@@ -86,6 +86,15 @@ MACRO_CONFIG_INT(DbgGraphs, dbg_graphs, 0, 0, 1, CFGFLAG_CLIENT, "Performance gr
 MACRO_CONFIG_INT(DbgHitch, dbg_hitch, 0, 0, 0, CFGFLAG_SERVER, "Hitch warnings", 3)
 MACRO_CONFIG_STR(DbgStressServer, dbg_stress_server, 32, "localhost", CFGFLAG_CLIENT, "Server to stress", -1)
 MACRO_CONFIG_INT(DbgResizable, dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables window resizing", -1)
+MACRO_CONFIG_INT(SvImphStatInterval, sv_imph_stat_interval, 1000, 1, 3600*24*50, CFGFLAG_SERVER, "display imph statistical information every X ticks", 1)
+MACRO_CONFIG_INT(SvImphUserDump, sv_imph_user_dump, 0, 0, 1, CFGFLAG_SERVER, "allow users to imphdump by saying /attack", 1)
+MACRO_CONFIG_INT(SvImphUserDumpTime, sv_imph_user_dump_time, 60, 1, 600, CFGFLAG_SERVER, "how many seconds of history are dumped by /attack", 1)
+MACRO_CONFIG_INT(SvImphUserDumpCooldown, sv_imph_user_dump_cooldown, 60, 1, 3600, CFGFLAG_SERVER, "disallow another /attack for X seconds", 1)
+MACRO_CONFIG_INT(SvImphBufSz, sv_imph_buf_sz, 1<<23, 1<<17, 1<<30, CFGFLAG_SERVER, "main buffer size, the default is 8 megs", 1)
+MACRO_CONFIG_INT(SvImphMaxMem, sv_imph_max_mem, 1<<24, 1<<17, 1<<30, CFGFLAG_SERVER, "maximum memory imph will ever consume", 1)
+MACRO_CONFIG_INT(SvImphPackSz, sv_imph_pack_sz, 96, 80, 1024, CFGFLAG_SERVER, "expected maximum size of regular, i.e. not oversized, packets", 1)
+MACRO_CONFIG_INT(SvImphMaxPayloadSz, sv_imph_max_payload_sz, 65536, 1, 65536, CFGFLAG_SERVER, "truncate packet payload if longer than this", 1)
+
 
 //DDRace
 MACRO_CONFIG_STR(SvWelcome, sv_welcome, 64, "", CFGFLAG_SERVER, "Message that will be displayed to players who join the server", 3)

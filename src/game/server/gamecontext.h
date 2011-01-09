@@ -148,6 +148,7 @@ public:
 
 	IGameController *m_pController;
 	CGameWorld m_World;
+	int m_ImphCooldown;
 	//CTeleTile *m_pSwitch;
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientId);

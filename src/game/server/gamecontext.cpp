@@ -470,6 +470,8 @@ void CGameContext::SendTuningParams(int Cid)
 
 void CGameContext::OnTick()
 {
+	if (m_ImphCooldown)
+		--m_ImphCooldown;
 	// check tuning
 	CheckPureTuning();
 
@@ -804,6 +806,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				*pMessage = ' ';
 			pMessage++;
 		}
+		if (g_Config.m_SvImphUserDump && str_comp_nocase(pMsg->m_pMessage,"/attack") == 0)
+		{
+			if (!m_ImphCooldown)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof aBuf, "userdump_tick%#x-%ds.imphdump", Server()->Tick(), g_Config.m_SvImphUserDumpTime);
+				Server()->ImphDump(g_Config.m_SvImphUserDumpTime, aBuf);
+				m_ImphCooldown = g_Config.m_SvImphUserDumpCooldown * Server()->TickSpeed();
+			}
+		} else
 		if(pMsg->m_pMessage[0]=='/')
 		{
 			ChatResponseInfo Info;

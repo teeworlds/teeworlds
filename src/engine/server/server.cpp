@@ -1,6 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <cstdlib>
+#include <cstdio>
 #include <base/system.h>
 
 #include <engine/shared/config.h>
@@ -173,7 +175,7 @@ void CServer::CClient::Reset()
 	m_Score = 0;
 }
 
-CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
+CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta), ImphChunk(0)
 {
 	m_TickSpeed = SERVER_TICK_SPEED;
 	
@@ -1069,6 +1071,7 @@ void CServer::PumpNetwork()
 	// process packets
 	while(m_NetServer.Recv(&Packet))
 	{
+		ImphFeed(&Packet);
 		if(Packet.m_ClientID == -1)
 		{
 			// stateless
@@ -1370,7 +1373,26 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 	else
 		((CServer *)pUser)->Kick(Victim, "Kicked by console");
 }
+void CServer::ConImphDump(IConsole::IResult *pResult, void *pUser, int ClientId)
+{
+	char aBuf[128];
+	int Secs = pResult->GetInteger(0);
+	if(pResult->NumArguments() == 1)
+		str_format(aBuf, sizeof aBuf, "tick0x%x-%ds.imphdump", ((IServer*)pUser)->Tick(), Secs);
+	else
+		str_copy(aBuf, pResult->GetString(1), sizeof aBuf);
+	
+	((CServer*)pUser)->ImphDump(Secs, aBuf);
+}
 
+void CServer::ConImphInit(IConsole::IResult *pResult, void *pUser, int ClientId)
+{
+	int BufSz   = pResult->NumArguments() > 0 ? pResult->GetInteger(0) : g_Config.m_SvImphBufSz;
+	int MaxMem  = pResult->NumArguments() > 1 ? pResult->GetInteger(1) : g_Config.m_SvImphMaxMem;
+	int PackSz  = pResult->NumArguments() > 2 ? pResult->GetInteger(2) : g_Config.m_SvImphPackSz;
+	int MaxPlSz = pResult->NumArguments() > 3 ? pResult->GetInteger(3) : g_Config.m_SvImphMaxPayloadSz;
+	((CServer*)pUser)->ImphInit(BufSz, MaxMem, PackSz, MaxPlSz);
+}
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 {
 	NETADDR Addr;
@@ -1625,6 +1647,9 @@ void CServer::RegisterCommands()
 	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "", 3);
 
+	Console()->Register("imphdump", "i?s", CFGFLAG_SERVER, ConImphDump, this, "", 1);
+	Console()->Register("imphinit", "?iiii", CFGFLAG_SERVER, ConImphInit, this, "", 1);
+
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
@@ -1661,6 +1686,196 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 }
 
 static CServer *CreateServer() { return new CServer(); }
+
+	/* this can be called multiple times, to recreate/reinit everything */
+void CServer::ImphInit(int BufSz, int MaxMem, int PackSz, int MaxPayloadSz)
+{
+	if (ImphChunk) {
+		for(int z = 0; z < ImphIndLimit; ++z)
+			if (*(int*)ImphBuf[z] != ImphPackSz)
+				free(ImphBuf[z]);
+
+		free(ImphChunk);
+		free(ImphBuf);
+		dbg_msg("imph", "destroyed former imph buffer");
+	}
+
+	ImphChunk = (char*)malloc(BufSz -= (BufSz % (ImphPackSz = PackSz)));
+	mem_zero(ImphChunk, BufSz);
+	ImphBuf = (char**)malloc(sizeof(char*) * (ImphIndLimit = BufSz / PackSz));
+
+	for(int z = 0; z < ImphIndLimit; ++z)
+		*(int*)(ImphBuf[z] = ImphChunk + z*PackSz) = PackSz;
+
+	ImphMaxPayloadSz = MaxPayloadSz;
+	ImphMemUsed = BufSz;
+	ImphMaxMemory = MaxMem;
+	ImphInd = ImphWraps = 0;
+
+	dbg_msg("imph", "initialized imph to: BufSz: %d, MaxMem: %d, PackSz: %d, MaxPayload: %d", BufSz, ImphMaxMemory, ImphPackSz, ImphMaxPayloadSz);
+}
+
+/* dump the most recent ,,Seconds'' seconds (or <= 0 for a complete dump) into ,,pFilename'' */
+void CServer::ImphDump(int Seconds, const char *pFilename)
+{
+	int StartIndex, EndIndex = (!ImphInd ? ImphIndLimit : ImphInd) - 1;
+
+	if (Seconds > 0)
+	{ /* we want a partial dump */
+		StartIndex = EndIndex;
+		/* traverse backwards through history, starting from the most recent packet,
+		   comparing tick information */
+		while((m_CurrentGameTick - *((int*)ImphBuf[StartIndex] + 1)) / m_TickSpeed < Seconds)
+		{ /* packet at StartIndex is within our timeframe */
+			if (--StartIndex < 0)
+			{ /* handle wraparound */
+				if (!ImphWraps)
+				{ /* if we never wrapped, search will start from index 0 */
+					StartIndex = 0;
+					break;
+				}
+
+				StartIndex = ImphIndLimit - 1; //otherwise we wrap
+			}
+
+			if (StartIndex == EndIndex)
+			{ /* search has reached the point where we begun, so we dump everything */
+				StartIndex = EndIndex+1;
+				break;
+			}
+		}
+	}
+	else /* we want a complete dump */
+		StartIndex = (!ImphWraps || EndIndex+1 == ImphIndLimit) ? 0 : EndIndex+1;
+
+	FILE *pDumpFile = fopen(pFilename, "w");
+	if (pDumpFile)
+	{
+		int Count = 1; //one is always dumped
+		while(StartIndex != EndIndex)
+		{
+			int Len = *(int*)ImphBuf[StartIndex];
+			if (fwrite(ImphBuf[StartIndex], 1, Len, pDumpFile) < (size_t)Len)
+			{
+				dbg_msg("imph", "write failed at index %i, dump aborted", StartIndex);
+				fclose(pDumpFile);
+				break;
+			}
+			if (++StartIndex == ImphIndLimit)
+				StartIndex = 0;
+			++Count;
+		}
+
+		/* write the most recent one as well */
+		fwrite(ImphBuf[EndIndex], 1, *(int*)ImphBuf[EndIndex], pDumpFile);
+		fclose(pDumpFile);
+
+		dbg_msg("imph", "dumped %i packets into \"%s\"", Count, pFilename);
+	}
+	else
+		dbg_msg("imph", "failed to open file \"%s\" for writing. cannot dump.", pFilename);
+}
+
+/* this gets fed packets as we receive them.
+   performs well as long as ImphPackSz is set to a reasonable value, like 96
+   which seems to be a good value both in terms of low memory waste and proper
+   address alignment.
+   to save a few cycles, remove all Stat_ stuff as it is not required for operation */
+void CServer::ImphFeed(struct CNetChunk *pPacket)
+{
+	/* if you dont want/need any statistical output, remove all of these: */
+	static int Stat_TickCount      = 0, Stat_LastTick  = 0, /* these two saves us a division. hooray. */
+	           Stat_PkgPerSecAccum = 0, Stat_DLenAccum = 0, Stat_NumPkg = 0, Stat_DLenMax = 0,
+	           Stat_XxlPkg         = 0, Stat_NumTrunc  = 0, Stat_MostDistantTick = 0;
+
+	/* length of packets payload, clamped aginst ImphMaxPayloadSz */
+	int PayloadLen = (pPacket->m_DataSize > ImphMaxPayloadSz) ? ImphMaxPayloadSz : pPacket->m_DataSize;
+
+	/* length of chunk we're going to write [<BUFLENGTH><TICK><NETCHUNK><PACKETDATA>] */
+	int DataLen = 2 * sizeof (int) + sizeof (struct CNetChunk) + PayloadLen;
+
+	/* slotlen is the buffer space available for where we're going to write our data into*/
+	int SlotLen = *(int*)ImphBuf[ImphInd];
+
+	/* this advances as we eventually write the data */
+	char *pWork = ImphBuf[ImphInd];
+
+	if (ImphMemUsed >= ImphMaxMemory && DataLen > SlotLen)
+	{ /* cheap branch: out of memory -> truncate packet*/
+		PayloadLen -= DataLen - SlotLen;
+		DataLen = SlotLen;
+		Stat_NumTrunc++;
+	}
+	else if (DataLen > ImphPackSz && DataLen > SlotLen)
+	{ /* expensive branch: ImphPackSz should be tuned so that this branch is very rarely taken. */
+		Stat_XxlPkg++;
+
+		/* (re)alloc a buffer for this 'large' packet */
+		pWork = (char*)( (SlotLen == ImphPackSz)
+		                           ? malloc(DataLen)
+		                           : realloc(pWork, DataLen) );
+
+		ImphMemUsed += DataLen;
+
+		if (SlotLen != ImphPackSz) /* we realloc'ed */
+			ImphMemUsed -= SlotLen;
+
+		ImphBuf[ImphInd] = pWork;
+		*(int*)pWork = DataLen; // write slotlen
+	}
+
+	/* skip over SLOTLENGTH */
+	pWork += sizeof (int);
+
+	/* read (for stats) and write and skip over TICK */
+	Stat_MostDistantTick = *(int*)pWork; // remove if no stats required
+	*(int*)pWork = m_CurrentGameTick;
+	pWork += sizeof (int);
+
+	/* copy netchunk and advance pointer */
+	mem_copy(pWork, pPacket, sizeof (struct CNetChunk));
+	pWork += sizeof (struct CNetChunk);
+
+	/* copy packet payload (which might be truncated) */
+	mem_copy(pWork, pPacket->m_pData, PayloadLen);
+
+	/* index wraparound */
+	if (++ImphInd == ImphIndLimit)
+	{
+		ImphWraps++;
+		ImphInd = 0;
+	}
+
+	/* everything below is for statictical output only. remove to save some cpu cycles */
+
+	Stat_DLenAccum += DataLen;
+	Stat_NumPkg++;
+	Stat_PkgPerSecAccum++;
+
+	/* peak sized packet */
+	if (DataLen > Stat_DLenMax)
+		Stat_DLenMax = DataLen;
+
+	/* the following two branches are the divisionless equivalent of sth like if (TICK % TICKSPEED == 0) */
+	if (m_CurrentGameTick != Stat_LastTick)
+	{
+		Stat_TickCount += m_CurrentGameTick - Stat_LastTick;
+		Stat_LastTick = m_CurrentGameTick;
+	}
+
+	/* will be taken approx. every second */
+	if (g_Config.m_SvImphStatInterval > 0 && Stat_TickCount >= g_Config.m_SvImphStatInterval)
+	{
+		dbg_msg("imph", "stats: ind: %i/%i, avg_dl: %i, max_dl: %i, num_pkg: %i, num_xxl: %i, "
+		        "num_trnc: %i, wraps: %i, pkg/s: %i, mem: %i/%i, hist: %is",
+		        ImphInd, ImphIndLimit, Stat_DLenAccum / Stat_NumPkg, Stat_DLenMax, Stat_NumPkg, Stat_XxlPkg,
+		        Stat_NumTrunc, ImphWraps, Stat_PkgPerSecAccum * m_TickSpeed / g_Config.m_SvImphStatInterval, ImphMemUsed, ImphMaxMemory,
+		        (m_CurrentGameTick - Stat_MostDistantTick) / m_TickSpeed);
+
+		Stat_PkgPerSecAccum = Stat_TickCount = 0;
+	}
+}
+
 
 int main(int argc, const char **argv) // ignore_convention
 {
@@ -1739,6 +1954,8 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfig->RestoreStrings();
 	
 	pServer->Engine()->InitLogfile();
+	
+	pServer->ImphInit(g_Config.m_SvImphBufSz, g_Config.m_SvImphMaxMem, g_Config.m_SvImphPackSz, g_Config.m_SvImphMaxPayloadSz);
 
 	// run the server
 	pServer->Run();

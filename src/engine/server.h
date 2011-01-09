@@ -57,6 +57,8 @@ public:
 	
 	virtual int IsAuthed(int ClientID) = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
+
+	virtual void ImphDump(int Seconds, const char *pFilename) = 0;
 };
 
 class IGameServer : public IInterface

@@ -231,6 +231,35 @@ public:
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int Id, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+
+	/*imph*/
+	char *ImphChunk; // our main buffer
+	char **ImphBuf; // pointers to where we store packets, mostly point into chunk
+
+	int ImphInd; // the next index to write a packet to
+	int ImphIndLimit; // maximum index, i.e. upper bound of
+
+	int ImphWraps; // how many times did ImphInd wrap around so far
+
+	int ImphPackSz; // the size we expect most packets to not exceed
+	int ImphMaxPayloadSz; // packets exceeding a payload length ot this will be truncated
+
+	int ImphMaxMemory; // note this may be slightly exceeded, we dont check in advance for performance reasons
+	int ImphMemUsed; // as mentioned this might actually be slightly higher than ImphMaxMemory.
+
+	/* may be called at any time to (re)init stuff */
+	void ImphInit(int BufSz, int MaxMem, int PackSz, int MaxPayloadSz);
+
+	/* this gets fed packets as we receive them */
+	void ImphFeed(struct CNetChunk *Packet);
+
+	/* write our history to a file */
+	virtual void ImphDump(int Seconds, const char *pFilename);
+
+	/* console access */
+	static void ConImphDump(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConImphInit(IConsole::IResult *pResult, void *pUser, int ClientId);
+
 };
 
 #endif
