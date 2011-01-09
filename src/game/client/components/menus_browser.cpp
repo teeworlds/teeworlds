@@ -493,6 +493,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	ServerDetails.HSplitBottom(10.0f, &ServerDetails, 0x0);
 
 	// server details
+	CTextCursor Cursor;
 	const float FontSize = 12.0f;
 	ServerDetails.HSplitTop(20.0f, &ServerHeader, &ServerDetails);
 	RenderTools()->DrawUIRect(&ServerHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
@@ -540,15 +541,21 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 		}
 
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pSelectedServer->m_aVersion, FontSize, -1);
+		TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = Row.w;
+		TextRender()->TextEx(&Cursor, pSelectedServer->m_aVersion, -1);
 
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pSelectedServer->m_aGameType, FontSize, -1);
+		TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = Row.w;
+		TextRender()->TextEx(&Cursor, pSelectedServer->m_aGameType, -1);
 
 		char aTemp[16];
 		str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_Latency);
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, aTemp, FontSize, -1);
+		TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = Row.w;
+		TextRender()->TextEx(&Cursor, aTemp, -1);
 
 	}
 
@@ -574,11 +581,12 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			ServerScoreBoard.HSplitTop(16.0f, &Row, &ServerScoreBoard);
 
 			str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aPlayers[i].m_Score);
-			UI()->DoLabelScaled(&Row, aTemp, FontSize, -1);
+			TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = 25.0f;
+			TextRender()->TextEx(&Cursor, aTemp, -1);
 
 			Row.VSplitLeft(25.0f, 0x0, &Row);
-
-			CTextCursor Cursor;
+	
 			TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Row.w;
 
