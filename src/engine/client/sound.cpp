@@ -329,7 +329,7 @@ int CSound::LoadWV(const char *pFilename)
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
-		dbg_msg("sound/wv", "failed to open %s", pFilename);
+		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
 		return -1;
 	}
 
