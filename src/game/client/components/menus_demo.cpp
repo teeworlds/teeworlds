@@ -47,6 +47,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	
 	if(CurrentTick == TotalTicks)
 	{
+		m_pClient->OnReset();
 		DemoPlayer()->Pause();
 		DemoPlayer()->SetPos(0);
 	}
@@ -69,7 +70,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			
 		MainView.Margin(5.0f, &MainView);
 		
-	CUIRect SeekBar, ButtonBar, NameBar;
+		CUIRect SeekBar, ButtonBar, NameBar;
 	
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
@@ -142,12 +143,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 		
 		// stop button
-		
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;
 		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_STOP, false, &Button))
 		{
+			m_pClient->OnReset();
 			DemoPlayer()->Pause(); 
 			DemoPlayer()->SetPos(0);
 		}
