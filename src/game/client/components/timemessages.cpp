@@ -179,7 +179,10 @@ void CTimeMessages::OnRender()
 		// render player tee
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorBody.a = Blend;
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorFeet.a = Blend;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), true);
+		if(m_aTimemsgs[r].m_LocalDiff < 0)
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), true);
+		else
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_NORMAL, vec2(-1,0), vec2(x, y+28), true);
 		
 		// new line
 		y += 46;
