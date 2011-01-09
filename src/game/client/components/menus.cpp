@@ -565,6 +565,12 @@ int CMenus::RenderMenubar(CUIRect r)
 			NewPage = PAGE_SERVER_INFO;
 
 		Box.VSplitLeft(4.0f, 0, &Box);
+		Box.VSplitLeft(100.0f, &Button, &Box);
+		static int s_GhostButton=0;
+		if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, CUI::CORNER_T))
+			NewPage = PAGE_GHOST;
+			
+		Box.VSplitLeft(4.0f, 0, &Box);
 		Box.VSplitLeft(140.0f, &Button, &Box);
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_T))
@@ -785,6 +791,8 @@ int CMenus::Render()
 				RenderGame(MainView);
 			else if(m_GamePage == PAGE_SERVER_INFO)
 				RenderServerInfo(MainView);
+			else if(m_GamePage == PAGE_GHOST)
+				RenderGhost(MainView);
 			else if(m_GamePage == PAGE_CALLVOTE)
 				RenderServerControl(MainView);
 			else if(m_GamePage == PAGE_SETTINGS)

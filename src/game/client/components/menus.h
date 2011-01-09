@@ -114,6 +114,7 @@ class CMenus : public CComponent
 		PAGE_NEWS=1,
 		PAGE_GAME,
 		PAGE_SERVER_INFO,
+		PAGE_GHOST,
 		PAGE_CALLVOTE,
 		PAGE_INTERNET,
 		PAGE_LAN,
@@ -197,6 +198,8 @@ class CMenus : public CComponent
 	void DemolistOnUpdate(bool Reset);
 	static void DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	
+	static void GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+	
 	// found in menus.cpp
 	int Render();
 	//void render_background();
@@ -214,6 +217,7 @@ class CMenus : public CComponent
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView);
 	void RenderServerControlServer(CUIRect MainView);
+	void RenderGhost(CUIRect MainView);
 	
 	// found in menus_browser.cpp
 	int m_SelectedIndex;
@@ -288,5 +292,22 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
+	
+	// ghost
+	struct CGhostItem
+	{
+		char m_aFilename[256];
+		char m_aPlayer[MAX_NAME_LENGTH];
+		
+		float m_Time;
+		
+		bool m_Active;
+		int m_ID;
+		
+		bool operator<(const CGhostItem &Other) { return m_Time < Other.m_Time; }
+	};
+	
+	sorted_array<CGhostItem> m_lGhosts;
+	void GhostlistPopulate();
 };
 #endif

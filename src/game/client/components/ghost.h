@@ -14,11 +14,17 @@ private:
 		unsigned char m_Version;
 	};
 	
+	struct CGhostList
+	{
+		int m_ID;
+		CNetObj_ClientInfo m_GhostInfo;
+		array<CNetObj_Character> m_BestPath;
+	};
+	array<CGhostList> m_lGhosts;
+	
 	array<CNetObj_Character> m_CurPath;
-	array<CNetObj_Character> m_BestPath;
 	
 	CNetObj_ClientInfo m_CurInfo;
-	CNetObj_ClientInfo m_GhostInfo;
 
 	int m_StartRenderTick;
 	int m_StartRecordTick;
@@ -46,7 +52,7 @@ private:
 	void RenderGhostHook();
 	
 	void Save();
-	void Load();
+	void LoadOwn();
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
 
@@ -58,6 +64,9 @@ public:
 	virtual void OnReset();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
+	
+	void Load(const char* pFilename, int ID);
+	void Unload(int ID);
 };
 
 #endif

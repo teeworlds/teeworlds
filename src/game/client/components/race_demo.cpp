@@ -6,8 +6,7 @@
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 
-#include <game/client/components/menus.h>
-
+#include "menus.h"
 #include "race_demo.h"
 
 CRaceDemo::CRaceDemo()

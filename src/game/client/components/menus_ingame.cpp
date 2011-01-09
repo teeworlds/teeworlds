@@ -1,8 +1,13 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <stdio.h>
+
 #include <base/math.h>
 
 #include <engine/demo.h>
+#include <engine/keys.h>
+#include <engine/graphics.h>
+#include <engine/storage.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -15,6 +20,7 @@
 #include <game/client/animstate.h>
 #include <game/client/teecomp.h>
 
+#include "ghost.h"
 #include "menus.h"
 #include "motd.h"
 #include "voting.h"
@@ -527,4 +533,311 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			}
 		}
 	}		
+}
+
+// ghost stuff
+void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+{
+	CMenus *pSelf = (CMenus *)pUser;
+	int Length = str_length(pName);
+	if((pName[0] == '.' && (pName[1] == 0 ||
+		(pName[1] == '.' && pName[2] == 0))) ||
+		(!IsDir && (Length < 4 || str_comp(pName+Length-4, ".gho"))))
+		return;
+	
+	int MapNameLength = str_length(pSelf->Client()->GetCurrentMap());
+	if(str_comp_num(pName, pSelf->Client()->GetCurrentMap(), MapNameLength))
+		return;
+	
+	// cut out the map crc
+	const char* pCrc = pName;
+	pCrc += Length-12;
+	int MapCrc = 0;
+	if(sscanf(pCrc, "%08x.gho", &MapCrc) != 1)
+		return;
+	
+	// check if map crc matches
+	if(MapCrc != pSelf->Client()->GetCurrentMapCrc())
+		return;
+	
+	CGhostItem Item;
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	
+	// get the time
+	const char* pTime = pName;
+	int Offset = 19;
+	pTime += Length-Offset;
+	while(Offset < Length)
+	{
+		if(pTime[0] == '_')
+			break;
+		pTime--;
+		Offset++;
+	}
+	
+	if(sscanf(pTime, "_%f", &Item.m_Time) != 1)
+		return;
+	
+	// get the Playername
+	const char* pPlayer = pName;
+	pPlayer += MapNameLength+1;
+	str_copy(Item.m_aPlayer, pPlayer, Length-(Offset+MapNameLength));
+	
+	Item.m_Active = false;
+	Item.m_ID = pSelf->m_lGhosts.size();
+	
+	pSelf->m_lGhosts.add(Item);
+}
+
+void CMenus::GhostlistPopulate()
+{
+	m_lGhosts.clear();
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ghosts", GhostlistFetchCallback, this);
+}
+
+void CMenus::RenderGhost(CUIRect MainView)
+{
+	// render background
+	CUIRect TabBar;
+	
+	// MainView.VSplitRight(120.0f, &MainView, &TabBar);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
+	
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitBottom(5.0f, &MainView, 0);
+	MainView.VSplitLeft(5.0f, 0, &MainView);
+	MainView.VSplitRight(5.0f, &MainView, 0);
+	
+	CUIRect Headers, Status;
+	CUIRect View = MainView;
+
+	View.HSplitTop(17.0f, &Headers, &View);
+	View.HSplitBottom(28.0f, &View, &Status);
+
+	// split of the scrollbar
+	RenderTools()->DrawUIRect(&Headers, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f);
+	Headers.VSplitRight(20.0f, &Headers, 0);
+	
+	struct CColumn
+	{
+		int m_Id;
+		CLocConstString m_Caption;
+		float m_Width;
+		CUIRect m_Rect;
+		CUIRect m_Spacer;
+	};
+	
+	enum
+	{
+		COL_ACTIVE=0,
+		COL_NAME,
+		COL_TIME,
+	};
+	
+	static CColumn s_aCols[] = {
+		{-1,			" ",		2.0f,		{0}, {0}},
+		{COL_ACTIVE,	" ",		30.0f,		{0}, {0}},
+		{COL_NAME,		"Name",		300.0f,		{0}, {0}},
+		{COL_TIME,		"Time",		200.0f,		{0}, {0}},
+	};
+	
+	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
+	
+	// do layout
+	for(int i = 0; i < NumCols; i++)
+	{
+		Headers.VSplitLeft(s_aCols[i].m_Width, &s_aCols[i].m_Rect, &Headers);
+
+		if(i+1 < NumCols)
+			Headers.VSplitLeft(2, &s_aCols[i].m_Spacer, &Headers);
+	}
+	
+	// do headers
+	for(int i = 0; i < NumCols; i++)
+		DoButton_GridHeader(s_aCols[i].m_Caption, s_aCols[i].m_Caption, 0, &s_aCols[i].m_Rect);
+	
+	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.15f), 0, 0);
+
+	CUIRect Scroll;
+	View.VSplitRight(15, &View, &Scroll);
+	
+	int NumGhosts = m_lGhosts.size();
+	
+	int Num = (int)(View.h/s_aCols[0].m_Rect.h) + 1;
+	static int s_ScrollBar = 0;
+	static float s_ScrollValue = 0;
+
+	Scroll.HMargin(5.0f, &Scroll);
+	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+	int ScrollNum = NumGhosts-Num+1;
+	if(ScrollNum > 0)
+	{
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+			s_ScrollValue -= 1.0f/ScrollNum;
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+			s_ScrollValue += 1.0f/ScrollNum;
+	}
+	else
+		ScrollNum = 0;
+	
+	static int s_SelectedIndex = 0;
+	for(int i = 0; i < m_NumInputEvents; i++)
+	{
+		int NewIndex = -1;
+		if(m_aInputEvents[i].m_Flags&IInput::FLAG_PRESS)
+		{
+			if(m_aInputEvents[i].m_Key == KEY_DOWN) NewIndex = s_SelectedIndex + 1;
+			if(m_aInputEvents[i].m_Key == KEY_UP) NewIndex = s_SelectedIndex - 1;
+		}
+		if(NewIndex > -1 && NewIndex < NumGhosts)
+		{
+			//scroll
+			float IndexY = View.y - s_ScrollValue*ScrollNum*s_aCols[0].m_Rect.h + NewIndex*s_aCols[0].m_Rect.h;
+			int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+s_aCols[0].m_Rect.h ? 1 : 0;
+			if(Scroll)
+			{
+				if(Scroll < 0)
+				{
+					int NumScrolls = (View.y-IndexY+s_aCols[0].m_Rect.h-1.0f)/s_aCols[0].m_Rect.h;
+					s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
+				}
+				else
+				{
+					int NumScrolls = (IndexY+s_aCols[0].m_Rect.h-(View.y+View.h)+s_aCols[0].m_Rect.h-1.0f)/s_aCols[0].m_Rect.h;
+					s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
+				}
+			}
+
+			s_SelectedIndex = NewIndex;
+		}
+	}
+	
+    if(s_ScrollValue < 0) s_ScrollValue = 0;
+    if(s_ScrollValue > 1) s_ScrollValue = 1;
+
+	// set clipping
+	UI()->ClipEnable(&View);
+	
+	CUIRect OriginalView = View;
+	View.y -= s_ScrollValue*ScrollNum*s_aCols[0].m_Rect.h;
+
+	for (int i = 0; i < NumGhosts; i++)
+	{
+		const CGhostItem *pItem = &m_lGhosts[i];
+		CUIRect Row;
+        CUIRect SelectHitBox;
+		
+		View.HSplitTop(17.0f, &Row, &View);
+		SelectHitBox = Row;
+
+		// make sure that only those in view can be selected
+		if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
+		{
+			if(i == s_SelectedIndex)
+			{
+				CUIRect r = Row;
+				r.Margin(1.5f, &r);
+				RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+			}
+
+			// clip the selection
+			if(SelectHitBox.y < OriginalView.y) // top
+			{
+				SelectHitBox.h -= OriginalView.y-SelectHitBox.y;
+				SelectHitBox.y = OriginalView.y;
+			}
+			else if(SelectHitBox.y+SelectHitBox.h > OriginalView.y+OriginalView.h) // bottom
+				SelectHitBox.h = OriginalView.y+OriginalView.h-SelectHitBox.y;
+
+			if(UI()->DoButtonLogic(pItem, "", 0, &SelectHitBox))
+			{
+				s_SelectedIndex = i;
+			}
+			
+			if(UI()->MouseInside(&Row) && Input()->MouseDoubleClick())
+			{
+				if(m_lGhosts[s_SelectedIndex].m_Active)
+				{
+					m_lGhosts[s_SelectedIndex].m_Active = false;
+					m_pClient->m_pGhost->Unload(s_SelectedIndex);
+				}
+				else
+				{
+					m_lGhosts[s_SelectedIndex].m_Active = true;
+					m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, s_SelectedIndex);
+				}
+			}
+		}
+
+		for(int c = 0; c < NumCols; c++)
+		{
+			CUIRect Button;
+			char aTemp[64];
+			Button.x = s_aCols[c].m_Rect.x;
+			Button.y = Row.y;
+			Button.h = Row.h;
+			Button.w = s_aCols[c].m_Rect.w;
+
+			int Id = s_aCols[c].m_Id;
+
+			if(Id == COL_ACTIVE)
+			{
+				if(pItem->m_Active)
+				{
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+					Graphics()->QuadsBegin();
+					RenderTools()->SelectSprite(SPRITE_OOP + 7);
+					IGraphics::CQuadItem QuadItem(Button.x+Button.w/2, Button.y+Button.h/2, 20.0f, 20.0f);
+					Graphics()->QuadsDraw(&QuadItem, 1);
+
+					Graphics()->QuadsEnd();
+				}
+			}
+			else if(Id == COL_NAME)
+			{
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+
+				TextRender()->TextEx(&Cursor, pItem->m_aPlayer, -1);
+			}
+			else if(Id == COL_TIME)
+			{
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, pItem->m_Time-((int)pItem->m_Time/60*60));
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
+		}
+	}
+
+	UI()->ClipDisable();
+	
+	RenderTools()->DrawUIRect(&Status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
+	Status.Margin(5.0f, &Status);
+	
+	CUIRect Button;
+	Status.VSplitRight(120.0f, &Status, &Button);
+	
+	static int s_GhostButton = 0;
+	if(m_lGhosts[s_SelectedIndex].m_Active)
+	{
+		if(DoButton_Menu(&s_GhostButton, Localize("Deactivate"), 0, &Button))
+		{
+			m_lGhosts[s_SelectedIndex].m_Active = false;
+			m_pClient->m_pGhost->Unload(s_SelectedIndex);
+		}
+	}
+	else
+	{
+		if(DoButton_Menu(&s_GhostButton, Localize("Activate"), 0, &Button))
+		{
+			m_lGhosts[s_SelectedIndex].m_Active = true;
+			m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, s_SelectedIndex);
+		}
+	}
 }
