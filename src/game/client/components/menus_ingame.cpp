@@ -545,43 +545,14 @@ void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageTyp
 		(!IsDir && (Length < 4 || str_comp(pName+Length-4, ".gho"))))
 		return;
 	
-	int MapNameLength = str_length(pSelf->Client()->GetCurrentMap());
-	if(str_comp_num(pName, pSelf->Client()->GetCurrentMap(), MapNameLength))
-		return;
-	
-	// cut out the map crc
-	const char* pCrc = pName;
-	pCrc += Length-12;
-	int MapCrc = 0;
-	if(sscanf(pCrc, "%08x.gho", &MapCrc) != 1)
-		return;
-	
-	// check if map crc matches
-	if(MapCrc != pSelf->Client()->GetCurrentMapCrc())
+	CGhost::CGhostHeader Header;
+	if(!pSelf->m_pClient->m_pGhost->GetInfo(pName, &Header))
 		return;
 	
 	CGhostItem Item;
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
-	
-	// get the time
-	const char* pTime = pName;
-	int Offset = 19;
-	pTime += Length-Offset;
-	while(Offset < Length)
-	{
-		if(pTime[0] == '_')
-			break;
-		pTime--;
-		Offset++;
-	}
-	
-	if(sscanf(pTime, "_%f", &Item.m_Time) != 1)
-		return;
-	
-	// get the Playername
-	const char* pPlayer = pName;
-	pPlayer += MapNameLength+1;
-	str_copy(Item.m_aPlayer, pPlayer, Length-(Offset+MapNameLength));
+	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
+	Item.m_Time = Header.m_Time;
 	
 	Item.m_Active = false;
 	Item.m_ID = pSelf->m_lGhosts.size();
@@ -593,6 +564,25 @@ void CMenus::GhostlistPopulate()
 {
 	m_lGhosts.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "ghosts", GhostlistFetchCallback, this);
+	
+	int OwnTime = -1;
+	int Own = -1;
+	
+	for(int i = 0; i < m_lGhosts.size(); i++)
+	{
+		if(str_comp(m_lGhosts[i].m_aPlayer, g_Config.m_PlayerName) == 0 && (OwnTime == -1 || m_lGhosts[i].m_Time < OwnTime))
+		{
+			OwnTime = m_lGhosts[i].m_Time;
+			Own = i;
+		}
+	}
+	
+	if(Own != -1)
+	{
+		m_lGhosts[Own].m_ID = -1;
+		m_lGhosts[Own].m_Active = true;
+		m_pClient->m_pGhost->Load(m_lGhosts[Own].m_aFilename, -1);
+	}
 }
 
 void CMenus::RenderGhost(CUIRect MainView)
@@ -632,13 +622,15 @@ void CMenus::RenderGhost(CUIRect MainView)
 		COL_ACTIVE=0,
 		COL_NAME,
 		COL_TIME,
+		COL_ID,
 	};
 	
 	static CColumn s_aCols[] = {
 		{-1,			" ",		2.0f,		{0}, {0}},
 		{COL_ACTIVE,	" ",		30.0f,		{0}, {0}},
-		{COL_NAME,		"Name",		300.0f,		{0}, {0}},
-		{COL_TIME,		"Time",		200.0f,		{0}, {0}},
+		{COL_NAME,		"Name",		200.0f,		{0}, {0}},
+		{COL_TIME,		"Time",		100.0f,		{0}, {0}},
+		{COL_ID,		"ID",		100.0f,		{0}, {0}},
 	};
 	
 	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
@@ -760,12 +752,12 @@ void CMenus::RenderGhost(CUIRect MainView)
 				if(m_lGhosts[s_SelectedIndex].m_Active)
 				{
 					m_lGhosts[s_SelectedIndex].m_Active = false;
-					m_pClient->m_pGhost->Unload(s_SelectedIndex);
+					m_pClient->m_pGhost->Unload(m_lGhosts[s_SelectedIndex].m_ID);
 				}
 				else
 				{
 					m_lGhosts[s_SelectedIndex].m_Active = true;
-					m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, s_SelectedIndex);
+					m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, m_lGhosts[s_SelectedIndex].m_ID);
 				}
 			}
 		}
@@ -800,7 +792,9 @@ void CMenus::RenderGhost(CUIRect MainView)
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 
-				TextRender()->TextEx(&Cursor, pItem->m_aPlayer, -1);
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "%s%s", pItem->m_aPlayer, (pItem->m_ID == -1)?" (own)":"");
+				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 			else if(Id == COL_TIME)
 			{
@@ -810,6 +804,16 @@ void CMenus::RenderGhost(CUIRect MainView)
 
 				char aBuf[64];
 				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, pItem->m_Time-((int)pItem->m_Time/60*60));
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
+			else if(Id == COL_ID)
+			{
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%d", pItem->m_ID);
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 		}
@@ -829,7 +833,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 		if(DoButton_Menu(&s_GhostButton, Localize("Deactivate"), 0, &Button))
 		{
 			m_lGhosts[s_SelectedIndex].m_Active = false;
-			m_pClient->m_pGhost->Unload(s_SelectedIndex);
+			m_pClient->m_pGhost->Unload(m_lGhosts[s_SelectedIndex].m_ID);
 		}
 	}
 	else
@@ -837,7 +841,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 		if(DoButton_Menu(&s_GhostButton, Localize("Activate"), 0, &Button))
 		{
 			m_lGhosts[s_SelectedIndex].m_Active = true;
-			m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, s_SelectedIndex);
+			m_pClient->m_pGhost->Load(m_lGhosts[s_SelectedIndex].m_aFilename, m_lGhosts[s_SelectedIndex].m_ID);
 		}
 	}
 }

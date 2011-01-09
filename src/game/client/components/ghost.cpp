@@ -55,9 +55,6 @@ void CGhost::AddInfos(CNetObj_Character Player)
 		return;
 	}
 	
-	// TODO: I don't know what the fuck is happening atm
-	if(m_CurPath.size() == 0)
-		m_CurPath.add(Player);
 	m_CurPath.add(Player);
 }
 
@@ -66,12 +63,6 @@ void CGhost::OnRender()
 	// only for race
 	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost)
 		return;
-	
-	CNetObj_Character Player = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
-	m_pClient->m_PredictedChar.Write(&Player);
-	
-	if(m_pClient->m_NewPredictedTick)
-		AddInfos(Player);
 	
 	// Check if the race line is crossed then start the render of the ghost if one
 	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
@@ -113,6 +104,12 @@ void CGhost::OnRender()
 		StopRender();
 		m_RaceState = RACE_NONE;
 	}
+	
+	CNetObj_Character Player = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
+	m_pClient->m_PredictedChar.Write(&Player);
+	
+	if(m_pClient->m_NewPredictedTick)
+		AddInfos(Player);
 
 	// Play the ghost
 	if(!m_Rendering || !g_Config.m_ClRaceShowGhost)
@@ -126,153 +123,145 @@ void CGhost::OnRender()
 		m_Rendering = false;
 		return;
 	}
-
-	RenderGhostHook();
-	RenderGhost();
-}
-
-void CGhost::RenderGhost()
-{
+	
 	for(int i = 0; i < m_lGhosts.size(); i++)
 	{
-		CGhostList *pGhost = &m_lGhosts[i];
-		
-		if(m_CurPos >= pGhost->m_BestPath.size())
-			continue;
-		
-		CNetObj_Character Player = pGhost->m_BestPath[m_CurPos];
-		CNetObj_Character Prev = pGhost->m_BestPath[m_CurPos];
-		
-		
-		if(m_CurPos > 0)
-			Prev = pGhost->m_BestPath[m_CurPos-1];
-		
-		char aSkinName[64];
-		IntsToStr(&pGhost->m_GhostInfo.m_Skin0, 6, aSkinName);
-		int SkinId = m_pClient->m_pSkins->Find(aSkinName);
-		if(SkinId < 0)
-		{
-			SkinId = m_pClient->m_pSkins->Find("default");
-			if(SkinId < 0)
-				SkinId = 0;
-		}
-		
-		CTeeRenderInfo RenderInfo;
-		RenderInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(pGhost->m_GhostInfo.m_ColorBody);
-		RenderInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(pGhost->m_GhostInfo.m_ColorFeet);
-		
-		if(pGhost->m_GhostInfo.m_UseCustomColor)
-			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_ColorTexture;
-		else
-		{
-			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_OrgTexture;
-			RenderInfo.m_ColorBody = vec4(1,1,1,1);
-			RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-		}
-		
-		RenderInfo.m_ColorBody.a = 0.5f;
-		RenderInfo.m_ColorFeet.a = 0.5f;
-		RenderInfo.m_Size = 64;
-		
-		float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
-		vec2 Direction = GetDirection((int)(Angle*256.0f));
-		vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
-		vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), Client()->PredIntraGameTick());
-		
-		bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-		bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
-		bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
-
-		float WalkTime = fmod(absolute(Position.x), 100.0f)/100.0f;
-		CAnimState State;
-		State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
-
-		if(InAir)
-			State.Add(&g_pData->m_aAnimations[ANIM_INAIR], 0, 1.0f);
-		else if(Stationary)
-			State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0, 1.0f);
-		else if(!WantOtherDir)
-			State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
-		
-		if (Player.m_Weapon == WEAPON_GRENADE)
-		{
-			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-			Graphics()->QuadsBegin();
-			Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-
-			// normal weapons
-			int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
-			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-			
-			vec2 Dir = Direction;
-			float Recoil = 0.0f;
-			// TODO: is this correct?
-			float a = (Client()->GameTick()-Player.m_AttackTick+Client()->PredIntraGameTick())/5.0f;
-			if(a < 1)
-				Recoil = sinf(a*pi);
-			
-			vec2 p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Direction*Recoil*10.0f;
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
-			Graphics()->QuadsEnd();
-		}
-
-		// Render ghost
-		RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
+		RenderGhostHook(&m_lGhosts[i]);
+		RenderGhost(&m_lGhosts[i]);
 	}
 }
 
-void CGhost::RenderGhostHook()
+void CGhost::RenderGhost(CGhostList *pGhost)
 {
-	for(int i = 0; i < m_lGhosts.size(); i++)
+	if(m_CurPos >= pGhost->m_BestPath.size())
+		return;
+	
+	CNetObj_Character Player = pGhost->m_BestPath[m_CurPos];
+	CNetObj_Character Prev = pGhost->m_BestPath[m_CurPos];
+	
+	if(m_CurPos > 0)
+		Prev = pGhost->m_BestPath[m_CurPos-1];
+	
+	char aSkinName[64];
+	IntsToStr(&pGhost->m_GhostInfo.m_Skin0, 6, aSkinName);
+	int SkinId = m_pClient->m_pSkins->Find(aSkinName);
+	if(SkinId < 0)
 	{
-		CGhostList *pGhost = &m_lGhosts[i];
-		
-		if(m_CurPos >= pGhost->m_BestPath.size())
-			continue;
-			
-		CNetObj_Character Player = pGhost->m_BestPath[m_CurPos];
-		CNetObj_Character Prev = pGhost->m_BestPath[m_CurPos];
-		
-		if(m_CurPos > 0)
-			Prev = pGhost->m_BestPath[m_CurPos-1];
+		SkinId = m_pClient->m_pSkins->Find("default");
+		if(SkinId < 0)
+			SkinId = 0;
+	}
+	
+	CTeeRenderInfo RenderInfo;
+	RenderInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(pGhost->m_GhostInfo.m_ColorBody);
+	RenderInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(pGhost->m_GhostInfo.m_ColorFeet);
+	
+	if(pGhost->m_GhostInfo.m_UseCustomColor)
+		RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_ColorTexture;
+	else
+	{
+		RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_OrgTexture;
+		RenderInfo.m_ColorBody = vec4(1,1,1,1);
+		RenderInfo.m_ColorFeet = vec4(1,1,1,1);
+	}
+	
+	RenderInfo.m_ColorBody.a = 0.5f;
+	RenderInfo.m_ColorFeet.a = 0.5f;
+	RenderInfo.m_Size = 64;
+	
+	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
+	vec2 Direction = GetDirection((int)(Angle*256.0f));
+	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
+	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), Client()->PredIntraGameTick());
+	
+	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
+	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
+	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
-		if (Prev.m_HookState<=0 || Player.m_HookState<=0)
-			return;
+	float WalkTime = fmod(absolute(Position.x), 100.0f)/100.0f;
+	CAnimState State;
+	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
 
-		float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
-		vec2 Direction = GetDirection((int)(Angle*256.0f));
-		vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
-
-		vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), Client()->PredIntraGameTick());
-		float d = distance(Pos, HookPos);
-		vec2 Dir = normalize(Pos-HookPos);
-
+	if(InAir)
+		State.Add(&g_pData->m_aAnimations[ANIM_INAIR], 0, 1.0f);
+	else if(Stationary)
+		State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0, 1.0f);
+	else if(!WantOtherDir)
+		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
+	
+	if (Player.m_Weapon == WEAPON_GRENADE)
+	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetRotation(GetAngle(Dir)+pi);
+		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
-		// render head
-		RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
-		IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24, 16);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-
-		// render chain
-		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
-		IGraphics::CQuadItem Array[1024];
-		int j = 0;
-		for(float f = 24; f < d && j < 1024; f += 24, j++)
-		{
-			vec2 p = HookPos + Dir*f;
-			Array[j] = IGraphics::CQuadItem(p.x, p.y, 24, 16);
-		}
-
-		Graphics()->QuadsDraw(Array, j);
-		Graphics()->QuadsSetRotation(0);
+		// normal weapons
+		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+		
+		vec2 Dir = Direction;
+		float Recoil = 0.0f;
+		// TODO: is this correct?
+		float a = (Client()->PredGameTick()-Player.m_AttackTick+Client()->PredIntraGameTick())/5.0f;
+		if(a < 1)
+			Recoil = sinf(a*pi);
+		
+		vec2 p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Direction*Recoil*10.0f;
+		p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
+		RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		Graphics()->QuadsEnd();
 	}
+
+	// Render ghost
+	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
+}
+
+void CGhost::RenderGhostHook(CGhostList *pGhost)
+{
+	if(m_CurPos >= pGhost->m_BestPath.size())
+		return;
+		
+	CNetObj_Character Player = pGhost->m_BestPath[m_CurPos];
+	CNetObj_Character Prev = pGhost->m_BestPath[m_CurPos];
+	
+	if(m_CurPos > 0)
+		Prev = pGhost->m_BestPath[m_CurPos-1];
+		
+	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
+		return;
+
+	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
+	vec2 Direction = GetDirection((int)(Angle*256.0f));
+	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
+
+	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), Client()->PredIntraGameTick());
+	float d = distance(Pos, HookPos);
+	vec2 Dir = normalize(Pos-HookPos);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->QuadsSetRotation(GetAngle(Dir)+pi);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
+
+	// render head
+	RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
+	IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24, 16);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+
+	// render chain
+	RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
+	IGraphics::CQuadItem Array[1024];
+	int j = 0;
+	for(float f = 24; f < d && j < 1024; f += 24, j++)
+	{
+		vec2 p = HookPos + Dir*f;
+		Array[j] = IGraphics::CQuadItem(p.x, p.y, 24, 16);
+	}
+
+	Graphics()->QuadsDraw(Array, j);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
 }
 
 void CGhost::StartRecord()
@@ -321,20 +310,26 @@ void CGhost::Save()
 	}
 	
 	char aFilename[256];
-	str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_PrevTime, Client()->GetCurrentMapCrc());
-	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	char aBuf[256];
+	str_format(aFilename, sizeof(aFilename), "%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_PrevTime, Client()->GetCurrentMapCrc());
+	str_format(aBuf, sizeof(aBuf), "ghosts/%s", aFilename);
+	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return;
 		
 	// write header
-	// TODO: save netversion, mapname, crc ...?
+	int Crc = Client()->GetCurrentMapCrc();
 	mem_zero(&Header, sizeof(Header));
 	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
 	Header.m_Version = gs_ActVersion;
+	IntsToStr(&m_CurInfo.m_Name0, 6, Header.m_aOwner);
+	str_copy(Header.m_aMap, Client()->GetCurrentMap(), sizeof(Header.m_aMap));
+	Header.m_aCrc[0] = (Crc>>24)&0xff;
+	Header.m_aCrc[1] = (Crc>>16)&0xff;
+	Header.m_aCrc[2] = (Crc>>8)&0xff;
+	Header.m_aCrc[3] = (Crc)&0xff;
+	Header.m_Time = m_PrevTime;
 	io_write(File, &Header, sizeof(Header));
-	
-	// write time
-	io_write(File, &m_PrevTime, sizeof(m_PrevTime));
 	
 	// write client info
 	io_write(File, &m_CurInfo, sizeof(m_CurInfo));
@@ -375,62 +370,65 @@ void CGhost::Save()
 	for(int i = 0; i < m_pClient->m_pMenus->m_lGhosts.size(); i++)
 	{
 		CMenus::CGhostItem TmpItem = m_pClient->m_pMenus->m_lGhosts[i];
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s_%s", Client()->GetCurrentMap(), aName);
-		int Length = str_length(aBuf);
-		if(!str_comp_num(TmpItem.m_aFilename, aBuf, Length))
+		if(TmpItem.m_ID == -1)
 		{
-			str_format(aFilename, sizeof(aFilename), "ghosts/%s", TmpItem.m_aFilename);
-			Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
+			char aFile[256];
+			str_format(aFile, sizeof(aFile), "ghosts/%s", TmpItem.m_aFilename);
+			Storage()->RemoveFile(aFile, IStorage::TYPE_SAVE);
 			m_pClient->m_pMenus->m_lGhosts.remove_index(i);
-			i--; // make sure all old ghosts will be deleted
+			break; // TODO remove other ghosts
 		}
 	}
 	
 	// add new ghost to ghost list
 	CMenus::CGhostItem Item;
-	str_format(aFilename, sizeof(aFilename), "%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_PrevTime, Client()->GetCurrentMapCrc());
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
-	str_copy(Item.m_aPlayer, aName, sizeof(Item.m_aPlayer));
+	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
 	Item.m_Time = m_PrevTime;
-	Item.m_Active = false;
-	Item.m_ID = m_pClient->m_pMenus->m_lGhosts.size();
+	Item.m_Active = true;
+	Item.m_ID = -1;
 	m_pClient->m_pMenus->m_lGhosts.add(Item);
 }
 
-void CGhost::LoadOwn()
+bool CGhost::GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader)
 {
-	// check the player name
-	char aName[MAX_NAME_LENGTH];
-	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
-	for(int i = 0; i < MAX_NAME_LENGTH; i++)
-	{
-		if(!aName[i])
-			break;
-		
-		if(aName[i] == '\\' || aName[i] == '/' || aName[i] == '|' || aName[i] == ':' || aName[i] == '*' || aName[i] == '?' || aName[i] == '<' || aName[i] == '>' || aName[i] == '"')
-			aName[i] = '%';
-	}
+	if(!*pFile)
+		return 0;
 	
-	for(int i = 0; i < m_pClient->m_pMenus->m_lGhosts.size(); i++)
-	{
-		CMenus::CGhostItem *Item = &m_pClient->m_pMenus->m_lGhosts[i];
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s_%s", Client()->GetCurrentMap(), aName);
-		int Length = str_length(aBuf);
-		if(!str_comp_num(Item->m_aFilename, aBuf, Length))
-		{
-			Item->m_Active = true;
-			Load(Item->m_aFilename, -1);
-			break;
-		}
-	}
+	CGhostHeader Header;
+	io_read(*pFile, &Header, sizeof(Header));
+	
+	*pHeader = Header;
+	
+	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+		return 0;
+	
+	if(Header.m_Version > gs_ActVersion)
+		return 0;
+	
+	int Crc = (Header.m_aCrc[0]<<24) | (Header.m_aCrc[1]<<16) | (Header.m_aCrc[2]<<8) | (Header.m_aCrc[3]);
+	if(str_comp(Header.m_aMap, Client()->GetCurrentMap()) != 0 || Crc != Client()->GetCurrentMapCrc())
+		return 0;
+	
+	return 1;
+}
+
+bool CGhost::GetInfo(const char* pFilename, CGhostHeader *pHeader)
+{
+	char aFilename[256];
+	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pFilename);
+	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+		return 0;
+	
+	bool Check = GetHeader(&File, pHeader);
+	io_close(File);
+	
+	return Check;
 }
 
 void CGhost::Load(const char* pFilename, int ID)
 {
-	CGhostHeader Header;
-	
 	char aFilename[256];
 	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pFilename);
 	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
@@ -438,23 +436,14 @@ void CGhost::Load(const char* pFilename, int ID)
 		return;
 
 	// read header
-	io_read(File, &Header, sizeof(Header));
-	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+	CGhostHeader Header;
+	if(!GetHeader(&File, &Header))
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "not a ghost file");
 		io_close(File);
 		return;
 	}
 	
-	if(Header.m_Version > gs_ActVersion)
-	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "wrong version");
-		io_close(File);
-		return;
-	}
-	
-	// read time
-	io_read(File, &m_PrevTime, sizeof(m_PrevTime));
+	m_PrevTime = Header.m_Time;
 	
 	// create ghost
 	CGhostList Ghost;
@@ -608,5 +597,4 @@ void CGhost::OnMapLoad()
 	m_PrevTime = -1;
 	m_lGhosts.clear();
 	m_pClient->m_pMenus->GhostlistPopulate();
-	LoadOwn();
 }

@@ -7,13 +7,18 @@
 
 class CGhost : public CComponent
 {
-private:
+public:
 	struct CGhostHeader
 	{
 		unsigned char m_aMarker[8];
 		unsigned char m_Version;
+		char m_aOwner[MAX_NAME_LENGTH];
+		char m_aMap[64];
+		unsigned char m_aCrc[4];
+		float m_Time;
 	};
 	
+private:
 	struct CGhostList
 	{
 		int m_ID;
@@ -48,11 +53,12 @@ private:
 	void StopRecord();
 	void StartRender();
 	void StopRender();
-	void RenderGhost();
-	void RenderGhostHook();
+	void RenderGhost(CGhostList *pGhost);
+	void RenderGhostHook(CGhostList *pGhost);
+	
+	bool GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader);
 	
 	void Save();
-	void LoadOwn();
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
 
@@ -67,6 +73,8 @@ public:
 	
 	void Load(const char* pFilename, int ID);
 	void Unload(int ID);
+	
+	bool GetInfo(const char* pFilename, CGhostHeader *pHeader);
 };
 
 #endif
