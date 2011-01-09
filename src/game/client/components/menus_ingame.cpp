@@ -622,15 +622,13 @@ void CMenus::RenderGhost(CUIRect MainView)
 		COL_ACTIVE=0,
 		COL_NAME,
 		COL_TIME,
-		COL_ID,
 	};
 	
 	static CColumn s_aCols[] = {
 		{-1,			" ",		2.0f,		{0}, {0}},
 		{COL_ACTIVE,	" ",		30.0f,		{0}, {0}},
-		{COL_NAME,		"Name",		200.0f,		{0}, {0}},
-		{COL_TIME,		"Time",		100.0f,		{0}, {0}},
-		{COL_ID,		"ID",		100.0f,		{0}, {0}},
+		{COL_NAME,		"Name",		300.0f,		{0}, {0}},
+		{COL_TIME,		"Time",		200.0f,		{0}, {0}},
 	};
 	
 	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
@@ -804,16 +802,6 @@ void CMenus::RenderGhost(CUIRect MainView)
 
 				char aBuf[64];
 				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, pItem->m_Time-((int)pItem->m_Time/60*60));
-				TextRender()->TextEx(&Cursor, aBuf, -1);
-			}
-			else if(Id == COL_ID)
-			{
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-				Cursor.m_LineWidth = Button.w;
-
-				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "%d", pItem->m_ID);
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 		}
