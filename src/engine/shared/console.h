@@ -84,7 +84,7 @@ class CConsole : public IConsole
 				mem_copy(m_aStringStorage, Other.m_aStringStorage, sizeof(m_aStringStorage));
 				m_pArgsStart = Other.m_pArgsStart + Offset;
 				m_pCommand = Other.m_pCommand + Offset;
-				for(int i = 0; i < Other.m_NumArgs; ++i)
+				for(unsigned i = 0; i < Other.m_NumArgs; ++i)
 					m_apArgs[i] = Other.m_apArgs[i] + Offset;
 			}
 			return *this;
