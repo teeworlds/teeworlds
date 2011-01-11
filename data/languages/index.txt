@@ -28,6 +28,9 @@ polish
 portuguese
 == Português
 
+romanian
+== Română
+
 russian
 == Русский
 

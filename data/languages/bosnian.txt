@@ -894,6 +894,9 @@ Toggle layer visibility
 Toggles the envelope editor.
 == 
 
+Unable to delete the demo
+== 
+
 Up
 == 
 
