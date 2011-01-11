@@ -1,3 +1,59 @@
+commit bb26c16e9b978355c63f6bea4e97225e9337f152
+Author: JulianAssange <demonul@ubuntu.(none)>
+Date:   Mon Jan 10 19:26:39 2011 -0800
+
+    changed some stuff and fixedd readme
+
+commit c4f3d0723498ac361301cedc49384aba14418b7e
+Author: josh <demonul@ubuntu.(none)>
+Date:   Mon Jan 10 19:23:11 2011 -0800
+
+    removed some dbg_msg's
+
+commit ca998fe791be0a162f40d0460702a0e2122d6eeb
+Merge: 475ec71 959b05d
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Mon Jan 10 11:26:26 2011 +1100
+
+    Merge branch 'master' of https://github.com/GreYFoXGTi/DDRace
+
+commit 959b05d55727a5dc9cd4f6492e5e68097ac950e7
+Merge: 3c5a430 eedaf62
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Mon Jan 10 00:45:58 2011 +0200
+
+    Merge branch 'master' of http://github.com/oy/teeworlds
+
+commit 475ec71dbbc7298c3f3ae63fb9a29e4951688ca6
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sun Jan 9 18:52:40 2011 +1100
+
+    reverted last commit
+
+commit c0db970f6e92af8d8862e62bd3bf4e030a3279e7
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sun Jan 9 17:22:48 2011 +1100
+
+    somthing
+
+commit c63e1d1a588ac0ab777d0b08dae65e905295bc9b
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sun Jan 9 14:13:47 2011 +1100
+
+    updated with fisted's imph dump
+
+commit c980adaffd1793041fddba8de989a3a534d64d2e
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sat Jan 8 19:39:05 2011 +1100
+
+    just updated some stuff
+
+commit 7cc833889f7407e74fea4412bd19e0a736557633
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sat Jan 8 19:31:12 2011 +1100
+
+    changed team failing
+
 commit 3a1f73464b7bb86db42301cd8fa0f7ea5645993e
 Merge: c1ef7b7 3c5a430
 Author: JulianAssange <logsarehere@gmail.com>
@@ -54,6 +110,12 @@ Date:   Fri Jan 7 23:51:18 2011 +1100
 
     cant remember what i did because i did it on the flight =/
 
+commit eedaf62d97d1100bc4bd3dda50bfcd0c3763e812
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 22:55:57 2011 +0100
+
+    fixed that the client crashes if it has no skins
+
 commit 6889adc0bb04f0c9043cdfa841fb8a3a28eb88f5
 Merge: 802dc7a 7487a22
 Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
@@ -67,6 +129,12 @@ Date:   Thu Jan 6 23:30:28 2011 +0200
     	src/game/editor/ed_editor.cpp
     	src/game/server/gamecontext.cpp
     	src/game/server/gamecontext.h & Cleaned it up
+
+commit f8b1edca646b14f5c7cbae71a2cd20d42c1fd705
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 22:18:19 2011 +0100
+
+    show error message for all content that could not be loaded. Closes #257
 
 commit 7487a22956680c601e57b9a0edd93eda1e33e287
 Author: oy <Tom_Adams@web.de>
