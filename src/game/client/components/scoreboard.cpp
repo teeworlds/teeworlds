@@ -119,6 +119,9 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 
 void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const char *pTitle)
 {
+	if(Team == TEAM_SPECTATORS)
+		return;
+
 	//float ystart = y;
 	float h = 750.0f;
 
@@ -139,60 +142,18 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 
 	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
+	TextRender()->Text(0, x+10, y, 48, pTitle, -1);
 
-	if(Team == TEAM_SPECTATORS)
+	if(m_pClient->m_Snap.m_pGameobj)
 	{
-		TextRender()->Text(0, x+w/2-tw/2, y, 48, pTitle, -1);
-	}
-	else
-	{
-		TextRender()->Text(0, x+10, y, 48, pTitle, -1);
-
-		if(m_pClient->m_Snap.m_pGameobj)
-		{
-			char aBuf[128];
-			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue;
-			str_format(aBuf, sizeof(aBuf), "%d", Score);
-			tw = TextRender()->TextWidth(0, 48, aBuf, -1);
-			TextRender()->Text(0, x+w-tw-30, y, 48, aBuf, -1);
-		}
+		char aBuf[128];
+		int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue;
+		str_format(aBuf, sizeof(aBuf), "%d", Score);
+		tw = TextRender()->TextWidth(0, 48, aBuf, -1);
+		TextRender()->Text(0, x+w-tw-30, y, 48, aBuf, -1);
 	}
 
 	y += 54.0f;
-
-	// find players
-	const CNetObj_PlayerInfo *paPlayers[MAX_CLIENTS] = {0};
-	int NumPlayers = 0;
-	for(int i = 0; i < Client()->SnapNumItems(IClient::SNAP_CURRENT); i++)
-	{
-		IClient::CSnapItem Item;
-		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
-		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
-		{
-			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
-			if(pInfo->m_Team == Team)
-			{
-				paPlayers[NumPlayers] = pInfo;
-				if(++NumPlayers == MAX_CLIENTS)
-					break;
-			}
-		}
-	}
-
-	// sort players
-	for(int k = 0; k < NumPlayers-1; k++) // ffs, bubblesort
-	{
-		for(int i = 0; i < NumPlayers-k-1; i++)
-		{
-			if(paPlayers[i]->m_Score < paPlayers[i+1]->m_Score)
-			{
-				const CNetObj_PlayerInfo *pTmp = paPlayers[i];
-				paPlayers[i] = paPlayers[i+1];
-				paPlayers[i+1] = pTmp;
-			}
-		}
-	}
 
 	// render headlines
 	TextRender()->Text(0, x+10, y, 24.0f, Localize("Score"), -1);
@@ -205,7 +166,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float TeeSizeMod = 1.0f;
 	float TeeOffset = 0.0f;
 	
-	if(NumPlayers > 13)
+	if(m_pClient->m_Snap.m_aTeamSize[Team] > 13)
 	{
 		FontSize = 30.0f;
 		LineHeight = 40.0f;
@@ -214,9 +175,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 	
 	// render player scores
-	for(int i = 0; i < NumPlayers; i++)
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		const CNetObj_PlayerInfo *pInfo = paPlayers[i];
+		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
+		if(!pInfo || pInfo->m_Team != Team)
+			continue;
 
 		// make sure that we render the correct team
 
