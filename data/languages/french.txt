@@ -286,9 +286,6 @@ Grenade
 Group
 == Groupe
 
-HD
-== HD
-
 Hammer
 == Maillet
 
@@ -922,6 +919,9 @@ Toggle layer visibility
 == 
 
 Toggles the envelope editor.
+== 
+
+Unable to delete the demo
 == 
 
 Use Clipping
