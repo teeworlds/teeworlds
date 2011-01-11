@@ -1697,7 +1697,7 @@ void CServer::ImphInit(int BufSz, int MaxMem, int PackSz, int MaxPayloadSz)
 
 		free(ImphChunk);
 		free(ImphBuf);
-		dbg_msg("imph", "destroyed former imph buffer");
+		////dbg_msg("imph", "destroyed former imph buffer");
 	}
 
 	ImphChunk = (char*)malloc(BufSz -= (BufSz % (ImphPackSz = PackSz)));
@@ -1712,7 +1712,7 @@ void CServer::ImphInit(int BufSz, int MaxMem, int PackSz, int MaxPayloadSz)
 	ImphMaxMemory = MaxMem;
 	ImphInd = ImphWraps = 0;
 
-	dbg_msg("imph", "initialized imph to: BufSz: %d, MaxMem: %d, PackSz: %d, MaxPayload: %d", BufSz, ImphMaxMemory, ImphPackSz, ImphMaxPayloadSz);
+	//dbg_msg("imph", "initialized imph to: BufSz: %d, MaxMem: %d, PackSz: %d, MaxPayload: %d", BufSz, ImphMaxMemory, ImphPackSz, ImphMaxPayloadSz);
 }
 
 /* dump the most recent ,,Seconds'' seconds (or <= 0 for a complete dump) into ,,pFilename'' */
@@ -1757,7 +1757,7 @@ void CServer::ImphDump(int Seconds, const char *pFilename)
 			int Len = *(int*)ImphBuf[StartIndex];
 			if (fwrite(ImphBuf[StartIndex], 1, Len, pDumpFile) < (size_t)Len)
 			{
-				dbg_msg("imph", "write failed at index %i, dump aborted", StartIndex);
+				//dbg_msg("imph", "write failed at index %i, dump aborted", StartIndex);
 				fclose(pDumpFile);
 				break;
 			}
@@ -1770,10 +1770,10 @@ void CServer::ImphDump(int Seconds, const char *pFilename)
 		fwrite(ImphBuf[EndIndex], 1, *(int*)ImphBuf[EndIndex], pDumpFile);
 		fclose(pDumpFile);
 
-		dbg_msg("imph", "dumped %i packets into \"%s\"", Count, pFilename);
+		//dbg_msg("imph", "dumped %i packets into \"%s\"", Count, pFilename);
 	}
 	else
-		dbg_msg("imph", "failed to open file \"%s\" for writing. cannot dump.", pFilename);
+		//dbg_msg("imph", "failed to open file \"%s\" for writing. cannot dump.", pFilename);
 }
 
 /* this gets fed packets as we receive them.
@@ -1866,7 +1866,7 @@ void CServer::ImphFeed(struct CNetChunk *pPacket)
 	/* will be taken approx. every second */
 	if (g_Config.m_SvImphStatInterval > 0 && Stat_TickCount >= g_Config.m_SvImphStatInterval)
 	{
-		dbg_msg("imph", "stats: ind: %i/%i, avg_dl: %i, max_dl: %i, num_pkg: %i, num_xxl: %i, "
+		//dbg_msg("imph", "stats: ind: %i/%i, avg_dl: %i, max_dl: %i, num_pkg: %i, num_xxl: %i, "
 		        "num_trnc: %i, wraps: %i, pkg/s: %i, mem: %i/%i, hist: %is",
 		        ImphInd, ImphIndLimit, Stat_DLenAccum / Stat_NumPkg, Stat_DLenMax, Stat_NumPkg, Stat_XxlPkg,
 		        Stat_NumTrunc, ImphWraps, Stat_PkgPerSecAccum * m_TickSpeed / g_Config.m_SvImphStatInterval, ImphMemUsed, ImphMaxMemory,
