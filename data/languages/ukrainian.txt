@@ -900,6 +900,9 @@ File: %s
 Green value of the envelope
 == 
 
+KiB
+== 
+
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 

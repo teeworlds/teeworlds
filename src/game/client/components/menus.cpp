@@ -969,7 +969,7 @@ int CMenus::Render()
 
 				Box.HSplitTop(64.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed);
+				str_format(aBuf, sizeof(aBuf), "%d/%d %s (%.1f %s/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024, Localize("KiB"), m_DownloadSpeed, Localize("KiB"));
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 				
 				// time left
