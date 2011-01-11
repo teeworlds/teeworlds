@@ -1697,7 +1697,7 @@ void CServer::ImphInit(int BufSz, int MaxMem, int PackSz, int MaxPayloadSz)
 
 		free(ImphChunk);
 		free(ImphBuf);
-		//dbg_msg("imph", "destroyed former imph buffer");
+		dbg_msg("imph", "destroyed former imph buffer");
 	}
 
 	ImphChunk = (char*)malloc(BufSz -= (BufSz % (ImphPackSz = PackSz)));

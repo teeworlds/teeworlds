@@ -107,7 +107,6 @@ void CCharacter::Destroy()
 {
 	m_Alive = false;
 	CEntity::Destroy();
-	m_DeepFreeze = false;
 }
 
 void CCharacter::SetWeapon(int W)
