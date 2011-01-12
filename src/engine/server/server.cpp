@@ -631,14 +631,14 @@ void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
 
 void CServer::SendRconResponse(const char *pLine, void *pUser)
 {
-  RconResponseInfo *pInfo = (RconResponseInfo *)pUser;
-  CServer *pThis = pInfo->m_Server;
+	RconResponseInfo *pInfo = (RconResponseInfo *)pUser;
+	CServer *pThis = pInfo->m_Server;
 	static volatile int ReentryGuard = 0;
 
 	if(ReentryGuard)
-	  return;
+		return;
 
-  ReentryGuard++;
+	ReentryGuard++;
 
 	if(pThis->m_aClients[pInfo->m_ClientId].m_State != CClient::STATE_EMPTY)
 			pThis->SendRconLine(pInfo->m_ClientId, pLine);
@@ -1378,7 +1378,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	int Minutes = 30;
-  	const char *pReason = "No reason given";
+	const char *pReason = "No reason given";
 	
 	if(pResult->NumArguments() > 1)
 		Minutes = pResult->GetInteger(1);

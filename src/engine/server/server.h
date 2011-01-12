@@ -180,8 +180,8 @@ public:
 
 	struct RconResponseInfo
 	{
-	  CServer *m_Server;
-	  int m_ClientId;
+		CServer *m_Server;
+		int m_ClientId;
 	};
 
 	void ProcessClientPacket(CNetChunk *pPacket);
