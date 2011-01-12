@@ -313,8 +313,8 @@ void CScoreboard::OnRender()
 			else if(m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed)
 				pText = Localize("Blue team wins!");
 				
-			float w = TextRender()->TextWidth(0, 92.0f, pText, -1);
-			TextRender()->Text(0, Width/2-w/2, 45, 92.0f, pText, -1);
+			float w = TextRender()->TextWidth(0, 86.0f, pText, -1);
+			TextRender()->Text(0, Width/2-w/2, 39, 86.0f, pText, -1);
 		}
 		
 		RenderScoreboard(Width/2-w-20, 150.0f, w, TEAM_RED, Localize("Red team"));
