@@ -62,7 +62,14 @@ void CHud::RenderGameTimer()
 			str_format(Buf, sizeof(Buf), "%02d:%02d.%d", Time/60, Time%60, m_DDRaceTick/10);
 		float FontSize = 10.0f;
 		float w = TextRender()->TextWidth(0, 12,"00:00.0",-1);
+		// last 60 sec red, last 10 sec blink
+		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit && Time <= 60)
+		{
+			float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
+			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
+		}
 		TextRender()->Text(0, Half-w/2, 2, FontSize, Buf, -1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 
@@ -79,64 +86,131 @@ void CHud::RenderSuddenDeath()
 }
 
 void CHud::RenderScoreHud()
-{
-	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
-	float Whole = 300*Graphics()->ScreenAspect();
-	
+{	
 	// render small score hud
-	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
+	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
 	{
-		char aScoreTeam[2][32];
-		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
-		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
-		float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
-		float Split = 3.0f;
-		float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
-		
-		for(int t = 0; t < 2; t++)
+		int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
+		float Whole = 300*Graphics()->ScreenAspect();
+
+		if(GameFlags&GAMEFLAG_TEAMS)
 		{
-			// draw box
-			Graphics()->BlendNormal();
-			Graphics()->TextureSet(-1);
-			Graphics()->QuadsBegin();
-			if(t == 0)
-				Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
-			else
-				Graphics()->SetColor(0.0f, 0.0f, 1.0f, 0.25f);
-			RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
-			Graphics()->QuadsEnd();
-
-			// draw score
-			TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreTeamWidth[t])/2-Split, 245.0f+t*20, 14.0f, aScoreTeam[t], -1);
-
-			if(GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_paFlags[t])
+			char aScoreTeam[2][32];
+			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+			float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
+			float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
+			float Split = 3.0f;
+			float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
+		
+			for(int t = 0; t < 2; t++)
 			{
-				if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
-				{
-					// draw flag
-					Graphics()->BlendNormal();
-					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-					Graphics()->QuadsBegin();
-					RenderTools()->SelectSprite(t==0?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE);
-					IGraphics::CQuadItem QuadItem(Whole-ScoreWidthMax-ImageSize, 246.0f+t*20, ImageSize/2, ImageSize);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
-				}
-				else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
-				{
-					// draw name of the flag holder
-					int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
-					const char *pName = m_pClient->m_aClients[Id].m_aName;
-					float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
-					TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
+				// draw box
+				Graphics()->BlendNormal();
+				Graphics()->TextureSet(-1);
+				Graphics()->QuadsBegin();
+				if(t == 0)
+					Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
+				else
+					Graphics()->SetColor(0.0f, 0.0f, 1.0f, 0.25f);
+				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
+				Graphics()->QuadsEnd();
 
-					// draw tee of the flag holder
-					CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
-					Info.m_Size = 18.0f;
-					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
-						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
+				// draw score
+				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreTeamWidth[t])/2-Split, 245.0f+t*20, 14.0f, aScoreTeam[t], -1);
+
+				if(GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_paFlags[t])
+				{
+					if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
+					{
+						// draw flag
+						Graphics()->BlendNormal();
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+						Graphics()->QuadsBegin();
+						RenderTools()->SelectSprite(t==0?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE);
+						IGraphics::CQuadItem QuadItem(Whole-ScoreWidthMax-ImageSize, 246.0f+t*20, ImageSize/2, ImageSize);
+						Graphics()->QuadsDrawTL(&QuadItem, 1);
+						Graphics()->QuadsEnd();
+					}
+					else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
+					{
+						// draw name of the flag holder
+						int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
+						const char *pName = m_pClient->m_aClients[Id].m_aName;
+						float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
+						TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
+
+						// draw tee of the flag holder
+						CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
+						Info.m_Size = 18.0f;
+						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+							vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
+					}
 				}
+			}
+		}
+		else
+		{
+			int Local = 1;
+			int aPos[2] = { 1, 2 };
+			const CNetObj_PlayerInfo *apPlayerInfo[2] = { m_pClient->m_Snap.m_paInfoByScore[0], 0 };
+			if(m_pClient->m_Snap.m_paInfoByScore[0])
+			{
+				if(m_pClient->m_Snap.m_paInfoByScore[0]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+				{
+					apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[1];
+					Local = 0;
+				}
+				else
+					for(int i = 1; i < MAX_CLIENTS; ++i)
+						if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+						{
+							apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[i];
+							aPos[1] = i+1;
+							break;
+						}
+			}
+			char aScore[2][32];
+			for(int t = 0; t < 2; ++t)
+			{
+				if(apPlayerInfo[t])
+					str_format(aScore[t], sizeof(aScore)/2, "%d", apPlayerInfo[t]->m_Score);
+				else
+					aScore[t][0] = 0;
+			}
+			float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1), TextRender()->TextWidth(0, 14.0f, aScore[1], -1)};
+			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1));
+			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
+		
+			for(int t = 0; t < 2; t++)
+			{
+				// draw box
+				Graphics()->BlendNormal();
+				Graphics()->TextureSet(-1);
+				Graphics()->QuadsBegin();
+				if(t == Local)
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
+				else
+					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f, 5.0f, CUI::CORNER_L);
+				Graphics()->QuadsEnd();
+
+				// draw score
+				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, 245.0f+t*20, 14.0f, aScore[t], -1);
+
+				// draw tee
+				if(apPlayerInfo[t])
+ 				{
+					CTeeRenderInfo Info = m_pClient->m_aClients[apPlayerInfo[t]->m_ClientId].m_RenderInfo;
+ 					Info.m_Size = 18.0f;
+ 					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+ 						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
+				}
+
+				// draw position
+				char aBuf[32];
+				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
+				TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-Split-PosSize, 247.0f+t*20, 10.0f, aBuf, -1);
 			}
 		}
 	}

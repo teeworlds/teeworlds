@@ -186,38 +186,38 @@ void CCharacter::HandleNinja()
 
 		// check if we Hit anything along the way
 		{
-			CCharacter *aEnts[64];
+			CCharacter *apEnts[64];
 			vec2 Dir = m_Pos - OldPos;
 			float Radius = m_ProximityRadius * 2.0f;
 			vec2 Center = OldPos + Dir * 0.5f;
-			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, 64, NETOBJTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)apEnts, 64, NETOBJTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
-				if (aEnts[i] == this)
+				if (apEnts[i] == this)
 					continue;
 
 				// make sure we haven't Hit this object before
 				bool bAlreadyHit = false;
 				for (int j = 0; j < m_NumObjectsHit; j++)
 				{
-					if (m_apHitObjects[j] == aEnts[i])
+					if (m_apHitObjects[j] == apEnts[i])
 						bAlreadyHit = true;
 				}
 				if (bAlreadyHit)
 					continue;
 
 				// check so we are sufficiently close
-				if (distance(aEnts[i]->m_Pos, m_Pos) > (m_ProximityRadius * 2.0f))
+				if (distance(apEnts[i]->m_Pos, m_Pos) > (m_ProximityRadius * 2.0f))
 					continue;
 
 				// Hit a m_pPlayer, give him damage and stuffs...
-				GameServer()->CreateSound(aEnts[i]->m_Pos, SOUND_NINJA_HIT);
+				GameServer()->CreateSound(apEnts[i]->m_Pos, SOUND_NINJA_HIT);
 				// set his velocity to fast upward (for now)
 				if(m_NumObjectsHit < 10)
-					m_apHitObjects[m_NumObjectsHit++] = aEnts[i];
+					m_apHitObjects[m_NumObjectsHit++] = apEnts[i];
 
-				aEnts[i]->TakeDamage(vec2(0, 10.0f), g_pData->m_Weapons.m_Ninja.m_pBase->m_Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
+				apEnts[i]->TakeDamage(vec2(0, 10.0f), g_pData->m_Weapons.m_Ninja.m_pBase->m_Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
 			}
 		}
 
@@ -329,39 +329,39 @@ void CCharacter::FireWeapon()
 
 			if (!g_Config.m_SvHit) break;
 
-			CCharacter *aEnts[64];
+			CCharacter *apEnts[64];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)aEnts,
+			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,
 			64, NETOBJTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
-				CCharacter *Target = aEnts[i];
+				CCharacter *pTarget = apEnts[i];
 
 				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this || !CanCollide(Target->GetPlayer()->GetCID())) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
+				if ((pTarget == this || !CanCollide(pTarget->GetPlayer()->GetCID())) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL)*/)
 					continue;
 
 				// set his velocity to fast upward (for now)
 				GameServer()->CreateHammerHit(m_Pos, Teams()->TeamMask(Team()));
-				aEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
+				apEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				vec2 Dir;
-				if (length(Target->m_Pos - m_Pos) > 0.0f)
-					Dir = normalize(Target->m_Pos - m_Pos);
+				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
+					Dir = normalize(pTarget->m_Pos - m_Pos);
 				else
 					Dir = vec2(0.f, -1.f);
-				vec2 Temp = Target->m_Core.m_Vel + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f * (m_HammerType + 1);
-				if(Temp.x > 0 && ((Target->m_TileIndex == TILE_STOP && Target->m_TileFlags == ROTATION_270) || (Target->m_TileIndexL == TILE_STOP && Target->m_TileFlagsL == ROTATION_270) || (Target->m_TileIndexL == TILE_STOPS && (Target->m_TileFlagsL == ROTATION_90 || Target->m_TileFlagsL ==ROTATION_270)) || (Target->m_TileIndexL == TILE_STOPA) || (Target->m_TileFIndex == TILE_STOP && Target->m_TileFFlags == ROTATION_270) || (Target->m_TileFIndexL == TILE_STOP && Target->m_TileFFlagsL == ROTATION_270) || (Target->m_TileFIndexL == TILE_STOPS && (Target->m_TileFFlagsL == ROTATION_90 || Target->m_TileFFlagsL == ROTATION_270)) || (Target->m_TileFIndexL == TILE_STOPA) || (Target->m_TileSIndex == TILE_STOP && Target->m_TileSFlags == ROTATION_270) || (Target->m_TileSIndexL == TILE_STOP && Target->m_TileSFlagsL == ROTATION_270) || (Target->m_TileSIndexL == TILE_STOPS && (Target->m_TileSFlagsL == ROTATION_90 || Target->m_TileSFlagsL == ROTATION_270)) || (Target->m_TileSIndexL == TILE_STOPA)))
+				vec2 Temp = pTarget->m_Core.m_Vel + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f * (m_HammerType + 1);
+				if(Temp.x > 0 && ((pTarget->m_TileIndex == TILE_STOP && pTarget->m_TileFlags == ROTATION_270) || (pTarget->m_TileIndexL == TILE_STOP && pTarget->m_TileFlagsL == ROTATION_270) || (pTarget->m_TileIndexL == TILE_STOPS && (pTarget->m_TileFlagsL == ROTATION_90 || pTarget->m_TileFlagsL ==ROTATION_270)) || (pTarget->m_TileIndexL == TILE_STOPA) || (pTarget->m_TileFIndex == TILE_STOP && pTarget->m_TileFFlags == ROTATION_270) || (pTarget->m_TileFIndexL == TILE_STOP && pTarget->m_TileFFlagsL == ROTATION_270) || (pTarget->m_TileFIndexL == TILE_STOPS && (pTarget->m_TileFFlagsL == ROTATION_90 || pTarget->m_TileFFlagsL == ROTATION_270)) || (pTarget->m_TileFIndexL == TILE_STOPA) || (pTarget->m_TileSIndex == TILE_STOP && pTarget->m_TileSFlags == ROTATION_270) || (pTarget->m_TileSIndexL == TILE_STOP && pTarget->m_TileSFlagsL == ROTATION_270) || (pTarget->m_TileSIndexL == TILE_STOPS && (pTarget->m_TileSFlagsL == ROTATION_90 || pTarget->m_TileSFlagsL == ROTATION_270)) || (pTarget->m_TileSIndexL == TILE_STOPA)))
 					Temp.x = 0;
-				if(Temp.x < 0 && ((Target->m_TileIndex == TILE_STOP && Target->m_TileFlags == ROTATION_90) || (Target->m_TileIndexR == TILE_STOP && Target->m_TileFlagsR == ROTATION_90) || (Target->m_TileIndexR == TILE_STOPS && (Target->m_TileFlagsR == ROTATION_90 || Target->m_TileFlagsR == ROTATION_270)) || (Target->m_TileIndexR == TILE_STOPA) || (Target->m_TileFIndex == TILE_STOP && Target->m_TileFFlags == ROTATION_90) || (Target->m_TileFIndexR == TILE_STOP && Target->m_TileFFlagsR == ROTATION_90) || (Target->m_TileFIndexR == TILE_STOPS && (Target->m_TileFFlagsR == ROTATION_90 || Target->m_TileFFlagsR == ROTATION_270)) || (Target->m_TileFIndexR == TILE_STOPA) || (Target->m_TileSIndex == TILE_STOP && Target->m_TileSFlags == ROTATION_90) || (Target->m_TileSIndexR == TILE_STOP && Target->m_TileSFlagsR == ROTATION_90) || (Target->m_TileSIndexR == TILE_STOPS && (Target->m_TileSFlagsR == ROTATION_90 || Target->m_TileSFlagsR == ROTATION_270)) || (Target->m_TileSIndexR == TILE_STOPA)))
+				if(Temp.x < 0 && ((pTarget->m_TileIndex == TILE_STOP && pTarget->m_TileFlags == ROTATION_90) || (pTarget->m_TileIndexR == TILE_STOP && pTarget->m_TileFlagsR == ROTATION_90) || (pTarget->m_TileIndexR == TILE_STOPS && (pTarget->m_TileFlagsR == ROTATION_90 || pTarget->m_TileFlagsR == ROTATION_270)) || (pTarget->m_TileIndexR == TILE_STOPA) || (pTarget->m_TileFIndex == TILE_STOP && pTarget->m_TileFFlags == ROTATION_90) || (pTarget->m_TileFIndexR == TILE_STOP && pTarget->m_TileFFlagsR == ROTATION_90) || (pTarget->m_TileFIndexR == TILE_STOPS && (pTarget->m_TileFFlagsR == ROTATION_90 || pTarget->m_TileFFlagsR == ROTATION_270)) || (pTarget->m_TileFIndexR == TILE_STOPA) || (pTarget->m_TileSIndex == TILE_STOP && pTarget->m_TileSFlags == ROTATION_90) || (pTarget->m_TileSIndexR == TILE_STOP && pTarget->m_TileSFlagsR == ROTATION_90) || (pTarget->m_TileSIndexR == TILE_STOPS && (pTarget->m_TileSFlagsR == ROTATION_90 || pTarget->m_TileSFlagsR == ROTATION_270)) || (pTarget->m_TileSIndexR == TILE_STOPA)))
 					Temp.x = 0;
-				if(Temp.y < 0 && ((Target->m_TileIndex == TILE_STOP && Target->m_TileFlags == ROTATION_180) || (Target->m_TileIndexB == TILE_STOP && Target->m_TileFlagsB == ROTATION_180) || (Target->m_TileIndexB == TILE_STOPS && (Target->m_TileFlagsB == ROTATION_0 || Target->m_TileFlagsB == ROTATION_180)) || (Target->m_TileIndexB == TILE_STOPA) || (Target->m_TileFIndex == TILE_STOP && Target->m_TileFFlags == ROTATION_180) || (Target->m_TileFIndexB == TILE_STOP && Target->m_TileFFlagsB == ROTATION_180) || (Target->m_TileFIndexB == TILE_STOPS && (Target->m_TileFFlagsB == ROTATION_0 || Target->m_TileFFlagsB == ROTATION_180)) || (Target->m_TileFIndexB == TILE_STOPA) || (Target->m_TileSIndex == TILE_STOP && Target->m_TileSFlags == ROTATION_180) || (Target->m_TileSIndexB == TILE_STOP && Target->m_TileSFlagsB == ROTATION_180) || (Target->m_TileSIndexB == TILE_STOPS && (Target->m_TileSFlagsB == ROTATION_0 || Target->m_TileSFlagsB == ROTATION_180)) || (Target->m_TileSIndexB == TILE_STOPA)))
+				if(Temp.y < 0 && ((pTarget->m_TileIndex == TILE_STOP && pTarget->m_TileFlags == ROTATION_180) || (pTarget->m_TileIndexB == TILE_STOP && pTarget->m_TileFlagsB == ROTATION_180) || (pTarget->m_TileIndexB == TILE_STOPS && (pTarget->m_TileFlagsB == ROTATION_0 || pTarget->m_TileFlagsB == ROTATION_180)) || (pTarget->m_TileIndexB == TILE_STOPA) || (pTarget->m_TileFIndex == TILE_STOP && pTarget->m_TileFFlags == ROTATION_180) || (pTarget->m_TileFIndexB == TILE_STOP && pTarget->m_TileFFlagsB == ROTATION_180) || (pTarget->m_TileFIndexB == TILE_STOPS && (pTarget->m_TileFFlagsB == ROTATION_0 || pTarget->m_TileFFlagsB == ROTATION_180)) || (pTarget->m_TileFIndexB == TILE_STOPA) || (pTarget->m_TileSIndex == TILE_STOP && pTarget->m_TileSFlags == ROTATION_180) || (pTarget->m_TileSIndexB == TILE_STOP && pTarget->m_TileSFlagsB == ROTATION_180) || (pTarget->m_TileSIndexB == TILE_STOPS && (pTarget->m_TileSFlagsB == ROTATION_0 || pTarget->m_TileSFlagsB == ROTATION_180)) || (pTarget->m_TileSIndexB == TILE_STOPA)))
 					Temp.y = 0;
-				if(Temp.y > 0 && ((Target->m_TileIndex == TILE_STOP && Target->m_TileFlags == ROTATION_0) || (Target->m_TileIndexT == TILE_STOP && Target->m_TileFlagsT == ROTATION_0) || (Target->m_TileIndexT == TILE_STOPS && (Target->m_TileFlagsT == ROTATION_0 || Target->m_TileFlagsT == ROTATION_180)) || (Target->m_TileIndexT == TILE_STOPA) || (Target->m_TileFIndex == TILE_STOP && Target->m_TileFFlags == ROTATION_0) || (Target->m_TileFIndexT == TILE_STOP && Target->m_TileFFlagsT == ROTATION_0) || (Target->m_TileFIndexT == TILE_STOPS && (Target->m_TileFFlagsT == ROTATION_0 || Target->m_TileFFlagsT == ROTATION_180)) || (Target->m_TileFIndexT == TILE_STOPA) || (Target->m_TileSIndex == TILE_STOP && Target->m_TileSFlags == ROTATION_0) || (Target->m_TileSIndexT == TILE_STOP && Target->m_TileSFlagsT == ROTATION_0) || (Target->m_TileSIndexT == TILE_STOPS && (Target->m_TileSFlagsT == ROTATION_0 || Target->m_TileSFlagsT == ROTATION_180)) || (Target->m_TileSIndexT == TILE_STOPA)))
+				if(Temp.y > 0 && ((pTarget->m_TileIndex == TILE_STOP && pTarget->m_TileFlags == ROTATION_0) || (pTarget->m_TileIndexT == TILE_STOP && pTarget->m_TileFlagsT == ROTATION_0) || (pTarget->m_TileIndexT == TILE_STOPS && (pTarget->m_TileFlagsT == ROTATION_0 || pTarget->m_TileFlagsT == ROTATION_180)) || (pTarget->m_TileIndexT == TILE_STOPA) || (pTarget->m_TileFIndex == TILE_STOP && pTarget->m_TileFFlags == ROTATION_0) || (pTarget->m_TileFIndexT == TILE_STOP && pTarget->m_TileFFlagsT == ROTATION_0) || (pTarget->m_TileFIndexT == TILE_STOPS && (pTarget->m_TileFFlagsT == ROTATION_0 || pTarget->m_TileFFlagsT == ROTATION_180)) || (pTarget->m_TileFIndexT == TILE_STOPA) || (pTarget->m_TileSIndex == TILE_STOP && pTarget->m_TileSFlags == ROTATION_0) || (pTarget->m_TileSIndexT == TILE_STOP && pTarget->m_TileSFlagsT == ROTATION_0) || (pTarget->m_TileSIndexT == TILE_STOPS && (pTarget->m_TileSFlagsT == ROTATION_0 || pTarget->m_TileSFlagsT == ROTATION_180)) || (pTarget->m_TileSIndexT == TILE_STOPA)))
 					Temp.y = 0;
-				Target->m_Core.m_Vel = Temp;
-				Target->UnFreeze();
+				pTarget->m_Core.m_Vel = Temp;
+				pTarget->UnFreeze();
 				Hits++;
 			}
 
@@ -373,7 +373,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GUN:
 		{
-			CProjectile *Proj = new CProjectile
+			CProjectile *pProj = new CProjectile
 				(
 				GameWorld(),
 				WEAPON_GUN,//Type
@@ -390,7 +390,7 @@ void CCharacter::FireWeapon()
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
-			Proj->FillInfo(&p);
+			pProj->FillInfo(&p);
 
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(1);
@@ -418,7 +418,7 @@ void CCharacter::FireWeapon()
 				a += Spreading[i+2];
 				float v = 1-(absolute(i)/(float)ShotSpread);
 				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
-				CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
+				CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
 					m_pPlayer->GetCID(),
 					ProjStartPos,
 					vec2(cosf(a), sinf(a))*Speed,
@@ -427,7 +427,7 @@ void CCharacter::FireWeapon()
 
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
-				Proj->FillInfo(&p);
+				pProj->FillInfo(&p);
 
 				for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
 					Msg.AddInt(((int *)&p)[i]);
@@ -440,7 +440,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GRENADE:
 		{
-				CProjectile *Proj = new CProjectile
+				CProjectile *pProj = new CProjectile
 					(
 					GameWorld(),
 					WEAPON_GRENADE,//Type
@@ -457,7 +457,7 @@ void CCharacter::FireWeapon()
 
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
-				Proj->FillInfo(&p);
+				pProj->FillInfo(&p);
 
 				CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 				Msg.AddInt(1);
@@ -1166,15 +1166,15 @@ void CCharacter::HandleTiles(int Index)
 		m_Core.m_Vel = vec2(0,0);
 		return;
 	}
-	// handle death-tiles
+	// handle death-tiles and leaving gamelayer
 	if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 			GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 			GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-			GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 			GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 			GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 			GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-			GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)&&
+			GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH || 
+			GameLayerClipped(m_Pos)) &&
 			!m_Super)
 		{
 			Die(m_pPlayer->GetCID(), WEAPON_WORLD);

@@ -963,6 +963,9 @@ no limit
 Name plates size
 == 
 
+Unable to delete the demo
+== 
+
 ##### old translations #####
 
 ##### DDRace #####
