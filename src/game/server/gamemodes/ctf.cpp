@@ -92,8 +92,8 @@ void CGameControllerCTF::Tick()
 		if(!F)
 			continue;
 		
-		// flag hits death-tile, reset it
-		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH)
+		// flag hits death-tile or left the game layer, reset it
+		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
 			GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
 			F->Reset();

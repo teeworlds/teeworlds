@@ -985,6 +985,9 @@ Name plates size
 == 
 >>>>>>> 544eb124c1a980c67f7a774af038cae9fb6d0c9b
 
+Unable to delete the demo
+== 
+
 ##### old translations #####
 
 ##### DDRace #####

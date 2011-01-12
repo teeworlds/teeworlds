@@ -264,7 +264,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 {
 	while(pStr && *pStr)
 	{
-		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
+		CResult Result;
 		const char *pEnd = pStr;
 		const char *pNextPart = 0;
 		int InString = 0;
@@ -292,24 +292,24 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 			pEnd++;
 		}
 		
-		if(ParseStart(pResult, pStr, (pEnd-pStr) + 1) != 0)
+		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
-		CCommand *pCommand = FindCommand(pResult->m_pCommand, m_FlagMask);
+		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
 		{
 			int IsStrokeCommand = 0;
-			if(pResult->m_pCommand[0] == '+')
+			if(Result.m_pCommand[0] == '+')
 			{
 				// insert the stroke direction token
-				pResult->AddArgument(m_paStrokeStr[Stroke]);
+				Result.AddArgument(m_paStrokeStr[Stroke]);
 				IsStrokeCommand = 1;
 			}
 			
 			if(Stroke || IsStrokeCommand)
 			{
-				if(ParseArgs(pResult, pCommand->m_pParams))
+				if(ParseArgs(&Result, pCommand->m_pParams))
 				{
 					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 					char aBuf[256];
@@ -319,14 +319,15 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 				}
 				else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
 				{
+					m_ExecutionQueue.AddEntry();
 					m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
 					m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
-					m_ExecutionQueue.AddEntry();
+					m_ExecutionQueue.m_pLast->m_Result = Result;
 				}
 				else 
 				{
-					if(pResult->GetVictim() == CResult::VICTIM_ME)
-						pResult->SetVictim(ClientId);
+					if(Result.GetVictim() == CResult::VICTIM_ME)
+						Result.SetVictim(ClientId);
 					
 					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD)))
 					{
@@ -346,7 +347,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 
 						ReleaseAlternativePrintResponseCallback();
 					}					
-					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
+					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && Result.GetVictim() != ClientId)
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "As a helper you can't use commands on others.");
@@ -369,19 +370,19 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					}
 					else
 					{
-						if (pResult->HasVictim())
+						if (Result.HasVictim())
 						{
-							if(pResult->GetVictim() == CResult::VICTIM_ALL)
+							if(Result.GetVictim() == CResult::VICTIM_ALL)
 							{
 								for (int i = 0; i < MAX_CLIENTS; i++)
 								{
 									if (ClientOnline(i) && CompareClients(ClientLevel, i))
 									{
-										pResult->SetVictim(i);
+										Result.SetVictim(i);
 										RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
 										RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
-										pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+										pCommand->m_pfnCallback(&Result, pCommand->m_pUserData, ClientId);
 
 										ReleaseAlternativePrintResponseCallback();
 										ReleaseAlternativePrintCallback();
@@ -390,13 +391,13 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 							}
 							else
 							{
-								if (!ClientOnline(pResult->GetVictim()))
+								if (!ClientOnline(Result.GetVictim()))
 								{
 									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "client is offline");
 									ReleaseAlternativePrintResponseCallback();
 								}
-								else if (!CompareClients(ClientLevel, pResult->GetVictim()) && ClientId != pResult->GetVictim())
+								else if (!CompareClients(ClientLevel, Result.GetVictim()) && ClientId != Result.GetVictim())
 								{
 									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "you can not use commands on players with the same or higher level than you");
@@ -407,7 +408,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 									RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
 									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
-									pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+									pCommand->m_pfnCallback(&Result, pCommand->m_pUserData, ClientId);
 
 									ReleaseAlternativePrintResponseCallback();
 									ReleaseAlternativePrintCallback();
@@ -419,7 +420,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 							RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
 							RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
-							pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+							pCommand->m_pfnCallback(&Result, pCommand->m_pUserData, ClientId);
 
 							ReleaseAlternativePrintResponseCallback();
 							ReleaseAlternativePrintCallback();
@@ -433,7 +434,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 			RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "No such command: %s.", pResult->m_pCommand);
+			str_format(aBuf, sizeof(aBuf), "No such command: %s.", Result.m_pCommand);
 			PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 
 			ReleaseAlternativePrintResponseCallback();
@@ -762,7 +763,7 @@ void CConsole::StoreCommands(bool Store, int ClientId)
 {
 	if(!Store)
 	{
-		for(CExecutionQueue::CQueueEntry *pEntry = m_ExecutionQueue.m_pFirst; pEntry != m_ExecutionQueue.m_pLast; pEntry = pEntry->m_pNext)
+		for(CExecutionQueue::CQueueEntry *pEntry = m_ExecutionQueue.m_pFirst; pEntry; pEntry = pEntry->m_pNext)
 			pEntry->m_pfnCommandCallback(&pEntry->m_Result, pEntry->m_pCommandUserData, ClientId);
 		m_ExecutionQueue.Reset();
 	}

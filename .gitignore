@@ -1,13 +1,13 @@
-*.imphdump
-*.orig
-*.exe
-*.rej
+bam
 .bam
 config.lua
 datasrc/__pycache__
 datasrc/*.pyc
 objs
 src/game/generated
+SDL.dll
+autoexec.cfg
+
 crapnet*
 dilate*
 fake_server*
@@ -22,11 +22,10 @@ versionsrv*
 Debug
 bam
 build server.bat
+buildlog.txt
 autoexec.cfg
 bam.exe
 *.bat
-teeworlds_d
-teeworlds_srv_d
 DDRace*
 DDRace-Server*
 .cproject
@@ -48,3 +47,5 @@ DDRace-Server*
 *.user
 *.cmd
 .settings
+
+

@@ -1,0 +1,970 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d/%d servere, %d jucători
+
+%d%% loaded
+== %d%% încărcat
+
+%ds left
+== %ds a ieșit
+
+%i minute left
+== %i minute rămas
+
+%i minutes left
+== %i minutes rămase
+
+%i second left
+== %i secundă rămasă
+
+%i seconds left
+== %i secunde rămase
+
+%s Right click for context menu.
+== %s Clic dreapta pentru meniul contextual.
+
+Abort
+== Anulează
+
+Add
+== Adaugă
+
+Add Image
+== Adaugă o imagine
+
+Add Quad
+== Adaugă quad
+
+Add group
+== Adaugă un grup
+
+Add quads layer
+== Adaugă strat quad-uri
+
+Add tile layer
+== Adaugă strat cu plăci
+
+Address
+== Adresa
+
+Adds a new group
+== Adaugă un grup nou
+
+Adds a new quad
+== Adaugă un nou quad
+
+All
+== Toți
+
+Alpha
+== Alfa
+
+Alpha value of the envelope
+== Valoarea alfa a plicului
+
+Always show name plates
+== Afișează întotdeauna pseudonimele
+
+Anim
+== Anim.
+
+Append
+== Adaugă
+
+Append map
+== Adaugă unei hărți
+
+Are you sure that you want to delete the demo?
+== Sigur vrei să ștergi demo-ul?
+
+Are you sure that you want to quit?
+== Sigur vrei să ieși?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Aceasta fiind prima lansare a jocului, te rog introdu-ți pseudonimul mai jos. E recomandat să verifici setările și să le ajustezi cum vrei înainte să intri pe un server.
+
+Aspect ratio
+== Rația de aspect
+
+Automatically record demos
+== Înregistrează automat demo-uri
+
+Automatically take game over screenshot
+== Fă automat o captură de ecran la final
+
+Blue team
+== Echipa albastră
+
+Blue team wins!
+== Echipa albastră a câștigat!
+
+Blue value of the envelope
+== Valoarea albastră a plicului
+
+Body
+== Corp
+
+Border
+== Bordură
+
+CCW
+== ST
+
+CW
+== DR
+
+Call vote
+== Votează
+
+Cancel
+== Anulează
+
+Chat
+== Chat
+
+Clear collision
+== Curăță coliziunea
+
+Clip H
+== Î clip
+
+Clip W
+== L clip
+
+Clip X
+== X clip
+
+Clip Y
+== Y clip
+
+Close
+== Închide
+
+Color
+== Culoare
+
+Color Env
+== Culoare Env
+
+Color TO
+== Culoare TO
+
+Color+
+== Culoare+
+
+Compatible version
+== Versiune compatibilă
+
+Connect
+== Conectează
+
+Connecting to
+== Conectare la
+
+Connection Problems...
+== Probleme la conexiune...
+
+Console
+== Consolă
+
+Constructs collision from this layer
+== Construiește coliziunea din acest strat
+
+Controls
+== Controale
+
+Creates a new color envelope
+== Creează un plic într-o culoare nouă
+
+Creates a new map
+== Creează o hartă nouă
+
+Creates a new pos envelope
+== Creează un nou plic poz
+
+Creates a new quad layer
+== Creează un nou strat quad
+
+Creates a new tile layer
+== Creează un nou strat de plăci
+
+Current
+== Curent
+
+Current version: %s
+== Versiunea actuală : %s
+
+Custom colors
+== Culori personalizate
+
+Decrease
+== Redu
+
+Decrease animation speed
+== Redu viteza animațiilor
+
+Delete
+== Șterge
+
+Delete demo
+== Șterge demonstrația
+
+Delete group
+== Șterge grupul
+
+Delete layer
+== Șterge stratul
+
+Delete this envelope
+== Șterge acest plic
+
+Deletes the current quad
+== Șterge acest quad
+
+Deletes the layer
+== Șterge stratul
+
+Demos
+== Demo
+
+Detail
+== Detalii
+
+Disconnect
+== Deconectare
+
+Disconnected
+== Deconectat
+
+Display Modes
+== Moduri de afișare
+
+Down
+== Jos
+
+Downloading map
+== Se descarcă harta
+
+Draw!
+== Egalitate!
+
+Dynamic Camera
+== Cameră dinamică
+
+Embed
+== Integrează
+
+Embedded
+== Integrat
+
+Embeds the image into the map file.
+== Integrează imaginea în fișierul hărții.
+
+Emoticon
+== Figurine
+
+Enable/disable group for saving
+== Comută salvarea grupului
+
+Enable/disable layer for saving
+== Comută salvarea stratului
+
+Enter
+== Intră
+
+Envelopes
+== Plicuri
+
+Error
+== Eroare
+
+Error loading demo
+== Eroare la încărcarea demo-ului
+
+Exit
+== Ieșire
+
+Exits from the editor
+== Închide editorul
+
+External
+== Extern
+
+FSAA samples
+== Eșantioane FSAA
+
+Favorite
+== Favorit
+
+Favorites
+== Favorite
+
+Feet
+== Picioare
+
+File
+== Fișier
+
+File: %s
+== Fișier : %s
+
+Filename:
+== Numele fișierului:
+
+Filter
+== Filtre
+
+Fire
+== Foc
+
+Folder
+== Dosar
+
+Force vote
+== Forțează votul
+
+Fullscreen
+== Ecrat complet
+
+Game
+== Joc
+
+Game info
+== Informații joc
+
+Game over
+== Final de joc
+
+Game type
+== Tip de joc
+
+Game types:
+== Tipuri de joc:
+
+General
+== General
+
+Graphics
+== Grafică
+
+Green value of the envelope
+== Valoarea verde a plicului
+
+Grenade
+== Grenade
+
+Group
+== Grup
+
+HD
+== HD
+
+Hammer
+== Ciocan
+
+Has people playing
+== Are jucători activi
+
+Height
+== Înălțime
+
+High Detail
+== Detalii înalte
+
+Hook
+== Cârlig
+
+Host address
+== Adresa gazdei
+
+Hue
+== Tentă
+
+Image
+== Imagine
+
+Images
+== Imagini
+
+Increase
+== Mărește
+
+Increase animation speed
+== Mărește viteza animației
+
+Info
+== Informații
+
+Internet
+== Internet
+
+Invalid Demo
+== Demo nevalid
+
+Join blue
+== La albaștri
+
+Join game
+== Intră în joc
+
+Join red
+== La roșii
+
+Jump
+== Salt
+
+Kick
+== Dă afară
+
+LAN
+== LAN
+
+Language
+== Limba
+
+Layers
+== Straturi
+
+Left
+== Stânga
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Clic stânga pentru mutare. Ține Shift pentru mutare pibot. Ține Ctrl pentru rotire.
+
+Left mouse button to move. Hold shift to move the texture.
+== Clic stânga pentru mutare. Ține Shift pentru mutarea texturii.
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Clic stânga pentru tragere. Ține Ctrl pentru precizie. Ține Shift pentru modificarea timpului. Clic dreapta pentru ștergere.
+
+Lht.
+== Lum.
+
+Load
+== Încarcă
+
+Load a new image to use in the map
+== Încarcă o imagine pentru utilizarea pe hartă
+
+Load map
+== Încarcă o hartă
+
+Loading
+== Se încarcă
+
+MOTD
+== Mesajul zilei
+
+Make collision
+== Creează coliziunea
+
+Make external
+== Fă-o externă
+
+Map
+== Hartă
+
+Max Screenshots
+== Număr maxim de capturi de ecran
+
+Max demos
+== Număr maxim de demo-uri
+
+Maximum ping:
+== Ping maxim:
+
+Miscellaneous
+== Diverse
+
+Mouse sens.
+== Sensib. maus
+
+Move left
+== Mută la stânga
+
+Move right
+== Mută la dreapta
+
+Movement
+== Mișcare
+
+Mute when not active
+== Mută la inactivate
+
+Name
+== Nume
+
+Name plates size
+== Dimensiune nume placă
+
+Name:
+== Nume:
+
+New
+== Nou
+
+New folder
+== Dosar nou
+
+News
+== Știri
+
+Next Envelope
+== Plicul următor
+
+Next weapon
+== Arma următoare
+
+Nickname
+== Pseudonim
+
+No
+== Nu
+
+No password
+== Fără parolă
+
+No servers found
+== Nici un server găsit
+
+No servers match your filter criteria
+== Nici un server nu corespunde criteriilor
+
+None
+== Niciunul
+
+Normal animation speed
+== Viteza normală a animațiilor
+
+Ok
+== Bine
+
+Open
+== Deschide
+
+Opens a map and adds everything from that map to the current one
+== Deschide o hartă și adaugă totul de pe ea pe cea curentă
+
+Opens a map for editing
+== Deschide o hartă pentru editare
+
+Order
+== Ordine
+
+Para X
+== Para X
+
+Para Y
+== Para Y
+
+Parent Folder
+== Dosarul părinte
+
+Password
+== Parolă
+
+Password incorrect
+== Parolă incorectă
+
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Joacă
+
+Player
+== Jucător
+
+Players
+== Jucători
+
+Please balance teams!
+== Echilibrați echipele!
+
+Pos X
+== Poz X
+
+Pos Y
+== Poz Y
+
+Pos. Env
+== Poz Env
+
+Pos. TO
+== Poz TO
+
+Pos.+
+== Pos.+
+
+Press right mouse button to create a new point
+== Clic-dreapta pentru crearea unui punct nou
+
+Prev. weapon
+== Arma precedentă
+
+Previous Envelope
+== Plicul anterior
+
+Proof
+== Negativ
+
+Quads
+== Quad-uri
+
+Quality Textures
+== Texturi de înaltă calitate
+
+Quick search:
+== Căutare rapidă:
+
+Quit
+== Ieșire
+
+REC
+== REC
+
+Reason:
+== Motiv:
+
+Record demo
+== Înreg. demo
+
+Red team
+== Echipa roșie
+
+Red team wins!
+== Echipa roșie a câștigat!
+
+Red value of the envelope
+== Valoarea roșie a plicului
+
+Refocus
+== Refocus
+
+Refresh
+== Reîncarcă
+
+Refreshing master servers
+== Reîncarcă serverele principale
+
+Remote console
+== Consolă server
+
+Remove
+== Elimină
+
+Removes collision from this layer
+== Elimină coliziunea din acest strat
+
+Removes the image from the map
+== Elimină imaginea din hartă
+
+Removes the image from the map file.
+== Elimină imaginea din fișierul hărții.
+
+Replace
+== Înlocuiește
+
+Replace Image
+== Înlocuiește imaginea
+
+Replaces the image with a new one
+== Înlocuiește imaginea cu una nouă
+
+Reset filter
+== Filtru implicit
+
+Reset to defaults
+== Setări implicite
+
+Resizes the current Quad based on the aspect ratio of the image
+== Redimensionează quad-ul curent în baza rației de aspect a imaginii
+
+Rifle
+== Mitralieră
+
+Right
+== Dreapta
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Rotația pensulei în grade. Folosește butonul stânga al mausului pentru a trage și modifica valoarea. Ține Shift pentru precizie.
+
+Rotation of the envelope
+== Rotirea plicului
+
+Round
+== Runda
+
+Sample rate
+== Frecvența
+
+Sat.
+== Sat.
+
+Save
+== Salvează
+
+Save As
+== Salvează ca
+
+Save map
+== Salvează harta
+
+Saves the current map
+== Salvează harta curentă
+
+Saves the current map under a new name
+== Salvează harta curentă sub un nume nou
+
+Score
+== Scor
+
+Score board
+== Scoruri
+
+Score limit
+== Limita de scor
+
+Scoreboard
+== Scoruri
+
+Screenshot
+== Captură de ecran
+
+Select group. Right click for properties.
+== Alege un grup. Clic-dreapta pentru proprietăți.
+
+Select image
+== Alege o imagine
+
+Select layer. Right click for properties.
+== Alege un strat. Clic-dreapta pentru prorpietăți.
+
+Server details
+== Detalii server
+
+Server info
+== Info. server
+
+Server not full
+== Are locuri libere
+
+Settings
+== Setări
+
+Shift
+== Shift
+
+Shotgun
+== Pușcă
+
+Show chat
+== Afișare chat
+
+Show name plates
+== Arată pseudonimele
+
+Show only supported
+== Arată doar modurile suportate
+
+Skins
+== Costume
+
+Sound
+== Sunet
+
+Sound volume
+== Volum sunet
+
+Spectate
+== Spectator
+
+Spectators
+== Spectatori
+
+Square
+== Pătrat
+
+Squares the current quad
+== Fă pătrat quad-ul curent
+
+Standard gametype
+== Jocuri standard
+
+Standard map
+== Hărți standard
+
+Stop record
+== Stop înreg.
+
+Sudden Death
+== Moarte subită
+
+Switch between images and layers managment.
+== Comută între gestiune imagini și straturi.
+
+Switch curve type
+== Comută tipul de curbă
+
+Switch weapon on pickup
+== Schimbă arma la găsire
+
+Team
+== Echipa
+
+Team chat
+== Chat cu echipa
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s este lansat! Descarcă-l de la www.teeworlds.com!
+
+Texture Compression
+== Compresie texturi
+
+The server is running a non-standard tuning on a pure game type.
+== Serverul folosește parametri ne-standard într-un joc standard.
+
+Tiles
+== Plăci
+
+Time limit
+== Timp limită
+
+Time limit: %d min
+== Timp limită : %d min
+
+Toggle group visibility
+== Comută vizibilitatea grupului
+
+Toggle layer visibility
+== Comută vizibilitatea stratului
+
+Toggles the envelope editor.
+== Comută editorul de plicuri.
+
+Try again
+== Reîncearcă
+
+Type
+== Tip
+
+UI Color
+== Culoare meniu
+
+Up
+== Sus
+
+Use Clipping
+== Folosește decuparea
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Folosește butonul stâng al mausului pentru a trage și schimba valoarea culorii. Ține Shift pentru precizie.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Folosește butonul stâng al mausului pentru a trage și schimba valoarea. Ține Shift pentru precizie.
+
+Use left mouse button to drag and create a brush.
+== Folosește butonul stâng al mausului pentru a trage și crea o pensulă.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Folosește butonul stâng al mausului pentru a picta cu pensula. Clic dreapta curăță pensula.
+
+Use sounds
+== Folosește sunetul
+
+V-Sync
+== Sincronizare verticală (V-Sync)
+
+Version
+== Versiune
+
+Vote no
+== Votează nu
+
+Vote yes
+== Votează da
+
+Voting
+== Votare
+
+Warmup
+== Încălzire
+
+Weapon
+== Arme
+
+Welcome to Teeworlds
+== Bun venit în Teeworlds
+
+Width
+== Lățime
+
+X-axis of the envelope
+== Axa-X a plicului
+
+Y-axis of the envelope
+== Axa-Y a plicului
+
+Yes
+== Da
+
+You must restart the game for all settings to take effect.
+== Trebuie să repornești jocul pentru aplicarea setărilor.
+
+Your skin
+== Costumul tău
+
+ZI
+== MA
+
+ZO
+== MI
+
+[HOME] Restore map focus
+== [HOME] Restaurează focusul hărții
+
+[M] Flip brush vertical
+== [M] Întoarce pe verticală
+
+[N] Flip brush horizontal
+== [N] Întoarce pe orizontală
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Focalizare normală și eliminare deplasament editor
+
+[NumPad+] Zoom in
+== [Numeric+] Mărire
+
+[NumPad-] Zoom out
+== [Numeric-] Micșorare
+
+[R] Rotates the brush counter clockwise
+== [R] Rotește peria spre stânga
+
+[T] Rotates the brush clockwise
+== [T] Rotește peria spre dreapta
+
+[ctrl+h] Toggle High Detail
+== [Ctrl+H] Comută detaliile înalte
+
+[ctrl+m] Toggle animation
+== [Ctrl+M] Comută animația
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [Ctrl+P] Comută bordurile negativului. Aceste borduri reprezintă maximul vizibil jucătorilor.
+
+no limit
+== fără limită
+
+##### needs translation #####
+
+Unable to delete the demo
+== 
+
+##### old translations #####
+

@@ -939,6 +939,9 @@ Tiles
 Time limit: %d min
 == 
 
+Unable to delete the demo
+== 
+
 Up
 == 
 

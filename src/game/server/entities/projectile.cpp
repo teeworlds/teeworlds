@@ -120,7 +120,7 @@ void CProjectile::Tick()
 	{
 			TeamMask = OwnerChar->Teams()->TeamMask( OwnerChar->Team());
 	}
-	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
+	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide || GameLayerClipped(CurPos)) && !isWeaponCollide)//TODO:TEAM
 	{
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
