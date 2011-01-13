@@ -777,9 +777,7 @@ void CCharacter::Tick()
 	}
 	
 	m_DoSplash = false;
-	if (g_Config.m_SvEndlessDrag || m_TileIndex == TILE_ENDON || m_TileFIndex == TILE_ENDON)
-		m_Core.m_HookTick = 0;
-	if (!g_Config.m_SvEndlessDrag && m_TileIndex == TILE_ENDON || g_Config.m_SvEndlessDrag && m_TileFIndex == TILE_ENDON)
+	if (g_Config.m_SvEndlessDrag)
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1;
@@ -827,7 +825,6 @@ void CCharacter::Tick()
 					str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
 					
 					CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-					m_Core.m_HookTick = 0;
 					str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
 					str_format(aTmp, sizeof(aTmp), "%s %s", (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
 					GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
@@ -1021,10 +1018,6 @@ void CCharacter::HandleTiles(int Index)
 	{
 		m_DeepFreeze = false;
 	}
-	/*else if((m_TileIndex == TILE_ENDOFF) || (m_TileFIndex == TILE_ENDOFF))
-	{
-	!m_Core.m_HookTick = 0;
-	}*/
 	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndexL).x)
