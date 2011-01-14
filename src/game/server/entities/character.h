@@ -125,6 +125,7 @@ public:
 	bool m_DeepFreeze;
 	int lastup;
 	int m_Doored;
+	bool m_EndlessHook;
 
 	vec2 m_OldPos;
 	vec2 m_OlderPos;
