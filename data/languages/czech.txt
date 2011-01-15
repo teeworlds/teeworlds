@@ -190,8 +190,8 @@ Language
 Lht.
 == Světel.
 
-Loading
-== Nahrávám
+Loading DDRace Client
+== Nahrávám DDRace
 
 MOTD
 == MOTD
@@ -465,6 +465,12 @@ Add Image
 Add Quad
 == 
 
+Add Quads Layer
+== 
+
+Add Tile Layer
+== 
+
 Add group
 == 
 
@@ -508,6 +514,9 @@ Blue value of the envelope
 == 
 
 Border
+== 
+
+Browser
 == 
 
 CCW
@@ -640,6 +649,9 @@ File: %s
 == 
 
 Filename:
+== 
+
+Filter gametype strict
 == 
 
 Folder
@@ -968,8 +980,6 @@ no limit
 
 ##### old translations #####
 
-##### DDRace #####
-
-Loading DDRace Client
-== Nahrávám DDRace
+Loading
+== Nahrávám
 

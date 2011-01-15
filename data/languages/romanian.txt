@@ -451,9 +451,6 @@ Load a new image to use in the map
 Load map
 == Încarcă o hartă
 
-Loading
-== Se încarcă
-
 MOTD
 == Mesajul zilei
 
@@ -963,8 +960,26 @@ no limit
 
 ##### needs translation #####
 
+Add Quads Layer
+== 
+
+Add Tile Layer
+== 
+
+Browser
+== 
+
+Filter gametype strict
+== 
+
+Loading DDRace Client
+== 
+
 Unable to delete the demo
 == 
 
 ##### old translations #####
+
+Loading
+== Se încarcă
 

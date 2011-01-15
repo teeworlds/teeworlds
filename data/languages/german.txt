@@ -439,8 +439,8 @@ Load a new image to use in the map
 Load map
 == Karte laden
 
-Loading
-== Laden
+Loading DDRace Client
+== Lade DDRace
 
 MOTD
 == Nachricht des Tages
@@ -943,13 +943,8 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [Strg+P] Schaltet Testrahmen um. Diese Rahmen zeigen, wie viel der Spieler höchstens sehen kann.
 
-<<<<<<< HEAD
-Loading DDRace Client
-== Lade DDRace Client
-=======
 no limit
 == Keine Begrenzung
->>>>>>> 544eb124c1a980c67f7a774af038cae9fb6d0c9b
 
 ##### needs translation #####
 
@@ -965,9 +960,31 @@ no limit
 %i seconds left
 == 
 
-<<<<<<< HEAD
-left
-== noch
+Add Quads Layer
+== 
+
+Add Tile Layer
+== 
+
+Browser
+== 
+
+Filter gametype strict
+== 
+
+Name plates size
+== 
+
+Unable to delete the demo
+== 
+
+##### old translations #####
+
+Loading
+== Laden
+
+second
+== Sekunde
 
 minute
 == Minute
@@ -975,23 +992,12 @@ minute
 minutes
 == Minuten
 
-no limit
-== Keine Begrenzung
-
-second
-== Sekunde
-=======
-Name plates size
-== 
 >>>>>>> 544eb124c1a980c67f7a774af038cae9fb6d0c9b
-
-Unable to delete the demo
 == 
 
-##### old translations #####
+<<<<<<< HEAD
+== t
 
-##### DDRace #####
-
-Loading DDRace Client
-== Lade DDRace
+left
+== noch
 
