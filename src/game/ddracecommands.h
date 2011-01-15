@@ -12,6 +12,7 @@ CONSOLE_COMMAND("helper", "v", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates 
 CONSOLE_COMMAND("moder", "v", CFGFLAG_SERVER, ConSetlvl2, this, "Authenticates player v to the level of 2", 3)
 CONSOLE_COMMAND("admin", "v", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player v to the level of 3 (CAUTION: Irreversible, once he is an admin you can't remove his status)", 3)
 CONSOLE_COMMAND("mute", "vi", CFGFLAG_SERVER, ConMute, this, "Mutes player v for i seconds", 2)
+CONSOLE_COMMAND("unmute", "v", CFGFLAG_SERVER, ConUnmute, this, "Unmutes player v", 2)
 CONSOLE_COMMAND("invis", "v", CFGFLAG_SERVER|CMDFLAG_CHEAT|CMDFLAG_HELPERCMD, ConInvis, this, "Makes player v invisible", 2)
 CONSOLE_COMMAND("vis", "v", CFGFLAG_SERVER|CMDFLAG_CHEAT|CMDFLAG_HELPERCMD, ConVis, this, "Makes player v visible again", 2)
 CONSOLE_COMMAND("timerstop", "v", CFGFLAG_SERVER|CMDFLAG_TIMER, ConTimerStop, this, "Stops the timer of player v", 2)

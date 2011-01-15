@@ -60,6 +60,7 @@ class CGameContext : public IGameServer
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	static void ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConUnmute(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int ClientId);

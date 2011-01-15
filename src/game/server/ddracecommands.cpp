@@ -68,6 +68,23 @@ void CGameContext::MoveCharacter(int ClientId, int Victim, int X, int Y, bool Ra
 	if(!g_Config.m_SvCheatTime)
 		pChr->m_DDRaceState = DDRACE_CHEAT;
 }
+void CGameContext::ConUnmute(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Victim = pResult->GetVictim();
+	char aBuf[512];
+	
+	if(Victim == ClientId) {
+		pSelf->SendChatTarget(ClientId, "You can't unmute yourself");
+	}
+	else 	{
+	if(pSelf->m_apPlayers[Victim]->m_Muted > 0)
+	{
+		pSelf->m_apPlayers[Victim]->m_Muted = 0;
+		str_format(aBuf, sizeof(aBuf), "%s has been unmuted", pSelf->Server()->ClientName(Victim));
+		pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	}	}
+}
 
 void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
@@ -713,12 +730,11 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
-	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	
 	if(g_Config.m_SvPauseable)
 	{
 		CCharacter* chr = pPlayer->GetCharacter();
-		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved && pChr->m_DeepFreeze == false)
+		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
 				pPlayer->SaveCharacter();
@@ -738,7 +754,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use pause while you are a ninja":(!chr->IsGrounded())?"You can't use pause while you are a in air":"You can't use pause while you are deepfrozen or moving.");
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use pause while you are a ninja":(!chr->IsGrounded())?"You can't use pause while you are a in air":"You can't use pause while you are moving.");
 		else
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No pause data saved.");
 	}
