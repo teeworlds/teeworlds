@@ -20,20 +20,19 @@ public:
 	};
 	
 private:
-	struct CGhostList
+	struct CGhostItem
 	{
 		int m_ID;
-		CNetObj_ClientInfo m_GhostInfo;
-		array<CNetObj_Character> m_BestPath;
+		CNetObj_ClientInfo m_Info;
+		array<CNetObj_Character> m_Path;
+		
+		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
 	};
-	array<CGhostList> m_lGhosts;
 	
-	array<CNetObj_Character> m_CurPath;
-	
-	CNetObj_ClientInfo m_CurInfo;
+	array<CGhostItem> m_lGhosts;
+	CGhostItem m_CurGhost;
 
 	int m_StartRenderTick;
-	int m_StartRecordTick;
 	int m_CurPos;
 	bool m_Recording;
 	bool m_Rendering;
@@ -54,8 +53,8 @@ private:
 	void StopRecord();
 	void StartRender();
 	void StopRender();
-	void RenderGhost(CGhostList *pGhost);
-	void RenderGhostHook(CGhostList *pGhost);
+	void RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetObj_ClientInfo Info);
+	void RenderGhostHook(CNetObj_Character Player, CNetObj_Character Prev);
 	
 	bool GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader);
 	
