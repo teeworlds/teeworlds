@@ -162,6 +162,7 @@ public:
 	void AbortVoteKickOnDisconnect(int ClientId);
 	
 	bool m_VoteKick;
+	bool m_Solo;
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
