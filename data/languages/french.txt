@@ -22,6 +22,9 @@
 %i seconds left
 == %i secondes restantes
 
+%s Right click for context menu.
+== %s Faites un clic droit voir le menu contexte
+
 Abort
 == Annuler
 
@@ -31,8 +34,17 @@ Add
 Add Image
 == Ajouter une image
 
+Add Quad
+== Ajouter cour carrée
+
 Add group
 == Ajouter un groupe
+
+Add quads layer
+== Accroyez quads feuillet
+
+Add tile layer
+== Accroyez tile feuillet
 
 Address
 == Adresse
@@ -40,11 +52,17 @@ Address
 Adds a new group
 == Ajoute un nouveau groupe
 
+Adds a new quad
+== Accroyez un nouveau quad
+
 All
 == Tout le monde
 
 Alpha
 == Alpha
+
+Alpha value of the envelope
+== Aplha valeur de la enveloppe
 
 Always show name plates
 == Toujours afficher les pseudonymes
@@ -67,6 +85,9 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Comme c'est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
 
+Aspect ratio
+== Aspect ratio
+
 Automatically record demos
 == Enregistrer automatiquement une démo
 
@@ -78,6 +99,9 @@ Blue team
 
 Blue team wins!
 == L'équipe bleue gagne !
+
+Blue value of the envelope
+== Bleu valeur de l'enveloppe
 
 Body
 == Corps
@@ -103,11 +127,29 @@ Chat
 Clear collision
 == Nettoyer la collision
 
+Clip H
+== Découpez H
+
+Clip W
+== Découpez W
+
+Clip X
+== Découpez X
+
+Clip Y
+== Découpez Y
+
 Close
 == Fermer
 
 Color
 == Couleur
+
+Color Env
+== Couleure enveloppe
+
+Color TO
+== Couleure TO
 
 Color+
 == Couleur+
@@ -208,6 +250,9 @@ Emoticon
 Enter
 == Démarrer
 
+Envelopes
+== Enveloppes
+
 Error
 == Erreur
 
@@ -285,6 +330,9 @@ Grenade
 
 Group
 == Groupe
+
+HD
+== HD
 
 Hammer
 == Maillet
@@ -424,6 +472,9 @@ New folder
 News
 == Nouvelles
 
+Next Envelope
+== Prochaine enveloppe
+
 Next weapon
 == Arme suivante
 
@@ -463,6 +514,12 @@ Opens a map for editing
 Order
 == Ordre
 
+Para X
+== Paramètre X
+
+Para Y
+== Paramètre Y
+
 Parent Folder
 == Dossier parent
 
@@ -490,6 +547,18 @@ Players
 Please balance teams!
 == Équilibrez les équipes !
 
+Pos X
+== Pos X
+
+Pos Y
+== Pos Y
+
+Pos. Env
+== Pos. enveloppe
+
+Pos. TO
+== Pos. TO
+
 Pos.+
 == Pos.+
 
@@ -498,6 +567,15 @@ Press right mouse button to create a new point
 
 Prev. weapon
 == Arme précédente
+
+Previous Envelope
+== Le précédente enveloppe
+
+Proof
+== L'épreuve de vérité
+
+Quads
+== Quads
 
 Quality Textures
 == Textures haute qualité
@@ -514,11 +592,17 @@ REC
 Reason:
 == Raison :
 
+Record demo
+== Enregistrer une démo
+
 Red team
 == Équipe rouge
 
 Red team wins!
 == L'équipe rouge gagne !
+
+Refocus
+== Recadrer
 
 Refresh
 == Rafraîchir
@@ -679,6 +763,9 @@ Texture Compression
 The server is running a non-standard tuning on a pure game type.
 == Le serveur utilise des paramètres non standards sur un type de jeu standard.
 
+Tiles
+== tuile
+
 Time limit
 == Temps limite
 
@@ -696,6 +783,9 @@ UI Color
 
 Up
 == Haut
+
+Use Clipping
+== les Découpez
 
 Use sounds
 == Jouer les sons
@@ -759,48 +849,6 @@ no limit
 
 ##### needs translation #####
 
-%s Right click for context menu.
-== 
-
-Add Quad
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new quad
-== 
-
-Alpha value of the envelope
-== 
-
-Aspect ratio
-== 
-
-Blue value of the envelope
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Color Env
-== 
-
-Color TO
-== 
-
 Creates a new color envelope
 == 
 
@@ -825,13 +873,7 @@ Enable/disable group for saving
 Enable/disable layer for saving
 == 
 
-Envelopes
-== 
-
 Green value of the envelope
-== 
-
-HD
 == 
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
@@ -846,43 +888,7 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 Name plates size
 == 
 
-Next Envelope
-== 
-
-Para X
-== 
-
-Para Y
-== 
-
-Pos X
-== 
-
-Pos Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
-Previous Envelope
-== 
-
-Proof
-== 
-
-Quads
-== 
-
-Record demo
-== 
-
 Red value of the envelope
-== 
-
-Refocus
 == 
 
 Resizes the current Quad based on the aspect ratio of the image
@@ -909,9 +915,6 @@ Switch between images and layers managment.
 Switch curve type
 == 
 
-Tiles
-== 
-
 Toggle group visibility
 == 
 
@@ -922,9 +925,6 @@ Toggles the envelope editor.
 == 
 
 Unable to delete the demo
-== 
-
-Use Clipping
 == 
 
 Use left mouse button to drag and change the color value. Hold shift to be more precise.
@@ -967,4 +967,7 @@ Y-axis of the envelope
 == 
 
 ##### old translations #####
+
+Creates a new tile layerparamètre
+== 
 

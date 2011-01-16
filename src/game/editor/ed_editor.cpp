@@ -3217,16 +3217,16 @@ void CEditor::Init()
 void CEditor::DoMapBorder()
 {
     CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
-    
+
     for(int i = 0; i < pT->m_Width*2; ++i)
         pT->m_pTiles[i].m_Index = 1;
-        
+
     for(int i = 0; i < pT->m_Width*pT->m_Height; ++i)
     {
         if(i%pT->m_Width < 2 || i%pT->m_Width > pT->m_Width-3)
             pT->m_pTiles[i].m_Index = 1;
     }
-    
+
     for(int i = (pT->m_Width*(pT->m_Height-2)); i < pT->m_Width*pT->m_Height; ++i)
         pT->m_pTiles[i].m_Index = 1;
 }

@@ -634,7 +634,7 @@ bool IGameController::CheckTeamBalance()
 	}
 	else
 	{
-		str_format(aBuf, sizeof(aBuf), "Team is balanced (red=%d blue=%d)", aT[0], aT[1]);
+		str_format(aBuf, sizeof(aBuf), "Teams are balanced (red=%d blue=%d)", aT[0], aT[1]);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		GameServer()->m_pController->m_UnbalancedTick = -1;
 		return true;
