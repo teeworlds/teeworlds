@@ -165,6 +165,7 @@ public:
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
+	bool m_Solo;
 	int m_VotePos;
 	char m_aVoteDescription[512];
 	char m_aVoteCommand[512];
