@@ -32,7 +32,6 @@ class CCharacter : public CEntity
 	void HandleTiles(int Index);
 	float m_Time;
 	int m_LastBroadcast;
-	bool m_Solo;
 public:
 	//character's size
 	static const int ms_PhysSize = 28;
