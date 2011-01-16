@@ -782,7 +782,9 @@ void CCharacter::Tick()
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1;
 	if (m_DeepFreeze && !m_Super)
-		Freeze();
+	{	Freeze();
+		dbg_msg("lol", "lol");
+}
 	if (m_Super && g_Config.m_SvEndlessSuperHook)
 		m_Core.m_HookTick = 0;
 	/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
@@ -1011,7 +1013,7 @@ void CCharacter::HandleTiles(int Index)
 	{
 		UnFreeze();
 	}
-	else if(((m_TileIndex == TILE_DEEPUNFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super && !m_DeepFreeze)
+	else if(((m_TileIndex == TILE_DEEPFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super && !m_DeepFreeze)
 	{
 		m_DeepFreeze = true;
 	}
