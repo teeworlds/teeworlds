@@ -1,0 +1,58 @@
+Title: Snapshots
+
+Section: Overview
+
+Topic: Definitions
+
+- *Snapshot*. A is a serialized game state from which a client can render the game from. They are sent from the server at a regular interval and is created specificly for each client in order to reduce bandwidth.
+- *Delta Snapshot*. A set of data that can be applied to a snapshot in order to create a new snapshot with the updated game state.
+
+Topic: Structure
+
+A snapshot contains a series of items. Each item have a type, id and data.
+
+- *Type*. Type of item. Could be projectile or character for example.
+- *Id*. A unique id so the client can identify the item between two snapshots.
+- *Data*. A series of 32-bit integers that contains the per item type specific data.
+
+Section: Server Side
+
+Topic: Creating
+
+Items can be added when <mods_snap> is called using the <snap_new_item> function to insert an item to the snapshot. The server can not inspect the snapshot that is in progress of being created.
+
+Section: Client Side
+
+Topic: Inspection
+<modc_newsnapshot> is called when a new snapshot has arrived for processing. <snap_num_items>, <snap_get_item> and <snap_find_item> can be used to inspect the current and previous snapshot. This can be done anywhere while the client is running and not just in the <modc_newsnapshot> function. The client can also call <snap_invalidate_item> if an item contains improper information that could harm the operation of the client. This should however be done in <modc_newsnapshot> to assure that no bad data propagates into the rest of the client.
+
+Topic: Rendering
+DOCTODO
+
+Section: In depth
+
+Topic: Compression
+
+After a snapshot have been created, compression is applyed to reduce the bandwidth. There are several steps taken inorder to reduce the size of the size of the snapshot.
+
+- *Delta*. The server looks in a clients backlog of snapshots to find a previous acked snapshot. It then compares the two snapshots and creates a delta snapshot containing the changes from the previous acked snapshot to the new one.
+- *Variable Integers*. The delta snapshot which is only consisting of 32-bit integers is then encoded into variable integers similar to UTF-8. Each byte has a bit that tells the decoder that it needs one more byte to decode the 32-bit integer. The first byte also contains a bit for telling the sign of the integer.
+
+> ESDDDDDD EDDDDDDD EDDDDDDD EDDDDDDD
+
+> E = extend
+> S = sign
+> D = data bit
+
+- *Huffman*. The last step is to compress the buffer with a huffman encoder. It uses a static tree that is weighted towards 0 because it's where most of the data will be because of the delta compression.
+
+Topic: Interval
+
+The interval for how often a client recives a snapshot changes during the course of the connection. There are three different snapshot rates. 
+
+- *Init*. 5 snapshots per second. Used when a client is connecting and used until the client has acknowlaged a snapshot. This mechanism is used because the first snapshot because no delta compression can be done.
+
+- *Full*. Snapshot for every tick or every even tick depending on server configuration. This is used during normal gameplay and everything is running smooth.
+
+- *Recovery*. 1 snapshot each second. A client enters recovery rate when it havn't acknowlaged a snapshot over 1 second. This is to let the client to beable to recover if it has a slow connection.
+

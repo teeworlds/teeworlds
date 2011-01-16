@@ -1,0 +1,970 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d av %d servrar, %d spelare
+
+Abort
+== Avbryt
+
+Address
+== Adress
+
+All
+== Alla
+
+Alpha
+== Alpha
+
+Always show name plates
+== Visa alltid namnskyltar
+
+Are you sure that you want to quit?
+== Är du säker på att du vill avsluta?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kontrollera inställningarna och justerar dom till din preferens innan du börjar spela.
+
+Blue team
+== Blå laget
+
+Blue team wins!
+== Blå laget vann!
+
+Body
+== Kropp
+
+Call vote
+== Röstning
+
+Chat
+== Chatt
+
+Close
+== Stäng
+
+Compatible version
+== Kompatibel version
+
+Connect
+== Anslut
+
+Connecting to
+== Ansluter till
+
+Console
+== Konsol
+
+Controls
+== Kontroller
+
+Current
+== Nuvarande
+
+Current version: %s
+== Nuvarande version: %s
+
+Custom colors
+== Egna färger
+
+Demos
+== Demon
+
+Disconnect
+== Avsluta
+
+Disconnected
+== Frånkopplad
+
+Display Modes
+== Skärmlägen
+
+Downloading map
+== Laddar ner karta
+
+Draw!
+== Oavgjort!
+
+Dynamic Camera
+== Dynamisk kamera
+
+Emoticon
+== Känsloikon
+
+Enter
+== Fortsätt
+
+FSAA samples
+== FSAA samplingar
+
+Favorite
+== Favorit
+
+Favorites
+== Favoriter
+
+Feet
+== Fötter
+
+Filter
+== Filter
+
+Fire
+== Skjuta
+
+Fullscreen
+== Fullskärm
+
+Game
+== Spel
+
+Game info
+== Spelinfo
+
+Game over
+== Slutspelat
+
+Game type
+== Speltyp
+
+Game types:
+== Speltyper:
+
+General
+== Generellt
+
+Graphics
+== Grafik
+
+Grenade
+== Granater
+
+Hammer
+== Hammare
+
+Has people playing
+== Har folk som spelar
+
+High Detail
+== Extra detaljer
+
+Hook
+== Haken
+
+Host address
+== Serveraddress
+
+Hue
+== Nyans
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Spela i blått
+
+Join game
+== Spela
+
+Join red
+== Spela i rött
+
+Jump
+== Hoppa
+
+Kick
+== Sparka
+
+LAN
+== LAN
+
+Language
+== Språk
+
+Lht.
+== Ljusstyrka
+
+Loading
+== Laddar
+
+MOTD
+== Meddelande
+
+Map
+== Karta
+
+Maximum ping:
+== Högsta ping:
+
+Miscellaneous
+== Övrigt
+
+Mouse sens.
+== Muskänslighet
+
+Move left
+== Gå vänster
+
+Move right
+== Gå höger
+
+Movement
+== Förflyttning
+
+Mute when not active
+== Stäng av ljudet när spelet inte är aktivt
+
+Name
+== Namn
+
+News
+== Nyheter
+
+Next weapon
+== Nästa vapen
+
+Nickname
+== Smeknamn
+
+No
+== Nej
+
+No password
+== Inget lösenord
+
+No servers found
+== Inga servrar hittade
+
+No servers match your filter criteria
+== Inga servrar matchar dina filterkriterer
+
+Ok
+== Ok
+
+Password
+== Lösenord
+
+Password incorrect
+== Felaktigt lösenord
+
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Spela
+
+Player
+== Spelare
+
+Players
+== Spelare
+
+Prev. weapon
+== Föregående vapen
+
+Quality Textures
+== Kvalitetstexturer
+
+Quick search:
+== Snabbsök:
+
+Quit
+== Avsluta
+
+Red team
+== Röda laget
+
+Red team wins!
+== Röda laget vann!
+
+Refresh
+== Uppdatera
+
+Refreshing master servers
+== Uppdaterar huvudservrar
+
+Remote console
+== Serverkonsol
+
+Reset filter
+== Återställ filter
+
+Reset to defaults
+== Återställ till standard
+
+Rifle
+== Gevär
+
+Round
+== Runda
+
+Sample rate
+== Samplingsfrekvens
+
+Sat.
+== Mättnad
+
+Score
+== Poäng
+
+Score board
+== Poängtavla
+
+Score limit
+== Poängmål
+
+Scoreboard
+== Poänglista
+
+Screenshot
+== Skärmdump
+
+Server details
+== Serverdetaljer
+
+Server info
+== Serverinfo
+
+Server not full
+== Inte full server
+
+Settings
+== Inställningar
+
+Shotgun
+== Hagelgevär
+
+Show name plates
+== Visa namnskyltar
+
+Show only supported
+== Visa endast upplösningar som stöds
+
+Skins
+== Utseende
+
+Sound
+== Ljud
+
+Sound volume
+== Ljud volym
+
+Spectate
+== Åskåda
+
+Spectators
+== Åskådare
+
+Standard gametype
+== Standard speltyp
+
+Standard map
+== Standardkarta
+
+Switch weapon on pickup
+== Byt vapen vid anskaffning
+
+Team
+== Lag
+
+Team chat
+== Lagchatt
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s är släppt! Ladda ner det på www.teeworlds.com!
+
+Texture Compression
+== Texturkompression
+
+The server is running a non-standard tuning on a pure game type.
+== Denna server kör inte standardinställningar på standard speltyp.
+
+Time limit
+== Tidsbegränsning
+
+Try again
+== Försök igen
+
+Type
+== Typ
+
+UI Color
+== Gränssnittfärg
+
+Use sounds
+== Använd ljudeffekter
+
+V-Sync
+== V-Sync
+
+Version
+== Version
+
+Vote no
+== Rösta nej
+
+Vote yes
+== Rösta ja
+
+Voting
+== Röstning
+
+Weapon
+== Vapen
+
+Welcome to Teeworlds
+== Välkommen till Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du måste starta om spelet för att ändringarna skall gälla.
+
+##### needs translation #####
+
+%d%% loaded
+== 
+
+%ds left
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+%s Right click for context menu.
+== 
+
+Add
+== 
+
+Add Image
+== 
+
+Add Quad
+== 
+
+Add group
+== 
+
+Add quads layer
+== 
+
+Add tile layer
+== 
+
+Adds a new group
+== 
+
+Adds a new quad
+== 
+
+Alpha value of the envelope
+== 
+
+Anim
+== 
+
+Append
+== 
+
+Append map
+== 
+
+Are you sure that you want to delete the demo?
+== 
+
+Aspect ratio
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Blue value of the envelope
+== 
+
+Border
+== 
+
+CCW
+== 
+
+CW
+== 
+
+Cancel
+== 
+
+Clear collision
+== 
+
+Clip H
+== 
+
+Clip W
+== 
+
+Clip X
+== 
+
+Clip Y
+== 
+
+Color
+== 
+
+Color Env
+== 
+
+Color TO
+== 
+
+Color+
+== 
+
+Connection Problems...
+== 
+
+Constructs collision from this layer
+== 
+
+Creates a new color envelope
+== 
+
+Creates a new map
+== 
+
+Creates a new pos envelope
+== 
+
+Creates a new quad layer
+== 
+
+Creates a new tile layer
+== 
+
+Decrease
+== 
+
+Decrease animation speed
+== 
+
+Delete
+== 
+
+Delete demo
+== 
+
+Delete group
+== 
+
+Delete layer
+== 
+
+Delete this envelope
+== 
+
+Deletes the current quad
+== 
+
+Deletes the layer
+== 
+
+Detail
+== 
+
+Down
+== 
+
+Embed
+== 
+
+Embedded
+== 
+
+Embeds the image into the map file.
+== 
+
+Enable/disable group for saving
+== 
+
+Enable/disable layer for saving
+== 
+
+Envelopes
+== 
+
+Error
+== 
+
+Error loading demo
+== 
+
+Exit
+== 
+
+Exits from the editor
+== 
+
+External
+== 
+
+File
+== 
+
+File: %s
+== 
+
+Filename:
+== 
+
+Folder
+== 
+
+Force vote
+== 
+
+Green value of the envelope
+== 
+
+Group
+== 
+
+HD
+== 
+
+Height
+== 
+
+Image
+== 
+
+Images
+== 
+
+Increase
+== 
+
+Increase animation speed
+== 
+
+Invalid Demo
+== 
+
+Layers
+== 
+
+Left
+== 
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== 
+
+Left mouse button to move. Hold shift to move the texture.
+== 
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Load
+== 
+
+Load a new image to use in the map
+== 
+
+Load map
+== 
+
+Make collision
+== 
+
+Make external
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Name plates size
+== 
+
+Name:
+== 
+
+New
+== 
+
+New folder
+== 
+
+Next Envelope
+== 
+
+None
+== 
+
+Normal animation speed
+== 
+
+Open
+== 
+
+Opens a map and adds everything from that map to the current one
+== 
+
+Opens a map for editing
+== 
+
+Order
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Parent Folder
+== 
+
+Please balance teams!
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Pos. Env
+== 
+
+Pos. TO
+== 
+
+Pos.+
+== 
+
+Press right mouse button to create a new point
+== 
+
+Previous Envelope
+== 
+
+Proof
+== 
+
+Quads
+== 
+
+REC
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Red value of the envelope
+== 
+
+Refocus
+== 
+
+Remove
+== 
+
+Removes collision from this layer
+== 
+
+Removes the image from the map
+== 
+
+Removes the image from the map file.
+== 
+
+Replace
+== 
+
+Replace Image
+== 
+
+Replaces the image with a new one
+== 
+
+Resizes the current Quad based on the aspect ratio of the image
+== 
+
+Right
+== 
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Rotation of the envelope
+== 
+
+Save
+== 
+
+Save As
+== 
+
+Save map
+== 
+
+Saves the current map
+== 
+
+Saves the current map under a new name
+== 
+
+Select group. Right click for properties.
+== 
+
+Select image
+== 
+
+Select layer. Right click for properties.
+== 
+
+Shift
+== 
+
+Show chat
+== 
+
+Square
+== 
+
+Squares the current quad
+== 
+
+Stop record
+== 
+
+Sudden Death
+== 
+
+Switch between images and layers managment.
+== 
+
+Switch curve type
+== 
+
+Tiles
+== 
+
+Time limit: %d min
+== 
+
+Toggle group visibility
+== 
+
+Toggle layer visibility
+== 
+
+Toggles the envelope editor.
+== 
+
+Unable to delete the demo
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and create a brush.
+== 
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+Warmup
+== 
+
+Width
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+Your skin
+== 
+
+ZI
+== 
+
+ZO
+== 
+
+[HOME] Restore map focus
+== 
+
+[M] Flip brush vertical
+== 
+
+[N] Flip brush horizontal
+== 
+
+[NumPad*] Zoom to normal and remove editor offset
+== 
+
+[NumPad+] Zoom in
+== 
+
+[NumPad-] Zoom out
+== 
+
+[R] Rotates the brush counter clockwise
+== 
+
+[T] Rotates the brush clockwise
+== 
+
+[ctrl+h] Toggle High Detail
+== 
+
+[ctrl+m] Toggle animation
+== 
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+no limit
+== 
+
+##### old translations #####
+

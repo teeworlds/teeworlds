@@ -1,0 +1,5 @@
+The source code under this directory are external libraries
+with their own licences. The source you find here is stripped
+of unnessesary information. Please visit their websites for
+more information and official releases.
+

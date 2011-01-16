@@ -1,0 +1,39 @@
+Title: Server Operation
+
+Section: Init
+
+Section: Running
+
+Here is an graph over how the server operates on each refresh.
+
+(start code)
+load map
+init mod
+
+while running
+	if map change then
+		load new map
+		shutdown mod <mods_shutdown>
+		reset clients to init state
+		init mod <mods_init>
+	end if
+
+	if new tick then
+		call <mods_tick>
+		for each client do
+			create snapshot <mods_snap>
+			send snapshot
+		end for
+	end
+	
+	process new network messages
+end while
+
+unload map
+(end)
+		
+
+
+Section: Reinit
+
+Section: Shutdown

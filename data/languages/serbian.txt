@@ -1,0 +1,970 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d od %d server(a), %d igrač(a)
+
+%ds left
+== Još %ds
+
+Abort
+== Prekini
+
+Address
+== Adresa
+
+All
+== Svi
+
+Alpha
+== Provid.
+
+Always show name plates
+== Uvek prikaži imena igrača
+
+Are you sure that you want to quit?
+== Jeste li sigurni da želite da izađete?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da proverite podešavanja i podesite ih prema Vašem ukusu pre nego što se konektujete na server.
+
+Blue team
+== Plavi tim
+
+Blue team wins!
+== Plavi tim je pobedio!
+
+Body
+== Telo
+
+Call vote
+== Glasanje
+
+Chat
+== Chat
+
+Close
+== Zatvori
+
+Compatible version
+== Kompatibilna verzija
+
+Connect
+== Konektuj
+
+Connecting to
+== Konektujem na
+
+Connection Problems...
+== Problemi sa konekcijom...
+
+Console
+== Konzola
+
+Controls
+== Kontrole
+
+Current
+== Trenutno
+
+Current version: %s
+== Trenutna verzija: %s
+
+Custom colors
+== Vlastite boje
+
+Delete
+== Izbriši
+
+Demos
+== Demoi
+
+Disconnect
+== Diskonektuj
+
+Disconnected
+== Diskonektovan
+
+Display Modes
+== Rezolucija i način prikaza
+
+Downloading map
+== Preuzimam mapu
+
+Draw!
+== Nerešeno!
+
+Dynamic Camera
+== Dinamička kamera
+
+Emoticon
+== Emoticon
+
+Enter
+== Započni
+
+Error
+== Greška
+
+Error loading demo
+== Greška prilikom učitavanja demo-snimka
+
+FSAA samples
+== FSAA samples
+
+Favorite
+== Omiljen
+
+Favorites
+== Omiljeni
+
+Feet
+== Stopala
+
+Filter
+== Filter
+
+Fire
+== Pucanje
+
+Force vote
+== Obavezno glasanje
+
+Fullscreen
+== Čitav ekran
+
+Game
+== Igra
+
+Game info
+== O igri
+
+Game over
+== Igra je završena
+
+Game type
+== Tip igre
+
+Game types:
+== Tipovi igre:
+
+General
+== Opšte
+
+Graphics
+== Grafika
+
+Grenade
+== Granate
+
+Hammer
+== Čekić
+
+Has people playing
+== Server nije prazan
+
+High Detail
+== Visoki detalji
+
+Hook
+== Lanac
+
+Host address
+== Adresa servera
+
+Hue
+== Nijansa
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== U plavi tim
+
+Join game
+== Uključi se u igru
+
+Join red
+== U crveni tim
+
+Jump
+== Skok
+
+Kick
+== Izbaci
+
+LAN
+== LAN
+
+Language
+== Jezik
+
+Lht.
+== Svetl.
+
+Loading
+== Učitavam
+
+MOTD
+== Vest dana
+
+Map
+== Mapa
+
+Maximum ping:
+== Maksimalan ping:
+
+Miscellaneous
+== Razno
+
+Mouse sens.
+== Osetljivost miša
+
+Move left
+== Nalevo
+
+Move right
+== Nadesno
+
+Movement
+== Kretanje
+
+Mute when not active
+== Bez zvuka prilikom neaktivnosti
+
+Name
+== Ime
+
+News
+== Novosti
+
+Next weapon
+== Sledeće oružje
+
+Nickname
+== Nadimak
+
+No
+== Ne
+
+No password
+== Bez lozinke
+
+No servers found
+== Nije pronađen nijedan server
+
+No servers match your filter criteria
+== Nijedan server ne odgovara zadatom kriteriju
+
+Ok
+== OK
+
+Password
+== Lozinka
+
+Password incorrect
+== Pogrešna lozinka
+
+Ping
+== Ping
+
+Pistol
+== Pištolj
+
+Play
+== Pokreni
+
+Player
+== Igrač
+
+Players
+== Igrači
+
+Please balance teams!
+== Molim uravnotežite timove!
+
+Prev. weapon
+== Prethodno oružje
+
+Quality Textures
+== Visokokvalitetne teksture
+
+Quick search:
+== Brza pretraga:
+
+Quit
+== Izlaz
+
+Red team
+== Crveni tim
+
+Red team wins!
+== Crveni tim je pobedio!
+
+Refresh
+== Osveži
+
+Refreshing master servers
+== Osvežavam master servere
+
+Remote console
+== Udaljena konzola
+
+Reset filter
+== Poništi filter
+
+Reset to defaults
+== Resetuj podešavanja
+
+Rifle
+== Laser
+
+Round
+== Runda
+
+Sample rate
+== Frekvencija
+
+Sat.
+== Zasić.
+
+Score
+== Rezultat
+
+Score board
+== Bodovi
+
+Score limit
+== Max. bodova
+
+Scoreboard
+== Bodovi
+
+Screenshot
+== Screenshot
+
+Server details
+== Podaci o serveru
+
+Server info
+== O Serveru
+
+Server not full
+== Server nije pun
+
+Settings
+== Podešavanja
+
+Shotgun
+== Sačmarica
+
+Show chat
+== Prikaži chat
+
+Show name plates
+== Prikaži imena igrača
+
+Show only supported
+== Prikaži samo podržane
+
+Skins
+== Izgled
+
+Sound
+== Zvuk
+
+Sound volume
+== Jačina zvuka
+
+Spectate
+== Posmatraj
+
+Spectators
+== Posmatrači
+
+Standard gametype
+== Standardni tip igre
+
+Standard map
+== Standardna mapa
+
+Sudden Death
+== Iznenadna smrt
+
+Switch weapon on pickup
+== Aktiviraj novo oružje prilikom uzimanja
+
+Team
+== Tim
+
+Team chat
+== Timski chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s je objavljen! Preuzmi ga na www.teeworlds.com!
+
+Texture Compression
+== Kompresija tekstura
+
+The server is running a non-standard tuning on a pure game type.
+== Server sadrži nestandardna podešavanja.
+
+Time limit
+== Max. vremena
+
+Try again
+== Pokušaj ponovo
+
+Type
+== Tip
+
+UI Color
+== Boja menija
+
+Use sounds
+== Aktiviraj zvuk
+
+V-Sync
+== V-Sync
+
+Version
+== Verzija
+
+Vote no
+== Ne
+
+Vote yes
+== Da
+
+Voting
+== Glasanje
+
+Warmup
+== Zagrejavanje
+
+Weapon
+== Oružje
+
+Welcome to Teeworlds
+== Dobrodošli u Teeworlds
+
+Yes
+== Da
+
+You must restart the game for all settings to take effect.
+== Morate ponovo pokrenuti igru da bi sva podešavanja bila primenjena.
+
+Your skin
+== Vaš izgled
+
+##### needs translation #####
+
+%d%% loaded
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+%s Right click for context menu.
+== 
+
+Add
+== 
+
+Add Image
+== 
+
+Add Quad
+== 
+
+Add group
+== 
+
+Add quads layer
+== 
+
+Add tile layer
+== 
+
+Adds a new group
+== 
+
+Adds a new quad
+== 
+
+Alpha value of the envelope
+== 
+
+Anim
+== 
+
+Append
+== 
+
+Append map
+== 
+
+Are you sure that you want to delete the demo?
+== 
+
+Aspect ratio
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Blue value of the envelope
+== 
+
+Border
+== 
+
+CCW
+== 
+
+CW
+== 
+
+Cancel
+== 
+
+Clear collision
+== 
+
+Clip H
+== 
+
+Clip W
+== 
+
+Clip X
+== 
+
+Clip Y
+== 
+
+Color
+== 
+
+Color Env
+== 
+
+Color TO
+== 
+
+Color+
+== 
+
+Constructs collision from this layer
+== 
+
+Creates a new color envelope
+== 
+
+Creates a new map
+== 
+
+Creates a new pos envelope
+== 
+
+Creates a new quad layer
+== 
+
+Creates a new tile layer
+== 
+
+Decrease
+== 
+
+Decrease animation speed
+== 
+
+Delete demo
+== 
+
+Delete group
+== 
+
+Delete layer
+== 
+
+Delete this envelope
+== 
+
+Deletes the current quad
+== 
+
+Deletes the layer
+== 
+
+Detail
+== 
+
+Down
+== 
+
+Embed
+== 
+
+Embedded
+== 
+
+Embeds the image into the map file.
+== 
+
+Enable/disable group for saving
+== 
+
+Enable/disable layer for saving
+== 
+
+Envelopes
+== 
+
+Exit
+== 
+
+Exits from the editor
+== 
+
+External
+== 
+
+File
+== 
+
+File: %s
+== 
+
+Filename:
+== 
+
+Folder
+== 
+
+Green value of the envelope
+== 
+
+Group
+== 
+
+HD
+== 
+
+Height
+== 
+
+Image
+== 
+
+Images
+== 
+
+Increase
+== 
+
+Increase animation speed
+== 
+
+Invalid Demo
+== 
+
+Layers
+== 
+
+Left
+== 
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== 
+
+Left mouse button to move. Hold shift to move the texture.
+== 
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Load
+== 
+
+Load a new image to use in the map
+== 
+
+Load map
+== 
+
+Make collision
+== 
+
+Make external
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Name plates size
+== 
+
+Name:
+== 
+
+New
+== 
+
+New folder
+== 
+
+Next Envelope
+== 
+
+None
+== 
+
+Normal animation speed
+== 
+
+Open
+== 
+
+Opens a map and adds everything from that map to the current one
+== 
+
+Opens a map for editing
+== 
+
+Order
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Parent Folder
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Pos. Env
+== 
+
+Pos. TO
+== 
+
+Pos.+
+== 
+
+Press right mouse button to create a new point
+== 
+
+Previous Envelope
+== 
+
+Proof
+== 
+
+Quads
+== 
+
+REC
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Red value of the envelope
+== 
+
+Refocus
+== 
+
+Remove
+== 
+
+Removes collision from this layer
+== 
+
+Removes the image from the map
+== 
+
+Removes the image from the map file.
+== 
+
+Replace
+== 
+
+Replace Image
+== 
+
+Replaces the image with a new one
+== 
+
+Resizes the current Quad based on the aspect ratio of the image
+== 
+
+Right
+== 
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Rotation of the envelope
+== 
+
+Save
+== 
+
+Save As
+== 
+
+Save map
+== 
+
+Saves the current map
+== 
+
+Saves the current map under a new name
+== 
+
+Select group. Right click for properties.
+== 
+
+Select image
+== 
+
+Select layer. Right click for properties.
+== 
+
+Shift
+== 
+
+Square
+== 
+
+Squares the current quad
+== 
+
+Stop record
+== 
+
+Switch between images and layers managment.
+== 
+
+Switch curve type
+== 
+
+Tiles
+== 
+
+Time limit: %d min
+== 
+
+Toggle group visibility
+== 
+
+Toggle layer visibility
+== 
+
+Toggles the envelope editor.
+== 
+
+Unable to delete the demo
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and create a brush.
+== 
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+Width
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+ZI
+== 
+
+ZO
+== 
+
+[HOME] Restore map focus
+== 
+
+[M] Flip brush vertical
+== 
+
+[N] Flip brush horizontal
+== 
+
+[NumPad*] Zoom to normal and remove editor offset
+== 
+
+[NumPad+] Zoom in
+== 
+
+[NumPad-] Zoom out
+== 
+
+[R] Rotates the brush counter clockwise
+== 
+
+[T] Rotates the brush clockwise
+== 
+
+[ctrl+h] Toggle High Detail
+== 
+
+[ctrl+m] Toggle animation
+== 
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+no limit
+== 
+
+##### old translations #####
+

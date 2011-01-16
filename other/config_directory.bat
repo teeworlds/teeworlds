@@ -1,0 +1,1 @@
+@start explorer %APPDATA%\Teeworlds
