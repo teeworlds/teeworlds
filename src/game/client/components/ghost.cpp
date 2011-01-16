@@ -157,10 +157,12 @@ void CGhost::RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetO
 	RenderInfo.m_ColorFeet.a = 0.5f;
 	RenderInfo.m_Size = 64;
 	
-	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
+	float IntraTick = Client()->PredIntraGameTick();
+	
+	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
-	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), Client()->PredIntraGameTick());
+	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
 	
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
@@ -191,7 +193,7 @@ void CGhost::RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetO
 		vec2 Dir = Direction;
 		float Recoil = 0.0f;
 		// TODO: is this correct?
-		float a = (Client()->PredGameTick()-Player.m_AttackTick+Client()->PredIntraGameTick())/5.0f;
+		float a = (Client()->PredGameTick()-Player.m_AttackTick+IntraTick)/5.0f;
 		if(a < 1)
 			Recoil = sinf(a*pi);
 		
@@ -209,12 +211,14 @@ void CGhost::RenderGhostHook(CNetObj_Character Player, CNetObj_Character Prev)
 {
 	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
 		return;
+	
+	float IntraTick = Client()->PredIntraGameTick();
 
-	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
+	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
+	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 
-	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), Client()->PredIntraGameTick());
+	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 	float d = distance(Pos, HookPos);
 	vec2 Dir = normalize(Pos-HookPos);
 
@@ -351,19 +355,18 @@ void CGhost::Save()
 		str_format(aFile, sizeof(aFile), "ghosts/%s", m_pClient->m_pMenus->m_OwnGhost->m_aFilename);
 		Storage()->RemoveFile(aFile, IStorage::TYPE_SAVE);
 		
-		m_pClient->m_pMenus->m_lGhosts.remove(m_pClient->m_pMenus->m_OwnGhost);
-		delete m_pClient->m_pMenus->m_OwnGhost;
+		m_pClient->m_pMenus->m_lGhosts.remove(*m_pClient->m_pMenus->m_OwnGhost);
 	}
 	
-	CMenus::CGhostItem *pItem = new CMenus::CGhostItem();
-	str_copy(pItem->m_aFilename, aFilename, sizeof(pItem->m_aFilename));
-	str_copy(pItem->m_aPlayer, Header.m_aOwner, sizeof(pItem->m_aPlayer));
-	pItem->m_Time = m_BestTime;
-	pItem->m_Active = true;
-	pItem->m_ID = -1;
+	CMenus::CGhostItem Item;
+	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
+	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
+	Item.m_Time = m_BestTime;
+	Item.m_Active = true;
+	Item.m_ID = -1;
 
-	m_pClient->m_pMenus->m_lGhosts.add(pItem);
-	m_pClient->m_pMenus->m_OwnGhost = pItem;
+	m_pClient->m_pMenus->m_lGhosts.add(Item);
+	m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
 }
 
 bool CGhost::GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader)

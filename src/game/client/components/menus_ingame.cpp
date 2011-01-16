@@ -493,23 +493,25 @@ void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageTyp
 	if(!pSelf->m_pClient->m_pGhost->GetInfo(pName, &Header))
 		return;
 	
-	CGhostItem *pItem = new CGhostItem();
-	str_copy(pItem->m_aFilename, pName, sizeof(pItem->m_aFilename));
-	str_copy(pItem->m_aPlayer, Header.m_aOwner, sizeof(pItem->m_aPlayer));
-	pItem->m_Time = Header.m_Time;
-	
-	pItem->m_Active = false;
-	pItem->m_ID = pSelf->m_lGhosts.add(pItem);
-	
-	if(str_comp(pItem->m_aPlayer, g_Config.m_PlayerName) == 0 && (!pSelf->m_OwnGhost || pItem < pSelf->m_OwnGhost))
-		pSelf->m_OwnGhost = pItem;
+	CGhostItem Item;
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
+	Item.m_Time = Header.m_Time;
+	Item.m_Active = false;
+	Item.m_ID = pSelf->m_lGhosts.add(Item);
 }
 
 void CMenus::GhostlistPopulate()
 {
 	m_OwnGhost = 0;
-	m_lGhosts.delete_all();
+	m_lGhosts.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "ghosts", GhostlistFetchCallback, this);
+	
+	for(int i = 0; i < m_lGhosts.size(); i++)
+	{
+		if(str_comp(m_lGhosts[i].m_aPlayer, g_Config.m_PlayerName) == 0 && (!m_OwnGhost || m_lGhosts[i] < *m_OwnGhost))
+			m_OwnGhost = &m_lGhosts[i];
+	}
 	
 	if(m_OwnGhost)
 	{
@@ -647,7 +649,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 
 	for (int i = 0; i < NumGhosts; i++)
 	{
-		const CGhostItem *pItem = m_lGhosts[i];
+		const CGhostItem *pItem = &m_lGhosts[i];
 		CUIRect Row;
         CUIRect SelectHitBox;
 		
@@ -729,7 +731,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 	if(NewSelected != -1)
 		s_SelectedIndex = NewSelected;
 	
-	CGhostItem *pGhost = m_lGhosts[s_SelectedIndex];
+	CGhostItem *pGhost = &m_lGhosts[s_SelectedIndex];
 
 	UI()->ClipDisable();
 	
