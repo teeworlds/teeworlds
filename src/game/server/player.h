@@ -59,7 +59,6 @@ public:
 		bool m_Super;
 		bool m_DeepFreeze;
 		bool m_EndlessHook;
-		bool m_Solo;
 		int m_PauseTime;
 		int m_Team;
 	} m_PauseInfo;

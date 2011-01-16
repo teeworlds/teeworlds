@@ -1464,22 +1464,22 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 				g_Config.m_SvOldLaser = 1;
 				dbg_msg("MapTile","Old Laser");
 			}
-			else if(Index == TILE_NPC || m_Solo)
+			else if(Index == TILE_NPC)
 			{
 				m_Tuning.Set("player_collision",0);
 				dbg_msg("MapTile","No Collision");
 			}
-			else if(Index == TILE_EHOOK || m_Solo)
+			else if(Index == TILE_EHOOK)
 			{
 				g_Config.m_SvEndlessDrag = 1;
 				dbg_msg("MapTile","Unlimited hook time");
 			}
-			else if(Index == TILE_NOHIT || m_Solo)
+			else if(Index == TILE_NOHIT)
 			{
 				g_Config.m_SvHit = 0;
 				dbg_msg("MapTile","No Weapons Hitting others");
 			}
-			else if(Index == TILE_NPH || m_Solo)
+			else if(Index == TILE_NPH)
 			{
 				m_Tuning.Set("player_hooking",0);
 				dbg_msg("MapTile","No Player Hooking");

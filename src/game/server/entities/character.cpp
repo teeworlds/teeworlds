@@ -1029,16 +1029,6 @@ void CCharacter::HandleTiles(int Index)
 		GameServer()->SendChatTarget(GetPlayer()->GetCID(),"Endless hook has been deactivated");
 	m_EndlessHook = false;
 }
-	else if(((m_TileIndex == TILE_SOLOON) || m_TileFIndex == TILE_SOLOON) && !m_Solo)
-		{
-			GameServer()->SendChatTarget(GetPlayer()->GetCID(),"Solo Mode activated!");
-			m_Solo = true;
-		}
-	else if(((m_TileIndex == TILE_SOLOOFF) || m_TileFIndex == TILE_SOLOOFF) && m_Solo)
-		{
-			GameServer()->SendChatTarget(GetPlayer()->GetCID(),"Solo Mode deactivated!");
-			m_Solo = false;
-		}
 	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndexL).x)

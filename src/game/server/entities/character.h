@@ -126,7 +126,6 @@ public:
 	int lastup;
 	int m_Doored;
 	bool m_EndlessHook;
-	bool m_Solo;
 
 	vec2 m_OldPos;
 	vec2 m_OlderPos;
