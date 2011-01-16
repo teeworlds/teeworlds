@@ -783,7 +783,6 @@ void CCharacter::Tick()
 		m_Core.m_Jumped = 1;
 	if (m_DeepFreeze && !m_Super)
 	{	Freeze();
-		dbg_msg("lol", "lol");
 }
 	if (m_Super && g_Config.m_SvEndlessSuperHook)
 		m_Core.m_HookTick = 0;
