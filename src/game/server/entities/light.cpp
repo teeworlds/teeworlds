@@ -34,7 +34,7 @@ bool CLight::HitCharacter()
 	for(std::list < CCharacter * >::iterator i = HitCharacters.begin(); i != HitCharacters.end(); i++) {
 		CCharacter * Char = *i;
 		if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()]) continue;
-		Char->Freeze(Server()->TickSpeed()*3, false);
+		Char->Freeze(Server()->TickSpeed()*3);
 	}
 	return true;
 }

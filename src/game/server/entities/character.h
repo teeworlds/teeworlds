@@ -74,8 +74,8 @@ public:
 	
 	void ResetPos();
 	
-	bool Freeze(int Time, bool Deep);
-	bool Freeze(bool Deep);
+	bool Freeze(int Time);
+	bool Freeze();
 	bool UnFreeze();
 	
 	void GiveAllWeapons();  

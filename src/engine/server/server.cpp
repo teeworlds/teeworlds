@@ -191,6 +191,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta), ImphChunk(0)
 	m_CurrentMapSize = 0;
 	
 	m_MapReload = 0;
+	m_LastMapLoad = 0;
 
 	m_RconClientId = -1;
 
@@ -1146,6 +1147,9 @@ int CServer::LoadMap(const char *pMapName)
 		io_read(File, m_pCurrentMapData, m_CurrentMapSize);
 		io_close(File);
 	}
+
+	m_LastMapLoad = time_get();
+
 	return 1;
 }
 

@@ -121,6 +121,7 @@ public:
 	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
+	int64 m_LastMapLoad;
 	int m_RconClientId;
 
 	char m_aBrowseinfoGametype[16];

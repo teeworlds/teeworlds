@@ -673,21 +673,24 @@ void CGameContext::OnClientEnter(int ClientId)
 	Score()->PlayerData(ClientId)->m_CurrentTime = Score()->PlayerData(ClientId)->m_BestTime;
 	m_apPlayers[ClientId]->m_Score = (Score()->PlayerData(ClientId)->m_BestTime)?Score()->PlayerData(ClientId)->m_BestTime:-9999;
 
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
-	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+	if(time_get() > ((CServer *) Server())->m_LastMapLoad + (time_freq() * 10)) {
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
+		SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	
-	SendChatTarget(ClientId, "DDRace Mod.");
-	SendChatTarget(ClientId, "Say /info for more infomation.");
-	if (g_Config.m_SvTeam == 1)
-	{ SendChatTarget(ClientId, "Please join a team or you wont be able too play");
+		SendChatTarget(ClientId, "DDRace Mod.");
+		SendChatTarget(ClientId, "Say /info for more infomation.");
+		if (g_Config.m_SvTeam == 1)
+		{ 
+		SendChatTarget(ClientId, "Please join a team or you wont be able too play");
 	}
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 	
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-	m_VoteUpdate = true;
+		}
+		m_VoteUpdate = true;
 }
 
 bool ComparePlayers(CPlayer *pl1, CPlayer *pl2)
