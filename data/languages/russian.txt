@@ -10,18 +10,6 @@
 %ds left
 == осталось %d сек.
 
-%i minute left
-== %i минута закончилас
-
-%i minutes left
-== %i минуты закончились
-
-%i second left
-== %i секунда пpошла
-
-%i seconds left
-== %i секунды закончились
-
 %s Right click for context menu.
 == %s Правая кнопка мыши для контекстного меню
 
@@ -202,9 +190,6 @@ Disconnected
 Display Modes
 == Режимы дисплея
 
-Down
-== вниз
-
 Downloading map
 == Скачивание карты
 
@@ -346,14 +331,11 @@ Info
 Internet
 == Интернет
 
-Invalid Demo
-== Неправильное демо
-
 Join blue
 == За синих
 
 Join game
-== Hграть
+== Наблюдать
 
 Join red
 == За красных
@@ -373,17 +355,11 @@ Language
 Layers
 == Слои
 
-Left
-== лево
-
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 == Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
 
 Left mouse button to move. Hold shift to move the texture.
 == Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-==  Левая клавиша для перемещения. Зажмите Ctrl для большей точности. Зажмите Shift для изменения момента времени. Правый клик для удаления.
 
 Lht.
 == Яркость
@@ -393,9 +369,6 @@ Load
 
 Load a new image to use in the map
 == Загрузить новое изображение для использования его в карте
-
-Load map
-== загрузить карту
 
 Loading
 == Загрузка
@@ -411,12 +384,6 @@ Make external
 
 Map
 == Карта
-
-Max Screenshots
-== Макс. кол-во скриншотов
-
-Max demos
-== Макс. кол-во демо
 
 Maximum ping:
 == Макс. пинг:
@@ -447,9 +414,6 @@ Name:
 
 New
 == Новый
-
-New folder
-== Новая папка
 
 News
 == Новости
@@ -496,15 +460,6 @@ Opens a map for editing
 Order
 == Порядок
 
-Para X
-== Пара. X
-
-Para Y
-== Пара. Y
-
-Parent Folder
-== Родительская папка
-
 Password
 == Пароль
 
@@ -529,12 +484,6 @@ Players
 Please balance teams!
 == Сбалансируйте команды!
 
-Pos X
-== Поз. X
-
-Pos Y
-== Поз. Y
-
 Pos. Env
 == Поз. крив.
 
@@ -556,9 +505,6 @@ Previous Envelope
 Proof
 == Границы
 
-Quads
-== Квады
-
 Quality Textures
 == Качественные текстуры
 
@@ -568,23 +514,14 @@ Quick search:
 Quit
 == Выход
 
-REC
-== REC
-
 Reason:
 == Причина:
-
-Record demo
-== Запись демо
 
 Red team
 == Красные
 
 Red team wins!
 == Красные победили!
-
-Red value of the envelope
-== Значение красного у кривой
 
 Refocus
 == Вернуть фокус
@@ -625,20 +562,8 @@ Reset filter
 Reset to defaults
 == Сбросить настройки
 
-Resizes the current Quad based on the aspect ratio of the image
-== Изменить размер квада под размер изображения
-
 Rifle
 == Лазер
-
-Right
-== впpаво
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Поворот кисти в градусах. Левая клавиша для перемещения и изменения значения. Зажмите Shift для большей точности.
-
-Rotation of the envelope
-== Поворот кривой
 
 Round
 == Раунд
@@ -700,9 +625,6 @@ Server not full
 Settings
 == Настройки
 
-Shift
-== Смещение
-
 Shotgun
 == Дробовик
 
@@ -742,9 +664,6 @@ Standard gametype
 Standard map
 == Стандартная карта
 
-Stop record
-== Стоп записи
-
 Sudden Death
 == Быстрая смерть
 
@@ -772,14 +691,8 @@ Texture Compression
 The server is running a non-standard tuning on a pure game type.
 == Сервер запущен с нестандартными настройками на стандартном типе игры.
 
-Tiles
-== плитка
-
 Time limit
 == Лимит
-
-Time limit: %d min
-== Лимит: %d мин.
 
 Toggle group visibility
 == Переключить видимость группы
@@ -798,18 +711,6 @@ Type
 
 UI Color
 == Цвет интерфейса
-
-Up
-== ввеpx
-
-Use Clipping
-== Обрезать
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Левая клавиша для перемещения и изменения цвета. Зажмите Shift для большей точности.
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Левая клавиша для перемещения и изменения значения. Зажмите Shift для большей точности.
 
 Use left mouse button to drag and create a brush.
 == Используйте левую кнопку мыши для перемещения и создания кисти
@@ -847,12 +748,6 @@ Welcome to Teeworlds
 Width
 == Ширина
 
-X-axis of the envelope
-== Горизонталь кривой
-
-Y-axis of the envelope
-== Вертикаль кривой
-
 Yes
 == Да
 
@@ -867,9 +762,6 @@ ZI
 
 ZO
 == Z-
-
-[HOME] Restore map focus
-== [HOME] Восстановить фокусировку карты
 
 [M] Flip brush vertical
 == [M] Зеркалировать кисть по вертикали
@@ -901,10 +793,19 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [ctrl+p] Показать или скрыть границы, в пределах которых игрок может видеть карту
 
-no limit
-== без лимита
-
 ##### needs translation #####
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
 
 Alpha value of the envelope
 == 
@@ -945,6 +846,9 @@ Delete demo
 Delete this envelope
 == 
 
+Down
+== 
+
 Enable/disable group for saving
 == 
 
@@ -960,10 +864,106 @@ Folder
 Green value of the envelope
 == 
 
+Invalid Demo
+== 
+
+Left
+== 
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Load map
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
 Name plates size
 == 
 
+New folder
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Parent Folder
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Quads
+== 
+
+REC
+== 
+
+Record demo
+== 
+
+Red value of the envelope
+== 
+
+Resizes the current Quad based on the aspect ratio of the image
+== 
+
+Right
+== 
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Rotation of the envelope
+== 
+
+Shift
+== 
+
+Stop record
+== 
+
+Tiles
+== 
+
+Time limit: %d min
+== 
+
 Unable to delete the demo
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+[HOME] Restore map focus
+== 
+
+no limit
 == 
 
 ##### old translations #####

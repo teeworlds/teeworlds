@@ -10,18 +10,6 @@
 %ds left
 == Noch %ds
 
-%i minute left
-== %i verbleibende Minute
-
-%i minutes left
-== %i verbleibende Minuten
-
-%i second left
-== %i verbleibende Sekunde
-
-%i seconds left
-== %i verbleibende Sekunden
-
 %s Right click for context menu.
 == %s Rechtsklick für Kontextmenü.
 
@@ -496,9 +484,6 @@ Mute when not active
 Name
 == Name
 
-Name plates size
-== Größe der Namensschilder
-
 Name:
 == Name:
 
@@ -856,9 +841,6 @@ Type
 UI Color
 == Menüfarbe
 
-Unable to delete the demo
-== Demo konnte nicht gelöscht werden
-
 Up
 == Oben
 
@@ -965,6 +947,24 @@ no limit
 == Keine Begrenzung
 
 ##### needs translation #####
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+Name plates size
+== 
+
+Unable to delete the demo
+== 
 
 ##### old translations #####
 

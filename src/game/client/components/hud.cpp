@@ -73,8 +73,7 @@ void CHud::RenderSuddenDeath()
 }
 
 void CHud::RenderScoreHud()
-{
-
+{	
 	// render small score hud
 	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
 	{
