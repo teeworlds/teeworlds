@@ -956,6 +956,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				SendChatTarget(ClientId, "You can't kick this person at the current time.");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
+				return;
 			}
 			if(GetPlayerChar(ClientId) && GetPlayerChar(KickId) && GetPlayerChar(ClientId)->Team() != GetPlayerChar(KickId)->Team())
 			{

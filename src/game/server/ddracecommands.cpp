@@ -73,11 +73,7 @@ void CGameContext::ConUnmute(IConsole::IResult *pResult, void *pUserData, int Cl
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = pResult->GetVictim();
 	char aBuf[512];
-	
-	if(Victim == ClientId) {
-		pSelf->SendChatTarget(ClientId, "You can't unmute yourself");
-	}
-	else 	{
+		{
 	if(pSelf->m_apPlayers[Victim]->m_Muted > 0)
 	{
 		pSelf->m_apPlayers[Victim]->m_Muted = 0;
