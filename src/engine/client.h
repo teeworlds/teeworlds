@@ -130,6 +130,8 @@ public:
 	virtual const char *ErrorString() = 0;
 	virtual const char *LatestVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
+
+	virtual bool SoundInitFailed() = 0;
 };
 
 class IGameClient : public IInterface

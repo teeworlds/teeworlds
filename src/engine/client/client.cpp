@@ -1803,7 +1803,7 @@ void CClient::Run()
 	m_pEditor->Init();
 
 	// init sound, allowed to fail
-	Sound()->Init();
+	m_SoundInitFailed = Sound()->Init() != 0;
 
 	// load data
 	if(!LoadData())
