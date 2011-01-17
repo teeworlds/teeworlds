@@ -187,7 +187,7 @@ void CRegister::RegisterUpdate()
 			else
 			{			
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "choosen '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
+				str_format(aBuf, sizeof(aBuf), "chose '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
 				m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend = 0;
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
