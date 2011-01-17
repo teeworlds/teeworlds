@@ -32,6 +32,11 @@ void CControls::OnReset()
 	m_InputDirectionRight = 0;
 }
 
+void CControls::OnRelease()
+{
+	OnReset();
+}
+
 void CControls::OnPlayerDeath()
 {
 	m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;

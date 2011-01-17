@@ -19,6 +19,7 @@ public:
 	CControls();
 	
 	virtual void OnReset();
+	virtual void OnRelease();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnMouseMove(float x, float y);

@@ -971,6 +971,11 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
+void CGameClient::OnActivateEditor()
+{
+	OnRelease();
+}
+
 void CGameClient::CClientData::UpdateRenderInfo()
 {
 	m_RenderInfo = m_SkinInfo;
