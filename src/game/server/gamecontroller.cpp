@@ -628,7 +628,7 @@ bool IGameController::CheckTeamBalance()
 	char aBuf[256];
 	if(absolute(aT[0]-aT[1]) >= 2)
 	{
-		str_format(aBuf, sizeof(aBuf), "Team is NOT balanced (red=%d blue=%d)", aT[0], aT[1]);
+		str_format(aBuf, sizeof(aBuf), "Teams are NOT balanced (red=%d blue=%d)", aT[0], aT[1]);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		if(GameServer()->m_pController->m_UnbalancedTick == -1)
 			GameServer()->m_pController->m_UnbalancedTick = Server()->Tick();
@@ -636,7 +636,7 @@ bool IGameController::CheckTeamBalance()
 	}
 	else
 	{
-		str_format(aBuf, sizeof(aBuf), "Team is balanced (red=%d blue=%d)", aT[0], aT[1]);
+		str_format(aBuf, sizeof(aBuf), "Teams are balanced (red=%d blue=%d)", aT[0], aT[1]);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		GameServer()->m_pController->m_UnbalancedTick = -1;
 		return true;
