@@ -8,6 +8,7 @@
 
 #include <game/client/gameclient.h>
 
+#include <game/client/components/motd.h>
 #include <game/client/components/scoreboard.h>
 
 #include "broadcast.h"
@@ -19,7 +20,7 @@ void CBroadcast::OnReset()
 
 void CBroadcast::OnRender()
 {
-	if(m_pClient->m_pScoreboard->Active())
+	if(m_pClient->m_pScoreboard->Active() || m_pClient->m_pMotd->IsActive())
 		return;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
