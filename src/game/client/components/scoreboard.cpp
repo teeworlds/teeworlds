@@ -265,24 +265,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
-	bool DoScoreBoard = false;
-
-	// if we activly wanna look on the scoreboard	
-	if(m_Active)
-		DoScoreBoard = true;
-		
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
-	{
-		// we are not a spectator, check if we are ead
-		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0)
-			DoScoreBoard = true;
-	}
-
-	// if we the game is over
-	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
-		DoScoreBoard = true;
-		
-	if(!DoScoreBoard)
+	if(!Active())
 		return;
 		
 	// if the score board is active, then we should clear the motd message aswell
@@ -298,10 +281,7 @@ void CScoreboard::OnRender()
 	float w = 650.0f;
 
 	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS))
-	{
 		RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
-		//render_scoreboard(gameobj, 0, 0, -1, 0);
-	}
 	else
 	{
 			
@@ -328,5 +308,20 @@ void CScoreboard::OnRender()
 
 bool CScoreboard::Active()
 {
-	return m_Active | (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver);
+	// if we activly wanna look on the scoreboard	
+	if(m_Active)
+		return true;
+		
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+	{
+		// we are not a spectator, check if we are dead
+		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health <= 0)
+			return true;
+	}
+
+	// if the game is over
+	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
+		return true;
+
+	return false;
 }
