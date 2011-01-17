@@ -897,6 +897,9 @@ Rotation of the envelope
 Shift
 == 
 
+Sound error
+== 
+
 Squares the current quad
 == 
 
@@ -907,6 +910,9 @@ Switch between images and layers managment.
 == 
 
 Switch curve type
+== 
+
+The audio device couldn't be initialised.
 == 
 
 Tiles

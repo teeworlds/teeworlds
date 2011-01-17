@@ -97,6 +97,7 @@ class CMenus : public CComponent
 		POPUP_PURE,
 		POPUP_LANGUAGE,
 		POPUP_DELETE_DEMO,
+		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
 	};

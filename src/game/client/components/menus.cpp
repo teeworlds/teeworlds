@@ -753,6 +753,14 @@ int CMenus::Render()
 	// some margin around the screen
 	Screen.Margin(10.0f, &Screen);
 	
+	static bool s_SoundCheck = false;
+	if(!s_SoundCheck && m_Popup == POPUP_NONE)
+	{
+		if(Client()->SoundInitFailed())
+			m_Popup = POPUP_SOUNDERROR;
+		s_SoundCheck = true;
+	}
+
 	if(m_Popup == POPUP_NONE)
 	{
 		// do tab bar
@@ -838,6 +846,13 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Delete demo");
 			pExtraText = Localize("Are you sure that you want to delete the demo?");
+			ExtraAlign = -1;
+		}
+		else if(m_Popup == POPUP_SOUNDERROR)
+		{
+			pTitle = Localize("Sound error");
+			pExtraText = Localize("The audio device couldn't be initialised.");
+			pButtonText = Localize("Ok");
 			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_PASSWORD)

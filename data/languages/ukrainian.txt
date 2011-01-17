@@ -945,6 +945,12 @@ Rotation of the envelope
 Shift
 == 
 
+Sound error
+== 
+
+The audio device couldn't be initialised.
+== 
+
 Unable to delete the demo
 == 
 
