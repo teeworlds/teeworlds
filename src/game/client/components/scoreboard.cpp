@@ -51,32 +51,26 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	Graphics()->QuadsEnd();
 
 	// render goals
-	//y = ystart+h-54;
-	float tw = 0.0f;
 	if(m_pClient->m_Snap.m_pGameobj)
 	{
 		if(m_pClient->m_Snap.m_pGameobj->m_ScoreLimit)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameobj->m_ScoreLimit);
-			TextRender()->Text(0, x+20.0f, y, 22.0f, aBuf, -1);
-			tw += TextRender()->TextWidth(0, 22.0f, aBuf, -1);
+			TextRender()->Text(0, x, y, 20.0f, aBuf, -1);
 		}
 		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameobj->m_TimeLimit);
-			TextRender()->Text(0, x+220.0f, y, 22.0f, aBuf, -1);
-			tw += TextRender()->TextWidth(0, 22.0f, aBuf, -1);
+			TextRender()->Text(0, x+220.0f, y, 20.0f, aBuf, -1);
 		}
 		if(m_pClient->m_Snap.m_pGameobj->m_RoundNum && m_pClient->m_Snap.m_pGameobj->m_RoundCurrent)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameobj->m_RoundCurrent, m_pClient->m_Snap.m_pGameobj->m_RoundNum);
-			TextRender()->Text(0, x+450.0f, y, 22.0f, aBuf, -1);
-			
-		/*[48c3fd4c][game/scoreboard]: timelimit x:219.428558
-		[48c3fd4c][game/scoreboard]: round x:453.142822*/
+			float tw = TextRender()->TextWidth(0, 20.0f, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-20.0f, y, 20.0f, aBuf, -1);
 		}
 	}
 }
