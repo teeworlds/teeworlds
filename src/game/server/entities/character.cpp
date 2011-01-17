@@ -304,15 +304,15 @@ void CCharacter::FireWeapon()
 
 				// set his velocity to fast upward (for now)
 				GameServer()->CreateHammerHit(m_Pos);
-				pTarget->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 				
-				vec2 Dir;
-				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
-					Dir = normalize(pTarget->m_Pos - m_Pos);
-				else
-					Dir = vec2(0.f, -1.f);
+				vec2 Dir = normalize(pTarget->m_Pos - m_Pos);
+
+				if (length(pTarget->m_Pos - m_Pos) < 0.0001f)
+					Dir = vec2(0.f, -1.f); // branch very rarely taken
+
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, //ensures identical behaviour but should be simplified
+						g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 					
-				pTarget->m_Core.m_Vel += normalize(Dir + vec2(0.f, -1.1f)) * 10.0f;
 				Hits++;
 			}
 			
