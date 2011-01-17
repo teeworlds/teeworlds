@@ -414,6 +414,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_WindowMustRefocus = 0;
 	m_SnapCrcErrors = 0;
 	m_AutoScreenshotRecycle = false;
+	m_EditorActive = false;
 
 	m_AckGameTick = -1;
 	m_CurrentRecvTick = 0;
@@ -1914,12 +1915,21 @@ void CClient::Run()
 		// render
 		if(g_Config.m_ClEditor)
 		{
+			if(!m_EditorActive)
+			{
+				GameClient()->OnActivateEditor();
+				m_EditorActive = true;
+			}
+
 			Update();
 			m_pEditor->UpdateAndRender();
 			m_pGraphics->Swap();
 		}
 		else
 		{
+			if(m_EditorActive)
+				m_EditorActive = false;
+
 			Update();
 
 			if(g_Config.m_DbgStress)
