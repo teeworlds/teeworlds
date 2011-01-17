@@ -51,10 +51,7 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)
 			Scoremod = 0.5f;
 			
 		float d = distance(Pos, pC->m_Pos);
-		if(d == 0)
-			Score += 1000000000.0f;
-		else
-			Score += 1.0f/d;
+		Score += Scoremod * (d == 0 ? 1000000000.0f : 1.0f/d);
 	}
 	
 	return Score;
