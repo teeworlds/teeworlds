@@ -123,13 +123,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		return;
 
 	//float ystart = y;
-	float h = 750.0f;
+	float h = 740.0f;
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x-10.f, y-10.f, w, h, 17.0f);
+	RenderTools()->DrawRoundRect(x-10.f, y, w, h, 17.0f);
 	Graphics()->QuadsEnd();
 
 	// render title
