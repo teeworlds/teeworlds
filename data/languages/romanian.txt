@@ -856,6 +856,9 @@ Type
 UI Color
 == Culoare meniu
 
+Unable to delete the demo
+== Nu pot șterge demo-ul
+
 Up
 == Sus
 
@@ -967,9 +970,6 @@ Sound error
 == 
 
 The audio device couldn't be initialised.
-== 
-
-Unable to delete the demo
 == 
 
 ##### old translations #####
