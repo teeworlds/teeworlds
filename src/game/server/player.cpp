@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
+#include <engine/shared/config.h>
 #include "player.h"
 
 
@@ -28,6 +29,9 @@ CPlayer::~CPlayer()
 
 void CPlayer::Tick()
 {
+#ifdef CONF_DEBUG
+	if(!g_Config.m_DbgDummies || m_ClientID < MAX_CLIENTS-g_Config.m_DbgDummies)
+#endif
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
@@ -75,6 +79,9 @@ void CPlayer::Tick()
 
 void CPlayer::Snap(int SnappingClient)
 {
+#ifdef CONF_DEBUG
+	if(!g_Config.m_DbgDummies || m_ClientID < MAX_CLIENTS-g_Config.m_DbgDummies)
+#endif
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
