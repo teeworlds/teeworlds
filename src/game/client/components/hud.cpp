@@ -138,24 +138,34 @@ void CHud::RenderScoreHud()
 		}
 		else
 		{
-			int Local = 1;
+			int Local = -1;
 			int aPos[2] = { 1, 2 };
-			const CNetObj_PlayerInfo *apPlayerInfo[2] = { m_pClient->m_Snap.m_paInfoByScore[0], 0 };
-			if(m_pClient->m_Snap.m_paInfoByScore[0])
+			const CNetObj_PlayerInfo *apPlayerInfo[2] = { 0, 0 };
+			int i = 0;
+			for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_paInfoByScore[i]; ++i)
 			{
-				if(m_pClient->m_Snap.m_paInfoByScore[0]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+				if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
 				{
-					apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[1];
-					Local = 0;
+					apPlayerInfo[t] = m_pClient->m_Snap.m_paInfoByScore[i];
+					if(apPlayerInfo[t]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+						Local = t;
+					++t;
 				}
-				else
-					for(int i = 1; i < MAX_CLIENTS; ++i)
-						if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
-						{
-							apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[i];
-							aPos[1] = i+1;
-							break;
-						}
+			}
+			// search local player info if not a spectator, nor within top2 scores
+			if(Local == -1 && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+			{
+				for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_paInfoByScore[i]; ++i)
+				{
+					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
+						++aPos[1];
+					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+					{
+						apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[i];
+						Local = 1;
+						break;
+					}
+				}
 			}
 			char aScore[2][32];
 			for(int t = 0; t < 2; ++t)
