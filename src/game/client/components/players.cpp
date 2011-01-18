@@ -121,9 +121,6 @@ void CPlayers::RenderHook(
 
 	float IntraTick = Client()->IntraGameTick();
 
-	if(Player.m_Health < 0) // dont render dead players
-		return;
-
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
@@ -131,7 +128,7 @@ void CPlayers::RenderHook(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0) || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
 		{
 		}
 		else
@@ -144,9 +141,6 @@ void CPlayers::RenderHook(
 	}
 
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
-
-	if(Prev.m_Health < 0) // Don't flicker from previous position
-		Position = vec2(Player.m_X, Player.m_Y);
 
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
@@ -254,9 +248,6 @@ void CPlayers::RenderPlayer(
 
 	float IntraTick = Client()->IntraGameTick();
 	
-	if(Player.m_Health < 0) // dont render dead players
-		return;
-
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 	
 	//float angle = 0;
@@ -292,7 +283,7 @@ void CPlayers::RenderPlayer(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0) || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
 		{
 		}
 		else
@@ -321,9 +312,6 @@ void CPlayers::RenderPlayer(
 		if(!RenderInfo.m_GotAirJump && !(Prev.m_Jumped&2))
 			m_pClient->m_pEffects->AirJump(Position);
 	}
-
-	if(Prev.m_Health < 0) // Don't flicker from previous position
-		Position = vec2(Player.m_X, Player.m_Y);
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);

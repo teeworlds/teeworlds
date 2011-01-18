@@ -309,7 +309,7 @@ bool CScoreboard::Active()
 	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 	{
 		// we are not a spectator, check if we are dead
-		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health <= 0)
+		if(!m_pClient->m_Snap.m_pLocalCharacter)
 			return true;
 	}
 
