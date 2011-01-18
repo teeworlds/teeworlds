@@ -114,7 +114,7 @@ class CSnapshotBuilder
 {
 	enum
 	{
-		MAX_ITEMS = 1024*2
+		MAX_ITEMS = 1024
 	};
 
 	char m_aData[CSnapshot::MAX_SIZE];
