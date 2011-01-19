@@ -1462,11 +1462,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						}
 
 						// adjust game time
+						if(m_RecivedSnapshots > 2)
 						{
 							int64 Now = m_GameTime.Get(time_get());
 							int64 TickStart = GameTick*time_freq()/50;
 							int64 TimeLeft = (TickStart-Now)*1000 / time_freq();
-							//st_update(&game_time, (game_tick-1)*time_freq()/50);
 							m_GameTime.Update(&m_GametimeMarginGraph, (GameTick-1)*time_freq()/50, TimeLeft, 0);
 						}
 
