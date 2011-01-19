@@ -125,10 +125,10 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 	if (!NoDamage)
 	{
 		// deal damage
-		CCharacter *apEnts[64];
+		CCharacter *apEnts[MAX_CLIENTS];
 		float Radius = 135.0f;
 		float InnerRadius = 48.0f;
-		int Num = m_World.FindEntities(p, Radius, (CEntity**)apEnts, 64, NETOBJTYPE_CHARACTER);
+		int Num = m_World.FindEntities(p, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		for(int i = 0; i < Num; i++)
 		{
 			vec2 Diff = apEnts[i]->m_Pos - p;

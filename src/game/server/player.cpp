@@ -208,7 +208,7 @@ void CPlayer::TryRespawn()
 
 	// check if the position is occupado
 	CEntity *apEnts[2] = {0};
-	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);
+	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, CGameWorld::ENTTYPE_CHARACTER);
 	
 	if(NumEnts == 0)
 	{
