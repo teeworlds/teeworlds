@@ -24,6 +24,7 @@ class CGameWorld
 	};
 
 	// TODO: two lists seams kinda not good, shouldn't be needed
+	CEntity *m_pNextTraverseEntity;
 	CEntity *m_pFirstEntity;
 	CEntity *m_apFirstEntityTypes[NUM_ENT_TYPES];
 	

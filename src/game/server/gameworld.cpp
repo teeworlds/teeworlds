@@ -107,6 +107,10 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 	if(pEnt->m_pNextTypeEntity)
 		pEnt->m_pNextTypeEntity->m_pPrevTypeEntity = pEnt->m_pPrevTypeEntity;
 
+	// keep list traversing valid
+	if(m_pNextTraverseEntity == pEnt)
+		m_pNextTraverseEntity = pEnt->m_pNextEntity;
+
 	pEnt->m_pNextEntity = 0;
 	pEnt->m_pPrevEntity = 0;
 	pEnt->m_pNextTypeEntity = 0;
@@ -116,15 +120,23 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 //
 void CGameWorld::Snap(int SnappingClient)
 {
-	for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+	for(CEntity *pEnt = m_pFirstEntity; pEnt; )
+	{
+		m_pNextTraverseEntity = pEnt->m_pNextEntity;
 		pEnt->Snap(SnappingClient);
+		pEnt = m_pNextTraverseEntity;
+	}
 }
 
 void CGameWorld::Reset()
 {
 	// reset all entities
-	for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+	for(CEntity *pEnt = m_pFirstEntity; pEnt; )
+	{
+		m_pNextTraverseEntity = pEnt->m_pNextEntity;
 		pEnt->Reset();
+		pEnt = m_pNextTraverseEntity;
+	}
 	RemoveEntities();
 
 	GameServer()->m_pController->PostReset();
@@ -139,13 +151,13 @@ void CGameWorld::RemoveEntities()
 	CEntity *pEnt = m_pFirstEntity;
 	while(pEnt)
 	{
-		CEntity *pNext = pEnt->m_pNextEntity;
+		m_pNextTraverseEntity = pEnt->m_pNextEntity;
 		if(pEnt->m_MarkedForDestroy)
 		{
 			RemoveEntity(pEnt);
 			pEnt->Destroy();
 		}
-		pEnt = pNext;
+		pEnt = m_pNextTraverseEntity;
 	}
 }
 
@@ -159,11 +171,19 @@ void CGameWorld::Tick()
 		if(GameServer()->m_pController->IsForceBalanced())
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "Teams have been balanced");
 		// update all objects
-		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+		for(CEntity *pEnt = m_pFirstEntity; pEnt; )
+		{
+			m_pNextTraverseEntity = pEnt->m_pNextEntity;
 			pEnt->Tick();
+			pEnt = m_pNextTraverseEntity;
+		}
 		
-		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+		for(CEntity *pEnt = m_pFirstEntity; pEnt; )
+		{
+			m_pNextTraverseEntity = pEnt->m_pNextEntity;
 			pEnt->TickDefered();
+			pEnt = m_pNextTraverseEntity;
+		}
 	}
 
 	RemoveEntities();
