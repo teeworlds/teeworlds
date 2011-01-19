@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <algorithm> // sort
 
+#include <base/math.h>
 #include <base/system.h>
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
@@ -440,9 +441,9 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 		{
 			SetInfo(pEntry, *pInfo);
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
-				pEntry->m_Info.m_Latency = (time_get()-m_BroadcastTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
 			else
-				pEntry->m_Info.m_Latency = (time_get()-pEntry->m_RequestTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
 			RemoveRequest(pEntry);
 		}
 	}
@@ -454,9 +455,9 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			SetInfo(pEntry, *pInfo);
 
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
-				pEntry->m_Info.m_Latency = (time_get()-m_BroadcastTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
 			else
-				pEntry->m_Info.m_Latency = (time_get()-pEntry->m_RequestTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
 			RemoveRequest(pEntry);
 		}
 	}
