@@ -91,6 +91,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		pReplacement += 3;
 		AddString(pLine, pReplacement);
 	}
+	io_close(IoHandle);
 	
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
