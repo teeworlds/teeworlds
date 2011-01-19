@@ -845,22 +845,24 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 			else
 			{
-				char aHex[] = "0123456789ABCDEF";
-				char aBuf[512];
-
-				for(int b = 0; b < pPacket->m_DataSize && b < 32; b++)
+				if(g_Config.m_Debug)
 				{
-					aBuf[b*3] = aHex[((const unsigned char *)pPacket->m_pData)[b]>>4];
-					aBuf[b*3+1] = aHex[((const unsigned char *)pPacket->m_pData)[b]&0xf];
-					aBuf[b*3+2] = ' ';
-					aBuf[b*3+3] = 0;
-				}
+					char aHex[] = "0123456789ABCDEF";
+					char aBuf[512];
 
-				char aBufMsg[256];
-				str_format(aBufMsg, sizeof(aBufMsg), "strange message ClientId=%d msg=%d data_size=%d", ClientId, Msg, pPacket->m_DataSize);
-				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
-				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
-				
+					for(int b = 0; b < pPacket->m_DataSize && b < 32; b++)
+					{
+						aBuf[b*3] = aHex[((const unsigned char *)pPacket->m_pData)[b]>>4];
+						aBuf[b*3+1] = aHex[((const unsigned char *)pPacket->m_pData)[b]&0xf];
+						aBuf[b*3+2] = ' ';
+						aBuf[b*3+3] = 0;
+					}
+
+					char aBufMsg[256];
+					str_format(aBufMsg, sizeof(aBufMsg), "strange message ClientId=%d msg=%d data_size=%d", ClientId, Msg, pPacket->m_DataSize);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBufMsg);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+				}
 			}
 		}
 		else
