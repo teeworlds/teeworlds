@@ -11,15 +11,13 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
 {
 	m_pGameWorld = pGameWorld;
 	
-	m_Objtype = ObjType;
+	m_ObjType = ObjType;
 	m_Pos = vec2(0,0);
 	m_ProximityRadius = 0;
 
 	m_MarkedForDestroy = false;	
 	m_Id = Server()->SnapNewID();
 
-	m_pNextEntity = 0;
-	m_pPrevEntity = 0;
 	m_pPrevTypeEntity = 0;
 	m_pNextTypeEntity = 0;
 }

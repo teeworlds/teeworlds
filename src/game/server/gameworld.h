@@ -15,18 +15,23 @@ class CCharacter;
 */
 class CGameWorld
 {
+public:
+	enum
+	{
+		ENTTYPE_PROJECTILE = 0,
+		ENTTYPE_LASER,
+		ENTTYPE_PICKUP,
+		ENTTYPE_FLAG,
+		ENTTYPE_CHARACTER,
+		NUM_ENTTYPES
+	};
+
+private:
 	void Reset();
 	void RemoveEntities();
 
-	enum
-	{
-		NUM_ENT_TYPES=10, // TODO: are more exact value perhaps? :)
-	};
-
-	// TODO: two lists seams kinda not good, shouldn't be needed
 	CEntity *m_pNextTraverseEntity;
-	CEntity *m_pFirstEntity;
-	CEntity *m_apFirstEntityTypes[NUM_ENT_TYPES];
+	CEntity *m_apFirstEntityTypes[NUM_ENTTYPES];
 	
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;
@@ -44,7 +49,6 @@ public:
 	
 	void SetGameServer(CGameContext *pGameServer);
 	
-	CEntity *FindFirst() { return m_pFirstEntity; }
 	CEntity *FindFirst(int Type);
 	
 	/*
@@ -57,12 +61,12 @@ public:
 			ents - Pointer to a list that should be filled with the pointers
 				to the entities.
 			max - Number of entities that fits into the ents array.
-			type - Type of the entities to find. -1 for all types.
+			type - Type of the entities to find.
 			
 		Returns:
 			Number of entities found and added to the ents array.
 	*/
-	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type = -1);
+	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type);
 	
 	/*
 		Function: interserct_CCharacter
