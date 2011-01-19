@@ -298,13 +298,11 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 				
-				//for race mod or any other mod, which needs hammer hits through the wall remove second condition
 				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 					continue;
 
 				// set his velocity to fast upward (for now)
 				GameServer()->CreateHammerHit(m_Pos);
-				pTarget->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 				
 				vec2 Dir;
 				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
@@ -312,7 +310,8 @@ void CCharacter::FireWeapon()
 				else
 					Dir = vec2(0.f, -1.f);
 					
-				pTarget->m_Core.m_Vel += normalize(Dir + vec2(0.f, -1.1f)) * 10.0f;
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
+					m_pPlayer->GetCID(), m_ActiveWeapon);
 				Hits++;
 			}
 			
