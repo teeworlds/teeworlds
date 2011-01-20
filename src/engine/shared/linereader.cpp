@@ -4,7 +4,7 @@
 
 void CLineReader::Init(IOHANDLE io)
 {
-	m_BufferMaxSize = 4*1024;
+	m_BufferMaxSize = sizeof(m_aBuffer);
 	m_BufferSize = 0;
 	m_BufferPos = 0;
 	m_IO = io;
@@ -13,6 +13,7 @@ void CLineReader::Init(IOHANDLE io)
 char *CLineReader::Get()
 {
 	unsigned LineStart = m_BufferPos;
+	bool CRLFBreak = false;
 
 	while(1)
 	{
@@ -53,10 +54,25 @@ char *CLineReader::Get()
 			if(m_aBuffer[m_BufferPos] == '\n' || m_aBuffer[m_BufferPos] == '\r')
 			{
 				// line found
-				if(m_aBuffer[m_BufferPos] == '\r' && m_BufferPos+1 < m_BufferSize && m_aBuffer[m_BufferPos+1] == '\n')
+				if(m_aBuffer[m_BufferPos] == '\r')
+				{
+					if(m_BufferPos+1 >= m_BufferSize)
+					{
+						// read more to get the connected '\n'
+						CRLFBreak = true;
+						++m_BufferPos;
+						continue;
+					}
+					else if(m_aBuffer[m_BufferPos+1] == '\n')
+						m_aBuffer[m_BufferPos++] = 0;
+				}
+				m_aBuffer[m_BufferPos++] = 0;
+				return &m_aBuffer[LineStart];
+			}
+			else if(CRLFBreak)
+			{
+				if(m_aBuffer[m_BufferPos] == '\n')
 					m_aBuffer[m_BufferPos++] = 0;
-				m_aBuffer[m_BufferPos] = 0;
-				m_BufferPos++;
 				return &m_aBuffer[LineStart];
 			}
 			else
