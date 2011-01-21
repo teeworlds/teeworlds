@@ -10,6 +10,18 @@
 %ds left
 == Noch %ds
 
+%i minute left
+== Noch %i Minute
+
+%i minutes left
+== Noch %i Minuten
+
+%i second left
+== Noch %i Sekunde
+
+%i seconds left
+== Noch %i Sekunden
+
 %s Right click for context menu.
 == %s Rechtsklick für Kontextmenü.
 
@@ -80,7 +92,7 @@ Automatically record demos
 == Automatisch Demos aufnehmen
 
 Automatically take game over screenshot
-== Automatisch am Ende einer Runde ein Bildschirmfoto erstellen
+== Bildschirmfotos autom. nach jeder Runde erstellen
 
 Blue team
 == Blaues Team
@@ -484,6 +496,9 @@ Mute when not active
 Name
 == Name
 
+Name plates size
+== Größe der Namen
+
 Name:
 == Name:
 
@@ -602,7 +617,7 @@ Quads
 == Vier.
 
 Quality Textures
-== Hochaufgelöste Texturen
+== Hochauflösende Texturen
 
 Quick search:
 == Schnellsuche:
@@ -763,6 +778,9 @@ Skins
 Sound
 == Ton
 
+Sound error
+== Audiofehler
+
 Sound volume
 == Lautstärke
 
@@ -811,6 +829,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Texturkompression
 
+The audio device couldn't be initialised.
+== Das Audiosystem konnte nicht gestartet werden.
+
 The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
@@ -840,6 +861,9 @@ Type
 
 UI Color
 == Menüfarbe
+
+Unable to delete the demo
+== Demo konnte nicht gelöscht werden
 
 Up
 == Oben
@@ -947,30 +971,6 @@ no limit
 == Keine Begrenzung
 
 ##### needs translation #####
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
-Name plates size
-== 
-
-Sound error
-== 
-
-The audio device couldn't be initialised.
-== 
-
-Unable to delete the demo
-== 
 
 ##### old translations #####
 
