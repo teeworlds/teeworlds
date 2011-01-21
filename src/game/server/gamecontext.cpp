@@ -968,6 +968,18 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
 
+void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "cleared votes");
+	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
+	pSelf->Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	pSelf->m_pVoteOptionHeap->Reset();
+	pSelf->m_pVoteOptionFirst = 0;
+	pSelf->m_pVoteOptionLast = 0;
+}
+
 void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1011,6 +1023,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "");
 
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "");
+	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
