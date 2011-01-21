@@ -194,6 +194,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, 0, 0, "Set team of all players to team");
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option");
+	Console()->Register("clear_votes", "", CFGFLAG_SERVER, 0, 0, "Clears the voting options");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
 
 
