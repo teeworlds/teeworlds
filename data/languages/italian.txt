@@ -202,7 +202,7 @@ Miscellaneous
 == Altro
 
 Mouse sens.
-== SensibilitÃ
+== Sensibilità
 
 Move left
 == Muovi a sinistra
@@ -268,7 +268,7 @@ Prev. weapon
 == Precedente
 
 Quality Textures
-== Textures di qualitÃ 
+== Textures di qualità
 
 Quick search:
 == Ricerca rapida:
@@ -474,7 +474,7 @@ Adds a new quad
 == Aggiunge una nuova Forma nella mappa
 
 Alpha value of the envelope
-== grafico dei valori di Trasparenza/OpacitÃ  (asse Y),  in funzione del tempo (asse X)
+== grafico dei valori di Trasparenza/Opacità (asse Y),  in funzione del tempo (asse X)
 
 Anim
 == Anim
@@ -564,7 +564,7 @@ Decrease
 == Diminuisci
 
 Decrease animation speed
-== Diminuisce la velocitÃ   dell'animazione
+== Diminuisce la velocità   dell'animazione
 
 Delete
 == Cancella
@@ -663,7 +663,7 @@ Increase
 == Aumenta
 
 Increase animation speed
-== Aumenta la velocitÃ  dell'animazione
+== Aumenta la velocità  dell'animazione
 
 Invalid Demo
 == Demo non valida
