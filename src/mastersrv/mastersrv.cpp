@@ -254,43 +254,6 @@ void PurgeServers()
 	}
 }
 
-void ConAddBan(IConsole::IResult *pResult, void *pUser)
-{
-	int i;
-	if(m_NumBans == MAX_BANS)
-	{
-		dbg_msg("mastersrv", "error: banlist is full");
-		return;
-	}
-	
-	net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0));
-	
-	for(i = 0; i < m_NumBans; i++)
-	{
-		if(net_addr_comp(&m_aBans[i].m_Address, &m_aBans[m_NumBans].m_Address) == 0)
-		{
-			dbg_msg("mastersrv", "duplicate ban: %d.%d.%d.%d:%d",
-				m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
-				m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
-				m_aBans[m_NumBans].m_Address.port);
-			return;
-		}
-	}
-	
-	
-	dbg_msg("mastersrv", "ban added: %d.%d.%d.%d:%d",
-		m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
-		m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
-		m_aBans[m_NumBans].m_Address.port);
-	m_NumBans++;
-}
-
-void ReloadBans()
-{
-	m_NumBans = 0;
-	m_pConsole->ExecuteFile("master.cfg");
-}
-
 bool CheckBan(NETADDR Addr)
 {
 	for(int i = 0; i < m_NumBans; i++)
@@ -309,6 +272,38 @@ bool CheckBan(NETADDR Addr)
 		}
 	}
 	return false;
+}
+
+void ConAddBan(IConsole::IResult *pResult, void *pUser)
+{
+	if(m_NumBans == MAX_BANS)
+	{
+		dbg_msg("mastersrv", "error: banlist is full");
+		return;
+	}
+	
+	net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0));
+	
+	if(CheckBan(m_aBans[m_NumBans].m_Address))
+	{
+		dbg_msg("mastersrv", "duplicate ban: %d.%d.%d.%d:%d",
+			m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
+			m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
+			m_aBans[m_NumBans].m_Address.port);
+		return;
+	}
+	
+	dbg_msg("mastersrv", "ban added: %d.%d.%d.%d:%d",
+		m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
+		m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
+		m_aBans[m_NumBans].m_Address.port);
+	m_NumBans++;
+}
+
+void ReloadBans()
+{
+	m_NumBans = 0;
+	m_pConsole->ExecuteFile("master.cfg");
 }
 
 int main(int argc, const char **argv) // ignore_convention
