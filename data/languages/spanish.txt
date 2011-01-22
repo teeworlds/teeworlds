@@ -1,0 +1,975 @@
+##### language spanish by ReGnuM - teenworld.es #####
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d de %d servidores, %d jugadores
+
+%ds left
+== faltan %ds
+
+Abort
+== Cancelar
+
+Address
+== Dirección
+
+All
+== Todos
+
+Alpha
+== Alpha
+
+Always show name plates
+== Siempre mostrar apodos
+
+Are you sure that you want to quit?
+== Seguro que desea salir?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Como es la primera vez que abre el juego, por favor, entre con su apodo. Es recomendable que verifique su configuración y ajuste las preferencias antes de entrar en un servidor.
+
+Blue team
+== Equipo azul
+
+Blue team wins!
+== Equipo azul gana!
+
+Body
+== Cuerpo
+
+Call vote
+== Votación
+
+Chat
+== Charla
+
+Close
+== Cerrar
+
+Compatible version
+== Versión compatible
+
+Connect
+== Conectar
+
+Connecting to
+== Conectando a
+
+Connection Problems...
+== Problemas de Conexión...
+
+Console
+== Consola
+
+Controls
+== Controles
+
+Current
+== Actualmente
+
+Current version: %s
+== Versión atual : %s
+
+Custom colors
+== Colores personalizados
+
+Demos
+== Demos
+
+Disconnect
+== Desconectar
+
+Disconnected
+== Desconectado
+
+Display Modes
+== Modos de exibición
+
+Downloading map
+== Bajando mapa
+
+Draw!
+== Empate!
+
+Dynamic Camera
+== Cámara dinámica
+
+Emoticon
+== Emoticon
+
+Enter
+== Entrar
+
+Error
+== Error
+
+Error loading demo
+== error al cargar demo
+
+FSAA samples
+== Muestras FSAA
+
+Favorite
+== Favorito
+
+Favorites
+== Favoritos
+
+Feet
+== Pies
+
+Filter
+== Filtro
+
+Fire
+== Disparar
+
+Force vote
+== Forzar
+
+Fullscreen
+== Pantalla Completa
+
+Game
+== Juego
+
+Game info
+== Info. sobre el juego
+
+Game over
+== Fin de Juego
+
+Game type
+== Tipo de juego
+
+Game types:
+== Tipos de juego:
+
+General
+== General
+
+Graphics
+== Gráficos
+
+Grenade
+== Granada
+
+Hammer
+== Martillo
+
+Has people playing
+== Hay gente jugando
+
+High Detail
+== Mas detalles (HD)
+
+Hook
+== Gancho
+
+Host address
+== Dirección de host
+
+Hue
+== Matiz
+
+Info
+== Info.
+
+Internet
+== Internet
+
+Join blue
+== Azul
+
+Join game
+== Entrar en juego
+
+Join red
+== Rojo
+
+Jump
+== Saltar
+
+Kick
+== Golpeo
+
+LAN
+== LAN
+
+Language
+== Lenguaje
+
+Lht.
+== Luz
+
+Loading
+== Cargando
+
+MOTD
+== MOTD
+
+Map
+== Mapa
+
+Maximum ping:
+== Ping máximo:
+
+Miscellaneous
+== Miscelanea
+
+Mouse sens.
+== Sens. o ratón
+
+Move left
+== Izquierda
+
+Move right
+== Derecha
+
+Movement
+== Movimiento
+
+Mute when not active
+== Silenciar en inactivo
+
+Name
+== Nombre
+
+News
+== Notícia
+
+Next weapon
+== Próxima arma
+
+Nickname
+== apodo
+
+No
+== No
+
+No password
+== Sin contraseña
+
+No servers found
+== Ningún servidor encontrado
+
+No servers match your filter criteria
+== Ningún servidor corresponde a los critérios de filtro
+
+Ok
+== Ok
+
+Password
+== Contraseña
+
+Password incorrect
+== Contraseña incorreta
+
+Ping
+== Ping
+
+Pistol
+== Pistola
+
+Play
+== Asistir
+
+Player
+== Jugador
+
+Players
+== Jugadores
+
+Please balance teams!
+== Por favor, equilibre los equipos!
+
+Prev. weapon
+== Arma anterior
+
+Quality Textures
+== Texturas de calidad
+
+Quick search:
+== Pesquisa rápida:
+
+Quit
+== Salir
+
+Red team
+== Equipo rojo
+
+Red team wins!
+== Equipo rojo gana!
+
+Refresh
+== Actualizar
+
+Refreshing master servers
+== Actualizando servidores master
+
+Remote console
+== Consola remota
+
+Reset filter
+== Resetar filtro
+
+Reset to defaults
+== Resetar por defecto
+
+Rifle
+== Laser
+
+Round
+== Ronda
+
+Sample rate
+== Frecuencia de muestreo
+
+Sat.
+== Sat.
+
+Score
+== Puntos
+
+Score board
+== Tabla de puntos
+
+Score limit
+== Puntos máx.
+
+Scoreboard
+== Puntuación
+
+Screenshot
+== Captura da pantalla
+
+Server details
+== Detalles del server
+
+Server info
+== Info del server
+
+Server not full
+== Servidor incompleto
+
+Settings
+== Config.
+
+Shotgun
+== Escopeta
+
+Show chat
+== Mostrar chat
+
+Show name plates
+== Mostrar nicks
+
+Show only supported
+== Mostrar solo soportados
+
+Skins
+== Skins
+
+Sound
+== Sonido
+
+Sound volume
+== Volumem de sonido
+
+Spectate
+== Observar
+
+Spectators
+== Observadores
+
+Standard gametype
+== Tipo de juego normal
+
+Standard map
+== Mapa normal
+
+Sudden Death
+== Muerte Súbita
+
+Switch weapon on pickup
+== Cambiar de arma
+
+Team
+== Equipo
+
+Team chat
+== Conv. de equipo
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s ya salió! Descárgalo desde www.teeworlds.com! Versión española www.teeworlds.es
+
+Texture Compression
+== Compresión de Textura
+
+The server is running a non-standard tuning on a pure game type.
+== El servidor está ejecutando una afinación no estándar en un tipo de juego puro.
+
+Time limit
+== Tiempo máx.
+
+Try again
+== Probar de nuevo
+
+Type
+== Tipo
+
+UI Color
+== Color de menu
+
+Use sounds
+== Usar sonidos
+
+V-Sync
+== V-Sync
+
+Version
+== Versión
+
+Vote no
+== Votar no
+
+Vote yes
+== Votar si
+
+Voting
+== Votando
+
+Warmup
+== Calentamiento
+
+Weapon
+== Arma
+
+Welcome to Teeworlds
+== Bienvenido a Teeworlds!
+
+Yes
+== Si
+
+You must restart the game for all settings to take effect.
+== Debes reiniciar el juego para que los cambios tengan efecto.
+
+Your skin
+== Tu skin
+
+##### needs translation #####
+
+%d%% loaded
+== %d%%  cargado
+
+%i minute left
+== %i minuto falta
+
+%i minutes left
+== %i minutos faltan
+
+%i second left
+== %i segundo falta
+
+%i seconds left
+== %i segundos faltan
+
+%s Right click for context menu.
+== %s click derecho para ver menu.
+
+Add
+== Agregar
+
+Add Image
+== Agregar imagen
+
+Add Quad
+== Agregar campo
+
+Add group
+== Agregar grupo
+
+Add quads layer
+== Agregar campo capa
+
+Add tile layer
+== Agregar capa de suelo
+
+Adds a new group
+== Agregar nuevo grupo
+
+Adds a new quad
+== Agregar nuevo campo
+
+Alpha value of the envelope
+== Valor alpha de la envoltura
+
+Anim
+== Animación
+
+Append
+== Anexar
+
+Append map
+== Anexar mapa
+
+Are you sure that you want to delete the demo?
+== Seguro de eliminar la demo?
+
+Aspect ratio
+== Relación de aspecto
+
+Automatically record demos
+== Registro automático en demos
+
+Automatically take game over screenshot
+== Pantalla game over automáticamente
+
+Blue value of the envelope
+== Valor azul de la envoltura
+
+Border
+== Bordes
+
+CCW
+== CCW
+
+CW
+== CW
+
+Cancel
+== Cancelar
+
+Clear collision
+== Limpiar colisión
+
+Clip H
+== Clip H
+
+Clip W
+== Clip W
+
+Clip X
+== Clip X
+
+Clip Y
+== Clip Y
+
+Color
+== Color
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Color+
+== Color+
+
+Constructs collision from this layer
+== Construir collisión para esta capa
+
+Creates a new color envelope
+== Crear nuevo color de envoltura
+
+Creates a new map
+== Crear nuevo mapa
+
+Creates a new pos envelope
+== Crear nueva envoltura
+
+Creates a new quad layer
+== Crear nueva capa de campo
+
+Creates a new tile layer
+== Crear nueva capa de suelo
+
+Decrease
+== Reducir
+
+Decrease animation speed
+== Reducir velocidad de animación
+
+Delete
+== Borrar
+
+Delete demo
+== Borrar demo
+
+Delete group
+== Borrar grupo
+
+Delete layer
+== Borrar capa
+
+Delete this envelope
+== Borrar envoltura
+
+Deletes the current quad
+== Borrar el campo actual
+
+Deletes the layer
+== Borrada la capa
+
+Detail
+== Detalles
+
+Down
+== Abajo
+
+Embed
+== Integrar
+
+Embedded
+== Embebido
+
+Embeds the image into the map file.
+== Integrar la imagen en el mapa
+
+Enable/disable group for saving
+== Activar/Desactivar guardar grupo
+
+Enable/disable layer for saving
+== Activar/Desactivar guardar capa
+
+Envelopes
+== Envolturas
+
+Exit
+== Salir
+
+Exits from the editor
+== Salir del editor
+
+External
+== Exterior
+
+File
+== Archivo
+
+File: %s
+== Archivo: %s
+
+Filename:
+== Archivo:
+
+Folder
+== Carpeta
+
+Green value of the envelope
+== Valor verde de la envoltura
+
+Group
+== Grupo
+
+HD
+== HD
+
+Height
+== Alto
+
+Image
+== Imagen
+
+Images
+== Imagenes
+
+Increase
+== Incrementar
+
+Increase animation speed
+== Incrementar velocidad animación
+
+Invalid Demo
+== Demo invalida
+
+Layers
+== Capas
+
+Left
+== Izquierda
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+==  Izquierdo del ratón para mover. Mantenga mayúsculas para pivotar. Mantenga control para rotar.
+
+Left mouse button to move. Hold shift to move the texture.
+== Izquierdo del ratón para mover. Mantenga mayúsculas para mover la textura.
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+==Izquierdo del ratón para arrastrar. Mantén pulsado Ctrl para ser más precisos. Mantenga mayúsculas para modificar el tiempo también. Derecho del ratón para eliminar.
+
+Load
+== Carga
+
+Load a new image to use in the map
+== Carga nueva imagen para usar en el mapa
+
+Load map
+== Cargar mapa
+
+Make collision
+== Fabricar colisión
+
+Make external
+== Fabricar exterior
+
+Max Screenshots
+== Max capturas
+
+Max demos
+== Max demos
+
+Name plates size
+== Tamaño del nombre de placas
+
+Name:
+== Nombre
+
+New
+== Nuevo
+
+New folder
+== nueva carpeta
+
+Next Envelope
+== Nueva encoltura
+
+None
+== Ninguno
+
+Normal animation speed
+== Velocidad de animación normal
+
+Open
+== Abrir
+
+Opens a map and adds everything from that map to the current one
+== Abrir mapa y añade todo desde otro mapa al actual
+
+Opens a map for editing
+== Abrir mapa para editar
+
+Order
+== Pedir
+
+Para X
+== Para X
+
+Para Y
+== Para Y
+
+Parent Folder
+== Carpeta superior
+
+Pos X
+== Pos X
+
+Pos Y
+== Pos Y
+
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Pos.+
+== Pos.+
+
+Press right mouse button to create a new point
+== Pulse el botón derecho del ratón para crear un nuevo punto
+
+Previous Envelope
+== Envoltura anterior
+
+Proof
+== Prueba
+
+Quads
+== Campos
+
+REC
+== REC
+
+Reason:
+== Razón:
+
+Record demo
+== Registro demo
+
+Red value of the envelope
+== Valor rojo de la envoltura
+
+Refocus
+== Reorientar
+
+Remove
+== Remover
+
+Removes collision from this layer
+== Remover colisión para esta capa
+
+Removes the image from the map
+==Remover la imagen de este mapa
+
+Removes the image from the map file.
+== Remover la imagen para este archivo de mapa.
+
+Replace
+== Reemplazar
+
+Replace Image
+== Reemplazar Imagen
+
+Replaces the image with a new one
+== Reemplazar imagen con una nueva
+
+Resizes the current Quad based on the aspect ratio of the image
+== Redimensionar el actual campo según la dimensión de imagen
+
+Right
+== Derecha
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Rotación del pincel en grados. Utilice el botón izquierdo del ratón para arrastrar y cambiar el valor. Mantenga mayúsculas para ser más precisos.
+
+Rotation of the envelope
+== Rotacion de la envoltura
+
+Save
+== Guardar
+
+Save As
+== Guardar como
+
+Save map
+== Guardar mapa
+
+Saves the current map
+== Guardar el mapa actual
+
+Saves the current map under a new name
+== Guardar el mapa actual en un nuevo juego
+
+Select group. Right click for properties.
+== Seleccionar grupo. Botón derecho para propiedades.
+
+Select image
+== Seleccionar imagen
+
+Select layer. Right click for properties.
+== Seleccionar capa. Botón derecho para propiedades.
+
+Shift
+== Mayúscula
+
+Sound error
+== Error de sonido
+
+Square
+== Cuadro
+
+Squares the current quad
+== Cuadros del campo actual 
+
+Stop record
+== Parar grabación
+
+Switch between images and layers managment.
+== Cambiar entre las imágenes y la gestión de capas.
+
+Switch curve type
+== Interruptor tipo curva
+
+The audio device couldn't be initialised.
+== El dispositivo de audio no puede ser inicializado.
+
+Tiles
+== Suelos
+
+Time limit: %d min
+== Tiempo limite: %d min
+
+Toggle group visibility
+== Cambiar la visibilidad del grupo
+
+Toggle layer visibility
+== Alternar la visibilidad de capa
+
+Toggles the envelope editor.
+== Cambia el editor de envoltura.
+
+Unable to delete the demo
+== No se puede eliminar la demo
+
+Up
+== Arriba
+
+Use Clipping
+== usar Tijretazo
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Utilice el botón izquierdo del ratón para arrastrar y cambiar el valor del color. Mantenga cambio para ser más precisos.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Utilice el botón izquierdo del ratón para arrastrar y cambiar el valor. Mantenga cambio para ser más precisos.
+
+Use left mouse button to drag and create a brush.
+== Utilice el botón izquierdo del ratón para arrastrar y crear un pincel.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Utilice el botón izquierdo del ratón para pintar con el pincel. Botón derecho despeja el pincel.
+
+Width
+== Ancho
+
+X-axis of the envelope
+== eje-X de la envoltura
+
+Y-axis of the envelope
+== eje-Y de la encoltura
+
+ZI
+== ZI
+
+ZO
+== ZO
+
+[HOME] Restore map focus
+== [HOME] Restaurar mapa
+
+[M] Flip brush vertical
+== [M] Flip pincel vertical
+
+[N] Flip brush horizontal
+== [N] Flip pincel horizontal
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom a la normalidad y eliminar editor de desplazamiento
+
+[NumPad+] Zoom in
+== [NumPad+] Acercar Zoom
+
+[NumPad-] Zoom out
+== [NumPad-] Alejar Zoom
+
+[R] Rotates the brush counter clockwise
+== [R] Rotar a la izquierda el pincel
+
+[T] Rotates the brush clockwise
+== [T] Rotar a la derecha el pincel
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Activar detalle alto
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Activar animación
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Alterna bordes de prueba. Estas fronteras representan lo que un jugador puede ver máximo.
+
+no limit
+== sin límite
+
+##### old translations #####
