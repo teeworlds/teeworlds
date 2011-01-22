@@ -2,6 +2,10 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <engine/shared/network.h>
+#include <engine/shared/config.h>
+#include <engine/console.h>
+#include <engine/storage.h>
+#include <engine/kernel.h>
 
 #include "mastersrv.h"
 
@@ -10,6 +14,7 @@ enum {
 	MAX_SERVERS_PER_PACKET=128,
 	MAX_PACKETS=16,
 	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
+	MAX_BANS=128,
 	EXPIRE_TIME = 90
 };
 
@@ -60,10 +65,22 @@ struct CCountPacketData
 
 static CCountPacketData m_CountData;
 
+
+struct CBanEntry
+{
+	NETADDR m_Address;
+	int64 m_Expire;
+};
+
+static CBanEntry m_aBans[MAX_BANS];
+static int m_NumBans = 0;
+
 //static int64 server_expire[MAX_SERVERS];
 
 static CNetClient m_NetChecker; // NAT/FW checker
 static CNetClient m_NetOp; // main
+
+IConsole *m_pConsole;
 
 void BuildPackets()
 {
@@ -237,9 +254,66 @@ void PurgeServers()
 	}
 }
 
-int main(int argc, char **argv) // ignore_convention
+void ConAddBan(IConsole::IResult *pResult, void *pUser)
 {
-	int64 LastBuild = 0;
+	int i;
+	if(m_NumBans == MAX_BANS)
+	{
+		dbg_msg("mastersrv", "error: banlist is full");
+		return;
+	}
+	
+	net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0));
+	
+	for(i = 0; i < m_NumBans; i++)
+	{
+		if(net_addr_comp(&m_aBans[i].m_Address, &m_aBans[m_NumBans].m_Address) == 0)
+		{
+			dbg_msg("mastersrv", "duplicate ban: %d.%d.%d.%d:%d",
+				m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
+				m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
+				m_aBans[m_NumBans].m_Address.port);
+			return;
+		}
+	}
+	
+	
+	dbg_msg("mastersrv", "ban added: %d.%d.%d.%d:%d",
+		m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
+		m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
+		m_aBans[m_NumBans].m_Address.port);
+	m_NumBans++;
+}
+
+void ReloadBans()
+{
+	m_NumBans = 0;
+	m_pConsole->ExecuteFile("master.cfg");
+}
+
+bool CheckBan(NETADDR Addr)
+{
+	for(int i = 0; i < m_NumBans; i++)
+	{
+		if(net_addr_comp(&m_aBans[i].m_Address, &Addr) == 0)
+		{
+			return true;
+		}
+	}
+	Addr.port = 0;
+	for(int i = 0; i < m_NumBans; i++)
+	{
+		if(net_addr_comp(&m_aBans[i].m_Address, &Addr) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+int main(int argc, const char **argv) // ignore_convention
+{
+	int64 LastBuild = 0, LastBanReload = 0;
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
@@ -256,6 +330,18 @@ int main(int argc, char **argv) // ignore_convention
 	
 	//mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
+
+	IKernel *pKernel = IKernel::Create();
+	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
+
+	m_pConsole = CreateConsole(CFGFLAG_MASTER);
+	m_pConsole->Register("ban", "s", CFGFLAG_MASTER, ConAddBan, 0, "Ban IP from mastersrv");
+
+	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
+	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
+
+	if(RegisterFail)
+		return -1;
 	
 	dbg_msg("mastersrv", "started");
 	
@@ -268,6 +354,9 @@ int main(int argc, char **argv) // ignore_convention
 		CNetChunk Packet;
 		while(m_NetOp.Recv(&Packet))
 		{
+			// check if the server is banned
+			if(CheckBan(Packet.m_Address)) continue;
+
 			if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
@@ -318,6 +407,9 @@ int main(int argc, char **argv) // ignore_convention
 		// process m_aPackets
 		while(m_NetChecker.Recv(&Packet))
 		{
+			// check if the server is banned
+			if(CheckBan(Packet.m_Address)) continue;
+			
 			if(Packet.m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 			{
@@ -338,6 +430,13 @@ int main(int argc, char **argv) // ignore_convention
 			}
 		}
 		
+		if(time_get()-LastBanReload > time_freq()*300)
+		{
+			LastBanReload = time_get();
+
+			ReloadBans();
+		}
+
 		if(time_get()-LastBuild > time_freq()*5)
 		{
 			LastBuild = time_get();
