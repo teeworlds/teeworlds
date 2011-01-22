@@ -28,6 +28,7 @@
 
 #include "register.h"
 #include "server.h"
+#include "game/server/gamecontext.h"
 
 #if defined(CONF_FAMILY_WINDOWS) 
 	#define _WIN32_WINNT 0x0500
@@ -1073,7 +1074,6 @@ void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterS
 
 int CServer::Run()
 {
-	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
@@ -1409,6 +1409,11 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_RunServer = 0;
 }
 
+void CServer::ConPause(IConsole::IResult *pResult, void *pUser)
+{
+	((CGameContext*)pUser)->m_World.m_Paused ^= 1;
+}
+
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 {
 	CServer* pServer = (CServer *)pUser;
@@ -1452,6 +1457,7 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	
 	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "");
 	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "");
@@ -1459,6 +1465,7 @@ void CServer::RegisterCommands()
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "");
+	Console()->Register("pause", "", CFGFLAG_SERVER, ConPause, m_pGameServer, "");
 
 	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");

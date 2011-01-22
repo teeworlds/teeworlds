@@ -2205,6 +2205,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
 	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
 	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
+	m_pConsole->Register("pause", "", CFGFLAG_SERVER, 0, 0, "Pause game");
 	m_pConsole->Register("record", "?s", CFGFLAG_SERVER, 0, 0, "Record to a file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
 	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
