@@ -281,9 +281,9 @@ void CMenus::UiDoListboxStart(void *pId, const CUIRect *pRect, float RowHeight, 
 	if(Num > 0)
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
-			gs_ListBoxScrollValue -= 1.0f/Num;
+			gs_ListBoxScrollValue -= 3.0f/Num;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
-			gs_ListBoxScrollValue += 1.0f/Num;
+			gs_ListBoxScrollValue += 3.0f/Num;
 		
 		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
 		if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
