@@ -460,7 +460,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_BrFilterPing);
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_BrFilterPing, &EditBox, aBuf, sizeof(aBuf), 12.0f, &Offset);
-		g_Config.m_BrFilterPing = str_toint(aBuf);
+		g_Config.m_BrFilterPing = clamp(str_toint(aBuf), 0, 999);
 	}
 
 	View.HSplitBottom(ms_ButtonHeight, &View, &Button);
