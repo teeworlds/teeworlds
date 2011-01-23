@@ -302,7 +302,10 @@ void CCharacter::FireWeapon()
 					continue;
 
 				// set his velocity to fast upward (for now)
-				GameServer()->CreateHammerHit(m_Pos);
+				if(length(pTarget->m_Pos-ProjStartPos) > 0.0f)
+					GameServer()->CreateHammerHit(pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*m_ProximityRadius*0.5f);
+				else
+					GameServer()->CreateHammerHit(ProjStartPos);
 				
 				vec2 Dir;
 				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
