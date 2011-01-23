@@ -1,13 +1,59 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
 == %d di %d server, %d giocatori
 
+%d%% loaded
+== %d%% caricati
+
+%ds left
+== %ds ancora
+
+%i minute left
+== %i minuto ancora
+
+%i minutes left
+== %i minuti ancora
+
+%i second left
+== %i secondo ancora
+
+%i seconds left
+== %i secondi ancora
+
+%s Right click for context menu.
+== %s Menu tasto destro.
+
 Abort
 == Annulla
 
+Add
+== Aggiungi
+
+Add Image
+== +Immagine
+
+Add Quad
+== +Forma
+
+Add group
+== Aggiungi gruppo
+
+Add quads layer
+== +Livello Forme
+
+Add tile layer
+== +Livello Caselle
+
 Address
 == Indirizzo
+
+Adds a new group
+== Aggiunge un nuovo Gruppo di Livelli
+
+Adds a new quad
+== Aggiunge una nuova Forma nella mappa
 
 All
 == Tutti
@@ -15,8 +61,23 @@ All
 Alpha
 == Alpha
 
+Alpha value of the envelope
+== Grafico dei valori di Trasparenza/Opacità (asse Y),  in funzione del tempo (asse X)
+
 Always show name plates
 == Mostra sempre etichette dei nomi
+
+Anim
+== Anim
+
+Append
+== Inserisci
+
+Append map
+== Inserisci Mappa
+
+Are you sure that you want to delete the demo?
+== Sicuro di voler cancellare questa registrazione?
 
 Are you sure that you want to quit?
 == Sicuro di voler uscire?
@@ -24,23 +85,74 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == E' la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname. E' consigliato aggiustare le impostazioni in base alle proprie preferenze prima di entrare in un server.
 
+Aspect ratio
+== Riproporziona
+
+Automatically record demos
+== Registra demo automaticamente
+
+Automatically take game over screenshot
+== Foto automatica a fine partita
+
 Blue team
 == Squadra Blu
 
 Blue team wins!
 == La squadra blu ha vinto!
 
+Blue value of the envelope
+== grafico dei valori di Blu (asse Y), in funzione del tempo (asse X)
+
 Body
 == Corpo
+
+Border
+== Bordi
+
+CCW
+== AS
+
+CW
+== OD
 
 Call vote
 == Inizia voto
 
+Cancel
+== Annulla
+
 Chat
 == Chat
 
+Clear collision
+== Cancella collisioni
+
+Clip H
+== Alt. Taglio
+
+Clip W
+== Lar. Taglio
+
+Clip X
+== Taglia da X
+
+Clip Y
+== Taglia da Y
+
 Close
 == Chiudi
+
+Color
+== Colore
+
+Color Env
+== Eff. Col.
+
+Color TO
+== a col.
+
+Color+
+== Colore
 
 Compatible version
 == Versione compatibile
@@ -51,11 +163,32 @@ Connect
 Connecting to
 == Connessione a
 
+Connection Problems...
+== Connessione Persa...
+
 Console
 == Console
 
+Constructs collision from this layer
+== Costruisce le collisioni su questo livello
+
 Controls
 == Controlli
+
+Creates a new color envelope
+== Crea un nuovo effetto di colore
+
+Creates a new map
+== Crea una nuova mappa
+
+Creates a new pos envelope
+== Crea un nuovo effetto di movimento
+
+Creates a new quad layer
+== Crea un nuovo livello di forme
+
+Creates a new tile layer
+== Crea un nuovo livello di caselle
 
 Current
 == Attuale
@@ -66,8 +199,38 @@ Current version: %s
 Custom colors
 == Colori personalizzati
 
+Decrease
+== Diminuisci
+
+Decrease animation speed
+== Diminuisce la velocità   dell'animazione
+
+Delete
+== Cancella
+
+Delete demo
+== Cancella demo
+
+Delete group
+== Cancella gruppo
+
+Delete layer
+== Cancella livello
+
+Delete this envelope
+== Cancella quest'effetto
+
+Deletes the current quad
+== Cancella la forma corrente
+
+Deletes the layer
+== Cancella il livello selezionato
+
 Demos
 == Demo
+
+Detail
+== Dettaglio
 
 Disconnect
 == Disconnetti
@@ -78,6 +241,9 @@ Disconnected
 Display Modes
 == Tipo di visualizzazione
 
+Down
+== Sotto
+
 Downloading map
 == Scaricando la mappa
 
@@ -87,11 +253,44 @@ Draw!
 Dynamic Camera
 == Visuale dinamica
 
+Embed
+== Incorpora
+
+Embedded
+== Incorporate
+
+Embeds the image into the map file.
+== Incorpora l'immagine nella mappa
+
 Emoticon
 == Emozioni
 
+Enable/disable group for saving
+== Includi/Escludi gruppo al salvataggio
+
+Enable/disable layer for saving
+== Includi/Escludi livello al salvataggio
+
 Enter
 == Entra
+
+Envelopes
+== Effetti
+
+Error
+== Errore
+
+Error loading demo
+== Impossibile caricare la demo
+
+Exit
+== Esci
+
+Exits from the editor
+== Esci dall'editor
+
+External
+== Esterne
 
 FSAA samples
 == Esempi FSAA
@@ -105,11 +304,20 @@ Favorites
 Feet
 == Piedi
 
+Filename:
+== Nome file:
+
 Filter
 == Filtro
 
 Fire
 == Fuoco
+
+Folder
+== Cartella
+
+Force vote
+== Forza voto
 
 Fullscreen
 == Schermo intero
@@ -135,14 +343,23 @@ General
 Graphics
 == Grafica
 
+Green value of the envelope
+== Grafico dei valori di Verde (asse Y), in funzione del tempo (asse X)
+
 Grenade
 == Granata
+
+Group
+== Gruppo
 
 Hammer
 == Martello
 
 Has people playing
 == Ha gente in gioco
+
+Height
+== Altezza
 
 High Detail
 == Molti dettagli
@@ -156,11 +373,26 @@ Host address
 Hue
 == Col.
 
+Image
+== Immagine
+
+Images
+== Immagini
+
+Increase
+== Aumenta
+
+Increase animation speed
+== Aumenta la velocità  dell'animazione
+
 Info
 == Info
 
 Internet
 == Internet
+
+Invalid Demo
+== Demo non valida
 
 Join blue
 == Entra blu
@@ -183,14 +415,44 @@ LAN
 Language
 == Lingua
 
+Layers
+== Livelli
+
+Left
+== Sinistra
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Sposta la forma, +Shift per muovere il centro, +Ctrl per ruotarla.
+
+Left mouse button to move. Hold shift to move the texture.
+== Sposta vertice, +Shift per adattare la trama interna.
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Trascina il punto, +Ctrl per aggiustare, +Shift sposta nel tempo. Tasto destro elimina il punto.
+
 Lht.
 == Lum.
+
+Load
+== Carica...
+
+Load a new image to use in the map
+== Carica una nuova immagine da usare nella mappa
+
+Load map
+== Carica mappa
 
 Loading
 == Caricamento
 
 MOTD
 == MDG
+
+Make collision
+== Ricalca collisioni
+
+Make external
+== Scorpora
 
 Map
 == Mappa
@@ -202,7 +464,7 @@ Miscellaneous
 == Altro
 
 Mouse sens.
-== SensibilitÃ
+== Sensibilità
 
 Move left
 == Muovi a sinistra
@@ -219,8 +481,23 @@ Mute when not active
 Name
 == Nome
 
+Name plates size
+== Dimensione etichetta
+
+Name:
+== Nome:
+
+New
+== Nuovo
+
+New folder
+== Nuova cartella
+
 News
 == Notizie
+
+Next Envelope
+== Effetto successivo
 
 Next weapon
 == Successiva
@@ -240,8 +517,35 @@ No servers found
 No servers match your filter criteria
 == Nessun server corrisponde ai filtri di ricerca
 
+None
+== Nessuna
+
+Normal animation speed
+== Imposta l'animazione alla velocità effettiva
+
 Ok
 == Ok
+
+Open
+== Apri
+
+Opens a map and adds everything from that map to the current one
+== Copia il contenuto di una mappa nella mappa corrente
+
+Opens a map for editing
+== Apre una mappa per modificarla
+
+Order
+== Ordine
+
+Para X
+== Profond. X
+
+Para Y
+== Profond. Y
+
+Parent Folder
+== Indietro
 
 Password
 == Password
@@ -264,11 +568,41 @@ Player
 Players
 == Giocatori
 
+Please balance teams!
+== Squadre sbilanciate!
+
+Pos X
+== Coord. X
+
+Pos Y
+== Coord. Y
+
+Pos. Env
+== Eff. Mov.
+
+Pos. TO
+== a Mov.
+
+Pos.+
+== Movim.
+
+Press right mouse button to create a new point
+== Tasto destro per inserire un nuovo punto nel grafico
+
 Prev. weapon
 == Precedente
 
+Previous Envelope
+== Effetto precedente
+
+Proof
+== Schermi
+
+Quads
+== Forme
+
 Quality Textures
-== Textures di qualitÃ 
+== Textures di qualità
 
 Quick search:
 == Ricerca rapida:
@@ -276,11 +610,23 @@ Quick search:
 Quit
 == Esci
 
+Reason:
+== Motivo:
+
+Record demo
+== Registra demo
+
 Red team
 == Squadra rossa
 
 Red team wins!
 == La squadra rossa ha vinto!
+
+Red value of the envelope
+== Grafico dei valori di Rosso (asse X), in funzione del tempo (asse Y)
+
+Refocus
+== Riorienta
 
 Refresh
 == Aggiorna
@@ -291,14 +637,47 @@ Refreshing master servers
 Remote console
 == Console remota
 
+Remove
+== Rimuovi
+
+Removes collision from this layer
+== Rimuove le collisioni presenti in questo livello
+
+Removes the image from the map
+== Rivuove l'immagine dalla mappa
+
+Removes the image from the map file.
+== Rimuove l'immagine dal file della mappa.
+
+Replace
+== Rimpiazza
+
+Replace Image
+== Sostituisci immagine
+
+Replaces the image with a new one
+== Assegna a un'altra immagine il posto di questa
+
 Reset filter
 == Annulla filtri
 
 Reset to defaults
 == Reimposta
 
+Resizes the current Quad based on the aspect ratio of the image
+== Ridimensiona la forma rispetto alle proporzioni dell'immagine associata al livello
+
 Rifle
 == Laser
+
+Right
+== Destra
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Ruota il pennello in gradi. Cambia valore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
+
+Rotation of the envelope
+== Grafico dei valori di Rotazione (asse Y), in funzione del tempo (asse X)
 
 Round
 == Turno
@@ -308,6 +687,21 @@ Sample rate
 
 Sat.
 == Sat.
+
+Save
+== Salva
+
+Save As
+== Salva come...
+
+Save map
+== Salva le modifiche effettuate alla mappa
+
+Saves the current map
+== Salva la mappa corrente
+
+Saves the current map under a new name
+== Salva la mappa corrente con un altro nome
 
 Score
 == Punti
@@ -324,6 +718,15 @@ Scoreboard
 Screenshot
 == Screenshot
 
+Select group. Right click for properties.
+== Seleziona gruppo.
+
+Select image
+== Seleziona immagine.
+
+Select layer. Right click for properties.
+== Seleziona livello.
+
 Server details
 == Dettagli del server
 
@@ -338,6 +741,9 @@ Settings
 
 Shotgun
 == Fucile
+
+Show chat
+== Mostra Chat
 
 Show name plates
 == Mostra etichetta nomi
@@ -360,11 +766,26 @@ Spectate
 Spectators
 == Spettatori
 
+Square
+== Squadra sagoma
+
+Squares the current quad
+== Risquadra la forma corrente
+
 Standard gametype
 == Tipo di gioco classico
 
 Standard map
 == Mappa classica
+
+Stop record
+== Termina reg.
+
+Switch between images and layers managment.
+== Cambia l'area di intervento tra immagini o livelli.
+
+Switch curve type
+== Cambia il tipo di curva
 
 Switch weapon on pickup
 == Cambia arma alla raccolta
@@ -381,11 +802,29 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Compressione Texture
 
+The audio device couldn't be initialised.
+== Il dispositivo audio non può essere inizializzato.
+
 The server is running a non-standard tuning on a pure game type.
 == Il server sta eseguendo un tuning non-standard su un tipo di gioco classico.
 
+Tiles
+== Caselle
+
 Time limit
 == Limite di tempo
+
+Time limit: %d min
+== Tempo limite %d min
+
+Toggle group visibility
+== mostra/nasconde Gruppo
+
+Toggle layer visibility
+== mostra/nasconde Livello
+
+Toggles the envelope editor.
+== apre/allarga/chiude l'editor di Effetti grafici
 
 Try again
 == Ritenta
@@ -395,6 +834,27 @@ Type
 
 UI Color
 == Colore del menu
+
+Unable to delete the demo
+== Impossibile eliminare la registrazione
+
+Up
+== Sopra
+
+Use Clipping
+== Ritaglia
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Cambia colore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Cambia valore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
+
+Use left mouse button to drag and create a brush.
+== Seleziona una casella o un insieme da usare come pennello.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Dipingi col tasto sinistro del mouse o pulisci pennello col destro.
 
 Use sounds
 == Usa suoni
@@ -418,513 +878,22 @@ Weapon
 == Attiva arma
 
 Welcome to Teeworlds
-==  Benvenuto su Teeworlds!
+== Benvenuto su Teeworlds!
+
+Width
+== Larghezza
+
+X-axis of the envelope
+== Grafico dei valori di spostamento in orizzontale (asse Y), in funzione del tempo (asse X)
+
+Y-axis of the envelope
+== Grafico dei valori di spostamento in verticale (asse Y), in funzione del tempo (asse X)
 
 Yes
 == Si
 
 You must restart the game for all settings to take effect.
 == E' necessario riavviare il gioco per rendere effettive le modifiche.
-
-##### needs translation #####
-
-%d%% loaded
-== %d%% caricati
-
-%ds left
-== %ds ancora
-
-%i minute left
-== %i minuto ancora
-
-%i minutes left
-== %i minuti ancora
-
-%i second left
-== %i secondo ancora
-
-%i seconds left
-== %i secondi ancora
-
-%s Right click for context menu.
-== Menu tasto destro.
-
-Add
-== Aggiungi
-
-Add Image
-== +Immagine
-
-Add Quad
-== +Forma
-
-Add group
-== Aggiungi gruppo
-
-Add quads layer
-== +Livello Forme
-
-Add tile layer
-== +Livello Caselle
-
-Adds a new group
-== Aggiunge un nuovo Gruppo di Livelli
-
-Adds a new quad
-== Aggiunge una nuova Forma nella mappa
-
-Alpha value of the envelope
-== grafico dei valori di Trasparenza/OpacitÃ  (asse Y),  in funzione del tempo (asse X)
-
-Anim
-== Anim
-
-Append
-== Inserisci
-
-Append map
-== Inserisci Mappa
-
-Are you sure that you want to delete the demo?
-== Sicuro di voler cancellare questa registrazione?
-
-Aspect ratio
-== Riproporziona
-
-Automatically record demos
-== Registra demo automaticamente
-
-Automatically take game over screenshot
-== Foto automatica a fine partita
-
-Blue value of the envelope
-== grafico dei valori di Blu (asse Y), in funzione del tempo (asse X)
-
-Border
-== Bordi
-
-CCW
-== AS
-
-CW
-== OD
-
-Cancel
-== Annulla
-
-Clear collision
-== Cancella collisioni
-
-Clip H
-== Alt. Taglio
-
-Clip W
-== Lar. Taglio
-
-Clip X
-== Taglia da X
-
-Clip Y
-== Taglia da Y
-
-Color
-== Colore
-
-Color Env
-== Eff. Col.
-
-Color TO
-== a col.
-
-Color+
-== Colore
-
-Connection Problems...
-== Connessione Persa...
-
-Constructs collision from this layer
-== Costruisce le collisioni su questo livello
-
-Creates a new color envelope
-== Crea un nuovo effetto di colore
-
-Creates a new map
-== Crea una nuova mappa
-
-Creates a new pos envelope
-== Crea un nuovo effetto di movimento
-
-Creates a new quad layer
-== Crea un nuovo livello di forme
-
-Creates a new tile layer
-== Crea un nuovo livello di caselle
-
-Decrease
-== Diminuisci
-
-Decrease animation speed
-== Diminuisce la velocitÃ   dell'animazione
-
-Delete
-== Cancella
-
-Delete demo
-== Cancella demo
-
-Delete group
-== Cancella gruppo
-
-Delete layer
-== Cancella livello
-
-Delete this envelope
-== Cancella quest'effetto
-
-Deletes the current quad
-== Cancella la forma corrente
-
-Deletes the layer
-== Cancella il livello selezionato
-
-Detail
-== Dettaglio
-
-Down
-== Sotto
-
-Embed
-== Incorpora
-
-Embedded
-== Incorporate
-
-Embeds the image into the map file.
-== Incorpora l'immagine nella mappa
-
-Enable/disable group for saving
-== Includi/Escludi gruppo al salvataggio
-
-Enable/disable layer for saving
-== Includi/Escludi livello al salvataggio
-
-Envelopes
-== Effetti
-
-Error
-== Errore
-
-Error loading demo
-== Impossibile caricare la demo
-
-Exit
-== Esci
-
-Exits from the editor
-== Esci dall'editor
-
-External
-== Esterne
-
-File
-== 
-
-File: %s
-== 
-
-Filename:
-== Nome file:
-
-Folder
-== Cartella
-
-Force vote
-== Forza voto
-
-Green value of the envelope
-== grafico dei valori di Verde (asse Y), in funzione del tempo (asse X)
-
-Group
-== Gruppo
-
-HD
-== 
-
-Height
-== Altezza
-
-Image
-== Immagine
-
-Images
-== Immagini
-
-Increase
-== Aumenta
-
-Increase animation speed
-== Aumenta la velocitÃ  dell'animazione
-
-Invalid Demo
-== Demo non valida
-
-Layers
-== Livelli
-
-Left
-== Sinistra
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Sposta la forma, +Shift per muovere il centro, +Ctrl per ruotarla.
-
-Left mouse button to move. Hold shift to move the texture.
-== Sposta vertice, +Shift per adattare la trama interna.
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== Trascina il punto, +Ctrl per aggiustare, +Shift sposta nel tempo. Tasto destro elimina il punto.
-
-Load
-== Carica...
-
-Load a new image to use in the map
-== Carica una nuova immagine da usare nella mappa
-
-Load map
-== Carica mappa
-
-Make collision
-== Ricalca collisioni
-
-Make external
-== Scorpora
-
-Max Screenshots
-==
-
-Max demos
-== 
-
-Name plates size
-== Dimensione etichetta
-
-Name:
-== Nome:
-
-New
-== Nuovo
-
-New folder
-== Nuova cartella
-
-Next Envelope
-== Effetto successivo
-
-None
-== Nessuna
-
-Normal animation speed
-== Imposta l'animazione alla velocità effettiva
-
-Open
-== Apri
-
-Opens a map and adds everything from that map to the current one
-== Copia il contenuto di una mappa nella mappa corrente
-
-Opens a map for editing
-== Apre una mappa per modificarla
-
-Order
-== Ordine
-
-Para X
-== Profond. X
-
-Para Y
-== Profond. Y
-
-Parent Folder
-== Indietro
-
-Please balance teams!
-== Squadre sbilanciate!
-
-Pos X
-== Coord. X
-
-Pos Y
-== Coord. Y
-
-Pos. Env
-== Eff. Mov.
-
-Pos. TO
-== a Mov.
-
-Pos.+
-== Movim.
-
-Press right mouse button to create a new point
-== Tasto destro per inserire un nuovo punto nel grafico
-
-Previous Envelope
-== Effetto precedente 
-
-Proof
-== Schermi
-
-Quads
-== Forme
-
-REC
-==
-
-Reason:
-== Motivo:
-
-Record demo
-== Registra demo
-
-Red value of the envelope
-== grafico dei valori di Rosso (asse X), in funzione del tempo (asse Y)
-
-Refocus
-== Riorienta
-
-Remove
-== Rimuovi
-
-Removes collision from this layer
-== Rimuove le collisioni presenti in questo livello
-
-Removes the image from the map
-== Rivuove l'immagine dalla mappa
-
-Removes the image from the map file.
-== Rimuove l'immagine dal file della mappa.
-
-Replace
-== Rimpiazza
-
-Replace Image
-== Sostituisci immagine
-
-Replaces the image with a new one
-== Assegna a un'altra immagine il posto di questa
-
-Resizes the current Quad based on the aspect ratio of the image
-== Ridimensiona la forma rispetto alle proporzioni dell'immagine associata al livello
-
-Right
-== Destra
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Ruota il pennello in gradi. Cambia valore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
-
-Rotation of the envelope
-== grafico dei valori di Rotazione (asse Y), in funzione del tempo (asse X)
-
-Save
-== Salva
-
-Save As
-== Salva come...
-
-Save map
-== Salva le modifiche effettuate alla mappa
-
-Saves the current map
-== Salva la mappa corrente
-
-Saves the current map under a new name
-== Salva la mappa corrente con un altro nome
-
-Select group. Right click for properties.
-== Seleziona gruppo.
-
-Select image
-== Seleziona immagine.
-
-Select layer. Right click for properties.
-== Seleziona livello.
-
-Shift
-== 
-
-Show chat
-== Mostra Chat
-
-Sound error
-==
-
-Square
-== Squadra sagoma
-
-Squares the current quad
-== Risquadra la forma corrente
-
-Stop record
-== Termina reg.
-
-Sudden Death
-== 
-
-Switch between images and layers managment.
-== Cambia l'area di intervento tra immagini o livelli.
-
-Switch curve type
-== Cambia il tipo di curva
-
-The audio device couldn't be initialised.
-== Il dispositivo audio non può essere inizializzato.
-
-Tiles
-== Caselle
-
-Time limit: %d min
-== Tempo limite %d min
-
-Toggle group visibility
-== mostra/nasconde Gruppo
-
-Toggle layer visibility
-== mostra/nasconde Livello
-
-Toggles the envelope editor.
-== apre/allarga/chiude l'editor di Effetti grafici
-
-Unable to delete the demo
-== Impossibile eliminare la registrazione
-
-Up
-== Sopra
-
-Use Clipping
-== Ritaglia
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Cambia colore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Cambia valore scorrendo col tasto sinistro del mouse, +Shift per aggiustare.
-
-Use left mouse button to drag and create a brush.
-== Seleziona una casella o un insieme da usare come pennello.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Dipingi col tasto sinistro del mouse o pulisci pennello col destro.
-
-Warmup
-== 
-
-Width
-== Larghezza
-
-X-axis of the envelope
-== grafico dei valori di spostamento in orizzontale (asse Y), in funzione del tempo (asse X)
-
-Y-axis of the envelope
-== grafico dei valori di spostamento in verticale (asse Y), in funzione del tempo (asse X)
 
 Your skin
 == La tua Skin
@@ -939,10 +908,10 @@ ZO
 == [HOME] Ritorna al punto iniziale della mappa
 
 [M] Flip brush vertical
-== [M] specchia la selezione in verticale
+== [M] Specchia la selezione in verticale
 
 [N] Flip brush horizontal
-== [N] specchia la selezione in orizzontale
+== [N] Specchia la selezione in orizzontale
 
 [NumPad*] Zoom to normal and remove editor offset
 == [NumPad*] Imposta la visuale alle dimensioni effettive
@@ -960,16 +929,48 @@ ZO
 == [T] Ruota la selezione in senso orario
 
 [ctrl+h] Toggle High Detail
-== [ctrl+h] mostra/nasconde i Dettagli
+== [ctrl+h] Mostra/nasconde i Dettagli
 
 [ctrl+m] Toggle animation
 == [ctrl+m] Avvia/Ferma l'animazione
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] mostra/nasconde le dimensioni degli schermi comuni, e i limiti della visuale dinamica 
+== [ctrl+p] Mostra/nasconde le dimensioni degli schermi comuni, e i limiti della visuale dinamica
 
 no limit
 == senza limite
+
+##### needs translation #####
+
+File
+== 
+
+File: %s
+== 
+
+HD
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+REC
+== 
+
+Shift
+== 
+
+Sound error
+== 
+
+Sudden Death
+== 
+
+Warmup
+== 
 
 ##### old translations #####
 
