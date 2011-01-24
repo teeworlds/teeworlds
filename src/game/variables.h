@@ -63,14 +63,6 @@ MACRO_CONFIG_INT(ClServermsgsound, cl_servermsgsound, 1, 0, 1, CFGFLAG_CLIENT|CF
 MACRO_CONFIG_INT(ClChatsound, cl_chatsound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes chat sound on or off")
 MACRO_CONFIG_INT(ClSpreesounds, cl_spreesounds, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes spreesounds on or off")
 
-/* lvlx */
-MACRO_CONFIG_STR(ClLvlxName, cl_lvlx_name, 16, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Set lvlx account name")
-MACRO_CONFIG_STR(ClLvlxPass, cl_lvlx_pass, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Set lvlx account pass")
-MACRO_CONFIG_INT(ClShortHpDisplay, cl_short_hp_display, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use short HP display")
-MACRO_CONFIG_INT(ClShowExpBar, cl_show_exp_bar, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show Exp bar")
-MACRO_CONFIG_INT(ClExpBarColor, cl_exp_bar_color, 10026844, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show Exp bar")
-MACRO_CONFIG_INT(ClShowSpreeMessages, cl_show_spree_messages, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show spree messages")
-
 /* Beep-Mod */
 MACRO_CONFIG_INT(ClChangeSound, cl_change_sound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turns special chat sound on or off")
 MACRO_CONFIG_INT(ClChangeColor, cl_change_color, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Changes the color in messages if it includes the name")

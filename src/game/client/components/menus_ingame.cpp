@@ -101,62 +101,6 @@ void CMenus::RenderGame(CUIRect MainView)
 				}
 			}
 		}
-		
-		// lvlx login stuff
-		if(m_pClient->m_LvlxMsgSent)
-		{
-			CUIRect LoginView = MainView;
-			CUIRect LoginButton = Button;
-			
-			if(m_pClient->m_LoggedIn)
-			{
-				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
-				LoginView.VSplitLeft(120.0f, &LoginButton, &LoginView);
-				static int s_LogoutLoginButton = 0;
-				if(DoButton_Menu(&s_LogoutLoginButton, Localize("Logout"), 0, &LoginButton))
-				{
-					CNetMsg_Cl_Logout Msg;
-					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-					SetActive(false);
-				}
-			}
-			else
-			{
-				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
-				LoginView.VSplitLeft(120.0f, &LoginButton, &LoginView);
-				static int s_LoginLoginButton = 0;
-				if(DoButton_Menu(&s_LoginLoginButton, Localize("Login"), 0, &LoginButton))
-				{
-					CNetMsg_Cl_Login Msg;
-					Msg.m_pName = g_Config.m_ClLvlxName;
-					Msg.m_pPass = g_Config.m_ClLvlxPass;
-					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-					SetActive(false);
-				}
-				
-				char aBuf[32];
-				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
-				LoginView.VSplitLeft(120.0f, &LoginButton, 0);
-				LoginButton.HSplitTop(12.0f, &LoginButton, 0);
-				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
-				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
-				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
-				LoginButton.VSplitLeft(110.0f, &LoginButton, 0);
-				static float NameOffset = 0.0f;
-				DoEditBox(g_Config.m_ClLvlxName, &LoginButton, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 10.0f, &NameOffset);
-				
-				LoginView.HSplitTop(2.0f, &LoginButton, &LoginView);
-				
-				LoginButton.HSplitTop(14.0f, 0, &LoginButton);
-				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
-				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
-				LoginButton.HSplitTop(12.0f, &LoginButton, 0);
-				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
-				LoginButton.VSplitLeft(110.0f, &LoginButton, 0);
-				static float PassOffset = 0.0f;
-				DoEditBox(g_Config.m_ClLvlxPass, &LoginButton, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
-			}
-		}
 	}
 	
 	MainView.VSplitRight(10.0f, &MainView, 0);

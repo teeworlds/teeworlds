@@ -15,8 +15,6 @@
 #include <game/client/teecomp.h>
 #include <game/localization.h>
 #include "teecomp_stats.h"
-#include "coopboard.h"
-#include "statboard.h"
 #include "scoreboard.h"
 
 
@@ -422,8 +420,8 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		DoScoreBoard = true;
 	
-	// if coopboard or statboard active dont show scoreboard
-	if(m_pClient->m_pCoopboard->m_Active || m_pClient->m_pStatboard->m_Active || m_pClient->m_pTeecompStats->IsActive())
+	// if statboard active dont show scoreboard
+	if(m_pClient->m_pTeecompStats->IsActive())
 		DoScoreBoard = false;
 		
 	if(!DoScoreBoard)

@@ -93,25 +93,6 @@ public:
 	bool m_IsFastCap;
 	vec2 m_FlagPos;
 
-	// lvlx
-	bool m_IsLvlx;
-	bool m_IsCoop;
-	bool m_LvlxMsgSent;
-	
-	bool m_LoggedIn;
-	
-	// stats
-	int m_Level;
-	int m_Weapon;
-	int m_Str;
-	int m_Sta;
-	int m_Dex;
-	int m_Int;
-	float m_Exp; // in percent
-	float m_ExpDiff;
-	int m_ExpDiffTick;
-	int m_Points;
-	bool m_LevelUp;
 	
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -292,8 +273,6 @@ public:
 	class CVoting *m_pVoting;
 	class CRaceDemo *m_pRaceDemo;
 	class CTeecompStats *m_pTeecompStats;
-	class CCoopboard *m_pCoopboard;
-	class CStatboard *m_pStatboard;
 	class CHud *m_pHud;
 	class CScoreboard *m_pScoreboard;
 	//TODO: This is ugly

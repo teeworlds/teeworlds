@@ -51,8 +51,6 @@
 #include "components/race_demo.h"
 #include "components/ghost.h"
 #include "components/teecomp_stats.h"
-#include "components/coopboard.h"
-#include "components/statboard.h"
 
 CGameClient g_GameClient;
 
@@ -73,8 +71,6 @@ static CHud gs_Hud;
 static CDebugHud gs_DebugHud;
 static CControls gs_Controls;
 static CEffects gs_Effects;
-static CCoopboard gs_Coopboard;
-static CStatboard gs_Statboard;
 static CScoreboard gs_Scoreboard;
 static CSounds gs_Sounds;
 static CEmoticon gs_Emoticon;
@@ -149,8 +145,6 @@ void CGameClient::OnConsoleInit()
 	m_pDamageind = &::gsDamageInd;
 	m_pMapimages = &::gs_MapImages;
 	m_pVoting = &::gs_Voting;
-	m_pCoopboard = &::gs_Coopboard;
-	m_pStatboard = &::gs_Statboard;
 	m_pHud = &::gs_Hud;
 	m_pRaceDemo = &::gs_RaceDemo;
 	m_pTeecompStats = &::gs_TeecompStats;
@@ -186,8 +180,6 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
 	m_All.Add(&gs_DebugHud);
-	m_All.Add(m_pCoopboard);
-	m_All.Add(m_pStatboard);
 	m_All.Add(&gs_Scoreboard);
 	m_All.Add(m_pRaceDemo);
 	m_All.Add(m_pTeecompStats);
@@ -346,23 +338,6 @@ void CGameClient::OnInit()
 	m_ShowOthers = -1;
 	m_FlagPos = vec2(-1, -1);
 	
-	// lvlx
-	m_IsLvlx = false;
-	m_IsCoop = false;
-	m_LvlxMsgSent = false;
-	m_LoggedIn = false;
-	
-	m_Level = -3;
-	m_Weapon = -1;
-	m_Str = 0;
-	m_Sta = 0;
-	m_Dex = 0;
-	m_Int = 0;
-	m_Exp = -1.0f;
-	m_ExpDiff = 0;
-	m_Points = 0;
-	m_LevelUp = false;
-
 	// Teecomp grayscale flags
 	Graphics()->UnloadTexture(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id); // Already loaded with full color, unload
 	g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id = -1;
@@ -562,23 +537,6 @@ void CGameClient::OnReset()
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
 	m_FlagPos = vec2(-1, -1);
-	
-	// lvlx
-	m_IsLvlx = false;
-	m_IsCoop = false;
-	m_LvlxMsgSent = false;
-	m_LoggedIn = false;
-	
-	m_Level = -3;
-	m_Weapon = -1;
-	m_Str = 0;
-	m_Sta = 0;
-	m_Dex = 0;
-	m_Int = 0;
-	m_Exp = -1.0f;
-	m_ExpDiff = 0.0f;
-	m_Points = 0;
-	m_LevelUp = false;
 }
 
 
@@ -886,52 +844,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				if(m_aClients[PlayerID].m_Score == 0 || Time < m_aClients[PlayerID].m_Score)
 					m_aClients[PlayerID].m_Score = Time;
 			}
-		}
-	}
-	else if(MsgId == NETMSGTYPE_SV_LOGGEDIN)
-	{	
-		CNetMsg_Sv_LoggedIn *pMsg = (CNetMsg_Sv_LoggedIn *)pRawMsg;
-		m_LoggedIn = (bool)pMsg->m_LoggedIn;
-		m_Level = pMsg->m_Level;
-		m_Weapon = pMsg->m_Weapon;
-		m_Str = pMsg->m_Str;
-		m_Sta = pMsg->m_Sta;
-		m_Dex = pMsg->m_Dex;
-		m_Int = pMsg->m_Int;
-		
-		if(m_LoggedIn)
-			m_Exp = (float)pMsg->m_Exp/100;
-		else
-			m_Exp = -1;
-		
-		// calculate available points
-		m_Points = (m_Level * 2 - 2) - (m_Str-1) - (m_Sta-1)  - (m_Dex-1) - (m_Int-1);
-		
-		if(!m_LoggedIn)
-			m_pHud->m_GotRequest = false;
-	}
-	else if(MsgId == NETMSGTYPE_SV_EXPUPDATE)
-	{
-		CNetMsg_Sv_ExpUpdate *pMsg = (CNetMsg_Sv_ExpUpdate *)pRawMsg;
-		m_LevelUp = (bool)pMsg->m_LevelUp;
-		if(pMsg->m_LevelUp)
-		{
-			m_Level++;
-			m_Points+=2;
-			
-			// calculate exp diff
-			m_ExpDiff = 100.0f - m_Exp;
-			m_ExpDiffTick = Client()->GameTick();
-			
-			m_Exp = 0;
-		}
-		else
-		{
-			// calculate exp diff
-			m_ExpDiff = (float)pMsg->m_Exp/100 - m_Exp;
-			m_ExpDiffTick = Client()->GameTick();
-			
-			m_Exp = (float)pMsg->m_Exp/100;
 		}
 	}
 }
@@ -1287,25 +1199,6 @@ void CGameClient::OnNewSnapshot()
 					
 					m_ShowOthers = g_Config.m_ClShowOthers;
 				}
-			}
-		}
-
-		// send lvlx msg
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "Lvl|"))
-		{
-			m_IsLvlx = true;
-			
-			// coop
-			if(str_find_nocase(CurrentServerInfo.m_aGameType, "coop"))
-				m_IsCoop = true;
-				
-			if(!m_LvlxMsgSent)
-			{
-				CNetMsg_Cl_IsLvlx Msg;
-				Msg.m_pName = g_Config.m_ClLvlxName;
-				Msg.m_pPass = g_Config.m_ClLvlxPass;
-				Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-				m_LvlxMsgSent = true;
 			}
 		}
 	}

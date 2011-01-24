@@ -394,11 +394,6 @@ static CKeyInfo gs_aKeys[] =
 	{ "Remote console", "toggle_remote_console", 0 },
 	{ "Screenshot", "screenshot", 0 },
 	{ "Scoreboard", "+scoreboard", 0 },
-	
-	// lvlx
-	{ Localize("Coopboard"), "+coopboard", 0 },
-	{ Localize("Coop vote yes"), "coop yes", 0 },
-	{ Localize("Coop vote no"), "coop no", 0 },
 };
 /*	This is for scripts/update_localization.py to work, don't remove!
 	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
@@ -760,130 +755,6 @@ void CMenus::UiDoKeybinder(CKeyInfo& pKey, CUIRect* r)
 		m_pClient->m_pBinds->Bind(NewId, pKey.m_pCommand);
 	}
 	r->HSplitTop(5.0f, 0, r);
-}
-
-void CMenus::RenderSettingsLvlx(CUIRect MainView)
-{
-	CUIRect Button;
-	CUIRect LeftView, RightView;
-
-	MainView.VSplitMid(&LeftView, &RightView);
-	
-	char aBuf[32];
-	
-	// Left
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, "Account settings", 16.0f, -1);
-	
-	LeftView.HSplitTop(5.0f, 0, &LeftView);
-	
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Login"));
-	UI()->DoLabel(&Button, aBuf, 14.0, -1);
-	Button.VSplitLeft(80.0f, 0, &Button);
-	Button.VSplitLeft(180.0f, &Button, 0);
-	static float NameOffset = 0.0f;
-	DoEditBox(g_Config.m_ClLvlxName, &Button, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 14.0f, &NameOffset);
-	
-	LeftView.HSplitTop(5.0f, 0, &LeftView);
-	
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
-	UI()->DoLabel(&Button, aBuf, 14.0, -1);
-	Button.VSplitLeft(80.0f, 0, &Button);
-	Button.VSplitLeft(180.0f, &Button, 0);
-	static float PassOffset = 0.0f;
-	DoEditBox(g_Config.m_ClLvlxPass, &Button, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 14.0f, &PassOffset, true);
-	
-	LeftView.HSplitTop(15.0f, 0, &LeftView);
-	
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, "Display settings", 16.0f, -1);
-	
-	LeftView.HSplitTop(5.0f, 0, &LeftView);
-	
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_ClShortHpDisplay, Localize("Use short HP display"), g_Config.m_ClShortHpDisplay, &Button))
-		g_Config.m_ClShortHpDisplay ^= 1;
-		
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_ClShowExpBar, Localize("Show Exp bar"), g_Config.m_ClShowExpBar, &Button))
-		g_Config.m_ClShowExpBar ^= 1;
-		
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_ClShowSpreeMessages, Localize("Show spree messages"), g_Config.m_ClShowSpreeMessages, &Button))
-		g_Config.m_ClShowSpreeMessages ^= 1;
-		
-	// Right
-	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, "Key bindings", 16.0f, -1);
-	RightView.HSplitTop(5.0f, &Button, &RightView);
-	CKeyInfo pKeys[] = {{ "Coopboard:", "+coopboard", 0},
-		{ "Statboard:", "+statboard", 0},
-		{ "Accept Cooprequest:", "coop yes", 0},
-		{ "Decline Cooprequest:", "coop no", 0}};
-
-	for(int pKeyid=0; pKeyid < KEY_LAST; pKeyid++)
-	{
-		const char *Bind = m_pClient->m_pBinds->Get(pKeyid);
-		if(!Bind[0])
-			continue;
-
-		for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
-			if(str_comp(Bind, pKeys[i].m_pCommand) == 0)
-			{
-				pKeys[i].m_KeyId = pKeyid;
-				break;
-			}
-	}
-
-	for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
-		UiDoKeybinder(pKeys[i], &RightView);
-	
-	RightView.HSplitTop(5.0f, 0, &RightView);
-	
-	// Exp bar color
-	CUIRect Text;
-	RightView.HSplitTop(20.0f, &Text, &RightView);
-	UI()->DoLabel(&Text, "Exp bar Color", 16.0, -1);
-
-	int *paColors = &g_Config.m_ClExpBarColor;
-
-	const char *paLabels[] = {
-		Localize("Hue"),
-		Localize("Sat."),
-		Localize("Lht.")};
-	static int s_aColorSlider[3] = {0};
-	//static float v[2][3] = {{0, 0.5f, 0.25f}, {0, 0.5f, 0.25f}};
-
-	int PrevColor = *paColors;
-	int Color = 0;
-
-	for(int s = 0; s < 3; s++)
-	{
-		RightView.HSplitTop(19.0f, &Button, &RightView);
-		Button.VSplitLeft(10.0f, 0, &Button);
-		Button.VSplitLeft(5.0f, &Text, &Button);
-		Button.HSplitTop(3.0f, 0, &Text);
-		Button.VSplitLeft(35.0f, 0, &Button);
-		Button.VSplitRight(5.0f, &Button, 0);
-		Button.HSplitTop(4.0f, 0, &Button);
-				
-		float k = ((PrevColor>>((2-s)*8))&0xff)  / 255.0f;
-		k = DoScrollbarH(&s_aColorSlider[s], &Button, k);
-		Color <<= 8;
-		Color += clamp((int)(k*255), 0, 255);
-		UI()->DoLabel(&Text, paLabels[s], 14.0f, -1);
-	}
-
-	if(*paColors != Color)
-		m_NeedSendinfo = true;
-
-	*paColors = Color;
-	RightView.HSplitTop(5.0f, 0, &Button);
-	Button.HSplitTop(20.0f, &Button, 0);
-	
-	RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColorV4(g_Config.m_ClExpBarColor), CUI::CORNER_ALL, 10.0f);
 }
 
 class CLanguage
@@ -1415,8 +1286,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("TeeComp"),
 		Localize("Beep"),
 		Localize("Hud-Mod"),
-		Localize("Race"),
-		"Lvl|x"};
+		Localize("Race")};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
@@ -1448,8 +1318,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsHudMod(MainView);
 	else if(s_SettingsPage == 8)
 		RenderSettingsRace(MainView);
-	else if(s_SettingsPage == 9)
-		RenderSettingsLvlx(MainView);
 
 	if((m_NeedRestartGraphics || m_NeedRestartSound) && s_SettingsPage != 5)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);

@@ -9,9 +9,6 @@
 #include <game/client/component.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menus.h>
-
-#include "coopboard.h"
-#include "statboard.h"
 #include "controls.h"
 
 CControls::CControls()
@@ -54,10 +51,7 @@ struct CInputSet
 
 static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
 {
-	CInputSet *pSelf = (CInputSet *)pUserData;
-	if(pSelf->m_pControls->GetClient()->m_IsLvlx && (pSelf->m_pControls->GetClient()->m_pCoopboard->m_Active || (pSelf->m_pControls->GetClient()->m_pStatboard->m_Active && (pSelf->m_pControls->GetClient()->m_Points > 0 || (pSelf->m_pControls->GetClient()->m_Level >= 20 && pSelf->m_pControls->GetClient()->m_Weapon < 0)))))
-		return;
-		
+	CInputSet *pSelf = (CInputSet *)pUserData;	
 	int *v = (int *)pSelf->m_pVariable;
 	if(((*v)&1) != pResult->GetInteger(0))
 		(*v)++;
