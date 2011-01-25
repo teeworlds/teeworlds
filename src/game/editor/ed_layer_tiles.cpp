@@ -342,7 +342,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				for(int x = 0; x < w; x++)
 				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_SOLID)
+					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
 					{
 						if(m_pTiles[y*m_Width+x].m_Index)
 							gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR;
@@ -351,11 +351,30 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			}
 			return 1;
 		}
-		
+
+		static int s_UHColButton = 0;
+		pToolBox->HSplitBottom(5.0f, pToolBox, &Button);
+		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
+		if(m_pEditor->DoButton_Editor(&s_UHColButton, Localize("Make unhookable"), 0, &Button, 0, Localize("Constructs unhookable collision from this layer")))
+		{
+			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
+			int w = min(gl->m_Width, m_Width);
+			int h = min(gl->m_Height, m_Height);
+			for(int y = 0; y < h; y++)
+			{
+				for(int x = 0; x < w; x++)
+				{
+					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_NOHOOK:TILE_AIR;
+				}
+			}
+			return 1;
+		}
+
 		static int s_ColButton = 0;
 		pToolBox->HSplitBottom(5.0f, pToolBox, &Button);
 		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-		if(m_pEditor->DoButton_Editor(&s_ColButton, Localize("Make collision"), 0, &Button, 0, Localize("Constructs collision from this layer")))
+		if(m_pEditor->DoButton_Editor(&s_ColButton, Localize("Make collision"), 0, &Button, 0, Localize("Constructs hookable collision from this layer")))
 		{
 			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
 			int w = min(gl->m_Width, m_Width);
