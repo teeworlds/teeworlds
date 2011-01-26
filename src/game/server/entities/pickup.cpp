@@ -67,15 +67,13 @@ void CPickup::Tick()
 			case POWERUP_WEAPON:
 				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS)
 				{
-					if(pChr->GiveWeapon(m_Subtype, 10))
+					if(pChr->GiveWeapon(m_Subtype, m_Subtype==WEAPON_HAMMER? -1: 10))
 					{
 						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 
-						if(m_Subtype == WEAPON_GRENADE)
+						if(m_Subtype == WEAPON_GRENADE || WEAPON_HAMMER)
 							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
-						else if(m_Subtype == WEAPON_SHOTGUN)
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
-						else if(m_Subtype == WEAPON_RIFLE)
+						else
 							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
 
 						if(pChr->GetPlayer())
