@@ -121,6 +121,16 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 		Type = POWERUP_ARMOR;
 	else if(Index == ENTITY_HEALTH_1)
 		Type = POWERUP_HEALTH;
+	else if(Index == ENTITY_WEAPON_HAMMER)
+	{
+		Type = POWERUP_WEAPON;
+		SubType = WEAPON_HAMMER;
+	}
+	else if(Index == ENTITY_WEAPON_GUN)
+	{
+		Type = POWERUP_WEAPON;
+		SubType = WEAPON_GUN;
+	}
 	else if(Index == ENTITY_WEAPON_SHOTGUN)
 	{
 		Type = POWERUP_WEAPON;
