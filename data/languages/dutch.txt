@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -949,28 +948,28 @@ no limit
 ##### needs translation #####
 
 %i minute left
-== 
+== nog %i minuut
 
 %i minutes left
-== 
+== nog %i minuten
 
 %i second left
-== 
+== nog %i seconde
 
 %i seconds left
-== 
+== nog %i seconden
 
 Name plates size
-== 
+== Grootte naamplaat
 
 Sound error
-== 
+== Geluidsfout 
 
 The audio device couldn't be initialised.
-== 
+== Het geluid kon niet worden geladen.
 
 Unable to delete the demo
-== 
+== Demo kon niet worden verwijderd
 
 ##### old translations #####
 
