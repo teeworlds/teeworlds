@@ -1137,6 +1137,33 @@ void CGameClient::OnNewSnapshot()
 	else
 		m_Snap.m_Spectate = true;
 	
+	// sort player infos by score
+	mem_copy(m_Snap.m_paInfoByScore, m_Snap.m_paPlayerInfos, sizeof(m_Snap.m_paInfoByScore));
+	for(int k = 0; k < MAX_CLIENTS-1; k++) // ffs, bubblesort
+	{
+		for(int i = 0; i < MAX_CLIENTS-k-1; i++)
+		{
+			if(m_IsRace)
+			{
+				if(m_Snap.m_paInfoByScore[i+1] && (!m_Snap.m_paInfoByScore[i] || m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientId].m_Score == 0 || (m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientId].m_Score > m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientId].m_Score && m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientId].m_Score != 0)))
+				{
+					const CNetObj_PlayerInfo *pTmp = m_Snap.m_paInfoByScore[i];
+					m_Snap.m_paInfoByScore[i] = m_Snap.m_paInfoByScore[i+1];
+					m_Snap.m_paInfoByScore[i+1] = pTmp;
+				}
+			}
+			else
+			{
+				if(m_Snap.m_paInfoByScore[i+1] && (!m_Snap.m_paInfoByScore[i] || m_Snap.m_paInfoByScore[i]->m_Score < m_Snap.m_paInfoByScore[i+1]->m_Score))
+				{
+					const CNetObj_PlayerInfo *pTmp = m_Snap.m_paInfoByScore[i];
+					m_Snap.m_paInfoByScore[i] = m_Snap.m_paInfoByScore[i+1];
+					m_Snap.m_paInfoByScore[i+1] = pTmp;
+				}
+			}
+		}
+	}
+	
 	CTuningParams StandardTuning;
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
@@ -1149,6 +1176,7 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
+	
 	// send race msg
 	if(m_Snap.m_pLocalInfo)
 	{
