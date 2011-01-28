@@ -8,6 +8,8 @@
 
 #include <game/client/gameclient.h>
 
+#include <game/client/components/scoreboard.h>
+
 #include "broadcast.h"
 	
 void CBroadcast::OnReset()
@@ -17,7 +19,7 @@ void CBroadcast::OnReset()
 
 void CBroadcast::OnRender()
 {
-	if(!g_Config.m_ClRenderBroadcast || g_Config.m_ClClearAll)
+	if(m_pClient->m_pScoreboard->Active() || !g_Config.m_ClRenderBroadcast || g_Config.m_ClClearAll)
 		return;
 		
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
