@@ -1064,8 +1064,12 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 				g_Config.m_ClRenderCrosshair ^= 1;
 			
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
-			if(DoButton_CheckBox(&g_Config.m_ClRenderScore, Localize("Team score"), g_Config.m_ClRenderScore, &Button))
-				g_Config.m_ClRenderScore ^= 1;
+			if(DoButton_CheckBox(&g_Config.m_ClRenderTeamScore, Localize("Team score"), g_Config.m_ClRenderTeamScore, &Button))
+				g_Config.m_ClRenderTeamScore ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderDmScore, Localize("DM score"), g_Config.m_ClRenderDmScore, &Button))
+				g_Config.m_ClRenderDmScore ^= 1;
 			
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			if(DoButton_CheckBox(&g_Config.m_ClShowfps, Localize("FPS"), g_Config.m_ClShowfps, &Button))
@@ -1164,7 +1168,8 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 		g_Config.m_ClRenderHp = 1;
 		g_Config.m_ClRenderAmmo = 1;
 		g_Config.m_ClRenderCrosshair = 1;
-		g_Config.m_ClRenderScore = 1;
+		g_Config.m_ClRenderTeamScore = 1;
+		g_Config.m_ClRenderDmScore = 1;
 		g_Config.m_ClShowfps = 0;
 		g_Config.m_ClRenderScoreboard = 1;
 		g_Config.m_ClRenderServermsg = 1;

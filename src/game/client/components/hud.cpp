@@ -97,7 +97,7 @@ void CHud::RenderSuddenDeath()
 
 void CHud::RenderScoreHud()
 {
-	if(m_pClient->m_IsRace || !g_Config.m_ClRenderScore || g_Config.m_ClClearHud || g_Config.m_ClClearAll)
+	if(m_pClient->m_IsRace || g_Config.m_ClClearHud || g_Config.m_ClClearAll)
 		return;
 	
 	// render small score hud
@@ -106,7 +106,7 @@ void CHud::RenderScoreHud()
 		int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
 		float Whole = 300*Graphics()->ScreenAspect();
 		
-		if(GameFlags&GAMEFLAG_TEAMS)
+		if(GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderTeamScore)
 		{
 			char aScoreTeam[2][32];
 			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
@@ -185,7 +185,7 @@ void CHud::RenderScoreHud()
 				}
 			}
 		}
-		else
+		else if(!GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderDmScore)
 		{
 			int Local = -1;
 			int aPos[2] = { 1, 2 };
