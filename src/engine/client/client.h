@@ -141,6 +141,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
+	bool m_EditorActive;
 
 	int m_AckGameTick;
 	int m_CurrentRecvTick;

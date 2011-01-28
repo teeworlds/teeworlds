@@ -1377,6 +1377,11 @@ void CGameClient::OnGameRestart()
 	m_pTeecompStats->OnReset();
 }
 
+void CGameClient::OnActivateEditor()
+{
+	OnRelease();
+}
+
 void CGameClient::OnWarmupEnd()
 {
 	for(int i=0; i<MAX_CLIENTS; i++)
