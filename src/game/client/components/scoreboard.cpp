@@ -353,29 +353,8 @@ void CScoreboard::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pLocalInfo)
 		return;
-		
-	bool DoScoreBoard = false;
 
-	// if we activly wanna look on the scoreboard	
-	if(m_Active)
-		DoScoreBoard = true;
-		
-	if(g_Config.m_ClRenderScoreboard && !g_Config.m_ClClearAll && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != -1)
-	{
-		// we are not a spectator, check if we are ead
-		if((!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0) && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-			DoScoreBoard = true;
-	}
-
-	// if we the game is over
-	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-		DoScoreBoard = true;
-	
-	// if statboard active dont show scoreboard
-	if(m_pClient->m_pTeecompStats->IsActive())
-		DoScoreBoard = false;
-		
-	if(!DoScoreBoard)
+	if(!Active())
 		return;
 		
 	// if the score board is active, then we should clear the motd message aswell
@@ -395,10 +374,7 @@ void CScoreboard::OnRender()
 		w = 750.0f;
 
 	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS))
-	{
 		RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
-		//render_scoreboard(gameobj, 0, 0, -1, 0);
-	}
 	else
 	{
 		char aText[32];
@@ -443,5 +419,24 @@ void CScoreboard::OnRender()
 
 bool CScoreboard::Active()
 {
-	return m_Active | (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver);
+	// if statboard active dont show scoreboard
+	if(m_pClient->m_pTeecompStats->IsActive())
+		return false;
+
+	// if we activly wanna look on the scoreboard
+	if(m_Active)
+		return true;
+
+	if(g_Config.m_ClRenderScoreboard && !g_Config.m_ClClearAll && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+	{
+		// we are not a spectator, check if we are dead
+		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health <= 0)
+			return true;
+	}
+
+	// if the game is over
+	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		return true;
+
+	return false;
 }
