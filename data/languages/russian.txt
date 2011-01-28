@@ -930,7 +930,13 @@ Rotation of the envelope
 Shift
 == 
 
+Sound error
+== 
+
 Stop record
+== 
+
+The audio device couldn't be initialised.
 == 
 
 Tiles
