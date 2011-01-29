@@ -8,8 +8,8 @@ source_exts = [".c", ".cpp", ".h"]
 def parse_source():
 	stringtable = {}
 	def process_line(line):
-		if b'Localize("' in line:
-			fields = line.split(b'Localize("', 1)[1].split(b'"', 1)
+		if 'Localize("'.encode() in line:
+			fields = line.split('Localize("'.encode(), 1)[1].split('"'.encode(), 1)
 			stringtable[fields[0]] = ""
 			process_line(fields[1])
 
@@ -35,7 +35,7 @@ def load_languagefile(filename):
 
 	for i in range(0, len(lines)-1):
 		l = lines[i].strip()
-		if len(l) and not l[0:1] == b"=" and not l[0:1] == b"#":
+		if len(l) and not l[0:1] == "=".encode() and not l[0:1] == "#".encode():
 			stringtable[l] = lines[i+1][3:].rstrip()
 
 	return stringtable
@@ -52,23 +52,23 @@ def generate_languagefile(outputfilename, srctable, loctable):
 		srctable_keys.append(key)
 	srctable_keys.sort()
 
-	content = b"\n##### translated strings #####\n\n"
+	content = "\n##### translated strings #####\n\n".encode()
 	for k in srctable_keys:
 		if k in loctable and len(loctable[k]):
-			content += k + b"\n== " + loctable[k] + b"\n\n"
+			content += k + "\n== ".encode() + loctable[k] + "\n\n".encode()
 			num_items += 1
 
-	content += b"##### needs translation #####\n\n"
+	content += "##### needs translation #####\n\n".encode()
 	for k in srctable_keys:
 		if not k in loctable or len(loctable[k]) == 0:
-			content += k + b"\n== \n\n"
+			content += k + "\n== \n\n".encode()
 			num_items += 1
 			new_items += 1
 
-	content += b"##### old translations #####\n\n"
+	content += "##### old translations #####\n\n".encode()
 	for k in loctable:
 		if not k in srctable:
-			content += k + b"\n== " + loctable[k] + b"\n\n"
+			content += k + "\n== ".encode() + loctable[k] + "\n\n".encode()
 			num_items += 1
 			old_items += 1
 
