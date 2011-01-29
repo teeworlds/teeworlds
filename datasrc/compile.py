@@ -69,8 +69,8 @@ if gen_client_content_header or gen_server_content_header:
 	order = []
 	for line in contentlines:
 		line = line.strip()
-		if line[:6] == "class " and '(Struct)' in line:
-			order += [line.split()[1].split("(")[0]]
+		if line[:6] == "class ".encode() and "(Struct)".encode() in line:
+			order += [line.split()[1].split("(".encode())[0].decode("ascii")]
 	for name in order:
 		EmitTypeDeclaration(content.__dict__[name])
 
