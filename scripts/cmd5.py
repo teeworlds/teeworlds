@@ -18,8 +18,8 @@ def cstrip(lines):
 	# this eats up cases like 'n {'
 	i = 1
 	while i < len(d)-2:
-		if d[i] == ' ':
-			if not (d[i-1] in alphanum and d[i+1] in alphanum):
+		if d[i:i + 1] == " ":
+			if not (d[i-1:i] in alphanum and d[i+1:i + 2] in alphanum):
 				d = d[:i] + d[i+1:]
 		i += 1
 	return d
