@@ -417,7 +417,7 @@ int CEditor::DoButton_MenuItem(const void *pID, const char *pText, int Checked, 
 	CUIRect t = *pRect;
 	t.VMargin(5.0f, &t);
 	UI()->DoLabel(&t, pText, 10, -1, -1);
-	return DoButton_Editor_Common(pID, pText, Checked, pRect, 0, 0);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_Tab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
