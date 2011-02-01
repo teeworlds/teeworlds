@@ -523,7 +523,7 @@ void CHud::RenderTime()
 	char aBuf[64];
 	if(m_FinishTime && m_RaceState == RACE_FINISHED)
 	{
-		str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%06.3f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
+		str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%06.3f", (int)m_FinishTime/60, fmod(m_FinishTime, 60));
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
 	}
 		
@@ -581,7 +581,7 @@ void CHud::RenderRecord()
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "Server best:");
 		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
-		str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
+		str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)m_Record/60, fmod(m_Record, 60));
 		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
 	}
 }
