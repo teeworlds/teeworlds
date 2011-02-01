@@ -722,7 +722,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 				Cursor.m_LineWidth = Button.w;
 
 				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, fmod(pItem->m_Time, 60);
+				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, fmod(pItem->m_Time, 60));
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 		}
