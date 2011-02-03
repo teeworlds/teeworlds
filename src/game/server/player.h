@@ -84,6 +84,8 @@ public:
 		int m_TargetY;
 	} m_LatestActivity;
 
+	int m_ChatScore;
+	
 	// network latency calculations
 	struct
 	{

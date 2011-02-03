@@ -600,7 +600,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		char aIP[16];
 		int MuteTicks = 0;
 
-		Server()->GetClientIP(ClientId, aIP, sizeof aIP);
+		Server()->GetClientAddr(ClientID, aIP, sizeof aIP);
 
 		for(int z = 0; z < MAX_MUTES && MuteTicks <= 0; ++z) //find a mute, remove it, if expired.
 			if (m_aMutes[z].m_IP[0] && str_comp(aIP, m_aMutes[z].m_IP) == 0 && (MuteTicks = m_aMutes[z].m_Expire - Server()->Tick()) <= 0)
@@ -610,7 +610,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof aBuf, "You are not permitted to talk for the next %d seconds.", MuteTicks / Server()->TickSpeed());
-			SendChatTarget(ClientId, aBuf);
+			SendChatTarget(ClientID, aBuf);
+			return;
+		}
+
+		if ((pPlayer->m_ChatScore += g_Config.m_SvChatPenalty) > g_Config.m_SvChatThreshold)
+		{
+			char aIP[16];
+			Server()->GetClientAddr(ClientID, aIP, sizeof aIP);
+			Mute(aIP, g_Config.m_SvSpamMuteDuration, Server()->ClientName(ClientID));
+			pPlayer->m_ChatScore = 0;
 			return;
 		}
 
@@ -1310,14 +1319,14 @@ void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConMuteID(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	int ClientId = pResult->GetInteger(0);
-	if (ClientId < 0 || ClientId >= MAX_CLIENTS || !pSelf->m_apPlayers[ClientId])
+	int ClientID = pResult->GetInteger(0);
+	if (ClientID < 0 || ClientID >= MAX_CLIENTS || !pSelf->m_apPlayers[ClientID])
 		return;
 
 	char aIP[16];
-	pSelf->Server()->GetClientIP(ClientId, aIP, sizeof aIP);
+	pSelf->Server()->GetClientAddr(ClientID, aIP, sizeof aIP);
 
-	pSelf->Mute(aIP, clamp(pResult->GetInteger(1), 1, 60*60*24*365), pSelf->Server()->ClientName(ClientId));
+	pSelf->Mute(aIP, clamp(pResult->GetInteger(1), 1, 60*60*24*365), pSelf->Server()->ClientName(ClientID));
 }
 
 // mute through ip, arguments reversed to workaround parsing
