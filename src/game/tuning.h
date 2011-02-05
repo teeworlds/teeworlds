@@ -24,8 +24,8 @@ MACRO_TUNING_PARAM(VelrampRange, velramp_range, 2000)
 MACRO_TUNING_PARAM(VelrampCurvature, velramp_curvature, 1.4f)
 
 // weapon tuning
-MACRO_TUNING_PARAM(GunCurvature, gun_curvature, 1.25f)
-MACRO_TUNING_PARAM(GunSpeed, gun_speed, 2200.0f)
+MACRO_TUNING_PARAM(GunCurvature, gun_curvature, 0.0f)
+MACRO_TUNING_PARAM(GunSpeed, gun_speed, 1000.0f)
 MACRO_TUNING_PARAM(GunLifetime, gun_lifetime, 2.0f)
 
 MACRO_TUNING_PARAM(ShotgunCurvature, shotgun_curvature, 1.25f)
@@ -45,4 +45,7 @@ MACRO_TUNING_PARAM(LaserDamage, laser_damage, 5)
 
 MACRO_TUNING_PARAM(PlayerCollision, player_collision, 1)
 MACRO_TUNING_PARAM(PlayerHooking, player_hooking, 1)
+
+MACRO_TUNING_PARAM(FreezeTicks, freeze_ticks, 3 * TicksPerSecond) // seconds
+
 #endif

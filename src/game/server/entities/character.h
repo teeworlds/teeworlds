@@ -55,7 +55,8 @@ public:
 	bool IncreaseArmor(int Amount);
 	
 	bool GiveWeapon(int Weapon, int Ammo);
-	void GiveNinja();
+	void GiveNinja(bool Silent = false);
+	void TakeNinja();
 	
 	void SetEmote(int Emote, int Tick);
 	

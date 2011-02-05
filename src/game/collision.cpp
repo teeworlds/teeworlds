@@ -45,6 +45,9 @@ void CCollision::Init(class CLayers *pLayers)
 		case TILE_NOHOOK:
 			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
 			break;
+		case TILE_FREEZE:
+		case TILE_UNFREEZE:
+			break;
 		default:
 			m_pTiles[i].m_Index = 0;
 		}
@@ -61,7 +64,14 @@ int CCollision::GetTile(int x, int y)
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	return GetTile(x,y)&COLFLAG_SOLID;
+	int i = GetTile(x,y);
+	return (i&COLFLAG_SOLID) && (i<=5);
+}
+
+int CCollision::IsTileFrz(int x, int y)
+{
+	int i = GetTile(x,y);
+	return i == TILE_FREEZE ? 1 : i == TILE_UNFREEZE ? 2 : 0;
 }
 
 // TODO: rewrite this smarter!

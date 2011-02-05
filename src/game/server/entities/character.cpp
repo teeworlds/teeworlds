@@ -121,12 +121,7 @@ void CCharacter::HandleNinja()
 	if ((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
 	{
 		// time's up, return
-		m_aWeapons[WEAPON_NINJA].m_Got = false;
-		m_ActiveWeapon = m_LastWeapon;
-		if(m_ActiveWeapon == WEAPON_NINJA)
-			m_ActiveWeapon = WEAPON_GUN;
-			
-		SetWeapon(m_ActiveWeapon);
+		TakeNinja();
 		return;
 	}
 	
@@ -267,6 +262,9 @@ void CCharacter::FireWeapon()
 	if(FullAuto && (m_LatestInput.m_Fire&1) && m_aWeapons[m_ActiveWeapon].m_Ammo)
 		WillFire = true;
 		
+	if (!g_Config.m_SvNinja && m_ActiveWeapon == WEAPON_NINJA)
+		WillFire = false;
+
 	if(!WillFire)
 		return;
 		
@@ -298,7 +296,8 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 				
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				//for race mod or any other mod, which needs hammer hits through the wall remove second condition
+				if ((pTarget == this) /* || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL) */)
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -315,6 +314,9 @@ void CCharacter::FireWeapon()
 					
 				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
 					m_pPlayer->GetCID(), m_ActiveWeapon);
+
+				pTarget->m_Core.m_Frozen = 0;
+
 				Hits++;
 			}
 			
@@ -425,7 +427,7 @@ void CCharacter::FireWeapon()
 	
 	m_AttackTick = Server()->Tick();
 	
-	if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0) // -1 == unlimited
+	if (!g_Config.m_SvUnlimitedAmmo && m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
 		m_aWeapons[m_ActiveWeapon].m_Ammo--;
 	
 	if(!m_ReloadTimer)
@@ -486,7 +488,7 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 	return false;
 }
 
-void CCharacter::GiveNinja()
+void CCharacter::GiveNinja(bool Silent)
 {
 	m_Ninja.m_ActivationTick = Server()->Tick();
 	m_aWeapons[WEAPON_NINJA].m_Got = true;
@@ -494,7 +496,20 @@ void CCharacter::GiveNinja()
 	m_LastWeapon = m_ActiveWeapon;
 	m_ActiveWeapon = WEAPON_NINJA;
 	
+	if (!Silent)
 	GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
+}
+
+void CCharacter::TakeNinja()
+{
+	if (m_ActiveWeapon != WEAPON_NINJA)
+		return;
+
+	m_aWeapons[WEAPON_NINJA].m_Got = false;
+	m_ActiveWeapon = m_LastWeapon;
+	if(m_ActiveWeapon == WEAPON_NINJA)
+		m_ActiveWeapon = WEAPON_HAMMER;
+	SetWeapon(m_ActiveWeapon);
 }
 
 void CCharacter::SetEmote(int Emote, int Tick)
@@ -546,15 +561,20 @@ void CCharacter::Tick()
 	m_Core.m_Input = m_Input;
 	m_Core.Tick(true);
 	
-	// handle death-tiles and leaving gamelayer
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameLayerClipped(m_Pos))
+	if (m_Core.m_Frozen)
 	{
-		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		if (m_ActiveWeapon != WEAPON_NINJA)
+			GiveNinja(true);
+		if ((m_Core.m_Frozen+1) % Server()->TickSpeed() == 0)
+			GameServer()->CreateDamageInd(m_Pos, 0, (m_Core.m_Frozen+1) / Server()->TickSpeed());
 	}
+	else if (m_ActiveWeapon == WEAPON_NINJA)
+		TakeNinja();
+
+	// handle death-tiles and leaving gamelayer
+	int Col = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y);
+	if(((Col&CCollision::COLFLAG_DEATH) && Col<=7) || GameLayerClipped(m_Pos)) //seriously, who could possibly care.
+		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
 	
 	// handle Weapons
 	HandleWeapons();
@@ -640,7 +660,8 @@ void CCharacter::TickDefered()
 		m_Core.Write(&Current);
 
 		// only allow dead reackoning for a top of 3 seconds
-		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0)
+		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0
+				|| m_Core.m_Frozen > 0)
 		{
 			m_ReckoningTick = Server()->Tick();
 			m_SendCore = m_Core;
@@ -702,7 +723,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
 	m_Core.m_Vel += Force;
 	
-	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
+	if(!g_Config.m_SvDamage || (GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage))
 		return false;
 
 	// m_pPlayer only inflicts half damage on self
