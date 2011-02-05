@@ -650,6 +650,9 @@ void CCharacter::TickDefered()
 		m_Pos.y = m_Input.m_TargetY;
 	}
 	
+	IServer::CClientInfo CltInfo;
+	Server()->GetClientInfo(m_pPlayer->GetCID(), &CltInfo);
+
 	// update the m_SendCore if needed
 	{
 		CNetObj_Character Predicted;
@@ -661,7 +664,7 @@ void CCharacter::TickDefered()
 
 		// only allow dead reackoning for a top of 3 seconds
 		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0
-				|| m_Core.m_Frozen > 0)
+				|| (!CltInfo.m_CustClt && m_Core.m_Frozen > 0))
 		{
 			m_ReckoningTick = Server()->Tick();
 			m_SendCore = m_Core;
@@ -807,32 +810,47 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CCharacter::Snap(int SnappingClient)
 {
+	CNetObj_Character Measure; // used only for measuring the offset between vanilla and extended core
 	if(NetworkClipped(SnappingClient))
 		return;
 	
-	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
-	if(!pCharacter)
-		return;
-	
-	// write down the m_Core
-	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
-	{
-		// no dead reckoning when paused because the client doesn't know
-		// how far to perform the reckoning
-		pCharacter->m_Tick = 0;
-		m_Core.Write(pCharacter);
-	}
-	else
-	{
-		pCharacter->m_Tick = m_ReckoningTick;
-		m_SendCore.Write(pCharacter);
-	}
-	
+	IServer::CClientInfo CltInfo;
+	Server()->GetClientInfo(SnappingClient, &CltInfo);
+
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
 	{
 		m_EmoteType = EMOTE_NORMAL;
 		m_EmoteStop = -1;
+	}
+
+	CNetObj_Character *pCharacter;
+
+	// measure distance between first extended and first vanilla field
+	size_t Offset = (char*)(&Measure.m_Tick) - (char*)(&Measure.m_Frz);
+
+	// vanilla size for vanilla clients, extended for custom client
+	size_t Sz = sizeof (CNetObj_Character) - (CltInfo.m_CustClt?0:Offset);
+
+	// create a snap item of the size the client expects
+	pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), Sz));
+	if(!pCharacter)
+		return;
+	
+	// for vanilla clients, make pCharacter point before the start our snap item start, so that the vanilla core
+	// aligns with the snap item. we may not access the extended fields then, since they are out of bounds (to the left)
+	if (!CltInfo.m_CustClt)
+		pCharacter = (CNetObj_Character*)(((char*)pCharacter)-Offset); // moar cookies.
+
+	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
+	{
+		pCharacter->m_Tick = 0;
+		m_Core.Write(pCharacter, !CltInfo.m_CustClt);
+	}
+	else
+	{
+		pCharacter->m_Tick = m_ReckoningTick;
+		m_SendCore.Write(pCharacter, !CltInfo.m_CustClt);
 	}
 
 	pCharacter->m_Emote = m_EmoteType;

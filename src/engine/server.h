@@ -20,6 +20,7 @@ public:
 	{
 		const char *m_pName;
 		int m_Latency;
+		bool m_CustClt;
 	};
 	
 	int Tick() const { return m_CurrentGameTick; }
@@ -80,6 +81,7 @@ public:
 	
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
+	virtual const char *NetVersionCust() = 0;
 };
 
 extern IGameServer *CreateGameServer();

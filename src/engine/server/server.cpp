@@ -323,6 +323,7 @@ int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)
 	{
 		pInfo->m_pName = m_aClients[ClientID].m_aName;
 		pInfo->m_Latency = m_aClients[ClientID].m_Latency;
+		pInfo->m_CustClt = m_aClients[ClientID].m_CustClt;
 		return 1;
 	}
 	return 0;
@@ -635,7 +636,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			char aVersion[64];
 			const char *pPassword;
 			str_copy(aVersion, Unpacker.GetString(CUnpacker::SANITIZE_CC), 64);
-			if(str_comp(aVersion, GameServer()->NetVersion()) != 0)
+			bool CustClt = str_comp(aVersion, GameServer()->NetVersionCust()) == 0;
+			if(!CustClt && str_comp(aVersion, GameServer()->NetVersion()) != 0)
 			{
 				// OH FUCK! wrong version, drop him
 				char aReason[256];
@@ -656,6 +658,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 			
 			m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
+			m_aClients[ClientId].m_CustClt = CustClt;
 			SendMap(ClientId);
 		}
 	}

@@ -387,7 +387,7 @@ void CCharacterCore::Move()
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 }
 
-void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
+void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore, bool VanillaOnly)
 {
 	pObjCore->m_X = round(m_Pos.x);
 	pObjCore->m_Y = round(m_Pos.y);
@@ -404,6 +404,8 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 	pObjCore->m_Jumped = m_Jumped;
 	pObjCore->m_Direction = m_Direction;
 	pObjCore->m_Angle = m_Angle;
+	if (!VanillaOnly)
+		pObjCore->m_Frz = m_Frozen;
 }
 
 void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
@@ -422,6 +424,7 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_Jumped = pObjCore->m_Jumped;
 	m_Direction = pObjCore->m_Direction;
 	m_Angle = pObjCore->m_Angle;
+	m_Frozen = pObjCore->m_Frz;
 }
 
 void CCharacterCore::Quantize()

@@ -93,6 +93,8 @@ public:
 		int m_Authed;
 		int m_AuthTries;
 		
+		bool m_CustClt;
+
 		void Reset();
 	};
 	

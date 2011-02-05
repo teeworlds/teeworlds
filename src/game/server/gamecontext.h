@@ -163,6 +163,7 @@ public:
 
 	virtual const char *Version();
 	virtual const char *NetVersion();
+	virtual const char *NetVersionCust();
 };
 
 inline int CmaskAll() { return -1; }

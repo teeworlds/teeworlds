@@ -201,7 +201,7 @@ public:
 	void Move();
 	
 	void Read(const CNetObj_CharacterCore *pObjCore);
-	void Write(CNetObj_CharacterCore *pObjCore);
+	void Write(CNetObj_CharacterCore *pObjCore, bool VanillaOnly = false);
 	void Quantize();
 };
 
