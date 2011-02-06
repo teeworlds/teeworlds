@@ -18,7 +18,7 @@ function Script(name)
 	if family == "windows" then
 		return str_replace(name, "/", "\\")
 	end
-	return "python " .. name
+	return "python -OOtt " .. name
 end
 
 function CHash(output, ...)

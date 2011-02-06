@@ -1,3 +1,4 @@
+#!/usr/bin/python -OOtt
 import imp, optparse, os, re, shutil, sys, zipfile
 from optparse import OptionParser
 if sys.version_info[0] == 2:

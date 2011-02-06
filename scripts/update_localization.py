@@ -1,3 +1,4 @@
+#!/usr/bin/python -OOtt
 import os, re, sys
 match = re.search("(.*?)/[^/]*?$", sys.argv[0])
 if match != None:
