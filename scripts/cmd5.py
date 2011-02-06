@@ -1,6 +1,6 @@
 import hashlib, sys, re
 
-alphanum = "0123456789abcdefghijklmnopqrstuvwzyxABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+alphanum = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".encode()
 
 def cstrip(lines):
 	d = "".encode()
@@ -12,15 +12,15 @@ def cstrip(lines):
 	d = d.replace("\t".encode(), " ".encode()) # tab to space
 	d = re.sub("  *".encode(), " ".encode(), d) # remove double spaces
 	d = re.sub("".encode(), "".encode(), d) # remove /* */ comments
-	
+
 	d = d.strip()
-	
+
 	# this eats up cases like 'n {'
 	i = 1
 	while i < len(d)-2:
-		if d[i:i + 1] == " ":
-			if not (d[i-1:i] in alphanum and d[i+1:i + 2] in alphanum):
-				d = d[:i] + d[i+1:]
+		if d[i:i + 1] == " ".encode():
+			if not (d[i - 1:i] in alphanum and d[i+1:i + 2] in alphanum):
+				d = d[:i] + d[i + 1:]
 		i += 1
 	return d
 
