@@ -21,13 +21,13 @@ function Script(name)
 	return "python " .. name
 end
 
-function CHash(output, ...)
+function CHash(output, defname, ...)
 	local inputs = TableFlatten({...})
 	
 	output = Path(output)
 	
 	-- compile all the files
-	local cmd = Script("scripts/cmd5.py") .. " "
+	local cmd = Script("scripts/cmd5.py") .. " " .. defname .. " "
 	for index, inname in ipairs(inputs) do
 		cmd = cmd .. Path(inname) .. " " 
 	end
@@ -106,7 +106,7 @@ AddDependency(network_source, network_header)
 AddDependency(client_content_source, client_content_header)
 AddDependency(server_content_source, server_content_header)
 
-nethash = CHash("src/game/generated/nethash.c", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
+nethash = CHash("src/game/generated/nethash.c", "GAME_NETVERSION_HASH", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 
 client_link_other = {}
 client_depends = {}

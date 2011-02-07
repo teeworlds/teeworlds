@@ -25,12 +25,13 @@ def cstrip(lines):
 	return d
 
 f = "".encode()
-for filename in sys.argv[1:]:
+for filename in sys.argv[2:]:
 	f += cstrip([l.strip() for l in open(filename, "rb")])
 
 hash = hashlib.md5(f).hexdigest().lower()[16:]
 # TODO: refactor hash that is equal to the 0.5 hash, remove when we 
 # TODO: remove when we don't need it any more
-if hash == "f16c2456fc487748":
+if sys.argv[1] == "GAME_NETVERSION_HASH" and hash == "f16c2456fc487748":
 	hash = "b67d1f1a1eea234e"
-print('#define GAME_NETVERSION_HASH "%s"' % hash)
+hash = sys.argv[1] + ' "' + hash + '"'
+print('#define %s' % hash)
