@@ -586,6 +586,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			pMessage++;
 		}
 		
+		char *pMsgStart = str_skip_whitespaces((char*)pMsg->m_pMessage);
+
+		if (*pMsgStart == IChatCtl::ms_CmdChar)
+			IChatCtl::Dispatch(p, pMsgStart);//one could handle unhandled msgs here
+		else
 		SendChat(ClientId, Team, pMsg->m_pMessage);
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
@@ -1103,6 +1108,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		}
 	}
 #endif
+	IChatCtl::Init(this);
 }
 
 void CGameContext::OnShutdown()
