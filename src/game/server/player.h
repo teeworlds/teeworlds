@@ -34,6 +34,9 @@ public:
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 	
+	CAccount *GetAccount() { return m_pAccount; }
+	void SetAccount(CAccount *pAcc) { m_pAccount = pAcc; }
+
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;
@@ -71,6 +74,8 @@ public:
 		int m_TargetY;
 	} m_LatestActivity;
 	
+	char m_OrigName[MAX_NAME_LENGTH];
+
 private:
 	CCharacter *Character;
 	CGameContext *m_pGameServer;
@@ -93,6 +98,8 @@ private:
 		int m_Min;
 		int m_Max;	
 	} m_Latency;
+
+	CAccount *m_pAccount;
 };
 
 #endif

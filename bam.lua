@@ -107,6 +107,7 @@ AddDependency(client_content_source, client_content_header)
 AddDependency(server_content_source, server_content_header)
 
 nethash = CHash("src/game/generated/nethash.c", "GAME_NETVERSION_HASH", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
+acchash = CHash("src/game/generated/acchash.c", "GAME_ACCVERSION_HASH", "src/game/server/acc_payload.h")
 
 client_link_other = {}
 client_depends = {}
@@ -213,7 +214,7 @@ function build(settings)
 	
 	versionserver = Compile(settings, Collect("src/versionsrv/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
-	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source)
+	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source, acchash)
 	game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), client_content_source)
 	game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), server_content_source)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
