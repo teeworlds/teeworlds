@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -20,6 +21,9 @@
 
 %i seconds left
 == %i secondes restantes
+
+%s Right click for context menu.
+== %s clique droit pour afficher le menu contextuel
 
 Abort
 == Annuler
@@ -44,6 +48,9 @@ All
 
 Alpha
 == Alpha
+
+Alpha value of the envelope
+== Valeur d'alpha dans l'arriere-plan
 
 Always show name plates
 == Toujours afficher les pseudonymes
@@ -78,6 +85,9 @@ Blue team
 Blue team wins!
 == L'équipe bleue gagne !
 
+Blue value of the envelope
+== Valeur de bleu dans l'arriere-plan
+
 Body
 == Corps
 
@@ -108,6 +118,12 @@ Close
 Color
 == Couleur
 
+Color Env
+== Couleur Env
+
+Color TO
+== Couleur TO
+
 Color+
 == Couleur+
 
@@ -132,8 +148,14 @@ Constructs collision from this layer
 Controls
 == Contrôles
 
+Creates a new color envelope
+== Créer une nouvelle couleur d'arriere-plan
+
 Creates a new map
 == Crée une nouvelle carte
+
+Creates a new pos envelope
+== Créer un nouvel arriere-plan
 
 Current
 == Actuellement
@@ -161,6 +183,9 @@ Delete group
 
 Delete layer
 == Supprimer la couche
+
+Delete this envelope
+== Supprimer l'arriere-plan
 
 Deletes the layer
 == Supprime la couche
@@ -206,6 +231,9 @@ Emoticon
 
 Enter
 == Démarrer
+
+Envelopes
+== Arriere-plans
 
 Error
 == Erreur
@@ -278,6 +306,9 @@ General
 
 Graphics
 == Affichage
+
+Green value of the envelope
+== Valeur de vert dans l'arriere-plan
 
 Grenade
 == Lance-grenade
@@ -354,6 +385,12 @@ Layers
 Left
 == Gauche
 
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Boutton gauche de la souris pour bouger. Maintenez [shift] pour changer le pivot. Maintenez [ctrl] pour la rotation.
+
+Left mouse button to move. Hold shift to move the texture.
+== Boutton gauche de la souris pour bouger. Maintenez [shift] pour changer la texture.
+
 Lht.
 == Lum.
 
@@ -423,6 +460,9 @@ New folder
 News
 == Nouvelles
 
+Next Envelope
+== L'arriere-plan suivant
+
 Next weapon
 == Arme suivante
 
@@ -489,6 +529,12 @@ Players
 Please balance teams!
 == Équilibrez les équipes !
 
+Pos X
+== position X
+
+Pos Y
+== position Y
+
 Pos.+
 == Pos.+
 
@@ -497,6 +543,9 @@ Press right mouse button to create a new point
 
 Prev. weapon
 == Arme précédente
+
+Previous Envelope
+== L'arriere-plan précédent
 
 Quality Textures
 == Textures haute qualité
@@ -513,11 +562,17 @@ REC
 Reason:
 == Raison :
 
+Record demo
+== Enregistrement démo
+
 Red team
 == Équipe rouge
 
 Red team wins!
 == L'équipe rouge gagne !
+
+Red value of the envelope
+== Valeur de rouge dans l'arriere-plan
 
 Refresh
 == Rafraîchir
@@ -560,6 +615,9 @@ Rifle
 
 Right
 == Droite
+
+Rotation of the envelope
+== Rotation de l'arriere-plan
 
 Round
 == Round
@@ -657,6 +715,9 @@ Standard gametype
 Standard map
 == Cartes standards
 
+Stop record
+== Stopper l'enregistrement
+
 Sudden Death
 == Mort Subite
 
@@ -695,6 +756,12 @@ UI Color
 
 Up
 == Haut
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur de la couleur. Maintenez [shift] pour plus de présision
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur. Maintenez [shift] pour plus de présision
 
 Use sounds
 == Jouer les sons
@@ -756,74 +823,6 @@ ZO
 no limit
 == pas de limite
 
-##### new translation #####
-
-%s Right click for context menu.
-== %s clique droit pour afficher le menu contextuel
-
-Alpha value of the envelope
-== Valeur d'alpha dans l'arriere-plan
-
-Blue value of the envelope
-== Valeur de bleu dans l'arriere-plan
-
-Next Envelope
-== L'arriere-plan suivant
-
-Previous Envelope
-== L'arriere-plan précédent
-
-Pos X
-== position X
-
-Pos Y
-== position Y
-
-Creates a new color envelope
-== Créer une nouvelle couleur d'arriere-plan
-
-Creates a new pos envelope
-== Créer un nouvel arriere-plan
-
-Record demo
-== Enregistrement démo
-
-Rotation of the envelope
-== Rotation de l'arriere-plan
-
-Delete this envelope
-== Supprimer l'arriere-plan
-
-Color Env
-== Couleur Env
-
-Color TO
-== Couleur TO
-
-Envelopes
-== Arriere-plans
-
-Green value of the envelope
-== Valeur de vert dans l'arriere-plan
-
-Red value of the envelope
-== Valeur de rouge dans l'arriere-plan
-
-Stop record
-== Stopper l'enregistrement
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Boutton gauche de la souris pour bouger. Maintenez [ctrl] pour la rotation. Hold shift to move pivot.
-
-Left mouse button to move. Hold shift to move the texture.
-== Boutton gauche de la souris pour bouger. Maintenez [shift] pour changer la texture.
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur de la couleur. Maintenez [shift] pour plus de présision
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur. Maintenez [shift] pour plus de présision
-
 ##### needs translation #####
 
 Add Quad
@@ -871,6 +870,9 @@ Enable/disable layer for saving
 HD
 == 
 
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
 Name plates size
 == 
 
@@ -893,9 +895,6 @@ Quads
 == 
 
 Refocus
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
 Resizes the current Quad based on the aspect ratio of the image
@@ -974,3 +973,4 @@ Y-axis of the envelope
 == 
 
 ##### old translations #####
+
