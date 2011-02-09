@@ -778,6 +778,9 @@ Skins
 Sound
 == Sunet
 
+Sound error
+== Eroare de sunet
+
 Sound volume
 == Volum sunet
 
@@ -825,6 +828,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 
 Texture Compression
 == Compresie texturi
+
+The audio device couldn't be initialised.
+== Dispozitivul audio nu a putut fi inițializat.
 
 The server is running a non-standard tuning on a pure game type.
 == Serverul folosește parametri ne-standard într-un joc standard.
@@ -965,12 +971,6 @@ no limit
 == fără limită
 
 ##### needs translation #####
-
-Sound error
-== 
-
-The audio device couldn't be initialised.
-== 
 
 ##### old translations #####
 
