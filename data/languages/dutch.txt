@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -20,7 +21,6 @@
 
 %i seconds left
 == nog %i seconden
-
 
 %s Right click for context menu.
 == %s Rechtermuisknop voor context menu.
@@ -496,11 +496,11 @@ Mute when not active
 Name
 == Naam
 
-Name:
-== Naam:
-
 Name plates size
 == Grootte naamplaat
+
+Name:
+== Naam:
 
 New
 == Nieuw
@@ -779,7 +779,7 @@ Sound
 == Geluid
 
 Sound error
-== Geluidsfout 
+== Geluidsfout
 
 Sound volume
 == Volume
