@@ -48,7 +48,8 @@ int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, 
 	{
 		if(distance(pEnt->m_Pos, Pos) < Radius+pEnt->m_ProximityRadius)
 		{
-			ppEnts[Num] = pEnt;
+			if(ppEnts)
+				ppEnts[Num] = pEnt;
 			Num++;
 			if(Num == Max)
 				break;

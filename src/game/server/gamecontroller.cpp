@@ -62,6 +62,10 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int T)
 	// get spawn point
 	for(int i  = 0; i < m_aNumSpawnPoints[T]; i++)
 	{
+		// check if the position is occupado
+		if(GameServer()->m_World.FindEntities(m_aaSpawnPoints[T][i], 64, 0, 1, CGameWorld::ENTTYPE_CHARACTER))
+			continue;
+
 		vec2 P = m_aaSpawnPoints[T][i];
 		float S = EvaluateSpawnPos(pEval, P);
 		if(!pEval->m_Got || pEval->m_Score > S)
@@ -73,25 +77,25 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int T)
 	}
 }
 
-bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
+bool IGameController::CanSpawn(int Team, vec2 *pOutPos)
 {
 	CSpawnEval Eval;
 	
 	// spectators can't spawn
-	if(pPlayer->GetTeam() == TEAM_SPECTATORS)
+	if(Team == TEAM_SPECTATORS)
 		return false;
 	
 	if(IsTeamplay())
 	{
-		Eval.m_FriendlyTeam = pPlayer->GetTeam();
+		Eval.m_FriendlyTeam = Team;
 		
-		// try first try own team spawn, then normal spawn and then enemy
-		EvaluateSpawnType(&Eval, 1+(pPlayer->GetTeam()&1));
+		// first try own team spawn, then normal spawn and then enemy
+		EvaluateSpawnType(&Eval, 1+(Team&1));
 		if(!Eval.m_Got)
 		{
 			EvaluateSpawnType(&Eval, 0);
 			if(!Eval.m_Got)
-				EvaluateSpawnType(&Eval, 1+((pPlayer->GetTeam()+1)&1));
+				EvaluateSpawnType(&Eval, 1+((Team+1)&1));
 		}
 	}
 	else
