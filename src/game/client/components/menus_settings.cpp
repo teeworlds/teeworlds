@@ -690,6 +690,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		return;
 	}
 	
+	char aOrigin[128];
 	CLineReader LineReader;
 	LineReader.Init(File);
 	char *pLine;
@@ -697,7 +698,8 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	{
 		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
 			continue;
-			
+		
+		str_copy(aOrigin, pLine, sizeof(aOrigin));
 		char *pReplacement = LineReader.Get();
 		if(!pReplacement)
 		{
@@ -708,13 +710,13 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
 			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", pLine);
+			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 			continue;
 		}
 		
 		char aFileName[128];
-		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", pLine);
+		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
 		pLanguages->add(CLanguage(pReplacement+3, aFileName));
 	}
 	io_close(File);
