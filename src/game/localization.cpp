@@ -63,6 +63,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
 	
+	char aOrigin[512];
 	CLineReader LineReader;
 	LineReader.Init(IoHandle);
 	char *pLine;
@@ -74,6 +75,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		if(pLine[0] == '#') // skip comments
 			continue;
 			
+		str_copy(aOrigin, pLine, sizeof(aOrigin));
 		char *pReplacement = LineReader.Get();
 		if(!pReplacement)
 		{
@@ -83,13 +85,13 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
-			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", pLine);
+			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", aOrigin);
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 			continue;
 		}
 
 		pReplacement += 3;
-		AddString(pLine, pReplacement);
+		AddString(aOrigin, pReplacement);
 	}
 	io_close(IoHandle);
 	
