@@ -497,7 +497,7 @@ void CGameClient::OnConnected()
 	m_Freeview = true;
 	m_SpectateCid = -1;
 	m_LastGameOver = 0;
-	m_LastWarmup = false;
+	m_LastRoundStartTick = 0;
 	m_aLastFlagCarrier[0] = -1;
 	m_aLastFlagCarrier[1] = -1;
 }
@@ -1086,12 +1086,10 @@ void CGameClient::OnNewSnapshot()
 						OnGameRestart();
 					m_LastGameOver = m_Snap.m_pGameobj->m_GameOver;
 				}
-				if((m_Snap.m_pGameobj->m_Warmup > 0) != m_LastWarmup)
-				{
-					if(m_LastWarmup)
-						OnWarmupEnd();
-					m_LastWarmup = m_Snap.m_pGameobj->m_Warmup > 0;
-				}
+				if(m_LastRoundStartTick != m_Snap.m_pGameobj->m_RoundStartTick)
+					OnRoundStart();
+				
+				m_LastRoundStartTick = m_Snap.m_pGameobj->m_RoundStartTick;
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 			{
@@ -1383,7 +1381,7 @@ void CGameClient::OnActivateEditor()
 	OnRelease();
 }
 
-void CGameClient::OnWarmupEnd()
+void CGameClient::OnRoundStart()
 {
 	for(int i=0; i<MAX_CLIENTS; i++)
 		m_aStats[i].Reset();
