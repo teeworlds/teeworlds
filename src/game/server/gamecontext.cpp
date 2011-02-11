@@ -445,8 +445,10 @@ void CGameContext::OnTick()
 					m_VoteEnforce = VOTE_ENFORCE_YES;
 				else if(No >= (Total+1)/2)
 					m_VoteEnforce = VOTE_ENFORCE_NO;
+				m_VoteWillPass = Yes > No;
 			}
-			
+			if(time_get() > m_VoteCloseTime)
+				m_VoteEnforce = (m_VoteWillPass) ? VOTE_ENFORCE_YES : VOTE_ENFORCE_NO;
 			if(m_VoteEnforce == VOTE_ENFORCE_YES)
 			{
 				Console()->ExecuteLine(m_aVoteCommand);
@@ -456,7 +458,7 @@ void CGameContext::OnTick()
 				if(m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_Last_VoteCall = 0;
 			}
-			else if(m_VoteEnforce == VOTE_ENFORCE_NO || time_get() > m_VoteCloseTime)
+			else if(m_VoteEnforce == VOTE_ENFORCE_NO)
 			{
 				EndVote();
 				SendChat(-1, CGameContext::CHAT_ALL, "Vote failed");
