@@ -25,7 +25,7 @@ so it will be affected by lags
 */
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 1;
+static const unsigned char gs_ActVersion = 2;
 
 CGhost::CGhost()
 {
@@ -41,15 +41,15 @@ CGhost::CGhost()
 	m_StartRenderTick = -1;
 }
 
-void CGhost::AddInfos(CNetObj_Character Player)
+void CGhost::AddInfos(CGhostCharacter Player)
 {
 	if(!m_Recording)
 		return;
 	
 	// Just to be sure it doesnt eat too much memory, the first test should be enough anyway
-	if(m_CurGhost.m_Path.size() > Client()->GameTickSpeed()*60*10)
+	if(m_CurGhost.m_Path.size() > Client()->GameTickSpeed()*60*20)
 	{
-		dbg_msg("ghost", "10 minutes elapsed. Stopping ghost record");
+		dbg_msg("ghost", "20 minutes elapsed. Stopping ghost record");
 		StopRecord();
 		m_CurGhost.m_Path.clear();
 		return;
@@ -93,11 +93,11 @@ void CGhost::OnRender()
 		m_RaceState = RACE_NONE;
 	}
 	
-	CNetObj_Character Player = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
-	m_pClient->m_PredictedChar.Write(&Player);
+	CNetObj_Character Char = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
+	m_pClient->m_PredictedChar.Write(&Char);
 	
 	if(m_pClient->m_NewPredictedTick)
-		AddInfos(Player);
+		AddInfos(GetGhostCharacter(Char));
 
 	// Play the ghost
 	if(!m_Rendering || !g_Config.m_ClRaceShowGhost)
@@ -119,8 +119,8 @@ void CGhost::OnRender()
 			continue;
 		
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
-		CNetObj_Character Player = pGhost->m_Path[m_CurPos];
-		CNetObj_Character Prev = pGhost->m_Path[PrevPos];
+		CGhostCharacter Player = pGhost->m_Path[m_CurPos];
+		CGhostCharacter Prev = pGhost->m_Path[PrevPos];
 		CNetObj_ClientInfo Info = pGhost->m_Info;
 		
 		RenderGhostHook(Player, Prev);
@@ -128,7 +128,7 @@ void CGhost::OnRender()
 	}
 }
 
-void CGhost::RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetObj_ClientInfo Info)
+void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CNetObj_ClientInfo Info)
 {
 	char aSkinName[64];
 	IntsToStr(&Info.m_Skin0, 6, aSkinName);
@@ -207,7 +207,7 @@ void CGhost::RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetO
 	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
 }
 
-void CGhost::RenderGhostHook(CNetObj_Character Player, CNetObj_Character Prev)
+void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)
 {
 	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
 		return;
@@ -245,6 +245,24 @@ void CGhost::RenderGhostHook(CNetObj_Character Player, CNetObj_Character Prev)
 	Graphics()->QuadsDraw(Array, j);
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
+}
+
+CGhost::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
+{
+	CGhostCharacter Player;
+	Player.m_X = Char.m_X;
+	Player.m_Y = Char.m_Y;
+	Player.m_VelX = Char.m_VelX;
+	Player.m_VelY = Char.m_VelY;
+	Player.m_Angle = Char.m_Angle;
+	Player.m_Direction = Char.m_Direction;
+	Player.m_Weapon = Char.m_Weapon;
+	Player.m_HookState = Char.m_HookState;
+	Player.m_HookX = Char.m_HookX;
+	Player.m_HookY = Char.m_HookY;
+	Player.m_AttackTick = Char.m_AttackTick;
+	
+	return Player;
 }
 
 void CGhost::StartRecord()
@@ -311,6 +329,7 @@ void CGhost::Save()
 	Header.m_aCrc[2] = (Crc>>8)&0xff;
 	Header.m_aCrc[3] = (Crc)&0xff;
 	Header.m_Time = m_BestTime;
+	Header.m_NumShots = m_CurGhost.m_Path.size();
 	io_write(File, &Header, sizeof(Header));
 	
 	// write client info
@@ -318,8 +337,8 @@ void CGhost::Save()
 	
 	// write data
 	int ItemsPerPackage = 500; // 500 ticks per package
-	int Num = m_CurGhost.m_Path.size();
-	CNetObj_Character *Data = &m_CurGhost.m_Path[0];
+	int Num = Header.m_NumShots;
+	CGhostCharacter *Data = &m_CurGhost.m_Path[0];
 	
 	while(Num)
 	{
@@ -330,7 +349,7 @@ void CGhost::Save()
 		char aBuffer2[100*500];
 		unsigned char aSize[4];
 		
-		int Size = sizeof(CNetObj_Character)*Items;
+		int Size = sizeof(CGhostCharacter)*Items;
 		mem_copy(aBuffer2, Data, Size);
 		Data += Items;
 		
@@ -382,7 +401,7 @@ bool CGhost::GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader)
 	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
 		return 0;
 	
-	if(Header.m_Version > gs_ActVersion)
+	if(Header.m_Version != gs_ActVersion)
 		return 0;
 	
 	int Crc = (Header.m_aCrc[0]<<24) | (Header.m_aCrc[1]<<16) | (Header.m_aCrc[2]<<8) | (Header.m_aCrc[3]);
@@ -425,16 +444,20 @@ void CGhost::Load(const char* pFilename, int ID)
 	if(ID == -1)
 		m_BestTime = Header.m_Time;
 	
+	int NumShots = Header.m_NumShots;
+	
 	// create ghost
 	CGhostItem Ghost;
 	Ghost.m_ID = ID;
 	Ghost.m_Path.clear();
+	Ghost.m_Path.set_size(NumShots);
 	
 	// read client info
 	io_read(File, &Ghost.m_Info, sizeof(Ghost.m_Info));
 	
 	// read data
-	while(1)
+	int Index = 0;
+	while(Index < NumShots)
 	{
 		static char aCompresseddata[100*500];
 		static char aDecompressed[100*500];
@@ -465,10 +488,14 @@ void CGhost::Load(const char* pFilename, int ID)
 			break;
 		}
 		
-		CNetObj_Character *Tmp = (CNetObj_Character*)aData;
-		for(unsigned i = 0; i < Size/sizeof(CNetObj_Character); i++)
+		CGhostCharacter *Tmp = (CGhostCharacter*)aData;
+		for(unsigned i = 0; i < Size/sizeof(CGhostCharacter); i++)
 		{
-			Ghost.m_Path.add(*Tmp);
+			if(Index >= NumShots)
+				break;
+			
+			Ghost.m_Path[Index] = *Tmp;
+			Index++;
 			Tmp++;
 		}
 	}

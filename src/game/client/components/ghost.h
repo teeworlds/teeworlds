@@ -16,15 +16,31 @@ public:
 		char m_aOwner[MAX_NAME_LENGTH];
 		char m_aMap[64];
 		unsigned char m_aCrc[4];
+		int m_NumShots;
 		float m_Time;
 	};
 	
 private:
+	struct CGhostCharacter
+	{
+		int m_X;
+		int m_Y;
+		int m_VelX;
+		int m_VelY;
+		int m_Angle;
+		int m_Direction;
+		int m_Weapon;
+		int m_HookState;
+		int m_HookX;
+		int m_HookY;
+		int m_AttackTick;
+	};
+	
 	struct CGhostItem
 	{
 		int m_ID;
 		CNetObj_ClientInfo m_Info;
-		array<CNetObj_Character> m_Path;
+		array<CGhostCharacter> m_Path;
 		
 		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
 	};
@@ -47,14 +63,16 @@ private:
 		RACE_FINISHED,
 	};
 	
-	void AddInfos(CNetObj_Character Player);
+	void AddInfos(CGhostCharacter Player);
+	
+	CGhostCharacter GetGhostCharacter(CNetObj_Character Char);
 	
 	void StartRecord();
 	void StopRecord();
 	void StartRender();
 	void StopRender();
-	void RenderGhost(CNetObj_Character Player, CNetObj_Character Prev, CNetObj_ClientInfo Info);
-	void RenderGhostHook(CNetObj_Character Player, CNetObj_Character Prev);
+	void RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CNetObj_ClientInfo Info);
+	void RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev);
 	
 	bool GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader);
 	
