@@ -78,7 +78,7 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 	
-	void UiDoListboxStart(void *pId, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+	void UiDoListboxStart(void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
 	CListboxItem UiDoListboxNextItem(void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();

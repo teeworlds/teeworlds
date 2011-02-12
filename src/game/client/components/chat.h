@@ -18,7 +18,7 @@ class CChat : public CComponent
 	{
 		int64 m_Time;
 		float m_YOffset[2];
-		int m_ClientId;
+		int m_ClientID;
 		int m_Team;
 		int m_NameColor;
 		char m_aName[64];
@@ -57,7 +57,7 @@ public:
 
 	bool IsActive() const { return m_Mode != MODE_NONE; }
 	
-	void AddLine(int ClientId, int Team, const char *pLine);
+	void AddLine(int ClientID, int Team, const char *pLine);
 	
 	void EnableMode(int Team);
 	

@@ -26,12 +26,12 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked,
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int SpriteID, int Checked, const CUIRect *pRect)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEMOBUTTONS].m_Id);
 	Graphics()->QuadsBegin();
-	RenderTools()->SelectSprite(SpriteId);
+	RenderTools()->SelectSprite(SpriteID);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
@@ -79,8 +79,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	// do seekbar
 	{
-		static int s_SeekBarId = 0;
-		void *id = &s_SeekBarId;
+		static int s_SeekBarID = 0;
+		void *id = &s_SeekBarID;
 		char aBuffer[128];
 		
 		RenderTools()->DrawUIRect(&SeekBar, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 5.0f);
@@ -235,7 +235,7 @@ static int gs_ListBoxItemsPerRow;
 static float gs_ListBoxScrollValue;
 static bool gs_ListBoxItemActivated;
 
-void CMenus::UiDoListboxStart(void *pId, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+void CMenus::UiDoListboxStart(void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 								int ItemsPerRow, int SelectedIndex, float ScrollValue)
 {
 	CUIRect Scroll, Row;
@@ -290,7 +290,7 @@ void CMenus::UiDoListboxStart(void *pId, const CUIRect *pRect, float RowHeight, 
 	}
 		
 	Scroll.HMargin(5.0f, &Scroll);
-	gs_ListBoxScrollValue = DoScrollbarV(pId, &Scroll, gs_ListBoxScrollValue);
+	gs_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, gs_ListBoxScrollValue);
 	
 	// the list
 	gs_ListBoxView = gs_ListBoxOriginalView;

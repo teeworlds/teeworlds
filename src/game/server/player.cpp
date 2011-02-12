@@ -9,14 +9,14 @@ MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
 	
-CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
+CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 {
 	m_pGameServer = pGameServer;
 	m_RespawnTick = Server()->Tick();
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
 	Character = 0;
-	this->m_ClientID = CID;
+	this->m_ClientID = ClientID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_LastActionTick = Server()->Tick();
 }
@@ -102,7 +102,7 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_Latency = m_Latency.m_Min;
 	pPlayerInfo->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
 	pPlayerInfo->m_Local = 0;
-	pPlayerInfo->m_ClientId = m_ClientID;
+	pPlayerInfo->m_ClientID = m_ClientID;
 	pPlayerInfo->m_Score = m_Score;
 	pPlayerInfo->m_Team = m_Team;
 

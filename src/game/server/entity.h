@@ -65,7 +65,7 @@ class CEntity
 	class CGameWorld *m_pGameWorld;
 protected:
 	bool m_MarkedForDestroy;
-	int m_Id;
+	int m_ID;
 	int m_ObjType;
 public:
 	CEntity(CGameWorld *pGameWorld, int Objtype);

@@ -32,7 +32,7 @@ public:
 	{
 	public:
 		int m_Type;
-		int m_Id;
+		int m_ID;
 		int m_DataSize;
 	};
 
@@ -108,10 +108,10 @@ public:
 	};
 		
 	// TODO: Refactor: should redo this a bit i think, too many virtual calls
-	virtual int SnapNumItems(int SnapId) = 0;
-	virtual void *SnapFindItem(int SnapId, int Type, int Id) = 0;
-	virtual void *SnapGetItem(int SnapId, int Index, CSnapItem *pItem) = 0;
-	virtual void SnapInvalidateItem(int SnapId, int Index) = 0;
+	virtual int SnapNumItems(int SnapID) = 0;
+	virtual void *SnapFindItem(int SnapID, int Type, int ID) = 0;
+	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) = 0;
+	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
@@ -149,7 +149,7 @@ public:
 	virtual void OnRender() = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnConnected() = 0;
-	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker) = 0;
+	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker) = 0;
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
 	

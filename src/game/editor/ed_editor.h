@@ -235,7 +235,7 @@ public:
 	CEditorImage(CEditor *pEditor)
 	{
 		m_pEditor = pEditor;
-		m_TexId = -1;
+		m_TexID = -1;
 		m_aName[0] = 0;
 		m_External = 0;
 		m_Width = 0;
@@ -248,7 +248,7 @@ public:
 	
 	void AnalyseTileFlags();
 	
-	int m_TexId;
+	int m_TexID;
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
@@ -389,7 +389,7 @@ public:
 
 	void GetSize(float *w, float *h) { *w = m_Width*32.0f;  *h = m_Height*32.0f; }
 	
-	int m_TexId;
+	int m_TexID;
 	int m_Game;
 	int m_Image;
 	int m_Width;
@@ -535,7 +535,7 @@ public:
 	CLayer *GetSelectedLayer(int Index);
 	CLayerGroup *GetSelectedGroup();
 	
-	int DoProperties(CUIRect *pToolbox, CProperty *pProps, int *pIds, int *pNewVal);
+	int DoProperties(CUIRect *pToolbox, CProperty *pProps, int *pIDs, int *pNewVal);
 	
 	int m_Mode;
 	int m_Dialog;
@@ -643,10 +643,10 @@ public:
 
 	void RenderBackground(CUIRect View, int Texture, float Size, float Brightness);
 
-	void UiInvokePopupMenu(void *pId, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
+	void UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
 	void UiDoPopupMenu();
 	
-	int UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
+	int UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
 
 	static int PopupGroup(CEditor *pEditor, CUIRect View);
 	static int PopupLayer(CEditor *pEditor, CUIRect View);
@@ -664,14 +664,14 @@ public:
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
 	
-	vec4 ButtonColorMul(const void *pId);
+	vec4 ButtonColorMul(const void *pID);
 
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
-	float UiDoScrollbarV(const void *id, const CUIRect *pRect, float Current);
-	vec4 GetButtonColor(const void *id, int Checked);
+	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
+	vec4 GetButtonColor(const void *pID, int Checked);
 	
 	static void ReplaceImage(const char *pFilename, int StorageType, void *pUser);
 	static void AddImage(const char *pFilename, int StorageType, void *pUser);
