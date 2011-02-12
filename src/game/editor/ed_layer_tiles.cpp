@@ -397,41 +397,20 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	if(InGameGroup)
 	{
 		static int s_ColclButton = 0;
-		if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), 0, &Button, 0, Localize("Removes collision from this layer")))
+		if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Game tiles"), 0, &Button, 0, Localize("Constructs game tiles from this layer")))
+			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
+
+		int Result = m_pEditor->PopupSelectGameTileOpResult();
+		if(Result > -1)
 		{
 			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
 			int w = min(gl->m_Width, m_Width);
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
-			{
 				for(int x = 0; x < w; x++)
-				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_SOLID)
-					{
-						if(m_pTiles[y*m_Width+x].m_Index)
-							gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR;
-					}
-				}
-			}
-			return 1;
-		}
-		
-		static int s_ColButton = 0;
-		pToolBox->HSplitBottom(5.0f, pToolBox, &Button);
-		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-		if(m_pEditor->DoButton_Editor(&s_ColButton, Localize("Make collision"), 0, &Button, 0, Localize("Constructs collision from this layer")))
-		{
-			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
-			int w = min(gl->m_Width, m_Width);
-			int h = min(gl->m_Height, m_Height);
-			for(int y = 0; y < h; y++)
-			{
-				for(int x = 0; x < w; x++)
-				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_SOLID)
-						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_SOLID:TILE_AIR;
-				}
-			}
+					if(gl->m_pTiles[y*gl->m_Width+x].m_Index >= TILE_AIR && gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_AIR+Result:TILE_AIR;
+
 			return 1;
 		}
 	}

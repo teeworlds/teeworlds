@@ -692,6 +692,7 @@ public:
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
+	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupTele(CEditor *pEditor, CUIRect View);
@@ -699,6 +700,9 @@ public:
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
 	int PopupSelectImageResult();
+
+	void PopupSelectGametileOpInvoke(float x, float y);
+	int PopupSelectGameTileOpResult();
 	
 	vec4 ButtonColorMul(const void *pId);
 

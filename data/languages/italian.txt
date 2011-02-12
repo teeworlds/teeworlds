@@ -124,9 +124,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Cancella collisioni
-
 Clip H
 == Alt. Taglio
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Console
-
-Constructs collision from this layer
-== Costruisce le collisioni su questo livello
 
 Controls
 == Controlli
@@ -448,9 +442,6 @@ Loading
 MOTD
 == MDG
 
-Make collision
-== Ricalca collisioni
-
 Make external
 == Scorpora
 
@@ -639,9 +630,6 @@ Remote console
 
 Remove
 == Rimuovi
-
-Removes collision from this layer
-== Rimuove le collisioni presenti in questo livello
 
 Removes the image from the map
 == Rivuove l'immagine dalla mappa
@@ -942,10 +930,25 @@ no limit
 
 ##### needs translation #####
 
+Clear
+== 
+
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
 File
 == 
 
 File: %s
+== 
+
+Game tiles
 == 
 
 HD
@@ -967,6 +970,9 @@ Sound error
 == 
 
 Sudden Death
+== 
+
+Unhookable
 == 
 
 Warmup

@@ -124,9 +124,6 @@ Cancel
 Chat
 == Charla
 
-Clear collision
-== Limpiar colisión
-
 Clip H
 == Clip H
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Consola
-
-Constructs collision from this layer
-== Construir collisión para esta capa
 
 Controls
 == Controles
@@ -457,9 +451,6 @@ Loading
 MOTD
 == MOTD
 
-Make collision
-== Fabricar colisión
-
 Make external
 == Fabricar exterior
 
@@ -657,9 +648,6 @@ Remote console
 
 Remove
 == Remover
-
-Removes collision from this layer
-== Remover colisión para esta capa
 
 Removes the image from the map
 == Remover la imagen de este mapa
@@ -971,6 +959,24 @@ no limit
 == sin límite
 
 ##### needs translation #####
+
+Clear
+== 
+
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
+Game tiles
+== 
+
+Unhookable
+== 
 
 ##### old translations #####
 
