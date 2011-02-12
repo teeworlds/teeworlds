@@ -756,8 +756,6 @@ ZO
 no limit
 == pas de limite
 
-##### new translation #####
-
 %s Right click for context menu.
 == %s clique droit pour afficher le menu contextuel
 
