@@ -15,7 +15,7 @@
 
 #include "items.h"
 
-void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
 
 	// get positions
@@ -60,7 +60,22 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 	{
 		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
 		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
-		Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemId);
+		
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
+			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+			static float Time = 0;
+			static float LastLocalTime = Client()->LocalTime();
+		
+			if(!pInfo->m_Paused)
+				Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
+			
+			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemID);
+			
+			LastLocalTime = Client()->LocalTime();
+		}
+		else
+			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemID);
 	}
 	else
 	{
@@ -117,12 +132,16 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+		static float Time = 0;
+		static float LastLocalTime = Client()->LocalTime();
 		
 		if(!pInfo->m_Paused)
-		{
-			Pos.x += cosf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
-			Pos.y += sinf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
-		}
+			Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
+			
+		Pos.x += cosf(Time*2.0f+Offset)*2.5f;
+		Pos.y += sinf(Time*2.0f+Offset)*2.5f;
+		
+		LastLocalTime = Client()->LocalTime();
 	}
 	else
 	{
@@ -156,7 +175,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
 	// make sure to use predicted position if we are the carrier
-	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
+	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
 		Pos = m_pClient->m_LocalCharacterPos;
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
@@ -243,11 +262,11 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_Id);
+			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
 				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
 		}
@@ -265,7 +284,7 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if (pPrev)
 				RenderFlag((const CNetObj_Flag *)pPrev, (const CNetObj_Flag *)pData);
 		}

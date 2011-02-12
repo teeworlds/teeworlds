@@ -11,7 +11,7 @@ struct CPacket
 	
 	NETADDR m_SendTo;
 	int64 m_Timestamp;
-	int m_Id;
+	int m_ID;
 	int m_DataSize;
 	char m_aData[1];
 };
@@ -48,7 +48,7 @@ void Run(int Port, NETADDR Dest)
 	NETSOCKET Socket = net_udp_create(Src);
 	
 	char aBuffer[1024*2];
-	int Id = 0;
+	int ID = 0;
 	int Delaycounter = 0;
 	
 	while(1)
@@ -104,10 +104,10 @@ void Run(int Port, NETADDR Dest)
 			// set data in packet
 			p->m_Timestamp = time_get();
 			p->m_DataSize = Bytes;
-			p->m_Id = Id++;
+			p->m_ID = ID++;
 			mem_copy(p->m_aData, aBuffer, Bytes);
 			
-			if(Id > 20 && Bytes > 6 && DataTrash)
+			if(ID > 20 && Bytes > 6 && DataTrash)
 			{
 				p->m_aData[6+(rand()%(Bytes-6))] = rand()&255; // modify a byte
 				if((rand()%10) == 0)
@@ -127,7 +127,7 @@ void Run(int Port, NETADDR Dest)
 			Delaycounter--;
 	
 			if(m_ConfigLog)
-				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->m_Id, From.ip[0], From.ip[1], From.ip[2], From.ip[3], From.port, p->m_DataSize);
+				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->m_ID, From.ip[0], From.ip[1], From.ip[2], From.ip[3], From.port, p->m_DataSize);
 		}
 		
 		//
@@ -180,7 +180,7 @@ void Run(int Port, NETADDR Dest)
 				int MsPing = Ping.m_Base;
 				m_CurrentLatency = ((time_freq()*MsPing)/1000) + (int64)(((time_freq()*MsFlux)/1000)*Flux); // 50ms
 				
-				if(MsSpike && (p->m_Id%100) == 0)
+				if(MsSpike && (p->m_ID%100) == 0)
 				{
 					m_CurrentLatency += (time_freq()*MsSpike)/1000;
 					aFlags[1] = 'S';
@@ -188,7 +188,7 @@ void Run(int Port, NETADDR Dest)
 
 				if(m_ConfigLog)
 				{
-					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->m_Id,
+					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->m_ID,
 						p->m_SendTo.ip[0], p->m_SendTo.ip[1],
 						p->m_SendTo.ip[2], p->m_SendTo.ip[3],
 						p->m_SendTo.port, p->m_DataSize, aFlags);

@@ -27,7 +27,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	struct CColumn
 	{
-		int m_Id;
+		int m_ID;
 		int m_Sort;
 		CLocConstString m_Caption;
 		int m_Direction;
@@ -270,14 +270,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			Button.h = Row.h;
 			Button.w = s_aCols[c].m_Rect.w;
 
-			int Id = s_aCols[c].m_Id;
+			int ID = s_aCols[c].m_ID;
 
-			if(Id == COL_FLAG_LOCK)
+			if(ID == COL_FLAG_LOCK)
 			{
 				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
 					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK, &Button);
 			}
-			else if(Id == COL_FLAG_PURE)
+			else if(ID == COL_FLAG_PURE)
 			{
 				if(	str_comp(pItem->m_aGameType, "DM") == 0 ||
 					str_comp(pItem->m_aGameType, "TDM") == 0 ||
@@ -291,12 +291,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE, &Button);
 				}
 			}
-			else if(Id == COL_FLAG_FAV)
+			else if(ID == COL_FLAG_FAV)
 			{
 				if(pItem->m_Favorite)
 					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART, &Button);
 			}
-			else if(Id == COL_NAME)
+			else if(ID == COL_NAME)
 			{
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -305,14 +305,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
 				{
 					// highlight the parts that matches
-					const char *s = str_find_nocase(pItem->m_aName, g_Config.m_BrFilterString);
-					if(s)
+					const char *pStr = str_find_nocase(pItem->m_aName, g_Config.m_BrFilterString);
+					if(pStr)
 					{
-						TextRender()->TextEx(&Cursor, pItem->m_aName, (int)(s-pItem->m_aName));
+						TextRender()->TextEx(&Cursor, pItem->m_aName, (int)(pStr-pItem->m_aName));
 						TextRender()->TextColor(0.4f,0.4f,1.0f,1);
-						TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
+						TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
 						TextRender()->TextColor(1,1,1,1);
-						TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
+						TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
 					}
 					else
 						TextRender()->TextEx(&Cursor, pItem->m_aName, -1);
@@ -320,14 +320,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				else
 					TextRender()->TextEx(&Cursor, pItem->m_aName, -1);
 			}
-			else if(Id == COL_MAP)
+			else if(ID == COL_MAP)
 			{
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 				TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
 			}
-			else if(Id == COL_PLAYERS)
+			else if(ID == COL_PLAYERS)
 			{
 				str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_PLAYERNAME))
@@ -335,17 +335,17 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
 				TextRender()->TextColor(1,1,1,1);
 			}
-			else if(Id == COL_PING)
+			else if(ID == COL_PING)
 			{
 				str_format(aTemp, sizeof(aTemp), "%i", pItem->m_Latency);
 				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
 			}
-			else if(Id == COL_VERSION)
+			else if(ID == COL_VERSION)
 			{
 				const char *pVersion = pItem->m_aVersion;
 				UI()->DoLabelScaled(&Button, pVersion, 12.0f, 1);
 			}
-			else if(Id == COL_GAMETYPE)
+			else if(ID == COL_GAMETYPE)
 			{
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f*UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);

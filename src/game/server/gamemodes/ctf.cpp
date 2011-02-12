@@ -63,9 +63,9 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return HadFlag;
 }
 
-bool CGameControllerCTF::CanBeMovedOnBalance(int Cid)
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
 {
-	CCharacter* Character = GameServer()->m_apPlayers[Cid]->GetCharacter();
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
 	if(Character)
 	{
 		for(int fi = 0; fi < 2; fi++)

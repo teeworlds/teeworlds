@@ -26,17 +26,17 @@ CBinds::CBinds()
 	m_SpecialBinds.m_pBinds = this;
 }
 
-void CBinds::Bind(int KeyId, const char *pStr)
+void CBinds::Bind(int KeyID, const char *pStr)
 {
-	if(KeyId < 0 || KeyId >= KEY_LAST)
+	if(KeyID < 0 || KeyID >= KEY_LAST)
 		return;
 		
-	str_copy(m_aaKeyBindings[KeyId], pStr, sizeof(m_aaKeyBindings[KeyId]));
+	str_copy(m_aaKeyBindings[KeyID], pStr, sizeof(m_aaKeyBindings[KeyID]));
 	char aBuf[256];
-	if(!m_aaKeyBindings[KeyId][0])
-		str_format(aBuf, sizeof(aBuf), "unbound %s (%d)", Input()->KeyName(KeyId), KeyId);
+	if(!m_aaKeyBindings[KeyID][0])
+		str_format(aBuf, sizeof(aBuf), "unbound %s (%d)", Input()->KeyName(KeyID), KeyID);
 	else
-		str_format(aBuf, sizeof(aBuf), "bound %s (%d) = %s", Input()->KeyName(KeyId), KeyId, m_aaKeyBindings[KeyId]);
+		str_format(aBuf, sizeof(aBuf), "bound %s (%d) = %s", Input()->KeyName(KeyID), KeyID, m_aaKeyBindings[KeyID]);
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 }
 
@@ -60,10 +60,10 @@ void CBinds::UnbindAll()
 		m_aaKeyBindings[i][0] = 0;
 }
 
-const char *CBinds::Get(int KeyId)
+const char *CBinds::Get(int KeyID)
 {
-	if(KeyId > 0 && KeyId < KEY_LAST)
-		return m_aaKeyBindings[KeyId];
+	if(KeyID > 0 && KeyID < KEY_LAST)
+		return m_aaKeyBindings[KeyID];
 	return "";
 }
 
@@ -136,7 +136,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
-	int id = pBinds->GetKeyId(pKeyName);
+	int id = pBinds->GetKeyID(pKeyName);
 	
 	if(!id)
 	{
@@ -154,7 +154,7 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
-	int id = pBinds->GetKeyId(pKeyName);
+	int id = pBinds->GetKeyID(pKeyName);
 	
 	if(!id)
 	{
@@ -188,7 +188,7 @@ void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
-int CBinds::GetKeyId(const char *pKeyName)
+int CBinds::GetKeyID(const char *pKeyName)
 {
 	// check for numeric
 	if(pKeyName[0] == '&')
