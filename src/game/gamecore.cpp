@@ -43,9 +43,9 @@ bool CTuningParams::Get(const char *pName, float *pValue)
 	return false;
 }
 
-float HermiteBasis1(float v)
+float HermiteBasis1(float V)
 {
-	return 2*v*v*v - 3*v*v+1;
+	return 2*V*V*V - 3*V*V+1;
 }
 
 float VelocityRamp(float Value, float Start, float Range, float Curvature)
@@ -100,16 +100,16 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Direction = m_Input.m_Direction;
 
 		// setup angle
-		float a = 0;
+		float A = 0;
 		if(m_Input.m_TargetX == 0)
-			a = atanf((float)m_Input.m_TargetY);
+			A = atanf((float)m_Input.m_TargetY);
 		else
-			a = atanf((float)m_Input.m_TargetY/(float)m_Input.m_TargetX);
+			A = atanf((float)m_Input.m_TargetY/(float)m_Input.m_TargetX);
 			
 		if(m_Input.m_TargetX < 0)
-			a = a+pi;
+			A = A+pi;
 			
-		m_Angle = (int)(a*256.0f);
+		m_Angle = (int)(A*256.0f);
 
 		// handle jump
 		if(m_Input.m_Jump)
@@ -212,19 +212,19 @@ void CCharacterCore::Tick(bool UseInput)
 			float Dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				if(!p || p == this)
+				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+				if(!pCharCore || pCharCore == this)
 					continue;
 
-				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
-				if(distance(p->m_Pos, ClosestPoint) < PhysSize+2.0f)
+				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
+				if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize+2.0f)
 				{
-					if (m_HookedPlayer == -1 || distance(m_HookPos, p->m_Pos) < Dist)
+					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Dist)
 					{
 						m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
 						m_HookedPlayer = i;
-						Dist = distance(m_HookPos, p->m_Pos);
+						Dist = distance(m_HookPos, pCharCore->m_Pos);
 					}
 				}
 			}
@@ -252,9 +252,9 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		if(m_HookedPlayer != -1)
 		{
-			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];
-			if(p)
-				m_HookPos = p->m_Pos;
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[m_HookedPlayer];
+			if(pCharCore)
+				m_HookPos = pCharCore->m_Pos;
 			else
 			{
 				// release hook
@@ -306,42 +306,42 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			CCharacterCore *p = m_pWorld->m_apCharacters[i];
-			if(!p)
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+			if(!pCharCore)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this) // || !(p->flags&FLAG_ALIVE)
+			if(pCharCore == this) // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
 			
 			// handle player <-> player collision
-			float d = distance(m_Pos, p->m_Pos);
-			vec2 Dir = normalize(m_Pos - p->m_Pos);
-			if(d < PhysSize*1.25f && d > 1.0f)
+			float D = distance(m_Pos, pCharCore->m_Pos);
+			vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
+			if(D < PhysSize*1.25f && D > 1.0f)
 			{
-				float a = (PhysSize*1.45f - d);
-				float v = 0.5f;
+				float A = (PhysSize*1.45f - D);
+				float V = 0.5f;
 
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity. if not zero.
 				if (length(m_Vel) > 0.0001)
-					v = 1-(dot(normalize(m_Vel), Dir)+1)/2;
+					V = 1-(dot(normalize(m_Vel), Dir)+1)/2;
 
-				m_Vel += Dir*a*(v*0.75f);
+				m_Vel += Dir*A*(V*0.75f);
 				m_Vel *= 0.85f;
 			}
 			
 			// handle hook influence
 			if(m_HookedPlayer == i)
 			{
-				if(d > PhysSize*1.50f) // TODO: fix tweakable variable
+				if(D > PhysSize*1.50f) // TODO: fix tweakable variable
 				{
-					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (d/m_pWorld->m_Tuning.m_HookLength);
+					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (D/m_pWorld->m_Tuning.m_HookLength);
 					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
 					
 					// add force to the hooked player
-					p->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.x, Accel*Dir.x*1.5f);
-					p->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.y, Accel*Dir.y*1.5f);
+					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
+					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
 
 					// add a little bit force to the guy who has the grip
 					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);

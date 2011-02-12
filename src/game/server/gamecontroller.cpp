@@ -349,17 +349,17 @@ void IGameController::DoWarmup(int Seconds)
 		m_Warmup = Seconds*Server()->TickSpeed();
 }
 
-bool IGameController::IsFriendlyFire(int Cid1, int Cid2)
+bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2)
 {
-	if(Cid1 == Cid2)
+	if(ClientID1 == ClientID2)
 		return false;
 	
 	if(IsTeamplay())
 	{
-		if(!GameServer()->m_apPlayers[Cid1] || !GameServer()->m_apPlayers[Cid2])
+		if(!GameServer()->m_apPlayers[ClientID1] || !GameServer()->m_apPlayers[ClientID2])
 			return false;
 			
-		if(GameServer()->m_apPlayers[Cid1]->GetTeam() == GameServer()->m_apPlayers[Cid2]->GetTeam())
+		if(GameServer()->m_apPlayers[ClientID1]->GetTeam() == GameServer()->m_apPlayers[ClientID2]->GetTeam())
 			return true;
 	}
 	
@@ -377,7 +377,7 @@ bool IGameController::IsForceBalanced()
 		return false;
 }
 
-bool IGameController::CanBeMovedOnBalance(int Cid)
+bool IGameController::CanBeMovedOnBalance(int ClientID)
 {
 	return true;
 }
@@ -568,7 +568,7 @@ void IGameController::Snap(int SnappingClient)
 	}
 }
 
-int IGameController::GetAutoTeam(int Notthisid)
+int IGameController::GetAutoTeam(int NotThisID)
 {
 	// this will force the auto balancer to work overtime aswell
 	if(g_Config.m_DbgStress)
@@ -577,7 +577,7 @@ int IGameController::GetAutoTeam(int Notthisid)
 	int aNumplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i] && i != Notthisid)
+		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
 			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
 				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
@@ -588,20 +588,20 @@ int IGameController::GetAutoTeam(int Notthisid)
 	if(IsTeamplay())
 		Team = aNumplayers[TEAM_RED] > aNumplayers[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
 		
-	if(CanJoinTeam(Team, Notthisid))
+	if(CanJoinTeam(Team, NotThisID))
 		return Team;
 	return -1;
 }
 
-bool IGameController::CanJoinTeam(int Team, int Notthisid)
+bool IGameController::CanJoinTeam(int Team, int NotThisID)
 {
-	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[Notthisid] && GameServer()->m_apPlayers[Notthisid]->GetTeam() != TEAM_SPECTATORS))
+	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS))
 		return true;
 
 	int aNumplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i] && i != Notthisid)
+		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
 			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
 				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;

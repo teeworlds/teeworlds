@@ -36,7 +36,7 @@ public:
 	void RemoveFirstTimeout();
 	int NewID();
 	void TimeoutIDs();
-	void FreeID(int Id);
+	void FreeID(int ID);
 };
 
 class CServer : public IServer
@@ -109,7 +109,7 @@ public:
 	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
-	int m_RconClientId;
+	int m_RconClientID;
 
 	char m_aBrowseinfoGametype[16];
 	int m_BrowseinfoProgression;
@@ -145,21 +145,21 @@ public:
 	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientIP(int ClientID, char *pIPString, int Size);
-	const char *ClientName(int ClientId);
+	const char *ClientName(int ClientID);
 	bool ClientIngame(int ClientID);
 
-	int *LatestInput(int ClientId, int *size);
+	int *LatestInput(int ClientID, int *size);
 
-	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientId);
+	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
 	int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System);
 
 	void DoSnapshot();
 
-	static int NewClientCallback(int ClientId, void *pUser);
-	static int DelClientCallback(int ClientId, const char *pReason, void *pUser);
+	static int NewClientCallback(int ClientID, void *pUser);
+	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
-	void SendMap(int ClientId);
-	void SendRconLine(int ClientId, const char *pLine);
+	void SendMap(int ClientID);
+	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 	
 	void ProcessClientPacket(CNetChunk *pPacket);
@@ -197,7 +197,7 @@ public:
 	
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);
-	virtual void *SnapNewItem(int Type, int Id, int Size);
+	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
 };
 

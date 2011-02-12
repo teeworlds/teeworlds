@@ -286,7 +286,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 	CSnapshotItem *pFromItem;
 	int Keep, ItemSize;
 	int *pDeleted;
-	int Id, Type, Key;
+	int ID, Type, Key;
 	int FromIndex;
 	int *pNewData;
 			
@@ -330,7 +330,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 			return -1;
 		
 		Type = *pData++;
-		Id = *pData++;
+		ID = *pData++;
 		if(m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else
@@ -343,7 +343,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 		
 		if(RangeCheck(pEnd, pData, ItemSize) || ItemSize < 0) return -3;
 		
-		Key = (Type<<16)|Id;
+		Key = (Type<<16)|ID;
 		
 		// create the item if needed
 		pNewData = Builder.GetItemData(Key);

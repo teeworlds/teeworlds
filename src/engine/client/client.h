@@ -266,10 +266,10 @@ public:
 
 	// ---
 
-	void *SnapGetItem(int SnapId, int Index, CSnapItem *pItem);
-	void SnapInvalidateItem(int SnapId, int Index);
-	void *SnapFindItem(int SnapId, int Type, int Id);
-	int SnapNumItems(int SnapId);
+	void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem);
+	void SnapInvalidateItem(int SnapID, int Index);
+	void *SnapFindItem(int SnapID, int Type, int ID);
+	int SnapNumItems(int SnapID);
 	void SnapSetStaticsize(int ItemType, int Size);
 
 	void Render();

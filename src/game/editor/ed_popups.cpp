@@ -20,19 +20,19 @@ static struct
 
 static int g_UiNumPopups = 0;
 
-void CEditor::UiInvokePopupMenu(void *Id, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
+void CEditor::UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "invoked");
-	if(x + w > UI()->Screen()->w)
-		x -= w;
-	if(y + h > UI()->Screen()->h)
-		y -= h;
-	s_UiPopups[g_UiNumPopups].m_pId = Id;
+	if(X + W > UI()->Screen()->w)
+		X -= W;
+	if(Y + H > UI()->Screen()->h)
+		Y -= H;
+	s_UiPopups[g_UiNumPopups].m_pId = pID;
 	s_UiPopups[g_UiNumPopups].m_IsMenu = Flags;
-	s_UiPopups[g_UiNumPopups].m_Rect.x = x;
-	s_UiPopups[g_UiNumPopups].m_Rect.y = y;
-	s_UiPopups[g_UiNumPopups].m_Rect.w = w;
-	s_UiPopups[g_UiNumPopups].m_Rect.h = h;
+	s_UiPopups[g_UiNumPopups].m_Rect.x = X;
+	s_UiPopups[g_UiNumPopups].m_Rect.y = Y;
+	s_UiPopups[g_UiNumPopups].m_Rect.w = W;
+	s_UiPopups[g_UiNumPopups].m_Rect.h = H;
 	s_UiPopups[g_UiNumPopups].m_pfnFunc = pfnFunc;
 	s_UiPopups[g_UiNumPopups].m_pExtra = pExtra;
 	g_UiNumPopups++;
@@ -479,7 +479,7 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 	}
 	
 	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
-		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexId);
+		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexID);
 	else
 		pEditor->Graphics()->TextureSet(-1);
 	pEditor->Graphics()->QuadsBegin();

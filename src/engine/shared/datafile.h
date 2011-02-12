@@ -21,10 +21,10 @@ public:
 	void *GetDataSwapped(int Index); // makes sure that the data is 32bit LE ints when saved
 	int GetDataSize(int Index);
 	void UnloadData(int Index);
-	void *GetItem(int Index, int *pType, int *pId);
+	void *GetItem(int Index, int *pType, int *pID);
 	int GetItemSize(int Index);
 	void GetType(int Type, int *pStart, int *pNum);
-	void *FindItem(int Type, int Id);
+	void *FindItem(int Type, int ID);
 	int NumItems();
 	int NumData();
 	void Unload();
@@ -45,7 +45,7 @@ class CDataFileWriter
 	struct CItemInfo
 	{
 		int m_Type;
-		int m_Id;
+		int m_ID;
 		int m_Size;
 		int m_Next;
 		int m_Prev;
@@ -72,7 +72,7 @@ public:
 	bool Open(class IStorage *pStorage, const char *Filename);
 	int AddData(int Size, void *pData);
 	int AddDataSwapped(int Size, void *pData);
-	int AddItem(int Type, int Id, int Size, void *pData);
+	int AddItem(int Type, int ID, int Size, void *pData);
 	int Finish();
 };
 

@@ -150,7 +150,7 @@ class Weapons(Struct):
 	def __init__(self):
 		Struct.__init__(self, "WEAPONSPECS")
 		self.hammer = Weapon_Hammer()
-		self.gun = Weapon_Hammer()
+		self.gun = Weapon_Gun()
 		self.shotgun = Weapon_Shotgun()
 		self.grenade = Weapon_Grenade()
 		self.rifle = Weapon_Rifle()
