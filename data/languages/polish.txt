@@ -91,9 +91,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Wyczyść kolizję
-
 Close
 == Zamknij
 
@@ -120,9 +117,6 @@ Connection Problems...
 
 Console
 == Konsola
-
-Constructs collision from this layer
-== Tworzy kolizję z tej warstwy
 
 Controls
 == Sterowanie
@@ -367,9 +361,6 @@ Loading
 MOTD
 == Wiadomość dnia
 
-Make collision
-== Stwórz kolizję
-
 Make external
 == Użyj jako zewnętrzny
 
@@ -522,9 +513,6 @@ Remote console
 
 Remove
 == Usuń
-
-Removes collision from this layer
-== Usuwa kolizję z tej warstwy
 
 Removes the image from the map
 == Usuwa obrazek z mapy
@@ -813,6 +801,9 @@ Automatically take game over screenshot
 Blue value of the envelope
 == 
 
+Clear
+== 
+
 Clip H
 == 
 
@@ -825,7 +816,16 @@ Clip X
 Clip Y
 == 
 
+Collision
+== 
+
 Color
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
 == 
 
 Delete demo
@@ -850,6 +850,9 @@ File: %s
 == 
 
 Folder
+== 
+
+Game tiles
 == 
 
 Green value of the envelope
@@ -946,6 +949,9 @@ Time limit: %d min
 == 
 
 Unable to delete the demo
+== 
+
+Unhookable
 == 
 
 Up

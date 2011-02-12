@@ -100,9 +100,6 @@ Cancel
 Chat
 == Чат
 
-Clear collision
-== Очистити колізію
-
 Close
 == Закрити
 
@@ -129,9 +126,6 @@ Connection Problems...
 
 Console
 == Консоль
-
-Constructs collision from this layer
-== Створити колізії з цього шару
 
 Controls
 == Управління
@@ -400,9 +394,6 @@ Loading
 MOTD
 == MOTD
 
-Make collision
-== Створити колізії
-
 Make external
 == Зробити зовнішнім
 
@@ -567,9 +558,6 @@ Remote console
 
 Remove
 == Видалити
-
-Removes collision from this layer
-== Видалити колізії з цього шару
 
 Removes the image from the map
 == Видалити зображення з карти
@@ -873,6 +861,9 @@ Automatically take game over screenshot
 Blue value of the envelope
 == 
 
+Clear
+== 
+
 Clip H
 == 
 
@@ -885,7 +876,16 @@ Clip X
 Clip Y
 == 
 
+Collision
+== 
+
 Color
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
 == 
 
 Delete demo
@@ -895,6 +895,9 @@ Delete this envelope
 == 
 
 File: %s
+== 
+
+Game tiles
 == 
 
 Green value of the envelope
@@ -952,6 +955,9 @@ The audio device couldn't be initialised.
 == 
 
 Unable to delete the demo
+== 
+
+Unhookable
 == 
 
 Up

@@ -109,9 +109,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Nettoyer la collision
-
 Close
 == Fermer
 
@@ -141,9 +138,6 @@ Connection Problems...
 
 Console
 == Console
-
-Constructs collision from this layer
-== Fait la collision depuis cette couche
 
 Controls
 == Contrôles
@@ -409,9 +403,6 @@ Loading
 MOTD
 == MOTD
 
-Make collision
-== Faire la collision
-
 Make external
 == Mettre en externe
 
@@ -585,9 +576,6 @@ Remote console
 
 Remove
 == Enlever
-
-Removes collision from this layer
-== Enlève la collision depuis cette couche
 
 Removes the image from the map
 == Enlève l'image de la carte
@@ -840,6 +828,9 @@ Adds a new quad
 Aspect ratio
 == 
 
+Clear
+== 
+
 Clip H
 == 
 
@@ -852,10 +843,19 @@ Clip X
 Clip Y
 == 
 
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
 Creates a new quad layer
 == 
 
 Creates a new tile layer
+== 
+
+Death
 == 
 
 Deletes the current quad
@@ -865,6 +865,9 @@ Enable/disable group for saving
 == 
 
 Enable/disable layer for saving
+== 
+
+Game tiles
 == 
 
 HD
@@ -934,6 +937,9 @@ Toggles the envelope editor.
 == 
 
 Unable to delete the demo
+== 
+
+Unhookable
 == 
 
 Use Clipping

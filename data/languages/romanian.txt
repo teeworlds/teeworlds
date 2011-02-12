@@ -124,9 +124,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Curăță coliziunea
-
 Clip H
 == Î clip
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Consolă
-
-Constructs collision from this layer
-== Construiește coliziunea din acest strat
 
 Controls
 == Controale
@@ -457,9 +451,6 @@ Loading
 MOTD
 == Mesajul zilei
 
-Make collision
-== Creează coliziunea
-
 Make external
 == Fă-o externă
 
@@ -657,9 +648,6 @@ Remote console
 
 Remove
 == Elimină
-
-Removes collision from this layer
-== Elimină coliziunea din acest strat
 
 Removes the image from the map
 == Elimină imaginea din hartă
@@ -971,6 +959,24 @@ no limit
 == fără limită
 
 ##### needs translation #####
+
+Clear
+== 
+
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
+Game tiles
+== 
+
+Unhookable
+== 
 
 ##### old translations #####
 
