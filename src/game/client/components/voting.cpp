@@ -31,13 +31,13 @@ void CVoting::Callvote(const char *pType, const char *pValue)
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CVoting::CallvoteKick(int ClientId, const char *pReason)
+void CVoting::CallvoteKick(int ClientID, const char *pReason)
 {
 	char aBuf[32];
 	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), "%d %s", ClientId, pReason);
+		str_format(aBuf, sizeof(aBuf), "%d %s", ClientID, pReason);
 	else
-		str_format(aBuf, sizeof(aBuf), "%d", ClientId);
+		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
 	Callvote("kick", aBuf);
 }
 
@@ -57,13 +57,13 @@ void CVoting::CallvoteOption(int OptionId)
 	}
 }
 
-void CVoting::ForcevoteKick(int ClientId, const char *pReason)
+void CVoting::ForcevoteKick(int ClientID, const char *pReason)
 {
 	char aBuf[32];
 	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), "kick %d %s", ClientId, pReason);
+		str_format(aBuf, sizeof(aBuf), "kick %d %s", ClientID, pReason);
 	else
-		str_format(aBuf, sizeof(aBuf), "kick %d", ClientId);
+		str_format(aBuf, sizeof(aBuf), "kick %d", ClientID);
 	Client()->Rcon(aBuf);
 }
 

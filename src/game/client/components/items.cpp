@@ -15,7 +15,7 @@
 
 #include "items.h"
 
-void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
 
 	// get positions
@@ -70,12 +70,12 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 			if(!pInfo->m_Paused)
 				Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
 			
-			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemId);
+			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemID);
 			
 			LastLocalTime = Client()->LocalTime();
 		}
 		else
-			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemId);
+			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemID);
 	}
 	else
 	{
@@ -175,7 +175,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
 	// make sure to use predicted position if we are the carrier
-	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
+	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
 		Pos = m_pClient->m_LocalCharacterPos;
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
@@ -262,11 +262,11 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_Id);
+			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
 				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
 		}
@@ -284,7 +284,7 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if (pPrev)
 				RenderFlag((const CNetObj_Flag *)pPrev, (const CNetObj_Flag *)pData);
 		}

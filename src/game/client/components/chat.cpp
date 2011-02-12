@@ -192,13 +192,13 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		AddLine(pMsg->m_Cid, pMsg->m_Team, pMsg->m_pMessage);
+		AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);
 	}
 }
 
-void CChat::AddLine(int ClientId, int Team, const char *pLine)
+void CChat::AddLine(int ClientID, int Team, const char *pLine)
 {
-	if(ClientId != -1 && m_pClient->m_aClients[ClientId].m_aName[0] == '\0') // unknown client
+	if(ClientID != -1 && m_pClient->m_aClients[ClientID].m_aName[0] == '\0') // unknown client
 		return;
 	
 	char *p = const_cast<char*>(pLine);
@@ -219,30 +219,30 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_Time = time_get();
 		m_aLines[m_CurrentLine].m_YOffset[0] = -1.0f;
 		m_aLines[m_CurrentLine].m_YOffset[1] = -1.0f;
-		m_aLines[m_CurrentLine].m_ClientId = ClientId;
+		m_aLines[m_CurrentLine].m_ClientID = ClientID;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
-		m_aLines[m_CurrentLine].m_Highlighted = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName) != 0;
+		m_aLines[m_CurrentLine].m_Highlighted = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0;
 
-		if(ClientId == -1) // server message
+		if(ClientID == -1) // server message
 		{
 			str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 		else
 		{
-			if(m_pClient->m_aClients[ClientId].m_Team == TEAM_SPECTATORS)
+			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
 				m_aLines[m_CurrentLine].m_NameColor = TEAM_SPECTATORS;
 
 			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 			{
-				if(m_pClient->m_aClients[ClientId].m_Team == TEAM_RED)
+				if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_RED;
-				else if(m_pClient->m_aClients[ClientId].m_Team == TEAM_BLUE)
+				else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 			
-			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientId].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
+			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientID].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), ": %s", pLine);
 		}
 		
@@ -252,7 +252,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 	}
 
 	// play sound
-	if(ClientId >= 0)
+	if(ClientID >= 0)
 		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
 	else
 		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
@@ -349,7 +349,7 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
-		if(m_aLines[r].m_ClientId == -1)
+		if(m_aLines[r].m_ClientID == -1)
 			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Team)
 			TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
@@ -365,7 +365,7 @@ void CChat::OnRender()
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line
-		if(m_aLines[r].m_ClientId == -1)
+		if(m_aLines[r].m_ClientID == -1)
 			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Highlighted)
 			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted

@@ -122,13 +122,13 @@ void CHud::RenderScoreHud()
 					else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
 					{
 						// draw name of the flag holder
-						int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
-						const char *pName = m_pClient->m_aClients[Id].m_aName;
+						int ID = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
+						const char *pName = m_pClient->m_aClients[ID].m_aName;
 						float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
 						TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
 
 						// draw tee of the flag holder
-						CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
+						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
 						Info.m_Size = 18.0f;
 						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
 							vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
@@ -147,7 +147,7 @@ void CHud::RenderScoreHud()
 				if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
 				{
 					apPlayerInfo[t] = m_pClient->m_Snap.m_paInfoByScore[i];
-					if(apPlayerInfo[t]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+					if(apPlayerInfo[t]->m_ClientID == m_pClient->m_Snap.m_LocalClientID)
 						Local = t;
 					++t;
 				}
@@ -159,7 +159,7 @@ void CHud::RenderScoreHud()
 				{
 					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
 						++aPos[1];
-					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientID == m_pClient->m_Snap.m_LocalClientID)
 					{
 						apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[i];
 						Local = 1;
@@ -198,7 +198,7 @@ void CHud::RenderScoreHud()
 				// draw tee
 				if(apPlayerInfo[t])
  				{
-					CTeeRenderInfo Info = m_pClient->m_aClients[apPlayerInfo[t]->m_ClientId].m_RenderInfo;
+					CTeeRenderInfo Info = m_pClient->m_aClients[apPlayerInfo[t]->m_ClientID].m_RenderInfo;
  					Info.m_Size = 18.0f;
  					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
  						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
