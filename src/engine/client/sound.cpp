@@ -8,7 +8,7 @@
 #include "sound.h"
 
 extern "C" { // wavpack
-	#include <engine/external/wavpack/wavpack.h>
+	#include <wavpack/wavpack.h>
 }
 #include <math.h>
 
@@ -326,19 +326,25 @@ int CSound::LoadWV(const char *pFilename)
 	if(!m_pStorage)
 		return -1;
 
+	#ifndef WAVPACK_H
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
 		return -1;
 	}
+	#endif
 
 	SampleID = AllocID();
 	if(SampleID < 0)
 		return -1;
 	pSample = &m_aSamples[SampleID];
 
+	#ifndef WAVPACK_H
 	pContext = WavpackOpenFileInput(ReadData, aError);
+	#else
+	pContext = WavpackOpenFileInput(pFilename, aError, 0, 0);
+	#endif
 	if (pContext)
 	{
 		int m_aSamples = WavpackGetNumSamples(pContext);
@@ -393,8 +399,10 @@ int CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "failed to open %s: %s", pFilename, aError);
 	}
 
+	#ifndef WAVPACK_H
 	io_close(ms_File);
 	ms_File = NULL;
+	#endif
 
 	if(g_Config.m_Debug)
 		dbg_msg("sound/wv", "loaded %s", pFilename);

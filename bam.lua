@@ -9,6 +9,7 @@ config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
+config:Add(OptLibrary("wavpack", "wavpack/wavpack.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
 config:Finalize("config.lua")
@@ -161,7 +162,7 @@ function build(settings)
 	end
 	
 	-- compile zlib if needed
-	if config.zlib.value == 1 then
+	if config.zlib.value == true then
 		settings.link.libs:Add("z")
 		if config.zlib.include_path then
 			settings.cc.includes:Add(config.zlib.include_path)
@@ -172,8 +173,18 @@ function build(settings)
 		settings.cc.includes:Add("src/engine/external/zlib")
 	end
 
+	if config.wavpack.value == true then
+		settings.link.libs:Add("wavpack")
+		if config.wavpack.include_path then
+			settings.cc.includes:Add(config.wavpack.include_path)
+		end
+		wavpack = {}
+	else
+		wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
+		settings.cc.includes:Add("src/engine/external/") --The header is wavpack/wavpack.h so include the external folder
+	end
+
 	-- build the small libraries
-	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 	
 	-- build game components
