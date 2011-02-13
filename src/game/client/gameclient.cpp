@@ -223,6 +223,8 @@ void CGameClient::OnConsoleInit()
 
 void CGameClient::OnInit()
 {
+	int64 Start = time_get();
+
 	// set the language
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
 	
@@ -233,8 +235,6 @@ void CGameClient::OnInit()
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
-	
-	int64 Start = time_get();
 	
 	// load default font	
 	static CFont *pDefaultFont = 0;
@@ -265,9 +265,6 @@ void CGameClient::OnInit()
 		gs_LoadCurrent++;
 	}
 
-	// load skins
-	::gs_Skins.Init();
-	
 	// TODO: Refactor: fix threaded loading of sounds again
 	// load sounds
 	{
