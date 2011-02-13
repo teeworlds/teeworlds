@@ -1709,6 +1709,15 @@ void CClient::Update()
 				ActionTaken = Now;
 			}
 		}
+		else
+		{
+			if(Now > ActionTaken+time_freq()*(10+g_Config.m_DbgStress))
+			{
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "stress", "disconnecting!");
+				Disconnect();
+				ActionTaken = Now;
+			}
+		}
 	}
 
 	// pump the network
