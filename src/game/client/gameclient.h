@@ -175,7 +175,7 @@ public:
 		// race
 		float m_Score;
 		
-		void UpdateRenderInfo(int Cid);
+		void UpdateRenderInfo(int ClientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
@@ -194,7 +194,7 @@ public:
 		int m_aDeathsFrom[NUM_WEAPONS];
 		int m_Frags;
 		int m_Deaths;
-		int m_Suicides;
+		int m_SuiClientIDes;
 		int m_BestSpree;
 		int m_CurrentSpree;
 
@@ -210,8 +210,8 @@ public:
 	CClientStats m_aStats[MAX_CLIENTS];
 	
 	bool m_Freeview;
-	int m_SpectateCid;
-	int m_KillerCid;
+	int m_SpectateClientID;
+	int m_KillerClientID;
 	vec2 m_SpectatePos;
 
 	CRenderTools m_RenderTools;
@@ -243,7 +243,7 @@ public:
 	void OnGameRestart();
 	void OnRoundStart();
 	void OnFlagGrab(int Id);
-	void FindNextSpectableCid();
+	void FindNextSpectableClientID();
 	
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();

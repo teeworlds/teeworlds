@@ -96,8 +96,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			g_Config.m_ClAutoswitchWeapons ^= 1;
 
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
-		if(DoButton_CheckBox(&g_Config.m_ClScoreboardClientId, Localize("Show Client ID in scoreboard"), g_Config.m_ClScoreboardClientId, &Button))
-			g_Config.m_ClScoreboardClientId ^= 1;
+		if(DoButton_CheckBox(&g_Config.m_ClScoreboardClientID, Localize("Show Client ID in scoreboard"), g_Config.m_ClScoreboardClientID, &Button))
+			g_Config.m_ClScoreboardClientID ^= 1;
 		
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(DoButton_CheckBox(&g_Config.m_ClShowGhost, Localize("Show ghost"), g_Config.m_ClShowGhost, &Button))
@@ -116,8 +116,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			Button.VSplitLeft(15.0f, 0, &Button);
-			if(DoButton_CheckBox(&g_Config.m_ClNameplateClientId, Localize("Client ID"), g_Config.m_ClNameplateClientId, &Button))
-				g_Config.m_ClNameplateClientId ^= 1;
+			if(DoButton_CheckBox(&g_Config.m_ClNameplateClientID, Localize("Client ID"), g_Config.m_ClNameplateClientID, &Button))
+				g_Config.m_ClNameplateClientID ^= 1;
 
 			// draw nameplates size slider
 			CUIRect Label;

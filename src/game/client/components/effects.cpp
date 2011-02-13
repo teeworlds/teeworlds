@@ -148,20 +148,20 @@ void CEffects::PlayerSpawn(vec2 Pos)
 	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
 }
 
-void CEffects::PlayerDeath(vec2 Pos, int Cid)
+void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 {
 	vec3 BloodColor(1.0f,1.0f,1.0f);
 
-	if(Cid >= 0)	
+	if(ClientID >= 0)	
 	{
-		if(m_pClient->m_aClients[Cid].m_UseCustomColor)
+		if(m_pClient->m_aClients[ClientID].m_UseCustomColor)
 		{
-			vec4 Color = m_pClient->m_aClients[Cid].m_RenderInfo.m_ColorBody;
+			vec4 Color = m_pClient->m_aClients[ClientID].m_RenderInfo.m_ColorBody;
 			BloodColor = vec3(Color.r, Color.g, Color.b);
 		}
 		else
 		{
-			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(m_pClient->m_aClients[Cid].m_SkinId);
+			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(m_pClient->m_aClients[ClientID].m_SkinID);
 			if(s)
 				BloodColor = s->m_BloodColor;
 		}

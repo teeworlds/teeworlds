@@ -196,7 +196,7 @@ void CHud::RenderScoreHud()
 				if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
 				{
 					apPlayerInfo[t] = m_pClient->m_Snap.m_paInfoByScore[i];
-					if(apPlayerInfo[t]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+					if(apPlayerInfo[t]->m_ClientID == m_pClient->m_Snap.m_LocalClientID)
 						Local = t;
 					++t;
 				}
@@ -208,7 +208,7 @@ void CHud::RenderScoreHud()
 				{
 					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
 						++aPos[1];
-					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalCid)
+					if(m_pClient->m_Snap.m_paInfoByScore[i]->m_ClientID == m_pClient->m_Snap.m_LocalClientID)
 					{
 						apPlayerInfo[1] = m_pClient->m_Snap.m_paInfoByScore[i];
 						Local = 1;
@@ -247,7 +247,7 @@ void CHud::RenderScoreHud()
 				// draw tee
 				if(apPlayerInfo[t])
 				{
-					CTeeRenderInfo Info = m_pClient->m_aClients[apPlayerInfo[t]->m_ClientId].m_RenderInfo;
+					CTeeRenderInfo Info = m_pClient->m_aClients[apPlayerInfo[t]->m_ClientID].m_RenderInfo;
 					Info.m_Size = 18.0f;
 					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
 											 vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
@@ -510,7 +510,7 @@ void CHud::RenderSpectate()
 	else
 	{
 		char aBuf[96];
-		str_format(aBuf, sizeof(aBuf), "Following: %s", m_pClient->m_aClients[m_pClient->m_SpectateCid].m_aName);
+		str_format(aBuf, sizeof(aBuf), "Following: %s", m_pClient->m_aClients[m_pClient->m_SpectateClientID].m_aName);
 		TextRender()->Text(0, 4*Graphics()->ScreenAspect(), 4, 8, aBuf, -1);
 	}
 }
@@ -649,7 +649,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalClientID)
 		{
 			m_CheckpointTick = 0;
 			m_RaceTime = 0;
@@ -664,7 +664,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_Cid == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
@@ -681,7 +681,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 			char PlayerName[MAX_NAME_LENGTH];
 			str_copy(PlayerName, pMsg->m_pMessage, Num+1);
 			
-			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName))
+			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName))
 			{
 				int Minutes = 0;
 				float Seconds = 0.0f;

@@ -18,7 +18,7 @@ public:
 
 	int Update();
 	int Shutdown();
-	int AllocID();
+	int AlloClientID();
 
 	static void RateConvert(int SampleID);
 

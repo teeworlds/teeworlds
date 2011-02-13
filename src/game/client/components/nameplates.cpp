@@ -34,9 +34,9 @@ void CNamePlates::RenderNameplate(
 			
 		char aName[256];
 		if(!g_Config.m_TcNameplateScore)
-			str_format(aName, 256, "%s", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName);
+			str_format(aName, 256, "%s", m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName);
 		else
-			str_format(aName, 256, "%s (%d)", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName, pPlayerInfo->m_Score);
+			str_format(aName, 256, "%s (%d)", m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName, pPlayerInfo->m_Score);
 		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 		if(g_Config.m_TcNameplateShadow)
 		{
@@ -48,7 +48,7 @@ void CNamePlates::RenderNameplate(
 		if(g_Config.m_TcColoredNameplates&1 && IsTeamplay)
 		{
 			vec3 Col = CTeecompUtils::GetTeamColor(
-				m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_Team,
+				m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_Team,
 				m_pClient->m_Snap.m_pLocalInfo->m_Team,
 				g_Config.m_TcColoredNameplatesTeam1,
 				g_Config.m_TcColoredNameplatesTeam2,
@@ -59,10 +59,10 @@ void CNamePlates::RenderNameplate(
 			TextRender()->TextColor(1,1,1,a);
 		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, aName, -1);
 		
-		if(g_Config.m_Debug || g_Config.m_ClNameplateClientId) // render client id when in debug aswell
+		if(g_Config.m_Debug || g_Config.m_ClNameplateClientID) // render client id when in debug aswell
 		{
 			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
+			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientID);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->Text(0, Position.x-tw/2.0f, Position.y-(FontSize*2.0f)-38.0f, FontSize, aBuf, -1);
 		}

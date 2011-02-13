@@ -3173,14 +3173,14 @@ void CEditorMap::MakeTeleLayer(CLayer *pLayer)
 {
 	m_pTeleLayer = (CLayerTele *)pLayer;
 	m_pTeleLayer->m_pEditor = m_pEditor;
-	m_pTeleLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
+	m_pTeleLayer->m_TexID = m_pEditor->ms_EntitiesTexture;
 }
 
 void CEditorMap::MakeSpeedupLayer(CLayer *pLayer)
 {
 	m_pSpeedupLayer = (CLayerSpeedup *)pLayer;
 	m_pSpeedupLayer->m_pEditor = m_pEditor;
-	m_pSpeedupLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
+	m_pSpeedupLayer->m_TexID = m_pEditor->ms_EntitiesTexture;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)

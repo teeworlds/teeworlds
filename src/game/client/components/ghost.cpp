@@ -93,7 +93,7 @@ void CGhost::OnRender()
 		m_RaceState = RACE_NONE;
 	}
 	
-	CNetObj_Character Char = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
+	CNetObj_Character Char = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Cur;
 	m_pClient->m_PredictedChar.Write(&Char);
 	
 	if(m_pClient->m_NewPredictedTick)
@@ -269,7 +269,7 @@ void CGhost::StartRecord()
 {
 	m_Recording = true;
 	m_CurGhost.m_Path.clear();
-	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, m_pClient->m_Snap.m_LocalCid);
+	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, m_pClient->m_Snap.m_LocalClientID);
 	m_CurGhost.m_Info = *pInfo;
 }
 
@@ -532,7 +532,7 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalClientID)
 		{
 			OnReset();
 		}
@@ -540,7 +540,7 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_Cid == -1 && m_RaceState == RACE_STARTED)
+		if(pMsg->m_ClientID == -1 && m_RaceState == RACE_STARTED)
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
@@ -560,7 +560,7 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 			// prepare values and state for saving
 			int Minutes;
 			float Seconds;
-			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
 			{
 				m_RaceState = RACE_FINISHED;
 				float CurTime = Minutes*60 + Seconds;

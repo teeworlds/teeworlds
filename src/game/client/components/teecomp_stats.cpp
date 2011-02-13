@@ -12,7 +12,7 @@
 CTeecompStats::CTeecompStats()
 {
 	m_Mode = 0;
-	m_StatsCid = -1;
+	m_StatsClientID = -1;
 }
 
 void CTeecompStats::OnReset()
@@ -20,7 +20,7 @@ void CTeecompStats::OnReset()
 	for(int i=0; i<MAX_CLIENTS; i++)
 		m_pClient->m_aStats[i].Reset();
 	m_Mode = 0;
-	m_StatsCid = -1;
+	m_StatsClientID = -1;
 }
 
 void CTeecompStats::ConKeyStats(IConsole::IResult *pResult, void *pUserData)
@@ -39,9 +39,9 @@ void CTeecompStats::ConKeyNext(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->GetInteger(0) == 0)
 	{
-		pStats->m_StatsCid++;
-		pStats->m_StatsCid %= MAX_CLIENTS;
-		pStats->CheckStatsCid();
+		pStats->m_StatsClientID++;
+		pStats->m_StatsClientID %= MAX_CLIENTS;
+		pStats->CheckStatsClientID();
 	}
 }
 
@@ -56,19 +56,19 @@ bool CTeecompStats::IsActive()
 	return (m_Mode > 0);
 }
 
-void CTeecompStats::CheckStatsCid()
+void CTeecompStats::CheckStatsClientID()
 {
-	if(m_StatsCid == -1)
-		m_StatsCid = m_pClient->m_Snap.m_LocalCid;
+	if(m_StatsClientID == -1)
+		m_StatsClientID = m_pClient->m_Snap.m_LocalClientID;
 
-	int Prev = m_StatsCid;
-	while(!m_pClient->m_aStats[m_StatsCid].m_Active)
+	int Prev = m_StatsClientID;
+	while(!m_pClient->m_aStats[m_StatsClientID].m_Active)
 	{
-		m_StatsCid++;
-		m_StatsCid %= MAX_CLIENTS;
-		if(m_StatsCid == Prev)
+		m_StatsClientID++;
+		m_StatsClientID %= MAX_CLIENTS;
+		if(m_StatsClientID == Prev)
 		{
-			m_StatsCid = -1;
+			m_StatsClientID = -1;
 			m_Mode = 0;
 			break;
 		}
@@ -94,7 +94,7 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 			pStats[pMsg->m_Killer].m_CurrentSpree++;
 			
 			// play spree sound
-			if(g_Config.m_ClSpreesounds && m_pClient->m_Snap.m_LocalCid == pMsg->m_Killer && pStats[pMsg->m_Killer].m_CurrentSpree % 5 == 0)
+			if(g_Config.m_ClSpreesounds && m_pClient->m_Snap.m_LocalClientID == pMsg->m_Killer && pStats[pMsg->m_Killer].m_CurrentSpree % 5 == 0)
 			{
 				int SpreeType = pStats[pMsg->m_Killer].m_CurrentSpree/5 - 1;
 				switch(SpreeType)
@@ -126,12 +126,12 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 				pStats[pMsg->m_Killer].m_KillsCarrying++;
 		}
 		else
-			pStats[pMsg->m_Victim].m_Suicides++;
+			pStats[pMsg->m_Victim].m_SuiClientIDes++;
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_Cid < 0)
+		if(pMsg->m_ClientID < 0)
 		{
 			const char *p;
 			const char *pLookFor = "flag was captured by ";
@@ -224,7 +224,7 @@ void CTeecompStats::RenderGlobalStats()
 		{
 			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
 
-			if(!m_pClient->m_aStats[pInfo->m_ClientId].m_Active)
+			if(!m_pClient->m_aStats[pInfo->m_ClientID].m_Active)
 				continue;
 
 			apPlayers[NumPlayers] = pInfo;
@@ -250,7 +250,7 @@ void CTeecompStats::RenderGlobalStats()
 		w += 10;
 		for(i=0; i<NumPlayers; i++)
 		{
-			const CGameClient::CClientStats pStats = m_pClient->m_aStats[apPlayers[i]->m_ClientId];
+			const CGameClient::CClientStats pStats = m_pClient->m_aStats[apPlayers[i]->m_ClientID];
 			for(int j=0; j<NUM_WEAPONS; j++)
 				aDisplayWeapon[j] = aDisplayWeapon[j] || pStats.m_aFragsWith[j] || pStats.m_aDeathsFrom[j];
 		}
@@ -275,7 +275,7 @@ void CTeecompStats::RenderGlobalStats()
 	int px = 525;
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, "Name", -1);
-	const char *apHeaders[] = { "Frags", "Deaths", "Suicides", "Ratio", "Net", "FPM", "Spree", "Best Spree", "Caps" };
+	const char *apHeaders[] = { "Frags", "Deaths", "SuiClientIDes", "Ratio", "Net", "FPM", "Spree", "Best Spree", "Caps" };
 	for(i=0; i<8; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
@@ -335,7 +335,7 @@ void CTeecompStats::RenderGlobalStats()
 	for(int j=0; j<NumPlayers; j++)
 	{
 		const CNetObj_PlayerInfo *pInfo = apPlayers[j];
-		const CGameClient::CClientStats Stats = m_pClient->m_aStats[pInfo->m_ClientId];
+		const CGameClient::CClientStats Stats = m_pClient->m_aStats[pInfo->m_ClientID];
 
 		if(pInfo->m_Local)
 		{
@@ -347,18 +347,18 @@ void CTeecompStats::RenderGlobalStats()
 			Graphics()->QuadsEnd();
 		}
 
-		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[pInfo->m_ClientId].m_RenderInfo;
+		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
 		Teeinfo.m_Size *= TeeSizemod;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &Teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+28, y+28+TeeOffset));
 
 		char aBuf[128];
 		if(g_Config.m_TcStatId)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pInfo->m_ClientId);
+			str_format(aBuf, sizeof(aBuf), "%d", pInfo->m_ClientID);
 			TextRender()->Text(0, x, y, FontSize, aBuf, -1);
 		}
 
-		TextRender()->Text(0, x+64, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		TextRender()->Text(0, x+64, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
 
 		px = 525;
 
@@ -376,9 +376,9 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
 		}
-		if(g_Config.m_TcStatboardInfos & TC_STATS_SUICIDES)
+		if(g_Config.m_TcStatboardInfos & TC_STATS_SUIClientIDES)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_Suicides);
+			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_SuiClientIDes);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
@@ -448,10 +448,10 @@ void CTeecompStats::RenderIndividualStats()
 {
 	if(m_Mode != 2)
 		return;
-	CheckStatsCid();
+	CheckStatsClientID();
 	if(m_Mode != 2)
 		return;
-	int m_ClientId = m_StatsCid;
+	int m_ClientID = m_StatsClientID;
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 	float w = 1200.0f;
@@ -460,7 +460,7 @@ void CTeecompStats::RenderIndividualStats()
 	float xo = 200.0f;
 	float FontSize = 30.0f;
 	float LineHeight = 40.0f;
-	const CGameClient::CClientStats m_aStats = m_pClient->m_aStats[m_ClientId];
+	const CGameClient::CClientStats m_aStats = m_pClient->m_aStats[m_ClientID];
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
@@ -472,19 +472,19 @@ void CTeecompStats::RenderIndividualStats()
 	RenderTools()->DrawRoundRect(x-10.f, y-10.f, w, 120.0f, 17.0f);
 	Graphics()->QuadsEnd();
 
-	CTeeRenderInfo Teeinfo = m_pClient->m_aClients[m_ClientId].m_RenderInfo;
+	CTeeRenderInfo Teeinfo = m_pClient->m_aClients[m_ClientID].m_RenderInfo;
 	Teeinfo.m_Size *= 1.5f;
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &Teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+xo+32, y+36));
-	TextRender()->Text(0, x+xo+128, y, 48.0f, m_pClient->m_aClients[m_ClientId].m_aName, -1);
+	TextRender()->Text(0, x+xo+128, y, 48.0f, m_pClient->m_aClients[m_ClientID].m_aName, -1);
 
 	char aBuf[64];
 	if(g_Config.m_TcStatId)
 	{
-		str_format(aBuf, sizeof(aBuf), "%d", m_ClientId);
+		str_format(aBuf, sizeof(aBuf), "%d", m_ClientID);
 		TextRender()->Text(0, x+xo, y, FontSize, aBuf, -1);
 	}
 
-	str_format(aBuf, sizeof(aBuf), "Score: %d", m_pClient->m_Snap.m_paPlayerInfos[m_ClientId]->m_Score);
+	str_format(aBuf, sizeof(aBuf), "Score: %d", m_pClient->m_Snap.m_paPlayerInfos[m_ClientID]->m_Score);
 	TextRender()->Text(0, x+xo, y+64, FontSize, aBuf, -1);
 	int Seconds = (float)(Client()->GameTick()-m_aStats.m_JoinDate)/Client()->GameTickSpeed();
 	str_format(aBuf, sizeof(aBuf), "Time played: %02d:%02d", Seconds/60, Seconds%60);
@@ -512,7 +512,7 @@ void CTeecompStats::RenderIndividualStats()
 	TextRender()->Text(0, x+xo, y, FontSize, aBuf, -1);
 	str_format(aBuf, sizeof(aBuf), "Deaths: %d", m_aStats.m_Deaths);
 	TextRender()->Text(0, x+xo+200.0f, y, FontSize, aBuf, -1);
-	str_format(aBuf, sizeof(aBuf), "Suicides: %d", m_aStats.m_Suicides);
+	str_format(aBuf, sizeof(aBuf), "SuiClientIDes: %d", m_aStats.m_SuiClientIDes);
 	TextRender()->Text(0, x+xo+400.0f, y, FontSize, aBuf, -1);
 	str_format(aBuf, sizeof(aBuf), "Spree: %d", m_aStats.m_CurrentSpree);
 	TextRender()->Text(0, x+xo+600.0f, y, FontSize, aBuf, -1);

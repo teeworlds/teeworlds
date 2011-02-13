@@ -543,7 +543,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 	
 	struct CColumn
 	{
-		int m_Id;
+		int m_ID;
 		CLocConstString m_Caption;
 		float m_Width;
 		CUIRect m_Rect;
@@ -689,7 +689,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 			Button.h = Row.h;
 			Button.w = s_aCols[c].m_Rect.w;
 
-			int Id = s_aCols[c].m_Id;
+			int Id = s_aCols[c].m_ID;
 
 			if(Id == COL_ACTIVE)
 			{

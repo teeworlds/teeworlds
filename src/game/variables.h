@@ -36,8 +36,8 @@ MACRO_CONFIG_STR(ClLanguagefile, cl_languagefile, 255, "", CFGFLAG_CLIENT|CFGFLA
 MACRO_CONFIG_STR(ClFontfile, cl_fontfile, 255, "Free Sans Bold.ttf", CFGFLAG_CLIENT|CFGFLAG_SAVE, "What font file to use")
 
 /* other stuff :\ */
-MACRO_CONFIG_INT(ClNameplateClientId, cl_nameplate_client_id, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the client id above the player")
-MACRO_CONFIG_INT(ClScoreboardClientId, cl_scoreboard_client_id, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the client id in scoreboard")
+MACRO_CONFIG_INT(ClNameplateClientID, cl_nameplate_client_id, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the client id above the player")
+MACRO_CONFIG_INT(ClScoreboardClientID, cl_scoreboard_client_id, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the client id in scoreboard")
 MACRO_CONFIG_INT(ClShowGhost, cl_show_ghost, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the ghost tee")
 
 //Hud-Mod

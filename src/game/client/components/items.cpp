@@ -160,7 +160,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 	float Angle = 0.0f;
 	float Size = 42.0f;
 
-	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId && g_Config.m_TcHideCarrying)
+	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientID && g_Config.m_TcHideCarrying)
 		return;
 
 	Graphics()->BlendNormal();

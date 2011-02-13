@@ -27,7 +27,7 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_Cid == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
@@ -72,7 +72,7 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 				m_aTimemsgs[m_TimemsgCurrent] = Time;
 			}
 		}
-		if(pMsg->m_Cid == -1 && !str_comp_num(pMsg->m_pMessage, "New record: ", 12))
+		if(pMsg->m_ClientID == -1 && !str_comp_num(pMsg->m_pMessage, "New record: ", 12))
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
@@ -130,7 +130,7 @@ void CTimeMessages::OnRender()
 			else
 				TextRender()->TextColor(0.7f, 0.7f, 0.7f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
-			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
+			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalClientID)
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			
 			x -= 16.0f;
@@ -146,7 +146,7 @@ void CTimeMessages::OnRender()
 			x -= DiffW;
 			TextRender()->TextColor(0.0f, 0.5f, 1.0f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
-			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
+			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalClientID)
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			
 			x -= 16.0f;

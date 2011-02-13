@@ -21,7 +21,7 @@ void CRaceDemo::OnRender()
 {
 	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameobj || m_pClient->m_Snap.m_Spectate)
 	{
-		m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Active;
+		m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active;
 		return;
 	}
 
@@ -32,7 +32,7 @@ void CRaceDemo::OnRender()
 	vec2 PlayerPos = m_pClient->m_LocalCharacterPos;
 	
 	// start the demo
-	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Active) ||
+	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
 		(m_pClient->m_IsFastCap && m_pClient->m_FlagPos != vec2(-1, -1) && distance(PlayerPos, m_pClient->m_FlagPos) < 200)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
@@ -50,7 +50,7 @@ void CRaceDemo::OnRender()
 		OnReset();
 	}
 	
-	m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Active;
+	m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active;
 }
 
 void CRaceDemo::OnReset()
@@ -91,7 +91,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid && m_RaceState == RACE_FINISHED)
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalClientID && m_RaceState == RACE_FINISHED)
 		{
 			// check for new record
 			CheckDemo();
@@ -101,7 +101,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_Cid == -1 && m_RaceState == RACE_STARTED)
+		if(pMsg->m_ClientID == -1 && m_RaceState == RACE_STARTED)
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
@@ -121,7 +121,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 			// prepare values and state for saving
 			int Minutes;
 			float Seconds;
-			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
 			{
 				m_RaceState = RACE_FINISHED;
 				m_RecordStopTime = Client()->GameTick() + Client()->GameTickSpeed();
@@ -180,7 +180,7 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 	if(g_Config.m_ClDemoName)
 	{
 		char aPlayerName[MAX_NAME_LENGTH];
-		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName, sizeof(aPlayerName));
+		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
 		
 		// check the player name
 		for(int i = 0; i < MAX_NAME_LENGTH; i++)

@@ -94,7 +94,7 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientId].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
 
 	// check for teamplay modes
 	bool IsTeamplay = false;
@@ -154,7 +154,7 @@ void CPlayers::RenderHook(
 		
 		if(pPlayerChar->m_HookedPlayer != -1)
 		{
-			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
+			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
 			{
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
 					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
@@ -217,7 +217,7 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientId].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
 
 	// check for teamplay modes
 	bool IsTeamplay = false;
@@ -226,12 +226,12 @@ void CPlayers::RenderPlayer(
 		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
 
 	// anti rainbow
-	if(g_Config.m_ClAntiRainbow && (m_pClient->m_aClients[pInfo.m_ClientId].m_ColorChangeCount > g_Config.m_ClAntiRainbowCount))
+	if(g_Config.m_ClAntiRainbow && (m_pClient->m_aClients[pInfo.m_ClientID].m_ColorChangeCount > g_Config.m_ClAntiRainbowCount))
 	{
 		if(g_Config.m_TcForceSkinTeam1)
 			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(max(0, m_pClient->m_pSkins->Find(g_Config.m_TcForcedSkin1)))->m_OrgTexture;
 		else
-			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(m_pClient->m_aClients[pInfo.m_ClientId].m_SkinId)->m_OrgTexture;
+			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(m_pClient->m_aClients[pInfo.m_ClientID].m_SkinID)->m_OrgTexture;
 		RenderInfo.m_ColorBody = vec4(1,1,1,1);
 		RenderInfo.m_ColorFeet = vec4(1,1,1,1);
 	}
@@ -276,7 +276,7 @@ void CPlayers::RenderPlayer(
 			mixspeed *= 15.0f;
 		
 		// move the delta on a constant speed on a x^2 curve
-		float current = g_GameClient.m_aClients[info.cid].angle;
+		float current = g_GameClient.m_aClients[info.ClientID].angle;
 		float target = player.angle/256.0f;
 		float delta = angular_distance(current, target);
 		float sign = delta < 0 ? -1 : 1;
@@ -288,7 +288,7 @@ void CPlayers::RenderPlayer(
 		else
 			angle = angular_approach(current, target, fabs(delta-new_delta));
 
-		g_GameClient.m_aClients[info.cid].angle = angle;*/
+		g_GameClient.m_aClients[info.ClientID].angle = angle;*/
 	}
 	
 	// use preditect players if needed
@@ -523,13 +523,13 @@ void CPlayers::RenderPlayer(
 	if(!g_Config.m_ClRenderEmotes || g_Config.m_ClClearAll)
 		return;
 		
-	if (m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+	if (m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
 
-		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart;
-		int FromEnd = m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
+		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart;
+		int FromEnd = m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
 
 		float a = 1;
 
@@ -550,7 +550,7 @@ void CPlayers::RenderPlayer(
 
 		Graphics()->SetColor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[pInfo.m_ClientId].m_Emoticon);
+		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[pInfo.m_ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
