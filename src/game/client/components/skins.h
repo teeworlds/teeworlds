@@ -20,7 +20,7 @@ public:
 		bool operator<(const CSkin &Other) { return str_comp(m_aName, Other.m_aName) < 0; }
 	};
 	
-	void Init();
+	void OnInit();
 	
 	vec3 GetColorV3(int v);
 	vec4 GetColorV4(int v);
