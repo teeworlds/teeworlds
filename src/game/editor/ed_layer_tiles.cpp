@@ -339,13 +339,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		int Result = m_pEditor->PopupSelectGameTileOpResult();
 		if(Result > -1)
 		{
-			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
-			int w = min(gl->m_Width, m_Width);
-			int h = min(gl->m_Height, m_Height);
-			for(int y = 0; y < h; y++)
-				for(int x = 0; x < w; x++)
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index >= TILE_AIR && gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
-						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_AIR+Result:TILE_AIR;
+			CLayerTiles *pGameLayer = m_pEditor->m_Map.m_pGameLayer;
+			int Width = min(pGameLayer->m_Width, m_Width);
+			int Height = min(pGameLayer->m_Height, m_Height);
+			for(int y = 0; y < Height; y++)
+				for(int x = 0; x < Width; x++)
+					if(pGameLayer->m_pTiles[y*pGameLayer->m_Width+x].m_Index >= TILE_AIR && pGameLayer->m_pTiles[y*pGameLayer->m_Width+x].m_Index <= TILE_NOHOOK)
+						pGameLayer->m_pTiles[y*pGameLayer->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_AIR+Result:pGameLayer->m_pTiles[y*pGameLayer->m_Width+x].m_Index;
 
 			return 1;
 		}
