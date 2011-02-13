@@ -1340,12 +1340,14 @@ void gui_messagebox(const char *title, const char *message)
 	RunStandardAlert(theItem, NULL, &itemIndex);
 #elif defined(CONF_FAMILY_UNIX)
 	static char cmd[1024];
+	int err;
 	/* use xmessage which is available on nearly every X11 system */
 	snprintf(cmd, sizeof(cmd), "xmessage -center -title '%s' '%s'",
 		title,
 		message);
 
-	int err = system(cmd);
+	err = system(cmd);
+	dbg_msg("gui/msgbox", "result = %i", err);
 #elif defined(CONF_FAMILY_WINDOWS)
 	MessageBox(NULL,
 		message,
