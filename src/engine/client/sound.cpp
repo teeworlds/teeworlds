@@ -47,6 +47,54 @@ struct CVoice
 	int m_X, m_Y;
 } ;
 
+#ifdef WAVPACK_H
+static int32_t ReadBytes(void *pFile, void *pBuffer, int32_t Size)
+{
+	return (int32_t)io_read((IOHANDLE)pFile, pBuffer, Size);
+}
+static uint32_t GetPos(void *pFile)
+{
+	return (uint32_t)io_tell((IOHANDLE)pFile);
+}
+static int SetPosAbs(void *pFile, uint32_t Offset)
+{
+	return io_seek((IOHANDLE)pFile, Offset, IOSEEK_START);
+}
+static int SetPosRel(void *pFile, int32_t Offset, int Mode)
+{
+	switch(Mode)
+	{
+	case SEEK_SET:
+		Mode = IOSEEK_START;
+		break;
+	case SEEK_CUR:
+		Mode = IOSEEK_CUR;
+		break;
+	case SEEK_END:
+		Mode = IOSEEK_END;
+	}
+	return io_seek((IOHANDLE)pFile, Offset, Mode);
+}
+
+//TODO: Fix if 'real' functionality is needed by the wavpack header
+static int PushBackByte(void *pFile, int Char)
+{
+	return io_seek((IOHANDLE)pFile, -1, IOSEEK_CUR);
+}
+static uint32_t GetLength(void *pFile)
+{
+	return (uint32_t)io_length((IOHANDLE)pFile);
+}
+// Essentially assuming this to always be true, should fix if this isn't the case
+static int CanSeek(void *pFile)
+{
+	return pFile != NULL;
+}
+static WavpackStreamReader CWavpackReader  = {
+    ReadBytes, GetPos, SetPosAbs, SetPosRel, PushBackByte, GetLength, CanSeek, 0
+};
+#endif
+
 static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
 static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
@@ -326,14 +374,12 @@ int CSound::LoadWV(const char *pFilename)
 	if(!m_pStorage)
 		return -1;
 
-	#ifndef WAVPACK_H
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
 		return -1;
 	}
-	#endif
 
 	SampleID = AllocID();
 	if(SampleID < 0)
@@ -343,7 +389,7 @@ int CSound::LoadWV(const char *pFilename)
 	#ifndef WAVPACK_H
 	pContext = WavpackOpenFileInput(ReadData, aError);
 	#else
-	pContext = WavpackOpenFileInput(pFilename, aError, 0, 0);
+	pContext = WavpackOpenFileInputEx(&CWavpackReader, ms_File, 0, aError, 0, 0);
 	#endif
 	if (pContext)
 	{
@@ -396,13 +442,11 @@ int CSound::LoadWV(const char *pFilename)
 	}
 	else
 	{
-		dbg_msg("sound/wv", "failed to open %s: %s", pFilename, aError);
+		dbg_msg("sound/wv", "failed to open '%s': %s", pFilename, aError);
 	}
 
-	#ifndef WAVPACK_H
 	io_close(ms_File);
 	ms_File = NULL;
-	#endif
 
 	if(g_Config.m_Debug)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
