@@ -73,8 +73,8 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	
 	for(int i = 0; i < End; i++)
 	{
-		float PointOnLine = i/Distance;
-		vec2 Pos = mix(Pos0, Pos1, PointOnLine);
+		float a = i/Distance;
+		vec2 Pos = mix(Pos0, Pos1, a);
 		if(CheckPoint(Pos.x, Pos.y))
 		{
 			if(pOutCollision)
