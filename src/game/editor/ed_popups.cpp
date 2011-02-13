@@ -563,3 +563,41 @@ int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
 	
 	return 0;
 }
+
+static int s_GametileOpSelected = -1;
+
+int CEditor::PopupSelectGametileOp(CEditor *pEditor, CUIRect View)
+{
+	/*	This is for scripts/update_localization.py to work, don't remove!
+		Localize("Clear"); Localize("Collision"); Localize("Death"); Localize("Unhookable"); */
+	static const char *s_pButtonNames[] = { "Clear", "Collision", "Death", "Unhookable" };
+	static unsigned s_NumButtons = sizeof(s_pButtonNames) / sizeof(char*);
+	CUIRect Button;
+
+	for(unsigned i = 0; i < s_NumButtons; ++i)
+	{
+		View.HSplitTop(2.0f, 0, &View);
+		View.HSplitTop(12.0f, &Button, &View);
+		if(pEditor->DoButton_Editor(&s_pButtonNames[i], Localize(s_pButtonNames[i]), 0, &Button, 0, 0))
+			s_GametileOpSelected = i;
+	}
+
+	return 0;
+}
+
+void CEditor::PopupSelectGametileOpInvoke(float x, float y)
+{
+	static int s_SelectGametileOpPopupId = 0;
+	s_GametileOpSelected = -1;
+	UiInvokePopupMenu(&s_SelectGametileOpPopupId, 0, x, y, 120.0f, 70.0f, PopupSelectGametileOp);
+}
+
+int CEditor::PopupSelectGameTileOpResult()
+{
+	if(s_GametileOpSelected < 0)
+		return -1;
+	
+	int Result = s_GametileOpSelected;
+	s_GametileOpSelected = -1;
+	return Result;
+}
