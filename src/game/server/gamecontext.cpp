@@ -83,19 +83,19 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 
 void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
 {
-	float A = 3 * 3.14159f / 2 + Angle;
+	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
-	float S = A-pi/3;
-	float E = A+pi/3;
+	float s = a-pi/3;
+	float e = a+pi/3;
 	for(int i = 0; i < Amount; i++)
 	{
-		float F = mix(S, E, float(i+1)/float(Amount+2));
+		float f = mix(s, e, float(i+1)/float(Amount+2));
 		NETEVENT_DAMAGEIND *pEvent = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND));
 		if(pEvent)
 		{
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
-			pEvent->m_Angle = (int)(F*256.0f);
+			pEvent->m_Angle = (int)(f*256.0f);
 		}
 	}
 }
@@ -145,14 +145,14 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 }
 
 /*
-void create_smoke(vec2 P)
+void create_smoke(vec2 Pos)
 {
 	// create the event
 	EV_EXPLOSION *pEvent = (EV_EXPLOSION *)events.create(EVENT_SMOKE, sizeof(EV_EXPLOSION));
 	if(pEvent)
 	{
-		pEvent->x = (int)P.x;
-		pEvent->y = (int)P.y;
+		pEvent->x = (int)Pos.x;
+		pEvent->y = (int)Pos.y;
 	}
 }*/
 
@@ -853,9 +853,9 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 	char aBuf[256];
 	for(int i = 0; i < pSelf->Tuning()->Num(); i++)
 	{
-		float V;
-		pSelf->Tuning()->Get(i, &V);
-		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], V);
+		float v;
+		pSelf->Tuning()->Get(i, &v);
+		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], v);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 	}
 }
