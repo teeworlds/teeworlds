@@ -23,7 +23,7 @@
 == %i secondes restantes
 
 %s Right click for context menu.
-== %s clique droit pour afficher le menu contextuel
+== %s Clic-droit pour afficher le menu contextuel.
 
 Abort
 == Annuler
@@ -50,7 +50,7 @@ Alpha
 == Alpha
 
 Alpha value of the envelope
-== Valeur d'alpha dans l'arriere-plan
+== Composante alpha de l'animation
 
 Always show name plates
 == Toujours afficher les pseudonymes
@@ -86,7 +86,7 @@ Blue team wins!
 == L'équipe bleue gagne !
 
 Blue value of the envelope
-== Valeur de bleu dans l'arriere-plan
+== Composante bleue de l'animation
 
 Body
 == Corps
@@ -116,10 +116,10 @@ Color
 == Couleur
 
 Color Env
-== Couleur Env
+== Couleur Anim
 
 Color TO
-== Couleur TO
+== Décalage Anim
 
 Color+
 == Couleur+
@@ -143,13 +143,13 @@ Controls
 == Contrôles
 
 Creates a new color envelope
-== Créer une nouvelle couleur d'arriere-plan
+== Crée une nouvelle animation de couleur
 
 Creates a new map
 == Crée une nouvelle carte
 
 Creates a new pos envelope
-== Créer un nouvel arriere-plan
+== Crée une nouvelle animation de position
 
 Current
 == Actuellement
@@ -179,7 +179,7 @@ Delete layer
 == Supprimer la couche
 
 Delete this envelope
-== Supprimer l'arriere-plan
+== Supprime l'animation
 
 Deletes the layer
 == Supprime la couche
@@ -227,7 +227,7 @@ Enter
 == Démarrer
 
 Envelopes
-== Arriere-plans
+== Animations
 
 Error
 == Erreur
@@ -302,7 +302,7 @@ Graphics
 == Affichage
 
 Green value of the envelope
-== Valeur de vert dans l'arriere-plan
+== Composante verte de l'animation
 
 Grenade
 == Lance-grenade
@@ -380,10 +380,10 @@ Left
 == Gauche
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Boutton gauche de la souris pour bouger. Maintenez [shift] pour changer le pivot. Maintenez [ctrl] pour la rotation.
+== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour changer le pivot. Maintenez [ctrl] pour tourner.
 
 Left mouse button to move. Hold shift to move the texture.
-== Boutton gauche de la souris pour bouger. Maintenez [shift] pour changer la texture.
+== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour déplacer la texture.
 
 Lht.
 == Lum.
@@ -452,7 +452,7 @@ News
 == Nouvelles
 
 Next Envelope
-== L'arriere-plan suivant
+== Animation suivante
 
 Next weapon
 == Arme suivante
@@ -521,10 +521,10 @@ Please balance teams!
 == Équilibrez les équipes !
 
 Pos X
-== position X
+== Pos X
 
 Pos Y
-== position Y
+== Pos Y
 
 Pos.+
 == Pos.+
@@ -536,7 +536,7 @@ Prev. weapon
 == Arme précédente
 
 Previous Envelope
-== L'arriere-plan précédent
+== Animation précédente
 
 Quality Textures
 == Textures haute qualité
@@ -563,7 +563,7 @@ Red team wins!
 == L'équipe rouge gagne !
 
 Red value of the envelope
-== Valeur de rouge dans l'arriere-plan
+== Composante rouge de l'animation
 
 Refresh
 == Rafraîchir
@@ -605,7 +605,7 @@ Right
 == Droite
 
 Rotation of the envelope
-== Rotation de l'arriere-plan
+== Rotation de l'animation
 
 Round
 == Round
@@ -704,7 +704,7 @@ Standard map
 == Cartes standards
 
 Stop record
-== Stopper l'enregistrement
+== Arrêter l'enregistrement
 
 Sudden Death
 == Mort Subite
@@ -746,10 +746,10 @@ Up
 == Haut
 
 Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur de la couleur. Maintenez [shift] pour plus de présision
+== Maintenez le bouton gauche de la souris et déplacez-là pour changer la couleur. Maintenez [shift] pour plus de précision.
 
 Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Maintenez le boutton gauche de la souris et déplacer là pour changer la valeur. Maintenez [shift] pour plus de présision
+== Maintenez le bouton gauche de la souris et déplacez-là pour changer la valeur. Maintenez [shift] pour plus de précision.
 
 Use sounds
 == Jouer les sons
