@@ -57,18 +57,18 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetTile(int x, int y)
 {
-	int nx = clamp(x/32, 0, m_Width-1);
-	int ny = clamp(y/32, 0, m_Height-1);
-
-	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID || m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH)
-		return m_pTiles[ny*m_Width+nx].m_Index;
+	int Nx = clamp(x/32, 0, m_Width-1);
+	int Ny = clamp(y/32, 0, m_Height-1);
+	
+	if(m_pTiles[Ny*m_Width+Nx].m_Index == COLFLAG_SOLID || m_pTiles[Ny*m_Width+Nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[Ny*m_Width+Nx].m_Index == COLFLAG_DEATH)
+		return m_pTiles[Ny*m_Width+Nx].m_Index;
 	else
 		return 0;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	return GetTile(x,y)&COLFLAG_SOLID;
+	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
 // TODO: rewrite this smarter!
