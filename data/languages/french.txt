@@ -8,7 +8,7 @@
 == %d%% chargé
 
 %ds left
-== %ds pour voter
+== %ds a quitté
 
 %i minute left
 == %i minute restante
