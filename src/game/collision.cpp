@@ -74,13 +74,13 @@ bool CCollision::IsTileSolid(int x, int y)
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	float d = distance(Pos0, Pos1);
-	int End(d+1);
+	float Distance = distance(Pos0, Pos1);
+	int End(Distance+1);
 	vec2 Last = Pos0;
 	
 	for(int i = 0; i < End; i++)
 	{
-		float a = i/d;
+		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
 		if(CheckPoint(Pos.x, Pos.y))
 		{
