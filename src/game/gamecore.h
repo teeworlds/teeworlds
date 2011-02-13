@@ -53,12 +53,12 @@ inline vec2 GetDirection(int Angle)
 	float a = Angle/256.0f;
 	return vec2(cosf(a), sinf(a));
 }
-
+/*
 inline vec2 GetDir(float Angle)
 {
 	return vec2(cosf(Angle), sinf(Angle));
 }
-
+*/
 inline float GetAngle(vec2 Dir)
 {
 	if(Dir.x == 0 && Dir.y == 0)
