@@ -77,7 +77,7 @@ public:
 
 	virtual void OnClientConnected(int ClientID) = 0;
 	virtual void OnClientEnter(int ClientID) = 0;
-	virtual void OnClientDrop(int ClientID) = 0;
+	virtual void OnClientDrop(int ClientID, const char *pReason) = 0;
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 

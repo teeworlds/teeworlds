@@ -546,10 +546,10 @@ void CGameContext::OnClientConnected(int ClientID)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
-void CGameContext::OnClientDrop(int ClientID)
+void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
 	AbortVoteKickOnDisconnect(ClientID);
-	m_apPlayers[ClientID]->OnDisconnect();
+	m_apPlayers[ClientID]->OnDisconnect(pReason);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
 	
