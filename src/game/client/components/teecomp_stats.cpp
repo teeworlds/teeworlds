@@ -376,7 +376,7 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
 		}
-		if(g_Config.m_TcStatboardInfos & TC_STATS_SUIClientIDES)
+		if(g_Config.m_TcStatboardInfos & TC_STATS_SUCIDES)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_SuiClientIDes);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);

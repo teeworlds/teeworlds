@@ -296,8 +296,8 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 		g_Config.m_TcStatboardInfos ^= TC_STATS_DEATHS;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+2, "SuiClientIDes", g_Config.m_TcStatboardInfos & TC_STATS_SUIClientIDES, &Button))
-		g_Config.m_TcStatboardInfos ^= TC_STATS_SUIClientIDES;
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+2, "SuiClientIDes", g_Config.m_TcStatboardInfos & TC_STATS_SUCIDES, &Button))
+		g_Config.m_TcStatboardInfos ^= TC_STATS_SUCIDES;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+3, "Ratio", g_Config.m_TcStatboardInfos & TC_STATS_RATIO, &Button))

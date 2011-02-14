@@ -253,7 +253,7 @@ int CSound::Shutdown()
 	return 0;
 }
 
-int CSound::AlloClientID()
+int CSound::AllocID()
 {
 	// TODO: linear search, get rid of it
 	for(unsigned SampleID = 0; SampleID < NUM_SAMPLES; SampleID++)
@@ -333,7 +333,7 @@ int CSound::LoadWV(const char *pFilename)
 		return -1;
 	}
 
-	SampleID = AlloClientID();
+	SampleID = AllocID();
 	if(SampleID < 0)
 		return -1;
 	pSample = &m_aSamples[SampleID];
