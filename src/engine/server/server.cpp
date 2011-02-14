@@ -597,7 +597,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 
 	// notify the mod about the drop
 	if(pThis->m_aClients[ClientID].m_State >= CClient::STATE_READY)
-		pThis->GameServer()->OnClientDrop(ClientID);
+		pThis->GameServer()->OnClientDrop(ClientID, pReason);
 	
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_EMPTY;
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
