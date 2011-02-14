@@ -1396,7 +1396,7 @@ CGameClient::CClientStats::CClientStats()
 	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
-	m_SuiClientIDes  = 0;
+	m_Suicides  = 0;
 	for(int j = 0; j < NUM_WEAPONS; j++)
 	{
 		m_aFragsWith[j]  = 0;
@@ -1416,7 +1416,7 @@ void CGameClient::CClientStats::Reset()
 	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
-	m_SuiClientIDes  = 0;
+	m_Suicides  = 0;
 	m_BestSpree = 0;
 	m_CurrentSpree = 0;
 	for(int j = 0; j < NUM_WEAPONS; j++)

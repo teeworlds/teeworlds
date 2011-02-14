@@ -194,7 +194,7 @@ public:
 		int m_aDeathsFrom[NUM_WEAPONS];
 		int m_Frags;
 		int m_Deaths;
-		int m_SuiClientIDes;
+		int m_Suicides;
 		int m_BestSpree;
 		int m_CurrentSpree;
 

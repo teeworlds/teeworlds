@@ -126,7 +126,7 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 				pStats[pMsg->m_Killer].m_KillsCarrying++;
 		}
 		else
-			pStats[pMsg->m_Victim].m_SuiClientIDes++;
+			pStats[pMsg->m_Victim].m_Suicides++;
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
@@ -275,7 +275,7 @@ void CTeecompStats::RenderGlobalStats()
 	int px = 525;
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, "Name", -1);
-	const char *apHeaders[] = { "Frags", "Deaths", "SuiClientIDes", "Ratio", "Net", "FPM", "Spree", "Best Spree", "Caps" };
+	const char *apHeaders[] = { "Frags", "Deaths", "Suicides", "Ratio", "Net", "FPM", "Spree", "Best Spree", "Caps" };
 	for(i=0; i<8; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
@@ -376,9 +376,9 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
 		}
-		if(g_Config.m_TcStatboardInfos & TC_STATS_SUCIDES)
+		if(g_Config.m_TcStatboardInfos & TC_STATS_SUICIDES)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_SuiClientIDes);
+			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_Suicides);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
@@ -512,7 +512,7 @@ void CTeecompStats::RenderIndividualStats()
 	TextRender()->Text(0, x+xo, y, FontSize, aBuf, -1);
 	str_format(aBuf, sizeof(aBuf), "Deaths: %d", m_aStats.m_Deaths);
 	TextRender()->Text(0, x+xo+200.0f, y, FontSize, aBuf, -1);
-	str_format(aBuf, sizeof(aBuf), "SuiClientIDes: %d", m_aStats.m_SuiClientIDes);
+	str_format(aBuf, sizeof(aBuf), "Suicides: %d", m_aStats.m_Suicides);
 	TextRender()->Text(0, x+xo+400.0f, y, FontSize, aBuf, -1);
 	str_format(aBuf, sizeof(aBuf), "Spree: %d", m_aStats.m_CurrentSpree);
 	TextRender()->Text(0, x+xo+600.0f, y, FontSize, aBuf, -1);
