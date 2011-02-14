@@ -481,7 +481,8 @@ void CHud::RenderSpeedmeter()
 		Speed += SmoothTable[i];
 	Speed /= SMOOTH_TABLE_SIZE;
 
-	int t = (m_pClient->m_Snap.m_pGameobj->m_Flags & GAMEFLAG_TEAMS)? -1 : 1;
+	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
+	int t = (GameFlags&GAMEFLAG_TEAMS || g_Config.m_ClRenderDmScore)? -1 : 1;
 	int LastIndex = SmoothIndex - 1;
 	if(LastIndex < 0)
 		LastIndex = SMOOTH_TABLE_SIZE - 1;
@@ -495,7 +496,47 @@ void CHud::RenderSpeedmeter()
 		Graphics()->SetColor(0.1f, 0.6f, 0.1f, 0.25f);
 	else
 		Graphics()->SetColor(0.1, 0.1, 0.1, 0.25);
-	RenderTools()->DrawRoundRect(m_Width-45, 245+t*20, 55, 18, 5.0f);
+	
+	if(GameFlags&GAMEFLAG_TEAMS || !g_Config.m_ClRenderDmScore)
+	{
+		char aScoreTeam[2][32];
+		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
+		float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
+		float Split = 3.0f;
+		float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
+		
+		RenderTools()->DrawRoundRectExt(m_Width-ScoreWidthMax-ImageSize-2*Split, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
+	}
+	else
+	{
+		int aPos[2] = { 1, 2 };
+		const CNetObj_PlayerInfo *apPlayerInfo[2] = { 0, 0 };
+		int i = 0;
+		for(int j = 0; j < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_paInfoByScore[i]; ++i)
+		{
+			if(m_pClient->m_Snap.m_paInfoByScore[i]->m_Team != TEAM_SPECTATORS)
+			{
+				apPlayerInfo[j] = m_pClient->m_Snap.m_paInfoByScore[i];
+				++j;
+			}
+		}
+
+		char aScore[2][32];
+		for(int j = 0; j < 2; ++j)
+		{
+			if(apPlayerInfo[j])
+				str_format(aScore[j], sizeof(aScore)/2, "%d", apPlayerInfo[j]->m_Score);
+			else
+				aScore[j][0] = 0;
+		}
+		float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1), TextRender()->TextWidth(0, 14.0f, aScore[1], -1)};
+		float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1));
+		float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
+		
+		RenderTools()->DrawRoundRectExt(m_Width-ScoreWidthMax-38.0f, 245.0f+t*20, ScoreWidthMax+38.0f, 18.0f, 5.0f, CUI::CORNER_L);
+	}
  	Graphics()->QuadsEnd();
 
 	char aBuf[16];
