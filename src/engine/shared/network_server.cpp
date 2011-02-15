@@ -258,6 +258,20 @@ int CNetServer::Update()
 	return 0;
 }
 
+CNetServer::CBan* CNetServer::FindBan(NETADDR Addr)
+{
+	CBan *pBan = 0;
+	NETADDR BanAddr = Addr;
+	int IpHash = (BanAddr.ip[0]+BanAddr.ip[1]+BanAddr.ip[2]+BanAddr.ip[3])&0xff;
+	BanAddr.port = 0;
+
+	for(pBan = m_aBans[IpHash]; pBan; pBan = pBan->m_pHashNext)
+		if(net_addr_comp(&pBan->m_Info.m_Addr, &BanAddr) == 0)
+			return pBan;
+
+	return 0;
+}
+
 /*
 	TODO: chopp up this function into smaller working parts
 */
@@ -282,18 +296,8 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
-			CBan *pBan = 0;
-			NETADDR BanAddr = Addr;
-			int IpHash = (BanAddr.ip[0]+BanAddr.ip[1]+BanAddr.ip[2]+BanAddr.ip[3])&0xff;
-			int Found = 0;
-			BanAddr.port = 0;
-			
-			// search a ban
-			for(pBan = m_aBans[IpHash]; pBan; pBan = pBan->m_pHashNext)
-			{
-				if(net_addr_comp(&pBan->m_Info.m_Addr, &BanAddr) == 0)
-					break;
-			}
+			// search a ban - externalized from inline into FindBan(), we also need it for extcon
+			CBan *pBan = FindBan(Addr);
 			
 			// check if we just should drop the packet
 			if(pBan)
@@ -328,7 +332,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				// TODO: check size here
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
-					Found = 0;
+					int Found = 0;
 				
 					// check if we already got this client
 					for(int i = 0; i < MaxClients(); i++)
