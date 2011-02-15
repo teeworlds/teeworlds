@@ -35,6 +35,48 @@
 	#include <windows.h>
 #endif
 
+#define EC_IOBUF_SZ 1024
+#define EC_RECV_TIMEOUT_AUTH 60
+#define EC_RECV_TIMEOUT (60*60*24)
+
+//convenience locker for one-liners only
+#define LOCKED(LCK, CODELINE) do{ \
+	lock_wait(LCK); \
+	CODELINE; \
+	lock_release(LCK); \
+}while(0)
+
+void ExtConListenerThread(void *pArg);
+void ExtConClientIOThread(void *pArg);
+bool CreateListener(NETSOCKET *pOutSocket, bool *pOutBlocking, int ListenPort, int OptBacklog = 32);
+
+// structure to provide parameters to listener and i/o worker threads.
+// doing it this way avoids having to make the thread functions friends of CServer
+class CServerThreadArgs
+{
+public:
+	CServer::CExtCon *m_pExtCons;
+	LOCK *m_pLocks;
+	bool *m_pDropListenerFlag;
+	bool *m_pInputSignalFlag;
+
+	void **m_ppListenerThread;
+	int m_ExtId;
+	CNetServer *m_pNetServer;
+
+	CServerThreadArgs(CServer::CExtCon *pExtCons, LOCK *pLocks, bool *pInputSignalFlag,
+			bool *pDropListenerFlag, void **ppListenerThread, CNetServer *pNetServer)
+	: m_pExtCons(pExtCons), m_pLocks(pLocks), m_pDropListenerFlag(pDropListenerFlag),
+			m_pInputSignalFlag(pInputSignalFlag), m_ppListenerThread(ppListenerThread),
+			m_ExtId(-1), m_pNetServer(pNetServer)
+	{} // for listener thread
+
+	CServerThreadArgs(CServer::CExtCon *pExtCons, LOCK *pLocks, bool *pInputSignalFlag, int ExtId)
+	: m_pExtCons(pExtCons), m_pLocks(pLocks), m_pDropListenerFlag(0), m_pInputSignalFlag(pInputSignalFlag),
+			m_ppListenerThread(0), m_ExtId(ExtId), m_pNetServer(0)
+	{} // for io worker threads
+};
+
 static const char *StrLtrim(const char *pStr)
 {
 	while(*pStr && *pStr >= 0 && *pStr <= 32)
@@ -306,7 +348,48 @@ int CServer::Init()
 
 	m_CurrentGameTick = 0;
 
+	// initialize extcon stuff
+	m_ExtConDropListener = false;
+	m_pExtConListener = 0;
+	m_aExtConLock[0] = lock_create();
+	m_aExtConLock[1] = lock_create();
+	m_ExtConInputSignal = false;
+	for(int i = 0; i < MAX_EXTCONS; ++i)
+		m_aExtCons[i].m_Online = false;
+
 	return 0;
+}
+
+void CServer::CleanupExtCons()
+{
+	void *apJoinThreads[MAX_EXTCONS];
+
+	lock_wait(m_aExtConLock[0]);
+
+	// gather running io threads for joining them outside the lock
+	for(int i = 0; i < MAX_EXTCONS; ++i)
+		if (m_aExtCons[i].m_Online && !m_aExtCons[i].m_Dead)
+		{
+			m_aExtCons[i].m_RequestDrop = true;
+			apJoinThreads[i] = m_aExtCons[i].m_pIOThread;
+		}
+		else
+			apJoinThreads[i] = 0;
+
+	lock_release(m_aExtConLock[0]);
+
+	// join them
+	for(int i = 0; i < MAX_EXTCONS; ++i)
+		if (apJoinThreads[i])
+			thread_wait(apJoinThreads[i]);
+
+	if (m_pExtConListener)
+	{
+		m_ExtConDropListener = true; //signal listener to terminate
+		thread_wait(m_pExtConListener);
+		// in blocking mode theres nothing we can do to make accept() return
+		m_pExtConListener = 0;
+	}
 }
 
 bool CServer::IsAuthed(int ClientID)
@@ -595,22 +678,52 @@ void CServer::SendRconLine(int ClientID, const char *pLine)
 	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 }
 
+void CServer::ConsolePrintCallback(const char *pLine, void *pUser)
+{
+	// if this function does not get called from multiple threads (async),
+	// then there is no need for 'volatile'.
+	// if it does, see comment below
+	static volatile int ReentryGuard = 0;
+	
+	if(ReentryGuard) return;
+	
+	//ReentryGuard++; // unsafe for multiple threads, ++ is not an atomic operation
+	ReentryGuard = 1;
+
+	SendRconLineAuthed(pLine, pUser);
+	SendRconLineExt(pLine, pUser);
+
+	ReentryGuard = 0;
+}
+
 void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
-	static volatile int ReentryGuard = 0;
-	int i;
-	
-	if(ReentryGuard) return;
-	ReentryGuard++;
-	
-	for(i = 0; i < MAX_CLIENTS; i++)
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed)
 			pThis->SendRconLine(i, pLine);
 	}
+}
+
+void CServer::SendRconLineExt(const char *pLine, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+
+	lock_wait(pThis->m_aExtConLock[0]);
 	
-	ReentryGuard--;
+	for(int i = 0; i < MAX_EXTCONS; i++)
+	{
+		CExtCon *pEx = &pThis->m_aExtCons[i];
+		if (pEx->m_Online && pEx->m_Authed)
+		{
+			str_append(pEx->m_pOutBuf, pLine, EC_IOBUF_SZ);
+			str_append(pEx->m_pOutBuf, "\n", EC_IOBUF_SZ);
+		}
+	}
+
+	lock_release(pThis->m_aExtConLock[0]);
 }
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
@@ -874,6 +987,122 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 	
+void CServer::ProcessExtConInput()
+{
+	char aInput[EC_IOBUF_SZ];
+	char aBuf[256];
+	bool RecvFlag;
+
+	LOCKED(m_aExtConLock[1], RecvFlag = m_ExtConInputSignal);
+
+	if (!RecvFlag) //no data arrived, nothing to do
+		return;
+
+	CExtCon *pEx = 0;
+	int ExtId = -1;
+
+	lock_wait(m_aExtConLock[0]);
+
+	// find an extcon having unprocessed data, copy to aInput for processing after lock release
+	for(int i = 0; i < MAX_EXTCONS; ++i)
+		if (m_aExtCons[i].m_Online && !m_aExtCons[i].m_RequestDrop && m_aExtCons[i].m_pInBuf[0])
+		{
+			pEx = &m_aExtCons[ExtId = i];
+			str_copy(aInput, pEx->m_pInBuf, sizeof aInput);
+			break;
+		}
+
+	lock_release(m_aExtConLock[0]);
+
+	if (!pEx) //nobody haz data, clear input signal flag, return
+	{
+		LOCKED(m_aExtConLock[1], m_ExtConInputSignal = false);
+		return;
+	}
+
+	const char *pCmdStart = str_skip_whitespaces(aInput);
+
+	//const casts ain't beautiful, but valid in this context.
+	//(blame the base for not providing char *str_find(char*, const char*) :P)
+	char *pCmdEnd = const_cast<char*>(str_find(pCmdStart, "\n"));
+
+	while(pCmdEnd) //while there is a full (\r*\n-terminated) line available
+	{
+		while(*--pCmdEnd == '\r');  //be compatible with garbage
+
+		*(pCmdEnd+1) = '\0';//we overwrote the leftmost \n or \r
+		//as a consequence, pCmdStart does now hold one line, with its line deliminating character stripped away
+
+		if (!pEx->m_Authed) //not authed, consider lines as password attempts
+		{
+			if (str_comp(pCmdStart, g_Config.m_SvRconPassword) == 0)
+				pEx->m_Authed = true; // no lock required
+			else if (++pEx->m_AuthFailCount < g_Config.m_SvRconMaxTries) // incorrect pass, prompt again
+				LOCKED(m_aExtConLock[0], str_append(pEx->m_pOutBuf, "Rcon password: ", EC_IOBUF_SZ));
+			else //maximum number of attempts exceeded
+			{
+				if (g_Config.m_SvRconBantime > 0)
+				{
+					NETADDR BAddr;
+
+					// next line must stay to zero out struct
+					// NETADDR's padding (act prob is net_addr_comp)
+					mem_zero(&BAddr, sizeof BAddr);
+
+					BAddr.type = NETTYPE_IPV4; // TODO ipv6
+					mem_copy(BAddr.ip, pEx->m_aIP, sizeof BAddr.ip);
+
+					// reason will not be written out on extcon
+					BanAdd(BAddr, g_Config.m_SvRconBantime * 60, "Too many extcon auth tries");
+				}
+
+				// tell his iothread to terminate
+				pEx->m_RequestDrop = true; // no lock required, this thread is the only one writing to m_RequestDrop
+
+				str_format(aBuf, sizeof aBuf, "ExtId=%d banned (trying too hard)", ExtId);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+				aInput[0] = '\0'; //make sure no leftover is copied and processed in the next pass...
+				pCmdStart = aInput;//...since we're going to kill this client
+				break;
+			}
+
+			str_format(aBuf, sizeof aBuf, "ExtId=%d %s.", ExtId, pEx->m_Authed?"authed":"failed to auth");
+			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		}
+		else
+		{
+			str_format(aBuf, sizeof aBuf, "ExtId=%d rcon='%s'", ExtId, pCmdStart);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
+			m_RconClientID = -1;
+			Console()->ExecuteLine(pCmdStart);
+		}
+
+		pCmdStart = str_skip_whitespaces(pCmdEnd+2);//find next command, if any
+
+		if (!*pCmdStart) //we're just at the end of input, no partial line in buffer
+		{
+			aInput[0] = '\0';
+			break;
+		}
+
+		pCmdEnd = const_cast<char*>(str_find(pCmdStart, "\n"));
+	}
+
+	//if there is a partial line which we didnt fully receive yet, its copied to the beginning of our input buffer for the next time
+	if (*pCmdStart && pCmdStart != aInput)
+	{
+		// could easily overlap, hence no mem_- or str_copy
+		int Ind = 0;
+		while(*pCmdStart) //overflow cannot happen and data is always \0-terminated
+			aInput[Ind++] = *pCmdStart++;
+
+		aInput[Ind] = '\0';
+	}
+
+	LOCKED(m_aExtConLock[0], str_copy(pEx->m_pInBuf, aInput, EC_IOBUF_SZ));
+}
+
 void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 {
 	CNetChunk Packet;
@@ -966,7 +1195,18 @@ int CServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	return m_NetServer.BanAdd(Addr, Seconds, pReason);	
+	int r = m_NetServer.BanAdd(Addr, Seconds, pReason);
+
+	lock_wait(m_aExtConLock[0]);
+	for(int i = 0; i < MAX_EXTCONS; ++i)
+	{
+		if (m_aExtCons[i].m_Online && !m_aExtCons[i].m_Dead &&
+				mem_comp(m_aExtCons[i].m_aIP, Addr.ip, sizeof Addr.ip) == 0)
+			m_aExtCons[i].m_RequestDrop = true;
+	}
+	lock_release(m_aExtConLock[0]);
+
+	return r;
 }
 
 int CServer::BanRemove(NETADDR Addr)
@@ -1081,7 +1321,7 @@ int CServer::Run()
 	net_init();
 	
 	//
-	Console()->RegisterPrintCallback(SendRconLineAuthed, this);
+	Console()->RegisterPrintCallback(ConsolePrintCallback, this);
 
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
@@ -1138,6 +1378,7 @@ int CServer::Run()
 			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 		}
 
+		int64 LastExtConCheck = 0;
 		while(m_RunServer)
 		{
 			int64 t = time_get();
@@ -1212,6 +1453,12 @@ int CServer::Run()
 			// master server stuff
 			m_Register.RegisterUpdate();
 	
+			if (LastExtConCheck + 100000 < t) // 10 Hz should suffice
+			{
+				ProcessExtConInput();
+				LastExtConCheck = t;
+			}
+
 			PumpNetwork();
 	
 			if(ReportTime < time_get())
@@ -1249,6 +1496,8 @@ int CServer::Run()
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			m_NetServer.Drop(i, "Server shutdown");
 	}
+
+	CleanupExtCons();
 
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
@@ -1495,6 +1744,250 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 	m_SnapshotDelta.SetStaticsize(ItemType, Size);
 }
 
+void ExtConListenerThread(void *pArg)
+{
+	CServerThreadArgs *pArgs = (CServerThreadArgs*)pArg;
+
+	struct CServer::CExtCon *pExtCons = pArgs->m_pExtCons;
+	LOCK *pLocks = pArgs->m_pLocks;
+
+	bool *pDropFlag = pArgs->m_pDropListenerFlag;
+	bool *pInputSignal = pArgs->m_pInputSignalFlag; // will only be passed on to io workers
+	void **ppListenerThread = pArgs->m_ppListenerThread;
+	CNetServer *pNetSrv = pArgs->m_pNetServer; // for bans
+
+	delete pArgs;
+
+	NETSOCKET LiSock = NETSOCKET_INVALID;
+	bool Blocking;
+
+	while(!*pDropFlag)//this is the only invariant
+	{
+		// create listening socket, if we don't have one yet
+		if (LiSock == NETSOCKET_INVALID)
+		{
+			if (!CreateListener(&LiSock, &Blocking, g_Config.m_SvExtConPort, CServer::MAX_EXTCONS))
+			{
+				dbg_msg("server", "failed to spawn listener on %s:%d, will retry in a minute", g_Config.m_SvExtConAddr, g_Config.m_SvExtConPort);
+				thread_sleep(60*1000); // wait a min to prevent excess
+				continue;
+			}
+			dbg_msg("server", "extcon listening on %s:%d", g_Config.m_SvExtConAddr, g_Config.m_SvExtConPort);
+
+			//HACK: hide thread if listener is in blocking mode, for not getting joined on cleanup.
+			// this is because there is no reason to make a blocking accept() call return,
+			// neither there is a way to specify a timeout (at least in that base/ provides)
+			*ppListenerThread = Blocking?0:thread_self();
+		}
+
+		NETSOCKET PeerSck;
+		NETADDR PeerAddr;
+		if (net_tcp_accept(LiSock, &PeerSck, &PeerAddr) < 0)
+		{
+			if (Blocking || !net_would_block())
+				dbg_msg("server", "failed to accept an external console connection");
+
+			thread_sleep(1000);
+			continue;
+		}
+
+		bool HaveIP = false, NoFreeSlot = true;
+		// check for room, and whether we already have a client from that host
+		for(int i = 0; (!HaveIP || NoFreeSlot) && i < CServer::MAX_EXTCONS; ++i)
+		{
+			// no locking required here, this thread is exclusively in charge of writing to m_Online
+			if (pExtCons[i].m_Online && !pExtCons[i].m_Dead) // but noncritical race on m_Dead, its not worth taking the lock
+				HaveIP |= mem_comp(pExtCons[i].m_aIP, PeerAddr.ip, sizeof PeerAddr.ip) == 0;
+			else
+				NoFreeSlot = false;
+		}
+
+		const char *pErrMsg =
+			HaveIP                      ? "Already got a connection from your site.\n":
+			NoFreeSlot                  ? "No free external rcon slot available.\n":
+                	pNetSrv->FindBan(PeerAddr)  ? "You are banned from this server.\n":
+			!*g_Config.m_SvRconPassword ? "No rcon password set on server, can't access.\n": 0;
+
+		if (pErrMsg)
+		{
+			net_tcp_send(PeerSck, pErrMsg, str_length(pErrMsg));
+			net_tcp_close(PeerSck);
+			dbg_msg("server", "rejected external console connection from %d.%d.%d.%d",
+					PeerAddr.ip[0], PeerAddr.ip[1], PeerAddr.ip[2], PeerAddr.ip[3]);
+			continue;
+		}
+
+		// if we reach here, the connection is almost accepted. we only need to find a free slot for it
+
+		lock_wait(pLocks[0]);
+
+		// first finish off zombies (doing it here/now avoids having to (locked) poll it somewhere else)
+		int i;
+		for(i = 0; i < CServer::MAX_EXTCONS; ++i)
+		{
+			struct CServer::CExtCon *pEx = &pExtCons[i];
+
+			if (pEx->m_Online && pEx->m_Dead)
+			{
+				pEx->m_Online = false;
+				mem_free(pEx->m_pInBuf);
+				mem_free(pEx->m_pOutBuf);
+			}
+		}
+
+		// then find a free slot and initialize everything
+		for(i = 0; i < CServer::MAX_EXTCONS; ++i)
+		{
+			struct CServer::CExtCon *pEx = &pExtCons[i];
+
+			if (pEx->m_Online)
+				continue;
+
+			pEx->m_pInBuf = (char*)mem_alloc(EC_IOBUF_SZ, 1);
+			pEx->m_pOutBuf = (char*)mem_alloc(EC_IOBUF_SZ, 1);
+			pEx->m_pInBuf[0] = '\0';
+			str_copy(pEx->m_pOutBuf, "Rcon password: ", EC_IOBUF_SZ);
+
+			pEx->m_Socket = PeerSck;
+			mem_copy(pEx->m_aIP, PeerAddr.ip, sizeof pEx->m_aIP);
+
+			pEx->m_AuthFailCount = 0;
+			pEx->m_Dead = pEx->m_RequestDrop = pEx->m_Authed = false;
+			pEx->m_Online = true;
+
+			break;
+		}
+
+		// assertion: (0 <= i < CServer::MAX_EXTCONS)   -- ensured because we had
+		// dropped the connection if there was no free slot available
+
+		// spawn io thread
+		if (!(pExtCons[i].m_pIOThread = thread_create(ExtConClientIOThread, new CServerThreadArgs(pExtCons, pLocks, pInputSignal, i))))
+		{
+			dbg_msg("server", "could not create extcon client io thread");
+			pErrMsg = "There has been an internal error, connection dropped.";
+		}
+
+		lock_release(pLocks[0]);
+
+		if (pErrMsg)
+		{
+			net_tcp_send(PeerSck, pErrMsg, str_length(pErrMsg));
+			net_tcp_close(PeerSck);
+			pExtCons[i].m_Dead = true;//instant zombie
+		}
+		else
+			dbg_msg("server", "accepted connection from %d.%d.%d.%d, assigned ExtId=%d",
+					PeerAddr.ip[0], PeerAddr.ip[1], PeerAddr.ip[2], PeerAddr.ip[3], i);
+	}
+
+	if (LiSock != NETSOCKET_INVALID)
+		net_tcp_close(LiSock);
+}
+
+// helper to create a bound+listening socket. socket is stored in pOutSocket, it is attempted to enable
+// non blocking mode, the actual mode used is stored in pOutBlocking.
+bool CreateListener(NETSOCKET *pOutSocket, bool *pOutBlocking, int ListenPort, int OptBacklog)
+{
+	if (!(ListenPort&=0xffffu) || !pOutSocket)
+		return false;
+
+	NETADDR BindAddr;
+	if (net_addr_from_str(&BindAddr, g_Config.m_SvExtConAddr) != 0)
+	{
+		mem_zero(&BindAddr, sizeof BindAddr);
+		BindAddr.type = NETTYPE_IPV4;
+	}
+	BindAddr.port = (unsigned short)ListenPort;
+
+	NETSOCKET Socket = net_tcp_create(&BindAddr);
+	*pOutBlocking = net_tcp_set_non_blocking(Socket) == -1;
+
+	if (Socket == NETSOCKET_INVALID)
+		return false;
+
+	if (net_tcp_listen(Socket, OptBacklog) != 0)
+	{
+		net_tcp_close(Socket);
+		return false;
+	}
+
+	*pOutSocket = Socket;
+
+	return true;
+}
+
+void ExtConClientIOThread(void *pArg)
+{
+	char aIOBuf[EC_IOBUF_SZ]; //used to not have to do IO while holding teh evil lock
+	CServerThreadArgs *pArgs = (CServerThreadArgs*)pArg;
+
+	int ExtId = pArgs->m_ExtId;
+	LOCK *pLocks = pArgs->m_pLocks;
+
+	struct CServer::CExtCon *pEx = &pArgs->m_pExtCons[ExtId];
+	bool *pInputSignal = pArgs->m_pInputSignalFlag;
+
+	delete pArgs;
+
+	int64 LastRecv = time_get();
+
+	for(;;) //invariant: socket doesn't fail on I/O and not asked to d/c (m_RequestDrop)
+	{
+		int DataLen = 0;
+
+		// test whether data is available, timeout 200ms
+		if (net_socket_read_wait(pEx->m_Socket, 200))
+		{
+			//read data into aIOBuf
+			DataLen = net_tcp_recv(pEx->m_Socket, aIOBuf, sizeof aIOBuf - 1);
+			if (DataLen <= 0)
+				break;//i/o error
+			aIOBuf[DataLen] = '\0'; //enforce zero termination since we operate on text
+			LastRecv = time_get();
+		}
+
+		// noncritical race on m_Authed
+		if (pEx->m_RequestDrop || time_get() > LastRecv + 1000000*(pEx->m_Authed ? EC_RECV_TIMEOUT : EC_RECV_TIMEOUT_AUTH))
+			break;//disconnect requested
+
+		lock_wait(pLocks[0]);
+
+		if (DataLen > 0)
+		{// data has arrived, copy it to input buf, raise input signal flag
+			str_append(pEx->m_pInBuf, aIOBuf, EC_IOBUF_SZ);
+			LOCKED(pLocks[1], *pInputSignal = true);
+		}
+
+		//now the output part
+		DataLen = 0;
+
+		if (pEx->m_pOutBuf[0])
+		{//there is buffered data to be sent out, copy into aIOBuf for transmission after we released the lock
+			DataLen = str_length(pEx->m_pOutBuf);
+
+			if ((unsigned)DataLen >= sizeof aIOBuf)
+				DataLen = sizeof aIOBuf - 1;
+
+			str_copy(aIOBuf, pEx->m_pOutBuf, DataLen + 1);
+
+			pEx->m_pOutBuf[0] = '\0';
+		}
+
+		lock_release(pLocks[0]);
+
+		// send out if there was something in output buffer
+		if (DataLen > 0 && net_tcp_send(pEx->m_Socket, aIOBuf, DataLen) != DataLen)
+			break;//i/o error
+	}
+
+	dbg_msg("server", "ExtId=%d connection finished.", ExtId);
+
+	net_tcp_close(pEx->m_Socket);
+
+	pEx->m_Dead = true;
+}
+
 static CServer *CreateServer() { return new CServer(); }
 
 int main(int argc, const char **argv) // ignore_convention
@@ -1563,6 +2056,14 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfig->RestoreStrings();
 	
 	pServer->Engine()->InitLogfile();
+
+	if (g_Config.m_SvExtConPort)
+	{
+		if (!(pServer->m_pExtConListener = thread_create(ExtConListenerThread,
+				new CServerThreadArgs(pServer->m_aExtCons, pServer->m_aExtConLock, &pServer->m_ExtConInputSignal,
+				&pServer->m_ExtConDropListener, &pServer->m_pExtConListener, &pServer->m_NetServer))))
+			dbg_msg("server", "could not create extcon listener thread");
+	}
 
 	// run the server
 	pServer->Run();
