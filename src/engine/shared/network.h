@@ -219,6 +219,7 @@ public:
 	{
 		NETADDR m_Addr;
 		int m_Expires;
+		char m_Reason[128];
 	};
 	
 private:

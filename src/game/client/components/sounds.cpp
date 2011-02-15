@@ -62,7 +62,7 @@ void CSounds::Enqueue(int SetId)
 void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 {
 	CNetMsg_Sv_SoundGlobal Msg;
-	Msg.m_Soundid = SetId;
+	Msg.m_SoundID = SetId;
 	Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
 	
 	Play(Chn, SetId, Vol, Pos);

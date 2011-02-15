@@ -63,9 +63,9 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return HadFlag;
 }
 
-bool CGameControllerCTF::CanBeMovedOnBalance(int Cid)
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
 {
-	CCharacter* Character = GameServer()->m_apPlayers[Cid]->GetCharacter();
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
 	if(Character)
 	{
 		for(int fi = 0; fi < 2; fi++)
@@ -94,6 +94,7 @@ void CGameControllerCTF::Tick()
 		// flag hits death-tile or left the game layer, reset it
 		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
+			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
 			GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
 			F->Reset();
 			continue;

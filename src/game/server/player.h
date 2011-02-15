@@ -13,7 +13,7 @@ class CPlayer
 	MACRO_ALLOC_POOL_ID()
 	
 public:
-	CPlayer(CGameContext *pGameServer, int CID, int Team);
+	CPlayer(CGameContext *pGameServer, int ClientID, int Team);
 	~CPlayer();
 
 	void Init(int CID);

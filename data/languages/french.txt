@@ -8,7 +8,7 @@
 == %d%% chargé
 
 %ds left
-== %ds a quitté
+== %ds pour voter
 
 %i minute left
 == %i minute restante
@@ -21,6 +21,9 @@
 
 %i seconds left
 == %i secondes restantes
+
+%s Right click for context menu.
+== %s Clic-droit pour afficher le menu contextuel.
 
 Abort
 == Annuler
@@ -45,6 +48,9 @@ All
 
 Alpha
 == Alpha
+
+Alpha value of the envelope
+== Composante alpha de l'animation
 
 Always show name plates
 == Toujours afficher les pseudonymes
@@ -79,6 +85,9 @@ Blue team
 Blue team wins!
 == L'équipe bleue gagne !
 
+Blue value of the envelope
+== Composante bleue de l'animation
+
 Body
 == Corps
 
@@ -100,14 +109,17 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Nettoyer la collision
-
 Close
 == Fermer
 
 Color
 == Couleur
+
+Color Env
+== Couleur Anim
+
+Color TO
+== Décalage Anim
 
 Color+
 == Couleur+
@@ -127,14 +139,17 @@ Connection Problems...
 Console
 == Console
 
-Constructs collision from this layer
-== Fait la collision depuis cette couche
-
 Controls
 == Contrôles
 
+Creates a new color envelope
+== Crée une nouvelle animation de couleur
+
 Creates a new map
 == Crée une nouvelle carte
+
+Creates a new pos envelope
+== Crée une nouvelle animation de position
 
 Current
 == Actuellement
@@ -162,6 +177,9 @@ Delete group
 
 Delete layer
 == Supprimer la couche
+
+Delete this envelope
+== Supprime l'animation
 
 Deletes the layer
 == Supprime la couche
@@ -207,6 +225,9 @@ Emoticon
 
 Enter
 == Démarrer
+
+Envelopes
+== Animations
 
 Error
 == Erreur
@@ -279,6 +300,9 @@ General
 
 Graphics
 == Affichage
+
+Green value of the envelope
+== Composante verte de l'animation
 
 Grenade
 == Lance-grenade
@@ -355,6 +379,12 @@ Layers
 Left
 == Gauche
 
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour changer le pivot. Maintenez [ctrl] pour tourner.
+
+Left mouse button to move. Hold shift to move the texture.
+== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour déplacer la texture.
+
 Lht.
 == Lum.
 
@@ -372,9 +402,6 @@ Loading
 
 MOTD
 == MOTD
-
-Make collision
-== Faire la collision
 
 Make external
 == Mettre en externe
@@ -423,6 +450,9 @@ New folder
 
 News
 == Nouvelles
+
+Next Envelope
+== Animation suivante
 
 Next weapon
 == Arme suivante
@@ -490,6 +520,12 @@ Players
 Please balance teams!
 == Équilibrez les équipes !
 
+Pos X
+== Pos X
+
+Pos Y
+== Pos Y
+
 Pos.+
 == Pos.+
 
@@ -498,6 +534,9 @@ Press right mouse button to create a new point
 
 Prev. weapon
 == Arme précédente
+
+Previous Envelope
+== Animation précédente
 
 Quality Textures
 == Textures haute qualité
@@ -514,11 +553,17 @@ REC
 Reason:
 == Raison :
 
+Record demo
+== Enregistrement démo
+
 Red team
 == Équipe rouge
 
 Red team wins!
 == L'équipe rouge gagne !
+
+Red value of the envelope
+== Composante rouge de l'animation
 
 Refresh
 == Rafraîchir
@@ -531,9 +576,6 @@ Remote console
 
 Remove
 == Enlever
-
-Removes collision from this layer
-== Enlève la collision depuis cette couche
 
 Removes the image from the map
 == Enlève l'image de la carte
@@ -561,6 +603,9 @@ Rifle
 
 Right
 == Droite
+
+Rotation of the envelope
+== Rotation de l'animation
 
 Round
 == Round
@@ -658,6 +703,9 @@ Standard gametype
 Standard map
 == Cartes standards
 
+Stop record
+== Arrêter l'enregistrement
+
 Sudden Death
 == Mort Subite
 
@@ -696,6 +744,12 @@ UI Color
 
 Up
 == Haut
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Maintenez le bouton gauche de la souris et déplacez-là pour changer la couleur. Maintenez [shift] pour plus de précision.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Maintenez le bouton gauche de la souris et déplacez-là pour changer la valeur. Maintenez [shift] pour plus de précision.
 
 Use sounds
 == Jouer les sons
@@ -759,9 +813,6 @@ no limit
 
 ##### needs translation #####
 
-%s Right click for context menu.
-== 
-
 Add Quad
 == 
 
@@ -774,13 +825,10 @@ Add tile layer
 Adds a new quad
 == 
 
-Alpha value of the envelope
-== 
-
 Aspect ratio
 == 
 
-Blue value of the envelope
+Clear
 == 
 
 Clip H
@@ -795,16 +843,10 @@ Clip X
 Clip Y
 == 
 
-Color Env
+Collision
 == 
 
-Color TO
-== 
-
-Creates a new color envelope
-== 
-
-Creates a new pos envelope
+Constructs game tiles from this layer
 == 
 
 Creates a new quad layer
@@ -813,7 +855,7 @@ Creates a new quad layer
 Creates a new tile layer
 == 
 
-Delete this envelope
+Death
 == 
 
 Deletes the current quad
@@ -825,19 +867,10 @@ Enable/disable group for saving
 Enable/disable layer for saving
 == 
 
-Envelopes
-== 
-
-Green value of the envelope
+Game tiles
 == 
 
 HD
-== 
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
-
-Left mouse button to move. Hold shift to move the texture.
 == 
 
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
@@ -846,19 +879,10 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 Name plates size
 == 
 
-Next Envelope
-== 
-
 Para X
 == 
 
 Para Y
-== 
-
-Pos X
-== 
-
-Pos Y
 == 
 
 Pos. Env
@@ -867,19 +891,10 @@ Pos. Env
 Pos. TO
 == 
 
-Previous Envelope
-== 
-
 Proof
 == 
 
 Quads
-== 
-
-Record demo
-== 
-
-Red value of the envelope
 == 
 
 Refocus
@@ -891,9 +906,6 @@ Resizes the current Quad based on the aspect ratio of the image
 Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
 == 
 
-Rotation of the envelope
-== 
-
 Shift
 == 
 
@@ -901,9 +913,6 @@ Sound error
 == 
 
 Squares the current quad
-== 
-
-Stop record
 == 
 
 Switch between images and layers managment.
@@ -930,13 +939,10 @@ Toggles the envelope editor.
 Unable to delete the demo
 == 
 
+Unhookable
+== 
+
 Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
 == 
 
 Use left mouse button to drag and create a brush.

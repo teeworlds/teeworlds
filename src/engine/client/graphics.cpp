@@ -357,7 +357,7 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
 	int l = str_length(pFilename);
-	int Id;
+	int ID;
 	CImageInfo Img;
 	
 	if(l < 3)
@@ -367,9 +367,9 @@ int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int St
 		if (StoreFormat == CImageInfo::FORMAT_AUTO)
 			StoreFormat = Img.m_Format;
 
-		Id = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
+		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
-		return Id;
+		return ID;
 	}
 	
 	return m_InvalidTexture;

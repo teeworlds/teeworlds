@@ -570,7 +570,7 @@ CW
 Cancel
 == 
 
-Clear collision
+Clear
 == 
 
 Clip H
@@ -585,6 +585,9 @@ Clip X
 Clip Y
 == 
 
+Collision
+== 
+
 Color
 == 
 
@@ -597,7 +600,7 @@ Color TO
 Color+
 == 
 
-Constructs collision from this layer
+Constructs game tiles from this layer
 == 
 
 Creates a new color envelope
@@ -613,6 +616,9 @@ Creates a new quad layer
 == 
 
 Creates a new tile layer
+== 
+
+Death
 == 
 
 Decrease
@@ -678,6 +684,9 @@ File: %s
 Filename:
 == 
 
+Game tiles
+== 
+
 Green value of the envelope
 == 
 
@@ -724,9 +733,6 @@ Load a new image to use in the map
 == 
 
 Load map
-== 
-
-Make collision
 == 
 
 Make external
@@ -808,9 +814,6 @@ Refocus
 == 
 
 Remove
-== 
-
-Removes collision from this layer
 == 
 
 Removes the image from the map
@@ -901,6 +904,9 @@ Toggles the envelope editor.
 == 
 
 Unable to delete the demo
+== 
+
+Unhookable
 == 
 
 Up

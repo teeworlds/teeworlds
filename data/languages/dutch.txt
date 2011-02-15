@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -20,7 +21,6 @@
 
 %i seconds left
 == nog %i seconden
-
 
 %s Right click for context menu.
 == %s Rechtermuisknop voor context menu.
@@ -124,9 +124,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Verwijder botsingen
-
 Clip H
 == Clip H
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Console
-
-Constructs collision from this layer
-== Maakt deze laag botsend
 
 Controls
 == Besturing
@@ -457,9 +451,6 @@ Loading
 MOTD
 == MOTD
 
-Make collision
-== Maak botsend
-
 Make external
 == Maak extern
 
@@ -496,11 +487,11 @@ Mute when not active
 Name
 == Naam
 
-Name:
-== Naam:
-
 Name plates size
 == Grootte naamplaat
+
+Name:
+== Naam:
 
 New
 == Nieuw
@@ -658,9 +649,6 @@ Remote console
 Remove
 == Verwijder
 
-Removes collision from this layer
-== Verwijdert botsingen in deze laag
-
 Removes the image from the map
 == Verwijdert de afbeelding uit de kaart
 
@@ -779,7 +767,7 @@ Sound
 == Geluid
 
 Sound error
-== Geluidsfout 
+== Geluidsfout
 
 Sound volume
 == Volume
@@ -971,6 +959,24 @@ no limit
 == ongelimiteerd
 
 ##### needs translation #####
+
+Clear
+== 
+
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
+Game tiles
+== 
+
+Unhookable
+== 
 
 ##### old translations #####
 

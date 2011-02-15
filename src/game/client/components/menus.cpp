@@ -977,7 +977,7 @@ int CMenus::Render()
 
 					// update download speed
 					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
-					m_DownloadSpeed = (m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed));
+					m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
 					m_DownloadLastCheckTime = Now;
 					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
 				}

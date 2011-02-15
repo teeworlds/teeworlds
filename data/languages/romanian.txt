@@ -124,9 +124,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Curăță coliziunea
-
 Clip H
 == Î clip
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Consolă
-
-Constructs collision from this layer
-== Construiește coliziunea din acest strat
 
 Controls
 == Controale
@@ -457,9 +451,6 @@ Loading
 MOTD
 == Mesajul zilei
 
-Make collision
-== Creează coliziunea
-
 Make external
 == Fă-o externă
 
@@ -658,9 +649,6 @@ Remote console
 Remove
 == Elimină
 
-Removes collision from this layer
-== Elimină coliziunea din acest strat
-
 Removes the image from the map
 == Elimină imaginea din hartă
 
@@ -778,6 +766,9 @@ Skins
 Sound
 == Sunet
 
+Sound error
+== Eroare de sunet
+
 Sound volume
 == Volum sunet
 
@@ -825,6 +816,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 
 Texture Compression
 == Compresie texturi
+
+The audio device couldn't be initialised.
+== Dispozitivul audio nu a putut fi inițializat.
 
 The server is running a non-standard tuning on a pure game type.
 == Serverul folosește parametri ne-standard într-un joc standard.
@@ -966,10 +960,22 @@ no limit
 
 ##### needs translation #####
 
-Sound error
+Clear
 == 
 
-The audio device couldn't be initialised.
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
+Game tiles
+== 
+
+Unhookable
 == 
 
 ##### old translations #####
