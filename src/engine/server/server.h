@@ -126,6 +126,35 @@ public:
 	CEngine m_Engine;
 	CRegister m_Register;
 	
+	enum
+	{
+		MAX_EXTCONS = 4
+	};
+
+	struct CExtCon
+	{
+		bool m_Online; //false indicates invalid, true indicates active (or zombie t/w m_Dead)
+
+		bool m_RequestDrop; // flag to force the worker thread to d/c and terminate
+		bool m_Dead; // client worker thread sets this to true before termination
+		bool m_Authed;
+		int m_AuthFailCount;
+
+		char *m_pInBuf;
+		char *m_pOutBuf;
+
+		void *m_pIOThread; //actually only used on cleanup
+
+		// next two are virtually const, safe for unlocked reading
+		NETSOCKET m_Socket;
+		unsigned char m_aIP[16];//TODO ipv6
+	} m_aExtCons[MAX_EXTCONS]; // lock on m_aExtConLock[0]
+
+	bool m_ExtConInputSignal; // lock on m_aExtConLock[1]
+	bool m_ExtConDropListener; // signal for listener to terminate
+	LOCK m_aExtConLock[2]; // two locks for minimal delay, 0 is main, 1 is only for input signal
+	void *m_pExtConListener; //handle for listener thread (only for joining on cleanup)
+
 	CServer();
 	
 	int TrySetClientName(int ClientID, const char *pName);
@@ -161,7 +190,9 @@ public:
 	void SendMap(int ClientId);
 	void SendRconLine(int ClientId, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
+	static void SendRconLineExt(const char *pLine, void *pUser);
 	
+	static void ConsolePrintCallback(const char *pLine, void *pUser);
 	void ProcessClientPacket(CNetChunk *pPacket);
 		
 	void SendServerInfo(NETADDR *pAddr, int Token);
@@ -199,6 +230,10 @@ public:
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int Id, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+
+	void ProcessExtConInput();
+	void InitExtCons();
+	void CleanupExtCons();
 };
 
 #endif
