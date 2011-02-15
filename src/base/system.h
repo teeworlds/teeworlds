@@ -350,7 +350,7 @@ void *thread_create(void (*threadfunc)(void *), void *user);
 	Parameters:
 		thread - Thread to wait for.
 */
-void thread_wait(void *thread);
+int thread_wait(void *thread);
 
 /*
 	Function: thread_destroy
@@ -366,6 +366,15 @@ void thread_destroy(void *thread);
 		Yeild the current threads execution slice.
 */
 void thread_yield();
+
+/*
+	Function: thread_self
+		Determines the current thread.
+
+	Returns:
+		Returns a handle for the calling thread.
+*/
+void* thread_self();
 
 
 /* Group: Locks */

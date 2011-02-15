@@ -349,8 +349,8 @@ void *thread_create(void (*threadfunc)(void *), void *u)
 {
 #if defined(CONF_FAMILY_UNIX)
 	pthread_t id;
-	pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
-	return (void*)id;
+	int r = pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
+	return r==0?(void*)id:NULL;
 #elif defined(CONF_FAMILY_WINDOWS)
 	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, u, 0, NULL);
 #else
@@ -358,15 +358,17 @@ void *thread_create(void (*threadfunc)(void *), void *u)
 #endif
 }
 
-void thread_wait(void *thread)
+int thread_wait(void *thread)
 {
+	int r = 0;
 #if defined(CONF_FAMILY_UNIX)
-	pthread_join((pthread_t)thread, NULL);
+	r = pthread_join((pthread_t)thread, NULL);
 #elif defined(CONF_FAMILY_WINDOWS)
 	WaitForSingleObject((HANDLE)thread, INFINITE);
 #else
 	#error not implemented
 #endif
+	return r;
 }
 
 void thread_destroy(void *thread)
@@ -401,6 +403,16 @@ void thread_sleep(int milliseconds)
 #endif
 }
 
+void* thread_self()
+{
+#if defined(CONF_FAMILY_UNIX)
+	return pthread_self();
+#elif defined(CONF_FAMILY_WINDOWS)
+	return GetCurrentThread();
+#else
+	#error not implemented
+#endif
+}
 
 
 
