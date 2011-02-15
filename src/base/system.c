@@ -745,10 +745,14 @@ NETSOCKET net_tcp_create(const NETADDR *a)
     if(sock < 0)
         return NETSOCKET_INVALID;
 
-    /* bind, we should check for error */
     netaddr_to_sockaddr(a, &addr);
-    bind(sock, &addr, sizeof(addr));
-
+    if (bind(sock, &addr, sizeof(addr)) != 0)
+    {
+        /*dbg_msg("base", "failed to bind() socket to %d.%d.%d.%d:%d",
+                a->ip[0], a->ip[1], a->ip[2], a->ip[3], a->port);*/
+        close(sock);
+        return NETSOCKET_INVALID;
+    }
     /* return */
     return sock;
 }
