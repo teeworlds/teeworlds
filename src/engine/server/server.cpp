@@ -1009,6 +1009,7 @@ void CServer::ProcessExtConInput()
 		{
 			pEx = &m_aExtCons[ExtId = i];
 			str_copy(aInput, pEx->m_pInBuf, sizeof aInput);
+			pEx->m_pInBuf[0] = '\0'
 			break;
 		}
 
