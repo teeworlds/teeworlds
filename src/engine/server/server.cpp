@@ -1100,7 +1100,16 @@ void CServer::ProcessExtConInput()
 		aInput[Ind] = '\0';
 	}
 
-	LOCKED(m_aExtConLock[0], str_copy(pEx->m_pInBuf, aInput, EC_IOBUF_SZ));
+	//LOCKED(m_aExtConLock[0], str_copy(pEx->m_pInBuf, aInput, EC_IOBUF_SZ));
+	lock_wait(m_aExtConLock[0]);
+		if (pEx->m_Online)
+		{
+			char aTmp[EC_IOBUF_SZ];
+			str_copy(aTmp, pEx->m_pInBuf, sizeof aTmp); //back up data which might have arrived in the meantime
+			str_copy(pEx->m_pInBuf, aInput, EC_IOBUF_SZ);//the leftover stuff in aInput was received even earlier,
+			str_append(pEx->m_pInBuf, aTmp, EC_IOBUF_SZ);
+		}
+	lock_release(m_aExtConLock[0]);
 }
 
 void CServer::SendServerInfo(NETADDR *pAddr, int Token)
