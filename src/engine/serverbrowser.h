@@ -28,7 +28,6 @@ public:
 	
 	int m_QuickSearchHit;
 	
-	int m_Progression;
 	int m_MaxPlayers;
 	int m_NumPlayers;
 	int m_Flags;
@@ -52,7 +51,6 @@ public:
 		SORT_PING - Sort by ping.
 		SORT_MAP - Sort by map
 		SORT_GAMETYPE - Sort by game type. DM, TDM etc.
-		SORT_PROGRESSION - Sort by progression.
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 	*/
 	enum{
@@ -60,7 +58,6 @@ public:
 		SORT_PING,
 		SORT_MAP,
 		SORT_GAMETYPE,
-		SORT_PROGRESSION,
 		SORT_NUMPLAYERS,
 		
 		QUICK_SERVERNAME=1,

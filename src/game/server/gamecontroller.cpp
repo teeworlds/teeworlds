@@ -498,33 +498,6 @@ void IGameController::Tick()
 			}
 		}
 	}
-	
-	// update browse info
-	int Prog = -1;
-	if(g_Config.m_SvTimelimit > 0)
-		Prog = max(Prog, (Server()->Tick()-m_RoundStartTick) * 100 / (g_Config.m_SvTimelimit*Server()->TickSpeed()*60));
-
-	if(g_Config.m_SvScorelimit)
-	{
-		if(IsTeamplay())
-		{
-			Prog = max(Prog, (m_aTeamscore[TEAM_RED]*100)/g_Config.m_SvScorelimit);
-			Prog = max(Prog, (m_aTeamscore[TEAM_BLUE]*100)/g_Config.m_SvScorelimit);
-		}
-		else
-		{
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(GameServer()->m_apPlayers[i])
-					Prog = max(Prog, (GameServer()->m_apPlayers[i]->m_Score*100)/g_Config.m_SvScorelimit);
-			}
-		}
-	}
-
-	if(m_Warmup)
-		Prog = -1;
-		
-	Server()->SetBrowseInfo(m_pGameType, Prog);
 }
 
 

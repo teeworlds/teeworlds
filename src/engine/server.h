@@ -42,7 +42,6 @@ public:
 		return SendMsg(&Packer, Flags, ClientID);
 	}
 	
-	virtual void SetBrowseInfo(char const *pGameType, int Progression) = 0;
 	virtual void SetClientName(int ClientID, char const *pName) = 0;
 	virtual void SetClientScore(int ClientID, int Score) = 0;
 	
@@ -78,6 +77,7 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 	
+	virtual const char *GameType() = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
 };

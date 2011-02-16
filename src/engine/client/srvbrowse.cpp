@@ -109,13 +109,6 @@ bool CServerBrowser::SortCompareGametype(int Index1, int Index2) const
 	return str_comp(a->m_Info.m_aGameType, b->m_Info.m_aGameType) < 0;
 }
 
-bool CServerBrowser::SortCompareProgression(int Index1, int Index2) const
-{
-	CServerEntry *a = m_ppServerlist[Index1];
-	CServerEntry *b = m_ppServerlist[Index2];
-	return a->m_Info.m_Progression < b->m_Info.m_Progression;
-}
-
 bool CServerBrowser::SortCompareNumPlayers(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
@@ -257,8 +250,6 @@ void CServerBrowser::Sort()
 		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareNumPlayers));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_GAMETYPE)
 		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
-	else if(g_Config.m_BrSort == IServerBrowser::SORT_PROGRESSION)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareProgression));
 
 	// invert the list if requested
 	if(g_Config.m_BrSortOrder)
