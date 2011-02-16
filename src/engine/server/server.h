@@ -111,9 +111,6 @@ public:
 	int m_MapReload;
 	int m_RconClientID;
 
-	char m_aBrowseinfoGametype[16];
-	int m_BrowseinfoProgression;
-
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
 
@@ -132,7 +129,6 @@ public:
 
 	virtual void SetClientName(int ClientID, const char *pName);
 	virtual void SetClientScore(int ClientID, int Score);
-	virtual void SetBrowseInfo(const char *pGameType, int Progression);
 
 	void Kick(int ClientID, const char *pReason);
 
