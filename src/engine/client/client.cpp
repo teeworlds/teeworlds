@@ -1137,6 +1137,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			{
 				const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 				int MapCrc = Unpacker.GetInt();
+				int MapSize = Unpacker.GetInt();
 				const char *pError = 0;
 
 				if(Unpacker.Error())
@@ -1147,6 +1148,9 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					if(pMap[i] == '/' || pMap[i] == '\\')
 						pError = "strange character in map name";
 				}
+
+				if(MapSize < 0)
+					pError = "invalid map size";
 
 				if(pError)
 					DisconnectWithReason(pError);
@@ -1174,7 +1178,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 							io_close(m_MapdownloadFile);
 						m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 						m_MapdownloadCrc = MapCrc;
-						m_MapdownloadTotalsize = -1;
+						m_MapdownloadTotalsize = MapSize;
 						m_MapdownloadAmount = 0;
 
 						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
@@ -1192,17 +1196,17 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			else if(Msg == NETMSG_MAP_DATA)
 			{
 				int Last = Unpacker.GetInt();
-				int TotalSize = Unpacker.GetInt();
+				int MapCRC = Unpacker.GetInt();
+				int Chunk = Unpacker.GetInt();
 				int Size = Unpacker.GetInt();
 				const unsigned char *pData = Unpacker.GetRaw(Size);
 
 				// check fior errors
-				if(Unpacker.Error() || Size <= 0 || TotalSize <= 0 || !m_MapdownloadFile)
+				if(Unpacker.Error() || Size <= 0 || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile)
 					return;
 
 				io_write(m_MapdownloadFile, pData, Size);
 
-				m_MapdownloadTotalsize = TotalSize;
 				m_MapdownloadAmount += Size;
 
 				if(Last)
