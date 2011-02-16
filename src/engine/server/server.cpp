@@ -1192,7 +1192,7 @@ void CServer::EconPumpNetwork()
 
 			dbg_assert(Eid >= 0, "bug in base:net_select_read()");
 
-			int NumRecv = net_tcp_recv(m_aEcon[Eid].m_Socket, aRecvBuf, sizeof aRecvBuf);
+			int NumRecv = net_tcp_recv(m_aEcon[Eid].m_Socket, aRecvBuf, sizeof aRecvBuf - 1);
 			if (NumRecv <= 0)
 			{// I/O error
 				EconDropClient(Eid);
