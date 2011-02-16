@@ -585,6 +585,7 @@ void CServer::SendMap(int ClientID)
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
 	Msg.AddString(GetMapName(), 0);
 	Msg.AddInt(m_CurrentMapCrc);
+	Msg.AddInt(m_CurrentMapSize);
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
 }
 
@@ -685,7 +686,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				CMsgPacker Msg(NETMSG_MAP_DATA);
 				Msg.AddInt(Last);
-				Msg.AddInt(m_CurrentMapSize);
+				Msg.AddInt(m_CurrentMapCrc);
+				Msg.AddInt(Chunk);
 				Msg.AddInt(ChunkSize);
 				Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
