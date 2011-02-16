@@ -6,7 +6,6 @@
 #include <game/generated/client_data.h>
 
 #include <game/gamecore.h> // get_angle
-#include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include "emoticon.h"
@@ -104,12 +103,6 @@ void CEmoticon::OnRender()
 	
 	m_WasActive = true;
 	
-	float x, y;
-	Input()->MouseRelative(&x, &y);
-
-	m_SelectorMouse.x += x;
-	m_SelectorMouse.y += y;
-
 	if (length(m_SelectorMouse) > 140)
 		m_SelectorMouse = normalize(m_SelectorMouse) * 140;
 
@@ -118,7 +111,7 @@ void CEmoticon::OnRender()
 		SelectedAngle += 2*pi;
 
 	if (length(m_SelectorMouse) > 100)
-		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * 12.0f);
+		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
 
     CUIRect Screen = *UI()->Screen();
 
@@ -135,15 +128,15 @@ void CEmoticon::OnRender()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 	Graphics()->QuadsBegin();
 
-	for (int i = 0; i < 12; i++)
+	for (int i = 0; i < NUM_EMOTICONS; i++)
 	{
-		float Angle = 2*pi*i/12.0;
+		float Angle = 2*pi*i/NUM_EMOTICONS;
 		if (Angle > pi)
 			Angle -= 2*pi;
 
 		bool Selected = m_SelectedEmote == i;
 
-		float Size = Selected ? 96 : 64;
+		float Size = Selected ? 80 : 32;
 
 		float NudgeX = 120 * cosf(Angle);
 		float NudgeY = 120 * sinf(Angle);
