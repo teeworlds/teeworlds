@@ -570,11 +570,12 @@ int net_udp_close(NETSOCKET sock);
 	
 	Parameters:
 		bindaddr - Address to bind the socket to.
+		reuse_addr - specify 1 to enable SO_REUSEADDR, zero otherwise. anything else is undefined
 
 	Returns:
 		On success it returns an handle to the socket. On failure it returns NETSOCKET_INVALID.
 */
-NETSOCKET net_tcp_create(const NETADDR *a);
+NETSOCKET net_tcp_create(const NETADDR *a, int reuse_addr);
 
 /*
 	Function: net_tcp_listen
@@ -1089,6 +1090,22 @@ int net_errno();
 int net_would_block();
 
 int net_socket_read_wait(NETSOCKET sock, int time);
+
+/*
+	Function: net_select_read
+		select()s a set of sockets for reading
+
+	Parameters:
+		out_ready   - sockets which are ready for reading are stored in this array
+		size_ready  - maximum amount of sockets out_ready can take
+		sock_arr    - array of sockets to select() for reading
+		num_sockets - number of sockets from sock_arr to select
+		timeout     - timeout in ms to wait (zero will do a poll)
+	Returns:
+		Returns the number of sockets which are ready to be read from, or 0 if none are.
+		Negative value on select() failure.
+*/
+int net_select_read(NETSOCKET *out_ready, unsigned size_ready, NETSOCKET *sock_arr, unsigned num_sockets, int timeout);
 
 void mem_debug_dump();
 
