@@ -90,7 +90,7 @@ void CGhost::OnRender()
 		}
 		StopRecord();
 		StopRender();
-		m_RaceState = RACE_NONE;
+		OnReset();
 	}
 	
 	CNetObj_Character Char = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Cur;
@@ -534,7 +534,8 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalClientID)
 		{
-			OnReset();
+			if(m_RaceState != RACE_FINISHED)
+				OnReset();
 		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
