@@ -105,6 +105,30 @@ public:
 	
 	IEngineMap *m_pMap;
 
+	enum
+	{
+		ECON_POLL_FREQ_HZ = 5,
+		ECON_RECOVERY_INTERVAL_S = 30,
+		ECON_MAX_CONN = 2,
+		ECON_MAX_IDLE_S = 60,
+		ECON_MAX_IDLE_AUTHED_S = 60*60*24,
+		ECON_IOBUF_SZ = 1024
+	};
+
+	struct CEcon
+	{
+		bool m_Online;
+		bool m_Authed;
+		int m_AuthFailCount;
+		int64 m_LastRecv;
+		NETADDR m_Addr;
+		NETSOCKET m_Socket;
+		char m_aInBuf[ECON_IOBUF_SZ];
+		char m_aOutBuf[ECON_IOBUF_SZ];
+	} m_aEcon[ECON_MAX_CONN];
+
+	NETSOCKET m_EconListenSock;
+
 	int64 m_GameStartTime;
 	//int m_CurrentGameTick;
 	int m_RunServer;
@@ -160,7 +184,9 @@ public:
 
 	void SendMap(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
+	static void ConsolePrintCallback(const char *pLine, void *pUser);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
+	static void SendRconLineEcon(const char *pLine, void *pUser);
 	
 	void ProcessClientPacket(CNetChunk *pPacket);
 		
@@ -172,6 +198,20 @@ public:
 		
 
 	void PumpNetwork();
+
+
+	bool EconInitListener();
+	void EconInitClient(int Eid, NETSOCKET Socket, NETADDR Addr);
+	void EconDropClient(int Eid);
+
+	bool EconHandleListener();
+	bool EconConnectFilter(NETSOCKET Socket, NETADDR Addr);
+
+	void EconHandleClients();
+	void EconPumpNetwork();
+	void EconProcessInput(int Eid);
+	bool EconTryAuth(int Eid, const char *pPass);
+
 
 	char *GetMapName();
 	int LoadMap(const char *pMapName);

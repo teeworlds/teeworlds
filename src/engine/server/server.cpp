@@ -35,6 +35,8 @@
 	#include <windows.h>
 #endif
 
+#define ECON_PASS_PROMPT "Rcon password: "
+
 static const char *StrLtrim(const char *pStr)
 {
 	while(*pStr && *pStr >= 0 && *pStr <= 32)
@@ -305,6 +307,10 @@ int CServer::Init()
 	}
 
 	m_CurrentGameTick = 0;
+
+	m_EconListenSock = NETSOCKET_INVALID;
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		m_aEcon[Eid].m_Online = false;
 
 	return 0;
 }
@@ -595,22 +601,38 @@ void CServer::SendRconLine(int ClientID, const char *pLine)
 	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 }
 
-void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
+void CServer::ConsolePrintCallback(const char *pLine, void *pUser)
 {
-	CServer *pThis = (CServer *)pUser;
 	static volatile int ReentryGuard = 0;
-	int i;
 	
 	if(ReentryGuard) return;
 	ReentryGuard++;
 	
-	for(i = 0; i < MAX_CLIENTS; i++)
-	{
+	SendRconLineAuthed(pLine, pUser);
+	SendRconLineEcon(pLine, pUser);
+
+	ReentryGuard--;
+
+}
+
+void CServer::SendRconLineEcon(const char *pLine, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		if (pThis->m_aEcon[Eid].m_Online && pThis->m_aEcon[Eid].m_Authed)
+		{
+			str_append(pThis->m_aEcon[Eid].m_aOutBuf, pLine, sizeof pThis->m_aEcon[Eid].m_aOutBuf);
+			str_append(pThis->m_aEcon[Eid].m_aOutBuf, "\n", sizeof pThis->m_aEcon[Eid].m_aOutBuf);
+		}
+}
+
+void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed)
 			pThis->SendRconLine(i, pLine);
-	}
 	
-	ReentryGuard--;
 }
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
@@ -966,7 +988,13 @@ int CServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	return m_NetServer.BanAdd(Addr, Seconds, pReason);	
+	int r = m_NetServer.BanAdd(Addr, Seconds, pReason);
+
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		if (m_aEcon[Eid].m_Online && mem_comp(Addr.ip, m_aEcon[Eid].m_Addr.ip, sizeof Addr.ip) == 0)
+			EconDropClient(Eid);
+
+	return r;
 }
 
 int CServer::BanRemove(NETADDR Addr)
@@ -1006,6 +1034,261 @@ void CServer::PumpNetwork()
 		else
 			ProcessClientPacket(&Packet);
 	}
+}
+
+bool CServer::EconInitListener()
+{
+	NETSOCKET Socket;
+	NETADDR BindAddr;
+
+	if (net_addr_from_str(&BindAddr, g_Config.m_SvEconAddr) != 0)
+		return false;
+
+	BindAddr.port = g_Config.m_SvEconPort;
+
+	if ((Socket = net_tcp_create(&BindAddr, 1)) == NETSOCKET_INVALID)
+		return false;
+
+	bool Err = false;
+	if (net_tcp_set_non_blocking(Socket) == -1 || net_tcp_listen(Socket, 128) != 0)
+	{
+		net_tcp_close(Socket);
+		Err = true;
+	}
+
+	m_EconListenSock = Err ? NETSOCKET_INVALID : Socket;
+
+	return !Err;
+}
+
+void CServer::EconInitClient(int Eid, NETSOCKET Socket, NETADDR Addr)
+{
+	m_aEcon[Eid].m_Socket = Socket;
+	m_aEcon[Eid].m_Addr = Addr;
+	m_aEcon[Eid].m_LastRecv = time_get();
+
+	str_copy(m_aEcon[Eid].m_aOutBuf, ECON_PASS_PROMPT, sizeof m_aEcon[Eid].m_aOutBuf);
+	m_aEcon[Eid].m_aInBuf[0] = '\0';
+
+	m_aEcon[Eid].m_AuthFailCount = 0;
+	m_aEcon[Eid].m_Authed = false;
+	m_aEcon[Eid].m_Online = true;
+}
+
+void CServer::EconDropClient(int Eid)
+{
+	if (!m_aEcon[Eid].m_Online)
+		return;
+
+	m_aEcon[Eid].m_Online = false;
+	net_tcp_close(m_aEcon[Eid].m_Socket);
+
+	dbg_msg("server", "dropped econ connection, Eid=%d", Eid);
+}
+
+bool CServer::EconHandleListener() //returns true as long as the listener socket is in proper state
+{
+	NETSOCKET Socket;
+	NETADDR Addr;
+	static int LisPort = 0; // for port changing at runtime
+
+	// close listener if we want to disable or change port
+	if (m_EconListenSock != NETSOCKET_INVALID && g_Config.m_SvEconPort != LisPort)
+	{
+		net_tcp_close(m_EconListenSock);
+		m_EconListenSock = NETSOCKET_INVALID;
+		LisPort = 0;
+	}
+
+	// create new listener if we want one, but have none
+	if (m_EconListenSock == NETSOCKET_INVALID && g_Config.m_SvEconPort)
+	{
+		if (EconInitListener())
+			LisPort = g_Config.m_SvEconPort;
+		else
+			dbg_msg("server", "failed to init econ listener, will retry in %d seconds", ECON_RECOVERY_INTERVAL_S);
+	}
+
+	if (m_EconListenSock == NETSOCKET_INVALID)
+		return false;// we either don't want, or cannot create one
+
+	if (net_tcp_accept(m_EconListenSock, &Socket, &Addr) < 0)
+		return net_would_block();
+
+	if (!EconConnectFilter(Socket, Addr))
+		return true;
+
+	int Eid = 0;
+	for(; Eid < ECON_MAX_CONN; ++Eid)
+		if (!m_aEcon[Eid].m_Online)
+			break;
+
+	EconInitClient(Eid, Socket, Addr); //Eid < ECON_MAX_CONN ensured by EconConnectFilter()
+
+	dbg_msg("server", "accepted econ connection (%d.%d.%d.%d), Eid=%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Eid);
+
+	return true;
+}
+
+bool CServer::EconConnectFilter(NETSOCKET Socket, NETADDR Addr)
+{
+	bool HaveIP = false, FreeSlot = false;
+	for(int Eid = 0; !HaveIP && Eid < ECON_MAX_CONN; ++Eid)
+		if (m_aEcon[Eid].m_Online)
+			HaveIP |= mem_comp(m_aEcon[Eid].m_Addr.ip, Addr.ip, sizeof Addr.ip) == 0;
+		else
+			FreeSlot = true;
+
+	const char *pErrMsg =
+		HaveIP                      ? "Already got a connection from your site.\n":
+		!FreeSlot                   ? "No free external rcon slot available.\n":
+		m_NetServer.FindBan(Addr)   ? "You are banned from this server.\n":
+		!*g_Config.m_SvRconPassword ? "No rcon password set on server, access denied.\n": 0;
+
+	if (pErrMsg)
+	{
+		net_tcp_send(Socket, pErrMsg, str_length(pErrMsg));
+		net_tcp_close(Socket);
+		dbg_msg("server", "rejected econ connection (%d.%d.%d.%d)", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+	}
+
+	return !pErrMsg;
+}
+
+void CServer::EconHandleClients()
+{
+	EconPumpNetwork();
+
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		if (m_aEcon[Eid].m_Online)
+		{
+			if (m_aEcon[Eid].m_aInBuf[0])
+				EconProcessInput(Eid);
+			else if (time_get() > m_aEcon[Eid].m_LastRecv + 1000000*(m_aEcon[Eid].m_Authed ? ECON_MAX_IDLE_AUTHED_S : ECON_MAX_IDLE_S))
+				EconDropClient(Eid); // idle timeout
+		}
+
+}
+
+void CServer::EconPumpNetwork()
+{
+	NETSOCKET aSckSelect[ECON_MAX_CONN];
+	NETSOCKET aSckReadable[ECON_MAX_CONN];
+	char aRecvBuf[ECON_IOBUF_SZ];
+
+	int Count = 0;// first holds the number of sockets to select, then the number of sockets actually ready to read from
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		if (m_aEcon[Eid].m_Online)
+			aSckSelect[Count++] = m_aEcon[Eid].m_Socket;
+
+	if ((Count = net_select_read(aSckReadable, sizeof aSckReadable, aSckSelect, Count, 0)) > 0)
+	{
+		for(int i = 0; i < Count; ++i)
+		{
+			int Eid = -1; // find the client which was associated with this socket
+			for(int j = 0; Eid < 0 && j < ECON_MAX_CONN; ++j)
+				if (m_aEcon[j].m_Socket == aSckReadable[i])
+					Eid = j;
+
+			dbg_assert(Eid >= 0, "bug in base:net_select_read()");
+
+			int NumRecv = net_tcp_recv(m_aEcon[Eid].m_Socket, aRecvBuf, sizeof aRecvBuf);
+			if (NumRecv <= 0)
+			{// I/O error
+				EconDropClient(Eid);
+				continue;
+			}
+
+			aRecvBuf[NumRecv] = '\0';
+			str_append(m_aEcon[Eid].m_aInBuf, aRecvBuf, sizeof m_aEcon[Eid].m_aInBuf);
+
+			m_aEcon[Eid].m_LastRecv = time_get();
+		}
+	}
+
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid) // handle output
+	{
+		if (m_aEcon[Eid].m_Online && m_aEcon[Eid].m_aOutBuf[0])
+		{
+			int DataLen = str_length(m_aEcon[Eid].m_aOutBuf);
+			if (net_tcp_send(m_aEcon[Eid].m_Socket, m_aEcon[Eid].m_aOutBuf, DataLen) != DataLen)
+				EconDropClient(Eid); // I/O error
+			else
+				m_aEcon[Eid].m_aOutBuf[0] = '\0';
+		}
+	}
+}
+
+void CServer::EconProcessInput(int Eid)
+{
+	const char *pCmdStart = str_skip_whitespaces(m_aEcon[Eid].m_aInBuf);
+	char       *pCmdEnd   = const_cast<char*>(str_find(pCmdStart, "\n"));
+
+	while(pCmdEnd) //while there is a full (\r*\n-terminated) line available
+	{
+		while(*--pCmdEnd == '\r');  //be compatible with garbage
+
+		*(pCmdEnd+1) = '\0';//we overwrote the leftmost \n or \r
+
+		if (!m_aEcon[Eid].m_Authed) //not authed, consider lines as password attempts
+		{
+			if (!EconTryAuth(Eid, pCmdStart)) // returns false when auth limit exceeded
+			{
+				EconDropClient(Eid);
+				return;
+			}
+		}
+		else
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof aBuf, "Eid=%d rcon='%s'", Eid, pCmdStart);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
+			m_RconClientID = -1;
+			Console()->ExecuteLine(pCmdStart);
+		}
+
+		pCmdStart = str_skip_whitespaces(pCmdEnd+2);//find next command, if any
+
+		if (!*pCmdStart) //we're just at the end of input, no partial line in buffer
+		{
+			m_aEcon[Eid].m_aInBuf[0] = '\0';
+			break;
+		}
+
+		pCmdEnd = const_cast<char*>(str_find(pCmdStart, "\n"));
+	}
+
+	if (*pCmdStart && pCmdStart != m_aEcon[Eid].m_aInBuf)
+	{//if there is a partial line which we didnt fully receive yet, its relocated to the beginning of our input buffer for the next time
+		int RemainderLen = str_length(pCmdStart);
+		mem_move(m_aEcon[Eid].m_aInBuf, pCmdStart, RemainderLen);
+		m_aEcon[Eid].m_aInBuf[RemainderLen] = '\0';
+	}
+}
+
+bool CServer::EconTryAuth(int Eid, const char *pPass) // returns false when auth limit exceeded
+{
+	char aBuf[64];
+
+	if (str_comp(pPass, g_Config.m_SvRconPassword) == 0)
+		m_aEcon[Eid].m_Authed = true;
+	else if (++m_aEcon[Eid].m_AuthFailCount < g_Config.m_SvRconMaxTries) // incorrect pass, prompt again
+		str_copy(m_aEcon[Eid].m_aOutBuf, ECON_PASS_PROMPT, sizeof m_aEcon[Eid].m_aOutBuf);
+	else //maximum number of attempts exceeded
+	{
+		if (g_Config.m_SvRconBantime > 0)// reason will not be written out on extcon
+			BanAdd(m_aEcon[Eid].m_Addr, g_Config.m_SvRconBantime * 60, "Too many econ auth attempts");
+
+		str_format(aBuf, sizeof aBuf, "Eid=%d banned (trying too hard)", Eid);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+		return false;
+	}
+
+	str_format(aBuf, sizeof aBuf, "Eid=%d %s.", Eid, m_aEcon[Eid].m_Authed?"authed":"failed to auth");
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+	return true;
 }
 
 char *CServer::GetMapName()
@@ -1081,7 +1364,7 @@ int CServer::Run()
 	net_init();
 	
 	//
-	Console()->RegisterPrintCallback(SendRconLineAuthed, this);
+	Console()->RegisterPrintCallback(ConsolePrintCallback, this);
 
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
@@ -1127,6 +1410,8 @@ int CServer::Run()
 	// start game
 	{
 		int64 ReportTime = time_get();
+		int64 EconCltTime = time_get();
+		int64 EconLisTime = time_get();//seperated to allow listener recovery w/o stalling clients
 		int ReportInterval = 3;
 	
 		m_Lastheartbeat = 0;
@@ -1214,6 +1499,19 @@ int CServer::Run()
 	
 			PumpNetwork();
 	
+			if (t > EconLisTime)
+			{
+				EconLisTime = (EconHandleListener()
+						? time_freq() / ECON_POLL_FREQ_HZ
+						: time_freq() * ECON_RECOVERY_INTERVAL_S) + t;
+			}
+
+			if (t > EconCltTime)
+			{
+				EconHandleClients();
+				EconCltTime = t + time_freq() / ECON_POLL_FREQ_HZ;
+			}
+
 			if(ReportTime < time_get())
 			{
 				if(g_Config.m_Debug)
@@ -1249,6 +1547,9 @@ int CServer::Run()
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			m_NetServer.Drop(i, "Server shutdown");
 	}
+
+	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
+		EconDropClient(Eid);
 
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
