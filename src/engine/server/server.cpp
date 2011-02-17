@@ -1188,7 +1188,7 @@ void CServer::EconPumpNetwork()
 		{
 			int Eid = -1; // find the client which was associated with this socket
 			for(int j = 0; Eid < 0 && j < ECON_MAX_CONN; ++j)
-				if (m_aEcon[j].m_Socket == aSckReadable[i])
+				if (m_aEcon[j].m_Online && m_aEcon[j].m_Socket == aSckReadable[i])
 					Eid = j;
 
 			dbg_assert(Eid >= 0, "bug in base:net_select_read()");
