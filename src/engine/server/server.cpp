@@ -1119,9 +1119,7 @@ bool CServer::EconHandleListener() //returns true as long as the listener socket
 		return true;
 
 	int Eid = 0;
-	for(; Eid < ECON_MAX_CONN; ++Eid)
-		if (!m_aEcon[Eid].m_Online)
-			break;
+	for(; Eid < ECON_MAX_CONN && m_aEcon[Eid].m_Online; ++Eid); //find free slot
 
 	EconInitClient(Eid, Socket, Addr); //Eid < ECON_MAX_CONN ensured by EconConnectFilter()
 
@@ -1180,6 +1178,9 @@ void CServer::EconPumpNetwork()
 	for(int Eid = 0; Eid < ECON_MAX_CONN; ++Eid)
 		if (m_aEcon[Eid].m_Online)
 			aSckSelect[Count++] = m_aEcon[Eid].m_Socket;
+
+	if (Count == 0)// no sockets to select from
+		return;
 
 	if ((Count = net_select_read(aSckReadable, sizeof aSckReadable, aSckSelect, Count, 0)) > 0)
 	{
