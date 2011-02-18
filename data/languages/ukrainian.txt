@@ -861,6 +861,9 @@ Automatically take game over screenshot
 Blue value of the envelope
 == 
 
+Clean-up game tiles
+== 
+
 Clear
 == 
 
@@ -940,6 +943,9 @@ REC
 == 
 
 Red value of the envelope
+== 
+
+Removes game tiles that aren't based on a layer
 == 
 
 Rotation of the envelope

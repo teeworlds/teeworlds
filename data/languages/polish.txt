@@ -801,6 +801,9 @@ Automatically take game over screenshot
 Blue value of the envelope
 == 
 
+Clean-up game tiles
+== 
+
 Clear
 == 
 
@@ -916,6 +919,9 @@ Red value of the envelope
 == 
 
 Refocus
+== 
+
+Removes game tiles that aren't based on a layer
 == 
 
 Resizes the current Quad based on the aspect ratio of the image

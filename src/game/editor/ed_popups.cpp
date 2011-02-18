@@ -87,12 +87,51 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	static int s_DeleteButton = 0;
 	
 	// don't allow deletion of game group
-	if(pEditor->m_Map.m_pGameGroup != pEditor->GetSelectedGroup() &&
-		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete group"), 0, &Button, 0, Localize("Delete group")))
+	if(pEditor->m_Map.m_pGameGroup != pEditor->GetSelectedGroup())
 	{
-		pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
-		pEditor->m_SelectedGroup = max(0, pEditor->m_SelectedGroup-1);
-		return 1;
+		if(pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete group"), 0, &Button, 0, Localize("Delete group")))
+		{
+			pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
+			pEditor->m_SelectedGroup = max(0, pEditor->m_SelectedGroup-1);
+			return 1;
+		}
+	}
+	else
+	{
+		if(pEditor->DoButton_Editor(&s_DeleteButton, Localize("Clean-up game tiles"), 0, &Button, 0, Localize("Removes game tiles that aren't based on a layer")))
+		{
+			// gather all tile layers
+			array<CLayerTiles*> Layers;
+			for(int i = 0; i < pEditor->m_Map.m_pGameGroup->m_lLayers.size(); ++i)
+			{
+				if(pEditor->m_Map.m_pGameGroup->m_lLayers[i] != pEditor->m_Map.m_pGameLayer && pEditor->m_Map.m_pGameGroup->m_lLayers[i]->m_Type == LAYERTYPE_TILES)
+					Layers.add(static_cast<CLayerTiles *>(pEditor->m_Map.m_pGameGroup->m_lLayers[i]));
+			}
+
+			// search for unneeded game tiles
+			CLayerTiles *gl = pEditor->m_Map.m_pGameLayer;
+			for(int y = 0; y < gl->m_Height; ++y)
+				for(int x = 0; x < gl->m_Width; ++x)
+				{
+					if(gl->m_pTiles[y*gl->m_Width+x].m_Index > static_cast<unsigned char>(TILE_NOHOOK))
+						continue;
+
+					bool Found = false;
+					for(int i = 0; i < Layers.size(); ++i)
+					{
+						if(x < Layers[i]->m_Width && y < Layers[i]->m_Height && Layers[i]->m_pTiles[y*Layers[i]->m_Width+x].m_Index)
+						{
+							Found = true;
+							break;
+						}
+					}
+
+					if(!Found)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR;
+				}
+
+			return 1;
+		}
 	}
 
 	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pTeleLayer)

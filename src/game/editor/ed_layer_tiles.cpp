@@ -408,8 +408,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
 				for(int x = 0; x < w; x++)
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index >= TILE_AIR && gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
-						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_AIR+Result:TILE_AIR;
+					if(m_pTiles[y*m_Width+x].m_Index)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR+Result;
 
 			return 1;
 		}

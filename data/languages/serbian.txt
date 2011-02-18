@@ -543,6 +543,9 @@ CW
 Cancel
 == 
 
+Clean-up game tiles
+== 
+
 Clear
 == 
 
@@ -811,6 +814,9 @@ Refocus
 == 
 
 Remove
+== 
+
+Removes game tiles that aren't based on a layer
 == 
 
 Removes the image from the map

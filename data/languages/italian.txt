@@ -930,6 +930,9 @@ no limit
 
 ##### needs translation #####
 
+Clean-up game tiles
+== 
+
 Clear
 == 
 
@@ -961,6 +964,9 @@ Max demos
 == 
 
 REC
+== 
+
+Removes game tiles that aren't based on a layer
 == 
 
 Shift

@@ -960,6 +960,9 @@ no limit
 
 ##### needs translation #####
 
+Clean-up game tiles
+== 
+
 Clear
 == 
 
@@ -973,6 +976,9 @@ Death
 == 
 
 Game tiles
+== 
+
+Removes game tiles that aren't based on a layer
 == 
 
 Unhookable
