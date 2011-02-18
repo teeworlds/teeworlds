@@ -1949,6 +1949,7 @@ void CClient::Run()
 
 			Update();
 			m_pEditor->UpdateAndRender();
+			DebugRender();
 			m_pGraphics->Swap();
 		}
 		else
