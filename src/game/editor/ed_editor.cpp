@@ -666,6 +666,17 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		m_ProofBorders = !m_ProofBorders;
 	}
 
+	TB_Top.VSplitLeft(5.0f, 0, &TB_Top);
+
+	// tile info button
+	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
+	static int s_TileInfoButton = 0;
+	if(DoButton_Editor(&s_TileInfoButton, Localize("Info"), m_ShowTileInfo, &Button, 0, Localize("[ctrl+i] Show tile informations")) ||
+		(Input()->KeyDown('i') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
+	{
+		m_ShowTileInfo = !m_ShowTileInfo;
+	}
+
 	TB_Top.VSplitLeft(15.0f, 0, &TB_Top);
 
 	// zoom group
@@ -812,7 +823,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		static int s_BorderBut = 0;
 		CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		
-		if(DoButton_Editor(&s_BorderBut, Localize("Border"), pT?0:-1, &Button, 0, Localize("Border")))
+		if(DoButton_Editor(&s_BorderBut, Localize("Border"), pT?0:-1, &Button, 0, Localize("Adds border tiles")))
 		{
 			if(pT)
                 DoMapBorder();
@@ -1147,6 +1158,10 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			m_Map.m_pGameGroup->MapScreen();
 			m_Map.m_pGameLayer->Render();
 		}
+
+		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
+		if(m_ShowTileInfo && pT && pT->m_Visible && m_ZoomLevel <= 300)
+			pT->ShowInfo();
 	}
 
 	static void *s_pEditorID = (void *)&s_pEditorID;
@@ -1191,6 +1206,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_TexID = t->m_TexID;
 			m_TilesetPicker.Render();
+			if(m_ShowTileInfo)
+				m_TilesetPicker.ShowInfo();
 		}
 	}
 

@@ -132,6 +132,8 @@ public:
 	virtual bool ConnectionProblems() = 0;
 
 	virtual bool SoundInitFailed() = 0;
+
+	virtual int GetDebugFont() = 0;
 };
 
 class IGameClient : public IInterface

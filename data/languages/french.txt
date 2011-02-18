@@ -825,6 +825,9 @@ Add tile layer
 Adds a new quad
 == 
 
+Adds border tiles
+== 
+
 Aspect ratio
 == 
 
@@ -976,6 +979,9 @@ Y-axis of the envelope
 == 
 
 [ctrl+h] Toggle High Detail
+== 
+
+[ctrl+i] Show tile informations
 == 
 
 [ctrl+m] Toggle animation

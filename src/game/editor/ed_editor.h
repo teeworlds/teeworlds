@@ -380,6 +380,7 @@ public:
 	virtual void BrushFlipY();
 	virtual void BrushRotate(float Amount);
 	
+	virtual void ShowInfo();
 	virtual int RenderProperties(CUIRect *pToolbox);
 
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc);
@@ -500,6 +501,7 @@ public:
 		m_GuiActive = true;
 		m_ProofBorders = false;
 		
+		m_ShowTileInfo = false;
 		m_ShowDetail = true;
 		m_Animate = false;
 		m_AnimateStart = 0;
@@ -598,6 +600,7 @@ public:
 	float m_MouseDeltaWx;
 	float m_MouseDeltaWy;
 	
+	bool m_ShowTileInfo;
 	bool m_ShowDetail;
 	bool m_Animate;
 	int64 m_AnimateStart;
