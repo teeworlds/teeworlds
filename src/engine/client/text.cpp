@@ -659,18 +659,13 @@ public:
 					pBatchEnd = pCurrent + Wlen;
 				}
 				
+				const char *pTmp = pCurrent;
+				int NextCharacter = str_utf8_decode(&pTmp);
 				while(pCurrent < pBatchEnd)
 				{
-					const char *pTmp;
-					float Advance = 0;
-					int Character = 0;
-					int Nextcharacter = 0;
-					CFontChar *pChr;
-
-					// TODO: UTF-8 decode
-					Character = str_utf8_decode(&pCurrent);
-					pTmp = pCurrent;
-					Nextcharacter = str_utf8_decode(&pTmp);
+					int Character = NextCharacter;
+					pCurrent = pTmp;
+					NextCharacter = str_utf8_decode(&pTmp);
 					
 					if(Character == '\n')
 					{
@@ -684,11 +679,10 @@ public:
 						continue;
 					}
 
-					pChr = GetChar(pFont, pSizeData, Character);
-
+					CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 					if(pChr)
 					{
-						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)*Scale;
+						float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
 						if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 						{
 							// we hit the end of the line, no more to render or count
@@ -702,10 +696,10 @@ public:
 							IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
 							Graphics()->QuadsDrawTL(&QuadItem, 1);
 						}
-					}
 
-					DrawX += Advance*Size;
-					pCursor->m_CharCount++;
+						DrawX += Advance*Size;
+						pCursor->m_CharCount++;
+					}
 				}
 				
 				if(NewLine)
