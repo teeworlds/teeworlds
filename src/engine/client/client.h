@@ -241,6 +241,8 @@ public:
 
 	virtual bool SoundInitFailed() { return m_SoundInitFailed; }
 
+	virtual int GetDebugFont() { return m_DebugFont; }
+
 	void DirectInput(int *pInput, int Size);
 	void SendInput();
 

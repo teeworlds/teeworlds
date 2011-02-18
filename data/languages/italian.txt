@@ -930,6 +930,9 @@ no limit
 
 ##### needs translation #####
 
+Adds border tiles
+== 
+
 Clean-up game tiles
 == 
 
@@ -982,6 +985,9 @@ Unhookable
 == 
 
 Warmup
+== 
+
+[ctrl+i] Show tile informations
 == 
 
 ##### old translations #####

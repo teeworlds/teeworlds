@@ -960,6 +960,9 @@ no limit
 
 ##### needs translation #####
 
+Adds border tiles
+== 
+
 Clean-up game tiles
 == 
 
@@ -982,6 +985,9 @@ Removes game tiles that aren't based on a layer
 == 
 
 Unhookable
+== 
+
+[ctrl+i] Show tile informations
 == 
 
 ##### old translations #####

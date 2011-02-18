@@ -783,6 +783,9 @@ ZO
 %i seconds left
 == 
 
+Adds border tiles
+== 
+
 Alpha value of the envelope
 == 
 
@@ -979,6 +982,9 @@ Y-axis of the envelope
 == 
 
 [HOME] Restore map focus
+== 
+
+[ctrl+i] Show tile informations
 == 
 
 no limit

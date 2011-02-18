@@ -501,6 +501,9 @@ Adds a new group
 Adds a new quad
 == 
 
+Adds border tiles
+== 
+
 Alpha value of the envelope
 == 
 
@@ -973,6 +976,9 @@ ZO
 == 
 
 [ctrl+h] Toggle High Detail
+== 
+
+[ctrl+i] Show tile informations
 == 
 
 [ctrl+m] Toggle animation

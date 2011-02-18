@@ -138,6 +138,8 @@ public:
 	virtual bool DemoIsRecording() = 0;
 	virtual bool DemoIsPlaying() = 0;
 	virtual void DemoRecord_Stop() = 0;
+
+	virtual int GetDebugFont() = 0;
 	
 	// Race
 	virtual const char* GetCurrentMap() = 0;

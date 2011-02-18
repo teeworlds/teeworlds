@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/input.h>
@@ -383,6 +384,37 @@ void CLayerTiles::Shift(int Direction)
 				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y-1)*m_Width], m_Width*sizeof(CTile));
 		}
 	}
+}
+
+void CLayerTiles::ShowInfo()
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+	
+	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+	int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+	int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+	
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			int c = x + y*m_Width;
+			if(m_pTiles[c].m_Index)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, 1,1,1,1, aBuf);
+
+				char aFlags[4] = {	m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ',
+									0};
+				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, 1,1,1,1, aFlags);
+			}
+			x += m_pTiles[c].m_Skip;
+		}
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
