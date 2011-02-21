@@ -282,6 +282,69 @@ public:
 		return 0;		
 	}
  	
+	struct CFindCBData
+	{
+		CStorage *pStorage;
+		const char *pFilename;
+		const char *pPath;
+		char *pBuffer;
+		int BufferSize;
+	};
+
+	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
+	{
+		CFindCBData Data = *static_cast<CFindCBData *>(pUser);
+		if(IsDir)
+		{
+			if(pName[0] == '.')
+				return 0;
+
+			// search within the folder
+			char aBuf[MAX_PATH_LENGTH];
+			char aPath[MAX_PATH_LENGTH];
+			str_format(aPath, sizeof(aPath), "%s/%s", Data.pPath, pName);
+			Data.pPath = aPath;
+			fs_listdir(Data.pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+		}
+		else if(!str_comp(pName, Data.pFilename))
+		{
+			// found the file = end
+			str_format(Data.pBuffer, Data.BufferSize, "%s/%s", Data.pPath, Data.pFilename);
+			return 1;
+		}
+
+		return 0;
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize)
+	{
+		if(BufferSize < 1)
+			return false;
+		
+		pBuffer[0] = 0;
+		char aBuf[MAX_PATH_LENGTH];
+		CFindCBData Data;
+		Data.pStorage = this;
+		Data.pFilename = pFilename;
+		Data.pPath = pPath;
+		Data.pBuffer = pBuffer;
+		Data.BufferSize = BufferSize;
+
+		if(Type == TYPE_ALL)
+		{
+			// search within all available directories
+			for(int i = 0; i < m_NumPaths; ++i)
+				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
+		}
+		else if(Type >= 0 && Type < m_NumPaths)
+		{
+			// search within wanted directory
+			fs_listdir(GetPath(Type, pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+		}
+
+		return pBuffer[0] != 0;
+	}
+
 	virtual bool RemoveFile(const char *pFilename, int Type)
 	{
 		if(Type < 0 || Type >= m_NumPaths)

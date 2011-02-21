@@ -11,12 +11,12 @@
 
 #include "skins.h"
 
-void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
+int  CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
-		return;
+		return 0;
 		
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
@@ -25,7 +25,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
-		return;
+		return 0;
 	}
 	
 	CSkin Skin;
@@ -107,6 +107,8 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 	pSelf->m_aSkins.add(Skin);
+
+	return 0;
 }
 
 

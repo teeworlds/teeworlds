@@ -2153,7 +2153,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 }
 
 
-static void EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	int Length = str_length(pName);
@@ -2161,7 +2161,7 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 		(pName[1] == '.' && pName[2] == 0 && (!str_comp(pEditor->m_pFileDialogPath, "maps") || !str_comp(pEditor->m_pFileDialogPath, "mapres"))))) ||
 		(!IsDir && ((pEditor->m_FileDialogFileType == CEditor::FILETYPE_MAP && (Length < 4 || str_comp(pName+Length-4, ".map"))) ||
 		(pEditor->m_FileDialogFileType == CEditor::FILETYPE_IMG && (Length < 4 || str_comp(pName+Length-4, ".png"))))))
-		return;
+		return 0;
 
 	CEditor::CFilelistItem Item;
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
@@ -2173,6 +2173,8 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 	Item.m_IsLink = false;
 	Item.m_StorageType = StorageType;
 	pEditor->m_FileList.add(Item);
+
+	return 0;
 }
 
 void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)

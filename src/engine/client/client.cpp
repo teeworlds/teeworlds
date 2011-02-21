@@ -378,19 +378,21 @@ void CFileCollection::AddEntry(int64 Timestamp)
 	}
 }
 
-void CFileCollection::FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser)
+int CFileCollection::FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser)
 {
 	CFileCollection *pThis = static_cast<CFileCollection *>(pUser);
 
 	// check for valid file name format
 	if(IsDir || !pThis->IsFilenameValid(pFilename))
-		return;
+		return 0;
 
 	// extract the timestamp
 	int64 Timestamp = pThis->ExtractTimestamp(pFilename+pThis->m_FileDescLength+1);
 
 	// add the entry
 	pThis->AddEntry(Timestamp);
+
+	return 0;
 }
 
 
@@ -991,6 +993,15 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 	// try the downloaded maps
 	str_format(aBuf, sizeof(aBuf), "downloadedmaps/%s_%08x.map", pMapName, WantedCrc);
 	pError = LoadMap(pMapName, aBuf, WantedCrc);
+	if(!pError)
+		return pError;
+
+	// search for the map within subfolders
+	char aFilename[128];
+	str_format(aFilename, sizeof(aFilename), "%s.map", pMapName);
+	if(Storage()->FindFile(aFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)));
+		pError = LoadMap(pMapName, aBuf, WantedCrc);
+
 	return pError;
 }
 

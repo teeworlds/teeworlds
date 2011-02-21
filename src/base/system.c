@@ -884,7 +884,8 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	do
 	{
 		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		cb(finddata.cFileName, fs_is_dir(buffer), type, user);
+		if(cb(finddata.cFileName, fs_is_dir(buffer), type, user))
+			break;
 	}
 	while (FindNextFileA(handle, &finddata));
 
@@ -905,7 +906,8 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		cb(entry->d_name, fs_is_dir(buffer), type, user);
+		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
+			break;
 	}
 
 	/* close the directory and return */
