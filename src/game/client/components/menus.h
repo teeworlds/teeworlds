@@ -197,7 +197,7 @@ class CMenus : public CComponent
 	int m_DemolistStorageType;
 	
 	void DemolistOnUpdate(bool Reset);
-	static void DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	
 	static void GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	

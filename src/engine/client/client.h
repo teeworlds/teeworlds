@@ -100,7 +100,7 @@ public:
 	void Init(IStorage *pStorage, const char *pPath, const char *pFileDesc, const char *pFileExt, int MaxEntries);
 	void AddEntry(int64 Timestamp);
 
-	static void FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
+	static int FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
 };
 
 
