@@ -415,6 +415,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_WindowMustRefocus = 0;
 	m_SnapCrcErrors = 0;
 	m_AutoScreenshotRecycle = false;
+	m_AutoStatScreenshotRecycle = false;
 	m_EditorActive = false;
 
 	m_AckGameTick = -1;
@@ -1970,6 +1971,7 @@ void CClient::Run()
 		}
 
 		AutoScreenshot_Cleanup();
+		AutoStatScreenshot_Cleanup();
 
 		// check conditions
 		if(State() == IClient::STATE_QUITING)
@@ -2065,6 +2067,15 @@ void CClient::AutoScreenshot_Start()
 	}
 }
 
+void CClient::AutoStatScreenshot_Start()
+{
+	if(g_Config.m_TcStatScreenshot)
+	{
+		Graphics()->TakeScreenshot("auto/stats/autoscreen");
+		m_AutoStatScreenshotRecycle = true;
+	}
+}
+
 void CClient::AutoScreenshot_Cleanup()
 {
 	if(m_AutoScreenshotRecycle)
@@ -2076,6 +2087,20 @@ void CClient::AutoScreenshot_Cleanup()
 			AutoScreens.Init(Storage(), "screenshots/auto", "autoscreen", ".png", g_Config.m_ClAutoScreenshotMax);
 		}
 		m_AutoScreenshotRecycle = false;
+	}
+}
+
+void CClient::AutoStatScreenshot_Cleanup()
+{
+	if(m_AutoStatScreenshotRecycle)
+	{
+		if(g_Config.m_TcStatScreenshotMax)
+		{
+			// clean up auto taken screens
+			CFileCollection AutoScreens;
+			AutoScreens.Init(Storage(), "screenshots/auto/stats", "autoscreen", ".png", g_Config.m_TcStatScreenshotMax);
+		}
+		m_AutoStatScreenshotRecycle = false;
 	}
 }
 

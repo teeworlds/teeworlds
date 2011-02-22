@@ -58,6 +58,7 @@ public:
 			char aPath[MAX_PATH_LENGTH];
 			fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
+			fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto/stats", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));

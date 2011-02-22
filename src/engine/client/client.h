@@ -141,6 +141,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
+	bool m_AutoStatScreenshotRecycle;
 	bool m_EditorActive;
 	bool m_SoundInitFailed;
 
@@ -333,7 +334,9 @@ public:
 	void DemoRecorder_Stop();
 
 	void AutoScreenshot_Start();
+	void AutoStatScreenshot_Start();
 	void AutoScreenshot_Cleanup();
+	void AutoStatScreenshot_Cleanup();
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };

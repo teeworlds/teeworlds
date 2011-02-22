@@ -80,6 +80,7 @@ public:
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
 	virtual void AutoScreenshot_Start() = 0;
+	virtual void AutoStatScreenshot_Start() = 0;
 
 	// networking
 	virtual void EnterGame() = 0;

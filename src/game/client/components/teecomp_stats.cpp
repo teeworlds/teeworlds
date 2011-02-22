@@ -13,6 +13,8 @@ CTeecompStats::CTeecompStats()
 {
 	m_Mode = 0;
 	m_StatsClientID = -1;
+	m_ScreenshotTaken = false;
+	m_ScreenshotTime = -1;
 }
 
 void CTeecompStats::OnReset()
@@ -21,6 +23,8 @@ void CTeecompStats::OnReset()
 		m_pClient->m_aStats[i].Reset();
 	m_Mode = 0;
 	m_StatsClientID = -1;
+	m_ScreenshotTaken = false;
+	m_ScreenshotTime = -1;
 }
 
 void CTeecompStats::ConKeyStats(IConsole::IResult *pResult, void *pUserData)
@@ -191,6 +195,22 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 
 void CTeecompStats::OnRender()
 {
+	// auto stat screenshot stuff
+	if(g_Config.m_TcStatScreenshot)
+	{
+		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
+			m_ScreenshotTime = time_get()+time_freq()*3;
+		
+		if(m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
+			m_Mode = 1;
+
+		if(!m_ScreenshotTaken && m_ScreenshotTime > -1 && m_ScreenshotTime+time_freq()/5 < time_get())
+		{
+			AutoStatScreenshot();
+			m_ScreenshotTaken = true;
+		}
+	}
+	
 	switch(m_Mode)
 	{
 		case 1:
@@ -607,4 +627,10 @@ void CTeecompStats::RenderIndividualStats()
 		TextRender()->Text(0, x+xo, y, FontSize, aBuf, -1);
 		y += LineHeight;
 	}
+}
+
+void CTeecompStats::AutoStatScreenshot()
+{
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		Client()->AutoStatScreenshot_Start();
 }

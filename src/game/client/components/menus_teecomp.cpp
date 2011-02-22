@@ -353,7 +353,7 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 
 void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 {
-	CUIRect LeftView, RightView, Button;
+	CUIRect LeftView, RightView, Button, Lable;
 
 	MainView.VSplitLeft(MainView.w/2, &LeftView, &RightView);
 
@@ -435,6 +435,23 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	if(DoButton_CheckBox(&g_Config.m_TcHideCarrying, "Hide flag while carrying it", g_Config.m_TcHideCarrying, &Button))
 		g_Config.m_TcHideCarrying ^= 1;
+
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_TcStatScreenshot, Localize("Automatically take game over stat screenshot"), g_Config.m_TcStatScreenshot, &Button))
+		g_Config.m_TcStatScreenshot ^= 1;
+
+	char aBuf[64];
+	RightView.HSplitTop(10.0f, 0, &RightView);
+	RightView.VSplitLeft(20.0f, 0, &RightView);
+	RightView.HSplitTop(20.0f, &Lable, &Button);
+	Button.VSplitRight(20.0f, &Button, 0);
+	Button.HSplitTop(20.0f, &Button, 0);
+	if(g_Config.m_TcStatScreenshotMax)
+		str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max Screenshots"), g_Config.m_TcStatScreenshotMax);
+	else
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max Screenshots"), Localize("no limit"));
+	UI()->DoLabelScaled(&Lable, aBuf, 13.0f, -1);
+	g_Config.m_TcStatScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_TcStatScreenshotMax, &Button, g_Config.m_TcStatScreenshotMax/1000.0f)*1000.0f+0.1f);
 }
 
 void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
