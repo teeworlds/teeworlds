@@ -879,6 +879,21 @@ Switch between images and layers managment.
 Switch curve type
 == Changer le type de courbe
 
+Unable to delete the demo
+== Suppression de la démo impossible
+
+Use Clipping
+== Utiliser la coupure
+
+Enable/disable group for saving
+== Activer/désactiver la visibilité du groupe
+
+Enable/disable layer for saving
+== Activer/désactiver la visibilité du sous-groupe
+
+Shift
+== [Shift]
+
 ##### needs translation #####
 
 Aspect ratio
@@ -894,12 +909,6 @@ Clip X
 == 
 
 Clip Y
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
 == 
 
 HD
@@ -929,19 +938,10 @@ Refocus
 Resizes the current Quad based on the aspect ratio of the image
 == 
 
-Shift
-== 
-
 Squares the current quad
 == 
 
 Toggles the envelope editor.
-== 
-
-Unable to delete the demo
-== 
-
-Use Clipping
 == 
 
 Use left mouse button to drag and create a brush.
