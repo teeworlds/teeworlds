@@ -167,7 +167,7 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 					if(!m_pClient->m_aStats[i].m_Active)
 						continue;
 
-					if(str_comp_nocase(m_pClient->m_aClients[i].m_aName, aName) == 0)
+					if(str_comp(m_pClient->m_aClients[i].m_aName, aName) == 0)
 					{
 						m_pClient->m_aStats[i].m_FlagCaptures++;
 						break;
@@ -180,8 +180,8 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 						// strip first and last sign
 						pName++;
 						pName[str_length(pName)-1] = 0;
-						
-						if(str_comp_nocase(m_pClient->m_aClients[i].m_aName, pName) == 0)
+
+						if(str_comp(m_pClient->m_aClients[i].m_aName, pName) == 0)
 						{
 							m_pClient->m_aStats[i].m_FlagCaptures++;
 							break;
