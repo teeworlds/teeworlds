@@ -124,6 +124,9 @@ Cancel
 Chat
 == Chat
 
+Clear
+== Löschen
+
 Clip H
 == Aussch. H
 
@@ -138,6 +141,9 @@ Clip Y
 
 Close
 == Schließ.
+
+Collision
+== Kollision
 
 Color
 == Farbe
@@ -166,6 +172,9 @@ Connection Problems...
 Console
 == Konsole
 
+Constructs game tiles from this layer
+== Erstellt Spieltiles auf diesem Layer
+
 Controls
 == Steuerung
 
@@ -192,6 +201,9 @@ Current version: %s
 
 Custom colors
 == Eigene Farben
+
+Death
+== Tod
 
 Decrease
 == Verringern
@@ -330,6 +342,9 @@ Game info
 
 Game over
 == Spiel vorbei
+
+Game tiles
+== Spieltiles
 
 Game type
 == Spieltyp
@@ -853,6 +868,9 @@ UI Color
 Unable to delete the demo
 == Aufnahme konnte nicht gelöscht werden
 
+Unhookable
+== Nicht-Hookbar
+
 Up
 == Oben
 
@@ -959,24 +977,6 @@ no limit
 == Keine Begrenzung
 
 ##### needs translation #####
-
-Clear
-== 
-
-Collision
-== 
-
-Constructs game tiles from this layer
-== 
-
-Death
-== 
-
-Game tiles
-== 
-
-Unhookable
-== 
 
 ##### old translations #####
 
