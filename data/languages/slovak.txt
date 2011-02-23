@@ -1,0 +1,976 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d z %d serverov, %d hráčov online
+
+%d%% loaded
+== %d%% načítaných
+
+%ds left
+== Zostáva %ds
+
+%i minute left
+== Zostáva %i minúta
+
+%i minutes left
+== Zostáva %i minút
+
+%i second left
+== Zostáva %i sekunda
+
+%i seconds left
+== Zostáva %i sekúnd
+
+%s Right click for context menu.
+== %s Pravým tlačítkom myši zobrazíte menu.
+
+Abort
+== Zrušiť
+
+Add
+== Pridať
+
+Add Image
+== Pridať obrázok
+
+Add Quad
+== Polygón
+
+Add group
+== Nová skupina
+
+Add quads layer
+== Pridať vrstvu polygónov
+
+Add tile layer
+== Pridať tilovú vrstvu
+
+Address
+== Adresa
+
+Adds a new group
+== Pridá novú skupinu
+
+Adds a new quad
+== Pridá nový polygón
+
+All
+== Všetkým
+
+Alpha
+== Alpha
+
+Alpha value of the envelope
+== Alpha hodnota envelopy
+
+Always show name plates
+== Vždy zobrazovať menovky
+
+Anim
+== Anim
+
+Append
+== Pripojiť
+
+Append map
+== Pripojiť mapu
+
+Are you sure that you want to delete the demo?
+== Určite chcete vymazať tento záznam?
+
+Are you sure that you want to quit?
+== Ukončiť hru?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Vitajte v hre TeeWorlds. Pred tým, ako sa pripojíte na herný server, odporúčame nastaviť si hru podľa svojich požiadavkov. Napíšte do políčka nižšie meno pre Vášho tee a pokračujte kliknutím na tlačítko.
+
+Aspect ratio
+== Pomer strán
+
+Automatically record demos
+== Automaticky nahrávať záznamy
+
+Automatically take game over screenshot
+== Automaticky vyfotiť koniec kola
+
+Blue team
+== Modrý tým
+
+Blue team wins!
+== Modrý tým vyhráva!
+
+Blue value of the envelope
+== Hodnota modrej v envelope
+
+Body
+== Telo
+
+Border
+== Okraje
+
+CCW
+== CCW
+
+CW
+== CW
+
+Call vote
+== Hlasovať
+
+Cancel
+== Zrušiť
+
+Chat
+== Chat
+
+Clear collision
+== Vymazať kolíziu
+
+Clip H
+== Orez. Výšky
+
+Clip W
+== Orez. Šírky
+
+Clip X
+== Orez. X
+
+Clip Y
+== Orez. Y
+
+Close
+== Zavrieť
+
+Color
+== Farba
+
+Color Env
+== Farebnosť Env
+
+Color TO
+== Farebnosť TO
+
+Color+
+== Farba+
+
+Compatible version
+== Kompatibilná verzia
+
+Connect
+== Pripojiť
+
+Connecting to
+== Pripojujem sa k
+
+Connection Problems...
+== Problémy s pripojením...
+
+Console
+== Konzola
+
+Constructs collision from this layer
+== Vytvorí kolíziu z tejto vrstvy
+
+Controls
+== Ovládanie
+
+Creates a new color envelope
+== Vytvorí novú farbovú envelopu
+
+Creates a new map
+== Vytvorí novú mapu
+
+Creates a new pos envelope
+== Vytvorí novú farbovú envelopu
+
+Creates a new quad layer
+== Vytvorí novú vrstvu polygónov
+
+Creates a new tile layer
+== Vytvorí novú tilovú vrstvu
+
+Current
+== Aktuálne
+
+Current version: %s
+== Aktuálna verzia: %s
+
+Custom colors
+== Vlastné farby
+
+Decrease
+== Znížiť
+
+Decrease animation speed
+== Znížiť rýchlosť animácie
+
+Delete
+== Vymazať
+
+Delete demo
+== Vymazať záznam
+
+Delete group
+== Vymazať skupinu
+
+Delete layer
+== Vymazať vrstvu
+
+Delete this envelope
+== Vymazať túto envelopu
+
+Deletes the current quad
+== Vymaže aktuálny polygón
+
+Deletes the layer
+== Vymaže túto vrstvu
+
+Demos
+== Záznamy
+
+Detail
+== Detail
+
+Disconnect
+== Odpojiť
+
+Disconnected
+== Prerušené spojenie
+
+Display Modes
+== Možnosti zobrazenia
+
+Down
+== Dole
+
+Downloading map
+== Sťahujem mapu
+
+Draw!
+== Remíza!
+
+Dynamic Camera
+== Dynamická kamera
+
+Embed
+== Vložiť do súboru mapy
+
+Embedded
+== Vložené
+
+Embeds the image into the map file.
+== Pridá obrázok do súboru mapy.
+
+Emoticon
+== Smajlíci
+
+Enable/disable group for saving
+== Povoliť/Zakázať uloženie skupiny
+
+Enable/disable layer for saving
+== Povoliť/Zakázať uloženie vrstvy
+
+Enter
+== Vstúpiť
+
+Envelopes
+== Envelopy
+
+Error
+== Chyba
+
+Error loading demo
+== Problém s otvorením záznamu
+
+Exit
+== Ukončiť
+
+Exits from the editor
+== Ukončí editor
+
+External
+== Externé
+
+FSAA samples
+== Anti-aliasing
+
+Favorite
+== Obľúbený
+
+Favorites
+== Obľúbené
+
+Feet
+== Nohy
+
+File
+== Súbor
+
+File: %s
+== Súbor: %s
+
+Filename:
+== Názov:
+
+Filter
+== Filter
+
+Fire
+== Streľba
+
+Folder
+== Zložka
+
+Force vote
+== Zvoliť
+
+Fullscreen
+== Celá obrazovka
+
+Game
+== Hra
+
+Game info
+== Info o hre
+
+Game over
+== Koniec hry
+
+Game type
+== Herný typ
+
+Game types:
+== Herné typy:
+
+General
+== Hlavné
+
+Graphics
+== Grafika
+
+Green value of the envelope
+== Hodnota zelenej v envelope
+
+Grenade
+== Granátomet
+
+Group
+== Skupina
+
+HD
+== HD
+
+Hammer
+== Kladivo
+
+Has people playing
+== Nie je prázdny
+
+Height
+== Výška
+
+High Detail
+== Detaily
+
+Hook
+== Hook/Lano
+
+Host address
+== Hostiteľ
+
+Hue
+== Hue
+
+Image
+== Obrázok
+
+Images
+== Obrázky
+
+Increase
+== Zvýšiť
+
+Increase animation speed
+== Zvýšiť rýchlosť animácie
+
+Info
+== Informácie
+
+Internet
+== Internet
+
+Invalid Demo
+== Neplatný Záznam
+
+Join blue
+== K modrým
+
+Join game
+== Hrať
+
+Join red
+== K červeným
+
+Jump
+== Skok
+
+Kick
+== Vyhodiť
+
+LAN
+== LAN
+
+Language
+== Jazyk
+
+Layers
+== Vrstvy
+
+Left
+== Doľava
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Ľavým tlačítkom myši hýbete. Držte shift pre presun ťažiska. Držte ctrl pre otočenie.
+
+Left mouse button to move. Hold shift to move the texture.
+== Ľavým tlačítkom myši hýbete. Držte shift pre presun textúry.
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Ľavým tlačítkom ťaháte. Držte ctrl pre väčšiu presnosť. Držte shift pre súčasnú zmenu času. Pravým tlačítkom mažete.
+
+Lht.
+== Lht.
+
+Load
+== Otvoriť
+
+Load a new image to use in the map
+== Pridá nový obrázok pre použitie v mape
+
+Load map
+== Otvoriť mapu
+
+Loading
+== Nahrávam
+
+MOTD
+== MOTD
+
+Make collision
+== Vytvoriť kolíziu
+
+Make external
+== Externý obrázok
+
+Map
+== Mapa
+
+Max Screenshots
+== Maximum obrázkov
+
+Max demos
+== Maximum nahrávok
+
+Maximum ping:
+== Maximálny ping:
+
+Miscellaneous
+== Ostatné
+
+Mouse sens.
+== Citlivosť myši
+
+Move left
+== Pohyb vľavo
+
+Move right
+== Pohyb vpravo
+
+Movement
+== Pohyb
+
+Mute when not active
+== Stlmiť pri neaktivite
+
+Name
+== Meno
+
+Name plates size
+== Veľkosť menoviek
+
+Name:
+== Meno:
+
+New
+== Nový
+
+New folder
+== Nový priečinok
+
+News
+== Novinky
+
+Next Envelope
+== Ďalšia Envelopa
+
+Next weapon
+== Ďalšia zbraň
+
+Nickname
+== Prezývka
+
+No
+== Nie
+
+No password
+== Bez hesla
+
+No servers found
+== Nenájdené žiadne servery
+
+No servers match your filter criteria
+== Žiadny server nezodpovedá zadaným kritériám
+
+None
+== Nič
+
+Normal animation speed
+== Normálna rýchlosť animácie
+
+Ok
+== Ok
+
+Open
+== Otvoriť
+
+Opens a map and adds everything from that map to the current one
+== Otvorí mapu a z nej pridá všetko do mapy aktuálnej
+
+Opens a map for editing
+== Otvorí mapu pre editovanie
+
+Order
+== Poradie
+
+Para X
+== Para X
+
+Para Y
+== Para Y
+
+Parent Folder
+== Nadradený Priečinok
+
+Password
+== Heslo
+
+Password incorrect
+== Nesprávne heslo
+
+Ping
+== Ping
+
+Pistol
+== Pištoľ
+
+Play
+== Prehrať
+
+Player
+== Hráč
+
+Players
+== Hráči
+
+Please balance teams!
+== Prosím vyrovnajte týmy!
+
+Pos X
+== Pozícia X
+
+Pos Y
+== Pozícia Y
+
+Pos. Env
+== Pozícia(Env)
+
+Pos. TO
+== Pozícia(TO)
+
+Pos.+
+== Pozícia+
+
+Press right mouse button to create a new point
+== Stlačte pravé tlačítko myši pre vytvorenie nového bodu
+
+Prev. weapon
+== Predošlá zbraň
+
+Previous Envelope
+== Predchádzajúca Envelopa
+
+Proof
+== Kamera
+
+Quads
+== Polygóny
+
+Quality Textures
+== Kvalitné textúry
+
+Quick search:
+== Rýchle hľadanie:
+
+Quit
+== Ukončiť
+
+REC
+== REC
+
+Reason:
+== Dôvod:
+
+Record demo
+== Nahrávať
+
+Red team
+== Červený tým
+
+Red team wins!
+== Červený tým vyhráva!
+
+Red value of the envelope
+== Hodnota červenej v envelope
+
+Refocus
+== Centrovať
+
+Refresh
+== Obnoviť
+
+Refreshing master servers
+== Obnovujem master servery
+
+Remote console
+== Vzdialená konzola
+
+Remove
+== Odstrániť
+
+Removes collision from this layer
+== Vymaže kolíziu z tejto vrstvy
+
+Removes the image from the map
+== Vymaže obrázok z tejto mapy
+
+Removes the image from the map file.
+== Vymaže obrázok zo súboru mapy.
+
+Replace
+== Nahradiť
+
+Replace Image
+== Nahradiť Obrázok
+
+Replaces the image with a new one
+== Nahradí obrázok iným
+
+Reset filter
+== Obnoviť filter
+
+Reset to defaults
+== Vrátiť na pôvodné
+
+Resizes the current Quad based on the aspect ratio of the image
+== Zmení veľkosť polygónu tak, aby mal pomer strán jeho obrázku
+
+Rifle
+== Laser
+
+Right
+== Doprava
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Otočenie štetca v stupňoch. Použite ľavé tlačítko myši pre zmenu hodnoty. Držte shift pre väčšiu presnosť.
+
+Rotation of the envelope
+== Otočenie envelopy
+
+Round
+== Kolo
+
+Sample rate
+== Sample rate
+
+Sat.
+== Sat.
+
+Save
+== Uložiť
+
+Save As
+== Uložiť Ako
+
+Save map
+== Uložiť mapu
+
+Saves the current map
+== Uloží aktuálnu mapu
+
+Saves the current map under a new name
+== Uloží aktuálnu mapu pod novým menom
+
+Score
+== Skóre
+
+Score board
+== Prehľad skóre
+
+Score limit
+== Limit skóre
+
+Scoreboard
+== Prehľad skóre
+
+Screenshot
+== Screenshot
+
+Select group. Right click for properties.
+== Vyberte skupinu. Pravým tlačítkom zobrazíte vlastnosti.
+
+Select image
+== Vyberte obrázok.
+
+Select layer. Right click for properties.
+== Vyberte skupinu. Pravým tlačítkom zobrazíte vlastnosti.
+
+Server details
+== Detaily servera
+
+Server info
+== Informácie
+
+Server not full
+== Nie je plný
+
+Settings
+== Nastavenia
+
+Shift
+== Posun
+
+Shotgun
+== Brokovnica
+
+Show chat
+== Ukázať chat
+
+Show name plates
+== Zobrazovať menovky
+
+Show only supported
+== Zobraziť len podporované
+
+Skins
+== Skiny
+
+Sound
+== Zvuky
+
+Sound error
+== Zvuková chyba
+
+Sound volume
+== Hlasitosť
+
+Spectate
+== Pozorovať
+
+Spectators
+== Diváci
+
+Square
+== Štvorec
+
+Squares the current quad
+== Vytvorí z aktuálneho polygónu štvorec
+
+Standard gametype
+== Štandartný herný typ
+
+Standard map
+== Štandartná mapa
+
+Stop record
+== Nenahrávať
+
+Sudden Death
+== Rýchla Smrť
+
+Switch between images and layers managment.
+== Prepína medzi správou obrázkov a vrstiev.
+
+Switch curve type
+== Zmeniť typ krivky
+
+Switch weapon on pickup
+== Nastavovať zdvíhanú zbraň ako aktuálnu
+
+Team
+== Tým
+
+Team chat
+== Týmový chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Vyšla nová verzia hry: %s! Stiahnite si ju na www.teeworlds.com!
+
+Texture Compression
+== Kompresia textúr
+
+The audio device couldn't be initialised.
+== Zvukové zariadenie nemohlo byť inicializované.
+
+The server is running a non-standard tuning on a pure game type.
+== Na serveri je nastavený neštandartný tuning.
+
+Tiles
+== Tily
+
+Time limit
+== Časový limit
+
+Time limit: %d min
+== Časový limit: %d min
+
+Toggle group visibility
+== Prepnúť viditeľnosť skupiny
+
+Toggle layer visibility
+== Prepnúť viditeľnosť vrstvy
+
+Toggles the envelope editor.
+== Prepne zobrazenie editoru envelop.
+
+Try again
+== Skúsiť znovu
+
+Type
+== Typ
+
+UI Color
+== Farba prostredia
+
+Unable to delete the demo
+== Nemôžem vymazať záznam
+
+Up
+== Hore
+
+Use Clipping
+== Použiť Orezanie
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Ľavým tlačítkom myši a ťahaním meníte hodnotu farby. Držte shift pre väčšiu presnosť.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Ľavým tlačítkom myši a ťahaním meníte hodnotu. Držte shift pre väčšiu presnosť.
+
+Use left mouse button to drag and create a brush.
+== Ľavým tlačítkom myši a ťahaním vytvoríte štetec.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Ľavým tlačítkom myši maľujete so štetcom. Pravým tlačítkom štetec odstránite.
+
+Use sounds
+== Povoliť zvuky
+
+V-Sync
+== V-Sync
+
+Version
+== Verzia
+
+Vote no
+== Hlasovať proti
+
+Vote yes
+== Hlasovať pre
+
+Voting
+== Hlasovanie
+
+Warmup
+== Rozohrávka
+
+Weapon
+== Zbraň
+
+Welcome to Teeworlds
+== Vitajte v hre Teeworlds!
+
+Width
+== Šírka
+
+X-axis of the envelope
+== os X envelopy
+
+Y-axis of the envelope
+== os Y envelopy
+
+Yes
+== Áno
+
+You must restart the game for all settings to take effect.
+== Zmeny sa prejavia po reštartovaní hry.
+
+Your skin
+== Váš skin
+
+ZI
+== ZI
+
+ZO
+== ZO
+
+[HOME] Restore map focus
+== [HOME] Vycentruje ľavý horný roh mapy
+
+[M] Flip brush vertical
+== [M] Prevráti štetec vertikálne
+
+[N] Flip brush horizontal
+== [N] Prevráti štetec horizontálne
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Priblíži/Oddiali na normálnu hodnotu
+
+[NumPad+] Zoom in
+== [NumPad+] Príblíži
+
+[NumPad-] Zoom out
+== [NumPad-] Oddiali
+
+[R] Rotates the brush counter clockwise
+== [R] Otočí štetec proti smeru hodinových ručičiek
+
+[T] Rotates the brush clockwise
+== [T] Otočí štetec po smere hodinových ručičiek
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Prepne zobrazenie vysokých detailov
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Prepne prehrávanie animácií
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Prepne zobrazenie kamery. Jej okraje ukazujú, kam hráč dovidí.
+
+no limit
+== žiadny limit
+
+##### needs translation #####
+
+##### old translations #####
+

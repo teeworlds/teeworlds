@@ -37,6 +37,9 @@ russian
 serbian
 == Srpski
 
+slovak
+== Slovensky
+
 spanish
 == Español
 
