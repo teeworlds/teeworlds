@@ -35,16 +35,16 @@ Add Image
 == Grafik hinzufügen
 
 Add Quad
-== Viere. hinz.
+== Quad hinzuf.
 
 Add group
-== Gruppe hinz.
+== Gruppe hinzuf.
 
 Add quads layer
-== Viereck-Ebene hinzu.
+== Quad-Ebene hinzuf.
 
 Add tile layer
-== Platten-Ebene hinzuf.
+== Tile-Ebene hinzuf.
 
 Address
 == Adresse
@@ -53,7 +53,7 @@ Adds a new group
 == Fügt eine neue Gruppe hinzu
 
 Adds a new quad
-== Fügt ein neues Viereck hinzu
+== Fügt ein neues Quad hinzu
 
 All
 == Alle
@@ -179,7 +179,7 @@ Creates a new pos envelope
 == Erstellt eine neue Positionsanimation
 
 Creates a new quad layer
-== Erstellt eine neue Viereck-Ebene
+== Erstellt eine neue Quad-Ebene
 
 Creates a new tile layer
 == Erstellt eine neue Tile-Ebene
@@ -215,7 +215,7 @@ Delete this envelope
 == Löscht die Animation
 
 Deletes the current quad
-== Entfernt das ausgewählte Viereck
+== Entfernt das ausgewählte Quad
 
 Deletes the layer
 == Entfernt die Ebene
@@ -260,10 +260,10 @@ Emoticon
 == Emoticon
 
 Enable/disable group for saving
-== Aktiviert/deaktiviert die Gruppe beim speichern
+== Aktiviert/deaktiviert die Gruppe beim Speichern
 
 Enable/disable layer for saving
-== Aktiviert/deaktiviert die Ebene beim speichern
+== Aktiviert/deaktiviert die Ebene beim Speichern
 
 Enter
 == Starten
@@ -605,7 +605,7 @@ Proof
 == Testra.
 
 Quads
-== Vier.
+== Quads
 
 Quality Textures
 == Hochauflösende Texturen
@@ -671,7 +671,7 @@ Reset to defaults
 == Standardeinstellung
 
 Resizes the current Quad based on the aspect ratio of the image
-== Ändert die Größe des aktuellen Vierecks basierend auf dem Seitenverhältnis des Bildes
+== Ändert die Größe des aktuellen Quads basierend auf dem Seitenverhältnis des Bildes
 
 Rifle
 == Laser
@@ -782,7 +782,7 @@ Square
 == Quadrat
 
 Squares the current quad
-== Macht das ausgewählte Viereck rechteckig
+== Macht das ausgewählte Quad rechteckig
 
 Standard gametype
 == Standard-Spieltyp
@@ -824,7 +824,7 @@ The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
 Tiles
-== Plat.
+== Tiles
 
 Time limit
 == Zeitlimit
