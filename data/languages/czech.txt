@@ -124,8 +124,8 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Zrušit kolizi
+Clear
+== Vymazat
 
 Clip H
 == Ořez výšky
@@ -141,6 +141,9 @@ Clip Y
 
 Close
 == Zavřít
+
+Collision
+== Kolize
 
 Color
 == Barva
@@ -169,8 +172,8 @@ Connection Problems...
 Console
 == Konzola
 
-Constructs collision from this layer
-== Vytvoří vrtsvu kolizí na základě této vrstvy
+Constructs game tiles from this layer
+== Sestavit herní hlaždice z této vrstvy
 
 Controls
 == Ovládání
@@ -198,6 +201,9 @@ Current version: %s
 
 Custom colors
 == Vlastní barvy
+
+Death
+== Smrt
 
 Decrease
 == Snížit
@@ -337,6 +343,9 @@ Game info
 Game over
 == Ukončit hru
 
+Game tiles
+== Herní dlaždice
+
 Game type
 == Herní mód
 
@@ -456,9 +465,6 @@ Loading
 
 MOTD
 == MOTD
-
-Make collision
-== Vytvořit kolize
 
 Make external
 == Vyjmout z mapy
@@ -657,9 +663,6 @@ Remote console
 
 Remove
 == Odstranit
-
-Removes collision from this layer
-== Odstraní kolize z této vrstvy
 
 Removes the image from the map
 == Odstraní obrázek z mapy
@@ -865,6 +868,9 @@ UI Color
 Unable to delete the demo
 == Demo se nepodařilo smazat
 
+Unhookable
+== Nechytitelné
+
 Up
 == Nahoru
 
@@ -908,7 +914,7 @@ Weapon
 == Zbraně
 
 Welcome to Teeworlds
-== Vítejte v Teeworls
+== Vítejte v Teeworlds
 
 Width
 == Šířka
@@ -973,4 +979,16 @@ no limit
 ##### needs translation #####
 
 ##### old translations #####
+
+Removes collision from this layer
+== Odstraní kolize z této vrstvy
+
+Constructs collision from this layer
+== Vytvoří vrtsvu kolizí na základě této vrstvy
+
+Clear collision
+== Zrušit kolizi
+
+Make collision
+== Vytvořit kolize
 

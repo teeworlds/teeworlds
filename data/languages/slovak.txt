@@ -124,9 +124,6 @@ Cancel
 Chat
 == Chat
 
-Clear collision
-== Vymazať kolíziu
-
 Clip H
 == Orez. Výšky
 
@@ -168,9 +165,6 @@ Connection Problems...
 
 Console
 == Konzola
-
-Constructs collision from this layer
-== Vytvorí kolíziu z tejto vrstvy
 
 Controls
 == Ovládanie
@@ -457,9 +451,6 @@ Loading
 MOTD
 == MOTD
 
-Make collision
-== Vytvoriť kolíziu
-
 Make external
 == Externý obrázok
 
@@ -657,9 +648,6 @@ Remote console
 
 Remove
 == Odstrániť
-
-Removes collision from this layer
-== Vymaže kolíziu z tejto vrstvy
 
 Removes the image from the map
 == Vymaže obrázok z tejto mapy
@@ -972,5 +960,35 @@ no limit
 
 ##### needs translation #####
 
+Clear
+== 
+
+Collision
+== 
+
+Constructs game tiles from this layer
+== 
+
+Death
+== 
+
+Game tiles
+== 
+
+Unhookable
+== 
+
 ##### old translations #####
+
+Removes collision from this layer
+== Vymaže kolíziu z tejto vrstvy
+
+Constructs collision from this layer
+== Vytvorí kolíziu z tejto vrstvy
+
+Clear collision
+== Vymazať kolíziu
+
+Make collision
+== Vytvoriť kolíziu
 
