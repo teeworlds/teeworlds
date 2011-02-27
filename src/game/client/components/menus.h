@@ -124,6 +124,10 @@ class CMenus : public CComponent
 	vec2 m_MousePos;
 	
 	int64 m_LastInput;
+
+	// loading
+	int m_LoadCurrent;
+	int m_LoadTotal;
 	
 	//
 	char m_aMessageTopic[512];
@@ -234,7 +238,7 @@ public:
 	
 	CMenus();
 
-	void RenderLoading(float Percent);
+	void RenderLoading();
 
 	bool IsActive() const { return m_MenuActive; }
 

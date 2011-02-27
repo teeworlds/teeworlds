@@ -31,6 +31,7 @@ class CGameClient : public IGameClient
 	CStack m_Input;
 	CNetObjHandler m_NetObjHandler;
 	
+	class IEngine *m_pEngine;
 	class IInput *m_pInput;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
@@ -62,6 +63,7 @@ class CGameClient : public IGameClient
 	
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
+	IEngine *Engine() const { return m_pEngine; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IClient *Client() const { return m_pClient; }
 	class CUI *UI() { return &m_UI; }

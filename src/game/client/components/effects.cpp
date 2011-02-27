@@ -1,6 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/demo.h>
+#include <engine/engine.h>
+
 #include <engine/shared/config.h>
 
 #include <game/generated/client_data.h>

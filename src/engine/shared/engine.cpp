@@ -49,7 +49,7 @@ public:
 		net_init();
 		CNetBase::Init();
 	
-		m_HostLookupPool.Init(1);
+		m_JobPool.Init(1);
 
 		//MACRO_REGISTER_COMMAND("dbg_dumpmem", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_dumpmem, 0x0, "Dump the memory");
 		//MACRO_REGISTER_COMMAND("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_lognetwork, 0x0, "Log the network");
@@ -65,7 +65,14 @@ public:
 	void HostLookup(CHostLookup *pLookup, const char *pHostname)
 	{
 		str_copy(pLookup->m_aHostname, pHostname, sizeof(pLookup->m_aHostname));
-		m_HostLookupPool.Add(&pLookup->m_Job, HostLookupThread, pLookup);
+		AddJob(&pLookup->m_Job, HostLookupThread, pLookup);
+	}
+
+	void AddJob(CJob *pJob, JOBFUNC pfnFunc, void *pData)
+	{
+		if(g_Config.m_Debug)
+			dbg_msg("engine", "job added");
+		m_JobPool.Add(pJob, pfnFunc, pData);
 	}
 };
 

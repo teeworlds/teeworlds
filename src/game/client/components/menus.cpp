@@ -593,9 +593,10 @@ int CMenus::RenderMenubar(CUIRect r)
 	return 0;
 }
 
-void CMenus::RenderLoading(float Percent)
+void CMenus::RenderLoading()
 {
 	static int64 LastLoadRender = 0;
+	float Percent = m_LoadCurrent++/(float)m_LoadTotal;
 
 	// make sure that we don't render for each little thing we load
 	// because that will slow down loading if we have vsync
@@ -704,6 +705,12 @@ void CMenus::OnInit()
 	g_Config.m_ClShowWelcome = 0;
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
+
+	// setup load amount
+	m_LoadCurrent = 0;
+	m_LoadTotal = g_pData->m_NumImages;
+	if(!g_Config.m_ClThreadsoundloading)
+		m_LoadTotal += g_pData->m_NumSounds;
 }
 
 void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton)

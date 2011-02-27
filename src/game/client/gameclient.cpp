@@ -1,11 +1,12 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/engine.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
-#include <engine/sound.h>
 #include <engine/demo.h>
 #include <engine/map.h>
 #include <engine/storage.h>
+#include <engine/sound.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
@@ -80,33 +81,13 @@ static CMapLayers gs_MapLayersForeGround(CMapLayers::TYPE_FOREGROUND);
 CGameClient::CStack::CStack() { m_Num = 0; }
 void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_Num++] = pComponent; }
 
-static int gs_LoadCurrent;
-static int gs_LoadTotal;
-
-/*static void load_sounds_thread(void *do_render)
-{
-	// load sounds
-	for(int s = 0; s < data->num_sounds; s++)
-	{
-		if(do_render)
-			gameclient.menus->render_loading(load_current/(float)load_total);
-		for(int i = 0; i < data->sounds[s].num_sounds; i++)
-		{
-			int id = Sound()->LoadWV(data->sounds[s].sounds[i].filename);
-			data->sounds[s].sounds[i].id = id;
-		}
-
-		if(do_render)
-			load_current++;
-	}
-}*/
-
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
 const char *CGameClient::GetItemName(int Type) { return m_NetObjHandler.GetObjName(Type); }
 
 void CGameClient::OnConsoleInit()
 {
+	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
@@ -227,15 +208,12 @@ void CGameClient::OnInit()
 
 	// set the language
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
-	
-	// init all components
-	for(int i = 0; i < m_All.m_Num; i++)
-		m_All.m_paComponents[i]->OnInit();
-	
+
+	// TODO: this should be different
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
-	
+
 	// load default font	
 	static CFont *pDefaultFont = 0;
 	char aFilename[512];
@@ -248,46 +226,17 @@ void CGameClient::OnInit()
 	}
 	if(!pDefaultFont)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load font. filename='fonts/DejaVuSans.ttf'");
-
-	g_Config.m_ClThreadsoundloading = 0;
-
-	// setup load amount
-	gs_LoadTotal = g_pData->m_NumImages;
-	gs_LoadCurrent = 0;
-	if(!g_Config.m_ClThreadsoundloading)
-		gs_LoadTotal += g_pData->m_NumSounds;
 	
-	// load textures
+	// init all components
+	for(int i = m_All.m_Num-1; i >= 0; --i)
+		m_All.m_paComponents[i]->OnInit();
+
+	// setup load amount// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
-		g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/(float)gs_LoadTotal);
 		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-		gs_LoadCurrent++;
+		g_GameClient.m_pMenus->RenderLoading();
 	}
-
-	// TODO: Refactor: fix threaded loading of sounds again
-	// load sounds
-	{
-		bool DoRender = true;
-		for(int s = 0; s < g_pData->m_NumSounds; s++)
-		{
-			if(DoRender)
-				g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/(float)gs_LoadTotal);
-			for(int i = 0; i < g_pData->m_aSounds[s].m_NumSounds; i++)
-			{
-				int Id = Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
-				g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
-			}
-
-			if(DoRender)
-				gs_LoadCurrent++;
-		}
-	}
-		
-	/*if(config.cl_threadsoundloading)
-		thread_create(load_sounds_thread, 0);
-	else
-		load_sounds_thread((void*)1);*/
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();

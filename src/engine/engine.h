@@ -19,11 +19,12 @@ class IEngine : public IInterface
 	MACRO_INTERFACE("engine", 0)
 
 protected:
-	class CJobPool m_HostLookupPool;
+	class CJobPool m_JobPool;
 
 public:
 	virtual void InitLogfile() = 0;
 	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname) = 0;
+	virtual void AddJob(CJob *pJob, JOBFUNC pfnFunc, void *pData) = 0;
 };
 
 extern IEngine *CreateEngine(const char *pAppname);
