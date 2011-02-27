@@ -21,14 +21,13 @@
 #include <base/system.h>
 #include <engine/external/pnglite/pnglite.h>
 
-#include <engine/shared/engine.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/keys.h>
 #include <engine/console.h>
 
-#include <math.h>
+#include <math.h> // cosf, sinf
 
 #include "graphics.h"
 

@@ -15,7 +15,7 @@ public:
 		MAX_MASTERSERVERS=4
 	};
 
-	virtual void Init(class CEngine *pEngine) = 0;
+	virtual void Init() = 0;
 	virtual void SetDefault() = 0;
 	virtual int Load() = 0;
 	virtual int Save() = 0;

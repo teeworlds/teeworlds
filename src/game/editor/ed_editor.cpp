@@ -5,7 +5,6 @@
 
 #include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
-#include <engine/shared/engine.h>
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>

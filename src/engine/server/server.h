@@ -48,7 +48,6 @@ public:
 	class IGameServer *GameServer() { return m_pGameServer; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
-	class CEngine *Engine() { return &m_Engine; }
 
 	class CClient
 	{
@@ -120,7 +119,6 @@ public:
 	int m_CurrentMapSize;	
 	
 	CDemoRecorder m_DemoRecorder;
-	CEngine m_Engine;
 	CRegister m_Register;
 	
 	CServer();
@@ -172,7 +170,6 @@ public:
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void InitEngine(const char *pAppname);
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 

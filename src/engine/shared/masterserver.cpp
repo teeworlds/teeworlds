@@ -3,9 +3,11 @@
 #include <stdio.h>	// sscanf
 
 #include <base/system.h>
+
+#include <engine/engine.h>
 #include <engine/masterserver.h>
 #include <engine/storage.h>
-#include "engine.h"
+
 #include "linereader.h"
 
 class CMasterServer : public IEngineMasterServer
@@ -22,7 +24,8 @@ public:
 
 	CMasterInfo m_aMasterServers[MAX_MASTERSERVERS];
 	int m_NeedsUpdate;
-	CEngine *m_pEngine;
+	IEngine *m_pEngine;
+	IStorage *m_pStorage;
 	
 	CMasterServer()
 	{
@@ -98,9 +101,10 @@ public:
 		}
 	}
 
-	virtual void Init(class CEngine *pEngine)
+	virtual void Init()
 	{
-		m_pEngine = pEngine;
+		m_pEngine = Kernel()->RequestInterface<IEngine>();
+		m_pStorage = Kernel()->RequestInterface<IStorage>();
 	}
 
 	virtual void SetDefault()
@@ -115,12 +119,11 @@ public:
 		CLineReader LineReader;
 		IOHANDLE File;
 		int Count = 0;
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-		if(!pStorage)
+		if(!m_pStorage)
 			return -1;
 		
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
+		File = m_pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 		
@@ -161,12 +164,11 @@ public:
 	{
 		IOHANDLE File;
 
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-		if(!pStorage)
+		if(!m_pStorage)
 			return -1;
 			
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		File = m_pStorage->OpenFile("masters.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 

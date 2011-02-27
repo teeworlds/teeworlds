@@ -6,29 +6,42 @@
 
 #include <base/math.h>
 #include <base/system.h>
-#include <engine/shared/engine.h>
 
-#include <engine/shared/protocol.h>
-#include <engine/shared/snapshot.h>
-#include <engine/shared/compression.h>
-#include <engine/shared/network.h>
+#include <engine/client.h>
+#include <engine/config.h>
+#include <engine/console.h>
+#include <engine/editor.h>
+#include <engine/engine.h>
+#include <engine/graphics.h>
+#include <engine/input.h>
+#include <engine/keys.h>
+#include <engine/map.h>
+#include <engine/masterserver.h>
+#include <engine/serverbrowser.h>
+#include <engine/sound.h>
+#include <engine/storage.h>
+#include <engine/textrender.h>
+
 #include <engine/shared/config.h>
-#include <engine/shared/packer.h>
-#include <engine/shared/memheap.h>
+#include <engine/shared/compression.h>
 #include <engine/shared/datafile.h>
-#include <engine/shared/ringbuffer.h>
-#include <engine/shared/protocol.h>
-
 #include <engine/shared/demo.h>
+#include <engine/shared/memheap.h>
+#include <engine/shared/network.h>
+#include <engine/shared/packer.h>
+#include <engine/shared/protocol.h>
+#include <engine/shared/ringbuffer.h>
+#include <engine/shared/snapshot.h>
 
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include "srvbrowse.h"
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
-	#define _WIN32_WINNT 0x0500
-	#define NOGDI
+	#define _WIN32_WINNT 0x0501
+	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 #endif
 
@@ -1748,7 +1761,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == 0)
 	{
-		m_Engine.HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer);
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer);
 		m_VersionInfo.m_State++;
 	}
 	else if(m_VersionInfo.m_State == 1)
@@ -1773,11 +1786,6 @@ void CClient::VersionUpdate()
 	}
 }
 
-void CClient::InitEngine(const char *pAppname)
-{
-	m_Engine.Init(pAppname);
-}
-
 void CClient::RegisterInterfaces()
 {
 	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
@@ -1788,6 +1796,7 @@ void CClient::RegisterInterfaces()
 void CClient::InitInterfaces()
 {
 	// fetch interfaces
+	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
@@ -2280,15 +2289,12 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 #endif
 
-	// init the engine
-	dbg_msg("client", "starting...");
-	m_Client.InitEngine("Teeworlds");
-
 	IKernel *pKernel = IKernel::Create();
 	pKernel->RegisterInterface(&m_Client);
 	m_Client.RegisterInterfaces();
 
 	// create the components
+	IEngine *pEngine = CreateEngine("Teeworlds");
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
@@ -2302,8 +2308,9 @@ int main(int argc, const char **argv) // ignore_convention
 	{
 		bool RegisterFail = false;
 
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IConsole*>(pConsole));
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IConfig*>(pConfig));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineGraphics*>(pEngineGraphics)); // register graphics as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IGraphics*>(pEngineGraphics));
@@ -2332,7 +2339,7 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 
 	pConfig->Init();
-	pEngineMasterServer->Init(m_Client.Engine());
+	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
 
 	// register all console commands
@@ -2359,6 +2366,7 @@ int main(int argc, const char **argv) // ignore_convention
 	m_Client.Engine()->InitLogfile();
 
 	// run the client
+	dbg_msg("client", "starting...");
 	m_Client.Run();
 
 	// write down the config and quit

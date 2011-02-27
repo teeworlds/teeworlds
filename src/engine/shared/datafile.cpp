@@ -4,7 +4,6 @@
 #include <base/system.h>
 #include <engine/storage.h>
 #include "datafile.h"
-#include "engine.h"
 #include <zlib.h>
 
 static const int DEBUG=0;

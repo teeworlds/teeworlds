@@ -3,7 +3,6 @@
 #include <base/system.h>
 #include <engine/shared/network.h>
 #include <engine/shared/config.h>
-#include <engine/shared/engine.h>
 #include <engine/console.h>
 #include <engine/masterserver.h>
 
