@@ -8,7 +8,6 @@
 #include <engine/shared/protocol.h>
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
-#include <engine/shared/engine.h>
 
 #include <engine/masterserver.h>
 #include <engine/console.h>

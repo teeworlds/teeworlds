@@ -6,7 +6,6 @@
 #include <engine/storage.h>
 #include "console.h"
 #include "config.h"
-#include "engine.h"
 #include "linereader.h"
 
 const char *CConsole::CResult::GetString(unsigned Index)
