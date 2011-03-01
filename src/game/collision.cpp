@@ -75,7 +75,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		if(CheckPoint(Pos.x, Pos.y) || CheckPoint(Last.x, Pos.y) || CheckPoint(Pos.x, Last.y))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;

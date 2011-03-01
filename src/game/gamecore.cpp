@@ -139,7 +139,7 @@ void CCharacterCore::Tick(bool UseInput)
 			if(m_HookState == HOOK_IDLE)
 			{
 				m_HookState = HOOK_FLYING;
-				m_HookPos = m_Pos+TargetDirection*PhysSize*1.5f;
+				m_HookPos = m_Pos+TargetDirection*PhysSize*0.5f;
 				m_HookDir = TargetDirection;
 				m_HookedPlayer = -1;
 				m_HookTick = 0;
@@ -197,7 +197,7 @@ void CCharacterCore::Tick(bool UseInput)
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
-		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
+		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, 0, &NewPos);
 		if(Hit)
 		{
 			if(Hit&CCollision::COLFLAG_NOHOOK)
