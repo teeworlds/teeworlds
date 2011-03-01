@@ -99,8 +99,13 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pPlayerInfo)
 		return;
 
-	pPlayerInfo->m_Latency = m_Latency.m_Min;
-	pPlayerInfo->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
+	// update latency value
+	if(SnappingClient != -1 && m_Team != -1 && GameServer()->m_apPlayers[SnappingClient]->m_PlayerFlags&PLAYERFLAG_SCOREBOARD)
+	{
+		GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID] = m_Latency.m_Min;
+	}
+
+	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
 	pPlayerInfo->m_Score = m_Score;
@@ -133,6 +138,8 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
+	m_PlayerFlags = NewInput->m_PlayerFlags;
+
 	if(Character)
 		Character->OnDirectInput(NewInput);
 

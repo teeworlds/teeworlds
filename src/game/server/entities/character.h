@@ -120,8 +120,6 @@ private:
 		
 	} m_Ninja;
 
-	int m_PlayerState;// if the client is chatting, accessing a menu or so
-
 	// the player core for the physics	
 	CCharacterCore m_Core;
 	

@@ -37,6 +37,12 @@ public:
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;
+
+	// states if the client is chatting, accessing a menu etc.
+	int m_PlayerFlags;
+
+	// used for snapping to just update latency if the scoreboard is active
+	int m_aActLatency[MAX_CLIENTS];
 	
 	//
 	int m_Vote;
