@@ -331,6 +331,16 @@ void CCharacterCore::Tick(bool UseInput)
 				m_Vel *= 0.85f;
 			}
 			
+			// anticipate player collision
+			if(normalize(m_Vel) == normalize(pCharCore->m_Pos-m_Pos))
+			{
+				while(length(m_Vel) >= Distance)
+				{
+					m_Vel.x /= 2.0f;
+					m_Vel.y /= 2.0f;
+				}
+			}
+			
 			// handle hook influence
 			if(m_HookedPlayer == i)
 			{
