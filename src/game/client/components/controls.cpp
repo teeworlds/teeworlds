@@ -9,6 +9,7 @@
 #include <game/client/component.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/scoreboard.h>
 
 #include "controls.h"
 
@@ -112,19 +113,22 @@ int CControls::SnapInput(int *pData)
 	
 	// update player state
 	if(m_pClient->m_pChat->IsActive())
-		m_InputData.m_PlayerState = PLAYERSTATE_CHATTING;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_CHATTING;
 	else if(m_pClient->m_pMenus->IsActive())
-		m_InputData.m_PlayerState = PLAYERSTATE_IN_MENU;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_IN_MENU;
 	else
-		m_InputData.m_PlayerState = PLAYERSTATE_PLAYING;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_PLAYING;
 	
-	if(m_LastData.m_PlayerState != m_InputData.m_PlayerState)
+	if(m_pClient->m_pScoreboard->Active())
+		m_InputData.m_PlayerFlags |= PLAYERFLAG_SCOREBOARD;
+
+	if(m_LastData.m_PlayerFlags != m_InputData.m_PlayerFlags)
 		Send = true;
 		
-	m_LastData.m_PlayerState = m_InputData.m_PlayerState;
+	m_LastData.m_PlayerFlags = m_InputData.m_PlayerFlags;
 	
 	// we freeze the input if chat or menu is activated
-	if(m_InputData.m_PlayerState != PLAYERSTATE_PLAYING)
+	if(!(m_InputData.m_PlayerFlags&PLAYERFLAG_PLAYING))
 	{
 		OnReset();
 			
@@ -172,7 +176,6 @@ int CControls::SnapInput(int *pData)
 		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;
 		else if(m_InputData.m_Fire != m_LastData.m_Fire) Send = true;
 		else if(m_InputData.m_Hook != m_LastData.m_Hook) Send = true;
-		else if(m_InputData.m_PlayerState != m_LastData.m_PlayerState) Send = true;
 		else if(m_InputData.m_WantedWeapon != m_LastData.m_WantedWeapon) Send = true;
 		else if(m_InputData.m_NextWeapon != m_LastData.m_NextWeapon) Send = true;
 		else if(m_InputData.m_PrevWeapon != m_LastData.m_PrevWeapon) Send = true;

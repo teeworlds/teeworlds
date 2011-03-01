@@ -1,7 +1,7 @@
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
-PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
+PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD"]
 GameFlags = ["TEAMS", "FLAGS"]
 
 Emoticons = [str(x) for x in range(0,16)]
@@ -31,13 +31,13 @@ RawSource = '''
 '''
 
 Enums = [
-	Enum("PLAYERSTATE", PlayerStates),
 	Enum("EMOTE", Emotes),
 	Enum("POWERUP", Powerups),
 	Enum("EMOTICON", Emoticons)
 ]
 
 Flags = [
+	Enum("PLAYERFLAG", PlayerFlags),
 	Flags("GAMEFLAG", GameFlags)
 ]
 
@@ -52,7 +52,7 @@ Objects = [
 		NetIntAny("m_Fire"),
 		NetIntAny("m_Hook"),
 		
-		NetIntRange("m_PlayerState", 0, len(PlayerStates)),
+		NetIntRange("m_PlayerFlags", 0, 256),
 		
 		NetIntAny("m_WantedWeapon"),
 		NetIntAny("m_NextWeapon"),
@@ -136,7 +136,7 @@ Objects = [
 	]),
 
 	NetObject("Character:CharacterCore", [
-		NetIntRange("m_PlayerState", 0, 'NUM_PLAYERSTATES-1'),
+		NetIntRange("m_PlayerFlags", 0, 256),
 		NetIntRange("m_Health", 0, 10),
 		NetIntRange("m_Armor", 0, 10),
 		NetIntRange("m_AmmoCount", 0, 10),
@@ -152,7 +152,6 @@ Objects = [
 
 		NetIntAny("m_Score"),
 		NetIntAny("m_Latency"),
-		NetIntAny("m_LatencyFlux"),
 	]),
 
 	NetObject("ClientInfo", [
