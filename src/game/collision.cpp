@@ -81,7 +81,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+			return GetCollisionAt(Pos.x, Pos.y)|GetCollisionAt(Last.x, Pos.y)|GetCollisionAt(Pos.x, Last.y);
 		}
 		Last = Pos;
 	}
