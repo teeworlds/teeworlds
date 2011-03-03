@@ -110,6 +110,7 @@ nethash = CHash("src/game/generated/nethash.c", "src/engine/shared/protocol.h", 
 
 client_link_other = {}
 client_depends = {}
+server_link_other = {}
 
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib\\freetype.dll"))
@@ -117,8 +118,10 @@ if family == "windows" then
 
 	if config.compiler.driver == "cl" then
 		client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
+		server_link_other = {ResCompile("other/icons/teeworlds_srv_cl.rc")}
 	elseif config.compiler.driver == "gcc" then
 		client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+		server_link_other = {ResCompile("other/icons/teeworlds_srv_gcc.rc")}
 	end
 end
 
@@ -240,7 +243,7 @@ function build(settings)
 		client_link_other, client_osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
-		game_shared, game_server, zlib)
+		game_shared, game_server, zlib, server_link_other)
 
 	serverlaunch = {}
 	if platform == "macosx" then
