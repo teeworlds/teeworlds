@@ -110,7 +110,9 @@ public:
 		const CNetObj_Character *m_pLocalPrevCharacter;
 		const CNetObj_PlayerInfo *m_pLocalInfo;
 		const CNetObj_Flag *m_paFlags[2];
-		const CNetObj_Game *m_pGameobj;
+		const CNetObj_GameInfo *m_pGameInfoObj;
+		const CNetObj_GameData *m_pGameDataObj;
+		int m_GameDataSnapID;
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfo *m_paInfoByScore[MAX_CLIENTS];

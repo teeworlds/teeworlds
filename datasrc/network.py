@@ -3,6 +3,7 @@ from datatypes import *
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD"]
 GameFlags = ["TEAMS", "FLAGS"]
+GameStateFlags = ["GAMEOVER", "SUDDENDEATH", "PAUSED"]
 
 Emoticons = [str(x) for x in range(0,16)]
 
@@ -21,7 +22,10 @@ enum
 {
 	TEAM_SPECTATORS=-1,
 	TEAM_RED,
-	TEAM_BLUE
+	TEAM_BLUE,
+
+	FLAG_ATSTAND=-2,
+	FLAG_TAKEN,
 };
 '''
 
@@ -37,8 +41,9 @@ Enums = [
 ]
 
 Flags = [
-	Enum("PLAYERFLAG", PlayerFlags),
-	Flags("GAMEFLAG", GameFlags)
+	Flags("PLAYERFLAG", PlayerFlags),
+	Flags("GAMEFLAG", GameFlags),
+	Flags("GAMESTATEFLAG", GameStateFlags)
 ]
 
 Objects = [
@@ -90,28 +95,28 @@ Objects = [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 		
-		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
-		NetIntRange("m_CarriedBy", -2, 'MAX_CLIENTS-1')
+		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE')
 	]),
 
-	NetObject("Game", [
-		NetIntRange("m_Flags", 0, 256),
+	NetObject("GameInfo", [
+		NetIntRange("m_GameFlags", 0, 256),
+		NetIntRange("m_GameStateFlags", 0, 256),
 		NetTick("m_RoundStartTick"),
-		
-		NetIntRange("m_GameOver", 0, 1),
-		NetIntRange("m_SuddenDeath", 0, 1),
-		NetIntRange("m_Paused", 0, 1),
+		NetIntRange("m_WarmupTimer", 0, 'max_int'),
 		
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 		
-		NetIntRange("m_Warmup", 0, 'max_int'),
-		
 		NetIntRange("m_RoundNum", 0, 'max_int'),
 		NetIntRange("m_RoundCurrent", 0, 'max_int'),
+	]),
 
+	NetObject("GameData", [
 		NetIntAny("m_TeamscoreRed"),
 		NetIntAny("m_TeamscoreBlue"),
+
+		NetIntRange("m_FlagCarrierRed", 'FLAG_ATSTAND', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierBlue", 'FLAG_ATSTAND', 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("CharacterCore", [

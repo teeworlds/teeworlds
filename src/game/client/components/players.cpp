@@ -99,8 +99,8 @@ void CPlayers::RenderHook(
 
 	// check for teamplay modes
 	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameobj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 
 	// check for ninja	
 	if (Player.m_Weapon == WEAPON_NINJA)
@@ -129,7 +129,7 @@ void CPlayers::RenderHook(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
 		}
 		else
@@ -223,8 +223,8 @@ void CPlayers::RenderPlayer(
 	// check for teamplay modes
 	bool IsTeamplay = false;
 	bool NewTick = m_pClient->m_NewTick;
-	if(m_pClient->m_Snap.m_pGameobj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 
 	// check for ninja	
 	if (Player.m_Weapon == WEAPON_NINJA)
@@ -284,7 +284,7 @@ void CPlayers::RenderPlayer(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
 		}
 		else

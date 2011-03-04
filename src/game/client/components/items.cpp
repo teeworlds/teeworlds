@@ -152,7 +152,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Graphics()->QuadsEnd();
 }
 
-void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
+void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameData *pPrevGameData, const CNetObj_GameData *pCurGameData)
 {
 	float Angle = 0.0f;
 	float Size = 42.0f;
@@ -170,13 +170,20 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
-	// make sure that the flag isn't interpolated between capture and return
-	if(pPrev->m_CarriedBy != pCurrent->m_CarriedBy)
-		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+	if(pCurGameData)
+	{
+		// make sure that the flag isn't interpolated between capture and return
+		if(pPrevGameData &&
+			((pCurrent->m_Team == TEAM_RED && pPrevGameData->m_FlagCarrierRed != pCurGameData->m_FlagCarrierRed) ||
+			(pCurrent->m_Team == TEAM_BLUE && pPrevGameData->m_FlagCarrierBlue != pCurGameData->m_FlagCarrierBlue)))
+			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
-	// make sure to use predicted position if we are the carrier
-	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
-		Pos = m_pClient->m_LocalCharacterPos;
+		// make sure to use predicted position if we are the carrier
+		if(m_pClient->m_Snap.m_pLocalInfo &&
+			((pCurrent->m_Team == TEAM_RED && pCurGameData->m_FlagCarrierRed == m_pClient->m_Snap.m_LocalClientID) ||
+			(pCurrent->m_Team == TEAM_BLUE && pCurGameData->m_FlagCarrierBlue == m_pClient->m_Snap.m_LocalClientID)))
+			Pos = m_pClient->m_LocalCharacterPos;
+	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -286,7 +293,11 @@ void CItems::OnRender()
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if (pPrev)
-				RenderFlag((const CNetObj_Flag *)pPrev, (const CNetObj_Flag *)pData);
+			{
+				const void *pPrevGameData =  Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATA, m_pClient->m_Snap.m_GameDataSnapID);
+				RenderFlag(static_cast<const CNetObj_Flag *>(pPrev), static_cast<const CNetObj_Flag *>(pData),
+							static_cast<const CNetObj_GameData *>(pPrevGameData), m_pClient->m_Snap.m_pGameDataObj);
+			}
 		}
 	}
 

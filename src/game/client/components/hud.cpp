@@ -32,25 +32,25 @@ void CHud::RenderGameTimer()
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
 	Graphics()->MapScreen(0, 0, 300.0f*Graphics()->ScreenAspect(), 300.0f);
 	
-	if(!m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
+	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH))
 	{
 		char Buf[32];
 		int Time = 0;
-		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
 		{
-			Time = m_pClient->m_Snap.m_pGameobj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed());
+			Time = m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed());
 
-			if(m_pClient->m_Snap.m_pGameobj->m_GameOver)
+			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 				Time  = 0;
 		}
 		else
-			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed();
+			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed();
 
 		str_format(Buf, sizeof(Buf), "%d:%02d", Time/60, Time%60);
 		float FontSize = 10.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Buf, -1);
 		// last 60 sec red, last 10 sec blink
-		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit && Time <= 60)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60)
 		{
 			float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
 			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
@@ -62,7 +62,7 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderSuddenDeath()
 {
-	if(m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
 	{
 		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
 		const char *pText = Localize("Sudden Death");
@@ -75,17 +75,18 @@ void CHud::RenderSuddenDeath()
 void CHud::RenderScoreHud()
 {	
 	// render small score hud
-	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 	{
-		int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
+		int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 		float Whole = 300*Graphics()->ScreenAspect();
 
-		if(GameFlags&GAMEFLAG_TEAMS)
+		if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataObj)
 		{
 			char aScoreTeam[2][32];
-			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
-			float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
+			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed);
+			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue);
+			float aScoreTeamWidth[2] = { TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1) };
+			int FlagCarrier[2] = { m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed, m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue };
 			float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 			float Split = 3.0f;
 			float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
@@ -106,9 +107,9 @@ void CHud::RenderScoreHud()
 				// draw score
 				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreTeamWidth[t])/2-Split, 245.0f+t*20, 14.0f, aScoreTeam[t], -1);
 
-				if(GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_paFlags[t])
+				if(GameFlags&GAMEFLAG_FLAGS)
 				{
-					if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
+					if(FlagCarrier[t] == FLAG_ATSTAND || (FlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick()/10)&1)))
 					{
 						// draw flag
 						Graphics()->BlendNormal();
@@ -119,10 +120,10 @@ void CHud::RenderScoreHud()
 						Graphics()->QuadsDrawTL(&QuadItem, 1);
 						Graphics()->QuadsEnd();
 					}
-					else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
+					else if(FlagCarrier[t] >= 0)
 					{
 						// draw name of the flag holder
-						int ID = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
+						int ID = FlagCarrier[t]%MAX_CLIENTS;
 						const char *pName = m_pClient->m_aClients[ID].m_aName;
 						float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
 						TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
@@ -216,16 +217,16 @@ void CHud::RenderScoreHud()
 void CHud::RenderWarmupTimer()
 {
 	// render warmup timer
-	if(m_pClient->m_Snap.m_pGameobj->m_Warmup)
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
 	{
 		char Buf[256];
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Localize("Warmup"), -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, Localize("Warmup"), -1);
 
-		int Seconds = m_pClient->m_Snap.m_pGameobj->m_Warmup/SERVER_TICK_SPEED;
+		int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer/SERVER_TICK_SPEED;
 		if(Seconds < 5)
-			str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameobj->m_Warmup*10/SERVER_TICK_SPEED)%10);
+			str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer*10/SERVER_TICK_SPEED)%10);
 		else
 			str_format(Buf, sizeof(Buf), "%d", Seconds);
 		w = TextRender()->TextWidth(0, FontSize, Buf, -1);
@@ -268,7 +269,7 @@ void CHud::RenderTeambalanceWarning()
 {
 	// render prompt about team-balance
 	bool Flash = time_get()/(time_freq()/2)%2 == 0;
-	if (m_pClient->m_Snap.m_pGameobj && (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0)
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 	{	
 		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[TEAM_RED]-m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE];
 		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
@@ -395,7 +396,7 @@ void CHud::RenderHealthAndAmmo()
 
 void CHud::OnRender()
 {
-	if(!m_pClient->m_Snap.m_pGameobj)
+	if(!m_pClient->m_Snap.m_pGameInfoObj)
 		return;
 		
 	m_Width = 300*Graphics()->ScreenAspect();
@@ -404,7 +405,7 @@ void CHud::OnRender()
 	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
 		Spectate = true;
 	
-	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		RenderHealthAndAmmo();
 
 	RenderGameTimer();

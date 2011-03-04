@@ -235,7 +235,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
 				m_aLines[m_CurrentLine].m_NameColor = TEAM_SPECTATORS;
 
-			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
+			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 			{
 				if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_RED;
