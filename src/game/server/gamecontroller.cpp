@@ -571,37 +571,26 @@ bool IGameController::IsTeamplay() const
 
 void IGameController::Snap(int SnappingClient)
 {
-	CNetObj_Game *pGameObj = (CNetObj_Game *)Server()->SnapNewItem(NETOBJTYPE_GAME, 0, sizeof(CNetObj_Game));
-	if(!pGameObj)
+	CNetObj_GameInfo *pGameInfoObj = (CNetObj_GameInfo *)Server()->SnapNewItem(NETOBJTYPE_GAMEINFO, 0, sizeof(CNetObj_GameInfo));
+	if(!pGameInfoObj)
 		return;
 
-	pGameObj->m_Paused = GameServer()->m_World.m_Paused;
-	pGameObj->m_GameOver = m_GameOverTick==-1?0:1;
-	pGameObj->m_SuddenDeath = m_SuddenDeath;
+	pGameInfoObj->m_GameFlags = m_GameFlags;
+	pGameInfoObj->m_GameStateFlags = 0;
+	if(m_GameOverTick != -1)
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
+	if(m_SuddenDeath)
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;
+	if(GameServer()->m_World.m_Paused)
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
+	pGameInfoObj->m_RoundStartTick = m_RoundStartTick;
+	pGameInfoObj->m_WarmupTimer = m_Warmup;
+
+	pGameInfoObj->m_ScoreLimit = g_Config.m_SvScorelimit;
+	pGameInfoObj->m_TimeLimit = g_Config.m_SvTimelimit;
 	
-	pGameObj->m_ScoreLimit = g_Config.m_SvScorelimit;
-	pGameObj->m_TimeLimit = g_Config.m_SvTimelimit;
-	pGameObj->m_RoundStartTick = m_RoundStartTick;
-	pGameObj->m_Flags = m_GameFlags;
-	
-	pGameObj->m_Warmup = m_Warmup;
-	
-	pGameObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap : 0;
-	pGameObj->m_RoundCurrent = m_RoundCount+1;
-	
-	
-	if(SnappingClient == -1)
-	{
-		// we are recording a demo, just set the scores
-		pGameObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-	}
-	else
-	{
-		// TODO: this little hack should be removed
-		pGameObj->m_TeamscoreRed = IsTeamplay() ? m_aTeamscore[TEAM_RED] : GameServer()->m_apPlayers[SnappingClient]->m_Score;
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-	}
+	pGameInfoObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap : 0;
+	pGameInfoObj->m_RoundCurrent = m_RoundCount+1;
 }
 
 int IGameController::GetAutoTeam(int NotThisID)

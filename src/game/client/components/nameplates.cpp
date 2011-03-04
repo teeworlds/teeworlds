@@ -44,7 +44,7 @@ void CNamePlates::RenderNameplate(
 			TextRender()->Text(0, Position.x-tw/2.0f+2, Position.y-FontSize-38.0f, FontSize, aName, -1);
 		}
 		bool IsTeamplay;
-		IsTeamplay = m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS;
+		IsTeamplay = m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS;
 		if(g_Config.m_TcColoredNameplates&1 && IsTeamplay)
 		{
 			vec3 Col = CTeecompUtils::GetTeamColor(

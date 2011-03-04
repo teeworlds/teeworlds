@@ -25,6 +25,9 @@ void CFlag::Reset()
 
 void CFlag::Snap(int SnappingClient)
 {
+	if(NetworkClipped(SnappingClient))
+		return;
+
 	CNetObj_Flag *pFlag = (CNetObj_Flag *)Server()->SnapNewItem(NETOBJTYPE_FLAG, m_Team, sizeof(CNetObj_Flag));
 	if(!pFlag)
 		return;
@@ -32,10 +35,4 @@ void CFlag::Snap(int SnappingClient)
 	pFlag->m_X = (int)m_Pos.x;
 	pFlag->m_Y = (int)m_Pos.y;
 	pFlag->m_Team = m_Team;
-	pFlag->m_CarriedBy = -1;
-	
-	if(m_AtStand)
-		pFlag->m_CarriedBy = -2;
-	else if(m_pCarryingCharacter && m_pCarryingCharacter->GetPlayer())
-		pFlag->m_CarriedBy = m_pCarryingCharacter->GetPlayer()->GetCID();
 }

@@ -55,24 +55,24 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	Graphics()->QuadsEnd();
 
 	// render goals
-	if(m_pClient->m_Snap.m_pGameobj)
+	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
-		if(m_pClient->m_Snap.m_pGameobj->m_ScoreLimit)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
 		{
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameobj->m_ScoreLimit);
+			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit);
 			TextRender()->Text(0, x, y, 20.0f, aBuf, -1);
 		}
-		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
 		{
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameobj->m_TimeLimit);
+			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
 			TextRender()->Text(0, x+220.0f, y, 20.0f, aBuf, -1);
 		}
-		if(m_pClient->m_Snap.m_pGameobj->m_RoundNum && m_pClient->m_Snap.m_pGameobj->m_RoundCurrent)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
 		{
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameobj->m_RoundCurrent, m_pClient->m_Snap.m_pGameobj->m_RoundNum);
+			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum);
 			float tw = TextRender()->TextWidth(0, 20.0f, aBuf, -1);
 			TextRender()->Text(0, x+w-tw-20.0f, y, 20.0f, aBuf, -1);
 		}
@@ -140,7 +140,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	// render title
 	if(!pTitle)
 	{
-		if(m_pClient->m_Snap.m_pGameobj->m_GameOver)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 			pTitle = Localize("Game over");
 		else
 			pTitle = Localize("Score board");
@@ -153,10 +153,24 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
 	TextRender()->Text(0, x+10, y, 48, pTitle, -1);
 	
-	if(m_pClient->m_Snap.m_pGameobj)
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+	{
+		if(m_pClient->m_Snap.m_pGameDataObj)
+		{
+			char aBuf[128];
+			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue;
+			if(!m_pClient->m_IsRace)
+			{
+				str_format(aBuf, sizeof(aBuf), "%d", Score);
+				tw = TextRender()->TextWidth(0, 48, aBuf, -1);
+				TextRender()->Text(0, x+w-tw-30, y, 48, aBuf, -1);
+			}
+		}
+	}
+	else
 	{
 		char aBuf[128];
-		int Score = Team ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed;
+		int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
 		if(!m_pClient->m_IsRace)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
@@ -272,9 +286,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			--FontSizeResize;
 		TextRender()->Text(0, x+w-35.0f-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 
-		// render avatar
-		if((m_pClient->m_Snap.m_paFlags[0] && m_pClient->m_Snap.m_paFlags[0]->m_CarriedBy == pInfo->m_ClientID) ||
-			(m_pClient->m_Snap.m_paFlags[1] && m_pClient->m_Snap.m_paFlags[1]->m_CarriedBy == pInfo->m_ClientID))
+		// render flag
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS &&
+			m_pClient->m_Snap.m_pGameDataObj && (m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed == pInfo->m_ClientID ||
+			m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == pInfo->m_ClientID))
 		{
 			Graphics()->BlendNormal();
 			if(g_Config.m_TcColoredFlags)
@@ -283,8 +298,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 			Graphics()->QuadsBegin();
 
-			if(pInfo->m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-			else RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+			RenderTools()->SelectSprite(pInfo->m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 			
 			if(g_Config.m_TcColoredFlags)
 			{
@@ -299,6 +313,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsEnd();
 		}
 		
+		// render avatar
 		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
 		
 		// anti rainbow
@@ -367,43 +382,28 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_IsRace)
 		w = 750.0f;
 
-	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS))
-		RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
-	else
+	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
-		char aText[32];
-		if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
+		if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS))
+			RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
+		else
 		{
-			str_copy(aText, Localize("Draw!"), sizeof(aText));
-			if(m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed > m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue)
-			{
-				if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-					str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
-				else
-					str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
-			}
-			else if(m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed)
-			{
-				if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-					str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
-				else
-					str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
-			}
-				
-			float w = TextRender()->TextWidth(0, 86.0f, aText, -1);
-			TextRender()->Text(0, Width/2-w/2, 39, 86.0f, aText, -1);
-		}
 		
-		if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-			str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
-		else
-			str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
-		RenderScoreboard(Width/2-w-20, 150.0f, w, 0, aText);
-		if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-			str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
-		else
-			str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
-		RenderScoreboard(Width/2 + 20, 150.0f, w, 1, aText);
+			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER && m_pClient->m_Snap.m_pGameDataObj)
+			{
+				const char *pText = Localize("Draw!");
+				if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue)
+					pText = Localize("Red team wins!");
+				else if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed)
+					pText = Localize("Blue team wins!");
+			
+				float w = TextRender()->TextWidth(0, 86.0f, pText, -1);
+				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, pText, -1);
+			}
+		
+			RenderScoreboard(Width/2-w-20, 150.0f, w, TEAM_RED, Localize("Red team"));
+			RenderScoreboard(Width/2 + 20, 150.0f, w, TEAM_BLUE, Localize("Blue team"));
+		}
 	}
 
 	RenderGoals(Width/2-w/2, 150+750+25, w);
@@ -429,7 +429,7 @@ bool CScoreboard::Active()
 	}
 
 	// if the game is over
-	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return true;
 
 	return false;
