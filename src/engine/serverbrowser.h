@@ -68,12 +68,9 @@ public:
 		TYPE_LAN = 1,
 		TYPE_FAVORITES = 2,
 
-		// TODO: clean this up
 		SET_MASTER_ADD=1,
 		SET_FAV_ADD,
-		SET_TOKEN,
-		SET_OLD_INTERNET,
-		SET_OLD_LAN
+		SET_TOKEN
 	};
 
 	virtual void Refresh(int Type) = 0;

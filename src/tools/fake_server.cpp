@@ -66,9 +66,10 @@ static void WriteInt(int i)
 
 static void BuildInfoMsg()
 {
-	aInfoMsgSize = sizeof(SERVERBROWSE_OLD_INFO);
-	mem_copy(aInfoMsg, SERVERBROWSE_OLD_INFO, aInfoMsgSize);
-	
+	aInfoMsgSize = sizeof(SERVERBROWSE_INFO);
+	mem_copy(aInfoMsg, SERVERBROWSE_INFO, aInfoMsgSize);
+	WriteInt(-1);
+
 	WriteStr(pVersion);
 	WriteStr(pServerName);
 	WriteStr(pMap);
@@ -123,8 +124,8 @@ static int Run()
 		{
 			if(p.m_ClientID == -1)
 			{
-				if(p.m_DataSize == sizeof(SERVERBROWSE_OLD_GETINFO) &&
-					mem_comp(p.m_pData, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
+				if(p.m_DataSize == sizeof(SERVERBROWSE_GETINFO) &&
+					mem_comp(p.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
 					SendServerInfo(&p.m_Address);
 				}

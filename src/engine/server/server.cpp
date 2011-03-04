@@ -875,18 +875,9 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	
 	p.Reset();
 
-	if(Token >= 0)
-	{
-		// new token based format
-		p.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-		str_format(aBuf, sizeof(aBuf), "%d", Token);
-		p.AddString(aBuf, 6);
-	}
-	else
-	{
-		// old format
-		p.AddRaw(SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO));
-	}
+	p.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+	str_format(aBuf, sizeof(aBuf), "%d", Token);
+	p.AddString(aBuf, 6);
 	
 	p.AddString(GameServer()->Version(), 32);
 	p.AddString(g_Config.m_SvName, 64);
@@ -930,7 +921,7 @@ void CServer::UpdateServerInfo()
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			NETADDR Addr = m_NetServer.ClientAddr(i);
-			SendServerInfo(&Addr, -1); 	// SERVERBROWSE_OLD_INFO
+			SendServerInfo(&Addr, -1);
 		}
 	}
 }
@@ -974,13 +965,6 @@ void CServer::PumpNetwork()
 					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
 					SendServerInfo(&Packet.m_Address, ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)]);
-				}
-				
-				
-				if(Packet.m_DataSize == sizeof(SERVERBROWSE_OLD_GETINFO) &&
-					mem_comp(Packet.m_pData, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
-				{
-					SendServerInfo(&Packet.m_Address, -1);
 				}
 			}
 		}
