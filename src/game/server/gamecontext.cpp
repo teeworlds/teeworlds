@@ -650,6 +650,21 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendChatTarget(ClientID, "Server does not allow voting to kick players");
 				return;
 			}
+
+			if(g_Config.m_SvVoteKickMin)
+			{
+				int PlayerNum = 0;
+				for(int i = 0; i < MAX_CLIENTS; ++i)
+					if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+						++PlayerNum;
+
+				if(PlayerNum < g_Config.m_SvVoteKickMin)
+				{
+					str_format(aChatmsg, sizeof(aChatmsg), "Kick voting requires %d players on the server", g_Config.m_SvVoteKickMin);
+					SendChatTarget(ClientID, aChatmsg);
+					return;
+				}
+			}
 			
 			int KickID = str_toint(pMsg->m_Value);
 			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID])
