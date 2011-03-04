@@ -1081,21 +1081,16 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 		{
 			int PacketType = 0;
 			if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
-				PacketType = 2;
-
-			if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_OLD_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO)) == 0)
-				PacketType = 1;
+				PacketType = 3;
 
 			if(PacketType)
 			{
 				// we got ze info
 				CUnpacker Up;
 				CServerInfo Info = {0};
-				int Token = -1;
-
+				
 				Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
-				if(PacketType >= 2)
-					Token = str_toint(Up.GetString());
+				int Token = str_toint(Up.GetString());
 				str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
 				str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
 				str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
@@ -1130,12 +1125,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						m_CurrentServerInfoRequestTime = -1;
 					}
 					else
-					{
-						if(PacketType == 2)
-							m_ServerBrowser.Set(pPacket->m_Address, IServerBrowser::SET_TOKEN, Token, &Info);
-						else
-							m_ServerBrowser.Set(pPacket->m_Address, IServerBrowser::SET_OLD_INTERNET, -1, &Info);
-					}
+						m_ServerBrowser.Set(pPacket->m_Address, IServerBrowser::SET_TOKEN, Token, &Info);
 				}
 			}
 		}

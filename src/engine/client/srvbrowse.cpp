@@ -437,29 +437,6 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			RemoveRequest(pEntry);
 		}
 	}
-	else if(Type == IServerBrowser::SET_OLD_INTERNET)
-	{
-		pEntry = Find(Addr);
-		if(pEntry)
-		{
-			SetInfo(pEntry, *pInfo);
-
-			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
-				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
-			else
-				pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
-			RemoveRequest(pEntry);
-		}
-	}
-	else if(Type == IServerBrowser::SET_OLD_LAN)
-	{
-		pEntry = Find(Addr);
-		if(pEntry)
-		if(!pEntry)
-			pEntry = Add(Addr);
-		if(pEntry)
-			SetInfo(pEntry, *pInfo);
-	}
 
 	Sort();
 }
