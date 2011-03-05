@@ -210,20 +210,24 @@ void mem_free(void *p)
 	}
 }
 
-void mem_debug_dump()
+void mem_debug_dump(IOHANDLE file)
 {
 	char buf[1024];
 	MEMHEADER *header = first;
-	IOHANDLE f = io_open("memory.txt", IOFLAG_WRITE);
+	if(!file)
+		file = io_open("memory.txt", IOFLAG_WRITE);
 	
-	while(header)
+	if(file)
 	{
-		str_format(buf, sizeof(buf), "%s(%d): %d\n", header->filename, header->line, header->size);
-		io_write(f, buf, strlen(buf));
-		header = header->next;
-	}
+		while(header)
+		{
+			str_format(buf, sizeof(buf), "%s(%d): %d\n", header->filename, header->line, header->size);
+			io_write(file, buf, strlen(buf));
+			header = header->next;
+		}
 	
-	io_close(f);
+		io_close(file);
+	}
 }
 
 

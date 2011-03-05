@@ -1090,7 +1090,7 @@ int net_would_block();
 
 int net_socket_read_wait(NETSOCKET sock, int time);
 
-void mem_debug_dump();
+void mem_debug_dump(IOHANDLE file);
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 

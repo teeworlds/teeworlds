@@ -22,6 +22,7 @@ protected:
 	class CJobPool m_JobPool;
 
 public:
+	virtual void Init() = 0;
 	virtual void InitLogfile() = 0;
 	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname) = 0;
 	virtual void AddJob(CJob *pJob, JOBFUNC pfnFunc, void *pData) = 0;
