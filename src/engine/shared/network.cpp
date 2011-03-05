@@ -293,26 +293,40 @@ IOHANDLE CNetBase::ms_DataLogRecv = 0;
 CHuffman CNetBase::ms_Huffman;
 
 
-void CNetBase::OpenLog(const char *pSentLog, const char *pRecvLog)
+void CNetBase::OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv)
 {
-	/*
-	if(pSentLog)
+	if(DataLogSent)
 	{
-		ms_DataLogSent = engine_openfile(pSentLog, IOFLAG_WRITE);
-		if(ms_DataLogSent)
-			dbg_msg("network", "logging sent packages to '%s'", pSentLog);
-		else
-			dbg_msg("network", "failed to open for logging '%s'", pSentLog);
+		ms_DataLogSent = DataLogSent;
+		dbg_msg("network", "logging sent packages");
 	}
-	
-	if(pRecvLog)
+	else
+		dbg_msg("network", "failed to start logging sent packages");
+
+	if(DataLogRecv)
 	{
-		ms_DataLogRecv = engine_openfile(pRecvLog, IOFLAG_WRITE);
-		if(ms_DataLogRecv)
-			dbg_msg("network", "logging recv packages to '%s'", pRecvLog);
-		else
-			dbg_msg("network", "failed to open for logging '%s'", pRecvLog);
-	}*/
+		ms_DataLogRecv = DataLogRecv;
+		dbg_msg("network", "logging recv packages");
+	}
+	else
+		dbg_msg("network", "failed to start logging recv packages");
+}
+
+void CNetBase::CloseLog()
+{
+	if(ms_DataLogSent)
+	{
+		dbg_msg("network", "stopped logging sent packages");
+		io_close(ms_DataLogSent);
+		ms_DataLogSent = 0;
+	}
+
+	if(ms_DataLogRecv)
+	{
+		dbg_msg("network", "stopped logging recv packages");
+		io_close(ms_DataLogRecv);
+		ms_DataLogRecv = 0;
+	}
 }
 
 int CNetBase::Compress(const void *pData, int DataSize, void *pOutput, int OutputSize)
