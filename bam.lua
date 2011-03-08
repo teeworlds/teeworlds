@@ -112,6 +112,11 @@ client_link_other = {}
 client_depends = {}
 
 if family == "windows" then
+	-- if settings.debug > 0 then
+		table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib\\freetype.dll"))
+	-- else
+	--	table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib\\freetype_D.dll"))
+	-- end
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
 
 	if config.compiler.driver == "cl" then
@@ -326,4 +331,3 @@ else
 	build(release_settings)
 	DefaultTarget("game_debug")
 end
-

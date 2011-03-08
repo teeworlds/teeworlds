@@ -29,9 +29,9 @@ FreeType = {
 				
 			elseif option.use_win32lib == true then
 				if settings.debug > 0 then
-					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype243MT_D")
+					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype_D")
 				else
-					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype243MT")
+					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype")
 				end
 			end
 		end
