@@ -57,8 +57,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_PlayerState = PLAYERSTATE_UNKNOWN;
 	m_EmoteStop = -1;
 	m_LastAction = -1;
-	m_ActiveWeapon = WEAPON_GRENADE;
-	m_LastWeapon = WEAPON_GRENADE;
+	m_ActiveWeapon = WEAPON_RIFLE;
+	m_LastWeapon = WEAPON_RIFLE;
 	m_QueuedWeapon = -1;
 	
 	m_pPlayer = pPlayer;
@@ -710,10 +710,6 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_Core.m_Vel += Force;
 	
 	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
-		return false;
-
-	// damage have to be bigger than 5
-	if(Dmg < 6)
 		return false;
 	
 	// no self damage

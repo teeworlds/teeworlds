@@ -139,12 +139,12 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	{
 		Type = POWERUP_WEAPON;
 		SubType = WEAPON_RIFLE;
-	}*/
+	}
 	else if(Index == ENTITY_POWERUP_NINJA && g_Config.m_SvPowerups)
 	{
 		Type = POWERUP_NINJA;
 		SubType = WEAPON_NINJA;
-	}
+	}*/
 	
 	if(Type != -1)
 	{
@@ -338,9 +338,7 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 	
 	// give default weapons
 	if(g_Config.m_SvInfiniteAmmo)
-		pChr->GiveWeapon(WEAPON_GRENADE, -1);
-	else
-		pChr->GiveWeapon(WEAPON_GRENADE, 5);
+		pChr->GiveWeapon(WEAPON_RIFLE, -1);
 }
 
 void IGameController::DoWarmup(int Seconds)
