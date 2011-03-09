@@ -339,6 +339,8 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 	// give default weapons
 	if(g_Config.m_SvInfiniteAmmo)
 		pChr->GiveWeapon(WEAPON_RIFLE, -1);
+	else
+		pChr->GiveWeapon(WEAPON_RIFLE, 5);
 }
 
 void IGameController::DoWarmup(int Seconds)
