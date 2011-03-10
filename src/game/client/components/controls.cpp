@@ -202,16 +202,18 @@ void CControls::OnRender()
 	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || m_pClient->m_Snap.m_Spectate))
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
 
-	if(m_pClient->m_Snap.m_Spectate && m_pClient->m_Snap.m_pSpectatorInfo)
-		m_MousePos = m_pClient->m_Snap.m_SpectatorPos;
+	if(m_pClient->m_Snap.m_Spectate && m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW)
+		m_TargetPos = m_pClient->m_Snap.m_SpectatorPos + m_MousePos;
 }
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED) || (m_pClient->m_Snap.m_Spectate && m_pClient->m_pChat->IsActive()))
+	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED) ||
+		(m_pClient->m_Snap.m_Spectate  && (!m_pClient->m_Snap.m_pSpectatorInfo || m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SPEC_FREEVIEW) &&
+		m_pClient->m_pChat->IsActive()))
 		return false;
+	
 	m_MousePos += vec2(x, y); // TODO: ugly
-
 	ClampMousePos();
 
 	return true;
@@ -219,35 +221,19 @@ bool CControls::OnMouseMove(float x, float y)
 
 void CControls::ClampMousePos()
 {
-	//
-	float CameraMaxDistance = 200.0f;
-	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-	float DeadZone = g_Config.m_ClMouseDeadzone;
-	float MouseMax = min(CameraMaxDistance/FollowFactor + DeadZone, (float)g_Config.m_ClMouseMaxDistance);
-	
-	//vec2 camera_offset(0, 0);
-
-	if(m_pClient->m_Snap.m_Spectate)
+	if(m_pClient->m_Snap.m_Spectate && (!m_pClient->m_Snap.m_pSpectatorInfo || m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SPEC_FREEVIEW))
 	{
-		if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
-		if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
-		if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
-		if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
-		
+		m_MousePos.x = clamp(m_MousePos.x, 200.0f, Collision()->GetWidth()*32-200.0f);
+		m_MousePos.y = clamp(m_MousePos.y, 200.0f, Collision()->GetHeight()*32-200.0f);
 		m_TargetPos = m_MousePos;
 	}
 	else
 	{
-		float l = length(m_MousePos);
+		float CameraMaxDistance = 200.0f;
+		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+		float MouseMax = min(CameraMaxDistance/FollowFactor + g_Config.m_ClMouseDeadzone, (float)g_Config.m_ClMouseMaxDistance);
 		
-		if(l > MouseMax)
-		{
+		if(length(m_MousePos) > MouseMax)
 			m_MousePos = normalize(m_MousePos)*MouseMax;
-			l = MouseMax;
-		}
-		
-		//float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
-		//if(l > 0.0001f) // make sure that this isn't 0
-			//camera_offset = normalize(mouse_pos)*offset_amount;
 	}
 }
