@@ -50,7 +50,6 @@ void CHud::RenderGameTimer()
 		return;
 		
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-	Graphics()->MapScreen(0, 0, 300.0f*Graphics()->ScreenAspect(), 300.0f);
 	
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH))
 	{
@@ -395,8 +394,11 @@ void CHud::RenderCursor()
 	Graphics()->QuadsEnd();
 }
 
-void CHud::RenderHealthAndAmmo()
+void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 {
+	if(!pCharacter)
+		return;
+
 	//mapscreen_to_group(gacenter_x, center_y, layers_game_group());
 
 	float x = 5;
@@ -406,53 +408,68 @@ void CHud::RenderHealthAndAmmo()
 	// render gui stuff
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-	Graphics()->MapScreen(0,0,m_Width,300);
 	
-	Graphics()->QuadsBegin();
-	
-	IGraphics::CQuadItem Array[10];
 	if(g_Config.m_ClRenderAmmo)
 	{
+		Graphics()->QuadsBegin();
+	
 		// if weaponstage is active, put a "glow" around the stage ammo
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
+		IGraphics::CQuadItem Array[10];
 		int i;
-		for (i = 0; i < min(m_pClient->m_Snap.m_pLocalCharacter->m_AmmoCount, 10); i++)
+		for (i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
 			Array[i] = IGraphics::CQuadItem(x+i*12,y+24,10,10);
 		Graphics()->QuadsDrawTL(Array, i);
+		Graphics()->QuadsEnd();
 	}
-	Graphics()->QuadsEnd();
+
+	if(!g_Config.m_ClRenderHp)
+		return;
 
 	Graphics()->QuadsBegin();
 	int h = 0;
 
 	// render health
-	if(g_Config.m_ClRenderHp)
-	{
-		RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
-		for(; h < min(m_pClient->m_Snap.m_pLocalCharacter->m_Health, 10); h++)
-			Array[h] = IGraphics::CQuadItem(x+h*12,y,10,10);
-		Graphics()->QuadsDrawTL(Array, h);
+	RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
+	for(; h < min(pCharacter->m_Health, 10); h++)
+		Array[h] = IGraphics::CQuadItem(x+h*12,y,10,10);
+	Graphics()->QuadsDrawTL(Array, h);
 
-		int i;
-		RenderTools()->SelectSprite(SPRITE_HEALTH_EMPTY);
-		for(i = 0; h < 10; h++)
-			Array[i++] = IGraphics::CQuadItem(x+h*12,y,10,10);
-		Graphics()->QuadsDrawTL(Array, i);
+	i = 0;
+	RenderTools()->SelectSprite(SPRITE_HEALTH_EMPTY);
+	for(; h < 10; h++)
+		Array[i++] = IGraphics::CQuadItem(x+h*12,y,10,10);
+	Graphics()->QuadsDrawTL(Array, i);
 
-		// render armor meter
-		h = 0;
-		RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
-		for(; h < min(m_pClient->m_Snap.m_pLocalCharacter->m_Armor, 10); h++)
-			Array[h] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
-		Graphics()->QuadsDrawTL(Array, h);
+	// render armor meter
+	h = 0;
+	RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
+	for(; h < min(pCharacter->m_Armor, 10); h++)
+		Array[h] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
+	Graphics()->QuadsDrawTL(Array, h);
 
-		i = 0;
-		RenderTools()->SelectSprite(SPRITE_ARMOR_EMPTY);
-		for(; h < 10; h++)
-			Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
-		Graphics()->QuadsDrawTL(Array, i);
-	}
+	i = 0;
+	RenderTools()->SelectSprite(SPRITE_ARMOR_EMPTY);
+	for(; h < 10; h++)
+		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
+	Graphics()->QuadsDrawTL(Array, i);
 	Graphics()->QuadsEnd();
+}
+
+void CHud::RenderSpectatorHud()
+{
+	// draw the box
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
+	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);
+	Graphics()->QuadsEnd();
+
+	// draw the text
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW ?
+		m_pClient->m_aClients[m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID].m_aName : Localize("Free-View"));
+	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
 void CHud::RenderSpeedmeter()
@@ -619,17 +636,21 @@ void CHud::OnRender()
 	if(!m_pClient->m_Snap.m_pGameInfoObj)
 		return;
 		
-	m_Width = 300*Graphics()->ScreenAspect();
+	m_Width = 300.0f*Graphics()->ScreenAspect();
+	m_Height = 300.0f;
+	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
 
-	bool Spectate = false;
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
-		Spectate = true;
-	
-	if(!g_Config.m_ClClearHud && !g_Config.m_ClClearAll && m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+	if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 	{
-		RenderHealthAndAmmo();
+		RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
 		RenderSpeedmeter();
 		RenderTime();
+	}
+	else if(m_pClient->m_Snap.m_Spectate)
+	{
+		if(m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW)
+			RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID].m_Cur);
+		RenderSpectatorHud();
 	}
 
 	RenderGameTimer();

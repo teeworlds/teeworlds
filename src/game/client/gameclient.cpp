@@ -48,6 +48,7 @@
 #include "components/scoreboard.h"
 #include "components/skins.h"
 #include "components/sounds.h"
+#include "components/spectator.h"
 #include "components/voting.h"
 #include "components/race_demo.h"
 #include "components/ghost.h"
@@ -77,6 +78,7 @@ static CSounds gs_Sounds;
 static CEmoticon gs_Emoticon;
 static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
+static CSpectator gs_Spectator;
 static CRaceDemo gs_RaceDemo;
 static CGhost gs_Ghost;
 static CTeecompStats gs_TeecompStats;
@@ -155,6 +157,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&m_pParticles->m_RenderGeneral);
 	m_All.Add(m_pDamageind);
 	m_All.Add(&gs_Hud);
+	m_All.Add(&gs_Spectator);
 	m_All.Add(&gs_Emoticon);
 	m_All.Add(&gs_KillMessages);
 	m_All.Add(&gs_TimeMessages);
@@ -175,6 +178,7 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pChat); // chat has higher prio due to tha you can quit it by pressing esc
 	m_Input.Add(m_pMotd); // for pressing esc to remove it
 	m_Input.Add(m_pMenus);
+	m_Input.Add(&gs_Spectator);
 	m_Input.Add(&gs_Emoticon);
 	m_Input.Add(m_pControls);
 	m_Input.Add(m_pBinds);
@@ -472,8 +476,9 @@ void CGameClient::OnReset()
 }
 
 
-void CGameClient::UpdateLocalCharacterPos()
+void CGameClient::UpdatePositions()
 {
+	// local character position
 	if(g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_Snap.m_pLocalCharacter || (m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
@@ -488,6 +493,16 @@ void CGameClient::UpdateLocalCharacterPos()
 		m_LocalCharacterPos = mix(
 			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
 			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick());
+	}
+
+	// spectator position
+	if(m_Snap.m_Spectate && m_Snap.m_pSpectatorInfo)
+	{
+		if(m_Snap.m_pPrevSpectatorInfo)
+			m_Snap.m_SpectatorPos = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
+										vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick());
+		else
+			m_Snap.m_SpectatorPos = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
 	}
 }
 
@@ -528,8 +543,8 @@ void CGameClient::OnRender()
 	
 	return;*/
 	
-	// update the local character position
-	UpdateLocalCharacterPos();
+	// update the local character and spectate position
+	UpdatePositions();
 	
 	// dispatch all input to systems
 	DispatchInput();
@@ -955,17 +970,22 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
 				const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
+				m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
 				if(pOld)
 				{
 					m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
 					m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
-					m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
 
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
 						Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
 						Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
 				}
+			}
+			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
+			{
+				m_Snap.m_pSpectatorInfo = (const CNetObj_SpectatorInfo *)pData;
+				m_Snap.m_pPrevSpectatorInfo = (const CNetObj_SpectatorInfo *)Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_SPECTATORINFO, Item.m_ID);
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEINFO)
 			{

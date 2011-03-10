@@ -6,7 +6,7 @@
 
 class CHud : public CComponent
 {	
-	float m_Width;
+	float m_Width, m_Height;
 	float m_AverageFPS;
 	
 	// Race
@@ -32,10 +32,11 @@ class CHud : public CComponent
 	void RenderConnectionWarning();
 	void RenderTeambalanceWarning();
 	void RenderVoting();
-	void RenderHealthAndAmmo();
+	void RenderHealthAndAmmo(const CNetObj_Character *pCharacter);
 	void RenderGameTimer();
 	void RenderSuddenDeath();
 	void RenderScoreHud();
+	void RenderSpectatorHud();
 	void RenderWarmupTimer();
 
 	void RenderTime();

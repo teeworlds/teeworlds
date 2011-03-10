@@ -26,6 +26,8 @@ enum
 
 	FLAG_ATSTAND=-2,
 	FLAG_TAKEN,
+
+	SPEC_FREEVIEW=-1,
 };
 '''
 
@@ -173,6 +175,12 @@ Objects = [
 		NetIntAny("m_ColorBody"),
 		NetIntAny("m_ColorFeet"),
 	]),
+
+	NetObject("SpectatorInfo", [
+		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+	]),
 	
 	## Events
 	
@@ -272,6 +280,10 @@ Messages = [
 
 	NetMessage("Cl_SetTeam", [
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
+	]),
+
+	NetMessage("Cl_SetSpectatorMode", [
+		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
 	]),
 	
 	NetMessage("Cl_StartInfo", [
