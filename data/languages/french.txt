@@ -873,6 +873,9 @@ Enable/disable group for saving
 Enable/disable layer for saving
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 

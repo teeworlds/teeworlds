@@ -690,6 +690,9 @@ File: %s
 Filename:
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 

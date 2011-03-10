@@ -903,6 +903,9 @@ Delete this envelope
 File: %s
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 

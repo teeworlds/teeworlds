@@ -654,6 +654,9 @@ Folder
 Force vote
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 

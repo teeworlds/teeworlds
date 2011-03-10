@@ -978,6 +978,9 @@ Constructs game tiles from this layer
 Death
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 
