@@ -669,6 +669,9 @@ Filename:
 Folder
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 

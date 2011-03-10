@@ -867,6 +867,9 @@ File: %s
 Folder
 == 
 
+Free-View
+== 
+
 Game tiles
 == 
 
