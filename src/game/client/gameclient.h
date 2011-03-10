@@ -49,7 +49,7 @@ class CGameClient : public IGameClient
 	
 	void DispatchInput();
 	void ProcessEvents();
-	void UpdateLocalCharacterPos();
+	void UpdatePositions();
 
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
@@ -109,6 +109,8 @@ public:
 		const CNetObj_Character *m_pLocalCharacter;
 		const CNetObj_Character *m_pLocalPrevCharacter;
 		const CNetObj_PlayerInfo *m_pLocalInfo;
+		const CNetObj_SpectatorInfo *m_pSpectatorInfo;
+		const CNetObj_SpectatorInfo *m_pPrevSpectatorInfo;
 		const CNetObj_Flag *m_paFlags[2];
 		const CNetObj_GameInfo *m_pGameInfoObj;
 		const CNetObj_GameData *m_pGameDataObj;
@@ -121,6 +123,7 @@ public:
 		int m_NumPlayers;
 		int m_aTeamSize[2];
 		bool m_Spectate;
+		vec2 m_SpectatorPos;
 		
 		//
 		struct CCharacterInfo

@@ -201,6 +201,9 @@ void CControls::OnRender()
 	// update target pos
 	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || m_pClient->m_Snap.m_Spectate))
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
+
+	if(m_pClient->m_Snap.m_Spectate && m_pClient->m_Snap.m_pSpectatorInfo)
+		m_MousePos = m_pClient->m_Snap.m_SpectatorPos;
 }
 
 bool CControls::OnMouseMove(float x, float y)
