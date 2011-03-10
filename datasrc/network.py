@@ -24,7 +24,8 @@ enum
 	TEAM_RED,
 	TEAM_BLUE,
 
-	FLAG_ATSTAND=-2,
+	FLAG_MISSING=-3,
+	FLAG_ATSTAND,
 	FLAG_TAKEN,
 
 	SPEC_FREEVIEW=-1,
@@ -117,8 +118,8 @@ Objects = [
 		NetIntAny("m_TeamscoreRed"),
 		NetIntAny("m_TeamscoreBlue"),
 
-		NetIntRange("m_FlagCarrierRed", 'FLAG_ATSTAND', 'MAX_CLIENTS-1'),
-		NetIntRange("m_FlagCarrierBlue", 'FLAG_ATSTAND', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRed", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierBlue", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("CharacterCore", [
