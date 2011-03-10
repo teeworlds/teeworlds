@@ -682,6 +682,18 @@ void CCharacter::Die(int Killer, int Weapon)
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
+	if(GameServer()->GetPlayerChar(Killer))
+	{
+		GameServer()->GetPlayerChar(Killer)->SpreeAdd();
+		SpreeEnd(Killer);
+	}
+
+	if(OnSpree())
+	{
+		GameServer()->CreateSound(m_Pos, SOUND_GRENADE_EXPLODE);
+		GameServer()->CreateExplosion(m_Pos, m_pPlayer->m_ClientID, WEAPON_RIFLE, true);
+	}
+
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
 	Msg.m_Killer = Killer;
@@ -703,6 +715,43 @@ void CCharacter::Die(int Killer, int Weapon)
 	
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
+}
+
+char SpreeNote[4][32] = {"is on a killing spree", "is on a rampage", "is dominating", "is unstoppable"};
+
+void CCharacter::SpreeAdd()
+{
+	m_Spree++;
+	if(m_Spree % 5 == 0)
+	{
+		int p = (int)m_Spree/5-1;
+		if(p > 3)
+			p = 3;
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s %s (%d kills)", Server()->ClientName(m_pPlayer->GetCID()), SpreeNote[p], m_Spree);
+		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	}
+}
+
+void CCharacter::SpreeEnd(int Killer)
+{
+	if(m_Spree >= 5)
+	{
+		int p = (int)m_Spree/5-1;
+		if(p > 4)
+			p = 4;
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s's spree (%d) was ended by %s", Server()->ClientName(m_pPlayer->GetCID()), m_Spree, Server()->ClientName(Killer));
+		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	}
+	m_Spree = 0;
+}
+
+bool CCharacter::OnSpree()
+{
+	if(m_Spree >= 5)
+		return true;
+	return false;
 }
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)

@@ -45,6 +45,12 @@ public:
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
 	void FireWeapon();
 
+	//Spree
+	void SpreeAdd();
+	void SpreeEnd(int Killer);
+	bool OnSpree();
+	int m_Spree;
+
 	void Die(int Killer, int Weapon);
 	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);	
 
