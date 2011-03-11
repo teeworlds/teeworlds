@@ -1049,6 +1049,12 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//world = new GAMEWORLD;
 	//players = new CPlayer[MAX_CLIENTS];
 
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "data/maps/%s.cfg", g_Config.m_SvMap);
+	Console()->ExecuteFile(aBuf);
+	str_format(aBuf, sizeof(aBuf), "data/maps/%s.map.cfg", g_Config.m_SvMap);
+	Console()->ExecuteFile(aBuf);
+
 	// select gametype
 	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
 		m_pController = new CGameControllerMOD(this);
