@@ -1236,6 +1236,11 @@ int str_utf8_encode(char *ptr, int chr);
 */
 int str_utf8_check(const char *str);
 
+// TODO: add documentation
+void *library_load(const char *path);
+void *library_load_function(const char *name, void *library);
+int library_unload(void *library);
+
 #ifdef __cplusplus
 }
 #endif
