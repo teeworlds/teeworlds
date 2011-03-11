@@ -7,6 +7,7 @@ objs
 src/game/generated
 SDL.dll
 autoexec.cfg
+plugin/
 
 crapnet*
 dilate*

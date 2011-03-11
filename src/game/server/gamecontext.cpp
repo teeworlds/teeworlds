@@ -20,6 +20,10 @@ enum
 	NO_RESET
 };
 
+void *s_pLibraryHandler = NULL;
+CreateGameController_t *s_pCreateGameController = NULL;
+DestroyGameController_t *s_pDestroyGameController = NULL;
+
 void CGameContext::Construct(int Resetting)
 {
 	m_Resetting = 0;
@@ -1029,6 +1033,30 @@ void CGameContext::OnConsoleInit()
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 }
 
+#ifdef CONF_FAMILY_UNIX
+static void LoadDefautlPlugin(IConsole *pConsole)
+{
+	s_pLibraryHandler = library_load("plugin/dm");
+	if(s_pLibraryHandler == NULL)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "plug-in", "Invalid default (dm mod) plug-in, shutdown server");
+		exit(-1);
+	}
+}
+
+static void LoadDefaultFunction(IConsole *pConsole, const char *FunctionName)
+{
+	LoadDefautlPlugin(pConsole);
+
+	s_pCreateGameController = (CreateGameController_t *)library_load_function(FunctionName, s_pLibraryHandler);
+	if(s_pCreateGameController == NULL)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "plug-in", "Invalid default (dm mod) plug-in, shutdown server");
+		exit(-1);
+	}
+}
+#endif
+
 void CGameContext::OnInit(/*class IKernel *pKernel*/)
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
@@ -1050,6 +1078,32 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//players = new CPlayer[MAX_CLIENTS];
 
 	// select gametype
+#ifdef CONF_FAMILY_UNIX
+	char aLibraryPath[128];
+	str_format(aLibraryPath, 128, "plugin/%s", g_Config.m_SvGametype);
+
+	s_pLibraryHandler = library_load(aLibraryPath);
+	if(s_pLibraryHandler == NULL)
+	{
+		char aBuffer[128];
+		str_format(aBuffer, 128, "Invalid plug-in %s, loading default (dm mod) plug-in", g_Config.m_SvGametype);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "plug-in", aBuffer);
+
+		LoadDefautlPlugin(m_pConsole);
+	}
+
+	s_pCreateGameController = (CreateGameController_t *)library_load_function("CreateGameController", s_pLibraryHandler);
+	if(s_pCreateGameController == NULL)
+	{
+		char aBuffer[128];
+		str_format(aBuffer, 128, "Invalid plug-in %s, loading default (dm mod) plug-in", g_Config.m_SvGametype);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "plug-in", aBuffer);
+
+		LoadDefaultFunction(m_pConsole, "CreateGameController");
+	}
+
+	m_pController = s_pCreateGameController(this);
+#else
 	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
 		m_pController = new CGameControllerMOD(this);
 	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
@@ -1058,6 +1112,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		m_pController = new CGameControllerTDM(this);
 	else
 		m_pController = new CGameControllerDM(this);
+#endif
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 
@@ -1107,7 +1162,19 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 void CGameContext::OnShutdown()
 {
+#ifdef CONF_FAMILY_UNIX
+	if(m_pController && s_pLibraryHandler)
+	{
+		s_pDestroyGameController = (DestroyGameController_t *)library_load_function("DestroyGameController", s_pLibraryHandler);
+		if(s_pDestroyGameController == 0)
+			s_pDestroyGameController(m_pController);
+		else
+			delete m_pController;
+	}
+#else
 	delete m_pController;
+#endif
+
 	m_pController = 0;
 	Clear();
 }

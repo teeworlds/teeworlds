@@ -151,6 +151,7 @@ function build(settings)
 			settings.link.frameworks:Add("AppKit")
 		else
 			settings.link.libs:Add("pthread")
+			settings.link.libs:Add("dl")
 		end
 	elseif family == "windows" then
 		settings.link.libs:Add("gdi32")
@@ -180,6 +181,7 @@ function build(settings)
 	engine_settings = settings:Copy()
 	server_settings = engine_settings:Copy()
 	client_settings = engine_settings:Copy()
+	mods_settings = engine_settings:Copy()
 	launcher_settings = engine_settings:Copy()
 
 	if family == "unix" then
@@ -189,10 +191,16 @@ function build(settings)
             client_settings.link.frameworks:Add("Carbon")
             client_settings.link.frameworks:Add("Cocoa")
             launcher_settings.link.frameworks:Add("Cocoa")
+			mods_settings.link.flags:Add("-dynamiclib")
+			mods_settings.link.flags:Add("-undefined dynamic_lookup")
 		else
 			client_settings.link.libs:Add("X11")
 			client_settings.link.libs:Add("GL")
 			client_settings.link.libs:Add("GLU")
+			mods_settings.cc.flags:Add("-fPIC");
+			mods_settings.link.flags:Add("-shared")
+			mods_settings.link.flags:Add("-nostartfiles")
+			server_settings.link.flags:Add("-rdynamic")
 		end
 		
 	elseif family == "windows" then
@@ -214,8 +222,14 @@ function build(settings)
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source)
 	game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), client_content_source)
-	game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), server_content_source)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
+
+if family == "unix" then -- if unix, make plug-in
+	game_server = Compile(settings, Collect("src/game/server/*.cpp", "src/game/server/entities/*.cpp"), server_content_source)
+	mods_src = Collect("src/game/server/gamemodes/*.cpp")
+else
+	game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), server_content_source)
+end
 
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
@@ -233,6 +247,15 @@ function build(settings)
 		tools[i] = Link(settings, toolname, Compile(settings, v), engine, zlib)
 	end
 	
+	-- build plug-in
+	mods = {}
+	if family == "unix" then
+		for index,value in ipairs(mods_src) do
+			modname = "plugin/" .. PathFilename(PathBase(value))
+			mods[index] = Link(mods_settings, modname, Compile(settings, value))
+		end
+	end
+
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
@@ -256,12 +279,13 @@ function build(settings)
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe, client_depends)
 	s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
+	o = PseudoTarget("mod".."_"..settings.config_name, mods)
 
 	v = PseudoTarget("versionserver".."_"..settings.config_name, versionserver_exe)
 	m = PseudoTarget("masterserver".."_"..settings.config_name, masterserver_exe)
 	t = PseudoTarget("tools".."_"..settings.config_name, tools)
 
-	all = PseudoTarget(settings.config_name, c, s, v, m, t)
+	all = PseudoTarget(settings.config_name, c, s, v, m, t, o)
 	return all
 end
 
