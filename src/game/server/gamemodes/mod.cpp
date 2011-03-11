@@ -20,3 +20,17 @@ void CGameControllerMOD::Tick()
 	
 	IGameController::Tick();
 }
+
+#ifdef CONF_FAMILY_UNIX
+
+IGameController *CreateGameController(CGameContext *pContext)
+{
+	return new CGameControllerMOD(pContext);
+}
+
+void DestroyGameController(IGameController *pController)
+{
+	delete pController;
+}
+
+#endif /* CONF_FAMILY_UNIX */

@@ -3,6 +3,7 @@
 #ifndef GAME_SERVER_GAMECONTROLLER_H
 #define GAME_SERVER_GAMECONTROLLER_H
 
+#include <base/detect.h>
 #include <base/vmath.h>
 
 /*
@@ -144,4 +145,13 @@ public:
 	virtual void PostReset();
 };
 
+typedef IGameController *CreateGameController_t(CGameContext *);
+typedef void DestroyGameController_t(IGameController *);
+
+#ifdef CONF_FAMILY_UNIX
+
+extern "C" IGameController *CreateGameController(CGameContext *pContext);
+extern "C" void DestroyGameController(IGameController *pController);
+
+#endif /* CONF_FAMILY_UNIX */
 #endif
