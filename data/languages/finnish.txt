@@ -747,6 +747,9 @@ New
 New folder
 == 
 
+New name:
+== 
+
 Next Envelope
 == 
 
@@ -804,7 +807,7 @@ Proof
 Quads
 == 
 
-REC
+REC %3d:%02d
 == 
 
 Reason:
@@ -829,6 +832,12 @@ Removes the image from the map
 == 
 
 Removes the image from the map file.
+== 
+
+Rename
+== 
+
+Rename demo
 == 
 
 Replace
@@ -916,6 +925,9 @@ Toggles the envelope editor.
 == 
 
 Unable to delete the demo
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable

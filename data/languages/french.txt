@@ -547,8 +547,8 @@ Quick search:
 Quit
 == Quitter
 
-REC
-== REC
+REC %3d:%02d
+== REC %3d:%02d
 
 Reason:
 == Raison :
@@ -888,6 +888,9 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 Name plates size
 == 
 
+New name:
+== 
+
 Para X
 == 
 
@@ -910,6 +913,12 @@ Refocus
 == 
 
 Removes game tiles that aren't based on a layer
+== 
+
+Rename
+== 
+
+Rename demo
 == 
 
 Resizes the current Quad based on the aspect ratio of the image
@@ -949,6 +958,9 @@ Toggles the envelope editor.
 == 
 
 Unable to delete the demo
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable
