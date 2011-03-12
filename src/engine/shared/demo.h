@@ -39,7 +39,7 @@ public:
 
 	bool IsRecording() const { return m_File != 0; }
 
-	int TickCount() const { return m_LastTickMarker - m_FirstTick; }
+	int Length() const { return m_LastTickMarker - m_FirstTick; }
 };
 
 class CDemoPlayer : public IDemoPlayer
