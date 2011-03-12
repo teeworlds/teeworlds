@@ -259,7 +259,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(x, 0.0f, 120.0f, 50.0f, 15.0f, CUI::CORNER_B);
+	RenderTools()->DrawRoundRectExt(x, 0.0f, 180.0f, 50.0f, 15.0f, CUI::CORNER_B);
 	Graphics()->QuadsEnd();
 
 	//draw the red dot
@@ -269,7 +269,10 @@ void CScoreboard::RenderRecordingNotification(float x)
 	Graphics()->QuadsEnd();
 
 	//draw the text
-	TextRender()->Text(0, x+50.0f, 8.0f, 24.0f, Localize("REC"), -1);
+	char aBuf[64];
+	int Seconds = m_pClient->DemoRecorder()->Length()/SERVER_TICK_SPEED;
+	str_format(aBuf, sizeof(aBuf), Localize("REC %3d:%02d"), Seconds/60, Seconds%60);
+	TextRender()->Text(0, x+50.0f, 10.0f, 20.0f, aBuf, -1);
 }
 
 void CScoreboard::OnRender()
