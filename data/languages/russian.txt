@@ -900,6 +900,9 @@ Name plates size
 New folder
 == 
 
+New name:
+== 
+
 Para X
 == 
 
@@ -918,7 +921,7 @@ Pos Y
 Quads
 == 
 
-REC
+REC %3d:%02d
 == 
 
 Record demo
@@ -928,6 +931,12 @@ Red value of the envelope
 == 
 
 Removes game tiles that aren't based on a layer
+== 
+
+Rename
+== 
+
+Rename demo
 == 
 
 Resizes the current Quad based on the aspect ratio of the image
@@ -961,6 +970,9 @@ Time limit: %d min
 == 
 
 Unable to delete the demo
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable

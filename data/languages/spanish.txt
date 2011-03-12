@@ -616,8 +616,8 @@ Quick search:
 Quit
 == Salir
 
-REC
-== REC
+REC %3d:%02d
+== REC %3d:%02d
 
 Reason:
 == Razón:
@@ -984,7 +984,19 @@ Free-View
 Game tiles
 == 
 
+New name:
+== 
+
 Removes game tiles that aren't based on a layer
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable

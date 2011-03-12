@@ -927,6 +927,9 @@ Max demos
 Name plates size
 == 
 
+New name:
+== 
+
 Para X
 == 
 
@@ -945,13 +948,19 @@ Pos Y
 Quads
 == 
 
-REC
+REC %3d:%02d
 == 
 
 Red value of the envelope
 == 
 
 Removes game tiles that aren't based on a layer
+== 
+
+Rename
+== 
+
+Rename demo
 == 
 
 Rotation of the envelope
@@ -967,6 +976,9 @@ The audio device couldn't be initialised.
 == 
 
 Unable to delete the demo
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable

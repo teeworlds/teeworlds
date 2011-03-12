@@ -969,10 +969,19 @@ Max Screenshots
 Max demos
 == 
 
-REC
+New name:
+== 
+
+REC %3d:%02d
 == 
 
 Removes game tiles that aren't based on a layer
+== 
+
+Rename
+== 
+
+Rename demo
 == 
 
 Shift
@@ -982,6 +991,9 @@ Sound error
 == 
 
 Sudden Death
+== 
+
+Unable to rename the demo
 == 
 
 Unhookable

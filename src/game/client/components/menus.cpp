@@ -855,6 +855,12 @@ int CMenus::Render()
 			pExtraText = Localize("Are you sure that you want to delete the demo?");
 			ExtraAlign = -1;
 		}
+		else if(m_Popup == POPUP_RENAME_DEMO)
+		{
+			pTitle = Localize("Rename demo");
+			pExtraText = "";
+			ExtraAlign = -1;
+		}
 		else if(m_Popup == POPUP_SOUNDERROR)
 		{
 			pTitle = Localize("Sound error");
@@ -1069,6 +1075,55 @@ int CMenus::Render()
 						PopupMessage(Localize("Error"), Localize("Unable to delete the demo"), Localize("Ok"));
 				}
 			}
+		}
+		else if(m_Popup == POPUP_RENAME_DEMO)
+		{
+			CUIRect Label, TextBox, Ok, Abort;
+			
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Part.VMargin(80.0f, &Part);
+			
+			Part.VSplitMid(&Abort, &Ok);
+			
+			Ok.VMargin(20.0f, &Ok);
+			Abort.VMargin(20.0f, &Abort);
+			
+			static int s_ButtonAbort = 0;
+			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static int s_ButtonOk = 0;
+			if(DoButton_Menu(&s_ButtonOk, Localize("Ok"), 0, &Ok) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				// rename demo
+				if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
+				{
+					char aBufOld[512];
+					str_format(aBufOld, sizeof(aBufOld), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+					char aBufNew[512];
+					str_format(aBufNew, sizeof(aBufNew), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
+					if(Storage()->RenameFile(aBufOld, aBufNew, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
+					{
+						DemolistPopulate();
+						DemolistOnUpdate(false);
+					}
+					else
+						PopupMessage(Localize("Error"), Localize("Unable to rename the demo"), Localize("Ok"));
+				}
+			}
+			
+			Box.HSplitBottom(60.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			
+			Part.VSplitLeft(60.0f, 0, &Label);
+			Label.VSplitLeft(120.0f, 0, &TextBox);
+			TextBox.VSplitLeft(20.0f, 0, &TextBox);
+			TextBox.VSplitRight(60.0f, &TextBox, 0);
+			UI()->DoLabel(&Label, Localize("New name:"), 18.0f, -1);
+			static float Offset = 0.0f;
+			DoEditBox(&Offset, &TextBox, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), 12.0f, &Offset);
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{

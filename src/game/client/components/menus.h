@@ -97,6 +97,7 @@ class CMenus : public CComponent
 		POPUP_PURE,
 		POPUP_LANGUAGE,
 		POPUP_DELETE_DEMO,
+		POPUP_RENAME_DEMO,
 		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
@@ -185,6 +186,7 @@ class CMenus : public CComponent
 	
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
+	char m_aCurrentDemoFile[64];
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;

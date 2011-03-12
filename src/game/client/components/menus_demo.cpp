@@ -509,13 +509,15 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 	
-	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect, FileIcon;
+	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect, RenameRect, FileIcon;
 	MainView.HSplitBottom(ms_ButtonHeight+5.0f, &MainView, &ButtonBar);
 	ButtonBar.HSplitTop(5.0f, 0, &ButtonBar);
 	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
 	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
-	ButtonBar.VSplitLeft(10.0f, &DeleteRect, &ButtonBar);
+	ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
 	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
+	ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
+	ButtonBar.VSplitLeft(120.0f, &RenameRect, &ButtonBar);
 	
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
@@ -586,6 +588,19 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			{
 				UI()->SetActiveItem(0);
 				m_Popup = POPUP_DELETE_DEMO;
+				return;
+			}
+		}
+
+		static int s_RenameButton = 0;
+		if(DoButton_Menu(&s_RenameButton, Localize("Rename"), 0, &RenameRect))
+		{
+			if(m_DemolistSelectedIndex >= 0)
+			{
+				UI()->SetActiveItem(0);
+				m_Popup = POPUP_RENAME_DEMO;
+				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
+				return;
 			}
 		}
 	}
