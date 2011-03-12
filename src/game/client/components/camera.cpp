@@ -12,7 +12,7 @@
 
 CCamera::CCamera()
 {
-	m_WasSpectator = false;
+	m_CamType = CAMTYPE_UNDEFINED;
 }
 
 void CCamera::OnRender()
@@ -21,21 +21,22 @@ void CCamera::OnRender()
 	m_Zoom = 1.0f;
 
 	// update camera center		
-	if(m_pClient->m_Snap.m_Spectate && (!m_pClient->m_Snap.m_pSpectatorInfo || m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SPEC_FREEVIEW))
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
 	{
-		if(!m_WasSpectator)
+		if(m_CamType != CAMTYPE_SPEC)
 		{
+			m_pClient->m_pControls->m_MousePos = m_PrevCenter;
 			m_pClient->m_pControls->ClampMousePos();
-			m_WasSpectator = true;
+			m_CamType = CAMTYPE_SPEC;
 		}
 		m_Center = m_pClient->m_pControls->m_MousePos;
 	}
 	else
 	{
-		if(m_WasSpectator)
+		if(m_CamType != CAMTYPE_PLAYER)
 		{
 			m_pClient->m_pControls->ClampMousePos();
-			m_WasSpectator = false;
+			m_CamType = CAMTYPE_PLAYER;
 		}
 
 		vec2 CameraOffset(0, 0);
@@ -50,9 +51,11 @@ void CCamera::OnRender()
 			CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
 		}
 		
-		if(m_pClient->m_Snap.m_Spectate)
-			m_Center = m_pClient->m_Snap.m_SpectatorPos + CameraOffset;
+		if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+			m_Center = m_pClient->m_Snap.m_SpecInfo.m_Position + CameraOffset;
 		else
 			m_Center = m_pClient->m_LocalCharacterPos + CameraOffset;
 	}
+
+	m_PrevCenter = m_Center;
 }

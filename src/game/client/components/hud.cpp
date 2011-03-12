@@ -406,8 +406,8 @@ void CHud::RenderSpectatorHud()
 
 	// draw the text
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW ?
-		m_pClient->m_aClients[m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID].m_aName : Localize("Free-View"));
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
+		m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"));
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
@@ -422,10 +422,10 @@ void CHud::OnRender()
 
 	if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
-	else if(m_pClient->m_Snap.m_Spectate)
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active)
 	{
-		if(m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW)
-			RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID].m_Cur);
+		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
+			RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
 		RenderSpectatorHud();
 	}
 

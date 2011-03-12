@@ -337,6 +337,8 @@ void CGameClient::OnReset()
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+
+	m_DemoSpecID = SPEC_FREEVIEW;
 }
 
 
@@ -360,13 +362,26 @@ void CGameClient::UpdatePositions()
 	}
 
 	// spectator position
-	if(m_Snap.m_Spectate && m_Snap.m_pSpectatorInfo)
+	if(m_Snap.m_SpecInfo.m_Active)
 	{
-		if(m_Snap.m_pPrevSpectatorInfo)
-			m_Snap.m_SpectatorPos = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
-										vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick());
-		else
-			m_Snap.m_SpectatorPos = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
+			m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
+		{
+			m_Snap.m_SpecInfo.m_Position = mix(
+				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
+				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y),
+				Client()->IntraGameTick());
+			m_Snap.m_SpecInfo.m_UsePosition = true;
+		}
+		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW))
+		{
+			if(m_Snap.m_pPrevSpectatorInfo)
+				m_Snap.m_SpecInfo.m_Position = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
+													vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick());
+			else
+				m_Snap.m_SpecInfo.m_Position = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
+			m_Snap.m_SpecInfo.m_UsePosition = true;
+		}
 	}
 }
 
@@ -720,7 +735,10 @@ void CGameClient::OnNewSnapshot()
 					m_Snap.m_pLocalInfo = pInfo;
 					
 					if(pInfo->m_Team == TEAM_SPECTATORS)
-						m_Snap.m_Spectate = true;
+					{
+						m_Snap.m_SpecInfo.m_Active = true;
+						m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+					}
 				}
 				
 				// calculate team-balance
@@ -747,6 +765,8 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pSpectatorInfo = (const CNetObj_SpectatorInfo *)pData;
 				m_Snap.m_pPrevSpectatorInfo = (const CNetObj_SpectatorInfo *)Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_SPECTATORINFO, Item.m_ID);
+
+				m_Snap.m_SpecInfo.m_SpectatorID = m_Snap.m_pSpectatorInfo->m_SpectatorID;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEINFO)
 			{
@@ -785,7 +805,14 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 	else
-		m_Snap.m_Spectate = true;
+	{
+		m_Snap.m_SpecInfo.m_Active = true;
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
+			m_DemoSpecID != SPEC_FREEVIEW && m_Snap.m_aCharacters[m_DemoSpecID].m_Active)
+			m_Snap.m_SpecInfo.m_SpectatorID = m_DemoSpecID;
+		else
+			m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+	}
 
 	// sort player infos by score
 	mem_copy(m_Snap.m_paInfoByScore, m_Snap.m_paPlayerInfos, sizeof(m_Snap.m_paInfoByScore));

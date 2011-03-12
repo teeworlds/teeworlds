@@ -199,18 +199,17 @@ int CControls::SnapInput(int *pData)
 void CControls::OnRender()
 {
 	// update target pos
-	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || m_pClient->m_Snap.m_Spectate))
+	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || m_pClient->m_Snap.m_SpecInfo.m_Active))
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
-
-	if(m_pClient->m_Snap.m_Spectate && m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID != SPEC_FREEVIEW)
-		m_TargetPos = m_pClient->m_Snap.m_SpectatorPos + m_MousePos;
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
+		m_TargetPos = m_pClient->m_Snap.m_SpecInfo.m_Position + m_MousePos;
+	else
+		m_TargetPos = m_MousePos;
 }
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED) ||
-		(m_pClient->m_Snap.m_Spectate  && (!m_pClient->m_Snap.m_pSpectatorInfo || m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SPEC_FREEVIEW) &&
-		m_pClient->m_pChat->IsActive()))
+	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
 		return false;
 	
 	m_MousePos += vec2(x, y); // TODO: ugly
@@ -221,11 +220,11 @@ bool CControls::OnMouseMove(float x, float y)
 
 void CControls::ClampMousePos()
 {
-	if(m_pClient->m_Snap.m_Spectate && (!m_pClient->m_Snap.m_pSpectatorInfo || m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SPEC_FREEVIEW))
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
 	{
 		m_MousePos.x = clamp(m_MousePos.x, 200.0f, Collision()->GetWidth()*32-200.0f);
 		m_MousePos.y = clamp(m_MousePos.y, 200.0f, Collision()->GetHeight()*32-200.0f);
-		m_TargetPos = m_MousePos;
+		
 	}
 	else
 	{

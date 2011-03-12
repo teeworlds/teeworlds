@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/demo.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -16,7 +17,8 @@
 void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
-	if(pSelf->m_pClient->m_Snap.m_Spectate)
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active &&
+		(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK || pSelf->DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER))
 		pSelf->m_Active = pResult->GetInteger(0) != 0;
 }
 
@@ -58,7 +60,7 @@ void CSpectator::OnRender()
 		{
 			if(m_SelectedSpectatorID != NO_SELECTION)
 				Spectate(m_SelectedSpectatorID);
-			OnReset();
+			m_WasActive = false;
 		}
 		return;
 	}
@@ -89,8 +91,7 @@ void CSpectator::OnRender()
 	float LineHeight = 60.0f;
 	bool Selected  = false;
 
-	int SpectatorID = m_pClient->m_Snap.m_pSpectatorInfo ? m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID : SPEC_FREEVIEW;
-	if(SpectatorID == SPEC_FREEVIEW)
+	if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 	{
 		Graphics()->TextureSet(-1);
 		Graphics()->QuadsBegin();
@@ -120,7 +121,7 @@ void CSpectator::OnRender()
 			y = StartY;
 		}
 
-		if(SpectatorID == i)
+		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == i)
 		{
 			Graphics()->TextureSet(-1);
 			Graphics()->QuadsBegin();
@@ -163,7 +164,13 @@ void CSpectator::OnReset()
 
 void CSpectator::Spectate(int SpectatorID)
 {
-	if(m_pClient->m_Snap.m_pSpectatorInfo && m_pClient->m_Snap.m_pSpectatorInfo->m_SpectatorID == SpectatorID)
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		m_pClient->m_DemoSpecID = clamp(SpectatorID, (int)SPEC_FREEVIEW, MAX_CLIENTS-1);
+		return;
+	}
+
+	if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SpectatorID)
 		return;
 
 	CNetMsg_Cl_SetSpectatorMode Msg;

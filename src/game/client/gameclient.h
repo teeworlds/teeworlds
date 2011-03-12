@@ -97,6 +97,8 @@ public:
 	};
 	int m_ServerMode;
 
+	int m_DemoSpecID;
+
 	vec2 m_LocalCharacterPos;
 
 	// predicted players
@@ -122,8 +124,15 @@ public:
 		int m_LocalClientID;
 		int m_NumPlayers;
 		int m_aTeamSize[2];
-		bool m_Spectate;
-		vec2 m_SpectatorPos;
+		
+		// spectate data
+		struct CSpectateInfo
+		{
+			bool m_Active;
+			int m_SpectatorID;
+			bool m_UsePosition;
+			vec2 m_Position;
+		} m_SpecInfo;
 		
 		//
 		struct CCharacterInfo

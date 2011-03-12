@@ -6,11 +6,20 @@
 #include <game/client/component.h>
 
 class CCamera : public CComponent
-{	
+{
+	enum
+	{
+		CAMTYPE_UNDEFINED=-1,
+		CAMTYPE_SPEC,
+		CAMTYPE_PLAYER,
+	};
+
+	int m_CamType;
+	vec2 m_PrevCenter;
+
 public:
 	vec2 m_Center;
 	float m_Zoom;
-	bool m_WasSpectator;
 
 	CCamera();
 	virtual void OnRender();

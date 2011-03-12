@@ -151,11 +151,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 	else
 	{
-		char aBuf[128];
-		int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
-		str_format(aBuf, sizeof(aBuf), "%d", Score);
-		tw = TextRender()->TextWidth(0, 48, aBuf, -1);
-		TextRender()->Text(0, x+w-tw-30, y, 48, aBuf, -1);
+		if(m_pClient->m_Snap.m_pLocalInfo)
+		{
+			char aBuf[128];
+			int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
+			str_format(aBuf, sizeof(aBuf), "%d", Score);
+			tw = TextRender()->TextWidth(0, 48, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-30, y, 48, aBuf, -1);
+		}
 	}
 
 	y += 54.0f;
