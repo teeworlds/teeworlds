@@ -94,6 +94,7 @@ private:
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
+	int m_DemoType;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	int m_LastSnapshotDataSize;
 	class CSnapshotDelta *m_pSnapshotDelta;
@@ -119,6 +120,7 @@ public:
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	char *GetDemoName();
 	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const;
+	int GetDemoType() const;
 	
 	int Update();
 	

@@ -562,6 +562,12 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		return -1;
 	}
 	
+	// get demo type
+	if(!str_comp(m_Info.m_Header.m_aType, "client"))
+			m_DemoType = DEMOTYPE_CLIENT;
+	else if(!str_comp(m_Info.m_Header.m_aType, "server"))
+		m_DemoType = DEMOTYPE_SERVER;
+	else DEMOTYPE_INVALID;
 	
 	// get map
 	if(m_Info.m_Header.m_Version >= gs_VersionWithMap)
@@ -770,4 +776,11 @@ bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, i
 	
 	io_close(File);
 	return true;
+}
+
+int CDemoPlayer::GetDemoType() const
+{
+	if(m_File)
+		return m_DemoType;
+	return DEMOTYPE_INVALID;
 }

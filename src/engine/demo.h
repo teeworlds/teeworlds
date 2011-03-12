@@ -20,6 +20,13 @@ public:
 		int m_LastTick;
 	};
 
+	enum
+	{
+		DEMOTYPE_INVALID=0,
+		DEMOTYPE_CLIENT,
+		DEMOTYPE_SERVER,
+	};
+
 	~IDemoPlayer() {}
 	virtual void SetSpeed(float Speed) = 0;
 	virtual int SetPos(float Precent) = 0;
@@ -28,6 +35,7 @@ public:
 	virtual const CInfo *BaseInfo() const = 0;
 	virtual char *GetDemoName() = 0;
 	virtual bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const = 0;
+	virtual int GetDemoType() const = 0;
 };
 
 class IDemoRecorder : public IInterface
