@@ -117,7 +117,7 @@ private:
 		vec2 m_ActivationDir;
 		int m_ActivationTick;
 		int m_CurrentMoveTime;
-		
+		int m_OldVelAmount;
 	} m_Ninja;
 
 	// the player core for the physics	
