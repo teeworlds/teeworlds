@@ -2120,11 +2120,11 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 		return "error loading demo";
 
 	// load map
-	Crc = (m_DemoPlayer.Info()->m_Header.m_aCrc[0]<<24)|
-		(m_DemoPlayer.Info()->m_Header.m_aCrc[1]<<16)|
-		(m_DemoPlayer.Info()->m_Header.m_aCrc[2]<<8)|
-		(m_DemoPlayer.Info()->m_Header.m_aCrc[3]);
-	pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMap, Crc);
+	Crc = (m_DemoPlayer.Info()->m_Header.m_aMapCrc[0]<<24)|
+		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[1]<<16)|
+		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[2]<<8)|
+		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[3]);
+	pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMapName, Crc);
 	if(pError)
 	{
 		DisconnectWithReason(pError);

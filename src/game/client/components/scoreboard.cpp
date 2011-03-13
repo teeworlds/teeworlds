@@ -270,7 +270,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 	//draw the text
 	char aBuf[64];
-	int Seconds = m_pClient->DemoRecorder()->Length()/SERVER_TICK_SPEED;
+	int Seconds = m_pClient->DemoRecorder()->Length();
 	str_format(aBuf, sizeof(aBuf), Localize("REC %3d:%02d"), Seconds/60, Seconds%60);
 	TextRender()->Text(0, x+50.0f, 10.0f, 20.0f, aBuf, -1);
 }

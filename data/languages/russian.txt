@@ -783,6 +783,9 @@ ZO
 
 ##### needs translation #####
 
+%d Bytes
+== 
+
 %i minute left
 == 
 
@@ -843,6 +846,12 @@ Color
 Constructs game tiles from this layer
 == 
 
+Crc:
+== 
+
+Created:
+== 
+
 Death
 == 
 
@@ -850,6 +859,9 @@ Delete demo
 == 
 
 Delete this envelope
+== 
+
+Demo details
 == 
 
 Down
@@ -885,7 +897,13 @@ Left
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
+Length:
+== 
+
 Load map
+== 
+
+Map:
 == 
 
 Max Screenshots
@@ -895,6 +913,9 @@ Max demos
 == 
 
 Name plates size
+== 
+
+Netversion:
 == 
 
 New folder
@@ -954,6 +975,9 @@ Rotation of the envelope
 Shift
 == 
 
+Size:
+== 
+
 Sound error
 == 
 
@@ -967,6 +991,9 @@ Tiles
 == 
 
 Time limit: %d min
+== 
+
+Type:
 == 
 
 Unable to delete the demo
@@ -988,6 +1015,9 @@ Use left mouse button to drag and change the color value. Hold shift to be more 
 == 
 
 Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Version:
 == 
 
 X-axis of the envelope
