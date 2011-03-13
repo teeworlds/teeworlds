@@ -511,7 +511,6 @@ void CHud::RenderSpeedmeter()
 	}
 	else
 	{
-		int aPos[2] = { 1, 2 };
 		const CNetObj_PlayerInfo *apPlayerInfo[2] = { 0, 0 };
 		int i = 0;
 		for(int j = 0; j < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_paInfoByScore[i]; ++i)
@@ -533,7 +532,6 @@ void CHud::RenderSpeedmeter()
 		}
 		float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1), TextRender()->TextWidth(0, 14.0f, aScore[1], -1)};
 		float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1));
-		float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 		
 		RenderTools()->DrawRoundRectExt(m_Width-ScoreWidthMax-38.0f, 245.0f+t*20, ScoreWidthMax+38.0f, 18.0f, 5.0f, CUI::CORNER_L);
 	}
