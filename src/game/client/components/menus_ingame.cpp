@@ -158,26 +158,13 @@ void CMenus::RenderGame(CUIRect MainView)
 
 void CMenus::RenderServerInfo(CUIRect MainView)
 {
+	if(!m_pClient->m_Snap.m_pLocalInfo)
+		return;
+
 	// fetch server info
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
 	
-	if(!m_pClient->m_Snap.m_pLocalInfo)
-		return;
-	
-	// count players for server info-box
-	int NumPlayers = 0;
-	for(int i = 0; i < Client()->SnapNumItems(IClient::SNAP_CURRENT); i++)
-	{
-		IClient::CSnapItem Item;
-		Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
-		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
-		{
-			NumPlayers++;
-		}
-	}
-
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	
