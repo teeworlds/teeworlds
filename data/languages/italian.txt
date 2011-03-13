@@ -930,6 +930,9 @@ no limit
 
 ##### needs translation #####
 
+%d Bytes
+== 
+
 Adds border tiles
 == 
 
@@ -945,7 +948,16 @@ Collision
 Constructs game tiles from this layer
 == 
 
+Crc:
+== 
+
+Created:
+== 
+
 Death
+== 
+
+Demo details
 == 
 
 File
@@ -963,10 +975,19 @@ Game tiles
 HD
 == 
 
+Length:
+== 
+
+Map:
+== 
+
 Max Screenshots
 == 
 
 Max demos
+== 
+
+Netversion:
 == 
 
 New name:
@@ -987,16 +1008,25 @@ Rename demo
 Shift
 == 
 
+Size:
+== 
+
 Sound error
 == 
 
 Sudden Death
 == 
 
+Type:
+== 
+
 Unable to rename the demo
 == 
 
 Unhookable
+== 
+
+Version:
 == 
 
 Warmup

@@ -960,6 +960,9 @@ no limit
 
 ##### needs translation #####
 
+%d Bytes
+== 
+
 Adds border tiles
 == 
 
@@ -975,13 +978,31 @@ Collision
 Constructs game tiles from this layer
 == 
 
+Crc:
+== 
+
+Created:
+== 
+
 Death
+== 
+
+Demo details
 == 
 
 Free-View
 == 
 
 Game tiles
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Netversion:
 == 
 
 New name:
@@ -996,10 +1017,19 @@ Rename
 Rename demo
 == 
 
+Size:
+== 
+
+Type:
+== 
+
 Unable to rename the demo
 == 
 
 Unhookable
+== 
+
+Version:
 == 
 
 [ctrl+i] Show tile informations

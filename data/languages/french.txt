@@ -813,6 +813,9 @@ no limit
 
 ##### needs translation #####
 
+%d Bytes
+== 
+
 Add Quad
 == 
 
@@ -855,6 +858,12 @@ Collision
 Constructs game tiles from this layer
 == 
 
+Crc:
+== 
+
+Created:
+== 
+
 Creates a new quad layer
 == 
 
@@ -865,6 +874,9 @@ Death
 == 
 
 Deletes the current quad
+== 
+
+Demo details
 == 
 
 Enable/disable group for saving
@@ -885,7 +897,16 @@ HD
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
+Length:
+== 
+
+Map:
+== 
+
 Name plates size
+== 
+
+Netversion:
 == 
 
 New name:
@@ -930,6 +951,9 @@ Rotation of the brush in degrees. Use left mouse button to drag and change the v
 Shift
 == 
 
+Size:
+== 
+
 Sound error
 == 
 
@@ -957,6 +981,9 @@ Toggle layer visibility
 Toggles the envelope editor.
 == 
 
+Type:
+== 
+
 Unable to delete the demo
 == 
 
@@ -973,6 +1000,9 @@ Use left mouse button to drag and create a brush.
 == 
 
 Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+Version:
 == 
 
 X-axis of the envelope

@@ -429,6 +429,9 @@ You must restart the game for all settings to take effect.
 
 ##### needs translation #####
 
+%d Bytes
+== 
+
 %d%% loaded
 == 
 
@@ -555,6 +558,12 @@ Connection Problems...
 Constructs game tiles from this layer
 == 
 
+Crc:
+== 
+
+Created:
+== 
+
 Creates a new color envelope
 == 
 
@@ -598,6 +607,9 @@ Deletes the current quad
 == 
 
 Deletes the layer
+== 
+
+Demo details
 == 
 
 Detail
@@ -702,6 +714,9 @@ Left mouse button to move. Hold shift to move the texture.
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
+Length:
+== 
+
 Load
 == 
 
@@ -714,6 +729,9 @@ Load map
 Make external
 == 
 
+Map:
+== 
+
 Max Screenshots
 == 
 
@@ -724,6 +742,9 @@ Name plates size
 == 
 
 Name:
+== 
+
+Netversion:
 == 
 
 New
@@ -879,6 +900,9 @@ Shift
 Show chat
 == 
 
+Size:
+== 
+
 Sound error
 == 
 
@@ -918,6 +942,9 @@ Toggle layer visibility
 Toggles the envelope editor.
 == 
 
+Type:
+== 
+
 Unable to delete the demo
 == 
 
@@ -943,6 +970,9 @@ Use left mouse button to drag and create a brush.
 == 
 
 Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+Version:
 == 
 
 Warmup
