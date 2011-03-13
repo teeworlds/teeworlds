@@ -101,6 +101,11 @@ class CTextRender : public IEngineTextRender
 	float m_TextG;
 	float m_TextB;
 	float m_TextA;
+
+	float m_TextOutlineR;
+	float m_TextOutlineG;
+	float m_TextOutlineB;
+	float m_TextOutlineA;
 	
 	int m_FontTextureFormat;
 
@@ -438,10 +443,14 @@ public:
 	{
 		m_pGraphics = 0;
 
-		m_TextR = 1;
-		m_TextG = 1;
-		m_TextB = 1;
-		m_TextA = 1;
+		m_TextR = 1.0f;
+		m_TextG = 1.0f;
+		m_TextB = 1.0f;
+		m_TextA = 1.0f;
+		m_TextOutlineR = 0.0f;
+		m_TextOutlineG = 0.0f;
+		m_TextOutlineB = 0.0f;
+		m_TextOutlineA = 0.3f;
 
 		m_pDefaultFont = 0;
 
@@ -535,6 +544,14 @@ public:
 		m_TextB = b;
 		m_TextA = a;
 	}
+
+	virtual void TextOutlineColor(float r, float g, float b, float a)
+	{
+		m_TextOutlineR = r;
+		m_TextOutlineG = g;
+		m_TextOutlineB = b;
+		m_TextOutlineA = a;
+	}
 	
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
@@ -614,7 +631,7 @@ public:
 
 				Graphics()->QuadsBegin();
 				if (i == 0)
-					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f*m_TextA);
+					Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
 				else
 					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
 			}
