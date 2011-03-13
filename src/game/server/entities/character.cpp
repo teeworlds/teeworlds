@@ -137,7 +137,7 @@ void CCharacter::HandleNinja()
 	if (m_Ninja.m_CurrentMoveTime == 0)
 	{
 		// reset velocity
-		m_Core.m_Vel *= 0.2f;
+		m_Core.m_Vel = m_Ninja.m_ActivationDir*m_Ninja.m_OldVelAmount;
 	}
 
 	if (m_Ninja.m_CurrentMoveTime > 0)
@@ -413,9 +413,9 @@ void CCharacter::FireWeapon()
 			// reset Hit objects
 			m_NumObjectsHit = 0;
 			
-			m_AttackTick = Server()->Tick();
 			m_Ninja.m_ActivationDir = Direction;
 			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
+			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
 			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
 		} break;
