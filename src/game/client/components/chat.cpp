@@ -252,14 +252,18 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	}
 
 	// play sound
-	if(ClientID >= 0)
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
-	else
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
+	if(g_Config.m_RdChat)
+		if(ClientID >= 0)
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
+		else
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 }
 
 void CChat::OnRender()
 {
+	if(!g_Config.m_RdChat)
+		return;
+
 	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
 	float x = 10.0f;
 	float y = 300.0f-20.0f;

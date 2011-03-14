@@ -22,6 +22,17 @@ MACRO_CONFIG_INT(ClAutoDemoMax, cl_auto_demo_max, 10, 0, 1000, CFGFLAG_SAVE|CFGF
 MACRO_CONFIG_INT(ClAutoScreenshot, cl_auto_screenshot, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Automatically take game over screenshot")
 MACRO_CONFIG_INT(ClAutoScreenshotMax, cl_auto_screenshot_max, 10, 0, 1000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Maximum number of automatically created screenshots (0 = no limit)")
 
+MACRO_CONFIG_INT(RdBroadcast, rd_broadcast, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the server's broadcast")
+MACRO_CONFIG_INT(RdChat, rd_chat, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the chat interface")
+MACRO_CONFIG_INT(RdConnProblems, rd_conn_problems, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show connection problems")
+MACRO_CONFIG_INT(RdGameTimer, rd_gametimer, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the game timer")
+MACRO_CONFIG_INT(RdHealthAmmo, rd_health_ammo, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the player's health and ammo")
+MACRO_CONFIG_INT(RdKillMessages, rd_kill_messages, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the kill messages")
+MACRO_CONFIG_INT(RdScoreTeam, rd_score_team, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the score hud in the team mode")
+MACRO_CONFIG_INT(RdScoreNoTeam, rd_score_no_team, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the score hud in the no team mode")
+MACRO_CONFIG_INT(RdVoting, rd_voting, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the voting")
+MACRO_CONFIG_INT(RdWarmup, rd_warmup, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show the warmup")
+
 MACRO_CONFIG_INT(ClEventthread, cl_eventthread, 0, 0, 1, CFGFLAG_CLIENT, "Enables the usage of a thread to pump the events")
 
 MACRO_CONFIG_INT(InpGrab, inp_grab, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Use forceful input grabbing method")

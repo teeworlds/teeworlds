@@ -8,6 +8,7 @@
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
 #include "killmessages.h"
+#include <engine/shared/config.h>
 
 void CKillMessages::OnReset()
 {
@@ -44,6 +45,9 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CKillMessages::OnRender()
 {
+	if(!g_Config.m_RdKillMessages)
+		return;
+
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 

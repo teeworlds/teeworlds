@@ -29,6 +29,9 @@ void CHud::OnReset()
 
 void CHud::RenderGameTimer()
 {
+	if(!g_Config.m_RdGameTimer)
+		return;
+
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
 	Graphics()->MapScreen(0, 0, 300.0f*Graphics()->ScreenAspect(), 300.0f);
 	
@@ -62,6 +65,9 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderSuddenDeath()
 {
+	if(!g_Config.m_RdGameTimer)
+		return;
+
 	if(m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
 		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
@@ -82,6 +88,9 @@ void CHud::RenderScoreHud()
 
 		if(GameFlags&GAMEFLAG_TEAMS)
 		{
+			if(!g_Config.m_RdScoreTeam)
+				return;
+
 			char aScoreTeam[2][32];
 			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
 			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
@@ -138,6 +147,9 @@ void CHud::RenderScoreHud()
 		}
 		else
 		{
+			if(!g_Config.m_RdScoreNoTeam)
+				return;
+
 			int Local = -1;
 			int aPos[2] = { 1, 2 };
 			const CNetObj_PlayerInfo *apPlayerInfo[2] = { 0, 0 };
@@ -215,6 +227,9 @@ void CHud::RenderScoreHud()
 
 void CHud::RenderWarmupTimer()
 {
+	if(!g_Config.m_RdWarmup)
+		return;
+	
 	// render warmup timer
 	if(m_pClient->m_Snap.m_pGameobj->m_Warmup)
 	{
@@ -256,6 +271,9 @@ void CHud::RenderFps()
 
 void CHud::RenderConnectionWarning()
 {
+	if(!g_Config.m_RdConnProblems)
+		return;
+	
 	if(Client()->ConnectionProblems())
 	{
 		const char *pText = Localize("Connection Problems...");
@@ -287,6 +305,9 @@ void CHud::RenderTeambalanceWarning()
 
 void CHud::RenderVoting()
 {
+	if(!g_Config.m_RdVoting)
+		return;
+	
 	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 	
@@ -342,6 +363,9 @@ void CHud::RenderCursor()
 void CHud::RenderHealthAndAmmo()
 {
 	//mapscreen_to_group(gacenter_x, center_y, layers_game_group());
+
+	if(!g_Config.m_RdHealthAmmo)
+		return;
 
 	float x = 5;
 	float y = 5;
