@@ -518,8 +518,6 @@ void CClient::SendInfo()
 {
 	CMsgPacker Msg(NETMSG_INFO);
 	Msg.AddString(GameClient()->NetVersion(), 128);
-	Msg.AddString(g_Config.m_PlayerName, 128);
-	Msg.AddString(g_Config.m_ClanName, 128);
 	Msg.AddString(g_Config.m_Password, 128);
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
@@ -1175,7 +1173,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					{
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
 						SendReady();
-						GameClient()->OnConnected();
 					}
 					else
 					{
@@ -1238,8 +1235,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					if(!pError)
 					{
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-						SendReady();
-						GameClient()->OnConnected();
+						SendReady();						
 					}
 					else
 						DisconnectWithReason(pError);
@@ -1260,6 +1256,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 					}
 				}
+			}
+			else if(Msg == NETMSG_CON_READY)
+			{
+				GameClient()->OnConnected();
 			}
 			else if(Msg == NETMSG_PING)
 			{

@@ -786,57 +786,65 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		else
 			pPlayer->m_SpectatorID = pMsg->m_SpectatorID;
 	}
-	else if (MsgID == NETMSGTYPE_CL_CHANGEINFO || MsgID == NETMSGTYPE_CL_STARTINFO)
-	{
-		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
-		
-		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
+	else if (MsgID == NETMSGTYPE_CL_STARTINFO)
+	{		
+		if(pPlayer->m_IsReady)
 			return;
-			
+
+		CNetMsg_Cl_StartInfo *pMsg = (CNetMsg_Cl_StartInfo *)pRawMsg;	
 		pPlayer->m_LastChangeInfo = Server()->Tick();
 		
+		// set start infos
+		Server()->SetClientName(ClientID, pMsg->m_pName);
+		str_copy(pPlayer->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_SkinName));
 		pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
 		pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
 		pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
+		m_pController->OnPlayerInfoChange(pPlayer);
 
-		// copy old name
-		char aOldName[MAX_NAME_LENGTH];
-		str_copy(aOldName, Server()->ClientName(ClientID), MAX_NAME_LENGTH);
+		// send vote options
+		CNetMsg_Sv_VoteClearOptions ClearMsg;
+		Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
+		CVoteOption *pCurrent = m_pVoteOptionFirst;
+		while(pCurrent)
+		{
+			CNetMsg_Sv_VoteOption OptionMsg;
+			OptionMsg.m_pCommand = pCurrent->m_aCommand;
+			Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
+			pCurrent = pCurrent->m_pNext;
+		}
+			
+		// send tuning parameters to client
+		SendTuningParams(ClientID);
+
+		// client is ready to enter
+		pPlayer->m_IsReady = true;
+		CNetMsg_Sv_ReadyToEnter m;
+		Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+	}
+	else if (MsgID == NETMSGTYPE_CL_CHANGEINFO)
+	{	
+		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
+			return;
 		
+		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
+		pPlayer->m_LastChangeInfo = Server()->Tick();
+		
+		// set infos
+		char aOldName[MAX_NAME_LENGTH];
+		str_copy(aOldName, Server()->ClientName(ClientID), sizeof(aOldName));	
 		Server()->SetClientName(ClientID, pMsg->m_pName);
-		if(MsgID == NETMSGTYPE_CL_CHANGEINFO && str_comp(aOldName, Server()->ClientName(ClientID)) != 0)
+		if(str_comp(aOldName, Server()->ClientName(ClientID)) != 0)
 		{
 			char aChatText[256];
 			str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientID));
 			SendChat(-1, CGameContext::CHAT_ALL, aChatText);
 		}
-		
-		// set skin
 		str_copy(pPlayer->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_SkinName));
-		
+		pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
+		pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
+		pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 		m_pController->OnPlayerInfoChange(pPlayer);
-		
-		if(MsgID == NETMSGTYPE_CL_STARTINFO)
-		{
-			// send vote options
-			CNetMsg_Sv_VoteClearOptions ClearMsg;
-			Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
-			CVoteOption *pCurrent = m_pVoteOptionFirst;
-			while(pCurrent)
-			{
-				CNetMsg_Sv_VoteOption OptionMsg;
-				OptionMsg.m_pCommand = pCurrent->m_aCommand;
-				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
-				pCurrent = pCurrent->m_pNext;
-			}
-			
-			// send tuning parameters to client
-			SendTuningParams(ClientID);
-
-			//
-			CNetMsg_Sv_ReadyToEnter m;
-			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
-		}
 	}
 	else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
 	{
@@ -1165,6 +1173,11 @@ void CGameContext::OnPreSnap() {}
 void CGameContext::OnPostSnap()
 {
 	m_Events.Clear();
+}
+
+bool CGameContext::IsClientReady(int ClientID)
+{
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_IsReady ? true : false;
 }
 
 const char *CGameContext::GameType() { return m_pController && m_pController->m_pGameType ? m_pController->m_pGameType : ""; }
