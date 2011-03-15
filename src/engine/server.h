@@ -76,6 +76,8 @@ public:
 	virtual void OnClientDrop(int ClientID) = 0;
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
+
+	virtual bool IsClientReady(int ClientID) = 0;
 	
 	virtual const char *GameType() = 0;
 	virtual const char *Version() = 0;

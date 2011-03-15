@@ -47,6 +47,8 @@ public:
 
 	// used for spectator mode
 	int m_SpectatorID;
+
+	bool m_IsReady;
 	
 	//
 	int m_Vote;

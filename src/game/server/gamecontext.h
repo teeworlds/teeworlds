@@ -161,6 +161,8 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput);
 	virtual void OnClientPredictedInput(int ClientID, void *pInput);
 
+	virtual bool IsClientReady(int ClientID);
+
 	virtual const char *GameType();
 	virtual const char *Version();
 	virtual const char *NetVersion();
