@@ -87,7 +87,8 @@ public:
 		int m_CurrentInput;
 		
 		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLANNAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
@@ -126,6 +127,8 @@ public:
 	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
+	virtual void SetClientClan(int ClientID, char const *pClan);
+	virtual void SetClientCountry(int ClientID, int Country);
 	virtual void SetClientScore(int ClientID, int Score);
 
 	void Kick(int ClientID, const char *pReason);
@@ -140,6 +143,8 @@ public:
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientIP(int ClientID, char *pIPString, int Size);
 	const char *ClientName(int ClientID);
+	const char *ClientClan(int ClientID);
+	int ClientCountry(int ClientID);
 	bool ClientIngame(int ClientID);
 
 	int *LatestInput(int ClientID, int *size);

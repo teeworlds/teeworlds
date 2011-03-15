@@ -26,6 +26,8 @@ public:
 	int TickSpeed() const { return m_TickSpeed; }
 
 	virtual const char *ClientName(int ClientID) = 0;
+	virtual const char *ClientClan(int ClientID) = 0;
+	virtual int ClientCountry(int ClientID) = 0;
 	virtual bool ClientIngame(int ClientID) = 0;
 	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) = 0;
 	virtual void GetClientIP(int ClientID, char *pIPString, int Size) = 0;
@@ -43,6 +45,8 @@ public:
 	}
 	
 	virtual void SetClientName(int ClientID, char const *pName) = 0;
+	virtual void SetClientClan(int ClientID, char const *pClan) = 0;
+	virtual void SetClientCountry(int ClientID, int Country) = 0;
 	virtual void SetClientScore(int ClientID, int Score) = 0;
 	
 	virtual int SnapNewID() = 0;
