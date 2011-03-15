@@ -169,12 +169,15 @@ public:
 		int m_ColorBody;
 		int m_ColorFeet;
 		
+		char m_aName[MAX_NAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
+
 		// anti rainbow
 		int m_ColorChangeCount;
 		vec4 m_PrevColorBody;
 		vec4 m_PrevColorFeet;
 
-		char m_aName[64];
 		char m_aSkinName[64];
 		int m_SkinID;
 		int m_SkinColor;

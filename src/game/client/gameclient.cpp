@@ -445,6 +445,8 @@ void CGameClient::OnReset()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		m_aClients[i].m_aName[0] = 0;
+		m_aClients[i].m_aClan[0] = 0;
+		m_aClients[i].m_Country = -1;
 		m_aClients[i].m_SkinID = 0;
 		m_aClients[i].m_Team = 0;
 		m_aClients[i].m_Angle = 0;
@@ -577,6 +579,8 @@ void CGameClient::OnRender()
 	{
 		// resend if client info differs
 		if(str_comp(g_Config.m_PlayerName, m_aClients[m_Snap.m_LocalClientID].m_aName) ||
+			str_comp(g_Config.m_PlayerClan, m_aClients[m_Snap.m_LocalClientID].m_aClan) ||
+			g_Config.m_PlayerCountry != m_aClients[m_Snap.m_LocalClientID].m_Country ||
 			str_comp(g_Config.m_PlayerSkin, m_aClients[m_Snap.m_LocalClientID].m_aSkinName) ||
 			(m_Snap.m_pGameInfoObj && !(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) &&	// no teamgame?
 			(g_Config.m_PlayerUseCustomColor != m_aClients[m_Snap.m_LocalClientID].m_UseCustomColor ||
@@ -919,7 +923,9 @@ void CGameClient::OnNewSnapshot()
 			{
 				const CNetObj_ClientInfo *pInfo = (const CNetObj_ClientInfo *)pData;
 				int ClientID = Item.m_ID;
-				IntsToStr(&pInfo->m_Name0, 6, m_aClients[ClientID].m_aName);
+				IntsToStr(&pInfo->m_Name0, 4, m_aClients[ClientID].m_aName);
+				IntsToStr(&pInfo->m_Clan0, 3, m_aClients[ClientID].m_aClan);
+				m_aClients[ClientID].m_Country = pInfo->m_Country;
 				IntsToStr(&pInfo->m_Skin0, 6, m_aClients[ClientID].m_aSkinName);
 				
 				m_aClients[ClientID].m_UseCustomColor = pInfo->m_UseCustomColor;
@@ -1436,6 +1442,8 @@ void CGameClient::SendInfo(bool Start)
 	{
 		CNetMsg_Cl_StartInfo Msg;
 		Msg.m_pName = g_Config.m_PlayerName;
+		Msg.m_pClan = g_Config.m_PlayerClan;
+		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_PlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
 		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
@@ -1446,6 +1454,8 @@ void CGameClient::SendInfo(bool Start)
 	{
 		CNetMsg_Cl_ChangeInfo Msg;
 		Msg.m_pName = g_Config.m_PlayerName;
+		Msg.m_pClan = g_Config.m_PlayerClan;
+		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_PlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
 		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
