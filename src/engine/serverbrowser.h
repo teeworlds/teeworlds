@@ -3,6 +3,8 @@
 #ifndef ENGINE_SERVERBROWSER_H
 #define ENGINE_SERVERBROWSER_H
 
+#include <engine/shared/protocol.h>
+
 #include "kernel.h"
 
 /*
@@ -17,7 +19,9 @@ public:
 	class CPlayer
 	{
 	public:
-		char m_aName[48];
+		char m_aName[MAX_NAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
 		int m_Score;
 	} ;
 
@@ -38,7 +42,7 @@ public:
 	char m_aMap[32];
 	char m_aVersion[32];
 	char m_aAddress[24];
-	CPlayer m_aPlayers[16];
+	CPlayer m_aPlayers[MAX_CLIENTS];
 };
 
 class IServerBrowser : public IInterface
