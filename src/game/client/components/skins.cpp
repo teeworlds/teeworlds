@@ -135,7 +135,7 @@ int CSkins::Num()
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[Index%m_aSkins.size()];
+	return &m_aSkins[max(0, Index%m_aSkins.size())];
 }
 
 int CSkins::Find(const char *pName)

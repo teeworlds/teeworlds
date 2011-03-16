@@ -40,6 +40,7 @@ class CMenus : public CComponent
 	int DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoButton_PageMenu(const void *pID, const char *pText, int Checked, bool Active, const CUIRect *pRect, int Corners);
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
@@ -80,9 +81,9 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 	
-	void UiDoListboxStart(void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
-	CListboxItem UiDoListboxNextItem(void *pID, bool Selected = false);
+	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
 	
@@ -153,6 +154,7 @@ class CMenus : public CComponent
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
+	int m_SettingPlayerPage;
 	
 	//
 	bool m_EscapePressed;
@@ -225,6 +227,8 @@ class CMenus : public CComponent
 	
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView);
+	void RenderSPPage0(CUIRect MainView);
+	void RenderSPPage1(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
