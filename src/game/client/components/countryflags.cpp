@@ -91,7 +91,7 @@ int CCountryFlags::Num() const
 
 const CCountryFlags::CCountryFlag *CCountryFlags::Get(int Index) const
 {
-	return &m_aCountryFlags[Index%m_aCountryFlags.size()];
+	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
 }
 
 int CCountryFlags::Find(int CountryCode) const
