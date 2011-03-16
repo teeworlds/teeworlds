@@ -418,6 +418,8 @@ void CMapLayers::OnRender()
 			}
 			else
 			{
+				if(g_Config.m_ClShowEntities && IsGameLayer)
+					Render = true;
 				if(PassedGameLayer && !IsGameLayer)
 					Render = true;
 			}
@@ -449,13 +451,16 @@ void CMapLayers::OnRender()
 					}
 				}
 
-				if(!IsGameLayer)
+				if(!IsGameLayer && !g_Config.m_ClShowEntities || (g_Config.m_ClShowEntities && IsGameLayer))
 				{
 					if(pLayer->m_Type == LAYERTYPE_TILES)
 					{
 						CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 						if(pTMap->m_Image == -1)
-							Graphics()->TextureClear();
+							if(!g_Config.m_ClShowEntities)
+								Graphics()->TextureClear();
+							else
+								Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 						else
 							Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
 

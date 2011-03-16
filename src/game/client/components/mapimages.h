@@ -21,7 +21,9 @@ class CMapImages : public CComponent
 	} m_Info[NUM_MAP_TYPES];
 
 	IGraphics::CTextureHandle m_EasterTexture;
+	IGraphics::CTextureHandle m_EntitiesTexture;
 	bool m_EasterIsLoaded;
+	bool m_EntitiesIsLoaded;
 
 	void LoadMapImages(class IMap *pMap, class CLayers *pLayers, int MapType);
 
@@ -35,6 +37,10 @@ public:
 	void OnMenuMapLoad(class IMap *pMap);
 	
 	IGraphics::CTextureHandle GetEasterTexture();
+
+	// DDRace
+
+	IGraphics::CTextureHandle GetEntitiesTexture();
 };
 
 #endif

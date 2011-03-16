@@ -14,6 +14,7 @@ CMapImages::CMapImages()
 	m_Info[MAP_TYPE_MENU].m_Count = 0;
 
 	m_EasterIsLoaded = false;
+	m_EntitiesIsLoaded = false;
 }
 
 void CMapImages::LoadMapImages(IMap *pMap, class CLayers *pLayers, int MapType)
@@ -90,6 +91,20 @@ IGraphics::CTextureHandle CMapImages::GetEasterTexture()
 		m_EasterIsLoaded = true;
 	}
 	return m_EasterTexture;
+}
+
+IGraphics::CTextureHandle CMapImages::GetEntitiesTexture()
+{
+	if(!m_EntitiesIsLoaded)
+	{
+		m_EntitiesTexture = Graphics()->LoadTexture("editor/entities_clear.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_EntitiesTexture.IsValid())
+			m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_EntitiesTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load entities.png");
+		m_EntitiesIsLoaded = true;
+	}
+	return m_EntitiesTexture;
 }
 
 IGraphics::CTextureHandle CMapImages::Get(int Index) const

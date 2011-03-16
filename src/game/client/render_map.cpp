@@ -4,6 +4,7 @@
 #include <base/math.h>
 #include <base/tl/base.h>
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 
 #include "render.h"
 
@@ -226,6 +227,8 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 
 void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
 {
+	if(g_Config.m_ClShowEntities)
+		return;
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
 	for(int i = 0; i < NumQuads; i++)
