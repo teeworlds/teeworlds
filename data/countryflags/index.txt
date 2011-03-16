@@ -1,0 +1,10 @@
+
+##### country codes #####
+
+##### custom #####
+
+default
+== -1
+
+##### ISO 3166-1 based #####
+
