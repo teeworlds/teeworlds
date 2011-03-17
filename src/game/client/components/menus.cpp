@@ -117,7 +117,7 @@ int CMenus::DoButton_PageMenu(const void *pID, const char *pText, int Checked, b
 	if(Active)
 		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), Corners, 10.0f);
 	else
-		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarInactive, Corners, 10.0f);
+		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 10.0f);
 	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
 	
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
