@@ -57,8 +57,8 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		return -1;
 	}
 
-	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-	if(!m_File)
+	IOHANDLE DemoFile = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!DemoFile)
 	{
 		io_close(MapFile);
 		MapFile = 0;
@@ -86,7 +86,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
 	// Header.m_Length - add this on stop
 	str_timestamp(Header.m_aTimestamp, sizeof(Header.m_aTimestamp));
-	io_write(m_File, &Header, sizeof(Header));
+	io_write(DemoFile, &Header, sizeof(Header));
 	
 	// write map data
 	while(1)
@@ -95,7 +95,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		int Bytes = io_read(MapFile, &aChunk, sizeof(aChunk));
 		if(Bytes <= 0)
 			break;
-		io_write(m_File, &aChunk, Bytes);
+		io_write(DemoFile, &aChunk, Bytes);
 	}
 	io_close(MapFile);
 	
@@ -106,6 +106,8 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "Recording to '%s'", pFilename);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", aBuf);
+	m_File = DemoFile;
+
 	return 0;
 }
 
@@ -261,9 +263,10 @@ int CDemoRecorder::Stop()
 	aLength[3] = (DemoLength)&0xff;
 	io_write(m_File, aLength, sizeof(aLength));
 		
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", "Stopped recording");
 	io_close(m_File);
 	m_File = 0;
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", "Stopped recording");
+
 	return 0;
 }
 
