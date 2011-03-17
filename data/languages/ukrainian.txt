@@ -852,6 +852,9 @@ ZO
 %i seconds left
 == 
 
+-Page %d-
+== 
+
 Adds border tiles
 == 
 
@@ -865,6 +868,9 @@ Automatically take game over screenshot
 == 
 
 Blue value of the envelope
+== 
+
+Clan
 == 
 
 Clean-up game tiles
@@ -892,6 +898,9 @@ Color
 == 
 
 Constructs game tiles from this layer
+== 
+
+Country flags
 == 
 
 Crc:
@@ -951,6 +960,12 @@ Netversion:
 New name:
 == 
 
+Next
+== 
+
+Page %d of %d
+== 
+
 Para X
 == 
 
@@ -964,6 +979,9 @@ Pos X
 == 
 
 Pos Y
+== 
+
+Prev
 == 
 
 Quads

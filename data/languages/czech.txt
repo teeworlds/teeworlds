@@ -459,6 +459,9 @@ Your skin
 %s Right click for context menu.
 == 
 
+-Page %d-
+== 
+
 Add
 == 
 
@@ -525,6 +528,9 @@ CW
 Cancel
 == 
 
+Clan
+== 
+
 Clean-up game tiles
 == 
 
@@ -562,6 +568,9 @@ Connection Problems...
 == 
 
 Constructs game tiles from this layer
+== 
+
+Country flags
 == 
 
 Crc:
@@ -759,6 +768,9 @@ New folder
 New name:
 == 
 
+Next
+== 
+
 Next Envelope
 == 
 
@@ -778,6 +790,9 @@ Opens a map for editing
 == 
 
 Order
+== 
+
+Page %d of %d
 == 
 
 Para X
@@ -808,6 +823,9 @@ Pos.+
 == 
 
 Press right mouse button to create a new point
+== 
+
+Prev
 == 
 
 Previous Envelope

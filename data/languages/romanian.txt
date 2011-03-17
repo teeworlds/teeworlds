@@ -963,7 +963,13 @@ no limit
 %d Bytes
 == 
 
+-Page %d-
+== 
+
 Adds border tiles
+== 
+
+Clan
 == 
 
 Clean-up game tiles
@@ -976,6 +982,9 @@ Collision
 == 
 
 Constructs game tiles from this layer
+== 
+
+Country flags
 == 
 
 Crc:
@@ -1006,6 +1015,15 @@ Netversion:
 == 
 
 New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Prev
 == 
 
 Removes game tiles that aren't based on a layer
