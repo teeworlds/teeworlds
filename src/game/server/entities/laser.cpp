@@ -1,6 +1,5 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "laser.h"
@@ -80,8 +79,6 @@ void CLaser::DoBounce()
 			m_Energy = -1;
 		}
 	}
-	if(g_Config.m_SvLaserjumps)
-		GameServer()->CreateExplosion(CurPos, m_Owner, WEAPON_RIFLE, false);
 }
 	
 void CLaser::Reset()

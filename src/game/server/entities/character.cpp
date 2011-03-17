@@ -57,8 +57,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_PlayerState = PLAYERSTATE_UNKNOWN;
 	m_EmoteStop = -1;
 	m_LastAction = -1;
-	m_ActiveWeapon = WEAPON_RIFLE;
-	m_LastWeapon = WEAPON_RIFLE;
+	m_ActiveWeapon = WEAPON_GUN;
+	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 	
 	m_pPlayer = pPlayer;
@@ -682,18 +682,6 @@ void CCharacter::Die(int Killer, int Weapon)
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-	if(GameServer()->GetPlayerChar(Killer))
-	{
-		GameServer()->GetPlayerChar(Killer)->SpreeAdd();
-		SpreeEnd(Killer);
-	}
-
-	if(OnSpree())
-	{
-		GameServer()->CreateSound(m_Pos, SOUND_GRENADE_EXPLODE);
-		GameServer()->CreateExplosion(m_Pos, m_pPlayer->m_ClientID, WEAPON_RIFLE, true);
-	}
-
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
 	Msg.m_Killer = Killer;
@@ -717,43 +705,6 @@ void CCharacter::Die(int Killer, int Weapon)
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 }
 
-char SpreeNote[4][32] = {"is on a killing spree", "is on a rampage", "is dominating", "is unstoppable"};
-
-void CCharacter::SpreeAdd()
-{
-	m_Spree++;
-	if(m_Spree % 5 == 0)
-	{
-		int p = (int)m_Spree/5-1;
-		if(p > 3)
-			p = 3;
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s %s (%d kills)", Server()->ClientName(m_pPlayer->GetCID()), SpreeNote[p], m_Spree);
-		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-	}
-}
-
-void CCharacter::SpreeEnd(int Killer)
-{
-	if(m_Spree >= 5)
-	{
-		int p = (int)m_Spree/5-1;
-		if(p > 4)
-			p = 4;
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s's spree (%d) was ended by %s", Server()->ClientName(m_pPlayer->GetCID()), m_Spree, Server()->ClientName(Killer));
-		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-	}
-	m_Spree = 0;
-}
-
-bool CCharacter::OnSpree()
-{
-	if(m_Spree >= 5)
-		return true;
-	return false;
-}
-
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
 	m_Core.m_Vel += Force;
@@ -761,55 +712,82 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
 		return false;
 	
-	// no self damage
+	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
-		return false;
+		Dmg = max(1, Dmg/2);
 	
-	// do damage Hit sound
-	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
-		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, CmaskOne(From));
-	
-	CCharacter *pChr = GameServer()->GetPlayerChar(From);
-	if(pChr)
+	m_DamageTaken++;
+
+	// create healthmod indicator
+	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
-		// give the attacker full ammo
-		if(!GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From))
+		// make sure that the damage indicators doesn't group together
+		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
+	}
+	else
+	{
+		m_DamageTaken = 0;
+		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
+	}
+
+	if(Dmg)
+	{
+		if(m_Armor)
 		{
-			if(!g_Config.m_SvInfiniteAmmo && g_Config.m_SvKillAmmo)
-				pChr->GiveWeapon(WEAPON_GRENADE, 5);
-			
-			// count the kills
-			pChr->m_Kills++;
-			pChr->m_LastKill = Server()->Tick();
-			
-			// send emoteicon
-			if(pChr->m_Kills > 1)
+			if(Dmg > 1)
 			{
-				switch(pChr->m_Kills)
-				{
-				case 2:
-					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 1);
-					break;
-				case 3:
-					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 10);
-					break;
-				default:
-					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 14);
-				}
+				m_Health--;
+				Dmg--;
+			}
+			
+			if(Dmg > m_Armor)
+			{
+				Dmg -= m_Armor;
+				m_Armor = 0;
+			}
+			else
+			{
+				m_Armor -= Dmg;
+				Dmg = 0;
 			}
 		}
 		
-		// set attacker's face to happy (taunt!)
-		if(From >= 0 && From != m_pPlayer->GetCID())
-		{
-			pChr->m_EmoteType = EMOTE_HAPPY;
-			pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
-		}
+		m_Health -= Dmg;
 	}
+
+	m_DamageTakenTick = Server()->Tick();
+
+	// do damage Hit sound
+	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, CmaskOne(From));
+
+	// check for death
+	if(m_Health <= 0)
+	{
+		Die(From, Weapon);
+		
+		// set attacker's face to happy (taunt!)
+		if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+		{
+			CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
+			if (pChr)
+			{
+				pChr->m_EmoteType = EMOTE_HAPPY;
+				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
+			}
+		}
 	
-	// kill the player
-	Die(From, Weapon);
-	
+		return false;
+	}
+
+	if (Dmg > 2)
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+	else
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
+
+	m_EmoteType = EMOTE_PAIN;
+	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
+
 	return true;
 }
 
