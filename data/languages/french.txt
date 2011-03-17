@@ -816,6 +816,9 @@ no limit
 %d Bytes
 == 
 
+-Page %d-
+== 
+
 Add Quad
 == 
 
@@ -832,6 +835,9 @@ Adds border tiles
 == 
 
 Aspect ratio
+== 
+
+Clan
 == 
 
 Clean-up game tiles
@@ -856,6 +862,9 @@ Collision
 == 
 
 Constructs game tiles from this layer
+== 
+
+Country flags
 == 
 
 Crc:
@@ -912,6 +921,12 @@ Netversion:
 New name:
 == 
 
+Next
+== 
+
+Page %d of %d
+== 
+
 Para X
 == 
 
@@ -922,6 +937,9 @@ Pos. Env
 == 
 
 Pos. TO
+== 
+
+Prev
 == 
 
 Proof
