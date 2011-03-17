@@ -208,8 +208,15 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int64 m_CurrentServerInfoRequestTime; // >= 0 should request, == -1 got info
 
 	// version info
-	struct
+	struct CVersionInfo
 	{
+		enum
+		{
+			STATE_INIT=0,
+			STATE_START,
+			STATE_READY,
+		};
+
 		int m_State;
 		class CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
@@ -289,7 +296,8 @@ public:
 
 	static int PlayerScoreComp(const void *a, const void *b);
 
-	void ProcessPacket(CNetChunk *pPacket);
+	void ProcessConnlessPacket(CNetChunk *pPacket);
+	void ProcessServerPacket(CNetChunk *pPacket);
 
 	virtual int MapDownloadAmount() { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() { return m_MapdownloadTotalsize; }

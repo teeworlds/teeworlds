@@ -533,7 +533,7 @@ void CServerBrowser::Request(const NETADDR &Addr) const
 
 void CServerBrowser::Update()
 {
-	int64 Timeout = time_freq()/2;	// TODO: increase this again
+	int64 Timeout = time_freq()/2;	// TODO 0.6: increase this again
 	int64 Now = time_get();
 	int Count;
 	CServerEntry *pEntry, *pNext;
