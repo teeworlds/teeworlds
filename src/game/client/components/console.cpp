@@ -166,11 +166,11 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 			}
 		}
-		else if(Event.m_Key == KEY_PAGEUP)
+		else if(Event.m_Key == KEY_PAGEUP || Event.m_Key == KEY_MOUSE_WHEEL_UP)
 		{
 			++m_BacklogActPage;
 		}
-		else if(Event.m_Key == KEY_PAGEDOWN)
+		else if(Event.m_Key == KEY_PAGEDOWN || Event.m_Key == KEY_MOUSE_WHEEL_DOWN)
 		{
 			--m_BacklogActPage;
 			if(m_BacklogActPage < 0)
