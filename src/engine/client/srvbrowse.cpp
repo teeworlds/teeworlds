@@ -167,50 +167,44 @@ void CServerBrowser::Filter()
 			Filtered = 1;
 		else if(g_Config.m_BrFilterCompatversion && str_comp_num(m_ppServerlist[i]->m_Info.m_aVersion, m_aNetVersion, 3) != 0)
 			Filtered = 1;
-		else
+		else if(g_Config.m_BrFilterServerAddress[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aAddress, g_Config.m_BrFilterServerAddress))
+			Filtered = 1;
+		else if(g_Config.m_BrFilterGametype[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
+			Filtered = 1;
+		else if(g_Config.m_BrFilterString[0] != 0)
 		{
-			if(g_Config.m_BrFilterString[0] != 0)
+			int MatchFound = 0;
+
+			m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
+
+			// match against server name
+			if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
 			{
-				int MatchFound = 0;
-
-				m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
-
-				// match against server name
-				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
-				{
-					MatchFound = 1;
-					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
-				}
-
-				// match against players
-				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumPlayers; p++)
-				{
-					if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aName, g_Config.m_BrFilterString) ||
-						str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aClan, g_Config.m_BrFilterString))
-					{
-						MatchFound = 1;
-						m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
-						break;
-					}
-				}
-
-				// match against map
-				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
-				{
-					MatchFound = 1;
-					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
-				}
-
-				if(!MatchFound)
-					Filtered = 1;
+				MatchFound = 1;
+				m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
 			}
 
-			if(!Filtered && g_Config.m_BrFilterGametype[0] != 0)
+			// match against players
+			for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumPlayers; p++)
 			{
-				// match against game type
-				if(!str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
-					Filtered = 1;
+				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aName, g_Config.m_BrFilterString) ||
+					str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aClan, g_Config.m_BrFilterString))
+				{
+					MatchFound = 1;
+					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
+					break;
+				}
 			}
+
+			// match against map
+			if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
+			{
+				MatchFound = 1;
+				m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
+			}
+
+			if(!MatchFound)
+				Filtered = 1;
 		}
 
 		if(Filtered == 0)
@@ -532,7 +526,7 @@ void CServerBrowser::Request(const NETADDR &Addr) const
 }
 
 
-void CServerBrowser::Update()
+void CServerBrowser::Update(bool ForceResort)
 {
 	int64 Timeout = time_freq()/2;	// TODO 0.6: increase this again
 	int64 Now = time_get();
@@ -606,8 +600,7 @@ void CServerBrowser::Update()
 	}
 
 	// check if we need to resort
-	// TODO: remove the str_comp
-	if(m_Sorthash != SortHash() || str_comp(m_aFilterString, g_Config.m_BrFilterString) != 0 || str_comp(m_aFilterGametypeString, g_Config.m_BrFilterGametype) != 0)
+	if(m_Sorthash != SortHash() || ForceResort)
 		Sort();
 }
 

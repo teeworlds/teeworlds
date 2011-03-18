@@ -1760,7 +1760,8 @@ void CClient::Update()
 	MasterServer()->Update();
 
 	// update the server browser
-	m_ServerBrowser.Update();
+	m_ServerBrowser.Update(m_ResortServerBrowser);
+	m_ResortServerBrowser = false;
 }
 
 void CClient::VersionUpdate()
@@ -2234,6 +2235,18 @@ void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoRecorder_Stop();
 }
 
+void CClient::ServerBrowserUpdate()
+{
+	m_ResortServerBrowser = true;
+}
+
+void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+		((CClient *)pUserData)->ServerBrowserUpdate();
+}
+
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -2260,8 +2273,12 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified");
 	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
-
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
+
+	// used for server browser update
+	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);
+	m_pConsole->Chain("br_filter_gametype", ConchainServerBrowserUpdate, this);
+	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 }
 
 static CClient m_Client;

@@ -912,6 +912,12 @@ Select image
 Select layer. Right click for properties.
 == 
 
+Server address:
+== 
+
+Server filter
+== 
+
 Shift
 == 
 

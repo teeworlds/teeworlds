@@ -990,6 +990,12 @@ Rotation of the brush in degrees. Use left mouse button to drag and change the v
 Rotation of the envelope
 == 
 
+Server address:
+== 
+
+Server filter
+== 
+
 Shift
 == 
 

@@ -385,7 +385,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	QuickSearch.VSplitLeft(5.0f, 0, &QuickSearch);
 	QuickSearch.VSplitLeft(240.0f-w-22.0f, &QuickSearch, &Button);
 	static float Offset = 0.0f;
-	DoEditBox(&g_Config.m_BrFilterString, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &Offset, false, CUI::CORNER_L);
+	if(DoEditBox(&g_Config.m_BrFilterString, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &Offset, false, CUI::CORNER_L))
+		Client()->ServerBrowserUpdate();
+
 	// clear button
 	{
 		static int s_ClearButton = 0;
@@ -395,6 +397,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{
 			g_Config.m_BrFilterString[0] = 0;
 			UI()->SetActiveItem(&g_Config.m_BrFilterString);
+			Client()->ServerBrowserUpdate();
 		}
 	}
 	
@@ -456,7 +459,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	Button.VSplitRight(60.0f, 0, &Button);
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	static float Offset = 0.0f;
-	DoEditBox(&g_Config.m_BrFilterGametype, &Button, g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype), FontSize, &Offset);
+	if(DoEditBox(&g_Config.m_BrFilterGametype, &Button, g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype), FontSize, &Offset))
+		Client()->ServerBrowserUpdate();
 
 	{
 		ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
@@ -472,6 +476,15 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterPing = clamp(str_toint(aBuf), 0, 999);
 	}
 
+	// server address
+	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
+	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	UI()->DoLabelScaled(&Button, Localize("Server address:"), FontSize, -1);
+	Button.VSplitRight(60.0f, 0, &Button);	
+	static float OffsetAddr = 0.0f;
+	if(DoEditBox(&g_Config.m_BrFilterServerAddress, &Button, g_Config.m_BrFilterServerAddress, sizeof(g_Config.m_BrFilterServerAddress), FontSize, &OffsetAddr))
+		Client()->ServerBrowserUpdate();
+
 	ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
 	ServerFilter.HSplitBottom(ms_ButtonHeight, &ServerFilter, &Button);
 	static int s_ClearButton = 0;
@@ -482,10 +495,12 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterPw = 0;
 		g_Config.m_BrFilterPing = 999;
 		g_Config.m_BrFilterGametype[0] = 0;
+		g_Config.m_BrFilterServerAddress[0] = 0;
 		g_Config.m_BrFilterCompatversion = 1;
 		g_Config.m_BrFilterString[0] = 0;
 		g_Config.m_BrFilterPure = 1;
 		g_Config.m_BrFilterPureMap = 1;
+		Client()->ServerBrowserUpdate();
 	}
 }
 
