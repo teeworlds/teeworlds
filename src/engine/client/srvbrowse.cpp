@@ -190,6 +190,15 @@ void CServerBrowser::Filter()
 					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
 				}
 
+				// match against IP address
+				char aIP[32];
+				str_format(aIP, sizeof(aIP), "%d.%d.%d.%d", m_ppServerlist[i]->m_Addr.ip[0], m_ppServerlist[i]->m_Addr.ip[1], m_ppServerlist[i]->m_Addr.ip[2], m_ppServerlist[i]->m_Addr.ip[3]);
+				if(str_comp(aIP, g_Config.m_BrFilterString) == 0)
+				{
+					MatchFound = 1;
+					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
+				}
+
 				// match against players
 				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumPlayers; p++)
 				{
