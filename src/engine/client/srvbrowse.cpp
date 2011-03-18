@@ -185,10 +185,11 @@ void CServerBrowser::Filter()
 				// match against players
 				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumPlayers; p++)
 				{
-					if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aName, g_Config.m_BrFilterString))
+					if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aName, g_Config.m_BrFilterString) ||
+						str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aClan, g_Config.m_BrFilterString))
 					{
 						MatchFound = 1;
-						m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYERNAME;
+						m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
 						break;
 					}
 				}
