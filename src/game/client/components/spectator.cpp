@@ -145,6 +145,7 @@ void CSpectator::OnRender()
 		
 		y += LineHeight;
 	}
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// draw cursor
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
