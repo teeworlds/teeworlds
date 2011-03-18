@@ -45,7 +45,7 @@ public:
 	void RemoveFavorite(const NETADDR &Addr);
 
 	//
-	void Update();
+	void Update(bool ForceResort);
 	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
 	void Request(const NETADDR &Addr) const;
 

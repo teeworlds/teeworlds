@@ -966,6 +966,12 @@ Resizes the current Quad based on the aspect ratio of the image
 Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
 == 
 
+Server address:
+== 
+
+Server filter
+== 
+
 Shift
 == 
 
