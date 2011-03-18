@@ -104,6 +104,8 @@ bool CChat::OnInput(IInput::CEvent e)
 		{
 			m_Mode = MODE_NONE;
 			m_pClient->OnRelease();
+			
+			return true;
 		}
 		else if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 		{
@@ -117,6 +119,8 @@ bool CChat::OnInput(IInput::CEvent e)
 			m_Mode = MODE_NONE;
 			m_pHistoryEntry = 0x0;
 			m_pClient->OnRelease();
+			
+			return true;
 		}
 		else if(e.m_Key == KEY_UP)
 		{
@@ -134,6 +138,8 @@ bool CChat::OnInput(IInput::CEvent e)
 				if(Len < sizeof(m_Input) - 1) // TODO: WTF?
 					m_Input.Set(m_pHistoryEntry);
 			}
+			
+			return true;
 		}
 		else if(e.m_Key == KEY_DOWN)
 		{
@@ -148,6 +154,8 @@ bool CChat::OnInput(IInput::CEvent e)
 			}
 			else
 				m_Input.Clear();
+			
+			return true;
 		}
 		else if(e.m_Key == KEY_TAB)
 		{
@@ -194,18 +202,15 @@ bool CChat::OnInput(IInput::CEvent e)
 				m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
 				m_InputUpdate = true;
 			}
+			return true;
 		}
-	}
-	else
-	{
-		// reset name completion process
-		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
+		else if(e.m_Key != KEY_TAB)
 			m_CompletionChosen = -1;
-
-		m_OldChatStringLength = m_Input.GetLength();
-		m_Input.ProcessInput(e);
-		m_InputUpdate = true;
 	}
+	
+	m_OldChatStringLength = m_Input.GetLength();
+	m_Input.ProcessInput(e);
+	m_InputUpdate = true;
 	
 	return true;
 }
