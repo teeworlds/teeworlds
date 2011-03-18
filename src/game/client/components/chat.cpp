@@ -143,7 +143,7 @@ bool CChat::OnInput(IInput::CEvent e)
 		}
 		else if(e.m_Key == KEY_DOWN)
 		{
-			if(m_pHistoryEntry && m_History.Next(m_pHistoryEntry))
+			if(m_pHistoryEntry)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 			if(m_pHistoryEntry)
