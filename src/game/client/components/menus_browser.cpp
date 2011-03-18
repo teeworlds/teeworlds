@@ -330,7 +330,24 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
-				TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
+
+				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME))
+				{
+					// highlight the parts that matches
+					const char *pStr = str_find_nocase(pItem->m_aMap, g_Config.m_BrFilterString);
+					if(pStr)
+					{
+						TextRender()->TextEx(&Cursor, pItem->m_aMap, (int)(pStr-pItem->m_aMap));
+						TextRender()->TextColor(0.4f,0.4f,1.0f,1);
+						TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
+						TextRender()->TextColor(1,1,1,1);
+						TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
+					}
+					else
+						TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
+				}
+				else
+					TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
 			}
 			else if(ID == COL_PLAYERS)
 			{
