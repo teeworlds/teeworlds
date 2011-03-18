@@ -2,12 +2,16 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include <engine/shared/ringbuffer.h>
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 
 class CChat : public CComponent
 {
 	CLineInput m_Input;
+	
+	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+	char *m_pHistoryEntry;
 	
 	enum 
 	{
