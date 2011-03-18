@@ -882,9 +882,6 @@ Switch curve type
 Unable to delete the demo
 == Suppression de la démo impossible
 
-Use Clipping
-== Utiliser la coupure
-
 Enable/disable group for saving
 == Activer/désactiver la visibilité du groupe
 
@@ -895,6 +892,9 @@ Shift
 == [Shift]
 
 ##### needs translation #####
+
+Use Clipping
+== 
 
 Aspect ratio
 == 
