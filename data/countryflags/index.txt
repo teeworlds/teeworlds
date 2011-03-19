@@ -8,3 +8,81 @@ default
 
 ##### ISO 3166-1 based #####
 
+argentina
+== 032
+
+austria
+== 040
+
+belgium
+== 056
+
+bosnia_and_herzegovina
+== 070
+
+czech_republic
+== 203
+
+denmark
+== 208
+
+finland
+== 246
+
+france
+== 250
+
+germany
+== 276
+
+greece
+== 300
+
+ireland
+== 372
+
+italy
+== 380
+
+netherlands
+== 528
+
+norway
+== 578
+
+poland
+== 616
+
+portugal
+== 620
+
+romania
+== 642
+
+russian_federation
+== 643
+
+serbia
+== 688
+
+slovakia
+== 703
+
+spain
+== 724
+
+sweden
+== 752
+
+switzerland
+== 756
+
+ukraine
+== 804
+
+united_kingdom
+== 826
+
+united_states
+== 840
+
