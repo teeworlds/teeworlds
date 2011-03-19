@@ -900,7 +900,7 @@ Color
 Constructs game tiles from this layer
 == 
 
-Country flags
+Country
 == 
 
 Crc:
