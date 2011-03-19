@@ -32,6 +32,9 @@ void CChat::OnReset()
 		m_aLines[i].m_aName[0] = 0;
 	}
 	
+	for(int i = 0; i < MAX_HISTORY; i++)
+		m_aaHistoryLines[i][0] = 0;
+
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
@@ -39,6 +42,8 @@ void CChat::OnReset()
 	m_aCompletionBuffer[0] = 0;
 	m_PlaceholderOffset = 0;
 	m_PlaceholderLength = 0;
+	m_CurrentHistoryLine = 0;
+	m_UsedHistoryLine = -1;
 }
 
 void CChat::OnRelease()
@@ -54,6 +59,11 @@ void CChat::OnStateChange(int NewState, int OldState)
 		for(int i = 0; i < MAX_LINES; i++)
 			m_aLines[i].m_Time = 0;
 		m_CurrentLine = 0;
+
+		for(int i = 0; i < MAX_HISTORY; i++)
+			m_aaHistoryLines[i][0] = 0;
+		m_CurrentHistoryLine = 0;
+		m_UsedHistoryLine = -1;
 	}
 }
 
@@ -96,75 +106,113 @@ bool CChat::OnInput(IInput::CEvent e)
 	if(m_Mode == MODE_NONE)
 		return false;
 
-	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_ESCAPE)
+	if(e.m_Flags&IInput::FLAG_PRESS)
 	{
-		m_Mode = MODE_NONE;
-		m_pClient->OnRelease();
-	}
-	else if(e.m_Flags&IInput::FLAG_PRESS && (e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER))
-	{
-		if(m_Input.GetString()[0])
-			Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
-		m_Mode = MODE_NONE;
-		m_pClient->OnRelease();
-	}
-	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_TAB)
-	{
-		// fill the completion buffer
-		if(m_CompletionChosen < 0)
+		if(e.m_Key == KEY_ESCAPE)
 		{
-			const char *pCursor = m_Input.GetString()+m_Input.GetCursorOffset();
-			for(int Count = 0; Count < m_Input.GetCursorOffset() && *(pCursor-1) != ' '; --pCursor, ++Count);
-			m_PlaceholderOffset = pCursor-m_Input.GetString();
-
-			for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; ++pCursor)
-				++m_PlaceholderLength;
-			
-			str_copy(m_aCompletionBuffer, m_Input.GetString()+m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
+			m_Mode = MODE_NONE;
+			m_pClient->OnRelease();
 		}
-
-		// find next possible name
-		const char *pCompletionString = 0;
-		m_CompletionChosen = (m_CompletionChosen+1)%MAX_CLIENTS;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		else if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 		{
-			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
-			if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
-				continue;
-
-			if(str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+			if(m_Input.GetString()[0])
 			{
-				pCompletionString = m_pClient->m_aClients[Index].m_aName;
-				m_CompletionChosen = Index;
-				break;
+				Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
+				m_CurrentHistoryLine = (m_CurrentHistoryLine + 1) % MAX_HISTORY;
+				m_UsedHistoryLine = -1;
+				str_copy(m_aaHistoryLines[m_CurrentHistoryLine], m_Input.GetString(), sizeof(m_aaHistoryLines[m_CurrentHistoryLine]));
+			}
+			m_Mode = MODE_NONE;
+			m_pClient->OnRelease();
+		}
+		
+		if(e.m_Key == KEY_UP)
+		{
+			if(m_UsedHistoryLine != -1)
+			{
+				int PrevHistoryLine = (m_UsedHistoryLine - 1 + MAX_HISTORY) % MAX_HISTORY;
+				if(PrevHistoryLine != m_CurrentHistoryLine && m_aaHistoryLines[PrevHistoryLine][0] != 0)
+					m_UsedHistoryLine = PrevHistoryLine;
+			}
+			else if(m_aaHistoryLines[m_CurrentHistoryLine][0] != 0)
+				m_UsedHistoryLine = m_CurrentHistoryLine;
+
+			m_Input.Set(m_aaHistoryLines[m_UsedHistoryLine]);
+		}
+		else if(e.m_Key == KEY_DOWN)
+		{
+			if(m_UsedHistoryLine != -1)
+			{
+				if(m_UsedHistoryLine != m_CurrentHistoryLine)
+				{
+					m_UsedHistoryLine = (m_UsedHistoryLine + 1) % MAX_HISTORY;
+					m_Input.Set(m_aaHistoryLines[m_UsedHistoryLine]);
+				}
+				else
+				{
+					m_UsedHistoryLine = -1;
+					m_Input.Clear();
+				}
 			}
 		}
-
-		// insert the name
-		if(pCompletionString)
+		else if(e.m_Key != KEY_LEFT && e.m_Key != KEY_RIGHT && e.m_Key != KEY_INSERT && e.m_Key != KEY_HOME && e.m_Key != KEY_END && e.m_Key != KEY_PAGEUP && e.m_Key != KEY_PAGEDOWN)
+			m_UsedHistoryLine = -1;
+		
+		if(e.m_Key == KEY_TAB)
 		{
-			char aBuf[256];
-			str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
-			str_append(aBuf, pCompletionString, sizeof(aBuf));
-			str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
-			m_PlaceholderLength = str_length(pCompletionString);
-			m_OldChatStringLength = m_Input.GetLength();
-			m_Input.Set(aBuf);
-			m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
-			m_InputUpdate = true;
-		}
-	}
-	else
-	{
-		// reset name completion process
-		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
-			m_CompletionChosen = -1;
+			// fill the completion buffer
+			if(m_CompletionChosen < 0)
+			{
+				const char *pCursor = m_Input.GetString() + m_Input.GetCursorOffset();
+				for(int Count = 0; Count < m_Input.GetCursorOffset() && *(pCursor-1) != ' '; pCursor--, Count++);
+				m_PlaceholderOffset = pCursor-m_Input.GetString();
 
+				for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; pCursor++)
+					m_PlaceholderLength++;
+				
+				str_copy(m_aCompletionBuffer, m_Input.GetString() + m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
+			}
+
+			// find next possible name
+			const char *pCompletionString = 0;
+			m_CompletionChosen = (m_CompletionChosen+1)%MAX_CLIENTS;
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+				if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
+					continue;
+
+				if(str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+				{
+					pCompletionString = m_pClient->m_aClients[Index].m_aName;
+					m_CompletionChosen = Index;
+					break;
+				}
+			}
+
+			// insert the name
+			if(pCompletionString)
+			{
+				char aBuf[256];
+				str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
+				str_append(aBuf, pCompletionString, sizeof(aBuf));
+				str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
+				m_PlaceholderLength = str_length(pCompletionString);
+				m_OldChatStringLength = m_Input.GetLength();
+				m_Input.Set(aBuf);
+				m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
+				m_InputUpdate = true;
+			}
+		}
+		else
+			m_CompletionChosen = -1; // reset name completion process
+	}
+	if(!(e.m_Flags&IInput::FLAG_PRESS) || (e.m_Key != KEY_TAB && e.m_Key != KEY_UP && e.m_Key != KEY_DOWN))
+	{
 		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(e);
 		m_InputUpdate = true;
 	}
-	
 	return true;
 }
 
