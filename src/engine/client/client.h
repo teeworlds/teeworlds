@@ -23,7 +23,7 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/network.h>
 
-#include "srvbrowse.h"
+#include "serverbrowser.h"
 
 class CGraph
 {
