@@ -262,7 +262,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 void CChat::OnRender()
 {
 	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
-	float x = 10.0f;
+	float x = 5.0f;
 	float y = 300.0f-20.0f;
 	if(m_Mode != MODE_NONE)
 	{
@@ -316,8 +316,8 @@ void CChat::OnRender()
 	y -= 8.0f;
 
 	int64 Now = time_get();
-	float LineWidth = m_pClient->m_pScoreboard->Active() ? 95.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 220.0f : m_Show ? 50.0f : 200.0f;
+	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
+	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
