@@ -225,12 +225,13 @@ int CServerBrowser::SortHash() const
 	int i = g_Config.m_BrSort&0xf;
 	i |= g_Config.m_BrFilterEmpty<<4;
 	i |= g_Config.m_BrFilterFull<<5;
-	i |= g_Config.m_BrFilterPw<<6;
-	i |= g_Config.m_BrSortOrder<<7;
-	i |= g_Config.m_BrFilterCompatversion<<8;
-	i |= g_Config.m_BrFilterPure<<9;
-	i |= g_Config.m_BrFilterPureMap<<10;
-	i |= g_Config.m_BrFilterPing<<16;
+	i |= g_Config.m_BrFilterSpectators<<6;
+	i |= g_Config.m_BrFilterPw<<7;
+	i |= g_Config.m_BrSortOrder<<8;
+	i |= g_Config.m_BrFilterCompatversion<<9;
+	i |= g_Config.m_BrFilterPure<<10;
+	i |= g_Config.m_BrFilterPureMap<<11;
+	i |= g_Config.m_BrFilterPing<<17;
 	return i;
 }
 
