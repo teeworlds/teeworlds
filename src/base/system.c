@@ -544,6 +544,10 @@ void net_addr_str(const NETADDR *addr, char *string, int max_length)
 			(addr->ip[8]<<8)|addr->ip[9], (addr->ip[10]<<8)|addr->ip[11], (addr->ip[12]<<8)|addr->ip[13], (addr->ip[14]<<8)|addr->ip[15],
 			addr->port);
 	}
+	else if(addr->type == NETTYPE_DNS)
+	{
+		str_format(string, max_length, "%s:%d", addr->ip, addr->port);
+	}
 	else
 		str_format(string, max_length, "unknown type %d", addr->type);
 }
@@ -620,6 +624,7 @@ static int parse_uint16(unsigned short *out, const char **str)
 
 int net_addr_from_str(NETADDR *addr, const char *string)
 {
+	int i;
 	const char *str = string;
 	mem_zero(addr, sizeof(NETADDR));
 	
@@ -630,20 +635,44 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 	else
 	{
 		/* ipv4 */
-		if(parse_uint8(&addr->ip[0], &str)) return -1;
-		if(parse_char('.', &str)) return -1;
-		if(parse_uint8(&addr->ip[1], &str)) return -1;
-		if(parse_char('.', &str)) return -1;
-		if(parse_uint8(&addr->ip[2], &str)) return -1;
-		if(parse_char('.', &str)) return -1;
-		if(parse_uint8(&addr->ip[3], &str)) return -1;
-		if(*str == ':')
+		do
 		{
-			str++;
-			if(parse_uint16(&addr->port, &str)) return -1;
-		}
+			if(parse_uint8(&addr->ip[0], &str)) break;
+			if(parse_char('.', &str)) break;
+			if(parse_uint8(&addr->ip[1], &str)) break;
+			if(parse_char('.', &str)) break;
+			if(parse_uint8(&addr->ip[2], &str)) break;
+			if(parse_char('.', &str)) break;
+			if(parse_uint8(&addr->ip[3], &str)) break;
+			if(*str == ':')
+			{
+				str++;
+				if(parse_uint16(&addr->port, &str)) break;
+			}
+			addr->type = NETTYPE_IPV4;
+			return 0;
+		} while(0);
 		
-		addr->type = NETTYPE_IPV4;
+		/* dns */
+		str = string;
+		i = 0;
+		while(*str)
+		{
+			if(*str == ':')
+			{
+				str++;
+				if(parse_uint16(&addr->port, &str)) return -1;
+				break;
+			}
+			else
+			{
+				if(i >= sizeof(addr->ip)) return -1;
+				addr->ip[i] = *str;
+				str++;
+			}
+			i++;
+		}
+		addr->type = NETTYPE_DNS;
 	}
 	
 	return 0;

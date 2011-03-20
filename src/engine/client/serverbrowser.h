@@ -15,8 +15,8 @@ public:
 		int64 m_RequestTime;
 		int m_GotInfo;
 		CServerInfo m_Info;
-
-		CServerEntry *m_pNextIp; // ip hashed list
+		CHostLookup m_Lookup;
+		NETADDR m_RealAddr;
 
 		CServerEntry *m_pPrevReq; // request list
 		CServerEntry *m_pNextReq;
@@ -49,10 +49,11 @@ public:
 	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
 	void Request(const NETADDR &Addr) const;
 
-	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
+	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion, class CEngine *pEngine);
 
 private:
 	CNetClient *m_pNetClient;
+	CEngine *m_pEngine;
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
 	char m_aNetVersion[128];
@@ -63,8 +64,6 @@ private:
 
 	NETADDR m_aFavoriteServers[MAX_FAVORITES];
 	int m_NumFavoriteServers;
-
-	CServerEntry *m_aServerlistIp[256]; // ip hash list
 
 	CServerEntry *m_pFirstReqServer; // request list
 	CServerEntry *m_pLastReqServer;

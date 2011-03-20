@@ -36,8 +36,6 @@ CServerBrowser::CServerBrowser()
 
 	m_NumFavoriteServers = 0;
 
-	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
-
 	m_pFirstReqServer = 0; // request list
 	m_pLastReqServer = 0;
 	m_NumRequests = 0;
@@ -60,10 +58,11 @@ CServerBrowser::CServerBrowser()
 	m_BroadcastTime = 0;
 }
 
-void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVersion)
+void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVersion, class CEngine *pEngine)
 {
 	m_pNetClient = pClient;
 	str_copy(m_aNetVersion, pNetVersion, sizeof(m_aNetVersion));
+	m_pEngine = pEngine;
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
@@ -311,11 +310,12 @@ void CServerBrowser::RemoveRequest(CServerEntry *pEntry)
 
 CServerBrowser::CServerEntry *CServerBrowser::Find(const NETADDR &Addr)
 {
-	CServerEntry *pEntry = m_aServerlistIp[Addr.ip[0]];
-
-	for(; pEntry; pEntry = pEntry->m_pNextIp)
+	for(int i = 0; i < m_NumServers; i++)
 	{
+		CServerEntry *pEntry = m_ppServerlist[i];
 		if(net_addr_comp(&pEntry->m_Addr, &Addr) == 0)
+			return pEntry;
+		if(pEntry->m_Addr.type == NETTYPE_DNS && net_addr_comp(&pEntry->m_RealAddr, &Addr) == 0)
 			return pEntry;
 	}
 	return (CServerEntry*)0;
@@ -340,6 +340,7 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 	pEntry->m_Info = Info;
 	pEntry->m_Info.m_Favorite = Fav;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
+	net_addr_str(&pEntry->m_Addr, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress));
 
 	// all these are just for nice compability
 	if(pEntry->m_Info.m_aGameType[0] == '0' && pEntry->m_Info.m_aGameType[1] == 0)
@@ -371,15 +372,12 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 
 	// set the info
 	pEntry->m_Addr = Addr;
+	pEntry->m_RealAddr = Addr;
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
-	str_format(pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress), "%d.%d.%d.%d:%d",
-		Addr.ip[0], Addr.ip[1], Addr.ip[2],
-		Addr.ip[3], Addr.port);
-	str_format(pEntry->m_Info.m_aName, sizeof(pEntry->m_Info.m_aName), "%d.%d.%d.%d:%d",
-		Addr.ip[0], Addr.ip[1], Addr.ip[2],
-		Addr.ip[3], Addr.port);
+	net_addr_str(&Addr, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress));
+	net_addr_str(&Addr, pEntry->m_Info.m_aName, sizeof(pEntry->m_Info.m_aName));
 
 	/*if(serverlist_type == IServerBrowser::TYPE_LAN)
 		pEntry->m_Info.latency = (time_get()-broadcast_time)*1000/time_freq();*/
@@ -390,10 +388,6 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			pEntry->m_Info.m_Favorite = 1;
 	}
-
-	// add to the hash list
-	pEntry->m_pNextIp = m_aServerlistIp[Hash];
-	m_aServerlistIp[Hash] = pEntry;
 
 	if(m_NumServers == m_NumServerCapacity)
 	{
@@ -434,8 +428,16 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 
 		if(!Find(Addr))
 		{
-			pEntry = Add(Addr);
-			QueueRequest(pEntry);
+			if(Addr.type == NETTYPE_DNS)
+			{
+				pEntry = Add(Addr);
+				m_pEngine->HostLookup(&pEntry->m_Lookup, (const char *)&Addr.ip);
+			}
+			else
+			{
+				pEntry = Add(Addr);
+				QueueRequest(pEntry);
+			}
 		}
 	}
 	else if(Type == IServerBrowser::SET_TOKEN)
@@ -489,7 +491,6 @@ void CServerBrowser::Refresh(int Type)
 	m_ServerlistHeap.Reset();
 	m_NumServers = 0;
 	m_NumSortedServers = 0;
-	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 	m_pFirstReqServer = 0;
 	m_pLastReqServer = 0;
 	m_NumRequests = 0;
@@ -627,7 +628,7 @@ void CServerBrowser::Update()
 		pEntry = pNext;
 	}
 
-	// do timeouts
+	// do requests
 	pEntry = m_pFirstReqServer;
 	Count = 0;
 	while(1)
@@ -635,15 +636,32 @@ void CServerBrowser::Update()
 		if(!pEntry) // no more entries
 			break;
 
-		// no more then 10 concurrent requests
+		// not more than 10 concurrent requests
 		if(Count == g_Config.m_BrMaxRequests)
 			break;
 
 		if(pEntry->m_RequestTime == 0)
-			RequestImpl(pEntry->m_Addr, pEntry);
+			RequestImpl(pEntry->m_RealAddr, pEntry);
 
 		Count++;
 		pEntry = pEntry->m_pNextReq;
+	}
+	
+	// check lookups
+	for(int i = 0; i < m_NumServers; i++)
+	{
+		pEntry = m_ppServerlist[i];
+		
+		if(pEntry->m_RealAddr.type != NETTYPE_DNS)
+			continue;
+		
+		if(pEntry->m_Lookup.m_Job.Status() == CJob::STATE_DONE && pEntry->m_Lookup.m_Job.Result() == 0)
+		{
+			NETADDR Addr = pEntry->m_Lookup.m_Addr;
+			Addr.port = pEntry->m_Addr.port;
+			pEntry->m_RealAddr = Addr;
+			QueueRequest(pEntry);
+		}
 	}
 
 	// check if we need to resort

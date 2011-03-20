@@ -72,8 +72,7 @@ void CEngine::InitLogfile()
 static int HostLookupThread(void *pUser)
 {
 	CHostLookup *pLookup = (CHostLookup *)pUser;
-	net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_IPV4);
-	return 0;
+	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_IPV4);
 }
 
 void CEngine::HostLookup(CHostLookup *pLookup, const char *pHostname)

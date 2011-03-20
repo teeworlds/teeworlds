@@ -1085,10 +1085,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
 					return;
 
-				str_format(Info.m_aAddress, sizeof(Info.m_aAddress), "%d.%d.%d.%d:%d",
-					pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2],
-					pPacket->m_Address.ip[3], pPacket->m_Address.port);
-
 				for(int i = 0; i < Info.m_NumPlayers; i++)
 				{
 					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aName));
@@ -1784,7 +1780,7 @@ void CClient::InitInterfaces()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
-	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
+	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion(), &m_Engine);
 }
 
 void CClient::Run()

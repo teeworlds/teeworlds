@@ -33,6 +33,7 @@ public:
 		STATE_DONE
 	};
 	
+	int Result() const { return m_Result; }
 	int Status() const { return m_Status; }
 };
 

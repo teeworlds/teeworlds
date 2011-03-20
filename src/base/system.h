@@ -426,13 +426,14 @@ enum
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
+	NETTYPE_DNS = 4,
 	NETTYPE_ALL = ~0
 };
 
 typedef struct
 {
 	unsigned int type;
-	unsigned char ip[16];
+	unsigned char ip[24];
 	unsigned short port;
 } NETADDR;
 
