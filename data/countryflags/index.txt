@@ -6,6 +6,15 @@
 default
 == -1
 
+england
+== 901
+
+scotland
+== 903
+
+wales
+== 904
+
 ##### ISO 3166-1 based #####
 
 argentina
