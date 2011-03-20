@@ -351,7 +351,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_PLAYERS)
 			{
-				str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
+				if(g_Config.m_BrFilterSpectators)
+					str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
+				else
+					str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumClients, pItem->m_MaxClients);
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 					TextRender()->TextColor(0.4f,0.4f,1.0f,1);
 				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
@@ -448,6 +451,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox(&g_Config.m_BrFilterEmpty, Localize("Has people playing"), g_Config.m_BrFilterEmpty, &Button))
 		g_Config.m_BrFilterEmpty ^= 1;
+
+	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	if(DoButton_CheckBox(&g_Config.m_BrFilterSpectators, Localize("Count players only"), g_Config.m_BrFilterSpectators, &Button))
+		g_Config.m_BrFilterSpectators ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox(&g_Config.m_BrFilterFull, Localize("Server not full"), g_Config.m_BrFilterFull, &Button))
@@ -608,7 +615,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	{
 		ServerScoreBoard.VSplitLeft(5.0f, 0, &ServerScoreBoard);
 		ServerScoreBoard.Margin(3.0f, &ServerScoreBoard);
-		for (int i = 0; i < pSelectedServer->m_NumPlayers; i++)
+		for (int i = 0; i < pSelectedServer->m_NumClients; i++)
 		{
 			CUIRect Name, Clan, Score, Flag;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
@@ -618,16 +625,19 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			Name.HSplitTop(12.0f, &Name, &Clan);
 
 			// score
-			char aTemp[16];
-			str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aPlayers[i].m_Score);
-			TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/2.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = Score.w;
-			TextRender()->TextEx(&Cursor, aTemp, -1);
+			if(pSelectedServer->m_aClients[i].m_Player)
+			{
+				char aTemp[16];
+				str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aClients[i].m_Score);
+				TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/2.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Score.w;
+				TextRender()->TextEx(&Cursor, aTemp, -1);
+			}
 	
 			// name
 			TextRender()->SetCursor(&Cursor, Name.x, Name.y, FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Name.w;
-			const char *pName = pSelectedServer->m_aPlayers[i].m_aName;
+			const char *pName = pSelectedServer->m_aClients[i].m_aName;
 			if(g_Config.m_BrFilterString[0])
 			{
 				// highlight the parts that matches
@@ -649,7 +659,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			// clan
 			TextRender()->SetCursor(&Cursor, Clan.x, Clan.y, FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Clan.w;
-			const char *pClan = pSelectedServer->m_aPlayers[i].m_aClan;
+			const char *pClan = pSelectedServer->m_aClients[i].m_aClan;
 			if(g_Config.m_BrFilterString[0])
 			{
 				// highlight the parts that matches
@@ -669,7 +679,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 				TextRender()->TextEx(&Cursor, pClan, -1);
 
 			// flag
-			Graphics()->TextureSet(m_pClient->m_pCountryFlags->Get(pSelectedServer->m_aPlayers[i].m_Country)->m_Texture);
+			Graphics()->TextureSet(m_pClient->m_pCountryFlags->Get(pSelectedServer->m_aClients[i].m_Country)->m_Texture);
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			IGraphics::CQuadItem QuadItem(Flag.x, Flag.y, Flag.w, Flag.h);

@@ -1018,8 +1018,12 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 
 int CClient::PlayerScoreComp(const void *a, const void *b)
 {
-	CServerInfo::CPlayer *p0 = (CServerInfo::CPlayer *)a;
-	CServerInfo::CPlayer *p1 = (CServerInfo::CPlayer *)b;
+	CServerInfo::CClient *p0 = (CServerInfo::CClient *)a;
+	CServerInfo::CClient *p1 = (CServerInfo::CClient *)b;
+	if(p0->m_Player && !p1->m_Player)
+		return -1;
+	if(!p0->m_Player && p1->m_Player)
+		return 1;
 	if(p0->m_Score == p1->m_Score)
 		return 0;
 	if(p0->m_Score < p1->m_Score)
@@ -1106,27 +1110,31 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		Info.m_Flags = str_toint(Up.GetString());
 		Info.m_NumPlayers = str_toint(Up.GetString());
 		Info.m_MaxPlayers = str_toint(Up.GetString());
+		Info.m_NumClients = str_toint(Up.GetString());
+		Info.m_MaxClients = str_toint(Up.GetString());
 
 		// don't add invalid info to the server browser list
-		if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
+		if(Info.m_NumClients < 0 || Info.m_NumClients > MAX_CLIENTS || Info.m_MaxClients < 0 || Info.m_MaxClients > MAX_CLIENTS ||
+			Info.m_NumPlayers < 0 || Info.m_NumPlayers > Info.m_NumClients || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > Info.m_MaxClients)
 			return;
 
 		str_format(Info.m_aAddress, sizeof(Info.m_aAddress), "%d.%d.%d.%d:%d",
 			pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2],
 			pPacket->m_Address.ip[3], pPacket->m_Address.port);
 
-		for(int i = 0; i < Info.m_NumPlayers; i++)
+		for(int i = 0; i < Info.m_NumClients; i++)
 		{
-			str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aName));
-			str_copy(Info.m_aPlayers[i].m_aClan, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aClan));
-			Info.m_aPlayers[i].m_Country = GameClient()->GetCountryIndex(str_toint(Up.GetString()));
-			Info.m_aPlayers[i].m_Score = str_toint(Up.GetString());
+			str_copy(Info.m_aClients[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aName));
+			str_copy(Info.m_aClients[i].m_aClan, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aClan));
+			Info.m_aClients[i].m_Country = GameClient()->GetCountryIndex(str_toint(Up.GetString()));
+			Info.m_aClients[i].m_Score = str_toint(Up.GetString());
+			Info.m_aClients[i].m_Player = str_toint(Up.GetString()) != 0 ? true : false;
 		}
 
 		if(!Up.Error())
 		{
 			// sort players
-			qsort(Info.m_aPlayers, Info.m_NumPlayers, sizeof(*Info.m_aPlayers), PlayerScoreComp);
+			qsort(Info.m_aClients, Info.m_NumClients, sizeof(*Info.m_aClients), PlayerScoreComp);
 
 			if(net_addr_comp(&m_ServerAddress, &pPacket->m_Address) == 0)
 			{

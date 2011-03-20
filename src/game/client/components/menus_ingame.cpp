@@ -252,7 +252,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 			Localize("Map"), CurrentServerInfo.m_aMap,
 			Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit,
 			Localize("Time limit"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit,
-			Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxPlayers
+			Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients
 		);
 		TextRender()->Text(0, GameInfo.x+x, GameInfo.y+y, 20, aBuf, 250);
 	}

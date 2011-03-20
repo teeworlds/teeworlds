@@ -115,6 +115,13 @@ bool CServerBrowser::SortCompareNumPlayers(int Index1, int Index2) const
 	return a->m_Info.m_NumPlayers < b->m_Info.m_NumPlayers;
 }
 
+bool CServerBrowser::SortCompareNumClients(int Index1, int Index2) const
+{
+	CServerEntry *a = m_ppServerlist[Index1];
+	CServerEntry *b = m_ppServerlist[Index2];
+	return a->m_Info.m_NumClients < b->m_Info.m_NumClients;
+}
+
 void CServerBrowser::Filter()
 {
 	int i = 0, p = 0;
@@ -134,9 +141,10 @@ void CServerBrowser::Filter()
 	{
 		int Filtered = 0;
 
-		if(g_Config.m_BrFilterEmpty && m_ppServerlist[i]->m_Info.m_NumPlayers == 0)
+		if(g_Config.m_BrFilterEmpty && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == 0) || m_ppServerlist[i]->m_Info.m_NumClients == 0))
 			Filtered = 1;
-		else if(g_Config.m_BrFilterFull && m_ppServerlist[i]->m_Info.m_NumPlayers == m_ppServerlist[i]->m_Info.m_MaxPlayers)
+		else if(g_Config.m_BrFilterFull && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == m_ppServerlist[i]->m_Info.m_MaxPlayers) ||
+				m_ppServerlist[i]->m_Info.m_NumClients == m_ppServerlist[i]->m_Info.m_MaxClients))
 			Filtered = 1;
 		else if(g_Config.m_BrFilterPw && m_ppServerlist[i]->m_Info.m_Flags&SERVER_FLAG_PASSWORD)
 			Filtered = 1;
@@ -187,8 +195,8 @@ void CServerBrowser::Filter()
 			// match against players
 			for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumPlayers; p++)
 			{
-				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aName, g_Config.m_BrFilterString) ||
-					str_find_nocase(m_ppServerlist[i]->m_Info.m_aPlayers[p].m_aClan, g_Config.m_BrFilterString))
+				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
+					str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
 				{
 					MatchFound = 1;
 					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
@@ -241,7 +249,8 @@ void CServerBrowser::Sort()
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_MAP)
 		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareMap));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_NUMPLAYERS)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareNumPlayers));
+		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this,
+					g_Config.m_BrFilterSpectators ? &CServerBrowser::SortCompareNumPlayers : &CServerBrowser::SortCompareNumClients));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_GAMETYPE)
 		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
 
