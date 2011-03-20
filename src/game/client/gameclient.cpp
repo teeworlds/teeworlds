@@ -212,6 +212,8 @@ void CGameClient::OnConsoleInit()
 	
 	//
 	Console()->Chain("player_name", ConchainSpecialInfoupdate, this);
+	Console()->Chain("player_clan", ConchainSpecialInfoupdate, this);
+	Console()->Chain("player_country", ConchainSpecialInfoupdate, this);
 	Console()->Chain("player_use_custom_color", ConchainSpecialInfoupdate, this);
 	Console()->Chain("player_color_body", ConchainSpecialInfoupdate, this);
 	Console()->Chain("player_color_feet", ConchainSpecialInfoupdate, this);
