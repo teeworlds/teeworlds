@@ -214,6 +214,7 @@ container.sounds.Add(SoundSet("hit", FileList("audio/sfx_hit_weak-%02d.wv", 2)))
 
 container.sounds.Add(SoundSet("chat_server", ["audio/sfx_msg-server.wv"]))
 container.sounds.Add(SoundSet("chat_client", ["audio/sfx_msg-client.wv"]))
+container.sounds.Add(SoundSet("chat_highlight", ["audio/sfx_msg-highlight.wv"]))
 container.sounds.Add(SoundSet("ctf_drop", ["audio/sfx_ctf_drop.wv"]))
 container.sounds.Add(SoundSet("ctf_return", ["audio/sfx_ctf_rtn.wv"]))
 container.sounds.Add(SoundSet("ctf_grab_pl", ["audio/sfx_ctf_grab_pl.wv"]))
