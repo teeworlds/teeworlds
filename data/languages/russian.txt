@@ -10,38 +10,11 @@
 %ds left
 == осталось %d сек.
 
-%s Right click for context menu.
-== %s Правая кнопка мыши для контекстного меню
-
 Abort
 == Отмена
 
-Add
-== Добавить
-
-Add Image
-== Добавить изображение
-
-Add Quad
-== Добавить квад
-
-Add group
-== Добавить группу
-
-Add quads layer
-== Добавить слой квадов
-
-Add tile layer
-== Добавить слой тайлов
-
 Address
 == Адрес
-
-Adds a new group
-== Добавить новую группу
-
-Adds a new quad
-== Добавить новый квад
 
 All
 == Все
@@ -51,15 +24,6 @@ Alpha
 
 Always show name plates
 == Всегда показывать ники игроков
-
-Anim
-== Аним.
-
-Append
-== Вставить
-
-Append map
-== Вставить карту в текущую
 
 Are you sure that you want to quit?
 == Вы действительно желаете выйти?
@@ -76,35 +40,14 @@ Blue team wins!
 Body
 == Тело
 
-Border
-== Создать края
-
-CCW
-== CCW
-
-CW
-== CW
-
 Call vote
 == Голосовать
-
-Cancel
-== Отмена
 
 Chat
 == Чат
 
 Close
 == Закрыть
-
-Color Env
-== Цвет. крив.
-
-Color TO
-== Цвет. TO
-
-Color+
-== Цвет+
 
 Compatible version
 == Совместимая версия
@@ -124,21 +67,6 @@ Console
 Controls
 == Управление
 
-Creates a new color envelope
-== Создать новую кривую цвета
-
-Creates a new map
-== Создать новую карту
-
-Creates a new pos envelope
-== Создать новую кривую позиции
-
-Creates a new quad layer
-== Создать новый слой квадов
-
-Creates a new tile layer
-== Создать новый слой тайлов
-
 Current
 == Текущий
 
@@ -148,32 +76,11 @@ Current version: %s
 Custom colors
 == Свои цвета
 
-Decrease
-== Уменьшить
-
-Decrease animation speed
-== Уменьшить скорость анимации
-
 Delete
 == Удалить
 
-Delete group
-== Удалить группу
-
-Delete layer
-== Удалить слой
-
-Deletes the current quad
-== Удалить текущий квад
-
-Deletes the layer
-== Удалить слой
-
 Demos
 == Демо
-
-Detail
-== Детальный
 
 Disconnect
 == Отключить
@@ -193,38 +100,17 @@ Draw!
 Dynamic Camera
 == Динамическая камера
 
-Embed
-== Встроить
-
-Embedded
-== Встроенные
-
-Embeds the image into the map file.
-== Встроить изображение в саму карту
-
 Emoticon
 == Эмоция
 
 Enter
 == Вход
 
-Envelopes
-== Кривые
-
 Error
 == Ошибка
 
 Error loading demo
 == ошибка при загрузке демо
-
-Exit
-== Выход
-
-Exits from the editor
-== Выход из редактора
-
-External
-== Внешние
 
 FSAA samples
 == Сэмплов FSAA
@@ -237,12 +123,6 @@ Favorites
 
 Feet
 == Ноги
-
-File
-== Файл
-
-Filename:
-== Имя файла:
 
 Filter
 == Фильтр
@@ -280,20 +160,11 @@ Graphics
 Grenade
 == Граната
 
-Group
-== Группа
-
-HD
-== HD
-
 Hammer
 == Молоток
 
 Has people playing
 == Сервер не пустой
-
-Height
-== Высота
 
 High Detail
 == Высокая детализация
@@ -306,18 +177,6 @@ Host address
 
 Hue
 == Оттенок
-
-Image
-== Изображение
-
-Images
-== Изображения
-
-Increase
-== Увеличить
-
-Increase animation speed
-== Увеличить скорость анимации
 
 Info
 == Инфо
@@ -346,32 +205,14 @@ LAN
 Language
 == Язык
 
-Layers
-== Слои
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
-
-Left mouse button to move. Hold shift to move the texture.
-== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
-
 Lht.
 == Яркость
-
-Load
-== Загрузить
-
-Load a new image to use in the map
-== Загрузить новое изображение для использования его в карте
 
 Loading
 == Загрузка
 
 MOTD
 == MOTD
-
-Make external
-== Сделать внешним
 
 Map
 == Карта
@@ -400,17 +241,8 @@ Mute when not active
 Name
 == Имя
 
-Name:
-== Имя:
-
-New
-== Новый
-
 News
 == Новости
-
-Next Envelope
-== Следуюая кривая
 
 Next weapon
 == След. оружие
@@ -430,26 +262,11 @@ No servers found
 No servers match your filter criteria
 == Нет серверов, отвечающих вашим критериям
 
-None
-== Ничего
-
-Normal animation speed
-== Нормальная скорость анимации
-
 Ok
 == Ок
 
 Open
 == Открыть
-
-Opens a map and adds everything from that map to the current one
-== Открыть карту и добавить из нее все в текущую
-
-Opens a map for editing
-== Открыть карту для редактирования
-
-Order
-== Порядок
 
 Password
 == Пароль
@@ -475,26 +292,8 @@ Players
 Please balance teams!
 == Сбалансируйте команды!
 
-Pos. Env
-== Поз. крив.
-
-Pos. TO
-== Поз. TO
-
-Pos.+
-== Поз.+
-
-Press right mouse button to create a new point
-== Нажмите правую кнопку мыши для создания новой точки
-
 Prev. weapon
 == Пред. оружие
-
-Previous Envelope
-== Предыдущая кривая
-
-Proof
-== Границы
 
 Quality Textures
 == Качественные текстуры
@@ -514,9 +313,6 @@ Red team
 Red team wins!
 == Красные победили!
 
-Refocus
-== Вернуть фокус
-
 Refresh
 == Обновить
 
@@ -525,24 +321,6 @@ Refreshing master servers
 
 Remote console
 == Консоль сервера
-
-Remove
-== Удалить
-
-Removes the image from the map
-== Удалить изображение из карты
-
-Removes the image from the map file.
-== Удалить изображение из файла с картой
-
-Replace
-== Заменить
-
-Replace Image
-== Заменить изображение
-
-Replaces the image with a new one
-== Заменить это изображение другим
 
 Reset filter
 == Сбросить фильтры
@@ -562,21 +340,6 @@ Sample rate
 Sat.
 == Контраст.
 
-Save
-== Сохранить
-
-Save As
-== Сохранить как
-
-Save map
-== Сохранить карту
-
-Saves the current map
-== Сохранить текущую карту
-
-Saves the current map under a new name
-== Сохранить текущую карту под новым названием
-
 Score
 == Очки
 
@@ -591,15 +354,6 @@ Scoreboard
 
 Screenshot
 == Скриншот
-
-Select group. Right click for properties.
-== Выберите группу. Правый клик открывает свойства.
-
-Select image
-== Выберите изображение
-
-Select layer. Right click for properties.
-== Выберите слой. Правый клик открывает свойства.
 
 Server details
 == Детали сервера
@@ -640,12 +394,6 @@ Spectate
 Spectators
 == Наблюдатели
 
-Square
-== Квадрат
-
-Squares the current quad
-== Преобразовать текущий квад в квадрат
-
 Standard gametype
 == Стандартный тип игры
 
@@ -654,12 +402,6 @@ Standard map
 
 Sudden Death
 == Быстрая смерть
-
-Switch between images and layers managment.
-== Переключиться между управлением слоями и изображениями
-
-Switch curve type
-== Изменить тип кривой
 
 Switch weapon on pickup
 == Переключать оружие при подборе
@@ -682,15 +424,6 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Лимит
 
-Toggle group visibility
-== Переключить видимость группы
-
-Toggle layer visibility
-== Переключить видимость слоя
-
-Toggles the envelope editor.
-== Показать или скрыть редактор кривых
-
 Try again
 == Попробовать снова
 
@@ -699,12 +432,6 @@ Type
 
 UI Color
 == Цвет интерфейса
-
-Use left mouse button to drag and create a brush.
-== Используйте левую кнопку мыши для перемещения и создания кисти
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Используйте левую кнопку мыши для рисования кистью. Правая кнопка мыши очищает кисть.
 
 Use sounds
 == Использовать звуки
@@ -733,9 +460,6 @@ Weapon
 Welcome to Teeworlds
 == Добро пожаловать в Teeworlds!
 
-Width
-== Ширина
-
 Yes
 == Да
 
@@ -744,42 +468,6 @@ You must restart the game for all settings to take effect.
 
 Your skin
 == Ваш скин
-
-ZI
-== Z+
-
-ZO
-== Z-
-
-[M] Flip brush vertical
-== [M] Зеркалировать кисть по вертикали
-
-[N] Flip brush horizontal
-== [N] Зеркалировать кисть по горизонтали
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Установить нормальное увеличение и убрать смещение редактора
-
-[NumPad+] Zoom in
-== [ClavierNum+] Увеличить
-
-[NumPad-] Zoom out
-== [ClavierNum-] Уменьшить
-
-[R] Rotates the brush counter clockwise
-== [R] Повернуть кисть против часовой стрелки
-
-[T] Rotates the brush clockwise
-== [T] Повернуть кисть по часовой стрелке
-
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Переключить высокую детализацию
-
-[ctrl+m] Toggle animation
-== [ctrl+m] Переключить анимацию
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Показать или скрыть границы, в пределах которых игрок может видеть карту
 
 ##### needs translation #####
 
@@ -801,16 +489,7 @@ ZO
 -Page %d-
 == 
 
-Adds border tiles
-== 
-
-Alpha value of the envelope
-== 
-
 Are you sure that you want to delete the demo?
-== 
-
-Aspect ratio
 == 
 
 Automatically record demos
@@ -819,37 +498,10 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
-Blue value of the envelope
-== 
-
 Clan
 == 
 
-Clean-up game tiles
-== 
-
-Clear
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Collision
-== 
-
-Color
-== 
-
-Constructs game tiles from this layer
+Count players only
 == 
 
 Country
@@ -861,28 +513,10 @@ Crc:
 Created:
 == 
 
-Death
-== 
-
 Delete demo
 == 
 
-Delete this envelope
-== 
-
 Demo details
-== 
-
-Down
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-File: %s
 == 
 
 Folder
@@ -891,25 +525,10 @@ Folder
 Free-View
 == 
 
-Game tiles
-== 
-
-Green value of the envelope
-== 
-
 Invalid Demo
 == 
 
-Left
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
 Length:
-== 
-
-Load map
 == 
 
 Map:
@@ -927,9 +546,6 @@ Name plates size
 Netversion:
 == 
 
-New folder
-== 
-
 New name:
 == 
 
@@ -939,25 +555,10 @@ Next
 Page %d of %d
 == 
 
-Para X
-== 
-
-Para Y
-== 
-
 Parent Folder
 == 
 
-Pos X
-== 
-
-Pos Y
-== 
-
 Prev
-== 
-
-Quads
 == 
 
 REC %3d:%02d
@@ -966,37 +567,16 @@ REC %3d:%02d
 Record demo
 == 
 
-Red value of the envelope
-== 
-
-Removes game tiles that aren't based on a layer
-== 
-
 Rename
 == 
 
 Rename demo
 == 
 
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
 Server address:
 == 
 
 Server filter
-== 
-
-Shift
 == 
 
 Size:
@@ -1011,9 +591,6 @@ Stop record
 The audio device couldn't be initialised.
 == 
 
-Tiles
-== 
-
 Time limit: %d min
 == 
 
@@ -1026,34 +603,7 @@ Unable to delete the demo
 Unable to rename the demo
 == 
 
-Unhookable
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
 Version:
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-[HOME] Restore map focus
-== 
-
-[ctrl+i] Show tile informations
 == 
 
 no limit
