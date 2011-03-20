@@ -305,6 +305,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	if(ClientID != -1 && m_pClient->m_aClients[ClientID].m_aName[0] == '\0') // unknown client
 		return;
 	
+	bool Highlighted = false;
 	char *p = const_cast<char*>(pLine);
 	while(*p)
 	{
@@ -337,6 +338,8 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 			m_aLines[m_CurrentLine].m_Spam = 1;
 		else
 			m_aLines[m_CurrentLine].m_Spam = 0;
+		if(m_aLines[m_CurrentLine].m_Highlighted)
+			Highlighted = true;
 
 		if(ClientID == -1) // server message
 		{
@@ -484,7 +487,12 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	// play sound
 	if(!m_Spam && !m_IgnorePlayer)
 	{
-		if(ClientID >= 0)
+		if(Highlighted)
+		{
+			if(g_Config.m_ClChatsound)
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0, vec2(0,0));
+		}
+		else if(ClientID >= 0)
 		{
 			if(g_Config.m_ClChatsound)
 				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
