@@ -223,7 +223,7 @@ int CLayerQuads::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	CProperty aProps[] = {
-		{Localize("Image"), m_Image, PROPTYPE_IMAGE, -1, 0},
+		{"Image", m_Image, PROPTYPE_IMAGE, -1, 0},
 		{0},
 	};
 	

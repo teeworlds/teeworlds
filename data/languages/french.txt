@@ -22,26 +22,11 @@
 %i seconds left
 == %i secondes restantes
 
-%s Right click for context menu.
-== %s Clic-droit pour afficher le menu contextuel.
-
 Abort
 == Annuler
 
-Add
-== Ajouter
-
-Add Image
-== Ajouter une image
-
-Add group
-== Ajouter un groupe
-
 Address
 == Adresse
-
-Adds a new group
-== Ajoute un nouveau groupe
 
 All
 == Tout le monde
@@ -49,20 +34,8 @@ All
 Alpha
 == Alpha
 
-Alpha value of the envelope
-== Composante alpha de l'animation
-
 Always show name plates
 == Toujours afficher les pseudonymes
-
-Anim
-== Anim.
-
-Append
-== Joindre
-
-Append map
-== Joindre une carte
 
 Are you sure that you want to delete the demo?
 == Êtes-vous sûr de vouloir supprimer cette démo ?
@@ -85,44 +58,17 @@ Blue team
 Blue team wins!
 == L'équipe bleue gagne !
 
-Blue value of the envelope
-== Composante bleue de l'animation
-
 Body
 == Corps
 
-Border
-== Bordure
-
-CCW
-== SAH
-
-CW
-== SH
-
 Call vote
 == Voter
-
-Cancel
-== Annuler
 
 Chat
 == Chat
 
 Close
 == Fermer
-
-Color
-== Couleur
-
-Color Env
-== Couleur Anim
-
-Color TO
-== Décalage Anim
-
-Color+
-== Couleur+
 
 Compatible version
 == Version compatible
@@ -142,15 +88,6 @@ Console
 Controls
 == Contrôles
 
-Creates a new color envelope
-== Crée une nouvelle animation de couleur
-
-Creates a new map
-== Crée une nouvelle carte
-
-Creates a new pos envelope
-== Crée une nouvelle animation de position
-
 Current
 == Actuellement
 
@@ -160,35 +97,14 @@ Current version: %s
 Custom colors
 == Couleurs personnalisées
 
-Decrease
-== Réduire
-
-Decrease animation speed
-== Réduire la vitesse des animations
-
 Delete
 == Supprimer
 
 Delete demo
 == Supprimer la démo
 
-Delete group
-== Supprimer le groupe
-
-Delete layer
-== Supprimer la couche
-
-Delete this envelope
-== Supprime l'animation
-
-Deletes the layer
-== Supprime la couche
-
 Demos
 == Démos
-
-Detail
-== Détail
 
 Disconnect
 == Partir
@@ -199,9 +115,6 @@ Disconnected
 Display Modes
 == Modes d'affichages
 
-Down
-== Bas
-
 Downloading map
 == Téléchargement de la carte
 
@@ -211,38 +124,17 @@ Draw!
 Dynamic Camera
 == Caméra dynamique
 
-Embed
-== Intégrer
-
-Embedded
-== Intégré
-
-Embeds the image into the map file.
-== Intègre l'image dans la carte.
-
 Emoticon
 == Émoticônes
 
 Enter
 == Démarrer
 
-Envelopes
-== Animations
-
 Error
 == Erreur
 
 Error loading demo
 == Erreur pendant le chargement de la démo
-
-Exit
-== Quitter
-
-Exits from the editor
-== Ferme l'éditeur
-
-External
-== Externe
 
 FSAA samples
 == Échantillons FSAA
@@ -255,15 +147,6 @@ Favorites
 
 Feet
 == Pieds
-
-File
-== Fichier
-
-File: %s
-== Fichier : %s
-
-Filename:
-== Nom du fichier:
 
 Filter
 == Filtre
@@ -301,23 +184,14 @@ General
 Graphics
 == Affichage
 
-Green value of the envelope
-== Composante verte de l'animation
-
 Grenade
 == Lance-grenade
-
-Group
-== Groupe
 
 Hammer
 == Maillet
 
 Has people playing
 == Au moins un joueur
-
-Height
-== Hauteur
 
 High Detail
 == Tous les détails
@@ -330,18 +204,6 @@ Host address
 
 Hue
 == Teinte
-
-Image
-== Image
-
-Images
-== Images
-
-Increase
-== Augmenter
-
-Increase animation speed
-== Augmenter la vitesse des animations
 
 Info
 == Info.
@@ -373,38 +235,14 @@ LAN
 Language
 == Langue
 
-Layers
-== Couches
-
-Left
-== Gauche
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour changer le pivot. Maintenez [ctrl] pour tourner.
-
-Left mouse button to move. Hold shift to move the texture.
-== Bouton gauche de la souris pour déplacer. Maintenez [shift] pour déplacer la texture.
-
 Lht.
 == Lum.
-
-Load
-== Charger
-
-Load a new image to use in the map
-== Charger une image pour l'utiliser dans la carte
-
-Load map
-== Charger une map
 
 Loading
 == Chargement
 
 MOTD
 == MOTD
-
-Make external
-== Mettre en externe
 
 Map
 == Carte
@@ -439,20 +277,8 @@ Mute when not active
 Name
 == Nom
 
-Name:
-== Nom:
-
-New
-== Nouveau
-
-New folder
-== Nouveau dossier
-
 News
 == Nouvelles
-
-Next Envelope
-== Animation suivante
 
 Next weapon
 == Arme suivante
@@ -472,26 +298,11 @@ No servers found
 No servers match your filter criteria
 == Aucun serveur ne correspond à vos critères
 
-None
-== Aucun
-
-Normal animation speed
-== Vitesse normale des animations
-
 Ok
 == Ok
 
 Open
 == Ouvrir
-
-Opens a map and adds everything from that map to the current one
-== Ouvre une carte et ajoute son contenu dans la carte actuelle
-
-Opens a map for editing
-== Ouvre une carte pour la modifier
-
-Order
-== Ordre
 
 Parent Folder
 == Dossier parent
@@ -520,23 +331,8 @@ Players
 Please balance teams!
 == Équilibrez les équipes !
 
-Pos X
-== Pos X
-
-Pos Y
-== Pos Y
-
-Pos.+
-== Pos.+
-
-Press right mouse button to create a new point
-== Clic-droit pour créer un nouveau point
-
 Prev. weapon
 == Arme précédente
-
-Previous Envelope
-== Animation précédente
 
 Quality Textures
 == Textures haute qualité
@@ -562,9 +358,6 @@ Red team
 Red team wins!
 == L'équipe rouge gagne !
 
-Red value of the envelope
-== Composante rouge de l'animation
-
 Refresh
 == Rafraîchir
 
@@ -573,24 +366,6 @@ Refreshing master servers
 
 Remote console
 == Console serveur
-
-Remove
-== Enlever
-
-Removes the image from the map
-== Enlève l'image de la carte
-
-Removes the image from the map file.
-== Enlève l'image de la carte.
-
-Replace
-== Remplacer
-
-Replace Image
-== Remplacer l'image
-
-Replaces the image with a new one
-== Remplace l'image par une nouvelle
 
 Reset filter
 == Filtres par défaut
@@ -601,12 +376,6 @@ Reset to defaults
 Rifle
 == Laser
 
-Right
-== Droite
-
-Rotation of the envelope
-== Rotation de l'animation
-
 Round
 == Round
 
@@ -615,21 +384,6 @@ Sample rate
 
 Sat.
 == Sat.
-
-Save
-== Enregistrer
-
-Save As
-== Enregistrer sous
-
-Save map
-== Enregistrer la carte
-
-Saves the current map
-== Enregistre la carte actuelle
-
-Saves the current map under a new name
-== Enregistre la carte actuelle sous un autre nom
 
 Score
 == Score
@@ -645,15 +399,6 @@ Scoreboard
 
 Screenshot
 == Capture d'écran
-
-Select group. Right click for properties.
-== Sélectionner un groupe. Clic-droit pour voir les propriétés.
-
-Select image
-== Sélectionner une image
-
-Select layer. Right click for properties.
-== Sélectionner une couche. Clic-droit pour voir les propriétés.
 
 Server details
 == Détails du serveur
@@ -693,9 +438,6 @@ Spectate
 
 Spectators
 == Spectateurs
-
-Square
-== Carré
 
 Standard gametype
 == Types de jeu standards
@@ -742,15 +484,6 @@ Type
 UI Color
 == Couleur du menu
 
-Up
-== Haut
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Maintenez le bouton gauche de la souris et déplacez-là pour changer la couleur. Maintenez [shift] pour plus de précision.
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Maintenez le bouton gauche de la souris et déplacez-là pour changer la valeur. Maintenez [shift] pour plus de précision.
-
 Use sounds
 == Jouer les sons
 
@@ -778,9 +511,6 @@ Weapon
 Welcome to Teeworlds
 == Bienvenue dans Teeworlds
 
-Width
-== Largeur
-
 Yes
 == Oui
 
@@ -789,24 +519,6 @@ You must restart the game for all settings to take effect.
 
 Your skin
 == Votre skin
-
-ZI
-== Z+
-
-ZO
-== Z-
-
-[M] Flip brush vertical
-== [M] Retourner verticalement
-
-[N] Flip brush horizontal
-== [N] Retourner horizontalement
-
-[NumPad+] Zoom in
-== [ClavierNum+] Zoomer
-
-[NumPad-] Zoom out
-== [ClavierNum-] Dézoomer
 
 no limit
 == pas de limite
@@ -819,49 +531,10 @@ no limit
 -Page %d-
 == 
 
-Add Quad
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new quad
-== 
-
-Adds border tiles
-== 
-
-Aspect ratio
-== 
-
 Clan
 == 
 
-Clean-up game tiles
-== 
-
-Clear
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Collision
-== 
-
-Constructs game tiles from this layer
+Count players only
 == 
 
 Country
@@ -873,37 +546,10 @@ Crc:
 Created:
 == 
 
-Creates a new quad layer
-== 
-
-Creates a new tile layer
-== 
-
-Death
-== 
-
-Deletes the current quad
-== 
-
 Demo details
 == 
 
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
 Free-View
-== 
-
-Game tiles
-== 
-
-HD
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
 Length:
@@ -927,31 +573,7 @@ Next
 Page %d of %d
 == 
 
-Para X
-== 
-
-Para Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
 Prev
-== 
-
-Proof
-== 
-
-Quads
-== 
-
-Refocus
-== 
-
-Removes game tiles that aren't based on a layer
 == 
 
 Rename
@@ -960,19 +582,10 @@ Rename
 Rename demo
 == 
 
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
 Server address:
 == 
 
 Server filter
-== 
-
-Shift
 == 
 
 Size:
@@ -981,28 +594,7 @@ Size:
 Sound error
 == 
 
-Squares the current quad
-== 
-
-Switch between images and layers managment.
-== 
-
-Switch curve type
-== 
-
 The audio device couldn't be initialised.
-== 
-
-Tiles
-== 
-
-Toggle group visibility
-== 
-
-Toggle layer visibility
-== 
-
-Toggles the envelope editor.
 == 
 
 Type:
@@ -1014,49 +606,7 @@ Unable to delete the demo
 Unable to rename the demo
 == 
 
-Unhookable
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and create a brush.
-== 
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
 Version:
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-[HOME] Restore map focus
-== 
-
-[NumPad*] Zoom to normal and remove editor offset
-== 
-
-[R] Rotates the brush counter clockwise
-== 
-
-[T] Rotates the brush clockwise
-== 
-
-[ctrl+h] Toggle High Detail
-== 
-
-[ctrl+i] Show tile informations
-== 
-
-[ctrl+m] Toggle animation
-== 
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == 
 
 ##### old translations #####

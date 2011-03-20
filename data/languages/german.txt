@@ -22,38 +22,11 @@
 %i seconds left
 == Noch %i Sekunden
 
-%s Right click for context menu.
-== %s Rechtsklick für Kontextmenü.
-
 Abort
 == Abbrechen
 
-Add
-== Hinzufügen
-
-Add Image
-== Grafik hinzufügen
-
-Add Quad
-== Viere. hinz.
-
-Add group
-== Gruppe hinz.
-
-Add quads layer
-== Viereck-Ebene hinzu.
-
-Add tile layer
-== Platten-Ebene hinzuf.
-
 Address
 == Adresse
-
-Adds a new group
-== Fügt eine neue Gruppe hinzu
-
-Adds a new quad
-== Fügt ein neues Viereck hinzu
 
 All
 == Alle
@@ -61,20 +34,8 @@ All
 Alpha
 == Alpha
 
-Alpha value of the envelope
-== Alpha-Wert der Animation
-
 Always show name plates
 == Spielernamen immer anzeigen
-
-Anim
-== Anima.
-
-Append
-== Anhängen
-
-Append map
-== Karte anhängen
 
 Are you sure that you want to delete the demo?
 == Möchtest du die Aufnahme wirklich löschen?
@@ -84,9 +45,6 @@ Are you sure that you want to quit?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
-
-Aspect ratio
-== Seitenverhältnis
 
 Automatically record demos
 == Automatisch Aufnahmen erstellen
@@ -100,56 +58,17 @@ Blue team
 Blue team wins!
 == Blaues Team gewinnt!
 
-Blue value of the envelope
-== Blau-Wert der Animation
-
 Body
 == Körper
-
-Border
-== Rand
-
-CCW
-== GUZS
-
-CW
-== UZS
 
 Call vote
 == Abstimmen
 
-Cancel
-== Abbrech.
-
 Chat
 == Chat
 
-Clip H
-== Aussch. H
-
-Clip W
-== Aussch. W
-
-Clip X
-== Aussch. X
-
-Clip Y
-== Aussch. Y
-
 Close
 == Schließ.
-
-Color
-== Farbe
-
-Color Env
-== Farbanim.
-
-Color TO
-== Farbe zu
-
-Color+
-== Farbe+
 
 Compatible version
 == Kompatible Version
@@ -169,21 +88,6 @@ Console
 Controls
 == Steuerung
 
-Creates a new color envelope
-== Erstellt eine neue Farbanimation
-
-Creates a new map
-== Erstellt eine neue Karte
-
-Creates a new pos envelope
-== Erstellt eine neue Positionsanimation
-
-Creates a new quad layer
-== Erstellt eine neue Viereck-Ebene
-
-Creates a new tile layer
-== Erstellt eine neue Tile-Ebene
-
 Current
 == Aktuell
 
@@ -193,38 +97,14 @@ Current version: %s
 Custom colors
 == Eigene Farben
 
-Decrease
-== Verringern
-
-Decrease animation speed
-== Animationsgeschwindigkeit verringern
-
 Delete
 == Löschen
 
 Delete demo
 == Aufnahme löschen
 
-Delete group
-== Gruppe löschen
-
-Delete layer
-== Ebene löschen
-
-Delete this envelope
-== Löscht die Animation
-
-Deletes the current quad
-== Entfernt das ausgewählte Viereck
-
-Deletes the layer
-== Entfernt die Ebene
-
 Demos
 == Aufnahm.
-
-Detail
-== Detail
 
 Disconnect
 == Trennen
@@ -235,9 +115,6 @@ Disconnected
 Display Modes
 == Auflösungen
 
-Down
-== Unten
-
 Downloading map
 == Karte herunterladen
 
@@ -247,44 +124,17 @@ Draw!
 Dynamic Camera
 == Dynamische Kamera
 
-Embed
-== Einbetten
-
-Embedded
-== Eingebettet
-
-Embeds the image into the map file.
-== Bettet die Grafik in die Kartendatei ein.
-
 Emoticon
 == Emoticon
 
-Enable/disable group for saving
-== Aktiviert/deaktiviert die Gruppe beim speichern
-
-Enable/disable layer for saving
-== Aktiviert/deaktiviert die Ebene beim speichern
-
 Enter
 == Starten
-
-Envelopes
-== Animation.
 
 Error
 == Fehlgeschlagen
 
 Error loading demo
 == Fehler beim Laden der Aufnahme, die Datei ist ungültig.
-
-Exit
-== Beenden
-
-Exits from the editor
-== Schließt den Editor
-
-External
-== Extern
 
 FSAA samples
 == Vollbild Anti-Aliasing
@@ -297,15 +147,6 @@ Favorites
 
 Feet
 == Füße
-
-File
-== Datei
-
-File: %s
-== Datei: %s
-
-Filename:
-== Dateina.:
 
 Filter
 == Filter
@@ -343,26 +184,14 @@ General
 Graphics
 == Grafik
 
-Green value of the envelope
-== Grün-Wert der Animation
-
 Grenade
 == Granate
-
-Group
-== Gruppe
-
-HD
-== HD
 
 Hammer
 == Hammer
 
 Has people playing
 == Server nicht leer
-
-Height
-== Höhe
 
 High Detail
 == Hohe Details
@@ -375,18 +204,6 @@ Host address
 
 Hue
 == Farb.
-
-Image
-== Grafik
-
-Images
-== Grafiken
-
-Increase
-== Vergrößern
-
-Increase animation speed
-== Animationsgeschwindigkeit erhöhen
 
 Info
 == Info
@@ -418,41 +235,14 @@ LAN
 Language
 == Sprache
 
-Layers
-== Ebenen
-
-Left
-== Links
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Achse zu bewegen. Strg gedrückt halten zum drehen.
-
-Left mouse button to move. Hold shift to move the texture.
-== Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Textur zu bewegen.
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== Mit linker Maustaste ziehen. Strg für eine höhere Genauigkeit gedrückt halten. Umschalt gedrückt halten, um die Zeitlinie auszuwählen. Rechtsklick zum löschen.
-
 Lht.
 == Hell.
-
-Load
-== Laden
-
-Load a new image to use in the map
-== Lädt eine neue Grafik, um sie in der Karte zu benutzen.
-
-Load map
-== Karte laden
 
 Loading
 == Laden
 
 MOTD
 == Nachricht des Tages
-
-Make external
-== Extern machen
 
 Map
 == Karte
@@ -490,20 +280,8 @@ Name
 Name plates size
 == Größe der Namen
 
-Name:
-== Name:
-
-New
-== Neu
-
-New folder
-== Neuer Ordner
-
 News
 == News
-
-Next Envelope
-== Nächste Animation
 
 Next weapon
 == Nächste Waffe
@@ -523,32 +301,11 @@ No servers found
 No servers match your filter criteria
 == Kein Server entspricht den Kriterien
 
-None
-== Kein
-
-Normal animation speed
-== Normale Animationsgeschwindigkeit
-
 Ok
 == OK
 
 Open
 == Öffnen
-
-Opens a map and adds everything from that map to the current one
-== Öffnet eine Karte und fügt alles aus dieser in die aktuelle ein.
-
-Opens a map for editing
-== Öffnet eine Map zum Bearbeiten
-
-Order
-== Reihenf.
-
-Para X
-== Para. X
-
-Para Y
-== Para. Y
 
 Parent Folder
 == Übergeordneter Ordner
@@ -577,35 +334,8 @@ Players
 Please balance teams!
 == Bitte Teams ausgleichen!
 
-Pos X
-== Pos. X
-
-Pos Y
-== Pos. Y
-
-Pos. Env
-== Pos. anim.
-
-Pos. TO
-== Pos. zu
-
-Pos.+
-== Pos.+
-
-Press right mouse button to create a new point
-== Drücke die rechte Maustaste, um einen neuen Punkt zu erstellen
-
 Prev. weapon
 == Vorherige Waffe
-
-Previous Envelope
-== Vorherige Animation
-
-Proof
-== Testra.
-
-Quads
-== Vier.
 
 Quality Textures
 == Hochauflösende Texturen
@@ -631,12 +361,6 @@ Red team
 Red team wins!
 == Rotes Team gewinnt!
 
-Red value of the envelope
-== Rot-Wert der Animation
-
-Refocus
-== Wiederh.
-
 Refresh
 == Erneuern
 
@@ -646,44 +370,14 @@ Refreshing master servers
 Remote console
 == Remotekonsole
 
-Remove
-== Entfernen
-
-Removes the image from the map
-== Entfernt die Grafik aus der Karte
-
-Removes the image from the map file.
-== Entfernt die Grafik aus der Kartendatei.
-
-Replace
-== Ersetzen
-
-Replace Image
-== Grafik ersetzen
-
-Replaces the image with a new one
-== Ersetzt die Grafik durch ein neues
-
 Reset filter
 == Standardfilter
 
 Reset to defaults
 == Standardeinstellung
 
-Resizes the current Quad based on the aspect ratio of the image
-== Ändert die Größe des aktuellen Vierecks basierend auf dem Seitenverhältnis des Bildes
-
 Rifle
 == Laser
-
-Right
-== Rechts
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Rotation des Pinsels in Grad. Mit gedrückter linker Maustaste ziehen, um den Wert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
-
-Rotation of the envelope
-== Rotation der Animation
 
 Round
 == Runde
@@ -693,21 +387,6 @@ Sample rate
 
 Sat.
 == Sätt.
-
-Save
-== Speichern
-
-Save As
-== Speichern unter
-
-Save map
-== Karte speichern
-
-Saves the current map
-== Speichert die aktuelle Karte
-
-Saves the current map under a new name
-== Speichert die aktuelle Karte unter neuem Namen
 
 Score
 == Score
@@ -724,15 +403,6 @@ Scoreboard
 Screenshot
 == Bildschirmfoto
 
-Select group. Right click for properties.
-== Gruppe auswählen. Rechtsklick für Eigenschaften.
-
-Select image
-== Grafik auswählen
-
-Select layer. Right click for properties.
-== Ebene auswählen. Rechtsklick für Eigenschaften.
-
 Server details
 == Serverdetails
 
@@ -744,9 +414,6 @@ Server not full
 
 Settings
 == Optionen
-
-Shift
-== Verschie.
 
 Shotgun
 == Schrotflinte
@@ -778,12 +445,6 @@ Spectate
 Spectators
 == Zuschauer
 
-Square
-== Quadrat
-
-Squares the current quad
-== Macht das ausgewählte Viereck rechteckig
-
 Standard gametype
 == Standard-Spieltyp
 
@@ -795,12 +456,6 @@ Stop record
 
 Sudden Death
 == Sudden Death
-
-Switch between images and layers managment.
-== Zwischen Ebenen- und Bildverwaltung umschalten.
-
-Switch curve type
-== Kurventyp ändern
 
 Switch weapon on pickup
 == Wechsle Waffen beim Aufnehmen
@@ -823,23 +478,11 @@ The audio device couldn't be initialised.
 The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
-Tiles
-== Plat.
-
 Time limit
 == Zeitlimit
 
 Time limit: %d min
 == Zeitlimit: %d min
-
-Toggle group visibility
-== Gruppensichtbarkeit umschalten
-
-Toggle layer visibility
-== Sichtbarkeit der Ebene umschalten
-
-Toggles the envelope editor.
-== Schaltet den Animationseditor um.
 
 Try again
 == Nochmal versuchen
@@ -852,24 +495,6 @@ UI Color
 
 Unable to delete the demo
 == Aufnahme konnte nicht gelöscht werden
-
-Up
-== Oben
-
-Use Clipping
-== Aussch. b.
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Mit gedrückter linker Maustaste ziehen, um den Farbwert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Mit gedrückter linker Maustaste ziehen, um den Wert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
-
-Use left mouse button to drag and create a brush.
-== Benutze die linke Maustaste, um zu ziehen und einen Pinsel zu erstellen.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Benutze die linke Maustaste um mit dem Pinsel zu malen. Die rechte Maustaste löscht den Pinsel.
 
 Use sounds
 == Aktiviere Ton
@@ -898,15 +523,6 @@ Weapon
 Welcome to Teeworlds
 == Willkommen bei Teeworlds
 
-Width
-== Breite
-
-X-axis of the envelope
-== X-Achse der Animation
-
-Y-axis of the envelope
-== Y-Achse der Animation
-
 Yes
 == Ja
 
@@ -915,45 +531,6 @@ You must restart the game for all settings to take effect.
 
 Your skin
 == Dein Skin
-
-ZI
-== ZI
-
-ZO
-== ZO
-
-[HOME] Restore map focus
-== [HOME] Setzt das Blickfeld der Karte zurück
-
-[M] Flip brush vertical
-== [M] Pinsel vertikal umdrehen
-
-[N] Flip brush horizontal
-== [N] Pinsel horizontal umdrehen
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumBlock*] Normale Größe
-
-[NumPad+] Zoom in
-== [NumBlock+] Vergrößern
-
-[NumPad-] Zoom out
-== [NumBlock-] Verkleinern
-
-[R] Rotates the brush counter clockwise
-== [R] Dreht den Pinsel gegen den Uhrzeigersinn
-
-[T] Rotates the brush clockwise
-== [T] dreht den Pinsel im Uhrzeigersinn
-
-[ctrl+h] Toggle High Detail
-== [Strg+H] Hohe Details umschalten
-
-[ctrl+m] Toggle animation
-== [Strg+M] Animation umschalten
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [Strg+P] Schaltet Testrahmen um. Diese Rahmen zeigen, wie viel der Spieler höchstens sehen kann.
 
 no limit
 == Keine Begrenzung
@@ -966,22 +543,10 @@ no limit
 -Page %d-
 == 
 
-Adds border tiles
-== 
-
 Clan
 == 
 
-Clean-up game tiles
-== 
-
-Clear
-== 
-
-Collision
-== 
-
-Constructs game tiles from this layer
+Count players only
 == 
 
 Country
@@ -993,16 +558,10 @@ Crc:
 Created:
 == 
 
-Death
-== 
-
 Demo details
 == 
 
 Free-View
-== 
-
-Game tiles
 == 
 
 Length:
@@ -1026,9 +585,6 @@ Page %d of %d
 Prev
 == 
 
-Removes game tiles that aren't based on a layer
-== 
-
 Rename
 == 
 
@@ -1050,13 +606,7 @@ Type:
 Unable to rename the demo
 == 
 
-Unhookable
-== 
-
 Version:
-== 
-
-[ctrl+i] Show tile informations
 == 
 
 ##### old translations #####

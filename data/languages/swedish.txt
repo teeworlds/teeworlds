@@ -450,55 +450,10 @@ You must restart the game for all settings to take effect.
 %i seconds left
 == 
 
-%s Right click for context menu.
-== 
-
 -Page %d-
 == 
 
-Add
-== 
-
-Add Image
-== 
-
-Add Quad
-== 
-
-Add group
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new group
-== 
-
-Adds a new quad
-== 
-
-Adds border tiles
-== 
-
-Alpha value of the envelope
-== 
-
-Anim
-== 
-
-Append
-== 
-
-Append map
-== 
-
 Are you sure that you want to delete the demo?
-== 
-
-Aspect ratio
 == 
 
 Automatically record demos
@@ -507,61 +462,13 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
-Blue value of the envelope
-== 
-
-Border
-== 
-
-CCW
-== 
-
-CW
-== 
-
-Cancel
-== 
-
 Clan
-== 
-
-Clean-up game tiles
-== 
-
-Clear
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Collision
-== 
-
-Color
-== 
-
-Color Env
-== 
-
-Color TO
-== 
-
-Color+
 == 
 
 Connection Problems...
 == 
 
-Constructs game tiles from this layer
+Count players only
 == 
 
 Country
@@ -573,100 +480,19 @@ Crc:
 Created:
 == 
 
-Creates a new color envelope
-== 
-
-Creates a new map
-== 
-
-Creates a new pos envelope
-== 
-
-Creates a new quad layer
-== 
-
-Creates a new tile layer
-== 
-
-Death
-== 
-
-Decrease
-== 
-
-Decrease animation speed
-== 
-
 Delete
 == 
 
 Delete demo
 == 
 
-Delete group
-== 
-
-Delete layer
-== 
-
-Delete this envelope
-== 
-
-Deletes the current quad
-== 
-
-Deletes the layer
-== 
-
 Demo details
-== 
-
-Detail
-== 
-
-Down
-== 
-
-Embed
-== 
-
-Embedded
-== 
-
-Embeds the image into the map file.
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Envelopes
 == 
 
 Error
 == 
 
 Error loading demo
-== 
-
-Exit
-== 
-
-Exits from the editor
-== 
-
-External
-== 
-
-File
-== 
-
-File: %s
-== 
-
-Filename:
 == 
 
 Folder
@@ -678,64 +504,10 @@ Force vote
 Free-View
 == 
 
-Game tiles
-== 
-
-Green value of the envelope
-== 
-
-Group
-== 
-
-HD
-== 
-
-Height
-== 
-
-Image
-== 
-
-Images
-== 
-
-Increase
-== 
-
-Increase animation speed
-== 
-
 Invalid Demo
 == 
 
-Layers
-== 
-
-Left
-== 
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
-
-Left mouse button to move. Hold shift to move the texture.
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
 Length:
-== 
-
-Load
-== 
-
-Load a new image to use in the map
-== 
-
-Load map
-== 
-
-Make external
 == 
 
 Map:
@@ -750,16 +522,7 @@ Max demos
 Name plates size
 == 
 
-Name:
-== 
-
 Netversion:
-== 
-
-New
-== 
-
-New folder
 == 
 
 New name:
@@ -768,34 +531,10 @@ New name:
 Next
 == 
 
-Next Envelope
-== 
-
-None
-== 
-
-Normal animation speed
-== 
-
 Open
 == 
 
-Opens a map and adds everything from that map to the current one
-== 
-
-Opens a map for editing
-== 
-
-Order
-== 
-
 Page %d of %d
-== 
-
-Para X
-== 
-
-Para Y
 == 
 
 Parent Folder
@@ -804,34 +543,7 @@ Parent Folder
 Please balance teams!
 == 
 
-Pos X
-== 
-
-Pos Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
-Pos.+
-== 
-
-Press right mouse button to create a new point
-== 
-
 Prev
-== 
-
-Previous Envelope
-== 
-
-Proof
-== 
-
-Quads
 == 
 
 REC %3d:%02d
@@ -843,82 +555,16 @@ Reason:
 Record demo
 == 
 
-Red value of the envelope
-== 
-
-Refocus
-== 
-
-Remove
-== 
-
-Removes game tiles that aren't based on a layer
-== 
-
-Removes the image from the map
-== 
-
-Removes the image from the map file.
-== 
-
 Rename
 == 
 
 Rename demo
 == 
 
-Replace
-== 
-
-Replace Image
-== 
-
-Replaces the image with a new one
-== 
-
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
-Save
-== 
-
-Save As
-== 
-
-Save map
-== 
-
-Saves the current map
-== 
-
-Saves the current map under a new name
-== 
-
-Select group. Right click for properties.
-== 
-
-Select image
-== 
-
-Select layer. Right click for properties.
-== 
-
 Server address:
 == 
 
 Server filter
-== 
-
-Shift
 == 
 
 Show chat
@@ -930,40 +576,16 @@ Size:
 Sound error
 == 
 
-Square
-== 
-
-Squares the current quad
-== 
-
 Stop record
 == 
 
 Sudden Death
 == 
 
-Switch between images and layers managment.
-== 
-
-Switch curve type
-== 
-
 The audio device couldn't be initialised.
 == 
 
-Tiles
-== 
-
 Time limit: %d min
-== 
-
-Toggle group visibility
-== 
-
-Toggle layer visibility
-== 
-
-Toggles the envelope editor.
 == 
 
 Type:
@@ -975,85 +597,13 @@ Unable to delete the demo
 Unable to rename the demo
 == 
 
-Unhookable
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and create a brush.
-== 
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
 Version:
 == 
 
 Warmup
 == 
 
-Width
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
 Your skin
-== 
-
-ZI
-== 
-
-ZO
-== 
-
-[HOME] Restore map focus
-== 
-
-[M] Flip brush vertical
-== 
-
-[N] Flip brush horizontal
-== 
-
-[NumPad*] Zoom to normal and remove editor offset
-== 
-
-[NumPad+] Zoom in
-== 
-
-[NumPad-] Zoom out
-== 
-
-[R] Rotates the brush counter clockwise
-== 
-
-[T] Rotates the brush clockwise
-== 
-
-[ctrl+h] Toggle High Detail
-== 
-
-[ctrl+i] Show tile informations
-== 
-
-[ctrl+m] Toggle animation
-== 
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == 
 
 no limit

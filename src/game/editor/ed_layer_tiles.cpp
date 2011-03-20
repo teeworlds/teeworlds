@@ -429,7 +429,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	if(InGameGroup)
 	{
 		static int s_ColclButton = 0;
-		if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Game tiles"), 0, &Button, 0, Localize("Constructs game tiles from this layer")))
+		if(m_pEditor->DoButton_Editor(&s_ColclButton, "Game tiles", 0, &Button, 0, "Constructs game tiles from this layer"))
 			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
 
 		int Result = m_pEditor->PopupSelectGameTileOpResult();
@@ -464,11 +464,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	Color |= m_Color.a;
 	
 	CProperty aProps[] = {
-		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
-		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
-		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
-		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
-		{Localize("Color"), Color, PROPTYPE_COLOR, 0, 0},
+		{"Width", m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Height", m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Shift", 0, PROPTYPE_SHIFT, 0, 0},
+		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
+		{"Color", Color, PROPTYPE_COLOR, 0, 0},
 		{0},
 	};
 	
