@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include <engine/shared/ringbuffer.h>
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 
@@ -46,6 +47,8 @@ class CChat : public CComponent
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
+	char *m_pHistoryEntry;
+	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 	
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
