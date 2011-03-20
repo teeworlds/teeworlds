@@ -911,11 +911,16 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	char aBuf[128];
 
 	// count the players
-	int PlayerCount = 0;
+	int PlayerCount = 0, ClientCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-			PlayerCount++;
+		{
+			if(GameServer()->IsClientPlayer(i))
+				PlayerCount++;
+			
+			ClientCount++;
+		}
 	}
 	
 	p.Reset();
@@ -939,19 +944,21 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 2);
 
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3);  // num clients
+	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max clients
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			p.AddString(ClientName(i), MAX_NAME_LENGTH);  // player name
-			p.AddString(ClientClan(i), MAX_CLAN_LENGTH);  // player clan
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6);  // player country
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // player score
+			p.AddString(ClientName(i), MAX_NAME_LENGTH);  // client name
+			p.AddString(ClientClan(i), MAX_CLAN_LENGTH);  // client clan
+			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6);  // client country
+			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // client score
+			str_format(aBuf, sizeof(aBuf), "%d", GameServer()->IsClientPlayer(i)?1:0); p.AddString(aBuf, 2);  // is player?
 		}
 	}
-	
 	
 	Packet.m_ClientID = -1;
 	Packet.m_Address = *pAddr;

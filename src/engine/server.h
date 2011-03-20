@@ -82,6 +82,7 @@ public:
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 
 	virtual bool IsClientReady(int ClientID) = 0;
+	virtual bool IsClientPlayer(int ClientID) = 0;
 	
 	virtual const char *GameType() = 0;
 	virtual const char *Version() = 0;

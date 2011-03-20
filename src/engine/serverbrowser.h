@@ -14,15 +14,16 @@ class CServerInfo
 {
 public:
 	/*
-		Structure: CInfoPlayer
+		Structure: CInfoClient
 	*/
-	class CPlayer
+	class CClient
 	{
 	public:
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
 		int m_Score;
+		bool m_Player;
 	} ;
 
 	int m_SortedIndex;
@@ -32,6 +33,8 @@ public:
 	
 	int m_QuickSearchHit;
 	
+	int m_MaxClients;
+	int m_NumClients;
 	int m_MaxPlayers;
 	int m_NumPlayers;
 	int m_Flags;
@@ -42,7 +45,7 @@ public:
 	char m_aMap[32];
 	char m_aVersion[32];
 	char m_aAddress[24];
-	CPlayer m_aPlayers[MAX_CLIENTS];
+	CClient m_aClients[MAX_CLIENTS];
 };
 
 class IServerBrowser : public IInterface
