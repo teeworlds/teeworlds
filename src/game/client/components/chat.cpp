@@ -40,6 +40,7 @@ void CChat::OnReset()
 	m_aCompletionBuffer[0] = 0;
 	m_PlaceholderOffset = 0;
 	m_PlaceholderLength = 0;
+	m_pHistoryEntry = 0x0;
 }
 
 void CChat::OnRelease()
@@ -105,7 +106,12 @@ bool CChat::OnInput(IInput::CEvent e)
 	else if(e.m_Flags&IInput::FLAG_PRESS && (e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER))
 	{
 		if(m_Input.GetString()[0])
+		{
 			Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
+			char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
+			mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+		}
+		m_pHistoryEntry = 0x0;
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
 	}
@@ -164,6 +170,39 @@ bool CChat::OnInput(IInput::CEvent e)
 		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(e);
 		m_InputUpdate = true;
+	}
+	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_UP)
+	{
+		if (m_pHistoryEntry)
+		{
+			char *pTest = m_History.Prev(m_pHistoryEntry);
+
+			if (pTest)
+				m_pHistoryEntry = pTest;
+		}
+		else
+			m_pHistoryEntry = m_History.Last();
+
+		if (m_pHistoryEntry)
+		{
+			unsigned int Len = str_length(m_pHistoryEntry);
+			if (Len < sizeof(m_Input) - 1) // TODO: WTF?
+				m_Input.Set(m_pHistoryEntry);
+		}
+	}
+	else if (e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_DOWN)
+	{
+		if (m_pHistoryEntry)
+			m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
+
+		if (m_pHistoryEntry)
+		{
+			unsigned int Len = str_length(m_pHistoryEntry);
+			if (Len < sizeof(m_Input) - 1) // TODO: WTF?
+				m_Input.Set(m_pHistoryEntry);
+		}
+		else
+			m_Input.Clear();
 	}
 	
 	return true;
