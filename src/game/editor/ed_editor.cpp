@@ -2244,8 +2244,9 @@ void CEditor::RenderFileDialog()
 {
 	// GUI coordsys
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-
 	CUIRect View = *UI()->Screen();
+	float Width = View.w, Height = View.h;
+
 	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.25f), 0, 0);
 	View.VMargin(150.0f, &View);
 	View.HMargin(50.0f, &View);
@@ -2418,19 +2419,11 @@ void CEditor::RenderFileDialog()
 		ButtonBar.VSplitLeft(70.0f, &Button, &ButtonBar);
 		if(DoButton_Editor(&s_NewFolderButton, "New folder", 0, &Button, 0, 0))
 		{
-			if(*m_aFileDialogFileName)
-			{
-				char aBuf[512];
-				str_format(aBuf, sizeof(aBuf), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
-				if(Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
-				{
-					FilelistPopulate(IStorage::TYPE_SAVE);
-					if(m_FilesSelectedIndex >= 0 && !m_FileList[m_FilesSelectedIndex].m_IsDir)
-						str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
-					else
-						m_aFileDialogFileName[0] = 0;
-				}
-			}
+			m_FileDialogNewFolderName[0] = 0;
+			m_FileDialogErrString[0] = 0;
+			static int s_NewFolderPopupID = 0;
+			UiInvokePopupMenu(&s_NewFolderPopupID, 0, Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, PopupNewFolder);
+			UI()->SetActiveItem(0);
 		}
 	}
 }

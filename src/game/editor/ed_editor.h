@@ -606,6 +606,8 @@ public:
 	int m_FileDialogFileType;
 	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
+	char m_FileDialogNewFolderName[64];
+	char m_FileDialogErrString[64];
 
 	struct CFilelistItem
 	{
@@ -694,6 +696,7 @@ public:
 	static int PopupLayer(CEditor *pEditor, CUIRect View);
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
+	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);

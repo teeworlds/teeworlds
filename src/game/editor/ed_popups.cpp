@@ -4,9 +4,9 @@
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
+#include <engine/storage.h>
 #include "ed_editor.h"
 
-#include <game/localization.h>
 
 // popup menu handling
 static struct
@@ -483,6 +483,74 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 	return 0;	
 }
 
+int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Label, ButtonBar, Origin = View;
+
+	// title
+	View.HSplitTop(10.0f, 0, &View);
+	View.HSplitTop(30.0f, &Label, &View);
+	pEditor->UI()->DoLabel(&Label, "Create new folder", 20.0f, 0);
+
+	View.HSplitBottom(10.0f, &View, 0);
+	View.HSplitBottom(20.0f, &View, &ButtonBar);	
+
+	if(pEditor->m_FileDialogErrString[0] == 0)
+	{
+		// interaction box
+		View.HSplitBottom(40.0f, &View, 0);
+		View.VMargin(40.0f, &View);
+		View.HSplitBottom(20.0f, &View, &Label);
+		static int s_FolderBox = 0;
+		pEditor->DoEditBox(&s_FolderBox, &Label, pEditor->m_FileDialogNewFolderName, sizeof(pEditor->m_FileDialogNewFolderName), 15.0f);
+		View.HSplitBottom(20.0f, &View, &Label);
+		pEditor->UI()->DoLabel(&Label, "Name:", 10.0f, -1);
+
+		// button bar
+		ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(110.0f, &Label, &ButtonBar);
+		static int s_CreateButton = 0;
+		if(pEditor->DoButton_Editor(&s_CreateButton, "Create", 0, &Label, 0, 0))
+		{
+			// create the folder
+			if(*pEditor->m_FileDialogNewFolderName)
+			{
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s/%s", pEditor->m_pFileDialogPath, pEditor->m_FileDialogNewFolderName);
+				if(pEditor->Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
+				{
+					pEditor->FilelistPopulate(IStorage::TYPE_SAVE);
+					return 1;
+				}
+				else
+					str_copy(pEditor->m_FileDialogErrString, "Unable to create the folder", sizeof(pEditor->m_FileDialogErrString));
+			}	
+		}
+		ButtonBar.VSplitRight(30.0f, &ButtonBar, 0);
+		ButtonBar.VSplitRight(110.0f, &ButtonBar, &Label);
+		static int s_AbortButton = 0;
+		if(pEditor->DoButton_Editor(&s_AbortButton, "Abort", 0, &Label, 0, 0))
+			return 1;
+	}
+	else
+	{
+		// error text
+		View.HSplitTop(30.0f, 0, &View);
+		View.VMargin(40.0f, &View);
+		View.HSplitTop(20.0f, &Label, &View);
+		pEditor->UI()->DoLabel(&Label, "Error:", 10.0f, -1);
+		View.HSplitTop(20.0f, &Label, &View);
+		pEditor->UI()->DoLabel(&Label, "Unable to create the folder", 10.0f, -1, View.w);
+
+		// button
+		ButtonBar.VMargin(ButtonBar.w/2.0f-55.0f, &ButtonBar);
+		static int s_CreateButton = 0;
+		if(pEditor->DoButton_Editor(&s_CreateButton, "Ok", 0, &ButtonBar, 0, 0))
+			return 1;
+	}
+
+	return 0;	
+}
 
 
 static int g_SelectImageSelected = -100;
