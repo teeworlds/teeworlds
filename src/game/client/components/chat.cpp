@@ -93,17 +93,17 @@ void CChat::OnConsoleInit()
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 }
 
-bool CChat::OnInput(IInput::CEvent e)
+bool CChat::OnInput(IInput::CEvent Event)
 {
 	if(m_Mode == MODE_NONE)
 		return false;
 
-	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_ESCAPE)
+	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
 	{
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
 	}
-	else if(e.m_Flags&IInput::FLAG_PRESS && (e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER))
+	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
 		if(m_Input.GetString()[0])
 		{
@@ -115,7 +115,7 @@ bool CChat::OnInput(IInput::CEvent e)
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
 	}
-	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_TAB)
+	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
 		// fill the completion buffer
 		if(m_CompletionChosen < 0)
@@ -164,14 +164,14 @@ bool CChat::OnInput(IInput::CEvent e)
 	else
 	{
 		// reset name completion process
-		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
+		if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key != KEY_TAB)
 			m_CompletionChosen = -1;
 
 		m_OldChatStringLength = m_Input.GetLength();
-		m_Input.ProcessInput(e);
+		m_Input.ProcessInput(Event);
 		m_InputUpdate = true;
 	}
-	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_UP)
+	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
 		if (m_pHistoryEntry)
 		{
@@ -190,7 +190,7 @@ bool CChat::OnInput(IInput::CEvent e)
 				m_Input.Set(m_pHistoryEntry);
 		}
 	}
-	else if (e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_DOWN)
+	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
 		if (m_pHistoryEntry)
 			m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
