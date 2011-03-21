@@ -540,7 +540,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	// misc settings
 	{
 		MiscSettings.HSplitTop(10.0f, 0, &MiscSettings);
-		MiscSettings.HSplitBottom(50.0f*UI()->Scale(), &MiscSettings, &ResetButton);
+		MiscSettings.HSplitBottom(50.0f, &MiscSettings, &ResetButton);
 		RenderTools()->DrawUIRect(&MiscSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MiscSettings.Margin(10.0f, &MiscSettings);
 
@@ -552,6 +552,9 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	// defaults
 	ResetButton.HSplitTop(10.0f, 0, &ResetButton);
+	RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	ResetButton.HMargin(10.0f, &ResetButton);
+	ResetButton.VMargin(30.0f, &ResetButton);
 	static int s_DefaultButton = 0;
 	if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
 		m_pClient->m_pBinds->SetDefaults();
