@@ -1536,30 +1536,26 @@ unsigned str_quickhash(const char *str)
 
 void *library_load(const char *path)
 {
-	void *handle;
-
 #if defined(CONF_FAMILY_UNIX)
-	handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+	void *handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 	if (!handle)
 	{
 		dbg_msg("library", "%s", dlerror());
 		return NULL;
 	}
-#else
-	return NULL;
-#endif
 
 	return handle;
+#else // Windows
+	return NULL;
+#endif
 }
 
 void *library_load_function(const char *name, void *library)
 {
-	void *function;
-
 #if defined(CONF_FAMILY_UNIX)
 	dlerror();    /* Clear any existing error */
 
-	function = dlsym(library, name);
+	void *function = dlsym(library, name);
 
 	char *error = dlerror();
 	if (error != NULL)
@@ -1567,11 +1563,11 @@ void *library_load_function(const char *name, void *library)
 		dbg_msg("library", "%s", error);
 		return NULL;
 	}
-#else
-	return NULL;
-#endif
 
 	return function;
+#else // Windows
+	return NULL;
+#endif
 }
 
 int library_unload(void *library)
@@ -1582,11 +1578,11 @@ int library_unload(void *library)
 		dbg_msg("library", "%s", dlerror());
 		return -1;
 	}
-#else
-	return -1;
-#endif
 
 	return 0;
+#else // Windows
+	return -1;
+#endif
 }
 
 #if defined(__cplusplus)
