@@ -487,20 +487,20 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	// play sound
 	if(!m_Spam && !m_IgnorePlayer)
 	{
-		if(Highlighted)
+		if(ClientID == -1)
+		{
+			if(g_Config.m_ClServermsgsound)
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
+		}
+		else if(Highlighted)
 		{
 			if(g_Config.m_ClChatsound)
 				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0, vec2(0,0));
 		}
-		else if(ClientID >= 0)
+		else
 		{
 			if(g_Config.m_ClChatsound)
 				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
-		}
-		else
-		{
-			if(g_Config.m_ClServermsgsound)
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 		}
 	}
 }
