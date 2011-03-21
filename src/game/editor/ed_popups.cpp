@@ -127,7 +127,10 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 					}
 
 					if(!Found)
+					{
 						gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR;
+						pEditor->m_Map.m_Modified = true;
+					}
 				}
 
 			return 1;
@@ -232,6 +235,9 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		aProps[PROP_POS_X].m_pName = 0;
 		
 	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		pEditor->m_Map.m_Modified = true;
+
 	if(Prop == PROP_ORDER)
 		pEditor->m_SelectedGroup = pEditor->m_Map.SwapGroups(pEditor->m_SelectedGroup, NewVal);
 		
@@ -299,7 +305,9 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		pEditor->m_Map.m_Modified = true;
 	
 	if(Prop == PROP_ORDER)
 		pEditor->m_SelectedLayer = pCurrentGroup->SwapLayers(pEditor->m_SelectedLayer, NewVal);
@@ -337,6 +345,7 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		CLayerQuads *pLayer = (CLayerQuads *)pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS);
 		if(pLayer)
 		{
+			pEditor->m_Map.m_Modified = true;
 			pLayer->m_lQuads.remove_index(pEditor->m_SelectedQuad);
 			pEditor->m_SelectedQuad--;
 		}
@@ -370,6 +379,7 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 			pQuad->m_aPoints[1].x = Right; pQuad->m_aPoints[1].y = Top;
 			pQuad->m_aPoints[2].x = Left; pQuad->m_aPoints[2].y = Top+Height;
 			pQuad->m_aPoints[3].x = Right; pQuad->m_aPoints[3].y = Top+Height;
+			pEditor->m_Map.m_Modified = true;
 			return 1;
 		}
 		View.HSplitBottom(6.0f, &View, &Button);
@@ -398,6 +408,7 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		pQuad->m_aPoints[1].x = Right; pQuad->m_aPoints[1].y = Top;
 		pQuad->m_aPoints[2].x = Left; pQuad->m_aPoints[2].y = Bottom;
 		pQuad->m_aPoints[3].x = Right; pQuad->m_aPoints[3].y = Bottom;
+		pEditor->m_Map.m_Modified = true;
 		return 1;
 	}
 
@@ -422,7 +433,9 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		pEditor->m_Map.m_Modified = true;
 	
 	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
 	if(Prop == PROP_POS_ENV_OFFSET) pQuad->m_PosEnvOffset = NewVal;
@@ -478,6 +491,7 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 				pQuad->m_aColors[v].a = NewVal&0xff;
 			}
 		}
+		pEditor->m_Map.m_Modified = true;
 	}
 	
 	return 0;	
@@ -485,7 +499,7 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 
 int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
 {
-	CUIRect Label, ButtonBar, Origin = View;
+	CUIRect Label, ButtonBar;
 
 	// title
 	View.HSplitTop(10.0f, 0, &View);
@@ -550,6 +564,66 @@ int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
 	}
 
 	return 0;	
+}
+
+int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Label, ButtonBar;
+
+	// title
+	View.HSplitTop(10.0f, 0, &View);
+	View.HSplitTop(30.0f, &Label, &View);
+	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
+		pEditor->UI()->DoLabel(&Label, "Exit the editor", 20.0f, 0);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
+		pEditor->UI()->DoLabel(&Label, "Load map", 20.0f, 0);
+	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
+		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, 0);
+	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
+		pEditor->UI()->DoLabel(&Label, "Save map", 20.0f, 0);
+
+	View.HSplitBottom(10.0f, &View, 0);
+	View.HSplitBottom(20.0f, &View, &ButtonBar);	
+
+	// notification text
+	View.HSplitTop(30.0f, 0, &View);
+	View.VMargin(40.0f, &View);
+	View.HSplitTop(20.0f, &Label, &View);
+	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, -1, Label.w-10.0f);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, -1, Label.w-10.0f);
+	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, -1, Label.w-10.0f);
+	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
+		pEditor->UI()->DoLabel(&Label, "The file already exists.\nDo you want to overwrite the map?", 10.0f, -1);
+
+	// button bar
+	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
+	ButtonBar.VSplitLeft(110.0f, &Label, &ButtonBar);
+	static int s_OkButton = 0;
+	if(pEditor->DoButton_Editor(&s_OkButton, "Ok", 0, &Label, 0, 0))
+	{
+		if(pEditor->m_PopupEventType == POPEVENT_EXIT)
+			g_Config.m_ClEditor = 0;
+		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
+			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
+		else if(pEditor->m_PopupEventType == POPEVENT_NEW)
+		{
+			pEditor->Reset();
+			pEditor->m_aFileName[0] = 0;
+		}
+		else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
+			pEditor->CallbackSaveMap(pEditor->m_aFileSaveName, IStorage::TYPE_SAVE, pEditor);
+		return 1;
+	}
+	ButtonBar.VSplitRight(30.0f, &ButtonBar, 0);
+	ButtonBar.VSplitRight(110.0f, &ButtonBar, &Label);
+	static int s_AbortButton = 0;
+	if(pEditor->DoButton_Editor(&s_AbortButton, "Abort", 0, &Label, 0, 0))
+		return 1;
+
+	return 0;
 }
 
 

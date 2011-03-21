@@ -119,11 +119,18 @@ void CLayerGroup::Render()
 	pGraphics->ClipDisable();
 }
 
+void CLayerGroup::AddLayer(CLayer *l)
+{
+	m_pMap->m_Modified = true;
+	m_lLayers.add(l);
+}
+
 void CLayerGroup::DeleteLayer(int Index)
 {
 	if(Index < 0 || Index >= m_lLayers.size()) return;
 	delete m_lLayers[Index];
 	m_lLayers.remove_index(Index);
+	m_pMap->m_Modified = true;
 }
 
 void CLayerGroup::GetSize(float *w, float *h)
@@ -144,6 +151,7 @@ int CLayerGroup::SwapLayers(int Index0, int Index1)
 	if(Index0 < 0 || Index0 >= m_lLayers.size()) return Index0;
 	if(Index1 < 0 || Index1 >= m_lLayers.size()) return Index0;
 	if(Index0 == Index1) return Index0;
+	m_pMap->m_Modified = true;
 	swap(m_lLayers[Index0], m_lLayers[Index1]);
 	return Index1;
 }
@@ -568,7 +576,7 @@ CQuad *CEditor::GetSelectedQuad()
 	return 0;
 }
 
-static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser)
+void CEditor::CallbackOpenMap(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	if(pEditor->Load(pFileName, StorageType))
@@ -577,9 +585,10 @@ static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser)
 		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
 		pEditor->SortImages();
 		pEditor->m_Dialog = DIALOG_NONE;
+		pEditor->m_Map.m_Modified = false;
 	}
 }
-static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser)
+void CEditor::CallbackAppendMap(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	if(pEditor->Append(pFileName, StorageType))
@@ -589,7 +598,7 @@ static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUse
 	
 	pEditor->m_Dialog = DIALOG_NONE;
 }
-static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
+void CEditor::CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = static_cast<CEditor*>(pUser);
 	char aBuf[1024];
@@ -605,6 +614,7 @@ static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
 	{
 		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
 		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
+		pEditor->m_Map.m_Modified = false;
 	}
 	
 	pEditor->m_Dialog = DIALOG_NONE;
@@ -622,13 +632,25 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 	// ctrl+o to open
 	if(Input()->KeyDown('o') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
-		InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", CallbackOpenMap, this);
+	{
+		if(HasUnsavedData())
+		{
+			m_PopupEventType = POPEVENT_LOAD;
+			m_PopupEventActivated = true;
+		}
+		else
+			InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", CallbackOpenMap, this);
+	}
 
 	// ctrl+s to save
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
 	{
 		if(m_aFileName[0] && m_ValidSaveFilename)	
-			CallbackSaveMap(m_aFileName, IStorage::TYPE_SAVE, this);
+		{
+			str_copy(m_aFileSaveName, m_aFileName, sizeof(m_aFileSaveName));
+			m_PopupEventType = POPEVENT_SAVE;
+			m_PopupEventActivated = true;
+		}
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", CallbackSaveMap, this);
 	}
@@ -2401,10 +2423,23 @@ void CEditor::RenderFileDialog()
 		}
 		else // file
 		{
-			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s/%s", m_pFileDialogPath, IsDir ? m_FileList[m_FilesSelectedIndex].m_aFilename : m_aFileDialogFileName);	
-			if(m_pfnFileDialogFunc)
-				m_pfnFileDialogFunc(aBuf, m_FilesSelectedIndex >= 0 ? m_FileList[m_FilesSelectedIndex].m_StorageType : m_FileDialogStorageType, m_pFileDialogUser);
+			str_format(m_aFileSaveName, sizeof(m_aFileSaveName), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
+			if(!str_comp(m_pFileDialogButtonText, "Save"))
+			{
+				IOHANDLE File = Storage()->OpenFile(m_aFileSaveName, IOFLAG_READ, IStorage::TYPE_SAVE);
+				if(File)
+				{
+					io_close(File);
+					m_PopupEventType = POPEVENT_SAVE;
+					m_PopupEventActivated = true;
+				}
+				else
+					if(m_pfnFileDialogFunc)
+						m_pfnFileDialogFunc(m_aFileSaveName, m_FilesSelectedIndex >= 0 ? m_FileList[m_FilesSelectedIndex].m_StorageType : m_FileDialogStorageType, m_pFileDialogUser);
+			}
+			else
+				if(m_pfnFileDialogFunc)
+					m_pfnFileDialogFunc(m_aFileSaveName, m_FilesSelectedIndex >= 0 ? m_FileList[m_FilesSelectedIndex].m_StorageType : m_FileDialogStorageType, m_pFileDialogUser);
 		}
 	}
 
@@ -2553,13 +2588,19 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
 		if(DoButton_Editor(&s_New4dButton, "Color+", 0, &Button, 0, "Creates a new color envelope"))
+		{
+			m_Map.m_Modified = true;
 			pNewEnv = m_Map.NewEnvelope(4);
+		}
 
 		ToolBar.VSplitRight(5.0f, &ToolBar, &Button);
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New2dButton = 0;
 		if(DoButton_Editor(&s_New2dButton, "Pos.+", 0, &Button, 0, "Creates a new pos envelope"))
+		{
+			m_Map.m_Modified = true;
 			pNewEnv = m_Map.NewEnvelope(3);
+		}
 
 		// Delete button
 		if(m_SelectedEnvelope >= 0)
@@ -2569,6 +2610,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			static int s_DelButton = 0;
 			if(DoButton_Editor(&s_DelButton, "Delete", 0, &Button, 0, "Delete this envelope"))
 			{
+				m_Map.m_Modified = true;
 				m_Map.DeleteEnvelope(m_SelectedEnvelope);
 				if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size())
 					m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
@@ -2616,7 +2658,8 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			ToolBar.VSplitLeft(80.0f, &Button, &ToolBar);
 
 			static int s_NameBox = 0;
-			DoEditBox(&s_NameBox, &Button, pEnvelope->m_aName, sizeof(pEnvelope->m_aName), 10.0f);
+			if(DoEditBox(&s_NameBox, &Button, pEnvelope->m_aName, sizeof(pEnvelope->m_aName), 10.0f))
+				m_Map.m_Modified = true;
 		}
 	}
 
@@ -2704,6 +2747,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					pEnvelope->AddPoint(Time,
 						f2fx(aChannels[0]), f2fx(aChannels[1]),
 						f2fx(aChannels[2]), f2fx(aChannels[3]));
+					m_Map.m_Modified = true;
 				}
 
 				m_pTooltip = "Press right mouse button to create a new point";
@@ -2870,6 +2914,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 										pEnvelope->m_lPoints[i].m_Time = pEnvelope->m_lPoints[i+1].m_Time - 1;
 								}
 							}
+							m_Map.m_Modified = true;
 						}
 
 						ColorMod = 100.0f;
@@ -2886,7 +2931,10 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 						// remove point
 						if(UI()->MouseButtonClicked(1))
+						{
 							pEnvelope->m_lPoints.remove_index(i);
+							m_Map.m_Modified = true;
+						}
 
 						ColorMod = 100.0f;
 						Graphics()->SetColor(1,0.75f,0.75f,1);
@@ -2927,8 +2975,16 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_NewMapButton, "New", 0, &Slot, 0, "Creates a new map"))
 	{
-		pEditor->Reset();
-		pEditor->m_aFileName[0] = 0;
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_NEW;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+		{
+			pEditor->Reset();
+			pEditor->m_aFileName[0] = 0;
+		}
 		return 1;
 	}
 
@@ -2936,7 +2992,13 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_OpenButton, "Load", 0, &Slot, 0, "Opens a map for editing"))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", CallbackOpenMap, pEditor);
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_LOAD;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		return 1;
 	}
 
@@ -2944,7 +3006,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_AppendButton, "Append", 0, &Slot, 0, "Opens a map and adds everything from that map to the current one"))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Append map", "Append", "maps", "", CallbackAppendMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Append map", "Append", "maps", "", pEditor->CallbackAppendMap, pEditor);
 		return 1;
 	}
 
@@ -2952,10 +3014,14 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, "Save", 0, &Slot, 0, "Saves the current map"))
 	{
-		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)	
-			CallbackSaveMap(pEditor->m_aFileName, IStorage::TYPE_SAVE, pEditor);
+		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)
+		{
+			str_copy(pEditor->m_aFileSaveName, pEditor->m_aFileName, sizeof(pEditor->m_aFileSaveName));
+			pEditor->m_PopupEventType = POPEVENT_SAVE;
+			pEditor->m_PopupEventActivated = true;
+		}
 		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", CallbackSaveMap, pEditor);
+			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
 		return 1;
 	}
 
@@ -2963,7 +3029,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", CallbackSaveMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
 		return 1;
 	}
 
@@ -2971,7 +3037,13 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, "Exits from the editor"))
 	{
-		g_Config.m_ClEditor = 0;
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_EXIT;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+			g_Config.m_ClEditor = 0;
 		return 1;
 	}
 
@@ -3010,6 +3082,9 @@ void CEditor::Render()
 	Graphics()->Clear(1.0f, 0.0f, 1.0f);
 	CUIRect View = *UI()->Screen();
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+
+	float Width = View.w;
+	float Height = View.h;
 
 	// reset tip
 	m_pTooltip = 0;
@@ -3093,6 +3168,13 @@ void CEditor::Render()
 		RenderFileDialog();
 	}
 
+	if(m_PopupEventActivated)
+	{
+		static int s_PopupID = 0;
+		UiInvokePopupMenu(&s_PopupID, 0, Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, PopupEvent);
+		m_PopupEventActivated = false;
+	}
+
 
 	UiDoPopupMenu();
 
@@ -3166,12 +3248,16 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaY = 0;
 	m_MouseDeltaWx = 0;
 	m_MouseDeltaWy = 0;
+
+	m_Map.m_Modified = false;
 }
 
 void CEditorMap::DeleteEnvelope(int Index)
 {
 	if(Index < 0 || Index >= m_lEnvelopes.size())
 		return;
+
+	m_Modified = true;
 
 	// fix links between envelopes and quads
 	for(int i = 0; i < m_lGroups.size(); ++i)
@@ -3235,6 +3321,8 @@ void CEditorMap::Clean()
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
 	m_pGameGroup = 0x0;
+
+	m_Modified = false;
 }
 
 void CEditorMap::CreateDefault(int EntitiesTexture)
@@ -3293,6 +3381,7 @@ void CEditor::Init()
 	m_Brush.m_pMap = &m_Map;
 
 	Reset();
+	m_Map.m_Modified = false;
 }
 
 void CEditor::DoMapBorder()

@@ -208,10 +208,7 @@ public:
 		m_lLayers.delete_all();
 	}
 	
-	void AddLayer(CLayer *l)
-	{
-		m_lLayers.add(l);
-	}
+	void AddLayer(CLayer *l);
 
 	void ModifyImageIndex(INDEX_MODIFY_FUNC Func)
 	{
@@ -259,6 +256,7 @@ class CEditorMap
 	void MakeGameLayer(CLayer *pLayer);
 public:
 	CEditor *m_pEditor;
+	bool m_Modified;
 
 	CEditorMap()
 	{
@@ -276,6 +274,7 @@ public:
 	
 	CEnvelope *NewEnvelope(int Channels)
 	{
+		m_Modified = true;
 		CEnvelope *e = new CEnvelope(Channels);
 		m_lEnvelopes.add(e);
 		return e;
@@ -285,6 +284,7 @@ public:
 	
 	CLayerGroup *NewGroup()
 	{
+		m_Modified = true;
 		CLayerGroup *g = new CLayerGroup;
 		g->m_pMap = this;
 		m_lGroups.add(g);
@@ -296,6 +296,7 @@ public:
 		if(Index0 < 0 || Index0 >= m_lGroups.size()) return Index0;
 		if(Index1 < 0 || Index1 >= m_lGroups.size()) return Index0;
 		if(Index0 == Index1) return Index0;
+		m_Modified = true;
 		swap(m_lGroups[Index0], m_lGroups[Index1]);
 		return Index1;
 	}
@@ -303,18 +304,21 @@ public:
 	void DeleteGroup(int Index)
 	{
 		if(Index < 0 || Index >= m_lGroups.size()) return;
+		m_Modified = true;
 		delete m_lGroups[Index];
 		m_lGroups.remove_index(Index);
 	}
 	
 	void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc)
 	{
+		m_Modified = true;
 		for(int i = 0; i < m_lGroups.size(); i++)
 			m_lGroups[i]->ModifyImageIndex(pfnFunc);
 	}
 	
 	void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc)
 	{
+		m_Modified = true;
 		for(int i = 0; i < m_lGroups.size(); i++)
 			m_lGroups[i]->ModifyEnvelopeIndex(pfnFunc);
 	}
@@ -501,7 +505,10 @@ public:
 		m_pTooltip = 0;
 
 		m_aFileName[0] = 0;
+		m_aFileSaveName[0] = 0;
 		m_ValidSaveFilename = false;
+
+		m_PopupEventActivated = false;
 		
 		m_FileDialogStorageType = 0;
 		m_pFileDialogTitle = 0;
@@ -559,6 +566,7 @@ public:
 	
 	virtual void Init();
 	virtual void UpdateAndRender();
+	virtual bool HasUnsavedData() { return m_Map.m_Modified; }
 	
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
@@ -583,7 +591,19 @@ public:
 	const char *m_pTooltip;
 
 	char m_aFileName[512];
+	char m_aFileSaveName[512];
 	bool m_ValidSaveFilename;
+
+	enum
+	{
+		POPEVENT_EXIT=0,
+		POPEVENT_LOAD,
+		POPEVENT_NEW,
+		POPEVENT_SAVE,
+	};
+
+	int m_PopupEventType;
+	int m_PopupEventActivated;
 
 	enum
 	{
@@ -697,12 +717,17 @@ public:
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
 	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
+	static int PopupEvent(CEditor *pEditor, CUIRect View);
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupTele(CEditor *pEditor, CUIRect View);
 	static int PopupSpeedup(CEditor *pEditor, CUIRect View);
+
+	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
+	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
+	static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser);
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
 	int PopupSelectImageResult();
