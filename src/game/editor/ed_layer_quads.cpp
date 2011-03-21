@@ -50,6 +50,8 @@ void CLayerQuads::Render()
 
 CQuad *CLayerQuads::NewQuad()
 {
+	m_pEditor->m_Map.m_Modified = true;
+
 	CQuad *q = &m_lQuads[m_lQuads.add(CQuad())];
 
 	q->m_PosEnv = -1;
@@ -158,6 +160,7 @@ void CLayerQuads::BrushPlace(CLayer *pBrush, float wx, float wy)
 			
 		m_lQuads.add(n);
 	}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerQuads::BrushFlipX()
@@ -229,7 +232,9 @@ int CLayerQuads::RenderProperties(CUIRect *pToolBox)
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);		
+	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		m_pEditor->m_Map.m_Modified = true;
 	
 	if(Prop == PROP_IMAGE)
 	{

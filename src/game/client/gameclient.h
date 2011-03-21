@@ -42,6 +42,7 @@ class CGameClient : public IGameClient
 	class IDemoPlayer *m_pDemoPlayer;
 	class IDemoRecorder *m_pDemoRecorder;
 	class IServerBrowser *m_pServerBrowser;
+	class IEditor *m_pEditor;
 	
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -78,6 +79,7 @@ public:
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
 	class CLayers *Layers() { return &m_Layers; };
 	class CCollision *Collision() { return &m_Collision; };
+	class IEditor *Editor() { return m_pEditor; }
 	
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }

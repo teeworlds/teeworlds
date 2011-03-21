@@ -179,6 +179,7 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
                 m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
@@ -201,6 +202,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 				
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -416,7 +418,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);		
+	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		m_pEditor->m_Map.m_Modified = true;
 	
 	if(Prop == PROP_WIDTH && NewVal > 1)
 		Resize(NewVal, m_Height);

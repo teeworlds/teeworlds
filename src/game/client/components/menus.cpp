@@ -9,11 +9,12 @@
 #include "menus.h"
 #include "skins.h"
 
+#include <engine/editor.h>
 #include <engine/graphics.h>
-#include <engine/textrender.h>
-#include <engine/serverbrowser.h>
 #include <engine/keys.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
+#include <engine/textrender.h>
 #include <engine/shared/config.h>
 
 #include <game/version.h>
@@ -889,6 +890,7 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Quit");
 			pExtraText = Localize("Are you sure that you want to quit?");
+			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
@@ -923,10 +925,17 @@ int CMenus::Render()
 			CUIRect Yes, No;
 			Box.HSplitBottom(20.f, &Box, &Part);
 			Box.HSplitBottom(24.f, &Box, &Part);
+
+			// additional info
+			Box.HSplitTop(10.0f, 0, &Box);
+			Box.VMargin(20.f/UI()->Scale(), &Box);
+			if(m_pClient->Editor()->HasUnsavedData())
+				UI()->DoLabelScaled(&Box, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?"),
+									20.f, -1, Part.w);
+
+			// buttons
 			Part.VMargin(80.0f, &Part);
-			
 			Part.VSplitMid(&No, &Yes);
-			
 			Yes.VMargin(20.0f, &Yes);
 			No.VMargin(20.0f, &No);
 
