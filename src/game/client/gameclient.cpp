@@ -341,20 +341,7 @@ void CGameClient::OnReset()
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		m_aClients[i].m_aName[0] = 0;
-		m_aClients[i].m_aClan[0] = 0;
-		m_aClients[i].m_Country = -1;
-		m_aClients[i].m_SkinID = 0;
-		m_aClients[i].m_Team = 0;
-		m_aClients[i].m_Angle = 0;
-		m_aClients[i].m_Emoticon = 0;
-		m_aClients[i].m_EmoticonStart = -1;
-		m_aClients[i].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
-		m_aClients[i].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
-		m_aClients[i].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
-		m_aClients[i].UpdateRenderInfo();
-	}
+		m_aClients[i].Reset();
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
@@ -744,7 +731,6 @@ void CGameClient::OnNewSnapshot()
 				}
 
 				m_aClients[ClientID].UpdateRenderInfo();
-				g_GameClient.m_Snap.m_NumPlayers++;
 				
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
@@ -752,7 +738,9 @@ void CGameClient::OnNewSnapshot()
 				const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
 				
 				m_aClients[pInfo->m_ClientID].m_Team = pInfo->m_Team;
+				m_aClients[pInfo->m_ClientID].m_Active = true;
 				m_Snap.m_paPlayerInfos[pInfo->m_ClientID] = pInfo;
+				m_Snap.m_NumPlayers++;
 				
 				if(pInfo->m_Local)
 				{
@@ -837,6 +825,13 @@ void CGameClient::OnNewSnapshot()
 			m_Snap.m_SpecInfo.m_SpectatorID = m_DemoSpecID;
 		else
 			m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+	}
+
+	// clear out unneeded client data
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
+			m_aClients[i].Reset();
 	}
 
 	// sort player infos by score
@@ -1015,6 +1010,24 @@ void CGameClient::CClientData::UpdateRenderInfo()
 			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
 		}
 	}		
+}
+
+void CGameClient::CClientData::Reset()
+{
+	m_aName[0] = 0;
+	m_aClan[0] = 0;
+	m_Country = -1;
+	m_SkinID = 0;
+	m_Team = 0;
+	m_Angle = 0;
+	m_Emoticon = 0;
+	m_EmoticonStart = -1;
+	m_Active = false;
+	m_ChatIgnore = false;
+	m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
+	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
+	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
+	UpdateRenderInfo();
 }
 
 void CGameClient::SendSwitchTeam(int Team)

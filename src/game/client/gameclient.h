@@ -176,8 +176,11 @@ public:
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 		
 		float m_Angle;
+		bool m_Active;
+		bool m_ChatIgnore;
 		
 		void UpdateRenderInfo();
+		void Reset();
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
