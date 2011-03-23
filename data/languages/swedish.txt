@@ -453,7 +453,13 @@ You must restart the game for all settings to take effect.
 -Page %d-
 == 
 
+Add Friend
+== 
+
 Are you sure that you want to delete the demo?
+== 
+
+Are you sure that you want to remove the player from your friends list?
 == 
 
 Automatically record demos
@@ -504,6 +510,15 @@ Force vote
 Free-View
 == 
 
+Friend
+== 
+
+Friends
+== 
+
+Ignore
+== 
+
 Invalid Demo
 == 
 
@@ -540,6 +555,9 @@ Page %d of %d
 Parent Folder
 == 
 
+Player options
+== 
+
 Please balance teams!
 == 
 
@@ -555,6 +573,12 @@ Reason:
 Record demo
 == 
 
+Remove
+== 
+
+Remove friend
+== 
+
 Rename
 == 
 
@@ -568,6 +592,9 @@ Server filter
 == 
 
 Show chat
+== 
+
+Show friends
 == 
 
 Size:

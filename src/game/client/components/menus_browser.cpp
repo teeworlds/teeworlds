@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/config.h>
+#include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
@@ -435,7 +437,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 {
 	CUIRect ServerFilter = View, FilterHeader;
 	const float FontSize = 12.0f;
-	ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
+	ServerFilter.HSplitBottom(42.5f, &ServerFilter, 0);
 
 	// server filter
 	ServerFilter.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFilter);
@@ -459,6 +461,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox(&g_Config.m_BrFilterFull, Localize("Server not full"), g_Config.m_BrFilterFull, &Button))
 		g_Config.m_BrFilterFull ^= 1;
+
+	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	if (DoButton_CheckBox(&g_Config.m_BrFilterFriends, Localize("Show friends"), g_Config.m_BrFilterFriends, &Button))
+		g_Config.m_BrFilterFriends ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox(&g_Config.m_BrFilterPw, Localize("No password"), g_Config.m_BrFilterPw, &Button))
@@ -536,8 +542,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	const CServerInfo *pSelectedServer = ServerBrowser()->SortedGet(m_SelectedIndex);
 
 	// split off a piece to use for scoreboard
-	ServerDetails.HSplitTop(100.0f, &ServerDetails, &ServerScoreBoard);
-	ServerDetails.HSplitBottom(5.0f, &ServerDetails, 0x0);
+	ServerDetails.HSplitTop(90.0f, &ServerDetails, &ServerScoreBoard);
+	ServerDetails.HSplitBottom(2.5f, &ServerDetails, 0x0);
 
 	// server details
 	CTextCursor Cursor;
@@ -605,7 +611,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	}
 
 	// server scoreboard
-	ServerScoreBoard.HSplitBottom(10.0f, &ServerScoreBoard, 0x0);
+	ServerScoreBoard.HSplitBottom(20.0f, &ServerScoreBoard, 0x0);
 	ServerScoreBoard.HSplitTop(ms_ListheaderHeight, &ServerHeader, &ServerScoreBoard);
 	RenderTools()->DrawUIRect(&ServerHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	RenderTools()->DrawUIRect(&ServerScoreBoard, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
@@ -689,6 +695,88 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	}
 }
 
+void CMenus::RenderServerbrowserFriends(CUIRect View)
+{
+	CUIRect ServerFriends = View, FilterHeader;
+	const float FontSize = 12.0f;
+
+	// header
+	ServerFriends.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFriends);
+	RenderTools()->DrawUIRect(&FilterHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
+	RenderTools()->DrawUIRect(&ServerFriends, vec4(0,0,0,0.15f), 0, 4.0f);
+	UI()->DoLabelScaled(&FilterHeader, Localize("Friends"), FontSize+2.0f, 0);
+	CUIRect Button, List;
+
+	ServerFriends.VSplitLeft(5.0f, 0, &ServerFriends);
+	ServerFriends.Margin(3.0f, &ServerFriends);
+	ServerFriends.VMargin(5.0f, &ServerFriends);
+	ServerFriends.HSplitBottom(100.0f, &List, &ServerFriends);
+
+	// friends list(remove friend)
+	static int s_FriendList = 0;
+	static float s_ScrollValue = 0;
+	UiDoListboxStart(&s_FriendList, &List, 40.0f, "", "", m_pClient->Friends()->NumFriends(), 1, m_FriendlistSelectedIndex, s_ScrollValue);
+	
+	for(int i = 0; i < m_pClient->Friends()->NumFriends(); ++i)
+	{
+		const CFriendInfo *pFriend = m_pClient->Friends()->GetFriend(i);
+		CListboxItem Item = UiDoListboxNextItem(pFriend);
+		
+		if(Item.m_Visible)
+		{
+			Item.m_Rect.Margin(2.5f, &Item.m_Rect);
+			RenderTools()->DrawUIRect(&Item.m_Rect, vec4(1.0f, 1.0f, 1.0f, 0.1f), CUI::CORNER_ALL, 4.0f);
+			Item.m_Rect.Margin(2.5f, &Item.m_Rect);
+			Item.m_Rect.HSplitTop(14.0f, &Item.m_Rect, &Button);
+			UI()->DoLabelScaled(&Item.m_Rect, pFriend->m_aName, FontSize, -1);
+			UI()->DoLabelScaled(&Button, pFriend->m_aClan, FontSize, -1);
+		}
+	}
+	
+	m_FriendlistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	ServerFriends.HSplitTop(2.5f, 0, &ServerFriends);
+	ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
+	if(m_FriendlistSelectedIndex != -1)
+	{
+		static int s_RemoveButton = 0;
+		if(DoButton_Menu(&s_RemoveButton, Localize("Remove"), 0, &Button))
+			m_Popup = POPUP_REMOVE_FRIEND;
+	}
+
+	// add friend
+	if(m_pClient->Friends()->NumFriends() < IFriends::MAX_FRIENDS)
+	{
+		ServerFriends.HSplitTop(10.0f, 0, &ServerFriends);
+		ServerFriends.HSplitTop(19.0f, &Button, &ServerFriends);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
+		UI()->DoLabelScaled(&Button, aBuf, FontSize, -1);
+		Button.VSplitLeft(80.0f, 0, &Button);
+		static char s_aName[MAX_NAME_LENGTH] = {0};
+		static float s_OffsetName = 0.0f;
+		DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), FontSize, &s_OffsetName);
+
+		ServerFriends.HSplitTop(3.0f, 0, &ServerFriends);
+		ServerFriends.HSplitTop(19.0f, &Button, &ServerFriends);
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
+		UI()->DoLabelScaled(&Button, aBuf, FontSize, -1);
+		Button.VSplitLeft(80.0f, 0, &Button);
+		static char s_aClan[MAX_CLAN_LENGTH] = {0};
+		static float s_OffsetClan = 0.0f;
+		DoEditBox(&s_aClan, &Button, s_aClan, sizeof(s_aClan), FontSize, &s_OffsetClan);
+
+		ServerFriends.HSplitTop(3.0f, 0, &ServerFriends);
+		ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
+		static int s_RemoveButton = 0;
+		if(DoButton_Menu(&s_RemoveButton, Localize("Add Friend"), 0, &Button))
+		{
+			m_pClient->Friends()->AddFriend(s_aName, s_aClan);
+			Client()->ServerBrowserUpdate();
+		}
+	}
+}
+
 void CMenus::RenderServerbrowser(CUIRect MainView)
 {
 	/*
@@ -723,11 +811,13 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// tab bar
 	{
-		CUIRect TabButton0, TabButton1;
+		CUIRect TabButton0, TabButton1, TabButton2;
 		TabBar.HSplitTop(5.0f, 0, &TabBar);
 		TabBar.HSplitTop(20.0f, &TabButton0, &TabBar);
-		TabBar.HSplitTop(5.0f, 0, &TabBar);
-		TabBar.HSplitTop(20.0f, &TabButton1, 0);
+		TabBar.HSplitTop(2.5f, 0, &TabBar);
+		TabBar.HSplitTop(20.0f, &TabButton1, &TabBar);
+		TabBar.HSplitTop(2.5f, 0, &TabBar);
+		TabBar.HSplitTop(20.0f, &TabButton2, 0);
 		vec4 Active = ms_ColorTabbarActive;
 		vec4 InActive = ms_ColorTabbarInactive;
 		ms_ColorTabbarActive = vec4(0.0f, 0.0f, 0.0f, 0.3f);
@@ -740,6 +830,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		static int s_InfoTab = 0;
 		if (DoButton_MenuTab(&s_InfoTab, Localize("Info"), ToolboxPage==1, &TabButton1, CUI::CORNER_L))
 			ToolboxPage = 1;
+
+		static int s_FriendsTab = 0;
+		if (DoButton_MenuTab(&s_FriendsTab, Localize("Friends"), ToolboxPage==2, &TabButton2, CUI::CORNER_L))
+			ToolboxPage = 2;
 
 		ms_ColorTabbarActive = Active;
 		ms_ColorTabbarInactive = InActive;
@@ -755,7 +849,8 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 			RenderServerbrowserFilters(ToolBox);
 		else if(ToolboxPage == 1)
 			RenderServerbrowserServerDetail(ToolBox);
-
+		else if(ToolboxPage == 2)
+			RenderServerbrowserFriends(ToolBox);
 	}
 
 	// status box

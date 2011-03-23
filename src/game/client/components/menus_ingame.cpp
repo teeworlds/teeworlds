@@ -2,7 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 
+#include <engine/config.h>
 #include <engine/demo.h>
+#include <engine/friends.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -113,7 +115,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, -1);
 
 	CUIRect Player;
-	static int s_aPlayerIDs[MAX_CLIENTS] = {0};
+	static int s_aPlayerIDs[MAX_CLIENTS][2] = {0};
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || i == m_pClient->m_Snap.m_LocalClientID)
@@ -142,8 +144,19 @@ void CMenus::RenderGame(CUIRect MainView)
 		// ignore button
 		ButtonBar.VSplitMid(&Button, &ButtonBar);
 		Button.VSplitRight(10.0f, &Button, 0);
-		if(DoButton_CheckBox(&s_aPlayerIDs[i], Localize("Ignore"), m_pClient->m_aClients[i].m_ChatIgnore, &Button))
+		if(DoButton_CheckBox(&s_aPlayerIDs[i][0], Localize("Ignore"), m_pClient->m_aClients[i].m_ChatIgnore, &Button))
 			m_pClient->m_aClients[i].m_ChatIgnore ^= 1;
+
+		// friend button
+		ButtonBar.VSplitMid(&Button, &ButtonBar);
+		Button.VSplitLeft(10.0f, 0, &Button);
+		if(DoButton_CheckBox(&s_aPlayerIDs[i][1], Localize("Friend"), m_pClient->m_aClients[i].m_Friend, &Button))
+		{
+			if(m_pClient->m_aClients[i].m_Friend)
+				m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+			else
+				m_pClient->Friends()->AddFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+		}
 	}
 	
 	/*

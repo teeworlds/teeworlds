@@ -36,6 +36,7 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include "friends.h"
 #include "srvbrowse.h"
 #include "client.h"
 
@@ -1806,6 +1807,7 @@ void CClient::RegisterInterfaces()
 	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
+	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
 }
 
 void CClient::InitInterfaces()
@@ -1823,6 +1825,7 @@ void CClient::InitInterfaces()
 
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
+	m_Friends.Init();
 }
 
 void CClient::Run()

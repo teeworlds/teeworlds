@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/editor.h>
 #include <engine/engine.h>
+#include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/demo.h>
@@ -115,6 +116,7 @@ void CGameClient::OnConsoleInit()
 	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
+	m_pFriends = Kernel()->RequestInterface<IFriends>();
 	
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -832,6 +834,15 @@ void CGameClient::OnNewSnapshot()
 	{
 		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
 			m_aClients[i].Reset();
+	}
+
+	// update friend state
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(i == m_Snap.m_LocalClientID || !m_Snap.m_paPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan))
+			m_aClients[i].m_Friend = false;
+		else
+			m_aClients[i].m_Friend = true;
 	}
 
 	// sort player infos by score
