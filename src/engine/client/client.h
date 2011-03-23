@@ -127,6 +127,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CDemoRecorder m_DemoRecorder;
 	class CGhostRecorder m_GhostRecorder;
 	class CServerBrowser m_ServerBrowser;
+	class CFriends m_Friends;
 
 	char m_aServerAddressStr[256];
 

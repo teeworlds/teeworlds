@@ -43,6 +43,7 @@ class CGameClient : public IGameClient
 	class IDemoRecorder *m_pDemoRecorder;
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
+	class IFriends *m_pFriends;
 	
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -84,6 +85,7 @@ public:
 	class CLayers *Layers() { return &m_Layers; };
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
+	class IFriends *Friends() { return m_pFriends; }
 	
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
@@ -194,6 +196,7 @@ public:
 		float m_Angle;
 		bool m_Active;
 		bool m_ChatIgnore;
+		bool m_Friend;
 		
 		// race
 		float m_Score;

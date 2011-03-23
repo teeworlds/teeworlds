@@ -480,7 +480,13 @@ Your skin
 -Page %d-
 == 
 
+Add Friend
+== 
+
 Are you sure that you want to delete the demo?
+== 
+
+Are you sure that you want to remove the player from your friends list?
 == 
 
 Automatically record demos
@@ -519,6 +525,15 @@ Folder
 Free-View
 == 
 
+Friend
+== 
+
+Friends
+== 
+
+Ignore
+== 
+
 Invalid Demo
 == 
 
@@ -555,6 +570,9 @@ Page %d of %d
 Parent Folder
 == 
 
+Player options
+== 
+
 Prev
 == 
 
@@ -567,6 +585,12 @@ Reason:
 Record demo
 == 
 
+Remove
+== 
+
+Remove friend
+== 
+
 Rename
 == 
 
@@ -577,6 +601,9 @@ Server address:
 == 
 
 Server filter
+== 
+
+Show friends
 == 
 
 Size:

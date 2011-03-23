@@ -6,11 +6,12 @@
 #include <base/math.h>
 #include <base/vmath.h>
 
-#include "menus.h"
+#include <engine/config.h>
+
 #include "binds.h"
-#include "skins.h"
 
 #include <engine/editor.h>
+#include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
@@ -25,6 +26,9 @@
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
 #include <mastersrv/mastersrv.h>
+
+#include "menus.h"
+#include "skins.h"
 
 vec4 CMenus::ms_GuiColor;
 vec4 CMenus::ms_ColorTabbarInactiveOutgame;
@@ -64,6 +68,8 @@ CMenus::CMenus()
 	
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
+
+	m_FriendlistSelectedIndex = -1;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -912,6 +918,12 @@ int CMenus::Render()
 			pExtraText = "";
 			ExtraAlign = -1;
 		}
+		else if(m_Popup == POPUP_REMOVE_FRIEND)
+		{
+			pTitle = Localize("Remove friend");
+			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
+			ExtraAlign = -1;
+		}
 		else if(m_Popup == POPUP_SOUNDERROR)
 		{
 			pTitle = Localize("Sound error");
@@ -1183,6 +1195,34 @@ int CMenus::Render()
 			UI()->DoLabel(&Label, Localize("New name:"), 18.0f, -1);
 			static float Offset = 0.0f;
 			DoEditBox(&Offset, &TextBox, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), 12.0f, &Offset);
+		}
+		else if(m_Popup == POPUP_REMOVE_FRIEND)
+		{
+			CUIRect Yes, No;
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Part.VMargin(80.0f, &Part);
+			
+			Part.VSplitMid(&No, &Yes);
+			
+			Yes.VMargin(20.0f, &Yes);
+			No.VMargin(20.0f, &No);
+
+			static int s_ButtonAbort = 0;
+			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static int s_ButtonTryAgain = 0;
+			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				// remove friend
+				if(m_FriendlistSelectedIndex >= 0)
+				{
+					m_pClient->Friends()->RemoveFriend(m_FriendlistSelectedIndex);
+					Client()->ServerBrowserUpdate();
+				}
+			}
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{

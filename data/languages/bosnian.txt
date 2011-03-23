@@ -519,6 +519,12 @@ Your skin
 -Page %d-
 == 
 
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
 Clan
 == 
 
@@ -538,6 +544,15 @@ Demo details
 == 
 
 Free-View
+== 
+
+Friend
+== 
+
+Friends
+== 
+
+Ignore
 == 
 
 Length:
@@ -561,6 +576,9 @@ Next
 Page %d of %d
 == 
 
+Player options
+== 
+
 Prev
 == 
 
@@ -568,6 +586,12 @@ REC %3d:%02d
 == 
 
 Reason:
+== 
+
+Remove
+== 
+
+Remove friend
 == 
 
 Rename
@@ -580,6 +604,9 @@ Server address:
 == 
 
 Server filter
+== 
+
+Show friends
 == 
 
 Size:

@@ -110,6 +110,7 @@ class CMenus : public CComponent
 		POPUP_LANGUAGE,
 		POPUP_DELETE_DEMO,
 		POPUP_RENAME_DEMO,
+		POPUP_REMOVE_FRIEND,
 		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
@@ -209,6 +210,8 @@ class CMenus : public CComponent
 	
 	void DemolistOnUpdate(bool Reset);
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+
+	int m_FriendlistSelectedIndex;
 	
 	static int GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	
@@ -236,6 +239,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
+	void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
