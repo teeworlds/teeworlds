@@ -44,6 +44,7 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/voting.h"
+#include "components/background.h"
 
 CGameClient g_GameClient;
 
@@ -68,6 +69,7 @@ static CSounds gs_Sounds;
 static CEmoticon gs_Emoticon;
 static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
+static CBackground gs_Background;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -135,6 +137,7 @@ void CGameClient::OnConsoleInit()
 	m_pMapimages = &::gs_MapImages;
 	m_pVoting = &::gs_Voting;
 	m_pScoreboard = &::gs_Scoreboard;
+	m_pBackground = &::gs_Background;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -148,6 +151,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pVoting);
 	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
 	
+	m_All.Add(m_pBackground);
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
 	m_All.Add(&gs_Items);

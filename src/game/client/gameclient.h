@@ -212,6 +212,7 @@ public:
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
+	class CBackground *m_pBackground;
 };
 
 
