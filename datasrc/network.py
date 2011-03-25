@@ -262,13 +262,12 @@ Messages = [
 	]),
 	
 	NetMessage("Sv_VoteOption", [
-		NetStringStrict("m_pCommand"),
+		NetStringStrict("m_pDescription"),
 	]),
 
 	NetMessage("Sv_VoteSet", [
 		NetIntRange("m_Timeout", 0, 60),
-		NetStringStrict("m_pDescription"),
-		NetStringStrict("m_pCommand"),
+		NetStringStrict("m_pDescription")
 	]),
 
 	NetMessage("Sv_VoteStatus", [

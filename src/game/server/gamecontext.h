@@ -93,7 +93,7 @@ public:
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
 	int m_VotePos;
-	char m_aVoteDescription[512];
+	char m_aVoteDescription[64];
 	char m_aVoteCommand[512];
 	int m_VoteEnforce;
 	enum
@@ -106,6 +106,7 @@ public:
 	{
 		CVoteOption *m_pNext;
 		CVoteOption *m_pPrev;
+		char m_aDescription[64];
 		char m_aCommand[1];
 	};
 	CHeap *m_pVoteOptionHeap;

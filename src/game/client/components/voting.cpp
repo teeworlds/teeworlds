@@ -48,7 +48,7 @@ void CVoting::CallvoteOption(int OptionId)
 	{
 		if(OptionId == 0)
 		{
-			Callvote("option", pOption->m_aCommand);
+			Callvote("option", pOption->m_aDescription);
 			break;
 		}
 		
@@ -74,7 +74,7 @@ void CVoting::ForcevoteOption(int OptionId)
 	{
 		if(OptionId == 0)
 		{
-			Client()->Rcon(pOption->m_aCommand);
+			Client()->Rcon(pOption->m_aDescription);
 			break;
 		}
 		
@@ -108,7 +108,6 @@ void CVoting::OnReset()
 {
 	m_Closetime = 0;
 	m_aDescription[0] = 0;
-	m_aCommand[0] = 0;
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
 }
@@ -128,7 +127,6 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		{
 			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
-			str_copy(m_aCommand, pMsg->m_pCommand, sizeof(m_aCommand));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 		}
 		else
@@ -149,9 +147,8 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTION)
 	{
 		CNetMsg_Sv_VoteOption *pMsg = (CNetMsg_Sv_VoteOption *)pRawMsg;
-		int Len = str_length(pMsg->m_pCommand);
 	
-		CVoteOption *pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption) + Len);
+		CVoteOption *pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption));
 		pOption->m_pNext = 0;
 		pOption->m_pPrev = m_pLast;
 		if(pOption->m_pPrev)
@@ -160,8 +157,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		if(!m_pFirst)
 			m_pFirst = pOption;
 		
-		mem_copy(pOption->m_aCommand, pMsg->m_pCommand, Len+1);
-
+		str_copy(pOption->m_aDescription, pMsg->m_pDescription, sizeof(pOption->m_aDescription));
 	}
 }
 

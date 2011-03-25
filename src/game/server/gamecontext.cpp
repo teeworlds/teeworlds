@@ -314,13 +314,11 @@ void CGameContext::SendVoteSet(int ClientID)
 	{
 		Msg.m_Timeout = (m_VoteCloseTime-time_get())/time_freq();
 		Msg.m_pDescription = m_aVoteDescription;
-		Msg.m_pCommand = "";
 	}
 	else
 	{
 		Msg.m_Timeout = 0;
 		Msg.m_pDescription = "";
-		Msg.m_pCommand = "";
 	}
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
@@ -635,9 +633,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			CVoteOption *pOption = m_pVoteOptionFirst;
 			while(pOption)
 			{
-				if(str_comp_nocase(pMsg->m_Value, pOption->m_aCommand) == 0)
+				if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
 				{
-					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientID), pOption->m_aCommand);
+					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientID), pOption->m_aDescription);
 					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aCommand);
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
 					break;
@@ -811,7 +809,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		while(pCurrent)
 		{
 			CNetMsg_Sv_VoteOption OptionMsg;
-			OptionMsg.m_pCommand = pCurrent->m_aCommand;
+			OptionMsg.m_pDescription = pCurrent->m_aDescription;
 			Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
 			pCurrent = pCurrent->m_pNext;
 		}
@@ -974,31 +972,34 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	const char *pString = pResult->GetString(0);
+	const char *pDescription = pResult->GetString(0);
+	const char *pCommand = pResult->GetString(1);
 	
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pString))
+	if(!pSelf->Console()->LineIsValid(pCommand))
 	{
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pString);
+		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pCommand);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
 	
+	// check for duplicate entry
 	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
 	while(pOption)
 	{
-		if(str_comp_nocase(pString, pOption->m_aCommand) == 0)
+		if(str_comp_nocase(pDescription, pOption->m_aCommand) == 0)
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", pString);
+			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", pDescription);
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 			return;
 		}
 		pOption = pOption->m_pNext;
 	}
 	
-	int Len = str_length(pString);
+	// add the option
+	int Len = str_length(pCommand);
 	
 	pOption = (CGameContext::CVoteOption *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
 	pOption->m_pNext = 0;
@@ -1009,13 +1010,15 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	if(!pSelf->m_pVoteOptionFirst)
 		pSelf->m_pVoteOptionFirst = pOption;
 	
-	mem_copy(pOption->m_aCommand, pString, Len+1);
+	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
+	mem_copy(pOption->m_aCommand, pCommand, Len+1);
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "added option '%s'", pOption->m_aCommand);
+	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
+	// send added option to the clients
 	CNetMsg_Sv_VoteOption OptionMsg;
-	OptionMsg.m_pCommand = pOption->m_aCommand;
+	OptionMsg.m_pDescription = pOption->m_aDescription;
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
 
@@ -1073,7 +1076,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "");
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "");
 
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "");
+	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 
