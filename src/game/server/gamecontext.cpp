@@ -804,7 +804,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		CVoteOption *pCurrent = m_pVoteOptionFirst;
 		while(pCurrent)
 		{
-			CNetMsg_Sv_VoteOption OptionMsg;
+			CNetMsg_Sv_VoteOptionAdd OptionMsg;
 			OptionMsg.m_pDescription = pCurrent->m_aDescription;
 			Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
 			pCurrent = pCurrent->m_pNext;
@@ -984,7 +984,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
 	while(pOption)
 	{
-		if(str_comp_nocase(pDescription, pOption->m_aCommand) == 0)
+		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", pDescription);
@@ -1012,8 +1012,70 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	// send added option to the clients
-	CNetMsg_Sv_VoteOption OptionMsg;
+	// inform clients about added option
+	CNetMsg_Sv_VoteOptionAdd OptionMsg;
+	OptionMsg.m_pDescription = pOption->m_aDescription;
+	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+}
+
+void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	const char *pDescription = pResult->GetString(0);
+	
+	// check for valid option
+	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+	while(pOption)
+	{
+		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
+			break;
+		pOption = pOption->m_pNext;
+	}
+	if(!pOption)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "option '%s' does not exist", pDescription);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		return;
+	}
+	
+	// TODO: improve this
+	// remove the option
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "removed option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+	CHeap *pVoteOptionHeap = new CHeap();
+	CVoteOption *pVoteOptionFirst = 0;
+	CVoteOption *pVoteOptionLast = 0;
+	for(CVoteOption *pSrc = pSelf->m_pVoteOptionFirst; pSrc; pSrc = pSrc->m_pNext)
+	{
+		if(pSrc == pOption)
+			continue;
+
+		// copy option
+		int Len = str_length(pSrc->m_aCommand);
+		CVoteOption *pDst = (CGameContext::CVoteOption *)pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
+		pDst->m_pNext = 0;
+		pDst->m_pPrev = pVoteOptionLast;
+		if(pDst->m_pPrev)
+			pDst->m_pPrev->m_pNext = pDst;
+		pVoteOptionLast = pDst;
+		if(!pVoteOptionFirst)
+			pVoteOptionFirst = pDst;
+		
+		str_copy(pDst->m_aDescription, pSrc->m_aDescription, sizeof(pDst->m_aDescription));
+		mem_copy(pDst->m_aCommand, pSrc->m_aCommand, Len+1);
+	}
+
+	// clean up
+	delete pSelf->m_pVoteOptionHeap;
+	pSelf->m_pVoteOptionHeap = pVoteOptionHeap;
+	pSelf->m_pVoteOptionFirst = pVoteOptionFirst;
+	pSelf->m_pVoteOptionLast = pVoteOptionLast;
+
+	// inform clients about removed option
+	CNetMsg_Sv_VoteOptionRemove OptionMsg;
 	OptionMsg.m_pDescription = pOption->m_aDescription;
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
@@ -1073,6 +1135,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "");
 
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "");
+	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 

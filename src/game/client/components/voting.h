@@ -34,6 +34,9 @@ public:
 	CVoteOption *m_pFirst;
 	CVoteOption *m_pLast;
 
+	CVoteOption *m_pRecycleFirst;
+	CVoteOption *m_pRecycleLast;
+
 	CVoting();
 	virtual void OnReset();
 	virtual void OnConsoleInit();
