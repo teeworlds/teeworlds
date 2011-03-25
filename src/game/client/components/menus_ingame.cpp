@@ -344,7 +344,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(pOption);
 		
 		if(Item.m_Visible)
-			UI()->DoLabelScaled(&Item.m_Rect, FormatCommand(pOption->m_aCommand), 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, FormatCommand(pOption->m_aDescription), 16.0f, -1);
 	}
 	
 	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);

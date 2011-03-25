@@ -14,8 +14,7 @@ class CVoting : public CComponent
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	
 	int64 m_Closetime;
-	char m_aDescription[512];
-	char m_aCommand[512];
+	char m_aDescription[64];
 	int m_Voted;
 	
 	void ClearOptions();
@@ -27,7 +26,7 @@ public:
 	{
 		CVoteOption *m_pNext;
 		CVoteOption *m_pPrev;
-		char m_aCommand[1];
+		char m_aDescription[64];
 	};
 	
 	CVoteOption *m_pFirst;
@@ -52,7 +51,6 @@ public:
 	bool IsVoting() { return m_Closetime != 0; }
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }
-	const char *VoteCommand() const { return m_aCommand; }
 	
 	int m_Yes, m_No, m_Pass, m_Total;
 };
