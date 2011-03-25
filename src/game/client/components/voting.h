@@ -15,10 +15,12 @@ class CVoting : public CComponent
 	
 	int64 m_Closetime;
 	char m_aDescription[64];
+	char m_aReason[16];
 	int m_Voted;
+	int m_Yes, m_No, m_Pass, m_Total;
 	
 	void ClearOptions();
-	void Callvote(const char *pType, const char *pValue);
+	void Callvote(const char *pType, const char *pValue, const char *pReason);
 	
 public:
 
@@ -41,9 +43,9 @@ public:
 	void RenderBars(CUIRect Bars, bool Text);
 	
 	void CallvoteKick(int ClientID, const char *pReason);
-	void CallvoteOption(int Option);
+	void CallvoteOption(int Option, const char *pReason);
 	void ForcevoteKick(int ClientID, const char *pReason);
-	void ForcevoteOption(int Option);
+	void ForcevoteOption(int Option, const char *pReason);
 	
 	void Vote(int v); // -1 = no, 1 = yes
 	
@@ -51,8 +53,7 @@ public:
 	bool IsVoting() { return m_Closetime != 0; }
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }
-	
-	int m_Yes, m_No, m_Pass, m_Total;
+	const char *VoteReason() const { return m_aReason; }
 };
 
 #endif

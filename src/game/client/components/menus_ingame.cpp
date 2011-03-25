@@ -323,11 +323,6 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, (int)Motd.w);
 }
 
-static const char *FormatCommand(const char *pCmd)
-{
-	return pCmd;
-}
-
 void CMenus::RenderServerControlServer(CUIRect MainView)
 {
 	int NumOptions = 0;
@@ -344,7 +339,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(pOption);
 		
 		if(Item.m_Visible)
-			UI()->DoLabelScaled(&Item.m_Rect, FormatCommand(pOption->m_aDescription), 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, pOption->m_aDescription, 16.0f, -1);
 	}
 	
 	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);
@@ -440,13 +435,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
 		{
 			if(s_ControlPage == 0)
-			{
-				//
-				m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption);
-				/*
-				if(callvote_selectedmap >= 0 && callvote_selectedmap < gameclient.maplist->num())
-					gameclient.voting->callvote_map(gameclient.maplist->name(callvote_selectedmap));*/
-			}
+				m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
 			else if(s_ControlPage == 1)
 			{
 				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
@@ -460,19 +449,16 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 		
 		// render kick reason
-		if(s_ControlPage == 1)
-		{
-			CUIRect Reason;
-			Bottom.VSplitRight(40.0f, &Bottom, 0);
-			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
-			Reason.HSplitTop(5.0f, 0, &Reason);
-			const char *pLabel = Localize("Reason:");
-			UI()->DoLabelScaled(&Reason, pLabel, 14.0f, -1);
-			float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
-			Reason.VSplitLeft(w+10.0f, 0, &Reason);
-			static float s_Offset = 0.0f;
-			DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
-		}
+		CUIRect Reason;
+		Bottom.VSplitRight(40.0f, &Bottom, 0);
+		Bottom.VSplitRight(160.0f, &Bottom, &Reason);
+		Reason.HSplitTop(5.0f, 0, &Reason);
+		const char *pLabel = Localize("Reason:");
+		UI()->DoLabelScaled(&Reason, pLabel, 14.0f, -1);
+		float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
+		Reason.VSplitLeft(w+10.0f, 0, &Reason);
+		static float s_Offset = 0.0f;
+		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
 		
 		// force vote button (only available when authed in rcon)
 		if(Client()->RconAuthed())
@@ -483,9 +469,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 			{
 				if(s_ControlPage == 0)
-				{
-					m_pClient->m_pVoting->ForcevoteOption(m_CallvoteSelectedOption);
-				}
+					m_pClient->m_pVoting->ForcevoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
 				else if(s_ControlPage == 1)
 				{
 					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&

@@ -293,34 +293,40 @@ void CHud::RenderVoting()
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
-	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 28, 5.0f);
+	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 46, 5.0f);
 	Graphics()->QuadsEnd();
 
 	TextRender()->TextColor(1,1,1,1);
 
-	char Buf[512];
-	str_format(Buf, sizeof(Buf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
-	float tw = TextRender()->TextWidth(0x0, 6, Buf, -1);
-
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, 5.0f, 60.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = 100-tw;
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
+	float tw = TextRender()->TextWidth(0x0, 6, aBuf, -1);
+	TextRender()->SetCursor(&Cursor, 5.0f+100.0f-tw, 60.0f, 6.0f, TEXTFLAG_RENDER);
+	TextRender()->TextEx(&Cursor, aBuf, -1);
+
+	TextRender()->SetCursor(&Cursor, 5.0f, 60.0f, 6.0f, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = 100.0f-tw;
+	Cursor.m_MaxLines = 3;
 	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
-
-	TextRender()->Text(0x0, 5+100-tw, 60, 6, Buf, -1);
 	
+	// reason
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
+	TextRender()->SetCursor(&Cursor, 5.0f, 79.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = 100.0f;
+	TextRender()->TextEx(&Cursor, aBuf, -1);
 
-	CUIRect Base = {5, 70, 100, 4};
+	CUIRect Base = {5, 88, 100, 4};
 	m_pClient->m_pVoting->RenderBars(Base, false);
 	
 	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
 	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(Buf, sizeof(Buf), "%s - %s", pYesKey, Localize("Vote yes"));
+	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
 	Base.y += Base.h+1;
-	UI()->DoLabel(&Base, Buf, 6.0f, -1);
+	UI()->DoLabel(&Base, aBuf, 6.0f, -1);
 
-	str_format(Buf, sizeof(Buf), "%s - %s", Localize("Vote no"), pNoKey);
-	UI()->DoLabel(&Base, Buf, 6.0f, 1);
+	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
+	UI()->DoLabel(&Base, aBuf, 6.0f, 1);
 }
 
 void CHud::RenderCursor()

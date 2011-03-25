@@ -275,7 +275,7 @@ void CGameContext::SendBroadcast(const char *pText, int ClientID)
 }
 
 // 
-void CGameContext::StartVote(const char *pDesc, const char *pCommand)
+void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char *pReason)
 {
 	// check if a vote is already running
 	if(m_VoteCloseTime)
@@ -296,6 +296,7 @@ void CGameContext::StartVote(const char *pDesc, const char *pCommand)
 	m_VoteCloseTime = time_get() + time_freq()*25;
 	str_copy(m_aVoteDescription, pDesc, sizeof(m_aVoteDescription));
 	str_copy(m_aVoteCommand, pCommand, sizeof(m_aVoteCommand));
+	str_copy(m_aVoteReason, pReason, sizeof(m_aVoteReason));
 	SendVoteSet(-1);
 	m_VoteUpdate = true;
 }
@@ -314,11 +315,13 @@ void CGameContext::SendVoteSet(int ClientID)
 	{
 		Msg.m_Timeout = (m_VoteCloseTime-time_get())/time_freq();
 		Msg.m_pDescription = m_aVoteDescription;
+		Msg.m_pReason = m_aVoteReason;
 	}
 	else
 	{
 		Msg.m_Timeout = 0;
 		Msg.m_pDescription = "";
+		Msg.m_pReason = "";
 	}
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
@@ -625,9 +628,11 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		}
 		
 		char aChatmsg[512] = {0};
-		char aDesc[512] = {0};
+		char aDesc[64] = {0};
 		char aCmd[512] = {0};
 		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
+		const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
+
 		if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 		{
 			CVoteOption *pOption = m_pVoteOptionFirst;
@@ -635,8 +640,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
 				{
-					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientID), pOption->m_aDescription);
-					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aCommand);
+					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s' (%s)", Server()->ClientName(ClientID),
+								pOption->m_aDescription, pReason);
+					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
 					break;
 				}
@@ -694,16 +700,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 			}
 			
-			const char *pReason = "No reason given";
-			for(const char *pStr = pMsg->m_Value; *pStr; ++pStr)
-			{
-				if(*pStr == ' ')
-				{
-					pReason = pStr+1;
-					break;
-				}
-			}
-			
 			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s' (%s)", Server()->ClientName(ClientID), Server()->ClientName(KickID), pReason);
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickID));
 			if (!g_Config.m_SvVoteKickBantime)
@@ -719,7 +715,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		if(aCmd[0])
 		{
 			SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
-			StartVote(aDesc, aCmd);
+			StartVote(aDesc, aCmd, pReason);
 			pPlayer->m_Vote = 1;
 			pPlayer->m_VotePos = m_VotePos = 1;
 			m_VoteCreator = ClientID;
