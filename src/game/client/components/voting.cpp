@@ -100,6 +100,9 @@ void CVoting::ClearOptions()
 	
 	m_pFirst = 0;
 	m_pLast = 0;
+
+	m_pRecycleFirst = 0;
+	m_pRecycleLast = 0;
 }
 
 void CVoting::OnReset()
@@ -144,11 +147,23 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	{
 		ClearOptions();
 	}
-	else if(MsgType == NETMSGTYPE_SV_VOTEOPTION)
+	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONADD)
 	{
-		CNetMsg_Sv_VoteOption *pMsg = (CNetMsg_Sv_VoteOption *)pRawMsg;
+		CNetMsg_Sv_VoteOptionAdd *pMsg = (CNetMsg_Sv_VoteOptionAdd *)pRawMsg;
 	
-		CVoteOption *pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption));
+		CVoteOption *pOption;
+		if(m_pRecycleFirst)
+		{
+			pOption = m_pRecycleFirst;
+			m_pRecycleFirst = m_pRecycleFirst->m_pNext;
+			if(m_pRecycleFirst)
+				m_pRecycleFirst->m_pPrev = 0;
+			else
+				m_pRecycleLast = 0;
+		}
+		else
+			pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption));
+
 		pOption->m_pNext = 0;
 		pOption->m_pPrev = m_pLast;
 		if(pOption->m_pPrev)
@@ -158,6 +173,37 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 			m_pFirst = pOption;
 		
 		str_copy(pOption->m_aDescription, pMsg->m_pDescription, sizeof(pOption->m_aDescription));
+	}
+	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONREMOVE)
+	{
+		CNetMsg_Sv_VoteOptionRemove *pMsg = (CNetMsg_Sv_VoteOptionRemove *)pRawMsg;
+	
+		for(CVoteOption *pOption = m_pFirst; pOption; pOption = pOption->m_pNext)
+		{
+			if(str_comp(pOption->m_aDescription, pMsg->m_pDescription) == 0)
+			{
+				// remove it from the list
+				if(m_pFirst == pOption)
+					m_pFirst = m_pFirst->m_pNext;
+				if(m_pLast == pOption)
+					m_pLast = m_pLast->m_pPrev;
+				if(pOption->m_pPrev)
+					pOption->m_pPrev->m_pNext = pOption->m_pNext;
+				if(pOption->m_pNext)
+					pOption->m_pNext->m_pPrev = pOption->m_pPrev;
+
+				// add it to recycle list
+				pOption->m_pNext = 0;
+				pOption->m_pPrev = m_pRecycleLast;
+				if(pOption->m_pPrev)
+					pOption->m_pPrev->m_pNext = pOption;
+				m_pRecycleLast = pOption;
+				if(!m_pRecycleFirst)
+					m_pRecycleLast = pOption;
+
+				break;
+			}
+		}
 	}
 }
 

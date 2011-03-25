@@ -261,7 +261,11 @@ Messages = [
 	NetMessage("Sv_VoteClearOptions", [
 	]),
 	
-	NetMessage("Sv_VoteOption", [
+	NetMessage("Sv_VoteOptionAdd", [
+		NetStringStrict("m_pDescription"),
+	]),
+
+	NetMessage("Sv_VoteOptionRemove", [
 		NetStringStrict("m_pDescription"),
 	]),
 
