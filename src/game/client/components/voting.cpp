@@ -31,48 +31,37 @@ void CVoting::Callvote(const char *pType, const char *pValue, const char *pReaso
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CVoting::CallvoteKick(int ClientID, const char *pReason)
+void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 {
-	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-	Callvote("kick", aBuf, pReason);
-}
-
-void CVoting::CallvoteOption(int OptionId, const char *pReason)
-{
-	CVoteOption *pOption = m_pFirst;
-	while(pOption && OptionId >= 0)
+	if(ForceVote)
 	{
-		if(OptionId == 0)
-		{
-			Callvote("option", pOption->m_aDescription, pReason);
-			break;
-		}
-		
-		OptionId--;
-		pOption = pOption->m_pNext;
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "force_vote kick %d %s", ClientID, pReason);
+		Client()->Rcon(aBuf);
+	}
+	else
+	{
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+		Callvote("kick", aBuf, pReason);
 	}
 }
 
-// TODO: fix these two
-void CVoting::ForcevoteKick(int ClientID, const char *pReason)
-{
-	char aBuf[32];
-	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), "kick %d %s", ClientID, pReason);
-	else
-		str_format(aBuf, sizeof(aBuf), "kick %d", ClientID);
-	Client()->Rcon(aBuf);
-}
-
-void CVoting::ForcevoteOption(int OptionId, const char *pReason)
+void CVoting::CallvoteOption(int OptionId, const char *pReason, bool ForceVote)
 {
 	CVoteOption *pOption = m_pFirst;
 	while(pOption && OptionId >= 0)
 	{
 		if(OptionId == 0)
 		{
-			Client()->Rcon(pOption->m_aDescription);
+			if(ForceVote)
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "force_vote option \"%s\" %s", pOption->m_aDescription, pReason);
+				Client()->Rcon(aBuf);
+			}
+			else
+				Callvote("option", pOption->m_aDescription, pReason);
 			break;
 		}
 		

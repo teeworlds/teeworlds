@@ -1080,6 +1080,61 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
 
+void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	const char *pType = pResult->GetString(0);
+	const char *pValue = pResult->GetString(1);
+	const char *pReason = pResult->GetString(2)[0] ? pResult->GetString(2) : "No reason given";
+	char aBuf[128] = {0};
+
+	if(str_comp_nocase(pType, "option") == 0)
+	{
+		CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+		while(pOption)
+		{
+			if(str_comp_nocase(pValue, pOption->m_aDescription) == 0)
+			{
+				str_format(aBuf, sizeof(aBuf), "admin forced server option '%s' (%s)", pValue, pReason);
+				pSelf->SendChatTarget(-1, aBuf);
+				pSelf->Console()->ExecuteLine(pOption->m_aCommand);
+				break;
+			}
+
+			pOption = pOption->m_pNext;
+		}
+			
+		if(!pOption)
+		{
+			str_format(aBuf, sizeof(aBuf), "'%s' isn't an option on this server", pValue);
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+			return;
+		}
+	}
+	else if(str_comp_nocase(pType, "kick") == 0)
+	{
+		int KickID = str_toint(pValue);
+		if(KickID < 0 || KickID >= MAX_CLIENTS || !pSelf->m_apPlayers[KickID])
+		{
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to kick");
+			return;
+		}
+
+		if (!g_Config.m_SvVoteKickBantime)
+		{
+			str_format(aBuf, sizeof(aBuf), "kick %d %s", KickID, pReason);
+			pSelf->Console()->ExecuteLine(aBuf);
+		}
+		else
+		{
+			char aIP[64] = {0};
+			pSelf->Server()->GetClientIP(KickID, aIP, sizeof(aIP));
+			str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aIP, g_Config.m_SvVoteKickBantime, pReason);
+			pSelf->Console()->ExecuteLine(aBuf);
+		}
+	}
+}
+
 void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1136,6 +1191,7 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "");
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "");
+	Console()->Register("force_vote", "ss?r", CFGFLAG_SERVER, ConForceVote, this, "");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 

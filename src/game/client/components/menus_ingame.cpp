@@ -442,10 +442,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 				{
 					m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-					m_aCallvoteReason[0] = 0;
 					SetActive(false);
 				}
 			}
+			m_aCallvoteReason[0] = 0;
 		}
 		
 		// render kick reason
@@ -469,17 +469,17 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 			{
 				if(s_ControlPage == 0)
-					m_pClient->m_pVoting->ForcevoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
+					m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason, true);
 				else if(s_ControlPage == 1)
 				{
 					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 					{
-						m_pClient->m_pVoting->ForcevoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-						m_aCallvoteReason[0] = 0;
+						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
 						SetActive(false);
 					}
 				}
+				m_aCallvoteReason[0] = 0;
 			}
 		}
 	}		
