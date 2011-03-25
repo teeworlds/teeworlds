@@ -357,7 +357,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView)
 	static int aPlayerIDs[MAX_CLIENTS];
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
+		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || i == m_pClient->m_Snap.m_LocalClientID)
 			continue;
 		if(m_CallvoteSelectedPlayer == i)
 			Selected = NumOptions;
