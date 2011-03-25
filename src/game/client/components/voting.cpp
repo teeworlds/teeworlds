@@ -5,13 +5,12 @@
 #include <game/generated/protocol.h>
 #include <base/vmath.h>
 #include <game/client/render.h>
-//#include <game/client/gameclient.h>
 #include "voting.h"
 
 void CVoting::ConCallvote(IConsole::IResult *pResult, void *pUserData)
 {
 	CVoting *pSelf = (CVoting*)pUserData;
-	pSelf->Callvote(pResult->GetString(0), pResult->GetString(1));
+	pSelf->Callvote(pResult->GetString(0), pResult->GetString(1), pResult->NumArguments() > 2 ? pResult->GetString(2) : "");
 }
 
 void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
@@ -23,32 +22,30 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Vote(-1);
 }
 
-void CVoting::Callvote(const char *pType, const char *pValue)
+void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason)
 {
 	CNetMsg_Cl_CallVote Msg = {0};
 	Msg.m_Type = pType;
 	Msg.m_Value = pValue;
+	Msg.m_Reason = pReason;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
 void CVoting::CallvoteKick(int ClientID, const char *pReason)
 {
 	char aBuf[32];
-	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), "%d %s", ClientID, pReason);
-	else
-		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-	Callvote("kick", aBuf);
+	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+	Callvote("kick", aBuf, pReason);
 }
 
-void CVoting::CallvoteOption(int OptionId)
+void CVoting::CallvoteOption(int OptionId, const char *pReason)
 {
 	CVoteOption *pOption = m_pFirst;
 	while(pOption && OptionId >= 0)
 	{
 		if(OptionId == 0)
 		{
-			Callvote("option", pOption->m_aDescription);
+			Callvote("option", pOption->m_aDescription, pReason);
 			break;
 		}
 		
@@ -57,6 +54,7 @@ void CVoting::CallvoteOption(int OptionId)
 	}
 }
 
+// TODO: fix these two
 void CVoting::ForcevoteKick(int ClientID, const char *pReason)
 {
 	char aBuf[32];
@@ -67,7 +65,7 @@ void CVoting::ForcevoteKick(int ClientID, const char *pReason)
 	Client()->Rcon(aBuf);
 }
 
-void CVoting::ForcevoteOption(int OptionId)
+void CVoting::ForcevoteOption(int OptionId, const char *pReason)
 {
 	CVoteOption *pOption = m_pFirst;
 	while(pOption && OptionId >= 0)
@@ -108,13 +106,14 @@ void CVoting::OnReset()
 {
 	m_Closetime = 0;
 	m_aDescription[0] = 0;
+	m_aReason[0] = 0;
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
 }
 
 void CVoting::OnConsoleInit()
 {
-	Console()->Register("callvote", "sr", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
+	Console()->Register("callvote", "ss?r", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
 	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
 }
 
@@ -127,6 +126,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		{
 			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
+			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 		}
 		else

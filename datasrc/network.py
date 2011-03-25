@@ -267,7 +267,8 @@ Messages = [
 
 	NetMessage("Sv_VoteSet", [
 		NetIntRange("m_Timeout", 0, 60),
-		NetStringStrict("m_pDescription")
+		NetStringStrict("m_pDescription"),
+		NetStringStrict("m_pReason"),
 	]),
 
 	NetMessage("Sv_VoteStatus", [
@@ -324,6 +325,7 @@ Messages = [
 	NetMessage("Cl_CallVote", [
 		NetStringStrict("m_Type"),
 		NetStringStrict("m_Value"),
+		NetStringStrict("m_Reason"),
 	]),
 	
 	NetMessage("Cl_IsRace", []),
