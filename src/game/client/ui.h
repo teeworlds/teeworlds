@@ -10,6 +10,7 @@ class CUIRect
 public:
     float x, y, w, h;
 	
+	void HSplitMid(CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void VSplitMid(CUIRect *pLeft, CUIRect *pRight) const;
