@@ -2,9 +2,12 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_VOTING_H
 #define GAME_CLIENT_COMPONENTS_VOTING_H
+
+#include <engine/shared/memheap.h>
+
+#include <game/voting.h>
 #include <game/client/component.h>
 #include <game/client/ui.h>
-#include <engine/shared/memheap.h>
 
 class CVoting : public CComponent
 {
@@ -14,8 +17,8 @@ class CVoting : public CComponent
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	
 	int64 m_Closetime;
-	char m_aDescription[64];
-	char m_aReason[16];
+	char m_aDescription[VOTE_DESC_LENGTH];
+	char m_aReason[VOTE_REASON_LENGTH];
 	int m_Voted;
 	int m_Yes, m_No, m_Pass, m_Total;
 	
@@ -23,19 +26,12 @@ class CVoting : public CComponent
 	void Callvote(const char *pType, const char *pValue, const char *pReason);
 	
 public:
+	int m_NumVoteOptions;	
+	CVoteOptionClient *m_pFirst;
+	CVoteOptionClient *m_pLast;
 
-	struct CVoteOption
-	{
-		CVoteOption *m_pNext;
-		CVoteOption *m_pPrev;
-		char m_aDescription[64];
-	};
-	
-	CVoteOption *m_pFirst;
-	CVoteOption *m_pLast;
-
-	CVoteOption *m_pRecycleFirst;
-	CVoteOption *m_pRecycleLast;
+	CVoteOptionClient *m_pRecycleFirst;
+	CVoteOptionClient *m_pRecycleLast;
 
 	CVoting();
 	virtual void OnReset();
