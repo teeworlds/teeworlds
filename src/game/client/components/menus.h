@@ -8,6 +8,7 @@
 
 #include <engine/demo.h>
 
+#include <game/voting.h>
 #include <game/client/component.h>
 #include <game/client/ui.h>
 
@@ -170,7 +171,7 @@ class CMenus : public CComponent
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
-	char m_aCallvoteReason[16];
+	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 	
 	// demo
 	struct CDemoItem

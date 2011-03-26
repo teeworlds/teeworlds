@@ -65,7 +65,7 @@ void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 
 void CVoting::CallvoteOption(int OptionId, const char *pReason, bool ForceVote)
 {
-	CVoteOption *pOption = m_pFirst;
+	CVoteOptionClient *pOption = m_pFirst;
 	while(pOption && OptionId >= 0)
 	{
 		if(OptionId == 0)
@@ -102,7 +102,8 @@ CVoting::CVoting()
 void CVoting::ClearOptions()
 {
 	m_Heap.Reset();
-	
+
+	m_NumVoteOptions = 0;	
 	m_pFirst = 0;
 	m_pLast = 0;
 
@@ -156,7 +157,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_VoteOptionAdd *pMsg = (CNetMsg_Sv_VoteOptionAdd *)pRawMsg;
 	
-		CVoteOption *pOption;
+		CVoteOptionClient *pOption;
 		if(m_pRecycleFirst)
 		{
 			pOption = m_pRecycleFirst;
@@ -167,7 +168,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				m_pRecycleLast = 0;
 		}
 		else
-			pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption));
+			pOption = (CVoteOptionClient *)m_Heap.Allocate(sizeof(CVoteOptionClient));
 
 		pOption->m_pNext = 0;
 		pOption->m_pPrev = m_pLast;
@@ -178,12 +179,13 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 			m_pFirst = pOption;
 		
 		str_copy(pOption->m_aDescription, pMsg->m_pDescription, sizeof(pOption->m_aDescription));
+		++m_NumVoteOptions;
 	}
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONREMOVE)
 	{
 		CNetMsg_Sv_VoteOptionRemove *pMsg = (CNetMsg_Sv_VoteOptionRemove *)pRawMsg;
 	
-		for(CVoteOption *pOption = m_pFirst; pOption; pOption = pOption->m_pNext)
+		for(CVoteOptionClient *pOption = m_pFirst; pOption; pOption = pOption->m_pNext)
 		{
 			if(str_comp(pOption->m_aDescription, pMsg->m_pDescription) == 0)
 			{
@@ -196,6 +198,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 					pOption->m_pPrev->m_pNext = pOption->m_pNext;
 				if(pOption->m_pNext)
 					pOption->m_pNext->m_pPrev = pOption->m_pPrev;
+				--m_NumVoteOptions;
 
 				// add it to recycle list
 				pOption->m_pNext = 0;

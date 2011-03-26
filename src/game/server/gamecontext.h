@@ -8,6 +8,7 @@
 #include <engine/shared/memheap.h>
 
 #include <game/layers.h>
+#include <game/voting.h>
 
 #include "eventhandler.h"
 #include "gamecontroller.h"
@@ -95,9 +96,9 @@ public:
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
 	int m_VotePos;
-	char m_aVoteDescription[64];
-	char m_aVoteCommand[512];
-	char m_aVoteReason[16];
+	char m_aVoteDescription[VOTE_DESC_LENGTH];
+	char m_aVoteCommand[VOTE_CMD_LENGTH];
+	char m_aVoteReason[VOTE_REASON_LENGTH];
 	int m_VoteEnforce;
 	enum
 	{
@@ -105,16 +106,9 @@ public:
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
 	};
-	struct CVoteOption
-	{
-		CVoteOption *m_pNext;
-		CVoteOption *m_pPrev;
-		char m_aDescription[64];
-		char m_aCommand[1];
-	};
 	CHeap *m_pVoteOptionHeap;
-	CVoteOption *m_pVoteOptionFirst;
-	CVoteOption *m_pVoteOptionLast;
+	CVoteOptionServer *m_pVoteOptionFirst;
+	CVoteOptionServer *m_pVoteOptionLast;
 
 	// helper functions
 	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);

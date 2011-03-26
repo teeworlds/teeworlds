@@ -58,8 +58,8 @@ CGameContext::~CGameContext()
 void CGameContext::Clear()
 {
 	CHeap *pVoteOptionHeap = m_pVoteOptionHeap;
-	CVoteOption *pVoteOptionFirst = m_pVoteOptionFirst;
-	CVoteOption *pVoteOptionLast = m_pVoteOptionLast;
+	CVoteOptionServer *pVoteOptionFirst = m_pVoteOptionFirst;
+	CVoteOptionServer *pVoteOptionLast = m_pVoteOptionLast;
 	CTuningParams Tuning = m_Tuning;
 
 	m_Resetting = true;
@@ -628,14 +628,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		}
 		
 		char aChatmsg[512] = {0};
-		char aDesc[64] = {0};
-		char aCmd[512] = {0};
+		char aDesc[VOTE_DESC_LENGTH] = {0};
+		char aCmd[VOTE_CMD_LENGTH] = {0};
 		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
 		const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
 
 		if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 		{
-			CVoteOption *pOption = m_pVoteOptionFirst;
+			CVoteOptionServer *pOption = m_pVoteOptionFirst;
 			while(pOption)
 			{
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
@@ -825,7 +825,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		// send vote options
 		CNetMsg_Sv_VoteClearOptions ClearMsg;
 		Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
-		CVoteOption *pCurrent = m_pVoteOptionFirst;
+		CVoteOptionServer *pCurrent = m_pVoteOptionFirst;
 		while(pCurrent)
 		{
 			CNetMsg_Sv_VoteOptionAdd OptionMsg;
@@ -996,16 +996,23 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	const char *pCommand = pResult->GetString(1);
 	
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pCommand))
+	if(!pSelf->Console()->LineIsValid(pCommand) || str_length(pCommand) >= VOTE_CMD_LENGTH)
 	{
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pCommand);
+		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", pCommand);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		return;
+	}
+	if(str_length(pDescription) >= VOTE_DESC_LENGTH)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pDescription);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
 	
 	// check for duplicate entry
-	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+	CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
 	while(pOption)
 	{
 		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
@@ -1021,7 +1028,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	// add the option
 	int Len = str_length(pCommand);
 	
-	pOption = (CGameContext::CVoteOption *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
+	pOption = (CVoteOptionServer *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 	pOption->m_pNext = 0;
 	pOption->m_pPrev = pSelf->m_pVoteOptionLast;
 	if(pOption->m_pPrev)
@@ -1048,7 +1055,7 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	const char *pDescription = pResult->GetString(0);
 	
 	// check for valid option
-	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+	CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
 	while(pOption)
 	{
 		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
@@ -1070,16 +1077,16 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
 	CHeap *pVoteOptionHeap = new CHeap();
-	CVoteOption *pVoteOptionFirst = 0;
-	CVoteOption *pVoteOptionLast = 0;
-	for(CVoteOption *pSrc = pSelf->m_pVoteOptionFirst; pSrc; pSrc = pSrc->m_pNext)
+	CVoteOptionServer *pVoteOptionFirst = 0;
+	CVoteOptionServer *pVoteOptionLast = 0;
+	for(CVoteOptionServer *pSrc = pSelf->m_pVoteOptionFirst; pSrc; pSrc = pSrc->m_pNext)
 	{
 		if(pSrc == pOption)
 			continue;
 
 		// copy option
 		int Len = str_length(pSrc->m_aCommand);
-		CVoteOption *pDst = (CGameContext::CVoteOption *)pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
+		CVoteOptionServer *pDst = (CVoteOptionServer *)pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 		pDst->m_pNext = 0;
 		pDst->m_pPrev = pVoteOptionLast;
 		if(pDst->m_pPrev)
@@ -1114,7 +1121,7 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 
 	if(str_comp_nocase(pType, "option") == 0)
 	{
-		CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+		CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
 		while(pOption)
 		{
 			if(str_comp_nocase(pValue, pOption->m_aDescription) == 0)
