@@ -184,6 +184,9 @@ Delete this envelope
 Deletes the layer
 == Supprime la couche
 
+Demofile
+== Démo
+
 Demos
 == Démos
 
@@ -287,7 +290,7 @@ Game info
 == Info. jeu
 
 Game over
-== Fin du jeu
+== Fin de la partie
 
 Game type
 == Type de jeu
@@ -439,6 +442,9 @@ Mute when not active
 Name
 == Nom
 
+Name plates size
+== Taille
+
 Name:
 == Nom:
 
@@ -554,7 +560,7 @@ Reason:
 == Raison :
 
 Record demo
-== Enregistrement démo
+== Enregistrer
 
 Red team
 == Équipe rouge
@@ -685,6 +691,9 @@ Skins
 Sound
 == Son
 
+Sound error
+== Problème de son
+
 Sound volume
 == Volume du son
 
@@ -704,7 +713,7 @@ Standard map
 == Cartes standards
 
 Stop record
-== Arrêter l'enregistrement
+== Arrêter
 
 Sudden Death
 == Mort Subite
@@ -724,6 +733,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Compression des textures
 
+The audio device couldn't be initialised.
+== Le périphérique audio n'a pas pu être trouvé.
+
 The server is running a non-standard tuning on a pure game type.
 == Le serveur utilise des paramètres non standards sur un type de jeu standard.
 
@@ -741,6 +753,9 @@ Type
 
 UI Color
 == Couleur du menu
+
+Unable to delete the demo
+== Impossible de supprimer la démo
 
 Up
 == Haut
@@ -876,9 +891,6 @@ HD
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
-Name plates size
-== 
-
 Para X
 == 
 
@@ -909,9 +921,6 @@ Rotation of the brush in degrees. Use left mouse button to drag and change the v
 Shift
 == 
 
-Sound error
-== 
-
 Squares the current quad
 == 
 
@@ -919,9 +928,6 @@ Switch between images and layers managment.
 == 
 
 Switch curve type
-== 
-
-The audio device couldn't be initialised.
 == 
 
 Tiles
@@ -934,9 +940,6 @@ Toggle layer visibility
 == 
 
 Toggles the envelope editor.
-== 
-
-Unable to delete the demo
 == 
 
 Unhookable
