@@ -31,6 +31,22 @@ void CVoting::Callvote(const char *pType, const char *pValue, const char *pReaso
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
+void CVoting::CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote)
+{
+	if(ForceVote)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "set_team %d -1", ClientID);
+		Client()->Rcon(aBuf);
+	}
+	else
+	{
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+		Callvote("spectate", aBuf, pReason);
+	}
+}
+
 void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 {
 	if(ForceVote)

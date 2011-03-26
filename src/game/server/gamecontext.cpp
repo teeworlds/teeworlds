@@ -711,6 +711,30 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aBuf, g_Config.m_SvVoteKickBantime);
 			}
 		}
+		else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
+		{
+			if(!g_Config.m_SvVoteSpectate)
+			{
+				SendChatTarget(ClientID, "Server does not allow voting to move players to spectators");
+				return;
+			}
+			
+			int SpectateID = str_toint(pMsg->m_Value);
+			if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+			{
+				SendChatTarget(ClientID, "Invalid client id to move");
+				return;
+			}
+			if(SpectateID == ClientID)
+			{
+				SendChatTarget(ClientID, "You cant move yourself");
+				return;
+			}
+			
+			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to move '%s' to spectators (%s)", Server()->ClientName(ClientID), Server()->ClientName(SpectateID), pReason);
+			str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));
+			str_format(aCmd, sizeof(aCmd), "set_team %d -1", SpectateID);
+		}
 		
 		if(aCmd[0])
 		{
@@ -1132,6 +1156,18 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 			str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aIP, g_Config.m_SvVoteKickBantime, pReason);
 			pSelf->Console()->ExecuteLine(aBuf);
 		}
+	}
+	else if(str_comp_nocase(pType, "spectate") == 0)
+	{
+		int SpectateID = str_toint(pValue);
+		if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+		{
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to move");
+			return;
+		}
+		
+		str_format(aBuf, sizeof(aBuf), "set_team %d -1", SpectateID);
+		pSelf->Console()->ExecuteLine(aBuf);
 	}
 }
 

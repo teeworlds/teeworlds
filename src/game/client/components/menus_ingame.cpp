@@ -345,7 +345,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);
 }
 
-void CMenus::RenderServerControlKick(CUIRect MainView)
+void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 {
 	int NumOptions = 0;
 	int Selected = -1;
@@ -353,6 +353,8 @@ void CMenus::RenderServerControlKick(CUIRect MainView)
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || i == m_pClient->m_Snap.m_LocalClientID)
+			continue;
+		if(FilterSpectators && m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 			continue;
 		if(m_CallvoteSelectedPlayer == i)
 			Selected = NumOptions;
@@ -400,7 +402,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	
 	const char *paTabs[] = {
 		Localize("Settings"),
-		Localize("Kick")};
+		Localize("Kick"),
+		Localize("Spectate")};
 	int aNumTabs = (int)(sizeof(paTabs)/sizeof(*paTabs));
 	
 	for(int i = 0; i < aNumTabs; i++)
@@ -424,8 +427,9 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	if(s_ControlPage == 0)
 		RenderServerControlServer(MainView);
 	else if(s_ControlPage == 1)
-		RenderServerControlKick(MainView);
-		
+		RenderServerControlKick(MainView, false);
+	else if(s_ControlPage == 2)
+		RenderServerControlKick(MainView, true);		
 
 	{
 		CUIRect Button;
@@ -442,6 +446,15 @@ void CMenus::RenderServerControl(CUIRect MainView)
 					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 				{
 					m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
+					SetActive(false);
+				}
+			}
+			else if(s_ControlPage == 2)
+			{
+				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+				{
+					m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason);
 					SetActive(false);
 				}
 			}
@@ -476,6 +489,15 @@ void CMenus::RenderServerControl(CUIRect MainView)
 						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 					{
 						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
+						SetActive(false);
+					}
+				}
+				else if(s_ControlPage == 2)
+				{
+					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+					{
+						m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
 						SetActive(false);
 					}
 				}
