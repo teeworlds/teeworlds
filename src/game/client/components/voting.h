@@ -43,7 +43,9 @@ public:
 	
 	void CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote = false);
 	void CallvoteKick(int ClientID, const char *pReason, bool ForceVote = false);
-	void CallvoteOption(int Option, const char *pReason, bool ForceVote = false);
+	void CallvoteOption(int OptionID, const char *pReason, bool ForceVote = false);
+	void RemovevoteOption(int OptionID);
+	void AddvoteOption(const char *pDescription, const char *pCommand);
 	
 	void Vote(int v); // -1 = no, 1 = yes
 	

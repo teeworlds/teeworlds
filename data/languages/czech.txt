@@ -459,6 +459,9 @@ Your skin
 -Page %d-
 == 
 
+Add
+== 
+
 Add Friend
 == 
 
@@ -631,6 +634,12 @@ Unable to rename the demo
 == 
 
 Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
 == 
 
 Warmup

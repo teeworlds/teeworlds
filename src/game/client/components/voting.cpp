@@ -63,12 +63,12 @@ void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 	}
 }
 
-void CVoting::CallvoteOption(int OptionId, const char *pReason, bool ForceVote)
+void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
 {
 	CVoteOptionClient *pOption = m_pFirst;
-	while(pOption && OptionId >= 0)
+	while(pOption && OptionID >= 0)
 	{
-		if(OptionId == 0)
+		if(OptionID == 0)
 		{
 			if(ForceVote)
 			{
@@ -81,9 +81,34 @@ void CVoting::CallvoteOption(int OptionId, const char *pReason, bool ForceVote)
 			break;
 		}
 		
-		OptionId--;
+		OptionID--;
 		pOption = pOption->m_pNext;
 	}
+}
+
+void CVoting::RemovevoteOption(int OptionID)
+{
+	CVoteOptionClient *pOption = m_pFirst;
+	while(pOption && OptionID >= 0)
+	{
+		if(OptionID == 0)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "remove_vote \"%s\"", pOption->m_aDescription);
+			Client()->Rcon(aBuf);
+			break;
+		}
+		
+		OptionID--;
+		pOption = pOption->m_pNext;
+	}
+}
+
+void CVoting::AddvoteOption(const char *pDescription, const char *pCommand)
+{
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "add_vote \"%s\" %s", pDescription, pCommand);
+	Client()->Rcon(aBuf);
 }
 
 void CVoting::Vote(int v)
