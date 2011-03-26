@@ -99,6 +99,7 @@ public:
 	char m_aVoteDescription[VOTE_DESC_LENGTH];
 	char m_aVoteCommand[VOTE_CMD_LENGTH];
 	char m_aVoteReason[VOTE_REASON_LENGTH];
+	int m_NumVoteOptions;
 	int m_VoteEnforce;
 	enum
 	{

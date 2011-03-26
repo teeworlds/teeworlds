@@ -261,6 +261,15 @@ Messages = [
 	NetMessage("Sv_VoteClearOptions", [
 	]),
 	
+	NetMessage("Sv_VoteOptionListAdd", [
+		NetIntRange("m_NumOptions", 1, 15),
+		NetStringStrict("m_pDescription0"), NetStringStrict("m_pDescription1"),	NetStringStrict("m_pDescription2"),
+		NetStringStrict("m_pDescription3"),	NetStringStrict("m_pDescription4"),	NetStringStrict("m_pDescription5"),
+		NetStringStrict("m_pDescription6"), NetStringStrict("m_pDescription7"), NetStringStrict("m_pDescription8"),
+		NetStringStrict("m_pDescription9"), NetStringStrict("m_pDescription10"), NetStringStrict("m_pDescription11"),
+		NetStringStrict("m_pDescription12"), NetStringStrict("m_pDescription13"), NetStringStrict("m_pDescription14"),
+	]),
+
 	NetMessage("Sv_VoteOptionAdd", [
 		NetStringStrict("m_pDescription"),
 	]),

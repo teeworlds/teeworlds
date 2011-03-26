@@ -123,6 +123,32 @@ CVoting::CVoting()
 	OnReset();
 }
 
+void CVoting::AddOption(const char *pDescription)
+{
+	CVoteOptionClient *pOption;
+	if(m_pRecycleFirst)
+	{
+		pOption = m_pRecycleFirst;
+		m_pRecycleFirst = m_pRecycleFirst->m_pNext;
+		if(m_pRecycleFirst)
+			m_pRecycleFirst->m_pPrev = 0;
+		else
+			m_pRecycleLast = 0;
+	}
+	else
+		pOption = (CVoteOptionClient *)m_Heap.Allocate(sizeof(CVoteOptionClient));
+
+	pOption->m_pNext = 0;
+	pOption->m_pPrev = m_pLast;
+	if(pOption->m_pPrev)
+		pOption->m_pPrev->m_pNext = pOption;
+	m_pLast = pOption;
+	if(!m_pFirst)
+		m_pFirst = pOption;
+		
+	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
+	++m_NumVoteOptions;
+}
 
 void CVoting::ClearOptions()
 {
@@ -178,33 +204,36 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	{
 		ClearOptions();
 	}
+	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONLISTADD)
+	{
+		CNetMsg_Sv_VoteOptionListAdd *pMsg = (CNetMsg_Sv_VoteOptionListAdd *)pRawMsg;
+		int NumOptions = pMsg->m_NumOptions;
+		for(int i = 0; i < NumOptions; ++i)
+		{
+			switch(i)
+			{
+			case 0: AddOption(pMsg->m_pDescription0); break;
+			case 1: AddOption(pMsg->m_pDescription1); break;
+			case 2: AddOption(pMsg->m_pDescription2); break;
+			case 3: AddOption(pMsg->m_pDescription3); break;
+			case 4: AddOption(pMsg->m_pDescription4); break;
+			case 5: AddOption(pMsg->m_pDescription5); break;
+			case 6: AddOption(pMsg->m_pDescription6); break;
+			case 7: AddOption(pMsg->m_pDescription7); break;
+			case 8: AddOption(pMsg->m_pDescription8); break;
+			case 9: AddOption(pMsg->m_pDescription9); break;
+			case 10: AddOption(pMsg->m_pDescription10); break;
+			case 11: AddOption(pMsg->m_pDescription11); break;
+			case 12: AddOption(pMsg->m_pDescription12); break;
+			case 13: AddOption(pMsg->m_pDescription13); break;
+			case 14: AddOption(pMsg->m_pDescription14);
+			}
+		}
+	}
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONADD)
 	{
 		CNetMsg_Sv_VoteOptionAdd *pMsg = (CNetMsg_Sv_VoteOptionAdd *)pRawMsg;
-	
-		CVoteOptionClient *pOption;
-		if(m_pRecycleFirst)
-		{
-			pOption = m_pRecycleFirst;
-			m_pRecycleFirst = m_pRecycleFirst->m_pNext;
-			if(m_pRecycleFirst)
-				m_pRecycleFirst->m_pPrev = 0;
-			else
-				m_pRecycleLast = 0;
-		}
-		else
-			pOption = (CVoteOptionClient *)m_Heap.Allocate(sizeof(CVoteOptionClient));
-
-		pOption->m_pNext = 0;
-		pOption->m_pPrev = m_pLast;
-		if(pOption->m_pPrev)
-			pOption->m_pPrev->m_pNext = pOption;
-		m_pLast = pOption;
-		if(!m_pFirst)
-			m_pFirst = pOption;
-		
-		str_copy(pOption->m_aDescription, pMsg->m_pDescription, sizeof(pOption->m_aDescription));
-		++m_NumVoteOptions;
+		AddOption(pMsg->m_pDescription);
 	}
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONREMOVE)
 	{
