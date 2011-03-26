@@ -230,7 +230,7 @@ class CMenus : public CComponent
 	void RenderGame(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
 	void RenderServerControl(CUIRect MainView);
-	void RenderServerControlKick(CUIRect MainView);
+	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
 	void RenderServerControlServer(CUIRect MainView);
 	void RenderGhost(CUIRect MainView);
 	
