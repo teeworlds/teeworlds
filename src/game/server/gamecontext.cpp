@@ -1085,7 +1085,7 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	const char *pType = pResult->GetString(0);
 	const char *pValue = pResult->GetString(1);
-	const char *pReason = pResult->GetString(2)[0] ? pResult->GetString(2) : "No reason given";
+	const char *pReason = pResult->NumArguments() > 2 && pResult->GetString(2)[0] ? pResult->GetString(2) : "No reason given";
 	char aBuf[128] = {0};
 
 	if(str_comp_nocase(pType, "option") == 0)
