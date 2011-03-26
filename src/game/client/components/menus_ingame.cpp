@@ -414,8 +414,9 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 	}
 		
+	CUIRect Bottom, Extended;
+	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 	MainView.Margin(10.0f, &MainView);
-	CUIRect Bottom;
 	MainView.HSplitBottom(ms_ButtonHeight + 5*2, &MainView, &Bottom);
 	Bottom.HMargin(5.0f, &Bottom);
 	
@@ -469,11 +470,17 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		static float s_Offset = 0.0f;
 		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
 		
-		// force vote button (only available when authed in rcon)
+		// extended features (only available when authed in rcon)
 		if(Client()->RconAuthed())
 		{
+			// background
+			Extended.Margin(10.0f, &Extended);
+			Extended.HSplitTop(20.0f, &Bottom, &Extended);
+			Extended.HSplitTop(5.0f, 0, &Extended);
+
+			// force vote
+			Bottom.VSplitLeft(5.0f, 0, &Bottom);
 			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
-			
 			static int s_ForceVoteButton = 0;
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 			{
@@ -498,6 +505,44 @@ void CMenus::RenderServerControl(CUIRect MainView)
 					}
 				}
 				m_aCallvoteReason[0] = 0;
+			}
+
+			if(s_ControlPage == 0)
+			{
+				// remove vote
+				Bottom.VSplitRight(10.0f, &Bottom, 0);
+				Bottom.VSplitRight(120.0f, 0, &Button);
+				static int s_RemoveVoteButton = 0;
+				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
+					m_pClient->m_pVoting->RemovevoteOption(m_CallvoteSelectedOption);
+		
+
+				// add vote
+				Extended.HSplitTop(20.0f, &Bottom, &Extended);
+				Bottom.VSplitLeft(5.0f, 0, &Bottom);
+				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
+				UI()->DoLabelScaled(&Button, Localize("Vote description:"), 14.0f, -1);
+
+				Bottom.VSplitLeft(20.0f, 0, &Button);
+				UI()->DoLabelScaled(&Button, Localize("Vote command:"), 14.0f, -1);
+
+				static char s_aVoteDescription[64] = {0};
+				static char s_aVoteCommand[512] = {0};
+				Extended.HSplitTop(20.0f, &Bottom, &Extended);
+				Bottom.VSplitRight(10.0f, &Bottom, 0);
+				Bottom.VSplitRight(120.0f, &Bottom, &Button);
+				static int s_AddVoteButton = 0;
+				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
+					m_pClient->m_pVoting->AddvoteOption(s_aVoteDescription, s_aVoteCommand);
+
+				Bottom.VSplitLeft(5.0f, 0, &Bottom);
+				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
+				static float s_OffsetDesc = 0.0f;
+				DoEditBox(&s_aVoteDescription, &Button, s_aVoteDescription, sizeof(s_aVoteDescription), 14.0f, &s_OffsetDesc, false, CUI::CORNER_ALL);
+
+				Bottom.VMargin(20.0f, &Button);	
+				static float s_OffsetCmd = 0.0f;
+				DoEditBox(&s_aVoteCommand, &Button, s_aVoteCommand, sizeof(s_aVoteCommand), 14.0f, &s_OffsetCmd, false, CUI::CORNER_ALL);
 			}
 		}
 	}		

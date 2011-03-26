@@ -531,6 +531,9 @@ no limit
 -Page %d-
 == 
 
+Add
+== 
+
 Add Friend
 == 
 
@@ -637,6 +640,12 @@ Unable to rename the demo
 == 
 
 Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
 == 
 
 ##### old translations #####

@@ -453,6 +453,9 @@ You must restart the game for all settings to take effect.
 -Page %d-
 == 
 
+Add
+== 
+
 Add Friend
 == 
 
@@ -628,6 +631,12 @@ Unable to rename the demo
 == 
 
 Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
 == 
 
 Warmup
