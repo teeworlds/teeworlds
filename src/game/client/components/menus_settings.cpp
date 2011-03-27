@@ -187,6 +187,12 @@ void CMenus::RenderSPPage0(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_ClAutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 		g_Config.m_ClAutoswitchWeapons ^= 1;
 
+	// show hud
+	Left.HSplitTop(5.0f, 0, &Left);
+	Left.HSplitTop(20.0f, &Button, &Left);
+	if(DoButton_CheckBox(&g_Config.m_ClShowhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
+		g_Config.m_ClShowhud ^= 1;
+
 	// name plates
 	Right.HSplitTop(20.0f, &Button, &Right);
 	if(DoButton_CheckBox(&g_Config.m_ClNameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
