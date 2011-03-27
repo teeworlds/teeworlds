@@ -32,6 +32,7 @@ public:
 	void Enqueue(int SetId);
 	void Play(int Channel, int SetId, float Vol, vec2 Pos);
 	void PlayAndRecord(int Channel, int SetId, float Vol, vec2 Pos);
+	void Stop(int SetId);
 };
 
 

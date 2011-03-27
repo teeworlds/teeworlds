@@ -70,6 +70,9 @@ void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 
 void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 {
+	if(!g_Config.m_SndEnable || (Chn == CHN_MUSIC && !g_Config.m_SndEnableMusic))
+		return;
+	
 	if(SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 
@@ -77,10 +80,14 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 
 	if(!pSet->m_NumSounds)
 		return;
+	
+	int Flags = 0;
+	if(Chn == CHN_MUSIC)
+		Flags = ISound::FLAG_LOOP;
 
 	if(pSet->m_NumSounds == 1)
 	{
-		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_Id, 0, Pos.x, Pos.y);
+		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_Id, Flags, Pos.x, Pos.y);
 		return;
 	}
 
@@ -89,6 +96,17 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 	do {
 		id = rand() % pSet->m_NumSounds;
 	} while(id == pSet->m_Last);
-	Sound()->PlayAt(Chn, pSet->m_aSounds[id].m_Id, 0, Pos.x, Pos.y);
+	Sound()->PlayAt(Chn, pSet->m_aSounds[id].m_Id, Flags, Pos.x, Pos.y);
 	pSet->m_Last = id;
+}
+
+void CSounds::Stop(int SetId)
+{
+	if(SetId < 0 || SetId >= g_pData->m_NumSounds)
+		return;
+	
+	SOUNDSET *pSet = &g_pData->m_aSounds[SetId];
+	
+	for(int i = 0; i < pSet->m_NumSounds; i++)
+		Sound()->Stop(pSet->m_aSounds[i].m_Id);
 }
