@@ -135,6 +135,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->SetPos(0);
 	}
 
+	bool IncreaseDemoSpeed = false, DecreaseDemoSpeed = false;
+
 	if(m_MenuActive)
 	{
 		// do buttons
@@ -170,33 +172,15 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_DemoPlayer_Sprite(&s_SlowDownButton, SPRITE_DEMOBUTTON_SLOWER, 0, &Button))
-		{
-			if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
-			else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
-			else if(pInfo->m_Speed > 1.0f) DemoPlayer()->SetSpeed(1.0f);
-			else if(pInfo->m_Speed > 0.75f) DemoPlayer()->SetSpeed(0.75f);
-			else if(pInfo->m_Speed > 0.5f) DemoPlayer()->SetSpeed(0.5f);
-			else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
-			else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
-			else DemoPlayer()->SetSpeed(0.05f);
-		}
+		if(DoButton_DemoPlayer_Sprite(&s_SlowDownButton, SPRITE_DEMOBUTTON_SLOWER, 0, &Button) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+			DecreaseDemoSpeed = true;
 		
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_FastForwardButton = 0;
 		if(DoButton_DemoPlayer_Sprite(&s_FastForwardButton, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
-		{
-			if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
-			else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
-			else if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
-			else if(pInfo->m_Speed < 0.75f) DemoPlayer()->SetSpeed(0.75f);
-			else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);
-			else if(pInfo->m_Speed < 2.0f) DemoPlayer()->SetSpeed(2.0f);
-			else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
-			else DemoPlayer()->SetSpeed(8.0f);
-		}
+			IncreaseDemoSpeed = true;
 
 		// speed meter
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
@@ -220,6 +204,29 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = MainView.w;
 		TextRender()->TextEx(&Cursor, aBuf, -1);
+	}
+
+	if(IncreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+	{
+		if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
+		else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
+		else if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
+		else if(pInfo->m_Speed < 0.75f) DemoPlayer()->SetSpeed(0.75f);
+		else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);
+		else if(pInfo->m_Speed < 2.0f) DemoPlayer()->SetSpeed(2.0f);
+		else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
+		else DemoPlayer()->SetSpeed(8.0f);
+	}
+	else if(DecreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+	{
+		if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
+		else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
+		else if(pInfo->m_Speed > 1.0f) DemoPlayer()->SetSpeed(1.0f);
+		else if(pInfo->m_Speed > 0.75f) DemoPlayer()->SetSpeed(0.75f);
+		else if(pInfo->m_Speed > 0.5f) DemoPlayer()->SetSpeed(0.5f);
+		else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
+		else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
+		else DemoPlayer()->SetSpeed(0.05f);
 	}
 }
 
