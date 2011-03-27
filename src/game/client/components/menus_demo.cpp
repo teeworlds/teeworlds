@@ -457,7 +457,7 @@ int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType,
 	}
 	Item.m_IsDir = IsDir != 0;
 	Item.m_StorageType = StorageType;
-	pSelf->m_lDemos.add(Item);
+	pSelf->m_lDemos.add_unsorted(Item);
 
 	return 0;
 }
@@ -468,6 +468,7 @@ void CMenus::DemolistPopulate()
 	if(!str_comp(m_aCurrentDemoFolder, "demos"))
 		m_DemolistStorageType = IStorage::TYPE_ALL;
 	Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	m_lDemos.sort_range();
 }
 
 void CMenus::DemolistOnUpdate(bool Reset)
