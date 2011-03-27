@@ -2134,6 +2134,14 @@ void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_ServerBrowser.AddFavorite(Addr);
 }
 
+void CClient::Con_RemoveFavorite(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	NETADDR Addr;
+	if(net_addr_from_str(&Addr, pResult->GetString(0)) == 0)
+		pSelf->m_ServerBrowser.RemoveFavorite(Addr);
+}
+
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;
@@ -2285,6 +2293,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
+	m_pConsole->Register("remove_favorite", "s", CFGFLAG_CLIENT, Con_RemoveFavorite, this, "Remove a server from favorites");
 
 	// used for server browser update
 	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);

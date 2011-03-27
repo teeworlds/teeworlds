@@ -721,6 +721,7 @@ void CMenus::OnInit()
 	g_Config.m_ClShowWelcome = 0;
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
+	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
 
 	// setup load amount
 	m_LoadCurrent = 0;
