@@ -306,7 +306,8 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 
 void CChat::OnRender()
 {
-	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
+	float Width = 300.0f*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 5.0f;
 	float y = 300.0f-20.0f;
 	if(m_Mode != MODE_NONE)
@@ -314,7 +315,7 @@ void CChat::OnRender()
 		// render chat input
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = 200.0f;
+		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 		
 		if(m_Mode == MODE_ALL)
