@@ -1433,8 +1433,8 @@ void CGameClient::CClientData::UpdateRenderInfo(int ClientID)
 		}
 		else
 		{
-			m_RenderInfo.m_ColorBody = vec4(1,1,1,1);
-			m_RenderInfo.m_ColorFeet = vec4(1,1,1,1);
+			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(12895054);
+			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(12895054);
 		}
 	}
 	else if(g_Config.m_TcForceSkinTeam1 && ClientID != g_GameClient.m_Snap.m_LocalClientID) // Force DM skin
