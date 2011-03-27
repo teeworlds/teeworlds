@@ -156,10 +156,14 @@ void CMenus::RenderSPPage0(CUIRect MainView)
 		m_NeedSendinfo = true;
 	}
 
-	// dynamic camera
+	CUIRect Left, Right;
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(230.0f, &Button, 0);
+	MainView.VSplitMid(&Left, &Right);
+	Left.VSplitRight(5.0f, &Left, 0);
+	Right.VMargin(5.0f, &Right);
+
+	// dynamic camera
+	Left.HSplitTop(20.0f, &Button, &Left);
 	static int s_DynamicCameraButton = 0;
 	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClMouseDeadzone != 0, &Button))
 	{
@@ -178,35 +182,35 @@ void CMenus::RenderSPPage0(CUIRect MainView)
 	}
 
 	// weapon pickup
-	MainView.HSplitTop(5.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(230.0f, &Button, 0);
+	Left.HSplitTop(5.0f, 0, &Left);
+	Left.HSplitTop(20.0f, &Button, &Left);
 	if(DoButton_CheckBox(&g_Config.m_ClAutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 		g_Config.m_ClAutoswitchWeapons ^= 1;
 
 	// name plates
-	MainView.HSplitTop(5.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(230.0f, &Button, 0);
+	Right.HSplitTop(20.0f, &Button, &Right);
 	if(DoButton_CheckBox(&g_Config.m_ClNameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
 		g_Config.m_ClNameplates ^= 1;
 
 	if(g_Config.m_ClNameplates)
 	{
-		MainView.HSplitTop(2.5f, 0, &MainView);
-		MainView.VSplitLeft(30.0f, 0, &MainView);
-		MainView.VSplitLeft(200.0f, &MainView, 0);
-		MainView.HSplitTop(20.0f, &Button, &MainView);
+		Right.HSplitTop(2.5f, 0, &Right);
+		Right.VSplitLeft(30.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Button, &Right);
 		if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 			g_Config.m_ClNameplatesAlways ^= 1;
 		
-		MainView.HSplitTop(2.5f, 0, &MainView);
-		MainView.HSplitTop(20.0f, &Label, &MainView);
-		MainView.HSplitTop(20.0f, &Button, &MainView);
+		Right.HSplitTop(2.5f, 0, &Right);
+		Right.HSplitTop(20.0f, &Label, &Right);
+		Right.HSplitTop(20.0f, &Button, &Right);
 		str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Name plates size"), g_Config.m_ClNameplatesSize);
 		UI()->DoLabelScaled(&Label, aBuf, 13.0f, -1);
 		Button.HMargin(2.0f, &Button);
 		g_Config.m_ClNameplatesSize = (int)(DoScrollbarH(&g_Config.m_ClNameplatesSize, &Button, g_Config.m_ClNameplatesSize/100.0f)*100.0f+0.1f);
+
+		Right.HSplitTop(20.0f, &Button, &Right);
+		if(DoButton_CheckBox(&g_Config.m_ClNameplatesTeamcolors, Localize("Use team colors for name plates"), g_Config.m_ClNameplatesTeamcolors, &Button))
+			g_Config.m_ClNameplatesTeamcolors ^= 1;
 	}
 }
 
