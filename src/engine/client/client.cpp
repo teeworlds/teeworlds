@@ -37,7 +37,7 @@
 #include <versionsrv/versionsrv.h>
 
 #include "friends.h"
-#include "srvbrowse.h"
+#include "serverbrowser.h"
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)

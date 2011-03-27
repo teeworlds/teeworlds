@@ -17,7 +17,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-#include "srvbrowse.h"
+#include "serverbrowser.h"
 
 class SortWrap
 {
