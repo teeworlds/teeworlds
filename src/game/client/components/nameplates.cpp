@@ -34,7 +34,7 @@ void CNamePlates::RenderNameplate(
 		
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
-		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 		{
 			if(pPlayerInfo->m_Team == TEAM_RED)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
