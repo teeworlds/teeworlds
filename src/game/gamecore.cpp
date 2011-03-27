@@ -317,7 +317,7 @@ void CCharacterCore::Tick(bool UseInput)
 			// handle player <-> player collision
 			float Distance = distance(m_Pos, pCharCore->m_Pos);
 			vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
-			if(Distance < PhysSize*1.25f && Distance > 1.0f)
+			if(Distance < PhysSize*1.25f && Distance > 0.0f)
 			{
 				float a = (PhysSize*1.45f - Distance);
 				float Velocity = 0.5f;
@@ -361,8 +361,40 @@ void CCharacterCore::Move()
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 	
 	m_Vel.x = m_Vel.x*RampValue;
-	m_pCollision->MoveBox(&m_Pos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	
+	vec2 NewPos = m_Pos;
+	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
+
+	if(m_pWorld && m_pWorld->m_Tuning.m_PlayerCollision)
+	{
+		// check player collision
+		float Distance = distance(m_Pos, NewPos);
+		int End = Distance+1;
+		for(int i = 0; i < End; i++)
+		{
+			float a = i/Distance;
+			vec2 Pos = mix(m_Pos, NewPos, a);
+			for(int p = 0; p < MAX_CLIENTS; p++)
+			{
+				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[p];
+				if(!pCharCore || pCharCore == this)
+					continue;
+				float D = distance(Pos, pCharCore->m_Pos);
+				if(D < 28.0f*1.25f && D > 0.0f)
+				{
+					if(a > 0.0f)
+						m_Pos = Pos;
+					else
+						m_Pos = NewPos;
+					return;
+				}
+			}
+		}
+	
+		m_Pos = NewPos;
+	}
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
