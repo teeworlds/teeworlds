@@ -477,6 +477,9 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
+Change settings
+== 
+
 Clan
 == 
 
@@ -516,19 +519,19 @@ Folder
 Free-View
 == 
 
-Friend
-== 
-
 Friends
-== 
-
-Ignore
 == 
 
 Invalid Demo
 == 
 
+Kick player
+== 
+
 Length:
+== 
+
+Make player a spectator
 == 
 
 Map:
@@ -603,6 +606,9 @@ Show chat
 Show friends
 == 
 
+Show ingame HUD
+== 
+
 Size:
 == 
 
@@ -633,6 +639,9 @@ Unable to delete the demo
 Unable to rename the demo
 == 
 
+Use team colors for name plates
+== 
+
 Version:
 == 
 
@@ -649,4 +658,10 @@ no limit
 == 
 
 ##### old translations #####
+
+Friend
+== 
+
+Ignore
+== 
 
