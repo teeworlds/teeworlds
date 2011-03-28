@@ -583,10 +583,11 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	
 	// get demo type
 	if(!str_comp(m_Info.m_Header.m_aType, "client"))
-			m_DemoType = DEMOTYPE_CLIENT;
+		m_DemoType = DEMOTYPE_CLIENT;
 	else if(!str_comp(m_Info.m_Header.m_aType, "server"))
 		m_DemoType = DEMOTYPE_SERVER;
-	else DEMOTYPE_INVALID;
+	else
+		m_DemoType = DEMOTYPE_INVALID;
 	
 	// read map
 	int MapSize = (m_Info.m_Header.m_aMapSize[0]<<24) | (m_Info.m_Header.m_aMapSize[1]<<16) | (m_Info.m_Header.m_aMapSize[2]<<8) | (m_Info.m_Header.m_aMapSize[3]);
