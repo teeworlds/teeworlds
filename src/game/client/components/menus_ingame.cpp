@@ -115,7 +115,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, -1);
 
 	CUIRect Player;
-	static int s_aPlayerIDs[MAX_CLIENTS][2] = {0};
+	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || i == m_pClient->m_Snap.m_LocalClientID)
