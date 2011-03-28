@@ -69,7 +69,7 @@ void CProjectile::Tick()
 	
 	if(TargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 	{
-		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
+		if(m_LifeSpan >= 0 || m_SoundImpact >= 0)
 			GameServer()->CreateSound(CurPos, m_SoundImpact);
 
 		if(m_Explosive)
