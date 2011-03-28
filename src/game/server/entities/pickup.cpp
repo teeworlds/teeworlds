@@ -45,66 +45,7 @@ void CPickup::Tick()
 	if(pChr && pChr->IsAlive())
 	{
 		// player picked us up, is someone was hooking us, let them go
-		int RespawnTime = -1;
-		switch (m_Type)
-		{
-			case POWERUP_HEALTH:
-				if(pChr->IncreaseHealth(1))
-				{
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
-				}
-				break;
-				
-			case POWERUP_ARMOR:
-				if(pChr->IncreaseArmor(1))
-				{
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
-				}
-				break;
-
-			case POWERUP_WEAPON:
-				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS)
-				{
-					if(pChr->GiveWeapon(m_Subtype, 10))
-					{
-						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
-
-						if(m_Subtype == WEAPON_GRENADE)
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
-						else if(m_Subtype == WEAPON_SHOTGUN)
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
-						else if(m_Subtype == WEAPON_RIFLE)
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
-
-						if(pChr->GetPlayer())
-							GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), m_Subtype);
-					}
-				}
-				break;
-				
-			case POWERUP_NINJA:
-				{
-					// activate ninja on target player
-					pChr->GiveNinja();
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
-
-					// loop through all players, setting their emotes
-					CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
-					for(; pC; pC = (CCharacter *)pC->TypeNext())
-					{
-						if (pC != pChr)
-							pC->SetEmote(EMOTE_SURPRISE, Server()->Tick() + Server()->TickSpeed());
-					}
-
-					pChr->SetEmote(EMOTE_ANGRY, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
-					break;
-				}
-				
-			default:
-				break;
-		};
+		int RespawnTime = OnPickup(pChr);
 
 		if(RespawnTime >= 0)
 		{
