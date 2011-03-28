@@ -30,7 +30,7 @@ public:
 	virtual int ClientCountry(int ClientID) = 0;
 	virtual bool ClientIngame(int ClientID) = 0;
 	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) = 0;
-	virtual void GetClientIP(int ClientID, char *pIPString, int Size) = 0;
+	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) = 0;
 	virtual int *LatestInput(int ClientID, int *pSize) = 0;
 	
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;

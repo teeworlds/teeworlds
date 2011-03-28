@@ -492,12 +492,10 @@ void CServerBrowser::Refresh(int Type)
 		mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 		Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentToken;
 
+		/* do the broadcast version */
 		Packet.m_ClientID = -1;
 		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_Address.ip[0] = 255;
-		Packet.m_Address.ip[1] = 255;
-		Packet.m_Address.ip[2] = 255;
-		Packet.m_Address.ip[3] = 255;
+		Packet.m_Address.type = NETTYPE_ALL|NETTYPE_LINK_BROADCAST;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS;
 		Packet.m_DataSize = sizeof(Buffer);
 		Packet.m_pData = Buffer;

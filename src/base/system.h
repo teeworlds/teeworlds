@@ -418,15 +418,22 @@ int64 time_freq();
 unsigned time_timestamp();
 
 /* Group: Network General */
-typedef int NETSOCKET;
+typedef struct
+{
+	int type;
+	int ipv4sock;
+	int ipv6sock;
+} NETSOCKET;
+
 enum
 {
-	NETSOCKET_INVALID = -1,
+	NETADDR_MAXSTRSIZE = 1+(8*4+7)+1+1+5+1, // [XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX]:XXXXX
 	
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
-	NETTYPE_ALL = ~0
+	NETTYPE_LINK_BROADCAST = 4,
+	NETTYPE_ALL = NETTYPE_IPV4|NETTYPE_IPV6
 };
 
 typedef struct

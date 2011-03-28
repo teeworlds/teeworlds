@@ -33,7 +33,7 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 	
 	// open socket
 	m_Socket = net_udp_create(BindAddr);
-	if(m_Socket == NETSOCKET_INVALID)
+	if(!m_Socket.type)
 		return false;
 	
 	// clamp clients

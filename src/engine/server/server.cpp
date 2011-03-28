@@ -333,12 +333,13 @@ int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)
 	return 0;
 }
 
-void CServer::GetClientIP(int ClientID, char *pIPString, int Size)
+void CServer::GetClientAddr(int ClientID, char *pAddrStr, int Size)
 {
 	if(ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State == CClient::STATE_INGAME)
 	{
 		NETADDR Addr = m_NetServer.ClientAddr(ClientID);
-		str_format(pIPString, Size, "%d.%d.%d.%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+		Addr.port = 0;
+		net_addr_str(&Addr, pAddrStr, Size);
 	}
 }
 	
@@ -587,12 +588,10 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	CServer *pThis = (CServer *)pUser;
 	
 	NETADDR Addr = pThis->m_NetServer.ClientAddr(ClientID);
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
-		ClientID,
-		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
-		pReason
-	);
+	str_format(aBuf, sizeof(aBuf), "client dropped. cid=%d addr=%s reason='%s'", ClientID, aAddrStr,	pReason);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 
 	// notify the mod about the drop
@@ -732,10 +731,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
 			{
 				Addr = m_NetServer.ClientAddr(ClientID);
+				char aAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 					
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "player is ready. ClientID=%x ip=%d.%d.%d.%d",
-					ClientID, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+				str_format(aBuf, sizeof(aBuf), "player is ready. ClientID=%x addr=%s", ClientID, aAddrStr);
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 				m_aClients[ClientID].m_State = CClient::STATE_READY;
 				GameServer()->OnClientConnected(ClientID);
@@ -747,10 +747,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientID))
 			{
 				Addr = m_NetServer.ClientAddr(ClientID);
+				char aAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 					
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "player has entered the game. ClientID=%x ip=%d.%d.%d.%d",
-					ClientID, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+				str_format(aBuf, sizeof(aBuf), "player has entered the game. ClientID=%x addr=%s", ClientID, aAddrStr);
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				m_aClients[ClientID].m_State = CClient::STATE_INGAME;
 				GameServer()->OnClientEnter(ClientID);
@@ -1102,9 +1103,8 @@ int CServer::Run()
 	}
 	
 	// start server
-	// TODO: IPv6 support
 	NETADDR BindAddr;
-	if(g_Config.m_SvBindaddr[0] && net_host_lookup(g_Config.m_SvBindaddr, &BindAddr, NETTYPE_IPV4) == 0)
+	if(g_Config.m_SvBindaddr[0] && net_host_lookup(g_Config.m_SvBindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// sweet!
 		BindAddr.port = g_Config.m_SvPort;
@@ -1112,6 +1112,7 @@ int CServer::Run()
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));
+		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_SvPort;
 	}
 	
@@ -1342,8 +1343,11 @@ void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
 	
 	if(net_addr_from_str(&Addr, pStr) == 0 && !pServer->BanRemove(Addr))
 	{
+		char aAddrStr[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+		str_format(aBuf, sizeof(aBuf), "unbanned %s", aAddrStr);
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 	}
 	else if(StrAllnum(pStr))
@@ -1354,8 +1358,11 @@ void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid ban index");
 		else if(!pServer->BanRemove(Info.m_Addr))
 		{
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(&Info.m_Addr, aAddrStr, sizeof(aAddrStr));
+
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", Info.m_Addr.ip[0], Info.m_Addr.ip[1], Info.m_Addr.ip[2], Info.m_Addr.ip[3]);
+			str_format(aBuf, sizeof(aBuf), "unbanned %s", aAddrStr);
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		}
 	}
@@ -1367,6 +1374,7 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser)
 {
 	unsigned Now = time_timestamp();
 	char aBuf[1024];
+	char aAddrStr[NETADDR_MAXSTRSIZE];
 	CServer* pServer = (CServer *)pUser;
 	
 	int Num = pServer->m_NetServer.BanNum();
@@ -1375,15 +1383,16 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser)
 		CNetServer::CBanInfo Info;
 		pServer->m_NetServer.BanGet(i, &Info);
 		NETADDR Addr = Info.m_Addr;
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 		
 		if(Info.m_Expires == -1)
 		{
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+			str_format(aBuf, sizeof(aBuf), "#%s for life", i, aAddrStr);
 		}
 		else
 		{
 			unsigned t = Info.m_Expires - Now;
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], t/60, t%60);
+			str_format(aBuf, sizeof(aBuf), "#%s for %d minutes and %d seconds", i, aAddrStr, t/60, t%60);
 		}
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 	}
@@ -1396,6 +1405,7 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 	int i;
 	NETADDR Addr;
 	char aBuf[1024];
+	char aAddrStr[NETADDR_MAXSTRSIZE];
 	CServer* pServer = (CServer *)pUser;
 
 	for(i = 0; i < MAX_CLIENTS; i++)
@@ -1403,13 +1413,12 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 		if(pServer->m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			Addr = pServer->m_NetServer.ClientAddr(i);
+			net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
-				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
-					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
+				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s name='%s' score=%d", i, aAddrStr,
 					pServer->m_aClients[i].m_aName, pServer->m_aClients[i].m_Score);
 			else
-				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d connecting",
-					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
+				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s connecting", i, aAddrStr);
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 		}
 	}

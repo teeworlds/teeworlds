@@ -692,20 +692,8 @@ void CClient::Connect(const char *pAddress)
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	ServerInfoRequest();
-	str_copy(aBuf, m_aServerAddressStr, sizeof(aBuf));
 
-	for(int k = 0; aBuf[k]; k++)
-	{
-		if(aBuf[k] == ':')
-		{
-			Port = str_toint(aBuf+k+1);
-			aBuf[k] = 0;
-			break;
-		}
-	}
-
-	// TODO: IPv6 support
-	if(net_host_lookup(aBuf, &m_ServerAddress, NETTYPE_IPV4) != 0)
+	if(net_host_lookup(m_aServerAddressStr, &m_ServerAddress, NETTYPE_ALL) != 0)
 	{
 		char aBufMsg[256];
 		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
@@ -714,7 +702,8 @@ void CClient::Connect(const char *pAddress)
 	}
 
 	m_RconAuthed = 0;
-	m_ServerAddress.port = Port;
+	if(m_ServerAddress.port == 0)
+		m_ServerAddress.port = Port;
 	m_NetClient.Connect(&m_ServerAddress);
 	SetState(IClient::STATE_CONNECTING);
 
@@ -1119,9 +1108,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			Info.m_NumPlayers < 0 || Info.m_NumPlayers > Info.m_NumClients || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > Info.m_MaxClients)
 			return;
 
-		str_format(Info.m_aAddress, sizeof(Info.m_aAddress), "%d.%d.%d.%d:%d",
-			pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2],
-			pPacket->m_Address.ip[3], pPacket->m_Address.port);
+		net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress));
 
 		for(int i = 0; i < Info.m_NumClients; i++)
 		{
@@ -1868,7 +1855,12 @@ void CClient::Run()
 	{
 		NETADDR BindAddr;
 		mem_zero(&BindAddr, sizeof(BindAddr));
-		m_NetClient.Open(BindAddr, 0);
+		BindAddr.type = NETTYPE_ALL;
+		if(!m_NetClient.Open(BindAddr, 0))
+		{
+			dbg_msg("client", "couldn't start network");
+			return;
+		}
 	}
 
 	// connect to the server if wanted

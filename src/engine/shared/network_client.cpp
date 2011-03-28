@@ -5,11 +5,17 @@
 
 bool CNetClient::Open(NETADDR BindAddr, int Flags)
 {
+	// open socket
+	NETSOCKET Socket;
+	Socket = net_udp_create(BindAddr);
+	if(!Socket.type)
+		return false;
+
 	// clean it
 	mem_zero(this, sizeof(*this));
 
-	// open socket
-	m_Socket = net_udp_create(BindAddr);
+	// init
+	m_Socket = Socket;
 	m_Connection.Init(m_Socket);
 	return true;
 }
