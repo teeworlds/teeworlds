@@ -26,10 +26,10 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked,
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int SpriteID, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_Sprite(const void *pID, int ImageID, int SpriteID, int Checked, const CUIRect *pRect)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEMOBUTTONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SpriteID);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
@@ -147,12 +147,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_PlayPauseButton = 0;
 		if(!pInfo->m_Paused)
 		{
-			if(DoButton_DemoPlayer_Sprite(&s_PlayPauseButton, SPRITE_DEMOBUTTON_PAUSE, pInfo->m_Paused, &Button))
+			if(DoButton_Sprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, pInfo->m_Paused, &Button))
 				DemoPlayer()->Pause();
 		}
 		else
 		{
-			if(DoButton_DemoPlayer_Sprite(&s_PlayPauseButton, SPRITE_DEMOBUTTON_PLAY, !pInfo->m_Paused, &Button))
+			if(DoButton_Sprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PLAY, !pInfo->m_Paused, &Button))
 				DemoPlayer()->Unpause();
 		}
 		
@@ -161,7 +161,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;
-		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_STOP, false, &Button))
+		if(DoButton_Sprite(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, false, &Button))
 		{
 			m_pClient->OnReset();
 			DemoPlayer()->Pause(); 
@@ -172,14 +172,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_DemoPlayer_Sprite(&s_SlowDownButton, SPRITE_DEMOBUTTON_SLOWER, 0, &Button) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		if(DoButton_Sprite(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, 0, &Button) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 			DecreaseDemoSpeed = true;
 		
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_FastForwardButton = 0;
-		if(DoButton_DemoPlayer_Sprite(&s_FastForwardButton, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
+		if(DoButton_Sprite(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
 			IncreaseDemoSpeed = true;
 
 		// speed meter
