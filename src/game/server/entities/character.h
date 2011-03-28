@@ -8,6 +8,7 @@
 #include <game/generated/protocol.h>
 
 #include <game/gamecore.h>
+#include "weapon.h"
 
 enum
 {
@@ -56,11 +57,15 @@ public:
 	
 	bool GiveWeapon(int Weapon, int Ammo);
 	void GiveNinja();
+	void EndNinja();
 	
 	void SetEmote(int Emote, int Tick);
 	
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
+	CCharacterCore *GetCore() { return &m_Core; }
+
+	bool WillFire();
 	
 private:
 	// player controlling this character
@@ -68,28 +73,18 @@ private:
 	
 	bool m_Alive;
 
-	// weapon info
-	CEntity *m_apHitObjects[10];
-	int m_NumObjectsHit;
-	
-	struct WeaponStat
-	{
-		int m_AmmoRegenStart;
-		int m_Ammo;
-		int m_Ammocost;
-		bool m_Got;
-		
-	} m_aWeapons[NUM_WEAPONS];
-	
-	int m_ActiveWeapon;
-	int m_LastWeapon;
+	CWeapon *m_apWeapons[NUM_WEAPONS];
+	CWeapon *m_pActiveWeapon;
+	CWeapon *m_pLastWeapon;
 	int m_QueuedWeapon;
-	
+
+	void InitWeapons(CGameWorld *pWorld);
+
 	int m_ReloadTimer;
 	int m_AttackTick;
 	
 	int m_DamageTaken;
-
+	
 	int m_EmoteType;
 	int m_EmoteStop;
 	
@@ -109,16 +104,9 @@ private:
 	int m_DamageTakenTick;
 
 	int m_Health;
+	int m_MaxHealth;
 	int m_Armor;
-
-	// ninja
-	struct
-	{
-		vec2 m_ActivationDir;
-		int m_ActivationTick;
-		int m_CurrentMoveTime;
-		
-	} m_Ninja;
+	int m_MaxArmor;
 
 	int m_PlayerState;// if the client is chatting, accessing a menu or so
 
