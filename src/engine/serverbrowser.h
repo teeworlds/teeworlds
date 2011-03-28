@@ -44,7 +44,7 @@ public:
 	char m_aName[64];
 	char m_aMap[32];
 	char m_aVersion[32];
-	char m_aAddress[24];
+	char m_aAddress[NETADDR_MAXSTRSIZE];
 	CClient m_aClients[MAX_CLIENTS];
 };
 

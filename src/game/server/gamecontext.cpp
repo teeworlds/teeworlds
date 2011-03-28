@@ -414,10 +414,10 @@ void CGameContext::OnTick()
 			if(m_VoteUpdate)
 			{
 				// count votes
-				char aaBuf[MAX_CLIENTS][64] = {{0}};
+				char aaBuf[MAX_CLIENTS][NETADDR_MAXSTRSIZE] = {{0}};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 					if(m_apPlayers[i])
-						Server()->GetClientIP(i, aaBuf[i], 64);
+						Server()->GetClientAddr(i, aaBuf[i], NETADDR_MAXSTRSIZE);
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
@@ -709,9 +709,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				str_format(aCmd, sizeof(aCmd), "kick %d Kicked by vote", KickID);
 			else
 			{
-				char aBuf[64] = {0};
-				Server()->GetClientIP(KickID, aBuf, sizeof(aBuf));
-				str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aBuf, g_Config.m_SvVoteKickBantime);
+				char aAddrStr[NETADDR_MAXSTRSIZE] = {0};
+				Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
+				str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aAddrStr, g_Config.m_SvVoteKickBantime);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aCmd);
 			}
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
@@ -1229,9 +1230,9 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 		}
 		else
 		{
-			char aIP[64] = {0};
-			pSelf->Server()->GetClientIP(KickID, aIP, sizeof(aIP));
-			str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aIP, g_Config.m_SvVoteKickBantime, pReason);
+			char aAddrStr[NETADDR_MAXSTRSIZE] = {0};
+			pSelf->Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
+			str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aAddrStr, g_Config.m_SvVoteKickBantime, pReason);
 			pSelf->Console()->ExecuteLine(aBuf);
 		}
 	}
