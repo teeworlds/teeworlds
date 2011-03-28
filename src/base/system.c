@@ -710,16 +710,19 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 		/* ipv6 */
 		struct sockaddr_in6 sa6;
 		char buf[128];
-		int i, size;
+		int i;
 		for(i = 0; i < 127 && str[i] && str[i] != ']'; i++)
 			buf[i] = str[i];
 		buf[i] = 0;
 		str += i;
 #if defined(CONF_FAMILY_WINDOWS)
-		sa6.sin6_family = AF_INET6;
-		size = (int)sizeof(sa6);
-		if(WSAStringToAddress(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
-			return -1;
+		{
+			int size;
+			sa6.sin6_family = AF_INET6;
+			size = (int)sizeof(sa6);
+			if(WSAStringToAddress(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
+				return -1;
+		}
 #else
 		if(inet_pton(AF_INET6, buf, &sa6) != 1)
 			return -1;
@@ -1112,7 +1115,7 @@ int net_tcp_connect(NETSOCKET sock, const NETADDR *a)
 
 int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a)
 {
-	struct sockaddr addr;
+	/* struct sockaddr addr; */
 	int res = 0;
 
 	/*
