@@ -534,6 +534,9 @@ Add Friend
 Are you sure that you want to remove the player from your friends list?
 == 
 
+Change settings
+== 
+
 Clan
 == 
 
@@ -555,16 +558,16 @@ Demo details
 Free-View
 == 
 
-Friend
-== 
-
 Friends
 == 
 
-Ignore
+Kick player
 == 
 
 Length:
+== 
+
+Make player a spectator
 == 
 
 Map:
@@ -618,6 +621,9 @@ Server filter
 Show friends
 == 
 
+Show ingame HUD
+== 
+
 Size:
 == 
 
@@ -636,6 +642,9 @@ Type:
 Unable to rename the demo
 == 
 
+Use team colors for name plates
+== 
+
 Version:
 == 
 
@@ -649,4 +658,10 @@ Warmup
 == 
 
 ##### old translations #####
+
+Ignore
+== 
+
+Friend
+== 
 
