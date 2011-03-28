@@ -229,6 +229,16 @@ void CPlayer::SetTeam(int Team)
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	
 	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
+
+	if(Team == TEAM_SPECTATORS)
+	{
+		// update spectator modes
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_SpectatorID == m_ClientID)
+				GameServer()->m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
+		}
+	}
 }
 
 void CPlayer::TryRespawn()
