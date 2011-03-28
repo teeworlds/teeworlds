@@ -16,7 +16,9 @@ public:
 	virtual void Tick();
 	virtual void Snap(int SnappingClient);
 	
-private:
+	virtual int OnPickup(CCharacter *pChr) {return -1;}
+
+protected:
 	int m_Type;
 	int m_Subtype;
 	int m_SpawnTick;
