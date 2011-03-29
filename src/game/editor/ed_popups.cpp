@@ -352,13 +352,12 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	View.HSplitBottom(10.0f, &View, &Button);
-
 	// aspect ratio button
+	View.HSplitBottom(10.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
 	CLayerQuads *pLayer = (CLayerQuads *)pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS);
 	if(pLayer && pLayer->m_Image >= 0 && pLayer->m_Image < pEditor->m_Map.m_lImages.size())
 	{
-		View.HSplitBottom(12.0f, &View, &Button);
 		static int s_AspectRatioButton = 0;
 		if(pEditor->DoButton_Editor(&s_AspectRatioButton, "Aspect ratio", 0, &Button, 0, "Resizes the current Quad based on the aspect ratio of the image"))
 		{
@@ -382,11 +381,25 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 			pEditor->m_Map.m_Modified = true;
 			return 1;
 		}
-		View.HSplitBottom(6.0f, &View, &Button);
-		
+	}
+
+	// align button
+	View.HSplitBottom(6.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_AlignButton = 0;
+	if(pEditor->DoButton_Editor(&s_AlignButton, "Align", 0, &Button, 0, "Aligns coordinates of the quad points"))
+	{
+		for(int k = 1; k < 4; k++)
+		{
+			pQuad->m_aPoints[k].x = 1000.0f * (int(pQuad->m_aPoints[k].x) / 1000);
+			pQuad->m_aPoints[k].y = 1000.0f * (int(pQuad->m_aPoints[k].y) / 1000);
+		}
+		pEditor->m_Map.m_Modified = true;
+		return 1;
 	}
 
 	// square button
+	View.HSplitBottom(6.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_Button = 0;
 	if(pEditor->DoButton_Editor(&s_Button, "Square", 0, &Button, 0, "Squares the current quad"))
@@ -415,7 +428,9 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 
 	enum
 	{
-		PROP_POS_ENV=0,
+		PROP_POS_X=0,
+		PROP_POS_Y,
+		PROP_POS_ENV,
 		PROP_POS_ENV_OFFSET,
 		PROP_COLOR_ENV,
 		PROP_COLOR_ENV_OFFSET,
@@ -423,6 +438,8 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	};
 	
 	CProperty aProps[] = {
+		{"Pos X", pQuad->m_aPoints[4].x/1000, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", pQuad->m_aPoints[4].y/1000, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Pos. Env", pQuad->m_PosEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
 		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Color Env", pQuad->m_ColorEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
@@ -437,6 +454,18 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	if(Prop != -1)
 		pEditor->m_Map.m_Modified = true;
 	
+	if(Prop == PROP_POS_X)
+	{
+		float Offset = NewVal*1000-pQuad->m_aPoints[4].x;
+		for(int k = 0; k < 5; ++k)
+			pQuad->m_aPoints[k].x += Offset;
+	}
+	if(Prop == PROP_POS_Y)
+	{
+		float Offset = NewVal*1000-pQuad->m_aPoints[4].y;
+		for(int k = 0; k < 5; ++k)
+			pQuad->m_aPoints[k].y += Offset;
+	}
 	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
 	if(Prop == PROP_POS_ENV_OFFSET) pQuad->m_PosEnvOffset = NewVal;
 	if(Prop == PROP_COLOR_ENV) pQuad->m_ColorEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
@@ -451,11 +480,14 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 	
 	enum
 	{
-		PROP_COLOR=0,
+		PROP_POS_X=0,
+		PROP_POS_Y,
+		PROP_COLOR,
 		NUM_PROPS,
 	};
 	
 	int Color = 0;
+	int x = 0, y = 0;
 
 	for(int v = 0; v < 4; v++)
 	{
@@ -466,18 +498,38 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 			Color |= pQuad->m_aColors[v].g<<16;
 			Color |= pQuad->m_aColors[v].b<<8;
 			Color |= pQuad->m_aColors[v].a;
+
+			x = pQuad->m_aPoints[v].x/1000;
+			y = pQuad->m_aPoints[v].y/1000;
 		}
 	}
 	
 	
 	CProperty aProps[] = {
+		{"Pos X", x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Color", Color, PROPTYPE_COLOR, -1, pEditor->m_Map.m_lEnvelopes.size()},
 		{0},
 	};
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		pEditor->m_Map.m_Modified = true;
+
+	if(Prop == PROP_POS_X)
+	{
+		for(int v = 0; v < 4; v++)
+			if(pEditor->m_SelectedPoints&(1<<v))
+				pQuad->m_aPoints[v].x = NewVal*1000;
+	}
+	if(Prop == PROP_POS_Y)
+	{
+		for(int v = 0; v < 4; v++)
+			if(pEditor->m_SelectedPoints&(1<<v))
+				pQuad->m_aPoints[v].y = NewVal*1000;
+	}
 	if(Prop == PROP_COLOR)
 	{
 		for(int v = 0; v < 4; v++)
@@ -491,7 +543,6 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 				pQuad->m_aColors[v].a = NewVal&0xff;
 			}
 		}
-		pEditor->m_Map.m_Modified = true;
 	}
 	
 	return 0;	
