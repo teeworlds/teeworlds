@@ -21,6 +21,7 @@
 #include <engine/shared/engine.h>
 #include <engine/shared/protocol.h>
 #include <engine/shared/demo.h>
+#include <engine/shared/ghost.h>
 #include <engine/shared/network.h>
 
 #include "srvbrowse.h"
@@ -125,6 +126,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	CNetClient m_NetClient;
 	CDemoPlayer m_DemoPlayer;
 	CDemoRecorder m_DemoRecorder;
+	CGhostRecorder m_GhostRecorder;
 	CEngine m_Engine;
 	CServerBrowser m_ServerBrowser;
 
@@ -321,6 +323,11 @@ public:
 	virtual const char* GetCurrentMap();
 	virtual int GetCurrentMapCrc();
 	virtual const char* RaceRecordStart(const char *pFilename);
+
+	void GhostRecorder_Start(const char* pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
+	void GhostRecorder_Stop(float Time=0.0f);
+	bool GhostIsRecording();
+	void GhostRecorder_AddInfo(IGhostRecorder::CGhostCharacter *pPlayer);
 
 	void RegisterCommands();
 

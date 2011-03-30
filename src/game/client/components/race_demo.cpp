@@ -7,6 +7,7 @@
 #include <engine/storage.h>
 
 #include "menus.h"
+#include "ghost.h"
 #include "race_demo.h"
 
 CRaceDemo::CRaceDemo()
@@ -70,12 +71,7 @@ void CRaceDemo::OnReset()
 
 void CRaceDemo::OnShutdown()
 {
-	if(Client()->DemoIsRecording())
-		Client()->DemoRecord_Stop();
-		
-	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
-	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
+	OnReset();
 }
 
 void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
@@ -181,18 +177,8 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 	{
 		char aPlayerName[MAX_NAME_LENGTH];
 		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
-		
-		// check the player name
-		for(int i = 0; i < MAX_NAME_LENGTH; i++)
-		{
-			if(!aPlayerName[i])
-				break;
-			
-			if(aPlayerName[i] == '\\' || aPlayerName[i] == '/' || aPlayerName[i] == '|' || aPlayerName[i] == ':' || aPlayerName[i] == '*' || aPlayerName[i] == '?' || aPlayerName[i] == '<' || aPlayerName[i] == '>' || aPlayerName[i] == '"')
-				aPlayerName[i] = '%';
-				
-			str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%5.2f_%s.demo", pDemo, m_Time, aPlayerName);
-		}
+		CGhost::ClearFilename(aPlayerName, MAX_NAME_LENGTH);
+		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%5.2f_%s.demo", pDemo, m_Time, aPlayerName);
 	}
 	else
 		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%5.2f.demo", pDemo, m_Time);

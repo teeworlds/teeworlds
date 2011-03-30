@@ -2173,6 +2173,40 @@ const char* CClient::RaceRecordStart(const char *pFilename)
 	return m_aCurrentMap;
 }
 
+void CClient::GhostRecorder_Start(const char* pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
+{
+	// check the player name
+	char aName[MAX_NAME_LENGTH];
+	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
+	for(int i = 0; i < MAX_NAME_LENGTH; i++)
+	{
+		if(!aName[i])
+			break;
+		
+		if(aName[i] == '\\' || aName[i] == '/' || aName[i] == '|' || aName[i] == ':' || aName[i] == '*' || aName[i] == '?' || aName[i] == '<' || aName[i] == '>' || aName[i] == '"')
+			aName[i] = '%';
+	}
+
+	char aFilename[128];
+	str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%08x_tmp.gho", GetCurrentMap(), aName, GetCurrentMapCrc());
+	m_GhostRecorder.Start(Storage(), m_pConsole, aFilename, GetCurrentMap(), GetCurrentMapCrc(), g_Config.m_PlayerName, pSkinName, UseCustomColor, ColorBody, ColorFeet);
+}
+
+void CClient::GhostRecorder_Stop(float Time)
+{
+	m_GhostRecorder.Stop(Time);
+}
+
+bool CClient::GhostIsRecording()
+{
+	return m_GhostRecorder.IsRecording();
+}
+
+void CClient::GhostRecorder_AddInfo(IGhostRecorder::CGhostCharacter *pPlayer)
+{
+	m_GhostRecorder.AddInfos(pPlayer);
+}
+
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;

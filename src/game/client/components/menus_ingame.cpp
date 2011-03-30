@@ -10,6 +10,7 @@
 #include <engine/storage.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
+#include <engine/shared/ghost.h>
 #include <engine/shared/config.h>
 
 #include <game/generated/protocol.h>
@@ -489,10 +490,13 @@ void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageTyp
 		(!IsDir && (Length < 4 || str_comp(pName+Length-4, ".gho"))))
 		return;
 	
-	CGhost::CGhostHeader Header;
+	IGhostRecorder::CGhostHeader Header;
 	if(!pSelf->m_pClient->m_pGhost->GetInfo(pName, &Header))
 		return;
 	
+	if(Header.m_Time <= 0)
+		return;
+
 	CGhostItem Item;
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));

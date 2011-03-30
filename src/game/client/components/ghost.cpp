@@ -25,7 +25,7 @@ so it will be affected by lags
 */
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 2;
+static const unsigned char gs_ActVersion = 3;
 
 CGhost::CGhost()
 {
@@ -41,21 +41,12 @@ CGhost::CGhost()
 	m_StartRenderTick = -1;
 }
 
-void CGhost::AddInfos(CGhostCharacter Player)
+void CGhost::AddInfos(IGhostRecorder::CGhostCharacter Player)
 {
-	if(!m_Recording)
-		return;
-	
-	// Just to be sure it doesnt eat too much memory, the first test should be enough anyway
-	if(m_CurGhost.m_Path.size() > Client()->GameTickSpeed()*60*20)
-	{
-		dbg_msg("ghost", "20 minutes elapsed. Stopping ghost record");
-		StopRecord();
-		m_CurGhost.m_Path.clear();
-		return;
-	}
-	
-	m_CurGhost.m_Path.add(Player);
+	if(m_Recording)
+		m_CurGhost.m_Path.add(Player);
+	if(Client()->GhostIsRecording())
+		Client()->GhostRecorder_AddInfo(&Player);
 }
 
 void CGhost::OnRender()
@@ -68,7 +59,6 @@ void CGhost::OnRender()
 	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
 		(m_pClient->m_IsFastCap && m_pClient->m_FlagPos != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_FlagPos) < 32)))
 	{
-		//dbg_msg("ghost", "race started");
 		m_RaceState = RACE_STARTED;
 		StartRender();
 		StartRecord();
@@ -86,9 +76,13 @@ void CGhost::OnRender()
 			else
 				r.front() = m_CurGhost;
 			
-			Save();
+			bool Recording = Client()->GhostIsRecording();
+			StopRecord(m_BestTime);
+			Save(Recording);
 		}
-		StopRecord();
+		else
+			StopRecord();
+		
 		StopRender();
 		OnReset();
 	}
@@ -100,14 +94,13 @@ void CGhost::OnRender()
 		AddInfos(GetGhostCharacter(Char));
 
 	// Play the ghost
-	if(!m_Rendering || !g_Config.m_ClRaceShowGhost)
+	if(!m_Rendering)
 		return;
 	
 	m_CurPos = Client()->PredGameTick()-m_StartRenderTick;
 
 	if(m_lGhosts.size() == 0 || m_CurPos < 0)
 	{
-		//dbg_msg("ghost", "Ghost path done");
 		StopRender();
 		return;
 	}
@@ -119,8 +112,8 @@ void CGhost::OnRender()
 			continue;
 		
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
-		CGhostCharacter Player = pGhost->m_Path[m_CurPos];
-		CGhostCharacter Prev = pGhost->m_Path[PrevPos];
+		IGhostRecorder::CGhostCharacter Player = pGhost->m_Path[m_CurPos];
+		IGhostRecorder::CGhostCharacter Prev = pGhost->m_Path[PrevPos];
 		CNetObj_ClientInfo Info = pGhost->m_Info;
 		
 		RenderGhostHook(Player, Prev);
@@ -128,7 +121,7 @@ void CGhost::OnRender()
 	}
 }
 
-void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CNetObj_ClientInfo Info)
+void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info)
 {
 	char aSkinName[64];
 	IntsToStr(&Info.m_Skin0, 6, aSkinName);
@@ -179,7 +172,7 @@ void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CNetObj_C
 	else if(!WantOtherDir)
 		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 	
-	if (Player.m_Weapon == WEAPON_GRENADE)
+	if(Player.m_Weapon == WEAPON_GRENADE)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
@@ -207,7 +200,7 @@ void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CNetObj_C
 	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
 }
 
-void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)
+void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev)
 {
 	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
 		return;
@@ -247,9 +240,9 @@ void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)
 	Graphics()->QuadsEnd();
 }
 
-CGhost::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
+IGhostRecorder::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
 {
-	CGhostCharacter Player;
+	IGhostRecorder::CGhostCharacter Player;
 	Player.m_X = Char.m_X;
 	Player.m_Y = Char.m_Y;
 	Player.m_VelX = Char.m_VelX;
@@ -271,11 +264,19 @@ void CGhost::StartRecord()
 	m_CurGhost.m_Path.clear();
 	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, m_pClient->m_Snap.m_LocalClientID);
 	m_CurGhost.m_Info = *pInfo;
+	
+	if(g_Config.m_ClRaceSaveGhost)
+	{
+		char aSkinName[32];
+		IntsToStr(&pInfo->m_Skin0, 6, aSkinName);
+		Client()->GhostRecorder_Start(aSkinName, pInfo->m_UseCustomColor, pInfo->m_ColorBody, pInfo->m_ColorFeet);
+	}
 }
 
-void CGhost::StopRecord()
+void CGhost::StopRecord(float Time)
 {
 	m_Recording = false;
+	Client()->GhostRecorder_Stop(Time);
 }
 
 void CGhost::StartRender()
@@ -290,110 +291,56 @@ void CGhost::StopRender()
 	m_Rendering = false;
 }
 
-void CGhost::Save()
+void CGhost::Save(bool WasRecording)
 {
-	if(!g_Config.m_ClRaceSaveGhost)
-		return;
-	
-	CGhostHeader Header;
-	
-	// check the player name
-	char aName[MAX_NAME_LENGTH];
-	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
-	for(int i = 0; i < MAX_NAME_LENGTH; i++)
-	{
-		if(!aName[i])
-			break;
-		
-		if(aName[i] == '\\' || aName[i] == '/' || aName[i] == '|' || aName[i] == ':' || aName[i] == '*' || aName[i] == '?' || aName[i] == '<' || aName[i] == '>' || aName[i] == '"')
-			aName[i] = '%';
-	}
-	
-	char aFilename[256];
-	char aBuf[256];
-	str_format(aFilename, sizeof(aFilename), "%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_BestTime, Client()->GetCurrentMapCrc());
-	str_format(aBuf, sizeof(aBuf), "ghosts/%s", aFilename);
-	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-	if(!File)
-		return;
-		
-	// write header
-	int Crc = Client()->GetCurrentMapCrc();
-	mem_zero(&Header, sizeof(Header));
-	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
-	Header.m_Version = gs_ActVersion;
-	IntsToStr(&m_CurGhost.m_Info.m_Name0, 6, Header.m_aOwner);
-	str_copy(Header.m_aMap, Client()->GetCurrentMap(), sizeof(Header.m_aMap));
-	Header.m_aCrc[0] = (Crc>>24)&0xff;
-	Header.m_aCrc[1] = (Crc>>16)&0xff;
-	Header.m_aCrc[2] = (Crc>>8)&0xff;
-	Header.m_aCrc[3] = (Crc)&0xff;
-	Header.m_Time = m_BestTime;
-	Header.m_NumShots = m_CurGhost.m_Path.size();
-	io_write(File, &Header, sizeof(Header));
-	
-	// write client info
-	io_write(File, &m_CurGhost.m_Info, sizeof(m_CurGhost.m_Info));
-	
-	// write data
-	int ItemsPerPackage = 500; // 500 ticks per package
-	int Num = Header.m_NumShots;
-	CGhostCharacter *Data = &m_CurGhost.m_Path[0];
-	
-	while(Num)
-	{
-		int Items = min(Num, ItemsPerPackage);
-		Num -= Items;
-		
-		char aBuffer[100*500];
-		char aBuffer2[100*500];
-		unsigned char aSize[4];
-		
-		int Size = sizeof(CGhostCharacter)*Items;
-		mem_copy(aBuffer2, Data, Size);
-		Data += Items;
-		
-		Size = CVariableInt::Compress(aBuffer2, Size, aBuffer);
-		Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2));
-		
-		aSize[0] = (Size>>24)&0xff;
-		aSize[1] = (Size>>16)&0xff;
-		aSize[2] = (Size>>8)&0xff;
-		aSize[3] = (Size)&0xff;
-		
-		io_write(File, aSize, sizeof(aSize));
-		io_write(File, aBuffer2, Size);
-	}
-	
-	io_close(File);
-	
 	// remove old ghost from list (TODO: remove other ghosts?)
 	if(m_pClient->m_pMenus->m_OwnGhost)
 	{
-		char aFile[256];
-		str_format(aFile, sizeof(aFile), "ghosts/%s", m_pClient->m_pMenus->m_OwnGhost->m_aFilename);
-		Storage()->RemoveFile(aFile, IStorage::TYPE_SAVE);
+		if(WasRecording)
+		{
+			char aFile[256];
+			str_format(aFile, sizeof(aFile), "ghosts/%s", m_pClient->m_pMenus->m_OwnGhost->m_aFilename);
+			Storage()->RemoveFile(aFile, IStorage::TYPE_SAVE);
+		}
 		
 		m_pClient->m_pMenus->m_lGhosts.remove(*m_pClient->m_pMenus->m_OwnGhost);
 	}
 	
+	char aFilename[128] = {0};
+	if(WasRecording)
+	{
+		// clear Playername from wrong chars
+		char aName[MAX_NAME_LENGTH];
+		str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
+		ClearFilename(aName, MAX_NAME_LENGTH);
+		
+		// rename ghost
+		str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_BestTime, Client()->GetCurrentMapCrc());
+		dbg_msg("test", "%s", aFilename);
+		char aOldFilename[128];
+		str_format(aOldFilename, sizeof(aOldFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
+		Storage()->RenameFile(aOldFilename, aFilename, IStorage::TYPE_SAVE);
+	}
+	
+	// create ghost item
 	CMenus::CGhostItem Item;
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
-	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
+	str_copy(Item.m_aPlayer, g_Config.m_PlayerName, sizeof(Item.m_aPlayer));
 	Item.m_Time = m_BestTime;
 	Item.m_Active = true;
 	Item.m_ID = -1;
 
+	// add item to list
 	m_pClient->m_pMenus->m_lGhosts.add(Item);
 	m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
 }
 
-bool CGhost::GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader)
+bool CGhost::GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader)
 {
 	if(!*pFile)
 		return 0;
 	
-	CGhostHeader Header;
+	IGhostRecorder::CGhostHeader Header;
 	io_read(*pFile, &Header, sizeof(Header));
 	
 	*pHeader = Header;
@@ -411,7 +358,7 @@ bool CGhost::GetHeader(IOHANDLE *pFile, CGhostHeader *pHeader)
 	return 1;
 }
 
-bool CGhost::GetInfo(const char* pFilename, CGhostHeader *pHeader)
+bool CGhost::GetInfo(const char* pFilename, IGhostRecorder::CGhostHeader *pHeader)
 {
 	char aFilename[256];
 	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pFilename);
@@ -434,7 +381,7 @@ void CGhost::Load(const char* pFilename, int ID)
 		return;
 
 	// read header
-	CGhostHeader Header;
+	IGhostRecorder::CGhostHeader Header;
 	if(!GetHeader(&File, &Header))
 	{
 		io_close(File);
@@ -453,7 +400,11 @@ void CGhost::Load(const char* pFilename, int ID)
 	Ghost.m_Path.set_size(NumShots);
 	
 	// read client info
-	io_read(File, &Ghost.m_Info, sizeof(Ghost.m_Info));
+	StrToInts(&Ghost.m_Info.m_Name0, 6, Header.m_aOwner);
+	StrToInts(&Ghost.m_Info.m_Skin0, 6, Header.m_aSkinName);
+	Ghost.m_Info.m_UseCustomColor = Header.m_UseCustomColor;
+	Ghost.m_Info.m_ColorBody = Header.m_ColorBody;
+	Ghost.m_Info.m_ColorFeet = Header.m_ColorFeet;
 	
 	// read data
 	int Index = 0;
@@ -488,8 +439,8 @@ void CGhost::Load(const char* pFilename, int ID)
 			break;
 		}
 		
-		CGhostCharacter *Tmp = (CGhostCharacter*)aData;
-		for(unsigned i = 0; i < Size/sizeof(CGhostCharacter); i++)
+		IGhostRecorder::CGhostCharacter *Tmp = (IGhostRecorder::CGhostCharacter*)aData;
+		for(unsigned i = 0; i < Size/sizeof(IGhostRecorder::CGhostCharacter); i++)
 		{
 			if(Index >= NumShots)
 				break;
@@ -583,6 +534,23 @@ void CGhost::OnReset()
 	m_NewRecord = false;
 	m_CurGhost.m_Path.clear();
 	m_StartRenderTick = -1;
+	
+	if(Client()->GhostIsRecording())
+		Client()->GhostRecorder_Stop();
+	
+	char aName[MAX_NAME_LENGTH];
+	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
+	ClearFilename(aName, MAX_NAME_LENGTH);
+	
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
+	dbg_msg("test", "%s", aFilename);
+	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
+}
+
+void CGhost::OnShutdown()
+{
+	OnReset();
 }
 
 void CGhost::OnMapLoad()
@@ -591,4 +559,16 @@ void CGhost::OnMapLoad()
 	m_BestTime = -1;
 	m_lGhosts.clear();
 	m_pClient->m_pMenus->GhostlistPopulate();
+}
+
+void CGhost::ClearFilename(char *pFilename, int Size)
+{
+	for(int i = 0; i < Size; i++)
+	{
+		if(!pFilename[i])
+			break;
+		
+		if(pFilename[i] == '\\' || pFilename[i] == '/' || pFilename[i] == '|' || pFilename[i] == ':' || pFilename[i] == '*' || pFilename[i] == '?' || pFilename[i] == '<' || pFilename[i] == '>' || pFilename[i] == '"')
+			pFilename[i] = '%';
+	}
 }

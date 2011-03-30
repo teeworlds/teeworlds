@@ -5,6 +5,7 @@
 #include "kernel.h"
 
 #include "message.h"
+#include <engine/shared/ghost.h>
 
 class IClient : public IInterface
 {
@@ -142,6 +143,11 @@ public:
 	virtual const char* GetCurrentMap() = 0;
 	virtual int GetCurrentMapCrc() = 0;
 	virtual const char* RaceRecordStart(const char *pFilename) = 0;
+	
+	virtual void GhostRecorder_Start(const char* pSkinName, int UseCustomColor, int ColorBody, int ColorFeet) = 0;
+	virtual void GhostRecorder_Stop(float Time=0.0f) = 0;
+	virtual bool GhostIsRecording() = 0;
+	virtual void GhostRecorder_AddInfo(IGhostRecorder::CGhostCharacter *pPlayer) = 0;
 };
 
 class IGameClient : public IInterface
