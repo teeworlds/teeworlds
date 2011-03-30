@@ -318,7 +318,7 @@ void CHud::RenderConnectionWarning()
 
 void CHud::RenderTeambalanceWarning()
 {
-	if(!g_Config.m_ClWarningTeambalance || g_Config.m_ClClearAll)
+	if(m_pClient->m_IsRace || !g_Config.m_ClWarningTeambalance || g_Config.m_ClClearAll)
 		return;
 	
 	// render prompt about team-balance
