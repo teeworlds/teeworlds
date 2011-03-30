@@ -1181,7 +1181,17 @@ void CGameClient::OnNewSnapshot()
 		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
 		{
 			if(!m_IsRace)
+			{
 				m_IsRace = true;
+				
+				// send login
+				if(g_Config.m_ClApiToken[0])
+				{
+					char aLogin[64];
+					str_format(aLogin, sizeof(aLogin), "teerace:%s", g_Config.m_ClApiToken);
+					Client()->RconAuth("", aLogin);
+				}
+			}
 			
 			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
 			{

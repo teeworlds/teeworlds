@@ -1244,6 +1244,14 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	else
 		LeftView.HSplitTop(40.0f, &Button, &LeftView);
 	
+	// api token box
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, "Api token:", 14.0, -1);
+	Button.VSplitLeft(80.0f, 0, &Button);
+	Button.VSplitLeft(180.0f, &Button, 0);
+	static float Offset = 0.0f;
+	DoEditBox(g_Config.m_ClApiToken, &Button, g_Config.m_ClApiToken, sizeof(g_Config.m_ClApiToken), 14.0f, &Offset);
+
 	// Right
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	UI()->DoLabel(&Button, Localize("Global settings"), 14.0f, -1);
