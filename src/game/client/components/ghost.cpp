@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include <engine/textrender.h>
 #include <engine/storage.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
@@ -13,6 +14,7 @@
 
 #include "skins.h"
 #include "menus.h"
+#include "controls.h"
 #include "ghost.h"
 
 /*
@@ -118,6 +120,7 @@ void CGhost::OnRender()
 		
 		RenderGhostHook(Player, Prev);
 		RenderGhost(Player, Prev, Info);
+		RenderGhostNamePlate(Player, Prev, Info);
 	}
 }
 
@@ -238,6 +241,34 @@ void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecor
 	Graphics()->QuadsDraw(Array, j);
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
+}
+
+void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info)
+{
+	if(!g_Config.m_ClGhostNamePlates)
+		return;
+	
+	float IntraTick = Client()->PredIntraGameTick();
+	
+	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	
+
+	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
+	
+	// render name plate
+	float a = 0.5f;
+	if(g_Config.m_ClGhostNameplatesAlways == 0)
+		a = clamp(0.5f-powf(distance(m_pClient->m_pControls->m_TargetPos, Pos)/200.0f,16.0f), 0.0f, 0.5f);
+	
+	char aName[MAX_NAME_LENGTH];
+	IntsToStr(&Info.m_Name0, 6, aName);
+	float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
+	
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
+	TextRender()->Text(0, Pos.x-tw/2.0f, Pos.y-FontSize-38.0f, FontSize, aName, -1);
+	
+	// reset color;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 IGhostRecorder::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)

@@ -48,6 +48,7 @@ private:
 	void StopRender();
 	void RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
 	void RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev);
+	void RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
 	
 	bool GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader);
 	
