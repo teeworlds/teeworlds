@@ -117,9 +117,13 @@ int CNetServer::BanNum()
 
 void CNetServer::BanRemoveByObject(CBan *pBan)
 {
-	int IpHash = (pBan->m_Info.m_Addr.ip[0]+pBan->m_Info.m_Addr.ip[1]+pBan->m_Info.m_Addr.ip[2]+pBan->m_Info.m_Addr.ip[3])&0xff;
-	dbg_msg("netserver", "removing ban on %d.%d.%d.%d",
-		pBan->m_Info.m_Addr.ip[0], pBan->m_Info.m_Addr.ip[1], pBan->m_Info.m_Addr.ip[2], pBan->m_Info.m_Addr.ip[3]);
+	int IpHash = (pBan->m_Info.m_Addr.ip[0]+pBan->m_Info.m_Addr.ip[1]+pBan->m_Info.m_Addr.ip[2]+pBan->m_Info.m_Addr.ip[3]+
+					pBan->m_Info.m_Addr.ip[4]+pBan->m_Info.m_Addr.ip[5]+pBan->m_Info.m_Addr.ip[6]+pBan->m_Info.m_Addr.ip[7]+
+					pBan->m_Info.m_Addr.ip[8]+pBan->m_Info.m_Addr.ip[9]+pBan->m_Info.m_Addr.ip[10]+pBan->m_Info.m_Addr.ip[11]+
+					pBan->m_Info.m_Addr.ip[12]+pBan->m_Info.m_Addr.ip[13]+pBan->m_Info.m_Addr.ip[14]+pBan->m_Info.m_Addr.ip[15])&0xff;
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(&pBan->m_Info.m_Addr, aAddrStr, sizeof(aAddrStr));
+	dbg_msg("netserver", "removing ban on %s", aAddrStr);
 	MACRO_LIST_UNLINK(pBan, m_BanPool_FirstUsed, m_pPrev, m_pNext);
 	MACRO_LIST_UNLINK(pBan, m_aBans[IpHash], m_pHashPrev, m_pHashNext);
 	MACRO_LIST_LINK_FIRST(pBan, m_BanPool_FirstFree, m_pPrev, m_pNext);
@@ -127,7 +131,8 @@ void CNetServer::BanRemoveByObject(CBan *pBan)
 
 int CNetServer::BanRemove(NETADDR Addr)
 {
-	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
+	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3]+Addr.ip[4]+Addr.ip[5]+Addr.ip[6]+Addr.ip[7]+
+					Addr.ip[8]+Addr.ip[9]+Addr.ip[10]+Addr.ip[11]+Addr.ip[12]+Addr.ip[13]+Addr.ip[14]+Addr.ip[15])&0xff;
 	CBan *pBan = m_aBans[IpHash];
 	
 	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
@@ -143,7 +148,8 @@ int CNetServer::BanRemove(NETADDR Addr)
 
 int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 {
-	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
+	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3]+Addr.ip[4]+Addr.ip[5]+Addr.ip[6]+Addr.ip[7]+
+					Addr.ip[8]+Addr.ip[9]+Addr.ip[10]+Addr.ip[11]+Addr.ip[12]+Addr.ip[13]+Addr.ip[14]+Addr.ip[15])&0xff;
 	int Stamp = -1;
 	CBan *pBan;
 	
@@ -284,7 +290,8 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		{
 			CBan *pBan = 0;
 			NETADDR BanAddr = Addr;
-			int IpHash = (BanAddr.ip[0]+BanAddr.ip[1]+BanAddr.ip[2]+BanAddr.ip[3])&0xff;
+			int IpHash = (BanAddr.ip[0]+BanAddr.ip[1]+BanAddr.ip[2]+BanAddr.ip[3]+BanAddr.ip[4]+BanAddr.ip[5]+BanAddr.ip[6]+BanAddr.ip[7]+
+							BanAddr.ip[8]+BanAddr.ip[9]+BanAddr.ip[10]+BanAddr.ip[11]+BanAddr.ip[12]+BanAddr.ip[13]+BanAddr.ip[14]+BanAddr.ip[15])&0xff;
 			int Found = 0;
 			BanAddr.port = 0;
 			

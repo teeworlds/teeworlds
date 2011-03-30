@@ -13,8 +13,7 @@
 static int HostLookupThread(void *pUser)
 {
 	CHostLookup *pLookup = (CHostLookup *)pUser;
-	net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_IPV4);
-	return 0;
+	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_ALL);
 }
 
 class CEngine : public IEngine
