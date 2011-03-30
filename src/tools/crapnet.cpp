@@ -127,7 +127,11 @@ void Run(int Port, NETADDR Dest)
 			Delaycounter--;
 	
 			if(m_ConfigLog)
-				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->m_ID, From.ip[0], From.ip[1], From.ip[2], From.ip[3], From.port, p->m_DataSize);
+			{
+				char aAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(&From, aAddrStr, sizeof(aAddrStr));
+				dbg_msg("crapnet", "<< %08d %s (%d)", p->m_ID, aAddrStr, p->m_DataSize);
+			}
 		}
 		
 		//
@@ -188,10 +192,9 @@ void Run(int Port, NETADDR Dest)
 
 				if(m_ConfigLog)
 				{
-					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->m_ID,
-						p->m_SendTo.ip[0], p->m_SendTo.ip[1],
-						p->m_SendTo.ip[2], p->m_SendTo.ip[3],
-						p->m_SendTo.port, p->m_DataSize, aFlags);
+					char aAddrStr[NETADDR_MAXSTRSIZE];
+					net_addr_str(&p->m_SendTo, aAddrStr, sizeof(aAddrStr));
+					dbg_msg("crapnet", ">> %08d %s (%d) %s", p->m_ID, aAddrStr, p->m_DataSize, aFlags);
 				}
 				
 

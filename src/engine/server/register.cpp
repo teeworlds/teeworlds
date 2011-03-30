@@ -124,18 +124,18 @@ void CRegister::RegisterUpdate()
 			int i;
 			for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 			{
+				if(!m_pMasterServer->IsValid(i))
+				{
+					m_aMasterserverInfo[i].m_Valid = 0;
+					m_aMasterserverInfo[i].m_Count = 0;
+					continue;
+				}
+
 				NETADDR Addr = m_pMasterServer->GetAddr(i);
 				m_aMasterserverInfo[i].m_Addr = Addr;
-				m_aMasterserverInfo[i].m_Count = 0;
-			
-				if(!Addr.ip[0] && !Addr.ip[1] && !Addr.ip[2] && !Addr.ip[3])
-					m_aMasterserverInfo[i].m_Valid = 0;
-				else
-				{
-					m_aMasterserverInfo[i].m_Valid = 1;
-					m_aMasterserverInfo[i].m_Count = -1;
-					m_aMasterserverInfo[i].m_LastSend = 0;
-				}
+				m_aMasterserverInfo[i].m_Valid = 1;
+				m_aMasterserverInfo[i].m_Count = -1;
+				m_aMasterserverInfo[i].m_LastSend = 0;
 			}
 			
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "fetching server counts");

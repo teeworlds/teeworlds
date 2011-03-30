@@ -380,15 +380,8 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
-	str_format(pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress), "%d.%d.%d.%d:%d",
-		Addr.ip[0], Addr.ip[1], Addr.ip[2],
-		Addr.ip[3], Addr.port);
-	str_format(pEntry->m_Info.m_aName, sizeof(pEntry->m_Info.m_aName), "%d.%d.%d.%d:%d",
-		Addr.ip[0], Addr.ip[1], Addr.ip[2],
-		Addr.ip[3], Addr.port);
-
-	/*if(serverlist_type == IServerBrowser::TYPE_LAN)
-		pEntry->m_Info.latency = (time_get()-broadcast_time)*1000/time_freq();*/
+	net_addr_str(&Addr, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress));
+	str_copy(pEntry->m_Info.m_aName, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aName));
 
 	// check if it's a favorite
 	for(i = 0; i < m_NumFavoriteServers; i++)
@@ -526,10 +519,10 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 
 	if(g_Config.m_Debug)
 	{
+		char aAddrStr[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf),"requesting server info from %d.%d.%d.%d:%d",
-			Addr.ip[0], Addr.ip[1], Addr.ip[2],
-			Addr.ip[3], Addr.port);
+		str_format(aBuf, sizeof(aBuf),"requesting server info from %s", aAddrStr);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 
@@ -556,7 +549,7 @@ void CServerBrowser::Request(const NETADDR &Addr) const
 
 void CServerBrowser::Update(bool ForceResort)
 {
-	int64 Timeout = time_freq()/2;	// TODO 0.6: increase this again
+	int64 Timeout = time_freq();
 	int64 Now = time_get();
 	int Count;
 	CServerEntry *pEntry, *pNext;
@@ -578,10 +571,10 @@ void CServerBrowser::Update(bool ForceResort)
 
 		for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 		{
-			Addr = m_pMasterServer->GetAddr(i);
-			if(!Addr.ip[0] && !Addr.ip[1] && !Addr.ip[2] && !Addr.ip[3])
+			if(!m_pMasterServer->IsValid(i))
 				continue;
 
+			Addr = m_pMasterServer->GetAddr(i);
 			Packet.m_Address = Addr;
 			m_pNetClient->Send(&Packet);
 		}
@@ -667,8 +660,10 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 
     if(g_Config.m_Debug)
 	{
+		char aAddrStr[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
 		char aBuf[256];
-        str_format(aBuf, sizeof(aBuf), "added fav, %d.%d.%d.%d:%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
+		str_format(aBuf, sizeof(aBuf), "added fav, %s", aAddrStr);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 }

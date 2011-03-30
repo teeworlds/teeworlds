@@ -698,7 +698,7 @@ void CClient::Connect(const char *pAddress)
 		char aBufMsg[256];
 		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
-		net_host_lookup("localhost", &m_ServerAddress, NETTYPE_IPV4);
+		net_host_lookup("localhost", &m_ServerAddress, NETTYPE_ALL);
 	}
 
 	m_RconAuthed = 0;
@@ -1052,34 +1052,31 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		bool Valid = false;
 		for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; ++i)
 		{
-			NETADDR Addr = m_pMasterServer->GetAddr(i);
-			if(net_addr_comp(&pPacket->m_Address, &Addr) == 0)
+			if(m_pMasterServer->IsValid(i))
 			{
-				Valid = true;
-				break;
+				NETADDR Addr = m_pMasterServer->GetAddr(i);
+				if(net_addr_comp(&pPacket->m_Address, &Addr) == 0)
+				{
+					Valid = true;
+					break;
+				}
 			}
 		}
 		if(!Valid)
 			return;
 
 		int Size = pPacket->m_DataSize-sizeof(SERVERBROWSE_LIST);
-		int Num = Size/sizeof(MASTERSRV_ADDR);
-		MASTERSRV_ADDR *pAddrs = (MASTERSRV_ADDR *)((char*)pPacket->m_pData+sizeof(SERVERBROWSE_LIST));
-		int i;
-
-		for(i = 0; i < Num; i++)
+		int Num = Size/sizeof(CMastersrvAddr);
+		CMastersrvAddr *pAddrs = (CMastersrvAddr *)((char*)pPacket->m_pData+sizeof(SERVERBROWSE_LIST));
+		for(int i = 0; i < Num; i++)
 		{
 			NETADDR Addr;
 
-			// convert address
-			mem_zero(&Addr, sizeof(Addr));
-			Addr.type = NETTYPE_IPV4;
-			Addr.ip[0] = pAddrs[i].m_aIp[0];
-			Addr.ip[1] = pAddrs[i].m_aIp[1];
-			Addr.ip[2] = pAddrs[i].m_aIp[2];
-			Addr.ip[3] = pAddrs[i].m_aIp[3];
-			Addr.port = (pAddrs[i].m_aPort[1]<<8) | pAddrs[i].m_aPort[0];
-
+			// copy address
+			Addr.type = (pAddrs->m_aType[0]<<24) | (pAddrs->m_aType[1]<<16) | (pAddrs->m_aType[2]<<8) | pAddrs->m_aType[3];
+			mem_copy(Addr.ip, pAddrs->m_aIp, sizeof(Addr.ip));
+			Addr.port = (pAddrs->m_aPort[0]<<8) | pAddrs->m_aPort[1];
+			
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 		}
 	}

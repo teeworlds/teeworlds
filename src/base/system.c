@@ -593,7 +593,7 @@ static int priv_net_extract(const char *hostname, char *host, int max_host, int 
 	if(hostname[0] == '[')
 	{
 		// ipv6 mode
-		for(i = 1; i < max_host-1 && hostname[i] && hostname[i] != ']'; i++)
+		for(i = 1; i < max_host && hostname[i] && hostname[i] != ']'; i++)
 			host[i-1] = hostname[i];
 		host[i-1] = 0;
 		if(hostname[i] != ']') // malformatted
@@ -711,6 +711,7 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 		struct sockaddr_in6 sa6;
 		char buf[128];
 		int i;
+		str++;
 		for(i = 0; i < 127 && str[i] && str[i] != ']'; i++)
 			buf[i] = str[i];
 		buf[i] = 0;
