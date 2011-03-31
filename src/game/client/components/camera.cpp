@@ -64,11 +64,7 @@ void CCamera::OnRender()
 			m_pClient->m_pControls->ClampMousePos();
 			m_WasSpectator = true;
 		}
-		
-		if(m_pClient->m_Freeview)
-			m_Center = m_pClient->m_pControls->m_MousePos;
-		else
-			m_Center = m_pClient->m_SpectatePos;
+		m_Center = m_pClient->m_pControls->m_MousePos;
 	}
 	else
 	{

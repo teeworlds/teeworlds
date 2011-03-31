@@ -542,18 +542,6 @@ void CHud::RenderSpeedmeter()
 	TextRender()->Text(0, m_Width-5-TextRender()->TextWidth(0,12,aBuf,-1), 246+t*20, 12, aBuf, -1);
 }
 
-void CHud::RenderSpectate()
-{
-	if(m_pClient->m_Freeview)
-		TextRender()->Text(0, 4*Graphics()->ScreenAspect(), 4, 8, "Freeview", -1);
-	else
-	{
-		char aBuf[96];
-		str_format(aBuf, sizeof(aBuf), "Following: %s", m_pClient->m_aClients[m_pClient->m_SpectateClientID].m_aName);
-		TextRender()->Text(0, 4*Graphics()->ScreenAspect(), 4, 8, aBuf, -1);
-	}
-}
-
 void CHud::RenderTime()
 {
 	if(!m_pClient->m_IsRace)
@@ -660,8 +648,6 @@ void CHud::OnRender()
 			RenderRecord();
 		if(g_Config.m_ClRenderCrosshair && !g_Config.m_ClClearHud)
 			RenderCursor();
-		if(g_Config.m_ClRenderViewmode && !g_Config.m_ClClearHud && Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
-			RenderSpectate();
 	}
 }
 

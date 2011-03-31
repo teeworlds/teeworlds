@@ -128,14 +128,6 @@ int CControls::SnapInput(int *pData)
 	if(m_InputData.m_PlayerState != PLAYERSTATE_PLAYING)
 	{
 		OnReset();
-			
-		// Keep following while chatting/in console/in menu
-		if(m_pClient->m_Snap.m_Spectate && !m_pClient->m_Freeview)
-		{
-			m_InputData.m_TargetX = (int)m_MousePos.x;
-			m_InputData.m_TargetY = (int)m_MousePos.y;
-			Send = true;
-		}
 
 		mem_copy(pData, &m_InputData, sizeof(m_InputData));
 
@@ -232,15 +224,10 @@ void CControls::ClampMousePos()
 
 	if(m_pClient->m_Snap.m_Spectate)
 	{
-		if(m_pClient->m_Freeview)
-		{
-			if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
-			if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
-			if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
-			if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
-		}
-		else
-			m_MousePos = m_pClient->m_SpectatePos;
+		if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
+		if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
+		if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
+		if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
 		
 		m_TargetPos = m_MousePos;
 	}

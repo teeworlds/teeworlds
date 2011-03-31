@@ -41,7 +41,6 @@ class CHud : public CComponent
 	void RenderTime();
 	void RenderRecord();
 	void RenderSpeedmeter();
-	void RenderSpectate();
 
 	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);
 public:

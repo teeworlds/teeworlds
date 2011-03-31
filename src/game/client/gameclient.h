@@ -208,11 +208,6 @@ public:
 	};
 	
 	CClientStats m_aStats[MAX_CLIENTS];
-	
-	bool m_Freeview;
-	int m_SpectateClientID;
-	int m_KillerClientID;
-	vec2 m_SpectatePos;
 
 	CRenderTools m_RenderTools;
 	
@@ -243,7 +238,6 @@ public:
 	void OnGameRestart();
 	void OnRoundStart();
 	void OnFlagGrab(int Id);
-	void FindNextSpectableClientID();
 	
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();

@@ -46,9 +46,6 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		// add the message
 		m_KillmsgCurrent = (m_KillmsgCurrent+1)%MAX_KILLMSGS;
 		m_aKillmsgs[m_KillmsgCurrent] = Kill;
-		
-		if(!m_pClient->m_Freeview && (Kill.m_VictimID == m_pClient->m_SpectateClientID) && m_pClient->m_Snap.m_aCharacters[Kill.m_KillerID].m_Active)
-			m_pClient->m_KillerClientID = Kill.m_KillerID;
 	}
 }
 
