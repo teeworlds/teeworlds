@@ -48,7 +48,7 @@ bool CFriends::IsFriend(const char *pName, const char *pClan) const
 {
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if(!str_comp(m_aFriends[i].m_aName, pName) && !str_comp(m_aFriends[i].m_aClan, pClan))
+		if((m_aFriends[i].m_aName[0] == 0 || !str_comp(m_aFriends[i].m_aName, pName)) && !str_comp(m_aFriends[i].m_aClan, pClan))
 			return true;
 	}
 	return false;
@@ -56,7 +56,7 @@ bool CFriends::IsFriend(const char *pName, const char *pClan) const
 
 void CFriends::AddFriend(const char *pName, const char *pClan)
 {
-	if(m_NumFriends == MAX_FRIENDS)
+	if(m_NumFriends == MAX_FRIENDS || (pName[0] == 0 && pClan[0] == 0))
 		return;
 
 	// make sure we don't have the friend already
