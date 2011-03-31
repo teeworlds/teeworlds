@@ -26,7 +26,7 @@
 #include <engine/shared/compression.h>
 #include <engine/shared/datafile.h>
 #include <engine/shared/demo.h>
-#include <engine/shared/memheap.h>
+#include <engine/shared/mapchecker.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
@@ -1023,24 +1023,47 @@ int CClient::PlayerScoreComp(const void *a, const void *b)
 
 void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 {
-	// version info
-	if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
-		mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0 &&
-		m_VersionInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionInfo.m_VersionServeraddr.m_Addr) == 0)
+	// version server
+	if(m_VersionInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionInfo.m_VersionServeraddr.m_Addr) == 0)
 	{
-		unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
-		int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
-
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "version does %s (%d.%d.%d)",
-			VersionMatch ? "match" : "NOT match",
-			pVersionData[1], pVersionData[2], pVersionData[3]);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
-
-		// assume version is out of date when version-data doesn't match
-		if (!VersionMatch)
+		// version info
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
+			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
+		
 		{
-			str_format(m_aVersionStr, sizeof(m_aVersionStr), "%d.%d.%d", pVersionData[1], pVersionData[2], pVersionData[3]);
+			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
+			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
+
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "version does %s (%d.%d.%d)",
+				VersionMatch ? "match" : "NOT match",
+				pVersionData[1], pVersionData[2], pVersionData[3]);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
+
+			// assume version is out of date when version-data doesn't match
+			if (!VersionMatch)
+			{
+				str_format(m_aVersionStr, sizeof(m_aVersionStr), "%d.%d.%d", pVersionData[1], pVersionData[2], pVersionData[3]);
+			}
+
+			// request the map version list now
+			CNetChunk Packet;
+			mem_zero(&Packet, sizeof(Packet));
+			Packet.m_ClientID = -1;
+			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
+			Packet.m_pData = VERSIONSRV_GETMAPLIST;
+			Packet.m_DataSize = sizeof(VERSIONSRV_GETMAPLIST);
+			Packet.m_Flags = NETSENDFLAG_CONNLESS;
+			m_NetClient.Send(&Packet);
+		}
+
+		// map version list
+		if(pPacket->m_DataSize >= (int)sizeof(VERSIONSRV_MAPLIST) &&
+			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)		
+		{
+			int Size = pPacket->m_DataSize-sizeof(VERSIONSRV_MAPLIST);
+			int Num = Size/sizeof(CMapVersion);
+			m_MapChecker.AddMaplist((CMapVersion *)((char*)pPacket->m_pData+sizeof(VERSIONSRV_MAPLIST)), Num);
 		}
 	}
 
@@ -1073,9 +1096,9 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			NETADDR Addr;
 
 			// copy address
-			Addr.type = (pAddrs->m_aType[0]<<24) | (pAddrs->m_aType[1]<<16) | (pAddrs->m_aType[2]<<8) | pAddrs->m_aType[3];
-			mem_copy(Addr.ip, pAddrs->m_aIp, sizeof(Addr.ip));
-			Addr.port = (pAddrs->m_aPort[0]<<8) | pAddrs->m_aPort[1];
+			Addr.type = (pAddrs[i].m_aType[0]<<24) | (pAddrs[i].m_aType[1]<<16) | (pAddrs[i].m_aType[2]<<8) | pAddrs[i].m_aType[3];
+			mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
+			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
 			
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 		}
@@ -1158,6 +1181,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 			if(Unpacker.Error())
 				return;
+
+			// check for valid standard map
+			if(!m_MapChecker.IsMapValid(pMap, MapCrc, MapSize))
+				pError = "invalid standard map";
 
 			for(int i = 0; pMap[i]; i++) // protect the player from nasty map names
 			{

@@ -106,6 +106,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;
 	class CFriends m_Friends;
+	class CMapChecker m_MapChecker;
 
 	char m_aServerAddressStr[256];
 
