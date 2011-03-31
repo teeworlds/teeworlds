@@ -24,7 +24,7 @@ static CMapVersion s_aMapVersionList[] = {
 	{"dm8", {0x92, 0x23, 0x91, 0x82}, {0x00, 0x00, 0x3a, 0x33}},
 	{"dm9", {0x48, 0xca, 0xfd, 0x11}, {0x00, 0x00, 0x18, 0x94}},
 };
-static int s_NumMapVersionItems = sizeof(s_aMapVersionList)/sizeof(CMapVersion);
+static const int s_NumMapVersionItems = sizeof(s_aMapVersionList)/sizeof(CMapVersion);
 
 static const unsigned char VERSION_DATA[] = {0x00, 0, 6, 0};
 

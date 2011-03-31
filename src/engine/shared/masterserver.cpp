@@ -146,7 +146,6 @@ public:
 		while(1)
 		{
 			CMasterInfo Info = {{0}};
-			int aIp[4];
 			const char *pLine = LineReader.Get();
 			if(!pLine)
 				break;
