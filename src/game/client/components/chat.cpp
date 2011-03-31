@@ -283,19 +283,16 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 		
 		m_ContainsName = false;
 		
-		if(g_Config.m_ClChangeColor || g_Config.m_ClChangeSound)
+		int i = 0;
+		while (i < Sp2.m_Count)
 		{
-			int i = 0;
-			while (i < Sp2.m_Count)
+			if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
 			{
-				if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
-				{
-					m_ContainsName = true;
-					break;
-				}
-				else
-					i++;
+				m_ContainsName = true;
+				break;
 			}
+			else
+				i++;
 		}
 		
 		AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);

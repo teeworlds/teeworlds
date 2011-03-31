@@ -513,7 +513,7 @@ void CTeecompStats::RenderIndividualStats()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f,1.0f,1.0f,1.0f);
-	RenderTools()->SelectSprite(SPRITE_DEADTEE);
+	RenderTools()->SelectSprite(SPRITE_EYES);
 	IGraphics::CQuadItem QuadItem(x+xo/2, y+40, 128, 128);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();

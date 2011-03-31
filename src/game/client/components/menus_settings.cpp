@@ -822,11 +822,11 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
+int GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
 {
 	const int PathLength = str_length(pFileName);
 	if(IsDir || PathLength <= 4 || pFileName[PathLength-4] != '.' || str_comp_nocase(pFileName+PathLength-3, "ttf") || pFileName[0] == '.')
-		return;
+		return 0;
 
 	sorted_array<CFontFile> &Fonts = *((sorted_array<CFontFile> *)pUser);
 	
@@ -837,9 +837,11 @@ void GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
 	// check if the font was already added
 	for(int i = 0; i < Fonts.size(); i++)
 		if(!str_comp(Fonts[i].m_Name, aNiceName))
-			return;
+			return 0;
 	
 	Fonts.add(CFontFile(aNiceName, pFileName));
+	
+	return 0;
 }
 
 void CMenus::RenderLanguageSelection(CUIRect MainView)
@@ -983,10 +985,6 @@ void CMenus::RenderSettingsBeep(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClChangeSound, Localize("Change chat sound"), g_Config.m_ClChangeSound, &Button))
 		g_Config.m_ClChangeSound ^= 1;
-		
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_ClChangeColor, Localize("Change color of chat messages"), g_Config.m_ClChangeColor, &Button))
-		g_Config.m_ClChangeColor ^= 1;
 		
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClBlockSpammer, Localize("Block all messages from spaming people"), g_Config.m_ClBlockSpammer, &Button))
