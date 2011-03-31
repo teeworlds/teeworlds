@@ -226,9 +226,6 @@ Join red
 Jump
 == Salta
 
-Kick
-== Kick
-
 LAN
 == LAN
 
@@ -567,9 +564,6 @@ Kick player
 Length:
 == 
 
-Make player a spectator
-== 
-
 Map:
 == 
 
@@ -577,6 +571,9 @@ Max Screenshots
 == 
 
 Max demos
+== 
+
+Move player to spectators
 == 
 
 Netversion:
@@ -658,10 +655,4 @@ Warmup
 == 
 
 ##### old translations #####
-
-Ignore
-== 
-
-Friend
-== 
 

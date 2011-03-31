@@ -193,9 +193,6 @@ Join red
 Jump
 == Skok
 
-Kick
-== Izbaci
-
 LAN
 == LAN
 
@@ -543,9 +540,6 @@ Kick player
 Length:
 == 
 
-Make player a spectator
-== 
-
 Map:
 == 
 
@@ -553,6 +547,9 @@ Max Screenshots
 == 
 
 Max demos
+== 
+
+Move player to spectators
 == 
 
 Name plates size
@@ -658,10 +655,4 @@ no limit
 == 
 
 ##### old translations #####
-
-Ignore
-== 
-
-Friend
-== 
 

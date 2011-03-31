@@ -226,9 +226,6 @@ Join red
 Jump
 == Springen
 
-Kick
-== Kicken
-
 LAN
 == LAN
 
@@ -585,10 +582,10 @@ Kick player
 Length:
 == 
 
-Make player a spectator
+Map:
 == 
 
-Map:
+Move player to spectators
 == 
 
 Netversion:
@@ -658,10 +655,4 @@ Vote description:
 == 
 
 ##### old translations #####
-
-Ignore
-== 
-
-Friend
-== 
 

@@ -361,7 +361,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	static int s_VoteList = 0;
 	static float s_ScrollValue = 0;
 	CUIRect List = MainView;
-	UiDoListboxStart(&s_VoteList, &List, 24.0f, FilterSpectators?Localize("Make player a spectator"):Localize("Kick player"), "", NumOptions, 1, Selected, s_ScrollValue);
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, FilterSpectators?Localize("Move player to spectators"):Localize("Kick player"), "", NumOptions, 1, Selected, s_ScrollValue);
 	
 	for(int i = 0; i < NumOptions; i++)
 	{
@@ -387,48 +387,64 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	static int s_ControlPage = 0;
 	
 	// render background
-	CUIRect Temp, TabBar;
-	MainView.VSplitRight(120.0f, &MainView, &TabBar);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
-	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
-	RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
-	
 	MainView.HSplitTop(10.0f, 0, &MainView);
 	
-	CUIRect Button;
-	
-	const char *paTabs[] = {
-		Localize("Settings"),
-		Localize("Kick"),
-		Localize("Spectate")};
-	int aNumTabs = (int)(sizeof(paTabs)/sizeof(*paTabs));
-	
-	for(int i = 0; i < aNumTabs; i++)
+	// page menu
+	CUIRect PageMenu, Button;
+	MainView.HSplitBottom(60.0f, &MainView, &PageMenu);
+	PageMenu.Margin(10.0f, &PageMenu);
+	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f,0.25f), CUI::CORNER_ALL, 10.0f);
+	PageMenu.Margin(10.0f, &PageMenu);
+
+	PageMenu.VSplitLeft(50.0f, 0, &PageMenu);
+	PageMenu.VSplitLeft(120.0f, &Button, &PageMenu);
+	static int s_PrevButton = 0;
+	if(DoButton_PageMenu(&s_PrevButton, Localize("Prev"), 0, s_ControlPage>0, &Button, CUI::CORNER_L))
 	{
-		TabBar.HSplitTop(10, &Button, &TabBar);
-		TabBar.HSplitTop(26, &Button, &TabBar);
-		if(DoButton_MenuTab(paTabs[i], paTabs[i], s_ControlPage == i, &Button, CUI::CORNER_R))
+		if(s_ControlPage > 0)
 		{
-			s_ControlPage = i;
 			m_CallvoteSelectedPlayer = -1;
 			m_CallvoteSelectedOption = -1;
+			--s_ControlPage;
 		}
 	}
-		
+	
+	PageMenu.VSplitRight(50.0f, &PageMenu, 0);
+	PageMenu.VSplitRight(120.0f, &PageMenu, &Button);
+	static int s_NextButton = 0;
+	if(DoButton_PageMenu(&s_NextButton, Localize("Next"), 0, s_ControlPage<2, &Button, CUI::CORNER_R))
+	{
+		if(s_ControlPage < 2)
+		{
+			m_CallvoteSelectedPlayer = -1;
+			m_CallvoteSelectedOption = -1;
+			++s_ControlPage;
+		}
+	}
+	
+	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f, 0.5f), 0, 10.0f);
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), Localize("Page %d of %d"), s_ControlPage+1, 3);
+	UI()->DoLabelScaled(&PageMenu, aBuf, PageMenu.h*ms_FontmodHeight, 0);
+
+	// render page
 	CUIRect Bottom, Extended;
+	MainView.VMargin(10.0f, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 	MainView.Margin(10.0f, &MainView);
 	MainView.HSplitBottom(ms_ButtonHeight + 5*2, &MainView, &Bottom);
 	Bottom.HMargin(5.0f, &Bottom);
-	
-	// render page		
+
 	if(s_ControlPage == 0)
 		RenderServerControlServer(MainView);
 	else if(s_ControlPage == 1)
 		RenderServerControlKick(MainView, false);
 	else if(s_ControlPage == 2)
-		RenderServerControlKick(MainView, true);		
+		RenderServerControlKick(MainView, true);
 
+	// vote menu
 	{
 		CUIRect Button;
 		Bottom.VSplitRight(120.0f, &Bottom, &Button);
@@ -546,6 +562,6 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				DoEditBox(&s_aVoteCommand, &Button, s_aVoteCommand, sizeof(s_aVoteCommand), 14.0f, &s_OffsetCmd, false, CUI::CORNER_ALL);
 			}
 		}
-	}		
+	}
 }
 
