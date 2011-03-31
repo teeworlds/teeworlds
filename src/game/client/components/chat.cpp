@@ -611,8 +611,8 @@ void CChat::OnRender()
 			if(m_aLines[r].m_ClientID == -1)
 				TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 			else if(m_aLines[r].m_Team)
-				TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // m_Team message
-			else if(m_aLines[r].m_NameColor == 0)
+				TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
+			else if(m_aLines[r].m_NameColor == TEAM_RED)
 			{
 				if(!m_pClient->m_Snap.m_pLocalInfo)
 					TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend);// red
@@ -623,7 +623,7 @@ void CChat::OnRender()
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}
 			}
-			else if(m_aLines[r].m_NameColor == 1)
+			else if(m_aLines[r].m_NameColor == TEAM_BLUE)
 			{
 				if(!m_pClient->m_Snap.m_pLocalInfo)
 					TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
@@ -634,7 +634,7 @@ void CChat::OnRender()
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}	
 			}
-			else if(m_aLines[r].m_NameColor == -1)
+			else if(m_aLines[r].m_NameColor == TEAM_SPECTATORS)
 				TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
 			else
 				TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
@@ -650,12 +650,8 @@ void CChat::OnRender()
 			// render line
 			if(m_aLines[r].m_ClientID == -1)
 				TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
-			else if(m_aLines[r].m_Highlighted)
+			else if(m_aLines[r].m_Highlighted || (m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor))
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted
-			else if(m_aLines[r].m_Team && m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
-				TextRender()->TextColor(0.3f, 1.0f, 0.3f, Blend); // team color if name
-			else if(m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
-				TextRender()->TextColor(0.6f, 0.6f, 0.6f, Blend); // standard color if name
 			else if(m_aLines[r].m_Team)
 				TextRender()->TextColor(0.65f, 1.0f, 0.65f, Blend); // team message
 			else
