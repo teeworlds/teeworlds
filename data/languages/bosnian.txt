@@ -226,9 +226,6 @@ Join red
 Jump
 == Skok
 
-Kick
-== Izbaci
-
 LAN
 == LAN
 
@@ -561,10 +558,10 @@ Kick player
 Length:
 == 
 
-Make player a spectator
+Map:
 == 
 
-Map:
+Move player to spectators
 == 
 
 Name plates size
@@ -658,10 +655,4 @@ no limit
 == 
 
 ##### old translations #####
-
-Ignore
-== 
-
-Friend
-== 
 
