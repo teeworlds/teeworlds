@@ -121,6 +121,7 @@ public:
 	
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
+	CMapChecker m_MapChecker;
 	
 	CServer();
 	

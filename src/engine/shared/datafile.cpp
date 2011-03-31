@@ -222,6 +222,32 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	return true;
 }
 
+bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
+{
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
+	if(!File)
+		return false;
+	
+	// get crc and size
+	unsigned Crc = 0;
+	unsigned Size = 0;
+	unsigned char aBuffer[64*1024];
+	while(1)
+	{
+		unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
+		if(Bytes <= 0)
+			break;
+		Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
+		Size += Bytes;
+	}
+	
+	io_close(File);
+
+	*pCrc = Crc;
+	*pSize = Size;
+	return true;
+}
+
 int CDataFileReader::NumData()
 {
 	if(!m_pDataFile) { return 0; }
