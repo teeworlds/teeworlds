@@ -143,21 +143,20 @@ void CServerBrowser::Filter()
 	for(i = 0; i < m_NumServers; i++)
 	{
 		int Filtered = 0;
-		bool FoundFriend = false;
 
 		if(g_Config.m_BrFilterFriends)
 		{
+			Filtered = 1;
 			for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
 			{
 				if(m_pFriends->IsFriend(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan))
 				{
-					FoundFriend = true;
+					Filtered = 0;
 					break;
 				}
 			}
 		}
-
-		if(!FoundFriend)
+		else
 		{
 			if(g_Config.m_BrFilterEmpty && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == 0) || m_ppServerlist[i]->m_Info.m_NumClients == 0))
 				Filtered = 1;
