@@ -481,21 +481,21 @@ void CMenus::RenderServerControl(CUIRect MainView)
 }
 
 // ghost stuff
-void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	int Length = str_length(pName);
 	if((pName[0] == '.' && (pName[1] == 0 ||
 		(pName[1] == '.' && pName[2] == 0))) ||
 		(!IsDir && (Length < 4 || str_comp(pName+Length-4, ".gho"))))
-		return;
+		return 0;
 	
 	IGhostRecorder::CGhostHeader Header;
 	if(!pSelf->m_pClient->m_pGhost->GetInfo(pName, &Header))
-		return;
+		return 0;
 	
 	if(Header.m_Time <= 0)
-		return;
+		return 0;
 
 	CGhostItem Item;
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
@@ -503,6 +503,8 @@ void CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageTyp
 	Item.m_Time = Header.m_Time;
 	Item.m_Active = false;
 	Item.m_ID = pSelf->m_lGhosts.add(Item);
+	
+	return 0;
 }
 
 void CMenus::GhostlistPopulate()

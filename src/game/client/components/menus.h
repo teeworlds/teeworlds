@@ -199,7 +199,7 @@ class CMenus : public CComponent
 	void DemolistOnUpdate(bool Reset);
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	
-	static void GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+	static int GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	
 	// found in menus.cpp
 	int Render();
