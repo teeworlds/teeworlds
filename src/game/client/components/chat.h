@@ -25,7 +25,6 @@ class CChat : public CComponent
 		int m_ClientID;
 		int m_Team;
 		int m_NameColor;
-		int m_ContainsName;
 		int m_Ignore;
 		int m_Spam;
 		char m_aName[64];

@@ -328,8 +328,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_ClientID = ClientID;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
-		m_aLines[m_CurrentLine].m_Highlighted = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0;
-		m_aLines[m_CurrentLine].m_ContainsName = 0;
+		m_aLines[m_CurrentLine].m_Highlighted = m_ContainsName || (str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0);
 		
 		if(g_Config.m_ClBlockSpammer && m_IgnorePlayer)
 			m_aLines[m_CurrentLine].m_Ignore = 1;
@@ -465,12 +464,10 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		{
 			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 			{
-				m_aLines[m_CurrentLine].m_ContainsName = (int)m_ContainsName;
 				m_aLines[m_CurrentLine].m_NameColor = m_pClient->m_aClients[ClientID].m_Team;
  			}
 			else
 			{
-				m_aLines[m_CurrentLine].m_ContainsName = (int)m_ContainsName;
 				if(m_pClient->m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
 					m_aLines[m_CurrentLine].m_NameColor = -1;
 				else
@@ -650,7 +647,7 @@ void CChat::OnRender()
 			// render line
 			if(m_aLines[r].m_ClientID == -1)
 				TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
-			else if(m_aLines[r].m_Highlighted || (m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor))
+			else if(m_aLines[r].m_Highlighted)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted
 			else if(m_aLines[r].m_Team)
 				TextRender()->TextColor(0.65f, 1.0f, 0.65f, Blend); // team message
