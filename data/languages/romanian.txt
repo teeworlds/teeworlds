@@ -633,6 +633,9 @@ Show ingame HUD
 Size:
 == 
 
+Spectator mode
+== 
+
 There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
 == 
 

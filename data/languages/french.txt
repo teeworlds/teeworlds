@@ -627,6 +627,9 @@ Size:
 Sound error
 == 
 
+Spectator mode
+== 
+
 The audio device couldn't be initialised.
 == 
 

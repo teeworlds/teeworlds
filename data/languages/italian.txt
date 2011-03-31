@@ -627,6 +627,9 @@ Size:
 Sound error
 == 
 
+Spectator mode
+== 
+
 Sudden Death
 == 
 

@@ -621,6 +621,9 @@ Size:
 Sound error
 == 
 
+Spectator mode
+== 
+
 Stop record
 == 
 
