@@ -167,25 +167,15 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 					if(!m_pClient->m_aStats[i].m_Active)
 						continue;
 
-					if(str_comp(m_pClient->m_aClients[i].m_aName, aName) == 0)
+					char *pName = aName;
+					// strip first and last sign
+					pName++;
+					pName[str_length(pName)-1] = 0;
+
+					if(str_comp(m_pClient->m_aClients[i].m_aName, pName) == 0)
 					{
 						m_pClient->m_aStats[i].m_FlagCaptures++;
 						break;
-					}
-					
-					// check against trunk version
-					if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (aName[0] == '"' || aName[0] == '\''))
-					{
-						char *pName = aName;
-						// strip first and last sign
-						pName++;
-						pName[str_length(pName)-1] = 0;
-
-						if(str_comp(m_pClient->m_aClients[i].m_aName, pName) == 0)
-						{
-							m_pClient->m_aStats[i].m_FlagCaptures++;
-							break;
-						}
 					}
 				}
 			}
