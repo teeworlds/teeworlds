@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -427,238 +426,238 @@ You must restart the game for all settings to take effect.
 ##### needs translation #####
 
 %d Bytes
-== 
+== %d Bytes
 
 %d%% loaded
-== 
+== %d%% laddat
 
 %ds left
-== 
+== %d sekunder kvar
 
 %i minute left
-== 
+== %i minut kvar
 
 %i minutes left
-== 
+== %i minuter kvar
 
 %i second left
-== 
+== %i sekund kvar
 
 %i seconds left
-== 
+== %i sekunder kvar
 
 -Page %d-
-== 
+== -Sida %d-
 
 Add
-== 
+== Lägg till
 
 Add Friend
-== 
+== Lägg till kompis
 
 Are you sure that you want to delete the demo?
-== 
+== Är du säker på att du vill ta bort detta demo?
 
 Are you sure that you want to remove the player from your friends list?
-== 
+== Är du säker på att du vill ta bort denna spelaren från din kompislista?
 
 Automatically record demos
-== 
+== Spela in demon automatiskt
 
 Automatically take game over screenshot
-== 
+== Ta automatiska skärmdumpar vid spelens slut
 
 Change settings
-== 
+== Ändra inställningar
 
 Clan
-== 
+== Klan
 
 Client
-== 
+== Klient
 
 Connection Problems...
-== 
+== Anslutningsproblem...
 
 Count players only
-== 
+== Räkna endast spelare
 
 Country
-== 
+== Land
 
 Crc:
-== 
+== Crc:
 
 Created:
-== 
+== Skapad:
 
 Delete
-== 
+== Ta bort
 
 Delete demo
-== 
+== Ta bort demo
 
 Demo details
-== 
+== Demoinformation
 
 Error
-== 
+== Fel
 
 Error loading demo
-== 
+== Kunde inte ladda demot
 
 Folder
-== 
+== Mapp
 
 Force vote
-== 
+== Tvinga omröstning
 
 Free-View
-== 
+== Friläge
 
 Friends
-== 
+== Kompisar
 
 Invalid Demo
-== 
+== Ogiltigt deo
 
 Kick player
-== 
+== Kicka spelare
 
 Length:
-== 
+== Längd
 
 Map:
-== 
+== Bana
 
 Max Screenshots
-== 
+== Max antal skärmdumpar
 
 Max demos
-== 
+== Max antal demon
 
 Move player to spectators
-== 
+== Flytta till åskådarna
 
 Name plates size
-== 
+== Storlek på namnskyltar
 
 Netversion:
-== 
+== Nätversion:
 
 New name:
-== 
+== Nytt namn:
 
 Next
-== 
+== Nästa
 
 Open
-== 
+== Öppna
 
 Page %d of %d
-== 
+== Sida %d av %d
 
 Parent Folder
-== 
+== Uppliggande mapp
 
 Player options
-== 
+== Spelaralternativ
 
 Please balance teams!
-== 
+== Balansera lagen!
 
 Prev
-== 
+== Föregående
 
 REC %3d:%02d
-== 
+== REC %3d:%02d
 
 Reason:
-== 
+== Anledning:
 
 Record demo
-== 
+== Spela in demo
 
 Remove
-== 
+== Ta bort
 
 Remove friend
-== 
+== Ta bort kompis
 
 Rename
-== 
+== Byt namn
 
 Rename demo
-== 
+== Byt namn på demo
 
 Server address:
-== 
+== Serveradress
 
 Server filter
-== 
+== Serverfilter
 
 Show chat
-== 
+== Visa chatt
 
 Show friends
-== 
+== Visa kompisar
 
 Show ingame HUD
-== 
+== Visa HUD i spel
 
 Size:
-== 
+== Storlek:
 
 Sound error
-== 
+== Ljudfel
 
 Spectator mode
-== 
+== Åskådarläge
 
 Stop record
-== 
+== Sluta spela in
 
 Sudden Death
-== 
+== Plötslig död
 
 The audio device couldn't be initialised.
-== 
+== Ljudet kunde inte startas
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
-== 
+== Det finns en osparad bana i redigeraden, du kanske vill spara den innan du avslutar.\nAvsluta i alla fall?
 
 Time limit: %d min
-== 
+== Tidsgräns: %d min
 
 Type:
-== 
+== Typ:
 
 Unable to delete the demo
-== 
+== Kunde inte ta bort demot
 
 Unable to rename the demo
-== 
+== Kunde inte byta namn på demot
 
 Use team colors for name plates
-== 
+== Använd lagfärger i namnskyltar
 
 Version:
-== 
+== Version:
 
 Vote command:
-== 
+== Omröstningskommando:
 
 Vote description:
-== 
+== Beskrivning:
 
 Warmup
-== 
+== Uppvärmning
 
 Your skin
-== 
+== Ditt skin
 
 no limit
-== 
+== Ingen gräns
 
 ##### old translations #####
 
