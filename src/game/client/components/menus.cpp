@@ -96,14 +96,18 @@ int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
-	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
+	CUIRect Temp;
+	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
+	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
 void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
-	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
+	CUIRect Temp;
+	pRect->HMargin(1.0f, &Temp);
+	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 }
 
 int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
@@ -112,7 +116,9 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarActive, Corners, 10.0f);
 	else
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarInactive, Corners, 10.0f);
-	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
+	CUIRect Temp;
+	pRect->HMargin(2.0f, &Temp);
+	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 	
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }

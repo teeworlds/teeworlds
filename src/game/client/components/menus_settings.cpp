@@ -442,12 +442,12 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View)
 		CKeyInfo &Key = gs_aKeys[i];
 		CUIRect Button, Label;
 		View.HSplitTop(20.0f, &Button, &View);
-		Button.VSplitLeft(130.0f, &Label, &Button);
+		Button.VSplitLeft(135.0f, &Label, &Button);
 
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s:", (const char *)Key.m_Name);
 
-		UI()->DoLabelScaled(&Label, aBuf, 14.0f, -1);
+		UI()->DoLabelScaled(&Label, aBuf, 13.0f, -1);
 		int OldId = Key.m_KeyId;
 		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
 		if(NewId != OldId)
@@ -497,7 +497,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		{
 			CUIRect Button, Label;
 			MovementSettings.HSplitTop(20.0f, &Button, &MovementSettings);
-			Button.VSplitLeft(130.0f, &Label, &Button);
+			Button.VSplitLeft(135.0f, &Label, &Button);
 			UI()->DoLabel(&Label, Localize("Mouse sens."), 14.0f*UI()->Scale(), -1);
 			Button.HMargin(2.0f, &Button);
 			g_Config.m_InpMousesens = (int)(DoScrollbarH(&g_Config.m_InpMousesens, &Button, (g_Config.m_InpMousesens-5)/500.0f)*500.0f)+5;
@@ -723,7 +723,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 void CMenus::RenderSettingsSound(CUIRect MainView)
 {
 	CUIRect Button;
-	MainView.VSplitLeft(300.0f, &MainView, 0);
+	MainView.VSplitMid(&MainView, 0);
 	static int s_SndEnable = g_Config.m_SndEnable;
 	static int s_SndRate = g_Config.m_SndRate;
 
@@ -747,8 +747,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_SndRate);
 		MainView.HSplitTop(20.0f, &Button, &MainView);
 		UI()->DoLabelScaled(&Button, Localize("Sample rate"), 14.0f, -1);
-		Button.VSplitLeft(110.0f, 0, &Button);
-		Button.VSplitLeft(180.0f, &Button, 0);
+		Button.VSplitLeft(190.0f, 0, &Button);
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f, &Offset);
 		int Before = g_Config.m_SndRate;
@@ -763,7 +762,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		CUIRect Button, Label;
 		MainView.HSplitTop(5.0f, &Button, &MainView);
 		MainView.HSplitTop(20.0f, &Button, &MainView);
-		Button.VSplitLeft(110.0f, &Label, &Button);
+		Button.VSplitLeft(190.0f, &Label, &Button);
 		Button.HMargin(2.0f, &Button);
 		UI()->DoLabelScaled(&Label, Localize("Sound volume"), 14.0f, -1);
 		g_Config.m_SndVolume = (int)(DoScrollbarH(&g_Config.m_SndVolume, &Button, g_Config.m_SndVolume/100.0f)*100.0f);
