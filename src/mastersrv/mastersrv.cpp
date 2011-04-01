@@ -11,7 +11,7 @@
 
 enum {
 	MTU = 1400,
-	MAX_SERVERS_PER_PACKET=40,
+	MAX_SERVERS_PER_PACKET=60,
 	MAX_PACKETS=16,
 	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
 	MAX_BANS=128,
@@ -20,6 +20,7 @@ enum {
 
 struct CCheckServer
 {
+	bool m_Legacy;
 	NETADDR m_Address;
 	NETADDR m_AltAddress;
 	int m_TryCount;
@@ -31,6 +32,7 @@ static int m_NumCheckServers = 0;
 
 struct CServerEntry
 {
+	bool m_Legacy;
 	NETADDR m_Address;
 	int64 m_Expire;
 };
@@ -50,6 +52,20 @@ struct CPacketData
 CPacketData m_aPackets[MAX_PACKETS];
 static int m_NumPackets = 0;
 
+// legacy code
+struct CPacketDataLegacy
+{
+	int m_Size;
+	struct {
+		unsigned char m_aHeader[sizeof(SERVERBROWSE_LIST_LEGACY)];
+		CMastersrvAddrLegacy m_aServers[MAX_SERVERS_PER_PACKET];
+	} m_Data;
+};
+
+CPacketDataLegacy m_aPacketsLegacy[MAX_PACKETS];
+static int m_NumPacketsLegacy = 0;
+
+
 struct CCountPacketData
 {
 	unsigned char m_Header[sizeof(SERVERBROWSE_COUNT)];
@@ -58,6 +74,7 @@ struct CCountPacketData
 };
 
 static CCountPacketData m_CountData;
+static CCountPacketData m_CountDataLegacy;
 
 
 struct CBanEntry
@@ -79,35 +96,63 @@ void BuildPackets()
 	CServerEntry *pCurrent = &m_aServers[0];
 	int ServersLeft = m_NumServers;
 	m_NumPackets = 0;
-	while(ServersLeft && m_NumPackets < MAX_PACKETS)
+	m_NumPacketsLegacy = 0;
+	int PacketIndex = 0;
+	int PacketIndexLegacy = 0;
+	while(ServersLeft-- && (m_NumPackets + m_NumPacketsLegacy) < MAX_PACKETS)
 	{
-		int Chunk = ServersLeft;
-		if(Chunk > MAX_SERVERS_PER_PACKET)
-			Chunk = MAX_SERVERS_PER_PACKET;
-		ServersLeft -= Chunk;
-		
-		// copy header	
-		mem_copy(m_aPackets[m_NumPackets].m_Data.m_aHeader, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
-		
-		// copy server addresses
-		for(int i = 0; i < Chunk; i++)
+		if(!pCurrent->m_Legacy)
 		{
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[0] = (pCurrent->m_Address.type>>24)&0xff;
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[1] = (pCurrent->m_Address.type>>16)&0xff;
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[2] = (pCurrent->m_Address.type>>8)&0xff;
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[3] = pCurrent->m_Address.type&0xff;
-			mem_copy(m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp, pCurrent->m_Address.ip,
-				sizeof(m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp));
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aPort[0] = (pCurrent->m_Address.port>>8)&0xff;
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aPort[1] = pCurrent->m_Address.port&0xff;
+			if(PacketIndex == MAX_SERVERS_PER_PACKET)
+			{
+				PacketIndex = 0;
+				m_NumPackets++;
+			}
 
-			pCurrent++;
+			// copy header	
+			mem_copy(m_aPackets[m_NumPackets].m_Data.m_aHeader, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+
+			// copy server addresses
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aType[0] = (pCurrent->m_Address.type>>24)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aType[1] = (pCurrent->m_Address.type>>16)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aType[2] = (pCurrent->m_Address.type>>8)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aType[3] = pCurrent->m_Address.type&0xff;
+			mem_copy(m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aIp, pCurrent->m_Address.ip,
+				sizeof(m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aIp));
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aPort[0] = (pCurrent->m_Address.port>>8)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[PacketIndex].m_aPort[1] = pCurrent->m_Address.port&0xff;
+
+			PacketIndex++;
+
+			m_aPackets[m_NumPackets].m_Size = sizeof(SERVERBROWSE_LIST) + sizeof(CMastersrvAddr)*PacketIndex;
 		}
-		
-		m_aPackets[m_NumPackets].m_Size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR)*Chunk;
-		
-		m_NumPackets++;
+		else // legacy code
+		{
+			if(PacketIndexLegacy == MAX_SERVERS_PER_PACKET)
+			{
+				PacketIndexLegacy = 0;
+				m_NumPacketsLegacy++;
+			}
+
+			// copy header	
+			mem_copy(m_aPacketsLegacy[m_NumPackets].m_Data.m_aHeader, SERVERBROWSE_LIST_LEGACY, sizeof(SERVERBROWSE_LIST_LEGACY));
+			
+			// copy server addresses
+			mem_copy(m_aPacketsLegacy[m_NumPacketsLegacy].m_Data.m_aServers[PacketIndexLegacy].m_aIp, pCurrent->m_Address.ip,
+				sizeof(m_aPacketsLegacy[m_NumPacketsLegacy].m_Data.m_aServers[PacketIndexLegacy].m_aIp));
+			// 0.5 has the port in little endian on the network
+			m_aPacketsLegacy[m_NumPacketsLegacy].m_Data.m_aServers[PacketIndexLegacy].m_aPort[0] = pCurrent->m_Address.port&0xff;
+			m_aPacketsLegacy[m_NumPacketsLegacy].m_Data.m_aServers[PacketIndexLegacy].m_aPort[1] = (pCurrent->m_Address.port>>8)&0xff;
+
+			PacketIndexLegacy++;
+
+			m_aPacketsLegacy[m_NumPacketsLegacy].m_Size = sizeof(SERVERBROWSE_LIST_LEGACY) + sizeof(CMastersrvAddrLegacy)*PacketIndexLegacy;
+		}
+
+		pCurrent++;
 	}
+	m_NumPackets++;
+	m_NumPacketsLegacy++;
 }
 
 void SendOk(NETADDR *pAddr)
@@ -146,7 +191,7 @@ void SendCheck(NETADDR *pAddr)
 	m_NetChecker.Send(&p);
 }
 
-void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt)
+void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, bool Legacy)
 {
 	// add server
 	if(m_NumCheckServers == MAX_SERVERS)
@@ -164,10 +209,11 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt)
 	m_aCheckServers[m_NumCheckServers].m_AltAddress = *pAlt;
 	m_aCheckServers[m_NumCheckServers].m_TryCount = 0;
 	m_aCheckServers[m_NumCheckServers].m_TryTime = 0;
+	m_aCheckServers[m_NumCheckServers].m_Legacy = Legacy;
 	m_NumCheckServers++;
 }
 
-void AddServer(NETADDR *pInfo)
+void AddServer(NETADDR *pInfo, bool Legacy)
 {
 	// see if server already exists in list
 	for(int i = 0; i < m_NumServers; i++)
@@ -194,6 +240,7 @@ void AddServer(NETADDR *pInfo)
 	dbg_msg("mastersrv", "added: %s", aAddrStr);
 	m_aServers[m_NumServers].m_Address = *pInfo;
 	m_aServers[m_NumServers].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
+	m_aServers[m_NumServers].m_Legacy = Legacy;
 	m_NumServers++;
 }
 
@@ -305,6 +352,7 @@ void ReloadBans()
 int main(int argc, const char **argv) // ignore_convention
 {
 	int64 LastBuild = 0, LastBanReload = 0;
+	bool Legacy = false;
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
@@ -328,6 +376,7 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 	
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
+	mem_copy(m_CountDataLegacy.m_Header, SERVERBROWSE_COUNT_LEGACY, sizeof(SERVERBROWSE_COUNT_LEGACY));
 
 	IKernel *pKernel = IKernel::Create();
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
@@ -355,9 +404,12 @@ int main(int argc, const char **argv) // ignore_convention
 			// check if the server is banned
 			if(CheckBan(Packet.m_Address)) continue;
 
-			if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
-				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
+			if((Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0) ||
+				(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT_LEGACY, sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)) == 0))
 			{
+				Legacy = (mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT_LEGACY, sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)) == 0);
 				NETADDR Alt;
 				unsigned char *d = (unsigned char *)Packet.m_pData;
 				Alt = Packet.m_Address;
@@ -366,28 +418,43 @@ int main(int argc, const char **argv) // ignore_convention
 					d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
 				
 				// add it
-				AddCheckserver(&Packet.m_Address, &Alt);
+				AddCheckserver(&Packet.m_Address, &Alt, Legacy);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
-				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
+			else if((Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0) ||
+				(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0))
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
 				
+				Legacy = (mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0);
 				CNetChunk p;
 				p.m_ClientID = -1;
 				p.m_Address = Packet.m_Address;
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 				p.m_DataSize = sizeof(m_CountData);
-				p.m_pData = &m_CountData;
-				m_CountData.m_High = (m_NumServers>>8)&0xff;
-				m_CountData.m_Low = m_NumServers&0xff;
+				p.m_pData = Legacy?&m_CountDataLegacy:&m_CountData;
+				if(Legacy)
+				{
+					m_CountDataLegacy.m_High = (m_NumServers>>8)&0xff;
+					m_CountDataLegacy.m_Low = m_NumServers&0xff;
+				}
+				else
+				{
+					m_CountData.m_High = (m_NumServers>>8)&0xff;
+					m_CountData.m_Low = m_NumServers&0xff;
+				}
 				m_NetOp.Send(&p);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
-				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
+			else if((Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0) ||
+				(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST_LEGACY, sizeof(SERVERBROWSE_GETLIST_LEGACY)) == 0))
 			{
 				// someone requested the list
 				dbg_msg("mastersrv", "requested, responding with %d m_aServers", m_NumServers);
+				
+				Legacy = (mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST_LEGACY, sizeof(SERVERBROWSE_GETLIST_LEGACY)) == 0);
 				CNetChunk p;
 				p.m_ClientID = -1;
 				p.m_Address = Packet.m_Address;
@@ -395,8 +462,8 @@ int main(int argc, const char **argv) // ignore_convention
 				
 				for(int i = 0; i < m_NumPackets; i++)
 				{
-					p.m_DataSize = m_aPackets[i].m_Size;
-					p.m_pData = &m_aPackets[i].m_Data;
+					p.m_DataSize = Legacy?m_aPacketsLegacy[i].m_Size:m_aPackets[i].m_Size;
+					p.m_pData = Legacy?((void*)&m_aPacketsLegacy[i].m_Data):((void*)&m_aPackets[i].m_Data);
 					m_NetOp.Send(&p);
 				}
 			}
@@ -417,13 +484,14 @@ int main(int argc, const char **argv) // ignore_convention
 					if(net_addr_comp(&m_aCheckServers[i].m_Address, &Packet.m_Address) == 0 ||
 						net_addr_comp(&m_aCheckServers[i].m_AltAddress, &Packet.m_Address) == 0)
 					{
+						Legacy = m_aCheckServers[i].m_Legacy;
 						m_NumCheckServers--;
 						m_aCheckServers[i] = m_aCheckServers[m_NumCheckServers];
 						break;
 					}
 				}
 				
-				AddServer(&Packet.m_Address);
+				AddServer(&Packet.m_Address, Legacy);
 				SendOk(&Packet.m_Address);
 			}
 		}
