@@ -12,6 +12,10 @@ public:
 	
 	CGameControllerCTF(class CGameContext *pGameServer);
 	virtual bool CanBeMovedOnBalance(int ClientID);
+<<<<<<< HEAD
+=======
+	virtual void Snap(int SnappingClient);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	virtual void Tick();
 	
 	virtual bool OnEntity(int Index, vec2 Pos);

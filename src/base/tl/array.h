@@ -242,7 +242,8 @@ public:
 	*/
 	void set_size(int new_size)
 	{
-		alloc(new_size);
+		if(list_size < new_size)
+			alloc(new_size);
 		num_elements = new_size;
 	}
 

@@ -101,6 +101,11 @@ class CTextRender : public IEngineTextRender
 	float m_TextG;
 	float m_TextB;
 	float m_TextA;
+
+	float m_TextOutlineR;
+	float m_TextOutlineG;
+	float m_TextOutlineB;
+	float m_TextOutlineA;
 	
 	int m_FontTextureFormat;
 
@@ -438,10 +443,14 @@ public:
 	{
 		m_pGraphics = 0;
 
-		m_TextR = 1;
-		m_TextG = 1;
-		m_TextB = 1;
-		m_TextA = 1;
+		m_TextR = 1.0f;
+		m_TextG = 1.0f;
+		m_TextB = 1.0f;
+		m_TextA = 1.0f;
+		m_TextOutlineR = 0.0f;
+		m_TextOutlineG = 0.0f;
+		m_TextOutlineB = 0.0f;
+		m_TextOutlineA = 0.3f;
 
 		m_pDefaultFont = 0;
 
@@ -535,6 +544,14 @@ public:
 		m_TextB = b;
 		m_TextA = a;
 	}
+
+	virtual void TextOutlineColor(float r, float g, float b, float a)
+	{
+		m_TextOutlineR = r;
+		m_TextOutlineG = g;
+		m_TextOutlineB = b;
+		m_TextOutlineA = a;
+	}
 	
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
@@ -614,7 +631,7 @@ public:
 
 				Graphics()->QuadsBegin();
 				if (i == 0)
-					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f*m_TextA);
+					Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
 				else
 					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
 			}
@@ -659,18 +676,13 @@ public:
 					pBatchEnd = pCurrent + Wlen;
 				}
 				
+				const char *pTmp = pCurrent;
+				int NextCharacter = str_utf8_decode(&pTmp);
 				while(pCurrent < pBatchEnd)
 				{
-					const char *pTmp;
-					float Advance = 0;
-					int Character = 0;
-					int Nextcharacter = 0;
-					CFontChar *pChr;
-
-					// TODO: UTF-8 decode
-					Character = str_utf8_decode(&pCurrent);
-					pTmp = pCurrent;
-					Nextcharacter = str_utf8_decode(&pTmp);
+					int Character = NextCharacter;
+					pCurrent = pTmp;
+					NextCharacter = str_utf8_decode(&pTmp);
 					
 					if(Character == '\n')
 					{
@@ -684,11 +696,14 @@ public:
 						continue;
 					}
 
-					pChr = GetChar(pFont, pSizeData, Character);
-
+					CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 					if(pChr)
 					{
+<<<<<<< HEAD
 						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)*Scale;
+=======
+						float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 						if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 						{
 							// we hit the end of the line, no more to render or count
@@ -702,10 +717,13 @@ public:
 							IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
 							Graphics()->QuadsDrawTL(&QuadItem, 1);
 						}
-					}
+<<<<<<< HEAD
+=======
 
-					DrawX += Advance*Size;
-					pCursor->m_CharCount++;
+						DrawX += Advance*Size;
+						pCursor->m_CharCount++;
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
+					}
 				}
 				
 				if(NewLine)

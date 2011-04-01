@@ -22,6 +22,7 @@
 %i seconds left
 == %i secunde rămase
 
+<<<<<<< HEAD
 %s Right click for context menu.
 == %s Clic dreapta pentru meniul contextual.
 
@@ -55,12 +56,21 @@ Adds a new group
 Adds a new quad
 == Adaugă un nou quad
 
+=======
+Abort
+== Anulează
+
+Address
+== Adresa
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 All
 == Toți
 
 Alpha
 == Alfa
 
+<<<<<<< HEAD
 Alpha value of the envelope
 == Valoarea alfa a plicului
 
@@ -76,6 +86,11 @@ Append
 Append map
 == Adaugă unei hărți
 
+=======
+Always show name plates
+== Afișează întotdeauna pseudonimele
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Are you sure that you want to delete the demo?
 == Sigur vrei să ștergi demo-ul?
 
@@ -85,9 +100,12 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Aceasta fiind prima lansare a jocului, te rog introdu-ți pseudonimul mai jos. E recomandat să verifici setările și să le ajustezi cum vrei înainte să intri pe un server.
 
+<<<<<<< HEAD
 Aspect ratio
 == Rația de aspect
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Automatically record demos
 == Înregistrează automat demo-uri
 
@@ -100,6 +118,7 @@ Blue team
 Blue team wins!
 == Echipa albastră a câștigat!
 
+<<<<<<< HEAD
 Blue value of the envelope
 == Valoarea albastră a plicului
 
@@ -151,6 +170,20 @@ Color TO
 Color+
 == Culoare+
 
+=======
+Body
+== Corp
+
+Call vote
+== Votează
+
+Chat
+== Chat
+
+Close
+== Închide
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Compatible version
 == Versiune compatibilă
 
@@ -169,6 +202,7 @@ Console
 Controls
 == Controale
 
+<<<<<<< HEAD
 Creates a new color envelope
 == Creează un plic într-o culoare nouă
 
@@ -184,6 +218,8 @@ Creates a new quad layer
 Creates a new tile layer
 == Creează un nou strat de plăci
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Current
 == Curent
 
@@ -193,18 +229,22 @@ Current version: %s
 Custom colors
 == Culori personalizate
 
+<<<<<<< HEAD
 Decrease
 == Redu
 
 Decrease animation speed
 == Redu viteza animațiilor
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Delete
 == Șterge
 
 Delete demo
 == Șterge demonstrația
 
+<<<<<<< HEAD
 Delete group
 == Șterge grupul
 
@@ -226,6 +266,11 @@ Demos
 Detail
 == Detalii
 
+=======
+Demos
+== Demo
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Disconnect
 == Deconectare
 
@@ -235,9 +280,12 @@ Disconnected
 Display Modes
 == Moduri de afișare
 
+<<<<<<< HEAD
 Down
 == Jos
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Downloading map
 == Se descarcă harta
 
@@ -247,6 +295,7 @@ Draw!
 Dynamic Camera
 == Cameră dinamică
 
+<<<<<<< HEAD
 Embed
 == Integrează
 
@@ -271,12 +320,21 @@ Enter
 Envelopes
 == Plicuri
 
+=======
+Emoticon
+== Figurine
+
+Enter
+== Intră
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Error
 == Eroare
 
 Error loading demo
 == Eroare la încărcarea demo-ului
 
+<<<<<<< HEAD
 Exit
 == Ieșire
 
@@ -286,6 +344,8 @@ Exits from the editor
 External
 == Extern
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 FSAA samples
 == Eșantioane FSAA
 
@@ -298,6 +358,7 @@ Favorites
 Feet
 == Picioare
 
+<<<<<<< HEAD
 File
 == Fișier
 
@@ -307,6 +368,8 @@ File: %s
 Filename:
 == Numele fișierului:
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Filter
 == Filtre
 
@@ -343,6 +406,7 @@ General
 Graphics
 == Grafică
 
+<<<<<<< HEAD
 Green value of the envelope
 == Valoarea verde a plicului
 
@@ -355,15 +419,23 @@ Group
 HD
 == HD
 
+=======
+Grenade
+== Grenade
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Hammer
 == Ciocan
 
 Has people playing
 == Are jucători activi
 
+<<<<<<< HEAD
 Height
 == Înălțime
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 High Detail
 == Detalii înalte
 
@@ -376,6 +448,7 @@ Host address
 Hue
 == Tentă
 
+<<<<<<< HEAD
 Image
 == Imagine
 
@@ -388,6 +461,8 @@ Increase
 Increase animation speed
 == Mărește viteza animației
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Info
 == Informații
 
@@ -409,15 +484,19 @@ Join red
 Jump
 == Salt
 
+<<<<<<< HEAD
 Kick
 == Dă afară
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 LAN
 == LAN
 
 Language
 == Limba
 
+<<<<<<< HEAD
 Layers
 == Straturi
 
@@ -445,15 +524,23 @@ Load a new image to use in the map
 Load map
 == Încarcă o hartă
 
+=======
+Lht.
+== Lum.
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Loading
 == Se încarcă
 
 MOTD
 == Mesajul zilei
 
+<<<<<<< HEAD
 Make external
 == Fă-o externă
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Map
 == Hartă
 
@@ -490,6 +577,7 @@ Name
 Name plates size
 == Dimensiune nume placă
 
+<<<<<<< HEAD
 Name:
 == Nume:
 
@@ -505,6 +593,11 @@ News
 Next Envelope
 == Plicul următor
 
+=======
+News
+== Știri
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Next weapon
 == Arma următoare
 
@@ -523,18 +616,22 @@ No servers found
 No servers match your filter criteria
 == Nici un server nu corespunde criteriilor
 
+<<<<<<< HEAD
 None
 == Niciunul
 
 Normal animation speed
 == Viteza normală a animațiilor
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Ok
 == Bine
 
 Open
 == Deschide
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == Deschide o hartă și adaugă totul de pe ea pe cea curentă
 
@@ -550,6 +647,8 @@ Para X
 Para Y
 == Para Y
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Parent Folder
 == Dosarul părinte
 
@@ -577,6 +676,7 @@ Players
 Please balance teams!
 == Echilibrați echipele!
 
+<<<<<<< HEAD
 Pos X
 == Poz X
 
@@ -607,6 +707,11 @@ Proof
 Quads
 == Quad-uri
 
+=======
+Prev. weapon
+== Arma precedentă
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Quality Textures
 == Texturi de înaltă calitate
 
@@ -616,8 +721,13 @@ Quick search:
 Quit
 == Ieșire
 
+<<<<<<< HEAD
 REC
 == REC
+=======
+REC %3d:%02d
+== REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Reason:
 == Motiv:
@@ -631,12 +741,15 @@ Red team
 Red team wins!
 == Echipa roșie a câștigat!
 
+<<<<<<< HEAD
 Red value of the envelope
 == Valoarea roșie a plicului
 
 Refocus
 == Refocus
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Refresh
 == Reîncarcă
 
@@ -646,6 +759,7 @@ Refreshing master servers
 Remote console
 == Consolă server
 
+<<<<<<< HEAD
 Remove
 == Elimină
 
@@ -664,12 +778,15 @@ Replace Image
 Replaces the image with a new one
 == Înlocuiește imaginea cu una nouă
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Reset filter
 == Filtru implicit
 
 Reset to defaults
 == Setări implicite
 
+<<<<<<< HEAD
 Resizes the current Quad based on the aspect ratio of the image
 == Redimensionează quad-ul curent în baza rației de aspect a imaginii
 
@@ -685,6 +802,11 @@ Rotation of the brush in degrees. Use left mouse button to drag and change the v
 Rotation of the envelope
 == Rotirea plicului
 
+=======
+Rifle
+== Mitralieră
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Round
 == Runda
 
@@ -694,6 +816,7 @@ Sample rate
 Sat.
 == Sat.
 
+<<<<<<< HEAD
 Save
 == Salvează
 
@@ -709,6 +832,8 @@ Saves the current map
 Saves the current map under a new name
 == Salvează harta curentă sub un nume nou
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Score
 == Scor
 
@@ -724,6 +849,7 @@ Scoreboard
 Screenshot
 == Captură de ecran
 
+<<<<<<< HEAD
 Select group. Right click for properties.
 == Alege un grup. Clic-dreapta pentru proprietăți.
 
@@ -733,6 +859,8 @@ Select image
 Select layer. Right click for properties.
 == Alege un strat. Clic-dreapta pentru prorpietăți.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Server details
 == Detalii server
 
@@ -745,9 +873,12 @@ Server not full
 Settings
 == Setări
 
+<<<<<<< HEAD
 Shift
 == Shift
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Shotgun
 == Pușcă
 
@@ -778,12 +909,15 @@ Spectate
 Spectators
 == Spectatori
 
+<<<<<<< HEAD
 Square
 == Pătrat
 
 Squares the current quad
 == Fă pătrat quad-ul curent
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Standard gametype
 == Jocuri standard
 
@@ -796,12 +930,15 @@ Stop record
 Sudden Death
 == Moarte subită
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == Comută între gestiune imagini și straturi.
 
 Switch curve type
 == Comută tipul de curbă
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Switch weapon on pickup
 == Schimbă arma la găsire
 
@@ -823,15 +960,19 @@ The audio device couldn't be initialised.
 The server is running a non-standard tuning on a pure game type.
 == Serverul folosește parametri ne-standard într-un joc standard.
 
+<<<<<<< HEAD
 Tiles
 == Plăci
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Time limit
 == Timp limită
 
 Time limit: %d min
 == Timp limită : %d min
 
+<<<<<<< HEAD
 Toggle group visibility
 == Comută vizibilitatea grupului
 
@@ -841,6 +982,8 @@ Toggle layer visibility
 Toggles the envelope editor.
 == Comută editorul de plicuri.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Try again
 == Reîncearcă
 
@@ -853,6 +996,7 @@ UI Color
 Unable to delete the demo
 == Nu pot șterge demo-ul
 
+<<<<<<< HEAD
 Up
 == Sus
 
@@ -871,6 +1015,8 @@ Use left mouse button to drag and create a brush.
 Use left mouse button to paint with the brush. Right button clears the brush.
 == Folosește butonul stâng al mausului pentru a picta cu pensula. Clic dreapta curăță pensula.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Use sounds
 == Folosește sunetul
 
@@ -898,6 +1044,7 @@ Weapon
 Welcome to Teeworlds
 == Bun venit în Teeworlds
 
+<<<<<<< HEAD
 Width
 == Lățime
 
@@ -907,6 +1054,8 @@ X-axis of the envelope
 Y-axis of the envelope
 == Axa-Y a plicului
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Yes
 == Da
 
@@ -916,6 +1065,7 @@ You must restart the game for all settings to take effect.
 Your skin
 == Costumul tău
 
+<<<<<<< HEAD
 ZI
 == MA
 
@@ -976,6 +1126,137 @@ Game tiles
 == 
 
 Unhookable
+=======
+no limit
+== fără limită
+
+##### needs translation #####
+
+%d Bytes
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Demo details
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Move player to spectators
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Spectator mode
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Type:
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 ##### old translations #####

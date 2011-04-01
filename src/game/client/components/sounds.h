@@ -13,6 +13,8 @@ class CSounds : public CComponent
 	int m_aQueue[QUEUE_SIZE];
 	int m_QueuePos;
 	int64 m_QueueWaitTime;
+	class CJob m_SoundJob;
+	bool m_WaitForSoundJob;
 
 public:
 	// sound channels

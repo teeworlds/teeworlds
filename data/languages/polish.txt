@@ -7,6 +7,7 @@
 %ds left
 == Jeszcze %d
 
+<<<<<<< HEAD
 %s Right click for context menu.
 == %s Prawy przycisk myszy aby włączyć menu.
 
@@ -40,6 +41,14 @@ Adds a new group
 Adds a new quad
 == Dodaje nowy quad
 
+=======
+Abort
+== Anuluj
+
+Address
+== Adres
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 All
 == Wszystki
 
@@ -49,6 +58,7 @@ Alpha
 Always show name plates
 == Zawsze pokazuj nicki
 
+<<<<<<< HEAD
 Anim
 == Animacja
 
@@ -58,6 +68,8 @@ Append
 Append map
 == Importuje mapę
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Are you sure that you want to quit?
 == Czy na pewno chcesz opuścić grę?
 
@@ -73,6 +85,7 @@ Blue team wins!
 Body
 == Ciało
 
+<<<<<<< HEAD
 Border
 == Granice
 
@@ -88,12 +101,18 @@ Call vote
 Cancel
 == Anuluj
 
+=======
+Call vote
+== Głosowanie
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Chat
 == Chat
 
 Close
 == Zamknij
 
+<<<<<<< HEAD
 Color Env
 == Color Env
 
@@ -103,6 +122,8 @@ Color TO
 Color+
 == Kolor+
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Compatible version
 == Kompatybilna wersja
 
@@ -121,6 +142,7 @@ Console
 Controls
 == Sterowanie
 
+<<<<<<< HEAD
 Creates a new color envelope
 == Tworzy nowy kolor animacji
 
@@ -136,6 +158,8 @@ Creates a new quad layer
 Creates a new tile layer
 == Tworzy nową warstwę tile
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Current
 == Aktualnie
 
@@ -145,6 +169,7 @@ Current version: %s
 Custom colors
 == Własne kolory
 
+<<<<<<< HEAD
 Decrease
 == Zmniejsz
 
@@ -172,6 +197,14 @@ Demos
 Detail
 == Szczegóły
 
+=======
+Delete
+== Usuń
+
+Demos
+== Dema
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Disconnect
 == Rozłącz
 
@@ -190,6 +223,7 @@ Draw!
 Dynamic Camera
 == Dynamiczna kamera
 
+<<<<<<< HEAD
 Embed
 == Zintegruj
 
@@ -199,27 +233,35 @@ Embedded
 Embeds the image into the map file.
 == Integruje obrazek z plikiem mapy.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Emoticon
 == Emotikonka
 
 Enter
 == Wejdź
 
+<<<<<<< HEAD
 Envelopes
 == Animacje
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Error
 == Błąd
 
 Error loading demo
 == Błąd przy ładowaniu demo
 
+<<<<<<< HEAD
 Exits from the editor
 == Wyjście z edytora
 
 External
 == Zewnętrzny
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 FSAA samples
 == próbki FSAA (anti-aliasing)
 
@@ -232,12 +274,15 @@ Favorites
 Feet
 == Stopy
 
+<<<<<<< HEAD
 File
 == Plik
 
 Filename:
 == Nazwa pliku:
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Filter
 == Filtr
 
@@ -274,21 +319,27 @@ Graphics
 Grenade
 == Granatnik
 
+<<<<<<< HEAD
 Group
 == Grupa
 
 HD
 == HD
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Hammer
 == Młot
 
 Has people playing
 == Nie pokazuj pustych
 
+<<<<<<< HEAD
 Height
 == Wysokość
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 High Detail
 == Wysoka jakość obrazu
 
@@ -301,6 +352,7 @@ Host address
 Hue
 == Kolor
 
+<<<<<<< HEAD
 Image
 == Obrazek
 
@@ -313,6 +365,8 @@ Increase
 Increase animation speed
 == Zwiększ prędkość animacji
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Info
 == Info
 
@@ -331,15 +385,19 @@ Join red
 Jump
 == Skok
 
+<<<<<<< HEAD
 Kick
 == Kopnięcie
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 LAN
 == LAN
 
 Language
 == Język
 
+<<<<<<< HEAD
 Layers
 == Warstwy
 
@@ -355,15 +413,23 @@ Lht.
 Load a new image to use in the map
 == Wybierz nowy obrazek do tej mapy:
 
+=======
+Lht.
+== Jasn.
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Loading
 == Ładowanie
 
 MOTD
 == Wiadomość dnia
 
+<<<<<<< HEAD
 Make external
 == Użyj jako zewnętrzny
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Map
 == Mapa
 
@@ -391,6 +457,7 @@ Mute when not active
 Name
 == Nick
 
+<<<<<<< HEAD
 Name:
 == Nazwa:
 
@@ -403,6 +470,11 @@ News
 Next Envelope
 == Następna animacja
 
+=======
+News
+== News
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Next weapon
 == Następna broń
 
@@ -421,18 +493,22 @@ No servers found
 No servers match your filter criteria
 == Nie znaleziono serwerów spełniających twoje kryteria
 
+<<<<<<< HEAD
 None
 == Brak
 
 Normal animation speed
 == Normalna prędkość animacji
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Ok
 == OK
 
 Open
 == Otwórz
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == Otwiera mapę i dodaje wszystko z tamtej mapy do bieżącej.
 
@@ -442,6 +518,8 @@ Opens a map for editing
 Order
 == Kolejność
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Password
 == Hasło
 
@@ -466,6 +544,7 @@ Players
 Please balance teams!
 == Konieczne wyrównanie drużyn!
 
+<<<<<<< HEAD
 Pos. Env
 == Pos. Env
 
@@ -487,6 +566,11 @@ Previous Envelope
 Proof
 == Test
 
+=======
+Prev. weapon
+== Poprzednia broń
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Quality Textures
 == Szczegółowe tekstury
 
@@ -511,6 +595,7 @@ Refreshing master servers
 Remote console
 == Zdalna konsola
 
+<<<<<<< HEAD
 Remove
 == Usuń
 
@@ -529,6 +614,8 @@ Replace Image
 Replaces the image with a new one
 == Zamienia obrazek na nowy
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Reset filter
 == Domyślne filtry
 
@@ -547,6 +634,7 @@ Sample rate
 Sat.
 == Nasyc.
 
+<<<<<<< HEAD
 Save
 == Zapisz
 
@@ -562,6 +650,8 @@ Saves the current map
 Saves the current map under a new name
 == Zapisuje bieżącą mapę pod nową nazwą
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Score
 == Wynik
 
@@ -577,6 +667,7 @@ Scoreboard
 Screenshot
 == Screenshot
 
+<<<<<<< HEAD
 Select group. Right click for properties.
 == Wybierz grupę. Prawy przycisk myszy da więcej informacji.
 
@@ -586,6 +677,8 @@ Select image
 Select layer. Right click for properties.
 == Wybierz warstwę. Prawy przycisk myszy da więcej informacji.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Server details
 == Szczegóły serwera
 
@@ -625,12 +718,15 @@ Spectate
 Spectators
 == Obserwatorzy
 
+<<<<<<< HEAD
 Square
 == Kwadrat
 
 Squares the current quad
 == Zmienia bieżący quad w kwadrat
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Standard gametype
 == Standardowy typ gry
 
@@ -640,12 +736,15 @@ Standard map
 Sudden Death
 == Nagła śmierć
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == Przełącz pomiędzy widokiem obrazków i warstw.
 
 Switch curve type
 == Przełącz typ krzywej
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Switch weapon on pickup
 == Zmień broń po podniesieniu
 
@@ -667,6 +766,7 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Limit czasu
 
+<<<<<<< HEAD
 Toggle group visibility
 == Zmień widzialność grupy
 
@@ -676,6 +776,8 @@ Toggle layer visibility
 Toggles the envelope editor.
 == Włącza edytor animacji.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Try again
 == Ponów próbę
 
@@ -685,12 +787,15 @@ Type
 UI Color
 == Kolor menu
 
+<<<<<<< HEAD
 Use left mouse button to drag and create a brush.
 == Lewy przycisk myszy aby przesuwać i tworzyć pędzel.
 
 Use left mouse button to paint with the brush. Right button clears the brush.
 == Lewy przycisk myszy aby malować bieżącym pędzlem. Prawy przycisk myszy czyści pędzel.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Use sounds
 == Włącz dźwięki
 
@@ -718,9 +823,12 @@ Weapon
 Welcome to Teeworlds
 == Witaj w Teeworlds
 
+<<<<<<< HEAD
 Width
 == Szerokość
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Yes
 == Tak
 
@@ -730,6 +838,7 @@ You must restart the game for all settings to take effect.
 Your skin
 == Twój wygląd
 
+<<<<<<< HEAD
 ZI
 == Przybliż
 
@@ -768,6 +877,13 @@ ZO
 
 ##### needs translation #####
 
+=======
+##### needs translation #####
+
+%d Bytes
+== 
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 %d%% loaded
 == 
 
@@ -783,6 +899,7 @@ ZO
 %i seconds left
 == 
 
+<<<<<<< HEAD
 Alpha value of the envelope
 == 
 
@@ -826,11 +943,54 @@ Constructs game tiles from this layer
 == 
 
 Death
+=======
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to delete the demo?
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Delete demo
 == 
 
+<<<<<<< HEAD
 Delete this envelope
 == 
 
@@ -847,20 +1007,31 @@ Exit
 == 
 
 File: %s
+=======
+Demo details
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Folder
 == 
 
+<<<<<<< HEAD
 Game tiles
 == 
 
 Green value of the envelope
+=======
+Free-View
+== 
+
+Friends
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Invalid Demo
 == 
 
+<<<<<<< HEAD
 Left
 == 
 
@@ -871,6 +1042,15 @@ Load
 == 
 
 Load map
+=======
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Max Screenshots
@@ -879,6 +1059,7 @@ Max Screenshots
 Max demos
 == 
 
+<<<<<<< HEAD
 Name plates size
 == 
 
@@ -904,6 +1085,36 @@ Quads
 == 
 
 REC
+=======
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Parent Folder
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Reason:
@@ -912,6 +1123,7 @@ Reason:
 Record demo
 == 
 
+<<<<<<< HEAD
 Red value of the envelope
 == 
 
@@ -973,6 +1185,72 @@ Y-axis of the envelope
 == 
 
 [HOME] Restore map focus
+=======
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+Stop record
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Time limit: %d min
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 no limit

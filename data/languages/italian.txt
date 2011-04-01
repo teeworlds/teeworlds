@@ -22,9 +22,12 @@
 %i seconds left
 == %i secondi ancora
 
+<<<<<<< HEAD
 %s Right click for context menu.
 == %s Menu tasto destro.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Abort
 == Annulla
 
@@ -67,6 +70,7 @@ Alpha value of the envelope
 Always show name plates
 == Mostra sempre etichette dei nomi
 
+<<<<<<< HEAD
 Anim
 == Anim
 
@@ -76,6 +80,8 @@ Append
 Append map
 == Inserisci Mappa
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Are you sure that you want to delete the demo?
 == Sicuro di voler cancellare questa registrazione?
 
@@ -85,9 +91,12 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == E' la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname. E' consigliato aggiustare le impostazioni in base alle proprie preferenze prima di entrare in un server.
 
+<<<<<<< HEAD
 Aspect ratio
 == Riproporziona
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Automatically record demos
 == Registra demo automaticamente
 
@@ -193,18 +202,22 @@ Current version: %s
 Custom colors
 == Colori personalizzati
 
+<<<<<<< HEAD
 Decrease
 == Diminuisci
 
 Decrease animation speed
 == Diminuisce la velocità   dell'animazione
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Delete
 == Cancella
 
 Delete demo
 == Cancella demo
 
+<<<<<<< HEAD
 Delete group
 == Cancella gruppo
 
@@ -220,6 +233,8 @@ Deletes the current quad
 Deletes the layer
 == Cancella il livello selezionato
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Demos
 == Demo
 
@@ -258,25 +273,32 @@ Embeds the image into the map file.
 
 Emoticon
 == Emozioni
+<<<<<<< HEAD
 
 Enable/disable group for saving
 == Includi/Escludi gruppo al salvataggio
 
 Enable/disable layer for saving
 == Includi/Escludi livello al salvataggio
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Enter
 == Entra
 
+<<<<<<< HEAD
 Envelopes
 == Effetti
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Error
 == Errore
 
 Error loading demo
 == Impossibile caricare la demo
 
+<<<<<<< HEAD
 Exit
 == Esci
 
@@ -286,6 +308,8 @@ Exits from the editor
 External
 == Esterne
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 FSAA samples
 == Esempi FSAA
 
@@ -336,9 +360,12 @@ General
 
 Graphics
 == Grafica
+<<<<<<< HEAD
 
 Green value of the envelope
 == Grafico dei valori di Verde (asse Y), in funzione del tempo (asse X)
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Grenade
 == Granata
@@ -399,9 +426,6 @@ Join red
 
 Jump
 == Salta
-
-Kick
-== Kick
 
 LAN
 == LAN
@@ -475,6 +499,7 @@ Name
 Name plates size
 == Dimensione etichetta
 
+<<<<<<< HEAD
 Name:
 == Nome:
 
@@ -484,6 +509,8 @@ New
 New folder
 == Nuova cartella
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 News
 == Notizie
 
@@ -520,6 +547,7 @@ Ok
 Open
 == Apri
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == Copia il contenuto di una mappa nella mappa corrente
 
@@ -535,6 +563,8 @@ Para X
 Para Y
 == Profond. Y
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Parent Folder
 == Indietro
 
@@ -562,6 +592,7 @@ Players
 Please balance teams!
 == Squadre sbilanciate!
 
+<<<<<<< HEAD
 Pos X
 == Coord. X
 
@@ -591,6 +622,10 @@ Proof
 
 Quads
 == Forme
+=======
+Prev. weapon
+== Precedente
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Quality Textures
 == Textures di qualità
@@ -769,12 +804,15 @@ Standard map
 Stop record
 == Termina reg.
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == Cambia l'area di intervento tra immagini o livelli.
 
 Switch curve type
 == Cambia il tipo di curva
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Switch weapon on pickup
 == Cambia arma alla raccolta
 
@@ -805,6 +843,7 @@ Time limit
 Time limit: %d min
 == Tempo limite %d min
 
+<<<<<<< HEAD
 Toggle group visibility
 == mostra/nasconde Gruppo
 
@@ -814,6 +853,8 @@ Toggle layer visibility
 Toggles the envelope editor.
 == apre/allarga/chiude l'editor di Effetti grafici
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Try again
 == Ritenta
 
@@ -826,6 +867,7 @@ UI Color
 Unable to delete the demo
 == Impossibile eliminare la registrazione
 
+<<<<<<< HEAD
 Up
 == Sopra
 
@@ -844,6 +886,8 @@ Use left mouse button to drag and create a brush.
 Use left mouse button to paint with the brush. Right button clears the brush.
 == Dipingi col tasto sinistro del mouse o pulisci pennello col destro.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Use sounds
 == Usa suoni
 
@@ -867,6 +911,7 @@ Weapon
 
 Welcome to Teeworlds
 == Benvenuto su Teeworlds!
+<<<<<<< HEAD
 
 Width
 == Larghezza
@@ -876,6 +921,8 @@ X-axis of the envelope
 
 Y-axis of the envelope
 == Grafico dei valori di spostamento in verticale (asse Y), in funzione del tempo (asse X)
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Yes
 == Si
@@ -886,6 +933,7 @@ You must restart the game for all settings to take effect.
 Your skin
 == La tua Skin
 
+<<<<<<< HEAD
 ZI
 == Z+
 
@@ -973,6 +1021,152 @@ Sudden Death
 == 
 
 Unhookable
+=======
+no limit
+== senza limite
+
+##### needs translation #####
+
+%d Bytes
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Demo details
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Move player to spectators
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+Sudden Death
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Type:
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Warmup

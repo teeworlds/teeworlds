@@ -32,8 +32,14 @@ void CNamePlates::RenderNameplate(
 		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName;
 		float tw = TextRender()->TextWidth(0, FontSize, pName, -1);
 		
+<<<<<<< HEAD
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
 		if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
+=======
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
+		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 		{
 			if(pPlayerInfo->m_Team == TEAM_RED)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
@@ -51,6 +57,7 @@ void CNamePlates::RenderNameplate(
 		}
 
 		TextRender()->TextColor(1,1,1,1);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	}
 }
 

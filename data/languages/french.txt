@@ -8,7 +8,11 @@
 == %d%% chargé
 
 %ds left
+<<<<<<< HEAD
 == %ds pour voter
+=======
+== %ds restantes
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 %i minute left
 == %i minute restante
@@ -21,13 +25,17 @@
 
 %i seconds left
 == %i secondes restantes
+<<<<<<< HEAD
 
 %s Right click for context menu.
 == %s Clic-droit pour afficher le menu contextuel.
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Abort
 == Annuler
 
+<<<<<<< HEAD
 Add
 == Ajouter
 
@@ -37,11 +45,10 @@ Add Image
 Add group
 == Ajouter un groupe
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Address
 == Adresse
-
-Adds a new group
-== Ajoute un nouveau groupe
 
 All
 == Tout le monde
@@ -55,14 +62,8 @@ Alpha value of the envelope
 Always show name plates
 == Toujours afficher les pseudonymes
 
-Anim
-== Anim.
-
-Append
-== Joindre
-
-Append map
-== Joindre une carte
+Are you sure that you want to delete the demo?
+== Êtes-vous sûr de vouloir supprimer cette démo ?
 
 Are you sure that you want to delete the demo?
 == Êtes-vous sûr de vouloir supprimer cette démo ?
@@ -91,6 +92,7 @@ Blue value of the envelope
 Body
 == Corps
 
+<<<<<<< HEAD
 Border
 == Bordure
 
@@ -100,11 +102,10 @@ CCW
 CW
 == SH
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Call vote
 == Voter
-
-Cancel
-== Annuler
 
 Chat
 == Chat
@@ -112,6 +113,7 @@ Chat
 Close
 == Fermer
 
+<<<<<<< HEAD
 Color
 == Couleur
 
@@ -124,6 +126,8 @@ Color TO
 Color+
 == Couleur+
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Compatible version
 == Version compatible
 
@@ -142,6 +146,7 @@ Console
 Controls
 == Contrôles
 
+<<<<<<< HEAD
 Creates a new color envelope
 == Crée une nouvelle animation de couleur
 
@@ -151,6 +156,8 @@ Creates a new map
 Creates a new pos envelope
 == Crée une nouvelle animation de position
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Current
 == Actuellement
 
@@ -160,17 +167,12 @@ Current version: %s
 Custom colors
 == Couleurs personnalisées
 
-Decrease
-== Réduire
-
-Decrease animation speed
-== Réduire la vitesse des animations
-
 Delete
 == Supprimer
 
 Delete demo
 == Supprimer la démo
+<<<<<<< HEAD
 
 Delete group
 == Supprimer le groupe
@@ -183,12 +185,11 @@ Delete this envelope
 
 Deletes the layer
 == Supprime la couche
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Demos
 == Démos
-
-Detail
-== Détail
 
 Disconnect
 == Partir
@@ -211,15 +212,6 @@ Draw!
 Dynamic Camera
 == Caméra dynamique
 
-Embed
-== Intégrer
-
-Embedded
-== Intégré
-
-Embeds the image into the map file.
-== Intègre l'image dans la carte.
-
 Emoticon
 == Émoticônes
 
@@ -234,6 +226,7 @@ Error
 
 Error loading demo
 == Erreur pendant le chargement de la démo
+<<<<<<< HEAD
 
 Exit
 == Quitter
@@ -243,6 +236,8 @@ Exits from the editor
 
 External
 == Externe
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 FSAA samples
 == Échantillons FSAA
@@ -256,6 +251,7 @@ Favorites
 Feet
 == Pieds
 
+<<<<<<< HEAD
 File
 == Fichier
 
@@ -265,6 +261,8 @@ File: %s
 Filename:
 == Nom du fichier:
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Filter
 == Filtre
 
@@ -307,17 +305,11 @@ Green value of the envelope
 Grenade
 == Lance-grenade
 
-Group
-== Groupe
-
 Hammer
 == Maillet
 
 Has people playing
 == Au moins un joueur
-
-Height
-== Hauteur
 
 High Detail
 == Tous les détails
@@ -330,18 +322,6 @@ Host address
 
 Hue
 == Teinte
-
-Image
-== Image
-
-Images
-== Images
-
-Increase
-== Augmenter
-
-Increase animation speed
-== Augmenter la vitesse des animations
 
 Info
 == Info.
@@ -364,15 +344,13 @@ Join red
 Jump
 == Sauter
 
-Kick
-== Expulser
-
 LAN
 == LAN
 
 Language
 == Langue
 
+<<<<<<< HEAD
 Layers
 == Couches
 
@@ -397,15 +375,23 @@ Load a new image to use in the map
 Load map
 == Charger une map
 
+=======
+Lht.
+== Lum.
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Loading
 == Chargement
 
 MOTD
 == MOTD
 
+<<<<<<< HEAD
 Make external
 == Mettre en externe
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Map
 == Carte
 
@@ -439,6 +425,7 @@ Mute when not active
 Name
 == Nom
 
+<<<<<<< HEAD
 Name:
 == Nom:
 
@@ -448,6 +435,8 @@ New
 New folder
 == Nouveau dossier
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 News
 == Nouvelles
 
@@ -472,18 +461,13 @@ No servers found
 No servers match your filter criteria
 == Aucun serveur ne correspond à vos critères
 
-None
-== Aucun
-
-Normal animation speed
-== Vitesse normale des animations
-
 Ok
 == Ok
 
 Open
 == Ouvrir
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == Ouvre une carte et ajoute son contenu dans la carte actuelle
 
@@ -492,6 +476,10 @@ Opens a map for editing
 
 Order
 == Ordre
+=======
+Parent Folder
+== Dossier parent
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Parent Folder
 == Dossier parent
@@ -520,6 +508,7 @@ Players
 Please balance teams!
 == Équilibrez les équipes !
 
+<<<<<<< HEAD
 Pos X
 == Pos X
 
@@ -532,6 +521,8 @@ Pos.+
 Press right mouse button to create a new point
 == Clic-droit pour créer un nouveau point
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Prev. weapon
 == Arme précédente
 
@@ -547,8 +538,13 @@ Quick search:
 Quit
 == Quitter
 
+<<<<<<< HEAD
 REC
 == REC
+=======
+REC %3d:%02d
+== REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Reason:
 == Raison :
@@ -574,6 +570,7 @@ Refreshing master servers
 Remote console
 == Console serveur
 
+<<<<<<< HEAD
 Remove
 == Enlever
 
@@ -592,6 +589,8 @@ Replace Image
 Replaces the image with a new one
 == Remplace l'image par une nouvelle
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Reset filter
 == Filtres par défaut
 
@@ -616,6 +615,7 @@ Sample rate
 Sat.
 == Sat.
 
+<<<<<<< HEAD
 Save
 == Enregistrer
 
@@ -631,6 +631,8 @@ Saves the current map
 Saves the current map under a new name
 == Enregistre la carte actuelle sous un autre nom
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Score
 == Score
 
@@ -646,6 +648,7 @@ Scoreboard
 Screenshot
 == Capture d'écran
 
+<<<<<<< HEAD
 Select group. Right click for properties.
 == Sélectionner un groupe. Clic-droit pour voir les propriétés.
 
@@ -655,6 +658,8 @@ Select image
 Select layer. Right click for properties.
 == Sélectionner une couche. Clic-droit pour voir les propriétés.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Server details
 == Détails du serveur
 
@@ -693,9 +698,6 @@ Spectate
 
 Spectators
 == Spectateurs
-
-Square
-== Carré
 
 Standard gametype
 == Types de jeu standards
@@ -778,9 +780,6 @@ Weapon
 Welcome to Teeworlds
 == Bienvenue dans Teeworlds
 
-Width
-== Largeur
-
 Yes
 == Oui
 
@@ -790,12 +789,30 @@ You must restart the game for all settings to take effect.
 Your skin
 == Votre skin
 
-ZI
-== Z+
+no limit
+== pas de limite
 
-ZO
-== Z-
+##### needs translation #####
 
+%d Bytes
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Change settings
+== 
+
+<<<<<<< HEAD
 [M] Flip brush vertical
 == [M] Retourner verticalement
 
@@ -978,5 +995,127 @@ Y-axis of the envelope
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == 
 
+=======
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Demo details
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+== 
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 ##### old translations #####
 

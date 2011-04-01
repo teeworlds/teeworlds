@@ -3,6 +3,10 @@ bam
 config.lua
 datasrc/__pycache__
 datasrc/*.pyc
+<<<<<<< HEAD
+=======
+freetype*.dll
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 objs
 src/game/generated
 SDL.dll

@@ -80,6 +80,10 @@ public:
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
 	virtual void AutoScreenshot_Start() = 0;
+<<<<<<< HEAD
+=======
+	virtual void ServerBrowserUpdate() = 0;
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 	// networking
 	virtual void EnterGame() = 0;
@@ -132,6 +136,11 @@ public:
 	virtual bool ConnectionProblems() = 0;
 
 	virtual bool SoundInitFailed() = 0;
+<<<<<<< HEAD
+=======
+
+	virtual int GetDebugFont() = 0;
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 };
 
 class IGameClient : public IInterface
@@ -156,6 +165,7 @@ public:
 	virtual int OnSnapInput(int *pData) = 0;
 	
 	virtual const char *GetItemName(int Type) = 0;
+	virtual int GetCountryIndex(int Code) = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
 

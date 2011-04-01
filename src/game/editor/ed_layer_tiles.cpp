@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 
@@ -178,6 +179,7 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
                 m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
@@ -200,6 +202,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 				
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -321,6 +324,37 @@ void CLayerTiles::Shift(int Direction)
 	}
 }
 
+void CLayerTiles::ShowInfo()
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+	
+	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+	int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+	int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+	
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			int c = x + y*m_Width;
+			if(m_pTiles[c].m_Index)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, 1,1,1,1, aBuf);
+
+				char aFlags[4] = {	m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ',
+									0};
+				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, 1,1,1,1, aFlags);
+			}
+			x += m_pTiles[c].m_Skip;
+		}
+}
+
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
@@ -333,7 +367,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	if(InGameGroup)
 	{
 		static int s_ColclButton = 0;
+<<<<<<< HEAD
 		if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Game tiles"), 0, &Button, 0, Localize("Constructs game tiles from this layer")))
+=======
+		if(m_pEditor->DoButton_Editor(&s_ColclButton, "Game tiles", 0, &Button, 0, "Constructs game tiles from this layer"))
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
 
 		int Result = m_pEditor->PopupSelectGameTileOpResult();
@@ -344,8 +382,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
 				for(int x = 0; x < w; x++)
+<<<<<<< HEAD
 					if(gl->m_pTiles[y*gl->m_Width+x].m_Index >= TILE_AIR && gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_NOHOOK)
 						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_AIR+Result:TILE_AIR;
+=======
+					if(m_pTiles[y*m_Width+x].m_Index)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR+Result;
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 			return 1;
 		}
@@ -368,11 +411,19 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	Color |= m_Color.a;
 	
 	CProperty aProps[] = {
+<<<<<<< HEAD
 		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
 		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
 		{Localize("Color"), Color, PROPTYPE_COLOR, 0, 0},
+=======
+		{"Width", m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Height", m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Shift", 0, PROPTYPE_SHIFT, 0, 0},
+		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
+		{"Color", Color, PROPTYPE_COLOR, 0, 0},
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 		{0},
 	};
 	
@@ -384,7 +435,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);		
+	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		m_pEditor->m_Map.m_Modified = true;
 	
 	if(Prop == PROP_WIDTH && NewVal > 1)
 		Resize(NewVal, m_Height);

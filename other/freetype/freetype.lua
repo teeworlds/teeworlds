@@ -28,11 +28,16 @@ FreeType = {
 				settings.link.flags:Add("`freetype-config --libs`")
 				
 			elseif option.use_win32lib == true then
+<<<<<<< HEAD
 				if settings.debug > 0 then
 					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype243MT_D")
 				else
 					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype243MT")
 				end
+=======
+				settings.link.libpath:Add(FreeType.basepath .. "/lib")
+				settings.link.libs:Add("freetype")
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 			end
 		end
 		

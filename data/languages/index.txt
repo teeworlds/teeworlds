@@ -43,5 +43,10 @@ spanish
 swedish
 == Svenska
 
+<<<<<<< HEAD
 ukrainian
 == Українська
+=======
+ukrainian
+== Українська
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb

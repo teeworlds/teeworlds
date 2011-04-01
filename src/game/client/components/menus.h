@@ -6,6 +6,9 @@
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
 
+#include <engine/demo.h>
+
+#include <game/voting.h>
 #include <game/client/component.h>
 #include <game/client/ui.h>
 
@@ -35,9 +38,13 @@ class CMenus : public CComponent
 
 
 	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect);
+	int DoButton_Sprite(const void *pID, int ImageID, int SpriteID, int Checked, const CUIRect *pRect, int Corners);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+<<<<<<< HEAD
+=======
+	int DoButton_PageMenu(const void *pID, const char *pText, int Checked, bool Active, const CUIRect *pRect, int Corners);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
@@ -78,9 +85,15 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 	
+<<<<<<< HEAD
 	void UiDoListboxStart(void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
 	CListboxItem UiDoListboxNextItem(void *pID, bool Selected = false);
+=======
+	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
+	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
 	
@@ -97,6 +110,11 @@ class CMenus : public CComponent
 		POPUP_PURE,
 		POPUP_LANGUAGE,
 		POPUP_DELETE_DEMO,
+<<<<<<< HEAD
+=======
+		POPUP_RENAME_DEMO,
+		POPUP_REMOVE_FRIEND,
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
@@ -124,6 +142,10 @@ class CMenus : public CComponent
 	vec2 m_MousePos;
 	
 	int64 m_LastInput;
+
+	// loading
+	int m_LoadCurrent;
+	int m_LoadTotal;
 	
 	//
 	char m_aMessageTopic[512];
@@ -146,6 +168,7 @@ class CMenus : public CComponent
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
+	int m_SettingPlayerPage;
 	
 	//
 	bool m_EscapePressed;
@@ -160,7 +183,7 @@ class CMenus : public CComponent
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
-	char m_aCallvoteReason[16];
+	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 	
 	// demo
 	struct CDemoItem
@@ -172,7 +195,7 @@ class CMenus : public CComponent
 		
 		bool m_InfosLoaded;
 		bool m_Valid;
-		char m_aMap[64];
+		CDemoHeader m_Info;
 		
 		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
@@ -181,13 +204,19 @@ class CMenus : public CComponent
 	
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
+<<<<<<< HEAD
+=======
+	char m_aCurrentDemoFile[64];
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
 	
 	void DemolistOnUpdate(bool Reset);
 	void DemolistPopulate();
-	static void DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+
+	int m_FriendlistSelectedIndex;
 	
 	// found in menus.cpp
 	int Render();
@@ -204,7 +233,7 @@ class CMenus : public CComponent
 	void RenderGame(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
 	void RenderServerControl(CUIRect MainView);
-	void RenderServerControlKick(CUIRect MainView);
+	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
 	void RenderServerControlServer(CUIRect MainView);
 	
 	// found in menus_browser.cpp
@@ -212,6 +241,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
+	void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
@@ -219,6 +249,7 @@ class CMenus : public CComponent
 	void RenderLanguageSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
+	void RenderSettingsTee(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
@@ -234,7 +265,7 @@ public:
 	
 	CMenus();
 
-	void RenderLoading(float Percent);
+	void RenderLoading();
 
 	bool IsActive() const { return m_MenuActive; }
 

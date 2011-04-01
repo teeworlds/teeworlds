@@ -214,6 +214,7 @@ container.sounds.Add(SoundSet("hit", FileList("audio/sfx_hit_weak-%02d.wv", 2)))
 
 container.sounds.Add(SoundSet("chat_server", ["audio/sfx_msg-server.wv"]))
 container.sounds.Add(SoundSet("chat_client", ["audio/sfx_msg-client.wv"]))
+container.sounds.Add(SoundSet("chat_highlight", ["audio/sfx_msg-highlight.wv"]))
 container.sounds.Add(SoundSet("ctf_drop", ["audio/sfx_ctf_drop.wv"]))
 container.sounds.Add(SoundSet("ctf_return", ["audio/sfx_ctf_rtn.wv"]))
 container.sounds.Add(SoundSet("ctf_grab_pl", ["audio/sfx_ctf_grab_pl.wv"]))
@@ -227,6 +228,10 @@ image_browseicons = Image("browseicons", "browse_icons.png")
 image_emoticons = Image("emoticons", "emoticons.png")
 image_demobuttons = Image("demobuttons", "demo_buttons.png")
 image_fileicons = Image("fileicons", "file_icons.png")
+<<<<<<< HEAD
+=======
+image_guibuttons = Image("guibuttons", "gui_buttons.png")
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 container.images.Add(image_null)
 container.images.Add(image_game)
@@ -239,6 +244,10 @@ container.images.Add(Image("console_bg", "console.png"))
 container.images.Add(Image("console_bar", "console_bar.png"))
 container.images.Add(image_demobuttons)
 container.images.Add(image_fileicons)
+<<<<<<< HEAD
+=======
+container.images.Add(image_guibuttons)
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))
@@ -252,6 +261,10 @@ set_browseicons = SpriteSet("browseicons", image_browseicons, 4, 1)
 set_emoticons = SpriteSet("emoticons", image_emoticons, 4, 4)
 set_demobuttons = SpriteSet("demobuttons", image_demobuttons, 5, 1)
 set_fileicons = SpriteSet("fileicons", image_fileicons, 8, 1)
+<<<<<<< HEAD
+=======
+set_guibuttons = SpriteSet("guibuttons", image_guibuttons, 16, 2)
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 container.spritesets.Add(set_particles)
 container.spritesets.Add(set_game)
@@ -260,6 +273,10 @@ container.spritesets.Add(set_browseicons)
 container.spritesets.Add(set_emoticons)
 container.spritesets.Add(set_demobuttons)
 container.spritesets.Add(set_fileicons)
+<<<<<<< HEAD
+=======
+container.spritesets.Add(set_guibuttons)
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 container.sprites.Add(Sprite("part_slice", set_particles, 0,0,1,1))
 container.sprites.Add(Sprite("part_ball", set_particles, 1,0,1,1))
@@ -354,17 +371,17 @@ container.sprites.Add(Sprite("exclamation", set_emoticons, 1, 0, 1, 1))
 container.sprites.Add(Sprite("hearts", set_emoticons, 2, 0, 1, 1))
 container.sprites.Add(Sprite("drop", set_emoticons, 3, 0, 1, 1))
 container.sprites.Add(Sprite("dotdot", set_emoticons, 0, 1, 1, 1))
-container.sprites.Add(Sprite("music1", set_emoticons, 1, 1, 1, 1))
-container.sprites.Add(Sprite("music2", set_emoticons, 2, 1, 1, 1))
+container.sprites.Add(Sprite("music", set_emoticons, 1, 1, 1, 1))
+container.sprites.Add(Sprite("sorry", set_emoticons, 2, 1, 1, 1))
 container.sprites.Add(Sprite("ghost", set_emoticons, 3, 1, 1, 1))
 container.sprites.Add(Sprite("sushi", set_emoticons, 0, 2, 1, 1))
 container.sprites.Add(Sprite("splattee", set_emoticons, 1, 2, 1, 1))
 container.sprites.Add(Sprite("deviltee", set_emoticons, 2, 2, 1, 1))
 container.sprites.Add(Sprite("zomg", set_emoticons, 3, 2, 1, 1))
 container.sprites.Add(Sprite("zzz", set_emoticons, 0, 3, 1, 1))
-container.sprites.Add(Sprite("blank1", set_emoticons, 1, 3, 1, 1))
-container.sprites.Add(Sprite("deadtee", set_emoticons, 2, 3, 1, 1))
-container.sprites.Add(Sprite("blank2", set_emoticons, 3, 3, 1, 1))
+container.sprites.Add(Sprite("wtf", set_emoticons, 1, 3, 1, 1))
+container.sprites.Add(Sprite("eyes", set_emoticons, 2, 3, 1, 1))
+container.sprites.Add(Sprite("question", set_emoticons, 3, 3, 1, 1))
 
 container.sprites.Add(Sprite("browse_lock", set_browseicons, 0,0,1,1))
 container.sprites.Add(Sprite("browse_heart", set_browseicons, 1,0,1,1))
@@ -382,6 +399,14 @@ container.sprites.Add(Sprite("file_folder", set_fileicons, 2,0,1,1))
 container.sprites.Add(Sprite("file_map1", set_fileicons, 5,0,1,1))
 container.sprites.Add(Sprite("file_map2", set_fileicons, 6,0,1,1))
 
+<<<<<<< HEAD
+=======
+container.sprites.Add(Sprite("guibutton_chatoff", set_guibuttons, 0,0,4,2))
+container.sprites.Add(Sprite("guibutton_chaton", set_guibuttons, 4,0,4,2))
+container.sprites.Add(Sprite("guibutton_friendadd", set_guibuttons, 8,0,4,2))
+container.sprites.Add(Sprite("guibutton_friendrem", set_guibuttons, 12,0,4,2))
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))

@@ -178,9 +178,6 @@ Join red
 Jump
 == Výskok
 
-Kick
-== Vyhodit
-
 LAN
 == LAN
 
@@ -434,6 +431,7 @@ Your skin
 == Váš skin
 
 ##### needs translation #####
+<<<<<<< HEAD
 
 %d%% loaded
 == 
@@ -978,5 +976,236 @@ ZO
 no limit
 == 
 
+=======
+
+%d Bytes
+== 
+
+%d%% loaded
+== 
+
+%ds left
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to delete the demo?
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Connection Problems...
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Delete
+== 
+
+Delete demo
+== 
+
+Demo details
+== 
+
+Error
+== 
+
+Error loading demo
+== 
+
+Folder
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Invalid Demo
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Open
+== 
+
+Page %d of %d
+== 
+
+Parent Folder
+== 
+
+Player options
+== 
+
+Please balance teams!
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show chat
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+Stop record
+== 
+
+Sudden Death
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Time limit: %d min
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+== 
+
+Warmup
+== 
+
+no limit
+== 
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 ##### old translations #####
 

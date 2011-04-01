@@ -22,9 +22,12 @@
 %i seconds left
 == Noch %i Sekunden
 
+<<<<<<< HEAD
 %s Right click for context menu.
 == %s Rechtsklick für Kontextmenü.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Abort
 == Abbrechen
 
@@ -67,6 +70,7 @@ Alpha value of the envelope
 Always show name plates
 == Spielernamen immer anzeigen
 
+<<<<<<< HEAD
 Anim
 == Anima.
 
@@ -76,6 +80,8 @@ Append
 Append map
 == Karte anhängen
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Are you sure that you want to delete the demo?
 == Möchtest du die Aufnahme wirklich löschen?
 
@@ -85,9 +91,12 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
 
+<<<<<<< HEAD
 Aspect ratio
 == Seitenverhältnis
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Automatically record demos
 == Automatisch Aufnahmen erstellen
 
@@ -117,9 +126,12 @@ CW
 
 Call vote
 == Abstimmen
+<<<<<<< HEAD
 
 Cancel
 == Abbrech.
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Chat
 == Chat
@@ -138,6 +150,7 @@ Clip Y
 
 Close
 == Schließ.
+<<<<<<< HEAD
 
 Color
 == Farbe
@@ -150,6 +163,8 @@ Color TO
 
 Color+
 == Farbe+
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Compatible version
 == Kompatible Version
@@ -193,18 +208,22 @@ Current version: %s
 Custom colors
 == Eigene Farben
 
+<<<<<<< HEAD
 Decrease
 == Verringern
 
 Decrease animation speed
 == Animationsgeschwindigkeit verringern
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Delete
 == Löschen
 
 Delete demo
 == Aufnahme löschen
 
+<<<<<<< HEAD
 Delete group
 == Gruppe löschen
 
@@ -225,6 +244,10 @@ Demos
 
 Detail
 == Detail
+=======
+Demos
+== Aufnahm.
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Disconnect
 == Trennen
@@ -268,15 +291,19 @@ Enable/disable layer for saving
 Enter
 == Starten
 
+<<<<<<< HEAD
 Envelopes
 == Animation.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Error
 == Fehlgeschlagen
 
 Error loading demo
 == Fehler beim Laden der Aufnahme, die Datei ist ungültig.
 
+<<<<<<< HEAD
 Exit
 == Beenden
 
@@ -286,6 +313,8 @@ Exits from the editor
 External
 == Extern
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 FSAA samples
 == Vollbild Anti-Aliasing
 
@@ -409,9 +438,6 @@ Join red
 Jump
 == Springen
 
-Kick
-== Kicken
-
 LAN
 == LAN
 
@@ -490,6 +516,7 @@ Name
 Name plates size
 == Größe der Namen
 
+<<<<<<< HEAD
 Name:
 == Name:
 
@@ -499,6 +526,8 @@ New
 New folder
 == Neuer Ordner
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 News
 == News
 
@@ -535,6 +564,7 @@ Ok
 Open
 == Öffnen
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == Öffnet eine Karte und fügt alles aus dieser in die aktuelle ein.
 
@@ -550,6 +580,8 @@ Para X
 Para Y
 == Para. Y
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Parent Folder
 == Übergeordneter Ordner
 
@@ -577,6 +609,7 @@ Players
 Please balance teams!
 == Bitte Teams ausgleichen!
 
+<<<<<<< HEAD
 Pos X
 == Pos. X
 
@@ -595,6 +628,8 @@ Pos.+
 Press right mouse button to create a new point
 == Drücke die rechte Maustaste, um einen neuen Punkt zu erstellen
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Prev. weapon
 == Vorherige Waffe
 
@@ -616,8 +651,13 @@ Quick search:
 Quit
 == Beenden
 
+<<<<<<< HEAD
 REC
 == REC
+=======
+REC %3d:%02d
+== REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 Reason:
 == Grund
@@ -796,12 +836,15 @@ Stop record
 Sudden Death
 == Sudden Death
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == Zwischen Ebenen- und Bildverwaltung umschalten.
 
 Switch curve type
 == Kurventyp ändern
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Switch weapon on pickup
 == Wechsle Waffen beim Aufnehmen
 
@@ -832,6 +875,7 @@ Time limit
 Time limit: %d min
 == Zeitlimit: %d min
 
+<<<<<<< HEAD
 Toggle group visibility
 == Gruppensichtbarkeit umschalten
 
@@ -841,6 +885,8 @@ Toggle layer visibility
 Toggles the envelope editor.
 == Schaltet den Animationseditor um.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Try again
 == Nochmal versuchen
 
@@ -853,6 +899,7 @@ UI Color
 Unable to delete the demo
 == Aufnahme konnte nicht gelöscht werden
 
+<<<<<<< HEAD
 Up
 == Oben
 
@@ -871,6 +918,8 @@ Use left mouse button to drag and create a brush.
 Use left mouse button to paint with the brush. Right button clears the brush.
 == Benutze die linke Maustaste um mit dem Pinsel zu malen. Die rechte Maustaste löscht den Pinsel.
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 Use sounds
 == Aktiviere Ton
 
@@ -916,6 +965,7 @@ You must restart the game for all settings to take effect.
 Your skin
 == Dein Skin
 
+<<<<<<< HEAD
 ZI
 == ZI
 
@@ -976,6 +1026,137 @@ Game tiles
 == 
 
 Unhookable
+=======
+no limit
+== Keine Begrenzung
+
+##### needs translation #####
+
+%d Bytes
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Demo details
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Move player to spectators
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Spectator mode
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Type:
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 ##### old translations #####

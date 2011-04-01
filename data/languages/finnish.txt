@@ -193,9 +193,12 @@ Join red
 Jump
 == Hyppää
 
+<<<<<<< HEAD
 Kick
 == Kick
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 LAN
 == LAN
 
@@ -462,6 +465,12 @@ Your skin
 
 ##### needs translation #####
 
+<<<<<<< HEAD
+=======
+%d Bytes
+== 
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 %d%% loaded
 == 
 
@@ -477,12 +486,17 @@ Your skin
 %i seconds left
 == 
 
+<<<<<<< HEAD
 %s Right click for context menu.
+=======
+-Page %d-
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Add
 == 
 
+<<<<<<< HEAD
 Add Image
 == 
 
@@ -514,12 +528,19 @@ Append
 == 
 
 Append map
+=======
+Add Friend
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Are you sure that you want to delete the demo?
 == 
 
+<<<<<<< HEAD
 Aspect ratio
+=======
+Are you sure that you want to remove the player from your friends list?
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Automatically record demos
@@ -528,6 +549,7 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
+<<<<<<< HEAD
 Blue value of the envelope
 == 
 
@@ -598,11 +620,33 @@ Decrease
 == 
 
 Decrease animation speed
+=======
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Delete demo
 == 
 
+<<<<<<< HEAD
 Delete group
 == 
 
@@ -658,11 +702,15 @@ File: %s
 == 
 
 Filename:
+=======
+Demo details
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Folder
 == 
 
+<<<<<<< HEAD
 Game tiles
 == 
 
@@ -688,11 +736,18 @@ Increase
 == 
 
 Increase animation speed
+=======
+Free-View
+== 
+
+Friends
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Invalid Demo
 == 
 
+<<<<<<< HEAD
 Layers
 == 
 
@@ -718,6 +773,15 @@ Load map
 == 
 
 Make external
+=======
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Max Screenshots
@@ -726,6 +790,7 @@ Max Screenshots
 Max demos
 == 
 
+<<<<<<< HEAD
 Name plates size
 == 
 
@@ -745,11 +810,27 @@ None
 == 
 
 Normal animation speed
+=======
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Open
 == 
 
+<<<<<<< HEAD
 Opens a map and adds everything from that map to the current one
 == 
 
@@ -763,11 +844,15 @@ Para X
 == 
 
 Para Y
+=======
+Page %d of %d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Parent Folder
 == 
 
+<<<<<<< HEAD
 Pos X
 == 
 
@@ -796,6 +881,15 @@ Quads
 == 
 
 REC
+=======
+Player options
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Reason:
@@ -804,6 +898,7 @@ Reason:
 Record demo
 == 
 
+<<<<<<< HEAD
 Red value of the envelope
 == 
 
@@ -865,20 +960,52 @@ Select layer. Right click for properties.
 == 
 
 Shift
+=======
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Sound error
 == 
 
+<<<<<<< HEAD
 Square
 == 
 
 Squares the current quad
+=======
+Spectator mode
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Stop record
 == 
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == 
 
@@ -889,11 +1016,18 @@ The audio device couldn't be initialised.
 == 
 
 Tiles
+=======
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Time limit: %d min
 == 
 
+<<<<<<< HEAD
 Toggle group visibility
 == 
 
@@ -901,11 +1035,15 @@ Toggle layer visibility
 == 
 
 Toggles the envelope editor.
+=======
+Type:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Unable to delete the demo
 == 
 
+<<<<<<< HEAD
 Unhookable
 == 
 
@@ -973,6 +1111,21 @@ ZO
 == 
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+=======
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 no limit

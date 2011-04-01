@@ -23,6 +23,17 @@ public:
 		return parent::insert(item, partition_binary(all(), item));
 	}
 
+	int add_unsorted(const T& item)
+	{
+		return parent::add(item);
+	}
+	
+	void sort_range()
+	{
+		sort(all());
+	}
+
+
 	/*
 		Function: all
 			Returns a sorted range that contains the whole array.

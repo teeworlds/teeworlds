@@ -7,16 +7,15 @@
 
 #include <engine/graphics.h>
 #include <engine/storage.h>
-#include <engine/shared/engine.h>
 
 #include "skins.h"
 
-void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
+int  CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
-		return;
+		return 0;
 		
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
@@ -25,7 +24,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
-		return;
+		return 0;
 	}
 	
 	CSkin Skin;
@@ -107,6 +106,8 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 	pSelf->m_aSkins.add(Skin);
+
+	return 0;
 }
 
 
@@ -134,7 +135,7 @@ int CSkins::Num()
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[Index%m_aSkins.size()];
+	return &m_aSkins[max(0, Index%m_aSkins.size())];
 }
 
 int CSkins::Find(const char *pName)

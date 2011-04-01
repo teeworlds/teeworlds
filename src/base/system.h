@@ -418,15 +418,22 @@ int64 time_freq();
 unsigned time_timestamp();
 
 /* Group: Network General */
-typedef int NETSOCKET;
+typedef struct
+{
+	int type;
+	int ipv4sock;
+	int ipv6sock;
+} NETSOCKET;
+
 enum
 {
-	NETSOCKET_INVALID = -1,
+	NETADDR_MAXSTRSIZE = 1+(8*4+7)+1+1+5+1, // [XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX]:XXXXX
 	
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
-	NETTYPE_ALL = ~0
+	NETTYPE_LINK_BROADCAST = 4,
+	NETTYPE_ALL = NETTYPE_IPV4|NETTYPE_IPV6
 };
 
 typedef struct
@@ -942,7 +949,7 @@ void str_timestamp(char *buffer, int buffer_size);
 	Returns:
 		Always returns 0.
 */
-typedef void (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
+typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
 int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
 /*
@@ -1090,7 +1097,7 @@ int net_would_block();
 
 int net_socket_read_wait(NETSOCKET sock, int time);
 
-void mem_debug_dump();
+void mem_debug_dump(IOHANDLE file);
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 

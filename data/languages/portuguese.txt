@@ -190,9 +190,6 @@ Join red
 Jump
 == Pular
 
-Kick
-== Kick
-
 LAN
 == LAN
 
@@ -458,6 +455,7 @@ Your skin
 == Sua skin
 
 ##### needs translation #####
+<<<<<<< HEAD
 
 %d%% loaded
 == 
@@ -511,12 +509,44 @@ Append
 == 
 
 Append map
+=======
+
+%d Bytes
+== 
+
+%d%% loaded
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Are you sure that you want to delete the demo?
 == 
 
+<<<<<<< HEAD
 Aspect ratio
+=======
+Are you sure that you want to remove the player from your friends list?
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Automatically record demos
@@ -525,6 +555,7 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
+<<<<<<< HEAD
 Blue value of the envelope
 == 
 
@@ -978,5 +1009,172 @@ ZO
 no limit
 == 
 
+=======
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Delete
+== 
+
+Delete demo
+== 
+
+Demo details
+== 
+
+Folder
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Invalid Demo
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Open
+== 
+
+Page %d of %d
+== 
+
+Parent Folder
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+Stop record
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Time limit: %d min
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+== 
+
+no limit
+== 
+
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 ##### old translations #####
 

@@ -18,6 +18,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	Character = 0;
 	this->m_ClientID = ClientID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
 }
 
@@ -77,6 +78,23 @@ void CPlayer::Tick()
 		TryRespawn();
 }
 
+void CPlayer::PostTick()
+{
+	// update latency value
+	if(m_PlayerFlags&PLAYERFLAG_SCOREBOARD)
+	{
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+				m_aActLatency[i] = GameServer()->m_apPlayers[i]->m_Latency.m_Min;
+		}
+	}
+
+	// update view pos for spectators
+	if(m_Team == TEAM_SPECTATORS && m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID])
+		m_ViewPos = GameServer()->m_apPlayers[m_SpectatorID]->m_ViewPos;
+}
+
 void CPlayer::Snap(int SnappingClient)
 {
 #ifdef CONF_DEBUG
@@ -89,7 +107,13 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pClientInfo)
 		return;
 
+<<<<<<< HEAD
 	StrToInts(&pClientInfo->m_Name0, 6, Server()->ClientName(m_ClientID));
+=======
+	StrToInts(&pClientInfo->m_Name0, 4, Server()->ClientName(m_ClientID));
+	StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
+	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
 	pClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
 	pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
@@ -99,25 +123,47 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pPlayerInfo)
 		return;
 
+<<<<<<< HEAD
 	pPlayerInfo->m_Latency = m_Latency.m_Min;
 	pPlayerInfo->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
+=======
+	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
 	pPlayerInfo->m_Score = m_Score;
 	pPlayerInfo->m_Team = m_Team;
 
 	if(m_ClientID == SnappingClient)
+<<<<<<< HEAD
 		pPlayerInfo->m_Local = 1;	
+=======
+		pPlayerInfo->m_Local = 1;
+
+	if(m_ClientID == SnappingClient && m_Team == TEAM_SPECTATORS)
+	{
+		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
+		if(!pSpectatorInfo)
+			return;
+
+		pSpectatorInfo->m_SpectatorID = m_SpectatorID;
+		pSpectatorInfo->m_X = m_ViewPos.x;
+		pSpectatorInfo->m_Y = m_ViewPos.y;
+	}
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 }
 
-void CPlayer::OnDisconnect()
+void CPlayer::OnDisconnect(const char *pReason)
 {
 	KillCharacter();
 
 	if(Server()->ClientIngame(m_ClientID))
 	{
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf),  "'%s' has left the game", Server()->ClientName(m_ClientID));
+		if(pReason && *pReason)
+			str_format(aBuf, sizeof(aBuf),  "'%s' has left the game (%s)", Server()->ClientName(m_ClientID), pReason);
+		else
+			str_format(aBuf, sizeof(aBuf),  "'%s' has left the game", Server()->ClientName(m_ClientID));
 		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
@@ -133,13 +179,19 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
+	m_PlayerFlags = NewInput->m_PlayerFlags;
+
 	if(Character)
 		Character->OnDirectInput(NewInput);
 
 	if(!Character && m_Team != TEAM_SPECTATORS && (NewInput->m_Fire&1))
 		m_Spawning = true;
 	
+<<<<<<< HEAD
 	if(!Character && m_Team == TEAM_SPECTATORS)
+=======
+	if(!Character && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
 
 	// check for activity
@@ -197,6 +249,16 @@ void CPlayer::SetTeam(int Team)
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	
 	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
+
+	if(Team == TEAM_SPECTATORS)
+	{
+		// update spectator modes
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_SpectatorID == m_ClientID)
+				GameServer()->m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
+		}
+	}
 }
 
 void CPlayer::TryRespawn()

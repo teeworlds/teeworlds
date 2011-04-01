@@ -94,6 +94,28 @@ void CUI::ClipDisable()
 	Graphics()->ClipDisable();
 }
 
+void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
+{
+	CUIRect r = *this;
+    float Cut = r.h/2;
+
+    if(pTop)
+    {
+        pTop->x = r.x;
+        pTop->y = r.y;
+        pTop->w = r.w;
+        pTop->h = Cut;
+    }
+
+    if(pBottom)
+    {
+        pBottom->x = r.x;
+        pBottom->y = r.y + Cut;
+        pBottom->w = r.w;
+        pBottom->h = r.h - Cut;
+    }
+}
+
 void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
     CUIRect r = *this;

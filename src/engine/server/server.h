@@ -48,7 +48,6 @@ public:
 	class IGameServer *GameServer() { return m_pGameServer; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
-	class CEngine *Engine() { return &m_Engine; }
 
 	class CClient
 	{
@@ -88,7 +87,8 @@ public:
 		int m_CurrentInput;
 		
 		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLANNAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
@@ -110,9 +110,12 @@ public:
 	int m_RunServer;
 	int m_MapReload;
 	int m_RconClientID;
+<<<<<<< HEAD
 
 	char m_aBrowseinfoGametype[16];
 	int m_BrowseinfoProgression;
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
@@ -123,16 +126,17 @@ public:
 	int m_CurrentMapSize;	
 	
 	CDemoRecorder m_DemoRecorder;
-	CEngine m_Engine;
 	CRegister m_Register;
+	CMapChecker m_MapChecker;
 	
 	CServer();
 	
 	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
+	virtual void SetClientClan(int ClientID, char const *pClan);
+	virtual void SetClientCountry(int ClientID, int Country);
 	virtual void SetClientScore(int ClientID, int Score);
-	virtual void SetBrowseInfo(const char *pGameType, int Progression);
 
 	void Kick(int ClientID, const char *pReason);
 
@@ -144,8 +148,15 @@ public:
 
 	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
+<<<<<<< HEAD
 	void GetClientIP(int ClientID, char *pIPString, int Size);
 	const char *ClientName(int ClientID);
+=======
+	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
+	const char *ClientName(int ClientID);
+	const char *ClientClan(int ClientID);
+	int ClientCountry(int ClientID);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	bool ClientIngame(int ClientID);
 
 	int *LatestInput(int ClientID, int *size);
@@ -159,6 +170,10 @@ public:
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
 	void SendMap(int ClientID);
+<<<<<<< HEAD
+=======
+	void SendConnectionReady(int ClientID);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 	
@@ -176,7 +191,6 @@ public:
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void InitEngine(const char *pAppname);
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 

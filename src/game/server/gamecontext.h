@@ -8,6 +8,7 @@
 #include <engine/shared/memheap.h>
 
 #include <game/layers.h>
+#include <game/voting.h>
 
 #include "eventhandler.h"
 #include "gamecontroller.h"
@@ -54,6 +55,11 @@ class CGameContext : public IGameServer
 	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetTeamAll(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData);
+<<<<<<< HEAD
+=======
+	static void ConRemoveVote(IConsole::IResult *pResult, void *pUserData);
+	static void ConForceVote(IConsole::IResult *pResult, void *pUserData);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -83,7 +89,7 @@ public:
 	class CCharacter *GetPlayerChar(int ClientID);
 	
 	// voting
-	void StartVote(const char *pDesc, const char *pCommand);
+	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote();
 	void SendVoteSet(int ClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
@@ -93,8 +99,10 @@ public:
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
 	int m_VotePos;
-	char m_aVoteDescription[512];
-	char m_aVoteCommand[512];
+	char m_aVoteDescription[VOTE_DESC_LENGTH];
+	char m_aVoteCommand[VOTE_CMD_LENGTH];
+	char m_aVoteReason[VOTE_REASON_LENGTH];
+	int m_NumVoteOptions;
 	int m_VoteEnforce;
 	enum
 	{
@@ -102,15 +110,9 @@ public:
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
 	};
-	struct CVoteOption
-	{
-		CVoteOption *m_pNext;
-		CVoteOption *m_pPrev;
-		char m_aCommand[1];
-	};
 	CHeap *m_pVoteOptionHeap;
-	CVoteOption *m_pVoteOptionFirst;
-	CVoteOption *m_pVoteOptionLast;
+	CVoteOptionServer *m_pVoteOptionFirst;
+	CVoteOptionServer *m_pVoteOptionLast;
 
 	// helper functions
 	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);
@@ -154,13 +156,26 @@ public:
 	virtual void OnPostSnap();
 	
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
+<<<<<<< HEAD
 
 	virtual void OnClientConnected(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID);
 	virtual void OnClientDirectInput(int ClientID, void *pInput);
 	virtual void OnClientPredictedInput(int ClientID, void *pInput);
+=======
 
+	virtual void OnClientConnected(int ClientID);
+	virtual void OnClientEnter(int ClientID);
+	virtual void OnClientDrop(int ClientID, const char *pReason);
+	virtual void OnClientDirectInput(int ClientID, void *pInput);
+	virtual void OnClientPredictedInput(int ClientID, void *pInput);
+
+	virtual bool IsClientReady(int ClientID);
+	virtual bool IsClientPlayer(int ClientID);
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
+
+	virtual const char *GameType();
 	virtual const char *Version();
 	virtual const char *NetVersion();
 };

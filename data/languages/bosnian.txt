@@ -226,9 +226,12 @@ Join red
 Jump
 == Skok
 
+<<<<<<< HEAD
 Kick
 == Izbaci
 
+=======
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 LAN
 == LAN
 
@@ -513,6 +516,7 @@ Your skin
 
 ##### needs translation #####
 
+<<<<<<< HEAD
 %s Right click for context menu.
 == 
 
@@ -736,11 +740,69 @@ Load map
 == 
 
 Make external
+=======
+%d Bytes
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Demo details
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Move player to spectators
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Name plates size
 == 
 
+<<<<<<< HEAD
 Name:
 == 
 
@@ -802,11 +864,33 @@ Quads
 == 
 
 REC
+=======
+Netversion:
+== 
+
+New name:
+== 
+
+Next
+== 
+
+Page %d of %d
+== 
+
+Player options
+== 
+
+Prev
+== 
+
+REC %3d:%02d
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Reason:
 == 
 
+<<<<<<< HEAD
 Red value of the envelope
 == 
 
@@ -868,20 +952,52 @@ Select layer. Right click for properties.
 == 
 
 Shift
+=======
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Sound error
 == 
 
+<<<<<<< HEAD
 Square
 == 
 
 Squares the current quad
+=======
+Spectator mode
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Stop record
 == 
 
+<<<<<<< HEAD
 Switch between images and layers managment.
 == 
 
@@ -901,11 +1017,21 @@ Toggle layer visibility
 == 
 
 Toggles the envelope editor.
+=======
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+== 
+
+Type:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 Unable to delete the demo
 == 
 
+<<<<<<< HEAD
 Unhookable
 == 
 
@@ -973,6 +1099,21 @@ ZO
 == 
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+=======
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+>>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
 == 
 
 no limit
