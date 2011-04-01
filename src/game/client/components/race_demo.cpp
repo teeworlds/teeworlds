@@ -20,7 +20,7 @@ CRaceDemo::CRaceDemo()
 
 void CRaceDemo::OnRender()
 {
-	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameInfoObj|| m_pClient->m_Snap.m_Spectate)
+	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameInfoObj || m_pClient->m_Snap.m_SpecInfo.m_Active)
 	{
 		m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active;
 		return;
@@ -77,7 +77,7 @@ void CRaceDemo::OnShutdown()
 
 void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(!g_Config.m_ClAutoRaceRecord || m_pClient->m_Snap.m_Spectate)
+	if(!g_Config.m_ClAutoRaceRecord || m_pClient->m_Snap.m_SpecInfo.m_Active)
 		return;
 	
 	// only for race
