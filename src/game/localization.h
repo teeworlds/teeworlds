@@ -23,6 +23,8 @@ class CLocalizationDatabase
 	sorted_array<CString> m_Strings;
 	int m_VersionCounter;
 	int m_CurrentVersion;
+
+	char *ParseString(char *pStr) const;
 	
 public:
 	CLocalizationDatabase();

@@ -36,6 +36,51 @@ CLocalizationDatabase::CLocalizationDatabase()
 	m_CurrentVersion = 0;
 }
 
+char *CLocalizationDatabase::ParseString(char *pStr) const
+{
+	char *pBegin = pStr;
+	char *pResult = pStr;
+	bool Escape = false;
+	while(*pStr)
+	{
+		if(Escape) // '\\' was the previous character
+		{
+			Escape = false;
+			switch(*pStr)
+			{
+			case '\\':
+				*pResult = '\\';
+				break;
+
+			case 'n':
+				*pResult = '\n';
+				break;
+
+			default: // unknown escape sequence: ignore it
+				*pResult = '\\';
+				pResult++;
+				*pResult = *pStr;
+				pResult++;
+				pStr++;
+				continue;
+			}
+		}
+		else if(*pStr == '\\') // beginning escape sequence found
+		{
+			Escape = true;
+			pStr++;
+			continue;
+		}
+		else // normal character
+			*pResult = *pStr;
+
+		pResult++;
+		pStr++;
+	}
+	*pResult = 0; // null termination
+	return pBegin;
+}
+
 void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 {
 	CString s;
@@ -91,7 +136,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		}
 
 		pReplacement += 3;
-		AddString(aOrigin, pReplacement);
+		AddString(ParseString(aOrigin), ParseString(pReplacement));
 	}
 	io_close(IoHandle);
 	
