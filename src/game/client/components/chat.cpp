@@ -484,12 +484,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	// play sound
 	if(!m_Spam && !m_IgnorePlayer)
 	{
-		if((ClientID >= 0) && g_Config.m_ClChangeSound && m_ContainsName)	
-		{
-			if(g_Config.m_ClChatsound)
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_MARK, 0, vec2(0,0));
-		}
-		else if(ClientID >= 0)
+		if(ClientID >= 0)
 		{
 			if(g_Config.m_ClChatsound)
 				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
