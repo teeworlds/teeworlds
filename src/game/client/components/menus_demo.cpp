@@ -160,7 +160,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
 		if(DoButton_DemoPlayer_Sprite(&s_SlowDownButton, SPRITE_DEMOBUTTON_SLOWER, 0, &Button) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
-			DecreaseDemoSpeed = true
+			DecreaseDemoSpeed = true;
 		
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
