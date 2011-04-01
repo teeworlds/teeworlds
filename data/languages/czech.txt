@@ -480,6 +480,9 @@ Change settings
 Clan
 == 
 
+Client
+== 
+
 Connection Problems...
 == 
 
