@@ -10,9 +10,6 @@ class CChat : public CComponent
 {
 	CLineInput m_Input;
 	
-	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
-	char *m_pHistoryEntry;
-	
 	enum 
 	{
 		MAX_LINES = 25,
@@ -52,6 +49,8 @@ class CChat : public CComponent
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
+	char *m_pHistoryEntry;
+	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 	
 	bool m_ContainsName;
 	bool m_IgnorePlayer;
