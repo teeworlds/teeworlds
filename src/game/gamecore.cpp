@@ -392,9 +392,9 @@ void CCharacterCore::Move()
 				}
 			}
 		}
-	
-		m_Pos = NewPos;
 	}
+	
+	m_Pos = NewPos;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
