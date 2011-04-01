@@ -210,6 +210,25 @@ bool CChat::OnInput(IInput::CEvent Event)
 	return true;
 }
 
+
+void CChat::EnableMode(int Team)
+{
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return;
+
+	if(m_Mode == MODE_NONE)
+	{
+		if(Team)
+			m_Mode = MODE_TEAM;
+		else
+			m_Mode = MODE_ALL;
+		
+		m_Input.Clear();
+		Input()->ClearEvents();
+		m_CompletionChosen = -1;
+	}
+}
+
 void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_CHAT)
