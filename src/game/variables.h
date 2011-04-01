@@ -57,7 +57,6 @@ MACRO_CONFIG_INT(ClRenderVote, cl_render_vote, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_S
 MACRO_CONFIG_INT(ClRenderViewmode, cl_render_viewmode, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes viewmode display on or off")
 MACRO_CONFIG_INT(ClRenderEmotes, cl_render_emotes, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes emoticons on or off")
 
-MACRO_CONFIG_INT(ClClearHud, cl_clear_hud, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes hud on or off")
 MACRO_CONFIG_INT(ClClearAll, cl_clear_all, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Cleans the whole screen")
 
 MACRO_CONFIG_INT(ClServermsgsound, cl_servermsgsound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes servermessage sound on or off")

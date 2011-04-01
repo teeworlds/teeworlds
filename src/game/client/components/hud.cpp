@@ -46,7 +46,7 @@ void CHud::OnReset()
 
 void CHud::RenderGameTimer()
 {
-	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearHud || g_Config.m_ClClearAll)
+	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearAll)
 		return;
 		
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
@@ -81,7 +81,7 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderSuddenDeath()
 {
-	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearHud || g_Config.m_ClClearAll)
+	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearAll)
 		return;
 	
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
@@ -96,7 +96,7 @@ void CHud::RenderSuddenDeath()
 
 void CHud::RenderScoreHud()
 {
-	if(m_pClient->m_IsRace || g_Config.m_ClClearHud || g_Config.m_ClClearAll)
+	if(m_pClient->m_IsRace || g_Config.m_ClClearAll)
 		return;
 	
 	// render small score hud
@@ -672,9 +672,9 @@ void CHud::OnRender()
 	{
 		if(g_Config.m_ClRenderVote)
 			RenderVoting();
-		if(!g_Config.m_ClClearHud)
+		if(g_Config.m_ClShowhud)
 			RenderRecord();
-		if(g_Config.m_ClRenderCrosshair && !g_Config.m_ClClearHud)
+		if(g_Config.m_ClRenderCrosshair && g_Config.m_ClShowhud)
 			RenderCursor();
 	}
 }
