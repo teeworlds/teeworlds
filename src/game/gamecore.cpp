@@ -352,8 +352,8 @@ void CCharacterCore::Tick(bool UseInput)
 	}	
 
 	// clamp the velocity to something sane
-	if(length(m_Vel) > 200)
-		m_Vel = normalize(m_Vel) * 200;
+	if(length(m_Vel) > 6000)
+		m_Vel = normalize(m_Vel) * 6000;
 }
 
 void CCharacterCore::Move()
