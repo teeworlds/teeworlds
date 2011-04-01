@@ -362,43 +362,6 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 	LeftView.HSplitTop(20.0f, 0, &LeftView);
 	RightView.HSplitTop(20.0f, 0, &RightView);
 
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcColoredNameplates, "Colored name plates", g_Config.m_TcColoredNameplates&1, &Button))
-		g_Config.m_TcColoredNameplates ^= 1;
-
-	RightView.HSplitTop(20.0f, &Button, &RightView);
-	if(DoButton_CheckBox(&g_Config.m_TcColoredNameplates+1, "Enemy based colors", g_Config.m_TcColoredNameplates&2, &Button))
-		g_Config.m_TcColoredNameplates ^= 2;
-
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredNameplates&2)?"Team mates":"Team 1", 14.0f, -1);
-	int r1, g1, b1, r2, g2, b2;
-	r1 = g_Config.m_TcColoredNameplatesTeam1>>16;
-	g1 = (g_Config.m_TcColoredNameplatesTeam1>>8)&0xff;
-	b1 = g_Config.m_TcColoredNameplatesTeam1&0xff;
-	RenderRgbSliders(&LeftView, &Button, r1, g1, b1, true);
-	g_Config.m_TcColoredNameplatesTeam1 = (r1<<16) + (g1<<8) + b1;
-
-	LeftView.HSplitTop(25.0f, &Button, &LeftView);
-	Button.VSplitLeft(30.0f, 0, &Button);
-	TextRender()->TextColor(r1/255.0f, g1/255.0f, b1/255.0f, 1);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredNameplates&2)?"Team mates":"Team 1", 15.0f, -1);
-	TextRender()->TextColor(1,1,1,1);
-
-	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredNameplates&2)?"Enemies":"Team 2", 14.0f, -1);
-	r2 = g_Config.m_TcColoredNameplatesTeam2>>16;
-	g2 = (g_Config.m_TcColoredNameplatesTeam2>>8)&0xff;
-	b2 = g_Config.m_TcColoredNameplatesTeam2&0xff;
-	RenderRgbSliders(&RightView, &Button, r2, g2, b2, true);
-	g_Config.m_TcColoredNameplatesTeam2 = (r2<<16) + (g2<<8) + b2;
-
-	RightView.HSplitTop(25.0f, &Button, &RightView);
-	Button.VSplitLeft(30.0f, 0, &Button);
-	TextRender()->TextColor(r2/255.0f, g2/255.0f, b2/255.0f, 1);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredNameplates&2)?"Enemies":"Team 2", 15.0f, -1);
-	TextRender()->TextColor(1,1,1,1);
-
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	if(DoButton_CheckBox(&g_Config.m_TcNameplateScore, "Show score in name plate", g_Config.m_TcNameplateScore, &Button))
 		g_Config.m_TcNameplateScore ^= 1;

@@ -42,14 +42,14 @@ void CNamePlates::RenderNameplate(
 		bool IsTeamplay;
 		IsTeamplay = m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS;
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
-		if(g_Config.m_TcColoredNameplates&1 && IsTeamplay)
+		if(g_Config.m_ClNameplatesTeamcolors && IsTeamplay)
 		{
 			vec3 Col = CTeecompUtils::GetTeamColor(
 				m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_Team,
 				m_pClient->m_Snap.m_pLocalInfo->m_Team,
-				g_Config.m_TcColoredNameplatesTeam1,
-				g_Config.m_TcColoredNameplatesTeam2,
-				g_Config.m_TcColoredNameplates&2);
+				g_Config.m_TcColoredTeesTeam1,
+				g_Config.m_TcColoredTeesTeam2,
+				g_Config.m_TcColoredTeesMethod);
 			TextRender()->TextColor(Col.r, Col.g, Col.b, a);
 		}
 		else // FFA or no colored plates

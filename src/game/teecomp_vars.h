@@ -1,7 +1,4 @@
 MACRO_CONFIG_INT(TcNameplateScore, tc_nameplate_score, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display score on name plates")
-MACRO_CONFIG_INT(TcColoredNameplates, tc_colored_nameplates, 0, 0, 3, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable colored name plates")
-MACRO_CONFIG_INT(TcColoredNameplatesTeam1, tc_colored_nameplates_team1, 16739179, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Red team/team mates name plate color")
-MACRO_CONFIG_INT(TcColoredNameplatesTeam2, tc_colored_nameplates_team2, 7053311, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Blue team/enemies name plate color")
 
 MACRO_CONFIG_INT(TcColoredTeesMethod, tc_colored_tees_method, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable enemy based skin colors")
 MACRO_CONFIG_INT(TcDmColorsTeam1, tc_dm_colors_team1, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use DM colors for red team/team mates")
