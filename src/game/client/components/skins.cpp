@@ -7,16 +7,15 @@
 
 #include <engine/graphics.h>
 #include <engine/storage.h>
-#include <engine/shared/engine.h>
 
 #include "skins.h"
 
-void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
+int  CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
-		return;
+		return 0;
 		
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
@@ -25,7 +24,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
-		return;
+		return 0;
 	}
 	
 	CSkin Skin;
@@ -65,42 +64,39 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	}
 
 	
-	if(1)
-	{
-		int Freq[256] = {0};
-		int OrgWeight = 0;
-		int NewWeight = 192;
+	int Freq[256] = {0};
+	int OrgWeight = 0;
+	int NewWeight = 192;
 		
-		// find most common frequence
-		for(int y = 0; y < BodySize; y++)
-			for(int x = 0; x < BodySize; x++)
-			{
-				if(d[y*Pitch+x*4+3] > 128)
-					Freq[d[y*Pitch+x*4]]++;
-			}
-		
-		for(int i = 1; i < 256; i++)
+	// find most common frequence
+	for(int y = 0; y < BodySize; y++)
+		for(int x = 0; x < BodySize; x++)
 		{
-			if(Freq[OrgWeight] < Freq[i])
-				OrgWeight = i;
+			if(d[y*Pitch+x*4+3] > 128)
+				Freq[d[y*Pitch+x*4]]++;
 		}
-
-		// reorder
-		int InvOrgWeight = 255-OrgWeight;
-		int InvNewWeight = 255-NewWeight;
-		for(int y = 0; y < BodySize; y++)
-			for(int x = 0; x < BodySize; x++)
-			{
-				int v = d[y*Pitch+x*4];
-				if(v <= OrgWeight)
-					v = (int)(((v/(float)OrgWeight) * NewWeight));
-				else
-					v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
-				d[y*Pitch+x*4] = v;
-				d[y*Pitch+x*4+1] = v;
-				d[y*Pitch+x*4+2] = v;
-			}
+		
+	for(int i = 1; i < 256; i++)
+	{
+		if(Freq[OrgWeight] < Freq[i])
+			OrgWeight = i;
 	}
+
+	// reorder
+	int InvOrgWeight = 255-OrgWeight;
+	int InvNewWeight = 255-NewWeight;
+	for(int y = 0; y < BodySize; y++)
+		for(int x = 0; x < BodySize; x++)
+		{
+			int v = d[y*Pitch+x*4];
+			if(v <= OrgWeight)
+				v = (int)(((v/(float)OrgWeight) * NewWeight));
+			else
+				v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
+			d[y*Pitch+x*4] = v;
+			d[y*Pitch+x*4+1] = v;
+			d[y*Pitch+x*4+2] = v;
+		}
 	
 	Skin.m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
@@ -110,10 +106,12 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 	pSelf->m_aSkins.add(Skin);
+
+	return 0;
 }
 
 
-void CSkins::Init()
+void CSkins::OnInit()
 {
 	// load skins
 	m_aSkins.clear();
@@ -137,7 +135,7 @@ int CSkins::Num()
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[Index%m_aSkins.size()];
+	return &m_aSkins[max(0, Index%m_aSkins.size())];
 }
 
 int CSkins::Find(const char *pName)

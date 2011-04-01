@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef ENGINE_CLIENT_SRVBROWSE_H
-#define ENGINE_CLIENT_SRVBROWSE_H
+#ifndef ENGINE_CLIENT_SERVERBROWSER_H
+#define ENGINE_CLIENT_SERVERBROWSER_H
 
 #include <engine/serverbrowser.h>
 
@@ -45,7 +45,7 @@ public:
 	void RemoveFavorite(const NETADDR &Addr);
 
 	//
-	void Update();
+	void Update(bool ForceResort);
 	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
 	void Request(const NETADDR &Addr) const;
 
@@ -55,6 +55,7 @@ private:
 	CNetClient *m_pNetClient;
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
+	class IFriends *m_pFriends;
 	char m_aNetVersion[128];
 
 	CHeap m_ServerlistHeap;
@@ -92,8 +93,8 @@ private:
 	bool SortCompareMap(int Index1, int Index2) const;
 	bool SortComparePing(int Index1, int Index2) const;
 	bool SortCompareGametype(int Index1, int Index2) const;
-	bool SortCompareProgression(int Index1, int Index2) const;
 	bool SortCompareNumPlayers(int Index1, int Index2) const;
+	bool SortCompareNumClients(int Index1, int Index2) const;
 
 	//
 	void Filter();

@@ -39,6 +39,7 @@ enum
 	// sent by server
 	NETMSG_MAP_CHANGE,		// sent when client should switch map
 	NETMSG_MAP_DATA,		// map transfer, contains a chunk of the map file
+	NETMSG_CON_READY,		// connection is ready, client should send start info
 	NETMSG_SNAP,			// normal snapshot, multiple parts
 	NETMSG_SNAPEMPTY,		// empty snapshot
 	NETMSG_SNAPSINGLE,		// ?
@@ -78,9 +79,8 @@ enum
 	MAX_INPUT_SIZE=128,
 	MAX_SNAPSHOT_PACKSIZE=900,
 
-	MAX_CLANNAME_LENGTH=32,
-	MAX_NAME_LENGTH=24,
-	
+	MAX_NAME_LENGTH=16,
+	MAX_CLAN_LENGTH=12,
 
 	// message packing
 	MSGFLAG_VITAL=1,

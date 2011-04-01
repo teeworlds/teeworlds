@@ -12,9 +12,9 @@ public:
 	virtual void *GetData(int Index) = 0;
 	virtual void *GetDataSwapped(int Index) = 0;
 	virtual void UnloadData(int Index) = 0;
-	virtual void *GetItem(int Index, int *Type, int *pId) = 0;
+	virtual void *GetItem(int Index, int *Type, int *pID) = 0;
 	virtual void GetType(int Type, int *pStart, int *pNum) = 0;
-	virtual void *FindItem(int Type, int Id) = 0;
+	virtual void *FindItem(int Type, int ID) = 0;
 	virtual int NumItems() = 0;
 };
 

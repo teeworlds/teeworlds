@@ -35,7 +35,7 @@ static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 
 struct CFontChar
 {
-	int m_Id;
+	int m_ID;
 	
 	// these values are scaled to the pFont size
 	// width * font_size == real_size
@@ -101,6 +101,11 @@ class CTextRender : public IEngineTextRender
 	float m_TextG;
 	float m_TextB;
 	float m_TextA;
+
+	float m_TextOutlineR;
+	float m_TextOutlineG;
+	float m_TextOutlineB;
+	float m_TextOutlineA;
 	
 	int m_FontTextureFormat;
 
@@ -244,10 +249,10 @@ class CTextRender : public IEngineTextRender
 	}
 
 
-	void UploadGlyph(CFontSizeData *pSizeData, int Texnum, int SlotId, int Chr, const void *pData)
+	void UploadGlyph(CFontSizeData *pSizeData, int Texnum, int SlotID, int Chr, const void *pData)
 	{
-		int x = (SlotId%pSizeData->m_NumXChars) * (pSizeData->m_TextureWidth/pSizeData->m_NumXChars);
-		int y = (SlotId/pSizeData->m_NumXChars) * (pSizeData->m_TextureHeight/pSizeData->m_NumYChars);
+		int x = (SlotID%pSizeData->m_NumXChars) * (pSizeData->m_TextureWidth/pSizeData->m_NumXChars);
+		int y = (SlotID/pSizeData->m_NumXChars) * (pSizeData->m_TextureHeight/pSizeData->m_NumYChars);
 		
 		glBindTexture(GL_TEXTURE_2D, pSizeData->m_aTextures[Texnum]);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
@@ -293,7 +298,7 @@ class CTextRender : public IEngineTextRender
 	int RenderGlyph(CFont *pFont, CFontSizeData *pSizeData, int Chr)
 	{
 		FT_Bitmap *pBitmap;
-		int SlotId = 0;
+		int SlotID = 0;
 		int SlotW = pSizeData->m_TextureWidth / pSizeData->m_NumXChars;
 		int SlotH = pSizeData->m_TextureHeight / pSizeData->m_NumYChars;
 		int SlotSize = SlotW*SlotH;
@@ -312,8 +317,8 @@ class CTextRender : public IEngineTextRender
 		pBitmap = &pFont->m_FtFace->glyph->bitmap; // ignore_convention
 		
 		// fetch slot
-		SlotId = GetSlot(pSizeData);
-		if(SlotId < 0)
+		SlotID = GetSlot(pSizeData);
+		if(SlotID < 0)
 			return -1;
 		
 		// adjust spacing
@@ -345,12 +350,12 @@ class CTextRender : public IEngineTextRender
 				ms_aGlyphData[py*SlotW+px] = 255;
 		
 		// upload the glyph
-		UploadGlyph(pSizeData, 0, SlotId, Chr, ms_aGlyphData);
+		UploadGlyph(pSizeData, 0, SlotID, Chr, ms_aGlyphData);
 		
 		if(OutlineThickness == 1)
 		{
 			Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
-			UploadGlyph(pSizeData, 1, SlotId, Chr, ms_aGlyphDataOutlined);
+			UploadGlyph(pSizeData, 1, SlotID, Chr, ms_aGlyphDataOutlined);
 		}
 		else
 		{
@@ -359,32 +364,32 @@ class CTextRender : public IEngineTextRender
 				Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
 				Grow(ms_aGlyphDataOutlined, ms_aGlyphData, SlotW, SlotH);
 			}
-			UploadGlyph(pSizeData, 1, SlotId, Chr, ms_aGlyphData);
+			UploadGlyph(pSizeData, 1, SlotID, Chr, ms_aGlyphData);
 		}
 		
 		// set char info
 		{
-			CFontChar *pFontchr = &pSizeData->m_aCharacters[SlotId];
+			CFontChar *pFontchr = &pSizeData->m_aCharacters[SlotID];
 			float Scale = 1.0f/pSizeData->m_FontSize;
 			float Uscale = 1.0f/pSizeData->m_TextureWidth;
 			float Vscale = 1.0f/pSizeData->m_TextureHeight;
 			int Height = pBitmap->rows + OutlineThickness*2 + 2; // ignore_convention
 			int Width = pBitmap->width + OutlineThickness*2 + 2; // ignore_convention
 			
-			pFontchr->m_Id = Chr;
+			pFontchr->m_ID = Chr;
 			pFontchr->m_Height = Height * Scale;
 			pFontchr->m_Width = Width * Scale;
 			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-1) * Scale; // ignore_convention
 			pFontchr->m_OffsetY = (pSizeData->m_FontSize - pFont->m_FtFace->glyph->bitmap_top) * Scale; // ignore_convention
 			pFontchr->m_AdvanceX = (pFont->m_FtFace->glyph->advance.x>>6) * Scale; // ignore_convention
 			
-			pFontchr->m_aUvs[0] = (SlotId%pSizeData->m_NumXChars) / (float)(pSizeData->m_NumXChars);
-			pFontchr->m_aUvs[1] = (SlotId/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
+			pFontchr->m_aUvs[0] = (SlotID%pSizeData->m_NumXChars) / (float)(pSizeData->m_NumXChars);
+			pFontchr->m_aUvs[1] = (SlotID/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
 			pFontchr->m_aUvs[2] = pFontchr->m_aUvs[0] + Width*Uscale;
 			pFontchr->m_aUvs[3] = pFontchr->m_aUvs[1] + Height*Vscale;
 		}
 		
-		return SlotId;
+		return SlotID;
 	}
 
 	CFontChar *GetChar(CFont *pFont, CFontSizeData *pSizeData, int Chr)
@@ -396,7 +401,7 @@ class CTextRender : public IEngineTextRender
 		int i;
 		for(i = 0; i < pSizeData->m_CurrentCharacter; i++)
 		{
-			if(pSizeData->m_aCharacters[i].m_Id == Chr)
+			if(pSizeData->m_aCharacters[i].m_ID == Chr)
 			{
 				pFontchr = &pSizeData->m_aCharacters[i];
 				break;
@@ -438,10 +443,14 @@ public:
 	{
 		m_pGraphics = 0;
 
-		m_TextR = 1;
-		m_TextG = 1;
-		m_TextB = 1;
-		m_TextA = 1;
+		m_TextR = 1.0f;
+		m_TextG = 1.0f;
+		m_TextB = 1.0f;
+		m_TextA = 1.0f;
+		m_TextOutlineR = 0.0f;
+		m_TextOutlineG = 0.0f;
+		m_TextOutlineB = 0.0f;
+		m_TextOutlineA = 0.3f;
 
 		m_pDefaultFont = 0;
 
@@ -535,6 +544,14 @@ public:
 		m_TextB = b;
 		m_TextA = a;
 	}
+
+	virtual void TextOutlineColor(float r, float g, float b, float a)
+	{
+		m_TextOutlineR = r;
+		m_TextOutlineG = g;
+		m_TextOutlineB = b;
+		m_TextOutlineA = a;
+	}
 	
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
@@ -614,7 +631,7 @@ public:
 
 				Graphics()->QuadsBegin();
 				if (i == 0)
-					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f*m_TextA);
+					Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
 				else
 					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
 			}
@@ -659,18 +676,13 @@ public:
 					pBatchEnd = pCurrent + Wlen;
 				}
 				
+				const char *pTmp = pCurrent;
+				int NextCharacter = str_utf8_decode(&pTmp);
 				while(pCurrent < pBatchEnd)
 				{
-					const char *pTmp;
-					float Advance = 0;
-					int Character = 0;
-					int Nextcharacter = 0;
-					CFontChar *pChr;
-
-					// TODO: UTF-8 decode
-					Character = str_utf8_decode(&pCurrent);
-					pTmp = pCurrent;
-					Nextcharacter = str_utf8_decode(&pTmp);
+					int Character = NextCharacter;
+					pCurrent = pTmp;
+					NextCharacter = str_utf8_decode(&pTmp);
 					
 					if(Character == '\n')
 					{
@@ -684,11 +696,10 @@ public:
 						continue;
 					}
 
-					pChr = GetChar(pFont, pSizeData, Character);
-
+					CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 					if(pChr)
 					{
-						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)*Scale;
+						float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
 						if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 						{
 							// we hit the end of the line, no more to render or count
@@ -702,10 +713,10 @@ public:
 							IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
 							Graphics()->QuadsDrawTL(&QuadItem, 1);
 						}
-					}
 
-					DrawX += Advance*Size;
-					pCursor->m_CharCount++;
+						DrawX += Advance*Size;
+						pCursor->m_CharCount++;
+					}
 				}
 				
 				if(NewLine)

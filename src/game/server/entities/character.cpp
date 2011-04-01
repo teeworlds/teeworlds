@@ -54,7 +54,6 @@ void CCharacter::Reset()
 
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
-	m_PlayerState = PLAYERSTATE_UNKNOWN;
 	m_EmoteStop = -1;
 	m_LastAction = -1;
 	m_ActiveWeapon = WEAPON_GUN;
@@ -133,7 +132,7 @@ void CCharacter::HandleNinja()
 	if (m_Ninja.m_CurrentMoveTime == 0)
 	{
 		// reset velocity
-		m_Core.m_Vel *= 0.2f;
+		m_Core.m_Vel = m_Ninja.m_ActivationDir*m_Ninja.m_OldVelAmount;
 	}
 
 	if (m_Ninja.m_CurrentMoveTime > 0)
@@ -416,9 +415,9 @@ void CCharacter::FireWeapon()
 			// reset Hit objects
 			m_NumObjectsHit = 0;
 			
-			m_AttackTick = Server()->Tick();
 			m_Ninja.m_ActivationDir = Direction;
 			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
+			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
 			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
 		} break;
@@ -579,8 +578,6 @@ void CCharacter::Tick()
 	// handle Weapons
 	HandleWeapons();
 
-	m_PlayerState = m_Input.m_PlayerState;
-
 	// Previnput
 	m_PrevInput = m_Input;
 	return;
@@ -691,6 +688,8 @@ bool CCharacter::IncreaseArmor(int Amount)
 
 void CCharacter::Die(int Killer, int Weapon)
 {
+	// we got to wait 0.5 secs before respawning
+	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
 	char aBuf[256];
@@ -717,9 +716,6 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameServer()->m_World.RemoveEntity(this);
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
-	
-	// we got to wait 0.5 secs before respawning
-	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 }
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
@@ -864,7 +860,7 @@ void CCharacter::Snap(int SnappingClient)
 
 	pCharacter->m_Direction = m_Input.m_Direction;
 
-	if(m_pPlayer->GetCID() == SnappingClient)
+	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 || m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->m_SpectatorID)
 	{
 		pCharacter->m_Health = m_Health;
 		pCharacter->m_Armor = m_Armor;
@@ -878,5 +874,5 @@ void CCharacter::Snap(int SnappingClient)
 			pCharacter->m_Emote = EMOTE_BLINK;
 	}
 
-	pCharacter->m_PlayerState = m_PlayerState;
+	pCharacter->m_PlayerFlags = GetPlayer()->m_PlayerFlags;
 }

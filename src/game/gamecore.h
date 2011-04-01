@@ -54,9 +54,9 @@ inline vec2 GetDirection(int Angle)
 	return vec2(cosf(a), sinf(a));
 }
 
-inline vec2 GetDir(float a)
+inline vec2 GetDir(float Angle)
 {
-	return vec2(cosf(a), sinf(a));
+	return vec2(cosf(Angle), sinf(Angle));
 }
 
 inline float GetAngle(vec2 Dir)
@@ -105,12 +105,12 @@ inline void IntsToStr(const int *pInts, int Num, char *pStr)
 
 
 
-inline vec2 CalcPos(vec2 p, vec2 v, float Curvature, float Speed, float t)
+inline vec2 CalcPos(vec2 Pos, vec2 Velocity, float Curvature, float Speed, float Time)
 {
 	vec2 n;
-	t *= Speed;
-	n.x = p.x + v.x*t;
-	n.y = p.y + v.y*t + Curvature/10000*(t*t);
+	Time *= Speed;
+	n.x = Pos.x + Velocity.x*Time;
+	n.y = Pos.y + Velocity.y*Time + Curvature/10000*(Time*Time);
 	return n;
 }
 

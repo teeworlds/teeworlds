@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/demo.h>
+#include <engine/engine.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <game/generated/protocol.h>
@@ -94,12 +95,12 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientId].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
 
 	// check for teamplay modes
 	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameobj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 
 	// check for ninja	
 	if (Player.m_Weapon == WEAPON_NINJA)
@@ -128,7 +129,7 @@ void CPlayers::RenderHook(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
 		}
 		else
@@ -154,7 +155,7 @@ void CPlayers::RenderHook(
 		
 		if(pPlayerChar->m_HookedPlayer != -1)
 		{
-			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
+			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
 			{
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
 					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
@@ -217,13 +218,13 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientId].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
 
 	// check for teamplay modes
 	bool IsTeamplay = false;
 	bool NewTick = m_pClient->m_NewTick;
-	if(m_pClient->m_Snap.m_pGameobj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 
 	// check for ninja	
 	if (Player.m_Weapon == WEAPON_NINJA)
@@ -283,7 +284,7 @@ void CPlayers::RenderPlayer(
 	// use preditect players if needed
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
 		}
 		else
@@ -499,7 +500,7 @@ void CPlayers::RenderPlayer(
 	RenderInfo.m_ColorFeet.a = 1.0f;
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
 
-	if(Player.m_PlayerState == PLAYERSTATE_CHATTING)
+	if(Player.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
@@ -509,13 +510,13 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsEnd();
 	}
 
-	if (m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+	if (m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
 
-		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart;
-		int FromEnd = m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
+		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart;
+		int FromEnd = m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
 
 		float a = 1;
 
@@ -536,7 +537,7 @@ void CPlayers::RenderPlayer(
 
 		Graphics()->SetColor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[pInfo.m_ClientId].m_Emoticon);
+		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[pInfo.m_ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();

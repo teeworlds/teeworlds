@@ -11,7 +11,7 @@
 
 enum {
 	MTU = 1400,
-	MAX_SERVERS_PER_PACKET=128,
+	MAX_SERVERS_PER_PACKET=40,
 	MAX_PACKETS=16,
 	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
 	MAX_BANS=128,
@@ -29,12 +29,6 @@ struct CCheckServer
 static CCheckServer m_aCheckServers[MAX_SERVERS];
 static int m_NumCheckServers = 0;
 
-struct NETADDR_IPv4
-{
-	unsigned char m_aIp[4];
-	unsigned short m_Port;
-};
-
 struct CServerEntry
 {
 	NETADDR m_Address;
@@ -49,7 +43,7 @@ struct CPacketData
 	int m_Size;
 	struct {
 		unsigned char m_aHeader[sizeof(SERVERBROWSE_LIST)];
-		NETADDR_IPv4 m_aServers[MAX_SERVERS_PER_PACKET];
+		CMastersrvAddr m_aServers[MAX_SERVERS_PER_PACKET];
 	} m_Data;
 };
 
@@ -75,8 +69,6 @@ struct CBanEntry
 static CBanEntry m_aBans[MAX_BANS];
 static int m_NumBans = 0;
 
-//static int64 server_expire[MAX_SERVERS];
-
 static CNetClient m_NetChecker; // NAT/FW checker
 static CNetClient m_NetOp; // main
 
@@ -100,16 +92,19 @@ void BuildPackets()
 		// copy server addresses
 		for(int i = 0; i < Chunk; i++)
 		{
-			// TODO: ipv6 support
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[0] = pCurrent->m_Address.ip[0];
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[1] = pCurrent->m_Address.ip[1];
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[2] = pCurrent->m_Address.ip[2];
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[3] = pCurrent->m_Address.ip[3];
-			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_Port = pCurrent->m_Address.port;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[0] = (pCurrent->m_Address.type>>24)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[1] = (pCurrent->m_Address.type>>16)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[2] = (pCurrent->m_Address.type>>8)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aType[3] = pCurrent->m_Address.type&0xff;
+			mem_copy(m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp, pCurrent->m_Address.ip,
+				sizeof(m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp));
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aPort[0] = (pCurrent->m_Address.port>>8)&0xff;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aPort[1] = pCurrent->m_Address.port&0xff;
+
 			pCurrent++;
 		}
 		
-		m_aPackets[m_NumPackets].m_Size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR_IPv4)*Chunk;
+		m_aPackets[m_NumPackets].m_Size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR)*Chunk;
 		
 		m_NumPackets++;
 	}
@@ -160,9 +155,11 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt)
 		return;
 	}
 	
-	dbg_msg("mastersrv", "checking: %d.%d.%d.%d:%d (%d.%d.%d.%d:%d)",
-		pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port,
-		pAlt->ip[0], pAlt->ip[1], pAlt->ip[2], pAlt->ip[3], pAlt->port);
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+	char aAltAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(pAlt, aAltAddrStr, sizeof(aAltAddrStr));
+	dbg_msg("mastersrv", "checking: %s (%s)", aAddrStr, aAltAddrStr);
 	m_aCheckServers[m_NumCheckServers].m_Address = *pInfo;
 	m_aCheckServers[m_NumCheckServers].m_AltAddress = *pAlt;
 	m_aCheckServers[m_NumCheckServers].m_TryCount = 0;
@@ -173,13 +170,13 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt)
 void AddServer(NETADDR *pInfo)
 {
 	// see if server already exists in list
-	int i;
-	for(i = 0; i < m_NumServers; i++)
+	for(int i = 0; i < m_NumServers; i++)
 	{
 		if(net_addr_comp(&m_aServers[i].m_Address, pInfo) == 0)
 		{
-			dbg_msg("mastersrv", "updated: %d.%d.%d.%d:%d",
-				pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port);
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+			dbg_msg("mastersrv", "updated: %s", aAddrStr);
 			m_aServers[i].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
 			return;
 		}
@@ -192,8 +189,9 @@ void AddServer(NETADDR *pInfo)
 		return;
 	}
 	
-	dbg_msg("mastersrv", "added: %d.%d.%d.%d:%d",
-		pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port);
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+	dbg_msg("mastersrv", "added: %s", aAddrStr);
 	m_aServers[m_NumServers].m_Address = *pInfo;
 	m_aServers[m_NumServers].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
 	m_NumServers++;
@@ -209,11 +207,11 @@ void UpdateServers()
 		{
 			if(m_aCheckServers[i].m_TryCount == 10)
 			{
-				dbg_msg("mastersrv", "check failed: %d.%d.%d.%d:%d",
-					m_aCheckServers[i].m_Address.ip[0], m_aCheckServers[i].m_Address.ip[1],
-					m_aCheckServers[i].m_Address.ip[2], m_aCheckServers[i].m_Address.ip[3],m_aCheckServers[i].m_Address.port,
-					m_aCheckServers[i].m_AltAddress.ip[0], m_aCheckServers[i].m_AltAddress.ip[1],
-					m_aCheckServers[i].m_AltAddress.ip[2], m_aCheckServers[i].m_AltAddress.ip[3],m_aCheckServers[i].m_AltAddress.port);
+				char aAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(&m_aCheckServers[i].m_Address, aAddrStr, sizeof(aAddrStr));
+				char aAltAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(&m_aCheckServers[i].m_AltAddress, aAltAddrStr, sizeof(aAltAddrStr));
+				dbg_msg("mastersrv", "check failed: %s (%s)", aAddrStr, aAltAddrStr);
 					
 				// FAIL!!
 				SendError(&m_aCheckServers[i].m_Address);
@@ -243,9 +241,9 @@ void PurgeServers()
 		if(m_aServers[i].m_Expire < Now)
 		{
 			// remove server
-			dbg_msg("mastersrv", "expired: %d.%d.%d.%d:%d",
-				m_aServers[i].m_Address.ip[0], m_aServers[i].m_Address.ip[1],
-				m_aServers[i].m_Address.ip[2], m_aServers[i].m_Address.ip[3], m_aServers[i].m_Address.port);
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(&m_aServers[i].m_Address, aAddrStr, sizeof(aAddrStr));
+			dbg_msg("mastersrv", "expired: %s", aAddrStr);
 			m_aServers[i] = m_aServers[m_NumServers-1];
 			m_NumServers--;
 		}
@@ -282,21 +280,19 @@ void ConAddBan(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 	
-	net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0));
-	
-	if(CheckBan(m_aBans[m_NumBans].m_Address))
+	if(net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0)) != 0)
 	{
-		dbg_msg("mastersrv", "duplicate ban: %d.%d.%d.%d:%d",
-			m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
-			m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
-			m_aBans[m_NumBans].m_Address.port);
+		dbg_msg("mastersrv", "error: invalid address");
 		return;
 	}
 	
-	dbg_msg("mastersrv", "ban added: %d.%d.%d.%d:%d",
-		m_aBans[m_NumBans].m_Address.ip[0], m_aBans[m_NumBans].m_Address.ip[1],
-		m_aBans[m_NumBans].m_Address.ip[2], m_aBans[m_NumBans].m_Address.ip[3],
-		m_aBans[m_NumBans].m_Address.port);
+	if(CheckBan(m_aBans[m_NumBans].m_Address))
+	{
+		dbg_msg("mastersrv", "duplicate ban: %s", pResult->GetString(0));
+		return;
+	}
+	
+	dbg_msg("mastersrv", "ban added: %s", pResult->GetString(0));
 	m_NumBans++;
 }
 
@@ -315,15 +311,22 @@ int main(int argc, const char **argv) // ignore_convention
 	net_init();
 
 	mem_zero(&BindAddr, sizeof(BindAddr));
+	BindAddr.type = NETTYPE_ALL;
 	BindAddr.port = MASTERSERVER_PORT;
 		
-	m_NetOp.Open(BindAddr, 0);
+	if(!m_NetOp.Open(BindAddr, 0))
+	{
+		dbg_msg("mastersrv", "couldn't start network (op)");
+		return -1;
+	}
 
 	BindAddr.port = MASTERSERVER_PORT+1;
-	m_NetChecker.Open(BindAddr, 0);
-	// TODO: check socket for errors
+	if(!m_NetChecker.Open(BindAddr, 0))
+	{
+		dbg_msg("mastersrv", "couldn't start network (checker)");
+		return -1;
+	}
 	
-	//mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 
 	IKernel *pKernel = IKernel::Create();

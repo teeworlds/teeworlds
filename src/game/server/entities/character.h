@@ -118,10 +118,8 @@ private:
 		vec2 m_ActivationDir;
 		int m_ActivationTick;
 		int m_CurrentMoveTime;
-		
+		int m_OldVelAmount;
 	} m_Ninja;
-
-	int m_PlayerState;// if the client is chatting, accessing a menu or so
 
 	// the player core for the physics	
 	CCharacterCore m_Core;

@@ -15,7 +15,7 @@ public:
 		MAX_MASTERSERVERS=4
 	};
 
-	virtual void Init(class CEngine *pEngine) = 0;
+	virtual void Init() = 0;
 	virtual void SetDefault() = 0;
 	virtual int Load() = 0;
 	virtual int Save() = 0;
@@ -26,6 +26,7 @@ public:
 	virtual void DumpServers() = 0;
 	virtual NETADDR GetAddr(int Index) = 0;
 	virtual const char *GetName(int Index) = 0;
+	virtual bool IsValid(int Index) = 0;
 };
 
 class IEngineMasterServer : public IMasterServer

@@ -3,6 +3,8 @@
 #ifndef ENGINE_SERVERBROWSER_H
 #define ENGINE_SERVERBROWSER_H
 
+#include <engine/shared/protocol.h>
+
 #include "kernel.h"
 
 /*
@@ -12,13 +14,16 @@ class CServerInfo
 {
 public:
 	/*
-		Structure: CInfoPlayer
+		Structure: CInfoClient
 	*/
-	class CPlayer
+	class CClient
 	{
 	public:
-		char m_aName[48];
+		char m_aName[MAX_NAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
 		int m_Score;
+		bool m_Player;
 	} ;
 
 	int m_SortedIndex;
@@ -28,7 +33,8 @@ public:
 	
 	int m_QuickSearchHit;
 	
-	int m_Progression;
+	int m_MaxClients;
+	int m_NumClients;
 	int m_MaxPlayers;
 	int m_NumPlayers;
 	int m_Flags;
@@ -38,8 +44,8 @@ public:
 	char m_aName[64];
 	char m_aMap[32];
 	char m_aVersion[32];
-	char m_aAddress[24];
-	CPlayer m_aPlayers[16];
+	char m_aAddress[NETADDR_MAXSTRSIZE];
+	CClient m_aClients[MAX_CLIENTS];
 };
 
 class IServerBrowser : public IInterface
@@ -52,7 +58,6 @@ public:
 		SORT_PING - Sort by ping.
 		SORT_MAP - Sort by map
 		SORT_GAMETYPE - Sort by game type. DM, TDM etc.
-		SORT_PROGRESSION - Sort by progression.
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 	*/
 	enum{
@@ -60,23 +65,19 @@ public:
 		SORT_PING,
 		SORT_MAP,
 		SORT_GAMETYPE,
-		SORT_PROGRESSION,
 		SORT_NUMPLAYERS,
 		
 		QUICK_SERVERNAME=1,
-		QUICK_PLAYERNAME=2,
+		QUICK_PLAYER=2,
 		QUICK_MAPNAME=4,
 		
 		TYPE_INTERNET = 0,
 		TYPE_LAN = 1,
 		TYPE_FAVORITES = 2,
 
-		// TODO: clean this up
 		SET_MASTER_ADD=1,
 		SET_FAV_ADD,
-		SET_TOKEN,
-		SET_OLD_INTERNET,
-		SET_OLD_LAN
+		SET_TOKEN
 	};
 
 	virtual void Refresh(int Type) = 0;

@@ -36,7 +36,7 @@ public:
 	void RemoveFirstTimeout();
 	int NewID();
 	void TimeoutIDs();
-	void FreeID(int Id);
+	void FreeID(int ID);
 };
 
 class CServer : public IServer
@@ -48,7 +48,6 @@ public:
 	class IGameServer *GameServer() { return m_pGameServer; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
-	class CEngine *Engine() { return &m_Engine; }
 
 	class CClient
 	{
@@ -88,7 +87,8 @@ public:
 		int m_CurrentInput;
 		
 		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLANNAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Country;
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
@@ -111,10 +111,7 @@ public:
 	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
-	int m_RconClientId;
-
-	char m_aBrowseinfoGametype[16];
-	int m_BrowseinfoProgression;
+	int m_RconClientID;
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
@@ -125,16 +122,17 @@ public:
 	int m_CurrentMapSize;	
 	
 	CDemoRecorder m_DemoRecorder;
-	CEngine m_Engine;
 	CRegister m_Register;
+	CMapChecker m_MapChecker;
 	
 	CServer();
 	
 	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
+	virtual void SetClientClan(int ClientID, char const *pClan);
+	virtual void SetClientCountry(int ClientID, int Country);
 	virtual void SetClientScore(int ClientID, int Score);
-	virtual void SetBrowseInfo(const char *pGameType, int Progression);
 
 	void Kick(int ClientID, const char *pReason);
 
@@ -146,22 +144,25 @@ public:
 
 	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
-	void GetClientIP(int ClientID, char *pIPString, int Size);
-	const char *ClientName(int ClientId);
+	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
+	const char *ClientName(int ClientID);
+	const char *ClientClan(int ClientID);
+	int ClientCountry(int ClientID);
 	bool ClientIngame(int ClientID);
 
-	int *LatestInput(int ClientId, int *size);
+	int *LatestInput(int ClientID, int *size);
 
-	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientId);
+	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
 	int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System);
 
 	void DoSnapshot();
 
-	static int NewClientCallback(int ClientId, void *pUser);
-	static int DelClientCallback(int ClientId, const char *pReason, void *pUser);
+	static int NewClientCallback(int ClientID, void *pUser);
+	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
-	void SendMap(int ClientId);
-	void SendRconLine(int ClientId, const char *pLine);
+	void SendMap(int ClientID);
+	void SendConnectionReady(int ClientID);
+	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 	
 	void ProcessClientPacket(CNetChunk *pPacket);
@@ -178,7 +179,6 @@ public:
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void InitEngine(const char *pAppname);
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 
@@ -199,7 +199,7 @@ public:
 	
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);
-	virtual void *SnapNewItem(int Type, int Id, int Size);
+	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
 };
 

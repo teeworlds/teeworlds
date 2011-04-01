@@ -9,6 +9,7 @@
 #include <game/client/component.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/scoreboard.h>
 
 #include "controls.h"
 
@@ -112,19 +113,22 @@ int CControls::SnapInput(int *pData)
 	
 	// update player state
 	if(m_pClient->m_pChat->IsActive())
-		m_InputData.m_PlayerState = PLAYERSTATE_CHATTING;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_CHATTING;
 	else if(m_pClient->m_pMenus->IsActive())
-		m_InputData.m_PlayerState = PLAYERSTATE_IN_MENU;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_IN_MENU;
 	else
-		m_InputData.m_PlayerState = PLAYERSTATE_PLAYING;
+		m_InputData.m_PlayerFlags = PLAYERFLAG_PLAYING;
 	
-	if(m_LastData.m_PlayerState != m_InputData.m_PlayerState)
+	if(m_pClient->m_pScoreboard->Active())
+		m_InputData.m_PlayerFlags |= PLAYERFLAG_SCOREBOARD;
+
+	if(m_LastData.m_PlayerFlags != m_InputData.m_PlayerFlags)
 		Send = true;
 		
-	m_LastData.m_PlayerState = m_InputData.m_PlayerState;
+	m_LastData.m_PlayerFlags = m_InputData.m_PlayerFlags;
 	
 	// we freeze the input if chat or menu is activated
-	if(m_InputData.m_PlayerState != PLAYERSTATE_PLAYING)
+	if(!(m_InputData.m_PlayerFlags&PLAYERFLAG_PLAYING))
 	{
 		OnReset();
 			
@@ -172,7 +176,6 @@ int CControls::SnapInput(int *pData)
 		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;
 		else if(m_InputData.m_Fire != m_LastData.m_Fire) Send = true;
 		else if(m_InputData.m_Hook != m_LastData.m_Hook) Send = true;
-		else if(m_InputData.m_PlayerState != m_LastData.m_PlayerState) Send = true;
 		else if(m_InputData.m_WantedWeapon != m_LastData.m_WantedWeapon) Send = true;
 		else if(m_InputData.m_NextWeapon != m_LastData.m_NextWeapon) Send = true;
 		else if(m_InputData.m_PrevWeapon != m_LastData.m_PrevWeapon) Send = true;
@@ -196,16 +199,20 @@ int CControls::SnapInput(int *pData)
 void CControls::OnRender()
 {
 	// update target pos
-	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Paused || m_pClient->m_Snap.m_Spectate))
+	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || m_pClient->m_Snap.m_SpecInfo.m_Active))
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
+		m_TargetPos = m_pClient->m_Snap.m_SpecInfo.m_Position + m_MousePos;
+	else
+		m_TargetPos = m_MousePos;
 }
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if((m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Paused) || (m_pClient->m_Snap.m_Spectate && m_pClient->m_pChat->IsActive()))
+	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
 		return false;
+	
 	m_MousePos += vec2(x, y); // TODO: ugly
-
 	ClampMousePos();
 
 	return true;
@@ -213,35 +220,19 @@ bool CControls::OnMouseMove(float x, float y)
 
 void CControls::ClampMousePos()
 {
-	//
-	float CameraMaxDistance = 200.0f;
-	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-	float DeadZone = g_Config.m_ClMouseDeadzone;
-	float MouseMax = min(CameraMaxDistance/FollowFactor + DeadZone, (float)g_Config.m_ClMouseMaxDistance);
-	
-	//vec2 camera_offset(0, 0);
-
-	if(m_pClient->m_Snap.m_Spectate)
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
 	{
-		if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
-		if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
-		if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
-		if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
+		m_MousePos.x = clamp(m_MousePos.x, 200.0f, Collision()->GetWidth()*32-200.0f);
+		m_MousePos.y = clamp(m_MousePos.y, 200.0f, Collision()->GetHeight()*32-200.0f);
 		
-		m_TargetPos = m_MousePos;
 	}
 	else
 	{
-		float l = length(m_MousePos);
+		float CameraMaxDistance = 200.0f;
+		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+		float MouseMax = min(CameraMaxDistance/FollowFactor + g_Config.m_ClMouseDeadzone, (float)g_Config.m_ClMouseMaxDistance);
 		
-		if(l > MouseMax)
-		{
+		if(length(m_MousePos) > MouseMax)
 			m_MousePos = normalize(m_MousePos)*MouseMax;
-			l = MouseMax;
-		}
-		
-		//float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
-		//if(l > 0.0001f) // make sure that this isn't 0
-			//camera_offset = normalize(mouse_pos)*offset_amount;
 	}
 }

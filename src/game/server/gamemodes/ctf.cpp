@@ -63,9 +63,9 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return HadFlag;
 }
 
-bool CGameControllerCTF::CanBeMovedOnBalance(int Cid)
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
 {
-	CCharacter* Character = GameServer()->m_apPlayers[Cid]->GetCharacter();
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
 	if(Character)
 	{
 		for(int fi = 0; fi < 2; fi++)
@@ -76,6 +76,41 @@ bool CGameControllerCTF::CanBeMovedOnBalance(int Cid)
 		}
 	}
 	return true;
+}
+
+void CGameControllerCTF::Snap(int SnappingClient)
+{
+	IGameController::Snap(SnappingClient);
+
+	CNetObj_GameData *pGameDataObj = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
+	if(!pGameDataObj)
+		return;
+
+	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
+	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
+
+	if(m_apFlags[TEAM_RED])
+	{
+		if(m_apFlags[TEAM_RED]->m_AtStand)
+			pGameDataObj->m_FlagCarrierRed = FLAG_ATSTAND;
+		else if(m_apFlags[TEAM_RED]->m_pCarryingCharacter && m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer())
+			pGameDataObj->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
+		else
+			pGameDataObj->m_FlagCarrierRed = FLAG_TAKEN;
+	}
+	else
+		pGameDataObj->m_FlagCarrierRed = FLAG_MISSING;
+	if(m_apFlags[TEAM_BLUE])
+	{
+		if(m_apFlags[TEAM_BLUE]->m_AtStand)
+			pGameDataObj->m_FlagCarrierBlue = FLAG_ATSTAND;
+		else if(m_apFlags[TEAM_BLUE]->m_pCarryingCharacter && m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer())
+			pGameDataObj->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
+		else
+			pGameDataObj->m_FlagCarrierBlue = FLAG_TAKEN;
+	}
+	else
+		pGameDataObj->m_FlagCarrierBlue = FLAG_MISSING;
 }
 
 void CGameControllerCTF::Tick()
@@ -94,6 +129,7 @@ void CGameControllerCTF::Tick()
 		// flag hits death-tile or left the game layer, reset it
 		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
+			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
 			GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
 			F->Reset();
 			continue;

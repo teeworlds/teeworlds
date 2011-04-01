@@ -4,7 +4,6 @@
 #include <base/system.h>
 #include <engine/storage.h>
 #include "datafile.h"
-#include "engine.h"
 #include <zlib.h>
 
 static const int DEBUG=0;
@@ -18,13 +17,13 @@ struct CDatafileItemType
 
 struct CDatafileItem
 {
-	int m_TypeAndId;
+	int m_TypeAndID;
 	int m_Size;
 };
 
 struct CDatafileHeader
 {
-	char m_aId[4];
+	char m_aID[4];
 	int m_Version;
 	int m_Size;
 	int m_Swaplen;
@@ -104,11 +103,11 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	// TODO: change this header
 	CDatafileHeader Header;
 	io_read(File, &Header, sizeof(Header));
-	if(Header.m_aId[0] != 'A' || Header.m_aId[1] != 'T' || Header.m_aId[2] != 'A' || Header.m_aId[3] != 'D')
+	if(Header.m_aID[0] != 'A' || Header.m_aID[1] != 'T' || Header.m_aID[2] != 'A' || Header.m_aID[3] != 'D')
 	{
-		if(Header.m_aId[0] != 'D' || Header.m_aId[1] != 'A' || Header.m_aId[2] != 'T' || Header.m_aId[3] != 'A')
+		if(Header.m_aID[0] != 'D' || Header.m_aID[1] != 'A' || Header.m_aID[2] != 'T' || Header.m_aID[3] != 'A')
 		{
-			dbg_msg("datafile", "wrong signature. %x %x %x %x", Header.m_aId[0], Header.m_aId[1], Header.m_aId[2], Header.m_aId[3]);
+			dbg_msg("datafile", "wrong signature. %x %x %x %x", Header.m_aID[0], Header.m_aID[1], Header.m_aID[2], Header.m_aID[3]);
 			return 0;
 		}
 	}
@@ -223,6 +222,32 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	return true;
 }
 
+bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
+{
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
+	if(!File)
+		return false;
+	
+	// get crc and size
+	unsigned Crc = 0;
+	unsigned Size = 0;
+	unsigned char aBuffer[64*1024];
+	while(1)
+	{
+		unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
+		if(Bytes <= 0)
+			break;
+		Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
+		Size += Bytes;
+	}
+	
+	io_close(File);
+
+	*pCrc = Crc;
+	*pSize = Size;
+	return true;
+}
+
 int CDataFileReader::NumData()
 {
 	if(!m_pDataFile) { return 0; }
@@ -318,15 +343,15 @@ int CDataFileReader::GetItemSize(int Index)
 	return  m_pDataFile->m_Info.m_pItemOffsets[Index+1]-m_pDataFile->m_Info.m_pItemOffsets[Index];
 }
 
-void *CDataFileReader::GetItem(int Index, int *pType, int *pId)
+void *CDataFileReader::GetItem(int Index, int *pType, int *pID)
 {
-	if(!m_pDataFile) { if(pType) *pType = 0; if(pId) *pId = 0; return 0; }
+	if(!m_pDataFile) { if(pType) *pType = 0; if(pID) *pID = 0; return 0; }
 	
 	CDatafileItem *i = (CDatafileItem *)(m_pDataFile->m_Info.m_pItemStart+m_pDataFile->m_Info.m_pItemOffsets[Index]);
 	if(pType)
-		*pType = (i->m_TypeAndId>>16)&0xffff; // remove sign extention
-	if(pId)
-		*pId = i->m_TypeAndId&0xffff;
+		*pType = (i->m_TypeAndID>>16)&0xffff; // remove sign extention
+	if(pID)
+		*pID = i->m_TypeAndID&0xffff;
 	return (void *)(i+1);
 }
 
@@ -349,7 +374,7 @@ void CDataFileReader::GetType(int Type, int *pStart, int *pNum)
 	}
 }
 
-void *CDataFileReader::FindItem(int Type, int Id)
+void *CDataFileReader::FindItem(int Type, int ID)
 {
 	if(!m_pDataFile) return 0;
 	
@@ -357,9 +382,9 @@ void *CDataFileReader::FindItem(int Type, int Id)
 	GetType(Type, &Start, &Num);
 	for(int i = 0; i < Num; i++)
 	{
-		int ItemId;
-		void *pItem = GetItem(Start+i,0, &ItemId);
-		if(Id == ItemId)
+		int ItemID;
+		void *pItem = GetItem(Start+i,0, &ItemID);
+		if(ID == ItemID)
 			return pItem;
 	}
 	return 0;
@@ -414,7 +439,7 @@ bool CDataFileWriter::Open(class IStorage *pStorage, const char *pFilename)
 	return true;
 }
 
-int CDataFileWriter::AddItem(int Type, int Id, int Size, void *pData)
+int CDataFileWriter::AddItem(int Type, int ID, int Size, void *pData)
 {
 	if(!m_File) return 0;
 
@@ -423,7 +448,7 @@ int CDataFileWriter::AddItem(int Type, int Id, int Size, void *pData)
 	dbg_assert(Size%sizeof(int) == 0, "incorrect boundary");
 
 	m_aItems[m_NumItems].m_Type = Type;
-	m_aItems[m_NumItems].m_Id = Id;
+	m_aItems[m_NumItems].m_ID = ID;
 	m_aItems[m_NumItems].m_Size = Size;
 	
 	// copy data
@@ -533,10 +558,10 @@ int CDataFileWriter::Finish()
 	
 	// construct Header
 	{
-		Header.m_aId[0] = 'D';
-		Header.m_aId[1] = 'A';
-		Header.m_aId[2] = 'T';
-		Header.m_aId[3] = 'A';
+		Header.m_aID[0] = 'D';
+		Header.m_aID[1] = 'A';
+		Header.m_aID[2] = 'T';
+		Header.m_aID[3] = 'A';
 		Header.m_Version = 4;
 		Header.m_Size = FileSize - 16;
 		Header.m_Swaplen = SwapSize - 16;
@@ -634,10 +659,10 @@ int CDataFileWriter::Finish()
 			while(k != -1)
 			{
 				CDatafileItem Item;
-				Item.m_TypeAndId = (i<<16)|m_aItems[k].m_Id;
+				Item.m_TypeAndID = (i<<16)|m_aItems[k].m_ID;
 				Item.m_Size = m_aItems[k].m_Size;
 				if(DEBUG)
-					dbg_msg("datafile", "writing item type=%x idx=%d id=%d size=%d", i, k, m_aItems[k].m_Id, m_aItems[k].m_Size);
+					dbg_msg("datafile", "writing item type=%x idx=%d id=%d size=%d", i, k, m_aItems[k].m_ID, m_aItems[k].m_Size);
 				
 #if defined(CONF_ARCH_ENDIAN_BIG)
 				swap_endian(&Item, sizeof(int), sizeof(Item)/sizeof(int));

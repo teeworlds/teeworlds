@@ -4,17 +4,9 @@
 #define ENGINE_SHARED_DEMO_H
 
 #include <engine/demo.h>
-#include "snapshot.h"
+#include <engine/shared/protocol.h>
 
-struct CDemoHeader
-{
-	unsigned char m_aMarker[7];
-	unsigned char m_Version;
-	char m_aNetversion[64];
-	char m_aMap[64];
-	unsigned char m_aCrc[4];
-	char m_aType[8];
-};
+#include "snapshot.h"
 
 class CDemoRecorder : public IDemoRecorder
 {
@@ -39,7 +31,7 @@ public:
 
 	bool IsRecording() const { return m_File != 0; }
 
-	int TickCount() const { return m_LastTickMarker - m_FirstTick; }
+	int Length() const { return (m_LastTickMarker - m_FirstTick)/SERVER_TICK_SPEED; }
 };
 
 class CDemoPlayer : public IDemoPlayer
@@ -94,6 +86,7 @@ private:
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
+	int m_DemoType;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	int m_LastSnapshotDataSize;
 	class CSnapshotDelta *m_pSnapshotDelta;
@@ -118,7 +111,8 @@ public:
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	char *GetDemoName();
-	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const;
+	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
+	int GetDemoType() const;
 	
 	int Update();
 	

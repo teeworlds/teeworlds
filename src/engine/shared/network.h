@@ -219,6 +219,7 @@ public:
 	{
 		NETADDR m_Addr;
 		int m_Expires;
+		char m_Reason[128];
 	};
 	
 private:
@@ -334,7 +335,8 @@ class CNetBase
 	static IOHANDLE ms_DataLogRecv;
 	static CHuffman ms_Huffman;
 public:
-	static void OpenLog(const char *pSentlog, const char *pRecvlog);
+	static void OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv);
+	static void CloseLog();
 	static void Init();
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
