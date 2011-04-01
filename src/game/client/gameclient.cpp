@@ -283,7 +283,8 @@ void CGameClient::OnInit()
 	m_IsRace = false;
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
-	m_FlagPos = vec2(-1, -1);
+	for(int i = 0; i < 2; i++)
+		m_aFlagPos[i] = vec2(-1, -1);
 	
 	// Teecomp grayscale flags
 	Graphics()->UnloadTexture(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id); // Already loaded with full color, unload
@@ -420,6 +421,15 @@ void CGameClient::OnConnected()
 	m_LastRoundStartTick = 0;
 	m_aLastFlagCarrier[0] = -1;
 	m_aLastFlagCarrier[1] = -1;
+	
+	// get flag positions
+	for(int i = 0; i < m_Collision.GetWidth()*m_Collision.GetHeight(); i++)
+	{
+		if(m_Collision.GetCollisionRace(i) == ENTITY_FLAGSTAND_RED)
+			m_aFlagPos[TEAM_RED] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
+		else if(m_Collision.GetCollisionRace(i) == ENTITY_FLAGSTAND_BLUE)
+			m_aFlagPos[TEAM_RED] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
+	}
 }
 
 void CGameClient::OnReset()
@@ -457,7 +467,8 @@ void CGameClient::OnReset()
 	m_IsRace = false;
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
-	m_FlagPos = vec2(-1, -1);
+	for(int i = 0; i < 2; i++)
+		m_aFlagPos[i] = vec2(-1, -1);
 }
 
 
@@ -548,8 +559,8 @@ void CGameClient::OnRender()
 	}
 	
 	bool IsTeamPlay = false;
-	if(m_Snap.m_pGameobj)
-		IsTeamPlay = (m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
+	if(m_Snap.m_pGameInfoObj)
+		IsTeamPlay = (m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 		
 	// anti rainbow
 	if(g_Config.m_ClAntiRainbow && !IsTeamPlay)
@@ -970,24 +981,23 @@ void CGameClient::OnNewSnapshot()
 				if(m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
 					OnRoundStart();
 				
-				m_LastRoundStartTick = m_Snap.m_pGameobj->m_RoundStartTick;
+				m_LastRoundStartTick = m_Snap.m_pGameInfoObj->m_RoundStartTick;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATA)
 			{
-				m_Snap.m_pGameDataObj = (const CNetObj_GameData *)pData;
+				const CNetObj_GameData *pGameData = (const CNetObj_GameData *)pData;
+				if(m_Snap.m_pGameDataObj)
+				{
+					if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_ATSTAND && pGameData->m_FlagCarrierRed >= 0)
+						OnFlagGrab(TEAM_RED);
+					else if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_ATSTAND && pGameData->m_FlagCarrierBlue >= 0)
+						OnFlagGrab(TEAM_BLUE);
+				}
+				m_Snap.m_pGameDataObj = pGameData;
 				m_Snap.m_GameDataSnapID = Item.m_ID;
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
-			{
-				int Fid = Item.m_ID%2;
-				m_Snap.m_paFlags[Fid] = (const CNetObj_Flag *)pData;
-				if(m_Snap.m_paFlags[Fid]->m_CarriedBy != m_aLastFlagCarrier[Fid])
-				{
-					if(m_Snap.m_paFlags[Fid]->m_CarriedBy >= 0)
-						OnFlagGrab(Fid);
-					m_aLastFlagCarrier[Fid] = m_Snap.m_paFlags[Fid]->m_CarriedBy;
-				}
-			}
+				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
 		}
 		
 		// TeeComp
@@ -1083,25 +1093,7 @@ void CGameClient::OnNewSnapshot()
 			}
 			
 			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
-			{
 				m_IsFastCap = true;
-				
-				// get Flag Pos (for demo recording)
-				m_FlagPos = vec2(-1, -1);
-				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
-				for(int i = 0; i < Num; i++)
-				{
-					IClient::CSnapItem Item;
-					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
-					if(Item.m_Type == NETOBJTYPE_FLAG)
-					{
-						const CNetObj_Flag *pFlag = (const CNetObj_Flag *)pData;
-						if(pFlag->m_CarriedBy == -2 && pFlag->m_Team != m_aClients[m_Snap.m_LocalClientID].m_Team)
-							m_FlagPos = vec2(pFlag->m_X, pFlag->m_Y);
-					}
-				}
-			}
 			
 			if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
 			{
@@ -1283,9 +1275,12 @@ void CGameClient::OnRoundStart()
 		m_aStats[i].Reset();
 }
 
-void CGameClient::OnFlagGrab(int id)
+void CGameClient::OnFlagGrab(int ID)
 {
-	m_aStats[m_Snap.m_paFlags[id]->m_CarriedBy].m_FlagGrabs++;
+	if(ID == TEAM_RED)
+		m_aStats[m_Snap.m_pGameDataObj->m_FlagCarrierRed].m_FlagGrabs++;
+	else
+		m_aStats[m_Snap.m_pGameDataObj->m_FlagCarrierBlue].m_FlagGrabs++;
 }
 
 CGameClient::CClientStats::CClientStats()

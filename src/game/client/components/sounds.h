@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_SOUNDS_H
 #define GAME_CLIENT_COMPONENTS_SOUNDS_H
+#include <engine/shared/jobs.h>
 #include <game/client/component.h>
 
 class CSounds : public CComponent
@@ -13,7 +14,7 @@ class CSounds : public CComponent
 	int m_aQueue[QUEUE_SIZE];
 	int m_QueuePos;
 	int64 m_QueueWaitTime;
-	class CJob m_SoundJob;
+	CJob m_SoundJob;
 	bool m_WaitForSoundJob;
 
 public:

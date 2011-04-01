@@ -20,7 +20,7 @@ CRaceDemo::CRaceDemo()
 
 void CRaceDemo::OnRender()
 {
-	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameobj || m_pClient->m_Snap.m_Spectate)
+	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameInfoObj|| m_pClient->m_Snap.m_Spectate)
 	{
 		m_Active = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active;
 		return;
@@ -33,8 +33,9 @@ void CRaceDemo::OnRender()
 	vec2 PlayerPos = m_pClient->m_LocalCharacterPos;
 	
 	// start the demo
+	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
 	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
-		(m_pClient->m_IsFastCap && m_pClient->m_FlagPos != vec2(-1, -1) && distance(PlayerPos, m_pClient->m_FlagPos) < 200)) && m_DemoStartTick < Client()->GameTick())
+		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(PlayerPos, m_pClient->m_aFlagPos[EnemyTeam]) < 200)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
 			OnReset();

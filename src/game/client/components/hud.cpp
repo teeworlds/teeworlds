@@ -178,7 +178,7 @@ void CHud::RenderScoreHud()
 						TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
 						
 						// draw tee of the flag holder
-						CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
+						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
 						Info.m_Size = 18.0f;
 						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
 												 vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
@@ -482,7 +482,7 @@ void CHud::RenderSpeedmeter()
 		Speed += SmoothTable[i];
 	Speed /= SMOOTH_TABLE_SIZE;
 
-	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
+	int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 	int t = (GameFlags&GAMEFLAG_TEAMS || g_Config.m_ClRenderDmScore)? -1 : 1;
 	int LastIndex = SmoothIndex - 1;
 	if(LastIndex < 0)
@@ -501,8 +501,8 @@ void CHud::RenderSpeedmeter()
 	if(GameFlags&GAMEFLAG_TEAMS || !g_Config.m_ClRenderDmScore)
 	{
 		char aScoreTeam[2][32];
-		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed);
+		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue);
 		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
 		float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 		float Split = 3.0f;

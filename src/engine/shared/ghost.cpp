@@ -7,7 +7,6 @@
 #include "memheap.h"
 #include "compression.h"
 #include "network.h"
-#include "engine.h"
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
 static const unsigned char gs_ActVersion = 3;

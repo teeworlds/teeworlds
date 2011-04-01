@@ -93,7 +93,7 @@ public:
 	// Race
 	bool m_IsRace;
 	bool m_IsFastCap;
-	vec2 m_FlagPos;
+	vec2 m_aFlagPos[2];
 
 	
 	// TODO: move this
