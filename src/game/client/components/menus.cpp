@@ -7,6 +7,7 @@
 #include <base/vmath.h>
 
 #include "menus.h"
+#include "binds.h"
 #include "skins.h"
 
 #include <engine/graphics.h>
@@ -378,7 +379,23 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
     return ReturnValue;
 }
 
+void CMenus::UiDoKeybinder(CKeyInfo& pKey, CUIRect* r)
+{
+	CUIRect Label, Button;
+	r->HSplitTop(20.0f, &Button, r);
+	Button.VSplitRight(5.0f, &Button, 0);
+	Button.VSplitLeft(180.0f, &Label, &Button);
 
+	UI()->DoLabel(&Label, pKey.m_Name, 14.0f, -1);
+	int OldId = pKey.m_KeyId;
+	int NewId = DoKeyReader((void *)&pKey.m_Name, &Button, OldId);
+	if(NewId != OldId)
+	{
+		m_pClient->m_pBinds->Bind(OldId, "");
+		m_pClient->m_pBinds->Bind(NewId, pKey.m_pCommand);
+	}
+	r->HSplitTop(5.0f, 0, r);
+}
 
 float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {

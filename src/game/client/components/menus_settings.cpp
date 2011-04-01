@@ -383,13 +383,6 @@ void CMenus::RenderSPPage1(CUIRect MainView)
 
 typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
 
-typedef struct
-{
-	CLocConstString m_Name;
-	const char *m_pCommand;
-	int m_KeyId;
-} CKeyInfo;
-
 static CKeyInfo gs_aKeys[] =
 {
 	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
