@@ -445,19 +445,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		CUIRect Button;
 		Bottom.VSplitRight(120.0f, &Bottom, &Button);
 		
-		int Vote = m_CallvoteSelectedOption;
-		CVoting::CVoteOption *pOption = m_pClient->m_pVoting->m_pFirst;
-		while(pOption && Vote >= 0)
-		{
-			if(!Vote)
-				break;
-			
-			Vote--;
-			pOption = pOption->m_pNext;
-		}
-		
 		static int s_CallVoteButton = 0;
-		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), (pOption && (pOption->m_aCommand[0] < 97 || pOption->m_aCommand[0] > 122))?-1:0, &Button))
+		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
 		{
 			if(s_ControlPage == 0)
 				m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
