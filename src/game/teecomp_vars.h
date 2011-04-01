@@ -1,4 +1,3 @@
-MACRO_CONFIG_INT(TcNameplateShadow, tc_nameplate_shadow, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable name plate shadow")
 MACRO_CONFIG_INT(TcNameplateScore, tc_nameplate_score, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display score on name plates")
 MACRO_CONFIG_INT(TcColoredNameplates, tc_colored_nameplates, 0, 0, 3, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable colored name plates")
 MACRO_CONFIG_INT(TcColoredNameplatesTeam1, tc_colored_nameplates_team1, 16739179, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Red team/team mates name plate color")

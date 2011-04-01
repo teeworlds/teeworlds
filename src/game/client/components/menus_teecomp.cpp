@@ -399,10 +399,6 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 	UI()->DoLabel(&Button, (g_Config.m_TcColoredNameplates&2)?"Enemies":"Team 2", 15.0f, -1);
 	TextRender()->TextColor(1,1,1,1);
 
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcNameplateShadow, "Show name plate shadow", g_Config.m_TcNameplateShadow, &Button))
-		g_Config.m_TcNameplateShadow ^= 1;
-
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	if(DoButton_CheckBox(&g_Config.m_TcNameplateScore, "Show score in name plate", g_Config.m_TcNameplateScore, &Button))
 		g_Config.m_TcNameplateScore ^= 1;

@@ -8,6 +8,8 @@
 
 #include <engine/demo.h>
 
+#include <game/localization.h>
+
 #include <game/client/component.h>
 #include <game/client/ui.h>
 
@@ -277,7 +279,7 @@ public:
 		
 		bool m_InfosLoaded;
 		bool m_Valid;
-		char m_aMap[64];
+		CDemoHeader m_Info;
 		
 		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
@@ -286,6 +288,7 @@ public:
 	
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
+	char m_aCurrentDemoFile[64];
 	
 	void DemolistPopulate();
 	

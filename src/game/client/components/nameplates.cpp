@@ -28,7 +28,7 @@ void CNamePlates::RenderNameplate(
 	if(!pPlayerInfo->m_Local)
 	{
 		//TextRender()->TextColor
-		float a = 1;
+		float a = 1.0f;
 		if(g_Config.m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 			
@@ -38,13 +38,10 @@ void CNamePlates::RenderNameplate(
 		else
 			str_format(aName, 256, "%s (%d)", m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName, pPlayerInfo->m_Score);
 		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
-		if(g_Config.m_TcNameplateShadow)
-		{
-			TextRender()->TextColor(0,0,0,a);
-			TextRender()->Text(0, Position.x-tw/2.0f+2, Position.y-FontSize-38.0f, FontSize, aName, -1);
-		}
+
 		bool IsTeamplay;
 		IsTeamplay = m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS;
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		if(g_Config.m_TcColoredNameplates&1 && IsTeamplay)
 		{
 			vec3 Col = CTeecompUtils::GetTeamColor(
@@ -56,7 +53,7 @@ void CNamePlates::RenderNameplate(
 			TextRender()->TextColor(Col.r, Col.g, Col.b, a);
 		}
 		else // FFA or no colored plates
-			TextRender()->TextColor(1,1,1,a);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
 		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, aName, -1);
 		
 		if(g_Config.m_Debug || g_Config.m_ClNameplateClientID) // render client id when in debug aswell
@@ -67,7 +64,8 @@ void CNamePlates::RenderNameplate(
 			TextRender()->Text(0, Position.x-tw/2.0f, Position.y-(FontSize*2.0f)-38.0f, FontSize, aBuf, -1);
 		}
 
-		TextRender()->TextColor(1,1,1,1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	}
 }
 

@@ -265,11 +265,13 @@ void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhost
 	IntsToStr(&Info.m_Name0, 6, aName);
 	float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 	
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
 	TextRender()->Text(0, Pos.x-tw/2.0f, Pos.y-FontSize-38.0f, FontSize, aName, -1);
 	
 	// reset color;
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 }
 
 IGhostRecorder::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
@@ -508,7 +510,7 @@ void CGhost::OnConsoleInit()
 void CGhost::OnMessage(int MsgType, void *pRawMsg)
 {
 	// only for race
-	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || m_pClient->m_Snap.m_Spectate)
+	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || m_pClient->m_Snap.m_SpecInfo.m_Active)
 		return;
 	
 	// check for messages from server
