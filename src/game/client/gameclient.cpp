@@ -464,7 +464,7 @@ void CGameClient::OnReset()
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].Reset();
+		m_aClients[i].Reset(i);
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
@@ -1090,7 +1090,7 @@ void CGameClient::OnNewSnapshot()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
-			m_aClients[i].Reset();
+			m_aClients[i].Reset(i);
 	}
 
 	// update friend state
@@ -1446,7 +1446,7 @@ void CGameClient::CClientData::UpdateRenderInfo(int ClientID)
 	}
 }
 
-void CGameClient::CClientData::Reset()
+void CGameClient::CClientData::Reset(int ClientID)
 {
 	m_aName[0] = 0;
 	m_aClan[0] = 0;
@@ -1462,7 +1462,7 @@ void CGameClient::CClientData::Reset()
 	m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
 	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
-	UpdateRenderInfo();
+	UpdateRenderInfo(ClientID);
 }
 
 void CGameClient::SendSwitchTeam(int Team)

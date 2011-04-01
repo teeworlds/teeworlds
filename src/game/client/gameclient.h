@@ -202,7 +202,7 @@ public:
 		float m_Score;
 		
 		void UpdateRenderInfo(int ClientID);
-		void Reset();
+		void Reset(int ClientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
