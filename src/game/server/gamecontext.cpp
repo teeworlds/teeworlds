@@ -832,6 +832,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		
 		CNetMsg_Sv_VoteOptionListAdd OptionMsg;
 		int NumOptions = 0;
+		OptionMsg.m_pDescription0 = "";
 		OptionMsg.m_pDescription1 = "";
 		OptionMsg.m_pDescription2 = "";
 		OptionMsg.m_pDescription3 = "";
