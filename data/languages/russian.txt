@@ -510,6 +510,9 @@ Change settings
 Clan
 == 
 
+Client
+== 
+
 Count players only
 == 
 
