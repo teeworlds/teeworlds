@@ -319,7 +319,7 @@ Move left
 == Naar links
 
 Move player to spectators
-== Verplaats speler naar toeschouwer
+== Verplaats speler naar toeschouwers
 
 Move right
 == Naar rechts
