@@ -1226,7 +1226,6 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	HRESULT r;
 	char *home = getenv("APPDATA");
 	if(!home)
 		return -1;
