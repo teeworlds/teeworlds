@@ -582,6 +582,9 @@ Player options
 Prev
 == 
 
+Quit anyway?
+== 
+
 REC %3d:%02d
 == 
 
@@ -630,7 +633,7 @@ Stop record
 The audio device couldn't be initialised.
 == 
 
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+There's an unsaved map in the editor, you might want to save it before you quit the game.
 == 
 
 Time limit: %d min

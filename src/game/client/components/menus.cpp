@@ -947,8 +947,11 @@ int CMenus::Render()
 			Box.HSplitTop(10.0f, 0, &Box);
 			Box.VMargin(20.f/UI()->Scale(), &Box);
 			if(m_pClient->Editor()->HasUnsavedData())
-				UI()->DoLabelScaled(&Box, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?"),
-									20.f, -1, Part.w-20.0f);
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "%s\n%s", Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), Localize("Quit anyway?"));
+				UI()->DoLabelScaled(&Box, aBuf, 20.f, -1, Part.w-20.0f);
+			}
 
 			// buttons
 			Part.VMargin(80.0f, &Part);
