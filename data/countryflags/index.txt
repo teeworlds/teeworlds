@@ -9,6 +9,9 @@ default
 england
 == 901
 
+northern_ireland
+== 902
+
 scotland
 == 903
 
@@ -47,8 +50,8 @@ germany
 greece
 == 300
 
-ireland
-== 372
+#ireland
+#== 372
 
 italy
 == 380
