@@ -609,6 +609,9 @@ Player options
 Prev
 == 
 
+Quit anyway?
+== 
+
 Remove
 == 
 
@@ -639,7 +642,7 @@ Size:
 Spectator mode
 == 
 
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+There's an unsaved map in the editor, you might want to save it before you quit the game.
 == 
 
 Type:
