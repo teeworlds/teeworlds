@@ -19,7 +19,7 @@ CGhostRecorder::CGhostRecorder()
 }
 
 // Record
-int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pFilename, const char *pMap, int Crc, const char* pName, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
+int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc, const char* pName, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
 {
 	CGhostHeader Header;
 	if(m_File)
