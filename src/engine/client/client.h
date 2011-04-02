@@ -158,7 +158,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	char m_aCurrentMap[256];
-	int m_CurrentMapCrc;
+	unsigned m_CurrentMapCrc;
 
 	//
 	char m_aCmdConnect[256];
