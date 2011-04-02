@@ -220,7 +220,7 @@ if 1:
 		content += "call %VSPATH%vsvars32.bat\n\n"
 		content += ":compile\n"
 		content += 'cd %s\n"%s\\%s%sbam" config\n"%s\\%s%sbam" %s' % (src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, work_dir, src_dir_bam, bam_execution_path, options.release_type)
-		file.write(content)
+		file.write(content.encode())
 		file.close()
 		command = os.system("build.bat")
 	else:
