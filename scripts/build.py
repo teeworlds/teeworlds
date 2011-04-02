@@ -45,8 +45,12 @@ if version_bam < "0.3.0":
 
 name = "teeworlds"
 
-flag_download = True
 flag_clean = True
+flag_download = True
+flag_unpack = True
+flag_build_bam = True
+flag_build_teeworlds = True
+flag_make_release = True
 
 if os.name == "nt":
 	platform = "win32"
@@ -134,6 +138,13 @@ def file_exists(file):
 	except:
 		return False;
 
+def search_object(directory, object):
+	directory = os.listdir(directory)
+	for entry in directory:
+		match = re.search(object, entry)
+		if match != None:
+			return entry
+
 # clean
 if flag_clean:
 	clean()
@@ -155,7 +166,7 @@ if flag_download:
 			if version:
 				version_bam = version.group(1)
 	else:
-		bail("couldn't find source package and couldn't download it")
+		bail("couldn't find bam source package and couldn't download it")
 
 	print("*** downloading %s source package ***" % name)
 	src_package_teeworlds = fetch_file(options.url_teeworlds)
@@ -165,20 +176,29 @@ if flag_download:
 			if version:
 				version_teeworlds = version.group(1)
 	else:
-		bail("couldn't find source package and couldn't download it")
+		bail("couldn't find %s source package and couldn't download it" % name)
 
 # unpack
-print("*** unpacking source ***")
-src_dir_bam = unzip(src_package_bam, ".")
-if not src_dir_bam:
-	bail("couldn't unpack source package")
+if flag_unpack:
+	print("*** unpacking source ***")
+	if hasattr(locals(), 'src_package_bam') == False:
+		src_package_bam = search_object(work_dir, r"bam.*?\.")
+		if not src_package_bam:
+			bail("couldn't find bam source package")
+	src_dir_bam = unzip(src_package_bam, ".")
+	if not src_dir_bam:
+		bail("couldn't unpack bam source package")
 
-src_dir_teeworlds = unzip(src_package_teeworlds, ".")
-if not src_dir_teeworlds:
-	bail("couldn't unpack source package")
+	if hasattr(locals(), 'src_package_teeworlds') == False:
+		src_package_teeworlds = search_object(work_dir, r"teeworlds.*?\.")
+		if not src_package_bam:
+			bail("couldn't find %s source package" % name)
+	src_dir_teeworlds = unzip(src_package_teeworlds, ".")
+	if not src_dir_teeworlds:
+		bail("couldn't unpack %s source package" % name)
 
 # build bam
-if 1:
+if flag_build_bam:
 	print("*** building bam ***")
 	os.chdir("%s/%s" % (work_dir, src_dir_bam))
 	if os.name == "nt":
@@ -201,9 +221,24 @@ if 1:
 	os.chdir(work_dir)
 
 # build the game
-if 1:
+if flag_build_teeworlds:
 	print("*** building %s ***" % name)
-	command  = 1
+	if hasattr(locals(), 'src_dir_bam') == False:
+		src_dir_bam = search_object(work_dir, r"bam[^\.]*$") + os.sep
+		if src_dir_bam:
+			directory = src_dir_bam + bam_execution_path
+			file = r"bam"
+			if os.name == "nt":
+				file += r"\.exe"
+			if not search_object(directory, file):
+				bail("couldn't find bam")
+		else:
+			bail("couldn't find bam")
+	if hasattr(locals(), 'src_dir_teeworlds') == False:
+		src_dir_teeworlds = search_object(work_dir, r"teeworlds[^\.]*$")
+		if not src_dir_teeworlds:
+			bail("couldn't find %s source" % name)
+	command = 1
 	if os.name == "nt":
 		file = open("build.bat", "wb")
 		content = "@echo off\n"
@@ -231,8 +266,12 @@ if 1:
 	os.chdir(work_dir)
 
 # make release
-if 1:
+if flag_make_release:
 	print("*** making release ***")
+	if hasattr(locals(), 'src_dir_teeworlds') == False:
+		src_dir_teeworlds = search_object(work_dir, r"teeworlds[^\.]*$")
+		if not src_dir_teeworlds:
+			bail("couldn't find %s source" % name)
 	os.chdir(src_dir_teeworlds)
 	command = '"%s/%s/scripts/make_release.py" %s %s' % (work_dir, src_dir_teeworlds, version_teeworlds, platform)
 	if os.name != "nt":
