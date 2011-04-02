@@ -149,7 +149,7 @@ void CServerBrowser::Filter()
 			Filtered = 1;
 			for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
 			{
-				if(m_pFriends->IsFriend(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan))
+				if(m_pFriends->IsFriend(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, false))
 				{
 					Filtered = 0;
 					break;
