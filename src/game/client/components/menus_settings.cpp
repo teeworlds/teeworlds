@@ -318,7 +318,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			for(int s = 0; s < 3; s++)
 			{
 				aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
-				Label.VSplitLeft(50.0f, &Label, &Button);
+				Label.VSplitLeft(100.0f, &Label, &Button);
 				Button.HMargin(2.0f, &Button);
 
 				float k = ((PrevColor>>((2-s)*8))&0xff)  / 255.0f;
