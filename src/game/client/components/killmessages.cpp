@@ -137,6 +137,6 @@ void CKillMessages::OnRender()
 			TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
 		}
 
-		y += 44;
+		y += 46.0f;
 	}
 }
