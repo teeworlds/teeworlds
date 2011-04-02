@@ -143,7 +143,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		else
 			pTitle = Localize("Score board");
 	}
-	TextRender()->Text(0, x+30, y, TitleFontsize, pTitle, -1);
+	TextRender()->Text(0, x+20.0f, y, TitleFontsize, pTitle, -1);
 
 	char aBuf[128] = {0};
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
@@ -163,7 +163,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 	}
 	float tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
-	TextRender()->Text(0, x+w-tw-30, y, TitleFontsize, aBuf, -1);
+	TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 
 	// calculate measurements
 	x += 10.0f;
@@ -186,17 +186,23 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float ScoreOffset = x+10.0f, ScoreLength = 60.0f;
 	float TeeOffset = ScoreOffset+ScoreLength, TeeLength = 60*TeeSizeMod;
 	float NameOffset = TeeOffset+TeeLength, NameLength = 300.0f-TeeLength;
-	float PingOffset = x+600.0f, PingLength = 70.0f;
+	float PingOffset = x+610.0f, PingLength = 65.0f;
 	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f;
 	float ClanOffset = x+370.0f, ClanLength = 230.0f-CountryLength;	
 
 	// render headlines
 	y += 50.0f;
 	float HeadlineFontsize = 22.0f;
-	TextRender()->Text(0, ScoreOffset, y, HeadlineFontsize, Localize("Score"), -1);
-	TextRender()->Text(0, NameOffset+10.0f, y, HeadlineFontsize, Localize("Name"), -1);
-	TextRender()->Text(0, ClanOffset+10.0f, y, HeadlineFontsize, Localize("Clan"), -1);
-	TextRender()->Text(0, PingOffset+10.0f, y, HeadlineFontsize, Localize("Ping"), -1);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
+	TextRender()->Text(0, ScoreOffset+ScoreLength-tw, y, HeadlineFontsize, Localize("Score"), -1);
+	
+	TextRender()->Text(0, NameOffset, y, HeadlineFontsize, Localize("Name"), -1);
+	
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Clan"), -1);
+	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y, HeadlineFontsize, Localize("Clan"), -1);
+	
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
+	TextRender()->Text(0, PingOffset+PingLength-tw, y, HeadlineFontsize, Localize("Ping"), -1);
 
 	// render player entries
 	y += HeadlineFontsize*2.0f;
@@ -255,7 +261,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
 
 		// clan
-		TextRender()->SetCursor(&Cursor, ClanOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
+		TextRender()->SetCursor(&Cursor, ClanOffset+ClanLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = ClanLength;
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
