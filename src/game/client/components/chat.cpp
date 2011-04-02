@@ -247,31 +247,9 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			m_Spam = true;
 		
 		str_copy(m_aaLastMsg[pMsg->m_ClientID+1], pMessage, sizeof(m_aaLastMsg[pMsg->m_ClientID+1]));
-			
-		// check if player is ignored
-		char aBuf[128];
-		str_copy(aBuf, g_Config.m_ClSpammerName, sizeof(aBuf));
-		
-		CSplit Sp = Split(aBuf, ' '); 
-		
-		m_IgnorePlayer = false;
-		
-		if(g_Config.m_ClBlockSpammer)
-		{
-			int i = 0;
-			while (i < Sp.m_Count)
-			{
-				if(str_find_nocase(m_pClient->m_aClients[pMsg->m_ClientID].m_aName, Sp.m_aPointers[i]) != 0)
-				{
-					m_IgnorePlayer = true;
-					break;
-				}
-				else
-					i++;
-			}
-		}
 		
 		// check if message should be marked
+		char aBuf[256];
 		str_copy(aBuf, g_Config.m_ClSearchName, sizeof(aBuf));
 
 		CSplit Sp2 = Split(aBuf, ' '); 
@@ -323,11 +301,6 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
 		m_aLines[m_CurrentLine].m_Highlighted = m_ContainsName || (str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0);
-		
-		if(g_Config.m_ClBlockSpammer && m_IgnorePlayer)
-			m_aLines[m_CurrentLine].m_Ignore = 1;
-		else
-			m_aLines[m_CurrentLine].m_Ignore = 0;
 			
 		if(g_Config.m_ClAntiSpam && m_Spam)
 			m_aLines[m_CurrentLine].m_Spam = 1;
@@ -480,7 +453,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	}
 
 	// play sound
-	if(!m_Spam && !m_IgnorePlayer)
+	if(!m_Spam)
 	{
 		if(ClientID == -1)
 		{
@@ -580,7 +553,7 @@ void CChat::OnRender()
 			m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
 		}
 		
-		if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+		if(!m_aLines[r].m_Spam)
 		{
 			if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID != -1)
 				|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID == -1)
@@ -633,7 +606,7 @@ void CChat::OnRender()
 			else
 				TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
 
-			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+			if(!m_aLines[r].m_Spam)
 			{
 				if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID != -1)
 					|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID == -1)
@@ -651,7 +624,7 @@ void CChat::OnRender()
 			else
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 
-			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+			if(!m_aLines[r].m_Spam)
 			{
 				if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID != -1)
 					|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientID == -1)

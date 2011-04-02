@@ -46,7 +46,7 @@ void CHud::OnReset()
 
 void CHud::RenderGameTimer()
 {
-	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearAll)
+	if(!g_Config.m_ClRenderTime)
 		return;
 		
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
@@ -81,7 +81,7 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderSuddenDeath()
 {
-	if(!g_Config.m_ClRenderTime || g_Config.m_ClClearAll)
+	if(!g_Config.m_ClRenderTime)
 		return;
 	
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
@@ -96,7 +96,7 @@ void CHud::RenderSuddenDeath()
 
 void CHud::RenderScoreHud()
 {
-	if(m_pClient->m_IsRace || g_Config.m_ClClearAll)
+	if(m_pClient->m_IsRace)
 		return;
 	
 	// render small score hud
@@ -264,7 +264,7 @@ void CHud::RenderScoreHud()
 
 void CHud::RenderWarmupTimer()
 {
-	if(!g_Config.m_ClRenderWarmup || g_Config.m_ClClearAll)
+	if(!g_Config.m_ClRenderWarmup)
 		return;
 	
 	// render warmup timer
@@ -318,7 +318,7 @@ void CHud::RenderConnectionWarning()
 
 void CHud::RenderTeambalanceWarning()
 {
-	if(m_pClient->m_IsRace || !g_Config.m_ClWarningTeambalance || g_Config.m_ClClearAll)
+	if(m_pClient->m_IsRace || !g_Config.m_ClWarningTeambalance)
 		return;
 	
 	// render prompt about team-balance
@@ -342,7 +342,7 @@ void CHud::RenderTeambalanceWarning()
 
 void CHud::RenderVoting()
 {
-	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK || !g_Config.m_ClRenderVote)
 		return;
 	
 	Graphics()->TextureSet(-1);
@@ -386,7 +386,7 @@ void CHud::RenderVoting()
 
 void CHud::RenderCursor()
 {
-	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK || !g_Config.m_ClRenderCrosshair)
 		return;
 		
 	MapscreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup());
@@ -464,6 +464,9 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 
 void CHud::RenderSpectatorHud()
 {
+	if(!g_Config.m_ClRenderViewmode)
+		return;
+		
 	// draw the box
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
@@ -639,7 +642,7 @@ void CHud::RenderRecord()
 
 void CHud::OnRender()
 {
-	if(!m_pClient->m_Snap.m_pGameInfoObj)
+	if(!m_pClient->m_Snap.m_pGameInfoObj || g_Config.m_ClClearAll)
 		return;
 		
 	m_Width = 300.0f*Graphics()->ScreenAspect();
@@ -670,25 +673,8 @@ void CHud::OnRender()
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
 		RenderVoting();
-	}
-
-	RenderGameTimer();
-	RenderSuddenDeath();
-	RenderScoreHud();
-	RenderWarmupTimer();
-	RenderFps();
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
-		RenderConnectionWarning();
-
-	RenderTeambalanceWarning();
-	if(!g_Config.m_ClClearAll)	
-	{
-		if(g_Config.m_ClRenderVote)
-			RenderVoting();
-		if(g_Config.m_ClShowhud)
-			RenderRecord();
-		if(g_Config.m_ClRenderCrosshair && g_Config.m_ClShowhud)
-			RenderCursor();
+		RenderRecord();
+		RenderCursor();
 	}
 }
 

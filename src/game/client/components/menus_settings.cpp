@@ -874,6 +874,296 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 	}
 }
 
+void CMenus::RenderSettingsChat(CUIRect MainView)
+{
+	CUIRect Button;
+
+	MainView.VSplitLeft(300.0f, &MainView, 0);
+		
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClAntiSpam, Localize("Block spam"), g_Config.m_ClAntiSpam, &Button))
+		g_Config.m_ClAntiSpam ^= 1;
+	
+	MainView.HSplitTop(10.0f, &Button, &MainView);
+	
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	UI()->DoLabel(&Button, Localize("Additional highlighting:"), 14.0f, -1);
+	float tw = TextRender()->TextWidth(0, 14.0f, Localize("Additional highlighting:"), -1);
+	Button.VSplitLeft(tw+10.0f, 0, &Button);
+	Button.VSplitLeft(380.0f, &Button, 0);
+	static float SearchOffset = 0.0f;
+	DoEditBox(g_Config.m_ClSearchName, &Button, g_Config.m_ClSearchName, sizeof(g_Config.m_ClSearchName), 14.0f, &SearchOffset);
+	
+	// information text
+	MainView.HSplitBottom(25.0f, &MainView, &Button);
+	UI()->DoLabel(&Button, Localize("Enter the names u want to look for.\nSeperate them with a simple space."), 14.0f, -1);
+}
+
+void CMenus::RenderSettingsHudMod(CUIRect MainView)
+{
+	CUIRect Button;
+	CUIRect LeftView, RightView;
+
+	MainView.VSplitMid(&LeftView, &RightView);
+	
+	// Left
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, Localize("General settings"), 14.0f, -1);
+	
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowhud, Localize("Show hud"), g_Config.m_ClShowhud, &Button))
+		g_Config.m_ClShowhud ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClClearAll, Localize("Clear all"), g_Config.m_ClClearAll, &Button))
+		g_Config.m_ClClearAll ^= 1;
+	
+	LeftView.HSplitTop(40.0f, &Button, &LeftView);
+		
+	if(!g_Config.m_ClClearAll)
+	{
+		LeftView.HSplitTop(15.0f, &Button, &LeftView);
+		UI()->DoLabel(&Button, Localize("Special settings"), 14.0f, -1);
+		
+		LeftView.HSplitTop(10.0f, &Button, &LeftView);
+		
+		if(g_Config.m_ClShowhud)
+		{
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderTime, Localize("Server time"), g_Config.m_ClRenderTime, &Button))
+				g_Config.m_ClRenderTime ^= 1;
+				
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderHp, Localize("Health"), g_Config.m_ClRenderHp, &Button))
+				g_Config.m_ClRenderHp ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderAmmo, Localize("Ammunition"), g_Config.m_ClRenderAmmo, &Button))
+				g_Config.m_ClRenderAmmo ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderCrosshair, Localize("Crosshair"), g_Config.m_ClRenderCrosshair, &Button))
+				g_Config.m_ClRenderCrosshair ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderTeamScore, Localize("Team score"), g_Config.m_ClRenderTeamScore, &Button))
+				g_Config.m_ClRenderTeamScore ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderDmScore, Localize("DM score"), g_Config.m_ClRenderDmScore, &Button))
+				g_Config.m_ClRenderDmScore ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClShowfps, Localize("FPS"), g_Config.m_ClShowfps, &Button))
+				g_Config.m_ClShowfps ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderViewmode, Localize("Viewmode"), g_Config.m_ClRenderViewmode, &Button))
+				g_Config.m_ClRenderViewmode ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderWarmup, Localize("Warmup"), g_Config.m_ClRenderWarmup, &Button))
+				g_Config.m_ClRenderWarmup ^= 1;
+			
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderVote, Localize("Votes"), g_Config.m_ClRenderVote, &Button))
+				g_Config.m_ClRenderVote ^= 1;
+		}
+		
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderScoreboard, Localize("Scoreboard"), g_Config.m_ClRenderScoreboard, &Button))
+			g_Config.m_ClRenderScoreboard ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderBroadcast, Localize("Broadcast"), g_Config.m_ClRenderBroadcast, &Button))
+			g_Config.m_ClRenderBroadcast ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderServermsg, Localize("Server messages"), g_Config.m_ClRenderServermsg, &Button))
+			g_Config.m_ClRenderServermsg ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderChat, Localize("Chat"), g_Config.m_ClRenderChat, &Button))
+			g_Config.m_ClRenderChat ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderKill, Localize("Kill messages"), g_Config.m_ClRenderKill, &Button))
+			g_Config.m_ClRenderKill ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderEmotes, Localize("Emoticons"), g_Config.m_ClRenderEmotes, &Button))
+			g_Config.m_ClRenderEmotes ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClWarningTeambalance, Localize("Team balance warning"), g_Config.m_ClWarningTeambalance, &Button))
+			g_Config.m_ClWarningTeambalance ^= 1;
+	}
+	
+	// Right
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, Localize("Sound settings"), 14.0f, -1);
+	
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClServermsgsound, Localize("Activate server message sound"), g_Config.m_ClServermsgsound, &Button))
+		g_Config.m_ClServermsgsound ^= 1;
+		
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClChatsound, Localize("Activate chat message sound"), g_Config.m_ClChatsound, &Button))
+		g_Config.m_ClChatsound ^= 1;
+		
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClSpreesounds, Localize("Activate spree sounds"), g_Config.m_ClSpreesounds, &Button))
+		g_Config.m_ClSpreesounds ^= 1;
+	
+	RightView.HSplitTop(20.0f, 0, &RightView);
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, "Key bindings", 14.0f, -1);
+	RightView.HSplitTop(5.0f, &Button, &RightView);
+	CKeyInfo pKeys[] = {{ "Zoom out:", "+zoomout", 0},
+		{ "Zoom in:", "+zoomin", 0}};
+
+	for(int pKeyid=0; pKeyid < KEY_LAST; pKeyid++)
+	{
+		const char *Bind = m_pClient->m_pBinds->Get(pKeyid);
+		if(!Bind[0])
+			continue;
+
+		for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
+			if(str_comp(Bind, pKeys[i].m_pCommand) == 0)
+			{
+				pKeys[i].m_KeyId = pKeyid;
+				break;
+			}
+	}
+
+	for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
+		UiDoKeybinder(pKeys[i], &RightView);
+		
+	// default button
+	LeftView.HSplitBottom(20.0f, 0, &Button);
+	static int s_DefaultButton = 0;
+	if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &Button))
+	{
+		g_Config.m_ClRenderTime = 1;
+		g_Config.m_ClRenderWarmup = 1;
+		g_Config.m_ClRenderBroadcast = 1;
+		g_Config.m_ClRenderHp = 1;
+		g_Config.m_ClRenderAmmo = 1;
+		g_Config.m_ClRenderCrosshair = 1;
+		g_Config.m_ClRenderTeamScore = 1;
+		g_Config.m_ClRenderDmScore = 1;
+		g_Config.m_ClShowfps = 0;
+		g_Config.m_ClRenderScoreboard = 1;
+		g_Config.m_ClRenderServermsg = 1;
+		g_Config.m_ClRenderChat = 1;
+		g_Config.m_ClRenderKill = 1;
+		g_Config.m_ClRenderVote = 1;
+		g_Config.m_ClRenderEmotes = 1;
+		g_Config.m_ClClearAll = 0;
+		g_Config.m_ClShowhud = 1;
+		g_Config.m_ClServermsgsound = 1;
+		g_Config.m_ClChatsound = 1;
+		g_Config.m_ClWarningTeambalance = 1;
+	}
+}
+
+void CMenus::RenderSettingsRace(CUIRect MainView)
+{
+	CUIRect Button;
+	CUIRect LeftView, RightView;
+
+	MainView.VSplitMid(&LeftView, &RightView);
+	
+	// Left
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, Localize("Race specific settings"), 14.0f, -1);
+	
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClAutoRaceRecord, Localize("Auto record"), g_Config.m_ClAutoRaceRecord, &Button))
+		g_Config.m_ClAutoRaceRecord ^= 1;
+	
+	if(g_Config.m_ClAutoRaceRecord)
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClDemoName, Localize("Save player name"), g_Config.m_ClDemoName, &Button))
+			g_Config.m_ClDemoName ^= 1;
+	}
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowOthers, Localize("Show other players"), g_Config.m_ClShowOthers, &Button))
+		g_Config.m_ClShowOthers ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowCheckpointDiff, Localize("Show checkpoint difference"), g_Config.m_ClShowCheckpointDiff, &Button))
+		g_Config.m_ClShowCheckpointDiff ^= 1;
+	
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClRaceGhost, Localize("Enable Ghost"), g_Config.m_ClRaceGhost, &Button))
+		g_Config.m_ClRaceGhost ^= 1;
+		
+	if(g_Config.m_ClRaceGhost)
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClRaceSaveGhost, Localize("Save Ghost"), g_Config.m_ClRaceSaveGhost, &Button))
+			g_Config.m_ClRaceSaveGhost ^= 1;
+		
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClGhostNamePlates, Localize("Show ghost nameplates"), g_Config.m_ClGhostNamePlates, &Button))
+			g_Config.m_ClGhostNamePlates ^= 1;
+		
+		if(g_Config.m_ClGhostNamePlates)
+		{
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			Button.VSplitLeft(30.0f, 0, &Button);
+			if(DoButton_CheckBox(&g_Config.m_ClGhostNameplatesAlways, Localize("Always show ghost nameplates"), g_Config.m_ClGhostNameplatesAlways, &Button))
+				g_Config.m_ClGhostNameplatesAlways ^= 1;
+		}
+	}
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowRecords, Localize("Show records"), g_Config.m_ClShowRecords, &Button))
+		g_Config.m_ClShowRecords ^= 1;
+		
+	if(g_Config.m_ClShowRecords)
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClShowServerRecord, Localize("Show best time on server"), g_Config.m_ClShowServerRecord, &Button))
+			g_Config.m_ClShowServerRecord ^= 1;
+	}
+	else
+		LeftView.HSplitTop(40.0f, &Button, &LeftView);
+	
+	// api token box
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, "Api token:", 14.0, -1);
+	Button.VSplitLeft(80.0f, 0, &Button);
+	Button.VSplitLeft(180.0f, &Button, 0);
+	static float Offset = 0.0f;
+	DoEditBox(g_Config.m_ClApiToken, &Button, g_Config.m_ClApiToken, sizeof(g_Config.m_ClApiToken), 14.0f, &Offset);
+
+	// Right
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, Localize("Global settings"), 14.0f, -1);
+	
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClRenderSpeedmeter, Localize("Show speedmeter"), g_Config.m_ClRenderSpeedmeter, &Button))
+		g_Config.m_ClRenderSpeedmeter ^= 1;
+	
+	if(g_Config.m_ClRenderSpeedmeter)
+	{
+		RightView.HSplitTop(20.0f, &Button, &RightView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClSpeedmeterAccel, Localize("Show acceleration"), g_Config.m_ClSpeedmeterAccel, &Button))
+			g_Config.m_ClSpeedmeterAccel ^= 1;
+	}
+	else
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+}
+
 void CMenus::RenderSettings(CUIRect MainView)
 {
 	static int s_SettingsPage = 0;
@@ -897,7 +1187,11 @@ void CMenus::RenderSettings(CUIRect MainView)
 		("Tee"),
 		Localize("Controls"),
 		Localize("Graphics"),
-		Localize("Sound")};
+		Localize("Sound"),
+		Localize("Chat"),
+		Localize("Hud-Mod"),
+		Localize("Race"),
+		Localize("TeeComp")};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
@@ -925,6 +1219,14 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGraphics(MainView);
 	else if(s_SettingsPage == 6)
 		RenderSettingsSound(MainView);
+	else if(s_SettingsPage == 7)
+		RenderSettingsChat(MainView);
+	else if(s_SettingsPage == 8)
+		RenderSettingsHudMod(MainView);
+	else if(s_SettingsPage == 9)
+		RenderSettingsRace(MainView);
+	else if(s_SettingsPage == 10)
+		RenderSettingsTeecomp(MainView);
 
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);

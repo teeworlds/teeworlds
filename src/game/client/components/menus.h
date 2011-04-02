@@ -255,7 +255,7 @@ class CMenus : public CComponent
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettingsHudMod(CUIRect MainView);
-	void RenderSettingsBeep(CUIRect MainView);
+	void RenderSettingsChat(CUIRect MainView);
 	void RenderSettingsRace(CUIRect MainView);
 	void RenderSettingsLvlx(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
