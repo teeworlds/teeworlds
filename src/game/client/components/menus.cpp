@@ -948,7 +948,7 @@ int CMenus::Render()
 			Box.VMargin(20.f/UI()->Scale(), &Box);
 			if(m_pClient->Editor()->HasUnsavedData())
 				UI()->DoLabelScaled(&Box, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?"),
-									20.f, -1, Part.w);
+									20.f, -1, Part.w-20.0f);
 
 			// buttons
 			Part.VMargin(80.0f, &Part);
