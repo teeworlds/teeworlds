@@ -138,18 +138,18 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_ClientID < 0)
 		{
 			const char *p;
-			const char *pLookFor = "flag was captured by ";
-			if(str_find_nocase(pMsg->m_pMessage, pLookFor) != 0)
+			const char *pLookFor = "flag was captured by '";
+			if(str_find(pMsg->m_pMessage, pLookFor) != 0)
 			{
 				// server info
 				CServerInfo CurrentServerInfo;
 				Client()->GetServerInfo(&CurrentServerInfo);
 			
-				p = str_find_nocase(pMsg->m_pMessage, pLookFor);
+				p = str_find(pMsg->m_pMessage, pLookFor);
 				char aName[64];
 				p += str_length(pLookFor);
 				str_copy(aName, p, sizeof(aName));
-				if(str_comp_nocase(aName+str_length(aName)-9, " seconds)") == 0)
+				if(str_comp(aName+str_length(aName)-9, " seconds)") == 0)
 				{
 					char *c = aName+str_length(aName)-10;
 					while(c > aName)
@@ -157,22 +157,17 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 						c--;
 						if(*c == '(')
 						{
-							*(c-1) = 0;
+							*(c-2) = 0;
 							break;
 						}
 					}
 				}
-				for(int i=0; i<MAX_CLIENTS; i++)
+				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
 					if(!m_pClient->m_aStats[i].m_Active)
 						continue;
 
-					char *pName = aName;
-					// strip first and last sign
-					pName++;
-					pName[str_length(pName)-1] = 0;
-
-					if(str_comp(m_pClient->m_aClients[i].m_aName, pName) == 0)
+					if(str_comp(m_pClient->m_aClients[i].m_aName, aName) == 0)
 					{
 						m_pClient->m_aStats[i].m_FlagCaptures++;
 						break;

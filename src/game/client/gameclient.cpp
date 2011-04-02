@@ -1034,16 +1034,20 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATA)
 			{
+				static int s_FlagCarrierRed = FLAG_ATSTAND;
+				static int s_FlagCarrierBlue = FLAG_ATSTAND;
 				const CNetObj_GameData *pGameData = (const CNetObj_GameData *)pData;
-				if(m_Snap.m_pGameDataObj)
-				{
-					if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_ATSTAND && pGameData->m_FlagCarrierRed >= 0)
-						OnFlagGrab(TEAM_RED);
-					else if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_ATSTAND && pGameData->m_FlagCarrierBlue >= 0)
-						OnFlagGrab(TEAM_BLUE);
-				}
+				
 				m_Snap.m_pGameDataObj = pGameData;
 				m_Snap.m_GameDataSnapID = Item.m_ID;
+				
+				if(s_FlagCarrierRed == FLAG_ATSTAND && pGameData->m_FlagCarrierRed >= 0)
+					OnFlagGrab(TEAM_RED);
+				else if(s_FlagCarrierBlue == FLAG_ATSTAND && pGameData->m_FlagCarrierBlue >= 0)
+					OnFlagGrab(TEAM_BLUE);
+
+				s_FlagCarrierRed = pGameData->m_FlagCarrierRed;
+				s_FlagCarrierBlue = pGameData->m_FlagCarrierBlue;
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
@@ -1349,6 +1353,7 @@ void CGameClient::OnRoundStart()
 
 void CGameClient::OnFlagGrab(int ID)
 {
+	dbg_msg("test2", "%d", ID);
 	if(ID == TEAM_RED)
 		m_aStats[m_Snap.m_pGameDataObj->m_FlagCarrierRed].m_FlagGrabs++;
 	else
