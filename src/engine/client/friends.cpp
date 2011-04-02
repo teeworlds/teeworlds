@@ -44,11 +44,12 @@ const CFriendInfo *CFriends::GetFriend(int Index) const
 	return &m_aFriends[max(0, Index%m_NumFriends)];
 }
 
-bool CFriends::IsFriend(const char *pName, const char *pClan) const
+bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
 {
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if((m_aFriends[i].m_aName[0] == 0 || !str_comp(m_aFriends[i].m_aName, pName)) && !str_comp(m_aFriends[i].m_aClan, pClan))
+		if(!str_comp(m_aFriends[i].m_aClan, pClan) &&
+			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || !str_comp(m_aFriends[i].m_aName, pName)))
 			return true;
 	}
 	return false;
