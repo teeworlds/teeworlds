@@ -51,7 +51,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x-10.f, y, w, h, 10.0f);
+	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
 	Graphics()->QuadsEnd();
 
 	// render goals
@@ -62,20 +62,20 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit);
-			TextRender()->Text(0, x, y, 20.0f, aBuf, -1);
+			TextRender()->Text(0, x+10.0f, y, 20.0f, aBuf, -1);
 		}
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
-			TextRender()->Text(0, x+220.0f, y, 20.0f, aBuf, -1);
+			TextRender()->Text(0, x+230.0f, y, 20.0f, aBuf, -1);
 		}
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
 		{
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum);
 			float tw = TextRender()->TextWidth(0, 20.0f, aBuf, -1);
-			TextRender()->Text(0, x+w-tw-20.0f, y, 20.0f, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-10.0f, y, 20.0f, aBuf, -1);
 		}
 	}
 }
@@ -89,12 +89,12 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x-10.f, y, w, h, 10.0f);
+	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
 	Graphics()->QuadsEnd();
 
 	// Headline
 	y += 10.0f;
-	TextRender()->Text(0, x, y, 28.0f, Localize("Spectators"), w-20.0f);
+	TextRender()->Text(0, x+10.0f, y, 28.0f, Localize("Spectators"), w-20.0f);
 
 	// spectator names
 	y += 30.0f;
@@ -113,7 +113,7 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 		Multiple = true;
 	}
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, x, y, 22.0f, TEXTFLAG_RENDER);
+	TextRender()->SetCursor(&Cursor, x+10.0f, y, 22.0f, TEXTFLAG_RENDER);
 	Cursor.m_LineWidth = w-20.0f;
 	Cursor.m_MaxLines = 4;
 	TextRender()->TextEx(&Cursor, aBuffer, -1);
