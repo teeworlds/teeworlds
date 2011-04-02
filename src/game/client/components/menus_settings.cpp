@@ -727,8 +727,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CUIRect Text;
 		MainView.HSplitTop(19.0f, &Button, &MainView);
 		Button.VMargin(15.0f, &Button);
-		Button.VSplitLeft(50.0f, &Text, &Button);
-		Button.VSplitRight(5.0f, &Button, 0);
+		Button.VSplitLeft(100.0f, &Text, &Button);
+		//Button.VSplitRight(5.0f, &Button, 0);
 		Button.HSplitTop(4.0f, 0, &Button);
 
 		float k = (*pColorSlider[s]) / 255.0f;
