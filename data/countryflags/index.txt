@@ -38,6 +38,9 @@ czech_republic
 denmark
 == 208
 
+egypt
+== 818
+
 finland
 == 246
 
