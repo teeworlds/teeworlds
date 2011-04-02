@@ -513,6 +513,9 @@ Your skin
 %d Bytes
 == 
 
+%s wins!
+== 
+
 -Page %d-
 == 
 
