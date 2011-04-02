@@ -350,7 +350,6 @@ void CGhost::Save(bool WasRecording)
 		
 		// rename ghost
 		str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_BestTime, Client()->GetCurrentMapCrc());
-		dbg_msg("test", "%s", aFilename);
 		char aOldFilename[128];
 		str_format(aOldFilename, sizeof(aOldFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
 		Storage()->RenameFile(aOldFilename, aFilename, IStorage::TYPE_SAVE);
@@ -578,7 +577,6 @@ void CGhost::OnReset()
 	
 	char aFilename[512];
 	str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
-	dbg_msg("test", "%s", aFilename);
 	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 }
 
