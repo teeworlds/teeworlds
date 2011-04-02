@@ -453,6 +453,9 @@ Your skin
 %i seconds left
 == 
 
+%s wins!
+== 
+
 -Page %d-
 == 
 

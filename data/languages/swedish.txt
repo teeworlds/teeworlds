@@ -663,5 +663,8 @@ no limit
 
 ##### needs translation #####
 
+%s wins!
+== 
+
 ##### old translations #####
 

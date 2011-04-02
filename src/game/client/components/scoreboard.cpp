@@ -393,24 +393,30 @@ void CScoreboard::OnRender()
 		else
 		{
 			char aText[64];
+			const char *pRedClanName = GetClanName(TEAM_RED);
+			const char *pBlueClanName = GetClanName(TEAM_BLUE);
+			
 			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER && m_pClient->m_Snap.m_pGameDataObj)
 			{
 				str_copy(aText, Localize("Draw!"), sizeof(aText));
 				if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue)
 				{
-					if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
+					if(pBlueClanName)
+						str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
+					else if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
 						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 					else
 						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 				}
 				else if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed)
 				{
-					if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
+					if(pBlueClanName)
+						str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
+					else if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
 						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 					else
 						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 				}
-			
 				float w = TextRender()->TextWidth(0, 86.0f, aText, -1);
 				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, aText, -1);
 			}
@@ -455,4 +461,34 @@ bool CScoreboard::Active()
 		return true;
 
 	return false;
+}
+
+const char *CScoreboard::GetClanName(int Team)
+{
+	int ClanPlayers = 0;
+	const char *pClanName = 0;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
+		if(!pInfo || pInfo->m_Team != Team)
+			continue;
+		
+		if(!pClanName)
+		{
+			pClanName = m_pClient->m_aClients[pInfo->m_ClientID].m_aClan;
+			ClanPlayers++;
+		}
+		else
+		{
+			if(str_comp(m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, pClanName) == 0)
+				ClanPlayers++;
+			else
+				return 0;
+		}
+	}
+	
+	if(ClanPlayers > 1 && pClanName[0])
+		return pClanName;
+	else
+		return 0;
 }
