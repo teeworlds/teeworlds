@@ -261,7 +261,7 @@ void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhost
 	if(g_Config.m_ClGhostNameplatesAlways == 0)
 		a = clamp(0.5f-powf(distance(m_pClient->m_pControls->m_TargetPos, Pos)/200.0f,16.0f), 0.0f, 0.5f);
 	
-	char aName[MAX_NAME_LENGTH];
+	char aName[32];
 	IntsToStr(&Info.m_Name0, 6, aName);
 	float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 	
