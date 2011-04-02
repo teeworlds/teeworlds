@@ -537,6 +537,9 @@ no limit
 %d Bytes
 == 
 
+%s wins!
+== 
+
 -Page %d-
 == 
 

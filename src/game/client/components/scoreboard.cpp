@@ -334,21 +334,35 @@ void CScoreboard::OnRender()
 			RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
 		else
 		{
-		
+			const char *pRedClanName = GetClanName(TEAM_RED);
+			const char *pBlueClanName = GetClanName(TEAM_BLUE);
+			
 			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER && m_pClient->m_Snap.m_pGameDataObj)
 			{
-				const char *pText = Localize("Draw!");
+				char aText[256];
+				str_copy(aText, Localize("Draw!"), sizeof(aText));
+				
 				if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue)
-					pText = Localize("Red team wins!");
+				{
+					if(pRedClanName)
+						str_format(aText, sizeof(aText), Localize("%s wins!"), pRedClanName);
+					else
+						str_copy(aText, Localize("Red team wins!"), sizeof(aText));
+				}
 				else if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed)
-					pText = Localize("Blue team wins!");
-			
-				float w = TextRender()->TextWidth(0, 86.0f, pText, -1);
-				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, pText, -1);
+				{
+					if(pBlueClanName)
+						str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
+					else
+						str_copy(aText, Localize("Blue team wins!"), sizeof(aText));
+				}
+				
+				float w = TextRender()->TextWidth(0, 86.0f, aText, -1);
+				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, aText, -1);
 			}
-		
-			RenderScoreboard(Width/2-w-5.0f, 150.0f, w, TEAM_RED, Localize("Red team"));
-			RenderScoreboard(Width/2+5.0f, 150.0f, w, TEAM_BLUE, Localize("Blue team"));
+			
+			RenderScoreboard(Width/2-w-5.0f, 150.0f, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"));
+			RenderScoreboard(Width/2+5.0f, 150.0f, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"));
 		}
 	}
 
@@ -375,4 +389,34 @@ bool CScoreboard::Active()
 		return true;
 
 	return false;
+}
+
+const char *CScoreboard::GetClanName(int Team)
+{
+	int ClanPlayers = 0;
+	const char *pClanName = 0;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
+		if(!pInfo || pInfo->m_Team != Team)
+			continue;
+		
+		if(!pClanName)
+		{
+			pClanName = m_pClient->m_aClients[pInfo->m_ClientID].m_aClan;
+			ClanPlayers++;
+		}
+		else
+		{
+			if(str_comp(m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, pClanName) == 0)
+				ClanPlayers++;
+			else
+				return 0;
+		}
+	}
+	
+	if(ClanPlayers > 1 && pClanName[0])
+		return pClanName;
+	else
+		return 0;
 }
