@@ -198,18 +198,25 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		Spacing = 5.0f;
  	}
 	
+	float RaceOffset = 0.0f;
+	if(m_pClient->m_IsRace)
+		RaceOffset = 90.0f;
+	
 	float ScoreOffset = x+10.0f, ScoreLength = m_pClient->m_IsRace ? 170.0f : 60.0f;
 	float TeeOffset = ScoreOffset+ScoreLength, TeeLength = 60*TeeSizeMod;
 	float NameOffset = TeeOffset+TeeLength, NameLength = 300.0f-TeeLength;
-	float PingOffset = x+610.0f, PingLength = 65.0f;
+	float PingOffset = x+610.0f+RaceOffset, PingLength = 65.0f;
 	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f;
-	float ClanOffset = x+370.0f, ClanLength = 230.0f-CountryLength;	
+	float ClanOffset = x+370.0f+RaceOffset, ClanLength = 230.0f-CountryLength;	
 
 	// render headlines
 	y += 50.0f;
 	float HeadlineFontsize = 22.0f;
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
-	TextRender()->Text(0, ScoreOffset+ScoreLength-tw, y, HeadlineFontsize, Localize("Score"), -1);
+	if(m_pClient->m_IsRace)
+		TextRender()->Text(0, ScoreOffset+ScoreLength/2-tw/2, y, HeadlineFontsize, Localize("Score"), -1);
+	else
+		TextRender()->Text(0, ScoreOffset+ScoreLength-tw, y, HeadlineFontsize, Localize("Score"), -1);
 	
 	TextRender()->Text(0, NameOffset, y, HeadlineFontsize, Localize("Name"), -1);
 	
@@ -384,7 +391,7 @@ void CScoreboard::OnRender()
 	
 	// resize scoreboard for race
 	if(m_pClient->m_IsRace)
-		w = 800.0f;
+		w += 100.0f;
 		
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
