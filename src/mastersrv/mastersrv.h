@@ -4,6 +4,13 @@
 #define MASTERSRV_MASTERSRV_H
 static const int MASTERSERVER_PORT = 8300;
 
+enum ServerType
+{
+	SERVERTYPE_INVALID = -1,
+	SERVERTYPE_NORMAL,
+	SERVERTYPE_LEGACY
+};
+
 struct CMastersrvAddr
 {
 	unsigned char m_aType[4];
