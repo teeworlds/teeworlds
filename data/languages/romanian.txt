@@ -1,6 +1,9 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d octeți
+
 %d of %d servers, %d players
 == %d/%d servere, %d jucători
 
@@ -22,8 +25,20 @@
 %i seconds left
 == %i secunde rămase
 
+%s wins!
+== %s câștigă!
+
+-Page %d-
+== -Pagina %d-
+
 Abort
 == Anulează
+
+Add
+== Adaugă
+
+Add Friend
+== Adaugă prieten
 
 Address
 == Adresa
@@ -42,6 +57,9 @@ Are you sure that you want to delete the demo?
 
 Are you sure that you want to quit?
 == Sigur vrei să ieși?
+
+Are you sure that you want to remove the player from your friends list?
+== Sigur vrei să ștergi jucătorul din lista ta de prieteni?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Aceasta fiind prima lansare a jocului, te rog introdu-ți pseudonimul mai jos. E recomandat să verifici setările și să le ajustezi cum vrei înainte să intri pe un server.
@@ -64,8 +82,17 @@ Body
 Call vote
 == Votează
 
+Change settings
+== Modifică setările
+
 Chat
 == Chat
+
+Clan
+== Clanul
+
+Client
+== Clientul
 
 Close
 == Închide
@@ -88,11 +115,23 @@ Console
 Controls
 == Controale
 
+Count players only
+== Numără doar jucătorii
+
+Country
+== Țara
+
+Crc:
+== Suma de control:
+
+Created:
+== Creată la data:
+
 Current
 == Curent
 
 Current version: %s
-== Versiunea actuală : %s
+== Versiunea actuală: %s
 
 Custom colors
 == Culori personalizate
@@ -102,6 +141,9 @@ Delete
 
 Delete demo
 == Șterge demonstrația
+
+Demo details
+== Detalii demo
 
 Demos
 == Demo
@@ -159,6 +201,12 @@ Folder
 
 Force vote
 == Forțează votul
+
+Free-View
+== Vizualizare liberă
+
+Friends
+== Prieteni
 
 Fullscreen
 == Ecrat complet
@@ -226,14 +274,20 @@ Join red
 Jump
 == Salt
 
+Kick player
+== Dă afară jucător
+
 LAN
-== LAN
+== Rețea
 
 Language
 == Limba
 
+Length:
+== Durată:
+
 Lht.
-== Lum.
+== Luminozitate
 
 Loading
 == Se încarcă
@@ -243,6 +297,9 @@ MOTD
 
 Map
 == Hartă
+
+Map:
+== Harta:
 
 Max Screenshots
 == Număr maxim de capturi de ecran
@@ -262,6 +319,9 @@ Mouse sens.
 Move left
 == Mută la stânga
 
+Move player to spectators
+== Mută jucătorul la spectatori
+
 Move right
 == Mută la dreapta
 
@@ -277,8 +337,17 @@ Name
 Name plates size
 == Dimensiune nume placă
 
+Netversion:
+== Cod rețea:
+
+New name:
+== Nume nou:
+
 News
 == Știri
+
+Next
+== Următoarea
 
 Next weapon
 == Arma următoare
@@ -304,6 +373,9 @@ Ok
 Open
 == Deschide
 
+Page %d of %d
+== Pagina %d din %d
+
 Parent Folder
 == Dosarul părinte
 
@@ -320,16 +392,22 @@ Pistol
 == Pistol
 
 Play
-== Joacă
+== Redă
 
 Player
 == Jucător
+
+Player options
+== Opțiuni jucător
 
 Players
 == Jucători
 
 Please balance teams!
 == Echilibrați echipele!
+
+Prev
+== Anterioara
 
 Prev. weapon
 == Arma precedentă
@@ -342,6 +420,9 @@ Quick search:
 
 Quit
 == Ieșire
+
+Quit anyway?
+== Ieși oricum?
 
 REC %3d:%02d
 == REC %3d:%02d
@@ -367,6 +448,18 @@ Refreshing master servers
 Remote console
 == Consolă server
 
+Remove
+== Șterge
+
+Remove friend
+== Șterge prietenul
+
+Rename
+== Redenumește
+
+Rename demo
+== Redenumește demo-ul
+
 Reset filter
 == Filtru implicit
 
@@ -374,7 +467,7 @@ Reset to defaults
 == Setări implicite
 
 Rifle
-== Mitralieră
+== Carabină
 
 Round
 == Runda
@@ -383,7 +476,7 @@ Sample rate
 == Frecvența
 
 Sat.
-== Sat.
+== Saturație
 
 Score
 == Scor
@@ -400,8 +493,14 @@ Scoreboard
 Screenshot
 == Captură de ecran
 
+Server address:
+== Adresă server:
+
 Server details
 == Detalii server
+
+Server filter
+== Filtru servere:
 
 Server info
 == Info. server
@@ -418,11 +517,20 @@ Shotgun
 Show chat
 == Afișare chat
 
+Show friends
+== Arată prietenii
+
+Show ingame HUD
+== Arată scorul în joc
+
 Show name plates
 == Arată pseudonimele
 
 Show only supported
 == Arată doar modurile suportate
+
+Size:
+== Dimensiunea:
 
 Skins
 == Costume
@@ -438,6 +546,9 @@ Sound volume
 
 Spectate
 == Spectator
+
+Spectator mode
+== Mod spectator
 
 Spectators
 == Spectatori
@@ -475,6 +586,9 @@ The audio device couldn't be initialised.
 The server is running a non-standard tuning on a pure game type.
 == Serverul folosește parametri ne-standard într-un joc standard.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Există o hartă nesalvată în editor. Probabil vrei să o salvezi înainte să ieși din joc.
+
 Time limit
 == Timp limită
 
@@ -487,20 +601,38 @@ Try again
 Type
 == Tip
 
+Type:
+== Tip:
+
 UI Color
 == Culoare meniu
 
 Unable to delete the demo
 == Nu pot șterge demo-ul
 
+Unable to rename the demo
+== Nu pot redenumi demo-ul
+
 Use sounds
 == Folosește sunetul
+
+Use team colors for name plates
+== Folosește culorile echipelor pe etichetele de nume
 
 V-Sync
 == Sincronizare verticală (V-Sync)
 
 Version
 == Versiune
+
+Version:
+== Versiune:
+
+Vote command:
+== Comandă votare:
+
+Vote description:
+== Descriere votare:
 
 Vote no
 == Votează nu
@@ -533,138 +665,6 @@ no limit
 == fără limită
 
 ##### needs translation #####
-
-%d Bytes
-== 
-
-%s wins!
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Client
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Demo details
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Move player to spectators
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Next
-== 
-
-Page %d of %d
-== 
-
-Player options
-== 
-
-Prev
-== 
-
-Quit anyway?
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Spectator mode
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.
-== 
-
-Type:
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
 
 ##### old translations #####
 
