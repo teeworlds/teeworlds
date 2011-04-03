@@ -84,7 +84,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	Header.m_aMapCrc[2] = (Crc>>8)&0xff;
 	Header.m_aMapCrc[3] = (Crc)&0xff;
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
-	// Header.m_Length - add this on stop
+	// Header.m_aLength - update this each second
 	str_timestamp(Header.m_aTimestamp, sizeof(Header.m_aTimestamp));
 	io_write(DemoFile, &Header, sizeof(Header));
 	
@@ -169,6 +169,9 @@ void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 
 void CDemoRecorder::Write(int Type, const void *pData, int Size)
 {
+	if(Length() != m_LastLength)
+		WriteLength();
+	
 	char aBuffer[64*1024];
 	char aBuffer2[64*1024];
 	unsigned char aChunk[3];
@@ -209,6 +212,24 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 	}
 	
 	io_write(m_File, aBuffer2, Size);
+}
+
+void CDemoRecorder::WriteLength()
+{
+	int CurPos = io_tell(m_File);
+	io_seek(m_File, gs_LengthOffset, IOSEEK_START);
+	
+	// add the demo length to the header
+	int DemoLength = Length();
+	char aLength[4];
+	aLength[0] = (DemoLength>>24)&0xff;
+	aLength[1] = (DemoLength>>16)&0xff;
+	aLength[2] = (DemoLength>>8)&0xff;
+	aLength[3] = (DemoLength)&0xff;
+	io_write(m_File, aLength, sizeof(aLength));
+	
+	// seek back
+	io_seek(m_File, CurPos, IOSEEK_START);
 }
 
 void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
@@ -252,17 +273,9 @@ int CDemoRecorder::Stop()
 {
 	if(!m_File)
 		return -1;
-
-	// add the demo length to the header
-	io_seek(m_File, gs_LengthOffset, IOSEEK_START);
-	int DemoLength = Length();
-	char aLength[4];
-	aLength[0] = (DemoLength>>24)&0xff;
-	aLength[1] = (DemoLength>>16)&0xff;
-	aLength[2] = (DemoLength>>8)&0xff;
-	aLength[3] = (DemoLength)&0xff;
-	io_write(m_File, aLength, sizeof(aLength));
-		
+	
+	WriteLength();
+	
 	io_close(m_File);
 	m_File = 0;
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", "Stopped recording");
