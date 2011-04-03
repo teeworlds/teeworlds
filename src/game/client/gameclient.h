@@ -301,6 +301,7 @@ public:
 	class CScoreboard *m_pScoreboard;
 	//TODO: This is ugly
 	class CGhost *m_pGhost;
+	class CItems *m_pItems;
 };
 
 

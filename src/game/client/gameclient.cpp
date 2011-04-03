@@ -151,6 +151,7 @@ void CGameClient::OnConsoleInit()
 	m_pTeecompStats = &::gs_TeecompStats;
 	m_pScoreboard = &::gs_Scoreboard;
 	m_pGhost = &::gs_Ghost;
+	m_pItems = &::gs_Items;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -167,7 +168,7 @@ void CGameClient::OnConsoleInit()
 	
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
-	m_All.Add(&gs_Items);
+	m_All.Add(m_pItems);
 	m_All.Add(&gs_Players);
 	m_All.Add(m_pGhost);
 	m_All.Add(&gs_MapLayersForeGround);
@@ -642,30 +643,24 @@ void CGameClient::OnRelease()
 
 void CGameClient::OnMessage(int MsgID, CUnpacker *pUnpacker)
 {
-	
 	// special messages
 	if(MsgID == NETMSGTYPE_SV_EXTRAPROJECTILE)
 	{
-		/*
-		int num = msg_unpack_int();
+		int Num = pUnpacker->GetInt();
 		
-		for(int k = 0; k < num; k++)
+		for(int k = 0; k < Num; k++)
 		{
-			NETOBJ_PROJECTILE proj;
-			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-				((int *)&proj)[i] = msg_unpack_int();
+			CNetObj_Projectile Proj;
+			for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
+				((int *)&Proj)[i] = pUnpacker->GetInt();
 				
-			if(msg_unpack_error())
+			if(pUnpacker->Error())
 				return;
-				
-			if(extraproj_num != MAX_EXTRA_PROJECTILES)
-			{
-				extraproj_projectiles[extraproj_num] = proj;
-				extraproj_num++;
-			}
+			
+			g_GameClient.m_pItems->AddExtraProjectile(&Proj);
 		}
 		
-		return;*/
+		return;
 	}
 	else if(MsgID == NETMSGTYPE_SV_TUNEPARAMS)
 	{
