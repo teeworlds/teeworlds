@@ -68,7 +68,7 @@ Automatically record demos
 == Enregistrer automatiquement une démo
 
 Automatically take game over screenshot
-== Faire automatiquement une capture d'écran à la fin de la partie
+== Sauvegarder les résultats à la fin de la partie
 
 Blue team
 == Équipe bleue
@@ -116,7 +116,7 @@ Controls
 == Contrôles
 
 Count players only
-== Compter seulement les joueurs
+== Seulement les joueurs
 
 Country
 == Pays
@@ -155,7 +155,7 @@ Disconnected
 == Déconnecté
 
 Display Modes
-== Modes d'affichages
+== Résolutions
 
 Downloading map
 == Téléchargement de la carte
@@ -218,7 +218,7 @@ Game info
 == Info. jeu
 
 Game over
-== Fin du jeu
+== Fin de la partie
 
 Game type
 == Type de jeu
@@ -287,7 +287,7 @@ Length:
 == Longueur :
 
 Lht.
-== Lum.
+== Luminosité
 
 Loading
 == Chargement
@@ -302,10 +302,10 @@ Map:
 == Carte :
 
 Max Screenshots
-== Nombre max de captures d'écran
+== Nombre maximum de captures d'écran
 
 Max demos
-== Nombre max de démos
+== Nombre maximum de démos
 
 Maximum ping:
 == Ping maximum:
@@ -425,7 +425,7 @@ Reason:
 == Raison :
 
 Record demo
-== Enregistrement démo
+== Enregistrer
 
 Red team
 == Équipe rouge
@@ -470,7 +470,7 @@ Sample rate
 == Fréquence
 
 Sat.
-== Sat.
+== Saturation
 
 Score
 == Score
@@ -521,7 +521,7 @@ Show name plates
 == Montrer les pseudonymes
 
 Show only supported
-== Ne montrer que les modes supportés
+== Ne montrer que les résolutions supportées
 
 Size:
 == Taille :
@@ -554,7 +554,7 @@ Standard map
 == Cartes standards
 
 Stop record
-== Arrêter l'enregistrement
+== Arrêter
 
 Sudden Death
 == Mort Subite
