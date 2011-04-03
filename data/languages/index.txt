@@ -1,4 +1,4 @@
-
+﻿
 ##### language indices #####
 
 bosnian
@@ -36,6 +36,9 @@ russian
 
 serbian
 == Srpski
+
+slovak
+== Slovensky
 
 spanish
 == Español
