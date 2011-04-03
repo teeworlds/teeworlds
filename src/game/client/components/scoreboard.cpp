@@ -202,7 +202,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	if(m_pClient->m_IsRace)
 		RaceOffset = 90.0f;
 	
-	float ScoreOffset = x+10.0f, ScoreLength = m_pClient->m_IsRace ? 170.0f : 60.0f;
+	float ScoreOffset = x+10.0f, ScoreLength = m_pClient->m_IsRace ? 150.0f : 60.0f;
 	float TeeOffset = ScoreOffset+ScoreLength, TeeLength = 60*TeeSizeMod;
 	float NameOffset = TeeOffset+TeeLength, NameLength = 300.0f-TeeLength;
 	float PingOffset = x+610.0f+RaceOffset, PingLength = 65.0f;
@@ -257,14 +257,22 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			
 			float Time = m_pClient->m_aClients[pInfo->m_ClientID].m_Score;
 			if(Time > 0)
+			{
 				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)Time/60, fmod(Time,60));
+				tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+				TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = ScoreLength;
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
 		}
 		else
+		{
 			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -999, 999));
-		tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-		TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = ScoreLength;
-		TextRender()->TextEx(&Cursor, aBuf, -1);
+			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = ScoreLength;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+		}
 
 		// flag
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS &&
