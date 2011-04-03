@@ -15,6 +15,11 @@
 
 #include "items.h"
 
+void CItems::OnReset()
+{
+	ExtraProjectilesNum = 0;
+}
+
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
 
@@ -302,15 +307,23 @@ void CItems::OnRender()
 	}
 
 	// render extra projectiles
-	/*
-	for(int i = 0; i < extraproj_num; i++)
+	for(int i = 0; i < ExtraProjectilesNum; i++)
 	{
-		if(extraproj_projectiles[i].start_tick < Client()->GameTick())
+		if(aExtraProjectiles[i].m_StartTick < Client()->GameTick())
 		{
-			extraproj_projectiles[i] = extraproj_projectiles[extraproj_num-1];
-			extraproj_num--;
+			aExtraProjectiles[i] = aExtraProjectiles[ExtraProjectilesNum-1];
+			ExtraProjectilesNum--;
 		}
 		else
-			render_projectile(&extraproj_projectiles[i], 0);
-	}*/
+			RenderProjectile(&aExtraProjectiles[i], 0);
+	}
+}
+
+void CItems::AddExtraProjectile(CNetObj_Projectile *pProj)
+{
+	if(ExtraProjectilesNum != MAX_EXTRA_PROJECTILES)
+	{
+		aExtraProjectiles[ExtraProjectilesNum] = *pProj;
+		ExtraProjectilesNum++;
+	}
 }

@@ -6,13 +6,24 @@
 
 class CItems : public CComponent
 {	
+	enum
+	{
+		MAX_EXTRA_PROJECTILES=32,
+	};
+	
+	CNetObj_Projectile aExtraProjectiles[MAX_EXTRA_PROJECTILES];
+	int ExtraProjectilesNum;
+	
 	void RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID);
 	void RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent);
 	void RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameData *pPrevGameData, const CNetObj_GameData *pCurGameData);
 	void RenderLaser(const struct CNetObj_Laser *pCurrent);
 	
 public:
+	virtual void OnReset();
 	virtual void OnRender();
+	
+	void AddExtraProjectile(CNetObj_Projectile *pProj);
 };
 
 #endif
