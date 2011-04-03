@@ -252,20 +252,23 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 		char aBuf[256];
 		str_copy(aBuf, g_Config.m_ClSearchName, sizeof(aBuf));
 
-		CSplit Sp2 = Split(aBuf, ' '); 
-		
-		m_ContainsName = false;
-		
-		int i = 0;
-		while (i < Sp2.m_Count)
+		if(aBuf[0])
 		{
-			if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
+			CSplit Sp2 = Split(aBuf, ' '); 
+			
+			m_ContainsName = false;
+			
+			int i = 0;
+			while (i < Sp2.m_Count)
 			{
-				m_ContainsName = true;
-				break;
+				if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
+				{
+					m_ContainsName = true;
+					break;
+				}
+				else
+					i++;
 			}
-			else
-				i++;
 		}
 		
 		AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);
