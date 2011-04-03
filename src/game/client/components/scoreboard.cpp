@@ -408,8 +408,8 @@ void CScoreboard::OnRender()
 				str_copy(aText, Localize("Draw!"), sizeof(aText));
 				if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue)
 				{
-					if(pBlueClanName)
-						str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
+					if(pRedClanName)
+						str_format(aText, sizeof(aText), Localize("%s wins!"), pRedClanName);
 					else if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
 						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 					else
