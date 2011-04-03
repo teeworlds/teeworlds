@@ -76,7 +76,7 @@ MACRO_CONFIG_STR(ClSpammerName, cl_spammer_name, 64, "nameless tee", CFGFLAG_CLI
 MACRO_CONFIG_INT(ClLaserColor, cl_laser_color, 11665217, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Laser color")
 
 /* Anti rainbow */
-MACRO_CONFIG_INT(ClAntiRainbowCount, cl_anti_rainbow_count, 2, 0, 20, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Set how many colorchanges are allowed")
+MACRO_CONFIG_INT(ClAntiRainbowCount, cl_anti_rainbow_count, 2, 0, 10, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Set how many colorchanges are allowed")
 MACRO_CONFIG_INT(ClAntiRainbow, cl_anti_rainbow, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable anti rainbow")
 
 MACRO_CONFIG_INT(PlayerUseCustomColor, player_use_custom_color, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors")

@@ -51,8 +51,9 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
 	char aBuf[128];
-	CUIRect Label, Button, Left, Right, Game, Client;
-	MainView.HSplitTop(150.0f, &Game, &Client);
+	CUIRect List, Label, Button, Left, Right, Game, Client;
+	MainView.HSplitTop(200.0f, &List, &MainView);
+	MainView.HSplitTop(210.0f, &Game, &Client);
 
 	// game
 	{
@@ -84,17 +85,47 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		}
 
 		// weapon pickup
-		Left.HSplitTop(5.0f, 0, &Left);
+		Left.HSplitTop(2.5f, 0, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClAutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 			g_Config.m_ClAutoswitchWeapons ^= 1;
 
 		// show hud
-		Left.HSplitTop(5.0f, 0, &Left);
+		Left.HSplitTop(2.5f, 0, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClShowhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
 			g_Config.m_ClShowhud ^= 1;
+		
+		// show client id in scoreboard
+		Left.HSplitTop(2.5f, 0, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClScoreboardClientID, Localize("Show Client ID in scoreboard"), g_Config.m_ClScoreboardClientID, &Button))
+			g_Config.m_ClScoreboardClientID ^= 1;
+		
+		// show ghost
+		Left.HSplitTop(2.5f, 0, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClShowGhost, Localize("Show ghost"), g_Config.m_ClShowGhost, &Button))
+			g_Config.m_ClShowGhost ^= 1;
 
+		// anti rainbow
+		Left.HSplitTop(2.5f, 0, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClAntiRainbow, Localize("Anti rainbow"), g_Config.m_ClAntiRainbow, &Button))
+			g_Config.m_ClAntiRainbow ^= 1;
+		
+		if(g_Config.m_ClAntiRainbow)
+		{
+			Left.HSplitTop(2.5f, 0, &Left);
+			Left.VSplitLeft(20.0f, 0, &Left);
+			Left.HSplitTop(20.0f, &Label, &Left);
+			Left.HSplitTop(20.0f, &Button, &Left);
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Allowed color changes"), g_Config.m_ClAntiRainbowCount);
+			UI()->DoLabelScaled(&Label, aBuf, 13.0f, -1);
+			Button.HMargin(2.0f, &Button);
+			g_Config.m_ClAntiRainbowCount = (int)(DoScrollbarH(&g_Config.m_ClAntiRainbowCount, &Button, g_Config.m_ClAntiRainbowCount/10.0f)*10.0f+0.1f);
+		}
+		
 		// name plates
 		Right.HSplitTop(20.0f, &Button, &Right);
 		if(DoButton_CheckBox(&g_Config.m_ClNameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
@@ -108,6 +139,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 				g_Config.m_ClNameplatesAlways ^= 1;
 		
+			Right.HSplitTop(2.5f, 0, &Right);
+			Right.HSplitTop(20.0f, &Button, &Right);
+			if(DoButton_CheckBox(&g_Config.m_ClNameplateClientID, Localize("Show Client ID in name plates"), g_Config.m_ClNameplateClientID, &Button))
+				g_Config.m_ClNameplateClientID ^= 1;
+			
 			Right.HSplitTop(2.5f, 0, &Right);
 			Right.HSplitTop(20.0f, &Label, &Right);
 			Right.HSplitTop(20.0f, &Button, &Right);
@@ -170,6 +206,9 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
 		}
 	}
+	
+	// font selector
+	RenderFontSelection(List);
 }
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
@@ -240,8 +279,9 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
-	CUIRect Button, Label;
+	CUIRect Button, Label, Right;
 	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.VSplitMid(0, &Right);
 
 	// skin info
 	const CSkins::CSkin *pOwnSkin = m_pClient->m_pSkins->Get(m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin));	
@@ -405,6 +445,102 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 		mem_copy(g_Config.m_PlayerSkin, s_paSkinList[NewSelected]->m_aName, sizeof(g_Config.m_PlayerSkin));
 		m_NeedSendinfo = true;
+	}
+
+	// laser color
+	{
+		CUIRect Laser;
+		Right.HSplitTop(100.0f, 0, &Laser);
+		Laser.VSplitLeft(40.0f, 0, &Laser);
+		Right.VSplitLeft(10.0f, 0, &Right);
+
+		int *pColor;
+		pColor = &g_Config.m_ClLaserColor;
+
+		const char *pParts = Localize("Laser color");
+		const char *paLabels[] = {
+			Localize("Hue"),
+			Localize("Sat."),
+			Localize("Lht.")};
+		static int s_aColorSlider[3] = {0};
+
+		Right.HSplitTop(20.0f, &Label, &Right);
+		UI()->DoLabelScaled(&Label, pParts, 14.0f, -1);
+		Right.VSplitLeft(20.0f, 0, &Right);
+		Right.HSplitTop(2.5f, 0, &Right);
+
+		int PrevColor = *pColor;
+		int Color = 0;
+		for(int s = 0; s < 3; s++)
+		{
+			Right.HSplitTop(20.0f, &Label, &Right);
+			Label.VSplitLeft(100.0f, &Label, &Button);
+			Button.HMargin(2.0f, &Button);
+
+			float k = ((PrevColor>>((2-s)*8))&0xff)  / 255.0f;
+			k = DoScrollbarH(&s_aColorSlider[s], &Button, k);
+			Color <<= 8;
+			Color += clamp((int)(k*255), 0, 255);
+			UI()->DoLabelScaled(&Label, paLabels[s], 14.0f, -1);
+		}
+
+		*pColor = Color;
+
+		// darw laser
+		vec2 From = vec2(Laser.x, Laser.y);
+		vec2 Pos = vec2(Laser.x+Laser.w-10.0f, Laser.y);
+
+		Graphics()->TextureSet(-1);
+		Graphics()->QuadsBegin();
+
+		// do outline
+		vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+		vec2 Out = vec2(0.0f, -1.0f) * (3.15f);
+
+		IGraphics::CFreeformItem Freeform(
+				From.x-Out.x, From.y-Out.y,
+				From.x+Out.x, From.y+Out.y,
+				Pos.x-Out.x, Pos.y-Out.y,
+				Pos.x+Out.x, Pos.y+Out.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
+
+		// do inner	
+		Out = vec2(0.0f, -1.0f) * (2.25f);
+		vec3 Rgb = m_pClient->m_pSkins->GetColorV3(g_Config.m_ClLaserColor);
+		Graphics()->SetColor(Rgb.r, Rgb.g, Rgb.b, 1.0f); // center
+
+		Freeform = IGraphics::CFreeformItem(
+				From.x-Out.x, From.y-Out.y,
+				From.x+Out.x, From.y+Out.y,
+				Pos.x-Out.x, Pos.y-Out.y,
+				Pos.x+Out.x, Pos.y+Out.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
+	
+		Graphics()->QuadsEnd();
+		
+		// render head
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
+		Graphics()->QuadsBegin();
+
+		RenderTools()->SelectSprite(SPRITE_PART_SPLAT01);
+		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+		Graphics()->SetColor(Rgb.r, Rgb.g, Rgb.b, 1.0f);
+		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+
+		Graphics()->QuadsEnd();
+
+		// draw laser weapon
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->QuadsBegin();
+
+		RenderTools()->SelectSprite(SPRITE_WEAPON_RIFLE_BODY);
+		RenderTools()->DrawSprite(Laser.x, Laser.y, 60.0f);
+
+		Graphics()->QuadsEnd();
 	}
 }
 
@@ -871,6 +1007,85 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 	{
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
+	}
+}
+
+class CFontFile
+{
+public:
+	CFontFile() {}
+	CFontFile(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+
+	string m_Name;
+	string m_FileName;
+
+	bool operator<(const CFontFile &Other) { return m_Name < Other.m_Name; }
+};
+
+ int GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
+{
+	const int PathLength = str_length(pFileName);
+	if(IsDir || PathLength <= 4 || pFileName[PathLength-4] != '.' || str_comp_nocase(pFileName+PathLength-3, "ttf") || pFileName[0] == '.')
+		return 0;
+
+	sorted_array<CFontFile> &Fonts = *((sorted_array<CFontFile> *)pUser);
+	
+	char aNiceName[128];
+	str_copy(aNiceName, pFileName, PathLength-3);
+	aNiceName[0] = str_uppercase(aNiceName[0]);
+
+	// check if the font was already added
+	for(int i = 0; i < Fonts.size(); i++)
+		if(!str_comp(Fonts[i].m_Name, aNiceName))
+			return 0;
+	
+	Fonts.add(CFontFile(aNiceName, pFileName));
+	
+	return 0;
+}
+
+void CMenus::RenderFontSelection(CUIRect MainView)
+{
+	static int s_FontList  = 0;
+	static int s_SelectedFont = 0;
+	static sorted_array<CFontFile> s_Fonts;
+	static float s_ScrollValue = 0;
+
+	if(s_Fonts.size() == 0)
+	{
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "fonts", GatherFonts, &s_Fonts);
+		for(int i = 0; i < s_Fonts.size(); i++)
+			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
+			{
+				s_SelectedFont = i;
+				break;
+			}
+	}
+
+	int OldSelectedFont = s_SelectedFont;
+
+	UiDoListboxStart(&s_FontList , &MainView, 24.0f, Localize("Fonts"), "", s_Fonts.size(), 1, s_SelectedFont, s_ScrollValue);
+
+	for(sorted_array<CFontFile>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+	}
+
+	s_SelectedFont = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	if(OldSelectedFont != s_SelectedFont)
+	{
+		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
+		char aRelFontPath[512];
+		str_format(aRelFontPath, sizeof(aRelFontPath), "fonts/%s", g_Config.m_ClFontfile);
+		char aFontPath[512];	
+		IOHANDLE File = Storage()->OpenFile(aRelFontPath, IOFLAG_READ, IStorage::TYPE_ALL, aFontPath, sizeof(aFontPath));
+		if(File)
+			io_close(File);
+		TextRender()->SetFont(TextRender()->LoadFont(aFontPath));
 	}
 }
 
