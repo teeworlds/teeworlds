@@ -1,7 +1,4 @@
-import shutil, os, re, sys, zipfile
-match = re.search('(.*)/', sys.argv[0])
-if match != None:
-	os.chdir(match.group(1))
+import shutil, os, sys, zipfile
 
 #valid_platforms = ["win32", "linux86", "linux86_64", "src"]
 
