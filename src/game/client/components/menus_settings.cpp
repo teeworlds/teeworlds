@@ -1359,24 +1359,6 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	Button.VSplitLeft(180.0f, &Button, 0);
 	static float Offset = 0.0f;
 	DoEditBox(g_Config.m_ClApiToken, &Button, g_Config.m_ClApiToken, sizeof(g_Config.m_ClApiToken), 14.0f, &Offset);
-
-	// Right
-	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, Localize("Global settings"), 14.0f, -1);
-	
-	RightView.HSplitTop(20.0f, &Button, &RightView);
-	if(DoButton_CheckBox(&g_Config.m_ClRenderSpeedmeter, Localize("Show speedmeter"), g_Config.m_ClRenderSpeedmeter, &Button))
-		g_Config.m_ClRenderSpeedmeter ^= 1;
-	
-	if(g_Config.m_ClRenderSpeedmeter)
-	{
-		RightView.HSplitTop(20.0f, &Button, &RightView);
-		Button.VSplitLeft(15.0f, 0, &Button);
-		if(DoButton_CheckBox(&g_Config.m_ClSpeedmeterAccel, Localize("Show acceleration"), g_Config.m_ClSpeedmeterAccel, &Button))
-			g_Config.m_ClSpeedmeterAccel ^= 1;
-	}
-	else
-		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 }
 
 void CMenus::RenderSettings(CUIRect MainView)

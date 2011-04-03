@@ -1019,17 +1019,15 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_GAMEINFO)
 			{
 				m_Snap.m_pGameInfoObj = (const CNetObj_GameInfo *)pData;
-				if(m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
-				{
-					if(!m_LastGameOver)
-						OnGameOver();
-					else
-						OnGameRestart();
-					m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
-				}
+				if(!m_LastGameOver && m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+					OnGameOver();
+				else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+					OnGameRestart();
+
 				if(m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
 					OnRoundStart();
 				
+				m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
 				m_LastRoundStartTick = m_Snap.m_pGameInfoObj->m_RoundStartTick;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATA)
