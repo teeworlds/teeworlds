@@ -219,7 +219,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		{
 			Item.m_Rect.Margin(10.0f, &Item.m_Rect);
 			float OldWidth = Item.m_Rect.w;
-			Item.m_Rect.w = 96.0f*Item.m_Rect.h/64.0f;
+			Item.m_Rect.w = Item.m_Rect.h*2;
 			Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
 			Graphics()->TextureSet(pEntry->m_Texture);
 			Graphics()->QuadsBegin();

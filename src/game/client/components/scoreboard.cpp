@@ -169,7 +169,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	x += 10.0f;
 	float LineHeight = 60.0f;
 	float TeeSizeMod = 1.0f;
-	float Spacing = 10.0f;
+	float Spacing = 16.0f;
 	if(m_pClient->m_Snap.m_aTeamSize[Team] > 12)
 	{
 		LineHeight = 40.0f;
@@ -180,14 +180,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	{
 		LineHeight = 50.0f;
 		TeeSizeMod = 0.9f;
-		Spacing = 5.0f;
+		Spacing = 8.0f;
 	}
 
 	float ScoreOffset = x+10.0f, ScoreLength = 60.0f;
 	float TeeOffset = ScoreOffset+ScoreLength, TeeLength = 60*TeeSizeMod;
 	float NameOffset = TeeOffset+TeeLength, NameLength = 300.0f-TeeLength;
 	float PingOffset = x+610.0f, PingLength = 65.0f;
-	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*96.0f/64.0f;
+	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f;
 	float ClanOffset = x+370.0f, ClanLength = 230.0f-CountryLength;	
 
 	// render headlines
@@ -269,7 +269,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		// country flag
 		Graphics()->TextureSet(m_pClient->m_pCountryFlags->Get(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_Texture);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 		IGraphics::CQuadItem QuadItem(CountryOffset, y+(Spacing+TeeSizeMod*5.0f)/2.0f, CountryLength, LineHeight-Spacing-TeeSizeMod*5.0f);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();

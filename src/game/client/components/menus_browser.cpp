@@ -626,8 +626,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			CUIRect Name, Clan, Score, Flag;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
 			Name.VSplitLeft(30.0f, &Score, &Name);
-			Name.VSplitRight(23.0f*96.0f/64.0f, &Name, &Flag);
-			Flag.HMargin(1.0f, &Flag);
+			Name.VSplitRight(34.0f, &Name, &Flag);
+			Flag.HMargin(4.0f, &Flag);
 			Name.HSplitTop(12.0f, &Name, &Clan);
 
 			// score
@@ -687,7 +687,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			// flag
 			Graphics()->TextureSet(m_pClient->m_pCountryFlags->Get(pSelectedServer->m_aClients[i].m_Country)->m_Texture);
 			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 			IGraphics::CQuadItem QuadItem(Flag.x, Flag.y, Flag.w, Flag.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
