@@ -149,6 +149,7 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 				char aName[64];
 				p += str_length(pLookFor);
 				str_copy(aName, p, sizeof(aName));
+				// remove capture time
 				if(str_comp(aName+str_length(aName)-9, " seconds)") == 0)
 				{
 					char *c = aName+str_length(aName)-10;
@@ -157,11 +158,14 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 						c--;
 						if(*c == '(')
 						{
-							*(c-2) = 0;
+							*(c-1) = 0;
 							break;
 						}
 					}
 				}
+				// remove the ' at the end
+				aName[str_length(aName)-1] = 0;
+				
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
 					if(!m_pClient->m_aStats[i].m_Active)
