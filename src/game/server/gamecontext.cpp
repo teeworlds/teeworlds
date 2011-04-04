@@ -1139,6 +1139,11 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
+
+	// inform clients about removed option
+	CNetMsg_Sv_VoteOptionRemove OptionMsg;
+	OptionMsg.m_pDescription = pOption->m_aDescription;
+	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 	
 	// TODO: improve this
 	// remove the option
@@ -1177,11 +1182,6 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_pVoteOptionFirst = pVoteOptionFirst;
 	pSelf->m_pVoteOptionLast = pVoteOptionLast;
 	pSelf->m_NumVoteOptions = NumVoteOptions;
-
-	// inform clients about removed option
-	CNetMsg_Sv_VoteOptionRemove OptionMsg;
-	OptionMsg.m_pDescription = pOption->m_aDescription;
-	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
 
 void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
