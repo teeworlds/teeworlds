@@ -1102,16 +1102,20 @@ void CMenus::RenderSettingsChat(CUIRect MainView)
 	MainView.HSplitTop(10.0f, &Button, &MainView);
 	
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, Localize("Additional highlighting:"), 14.0f, -1);
-	float tw = TextRender()->TextWidth(0, 14.0f, Localize("Additional highlighting:"), -1);
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Additional highlighting"));
+	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
+	float tw = TextRender()->TextWidth(0, 14.0f, aBuf, -1);
 	Button.VSplitLeft(tw+10.0f, 0, &Button);
 	Button.VSplitLeft(380.0f, &Button, 0);
 	static float SearchOffset = 0.0f;
 	DoEditBox(g_Config.m_ClSearchName, &Button, g_Config.m_ClSearchName, sizeof(g_Config.m_ClSearchName), 14.0f, &SearchOffset);
 	
 	// information text
-	MainView.HSplitBottom(25.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, Localize("Enter the names u want to look for.\nSeperate them with a simple space."), 14.0f, -1);
+	MainView.HSplitBottom(25.0f, 0, &Button);
+	UI()->DoLabel(&Button, Localize("Enter the names you want to look for."), 14.0f, -1);
+	MainView.HSplitBottom(12.0f, 0, &Button);
+	UI()->DoLabel(&Button, Localize("Seperate them with a simple space."), 14.0f, -1);
 }
 
 void CMenus::RenderSettingsHudMod(CUIRect MainView)
@@ -1232,10 +1236,13 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 	
 	RightView.HSplitTop(20.0f, 0, &RightView);
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, "Key bindings", 14.0f, -1);
+	UI()->DoLabel(&Button, Localize("Key bindings"), 14.0f, -1);
 	RightView.HSplitTop(5.0f, &Button, &RightView);
-	CKeyInfo pKeys[] = {{ "Zoom out:", "+zoomout", 0},
-		{ "Zoom in:", "+zoomin", 0}};
+	char aaBuf[2][32];
+	str_format(aaBuf[0], sizeof(aaBuf[0]), "%s:", Localize("Zoom out"));
+	str_format(aaBuf[1], sizeof(aaBuf[1]), "%s:", Localize("Zoom in"));
+	CKeyInfo pKeys[] = {{ aaBuf[0], "+zoomout", 0},
+		{ aaBuf[1], "+zoomin", 0}};
 
 	for(int pKeyid=0; pKeyid < KEY_LAST; pKeyid++)
 	{
@@ -1354,7 +1361,9 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	
 	// api token box
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, "Api token:", 14.0, -1);
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Api token"));
+	UI()->DoLabel(&Button, aBuf, 14.0, -1);
 	Button.VSplitLeft(80.0f, 0, &Button);
 	Button.VSplitLeft(180.0f, &Button, 0);
 	static float Offset = 0.0f;
@@ -1388,7 +1397,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Chat"),
 		Localize("Hud-Mod"),
 		Localize("Race"),
-		Localize("TeeComp")};
+		"TeeComp"};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 

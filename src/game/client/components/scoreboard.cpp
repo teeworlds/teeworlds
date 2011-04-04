@@ -419,32 +419,32 @@ void CScoreboard::OnRender()
 					if(pRedClanName)
 						str_format(aText, sizeof(aText), Localize("%s wins!"), pRedClanName);
 					else if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+						str_format(aText, sizeof(aText), Localize("%s team wins!"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 					else
-						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
+						str_format(aText, sizeof(aText), Localize("%s team wins!"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 				}
 				else if(m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed)
 				{
 					if(pBlueClanName)
 						str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
 					else if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
+						str_format(aText, sizeof(aText), Localize("%s team wins!"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 					else
-						str_format(aText, sizeof(aText), "%s Team Wins!", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+						str_format(aText, sizeof(aText), Localize("%s team wins!"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 				}
 				float w = TextRender()->TextWidth(0, 86.0f, aText, -1);
 				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, aText, -1);
 			}
 			
 			if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-				str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 			else
-				str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 			RenderScoreboard(Width/2-w-5.0f, 150.0f, w, TEAM_RED, Localize(aText));
 			if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
-				str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 			else
-				str_format(aText, sizeof(aText), "%s Team", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 			RenderScoreboard(Width/2+5.0f, 150.0f, w, TEAM_BLUE, Localize(aText));	
 		}
 	}

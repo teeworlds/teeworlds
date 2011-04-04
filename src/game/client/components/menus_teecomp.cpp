@@ -60,7 +60,7 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 		UI()->DoLabel(&Button, "http://spl0k.unreal-design.com/teeworlds/", 10.0f, 1);
 		MainView.HSplitBottom(10.0f, &MainView, &Button);
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "Teeworlds %s with TeeComp %s by spl0k", GAME_VERSION, TEECOMP_VERSION);
+		str_format(aBuf, sizeof(aBuf),  Localize("Teeworlds %s with TeeComp %s by spl0k"), GAME_VERSION, TEECOMP_VERSION);
 		UI()->DoLabel(&Button, aBuf, 10.0f, 1);
 		MainView.HSplitBottom(10.0f, &MainView, 0);
 	}
@@ -70,7 +70,7 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 	MainView.HSplitTop(24.0f, &Tabbar, &MainView);
 	//RenderTools()->DrawUIRect(&MainView, color_Tabbar_active, CORNER_ALL, 10.0f);
 
-	const char *pTabs[] = {"Skins", "Stats", "Misc", "About"};
+	const char *pTabs[] = { Localize("Skins"), Localize("Stats"), Localize("Misc"), Localize("About") };
 	int NumTabs = (int)(sizeof(pTabs)/sizeof(*pTabs));
 
 	for(int i=0; i<NumTabs; i++)
@@ -101,19 +101,19 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 	MainView.VSplitLeft(MainView.w/2, &LeftView, &RightView);
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcColoredTeesMethod, "Enemy based colors", g_Config.m_TcColoredTeesMethod, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcColoredTeesMethod, Localize("Enemy based colors"), g_Config.m_TcColoredTeesMethod, &Button))
 		g_Config.m_TcColoredTeesMethod ^= 1;
 
 	// Colors team 1
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "Use DM colors for team %s", (g_Config.m_TcColoredTeesMethod)?"mates":"1");
+	str_format(aBuf, sizeof(aBuf), Localize("Use DM colors for team %s"), (g_Config.m_TcColoredTeesMethod)?Localize("mates"):"1");
 	if(DoButton_CheckBox(&g_Config.m_TcDmColorsTeam1, aBuf, g_Config.m_TcDmColorsTeam1, &Button))
 		g_Config.m_TcDmColorsTeam1 ^= 1;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredTeesMethod)?"Team mates":"Team 1", 14.0f, -1);
+	UI()->DoLabel(&Button, (g_Config.m_TcColoredTeesMethod)?Localize("Team mates"):Localize("Team 1"), 14.0f, -1);
 	int r1, g1, b1, r2, g2, b2;
 	r1 = g_Config.m_TcColoredTeesTeam1>>16;
 	g1 = (g_Config.m_TcColoredTeesTeam1>>8)&0xff;
@@ -145,12 +145,12 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 
 	RightView.HSplitTop(20.0f, 0, &RightView);
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	str_format(aBuf, sizeof(aBuf), "Use DM colors for %s", (g_Config.m_TcColoredTeesMethod)?"enemies":"team 2");
+	str_format(aBuf, sizeof(aBuf), Localize("Use DM colors for %s"), (g_Config.m_TcColoredTeesMethod)?Localize("enemies"):Localize("team 2"));
 	if(DoButton_CheckBox(&g_Config.m_TcDmColorsTeam2, aBuf, g_Config.m_TcDmColorsTeam2, &Button))
 		g_Config.m_TcDmColorsTeam2 ^= 1;
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, (g_Config.m_TcColoredTeesMethod)?"Enemies":"Team 2", 14.0f, -1);
+	UI()->DoLabel(&Button, (g_Config.m_TcColoredTeesMethod)?Localize("Enemies"):Localize("Team 2"), 14.0f, -1);
 	r2 = g_Config.m_TcColoredTeesTeam2>>16;
 	g2 = (g_Config.m_TcColoredTeesTeam2>>8)&0xff;
 	b2 = g_Config.m_TcColoredTeesTeam2&0xff;
@@ -178,11 +178,11 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 	// Force skins team 1
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcForcedSkinsMethod, "Enemy based skins", g_Config.m_TcForcedSkinsMethod, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcForcedSkinsMethod, Localize("Enemy based skins"), g_Config.m_TcForcedSkinsMethod, &Button))
 		g_Config.m_TcForcedSkinsMethod ^= 1;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	str_format(aBuf, sizeof(aBuf), "Force team %s/FFA skins", (g_Config.m_TcForcedSkinsMethod)?"mates":"1");
+	str_format(aBuf, sizeof(aBuf), Localize("Force team %s/FFA skins"), (g_Config.m_TcForcedSkinsMethod)?Localize("mates"):"1");
 	if(DoButton_CheckBox(&g_Config.m_TcForceSkinTeam1, aBuf, g_Config.m_TcForceSkinTeam1, &Button))
 		g_Config.m_TcForceSkinTeam1 ^= 1;
 
@@ -191,7 +191,7 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 
 	SkinSelection.HSplitTop(20, &Button, &SkinSelection);
 	RenderTools()->DrawUIRect(&Button, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
-	UI()->DoLabel(&Button, "Forced skin", 14.0f, 0);
+	UI()->DoLabel(&Button, Localize("Forced skin"), 14.0f, 0);
 
 	RenderTools()->DrawUIRect(&SkinSelection, vec4(0,0,0,0.15f), 0, 0);
 	SkinSelection.VSplitRight(15, &SkinSelection, &Scroll);
@@ -232,7 +232,7 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 
 	RightView.HSplitTop(20.0f, 0, &RightView);
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	str_format(aBuf, sizeof(aBuf), "Force %s skins", (g_Config.m_TcForcedSkinsMethod)?"enemies":"team 2");
+	str_format(aBuf, sizeof(aBuf), Localize("Force %s skins"), (g_Config.m_TcForcedSkinsMethod)?Localize("enemies"):Localize("team 2"));
 	if(DoButton_CheckBox(&g_Config.m_TcForceSkinTeam2, aBuf, g_Config.m_TcForceSkinTeam2, &Button))
 		g_Config.m_TcForceSkinTeam2 ^= 1;
 
@@ -240,7 +240,7 @@ void CMenus::RenderSettingsTeecompSkins(CUIRect MainView)
 
 	SkinSelection.HSplitTop(20, &Button, &SkinSelection);
 	RenderTools()->DrawUIRect(&Button, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
-	UI()->DoLabel(&Button, "Forced skin", 14.0f, 0);
+	UI()->DoLabel(&Button, Localize("Forced skin"), 14.0f, 0);
 
 	RenderTools()->DrawUIRect(&SkinSelection, vec4(0,0,0,0.15f), 0, 0);
 	SkinSelection.VSplitRight(15, &SkinSelection, &Scroll);
@@ -284,54 +284,60 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 
 	MainView.VSplitLeft(MainView.w/2, &LeftView, &MainView);
 
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), "%s:",  Localize("Show in global statboard"));
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, "Show in global statboard:", 16.0f, -1);
+	UI()->DoLabel(&Button, aBuf, 16.0f, -1);
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos, "Frags", g_Config.m_TcStatboardInfos & TC_STATS_FRAGS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos, Localize("Frags"), g_Config.m_TcStatboardInfos & TC_STATS_FRAGS, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_FRAGS;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+1, "Deaths", g_Config.m_TcStatboardInfos & TC_STATS_DEATHS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+1, Localize("Deaths"), g_Config.m_TcStatboardInfos & TC_STATS_DEATHS, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_DEATHS;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+2, "Suicides", g_Config.m_TcStatboardInfos & TC_STATS_SUICIDES, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+2, Localize("Suicides"), g_Config.m_TcStatboardInfos & TC_STATS_SUICIDES, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_SUICIDES;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+3, "Ratio", g_Config.m_TcStatboardInfos & TC_STATS_RATIO, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+3, Localize("Ratio"), g_Config.m_TcStatboardInfos & TC_STATS_RATIO, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_RATIO;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+4, "Net score", g_Config.m_TcStatboardInfos & TC_STATS_NET, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+4, Localize("Net score"), g_Config.m_TcStatboardInfos & TC_STATS_NET, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_NET;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+5, "Frags per minute", g_Config.m_TcStatboardInfos & TC_STATS_FPM, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+5, Localize("Frags per minute"), g_Config.m_TcStatboardInfos & TC_STATS_FPM, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_FPM;
 		
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+6, "Current spree", g_Config.m_TcStatboardInfos & TC_STATS_SPREE, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+6, Localize("Current spree"), g_Config.m_TcStatboardInfos & TC_STATS_SPREE, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_SPREE;
 		
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+7, "Best spree", g_Config.m_TcStatboardInfos & TC_STATS_BESTSPREE, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+7, Localize("Best spree"), g_Config.m_TcStatboardInfos & TC_STATS_BESTSPREE, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_BESTSPREE;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+8, "Weapons stats", g_Config.m_TcStatboardInfos & TC_STATS_WEAPS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+8, Localize("Weapons stats"), g_Config.m_TcStatboardInfos & TC_STATS_WEAPS, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_WEAPS;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+9, "Flag captures", g_Config.m_TcStatboardInfos & TC_STATS_FLAGS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+9, Localize("Flag captures"), g_Config.m_TcStatboardInfos & TC_STATS_FLAGS, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_FLAGS;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "Key bindings:", 16.0f, -1);
-	CKeyInfo pKeys[] = {{ "Global statboard:", "+stats 1", 0},
-		{ "Player board:", "+stats 2", 0},
-		{ "Next player:", "+next_stats", 0}};
+	UI()->DoLabel(&Button, Localize("Key bindings"), 16.0f, -1);
+	char aaBuf[3][32];
+	str_format(aaBuf[0], sizeof(aaBuf[0]), "%s:", Localize("Global statboard"));
+	str_format(aaBuf[1], sizeof(aaBuf[1]), "%s:", Localize("Player board"));
+	str_format(aaBuf[2], sizeof(aaBuf[2]), "%s:", Localize("Next player"));
+	CKeyInfo pKeys[] = {{ aaBuf[0], "+stats 1", 0},
+		{ aaBuf[1], "+stats 2", 0},
+		{ aaBuf[2], "+next_stats", 0}};
 
 	for(int pKeyid=0; pKeyid < KEY_LAST; pKeyid++)
 	{
@@ -358,41 +364,41 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 	MainView.VSplitLeft(MainView.w/2, &LeftView, &RightView);
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "Name plates", 16.0f, 0);
+	UI()->DoLabel(&Button, Localize("Name plates"), 16.0f, 0);
 	LeftView.HSplitTop(20.0f, 0, &LeftView);
 	RightView.HSplitTop(20.0f, 0, &RightView);
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	if(DoButton_CheckBox(&g_Config.m_TcNameplateScore, "Show score in name plate", g_Config.m_TcNameplateScore, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcNameplateScore, Localize("Show score in name plate"), g_Config.m_TcNameplateScore, &Button))
 		g_Config.m_TcNameplateScore ^= 1;
 
 	LeftView.HSplitTop(20.0f, 0, &LeftView);
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	UI()->DoLabel(&Button, "HUD/Flag", 16.0f, -1);
+	UI()->DoLabel(&Button, Localize("HUD/Flag"), 16.0f, -1);
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcHudMatch, "Make HUD match tees colors", g_Config.m_TcHudMatch, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcHudMatch, Localize("Make HUD match tees colors"), g_Config.m_TcHudMatch, &Button))
 		g_Config.m_TcHudMatch ^= 1;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcColoredFlags, "Make flags match tees colors", g_Config.m_TcColoredFlags, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcColoredFlags, Localize("Make flags match tees colors"), g_Config.m_TcColoredFlags, &Button))
 		g_Config.m_TcColoredFlags ^= 1;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcSpeedmeter, "Display speed meter", g_Config.m_TcSpeedmeter, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcSpeedmeter, Localize("Display speed meter"), g_Config.m_TcSpeedmeter, &Button))
 		g_Config.m_TcSpeedmeter ^= 1;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	Button.VSplitLeft(15.0f, 0, &Button);
-	if(DoButton_CheckBox(&g_Config.m_TcSpeedmeterAccel, "Speed meter show acceleration", g_Config.m_TcSpeedmeterAccel, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcSpeedmeterAccel, Localize("Speed meter show acceleration"), g_Config.m_TcSpeedmeterAccel, &Button))
 		g_Config.m_TcSpeedmeterAccel ^= 1;
 
 	RightView.HSplitTop(20.0f, 0, &RightView);
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	UI()->DoLabel(&Button, "Others", 16.0f, -1);
+	UI()->DoLabel(&Button, Localize("Others"), 16.0f, -1);
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	if(DoButton_CheckBox(&g_Config.m_TcHideCarrying, "Hide flag while carrying it", g_Config.m_TcHideCarrying, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcHideCarrying, Localize("Hide flag while carrying it"), g_Config.m_TcHideCarrying, &Button))
 		g_Config.m_TcHideCarrying ^= 1;
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
@@ -416,28 +422,32 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
 {
 	CUIRect Button;
-
+	
+	char aBuf[32];
 	MainView.HSplitTop(52.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, "TeeComp", 48.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	Button.VSplitRight(Button.w/3, 0, &Button);
-	UI()->DoLabel(&Button, "Version "TEECOMP_VERSION, 14.0f, -1);
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Version"), TEECOMP_VERSION);
+	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	Button.VSplitRight(Button.w/3, 0, &Button);
-	UI()->DoLabel(&Button, "For Teeworlds "GAME_VERSION, 14.0f, -1);
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("For Teeworlds"), GAME_VERSION);
+	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	Button.VSplitRight(Button.w/3, 0, &Button);
-	UI()->DoLabel(&Button, "Compiled "__DATE__" "__TIME__, 14.0f, -1);
+	str_format(aBuf, sizeof(aBuf), "%s %s %s", Localize("Compiled"), __DATE__, __TIME__);
+	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
 
 	MainView.HSplitTop(40.0f, 0, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "By Alban 'spl0k' FERON", 14.0f, 0);
+	UI()->DoLabel(&Button, Localize("By Alban 'spl0k' FERON"), 14.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, "http://spl0k.unreal-design.com/", 14.0f, 0);
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(22.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "Special thanks to:", 16.0f, 0);
+	UI()->DoLabel(&Button, Localize("Special thanks to:"), 16.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, "Sd`", 14.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
@@ -445,12 +455,12 @@ void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, "Eve", 14.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "some other MonkeyStyle members", 14.0f, 0);
+	UI()->DoLabel(&Button, Localize("some other MonkeyStyle members"), 14.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "and the Teeworlds.com community", 14.0f, 0);
+	UI()->DoLabel(&Button, Localize("and the Teeworlds.com community"), 14.0f, 0);
 
 	MainView.HSplitBottom(10.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, "so you can set while u set while u set options", 10.0f, -1);
+	UI()->DoLabel(&Button, Localize("so you can set while u set while u set options"), 10.0f, -1);
 	MainView.HSplitBottom(10.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, "Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs", 10.0f, -1);
+	UI()->DoLabel(&Button, Localize("Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs"), 10.0f, -1);
 }
