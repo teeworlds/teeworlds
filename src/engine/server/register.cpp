@@ -97,7 +97,7 @@ void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer,
 	m_pConsole = pConsole;
 }
 
-void CRegister::RegisterUpdate()
+void CRegister::RegisterUpdate(int Nettype)
 {
 	int64 Now = time_get();
 	int64 Freq = time_freq();
@@ -112,7 +112,7 @@ void CRegister::RegisterUpdate()
 		m_RegisterCount = 0;
 		m_RegisterFirst = 1;
 		RegisterNewState(REGISTERSTATE_UPDATE_ADDRS);
-		m_pMasterServer->RefreshAddresses();
+		m_pMasterServer->RefreshAddresses(Nettype);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "refreshing ip addresses");
 	}
 	else if(m_RegisterState == REGISTERSTATE_UPDATE_ADDRS)
