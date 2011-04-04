@@ -59,7 +59,7 @@ Are you sure that you want to quit?
 == Bist du sicher, dass du beenden möchtest?
 
 Are you sure that you want to remove the player from your friends list?
-== Bist du sicher, dass du diesen Spieler von deiner Freundesliste entfernen möchtest?
+== Bist du sicher, dass du diesen Spieler aus deiner Freundesliste entfernen möchtest?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
@@ -302,10 +302,10 @@ Map:
 == Karte:
 
 Max Screenshots
-== Maximale Bildschirmfotos
+== Maximale Anzahl an Bildschirmfotos
 
 Max demos
-== Maximale Aufnahmen
+== Maximale Anzahl an Aufnahmen
 
 Maximum ping:
 == Maximaler Ping:
@@ -335,7 +335,7 @@ Name
 == Name
 
 Name plates size
-== Größe der Namen
+== Größe der Spielernamen
 
 Netversion:
 == Netversion:
@@ -422,13 +422,13 @@ Quit
 == Beenden
 
 Quit anyway?
-== Trotzdem schließen?
+== Trotzdem beenden?
 
 REC %3d:%02d
 == REC %3d:%02d
 
 Reason:
-== Grund
+== Grund:
 
 Record demo
 == Aufnahme sta.
@@ -566,7 +566,7 @@ Sudden Death
 == Sudden Death
 
 Switch weapon on pickup
-== Wechsle Waffen beim Aufnehmen
+== Waffe beim Aufnehmen wechseln
 
 Team
 == Team
@@ -611,7 +611,7 @@ Unable to delete the demo
 == Aufnahme konnte nicht gelöscht werden
 
 Unable to rename the demo
-== Fehler beim Umbenennen der Demo
+== Aufnahme konnte nicht umbenannt werden
 
 Use sounds
 == Aktiviere Ton
@@ -629,10 +629,10 @@ Version:
 == Version:
 
 Vote command:
-== Abstimmungskommando:
+== Kommando:
 
 Vote description:
-== Abstimmungsbeschreibung:
+== Beschreibung:
 
 Vote no
 == Nein
