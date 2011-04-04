@@ -456,6 +456,9 @@ public:
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void BrushFlipX();
+	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
 };
 
@@ -470,6 +473,9 @@ public:
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void BrushFlipX();
+	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
 };
 

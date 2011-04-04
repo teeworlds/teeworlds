@@ -271,7 +271,7 @@ void CLayerTiles::BrushFlipX()
 			m_pTiles[y*m_Width+m_Width-1-x] = Tmp;
 		}
 
-	if(!m_Game)
+	if(!m_Game && !m_Tele && !m_Speedup)
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
@@ -287,7 +287,7 @@ void CLayerTiles::BrushFlipY()
 			m_pTiles[(m_Height-1-y)*m_Width+x] = Tmp;
 		}
 
-	if(!m_Game)
+	if(!m_Game && !m_Tele && !m_Speedup)
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
@@ -309,12 +309,12 @@ void CLayerTiles::BrushRotate(float Amount)
 			for(int y = m_Height-1; y >= 0; --y, ++pDst)
 			{
 				*pDst = pTempData[y*m_Width+x];
-				if(!m_Game)
+				if(!m_Game && !m_Tele && !m_Speedup)
 				{
-				if(pDst->m_Flags&TILEFLAG_ROTATE)
-					pDst->m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
-				pDst->m_Flags ^= TILEFLAG_ROTATE;
-			}
+					if(pDst->m_Flags&TILEFLAG_ROTATE)
+						pDst->m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+					pDst->m_Flags ^= TILEFLAG_ROTATE;
+				}
 			}
 
 		int Temp = m_Width;
@@ -639,6 +639,68 @@ void CLayerTele::BrushDraw(CLayer *pBrush, float wx, float wy)
 		}
 }
 
+void CLayerTele::BrushFlipX()
+{
+	CLayerTiles::BrushFlipX();
+	
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width/2; x++)
+		{
+			CTeleTile Tmp = m_pTeleTile[y*m_Width+x];
+			m_pTeleTile[y*m_Width+x] = m_pTeleTile[y*m_Width+m_Width-1-x];
+			m_pTeleTile[y*m_Width+m_Width-1-x] = Tmp;
+		}
+}
+
+void CLayerTele::BrushFlipY()
+{
+	CLayerTiles::BrushFlipY();
+	
+	for(int y = 0; y < m_Height/2; y++)
+		for(int x = 0; x < m_Width; x++)
+		{
+			CTeleTile Tmp = m_pTeleTile[y*m_Width+x];
+			m_pTeleTile[y*m_Width+x] = m_pTeleTile[(m_Height-1-y)*m_Width+x];
+			m_pTeleTile[(m_Height-1-y)*m_Width+x] = Tmp;
+		}
+}
+
+void CLayerTele::BrushRotate(float Amount)
+{
+	int Rotation = (round(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	if(Rotation < 0)
+		Rotation +=4;
+
+	if(Rotation == 1 || Rotation == 3)
+	{
+		// 90° rotation			
+		CTeleTile *pTempData1 = new CTeleTile[m_Width*m_Height];
+		CTile *pTempData2 = new CTile[m_Width*m_Height];
+		mem_copy(pTempData1, m_pTeleTile, m_Width*m_Height*sizeof(CTeleTile));
+		mem_copy(pTempData2, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTeleTile *pDst1 = m_pTeleTile;
+		CTile *pDst2 = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst1, ++pDst2)
+			{
+				*pDst1 = pTempData1[y*m_Width+x];
+				*pDst2 = pTempData2[y*m_Width+x];
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData1;
+		delete[] pTempData2;
+	}
+
+	if(Rotation == 2 || Rotation == 3)
+	{
+		BrushFlipX();
+		BrushFlipY();
+	}
+}
+
 void CLayerTele::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 {
 	if(m_Readonly)
@@ -811,6 +873,68 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 				m_pTiles[fy*m_Width+fx].m_Index = 0;
 			}
 		}
+}
+
+void CLayerSpeedup::BrushFlipX()
+{
+	CLayerTiles::BrushFlipX();
+	
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width/2; x++)
+		{
+			CSpeedupTile Tmp = m_pSpeedupTile[y*m_Width+x];
+			m_pSpeedupTile[y*m_Width+x] = m_pSpeedupTile[y*m_Width+m_Width-1-x];
+			m_pSpeedupTile[y*m_Width+m_Width-1-x] = Tmp;
+		}
+}
+
+void CLayerSpeedup::BrushFlipY()
+{
+	CLayerTiles::BrushFlipY();
+	
+	for(int y = 0; y < m_Height/2; y++)
+		for(int x = 0; x < m_Width; x++)
+		{
+			CSpeedupTile Tmp = m_pSpeedupTile[y*m_Width+x];
+			m_pSpeedupTile[y*m_Width+x] = m_pSpeedupTile[(m_Height-1-y)*m_Width+x];
+			m_pSpeedupTile[(m_Height-1-y)*m_Width+x] = Tmp;
+		}
+}
+
+void CLayerSpeedup::BrushRotate(float Amount)
+{
+	int Rotation = (round(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	if(Rotation < 0)
+		Rotation +=4;
+
+	if(Rotation == 1 || Rotation == 3)
+	{
+		// 90° rotation			
+		CSpeedupTile *pTempData1 = new CSpeedupTile[m_Width*m_Height];
+		CTile *pTempData2 = new CTile[m_Width*m_Height];
+		mem_copy(pTempData1, m_pSpeedupTile, m_Width*m_Height*sizeof(CSpeedupTile));
+		mem_copy(pTempData2, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CSpeedupTile *pDst1 = m_pSpeedupTile;
+		CTile *pDst2 = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst1, ++pDst2)
+			{
+				*pDst1 = pTempData1[y*m_Width+x];
+				*pDst2 = pTempData2[y*m_Width+x];
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData1;
+		delete[] pTempData2;
+	}
+
+	if(Rotation == 2 || Rotation == 3)
+	{
+		BrushFlipX();
+		BrushFlipY();
+	}
 }
 
 void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
