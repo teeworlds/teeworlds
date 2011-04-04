@@ -30,8 +30,8 @@ void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
-	int SelectedSpectator;
-	bool GotNewPlayer = false;
+	int NewSpectatorID;
+	bool GotNewSpectatorID = false;
 	
 	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 	{
@@ -40,8 +40,8 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 				continue;
 
-			SelectedSpectator = i;
-			GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 			break;
 		}
 	}
@@ -52,33 +52,33 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 				continue;
 
-			SelectedSpectator = i;
-			GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 			break;
 		}
 	
-		if(!GotNewPlayer)
+		if(!GotNewSpectatorID)
 		{
 			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
 			{
 				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 					continue;
 
-				SelectedSpectator = i;
-				GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 				break;
 			}
 		}
 	}
-	if(GotNewPlayer)
-		pSelf->Spectate(SelectedSpectator);
+	if(GotNewSpectatorID)
+		pSelf->Spectate(NewSpectatorID);
 }
 
 void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
-	int SelectedSpectator;
-	bool GotNewPlayer = false;
+	int NewSpectatorID;
+	bool GotNewSpectatorID = false;
 	
 	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 	{
@@ -87,8 +87,8 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 				continue;
 
-			SelectedSpectator = i;
-			GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 			break;
 		}
 	}
@@ -99,26 +99,26 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 				continue;
 
-			SelectedSpectator = i;
-			GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 			break;
 		}
 	
-		if(!GotNewPlayer)
+		if(!GotNewSpectatorID)
 		{
 			for(int i = MAX_CLIENTS - 1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
 			{
 				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 					continue;
 
-				SelectedSpectator = i;
-				GotNewPlayer = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 				break;
 			}
 		}
 	}
-	if(GotNewPlayer)
-		pSelf->Spectate(SelectedSpectator);
+	if(GotNewSpectatorID)
+		pSelf->Spectate(NewSpectatorID);
 }
 
 CSpectator::CSpectator()
