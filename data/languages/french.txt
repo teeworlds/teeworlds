@@ -668,3 +668,55 @@ Prev
 
 ##### old translations #####
 
+##### race #####
+
+Ghost
+== 
+
+Actuvate
+== 
+
+Deactivate
+== 
+
+Time
+== 
+
+Race specific settings
+== 
+
+Auto record
+== 
+
+Save player name
+== 
+
+Show other players
+== 
+
+Show checkpoint difference
+== 
+
+Enable Ghost
+== 
+
+Save Ghost
+== 
+
+Show ghost nameplates
+== 
+
+Always show ghost nameplates
+== 
+
+Show records
+== 
+
+Show best time on server
+== 
+
+Finish time
+== 
+
+Server best
+== 
