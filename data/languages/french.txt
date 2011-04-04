@@ -437,7 +437,7 @@ Refresh
 == Rafraîchir
 
 Refreshing master servers
-== Rafraichîssement des serveurs maîtres
+== Rafraîchissement des serveurs maîtres
 
 Remote console
 == Console serveur
