@@ -11,6 +11,7 @@ class CHostLookup
 public:
 	CJob m_Job;
 	char m_aHostname[128];
+	int m_Nettype;
 	NETADDR m_Addr;
 };
 
@@ -24,7 +25,7 @@ protected:
 public:
 	virtual void Init() = 0;
 	virtual void InitLogfile() = 0;
-	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname) = 0;
+	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype) = 0;
 	virtual void AddJob(CJob *pJob, JOBFUNC pfnFunc, void *pData) = 0;
 };
 

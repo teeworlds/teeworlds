@@ -1788,7 +1788,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer);
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_BindAddr.type);
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
@@ -1851,6 +1851,18 @@ void CClient::Run()
 	if(m_pGraphics->Init() != 0)
 		return;
 
+	// open socket
+	{
+		NETADDR BindAddr;
+		mem_zero(&BindAddr, sizeof(BindAddr));
+		BindAddr.type = NETTYPE_ALL;
+		if(!m_NetClient.Open(BindAddr, 0))
+		{
+			dbg_msg("client", "couldn't start network");
+			return;
+		}
+	}
+
 	// init font rendering
 	Kernel()->RequestInterface<IEngineTextRender>()->Init();
 
@@ -1858,7 +1870,7 @@ void CClient::Run()
 	Input()->Init();
 
 	// start refreshing addresses while we load
-	MasterServer()->RefreshAddresses();
+	MasterServer()->RefreshAddresses(m_BindAddr.type);
 
 	// init the editor
 	m_pEditor->Init();
@@ -1874,18 +1886,6 @@ void CClient::Run()
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
-
-	// open socket
-	{
-		NETADDR BindAddr;
-		mem_zero(&BindAddr, sizeof(BindAddr));
-		BindAddr.type = NETTYPE_ALL;
-		if(!m_NetClient.Open(BindAddr, 0))
-		{
-			dbg_msg("client", "couldn't start network");
-			return;
-		}
-	}
 
 	// connect to the server if wanted
 	/*

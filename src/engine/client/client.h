@@ -118,6 +118,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	float m_FrameTimeHigh;
 	int m_Frames;
 	NETADDR m_ServerAddress;
+	NETADDR m_BindAddr;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;

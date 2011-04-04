@@ -35,7 +35,7 @@ public:
 		m_pEngine = 0;
 	}
 
-	virtual int RefreshAddresses()
+	virtual int RefreshAddresses(int Nettype)
 	{
 		int i;
 		
@@ -47,7 +47,7 @@ public:
 		// add lookup jobs
 		for(i = 0; i < MAX_MASTERSERVERS; i++)
 		{
-			m_pEngine->HostLookup(&m_aMasterServers[i].m_Lookup, m_aMasterServers[i].m_aHostname);
+			m_pEngine->HostLookup(&m_aMasterServers[i].m_Lookup, m_aMasterServers[i].m_aHostname, Nettype);
 			m_aMasterServers[i].m_Valid = false;
 		}
 		

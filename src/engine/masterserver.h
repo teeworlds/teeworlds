@@ -20,7 +20,7 @@ public:
 	virtual int Load() = 0;
 	virtual int Save() = 0;
 
-	virtual int RefreshAddresses() = 0;
+	virtual int RefreshAddresses(int Nettype) = 0;
 	virtual void Update() = 0;
 	virtual int IsRefreshing() = 0;
 	virtual void DumpServers() = 0;

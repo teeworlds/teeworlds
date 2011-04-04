@@ -13,7 +13,7 @@
 static int HostLookupThread(void *pUser)
 {
 	CHostLookup *pLookup = (CHostLookup *)pUser;
-	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_ALL);
+	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, pLookup->m_Nettype);
 }
 
 class CEngine : public IEngine
@@ -98,9 +98,10 @@ public:
 			dbg_logger_file(g_Config.m_Logfile);
 	}
 
-	void HostLookup(CHostLookup *pLookup, const char *pHostname)
+	void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype)
 	{
 		str_copy(pLookup->m_aHostname, pHostname, sizeof(pLookup->m_aHostname));
+		pLookup->m_Nettype = Nettype;
 		AddJob(&pLookup->m_Job, HostLookupThread, pLookup);
 	}
 
