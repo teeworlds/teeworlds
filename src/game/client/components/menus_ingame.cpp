@@ -550,7 +550,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Bottom.VSplitRight(120.0f, &Bottom, &Button);
 				static int s_AddVoteButton = 0;
 				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
-					m_pClient->m_pVoting->AddvoteOption(s_aVoteDescription, s_aVoteCommand);
+					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
+						m_pClient->m_pVoting->AddvoteOption(s_aVoteDescription, s_aVoteCommand);
 
 				Bottom.VSplitLeft(5.0f, 0, &Bottom);
 				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
