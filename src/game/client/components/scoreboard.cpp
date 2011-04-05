@@ -156,7 +156,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 	else
 	{
-		if(m_pClient->m_Snap.m_pLocalInfo)
+		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW &&
+			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID])
+		{
+			int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
+			str_format(aBuf, sizeof(aBuf), "%d", Score);
+		}
+		else if(m_pClient->m_Snap.m_pLocalInfo)
 		{
 			int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
@@ -216,8 +222,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		if(!pInfo || pInfo->m_Team != Team)
 			continue;
 
-		// background so it's easy to find the local player
-		if(pInfo->m_Local)
+		// background so it's easy to find the local player or the followed one in spectator mode
+		if(pInfo->m_Local || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 		{
 			Graphics()->TextureSet(-1);
 			Graphics()->QuadsBegin();
