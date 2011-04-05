@@ -1,6 +1,9 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d байт
+
 %d of %d servers, %d players
 == %d/%d серверов, %d игроков
 
@@ -10,8 +13,32 @@
 %ds left
 == осталось %d сек.
 
+%i minute left
+== Осталось %i минута!
+
+%i minutes left
+== Осталось %i минут!
+
+%i second left
+== Осталось %i секунда!
+
+%i seconds left
+== Осталось %i секунд!
+
+%s wins!
+== %s победил!
+
+-Page %d-
+== -Страница %d-
+
 Abort
 == Отмена
+
+Add
+== Добавить
+
+Add Friend
+== Добавить друга
 
 Address
 == Адрес
@@ -25,11 +52,23 @@ Alpha
 Always show name plates
 == Всегда показывать ники игроков
 
+Are you sure that you want to delete the demo?
+== Вы уверены, что хотите удалить демо?
+
 Are you sure that you want to quit?
 == Вы действительно желаете выйти?
 
+Are you sure that you want to remove the player from your friends list?
+== Вы уверены, что хотите удалить игрока из друзей?
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Так как это ваш первый запуск игры, пожалуйста, введите свой ник в поле ниже. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
+
+Automatically record demos
+== Автоматически записывать демо
+
+Automatically take game over screenshot
+== Автоматически снимать скриншот
 
 Blue team
 == Синие
@@ -43,8 +82,17 @@ Body
 Call vote
 == Голосовать
 
+Change settings
+== Изменить настройки
+
 Chat
 == Чат
+
+Clan
+== Клан
+
+Client
+== Клиент
 
 Close
 == Закрыть
@@ -67,6 +115,18 @@ Console
 Controls
 == Управление
 
+Count players only
+== Считать только игроков
+
+Country
+== Страна
+
+Crc:
+== Crc:
+
+Created:
+== Создан:
+
 Current
 == Текущий
 
@@ -78,6 +138,12 @@ Custom colors
 
 Delete
 == Удалить
+
+Delete demo
+== Удалить демо
+
+Demo details
+== Детали демо
 
 Demos
 == Демо
@@ -130,8 +196,17 @@ Filter
 Fire
 == Выстрел
 
+Folder
+== Папка
+
 Force vote
 == Форсировать
+
+Free-View
+== Свободный обзор
+
+Friends
+== Друзья
 
 Fullscreen
 == Полноэкранный режим
@@ -184,6 +259,9 @@ Info
 Internet
 == Интернет
 
+Invalid Demo
+== Недопустимое демо
+
 Join blue
 == За синих
 
@@ -196,11 +274,17 @@ Join red
 Jump
 == Прыжок
 
+Kick player
+== Забанить игрока
+
 LAN
 == LAN
 
 Language
 == Язык
+
+Length:
+== Длина
 
 Lht.
 == Яркость
@@ -214,6 +298,15 @@ MOTD
 Map
 == Карта
 
+Map:
+== Карта:
+
+Max Screenshots
+== Макс. кол-во скриншотов
+
+Max demos
+== Мак. кол-во демо
+
 Maximum ping:
 == Макс. пинг:
 
@@ -225,6 +318,9 @@ Mouse sens.
 
 Move left
 == Влево
+
+Move player to spectators
+== Переместить игрока в наблюдателей
 
 Move right
 == Вправо
@@ -238,8 +334,17 @@ Mute when not active
 Name
 == Имя
 
+Netversion:
+== Сетевая версия
+
+New name:
+== Новое имя
+
 News
 == Новости
+
+Next
+== Далее
 
 Next weapon
 == След. оружие
@@ -265,6 +370,12 @@ Ok
 Open
 == Открыть
 
+Page %d of %d
+== Страница %d из %d
+
+Parent Folder
+== Родительский каталог
+
 Password
 == Пароль
 
@@ -283,11 +394,17 @@ Play
 Player
 == Игрок
 
+Player options
+== Опции игрока
+
 Players
 == Игроки
 
 Please balance teams!
 == Сбалансируйте команды!
+
+Prev
+== Пред.
 
 Prev. weapon
 == Пред. оружие
@@ -301,8 +418,17 @@ Quick search:
 Quit
 == Выход
 
+Quit anyway?
+== Выйти?
+
+REC %3d:%02d
+== Запись %3d:%02d
+
 Reason:
 == Причина:
+
+Record demo
+== Записать демо
 
 Red team
 == Красные
@@ -318,6 +444,18 @@ Refreshing master servers
 
 Remote console
 == Консоль сервера
+
+Remove
+== Удалить
+
+Remove friend
+== Удалить друга
+
+Rename
+== Переименовать
+
+Rename demo
+== Переименовать демо
 
 Reset filter
 == Сбросить фильтры
@@ -352,8 +490,14 @@ Scoreboard
 Screenshot
 == Скриншот
 
+Server address:
+== Адрес сервера
+
 Server details
 == Детали сервера
+
+Server filter
+== Фильтр серверов
 
 Server info
 == Информация
@@ -370,11 +514,20 @@ Shotgun
 Show chat
 == Показать чат
 
+Show friends
+== Показывать друзей
+
+Show ingame HUD
+== Показывать внутриигроврй HUD
+
 Show name plates
 == Показывать ники игроков
 
 Show only supported
 == Только поддерживаемые режимы
+
+Size:
+== Размер
 
 Skins
 == Скины
@@ -382,11 +535,17 @@ Skins
 Sound
 == Звук
 
+Sound error
+== Ошибка звука
+
 Sound volume
 == Громкость звука
 
 Spectate
 == Наблюдать
+
+Spectator mode
+== Режим наблюдателя
 
 Spectators
 == Наблюдатели
@@ -396,6 +555,9 @@ Standard gametype
 
 Standard map
 == Стандартная карта
+
+Stop record
+== Остановить запись
 
 Sudden Death
 == Быстрая смерть
@@ -415,11 +577,20 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Сжатие текстур
 
+The audio device couldn't be initialised.
+== Аудио устройство не может быть инициализировано
+
 The server is running a non-standard tuning on a pure game type.
 == Сервер запущен с нестандартными настройками на стандартном типе игры.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Есть несохранённая карта в редакторе, Вы можете сохранить её перед тем, как выйти.
+
 Time limit
 == Лимит
+
+Time limit: %d min
+== Лимит по времени: %d
 
 Try again
 == Попробовать снова
@@ -427,17 +598,38 @@ Try again
 Type
 == Тип
 
+Type:
+== Тип:
+
 UI Color
 == Цвет интерфейса
 
+Unable to delete the demo
+== Невозможно удалить демо
+
+Unable to rename the demo
+== Невозможно переименовать демо
+
 Use sounds
 == Использовать звуки
+
+Use team colors for name plates
+== Использовать командные цвета для таблицы
 
 V-Sync
 == Вертикальная синхронизация
 
 Version
 == Версия
+
+Version:
+== Версия:
+
+Vote command:
+== Комманда голосования:
+
+Vote description:
+== Описание голосования:
 
 Vote no
 == Против
@@ -466,204 +658,12 @@ You must restart the game for all settings to take effect.
 Your skin
 == Ваш скин
 
+no limit
+== нет лимита
+
 ##### needs translation #####
 
-%d Bytes
-== 
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
-%s wins!
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Client
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Delete demo
-== 
-
-Demo details
-== 
-
-Folder
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Invalid Demo
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Move player to spectators
-== 
-
 Name plates size
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Next
-== 
-
-Page %d of %d
-== 
-
-Parent Folder
-== 
-
-Player options
-== 
-
-Prev
-== 
-
-Quit anyway?
-== 
-
-REC %3d:%02d
-== 
-
-Record demo
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Sound error
-== 
-
-Spectator mode
-== 
-
-Stop record
-== 
-
-The audio device couldn't be initialised.
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.
-== 
-
-Time limit: %d min
-== 
-
-Type:
-== 
-
-Unable to delete the demo
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
-
-no limit
 == 
 
 ##### old translations #####
