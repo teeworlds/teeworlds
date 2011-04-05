@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef TL_FILE_STRING_HPP
-#define TL_FILE_STRING_HPP
+#ifndef BASE_TL_STRING_H
+#define BASE_TL_STRING_H
 
 #include "base.h"
 #include "allocator.h"

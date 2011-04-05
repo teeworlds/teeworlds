@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef TL_FILE_ALGORITHM_HPP
-#define TL_FILE_ALGORITHM_HPP
+#ifndef BASE_TL_ALGORITHM_H
+#define BASE_TL_ALGORITHM_H
 
 #include "range.h"
 
