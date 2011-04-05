@@ -1072,7 +1072,9 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
-	if(str_length(pDescription) >= VOTE_DESC_LENGTH)
+	while(*pDescription && *pDescription == ' ')
+		pDescription++;
+	if(str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pDescription);
