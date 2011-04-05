@@ -27,7 +27,7 @@ def check_dir(dir):
 	list = os.listdir(dir)
 	for file in list:
 		if os.path.isdir(dir+file):
-			if file != "external" and file != "generated":
+			if file != "external":
 				check_dir(dir+file+"/")
 		elif file[-2:] == ".h" and file != "keynames.h":
 			check_file(dir+file)

@@ -55,12 +55,12 @@ if "server_content_header" in sys.argv: gen_server_content_header = True
 if "server_content_source" in sys.argv: gen_server_content_source = True
 
 if gen_client_content_header:
-	print("#ifndef CLIENT_CONTENT_HEADER")
-	print("#define CLIENT_CONTENT_HEADER")
+	print("#ifndef GAME_GENERATED_CLIENT_DATA_H")
+	print("#define GAME_GENERATED_CLIENT_DATA_H")
 
 if gen_server_content_header:
-	print("#ifndef SERVER_CONTENT_HEADER")
-	print("#define SERVER_CONTENT_HEADER")
+	print("#ifndef GAME_GENERATED_SERVER_DATA_H")
+	print("#define GAME_GENERATED_SERVER_DATA_H")
 
 
 if gen_client_content_header or gen_server_content_header:
