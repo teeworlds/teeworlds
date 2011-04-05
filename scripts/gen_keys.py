@@ -1,12 +1,14 @@
 import sys, os
 
 # genereate keys.h file
-f = file("src/engine/keys.h", "w")
+f = file("../src/engine/keys.h", "w")
 
 keynames = []
 for i in range(0, 512):
 	keynames += ["&%d"%i]
 
+print >>f, "/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */"
+print >>f, "/* If you are missing that file, acquire a complete release at teeworlds.com.                */"
 print >>f, "#ifndef ENGINE_KEYS_H"
 print >>f, "#define ENGINE_KEYS_H"
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
@@ -14,7 +16,7 @@ print >>f, "enum"
 print >>f, "{"
 
 highestid = 0
-for line in open("scripts/SDL_keysym.h"):
+for line in open("SDL_keysym.h"):
 	l = line.strip().split("=")
 	if len(l) == 2 and "SDLK_" in line:
 		key = l[0].strip().replace("SDLK_", "KEY_")
@@ -42,8 +44,10 @@ print >>f, "};"
 print >>f, ""
 print >>f, "#endif"
 
-# generate keynames.c file
-f = file("src/engine/client/keynames.h", "w")
+# generate keynames.h file
+f = file("../src/engine/client/keynames.h", "w")
+print >>f, "/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */"
+print >>f, "/* If you are missing that file, acquire a complete release at teeworlds.com.                */"
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
 print >>f, ''
 print >>f, '#ifndef KEYS_INCLUDE'
