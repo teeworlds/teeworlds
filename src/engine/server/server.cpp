@@ -1400,7 +1400,7 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser)
 		else
 		{
 			unsigned t = Info.m_Expires - Now;
-			str_format(aBuf, sizeof(aBuf), "#%s for %d minutes and %d seconds", i, aAddrStr, t/60, t%60);
+			str_format(aBuf, sizeof(aBuf), "#%d %s for %d minutes and %d seconds", i, aAddrStr, t/60, t%60);
 		}
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 	}
