@@ -1,29 +1,44 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d Bytes
+
 %d of %d servers, %d players
 == %d de %d servidores, %d jugadores
 
 %d%% loaded
-== %d%%  cargado
+== %d%% cargado
 
 %ds left
 == faltan %ds
 
 %i minute left
-== %i minuto falta
+== falta %i minuto
 
 %i minutes left
-== %i minutos faltan
+== faltan %i minutos
 
 %i second left
-== %i segundo falta
+== falta %i segundo
 
 %i seconds left
-== %i segundos faltan
+== faltan %i segundos
+
+%s wins!
+== %s gana!
+
+-Page %d-
+== -Página %d-
 
 Abort
 == Cancelar
+
+Add
+== Añadir
+
+Add Friend
+== Añadir Amigo
 
 Address
 == Dirección
@@ -35,22 +50,25 @@ Alpha
 == Alpha
 
 Always show name plates
-== Siempre mostrar apodos
+== Mostrar siempre los apodos
 
 Are you sure that you want to delete the demo?
-== Seguro de eliminar la demo?
+== ¿Seguro que quiere eliminar la demo?
 
 Are you sure that you want to quit?
-== Seguro que desea salir?
+== ¿Seguro que quiere salir?
+
+Are you sure that you want to remove the player from your friends list?
+== ¿Estas seguro de que quiere eliminar este jugador de su lista de amigos?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Como es la primera vez que abre el juego, por favor, entre con su apodo. Es recomendable que verifique su configuración y ajuste las preferencias antes de entrar en un servidor.
+== Como es la primera vez que abre el juego, por favor, introduzca su apodo. Es recomendable que verifique su configuración y ajuste las preferencias antes de entrar en un servidor.
 
 Automatically record demos
-== Registro automático en demos
+== Grabar demos automáticamente
 
 Automatically take game over screenshot
-== Pantalla game over automáticamente
+== Pantallazo 'game over' automáticamente
 
 Blue team
 == Equipo azul
@@ -64,8 +82,17 @@ Body
 Call vote
 == Votación
 
+Change settings
+== Cambiar configuración
+
 Chat
 == Charla
+
+Clan
+== Clan
+
+Client
+== Cliente
 
 Close
 == Cerrar
@@ -77,7 +104,7 @@ Connect
 == Conectar
 
 Connecting to
-== Conectando a
+== Conectando con
 
 Connection Problems...
 == Problemas de Conexión...
@@ -87,6 +114,18 @@ Console
 
 Controls
 == Controles
+
+Count players only
+== Solo contar jugadores
+
+Country
+== Pais
+
+Crc:
+== Crc:
+
+Created:
+== Creado:
 
 Current
 == Actualmente
@@ -102,6 +141,9 @@ Delete
 
 Delete demo
 == Borrar demo
+
+Demo details
+== Detellades demo
 
 Demos
 == Demos
@@ -160,6 +202,12 @@ Folder
 Force vote
 == Forzar
 
+Free-View
+== Vista Libre
+
+Friends
+== Amigos
+
 Fullscreen
 == Pantalla Completa
 
@@ -170,7 +218,7 @@ Game info
 == Info. sobre el juego
 
 Game over
-== Fin de Juego
+== Fin del Juego
 
 Game type
 == Tipo de juego
@@ -212,13 +260,13 @@ Internet
 == Internet
 
 Invalid Demo
-== Demo invalida
+== Demo inválida
 
 Join blue
 == Azul
 
 Join game
-== Entrar en juego
+== Entrar al juego
 
 Join red
 == Rojo
@@ -226,11 +274,17 @@ Join red
 Jump
 == Saltar
 
+Kick player
+== Expulsar jugador
+
 LAN
 == LAN
 
 Language
-== Lenguaje
+== Idioma
+
+Length:
+== Longitud:
 
 Lht.
 == Luz
@@ -244,8 +298,11 @@ MOTD
 Map
 == Mapa
 
+Map:
+== Mapa:
+
 Max Screenshots
-== Max capturas
+== Max Pantallazos
 
 Max demos
 == Max demos
@@ -254,13 +311,16 @@ Maximum ping:
 == Ping máximo:
 
 Miscellaneous
-== Miscelanea
+== Miscelánea
 
 Mouse sens.
-== Sens. o ratón
+== Sens. del ratón
 
 Move left
 == Izquierda
+
+Move player to spectators
+== Mover jugador a espectadores
 
 Move right
 == Derecha
@@ -275,10 +335,19 @@ Name
 == Nombre
 
 Name plates size
-== Tamaño del nombre de placas
+== Máx. Caracteres para los Apodos
+
+Netversion:
+== Versión Net
+
+New name:
+== Nuevo Nombre:
 
 News
 == Notícia
+
+Next
+== Siguiente
 
 Next weapon
 == Próxima arma
@@ -296,13 +365,16 @@ No servers found
 == Ningún servidor encontrado
 
 No servers match your filter criteria
-== Ningún servidor corresponde a los critérios de filtro
+== Ningún servidor corresponde a los critérios de filtrado
 
 Ok
-== Ok
+== Aceptar
 
 Open
 == Abrir
+
+Page %d of %d
+== Página %d de %d
 
 Parent Folder
 == Carpeta superior
@@ -325,11 +397,17 @@ Play
 Player
 == Jugador
 
+Player options
+== Opciones de Jugador
+
 Players
 == Jugadores
 
 Please balance teams!
 == Por favor, equilibre los equipos!
+
+Prev
+== Anterior
 
 Prev. weapon
 == Arma anterior
@@ -338,37 +416,52 @@ Quality Textures
 == Texturas de calidad
 
 Quick search:
-== Pesquisa rápida:
+== Busqueda rápida:
 
 Quit
 == Salir
+
+Quit anyway?
+== ¿Salir de todos modos?
 
 REC %3d:%02d
 == REC %3d:%02d
 
 Reason:
-== Razón:
+== Motivo:
 
 Record demo
-== Registro demo
+== Grabar demo
 
 Red team
 == Equipo rojo
 
 Red team wins!
-== Equipo rojo gana!
+== Ganó el Equipo rojo!
 
 Refresh
 == Actualizar
 
 Refreshing master servers
-== Actualizando servidores master
+== Actualizando servidores maestros
 
 Remote console
 == Consola remota
 
+Remove
+== Eliminar
+
+Remove friend
+== Eliminar amigo
+
+Rename
+== Renombrar
+
+Rename demo
+== Renombrar demo
+
 Reset filter
-== Resetar filtro
+== Resetear filtro
 
 Reset to defaults
 == Resetar por defecto
@@ -392,16 +485,22 @@ Score board
 == Tabla de puntos
 
 Score limit
-== Puntos máx.
+== Puntuación Máx.
 
 Scoreboard
 == Puntuación
 
 Screenshot
-== Captura da pantalla
+== Pantallazo
+
+Server address:
+== Dirección del servidor:
 
 Server details
 == Detalles del server
+
+Server filter
+== Filtro del servidor
 
 Server info
 == Info del server
@@ -418,11 +517,20 @@ Shotgun
 Show chat
 == Mostrar chat
 
+Show friends
+== Mostrar amigos
+
+Show ingame HUD
+== Mostar HUD en juego
+
 Show name plates
-== Mostrar nicks
+== Mostrar apodos
 
 Show only supported
 == Mostrar solo soportados
+
+Size:
+== Tamaño:
 
 Skins
 == Skins
@@ -434,10 +542,13 @@ Sound error
 == Error de sonido
 
 Sound volume
-== Volumem de sonido
+== Volumen de sonido
 
 Spectate
 == Observar
+
+Spectator mode
+== Modo espectador
 
 Spectators
 == Observadores
@@ -475,6 +586,9 @@ The audio device couldn't be initialised.
 The server is running a non-standard tuning on a pure game type.
 == El servidor está ejecutando una afinación no estándar en un tipo de juego puro.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Tienes un mapa sin guardar en el editor, ¿quiere guardarlo antes de salir?
+
 Time limit
 == Tiempo máx.
 
@@ -487,20 +601,38 @@ Try again
 Type
 == Tipo
 
+Type:
+== Tipo:
+
 UI Color
 == Color de menu
 
 Unable to delete the demo
 == No se puede eliminar la demo
 
+Unable to rename the demo
+== Imposible renombrar la demo
+
 Use sounds
 == Usar sonidos
+
+Use team colors for name plates
+== Usar el color del equipo en los apodos
 
 V-Sync
 == V-Sync
 
 Version
 == Versión
+
+Version:
+== Versión:
+
+Vote command:
+== Votar comando:
+
+Vote description:
+== Descripción de la votación:
 
 Vote no
 == Votar no
@@ -533,129 +665,6 @@ no limit
 == sin límite
 
 ##### needs translation #####
-
-%d Bytes
-== 
-
-%s wins!
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Client
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Demo details
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Move player to spectators
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Player options
-== 
-
-Quit anyway?
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Spectator mode
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.
-== 
-
-Type:
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
 
 ##### old translations #####
 
