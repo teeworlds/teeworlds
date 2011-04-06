@@ -657,5 +657,11 @@ no limit
 Name plates size
 == 
 
+Spectate next
+== 
+
+Spectate previous
+== 
+
 ##### old translations #####
 

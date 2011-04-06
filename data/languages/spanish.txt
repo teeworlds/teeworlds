@@ -633,6 +633,12 @@ Show ingame HUD
 Size:
 == 
 
+Spectate next
+== 
+
+Spectate previous
+== 
+
 Spectator mode
 == 
 
