@@ -5,6 +5,7 @@
 #include <engine/config.h>
 #include <engine/demo.h>
 #include <engine/friends.h>
+#include <engine/graphics.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -24,11 +25,11 @@
 
 void CMenus::RenderGame(CUIRect MainView)
 {
-	CUIRect Button, ButtonBar, Options;
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	CUIRect Button, ButtonBar;
+	MainView.HSplitTop(45.0f, &ButtonBar, &MainView);
+	RenderTools()->DrawUIRect(&ButtonBar, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	
 	// button bar
-	MainView.HSplitTop(45.0f, &ButtonBar, &MainView);
 	ButtonBar.HSplitTop(10.0f, 0, &ButtonBar);
 	ButtonBar.HSplitTop(25.0f, &ButtonBar, 0);
 	ButtonBar.VMargin(10.0f, &ButtonBar);
@@ -106,6 +107,12 @@ void CMenus::RenderGame(CUIRect MainView)
 		else
 			Client()->DemoRecorder_Stop();
 	}
+}
+
+void CMenus::RenderPlayers(CUIRect MainView)
+{
+	CUIRect Button, ButtonBar, Options, Player;
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
 	// player options
 	MainView.Margin(10.0f, &Options);
@@ -114,14 +121,40 @@ void CMenus::RenderGame(CUIRect MainView)
 	Options.HSplitTop(50.0f, &Button, &Options);
 	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, -1);
 
-	CUIRect Player;
-	static int s_aPlayerIDs[MAX_CLIENTS][4] = {{0}};
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	// headline
+	Options.HSplitTop(34.0f, &ButtonBar, &Options);
+	ButtonBar.VSplitRight(220.0f, &Player, &ButtonBar);
+	UI()->DoLabelScaled(&Player, Localize("Player"), 24.0f, -1);
+
+	ButtonBar.HMargin(1.0f, &ButtonBar);
+	float Width = ButtonBar.h*2.0f;
+	ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIICONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_GUIICON_MUTE);
+	IGraphics::CQuadItem QuadItem(Button.x, Button.y, Button.w, Button.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	ButtonBar.VSplitLeft(20.0f, 0, &ButtonBar);
+	ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIICONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_GUIICON_FRIEND);
+	QuadItem = IGraphics::CQuadItem(Button.x, Button.y, Button.w, Button.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	// options
+	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
+	for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || i == m_pClient->m_Snap.m_LocalClientID)
 			continue;
 
 		Options.HSplitTop(28.0f, &ButtonBar, &Options);
+		if(Count++%2 == 0)
+			RenderTools()->DrawUIRect(&ButtonBar, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 		ButtonBar.VSplitRight(220.0f, &Player, &ButtonBar);
 
 		// player info
@@ -142,22 +175,23 @@ void CMenus::RenderGame(CUIRect MainView)
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[i].m_aClan, -1);
 
 		// ignore button
-		ButtonBar.HMargin(1.0f, &ButtonBar);
-		ButtonBar.VSplitLeft(ButtonBar.h*2.0f, &Button, &ButtonBar);
-		if(DoButton_Sprite(&s_aPlayerIDs[i][0], IMAGE_GUIBUTTONS, SPRITE_GUIBUTTON_CHATON, !m_pClient->m_aClients[i].m_ChatIgnore, &Button,  CUI::CORNER_L))
-			m_pClient->m_aClients[i].m_ChatIgnore = 0;
-		ButtonBar.VSplitLeft(ButtonBar.h*2.0f, &Button, &ButtonBar);
-		if(DoButton_Sprite(&s_aPlayerIDs[i][1], IMAGE_GUIBUTTONS, SPRITE_GUIBUTTON_CHATOFF, m_pClient->m_aClients[i].m_ChatIgnore, &Button,  CUI::CORNER_R))
-			m_pClient->m_aClients[i].m_ChatIgnore = 1;
+		ButtonBar.HMargin(2.0f, &ButtonBar);
+		ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
+		Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
+		Button.VSplitLeft(Button.h, &Button, 0);
+		if(DoButton_Toggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Button))
+			m_pClient->m_aClients[i].m_ChatIgnore ^= 1;
 
 		// friend button
-		ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
-		ButtonBar.VSplitLeft(ButtonBar.h*2.0f, &Button, &ButtonBar);
-		if(DoButton_Sprite(&s_aPlayerIDs[i][2], IMAGE_GUIBUTTONS, SPRITE_GUIBUTTON_FRIENDREM, !m_pClient->m_aClients[i].m_Friend, &Button,  CUI::CORNER_L))
-			m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
-		ButtonBar.VSplitLeft(ButtonBar.h*2.0f, &Button, &ButtonBar);
-		if(DoButton_Sprite(&s_aPlayerIDs[i][3], IMAGE_GUIBUTTONS, SPRITE_GUIBUTTON_FRIENDADD, m_pClient->m_aClients[i].m_Friend, &Button,  CUI::CORNER_R))
-			m_pClient->Friends()->AddFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+		ButtonBar.VSplitLeft(20.0f, &Button, &ButtonBar);
+		ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
+		Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
+		Button.VSplitLeft(Button.h, &Button, 0);
+		if(DoButton_Toggle(&s_aPlayerIDs[i][1], m_pClient->m_aClients[i].m_Friend, &Button))
+			if(m_pClient->m_aClients[i].m_Friend)
+				m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+			else
+				m_pClient->Friends()->AddFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
 	}
 	
 	/*
