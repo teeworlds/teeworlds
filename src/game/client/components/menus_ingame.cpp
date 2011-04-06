@@ -385,48 +385,32 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 void CMenus::RenderServerControl(CUIRect MainView)
 {
 	static int s_ControlPage = 0;
-	
-	// render background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
-	MainView.HSplitTop(10.0f, 0, &MainView);
-	
-	// page menu
-	CUIRect PageMenu, Button;
-	MainView.HSplitBottom(60.0f, &MainView, &PageMenu);
-	PageMenu.Margin(10.0f, &PageMenu);
-	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f,0.25f), CUI::CORNER_ALL, 10.0f);
-	PageMenu.Margin(10.0f, &PageMenu);
+	CUIRect PageMenu, Button, TabBar, Temp;
 
-	PageMenu.VSplitLeft(50.0f, 0, &PageMenu);
-	PageMenu.VSplitLeft(120.0f, &Button, &PageMenu);
-	static int s_PrevButton = 0;
-	if(DoButton_PageMenu(&s_PrevButton, Localize("Prev"), 0, s_ControlPage>0, &Button, CUI::CORNER_L))
+
+	MainView.VSplitRight(160.0f, &MainView, &TabBar);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
+	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
+	RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
+	//MainView.Margin(10.0f, &MainView);
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitBottom(10.0f, &MainView, 0);
+
+
+	const char *aTabs[] = {
+		Localize("Change settings"),
+		Localize("Kick player"),
+		Localize("Move player")};
+		
+	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
+
+	for(int i = 0; i < NumTabs; i++)
 	{
-		if(s_ControlPage > 0)
-		{
-			m_CallvoteSelectedPlayer = -1;
-			m_CallvoteSelectedOption = -1;
-			--s_ControlPage;
-		}
-	}
-	
-	PageMenu.VSplitRight(50.0f, &PageMenu, 0);
-	PageMenu.VSplitRight(120.0f, &PageMenu, &Button);
-	static int s_NextButton = 0;
-	if(DoButton_PageMenu(&s_NextButton, Localize("Next"), 0, s_ControlPage<2, &Button, CUI::CORNER_R))
-	{
-		if(s_ControlPage < 2)
-		{
-			m_CallvoteSelectedPlayer = -1;
-			m_CallvoteSelectedOption = -1;
-			++s_ControlPage;
-		}
-	}
-	
-	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f, 0.5f), 0, 10.0f);
-	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), Localize("Page %d of %d"), s_ControlPage+1, 3);
-	UI()->DoLabelScaled(&PageMenu, aBuf, PageMenu.h*ms_FontmodHeight, 0);
+		TabBar.HSplitTop(10, &Button, &TabBar);
+		TabBar.HSplitTop(26, &Button, &TabBar);
+		if(DoButton_MenuTab(aTabs[i], aTabs[i], s_ControlPage == i, &Button, CUI::CORNER_R))
+			s_ControlPage = i;
+	}	
 
 	// render page
 	CUIRect Bottom, Extended;
