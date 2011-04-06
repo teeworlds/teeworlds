@@ -4,6 +4,9 @@
 bosnian
 == Bosanski
 
+bulgarian
+== Български
+
 czech
 == Česky
 
