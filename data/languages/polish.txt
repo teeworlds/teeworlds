@@ -350,7 +350,7 @@ Server details
 == Szczegóły serwera
 
 Server info
-== Informacje o serwerze
+== Server info
 
 Server not full
 == Nie pokazuj pełnych
