@@ -195,7 +195,7 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	StrRtrim(aTrimmedName);
 
 	// check if new and old name are the same
-	if(str_comp(m_aClients[ClientID].m_aName, aTrimmedName) == 0)
+	if(m_aClients[ClientID].m_aName[0] && str_comp(m_aClients[ClientID].m_aName, aTrimmedName) == 0)
 		return 0;
 
 	char aBuf[256];
