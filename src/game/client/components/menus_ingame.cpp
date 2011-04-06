@@ -399,7 +399,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	const char *aTabs[] = {
 		Localize("Change settings"),
 		Localize("Kick player"),
-		Localize("Move palyer")};
+		Localize("Move player")};
 		
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
