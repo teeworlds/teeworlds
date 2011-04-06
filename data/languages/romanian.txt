@@ -346,9 +346,6 @@ New name:
 News
 == Știri
 
-Next
-== Următoarea
-
 Next weapon
 == Arma următoare
 
@@ -372,9 +369,6 @@ Ok
 
 Open
 == Deschide
-
-Page %d of %d
-== Pagina %d din %d
 
 Parent Folder
 == Dosarul părinte
@@ -405,9 +399,6 @@ Players
 
 Please balance teams!
 == Echilibrați echipele!
-
-Prev
-== Anterioara
 
 Prev. weapon
 == Arma precedentă

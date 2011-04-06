@@ -570,19 +570,10 @@ Netversion:
 New name:
 == 
 
-Next
-== 
-
-Page %d of %d
-== 
-
 Parent Folder
 == 
 
 Player options
-== 
-
-Prev
 == 
 
 Quit anyway?

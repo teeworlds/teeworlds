@@ -600,16 +600,7 @@ Netversion:
 New name:
 == 
 
-Next
-== 
-
-Page %d of %d
-== 
-
 Player options
-== 
-
-Prev
 == 
 
 Quit anyway?

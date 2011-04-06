@@ -346,9 +346,6 @@ New name:
 News
 == News
 
-Next
-== Weiter
-
 Next weapon
 == Nächste Waffe
 
@@ -372,9 +369,6 @@ Ok
 
 Open
 == Öffnen
-
-Page %d of %d
-== Seite %d von %d
 
 Parent Folder
 == Übergeordneter Ordner
@@ -405,9 +399,6 @@ Players
 
 Please balance teams!
 == Bitte Teams ausgleichen!
-
-Prev
-== Zurück
 
 Prev. weapon
 == Vorherige Waffe

@@ -370,9 +370,6 @@ Ok
 Open
 == Ouvrir
 
-Page %d of %d
-== Page %d sur %d
-
 Parent Folder
 == Dossier parent
 
@@ -659,12 +656,6 @@ no limit
 == pas de limite
 
 ##### needs translation #####
-
-Next
-== 
-
-Prev
-== 
 
 ##### old translations #####
 

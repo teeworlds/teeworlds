@@ -346,9 +346,6 @@ New name:
 News
 == Novinky
 
-Next
-== Další
-
 Next weapon
 == Další zbraň
 
@@ -372,9 +369,6 @@ Ok
 
 Open
 == Otevřít
-
-Page %d of %d
-== Strana %d z %d
 
 Parent Folder
 == Nadřazená složka
@@ -405,9 +399,6 @@ Players
 
 Please balance teams!
 == Prosím vyrovnejte týmy!
-
-Prev
-== Předchozí
 
 Prev. weapon
 == Předchozí zbraň
