@@ -46,6 +46,7 @@ class CMenus : public CComponent
 
 	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_Sprite(const void *pID, int ImageID, int SpriteID, int Checked, const CUIRect *pRect, int Corners);
+	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
 
@@ -119,6 +120,7 @@ class CMenus : public CComponent
 	{
 		PAGE_NEWS=1,
 		PAGE_GAME,
+		PAGE_PLAYERS,
 		PAGE_SERVER_INFO,
 		PAGE_GHOST,
 		PAGE_CALLVOTE,
@@ -227,6 +229,7 @@ class CMenus : public CComponent
 	
 	// found in menus_ingame.cpp
 	void RenderGame(CUIRect MainView);
+	void RenderPlayers(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
