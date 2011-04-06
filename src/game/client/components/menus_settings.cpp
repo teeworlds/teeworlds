@@ -439,16 +439,19 @@ static CKeyInfo gs_aKeys[] =
 	{ "Show chat", "+show_chat", 0 },
 	{ "Emoticon", "+emote", 0 },
 	{ "Spectator mode", "+spectate", 0 },
+	{ "Spectate next", "spectate_next", 0 },
+	{ "Spectate previous", "spectate_previous", 0 },
 	{ "Console", "toggle_local_console", 0 },
 	{ "Remote console", "toggle_remote_console", 0 },
 	{ "Screenshot", "screenshot", 0 },
 	{ "Scoreboard", "+scoreboard", 0 },
 };
+
 /*	This is for scripts/update_localization.py to work, don't remove!
 	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
 	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Rifle");Localize("Next weapon");Localize("Prev. weapon");
 	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
-	Localize("Spectator mode");Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
+	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
 */
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
@@ -504,7 +507,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	// movement settings
 	{
-		MovementSettings.HSplitTop(MainView.h/2-5.0f, &MovementSettings, &WeaponSettings);
+		MovementSettings.HSplitTop(MainView.h/3+60.0f, &MovementSettings, &WeaponSettings);
 		RenderTools()->DrawUIRect(&MovementSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MovementSettings.Margin(10.0f, &MovementSettings);
 
@@ -530,6 +533,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	// weapon settings
 	{
 		WeaponSettings.HSplitTop(10.0f, 0, &WeaponSettings);
+		WeaponSettings.HSplitTop(MainView.h/3+50.0f, &WeaponSettings, &ResetButton);
 		RenderTools()->DrawUIRect(&WeaponSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		WeaponSettings.Margin(10.0f, &WeaponSettings);
 
@@ -538,11 +542,22 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		WeaponSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &WeaponSettings);
 		UiDoGetButtons(5, 12, WeaponSettings);
 	}
-
+	
+	// defaults
+	{
+		ResetButton.HSplitTop(10.0f, 0, &ResetButton);
+		RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+		ResetButton.HMargin(10.0f, &ResetButton);
+		ResetButton.VMargin(30.0f, &ResetButton);
+		static int s_DefaultButton = 0;
+		if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
+			m_pClient->m_pBinds->SetDefaults();
+	}
+	
 	// voting settings
 	{
 		VotingSettings.VSplitLeft(10.0f, 0, &VotingSettings);
-		VotingSettings.HSplitTop(MainView.h/4-5.0f, &VotingSettings, &ChatSettings);
+		VotingSettings.HSplitTop(MainView.h/3-75.0f, &VotingSettings, &ChatSettings);
 		RenderTools()->DrawUIRect(&VotingSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		VotingSettings.Margin(10.0f, &VotingSettings);
 
@@ -555,7 +570,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	// chat settings
 	{
 		ChatSettings.HSplitTop(10.0f, 0, &ChatSettings);
-		ChatSettings.HSplitTop(MainView.h/4-10.0f, &ChatSettings, &MiscSettings);
+		ChatSettings.HSplitTop(MainView.h/3-45.0f, &ChatSettings, &MiscSettings);
 		RenderTools()->DrawUIRect(&ChatSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		ChatSettings.Margin(10.0f, &ChatSettings);
 
@@ -568,24 +583,15 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	// misc settings
 	{
 		MiscSettings.HSplitTop(10.0f, 0, &MiscSettings);
-		MiscSettings.HSplitBottom(50.0f, &MiscSettings, &ResetButton);
 		RenderTools()->DrawUIRect(&MiscSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MiscSettings.Margin(10.0f, &MiscSettings);
 
 		TextRender()->Text(0, MiscSettings.x, MiscSettings.y, 14.0f*UI()->Scale(), Localize("Miscellaneous"), -1);
 
 		MiscSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &MiscSettings);
-		UiDoGetButtons(17, 23, MiscSettings);
+		UiDoGetButtons(17, 25, MiscSettings);
 	}
 
-	// defaults
-	ResetButton.HSplitTop(10.0f, 0, &ResetButton);
-	RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-	ResetButton.HMargin(10.0f, &ResetButton);
-	ResetButton.VMargin(30.0f, &ResetButton);
-	static int s_DefaultButton = 0;
-	if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
-		m_pClient->m_pBinds->SetDefaults();
 }
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
