@@ -567,22 +567,13 @@ Netversion:
 New name:
 == 
 
-Next
-== 
-
 Open
-== 
-
-Page %d of %d
 == 
 
 Parent Folder
 == 
 
 Player options
-== 
-
-Prev
 == 
 
 Quit anyway?

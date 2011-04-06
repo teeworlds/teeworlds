@@ -343,9 +343,6 @@ New name:
 News
 == Nyheter
 
-Next
-== Nästa
-
 Next weapon
 == Nästa vapen
 
@@ -369,9 +366,6 @@ Ok
 
 Open
 == Öppna
-
-Page %d of %d
-== Sida %d av %d
 
 Parent Folder
 == Uppliggande mapp
@@ -402,9 +396,6 @@ Players
 
 Please balance teams!
 == Balansera lagen!
-
-Prev
-== Föregående
 
 Prev. weapon
 == Föregående vapen

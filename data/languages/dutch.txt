@@ -346,9 +346,6 @@ New name:
 News
 == Nieuws
 
-Next
-== Volgende
-
 Next weapon
 == Volgend wapen
 
@@ -372,9 +369,6 @@ Ok
 
 Open
 == Open
-
-Page %d of %d
-== Pagina %d van %d
 
 Parent Folder
 == Bovenliggende map
@@ -405,9 +399,6 @@ Players
 
 Please balance teams!
 == Balanceer teams!
-
-Prev
-== Vorige
 
 Prev. weapon
 == Vorig wapen

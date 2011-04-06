@@ -343,9 +343,6 @@ New name:
 News
 == Новости
 
-Next
-== Далее
-
 Next weapon
 == След. оружие
 
@@ -369,9 +366,6 @@ Ok
 
 Open
 == Открыть
-
-Page %d of %d
-== Страница %d из %d
 
 Parent Folder
 == Родительский каталог
@@ -402,9 +396,6 @@ Players
 
 Please balance teams!
 == Сбалансируйте команды!
-
-Prev
-== Пред.
 
 Prev. weapon
 == Пред. оружие

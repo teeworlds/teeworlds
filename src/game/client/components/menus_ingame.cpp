@@ -387,53 +387,30 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	static int s_ControlPage = 0;
 	
 	// render background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
-	MainView.HSplitTop(10.0f, 0, &MainView);
-	
-	// page menu
-	CUIRect PageMenu, Button;
-	MainView.HSplitBottom(60.0f, &MainView, &PageMenu);
-	PageMenu.Margin(10.0f, &PageMenu);
-	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f,0.25f), CUI::CORNER_ALL, 10.0f);
-	PageMenu.Margin(10.0f, &PageMenu);
+	CUIRect Bottom, Extended, TabBar, Button;
+	MainView.HSplitBottom(20.0f, &MainView, &TabBar);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	MainView.Margin(10.0f, &MainView);
+	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 
-	PageMenu.VSplitLeft(50.0f, 0, &PageMenu);
-	PageMenu.VSplitLeft(120.0f, &Button, &PageMenu);
-	static int s_PrevButton = 0;
-	if(DoButton_PageMenu(&s_PrevButton, Localize("Prev"), 0, s_ControlPage>0, &Button, CUI::CORNER_L))
+	// tab bar
 	{
-		if(s_ControlPage > 0)
-		{
-			m_CallvoteSelectedPlayer = -1;
-			m_CallvoteSelectedOption = -1;
-			--s_ControlPage;
-		}
+		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
+		static int s_Button0 = 0;
+		if(DoButton_MenuTab(&s_Button0, Localize("Change settings"), s_ControlPage == 0, &Button, CUI::CORNER_BL))
+			s_ControlPage = 0;
+
+		TabBar.VSplitMid(&Button, &TabBar);
+		static int s_Button1 = 0;
+		if(DoButton_MenuTab(&s_Button1, Localize("Kick player"), s_ControlPage == 1, &Button, 0))
+			s_ControlPage = 1;
+
+		static int s_Button2 = 0;
+		if(DoButton_MenuTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == 2, &TabBar, CUI::CORNER_BR))
+			s_ControlPage = 2;
 	}
-	
-	PageMenu.VSplitRight(50.0f, &PageMenu, 0);
-	PageMenu.VSplitRight(120.0f, &PageMenu, &Button);
-	static int s_NextButton = 0;
-	if(DoButton_PageMenu(&s_NextButton, Localize("Next"), 0, s_ControlPage<2, &Button, CUI::CORNER_R))
-	{
-		if(s_ControlPage < 2)
-		{
-			m_CallvoteSelectedPlayer = -1;
-			m_CallvoteSelectedOption = -1;
-			++s_ControlPage;
-		}
-	}
-	
-	RenderTools()->DrawUIRect(&PageMenu, vec4(1.0f, 1.0f, 1.0f, 0.5f), 0, 10.0f);
-	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), Localize("Page %d of %d"), s_ControlPage+1, 3);
-	UI()->DoLabelScaled(&PageMenu, aBuf, PageMenu.h*ms_FontmodHeight, 0);
 
 	// render page
-	CUIRect Bottom, Extended;
-	MainView.VMargin(10.0f, &MainView);
-	RenderTools()->DrawUIRect(&MainView, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
-	MainView.HSplitBottom(90.0f, &MainView, &Extended);
-	MainView.Margin(10.0f, &MainView);
 	MainView.HSplitBottom(ms_ButtonHeight + 5*2, &MainView, &Bottom);
 	Bottom.HMargin(5.0f, &Bottom);
 
