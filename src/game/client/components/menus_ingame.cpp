@@ -389,7 +389,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 
 	// render background and tabbar
-	MainView.VSplitRight(150.0f, &MainView, &TabBar);
+	MainView.VSplitRight(170.0f, &MainView, &TabBar);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
 	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
 	RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
@@ -397,9 +397,9 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	MainView.HSplitBottom(10.0f, &MainView, 0);
 
 	const char *aTabs[] = {
-		Localize("Change settings"),
-		Localize("Kick player"),
-		Localize("Move player")};
+		Localize("Settings"),
+		Localize("Kick"),
+		Localize("Make spec.")};
 		
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 

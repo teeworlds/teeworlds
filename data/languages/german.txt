@@ -83,7 +83,7 @@ Call vote
 == Abstimmen
 
 Change settings
-== Einstellungen ändern
+== Optionen ändern
 
 Chat
 == Chat
@@ -274,6 +274,9 @@ Join red
 Jump
 == Springen
 
+Kick
+== Kicken
+
 Kick player
 == Spieler kicken
 
@@ -294,6 +297,9 @@ Loading
 
 MOTD
 == Nachricht des Tages
+
+Make spec.
+== Zu Zusch. machen
 
 Map
 == Karte
@@ -346,9 +352,6 @@ New name:
 News
 == News
 
-Next
-== Weiter
-
 Next weapon
 == Nächste Waffe
 
@@ -372,9 +375,6 @@ Ok
 
 Open
 == Öffnen
-
-Page %d of %d
-== Seite %d von %d
 
 Parent Folder
 == Übergeordneter Ordner
@@ -405,9 +405,6 @@ Players
 
 Please balance teams!
 == Bitte Teams ausgleichen!
-
-Prev
-== Zurück
 
 Prev. weapon
 == Vorherige Waffe
@@ -667,4 +664,13 @@ no limit
 ##### needs translation #####
 
 ##### old translations #####
+
+Page %d of %d
+== Seite %d von %d
+
+Next
+== Weiter
+
+Prev
+== Zurück
 

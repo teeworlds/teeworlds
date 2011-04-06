@@ -582,10 +582,16 @@ Free-View
 Friends
 == 
 
+Kick
+== 
+
 Kick player
 == 
 
 Length:
+== 
+
+Make spec.
 == 
 
 Map:
@@ -600,16 +606,7 @@ Netversion:
 New name:
 == 
 
-Next
-== 
-
-Page %d of %d
-== 
-
 Player options
-== 
-
-Prev
 == 
 
 Quit anyway?
@@ -667,4 +664,13 @@ Vote description:
 == 
 
 ##### old translations #####
+
+Page %d of %d
+== 
+
+Next
+== 
+
+Prev
+== 
 
