@@ -385,22 +385,21 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 void CMenus::RenderServerControl(CUIRect MainView)
 {
 	static int s_ControlPage = 0;
-	CUIRect PageMenu, Button, TabBar, Temp;
+	CUIRect Button, TabBar, Temp;
 
 
-	MainView.VSplitRight(160.0f, &MainView, &TabBar);
+	// render background and tabbar
+	MainView.VSplitRight(150.0f, &MainView, &TabBar);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
 	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
 	RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
-	//MainView.Margin(10.0f, &MainView);
 	MainView.HSplitTop(10.0f, 0, &MainView);
 	MainView.HSplitBottom(10.0f, &MainView, 0);
-
 
 	const char *aTabs[] = {
 		Localize("Change settings"),
 		Localize("Kick player"),
-		Localize("Move player")};
+		Localize("Move palyer")};
 		
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
