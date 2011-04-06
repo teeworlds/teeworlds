@@ -68,7 +68,7 @@ Automatically record demos
 == Automatisch Aufnahmen erstellen
 
 Automatically take game over screenshot
-== Bildschirmfotos autom. nach jeder Runde erstellen
+== Autom. ein Bild vom Spielergebnis erstellen
 
 Blue team
 == Blaues Team
