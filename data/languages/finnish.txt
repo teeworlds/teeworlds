@@ -1,14 +1,44 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d tavua
+
 %d of %d servers, %d players
 == %d/%d palvelinta, %d pelaajaa
 
+%d%% loaded
+== %d%% ladattu
+
 %ds left
-== %ds poistui
+== %ds jäljellä
+
+%i minute left
+== %i minuutti jäljellä
+
+%i minutes left
+== %i minuuttia jäljellä
+
+%i second left
+== %i sekunti jäljellä
+
+%i seconds left
+== %i sekuntia jäljellä
+
+%s wins!
+== %s voitti!
+
+-Page %d-
+== -Sivu %d-
 
 Abort
 == Keskeytä
+
+Add
+== Lisää
+
+Add Friend
+== Lisää ystävä
 
 Address
 == Osoite
@@ -22,11 +52,23 @@ Alpha
 Always show name plates
 == Näytä nimikyltit aina
 
+Are you sure that you want to delete the demo?
+== Oletko varma, että haluat poistaa demon?
+
 Are you sure that you want to quit?
 == Oletko varma, että haluat lopettaa?
 
+Are you sure that you want to remove the player from your friends list?
+== Oletko varma, että haluat poistaa pelaajan ystävälistaltasi?
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Tämä on ensimmäinen kerta kun käynnistät pelin, ole hyvä ja kirjoita nimimerkkisi alle. On suositeltua, että tarkistat asetukset ja muutat niitä mielesi mukaan ennen kuin liityt palvelimille.
+
+Automatically record demos
+== Nauhoita demot automaattisesti
+
+Automatically take game over screenshot
+== Ota pelin jälkeinen kuvankaappaus autom.
 
 Blue team
 == Sininen joukkue
@@ -40,8 +82,17 @@ Body
 Call vote
 == Aloita äänestys
 
+Change settings
+== Muuta asetuksia
+
 Chat
 == Chatti
+
+Clan
+== Klaani
+
+Client
+== Asiakasohjelma
 
 Close
 == Sulje
@@ -64,6 +115,18 @@ Console
 Controls
 == Kontrollit
 
+Count players only
+== Laske vain pelaajat
+
+Country
+== Maa
+
+Crc:
+== Crc:
+
+Created:
+== Luotu:
+
 Current
 == Nykyinen
 
@@ -76,11 +139,17 @@ Custom colors
 Delete
 == Poista
 
+Delete demo
+== Poista demo
+
+Demo details
+== Demon tiedot
+
 Demos
 == Demot
 
 Disconnect
-== Katkaise yhteys
+== Katk. yhteys
 
 Disconnected
 == Yhteys katkaistu
@@ -127,8 +196,17 @@ Filter
 Fire
 == Ammu
 
+Folder
+== Kansio
+
 Force vote
-== Pakota äänestys
+== Päätä äänestys
+
+Free-View
+== Vapaa näkymä
+
+Friends
+== Ystävät
 
 Fullscreen
 == Koko näyttö
@@ -181,6 +259,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Epäkelpo demo
+
 Join blue
 == Liity sinisiin
 
@@ -193,11 +274,17 @@ Join red
 Jump
 == Hyppää
 
+Kick player
+== Potkaise pelaaja
+
 LAN
 == LAN
 
 Language
 == Kieli
+
+Length:
+== Pituus:
 
 Lht.
 == Valoisuus
@@ -211,6 +298,15 @@ MOTD
 Map
 == Kenttä
 
+Map:
+== Kenttä:
+
+Max Screenshots
+== Kuvankaappausmaksimi
+
+Max demos
+== Demomaksimi
+
 Maximum ping:
 == Maksimiping:
 
@@ -223,6 +319,9 @@ Mouse sens.
 Move left
 == Liiku vasemmalle
 
+Move player to spectators
+== Siirrä pelaaja katsojaksi
+
 Move right
 == Liiku oikealle
 
@@ -234,6 +333,15 @@ Mute when not active
 
 Name
 == Nimi
+
+Name plates size
+== Nimikylttien koko
+
+Netversion:
+== Yhteysversio:
+
+New name:
+== Uusi nimi:
 
 News
 == Uutiset
@@ -254,10 +362,16 @@ No servers found
 == Palvelimia ei löytynyt
 
 No servers match your filter criteria
-== Yksikään palvelin ei läpäissyt suodinkriteerejäsi
+== Yksikään palvelin ei täyttänyt suodinkriteerejäsi
 
 Ok
 == Ok
+
+Open
+== Avaa
+
+Parent Folder
+== Yläkansio
 
 Password
 == Salasana
@@ -277,11 +391,14 @@ Play
 Player
 == Pelaaja
 
+Player options
+== Pelaajavalinnat
+
 Players
-== Pelaajia
+== Pelaajat
 
 Please balance teams!
-== Ole hyvä ja tasoita joukkueet!
+== Ole hyvä ja tasoita joukkueita!
 
 Prev. weapon
 == Edellinen ase
@@ -294,6 +411,18 @@ Quick search:
 
 Quit
 == Lopeta
+
+Quit anyway?
+== Lopeta siitä huolimatta?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Syy:
+
+Record demo
+== Nauhoita demo
 
 Red team
 == Punainen joukkue
@@ -309,6 +438,18 @@ Refreshing master servers
 
 Remote console
 == Etäkonsoli
+
+Remove
+== Poista
+
+Remove friend
+== Poista ystävä
+
+Rename
+== Nimeä
+
+Rename demo
+== Uudelleennimeä demo
 
 Reset filter
 == Nollaa suotimet
@@ -326,7 +467,7 @@ Sample rate
 == Näytteenottotaajuus
 
 Sat.
-== Kylläisyys
+== Kyllästys
 
 Score
 == Pisteet
@@ -343,11 +484,17 @@ Scoreboard
 Screenshot
 == Kuvankaappaus
 
+Server address:
+== Palvelimen osoite:
+
 Server details
 == Palvelimen yksityiskohdat
 
+Server filter
+== Palvelinsuotimet
+
 Server info
-== Palvelimen tiedot
+== Palvelintiedot
 
 Server not full
 == Palvelin ei täysi
@@ -361,11 +508,20 @@ Shotgun
 Show chat
 == Näytä chatti
 
+Show friends
+== Näytä ystävät
+
+Show ingame HUD
+== Näytä peli-HUD
+
 Show name plates
 == Näytä nimikyltit
 
 Show only supported
 == Näytä vain tuetut
+
+Size:
+== Koko:
 
 Skins
 == Ulkonäkö
@@ -373,11 +529,17 @@ Skins
 Sound
 == Äänet
 
+Sound error
+== Äänivirhe
+
 Sound volume
 == Äänenvoimakkuus
 
 Spectate
 == Katso
+
+Spectator mode
+== Katsojatila
 
 Spectators
 == Katsojat
@@ -387,6 +549,9 @@ Standard gametype
 
 Standard map
 == Standardikenttä
+
+Stop record
+== Lopeta nauhoit.
 
 Sudden Death
 == Äkkikuolema
@@ -406,11 +571,20 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Tekstuuripakkaus
 
+The audio device couldn't be initialised.
+== Äänilaitteen alustaminen ei onnistunut.
+
 The server is running a non-standard tuning on a pure game type.
 == Tämä palvelin ajaa ei-standardeja virityksiä standardipelityypillä.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Editorissa on tallentamaton kenttä, saatat haluta tallentaa sen ennen kuin lopetat pelin.
+
 Time limit
 == Aikaraja
+
+Time limit: %d min
+== Aikaraja: %d min
 
 Try again
 == Yritä uudelleen
@@ -418,17 +592,38 @@ Try again
 Type
 == Tyyppi
 
+Type:
+== Tyyppi:
+
 UI Color
 == Käyttöliittymäväri
 
+Unable to delete the demo
+== Demon poistaminen ei onnistunut
+
+Unable to rename the demo
+== Demon nimeäminen ei onnistunut
+
 Use sounds
 == Käytä ääniefektejä
+
+Use team colors for name plates
+== Käytä joukkueiden värejä nimikylteissä
 
 V-Sync
 == V-Sync
 
 Version
 == Versio
+
+Version:
+== Versio:
+
+Vote command:
+== Äänestyskäsky:
+
+Vote description:
+== Äänestyksen kuvaus:
 
 Vote no
 == Äänestä ei
@@ -457,205 +652,10 @@ You must restart the game for all settings to take effect.
 Your skin
 == Sinun ulkonäkösi
 
-##### needs translation #####
-
-%d Bytes
-== 
-
-%d%% loaded
-== 
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
-%s wins!
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Client
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Delete demo
-== 
-
-Demo details
-== 
-
-Folder
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Invalid Demo
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Move player to spectators
-== 
-
-Name plates size
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Open
-== 
-
-Parent Folder
-== 
-
-Player options
-== 
-
-Quit anyway?
-== 
-
-REC %3d:%02d
-== 
-
-Reason:
-== 
-
-Record demo
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Sound error
-== 
-
-Spectator mode
-== 
-
-Stop record
-== 
-
-The audio device couldn't be initialised.
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.
-== 
-
-Time limit: %d min
-== 
-
-Type:
-== 
-
-Unable to delete the demo
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
-
 no limit
-== 
+== ei rajaa
+
+##### needs translation #####
 
 ##### old translations #####
 
