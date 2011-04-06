@@ -657,5 +657,11 @@ no limit
 
 ##### needs translation #####
 
+Spectate next
+== 
+
+Spectate previous
+== 
+
 ##### old translations #####
 

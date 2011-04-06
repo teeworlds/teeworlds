@@ -618,6 +618,12 @@ Size:
 Sound error
 == 
 
+Spectate next
+== 
+
+Spectate previous
+== 
+
 Spectator mode
 == 
 
