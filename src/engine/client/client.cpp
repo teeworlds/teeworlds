@@ -956,8 +956,9 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	// get the crc of the map
 	if(m_pMap->Crc() != WantedCrc)
 	{
-		m_pMap->Unload();
 		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %08x != %08x", m_pMap->Crc(), WantedCrc);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
+		m_pMap->Unload();
 		return aErrorMsg;
 	}
 
