@@ -33,6 +33,8 @@ void CParticles::OnReset()
 
 	for(int i = 0; i < NUM_GROUPS; i++)
 		m_aFirstPart[i] = -1;
+	
+	ResetExplosions();
 }
 
 void CParticles::Add(int Group, CParticle *pPart)
@@ -67,6 +69,17 @@ void CParticles::Add(int Group, CParticle *pPart)
 	m_aParticles[Id].m_Life = 0;
 }
 
+void CParticles::AddExplosion(vec2 Pos)
+{
+	m_aExplosionPos[m_ExplosionCount++] = Pos;
+}
+
+void CParticles::ResetExplosions()
+{
+	mem_zero(&m_aExplosionPos, sizeof(m_aExplosionPos));
+	m_ExplosionCount = 0;
+}
+	
 void CParticles::Update(float TimePassed)
 {
 	static float FrictionFraction = 0;
@@ -82,13 +95,43 @@ void CParticles::Update(float TimePassed)
 		FrictionFraction -= 0.05f;
 	}
 	
+	float IntraTick = Client()->PredIntraGameTick();
+	
 	for(int g = 0; g < NUM_GROUPS; g++)
 	{
 		int i = m_aFirstPart[g];
 		while(i != -1)
 		{
 			int Next = m_aParticles[i].m_NextPart;
-			//m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
+			
+			// check against players
+			for(int j = 0; j < MAX_CLIENTS; j++)
+			{
+				if(!m_pClient->m_Snap.m_aCharacters[j].m_Active)
+					continue;
+				
+				CNetObj_Character *pCur = &m_pClient->m_Snap.m_aCharacters[j].m_Cur;
+				CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
+				vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
+				vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
+				if(distance(Position, m_aParticles[i].m_Pos) < 16.0f)
+					m_aParticles[i].m_Vel += Vel*m_aParticles[i].m_FlowAffected;
+			}
+			
+			// check against explosions
+			if(m_aParticles[i].m_FlowAffected)
+			{
+				for(int j = 0; j < m_ExplosionCount; j++)
+				{
+					float Distance = distance(m_aParticles[i].m_Pos, m_aExplosionPos[j]);
+					if(Distance < 82.0f && Distance > 0.0f)
+					{
+						vec2 Dir = normalize(m_aParticles[i].m_Pos-m_aExplosionPos[j]);
+						m_aParticles[i].m_Vel += Dir*500.0f*(Distance/82.0f);
+					}
+				}
+			}
+			
 			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
 			
 			for(int f = 0; f < FrictionCount; f++) // apply friction
@@ -125,6 +168,9 @@ void CParticles::Update(float TimePassed)
 			i = Next;
 		}
 	}
+	
+	// reset explosion count
+	m_ExplosionCount = 0;
 }
 
 void CParticles::OnRender()
