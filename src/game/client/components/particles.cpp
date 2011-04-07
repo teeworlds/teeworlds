@@ -127,7 +127,7 @@ void CParticles::Update(float TimePassed)
 					if(Distance < 82.0f && Distance > 0.0f)
 					{
 						vec2 Dir = normalize(m_aParticles[i].m_Pos-m_aExplosionPos[j]);
-						m_aParticles[i].m_Vel += Dir*500.0f*(Distance/82.0f);
+						m_aParticles[i].m_Vel += Dir*500.0f*((82.0f-Distance)/82.0f);
 					}
 				}
 			}
