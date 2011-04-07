@@ -306,6 +306,8 @@ public:
 			str_format(aPath, sizeof(aPath), "%s/%s", Data.pPath, pName);
 			Data.pPath = aPath;
 			fs_listdir(Data.pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+			if(Data.pBuffer[0])
+				return 1;
 		}
 		else if(!str_comp(pName, Data.pFilename))
 		{
@@ -335,7 +337,11 @@ public:
 		{
 			// search within all available directories
 			for(int i = 0; i < m_NumPaths; ++i)
+			{
 				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
+				if(pBuffer[0])
+					return true;
+			}
 		}
 		else if(Type >= 0 && Type < m_NumPaths)
 		{
