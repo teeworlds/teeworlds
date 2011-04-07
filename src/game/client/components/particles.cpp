@@ -104,23 +104,23 @@ void CParticles::Update(float TimePassed)
 		{
 			int Next = m_aParticles[i].m_NextPart;
 			
-			// check against players
-			for(int j = 0; j < MAX_CLIENTS; j++)
-			{
-				if(!m_pClient->m_Snap.m_aCharacters[j].m_Active)
-					continue;
-				
-				CNetObj_Character *pCur = &m_pClient->m_Snap.m_aCharacters[j].m_Cur;
-				CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
-				vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
-				vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
-				if(distance(Position, m_aParticles[i].m_Pos) < 16.0f)
-					m_aParticles[i].m_Vel += Vel*m_aParticles[i].m_FlowAffected;
-			}
-			
-			// check against explosions
 			if(m_aParticles[i].m_FlowAffected)
 			{
+				// check against players
+				for(int j = 0; j < MAX_CLIENTS; j++)
+				{
+					if(!m_pClient->m_Snap.m_aCharacters[j].m_Active)
+						continue;
+					
+					CNetObj_Character *pCur = &m_pClient->m_Snap.m_aCharacters[j].m_Cur;
+					CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
+					vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
+					vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
+					if(distance(Position, m_aParticles[i].m_Pos) < 16.0f)
+						m_aParticles[i].m_Vel += Vel*m_aParticles[i].m_FlowAffected;
+				}
+			
+				// check against explosions
 				for(int j = 0; j < m_ExplosionCount; j++)
 				{
 					float Distance = distance(m_aParticles[i].m_Pos, m_aExplosionPos[j]);
