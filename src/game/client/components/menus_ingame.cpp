@@ -7,7 +7,6 @@
 #include <engine/config.h>
 #include <engine/demo.h>
 #include <engine/friends.h>
-#include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
