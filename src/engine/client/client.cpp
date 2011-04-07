@@ -1660,7 +1660,7 @@ void CClient::Update()
 			Disconnect();
 		}
 	}
-	else if(State() != IClient::STATE_OFFLINE && m_RecivedSnapshots >= 3)
+	else if(State() == IClient::STATE_ONLINE && m_RecivedSnapshots >= 3)
 	{
 		// switch snapshot
 		int Repredict = 0;
