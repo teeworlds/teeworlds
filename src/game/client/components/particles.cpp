@@ -118,7 +118,7 @@ void CParticles::Update(float TimePassed)
 					CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
 					vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
 					vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
-					if(distance(Position, m_aParticles[i].m_Pos) < 16.0f)
+					if(distance(Position, m_aParticles[i].m_Pos) < 28.0f)
 						m_aParticles[i].m_Vel += Vel*m_aParticles[i].m_FlowAffected;
 				}
 			
