@@ -130,6 +130,50 @@ void CParticles::Update(float TimePassed)
 						m_aParticles[i].m_Vel += Dir*500.0f*((82.0f-Distance)/82.0f);
 					}
 				}
+				
+				// check against projectiles
+				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
+				for(int j = 0; j < Num; j++)
+				{
+					IClient::CSnapItem Item;
+					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, j, &Item);
+
+					if(Item.m_Type == NETOBJTYPE_PROJECTILE)
+					{
+						const CNetObj_Projectile *pProj = (const CNetObj_Projectile *)pData;
+						
+						// get positions
+						float Curvature = 0;
+						float Speed = 0;
+						if(pProj->m_Type == WEAPON_GRENADE)
+						{
+							Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
+							Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
+						}
+						else if(pProj->m_Type == WEAPON_SHOTGUN)
+						{
+							Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
+							Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
+						}
+						else if(pProj->m_Type == WEAPON_GUN)
+						{
+							Curvature = m_pClient->m_Tuning.m_GunCurvature;
+							Speed = m_pClient->m_Tuning.m_GunSpeed;
+						}
+
+						float Ct = (Client()->PrevGameTick()-pProj->m_StartTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
+						if(Ct < 0)
+							return; // projectile havn't been shot yet
+						
+						vec2 StartPos(pProj->m_X, pProj->m_Y);
+						vec2 StartVel(pProj->m_VelX/100.0f, pProj->m_VelY/100.0f);
+						vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
+						vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
+						vec2 Vel = Pos-PrevPos;
+						if(distance(Pos, m_aParticles[i].m_Pos) < 16.0f)
+							m_aParticles[i].m_Vel += Vel*10.0f*m_aParticles[i].m_FlowAffected;
+					}
+				}
 			}
 			
 			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
