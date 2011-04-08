@@ -129,6 +129,9 @@ void CParticles::Update(float TimePassed)
 
 void CParticles::OnRender()
 {
+	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+
 	static int64 LastTime = 0;
 	int64 t = time_get();
 	
