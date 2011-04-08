@@ -1039,7 +1039,8 @@ int CMenus::Render()
 
 					// update download speed
 					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
-					m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
+					if(m_DownloadSpeed > 0.0f || Diff > 0.0f)
+						m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
 					m_DownloadLastCheckTime = Now;
 					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
 				}
@@ -1051,7 +1052,9 @@ int CMenus::Render()
 				
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/(m_DownloadSpeed*1024)+1;
+				int TimeLeft = 0;
+				if(m_DownloadSpeed > 0.0f)
+					TimeLeft = (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/(m_DownloadSpeed*1024)+1;
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -1346,7 +1349,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_CONNECTING;
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
-		m_DownloadSpeed = 1.0f;
+		m_DownloadSpeed = 0.0f;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
