@@ -71,7 +71,8 @@ void CParticles::Add(int Group, CParticle *pPart)
 
 void CParticles::AddExplosion(vec2 Pos)
 {
-	m_aExplosionPos[m_ExplosionCount++] = Pos;
+	if(m_ExplosionCount != MAX_PROJECTILES)
+		m_aExplosionPos[m_ExplosionCount++] = Pos;
 }
 
 void CParticles::ResetExplosions()
@@ -96,6 +97,7 @@ void CParticles::Update(float TimePassed)
 	}
 	
 	float IntraTick = Client()->PredIntraGameTick();
+	int NumItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 	
 	for(int g = 0; g < NUM_GROUPS; g++)
 	{
@@ -132,8 +134,7 @@ void CParticles::Update(float TimePassed)
 				}
 				
 				// check against projectiles
-				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
-				for(int j = 0; j < Num; j++)
+				for(int j = 0; j < NumItems; j++)
 				{
 					IClient::CSnapItem Item;
 					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, j, &Item);

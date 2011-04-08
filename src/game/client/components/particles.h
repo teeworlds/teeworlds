@@ -73,6 +73,7 @@ private:
 	enum
 	{
 		MAX_PARTICLES=1024*8,
+		MAX_PROJECTILES=128,
 	};
 
 	CParticle m_aParticles[MAX_PARTICLES];
@@ -90,7 +91,7 @@ private:
 		virtual void OnRender() { m_pParts->RenderGroup(TGROUP); }
 	};
 	
-	vec2 m_aExplosionPos[128];
+	vec2 m_aExplosionPos[MAX_PROJECTILES];
 	int m_ExplosionCount;
 	
 	void ResetExplosions();
