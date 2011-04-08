@@ -13,7 +13,6 @@ enum ServerType
 
 struct CMastersrvAddr
 {
-	unsigned char m_aType[4];
 	unsigned char m_aIp[16];
 	unsigned char m_aPort[2];
 };

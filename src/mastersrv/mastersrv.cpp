@@ -11,7 +11,7 @@
 
 enum {
 	MTU = 1400,
-	MAX_SERVERS_PER_PACKET=60,
+	MAX_SERVERS_PER_PACKET=77,
 	MAX_PACKETS=16,
 	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
 	MAX_BANS=128,
@@ -113,12 +113,22 @@ void BuildPackets()
 			mem_copy(m_aPackets[m_NumPackets-1].m_Data.m_aHeader, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 
 			// copy server addresses
-			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aType[0] = (pCurrent->m_Address.type>>24)&0xff;
-			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aType[1] = (pCurrent->m_Address.type>>16)&0xff;
-			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aType[2] = (pCurrent->m_Address.type>>8)&0xff;
-			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aType[3] = pCurrent->m_Address.type&0xff;
-			mem_copy(m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp, pCurrent->m_Address.ip,
-				sizeof(m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp));
+			if(pCurrent->m_Address.type == NETTYPE_IPV6)
+			{
+				mem_copy(m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp, pCurrent->m_Address.ip,
+					sizeof(m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp));
+			}
+			else
+			{
+				static char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+
+				mem_copy(m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp, IPV4Mapping, sizeof(IPV4Mapping));
+				m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp[12] = pCurrent->m_Address.ip[0];
+				m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp[13] = pCurrent->m_Address.ip[1];
+				m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp[14] = pCurrent->m_Address.ip[2];
+				m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aIp[15] = pCurrent->m_Address.ip[3];
+			}
+
 			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aPort[0] = (pCurrent->m_Address.port>>8)&0xff;
 			m_aPackets[m_NumPackets-1].m_Data.m_aServers[PacketIndex].m_aPort[1] = pCurrent->m_Address.port&0xff;
 
