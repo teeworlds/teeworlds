@@ -363,7 +363,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 	static int s_VoteList = 0;
 	static float s_ScrollValue = 0;
 	CUIRect List = MainView;
-	UiDoListboxStart(&s_VoteList, &List, 24.0f, Localize("Change settings"), "", m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, s_ScrollValue);
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, "", "", m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, s_ScrollValue);
 	
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
@@ -395,7 +395,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	static int s_VoteList = 0;
 	static float s_ScrollValue = 0;
 	CUIRect List = MainView;
-	UiDoListboxStart(&s_VoteList, &List, 24.0f, FilterSpectators?Localize("Move player to spectators"):Localize("Kick player"), "", NumOptions, 1, Selected, s_ScrollValue);
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, "", "", NumOptions, 1, Selected, s_ScrollValue);
 	
 	for(int i = 0; i < NumOptions; i++)
 	{
@@ -422,8 +422,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	
 	// render background
 	CUIRect Bottom, Extended, TabBar, Button;
-	MainView.HSplitBottom(20.0f, &MainView, &TabBar);
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	MainView.HSplitTop(20.0f, &Bottom, &MainView);
+	RenderTools()->DrawUIRect(&Bottom, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	MainView.HSplitTop(20.0f, &TabBar, &MainView);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 
@@ -431,7 +433,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	{
 		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
 		static int s_Button0 = 0;
-		if(DoButton_MenuTab(&s_Button0, Localize("Change settings"), s_ControlPage == 0, &Button, CUI::CORNER_BL))
+		if(DoButton_MenuTab(&s_Button0, Localize("Change settings"), s_ControlPage == 0, &Button, 0))
 			s_ControlPage = 0;
 
 		TabBar.VSplitMid(&Button, &TabBar);
@@ -440,7 +442,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			s_ControlPage = 1;
 
 		static int s_Button2 = 0;
-		if(DoButton_MenuTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == 2, &TabBar, CUI::CORNER_BR))
+		if(DoButton_MenuTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == 2, &TabBar, 0))
 			s_ControlPage = 2;
 	}
 
