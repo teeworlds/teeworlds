@@ -1346,7 +1346,6 @@ void CGameClient::OnRoundStart()
 
 void CGameClient::OnFlagGrab(int ID)
 {
-	dbg_msg("test2", "%d", ID);
 	if(ID == TEAM_RED)
 		m_aStats[m_Snap.m_pGameDataObj->m_FlagCarrierRed].m_FlagGrabs++;
 	else

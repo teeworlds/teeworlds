@@ -118,8 +118,9 @@ void CParticles::Update(float TimePassed)
 					CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
 					vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
 					vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
+					float VelLength = clamp(length(Vel), 0.0f, 50.0f);
 					if(distance(Position, m_aParticles[i].m_Pos) < 28.0f)
-						m_aParticles[i].m_Vel += Vel*m_aParticles[i].m_FlowAffected;
+						m_aParticles[i].m_Vel += Vel*(((1-(VelLength/40.0f)*m_aParticles[i].m_FlowAffected))+0.05f)*TimePassed*500.0f;
 				}
 			
 				// check against explosions
@@ -129,7 +130,7 @@ void CParticles::Update(float TimePassed)
 					if(Distance < 82.0f && Distance > 0.0f)
 					{
 						vec2 Dir = normalize(m_aParticles[i].m_Pos-m_aExplosionPos[j]);
-						m_aParticles[i].m_Vel += Dir*500.0f*((82.0f-Distance)/82.0f);
+						m_aParticles[i].m_Vel += Dir*500.0f*((82.0f-Distance)/82.0f)*TimePassed*500.0f;
 					}
 				}
 				
@@ -172,7 +173,7 @@ void CParticles::Update(float TimePassed)
 						vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 						vec2 Vel = Pos-PrevPos;
 						if(distance(Pos, m_aParticles[i].m_Pos) < 16.0f)
-							m_aParticles[i].m_Vel += Vel*10.0f*m_aParticles[i].m_FlowAffected;
+							m_aParticles[i].m_Vel += Vel*10.0f*m_aParticles[i].m_FlowAffected*TimePassed*500.0f;
 					}
 				}
 			}
