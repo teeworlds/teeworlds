@@ -615,19 +615,15 @@ int CMenus::RenderMenubar(CUIRect r)
 		if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
 			NewPage = PAGE_SERVER_INFO;
 
-		Box.VSplitLeft(130.0f, &Button, &Box);
-
 		if(m_pClient->m_IsRace)
 		{
-			Box.VSplitLeft(4.0f, 0, &Box);
-			Box.VSplitLeft(100.0f, &Button, &Box);
+			Box.VSplitLeft(90.0f, &Button, &Box);
 			static int s_GhostButton=0;
-			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, CUI::CORNER_T))
+			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, 0))
 				NewPage = PAGE_GHOST;
 		}
 		
-		Box.VSplitLeft(4.0f, 0, &Box);
-		Box.VSplitLeft(140.0f, &Button, &Box);
+		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
 			NewPage = PAGE_CALLVOTE;
