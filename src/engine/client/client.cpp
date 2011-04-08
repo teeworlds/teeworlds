@@ -1096,9 +1096,23 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			NETADDR Addr;
 
+			static char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+
 			// copy address
-			Addr.type = (pAddrs[i].m_aType[0]<<24) | (pAddrs[i].m_aType[1]<<16) | (pAddrs[i].m_aType[2]<<8) | pAddrs[i].m_aType[3];
-			mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
+			if(!mem_comp(IPV4Mapping, pAddrs[i].m_aIp, sizeof(IPV4Mapping)))
+			{
+				mem_zero(&Addr, sizeof(Addr));
+				Addr.type = NETTYPE_IPV4;
+				Addr.ip[0] = pAddrs[i].m_aIp[12];
+				Addr.ip[1] = pAddrs[i].m_aIp[13];
+				Addr.ip[2] = pAddrs[i].m_aIp[14];
+				Addr.ip[3] = pAddrs[i].m_aIp[15];
+			}
+			else
+			{
+				Addr.type = NETTYPE_IPV6;
+				mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
+			}
 			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
 			
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
