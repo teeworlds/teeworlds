@@ -183,7 +183,9 @@ void CServerBrowser::Filter()
 				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf2") == 0 ||
 				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf3") == 0 ||
 				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf4") == 0 ||
-				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf5") == 0)
+				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf5") == 0 ||
+				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf6") == 0 ||
+				str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf7") == 0)
 			)
 			{
 				Filtered = 1;
