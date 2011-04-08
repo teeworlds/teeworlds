@@ -280,7 +280,7 @@ container.sprites.Add(Sprite("part_smoke", set_particles, 0,1,1,1))
 container.sprites.Add(Sprite("part_shell", set_particles, 0,2,2,2))
 container.sprites.Add(Sprite("part_expl01", set_particles, 0,4,4,4))
 container.sprites.Add(Sprite("part_airjump", set_particles, 2,2,2,2))
-container.sprites.Add(Sprite("part_hit01", set_particles, 4,1,4,4))
+container.sprites.Add(Sprite("part_hit01", set_particles, 4,1,2,2))
 
 container.sprites.Add(Sprite("health_full", set_game, 21,0,2,2))
 container.sprites.Add(Sprite("health_empty", set_game, 23,0,2,2))
