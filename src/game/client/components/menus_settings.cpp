@@ -1399,7 +1399,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Graphics"),
 		Localize("Sound"),
 		Localize("Chat"),
-		Localize("Hud-Mod"),
+		Localize("Hud"),
 		Localize("Race"),
 		"TeeComp"};
 

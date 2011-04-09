@@ -825,7 +825,7 @@ Zoom out
 Zoom in
 == 
 
-Hud-Mod
+Hud
 == 
 
 Race
