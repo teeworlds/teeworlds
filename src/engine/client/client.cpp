@@ -450,14 +450,10 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	//
 	m_aCmdConnect[0] = 0;
 
-	// map download
-	m_aMapdownloadFilename[0] = 0;
-	m_aMapdownloadName[0] = 0;
-	m_MapdownloadFile = 0;
-	m_MapdownloadChunk = 0;
-	m_MapdownloadCrc = 0;
-	m_MapdownloadAmount = -1;
-	m_MapdownloadTotalsize = -1;
+	// file download
+	for(int i = 0; i < MAX_FILES; i++)
+		m_aFiles[i].m_File = 0;
+	m_MapFile = -1;
 
 	m_CurrentServerInfoRequestTime = -1;
 
@@ -731,13 +727,13 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_pMap->Unload();
 
 	// disable all downloads
-	m_MapdownloadChunk = 0;
-	if(m_MapdownloadFile)
-		io_close(m_MapdownloadFile);
-	m_MapdownloadFile = 0;
-	m_MapdownloadCrc = 0;
-	m_MapdownloadTotalsize = -1;
-	m_MapdownloadAmount = 0;
+	for(int i = 0; i < MAX_FILES; i++)
+	{
+		if(m_aFiles[i].m_File)
+			io_close(m_aFiles[i].m_File);
+		m_aFiles[i].m_File = 0;
+	}
+	m_MapFile = -1;
 
 	// clear the current server info
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
@@ -1173,119 +1169,157 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 	if(Sys)
 	{
 		// system message
-		if(Msg == NETMSG_MAP_CHANGE)
+		if(Msg == NETMSG_FILE_INFO)
 		{
-			const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
-			int MapCrc = Unpacker.GetInt();
-			int MapSize = Unpacker.GetInt();
-			const char *pError = 0;
-
+			int Id = Unpacker.GetInt();
+			if(Id < 0 || Id >= MAX_FILES)
+				return;
+			CFile *pFile = &m_aFiles[Id];
+			
+			int Type = Unpacker.GetInt();
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
+			unsigned Crc = Unpacker.GetInt();
+			int Size = Unpacker.GetInt();
+			
 			if(Unpacker.Error())
 				return;
-
+			
+			const char *pError = 0;
+			if(Type < FILETYPE_MAP || Type > FILETYPE_MAP)
+				pError = "invalid file type";
+			
 			// check for valid standard map
-			if(!m_MapChecker.IsMapValid(pMap, MapCrc, MapSize))
+			if(Type == FILETYPE_MAP && !m_MapChecker.IsMapValid(pName, Crc, Size))
 				pError = "invalid standard map";
-
-			for(int i = 0; pMap[i]; i++) // protect the player from nasty map names
+			
+			for(int i = 0; pName[i]; i++) // protect the player from nasty file names
 			{
-				if(pMap[i] == '/' || pMap[i] == '\\')
-					pError = "strange character in map name";
+				if(pName[i] == '/' || pName[i] == '\\')
+					pError = "strange character in file name";
 			}
-
-			if(MapSize < 0)
-				pError = "invalid map size";
-
+			
+			if(Size < 0)
+				pError = "invalid file size";
+			
 			if(pError)
 				DisconnectWithReason(pError);
 			else
 			{
-				pError = LoadMapSearch(pMap, MapCrc);
-
+				if(Type == FILETYPE_MAP)
+					pError = LoadMapSearch(pName, Crc);
+				else
+				{
+					// TODO: search for file here
+				}
+				
 				if(!pError)
 				{
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();
+					if(Type == FILETYPE_MAP)
+					{
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "map loading done");
+						SendReady();
+					}
 				}
 				else
 				{
-					str_format(m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename), "downloadedmaps/%s_%08x.map", pMap, MapCrc);
-
+					if(Type == FILETYPE_MAP)
+						str_format(pFile->m_aFilename, sizeof(pFile->m_aFilename), "downloadedmaps/%s_%08x.map", pName, Crc);
+					else
+					{
+						// TODO: format filename here
+						return; // TODO: and remove that
+					}
+					
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "starting to download map to '%s'", m_aMapdownloadFilename);
+					str_format(aBuf, sizeof(aBuf), "starting to download file to '%s'", pFile->m_aFilename);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
-
-					m_MapdownloadChunk = 0;
-					str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
-					if(m_MapdownloadFile)
-						io_close(m_MapdownloadFile);
-					m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-					m_MapdownloadCrc = MapCrc;
-					m_MapdownloadTotalsize = MapSize;
-					m_MapdownloadAmount = 0;
-
-					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-					Msg.AddInt(m_MapdownloadChunk);
+					
+					pFile->m_Chunk = 0;
+					str_copy(pFile->m_aName, pName, sizeof(pFile->m_aName));
+					if(pFile->m_File)
+						io_close(pFile->m_File);
+					pFile->m_File = Storage()->OpenFile(pFile->m_aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+					pFile->m_Crc = Crc;
+					pFile->m_Totalsize = Size;
+					pFile->m_Amount = 0;
+					
+					if(Type == FILETYPE_MAP)
+						m_MapFile = Id;
+					
+					CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+					Msg.AddInt(Id);
+					Msg.AddInt(pFile->m_Chunk);
 					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-
+					
 					if(g_Config.m_Debug)
 					{
-						str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+						str_format(aBuf, sizeof(aBuf), "requested chunk %d", pFile->m_Chunk);
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 					}
 				}
 			}
 		}
-		else if(Msg == NETMSG_MAP_DATA)
+		else if(Msg == NETMSG_FILE_DATA)
 		{
+			int Id = Unpacker.GetInt();
+			if(Id < 0 || Id >= MAX_FILES)
+				return;
+			CFile *pFile = &m_aFiles[Id];
+			
 			int Last = Unpacker.GetInt();
-			int MapCRC = Unpacker.GetInt();
+			unsigned Crc = Unpacker.GetInt();
 			int Chunk = Unpacker.GetInt();
 			int Size = Unpacker.GetInt();
 			const unsigned char *pData = Unpacker.GetRaw(Size);
-
-			// check fior errors
-			if(Unpacker.Error() || Size <= 0 || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile)
+			
+			// check for errors
+			if(Unpacker.Error() || Size <= 0 || !pFile->m_File || Crc != pFile->m_Crc || Chunk != pFile->m_Chunk)
 				return;
-
-			io_write(m_MapdownloadFile, pData, Size);
-
-			m_MapdownloadAmount += Size;
-
+			
+			io_write(pFile->m_File, pData, Size);
+			pFile->m_Amount += Size;
+			
 			if(Last)
 			{
 				const char *pError;
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
-
-				if(m_MapdownloadFile)
-					io_close(m_MapdownloadFile);
-				m_MapdownloadFile = 0;
-				m_MapdownloadAmount = 0;
-				m_MapdownloadTotalsize = -1;
-
-				// load map
-				pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
-				if(!pError)
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading file");
+				
+				if(pFile->m_File)
+					io_close(pFile->m_File);
+				pFile->m_File = 0;
+				
+				if(m_MapFile == Id)
 				{
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();						
+					// load map
+					pError = LoadMap(pFile->m_aName, pFile->m_aFilename, pFile->m_Crc);
+					if(!pError)
+					{
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
+						SendReady();
+					}
+					else
+						DisconnectWithReason(pError);
+					m_MapFile = -1;
 				}
 				else
-					DisconnectWithReason(pError);
+				{
+					// TODO: load sounds and images
+				}
 			}
 			else
 			{
 				// request new chunk
-				m_MapdownloadChunk++;
-
-				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-				Msg.AddInt(m_MapdownloadChunk);
+				pFile->m_Chunk++;
+				
+				CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+				Msg.AddInt(Id);
+				Msg.AddInt(pFile->m_Chunk);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-
+				
 				if(g_Config.m_Debug)
 				{
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+					str_format(aBuf, sizeof(aBuf), "requested chunk %d", pFile->m_Chunk);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 				}
 			}

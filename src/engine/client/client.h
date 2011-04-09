@@ -100,6 +100,17 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		NUM_SNAPSHOT_TYPES=2,
 		PREDICTION_MARGIN=1000/50/2, // magic network prediction value
 	};
+	
+	struct CFile
+	{
+		char m_aFilename[256];
+		char m_aName[64];
+		IOHANDLE m_File;
+		int m_Chunk;
+		unsigned m_Crc;
+		int m_Amount;
+		int m_Totalsize;
+	};
 
 	class CNetClient m_NetClient;
 	class CDemoPlayer m_DemoPlayer;
@@ -142,15 +153,10 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	char m_aCmdConnect[256];
-
-	// map download
-	char m_aMapdownloadFilename[256];
-	char m_aMapdownloadName[256];
-	IOHANDLE m_MapdownloadFile;
-	int m_MapdownloadChunk;
-	int m_MapdownloadCrc;
-	int m_MapdownloadAmount;
-	int m_MapdownloadTotalsize;
+	
+	// file download
+	CFile m_aFiles[MAX_FILES];
+	int m_MapFile;
 
 	// time
 	CSmoothTime m_GameTime;
@@ -280,8 +286,8 @@ public:
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
-	virtual int MapDownloadAmount() { return m_MapdownloadAmount; }
-	virtual int MapDownloadTotalsize() { return m_MapdownloadTotalsize; }
+	virtual int MapDownloadAmount() { return m_MapFile < 0 ? 0 : m_aFiles[m_MapFile].m_Amount; }
+	virtual int MapDownloadTotalsize() { return m_MapFile < 0 ? -1 : m_aFiles[m_MapFile].m_Totalsize; }
 
 	void PumpNetwork();
 

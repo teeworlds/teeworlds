@@ -96,6 +96,15 @@ public:
 		void Reset();
 	};
 	
+	struct CFile
+	{
+		int m_Type;
+		char m_aName[64];
+		unsigned m_Crc;
+		unsigned char *m_pData;
+		int m_Size;
+	};
+
 	CClient m_aClients[MAX_CLIENTS];
 
 	CSnapshotDelta m_SnapshotDelta;
@@ -113,11 +122,9 @@ public:
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
-
-	char m_aCurrentMap[64];
-	unsigned m_CurrentMapCrc;
-	unsigned char *m_pCurrentMapData;
-	int m_CurrentMapSize;	
+	
+	CFile m_aFiles[MAX_FILES];
+	char m_aMapFilename[256];
 	
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
@@ -158,7 +165,7 @@ public:
 	static int NewClientCallback(int ClientID, void *pUser);
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
-	void SendMap(int ClientID);
+	void SendFile(int ClientID, int FileId);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
@@ -175,6 +182,7 @@ public:
 	void PumpNetwork();
 
 	char *GetMapName();
+	void LoadFile(const char *pName, char *pFilename, int Type);
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);

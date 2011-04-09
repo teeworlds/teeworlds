@@ -37,30 +37,30 @@ enum
 	NETMSG_INFO=1,
 	
 	// sent by server
-	NETMSG_MAP_CHANGE,		// sent when client should switch map
-	NETMSG_MAP_DATA,		// map transfer, contains a chunk of the map file
-	NETMSG_CON_READY,		// connection is ready, client should send start info
-	NETMSG_SNAP,			// normal snapshot, multiple parts
-	NETMSG_SNAPEMPTY,		// empty snapshot
-	NETMSG_SNAPSINGLE,		// ?
-	NETMSG_SNAPSMALL,		//
-	NETMSG_INPUTTIMING,		// reports how off the input was
-	NETMSG_RCON_AUTH_STATUS,// result of the authentication
-	NETMSG_RCON_LINE,		// line that should be printed to the remote console
+	NETMSG_FILE_INFO,			// sent when client will need a file
+	NETMSG_FILE_DATA,			// file transfer, contains a chunk of the file
+	NETMSG_CON_READY,			// connection is ready, client should send start info
+	NETMSG_SNAP,				// normal snapshot, multiple parts
+	NETMSG_SNAPEMPTY,			// empty snapshot
+	NETMSG_SNAPSINGLE,			// ?
+	NETMSG_SNAPSMALL,			//
+	NETMSG_INPUTTIMING,			// reports how off the input was
+	NETMSG_RCON_AUTH_STATUS,	// result of the authentication
+	NETMSG_RCON_LINE,			// line that should be printed to the remote console
 
-	NETMSG_AUTH_CHALLANGE,	//
-	NETMSG_AUTH_RESULT,		//
+	NETMSG_AUTH_CHALLANGE,		//
+	NETMSG_AUTH_RESULT,			//
 	
 	// sent by client
-	NETMSG_READY,			//
+	NETMSG_READY,				//
 	NETMSG_ENTERGAME,
-	NETMSG_INPUT,			// contains the inputdata from the client
-	NETMSG_RCON_CMD,		// 
-	NETMSG_RCON_AUTH,		//
-	NETMSG_REQUEST_MAP_DATA,//
+	NETMSG_INPUT,				// contains the inputdata from the client
+	NETMSG_RCON_CMD,			//
+	NETMSG_RCON_AUTH,			//
+	NETMSG_REQUEST_FILE_DATA,	//
 
-	NETMSG_AUTH_START,		//
-	NETMSG_AUTH_RESPONSE,	//
+	NETMSG_AUTH_START,			//
+	NETMSG_AUTH_RESPONSE,		//
 	
 	// sent by both
 	NETMSG_PING,
@@ -75,6 +75,9 @@ enum
 	SERVER_FLAG_PASSWORD = 0x1,
 
 	MAX_CLIENTS=16,
+	MAX_FILES=16,
+	
+	FILETYPE_MAP=0,
 
 	MAX_INPUT_SIZE=128,
 	MAX_SNAPSHOT_PACKSIZE=900,

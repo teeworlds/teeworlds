@@ -174,9 +174,9 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	
 	m_CurrentGameTick = 0;
 	m_RunServer = 1;
-
-	m_pCurrentMapData = 0;
-	m_CurrentMapSize = 0;
+	
+	for(int i = 0; i < MAX_FILES; i++)
+		m_aFiles[i].m_pData = 0;
 	
 	m_MapReload = 0;
 
@@ -609,12 +609,18 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	return 0;
 }
 
-void CServer::SendMap(int ClientID)
+void CServer::SendFile(int ClientID, int FileId)
 {
-	CMsgPacker Msg(NETMSG_MAP_CHANGE);
-	Msg.AddString(GetMapName(), 0);
-	Msg.AddInt(m_CurrentMapCrc);
-	Msg.AddInt(m_CurrentMapSize);
+	CFile *pFile = &m_aFiles[FileId];
+	if(!pFile->m_pData)
+		return;
+	
+	CMsgPacker Msg(NETMSG_FILE_INFO);
+	Msg.AddInt(FileId);
+	Msg.AddInt(pFile->m_Type);
+	Msg.AddString(pFile->m_aName, 0);
+	Msg.AddInt(pFile->m_Crc);
+	Msg.AddInt(pFile->m_Size);
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
 }
 
@@ -690,36 +696,42 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
-				SendMap(ClientID);
+				SendFile(ClientID, 0);
 			}
 		}
-		else if(Msg == NETMSG_REQUEST_MAP_DATA)
+		else if(Msg == NETMSG_REQUEST_FILE_DATA)
 		{
+			int Id = Unpacker.GetInt();
+			if(Id < 0 || Id >= MAX_FILES)
+				return;
+			CFile *pFile = &m_aFiles[Id];
+			
 			int Chunk = Unpacker.GetInt();
 			int ChunkSize = 1024-128;
 			int Offset = Chunk * ChunkSize;
 			int Last = 0;
-				
-			// drop faulty map data requests
-			if(Chunk < 0 || Offset > m_CurrentMapSize)
+			
+			// drop faulty file data requests
+			if(Unpacker.Error() || !pFile->m_pData || Chunk < 0 || Offset > pFile->m_Size)
 				return;
 				
-			if(Offset+ChunkSize >= m_CurrentMapSize)
+			if(Offset+ChunkSize >= pFile->m_Size)
 			{
-				ChunkSize = m_CurrentMapSize-Offset;
+				ChunkSize = pFile->m_Size-Offset;
 				if(ChunkSize < 0)
 					ChunkSize = 0;
 				Last = 1;
 			}
-				
-			CMsgPacker Msg(NETMSG_MAP_DATA);
+			
+			CMsgPacker Msg(NETMSG_FILE_DATA);
+			Msg.AddInt(Id);
 			Msg.AddInt(Last);
-			Msg.AddInt(m_CurrentMapCrc);
+			Msg.AddInt(pFile->m_Crc);
 			Msg.AddInt(Chunk);
 			Msg.AddInt(ChunkSize);
-			Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
+			Msg.AddRaw(&pFile->m_pData[Offset], ChunkSize);
 			SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
-				
+			
 			if(g_Config.m_Debug)
 			{
 				char aBuf[256];
@@ -1041,23 +1053,51 @@ char *CServer::GetMapName()
 	return pMapShortName;
 }
 
+void CServer::LoadFile(const char *pName, char *pFilename, int Type)
+{
+	// find file slot
+	int Id = -1;
+	if(Type == FILETYPE_MAP)
+		Id = 0;
+	else
+	{
+		for(int i = 1; i < MAX_FILES; i++)
+		{
+			if(!m_aFiles[i].m_pData)
+			{
+				Id = i;
+				break;
+			}
+		}
+	}
+	if(Id == -1)
+		return;
+	
+	CFile *pFile = &m_aFiles[Id];
+	str_copy(pFile->m_aName, GetMapName(), sizeof(pFile->m_aName));
+	
+	// load compelate map into memory for download
+	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	pFile->m_Size = (int)io_length(File);
+	if(pFile->m_pData)
+		mem_free(pFile->m_pData);
+	pFile->m_pData = (unsigned char *)mem_alloc(pFile->m_Size, 1);
+	io_read(File, pFile->m_pData, pFile->m_Size);
+	io_close(File);
+}
+
 int CServer::LoadMap(const char *pMapName)
 {
-	//DATAFILE *df;
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
 	
-	/*df = datafile_load(buf);
-	if(!df)
-		return 0;*/
-
 	// check for valid standard map
 	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL))
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "mapchecker", "invalid standard map");
 		return 0;
 	}
-		
+	
 	if(!m_pMap->Load(aBuf))
 		return 0;
 	
@@ -1068,24 +1108,14 @@ int CServer::LoadMap(const char *pMapName)
 	m_IDPool.TimeoutIDs();
 	
 	// get the crc of the map
-	m_CurrentMapCrc = m_pMap->Crc();
+	m_aFiles[0].m_Crc = m_pMap->Crc();
 	char aBufMsg[256];
-	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentMapCrc);
+	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_aFiles[0].m_Crc);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
-		
-	str_copy(m_aCurrentMap, pMapName, sizeof(m_aCurrentMap));
-	//map_set(df);
 	
-	// load compelate map into memory for download
-	{
-		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
-		m_CurrentMapSize = (int)io_length(File);
-		if(m_pCurrentMapData)
-			mem_free(m_pCurrentMapData);
-		m_pCurrentMapData = (unsigned char *)mem_alloc(m_CurrentMapSize, 1);
-		io_read(File, m_pCurrentMapData, m_CurrentMapSize);
-		io_close(File);
-	}
+	LoadFile(GetMapName(), aBuf, FILETYPE_MAP);
+	str_copy(m_aMapFilename, pMapName, sizeof(m_aMapFilename));
+	
 	return 1;
 }
 
@@ -1109,6 +1139,9 @@ int CServer::Run()
 		dbg_msg("server", "failed to load map. mapname='%s'", g_Config.m_SvMap);
 		return -1;
 	}
+	
+	// load files
+	// LoadFile(pName, pFilename, Type);
 	
 	// start server
 	NETADDR BindAddr;
@@ -1164,7 +1197,7 @@ int CServer::Run()
 			int NewTicks = 0;
 			
 			// load new map TODO: don't poll this
-			if(str_comp(g_Config.m_SvMap, m_aCurrentMap) != 0 || m_MapReload)
+			if(str_comp(g_Config.m_SvMap, m_aMapFilename) != 0 || m_MapReload)
 			{
 				m_MapReload = 0;
 				
@@ -1179,7 +1212,7 @@ int CServer::Run()
 						if(m_aClients[c].m_State <= CClient::STATE_AUTH)
 							continue;
 						
-						SendMap(c);
+						SendFile(c, 0);
 						m_aClients[c].Reset();
 						m_aClients[c].m_State = CClient::STATE_CONNECTING;
 					}
@@ -1194,7 +1227,7 @@ int CServer::Run()
 				{
 					str_format(aBuf, sizeof(aBuf), "failed to load map. mapname='%s'", g_Config.m_SvMap);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-					str_copy(g_Config.m_SvMap, m_aCurrentMap, sizeof(g_Config.m_SvMap));
+					str_copy(g_Config.m_SvMap, m_aMapFilename, sizeof(g_Config.m_SvMap));
 				}
 			}
 			
@@ -1273,8 +1306,9 @@ int CServer::Run()
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
 
-	if(m_pCurrentMapData)
-		mem_free(m_pCurrentMapData);
+	for(int i = 0; i < MAX_FILES; i++)
+		mem_free(m_aFiles[i].m_pData);
+	
 	return 0;
 }
 
@@ -1450,7 +1484,7 @@ void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 		str_timestamp(aDate, sizeof(aDate));
 		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
 	}
-	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
+	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aMapFilename, pServer->m_aFiles[0].m_Crc, "server");
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
