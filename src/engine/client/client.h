@@ -101,15 +101,23 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		PREDICTION_MARGIN=1000/50/2, // magic network prediction value
 	};
 	
-	struct CFile
+	struct CFileInfo
 	{
+		bool m_Queued;
+		int m_Queue;
+		int m_Type;
+		unsigned m_Crc;
 		char m_aFilename[256];
 		char m_aName[64];
+		int m_Totalsize;
+	};
+	
+	struct CFile
+	{
+		int m_Id;
 		IOHANDLE m_File;
 		int m_Chunk;
-		unsigned m_Crc;
 		int m_Amount;
-		int m_Totalsize;
 	};
 
 	class CNetClient m_NetClient;
@@ -155,8 +163,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	char m_aCmdConnect[256];
 	
 	// file download
-	CFile m_aFiles[MAX_FILES];
-	int m_MapFile;
+	CFileInfo m_aFiles[MAX_FILES];
+	CFile m_DownloadFile;
 
 	// time
 	CSmoothTime m_GameTime;
@@ -278,6 +286,9 @@ public:
 
 	virtual const char *ErrorString();
 
+	void QueueFile(int Id);
+	void DownloadQueuedFile();
+	
 	const char *LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc);
 	const char *LoadMapSearch(const char *pMapName, int WantedCrc);
 
@@ -286,8 +297,8 @@ public:
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
-	virtual int MapDownloadAmount() { return m_MapFile < 0 ? 0 : m_aFiles[m_MapFile].m_Amount; }
-	virtual int MapDownloadTotalsize() { return m_MapFile < 0 ? -1 : m_aFiles[m_MapFile].m_Totalsize; }
+	virtual int FileDownloadAmount() { return m_DownloadFile.m_File ? m_DownloadFile.m_Amount : 0; }
+	virtual int FileDownloadTotalsize() { return m_DownloadFile.m_File ? m_aFiles[m_DownloadFile.m_Id].m_Totalsize : -1; }
 
 	void PumpNetwork();
 

@@ -86,8 +86,8 @@ public:
 	virtual void EnterGame() = 0;
 
 	//
-	virtual int MapDownloadAmount() = 0;
-	virtual int MapDownloadTotalsize() = 0;
+	virtual int FileDownloadAmount() = 0;
+	virtual int FileDownloadTotalsize() = 0;
 	
 	// input
 	virtual int *GetInput(int Tick) = 0;

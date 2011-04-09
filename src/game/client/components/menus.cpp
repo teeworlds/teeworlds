@@ -861,9 +861,9 @@ int CMenus::Render()
 			pTitle = Localize("Connecting to");
 			pExtraText = g_Config.m_UiServerAddress;  // TODO: query the client about the address
 			pButtonText = Localize("Abort");
-			if(Client()->MapDownloadTotalsize() > 0)
+			if(Client()->FileDownloadTotalsize() > 0)
 			{
-				pTitle = Localize("Downloading map");
+				pTitle = Localize("Downloading server files");
 				pExtraText = "";
 			}
 		}
@@ -1026,35 +1026,35 @@ int CMenus::Render()
 				m_Popup = POPUP_NONE;
 			}
 
-			if(Client()->MapDownloadTotalsize() > 0)
+			if(Client()->FileDownloadTotalsize() > 0)
 			{
 				int64 Now = time_get();
 				if(Now-m_DownloadLastCheckTime >= time_freq())
 				{
-					if(m_DownloadLastCheckSize > Client()->MapDownloadAmount())
+					if(m_DownloadLastCheckSize > Client()->FileDownloadAmount())
 					{
 						// map downloaded restarted
 						m_DownloadLastCheckSize = 0;
 					}
 
 					// update download speed
-					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
+					float Diff = (Client()->FileDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
 					if(m_DownloadSpeed > 0.0f || Diff > 0.0f)
 						m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
 					m_DownloadLastCheckTime = Now;
-					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
+					m_DownloadLastCheckSize = Client()->FileDownloadAmount();
 				}
 
 				Box.HSplitTop(64.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->FileDownloadAmount()/1024, Client()->FileDownloadTotalsize()/1024, m_DownloadSpeed);
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 				
 				// time left
 				const char *pTimeLeftString;
 				int TimeLeft = 0;
 				if(m_DownloadSpeed > 0.0f)
-					TimeLeft = (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/(m_DownloadSpeed*1024)+1;
+					TimeLeft = (Client()->FileDownloadTotalsize()-Client()->FileDownloadAmount())/(m_DownloadSpeed*1024)+1;
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -1072,7 +1072,7 @@ int CMenus::Render()
 				Box.HSplitTop(24.f, &Part, &Box);
 				Part.VMargin(40.0f, &Part);
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-				Part.w = max(10.0f, (Part.w*Client()->MapDownloadAmount())/Client()->MapDownloadTotalsize());
+				Part.w = max(10.0f, (Part.w*Client()->FileDownloadAmount())/Client()->FileDownloadTotalsize());
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
 			}
 		}
@@ -1349,7 +1349,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_CONNECTING;
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
-		m_DownloadSpeed = 0.0f;
+		m_DownloadSpeed = 1.0f;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)

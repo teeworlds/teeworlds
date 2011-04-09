@@ -452,8 +452,8 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	// file download
 	for(int i = 0; i < MAX_FILES; i++)
-		m_aFiles[i].m_File = 0;
-	m_MapFile = -1;
+		m_aFiles[i].m_Queued = false;
+	m_DownloadFile.m_File = 0;
 
 	m_CurrentServerInfoRequestTime = -1;
 
@@ -728,12 +728,10 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	// disable all downloads
 	for(int i = 0; i < MAX_FILES; i++)
-	{
-		if(m_aFiles[i].m_File)
-			io_close(m_aFiles[i].m_File);
-		m_aFiles[i].m_File = 0;
-	}
-	m_MapFile = -1;
+		m_aFiles[i].m_Queued = false;
+	if(m_DownloadFile.m_File)
+		io_close(m_DownloadFile.m_File);
+	m_DownloadFile.m_File = 0;
 
 	// clear the current server info
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
@@ -935,6 +933,60 @@ void CClient::Render()
 
 	GameClient()->OnRender();
 	DebugRender();
+}
+
+void CClient::QueueFile(int Id)
+{
+	// find the last queued file
+	int QueueLast = -1;
+	for(int i = 0; i < MAX_FILES; i++)
+	{
+		if(i == Id || !m_aFiles[i].m_Queued)
+			continue;
+		if(m_aFiles[i].m_Queue > QueueLast)
+			QueueLast = m_aFiles[i].m_Queue;
+	}
+	m_aFiles[Id].m_Queue = QueueLast+1;
+}
+
+void CClient::DownloadQueuedFile()
+{
+	// find the first queued file
+	int Id = -1;
+	int QueueFirst;
+	for(int i = 0; i < MAX_FILES; i++)
+	{
+		if(!m_aFiles[i].m_Queued)
+			continue;
+		if(Id == -1 || m_aFiles[i].m_Queue < QueueFirst)
+		{
+			Id = i;
+			QueueFirst = m_aFiles[i].m_Queue;
+		}
+	}
+	if(Id == -1)
+		return;
+	
+	CFileInfo *pFile = &m_aFiles[Id];
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "starting to download file to '%s'", pFile->m_aFilename);
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
+	
+	m_DownloadFile.m_Id = Id;
+	m_DownloadFile.m_Chunk = 0;
+	m_DownloadFile.m_File = Storage()->OpenFile(pFile->m_aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	m_DownloadFile.m_Amount = 0;
+	
+	CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+	Msg.AddInt(Id);
+	Msg.AddInt(m_DownloadFile.m_Chunk);
+	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	
+	if(g_Config.m_Debug)
+	{
+		str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_DownloadFile.m_Chunk);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+	}
 }
 
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
@@ -1174,7 +1226,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int Id = Unpacker.GetInt();
 			if(Id < 0 || Id >= MAX_FILES)
 				return;
-			CFile *pFile = &m_aFiles[Id];
+			CFileInfo *pFile = &m_aFiles[Id];
 			
 			int Type = Unpacker.GetInt();
 			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
@@ -1210,6 +1262,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				else
 				{
 					// TODO: search for file here
+					pError = "file '%s' not found";
 				}
 				
 				if(!pError)
@@ -1230,41 +1283,24 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 						return; // TODO: and remove that
 					}
 					
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "starting to download file to '%s'", pFile->m_aFilename);
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
-					
-					pFile->m_Chunk = 0;
-					str_copy(pFile->m_aName, pName, sizeof(pFile->m_aName));
-					if(pFile->m_File)
-						io_close(pFile->m_File);
-					pFile->m_File = Storage()->OpenFile(pFile->m_aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+					pFile->m_Queued = true;
+					pFile->m_Type = Type;
 					pFile->m_Crc = Crc;
+					str_copy(pFile->m_aName, pName, sizeof(pFile->m_aName));
 					pFile->m_Totalsize = Size;
-					pFile->m_Amount = 0;
+					QueueFile(Id);
 					
-					if(Type == FILETYPE_MAP)
-						m_MapFile = Id;
-					
-					CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
-					Msg.AddInt(Id);
-					Msg.AddInt(pFile->m_Chunk);
-					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-					
-					if(g_Config.m_Debug)
-					{
-						str_format(aBuf, sizeof(aBuf), "requested chunk %d", pFile->m_Chunk);
-						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
-					}
+					if(!m_DownloadFile.m_File)
+						DownloadQueuedFile();
 				}
 			}
 		}
 		else if(Msg == NETMSG_FILE_DATA)
 		{
-			int Id = Unpacker.GetInt();
-			if(Id < 0 || Id >= MAX_FILES)
+			if(!m_DownloadFile.m_File)
 				return;
-			CFile *pFile = &m_aFiles[Id];
+			
+			CFileInfo *pFile = &m_aFiles[m_DownloadFile.m_Id];
 			
 			int Last = Unpacker.GetInt();
 			unsigned Crc = Unpacker.GetInt();
@@ -1273,22 +1309,27 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const unsigned char *pData = Unpacker.GetRaw(Size);
 			
 			// check for errors
-			if(Unpacker.Error() || Size <= 0 || !pFile->m_File || Crc != pFile->m_Crc || Chunk != pFile->m_Chunk)
+			if(Unpacker.Error() || Size <= 0 || Crc != pFile->m_Crc || Chunk != m_DownloadFile.m_Chunk)
+			{
+				io_close(m_DownloadFile.m_File);
+				m_DownloadFile.m_File = 0;
+				DownloadQueuedFile();
 				return;
+			}
 			
-			io_write(pFile->m_File, pData, Size);
-			pFile->m_Amount += Size;
+			io_write(m_DownloadFile.m_File, pData, Size);
+			m_DownloadFile.m_Amount += Size;
 			
 			if(Last)
 			{
 				const char *pError;
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading file");
 				
-				if(pFile->m_File)
-					io_close(pFile->m_File);
-				pFile->m_File = 0;
+				pFile->m_Queued = false;
+				io_close(m_DownloadFile.m_File);
+				m_DownloadFile.m_File = 0;
 				
-				if(m_MapFile == Id)
+				if(pFile->m_Type == FILETYPE_MAP)
 				{
 					// load map
 					pError = LoadMap(pFile->m_aName, pFile->m_aFilename, pFile->m_Crc);
@@ -1299,27 +1340,28 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					}
 					else
 						DisconnectWithReason(pError);
-					m_MapFile = -1;
 				}
 				else
 				{
 					// TODO: load sounds and images
 				}
+				
+				DownloadQueuedFile();
 			}
 			else
 			{
 				// request new chunk
-				pFile->m_Chunk++;
+				m_DownloadFile.m_Chunk++;
 				
 				CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
-				Msg.AddInt(Id);
-				Msg.AddInt(pFile->m_Chunk);
+				Msg.AddInt(m_DownloadFile.m_Id);
+				Msg.AddInt(m_DownloadFile.m_Chunk);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 				
 				if(g_Config.m_Debug)
 				{
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", pFile->m_Chunk);
+					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_DownloadFile.m_Chunk);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 				}
 			}

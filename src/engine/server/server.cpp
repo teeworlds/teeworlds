@@ -609,8 +609,23 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	return 0;
 }
 
+int CServer::FindFile(const char *pName, int Type)
+{
+	for(int i = 0; i < MAX_FILES; i++)
+	{
+		if(!m_aFiles[i].m_pData)
+			continue;
+		if(m_aFiles[i].m_Type == Type && str_comp(m_aFiles[i].m_aName, pName) == 0)
+			return i;
+	}
+	
+	return -1;
+}
+
 void CServer::SendFile(int ClientID, int FileId)
 {
+	if(FileId < 0)
+		return;
 	CFile *pFile = &m_aFiles[FileId];
 	if(!pFile->m_pData)
 		return;
@@ -686,7 +701,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_NetServer.Drop(ClientID, aReason);
 					return;
 				}
-			
+				
 				const char *pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 				{
@@ -694,9 +709,17 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_NetServer.Drop(ClientID, "Wrong password");
 					return;
 				}
-			
+				
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
-				SendFile(ClientID, 0);
+				
+				// send files you want to be downloaded by the client before he enters the game
+				// SendFile(ClientID, FileId);
+				
+				// send map
+				SendFile(ClientID, FindFile(GetMapName(), FILETYPE_MAP));
+				
+				// send files you want to be downloaded by the client while he plays
+				// SendFile(ClientID, FileId);
 			}
 		}
 		else if(Msg == NETMSG_REQUEST_FILE_DATA)
@@ -714,7 +737,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			// drop faulty file data requests
 			if(Unpacker.Error() || !pFile->m_pData || Chunk < 0 || Offset > pFile->m_Size)
 				return;
-				
+			
 			if(Offset+ChunkSize >= pFile->m_Size)
 			{
 				ChunkSize = pFile->m_Size-Offset;
@@ -724,7 +747,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 			
 			CMsgPacker Msg(NETMSG_FILE_DATA);
-			Msg.AddInt(Id);
 			Msg.AddInt(Last);
 			Msg.AddInt(pFile->m_Crc);
 			Msg.AddInt(Chunk);
@@ -1074,9 +1096,10 @@ void CServer::LoadFile(const char *pName, char *pFilename, int Type)
 		return;
 	
 	CFile *pFile = &m_aFiles[Id];
-	str_copy(pFile->m_aName, GetMapName(), sizeof(pFile->m_aName));
+	pFile->m_Type = Type;
+	str_copy(pFile->m_aName, pName, sizeof(pFile->m_aName));
 	
-	// load compelate map into memory for download
+	// load complete file into memory for download
 	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	pFile->m_Size = (int)io_length(File);
 	if(pFile->m_pData)
