@@ -634,7 +634,7 @@ void CHud::RenderRecord()
 	{
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s: %02d:%06.3f", Localize("Server best"), (int)m_Record/60, fmod(m_Record, 60));
-		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
+		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
 	}
 }
 
