@@ -184,8 +184,6 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
 	TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 
-	y += 54.0f;
-
 	// calculate measurements
 	x += 10.0f;
 	float LineHeight = 60.0f;
