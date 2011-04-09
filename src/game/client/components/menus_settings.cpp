@@ -821,6 +821,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_GfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
 		g_Config.m_GfxHighDetail ^= 1;
 
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClRenderFLow, Localize("Particle flow (experimental)"), g_Config.m_ClRenderFLow, &Button))
+		g_Config.m_ClRenderFLow ^= 1;
+
 	// check if the new settings require a restart
 	if(CheckSettings)
 	{

@@ -3,6 +3,7 @@
 #include <base/math.h>
 #include <engine/graphics.h>
 #include <engine/demo.h>
+#include <engine/shared/config.h>
 
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
@@ -106,7 +107,7 @@ void CParticles::Update(float TimePassed)
 		{
 			int Next = m_aParticles[i].m_NextPart;
 			
-			if(m_aParticles[i].m_FlowAffected)
+			if(g_Config.m_ClRenderFLow && m_aParticles[i].m_FlowAffected)
 			{
 				// check against players
 				for(int j = 0; j < MAX_CLIENTS; j++)
