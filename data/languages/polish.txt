@@ -1,0 +1,661 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d z %d serwerów, %d graczy
+
+%ds left
+== Jeszcze %d
+
+Abort
+== Anuluj
+
+Address
+== Adres
+
+All
+== Wszyscy
+
+Alpha
+== Alfa
+
+Always show name plates
+== Zawsze pokazuj nicki
+
+Are you sure that you want to quit?
+== Czy na pewno chcesz opuścić grę?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== To pierwsze uruchomienie gry, podaj swój nick poniżej. Zalecane jest też sprawdzenie ustawień i dopasowanie ich do siebie przed dołączeniem do gry.
+
+Blue team
+== Drużyna niebieskich
+
+Blue team wins!
+== Drużyna niebieskich wygrała!
+
+Body
+== Ciało
+
+Call vote
+== Głosowanie
+
+Chat
+== Chat
+
+Close
+== Zamknij
+
+Compatible version
+== Kompatybilna wersja
+
+Connect
+== Połącz
+
+Connecting to
+== Łączenie z
+
+Connection Problems...
+== Problemy z połączeniem...
+
+Console
+== Konsola
+
+Controls
+== Sterowanie
+
+Current
+== Aktualnie
+
+Current version: %s
+== Aktualna wersja: %s
+
+Custom colors
+== Własne kolory
+
+Delete
+== Usuń
+
+Demos
+== Dema
+
+Disconnect
+== Rozłącz
+
+Disconnected
+== Rozłączono
+
+Display Modes
+== Tryby wyświetlania
+
+Downloading map
+== Pobieranie mapy
+
+Draw!
+== Remis!
+
+Dynamic Camera
+== Dynamiczna kamera
+
+Emoticon
+== Emotikonka
+
+Enter
+== Wejdź
+
+Error
+== Błąd
+
+Error loading demo
+== Błąd przy ładowaniu demo
+
+FSAA samples
+== próbki FSAA (anti-aliasing)
+
+Favorite
+== Ulubiony
+
+Favorites
+== Ulubione
+
+Feet
+== Stopy
+
+Filter
+== Filtr
+
+Fire
+== Strzał
+
+Force vote
+== Wymuś głosowanie
+
+Fullscreen
+== Pełny ekran
+
+Game
+== Gra
+
+Game info
+== Informacje o grze
+
+Game over
+== Koniec gry
+
+Game type
+== Typ gry
+
+Game types:
+== Typy gier:
+
+General
+== Ogólne
+
+Graphics
+== Grafika
+
+Grenade
+== Granatnik
+
+Hammer
+== Młot
+
+Has people playing
+== Nie pokazuj pustych
+
+High Detail
+== Wysoka jakość obrazu
+
+Hook
+== Hak
+
+Host address
+== Adres serwera
+
+Hue
+== Kolor
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Dołącz do niebieskich
+
+Join game
+== Dołącz
+
+Join red
+== Dołącz do czerwonych
+
+Jump
+== Skok
+
+LAN
+== LAN
+
+Language
+== Język
+
+Lht.
+== Jasn.
+
+Loading
+== Ładowanie
+
+MOTD
+== Wiadomość dnia
+
+Map
+== Mapa
+
+Maximum ping:
+== Maksymalny ping:
+
+Miscellaneous
+== Różne
+
+Mouse sens.
+== Czułość myszy
+
+Move left
+== Lewo
+
+Move right
+== Prawo
+
+Movement
+== Ruch
+
+Mute when not active
+== Wycisz kiedy gra nieaktywna
+
+Name
+== Nick
+
+News
+== News
+
+Next weapon
+== Następna broń
+
+Nickname
+== Nick
+
+No
+== Nie
+
+No password
+== Bez hasła
+
+No servers found
+== Nie znaleziono serwerów
+
+No servers match your filter criteria
+== Nie znaleziono serwerów spełniających twoje kryteria
+
+Ok
+== OK
+
+Open
+== Otwórz
+
+Password
+== Hasło
+
+Password incorrect
+== Błędne hasło
+
+Ping
+== Ping
+
+Pistol
+== Pistolet
+
+Play
+== Start
+
+Player
+== Gracz
+
+Players
+== Gracze
+
+Please balance teams!
+== Konieczne wyrównanie drużyn!
+
+Prev. weapon
+== Poprzednia broń
+
+Quality Textures
+== Szczegółowe tekstury
+
+Quick search:
+== Szybkie wyszukiwanie:
+
+Quit
+== Wyjście
+
+Red team
+== Drużyna czerwonych
+
+Red team wins!
+== Drużyna czerwonych wygrała!
+
+Refresh
+== Odśwież
+
+Refreshing master servers
+== Odświeżanie głównych serwerów
+
+Remote console
+== Zdalna konsola
+
+Reset filter
+== Domyślne filtry
+
+Reset to defaults
+== Przywróć domyślne
+
+Rifle
+== Laser
+
+Round
+== Runda
+
+Sample rate
+== Próbkowanie
+
+Sat.
+== Nasyc.
+
+Score
+== Wynik
+
+Score board
+== Tablica wyników
+
+Score limit
+== Limit punktów
+
+Scoreboard
+== Tablica wyników
+
+Screenshot
+== Screenshot
+
+Server details
+== Szczegóły serwera
+
+Server info
+== Server info
+
+Server not full
+== Nie pokazuj pełnych
+
+Settings
+== Opcje
+
+Shotgun
+== Shotgun
+
+Show chat
+== Pokaż chat
+
+Show name plates
+== Pokaż nicki
+
+Show only supported
+== Pokaż tylko wspierane
+
+Skins
+== Motywy
+
+Sound
+== Dźwięk
+
+Sound volume
+== Głośność
+
+Spectate
+== Obserwuj
+
+Spectators
+== Obserwatorzy
+
+Standard gametype
+== Standardowy typ gry
+
+Standard map
+== Standardowa mapa
+
+Sudden Death
+== Nagła śmierć
+
+Switch weapon on pickup
+== Zmień broń po podniesieniu
+
+Team
+== Drużyna
+
+Team chat
+== Chat drużynowy
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Wydano Teeworlds %s! Ściągnij je z www.teeworlds.com!
+
+Texture Compression
+== Kompresja tekstur
+
+The server is running a non-standard tuning on a pure game type.
+== Ten serwer nie korzysta ze standardowych ustawień.
+
+Time limit
+== Limit czasu
+
+Try again
+== Ponów próbę
+
+Type
+== Typ
+
+UI Color
+== Kolor menu
+
+Use sounds
+== Włącz dźwięki
+
+V-Sync
+== V-Sync
+
+Version
+== Wersja
+
+Vote no
+== Nie
+
+Vote yes
+== Tak
+
+Voting
+== Głosowanie
+
+Warmup
+== Rozgrzewka
+
+Weapon
+== Bronie
+
+Welcome to Teeworlds
+== Witaj w Teeworlds
+
+Yes
+== Tak
+
+You must restart the game for all settings to take effect.
+== Gra musi zostać uruchomiona ponownie, żeby nowe ustawienia weszły w życie.
+
+Your skin
+== Twój wygląd
+
+##### needs translation #####
+
+%d Bytes
+== 
+
+%d%% loaded
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+%s wins!
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to delete the demo?
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Delete demo
+== 
+
+Demo details
+== 
+
+Folder
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Invalid Demo
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Parent Folder
+== 
+
+Player options
+== 
+
+Quit anyway?
+== 
+
+REC %3d:%02d
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectator mode
+== 
+
+Stop record
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== 
+
+Time limit: %d min
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+== 
+
+no limit
+== 
+
+##### old translations #####
+
