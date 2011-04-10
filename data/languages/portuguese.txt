@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -25,8 +24,14 @@ Always show name plates
 Are you sure that you want to quit?
 == Você tem certeza que deseja sair?
 
-As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Como esta é a primeira vez que você abriu o jogo, por favor, entre com seu apelido abaixo. É recomendado que você cheque suas configurações e então ajuste elas para suas preferências antes de entrar em um servidor.
+As this is the first time you launch the game, please enter your nick name below. It's recommended 
+
+that you check the settings to adjust them to your liking before joining a server.
+== Como esta é a primeira vez que você abre o jogo, por favor, entre com seu apelido abaixo. É 
+
+recomendado que você cheque as configurações e então ajuste elas para suas preferências antes de 
+
+entrar em um servidor.
 
 Blue team
 == Time azul
@@ -104,7 +109,7 @@ Error
 == Erro
 
 Error loading demo
-== erro ao carregar demo
+== Erro ao carregar demo
 
 FSAA samples
 == Amostras FSAA
@@ -134,7 +139,7 @@ Game
 == Jogo
 
 Game info
-== Info. sobre o jogo
+== Info sobre o jogo
 
 Game over
 == Fim de Jogo
@@ -194,7 +199,7 @@ LAN
 == LAN
 
 Language
-== Linguagem
+== Idioma
 
 Lht.
 == Luz
@@ -302,7 +307,7 @@ Refresh
 == Atualizar
 
 Refreshing master servers
-== Atualizando servidores master
+== Atualizando servidores mestres
 
 Remote console
 == Console remoto
@@ -338,7 +343,7 @@ Scoreboard
 == Placar
 
 Screenshot
-== Captura da tela
+== Captura de tela
 
 Server details
 == Detalhes do server
@@ -350,7 +355,7 @@ Server not full
 == Servidor não cheio
 
 Settings
-== Config.
+== Configurações
 
 Shotgun
 == Espingarda
@@ -371,7 +376,7 @@ Sound
 == Som
 
 Sound volume
-== Volume de som
+== Volume do som
 
 Spectate
 == Observar
@@ -457,205 +462,204 @@ Your skin
 ##### needs translation #####
 
 %d Bytes
-== 
+== %d Bytes
 
 %d%% loaded
-== 
+== %d%% carregado
 
 %i minute left
-== 
+== falta %i minuto
 
 %i minutes left
-== 
+== faltam %i minutos
 
 %i second left
-== 
+== falta %i segundo
 
 %i seconds left
-== 
+== faltam %i segundos
 
 %s wins!
-== 
+== %s vence!
 
 -Page %d-
-== 
+== -Página %d-
 
 Add
-== 
+== Adicionar
 
 Add Friend
-== 
+== Adicionar Amigo
 
 Are you sure that you want to delete the demo?
-== 
+== Tem certeza que deseja deletar o demo?
 
 Are you sure that you want to remove the player from your friends list?
-== 
+== Tem certeza que deseja remover o jogador da sua lista de amigos?
 
 Automatically record demos
-== 
+== Gravar demos automaticamente
 
 Automatically take game over screenshot
-== 
+== Capturar tela final de jogo automaticamente
 
 Change settings
-== 
+== Mudar configurações
 
 Clan
-== 
+== Clan
 
 Client
-== 
+== Cliente
 
 Count players only
-== 
+== Contar apenas jogadores
 
 Country
-== 
+== País
 
 Crc:
-== 
+== Crc:
 
 Created:
-== 
+== Criado:
 
 Delete
-== 
+== Deletar
 
 Delete demo
-== 
+== Deletar demo
 
 Demo details
-== 
+== Detalhes do demo
 
 Folder
-== 
+== Pasta
 
 Free-View
-== 
+== Visão Livre
 
 Friends
-== 
+== Amigos
 
 Invalid Demo
-== 
+== Demo inválido
 
 Kick player
-== 
+== Kickar jogador
 
 Length:
-== 
+== Duração:
 
 Map:
-== 
+== Mapa:
 
 Max Screenshots
-== 
+== Máx. de Capturas de Tela
 
 Max demos
-== 
+== Máx. de demos
 
 Move player to spectators
-== 
+== Mover jogador para observadores
 
 Name plates size
-== 
+== Tamanho dos apelidos
 
 Netversion:
-== 
+== Netversion
 
 New name:
-== 
+== Novo nome:
 
 Open
-== 
+== Abrir
 
 Parent Folder
-== 
+== Diretório pai
 
 Player options
-== 
+== Opções do jogador
 
 Quit anyway?
-== 
+== Sair mesmo assim?
 
 REC %3d:%02d
-== 
+== REC %3d:%02d
 
 Reason:
-== 
+== Motivo:
 
 Record demo
-== 
+== Gravar demo
 
 Remove
-== 
+== Deletar
 
 Remove friend
-== 
+== Deletar amigo
 
 Rename
-== 
+== Renomear
 
 Rename demo
-== 
+== Renomear demo
 
 Server address:
-== 
+== Endereço do server:
 
 Server filter
-== 
+== Filtro de server
 
 Show friends
-== 
+== Mostrar amigos
 
 Show ingame HUD
-== 
+== Mostrar HUD do jogo
 
 Size:
-== 
+== Tamanho:
 
 Sound error
-== 
+== Erro de som
 
 Spectator mode
-== 
+== Modo Observador
 
 Stop record
-== 
+== Parar de gravar
 
 The audio device couldn't be initialised.
-== 
+== O aparelho de áudio não pode ser inicializado.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== 
+== Existe um mapa não salvo no editor, você pode querer salvá-lo antes de sair do jogo.
 
 Time limit: %d min
-== 
+== Limite de tempo: %d min
 
 Type:
-== 
+== Tipo:
 
 Unable to delete the demo
-== 
+== Incapaz de deletar demo
 
 Unable to rename the demo
-== 
+== Incapaz de renomear demo
 
 Use team colors for name plates
-== 
+== Usar cores do time para apelidos
 
 Version:
-== 
+== Versão
 
 Vote command:
-== 
+== Comando:
 
 Vote description:
-== 
+== Descrição da votação:
 
 no limit
-== 
+== sem limite
 
 ##### old translations #####
-

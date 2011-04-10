@@ -516,7 +516,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		Client()->ServerBrowserUpdate();
 
 	ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
-	ServerFilter.HSplitBottom(ms_ButtonHeight, &ServerFilter, &Button);
+	ServerFilter.HSplitBottom(ms_ButtonHeight-2.0f, &ServerFilter, &Button);
 	static int s_ClearButton = 0;
 	if(DoButton_Menu(&s_ClearButton, Localize("Reset filter"), 0, &Button))
 	{
