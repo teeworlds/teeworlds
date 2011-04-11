@@ -1,0 +1,227 @@
+[Desert]
+Index 1
+BaseTile
+
+#random
+Index 2
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 3
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+#top
+Index 16
+Pos 0 -1 EMPTY
+
+#right 
+Index 17
+Pos 1 0 EMPTY
+
+#bottom
+Index 18
+Pos 0 1 EMPTY
+
+#left
+Index 19
+Pos -1 0 EMPTY
+
+#corner top-right
+Index 33
+Pos 0 -1 EMPTY
+Pos 1 0 EMPTY
+
+#corner top-left
+Index 32
+Pos 0 -1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-left
+Index 35
+Pos 0 1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-right
+Index 34
+Pos 0 1 EMPTY
+Pos 1 0 EMPTY
+
+#inside corner top-right
+Index 51
+Pos -1 1 EMPTY
+Pos -1 0 FULL
+Pos 0 1 FULL
+
+#inside corner top-left
+Index 50
+Pos 1 1 EMPTY
+Pos 1 0 FULL
+Pos 0 1 FULL
+
+#inside corner bottom-left
+Index 49
+Pos 1 -1 EMPTY
+Pos 1 0 FULL
+Pos 0 -1 FULL
+
+#inside corner bottom-right
+Index 48
+Pos -1 -1 EMPTY
+Pos -1 0 FULL
+Pos 0 -1 FULL
+
+[Mine]
+Index 81
+BaseTile
+
+#random
+Index 82
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 83
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 84
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 85
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 86
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 100
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 101
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 102
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 117
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 118
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 133
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+Index 134
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 500
+
+#top
+Index 96
+Pos 0 -1 EMPTY
+
+#right 
+Index 97
+Pos 1 0 EMPTY
+
+#bottom
+Index 98
+Pos 0 1 EMPTY
+
+#left
+Index 99
+Pos -1 0 EMPTY
+
+#corner top-right
+Index 113
+Pos 0 -1 EMPTY
+Pos 1 0 EMPTY
+
+#corner top-left
+Index 112
+Pos 0 -1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-left
+Index 115
+Pos 0 1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-right
+Index 114
+Pos 0 1 EMPTY
+Pos 1 0 EMPTY
+
+#inside corner top-right
+Index 131
+Pos -1 1 EMPTY
+Pos -1 0 FULL
+Pos 0 1 FULL
+
+#inside corner top-left
+Index 130
+Pos 1 1 EMPTY
+Pos 1 0 FULL
+Pos 0 1 FULL
+
+#inside corner bottom-left
+Index 129
+Pos 1 -1 EMPTY
+Pos 1 0 FULL
+Pos 0 -1 FULL
+
+#inside corner bottom-right
+Index 128
+Pos -1 -1 EMPTY
+Pos -1 0 FULL
+Pos 0 -1 FULL
