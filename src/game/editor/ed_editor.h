@@ -21,6 +21,8 @@
 
 #include <game/client/ui.h>
 
+#include "ed_auto_map.h"
+
 typedef void (*INDEX_MODIFY_FUNC)(int *pIndex);
 
 //CRenderTools m_RenderTools;
@@ -119,6 +121,7 @@ public:
 	class CEditor *m_pEditor;
 	class IGraphics *Graphics();
 	class ITextRender *TextRender();
+	class IStorage *Storage();
 
 	CLayer()
 	{
@@ -230,6 +233,7 @@ public:
 	CEditor *m_pEditor;
 	
 	CEditorImage(CEditor *pEditor)
+	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
 		m_TexID = -1;
@@ -249,6 +253,7 @@ public:
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
+	class CAutoMapper m_AutoMapper;
 };
 
 class CEditorMap
@@ -393,7 +398,7 @@ public:
 	void PrepareForSave();
 
 	void GetSize(float *w, float *h) { *w = m_Width*32.0f;  *h = m_Height*32.0f; }
-	
+
 	int m_TexID;
 	int m_Game;
 	int m_Image;
@@ -683,6 +688,7 @@ public:
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
+	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -693,6 +699,9 @@ public:
 
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
+	
+	void PopupSelectConfigAutoMapInvoke(float x, float y);
+	int PopupSelectConfigAutoMapResult();
 	
 	vec4 ButtonColorMul(const void *pID);
 

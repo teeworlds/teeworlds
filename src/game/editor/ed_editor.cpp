@@ -19,6 +19,7 @@
 #include <game/generated/client_data.h>
 
 #include "ed_editor.h"
+#include "ed_auto_map.h"
 #include <game/client/lineinput.h>
 
 #include <game/localization.h>
@@ -1945,8 +1946,13 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	CEditorImage *pImg = new CEditorImage(pEditor);
 	*pImg = ImgInfo;
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
-	pImg->m_External = 1;	// external by default
+	
+	// external by default
+	pImg->m_External = 1;
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
+	
+	pImg->m_AutoMapper.Load(pImg->m_aName);
+	
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
 	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())
