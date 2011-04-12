@@ -28,11 +28,11 @@ public:
 
 	int m_SortedIndex;
 	int m_ServerIndex;
-	
+
 	NETADDR m_NetAddr;
-	
+
 	int m_QuickSearchHit;
-	
+
 	int m_MaxClients;
 	int m_NumClients;
 	int m_MaxPlayers;
@@ -66,11 +66,11 @@ public:
 		SORT_MAP,
 		SORT_GAMETYPE,
 		SORT_NUMPLAYERS,
-		
+
 		QUICK_SERVERNAME=1,
 		QUICK_PLAYER=2,
 		QUICK_MAPNAME=4,
-		
+
 		TYPE_INTERNET = 0,
 		TYPE_LAN = 1,
 		TYPE_FAVORITES = 2,
@@ -84,12 +84,12 @@ public:
 	virtual bool IsRefreshing() const = 0;
 	virtual bool IsRefreshingMasters() const = 0;
 	virtual int LoadingProgression() const = 0;
-	
+
 	virtual int NumServers() const = 0;
-	
+
 	virtual int NumSortedServers() const = 0;
 	virtual const CServerInfo *SortedGet(int Index) const = 0;
-	
+
 	virtual bool IsFavorite(const NETADDR &Addr) const = 0;
 	virtual void AddFavorite(const NETADDR &Addr) = 0;
 	virtual void RemoveFavorite(const NETADDR &Addr) = 0;

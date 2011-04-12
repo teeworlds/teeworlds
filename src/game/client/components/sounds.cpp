@@ -19,7 +19,7 @@ struct CUserData
 static int LoadSoundsThread(void *pUser)
 {
 	CUserData *pData = static_cast<CUserData *>(pUser);
-	
+
 	for(int s = 0; s < g_pData->m_NumSounds; s++)
 	{
 		for(int i = 0; i < g_pData->m_aSounds[s].m_NumSounds; i++)
@@ -81,7 +81,7 @@ void CSounds::OnRender()
 	// play sound from queue
 	if(m_QueuePos > 0)
 	{
-		int64 Now =  time_get();
+		int64 Now = time_get();
 		if(m_QueueWaitTime <= Now)
 		{
 			Play(CHN_GLOBAL, m_aQueue[0], 1.0f, vec2(0,0));
@@ -111,7 +111,7 @@ void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 	CNetMsg_Sv_SoundGlobal Msg;
 	Msg.m_SoundID = SetId;
 	Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
-	
+
 	Play(Chn, SetId, Vol, Pos);
 }
 

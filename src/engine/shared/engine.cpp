@@ -43,7 +43,7 @@ public:
 			pEngine->m_Logging = false;
 		}
 		else
-		{			
+		{
 			char aBuf[32];
 			str_timestamp(aBuf, sizeof(aBuf));
 			char aFilenameSent[128], aFilenameRecv[128];
@@ -59,7 +59,7 @@ public:
 	{
 		dbg_logger_stdout();
 		dbg_logger_debugger();
-	
+
 		//
 		dbg_msg("engine", "running on %s-%s-%s", CONF_FAMILY_STRING, CONF_PLATFORM_STRING, CONF_ARCH_STRING);
 	#ifdef CONF_ARCH_ENDIAN_LITTLE
@@ -73,7 +73,7 @@ public:
 		// init the network
 		net_init();
 		CNetBase::Init();
-	
+
 		m_JobPool.Init(1);
 
 		m_Logging = false;

@@ -29,7 +29,7 @@ public:
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnRender();
-	
+
 	void ClearQueue();
 	void Enqueue(int SetId);
 	void Play(int Channel, int SetId, float Vol, vec2 Pos);

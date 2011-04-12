@@ -10,12 +10,12 @@ function NewConfig(on_configured_callback)
 	config.OnConfigured = function(self)
 		return true
 	end
-	
+
 	if on_configured_callback then config.OnConfigured = on_configured_callback end
-	
+
 	config.options = {}
 	config.settings = NewSettings()
-	
+
 	config.NewSettings = function(self)
 		local s = NewSettings()
 		for _,v in pairs(self.options) do
@@ -28,25 +28,25 @@ function NewConfig(on_configured_callback)
 		table.insert(self.options, o)
 		self[o.name] = o
 	end
-	
+
 	config.Print = function(self)
 		for k,v in pairs(self.options) do
 			print(v:FormatDisplay())
 		end
 	end
-	
+
 	config.Save = function(self, filename)
 		print("saved configuration to '"..filename.."'")
 		local file = io.open(filename, "w")
-		
+
 		-- Define a little helper function to save options
 		local saver = {}
 		saver.file = file
-		
+
 		saver.line = function(self, str)
 			self.file:write(str .. "\n")
 		end
-		
+
 		saver.option = function(self, option, name)
 			local valuestr = "no"
 			if type(option[name]) == type(0) then
@@ -64,30 +64,30 @@ function NewConfig(on_configured_callback)
 			self.file:write(option.name.."."..name.." = ".. valuestr.."\n")
 		end
 
-		-- Save all the options		
+		-- Save all the options
 		for k,v in pairs(self.options) do
 			v:Save(saver)
 		end
 		file:close()
 	end
-	
+
 	config.Load = function(self, filename)
 		local options_func = loadfile(filename)
 		local options_table = {}
-		
+
 		if not options_func then
 			print("auto configuration")
 			self:Config(filename)
 			options_func = loadfile(filename)
 		end
-		
+
 		if options_func then
 			-- Setup the options tables
 			for k,v in pairs(self.options) do
 				options_table[v.name] = {}
 			end
 			setfenv(options_func, options_table)
-			
+
 			-- this is to make sure that we get nice error messages when
 			-- someone sets an option that isn't valid.
 			local mt = {}
@@ -96,8 +96,8 @@ function NewConfig(on_configured_callback)
 				if v ~= nil then return v end
 				error("there is no configuration option named '" .. key .. "'")
 			end
-			
-			setmetatable(options_table, mt)		
+
+			setmetatable(options_table, mt)
 
 			-- Process the options
 			options_func()
@@ -117,10 +117,10 @@ function NewConfig(on_configured_callback)
 			print("run 'bam config' to generate")
 			print("run 'bam config help' for configuration options")
 			print("")
-			os.exit(1)			
+			os.exit(1)
 		end
 	end
-	
+
 	config.Config = function(self, filename)
 		print("")
 		print("configuration:")
@@ -140,7 +140,7 @@ function NewConfig(on_configured_callback)
 			end
 			print("")
 		end
-	
+
 	end
 
 	config.Autodetect = function(self)
@@ -159,7 +159,7 @@ function NewConfig(on_configured_callback)
 			end
 		end
 	end
-	
+
 	config.Finalize = function(self, filename)
 		if _bam_targets[0] == "config" then
 			if _bam_targets[1] == "help" then
@@ -171,11 +171,11 @@ function NewConfig(on_configured_callback)
 
 			os.exit(0)
 		end
-	
+
 		self:Load(filename)
 		bam_update_globalstamp(filename)
 	end
-	
+
 	return config
 end
 
@@ -214,10 +214,10 @@ function MakeOption(name, value, check, save, display, printhelp)
 	o.auto_detected = true
 	o.FormatDisplay = function(self)
 		local a = "SET"
-		if self.auto_detected then a = "AUTO" end	
+		if self.auto_detected then a = "AUTO" end
 		return string.format("%-5s %-20s %s", a, self.name, self:Display())
 	end
-	
+
 	o.Display = display
 	o.PrintHelp = printhelp
 	if o.Display == nil then o.Display = DefaultOptionDisplay end
@@ -244,16 +244,16 @@ function OptTestCompileC(name, source, compileoptions, desc)
 			end
 		end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "value")
 	end
-	
+
 	local printhelp = function(option)
 		print("\t"..option.name.."=on|off")
 		if option.desc then print("\t\t"..option.desc) end
 	end
-	
+
 	local o = MakeOption(name, false, check, save, nil, printhelp)
 	o.desc = desc
 	o.source = source
@@ -275,16 +275,16 @@ function OptToggle(name, default_value, desc)
 			end
 		end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "value")
 	end
-	
+
 	local printhelp = function(option)
 		print("\t"..option.name.."=on|off")
 		if option.desc then print("\t\t"..option.desc) end
 	end
-	
+
 	local o = MakeOption(name, default_value, check, save, nil, printhelp)
 	o.desc = desc
 	return o
@@ -297,16 +297,16 @@ function OptInteger(name, default_value, desc)
 			option.value = tonumber(ScriptArgs[option.name])
 		end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "value")
 	end
-	
+
 	local printhelp = function(option)
 		print("\t"..option.name.."=N")
 		if option.desc then print("\t\t"..option.desc) end
 	end
-	
+
 	local o = MakeOption(name, default_value, check, save, nil, printhelp)
 	o.desc = desc
 	return o
@@ -320,16 +320,16 @@ function OptString(name, default_value, desc)
 			option.value = ScriptArgs[option.name]
 		end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "value")
 	end
-	
+
 	local printhelp = function(option)
 		print("\t"..option.name.."=STRING")
 		if option.desc then print("\t\t"..option.desc) end
 	end
-	
+
 	local o = MakeOption(name, default_value, check, save, nil, printhelp)
 	o.desc = desc
 	return o
@@ -354,7 +354,7 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			if ScriptArgs[option.name..".cxx"] then
 				option.cxx_compiler = ScriptArgs[option.name..".cxx"]
 			end
-			
+
 			option.auto_detected = false
 		elseif option.driver then
 			-- no need todo anything if we have a driver
@@ -379,11 +379,11 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 		else
 			error(option.driver.." is not a known c/c++ compile driver")
 		end
-		
+
 		if option.c_compiler then settings.cc.c_compiler = option.c_compiler end
 		if option.cxx_compiler then settings.cc.cxx_compiler = option.cxx_compiler end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "driver")
 		output:option(option, "c_compiler")
@@ -407,7 +407,7 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 		if option.cxx_compiler then s = s .. " cxx="..option.cxx_compiler end
 		return s
 	end
-		
+
 	local o = MakeOption(name, nil, check, save, display, printhelp)
 	o.desc = desc
 	o.driver = false
@@ -430,7 +430,7 @@ function OptLibrary(name, header, desc)
 	local check = function(option, settings)
 		option.value = false
 		option.include_path = false
-		
+
 		local function check_compile_include(filename, paths)
 			if CTestCompile(settings, "#include <" .. filename .. ">\nint main(){return 0;}", "") then
 				return ""
@@ -441,7 +441,7 @@ function OptLibrary(name, header, desc)
 					return v
 				end
 			end
-			
+
 			return false
 		end
 
@@ -468,12 +468,12 @@ function OptLibrary(name, header, desc)
 			end
 		end
 	end
-	
+
 	local save = function(option, output)
 		output:option(option, "value")
 		output:option(option, "include_path")
 	end
-	
+
 	local display = function(option)
 		if option.value then
 			if option.include_path then
@@ -490,7 +490,7 @@ function OptLibrary(name, header, desc)
 		print("\t"..option.name.."=disable|system|PATH")
 		if option.desc then print("\t\t"..option.desc) end
 	end
-	
+
 	local o = MakeOption(name, false, check, save, display, printhelp)
 	o.include_path = false
 	o.header = header

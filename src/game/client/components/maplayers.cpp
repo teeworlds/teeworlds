@@ -54,26 +54,26 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		if(Num)
 			pPoints = (CEnvPoint *)pThis->m_pLayers->Map()->GetItem(Start, 0, 0);
 	}
-	
+
 	int Start, Num;
 	pThis->m_pLayers->Map()->GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
-	
+
 	if(Env >= Num)
 		return;
-	
+
 	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pThis->m_pLayers->Map()->GetItem(Start+Env, 0, 0);
-	
+
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
 		static float Time = 0;
 		static float LastLocalTime = pThis->Client()->LocalTime();
-		
+
 		if(!pInfo->m_Paused)
 			Time += (pThis->Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
-		
+
 		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
-		
+
 		LastLocalTime = pThis->Client()->LocalTime();
 	}
 	else
@@ -84,20 +84,20 @@ void CMapLayers::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
-	
+
 	CUIRect Screen;
 	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
-	
+
 	vec2 Center = m_pClient->m_pCamera->m_Center;
 	//float center_x = gameclient.camera->center.x;
 	//float center_y = gameclient.camera->center.y;
-	
+
 	bool PassedGameLayer = false;
-	
+
 	for(int g = 0; g < m_pLayers->NumGroups(); g++)
 	{
 		CMapItemGroup *pGroup = m_pLayers->GetGroup(g);
-		
+
 		if(!g_Config.m_GfxNoclip && pGroup->m_Version >= 2 && pGroup->m_UseClipping)
 		{
 			// set clipping
@@ -108,29 +108,29 @@ void CMapLayers::OnRender()
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
 			float x1 = ((pGroup->m_ClipX+pGroup->m_ClipW) - Points[0]) / (Points[2]-Points[0]);
 			float y1 = ((pGroup->m_ClipY+pGroup->m_ClipH) - Points[1]) / (Points[3]-Points[1]);
-			
+
 			Graphics()->ClipEnable((int)(x0*Graphics()->ScreenWidth()), (int)(y0*Graphics()->ScreenHeight()),
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
-		}		
-		
+		}
+
 		MapScreenToGroup(Center.x, Center.y, pGroup);
-		
+
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
 			CMapItemLayer *pLayer = m_pLayers->GetLayer(pGroup->m_StartLayer+l);
 			bool Render = false;
 			bool IsGameLayer = false;
-			
+
 			if(pLayer == (CMapItemLayer*)m_pLayers->GameLayer())
 			{
 				IsGameLayer = true;
 				PassedGameLayer = 1;
 			}
-			
+
 			// skip rendering if detail layers if not wanted
 			if(pLayer->m_Flags&LAYERFLAG_DETAIL && !g_Config.m_GfxHighDetail && !IsGameLayer)
 				continue;
-				
+
 			if(m_Type == -1)
 				Render = true;
 			else if(m_Type == 0)
@@ -144,7 +144,7 @@ void CMapLayers::OnRender()
 				if(PassedGameLayer && !IsGameLayer)
 					Render = true;
 			}
-			
+
 			if(Render && pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown(KEY_KP0))
 			{
 				CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
@@ -169,12 +169,12 @@ void CMapLayers::OnRender()
 					}
 					io_close(File);
 				}
-			}			
-			
+			}
+
 			if(Render && !IsGameLayer)
 			{
 				//layershot_begin();
-				
+
 				if(pLayer->m_Type == LAYERTYPE_TILES)
 				{
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
@@ -182,7 +182,7 @@ void CMapLayers::OnRender()
 						Graphics()->TextureSet(-1);
 					else
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
-					
+
 					CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
 					Graphics()->BlendNone();
 					vec4 Color = vec4(pTMap->m_Color.r/255.0f, pTMap->m_Color.g/255.0f, pTMap->m_Color.b/255.0f, pTMap->m_Color.a/255.0f);
@@ -199,23 +199,23 @@ void CMapLayers::OnRender()
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pQLayer->m_Image));
 
 					CQuad *pQuads = (CQuad *)m_pLayers->Map()->GetDataSwapped(pQLayer->m_Data);
-					
+
 					Graphics()->BlendNone();
 					RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_OPAQUE, EnvelopeEval, this);
 					Graphics()->BlendNormal();
 					RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, this);
 				}
-				
-				//layershot_end();	
+
+				//layershot_end();
 			}
 		}
 		if(!g_Config.m_GfxNoclip)
 			Graphics()->ClipDisable();
 	}
-	
+
 	if(!g_Config.m_GfxNoclip)
 		Graphics()->ClipDisable();
-	
+
 	// reset the screen like it was before
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }

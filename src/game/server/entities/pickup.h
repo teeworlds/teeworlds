@@ -11,11 +11,11 @@ class CPickup : public CEntity
 {
 public:
 	CPickup(CGameWorld *pGameWorld, int Type, int SubType = 0);
-	
+
 	virtual void Reset();
 	virtual void Tick();
 	virtual void Snap(int SnappingClient);
-	
+
 private:
 	int m_Type;
 	int m_Subtype;

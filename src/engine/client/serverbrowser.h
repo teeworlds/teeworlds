@@ -103,7 +103,7 @@ private:
 
 	CServerEntry *Find(const NETADDR &Addr);
 	CServerEntry *Add(const NETADDR &Addr);
- 
+
 	void RemoveRequest(CServerEntry *pEntry);
 	void QueueRequest(CServerEntry *pEntry);
 

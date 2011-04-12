@@ -61,7 +61,7 @@ int CNetClient::Recv(CNetChunk *pChunk)
 		// check for a chunk
 		if(m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
-		
+
 		// TODO: empty the recvinfo
 		NETADDR Addr;
 		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
@@ -98,7 +98,7 @@ int CNetClient::Send(CNetChunk *pChunk)
 		dbg_msg("netclient", "chunk payload too big. %d. dropping chunk", pChunk->m_DataSize);
 		return -1;
 	}
-	
+
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		// send connectionless packet
@@ -108,10 +108,10 @@ int CNetClient::Send(CNetChunk *pChunk)
 	{
 		int Flags = 0;
 		dbg_assert(pChunk->m_ClientID == 0, "errornous client id");
-		
+
 		if(pChunk->m_Flags&NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;
-		
+
 		m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData);
 
 		if(pChunk->m_Flags&NETSENDFLAG_FLUSH)

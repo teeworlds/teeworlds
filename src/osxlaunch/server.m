@@ -13,9 +13,9 @@
 {
 	NSPipe *pipe;
 	task = t;
-    pipe = [NSPipe pipe];
-    [task setStandardOutput: pipe];
-    file = [pipe fileHandleForReading];
+	pipe = [NSPipe pipe];
+	[task setStandardOutput: pipe];
+	file = [pipe fileHandleForReading];
 
 	[[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(outputNotification:) name: NSFileHandleReadCompletionNotification object: file];
 
@@ -30,8 +30,8 @@
 
 	[[self textStorage] appendAttributedString: attrstr];
 	int length = [[self textStorage] length];
-    NSRange range = NSMakeRange(length, 0);
-    [self scrollRangeToVisible: range];
+	NSRange range = NSMakeRange(length, 0);
+	[self scrollRangeToVisible: range];
 
 	[attrstr release];
 	[string release];
@@ -41,18 +41,18 @@
 -(void)windowWillClose:(NSNotification *)notification
 {
 	[task terminate];
-    [NSApp terminate:self];
+	[NSApp terminate:self];
 }
 @end
 
 void runServer()
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSApp = [NSApplication sharedApplication];
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSApp = [NSApplication sharedApplication];
 	NSBundle* mainBundle = [NSBundle mainBundle];
 	NSTask *task;
-    task = [[NSTask alloc] init];
-	[task setCurrentDirectoryPath: [mainBundle resourcePath]]; 
+	task = [[NSTask alloc] init];
+	[task setCurrentDirectoryPath: [mainBundle resourcePath]];
 
 	// get a server config
 	NSOpenPanel* openDlg = [NSOpenPanel openPanel];
@@ -77,8 +77,8 @@ void runServer()
 
 	window = [[NSWindow alloc]
 		initWithContentRect: graphicsRect
-		styleMask: NSTitledWindowMask 
-		| NSClosableWindowMask 
+		styleMask: NSTitledWindowMask
+		| NSClosableWindowMask
 		| NSMiniaturizableWindowMask
 		backing: NSBackingStoreBuffered
 		defer: NO];
@@ -100,8 +100,8 @@ void runServer()
 	[NSApp run];
 	[task terminate];
 
-    [NSApp release];
-    [pool release];
+	[NSApp release];
+	[pool release];
 }
 
 int main (int argc, char **argv)

@@ -13,7 +13,7 @@ public:
 
 	void Clear();
 	bool IsActive();
-	
+
 	virtual void OnRender();
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnMessage(int MsgType, void *pRawMsg);

@@ -109,7 +109,7 @@ void BuildPackets()
 				m_NumPackets++;
 			}
 
-			// copy header	
+			// copy header
 			mem_copy(m_aPackets[m_NumPackets-1].m_Data.m_aHeader, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 
 			// copy server addresses
@@ -146,9 +146,9 @@ void BuildPackets()
 				m_NumPacketsLegacy++;
 			}
 
-			// copy header	
+			// copy header
 			mem_copy(m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aHeader, SERVERBROWSE_LIST_LEGACY, sizeof(SERVERBROWSE_LIST_LEGACY));
-			
+
 			// copy server addresses
 			mem_copy(m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aIp, pCurrent->m_Address.ip,
 				sizeof(m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aIp));
@@ -179,7 +179,7 @@ void SendOk(NETADDR *pAddr)
 	p.m_Flags = NETSENDFLAG_CONNLESS;
 	p.m_DataSize = sizeof(SERVERBROWSE_FWOK);
 	p.m_pData = SERVERBROWSE_FWOK;
-	
+
 	// send on both to be sure
 	m_NetChecker.Send(&p);
 	m_NetOp.Send(&p);
@@ -215,7 +215,7 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, ServerType Type)
 		dbg_msg("mastersrv", "error: mastersrv is full");
 		return;
 	}
-	
+
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
 	char aAltAddrStr[NETADDR_MAXSTRSIZE];
@@ -243,14 +243,14 @@ void AddServer(NETADDR *pInfo, ServerType Type)
 			return;
 		}
 	}
-	
+
 	// add server
 	if(m_NumServers == MAX_SERVERS)
 	{
 		dbg_msg("mastersrv", "error: mastersrv is full");
 		return;
 	}
-	
+
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
 	dbg_msg("mastersrv", "added: %s", aAddrStr);
@@ -275,7 +275,7 @@ void UpdateServers()
 				char aAltAddrStr[NETADDR_MAXSTRSIZE];
 				net_addr_str(&m_aCheckServers[i].m_AltAddress, aAltAddrStr, sizeof(aAltAddrStr));
 				dbg_msg("mastersrv", "check failed: %s (%s)", aAddrStr, aAltAddrStr);
-					
+
 				// FAIL!!
 				SendError(&m_aCheckServers[i].m_Address);
 				m_aCheckServers[i] = m_aCheckServers[m_NumCheckServers-1];
@@ -342,19 +342,19 @@ void ConAddBan(IConsole::IResult *pResult, void *pUser)
 		dbg_msg("mastersrv", "error: banlist is full");
 		return;
 	}
-	
+
 	if(net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0)) != 0)
 	{
 		dbg_msg("mastersrv", "error: invalid address");
 		return;
 	}
-	
+
 	if(CheckBan(m_aBans[m_NumBans].m_Address))
 	{
 		dbg_msg("mastersrv", "duplicate ban: %s", pResult->GetString(0));
 		return;
 	}
-	
+
 	dbg_msg("mastersrv", "ban added: %s", pResult->GetString(0));
 	m_NumBans++;
 }
@@ -377,7 +377,7 @@ int main(int argc, const char **argv) // ignore_convention
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;
 	BindAddr.port = MASTERSERVER_PORT;
-		
+
 	if(!m_NetOp.Open(BindAddr, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
@@ -390,7 +390,7 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
 	}
-	
+
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 	mem_copy(m_CountDataLegacy.m_Header, SERVERBROWSE_COUNT_LEGACY, sizeof(SERVERBROWSE_COUNT_LEGACY));
 
@@ -405,14 +405,14 @@ int main(int argc, const char **argv) // ignore_convention
 
 	if(RegisterFail)
 		return -1;
-	
+
 	dbg_msg("mastersrv", "started");
-	
+
 	while(1)
 	{
 		m_NetOp.Update();
 		m_NetChecker.Update();
-		
+
 		// process m_aPackets
 		CNetChunk Packet;
 		while(m_NetOp.Recv(&Packet))
@@ -442,7 +442,7 @@ int main(int argc, const char **argv) // ignore_convention
 				Alt.port =
 					(d[sizeof(SERVERBROWSE_HEARTBEAT)]<<8) |
 					d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
-				
+
 				// add it
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_LEGACY);
 			}
@@ -466,7 +466,7 @@ int main(int argc, const char **argv) // ignore_convention
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
-				
+
 				CNetChunk p;
 				p.m_ClientID = -1;
 				p.m_Address = Packet.m_Address;
@@ -500,12 +500,12 @@ int main(int argc, const char **argv) // ignore_convention
 			{
 				// someone requested the list
 				dbg_msg("mastersrv", "requested, responding with %d m_aServers", m_NumServers);
-				
+
 				CNetChunk p;
 				p.m_ClientID = -1;
 				p.m_Address = Packet.m_Address;
 				p.m_Flags = NETSENDFLAG_CONNLESS;
-				
+
 				for(int i = 0; i < m_NumPacketsLegacy; i++)
 				{
 					p.m_DataSize = m_aPacketsLegacy[i].m_Size;
@@ -520,7 +520,7 @@ int main(int argc, const char **argv) // ignore_convention
 		{
 			// check if the server is banned
 			if(CheckBan(Packet.m_Address)) continue;
-			
+
 			if(Packet.m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 			{
@@ -546,7 +546,7 @@ int main(int argc, const char **argv) // ignore_convention
 				SendOk(&Packet.m_Address);
 			}
 		}
-		
+
 		if(time_get()-LastBanReload > time_freq()*300)
 		{
 			LastBanReload = time_get();
@@ -557,15 +557,15 @@ int main(int argc, const char **argv) // ignore_convention
 		if(time_get()-LastBuild > time_freq()*5)
 		{
 			LastBuild = time_get();
-			
+
 			PurgeServers();
 			UpdateServers();
 			BuildPackets();
 		}
-		
+
 		// be nice to the CPU
 		thread_sleep(1);
 	}
-	
+
 	return 0;
 }
