@@ -67,11 +67,8 @@ MACRO_CONFIG_INT(ClChatsound, cl_chatsound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE
 MACRO_CONFIG_INT(ClSpreesounds, cl_spreesounds, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes spreesounds on or off")
 
 /* Beep-Mod */
-MACRO_CONFIG_INT(ClChangeSound, cl_change_sound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turns special chat sound on or off")
-MACRO_CONFIG_STR(ClSearchName, cl_search_name, 64, "nameless tee", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Names to search for in chat messages")
+MACRO_CONFIG_STR(ClSearchName, cl_search_name, 64, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Names to search for in chat messages")
 MACRO_CONFIG_INT(ClAntiSpam, cl_anti_spam, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disables multiple messages")
-MACRO_CONFIG_INT(ClBlockSpammer, cl_block_spammer, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disables chat messages for player you want to ignore")
-MACRO_CONFIG_STR(ClSpammerName, cl_spammer_name, 64, "nameless tee", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Names of players you want to ignore")
 
 /* Laser Color */
 MACRO_CONFIG_INT(ClLaserColor, cl_laser_color, 11665217, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Laser color")
