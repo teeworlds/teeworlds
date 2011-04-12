@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -86,7 +86,7 @@ Are you sure that you want to delete the demo?
 == Möchtest du die Aufnahme wirklich löschen?
 
 Are you sure that you want to quit?
-== Bist du sicher, dass du beenden möchtest?
+== Bist du sicher, dass du das Spiel beenden möchtest?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
@@ -277,7 +277,7 @@ Embedded
 == Eingebettet
 
 Embeds the image into the map file.
-== Bettet die Grafik in die Kartendatei ein.
+== Bettet die Grafik in die Karte ein.
 
 Emoticon
 == Emoticon
@@ -496,7 +496,7 @@ Miscellaneous
 == Verschiedenes
 
 Mouse sens.
-== Maus-Empfindl.
+== Maussensitivität
 
 Move left
 == Nach links
@@ -1020,7 +1020,7 @@ Constructs game tiles from this layer
 == 
 
 Death
-== 
+== Tot
 
 Game tiles
 == 
@@ -1153,7 +1153,7 @@ Version:
 == 
 
 Vote command:
-== 
+== Befehl
 
 Vote description:
 >>>>>>> a4ce187613a2afba1dbece7d5cfb356fd29d21eb
