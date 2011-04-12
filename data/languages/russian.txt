@@ -146,7 +146,7 @@ Demo details
 == Подробности
 
 Demos
-== Демы
+== Демо
 
 Disconnect
 == Уйти
