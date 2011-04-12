@@ -322,12 +322,16 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 		g_Config.m_TcStatboardInfos ^= TC_STATS_BESTSPREE;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+8, Localize("Weapons stats"), g_Config.m_TcStatboardInfos & TC_STATS_WEAPS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+9, Localize("Weapons stats"), g_Config.m_TcStatboardInfos & TC_STATS_WEAPS, &Button))
 		g_Config.m_TcStatboardInfos ^= TC_STATS_WEAPS;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+9, Localize("Flag captures"), g_Config.m_TcStatboardInfos & TC_STATS_FLAGS, &Button))
-		g_Config.m_TcStatboardInfos ^= TC_STATS_FLAGS;
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+8, Localize("Flag grabs"), g_Config.m_TcStatboardInfos & TC_STATS_FLAGGRABS, &Button))
+		g_Config.m_TcStatboardInfos ^= TC_STATS_FLAGGRABS;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcStatboardInfos+10, Localize("Flag captures"), g_Config.m_TcStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
+		g_Config.m_TcStatboardInfos ^= TC_STATS_FLAGCAPTURES;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, Localize("Key bindings"), 16.0f, -1);

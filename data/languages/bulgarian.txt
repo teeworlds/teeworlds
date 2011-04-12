@@ -956,6 +956,9 @@ Weapons stats
 Flag captures
 == 
 
+Flag grabs
+== 
+
 Global statboard
 == 
 

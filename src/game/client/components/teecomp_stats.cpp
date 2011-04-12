@@ -218,7 +218,7 @@ void CTeecompStats::RenderGlobalStats()
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
-	float w = 450.0f;
+	float w = 250.0f;
 	float h = 750.0f;
 	
 	const CNetObj_PlayerInfo *apPlayers[MAX_CLIENTS] = {0};
@@ -241,7 +241,7 @@ void CTeecompStats::RenderGlobalStats()
 		}
 	}
 
-	for(int i=0; i<8; i++)
+	for(int i=0; i<9; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
 			if((1<<i) == (TC_STATS_BESTSPREE))
@@ -250,7 +250,7 @@ void CTeecompStats::RenderGlobalStats()
 				w += 100;
 		}
 		
-	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGS)
+	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGCAPTURES)
 		w += 100;
 
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
@@ -281,11 +281,11 @@ void CTeecompStats::RenderGlobalStats()
 	Graphics()->QuadsEnd();
 
 	float tw;
-	int px = 525;
+	int px = 325;
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, Localize("Name"), -1);
-	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Caps") };
-	for(i=0; i<8; i++)
+	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs") };
+	for(i=0; i<9; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
 			if(1<<i == TC_STATS_BESTSPREE)
@@ -315,7 +315,7 @@ void CTeecompStats::RenderGlobalStats()
 		px += 40;
 	}
 
-	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGS)
+	if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGCAPTURES)
 	{
 		px -= 40;
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -367,9 +367,14 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x, y, FontSize, aBuf, -1);
 		}
 
-		TextRender()->Text(0, x+64, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+		CTextCursor Cursor;
+		tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+		TextRender()->SetCursor(&Cursor, x+64, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = 220;
+		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+		//TextRender()->Text(0, x+64, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
 
-		px = 525;
+		px = 325;
 
 		if(g_Config.m_TcStatboardInfos & TC_STATS_FRAGS)
 		{
@@ -432,6 +437,13 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
 		}
+		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGGRABS)
+		{
+			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_FlagGrabs);
+			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
+			px += 100;
+		}
 		for(i=0, px=px-40; i<NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
@@ -442,7 +454,7 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x+px-tw/2, y, FontSize, aBuf, -1);
 			px += 80;
 		}
-		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGS)
+		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_TcStatboardInfos&TC_STATS_FLAGCAPTURES)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", Stats.m_FlagCaptures);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
