@@ -204,11 +204,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	
 	float RaceOffset = 0.0f;
 	if(m_pClient->m_IsRace)
-		RaceOffset = 90.0f;
+		RaceOffset = 30.0f;
 	
-	float ScoreOffset = x+10.0f, ScoreLength = m_pClient->m_IsRace ? 150.0f : 60.0f;
+	float ScoreOffset = x+10.0f, ScoreLength = m_pClient->m_IsRace ? 125.0f : 60.0f;
 	float TeeOffset = ScoreOffset+ScoreLength, TeeLength = 60*TeeSizeMod;
-	float NameOffset = TeeOffset+TeeLength, NameLength = 300.0f-TeeLength;
+	float NameOffset = TeeOffset+TeeLength, NameLength = m_pClient->m_IsRace ? 250-TeeLength : 300.0f-TeeLength;
 	float PingOffset = x+610.0f+RaceOffset, PingLength = 65.0f;
 	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f;
 	float ClanOffset = x+370.0f+RaceOffset, ClanLength = 230.0f-CountryLength;	
@@ -403,7 +403,7 @@ void CScoreboard::OnRender()
 	
 	// resize scoreboard for race
 	if(m_pClient->m_IsRace)
-		w += 100.0f;
+		w += 40.0f;
 		
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
