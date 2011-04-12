@@ -1038,20 +1038,24 @@ int CMenus::Render()
 					}
 
 					// update download speed
-					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
-					m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
+					float Diff = Client()->MapDownloadAmount()-m_DownloadLastCheckSize;
+					float StartDiff = m_DownloadLastCheckSize-0.0f;
+					if(StartDiff+Diff > 0.0f)
+						m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
+					else
+						m_DownloadSpeed = 0.0f;
 					m_DownloadLastCheckTime = Now;
 					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
 				}
 
 				Box.HSplitTop(64.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed/1024.0f);
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 				
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/(m_DownloadSpeed*1024)+1;
+				int TimeLeft = m_DownloadSpeed > 0.0f ? (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed : 0.0f;
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -1346,7 +1350,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_CONNECTING;
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
-		m_DownloadSpeed = 1.0f;
+		m_DownloadSpeed = 0.0f;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
