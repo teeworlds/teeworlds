@@ -25,6 +25,9 @@ german
 italian
 == Italiano
 
+norwegian
+== Norsk
+
 polish
 == Polski
 
