@@ -128,7 +128,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		if(Inside)
 			UI()->SetHotItem(id);
-	}
+
 
 		// do buttons
 		CUIRect Button;
@@ -495,9 +495,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				Item->m_InfosLoaded = true;
 			}
 			if(!Item->m_Valid)
-			str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
-		else
+				str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
+			else
 				str_copy(aFooterLabel, Localize("Demo details"), sizeof(aFooterLabel));
+		}
 	}
 
 	// render background
