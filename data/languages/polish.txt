@@ -573,6 +573,9 @@ New name:
 Parent Folder
 == 
 
+Play background music
+== 
+
 Player options
 == 
 

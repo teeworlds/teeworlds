@@ -573,6 +573,9 @@ Open
 Parent Folder
 == 
 
+Play background music
+== 
+
 Player options
 == 
 

@@ -157,8 +157,12 @@ static void Mix(short *pFinalOut, unsigned Frames)
 			
 			// free voice if not used any more
 			if(v->m_Tick == v->m_pSample->m_NumFrames)
-				v->m_pSample = 0;
-			
+			{
+				if(v->m_Flags&ISound::FLAG_LOOP)
+					v->m_Tick = 0;
+				else
+					v->m_pSample = 0;
+			}
 		}
 	}
 	
@@ -410,7 +414,7 @@ void CSound::SetListenerPos(float x, float y)
 	m_CenterX = (int)x;
 	m_CenterY = (int)y;
 }
-	
+
 
 void CSound::SetChannel(int ChannelID, float Vol, float Pan)
 {
@@ -463,11 +467,16 @@ int CSound::Play(int ChannelID, int SampleID, int Flags)
 	return Play(ChannelID, SampleID, Flags, 0, 0);
 }
 
-void CSound::Stop(int VoiceID)
+void CSound::Stop(int SampleID)
 {
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
-	m_aVoices[VoiceID].m_pSample = 0;
+	CSample *pSample = &m_aSamples[SampleID];
+	for(int i = 0; i < NUM_VOICES; i++)
+	{
+		if(m_aVoices[i].m_pSample == pSample)
+			m_aVoices[i].m_pSample = 0;
+	}
 	lock_release(m_SoundLock);
 }
 

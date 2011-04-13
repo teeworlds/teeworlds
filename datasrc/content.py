@@ -221,6 +221,8 @@ container.sounds.Add(SoundSet("ctf_grab_pl", ["audio/sfx_ctf_grab_pl.wv"]))
 container.sounds.Add(SoundSet("ctf_grab_en", ["audio/sfx_ctf_grab_en.wv"]))
 container.sounds.Add(SoundSet("ctf_capture", ["audio/sfx_ctf_cap_pl.wv"]))
 
+container.sounds.Add(SoundSet("menu", ["audio/music_menu.wv"]))
+
 container.sounds.Add(SoundSet("spree_killingspree", ["audio/spree_killingspree.wv"]))
 container.sounds.Add(SoundSet("spree_rampage", ["audio/spree_rampage.wv"]))
 container.sounds.Add(SoundSet("spree_dominating", ["audio/spree_dominating.wv"]))

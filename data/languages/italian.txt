@@ -588,6 +588,9 @@ Netversion:
 New name:
 == 
 
+Play background music
+== 
+
 Player options
 == 
 
