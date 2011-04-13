@@ -100,6 +100,8 @@ void CBinds::SetDefaults()
 	Bind(KEY_MOUSE_2, "+hook");
 	Bind(KEY_LSHIFT, "+emote");
 	Bind(KEY_RSHIFT, "+spectate");
+	Bind(KEY_RIGHT, "spectate_next");
+	Bind(KEY_LEFT, "spectate_previous");
 
 	Bind('1', "+weapon1");
 	Bind('2', "+weapon2");
