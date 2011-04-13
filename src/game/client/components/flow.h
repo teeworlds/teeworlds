@@ -16,12 +16,12 @@ class CFlow : public CComponent
 	int m_Height;
 	int m_Width;
 	int m_Spacing;
-	
+
 	void DbgRender();
 	void Init();
 public:
 	CFlow();
-	
+
 	vec2 Get(vec2 Pos);
 	void Add(vec2 Pos, vec2 Vel, float Size);
 	void Update();

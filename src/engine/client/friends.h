@@ -14,14 +14,14 @@ class CFriends : public IFriends
 	static void ConRemoveFriend(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
-	
+
 public:
 	CFriends();
-	
+
 	void Init();
-	
+
 	int NumFriends() const { return m_NumFriends; }
-	const CFriendInfo *GetFriend(int Index) const; 
+	const CFriendInfo *GetFriend(int Index) const;
 	bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const;
 
 	void AddFriend(const char *pName, const char *pClan);

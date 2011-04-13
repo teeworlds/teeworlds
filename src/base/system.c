@@ -21,20 +21,20 @@
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
 	#include <errno.h>
-	#include <netdb.h>      
+	#include <netdb.h>
 	#include <netinet/in.h>
 	#include <fcntl.h>
 	#include <pthread.h>
 	#include <arpa/inet.h>
 
 	#include <dirent.h>
-	
+
 	#if defined(CONF_PLATFORM_MACOSX)
 		#include <Carbon/Carbon.h>
 	#endif
-	
+
 #elif defined(CONF_FAMILY_WINDOWS)
-	#define WIN32_LEAN_AND_MEAN 
+	#define WIN32_LEAN_AND_MEAN
 	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
 	#include <windows.h>
 	#include <winsock2.h>
@@ -176,7 +176,7 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 	memory_stats.allocated += header->size;
 	memory_stats.total_allocations++;
 	memory_stats.active_allocations++;
-	
+
 	tail->guard = MEM_GUARD_VAL;
 
 	header->prev = (MEMHEADER *)0;
@@ -184,7 +184,7 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 	if(first)
 		first->prev = header;
 	first = header;
-	
+
 	/*dbg_msg("mem", "++ %p", header+1); */
 	return header+1;
 }
@@ -195,20 +195,20 @@ void mem_free(void *p)
 	{
 		MEMHEADER *header = (MEMHEADER *)p - 1;
 		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
-		
+
 		if(tail->guard != MEM_GUARD_VAL)
 			dbg_msg("mem", "!! %p", p);
 		/* dbg_msg("mem", "-- %p", p); */
 		memory_stats.allocated -= header->size;
 		memory_stats.active_allocations--;
-		
+
 		if(header->prev)
 			header->prev->next = header->next;
 		else
 			first = header->next;
 		if(header->next)
 			header->next->prev = header->prev;
-		
+
 		free(header);
 	}
 }
@@ -219,7 +219,7 @@ void mem_debug_dump(IOHANDLE file)
 	MEMHEADER *header = first;
 	if(!file)
 		file = io_open("memory.txt", IOFLAG_WRITE);
-	
+
 	if(file)
 	{
 		while(header)
@@ -228,7 +228,7 @@ void mem_debug_dump(IOHANDLE file)
 			io_write(file, buf, strlen(buf));
 			header = header->next;
 		}
-	
+
 		io_close(file);
 	}
 }
@@ -275,7 +275,7 @@ IOHANDLE io_open(const char *filename, int flags)
 		WIN32_FIND_DATA finddata;
 		HANDLE handle;
 		int length;
-		
+
 		length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
@@ -630,9 +630,9 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types)
 	/*
 	dbg_msg("host lookup", "host='%s' port=%d %d", host, port, types);
 	*/
-	
+
 	mem_zero(&hints, sizeof(hints));
-	
+
 	hints.ai_family = AF_UNSPEC;
 
 	if(types == NETTYPE_IPV4)
@@ -655,8 +655,8 @@ static int parse_int(int *out, const char **str)
 	int i = 0;
 	*out = 0;
 	if(**str < '0' || **str > '9')
-		return -1; 
-		
+		return -1;
+
 	i = **str - '0';
 	(*str)++;
 
@@ -665,9 +665,9 @@ static int parse_int(int *out, const char **str)
 		if(**str < '0' || **str > '9')
 		{
 			*out = i;
-			return 0; 
+			return 0;
 		}
-		
+
 		i = (i*10) + (**str - '0');
 		(*str)++;
 	}
@@ -704,7 +704,7 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 {
 	const char *str = string;
 	mem_zero(addr, sizeof(NETADDR));
-	
+
 	if(str[0] == '[')
 	{
 		/* ipv6 */
@@ -760,10 +760,10 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 			str++;
 			if(parse_uint16(&addr->port, &str)) return -1;
 		}
-		
+
 		addr->type = NETTYPE_IPV4;
 	}
-	
+
 	return 0;
 }
 
@@ -825,7 +825,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		priv_net_close_socket(sock);
 		return -1;
 	}
-	
+
 	/* set non-blocking */
 #if defined(CONF_FAMILY_WINDOWS)
 	ioctlsocket(sock, FIONBIO, &mode);
@@ -835,7 +835,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 
 	/* set boardcast */
 	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
-	
+
 	/* return the newly created socket */
 	return sock;
 }
@@ -937,7 +937,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 	{
 		char addrstr[256];
 		net_addr_str(addr, addrstr, sizeof(addrstr));
-		
+
 		dbg_msg("net", "sendto error (%d '%s')", errno, strerror(errno));
 		dbg_msg("net", "\tsock = %d %x", sock, sock);
 		dbg_msg("net", "\tsize = %d %x", size, size);
@@ -1005,8 +1005,8 @@ NETSOCKET net_tcp_create(const NETADDR *a)
 		bind(sock.ipv4sock, (struct sockaddr *)&addr, sizeof(addr));
 	}
 
-    /* return */
-    return sock;
+	/* return */
+	return sock;
 }
 
 int net_tcp_set_non_blocking(NETSOCKET sock)
@@ -1122,7 +1122,7 @@ int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a)
 	/*
 	netaddr_to_sockaddr(a, &addr);
 	net_tcp_set_non_blocking(sock);
-  	res = connect(sock, &addr, sizeof(addr));
+	res = connect(sock, &addr, sizeof(addr));
 	net_tcp_set_blocking(sock);
 	*/
 
@@ -1206,7 +1206,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 
 	if(!d)
 		return 0;
-		
+
 	str_format(buffer, sizeof(buffer), "%s/", dir);
 	length = str_length(buffer);
 
@@ -1246,7 +1246,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
 #endif
-	
+
 	return 0;
 #endif
 }
@@ -1286,7 +1286,7 @@ int fs_is_dir(const char *path)
 	struct stat sb;
 	if (stat(path, &sb) == -1)
 		return 0;
-	
+
 	if (S_ISDIR(sb.st_mode))
 		return 1;
 	else
@@ -1326,7 +1326,7 @@ int fs_parent_dir(char *path)
 		if(*path == '/' || *path == '\\')
 			parent = path;
 	}
-	
+
 	if(parent)
 	{
 		*parent = 0;
@@ -1377,16 +1377,16 @@ void swap_endian(void *data, unsigned elem_size, unsigned num)
 
 int net_socket_read_wait(NETSOCKET sock, int time)
 {
-    struct timeval tv;
-    fd_set readfds;
+	struct timeval tv;
+	fd_set readfds;
 	int sockid;
 
-    tv.tv_sec = 0;
-    tv.tv_usec = 1000*time;
+	tv.tv_sec = 0;
+	tv.tv_usec = 1000*time;
 	sockid = 0;
 
-    FD_ZERO(&readfds);
-    if(sock.ipv4sock >= 0)
+	FD_ZERO(&readfds);
+	if(sock.ipv4sock >= 0)
 	{
 		FD_SET(sock.ipv4sock, &readfds);
 		sockid = sock.ipv4sock;
@@ -1398,8 +1398,8 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 			sockid = sock.ipv6sock;
 	}
 
-    /* don't care about writefds and exceptfds */
-    select(sockid+1, &readfds, NULL, NULL, &tv);
+	/* don't care about writefds and exceptfds */
+	select(sockid+1, &readfds, NULL, NULL, &tv);
 
 	if(sock.ipv4sock >= 0 && FD_ISSET(sock.ipv4sock, &readfds))
 		return 1;
@@ -1407,7 +1407,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 	if(sock.ipv6sock >= 0 && FD_ISSET(sock.ipv6sock, &readfds))
 		return 1;
 
-    return 0;
+	return 0;
 }
 
 unsigned time_timestamp()
@@ -1427,7 +1427,7 @@ void str_append(char *dst, const char *src, int dst_size)
 		s++;
 		i++;
 	}
-	
+
 	dst[dst_size-1] = 0; /* assure null termination */
 }
 
@@ -1448,12 +1448,12 @@ void str_format(char *buffer, int buffer_size, const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 	_vsnprintf(buffer, buffer_size, format, ap);
-    va_end(ap);
+	va_end(ap);
 #else
 	va_list ap;
 	va_start(ap, format);
 	vsnprintf(buffer, buffer_size, format, ap);
-    va_end(ap);
+	va_end(ap);
 #endif
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
@@ -1578,7 +1578,7 @@ const char *str_find_nocase(const char *haystack, const char *needle)
 			return haystack;
 		haystack++;
 	}
-	
+
 	return 0;
 }
 
@@ -1598,7 +1598,7 @@ const char *str_find(const char *haystack, const char *needle)
 			return haystack;
 		haystack++;
 	}
-	
+
 	return 0;
 }
 
@@ -1620,7 +1620,7 @@ void str_timestamp(char *buffer, int buffer_size)
 {
 	time_t time_data;
 	struct tm *time_info;
-	
+
 	time(&time_data);
 	time_info = localtime(&time_data);
 	strftime(buffer, buffer_size, "%Y-%m-%d_%H-%M-%S", time_info);
@@ -1700,7 +1700,7 @@ float str_tofloat(const char *str) { return atof(str); }
 
 static int str_utf8_isstart(char c)
 {
-	if((c&0xC0) == 0x80)  /* 10xxxxxx */
+	if((c&0xC0) == 0x80) /* 10xxxxxx */
 		return 0;
 	return 1;
 }
@@ -1721,7 +1721,7 @@ int str_utf8_forward(const char *str, int cursor)
 	const char *buf = str + cursor;
 	if(!buf[0])
 		return cursor;
-	
+
 	if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 		return cursor+1;
 	else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
@@ -1742,7 +1742,7 @@ int str_utf8_forward(const char *str, int cursor)
 		if(!buf[3]) return cursor+3;
 		return cursor+4;
 	}
-	
+
 	/* invalid */
 	return cursor+1;
 }
@@ -1776,7 +1776,7 @@ int str_utf8_encode(char *ptr, int chr)
 		ptr[3] = 0x80|(chr&0x3F);
 		return 4;
 	}
-	
+
 	return 0;
 }
 
@@ -1784,7 +1784,7 @@ int str_utf8_decode(const char **ptr)
 {
 	const char *buf = *ptr;
 	int ch = 0;
-	
+
 	do
 	{
 		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
@@ -1819,7 +1819,7 @@ int str_utf8_decode(const char **ptr)
 			buf++;
 			break;
 		}
-		
+
 		*ptr = buf;
 		return ch;
 	} while(0);
@@ -1827,7 +1827,7 @@ int str_utf8_decode(const char **ptr)
 	/* out of bounds */
 	*ptr = buf;
 	return -1;
-	
+
 }
 
 int str_utf8_check(const char *str)
@@ -1835,7 +1835,7 @@ int str_utf8_check(const char *str)
 	while(*str)
 	{
 		if((*str&0x80) == 0x0)
-			str++;	
+			str++;
 		else if((*str&0xE0) == 0xC0 && (*(str+1)&0xC0) == 0x80)
 			str += 2;
 		else if((*str&0xF0) == 0xE0 && (*(str+1)&0xC0) == 0x80 && (*(str+2)&0xC0) == 0x80)

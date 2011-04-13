@@ -211,7 +211,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float NameOffset = TeeOffset+TeeLength, NameLength = m_pClient->m_IsRace ? 250-TeeLength : 300.0f-TeeLength;
 	float PingOffset = x+610.0f+RaceOffset, PingLength = 65.0f;
 	float CountryOffset = PingOffset-(LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f, CountryLength = (LineHeight-Spacing-TeeSizeMod*5.0f)*2.0f;
-	float ClanOffset = x+370.0f+RaceOffset, ClanLength = 230.0f-CountryLength;	
+	float ClanOffset = x+370.0f+RaceOffset, ClanLength = 230.0f-CountryLength;
 
 	// render headlines
 	y += 50.0f;
@@ -221,12 +221,12 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		TextRender()->Text(0, ScoreOffset+ScoreLength/2-tw/2, y, HeadlineFontsize, Localize("Score"), -1);
 	else
 		TextRender()->Text(0, ScoreOffset+ScoreLength-tw, y, HeadlineFontsize, Localize("Score"), -1);
-	
+
 	TextRender()->Text(0, NameOffset, y, HeadlineFontsize, Localize("Name"), -1);
-	
+
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Clan"), -1);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y, HeadlineFontsize, Localize("Clan"), -1);
-	
+
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
 	TextRender()->Text(0, PingOffset+PingLength-tw, y, HeadlineFontsize, Localize("Ping"), -1);
 
@@ -291,7 +291,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsBegin();
 
 			RenderTools()->SelectSprite(pInfo->m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
-			
+
 			if(g_Config.m_TcColoredFlags)
 			{
 				vec3 Col = CTeecompUtils::GetTeamColor(1-pInfo->m_Team, m_pClient->m_Snap.m_pLocalInfo->m_Team, 
@@ -304,7 +304,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
-		
+
 		// avatar
 		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
 		
@@ -388,15 +388,15 @@ void CScoreboard::OnRender()
 {
 	if(!Active())
 		return;
-		
+
 	// if the score board is active, then we should clear the motd message aswell
 	if(m_pClient->m_pMotd->IsActive())
 		m_pClient->m_pMotd->Clear();
-	
+
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
-	
+
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	float w = 700.0f;
@@ -414,7 +414,7 @@ void CScoreboard::OnRender()
 			char aText[64];
 			const char *pRedClanName = GetClanName(TEAM_RED);
 			const char *pBlueClanName = GetClanName(TEAM_BLUE);
-			
+
 			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER && m_pClient->m_Snap.m_pGameDataObj)
 			{
 				str_copy(aText, Localize("Draw!"), sizeof(aText));
@@ -436,10 +436,11 @@ void CScoreboard::OnRender()
 					else
 						str_format(aText, sizeof(aText), Localize("%s team wins!"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 				}
+
 				float w = TextRender()->TextWidth(0, 86.0f, aText, -1);
 				TextRender()->Text(0, Width/2-w/2, 39, 86.0f, aText, -1);
 			}
-			
+
 			if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE && g_Config.m_TcColoredTeesMethod == 1)
 				str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 			else
@@ -463,11 +464,11 @@ bool CScoreboard::Active()
 	// if statboard active dont show scoreboard
 	if(m_pClient->m_pTeecompStats->IsActive())
 		return false;
-	
+
 	// if we activly wanna look on the scoreboard	
 	if(m_Active)
 		return true;
-		
+
 	if(g_Config.m_ClRenderScoreboard && !g_Config.m_ClClearAll && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 	{
 		// we are not a spectator, check if we are dead
@@ -491,7 +492,7 @@ const char *CScoreboard::GetClanName(int Team)
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
 		if(!pInfo || pInfo->m_Team != Team)
 			continue;
-		
+
 		if(!pClanName)
 		{
 			pClanName = m_pClient->m_aClients[pInfo->m_ClientID].m_aClan;
@@ -505,7 +506,7 @@ const char *CScoreboard::GetClanName(int Team)
 				return 0;
 		}
 	}
-	
+
 	if(ClanPlayers > 1 && pClanName[0])
 		return pClanName;
 	else

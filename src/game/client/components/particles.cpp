@@ -27,7 +27,7 @@ void CParticles::OnReset()
 		m_aParticles[i].m_PrevPart = i-1;
 		m_aParticles[i].m_NextPart = i+1;
 	}
-	
+
 	m_aParticles[0].m_PrevPart = 0;
 	m_aParticles[MAX_PARTICLES-1].m_NextPart = -1;
 	m_FirstFree = 0;
@@ -42,30 +42,30 @@ void CParticles::Add(int Group, CParticle *pPart)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();		
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		if(pInfo->m_Paused)
 			return;
 	}
 
 	if (m_FirstFree == -1)
 		return;
-		
+
 	// remove from the free list
 	int Id = m_FirstFree;
 	m_FirstFree = m_aParticles[Id].m_NextPart;
 	if(m_FirstFree != -1)
 		m_aParticles[m_FirstFree].m_PrevPart = -1;
-	
+
 	// copy data
 	m_aParticles[Id] = *pPart;
-	
+
 	// insert to the group list
 	m_aParticles[Id].m_PrevPart = -1;
 	m_aParticles[Id].m_NextPart = m_aFirstPart[Group];
 	if(m_aFirstPart[Group] != -1)
 		m_aParticles[m_aFirstPart[Group]].m_PrevPart = Id;
 	m_aFirstPart[Group] = Id;
-	
+
 	// set some parameters
 	m_aParticles[Id].m_Life = 0;
 }
@@ -89,14 +89,14 @@ void CParticles::Update(float TimePassed)
 
 	if(FrictionFraction > 2.0f) // safty messure
 		FrictionFraction = 0;
-	
+
 	int FrictionCount = 0;
 	while(FrictionFraction > 0.05f)
 	{
 		FrictionCount++;
 		FrictionFraction -= 0.05f;
 	}
-	
+
 	float IntraTick = Client()->PredIntraGameTick();
 	int NumItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 	
@@ -180,15 +180,15 @@ void CParticles::Update(float TimePassed)
 			}
 			
 			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
-			
+
 			for(int f = 0; f < FrictionCount; f++) // apply friction
 				m_aParticles[i].m_Vel *= m_aParticles[i].m_Friction;
-			
+
 			// move the point
 			vec2 Vel = m_aParticles[i].m_Vel*TimePassed;
 			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL);
 			m_aParticles[i].m_Vel = Vel* (1.0f/TimePassed);
-			
+
 			m_aParticles[i].m_Life += TimePassed;
 			m_aParticles[i].m_Rot += TimePassed * m_aParticles[i].m_Rotspeed;
 
@@ -200,10 +200,10 @@ void CParticles::Update(float TimePassed)
 					m_aParticles[m_aParticles[i].m_PrevPart].m_NextPart = m_aParticles[i].m_NextPart;
 				else
 					m_aFirstPart[g] = m_aParticles[i].m_NextPart;
-					
+
 				if(m_aParticles[i].m_NextPart != -1)
 					m_aParticles[m_aParticles[i].m_NextPart].m_PrevPart = m_aParticles[i].m_PrevPart;
-					
+
 				// insert to the free list
 				if(m_FirstFree != -1)
 					m_aParticles[m_FirstFree].m_PrevPart = i;
@@ -211,7 +211,7 @@ void CParticles::Update(float TimePassed)
 				m_aParticles[i].m_NextPart = m_FirstFree;
 				m_FirstFree = i;
 			}
-			
+
 			i = Next;
 		}
 	}
@@ -227,16 +227,16 @@ void CParticles::OnRender()
 
 	static int64 LastTime = 0;
 	int64 t = time_get();
-	
+
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();		
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		if(!pInfo->m_Paused)
 			Update((float)((t-LastTime)/(double)time_freq())*pInfo->m_Speed);
 	}
 	else
 		Update((float)((t-LastTime)/(double)time_freq()));
-	
+
 	LastTime = t;
 }
 
@@ -261,11 +261,11 @@ void CParticles::RenderGroup(int Group)
 			m_aParticles[i].m_Color.r,
 			m_aParticles[i].m_Color.g,
 			m_aParticles[i].m_Color.b,
-			m_aParticles[i].m_Color.a); // pow(a, 0.75f) * 
+			m_aParticles[i].m_Color.a); // pow(a, 0.75f) *
 
 		IGraphics::CQuadItem QuadItem(p.x, p.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);
-		
+
 		i = m_aParticles[i].m_NextPart;
 	}
 	Graphics()->QuadsEnd();

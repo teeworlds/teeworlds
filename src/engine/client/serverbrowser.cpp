@@ -86,7 +86,7 @@ bool CServerBrowser::SortCompareName(int Index1, int Index2) const
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
 	//	make sure empty entries are listed last
-	return (a->m_GotInfo && b->m_GotInfo) || (!a->m_GotInfo && !b->m_GotInfo) ?  str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0 :
+	return (a->m_GotInfo && b->m_GotInfo) || (!a->m_GotInfo && !b->m_GotInfo) ? str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0 :
 			a->m_GotInfo ? true : false;
 }
 
@@ -535,7 +535,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	Packet.m_DataSize = sizeof(Buffer);
 	Packet.m_pData = Buffer;
-	
+
 	m_pNetClient->Send(&Packet);
 
 	if(pEntry)
@@ -659,7 +659,7 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 	if(pEntry)
 		pEntry->m_Info.m_Favorite = 1;
 
-    if(g_Config.m_Debug)
+	if(g_Config.m_Debug)
 	{
 		char aAddrStr[NETADDR_MAXSTRSIZE];
 		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
@@ -705,7 +705,7 @@ int CServerBrowser::LoadingProgression() const
 {
 	if(m_NumServers == 0)
 		return 0;
-	
+
 	int Servers = m_NumServers;
 	int Loaded = m_NumServers-m_NumRequests;
 	return 100.0f * Loaded/Servers;

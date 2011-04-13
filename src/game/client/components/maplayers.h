@@ -5,7 +5,7 @@
 #include <game/client/component.h>
 
 class CMapLayers : public CComponent
-{	
+{
 	CLayers *m_pLayers;	// todo refactor: maybe remove it and access it through client*
 	int m_Type;
 

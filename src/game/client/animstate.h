@@ -17,7 +17,7 @@ public:
 	ANIM_KEYFRAME *GetAttach() { return &m_Attach; };
 	void Set(ANIMATION *pAnim, float Time);
 	void Add(ANIMATION *pAdded, float Time, float Amount);
-	
+
 	static CAnimState *GetIdle();
 };
 

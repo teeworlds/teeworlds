@@ -28,7 +28,7 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 			return;
 		
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		
+
 		// unpack messages
 		CKillMsg Kill;
 		Kill.m_VictimID = pMsg->m_Victim;
@@ -81,7 +81,7 @@ void CKillMessages::OnRender()
 
 		// render victim tee
 		x -= 24.0f;
-		
+
 		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS)
 		{
 			if(m_aKillmsgs[r].m_ModeSpecial&1)
@@ -95,7 +95,7 @@ void CKillMessages::OnRender()
 
 				int Team = m_aKillmsgs[r].m_VictimTeam;
 				RenderTools()->SelectSprite(Team?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE);
-				
+
 				if(g_Config.m_TcColoredFlags)
 				{
 					vec3 Col = CTeecompUtils::GetTeamColor(Team^1,
@@ -109,13 +109,13 @@ void CKillMessages::OnRender()
 				float Size = 56.0f;
 				IGraphics::CQuadItem QuadItem(x, y-16, Size/2, Size);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();					
+				Graphics()->QuadsEnd();
 			}
 		}
-		
+
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_VictimRenderInfo, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 		x -= 32.0f;
-		
+
 		// render weapon
 		x -= 44.0f;
 		if (m_aKillmsgs[r].m_Weapon >= 0)
@@ -143,7 +143,7 @@ void CKillMessages::OnRender()
 
 					int Team = m_aKillmsgs[r].m_KillerTeam;
 					RenderTools()->SelectSprite(Team?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-					
+
 					if(g_Config.m_TcColoredFlags)
 					{
 						vec3 Col = CTeecompUtils::GetTeamColor(Team^1,
@@ -157,10 +157,10 @@ void CKillMessages::OnRender()
 					float Size = 56.0f;
 					IGraphics::CQuadItem QuadItem(x-56, y-16, Size/2, Size);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();				
+					Graphics()->QuadsEnd();
 				}
-			}				
-			
+			}
+
 			// render killer tee
 			x -= 24.0f;
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_KillerRenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));

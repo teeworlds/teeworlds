@@ -30,7 +30,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 
 	m_Tele = 0;
 	m_Speedup = 0;
-	
+
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
 }
@@ -102,19 +102,19 @@ void CLayerTiles::Clamp(RECTi *pRect)
 		pRect->w += pRect->x;
 		pRect->x = 0;
 	}
-		
+
 	if(pRect->y < 0)
 	{
 		pRect->h += pRect->y;
 		pRect->y = 0;
 	}
-	
+
 	if(pRect->x+pRect->w > m_Width)
 		pRect->w = m_Width - pRect->x;
 
 	if(pRect->y+pRect->h > m_Height)
 		pRect->h = m_Height - pRect->y;
-		
+
 	if(pRect->h < 0)
 		pRect->h = 0;
 	if(pRect->w < 0)
@@ -140,10 +140,10 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	RECTi r;
 	Convert(Rect, &r);
 	Clamp(&r);
-	
+
 	if(!r.w || !r.h)
 		return 0;
-	
+
 	// create new layers
 	if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pTeleLayer)
 	{
@@ -199,7 +199,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 			for(int x = 0; x < r.w; x++)
 				pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
 	}
-	
+
 	return 1;
 }
 
@@ -207,28 +207,28 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 {
 	if(m_Readonly)
 		return;
-		
+
 	int sx = ConvertX(Rect.x);
 	int sy = ConvertY(Rect.y);
 	int w = ConvertX(Rect.w);
 	int h = ConvertY(Rect.h);
-	
+
 	CLayerTiles *pLt = static_cast<CLayerTiles*>(pBrush);
-	
+
 	for(int y = 0; y <= h; y++)
 	{
 		for(int x = 0; x <= w; x++)
 		{
 			int fx = x+sx;
 			int fy = y+sy;
-			
+
 			if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
-			
-			if(Empty)	
-                m_pTiles[fy*m_Width+fx].m_Index = 1;
-            else
-                m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+
+			if(Empty)
+				m_pTiles[fy*m_Width+fx].m_Index = 1;
+			else
+				m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
 	m_pEditor->m_Map.m_Modified = true;
@@ -238,12 +238,12 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 {
 	if(m_Readonly)
 		return;
-	
+
 	//
 	CLayerTiles *l = (CLayerTiles *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
-	
+
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
 		{
@@ -251,11 +251,11 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			int fy = y+sy;
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
-			
+
 			// dont allow tele in and out tiles... same with speedup tile
 			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
 				continue;
-			
+
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
 	m_pEditor->m_Map.m_Modified = true;
@@ -335,10 +335,10 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	CTile *pNewData = new CTile[NewW*NewH];
 	mem_zero(pNewData, NewW*NewH*sizeof(CTile));
 
-	// copy old data	
+	// copy old data
 	for(int y = 0; y < min(NewH, m_Height); y++)
 		mem_copy(&pNewData[y*NewW], &m_pTiles[y*m_Width], min(m_Width, NewW)*sizeof(CTile));
-	
+
 	// replace old
 	delete [] m_pTiles;
 	m_pTiles = pNewData;
@@ -393,12 +393,12 @@ void CLayerTiles::ShowInfo()
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
-	
+
 	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
 	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
 	int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
 	int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
-	
+
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
 		{
@@ -423,7 +423,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-	
+
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this)
 		InGameGroup = false;
@@ -448,7 +448,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			return 1;
 		}
 	}
-	
+
 	enum
 	{
 		PROP_WIDTH=0,
@@ -458,13 +458,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		PROP_COLOR,
 		NUM_PROPS,
 	};
-	
+
 	int Color = 0;
 	Color |= m_Color.r<<24;
 	Color |= m_Color.g<<16;
 	Color |= m_Color.b<<8;
 	Color |= m_Color.a;
-	
+
 	CProperty aProps[] = {
 		{"Width", m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{"Height", m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
@@ -473,19 +473,19 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{"Color", Color, PROPTYPE_COLOR, 0, 0},
 		{0},
 	};
-	
+
 	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this) // remove the image and color properties if this is the game-, tele- or speedup layer
 	{
 		aProps[3].m_pName = 0;
 		aProps[4].m_pName = 0;
 	}
-	
+
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
 	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
 	if(Prop != -1)
 		m_pEditor->m_Map.m_Modified = true;
-	
+
 	if(Prop == PROP_WIDTH && NewVal > 1)
 		Resize(NewVal, m_Height);
 	else if(Prop == PROP_HEIGHT && NewVal > 1)
@@ -509,7 +509,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.b = (NewVal>>8)&0xff;
 		m_Color.a = NewVal&0xff;
 	}
-	
+
 	return 0;
 }
 

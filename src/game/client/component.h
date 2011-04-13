@@ -12,7 +12,7 @@ protected:
 	friend class CGameClient;
 
 	CGameClient *m_pClient;
-	
+
 	// perhaps propagte pointers for these as well
 	class IKernel *Kernel() const { return m_pClient->Kernel(); }
 	class IGraphics *Graphics() const { return m_pClient->Graphics(); }
@@ -31,7 +31,7 @@ protected:
 	class CCollision *Collision() const { return m_pClient->Collision(); }
 public:
 	virtual ~CComponent() {}
-	
+
 	virtual void OnStateChange(int NewState, int OldState) {};
 	virtual void OnConsoleInit() {};
 	virtual void OnInit() {};

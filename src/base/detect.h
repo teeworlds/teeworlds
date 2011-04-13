@@ -4,8 +4,8 @@
 #define BASE_DETECT_H
 
 /*
-  this file detected the family, platform and architecture
-  to compile for.
+	this file detected the family, platform and architecture
+	to compile for.
 */
 
 /* platforms */

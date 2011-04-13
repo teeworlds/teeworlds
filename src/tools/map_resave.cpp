@@ -25,7 +25,7 @@ int main(int argc, const char **argv)
 
 	// add all items
 	for(Index = 0; Index < DataFile.NumItems(); Index++)
-	{	
+	{
 		pPtr = DataFile.GetItem(Index, &Type, &ID);
 		Size = DataFile.GetItemSize(Index);
 		df.AddItem(Type, ID, Size, pPtr);

@@ -18,28 +18,28 @@ extern "C" {
 /*
 	Function: dbg_assert
 		Breaks into the debugger based on a test.
-	
+
 	Parameters:
 		test - Result of the test.
 		msg - Message that should be printed if the test fails.
-	
+
 	Remarks:
 		Does nothing in release version of the library.
-	
+
 	See Also:
 		<dbg_break>
 */
 void dbg_assert(int test, const char *msg);
-#define dbg_assert(test,msg) dbg_assert_imp(__FILE__, __LINE__, test,  msg)
+#define dbg_assert(test,msg) dbg_assert_imp(__FILE__, __LINE__, test, msg)
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg);
 
 /*
 	Function: dbg_break
 		Breaks into the debugger.
-	
+
 	Remarks:
 		Does nothing in release version of the library.
-	
+
 	See Also:
 		<dbg_assert>
 */
@@ -47,16 +47,16 @@ void dbg_break();
 
 /*
 	Function: dbg_msg
-	
+
 	Prints a debug message.
-	
+
 	Parameters:
 		sys - A string that describes what system the message belongs to
 		fmt - A printf styled format string.
-	
+
 	Remarks:
 		Does nothing in release version of the library.
-		
+
 	See Also:
 		<dbg_assert>
 */
@@ -67,15 +67,15 @@ void dbg_msg(const char *sys, const char *fmt, ...);
 /*
 	Function: mem_alloc
 		Allocates memory.
-	
+
 	Parameters:
 		size - Size of the needed block.
 		alignment - Alignment for the block.
-	
+
 	Returns:
 		Returns a pointer to the newly allocated block. Returns a
 		null pointer if the memory couldn't be allocated.
-		
+
 	Remarks:
 		- Passing 0 to size will allocated the smallest amount possible
 		and return a unique pointer.
@@ -89,12 +89,12 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 /*
 	Function: mem_free
 		Frees a block allocated through <mem_alloc>.
-	
+
 	Remarks:
 		- In the debug version of the library the function will assert if
 		a non-valid block is passed, like a null pointer or a block that
 		isn't allocated.
-	
+
 	See Also:
 		<mem_alloc>
 */
@@ -103,16 +103,16 @@ void mem_free(void *block);
 /*
 	Function: mem_copy
 		Copies a a memory block.
-	
+
 	Parameters:
 		dest - Destination.
 		source - Source to copy.
 		size - Size of the block to copy.
-	
+
 	Remarks:
 		- This functions DOES NOT handles cases where source and
 		destination is overlapping.
-	
+
 	See Also:
 		<mem_move>
 */
@@ -121,16 +121,16 @@ void mem_copy(void *dest, const void *source, unsigned size);
 /*
 	Function: mem_move
 		Copies a a memory block
-	
+
 	Parameters:
 		dest - Destination
 		source - Source to copy
 		size - Size of the block to copy
-	
+
 	Remarks:
 		- This functions handles cases where source and destination
 		is overlapping
-	
+
 	See Also:
 		<mem_copy>
 */
@@ -139,7 +139,7 @@ void mem_move(void *dest, const void *source, unsigned size);
 /*
 	Function: mem_zero
 		Sets a complete memory block to 0
-	
+
 	Parameters:
 		block - Pointer to the block to zero out
 		size - Size of the block
@@ -149,12 +149,12 @@ void mem_zero(void *block, unsigned size);
 /*
 	Function: mem_comp
 		Compares two blocks of memory
-	
+
 	Parameters:
 		a - First block of data
 		b - Second block of data
 		size - Size of the data to compare
-		
+
 	Returns:
 		<0 - Block a is lesser then block b
 		0 - Block a is equal to block b
@@ -168,7 +168,7 @@ int mem_comp(const void *a, const void *b, int size);
 		Will trigger a assert if memory has failed.
 */
 int mem_check_imp();
-#define mem_check() dbg_assert_imp(__FILE__, __LINE__, mem_check_imp(),  "Memory check failed")
+#define mem_check() dbg_assert_imp(__FILE__, __LINE__, mem_check_imp(), "Memory check failed")
 
 /* Group: File IO */
 enum {
@@ -205,7 +205,7 @@ IOHANDLE io_open(const char *filename, int flags);
 		io - Handle to the file to read data from.
 		buffer - Pointer to the buffer that will recive the data.
 		size - Number of bytes to read from the file.
-		
+
 	Returns:
 		Number of bytes read.
 
@@ -215,11 +215,11 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 /*
 	Function: io_skip
 		Skips data in a file.
-	
+
 	Parameters:
 		io - Handle to the file.
 		size - Number of bytes to skip.
-		
+
 	Returns:
 		Number of bytes skipped.
 */
@@ -228,12 +228,12 @@ unsigned io_skip(IOHANDLE io, int size);
 /*
 	Function: io_write
 		Writes data from a buffer to file.
-	
+
 	Parameters:
 		io - Handle to the file.
 		buffer - Pointer to the data that should be written.
 		size - Number of bytes to write.
-		
+
 	Returns:
 		Number of bytes written.
 */
@@ -242,12 +242,12 @@ unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
 /*
 	Function: io_seek
 		Seeks to a specified offset in the file.
-	
+
 	Parameters:
 		io - Handle to the file.
 		offset - Offset from pos to stop.
 		origin - Position to start searching from.
-		
+
 	Returns:
 		Returns 0 on success.
 */
@@ -256,10 +256,10 @@ int io_seek(IOHANDLE io, int offset, int origin);
 /*
 	Function: io_tell
 		Gets the current position in the file.
-	
+
 	Parameters:
 		io - Handle to the file.
-		
+
 	Returns:
 		Returns the current position. -1L if an error occured.
 */
@@ -268,10 +268,10 @@ long int io_tell(IOHANDLE io);
 /*
 	Function: io_length
 		Gets the total length of the file. Resetting cursor to the beginning
-	
+
 	Parameters:
 		io - Handle to the file.
-		
+
 	Returns:
 		Returns the total size. -1L if an error occured.
 */
@@ -280,10 +280,10 @@ long int io_length(IOHANDLE io);
 /*
 	Function: io_close
 		Closes a file.
-	
+
 	Parameters:
 		io - Handle to the file.
-		
+
 	Returns:
 		Returns 0 on success.
 */
@@ -292,10 +292,10 @@ int io_close(IOHANDLE io);
 /*
 	Function: io_flush
 		Empties all buffers and writes all pending data.
-	
+
 	Parameters:
 		io - Handle to the file.
-		
+
 	Returns:
 		Returns 0 on success.
 */
@@ -326,7 +326,7 @@ IOHANDLE io_stderr();
 /*
 	Function: thread_sleep
 		Suspends the current thread for a given period.
-	
+
 	Parameters:
 		milliseconds - Number of milliseconds to sleep.
 */
@@ -335,18 +335,18 @@ void thread_sleep(int milliseconds);
 /*
 	Function: thread_create
 		Creates a new thread.
-	
+
 	Parameters:
 		threadfunc - Entry point for the new thread.
 		user - Pointer to pass to the thread.
-		
+
 */
 void *thread_create(void (*threadfunc)(void *), void *user);
 
 /*
 	Function: thread_wait
 		Waits for a thread to be done or destroyed.
-	
+
 	Parameters:
 		thread - Thread to wait for.
 */
@@ -355,7 +355,7 @@ void thread_wait(void *thread);
 /*
 	Function: thread_destroy
 		Destroys a thread.
-	
+
 	Parameters:
 		thread - Thread to destroy.
 */
@@ -390,7 +390,7 @@ typedef long long int64;
 /*
 	Function: time_get
 		Fetches a sample from a high resolution timer.
-	
+
 	Returns:
 		Current value of the timer.
 
@@ -402,7 +402,7 @@ int64 time_get();
 /*
 	Function: time_freq
 		Returns the frequency of the high resolution timer.
-	
+
 	Returns:
 		Returns the frequency of the high resolution timer.
 */
@@ -411,7 +411,7 @@ int64 time_freq();
 /*
 	Function: time_timestamp
 		Retrives the current time as a UNIX timestamp
-	
+
 	Returns:
 		The time as a UNIX timestamp
 */
@@ -428,7 +428,7 @@ typedef struct
 enum
 {
 	NETADDR_MAXSTRSIZE = 1+(8*4+7)+1+1+5+1, // [XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX]:XXXXX
-	
+
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
@@ -446,10 +446,10 @@ typedef struct
 /*
 	Function: net_init
 		Initiates network functionallity.
-	
+
 	Returns:
 		Returns 0 on success,
-		
+
 	Remarks:
 		You must call this function before using any other network
 		functions.
@@ -469,11 +469,11 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 /*
 	Function: net_addr_comp
 		Compares two network addresses.
-	
+
 	Parameters:
 		a - Address to compare
 		b - Address to compare to.
-	
+
 	Returns:
 		<0 - Address a is lesser then address b
 		0 - Address a is equal to address b
@@ -484,12 +484,12 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b);
 /*
 	Function: net_addr_str
 		Turns a network address into a representive string.
-	
+
 	Parameters:
 		addr - Address to turn into a string.
 		string - Buffer to fill with the string.
 		max_length - Maximum size of the string.
-		
+
 	Remarks:
 		- The string will always be zero terminated
 
@@ -499,10 +499,10 @@ void net_addr_str(const NETADDR *addr, char *string, int max_length);
 /*
 	Function: net_addr_from_str
 		Turns string into a network address.
-	
+
 	Returns:
 		0 on success
-	
+
 	Parameters:
 		addr - Address to fill in.
 		string - String to parse.
@@ -517,7 +517,7 @@ int net_addr_from_str(NETADDR *addr, const char *string);
 
 	Parameters:
 		bindaddr - Address to bind the socket to.
-	
+
 	Returns:
 		On success it returns an handle to the socket. On failure it
 		returns NETSOCKET_INVALID.
@@ -533,7 +533,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr);
 		addr - Where to send the packet.
 		data - Pointer to the packet data to send.
 		size - Size of the packet.
-	
+
 	Returns:
 		On success it returns the number of bytes sent. Returns -1
 		on error.
@@ -549,7 +549,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 		addr - Pointer to an NETADDR that will recive the address.
 		data - Pointer to a buffer that will recive the data.
 		maxsize - Maximum size to recive.
-	
+
 	Returns:
 		On success it returns the number of bytes recived. Returns -1
 		on error.
@@ -562,7 +562,7 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize);
 
 	Parameters:
 		sock - Socket to close.
-	
+
 	Returns:
 		Returns 0 on success. -1 on error.
 */
@@ -574,7 +574,7 @@ int net_udp_close(NETSOCKET sock);
 /*
 	Function: net_tcp_create
 		Creates a TCP socket.
-	
+
 	Parameters:
 		bindaddr - Address to bind the socket to.
 
@@ -586,11 +586,11 @@ NETSOCKET net_tcp_create(const NETADDR *a);
 /*
 	Function: net_tcp_listen
 		Makes the socket start listening for new connections.
-	
+
 	Parameters:
 		sock - Socket to start listen to.
 		backlog - Size of the queue of incomming connections to keep.
-	
+
 	Returns:
 		Returns 0 on success.
 */
@@ -599,12 +599,12 @@ int net_tcp_listen(NETSOCKET sock, int backlog);
 /*
 	Function: net_tcp_accept
 		Polls a listning socket for a new connection.
-		
+
 	Parameters:
 		sock - Listning socket to poll.
 		new_sock - Pointer to a socket to fill in with the new socket.
 		addr - Pointer to an address that will be filled in the remote address (optional, can be NULL).
-	
+
 	Returns:
 		Returns a non-negative integer on success. Negative integer on failure.
 */
@@ -613,26 +613,26 @@ int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *addr);
 /*
 	Function: net_tcp_connect
 		Connects one socket to another.
-		
+
 	Parameters:
 		sock - Socket to connect.
 		addr - Address to connect to.
 
 	Returns:
 		Returns 0 on success.
-			
+
 */
 int net_tcp_connect(NETSOCKET sock, const NETADDR *addr);
 
 /*
 	Function: net_tcp_send
 		Sends data to a TCP stream.
-	
+
 	Parameters:
 		sock - Socket to send data to.
 		data - Pointer to the data to send.
 		size - Size of the data to send.
-	
+
 	Returns:
 		Number of bytes sent. Negative value on failure.
 */
@@ -641,12 +641,12 @@ int net_tcp_send(NETSOCKET sock, const void *data, int size);
 /*
 	Function: net_tcp_recv
 		Recvives data from a TCP stream.
-		
+
 	Parameters:
 		sock - Socket to recvive data from.
 		data - Pointer to a buffer to write the data to
 		max_size - Maximum of data to write to the buffer.
-		
+
 	Returns:
 		Number of bytes recvived. Negative value on failure. When in
 		non-blocking mode, it returns 0 when there is no more data to
@@ -657,10 +657,10 @@ int net_tcp_recv(NETSOCKET sock, void *data, int maxsize);
 /*
 	Function: net_tcp_close
 		Closes a TCP socket.
-	
+
 	Parameters:
 		sock - Socket to close.
-	
+
 	Returns:
 		Returns 0 on success. Negative value on failure.
 */
@@ -671,12 +671,12 @@ int net_tcp_close(NETSOCKET sock);
 /*
 	Function: str_append
 		Appends a string to another.
-	
+
 	Parameters:
 		dst - Pointer to a buffer that contains a string.
 		src - String to append.
 		dst_size - Size of the buffer of the dst string.
-		
+
 	Remarks:
 		- The strings are treated as zero-termineted strings.
 		- Garantees that dst string will contain zero-termination.
@@ -686,7 +686,7 @@ void str_append(char *dst, const char *src, int dst_size);
 /*
 	Function: str_copy
 		Copies a string to another.
-		
+
 	Parameters:
 		dst - Pointer to a buffer that shall recive the string.
 		src - String to be copied.
@@ -701,10 +701,10 @@ void str_copy(char *dst, const char *src, int dst_size);
 /*
 	Function: str_length
 		Returns the length of a zero terminated string.
-		
+
 	Parameters:
 		str - Pointer to the string.
-		
+
 	Returns:
 		Length of string in bytes excluding the zero termination.
 */
@@ -713,7 +713,7 @@ int str_length(const char *str);
 /*
 	Function: str_format
 		Performs printf formating into a buffer.
-		
+
 	Parameters:
 		buffer - Pointer to the buffer to recive the formated string.
 		buffer_size - Size of the buffer.
@@ -730,7 +730,7 @@ void str_format(char *buffer, int buffer_size, const char *format, ...);
 /*
 	Function: str_sanitize_strong
 		Replaces all characters below 32 and above 127 with whitespace.
-	
+
 	Parameters:
 		str - String to sanitize.
 
@@ -742,7 +742,7 @@ void str_sanitize_strong(char *str);
 /*
 	Function: str_sanitize_cc
 		Replaces all characters below 32 with whitespace.
-	
+
 	Parameters:
 		str - String to sanitize.
 
@@ -755,7 +755,7 @@ void str_sanitize_cc(char *str);
 	Function: str_sanitize
 		Replaces all characters below 32 with whitespace with
 		exception to \t, \n and \r.
-	
+
 	Parameters:
 		str - String to sanitize.
 
@@ -767,7 +767,7 @@ void str_sanitize(char *str);
 /*
 	Function: str_skip_to_whitespace
 		Skips leading non-whitespace characters(all but ' ', '\t', '\n', '\r').
-	
+
 	Parameters:
 		str - Pointer to the string.
 
@@ -783,7 +783,7 @@ char *str_skip_to_whitespace(char *str);
 /*
 	Function: str_skip_whitespaces
 		Skips leading whitespace characters(' ', '\t', '\n', '\r').
-	
+
 	Parameters:
 		str - Pointer to the string.
 
@@ -799,12 +799,12 @@ char *str_skip_whitespaces(char *str);
 /*
 	Function: str_comp_nocase
 		Compares to strings case insensitive.
-	
+
 	Parameters:
 		a - String to compare.
 		b - String to compare.
-	
-	Returns:	
+
+	Returns:
 		<0 - String a is lesser then string b
 		0 - String a is equal to string b
 		>0 - String a is greater then string b
@@ -819,12 +819,12 @@ int str_comp_nocase(const char *a, const char *b);
 /*
 	Function: str_comp
 		Compares to strings case sensitive.
-	
+
 	Parameters:
 		a - String to compare.
 		b - String to compare.
-	
-	Returns:	
+
+	Returns:
 		<0 - String a is lesser then string b
 		0 - String a is equal to string b
 		>0 - String a is greater then string b
@@ -837,13 +837,13 @@ int str_comp(const char *a, const char *b);
 /*
 	Function: str_comp_num
 		Compares up to num characters of two strings case sensitive.
-	
+
 	Parameters:
 		a - String to compare.
 		b - String to compare.
 		num - Maximum characters to compare
-	
-	Returns:	
+
+	Returns:
 		<0 - String a is lesser then string b
 		0 - String a is equal to string b
 		>0 - String a is greater then string b
@@ -856,12 +856,12 @@ int str_comp_num(const char *a, const char *b, const int num);
 /*
 	Function: str_comp_filenames
 		Compares two strings case sensitive, digit chars will be compared as numbers.
-	
+
 	Parameters:
 		a - String to compare.
 		b - String to compare.
-	
-	Returns:	
+
+	Returns:
 		<0 - String a is lesser then string b
 		0 - String a is equal to string b
 		>0 - String a is greater then string b
@@ -878,7 +878,7 @@ int str_comp_filenames(const char *a, const char *b);
 	Parameters:
 		haystack - String to search in
 		needle - String to search for
-		
+
 	Returns:
 		A pointer into haystack where the needle was found.
 		Returns NULL of needle could not be found.
@@ -896,7 +896,7 @@ const char *str_find_nocase(const char *haystack, const char *needle);
 	Parameters:
 		haystack - String to search in
 		needle - String to search for
-		
+
 	Returns:
 		A pointer into haystack where the needle was found.
 		Returns NULL of needle could not be found.
@@ -939,13 +939,13 @@ void str_timestamp(char *buffer, int buffer_size);
 /*
 	Function: fs_listdir
 		Lists the files in a directory
-		
+
 	Parameters:
 		dir - Directory to list
 		cb - Callback function to call for each entry
 		type - Type of the directory
 		user - Pointer to give to the callback
-	
+
 	Returns:
 		Always returns 0.
 */
@@ -955,13 +955,13 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 /*
 	Function: fs_makedir
 		Creates a directory
-	
+
 	Parameters:
 		path - Directory to create
-	
+
 	Returns:
 		Returns 0 on success. Negative value on failure.
-	
+
 	Remarks:
 		Does not create several directories if needed. "a/b/c" will result
 		in a failure if b or a does not exist.
@@ -971,10 +971,10 @@ int fs_makedir(const char *path);
 /*
 	Function: fs_storage_path
 		Fetches per user configuration directory.
-	
+
 	Returns:
 		Returns 0 on success. Negative value on failure.
-	
+
 	Remarks:
 		- Returns ~/.appname on UNIX based systems
 		- Returns ~/Library/Applications Support/appname on Mac OS X
@@ -985,7 +985,7 @@ int fs_storage_path(const char *appname, char *path, int max);
 /*
 	Function: fs_is_dir
 		Checks if directory exists
-	
+
 	Returns:
 		Returns 1 on success, 0 on failure.
 */
@@ -994,7 +994,7 @@ int fs_is_dir(const char *path);
 /*
 	Function: fs_chdir
 		Changes current working directory
-	
+
 	Returns:
 		Returns 0 on success, 1 on failure.
 */
@@ -1003,7 +1003,7 @@ int fs_chdir(const char *path);
 /*
 	Function: fs_getcwd
 		Gets the current working directory.
-	
+
 	Returns:
 		Returns a pointer to the buffer on success, 0 on failure.
 */
@@ -1012,7 +1012,7 @@ char *fs_getcwd(char *buffer, int buffer_size);
 /*
 	Function: fs_parent_dir
 		Get the parent directory of a directory
-	
+
 	Parameters:
 		path - The directory string
 
@@ -1027,7 +1027,7 @@ int fs_parent_dir(char *path);
 /*
 	Function: fs_remove
 		Deletes the file with the specified name.
-	
+
 	Parameters:
 		filename - The file to delete
 
@@ -1042,7 +1042,7 @@ int fs_remove(const char *filename);
 /*
 	Function: fs_rename
 		Renames the file or directory. If the paths differ the file will be moved.
-	
+
 	Parameters:
 		oldname - The actual name
 		newname - The new name
@@ -1062,7 +1062,7 @@ int fs_rename(const char *oldname, const char *newname);
 
 /*
 	Function: net_tcp_connect_non_blocking
-	
+
 	DOCTODO: serp
 */
 int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a);
@@ -1121,7 +1121,7 @@ enum {
 #define DBG_LEVEL_LOW DBG_LEVEL_IMPORTANT
 #define DBG_LEVEL_HIGH DBG_LEVEL_INFO
 
-typedef void (*DBG_LOGGER)(const char *line); 
+typedef void (*DBG_LOGGER)(const char *line);
 void dbg_logger(DBG_LOGGER logger);
 
 void dbg_logger_stdout();
@@ -1157,7 +1157,7 @@ unsigned str_quickhash(const char *str);
 /*
 	Function: gui_messagebox
 		Display plain OS-dependent message box
-	
+
 	Parameters:
 		title - title of the message box
 		message - text to display
@@ -1168,7 +1168,7 @@ void gui_messagebox(const char *title, const char *message);
 /*
 	Function: str_utf8_rewind
 		Moves a cursor backwards in an utf8 string
-	
+
 	Parameters:
 		str - utf8 string
 		cursor - position in the string
@@ -1184,11 +1184,11 @@ int str_utf8_rewind(const char *str, int cursor);
 /*
 	Function: str_utf8_forward
 		Moves a cursor forwards in an utf8 string
-	
+
 	Parameters:
 		str - utf8 string
 		cursor - position in the string
-		
+
 	Returns:
 		New cursor position.
 
@@ -1200,10 +1200,10 @@ int str_utf8_forward(const char *str, int cursor);
 /*
 	Function: str_utf8_decode
 		Decodes an utf8 character
-	
+
 	Parameters:
 		ptr - pointer to an utf8 string. this pointer will be moved forward
-		
+
 	Returns:
 		Unicode value for the character. -1 for invalid characters and 0 for end of string.
 
@@ -1215,10 +1215,10 @@ int str_utf8_decode(const char **ptr);
 /*
 	Function: str_utf8_encode
 		Encode an utf8 character
-	
+
 	Parameters:
 		ptr - Pointer to a buffer that should recive the data. Should be able to hold at least 4 bytes.
-		
+
 	Returns:
 		Number of bytes put into the buffer.
 
@@ -1230,10 +1230,10 @@ int str_utf8_encode(char *ptr, int chr);
 /*
 	Function: str_utf8_check
 		Checks if a strings contains just valid utf8 characters.
-	
+
 	Parameters:
 		str - Pointer to a possible utf8 string.
-		
+
 	Returns:
 		0 - invalid characters found.
 		1 - only valid characters found.

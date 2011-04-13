@@ -24,15 +24,15 @@ class CGameConsole : public CComponent
 		int m_Type;
 		int m_CompletionEnumerationCount;
 		int m_BacklogActPage;
-		
+
 	public:
 		CGameConsole *m_pGameConsole;
-		
+
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
 		int m_CompletionFlagmask;
 		float m_CompletionRenderOffset;
-		
+
 		IConsole::CCommandInfo *m_pCommand;
 
 		CInstance(int t);
@@ -42,22 +42,22 @@ class CGameConsole : public CComponent
 		void ClearHistory();
 
 		void ExecuteLine(const char *pLine);
-		
+
 		void OnInput(IInput::CEvent Event);
 		void PrintLine(const char *pLine);
-		
+
 		const char *GetString() const { return m_Input.GetString(); }
 		static void PossibleCommandsCompleteCallback(const char *pStr, void *pUser);
 	};
-	
+
 	class IConsole *m_pConsole;
-	
+
 	CInstance m_LocalConsole;
 	CInstance m_RemoteConsole;
-	
+
 	CInstance *CurrentConsole();
 	float TimeNow();
-	
+
 	int m_ConsoleType;
 	int m_ConsoleState;
 	float m_StateChangeEnd;
@@ -74,7 +74,7 @@ class CGameConsole : public CComponent
 	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
-	
+
 public:
 	enum
 	{

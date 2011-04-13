@@ -21,7 +21,7 @@ struct CParticle
 		m_FlowAffected = 0.0f;
 		m_Color = vec4(1,1,1,1);
 	}
-	
+
 	vec2 m_Pos;
 	vec2 m_Vel;
 
@@ -30,7 +30,7 @@ struct CParticle
 	float m_FlowAffected;
 
 	float m_LifeSpan;
-	
+
 	float m_StartSize;
 	float m_EndSize;
 
@@ -41,7 +41,7 @@ struct CParticle
 	float m_Friction;
 
 	vec4 m_Color;
-	
+
 	// set by the particle system
 	float m_Life;
 	int m_PrevPart;
@@ -61,15 +61,15 @@ public:
 	};
 
 	CParticles();
-	
+
 	void Add(int Group, CParticle *pPart);
 	void AddExplosion(vec2 Pos);
-	
+
 	virtual void OnReset();
 	virtual void OnRender();
 
 private:
-	
+
 	enum
 	{
 		MAX_PARTICLES=1024*8,
@@ -79,7 +79,7 @@ private:
 	CParticle m_aParticles[MAX_PARTICLES];
 	int m_FirstFree;
 	int m_aFirstPart[NUM_GROUPS];
-	
+
 	void RenderGroup(int Group);
 	void Update(float TimePassed);
 
@@ -90,7 +90,7 @@ private:
 		CParticles *m_pParts;
 		virtual void OnRender() { m_pParts->RenderGroup(TGROUP); }
 	};
-	
+
 	vec2 m_aExplosionPos[MAX_PROJECTILES];
 	int m_ExplosionCount;
 	

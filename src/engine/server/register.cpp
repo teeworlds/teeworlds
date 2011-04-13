@@ -41,15 +41,15 @@ void CRegister::RegisterSendFwcheckresponse(NETADDR *pAddr)
 	Packet.m_pData = SERVERBROWSE_FWRESPONSE;
 	m_pNetServer->Send(&Packet);
 }
-	
+
 void CRegister::RegisterSendHeartbeat(NETADDR Addr)
 {
 	static unsigned char aData[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
 	unsigned short Port = g_Config.m_SvPort;
 	CNetChunk Packet;
-	
+
 	mem_copy(aData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
-	
+
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
@@ -118,7 +118,7 @@ void CRegister::RegisterUpdate(int Nettype)
 	else if(m_RegisterState == REGISTERSTATE_UPDATE_ADDRS)
 	{
 		m_RegisterRegisteredServer = -1;
-	
+
 		if(!m_pMasterServer->IsRefreshing())
 		{
 			int i;
@@ -137,7 +137,7 @@ void CRegister::RegisterUpdate(int Nettype)
 				m_aMasterserverInfo[i].m_Count = -1;
 				m_aMasterserverInfo[i].m_LastSend = 0;
 			}
-			
+
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "fetching server counts");
 			RegisterNewState(REGISTERSTATE_QUERY_COUNT);
 		}
@@ -149,7 +149,7 @@ void CRegister::RegisterUpdate(int Nettype)
 		{
 			if(!m_aMasterserverInfo[i].m_Valid)
 				continue;
-				
+
 			if(m_aMasterserverInfo[i].m_Count == -1)
 			{
 				Left++;
@@ -160,7 +160,7 @@ void CRegister::RegisterUpdate(int Nettype)
 				}
 			}
 		}
-		
+
 		// check if we are done or timed out
 		if(Left == 0 || Now > m_RegisterStateStart+Freq*3)
 		{
@@ -171,7 +171,7 @@ void CRegister::RegisterUpdate(int Nettype)
 			{
 				if(!m_aMasterserverInfo[i].m_Valid || m_aMasterserverInfo[i].m_Count == -1)
 					continue;
-					
+
 				if(Best == -1 || m_aMasterserverInfo[i].m_Count < m_aMasterserverInfo[Best].m_Count)
 					Best = i;
 			}
@@ -184,7 +184,7 @@ void CRegister::RegisterUpdate(int Nettype)
 				RegisterNewState(REGISTERSTATE_ERROR);
 			}
 			else
-			{			
+			{
 				char aBuf[256];
 				str_format(aBuf, sizeof(aBuf), "chose '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
@@ -201,7 +201,7 @@ void CRegister::RegisterUpdate(int Nettype)
 			m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend = Now;
 			RegisterSendHeartbeat(m_aMasterserverInfo[m_RegisterRegisteredServer].m_Addr);
 		}
-		
+
 		if(Now > m_RegisterStateStart+Freq*60)
 		{
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "WARNING: Master server is not responding, switching master");
@@ -212,9 +212,9 @@ void CRegister::RegisterUpdate(int Nettype)
 	{
 		if(m_RegisterFirst)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "server registered");
-			
+
 		m_RegisterFirst = 0;
-		
+
 		// check if we should send new heartbeat again
 		if(Now > m_RegisterStateStart+Freq)
 		{
@@ -253,7 +253,7 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket)
 	}
 	if(!Valid)
 		return 0;
-			
+
 	if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWCHECK) &&
 		mem_comp(pPacket->m_pData, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
 	{

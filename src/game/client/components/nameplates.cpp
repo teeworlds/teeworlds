@@ -19,9 +19,9 @@ void CNamePlates::RenderNameplate(
 	)
 {
 	float IntraTick = Client()->IntraGameTick();
-	
+
 	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
-	
+
 
 	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 	// render name plate
@@ -31,7 +31,7 @@ void CNamePlates::RenderNameplate(
 		float a = 1.0f;
 		if(g_Config.m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
-			
+
 		char aName[256];
 		if(!g_Config.m_TcNameplateScore)
 			str_format(aName, 256, "%s", m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName);

@@ -22,7 +22,7 @@ public:
 		int m_ModeSpecial; // for CTF, if the guy is carrying a flag for example
 		int m_Tick;
 	};
-	
+
 	enum
 	{
 		MAX_KILLMSGS = 5,

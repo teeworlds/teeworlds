@@ -32,7 +32,7 @@ CHud::CHud()
 	
 	OnReset();
 }
-	
+
 void CHud::OnReset()
 {
 	// race
@@ -50,7 +50,7 @@ void CHud::RenderGameTimer()
 		return;
 		
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-	
+
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH))
 	{
 		char Buf[32];
@@ -60,7 +60,7 @@ void CHud::RenderGameTimer()
 			Time = m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed());
 
 			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
-				Time  = 0;
+				Time = 0;
 		}
 		else
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed();
@@ -98,7 +98,7 @@ void CHud::RenderScoreHud()
 {
 	if(m_pClient->m_IsRace)
 		return;
-	
+
 	// render small score hud
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 	{
@@ -115,7 +115,7 @@ void CHud::RenderScoreHud()
 			float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 			float Split = 3.0f;
 			float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
-			
+
 			for(int t = 0; t < 2; t++)
 			{
 				// draw box
@@ -227,7 +227,7 @@ void CHud::RenderScoreHud()
 			float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1), TextRender()->TextWidth(0, 14.0f, aScore[1], -1)};
 			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1));
 			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
-			
+
 			for(int t = 0; t < 2; t++)
 			{
 				// draw box
@@ -282,7 +282,7 @@ void CHud::RenderWarmupTimer()
 			str_format(Buf, sizeof(Buf), "%d", Seconds);
 		w = TextRender()->TextWidth(0, FontSize, Buf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, Buf, -1);
-	}	
+	}
 }
 
 void CHud::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
@@ -324,7 +324,7 @@ void CHud::RenderTeambalanceWarning()
 	// render prompt about team-balance
 	bool Flash = time_get()/(time_freq()/2)%2 == 0;
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
-	{	
+	{
 		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[TEAM_RED]-m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE];
 		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
 		{
@@ -344,7 +344,7 @@ void CHud::RenderVoting()
 {
 	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK || !g_Config.m_ClRenderVote)
 		return;
-	
+
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
@@ -364,7 +364,7 @@ void CHud::RenderVoting()
 	Cursor.m_LineWidth = 100.0f-tw;
 	Cursor.m_MaxLines = 3;
 	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
-	
+
 	// reason
 	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
 	TextRender()->SetCursor(&Cursor, 5.0f, 79.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -373,7 +373,7 @@ void CHud::RenderVoting()
 
 	CUIRect Base = {5, 88, 100, 4};
 	m_pClient->m_pVoting->RenderBars(Base, false);
-	
+
 	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
 	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
 	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
@@ -388,7 +388,7 @@ void CHud::RenderCursor()
 {
 	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK || !g_Config.m_ClRenderCrosshair)
 		return;
-		
+
 	MapscreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup());
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
@@ -414,13 +414,13 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	// render gui stuff
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-	
+
 	IGraphics::CQuadItem Array[10];
 	int i = 0;
 	if(g_Config.m_ClRenderAmmo)
 	{
 		Graphics()->QuadsBegin();
-	
+
 		// if weaponstage is active, put a "glow" around the stage ammo
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
 		for (i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
@@ -642,7 +642,7 @@ void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameInfoObj || g_Config.m_ClClearAll)
 		return;
-		
+
 	m_Width = 300.0f*Graphics()->ScreenAspect();
 	m_Height = 300.0f;
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);

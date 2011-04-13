@@ -5,10 +5,10 @@
 #include <game/client/component.h>
 
 class CHud : public CComponent
-{	
+{
 	float m_Width, m_Height;
 	float m_AverageFPS;
-	
+
 	// Race
 	float m_CheckpointDiff;
 	int m_RaceTime;
@@ -27,7 +27,7 @@ class CHud : public CComponent
 	};
 	
 	void RenderCursor();
-	
+
 	void RenderFps();
 	void RenderConnectionWarning();
 	void RenderTeambalanceWarning();
@@ -46,7 +46,7 @@ class CHud : public CComponent
 	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);
 public:
 	CHud();
-	
+
 	virtual void OnReset();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
