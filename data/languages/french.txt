@@ -657,6 +657,9 @@ no limit
 
 ##### needs translation #####
 
+Play background music
+== 
+
 Spectate next
 == 
 

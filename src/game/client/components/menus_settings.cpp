@@ -3,7 +3,7 @@
 
 #include <base/math.h>
 
-
+#include <engine/engine.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -13,6 +13,7 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
+#include <game/client/components/sounds.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
@@ -755,11 +756,25 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_SndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
 	{
 		g_Config.m_SndEnable ^= 1;
+		if(g_Config.m_SndEnable)
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		else
+			m_pClient->m_pSounds->Stop(SOUND_MENU);
 		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
 	}
 
 	if(!g_Config.m_SndEnable)
 		return;
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_SndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
+	{
+		g_Config.m_SndMusic ^= 1;
+		if(g_Config.m_SndMusic)
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		else
+			m_pClient->m_pSounds->Stop(SOUND_MENU);
+	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_SndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
