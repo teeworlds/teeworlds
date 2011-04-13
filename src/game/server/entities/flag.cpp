@@ -10,7 +10,7 @@ CFlag::CFlag(CGameWorld *pGameWorld, int Team)
 	m_ProximityRadius = ms_PhysSize;
 	m_pCarryingCharacter = NULL;
 	m_GrabTick = 0;
-	
+
 	Reset();
 }
 

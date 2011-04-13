@@ -20,13 +20,13 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 {
 	if(IGameController::OnEntity(Index, Pos))
 		return true;
-	
+
 	int Team = -1;
 	if(Index == ENTITY_FLAGSTAND_RED) Team = TEAM_RED;
 	if(Index == ENTITY_FLAGSTAND_BLUE) Team = TEAM_BLUE;
 	if(Team == -1 || m_apFlags[Team])
 		return false;
-		
+
 	CFlag *F = new CFlag(&GameServer()->m_World, Team);
 	F->m_StandPos = Pos;
 	F->m_Pos = Pos;
@@ -39,7 +39,7 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 {
 	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
 	int HadFlag = 0;
-	
+
 	// drop flags
 	for(int i = 0; i < 2; i++)
 	{
@@ -52,14 +52,14 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 			F->m_DropTick = Server()->Tick();
 			F->m_pCarryingCharacter = 0;
 			F->m_Vel = vec2(0,0);
-			
+
 			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
 				pKiller->m_Score++;
-				
+
 			HadFlag |= 1;
 		}
 	}
-	
+
 	return HadFlag;
 }
 
@@ -118,14 +118,14 @@ void CGameControllerCTF::Tick()
 	IGameController::Tick();
 
 	DoTeamScoreWincheck();
-	
+
 	for(int fi = 0; fi < 2; fi++)
 	{
 		CFlag *F = m_apFlags[fi];
-		
+
 		if(!F)
 			continue;
-		
+
 		// flag hits death-tile or left the game layer, reset it
 		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
@@ -134,13 +134,13 @@ void CGameControllerCTF::Tick()
 			F->Reset();
 			continue;
 		}
-		
+
 		//
 		if(F->m_pCarryingCharacter)
 		{
 			// update flag position
 			F->m_Pos = F->m_pCarryingCharacter->m_Pos;
-			
+
 			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
 			{
 				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
@@ -167,7 +167,7 @@ void CGameControllerCTF::Tick()
 					GameServer()->SendChat(-1, -2, aBuf);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
-					
+
 					GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 				}
 			}
@@ -180,7 +180,7 @@ void CGameControllerCTF::Tick()
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
 					continue;
-				
+
 				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
 				{
 					// return the flag
@@ -207,7 +207,7 @@ void CGameControllerCTF::Tick()
 						m_aTeamscore[fi^1]++;
 						F->m_GrabTick = Server()->Tick();
 					}
-					
+
 					F->m_AtStand = 0;
 					F->m_pCarryingCharacter = apCloseCCharacters[i];
 					F->m_pCarryingCharacter->GetPlayer()->m_Score += 1;
@@ -217,12 +217,12 @@ void CGameControllerCTF::Tick()
 						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
 						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-					
+
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
 						if(!GameServer()->m_apPlayers[c])
 							continue;
-							
+
 						if(GameServer()->m_apPlayers[c]->GetTeam() == fi)
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, GameServer()->m_apPlayers[c]->GetCID());
 						else
@@ -231,7 +231,7 @@ void CGameControllerCTF::Tick()
 					break;
 				}
 			}
-			
+
 			if(!F->m_pCarryingCharacter && !F->m_AtStand)
 			{
 				if(Server()->Tick() > F->m_DropTick + Server()->TickSpeed()*30)

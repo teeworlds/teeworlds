@@ -21,7 +21,7 @@ public:
 	void AddInt(int i);
 	void AddString(const char *pStr, int Limit);
 	void AddRaw(const void *pData, int Size);
-	
+
 	int Size() const { return (int)(m_pCurrent-m_aBuffer); }
 	const unsigned char *Data() const { return m_aBuffer; }
 	bool Error() const { return m_Error; }

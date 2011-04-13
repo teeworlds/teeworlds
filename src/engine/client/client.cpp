@@ -545,7 +545,7 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 {
 	if(RconAuthed())
 		return;
-        
+
 	CMsgPacker Msg(NETMSG_RCON_AUTH);
 	Msg.AddString(pName, 32);
 	Msg.AddString(pPassword, 32);
@@ -860,7 +860,7 @@ void CClient::DebugRender()
 		total = 42
 	*/
 	FrameTimeAvg = FrameTimeAvg*0.9f + m_FrameTime*0.1f;
-	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d mem %dk %d  gfxmem: %dk  fps: %3d",
+	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d mem %dk %d gfxmem: %dk fps: %3d",
 		m_CurGameTick, m_PredTick,
 		mem_stats()->allocated/1024,
 		mem_stats()->total_allocations,
@@ -1030,7 +1030,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		// version info
 		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
-		
+
 		{
 			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
 			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
@@ -1060,7 +1060,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 
 		// map version list
 		if(pPacket->m_DataSize >= (int)sizeof(VERSIONSRV_MAPLIST) &&
-			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)		
+			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)
 		{
 			int Size = pPacket->m_DataSize-sizeof(VERSIONSRV_MAPLIST);
 			int Num = Size/sizeof(CMapVersion);
@@ -1114,7 +1114,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 				mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
 			}
 			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
-			
+
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 		}
 	}
@@ -1125,7 +1125,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		// we got ze info
 		CUnpacker Up;
 		CServerInfo Info = {0};
-				
+
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 		int Token = str_toint(Up.GetString());
 		str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
@@ -1282,7 +1282,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();						
+					SendReady();
 				}
 				else
 					DisconnectWithReason(pError);

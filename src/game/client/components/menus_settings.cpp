@@ -108,7 +108,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Right.HSplitTop(20.0f, &Button, &Right);
 			if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 				g_Config.m_ClNameplatesAlways ^= 1;
-		
+
 			Right.HSplitTop(2.5f, 0, &Right);
 			Right.HSplitTop(20.0f, &Label, &Right);
 			Right.HSplitTop(20.0f, &Button, &Right);
@@ -245,7 +245,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	MainView.HSplitTop(10.0f, 0, &MainView);
 
 	// skin info
-	const CSkins::CSkin *pOwnSkin = m_pClient->m_pSkins->Get(m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin));	
+	const CSkins::CSkin *pOwnSkin = m_pClient->m_pSkins->Get(m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin));
 	CTeeRenderInfo OwnSkinInfo;
 	if(g_Config.m_PlayerUseCustomColor)
 	{
@@ -273,7 +273,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Label.x+30.0f, Label.y+28.0f));
 	Label.HSplitTop(15.0f, 0, &Label);;
 	Label.VSplitLeft(70.0f, 0, &Label);
-	UI()->DoLabelScaled(&Label,  g_Config.m_PlayerSkin, 14.0f, -1, 150.0f);
+	UI()->DoLabelScaled(&Label, g_Config.m_PlayerSkin, 14.0f, -1, 150.0f);
 
 	// custom colour selector
 	MainView.HSplitTop(20.0f, 0, &MainView);
@@ -322,7 +322,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				Label.VSplitLeft(100.0f, &Label, &Button);
 				Button.HMargin(2.0f, &Button);
 
-				float k = ((PrevColor>>((2-s)*8))&0xff)  / 255.0f;
+				float k = ((PrevColor>>((2-s)*8))&0xff) / 255.0f;
 				k = DoScrollbarH(&s_aColorSlider[i][s], &Button, k);
 				Color <<= 8;
 				Color += clamp((int)(k*255), 0, 255);
@@ -643,7 +643,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_aModes[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			str_format(aBuf, sizeof(aBuf), "  %dx%d %d bit", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth);
+			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth);
 			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, -1);
 		}
 	}
@@ -826,7 +826,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
 		return;
 	}
-	
+
 	char aOrigin[128];
 	CLineReader LineReader;
 	LineReader.Init(File);
@@ -835,7 +835,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	{
 		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
 			continue;
-		
+
 		str_copy(aOrigin, pLine, sizeof(aOrigin));
 		char *pReplacement = LineReader.Get();
 		if(!pReplacement)
@@ -843,7 +843,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
 			break;
 		}
-		
+
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
 			char aBuf[128];
@@ -851,7 +851,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 			continue;
 		}
-		
+
 		char aFileName[128];
 		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
 		pLanguages->add(CLanguage(pReplacement+3, aFileName));
@@ -861,7 +861,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 
 void CMenus::RenderLanguageSelection(CUIRect MainView)
 {
-	static int s_LanguageList  = 0;
+	static int s_LanguageList = 0;
 	static int s_SelectedLanguage = 0;
 	static sorted_array<CLanguage> s_Languages;
 	static float s_ScrollValue = 0;

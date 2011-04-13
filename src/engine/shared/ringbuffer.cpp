@@ -3,7 +3,7 @@
 #include <base/system.h>
 
 #include "ringbuffer.h"
-	
+
 CRingBufferBase::CItem *CRingBufferBase::NextBlock(CItem *pItem)
 {
 	if(pItem->m_pNext)
@@ -27,19 +27,19 @@ CRingBufferBase::CItem *CRingBufferBase::MergeBack(CItem *pItem)
 	// merge the blocks
 	pItem->m_pPrev->m_Size += pItem->m_Size;
 	pItem->m_pPrev->m_pNext = pItem->m_pNext;
-	
+
 	// fixup pointers
 	if(pItem->m_pNext)
 		pItem->m_pNext->m_pPrev = pItem->m_pPrev;
 	else
 		m_pLast = pItem->m_pPrev;
-		
+
 	if(pItem == m_pProduce)
 		m_pProduce = pItem->m_pPrev;
-	
+
 	if(pItem == m_pConsume)
 		m_pConsume = pItem->m_pPrev;
-	
+
 	// return the current block
 	return pItem->m_pPrev;
 }
@@ -54,8 +54,8 @@ void CRingBufferBase::Init(void *pMemory, int Size, int Flags)
 	m_pLast = m_pFirst;
 	m_pProduce = m_pFirst;
 	m_pConsume = m_pFirst;
-	m_Flags = Flags;		
-	
+	m_Flags = Flags;
+
 }
 
 void *CRingBufferBase::Allocate(int Size)
@@ -67,7 +67,7 @@ void *CRingBufferBase::Allocate(int Size)
 	if(WantedSize > m_Size)
 		return 0;
 
-	while(1)	
+	while(1)
 	{
 		// check for space
 		if(m_pProduce->m_Free)
@@ -81,7 +81,7 @@ void *CRingBufferBase::Allocate(int Size)
 					pBlock = m_pFirst;
 			}
 		}
-		
+
 		if(pBlock)
 			break;
 		else
@@ -96,9 +96,9 @@ void *CRingBufferBase::Allocate(int Size)
 				return 0;
 		}
 	}
-	
+
 	// okey, we have our block
-	
+
 	// split the block if needed
 	if(pBlock->m_Size > WantedSize+(int)sizeof(CItem))
 	{
@@ -108,19 +108,19 @@ void *CRingBufferBase::Allocate(int Size)
 		if(pNewItem->m_pNext)
 			pNewItem->m_pNext->m_pPrev = pNewItem;
 		pBlock->m_pNext = pNewItem;
-		
+
 		pNewItem->m_Free = 1;
 		pNewItem->m_Size = pBlock->m_Size - WantedSize;
 		pBlock->m_Size = WantedSize;
-		
+
 		if(!pNewItem->m_pNext)
 			m_pLast = pNewItem;
 	}
-	
-	
+
+
 	// set next block
 	m_pProduce = NextBlock(pBlock);
-	
+
 	// set as used and return the item pointer
 	pBlock->m_Free = 0;
 	return (void *)(pBlock+1);
@@ -130,13 +130,13 @@ int CRingBufferBase::PopFirst()
 {
 	if(m_pConsume->m_Free)
 		return 0;
-	
+
 	// set the free flag
 	m_pConsume->m_Free = 1;
-	
+
 	// previous block is also free, merge them
 	m_pConsume = MergeBack(m_pConsume);
-	
+
 	// advance the consume pointer
 	m_pConsume = NextBlock(m_pConsume);
 	while(m_pConsume->m_Free && m_pConsume != m_pProduce)
@@ -144,7 +144,7 @@ int CRingBufferBase::PopFirst()
 		m_pConsume = MergeBack(m_pConsume);
 		m_pConsume = NextBlock(m_pConsume);
 	}
-		
+
 	// in the case that we have catched up with the produce pointer
 	// we might stand on a free block so merge em
 	MergeBack(m_pConsume);
@@ -155,7 +155,7 @@ int CRingBufferBase::PopFirst()
 void *CRingBufferBase::Prev(void *pCurrent)
 {
 	CItem *pItem = ((CItem *)pCurrent) - 1;
-	
+
 	while(1)
 	{
 		pItem = PrevBlock(pItem);
@@ -169,7 +169,7 @@ void *CRingBufferBase::Prev(void *pCurrent)
 void *CRingBufferBase::Next(void *pCurrent)
 {
 	CItem *pItem = ((CItem *)pCurrent) - 1;
-	
+
 	while(1)
 	{
 		pItem = NextBlock(pItem);

@@ -25,7 +25,7 @@
 				Remove entities marked for deletion (GAMEWORLD::remove_entities)
 			Game Controller (GAMECONTROLLER::tick)
 			All players (CPlayer::tick)
-			
+
 
 	Snap
 		Game Context (CGameContext::snap)
@@ -60,7 +60,7 @@ class CGameContext : public IGameServer
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	
+
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
@@ -73,25 +73,25 @@ public:
 
 	CGameContext();
 	~CGameContext();
-	
+
 	void Clear();
-	
+
 	CEventHandler m_Events;
 	CPlayer *m_apPlayers[MAX_CLIENTS];
 
 	IGameController *m_pController;
 	CGameWorld m_World;
-	
+
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
-	
+
 	// voting
 	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote();
 	void SendVoteSet(int ClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
 	void AbortVoteKickOnDisconnect(int ClientID);
-	
+
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
@@ -118,7 +118,7 @@ public:
 	void CreatePlayerSpawn(vec2 Pos);
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
-	void CreateSoundGlobal(int Sound, int Target=-1);	
+	void CreateSoundGlobal(int Sound, int Target=-1);
 
 
 	enum
@@ -135,22 +135,22 @@ public:
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendBroadcast(const char *pText, int ClientID);
-	
-	
+
+
 	//
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
-	
+
 	// engine events
 	virtual void OnInit();
 	virtual void OnConsoleInit();
 	virtual void OnShutdown();
-	
+
 	virtual void OnTick();
 	virtual void OnPreSnap();
 	virtual void OnSnap(int ClientID);
 	virtual void OnPostSnap();
-	
+
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
 	virtual void OnClientConnected(int ClientID);

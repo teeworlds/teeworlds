@@ -32,7 +32,7 @@ static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUse
 		pChannels[3] = 0;
 		return;
 	}
-		
+
 	CEnvelope *e = pEditor->m_Map.m_lEnvelopes[Env];
 	float t = pEditor->m_AnimateTime+TimeOffset;
 	t *= pEditor->m_AnimateSpeed;
@@ -44,7 +44,7 @@ void CLayerQuads::Render()
 	Graphics()->TextureSet(-1);
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
 		Graphics()->TextureSet(m_pEditor->m_Map.m_lImages[m_Image]->m_TexID);
-		
+
 	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, m_pEditor);
 }
 
@@ -70,26 +70,26 @@ CQuad *CLayerQuads::NewQuad()
 
 	q->m_aPoints[4].x = x+32; // pivot
 	q->m_aPoints[4].y = y+32;
-	
+
 	for(int i = 0; i < 5; i++)
 	{
 		q->m_aPoints[i].x <<= 10;
 		q->m_aPoints[i].y <<= 10;
 	}
-	
+
 
 	q->m_aTexcoords[0].x = 0;
 	q->m_aTexcoords[0].y = 0;
-	
+
 	q->m_aTexcoords[1].x = 1<<10;
 	q->m_aTexcoords[1].y = 0;
-	
+
 	q->m_aTexcoords[2].x = 0;
 	q->m_aTexcoords[2].y = 1<<10;
-	
+
 	q->m_aTexcoords[3].x = 1<<10;
 	q->m_aTexcoords[3].y = 1<<10;
-	
+
 	q->m_aColors[0].r = 255; q->m_aColors[0].g = 255; q->m_aColors[0].b = 255; q->m_aColors[0].a = 255;
 	q->m_aColors[1].r = 255; q->m_aColors[1].g = 255; q->m_aColors[1].b = 255; q->m_aColors[1].a = 255;
 	q->m_aColors[2].r = 255; q->m_aColors[2].g = 255; q->m_aColors[2].b = 255; q->m_aColors[2].a = 255;
@@ -119,29 +119,29 @@ int CLayerQuads::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	pGrabbed->m_pEditor = m_pEditor;
 	pGrabbed->m_Image = m_Image;
 	pBrush->AddLayer(pGrabbed);
-	
+
 	//dbg_msg("", "%f %f %f %f", rect.x, rect.y, rect.w, rect.h);
 	for(int i = 0; i < m_lQuads.size(); i++)
 	{
 		CQuad *q = &m_lQuads[i];
 		float px = fx2f(q->m_aPoints[4].x);
 		float py = fx2f(q->m_aPoints[4].y);
-		
+
 		if(px > Rect.x && px < Rect.x+Rect.w && py > Rect.y && py < Rect.y+Rect.h)
 		{
 			CQuad n;
 			n = *q;
-			
+
 			for(int p = 0; p < 5; p++)
 			{
 				n.m_aPoints[p].x -= f2fx(Rect.x);
 				n.m_aPoints[p].y -= f2fx(Rect.y);
 			}
-			
+
 			pGrabbed->m_lQuads.add(n);
 		}
 	}
-	
+
 	return pGrabbed->m_lQuads.size()?1:0;
 }
 
@@ -151,13 +151,13 @@ void CLayerQuads::BrushPlace(CLayer *pBrush, float wx, float wy)
 	for(int i = 0; i < l->m_lQuads.size(); i++)
 	{
 		CQuad n = l->m_lQuads[i];
-		
+
 		for(int p = 0; p < 5; p++)
 		{
 			n.m_aPoints[p].x += f2fx(wx);
 			n.m_aPoints[p].y += f2fx(wy);
 		}
-			
+
 		m_lQuads.add(n);
 	}
 	m_pEditor->m_Map.m_Modified = true;
@@ -189,7 +189,7 @@ void CLayerQuads::BrushRotate(float Amount)
 	for(int i = 0; i < m_lQuads.size(); i++)
 	{
 		CQuad *q = &m_lQuads[i];
-		
+
 		for(int p = 0; p < 5; p++)
 		{
 			vec2 Pos(fx2f(q->m_aPoints[p].x), fx2f(q->m_aPoints[p].y));
@@ -203,7 +203,7 @@ void CLayerQuads::BrushRotate(float Amount)
 void CLayerQuads::GetSize(float *w, float *h)
 {
 	*w = 0; *h = 0;
-	
+
 	for(int i = 0; i < m_lQuads.size(); i++)
 	{
 		for(int p = 0; p < 5; p++)
@@ -224,18 +224,18 @@ int CLayerQuads::RenderProperties(CUIRect *pToolBox)
 		PROP_IMAGE=0,
 		NUM_PROPS,
 	};
-	
+
 	CProperty aProps[] = {
 		{"Image", m_Image, PROPTYPE_IMAGE, -1, 0},
 		{0},
 	};
-	
+
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
 	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
 	if(Prop != -1)
 		m_pEditor->m_Map.m_Modified = true;
-	
+
 	if(Prop == PROP_IMAGE)
 	{
 		if(NewVal >= 0)

@@ -15,7 +15,7 @@ void CHuffman::Setbits_r(CNode *pNode, int Bits, unsigned Depth)
 		Setbits_r(&m_aNodes[pNode->m_aLeafs[1]], Bits|(1<<Depth), Depth+1);
 	if(pNode->m_aLeafs[0] != 0xffff)
 		Setbits_r(&m_aNodes[pNode->m_aLeafs[0]], Bits, Depth+1);
-		
+
 	if(pNode->m_NumBits)
 	{
 		pNode->m_Bits = Bits;
@@ -28,7 +28,7 @@ static void BubbleSort(CHuffmanConstructNode **ppList, int Size)
 {
 	int Changed = 1;
 	CHuffmanConstructNode *pTemp;
-	
+
 	while(Changed)
 	{
 		Changed = 0;
@@ -68,15 +68,15 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 		apNodesLeft[i] = &aNodesLeftStorage[i];
 
 	}
-	
+
 	m_NumNodes = HUFFMAN_MAX_SYMBOLS;
-	
+
 	// construct the table
 	while(NumNodesLeft > 1)
 	{
 		// we can't rely on stdlib's qsort for this, it can generate different results on different implementations
 		BubbleSort(apNodesLeft, NumNodesLeft);
-		
+
 		m_aNodes[m_NumNodes].m_NumBits = 0;
 		m_aNodes[m_NumNodes].m_aLeafs[0] = apNodesLeft[NumNodesLeft-1]->m_NodeId;
 		m_aNodes[m_NumNodes].m_aLeafs[1] = apNodesLeft[NumNodesLeft-2]->m_NodeId;
@@ -89,7 +89,7 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 
 	// set start node
 	m_pStartNode = &m_aNodes[m_NumNodes-1];
-	
+
 	// build symbol bits
 	Setbits_r(m_pStartNode, 0, 0);
 }
@@ -230,7 +230,7 @@ int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int O
 		// {C} load symbol now if we didn't that earlier at location {A}
 		if(!pNode)
 			pNode = m_apDecodeLut[Bits&HUFFMAN_LUTMASK];
-		
+
 		if(!pNode)
 			return -1;
 

@@ -13,16 +13,16 @@ public:
 	{
 		int m_CountryCode;
 		int m_Texture;
-		
+
 		bool operator<(const CCountryFlag &Other) { return m_CountryCode < Other.m_CountryCode; }
 	};
-	
+
 	void OnInit();
-	
+
 	int Num() const;
 	const CCountryFlag *Get(int Index) const;
 	int Find(int CountryCode) const;
-	
+
 private:
 	sorted_array<CCountryFlag> m_aCountryFlags;
 

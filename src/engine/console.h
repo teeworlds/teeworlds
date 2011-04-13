@@ -25,14 +25,14 @@ public:
 	public:
 		IResult() { m_NumArgs = 0; }
 		virtual ~IResult() {}
-		
+
 		virtual int GetInteger(unsigned Index) = 0;
 		virtual float GetFloat(unsigned Index) = 0;
 		virtual const char *GetString(unsigned Index) = 0;
-		
+
 		int NumArguments() const { return m_NumArgs; }
 	};
-	
+
 	class CCommandInfo
 	{
 	public:
@@ -50,16 +50,16 @@ public:
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
-	virtual void Register(const char *pName, const char *pParams, 
+	virtual void Register(const char *pName, const char *pParams,
 		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
-	
+
 	virtual bool LineIsValid(const char *pStr) = 0;
 	virtual void ExecuteLine(const char *Sptr) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
 	virtual void ExecuteFile(const char *pFilename) = 0;
-	
+
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
 };

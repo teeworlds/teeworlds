@@ -12,7 +12,7 @@
 #include <game/client/components/scoreboard.h>
 
 #include "broadcast.h"
-	
+
 void CBroadcast::OnReset()
 {
 	m_BroadcastTime = 0;
@@ -24,7 +24,7 @@ void CBroadcast::OnRender()
 		return;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
-		
+
 	if(time_get() < m_BroadcastTime)
 	{
 		CTextCursor Cursor;

@@ -21,11 +21,11 @@ public:
 	{
 		MAX_FRIENDS=128,
 	};
-	
+
 	virtual void Init() = 0;
-	
+
 	virtual int NumFriends() const = 0;
-	virtual const CFriendInfo *GetFriend(int Index) const = 0; 
+	virtual const CFriendInfo *GetFriend(int Index) const = 0;
 	virtual bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const = 0;
 
 	virtual void AddFriend(const char *pName, const char *pClan) = 0;

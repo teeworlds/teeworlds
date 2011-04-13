@@ -29,7 +29,7 @@ int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 	IOHANDLE MapFile = s_pStorage->OpenFile(aBuf, IOFLAG_READ, DirType);
 	unsigned MapSize = io_length(MapFile);
 	io_close(MapFile);
-	
+
 	char aMapName[8];
 	str_copy(aMapName, pName, min((int)sizeof(aMapName),l-3));
 
@@ -52,7 +52,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	if(RegisterFail)
 		return -1;
-	
+
 	s_File = s_pStorage->OpenFile("map_version.txt", IOFLAG_WRITE, 1);
 	if(s_File)
 	{
@@ -61,6 +61,6 @@ int main(int argc, const char **argv) // ignore_convention
 		io_write(s_File, "};\n", str_length("};\n"));
 		io_close(s_File);
 	}
-	
+
 	return 0;
 }

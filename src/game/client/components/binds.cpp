@@ -12,11 +12,11 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 		int Stroke = 0;
 		if(Event.m_Flags&IInput::FLAG_PRESS)
 			Stroke = 1;
-			
+
 		m_pBinds->GetConsole()->ExecuteLineStroked(Stroke, m_pBinds->m_aaKeyBindings[Event.m_Key]);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -30,7 +30,7 @@ void CBinds::Bind(int KeyID, const char *pStr)
 {
 	if(KeyID < 0 || KeyID >= KEY_LAST)
 		return;
-		
+
 	str_copy(m_aaKeyBindings[KeyID], pStr, sizeof(m_aaKeyBindings[KeyID]));
 	char aBuf[256];
 	if(!m_aaKeyBindings[KeyID][0])
@@ -74,11 +74,11 @@ const char *CBinds::GetKey(const char *pBindStr)
 		const char *pBind = Get(KeyId);
 		if(!pBind[0])
 			continue;
-			
+
 		if(str_comp(pBind, pBindStr) == 0)
 			return Input()->KeyName(KeyId);
 	}
-	
+
 	return "";
 }
 
@@ -108,15 +108,15 @@ void CBinds::SetDefaults()
 	Bind('3', "+weapon3");
 	Bind('4', "+weapon4");
 	Bind('5', "+weapon5");
-	
+
 	Bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
 	Bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
-	
+
 	Bind('t', "chat all");
-	Bind('y', "chat team");	
+	Bind('y', "chat team");
 
 	Bind(KEY_F3, "vote yes");
-	Bind(KEY_F4, "vote no");	
+	Bind(KEY_F4, "vote no");
 }
 
 void CBinds::OnConsoleInit()
@@ -125,12 +125,12 @@ void CBinds::OnConsoleInit()
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
 	if(pConfig)
 		pConfig->RegisterCallback(ConfigSaveCallback, this);
-	
+
 	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
 	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
 	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys");
 	Console()->Register("dump_binds", "", CFGFLAG_CLIENT, ConDumpBinds, this, "Dump binds");
-	
+
 	// default bindings
 	SetDefaults();
 }
@@ -140,7 +140,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
 	int id = pBinds->GetKeyID(pKeyName);
-	
+
 	if(!id)
 	{
 		char aBuf[256];
@@ -148,7 +148,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 		pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 		return;
 	}
-	
+
 	pBinds->Bind(id, pResult->GetString(1));
 }
 
@@ -158,7 +158,7 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
 	int id = pBinds->GetKeyID(pKeyName);
-	
+
 	if(!id)
 	{
 		char aBuf[256];
@@ -166,7 +166,7 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 		pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 		return;
 	}
-	
+
 	pBinds->Bind(id, "");
 }
 
@@ -200,21 +200,21 @@ int CBinds::GetKeyID(const char *pKeyName)
 		if(i > 0 && i < KEY_LAST)
 			return i; // numeric
 	}
-		
+
 	// search for key
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		if(str_comp(pKeyName, Input()->KeyName(i)) == 0)
 			return i;
 	}
-	
+
 	return 0;
 }
 
 void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
-	
+
 	char aBuffer[256];
 	char *pEnd = aBuffer+sizeof(aBuffer)-8;
 	pConfig->WriteLine("unbindall");
@@ -223,7 +223,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		if(pSelf->m_aaKeyBindings[i][0] == 0)
 			continue;
 		str_format(aBuffer, sizeof(aBuffer), "bind %s ", pSelf->Input()->KeyName(i));
-		
+
 		// process the string. we need to escape some characters
 		const char *pSrc = pSelf->m_aaKeyBindings[i];
 		char *pDst = aBuffer + str_length(aBuffer);
@@ -236,7 +236,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		}
 		*pDst++ = '"';
 		*pDst++ = 0;
-		
+
 		pConfig->WriteLine(aBuffer);
 	}
 }

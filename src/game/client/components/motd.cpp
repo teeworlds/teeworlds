@@ -18,7 +18,7 @@ void CMotd::Clear()
 
 bool CMotd::IsActive()
 {
-	return time_get() < m_ServerMotdTime;	
+	return time_get() < m_ServerMotdTime;
 }
 
 void CMotd::OnStateChange(int NewState, int OldState)
@@ -31,12 +31,12 @@ void CMotd::OnRender()
 {
 	if(!IsActive())
 		return;
-		
+
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 
 	Graphics()->MapScreen(0, 0, Width, Height);
-	
+
 	float h = 800.0f;
 	float w = 650.0f;
 	float x = Width/2 - w/2;
@@ -61,7 +61,7 @@ void CMotd::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_Motd *pMsg = (CNetMsg_Sv_Motd *)pRawMsg;
 
-		// process escaping			
+		// process escaping
 		str_copy(m_aServerMotd, pMsg->m_pMessage, sizeof(m_aServerMotd));
 		for(int i = 0; m_aServerMotd[i]; i++)
 		{

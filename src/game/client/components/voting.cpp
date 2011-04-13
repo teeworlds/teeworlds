@@ -80,7 +80,7 @@ void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
 				Callvote("option", pOption->m_aDescription, pReason);
 			break;
 		}
-		
+
 		OptionID--;
 		pOption = pOption->m_pNext;
 	}
@@ -98,7 +98,7 @@ void CVoting::RemovevoteOption(int OptionID)
 			Client()->Rcon(aBuf);
 			break;
 		}
-		
+
 		OptionID--;
 		pOption = pOption->m_pNext;
 	}
@@ -145,7 +145,7 @@ void CVoting::AddOption(const char *pDescription)
 	m_pLast = pOption;
 	if(!m_pFirst)
 		m_pFirst = pOption;
-		
+
 	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
 	++m_NumVoteOptions;
 }
@@ -154,7 +154,7 @@ void CVoting::ClearOptions()
 {
 	m_Heap.Reset();
 
-	m_NumVoteOptions = 0;	
+	m_NumVoteOptions = 0;
 	m_pFirst = 0;
 	m_pLast = 0;
 
@@ -199,7 +199,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		m_No = pMsg->m_No;
 		m_Pass = pMsg->m_Pass;
 		m_Total = pMsg->m_Total;
-	}	
+	}
 	else if(MsgType == NETMSGTYPE_SV_VOTECLEAROPTIONS)
 	{
 		ClearOptions();
@@ -238,7 +238,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONREMOVE)
 	{
 		CNetMsg_Sv_VoteOptionRemove *pMsg = (CNetMsg_Sv_VoteOptionRemove *)pRawMsg;
-	
+
 		for(CVoteOptionClient *pOption = m_pFirst; pOption; pOption = pOption->m_pNext)
 		{
 			if(str_comp(pOption->m_aDescription, pMsg->m_pDescription) == 0)
@@ -277,13 +277,13 @@ void CVoting::OnRender()
 void CVoting::RenderBars(CUIRect Bars, bool Text)
 {
 	RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, Bars.h/3);
-	
+
 	CUIRect Splitter = Bars;
 	Splitter.x = Splitter.x+Splitter.w/2;
 	Splitter.w = Splitter.h/2.0f;
 	Splitter.x -= Splitter.w/2;
 	RenderTools()->DrawUIRect(&Splitter, vec4(0.4f,0.4f,0.4f,0.5f), CUI::CORNER_ALL, Splitter.h/4);
-			
+
 	if(m_Total)
 	{
 		CUIRect PassArea = Bars;
@@ -292,25 +292,25 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			CUIRect YesArea = Bars;
 			YesArea.w *= m_Yes/(float)m_Total;
 			RenderTools()->DrawUIRect(&YesArea, vec4(0.2f,0.9f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
-			
+
 			if(Text)
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "%d", m_Yes);
 				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, 0);
 			}
-			
+
 			PassArea.x += YesArea.w;
 			PassArea.w -= YesArea.w;
 		}
-		
+
 		if(m_No)
 		{
 			CUIRect NoArea = Bars;
 			NoArea.w *= m_No/(float)m_Total;
 			NoArea.x = (Bars.x + Bars.w)-NoArea.w;
 			RenderTools()->DrawUIRect(&NoArea, vec4(0.9f,0.2f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
-			
+
 			if(Text)
 			{
 				char Buf[256];
@@ -327,7 +327,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			str_format(Buf, sizeof(Buf), "%d", m_Pass);
 			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, 0);
 		}
-	}	
+	}
 }
 
 

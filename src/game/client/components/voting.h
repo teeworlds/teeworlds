@@ -15,19 +15,19 @@ class CVoting : public CComponent
 
 	static void ConCallvote(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
-	
+
 	int64 m_Closetime;
 	char m_aDescription[VOTE_DESC_LENGTH];
 	char m_aReason[VOTE_REASON_LENGTH];
 	int m_Voted;
 	int m_Yes, m_No, m_Pass, m_Total;
-	
+
 	void AddOption(const char *pDescription);
 	void ClearOptions();
 	void Callvote(const char *pType, const char *pValue, const char *pReason);
-	
+
 public:
-	int m_NumVoteOptions;	
+	int m_NumVoteOptions;
 	CVoteOptionClient *m_pFirst;
 	CVoteOptionClient *m_pLast;
 
@@ -39,17 +39,17 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnMessage(int Msgtype, void *pRawMsg);
 	virtual void OnRender();
-	
+
 	void RenderBars(CUIRect Bars, bool Text);
-	
+
 	void CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote = false);
 	void CallvoteKick(int ClientID, const char *pReason, bool ForceVote = false);
 	void CallvoteOption(int OptionID, const char *pReason, bool ForceVote = false);
 	void RemovevoteOption(int OptionID);
 	void AddvoteOption(const char *pDescription, const char *pCommand);
-	
+
 	void Vote(int v); // -1 = no, 1 = yes
-	
+
 	int SecondsLeft() { return (m_Closetime - time_get())/time_freq(); }
 	bool IsVoting() { return m_Closetime != 0; }
 	int TakenChoice() const { return m_Voted; }

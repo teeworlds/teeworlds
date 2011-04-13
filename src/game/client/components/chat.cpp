@@ -32,7 +32,7 @@ void CChat::OnReset()
 		m_aLines[i].m_aText[0] = 0;
 		m_aLines[i].m_aName[0] = 0;
 	}
-	
+
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
@@ -126,7 +126,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 			for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; ++pCursor)
 				++m_PlaceholderLength;
-			
+
 			str_copy(m_aCompletionBuffer, m_Input.GetString()+m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
 		}
 
@@ -204,7 +204,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		else
 			m_Input.Clear();
 	}
-	
+
 	return true;
 }
 
@@ -220,7 +220,7 @@ void CChat::EnableMode(int Team)
 			m_Mode = MODE_TEAM;
 		else
 			m_Mode = MODE_ALL;
-		
+
 		m_Input.Clear();
 		Input()->ClearEvents();
 		m_CompletionChosen = -1;
@@ -241,7 +241,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	if(ClientID != -1 && (m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore))
 		return;
-	
+
 	bool Highlighted = false;
 	char *p = const_cast<char*>(pLine);
 	while(*p)
@@ -285,11 +285,11 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 				else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
-			
+
 			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientID].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), ": %s", pLine);
 		}
-		
+
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat", aBuf);
@@ -317,7 +317,7 @@ void CChat::OnRender()
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
-		
+
 		if(m_Mode == MODE_ALL)
 			TextRender()->TextEx(&Cursor, Localize("All"), -1);
 		else if(m_Mode == MODE_TEAM)
@@ -326,7 +326,7 @@ void CChat::OnRender()
 			TextRender()->TextEx(&Cursor, Localize("Chat"), -1);
 
 		TextRender()->TextEx(&Cursor, ": ", -1);
-			
+
 		// check if the visible text has to be moved
 		if(m_InputUpdate)
 		{
@@ -373,7 +373,7 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
 			break;
-		
+
 		// get the y offset (calculate it if we haven't done that yet)
 		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)
 		{
@@ -388,7 +388,7 @@ void CChat::OnRender()
 		// cut off if msgs waste too much space
 		if(y < HeightLimit)
 			break;
-		
+
 		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 
 		// reset the cursor
@@ -408,7 +408,7 @@ void CChat::OnRender()
 			TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
 		else
 			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
-			
+
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line

@@ -39,9 +39,9 @@ enum
 CGameConsole::CInstance::CInstance(int Type)
 {
 	m_pHistoryEntry = 0x0;
-	
+
 	m_Type = Type;
-	
+
 	if(Type == CGameConsole::CONSOLETYPE_LOCAL)
 		m_CompletionFlagmask = CFGFLAG_CLIENT;
 	else
@@ -50,7 +50,7 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_aCompletionBuffer[0] = 0;
 	m_CompletionChosen = -1;
 	m_CompletionRenderOffset = 0.0f;
-	
+
 	m_pCommand = 0x0;
 }
 
@@ -95,7 +95,7 @@ void CGameConsole::CInstance::PossibleCommandsCompleteCallback(const char *pStr,
 void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 {
 	bool Handled = false;
-	
+
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
@@ -111,7 +111,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_Input.Clear();
 				m_pHistoryEntry = 0x0;
 			}
-			
+
 			Handled = true;
 		}
 		else if (Event.m_Key == KEY_UP)
@@ -197,7 +197,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			for(; i < (int)sizeof(aBuf)-1 && *pSrc && *pSrc != ' '; i++, pSrc++)
 				aBuf[i] = *pSrc;
 			aBuf[i] = 0;
-			
+
 			m_pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask);
 		}
 	}
@@ -233,9 +233,9 @@ float CGameConsole::TimeNow()
 
 CGameConsole::CInstance *CGameConsole::CurrentConsole()
 {
-    if(m_ConsoleType == CONSOLETYPE_REMOTE)
-    	return &m_RemoteConsole;
-    return &m_LocalConsole;
+	if(m_ConsoleType == CONSOLETYPE_REMOTE)
+		return &m_RemoteConsole;
+	return &m_LocalConsole;
 }
 
 void CGameConsole::OnReset()
@@ -263,7 +263,7 @@ struct CRenderInfo
 void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 {
 	CRenderInfo *pInfo = static_cast<CRenderInfo *>(pUser);
-	
+
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1);
@@ -272,7 +272,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 			pInfo->m_pSelf->Graphics()->SetColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
 			pInfo->m_pSelf->RenderTools()->DrawRoundRect(pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4, pInfo->m_Cursor.m_FontSize/3);
 		pInfo->m_pSelf->Graphics()->QuadsEnd();
-		
+
 		// scroll when out of sight
 		if(pInfo->m_Cursor.m_X < 3.0f)
 			pInfo->m_Offset = 0.0f;
@@ -285,7 +285,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 	else
 	{
 		const char *pMatchStart = str_find_nocase(pStr, pInfo->m_pCurrentCmd);
-		
+
 		if(pMatchStart)
 		{
 			pInfo->m_pSelf->TextRender()->TextColor(0.5f,0.5f,0.5f,1);
@@ -301,14 +301,14 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 			pInfo->m_pSelf->TextRender()->TextEx(&pInfo->m_Cursor, pStr, -1);
 		}
 	}
-	
+
 	pInfo->m_EnumCount++;
 	pInfo->m_Cursor.m_X += 7.0f;
 }
 
 void CGameConsole::OnRender()
 {
-    CUIRect Screen = *UI()->Screen();
+	CUIRect Screen = *UI()->Screen();
 	float ConsoleMaxHeight = Screen.h*3/5.0f;
 	float ConsoleHeight;
 
@@ -325,11 +325,11 @@ void CGameConsole::OnRender()
 	}
 
 	if (m_ConsoleState == CONSOLE_OPEN && g_Config.m_ClEditor)
-		Toggle(CONSOLETYPE_LOCAL);	
-		
+		Toggle(CONSOLETYPE_LOCAL);
+
 	if (m_ConsoleState == CONSOLE_CLOSED)
 		return;
-		
+
 	if (m_ConsoleState == CONSOLE_OPEN)
 		Input()->MouseModeAbsolute();
 
@@ -348,31 +348,31 @@ void CGameConsole::OnRender()
 
 	// do console shadow
 	Graphics()->TextureSet(-1);
-    Graphics()->QuadsBegin();
+	Graphics()->QuadsBegin();
 	IGraphics::CColorVertex Array[4] = {
-    	IGraphics::CColorVertex(0, 0,0,0, 0.5f),
-    	IGraphics::CColorVertex(1, 0,0,0, 0.5f),
-    	IGraphics::CColorVertex(2, 0,0,0, 0.0f),
+		IGraphics::CColorVertex(0, 0,0,0, 0.5f),
+		IGraphics::CColorVertex(1, 0,0,0, 0.5f),
+		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
 		IGraphics::CColorVertex(3, 0,0,0, 0.0f)};
 	Graphics()->SetColorVertex(Array, 4);
 	IGraphics::CQuadItem QuadItem(0, ConsoleHeight, Screen.w, 10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-    Graphics()->QuadsEnd();
+	Graphics()->QuadsEnd();
 
 	// do background
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
-    Graphics()->QuadsBegin();
-    Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
-    if(m_ConsoleType == CONSOLETYPE_REMOTE)
-	    Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
-    Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,Screen.w*0.075f*0.5f,0);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
+	if(m_ConsoleType == CONSOLETYPE_REMOTE)
+		Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
+	Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,Screen.w*0.075f*0.5f,0);
 	QuadItem = IGraphics::CQuadItem(0, 0, Screen.w, ConsoleHeight);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-    Graphics()->QuadsEnd();
+	Graphics()->QuadsEnd();
 
 	// do small bar shadow
 	Graphics()->TextureSet(-1);
-    Graphics()->QuadsBegin();
+	Graphics()->QuadsBegin();
 	Array[0] = IGraphics::CColorVertex(0, 0,0,0, 0.0f);
 	Array[1] = IGraphics::CColorVertex(1, 0,0,0, 0.0f);
 	Array[2] = IGraphics::CColorVertex(2, 0,0,0, 0.25f);
@@ -380,20 +380,20 @@ void CGameConsole::OnRender()
 	Graphics()->SetColorVertex(Array, 4);
 	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight-20, Screen.w, 10);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-    Graphics()->QuadsEnd();
+	Graphics()->QuadsEnd();
 
 	// do the lower bar
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BAR].m_Id);
-    Graphics()->QuadsBegin();
-    Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
-    Graphics()->QuadsSetSubset(0,0.1f,Screen.w*0.015f,1-0.1f);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
+	Graphics()->QuadsSetSubset(0,0.1f,Screen.w*0.015f,1-0.1f);
 	QuadItem = IGraphics::CQuadItem(0,ConsoleHeight-10.0f,Screen.w,10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-    Graphics()->QuadsEnd();
-    
-    ConsoleHeight -= 22.0f;
-    
-    CInstance *pConsole = CurrentConsole();
+	Graphics()->QuadsEnd();
+
+	ConsoleHeight -= 22.0f;
+
+	CInstance *pConsole = CurrentConsole();
 
 	{
 		float FontSize = 10.0f;
@@ -410,7 +410,7 @@ void CGameConsole::OnRender()
 		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
 		TextRender()->SetCursor(&Info.m_Cursor, x+Info.m_Offset, y+RowHeight+2.0f, FontSize, TEXTFLAG_RENDER);
 
-		// render prompt		
+		// render prompt
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
 		const char *pPrompt = "> ";
@@ -427,7 +427,7 @@ void CGameConsole::OnRender()
 				pPrompt = "NOT CONNECTED> ";
 		}
 		TextRender()->TextEx(&Cursor, pPrompt, -1);
-		
+
 		x = Cursor.m_X;
 
 		// render console input (wrap line)
@@ -435,7 +435,7 @@ void CGameConsole::OnRender()
 		y -= (Lines - 1) * FontSize;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Screen.w - 10.0f - x;
-		
+
 		//hide rcon password
 		char aInputString[256];
 		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
@@ -444,12 +444,12 @@ void CGameConsole::OnRender()
 			for(int i = 0; i < pConsole->m_Input.GetLength(); ++i)
 				aInputString[i] = '*';
 		}
-			
+
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		CTextCursor Marker = Cursor;
 		TextRender()->TextEx(&Marker, "|", -1);
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
-		
+
 		// render possible commands
 		if(m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed())
 		{
@@ -457,12 +457,12 @@ void CGameConsole::OnRender()
 			{
 				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, PossibleCommandsRenderCallback, &Info);
 				pConsole->m_CompletionRenderOffset = Info.m_Offset;
-				
+
 				if(Info.m_EnumCount <= 0)
 				{
 					if(pConsole->m_pCommand)
 					{
-						
+
 						char aBuf[512];
 						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_pCommand->m_pHelp);
 						TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
@@ -492,7 +492,7 @@ void CGameConsole::OnRender()
 					pEntry->m_YOffset = Cursor.m_Y+Cursor.m_FontSize+LineOffset;
 				}
 				OffsetY += pEntry->m_YOffset;
-				
+
 				//	next page when lines reach the top
 				if(y-OffsetY <= RowHeight)
 					break;
@@ -533,7 +533,7 @@ void CGameConsole::OnRender()
 		str_format(aBuf, sizeof(aBuf), "v%s", GAME_VERSION);
 		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1);
-	}	
+	}
 }
 
 void CGameConsole::OnMessage(int MsgType, void *pRawMsg)
@@ -551,7 +551,7 @@ bool CGameConsole::OnInput(IInput::CEvent Event)
 		Toggle(m_ConsoleType);
 	else
 		CurrentConsole()->OnInput(Event);
-		
+
 	return true;
 }
 
@@ -562,7 +562,7 @@ void CGameConsole::Toggle(int Type)
 		// don't toggle console, just switch what console to use
 	}
 	else
-	{	
+	{
 		if (m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_OPEN)
 		{
 			m_StateChangeEnd = TimeNow()+m_StateChangeDuration;
@@ -671,10 +671,10 @@ void CGameConsole::OnConsoleInit()
 	m_RemoteConsole.Init(this);
 
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	
+
 	//
 	Console()->RegisterPrintCallback(ClientConsolePrintCallback, this);
-	
+
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
 	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console");

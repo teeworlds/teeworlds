@@ -19,7 +19,7 @@ class CMapChecker
 		unsigned m_MapSize;
 		CWhitelistEntry *m_pNext;
 	};
-	
+
 	class CHeap m_Whitelist;
 	CWhitelistEntry *m_pFirst;
 
