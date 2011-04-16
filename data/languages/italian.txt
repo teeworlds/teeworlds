@@ -558,6 +558,9 @@ Created:
 Demo details
 == 
 
+Demofile: %s
+== 
+
 Free-View
 == 
 

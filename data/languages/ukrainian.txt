@@ -549,6 +549,9 @@ Delete demo
 Demo details
 == 
 
+Demofile: %s
+== 
+
 Free-View
 == 
 
