@@ -528,6 +528,9 @@ Delete demo
 Demo details
 == 
 
+Demofile: %s
+== 
+
 Folder
 == 
 
