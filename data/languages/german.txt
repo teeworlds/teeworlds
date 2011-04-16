@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d Bytes
@@ -56,7 +56,7 @@ Are you sure that you want to delete the demo?
 == Möchtest du die Aufnahme wirklich löschen?
 
 Are you sure that you want to quit?
-== Bist du sicher, dass du beenden möchtest?
+== Bist du sicher, dass du das Spiel beenden möchtest?
 
 Are you sure that you want to remove the player from your friends list?
 == Bist du sicher, dass du diesen Spieler aus deiner Freundesliste entfernen möchtest?
@@ -230,7 +230,7 @@ General
 == Allgemein
 
 Graphics
-== Grafik
+== Grafiken
 
 Grenade
 == Granate
@@ -290,7 +290,7 @@ Lht.
 == Hell.
 
 Loading
-== Laden
+== Spiel ladet
 
 MOTD
 == Nachricht des Tages
@@ -314,7 +314,7 @@ Miscellaneous
 == Verschiedenes
 
 Mouse sens.
-== Maus-Empfindl.
+== Maussensitivität
 
 Move left
 == Nach links
@@ -620,7 +620,7 @@ Version:
 == Version:
 
 Vote command:
-== Kommando:
+== Befehl:
 
 Vote description:
 == Beschreibung:
@@ -658,7 +658,7 @@ no limit
 ##### needs translation #####
 
 Play background music
-== 
+== Hintergrundmusik abspielen
 
 Spectate next
 == 
