@@ -1157,12 +1157,8 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
+void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 {
-	//UI()->ClipEnable(&view);
-
-	bool ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
-
 	// render all good stuff
 	if(!ShowPicker)
 	{
@@ -3050,6 +3046,7 @@ void CEditor::Render()
 	RenderBackground(View, ms_CheckerTexture, 32.0f, 1.0f);
 
 	CUIRect MenuBar, CModeBar, ToolBar, StatusBar, EnvelopeEditor, ToolBox;
+	bool ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
 
 	if(m_GuiActive)
 	{
@@ -3059,7 +3056,7 @@ void CEditor::Render()
 		View.VSplitLeft(100.0f, &ToolBox, &View);
 		View.HSplitBottom(16.0f, &View, &StatusBar);
 
-		if(m_ShowEnvelopeEditor)
+		if(m_ShowEnvelopeEditor && !ShowPicker)
 		{
 			float size = 125.0f;
 			if(m_ShowEnvelopeEditor == 2)
@@ -3072,7 +3069,7 @@ void CEditor::Render()
 
 	//	a little hack for now
 	if(m_Mode == MODE_LAYERS)
-		DoMapEditor(View, ToolBar);
+		DoMapEditor(View, ToolBar, ShowPicker);
 
 	if(m_GuiActive)
 	{
