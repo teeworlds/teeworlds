@@ -456,7 +456,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	}
 
 	// play sound
-	if(!m_Spam)
+	if(!g_Config.m_ClAntiSpam || !m_Spam)
 	{
 		if(ClientID == -1)
 		{
