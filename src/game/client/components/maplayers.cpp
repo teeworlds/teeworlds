@@ -63,21 +63,25 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 
 	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pThis->m_pLayers->Map()->GetItem(Start+Env, 0, 0);
 
+	static float Time = 0;
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-		static float Time = 0;
-		static float LastLocalTime = pThis->Client()->LocalTime();
+		static int LastLocalTick = pInfo->m_CurrentTick;
 
 		if(!pInfo->m_Paused)
-			Time += (pThis->Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
+			Time += (pInfo->m_CurrentTick-LastLocalTick) / (float)pThis->Client()->GameTickSpeed() * pInfo->m_Speed;
 
 		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 
-		LastLocalTime = pThis->Client()->LocalTime();
+		LastLocalTick = pInfo->m_CurrentTick;
 	}
 	else
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, pThis->Client()->LocalTime()+TimeOffset, pChannels);
+	{
+		if(pThis->m_pClient->m_Snap.m_pGameInfoObj)
+			Time = (pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed();
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+	}
 }
 
 void CMapLayers::OnRender()
