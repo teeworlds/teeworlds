@@ -42,11 +42,11 @@ void CDebugHud::RenderNetCorrections()
 
 	x = Width-10.0f;
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed);
+	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32);
 	float w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed*Ramp);
+	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32*Ramp);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += LineHeight;
@@ -54,11 +54,11 @@ void CDebugHud::RenderNetCorrections()
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += 2*LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_X);
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_X/32);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Y);
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Y/32);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += 2*LineHeight;
