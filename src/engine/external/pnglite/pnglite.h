@@ -73,7 +73,7 @@ enum
 typedef unsigned (*png_write_callback_t)(void* input, unsigned long size, unsigned long numel, void* user_pointer);
 typedef unsigned (*png_read_callback_t)(void* output, unsigned long size, unsigned long numel, void* user_pointer);
 typedef void (*png_free_t)(void* p);
-typedef void * (*png_alloc_t)(size_t s);
+typedef void * (*png_alloc_t)(unsigned long s);
 
 typedef struct
 {
