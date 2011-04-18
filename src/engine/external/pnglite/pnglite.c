@@ -492,7 +492,7 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	(void)png_end_deflate;
 	(void)png_deflate;
 
-	chunk = png_alloc(size);
+	chunk = png_alloc(size+8);
 	memcpy(chunk, "IDAT", 4);
 	
 	written = size;
