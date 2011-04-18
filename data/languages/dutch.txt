@@ -657,7 +657,13 @@ no limit
 
 ##### needs translation #####
 
+APM: %d
+== 
+
 Play background music
+== 
+
+Show actions per minute
 == 
 
 Spectate next

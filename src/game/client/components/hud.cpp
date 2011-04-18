@@ -417,6 +417,40 @@ void CHud::RenderSpectatorHud()
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
+void CHud::RenderAPM()
+{
+	static int s_OldTeam = TEAM_SPECTATORS;
+	int NewTeam = s_OldTeam;
+	if(m_pClient->m_Snap.m_pLocalInfo)
+		NewTeam = m_pClient->m_Snap.m_pLocalInfo->m_Team;
+
+	if(NewTeam != s_OldTeam)
+	{
+		m_pClient->m_pControls->ResetAPM();
+		s_OldTeam = NewTeam;
+	}
+
+	if(!g_Config.m_ClShowapm || NewTeam == TEAM_SPECTATORS)
+		return;
+
+	// draw the box
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
+	RenderTools()->DrawRoundRectExt((m_Width/7)*3-45.0f, 0.0f, 45.0f, 12.5f, 5.0f, CUI::CORNER_B);
+	Graphics()->QuadsEnd();
+
+	// compute APM
+	float Minutes = (Client()->GameTick()-m_pClient->m_pControls->m_StartTick) / (float)Client()->GameTickSpeed() / 60.0f;
+	int APM = Minutes > 0.0f ? m_pClient->m_pControls->m_Actions/Minutes : 0;
+
+	// draw the text
+	char aBuf[16];
+	str_format(aBuf, sizeof(aBuf), Localize("APM: %d"), APM);
+	TextRender()->Text(0, (m_Width/7)*3-45.0f+10.0f, 2.0f, 5.5f, aBuf, -1);
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameInfoObj)
@@ -446,6 +480,8 @@ void CHud::OnRender()
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
 		RenderVoting();
+		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+			RenderAPM();
 	}
 	RenderCursor();
 }

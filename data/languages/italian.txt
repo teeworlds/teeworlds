@@ -525,6 +525,9 @@ no limit
 -Page %d-
 == 
 
+APM: %d
+== 
+
 Add
 == 
 
@@ -616,6 +619,9 @@ Server address:
 == 
 
 Server filter
+== 
+
+Show actions per minute
 == 
 
 Show friends

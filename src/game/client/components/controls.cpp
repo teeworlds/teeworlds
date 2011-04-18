@@ -20,6 +20,12 @@ CControls::CControls()
 
 void CControls::OnReset()
 {
+	ResetInput();
+	ResetAPM();
+}
+
+void CControls::ResetInput()
+{
 	m_LastData.m_Direction = 0;
 	m_LastData.m_Hook = 0;
 	// simulate releasing the fire button
@@ -33,9 +39,15 @@ void CControls::OnReset()
 	m_InputDirectionRight = 0;
 }
 
+void CControls::ResetAPM()
+{
+	m_Actions = 0;
+	m_StartTick = Client()->GameTick();
+}
+
 void CControls::OnRelease()
 {
-	OnReset();
+	ResetInput();
 }
 
 void CControls::OnPlayerDeath()
@@ -130,7 +142,7 @@ int CControls::SnapInput(int *pData)
 	// we freeze the input if chat or menu is activated
 	if(!(m_InputData.m_PlayerFlags&PLAYERFLAG_PLAYING))
 	{
-		OnReset();
+		ResetInput();
 
 		mem_copy(pData, &m_InputData, sizeof(m_InputData));
 
@@ -171,14 +183,14 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_TargetY = (int)(cosf(t*3)*100.0f);
 		}
 
-		// check if we need to send input
-		if(m_InputData.m_Direction != m_LastData.m_Direction) Send = true;
-		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;
-		else if(m_InputData.m_Fire != m_LastData.m_Fire) Send = true;
-		else if(m_InputData.m_Hook != m_LastData.m_Hook) Send = true;
-		else if(m_InputData.m_WantedWeapon != m_LastData.m_WantedWeapon) Send = true;
-		else if(m_InputData.m_NextWeapon != m_LastData.m_NextWeapon) Send = true;
-		else if(m_InputData.m_PrevWeapon != m_LastData.m_PrevWeapon) Send = true;
+		// check if we need to send input and update APM
+		if(m_InputData.m_Direction != m_LastData.m_Direction)		{ Send = true; if(m_InputData.m_Direction != 0) m_Actions++; }
+		if(m_InputData.m_Jump != m_LastData.m_Jump)					{ Send = true; if(m_InputData.m_Jump != 0) m_Actions++; }
+		if(m_InputData.m_Fire != m_LastData.m_Fire)					{ Send = true; if(m_InputData.m_Fire&1) m_Actions++; }
+		if(m_InputData.m_Hook != m_LastData.m_Hook)					{ Send = true; if(m_InputData.m_Hook) m_Actions++; }
+		if(m_InputData.m_WantedWeapon != m_LastData.m_WantedWeapon)	{ Send = true; if(m_InputData.m_WantedWeapon != 0) m_Actions++; }
+		if(m_InputData.m_NextWeapon != m_LastData.m_NextWeapon)		{ Send = true; if(m_InputData.m_NextWeapon != 0) m_Actions++; }
+		if(m_InputData.m_PrevWeapon != m_LastData.m_PrevWeapon)		{ Send = true; if(m_InputData.m_PrevWeapon != 0) m_Actions++; }
 
 		// send at at least 10hz
 		if(time_get() > LastSendTime + time_freq()/25)

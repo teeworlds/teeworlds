@@ -13,6 +13,7 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
+#include <game/client/components/controls.h>
 #include <game/client/components/sounds.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
@@ -95,6 +96,19 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClShowhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
 			g_Config.m_ClShowhud ^= 1;
+
+		// show APM
+		if(g_Config.m_ClShowhud)
+		{
+			Left.HSplitTop(2.5f, 0, &Left);
+			Left.VSplitLeft(30.0f, 0, &Left);
+			Left.HSplitTop(20.0f, &Button, &Left);
+			if(DoButton_CheckBox(&g_Config.m_ClShowapm, Localize("Show actions per minute"), g_Config.m_ClShowapm, &Button))
+			{
+				g_Config.m_ClShowapm ^= 1;
+				m_pClient->m_pControls->ResetAPM();
+			}
+		}
 
 		// name plates
 		Right.HSplitTop(20.0f, &Button, &Right);
