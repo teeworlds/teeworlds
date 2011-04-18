@@ -61,6 +61,9 @@ Are you sure that you want to quit?
 Are you sure that you want to remove the player from your friends list?
 == Tem certeza que deseja remover o jogador da sua lista de amigos?
 
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Como esta é a primeira vez que você abriu o jogo, por favor, entre com seu apelido abaixo. É recomendado que você cheque suas configurações e então ajuste elas para suas preferências antes de entrar em um servidor.
+
 Automatically record demos
 == Gravar demos automaticamente
 
@@ -653,9 +656,6 @@ no limit
 == sem limite
 
 ##### needs translation #####
-
-As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== 
 
 Play background music
 == 
