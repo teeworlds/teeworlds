@@ -18,7 +18,7 @@
 #include <game/client/render.h>
 #include <game/generated/client_data.h>
 
-#include "ed_editor.h"
+#include "editor.h"
 #include <game/client/lineinput.h>
 
 #include <game/localization.h>

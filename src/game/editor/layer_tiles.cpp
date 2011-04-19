@@ -10,7 +10,7 @@
 
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
-#include "ed_editor.h"
+#include "editor.h"
 
 #include <game/localization.h>
 
