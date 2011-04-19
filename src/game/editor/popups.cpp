@@ -5,7 +5,7 @@
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
-#include "ed_editor.h"
+#include "editor.h"
 
 
 // popup menu handling
