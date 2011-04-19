@@ -262,7 +262,7 @@ void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhost
 		a = clamp(0.5f-powf(distance(m_pClient->m_pControls->m_TargetPos, Pos)/200.0f,16.0f), 0.0f, 0.5f);
 	
 	char aName[32];
-	IntsToStr(&Info.m_Name0, 6, aName);
+	IntsToStr(&Info.m_Name0, 4, aName);
 	float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 	
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
@@ -433,7 +433,7 @@ void CGhost::Load(const char* pFilename, int ID)
 	Ghost.m_Path.set_size(NumShots);
 	
 	// read client info
-	StrToInts(&Ghost.m_Info.m_Name0, 6, Header.m_aOwner);
+	StrToInts(&Ghost.m_Info.m_Name0, 4, Header.m_aOwner);
 	StrToInts(&Ghost.m_Info.m_Skin0, 6, Header.m_aSkinName);
 	Ghost.m_Info.m_UseCustomColor = Header.m_UseCustomColor;
 	Ghost.m_Info.m_ColorBody = Header.m_ColorBody;
