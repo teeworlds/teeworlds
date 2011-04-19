@@ -36,7 +36,7 @@ class CConsole : public IConsole
 	{
 	public:
 		const char *m_pFilename;
-		struct CExecFile *m_pPrev;
+		CExecFile *m_pPrev;
 	};
 
 	CExecFile *m_pFirstExec;
