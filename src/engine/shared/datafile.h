@@ -6,7 +6,7 @@
 // raw datafile access
 class CDataFileReader
 {
-	class CDatafile *m_pDataFile;
+	struct CDatafile *m_pDataFile;
 	void *GetDataImpl(int Index, int Swap);
 public:
 	CDataFileReader() : m_pDataFile(0) {}
