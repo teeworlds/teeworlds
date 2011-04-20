@@ -705,20 +705,6 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(From == m_pPlayer->GetCID())
 		Dmg = max(1, Dmg/2);
 
-	m_DamageTaken++;
-
-	// create healthmod indicator
-	if(Server()->Tick() < m_DamageTakenTick+25)
-	{
-		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
-	}
-	else
-	{
-		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
-	}
-
 	if(Dmg)
 	{
 		if(m_Armor)
@@ -742,6 +728,24 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		}
 
 		m_Health -= Dmg;
+	}
+
+	m_DamageTaken++;
+
+	int DamageInd = Dmg;
+	if(m_Health < 0)
+		DamageInd += m_Health;
+
+	// create healthmod indicator
+	if(Server()->Tick() < m_DamageTakenTick+25)
+	{
+		// make sure that the damage indicators doesn't group together
+		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, DamageInd);
+	}
+	else
+	{
+		m_DamageTaken = 0;
+		GameServer()->CreateDamageInd(m_Pos, 0, DamageInd);
 	}
 
 	m_DamageTakenTick = Server()->Tick();
