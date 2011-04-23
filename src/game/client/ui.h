@@ -8,8 +8,9 @@ class CUIRect
 	// TODO: Refactor: Redo UI scaling
 	float Scale() const;
 public:
-    float x, y, w, h;
-	
+	float x, y, w, h;
+
+	void HSplitMid(CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void VSplitMid(CUIRect *pLeft, CUIRect *pRight) const;
@@ -19,7 +20,7 @@ public:
 	void Margin(float Cut, CUIRect *pOtherRect) const;
 	void VMargin(float Cut, CUIRect *pOtherRect) const;
 	void HMargin(float Cut, CUIRect *pOtherRect) const;
-	
+
 };
 
 class CUI
@@ -32,11 +33,11 @@ class CUI
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
-	
+
 	CUIRect m_Screen;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
-	
+
 public:
 	// TODO: Refactor: Fill this in
 	void SetGraphics(class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pGraphics = pGraphics; m_pTextRender = pTextRender;}
@@ -51,12 +52,12 @@ public:
 		CORNER_TR=2,
 		CORNER_BL=4,
 		CORNER_BR=8,
-		
+
 		CORNER_T=CORNER_TL|CORNER_TR,
 		CORNER_B=CORNER_BL|CORNER_BR,
 		CORNER_R=CORNER_TR|CORNER_BR,
 		CORNER_L=CORNER_TL|CORNER_BL,
-		
+
 		CORNER_ALL=CORNER_T|CORNER_B
 	};
 
@@ -82,13 +83,13 @@ public:
 	CUIRect *Screen();
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
-	
+
 	// TODO: Refactor: Redo UI scaling
 	void SetScale(float s);
 	float Scale();
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
-	
+
 	// TODO: Refactor: Remove this?
 	void DoLabel(const CUIRect *pRect, const char *pText, float Size, int Align, int MaxWidth = -1);
 	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, int Align, int MaxWidth = -1);

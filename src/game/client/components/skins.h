@@ -19,18 +19,18 @@ public:
 
 		bool operator<(const CSkin &Other) { return str_comp(m_aName, Other.m_aName) < 0; }
 	};
-	
-	void Init();
-	
+
+	void OnInit();
+
 	vec3 GetColorV3(int v);
 	vec4 GetColorV4(int v);
 	int Num();
 	const CSkin *Get(int Index);
 	int Find(const char *pName);
-	
+
 private:
 	sorted_array<CSkin> m_aSkins;
 
-	static void SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 };
 #endif

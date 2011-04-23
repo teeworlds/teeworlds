@@ -27,7 +27,7 @@ class CDamageInd : public CComponent
 	CItem *CreateI();
 	void DestroyI(CItem *i);
 
-public:	
+public:
 	CDamageInd();
 
 	void Create(vec2 Pos, vec2 Dir);

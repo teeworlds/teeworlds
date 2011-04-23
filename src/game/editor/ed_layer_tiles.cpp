@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 
@@ -18,13 +19,13 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Width = w;
 	m_Height = h;
 	m_Image = -1;
-	m_TexId = -1;
+	m_TexID = -1;
 	m_Game = 0;
 	m_Color.r = 255;
 	m_Color.g = 255;
 	m_Color.b = 255;
 	m_Color.a = 255;
-	
+
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
 }
@@ -58,8 +59,8 @@ void CLayerTiles::MakePalette()
 void CLayerTiles::Render()
 {
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
-		m_TexId = m_pEditor->m_Map.m_lImages[m_Image]->m_TexId;
-	Graphics()->TextureSet(m_TexId);
+		m_TexID = m_pEditor->m_Map.m_lImages[m_Image]->m_TexID;
+	Graphics()->TextureSet(m_TexID);
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
@@ -92,19 +93,19 @@ void CLayerTiles::Clamp(RECTi *pRect)
 		pRect->w += pRect->x;
 		pRect->x = 0;
 	}
-		
+
 	if(pRect->y < 0)
 	{
 		pRect->h += pRect->y;
 		pRect->y = 0;
 	}
-	
+
 	if(pRect->x+pRect->w > m_Width)
 		pRect->w = m_Width - pRect->x;
 
 	if(pRect->y+pRect->h > m_Height)
 		pRect->h = m_Height - pRect->y;
-		
+
 	if(pRect->h < 0)
 		pRect->h = 0;
 	if(pRect->w < 0)
@@ -130,23 +131,23 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	RECTi r;
 	Convert(Rect, &r);
 	Clamp(&r);
-	
+
 	if(!r.w || !r.h)
 		return 0;
-	
+
 	// create new layers
 	CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
 	pGrabbed->m_pEditor = m_pEditor;
-	pGrabbed->m_TexId = m_TexId;
+	pGrabbed->m_TexID = m_TexID;
 	pGrabbed->m_Image = m_Image;
 	pGrabbed->m_Game = m_Game;
 	pBrush->AddLayer(pGrabbed);
-	
+
 	// copy the tiles
 	for(int y = 0; y < r.h; y++)
 		for(int x = 0; x < r.w; x++)
 			pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
-	
+
 	return 1;
 }
 
@@ -154,42 +155,43 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 {
 	if(m_Readonly)
 		return;
-		
+
 	int sx = ConvertX(Rect.x);
 	int sy = ConvertY(Rect.y);
 	int w = ConvertX(Rect.w);
 	int h = ConvertY(Rect.h);
-	
+
 	CLayerTiles *pLt = static_cast<CLayerTiles*>(pBrush);
-	
+
 	for(int y = 0; y <= h; y++)
 	{
 		for(int x = 0; x <= w; x++)
 		{
 			int fx = x+sx;
 			int fy = y+sy;
-			
+
 			if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
-			
-			if(Empty)	
-                m_pTiles[fy*m_Width+fx].m_Index = 1;
-            else
-                m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+
+			if(Empty)
+				m_pTiles[fy*m_Width+fx].m_Index = 1;
+			else
+				m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 {
 	if(m_Readonly)
 		return;
-	
+
 	//
 	CLayerTiles *l = (CLayerTiles *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
-	
+
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
 		{
@@ -197,9 +199,10 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			int fy = y+sy;
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
-				
+
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+	m_pEditor->m_Map.m_Modified = true;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -276,10 +279,10 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	CTile *pNewData = new CTile[NewW*NewH];
 	mem_zero(pNewData, NewW*NewH*sizeof(CTile));
 
-	// copy old data	
+	// copy old data
 	for(int y = 0; y < min(NewH, m_Height); y++)
 		mem_copy(&pNewData[y*NewW], &m_pTiles[y*m_Width], min(m_Width, NewW)*sizeof(CTile));
-	
+
 	// replace old
 	delete [] m_pTiles;
 	m_pTiles = pNewData;
@@ -321,11 +324,42 @@ void CLayerTiles::Shift(int Direction)
 	}
 }
 
+void CLayerTiles::ShowInfo()
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+
+	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+	int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+	int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			int c = x + y*m_Width;
+			if(m_pTiles[c].m_Index)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, 1,1,1,1, aBuf);
+
+				char aFlags[4] = {	m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
+									m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ',
+									0};
+				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, 1,1,1,1, aFlags);
+			}
+			x += m_pTiles[c].m_Skip;
+		}
+}
+
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-	
+
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer == this)
 		InGameGroup = false;
@@ -333,45 +367,24 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	if(InGameGroup)
 	{
 		static int s_ColclButton = 0;
-		if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), 0, &Button, 0, Localize("Removes collision from this layer")))
+		if(m_pEditor->DoButton_Editor(&s_ColclButton, "Game tiles", 0, &Button, 0, "Constructs game tiles from this layer"))
+			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
+
+		int Result = m_pEditor->PopupSelectGameTileOpResult();
+		if(Result > -1)
 		{
 			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
 			int w = min(gl->m_Width, m_Width);
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
-			{
 				for(int x = 0; x < w; x++)
-				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_SOLID)
-					{
-						if(m_pTiles[y*m_Width+x].m_Index)
-							gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR;
-					}
-				}
-			}
-			return 1;
-		}
-		
-		static int s_ColButton = 0;
-		pToolBox->HSplitBottom(5.0f, pToolBox, &Button);
-		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-		if(m_pEditor->DoButton_Editor(&s_ColButton, Localize("Make collision"), 0, &Button, 0, Localize("Constructs collision from this layer")))
-		{
-			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
-			int w = min(gl->m_Width, m_Width);
-			int h = min(gl->m_Height, m_Height);
-			for(int y = 0; y < h; y++)
-			{
-				for(int x = 0; x < w; x++)
-				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index <= TILE_SOLID)
-						gl->m_pTiles[y*gl->m_Width+x].m_Index = m_pTiles[y*m_Width+x].m_Index?TILE_SOLID:TILE_AIR;
-				}
-			}
+					if(m_pTiles[y*m_Width+x].m_Index)
+						gl->m_pTiles[y*gl->m_Width+x].m_Index = TILE_AIR+Result;
+
 			return 1;
 		}
 	}
-	
+
 	enum
 	{
 		PROP_WIDTH=0,
@@ -381,32 +394,34 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		PROP_COLOR,
 		NUM_PROPS,
 	};
-	
+
 	int Color = 0;
 	Color |= m_Color.r<<24;
 	Color |= m_Color.g<<16;
 	Color |= m_Color.b<<8;
 	Color |= m_Color.a;
-	
+
 	CProperty aProps[] = {
-		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
-		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
-		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
-		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
-		{Localize("Color"), Color, PROPTYPE_COLOR, 0, 0},
+		{"Width", m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Height", m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Shift", 0, PROPTYPE_SHIFT, 0, 0},
+		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
+		{"Color", Color, PROPTYPE_COLOR, 0, 0},
 		{0},
 	};
-	
+
 	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image and color properties if this is the game layer
 	{
 		aProps[3].m_pName = 0;
 		aProps[4].m_pName = 0;
 	}
-	
+
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
-	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);		
-	
+	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		m_pEditor->m_Map.m_Modified = true;
+
 	if(Prop == PROP_WIDTH && NewVal > 1)
 		Resize(NewVal, m_Height);
 	else if(Prop == PROP_HEIGHT && NewVal > 1)
@@ -417,7 +432,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	{
 		if (NewVal == -1)
 		{
-			m_TexId = -1;
+			m_TexID = -1;
 			m_Image = -1;
 		}
 		else
@@ -430,7 +445,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.b = (NewVal>>8)&0xff;
 		m_Color.a = NewVal&0xff;
 	}
-	
+
 	return 0;
 }
 

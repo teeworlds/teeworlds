@@ -7,7 +7,7 @@
 int main(int argc, const char **argv)
 {
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
-	int Index, Id = 0, Type = 0, Size;
+	int Index, ID = 0, Type = 0, Size;
 	void *pPtr;
 	char aFileName[1024];
 	CDataFileReader DataFile;
@@ -25,10 +25,10 @@ int main(int argc, const char **argv)
 
 	// add all items
 	for(Index = 0; Index < DataFile.NumItems(); Index++)
-	{	
-		pPtr = DataFile.GetItem(Index, &Type, &Id);
+	{
+		pPtr = DataFile.GetItem(Index, &Type, &ID);
 		Size = DataFile.GetItemSize(Index);
-		df.AddItem(Type, Id, Size, pPtr);
+		df.AddItem(Type, ID, Size, pPtr);
 	}
 
 	// add all data

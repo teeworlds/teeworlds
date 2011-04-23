@@ -8,19 +8,19 @@
 class CEmoticon : public CComponent
 {
 	void DrawCircle(float x, float y, float r, int Segments);
-	
+
 	bool m_WasActive;
 	bool m_Active;
-	
+
 	vec2 m_SelectorMouse;
 	int m_SelectedEmote;
 
 	static void ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData);
 	static void ConEmote(IConsole::IResult *pResult, void *pUserData);
-	
+
 public:
 	CEmoticon();
-	
+
 	virtual void OnReset();
 	virtual void OnConsoleInit();
 	virtual void OnRender();

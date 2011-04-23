@@ -30,7 +30,7 @@ static void layershot_end()
 {
 	if(!config.cl_layershot)
 		return;
-	
+
 	char buf[256];
 	str_format(buf, sizeof(buf), "screenshots/layers_%04d.png", config.cl_layershot);
 	gfx_screenshot_direct(buf);
@@ -49,7 +49,7 @@ void CRenderTools::SelectSprite(SPRITE *pSpr, int Flags, int sx, int sy)
 	float f = sqrtf(h*h + w*w);
 	gs_SpriteWScale = w/f;
 	gs_SpriteHScale = h/f;
-	
+
 	float x1 = x/(float)cx;
 	float x2 = (x+w)/(float)cx;
 	float y1 = y/(float)cy;
@@ -69,7 +69,7 @@ void CRenderTools::SelectSprite(SPRITE *pSpr, int Flags, int sx, int sy)
 		x1 = x2;
 		x2 = Temp;
 	}
-	
+
 	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
 }
 
@@ -140,7 +140,7 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x+r, y+h-r, w-r*2, r); // bottom
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y+r, r, h-r*2); // left
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x+w-r, y+r, r, h-r*2); // right
-	
+
 	if(!(Corners&1)) ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y, r, r); // TL
 	if(!(Corners&2)) ArrayQ[NumItems++] = IGraphics::CQuadItem(x+w, y, -r, r); // TR
 	if(!(Corners&4)) ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y+h, r, -r); // BL
@@ -157,7 +157,7 @@ void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float Rounding)
 {
 	Graphics()->TextureSet(-1);
-	
+
 	// TODO: FIX US
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
@@ -172,7 +172,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 
 	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
 	Graphics()->TextureSet(pInfo->m_Texture);
-	
+
 	// TODO: FIX ME
 	Graphics()->QuadsBegin();
 	//Graphics()->QuadsDraw(pos.x, pos.y-128, 128, 128);
@@ -192,7 +192,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 
 				// draw body
-				Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, 1.0f);
+				Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, pInfo->m_ColorBody.a);
 				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
 				SelectSprite(OutLine?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
 				IGraphics::CQuadItem QuadItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
@@ -219,7 +219,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 							SelectSprite(SPRITE_TEE_EYE_NORMAL, 0, 0, 0);
 							break;
 					}
-					
+
 					float EyeScale = BaseSize*0.40f;
 					float h = Emote == EMOTE_BLINK ? BaseSize*0.15f : EyeScale;
 					float EyeSeparation = (0.075f - 0.010f*absolute(Direction.x))*BaseSize;
@@ -238,10 +238,10 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			float h = BaseSize/2;
 
 			Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
-			
+
 			bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
 			float cs = 1.0f; // color scale
-			
+
 			if(OutLine)
 				SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
 			else
@@ -250,16 +250,16 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				if(Indicate)
 					cs = 0.5f;
 			}
-				
-			Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, 1.0f);
+
+			Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, pInfo->m_ColorFeet.a);
 			IGraphics::CQuadItem QuadItem(Position.x+pFoot->m_X*AnimScale, Position.y+pFoot->m_Y*AnimScale, w, h);
 			Graphics()->QuadsDraw(&QuadItem, 1);
 		}
 	}
 
 	Graphics()->QuadsEnd();
-	
-	
+
+
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
@@ -267,14 +267,14 @@ static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect,
 	float f = sqrtf(Amount) / sqrtf(Aspect);
 	*w = f*Aspect;
 	*h = f;
-	
+
 	// limit the view
 	if(*w > WMax)
 	{
 		*w = WMax;
 		*h = *w/Aspect;
 	}
-	
+
 	if(*h > HMax)
 	{
 		*h = HMax;
@@ -299,11 +299,11 @@ void CRenderTools::MapscreenToWorld(float CenterX, float CenterY, float Parallax
 
 void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 {
-	
+
 	for(int g = 0; g < pLayers->NumGroups(); g++)
 	{
 		CMapItemGroup *pGroup = pLayers->GetGroup(g);
-		
+
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
 			CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer+l);
@@ -322,7 +322,7 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 							if(pTiles[y*pTmap->m_Width+x+sx].m_Index)
 								break;
 						}
-						
+
 						pTiles[y*pTmap->m_Width+x].m_Skip = sx-1;
 					}
 				}

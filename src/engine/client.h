@@ -18,13 +18,13 @@ protected:
 	int m_CurGameTick;
 	float m_GameIntraTick;
 	float m_GameTickTime;
-	
+
 	int m_PredTick;
 	float m_PredIntraTick;
-	
+
 	float m_LocalTime;
 	float m_FrameTime;
-	
+
 	int m_GameTickSpeed;
 public:
 
@@ -32,7 +32,7 @@ public:
 	{
 	public:
 		int m_Type;
-		int m_Id;
+		int m_ID;
 		int m_DataSize;
 	};
 
@@ -66,11 +66,11 @@ public:
 	inline float PredIntraGameTick() const { return m_PredIntraTick; }
 	inline float GameTickTime() const { return m_GameTickTime; }
 	inline int GameTickSpeed() const { return m_GameTickSpeed; }
-	
+
 	// other time access
 	inline float FrameTime() const { return m_FrameTime; }
 	inline float LocalTime() const { return m_LocalTime; }
-	
+
 	// actions
 	virtual void Connect(const char *pAddress) = 0;
 	virtual void Disconnect() = 0;
@@ -80,6 +80,7 @@ public:
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
 	virtual void AutoScreenshot_Start() = 0;
+	virtual void ServerBrowserUpdate() = 0;
 
 	// networking
 	virtual void EnterGame() = 0;
@@ -87,31 +88,31 @@ public:
 	//
 	virtual int MapDownloadAmount() = 0;
 	virtual int MapDownloadTotalsize() = 0;
-	
+
 	// input
 	virtual int *GetInput(int Tick) = 0;
-	
+
 	// remote console
 	virtual void RconAuth(const char *pUsername, const char *pPassword) = 0;
 	virtual bool RconAuthed() = 0;
 	virtual void Rcon(const char *pLine) = 0;
-	
+
 	// server info
 	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;
-	
+
 	// snapshot interface
-	
+
 	enum
 	{
 		SNAP_CURRENT=0,
 		SNAP_PREV=1
 	};
-		
+
 	// TODO: Refactor: should redo this a bit i think, too many virtual calls
-	virtual int SnapNumItems(int SnapId) = 0;
-	virtual void *SnapFindItem(int SnapId, int Type, int Id) = 0;
-	virtual void *SnapGetItem(int SnapId, int Index, CSnapItem *pItem) = 0;
-	virtual void SnapInvalidateItem(int SnapId, int Index) = 0;
+	virtual int SnapNumItems(int SnapID) = 0;
+	virtual void *SnapFindItem(int SnapID, int Type, int ID) = 0;
+	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) = 0;
+	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
@@ -125,13 +126,15 @@ public:
 			return -1;
 		return SendMsg(&Packer, Flags);
 	}
-	
-	// 
+
+	//
 	virtual const char *ErrorString() = 0;
 	virtual const char *LatestVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
 
 	virtual bool SoundInitFailed() = 0;
+
+	virtual int GetDebugFont() = 0;
 };
 
 class IGameClient : public IInterface
@@ -149,13 +152,14 @@ public:
 	virtual void OnRender() = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnConnected() = 0;
-	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker) = 0;
+	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker) = 0;
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
-	
+
 	virtual int OnSnapInput(int *pData) = 0;
-	
+
 	virtual const char *GetItemName(int Type) = 0;
+	virtual int GetCountryIndex(int Code) = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
 

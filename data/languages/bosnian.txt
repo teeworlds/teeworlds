@@ -1,6 +1,9 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d bytes
+
 %d of %d servers, %d players
 == %d od %d server(a), %d igrač(a)
 
@@ -22,8 +25,20 @@
 %i seconds left
 == Preostalo: %i sek.
 
+%s wins!
+== %s je pobijedio!
+
+-Page %d-
+== -Strana %d-
+
 Abort
 == Prekini
+
+Add
+== Dodaj
+
+Add Friend
+== Dodaj prijatelja
 
 Address
 == Adresa
@@ -42,6 +57,9 @@ Are you sure that you want to delete the demo?
 
 Are you sure that you want to quit?
 == Jeste li sigurni da želite izići?
+
+Are you sure that you want to remove the player from your friends list?
+== Da li ste sigurni da želite ukloniti igrača iz vaše liste prijatelja?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da provjerite postavke i podesite ih prema Vašem ukusu prije nego se konektujete na server.
@@ -64,8 +82,17 @@ Body
 Call vote
 == Glasanje
 
+Change settings
+== Izmijeni postavke
+
 Chat
 == Chat
+
+Clan
+== Klan
+
+Client
+== Klijent
 
 Close
 == Zatvori
@@ -88,6 +115,18 @@ Console
 Controls
 == Kontrole
 
+Count players only
+== Izbroj samo igrače
+
+Country
+== Država
+
+Crc:
+== Crc:
+
+Created:
+== Kreirano:
+
 Current
 == Current
 
@@ -102,6 +141,9 @@ Delete
 
 Delete demo
 == Brisanje demo-snimka
+
+Demo details
+== Podaci o demo-snimku
 
 Demos
 == Demo
@@ -134,7 +176,7 @@ Error
 == Greška
 
 Error loading demo
-== Greška prilikom učitavanja demo-snimka
+== Došlo je do greške pri učitavanju demo-snimka
 
 FSAA samples
 == FSAA samples
@@ -159,6 +201,12 @@ Folder
 
 Force vote
 == Obavezno glasanje
+
+Free-View
+== Slobodan pogled
+
+Friends
+== Prijatelji
 
 Fullscreen
 == Čitav ekran
@@ -226,14 +274,17 @@ Join red
 Jump
 == Skok
 
-Kick
-== Izbaci
+Kick player
+== Izbaci igrača iz igre
 
 LAN
 == LAN
 
 Language
 == Jezik
+
+Length:
+== Dužina:
 
 Lht.
 == Svjetl.
@@ -242,10 +293,13 @@ Loading
 == Učitavam
 
 MOTD
-== Vijest dana
+== Poruka dana
 
 Map
 == Mapa
+
+Map:
+== Mapa:
 
 Max Screenshots
 == Maksimalan broj screenshot-a
@@ -265,6 +319,9 @@ Mouse sens.
 Move left
 == Nalijevo
 
+Move player to spectators
+== Izbaci igrača u posmatrače
+
 Move right
 == Nadesno
 
@@ -276,6 +333,15 @@ Mute when not active
 
 Name
 == Ime
+
+Name plates size
+== Veličina podloge za ime
+
+Netversion:
+== Net-verzija:
+
+New name:
+== Novo ime:
 
 News
 == Novosti
@@ -325,6 +391,9 @@ Play
 Player
 == Igrač
 
+Player options
+== Postavke igrača
+
 Players
 == Igrači
 
@@ -343,6 +412,15 @@ Quick search:
 Quit
 == Izlaz
 
+Quit anyway?
+== Izlaz?
+
+REC %3d:%02d
+== %3d:%02d
+
+Reason:
+== Razlog:
+
 Record demo
 == Snimi demo
 
@@ -360,6 +438,18 @@ Refreshing master servers
 
 Remote console
 == Udaljena konzola
+
+Remove
+== Ukloni
+
+Remove friend
+== Ukloni prijatelja
+
+Rename
+== Preimenuj
+
+Rename demo
+== Preimenuj demo-snimak
 
 Reset filter
 == Poništi filter
@@ -394,8 +484,14 @@ Scoreboard
 Screenshot
 == Screenshot
 
+Server address:
+== Adresa servera:
+
 Server details
 == Podaci o serveru
+
+Server filter
+== Filter servera
 
 Server info
 == O Serveru
@@ -412,11 +508,20 @@ Shotgun
 Show chat
 == Prikaži chat
 
+Show friends
+== Prikaži prijatelje
+
+Show ingame HUD
+== Prikaži HUD
+
 Show name plates
 == Prikaži imena igrača
 
 Show only supported
 == Prikaži samo podržane
+
+Size:
+== Veličina:
 
 Skins
 == Izgled
@@ -424,11 +529,17 @@ Skins
 Sound
 == Zvuk
 
+Sound error
+== Problem sa zvukom
+
 Sound volume
 == Jačina zvuka
 
 Spectate
 == Posmatraj
+
+Spectator mode
+== Posmatrački mod
 
 Spectators
 == Posmatrači
@@ -438,6 +549,9 @@ Standard gametype
 
 Standard map
 == Standardna mapa
+
+Stop record
+== Prekini snimanje
 
 Sudden Death
 == Iznenadna smrt
@@ -457,8 +571,14 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Kompresija tekstura
 
+The audio device couldn't be initialised.
+== Audio-uređaj nije moguće pokrenuti.
+
 The server is running a non-standard tuning on a pure game type.
 == Server sadrži nestandardne postavke.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Mapa u editoru nije memorisana, možda je želite memorisati prije nego izađete iz igre.
 
 Time limit
 == Max. vremena
@@ -472,17 +592,38 @@ Try again
 Type
 == Tip
 
+Type:
+== Tip:
+
 UI Color
 == Boja menija
 
+Unable to delete the demo
+== Demo-snimak nije moguće obrisati
+
+Unable to rename the demo
+== Demo-snimak nije moguće preimenovati
+
 Use sounds
 == Aktiviraj zvuk
+
+Use team colors for name plates
+== Koristi timsku boju u prikazu imena
 
 V-Sync
 == V-Sync
 
 Version
 == Verzija
+
+Version:
+== Verzija:
+
+Vote command:
+== Komanda za glasanje:
+
+Vote description:
+== Opis glasanja:
 
 Vote no
 == Ne
@@ -511,465 +652,18 @@ You must restart the game for all settings to take effect.
 Your skin
 == Vaš izgled
 
+no limit
+== bez ograničenja
+
 ##### needs translation #####
 
-%s Right click for context menu.
+Play background music
 == 
 
-Add
+Spectate next
 == 
 
-Add Image
-== 
-
-Add Quad
-== 
-
-Add group
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new group
-== 
-
-Adds a new quad
-== 
-
-Alpha value of the envelope
-== 
-
-Anim
-== 
-
-Append
-== 
-
-Append map
-== 
-
-Aspect ratio
-== 
-
-Blue value of the envelope
-== 
-
-Border
-== 
-
-CCW
-== 
-
-CW
-== 
-
-Cancel
-== 
-
-Clear collision
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Color
-== 
-
-Color Env
-== 
-
-Color TO
-== 
-
-Color+
-== 
-
-Constructs collision from this layer
-== 
-
-Creates a new color envelope
-== 
-
-Creates a new map
-== 
-
-Creates a new pos envelope
-== 
-
-Creates a new quad layer
-== 
-
-Creates a new tile layer
-== 
-
-Decrease
-== 
-
-Decrease animation speed
-== 
-
-Delete group
-== 
-
-Delete layer
-== 
-
-Delete this envelope
-== 
-
-Deletes the current quad
-== 
-
-Deletes the layer
-== 
-
-Detail
-== 
-
-Down
-== 
-
-Embed
-== 
-
-Embedded
-== 
-
-Embeds the image into the map file.
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Envelopes
-== 
-
-Exit
-== 
-
-Exits from the editor
-== 
-
-External
-== 
-
-File
-== 
-
-File: %s
-== 
-
-Filename:
-== 
-
-Green value of the envelope
-== 
-
-Group
-== 
-
-HD
-== 
-
-Height
-== 
-
-Image
-== 
-
-Images
-== 
-
-Increase
-== 
-
-Increase animation speed
-== 
-
-Layers
-== 
-
-Left
-== 
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
-
-Left mouse button to move. Hold shift to move the texture.
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
-Load
-== 
-
-Load a new image to use in the map
-== 
-
-Load map
-== 
-
-Make collision
-== 
-
-Make external
-== 
-
-Name plates size
-== 
-
-Name:
-== 
-
-New
-== 
-
-New folder
-== 
-
-Next Envelope
-== 
-
-None
-== 
-
-Normal animation speed
-== 
-
-Opens a map and adds everything from that map to the current one
-== 
-
-Opens a map for editing
-== 
-
-Order
-== 
-
-Para X
-== 
-
-Para Y
-== 
-
-Pos X
-== 
-
-Pos Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
-Pos.+
-== 
-
-Press right mouse button to create a new point
-== 
-
-Previous Envelope
-== 
-
-Proof
-== 
-
-Quads
-== 
-
-REC
-== 
-
-Reason:
-== 
-
-Red value of the envelope
-== 
-
-Refocus
-== 
-
-Remove
-== 
-
-Removes collision from this layer
-== 
-
-Removes the image from the map
-== 
-
-Removes the image from the map file.
-== 
-
-Replace
-== 
-
-Replace Image
-== 
-
-Replaces the image with a new one
-== 
-
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
-Save
-== 
-
-Save As
-== 
-
-Save map
-== 
-
-Saves the current map
-== 
-
-Saves the current map under a new name
-== 
-
-Select group. Right click for properties.
-== 
-
-Select image
-== 
-
-Select layer. Right click for properties.
-== 
-
-Shift
-== 
-
-Sound error
-== 
-
-Square
-== 
-
-Squares the current quad
-== 
-
-Stop record
-== 
-
-Switch between images and layers managment.
-== 
-
-Switch curve type
-== 
-
-The audio device couldn't be initialised.
-== 
-
-Tiles
-== 
-
-Toggle group visibility
-== 
-
-Toggle layer visibility
-== 
-
-Toggles the envelope editor.
-== 
-
-Unable to delete the demo
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and create a brush.
-== 
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
-Width
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-ZI
-== 
-
-ZO
-== 
-
-[HOME] Restore map focus
-== 
-
-[M] Flip brush vertical
-== 
-
-[N] Flip brush horizontal
-== 
-
-[NumPad*] Zoom to normal and remove editor offset
-== 
-
-[NumPad+] Zoom in
-== 
-
-[NumPad-] Zoom out
-== 
-
-[R] Rotates the brush counter clockwise
-== 
-
-[T] Rotates the brush clockwise
-== 
-
-[ctrl+h] Toggle High Detail
-== 
-
-[ctrl+m] Toggle animation
-== 
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== 
-
-no limit
+Spectate previous
 == 
 
 ##### old translations #####

@@ -1,35 +1,80 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d Bajtů
+
 %d of %d servers, %d players
-== %d z %d serverů, %d hráčů online
+== %d z %d serverů, %d hráčů
+
+%d%% loaded
+== %d%% načteno
+
+%ds left
+== zbývá %ds
+
+%i minute left
+== Zbývá minut: %i
+
+%i minutes left
+== Zbývá minut: %i
+
+%i second left
+== Zbývá sekund: %i
+
+%i seconds left
+== Zbývá sekund: %i
+
+%s wins!
+== %s zvítězil!
+
+-Page %d-
+== -Strana %d-
 
 Abort
-== Zrušit
+== Přerušit
+
+Add
+== Přidat
+
+Add Friend
+== Přidat do přátel
 
 Address
 == Adresa
 
 All
-== Vše
+== Všem
 
 Alpha
-== Alpha
+== Alfa
 
 Always show name plates
-== Vždy zobrazovat jmenovky
+== Vždy zobrazovat
+
+Are you sure that you want to delete the demo?
+== Opravdu chcete smazat toto demo?
 
 Are you sure that you want to quit?
-== Ukončit hru?
+== Opravdu chcete ukončit Teeworlds?
+
+Are you sure that you want to remove the player from your friends list?
+== Chcete odebrat tohoto hráče ze seznamu přátel?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Vítejte ve hře TeeWorlds. Před tím, než se poprvé připojíte na herní server, je doporučováno nastavit si hru svým požadavkům. Vložte do políčka níže jméno pro Vašeho tee a pokračujte klepnutím na tlačítko.
+== Jelikož je toto Vaše první spuštění hry, zadejte prosím svou přezdívku. Než začnete hrát, doporučujeme si upravit nastavení tak, aby Vám vyhovovalo.
+
+Automatically record demos
+== Nahrávat dema automaticky
+
+Automatically take game over screenshot
+== Na konci kola vyfotit obrazovku
 
 Blue team
-== Modrý tým
+== Modří
 
 Blue team wins!
-== Modrý tým vyhrává!
+== Modří vyhráli!
 
 Body
 == Tělo
@@ -37,8 +82,17 @@ Body
 Call vote
 == Hlasovat
 
+Change settings
+== Změna nastavení
+
 Chat
 == Chat
+
+Clan
+== Herní klan
+
+Client
+== Klient
 
 Close
 == Zavřít
@@ -50,52 +104,82 @@ Connect
 == Připojit
 
 Connecting to
-== Připojuji se k
+== Připojuji na
+
+Connection Problems...
+== Chyba spojení...
 
 Console
-== Konzole
+== Konzola
 
 Controls
 == Ovládání
 
+Count players only
+== Započítat hrajíci hráče
+
+Country
+== Národnost
+
+Crc:
+== Crc:
+
+Created:
+== Vytvořeno:
+
 Current
-== aktuální
+== Aktuálně
 
 Current version: %s
-== Verze klienta: %s
+== Aktuální verze: %s
 
 Custom colors
 == Vlastní barvy
 
+Delete
+== Smazat
+
+Delete demo
+== Smazat demo
+
+Demo details
+== Detaily záznamu:
+
 Demos
-== Záznamy
+== Dema
 
 Disconnect
-== Odejít
+== Odpojit
 
 Disconnected
-== Spojení přerušeno
+== Odpojeno
 
 Display Modes
-== Možnosti zobrazení
+== Režimy zobrazení
 
 Downloading map
-== Stahuji mapu
+== Stahování mapy
 
 Draw!
 == Remíza!
 
 Dynamic Camera
-== Dynamická kamera
+== Pohyblivá kamera
 
 Emoticon
-== Smajlíci
+== Emotikony
 
 Enter
-== Vstup
+== Vstoupit
+
+Error
+== Chyba
+
+Error loading demo
+== Chyba načítání dema
 
 FSAA samples
-== Anti-aliasing
+== FSAA vzorkování
 
 Favorite
 == Oblíbený
@@ -112,8 +196,17 @@ Filter
 Fire
 == Střelba
 
+Folder
+== Složka
+
 Force vote
-== Zvolit možnost a ukončit hlasování
+== Zvolit
+
+Free-View
+== Volný pohled
+
+Friends
+== Přátelé
 
 Fullscreen
 == Celá obrazovka
@@ -122,64 +215,67 @@ Game
 == Hra
 
 Game info
-== Informace o hře
+== Hra
 
 Game over
-== Konec hry
+== Ukončit hru
 
 Game type
-== Herní typ
+== Herní mód
 
 Game types:
-== Herní typy:
+== Herní mód:
 
 General
 == Hlavní
 
 Graphics
-== Grafické
+== Video
 
 Grenade
 == Granátomet
 
 Hammer
-== Palice
+== Kladivo
 
 Has people playing
-== Není prázdný
+== Hráči na serveru
 
 High Detail
-== Detaily
+== Vysoké detaily
 
 Hook
-== Hook/lano
+== Hák
 
 Host address
-== Hostitel
+== Adresa serveru
 
 Hue
-== Odstín
+== Tón
 
 Info
-== Informace
+== Info
 
 Internet
 == Internet
 
+Invalid Demo
+== Neplatné demo
+
 Join blue
-== K modrým
+== Modří
 
 Join game
 == Do hry
 
 Join red
-== K červeným
+== Červení
 
 Jump
-== Výskok
+== Skok
 
-Kick
-== Vyhodit
+Kick player
+== Vyhodit hráče
 
 LAN
 == LAN
@@ -187,11 +283,14 @@ LAN
 Language
 == Jazyk
 
+Length:
+== Délka:
+
 Lht.
-== Světel.
+== Jas
 
 Loading
-== Nahrávám
+== Načítání
 
 MOTD
 == MOTD
@@ -199,8 +298,17 @@ MOTD
 Map
 == Mapa
 
+Map:
+== Mapa:
+
+Max Screenshots
+== Maximální počet vyfocených obrazovek
+
+Max demos
+== Maximální počet dem
+
 Maximum ping:
-== Max. odezva:
+== Maximální ping:
 
 Miscellaneous
 == Ostatní
@@ -209,19 +317,31 @@ Mouse sens.
 == Citlivost myši
 
 Move left
-== Pohyb vlevo
+== Pohyb doleva
+
+Move player to spectators
+== Poslat hráče pozorovat
 
 Move right
-== Pohyb vpravo
+== Pohyb doprava
 
 Movement
 == Pohyb
 
 Mute when not active
-== Ztlumit při neaktivitě
+== Při nečinosti ztlumit zvuk
 
 Name
 == Jméno
+
+Name plates size
+== Velikost jmen
+
+Netversion:
+== Netversion:
+
+New name:
+== Nové jméno:
 
 News
 == Novinky
@@ -239,34 +359,46 @@ No password
 == Bez hesla
 
 No servers found
-== Nenalezeny žádné servery
+== Žádny server nenalezen
 
 No servers match your filter criteria
-== Žádný server neodpovídá zadaným kritériím
+== Žádný server neodpovídá požadavkům filtru
 
 Ok
-== Ok
+== OK
+
+Open
+== Otevřít
+
+Parent Folder
+== Nadřazená složka
 
 Password
 == Heslo
 
 Password incorrect
-== Nesprávné heslo
+== Špatné heslo
 
 Ping
-== Odezva
+== Ping
 
 Pistol
-== Pistol
+== Pistolka
 
 Play
-== Hrát
+== Přehrát
 
 Player
 == Hráč
 
+Player options
+== Nastavení hráčů
+
 Players
 == Hráči
+
+Please balance teams!
+== Prosím vyrovnejte týmy!
 
 Prev. weapon
 == Předchozí zbraň
@@ -275,31 +407,55 @@ Quality Textures
 == Kvalitní textury
 
 Quick search:
-== Rychlé hledání:
+== Vyhledávání:
 
 Quit
-== Ukončit
+== Konec
+
+Quit anyway?
+== Opravdu odejít?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Důvod:
+
+Record demo
+== Záznam dema
 
 Red team
-== Červený tým
+== Červení
 
 Red team wins!
-== Červený tým vyhrává!
+== Červení vyhráli!
 
 Refresh
 == Obnovit
 
 Refreshing master servers
-== Obnovuji master servery
+== Aktualizování hlavních serverů
 
 Remote console
-== Vzdálená konzole
+== Vzdálená konzola
+
+Remove
+== Odstranit
+
+Remove friend
+== Odebrat přítele
+
+Rename
+== Přejmenovat
+
+Rename demo
+== Přejmenovat záznam
 
 Reset filter
-== Obnovit filtr
+== Vymazat filtr
 
 Reset to defaults
-== Vrátit na výchozí
+== Obnovit výchozí
 
 Rifle
 == Laser
@@ -308,34 +464,40 @@ Round
 == Kolo
 
 Sample rate
-== Sample rate
+== Vzorkování:
 
 Sat.
-== Sat.
+== Barva
 
 Score
 == Skóre
 
 Score board
-== Přehled skóre
+== Tabulka výsledků
 
 Score limit
-== Skórelimit
+== Skóre limit
 
 Scoreboard
-== Přehled skóre
+== Tabulka výsledků
 
 Screenshot
-== Screenshot
+== Vyfotit obrazovku
+
+Server address:
+== Adresa serveru:
 
 Server details
 == Detaily serveru
 
+Server filter
+== Filtr serverů:
+
 Server info
-== Informace o serveru
+== Informace
 
 Server not full
-== Není plný
+== Možnost připojení
 
 Settings
 == Nastavení
@@ -343,17 +505,32 @@ Settings
 Shotgun
 == Brokovnice
 
+Show chat
+== Zobrazit chat
+
+Show friends
+== Zobrazit přátele
+
+Show ingame HUD
+== Zobrazit HUD
+
 Show name plates
-== Zobrazovat jmenovky
+== Zobrazovat jména hráčů
 
 Show only supported
-== Zobrazit jen podporované
+== Zobrazit pouze podporované
+
+Size:
+== Velikost:
 
 Skins
-== Skiny
+== Vzhledy
 
 Sound
-== Zvuky
+== Zvuk
+
+Sound error
+== Chyba zvuku
 
 Sound volume
 == Hlasitost
@@ -361,615 +538,132 @@ Sound volume
 Spectate
 == Pozorovat
 
+Spectator mode
+== Nastavit pozorování
+
 Spectators
-== Pozorují
+== Pozorovatelé
 
 Standard gametype
-== Standartní herní typ
+== Základní herní módy
 
 Standard map
-== Standartní mapa
+== Základní mapy
+
+Stop record
+== Zastavit nahránání
+
+Sudden Death
+== Náhlá smrt
 
 Switch weapon on pickup
-== Nastavovat zvednutou zbraň jako aktuální
+== Automaticky přepínat zbraň na nově získanou
 
 Team
-== Tým
+== Týmu
 
 Team chat
 == Týmový chat
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Vyšla nová verze hry: %s! Stáhněte si ji na www.teeworlds.com nebo na české fanstránce!
+== Nejnovější verze Teeworlds je %s! Stáhněte si ji na www.teeworlds.com!
 
 Texture Compression
-== Komprese textur
+== Komprimované textury
+
+The audio device couldn't be initialised.
+== Zvukové zařízení nelze inicializovat.
 
 The server is running a non-standard tuning on a pure game type.
-== Server poskytuje nestandartní tunning, ale představuje se jako standartní herní typ.
+== Server používá nestandartní nastavení (tuning) pro základní módy.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== V editoru map je neuložená mapa, možná ji chcete před ukončením hry uložit.
 
 Time limit
 == Časový limit
+
+Time limit: %d min
+== Časový limit: %d min
 
 Try again
 == Zkusit znovu
 
 Type
-== Typ
+== Mód
+
+Type:
+== Typ:
 
 UI Color
-== Barva prostředí
+== Barvy uživatelského rozhraní
+
+Unable to delete the demo
+== Demo se nepodařilo smazat
+
+Unable to rename the demo
+== Záznam nelze přejmenovat
 
 Use sounds
-== Povolit zvuky
+== Povolit zvuk
+
+Use team colors for name plates
+== Obarvit jména hráčů podle týmů
 
 V-Sync
-== V-Sync
+== Vertikální synchronizace
 
 Version
 == Verze
 
+Version:
+== Verze:
+
+Vote command:
+== Příkaz:
+
+Vote description:
+== Popisek hlasování:
+
 Vote no
-== Hlasuj proti
+== NE
 
 Vote yes
-== Hlasuj pro
+== ANO
 
 Voting
 == Hlasování
 
+Warmup
+== Zahřívací kolo
+
 Weapon
-== Zbraň
+== Zbraně
 
 Welcome to Teeworlds
-== Vítejte ve hře Teeworlds!
+== Vítejte v Teeworls
 
 Yes
 == Ano
 
 You must restart the game for all settings to take effect.
-== Změny se projeví po dalším spuštění hry.
+== Změna nastavení se projeví až po restartu hry.
 
 Your skin
-== Váš skin
+== Zvolený vzhled
+
+no limit
+== neomezeno
 
 ##### needs translation #####
 
-%d%% loaded
+Play background music
 == 
 
-%ds left
+Spectate next
 == 
 
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
-%s Right click for context menu.
-== 
-
-Add
-== 
-
-Add Image
-== 
-
-Add Quad
-== 
-
-Add group
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new group
-== 
-
-Adds a new quad
-== 
-
-Alpha value of the envelope
-== 
-
-Anim
-== 
-
-Append
-== 
-
-Append map
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Aspect ratio
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Blue value of the envelope
-== 
-
-Border
-== 
-
-CCW
-== 
-
-CW
-== 
-
-Cancel
-== 
-
-Clear collision
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Color
-== 
-
-Color Env
-== 
-
-Color TO
-== 
-
-Color+
-== 
-
-Connection Problems...
-== 
-
-Constructs collision from this layer
-== 
-
-Creates a new color envelope
-== 
-
-Creates a new map
-== 
-
-Creates a new pos envelope
-== 
-
-Creates a new quad layer
-== 
-
-Creates a new tile layer
-== 
-
-Decrease
-== 
-
-Decrease animation speed
-== 
-
-Delete
-== 
-
-Delete demo
-== 
-
-Delete group
-== 
-
-Delete layer
-== 
-
-Delete this envelope
-== 
-
-Deletes the current quad
-== 
-
-Deletes the layer
-== 
-
-Detail
-== 
-
-Down
-== 
-
-Embed
-== 
-
-Embedded
-== 
-
-Embeds the image into the map file.
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Envelopes
-== 
-
-Error
-== 
-
-Error loading demo
-== 
-
-Exit
-== 
-
-Exits from the editor
-== 
-
-External
-== 
-
-File
-== 
-
-File: %s
-== 
-
-Filename:
-== 
-
-Folder
-== 
-
-Green value of the envelope
-== 
-
-Group
-== 
-
-HD
-== 
-
-Height
-== 
-
-Image
-== 
-
-Images
-== 
-
-Increase
-== 
-
-Increase animation speed
-== 
-
-Invalid Demo
-== 
-
-Layers
-== 
-
-Left
-== 
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
-
-Left mouse button to move. Hold shift to move the texture.
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
-Load
-== 
-
-Load a new image to use in the map
-== 
-
-Load map
-== 
-
-Make collision
-== 
-
-Make external
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Name plates size
-== 
-
-Name:
-== 
-
-New
-== 
-
-New folder
-== 
-
-Next Envelope
-== 
-
-None
-== 
-
-Normal animation speed
-== 
-
-Open
-== 
-
-Opens a map and adds everything from that map to the current one
-== 
-
-Opens a map for editing
-== 
-
-Order
-== 
-
-Para X
-== 
-
-Para Y
-== 
-
-Parent Folder
-== 
-
-Please balance teams!
-== 
-
-Pos X
-== 
-
-Pos Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
-Pos.+
-== 
-
-Press right mouse button to create a new point
-== 
-
-Previous Envelope
-== 
-
-Proof
-== 
-
-Quads
-== 
-
-REC
-== 
-
-Reason:
-== 
-
-Record demo
-== 
-
-Red value of the envelope
-== 
-
-Refocus
-== 
-
-Remove
-== 
-
-Removes collision from this layer
-== 
-
-Removes the image from the map
-== 
-
-Removes the image from the map file.
-== 
-
-Replace
-== 
-
-Replace Image
-== 
-
-Replaces the image with a new one
-== 
-
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
-Save
-== 
-
-Save As
-== 
-
-Save map
-== 
-
-Saves the current map
-== 
-
-Saves the current map under a new name
-== 
-
-Select group. Right click for properties.
-== 
-
-Select image
-== 
-
-Select layer. Right click for properties.
-== 
-
-Shift
-== 
-
-Show chat
-== 
-
-Sound error
-== 
-
-Square
-== 
-
-Squares the current quad
-== 
-
-Stop record
-== 
-
-Sudden Death
-== 
-
-Switch between images and layers managment.
-== 
-
-Switch curve type
-== 
-
-The audio device couldn't be initialised.
-== 
-
-Tiles
-== 
-
-Time limit: %d min
-== 
-
-Toggle group visibility
-== 
-
-Toggle layer visibility
-== 
-
-Toggles the envelope editor.
-== 
-
-Unable to delete the demo
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and create a brush.
-== 
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
-Warmup
-== 
-
-Width
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-ZI
-== 
-
-ZO
-== 
-
-[HOME] Restore map focus
-== 
-
-[M] Flip brush vertical
-== 
-
-[N] Flip brush horizontal
-== 
-
-[NumPad*] Zoom to normal and remove editor offset
-== 
-
-[NumPad+] Zoom in
-== 
-
-[NumPad-] Zoom out
-== 
-
-[R] Rotates the brush counter clockwise
-== 
-
-[T] Rotates the brush clockwise
-== 
-
-[ctrl+h] Toggle High Detail
-== 
-
-[ctrl+m] Toggle animation
-== 
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== 
-
-no limit
+Spectate previous
 == 
 
 ##### old translations #####

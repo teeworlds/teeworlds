@@ -53,16 +53,17 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		m_CurrentVersion = 0;
 		return true;
 	}
-	
+
 	IOHANDLE IoHandle = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!IoHandle)
 		return false;
-	
+
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
-	
+
+	char aOrigin[512];
 	CLineReader LineReader;
 	LineReader.Init(IoHandle);
 	char *pLine;
@@ -70,29 +71,30 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	{
 		if(!str_length(pLine))
 			continue;
-			
+
 		if(pLine[0] == '#') // skip comments
 			continue;
-			
+
+		str_copy(aOrigin, pLine, sizeof(aOrigin));
 		char *pReplacement = LineReader.Get();
 		if(!pReplacement)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of file");
 			break;
 		}
-		
+
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
-			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", pLine);
+			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", aOrigin);
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 			continue;
 		}
 
 		pReplacement += 3;
-		AddString(pLine, pReplacement);
+		AddString(aOrigin, pReplacement);
 	}
 	io_close(IoHandle);
-	
+
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }

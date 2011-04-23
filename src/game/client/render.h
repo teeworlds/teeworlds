@@ -19,7 +19,7 @@ public:
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
-	
+
 	int m_Texture;
 	vec4 m_ColorBody;
 	vec4 m_ColorFeet;
@@ -32,10 +32,10 @@ enum
 {
 	SPRITE_FLAG_FLIP_Y=1,
 	SPRITE_FLAG_FLIP_X=2,
-	
+
 	LAYERRENDERFLAG_OPAQUE=1,
 	LAYERRENDERFLAG_TRANSPARENT=2,
-	
+
 	TILERENDERFLAG_EXTEND=4,
 };
 
@@ -45,7 +45,7 @@ class CRenderTools
 public:
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
-	
+
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
 
@@ -59,7 +59,7 @@ public:
 	// rects
 	void DrawRoundRect(float x, float y, float w, float h, float r);
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
-	
+
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
 
 	// larger rendering methods
@@ -75,8 +75,8 @@ public:
 
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
-		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);	
-	
+		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);
+
 };
 
 #endif

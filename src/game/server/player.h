@@ -11,9 +11,9 @@
 class CPlayer
 {
 	MACRO_ALLOC_POOL_ID()
-	
+
 public:
-	CPlayer(CGameContext *pGameServer, int CID, int Team);
+	CPlayer(CGameContext *pGameServer, int ClientID, int Team);
 	~CPlayer();
 
 	void Init(int CID);
@@ -23,14 +23,15 @@ public:
 	void SetTeam(int Team);
 	int GetTeam() const { return m_Team; };
 	int GetCID() const { return m_ClientID; };
-	
+
 	void Tick();
+	void PostTick();
 	void Snap(int SnappingClient);
 
 	void OnDirectInput(CNetObj_PlayerInput *NewInput);
 	void OnPredictedInput(CNetObj_PlayerInput *NewInput);
-	void OnDisconnect();
-	
+	void OnDisconnect(const char *pReason);
+
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 	
@@ -40,28 +41,40 @@ public:
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;
-	
+
+	// states if the client is chatting, accessing a menu etc.
+	int m_PlayerFlags;
+
+	// used for snapping to just update latency if the scoreboard is active
+	int m_aActLatency[MAX_CLIENTS];
+
+	// used for spectator mode
+	int m_SpectatorID;
+
+	bool m_IsReady;
+
 	//
 	int m_Vote;
 	int m_VotePos;
 	//
-	int m_Last_VoteCall;
-	int m_Last_VoteTry;
-	int m_Last_Chat;
-	int m_Last_SetTeam;
-	int m_Last_ChangeInfo;
-	int m_Last_Emote;
-	int m_Last_Kill;
-	
+	int m_LastVoteCall;
+	int m_LastVoteTry;
+	int m_LastChat;
+	int m_LastSetTeam;
+	int m_LastSetSpectatorMode;
+	int m_LastChangeInfo;
+	int m_LastEmote;
+	int m_LastKill;
+
 	// TODO: clean this up
-	struct 
+	struct
 	{
 		char m_SkinName[64];
 		int m_UseCustomColor;
 		int m_ColorBody;
 		int m_ColorFeet;
 	} m_TeeInfos;
-	
+
 	int m_RespawnTick;
 	int m_DieTick;
 	int m_Score;
@@ -74,21 +87,8 @@ public:
 		int m_TargetY;
 	} m_LatestActivity;
 	
-	char m_OrigName[MAX_NAME_LENGTH];
 
-private:
-	CCharacter *Character;
-	CGameContext *m_pGameServer;
-	
-	CGameContext *GameServer() const { return m_pGameServer; }
-	IServer *Server() const;
-	
-	//
-	bool m_Spawning;
-	int m_ClientID;
-	int m_Team;
-
-	// network latency calculations	
+	// network latency calculations
 	struct
 	{
 		int m_Accum;
@@ -96,8 +96,21 @@ private:
 		int m_AccumMax;
 		int m_Avg;
 		int m_Min;
-		int m_Max;	
+		int m_Max;
 	} m_Latency;
+
+	char m_OrigName[MAX_NAME_LENGTH];
+private:
+	CCharacter *Character;
+	CGameContext *m_pGameServer;
+
+	CGameContext *GameServer() const { return m_pGameServer; }
+	IServer *Server() const;
+
+	//
+	bool m_Spawning;
+	int m_ClientID;
+	int m_Team;
 
 	CAccount *m_pAccount;
 };

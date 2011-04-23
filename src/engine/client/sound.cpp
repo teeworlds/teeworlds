@@ -1,6 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
+#include <engine/graphics.h>
+#include <engine/storage.h>
 #include <engine/shared/config.h>
 
 #include "SDL.h"
@@ -155,8 +157,12 @@ static void Mix(short *pFinalOut, unsigned Frames)
 			
 			// free voice if not used any more
 			if(v->m_Tick == v->m_pSample->m_NumFrames)
-				v->m_pSample = 0;
-			
+			{
+				if(v->m_Flags&ISound::FLAG_LOOP)
+					v->m_Tick = 0;
+				else
+					v->m_pSample = 0;
+			}
 		}
 	}
 	
@@ -253,21 +259,21 @@ int CSound::Shutdown()
 	return 0;
 }
 
-int CSound::AllocId()
+int CSound::AllocID()
 {
 	// TODO: linear search, get rid of it
-	for(unsigned SampleId = 0; SampleId < NUM_SAMPLES; SampleId++)
+	for(unsigned SampleID = 0; SampleID < NUM_SAMPLES; SampleID++)
 	{
-		if(m_aSamples[SampleId].m_pData == 0x0)
-			return SampleId;
+		if(m_aSamples[SampleID].m_pData == 0x0)
+			return SampleID;
 	}
 
 	return -1;
 }
 
-void CSound::RateConvert(int SampleId)
+void CSound::RateConvert(int SampleID)
 {
-	CSample *pSample = &m_aSamples[SampleId];
+	CSample *pSample = &m_aSamples[SampleID];
 	int NumFrames = 0;
 	short *pNewData = 0;
 	
@@ -311,7 +317,7 @@ int CSound::ReadData(void *pBuffer, int Size)
 int CSound::LoadWV(const char *pFilename)
 {
 	CSample *pSample;
-	int SampleId = -1;
+	int SampleID = -1;
 	char aError[100];
 	WavpackContext *pContext;
 	
@@ -333,10 +339,10 @@ int CSound::LoadWV(const char *pFilename)
 		return -1;
 	}
 
-	SampleId = AllocId();
-	if(SampleId < 0)
+	SampleID = AllocID();
+	if(SampleID < 0)
 		return -1;
-	pSample = &m_aSamples[SampleId];
+	pSample = &m_aSamples[SampleID];
 
 	pContext = WavpackOpenFileInput(ReadData, aError);
 	if (pContext)
@@ -399,8 +405,8 @@ int CSound::LoadWV(const char *pFilename)
 	if(g_Config.m_Debug)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
-	RateConvert(SampleId);
-	return SampleId;
+	RateConvert(SampleID);
+	return SampleID;
 }
 
 void CSound::SetListenerPos(float x, float y)
@@ -408,17 +414,17 @@ void CSound::SetListenerPos(float x, float y)
 	m_CenterX = (int)x;
 	m_CenterY = (int)y;
 }
-	
 
-void CSound::SetChannel(int ChannelId, float Vol, float Pan)
+
+void CSound::SetChannel(int ChannelID, float Vol, float Pan)
 {
-	m_aChannels[ChannelId].m_Vol = (int)(Vol*255.0f);
-	m_aChannels[ChannelId].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
+	m_aChannels[ChannelID].m_Vol = (int)(Vol*255.0f);
+	m_aChannels[ChannelID].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
 }
 
-int CSound::Play(int ChannelId, int SampleId, int Flags, float x, float y)
+int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 {
-	int VoiceId = -1;
+	int VoiceID = -1;
 	int i;
 	
 	lock_wait(m_SoundLock);
@@ -429,43 +435,48 @@ int CSound::Play(int ChannelId, int SampleId, int Flags, float x, float y)
 		int id = (m_NextVoice + i) % NUM_VOICES;
 		if(!m_aVoices[id].m_pSample)
 		{
-			VoiceId = id;
+			VoiceID = id;
 			m_NextVoice = id+1;
 			break;
 		}
 	}
 	
 	// voice found, use it
-	if(VoiceId != -1)
+	if(VoiceID != -1)
 	{
-		m_aVoices[VoiceId].m_pSample = &m_aSamples[SampleId];
-		m_aVoices[VoiceId].m_pChannel = &m_aChannels[ChannelId];
-		m_aVoices[VoiceId].m_Tick = 0;
-		m_aVoices[VoiceId].m_Vol = 255;
-		m_aVoices[VoiceId].m_Flags = Flags;
-		m_aVoices[VoiceId].m_X = (int)x;
-		m_aVoices[VoiceId].m_Y = (int)y;
+		m_aVoices[VoiceID].m_pSample = &m_aSamples[SampleID];
+		m_aVoices[VoiceID].m_pChannel = &m_aChannels[ChannelID];
+		m_aVoices[VoiceID].m_Tick = 0;
+		m_aVoices[VoiceID].m_Vol = 255;
+		m_aVoices[VoiceID].m_Flags = Flags;
+		m_aVoices[VoiceID].m_X = (int)x;
+		m_aVoices[VoiceID].m_Y = (int)y;
 	}
 	
 	lock_release(m_SoundLock);
-	return VoiceId;
+	return VoiceID;
 }
 
-int CSound::PlayAt(int ChannelId, int SampleId, int Flags, float x, float y)
+int CSound::PlayAt(int ChannelID, int SampleID, int Flags, float x, float y)
 {
-	return Play(ChannelId, SampleId, Flags|ISound::FLAG_POS, x, y);
+	return Play(ChannelID, SampleID, Flags|ISound::FLAG_POS, x, y);
 }
 
-int CSound::Play(int ChannelId, int SampleId, int Flags)
+int CSound::Play(int ChannelID, int SampleID, int Flags)
 {
-	return Play(ChannelId, SampleId, Flags, 0, 0);
+	return Play(ChannelID, SampleID, Flags, 0, 0);
 }
 
-void CSound::Stop(int VoiceId)
+void CSound::Stop(int SampleID)
 {
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
-	m_aVoices[VoiceId].m_pSample = 0;
+	CSample *pSample = &m_aSamples[SampleID];
+	for(int i = 0; i < NUM_VOICES; i++)
+	{
+		if(m_aVoices[i].m_pSample == pSample)
+			m_aVoices[i].m_pSample = 0;
+	}
 	lock_release(m_SoundLock);
 }
 

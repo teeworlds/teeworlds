@@ -35,11 +35,11 @@ public:
 	}
 
 	static const char *m_apNames[];
-	
+
 	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) CTuneParam m_##Name;
 	#include "tuning.h"
 	#undef MACRO_TUNING_PARAM
-	
+
 	static int Num() { return sizeof(CTuningParams)/sizeof(int); }
 	bool Set(int Index, float Value);
 	bool Set(const char *pName, float Value);
@@ -54,9 +54,9 @@ inline vec2 GetDirection(int Angle)
 	return vec2(cosf(a), sinf(a));
 }
 
-inline vec2 GetDir(float a)
+inline vec2 GetDir(float Angle)
 {
-	return vec2(cosf(a), sinf(a));
+	return vec2(cosf(Angle), sinf(Angle));
 }
 
 inline float GetAngle(vec2 Dir)
@@ -81,7 +81,7 @@ inline void StrToInts(int *pInts, int Num, const char *pStr)
 		pInts++;
 		Num--;
 	}
-	
+
 	// null terminate
 	pInts[-1] &= 0xffffff00;
 }
@@ -98,19 +98,19 @@ inline void IntsToStr(const int *pInts, int Num, char *pStr)
 		pInts++;
 		Num--;
 	}
-	
+
 	// null terminate
 	pStr[-1] = 0;
 }
 
 
 
-inline vec2 CalcPos(vec2 p, vec2 v, float Curvature, float Speed, float t)
+inline vec2 CalcPos(vec2 Pos, vec2 Velocity, float Curvature, float Speed, float Time)
 {
 	vec2 n;
-	t *= Speed;
-	n.x = p.x + v.x*t;
-	n.y = p.y + v.y*t + Curvature/10000*(t*t);
+	Time *= Speed;
+	n.x = Pos.x + Velocity.x*Time;
+	n.y = Pos.y + Velocity.y*Time + Curvature/10000*(Time*Time);
 	return n;
 }
 
@@ -150,7 +150,7 @@ enum
 	HOOK_RETRACT_END=3,
 	HOOK_FLYING,
 	HOOK_GRABBED,
-	
+
 	COREEVENT_GROUND_JUMP=0x01,
 	COREEVENT_AIR_JUMP=0x02,
 	COREEVENT_HOOK_LAUNCH=0x04,
@@ -167,7 +167,7 @@ public:
 	{
 		mem_zero(m_apCharacters, sizeof(m_apCharacters));
 	}
-	
+
 	CTuningParams m_Tuning;
 	class CCharacterCore *m_apCharacters[MAX_CLIENTS];
 };
@@ -179,26 +179,26 @@ class CCharacterCore
 public:
 	vec2 m_Pos;
 	vec2 m_Vel;
-	
+
 	vec2 m_HookPos;
 	vec2 m_HookDir;
 	int m_HookTick;
 	int m_HookState;
 	int m_HookedPlayer;
-	
+
 	int m_Jumped;
-	
+
 	int m_Direction;
 	int m_Angle;
 	CNetObj_PlayerInput m_Input;
-	
+
 	int m_TriggeredEvents;
-	
+
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
 	void Move();
-	
+
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);
 	void Quantize();

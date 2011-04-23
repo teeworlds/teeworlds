@@ -314,7 +314,7 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 
 				pAcc->Head()->m_FailCount++;
 				char aIP[16];
-				GameContext()->Server()->GetClientIP(pPlayer->GetCID(), aIP, sizeof aIP);
+				GameContext()->Server()->GetClientAddr(pPlayer->GetCID(), aIP, sizeof aIP);
 				str_copy(pAcc->Head()->m_FailIP[FailInd], aIP, sizeof (pAcc->Head()->m_FailIP[FailInd]));
 				pAcc->Head()->m_FailDate[FailInd] = time_timestamp();
 				pAcc->Write();
@@ -347,7 +347,7 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 			str_format(aBuf, sizeof aBuf, "Login successful. Last login from %s at %s.", pAcc->Head()->m_LastLoginIP, aTmp);
 
 			pAcc->Head()->m_LastLoginDate = time_timestamp();
-			GameContext()->Server()->GetClientIP(pPlayer->GetCID(), pAcc->Head()->m_LastLoginIP, sizeof (pAcc->Head()->m_LastLoginIP));
+			GameContext()->Server()->GetClientAddr(pPlayer->GetCID(), pAcc->Head()->m_LastLoginIP, sizeof (pAcc->Head()->m_LastLoginIP));
 
 			pAcc->Write();
 

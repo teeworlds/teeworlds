@@ -31,18 +31,18 @@ static void SendHeartBeats()
 {
 	static unsigned char aData[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
 	CNetChunk Packet;
-	
+
 	mem_copy(aData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
-	
+
 	Packet.m_ClientID = -1;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	Packet.m_DataSize = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
 	Packet.m_pData = &aData;
 
-	/* supply the set port that the master can use if it has problems */	
+	/* supply the set port that the master can use if it has problems */
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)] = 0;
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)+1] = 0;
-	
+
 	for(int i = 0; i < NumMasters; i++)
 	{
 		Packet.m_Address = aMasterServers[i];
@@ -66,9 +66,10 @@ static void WriteInt(int i)
 
 static void BuildInfoMsg()
 {
-	aInfoMsgSize = sizeof(SERVERBROWSE_OLD_INFO);
-	mem_copy(aInfoMsg, SERVERBROWSE_OLD_INFO, aInfoMsgSize);
-	
+	aInfoMsgSize = sizeof(SERVERBROWSE_INFO);
+	mem_copy(aInfoMsg, SERVERBROWSE_INFO, aInfoMsgSize);
+	WriteInt(-1);
+
 	WriteStr(pVersion);
 	WriteStr(pServerName);
 	WriteStr(pMap);
@@ -77,7 +78,7 @@ static void BuildInfoMsg()
 	WriteInt(Progression);
 	WriteInt(NumPlayers);
 	WriteInt(MaxPlayers);
-	
+
 	for(int i = 0; i < NumPlayers; i++)
 	{
 		WriteStr(PlayerNames[i]);
@@ -111,10 +112,10 @@ static int Run()
 {
 	int64 NextHeartBeat = 0;
 	NETADDR BindAddr = {NETTYPE_IPV4, {0},0};
-	
+
 	if(!pNet->Open(BindAddr, 0, 0, 0))
 		return 0;
-	
+
 	while(1)
 	{
 		CNetChunk p;
@@ -123,8 +124,8 @@ static int Run()
 		{
 			if(p.m_ClientID == -1)
 			{
-				if(p.m_DataSize == sizeof(SERVERBROWSE_OLD_GETINFO) &&
-					mem_comp(p.m_pData, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
+				if(p.m_DataSize == sizeof(SERVERBROWSE_GETINFO) &&
+					mem_comp(p.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
 					SendServerInfo(&p.m_Address);
 				}
@@ -135,14 +136,14 @@ static int Run()
 				}
 			}
 		}
-		
+
 		/* send heartbeats if needed */
 		if(NextHeartBeat < time_get())
 		{
 			NextHeartBeat = time_get()+time_freq()*(15+(rand()%15));
 			SendHeartBeats();
 		}
-		
+
 		thread_sleep(100);
 	}
 }
@@ -150,7 +151,7 @@ static int Run()
 int main(int argc, char **argv)
 {
 	pNet = new CNetServer;
-	
+
 	while(argc)
 	{
 		// ?
@@ -199,13 +200,13 @@ int main(int argc, char **argv)
 			argc--; argv++;
 			pServerName = *argv;
 		}
-		
+
 		argc--; argv++;
 	}
-	
+
 	BuildInfoMsg();
 	int RunReturn = Run();
-	
+
 	delete pNet;
 	return RunReturn;
 }

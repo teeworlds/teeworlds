@@ -41,7 +41,7 @@ protected:
 
 	int KeyWasPressed(int Key) { return m_aInputState[m_InputCurrent^1][Key]; }
 
-public:	
+public:
 	enum
 	{
 		FLAG_PRESS=1,
@@ -53,7 +53,7 @@ public:
 	int NumEvents() const { return m_NumEvents; }
 	void ClearEvents() { m_NumEvents = 0; }
 	CEvent GetEvent(int Index) const
-	{ 
+	{
 		if(Index < 0 || Index >= m_NumEvents)
 		{
 			IInput::CEvent e = {0,0};
@@ -61,19 +61,19 @@ public:
 		}
 		return m_aInputEvents[Index];
 	}
-	
+
 	// keys
 	int KeyPressed(int Key) { return m_aInputState[m_InputCurrent][Key]; }
 	int KeyReleases(int Key) { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
 	int KeyPresses(int Key) { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
 	int KeyDown(int Key) { return KeyPressed(Key)&&!KeyWasPressed(Key); }
 	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
-	
+
 	//
 	virtual void MouseModeRelative() = 0;
 	virtual void MouseModeAbsolute() = 0;
 	virtual int MouseDoubleClick() = 0;
-	
+
 	virtual void MouseRelative(float *x, float *y) = 0;
 };
 

@@ -7,56 +7,20 @@
 %ds left
 == Jeszcze %d
 
-%s Right click for context menu.
-== %s Prawy przycisk myszy aby włączyć menu.
-
 Abort
 == Anuluj
-
-Add
-== Dodaj
-
-Add Image
-== Dodaj obrazek
-
-Add Quad
-== Dodaj Quad
-
-Add group
-== Dodaj grupę
-
-Add quads layer
-== Dodaj warstwę quad
-
-Add tile layer
-== Dodaj warstwę tile
 
 Address
 == Adres
 
-Adds a new group
-== Dodaje nową grupę
-
-Adds a new quad
-== Dodaje nowy quad
-
 All
-== Wszystki
+== Wszyscy
 
 Alpha
 == Alfa
 
 Always show name plates
 == Zawsze pokazuj nicki
-
-Anim
-== Animacja
-
-Append
-== Importuj
-
-Append map
-== Importuje mapę
 
 Are you sure that you want to quit?
 == Czy na pewno chcesz opuścić grę?
@@ -73,38 +37,14 @@ Blue team wins!
 Body
 == Ciało
 
-Border
-== Granice
-
-CCW
-== CCW
-
-CW
-== CW
-
 Call vote
 == Głosowanie
-
-Cancel
-== Anuluj
 
 Chat
 == Chat
 
-Clear collision
-== Wyczyść kolizję
-
 Close
 == Zamknij
-
-Color Env
-== Color Env
-
-Color TO
-== Color TO
-
-Color+
-== Kolor+
 
 Compatible version
 == Kompatybilna wersja
@@ -121,26 +61,8 @@ Connection Problems...
 Console
 == Konsola
 
-Constructs collision from this layer
-== Tworzy kolizję z tej warstwy
-
 Controls
 == Sterowanie
-
-Creates a new color envelope
-== Tworzy nowy kolor animacji
-
-Creates a new map
-== Tworzy nową mapę
-
-Creates a new pos envelope
-== Tworzy nową pozycję animacji
-
-Creates a new quad layer
-== Tworzy nową warstwę quad
-
-Creates a new tile layer
-== Tworzy nową warstwę tile
 
 Current
 == Aktualnie
@@ -151,32 +73,11 @@ Current version: %s
 Custom colors
 == Własne kolory
 
-Decrease
-== Zmniejsz
-
-Decrease animation speed
-== Zmniejsz prędkość animacji
-
 Delete
 == Usuń
 
-Delete group
-== Usuń grupę
-
-Delete layer
-== Usuń warstwę
-
-Deletes the current quad
-== Usuwa bieżący quad
-
-Deletes the layer
-== Usuwa warstwę
-
 Demos
 == Dema
-
-Detail
-== Szczegóły
 
 Disconnect
 == Rozłącz
@@ -196,35 +97,17 @@ Draw!
 Dynamic Camera
 == Dynamiczna kamera
 
-Embed
-== Zintegruj
-
-Embedded
-== Zintegrowany
-
-Embeds the image into the map file.
-== Integruje obrazek z plikiem mapy.
-
 Emoticon
 == Emotikonka
 
 Enter
 == Wejdź
 
-Envelopes
-== Animacje
-
 Error
 == Błąd
 
 Error loading demo
 == Błąd przy ładowaniu demo
-
-Exits from the editor
-== Wyjście z edytora
-
-External
-== Zewnętrzny
 
 FSAA samples
 == próbki FSAA (anti-aliasing)
@@ -237,12 +120,6 @@ Favorites
 
 Feet
 == Stopy
-
-File
-== Plik
-
-Filename:
-== Nazwa pliku:
 
 Filter
 == Filtr
@@ -280,20 +157,11 @@ Graphics
 Grenade
 == Granatnik
 
-Group
-== Grupa
-
-HD
-== HD
-
 Hammer
 == Młot
 
 Has people playing
 == Nie pokazuj pustych
-
-Height
-== Wysokość
 
 High Detail
 == Wysoka jakość obrazu
@@ -306,18 +174,6 @@ Host address
 
 Hue
 == Kolor
-
-Image
-== Obrazek
-
-Images
-== Obrazki
-
-Increase
-== Zwiększ
-
-Increase animation speed
-== Zwiększ prędkość animacji
 
 Info
 == Info
@@ -337,41 +193,20 @@ Join red
 Jump
 == Skok
 
-Kick
-== Kopnięcie
-
 LAN
 == LAN
 
 Language
 == Język
 
-Layers
-== Warstwy
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Lewy przycisk myszy aby się poruszać. Przytrzymaj Shift aby przesuwać oś. Przytrzymaj Ctrl aby obrócić.
-
-Left mouse button to move. Hold shift to move the texture.
-== Lewy przycisk myszy aby się poruszać. Przytrzymaj Shift aby przesuwać teksturę.
-
 Lht.
 == Jasn.
-
-Load a new image to use in the map
-== Wybierz nowy obrazek do tej mapy:
 
 Loading
 == Ładowanie
 
 MOTD
 == Wiadomość dnia
-
-Make collision
-== Stwórz kolizję
-
-Make external
-== Użyj jako zewnętrzny
 
 Map
 == Mapa
@@ -400,17 +235,8 @@ Mute when not active
 Name
 == Nick
 
-Name:
-== Nazwa:
-
-New
-== Nowy
-
 News
 == News
-
-Next Envelope
-== Następna animacja
 
 Next weapon
 == Następna broń
@@ -430,26 +256,11 @@ No servers found
 No servers match your filter criteria
 == Nie znaleziono serwerów spełniających twoje kryteria
 
-None
-== Brak
-
-Normal animation speed
-== Normalna prędkość animacji
-
 Ok
 == OK
 
 Open
 == Otwórz
-
-Opens a map and adds everything from that map to the current one
-== Otwiera mapę i dodaje wszystko z tamtej mapy do bieżącej.
-
-Opens a map for editing
-== Otwiera mapę do edycji
-
-Order
-== Kolejność
 
 Password
 == Hasło
@@ -475,26 +286,8 @@ Players
 Please balance teams!
 == Konieczne wyrównanie drużyn!
 
-Pos. Env
-== Pos. Env
-
-Pos. TO
-== Pos. TO
-
-Pos.+
-== Poz.+
-
-Press right mouse button to create a new point
-== Prawy przycisk myszy aby utworzyć nowy punkt
-
 Prev. weapon
 == Poprzednia broń
-
-Previous Envelope
-== Poprzednia animacja
-
-Proof
-== Test
 
 Quality Textures
 == Szczegółowe tekstury
@@ -520,27 +313,6 @@ Refreshing master servers
 Remote console
 == Zdalna konsola
 
-Remove
-== Usuń
-
-Removes collision from this layer
-== Usuwa kolizję z tej warstwy
-
-Removes the image from the map
-== Usuwa obrazek z mapy
-
-Removes the image from the map file.
-== Usuwa obrazek z pliku mapy.
-
-Replace
-== Zamień
-
-Replace Image
-== Zamień obrazek
-
-Replaces the image with a new one
-== Zamienia obrazek na nowy
-
 Reset filter
 == Domyślne filtry
 
@@ -559,21 +331,6 @@ Sample rate
 Sat.
 == Nasyc.
 
-Save
-== Zapisz
-
-Save As
-== Zapisz jako
-
-Save map
-== Zapisz mapę
-
-Saves the current map
-== Zapisuje bieżącą mapę
-
-Saves the current map under a new name
-== Zapisuje bieżącą mapę pod nową nazwą
-
 Score
 == Wynik
 
@@ -589,20 +346,11 @@ Scoreboard
 Screenshot
 == Screenshot
 
-Select group. Right click for properties.
-== Wybierz grupę. Prawy przycisk myszy da więcej informacji.
-
-Select image
-== Wybierz obrazek
-
-Select layer. Right click for properties.
-== Wybierz warstwę. Prawy przycisk myszy da więcej informacji.
-
 Server details
 == Szczegóły serwera
 
 Server info
-== Informacje o serwerze
+== Server info
 
 Server not full
 == Nie pokazuj pełnych
@@ -637,12 +385,6 @@ Spectate
 Spectators
 == Obserwatorzy
 
-Square
-== Kwadrat
-
-Squares the current quad
-== Zmienia bieżący quad w kwadrat
-
 Standard gametype
 == Standardowy typ gry
 
@@ -651,12 +393,6 @@ Standard map
 
 Sudden Death
 == Nagła śmierć
-
-Switch between images and layers managment.
-== Przełącz pomiędzy widokiem obrazków i warstw.
-
-Switch curve type
-== Przełącz typ krzywej
 
 Switch weapon on pickup
 == Zmień broń po podniesieniu
@@ -679,15 +415,6 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Limit czasu
 
-Toggle group visibility
-== Zmień widzialność grupy
-
-Toggle layer visibility
-== Przełącz widoczność warstwy
-
-Toggles the envelope editor.
-== Włącza edytor animacji.
-
 Try again
 == Ponów próbę
 
@@ -696,12 +423,6 @@ Type
 
 UI Color
 == Kolor menu
-
-Use left mouse button to drag and create a brush.
-== Lewy przycisk myszy aby przesuwać i tworzyć pędzel.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Lewy przycisk myszy aby malować bieżącym pędzlem. Prawy przycisk myszy czyści pędzel.
 
 Use sounds
 == Włącz dźwięki
@@ -730,9 +451,6 @@ Weapon
 Welcome to Teeworlds
 == Witaj w Teeworlds
 
-Width
-== Szerokość
-
 Yes
 == Tak
 
@@ -742,43 +460,10 @@ You must restart the game for all settings to take effect.
 Your skin
 == Twój wygląd
 
-ZI
-== Przybliż
-
-ZO
-== Oddal
-
-[M] Flip brush vertical
-== [M] Obróć pędzel pionowo
-
-[N] Flip brush horizontal
-== [N] Obróć pędzel poziomo
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Normalny rozmiar
-
-[NumPad+] Zoom in
-== [NumPad+] Przybliż
-
-[NumPad-] Zoom out
-== [NumPad-] Oddal
-
-[R] Rotates the brush counter clockwise
-== [R] Obraca pędzel odwrotnie do wskazówek zegara
-
-[T] Rotates the brush clockwise
-== [T] Obraca pędzel zgodnie ze wskazówkami zegara
-
-[ctrl+h] Toggle High Detail
-== [Ctrl+H] Przełącz jakość obrazu
-
-[ctrl+m] Toggle animation
-== [Ctrl+M] Przełącz animacje
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [Ctrl+P] Przełącza granice testowania. Te granice pokazują, ile najwięcej może zobaczyć gracz.
-
 ##### needs translation #####
+
+%d Bytes
+== 
 
 %d%% loaded
 == 
@@ -795,13 +480,22 @@ ZO
 %i seconds left
 == 
 
-Alpha value of the envelope
+%s wins!
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
 == 
 
 Are you sure that you want to delete the demo?
 == 
 
-Aspect ratio
+Are you sure that you want to remove the player from your friends list?
 == 
 
 Automatically record demos
@@ -810,64 +504,52 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
-Blue value of the envelope
+Change settings
 == 
 
-Clip H
+Clan
 == 
 
-Clip W
+Client
 == 
 
-Clip X
+Count players only
 == 
 
-Clip Y
+Country
 == 
 
-Color
+Crc:
+== 
+
+Created:
 == 
 
 Delete demo
 == 
 
-Delete this envelope
-== 
-
-Down
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Exit
-== 
-
-File: %s
+Demo details
 == 
 
 Folder
 == 
 
-Green value of the envelope
+Free-View
+== 
+
+Friends
 == 
 
 Invalid Demo
 == 
 
-Left
+Kick player
 == 
 
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+Length:
 == 
 
-Load
-== 
-
-Load map
+Map:
 == 
 
 Max Screenshots
@@ -876,31 +558,31 @@ Max Screenshots
 Max demos
 == 
 
+Move player to spectators
+== 
+
 Name plates size
 == 
 
-New folder
+Netversion:
 == 
 
-Para X
-== 
-
-Para Y
+New name:
 == 
 
 Parent Folder
 == 
 
-Pos X
+Play background music
 == 
 
-Pos Y
+Player options
 == 
 
-Quads
+Quit anyway?
 == 
 
-REC
+REC %3d:%02d
 == 
 
 Reason:
@@ -909,28 +591,43 @@ Reason:
 Record demo
 == 
 
-Red value of the envelope
+Remove
 == 
 
-Refocus
+Remove friend
 == 
 
-Resizes the current Quad based on the aspect ratio of the image
+Rename
 == 
 
-Right
+Rename demo
 == 
 
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+Server address:
 == 
 
-Rotation of the envelope
+Server filter
 == 
 
-Shift
+Show friends
+== 
+
+Show ingame HUD
+== 
+
+Size:
 == 
 
 Sound error
+== 
+
+Spectate next
+== 
+
+Spectate previous
+== 
+
+Spectator mode
 == 
 
 Stop record
@@ -939,34 +636,31 @@ Stop record
 The audio device couldn't be initialised.
 == 
 
-Tiles
+There's an unsaved map in the editor, you might want to save it before you quit the game.
 == 
 
 Time limit: %d min
 == 
 
+Type:
+== 
+
 Unable to delete the demo
 == 
 
-Up
+Unable to rename the demo
 == 
 
-Use Clipping
+Use team colors for name plates
 == 
 
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
+Version:
 == 
 
-Use left mouse button to drag and change the value. Hold shift to be more precise.
+Vote command:
 == 
 
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-[HOME] Restore map focus
+Vote description:
 == 
 
 no limit

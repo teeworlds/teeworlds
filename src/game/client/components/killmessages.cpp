@@ -21,7 +21,7 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		
+
 		// unpack messages
 		CKillMsg Kill;
 		Kill.m_VictimID = pMsg->m_Victim;
@@ -69,8 +69,8 @@ void CKillMessages::OnRender()
 
 		// render victim tee
 		x -= 24.0f;
-		
-		if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_FLAGS)
+
+		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS)
 		{
 			if(m_aKillmsgs[r].m_ModeSpecial&1)
 			{
@@ -82,17 +82,17 @@ void CKillMessages::OnRender()
 					RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
 				else
 					RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-				
+
 				float Size = 56.0f;
 				IGraphics::CQuadItem QuadItem(x, y-16, Size/2, Size);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();					
+				Graphics()->QuadsEnd();
 			}
 		}
-		
+
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_VictimRenderInfo, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 		x -= 32.0f;
-		
+
 		// render weapon
 		x -= 44.0f;
 		if (m_aKillmsgs[r].m_Weapon >= 0)
@@ -107,7 +107,7 @@ void CKillMessages::OnRender()
 
 		if(m_aKillmsgs[r].m_VictimID != m_aKillmsgs[r].m_KillerID)
 		{
-			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_FLAGS)
+			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS)
 			{
 				if(m_aKillmsgs[r].m_ModeSpecial&2)
 				{
@@ -119,14 +119,14 @@ void CKillMessages::OnRender()
 						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
 					else
 						RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
-					
+
 					float Size = 56.0f;
 					IGraphics::CQuadItem QuadItem(x-56, y-16, Size/2, Size);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();				
+					Graphics()->QuadsEnd();
 				}
-			}				
-			
+			}
+
 			// render killer tee
 			x -= 24.0f;
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_KillerRenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
@@ -137,6 +137,6 @@ void CKillMessages::OnRender()
 			TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
 		}
 
-		y += 44;
+		y += 46.0f;
 	}
 }

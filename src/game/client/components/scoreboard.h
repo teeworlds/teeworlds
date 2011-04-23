@@ -12,9 +12,11 @@ class CScoreboard : public CComponent
 	void RenderRecordingNotification(float x);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
-	
+
+	const char *GetClanName(int Team);
+
 	bool m_Active;
-	
+
 public:
 	CScoreboard();
 	virtual void OnReset();

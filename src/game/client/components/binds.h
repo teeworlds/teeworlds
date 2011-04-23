@@ -9,34 +9,34 @@ class CBinds : public CComponent
 {
 	char m_aaKeyBindings[KEY_LAST][128];
 
-	int GetKeyId(const char *pKeyName);
+	int GetKeyID(const char *pKeyName);
 
 	static void ConBind(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnbind(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnbindAll(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpBinds(IConsole::IResult *pResult, void *pUserData);
 	class IConsole *GetConsole() const { return Console(); }
-	
+
 	static void ConfigSaveCallback(class IConfig *pConfig, void *pUserData);
-	
+
 public:
 	CBinds();
-	
+
 	class CBindsSpecial : public CComponent
 	{
 	public:
 		CBinds *m_pBinds;
 		virtual bool OnInput(IInput::CEvent Event);
 	};
-	
+
 	CBindsSpecial m_SpecialBinds;
-	
-	void Bind(int KeyId, const char *pStr);
+
+	void Bind(int KeyID, const char *pStr);
 	void SetDefaults();
 	void UnbindAll();
-	const char *Get(int KeyId);
+	const char *Get(int KeyID);
 	const char *GetKey(const char *pBindStr);
-	
+
 	virtual void OnConsoleInit();
 	virtual bool OnInput(IInput::CEvent Event);
 };

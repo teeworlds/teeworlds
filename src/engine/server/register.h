@@ -44,7 +44,7 @@ class CRegister
 public:
 	CRegister();
 	void Init(class CNetServer *pNetServer, class IEngineMasterServer *pMasterServer, class IConsole *pConsole);
-	void RegisterUpdate();
+	void RegisterUpdate(int Nettype);
 	int RegisterProcessPacket(class CNetChunk *pPacket);
 };
 

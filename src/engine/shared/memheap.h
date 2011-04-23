@@ -11,20 +11,20 @@ class CHeap
 		char *m_pEnd;
 		CChunk *m_pNext;
 	};
-	
+
 	enum
 	{
 		// how large each chunk should be
 		CHUNK_SIZE = 1025*64,
 	};
-	
+
 	CChunk *m_pCurrent;
-	
-	
+
+
 	void Clear();
 	void NewChunk();
 	void *AllocateFromChunk(unsigned int Size);
-	
+
 public:
 	CHeap();
 	~CHeap();

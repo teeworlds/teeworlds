@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <engine/storage.h>
-#include "engine.h"
 #include "linereader.h"
 
 // compiled-in data-dir path
@@ -22,7 +21,7 @@ public:
 	char m_aDatadir[MAX_PATH_LENGTH];
 	char m_aUserdir[MAX_PATH_LENGTH];
 	char m_aCurrentdir[MAX_PATH_LENGTH];
-	
+
 	CStorage()
 	{
 		mem_zero(m_aaStoragePaths, sizeof(m_aaStoragePaths));
@@ -30,7 +29,7 @@ public:
 		m_aDatadir[0] = 0;
 		m_aUserdir[0] = 0;
 	}
-	
+
 	int Init(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		// get userdir
@@ -86,7 +85,7 @@ public:
 				str_append(aBuffer, "/storage.cfg", sizeof(aBuffer));
 				File = io_open(aBuffer, IOFLAG_READ);
 			}
-			
+
 			if(Pos >= MAX_PATH_LENGTH || !File)
 			{
 				dbg_msg("storage", "couldn't open storage.cfg");
@@ -152,7 +151,7 @@ public:
 			}
 		}
 	}
-		
+
 	void FindDatadir(const char *pArgv0)
 	{
 		// 1) use data-dir in PWD if present
@@ -161,35 +160,35 @@ public:
 			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
 			return;
 		}
-		
+
 		// 2) use compiled-in data-dir if present
 		if(fs_is_dir(DATA_DIR "/mapres"))
 		{
 			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
 			return;
 		}
-		
+
 		// 3) check for usable path in argv[0]
 		{
 			unsigned int Pos = ~0U;
 			for(unsigned i = 0; pArgv0[i]; i++)
 				if(pArgv0[i] == '/' || pArgv0[i] == '\\')
 					Pos = i;
-			
+
 			if(Pos < MAX_PATH_LENGTH)
 			{
 				char aBaseDir[MAX_PATH_LENGTH];
 				str_copy(aBaseDir, pArgv0, Pos+1);
 				str_format(m_aDatadir, sizeof(m_aDatadir), "%s/data", aBaseDir);
 				str_append(aBaseDir, "/data/mapres", sizeof(aBaseDir));
-				
+
 				if(fs_is_dir(aBaseDir))
 					return;
 				else
 					m_aDatadir[0] = 0;
 			}
 		}
-		
+
 	#if defined(CONF_FAMILY_UNIX)
 		// 4) check for all default locations
 		{
@@ -201,7 +200,7 @@ public:
 				"/opt/teeworlds/data"
 			};
 			const int DirsCount = sizeof(aDirs) / sizeof(aDirs[0]);
-			
+
 			int i;
 			for (i = 0; i < DirsCount; i++)
 			{
@@ -215,7 +214,7 @@ public:
 			}
 		}
 	#endif
-		
+
 		// no data-dir found
 		dbg_msg("storage", "warning no data directory found");
 	}
@@ -241,7 +240,7 @@ public:
 		str_format(pBuffer, BufferSize, "%s%s%s", m_aaStoragePaths[Type], !m_aaStoragePaths[Type][0] ? "" : "/", pDir);
 		return pBuffer;
 	}
-	
+
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
@@ -250,7 +249,7 @@ public:
 			pBuffer = aBuffer;
 			BufferSize = sizeof(aBuffer);
 		}
-		
+
 		if(Flags&IOFLAG_WRITE)
 		{
 			return io_open(GetPath(TYPE_SAVE, pFilename, pBuffer, BufferSize), Flags);
@@ -277,11 +276,80 @@ public:
 					return Handle;
 			}
 		}
-		
+
 		pBuffer[0] = 0;
-		return 0;		
+		return 0;
 	}
- 	
+
+	struct CFindCBData
+	{
+		CStorage *pStorage;
+		const char *pFilename;
+		const char *pPath;
+		char *pBuffer;
+		int BufferSize;
+	};
+
+	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
+	{
+		CFindCBData Data = *static_cast<CFindCBData *>(pUser);
+		if(IsDir)
+		{
+			if(pName[0] == '.')
+				return 0;
+
+			// search within the folder
+			char aBuf[MAX_PATH_LENGTH];
+			char aPath[MAX_PATH_LENGTH];
+			str_format(aPath, sizeof(aPath), "%s/%s", Data.pPath, pName);
+			Data.pPath = aPath;
+			fs_listdir(Data.pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+			if(Data.pBuffer[0])
+				return 1;
+		}
+		else if(!str_comp(pName, Data.pFilename))
+		{
+			// found the file = end
+			str_format(Data.pBuffer, Data.BufferSize, "%s/%s", Data.pPath, Data.pFilename);
+			return 1;
+		}
+
+		return 0;
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize)
+	{
+		if(BufferSize < 1)
+			return false;
+
+		pBuffer[0] = 0;
+		char aBuf[MAX_PATH_LENGTH];
+		CFindCBData Data;
+		Data.pStorage = this;
+		Data.pFilename = pFilename;
+		Data.pPath = pPath;
+		Data.pBuffer = pBuffer;
+		Data.BufferSize = BufferSize;
+
+		if(Type == TYPE_ALL)
+		{
+			// search within all available directories
+			for(int i = 0; i < m_NumPaths; ++i)
+			{
+				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
+				if(pBuffer[0])
+					return true;
+			}
+		}
+		else if(Type >= 0 && Type < m_NumPaths)
+		{
+			// search within wanted directory
+			fs_listdir(GetPath(Type, pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+		}
+
+		return pBuffer[0] != 0;
+	}
+
 	virtual bool RemoveFile(const char *pFilename, int Type)
 	{
 		if(Type < 0 || Type >= m_NumPaths)

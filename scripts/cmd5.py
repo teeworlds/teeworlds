@@ -1,6 +1,6 @@
 import hashlib, sys, re
 
-alphanum = "0123456789abcdefghijklmnopqrstuvwzyxABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+alphanum = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".encode()
 
 def cstrip(lines):
 	d = "".encode()
@@ -12,15 +12,15 @@ def cstrip(lines):
 	d = d.replace("\t".encode(), " ".encode()) # tab to space
 	d = re.sub("  *".encode(), " ".encode(), d) # remove double spaces
 	d = re.sub("".encode(), "".encode(), d) # remove /* */ comments
-	
+
 	d = d.strip()
-	
+
 	# this eats up cases like 'n {'
 	i = 1
 	while i < len(d)-2:
-		if d[i:i + 1] == " ":
-			if not (d[i-1:i] in alphanum and d[i+1:i + 2] in alphanum):
-				d = d[:i] + d[i+1:]
+		if d[i:i + 1] == " ".encode():
+			if not (d[i - 1:i] in alphanum and d[i+1:i + 2] in alphanum):
+				d = d[:i] + d[i + 1:]
 		i += 1
 	return d
 
@@ -29,9 +29,8 @@ for filename in sys.argv[2:]:
 	f += cstrip([l.strip() for l in open(filename, "rb")])
 
 hash = hashlib.md5(f).hexdigest().lower()[16:]
-# TODO: refactor hash that is equal to the 0.5 hash, remove when we 
-# TODO: remove when we don't need it any more
-if sys.argv[1] == "GAME_NETVERSION_HASH" and hash == "f16c2456fc487748":
-	hash = "b67d1f1a1eea234e"
+#TODO 0.7: improve nethash creation
+if sys.argv[1] == "GAME_NETVERSION_HASH" and hash == "6e28a475de43adfd":
+	hash = "626fce9a778df4d4"
 hash = sys.argv[1] + ' "' + hash + '"'
 print('#define %s' % hash)

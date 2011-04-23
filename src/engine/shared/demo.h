@@ -4,17 +4,9 @@
 #define ENGINE_SHARED_DEMO_H
 
 #include <engine/demo.h>
-#include "snapshot.h"
+#include <engine/shared/protocol.h>
 
-struct CDemoHeader
-{
-	unsigned char m_aMarker[7];
-	unsigned char m_Version;
-	char m_aNetversion[64];
-	char m_aMap[64];
-	unsigned char m_aCrc[4];
-	char m_aType[8];
-};
+#include "snapshot.h"
 
 class CDemoRecorder : public IDemoRecorder
 {
@@ -25,13 +17,13 @@ class CDemoRecorder : public IDemoRecorder
 	int m_FirstTick;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	class CSnapshotDelta *m_pSnapshotDelta;
-	
+
 	void WriteTickMarker(int Tick, int Keyframe);
 	void Write(int Type, const void *pData, int Size);
 public:
 	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta);
-	
-	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, int MapCrc, const char *pType);
+
+	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, unsigned MapCrc, const char *pType);
 	int Stop();
 
 	void RecordSnapshot(int Tick, const void *pData, int Size);
@@ -39,7 +31,7 @@ public:
 
 	bool IsRecording() const { return m_File != 0; }
 
-	int TickCount() const { return m_LastTickMarker - m_FirstTick; }
+	int Length() const { return (m_LastTickMarker - m_FirstTick)/SERVER_TICK_SPEED; }
 };
 
 class CDemoPlayer : public IDemoPlayer
@@ -52,21 +44,21 @@ public:
 		virtual void OnDemoPlayerSnapshot(void *pData, int Size) = 0;
 		virtual void OnDemoPlayerMessage(void *pData, int Size) = 0;
 	};
-	
+
 	struct CPlaybackInfo
 	{
 		CDemoHeader m_Header;
-		
+
 		IDemoPlayer::CInfo m_Info;
 
 		int64 m_LastUpdate;
 		int64 m_CurrentTime;
-		
+
 		int m_SeekablePoints;
-		
+
 		int m_NextTick;
 		int m_PreviousTick;
-		
+
 		float m_IntraTick;
 		float m_TickTime;
 	};
@@ -81,12 +73,12 @@ private:
 		long m_Filepos;
 		int m_Tick;
 	};
-		
+
 	struct CKeyFrameSearch
 	{
 		CKeyFrame m_Frame;
 		CKeyFrameSearch *m_pNext;
-	};	
+	};
 
 	class IConsole *m_pConsole;
 	IOHANDLE m_File;
@@ -94,6 +86,7 @@ private:
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
+	int m_DemoType;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	int m_LastSnapshotDataSize;
 	class CSnapshotDelta *m_pSnapshotDelta;
@@ -104,24 +97,25 @@ private:
 	int NextFrame();
 
 public:
-	
+
 	CDemoPlayer(class CSnapshotDelta *m_pSnapshotDelta);
-	
+
 	void SetListner(IListner *pListner);
-		
+
 	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType);
 	int Play();
 	void Pause();
 	void Unpause();
-	int Stop();	
+	int Stop();
 	void SetSpeed(float Speed);
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	char *GetDemoName();
-	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const;
-	
+	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
+	int GetDemoType() const;
+
 	int Update();
-	
+
 	const CPlaybackInfo *Info() const { return &m_Info; }
 	int IsPlaying() const { return m_File != 0; }
 };

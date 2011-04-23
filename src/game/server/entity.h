@@ -28,7 +28,7 @@
 	void *operator new(size_t Size, int id); \
 	void operator delete(void *p); \
 	private:
-	
+
 #define MACRO_ALLOC_POOL_ID_IMPL(POOLTYPE, PoolSize) \
 	static char ms_PoolData##POOLTYPE[PoolSize][sizeof(POOLTYPE)] = {{0}}; \
 	static int ms_PoolUsed##POOLTYPE[PoolSize] = {0}; \
@@ -49,7 +49,7 @@
 		ms_PoolUsed##POOLTYPE[id] = 0; \
 		mem_zero(ms_PoolData##POOLTYPE[id], sizeof(POOLTYPE)); \
 	}
-	
+
 /*
 	Class: Entity
 		Basic entity class.
@@ -61,21 +61,21 @@ class CEntity
 	friend class CGameWorld;	// entity list handling
 	CEntity *m_pPrevTypeEntity;
 	CEntity *m_pNextTypeEntity;
-	
+
 	class CGameWorld *m_pGameWorld;
 protected:
 	bool m_MarkedForDestroy;
-	int m_Id;
+	int m_ID;
 	int m_ObjType;
 public:
 	CEntity(CGameWorld *pGameWorld, int Objtype);
 	virtual ~CEntity();
-	
+
 	class CGameWorld *GameWorld() { return m_pGameWorld; }
 	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
 	class IServer *Server() { return GameWorld()->Server(); }
-	
-	
+
+
 	CEntity *TypeNext() { return m_pNextTypeEntity; }
 	CEntity *TypePrev() { return m_pPrevTypeEntity; }
 
@@ -84,14 +84,14 @@ public:
 			Destorys the entity.
 	*/
 	virtual void Destroy() { delete this; }
-		
+
 	/*
 		Function: reset
 			Called when the game resets the map. Puts the entity
 			back to it's starting state or perhaps destroys it.
 	*/
 	virtual void Reset() {}
-	
+
 	/*
 		Function: tick
 			Called progress the entity to the next tick. Updates
@@ -104,12 +104,12 @@ public:
 			Called after all entities tick() function has been called.
 	*/
 	virtual void TickDefered() {}
-	
+
 	/*
 		Function: snap
 			Called when a new snapshot is being generated for a specific
 			client.
-		
+
 		Arguments:
 			snapping_client - ID of the client which snapshot is
 				being generated. Could be -1 to create a complete
@@ -117,7 +117,7 @@ public:
 				recording.
 	*/
 	virtual void Snap(int SnappingClient) {}
-	
+
 	/*
 		Function: networkclipped(int snapping_client)
 			Performs a series of test to see if a client can see the
@@ -128,13 +128,13 @@ public:
 				being generated. Could be -1 to create a complete
 				snapshot of everything in the game for demo
 				recording.
-			
+
 		Returns:
 			Non-zero if the entity doesn't have to be in the snapshot.
 	*/
 	int NetworkClipped(int SnappingClient);
 	int NetworkClipped(int SnappingClient, vec2 CheckPos);
-	
+
 	bool GameLayerClipped(vec2 CheckPos);
 
 	/*
@@ -142,7 +142,7 @@ public:
 			Contains the physical size of the entity.
 	*/
 	float m_ProximityRadius;
-	
+
 	/*
 		Variable: pos
 			Contains the current posititon of the entity.

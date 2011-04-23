@@ -15,7 +15,12 @@
 
 #include "items.h"
 
-void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
+void CItems::OnReset()
+{
+	ExtraProjectilesNum = 0;
+}
+
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
 
 	// get positions
@@ -40,7 +45,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
 	if(Ct < 0)
 		return; // projectile havn't been shot yet
-		
+
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
@@ -49,33 +54,33 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
-	
+
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
 	vec2 Vel = Pos-PrevPos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), Client()->IntraGameTick());
-	
+
 
 	// add particle for this projectile
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
 		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
 		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
-		
+
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		{
 			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 			static float Time = 0;
 			static float LastLocalTime = Client()->LocalTime();
-		
+
 			if(!pInfo->m_Paused)
 				Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
-			
-			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemId);
-			
+
+			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemID);
+
 			LastLocalTime = Client()->LocalTime();
 		}
 		else
-			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemId);
+			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemID);
 	}
 	else
 	{
@@ -134,13 +139,13 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		static float Time = 0;
 		static float LastLocalTime = Client()->LocalTime();
-		
+
 		if(!pInfo->m_Paused)
 			Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
-			
+
 		Pos.x += cosf(Time*2.0f+Offset)*2.5f;
 		Pos.y += sinf(Time*2.0f+Offset)*2.5f;
-		
+
 		LastLocalTime = Client()->LocalTime();
 	}
 	else
@@ -152,7 +157,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Graphics()->QuadsEnd();
 }
 
-void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
+void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameData *pPrevGameData, const CNetObj_GameData *pCurGameData)
 {
 	float Angle = 0.0f;
 	float Size = 42.0f;
@@ -169,14 +174,21 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 	Graphics()->QuadsSetRotation(Angle);
 
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
-	
-	// make sure that the flag isn't interpolated between capture and return
-	if(pPrev->m_CarriedBy != pCurrent->m_CarriedBy)
-		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
-	// make sure to use predicted position if we are the carrier
-	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
-		Pos = m_pClient->m_LocalCharacterPos;
+	if(pCurGameData)
+	{
+		// make sure that the flag isn't interpolated between capture and return
+		if(pPrevGameData &&
+			((pCurrent->m_Team == TEAM_RED && pPrevGameData->m_FlagCarrierRed != pCurGameData->m_FlagCarrierRed) ||
+			(pCurrent->m_Team == TEAM_BLUE && pPrevGameData->m_FlagCarrierBlue != pCurGameData->m_FlagCarrierBlue)))
+			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+
+		// make sure to use predicted position if we are the carrier
+		if(m_pClient->m_Snap.m_pLocalInfo &&
+			((pCurrent->m_Team == TEAM_RED && pCurGameData->m_FlagCarrierRed == m_pClient->m_Snap.m_LocalClientID) ||
+			(pCurrent->m_Team == TEAM_BLUE && pCurGameData->m_FlagCarrierBlue == m_pClient->m_Snap.m_LocalClientID)))
+			Pos = m_pClient->m_LocalCharacterPos;
+	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -192,16 +204,16 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 	float Ms = (Ticks/50.0f) * 1000.0f;
-	float a =  Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
+	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
 	a = clamp(a, 0.0f, 1.0f);
 	float Ia = 1-a;
-	
+
 	vec2 Out, Border;
-	
+
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
-	
+
 	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
 	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
 
@@ -217,20 +229,20 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 			Pos.x+Out.x, Pos.y+Out.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
-	// do inner	
+	// do inner
 	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
 	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
 	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-	
+
 	Freeform = IGraphics::CFreeformItem(
 			From.x-Out.x, From.y-Out.y,
 			From.x+Out.x, From.y+Out.y,
 			Pos.x-Out.x, Pos.y-Out.y,
 			Pos.x+Out.x, Pos.y+Out.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
-		
+
 	Graphics()->QuadsEnd();
-	
+
 	// render head
 	{
 		Graphics()->BlendNormal();
@@ -248,12 +260,15 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
-	
-	Graphics()->BlendNormal();	
+
+	Graphics()->BlendNormal();
 }
 
 void CItems::OnRender()
 {
+	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+
 	int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 	for(int i = 0; i < Num; i++)
 	{
@@ -262,11 +277,11 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_Id);
+			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
 				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
 		}
@@ -284,22 +299,34 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
-			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if (pPrev)
-				RenderFlag((const CNetObj_Flag *)pPrev, (const CNetObj_Flag *)pData);
+			{
+				const void *pPrevGameData = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATA, m_pClient->m_Snap.m_GameDataSnapID);
+				RenderFlag(static_cast<const CNetObj_Flag *>(pPrev), static_cast<const CNetObj_Flag *>(pData),
+							static_cast<const CNetObj_GameData *>(pPrevGameData), m_pClient->m_Snap.m_pGameDataObj);
+			}
 		}
 	}
 
 	// render extra projectiles
-	/*
-	for(int i = 0; i < extraproj_num; i++)
+	for(int i = 0; i < ExtraProjectilesNum; i++)
 	{
-		if(extraproj_projectiles[i].start_tick < Client()->GameTick())
+		if(aExtraProjectiles[i].m_StartTick < Client()->GameTick())
 		{
-			extraproj_projectiles[i] = extraproj_projectiles[extraproj_num-1];
-			extraproj_num--;
+			aExtraProjectiles[i] = aExtraProjectiles[ExtraProjectilesNum-1];
+			ExtraProjectilesNum--;
 		}
 		else
-			render_projectile(&extraproj_projectiles[i], 0);
-	}*/
+			RenderProjectile(&aExtraProjectiles[i], 0);
+	}
+}
+
+void CItems::AddExtraProjectile(CNetObj_Projectile *pProj)
+{
+	if(ExtraProjectilesNum != MAX_EXTRA_PROJECTILES)
+	{
+		aExtraProjectiles[ExtraProjectilesNum] = *pProj;
+		ExtraProjectilesNum++;
+	}
 }

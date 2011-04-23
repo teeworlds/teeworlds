@@ -8,16 +8,17 @@
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
-	
-CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
+
+CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 {
 	m_pGameServer = pGameServer;
 	m_RespawnTick = Server()->Tick();
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
 	Character = 0;
-	this->m_ClientID = CID;
+	this->m_ClientID = ClientID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
 	m_pAccount = 0;
 }
@@ -58,7 +59,7 @@ void CPlayer::Tick()
 			m_Latency.m_AccumMax = 0;
 		}
 	}
-	
+
 	if(!Character && m_DieTick+Server()->TickSpeed()*3 <= Server()->Tick())
 		m_Spawning = true;
 
@@ -78,6 +79,23 @@ void CPlayer::Tick()
 		TryRespawn();
 }
 
+void CPlayer::PostTick()
+{
+	// update latency value
+	if(m_PlayerFlags&PLAYERFLAG_SCOREBOARD)
+	{
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+				m_aActLatency[i] = GameServer()->m_apPlayers[i]->m_Latency.m_Min;
+		}
+	}
+
+	// update view pos for spectators
+	if(m_Team == TEAM_SPECTATORS && m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID])
+		m_ViewPos = GameServer()->m_apPlayers[m_SpectatorID]->m_ViewPos;
+}
+
 void CPlayer::Snap(int SnappingClient)
 {
 #ifdef CONF_DEBUG
@@ -90,7 +108,9 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pClientInfo)
 		return;
 
-	StrToInts(&pClientInfo->m_Name0, 6, Server()->ClientName(m_ClientID));
+	StrToInts(&pClientInfo->m_Name0, 4, Server()->ClientName(m_ClientID));
+	StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
+	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
 	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
 	pClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
 	pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
@@ -100,25 +120,38 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pPlayerInfo)
 		return;
 
-	pPlayerInfo->m_Latency = m_Latency.m_Min;
-	pPlayerInfo->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
+	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
-	pPlayerInfo->m_ClientId = m_ClientID;
+	pPlayerInfo->m_ClientID = m_ClientID;
 	pPlayerInfo->m_Score = m_Score;
 	pPlayerInfo->m_Team = m_Team;
 
 	if(m_ClientID == SnappingClient)
-		pPlayerInfo->m_Local = 1;	
+		pPlayerInfo->m_Local = 1;
+
+	if(m_ClientID == SnappingClient && m_Team == TEAM_SPECTATORS)
+	{
+		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
+		if(!pSpectatorInfo)
+			return;
+
+		pSpectatorInfo->m_SpectatorID = m_SpectatorID;
+		pSpectatorInfo->m_X = m_ViewPos.x;
+		pSpectatorInfo->m_Y = m_ViewPos.y;
+	}
 }
 
-void CPlayer::OnDisconnect()
+void CPlayer::OnDisconnect(const char *pReason)
 {
 	KillCharacter();
 
 	if(Server()->ClientIngame(m_ClientID))
 	{
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf),  "'%s' has left the game", Server()->ClientName(m_ClientID));
+		if(pReason && *pReason)
+			str_format(aBuf, sizeof(aBuf), "'%s' has left the game (%s)", Server()->ClientName(m_ClientID), pReason);
+		else
+			str_format(aBuf, sizeof(aBuf), "'%s' has left the game", Server()->ClientName(m_ClientID));
 		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
@@ -134,13 +167,15 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
+	m_PlayerFlags = NewInput->m_PlayerFlags;
+
 	if(Character)
 		Character->OnDirectInput(NewInput);
 
 	if(!Character && m_Team != TEAM_SPECTATORS && (NewInput->m_Fire&1))
 		m_Spawning = true;
-	
-	if(!Character && m_Team == TEAM_SPECTATORS)
+
+	if(!Character && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
 
 	// check for activity
@@ -183,11 +218,11 @@ void CPlayer::SetTeam(int Team)
 	Team = GameServer()->m_pController->ClampTeam(Team);
 	if(m_Team == Team)
 		return;
-		
+
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));
-	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
-	
+	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+
 	KillCharacter();
 
 	m_Team = Team;
@@ -196,26 +231,29 @@ void CPlayer::SetTeam(int Team)
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	
+
 	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
+
+	if(Team == TEAM_SPECTATORS)
+	{
+		// update spectator modes
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_SpectatorID == m_ClientID)
+				GameServer()->m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
+		}
+	}
 }
 
 void CPlayer::TryRespawn()
 {
-	vec2 SpawnPos = vec2(100.0f, -60.0f);
-	
-	if(!GameServer()->m_pController->CanSpawn(this, &SpawnPos))
+	vec2 SpawnPos;
+
+	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
 		return;
 
-	// check if the position is occupado
-	CEntity *apEnts[2] = {0};
-	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, CGameWorld::ENTTYPE_CHARACTER);
-	
-	if(NumEnts == 0)
-	{
-		m_Spawning = false;
-		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
-		Character->Spawn(this, SpawnPos);
-		GameServer()->CreatePlayerSpawn(SpawnPos);
-	}
+	m_Spawning = false;
+	Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
+	Character->Spawn(this, SpawnPos);
+	GameServer()->CreatePlayerSpawn(SpawnPos);
 }

@@ -1,14 +1,44 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d tavua
+
 %d of %d servers, %d players
 == %d/%d palvelinta, %d pelaajaa
 
+%d%% loaded
+== %d%% ladattu
+
 %ds left
-== %ds poistui
+== %ds jäljellä
+
+%i minute left
+== %i minuutti jäljellä
+
+%i minutes left
+== %i minuuttia jäljellä
+
+%i second left
+== %i sekunti jäljellä
+
+%i seconds left
+== %i sekuntia jäljellä
+
+%s wins!
+== %s voitti!
+
+-Page %d-
+== -Sivu %d-
 
 Abort
 == Keskeytä
+
+Add
+== Lisää
+
+Add Friend
+== Lisää ystävä
 
 Address
 == Osoite
@@ -22,11 +52,23 @@ Alpha
 Always show name plates
 == Näytä nimikyltit aina
 
+Are you sure that you want to delete the demo?
+== Oletko varma, että haluat poistaa demon?
+
 Are you sure that you want to quit?
 == Oletko varma, että haluat lopettaa?
 
+Are you sure that you want to remove the player from your friends list?
+== Oletko varma, että haluat poistaa pelaajan ystävälistaltasi?
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Tämä on ensimmäinen kerta kun käynnistät pelin, ole hyvä ja kirjoita nimimerkkisi alle. On suositeltua, että tarkistat asetukset ja muutat niitä mielesi mukaan ennen kuin liityt palvelimille.
+
+Automatically record demos
+== Nauhoita demot automaattisesti
+
+Automatically take game over screenshot
+== Ota pelin jälkeinen kuvankaappaus autom.
 
 Blue team
 == Sininen joukkue
@@ -40,8 +82,17 @@ Body
 Call vote
 == Aloita äänestys
 
+Change settings
+== Muuta asetuksia
+
 Chat
 == Chatti
+
+Clan
+== Klaani
+
+Client
+== Asiakasohjelma
 
 Close
 == Sulje
@@ -64,6 +115,18 @@ Console
 Controls
 == Kontrollit
 
+Count players only
+== Laske vain pelaajat
+
+Country
+== Maa
+
+Crc:
+== Crc:
+
+Created:
+== Luotu:
+
 Current
 == Nykyinen
 
@@ -76,11 +139,17 @@ Custom colors
 Delete
 == Poista
 
+Delete demo
+== Poista demo
+
+Demo details
+== Demon tiedot
+
 Demos
 == Demot
 
 Disconnect
-== Katkaise yhteys
+== Katk. yhteys
 
 Disconnected
 == Yhteys katkaistu
@@ -127,8 +196,17 @@ Filter
 Fire
 == Ammu
 
+Folder
+== Kansio
+
 Force vote
-== Pakota äänestys
+== Päätä äänestys
+
+Free-View
+== Vapaa näkymä
+
+Friends
+== Ystävät
 
 Fullscreen
 == Koko näyttö
@@ -181,6 +259,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Epäkelpo demo
+
 Join blue
 == Liity sinisiin
 
@@ -193,14 +274,17 @@ Join red
 Jump
 == Hyppää
 
-Kick
-== Kick
+Kick player
+== Potkaise pelaaja
 
 LAN
 == LAN
 
 Language
 == Kieli
+
+Length:
+== Pituus:
 
 Lht.
 == Valoisuus
@@ -214,6 +298,15 @@ MOTD
 Map
 == Kenttä
 
+Map:
+== Kenttä:
+
+Max Screenshots
+== Kuvankaappausmaksimi
+
+Max demos
+== Demomaksimi
+
 Maximum ping:
 == Maksimiping:
 
@@ -226,6 +319,9 @@ Mouse sens.
 Move left
 == Liiku vasemmalle
 
+Move player to spectators
+== Siirrä pelaaja katsojaksi
+
 Move right
 == Liiku oikealle
 
@@ -237,6 +333,15 @@ Mute when not active
 
 Name
 == Nimi
+
+Name plates size
+== Nimikylttien koko
+
+Netversion:
+== Yhteysversio:
+
+New name:
+== Uusi nimi:
 
 News
 == Uutiset
@@ -257,10 +362,16 @@ No servers found
 == Palvelimia ei löytynyt
 
 No servers match your filter criteria
-== Yksikään palvelin ei läpäissyt suodinkriteerejäsi
+== Yksikään palvelin ei täyttänyt suodinkriteerejäsi
 
 Ok
 == Ok
+
+Open
+== Avaa
+
+Parent Folder
+== Yläkansio
 
 Password
 == Salasana
@@ -280,11 +391,14 @@ Play
 Player
 == Pelaaja
 
+Player options
+== Pelaajavalinnat
+
 Players
-== Pelaajia
+== Pelaajat
 
 Please balance teams!
-== Ole hyvä ja tasoita joukkueet!
+== Ole hyvä ja tasoita joukkueita!
 
 Prev. weapon
 == Edellinen ase
@@ -297,6 +411,18 @@ Quick search:
 
 Quit
 == Lopeta
+
+Quit anyway?
+== Lopeta siitä huolimatta?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Syy:
+
+Record demo
+== Nauhoita demo
 
 Red team
 == Punainen joukkue
@@ -312,6 +438,18 @@ Refreshing master servers
 
 Remote console
 == Etäkonsoli
+
+Remove
+== Poista
+
+Remove friend
+== Poista ystävä
+
+Rename
+== Nimeä
+
+Rename demo
+== Uudelleennimeä demo
 
 Reset filter
 == Nollaa suotimet
@@ -329,7 +467,7 @@ Sample rate
 == Näytteenottotaajuus
 
 Sat.
-== Kylläisyys
+== Kyllästys
 
 Score
 == Pisteet
@@ -346,11 +484,17 @@ Scoreboard
 Screenshot
 == Kuvankaappaus
 
+Server address:
+== Palvelimen osoite:
+
 Server details
 == Palvelimen yksityiskohdat
 
+Server filter
+== Palvelinsuotimet
+
 Server info
-== Palvelimen tiedot
+== Palvelintiedot
 
 Server not full
 == Palvelin ei täysi
@@ -364,11 +508,20 @@ Shotgun
 Show chat
 == Näytä chatti
 
+Show friends
+== Näytä ystävät
+
+Show ingame HUD
+== Näytä peli-HUD
+
 Show name plates
 == Näytä nimikyltit
 
 Show only supported
 == Näytä vain tuetut
+
+Size:
+== Koko:
 
 Skins
 == Ulkonäkö
@@ -376,11 +529,17 @@ Skins
 Sound
 == Äänet
 
+Sound error
+== Äänivirhe
+
 Sound volume
 == Äänenvoimakkuus
 
 Spectate
 == Katso
+
+Spectator mode
+== Katsojatila
 
 Spectators
 == Katsojat
@@ -390,6 +549,9 @@ Standard gametype
 
 Standard map
 == Standardikenttä
+
+Stop record
+== Lopeta nauhoit.
 
 Sudden Death
 == Äkkikuolema
@@ -409,11 +571,20 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Tekstuuripakkaus
 
+The audio device couldn't be initialised.
+== Äänilaitteen alustaminen ei onnistunut.
+
 The server is running a non-standard tuning on a pure game type.
 == Tämä palvelin ajaa ei-standardeja virityksiä standardipelityypillä.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Editorissa on tallentamaton kenttä, saatat haluta tallentaa sen ennen kuin lopetat pelin.
+
 Time limit
 == Aikaraja
+
+Time limit: %d min
+== Aikaraja: %d min
 
 Try again
 == Yritä uudelleen
@@ -421,17 +592,38 @@ Try again
 Type
 == Tyyppi
 
+Type:
+== Tyyppi:
+
 UI Color
 == Käyttöliittymäväri
 
+Unable to delete the demo
+== Demon poistaminen ei onnistunut
+
+Unable to rename the demo
+== Demon nimeäminen ei onnistunut
+
 Use sounds
 == Käytä ääniefektejä
+
+Use team colors for name plates
+== Käytä joukkueiden värejä nimikylteissä
 
 V-Sync
 == V-Sync
 
 Version
 == Versio
+
+Version:
+== Versio:
+
+Vote command:
+== Äänestyskäsky:
+
+Vote description:
+== Äänestyksen kuvaus:
 
 Vote no
 == Äänestä ei
@@ -460,516 +652,18 @@ You must restart the game for all settings to take effect.
 Your skin
 == Sinun ulkonäkösi
 
+no limit
+== ei rajaa
+
 ##### needs translation #####
 
-%d%% loaded
+Play background music
 == 
 
-%i minute left
+Spectate next
 == 
 
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
-%s Right click for context menu.
-== 
-
-Add
-== 
-
-Add Image
-== 
-
-Add Quad
-== 
-
-Add group
-== 
-
-Add quads layer
-== 
-
-Add tile layer
-== 
-
-Adds a new group
-== 
-
-Adds a new quad
-== 
-
-Alpha value of the envelope
-== 
-
-Anim
-== 
-
-Append
-== 
-
-Append map
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Aspect ratio
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Blue value of the envelope
-== 
-
-Border
-== 
-
-CCW
-== 
-
-CW
-== 
-
-Cancel
-== 
-
-Clear collision
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Color
-== 
-
-Color Env
-== 
-
-Color TO
-== 
-
-Color+
-== 
-
-Constructs collision from this layer
-== 
-
-Creates a new color envelope
-== 
-
-Creates a new map
-== 
-
-Creates a new pos envelope
-== 
-
-Creates a new quad layer
-== 
-
-Creates a new tile layer
-== 
-
-Decrease
-== 
-
-Decrease animation speed
-== 
-
-Delete demo
-== 
-
-Delete group
-== 
-
-Delete layer
-== 
-
-Delete this envelope
-== 
-
-Deletes the current quad
-== 
-
-Deletes the layer
-== 
-
-Detail
-== 
-
-Down
-== 
-
-Embed
-== 
-
-Embedded
-== 
-
-Embeds the image into the map file.
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Envelopes
-== 
-
-Exit
-== 
-
-Exits from the editor
-== 
-
-External
-== 
-
-File
-== 
-
-File: %s
-== 
-
-Filename:
-== 
-
-Folder
-== 
-
-Green value of the envelope
-== 
-
-Group
-== 
-
-HD
-== 
-
-Height
-== 
-
-Image
-== 
-
-Images
-== 
-
-Increase
-== 
-
-Increase animation speed
-== 
-
-Invalid Demo
-== 
-
-Layers
-== 
-
-Left
-== 
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
-
-Left mouse button to move. Hold shift to move the texture.
-== 
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
-Load
-== 
-
-Load a new image to use in the map
-== 
-
-Load map
-== 
-
-Make collision
-== 
-
-Make external
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Name plates size
-== 
-
-Name:
-== 
-
-New
-== 
-
-New folder
-== 
-
-Next Envelope
-== 
-
-None
-== 
-
-Normal animation speed
-== 
-
-Open
-== 
-
-Opens a map and adds everything from that map to the current one
-== 
-
-Opens a map for editing
-== 
-
-Order
-== 
-
-Para X
-== 
-
-Para Y
-== 
-
-Parent Folder
-== 
-
-Pos X
-== 
-
-Pos Y
-== 
-
-Pos. Env
-== 
-
-Pos. TO
-== 
-
-Pos.+
-== 
-
-Press right mouse button to create a new point
-== 
-
-Previous Envelope
-== 
-
-Proof
-== 
-
-Quads
-== 
-
-REC
-== 
-
-Reason:
-== 
-
-Record demo
-== 
-
-Red value of the envelope
-== 
-
-Refocus
-== 
-
-Remove
-== 
-
-Removes collision from this layer
-== 
-
-Removes the image from the map
-== 
-
-Removes the image from the map file.
-== 
-
-Replace
-== 
-
-Replace Image
-== 
-
-Replaces the image with a new one
-== 
-
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
-Save
-== 
-
-Save As
-== 
-
-Save map
-== 
-
-Saves the current map
-== 
-
-Saves the current map under a new name
-== 
-
-Select group. Right click for properties.
-== 
-
-Select image
-== 
-
-Select layer. Right click for properties.
-== 
-
-Shift
-== 
-
-Sound error
-== 
-
-Square
-== 
-
-Squares the current quad
-== 
-
-Stop record
-== 
-
-Switch between images and layers managment.
-== 
-
-Switch curve type
-== 
-
-The audio device couldn't be initialised.
-== 
-
-Tiles
-== 
-
-Time limit: %d min
-== 
-
-Toggle group visibility
-== 
-
-Toggle layer visibility
-== 
-
-Toggles the envelope editor.
-== 
-
-Unable to delete the demo
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and create a brush.
-== 
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
-Width
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-ZI
-== 
-
-ZO
-== 
-
-[HOME] Restore map focus
-== 
-
-[M] Flip brush vertical
-== 
-
-[N] Flip brush horizontal
-== 
-
-[NumPad*] Zoom to normal and remove editor offset
-== 
-
-[NumPad+] Zoom in
-== 
-
-[NumPad-] Zoom out
-== 
-
-[R] Rotates the brush counter clockwise
-== 
-
-[T] Rotates the brush clockwise
-== 
-
-[ctrl+h] Toggle High Detail
-== 
-
-[ctrl+m] Toggle animation
-== 
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== 
-
-no limit
+Spectate previous
 == 
 
 ##### old translations #####

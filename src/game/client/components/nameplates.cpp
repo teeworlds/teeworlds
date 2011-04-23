@@ -17,9 +17,9 @@ void CNamePlates::RenderNameplate(
 	)
 {
 	float IntraTick = Client()->IntraGameTick();
-	
+
 	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
-	
+
 
 	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 	// render name plate
@@ -28,29 +28,31 @@ void CNamePlates::RenderNameplate(
 		float a = 1;
 		if(g_Config.m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
-			
-		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
+
+		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName;
 		float tw = TextRender()->TextWidth(0, FontSize, pName, -1);
-		
+
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
-		if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
+		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 		{
 			if(pPlayerInfo->m_Team == TEAM_RED)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
 			else if(pPlayerInfo->m_Team == TEAM_BLUE)
 				TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
 		}
-		
+
 		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, pName, -1);
-		
+
 		if(g_Config.m_Debug) // render client id when in debug aswell
 		{
 			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
+			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientID);
 			TextRender()->Text(0, Position.x, Position.y-90, 28.0f, aBuf, -1);
 		}
 
 		TextRender()->TextColor(1,1,1,1);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	}
 }
 

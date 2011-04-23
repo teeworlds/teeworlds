@@ -4,7 +4,6 @@
 
 #include "packer.h"
 #include "compression.h"
-#include "engine.h"
 #include "config.h"
 
 void CPacker::Reset()
@@ -18,7 +17,7 @@ void CPacker::AddInt(int i)
 {
 	if(m_Error)
 		return;
-		
+
 	// make sure that we have space enough
 	if(m_pEnd - m_pCurrent < 6)
 	{
@@ -33,7 +32,7 @@ void CPacker::AddString(const char *pStr, int Limit)
 {
 	if(m_Error)
 		return;
-	
+
 	//
 	if(Limit > 0)
 	{
@@ -41,7 +40,7 @@ void CPacker::AddString(const char *pStr, int Limit)
 		{
 			*m_pCurrent++ = *pStr++;
 			Limit--;
-			
+
 			if(m_pCurrent >= m_pEnd)
 			{
 				m_Error = 1;
@@ -70,13 +69,13 @@ void CPacker::AddRaw(const void *pData, int Size)
 {
 	if(m_Error)
 		return;
-		
+
 	if(m_pCurrent+Size >= m_pEnd)
 	{
 		m_Error = 1;
 		return;
 	}
-	
+
 	const unsigned char *pSrc = (const unsigned char *)pData;
 	while(Size)
 	{
@@ -98,13 +97,13 @@ int CUnpacker::GetInt()
 {
 	if(m_Error)
 		return 0;
-		
+
 	if(m_pCurrent >= m_pEnd)
 	{
 		m_Error = 1;
 		return 0;
 	}
-	
+
 	int i;
 	m_pCurrent = CVariableInt::Unpack(m_pCurrent, &i);
 	if(m_pCurrent > m_pEnd)
@@ -119,7 +118,7 @@ const char *CUnpacker::GetString(int SanitizeType)
 {
 	if(m_Error || m_pCurrent >= m_pEnd)
 		return "";
-		
+
 	char *pPtr = (char *)m_pCurrent;
 	while(*m_pCurrent) // skip the string
 	{
@@ -131,7 +130,7 @@ const char *CUnpacker::GetString(int SanitizeType)
 		}
 	}
 	m_pCurrent++;
-	
+
 	// sanitize all strings
 	if(SanitizeType&SANITIZE)
 		str_sanitize(pPtr);
@@ -145,7 +144,7 @@ const unsigned char *CUnpacker::GetRaw(int Size)
 	const unsigned char *pPtr = m_pCurrent;
 	if(m_Error)
 		return 0;
-	
+
 	// check for nasty sizes
 	if(Size < 0 || m_pCurrent+Size > m_pEnd)
 	{

@@ -1,6 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/demo.h>
+#include <engine/engine.h>
+
 #include <engine/shared/config.h>
 
 #include <game/generated/client_data.h>
@@ -41,7 +43,7 @@ void CEffects::AirJump(vec2 Pos)
 
 	p.m_Pos = Pos + vec2(6.0f, 16.0f);
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
-	
+
 	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
@@ -54,7 +56,7 @@ void CEffects::PowerupShine(vec2 Pos, vec2 size)
 {
 	if(!m_Add50hz)
 		return;
-		
+
 	CParticle p;
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SLICE;
@@ -75,7 +77,7 @@ void CEffects::SmokeTrail(vec2 Pos, vec2 Vel)
 {
 	if(!m_Add50hz)
 		return;
-		
+
 	CParticle p;
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SMOKE;
@@ -94,7 +96,7 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 {
 	if(!m_Add100hz)
 		return;
-	
+
 	CParticle p;
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SMOKE;
@@ -106,14 +108,14 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 	p.m_Friction = 0.7f;
 	p.m_Gravity = frandom()*-500.0f;
 	p.m_Color = vec4(0.75f,0.75f,0.75f,1.0f);
-	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);	
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
 void CEffects::BulletTrail(vec2 Pos)
 {
 	if(!m_Add100hz)
 		return;
-		
+
 	CParticle p;
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_BALL;
@@ -143,27 +145,27 @@ void CEffects::PlayerSpawn(vec2 Pos)
 		p.m_Friction = 0.7f;
 		p.m_Color = vec4(0xb5/255.0f, 0x50/255.0f, 0xcb/255.0f, 1.0f);
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
-		
+
 	}
 	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
 }
 
-void CEffects::PlayerDeath(vec2 Pos, int Cid)
+void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 {
 	vec3 BloodColor(1.0f,1.0f,1.0f);
 
-	if(Cid >= 0)	
+	if(ClientID >= 0)
 	{
-		if(m_pClient->m_aClients[Cid].m_UseCustomColor)
-			BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[Cid].m_ColorBody);
+		if(m_pClient->m_aClients[ClientID].m_UseCustomColor)
+			BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_ColorBody);
 		else
 		{
-			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(m_pClient->m_aClients[Cid].m_SkinId);
+			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(m_pClient->m_aClients[ClientID].m_SkinID);
 			if(s)
 				BloodColor = s->m_BloodColor;
 		}
 	}
-	
+
 	for(int i = 0; i < 64; i++)
 	{
 		CParticle p;
@@ -193,11 +195,11 @@ void CEffects::Explosion(vec2 Pos)
 		{
 			if(x == 0 && y == 0)
 				continue;
-			
+
 			float a = 1 - (length(vec2(x,y)) / length(vec2(8,8)));
 			m_pClient->m_pFlow->Add(Pos+vec2(x,y)*16, normalize(vec2(x,y))*5000.0f*a, 10.0f);
 		}
-		
+
 	// add the explosion
 	CParticle p;
 	p.SetDefault();
@@ -208,7 +210,7 @@ void CEffects::Explosion(vec2 Pos)
 	p.m_EndSize = 0;
 	p.m_Rot = frandom()*pi*2;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
-	
+
 	// add the smoke
 	for(int i = 0; i < 24; i++)
 	{
@@ -233,13 +235,13 @@ void CEffects::HammerHit(vec2 Pos)
 	// add the explosion
 	CParticle p;
 	p.SetDefault();
-	p.m_Spr = SPRITE_PART_EXPL01;
+	p.m_Spr = SPRITE_PART_HIT01;
 	p.m_Pos = Pos;
-	p.m_LifeSpan = 0.4f;
-	p.m_StartSize = 150.0f;
+	p.m_LifeSpan = 0.3f;
+	p.m_StartSize = 120.0f;
 	p.m_EndSize = 0;
 	p.m_Rot = frandom()*pi*2;
-	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);	
+	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
 	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
 }
 
@@ -251,7 +253,7 @@ void CEffects::OnRender()
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		
+
 		if(time_get()-LastUpdate100hz > time_freq()/(100*pInfo->m_Speed))
 		{
 			m_Add100hz = true;
@@ -267,10 +269,10 @@ void CEffects::OnRender()
 		}
 		else
 			m_Add50hz = false;
-		
+
 		if(m_Add50hz)
 			m_pClient->m_pFlow->Update();
-		
+
 		return;
 	}
 
@@ -289,7 +291,7 @@ void CEffects::OnRender()
 	}
 	else
 		m_Add50hz = false;
-		
+
 	if(m_Add50hz)
 		m_pClient->m_pFlow->Update();
 }

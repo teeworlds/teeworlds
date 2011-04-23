@@ -12,7 +12,7 @@ CFlow::CFlow()
 	m_Width = 0;
 	m_Spacing = 16;
 }
-	
+
 void CFlow::DbgRender()
 {
 	if(!m_pCells)
@@ -34,7 +34,7 @@ void CFlow::DbgRender()
 				NumItems = 0;
 			}
 		}
-	
+
 	if(NumItems)
 		Graphics()->LinesDraw(Array, NumItems);
 	Graphics()->LinesEnd();
@@ -47,12 +47,12 @@ void CFlow::Init()
 		mem_free(m_pCells);
 		m_pCells = 0;
 	}
-	
+
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
 	m_Width = pTilemap->m_Width*32/m_Spacing;
 	m_Height = pTilemap->m_Height*32/m_Spacing;
 
-	// allocate and clear	
+	// allocate and clear
 	m_pCells = (CCell *)mem_alloc(sizeof(CCell)*m_Width*m_Height, 1);
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
@@ -63,7 +63,7 @@ void CFlow::Update()
 {
 	if(!m_pCells)
 		return;
-		
+
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 			m_pCells[y*m_Width+x].m_Vel *= 0.85f;
@@ -73,24 +73,24 @@ vec2 CFlow::Get(vec2 Pos)
 {
 	if(!m_pCells)
 		return vec2(0,0);
-	
+
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
 	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
 		return vec2(0,0);
-	
-	return m_pCells[y*m_Width+x].m_Vel;	
+
+	return m_pCells[y*m_Width+x].m_Vel;
 }
 
 void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 {
 	if(!m_pCells)
 		return;
-		
+
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
 	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
 		return;
-	
+
 	m_pCells[y*m_Width+x].m_Vel += Vel;
 }

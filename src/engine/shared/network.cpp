@@ -4,7 +4,6 @@
 
 
 #include "config.h"
-#include "engine.h"
 #include "network.h"
 #include "huffman.h"
 
@@ -27,35 +26,35 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 {
 	CNetChunkHeader Header;
 	unsigned char *pEnd = m_Data.m_aChunkData + m_Data.m_DataSize;
-	
+
 	while(1)
 	{
 		unsigned char *pData = m_Data.m_aChunkData;
-		
+
 		// check for old data to unpack
 		if(!m_Valid || m_CurrentChunk >= m_Data.m_NumChunks)
 		{
 			Clear();
 			return 0;
 		}
-		
+
 		// TODO: add checking here so we don't read too far
 		for(int i = 0; i < m_CurrentChunk; i++)
 		{
 			pData = Header.Unpack(pData);
 			pData += Header.m_Size;
 		}
-		
+
 		// unpack the header
 		pData = Header.Unpack(pData);
 		m_CurrentChunk++;
-		
+
 		if(pData+Header.m_Size > pEnd)
 		{
 			Clear();
 			return 0;
 		}
-		
+
 		// handle sequence stuff
 		if(m_pConnection && (Header.m_Flags&NET_CHUNKFLAG_VITAL))
 		{
@@ -77,7 +76,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 				continue; // take the next chunk in the packet
 			}
 		}
-		
+
 		// fill in the info
 		pChunk->m_ClientID = m_ClientID;
 		pChunk->m_Address = m_Addr;
@@ -117,7 +116,7 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		io_write(ms_DataLogSent, &pPacket->m_aChunkData, pPacket->m_DataSize);
 		io_flush(ms_DataLogSent);
 	}
-	
+
 	// compress
 	CompressedSize = ms_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[3], NET_MAX_PACKETSIZE-4);
 
@@ -175,7 +174,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		io_write(ms_DataLogRecv, pBuffer, Size);
 		io_flush(ms_DataLogRecv);
 	}
-	
+
 	// read the packet
 	pPacket->m_Flags = pBuffer[0]>>4;
 	pPacket->m_Ack = ((pBuffer[0]&0xf)<<8) | pBuffer[1];
@@ -189,7 +188,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			dbg_msg("", "connection less packet too small, %d", Size);
 			return -1;
 		}
-			
+
 		pPacket->m_Flags = NET_PACKETFLAG_CONNLESS;
 		pPacket->m_Ack = 0;
 		pPacket->m_NumChunks = 0;
@@ -221,7 +220,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		io_write(ms_DataLogRecv, pPacket->m_aChunkData, pPacket->m_DataSize);
 		io_flush(ms_DataLogRecv);
 	}
-		
+
 	// return success
 	return 0;
 }
@@ -236,7 +235,7 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int Con
 	Construct.m_DataSize = 1+ExtraSize;
 	Construct.m_aChunkData[0] = ControlMsg;
 	mem_copy(&Construct.m_aChunkData[1], pExtra, ExtraSize);
-	
+
 	// send the control message
 	CNetBase::SendPacket(Socket, pAddr, &Construct);
 }
@@ -285,7 +284,7 @@ int CNetBase::IsSeqInBackroom(int Seq, int Ack)
 		if(Seq <= Ack && Seq >= Bottom)
 			return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -294,26 +293,40 @@ IOHANDLE CNetBase::ms_DataLogRecv = 0;
 CHuffman CNetBase::ms_Huffman;
 
 
-void CNetBase::OpenLog(const char *pSentLog, const char *pRecvLog)
+void CNetBase::OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv)
 {
-	/*
-	if(pSentLog)
+	if(DataLogSent)
 	{
-		ms_DataLogSent = engine_openfile(pSentLog, IOFLAG_WRITE);
-		if(ms_DataLogSent)
-			dbg_msg("network", "logging sent packages to '%s'", pSentLog);
-		else
-			dbg_msg("network", "failed to open for logging '%s'", pSentLog);
+		ms_DataLogSent = DataLogSent;
+		dbg_msg("network", "logging sent packages");
 	}
-	
-	if(pRecvLog)
+	else
+		dbg_msg("network", "failed to start logging sent packages");
+
+	if(DataLogRecv)
 	{
-		ms_DataLogRecv = engine_openfile(pRecvLog, IOFLAG_WRITE);
-		if(ms_DataLogRecv)
-			dbg_msg("network", "logging recv packages to '%s'", pRecvLog);
-		else
-			dbg_msg("network", "failed to open for logging '%s'", pRecvLog);
-	}*/
+		ms_DataLogRecv = DataLogRecv;
+		dbg_msg("network", "logging recv packages");
+	}
+	else
+		dbg_msg("network", "failed to start logging recv packages");
+}
+
+void CNetBase::CloseLog()
+{
+	if(ms_DataLogSent)
+	{
+		dbg_msg("network", "stopped logging sent packages");
+		io_close(ms_DataLogSent);
+		ms_DataLogSent = 0;
+	}
+
+	if(ms_DataLogRecv)
+	{
+		dbg_msg("network", "stopped logging recv packages");
+		io_close(ms_DataLogRecv);
+		ms_DataLogRecv = 0;
+	}
 }
 
 int CNetBase::Compress(const void *pData, int DataSize, void *pOutput, int OutputSize)

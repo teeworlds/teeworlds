@@ -3,9 +3,11 @@
 #include <stdio.h>	// sscanf
 
 #include <base/system.h>
+
+#include <engine/engine.h>
 #include <engine/masterserver.h>
 #include <engine/storage.h>
-#include "engine.h"
+
 #include "linereader.h"
 
 class CMasterServer : public IEngineMasterServer
@@ -16,14 +18,16 @@ public:
 	{
 		char m_aHostname[128];
 		NETADDR m_Addr;
-		
+		bool m_Valid;
+
 		CHostLookup m_Lookup;
 	} ;
 
 	CMasterInfo m_aMasterServers[MAX_MASTERSERVERS];
 	int m_NeedsUpdate;
-	CEngine *m_pEngine;
-	
+	IEngine *m_pEngine;
+	IStorage *m_pStorage;
+
 	CMasterServer()
 	{
 		SetDefault();
@@ -31,19 +35,22 @@ public:
 		m_pEngine = 0;
 	}
 
-	virtual int RefreshAddresses()
+	virtual int RefreshAddresses(int Nettype)
 	{
 		int i;
-		
+
 		if(m_NeedsUpdate != -1)
 			return 0;
-		
+
 		dbg_msg("engine/mastersrv", "refreshing master server addresses");
 
 		// add lookup jobs
-		for(i = 0; i < MAX_MASTERSERVERS; i++)	
-			m_pEngine->HostLookup(&m_aMasterServers[i].m_Lookup, m_aMasterServers[i].m_aHostname);
-		
+		for(i = 0; i < MAX_MASTERSERVERS; i++)
+		{
+			m_pEngine->HostLookup(&m_aMasterServers[i].m_Lookup, m_aMasterServers[i].m_aHostname, Nettype);
+			m_aMasterServers[i].m_Valid = false;
+		}
+
 		m_NeedsUpdate = 1;
 		return 0;
 	}
@@ -54,18 +61,24 @@ public:
 		if(m_NeedsUpdate != 1)
 			return;
 		m_NeedsUpdate = 0;
-		
+
 		for(int i = 0; i < MAX_MASTERSERVERS; i++)
 		{
 			if(m_aMasterServers[i].m_Lookup.m_Job.Status() != CJob::STATE_DONE)
 				m_NeedsUpdate = 1;
 			else
 			{
-				m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
-				m_aMasterServers[i].m_Addr.port = 8300;
+				if(m_aMasterServers[i].m_Lookup.m_Job.Result() == 0)
+				{
+					m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
+					m_aMasterServers[i].m_Addr.port = 8300;
+					m_aMasterServers[i].m_Valid = true;
+				}
+				else
+					m_aMasterServers[i].m_Valid = false;
 			}
 		}
-		
+
 		if(!m_NeedsUpdate)
 		{
 			dbg_msg("engine/mastersrv", "saving addresses");
@@ -78,29 +91,35 @@ public:
 		return m_NeedsUpdate;
 	}
 
-	virtual NETADDR GetAddr(int Index) 
+	virtual NETADDR GetAddr(int Index)
 	{
 		return m_aMasterServers[Index].m_Addr;
 	}
 
-	virtual const char *GetName(int Index) 
+	virtual const char *GetName(int Index)
 	{
 		return m_aMasterServers[Index].m_aHostname;
+	}
+
+	virtual bool IsValid(int Index)
+	{
+		return m_aMasterServers[Index].m_Valid;
 	}
 
 	virtual void DumpServers()
 	{
 		for(int i = 0; i < MAX_MASTERSERVERS; i++)
 		{
-			dbg_msg("mastersrv", "#%d = %d.%d.%d.%d", i,
-				m_aMasterServers[i].m_Addr.ip[0], m_aMasterServers[i].m_Addr.ip[1],
-				m_aMasterServers[i].m_Addr.ip[2], m_aMasterServers[i].m_Addr.ip[3]);
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(&m_aMasterServers[i].m_Addr, aAddrStr, sizeof(aAddrStr));
+			dbg_msg("mastersrv", "#%d = %s", i, aAddrStr);
 		}
 	}
 
-	virtual void Init(class CEngine *pEngine)
+	virtual void Init()
 	{
-		m_pEngine = pEngine;
+		m_pEngine = Kernel()->RequestInterface<IEngine>();
+		m_pStorage = Kernel()->RequestInterface<IStorage>();
 	}
 
 	virtual void SetDefault()
@@ -115,31 +134,26 @@ public:
 		CLineReader LineReader;
 		IOHANDLE File;
 		int Count = 0;
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-		if(!pStorage)
+		if(!m_pStorage)
 			return -1;
-		
+
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
+		File = m_pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
-		
+
 		LineReader.Init(File);
 		while(1)
 		{
 			CMasterInfo Info = {{0}};
-			int aIp[4];
 			const char *pLine = LineReader.Get();
 			if(!pLine)
 				break;
 
-			// parse line	
-			if(sscanf(pLine, "%s %d.%d.%d.%d", Info.m_aHostname, &aIp[0], &aIp[1], &aIp[2], &aIp[3]) == 5)
+			// parse line
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			if(sscanf(pLine, "%s %s", Info.m_aHostname, aAddrStr) == 2 && net_addr_from_str(&Info.m_Addr, aAddrStr) == 0)
 			{
-				Info.m_Addr.ip[0] = (unsigned char)aIp[0];
-				Info.m_Addr.ip[1] = (unsigned char)aIp[1];
-				Info.m_Addr.ip[2] = (unsigned char)aIp[2];
-				Info.m_Addr.ip[3] = (unsigned char)aIp[3];
 				Info.m_Addr.port = 8300;
 				if(Count != MAX_MASTERSERVERS)
 				{
@@ -152,7 +166,7 @@ public:
 			//else
 			//	dbg_msg("engine/mastersrv", "warning: couldn't parse master server '%s'", pLine);
 		}
-		
+
 		io_close(File);
 		return 0;
 	}
@@ -161,25 +175,24 @@ public:
 	{
 		IOHANDLE File;
 
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-		if(!pStorage)
+		if(!m_pStorage)
 			return -1;
-			
+
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		File = m_pStorage->OpenFile("masters.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 
 		for(int i = 0; i < MAX_MASTERSERVERS; i++)
 		{
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(&m_aMasterServers[i].m_Addr, aAddrStr, sizeof(aAddrStr));
 			char aBuf[1024];
-			str_format(aBuf, sizeof(aBuf), "%s %d.%d.%d.%d\n", m_aMasterServers[i].m_aHostname,
-				m_aMasterServers[i].m_Addr.ip[0], m_aMasterServers[i].m_Addr.ip[1],
-				m_aMasterServers[i].m_Addr.ip[2], m_aMasterServers[i].m_Addr.ip[3]);
-				
+			str_format(aBuf, sizeof(aBuf), "%s %s\n", m_aMasterServers[i].m_aHostname, aAddrStr);
+
 			io_write(File, aBuf, str_length(aBuf));
 		}
-		
+
 		io_close(File);
 		return 0;
 	}
