@@ -113,7 +113,7 @@ int png_init(png_alloc_t pngalloc, png_free_t pngfree)
 	if(pngalloc)
 		png_alloc = pngalloc;
 	else
-		png_alloc = &(png_alloc_t)malloc;
+		png_alloc = (png_alloc_t)&malloc;
 
 	if(pngfree)
 		png_free = pngfree;
