@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -398,7 +397,7 @@ Players
 == Игроки
 
 Please balance teams!
-== Пожалуйста отбалансируйте команды!
+== Пожалуйста cбалансируйте команды!
 
 Prev. weapon
 == Пред. оружие
@@ -655,16 +654,15 @@ Your skin
 no limit
 == Без лимита
 
-##### needs translation #####
-
 Play background music
-== 
+== Воспроизвести фоновую музыку
 
 Spectate next
-== 
+== Наблюдать следующего
 
 Spectate previous
-== 
+== Наблюдать предыдущего
+
+##### needs translation #####
 
 ##### old translations #####
-
