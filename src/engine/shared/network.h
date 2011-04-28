@@ -192,7 +192,7 @@ public:
 	int AckSequence() const { return m_Ack; }
 };
 
-struct CNetRecvUnpacker
+class CNetRecvUnpacker
 {
 public:
 	bool m_Valid;
@@ -222,13 +222,13 @@ public:
 	};
 
 private:
-	class CSlot
+	struct CSlot
 	{
 	public:
 		CNetConnection m_Connection;
 	};
 
-	class CBan
+	struct CBan
 	{
 	public:
 		CBanInfo m_Info;
