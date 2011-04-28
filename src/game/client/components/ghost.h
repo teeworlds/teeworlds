@@ -16,10 +16,10 @@ private:
 		int m_ID;
 		CNetObj_ClientInfo m_Info;
 		array<IGhostRecorder::CGhostCharacter> m_Path;
-		
+
 		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
 	};
-	
+
 	array<CGhostItem> m_lGhosts;
 	CGhostItem m_CurGhost;
 
@@ -37,11 +37,11 @@ private:
 		RACE_STARTED,
 		RACE_FINISHED,
 	};
-	
+
 	void AddInfos(IGhostRecorder::CGhostCharacter Player);
-	
+
 	IGhostRecorder::CGhostCharacter GetGhostCharacter(CNetObj_Character Char);
-	
+
 	void StartRecord();
 	void StopRecord(float Time=0.0f);
 	void StartRender();
@@ -49,9 +49,9 @@ private:
 	void RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
 	void RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev);
 	void RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
-	
+
 	bool GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader);
-	
+
 	void Save(bool WasRecording);
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
@@ -65,12 +65,12 @@ public:
 	virtual void OnShutdown();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
-	
+
 	void Load(const char* pFilename, int ID);
 	void Unload(int ID);
-	
+
 	bool GetInfo(const char* pFilename, IGhostRecorder::CGhostHeader *pHeader);
-	
+
 	static void ClearFilename(char *pFilename, int Size);
 };
 
