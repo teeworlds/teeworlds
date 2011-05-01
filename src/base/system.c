@@ -408,6 +408,17 @@ void thread_sleep(int milliseconds)
 #endif
 }
 
+void thread_detach(void *thread)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_detach((pthread_t)(thread));
+#elif defined(CONF_FAMILY_WINDOWS)
+	CloseHandle(thread);
+#else
+	#error not implemented
+#endif
+}
+
 
 
 

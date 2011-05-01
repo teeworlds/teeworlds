@@ -367,6 +367,16 @@ void thread_destroy(void *thread);
 */
 void thread_yield();
 
+/*
+	Function: thread_detach
+		Puts the thread in the detached thread, guaranteeing that
+		resources of the thread will be freed immediately when the
+		thread terminates.
+
+	Parameters:
+		thread - Thread to detach
+*/
+void thread_detach(void *thread);
 
 /* Group: Locks */
 typedef void* LOCK;
