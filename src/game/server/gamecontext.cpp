@@ -556,6 +556,7 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		if (g_Config.m_SvAccEnable && g_Config.m_SvAccAutoSave)
 			m_apPlayers[ClientID]->GetAccount()->Write();
 		delete m_apPlayers[ClientID]->GetAccount();
+		m_apPlayers[ClientID]->SetAccount(0);
 	}
 
 	m_apPlayers[ClientID]->OnDisconnect(pReason);
