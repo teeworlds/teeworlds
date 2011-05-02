@@ -1,4 +1,4 @@
-﻿
+
 ##### translated strings #####
 
 %d Bytes
@@ -37,7 +37,7 @@ Abort
 Add
 == Ekle
 
-Add Friend,
+Add Friend
 == Arkadaş Ekle
 
 Address
@@ -104,7 +104,7 @@ Connect
 == Bağlan
 
 Connecting to
-== Bağlanılıyor 
+== Bağlanılıyor
 
 Connection Problems...
 == Bağlantı Hatası...
@@ -635,7 +635,7 @@ Voting
 == Oylama
 
 Warmup
-== Isınma 
+== Isınma
 
 Weapon
 == Silah
@@ -656,6 +656,9 @@ no limit
 == limit yok
 
 ##### needs translation #####
+
+Demofile: %s
+== 
 
 Play background music
 == 
