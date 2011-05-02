@@ -531,6 +531,9 @@ Delete demo
 Demo details
 == 
 
+Demofile: %s
+== 
+
 Folder
 == 
 
@@ -631,6 +634,9 @@ Spectator mode
 == 
 
 Stop record
+== 
+
+Strict gametype filter
 == 
 
 The audio device couldn't be initialised.

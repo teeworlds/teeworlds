@@ -55,5 +55,8 @@ spanish
 swedish
 == Svenska
 
+turkish
+== Türkçe
+
 ukrainian
 == Українська

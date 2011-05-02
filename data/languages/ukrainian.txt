@@ -549,6 +549,9 @@ Delete demo
 Demo details
 == 
 
+Demofile: %s
+== 
+
 Free-View
 == 
 
@@ -634,6 +637,9 @@ Spectate previous
 == 
 
 Spectator mode
+== 
+
+Strict gametype filter
 == 
 
 The audio device couldn't be initialised.

@@ -481,6 +481,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterPureMap, Localize("Standard map"), g_Config.m_BrFilterPureMap, &Button))
 		g_Config.m_BrFilterPureMap ^= 1;
+	
+	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterGametypeStrict, Localize("Strict gametype filter"), g_Config.m_BrFilterGametypeStrict, &Button))
+		g_Config.m_BrFilterGametypeStrict ^= 1;
 
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
 
@@ -530,6 +534,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterString[0] = 0;
 		g_Config.m_BrFilterPure = 1;
 		g_Config.m_BrFilterPureMap = 1;
+		g_Config.m_BrFilterGametypeStrict = 0;
 		Client()->ServerBrowserUpdate();
 	}
 }
@@ -619,23 +624,24 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 
 	if (pSelectedServer)
 	{
-		ServerScoreBoard.VSplitLeft(5.0f, 0, &ServerScoreBoard);
 		ServerScoreBoard.Margin(3.0f, &ServerScoreBoard);
 		for (int i = 0; i < pSelectedServer->m_NumClients; i++)
 		{
 			CUIRect Name, Clan, Score, Flag;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
+			RenderTools()->DrawUIRect(&Name, vec4(1,1,1,(i%2+1)*0.05f), CUI::CORNER_ALL, 4.0f);
+			Name.VSplitLeft(5.0f, 0, &Name);
 			Name.VSplitLeft(30.0f, &Score, &Name);
 			Name.VSplitRight(34.0f, &Name, &Flag);
 			Flag.HMargin(4.0f, &Flag);
-			Name.HSplitTop(12.0f, &Name, &Clan);
+			Name.HSplitTop(11.0f, &Name, &Clan);
 
 			// score
 			if(pSelectedServer->m_aClients[i].m_Player)
 			{
 				char aTemp[16];
 				str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aClients[i].m_Score);
-				TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/2.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Score.w;
 				TextRender()->TextEx(&Cursor, aTemp, -1);
 			}

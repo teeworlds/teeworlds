@@ -697,7 +697,7 @@ public:
 	vec4 ButtonColorMul(const void *pID);
 
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
-	void DoMapEditor(CUIRect View, CUIRect Toolbar);
+	void DoMapEditor(CUIRect View, CUIRect Toolbar, bool ShowPicker);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
 	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);

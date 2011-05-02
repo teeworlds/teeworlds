@@ -201,7 +201,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		// demo name
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Demofile: %s", DemoPlayer()->GetDemoName());
+		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), DemoPlayer()->GetDemoName());
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = MainView.w;
