@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d Bytes
@@ -578,7 +578,7 @@ The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== Im Editor ist noch eine ungespeicherte Karte.
+== Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern.
 
 Time limit
 == Zeitlimit
@@ -661,13 +661,13 @@ Demofile: %s
 == 
 
 Play background music
-== 
+== Hintergrundmusik abspielen
 
 Spectate next
-== 
+== Nächstem zusehen
 
 Spectate previous
-== 
+== Vorherigem zusehen
 
 ##### old translations #####
 
