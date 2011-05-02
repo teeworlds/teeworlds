@@ -388,6 +388,9 @@ Pistol
 Play
 == Abspielen
 
+Play background music
+== Hintergrundmusik abspielen
+
 Player
 == Spieler
 
@@ -538,6 +541,12 @@ Sound volume
 Spectate
 == Zuschauen
 
+Spectate next
+== Nächstem zusehen
+
+Spectate previous
+== Vorherigem zusehen
+
 Spectator mode
 == Zuschaueroptionen
 
@@ -578,7 +587,7 @@ The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== Im Editor ist noch eine ungespeicherte Karte.
+== Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern.
 
 Time limit
 == Zeitlimit
@@ -658,15 +667,6 @@ no limit
 ##### needs translation #####
 
 Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
 == 
 
 ##### old translations #####
