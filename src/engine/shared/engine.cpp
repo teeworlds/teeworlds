@@ -13,7 +13,7 @@
 static int HostLookupThread(void *pUser)
 {
 	CHostLookup *pLookup = (CHostLookup *)pUser;
-	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, NETTYPE_ALL);
+	return net_host_lookup(pLookup->m_aHostname, &pLookup->m_Addr, pLookup->m_Nettype);
 }
 
 class CEngine : public IEngine
@@ -43,7 +43,7 @@ public:
 			pEngine->m_Logging = false;
 		}
 		else
-		{			
+		{
 			char aBuf[32];
 			str_timestamp(aBuf, sizeof(aBuf));
 			char aFilenameSent[128], aFilenameRecv[128];
@@ -59,7 +59,7 @@ public:
 	{
 		dbg_logger_stdout();
 		dbg_logger_debugger();
-	
+
 		//
 		dbg_msg("engine", "running on %s-%s-%s", CONF_FAMILY_STRING, CONF_PLATFORM_STRING, CONF_ARCH_STRING);
 	#ifdef CONF_ARCH_ENDIAN_LITTLE
@@ -73,7 +73,7 @@ public:
 		// init the network
 		net_init();
 		CNetBase::Init();
-	
+
 		m_JobPool.Init(1);
 
 		m_Logging = false;
@@ -98,9 +98,10 @@ public:
 			dbg_logger_file(g_Config.m_Logfile);
 	}
 
-	void HostLookup(CHostLookup *pLookup, const char *pHostname)
+	void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype)
 	{
 		str_copy(pLookup->m_aHostname, pHostname, sizeof(pLookup->m_aHostname));
+		pLookup->m_Nettype = Nettype;
 		AddJob(&pLookup->m_Job, HostLookupThread, pLookup);
 	}
 

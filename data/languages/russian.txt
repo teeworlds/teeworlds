@@ -1,8 +1,11 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d Байтов
+
 %d of %d servers, %d players
-== %d/%d серверов, %d игроков
+== %d из %d серверов, %d игроков
 
 %d%% loaded
 == %d%% загружено
@@ -10,8 +13,32 @@
 %ds left
 == осталось %d сек.
 
+%i minute left
+== %i минута осталась
+
+%i minutes left
+== %i минут осталось
+
+%i second left
+== %i секунда осталась
+
+%i seconds left
+== %i секунд осталось
+
+%s wins!
+== %s - победа!
+
+-Page %d-
+== -Страница %d-
+
 Abort
 == Отмена
+
+Add
+== Добавить
+
+Add Friend
+== Добавить друга
 
 Address
 == Адрес
@@ -20,22 +47,34 @@ All
 == Все
 
 Alpha
-== Прозрачн..
+== Прозрачность
 
 Always show name plates
-== Всегда показывать ники игроков
+== Всегда показывать имена игроков
+
+Are you sure that you want to delete the demo?
+== Вы действительно хотите удалить это демо?
 
 Are you sure that you want to quit?
-== Вы действительно желаете выйти?
+== Вы действительно хотите выйти?
+
+Are you sure that you want to remove the player from your friends list?
+== Вы действительно хотите удалить этого игрока из списка друзей?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Так как это ваш первый запуск игры, пожалуйста, введите свой ник в поле ниже. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
+== Вы запустили игру первый раз, пожалуйста, введите ваш никнейм. Мы рекомендуем вам настроить игру.
+
+Automatically record demos
+== Записывать демо автоматически
+
+Automatically take game over screenshot
+== Автоматически снимать скриншоты в конце игры
 
 Blue team
-== Синие
+== Синяя команда
 
 Blue team wins!
-== Синие победили!
+== Синяя команда победила!
 
 Body
 == Тело
@@ -43,8 +82,17 @@ Body
 Call vote
 == Голосовать
 
+Change settings
+== Настройки
+
 Chat
 == Чат
+
+Clan
+== Клан
+
+Client
+== Клиент
 
 Close
 == Закрыть
@@ -53,19 +101,31 @@ Compatible version
 == Совместимая версия
 
 Connect
-== Подключиться
+== Играть
 
 Connecting to
-== Подключение к
+== Соединяемся с
 
 Connection Problems...
-== Проблемы со связью...
+== Проблемы с соединением...
 
 Console
 == Консоль
 
 Controls
 == Управление
+
+Count players only
+== Считать только игроков
+
+Country
+== Страна
+
+Crc:
+== Crc-сумма:
+
+Created:
+== Создан:
 
 Current
 == Текущий
@@ -74,73 +134,88 @@ Current version: %s
 == Текущая версия: %s
 
 Custom colors
-== Свои цвета
+== Произвольный цвет
 
 Delete
 == Удалить
+
+Delete demo
+== Удалить демо
+
+Demo details
+== Подробности
 
 Demos
 == Демо
 
 Disconnect
-== Отключить
+== Уйти
 
 Disconnected
-== Отключено
+== Отсоединен
 
 Display Modes
-== Режимы дисплея
+== Режим отображения
 
 Downloading map
-== Скачивание карты
+== Загрузка карты
 
 Draw!
 == Ничья!
 
 Dynamic Camera
-== Динамическая камера
+== Динамичная Камера
 
 Emoticon
-== Эмоция
+== Эмоции
 
 Enter
-== Вход
+== Войти
 
 Error
 == Ошибка
 
 Error loading demo
-== ошибка при загрузке демо
+== Ошибка при загрузке демо
 
 FSAA samples
-== Сэмплов FSAA
+== FSAA сэмплы
 
 Favorite
-== Избранный
+== Избранное
 
 Favorites
-== Избранные
+== Избранное
 
 Feet
-== Ноги
+== Нога
 
 Filter
 == Фильтр
 
 Fire
-== Выстрел
+== Стрельба
+
+Folder
+== Папка
 
 Force vote
-== Форсировать
+== Форсировать голосование
+
+Free-View
+== Свободный просмотр
+
+Friends
+== Приятели
 
 Fullscreen
-== Полноэкранный режим
+== На весь экран
 
 Game
 == Игра
 
 Game info
-== Инфо об игре
+== Информация о игре
 
 Game over
 == Игра окончена
@@ -149,7 +224,7 @@ Game type
 == Тип игры
 
 Game types:
-== Тип игры:
+== Типы игры:
 
 General
 == Основные
@@ -164,13 +239,13 @@ Hammer
 == Молоток
 
 Has people playing
-== Сервер не пустой
+== Есть игроки на сервере
 
 High Detail
-== Высокая детализация
+== Высокая Детализация
 
 Hook
-== Веревка
+== Цепь
 
 Host address
 == Адрес сервера
@@ -184,23 +259,32 @@ Info
 Internet
 == Интернет
 
+Invalid Demo
+== Невалидное демо
+
 Join blue
-== За синих
+== К синим
 
 Join game
-== Наблюдать
+== Войти в игру
 
 Join red
-== За красных
+== К красным
 
 Jump
 == Прыжок
+
+Kick player
+== Кикнуть игрока
 
 LAN
 == LAN
 
 Language
 == Язык
+
+Length:
+== Длина:
 
 Lht.
 == Яркость
@@ -214,6 +298,15 @@ MOTD
 Map
 == Карта
 
+Map:
+== Карта:
+
+Max Screenshots
+== Максимум Скриншотов
+
+Max demos
+== Максимум Демо
+
 Maximum ping:
 == Макс. пинг:
 
@@ -221,28 +314,40 @@ Miscellaneous
 == Дополнительно
 
 Mouse sens.
-== Чувств. мыши
+== Чувст. мыши
 
 Move left
 == Влево
+
+Move player to spectators
+== Стать наблюдателем
 
 Move right
 == Вправо
 
 Movement
-== Перемещение
+== Движение
 
 Mute when not active
-== Глушить звуки, когда игра неактивна
+== Выключить звук когда игра неактивна
 
 Name
 == Имя
+
+Name plates size
+== Размер имён над игроками
+
+Netversion:
+== Версия:
+
+New name:
+== Новое имя:
 
 News
 == Новости
 
 Next weapon
-== След. оружие
+== Следующее оружие
 
 Nickname
 == Ник
@@ -257,13 +362,16 @@ No servers found
 == Сервера не найдены
 
 No servers match your filter criteria
-== Нет серверов, отвечающих вашим критериям
+== Нет серверов, подходящих под Ваш фильтр
 
 Ok
-== Ок
+== Ok
 
 Open
 == Открыть
+
+Parent Folder
+== Корневая папка
 
 Password
 == Пароль
@@ -278,52 +386,79 @@ Pistol
 == Пистолет
 
 Play
-== Просмотр
+== Воспроизвести
+
+Play background music
+== Воспроизвести фоновую музыку
 
 Player
 == Игрок
+
+Player options
+== Настройки игрока
 
 Players
 == Игроки
 
 Please balance teams!
-== Сбалансируйте команды!
+== Пожалуйста cбалансируйте команды!
 
 Prev. weapon
 == Пред. оружие
 
 Quality Textures
-== Качественные текстуры
+== Качественные Текстуры
 
 Quick search:
-== Быстрый поиск:
+== Быстрый поиск
 
 Quit
 == Выход
 
+Quit anyway?
+== Всё равно выйти?
+
+REC %3d:%02d
+== Записано %3d:%02d
+
 Reason:
 == Причина:
 
+Record demo
+== Записать демо
+
 Red team
-== Красные
+== Красная команда
 
 Red team wins!
-== Красные победили!
+== Красная команда победила!
 
 Refresh
 == Обновить
 
 Refreshing master servers
-== Обновление списка мастер-серверов
+== Обновляем мастер-сервера
 
 Remote console
-== Консоль сервера
+== Серверная консоль
+
+Remove
+== Удалить
+
+Remove friend
+== Удалить из друзей
+
+Rename
+== Переименовать
+
+Rename demo
+== Переименовать демо
 
 Reset filter
-== Сбросить фильтры
+== Сбросить фильтр
 
 Reset to defaults
-== Сбросить настройки
+== Сбросить на стандартные настройки
 
 Rifle
 == Лазер
@@ -335,28 +470,34 @@ Sample rate
 == Частота
 
 Sat.
-== Контраст.
+== Контраст
 
 Score
 == Очки
 
 Score board
-== Табло
+== Результат
 
 Score limit
-== Лимит очков
+== Лимит на очки
 
 Scoreboard
-== Ход игры
+== Результат
 
 Screenshot
 == Скриншот
 
+Server address:
+== Адрес сервера:
+
 Server details
-== Детали сервера
+== Информация о сервере
+
+Server filter
+== Фильтр сервера
 
 Server info
-== Информация
+== Инфо
 
 Server not full
 == Сервер не заполнен
@@ -370,23 +511,44 @@ Shotgun
 Show chat
 == Показать чат
 
+Show friends
+== Показывать друзей
+
+Show ingame HUD
+== Показывать HUD
+
 Show name plates
-== Показывать ники игроков
+== Показывать имена над игроками
 
 Show only supported
-== Только поддерживаемые режимы
+== Показывать только поддерживаемые
+
+Size:
+== Размер
 
 Skins
-== Скины
+== Модели
 
 Sound
 == Звук
 
+Sound error
+== Звуковая ошибка
+
 Sound volume
-== Громкость звука
+== Громкость
 
 Spectate
 == Наблюдать
+
+Spectate next
+== Наблюдать следующего
+
+Spectate previous
+== Наблюдать предыдущего
+
+Spectator mode
+== Наблюдатель
 
 Spectators
 == Наблюдатели
@@ -397,11 +559,14 @@ Standard gametype
 Standard map
 == Стандартная карта
 
+Stop record
+== Остановить запись
+
 Sudden Death
-== Быстрая смерть
+== Внезапная смерть
 
 Switch weapon on pickup
-== Переключать оружие при подборе
+== Сменить оружие на подобранное
 
 Team
 == Команда
@@ -410,34 +575,64 @@ Team chat
 == Командный чат
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Вышла Teeworlds %s! Скачивайте на www.teeworlds.com!
+== Teeworlds %s в сети! Скачайте его на www.teeworlds.com!
 
 Texture Compression
 == Сжатие текстур
 
+The audio device couldn't be initialised.
+== Аудио устройство не может быть инициализировано.
+
 The server is running a non-standard tuning on a pure game type.
-== Сервер запущен с нестандартными настройками на стандартном типе игры.
+== Этот сервер работает на нестандартных настройках стандартного типа игры.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== В редакторе есть несохранённая карта
 
 Time limit
-== Лимит
+== Лимит на время
+
+Time limit: %d min
+== Лимит на время: %d мин
 
 Try again
-== Попробовать снова
+== Попробовать ещё раз
 
 Type
 == Тип
 
+Type:
+== Тип:
+
 UI Color
 == Цвет интерфейса
 
+Unable to delete the demo
+== Невозможно удалить демо
+
+Unable to rename the demo
+== Невозможно переименовать демо
+
 Use sounds
-== Использовать звуки
+== Звук
+
+Use team colors for name plates
+== Использовать цвет команды для имён игроков
 
 V-Sync
 == Вертикальная синхронизация
 
 Version
 == Версия
+
+Version:
+== Версия:
+
+Vote command:
+== Голосование:
+
+Vote description:
+== Причина голосования:
 
 Vote no
 == Против
@@ -449,7 +644,7 @@ Voting
 == Голосование
 
 Warmup
-== Разминка
+== Разогрев
 
 Weapon
 == Оружие
@@ -461,200 +656,20 @@ Yes
 == Да
 
 You must restart the game for all settings to take effect.
-== Перезапустите игру для применения изменений.
+== Вы должны перезапустить игру, чтобы настройки применились.
 
 Your skin
 == Ваш скин
 
+no limit
+== Без лимита
+
 ##### needs translation #####
 
-%d Bytes
+Demofile: %s
 == 
 
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Delete demo
-== 
-
-Demo details
-== 
-
-Folder
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Invalid Demo
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Move player to spectators
-== 
-
-Name plates size
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Next
-== 
-
-Page %d of %d
-== 
-
-Parent Folder
-== 
-
-Player options
-== 
-
-Prev
-== 
-
-REC %3d:%02d
-== 
-
-Record demo
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Sound error
-== 
-
-Spectator mode
-== 
-
-Stop record
-== 
-
-The audio device couldn't be initialised.
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
-== 
-
-Time limit: %d min
-== 
-
-Type:
-== 
-
-Unable to delete the demo
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
-
-no limit
+Strict gametype filter
 == 
 
 ##### old translations #####

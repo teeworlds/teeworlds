@@ -11,7 +11,7 @@ struct CDemoHeader
 	unsigned char m_Version;
 	char m_aNetversion[64];
 	char m_aMapName[64];
-	char m_aMapSize[4];
+	unsigned char m_aMapSize[4];
 	unsigned char m_aMapCrc[4];
 	char m_aType[8];
 	char m_aLength[4];

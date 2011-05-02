@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef TL_FILE_RANGE_HPP
-#define TL_FILE_RANGE_HPP
+#ifndef BASE_TL_RANGE_H
+#define BASE_TL_RANGE_H
 
 #include "base.h"
 
@@ -11,7 +11,7 @@
 
 /*
 	Concept: concept_empty
-		
+
 		template<class T>
 		struct range
 		{
@@ -25,7 +25,7 @@ struct concept_empty
 
 /*
 	Concept: concept_index
-		
+
 		template<class T>
 		struct range
 		{
@@ -39,7 +39,7 @@ struct concept_index
 
 /*
 	Concept: concept_size
-		
+
 		template<class T>
 		struct range
 		{
@@ -53,7 +53,7 @@ struct concept_size
 
 /*
 	Concept: concept_slice
-		
+
 		template<class T>
 		struct range
 		{
@@ -67,7 +67,7 @@ struct concept_slice
 
 /*
 	Concept: concept_sorted
-		
+
 		template<class T>
 		struct range
 		{
@@ -82,13 +82,13 @@ struct concept_sorted
 /*
 	Concept: concept_forwarditeration
 		Checks for the front and pop_front methods
-		
+
 		template<class T>
 		struct range
 		{
 			void pop_front();
 			T &front() const;
-		};		
+		};
 */
 struct concept_forwarditeration
 {
@@ -98,13 +98,13 @@ struct concept_forwarditeration
 /*
 	Concept: concept_backwarditeration
 		Checks for the back and pop_back methods
-		
+
 		template<class T>
 		struct range
 		{
 			void pop_back();
 			T &back() const;
-		};			
+		};
 */
 struct concept_backwarditeration
 {
@@ -119,7 +119,7 @@ struct concept_backwarditeration
 
 /*
 	Class: plain_range
-	
+
 	Concepts:
 		<concept_empty>
 		<concept_index>
@@ -142,13 +142,13 @@ public:
 	{
 		*this = r;
 	}
-		
+
 	plain_range(T *b, T *e)
 	{
 		begin = b;
 		end = e;
 	}
-	
+
 	bool empty() const { return begin >= end; }
 	void pop_front() { assert(!empty()); begin++; }
 	void pop_back() { assert(!empty()); end--; }
@@ -160,7 +160,7 @@ public:
 	{
 		return plain_range(begin+startindex, begin+endindex);
 	}
-	
+
 protected:
 	T *begin;
 	T *end;
@@ -168,7 +168,7 @@ protected:
 
 /*
 	Class: plain_range_sorted
-	
+
 	Concepts:
 		Same as <plain_range> but with these additions:
 		<concept_sorted>
@@ -180,7 +180,7 @@ class plain_range_sorted : public plain_range<T>
 public:
 	/* sorted concept */
 	void sorted() const { }
-	
+
 	plain_range_sorted()
 	{}
 
@@ -188,11 +188,11 @@ public:
 	{
 		*this = r;
 	}
-		
+
 	plain_range_sorted(T *b, T *e)
 	: parent(b, e)
 	{}
-	
+
 	plain_range_sorted slice(unsigned start, unsigned count)
 	{
 		return plain_range_sorted(parent::begin+start, parent::begin+start+count);
@@ -206,29 +206,29 @@ private:
 	reverse_range() {}
 public:
 	typedef typename R::type type;
-	
+
 	reverse_range(R r)
 	{
 		range = r;
 	}
-	
+
 	reverse_range(const reverse_range &other) { range = other.range; }
-	
+
 
 	bool empty() const { return range.empty(); }
 	void pop_front() { range.pop_back(); }
 	void pop_back() { range.pop_front(); }
 	type& front() { return range.back(); }
 	type& back() { return range.front(); }
-	
+
 	R range;
 };
 
 template<class R> reverse_range<R> reverse(R range) {
-   return reverse_range<R>(range);
+	return reverse_range<R>(range);
 }
 template<class R> R reverse(reverse_range<R> range) {
-   return range.range;
+	return range.range;
 }
 
 #endif // TL_FILE_RANGE_HPP

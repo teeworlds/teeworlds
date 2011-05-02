@@ -545,7 +545,7 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 {
 	if(RconAuthed())
 		return;
-        
+
 	CMsgPacker Msg(NETMSG_RCON_AUTH);
 	Msg.AddString(pName, 32);
 	Msg.AddString(pPassword, 32);
@@ -860,7 +860,7 @@ void CClient::DebugRender()
 		total = 42
 	*/
 	FrameTimeAvg = FrameTimeAvg*0.9f + m_FrameTime*0.1f;
-	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d mem %dk %d  gfxmem: %dk  fps: %3d",
+	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d mem %dk %d gfxmem: %dk fps: %3d",
 		m_CurGameTick, m_PredTick,
 		mem_stats()->allocated/1024,
 		mem_stats()->total_allocations,
@@ -956,8 +956,9 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	// get the crc of the map
 	if(m_pMap->Crc() != WantedCrc)
 	{
-		m_pMap->Unload();
 		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %08x != %08x", m_pMap->Crc(), WantedCrc);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
+		m_pMap->Unload();
 		return aErrorMsg;
 	}
 
@@ -1000,7 +1001,7 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 	// search for the map within subfolders
 	char aFilename[128];
 	str_format(aFilename, sizeof(aFilename), "%s.map", pMapName);
-	if(Storage()->FindFile(aFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)));
+	if(Storage()->FindFile(aFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
 		pError = LoadMap(pMapName, aBuf, WantedCrc);
 
 	return pError;
@@ -1029,7 +1030,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		// version info
 		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
-		
+
 		{
 			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
 			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
@@ -1059,7 +1060,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 
 		// map version list
 		if(pPacket->m_DataSize >= (int)sizeof(VERSIONSRV_MAPLIST) &&
-			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)		
+			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)
 		{
 			int Size = pPacket->m_DataSize-sizeof(VERSIONSRV_MAPLIST);
 			int Num = Size/sizeof(CMapVersion);
@@ -1095,11 +1096,25 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			NETADDR Addr;
 
+			static char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+
 			// copy address
-			Addr.type = (pAddrs[i].m_aType[0]<<24) | (pAddrs[i].m_aType[1]<<16) | (pAddrs[i].m_aType[2]<<8) | pAddrs[i].m_aType[3];
-			mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
+			if(!mem_comp(IPV4Mapping, pAddrs[i].m_aIp, sizeof(IPV4Mapping)))
+			{
+				mem_zero(&Addr, sizeof(Addr));
+				Addr.type = NETTYPE_IPV4;
+				Addr.ip[0] = pAddrs[i].m_aIp[12];
+				Addr.ip[1] = pAddrs[i].m_aIp[13];
+				Addr.ip[2] = pAddrs[i].m_aIp[14];
+				Addr.ip[3] = pAddrs[i].m_aIp[15];
+			}
+			else
+			{
+				Addr.type = NETTYPE_IPV6;
+				mem_copy(Addr.ip, pAddrs[i].m_aIp, sizeof(Addr.ip));
+			}
 			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
-			
+
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 		}
 	}
@@ -1110,7 +1125,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		// we got ze info
 		CUnpacker Up;
 		CServerInfo Info = {0};
-				
+
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 		int Token = str_toint(Up.GetString());
 		str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
@@ -1267,7 +1282,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();						
+					SendReady();
 				}
 				else
 					DisconnectWithReason(pError);
@@ -1659,7 +1674,7 @@ void CClient::Update()
 			Disconnect();
 		}
 	}
-	else if(State() != IClient::STATE_OFFLINE && m_RecivedSnapshots >= 3)
+	else if(State() == IClient::STATE_ONLINE && m_RecivedSnapshots >= 3)
 	{
 		// switch snapshot
 		int Repredict = 0;
@@ -1788,7 +1803,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer);
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_BindAddr.type);
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
@@ -1851,6 +1866,18 @@ void CClient::Run()
 	if(m_pGraphics->Init() != 0)
 		return;
 
+	// open socket
+	{
+		NETADDR BindAddr;
+		mem_zero(&BindAddr, sizeof(BindAddr));
+		BindAddr.type = NETTYPE_ALL;
+		if(!m_NetClient.Open(BindAddr, 0))
+		{
+			dbg_msg("client", "couldn't start network");
+			return;
+		}
+	}
+
 	// init font rendering
 	Kernel()->RequestInterface<IEngineTextRender>()->Init();
 
@@ -1858,7 +1885,7 @@ void CClient::Run()
 	Input()->Init();
 
 	// start refreshing addresses while we load
-	MasterServer()->RefreshAddresses();
+	MasterServer()->RefreshAddresses(m_BindAddr.type);
 
 	// init the editor
 	m_pEditor->Init();
@@ -1874,18 +1901,6 @@ void CClient::Run()
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
-
-	// open socket
-	{
-		NETADDR BindAddr;
-		mem_zero(&BindAddr, sizeof(BindAddr));
-		BindAddr.type = NETTYPE_ALL;
-		if(!m_NetClient.Open(BindAddr, 0))
-		{
-			dbg_msg("client", "couldn't start network");
-			return;
-		}
-	}
 
 	// connect to the server if wanted
 	/*

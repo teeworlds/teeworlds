@@ -4,8 +4,14 @@
 bosnian
 == Bosanski
 
+bulgarian
+== Български
+
 czech
 == Česky
+
+danish
+== Dansk
 
 dutch
 == Nederlands
@@ -22,6 +28,9 @@ german
 italian
 == Italiano
 
+norwegian
+== Norsk
+
 polish
 == Polski
 
@@ -37,11 +46,17 @@ russian
 serbian
 == Srpski
 
+slovak
+== Slovensky
+
 spanish
 == Español
 
 swedish
 == Svenska
+
+turkish
+== Türkçe
 
 ukrainian
 == Українська

@@ -118,6 +118,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	float m_FrameTimeHigh;
 	int m_Frames;
 	NETADDR m_ServerAddress;
+	NETADDR m_BindAddr;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
@@ -137,7 +138,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	char m_aCurrentMap[256];
-	int m_CurrentMapCrc;
+	unsigned m_CurrentMapCrc;
 
 	//
 	char m_aCmdConnect[256];

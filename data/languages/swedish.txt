@@ -1,11 +1,44 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d Bytes
+
 %d of %d servers, %d players
 == %d av %d servrar, %d spelare
 
+%d%% loaded
+== %d%% laddat
+
+%ds left
+== %d sekunder kvar
+
+%i minute left
+== %i minut kvar
+
+%i minutes left
+== %i minuter kvar
+
+%i second left
+== %i sekund kvar
+
+%i seconds left
+== %i sekunder kvar
+
+%s wins!
+== %s vinner!
+
+-Page %d-
+== -Sida %d-
+
 Abort
 == Avbryt
+
+Add
+== Lägg till
+
+Add Friend
+== Lägg till kompis
 
 Address
 == Adress
@@ -19,11 +52,23 @@ Alpha
 Always show name plates
 == Visa alltid namnskyltar
 
+Are you sure that you want to delete the demo?
+== Är du säker på att du vill ta bort detta demo?
+
 Are you sure that you want to quit?
 == Är du säker på att du vill avsluta?
 
+Are you sure that you want to remove the player from your friends list?
+== Är du säker på att du vill ta bort denna spelaren från din kompislista?
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kontrollera inställningarna och justerar dom till din preferens innan du börjar spela.
+
+Automatically record demos
+== Spela in demon automatiskt
+
+Automatically take game over screenshot
+== Ta skärmdumpar vid matchslut
 
 Blue team
 == Blå laget
@@ -37,8 +82,17 @@ Body
 Call vote
 == Röstning
 
+Change settings
+== Ändra inställningar
+
 Chat
 == Chatt
+
+Clan
+== Klan
+
+Client
+== Klient
 
 Close
 == Stäng
@@ -52,11 +106,26 @@ Connect
 Connecting to
 == Ansluter till
 
+Connection Problems...
+== Anslutningsproblem...
+
 Console
 == Konsol
 
 Controls
 == Kontroller
+
+Count players only
+== Räkna endast spelare
+
+Country
+== Land
+
+Crc:
+== Crc:
+
+Created:
+== Skapad:
 
 Current
 == Nuvarande
@@ -66,6 +135,15 @@ Current version: %s
 
 Custom colors
 == Egna färger
+
+Delete
+== Ta bort
+
+Delete demo
+== Ta bort demo
+
+Demo details
+== Demoinformation
 
 Demos
 == Demon
@@ -94,6 +172,12 @@ Emoticon
 Enter
 == Fortsätt
 
+Error
+== Fel
+
+Error loading demo
+== Kunde inte ladda demot
+
 FSAA samples
 == FSAA samplingar
 
@@ -111,6 +195,18 @@ Filter
 
 Fire
 == Skjuta
+
+Folder
+== Mapp
+
+Force vote
+== Tvinga omröstning
+
+Free-View
+== Friläge
+
+Friends
+== Kompisar
 
 Fullscreen
 == Fullskärm
@@ -163,6 +259,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Ogiltigt deo
+
 Join blue
 == Spela i blått
 
@@ -175,11 +274,17 @@ Join red
 Jump
 == Hoppa
 
+Kick player
+== Kicka spelare
+
 LAN
 == LAN
 
 Language
 == Språk
+
+Length:
+== Längd
 
 Lht.
 == Ljusstyrka
@@ -193,6 +298,15 @@ MOTD
 Map
 == Karta
 
+Map:
+== Bana
+
+Max Screenshots
+== Max antal skärmdumpar
+
+Max demos
+== Max antal demon
+
 Maximum ping:
 == Högsta ping:
 
@@ -205,6 +319,9 @@ Mouse sens.
 Move left
 == Gå vänster
 
+Move player to spectators
+== Flytta till åskådarna
+
 Move right
 == Gå höger
 
@@ -216,6 +333,15 @@ Mute when not active
 
 Name
 == Namn
+
+Name plates size
+== Storlek på namnskyltar
+
+Netversion:
+== Nätversion:
+
+New name:
+== Nytt namn:
 
 News
 == Nyheter
@@ -241,6 +367,12 @@ No servers match your filter criteria
 Ok
 == Ok
 
+Open
+== Öppna
+
+Parent Folder
+== Uppliggande mapp
+
 Password
 == Lösenord
 
@@ -259,8 +391,14 @@ Play
 Player
 == Spelare
 
+Player options
+== Spelaralternativ
+
 Players
 == Spelare
+
+Please balance teams!
+== Balansera lagen!
 
 Prev. weapon
 == Föregående vapen
@@ -273,6 +411,18 @@ Quick search:
 
 Quit
 == Avsluta
+
+Quit anyway?
+== Avsluta i alla fall?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Anledning:
+
+Record demo
+== Spela in demo
 
 Red team
 == Röda laget
@@ -288,6 +438,18 @@ Refreshing master servers
 
 Remote console
 == Serverkonsol
+
+Remove
+== Ta bort
+
+Remove friend
+== Ta bort kompis
+
+Rename
+== Byt namn
+
+Rename demo
+== Byt namn på demo
 
 Reset filter
 == Återställ filter
@@ -322,8 +484,14 @@ Scoreboard
 Screenshot
 == Skärmdump
 
+Server address:
+== Serveradress
+
 Server details
 == Serverdetaljer
+
+Server filter
+== Serverfilter
 
 Server info
 == Serverinfo
@@ -337,11 +505,23 @@ Settings
 Shotgun
 == Hagelgevär
 
+Show chat
+== Visa chatt
+
+Show friends
+== Visa kompisar
+
+Show ingame HUD
+== Visa HUD i spel
+
 Show name plates
 == Visa namnskyltar
 
 Show only supported
 == Visa endast upplösningar som stöds
+
+Size:
+== Storlek:
 
 Skins
 == Utseende
@@ -349,11 +529,17 @@ Skins
 Sound
 == Ljud
 
+Sound error
+== Ljudfel
+
 Sound volume
 == Ljud volym
 
 Spectate
 == Åskåda
+
+Spectator mode
+== Åskådarläge
 
 Spectators
 == Åskådare
@@ -363,6 +549,12 @@ Standard gametype
 
 Standard map
 == Standardkarta
+
+Stop record
+== Sluta spela in
+
+Sudden Death
+== Plötslig död
 
 Switch weapon on pickup
 == Byt vapen vid anskaffning
@@ -379,11 +571,20 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Texturkompression
 
+The audio device couldn't be initialised.
+== Ljudet kunde inte startas
+
 The server is running a non-standard tuning on a pure game type.
 == Denna server kör inte standardinställningar på standard speltyp.
 
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Det finns en osparad bana i redigeraden, du kanske vill spara den innan du avslutar.
+
 Time limit
 == Tidsbegränsning
+
+Time limit: %d min
+== Tidsgräns: %d min
 
 Try again
 == Försök igen
@@ -391,17 +592,38 @@ Try again
 Type
 == Typ
 
+Type:
+== Typ:
+
 UI Color
 == Gränssnittfärg
 
+Unable to delete the demo
+== Kunde inte ta bort demot
+
+Unable to rename the demo
+== Kunde inte byta namn på demot
+
 Use sounds
 == Använd ljudeffekter
+
+Use team colors for name plates
+== Använd lagfärger i namnskyltar
 
 V-Sync
 == V-Sync
 
 Version
 == Version
+
+Version:
+== Version:
+
+Vote command:
+== Omröstningskommando:
+
+Vote description:
+== Beskrivning:
 
 Vote no
 == Rösta nej
@@ -411,6 +633,9 @@ Vote yes
 
 Voting
 == Röstning
+
+Warmup
+== Uppvärmning
 
 Weapon
 == Vapen
@@ -424,237 +649,27 @@ Yes
 You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
 
-##### needs translation #####
-
-%d Bytes
-== 
-
-%d%% loaded
-== 
-
-%ds left
-== 
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
--Page %d-
-== 
-
-Add
-== 
-
-Add Friend
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Connection Problems...
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Delete
-== 
-
-Delete demo
-== 
-
-Demo details
-== 
-
-Error
-== 
-
-Error loading demo
-== 
-
-Folder
-== 
-
-Force vote
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Invalid Demo
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-Move player to spectators
-== 
-
-Name plates size
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Next
-== 
-
-Open
-== 
-
-Page %d of %d
-== 
-
-Parent Folder
-== 
-
-Player options
-== 
-
-Please balance teams!
-== 
-
-Prev
-== 
-
-REC %3d:%02d
-== 
-
-Reason:
-== 
-
-Record demo
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show chat
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Sound error
-== 
-
-Spectator mode
-== 
-
-Stop record
-== 
-
-Sudden Death
-== 
-
-The audio device couldn't be initialised.
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
-== 
-
-Time limit: %d min
-== 
-
-Type:
-== 
-
-Unable to delete the demo
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
-== 
-
-Warmup
-== 
-
 Your skin
-== 
+== Ditt skin
 
 no limit
+== Ingen gräns
+
+##### needs translation #####
+
+Demofile: %s
+== 
+
+Play background music
+== 
+
+Spectate next
+== 
+
+Spectate previous
+== 
+
+Strict gametype filter
 == 
 
 ##### old translations #####

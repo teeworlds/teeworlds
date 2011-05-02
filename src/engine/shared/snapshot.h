@@ -11,7 +11,7 @@ class CSnapshotItem
 {
 public:
 	int m_TypeAndID;
-	
+
 	int *Data() { return (int *)(this+1); }
 	int Type() { return m_TypeAndID>>16; }
 	int ID() { return m_TypeAndID&0xffff; }
@@ -90,15 +90,15 @@ public:
 	public:
 		CHolder *m_pPrev;
 		CHolder *m_pNext;
-		
+
 		int64 m_Tagtime;
 		int m_Tick;
-		
+
 		int m_SnapSize;
 		CSnapshot *m_pSnap;
 		CSnapshot *m_pAltSnap;
 	};
-	 
+
 
 	CHolder *m_pFirst;
 	CHolder *m_pLast;
@@ -125,12 +125,12 @@ class CSnapshotBuilder
 
 public:
 	void Init();
-	
+
 	void *NewItem(int Type, int ID, int Size);
-	
+
 	CSnapshotItem *GetItem(int Index);
 	int *GetItemData(int Key);
-	
+
 	int Finish(void *Snapdata);
 };
 

@@ -501,6 +501,9 @@ Your skin
 %i seconds left
 == 
 
+%s wins!
+== 
+
 -Page %d-
 == 
 
@@ -525,6 +528,9 @@ Change settings
 Clan
 == 
 
+Client
+== 
+
 Count players only
 == 
 
@@ -541,6 +547,9 @@ Delete demo
 == 
 
 Demo details
+== 
+
+Demofile: %s
 == 
 
 Free-View
@@ -576,19 +585,16 @@ Netversion:
 New name:
 == 
 
-Next
-== 
-
-Page %d of %d
-== 
-
 Parent Folder
+== 
+
+Play background music
 == 
 
 Player options
 == 
 
-Prev
+Quit anyway?
 == 
 
 REC %3d:%02d
@@ -624,13 +630,22 @@ Size:
 Sound error
 == 
 
+Spectate next
+== 
+
+Spectate previous
+== 
+
 Spectator mode
+== 
+
+Strict gametype filter
 == 
 
 The audio device couldn't be initialised.
 == 
 
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
+There's an unsaved map in the editor, you might want to save it before you quit the game.
 == 
 
 Type:

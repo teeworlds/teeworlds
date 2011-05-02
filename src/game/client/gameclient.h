@@ -19,18 +19,18 @@ class CGameClient : public IGameClient
 		{
 			MAX_COMPONENTS = 64,
 		};
-	
+
 		CStack();
 		void Add(class CComponent *pComponent);
-		
+
 		class CComponent *m_paComponents[MAX_COMPONENTS];
 		int m_Num;
 	};
-	
+
 	CStack m_All;
 	CStack m_Input;
 	CNetObjHandler m_NetObjHandler;
-	
+
 	class IEngine *m_pEngine;
 	class IInput *m_pInput;
 	class IGraphics *m_pGraphics;
@@ -44,11 +44,11 @@ class CGameClient : public IGameClient
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
-	
+
 	CLayers m_Layers;
 	class CCollision m_Collision;
 	CUI m_UI;
-	
+
 	void DispatchInput();
 	void ProcessEvents();
 	void UpdatePositions();
@@ -60,9 +60,9 @@ class CGameClient : public IGameClient
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
-	
+
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	
+
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
@@ -82,7 +82,7 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
-	
+
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
@@ -92,7 +92,7 @@ public:
 
 	// TODO: move this
 	CTuningParams m_Tuning;
-	
+
 	enum
 	{
 		SERVERMODE_PURE=0,
@@ -124,11 +124,11 @@ public:
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfo *m_paInfoByScore[MAX_CLIENTS];
-		
+
 		int m_LocalClientID;
 		int m_NumPlayers;
 		int m_aTeamSize[2];
-		
+
 		// spectate data
 		struct CSpectateInfo
 		{
@@ -137,32 +137,32 @@ public:
 			bool m_UsePosition;
 			vec2 m_Position;
 		} m_SpecInfo;
-		
+
 		//
 		struct CCharacterInfo
 		{
 			bool m_Active;
-			
+
 			// snapshots
 			CNetObj_Character m_Prev;
 			CNetObj_Character m_Cur;
-			
+
 			// interpolated position
 			vec2 m_Position;
 		};
-		
+
 		CCharacterInfo m_aCharacters[MAX_CLIENTS];
 	};
 
 	CSnapState m_Snap;
-	
+
 	// client data
 	struct CClientData
 	{
 		int m_UseCustomColor;
 		int m_ColorBody;
 		int m_ColorFeet;
-		
+
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
@@ -173,23 +173,23 @@ public:
 		int m_Emoticon;
 		int m_EmoticonStart;
 		CCharacterCore m_Predicted;
-		
+
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
-		
+
 		float m_Angle;
 		bool m_Active;
 		bool m_ChatIgnore;
 		bool m_Friend;
-		
+
 		void UpdateRenderInfo();
 		void Reset();
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
-	
+
 	CRenderTools m_RenderTools;
-	
+
 	void OnReset();
 
 	// hooks
@@ -209,19 +209,19 @@ public:
 	virtual void OnRconLine(const char *pLine);
 	virtual void OnGameOver();
 	virtual void OnStartGame();
-	
+
 	virtual const char *GetItemName(int Type);
 	virtual int GetCountryIndex(int Code);
 	virtual const char *Version();
 	virtual const char *NetVersion();
-	
-	
+
+
 	// actions
 	// TODO: move these
 	void SendSwitchTeam(int Team);
 	void SendInfo(bool Start);
 	void SendKill(int ClientID);
-	
+
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;
 	class CBinds *m_pBinds;
@@ -240,17 +240,18 @@ public:
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
+	class CItems *m_pItems;
 };
 
 
 inline float HueToRgb(float v1, float v2, float h)
 {
-   if(h < 0.0f) h += 1;
-   if(h > 1.0f) h -= 1;
-   if((6.0f * h) < 1.0f) return v1 + (v2 - v1) * 6.0f * h;
-   if((2.0f * h) < 1.0f) return v2;
-   if((3.0f * h) < 2.0f) return v1 + (v2 - v1) * ((2.0f/3.0f) - h) * 6.0f;
-   return v1;
+	if(h < 0.0f) h += 1;
+	if(h > 1.0f) h -= 1;
+	if((6.0f * h) < 1.0f) return v1 + (v2 - v1) * 6.0f * h;
+	if((2.0f * h) < 1.0f) return v2;
+	if((3.0f * h) < 2.0f) return v1 + (v2 - v1) * ((2.0f/3.0f) - h) * 6.0f;
+	return v1;
 }
 
 inline vec3 HslToRgb(vec3 HSL)

@@ -1,0 +1,685 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Байтове
+
+%d of %d servers, %d players
+== %d/%d сървъри, %d играчи
+
+%d%% loaded
+== %d%% заредено
+
+%ds left
+== остават %d сек.
+
+%i minute left
+== %i минута остава
+
+%i minutes left
+== %i минути остават
+
+%i second left
+== %i секунда остава
+
+%i seconds left
+== %i секунди остават
+
+%s wins!
+== %s печели!
+
+-Page %d-
+== -Страница %d-
+
+Abort
+== Прекрати
+
+Add
+== Добави
+
+Add Friend
+== Добави Приятел
+
+Address
+== Адрес
+
+All
+== Всички
+
+Alpha
+== Прозрачност
+
+Always show name plates
+== Винаги показвай лентите с имената
+
+Are you sure that you want to delete the demo?
+== Сигурни ли сте че искате да изтриете това демо?
+
+Are you sure that you want to quit?
+== Сигурни ли сте че искате да напуснете?
+
+Are you sure that you want to remove the player from your friends list?
+== Сигурни ли сте че искате да премахнете този играч от листа с приятели?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Тъй като стартирате играта за първи път, моля да въведете вашият ник отдолу. Препоръчително е да проверите и нагласите настройките по ваш избор преди да започнете игра.
+
+Automatically record demos
+== Записвай демота автоматично
+
+Automatically take game over screenshot
+== Автоматична снимка в края на играта
+
+Blue team
+== Отбор Сини
+
+Blue team wins!
+== Отбор Сини печели!
+
+Body
+== Тяло
+
+Call vote
+== Гласувай
+
+Change settings
+== Промени настройките
+
+Chat
+== Чат
+
+Clan
+== Клан
+
+Client
+== Клиент
+
+Close
+== Затвори
+
+Compatible version
+== Съвместима версия
+
+Connect
+== Впиши
+
+Connecting to
+== Свързвам се с
+
+Connection Problems...
+== Проблеми с Връзката...
+
+Console
+== Конзола
+
+Controls
+== Контроли
+
+Count players only
+== Брой на играчите
+
+Country
+== Държава
+
+Crc:
+== Crc:
+
+Created:
+== Създаден:
+
+Current
+== Текущ
+
+Current version: %s
+== Текуща версия: %s
+
+Custom colors
+== Произволни цветове
+
+Delete
+== Изтрий
+
+Delete demo
+== Изтрий демото
+
+Demo details
+== Детайли за демото
+
+Demos
+== Демота
+
+Disconnect
+== Отпиши
+
+Disconnected
+== Отписан
+
+Display Modes
+== Режими на Показване
+
+Downloading map
+== Свалям карта
+
+Draw!
+== Равни!
+
+Dynamic Camera
+== Динамична Камера
+
+Emoticon
+== Емотикони
+
+Enter
+== Влез
+
+Error
+== Грешка
+
+Error loading demo
+== Грешка при зареждане на демо файл
+
+FSAA samples
+== FSAA семпли
+
+Favorite
+== Любим
+
+Favorites
+== Любими
+
+Feet
+== Крака
+
+Filter
+== Филтър
+
+Fire
+== Стрелба
+
+Folder
+== Папка
+
+Force vote
+== Форсирай вот
+
+Free-View
+== Свободен Изглед
+
+Friends
+== Приятели
+
+Fullscreen
+== Цял Екран
+
+Game
+== Игра
+
+Game info
+== Игра
+
+Game over
+== Играта свърши
+
+Game type
+== Тип игра
+
+Game types:
+== Тип иги:
+
+General
+== Основни
+
+Graphics
+== Графика
+
+Grenade
+== Граната
+
+Hammer
+== Чук
+
+Has people playing
+== Не показвай празни
+
+High Detail
+== Висока Детайлност
+
+Hook
+== Верига
+
+Host address
+== Адрес на сървъра
+
+Hue
+== Оттенък
+
+Info
+== Инфо
+
+Internet
+== Интернет
+
+Invalid Demo
+== Невалидно Демо
+
+Join blue
+== Влез син
+
+Join game
+== Влез
+
+Join red
+== Влез червен
+
+Jump
+== Скок
+
+Kick player
+== Кикни играч
+
+LAN
+== ЛАН
+
+Language
+== Език
+
+Length:
+== Дължина:
+
+Lht.
+== Яркост
+
+Loading
+== Зареждам
+
+MOTD
+== MOTD
+
+Map
+== Карта
+
+Map:
+== Карта:
+
+Max Screenshots
+== Максимум Снимки
+
+Max demos
+== Максимум Демота
+
+Maximum ping:
+== Макс. пинг:
+
+Miscellaneous
+== Допълнителни
+
+Mouse sens.
+== Мишка
+
+Move left
+== На ляво
+
+Move player to spectators
+== Премести играча в наблюдатели
+
+Move right
+== На дясно
+
+Movement
+== Движение
+
+Mute when not active
+== Изключвай звука когато играта е неактивна
+
+Name
+== Име
+
+Name plates size
+== Размер на лентата с имената
+
+Netversion:
+== Версия:
+
+New name:
+== Ново име:
+
+News
+== Новини
+
+Next weapon
+== Следващо оръжие
+
+Nickname
+== Ник
+
+No
+== Не
+
+No password
+== Без парола
+
+No servers found
+== Няма намерени сървъри
+
+No servers match your filter criteria
+== Няма сървъри съответстващи вашите настройки
+
+Ok
+== Добре
+
+Open
+== Отвори
+
+Parent Folder
+== Предишна Папка
+
+Password
+== Парола
+
+Password incorrect
+== Грешна Парола
+
+Ping
+== Пинг
+
+Pistol
+== Пистолет
+
+Play
+== Възпроизведи
+
+Player
+== Играч
+
+Player options
+== Настройки на Играча
+
+Players
+== Играчи
+
+Please balance teams!
+== Моля уравновесете отборите!
+
+Prev. weapon
+== Пред. оръжие
+
+Quality Textures
+== Качествени Текстури
+
+Quick search:
+== Бързо Търсене:
+
+Quit
+== Изход
+
+Quit anyway?
+== Излезни все пак?
+
+REC %3d:%02d
+== Записани %3d:%02d
+
+Reason:
+== Причина:
+
+Record demo
+== Запиши демо
+
+Red team
+== Отбор Червени
+
+Red team wins!
+== Отбор Червени печели!
+
+Refresh
+== Обнови
+
+Refreshing master servers
+== Обновновявам мастър-сървърите
+
+Remote console
+== Сървър Конзола
+
+Remove
+== Премахни
+
+Remove friend
+== Премахни приятел
+
+Rename
+== Преименувай
+
+Rename demo
+== Преименувай демо
+
+Reset filter
+== Рестартирай филтрите
+
+Reset to defaults
+== Рестартирай настройките
+
+Rifle
+== Лазер
+
+Round
+== Рунд
+
+Sample rate
+== Честота
+
+Sat.
+== Контраст
+
+Score
+== Точки
+
+Score board
+== Резултат
+
+Score limit
+== Лимит на точките
+
+Scoreboard
+== Резултат
+
+Screenshot
+== Снимка
+
+Server address:
+== Адрес на сървъра:
+
+Server details
+== Детайли за Сървъра
+
+Server filter
+== Филтър на сървъра
+
+Server info
+== Инфо
+
+Server not full
+== Не показвай пълните
+
+Settings
+== Настройки
+
+Shotgun
+== Пушка
+
+Show chat
+== Показвай чата
+
+Show friends
+== Покажи приятели
+
+Show ingame HUD
+== Показвай детайли в играта
+
+Show name plates
+== Показвай лентите с имената
+
+Show only supported
+== Показвай само съвместимите
+
+Size:
+== Размер
+
+Skins
+== Модели
+
+Sound
+== Звук
+
+Sound error
+== Грешка в звука
+
+Sound volume
+== Сила на звука
+
+Spectate
+== Наблюдавайте
+
+Spectator mode
+== Наблюдател
+
+Spectators
+== Наблюдатели
+
+Standard gametype
+== Стандартен тип игри
+
+Standard map
+== Стандартна карта
+
+Stop record
+== Спри записа
+
+Sudden Death
+== Внезапна Смърт
+
+Switch weapon on pickup
+== Сменяй оръжието при взимане
+
+Team
+== Отбор
+
+Team chat
+== Отборен чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Излезна Teeworlds %s! Свалете новата версия от www.teeworlds.com!
+
+Texture Compression
+== Компресиране на Текстурите
+
+The audio device couldn't be initialised.
+== Аудио устройството не може да бъде стартирано
+
+The server is running a non-standard tuning on a pure game type.
+== Този сървър използва нестандартен тунинг на стандартен тип ига.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Има незапазена карта в редактора, ако напуснете картата няма да бъде запазена.
+
+Time limit
+== Лимит на Времето
+
+Time limit: %d min
+== Лимит на Времето: %d мин
+
+Try again
+== Опитайте Отново
+
+Type
+== Тип
+
+Type:
+== Тип:
+
+UI Color
+== Цвят на Интерфейса
+
+Unable to delete the demo
+== Изтриването неуспешно
+
+Unable to rename the demo
+== Преименуването неуспешно
+
+Use sounds
+== Използвай Звук
+
+Use team colors for name plates
+== Използвай  цветове в лентите
+
+V-Sync
+== Вертикална Синхронизация
+
+Version
+== Версия
+
+Version:
+== Версия:
+
+Vote command:
+== Гласувай за команда:
+
+Vote description:
+== Гласувай за обяснение:
+
+Vote no
+== Против
+
+Vote yes
+== За
+
+Voting
+== Гласуване
+
+Warmup
+== Разгрявка
+
+Weapon
+== Оръжия
+
+Welcome to Teeworlds
+== Добре дошли в Teeworlds!
+
+Yes
+== Да
+
+You must restart the game for all settings to take effect.
+== Трябва да рестартирате играта за да поемат ефект новите настройки.
+
+Your skin
+== Вашият модел
+
+no limit
+== Без лимит
+
+##### needs translation #####
+
+Demofile: %s
+== 
+
+Play background music
+== 
+
+Spectate next
+== 
+
+Spectate previous
+== 
+
+Strict gametype filter
+== 
+
+##### old translations #####
+
+Page %d of %d
+== Страница %d/%d
+
+Next
+== Нататък
+
+Prev
+== Назад
+

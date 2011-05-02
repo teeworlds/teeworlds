@@ -4,16 +4,16 @@
 
 enum { NUM_SOCKETS = 64 };
 
-int Run(NETADDR Dest)
+void Run(NETADDR Dest)
 {
 	NETSOCKET aSockets[NUM_SOCKETS];
-	
+
 	for(int i = 0; i < NUM_SOCKETS; i++)
 	{
 		NETADDR BindAddr = {NETTYPE_IPV4, {0}, 0};
 	 	aSockets[i] = net_udp_create(BindAddr);
 	}
-	
+
 	while(1)
 	{
 		unsigned char aData[1024];

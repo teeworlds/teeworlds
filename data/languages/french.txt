@@ -1,6 +1,9 @@
 
 ##### translated strings #####
 
+%d Bytes
+== %d octets
+
 %d of %d servers, %d players
 == %d/%d serveurs, %d joueurs
 
@@ -22,8 +25,20 @@
 %i seconds left
 == %i secondes restantes
 
+%s wins!
+== %s gagne !
+
+-Page %d-
+== -Page %d-
+
 Abort
 == Annuler
+
+Add
+== Ajouter
+
+Add Friend
+== Ajouter aux amis
 
 Address
 == Adresse
@@ -43,6 +58,9 @@ Are you sure that you want to delete the demo?
 Are you sure that you want to quit?
 == Êtes-vous sûr de vouloir quitter ?
 
+Are you sure that you want to remove the player from your friends list?
+== Êtes-vous sûr de vouloir enlever le joueur de votre liste d'amis ?
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Comme c'est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
 
@@ -50,7 +68,7 @@ Automatically record demos
 == Enregistrer automatiquement une démo
 
 Automatically take game over screenshot
-== Faire automatiquement une capture d'écran à la fin de la partie
+== Sauvegarder les résultats à la fin de la partie
 
 Blue team
 == Équipe bleue
@@ -64,8 +82,17 @@ Body
 Call vote
 == Voter
 
+Change settings
+== Changer les options
+
 Chat
 == Chat
+
+Clan
+== Clan
+
+Client
+== Client
 
 Close
 == Fermer
@@ -88,6 +115,18 @@ Console
 Controls
 == Contrôles
 
+Count players only
+== Seulement les joueurs
+
+Country
+== Pays
+
+Crc:
+== Crc :
+
+Created:
+== Créé le :
+
 Current
 == Actuellement
 
@@ -103,6 +142,9 @@ Delete
 Delete demo
 == Supprimer la démo
 
+Demo details
+== Détails de la démo
+
 Demos
 == Démos
 
@@ -113,7 +155,7 @@ Disconnected
 == Déconnecté
 
 Display Modes
-== Modes d'affichages
+== Résolutions
 
 Downloading map
 == Téléchargement de la carte
@@ -160,6 +202,12 @@ Folder
 Force vote
 == Forcer le vote
 
+Free-View
+== Vue libre
+
+Friends
+== Amis
+
 Fullscreen
 == Plein écran
 
@@ -170,7 +218,7 @@ Game info
 == Info. jeu
 
 Game over
-== Fin du jeu
+== Fin de la partie
 
 Game type
 == Type de jeu
@@ -226,14 +274,20 @@ Join red
 Jump
 == Sauter
 
+Kick player
+== Éjecter un joueur
+
 LAN
 == LAN
 
 Language
 == Langue
 
+Length:
+== Longueur :
+
 Lht.
-== Lum.
+== Luminosité
 
 Loading
 == Chargement
@@ -244,11 +298,14 @@ MOTD
 Map
 == Carte
 
+Map:
+== Carte :
+
 Max Screenshots
-== Nombre max de captures d'écran
+== Nombre maximum de captures d'écran
 
 Max demos
-== Nombre max de démos
+== Nombre maximum de démos
 
 Maximum ping:
 == Ping maximum:
@@ -262,6 +319,9 @@ Mouse sens.
 Move left
 == Aller à gauche
 
+Move player to spectators
+== Déplacer le joueur dans les spectateurs
+
 Move right
 == Aller à droite
 
@@ -273,6 +333,15 @@ Mute when not active
 
 Name
 == Nom
+
+Name plates size
+== Taille
+
+Netversion:
+== Netversion :
+
+New name:
+== Nouveau nom :
 
 News
 == Nouvelles
@@ -322,6 +391,9 @@ Play
 Player
 == Joueur
 
+Player options
+== Joueurs
+
 Players
 == Joueurs
 
@@ -340,6 +412,9 @@ Quick search:
 Quit
 == Quitter
 
+Quit anyway?
+== Quitter quand même ?
+
 REC %3d:%02d
 == REC %3d:%02d
 
@@ -347,7 +422,7 @@ Reason:
 == Raison :
 
 Record demo
-== Enregistrement démo
+== Enregistrer
 
 Red team
 == Équipe rouge
@@ -359,10 +434,22 @@ Refresh
 == Rafraîchir
 
 Refreshing master servers
-== Rafraichîssement des serveurs maîtres
+== Rafraîchissement des serveurs maîtres
 
 Remote console
 == Console serveur
+
+Remove
+== Enlever
+
+Remove friend
+== Enlever des amis
+
+Rename
+== Renommer
+
+Rename demo
+== Renommer la démo
 
 Reset filter
 == Filtres par défaut
@@ -380,7 +467,7 @@ Sample rate
 == Fréquence
 
 Sat.
-== Sat.
+== Saturation
 
 Score
 == Score
@@ -397,8 +484,14 @@ Scoreboard
 Screenshot
 == Capture d'écran
 
+Server address:
+== Addresse :
+
 Server details
 == Détails du serveur
+
+Server filter
+== Filtres
 
 Server info
 == Info. serveur
@@ -415,11 +508,20 @@ Shotgun
 Show chat
 == Montrer le chat
 
+Show friends
+== Montrer les amis
+
+Show ingame HUD
+== Afficher l'interface du jeu
+
 Show name plates
 == Montrer les pseudonymes
 
 Show only supported
-== Ne montrer que les modes supportés
+== Ne montrer que les résolutions supportées
+
+Size:
+== Taille :
 
 Skins
 == Skins
@@ -427,11 +529,17 @@ Skins
 Sound
 == Son
 
+Sound error
+== Erreur de son
+
 Sound volume
 == Volume du son
 
 Spectate
 == Regarder
+
+Spectator mode
+== Menu spectateur
 
 Spectators
 == Spectateurs
@@ -443,7 +551,7 @@ Standard map
 == Cartes standards
 
 Stop record
-== Arrêter l'enregistrement
+== Arrêter
 
 Sudden Death
 == Mort Subite
@@ -463,8 +571,14 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Compression des textures
 
+The audio device couldn't be initialised.
+== Le périphérique audio n'a pas pu être initialisé.
+
 The server is running a non-standard tuning on a pure game type.
 == Le serveur utilise des paramètres non standards sur un type de jeu standard.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Il y a une carte non-enregistrée dans l'éditeur, vous voulez peut-être l'enregistrer avant de quitter le jeu.
 
 Time limit
 == Temps limite
@@ -478,17 +592,38 @@ Try again
 Type
 == Type
 
+Type:
+== Type :
+
 UI Color
 == Couleur du menu
 
+Unable to delete the demo
+== Impossible de supprimer la démo
+
+Unable to rename the demo
+== Impossible de renommer la démo
+
 Use sounds
 == Jouer les sons
+
+Use team colors for name plates
+== Utiliser la couleur des équipes
 
 V-Sync
 == V-Sync
 
 Version
 == Version
+
+Version:
+== Version :
+
+Vote command:
+== Commande :
+
+Vote description:
+== Description :
 
 Vote no
 == Voter non
@@ -522,139 +657,19 @@ no limit
 
 ##### needs translation #####
 
-%d Bytes
+Demofile: %s
 == 
 
--Page %d-
+Play background music
 == 
 
-Add
+Spectate next
 == 
 
-Add Friend
+Spectate previous
 == 
 
-Are you sure that you want to remove the player from your friends list?
-== 
-
-Change settings
-== 
-
-Clan
-== 
-
-Count players only
-== 
-
-Country
-== 
-
-Crc:
-== 
-
-Created:
-== 
-
-Demo details
-== 
-
-Free-View
-== 
-
-Friends
-== 
-
-Kick player
-== 
-
-Length:
-== 
-
-Map:
-== 
-
-Move player to spectators
-== 
-
-Name plates size
-== 
-
-Netversion:
-== 
-
-New name:
-== 
-
-Next
-== 
-
-Page %d of %d
-== 
-
-Player options
-== 
-
-Prev
-== 
-
-Remove
-== 
-
-Remove friend
-== 
-
-Rename
-== 
-
-Rename demo
-== 
-
-Server address:
-== 
-
-Server filter
-== 
-
-Show friends
-== 
-
-Show ingame HUD
-== 
-
-Size:
-== 
-
-Sound error
-== 
-
-Spectator mode
-== 
-
-The audio device couldn't be initialised.
-== 
-
-There's an unsaved map in the editor, you might want to save it before you quit the game.\nQuit anyway?
-== 
-
-Type:
-== 
-
-Unable to delete the demo
-== 
-
-Unable to rename the demo
-== 
-
-Use team colors for name plates
-== 
-
-Version:
-== 
-
-Vote command:
-== 
-
-Vote description:
+Strict gametype filter
 == 
 
 ##### old translations #####

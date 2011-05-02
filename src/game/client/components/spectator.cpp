@@ -27,6 +27,100 @@ void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 	((CSpectator *)pUserData)->Spectate(pResult->GetInteger(0));
 }
 
+void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
+{
+	CSpectator *pSelf = (CSpectator *)pUserData;
+	int NewSpectatorID;
+	bool GotNewSpectatorID = false;
+
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+				continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+			break;
+		}
+	}
+	else
+	{
+		for(int i = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID + 1; i < MAX_CLIENTS; i++)
+		{
+			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+				continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+			break;
+		}
+
+		if(!GotNewSpectatorID)
+		{
+			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
+			{
+				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+					continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+				break;
+			}
+		}
+	}
+	if(GotNewSpectatorID)
+		pSelf->Spectate(NewSpectatorID);
+}
+
+void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData)
+{
+	CSpectator *pSelf = (CSpectator *)pUserData;
+	int NewSpectatorID;
+	bool GotNewSpectatorID = false;
+
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
+	{
+		for(int i = MAX_CLIENTS -1; i > -1; i--)
+		{
+			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+				continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+			break;
+		}
+	}
+	else
+	{
+		for(int i = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID - 1; i > -1; i--)
+		{
+			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+				continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+			break;
+		}
+
+		if(!GotNewSpectatorID)
+		{
+			for(int i = MAX_CLIENTS - 1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
+			{
+				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+					continue;
+
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
+				break;
+			}
+		}
+	}
+	if(GotNewSpectatorID)
+		pSelf->Spectate(NewSpectatorID);
+}
+
 CSpectator::CSpectator()
 {
 	OnReset();
@@ -36,13 +130,15 @@ void CSpectator::OnConsoleInit()
 {
 	Console()->Register("+spectate", "", CFGFLAG_CLIENT, ConKeySpectator, this, "Open spectator mode selector");
 	Console()->Register("spectate", "i", CFGFLAG_CLIENT, ConSpectate, this, "Switch spectator mode");
+	Console()->Register("spectate_next", "", CFGFLAG_CLIENT, ConSpectateNext, this, "Spectate the next player");
+	Console()->Register("spectate_previous", "", CFGFLAG_CLIENT, ConSpectatePrevious, this, "Spectate the previous player");
 }
 
 bool CSpectator::OnMouseMove(float x, float y)
 {
 	if(!m_Active)
 		return false;
-	
+
 	m_SelectorMouse += vec2(x,y);
 	return true;
 }
@@ -51,7 +147,7 @@ void CSpectator::OnRelease()
 {
 	OnReset();
 }
-	
+
 void CSpectator::OnRender()
 {
 	if(!m_Active)
@@ -64,14 +160,14 @@ void CSpectator::OnRender()
 		}
 		return;
 	}
-	
+
 	m_WasActive = true;
 	m_SelectedSpectatorID = NO_SELECTION;
 
 	// draw background
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
-	
+
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	Graphics()->BlendNormal();
@@ -89,7 +185,7 @@ void CSpectator::OnRender()
 	float FontSize = 20.0f;
 	float StartY = -190.0f;
 	float LineHeight = 60.0f;
-	bool Selected  = false;
+	bool Selected = false;
 
 	if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 	{
@@ -142,7 +238,7 @@ void CSpectator::OnRender()
 
 		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[i].m_RenderInfo;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(Width/2.0f+x+20.0f, Height/2.0f+y+20.0f));
-		
+
 		y += LineHeight;
 	}
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

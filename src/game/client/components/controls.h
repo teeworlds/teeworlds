@@ -6,7 +6,7 @@
 #include <game/client/component.h>
 
 class CControls : public CComponent
-{	
+{
 public:
 	vec2 m_MousePos;
 	vec2 m_TargetPos;
@@ -17,7 +17,7 @@ public:
 	int m_InputDirectionRight;
 
 	CControls();
-	
+
 	virtual void OnReset();
 	virtual void OnRelease();
 	virtual void OnRender();
@@ -25,7 +25,7 @@ public:
 	virtual bool OnMouseMove(float x, float y);
 	virtual void OnConsoleInit();
 	virtual void OnPlayerDeath();
-	
+
 	int SnapInput(int *pData);
 	void ClampMousePos();
 };

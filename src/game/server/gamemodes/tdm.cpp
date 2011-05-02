@@ -15,8 +15,8 @@ CGameControllerTDM::CGameControllerTDM(class CGameContext *pGameServer) : IGameC
 int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
 	IGameController::OnCharacterDeath(pVictim, pKiller, Weapon);
-	
-	
+
+
 	if(Weapon != WEAPON_GAME)
 	{
 		// do team scoring
@@ -27,7 +27,7 @@ int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	}
 
 	pVictim->GetPlayer()->m_RespawnTick = max(pVictim->GetPlayer()->m_RespawnTick, Server()->Tick()+Server()->TickSpeed()*g_Config.m_SvRespawnDelayTDM);
-		
+
 	return 0;
 }
 

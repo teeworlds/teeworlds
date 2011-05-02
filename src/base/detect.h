@@ -1,11 +1,11 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef BASELIB_FILE_CONFIG_H
-#define BASELIB_FILE_CONFIG_H
+#ifndef BASE_DETECT_H
+#define BASE_DETECT_H
 
 /*
-  this file detected the family, platform and architecture
-  to compile for.
+	this file detected the family, platform and architecture
+	to compile for.
 */
 
 /* platforms */

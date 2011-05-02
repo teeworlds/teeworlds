@@ -16,7 +16,7 @@ CMapImages::CMapImages()
 void CMapImages::OnMapLoad()
 {
 	IMap *pMap = Kernel()->RequestInterface<IMap>();
-	
+
 	// unload all textures
 	for(int i = 0; i < m_Count; i++)
 	{
@@ -27,12 +27,12 @@ void CMapImages::OnMapLoad()
 
 	int Start;
 	pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_Count);
-	
+
 	// load new textures
 	for(int i = 0; i < m_Count; i++)
 	{
 		m_aTextures[i] = 0;
-		
+
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External)
 		{

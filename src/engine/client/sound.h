@@ -31,7 +31,7 @@ public:
 	int Play(int ChannelID, int SampleID, int Flags, float x, float y);
 	virtual int PlayAt(int ChannelID, int SampleID, int Flags, float x, float y);
 	virtual int Play(int ChannelID, int SampleID, int Flags);
-	virtual void Stop(int VoiceID);
+	virtual void Stop(int SampleID);
 	virtual void StopAll();
 };
 

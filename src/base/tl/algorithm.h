@@ -1,14 +1,14 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef TL_FILE_ALGORITHM_HPP
-#define TL_FILE_ALGORITHM_HPP
+#ifndef BASE_TL_ALGORITHM_H
+#define BASE_TL_ALGORITHM_H
 
 #include "range.h"
 
 
 /*
 	insert 4
-	      v
+		v
 	1 2 3 4 5 6
 
 */
@@ -38,12 +38,12 @@ R partition_binary(R range, T value)
 	concept_size::check(range);
 	concept_slice::check(range);
 	concept_sorted::check(range);
-	
+
 	if(range.empty())
 		return range;
 	if(range.back() < value)
 		return R();
-	
+
 	while(range.size() > 1)
 	{
 		unsigned pivot = (range.size()-1)/2;
@@ -82,7 +82,7 @@ void sort_bubble(R range)
 	concept_empty::check(range);
 	concept_forwarditeration::check(range);
 	concept_backwarditeration::check(range);
-	
+
 	// slow bubblesort :/
 	for(; !range.empty(); range.pop_back())
 	{
@@ -119,18 +119,18 @@ bool sort_verify(R range)
 {
 	concept_empty::check(range);
 	concept_forwarditeration::check(range);
-	
+
 	typename R::type *prev = &range.front();
 	range.pop_front();
 	for(; !range.empty(); range.pop_front())
 	{
 		typename R::type *cur = &range.front();
-		
+
 		if(*cur < *prev)
 			return false;
 		prev = cur;
 	}
-	
+
 	return true;
 }
 

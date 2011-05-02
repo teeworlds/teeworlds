@@ -13,19 +13,19 @@ class vector2_base
 public:
 	union { T x,u; };
 	union { T y,v; };
-	
+
 	vector2_base() {}
 	vector2_base(float nx, float ny)
 	{
 		x = nx;
 		y = ny;
 	}
-	
+
 	vector2_base operator -() const { return vector2_base(-x, -y); }
 	vector2_base operator -(const vector2_base &v) const { return vector2_base(x-v.x, y-v.y); }
 	vector2_base operator +(const vector2_base &v) const { return vector2_base(x+v.x, y+v.y); }
 	vector2_base operator *(const T v) const { return vector2_base(x*v, y*v); }
-	
+
 	const vector2_base &operator =(const vector2_base &v) { x = v.x; y = v.y; return *this; }
 
 	const vector2_base &operator +=(const vector2_base &v) { x += v.x; y += v.y; return *this; }
@@ -81,7 +81,7 @@ inline vector2_base<T> closest_point_on_line(vector2_base<T> line_point0, vector
 	if (t > 1.0f) return 1.0f;
 	return t;*/
 }
-	
+
 // ------------------------------------
 template<typename T>
 class vector3_base
@@ -98,7 +98,7 @@ public:
 		y = ny;
 		z = nz;
 	}
-	
+
 	const vector3_base &operator =(const vector3_base &v) { x = v.x; y = v.y; z = v.z; return *this; }
 
 	vector3_base operator -(const vector3_base &v) const { return vector3_base(x-v.x, y-v.y, z-v.z); }
@@ -107,7 +107,7 @@ public:
 	vector3_base operator *(const T v) const { return vector3_base(x*v, y*v, z*v); }
 	vector3_base operator *(const vector3_base &v) const { return vector3_base(x*v.x, y*v.y, z*v.z); }
 	vector3_base operator /(const T v) const { return vector3_base(x/v, y/v, z/v); }
-	
+
 	const vector3_base &operator +=(const vector3_base &v) { x += v.x; y += v.y; z += v.z; return *this; }
 	const vector3_base &operator -=(const vector3_base &v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
 	const vector3_base &operator *=(const T v) { x *= v; y *= v; z *= v; return *this;	}
@@ -174,13 +174,13 @@ public:
 		z = nz;
 		w = nw;
 	}
-	
+
 	vector4_base operator +(const vector4_base &v) const { return vector4_base(x+v.x, y+v.y, z+v.z, w+v.w); }
 	vector4_base operator -(const vector4_base &v) const { return vector4_base(x-v.x, y-v.y, z-v.z, w-v.w); }
 	vector4_base operator -() const { return vector4_base(-x, -y, -z, -w); }
 	vector4_base operator *(const vector4_base &v) const { return vector4_base(x*v.x, y*v.y, z*v.z, w*v.w); }
 	vector4_base operator *(const T v) const { return vector4_base(x*v, y*v, z*v, w*v); }
-	
+
 	const vector4_base &operator =(const vector4_base &v) { x = v.x; y = v.y; z = v.z; w = v.w; return *this; }
 
 	const vector4_base &operator +=(const vector4_base &v) { x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
