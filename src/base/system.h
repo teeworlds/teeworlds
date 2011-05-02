@@ -932,6 +932,20 @@ const char *str_find(const char *haystack, const char *needle);
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 /*
+	Function: str_timestamp_at
+		Copies the given time stamp in the format year-month-day_hour-minute-second to the string.
+
+	Parameters:
+		buffer - Pointer to a buffer that shall receive the time stamp string.
+		buffer_size - Size of the buffer.
+		when - timestamp to use
+
+	Remarks:
+		- Guarantees that buffer string will contain zero-termination.
+*/
+
+void str_timestamp_at(char *buffer, int buffer_size, unsigned long when);
+/*
 	Function: str_timestamp
 		Copies a time stamp in the format year-month-day_hour-minute-second to the string.
 
@@ -941,6 +955,7 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 	Remarks:
 		- Guarantees that buffer string will contain zero-termination.
+		- as of str_timestamp_at, this is equivalent to str_timestamp_at(buffer, buffer_size, time(0))
 */
 void str_timestamp(char *buffer, int buffer_size);
 

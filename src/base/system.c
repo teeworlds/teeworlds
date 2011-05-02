@@ -1637,15 +1637,19 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	}
 }
 
+void str_timestamp_at(char *buffer, int buffer_size, unsigned long when)
+{
+	struct tm *time_info;
+	time_info = localtime((time_t*)&when);
+	strftime(buffer, buffer_size, "%Y-%m-%d_%H-%M-%S", time_info);
+	buffer[buffer_size-1] = 0;	/* assure null termination */
+}
+
 void str_timestamp(char *buffer, int buffer_size)
 {
 	time_t time_data;
-	struct tm *time_info;
-
 	time(&time_data);
-	time_info = localtime(&time_data);
-	strftime(buffer, buffer_size, "%Y-%m-%d_%H-%M-%S", time_info);
-	buffer[buffer_size-1] = 0;	/* assure null termination */
+	str_timestamp_at(buffer, buffer_size, time_data);
 }
 
 int mem_comp(const void *a, const void *b, int size)

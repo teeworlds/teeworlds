@@ -25,10 +25,14 @@ def cstrip(lines):
 	return d
 
 f = "".encode()
-for filename in sys.argv[1:]:
+for filename in sys.argv[2:]:
 	f += cstrip([l.strip() for l in open(filename, "rb")])
 
 hash = hashlib.md5(f).hexdigest().lower()[16:]
 #TODO 0.7: improve nethash creation
-print('#define GAME_NETVERSION_HASH "626fce9a778df4d4"')
-print('#define GAME_NETVERSION_HASH_CUST "%s"' % hash)
+if sys.argv[1] == "GAME_NETVERSION_HASH":
+	if hash == "6e28a475de43adfd":
+		hash = "626fce9a778df4d4"
+	
+hash = sys.argv[1] + ' "' + hash + '"'
+print('#define %s' % hash)

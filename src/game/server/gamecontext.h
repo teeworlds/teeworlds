@@ -13,6 +13,7 @@
 #include "eventhandler.h"
 #include "gamecontroller.h"
 #include "gameworld.h"
+#include "account.h"
 #include "player.h"
 
 /*
@@ -166,6 +167,7 @@ public:
 	virtual const char *Version();
 	virtual const char *NetVersion();
 	virtual const char *NetVersionCust();
+	virtual const char *AccVersion();
 };
 
 inline int CmaskAll() { return -1; }
