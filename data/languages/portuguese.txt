@@ -61,6 +61,9 @@ Are you sure that you want to quit?
 Are you sure that you want to remove the player from your friends list?
 == Tem certeza que deseja remover o jogador da sua lista de amigos?
 
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Como esta é a primeira vez que você abre o jogo, por favor, coloque seu apelido abaixo. É recomendado que você verifique as configurações e então ajuste-as para suas preferências antes de entrar em um servidor.
+
 Automatically record demos
 == Gravar demos automaticamente
 
@@ -385,6 +388,9 @@ Pistol
 Play
 == Assistir
 
+Play background music
+== Tocar música de fundo
+
 Player
 == Jogador
 
@@ -482,7 +488,7 @@ Screenshot
 == Captura de tela
 
 Server address:
-== Endereço do server:
+== End. do servidor:
 
 Server details
 == Detalhes do server
@@ -534,6 +540,12 @@ Sound volume
 
 Spectate
 == Observar
+
+Spectate next
+== Observar próximo
+
+Spectate previous
+== Observar anterior
 
 Spectator mode
 == Modo Observador
@@ -654,20 +666,11 @@ no limit
 
 ##### needs translation #####
 
-As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== 
-
 Demofile: %s
 == 
 
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
 ##### old translations #####
+
+﻿
+== ## translated strings #####
 
