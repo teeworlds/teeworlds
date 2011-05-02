@@ -388,6 +388,9 @@ Pistol
 Play
 == Spelen
 
+Play background music
+== Speel achtergrondmuziek
+
 Player
 == Speler
 
@@ -538,6 +541,12 @@ Sound volume
 Spectate
 == Toekijken
 
+Spectate next
+== Volg volgende speler
+
+Spectate previous
+== Volg vorige speler
+
 Spectator mode
 == Toeschouwer modus
 
@@ -658,15 +667,6 @@ no limit
 ##### needs translation #####
 
 Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
 == 
 
 ##### old translations #####
