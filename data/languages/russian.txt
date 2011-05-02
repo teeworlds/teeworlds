@@ -388,6 +388,9 @@ Pistol
 Play
 == Воспроизвести
 
+Play background music
+== Воспроизвести фоновую музыку
+
 Player
 == Игрок
 
@@ -398,7 +401,7 @@ Players
 == Игроки
 
 Please balance teams!
-== Пожалуйста отбалансируйте команды!
+== Пожалуйста cбалансируйте команды!
 
 Prev. weapon
 == Пред. оружие
@@ -538,6 +541,12 @@ Sound volume
 Spectate
 == Наблюдать
 
+Spectate next
+== Наблюдать следующего
+
+Spectate previous
+== Наблюдать предыдущего
+
 Spectator mode
 == Наблюдатель
 
@@ -658,15 +667,6 @@ no limit
 ##### needs translation #####
 
 Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
 == 
 
 ##### old translations #####
