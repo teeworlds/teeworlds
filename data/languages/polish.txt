@@ -636,6 +636,9 @@ Spectator mode
 Stop record
 == 
 
+Strict gametype filter
+== 
+
 The audio device couldn't be initialised.
 == 
 

@@ -639,6 +639,9 @@ Spectate previous
 Spectator mode
 == 
 
+Strict gametype filter
+== 
+
 The audio device couldn't be initialised.
 == 
 

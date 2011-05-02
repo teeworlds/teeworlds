@@ -669,6 +669,9 @@ Spectate next
 Spectate previous
 == 
 
+Strict gametype filter
+== 
+
 ##### old translations #####
 
 ##### race #####

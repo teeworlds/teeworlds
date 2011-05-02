@@ -669,5 +669,8 @@ no limit
 Demofile: %s
 == 
 
+Strict gametype filter
+== 
+
 ##### old translations #####
 
