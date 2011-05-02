@@ -196,7 +196,9 @@ void CServerBrowser::Filter()
 				Filtered = 1;
 			else if(g_Config.m_BrFilterServerAddress[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aAddress, g_Config.m_BrFilterServerAddress))
 				Filtered = 1;
-			else if(g_Config.m_BrFilterGametype[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
+			else if(g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && str_comp_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
+				Filtered = 1;
+			else if(!g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
 				Filtered = 1;
 			else if(g_Config.m_BrFilterString[0] != 0)
 			{
@@ -252,6 +254,7 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterCompatversion<<10;
 	i |= g_Config.m_BrFilterPure<<11;
 	i |= g_Config.m_BrFilterPureMap<<12;
+	i |= g_Config.m_BrFilterGametypeStrict<<13;
 	i |= g_Config.m_BrFilterPing<<18;
 	return i;
 }
