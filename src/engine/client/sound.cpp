@@ -10,7 +10,7 @@
 #include "sound.h"
 
 extern "C" { // wavpack
-	#include <engine/external/wavpack/wavpack.h>
+	#include <wavpack/wavpack.h>
 }
 #include <math.h>
 
@@ -48,6 +48,54 @@ struct CVoice
 	int m_Flags;
 	int m_X, m_Y;
 } ;
+
+#ifdef WAVPACK_H
+static int32_t ReadBytes(void *pFile, void *pBuffer, int32_t Size)
+{
+	return (int32_t)io_read((IOHANDLE)pFile, pBuffer, Size);
+}
+static uint32_t GetPos(void *pFile)
+{
+	return (uint32_t)io_tell((IOHANDLE)pFile);
+}
+static int SetPosAbs(void *pFile, uint32_t Offset)
+{
+	return io_seek((IOHANDLE)pFile, Offset, IOSEEK_START);
+}
+static int SetPosRel(void *pFile, int32_t Offset, int Mode)
+{
+	switch(Mode)
+	{
+	case SEEK_SET:
+		Mode = IOSEEK_START;
+		break;
+	case SEEK_CUR:
+		Mode = IOSEEK_CUR;
+		break;
+	case SEEK_END:
+		Mode = IOSEEK_END;
+	}
+	return io_seek((IOHANDLE)pFile, Offset, Mode);
+}
+
+//TODO: Fix if 'real' functionality is needed by the wavpack header
+static int PushBackByte(void *pFile, int Char)
+{
+	return io_seek((IOHANDLE)pFile, -1, IOSEEK_CUR);
+}
+static uint32_t GetLength(void *pFile)
+{
+	return (uint32_t)io_length((IOHANDLE)pFile);
+}
+// Essentially assuming this to always be true, should fix if this isn't the case
+static int CanSeek(void *pFile)
+{
+	return pFile != NULL;
+}
+static WavpackStreamReader CWavpackReader  = {
+    ReadBytes, GetPos, SetPosAbs, SetPosRel, PushBackByte, GetLength, CanSeek, 0
+};
+#endif
 
 static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
@@ -344,7 +392,11 @@ int CSound::LoadWV(const char *pFilename)
 		return -1;
 	pSample = &m_aSamples[SampleID];
 
+	#ifndef WAVPACK_H
 	pContext = WavpackOpenFileInput(ReadData, aError);
+	#else
+	pContext = WavpackOpenFileInputEx(&CWavpackReader, ms_File, 0, aError, 0, 0);
+	#endif
 	if (pContext)
 	{
 		int m_aSamples = WavpackGetNumSamples(pContext);
@@ -396,7 +448,7 @@ int CSound::LoadWV(const char *pFilename)
 	}
 	else
 	{
-		dbg_msg("sound/wv", "failed to open %s: %s", pFilename, aError);
+		dbg_msg("sound/wv", "failed to open '%s': %s", pFilename, aError);
 	}
 
 	io_close(ms_File);
