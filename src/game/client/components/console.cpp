@@ -447,6 +447,7 @@ void CGameConsole::OnRender()
 
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		CTextCursor Marker = Cursor;
+		Marker.m_X -= TextRender()->TextWidth(0, FontSize, "|", -1)/2;
 		TextRender()->TextEx(&Marker, "|", -1);
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
 
