@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d Bytes
@@ -664,13 +664,14 @@ Your skin
 no limit
 == Keine Begrenzung
 
-##### needs translation #####
-
 Demofile: %s
-== 
+== Demodatei:
 
 Strict gametype filter
-== 
+== Genauer Spieltyp
+
+
+##### needs translation #####
 
 ##### old translations #####
 
