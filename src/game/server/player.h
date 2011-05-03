@@ -38,6 +38,9 @@ public:
 	CAccount *GetAccount() { return m_pAccount; }
 	void SetAccount(CAccount *pAcc) { m_pAccount = pAcc; }
 
+	void BlockKill();
+	int BlockKillCheck();
+
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;
@@ -113,6 +116,7 @@ private:
 	int m_Team;
 
 	CAccount *m_pAccount;
+	double blockScore;
 };
 
 #endif

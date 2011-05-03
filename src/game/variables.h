@@ -82,6 +82,17 @@ MACRO_CONFIG_INT(SvDamage, sv_damage, 0, 0, 1, CFGFLAG_SERVER, "allow damage")
 MACRO_CONFIG_INT(SvNinja, sv_ninja, 0, 0, 1, CFGFLAG_SERVER, "allow ninja")
 MACRO_CONFIG_INT(SvUnlimitedAmmo, sv_unlimited_ammo, 1, 0, 1, CFGFLAG_SERVER, "guess what")
 
+MACRO_CONFIG_INT(SvScoreSteal, sv_scoresteal, 10, 0, 100, CFGFLAG_SERVER, "Percentage of score to steal on block")
+MACRO_CONFIG_INT(SvScoreStealLimit, sv_scoresteallimit, 40, 0, 100, CFGFLAG_SERVER, "Tee cannot steal more than this*killer_current_score")
+
+MACRO_CONFIG_INT(SvIntFree, sv_int_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for interacted->free transition")
+MACRO_CONFIG_INT(SvBlockedFree, sv_blocked_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for blocked->free transition")
+MACRO_CONFIG_INT(SvFrozenInt, sv_frozen_int, 300, 0, 10000, CFGFLAG_SERVER, "Milliseconds for frozen->interacted transition")
+MACRO_CONFIG_INT(SvFrozenBlocked, sv_frozen_blocked, 5000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for frozen->blocked transition")
+MACRO_CONFIG_INT(SvSelfBlocked, sv_self_blocked, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for self-frozen->blocked transition")
+MACRO_CONFIG_INT(SvHookIntMask, sv_hookintmask, -1, -1, 3000, CFGFLAG_SERVER, "Ignore reverse hook interaction if another interaction happend this milliseconds ago")
+MACRO_CONFIG_INT(SvDmgIntMask, sv_dmgintmask, 300, -1, 3000, CFGFLAG_SERVER, "Ignore damage interaction if another interaction happend this milliseconds ago")
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")

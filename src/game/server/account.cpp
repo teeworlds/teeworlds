@@ -72,25 +72,25 @@ bool CAccount::Write() const
 	mem_zero(aBodyChunk, sizeof aBodyChunk);
 	mem_copy(aBodyChunk, &m_Payload.m_Body, sizeof m_Payload.m_Body);
 
-	struct flock fl = { 0, 0, 0, F_WRLCK, SEEK_SET };
-	fl.l_pid = getpid();
+//	struct flock fl = { 0, 0, 0, F_WRLCK, SEEK_SET };
+//	fl.l_pid = getpid();
 
 	char aBuf[MAX_FILEPATH];
 	str_format(aBuf, sizeof aBuf, "%s/%s_%s.acc", g_Config.m_SvAccDir, ms_pPayloadHash, m_aAccName);
 
-	int fd = open(aBuf, O_WRONLY | O_CREAT | O_TRUNC, ~(S_IWGRP|S_IWOTH));
+	int fd = open(aBuf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR|S_IRGRP);
 
 	if (fd == -1)
 		return false;
-	if (fcntl(fd, F_SETLKW, &fl) != -1)
-	{
+//	if (fcntl(fd, F_SETLKW, &fl) != -1)
+//	{
 		if (write(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
 				&& write(fd, aBodyChunk, SzBody) == SzBody)
 			Ret = true;
 
-		fl.l_type = F_UNLCK;
-		fcntl(fd, F_SETLK, &fl);
-	}
+//		fl.l_type = F_UNLCK;
+//		fcntl(fd, F_SETLK, &fl);
+//	}
 
 	close(fd);
 	return Ret;
@@ -111,8 +111,8 @@ bool CAccount::Read()
 
 	mem_zero(aBodyChunk, sizeof aBodyChunk);
 
-	struct flock fl = { 0, 0, 0, F_RDLCK, SEEK_SET };
-	fl.l_pid = getpid();
+//	struct flock fl = { 0, 0, 0, F_RDLCK, SEEK_SET };
+//	fl.l_pid = getpid();
 
 	char aBuf[MAX_FILEPATH];
 	str_format(aBuf, sizeof aBuf, "%s/%s_%s.acc", g_Config.m_SvAccDir, ms_pPayloadHash, m_aAccName);
@@ -122,8 +122,8 @@ bool CAccount::Read()
 	if (fd == -1)
 		return false;
 
-	if (fcntl(fd, F_SETLKW, &fl) != -1)
-	{
+//	if (fcntl(fd, F_SETLKW, &fl) != -1)
+//	{
 		if (read(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
 				&& read(fd, aBodyChunk, SzBody) == SzBody)
 		{
@@ -131,9 +131,9 @@ bool CAccount::Read()
 			mem_copy(&m_Payload.m_Body, aBodyChunk, sizeof m_Payload.m_Body);
 		}
 
-		fl.l_type = F_UNLCK;
-		fcntl(fd, F_SETLK, &fl);
-	}
+//		fl.l_type = F_UNLCK;
+//		fcntl(fd, F_SETLK, &fl);
+//	}
 
 	close(fd);
 	return Ret;
@@ -283,6 +283,7 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 		{
 			str_copy(aBuf, "Account successfully created, logged in. Do not forget your password, there is no way to get it back if lost.", sizeof aBuf);
 			pPlayer->SetAccount(pAcc);
+			pAcc->Payload()->blockScore = 10.0; // XXX dirty
 			char aName[MAX_NAME_LENGTH];
 			CAccount::OverrideName(aName, sizeof aName, pPlayer, pPlayer->m_OrigName);
 			GameContext()->Server()->SetClientName(pPlayer->GetCID(), aName);

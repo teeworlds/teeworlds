@@ -315,8 +315,8 @@ void CCharacter::FireWeapon()
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				pTarget->m_Core.m_Frozen = 0;
-
 				Hits++;
+				pTarget->Interaction(m_pPlayer->GetCID(), g_Config.m_SvDmgIntMask);
 			}
 
 			// if we Hit anything, we have to wait for the reload
@@ -566,9 +566,23 @@ void CCharacter::Tick()
 			GiveNinja(true);
 		if ((m_Core.m_Frozen+1) % Server()->TickSpeed() == 0)
 			GameServer()->CreateDamageInd(m_Pos, 0, (m_Core.m_Frozen+1) / Server()->TickSpeed());
+		Frozen();
 	}
-	else if (m_ActiveWeapon == WEAPON_NINJA)
-		TakeNinja();
+	else
+	{
+		if (m_ActiveWeapon == WEAPON_NINJA)
+			TakeNinja();
+		UnFrozen();
+	}
+	if (m_Core.m_HookedPlayer != -1)
+	{
+		CCharacter* hookedChar = GameServer()->GetPlayerChar(m_Core.m_HookedPlayer);
+		if (hookedChar)
+			hookedChar->Interaction(GetPlayer()->GetCID(), 0);
+		Interaction(m_Core.m_HookedPlayer, g_Config.m_SvHookIntMask);
+	}
+
+	ResolveTick();
 
 	// handle death-tiles and leaving gamelayer
 	int Col = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y);
@@ -686,6 +700,16 @@ bool CCharacter::IncreaseArmor(int Amount)
 	return true;
 }
 
+void CCharacter::SendKillMsg(int Killer, int Weapon, int ModeSpecial)
+{
+	CNetMsg_Sv_KillMsg Msg;
+	Msg.m_Killer = Killer;
+	Msg.m_Victim = m_pPlayer->GetCID();
+	Msg.m_Weapon = Weapon;
+	Msg.m_ModeSpecial = ModeSpecial;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+}
+
 void CCharacter::Die(int Killer, int Weapon)
 {
 	// we got to wait 0.5 secs before respawning
@@ -699,12 +723,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	// send the kill message
-	CNetMsg_Sv_KillMsg Msg;
-	Msg.m_Killer = Killer;
-	Msg.m_Victim = m_pPlayer->GetCID();
-	Msg.m_Weapon = Weapon;
-	Msg.m_ModeSpecial = ModeSpecial;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	SendKillMsg(Killer, Weapon, ModeSpecial);
 
 	// a nice sound
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
@@ -875,4 +894,74 @@ void CCharacter::Snap(int SnappingClient)
 	}
 
 	pCharacter->m_PlayerFlags = GetPlayer()->m_PlayerFlags;
+}
+
+void CCharacter::Frozen()
+{
+	lastFrozen = Server()->Tick();
+	isFrozen = true;
+}
+
+void CCharacter::UnFrozen()
+{
+	isFrozen = false;
+}
+
+void CCharacter::Interaction(int with, int maskmsec)
+{
+	if (maskmsec == -1) return;
+	if (!(State == BS_FREE || State == BS_INTERACTED)) return;
+	if (lastStateChange > Server()->Tick() - Server()->TickSpeed() * maskmsec / 1000) return;
+	lastInteractionPlayer = with;
+	lastStateChange = Server()->Tick();
+}
+
+bool CCharacter::Ago(int event, int millis)
+{
+	return (event < Server()->Tick()-Server()->TickSpeed()*millis/1000);
+}
+
+//const char *StateStr(int s)
+//{
+//	return s == BS_FREE ? "FREE" : 
+//	       s == BS_BLOCKED ? "BLOCKED" : 
+//	       s == BS_INTERACTED ? "INTERACT" : 
+//	       s == BS_SELFFREEZED ? "SELFFROZEN" : 
+//	       s == BS_FROZEN ? "FROZEN" :  "<unknown>";
+//}
+void CCharacter::NewState(int newState)
+{
+	if (newState == BS_FREE)
+		lastInteractionPlayer = -1;
+	if (newState == BS_BLOCKED)
+		GetPlayer()->BlockKill();
+//	if (State != newState)
+//		dbg_msg("char", "%d:\t%s ---> %s", m_pPlayer->GetCID(), StateStr(State), StateStr(newState));
+	State = newState;
+	lastStateChange = Server()->Tick();
+}
+
+
+void CCharacter::ResolveTick()
+{
+	if (State == BS_FREE)
+	{
+		if (lastInteractionPlayer != -1) NewState(BS_INTERACTED);
+		else if (m_Core.m_Frozen > 0) NewState(BS_SELFFREEZED);
+	} else if (State == BS_SELFFREEZED)
+	{
+		if (Ago(lastStateChange, g_Config.m_SvSelfBlocked)) NewState(BS_BLOCKED);
+		else if (m_Core.m_Frozen <= 0) NewState(BS_FREE);
+	} else if (State == BS_INTERACTED)
+	{
+		if (isFrozen) NewState(BS_FROZEN);
+		else if (Ago(lastStateChange, g_Config.m_SvIntFree)) NewState(BS_FREE);
+	} else if (State == BS_FROZEN)
+	{
+		if (Ago(lastStateChange, g_Config.m_SvFrozenBlocked)) NewState(BS_BLOCKED);
+		else if (Ago(lastFrozen, g_Config.m_SvFrozenInt)) NewState(BS_INTERACTED);
+	} else if (State == BS_BLOCKED)
+	{
+		if (Ago(lastFrozen, g_Config.m_SvBlockedFree)) NewState(BS_FREE);
+	}
 }

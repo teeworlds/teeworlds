@@ -21,6 +21,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
 	m_pAccount = 0;
+	blockScore = 0;
 }
 
 CPlayer::~CPlayer()
@@ -37,7 +38,12 @@ void CPlayer::Tick()
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
-	Server()->SetClientScore(m_ClientID, m_Score);
+	if (GetAccount())
+	{
+		blockScore = GetAccount()->Payload()->blockScore;
+	}
+
+	Server()->SetClientScore(m_ClientID, blockScore);
 
 	// do latency stuff
 	{
@@ -123,7 +129,7 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
-	pPlayerInfo->m_Score = m_Score;
+	pPlayerInfo->m_Score = blockScore;
 	pPlayerInfo->m_Team = m_Team;
 
 	if(m_ClientID == SnappingClient)
@@ -196,11 +202,42 @@ CCharacter *CPlayer::GetCharacter()
 	return 0;
 }
 
+int CPlayer::BlockKillCheck()
+{
+	int killer = m_ClientID;
+	if (Character->State != BS_FROZEN) return killer;
+	if (Server()->ClientIngame(Character->lastInteractionPlayer))
+	{
+		killer = Character->lastInteractionPlayer;
+		double scoreStealed = blockScore * g_Config.m_SvScoreSteal / 100; // stolen:P
+			if (scoreStealed > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
+			scoreStealed = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
+			GameServer()->m_apPlayers[killer] -> blockScore += scoreStealed;
+		if (GameServer()->m_apPlayers[killer]->GetAccount())
+		{
+			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer] -> blockScore;
+		}
+		blockScore -= scoreStealed;
+		if (GetAccount())
+			GetAccount()->Payload()->blockScore = blockScore;
+	}
+	return killer;
+}
+
+void CPlayer::BlockKill()
+{
+	if (!Character) return;
+	int killer = BlockKillCheck();
+	if (killer == m_ClientID) return;
+	Character->SendKillMsg(killer, WEAPON_HAMMER, 0);
+}
+
 void CPlayer::KillCharacter(int Weapon)
 {
 	if(Character)
 	{
-		Character->Die(m_ClientID, Weapon);
+		int killer = BlockKillCheck();
+		Character->Die(killer, killer == m_ClientID ? Weapon : WEAPON_NINJA);
 		delete Character;
 		Character = 0;
 	}

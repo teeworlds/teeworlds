@@ -16,6 +16,15 @@ enum
 	WEAPON_WORLD = -1, // death tiles etc
 };
 
+enum
+{
+	BS_FREE = 0,
+	BS_SELFFREEZED,
+	BS_INTERACTED,
+	BS_FROZEN,
+	BS_BLOCKED
+};
+
 class CCharacter : public CEntity
 {
 	MACRO_ALLOC_POOL_ID()
@@ -63,6 +72,21 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
+	/* TODO naming conventions */
+	int State;
+	int lastInteractionPlayer;
+	int lastStateChange;
+	int lastFrozen;
+	bool isFrozen;
+	int m_ActualFreezeTick;
+        
+	void Frozen();
+        void UnFrozen();
+        void Interaction(int with, int maskmsec);
+        void ResolveTick();
+        bool Ago(int event, int millis);
+        void NewState(int newstate);
+	void SendKillMsg(int Killer, int Weapon, int ModeSpecial);
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
@@ -128,6 +152,7 @@ private:
 	int m_ReckoningTick; // tick that we are performing dead reckoning From
 	CCharacterCore m_SendCore; // core that we should send
 	CCharacterCore m_ReckoningCore; // the dead reckoning core
+
 
 };
 
