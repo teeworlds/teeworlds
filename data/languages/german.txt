@@ -665,7 +665,7 @@ no limit
 == Keine Begrenzung
 
 Demofile: %s
-== Demodatei:
+== Demodatei: %s
 
 Strict gametype filter
 == Genauer Spieltyp
