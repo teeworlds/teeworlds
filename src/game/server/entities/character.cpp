@@ -564,6 +564,9 @@ void CCharacter::Tick()
 	{
 		if (m_ActiveWeapon != WEAPON_NINJA)
 			GiveNinja(true);
+		else if (m_Ninja.m_ActivationTick + 5 * Server()->TickSpeed() < Server()->Tick())
+			m_Ninja.m_ActivationTick = Server()->Tick(); // this should fix the end-of-ninja missprediction bug
+
 		if ((m_Core.m_Frozen+1) % Server()->TickSpeed() == 0)
 			GameServer()->CreateDamageInd(m_Pos, 0, (m_Core.m_Frozen+1) / Server()->TickSpeed());
 	}
