@@ -205,10 +205,10 @@ CCharacter *CPlayer::GetCharacter()
 int CPlayer::BlockKillCheck()
 {
 	int killer = m_ClientID;
-	if (Character->State != BS_FROZEN) return killer;
-	if (Server()->ClientIngame(Character->lastInteractionPlayer))
+	if (m_pCharacter->State != BS_FROZEN) return killer;
+	if (Server()->ClientIngame(m_pCharacter->lastInteractionPlayer))
 	{
-		killer = Character->lastInteractionPlayer;
+		killer = m_pCharacter->lastInteractionPlayer;
 		double scoreStealed = blockScore * g_Config.m_SvScoreSteal / 100; // stolen:P
 			if (scoreStealed > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
 			scoreStealed = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
@@ -226,10 +226,10 @@ int CPlayer::BlockKillCheck()
 
 void CPlayer::BlockKill()
 {
-	if (!Character) return;
+	if (!m_pCharacter) return;
 	int killer = BlockKillCheck();
 	if (killer == m_ClientID) return;
-	Character->SendKillMsg(killer, WEAPON_HAMMER, 0);
+	m_pCharacter->SendKillMsg(killer, WEAPON_HAMMER, 0);
 }
 
 void CPlayer::KillCharacter(int Weapon)
