@@ -630,6 +630,7 @@ public:
 	float m_AnimateSpeed;
 
 	int m_ShowEnvelopeEditor;
+	bool m_ShowPicker;
 
 	int m_SelectedLayer;
 	int m_SelectedGroup;
@@ -697,7 +698,7 @@ public:
 	vec4 ButtonColorMul(const void *pID);
 
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
-	void DoMapEditor(CUIRect View, CUIRect Toolbar, bool ShowPicker);
+	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
 	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
