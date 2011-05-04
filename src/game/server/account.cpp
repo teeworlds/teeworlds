@@ -1,8 +1,3 @@
-#include <cstdio>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-
 #include <base/system.h>
 
 #include <engine/external/md5/md5.h>
@@ -72,27 +67,18 @@ bool CAccount::Write() const
 	mem_zero(aBodyChunk, sizeof aBodyChunk);
 	mem_copy(aBodyChunk, &m_Payload.m_Body, sizeof m_Payload.m_Body);
 
-	struct flock fl = { 0, 0, 0, F_WRLCK, SEEK_SET };
-	fl.l_pid = getpid();
-
 	char aBuf[MAX_FILEPATH];
 	str_format(aBuf, sizeof aBuf, "%s/%s_%s.acc", g_Config.m_SvAccDir, ms_pPayloadHash, m_aAccName);
 
-	int fd = open(aBuf, O_WRONLY | O_CREAT | O_TRUNC, ~(S_IWGRP|S_IWOTH));
+	IOHANDLE fd = io_open(aBuf, IOFLAG_WRITE);
 
-	if (fd == -1)
+	if (!fd)
 		return false;
-	if (fcntl(fd, F_SETLKW, &fl) != -1)
-	{
-		if (write(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
-				&& write(fd, aBodyChunk, SzBody) == SzBody)
-			Ret = true;
+	if (io_write(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
+			&& io_write(fd, aBodyChunk, SzBody) == (unsigned)SzBody)
+		Ret = true;
 
-		fl.l_type = F_UNLCK;
-		fcntl(fd, F_SETLK, &fl);
-	}
-
-	close(fd);
+	io_close(fd);
 	return Ret;
 }
 
@@ -111,31 +97,22 @@ bool CAccount::Read()
 
 	mem_zero(aBodyChunk, sizeof aBodyChunk);
 
-	struct flock fl = { 0, 0, 0, F_RDLCK, SEEK_SET };
-	fl.l_pid = getpid();
-
 	char aBuf[MAX_FILEPATH];
 	str_format(aBuf, sizeof aBuf, "%s/%s_%s.acc", g_Config.m_SvAccDir, ms_pPayloadHash, m_aAccName);
 
-	int fd = open(aBuf, O_RDONLY);
+	IOHANDLE fd = io_open(aBuf, IOFLAG_READ);
 
-	if (fd == -1)
+	if (!fd)
 		return false;
 
-	if (fcntl(fd, F_SETLKW, &fl) != -1)
+	if (io_read(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
+			&& io_read(fd, aBodyChunk, SzBody) == (unsigned)SzBody)
 	{
-		if (read(fd, &m_Payload.m_Head, sizeof m_Payload.m_Head) == sizeof m_Payload.m_Head
-				&& read(fd, aBodyChunk, SzBody) == SzBody)
-		{
-			Ret = true;
-			mem_copy(&m_Payload.m_Body, aBodyChunk, sizeof m_Payload.m_Body);
-		}
-
-		fl.l_type = F_UNLCK;
-		fcntl(fd, F_SETLK, &fl);
+		Ret = true;
+		mem_copy(&m_Payload.m_Body, aBodyChunk, sizeof m_Payload.m_Body);
 	}
 
-	close(fd);
+	io_close(fd);
 	return Ret;
 }
 
@@ -322,43 +299,57 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 		}
 		else
 		{
-			char aTmp[128];
-			if (pAcc->Head()->m_FailCount > 0)
+			bool Already = false;
+			for (int i = 0; !Already && i < MAX_CLIENTS; ++i)
 			{
-				char aTime[2][32];
-				str_timestamp_at(aTime[0], sizeof (aTime[0]), pAcc->Head()->m_FailDate[0]);
-				if (pAcc->Head()->m_FailCount > 1)
-				{
-					str_timestamp_at(aTime[1], sizeof (aTime[1]), pAcc->Head()->m_FailDate[1]);
-					str_format(aTmp, sizeof aTmp, "%d failed logins since last login. first: %s at %s, last: %s at %s",
-							pAcc->Head()->m_FailCount, pAcc->Head()->m_FailIP[0], aTime[0], pAcc->Head()->m_FailIP[1], aTime[1]);
-				}
-				else
-				{
-					str_format(aTmp, sizeof aTmp, "One failed login since last login: %s at %s",
-						pAcc->Head()->m_FailIP[0], aTime[0]);
-				}
-				pAcc->Head()->m_FailCount = 0;
-				pAcc->Head()->m_FailIP[0][0] = pAcc->Head()->m_FailIP[1][0] = '\0';
-				GameContext()->SendChatTarget(pPlayer->GetCID(), aTmp);
+				CPlayer *p = ((CGameContext*)GameContext())->m_apPlayers[i];
+				if (p && p->GetAccount() && str_comp(p->GetAccount()->Name(), pAcc->Name()) == 0)
+					Already = true;
 			}
 
-			str_timestamp_at(aTmp, sizeof aTmp, pAcc->Head()->m_LastLoginDate);
-			str_format(aBuf, sizeof aBuf, "Login successful. Last login from %s at %s.", pAcc->Head()->m_LastLoginIP, aTmp);
+			if (Already)
+				str_copy(aBuf, "Account in use. Nice try.", sizeof aBuf);
+			else
+			{
 
-			pAcc->Head()->m_LastLoginDate = time_timestamp();
-			GameContext()->Server()->GetClientAddr(pPlayer->GetCID(), pAcc->Head()->m_LastLoginIP, sizeof (pAcc->Head()->m_LastLoginIP));
+				char aTmp[128];
+				if (pAcc->Head()->m_FailCount > 0)
+				{
+					char aTime[2][32];
+					str_timestamp_at(aTime[0], sizeof (aTime[0]), pAcc->Head()->m_FailDate[0]);
+					if (pAcc->Head()->m_FailCount > 1)
+					{
+						str_timestamp_at(aTime[1], sizeof (aTime[1]), pAcc->Head()->m_FailDate[1]);
+						str_format(aTmp, sizeof aTmp, "%d failed logins since last login. first: %s at %s, last: %s at %s",
+								pAcc->Head()->m_FailCount, pAcc->Head()->m_FailIP[0], aTime[0], pAcc->Head()->m_FailIP[1], aTime[1]);
+					}
+					else
+					{
+						str_format(aTmp, sizeof aTmp, "One failed login since last login: %s at %s",
+							pAcc->Head()->m_FailIP[0], aTime[0]);
+					}
+					pAcc->Head()->m_FailCount = 0;
+					pAcc->Head()->m_FailIP[0][0] = pAcc->Head()->m_FailIP[1][0] = '\0';
+					GameContext()->SendChatTarget(pPlayer->GetCID(), aTmp);
+				}
 
-			pAcc->Write();
+				str_timestamp_at(aTmp, sizeof aTmp, pAcc->Head()->m_LastLoginDate);
+				str_format(aBuf, sizeof aBuf, "Login successful. Last login from %s at %s.", pAcc->Head()->m_LastLoginIP, aTmp);
 
-			pPlayer->SetAccount(pAcc);
-			char aName[MAX_NAME_LENGTH];
-			CAccount::OverrideName(aName, sizeof aName, pPlayer, pPlayer->m_OrigName);
-			GameContext()->Server()->SetClientName(pPlayer->GetCID(), aName);
-			if (!g_Config.m_SvTournamentMode)
-				pPlayer->SetTeam(0);
+				pAcc->Head()->m_LastLoginDate = time_timestamp();
+				GameContext()->Server()->GetClientAddr(pPlayer->GetCID(), pAcc->Head()->m_LastLoginIP, sizeof (pAcc->Head()->m_LastLoginIP));
 
-			pAcc = NULL;
+				pAcc->Write();
+
+				pPlayer->SetAccount(pAcc);
+				char aName[MAX_NAME_LENGTH];
+				CAccount::OverrideName(aName, sizeof aName, pPlayer, pPlayer->m_OrigName);
+				GameContext()->Server()->SetClientName(pPlayer->GetCID(), aName);
+				if (!g_Config.m_SvTournamentMode)
+					pPlayer->SetTeam(0);
+
+				pAcc = NULL;
+			}
 		}
 
 		GameContext()->SendChatTarget(pPlayer->GetCID(), aBuf);
@@ -408,7 +399,9 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 	}
 	else if (str_comp(pMsg, "/bail") == 0) //logout w/o saving
 	{
-		if (!pPlayer->GetAccount())
+		if (!g_Config.m_SvAccAllowBail)
+			str_copy(aBuf, "Cannot bail, disallowed.", sizeof aBuf);
+		else if (!pPlayer->GetAccount())
 			str_copy(aBuf, "Cannot bail out while not logged in.", sizeof aBuf);
 		else
 		{

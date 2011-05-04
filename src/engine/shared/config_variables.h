@@ -87,6 +87,7 @@ MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SERVER, "Th
 MACRO_CONFIG_INT(SvAccEnable, sv_acc_enable, 1, 0, 1, CFGFLAG_SERVER, "globally allow/disallow login/register")
 MACRO_CONFIG_STR(SvAccDir, sv_acc_dir, 256, "accounts", CFGFLAG_SERVER, "directory to store accounts in")
 MACRO_CONFIG_STR(SvAccAllowedNameChars, sv_acc_allowed_name_chars, 256, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=+!@()[]{}|.", CFGFLAG_SERVER, "valid chars in acc names i.e. file names")
+MACRO_CONFIG_INT(SvAccAllowBail, sv_acc_allow_bail, 0, 0, 1, CFGFLAG_SERVER, "allow /bail (logout w/o saving), 1=allow, 0=disallow")
 MACRO_CONFIG_INT(SvAccEnforce, sv_acc_enforce, 0, 0, 1, CFGFLAG_SERVER, "force players which are not logged in into spectator-only mode")
 MACRO_CONFIG_INT(SvAccEnforceNames, sv_acc_enforce_names, 0, 0, 1, CFGFLAG_SERVER, "force player names to equal their account names")
 MACRO_CONFIG_STR(SvAccMemberPrefix, sv_acc_member_prefix, 32, "", CFGFLAG_SERVER, "name prefix for logged-in players")
