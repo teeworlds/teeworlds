@@ -162,8 +162,9 @@ public:
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 
 	void ProcessClientPacket(CNetChunk *pPacket);
+		
+	void SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket);
 
-	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);

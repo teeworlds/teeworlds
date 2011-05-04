@@ -676,11 +676,27 @@ void CCharacter::Die(int Killer, int Weapon)
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
-	Msg.m_Killer = Killer;
-	Msg.m_Victim = m_pPlayer->GetCID();
 	Msg.m_Weapon = Weapon;
 	Msg.m_ModeSpecial = ModeSpecial;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		if (Server()->ClientIngame(i))
+		{
+			Msg.m_Killer = -1;
+			Msg.m_Victim = -1;
+			for (int j = 0;j < 16;j++)
+			{
+				if (GameServer()->m_apPlayers[i]->idMap[j] == m_pPlayer->GetCID())
+					Msg.m_Victim = j;
+				if (GameServer()->m_apPlayers[i]->idMap[j] == Killer)
+					Msg.m_Killer = j;
+			}
+			if (Msg.m_Victim != -1)
+			{
+				if (Msg.m_Killer == -1) Msg.m_Killer = Msg.m_Victim;
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+			}
+		}
 
 	// a nice sound
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
@@ -782,10 +798,71 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CCharacter::Snap(int SnappingClient)
 {
+
+	int id = -1;
+	int lastfree = -1;
+	int* idMap = GameServer()->m_apPlayers[SnappingClient]->idMap;
+	int* idLastSent = GameServer()->m_apPlayers[SnappingClient]->idMapBook;
+	double maxDist = 0;
+	int maxDistId = 0;
+	int tick = Server()->Tick();
+	int m_ClientID = m_pPlayer->GetCID();
+	if (m_ClientID == SnappingClient)
+	{
+		id = 0;
+	} 
+	else
+		for (int i = 15;i >= 1;i--)
+		{
+			if (!GameServer()->m_apPlayers[idMap[i]]) idMap[i]=-1;
+			if (idMap[i]==-1) lastfree=i;
+			else
+			{
+				//idMap updates once in 10 ticks
+				if (tick % 10 == 0)
+				{
+					double dist = distance(GameServer()->m_apPlayers[idMap[i]]->m_ViewPos, GameServer()->m_apPlayers[SnappingClient]->m_ViewPos);
+					if (dist > maxDist)
+					{
+						maxDist = dist;
+						maxDistId = i;
+					}
+				}
+			}
+			if (idMap[i] == m_ClientID)
+			{
+				id = i;
+				break;
+			}
+		}
+
+	if (id == -1)
+	{
+		if (lastfree != -1)
+		{
+			id = lastfree;
+			idMap[id] = m_ClientID;
+		}
+		else
+		{
+			//idMap updates once in 10 ticks
+			if (tick % 10 != 0) return;
+			//dont bother swapping clients which are too far to be displayed
+			if(NetworkClipped(SnappingClient))
+				return;
+			if (distance(GameServer()->m_apPlayers[m_ClientID]->m_ViewPos, GameServer()->m_apPlayers[SnappingClient]->m_ViewPos) > maxDist) return;
+			id = maxDistId;
+			idMap[maxDistId] = m_ClientID;
+		}
+	}
+	//must ensure not update slot more than once per tick
+	if (idLastSent[id] == tick) return;
+	idLastSent[id] = tick;
+
 	if(NetworkClipped(SnappingClient))
 		return;
 
-	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, id, sizeof(CNetObj_Character)));
 	if(!pCharacter)
 		return;
 
@@ -810,6 +887,19 @@ void CCharacter::Snap(int SnappingClient)
 		m_EmoteStop = -1;
 	}
 
+	if (pCharacter->m_HookedPlayer != -1)
+	{
+		int hooked = pCharacter->m_HookedPlayer;
+		pCharacter->m_HookedPlayer = -1;
+		for (int j = 0;j < 16;j++)
+		{
+			if (idMap[j] == hooked)
+			{
+				pCharacter->m_HookedPlayer = j;
+				break;
+			}
+		}
+	}
 	pCharacter->m_Emote = m_EmoteType;
 
 	pCharacter->m_AmmoCount = 0;

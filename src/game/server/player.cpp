@@ -20,6 +20,12 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
+	
+	for (int i = 1;i < 16;i++)
+	{
+	    idMap[i] = -1;
+	}
+	idMap[0] = ClientID;
 }
 
 CPlayer::~CPlayer()
@@ -103,7 +109,21 @@ void CPlayer::Snap(int SnappingClient)
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
-	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CNetObj_ClientInfo)));
+	int id = -1;
+	int* idMap=GameServer()->m_apPlayers[SnappingClient]->idMap;
+	for (int i = 0;i < 16;i++)
+	{
+	    if (idMap[i] == m_ClientID)
+	    {
+		id = i;
+		break;
+	    }
+	}
+	if (id == -1)
+		return;
+	
+	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, id, sizeof(CNetObj_ClientInfo)));
+
 	if(!pClientInfo)
 		return;
 
@@ -115,13 +135,13 @@ void CPlayer::Snap(int SnappingClient)
 	pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
 	pClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
 
-	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CNetObj_PlayerInfo)));
+	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, id, sizeof(CNetObj_PlayerInfo)));
 	if(!pPlayerInfo)
 		return;
 
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
-	pPlayerInfo->m_ClientID = m_ClientID;
+	pPlayerInfo->m_ClientID = id;
 	pPlayerInfo->m_Score = m_Score;
 	pPlayerInfo->m_Team = m_Team;
 

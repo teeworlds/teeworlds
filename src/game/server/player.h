@@ -83,6 +83,9 @@ public:
 		int m_TargetX;
 		int m_TargetY;
 	} m_LatestActivity;
+	
+	int idMap[16];
+	int idMapBook[16];
 
 	// network latency calculations
 	struct
