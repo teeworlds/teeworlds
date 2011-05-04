@@ -744,8 +744,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && m_Dialog == DIALOG_NONE)
 		m_ZoomLevel += 20;
 
-	if(m_ZoomLevel < 50)
-		m_ZoomLevel = 50;
+	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	m_WorldZoom = m_ZoomLevel/100.0f;
 
 	TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
