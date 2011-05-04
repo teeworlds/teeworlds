@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_VERSION_H
 #define GAME_VERSION_H
-#include "generated/nethash.c"
+#include "generated/nethash.cpp"
 #include "generated/nethash_cust.c"
 #include "generated/acchash.c"
 #define GAME_VERSION "0.6 trunk"
