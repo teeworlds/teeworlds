@@ -32,20 +32,20 @@ class CRegister
 	int m_RegisterFirst;
 	int m_RegisterCount;
 
-	class CMasterserverInfo m_aMasterserverInfo[IMasterServer::MAX_MASTERSERVERS];
+	CMasterserverInfo m_aMasterserverInfo[IMasterServer::MAX_MASTERSERVERS];
 	int m_RegisterRegisteredServer;
 
 	void RegisterNewState(int State);
 	void RegisterSendFwcheckresponse(NETADDR *pAddr);
 	void RegisterSendHeartbeat(NETADDR Addr);
 	void RegisterSendCountRequest(NETADDR Addr);
-	void RegisterGotCount(class CNetChunk *pChunk);
+	void RegisterGotCount(struct CNetChunk *pChunk);
 
 public:
 	CRegister();
 	void Init(class CNetServer *pNetServer, class IEngineMasterServer *pMasterServer, class IConsole *pConsole);
 	void RegisterUpdate(int Nettype);
-	int RegisterProcessPacket(class CNetChunk *pPacket);
+	int RegisterProcessPacket(struct CNetChunk *pPacket);
 };
 
 #endif

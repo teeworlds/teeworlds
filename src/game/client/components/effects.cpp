@@ -86,7 +86,7 @@ void CEffects::SmokeTrail(vec2 Pos, vec2 Vel)
 	p.m_LifeSpan = 0.5f + frandom()*0.5f;
 	p.m_StartSize = 12.0f + frandom()*8;
 	p.m_EndSize = 0;
-	p.m_Friction = 0.7;
+	p.m_Friction = 0.7f;
 	p.m_Gravity = frandom()*-500.0f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_PROJECTILE_TRAIL, &p);
 }

@@ -96,7 +96,7 @@ public:
 	} m_Latency;
 
 private:
-	CCharacter *Character;
+	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
 
 	CGameContext *GameServer() const { return m_pGameServer; }

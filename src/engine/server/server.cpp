@@ -346,13 +346,6 @@ void CServer::GetClientAddr(int ClientID, char *pAddrStr, int Size)
 }
 
 
-int *CServer::LatestInput(int ClientID, int *size)
-{
-	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State < CServer::CClient::STATE_READY)
-		return 0;
-	return m_aClients[ClientID].m_LatestInput.m_aData;
-}
-
 const char *CServer::ClientName(int ClientID)
 {
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
