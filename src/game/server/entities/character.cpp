@@ -115,8 +115,6 @@ void CCharacter::HandleNinja()
 	if(m_ActiveWeapon != WEAPON_NINJA)
 		return;
 
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
-
 	if ((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
 	{
 		// time's up, return
@@ -435,8 +433,6 @@ void CCharacter::HandleWeapons()
 {
 	//ninja
 	HandleNinja();
-
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	// check reload timer
 	if(m_ReloadTimer)
