@@ -58,6 +58,7 @@ public:
 	void GiveNinja();
 
 	void SetEmote(int Emote, int Tick);
+	void SetDefEmote(int Emote, int Tick);
 
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
@@ -92,6 +93,9 @@ private:
 
 	int m_EmoteType;
 	int m_EmoteStop;
+
+	int m_DefEmote;
+	int m_DefEmoteReset;
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;

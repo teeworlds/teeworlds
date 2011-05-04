@@ -76,7 +76,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Alive = true;
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
-
+	
+	m_DefEmote = EMOTE_NORMAL;
+	m_DefEmoteReset = -1;
 	return true;
 }
 
@@ -496,6 +498,12 @@ void CCharacter::GiveNinja()
 	GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 }
 
+void CCharacter::SetDefEmote(int Emote, int Tick)
+{
+	m_DefEmote = Emote;
+	m_DefEmoteReset = Tick;
+}
+
 void CCharacter::SetEmote(int Emote, int Tick)
 {
 	m_EmoteType = Emote;
@@ -557,6 +565,13 @@ void CCharacter::Tick()
 
 	// handle Weapons
 	HandleWeapons();
+
+	if (m_DefEmoteReset >= 0 && m_DefEmoteReset <= Server()->Tick())
+	{
+		m_DefEmoteReset = -1;
+		m_EmoteType = m_DefEmote = EMOTE_NORMAL;
+		m_EmoteStop = -1;
+	}
 
 	// Previnput
 	m_PrevInput = m_Input;
@@ -806,7 +821,7 @@ void CCharacter::Snap(int SnappingClient)
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
 	{
-		m_EmoteType = EMOTE_NORMAL;
+		m_EmoteType = m_DefEmote;
 		m_EmoteStop = -1;
 	}
 

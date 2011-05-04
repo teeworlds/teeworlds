@@ -9,7 +9,7 @@
 #include <game/version.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
-#include <game/server/chatctl.h>
+#include <game/server/ddmisc.h>
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
@@ -36,7 +36,10 @@ void CGameContext::Construct(int Resetting)
 	m_NumVoteOptions = 0;
 
 	if(Resetting==NO_RESET)
+	{
 		m_pVoteOptionHeap = new CHeap();
+		new CDDChatHnd();
+	}
 }
 
 CGameContext::CGameContext(int Resetting)
