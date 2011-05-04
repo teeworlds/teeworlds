@@ -273,7 +273,9 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 	{
 		// fetch the data size
 		int DataSize = GetDataSize(Index);
+#if defined(CONF_ARCH_ENDIAN_BIG)
 		int SwapSize = DataSize;
+#endif
 
 		if(m_pDataFile->m_Header.m_Version == 4)
 		{
@@ -292,7 +294,9 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 			// decompress the data, TODO: check for errors
 			s = UncompressedSize;
 			uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize); // ignore_convention
+#if defined(CONF_ARCH_ENDIAN_BIG)
 			SwapSize = s;
+#endif
 
 			// clean up the temporary buffers
 			mem_free(pTemp);

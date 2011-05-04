@@ -482,15 +482,12 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 {
     // logic
     static float s_Value;
-    int Ret = 0;
     int Inside = UI()->MouseInside(pRect);
 
 	if(UI()->ActiveItem() == pID)
 	{
 		if(!UI()->MouseButton(0))
 		{
-			if(Inside)
-				Ret = 1;
 			m_LockMouse = false;
 			UI()->SetActiveItem(0);
 		}
@@ -1222,8 +1219,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 
 	static float s_StartWx = 0;
 	static float s_StartWy = 0;
-	static float s_StartMx = 0;
-	static float s_StartMy = 0;
 
 	enum
 	{
@@ -1311,8 +1306,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 		{
 			s_StartWx = wx;
 			s_StartWy = wy;
-			s_StartMx = mx;
-			s_StartMy = my;
 
 			if(Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL) || UI()->MouseButton(2))
 			{
@@ -1798,14 +1791,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	CUIRect Slot, Button;
 	char aBuf[64];
 
-	int ValidGroup = 0;
-	int ValidLayer = 0;
-	if(m_SelectedGroup >= 0 && m_SelectedGroup < m_Map.m_lGroups.size())
-		ValidGroup = 1;
-
-	if(ValidGroup && m_SelectedLayer >= 0 && m_SelectedLayer < m_Map.m_lGroups[m_SelectedGroup]->m_lLayers.size())
-		ValidLayer = 1;
-
 	float LayersHeight = 12.0f;	 // Height of AddGroup button
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
@@ -2245,7 +2230,8 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	if(DoButton_File((void*)(10+(int)Button.y), m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
+	static int s_FileButton = 0;
+	if(DoButton_File(&s_FileButton, m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
 	{
 		if(!m_FileList[Index].m_IsDir)
 			str_copy(m_aFileDialogFileName, m_FileList[Index].m_aFilename, sizeof(m_aFileDialogFileName));
@@ -2852,8 +2838,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 		// render handles
 		{
-			static bool s_Move = false;
-
 			int CurrentValue = 0, CurrentTime = 0;
 
 			Graphics()->TextureSet(-1);
@@ -2887,7 +2871,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						if(!UI()->MouseButton(0))
 						{
 							UI()->SetActiveItem(0);
-							s_Move = false;
 						}
 						else
 						{							

@@ -680,8 +680,6 @@ void CMenus::RenderLoading()
 
 	RenderBackground();
 
-	float tw;
-
 	float w = 700;
 	float h = 200;
 	float x = Screen.w/2-w/2;
@@ -698,7 +696,6 @@ void CMenus::RenderLoading()
 
 	const char *pCaption = Localize("Loading");
 
-	tw = TextRender()->TextWidth(0, 48.0f, pCaption, -1);
 	CUIRect r;
 	r.x = x;
 	r.y = y+20;
