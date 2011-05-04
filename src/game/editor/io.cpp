@@ -6,7 +6,7 @@
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <game/gamecore.h>
-#include "ed_editor.h"
+#include "editor.h"
 
 template<typename T>
 static int MakeVersion(int i, const T &v)

@@ -57,8 +57,8 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 	{
 		m_aNodes[i].m_NumBits = 0xFFFFFFFF;
 		m_aNodes[i].m_Symbol = i;
-		m_aNodes[i].m_aLeafs[0] = -1;
-		m_aNodes[i].m_aLeafs[1] = -1;
+		m_aNodes[i].m_aLeafs[0] = 0xffff;
+		m_aNodes[i].m_aLeafs[1] = 0xffff;
 
 		if(i == HUFFMAN_EOF_SYMBOL)
 			aNodesLeftStorage[i].m_Frequency = 1;

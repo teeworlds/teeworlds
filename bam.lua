@@ -106,7 +106,7 @@ AddDependency(network_source, network_header)
 AddDependency(client_content_source, client_content_header)
 AddDependency(server_content_source, server_content_header)
 
-nethash = CHash("src/game/generated/nethash.c", "GAME_NETVERSION_HASH", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
+nethash = CHash("src/game/generated/nethash.cpp", "GAME_NETVERSION_HASH", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 custnethash = CHash("src/game/generated/nethash_cust.c", "GAME_NETVERSION_HASH_CUST", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 acchash = CHash("src/game/generated/acchash.c", "GAME_ACCVERSION_HASH", "src/game/server/acc_payload.h")
 

@@ -113,7 +113,7 @@ int png_init(png_alloc_t pngalloc, png_free_t pngfree)
 	if(pngalloc)
 		png_alloc = pngalloc;
 	else
-		png_alloc = &malloc;
+		png_alloc = (png_alloc_t)&malloc;
 
 	if(pngfree)
 		png_free = pngfree;
@@ -492,7 +492,7 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	(void)png_end_deflate;
 	(void)png_deflate;
 
-	chunk = png_alloc(size);
+	chunk = png_alloc(size+8);
 	memcpy(chunk, "IDAT", 4);
 	
 	written = size;

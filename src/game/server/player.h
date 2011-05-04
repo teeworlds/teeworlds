@@ -104,7 +104,7 @@ public:
 
 	char m_OrigName[MAX_NAME_LENGTH];
 private:
-	CCharacter *Character;
+	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
 
 	CGameContext *GameServer() const { return m_pGameServer; }

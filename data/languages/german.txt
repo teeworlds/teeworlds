@@ -145,6 +145,9 @@ Delete demo
 Demo details
 == Aufnahmendetails:
 
+Demofile: %s
+== Demodatei: %s
+
 Demos
 == Aufnahm.
 
@@ -562,6 +565,9 @@ Standard map
 Stop record
 == Aufnahme be.
 
+Strict gametype filter
+== Genauer Spieltyp
+
 Sudden Death
 == Sudden Death
 
@@ -665,12 +671,6 @@ no limit
 == Keine Begrenzung
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 
