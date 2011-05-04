@@ -1179,10 +1179,10 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
+void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 {
 	// render all good stuff
-	if(!ShowPicker)
+	if(!m_ShowPicker)
 	{
 		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
 		{
@@ -1231,7 +1231,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 	};
 
 	// remap the screen so it can display the whole tileset
-	if(ShowPicker)
+	if(m_ShowPicker)
 	{
 		CUIRect Screen = *UI()->Screen();
 		float Size = 32.0*16.0f;
@@ -1260,7 +1260,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 	int NumEditLayers = 0;
 	NumEditLayers = 0;
 
-	if(ShowPicker)
+	if(m_ShowPicker)
 	{
 		pEditLayers[0] = &m_TilesetPicker;
 		NumEditLayers++;
@@ -1464,7 +1464,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 
 		// quad editing
 		{
-			if(!ShowPicker && m_Brush.IsEmpty())
+			if(!m_ShowPicker && m_Brush.IsEmpty())
 			{
 				// fetch layers
 				CLayerGroup *g = GetSelectedGroup();
@@ -3074,7 +3074,7 @@ void CEditor::Render()
 	RenderBackground(View, ms_CheckerTexture, 32.0f, 1.0f);
 
 	CUIRect MenuBar, CModeBar, ToolBar, StatusBar, EnvelopeEditor, ToolBox;
-	bool ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
+	m_ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
 
 	if(m_GuiActive)
 	{
@@ -3084,7 +3084,7 @@ void CEditor::Render()
 		View.VSplitLeft(100.0f, &ToolBox, &View);
 		View.HSplitBottom(16.0f, &View, &StatusBar);
 
-		if(m_ShowEnvelopeEditor && !ShowPicker)
+		if(m_ShowEnvelopeEditor && !m_ShowPicker)
 		{
 			float size = 125.0f;
 			if(m_ShowEnvelopeEditor == 2)
@@ -3097,7 +3097,7 @@ void CEditor::Render()
 
 	//	a little hack for now
 	if(m_Mode == MODE_LAYERS)
-		DoMapEditor(View, ToolBar, ShowPicker);
+		DoMapEditor(View, ToolBar);
 
 	if(m_GuiActive)
 	{
