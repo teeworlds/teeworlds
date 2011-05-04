@@ -30,6 +30,7 @@ enum
 	NETSENDFLAG_VITAL=1,
 	NETSENDFLAG_CONNLESS=2,
 	NETSENDFLAG_FLUSH=4,
+	NETSENDFLAG_AUX=128,
 
 	NETSTATE_OFFLINE=0,
 	NETSTATE_CONNECTING,
@@ -48,7 +49,7 @@ enum
 	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-6,
 	NET_MAX_CHUNKHEADERSIZE = 5,
 	NET_PACKETHEADERSIZE = 3,
-	NET_MAX_CLIENTS = 16,
+	NET_MAX_CLIENTS = 32,
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
@@ -244,6 +245,7 @@ private:
 
 
 	NETSOCKET m_Socket;
+	NETSOCKET m_AuxSocket;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
@@ -265,7 +267,7 @@ public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
-	bool Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags);
+	bool Open(NETADDR BindAddr, NETADDR AuxBindAddr, int MaxClients, int MaxClientsPerIP, int Flags);
 	int Close();
 
 	//
@@ -289,6 +291,7 @@ public:
 
 	//
 	void SetMaxClientsPerIP(int Max);
+	void DropAuxSocket();
 };
 
 

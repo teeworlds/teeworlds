@@ -26,7 +26,7 @@
 #define MACRO_LIST_FIND(Start, Next, Expression) \
 	{ while(Start && !(Expression)) Start = Start->Next; }
 
-bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags)
+bool CNetServer::Open(NETADDR BindAddr, NETADDR AuxBindAddr, int MaxClients, int MaxClientsPerIP, int Flags)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -36,6 +36,15 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 	if(!m_Socket.type)
 		return false;
 
+	if (AuxBindAddr.port != 0) 
+	{
+		m_AuxSocket = net_udp_create(AuxBindAddr);
+		if(!m_AuxSocket.type)
+			return false;
+	}
+	else
+		m_AuxSocket.type = 0;
+	
 	// clamp clients
 	m_MaxClients = MaxClients;
 	if(m_MaxClients > NET_MAX_CLIENTS)
@@ -282,10 +291,19 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		// TODO: empty the recvinfo
 		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
 
+		bool isAuxSocket = false;
 		// no more packets for now
 		if(Bytes <= 0)
-			break;
-
+		{
+			if (m_AuxSocket.type != 0)
+			{
+				Bytes = net_udp_recv(m_AuxSocket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
+				isAuxSocket = true;
+			}
+			if(Bytes <= 0)
+				break;
+		}
+		
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
 			CBan *pBan = 0;
@@ -324,6 +342,8 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+				if (isAuxSocket) 
+					pChunk->m_Flags |= NETSENDFLAG_AUX;
 				pChunk->m_ClientID = -1;
 				pChunk->m_Address = Addr;
 				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
@@ -332,6 +352,13 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			}
 			else
 			{
+				if (isAuxSocket)
+				{
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "This is aux placeholder server. Connect to the other server pls!");
+					CNetBase::SendControlMsg(m_AuxSocket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+					return 0;
+				}
 				// TODO: check size here
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
@@ -427,7 +454,11 @@ int CNetServer::Send(CNetChunk *pChunk)
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		// send connectionless packet
-		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+		if (pChunk->m_Flags & NETSENDFLAG_AUX)
+		{
+			if (m_AuxSocket.type != 0) CNetBase::SendPacketConnless(m_AuxSocket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+		}
+		else CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
 	}
 	else
 	{
@@ -460,4 +491,9 @@ void CNetServer::SetMaxClientsPerIP(int Max)
 		Max = NET_MAX_CLIENTS;
 
 	m_MaxClientsPerIP = Max;
+}
+
+void CNetServer::DropAuxSocket()
+{
+	m_AuxSocket.type = 0;
 }

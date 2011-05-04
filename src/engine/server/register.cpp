@@ -40,6 +40,10 @@ void CRegister::RegisterSendFwcheckresponse(NETADDR *pAddr)
 	Packet.m_DataSize = sizeof(SERVERBROWSE_FWRESPONSE);
 	Packet.m_pData = SERVERBROWSE_FWRESPONSE;
 	m_pNetServer->Send(&Packet);
+
+	//register aux server
+	Packet.m_Flags |= NETSENDFLAG_AUX;
+	m_pNetServer->Send(&Packet);
 }
 
 void CRegister::RegisterSendHeartbeat(NETADDR Addr)
@@ -62,6 +66,10 @@ void CRegister::RegisterSendHeartbeat(NETADDR Addr)
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)] = Port >> 8;
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)+1] = Port&0xff;
 	m_pNetServer->Send(&Packet);
+
+	//register aux server
+	Packet.m_Flags |= NETSENDFLAG_AUX;
+	m_pNetServer->Send(&Packet);
 }
 
 void CRegister::RegisterSendCountRequest(NETADDR Addr)
@@ -72,6 +80,10 @@ void CRegister::RegisterSendCountRequest(NETADDR Addr)
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	Packet.m_DataSize = sizeof(SERVERBROWSE_GETCOUNT);
 	Packet.m_pData = SERVERBROWSE_GETCOUNT;
+	m_pNetServer->Send(&Packet);
+
+	//register aux server
+	Packet.m_Flags |= NETSENDFLAG_AUX;
 	m_pNetServer->Send(&Packet);
 }
 
