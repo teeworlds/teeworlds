@@ -315,7 +315,6 @@ void CCharacter::FireWeapon()
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				pTarget->m_Core.m_Frozen = 0;
-				pTarget->m_Core.m_Heat++;
 
 				Hits++;
 			}
