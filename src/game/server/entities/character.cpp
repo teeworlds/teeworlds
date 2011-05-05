@@ -315,6 +315,7 @@ void CCharacter::FireWeapon()
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				pTarget->m_Core.m_Frozen = 0;
+				pTarget->m_Core.m_Heat++;
 
 				Hits++;
 			}
@@ -573,6 +574,8 @@ void CCharacter::Tick()
 	else if (m_ActiveWeapon == WEAPON_NINJA)
 		TakeNinja();
 
+	m_Armor = m_Core.m_Heat;
+
 	// handle death-tiles and leaving gamelayer
 	int Col = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y);
 	if(((Col&CCollision::COLFLAG_DEATH) && Col<=7) || GameLayerClipped(m_Pos)) //seriously, who could possibly care.
@@ -686,6 +689,7 @@ bool CCharacter::IncreaseArmor(int Amount)
 	if(m_Armor >= 10)
 		return false;
 	m_Armor = clamp(m_Armor+Amount, 0, 10);
+	m_Core.m_Heat = m_Armor;
 	return true;
 }
 
@@ -748,7 +752,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 	if(Dmg)
 	{
-		if(m_Armor)
+		/*if(m_Armor)
 		{
 			if(Dmg > 1)
 			{
@@ -766,7 +770,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 				m_Armor -= Dmg;
 				Dmg = 0;
 			}
-		}
+		}*/
 
 		m_Health -= Dmg;
 	}

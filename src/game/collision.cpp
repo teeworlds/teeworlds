@@ -54,10 +54,18 @@ void CCollision::Init(class CLayers *pLayers)
 	}
 }
 
-int CCollision::GetTile(int x, int y)
+int CCollision::GetTileTC(int x, int y) // tile coords
+{
+	return m_pTiles[y*m_Width+x].m_Index > 128 ? 0 : m_pTiles[y*m_Width+x].m_Index;
+}
+
+int CCollision::GetTile(int x, int y, int *pOutTX, int *pOutTY)
 {
 	int Nx = clamp(x/32, 0, m_Width-1);
 	int Ny = clamp(y/32, 0, m_Height-1);
+
+	if (pOutTX) *pOutTX = Nx;
+	if (pOutTY) *pOutTY = Ny;
 
 	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
 }

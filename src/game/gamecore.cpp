@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
+#include "game/mapitems.h"
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -73,6 +74,7 @@ void CCharacterCore::Reset()
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
 	m_Frozen = 0;
+	m_Heat = 0;
 }
 
 void CCharacterCore::Tick(bool UseInput)
@@ -86,15 +88,61 @@ void CCharacterCore::Tick(bool UseInput)
 		Grounded = true;
 	if(m_pCollision->CheckPoint(m_Pos.x-PhysSize/2, m_Pos.y+PhysSize/2+5))
 		Grounded = true;
-	
-	int Frz = m_pCollision->CheckPointFrz(m_Pos.x, m_Pos.y);
 
-	if (Frz == 1)
-		m_Frozen = m_pWorld->m_Tuning.m_FreezeTicks;
-	else if (Frz == 2)
-		m_Frozen = 0;
-	else if (m_Frozen > 0)
+	int Tx, Ty;	
+	int Tile = m_pCollision->GetTile(m_Pos.x, m_Pos.y, &Tx, &Ty);
+	
+	int CFrz = Tile == TILE_FREEZE ? 1 : Tile == TILE_UNFREEZE ? 2 : 0; 
+
+	int XDiff = absolute(Tx - m_PrevTx);
+	int YDiff = absolute(Ty - m_PrevTy);
+
+	if (XDiff > 0 || YDiff > 0)
+	{ // tunnel effect 
+		int XDir = m_PrevTx == Tx ? 0 : (m_PrevTx < Tx?1:-1);
+		int YDir = m_PrevTy == Ty ? 0 : (m_PrevTy < Ty?1:-1);
+
+		int IncXEvery = XDiff == 0 ? 0 : (XDiff > YDiff?1:YDiff/XDiff);
+		int IncYEvery = YDiff == 0 ? 0 : (XDiff > YDiff?XDiff/YDiff:1);
+
+		int X = m_PrevTx;
+		int Y = m_PrevTy;
+		
+		int S = 0;
+
+		while(X != Tx || Y != Ty)
+		{
+			if (X != Tx && S % IncXEvery == IncXEvery - 1)
+				X += XDir;
+
+			if (Y != Ty && S % IncYEvery == IncYEvery - 1)
+				Y += YDir;
+
+			int T = m_pCollision->GetTileTC(X, Y);
+			if (T == TILE_FREEZE || T == TILE_UNFREEZE)
+			{
+				int Frz = T == TILE_FREEZE ? 1 : 2;
+				if (Frz == 1)
+				{
+					m_Heat--;
+					if (m_Heat < 0)
+					{
+						m_Frozen = m_pWorld->m_Tuning.m_FreezeTicks;
+						m_Heat = 0;
+					}
+				}
+				else if (Frz == 2)
+					m_Frozen = 0;
+			}
+			S++;
+		}
+	}
+
+	if (CFrz == 0 && m_Frozen > 0) 
 		m_Frozen--;
+
+	m_PrevTx = Tx;
+	m_PrevTy = Ty;
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
@@ -437,7 +485,12 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore, bool VanillaOnly)
 	pObjCore->m_Direction = m_Direction;
 	pObjCore->m_Angle = m_Angle;
 	if (!VanillaOnly)
+	{
 		pObjCore->m_Frz = m_Frozen;
+		pObjCore->m_Heat = m_Heat;
+		pObjCore->m_PrevTx = m_PrevTx;
+		pObjCore->m_PrevTy = m_PrevTy;
+	}
 }
 
 void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
@@ -457,6 +510,9 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_Direction = pObjCore->m_Direction;
 	m_Angle = pObjCore->m_Angle;
 	m_Frozen = pObjCore->m_Frz;
+	m_Heat = pObjCore->m_Heat;
+	m_PrevTx = pObjCore->m_PrevTx;
+	m_PrevTy = pObjCore->m_PrevTy;
 }
 
 void CCharacterCore::Quantize()
