@@ -191,6 +191,10 @@ public:
 	int m_Direction;
 	int m_Angle;
 	int m_Frozen;
+	int m_Heat;
+	int m_PrevTx;
+	int m_PrevTy;
+
 	CNetObj_PlayerInput m_Input;
 
 	int m_TriggeredEvents;

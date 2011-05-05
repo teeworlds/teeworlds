@@ -17,7 +17,8 @@ class CCollision
 
 
 public:
-	int GetTile(int x, int y);
+	int GetTileTC(int x, int y); // tile coords
+	int GetTile(int x, int y, int *pOutTX = 0, int *pOutTY = 0);
 	enum
 	{
 		COLFLAG_SOLID=1,
