@@ -229,15 +229,15 @@ int CPlayer::BlockKillCheck()
 	if (Server()->ClientIngame(m_pCharacter->lastInteractionPlayer))
 	{
 		killer = m_pCharacter->lastInteractionPlayer;
-		double scoreStealed = blockScore * g_Config.m_SvScoreSteal / 100; // stolen:P
-			if (scoreStealed > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
-			scoreStealed = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
-			GameServer()->m_apPlayers[killer] -> blockScore += scoreStealed;
+		double scoreStolen = blockScore * g_Config.m_SvScoreSteal / 100;
+			if (scoreStolen > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
+			scoreStolen = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
+			GameServer()->m_apPlayers[killer] -> blockScore += scoreStolen;
 		if (GameServer()->m_apPlayers[killer]->GetAccount())
 		{
 			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer] -> blockScore;
 		}
-		blockScore -= scoreStealed;
+		blockScore -= scoreStolen;
 		if (GetAccount())
 			GetAccount()->Payload()->blockScore = blockScore;
 	}
