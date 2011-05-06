@@ -47,5 +47,6 @@ MACRO_TUNING_PARAM(PlayerCollision, player_collision, 1)
 MACRO_TUNING_PARAM(PlayerHooking, player_hooking, 1)
 
 MACRO_TUNING_PARAM(FreezeTicks, freeze_ticks, 3 * TicksPerSecond) // seconds
+MACRO_TUNING_PARAM(FreezeDelay, freeze_delay, 0)
 
 #endif
