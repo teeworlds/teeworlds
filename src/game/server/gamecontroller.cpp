@@ -397,7 +397,7 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 			pKiller->m_Score++; // normal kill
 	}
 	if(Weapon == WEAPON_SELF)
-		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3.0f;
+		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed();
 	return 0;
 }
 
