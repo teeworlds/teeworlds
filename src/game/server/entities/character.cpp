@@ -607,7 +607,7 @@ void CCharacter::Tick()
 	else if (Col >= TILE_COLFRZ_FIRST && Col <= TILE_COLFRZ_LAST)
 	{
 		int ColIndex = Col - TILE_COLFRZ_FIRST;
-		int Color;
+		int Color = -1;
 		switch(ColIndex)
 		{//okay this is dirty but where are config arrays? :P
 			case 0:Color = g_Config.m_SvColFrz0;break;
