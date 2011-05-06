@@ -127,7 +127,10 @@ void CCharacterCore::Tick(bool UseInput)
 					m_Heat--;
 					if (m_Heat < 0)
 					{
-						m_Frozen = m_pWorld->m_Tuning.m_FreezeTicks;
+						if (m_Frozen == 0)
+							m_Frozen = m_pWorld->m_Tuning.m_FreezeTicks + m_pWorld->m_Tuning.m_FreezeDelay;
+						else
+							m_Frozen = m_pWorld->m_Tuning.m_FreezeTicks;
 						m_Heat = 0;
 					}
 				}
@@ -214,7 +217,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 	
-	if (m_Frozen > 0)
+	if (m_Frozen > 0 && m_Frozen <= m_pWorld->m_Tuning.m_FreezeTicks)
 	{
 		m_Jumped &= ~1;
 		m_HookedPlayer = -1;

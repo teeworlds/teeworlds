@@ -22,6 +22,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_LastActionTick = Server()->Tick();
 	m_pAccount = 0;
 	blockScore = 0;
+	m_LastAnnoyingMsg = 0;
 	
 	for (int i = 1;i < 16;i++)
 	{
@@ -279,17 +280,28 @@ int CPlayer::BlockKillCheck()
 	if (Server()->ClientIngame(m_pCharacter->lastInteractionPlayer))
 	{
 		killer = m_pCharacter->lastInteractionPlayer;
-		double scoreStolen = blockScore * g_Config.m_SvScoreSteal / 100;
-			if (scoreStolen > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
-			scoreStolen = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
-			GameServer()->m_apPlayers[killer] -> blockScore += scoreStolen;
-		if (GameServer()->m_apPlayers[killer]->GetAccount())
-		{
-			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer] -> blockScore;
-		}
+		double scoreStolen = min(blockScore * g_Config.m_SvScoreSteal, GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit) / 100;
 		blockScore -= scoreStolen;
 		if (GetAccount())
+		{
 			GetAccount()->Payload()->blockScore = blockScore;
+		}
+		double minSteal = (double)g_Config.m_SvScoreCreep / 1000;
+		if (scoreStolen < minSteal && GameServer()->m_apPlayers[killer]->GetAccount()) // if killer has account, give him score for unreg creeps
+			scoreStolen = minSteal;
+		GameServer()->m_apPlayers[killer]->blockScore += scoreStolen;
+		if (GameServer()->m_apPlayers[killer]->GetAccount())
+			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
+		else
+		{
+			if (g_Config.m_SvRegisterMessageInterval != 0 && (m_LastAnnoyingMsg == 0 || Server()->Tick() - m_LastAnnoyingMsg > Server()->TickSpeed()*g_Config.m_SvRegisterMessageInterval))
+			{
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s, say /reg in chat to register and gain score for killing %s", Server()->ClientName(killer), Server()->ClientName(m_ClientID));
+				GameServer()->SendChatTarget(killer, aBuf);
+				m_LastAnnoyingMsg = Server()->Tick();
+			}
+		}
 	}
 	return killer;
 }
