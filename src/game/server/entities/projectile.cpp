@@ -74,9 +74,14 @@ void CProjectile::Tick()
 
 		if(m_Explosive)
 			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false);
-
 		else if(TargetChr)
 			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
+
+		if (m_Weapon == WEAPON_GUN)
+		{
+			//didn't track down why the 0.20 is necessary, but it is clearly skew without.
+			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y)+0.20, 3);
+		}
 
 		GameServer()->m_World.DestroyEntity(this);
 	}
