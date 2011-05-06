@@ -92,7 +92,7 @@ void CCharacterCore::Tick(bool UseInput)
 	int Tx, Ty;	
 	int Tile = m_pCollision->GetTile(m_Pos.x, m_Pos.y, &Tx, &Ty);
 	
-	int CFrz = Tile == TILE_FREEZE ? 1 : Tile == TILE_UNFREEZE ? 2 : 0; 
+	int CFrz = (Tile == TILE_FREEZE || (Tile >= TILE_COLFRZ_FIRST && Tile <= TILE_COLFRZ_LAST)) ? 1 : Tile == TILE_UNFREEZE ? 2 : 0; 
 
 	int XDiff = absolute(Tx - m_PrevTx);
 	int YDiff = absolute(Ty - m_PrevTy);
@@ -119,9 +119,9 @@ void CCharacterCore::Tick(bool UseInput)
 				Y += YDir;
 
 			int T = m_pCollision->GetTileTC(X, Y);
-			if (T == TILE_FREEZE || T == TILE_UNFREEZE)
+			if (T == TILE_FREEZE || T == TILE_UNFREEZE || (T >= TILE_COLFRZ_FIRST && T <= TILE_COLFRZ_LAST))
 			{
-				int Frz = T == TILE_FREEZE ? 1 : 2;
+				int Frz = (T == TILE_FREEZE || (T >= TILE_COLFRZ_FIRST && T <= TILE_COLFRZ_LAST)) ? 1 : 2;
 				if (Frz == 1)
 				{
 					m_Heat--;
