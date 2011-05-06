@@ -28,6 +28,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	    idMap[i] = -1;
 	}
 	idMap[0] = ClientID;
+	m_ChatScore = 0;
 }
 
 CPlayer::~CPlayer()
@@ -50,6 +51,11 @@ void CPlayer::Tick()
 	}
 
 	Server()->SetClientScore(m_ClientID, blockScore);
+
+	if (m_ChatScore > 0)
+		m_ChatScore--;
+
+	Server()->SetClientScore(m_ClientID, m_Score);
 
 	// do latency stuff
 	{

@@ -97,6 +97,8 @@ public:
 	int idMap[16];
 	int idMapBook[16];
 
+	int m_ChatScore;
+	
 	// network latency calculations
 	struct
 	{

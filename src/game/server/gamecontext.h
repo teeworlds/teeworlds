@@ -16,6 +16,8 @@
 #include "account.h"
 #include "player.h"
 
+#define MAX_MUTES 32
+
 /*
 	Tick
 		Game Context (CGameContext::tick)
@@ -37,6 +39,10 @@
 			All players (CPlayer::snap)
 
 */
+struct CMute {
+	char m_IP[16];// TODO ipv6
+	int m_Expire;
+};
 class CGameContext : public IGameServer
 {
 	IServer *m_pServer;
@@ -60,12 +66,20 @@ class CGameContext : public IGameServer
 	static void ConForceVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
+	static void ConMute(IConsole::IResult *pResult, void *pUserData);
+	static void ConMuteID(IConsole::IResult *pResult, void *pUserData);
+	static void ConMuteIP(IConsole::IResult *pResult, void *pUserData);
+	static void ConUnmute(IConsole::IResult *pResult, void *pUserData);
+	static void ConMutes(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
 	bool m_Resetting;
+
+	static struct CMute m_aMutes[MAX_MUTES];
+	void Mute(const char *pIP, int Secs, const char *pDisplayName);
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
