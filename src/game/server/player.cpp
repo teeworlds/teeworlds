@@ -134,7 +134,16 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pClientInfo)
 		return;
 
-	StrToInts(&pClientInfo->m_Name0, 4, Server()->ClientName(m_ClientID));
+	const char* DbgStateChars = "fsizb";
+
+	if (g_Config.m_SvScoringDebug && m_pCharacter)
+	{
+		char dbgName[200];
+		str_format(dbgName, sizeof(dbgName), "%c%d::%d%s", DbgStateChars[m_pCharacter->State], m_pCharacter->lastInteractionPlayer, m_ClientID, Server()->ClientName(m_ClientID));
+		StrToInts(&pClientInfo->m_Name0, 4, dbgName);
+	}
+	else
+		StrToInts(&pClientInfo->m_Name0, 4, Server()->ClientName(m_ClientID));
 	StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
 	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
 	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
