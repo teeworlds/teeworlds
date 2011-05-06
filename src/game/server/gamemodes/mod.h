@@ -8,6 +8,8 @@
 // todo a modification with their base as well.
 class CGameControllerMOD : public IGameController
 {
+private:
+	int m_NextBroadcastTick;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	virtual void Tick();
