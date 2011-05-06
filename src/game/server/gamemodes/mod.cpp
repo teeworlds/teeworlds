@@ -13,6 +13,7 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	// DM, TDM and CTF are reserved for teeworlds original modes.
 	m_pGameType = "MOD";
 	m_NextBroadcastTick = 0;
+	m_NextAnnounceTick = 0;
 	//m_GameFlags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
 }
 
@@ -23,6 +24,12 @@ void CGameControllerMOD::Tick()
 	//DoTeamScoreWincheck(); // checks for winners, two teams version
 
 	IGameController::Tick();
+
+	if (*g_Config.m_SvAnnouncement && m_NextAnnounceTick <= Server()->Tick())
+	{
+		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, g_Config.m_SvAnnouncement);
+		m_NextAnnounceTick = Server()->Tick() + g_Config.m_SvAnnouncementInterval * 60 * Server()->TickSpeed();
+	}
 
 	if (*g_Config.m_SvBroadcast && m_NextBroadcastTick <= Server()->Tick())
 	{

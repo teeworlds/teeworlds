@@ -77,6 +77,8 @@ MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 50, 50, 250, CFGFLAG_SERVER
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "eye emote on emoticons")
 
 MACRO_CONFIG_STR(SvBroadcast, sv_broadcast, 255, "", CFGFLAG_SERVER, "")
+MACRO_CONFIG_STR(SvAnnouncement, sv_announcement, 255, "", CFGFLAG_SERVER, "")
+MACRO_CONFIG_INT(SvAnnouncementInterval, sv_announcement_interval, 5, 1, 300, CFGFLAG_SERVER, "")
 
 MACRO_CONFIG_INT(SvVoteSpectate, sv_vote_spectate, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to move players to spectators")
 MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to kick players")

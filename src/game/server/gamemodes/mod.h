@@ -10,6 +10,7 @@ class CGameControllerMOD : public IGameController
 {
 private:
 	int m_NextBroadcastTick;
+	int m_NextAnnounceTick;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	virtual void Tick();
