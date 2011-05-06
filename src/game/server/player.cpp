@@ -273,17 +273,18 @@ int CPlayer::BlockKillCheck()
 	if (Server()->ClientIngame(m_pCharacter->lastInteractionPlayer))
 	{
 		killer = m_pCharacter->lastInteractionPlayer;
-		double scoreStolen = blockScore * g_Config.m_SvScoreSteal / 100;
-			if (scoreStolen > GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100)
-			scoreStolen = GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit / 100;
-			GameServer()->m_apPlayers[killer] -> blockScore += scoreStolen;
-		if (GameServer()->m_apPlayers[killer]->GetAccount())
-		{
-			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer] -> blockScore;
-		}
+		double scoreStolen = min(blockScore * g_Config.m_SvScoreSteal, GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit) / 100;
 		blockScore -= scoreStolen;
 		if (GetAccount())
+		{
 			GetAccount()->Payload()->blockScore = blockScore;
+		}
+		double minSteal = (double)g_Config.m_SvScoreCreep / 1000;
+		if (scoreStolen < minSteal && GameServer()->m_apPlayers[killer]->GetAccount()) // if killer has account, give him score for unreg creeps
+			scoreStolen = minSteal;
+		GameServer()->m_apPlayers[killer]->blockScore += scoreStolen;
+		if (GameServer()->m_apPlayers[killer]->GetAccount())
+			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
 	}
 	return killer;
 }
