@@ -49,7 +49,8 @@ void CCollision::Init(class CLayers *pLayers)
 		case TILE_UNFREEZE:
 			break;
 		default:
-			m_pTiles[i].m_Index = 0;
+			if (Index < TILE_COLFRZ_FIRST || Index > TILE_COLFRZ_LAST)
+				m_pTiles[i].m_Index = 0;
 		}
 	}
 }
@@ -79,7 +80,7 @@ bool CCollision::IsTileSolid(int x, int y)
 int CCollision::IsTileFrz(int x, int y)
 {
 	int i = GetTile(x,y);
-	return i == TILE_FREEZE ? 1 : i == TILE_UNFREEZE ? 2 : 0;
+	return (i == TILE_FREEZE || (i >= TILE_COLFRZ_FIRST && i <= TILE_COLFRZ_LAST)) ? 1 : i == TILE_UNFREEZE ? 2 : 0;
 }
 
 // TODO: rewrite this smarter!

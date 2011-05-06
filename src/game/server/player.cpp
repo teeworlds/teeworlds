@@ -185,6 +185,33 @@ void CPlayer::OnDisconnect(const char *pReason)
 	}
 }
 
+void CPlayer::OverrideColors(int Color)
+{
+	bool Ch = false;
+	
+	if (Color < 0) // reset
+	{
+		Ch = (m_TeeInfos.m_UseCustomColor != m_OrigTeeInfos.m_UseCustomColor)
+			|| (m_TeeInfos.m_ColorBody != m_OrigTeeInfos.m_ColorBody)
+			|| (m_TeeInfos.m_ColorFeet != m_OrigTeeInfos.m_ColorFeet);
+		m_EnforcedColors = false;
+		m_TeeInfos.m_UseCustomColor = m_OrigTeeInfos.m_UseCustomColor;	
+		m_TeeInfos.m_ColorBody = m_OrigTeeInfos.m_ColorBody;	
+		m_TeeInfos.m_ColorFeet = m_OrigTeeInfos.m_ColorFeet;	
+	}
+	else
+	{
+		Ch = (m_TeeInfos.m_UseCustomColor != 1)
+			|| (m_TeeInfos.m_ColorBody != Color)
+			|| (m_TeeInfos.m_ColorFeet != Color);
+		m_EnforcedColors = true;
+		m_TeeInfos.m_UseCustomColor = 1;
+		m_TeeInfos.m_ColorBody = m_TeeInfos.m_ColorFeet = Color;	
+	}
+	if (Ch)
+		GameServer()->m_pController->OnPlayerInfoChange(this);
+}
+
 void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 {
 	if(m_pCharacter)

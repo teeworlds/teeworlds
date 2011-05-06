@@ -32,6 +32,8 @@ public:
 	void OnPredictedInput(CNetObj_PlayerInput *NewInput);
 	void OnDisconnect(const char *pReason);
 
+	void OverrideColors(int Color);
+
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 	
@@ -76,7 +78,9 @@ public:
 		int m_UseCustomColor;
 		int m_ColorBody;
 		int m_ColorFeet;
-	} m_TeeInfos;
+	} m_TeeInfos, m_OrigTeeInfos;
+
+	bool m_EnforcedColors;
 
 	int m_RespawnTick;
 	int m_DieTick;

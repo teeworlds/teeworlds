@@ -61,6 +61,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_QueuedWeapon = -1;
 
 	m_pPlayer = pPlayer;
+	if (m_pPlayer)
+		m_pPlayer->OverrideColors(-1);
 	m_Pos = Pos;
 
 	m_Core.Reset();
@@ -602,6 +604,26 @@ void CCharacter::Tick()
 	int Col = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y);
 	if(((Col&CCollision::COLFLAG_DEATH) && Col<=7) || GameLayerClipped(m_Pos)) //seriously, who could possibly care.
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+	else if (Col >= TILE_COLFRZ_FIRST && Col <= TILE_COLFRZ_LAST)
+	{
+		int ColIndex = Col - TILE_COLFRZ_FIRST;
+		int Color;
+		switch(ColIndex)
+		{//okay this is dirty but where are config arrays? :P
+			case 0:Color = g_Config.m_SvColFrz0;break;
+			case 1:Color = g_Config.m_SvColFrz1;break;
+			case 2:Color = g_Config.m_SvColFrz2;break;
+			case 3:Color = g_Config.m_SvColFrz3;break;
+			case 4:Color = g_Config.m_SvColFrz4;break;
+			case 5:Color = g_Config.m_SvColFrz5;break;
+			case 6:Color = g_Config.m_SvColFrz6;break;
+			case 7:Color = g_Config.m_SvColFrz7;break;
+			case 8:Color = g_Config.m_SvColFrz8;break;
+		}
+
+		m_pPlayer->OverrideColors(Color);
+	}
+	
 	
 	// handle Weapons
 	HandleWeapons();
