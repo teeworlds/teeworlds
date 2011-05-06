@@ -96,6 +96,7 @@ public:
 	
 	int idMap[16];
 	int idMapBook[16];
+	int m_LastAnnoyingMsg;
 
 	// network latency calculations
 	struct

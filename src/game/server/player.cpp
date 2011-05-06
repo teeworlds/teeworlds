@@ -22,6 +22,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_LastActionTick = Server()->Tick();
 	m_pAccount = 0;
 	blockScore = 0;
+	m_LastAnnoyingMsg = 0;
 	
 	for (int i = 1;i < 16;i++)
 	{
@@ -285,6 +286,16 @@ int CPlayer::BlockKillCheck()
 		GameServer()->m_apPlayers[killer]->blockScore += scoreStolen;
 		if (GameServer()->m_apPlayers[killer]->GetAccount())
 			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
+		else
+		{
+			if (g_Config.m_SvRegisterMessageInterval != 0 && (m_LastAnnoyingMsg == 0 || Server()->Tick() - m_LastAnnoyingMsg > Server()->TickSpeed()*g_Config.m_SvRegisterMessageInterval))
+			{
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s, say /reg in chat to register and gain score for killing %s", Server()->ClientName(killer), Server()->ClientName(m_ClientID));
+				GameServer()->SendChatTarget(killer, aBuf);
+				m_LastAnnoyingMsg = Server()->Tick();
+			}
+		}
 	}
 	return killer;
 }
