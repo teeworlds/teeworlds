@@ -629,13 +629,15 @@ void CCharacter::Tick()
 		{
 			double seconds = (double)(Server()->Tick() - m_StartTick) / Server()->TickSpeed();
 			char buf[500];
-			if (g_Config.m_SvRaceFinishReward > 0)
+			if (g_Config.m_SvRaceFinishReward > 0 && m_pPlayer->GetAccount())
 				str_format(buf, sizeof(buf), "%s finished in %.2f seconds and gained %.2f score", Server()->ClientName(m_pPlayer->GetCID()), seconds, (double)g_Config.m_SvRaceFinishReward);
 			else str_format(buf, sizeof(buf), "%s finished in %.2f seconds", Server()->ClientName(m_pPlayer->GetCID()), seconds);
 			GameServer()->SendChat(-1, -2, buf);
-			m_pPlayer->blockScore += g_Config.m_SvRaceFinishReward;
 			if (m_pPlayer->GetAccount())
+			{
+				m_pPlayer->blockScore += g_Config.m_SvRaceFinishReward;
 				m_pPlayer->GetAccount()->Payload()->blockScore = m_pPlayer->blockScore;
+			}
 			m_StartTick = 0;
 		}
 	}
