@@ -13,8 +13,12 @@ bool CDDChatHnd::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 {
 	unsigned Time;
 	char aType[16];
+	if (str_comp_num(pMsg, "/emote", 6) != 0)
+		return false;
+
 	char aLine[256];
 	str_copy(aLine, pMsg, sizeof aLine);
+
 	if (!ParseLine(aType, sizeof aType, &Time, str_skip_to_whitespace(aLine)))
 	{
 		GameContext()->SendChatTarget(pPlayer->GetCID(), "usage: /emote {happy/angry/pain/blink/surprise} <seconds>");

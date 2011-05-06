@@ -621,11 +621,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		else
 			Team = CGameContext::CHAT_ALL;
 
-		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
-			return;
-
-		pPlayer->m_LastChat = Server()->Tick();
-
 		// check for invalid chars
 		unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
 		while (*pMessage)
@@ -640,7 +635,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		if (*pMsgStart == IChatCtl::ms_CmdChar)
 			IChatCtl::Dispatch(pPlayer, pMsgStart);//one could handle unhandled msgs here
 		else
-		SendChat(ClientID, Team, pMsg->m_pMessage);
+		{
+			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
+				return;
+
+			pPlayer->m_LastChat = Server()->Tick();
+
+			SendChat(ClientID, Team, pMsg->m_pMessage);
+		}
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{
