@@ -99,6 +99,7 @@ MACRO_CONFIG_INT(SvUnlimitedAmmo, sv_unlimited_ammo, 1, 0, 1, CFGFLAG_SERVER, "g
 MACRO_CONFIG_INT(SvScoreSteal, sv_scoresteal, 10, 0, 100, CFGFLAG_SERVER, "Percentage of score to steal on block")
 MACRO_CONFIG_INT(SvScoreStealLimit, sv_scoresteallimit, 40, 0, 100, CFGFLAG_SERVER, "Tee cannot steal more than this*killer_current_score")
 MACRO_CONFIG_INT(SvScoreCreep, sv_scorecreep, 500, 0, 100000, CFGFLAG_SERVER, "Reward for killing unregistered players in 1/1000th of score")
+MACRO_CONFIG_INT(SvRaceFinishReward, sv_finish_reward, 20, 0, 1000, CFGFLAG_SERVER, "Score reward for finishing race")
 
 MACRO_CONFIG_INT(SvRegisterMessageInterval, sv_register_message_interval, 120, 0, 1000, CFGFLAG_SERVER, "Min. seconds between 'pls register' chat msgs")
 

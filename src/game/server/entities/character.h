@@ -80,7 +80,7 @@ public:
 	int lastFrozen;
 	bool isFrozen;
 	int m_ActualFreezeTick;
-        
+	int m_StartTick;
 	void Frozen();
         void UnFrozen();
         void Interaction(int with, int maskmsec);
