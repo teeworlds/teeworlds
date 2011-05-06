@@ -570,7 +570,6 @@ public:
 		float DrawX = 0.0f, DrawY = 0.0f;
 		int LineCount = 0;
 		float CursorX, CursorY;
-		const char *pEnd;
 
 		float Size = pCursor->m_FontSize;
 
@@ -604,8 +603,6 @@ public:
 		// set length
 		if(Length < 0)
 			Length = str_length(pText);
-
-		pEnd = pText + Length;
 
 		// if we don't want to render, we can just skip the first outline pass
 		i = 1;

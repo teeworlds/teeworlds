@@ -223,12 +223,20 @@ void CPlayer::OverrideColors(int Color)
 
 void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 {
+	// skip the input if chat is active
+	if((m_PlayerFlags&PLAYERFLAG_CHATTING) && (NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING))
+		return;
+
 	if(m_pCharacter)
 		m_pCharacter->OnPredictedInput(NewInput);
 }
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
+	// skip the input if chat is active
+	if((m_PlayerFlags&PLAYERFLAG_CHATTING) && (NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING))
+		return;
+
 	m_PlayerFlags = NewInput->m_PlayerFlags;
 
 	if(m_pCharacter)

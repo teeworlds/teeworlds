@@ -234,7 +234,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 	}
 	else
 		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
-	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "chat", aBuf);
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, Team!=CHAT_ALL?"teamchat":"chat", aBuf);
 
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = Team != CHAT_ALL;
