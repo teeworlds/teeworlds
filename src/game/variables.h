@@ -82,6 +82,15 @@ MACRO_CONFIG_INT(SvDamage, sv_damage, 0, 0, 1, CFGFLAG_SERVER, "allow damage")
 MACRO_CONFIG_INT(SvNinja, sv_ninja, 0, 0, 1, CFGFLAG_SERVER, "allow ninja")
 MACRO_CONFIG_INT(SvUnlimitedAmmo, sv_unlimited_ammo, 1, 0, 1, CFGFLAG_SERVER, "guess what")
 
+MACRO_CONFIG_INT(SvColFrz0, sv_col_frz_0, 0xffffff, -1, 0x7fffffff, CFGFLAG_SERVER, "") //white
+MACRO_CONFIG_INT(SvColFrz1, sv_col_frz_1, 0x0, -1, 0x7fffffff, CFGFLAG_SERVER, "") // gray
+MACRO_CONFIG_INT(SvColFrz2, sv_col_frz_2, 0xffff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // red
+MACRO_CONFIG_INT(SvColFrz3, sv_col_frz_3, 0x17ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // orange
+MACRO_CONFIG_INT(SvColFrz4, sv_col_frz_4, 0x26ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // yellow
+MACRO_CONFIG_INT(SvColFrz5, sv_col_frz_5, 0x3aff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // light green
+MACRO_CONFIG_INT(SvColFrz6, sv_col_frz_6, 0xa1ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // deep blue
+MACRO_CONFIG_INT(SvColFrz7, sv_col_frz_7, 0xd6ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // pink
+MACRO_CONFIG_INT(SvColFrz8, sv_col_frz_8, -1, -1, 0x7fffffff, CFGFLAG_SERVER, "") // reset
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
