@@ -102,6 +102,7 @@ MACRO_CONFIG_INT(SvScoreCreep, sv_scorecreep, 500, 0, 100000, CFGFLAG_SERVER, "R
 MACRO_CONFIG_INT(SvRaceFinishReward, sv_finish_reward, 20, 0, 1000, CFGFLAG_SERVER, "Score reward for finishing race")
 
 MACRO_CONFIG_INT(SvRegisterMessageInterval, sv_register_message_interval, 120, 0, 1000, CFGFLAG_SERVER, "Min. seconds between 'pls register' chat msgs")
+MACRO_CONFIG_INT(SvLoginClan, sv_login_clan, 0, 0, 1, CFGFLAG_SERVER, "Display login in place of clan tag")
 
 MACRO_CONFIG_INT(SvIntFree, sv_int_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for interacted->free transition")
 MACRO_CONFIG_INT(SvBlockedFree, sv_blocked_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for blocked->free transition")
