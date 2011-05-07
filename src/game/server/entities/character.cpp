@@ -314,7 +314,9 @@ void CCharacter::FireWeapon()
 				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 
-				pTarget->m_Core.m_Frozen = 0;
+				int Col = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y);
+				if (Col != TILE_FREEZE)
+					pTarget->m_Core.m_Frozen = 0;
 
 				Hits++;
 			}
