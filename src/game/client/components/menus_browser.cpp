@@ -628,6 +628,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 		for (int i = 0; i < pSelectedServer->m_NumClients; i++)
 		{
 			CUIRect Name, Clan, Score, Flag;
+			bool IsFriend;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
 			RenderTools()->DrawUIRect(&Name, vec4(1,1,1,(i%2+1)*0.05f), CUI::CORNER_ALL, 4.0f);
 			Name.VSplitLeft(5.0f, 0, &Name);
@@ -636,6 +637,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			Flag.HMargin(4.0f, &Flag);
 			Name.HSplitTop(11.0f, &Name, &Clan);
 
+			IsFriend = (m_pClient->Friends()->IsFriend(pSelectedServer->m_aClients[i].m_aName, pSelectedServer->m_aClients[i].m_aClan, false));
+			
 			// score
 			if(pSelectedServer->m_aClients[i].m_Player)
 			{
@@ -645,6 +648,10 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 				Cursor.m_LineWidth = Score.w;
 				TextRender()->TextEx(&Cursor, aTemp, -1);
 			}
+			
+			// highlight in green if it's a friend
+			if(IsFriend && g_Config.m_BrFilterFriends)
+				TextRender()->TextColor(0.4f, 1.0f, 0.4f, 1.0f);
 
 			// name
 			TextRender()->SetCursor(&Cursor, Name.x, Name.y, FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -659,7 +666,12 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 					TextRender()->TextEx(&Cursor, pName, (int)(s-pName));
 					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
 					TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+					
+					if(IsFriend && g_Config.m_BrFilterFriends)
+						TextRender()->TextColor(0.4f, 1.0f, 0.4f, 1.0f);
+					else 
+						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+						
 					TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
 				}
 				else
