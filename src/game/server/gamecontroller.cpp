@@ -130,14 +130,8 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos)
 	{
 		Eval.m_FriendlyTeam = Team;
 
-		// first try own team spawn, then normal spawn and then enemy
+		// only try own team spawn
 		EvaluateSpawnType(&Eval, 1+(Team&1));
-		if(!Eval.m_Got)
-		{
-			EvaluateSpawnType(&Eval, 0);
-			if(!Eval.m_Got)
-				EvaluateSpawnType(&Eval, 1+((Team+1)&1));
-		}
 	}
 	else
 	{
@@ -151,14 +145,8 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos)
 	{
 		if(IsTeamplay())
 		{
-			// first try own team spawn, then normal spawn and then enemy
+			// only try own team spawn
 			FindFreeSpawn(&Eval, 1+(Team&1));
-			if(!Eval.m_Got)
-			{
-				FindFreeSpawn(&Eval, 0);
-				if(!Eval.m_Got)
-					FindFreeSpawn(&Eval, 1+((Team+1)&1));
-			}
 		}
 		else
 		{
