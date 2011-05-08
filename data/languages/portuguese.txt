@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d Bytes
@@ -144,6 +144,9 @@ Delete demo
 
 Demo details
 == Detalhes do demo
+
+Demofile: %s
+== Demo: %s
 
 Demos
 == Demos
@@ -562,6 +565,9 @@ Standard map
 Stop record
 == Parar de gravar
 
+Strict gametype filter
+== Tipo de jogo exato
+
 Sudden Death
 == Morte Súbita
 
@@ -666,11 +672,6 @@ no limit
 
 ##### needs translation #####
 
-Demofile: %s
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 
