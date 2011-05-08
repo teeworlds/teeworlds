@@ -8,6 +8,7 @@
 #include <game/generated/client_data.h>
 #include <game/generated/protocol.h>
 
+#include <game/client/teecomp.h>
 #include <game/client/animstate.h>
 #include <game/client/render.h>
 
@@ -242,10 +243,20 @@ void CSpectator::OnRender()
 			m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == m_pClient->m_Snap.m_paPlayerInfos[i]->m_ClientID))
 		{
 			Graphics()->BlendNormal();
-			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+			if(g_Config.m_TcColoredFlags)
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id);
+			else
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 			Graphics()->QuadsBegin();
 
 			RenderTools()->SelectSprite(m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+
+			if(g_Config.m_TcColoredFlags)
+			{
+				vec3 Col = CTeecompUtils::GetTeamColor(1-m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team, m_pClient->m_Snap.m_pLocalInfo->m_Team, 
+					g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+				Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
+			}
 
 			float Size = LineHeight;
 			IGraphics::CQuadItem QuadItem(Width/2.0f+x-LineHeight/5.0f, Height/2.0f+y-LineHeight/3.0f, Size/2.0f, Size);
