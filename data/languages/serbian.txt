@@ -674,6 +674,62 @@ no limit
 
 ##### old translations #####
 
+##### race #####
+
+Ghost
+== 
+
+Activate
+== 
+
+Deactivate
+== 
+
+Time
+== 
+
+Race specific settings
+== 
+
+Auto record
+== 
+
+Save player name
+== 
+
+Show other players
+== 
+
+Show checkpoint difference
+== 
+
+Enable Ghost
+== 
+
+Save Ghost
+== 
+
+Show ghost nameplates
+== 
+
+Always show ghost nameplates
+== 
+
+Show records
+== 
+
+Show best time on server
+== 
+
+Api token
+== 
+
+Finish time
+== 
+
+Server best
+== 
+
 ##### client-pack #####
 
 Particle flow (experimental)

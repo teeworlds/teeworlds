@@ -679,7 +679,7 @@ no limit
 Ghost
 == 
 
-Actuvate
+Activate
 == 
 
 Deactivate

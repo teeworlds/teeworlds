@@ -688,7 +688,7 @@ Prev
 Ghost
 == 
 
-Actuvate
+Activate
 == 
 
 Deactivate

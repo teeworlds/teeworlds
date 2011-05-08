@@ -679,7 +679,7 @@ Strict gametype filter
 Ghost
 == 
 
-Actuvate
+Activate
 == 
 
 Deactivate
