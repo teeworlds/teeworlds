@@ -677,396 +677,396 @@ no limit
 ##### race #####
 
 Ghost
-== 
+== Geist
 
 Activate
-== 
+== Aktivieren
 
 Deactivate
-== 
+== Deaktivieren
 
 Time
-== 
+== Zeit
 
 Race specific settings
-== 
+== Race Einstellungen
 
 Auto record
-== 
+== Automatische Aufnahme
 
 Save player name
-== 
+== Spielernamen speichern 
 
 Show other players
-== 
+== Andere Spieler anzeigen
 
 Show checkpoint difference
-== 
+== Kontrollpunkt Unterschied anzeigen
 
 Enable Ghost
-== 
+== Geist aktivieren
 
 Save Ghost
-== 
+== Geist speichern
 
-Show ghost nameplates
-== 
+Show ghost name plates
+== Zeige Geistnamen
 
-Always show ghost nameplates
-== 
+Always show ghost name plates
+== Geistnamen immer anzeigen
 
 Show records
-== 
+== Rekorde anzeigen
 
 Show best time on server
-== 
+== Beste Zeit vom Server anzeigen
 
 Api token
-== 
+== Api token
 
 Finish time
-== 
+== Endzeit
 
 Server best
-== 
+== Serverrekord
 
 ##### client-pack #####
 
 Particle flow (experimental)
-== 
+== Particle flow (experimentell)
 
 Show Client ID in scoreboard
-== 
+== Zeige Client ID im Namensschild
 
 Show ghost
-== 
+== Zeige Geist
 
 Anti rainbow
-== 
+== Anti rainbow
 
 Allowed color changes
-== 
+== Farbänderungen erlauben
 
 Show Client ID in name plates
-== 
+== Zeige Client ID im Namensschild
 
 Laser color
-== 
+== Laserfarbe
 
 Fonts
-== 
+== Schriftarten
 
 Block spam
-== 
+== Spam blockieren
 
 Enter the names you want to look for.
-== 
+== Gib die Namen ein, nach denen du suchen willst.
 
 Seperate them with a simple space.
-== 
+== Trenne sie mit einem Leerzeichen.
 
 General settings
-== 
+== Allgemeine Einstellungen
 
 Show hud
-== 
+== Zeige HUD
 
 Clear all
-== 
+== Entferne alles
 
 Special settings
-== 
+== Spezielle Einstellungen
 
 Server time
-== 
+== Server Zeit
 
 Health
-== 
+== Leben
 
 Ammunition
-== 
+== Munition
 
 Crosshair
-== 
+== Fadenkreuz
 
 DM score
-== 
+== DM Punkte
 
 FPS
-== 
+== FPS
 
 Viewmode
-== 
+== Zuschauermodus
 
 Warmup
-== 
+== Aufwärmen
 
 Votes
-== 
+== Abstimmungen
 
 Broadcast
-== 
+== Ankündigungen
 
 Server messages
-== 
+== Server Nachrichten
 
 Kill messages
-== 
+== Kill Nachrichten
 
 Emoticons
-== 
+== Emoticons
 
 Team balance warning
-== 
+== Team ausgleichen Warnung
 
 Sound settings
-== 
+== Sound Einstellungen
 
 Activate server message sound
-== 
+== Server Nachrichten Sound aktivieren
 
 Activate chat message sound
-== 
+== Chat Nachrichten Sound aktivieren
 
 Activate spree sounds
-== 
+== Killseriensounds aktivieren
 
 Key bindings
-== 
+== Tastenzuweisungen
 
 Zoom out
-==
+== Hereinzoomen
 
 Zoom in
-== 
+== Herauszoomen
 
 Hud
-== 
+== Hud
 
 Race
-== 
+== Race
 
 Frags
-== 
+== Kills
 
 Deaths
-== 
+== Tode
 
 Suicides
-== 
+== Selbstmorde
 
 Ratio
-== 
+== Verhältnis
 
 Net
-== 
+== Net
 
 FPM
-== 
+== FPM
 
 Spree
-== 
+== Serie
 
 Best spree
-== 
+== Beste Serie
 
 Caps
-== 
+== Caps
 
 Time played
-== 
+== Gespielte Zeit
 
 Grabs
-== 
+== Berührt
 
 Captures
-== 
+== Captures
 
 Kills holding flag
-== 
+== Kills mit Flagge
 
 Deaths with flag
-== 
+== Tode mit Flagge
 
 Carriers killed
-== 
+== Träger getötet
 
 Stats
-== 
+== Status
 
 Misc
-== 
+== Anderes
 
 About
-== 
+== Über
 
 Teeworlds %s with TeeComp %s by spl0k
-== 
+== Teeworlds %s mit TeeComp %s von spl0k
 
 Enemy based colors
-== 
+== Gegnerbasierende Farben
 
 Use DM colors for team %s
-== 
+== DM Farben für Team %s benutzen
 
 mates
-== 
+== Kammeraden
 
 enemies
-== 
+== Feinde
 
 Enemies
-== 
+== Feinde
 
 Team mates
-== 
+== Teamkammeraden
 
 Team 1
-== 
+== Team 1
 
 Team 2
-== 
+== Team 2
 
 team 2
-== 
+== Team 2
 
 Use DM colors for %s
-== 
+== Benutze DM Farben für %s
 
 Enemy based skins
-== 
+== Gegnerbasierende skins
 
 Force team %s/FFA skins
-== 
+== Zwinge Team %s/FFA skins 
 
 Forced skin
-== 
+== Erzwungener Skin
 
 Force %s skins
-== 
+== Erzwinge %s Skins
 
 Show in global statboard
-== 
+== In Globaler Statustafel anzeigen
 
 Net score
-== 
+== Net Punkte
 
 Frags per minute
-== 
+== Kills pro Minute
 
 Current spree
-== 
+== Aktuelle Serie
 
 Weapons stats
-== 
+== Waffen Status
 
 Flag captures
-== 
+== Flaggen Captures
 
 Flag grabs
-== 
+== Flaggen Berührungen
 
 Global statboard
-== 
+== Globale Statustafel
 
 Player board
-== 
+== Spielertafel
 
 Next player
-== 
+== Nächster Spieler
 
 Name plates
-== 
+== Namensschilder
 
 Show score in name plate
-== 
+== Zeige Punkte im Namensschild
 
 HUD/Flag
-== 
+== HUD/Flagge
 
 Make HUD match tees colors
-== 
+== HUD den Teefarben anpassen
 
 Make flags match tees colors
-== 
+== Flaggen den Teefarben anpassen
 
 Display speed meter
-== 
+== Geschwindigkeit anzeigen
 
 Speed meter show acceleration
-== 
+== Beschleunigung in der Geschwindigkeitsanz.
 
 Others
-== 
+== Anderes
 
 Hide flag while carrying it
-== 
+== Flagge während dem Tragen verstecken
 
 Automatically take game over stat screenshot
-== 
+== Autom. ein Bild von der Statustafel erstellen
 
 For Teeworlds
-== 
+== Für Teeworlds
 
 Compiled
-== 
+== Kompiliert:
 
 By Alban 'spl0k' FERON
-== 
+== Von Alban 'spl0k' FERON
 
 Special thanks to:
-== 
+== Besonderer Dank geht an:
 
 some other MonkeyStyle members
-== 
+== einige andere MonkeyStyle Mitglieder
 
 and the Teeworlds.com community
-== 
+== und die Teeworlds.com community
 
 so you can set while u set while u set options
-== 
+== dass du einstellen kannst wärend du einstellst wärend du einstellst
 
 Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs
-== 
+== Ich hörte Tabs rocken, also habe ich Tabs in die Tabs in die Tabs gemacht,
 
 Black team
-== 
+== Schwarzes Team
 
 Black team wins!
-== 
+== Schwarzes Team gewinnt!
 
 White team
-== 
+== Weißes Team
 
 White team wins!
-== 
+== Weißes Team gewinnt!
 
 Grey team
-== 
+== Graues Team
 
 Grey team wins!
-== 
+== Graues Team gewinnt!
 
 Orange team
-== 
+== Oranges Team
 
 Orange team wins!
-== 
+== Oranges Team gewinnt!
 
 Yellow team
-== 
+== Gelbes Team
 
 Yellow team wins!
-== 
+== Gelbes Team gewinnt!
 
 Green team
-== 
+== Grünes Team
 
 Green team wins!
-== 
+== Grünes Team gewinnt!
 
 Purple team
-== 
+== Lila Team
 
 Purple team wins!
-== 
+== Lila Team gewinnt!

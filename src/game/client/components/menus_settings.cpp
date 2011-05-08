@@ -1355,14 +1355,14 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 		
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		Button.VSplitLeft(15.0f, 0, &Button);
-		if(DoButton_CheckBox(&g_Config.m_ClGhostNamePlates, Localize("Show ghost nameplates"), g_Config.m_ClGhostNamePlates, &Button))
+		if(DoButton_CheckBox(&g_Config.m_ClGhostNamePlates, Localize("Show ghost name plates"), g_Config.m_ClGhostNamePlates, &Button))
 			g_Config.m_ClGhostNamePlates ^= 1;
 		
 		if(g_Config.m_ClGhostNamePlates)
 		{
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			Button.VSplitLeft(30.0f, 0, &Button);
-			if(DoButton_CheckBox(&g_Config.m_ClGhostNameplatesAlways, Localize("Always show ghost nameplates"), g_Config.m_ClGhostNameplatesAlways, &Button))
+			if(DoButton_CheckBox(&g_Config.m_ClGhostNameplatesAlways, Localize("Always show ghost name plates"), g_Config.m_ClGhostNameplatesAlways, &Button))
 				g_Config.m_ClGhostNameplatesAlways ^= 1;
 		}
 	}

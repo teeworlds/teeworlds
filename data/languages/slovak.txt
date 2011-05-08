@@ -709,10 +709,10 @@ Enable Ghost
 Save Ghost
 == 
 
-Show ghost nameplates
+Show ghost name plates
 == 
 
-Always show ghost nameplates
+Always show ghost name plates
 == 
 
 Show records
