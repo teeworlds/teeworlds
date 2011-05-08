@@ -8,6 +8,7 @@
 #include "gamecontext.h"
 #include <game/version.h>
 #include <game/collision.h>
+#include <game/server/entities/loltext.h>
 #include <game/gamecore.h>
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
@@ -1276,6 +1277,11 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+}
+
+void CGameContext::CreateLolText(CEntity *pParent, bool Follow, vec2 Pos, vec2 Vel, int Lifespan, const char *pText)
+{
+	CLoltext::Create(&m_World, pParent, Pos, Vel, Lifespan, pText, true, Follow);
 }
 
 void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
