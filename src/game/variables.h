@@ -121,6 +121,10 @@ MACRO_CONFIG_INT(SvColFrz5, sv_col_frz_5, 0x3aff00, -1, 0x7fffffff, CFGFLAG_SERV
 MACRO_CONFIG_INT(SvColFrz6, sv_col_frz_6, 0xa1ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // deep blue
 MACRO_CONFIG_INT(SvColFrz7, sv_col_frz_7, 0xd6ff00, -1, 0x7fffffff, CFGFLAG_SERVER, "") // pink
 MACRO_CONFIG_INT(SvColFrz8, sv_col_frz_8, -1, -1, 0x7fffffff, CFGFLAG_SERVER, "") // reset
+
+MACRO_CONFIG_INT(SvLoltextHspace, sv_loltext_hspace, 14, 10, 25, CFGFLAG_SERVER, "horizontal offset between loltext 'pixels'")
+MACRO_CONFIG_INT(SvLoltextVspace, sv_loltext_vspace, 14, 10, 25, CFGFLAG_SERVER, "vertical offset between loltext 'pixels'")
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
