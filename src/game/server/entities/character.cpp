@@ -1117,6 +1117,6 @@ void CCharacter::ResolveTick()
 		else if (Ago(lastFrozen, g_Config.m_SvFrozenInt)) NewState(BS_INTERACTED);
 	} else if (State == BS_BLOCKED)
 	{
-		if (Ago(lastFrozen, g_Config.m_SvBlockedFree)) NewState(BS_FREE);
+		if (Ago(lastFrozen, g_Config.m_SvBlockedFree) && !Ago(m_pPlayer->m_LastActionTick, 500)) NewState(BS_FREE);
 	}
 }
