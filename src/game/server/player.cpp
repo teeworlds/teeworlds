@@ -57,8 +57,6 @@ void CPlayer::Tick()
 	if (m_ChatScore > 0)
 		m_ChatScore--;
 
-	Server()->SetClientScore(m_ClientID, m_Score);
-
 	// do latency stuff
 	{
 		IServer::CClientInfo Info;
