@@ -32,6 +32,7 @@ private:
 	static bool s_aaaChars[256][5][3];
 	static bool HasRepr(char c);
 public:
+	static vec2 TextSize(const char *pText);
 	static void Create(CGameWorld *pGameWorld, CEntity *pParent, vec2 Pos, vec2 Vel, int Lifespan, const char *pText, bool Center, bool Follow);
 };
 
