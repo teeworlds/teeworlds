@@ -212,7 +212,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(pEntry == 0)
 			continue;
 
-		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
+		if(pEntry->m_CountryCode == m_pClient->m_pCountryFlags->Get(g_Config.m_PlayerCountry)->m_CountryCode)
 			OldSelected = i;
 
 		CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
@@ -234,7 +234,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
 	if(OldSelected != NewSelected)
 	{
-		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->Get(NewSelected)->m_CountryCode;
+		g_Config.m_PlayerCountry = NewSelected;
 		m_NeedSendinfo = true;
 	}
 }
