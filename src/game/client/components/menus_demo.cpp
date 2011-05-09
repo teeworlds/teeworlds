@@ -553,8 +553,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		Labels.HSplitTop(20.0f, &Left, &Labels);
 		Left.VSplitLeft(150.0f, &Left, &Right);
 		UI()->DoLabelScaled(&Left, Localize("Length:"), 14.0f, -1);
-		int Length = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16) |
-					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]);
+		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
+					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
 		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
@@ -576,9 +576,9 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		Left.VSplitLeft(20.0f, 0, &Left);
 		Left.VSplitLeft(130.0f, &Left, &Right);
 		UI()->DoLabelScaled(&Left, Localize("Size:"), 14.0f, -1);
-		Length = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
+		unsigned Size = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
 					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]);
-		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Length);
+		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Size);
 		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
 		Labels.HSplitTop(5.0f, 0, &Labels);
 		Labels.HSplitTop(20.0f, &Left, &Labels);
