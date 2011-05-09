@@ -51,26 +51,27 @@ void CPlasma::Snap(int SnappingClient)
 }
 
 
+vec2 CLoltext::TextSize(const char *pText)
+{
+	int Count = 0;
+	char c;
+	while((c = *pText++))
+	{
+		if (c >= 'a' && c <= 'z')
+			c -= ('a' - 'A');
+		if (c != ' ' && !HasRepr(c))
+			continue;
+		++Count;
+	}//no there ain't linebreaks
+	return vec2(Count*g_Config.m_SvLoltextHspace*4.0f, g_Config.m_SvLoltextVspace);
+}
 
 void CLoltext::Create(CGameWorld *pGameWorld, CEntity *pParent, vec2 Pos, vec2 Vel, int Lifespan, const char *pText, bool Center, bool Follow)
 {
 	char c;
 	vec2 CurPos = Pos;
 	if (Center)
-	{
-		const char *pOText = pText;
-		int Count = 0;
-		while((c = *pText++))
-		{
-			if (c >= 'a' && c <= 'z')
-				c -= ('a' - 'A');
-			if (c != ' ' && !HasRepr(c))
-				continue;
-			++Count;
-		}//no there ain't linebreaks
-		CurPos -= vec2(Count*g_Config.m_SvLoltextHspace*2.0f, g_Config.m_SvLoltextVspace/2.0f);
-		pText = pOText;
-	}
+		CurPos -= TextSize(pText)*0.5f;
 
 	if (pParent && !Follow)
 	{
