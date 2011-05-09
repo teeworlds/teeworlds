@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 #include <engine/shared/config.h>
+#include <game/server/entities/loltext.h>
 #include "player.h"
 
 
@@ -278,22 +279,38 @@ CCharacter *CPlayer::GetCharacter()
 int CPlayer::BlockKillCheck()
 {
 	int killer = m_ClientID;
-	if (m_pCharacter->State != BS_FROZEN) return killer;
+	if (m_pCharacter->State != BS_FROZEN)
+		return killer;
+
 	if (Server()->ClientIngame(m_pCharacter->lastInteractionPlayer))
 	{
+		char aVictimText[16] = {0};//for loltext
+		char aKillerText[16] = {0};
+
 		killer = m_pCharacter->lastInteractionPlayer;
 		double scoreStolen = min(blockScore * g_Config.m_SvScoreSteal, GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit) / 100;
 		blockScore -= scoreStolen;
+
 		if (GetAccount())
 		{
 			GetAccount()->Payload()->blockScore = blockScore;
+			if (scoreStolen >= .5f)
+				str_format(aVictimText, sizeof aVictimText, "-%.1f", scoreStolen);
 		}
+
 		double minSteal = (double)g_Config.m_SvScoreCreep / 1000;
+
 		if (scoreStolen < minSteal && GameServer()->m_apPlayers[killer]->GetAccount()) // if killer has account, give him score for unreg creeps
 			scoreStolen = minSteal;
+
 		GameServer()->m_apPlayers[killer]->blockScore += scoreStolen;
+
 		if (GameServer()->m_apPlayers[killer]->GetAccount())
+		{
 			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
+			if (scoreStolen >= .5f)
+				str_format(aKillerText, sizeof aKillerText, "+%.1f", scoreStolen);
+		}
 		else
 		{
 			if (g_Config.m_SvRegisterMessageInterval != 0 && (m_LastAnnoyingMsg == 0 || Server()->Tick() - m_LastAnnoyingMsg > Server()->TickSpeed()*g_Config.m_SvRegisterMessageInterval))
@@ -303,7 +320,31 @@ int CPlayer::BlockKillCheck()
 				GameServer()->SendChatTarget(killer, aBuf);
 				m_LastAnnoyingMsg = Server()->Tick();
 			}
+			str_copy(aKillerText, "!", sizeof aKillerText);
 		}
+	
+		CCharacter *killerchar = GameServer()->GetPlayerChar(killer);
+
+		if (*aVictimText && *aKillerText && killerchar)
+		{
+			vec2 Vs = CLoltext::TextSize(aVictimText);
+			vec2 Ks = CLoltext::TextSize(aKillerText);
+			// no full overlap check here, its way cheaper to disregard Y and just consider size vs dx
+
+			float XDiff = absolute(m_pCharacter->m_Pos.x - killerchar->m_Pos.x);
+			float YDiff = absolute(m_pCharacter->m_Pos.y - killerchar->m_Pos.y);
+
+			if (XDiff < 0.5f*(Vs.x + Ks.x) && YDiff < 0.5f*(Vs.y + Ks.y))
+			{
+				*aVictimText = 0;
+				str_append(aKillerText, "-", sizeof aKillerText);
+			}
+		}
+		if (*aKillerText)
+			GameServer()->CreateLolText(GameServer()->GetPlayerChar(killer), false, vec2(0,-100), vec2(0,-1), 50, aKillerText);
+		if (*aVictimText)
+			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0,-1), 50, aVictimText);
+	
 	}
 	return killer;
 }
