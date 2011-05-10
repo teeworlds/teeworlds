@@ -1718,7 +1718,6 @@ void CClient::Update()
 			int64 PrevtickStart = (m_aSnapshots[SNAP_PREV]->m_Tick)*time_freq()/50;
 			int PrevPredTick = (int)(PredNow*50/time_freq());
 			int NewPredTick = PrevPredTick+1;
-			static float LastPredintra = 0;
 
 			m_GameIntraTick = (Now - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
 			m_GameTickTime = (Now - PrevtickStart) / (float)Freq; //(float)SERVER_TICK_SPEED);
@@ -1735,15 +1734,12 @@ void CClient::Update()
 
 			if(NewPredTick > m_PredTick)
 			{
-				LastPredintra = m_PredIntraTick;
 				m_PredTick = NewPredTick;
 				Repredict = 1;
 
 				// send input
 				SendInput();
 			}
-
-			LastPredintra = m_PredIntraTick;
 		}
 
 		// only do sane predictions
