@@ -342,7 +342,10 @@ int CPlayer::BlockKillCheck()
 			GameServer()->CreateLolText(GameServer()->GetPlayerChar(killer), false, vec2(0,-100), vec2(0,-1), 50, aKillerText);
 		if (*aVictimText)
 			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0,-1), 50, aVictimText);
-	
+
+		killerchar->BlockScored();
+		if (m_pCharacter->m_chatFrozen)
+			killerchar->ChatBlockScored();
 	}
 	return killer;
 }

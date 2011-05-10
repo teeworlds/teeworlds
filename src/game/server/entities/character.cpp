@@ -1090,6 +1090,8 @@ void CCharacter::NewState(int newState)
 		lastInteractionPlayer = -1;
 	if (newState == BS_BLOCKED)
 		GetPlayer()->BlockKill();
+	if (newState == BS_FROZEN && m_lastNotChattingTick < Server()->Tick() - g_Config.m_SvChatBlockDelay*Server()->TickSpeed()/1000)
+		m_chatFrozen = 1;
 //	if (State != newState)
 //		dbg_msg("char", "%d:\t%s ---> %s", m_pPlayer->GetCID(), StateStr(State), StateStr(newState));
 	State = newState;
@@ -1119,4 +1121,35 @@ void CCharacter::ResolveTick()
 	{
 		if (Ago(lastFrozen, g_Config.m_SvBlockedFree) && !Ago(m_pPlayer->m_LastActionTick, 500)) NewState(BS_FREE);
 	}
+
+	if (State == BS_INTERACTED || State == BS_FREE)
+	{
+		if (!(m_pPlayer->m_PlayerFlags & PLAYERFLAG_CHATTING))
+		{
+			m_lastNotChattingTick = Server()->Tick();
+			m_chatFrozen = false;
+		}
+	}
+
+	if (m_pPlayer->GetAccount())
+	{
+//		if (m_pPlayer->GetAccount()->Payload()->Kills < GetAccount()->Payload()->ChatKills * 10)
+//			TakeHammer();
+//		else
+//			GiveHammer();
+	}
+}
+
+void CCharacter::BlockScored()
+{
+	GameServer()->CreateLolText(this, false, vec2(0,-100), vec2(0,-1), 50, "kill");
+	if (m_pPlayer->GetAccount())
+		m_pPlayer->GetAccount()->Payload()->m_Kills++;
+}
+
+void CCharacter::ChatBlockScored()
+{
+	GameServer()->CreateLolText(this, false, vec2(0,-100), vec2(0,-1), 50, "chatkill");
+	if (m_pPlayer->GetAccount())
+		m_pPlayer->GetAccount()->Payload()->m_ChatKills++;
 }

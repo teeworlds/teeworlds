@@ -111,6 +111,7 @@ MACRO_CONFIG_INT(SvFrozenBlocked, sv_frozen_blocked, 5000, 0, 10000, CFGFLAG_SER
 MACRO_CONFIG_INT(SvSelfBlocked, sv_self_blocked, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for self-frozen->blocked transition")
 MACRO_CONFIG_INT(SvHookIntMask, sv_hookintmask, -1, -1, 3000, CFGFLAG_SERVER, "Ignore reverse hook interaction if another interaction happend this milliseconds ago")
 MACRO_CONFIG_INT(SvDmgIntMask, sv_dmgintmask, 300, -1, 3000, CFGFLAG_SERVER, "Ignore damage interaction if another interaction happend this milliseconds ago")
+MACRO_CONFIG_INT(SvChatBlockDelay, sv_chatblockdelay, 1000, 0, 5000, CFGFLAG_SERVER, "If player was in chat for at least this milliseconds before getting frozen and blocked, consider it a chatblock")
 
 MACRO_CONFIG_INT(SvColFrz0, sv_col_frz_0, 0xffffff, -1, 0x7fffffff, CFGFLAG_SERVER, "") //white
 MACRO_CONFIG_INT(SvColFrz1, sv_col_frz_1, 0x0, -1, 0x7fffffff, CFGFLAG_SERVER, "") // gray

@@ -81,6 +81,8 @@ public:
 	bool isFrozen;
 	int m_ActualFreezeTick;
 	int m_StartTick;
+	int m_lastNotChattingTick;
+	bool m_chatFrozen;
 	void Frozen();
         void UnFrozen();
         void Interaction(int with, int maskmsec);
@@ -88,6 +90,8 @@ public:
         bool Ago(int event, int millis);
         void NewState(int newstate);
 	void SendKillMsg(int Killer, int Weapon, int ModeSpecial);
+	void BlockScored();
+	void ChatBlockScored();
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
