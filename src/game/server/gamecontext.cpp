@@ -1082,8 +1082,11 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*3 > Server()->Tick())
 			return;
 
-		pPlayer->m_LastKill = Server()->Tick();
-		pPlayer->KillCharacter(WEAPON_SELF);
+		if (pPlayer->GetCharacter() && pPlayer->GetCharacter()->GetState() != BS_INTERACTED)
+		{
+			pPlayer->m_LastKill = Server()->Tick();
+			pPlayer->KillCharacter(WEAPON_SELF);
+		}
 	}
 }
 

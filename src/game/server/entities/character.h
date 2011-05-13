@@ -89,6 +89,8 @@ public:
         void ResolveTick();
         bool Ago(int event, int millis);
         void NewState(int newstate);
+	int GetState() { return State; }
+
 	void SendKillMsg(int Killer, int Weapon, int ModeSpecial);
 	void BlockScored();
 	void ChatBlockScored();
