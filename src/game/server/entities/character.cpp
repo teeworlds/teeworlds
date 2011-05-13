@@ -1164,7 +1164,7 @@ void CCharacter::ResolveTick()
 		}
 	}
 
-	if (m_pPlayer->GetAccount())
+	if (m_pPlayer->GetAccount() && g_Config.m_SvTakeHammerOnChatkill)
 	{
 		if ((m_pPlayer->GetAccount()->Payload()->m_ChatKills >= 3) && m_pPlayer->GetAccount()->Payload()->m_Kills < m_pPlayer->GetAccount()->Payload()->m_ChatKills * 5)
 			TakeWeapon(WEAPON_HAMMER);
