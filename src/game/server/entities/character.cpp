@@ -102,8 +102,8 @@ void CCharacter::SetWeapon(int W)
 	m_ActiveWeapon = W;
 	GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SWITCH);
 
-	if(m_ActiveWeapon < 0 || m_ActiveWeapon >= NUM_WEAPONS)
-		m_ActiveWeapon = 0;
+	if(m_ActiveWeapon < -1 || m_ActiveWeapon >= NUM_WEAPONS)
+		m_ActiveWeapon = -1;
 }
 
 bool CCharacter::IsGrounded()
@@ -205,6 +205,14 @@ void CCharacter::DoWeaponSwitch()
 
 void CCharacter::HandleWeaponSwitch()
 {
+	int NumWeps = 0;
+	for(int i = 0; i < NUM_WEAPONS; ++i)
+		if (m_aWeapons[i].m_Got)
+			NumWeps++;
+
+	if (!NumWeps)
+		return;
+
 	int WantedWeapon = m_ActiveWeapon;
 	if(m_QueuedWeapon != -1)
 		WantedWeapon = m_QueuedWeapon;
@@ -247,6 +255,9 @@ void CCharacter::HandleWeaponSwitch()
 void CCharacter::FireWeapon()
 {
 	if(m_ReloadTimer != 0)
+		return;
+
+	if (m_ActiveWeapon == -1)
 		return;
 
 	DoWeaponSwitch();
@@ -442,6 +453,9 @@ void CCharacter::FireWeapon()
 
 void CCharacter::HandleWeapons()
 {
+	if (m_ActiveWeapon == -1)
+		return;
+
 	//ninja
 	HandleNinja();
 
@@ -480,6 +494,23 @@ void CCharacter::HandleWeapons()
 
 	return;
 }
+void CCharacter::TakeWeapon(int Weapon)
+{
+	m_aWeapons[Weapon].m_Got = false;
+	if (m_ActiveWeapon == Weapon)
+	{
+		int NewWeap = -1;
+		if (m_LastWeapon != -1 && m_LastWeapon != Weapon && m_aWeapons[m_LastWeapon].m_Got)
+			NewWeap = m_LastWeapon;
+		else
+		{
+			for(NewWeap = 0; NewWeap < NUM_WEAPONS && !m_aWeapons[NewWeap].m_Got; NewWeap++);
+			if (NewWeap == NUM_WEAPONS)
+				NewWeap = -1;
+		}
+		SetWeapon(NewWeap);
+	}
+}
 
 bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 {
@@ -513,7 +544,7 @@ void CCharacter::TakeNinja()
 	m_ActiveWeapon = m_LastWeapon;
 	if(m_ActiveWeapon == WEAPON_NINJA)
 		m_ActiveWeapon = WEAPON_HAMMER;
-	SetWeapon(m_ActiveWeapon);
+	//SetWeapon(m_ActiveWeapon); //has no effect
 }
 
 void CCharacter::SetDefEmote(int Emote, int Tick)
@@ -1031,7 +1062,7 @@ void CCharacter::Snap(int SnappingClient)
 	pCharacter->m_Health = 0;
 	pCharacter->m_Armor = 0;
 
-	pCharacter->m_Weapon = m_ActiveWeapon;
+	pCharacter->m_Weapon = m_ActiveWeapon == -1 ? (g_Config.m_SvNowepsKnife ? NUM_WEAPONS : WEAPON_GUN) : m_ActiveWeapon; // dangerous
 	pCharacter->m_AttackTick = m_AttackTick;
 
 	pCharacter->m_Direction = m_Input.m_Direction;
@@ -1040,7 +1071,7 @@ void CCharacter::Snap(int SnappingClient)
 	{
 		pCharacter->m_Health = m_Health;
 		pCharacter->m_Armor = m_Armor;
-		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
+		if(m_ActiveWeapon != -1 && m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
 			pCharacter->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
 	}
 
@@ -1135,23 +1166,22 @@ void CCharacter::ResolveTick()
 
 	if (m_pPlayer->GetAccount())
 	{
-//		if (m_pPlayer->GetAccount()->Payload()->Kills < GetAccount()->Payload()->ChatKills * 10)
-//			TakeHammer();
-//		else
-//			GiveHammer();
+		if ((m_pPlayer->GetAccount()->Payload()->m_ChatKills >= 3) && m_pPlayer->GetAccount()->Payload()->m_Kills < m_pPlayer->GetAccount()->Payload()->m_ChatKills * 5)
+			TakeWeapon(WEAPON_HAMMER);
+		else
+			GiveWeapon(WEAPON_HAMMER, 10);
 	}
 }
 
 void CCharacter::BlockScored()
 {
-	GameServer()->CreateLolText(this, false, vec2(0,-100), vec2(0,-1), 50, "kill");
 	if (m_pPlayer->GetAccount())
 		m_pPlayer->GetAccount()->Payload()->m_Kills++;
 }
 
 void CCharacter::ChatBlockScored()
 {
-	GameServer()->CreateLolText(this, false, vec2(0,-100), vec2(0,-1), 50, "chatkill");
+	GameServer()->CreateLolText(this, false, vec2(0,-50), vec2(0,-0.2), 200, "chat block");
 	if (m_pPlayer->GetAccount())
 		m_pPlayer->GetAccount()->Payload()->m_ChatKills++;
 }

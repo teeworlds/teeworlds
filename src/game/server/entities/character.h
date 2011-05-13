@@ -64,9 +64,11 @@ public:
 	bool IncreaseArmor(int Amount);
 
 	bool GiveWeapon(int Weapon, int Ammo);
-	void GiveNinja(bool Silent = false);
+	void TakeWeapon(int Weapon);
+
+	void GiveNinja(bool Silent = false); // actually a redundance as of weaponless
 	void TakeNinja();
-	
+
 	void SetEmote(int Emote, int Tick);
 	void SetDefEmote(int Emote, int Tick);
 
