@@ -343,9 +343,12 @@ int CPlayer::BlockKillCheck()
 		if (*aVictimText)
 			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0,-1), 50, aVictimText);
 
-		killerchar->BlockScored();
-		if (m_pCharacter->m_chatFrozen)
-			killerchar->ChatBlockScored();
+		if (killerchar) //TODO find out why, i think it needs well-timed kill just when scoring
+		{
+			killerchar->BlockScored();
+			if (m_pCharacter->m_chatFrozen)
+				killerchar->ChatBlockScored();
+		}
 	}
 	return killer;
 }
