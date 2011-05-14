@@ -63,7 +63,7 @@ vec2 CLoltext::TextSize(const char *pText)
 			continue;
 		++Count;
 	}//no there ain't linebreaks
-	return vec2(Count*g_Config.m_SvLoltextHspace*4.0f, g_Config.m_SvLoltextVspace);
+	return vec2(Count*g_Config.m_SvLoltextHspace*4.0f, g_Config.m_SvLoltextVspace*5.0f);
 }
 
 void CLoltext::Create(CGameWorld *pGameWorld, CEntity *pParent, vec2 Pos, vec2 Vel, int Lifespan, const char *pText, bool Center, bool Follow)
