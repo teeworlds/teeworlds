@@ -223,17 +223,28 @@ void CTeecompStats::RenderGlobalStats()
 	
 	const CNetObj_PlayerInfo *apPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
-	int i;
-	for(i=0; i<Client()->SnapNumItems(IClient::SNAP_CURRENT); i++)
+	int i = 0;
+
+	// sort red or dm players by score
+	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		IClient::CSnapItem Item;
-		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
 
-		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
+		if(!pInfo || !m_pClient->m_aStats[pInfo->m_ClientID].m_Active || pInfo->m_Team != TEAM_RED)
+			continue;
+
+		apPlayers[NumPlayers] = pInfo;
+		NumPlayers++;
+	}
+
+	// sort blue players by score after
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+	{
+		for(i = 0; i < MAX_CLIENTS; i++)
 		{
-			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
+			const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
 
-			if(!m_pClient->m_aStats[pInfo->m_ClientID].m_Active)
+			if(!pInfo || !m_pClient->m_aStats[pInfo->m_ClientID].m_Active || pInfo->m_Team != TEAM_BLUE)
 				continue;
 
 			apPlayers[NumPlayers] = pInfo;
@@ -241,7 +252,7 @@ void CTeecompStats::RenderGlobalStats()
 		}
 	}
 
-	for(int i=0; i<9; i++)
+	for(i = 0; i < 9; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
 			if((1<<i) == (TC_STATS_BESTSPREE))
@@ -285,7 +296,7 @@ void CTeecompStats::RenderGlobalStats()
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, Localize("Name"), -1);
 	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs") };
-	for(i=0; i<9; i++)
+	for(i = 0; i < 9; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
 			if(1<<i == TC_STATS_BESTSPREE)
@@ -299,7 +310,7 @@ void CTeecompStats::RenderGlobalStats()
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		for(i=0, px-=40; i<NUM_WEAPONS; i++)
+		for(i = 0, px-=40; i < NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
 				continue;
@@ -341,7 +352,7 @@ void CTeecompStats::RenderGlobalStats()
 		TeeOffset = -5.0f;
 	}
 
-	for(int j=0; j<NumPlayers; j++)
+	for(int j = 0; j < NumPlayers; j++)
 	{
 		const CNetObj_PlayerInfo *pInfo = apPlayers[j];
 		const CGameClient::CClientStats Stats = m_pClient->m_aStats[pInfo->m_ClientID];
@@ -444,7 +455,7 @@ void CTeecompStats::RenderGlobalStats()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
 			px += 100;
 		}
-		for(i=0, px=px-40; i<NUM_WEAPONS; i++)
+		for(i = 0, px=px-40; i < NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
 				continue;
