@@ -346,7 +346,7 @@ void CTeecompStats::RenderGlobalStats()
 		const CNetObj_PlayerInfo *pInfo = apPlayers[j];
 		const CGameClient::CClientStats Stats = m_pClient->m_aStats[pInfo->m_ClientID];
 
-		if(pInfo->m_Local)
+		if(pInfo->m_Local || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 		{
 			// background so it's easy to find the local player
 			Graphics()->TextureSet(-1);
