@@ -3443,18 +3443,6 @@ void CEditor::UpdateAndRender()
 	if(Input()->KeyDown(KEY_TAB))
 		m_GuiActive = !m_GuiActive;
 
-	if(Input()->KeyDown(KEY_F5))
-		Save("maps/debug_test2.map");
-
-	if(Input()->KeyDown(KEY_F6))
-		Load("maps/debug_test2.map", IStorage::TYPE_ALL);
-	
-	if(Input()->KeyDown(KEY_F8))
-		Load("maps/debug_test.map", IStorage::TYPE_ALL);
-	
-	if(Input()->KeyDown(KEY_F7))
-		Save("maps/quicksave.map");
-
 	if(Input()->KeyDown(KEY_F10))
 		m_ShowMousePointer = false;
 
