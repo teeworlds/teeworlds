@@ -942,7 +942,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		pPlayer->m_LastEmote = Server()->Tick();
 
 		SendEmoticon(ClientID, pMsg->m_Emoticon);
-		if(CCharacter* pChr = pPlayer->GetCharacter())
+		CCharacter* pChr = pPlayer->GetCharacter();
+		if(g_Config.m_SvEmotionalTees && pChr)
 		{
 			int EyeEmote;
 			switch(pMsg->m_Emoticon)
