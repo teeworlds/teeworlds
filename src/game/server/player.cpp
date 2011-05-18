@@ -339,9 +339,9 @@ int CPlayer::BlockKillCheck()
 			}
 		}
 		if (*aKillerText)
-			GameServer()->CreateLolText(GameServer()->GetPlayerChar(killer), false, vec2(0,-100), vec2(0,-1), 50, aKillerText);
+			GameServer()->CreateLolText(GameServer()->GetPlayerChar(killer), false, vec2(0,-100), vec2(0.f,0.f), 50, aKillerText);
 		if (*aVictimText)
-			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0,-1), 50, aVictimText);
+			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0.f,0.f), 50, aVictimText);
 
 		if (killerchar) //TODO find out why, i think it needs well-timed kill just when scoring
 		{

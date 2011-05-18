@@ -1163,7 +1163,7 @@ void CCharacter::ResolveTick()
 			m_chatFrozen = false;
 		}
 	}
-
+/* problematic
 	if (m_pPlayer->GetAccount() && g_Config.m_SvTakeHammerOnChatkill)
 	{
 		if ((m_pPlayer->GetAccount()->Payload()->m_ChatKills >= 3) && m_pPlayer->GetAccount()->Payload()->m_Kills < m_pPlayer->GetAccount()->Payload()->m_ChatKills * 5)
@@ -1171,6 +1171,7 @@ void CCharacter::ResolveTick()
 		else
 			GiveWeapon(WEAPON_HAMMER, 10);
 	}
+*/
 }
 
 void CCharacter::BlockScored()
@@ -1181,7 +1182,7 @@ void CCharacter::BlockScored()
 
 void CCharacter::ChatBlockScored()
 {
-	GameServer()->CreateLolText(this, false, vec2(0,-50), vec2(0,-0.2), 200, "chat block");
+	GameServer()->CreateLolText(this, false, vec2(0,-50), vec2(0.f,0.f), 200, "chat block");
 	if (m_pPlayer->GetAccount())
 		m_pPlayer->GetAccount()->Payload()->m_ChatKills++;
 }
