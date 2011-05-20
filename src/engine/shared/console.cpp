@@ -247,6 +247,9 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
+		if (!*Result.m_pCommand)
+			return;
+
 		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
