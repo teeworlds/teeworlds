@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -144,6 +143,9 @@ Delete demo
 
 Demo details
 == Detalii demo
+
+Demofile: %s
+== Fișier demo: %s
 
 Demos
 == Demo
@@ -388,6 +390,9 @@ Pistol
 Play
 == Redă
 
+Play background music
+== Redă muzica de fundal
+
 Player
 == Jucător
 
@@ -541,6 +546,12 @@ Spectate
 Spectator mode
 == Mod spectator
 
+Spectate next
+== Urmărește următorul
+
+Spectate previous
+== Urmărește anteriorul
+
 Spectators
 == Spectatori
 
@@ -552,6 +563,9 @@ Standard map
 
 Stop record
 == Stop înreg.
+
+Strict gametype filter
+== Filtru strict pe tip de joc
 
 Sudden Death
 == Moarte subită
@@ -657,20 +671,6 @@ no limit
 
 ##### needs translation #####
 
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 
