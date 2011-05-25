@@ -759,7 +759,6 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 		UI()->DoLabelScaled(&Button, aBuf, FontSize, -1);
 		Button.VSplitLeft(80.0f, 0, &Button);
-		static char s_aName[MAX_NAME_LENGTH] = {0};
 		static float s_OffsetName = 0.0f;
 		DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), FontSize, &s_OffsetName);
 
@@ -768,17 +767,18 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
 		UI()->DoLabelScaled(&Button, aBuf, FontSize, -1);
 		Button.VSplitLeft(80.0f, 0, &Button);
-		static char s_aClan[MAX_CLAN_LENGTH] = {0};
 		static float s_OffsetClan = 0.0f;
 		DoEditBox(&s_aClan, &Button, s_aClan, sizeof(s_aClan), FontSize, &s_OffsetClan);
 
 		ServerFriends.HSplitTop(3.0f, 0, &ServerFriends);
 		ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
 		static int s_RemoveButton = 0;
-		if(DoButton_Menu(&s_RemoveButton, Localize("Add Friend"), 0, &Button))
+		if(DoButton_Menu(&s_RemoveButton, Localize("Add Friend"), 0, &Button) || (m_EnterPressed && ((UI()->LastActiveItem() == &s_aName) || (UI()->LastActiveItem() == &s_aClan))))
 		{
 			m_pClient->Friends()->AddFriend(s_aName, s_aClan);
 			Client()->ServerBrowserUpdate();
+			s_aName[0] = 0;
+			s_aClan[0] = 0;
 		}
 	}
 }
@@ -900,7 +900,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		Button.VMargin(2.0f, &Button);
 
 		static int s_JoinButton = 0;
-		if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
+		if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || (m_EnterPressed && ((UI()->LastActiveItem() != &s_aName) && (UI()->LastActiveItem() != &s_aClan))))
 		{
 			Client()->Connect(g_Config.m_UiServerAddress);
 			m_EnterPressed = false;

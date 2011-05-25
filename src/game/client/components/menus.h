@@ -130,6 +130,8 @@ class CMenus : public CComponent
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 
+	char s_aName[MAX_NAME_LENGTH];
+	char s_aClan[MAX_CLAN_LENGTH];
 	int64 m_LastInput;
 
 	// loading
