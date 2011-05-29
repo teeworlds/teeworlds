@@ -581,6 +581,8 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
 	AbortVoteKickOnDisconnect(ClientID);
 
+	m_apPlayers[ClientID]->OnDisconnect(pReason);
+
 	if (m_apPlayers[ClientID]->GetAccount())
 	{
 		if (g_Config.m_SvAccEnable && g_Config.m_SvAccAutoSave)
@@ -589,7 +591,6 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		m_apPlayers[ClientID]->SetAccount(0);
 	}
 
-	m_apPlayers[ClientID]->OnDisconnect(pReason);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
 	
