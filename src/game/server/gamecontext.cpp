@@ -691,12 +691,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 			if(KickID == ClientID)
 			{
-				SendChatTarget(ClientID, "You cant kick yourself");
+				SendChatTarget(ClientID, "You can't kick yourself");
 				return;
 			}
 			if(Server()->IsAuthed(KickID))
 			{
-				SendChatTarget(ClientID, "You cant kick admins");
+				SendChatTarget(ClientID, "You can't kick admins");
 				char aBufKick[128];
 				str_format(aBufKick, sizeof(aBufKick), "'%s' called for vote to kick you", Server()->ClientName(ClientID));
 				SendChatTarget(KickID, aBufKick);
@@ -731,7 +731,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 			if(SpectateID == ClientID)
 			{
-				SendChatTarget(ClientID, "You cant move yourself");
+				SendChatTarget(ClientID, "You can't move yourself");
 				return;
 			}
 
