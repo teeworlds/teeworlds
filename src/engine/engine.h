@@ -19,9 +19,6 @@ class IEngine : public IInterface
 {
 	MACRO_INTERFACE("engine", 0)
 
-protected:
-	class CJobPool m_JobPool;
-
 public:
 	virtual void Init() = 0;
 	virtual void InitLogfile() = 0;

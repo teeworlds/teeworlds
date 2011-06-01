@@ -583,4 +583,4 @@ IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName, int FlagMask
 }
 
 
-extern IConsole *CreateConsole(int FlagMask) { return new CConsole(FlagMask); }
+IConsole *CreateConsole(int FlagMask) { return new CConsole(FlagMask); }
