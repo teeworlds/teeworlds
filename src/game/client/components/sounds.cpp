@@ -131,7 +131,7 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 	if(!g_Config.m_SndEnable || (Chn == CHN_MUSIC && !g_Config.m_SndMusic) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 
-	SOUNDSET *pSet = &g_pData->m_aSounds[SetId];
+	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
 
 	if(!pSet->m_NumSounds)
 		return;
@@ -162,7 +162,7 @@ void CSounds::Stop(int SetId)
 	if(m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 	
-	SOUNDSET *pSet = &g_pData->m_aSounds[SetId];
+	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
 	
 	for(int i = 0; i < pSet->m_NumSounds; i++)
 		Sound()->Stop(pSet->m_aSounds[i].m_Id);
