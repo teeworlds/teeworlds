@@ -232,8 +232,8 @@ class NetObject:
 class NetEvent(NetObject):
 	def __init__(self, name, variables):
 		NetObject.__init__(self, name, variables)
-		self.base_struct_name = "NETEVENT_%s" % self.base.upper()
-		self.struct_name = "NETEVENT_%s" % self.name.upper()
+		self.base_struct_name = "CNetEvent_%s" % self.base
+		self.struct_name = "CNetEvent_%s" % self.name
 		self.enum_name = "NETEVENTTYPE_%s" % self.name.upper()
 
 class NetMessage(NetObject):
