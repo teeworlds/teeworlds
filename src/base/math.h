@@ -39,6 +39,17 @@ inline float frandom() { return rand()/(float)(RAND_MAX); }
 inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
 inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
 
+inline unsigned gcd(unsigned a, unsigned b)
+{
+	while(b != 0)
+	{
+		unsigned c = a % b;
+		a = b;
+		b = c;
+	}
+	return a;
+}
+
 class fxp
 {
 	int value;
