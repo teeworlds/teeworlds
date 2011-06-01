@@ -602,32 +602,32 @@ void CGameClient::ProcessEvents()
 
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
-			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)pData;
+			CNetEvent_DamageInd *ev = (CNetEvent_DamageInd *)pData;
 			g_GameClient.m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), GetDirection(ev->m_Angle));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
-			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)pData;
+			CNetEvent_Explosion *ev = (CNetEvent_Explosion *)pData;
 			g_GameClient.m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
-			NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)pData;
+			CNetEvent_HammerHit *ev = (CNetEvent_HammerHit *)pData;
 			g_GameClient.m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
-			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)pData;
+			CNetEvent_Spawn *ev = (CNetEvent_Spawn *)pData;
 			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
-			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)pData;
+			CNetEvent_Death *ev = (CNetEvent_Death *)pData;
 			g_GameClient.m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
-			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)pData;
+			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
 			g_GameClient.m_pSounds->Play(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
 	}
