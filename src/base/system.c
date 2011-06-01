@@ -92,6 +92,11 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	char *msg;
 	int i, len;
 
+	/* hold last msg, number of repetitions and time of first occurence*/
+	static char last_msg[1024*4];
+	static unsigned rep_count;
+	static int64 rep_first;
+
 	str_format(str, sizeof(str), "[%08x][%s]: ", (int)time(0), sys);
 	len = strlen(str);
 	msg = (char *)str + len;
@@ -104,8 +109,29 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 #endif
 	va_end(args);
 
-	for(i = 0; i < num_loggers; i++)
-		loggers[i](str);
+	//comparing 'msg', not 'str', because timestamp changes every second
+	if (str_comp(msg, last_msg) == 0)
+		rep_count++;
+	else
+	{
+		if (rep_count > 0)
+		{
+			//using last_msg for the repeat statement
+			str_format(last_msg, sizeof last_msg,
+			         "(last message repeated %u times in %d secs)",
+			         rep_count, (time_get()-rep_first)/time_freq());
+
+			for(i = 0; i < num_loggers; i++) //dispatch repeat-msg
+				loggers[i](last_msg);
+		}
+
+		str_copy(last_msg, msg, sizeof last_msg);
+		rep_count = 0;
+		rep_first = time_get();
+
+		for(i = 0; i < num_loggers; i++)
+			loggers[i](str);
+	}
 }
 
 static void logger_stdout(const char *line)
