@@ -117,7 +117,13 @@ void CGameControllerCTF::Tick()
 {
 	IGameController::Tick();
 
+	if(GameServer()->m_World.m_ResetRequested)
+		return;
+
 	DoTeamScoreWincheck();
+
+	if(GameServer()->m_World.m_Paused)
+		return;
 
 	for(int fi = 0; fi < 2; fi++)
 	{
