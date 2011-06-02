@@ -1174,7 +1174,10 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
 		if(m_ShowTileInfo && pT && pT->m_Visible && m_ZoomLevel <= 300)
+		{
+			GetSelectedGroup()->MapScreen();
 			pT->ShowInfo();
+		}
 	}
 
 	static void *s_pEditorID = (void *)&s_pEditorID;
