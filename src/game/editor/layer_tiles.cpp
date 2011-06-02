@@ -417,6 +417,8 @@ void CLayerTiles::ShowInfo()
 			}
 			x += m_pTiles[c].m_Skip;
 		}
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
