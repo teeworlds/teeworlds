@@ -16,7 +16,7 @@ CAutoMapper::CAutoMapper(CEditor *pEditor)
 void CAutoMapper::Load(char* pTileName)
 {
 	char aPath[256];
-	str_format(aPath, sizeof(aPath), "data/editor/%s.rules", pTileName);
+	str_format(aPath, sizeof(aPath), "editor/%s.rules", pTileName);
 	IOHANDLE RulesFile = m_pEditor->Storage()->OpenFile(aPath, IOFLAG_READ, IStorage::TYPE_ALL);
 	
 	if(RulesFile)
