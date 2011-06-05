@@ -21,6 +21,8 @@
 
 #include <game/client/ui.h>
 
+#include "auto_map.h"
+
 typedef void (*INDEX_MODIFY_FUNC)(int *pIndex);
 
 //CRenderTools m_RenderTools;
@@ -119,6 +121,7 @@ public:
 	class CEditor *m_pEditor;
 	class IGraphics *Graphics();
 	class ITextRender *TextRender();
+	class IStorage *Storage();
 
 	CLayer()
 	{
@@ -228,6 +231,7 @@ public:
 	CEditor *m_pEditor;
 
 	CEditorImage(CEditor *pEditor)
+	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
 		m_TexID = -1;
@@ -247,6 +251,7 @@ public:
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
+	class CAutoMapper m_AutoMapper;
 };
 
 class CEditorMap
@@ -728,6 +733,7 @@ public:
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
+	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
 	static int PopupTele(CEditor *pEditor, CUIRect View);
 	static int PopupSpeedup(CEditor *pEditor, CUIRect View);
 
@@ -740,6 +746,9 @@ public:
 
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
+
+	void PopupSelectConfigAutoMapInvoke(float x, float y);
+	int PopupSelectConfigAutoMapResult();
 
 	vec4 ButtonColorMul(const void *pID);
 

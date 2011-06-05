@@ -471,6 +471,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				if(pName)
 					str_copy(pImg->m_aName, pName, 128);
 
+				// load auto mapper file
+				pImg->m_AutoMapper.Load(pImg->m_aName);
+
 				m_lImages.add(pImg);
 
 				// unload image
