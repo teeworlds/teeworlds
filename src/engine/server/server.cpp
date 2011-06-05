@@ -936,7 +936,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket)
 	p.AddString(GameServer()->Version(), 32);
 	if (isAuxSocket)
 	{
-		str_format(aBuf, sizeof(aBuf), "%s auxillary", g_Config.m_SvName, PlayerCount);
+		str_format(aBuf, sizeof(aBuf), "%s auxiliary", g_Config.m_SvName, PlayerCount);
 		p.AddString(aBuf, 64);
 	}
 	else
