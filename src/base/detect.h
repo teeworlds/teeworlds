@@ -46,6 +46,13 @@
 	#define CONF_PLATFORM_STRING "linux"
 #endif
 
+#if defined(__GNU__) || defined(__gnu__)
+	#define CONF_FAMILY_UNIX 1
+	#define CONF_FAMILY_STRING "unix"
+	#define CONF_PLATFORM_HURD 1
+	#define CONF_PLATFORM_STRING "gnu"
+#endif
+
 #if defined(MACOSX) || defined(__APPLE__) || defined(__DARWIN__)
 	#define CONF_FAMILY_UNIX 1
 	#define CONF_FAMILY_STRING "unix"
