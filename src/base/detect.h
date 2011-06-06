@@ -25,7 +25,7 @@
 #endif
 
 /* unix family */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 	#define CONF_FAMILY_UNIX 1
 	#define CONF_FAMILY_STRING "unix"
 	#define CONF_PLATFORM_FREEBSD 1
