@@ -76,35 +76,56 @@
 #endif
 
 
+/* use gcc endianness definitions when available */
+#ifdef __GNUC__
+	#include <endian.h>
+	#if __BYTE_ORDER == __LITTLE_ENDIAN
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#elif __BYTE_ORDER == __BIG_ENDIAN
+		#define CONF_ARCH_ENDIAN_BIG 1
+	#endif
+#endif
+
+
 /* architectures */
 #if defined(i386) || defined(__i386__) || defined(__x86__) || defined(CONF_PLATFORM_WIN32)
 	#define CONF_ARCH_IA32 1
 	#define CONF_ARCH_STRING "ia32"
-	#define CONF_ARCH_ENDIAN_LITTLE 1
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
 #endif
 
 #if defined(__ia64__)
 	#define CONF_ARCH_IA64 1
 	#define CONF_ARCH_STRING "ia64"
-	#define CONF_ARCH_ENDIAN_LITTLE 1
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
 #endif
 
 #if defined(__amd64__) || defined(__x86_64__)
 	#define CONF_ARCH_AMD64 1
 	#define CONF_ARCH_STRING "amd64"
-	#define CONF_ARCH_ENDIAN_LITTLE 1
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
 #endif
 
 #if defined(__powerpc__) || defined(__ppc__)
 	#define CONF_ARCH_PPC 1
 	#define CONF_ARCH_STRING "ppc"
-	#define CONF_ARCH_ENDIAN_BIG 1
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_BIG 1
+	#endif
 #endif
 
 #if defined(__sparc__)
 	#define CONF_ARCH_SPARC 1
 	#define CONF_ARCH_STRING "sparc"
-	#define CONF_ARCH_ENDIAN_BIG 1
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_BIG 1
+	#endif
 #endif
 
 
