@@ -77,7 +77,7 @@
 
 
 /* use gcc endianness definitions when available */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__APPLE__)
 	#include <endian.h>
 	#if __BYTE_ORDER == __LITTLE_ENDIAN
 		#define CONF_ARCH_ENDIAN_LITTLE 1
