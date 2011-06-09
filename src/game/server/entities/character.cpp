@@ -527,6 +527,18 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 }
 
+void CCharacter::ResetInput()
+{
+	m_Input.m_Direction = 0;
+	m_Input.m_Hook = 0;
+	// simulate releasing the fire button
+	if((m_Input.m_Fire&1) != 0)
+		m_Input.m_Fire++;
+	m_Input.m_Fire &= INPUT_STATE_MASK;
+	m_Input.m_Jump = 0;
+	m_LatestPrevInput = m_LatestInput = m_Input;
+}
+
 void CCharacter::Tick()
 {
 	if(m_pPlayer->m_ForceBalanced)
