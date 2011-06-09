@@ -303,6 +303,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	char *p = const_cast<char*>(pLine);
 	while(*p)
 	{
+		Highlighted = false;
 		pLine = p;
 		// find line seperator and strip multiline
 		while(*p)
@@ -321,6 +322,16 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_ClientID = ClientID;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
+		
+		// check for highlighted name
+		const char *pHL = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName);
+		if(pHL)
+		{
+			int Length = str_length(m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName);
+			if((pLine == pHL || pHL[-1] == ' ') && (pHL[Length] == 0 || pHL[Length] == ' ' || (pHL[Length] == ':' && pHL[Length+1] == ' ')))
+				Highlighted = true;
+		}
+		m_aLines[m_CurrentLine].m_Highlighted =  Highlighted;
 		m_aLines[m_CurrentLine].m_Highlighted = m_ContainsName || (str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0);
 			
 		if(g_Config.m_ClAntiSpam && m_Spam)
