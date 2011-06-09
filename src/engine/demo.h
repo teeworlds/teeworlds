@@ -46,7 +46,7 @@ public:
 	virtual void Pause() = 0;
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
-	virtual char *GetDemoName() = 0;
+	virtual void GetDemoName(char *pBuffer, int BufferSize) const = 0;
 	virtual bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const = 0;
 	virtual int GetDemoType() const = 0;
 };

@@ -1,13 +1,16 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
+
 #include <engine/console.h>
 #include <engine/storage.h>
+
+#include "compression.h"
 #include "demo.h"
 #include "memheap.h"
-#include "snapshot.h"
-#include "compression.h"
 #include "network.h"
+#include "snapshot.h"
 
 static const unsigned char gs_aHeaderMarker[7] = {'T', 'W', 'D', 'E', 'M', 'O', 0};
 static const unsigned char gs_ActVersion = 3;
@@ -760,16 +763,21 @@ int CDemoPlayer::Stop()
 	return 0;
 }
 
-char *CDemoPlayer::GetDemoName()
+void CDemoPlayer::GetDemoName(char *pBuffer, int BufferSize) const
 {
-	// get the name of the demo without its path
-	char *pDemoShortName = &m_aFilename[0];
-	for(int i = 0; i < str_length(m_aFilename)-1; i++)
+	const char *pFileName = m_aFilename;
+	const char *pExtractedName = pFileName;
+	const char *pEnd = 0;
+	for(; *pFileName; ++pFileName)
 	{
-		if(m_aFilename[i] == '/' || m_aFilename[i] == '\\')
-			pDemoShortName = &m_aFilename[i+1];
+		if(*pFileName == '/' || *pFileName == '\\')
+			pExtractedName = pFileName+1;
+		else if(*pFileName == '.')
+			pEnd = pFileName;
 	}
-	return pDemoShortName;
+	
+	int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
+	str_copy(pBuffer, pExtractedName, Length);
 }
 
 bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const
