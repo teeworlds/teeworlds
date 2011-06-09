@@ -162,10 +162,25 @@ bool CChat::OnInput(IInput::CEvent Event)
 		if(pCompletionString)
 		{
 			char aBuf[256];
+			// add part before the name
 			str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
+
+			// add the name
 			str_append(aBuf, pCompletionString, sizeof(aBuf));
+
+			// add seperator
+			const char *pSeparator = "";
+			if(*(m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength) != ' ')
+				pSeparator = m_PlaceholderOffset == 0 ? ": " : " ";
+			else if(m_PlaceholderOffset == 0)
+				pSeparator = ":";
+			if(*pSeparator)
+				str_append(aBuf, pSeparator, sizeof(aBuf));
+
+			// add part after the name
 			str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
-			m_PlaceholderLength = str_length(pCompletionString);
+
+			m_PlaceholderLength = str_length(pSeparator)+str_length(pCompletionString);
 			m_OldChatStringLength = m_Input.GetLength();
 			m_Input.Set(aBuf);
 			m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
