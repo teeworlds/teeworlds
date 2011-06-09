@@ -825,6 +825,25 @@ char *str_skip_whitespaces(char *str);
 */
 int str_comp_nocase(const char *a, const char *b);
 
+/*
+	Function: str_comp_nocase_num
+		Compares up to num characters of two strings case insensitive.
+
+	Parameters:
+		a - String to compare.
+		b - String to compare.
+		num - Maximum characters to compare
+
+	Returns:
+		<0 - String a is lesser than string b
+		0 - String a is equal to string b
+		>0 - String a is greater than string b
+
+	Remarks:
+		- Only garanted to work with a-z/A-Z.
+		- The strings are treated as zero-termineted strings.
+*/
+int str_comp_nocase_num(const char *a, const char *b, const int num);
 
 /*
 	Function: str_comp

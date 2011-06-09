@@ -132,17 +132,28 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-		m_CompletionChosen = (m_CompletionChosen+1)%MAX_CLIENTS;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
+			int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
 			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
 			if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
 				continue;
 
-			if(str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+			bool Found = false;
+			if(SearchType == 1)
+			{
+				if(str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)) &&
+					str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+					Found = true;
+			}
+			else if(!str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)))
+				Found = true;
+
+			if(Found)
 			{
 				pCompletionString = m_pClient->m_aClients[Index].m_aName;
-				m_CompletionChosen = Index;
+				m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
 				break;
 			}
 		}
