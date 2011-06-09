@@ -127,11 +127,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Last();
 
 			if (m_pHistoryEntry)
-			{
-				unsigned int Len = str_length(m_pHistoryEntry);
-				if (Len < sizeof(m_Input) - 1) // TODO: WTF?
-					m_Input.Set(m_pHistoryEntry);
-			}
+				m_Input.Set(m_pHistoryEntry);
 			Handled = true;
 		}
 		else if (Event.m_Key == KEY_DOWN)
@@ -140,11 +136,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 			if (m_pHistoryEntry)
-			{
-				unsigned int Len = str_length(m_pHistoryEntry);
-				if (Len < sizeof(m_Input) - 1) // TODO: WTF?
-					m_Input.Set(m_pHistoryEntry);
-			}
+				m_Input.Set(m_pHistoryEntry);
 			else
 				m_Input.Clear();
 			Handled = true;
