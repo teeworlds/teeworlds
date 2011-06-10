@@ -235,6 +235,21 @@ void CServerBrowser::Filter()
 				if(!MatchFound)
 					Filtered = 1;
 			}
+			if(g_Config.m_BrFilterCountry)
+			{
+				bool MatchFound = 0;
+				// looking for any player from the player's own country
+				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
+				{
+					if(g_Config.m_PlayerCountry == m_ppServerlist[i]->m_Info.m_aClients[p].m_Country)
+					{
+						MatchFound = 1;
+						break;
+					}
+				}
+				if(!MatchFound)
+					Filtered = 1;
+			}
 		}
 
 		if(Filtered == 0)
@@ -255,6 +270,7 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterPure<<11;
 	i |= g_Config.m_BrFilterPureMap<<12;
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
+	i |= g_Config.m_BrFilterCountry<<14;
 	i |= g_Config.m_BrFilterPing<<18;
 	return i;
 }

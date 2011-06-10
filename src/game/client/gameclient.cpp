@@ -456,7 +456,7 @@ void CGameClient::OnRender()
 		// resend if client info differs
 		if(str_comp(g_Config.m_PlayerName, m_aClients[m_Snap.m_LocalClientID].m_aName) ||
 			str_comp(g_Config.m_PlayerClan, m_aClients[m_Snap.m_LocalClientID].m_aClan) ||
-			g_Config.m_PlayerCountry != m_aClients[m_Snap.m_LocalClientID].m_Country ||
+			m_pCountryFlags->Get(g_Config.m_PlayerCountry)->m_CountryCode != m_aClients[m_Snap.m_LocalClientID].m_Country ||
 			str_comp(g_Config.m_PlayerSkin, m_aClients[m_Snap.m_LocalClientID].m_aSkinName) ||
 			(m_Snap.m_pGameInfoObj && !(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) &&	// no teamgame?
 			(g_Config.m_PlayerUseCustomColor != m_aClients[m_Snap.m_LocalClientID].m_UseCustomColor ||
@@ -1057,7 +1057,7 @@ void CGameClient::SendInfo(bool Start)
 		CNetMsg_Cl_StartInfo Msg;
 		Msg.m_pName = g_Config.m_PlayerName;
 		Msg.m_pClan = g_Config.m_PlayerClan;
-		Msg.m_Country = g_Config.m_PlayerCountry;
+		Msg.m_Country = (m_pCountryFlags->Get(g_Config.m_PlayerCountry)) ? m_pCountryFlags->Get(g_Config.m_PlayerCountry)->m_CountryCode : -1;
 		Msg.m_pSkin = g_Config.m_PlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
 		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
@@ -1068,8 +1068,8 @@ void CGameClient::SendInfo(bool Start)
 	{
 		CNetMsg_Cl_ChangeInfo Msg;
 		Msg.m_pName = g_Config.m_PlayerName;
-		Msg.m_pClan = g_Config.m_PlayerClan;
-		Msg.m_Country = g_Config.m_PlayerCountry;
+		Msg.m_pClan = g_Config.m_PlayerClan;		
+		Msg.m_Country = (m_pCountryFlags->Get(g_Config.m_PlayerCountry)) ? m_pCountryFlags->Get(g_Config.m_PlayerCountry)->m_CountryCode : -1;
 		Msg.m_pSkin = g_Config.m_PlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
 		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
