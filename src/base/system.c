@@ -833,11 +833,13 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	}
 
 	/* set to IPv6 only if thats what we are creating */
+#if defined(IPV6_V6ONLY)	/* windows sdk 6.1 and higher */
 	if(domain == AF_INET6)
 	{
 		int ipv6only = 1;
 		setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&ipv6only, sizeof(ipv6only));
 	}
+#endif
 
 	/* bind the socket */
 	e = bind(sock, addr, sockaddrlen);
