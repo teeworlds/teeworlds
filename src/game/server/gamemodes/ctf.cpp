@@ -1,6 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/shared/config.h>
+
 #include <game/mapitems.h>
+
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
 #include <game/server/player.h>
@@ -63,6 +66,30 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return HadFlag;
 }
 
+void CGameControllerCTF::DoWincheck()
+{
+	if(m_GameOverTick == -1 && !m_Warmup)
+	{
+		// check score win condition
+		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
+			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+		{
+			if(m_SuddenDeath)
+			{
+				if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
+					EndRound();
+			}
+			else
+			{
+				if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
+					EndRound();
+				else
+					m_SuddenDeath = 1;
+			}
+		}
+	}
+}
+
 bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
 {
 	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
@@ -117,12 +144,7 @@ void CGameControllerCTF::Tick()
 {
 	IGameController::Tick();
 
-	if(GameServer()->m_World.m_ResetRequested)
-		return;
-
-	DoTeamScoreWincheck();
-
-	if(GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;
 
 	for(int fi = 0; fi < 2; fi++)
