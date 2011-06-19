@@ -68,8 +68,7 @@ public:
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController();
 
-	void DoTeamScoreWincheck();
-	void DoPlayerScoreWincheck();
+	virtual void DoWincheck();
 
 	void DoWarmup(int Seconds);
 
