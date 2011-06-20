@@ -120,7 +120,7 @@ void CGameControllerCTF::Tick()
 	if(GameServer()->m_World.m_ResetRequested)
 		return;
 
-	DoTeamScoreWincheck();
+	DoFlagScoreWincheck();
 
 	if(GameServer()->m_World.m_Paused)
 		return;
