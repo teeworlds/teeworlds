@@ -724,6 +724,24 @@ Show best time on server
 Api token
 == 
 
+Username
+== 
+
+Password
+== 
+
+Error requesting api token
+== 
+
+None
+== 
+
+Checking...
+== 
+
+Request api token
+== 
+
 Finish time
 == 
 

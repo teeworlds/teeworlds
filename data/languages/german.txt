@@ -722,7 +722,25 @@ Show best time on server
 == Beste Zeit vom Server anzeigen
 
 Api token
-== Api token
+== Api Token
+
+Username
+== Nutzername
+
+Password
+== Passwort
+
+Error requesting api token
+== Error bei der Anfrage des Api Token
+
+None
+== Keiner
+
+Checking...
+== Überprüfe...
+
+Request api token
+== Frage Api Token an
 
 Finish time
 == Endzeit
