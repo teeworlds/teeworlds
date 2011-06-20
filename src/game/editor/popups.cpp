@@ -843,7 +843,7 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 
 	static int s_AutoMapperConfigButtons[256];
 	
-	for(unsigned i = 0; i < aConfigNames.size(); ++i)
+	for(int i = 0; i < aConfigNames.size(); ++i)
 	{
 		View.HSplitTop(2.0f, 0, &View);
 		View.HSplitTop(12.0f, &Button, &View);
