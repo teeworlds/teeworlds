@@ -22,6 +22,8 @@
 #include <game/version.h>
 #include "render.h"
 
+#include "webapp.h"
+
 #include "teecomp.h"
 #include "gameclient.h"
 
@@ -382,6 +384,9 @@ void CGameClient::OnInit()
 
 	g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
+
+	// init webapp
+	m_pWebapp = new CClientWebapp(this);
 }
 
 void CGameClient::DispatchInput()
@@ -573,6 +578,9 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
+
+	// run webapp tick
+	m_pWebapp->Tick();
 
 	// clear new tick flags
 	m_NewTick = false;
@@ -787,6 +795,7 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 void CGameClient::OnShutdown()
 {
 	m_pRaceDemo->OnShutdown();
+	m_pGhost->OnShutdown();
 }
 
 void CGameClient::OnEnterGame() {}

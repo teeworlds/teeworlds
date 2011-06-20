@@ -45,6 +45,8 @@ class CGameClient : public IGameClient
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
 
+	class CClientWebapp *m_pWebapp;
+
 	CLayers m_Layers;
 	class CCollision m_Collision;
 	CUI m_UI;
@@ -86,6 +88,8 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+
+	class CClientWebapp *Webapp() { return m_pWebapp; }
 
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }

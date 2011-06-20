@@ -18,6 +18,7 @@
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
+#include <game/client/webapp.h>
 #include <game/localization.h>
 
 #include "binds.h"
@@ -1315,7 +1316,7 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 
 void CMenus::RenderSettingsRace(CUIRect MainView)
 {
-	CUIRect Button;
+	CUIRect Button, ApiButton;
 	CUIRect LeftView, RightView;
 
 	MainView.VSplitMid(&LeftView, &RightView);
@@ -1383,15 +1384,45 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	else
 		LeftView.HSplitTop(40.0f, &Button, &LeftView);
 	
-	// api token box
+	// username
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Api token"));
+	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Username"));
 	UI()->DoLabel(&Button, aBuf, 14.0, -1);
 	Button.VSplitLeft(80.0f, 0, &Button);
 	Button.VSplitLeft(180.0f, &Button, 0);
-	static float Offset = 0.0f;
-	DoEditBox(g_Config.m_ClApiToken, &Button, g_Config.m_ClApiToken, sizeof(g_Config.m_ClApiToken), 14.0f, &Offset);
+	static float UserOffset = 0.0f;
+	DoEditBox(g_Config.m_ClUsername, &Button, g_Config.m_ClUsername, sizeof(g_Config.m_ClUsername), 14.0f, &UserOffset);
+
+	LeftView.HSplitTop(5.0f, &Button, &LeftView);
+
+	// password
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
+	UI()->DoLabel(&Button, aBuf, 14.0, -1);
+	Button.VSplitLeft(80.0f, 0, &Button);
+	Button.VSplitLeft(180.0f, &Button, 0);
+	static float PassOffset = 0.0f;
+	DoEditBox(g_Config.m_ClPassword, &Button, g_Config.m_ClPassword, sizeof(g_Config.m_ClPassword), 14.0f, &PassOffset, true);
+
+	// api token box
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Api token"));
+	UI()->DoLabel(&Button, aBuf, 14.0, -1);
+	Button.VSplitLeft(80.0f, 0, &Button);
+	UI()->DoLabel(&Button, m_pClient->Webapp()->m_ApiTokenError ? Localize("Error requesting api token") : (g_Config.m_ClApiToken[0] == 0) ? Localize("None") : g_Config.m_ClApiToken, 14.0, -1);
+
+	LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
+	ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
+	static int s_ApiTokenButton = 0;
+	if(DoButton_Menu((void*)&s_ApiTokenButton, m_pClient->Webapp()->m_ApiTokenRequested ? Localize("Checking...") : Localize("Request api token"), m_pClient->Webapp()->m_ApiTokenRequested ? -1 : 0, &ApiButton))
+	{
+		m_pClient->Webapp()->m_ApiTokenRequested = true;
+		CWebApiToken::CParam *pParams = new CWebApiToken::CParam();
+		str_copy(pParams->m_aUsername, g_Config.m_ClUsername, sizeof(pParams->m_aUsername));
+		str_copy(pParams->m_aPassword, g_Config.m_ClPassword, sizeof(pParams->m_aPassword));
+		m_pClient->Webapp()->AddJob(CWebApiToken::GetApiToken, pParams, 0);
+	}
 }
 
 void CMenus::RenderSettings(CUIRect MainView)
