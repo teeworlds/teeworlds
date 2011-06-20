@@ -467,6 +467,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterFriends ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	if (DoButton_CheckBox(&g_Config.m_BrFilterCountry, Localize("Show compatriots"), g_Config.m_BrFilterCountry, &Button))
+		g_Config.m_BrFilterCountry ^= 1;
+
+	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox(&g_Config.m_BrFilterPw, Localize("No password"), g_Config.m_BrFilterPw, &Button))
 		g_Config.m_BrFilterPw ^= 1;
 

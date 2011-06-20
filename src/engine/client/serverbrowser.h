@@ -53,6 +53,7 @@ public:
 
 private:
 	CNetClient *m_pNetClient;
+	class IGameClient *m_pGameClient;
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
 	class IFriends *m_pFriends;
