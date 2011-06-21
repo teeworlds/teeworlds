@@ -119,12 +119,39 @@ void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
 	}
 }
 
-unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset)
+unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
 {
-	return (pData[(v*w+u)*4+Offset]+
-	pData[(v*w+u+1)*4+Offset]+
-	pData[((v+1)*w+u)*4+Offset]+
-	pData[((v+1)*w+u+1)*4+Offset])/4;
+	int Value = 0;
+	for(int x = 0; x < ScaleW; x++)
+		for(int y = 0; y < ScaleH; y++)
+			Value += pData[((v+y)*w+(u+x))*Bpp+Offset];
+	return Value/(ScaleW*ScaleH);
+}
+
+unsigned char *CGraphics_OpenGL::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
+{
+	unsigned char *pTmpData;
+	int ScaleW = Width/NewWidth;
+	int ScaleH = Height/NewHeight;
+
+	int Bpp = 3;
+	if(Format == CImageInfo::FORMAT_RGBA)
+		Bpp = 4;
+
+	pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
+
+	int c = 0;
+	for(int y = 0; y < NewHeight; y++)
+		for(int x = 0; x < NewWidth; x++, c++)
+		{
+			pTmpData[c*Bpp] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 0, ScaleW, ScaleH, Bpp);
+			pTmpData[c*Bpp+1] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 1, ScaleW, ScaleH, Bpp);
+			pTmpData[c*Bpp+2] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 2, ScaleW, ScaleH, Bpp);
+			if(Bpp == 4)
+				pTmpData[c*Bpp+3] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 3, ScaleW, ScaleH, Bpp);
+		}
+
+	return pTmpData;
 }
 
 CGraphics_OpenGL::CGraphics_OpenGL()
@@ -272,28 +299,23 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 	m_aTextures[Tex].m_Next = -1;
 
 	// resample if needed
-	if(!(Flags&TEXLOAD_NORESAMPLE) && g_Config.m_GfxTextureQuality==0)
+	if(!(Flags&TEXLOAD_NORESAMPLE) && (Format == CImageInfo::FORMAT_RGBA || Format == CImageInfo::FORMAT_RGB))
 	{
-		if(Width > 16 && Height > 16 && Format == CImageInfo::FORMAT_RGBA)
+		if(Width > GL_MAX_TEXTURE_SIZE || Height > GL_MAX_TEXTURE_SIZE)
 		{
-			unsigned char *pTmpData;
-			int c = 0;
-			int x, y;
-
-			pTmpData = (unsigned char *)mem_alloc(Width*Height*4, 1);
-
-			Width/=2;
-			Height/=2;
-
-			for(y = 0; y < Height; y++)
-				for(x = 0; x < Width; x++, c++)
-				{
-					pTmpData[c*4] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 0);
-					pTmpData[c*4+1] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 1);
-					pTmpData[c*4+2] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 2);
-					pTmpData[c*4+3] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 3);
-				}
+			int NewWidth = min(Width, GL_MAX_TEXTURE_SIZE);
+			int NewHeight = min(Height, GL_MAX_TEXTURE_SIZE);
+			pTmpData = Rescale(Width, Height, NewWidth, NewHeight, Format, pTexData);
 			pTexData = pTmpData;
+			Width = NewWidth;
+			Height = NewHeight;
+		}
+		else if(Width > 16 && Height > 16 && g_Config.m_GfxTextureQuality == 0)
+		{
+			pTmpData = Rescale(Width, Height, Width/2, Height/2, Format, pTexData);
+			pTexData = pTmpData;
+			Width /= 2;
+			Height /= 2;
 		}
 	}
 

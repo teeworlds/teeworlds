@@ -10,6 +10,7 @@
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
 
+#include <engine/client.h>
 #include <engine/config.h>
 #include <engine/console.h>
 #include <engine/friends.h>
@@ -31,6 +32,7 @@ public:
 
 CServerBrowser::CServerBrowser()
 {
+	m_pGameClient = 0;
 	m_pMasterServer = 0;
 	m_ppServerlist = 0;
 	m_pSortedServerlist = 0;
@@ -65,6 +67,7 @@ void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVers
 {
 	m_pNetClient = pClient;
 	str_copy(m_aNetVersion, pNetVersion, sizeof(m_aNetVersion));
+	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
@@ -235,6 +238,19 @@ void CServerBrowser::Filter()
 				if(!MatchFound)
 					Filtered = 1;
 			}
+			else if(g_Config.m_BrFilterCountry)
+			{
+				Filtered = 1;
+				int Country = m_pGameClient->GetCountryIndex(g_Config.m_PlayerCountry);
+				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
+				{
+					if(m_ppServerlist[i]->m_Info.m_aClients[p].m_Country == Country)
+					{
+						Filtered = 0;
+						break;
+					}
+				}
+			}
 		}
 
 		if(Filtered == 0)
@@ -255,6 +271,7 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterPure<<11;
 	i |= g_Config.m_BrFilterPureMap<<12;
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
+	i |= g_Config.m_BrFilterCountry<<14;
 	i |= g_Config.m_BrFilterPing<<18;
 	return i;
 }
