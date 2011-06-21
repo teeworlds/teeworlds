@@ -66,7 +66,8 @@ protected:
 	void AddVertices(int Count);
 	void Rotate4(const CPoint &rCenter, CVertex *pPoints);
 
-	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset);
+	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
+	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
 public:
 	CGraphics_OpenGL();
 
