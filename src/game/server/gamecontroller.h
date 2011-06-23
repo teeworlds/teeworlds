@@ -64,9 +64,12 @@ public:
 	const char *m_pGameType;
 
 	bool IsTeamplay() const;
+	bool IsStandart() const;
 
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController();
+	
+	void CheckGameTypeName();
 
 	void DoTeamScoreWincheck();
 	void DoPlayerScoreWincheck();

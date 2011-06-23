@@ -48,6 +48,7 @@ class CGameContext : public IGameServer
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData);
+	static void ConModReset(IConsole::IResult *pResult, void *pUserData); 
 	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConRestart(IConsole::IResult *pResult, void *pUserData);
 	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData);
@@ -139,6 +140,7 @@ public:
 
 	//
 	void CheckPureTuning();
+	void CheckPureModing(bool ForceReset = false);
 	void SendTuningParams(int ClientID);
 
 	// engine events

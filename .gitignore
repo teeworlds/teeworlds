@@ -6,8 +6,12 @@ datasrc/*.pyc
 objs
 src/game/generated
 SDL.dll
+RcDll.dll
 freetype.dll
 autoexec.cfg
+config.cfg
+*.exe
+*.cmd
 
 crapnet*
 dilate*

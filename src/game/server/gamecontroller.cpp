@@ -39,6 +39,22 @@ IGameController::~IGameController()
 {
 }
 
+void IGameController::CheckGameTypeName()
+{
+	if (g_Config.m_SvGameTypeConfigurable == 1)
+	{
+		static char aBuf[16];
+		str_format(aBuf, sizeof(aBuf), "%s%s.", g_Config.m_SvGameTypePrefix, m_pGameType);
+		m_pGameType = aBuf;
+	}
+	else if (g_Config.m_SvGameTypeConfigurable == 2)
+	{
+		static char aBuf[16];
+		str_format(aBuf, sizeof(aBuf), "%s%s!", g_Config.m_SvGameTypePrefix, m_pGameType);
+		m_pGameType = aBuf;
+	}
+}
+
 float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)
 {
 	float Score = 0.0f;
@@ -526,6 +542,11 @@ void IGameController::Tick()
 bool IGameController::IsTeamplay() const
 {
 	return m_GameFlags&GAMEFLAG_TEAMS;
+}
+
+bool IGameController::IsStandart() const
+{
+	return (str_comp(m_pGameType, "DM") == 0 || str_comp(m_pGameType, "TDM") == 0 || str_comp(m_pGameType, "CTF") == 0);
 }
 
 void IGameController::Snap(int SnappingClient)

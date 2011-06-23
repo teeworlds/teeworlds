@@ -368,6 +368,18 @@ void CGameContext::CheckPureTuning()
 	}
 }
 
+void CGameContext::CheckPureModing(bool ForceReset)
+{
+	// might not be created yet during start up
+	if  (!m_pController)
+		return;
+
+	if (!ForceReset && !m_pController->IsStandart())
+		return;
+
+	// This should be never here: g_Config.SvGameTypeConfigurable = 0;
+}
+
 void CGameContext::SendTuningParams(int ClientID)
 {
 	CheckPureTuning();
@@ -383,6 +395,9 @@ void CGameContext::OnTick()
 {
 	// check tuning
 	CheckPureTuning();
+	
+	// check moding
+	CheckPureModing();
 
 	// copy tuning
 	m_World.m_Core.m_Tuning = m_Tuning;
@@ -542,8 +557,11 @@ void CGameContext::OnClientConnected(int ClientID)
 		SendVoteSet(ClientID);
 
 	// send motd
+	char aBuf[900];
+	str_format(aBuf, sizeof(aBuf), "%s\n%s", g_Config.m_SvMotd, g_Config.m_SvMotdMod);
 	CNetMsg_Sv_Motd Msg;
-	Msg.m_pMessage = g_Config.m_SvMotd;
+	Msg.m_pMessage = aBuf;
+	
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -993,6 +1011,12 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
+void CGameContext::ConModReset(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->CheckPureModing(true);
+} 
+
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1284,8 +1308,11 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 	{
+		char aBuf[900];
+		str_format(aBuf, sizeof(aBuf), "%s\n%s", g_Config.m_SvMotd, g_Config.m_SvMotdMod);
+		
 		CNetMsg_Sv_Motd Msg;
-		Msg.m_pMessage = g_Config.m_SvMotd;
+		Msg.m_pMessage = aBuf;		
 		CGameContext *pSelf = (CGameContext *)pUserData;
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 			if(pSelf->m_apPlayers[i])
@@ -1301,6 +1328,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "");
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "");
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "");
+	
+	Console()->Register("mod_reset", "", CFGFLAG_SERVER, ConModReset, this, "");
 
 	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "");
 	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "");
@@ -1316,6 +1345,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
+	Console()->Chain("sv_motd_mod", ConchainSpecialMotdupdate, this);
 }
 
 void CGameContext::OnInit(/*class IKernel *pKernel*/)

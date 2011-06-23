@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/shared/config.h>
+
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
@@ -14,6 +16,8 @@ CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
 	m_apFlags[1] = 0;
 	m_pGameType = "CTF";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
+
+	IGameController::CheckGameTypeName();
 }
 
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)

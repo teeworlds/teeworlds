@@ -7,6 +7,8 @@ CGameControllerDM::CGameControllerDM(class CGameContext *pGameServer)
 : IGameController(pGameServer)
 {
 	m_pGameType = "DM";
+	
+	IGameController::CheckGameTypeName();
 }
 
 void CGameControllerDM::Tick()

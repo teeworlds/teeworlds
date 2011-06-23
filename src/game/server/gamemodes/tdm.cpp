@@ -10,6 +10,8 @@ CGameControllerTDM::CGameControllerTDM(class CGameContext *pGameServer) : IGameC
 {
 	m_pGameType = "TDM";
 	m_GameFlags = GAMEFLAG_TEAMS;
+	
+	IGameController::CheckGameTypeName();
 }
 
 int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
