@@ -376,8 +376,34 @@ void CGameContext::CheckPureModing(bool ForceReset)
 
 	if (!ForceReset && !m_pController->IsStandart())
 		return;
-
+	
 	// This should be never here: g_Config.SvGameTypeConfigurable = 0;
+	
+	g_Config.m_SvSpawnHealth  = 1;
+	g_Config.m_SvSpawnArmor   = 1;
+	g_Config.m_SvSpawnShotgun = 1;
+	g_Config.m_SvSpawnGrenade = 1;
+	g_Config.m_SvSpawnRifle   = 1;
+
+	g_Config.m_SvSpawnDelayHealth  = 0;
+	g_Config.m_SvSpawnDelayArmor   = 0;
+	g_Config.m_SvSpawnDelayShotgun = 0;
+	g_Config.m_SvSpawnDelayGrenade = 0;
+	g_Config.m_SvSpawnDelayRifle   = 0;
+	g_Config.m_SvSpawnDelayNinja   = 90;
+
+	g_Config.m_SvRespawnDelayHealth  = 15;
+	g_Config.m_SvRespawnDelayArmor   = 15;
+	g_Config.m_SvRespawnDelayShotgun = 15;
+	g_Config.m_SvRespawnDelayGrenade = 15;
+	g_Config.m_SvRespawnDelayRifle   = 15;
+	g_Config.m_SvRespawnDelayNinja   = 90;
+
+	g_Config.m_SvPickupGiveHealth  = 1;
+	g_Config.m_SvPickupGiveArmor   = 1;
+	g_Config.m_SvPickupGiveAmmoShotgun = 10;
+	g_Config.m_SvPickupGiveAmmoGrenade = 10;
+	g_Config.m_SvPickupGiveAmmoRifle   = 10;
 }
 
 void CGameContext::SendTuningParams(int ClientID)

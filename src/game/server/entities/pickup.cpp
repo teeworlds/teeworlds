@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "pickup.h"
@@ -18,14 +19,37 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
 
 void CPickup::Reset()
 {
-	if (g_pData->m_aPickups[m_Type].m_Spawndelay > 0)
-		m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * g_pData->m_aPickups[m_Type].m_Spawndelay;
+	int SpawnDelay = 0;
+	switch (m_Type) {
+		case (POWERUP_HEALTH): SpawnDelay = g_Config.m_SvSpawnDelayHealth; break;
+		case (POWERUP_ARMOR ): SpawnDelay = g_Config.m_SvSpawnDelayArmor ; break;
+		case (POWERUP_NINJA ): SpawnDelay = g_Config.m_SvSpawnDelayNinja ; break;
+	}
+	switch (m_Subtype) {
+		case (WEAPON_SHOTGUN): SpawnDelay = g_Config.m_SvSpawnDelayShotgun; break;
+		case (WEAPON_GRENADE): SpawnDelay = g_Config.m_SvSpawnDelayGrenade; break;
+		case (WEAPON_RIFLE  ): SpawnDelay = g_Config.m_SvSpawnDelayRifle  ; break;
+	}
+	
+	if (SpawnDelay > 0)
+		m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * SpawnDelay;
 	else
 		m_SpawnTick = -1;
 }
 
 void CPickup::Tick()
 {
+	if (!(g_Config.m_SvSpawnArmor   && m_Type == POWERUP_ARMOR ) &&
+	    !(g_Config.m_SvSpawnHealth  && m_Type == POWERUP_HEALTH) &&
+	    !(g_Config.m_SvPowerups     && m_Type == POWERUP_NINJA ) &&
+	    !(g_Config.m_SvSpawnShotgun && m_Type == POWERUP_WEAPON && m_Subtype == WEAPON_SHOTGUN) &&
+	    !(g_Config.m_SvSpawnGrenade && m_Type == POWERUP_WEAPON && m_Subtype == WEAPON_GRENADE) &&
+	    !(g_Config.m_SvSpawnRifle   && m_Type == POWERUP_WEAPON && m_Subtype == WEAPON_RIFLE  ))
+	{
+		m_SpawnTick = 1;
+		return;
+	}
+	
 	// wait for respawn
 	if(m_SpawnTick > 0)
 	{
@@ -49,27 +73,38 @@ void CPickup::Tick()
 		switch (m_Type)
 		{
 			case POWERUP_HEALTH:
-				if(pChr->IncreaseHealth(1))
+				if(pChr->IncreaseHealth(g_Config.m_SvPickupGiveHealth))
 				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					RespawnTime = g_Config.m_SvRespawnDelayHealth;
 				}
 				break;
 
 			case POWERUP_ARMOR:
-				if(pChr->IncreaseArmor(1))
+				if(pChr->IncreaseArmor(g_Config.m_SvPickupGiveArmor))
 				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					RespawnTime = g_Config.m_SvRespawnDelayArmor;
 				}
 				break;
 
 			case POWERUP_WEAPON:
 				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS)
 				{
-					if(pChr->GiveWeapon(m_Subtype, 10))
+					int Ammo = 10;
+					switch (m_Subtype) {
+						case (WEAPON_SHOTGUN): Ammo = g_Config.m_SvPickupGiveAmmoShotgun; break;
+						case (WEAPON_GRENADE): Ammo = g_Config.m_SvPickupGiveAmmoGrenade; break;
+						case (WEAPON_RIFLE  ): Ammo = g_Config.m_SvPickupGiveAmmoRifle  ; break;
+					}
+						
+					if(pChr->GiveWeapon(m_Subtype, Ammo))
 					{
-						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+						switch (m_Subtype) {
+							case (WEAPON_SHOTGUN): RespawnTime = g_Config.m_SvRespawnDelayShotgun; break;
+							case (WEAPON_GRENADE): RespawnTime = g_Config.m_SvRespawnDelayGrenade; break;
+							case (WEAPON_RIFLE  ): RespawnTime = g_Config.m_SvRespawnDelayRifle  ; break;
+						}
 
 						if(m_Subtype == WEAPON_GRENADE)
 							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
@@ -88,7 +123,7 @@ void CPickup::Tick()
 				{
 					// activate ninja on target player
 					pChr->GiveNinja();
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					RespawnTime = g_Config.m_SvRespawnDelayNinja; 
 
 					// loop through all players, setting their emotes
 					CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));

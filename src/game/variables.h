@@ -85,6 +85,34 @@ MACRO_CONFIG_STR(SvMotdMod, sv_motd_mod, 900, "", CFGFLAG_SERVER, "Message of th
 MACRO_CONFIG_INT(SvGameTypeConfigurable, sv_gametype_configurable, 0, 0, 2, CFGFLAG_SERVER, "Is gametype nonstandart? (0 - classic/vanilla, 1 - configurable, 2 - configurable tuning)")
 MACRO_CONFIG_STR(SvGameTypePrefix, sv_gametype_prefix, 12, "", CFGFLAG_SERVER, "Prefix in gametype name")
 
+MACRO_CONFIG_INT(SvSpawnHealth, sv_spawn_health, 1, 0, 1, CFGFLAG_SERVER, "Spawn health on map (0 disables)")
+MACRO_CONFIG_INT(SvSpawnArmor, sv_spawn_armor, 1, 0, 1, CFGFLAG_SERVER, "Spawn armor on map (0 disables)")
+MACRO_CONFIG_INT(SvSpawnShotgun, sv_spawn_shotgun, 1, 0, 1, CFGFLAG_SERVER, "Spawn shotgun on map (0 disables)")
+MACRO_CONFIG_INT(SvSpawnGrenade, sv_spawn_grenade, 1, 0, 1, CFGFLAG_SERVER, "Spawn grenade on map (0 disables)")
+MACRO_CONFIG_INT(SvSpawnRifle, sv_spawn_rifle, 1, 0, 1, CFGFLAG_SERVER, "Spawn riflegun on map (0 disables)")
+
+MACRO_CONFIG_INT(SvSpawnDelayHealth, sv_spawn_delay_health, 0, 0, 3600, CFGFLAG_SERVER, "Delay before first health's spawn (in seconds)")
+MACRO_CONFIG_INT(SvSpawnDelayArmor, sv_spawn_delay_armor, 0, 0, 3600, CFGFLAG_SERVER, "Delay before first armor's spawn (in seconds)")
+MACRO_CONFIG_INT(SvSpawnDelayShotgun, sv_spawn_delay_shotgun, 0, 0, 3600, CFGFLAG_SERVER, "Delay before first shotgun's spawn (in seconds)")
+MACRO_CONFIG_INT(SvSpawnDelayGrenade, sv_spawn_delay_grenade, 0, 0, 3600, CFGFLAG_SERVER, "Delay before first grenade's spawn (in seconds)")
+MACRO_CONFIG_INT(SvSpawnDelayRifle, sv_spawn_delay_rifle, 0, 0, 3600, CFGFLAG_SERVER, "Delay before first rifle's spawn (in seconds)")
+MACRO_CONFIG_INT(SvSpawnDelayNinja, sv_spawn_delay_ninja, 90, 0, 3600, CFGFLAG_SERVER, "Delay before first ninja's spawn (in seconds)")
+
+MACRO_CONFIG_INT(SvRespawnDelayHealth, sv_respawn_delay_health, 15, 0, 3600, CFGFLAG_SERVER, "Health's respawn delay (in seconds)")
+MACRO_CONFIG_INT(SvRespawnDelayArmor, sv_respawn_delay_armor, 15, 0, 3600, CFGFLAG_SERVER, "Armor's respawn delay (in seconds)")
+MACRO_CONFIG_INT(SvRespawnDelayShotgun, sv_respawn_delay_shotgun, 15, 0, 3600, CFGFLAG_SERVER, "Shotgun's respawn delay (in seconds)")
+MACRO_CONFIG_INT(SvRespawnDelayGrenade, sv_respawn_delay_grenade, 15, 0, 3600, CFGFLAG_SERVER, "Grenade's respawn delay (in seconds)")
+MACRO_CONFIG_INT(SvRespawnDelayRifle, sv_respawn_delay_rifle, 15, 0, 3600, CFGFLAG_SERVER, "Rifle's respawn delay (in seconds)")
+MACRO_CONFIG_INT(SvRespawnDelayNinja, sv_respawn_delay_ninja, 90, 0, 3600, CFGFLAG_SERVER, "Ninja's respawn delay (in seconds)")
+
+MACRO_CONFIG_INT(SvPickupGiveHealth, sv_pickup_health, 1, 1, 100, CFGFLAG_SERVER, "How many health player get after pickup (1 is default)")
+MACRO_CONFIG_INT(SvPickupGiveArmor, sv_pickup_armor, 1, 1, 100, CFGFLAG_SERVER, "How many armor player get after pickup (1 is default)")
+MACRO_CONFIG_INT(SvPickupGiveAmmoShotgun, sv_pickup_ammo_shotgun, 10, 1, 100, CFGFLAG_SERVER, "How many shotgun's ammo player get after pickup (10 is default)")
+MACRO_CONFIG_INT(SvPickupGiveAmmoGrenade, sv_pickup_ammo_grenade, 10, 1, 100, CFGFLAG_SERVER, "How many grenade's ammo player get after pickup (10 is default)")
+MACRO_CONFIG_INT(SvPickupGiveAmmoRifle, sv_pickup_ammo_rifle, 10, 1, 100, CFGFLAG_SERVER, "How many rifle's ammo player get after pickup (10 is default)")
+
+
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
