@@ -14,7 +14,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
-	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
+	if(l < 4 || IsDir || str_comp_nocase(pName+l-4, ".png") != 0)
 		return 0;
 
 	char aBuf[512];
