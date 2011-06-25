@@ -56,7 +56,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
 	m_EmoteStop = -1;
 	m_LastAction = -1;
-	m_ActiveWeapon = WEAPON_GUN;
+	m_ActiveWeapon = g_Config.m_SvStartWeapon;
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 
@@ -76,6 +76,12 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Alive = true;
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
+	
+	// check weapons
+	if (!m_aWeapons[g_Config.m_SvStartWeapon].m_Got)
+		for (int i = 0; i < NUM_WEAPONS; i++)
+			if (m_aWeapons[i].m_Got)
+				m_ActiveWeapon = i;
 
 	return true;
 }
@@ -208,6 +214,12 @@ void CCharacter::HandleWeaponSwitch()
 	if(m_QueuedWeapon != -1)
 		WantedWeapon = m_QueuedWeapon;
 
+	bool NoWeapons = true;
+	for (int i = 0; i < NUM_WEAPONS; i++)
+		NoWeapons = NoWeapons && !m_aWeapons[i].m_Got;
+	if (NoWeapons)
+		return;
+
 	// select Weapon
 	int Next = CountInput(m_LatestPrevInput.m_NextWeapon, m_LatestInput.m_NextWeapon).m_Presses;
 	int Prev = CountInput(m_LatestPrevInput.m_PrevWeapon, m_LatestInput.m_PrevWeapon).m_Presses;
@@ -266,9 +278,9 @@ void CCharacter::FireWeapon()
 
 	if(!WillFire)
 		return;
-
+		
 	// check for ammo
-	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
+	if(!m_aWeapons[m_ActiveWeapon].m_Ammo || !m_aWeapons[m_ActiveWeapon].m_Got)
 	{
 		// 125ms is a magical limit of how fast a human can click
 		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
@@ -446,7 +458,7 @@ void CCharacter::HandleWeapons()
 
 	// ammo regen
 	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
-	if(AmmoRegenTime)
+	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Got)
 	{
 		// If equipped and not active, regen ammo?
 		if (m_ReloadTimer <= 0)
@@ -472,6 +484,9 @@ void CCharacter::HandleWeapons()
 
 bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 {
+	if (Ammo == -2)
+		return false;
+
 	if(m_aWeapons[Weapon].m_Ammo < g_pData->m_Weapons.m_aId[Weapon].m_Maxammo || !m_aWeapons[Weapon].m_Got)
 	{
 		m_aWeapons[Weapon].m_Got = true;
@@ -691,7 +706,8 @@ void CCharacter::Die(int Killer, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	// a nice sound
-	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
+	if (!g_Config.m_SvInstagib)
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
 
 	// this is for auto respawn after 3 secs
 	m_pPlayer->m_DieTick = Server()->Tick();
@@ -708,23 +724,35 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
 		return false;
+		
+	// no self kill in instagib
+	if (g_Config.m_SvInstagib && m_pPlayer->GetCID() == From)
+		return false;
+		
+	// no damage = no kill = just push player
+	if (g_Config.m_SvInstagib && !Dmg)
+		return false;
 
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
 		Dmg = max(1, Dmg/2);
 
-	m_DamageTaken++;
-
-	// create healthmod indicator
-	if(Server()->Tick() < m_DamageTakenTick+25)
+	// no damage indicators in instagib
+	if (!g_Config.m_SvInstagib)
 	{
-		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
-	}
-	else
-	{
-		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
+		m_DamageTaken++;
+	
+		// create healthmod indicator
+		if(Server()->Tick() < m_DamageTakenTick+25)
+		{
+			// make sure that the damage indicators doesn't group together
+			GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
+		}
+		else
+		{
+			m_DamageTaken = 0;
+			GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
+		}
 	}
 
 	if(Dmg)
@@ -755,7 +783,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_DamageTakenTick = Server()->Tick();
 
 	// do damage Hit sound
-	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+	if(!g_Config.m_SvInstagib && From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
 		int Mask = CmaskOne(From);
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -767,7 +795,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	}
 
 	// check for death
-	if(m_Health <= 0)
+	if(m_Health <= 0 || g_Config.m_SvInstagib)
 	{
 		Die(From, Weapon);
 
@@ -842,7 +870,7 @@ void CCharacter::Snap(int SnappingClient)
 	{
 		pCharacter->m_Health = m_Health;
 		pCharacter->m_Armor = m_Armor;
-		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
+		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0 && m_aWeapons[m_ActiveWeapon].m_Got)
 			pCharacter->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
 	}
 

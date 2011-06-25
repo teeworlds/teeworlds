@@ -375,8 +375,11 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 	pChr->IncreaseHealth(10);
 
 	// give default weapons
-	pChr->GiveWeapon(WEAPON_HAMMER, -1);
-	pChr->GiveWeapon(WEAPON_GUN, 10);
+	pChr->GiveWeapon(WEAPON_HAMMER , g_Config.m_SvStartAmmoHammer );
+	pChr->GiveWeapon(WEAPON_GUN    , g_Config.m_SvStartAmmoPistol );
+	pChr->GiveWeapon(WEAPON_SHOTGUN, g_Config.m_SvStartAmmoShotgun);
+	pChr->GiveWeapon(WEAPON_GRENADE, g_Config.m_SvStartAmmoGrenade);
+	pChr->GiveWeapon(WEAPON_RIFLE  , g_Config.m_SvStartAmmoRifle  );
 }
 
 void IGameController::DoWarmup(int Seconds)

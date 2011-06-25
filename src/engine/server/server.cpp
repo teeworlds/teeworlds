@@ -1102,6 +1102,17 @@ int CServer::Run()
 		dbg_msg("server", "failed to load map. mapname='%s'", g_Config.m_SvMap);
 		return -1;
 	}
+	
+	// check weapons
+	if (g_Config.m_SvStartAmmoHammer  == -2 &&
+	    g_Config.m_SvStartAmmoPistol  == -2 &&
+	    g_Config.m_SvStartAmmoShotgun == -2 &&
+	    g_Config.m_SvStartAmmoGrenade == -2 &&
+	    g_Config.m_SvStartAmmoRifle   == -2)
+	{
+		dbg_msg("server", "your config sucks: player have no weapons");
+		return -1;
+	}
 
 	// start server
 	NETADDR BindAddr;

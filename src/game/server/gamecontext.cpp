@@ -141,8 +141,11 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 			float Dmg = 6 * l;
-			if((int)Dmg)
+			
+			if((int)Dmg && (!g_Config.m_SvInstagib || (1 - l) * 100 <= g_Config.m_SvInstagibHitRadius))
 				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
+			else if (g_Config.m_SvInstagib)
+				apEnts[i]->TakeDamage(ForceDir*Dmg*2, 0, Owner, Weapon);
 		}
 	}
 }
@@ -379,6 +382,9 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	
 	// This should be never here: g_Config.SvGameTypeConfigurable = 0;
 	
+	g_Config.m_SvInstagib = 0;
+	g_Config.m_SvInstagibHitRadius = 0;
+	
 	g_Config.m_SvSpawnHealth  = 1;
 	g_Config.m_SvSpawnArmor   = 1;
 	g_Config.m_SvSpawnShotgun = 1;
@@ -404,6 +410,14 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvPickupGiveAmmoShotgun = 10;
 	g_Config.m_SvPickupGiveAmmoGrenade = 10;
 	g_Config.m_SvPickupGiveAmmoRifle   = 10;
+	
+	g_Config.m_SvStartWeapon = WEAPON_GUN;
+	
+	g_Config.m_SvStartAmmoHammer  = -1;
+	g_Config.m_SvStartAmmoPistol  = 10;
+	g_Config.m_SvStartAmmoShotgun = -2;
+	g_Config.m_SvStartAmmoGrenade = -2;
+	g_Config.m_SvStartAmmoRifle   = -2;
 }
 
 void CGameContext::SendTuningParams(int ClientID)
