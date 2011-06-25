@@ -382,9 +382,11 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	
 	// This should be never here: g_Config.SvGameTypeConfigurable = 0;
 	
+	// mod-like features
 	g_Config.m_SvInstagib = 0;
 	g_Config.m_SvInstagibHitRadius = 0;
 	
+	// pickups
 	g_Config.m_SvSpawnHealth  = 1;
 	g_Config.m_SvSpawnArmor   = 1;
 	g_Config.m_SvSpawnShotgun = 1;
@@ -411,6 +413,7 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvPickupGiveAmmoGrenade = 10;
 	g_Config.m_SvPickupGiveAmmoRifle   = 10;
 	
+	// character
 	g_Config.m_SvStartHealth = 10;
 	g_Config.m_SvStartArmor  = 0;
 	
@@ -419,6 +422,7 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	
 	g_Config.m_SvStartWeapon = WEAPON_GUN;
 	
+	// weapons
 	g_Config.m_SvStartAmmoHammer  = -1;
 	g_Config.m_SvStartAmmoPistol  = 10;
 	g_Config.m_SvStartAmmoShotgun = -2;

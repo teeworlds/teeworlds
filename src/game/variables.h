@@ -85,9 +85,11 @@ MACRO_CONFIG_STR(SvMotdMod, sv_motd_mod, 900, "", CFGFLAG_SERVER, "Message of th
 MACRO_CONFIG_INT(SvGameTypeConfigurable, sv_gametype_configurable, 0, 0, 2, CFGFLAG_SERVER, "Is gametype nonstandart? (0 - classic/vanilla, 1 - configurable, 2 - configurable tuning)")
 MACRO_CONFIG_STR(SvGameTypePrefix, sv_gametype_prefix, 12, "", CFGFLAG_SERVER, "Prefix in gametype name")
 
+// mod-like features
 MACRO_CONFIG_INT(SvInstagib, sv_instagib, 0, 0, 1, CFGFLAG_SERVER, "Mod: instagib (1 enables, 0 is default)");
 MACRO_CONFIG_INT(SvInstagibHitRadius, sv_instagib_radius, 0, 0, 100, CFGFLAG_SERVER, "Distance in percents, which is need for killing in grenadeInstagib (100% is default)");
 
+// pickups
 MACRO_CONFIG_INT(SvSpawnHealth, sv_spawn_health, 1, 0, 1, CFGFLAG_SERVER, "Spawn health on map (0 disables)")
 MACRO_CONFIG_INT(SvSpawnArmor, sv_spawn_armor, 1, 0, 1, CFGFLAG_SERVER, "Spawn armor on map (0 disables)")
 MACRO_CONFIG_INT(SvSpawnShotgun, sv_spawn_shotgun, 1, 0, 1, CFGFLAG_SERVER, "Spawn shotgun on map (0 disables)")
@@ -114,12 +116,14 @@ MACRO_CONFIG_INT(SvPickupGiveAmmoShotgun, sv_pickup_ammo_shotgun, 10, 1, 100, CF
 MACRO_CONFIG_INT(SvPickupGiveAmmoGrenade, sv_pickup_ammo_grenade, 10, 1, 100, CFGFLAG_SERVER, "How many grenade's ammo player get after pickup (10 is default)")
 MACRO_CONFIG_INT(SvPickupGiveAmmoRifle, sv_pickup_ammo_rifle, 10, 1, 100, CFGFLAG_SERVER, "How many rifle's ammo player get after pickup (10 is default)")
 
+// character
 MACRO_CONFIG_INT(SvStartHealth, sv_start_health, 10, 1, 100, CFGFLAG_SERVER, "Start health's num (10 is default)")
 MACRO_CONFIG_INT(SvStartArmor, sv_start_armor, 0, 0, 100, CFGFLAG_SERVER, "Start armor (10 is default)")
 
 MACRO_CONFIG_INT(SvMaxHealth, sv_max_health, 10, 1, 100, CFGFLAG_SERVER, "Max avaible health number (100 is max, 10 is normal)")
 MACRO_CONFIG_INT(SvMaxArmor, sv_max_armor, 10, 0, 100, CFGFLAG_SERVER, "Max avaible armor number (100 is max, 10 is normal)")
 
+// weapons
 MACRO_CONFIG_INT(SvStartWeapon, sv_start_weapon, 1, 0, 4, CFGFLAG_SERVER, "Start weapon (0 - hammer, 1 - pistol, 2 - shotgun, 3 - grenade, 4 - rifle)")
 
 MACRO_CONFIG_INT(SvStartAmmoHammer, sv_start_ammo_hammer, -1, -2, 100, CFGFLAG_SERVER, "Start hammer's ammo (-1 - unlimited, -2 - no weapon)")
