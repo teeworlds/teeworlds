@@ -457,8 +457,17 @@ void CCharacter::HandleWeapons()
 	FireWeapon();
 
 	// ammo regen
-	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
-	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Got)
+	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;  // Magic here: 50=500/10=AmmoRegenTimeInPistol/10
+	switch (m_ActiveWeapon)
+	{
+		case (WEAPON_HAMMER ): AmmoRegenTime = g_Config.m_SvRegenTimeHammer ; break;
+		case (WEAPON_GUN    ): AmmoRegenTime = g_Config.m_SvRegenTimePistol ; break;
+		case (WEAPON_SHOTGUN): AmmoRegenTime = g_Config.m_SvRegenTimeShotgun; break;
+		case (WEAPON_GRENADE): AmmoRegenTime = g_Config.m_SvRegenTimeGrenade; break;
+		case (WEAPON_RIFLE  ): AmmoRegenTime = g_Config.m_SvRegenTimeRifle  ; break;
+	}
+		
+	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Got && m_aWeapons[m_ActiveWeapon].m_Ammo != -1)
 	{
 		// If equipped and not active, regen ammo?
 		if (m_ReloadTimer <= 0)
@@ -469,7 +478,8 @@ void CCharacter::HandleWeapons()
 			if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
 			{
 				// Add some ammo
-				m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1, 10);
+				if (m_aWeapons[m_ActiveWeapon].m_Got)
+					GiveWeapon(m_ActiveWeapon, 1);
 				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 			}
 		}
@@ -480,6 +490,35 @@ void CCharacter::HandleWeapons()
 	}
 
 	return;
+}
+
+void CCharacter::RegenHealthAndAmmo()
+{
+	if (g_Config.m_SvRegenTimeHealth)
+	{
+		if (m_HealthRegenStart < 0)
+			m_HealthRegenStart = Server()->Tick();
+			
+		if ((Server()->Tick() - m_HealthRegenStart) >= g_Config.m_SvRegenTimeHealth * Server()->TickSpeed() / 1000)
+		{
+			IncreaseHealth(1);
+			m_HealthRegenStart = -1;
+		}
+	}
+
+	if (g_Config.m_SvRegenTimeArmor)
+	{
+		
+		if (m_ArmorRegenStart < 0)
+			m_ArmorRegenStart = Server()->Tick();
+			
+		if ((Server()->Tick() - m_ArmorRegenStart) >= g_Config.m_SvRegenTimeArmor * Server()->TickSpeed() / 1000)
+		{
+			IncreaseArmor(1);
+			m_ArmorRegenStart = -1;
+		}
+	}	
+	
 }
 
 bool CCharacter::GiveWeapon(int Weapon, int Ammo)
@@ -596,6 +635,8 @@ void CCharacter::Tick()
 
 	// handle Weapons
 	HandleWeapons();
+	
+	RegenHealthAndAmmo();
 
 	// Previnput
 	m_PrevInput = m_Input;

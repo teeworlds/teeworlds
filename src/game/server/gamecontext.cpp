@@ -420,6 +420,9 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvMaxHealth = 10;
 	g_Config.m_SvMaxArmor  = 10;	
 	
+	g_Config.m_SvRegenTimeHealth = 0;
+	g_Config.m_SvRegenTimeArmor  = 0;	
+	
 	g_Config.m_SvStartWeapon = WEAPON_GUN;
 	
 	// weapons
@@ -434,6 +437,12 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvMaxAmmoShotgun	= 10;
 	g_Config.m_SvMaxAmmoGrenade	= 10;
 	g_Config.m_SvMaxAmmoRifle	= 10;	
+	
+	g_Config.m_SvRegenTimeHammer  = 0;
+	g_Config.m_SvRegenTimePistol  = 500;
+	g_Config.m_SvRegenTimeShotgun = 0;
+	g_Config.m_SvRegenTimeGrenade = 0;
+	g_Config.m_SvRegenTimeRifle   = 0;
 }
 
 void CGameContext::SendTuningParams(int ClientID)

@@ -37,9 +37,11 @@ public:
 	void SetWeapon(int W);
 	void HandleWeaponSwitch();
 	void DoWeaponSwitch();
-
+	
 	void HandleWeapons();
 	void HandleNinja();
+	
+	void RegenHealthAndAmmo();
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
@@ -111,6 +113,9 @@ private:
 
 	int m_Health;
 	int m_Armor;
+	
+	int m_HealthRegenStart;
+	int m_ArmorRegenStart;
 
 	// ninja
 	struct

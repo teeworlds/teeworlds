@@ -123,6 +123,9 @@ MACRO_CONFIG_INT(SvStartArmor, sv_start_armor, 0, 0, 100, CFGFLAG_SERVER, "Start
 MACRO_CONFIG_INT(SvMaxHealth, sv_max_health, 10, 1, 100, CFGFLAG_SERVER, "Max avaible health number (100 is max, 10 is normal)")
 MACRO_CONFIG_INT(SvMaxArmor, sv_max_armor, 10, 0, 100, CFGFLAG_SERVER, "Max avaible armor number (100 is max, 10 is normal)")
 
+MACRO_CONFIG_INT(SvRegenTimeHealth, sv_regentime_health, 0, 0, 100000, CFGFLAG_SERVER, "Health's regeneration time (in ms, normal is 0)")
+MACRO_CONFIG_INT(SvRegenTimeArmor, sv_regentime_armor, 0, 0, 100000, CFGFLAG_SERVER, "Armor's regeneration time (in ms, normal is 0)")
+
 // weapons
 MACRO_CONFIG_INT(SvStartWeapon, sv_start_weapon, 1, 0, 4, CFGFLAG_SERVER, "Start weapon (0 - hammer, 1 - pistol, 2 - shotgun, 3 - grenade, 4 - rifle)")
 
@@ -137,6 +140,12 @@ MACRO_CONFIG_INT(SvMaxAmmoPistol, sv_max_ammo_pistol, 10, -1, 100, CFGFLAG_SERVE
 MACRO_CONFIG_INT(SvMaxAmmoShotgun, sv_max_ammo_shotgun, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in ShotGun (100 is max, 10 is normal)")
 MACRO_CONFIG_INT(SvMaxAmmoGrenade, sv_max_ammo_grenade, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in Grenade (100 is max, 10 is normal)")
 MACRO_CONFIG_INT(SvMaxAmmoRifle, sv_max_ammo_rifle, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in Rifle (100 is max, 10 is normal)")
+
+MACRO_CONFIG_INT(SvRegenTimeHammer, sv_regentime_hammer, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for Hammer (in ms, normal is 0)")
+MACRO_CONFIG_INT(SvRegenTimePistol, sv_regentime_pistol, 500, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for PistolGun (in ms, normal is 500)")
+MACRO_CONFIG_INT(SvRegenTimeShotgun, sv_regentime_shotgun, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for ShotGun (in ms, normal is 0)")
+MACRO_CONFIG_INT(SvRegenTimeGrenade, sv_regentime_grenade, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for Grenade (in ms, normal is 0)")
+MACRO_CONFIG_INT(SvRegenTimeRifle, sv_regentime_rifle, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for Rifle (in ms, normal is 0)")
 
 
 // debug
