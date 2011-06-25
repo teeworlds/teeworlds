@@ -128,6 +128,12 @@ MACRO_CONFIG_INT(SvStartAmmoShotgun, sv_start_ammo_shotgun, -2, -2, 100, CFGFLAG
 MACRO_CONFIG_INT(SvStartAmmoGrenade, sv_start_ammo_grenade, -2, -2, 100, CFGFLAG_SERVER, "Start grenade's ammo (-1 - unlimited, -2 - no weapon)")
 MACRO_CONFIG_INT(SvStartAmmoRifle, sv_start_ammo_rifle, -2, -2, 100, CFGFLAG_SERVER, "Start rifle's ammo (-1 - unlimited, -2 - no weapon)")
 
+MACRO_CONFIG_INT(SvMaxAmmoHammer, sv_max_ammo_hammer, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in Hammer (100 is max, 10 is normal)")
+MACRO_CONFIG_INT(SvMaxAmmoPistol, sv_max_ammo_pistol, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in PistolGun (100 is max, 10 is normal)")
+MACRO_CONFIG_INT(SvMaxAmmoShotgun, sv_max_ammo_shotgun, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in ShotGun (100 is max, 10 is normal)")
+MACRO_CONFIG_INT(SvMaxAmmoGrenade, sv_max_ammo_grenade, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in Grenade (100 is max, 10 is normal)")
+MACRO_CONFIG_INT(SvMaxAmmoRifle, sv_max_ammo_rifle, 10, -1, 100, CFGFLAG_SERVER, "Max avaible ammo in Rifle (100 is max, 10 is normal)")
+
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

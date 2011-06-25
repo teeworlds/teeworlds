@@ -424,6 +424,12 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvStartAmmoShotgun = -2;
 	g_Config.m_SvStartAmmoGrenade = -2;
 	g_Config.m_SvStartAmmoRifle   = -2;
+	
+	g_Config.m_SvMaxAmmoHammer	= 10;
+	g_Config.m_SvMaxAmmoPistol	= 10;
+	g_Config.m_SvMaxAmmoShotgun	= 10;
+	g_Config.m_SvMaxAmmoGrenade	= 10;
+	g_Config.m_SvMaxAmmoRifle	= 10;	
 }
 
 void CGameContext::SendTuningParams(int ClientID)

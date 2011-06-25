@@ -484,13 +484,29 @@ void CCharacter::HandleWeapons()
 
 bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 {
+	// No weapon, look at variables.h
 	if (Ammo == -2)
 		return false;
+		
+	// Current weapon have unlimited ammo
+	if (m_aWeapons[Weapon].m_Ammo == -1 && m_aWeapons[Weapon].m_Got)
+		return false;
+	else
+		m_aWeapons[Weapon].m_Ammo = 0; // no weapon = no umlimited ammo
 
-	if(m_aWeapons[Weapon].m_Ammo < g_pData->m_Weapons.m_aId[Weapon].m_Maxammo || !m_aWeapons[Weapon].m_Got)
+	int MaxAmmo = 0;
+	switch(Weapon)
+	{
+		case WEAPON_GUN:     MaxAmmo = g_Config.m_SvMaxAmmoPistol ; break;
+		case WEAPON_SHOTGUN: MaxAmmo = g_Config.m_SvMaxAmmoShotgun; break;
+		case WEAPON_GRENADE: MaxAmmo = g_Config.m_SvMaxAmmoGrenade; break;
+		case WEAPON_RIFLE:   MaxAmmo = g_Config.m_SvMaxAmmoRifle  ; break;
+	}			
+		
+	if(m_aWeapons[Weapon].m_Ammo < MaxAmmo || !m_aWeapons[Weapon].m_Got)
 	{
 		m_aWeapons[Weapon].m_Got = true;
-		m_aWeapons[Weapon].m_Ammo = min(g_pData->m_Weapons.m_aId[Weapon].m_Maxammo, Ammo);
+		m_aWeapons[Weapon].m_Ammo = min(MaxAmmo, Ammo + m_aWeapons[Weapon].m_Ammo);
 		return true;
 	}
 	return false;
@@ -878,7 +894,26 @@ void CCharacter::Snap(int SnappingClient)
 		}
 			
 		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0 && m_aWeapons[m_ActiveWeapon].m_Got)
+		{
+			float MaxAmmo = 0;
+			switch(pCharacter->m_Weapon)
+			{
+				case WEAPON_GUN:     MaxAmmo = g_Config.m_SvMaxAmmoPistol ; break;
+				case WEAPON_SHOTGUN: MaxAmmo = g_Config.m_SvMaxAmmoShotgun; break;
+				case WEAPON_GRENADE: MaxAmmo = g_Config.m_SvMaxAmmoGrenade; break;
+				case WEAPON_RIFLE:   MaxAmmo = g_Config.m_SvMaxAmmoRifle  ; break;
+			}
+			
 			pCharacter->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
+			if (MaxAmmo > 10)
+			{
+				pCharacter->m_AmmoCount = 10 * (float)m_aWeapons[m_ActiveWeapon].m_Ammo / MaxAmmo;
+				// blink indicates how many ammo you have
+				int BlinkTime = 10 * ((10 * (float)m_aWeapons[m_ActiveWeapon].m_Ammo / MaxAmmo) - (float)pCharacter->m_AmmoCount);
+				if (BlinkTime && Server()->Tick() % 10 <= BlinkTime + pCharacter->m_AmmoCount) // blink must not be annoying, so there are no blink when m_AmmoCount = 10
+					pCharacter->m_AmmoCount += 1;
+			}
+		}
 	}
 
 	if(pCharacter->m_Emote == EMOTE_NORMAL)
