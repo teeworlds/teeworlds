@@ -530,7 +530,7 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 	// Current weapon have unlimited ammo
 	if (m_aWeapons[Weapon].m_Ammo == -1 && m_aWeapons[Weapon].m_Got)
 		return false;
-	else
+	else if (m_aWeapons[Weapon].m_Ammo == -1)
 		m_aWeapons[Weapon].m_Ammo = 0; // no weapon = no umlimited ammo
 
 	int MaxAmmo = 0;
