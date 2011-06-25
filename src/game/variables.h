@@ -114,6 +114,12 @@ MACRO_CONFIG_INT(SvPickupGiveAmmoShotgun, sv_pickup_ammo_shotgun, 10, 1, 100, CF
 MACRO_CONFIG_INT(SvPickupGiveAmmoGrenade, sv_pickup_ammo_grenade, 10, 1, 100, CFGFLAG_SERVER, "How many grenade's ammo player get after pickup (10 is default)")
 MACRO_CONFIG_INT(SvPickupGiveAmmoRifle, sv_pickup_ammo_rifle, 10, 1, 100, CFGFLAG_SERVER, "How many rifle's ammo player get after pickup (10 is default)")
 
+MACRO_CONFIG_INT(SvStartHealth, sv_start_health, 10, 1, 100, CFGFLAG_SERVER, "Start health's num (10 is default)")
+MACRO_CONFIG_INT(SvStartArmor, sv_start_armor, 0, 0, 100, CFGFLAG_SERVER, "Start armor (10 is default)")
+
+MACRO_CONFIG_INT(SvMaxHealth, sv_max_health, 10, 1, 100, CFGFLAG_SERVER, "Max avaible health number (100 is max, 10 is normal)")
+MACRO_CONFIG_INT(SvMaxArmor, sv_max_armor, 10, 0, 100, CFGFLAG_SERVER, "Max avaible armor number (100 is max, 10 is normal)")
+
 MACRO_CONFIG_INT(SvStartWeapon, sv_start_weapon, 1, 0, 4, CFGFLAG_SERVER, "Start weapon (0 - hammer, 1 - pistol, 2 - shotgun, 3 - grenade, 4 - rifle)")
 
 MACRO_CONFIG_INT(SvStartAmmoHammer, sv_start_ammo_hammer, -1, -2, 100, CFGFLAG_SERVER, "Start hammer's ammo (-1 - unlimited, -2 - no weapon)")

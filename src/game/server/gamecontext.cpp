@@ -411,6 +411,12 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvPickupGiveAmmoGrenade = 10;
 	g_Config.m_SvPickupGiveAmmoRifle   = 10;
 	
+	g_Config.m_SvStartHealth = 10;
+	g_Config.m_SvStartArmor  = 0;
+	
+	g_Config.m_SvMaxHealth = 10;
+	g_Config.m_SvMaxArmor  = 10;	
+	
 	g_Config.m_SvStartWeapon = WEAPON_GUN;
 	
 	g_Config.m_SvStartAmmoHammer  = -1;

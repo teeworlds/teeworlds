@@ -671,17 +671,17 @@ void CCharacter::TickDefered()
 
 bool CCharacter::IncreaseHealth(int Amount)
 {
-	if(m_Health >= 10)
+	if(m_Health >= g_Config.m_SvMaxHealth)
 		return false;
-	m_Health = clamp(m_Health+Amount, 0, 10);
+	m_Health = clamp(m_Health+Amount, 0, g_Config.m_SvMaxHealth);
 	return true;
 }
 
 bool CCharacter::IncreaseArmor(int Amount)
 {
-	if(m_Armor >= 10)
+	if(m_Armor >= g_Config.m_SvMaxArmor)
 		return false;
-	m_Armor = clamp(m_Armor+Amount, 0, 10);
+	m_Armor = clamp(m_Armor+Amount, 0, g_Config.m_SvMaxArmor);
 	return true;
 }
 
@@ -870,6 +870,13 @@ void CCharacter::Snap(int SnappingClient)
 	{
 		pCharacter->m_Health = m_Health;
 		pCharacter->m_Armor = m_Armor;
+		float MaxHP = g_Config.m_SvMaxHealth > g_Config.m_SvMaxArmor ? g_Config.m_SvMaxHealth : g_Config.m_SvMaxArmor;
+		if (MaxHP > 10)
+		{
+			pCharacter->m_Health = 10*(float)m_Health/MaxHP;
+			pCharacter->m_Armor = 10*(float)m_Armor/MaxHP;
+		}
+			
 		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0 && m_aWeapons[m_ActiveWeapon].m_Got)
 			pCharacter->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
 	}
