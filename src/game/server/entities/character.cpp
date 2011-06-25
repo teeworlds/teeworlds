@@ -889,8 +889,17 @@ void CCharacter::Snap(int SnappingClient)
 		float MaxHP = g_Config.m_SvMaxHealth > g_Config.m_SvMaxArmor ? g_Config.m_SvMaxHealth : g_Config.m_SvMaxArmor;
 		if (MaxHP > 10)
 		{
-			pCharacter->m_Health = 10*(float)m_Health/MaxHP;
-			pCharacter->m_Armor = 10*(float)m_Armor/MaxHP;
+			pCharacter->m_Health = 10 * (float)m_Health/MaxHP;
+			// blink indicates how many health you have
+			int BlinkTime = 10 * (10 * (float)m_Health/MaxHP - (float)pCharacter->m_Health);
+			if (BlinkTime && Server()->Tick() % 10 <= BlinkTime + pCharacter->m_Health) // blink must not be annoying, so there are no blink when m_Health = 10
+				pCharacter->m_Health += 1;
+				
+			pCharacter->m_Armor = 10 * (float)m_Armor/MaxHP;
+			// blink indicates how many armor you have
+			BlinkTime = 10 * (10 * (float)m_Armor/MaxHP - (float)pCharacter->m_Armor);
+			if (BlinkTime && Server()->Tick() % 10 <= BlinkTime + pCharacter->m_Armor) // blink must not be annoying, so there are no blink when m_Armor = 10
+				pCharacter->m_Armor += 1;
 		}
 			
 		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0 && m_aWeapons[m_ActiveWeapon].m_Got)
