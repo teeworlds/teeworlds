@@ -187,7 +187,7 @@ void CCharacter::HandleNinja()
 				if(m_NumObjectsHit < 10)
 					m_apHitObjects[m_NumObjectsHit++] = aEnts[i];
 
-				aEnts[i]->TakeDamage(vec2(0, 10.0f), g_pData->m_Weapons.m_Ninja.m_pBase->m_Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
+				aEnts[i]->TakeDamage(vec2(0, 10.0f), g_Config.m_SvDamageNinja, m_pPlayer->GetCID(), WEAPON_NINJA);
 			}
 		}
 
@@ -264,9 +264,12 @@ void CCharacter::FireWeapon()
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	bool FullAuto = false;
-	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
+	if ((m_ActiveWeapon == WEAPON_HAMMER  && g_Config.m_SvFullAutoHammer ) ||
+	    (m_ActiveWeapon == WEAPON_GUN     && g_Config.m_SvFullAutoPistol ) ||
+	    (m_ActiveWeapon == WEAPON_SHOTGUN && g_Config.m_SvFullAutoShotgun) ||
+	    (m_ActiveWeapon == WEAPON_GRENADE && g_Config.m_SvFullAutoGrenade) ||
+	    (m_ActiveWeapon == WEAPON_RIFLE   && g_Config.m_SvFullAutoRifle  ))
 		FullAuto = true;
-
 
 	// check if we gonna fire
 	bool WillFire = false;
@@ -322,7 +325,7 @@ void CCharacter::FireWeapon()
 				else
 					Dir = vec2(0.f, -1.f);
 
-				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_Config.m_SvDamageHammer,
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 				Hits++;
 			}
@@ -340,7 +343,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				Direction,
 				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
-				1, 0, 0, -1, WEAPON_GUN);
+				g_Config.m_SvDamagePistol, 0, 0, -1, WEAPON_GUN);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -375,7 +378,7 @@ void CCharacter::FireWeapon()
 					ProjStartPos,
 					vec2(cosf(a), sinf(a))*Speed,
 					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_ShotgunLifetime),
-					1, 0, 0, -1, WEAPON_SHOTGUN);
+					g_Config.m_SvDamageShotgun, 0, 0, -1, WEAPON_SHOTGUN);
 
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
@@ -438,7 +441,19 @@ void CCharacter::FireWeapon()
 		m_aWeapons[m_ActiveWeapon].m_Ammo--;
 
 	if(!m_ReloadTimer)
-		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
+	{
+		int FireDelay = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay;
+		switch (m_ActiveWeapon)
+		{
+			case (WEAPON_HAMMER ): FireDelay = g_Config.m_SvFireDelayHammer;  break;
+			case (WEAPON_GUN    ): FireDelay = g_Config.m_SvFireDelayPistol;  break;
+			case (WEAPON_SHOTGUN): FireDelay = g_Config.m_SvFireDelayShotgun; break;
+			case (WEAPON_GRENADE): FireDelay = g_Config.m_SvFireDelayGrenade; break;
+			case (WEAPON_RIFLE  ): FireDelay = g_Config.m_SvFireDelayRifle;   break;
+			case (WEAPON_NINJA  ): FireDelay = g_Config.m_SvFireDelayNinja;   break;
+		}
+		m_ReloadTimer = FireDelay * Server()->TickSpeed() / 1000; 
+	}
 }
 
 void CCharacter::HandleWeapons()
@@ -792,7 +807,17 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
-		Dmg = max(1, Dmg/2);
+	{
+		Dmg = max(1, Dmg * g_Config.m_SvDamageSelf/100);
+		if (g_Config.m_SvDamageSelf == 0)
+			Dmg = 0;
+	}
+	else
+	{
+		Dmg = max(1, Dmg * g_Config.m_SvDamageAll/100);
+		if (g_Config.m_SvDamageAll == 0)
+			Dmg = 0;
+	}
 
 	// no damage indicators in instagib
 	if (!g_Config.m_SvInstagib)

@@ -140,7 +140,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			if(l)
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
-			float Dmg = 6 * l;
+			float Dmg = g_Config.m_SvDamageExplosion * l;
 			
 			if((int)Dmg && (!g_Config.m_SvInstagib || (1 - l) * 100 <= g_Config.m_SvInstagibHitRadius))
 				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
@@ -443,6 +443,31 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvRegenTimeShotgun = 0;
 	g_Config.m_SvRegenTimeGrenade = 0;
 	g_Config.m_SvRegenTimeRifle   = 0;
+	
+	g_Config.m_SvFireDelayHammer  = 125;
+	g_Config.m_SvFireDelayPistol  = 125;
+	g_Config.m_SvFireDelayShotgun = 500;
+	g_Config.m_SvFireDelayGrenade = 500;
+	g_Config.m_SvFireDelayRifle   = 800;
+	g_Config.m_SvFireDelayNinja   = 800;
+	
+	g_Config.m_SvFullAutoHammer   = 0;
+	g_Config.m_SvFullAutoPistol   = 0;
+	g_Config.m_SvFullAutoShotgun  = 1;
+	g_Config.m_SvFullAutoGrenade  = 1;
+	g_Config.m_SvFullAutoRifle    = 1;
+	
+	g_Config.m_SvDamageSelf	= 50;
+	g_Config.m_SvDamageAll = 100;
+	
+	g_Config.m_SvDamageHammer  = 3;
+	g_Config.m_SvDamagePistol  = 1;
+	g_Config.m_SvDamageShotgun = 1;
+	g_Config.m_SvDamageRifle   = 5;
+	g_Config.m_SvDamageNinja   = 9;
+	g_Config.m_SvDamageExplosion = 6;
+	
+	g_Config.m_SvDamageRifleBounce = 0;
 }
 
 void CGameContext::SendTuningParams(int ClientID)

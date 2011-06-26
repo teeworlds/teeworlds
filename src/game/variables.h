@@ -147,6 +147,30 @@ MACRO_CONFIG_INT(SvRegenTimeShotgun, sv_regentime_shotgun, 0, 0, 100000, CFGFLAG
 MACRO_CONFIG_INT(SvRegenTimeGrenade, sv_regentime_grenade, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for Grenade (in ms, normal is 0)")
 MACRO_CONFIG_INT(SvRegenTimeRifle, sv_regentime_rifle, 0, 0, 100000, CFGFLAG_SERVER, "Ammo's regeneration time for Rifle (in ms, normal is 0)")
 
+MACRO_CONFIG_INT(SvFireDelayHammer, sv_fire_delay_hammer, 125, 1, 10000, CFGFLAG_SERVER, "FireDelay time for Hammer (in ms, normal is 125)")
+MACRO_CONFIG_INT(SvFireDelayPistol, sv_fire_delay_pistol, 125, 1, 10000, CFGFLAG_SERVER, "FireDelay time for PistolGun (in ms, normal is 10)")
+MACRO_CONFIG_INT(SvFireDelayShotgun, sv_fire_delay_shotgun, 500, 1, 10000, CFGFLAG_SERVER, "FireDelay time for ShotGun (in ms, normal is 500)")
+MACRO_CONFIG_INT(SvFireDelayGrenade, sv_fire_delay_grenade, 500, 1, 10000, CFGFLAG_SERVER, "FireDelay time for Grenade (in ms, normal is 500)")
+MACRO_CONFIG_INT(SvFireDelayRifle, sv_fire_delay_rifle, 800, 1, 10000, CFGFLAG_SERVER, "FireDelay time for Rifle (in ms, normal is 800)")
+MACRO_CONFIG_INT(SvFireDelayNinja, sv_fire_delay_ninja, 800, 1, 10000, CFGFLAG_SERVER, "FireDelay time for Ninja (in ms, normal is 800)")
+
+MACRO_CONFIG_INT(SvFullAutoHammer, sv_fullauto_hammer, 0, 1, 1, CFGFLAG_SERVER, "Hammer is fully automatic weapon (0 disables, 0 is normal)")
+MACRO_CONFIG_INT(SvFullAutoPistol, sv_fullauto_pistol, 0, 1, 1, CFGFLAG_SERVER, "Pistol is fully automatic weapon (0 disables, 0 is normal)")
+MACRO_CONFIG_INT(SvFullAutoShotgun, sv_fullauto_shotgun, 1, 1, 1, CFGFLAG_SERVER, "Shotgun is fully automatic weapon (0 disables, 1 is normal)")
+MACRO_CONFIG_INT(SvFullAutoGrenade, sv_fullauto_grenade, 1, 1, 1, CFGFLAG_SERVER, "Grenade is fully automatic weapon (0 disables, 1 is normal)")
+MACRO_CONFIG_INT(SvFullAutoRifle, sv_fullauto_rifle, 1, 1, 1, CFGFLAG_SERVER, "Rifle is fully automatic weapon (0 disables, 1 is normal)")
+
+MACRO_CONFIG_INT(SvDamageSelf, sv_damage_self, 50, 0, 1000, CFGFLAG_SERVER, "Damage to player, in percents (0 - no damage, 50% is normal)")
+MACRO_CONFIG_INT(SvDamageAll, sv_damage_all, 100, 0, 1000, CFGFLAG_SERVER, "Damage to all tees, in percents (0 - no damage = for pacifists, 100% is normal)")
+
+MACRO_CONFIG_INT(SvDamageHammer, sv_damage_hammer, 3, 0, 100, CFGFLAG_SERVER, "Damage by hammer (100 is max, 3 is normal)")
+MACRO_CONFIG_INT(SvDamagePistol, sv_damage_pistol, 1, 0, 100, CFGFLAG_SERVER, "Damage by pistol (100 is max, 1 is normal)")
+MACRO_CONFIG_INT(SvDamageShotgun, sv_damage_shotgun, 1, 0, 100, CFGFLAG_SERVER, "Damage by shotgun (for each bullet; 100 is max, 1 is normal)")
+MACRO_CONFIG_INT(SvDamageRifle, sv_damage_rifle, 5, 0, 100, CFGFLAG_SERVER, "Damage by rifle (100 is max, 5 is normal)")
+MACRO_CONFIG_INT(SvDamageNinja, sv_damage_ninja, 9, 0, 100, CFGFLAG_SERVER, "Damage by ninja (100 is max, 9 is normal)")
+MACRO_CONFIG_INT(SvDamageExplosion, sv_damage_explosion, 6, 0, 100, CFGFLAG_SERVER, "Damage by explosion (100 is max, 6 is normal)") 
+
+MACRO_CONFIG_INT(SvDamageRifleBounce, sv_damage_rifle_bounce, 0, 0, 100, CFGFLAG_SERVER, "Bonus damage by rifle bounce (100 is max, 0 is normal)")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
