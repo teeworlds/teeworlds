@@ -880,7 +880,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(m_Health <= 0 || g_Config.m_SvInstagib)
 	{
 		Die(From, Weapon);
-
+		
 		// set attacker's face to happy (taunt!)
 		if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 		{
@@ -889,9 +889,26 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 			{
 				pChr->m_EmoteType = EMOTE_HAPPY;
 				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
+
+				if (!GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) || g_Config.m_SvBonusKillTeam)
+				{
+					// give some ammo
+					if (m_aWeapons[WEAPON_HAMMER ].m_Got)
+						pChr->GiveWeapon(WEAPON_HAMMER , g_Config.m_SvBonusKillAmmoHammer );
+					if (m_aWeapons[WEAPON_GUN    ].m_Got)
+						pChr->GiveWeapon(WEAPON_GUN    , g_Config.m_SvBonusKillAmmoPistol );
+					if (m_aWeapons[WEAPON_SHOTGUN].m_Got)
+						pChr->GiveWeapon(WEAPON_SHOTGUN, g_Config.m_SvBonusKillAmmoShotgun);
+					if (m_aWeapons[WEAPON_GRENADE].m_Got)
+						pChr->GiveWeapon(WEAPON_GRENADE, g_Config.m_SvBonusKillAmmoGrenade);
+					if (m_aWeapons[WEAPON_RIFLE  ].m_Got)
+						pChr->GiveWeapon(WEAPON_RIFLE  , g_Config.m_SvBonusKillAmmoRifle  );				
+					pChr->IncreaseHealth(g_Config.m_SvBonusKillHealth);
+					pChr->IncreaseArmor(g_Config.m_SvBonusKillArmor);
+				}
 			}
 		}
-
+		
 		return false;
 	}
 

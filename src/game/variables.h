@@ -172,6 +172,17 @@ MACRO_CONFIG_INT(SvDamageExplosion, sv_damage_explosion, 6, 0, 100, CFGFLAG_SERV
 
 MACRO_CONFIG_INT(SvDamageRifleBounce, sv_damage_rifle_bounce, 0, 0, 100, CFGFLAG_SERVER, "Bonus damage by rifle bounce (100 is max, 0 is normal)")
 
+// Bonus system
+MACRO_CONFIG_INT(SvBonusKillTeam, sv_bonus_kill_team, 0, 0, 1, CFGFLAG_SERVER, "Is there a bonus for killing teammate? (0 is default)")
+
+MACRO_CONFIG_INT(SvBonusKillHealth, sv_bonus_kill_health, 0, 0, 100, CFGFLAG_SERVER, "Health's bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillArmor, sv_bonus_kill_armor, 0, 0, 100, CFGFLAG_SERVER, "Armor's bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillAmmoHammer, sv_bonus_kill_ammo_hammer, 0, 0, 100, CFGFLAG_SERVER, "Hammer's ammo bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillAmmoPistol, sv_bonus_kill_ammo_pistol, 0, 0, 100, CFGFLAG_SERVER, "Pistol's ammo bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillAmmoShotgun, sv_bonus_kill_ammo_shotgun, 0, 0, 100, CFGFLAG_SERVER, "Shotgun's ammo bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillAmmoGrenade, sv_bonus_kill_ammo_grenade, 0, 0, 100, CFGFLAG_SERVER, "Grenade's ammo bonus for kill (0 is default)")
+MACRO_CONFIG_INT(SvBonusKillAmmoRifle, sv_bonus_kill_ammo_rifle, 0, 0, 100, CFGFLAG_SERVER, "Rifle's ammo bonus for kill (0 is default)")
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")

@@ -468,6 +468,17 @@ void CGameContext::CheckPureModing(bool ForceReset)
 	g_Config.m_SvDamageExplosion = 6;
 	
 	g_Config.m_SvDamageRifleBounce = 0;
+	
+	// Bonus system
+	g_Config.m_SvBonusKillTeam = 0;
+	
+	g_Config.m_SvBonusKillHealth = 0;
+	g_Config.m_SvBonusKillArmor  = 0;
+	g_Config.m_SvBonusKillAmmoHammer  = 0;
+	g_Config.m_SvBonusKillAmmoPistol  = 0;
+	g_Config.m_SvBonusKillAmmoShotgun = 0;
+	g_Config.m_SvBonusKillAmmoGrenade = 0;
+	g_Config.m_SvBonusKillAmmoRifle   = 0;
 }
 
 void CGameContext::SendTuningParams(int ClientID)
