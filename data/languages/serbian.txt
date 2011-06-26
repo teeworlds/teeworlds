@@ -612,7 +612,7 @@ Server address:
 Server filter
 == 
 
-Show friends
+Show friends only
 == 
 
 Show ingame HUD

@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Sohbeti göster
 
-Show friends
+Show friends only
 == Arkadaşları göster
 
 Show ingame HUD

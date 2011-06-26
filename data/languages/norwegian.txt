@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Vis samtale
 
-Show friends
+Show friends only
 == Vis venner
 
 Show ingame HUD

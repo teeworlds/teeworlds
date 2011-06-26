@@ -24,7 +24,9 @@ public:
 		int m_Country;
 		int m_Score;
 		bool m_Player;
-	} ;
+		
+		int m_FriendState;
+	};
 
 	int m_SortedIndex;
 	int m_ServerIndex;
@@ -32,6 +34,7 @@ public:
 	NETADDR m_NetAddr;
 
 	int m_QuickSearchHit;
+	int m_FriendState;
 
 	int m_MaxClients;
 	int m_NumClients;

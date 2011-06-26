@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Показвай чата
 
-Show friends
+Show friends only
 == Покажи приятели
 
 Show ingame HUD
@@ -673,13 +673,4 @@ Strict gametype filter
 == 
 
 ##### old translations #####
-
-Page %d of %d
-== Страница %d/%d
-
-Next
-== Нататък
-
-Prev
-== Назад
 

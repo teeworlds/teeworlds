@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -141,11 +142,11 @@ Delete
 Delete demo
 == Șterge demonstrația
 
-Demofile: %s
-== Fișier demo: %s
-
 Demo details
 == Detalii demo
+
+Demofile: %s
+== Fișier demo: %s
 
 Demos
 == Demo
@@ -513,7 +514,7 @@ Shotgun
 Show chat
 == Afișare chat
 
-Show friends
+Show friends only
 == Arată prietenii
 
 Show ingame HUD

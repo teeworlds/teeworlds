@@ -154,6 +154,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	int ScrollNum = NumServers-Num+1;
 	if(ScrollNum > 0)
 	{
+		if(m_ScrollOffset)
+		{
+			s_ScrollValue = (float)(m_ScrollOffset)/ScrollNum;
+			m_ScrollOffset = 0;
+		}
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f/ScrollNum;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
@@ -213,16 +218,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	m_SelectedIndex = -1;
 
-	for (int i = 0; i < NumServers; i++)
-	{
-		const CServerInfo *pItem = ServerBrowser()->SortedGet(i);
-		NumPlayers += pItem->m_NumPlayers;
-	}
+	// reset friend counter
+	for(int i = 0; i < m_lFriends.size(); m_lFriends[i++].m_NumFound = 0);
 
 	for (int i = 0; i < NumServers; i++)
 	{
 		int ItemIndex = i;
 		const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
+		NumPlayers += pItem->m_NumPlayers;
 		CUIRect Row;
 		CUIRect SelectHitBox;
 
@@ -233,6 +236,28 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 		if(Selected)
 			m_SelectedIndex = i;
+
+		// update friend counter
+		if(pItem->m_FriendState != IFriends::FRIEND_NO)
+		{
+			for(int j = 0; j < pItem->m_NumClients; ++j)
+			{
+				if(pItem->m_aClients[j].m_FriendState != IFriends::FRIEND_NO)
+				{
+					unsigned NameHash = str_quickhash(pItem->m_aClients[j].m_aName);
+					unsigned ClanHash = str_quickhash(pItem->m_aClients[j].m_aClan);
+					for(int f = 0; f < m_lFriends.size(); ++f)
+					{
+						if(ClanHash == m_lFriends[f].m_pFriendInfo->m_ClanHash &&
+							(!m_lFriends[f].m_pFriendInfo->m_aName[0] || NameHash == m_lFriends[f].m_pFriendInfo->m_NameHash))
+						{
+							m_lFriends[f].m_NumFound++;
+							break;
+						}
+					}
+				}
+			}
+		}
 
 		// make sure that only those in view can be selected
 		if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
@@ -353,6 +378,15 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_PLAYERS)
 			{
+				CUIRect Icon;
+				Button.VMargin(4.0f, &Button);
+				if(pItem->m_FriendState != IFriends::FRIEND_NO)
+				{
+					Button.VSplitLeft(Button.h, &Icon, &Button);
+					Icon.Margin(2.0f, &Icon);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART, &Icon);
+				}
+
 				if(g_Config.m_BrFilterSpectators)
 					str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
 				else
@@ -463,7 +497,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterFull ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
-	if (DoButton_CheckBox(&g_Config.m_BrFilterFriends, Localize("Show friends"), g_Config.m_BrFilterFriends, &Button))
+	if (DoButton_CheckBox(&g_Config.m_BrFilterFriends, Localize("Show friends only"), g_Config.m_BrFilterFriends, &Button))
 		g_Config.m_BrFilterFriends ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
@@ -622,14 +656,26 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	RenderTools()->DrawUIRect(&ServerScoreBoard, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
 	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize+2.0f, 0);
 
-	if (pSelectedServer)
+	if(pSelectedServer)
 	{
 		ServerScoreBoard.Margin(3.0f, &ServerScoreBoard);
 		for (int i = 0; i < pSelectedServer->m_NumClients; i++)
 		{
 			CUIRect Name, Clan, Score, Flag;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
-			RenderTools()->DrawUIRect(&Name, vec4(1,1,1,(i%2+1)*0.05f), CUI::CORNER_ALL, 4.0f);
+			if(UI()->DoButtonLogic(&pSelectedServer->m_aClients[i], "", 0, &Name))
+			{
+				if(pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
+					m_pClient->Friends()->RemoveFriend(pSelectedServer->m_aClients[i].m_aName, pSelectedServer->m_aClients[i].m_aClan);
+				else
+					m_pClient->Friends()->AddFriend(pSelectedServer->m_aClients[i].m_aName, pSelectedServer->m_aClients[i].m_aClan);
+				FriendlistOnUpdate();
+				Client()->ServerBrowserUpdate();
+			}
+
+			vec4 Colour = pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_NO ? vec4(1.0f, 1.0f, 1.0f, (i%2+1)*0.05f) :
+																								vec4(0.5f, 1.0f, 0.5f, 0.15f+(i%2+1)*0.05f);
+			RenderTools()->DrawUIRect(&Name, Colour, CUI::CORNER_ALL, 4.0f);
 			Name.VSplitLeft(5.0f, 0, &Name);
 			Name.VSplitLeft(30.0f, &Score, &Name);
 			Name.VSplitRight(34.0f, &Name, &Flag);
@@ -701,45 +747,102 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	}
 }
 
+void CMenus::FriendlistOnUpdate()
+{
+	m_lFriends.clear();
+	for(int i = 0; i < m_pClient->Friends()->NumFriends(); ++i)
+	{
+		CFriendItem Item;
+		Item.m_pFriendInfo = m_pClient->Friends()->GetFriend(i);
+		Item.m_NumFound = 0;
+		m_lFriends.add_unsorted(Item);
+	}
+	m_lFriends.sort_range();
+}
+
 void CMenus::RenderServerbrowserFriends(CUIRect View)
 {
+	static int s_Inited = 0;
+	if(!s_Inited)
+	{
+		FriendlistOnUpdate();
+		s_Inited = 1;
+	}
+
 	CUIRect ServerFriends = View, FilterHeader;
-	const float FontSize = 12.0f;
+	const float FontSize = 10.0f;
 
 	// header
 	ServerFriends.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFriends);
 	RenderTools()->DrawUIRect(&FilterHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	RenderTools()->DrawUIRect(&ServerFriends, vec4(0,0,0,0.15f), 0, 4.0f);
-	UI()->DoLabelScaled(&FilterHeader, Localize("Friends"), FontSize+2.0f, 0);
+	UI()->DoLabelScaled(&FilterHeader, Localize("Friends"), FontSize+4.0f, 0);
 	CUIRect Button, List;
 
-	ServerFriends.VSplitLeft(5.0f, 0, &ServerFriends);
 	ServerFriends.Margin(3.0f, &ServerFriends);
-	ServerFriends.VMargin(5.0f, &ServerFriends);
+	ServerFriends.VMargin(3.0f, &ServerFriends);
 	ServerFriends.HSplitBottom(100.0f, &List, &ServerFriends);
 
 	// friends list(remove friend)
-	static int s_FriendList = 0;
 	static float s_ScrollValue = 0;
-	UiDoListboxStart(&s_FriendList, &List, 40.0f, "", "", m_pClient->Friends()->NumFriends(), 1, m_FriendlistSelectedIndex, s_ScrollValue);
+	UiDoListboxStart(&m_lFriends, &List, 30.0f, "", "", m_lFriends.size(), 1, m_FriendlistSelectedIndex, s_ScrollValue);
 
-	for(int i = 0; i < m_pClient->Friends()->NumFriends(); ++i)
+	m_lFriends.sort_range();
+	for(int i = 0; i < m_lFriends.size(); ++i)
 	{
-		const CFriendInfo *pFriend = m_pClient->Friends()->GetFriend(i);
-		CListboxItem Item = UiDoListboxNextItem(pFriend);
+		CListboxItem Item = UiDoListboxNextItem(&m_lFriends[i]);
 
 		if(Item.m_Visible)
 		{
-			Item.m_Rect.Margin(2.5f, &Item.m_Rect);
-			RenderTools()->DrawUIRect(&Item.m_Rect, vec4(1.0f, 1.0f, 1.0f, 0.1f), CUI::CORNER_ALL, 4.0f);
-			Item.m_Rect.Margin(2.5f, &Item.m_Rect);
-			Item.m_Rect.HSplitTop(14.0f, &Item.m_Rect, &Button);
-			UI()->DoLabelScaled(&Item.m_Rect, pFriend->m_aName, FontSize, -1);
-			UI()->DoLabelScaled(&Button, pFriend->m_aClan, FontSize, -1);
+			Item.m_Rect.Margin(1.5f, &Item.m_Rect);
+			CUIRect OnState;
+			Item.m_Rect.VSplitRight(30.0f, &Item.m_Rect, &OnState);
+			RenderTools()->DrawUIRect(&Item.m_Rect, vec4(1.0f, 1.0f, 1.0f, 0.1f), CUI::CORNER_L, 4.0f);
+
+			Item.m_Rect.VMargin(2.5f, &Item.m_Rect);
+			Item.m_Rect.HSplitTop(12.0f, &Item.m_Rect, &Button);
+			UI()->DoLabelScaled(&Item.m_Rect, m_lFriends[i].m_pFriendInfo->m_aName, FontSize, -1);
+			UI()->DoLabelScaled(&Button, m_lFriends[i].m_pFriendInfo->m_aClan, FontSize, -1);
+
+			RenderTools()->DrawUIRect(&OnState, m_lFriends[i].m_NumFound ? vec4(0.0f, 1.0f, 0.0f, 0.25f) : vec4(1.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_R, 4.0f);
+			OnState.HMargin((OnState.h-FontSize)/3, &OnState);
+			OnState.VMargin(5.0f, &OnState);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%i", m_lFriends[i].m_NumFound);
+			UI()->DoLabelScaled(&OnState, aBuf, FontSize+2, 1);
 		}
 	}
 
-	m_FriendlistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, 0);
+	bool Activated = false;
+	m_FriendlistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);
+
+	// activate found server with friend
+	if(Activated && !m_EnterPressed && m_lFriends[m_FriendlistSelectedIndex].m_NumFound)
+	{
+		bool Found = false;
+		int NumServers = ServerBrowser()->NumSortedServers();
+		for (int i = 0; i < NumServers && !Found; i++)
+		{
+			int ItemIndex = m_SelectedIndex != -1 ? (m_SelectedIndex+i+1)%NumServers : i;
+			const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
+			if(pItem->m_FriendState != IFriends::FRIEND_NO)
+			{
+				for(int j = 0; j < pItem->m_NumClients && !Found; ++j)
+				{
+					if(pItem->m_aClients[j].m_FriendState != IFriends::FRIEND_NO &&
+						str_quickhash(pItem->m_aClients[j].m_aClan) == m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_ClanHash &&
+						(!m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aName[0] ||
+						str_quickhash(pItem->m_aClients[j].m_aName) == m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_NameHash))
+					{
+						str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+						m_ScrollOffset = ItemIndex;
+						m_SelectedIndex = ItemIndex;
+						Found = true;
+					}
+				}
+			}
+		}
+	}
 
 	ServerFriends.HSplitTop(2.5f, 0, &ServerFriends);
 	ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
@@ -774,10 +877,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 		ServerFriends.HSplitTop(3.0f, 0, &ServerFriends);
 		ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
-		static int s_RemoveButton = 0;
-		if(DoButton_Menu(&s_RemoveButton, Localize("Add Friend"), 0, &Button))
+		static int s_AddButton = 0;
+		if(DoButton_Menu(&s_AddButton, Localize("Add Friend"), 0, &Button))
 		{
 			m_pClient->Friends()->AddFriend(s_aName, s_aClan);
+			FriendlistOnUpdate();
 			Client()->ServerBrowserUpdate();
 		}
 	}
@@ -913,6 +1017,16 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		StatusBox.HSplitTop(20.0f, &Button, 0);
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
+	}
+}
+
+void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() == 2 && ((CMenus *)pUserData)->Client()->State() == IClient::STATE_OFFLINE)
+	{
+		((CMenus *)pUserData)->FriendlistOnUpdate();
+		((CMenus *)pUserData)->Client()->ServerBrowserUpdate();
 	}
 }
 

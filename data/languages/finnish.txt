@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Näytä chatti
 
-Show friends
+Show friends only
 == Näytä ystävät
 
 Show ingame HUD

@@ -734,6 +734,8 @@ void CMenus::OnInit()
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
+	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);
+	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
 
 	// setup load amount
 	m_LoadCurrent = 0;
@@ -1205,7 +1207,9 @@ int CMenus::Render()
 				// remove friend
 				if(m_FriendlistSelectedIndex >= 0)
 				{
-					m_pClient->Friends()->RemoveFriend(m_FriendlistSelectedIndex);
+					m_pClient->Friends()->RemoveFriend(m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aName,
+						m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aClan);
+					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 				}
 			}

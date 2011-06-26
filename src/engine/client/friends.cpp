@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
+#include <base/system.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
@@ -44,12 +45,35 @@ const CFriendInfo *CFriends::GetFriend(int Index) const
 	return &m_aFriends[max(0, Index%m_NumFriends)];
 }
 
-bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
+int CFriends::GetFriendState(const char *pName, const char *pClan) const
 {
+	int Result = FRIEND_NO;
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if(!str_comp(m_aFriends[i].m_aClan, pClan) &&
-			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || !str_comp(m_aFriends[i].m_aName, pName)))
+		if(m_aFriends[i].m_ClanHash == ClanHash)
+		{
+			if(m_aFriends[i].m_aName[0] == 0)
+				Result = FRIEND_CLAN;
+			else if(m_aFriends[i].m_NameHash == NameHash)
+			{
+				Result = FRIEND_PLAYER;
+				break;
+			}
+		}
+	}
+	return Result;
+}
+
+bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
+{
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
+	for(int i = 0; i < m_NumFriends; ++i)
+	{
+		if(m_aFriends[i].m_ClanHash == ClanHash &&
+			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || m_aFriends[i].m_NameHash == NameHash))
 			return true;
 	}
 	return false;
@@ -61,22 +85,28 @@ void CFriends::AddFriend(const char *pName, const char *pClan)
 		return;
 
 	// make sure we don't have the friend already
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if(!str_comp(m_aFriends[i].m_aName, pName) && !str_comp(m_aFriends[i].m_aClan, pClan))
+		if(m_aFriends[i].m_NameHash == NameHash && m_aFriends[i].m_ClanHash == ClanHash)
 			return;
 	}
 
 	str_copy(m_aFriends[m_NumFriends].m_aName, pName, sizeof(m_aFriends[m_NumFriends].m_aName));
 	str_copy(m_aFriends[m_NumFriends].m_aClan, pClan, sizeof(m_aFriends[m_NumFriends].m_aClan));
+	m_aFriends[m_NumFriends].m_NameHash = NameHash;
+	m_aFriends[m_NumFriends].m_ClanHash = ClanHash;
 	++m_NumFriends;
 }
 
 void CFriends::RemoveFriend(const char *pName, const char *pClan)
 {
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if(!str_comp(m_aFriends[i].m_aName, pName) && !str_comp(m_aFriends[i].m_aClan, pClan))
+		if(m_aFriends[i].m_NameHash == NameHash && m_aFriends[i].m_ClanHash == ClanHash)
 		{
 			RemoveFriend(i);
 			return;

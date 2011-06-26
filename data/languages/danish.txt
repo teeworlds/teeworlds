@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Vis chat
 
-Show friends
+Show friends only
 == Vis venner
 
 Show ingame HUD
@@ -673,7 +673,4 @@ Strict gametype filter
 == 
 
 ##### old translations #####
-
-﻿##### translated strings #####
-== 
 

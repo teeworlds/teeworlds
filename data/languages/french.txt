@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Montrer le chat
 
-Show friends
+Show friends only
 == Montrer les amis
 
 Show ingame HUD
