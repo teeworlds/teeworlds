@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Visa chatt
 
-Show friends
+Show friends only
 == Visa kompisar
 
 Show ingame HUD

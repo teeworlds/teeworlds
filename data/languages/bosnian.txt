@@ -508,7 +508,7 @@ Shotgun
 Show chat
 == Prikaži chat
 
-Show friends
+Show friends only
 == Prikaži prijatelje
 
 Show ingame HUD
