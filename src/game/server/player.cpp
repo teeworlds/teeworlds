@@ -338,7 +338,7 @@ int CPlayer::BlockKillCheck()
 				str_append(aKillerText, "-", sizeof aKillerText);
 			}
 		}
-		if (*aKillerText)
+		if (*aKillerText && killerchar)
 			GameServer()->CreateLolText(GameServer()->GetPlayerChar(killer), false, vec2(0,-100), vec2(0.f,0.f), 50, aKillerText);
 		if (*aVictimText)
 			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-100), vec2(0.f,0.f), 50, aVictimText);
