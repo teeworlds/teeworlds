@@ -233,21 +233,21 @@ void CGraphics_OpenGL::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBot
 
 void CGraphics_OpenGL::LinesBegin()
 {
-	dbg_assert(m_Drawing == 0, "called begin twice");
+	dbg_assert(m_Drawing == 0, "called Graphics()->LinesBegin twice");
 	m_Drawing = DRAWING_LINES;
 	SetColor(1,1,1,1);
 }
 
 void CGraphics_OpenGL::LinesEnd()
 {
-	dbg_assert(m_Drawing == DRAWING_LINES, "called end without begin");
+	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
 
 void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 {
-	dbg_assert(m_Drawing == DRAWING_LINES, "called draw without begin");
+	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesDraw without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -511,7 +511,7 @@ void CGraphics_OpenGL::Clear(float r, float g, float b)
 
 void CGraphics_OpenGL::QuadsBegin()
 {
-	dbg_assert(m_Drawing == 0, "called quads_begin twice");
+	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
 
 	QuadsSetSubset(0,0,1,1);
@@ -521,7 +521,7 @@ void CGraphics_OpenGL::QuadsBegin()
 
 void CGraphics_OpenGL::QuadsEnd()
 {
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_end without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
@@ -534,7 +534,7 @@ void CGraphics_OpenGL::QuadsSetRotation(float Angle)
 
 void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
 {
-	dbg_assert(m_Drawing != 0, "called gfx_quads_setcolorvertex without begin");
+	dbg_assert(m_Drawing != 0, "called Graphics()->SetColorVertex without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -547,7 +547,7 @@ void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
 
 void CGraphics_OpenGL::SetColor(float r, float g, float b, float a)
 {
-	dbg_assert(m_Drawing != 0, "called gfx_quads_setcolor without begin");
+	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
 	CColorVertex Array[4] = {
 		CColorVertex(0, r, g, b, a),
 		CColorVertex(1, r, g, b, a),
@@ -593,7 +593,7 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 	CPoint Center;
 	Center.z = 0;
 
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -631,7 +631,7 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 
 void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 {
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw_freeform without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawFreeform without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
