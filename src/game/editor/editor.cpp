@@ -482,15 +482,12 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 {
     // logic
     static float s_Value;
-    int Ret = 0;
     int Inside = UI()->MouseInside(pRect);
 
 	if(UI()->ActiveItem() == pID)
 	{
 		if(!UI()->MouseButton(0))
 		{
-			if(Inside)
-				Ret = 1;
 			m_LockMouse = false;
 			UI()->SetActiveItem(0);
 		}
@@ -747,8 +744,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && m_Dialog == DIALOG_NONE)
 		m_ZoomLevel += 20;
 
-	if(m_ZoomLevel < 50)
-		m_ZoomLevel = 50;
+	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	m_WorldZoom = m_ZoomLevel/100.0f;
 
 	TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
@@ -1157,10 +1153,10 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
+void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 {
 	// render all good stuff
-	if(!ShowPicker)
+	if(!m_ShowPicker)
 	{
 		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
 		{
@@ -1192,8 +1188,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 
 	static float s_StartWx = 0;
 	static float s_StartWy = 0;
-	static float s_StartMx = 0;
-	static float s_StartMy = 0;
 
 	enum
 	{
@@ -1206,7 +1200,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 	};
 
 	// remap the screen so it can display the whole tileset
-	if(ShowPicker)
+	if(m_ShowPicker)
 	{
 		CUIRect Screen = *UI()->Screen();
 		float Size = 32.0*16.0f;
@@ -1235,7 +1229,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 	int NumEditLayers = 0;
 	NumEditLayers = 0;
 
-	if(ShowPicker)
+	if(m_ShowPicker)
 	{
 		pEditLayers[0] = &m_TilesetPicker;
 		NumEditLayers++;
@@ -1281,8 +1275,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 		{
 			s_StartWx = wx;
 			s_StartWy = wy;
-			s_StartMx = mx;
-			s_StartMy = my;
 
 			if(Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL) || UI()->MouseButton(2))
 			{
@@ -1441,7 +1433,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar, bool ShowPicker)
 
 		// quad editing
 		{
-			if(!ShowPicker && m_Brush.IsEmpty())
+			if(!m_ShowPicker && m_Brush.IsEmpty())
 			{
 				// fetch layers
 				CLayerGroup *g = GetSelectedGroup();
@@ -1767,14 +1759,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 	CUIRect Slot, Button;
 	char aBuf[64];
-
-	int ValidGroup = 0;
-	int ValidLayer = 0;
-	if(m_SelectedGroup >= 0 && m_SelectedGroup < m_Map.m_lGroups.size())
-		ValidGroup = 1;
-
-	if(ValidGroup && m_SelectedLayer >= 0 && m_SelectedLayer < m_Map.m_lGroups[m_SelectedGroup]->m_lLayers.size())
-		ValidLayer = 1;
 
 	float LayersHeight = 12.0f;	 // Height of AddGroup button
 	static int s_ScrollBar = 0;
@@ -2213,7 +2197,8 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	if(DoButton_File((void*)(10+(int)Button.y), m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
+	static int s_FileButton = 0;
+	if(DoButton_File(&s_FileButton, m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
 	{
 		if(!m_FileList[Index].m_IsDir)
 			str_copy(m_aFileDialogFileName, m_FileList[Index].m_aFilename, sizeof(m_aFileDialogFileName));
@@ -2807,8 +2792,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 		// render handles
 		{
-			static bool s_Move = false;
-
 			int CurrentValue = 0, CurrentTime = 0;
 
 			Graphics()->TextureSet(-1);
@@ -2842,7 +2825,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						if(!UI()->MouseButton(0))
 						{
 							UI()->SetActiveItem(0);
-							s_Move = false;
 						}
 						else
 						{							
@@ -3046,7 +3028,7 @@ void CEditor::Render()
 	RenderBackground(View, ms_CheckerTexture, 32.0f, 1.0f);
 
 	CUIRect MenuBar, CModeBar, ToolBar, StatusBar, EnvelopeEditor, ToolBox;
-	bool ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
+	m_ShowPicker = Input()->KeyPressed(KEY_SPACE) != 0 && m_Dialog == DIALOG_NONE;
 
 	if(m_GuiActive)
 	{
@@ -3056,7 +3038,7 @@ void CEditor::Render()
 		View.VSplitLeft(100.0f, &ToolBox, &View);
 		View.HSplitBottom(16.0f, &View, &StatusBar);
 
-		if(m_ShowEnvelopeEditor && !ShowPicker)
+		if(m_ShowEnvelopeEditor && !m_ShowPicker)
 		{
 			float size = 125.0f;
 			if(m_ShowEnvelopeEditor == 2)
@@ -3069,7 +3051,7 @@ void CEditor::Render()
 
 	//	a little hack for now
 	if(m_Mode == MODE_LAYERS)
-		DoMapEditor(View, ToolBar, ShowPicker);
+		DoMapEditor(View, ToolBar);
 
 	if(m_GuiActive)
 	{
