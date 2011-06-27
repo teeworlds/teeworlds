@@ -206,7 +206,7 @@ void CGameClient::OnConsoleInit()
 
 
 	// propagate pointers
-	m_UI.SetGraphics(Graphics(), TextRender());
+	m_UI.Init(Graphics(), TextRender());
 	m_RenderTools.m_pGraphics = Graphics();
 	m_RenderTools.m_pUI = UI();
 	for(int i = 0; i < m_All.m_Num; i++)

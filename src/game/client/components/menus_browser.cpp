@@ -278,10 +278,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			else if(SelectHitBox.y+SelectHitBox.h > OriginalView.y+OriginalView.h) // bottom
 				SelectHitBox.h = OriginalView.y+OriginalView.h-SelectHitBox.y;
 
-			if(UI()->DoButtonLogic(pItem, "", Selected, &SelectHitBox))
-			{
+			if(UI()->DoButtonLogic(pItem, Selected, &SelectHitBox))
 				NewSelected = ItemIndex;
-			}
 		}
 		else
 		{
@@ -449,7 +447,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		static int s_ClearButton = 0;
 		RenderTools()->DrawUIRect(&Button, vec4(1,1,1,0.33f)*ButtonColorMul(&s_ClearButton), CUI::CORNER_R, 3.0f);
 		UI()->DoLabel(&Button, "x", Button.h*ms_FontmodHeight, 0);
-		if(UI()->DoButtonLogic(&s_ClearButton, "x", 0, &Button))
+		if(UI()->DoButtonLogic(&s_ClearButton, 0, &Button))
 		{
 			g_Config.m_BrFilterString[0] = 0;
 			UI()->SetActiveItem(&g_Config.m_BrFilterString);
@@ -663,7 +661,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 		{
 			CUIRect Name, Clan, Score, Flag;
 			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
-			if(UI()->DoButtonLogic(&pSelectedServer->m_aClients[i], "", 0, &Name))
+			if(UI()->DoButtonLogic(&pSelectedServer->m_aClients[i], 0, &Name))
 			{
 				if(pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
 					m_pClient->Friends()->RemoveFriend(pSelectedServer->m_aClients[i].m_aName, pSelectedServer->m_aClients[i].m_aClan);
