@@ -54,7 +54,6 @@ static CVoice m_aVoices[NUM_VOICES] = { {0} };
 static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
 
 static LOCK m_SoundLock = 0;
-static int m_SoundEnabled = 0;
 
 static int m_CenterX = 0;
 static int m_CenterY = 0;
@@ -198,6 +197,7 @@ static void SdlCallback(void *pUnused, Uint8 *pStream, int Len)
 
 int CSound::Init()
 {
+	m_SoundEnabled = 0;
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	

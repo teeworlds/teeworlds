@@ -128,7 +128,7 @@ void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 
 void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 {
-	if(!g_Config.m_SndEnable || (Chn == CHN_MUSIC && !g_Config.m_SndMusic) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || (Chn == CHN_MUSIC && !g_Config.m_SndMusic) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
