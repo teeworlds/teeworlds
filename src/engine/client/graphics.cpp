@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include <base/detect.h>
+#include <base/math.h>
 
 #include "SDL.h"
 
