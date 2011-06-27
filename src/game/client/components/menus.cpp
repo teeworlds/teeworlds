@@ -109,7 +109,7 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect)
 	}
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pID, "", Checked, pRect);
+	return UI()->DoButtonLogic(pID, Checked, pRect);
 }
 
 int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
@@ -118,7 +118,7 @@ int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	return UI()->DoButtonLogic(pID, Checked, pRect);
 }
 
 void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
@@ -139,22 +139,20 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 	pRect->HMargin(2.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	return UI()->DoButtonLogic(pID, Checked, pRect);
 }
 
 int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-//void CMenus::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
 	if(Checked)
 		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), CUI::CORNER_T, 5.0f);
 	CUIRect t;
 	pRect->VSplitLeft(5.0f, 0, &t);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight, -1);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	return UI()->DoButtonLogic(pID, Checked, pRect);
 }
 
 int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect)
-//void CMenus::ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const CUIRect *r, const void *extra)
 {
 	CUIRect c = *pRect;
 	CUIRect t = *pRect;
@@ -168,14 +166,13 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	c.y += 2;
 	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, 0);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, -1);
-	return UI()->DoButtonLogic(pID, pText, 0, pRect);
+	return UI()->DoButtonLogic(pID, 0, pRect);
 }
 
 int CMenus::DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
 	return DoButton_CheckBox_Common(pID, pText, Checked?"X":"", pRect);
 }
-
 
 int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
@@ -387,8 +384,6 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
-
-
 float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	CUIRect Handle;
@@ -441,6 +436,206 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f)*ButtonColorMul(pID), CUI::CORNER_ALL, 2.5f);
 
 	return ReturnValue;
+}
+
+static CUIRect gs_ListBoxOriginalView;
+static CUIRect gs_ListBoxView;
+static float gs_ListBoxRowHeight;
+static int gs_ListBoxItemIndex;
+static int gs_ListBoxSelectedIndex;
+static int gs_ListBoxNewSelected;
+static int gs_ListBoxDoneEvents;
+static int gs_ListBoxNumItems;
+static int gs_ListBoxItemsPerRow;
+static float gs_ListBoxScrollValue;
+static bool gs_ListBoxItemActivated;
+
+void CMenus::UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+								int ItemsPerRow, int SelectedIndex, float ScrollValue)
+{
+	CUIRect Scroll, Row;
+	CUIRect View = *pRect;
+	CUIRect Header, Footer;
+
+	// draw header
+	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
+	RenderTools()->DrawUIRect(&Header, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f);
+	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight, 0);
+
+	// draw footers
+	View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
+	RenderTools()->DrawUIRect(&Footer, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
+	Footer.VSplitLeft(10.0f, 0, &Footer);
+	UI()->DoLabel(&Footer, pBottomText, Header.h*ms_FontmodHeight, 0);
+
+	// background
+	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.15f), 0, 0);
+
+	// prepare the scroll
+	View.VSplitRight(15, &View, &Scroll);
+
+	// setup the variables
+	gs_ListBoxOriginalView = View;
+	gs_ListBoxSelectedIndex = SelectedIndex;
+	gs_ListBoxNewSelected = SelectedIndex;
+	gs_ListBoxItemIndex = 0;
+	gs_ListBoxRowHeight = RowHeight;
+	gs_ListBoxNumItems = NumItems;
+	gs_ListBoxItemsPerRow = ItemsPerRow;
+	gs_ListBoxDoneEvents = 0;
+	gs_ListBoxScrollValue = ScrollValue;
+	gs_ListBoxItemActivated = false;
+
+	// do the scrollbar
+	View.HSplitTop(gs_ListBoxRowHeight, &Row, 0);
+
+	int NumViewable = (int)(gs_ListBoxOriginalView.h/Row.h) + 1;
+	int Num = (NumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+	if(Num < 0)
+		Num = 0;
+	if(Num > 0)
+	{
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+			gs_ListBoxScrollValue -= 3.0f/Num;
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+			gs_ListBoxScrollValue += 3.0f/Num;
+
+		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
+		if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+	}
+
+	Scroll.HMargin(5.0f, &Scroll);
+	gs_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, gs_ListBoxScrollValue);
+
+	// the list
+	gs_ListBoxView = gs_ListBoxOriginalView;
+	gs_ListBoxView.VMargin(5.0f, &gs_ListBoxView);
+	UI()->ClipEnable(&gs_ListBoxView);
+	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
+}
+
+CMenus::CListboxItem CMenus::UiDoListboxNextRow()
+{
+	static CUIRect s_RowView;
+	CListboxItem Item = {0};
+	if(gs_ListBoxItemIndex%gs_ListBoxItemsPerRow == 0)
+		gs_ListBoxView.HSplitTop(gs_ListBoxRowHeight, &s_RowView, &gs_ListBoxView);
+
+	s_RowView.VSplitLeft(s_RowView.w/(gs_ListBoxItemsPerRow-gs_ListBoxItemIndex%gs_ListBoxItemsPerRow)/(UI()->Scale()), &Item.m_Rect, &s_RowView);
+
+	Item.m_Visible = 1;
+
+	Item.m_HitRect = Item.m_Rect;
+
+	if(gs_ListBoxSelectedIndex == gs_ListBoxItemIndex)
+		Item.m_Selected = 1;
+
+	// make sure that only those in view can be selected
+	if(Item.m_Rect.y+Item.m_Rect.h > gs_ListBoxOriginalView.y)
+	{
+
+		if(Item.m_HitRect.y < Item.m_HitRect.y) // clip the selection
+		{
+			Item.m_HitRect.h -= gs_ListBoxOriginalView.y-Item.m_HitRect.y;
+			Item.m_HitRect.y = gs_ListBoxOriginalView.y;
+		}
+
+	}
+	else
+		Item.m_Visible = 0;
+
+	// check if we need to do more
+	if(Item.m_Rect.y > gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)
+		Item.m_Visible = 0;
+
+	gs_ListBoxItemIndex++;
+	return Item;
+}
+
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
+{
+	int ThisItemIndex = gs_ListBoxItemIndex;
+	if(Selected)
+	{
+		if(gs_ListBoxSelectedIndex == gs_ListBoxNewSelected)
+			gs_ListBoxNewSelected = ThisItemIndex;
+		gs_ListBoxSelectedIndex = ThisItemIndex;
+	}
+
+	CListboxItem Item = UiDoListboxNextRow();
+
+	if(Item.m_Visible && UI()->DoButtonLogic(pId, gs_ListBoxSelectedIndex == gs_ListBoxItemIndex, &Item.m_HitRect))
+		gs_ListBoxNewSelected = ThisItemIndex;
+
+	// process input, regard selected index
+	if(gs_ListBoxSelectedIndex == ThisItemIndex)
+	{
+		if(!gs_ListBoxDoneEvents)
+		{
+			gs_ListBoxDoneEvents = 1;
+
+			if(m_EnterPressed || (UI()->ActiveItem() == pId && Input()->MouseDoubleClick()))
+			{
+				gs_ListBoxItemActivated = true;
+				UI()->SetActiveItem(0);
+			}
+			else
+			{
+				for(int i = 0; i < m_NumInputEvents; i++)
+				{
+					int NewIndex = -1;
+					if(m_aInputEvents[i].m_Flags&IInput::FLAG_PRESS)
+					{
+						if(m_aInputEvents[i].m_Key == KEY_DOWN) NewIndex = gs_ListBoxNewSelected + 1;
+						if(m_aInputEvents[i].m_Key == KEY_UP) NewIndex = gs_ListBoxNewSelected - 1;
+					}
+					if(NewIndex > -1 && NewIndex < gs_ListBoxNumItems)
+					{
+						// scroll
+						float Offset = (NewIndex/gs_ListBoxItemsPerRow-gs_ListBoxNewSelected/gs_ListBoxItemsPerRow)*gs_ListBoxRowHeight;
+						int Scroll = gs_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
+										gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
+						if(Scroll)
+						{
+							int NumViewable = (int)(gs_ListBoxOriginalView.h/gs_ListBoxRowHeight) + 1;
+							int ScrollNum = (gs_ListBoxNumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+							if(Scroll < 0)
+							{
+								int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/gs_ListBoxRowHeight;
+								gs_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
+							}
+							else
+							{
+								int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)+gs_ListBoxRowHeight-1.0f)/
+									gs_ListBoxRowHeight;
+								gs_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
+							}
+							if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
+							if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+						}
+
+						gs_ListBoxNewSelected = NewIndex;
+					}
+				}
+			}
+		}
+
+		CUIRect r = Item.m_Rect;
+		r.Margin(1.5f, &r);
+		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+	}
+
+	return Item;
+}
+
+int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
+{
+	UI()->ClipDisable();
+	if(pScrollValue)
+		*pScrollValue = gs_ListBoxScrollValue;
+	if(pItemActivated)
+		*pItemActivated = gs_ListBoxItemActivated;
+	return gs_ListBoxNewSelected;
 }
 
 int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
@@ -543,7 +738,6 @@ int CMenus::RenderMenubar(CUIRect r)
 			NewPage = PAGE_INTERNET;
 		}
 
-		//Box.VSplitLeft(4.0f, 0, &Box);
 		Box.VSplitLeft(80.0f, &Button, &Box);
 		static int s_LanButton=0;
 		if(DoButton_MenuTab(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0))
@@ -552,7 +746,6 @@ int CMenus::RenderMenubar(CUIRect r)
 			NewPage = PAGE_LAN;
 		}
 
-		//box.VSplitLeft(4.0f, 0, &box);
 		Box.VSplitLeft(110.0f, &Button, &Box);
 		static int s_FavoritesButton=0;
 		if(DoButton_MenuTab(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR))
@@ -595,12 +788,12 @@ int CMenus::RenderMenubar(CUIRect r)
 	}
 
 	/*
-	box.VSplitRight(110.0f, &box, &button);
-	static int system_button=0;
-	if (UI()->DoButton(&system_button, "System", g_Config.m_UiPage==PAGE_SYSTEM, &button))
+	Box.VSplitRight(110.0f, &Box, &Button);
+	static int s_SystemButton = 0;
+	if(UI()->DoButton(&s_SystemButton, "System", g_Config.m_UiPage==PAGE_SYSTEM, &Button))
 		g_Config.m_UiPage = PAGE_SYSTEM;
 
-	box.VSplitRight(30.0f, &box, 0);
+	Box.VSplitRight(30.0f, &Box, 0);
 	*/
 
 	Box.VSplitRight(90.0f, &Box, &Button);
@@ -685,50 +878,6 @@ void CMenus::RenderNews(CUIRect MainView)
 
 void CMenus::OnInit()
 {
-
-	/*
-	array<string> my_strings;
-	array<string>::range r2;
-	my_strings.add("4");
-	my_strings.add("6");
-	my_strings.add("1");
-	my_strings.add("3");
-	my_strings.add("7");
-	my_strings.add("5");
-	my_strings.add("2");
-
-	for(array<string>::range r = my_strings.all(); !r.empty(); r.pop_front())
-		dbg_msg("", "%s", r.front().cstr());
-
-	sort(my_strings.all());
-
-	dbg_msg("", "after:");
-	for(array<string>::range r = my_strings.all(); !r.empty(); r.pop_front())
-		dbg_msg("", "%s", r.front().cstr());
-
-
-	array<int> myarray;
-	myarray.add(4);
-	myarray.add(6);
-	myarray.add(1);
-	myarray.add(3);
-	myarray.add(7);
-	myarray.add(5);
-	myarray.add(2);
-
-	for(array<int>::range r = myarray.all(); !r.empty(); r.pop_front())
-		dbg_msg("", "%d", r.front());
-
-	sort(myarray.all());
-	sort_verify(myarray.all());
-
-	dbg_msg("", "after:");
-	for(array<int>::range r = myarray.all(); !r.empty(); r.pop_front())
-		dbg_msg("", "%d", r.front());
-
-	exit(-1);
-	// */
-
 	if(g_Config.m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
 	g_Config.m_ClShowWelcome = 0;
@@ -1357,7 +1506,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
 		m_DownloadSpeed = 0.0f;
-		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
 		m_Popup = POPUP_CONNECTING;
@@ -1374,14 +1522,14 @@ void CMenus::OnRender()
 {
 	/*
 	// text rendering test stuff
-	render_background();
+	RenderBackground();
 
-	CTextCursor cursor;
-	TextRender()->SetCursor(&cursor, 10, 10, 20, TEXTFLAG_RENDER);
-	TextRender()->TextEx(&cursor, "ようこそ - ガイド", -1);
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, 10, 10, 20, TEXTFLAG_RENDER);
+	TextRender()->TextEx(&Cursor, "ようこそ - ガイド", -1);
 
-	TextRender()->SetCursor(&cursor, 10, 30, 15, TEXTFLAG_RENDER);
-	TextRender()->TextEx(&cursor, "ようこそ - ガイド", -1);
+	TextRender()->SetCursor(&Cursor, 10, 30, 15, TEXTFLAG_RENDER);
+	TextRender()->TextEx(&Cursor, "ようこそ - ガイド", -1);
 
 	//Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();

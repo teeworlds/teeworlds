@@ -378,10 +378,7 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 	if(UI()->HotItem() == pID && pToolTip)
 		m_pTooltip = (const char *)pToolTip;
 
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-
-	// Draw here
-	//return UI()->DoButton(id, text, checked, r, draw_func, 0);
+	return UI()->DoButtonLogic(pID, Checked, pRect);
 }
 
 
@@ -3283,7 +3280,7 @@ void CEditor::Init()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_RenderTools.m_pGraphics = m_pGraphics;
 	m_RenderTools.m_pUI = &m_UI;
-	m_UI.SetGraphics(m_pGraphics, m_pTextRender);
+	m_UI.Init(m_pGraphics, m_pTextRender);
 	m_Map.m_pEditor = this;
 
 	ms_CheckerTexture = Graphics()->LoadTexture("editor/checker.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
