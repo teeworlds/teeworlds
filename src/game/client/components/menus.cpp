@@ -251,6 +251,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	{
 		if(!UI()->MouseButton(0))
 		{
+			s_AtIndex = min(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 		}
