@@ -776,6 +776,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 		if(pPlayer->m_TeamChangeTick > Server()->Tick())
 		{
+			pPlayer->m_LastSetTeam = Server()->Tick();
 			int TimeLeft = (pPlayer->m_TeamChangeTick - Server()->Tick())/Server()->TickSpeed();
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "Time to wait before changing team: %02d:%02d", TimeLeft/60, TimeLeft%60);
