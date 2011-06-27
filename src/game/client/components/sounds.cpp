@@ -65,8 +65,17 @@ void CSounds::OnInit()
 
 void CSounds::OnReset()
 {
-	Sound()->StopAll();
-	ClearQueue();
+	if(Client()->State() >= IClient::STATE_ONLINE)
+	{
+		Sound()->StopAll();
+		ClearQueue();
+	}
+}
+
+void CSounds::OnStateChange(int NewState, int OldState)
+{
+	if(NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK)
+		OnReset();
 }
 
 void CSounds::OnRender()

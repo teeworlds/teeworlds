@@ -759,7 +759,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	{
 		g_Config.m_SndEnable ^= 1;
 		if(g_Config.m_SndEnable)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		{
+			if(g_Config.m_SndMusic)
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		}
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
 		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
