@@ -1058,7 +1058,7 @@ int CMenus::Render()
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = m_DownloadSpeed > 0.0f ? (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed : 0.0f;
+				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
