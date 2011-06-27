@@ -509,7 +509,7 @@ Show chat
 == Sohbeti göster
 
 Show friends only
-== Arkadaşları göster
+== Sadece arkadaşları göster
 
 Show ingame HUD
 == Oyun içi HUD ı göster
