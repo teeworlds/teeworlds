@@ -154,10 +154,19 @@ void CPlayer::Snap(int SnappingClient)
 		StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
 	else StrToInts(&pClientInfo->m_Clan0, 3, GetAccount()->Name());
 	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
-	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
-	pClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
-	pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
-	pClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
+	if (m_StolenSkin && SnappingClient != m_ClientID && g_Config.m_SvSkinStealAction == 1)
+	{
+		StrToInts(&pClientInfo->m_Skin0, 6, "pinky");
+		pClientInfo->m_UseCustomColor = 0;
+		pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
+		pClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
+	} else
+	{
+		StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
+		pClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
+		pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
+		pClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
+	}
 
 	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, id, sizeof(CNetObj_PlayerInfo)));
 	if(!pPlayerInfo)
@@ -422,4 +431,26 @@ void CPlayer::TryRespawn()
 	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
 	m_pCharacter->Spawn(this, SpawnPos);
 	GameServer()->CreatePlayerSpawn(SpawnPos);
+}
+
+void CPlayer::FindDuplicateSkins()
+{
+	m_StolenSkin = 0;
+	if (m_OrigTeeInfos.m_UseCustomColor == 0) return;
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if (i == m_ClientID) continue;
+		if(GameServer()->m_apPlayers[i])
+		{
+			if (GameServer()->m_apPlayers[i]->m_StolenSkin) continue;
+			if ((GameServer()->m_apPlayers[i]->m_OrigTeeInfos.m_UseCustomColor == 1) &&
+			(GameServer()->m_apPlayers[i]->m_OrigTeeInfos.m_ColorFeet == m_OrigTeeInfos.m_ColorFeet) &&
+			(GameServer()->m_apPlayers[i]->m_OrigTeeInfos.m_ColorBody == m_OrigTeeInfos.m_ColorBody) &&
+			!str_comp(GameServer()->m_apPlayers[i]->m_TeeInfos.m_SkinName, m_TeeInfos.m_SkinName))
+			{
+				m_StolenSkin = 1;
+				return;
+			}
+		}
+	}
 }

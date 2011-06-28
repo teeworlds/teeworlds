@@ -104,6 +104,8 @@ MACRO_CONFIG_INT(SvRaceFinishReward, sv_finish_reward, 20, 0, 1000, CFGFLAG_SERV
 MACRO_CONFIG_INT(SvRegisterMessageInterval, sv_register_message_interval, 120, 0, 1000, CFGFLAG_SERVER, "Min. seconds between 'pls register' chat msgs")
 MACRO_CONFIG_INT(SvLoginClan, sv_login_clan, 0, 0, 1, CFGFLAG_SERVER, "Display login in place of clan tag")
 
+MACRO_CONFIG_INT(SvSkinStealAction, sv_skinstealaction, 0, 0, 1, CFGFLAG_SERVER, "How to punish skin stealing (currently only 1 = force pinky)")
+
 MACRO_CONFIG_INT(SvIntFree, sv_int_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for interacted->free transition")
 MACRO_CONFIG_INT(SvBlockedFree, sv_blocked_free, 2000, 0, 10000, CFGFLAG_SERVER, "Milliseconds for blocked->free transition")
 MACRO_CONFIG_INT(SvFrozenInt, sv_frozen_int, 300, 0, 10000, CFGFLAG_SERVER, "Milliseconds for frozen->interacted transition")

@@ -1029,6 +1029,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->m_OrigTeeInfos.m_UseCustomColor = pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
 			pPlayer->m_OrigTeeInfos.m_ColorBody = pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
 			pPlayer->m_OrigTeeInfos.m_ColorFeet = pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
+			pPlayer->FindDuplicateSkins();
 			//dbg_msg("player", "body: %x, feet: %x", pMsg->m_ColorBody, pMsg->m_ColorFeet);
 		}
 		m_pController->OnPlayerInfoChange(pPlayer);
