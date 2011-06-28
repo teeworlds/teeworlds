@@ -225,7 +225,7 @@ void CPlayer::OverrideColors(int Color)
 		m_TeeInfos.m_ColorBody = m_OrigTeeInfos.m_ColorBody;	
 		m_TeeInfos.m_ColorFeet = m_OrigTeeInfos.m_ColorFeet;	
 	}
-	else
+	else if (g_Config.m_SvOverrideColor)
 	{
 		Ch = (m_TeeInfos.m_UseCustomColor != 1)
 			|| (m_TeeInfos.m_ColorBody != Color)
