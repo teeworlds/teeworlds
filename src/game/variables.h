@@ -86,6 +86,7 @@ MACRO_CONFIG_STR(SvAnnouncement, sv_announcement, 255, "", CFGFLAG_SERVER, "")
 MACRO_CONFIG_INT(SvAnnouncementInterval, sv_announcement_interval, 5, 1, 300, CFGFLAG_SERVER, "")
 
 MACRO_CONFIG_INT(SvScoringDebug, sv_scoring_debug, 0, 0, 1, CFGFLAG_SERVER, "Include scoring debug info in players' names")
+MACRO_CONFIG_INT(SvScoringDebugLog, sv_scoring_debug_log, 0, 0, 1, CFGFLAG_SERVER, "Include scoring debug info in log")
 
 MACRO_CONFIG_INT(SvVoteSpectate, sv_vote_spectate, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to move players to spectators")
 MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to kick players")
