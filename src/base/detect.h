@@ -78,7 +78,12 @@
 
 /* use gcc endianness definitions when available */
 #if defined(__GNUC__) && !defined(__APPLE__)
-	#include <endian.h>
+	#if defined(__FreeBSD__) || defined(__OpenBSD__)
+		#include <sys/endian.h>
+	#else
+		#include <endian.h>
+	#endif
+
 	#if __BYTE_ORDER == __LITTLE_ENDIAN
 		#define CONF_ARCH_ENDIAN_LITTLE 1
 	#elif __BYTE_ORDER == __BIG_ENDIAN
