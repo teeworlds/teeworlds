@@ -20,11 +20,19 @@ public:
 	void OnInit();
 
 	int Num() const;
-	const CCountryFlag *Get(int Index) const;
-	int Find(int CountryCode) const;
+	const CCountryFlag *GetByCountryCode(int CountryCode) const;
+	const CCountryFlag *GetByIndex(int Index) const;
+	//int Find(int CountryCode) const;
 
 private:
+	enum
+	{
+		CODE_LB=-1,
+		CODE_UB=999,
+		CODE_RANGE=CODE_UB-CODE_LB+1,
+	};
 	sorted_array<CCountryFlag> m_aCountryFlags;
+	int m_CodeIndexLUT[CODE_RANGE];
 
 	void LoadCountryflagsIndexfile();
 };

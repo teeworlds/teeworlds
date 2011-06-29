@@ -663,6 +663,9 @@ Demofile: %s
 Play background music
 == 
 
+Player country:
+== 
+
 Spectate next
 == 
 

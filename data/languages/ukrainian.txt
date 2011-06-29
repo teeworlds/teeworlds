@@ -591,6 +591,9 @@ Parent Folder
 Play background music
 == 
 
+Player country:
+== 
+
 Player options
 == 
 

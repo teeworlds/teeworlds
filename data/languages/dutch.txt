@@ -669,6 +669,9 @@ no limit
 Demofile: %s
 == 
 
+Player country:
+== 
+
 Strict gametype filter
 == 
 
