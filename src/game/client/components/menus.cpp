@@ -209,7 +209,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 
 			for(int i = 1; i <= Len; i++)
 			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset + 10 > MxRel)
+				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset > MxRel)
 				{
 					s_AtIndex = i - 1;
 					break;
