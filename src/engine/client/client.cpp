@@ -1149,7 +1149,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			str_copy(Info.m_aClients[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aName));
 			str_copy(Info.m_aClients[i].m_aClan, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aClan));
-			Info.m_aClients[i].m_Country = GameClient()->GetCountryIndex(str_toint(Up.GetString()));
+			Info.m_aClients[i].m_Country = str_toint(Up.GetString());
 			Info.m_aClients[i].m_Score = str_toint(Up.GetString());
 			Info.m_aClients[i].m_Player = str_toint(Up.GetString()) != 0 ? true : false;
 		}

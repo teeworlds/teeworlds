@@ -186,40 +186,57 @@ void CServerBrowser::Filter()
 			Filtered = 1;
 		else if(!g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
 			Filtered = 1;
-		else if(g_Config.m_BrFilterString[0] != 0)
+		else
 		{
-			int MatchFound = 0;
-
-			m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
-
-			// match against server name
-			if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
+			if(g_Config.m_BrFilterCountry)
 			{
-				MatchFound = 1;
-				m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
-			}
-
-			// match against players
-			for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
-			{
-				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
-					str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
+				Filtered = 1;
+				// match against player country
+				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
 				{
-					MatchFound = 1;
-					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
-					break;
+					if(m_ppServerlist[i]->m_Info.m_aClients[p].m_Country == g_Config.m_BrFilterCountryIndex)
+					{
+						Filtered = 0;
+						break;
+					}
 				}
 			}
 
-			// match against map
-			if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
+			if(!Filtered && g_Config.m_BrFilterString[0] != 0)
 			{
-				MatchFound = 1;
-				m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
-			}
+				int MatchFound = 0;
 
-			if(!MatchFound)
-				Filtered = 1;
+				m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
+
+				// match against server name
+				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
+				{
+					MatchFound = 1;
+					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
+				}
+
+				// match against players
+				for(p = 0; p < m_ppServerlist[i]->m_Info.m_NumClients; p++)
+				{
+					if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
+						str_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
+					{
+						MatchFound = 1;
+						m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
+						break;
+					}
+				}
+
+				// match against map
+				if(str_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
+				{
+					MatchFound = 1;
+					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
+				}
+
+				if(!MatchFound)
+					Filtered = 1;
+			}
 		}
 
 		if(Filtered == 0)
@@ -252,7 +269,8 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterPure<<11;
 	i |= g_Config.m_BrFilterPureMap<<12;
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
-	i |= g_Config.m_BrFilterPing<<18;
+	i |= g_Config.m_BrFilterCountry<<14;
+	i |= g_Config.m_BrFilterPing<<15;
 	return i;
 }
 

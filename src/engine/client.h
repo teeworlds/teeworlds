@@ -159,7 +159,6 @@ public:
 	virtual int OnSnapInput(int *pData) = 0;
 
 	virtual const char *GetItemName(int Type) = 0;
-	virtual int GetCountryIndex(int Code) = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
 

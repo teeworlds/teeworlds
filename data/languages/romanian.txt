@@ -672,5 +672,8 @@ no limit
 
 ##### needs translation #####
 
+Player country:
+== 
+
 ##### old translations #####
 

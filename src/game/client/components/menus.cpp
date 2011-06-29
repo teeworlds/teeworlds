@@ -27,6 +27,7 @@
 #include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
+#include "countryflags.h"
 #include "menus.h"
 #include "skins.h"
 
@@ -1096,6 +1097,66 @@ int CMenus::Render()
 			static int s_Button = 0;
 			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EscapePressed || m_EnterPressed)
 				m_Popup = POPUP_FIRST_LAUNCH;
+		}
+		else if(m_Popup == POPUP_COUNTRY)
+		{
+			Box = Screen;
+			Box.VMargin(150.0f, &Box);
+			Box.HMargin(150.0f, &Box);
+			Box.HSplitTop(20.f, &Part, &Box);
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Box.HSplitBottom(20.f, &Box, 0);
+			Box.VMargin(20.0f, &Box);
+			
+			static int ActSelection = -2;
+			if(ActSelection == -2)
+				ActSelection = g_Config.m_BrFilterCountryIndex;
+			static float s_ScrollValue = 0.0f;
+			int OldSelected = -1;
+			UiDoListboxStart(&s_ScrollValue, &Box, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
+
+			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
+			{
+				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+				if(pEntry->m_CountryCode == ActSelection)
+					OldSelected = i;
+
+				CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
+				if(Item.m_Visible)
+				{
+					Item.m_Rect.Margin(10.0f, &Item.m_Rect);
+					float OldWidth = Item.m_Rect.w;
+					Item.m_Rect.w = Item.m_Rect.h*2;
+					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
+					Graphics()->TextureSet(pEntry->m_Texture);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+				}
+			}
+
+			const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+			if(OldSelected != NewSelected)
+				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
+
+			Part.VMargin(120.0f, &Part);
+
+			static int s_Button = 0;
+			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EnterPressed)
+			{
+				g_Config.m_BrFilterCountryIndex = ActSelection;
+				Client()->ServerBrowserUpdate();
+				m_Popup = POPUP_NONE;
+			}
+
+			if(m_EscapePressed)
+			{
+				ActSelection = g_Config.m_BrFilterCountryIndex;
+				m_Popup = POPUP_NONE;
+			}
 		}
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{

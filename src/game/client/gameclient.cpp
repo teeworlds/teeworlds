@@ -90,17 +90,6 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
 const char *CGameClient::GetItemName(int Type) { return m_NetObjHandler.GetObjName(Type); }
-int CGameClient::GetCountryIndex(int Code)
-{
-	int Index = g_GameClient.m_pCountryFlags->Find(Code);
-	if(Index < 0)
-	{
-		Index = g_GameClient.m_pCountryFlags->Find(-1);
-		if(Index < 0)
-			Index = 0;
-	}
-	return Index;
-}
 
 void CGameClient::OnConsoleInit()
 {
@@ -696,7 +685,7 @@ void CGameClient::OnNewSnapshot()
 				int ClientID = Item.m_ID;
 				IntsToStr(&pInfo->m_Name0, 4, m_aClients[ClientID].m_aName);
 				IntsToStr(&pInfo->m_Clan0, 3, m_aClients[ClientID].m_aClan);
-				m_aClients[ClientID].m_Country = GetCountryIndex(pInfo->m_Country);
+				m_aClients[ClientID].m_Country = pInfo->m_Country;
 				IntsToStr(&pInfo->m_Skin0, 6, m_aClients[ClientID].m_aSkinName);
 
 				m_aClients[ClientID].m_UseCustomColor = pInfo->m_UseCustomColor;

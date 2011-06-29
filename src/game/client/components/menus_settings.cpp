@@ -208,10 +208,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
-		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->Get(i);
-		if(pEntry == 0)
-			continue;
-
+		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
@@ -234,7 +231,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
 	if(OldSelected != NewSelected)
 	{
-		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->Get(NewSelected)->m_CountryCode;
+		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
 		m_NeedSendinfo = true;
 	}
 }
