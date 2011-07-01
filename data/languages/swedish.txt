@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -179,7 +178,7 @@ Error loading demo
 == Kunde inte ladda demot
 
 FSAA samples
-== FSAA samplingar
+== FSAA-samplingar
 
 Favorite
 == Favorit
@@ -239,7 +238,7 @@ Hammer
 == Hammare
 
 Has people playing
-== Har folk som spelar
+== Inte tom
 
 High Detail
 == Extra detaljer
@@ -296,7 +295,7 @@ MOTD
 == Meddelande
 
 Map
-== Karta
+== Bana
 
 Map:
 == Bana
@@ -497,7 +496,7 @@ Server info
 == Serverinfo
 
 Server not full
-== Inte full server
+== Lediga platser
 
 Settings
 == Inställningar
@@ -506,7 +505,7 @@ Shotgun
 == Hagelgevär
 
 Show chat
-== Visa chatt
+== Visa chatten
 
 Show friends only
 == Visa kompisar
@@ -533,7 +532,7 @@ Sound error
 == Ljudfel
 
 Sound volume
-== Ljud volym
+== Volym
 
 Spectate
 == Åskåda
@@ -566,7 +565,7 @@ Team chat
 == Lagchatt
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworld %s är släppt! Ladda ner det på www.teeworlds.com!
+== Teeworlds %s är ute nu! Ladda ner det från www.teeworlds.com.
 
 Texture Compression
 == Texturkompression
@@ -575,7 +574,7 @@ The audio device couldn't be initialised.
 == Ljudet kunde inte startas
 
 The server is running a non-standard tuning on a pure game type.
-== Denna server kör inte standardinställningar på standard speltyp.
+== Denna server kör inte standardinställningar på en reserverad speltyp.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
 == Det finns en osparad bana i redigeraden, du kanske vill spara den innan du avslutar.
@@ -605,13 +604,13 @@ Unable to rename the demo
 == Kunde inte byta namn på demot
 
 Use sounds
-== Använd ljudeffekter
+== Aktivera ljudeffekter
 
 Use team colors for name plates
 == Använd lagfärger i namnskyltar
 
 V-Sync
-== V-Sync
+== V-Synk
 
 Version
 == Version
@@ -647,7 +646,7 @@ Yes
 == Ja
 
 You must restart the game for all settings to take effect.
-== Du måste starta om spelet för att ändringarna skall gälla.
+== Du måste starta om spelet för att ändringarna skall verkställas.
 
 Your skin
 == Ditt skin
@@ -655,25 +654,23 @@ Your skin
 no limit
 == Ingen gräns
 
-##### needs translation #####
-
 Demofile: %s
-== 
+== Demofil: %s
 
 Play background music
-== 
+== Aktivera bakgrundsmusik
 
 Player country:
-== 
+== Land
 
 Spectate next
-== 
+== Se på nästa
 
 Spectate previous
-== 
+== Se på föregående
 
 Strict gametype filter
-== 
+== Strikt speltypsfilter
 
 ##### old translations #####
 
