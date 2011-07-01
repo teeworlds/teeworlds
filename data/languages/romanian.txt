@@ -397,6 +397,9 @@ Play background music
 Player
 == Jucător
 
+Player country:
+== Țara jucătorului:
+
 Player options
 == Opțiuni jucător
 
@@ -671,9 +674,6 @@ no limit
 == fără limită
 
 ##### needs translation #####
-
-Player country:
-== 
 
 ##### old translations #####
 
