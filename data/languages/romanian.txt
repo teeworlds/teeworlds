@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -588,6 +587,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 
 Texture Compression
 == Compresie texturi
+Player country:
+== 
+
 
 The audio device couldn't be initialised.
 == Dispozitivul audio nu a putut fi inițializat.
