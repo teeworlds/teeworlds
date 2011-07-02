@@ -344,6 +344,20 @@ void CServer::GetClientAddr(int ClientID, char *pAddrStr, int Size)
 	}
 }
 
+bool CServer::AddrMatch(int ClientID1, int ClientID2)
+{
+	if(ClientID1 >= 0 && ClientID1 < MAX_CLIENTS && m_aClients[ClientID1].m_State == CClient::STATE_INGAME
+		&& ClientID2 >= 0 && ClientID2 < MAX_CLIENTS && m_aClients[ClientID2].m_State == CClient::STATE_INGAME)
+	{
+		NETADDR Addr1 = m_NetServer.ClientAddr(ClientID1);
+		Addr1.port = 0;
+		NETADDR Addr2 = m_NetServer.ClientAddr(ClientID2);
+		Addr2.port = 0;
+		return net_addr_comp(&Addr1, &Addr2) == 0;
+	}
+	else
+		return false;
+}
 
 const char *CServer::ClientName(int ClientID)
 {

@@ -414,11 +414,6 @@ void CGameContext::OnTick()
 			int Total = 0, Yes = 0, No = 0;
 			if(m_VoteUpdate)
 			{
-				// count votes
-				char aaBuf[MAX_CLIENTS][NETADDR_MAXSTRSIZE] = {{0}};
-				for(int i = 0; i < MAX_CLIENTS; i++)
-					if(m_apPlayers[i])
-						Server()->GetClientAddr(i, aaBuf[i], NETADDR_MAXSTRSIZE);
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
@@ -431,7 +426,7 @@ void CGameContext::OnTick()
 					// check for more players with the same ip (only use the vote of the one who voted first)
 					for(int j = i+1; j < MAX_CLIENTS; ++j)
 					{
-						if(!m_apPlayers[j] || aVoteChecked[j] || str_comp(aaBuf[j], aaBuf[i]))
+						if(!m_apPlayers[j] || aVoteChecked[j] || Server()->AddrMatch(j, i))
 							continue;
 
 						aVoteChecked[j] = true;
