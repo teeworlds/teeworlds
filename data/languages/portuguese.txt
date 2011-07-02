@@ -397,6 +397,9 @@ Play background music
 Player
 == Jogador
 
+Player country:
+== País do jogador:
+
 Player options
 == Opções do jogador
 
@@ -563,7 +566,7 @@ Standard map
 == Mapa padrão
 
 Stop record
-== Parar de gravar
+== Parar a gravação
 
 Strict gametype filter
 == Tipo de jogo exato
@@ -671,9 +674,6 @@ no limit
 == sem limite
 
 ##### needs translation #####
-
-Player country:
-== 
 
 ##### old translations #####
 
