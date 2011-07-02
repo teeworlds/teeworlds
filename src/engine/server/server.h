@@ -143,6 +143,7 @@ public:
 	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
+	bool AddrMatch(int ClientID1, int ClientID2);
 	const char *ClientName(int ClientID);
 	const char *ClientClan(int ClientID);
 	int ClientCountry(int ClientID);

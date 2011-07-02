@@ -836,8 +836,24 @@ void CCharacter::Snap(int SnappingClient)
 
 	pCharacter->m_Direction = m_Input.m_Direction;
 
-	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
-		(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->m_SpectatorID))
+	bool ShowInfo = false;
+	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1)
+		ShowInfo = true;
+	else if(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->m_SpectatorID)
+	{
+		ShowInfo = true;
+		// check if the player is also playing with a second client
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && Server()->AddrMatch(SnappingClient, i))
+			{
+				ShowInfo = false;
+				break;
+			}
+		}
+	}
+
+	if(ShowInfo)
 	{
 		pCharacter->m_Health = m_Health;
 		pCharacter->m_Armor = m_Armor;
