@@ -53,6 +53,13 @@ int CUI::MouseInside(const CUIRect *r)
 	return 0;
 }
 
+void CUI::ConvertMouseMove(float *x, float *y)
+{
+	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
+	*x = *x*Fac;
+	*y = *y*Fac;
+}
+
 CUIRect *CUI::Screen()
 {
 	float Aspect = Graphics()->ScreenAspect();
