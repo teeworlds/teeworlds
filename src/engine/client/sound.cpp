@@ -31,6 +31,7 @@ struct CSample
 	int m_Channels;
 	int m_LoopStart;
 	int m_LoopEnd;
+	int m_PausedAt;
 };
 
 struct CChannel
@@ -393,6 +394,7 @@ int CSound::LoadWV(const char *pFilename)
 		pSample->m_NumFrames = m_aSamples;
 		pSample->m_LoopStart = -1;
 		pSample->m_LoopEnd = -1;
+		pSample->m_PausedAt = 0;
 	}
 	else
 	{
@@ -446,7 +448,10 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 	{
 		m_aVoices[VoiceID].m_pSample = &m_aSamples[SampleID];
 		m_aVoices[VoiceID].m_pChannel = &m_aChannels[ChannelID];
-		m_aVoices[VoiceID].m_Tick = 0;
+		if(Flags & FLAG_LOOP)
+			m_aVoices[VoiceID].m_Tick = m_aSamples[SampleID].m_PausedAt;
+		else
+			m_aVoices[VoiceID].m_Tick = 0;
 		m_aVoices[VoiceID].m_Vol = 255;
 		m_aVoices[VoiceID].m_Flags = Flags;
 		m_aVoices[VoiceID].m_X = (int)x;
@@ -475,7 +480,13 @@ void CSound::Stop(int SampleID)
 	for(int i = 0; i < NUM_VOICES; i++)
 	{
 		if(m_aVoices[i].m_pSample == pSample)
+		{
+			if(m_aVoices[i].m_Flags & FLAG_LOOP)
+				m_aVoices[i].m_pSample->m_PausedAt = m_aVoices[i].m_Tick;
+			else
+				m_aVoices[i].m_pSample->m_PausedAt = 0;
 			m_aVoices[i].m_pSample = 0;
+		}
 	}
 	lock_release(m_SoundLock);
 }
@@ -486,6 +497,13 @@ void CSound::StopAll()
 	lock_wait(m_SoundLock);
 	for(int i = 0; i < NUM_VOICES; i++)
 	{
+		if(m_aVoices[i].m_pSample)
+		{
+			if(m_aVoices[i].m_Flags & FLAG_LOOP)
+				m_aVoices[i].m_pSample->m_PausedAt = m_aVoices[i].m_Tick;
+			else
+				m_aVoices[i].m_pSample->m_PausedAt = 0;
+		}
 		m_aVoices[i].m_pSample = 0;
 	}
 	lock_release(m_SoundLock);
