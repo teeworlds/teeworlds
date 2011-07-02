@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -143,6 +144,9 @@ Delete demo
 
 Demo details
 == Demoinformation
+
+Demofile: %s
+== Demofil: %s
 
 Demos
 == Demon
@@ -387,8 +391,14 @@ Pistol
 Play
 == Spela
 
+Play background music
+== Aktivera bakgrundsmusik
+
 Player
 == Spelare
+
+Player country:
+== Land
 
 Player options
 == Spelaralternativ
@@ -537,6 +547,12 @@ Sound volume
 Spectate
 == Åskåda
 
+Spectate next
+== Se på nästa
+
+Spectate previous
+== Se på föregående
+
 Spectator mode
 == Åskådarläge
 
@@ -551,6 +567,9 @@ Standard map
 
 Stop record
 == Sluta spela in
+
+Strict gametype filter
+== Strikt speltypsfilter
 
 Sudden Death
 == Plötslig död
@@ -654,23 +673,7 @@ Your skin
 no limit
 == Ingen gräns
 
-Demofile: %s
-== Demofil: %s
-
-Play background music
-== Aktivera bakgrundsmusik
-
-Player country:
-== Land
-
-Spectate next
-== Se på nästa
-
-Spectate previous
-== Se på föregående
-
-Strict gametype filter
-== Strikt speltypsfilter
+##### needs translation #####
 
 ##### old translations #####
 
