@@ -1,11 +1,10 @@
-
 ##### translated strings #####
 
 %d Bytes
 == %d Bajtů
 
 %d of %d servers, %d players
-== %d z %d serverů, %d hráčů
+== Serverů: %d z %d, Hráčů: %d
 
 %d%% loaded
 == %d%% načteno
@@ -53,7 +52,7 @@ Always show name plates
 == Vždy zobrazovat
 
 Are you sure that you want to delete the demo?
-== Opravdu chcete smazat toto demo?
+== Opravdu chcete smazat tento záznam?
 
 Are you sure that you want to quit?
 == Opravdu chcete ukončit Teeworlds?
@@ -65,7 +64,7 @@ As this is the first time you launch the game, please enter your nick name below
 == Jelikož je toto Vaše první spuštění hry, zadejte prosím svou přezdívku. Než začnete hrát, doporučujeme si upravit nastavení tak, aby Vám vyhovovalo.
 
 Automatically record demos
-== Nahrávat dema automaticky
+== Automaticky nahrávat záznamy
 
 Automatically take game over screenshot
 == Na konci kola vyfotit obrazovku
@@ -116,7 +115,7 @@ Controls
 == Ovládání
 
 Count players only
-== Započítat hrajíci hráče
+== Započítat hrající hráče
 
 Country
 == Národnost
@@ -140,13 +139,16 @@ Delete
 == Smazat
 
 Delete demo
-== Smazat demo
+== Smazat záznam
 
 Demo details
 == Detaily záznamu:
 
+Demofile: %s
+== Soubor záznamu: %s
+
 Demos
-== Dema
+== Záznamy
 
 Disconnect
 == Odpojit
@@ -176,7 +178,7 @@ Error
 == Chyba
 
 Error loading demo
-== Chyba načítání dema
+== Chyba načítání záznamu
 
 FSAA samples
 == FSAA vzorkování
@@ -218,7 +220,7 @@ Game info
 == Hra
 
 Game over
-== Ukončit hru
+== Konec hry
 
 Game type
 == Herní mód
@@ -260,7 +262,7 @@ Internet
 == Internet
 
 Invalid Demo
-== Neplatné demo
+== Neplatný záznam
 
 Join blue
 == Modří
@@ -305,7 +307,7 @@ Max Screenshots
 == Maximální počet vyfocených obrazovek
 
 Max demos
-== Maximální počet dem
+== Maximální počet záznamů
 
 Maximum ping:
 == Maximální ping:
@@ -329,7 +331,7 @@ Movement
 == Pohyb
 
 Mute when not active
-== Při nečinosti ztlumit zvuk
+== Při nečinnosti ztlumit zvuk
 
 Name
 == Jméno
@@ -359,7 +361,7 @@ No password
 == Bez hesla
 
 No servers found
-== Žádny server nenalezen
+== Žádný server nenalezen
 
 No servers match your filter criteria
 == Žádný server neodpovídá požadavkům filtru
@@ -388,8 +390,14 @@ Pistol
 Play
 == Přehrát
 
+Play background music
+== Přehrávat hudbu na pozadí
+
 Player
 == Hráč
+
+Player country:
+== Národnost hráče:
 
 Player options
 == Nastavení hráčů
@@ -422,7 +430,7 @@ Reason:
 == Důvod:
 
 Record demo
-== Záznam dema
+== Zaznamenat
 
 Red team
 == Červení
@@ -491,13 +499,13 @@ Server details
 == Detaily serveru
 
 Server filter
-== Filtr serverů:
+== Filtr serverů
 
 Server info
 == Informace
 
 Server not full
-== Možnost připojení
+== Možnost připojit se
 
 Settings
 == Nastavení
@@ -538,6 +546,12 @@ Sound volume
 Spectate
 == Pozorovat
 
+Spectate next
+== Pozorovat dalšího
+
+Spectate previous
+== Pozorovat předchozího
+
 Spectator mode
 == Nastavit pozorování
 
@@ -551,13 +565,16 @@ Standard map
 == Základní mapy
 
 Stop record
-== Zastavit nahránání
+== Ukončit záznam
+
+Strict gametype filter
+== Pouze tento herní mód
 
 Sudden Death
 == Náhlá smrt
 
 Switch weapon on pickup
-== Automaticky přepínat zbraň na nově získanou
+== Přehazovat zbraň na nově sebranou
 
 Team
 == Týmu
@@ -566,7 +583,7 @@ Team chat
 == Týmový chat
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Nejnovější verze Teeworlds je %s! Stáhněte si ji na www.teeworlds.com!
+== Vyšlo nové Teeworlds %s! Stáhněte si ji na www.teeworlds.com!
 
 Texture Compression
 == Komprimované textury
@@ -599,7 +616,7 @@ UI Color
 == Barvy uživatelského rozhraní
 
 Unable to delete the demo
-== Demo se nepodařilo smazat
+== Záznam se nepodařilo smazat
 
 Unable to rename the demo
 == Záznam nelze přejmenovat
@@ -608,7 +625,7 @@ Use sounds
 == Povolit zvuk
 
 Use team colors for name plates
-== Obarvit jména hráčů podle týmů
+== Obarvit jména hráčů podle týmu
 
 V-Sync
 == Vertikální synchronizace
@@ -641,7 +658,7 @@ Weapon
 == Zbraně
 
 Welcome to Teeworlds
-== Vítejte v Teeworls
+== Vítejte v Teeworlds
 
 Yes
 == Ano
@@ -656,24 +673,6 @@ no limit
 == neomezeno
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Player country:
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 
