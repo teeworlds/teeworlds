@@ -397,6 +397,9 @@ Play background music
 Player
 == Spieler
 
+Player country:
+== Spielerland:
+
 Player options
 == Spieleroptionen
 
@@ -671,9 +674,6 @@ no limit
 == Keine Begrenzung
 
 ##### needs translation #####
-
-Player country:
-== 
 
 ##### old translations #####
 
