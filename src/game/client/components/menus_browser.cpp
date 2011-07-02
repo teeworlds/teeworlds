@@ -582,17 +582,21 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	static int s_ClearButton = 0;
 	if(DoButton_Menu(&s_ClearButton, Localize("Reset filter"), 0, &Button))
 	{
+		g_Config.m_BrFilterString[0] = 0;
 		g_Config.m_BrFilterFull = 0;
 		g_Config.m_BrFilterEmpty = 0;
+		g_Config.m_BrFilterSpectators = 0;
+		g_Config.m_BrFilterFriends = 0;
+		g_Config.m_BrFilterCountry = 0;
+		g_Config.m_BrFilterCountryIndex = -1;
 		g_Config.m_BrFilterPw = 0;
 		g_Config.m_BrFilterPing = 999;
 		g_Config.m_BrFilterGametype[0] = 0;
+		g_Config.m_BrFilterGametypeStrict = 0;
 		g_Config.m_BrFilterServerAddress[0] = 0;
-		g_Config.m_BrFilterCompatversion = 1;
-		g_Config.m_BrFilterString[0] = 0;
 		g_Config.m_BrFilterPure = 1;
 		g_Config.m_BrFilterPureMap = 1;
-		g_Config.m_BrFilterGametypeStrict = 0;
+		g_Config.m_BrFilterCompatversion = 1;
 		Client()->ServerBrowserUpdate();
 	}
 }
