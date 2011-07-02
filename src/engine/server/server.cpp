@@ -317,7 +317,14 @@ int CServer::Init()
 		m_aClients[i].m_Snapshots.Init();
 	}
 
+	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
+	{
+		m_aEconClients[i].m_State = CEconClient::STATE_EMPTY;
+	}
+
 	m_CurrentGameTick = 0;
+
+	m_UseEcon = 0;
 
 	return 0;
 }
@@ -611,6 +618,30 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	return 0;
 }
 
+int CServer::NewConsoleClientCallback(int EconID, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	pThis->m_aEconClients[EconID].m_State = CEconClient::STATE_CONNECTED;
+	pThis->m_NetConsole.SetTimeout(EconID, g_Config.m_SvEconAuthTimeout);
+	return 0;
+}
+
+int CServer::DelConsoleClientCallback(int EconID, const char *pReason, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+
+	NETADDR Addr = pThis->m_NetConsole.ClientAddr(EconID);
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "econ client dropped. eid=%d addr=%s reason='%s'", EconID, aAddrStr, pReason);
+	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
+
+	pThis->m_aEconClients[EconID].m_State = CEconClient::STATE_EMPTY;
+	return 0;
+}
+
+
 void CServer::SendMap(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
@@ -633,7 +664,12 @@ void CServer::SendRconLine(int ClientID, const char *pLine)
 	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 }
 
-void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
+void CServer::SendEconLine(int EconID, const char *pLine)
+{
+	m_NetConsole.Send(EconID, pLine);
+}
+
+void CServer::SendConsoleLineAuthed(const char *pLine, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
 	static volatile int ReentryGuard = 0;
@@ -646,6 +682,15 @@ void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
 	{
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed >= pThis->m_RconAuthLevel)
 			pThis->SendRconLine(i, pLine);
+	}
+
+	if(pThis->m_UseEcon)
+	{
+		for(i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
+		{
+			if(pThis->m_aEconClients[i].m_State == CEconClient::STATE_AUTHED)
+				pThis->SendEconLine(i, pLine);
+		}
 	}
 
 	ReentryGuard--;
@@ -1084,6 +1129,47 @@ void CServer::PumpNetwork()
 		else
 			ProcessClientPacket(&Packet);
 	}
+
+	if(m_UseEcon)
+		EconPumpNetwork();
+}
+
+void CServer::EconPumpNetwork()
+{
+	m_NetConsole.Update();
+
+	char aBuf[NET_MAX_PACKETSIZE];
+	int EconID;
+
+	while(m_NetConsole.Recv(aBuf, sizeof(aBuf) - 1, &EconID))
+	{
+		dbg_assert(m_aEconClients[EconID].m_State != CEconClient::STATE_EMPTY, "got message from empty slot");
+		if(m_aEconClients[EconID].m_State == CEconClient::STATE_CONNECTED)
+		{
+			if(str_comp(aBuf, g_Config.m_SvRconPassword) == 0)
+			{
+				m_aEconClients[EconID].m_State = CEconClient::STATE_AUTHED;
+				m_NetConsole.Send(EconID, "Authentication successful. Remote console access granted.");
+				m_NetConsole.SetTimeout(EconID, g_Config.m_SvEconTimeout);
+
+				str_format(aBuf, sizeof(aBuf), "EconID=%d authed", EconID);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+			}
+			else
+			{
+				m_NetConsole.Send(EconID, "Wrong password");
+			}
+		}
+		else if(m_aEconClients[EconID].m_State == CEconClient::STATE_AUTHED)
+		{
+			char aFormatted[256];
+			str_format(aFormatted, sizeof(aBuf), "eid=%d cmd='%s'", EconID, aBuf);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aFormatted);
+			m_RconClientID = EconID;
+			Console()->ExecuteLine(aBuf);
+			m_RconClientID = -1;
+		}
+	}
 }
 
 char *CServer::GetMapName()
@@ -1158,7 +1244,7 @@ int CServer::Run()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
-	Console()->RegisterPrintCallback(SendRconLineAuthed, this);
+	Console()->RegisterPrintCallback(SendConsoleLineAuthed, this);
 
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
@@ -1181,7 +1267,6 @@ int CServer::Run()
 		BindAddr.port = g_Config.m_SvPort;
 	}
 
-
 	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
 	{
 		dbg_msg("server", "couldn't open socket. port might already be in use");
@@ -1189,6 +1274,31 @@ int CServer::Run()
 	}
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
+
+	if(g_Config.m_SvEconPort && g_Config.m_SvRconPassword[0])
+	{
+		dbg_msg("econ", "binding econ to %s:%d", g_Config.m_SvEconBindaddr, g_Config.m_SvEconPort);
+		if(g_Config.m_SvEconBindaddr[0] && net_host_lookup(g_Config.m_SvEconBindaddr, &BindAddr, NETTYPE_ALL) == 0)
+		{
+			BindAddr.port = g_Config.m_SvEconPort;
+		}
+		else
+		{
+			mem_zero(&BindAddr, sizeof(BindAddr));
+			BindAddr.type = NETTYPE_ALL;
+			BindAddr.port = g_Config.m_SvEconPort;
+		}
+
+		if(m_NetConsole.Open(BindAddr, 0))
+		{
+			m_NetConsole.SetCallbacks(NewConsoleClientCallback, DelConsoleClientCallback, this);
+			m_UseEcon = 1;
+		}
+		else
+		{
+			dbg_msg("econ", "couldn't open econ socket. port might already be in use");
+		}
+	}
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "server name is '%s'", g_Config.m_SvName);
