@@ -66,14 +66,52 @@ int CFriends::GetFriendState(const char *pName, const char *pClan) const
 	return Result;
 }
 
+bool CFriends::CompWithJokers(const char* pFilter, const char* pStr) const
+{
+	if(str_length(pFilter) < 3 || (pFilter[0] != '*' && pFilter[str_length(pFilter) - 1] != '*'))
+		return (str_comp(pFilter, pStr) != 0);
+	
+	bool AtBegin = pFilter[0] == '*';
+	bool AtEnd = pFilter[str_length(pFilter) - 1] == '*';
+	char pBuf[64];
+			
+	if(AtBegin && !AtEnd)
+	{
+		// *xxx
+		str_copy(pBuf, pFilter + 1, sizeof(pBuf));
+		
+		if(str_find(pStr, pBuf) == pStr + str_length(pStr) - str_length(pBuf))
+			return false;
+		return true;
+	}
+	else if(!AtBegin && AtEnd)
+	{
+		// xxx*
+		str_copy(pBuf, pFilter, sizeof(pBuf));
+		pBuf[str_length(pFilter) - 1] = 0;
+		
+		if(str_find(pStr, pBuf) == pStr)
+			return false;
+		return true;
+	}
+	else
+	{
+		// *xxx*		
+		str_copy(pBuf, pFilter + 1, sizeof(pBuf));
+		pBuf[str_length(pFilter) - 2] = 0;
+		
+		if(str_find(pStr, pBuf))
+			return false;
+		return true;
+	}
+}
+
 bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
 {
-	unsigned NameHash = str_quickhash(pName);
-	unsigned ClanHash = str_quickhash(pClan);
 	for(int i = 0; i < m_NumFriends; ++i)
 	{
-		if(m_aFriends[i].m_ClanHash == ClanHash &&
-			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || m_aFriends[i].m_NameHash == NameHash))
+		if(!CompWithJokers(m_aFriends[i].m_aClan, Clan) &&
+			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || !CompWithJokers(m_aFriends[i].m_aName, pName)))
 			return true;
 	}
 	return false;
