@@ -65,7 +65,13 @@ enum
 	// sent by both
 	NETMSG_PING,
 	NETMSG_PING_REPLY,
-	NETMSG_ERROR
+	NETMSG_ERROR,
+
+	// extra messages, added at the end for compatiblity
+	NETMSG_REQUEST_LIGHT_MAP_DATA,	// client -> server
+	NETMSG_LIGHT_MAP_DATA,		// server -> client
+	NETMSG_REQUEST_IMAGE_DATA,	// client -> server
+	NETMSG_IMAGE_DATA,		// server -> client
 };
 
 // this should be revised

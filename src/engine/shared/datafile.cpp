@@ -248,6 +248,15 @@ bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename
 	return true;
 }
 
+bool CDataFileReader::CheckCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned WantedCrc, unsigned WantedSize)
+{
+	unsigned Crc;
+	unsigned Size;
+	if(!GetCrcSize(pStorage, pFilename, StorageType, &Crc, &Size))
+		return false; // file not found
+	return Crc == WantedCrc && Size == WantedSize;
+}
+
 int CDataFileReader::NumData()
 {
 	if(!m_pDataFile) { return 0; }

@@ -34,7 +34,14 @@ void CMapImages::OnMapLoad()
 		m_aTextures[i] = 0;
 
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
-		if(pImg->m_External)
+		if(pImg->m_External == 2)
+		{
+			char Buf[256];
+			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
+			str_format(Buf, sizeof(Buf), "downloadedmapres/%s.png", pName);
+			m_aTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+		}
+		else if(pImg->m_External)
 		{
 			char Buf[256];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
