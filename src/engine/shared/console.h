@@ -13,6 +13,7 @@ class CConsole : public IConsole
 	public:
 		CCommand *m_pNext;
 		int m_Flags;
+		int m_AccessLevel;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
 	};
@@ -41,10 +42,13 @@ class CConsole : public IConsole
 
 	CExecFile *m_pFirstExec;
 	class IStorage *m_pStorage;
+	int m_AccessLevel;
 
 	static void Con_Chain(IResult *pResult, void *pUserData);
 	static void Con_Echo(IResult *pResult, void *pUserData);
 	static void Con_Exec(IResult *pResult, void *pUserData);
+	static void ConModCommandAccess(IResult *pResult, void *pUser);
+	static void ConModCommandStatus(IConsole::IResult *pResult, void *pUser);
 
 	void ExecuteFileRecurse(const char *pFilename);
 	void ExecuteLineStroked(int Stroke, const char *pStr);
@@ -153,6 +157,8 @@ public:
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void Print(int Level, const char *pFrom, const char *pStr);
+
+	void SetAccessLevel(int AccessLevel) { m_AccessLevel = clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD)); }
 };
 
 #endif

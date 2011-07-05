@@ -1,11 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
+
+#include <base/math.h>
 #include <base/system.h>
-#include <engine/shared/protocol.h>
+
 #include <engine/storage.h>
-#include "console.h"
+#include <engine/shared/protocol.h>
+
 #include "config.h"
+#include "console.h"
 #include "linereader.h"
 
 const char *CConsole::CResult::GetString(unsigned Index)
@@ -247,38 +251,47 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
-		if (!*Result.m_pCommand)
+		if(!*Result.m_pCommand)
 			return;
 
 		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
 		{
-			int IsStrokeCommand = 0;
-			if(Result.m_pCommand[0] == '+')
+			if(pCommand->m_AccessLevel >= m_AccessLevel)
 			{
-				// insert the stroke direction token
-				Result.AddArgument(m_paStrokeStr[Stroke]);
-				IsStrokeCommand = 1;
-			}
+				int IsStrokeCommand = 0;
+				if(Result.m_pCommand[0] == '+')
+				{
+					// insert the stroke direction token
+					Result.AddArgument(m_paStrokeStr[Stroke]);
+					IsStrokeCommand = 1;
+				}
 
-			if(Stroke || IsStrokeCommand)
+				if(Stroke || IsStrokeCommand)
+				{
+					if(ParseArgs(&Result, pCommand->m_pParams))
+					{
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
+						Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+					}
+					else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
+					{
+						m_ExecutionQueue.AddEntry();
+						m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
+						m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
+						m_ExecutionQueue.m_pLast->m_Result = Result;
+					}
+					else
+						pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+				}
+			}
+			else if(Stroke)
 			{
-				if(ParseArgs(&Result, pCommand->m_pParams))
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
-					Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-				}
-				else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
-				{
-					m_ExecutionQueue.AddEntry();
-					m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
-					m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
-					m_ExecutionQueue.m_pLast->m_Result = Result;
-				}
-				else
-					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "Access for command %s denied.", Result.m_pCommand);
+				Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 			}
 		}
 		else if(Stroke)
@@ -294,8 +307,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 
 void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser)
 {
-	CCommand *pCommand;
-	for(pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
 		if(pCommand->m_Flags&FlagMask)
 		{
@@ -307,8 +319,7 @@ void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallbac
 
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
-	CCommand *pCommand;
-	for (pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
 		if(pCommand->m_Flags&FlagMask)
 		{
@@ -381,6 +392,62 @@ void CConsole::Con_Echo(IResult *pResult, void *pUserData)
 void CConsole::Con_Exec(IResult *pResult, void *pUserData)
 {
 	((CConsole*)pUserData)->ExecuteFile(pResult->GetString(0));
+}
+
+void CConsole::ConModCommandAccess(IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[128];
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), CFGFLAG_SERVER);
+	if(pCommand)
+	{
+		if(pResult->NumArguments() == 2)
+		{
+			pCommand->m_AccessLevel = clamp(pResult->GetInteger(1), (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD));
+			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is now %s", pResult->GetString(0), pCommand->m_AccessLevel ? "enabled" : "disabled");
+		}
+		else
+			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is %s", pResult->GetString(0), pCommand->m_AccessLevel ? "enabled" : "disabled");
+	}
+	else
+		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+
+	pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+}
+
+void CConsole::ConModCommandStatus(IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[240];
+	mem_zero(aBuf, sizeof(aBuf));
+	int Used = 0;
+
+	for(CCommand *pCommand = pConsole->m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		if(pCommand->m_Flags&pConsole->m_FlagMask && pCommand->m_AccessLevel == ACCESS_LEVEL_MOD)
+		{
+			int Length = str_length(pCommand->m_pName);
+			if(Used + Length + 2 < (int)(sizeof(aBuf)))
+			{
+				if(Used > 0)
+				{
+					Used += 2;
+					str_append(aBuf, ", ", sizeof(aBuf));
+				}
+				str_append(aBuf, pCommand->m_pName, sizeof(aBuf));
+				Used += Length;
+			}
+			else
+			{
+				pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+				mem_zero(aBuf, sizeof(aBuf));
+				str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
+				Used = Length;
+			}
+		}
+	}
+	if(Used > 0)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 }
 
 struct CIntVariableData
@@ -463,6 +530,7 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 CConsole::CConsole(int FlagMask)
 {
 	m_FlagMask = FlagMask;
+	m_AccessLevel = ACCESS_LEVEL_ADMIN;
 	m_StoreCommands = true;
 	m_paStrokeStr[0] = "0";
 	m_paStrokeStr[1] = "1";
@@ -477,6 +545,9 @@ CConsole::CConsole(int FlagMask)
 	// register some basic commands
 	Register("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
+
+	Register("mod_command", "s?i", CFGFLAG_SERVER, ConModCommandAccess, this, "Specify command accessibility for moderators");
+	Register("mod_status", "", CFGFLAG_SERVER, ConModCommandStatus, this, "List all commands which are accessible for moderators");
 
 	// TODO: this should disappear
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
@@ -524,14 +595,14 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 void CConsole::Register(const char *pName, const char *pParams,
 	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
 {
-	CCommand *pCommand = (CCommand *)mem_alloc(sizeof(CCommand), sizeof(void*));
+	CCommand *pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
 	pCommand->m_pfnCallback = pfnFunc;
 	pCommand->m_pUserData = pUser;
 	pCommand->m_pHelp = pHelp;
 	pCommand->m_pName = pName;
 	pCommand->m_pParams = pParams;
 	pCommand->m_Flags = Flags;
-
+	pCommand->m_AccessLevel = ACCESS_LEVEL_ADMIN;
 
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
