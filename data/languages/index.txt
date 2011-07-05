@@ -37,6 +37,9 @@ polish
 portuguese
 == Português
 
+portuguese_brazilian
+== Português do Brasil
+
 romanian
 == Română
 
