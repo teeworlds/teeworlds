@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -332,7 +331,7 @@ Movement
 == Mișcare
 
 Mute when not active
-== Mută la inactivate
+== Opreşte sunetul la inactivate
 
 Name
 == Nume
