@@ -341,6 +341,8 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_DemoSpecID = SPEC_FREEVIEW;
+	m_FlagDropTick[TEAM_RED] = 0;
+	m_FlagDropTick[TEAM_BLUE] = 0;
 }
 
 
@@ -783,6 +785,20 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pGameDataObj = (const CNetObj_GameData *)pData;
 				m_Snap.m_GameDataSnapID = Item.m_ID;
+				if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_TAKEN)
+				{
+					if(m_FlagDropTick[TEAM_RED] == 0)
+						m_FlagDropTick[TEAM_RED] = Client()->GameTick();
+				}
+				else if(m_FlagDropTick[TEAM_RED] != 0)
+						m_FlagDropTick[TEAM_RED] = 0;
+				if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_TAKEN)
+				{
+					if(m_FlagDropTick[TEAM_BLUE] == 0)
+						m_FlagDropTick[TEAM_BLUE] = Client()->GameTick();
+				}
+				else if(m_FlagDropTick[TEAM_BLUE] != 0)
+						m_FlagDropTick[TEAM_BLUE] = 0;
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;

@@ -108,7 +108,9 @@ void CHud::RenderScoreHud()
 
 				if(GameFlags&GAMEFLAG_FLAGS)
 				{
-					if(FlagCarrier[t] == FLAG_ATSTAND || (FlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick()/10)&1)))
+					int BlinkTimer = (m_pClient->m_FlagDropTick[t] != 0 && 
+										(Client()->GameTick()-m_pClient->m_FlagDropTick[t])/Client()->GameTickSpeed() >= 25) ? 10 : 20;
+					if(FlagCarrier[t] == FLAG_ATSTAND || (FlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick()/BlinkTimer)&1)))
 					{
 						// draw flag
 						Graphics()->BlendNormal();

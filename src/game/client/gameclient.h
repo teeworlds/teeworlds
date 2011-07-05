@@ -89,6 +89,7 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
+	int m_FlagDropTick[2];
 
 	// TODO: move this
 	CTuningParams m_Tuning;
