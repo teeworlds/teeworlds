@@ -252,7 +252,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 							(!m_lFriends[f].m_pFriendInfo->m_aName[0] || NameHash == m_lFriends[f].m_pFriendInfo->m_NameHash))
 						{
 							m_lFriends[f].m_NumFound++;
-							break;
+							if(m_lFriends[f].m_pFriendInfo->m_aName[0])
+								break;
 						}
 					}
 				}
