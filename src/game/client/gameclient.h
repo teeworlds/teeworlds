@@ -97,7 +97,8 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
-	
+	int m_FlagDropTick[2];
+
 	// Race
 	bool m_IsRace;
 	bool m_IsFastCap;
