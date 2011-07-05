@@ -14,7 +14,10 @@ public:
 	{
 		OUTPUT_LEVEL_STANDARD=0,
 		OUTPUT_LEVEL_ADDINFO,
-		OUTPUT_LEVEL_DEBUG
+		OUTPUT_LEVEL_DEBUG,
+
+		ACCESS_LEVEL_ADMIN=0,
+		ACCESS_LEVEL_MOD,
 	};
 
 	// TODO: rework this interface to reduce the amount of virtual calls
@@ -62,6 +65,8 @@ public:
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
+
+	virtual void SetAccessLevel(int AccessLevel) = 0;
 };
 
 extern IConsole *CreateConsole(int FlagMask);
