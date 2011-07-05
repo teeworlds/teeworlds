@@ -591,7 +591,7 @@ int net_udp_close(NETSOCKET sock);
 	Returns:
 		On success it returns an handle to the socket. On failure it returns NETSOCKET_INVALID.
 */
-NETSOCKET net_tcp_create(const NETADDR *a);
+NETSOCKET net_tcp_create(NETADDR bindaddr);
 
 /*
 	Function: net_tcp_listen
@@ -1094,21 +1094,21 @@ int fs_rename(const char *oldname, const char *newname);
 
 	DOCTODO: serp
 */
-int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a);
+int net_tcp_connect_non_blocking(NETSOCKET sock, NETADDR bindaddr);
 
 /*
-	Function: net_tcp_set_non_blocking
+	Function: net_set_non_blocking
 
 	DOCTODO: serp
 */
-int net_tcp_set_non_blocking(NETSOCKET sock);
+int net_set_non_blocking(NETSOCKET sock);
 
 /*
-	Function: net_tcp_set_non_blocking
+	Function: net_set_non_blocking
 
 	DOCTODO: serp
 */
-int net_tcp_set_blocking(NETSOCKET sock);
+int net_set_blocking(NETSOCKET sock);
 
 /*
 	Function: net_errno
