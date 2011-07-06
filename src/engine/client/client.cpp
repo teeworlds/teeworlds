@@ -1199,8 +1199,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int LightMapSize = Unpacker.GetInt();
 			const char *pError = 0;
 
-			dbg_msg("dbg", "mapcrc=%08x, mapsize=%d, lmapcrc=%08x, lmapsize=%d", MapCrc, MapSize, LightMapCrc, LightMapSize);
-
 			m_MapDownload.Reset();
 			for(int i = 0; i < m_NumImageDownloads; i++)
 				m_aImageDownloads[i].Reset();
@@ -1261,13 +1259,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 								m_aImageDownloads[m_NumImageDownloads].m_Size = ImageSize;
 								m_DownloadTotalsize += ImageSize;
 
-								dbg_msg("dbg", "image, name=\"%s\" crc=%08x size=%d", pImageName, ImageCrc, ImageSize);
 								m_NumImageDownloads++;
 							}
 						}
 					}
-					if(!SearchMap(pMapName, LightMapCrc, LightMapSize))
-						m_GotMap = 0;
+					if(SearchMap(pMapName, LightMapCrc, LightMapSize))
+						m_GotMap = 1;
 				}
 
 				if(!pError)
@@ -1281,7 +1278,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					str_copy(m_MapDownload.m_aName, pMapName, sizeof(m_MapDownload.m_aName));
 					m_MapDownload.m_Crc = (m_OldDownload) ? MapCrc : LightMapCrc;
 					m_MapDownload.m_Size = (m_OldDownload) ? MapSize : LightMapSize;
-					m_DownloadTotalsize += (m_OldDownload) ? MapSize : LightMapSize;
+					if(!m_GotMap)
+						m_DownloadTotalsize += (m_OldDownload) ? MapSize : LightMapSize;
 
 					TryLoadDownloadMap();
 				}
@@ -1295,8 +1293,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int Size = Unpacker.GetInt();
 			const unsigned char *pData = Unpacker.GetRaw(Size);
 
-			dbg_msg("dbg", "got chunk, id=%d size=%d mapcrc=%08x last=%d, lmap=%d", Chunk, Size, MapCrc, Last, Msg == NETMSG_LIGHT_MAP_DATA);
-
 			// check for errors
 			if(Unpacker.Error() || m_GotMap || Size <= 0 || MapCrc != m_MapDownload.m_Crc || Chunk != m_MapDownload.m_Chunk || !m_MapDownload.m_File)
 				return;
@@ -1308,7 +1304,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 			if(Last)
 			{
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "map download complete");
 
 				if(m_MapDownload.m_File)
 					io_close(m_MapDownload.m_File);
@@ -1344,9 +1340,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int Size = Unpacker.GetInt();
 			const unsigned char *pData = Unpacker.GetRaw(Size);
 			int i = m_NumImageDownloads - 1;
-
-			dbg_msg("dbg", "got image chunk, name=\"%s\" id=%d size=%d crc=%08x last=%d", pImageName, Chunk, Size, ImageCrc, Last);
-			dbg_msg("dbg", "own image data, name=\"%s\" size=%d crc=%08x error=%d", m_aImageDownloads[i].m_aName, m_aImageDownloads[i].m_Size, m_aImageDownloads[i].m_Crc, Unpacker.Error());
 
 			// check for errors
 			if(Unpacker.Error() || Size <= 0 || ImageCrc != m_aImageDownloads[i].m_Crc || Chunk != m_aImageDownloads[i].m_Chunk || !m_aImageDownloads[i].m_File || str_comp(pImageName, m_aImageDownloads[i].m_aName) != 0)
@@ -1384,7 +1377,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(g_Config.m_Debug)
 				{
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_aImageDownloads[i].m_Chunk);
+					str_format(aBuf, sizeof(aBuf), "requested chunk %d of image %s", m_aImageDownloads[i].m_Chunk, m_aImageDownloads[i].m_aName);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 				}
 			}
@@ -1713,20 +1706,22 @@ bool CClient::SearchImage(const char *pName, int Crc, int Size)
 {
 	char aBuf[256];
 
+	dbg_msg("dbg", "check image, name=\"%s\" crc=%08x size=%d", pName, Crc, Size);
+
 	// try the downloaded mapres
 	str_format(aBuf, sizeof(aBuf), "downloadedmapres/%s_%08x.png", pName, Crc);
 	if(CDataFileReader::CheckCrcSize(m_pStorage, aBuf, IStorage::TYPE_ALL, Crc, Size))
 		return true;
 
 	// try the normal mapres folder
-	str_format(aBuf, sizeof(aBuf), "mapres/%s.png", pName);
+	str_format(aBuf, sizeof(aBuf), "data/mapres/%s.png", pName);
 	if(CDataFileReader::CheckCrcSize(m_pStorage, aBuf, IStorage::TYPE_ALL, Crc, Size))
 		return true;
 
 	// search for the mapres within subfolders
 	char aFilename[128];
 	str_format(aFilename, sizeof(aFilename), "%s.png", pName);
-	if(Storage()->FindFile(aFilename, "mapres", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
+	if(Storage()->FindFile(aFilename, "data/mapres", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
 		if(CDataFileReader::CheckCrcSize(m_pStorage, aBuf, IStorage::TYPE_ALL, Crc, Size))
 			return true;
 

@@ -625,7 +625,6 @@ void CServer::SendMap(int ClientID)
 	Msg.AddInt(m_CurrentLightMap.m_Size);
 	for(int i = 0; i < m_NumImages; i++)
 	{
-		dbg_msg("dbg", "adding image to mapchange, name=\"%s\", crc=%u, size=%d", m_aCurrentImages[i].m_aName, m_aCurrentImages[i].m_Crc, m_aCurrentImages[i].m_Size);
 		Msg.AddString(m_aCurrentImages[i].m_aName, 0);
 		Msg.AddInt(m_aCurrentImages[i].m_Crc);
 		Msg.AddInt(m_aCurrentImages[i].m_Size);
@@ -720,7 +719,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			const char *pImageName = Unpacker.GetString();
 			unsigned ImageCrc = Unpacker.GetInt();
-			dbg_msg("dbg", "got image request, name=\"%s\" crc=%u", pImageName, ImageCrc);
 			for(int i = 0; i < m_NumImages; i++)
 			{
 				if(ImageCrc == m_aCurrentImages[i].m_Crc && str_comp(pImageName, m_aCurrentImages[i].m_aName) == 0)
@@ -915,8 +913,6 @@ void CServer::SendDownloadChunk(int ClientID, CDownloadFile File, int Chunk, int
 	int Offset = Chunk * ChunkSize;
 	int Last = 0;
 
-	dbg_msg("dbg", "chunk request, cid=%d chunk=%d", ClientID, Chunk);
-
 	// drop faulty data requests
 	if(Chunk < 0 || Offset > File.m_Size)
 		return;
@@ -942,7 +938,7 @@ void CServer::SendDownloadChunk(int ClientID, CDownloadFile File, int Chunk, int
 	if(g_Config.m_Debug)
 	{
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
+		str_format(aBuf, sizeof(aBuf), "sending chunk %d of %s with size %d", Chunk, File.m_aName, ChunkSize);
 		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 	}
 }
@@ -1127,7 +1123,7 @@ int CServer::LoadMap(const char *pMapName)
 	char aPath[128];
 	m_pStorage->GetPath(0, "", aPath, sizeof(aPath));
 
-	// extract images and generate lightmap
+	// extract images and generate light map
 	char aLightMapName[256];
 	str_format(aLightMapName, sizeof(aLightMapName), "_%s.map.light.tmp", pMapName);
 
@@ -1159,7 +1155,6 @@ int CServer::LoadMap(const char *pMapName)
 			if(!pImage->m_External) // ignore external images
 			{
 				dbg_assert(m_NumImages < 128, "maximum number of images reached");
-				dbg_msg("dbg", "new image");
 
 				unsigned char *pData = (unsigned char *)DataFileReader.GetData(pImage->m_ImageData);
 				str_format(aBuf, sizeof(aBuf), "%s_%s.png.temp", aPath, pName);
@@ -1175,7 +1170,7 @@ int CServer::LoadMap(const char *pMapName)
 
 				// load complete png into memory for download
 				IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
-				dbg_assert((int)File, "file not opened");
+				dbg_assert(File != 0, "image file not opened");
 				m_aCurrentImages[m_NumImages].m_Size = (int)io_length(File);
 				m_aCurrentImages[m_NumImages].m_pData = (unsigned char *)mem_alloc(m_aCurrentImages[m_NumImages].m_Size, 1);
 				io_read(File, m_aCurrentImages[m_NumImages].m_pData, m_aCurrentImages[m_NumImages].m_Size);
@@ -1195,6 +1190,8 @@ int CServer::LoadMap(const char *pMapName)
 				NumImageDatas++;
 
 				m_NumImages++;
+
+				fs_remove(aBuf); // removing the temp file
 			}
 
 			DataFileReader.UnloadData(pImage->m_ImageName);
@@ -1202,7 +1199,7 @@ int CServer::LoadMap(const char *pMapName)
 			DataFileWriter.AddItem(Type, ID, sizeof(WriteImage), &WriteImage);
 		}
 		else
-			DataFileWriter.AddItem(Type, ID, DataFileReader.GetItemSize(i), pItem);
+			DataFileWriter.AddItem(Type, ID, DataFileReader.GetItemSize(i) - 2 * sizeof(int), pItem);
 	}
 
 	for(int i = 0; i < DataFileReader.NumData(); i++)
@@ -1216,39 +1213,47 @@ int CServer::LoadMap(const char *pMapName)
 			if(ImageDatas[k].m_NameIndex == i)
 			{
 				DataFileWriter.AddData(str_length(ImageDatas[k].m_aName) + 1, ImageDatas[k].m_aName);
+				Found = 1;
 			}
 			else if(ImageDatas[k].m_DataIndex == i)
 			{
 				DataFileWriter.AddData(sizeof(Temp), &Temp); // add dummy data for not corrupting the index
+				Found = 1;
 			}
 		}
 
 		if(!Found)
-			DataFileWriter.AddData(DataFileReader.GetDataSize(i), pData);
+			DataFileWriter.AddData(DataFileReader.GetUncompressedDataSize(i), pData);
 
 		DataFileReader.UnloadData(i);
 	}
 
+	DataFileReader.Close();
 	DataFileWriter.Finish();
 
 	// load complete light map into memory for download
 	IOHANDLE File = Storage()->OpenFile(aLightMapName, IOFLAG_READ, IStorage::TYPE_ALL);
-	dbg_assert((int)File, "file2 not opened");
+	dbg_assert(File != 0, "light map file not opened");
 	m_CurrentLightMap.m_Size = (int)io_length(File);
 	m_CurrentLightMap.m_pData = (unsigned char *)mem_alloc(m_CurrentLightMap.m_Size, 1);
 	io_read(File, m_CurrentLightMap.m_pData, m_CurrentLightMap.m_Size);
 	io_close(File);
-
+	
 	unsigned Temp;
-	CDataFileReader::GetCrcSize(Storage(), aLightMapName, IStorage::TYPE_ALL, &m_CurrentLightMap.m_Crc, &Temp);
+	CDataFileReader::GetCrcSize(Storage(), aLightMapName, IStorage::TYPE_ALL, &m_CurrentLightMap.m_Crc, &Temp); // get the crc of the light map
+
+	char aDelete[256];
+	str_format(aDelete, sizeof(aBuf), "%s%s", aPath, aLightMapName);
+	fs_remove(aDelete); // remove the temp file
 
 	// load complete map into memory for download
 	File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
-	dbg_assert((int)File, "file3 not opened");
+	dbg_assert(File != 0, "map file not opened");
 	m_CurrentMap.m_Size = (int)io_length(File);
 	m_CurrentMap.m_pData = (unsigned char *)mem_alloc(m_CurrentMap.m_Size, 1);
 	io_read(File, m_CurrentMap.m_pData, m_CurrentMap.m_Size);
 	io_close(File);
+
 	return 1;
 }
 

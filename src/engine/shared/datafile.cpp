@@ -3,6 +3,7 @@
 #include <base/math.h>
 #include <base/system.h>
 #include <engine/storage.h>
+#include "config.h"
 #include "datafile.h"
 #include <zlib.h>
 
@@ -68,7 +69,8 @@ struct CDatafile
 
 bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int StorageType)
 {
-	dbg_msg("datafile", "loading. filename='%s'", pFilename);
+	if(g_Config.m_Debug)
+		dbg_msg("datafile", "loading. filename='%s'", pFilename);
 
 	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
 	if(!File)
@@ -162,7 +164,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), Size) / sizeof(int));
 #endif
 
-	//if(DEBUG)
+	if(DEBUG)
 	{
 		dbg_msg("datafile", "allocsize=%d", AllocSize);
 		dbg_msg("datafile", "readsize=%d", ReadSize);
@@ -185,38 +187,39 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 
 	if(DEBUG)
 	{
-		/*
-		for(int i = 0; i < m_pDataFile->data.num_raw_data; i++)
+
+		for(int i = 0; i < m_pDataFile->m_Header.m_NumRawData; i++)
 		{
-			void *p = datafile_get_data(df, i);
-			dbg_msg("datafile", "%d %d", (int)((char*)p - (char*)(&m_pDataFile->data)), size);
+			//void *pData = GetData(i);
+			dbg_msg("datafile", "%d", /*(int)((char*)pData - (char*)(&m_pDataFile->data)),*/ Size);
 		}
 
-		for(int i = 0; i < datafile_num_items(df); i++)
+		for(int i = 0; i < NumItems(); i++)
 		{
-			int type, id;
-			void *data = datafile_get_item(df, i, &type, &id);
-			dbg_msg("map", "\t%d: type=%x id=%x p=%p offset=%d", i, type, id, data, m_pDataFile->info.item_offsets[i]);
-			int *idata = (int*)data;
-			for(int k = 0; k < 3; k++)
-				dbg_msg("datafile", "\t\t%d=%d (%x)", k, idata[k], idata[k]);
+			int Type, ID;
+			void *pData = GetItem(i, &Type, &ID);
+			dbg_msg("map", "\t%d: type=%x id=%x p=%p offset=%d", i, Type, ID, pData, m_pDataFile->m_Info.m_pItemOffsets[i]);
+			int *pIntData = (int*)pData;
+			for(unsigned k = 0; k < GetItemSize(i) / sizeof(int); k++)
+				dbg_msg("datafile", "\t\t%d=%d (%x)", k, pIntData[k], pIntData[k]);
 		}
 
-		for(int i = 0; i < m_pDataFile->data.num_m_aItemTypes; i++)
+		for(int i = 0; i < m_pDataFile->m_Header.m_NumItemTypes; i++)
 		{
 			dbg_msg("map", "\t%d: type=%x start=%d num=%d", i,
-				m_pDataFile->info.m_aItemTypes[i].type,
-				m_pDataFile->info.m_aItemTypes[i].start,
-				m_pDataFile->info.m_aItemTypes[i].num);
-			for(int k = 0; k < m_pDataFile->info.m_aItemTypes[i].num; k++)
+				m_pDataFile->m_Info.m_pItemTypes[i].m_Type,
+				m_pDataFile->m_Info.m_pItemTypes[i].m_Start,
+				m_pDataFile->m_Info.m_pItemTypes[i].m_Num);
+
+			for(int k = 0; k < m_pDataFile->m_Info.m_pItemTypes[i].m_Num; k++)
 			{
-				int type, id;
-				datafile_get_item(df, m_pDataFile->info.m_aItemTypes[i].start+k, &type, &id);
-				if(type != m_pDataFile->info.m_aItemTypes[i].type)
+				int Type, ID;
+				GetItem(m_pDataFile->m_Info.m_pItemTypes[i].m_Start + k, &Type, &ID);
+				if(Type != m_pDataFile->m_Info.m_pItemTypes[i].m_Type)
 					dbg_msg("map", "\tERROR");
 			}
 		}
-		*/
+		
 	}
 
 	return true;
@@ -273,6 +276,14 @@ int CDataFileReader::GetDataSize(int Index)
 	return m_pDataFile->m_Info.m_pDataOffsets[Index+1]-m_pDataFile->m_Info.m_pDataOffsets[Index];
 }
 
+
+int CDataFileReader::GetUncompressedDataSize(int Index)
+{
+	if(!m_pDataFile) { return 0; }
+
+	return m_pDataFile->m_Info.m_pDataSizes[Index];
+}
+
 void *CDataFileReader::GetDataImpl(int Index, int Swap)
 {
 	if(!m_pDataFile) { return 0; }
@@ -293,7 +304,8 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 			unsigned long UncompressedSize = m_pDataFile->m_Info.m_pDataSizes[Index];
 			unsigned long s;
 
-			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%d", Index, DataSize, UncompressedSize);
+			if(g_Config.m_Debug)
+				dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%d", Index, DataSize, UncompressedSize);
 			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(UncompressedSize, 1);
 
 			// read the compressed data
@@ -313,7 +325,8 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 		else
 		{
 			// load the data
-			dbg_msg("datafile", "loading data index=%d size=%d", Index, DataSize);
+			if(g_Config.m_Debug)
+				dbg_msg("datafile", "loading data index=%d size=%d", Index, DataSize);
 			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(DataSize, 1);
 			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset+m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
 			io_read(m_pDataFile->m_File, m_pDataFile->m_ppDataPtrs[Index], DataSize);

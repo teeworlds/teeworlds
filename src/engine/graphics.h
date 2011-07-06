@@ -80,6 +80,7 @@ public:
 	virtual int UnloadTexture(int Index) = 0;
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
+	virtual int IsInvalidTexture(int Index) = 0;
 	virtual void TextureSet(int TextureID) = 0;
 
 	struct CLineItem

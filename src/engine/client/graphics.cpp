@@ -375,6 +375,11 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 	return Tex;
 }
 
+int CGraphics_OpenGL::IsInvalidTexture(int Index)
+{
+	return Index == m_InvalidTexture;
+}
+
 // simple uncompressed RGBA loaders
 int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
