@@ -285,6 +285,7 @@ public:
 	// status requests
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
 	NETSOCKET Socket() const { return m_Socket; }
+	int NetType() { return m_Socket.type; }
 	int MaxClients() const { return m_MaxClients; }
 
 	//
@@ -320,6 +321,7 @@ public:
 	int ResetErrorString();
 
 	// error and state
+	int NetType() { return m_Socket.type; }
 	int State();
 	int GotProblems();
 	const char *ErrorString();
