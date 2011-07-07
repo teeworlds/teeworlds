@@ -2,7 +2,7 @@
 ##### translated strings #####
 
 %d Bytes
-== %d Байтов
+== %d байт
 
 %d of %d servers, %d players
 == %d из %d серверов, %d игроков
@@ -14,19 +14,19 @@
 == осталось %d сек.
 
 %i minute left
-== %i минута осталась
+== осталась %i минута!
 
 %i minutes left
-== %i минут осталось
+== остались %i минут(ы)
 
 %i second left
-== %i секунда осталась
+== осталась %i секунда!
 
 %i seconds left
-== %i секунд осталось
+== остались %i секунд(ы)
 
 %s wins!
-== %s - победа!
+== %s  победил!
 
 -Page %d-
 == -Страница %d-
@@ -44,10 +44,10 @@ Address
 == Адрес
 
 All
-== Все
+== Всем
 
 Alpha
-== Прозрачность
+== Прозрачн.
 
 Always show name plates
 == Всегда показывать имена игроков
@@ -62,19 +62,19 @@ Are you sure that you want to remove the player from your friends list?
 == Вы действительно хотите удалить этого игрока из списка друзей?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Вы запустили игру первый раз, пожалуйста, введите ваш никнейм. Мы рекомендуем вам настроить игру.
+== Вы запустили игру первый раз, пожалуйста, введите ваш никнейм. Также мы рекомендуем вам настроить игру под себя в меню "Настройки".
 
 Automatically record demos
 == Записывать демо автоматически
 
 Automatically take game over screenshot
-== Автоматически снимать скриншоты в конце игры
+== Автоматически снимать итоги игры
 
 Blue team
-== Синяя команда
+== Синие
 
 Blue team wins!
-== Синяя команда победила!
+== Синие победили!
 
 Body
 == Тело
@@ -95,19 +95,19 @@ Client
 == Клиент
 
 Close
-== Закрыть
+== Выйти
 
 Compatible version
 == Совместимая версия
 
 Connect
-== Играть
+== Подключиться
 
 Connecting to
-== Соединяемся с
+== Подключаемся к
 
 Connection Problems...
-== Проблемы с соединением...
+== Проблемы со связью...
 
 Console
 == Консоль
@@ -119,10 +119,10 @@ Count players only
 == Считать только игроков
 
 Country
-== Страна
+== Флаг
 
 Crc:
-== Crc-сумма:
+== Crc-хэш:
 
 Created:
 == Создан:
@@ -134,7 +134,7 @@ Current version: %s
 == Текущая версия: %s
 
 Custom colors
-== Произвольный цвет
+== Свои цвета
 
 Delete
 == Удалить
@@ -143,13 +143,16 @@ Delete demo
 == Удалить демо
 
 Demo details
-== Подробности
+== Подробнее про это демо
+
+Demofile: %s
+== Демо: %s
 
 Demos
 == Демо
 
 Disconnect
-== Уйти
+== Отключиться
 
 Disconnected
 == Отсоединен
@@ -164,7 +167,7 @@ Draw!
 == Ничья!
 
 Dynamic Camera
-== Динамичная Камера
+== Подвижная камера
 
 Emoticon
 == Эмоции
@@ -182,13 +185,13 @@ FSAA samples
 == FSAA сэмплы
 
 Favorite
-== Избранное
+== Избранный сервер
 
 Favorites
 == Избранное
 
 Feet
-== Нога
+== Ноги
 
 Filter
 == Фильтр
@@ -200,13 +203,13 @@ Folder
 == Папка
 
 Force vote
-== Форсировать голосование
+== Применить
 
 Free-View
 == Свободный просмотр
 
 Friends
-== Приятели
+== Друзья
 
 Fullscreen
 == На весь экран
@@ -215,7 +218,7 @@ Game
 == Игра
 
 Game info
-== Информация о игре
+== Подробности
 
 Game over
 == Игра окончена
@@ -233,7 +236,7 @@ Graphics
 == Графика
 
 Grenade
-== Граната
+== Гранатомёт
 
 Hammer
 == Молоток
@@ -242,7 +245,7 @@ Has people playing
 == Есть игроки на сервере
 
 High Detail
-== Высокая Детализация
+== Высокая детализация
 
 Hook
 == Цепь
@@ -260,13 +263,13 @@ Internet
 == Интернет
 
 Invalid Demo
-== Невалидное демо
+== Нерабочее демо
 
 Join blue
 == К синим
 
 Join game
-== Войти в игру
+== В игру
 
 Join red
 == К красным
@@ -302,10 +305,10 @@ Map:
 == Карта:
 
 Max Screenshots
-== Максимум Скриншотов
+== Максимум скриншотов
 
 Max demos
-== Максимум Демо
+== Максимум демо
 
 Maximum ping:
 == Макс. пинг:
@@ -317,19 +320,19 @@ Mouse sens.
 == Чувст. мыши
 
 Move left
-== Влево
+== Шаг влево
 
 Move player to spectators
-== Стать наблюдателем
+== Сделать наблюдателем
 
 Move right
-== Вправо
+== Шаг вправо
 
 Movement
 == Движение
 
 Mute when not active
-== Выключить звук когда игра неактивна
+== Выключать звук, если игра свёрнута
 
 Name
 == Имя
@@ -347,7 +350,7 @@ News
 == Новости
 
 Next weapon
-== Следующее оружие
+== След. оружие
 
 Nickname
 == Ник
@@ -362,16 +365,16 @@ No servers found
 == Сервера не найдены
 
 No servers match your filter criteria
-== Нет серверов, подходящих под Ваш фильтр
+== Нет серверов, подходящих под ваш фильтр
 
 Ok
-== Ok
+== ОК
 
 Open
 == Открыть
 
 Parent Folder
-== Корневая папка
+== На уровень выше
 
 Password
 == Пароль
@@ -386,31 +389,34 @@ Pistol
 == Пистолет
 
 Play
-== Воспроизвести
+== Запустить
 
 Play background music
-== Воспроизвести фоновую музыку
+== Играть фоновую музыку
 
 Player
 == Игрок
 
+Player country:
+== Страна:
+
 Player options
-== Настройки игрока
+== Настройки игроков
 
 Players
 == Игроки
 
 Please balance teams!
-== Пожалуйста cбалансируйте команды!
+== Пожалуйста, cбалансируйте команды!
 
 Prev. weapon
 == Пред. оружие
 
 Quality Textures
-== Качественные Текстуры
+== Качественные текстуры
 
 Quick search:
-== Быстрый поиск
+== Быстрый поиск:
 
 Quit
 == Выход
@@ -419,7 +425,7 @@ Quit anyway?
 == Всё равно выйти?
 
 REC %3d:%02d
-== Записано %3d:%02d
+== REC %3d:%02d
 
 Reason:
 == Причина:
@@ -428,10 +434,10 @@ Record demo
 == Записать демо
 
 Red team
-== Красная команда
+== Красные
 
 Red team wins!
-== Красная команда победила!
+== Красные победили!
 
 Refresh
 == Обновить
@@ -440,7 +446,7 @@ Refreshing master servers
 == Обновляем мастер-сервера
 
 Remote console
-== Серверная консоль
+== Консоль сервера
 
 Remove
 == Удалить
@@ -449,16 +455,16 @@ Remove friend
 == Удалить из друзей
 
 Rename
-== Переименовать
+== Сменить имя
 
 Rename demo
-== Переименовать демо
+== Сменить имя демо
 
 Reset filter
 == Сбросить фильтр
 
 Reset to defaults
-== Сбросить на стандартные настройки
+== Сбросить настройки
 
 Rifle
 == Лазер
@@ -473,16 +479,16 @@ Sat.
 == Контраст
 
 Score
-== Очки
+== Счёт
 
 Score board
-== Результат
+== Ход игры
 
 Score limit
-== Лимит на очки
+== Лимит счёта
 
 Scoreboard
-== Результат
+== Ход игры
 
 Screenshot
 == Скриншот
@@ -491,13 +497,13 @@ Server address:
 == Адрес сервера:
 
 Server details
-== Информация о сервере
+== Основное
 
 Server filter
-== Фильтр сервера
+== Фильтр
 
 Server info
-== Инфо
+== О сервере
 
 Server not full
 == Сервер не заполнен
@@ -512,7 +518,7 @@ Show chat
 == Показать чат
 
 Show friends only
-== Показывать друзей
+== Только друзья
 
 Show ingame HUD
 == Показывать HUD
@@ -524,10 +530,10 @@ Show only supported
 == Показывать только поддерживаемые
 
 Size:
-== Размер
+== Размер:
 
 Skins
-== Модели
+== Доступные скины
 
 Sound
 == Звук
@@ -560,22 +566,25 @@ Standard map
 == Стандартная карта
 
 Stop record
-== Остановить запись
+== Выкл. запись
+
+Strict gametype filter
+== Строгий фильтр режимов
 
 Sudden Death
 == Внезапная смерть
 
 Switch weapon on pickup
-== Сменить оружие на подобранное
+== Сменять оружие на подобранное
 
 Team
-== Команда
+== Команде
 
 Team chat
 == Командный чат
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworlds %s в сети! Скачайте его на www.teeworlds.com!
+== Teeworlds %s вышел! Скачайте его на www.teeworlds.com!
 
 Texture Compression
 == Сжатие текстур
@@ -587,16 +596,16 @@ The server is running a non-standard tuning on a pure game type.
 == Этот сервер работает на нестандартных настройках стандартного типа игры.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== В редакторе есть несохранённая карта
+== В редакторе есть несохранённая карта!
 
 Time limit
-== Лимит на время
+== Лимит времени
 
 Time limit: %d min
-== Лимит на время: %d мин
+== Лимит времени: %d мин
 
 Try again
-== Попробовать ещё раз
+== Ещё раз
 
 Type
 == Тип
@@ -608,16 +617,16 @@ UI Color
 == Цвет интерфейса
 
 Unable to delete the demo
-== Невозможно удалить демо
+== Ошибка удаления демо
 
 Unable to rename the demo
-== Невозможно переименовать демо
+== Ошибка переименования демо
 
 Use sounds
-== Звук
+== Использовать звуки
 
 Use team colors for name plates
-== Использовать цвет команды для имён игроков
+== Красить ники в цвет команды
 
 V-Sync
 == Вертикальная синхронизация
@@ -629,10 +638,10 @@ Version:
 == Версия:
 
 Vote command:
-== Голосование:
+== Команда серверу:
 
 Vote description:
-== Причина голосования:
+== Описание голосования:
 
 Vote no
 == Против
@@ -644,7 +653,7 @@ Voting
 == Голосование
 
 Warmup
-== Разогрев
+== Разминка
 
 Weapon
 == Оружие
@@ -656,7 +665,7 @@ Yes
 == Да
 
 You must restart the game for all settings to take effect.
-== Вы должны перезапустить игру, чтобы настройки применились.
+== Перезапустить игру, чтобы новые настройки применились.
 
 Your skin
 == Ваш скин
@@ -665,15 +674,6 @@ no limit
 == Без лимита
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Player country:
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 
