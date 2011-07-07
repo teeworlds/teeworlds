@@ -28,6 +28,9 @@ public:
 	void AddFriend(const char *pName, const char *pClan);
 	void RemoveFriend(const char *pName, const char *pClan);
 	void RemoveFriend(int Index);
+
+private:
+	bool CompWithJokers(const char* pFilter, const char* pStr) const;
 };
 
 #endif
