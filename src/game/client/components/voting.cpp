@@ -22,6 +22,23 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Vote(-1);
 }
 
+void CVoting::ConVotes(IConsole::IResult *pResult, void *pUserData)
+{
+	CVoting *pSelf = (CVoting *)pUserData;
+	CVoteOptionClient *pVoteOption = pSelf->m_pFirst;
+	int i = 0;
+
+	while(pVoteOption)
+	{
+		char aBuf[VOTE_DESC_LENGTH + 64];
+		str_format(aBuf, sizeof(aBuf), "%i: %s", i, pVoteOption->m_aDescription);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", aBuf);
+
+		pVoteOption = pVoteOption->m_pNext;
+		i++;
+	}
+}
+
 void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason)
 {
 	CNetMsg_Cl_CallVote Msg = {0};
@@ -175,6 +192,7 @@ void CVoting::OnConsoleInit()
 {
 	Console()->Register("callvote", "ss?r", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
 	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
+	Console()->Register("votes", "", CFGFLAG_CLIENT, ConVotes, this, "List votes");
 }
 
 void CVoting::OnMessage(int MsgType, void *pRawMsg)
