@@ -8,20 +8,20 @@
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
-#include <engine/textrender.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
+#include <engine/textrender.h>
 
-#include <game/client/ui.h>
 #include <game/gamecore.h>
+#include <game/localization.h>
+#include <game/client/lineinput.h>
 #include <game/client/render.h>
+#include <game/client/ui.h>
 #include <game/generated/client_data.h>
 
+#include "auto_map.h"
 #include "editor.h"
-#include <game/client/lineinput.h>
-
-#include <game/localization.h>
 
 int CEditor::ms_CheckerTexture;
 int CEditor::ms_BackgroundTexture;
@@ -1899,6 +1899,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	*pImg = ImgInfo;
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
+	pImg->m_AutoMapper.Load(pImg->m_aName);
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
@@ -1930,6 +1931,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
+	pImg->m_AutoMapper.Load(pImg->m_aName);
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
 	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())

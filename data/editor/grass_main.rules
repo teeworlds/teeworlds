@@ -1,0 +1,225 @@
+[Grass]
+Index 1
+BaseTile
+
+#random bones
+Index 2
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 3
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 66
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 67
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 68
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+#---------
+
+#top
+Index 16
+Pos 0 -1 EMPTY
+
+#right
+Index 21
+Pos 1 0 EMPTY
+
+#bottom
+Index 52
+Pos 0 1 EMPTY
+
+#left
+Index 20
+Pos -1 0 EMPTY
+
+#corner top-right
+Index 5
+Pos 0 -1 EMPTY
+Pos 1 0 EMPTY
+
+#corner top-left
+Index 4
+Pos 0 -1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-left
+Index 36
+Pos 0 1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-right
+Index 37
+Pos 0 1 EMPTY
+Pos 1 0 EMPTY
+
+#inside corner top-right
+Index 54
+Pos -1 1 EMPTY
+Pos -1 0 FULL
+Pos 0 1 FULL
+
+#inside corner top-left
+Index 53
+Pos 1 1 EMPTY
+Pos 1 0 FULL
+Pos 0 1 FULL
+
+#inside corner bottom-left
+Index 49
+Pos 1 -1 EMPTY
+Pos 1 0 FULL
+Pos 0 -1 FULL
+
+#inside corner bottom-right
+Index 48
+Pos -1 -1 EMPTY
+Pos -1 0 FULL
+Pos 0 -1 FULL
+
+#right bottom
+Index 22
+Pos -1 0 EMPTY
+Pos -1 1 FULL
+Pos 0 1 FULL
+
+#left bottom
+Index 38
+Pos 1 0 EMPTY
+Pos 1 1 FULL
+Pos 0 1 FULL
+
+#top corner right 2
+Index 33
+Pos 0 -1 EMPTY
+Pos 1 0 EMPTY
+Pos 1 1 FULL
+
+#top corner left 2
+Index 32
+Pos 0 -1 EMPTY
+Pos -1 0 EMPTY
+Pos -1 1 FULL
+
+[Cave]
+Index 13
+BaseTile
+
+#random bones
+Index 29
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 42
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 43
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 44
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+
+Index 45
+Pos 0 1 FULL
+Pos 0 -1 FULL
+Pos 1 0 FULL
+Pos -1 0 FULL
+Random 150
+#---------
+
+#top
+Index 26
+Pos 0 -1 EMPTY
+
+#right
+Index 25
+Pos 1 0 EMPTY
+
+#bottom
+Index 10
+Pos 0 1 EMPTY
+
+#left
+Index 24
+Pos -1 0 EMPTY
+
+#corner top-right
+Index 9
+Pos 0 -1 EMPTY
+Pos 1 0 EMPTY
+
+#corner top-left
+Index 8
+Pos 0 -1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-left
+Index 40
+Pos 0 1 EMPTY
+Pos -1 0 EMPTY
+
+#corner bottom-right
+Index 41
+Pos 0 1 EMPTY
+Pos 1 0 EMPTY
+
+#inside corner top-right
+Index 12
+Pos -1 1 EMPTY
+Pos -1 0 FULL
+Pos 0 1 FULL
+
+#inside corner top-left
+Index 11
+Pos 1 1 EMPTY
+Pos 1 0 FULL
+Pos 0 1 FULL
+
+#inside corner bottom-left
+Index 27
+Pos 1 -1 EMPTY
+Pos 1 0 FULL
+Pos 0 -1 FULL
+
+#inside corner bottom-right
+Index 28
+Pos -1 -1 EMPTY
+Pos -1 0 FULL
+Pos 0 -1 FULL
