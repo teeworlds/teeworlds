@@ -317,6 +317,17 @@ void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallbac
 	}
 }
 
+void CConsole::GetCommandsInfo(int FlagMask, FCommandInfoCallback pfnCallback, void *pUser)
+{
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		if(pCommand->m_Flags&FlagMask)
+		{
+			pfnCallback(pCommand, pUser);
+		}
+	}
+}
+
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
@@ -606,6 +617,29 @@ void CConsole::Register(const char *pName, const char *pParams,
 
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
+}
+
+// Remove all commands except if they match FlagMask
+void CConsole::UnRegisterAll(int FlagMask)
+{
+	CCommand *pCommand = m_pFirstCommand;
+	while(pCommand && !pCommand->m_Flags&FlagMask)
+	{
+		m_pFirstCommand = pCommand->m_pNext;
+		mem_free(pCommand);
+		pCommand = m_pFirstCommand;
+	}
+
+	for(pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		CCommand *pNext = pCommand->m_pNext;
+		while(pNext && !pNext->m_Flags&FlagMask)
+		{
+			pCommand->m_pNext = pNext->m_pNext;
+			mem_free(pNext);
+			pNext = pCommand->m_pNext;
+		}
+	}
 }
 
 void CConsole::Con_Chain(IResult *pResult, void *pUserData)
