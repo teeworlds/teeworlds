@@ -475,6 +475,9 @@ public:
 		m_Dialog = 0;
 		m_pTooltip = 0;
 
+		m_GridActive = false;
+		m_GridFactor = 1;
+
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
 		m_ValidSaveFilename = false;
@@ -555,6 +558,9 @@ public:
 	int m_Mode;
 	int m_Dialog;
 	const char *m_pTooltip;
+
+	bool m_GridActive;
+	int m_GridFactor;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
@@ -674,6 +680,8 @@ public:
 
 	void RenderBackground(CUIRect View, int Texture, float Size, float Brightness);
 
+	void RenderGrid(CLayerGroup *pGroup);
+
 	void UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
 	void UiDoPopupMenu();
 
@@ -742,6 +750,8 @@ public:
 		int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 		str_copy(pName, pExtractedName, Length);
 	}
+
+	int GetLineDistance();
 };
 
 // make sure to inline this function

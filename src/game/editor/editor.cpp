@@ -466,6 +466,49 @@ int CEditor::DoButton_ButtonDec(const void *pID, const char *pText, int Checked,
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
+void CEditor::RenderGrid(CLayerGroup *pGroup)
+{
+	if(!m_GridActive)
+		return;
+
+	float aGroupPoints[4];
+	pGroup->Mapping(aGroupPoints); 
+
+	float w = UI()->Screen()->w;
+	float h = UI()->Screen()->h;
+
+	int LineDistance = GetLineDistance();
+
+	int XOffset = aGroupPoints[0]/LineDistance;
+	int YOffset = aGroupPoints[1]/LineDistance;
+	int XGridOffset = XOffset % m_GridFactor;
+	int YGridOffset = YOffset % m_GridFactor;
+
+	Graphics()->TextureSet(-1);	
+	Graphics()->LinesBegin();
+
+	for(int i = 0; i < (int)w; i++)
+	{
+		if((i+YGridOffset) % m_GridFactor == 0)
+			Graphics()->SetColor(1.0f, 0.3f, 0.3f, 0.3f);
+		else
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.15f);
+
+		IGraphics::CLineItem Line = IGraphics::CLineItem(LineDistance*XOffset, LineDistance*i+LineDistance*YOffset, w+aGroupPoints[2], LineDistance*i+LineDistance*YOffset);
+		Graphics()->LinesDraw(&Line, 1);
+
+		if((i+XGridOffset) % m_GridFactor == 0)
+			Graphics()->SetColor(1.0f, 0.3f, 0.3f, 0.3f);
+		else
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.15f);
+
+		Line = IGraphics::CLineItem(LineDistance*i+LineDistance*XOffset, LineDistance*YOffset, LineDistance*i+LineDistance*XOffset, h+aGroupPoints[3]);
+		Graphics()->LinesDraw(&Line, 1);
+	}
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->LinesEnd();
+}
+
 void CEditor::RenderBackground(CUIRect View, int Texture, float Size, float Brightness)
 {
 	Graphics()->TextureSet(Texture);
@@ -857,6 +900,41 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		m_WorldOffsetX = 0;
 		m_WorldOffsetY = 0;
 	}
+
+	TB_Bottom.VSplitLeft(5.0f, 0, &TB_Bottom);
+
+	// grid button
+	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
+	static int s_GridButton = 0;
+	if(DoButton_Editor(&s_GridButton, "Grid", m_GridActive, &Button, 0, "Toggle Grid"))
+	{
+		m_GridActive = !m_GridActive;
+	}
+
+	TB_Bottom.VSplitLeft(30.0f, 0, &TB_Bottom);
+
+	// grid zoom
+	TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+	static int s_GridIncreaseButton = 0;
+	if(DoButton_Ex(&s_GridIncreaseButton, "G-", 0, &Button, 0, "Decrease grid", CUI::CORNER_L))
+	{
+		if(m_GridFactor > 1)
+			m_GridFactor--;
+	}
+
+	TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+	static int s_GridNormalButton = 0;
+	if(DoButton_Ex(&s_GridNormalButton, "1", 0, &Button, 0, "Normal grid", 0))
+		m_GridFactor = 1;
+
+	TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+
+	static int s_GridDecreaseButton = 0;
+	if(DoButton_Ex(&s_GridDecreaseButton, "G+", 0, &Button, 0, "Increase grid", CUI::CORNER_R))
+	{
+		if(m_GridFactor < 15)
+			m_GridFactor++;
+	}
 }
 
 static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
@@ -916,10 +994,41 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		else if(s_Operation == OP_MOVE_ALL)
 		{
 			// move all points including pivot
-			for(int v = 0; v < 5; v++)
+			if(m_GridActive)
 			{
-				q->m_aPoints[v].x += f2fx(wx-s_LastWx);
-				q->m_aPoints[v].y += f2fx(wy-s_LastWy);
+				int LineDistance = GetLineDistance();
+
+				float x = 0.0f;
+				float y = 0.0f;
+				if(wx >= 0)
+					x = (int)((wx+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+				else
+					x = (int)((wx-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+				if(wy >= 0)
+					y = (int)((wy+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+				else
+					y = (int)((wy-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+				
+				int OldX = q->m_aPoints[4].x;
+				int OldY = q->m_aPoints[4].y;
+				q->m_aPoints[4].x = f2fx(x);
+				q->m_aPoints[4].y = f2fx(y);
+				int DiffX = q->m_aPoints[4].x - OldX;
+				int DiffY = q->m_aPoints[4].y - OldY;
+				
+				for(int v = 0; v < 4; v++)
+				{
+					q->m_aPoints[v].x += DiffX;
+					q->m_aPoints[v].y += DiffY;
+				}
+			}
+			else
+			{
+				for(int v = 0; v < 5; v++)
+				{
+						q->m_aPoints[v].x += f2fx(wx-s_LastWx);
+						q->m_aPoints[v].y += f2fx(wy-s_LastWy);
+				}
 			}
 		}
 		else if(s_Operation == OP_ROTATE)
@@ -1050,12 +1159,37 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		{
 			if(s_Operation == OP_MOVEPOINT)
 			{
-				for(int m = 0; m < 4; m++)
-					if(m_SelectedPoints&(1<<m))
-					{
-						pQuad->m_aPoints[m].x += f2fx(dx);
-						pQuad->m_aPoints[m].y += f2fx(dy);
-					}
+				if(m_GridActive)
+				{
+					for(int m = 0; m < 4; m++)
+						if(m_SelectedPoints&(1<<m))
+						{
+							int LineDistance = GetLineDistance();
+
+							float x = 0.0f;
+							float y = 0.0f;
+							if(wx >= 0)
+								x = (int)((wx+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+							else
+								x = (int)((wx-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+							if(wy >= 0)
+								y = (int)((wy+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+							else
+								y = (int)((wy-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+
+							pQuad->m_aPoints[m].x = f2fx(x);
+							pQuad->m_aPoints[m].y = f2fx(y);
+						}
+				}
+				else
+				{
+					for(int m = 0; m < 4; m++)
+						if(m_SelectedPoints&(1<<m))
+						{
+							pQuad->m_aPoints[m].x += f2fx(dx);
+							pQuad->m_aPoints[m].y += f2fx(dy);
+						}
+				}
 			}
 			else if(s_Operation == OP_MOVEUV)
 			{
@@ -1247,6 +1381,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		if(g)
 		{
 			g->MapScreen();
+
+			RenderGrid(g);
 
 			for(int i = 0; i < NumEditLayers; i++)
 			{
@@ -3154,7 +3290,6 @@ void CEditor::Render()
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
-
 }
 
 void CEditor::Reset(bool CreateDefault)
@@ -3190,6 +3325,24 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaWy = 0;
 
 	m_Map.m_Modified = false;
+}
+
+int CEditor::GetLineDistance()
+{
+	int LineDistance = 512;
+
+	if(m_ZoomLevel <= 100)
+		LineDistance = 16;
+	else if(m_ZoomLevel <= 250)
+		LineDistance = 32;
+	else if(m_ZoomLevel <= 450)
+		LineDistance = 64;
+	else if(m_ZoomLevel <= 850)
+		LineDistance = 128;
+	else if(m_ZoomLevel <= 1550)
+		LineDistance = 256;
+
+	return LineDistance;
 }
 
 void CEditorMap::DeleteEnvelope(int Index)
