@@ -89,6 +89,7 @@ public:
 
 	virtual int UnloadTexture(int Index);
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
+	virtual int IsInvalidTexture(int Index);
 
 	// simple uncompressed RGBA loaders
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);

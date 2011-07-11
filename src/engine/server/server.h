@@ -123,9 +123,21 @@ public:
 	//static NETADDR4 master_server;
 
 	char m_aCurrentMap[64];
-	unsigned m_CurrentMapCrc;
-	unsigned char *m_pCurrentMapData;
-	int m_CurrentMapSize;
+
+	struct CDownloadFile
+	{
+		char m_aName[64];
+		unsigned m_Crc;
+		unsigned char *m_pData;
+		int m_Size;
+
+		void Reset() { if(m_pData) mem_free(m_pData); mem_zero(this, sizeof(*this)); }
+	};
+
+	CDownloadFile m_CurrentMap;
+	CDownloadFile m_CurrentLightMap;
+	CDownloadFile m_aCurrentImages[128];
+	int m_NumImages;
 
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
@@ -165,6 +177,7 @@ public:
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
 	void SendMap(int ClientID);
+	void SendDownloadChunk(int ClientID, CDownloadFile File, int Chunk, int MsgType);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);

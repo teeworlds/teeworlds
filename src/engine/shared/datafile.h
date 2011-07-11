@@ -18,10 +18,12 @@ public:
 	bool Close();
 
 	static bool GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize);
+	static bool CheckCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned WantedCrc, unsigned WantedSize);
 
 	void *GetData(int Index);
 	void *GetDataSwapped(int Index); // makes sure that the data is 32bit LE ints when saved
 	int GetDataSize(int Index);
+	int GetUncompressedDataSize(int Index);
 	void UnloadData(int Index);
 	void *GetItem(int Index, int *pType, int *pID);
 	int GetItemSize(int Index);

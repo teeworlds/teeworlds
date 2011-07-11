@@ -22,6 +22,10 @@
 #include <engine/shared/protocol.h>
 #include <engine/shared/snapshot.h>
 
+#include <engine/external/pnglite/pnglite.h>
+
+#include <game/mapitems.h>
+
 #include <mastersrv/mastersrv.h>
 
 #include "register.h"
@@ -176,8 +180,17 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_CurrentGameTick = 0;
 	m_RunServer = 1;
 
-	m_pCurrentMapData = 0;
-	m_CurrentMapSize = 0;
+	m_CurrentMap.m_pData = 0;
+	m_CurrentMap.Reset();
+	m_CurrentLightMap.m_pData = 0;
+	m_CurrentLightMap.Reset();
+
+	for(unsigned i = 0; i < sizeof(m_aCurrentImages) / sizeof(m_aCurrentImages[0]); i++)
+	{
+		m_aCurrentImages[i].m_pData = 0;
+		m_aCurrentImages[i].Reset();
+	}
+	m_NumImages = 0;
 
 	m_MapReload = 0;
 
@@ -613,8 +626,16 @@ void CServer::SendMap(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
 	Msg.AddString(GetMapName(), 0);
-	Msg.AddInt(m_CurrentMapCrc);
-	Msg.AddInt(m_CurrentMapSize);
+	Msg.AddInt(m_CurrentMap.m_Crc);
+	Msg.AddInt(m_CurrentMap.m_Size);
+	Msg.AddInt(m_CurrentLightMap.m_Crc);
+	Msg.AddInt(m_CurrentLightMap.m_Size);
+	for(int i = 0; i < m_NumImages; i++)
+	{
+		Msg.AddString(m_aCurrentImages[i].m_aName, 0);
+		Msg.AddInt(m_aCurrentImages[i].m_Crc);
+		Msg.AddInt(m_aCurrentImages[i].m_Size);
+	}
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
 }
 
@@ -695,36 +716,23 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
 		{
-			int Chunk = Unpacker.GetInt();
-			int ChunkSize = 1024-128;
-			int Offset = Chunk * ChunkSize;
-			int Last = 0;
-
-			// drop faulty map data requests
-			if(Chunk < 0 || Offset > m_CurrentMapSize)
-				return;
-
-			if(Offset+ChunkSize >= m_CurrentMapSize)
+			SendDownloadChunk(ClientID, m_CurrentMap, Unpacker.GetInt(), NETMSG_MAP_DATA);
+		}
+		else if(Msg == NETMSG_REQUEST_LIGHT_MAP_DATA)
+		{
+			SendDownloadChunk(ClientID, m_CurrentLightMap, Unpacker.GetInt(), NETMSG_LIGHT_MAP_DATA);
+		}
+		else if(Msg == NETMSG_REQUEST_IMAGE_DATA)
+		{
+			const char *pImageName = Unpacker.GetString();
+			unsigned ImageCrc = Unpacker.GetInt();
+			for(int i = 0; i < m_NumImages; i++)
 			{
-				ChunkSize = m_CurrentMapSize-Offset;
-				if(ChunkSize < 0)
-					ChunkSize = 0;
-				Last = 1;
-			}
-
-			CMsgPacker Msg(NETMSG_MAP_DATA);
-			Msg.AddInt(Last);
-			Msg.AddInt(m_CurrentMapCrc);
-			Msg.AddInt(Chunk);
-			Msg.AddInt(ChunkSize);
-			Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
-			SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
-
-			if(g_Config.m_Debug)
-			{
-				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
-				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+				if(ImageCrc == m_aCurrentImages[i].m_Crc && str_comp(pImageName, m_aCurrentImages[i].m_aName) == 0)
+				{
+					SendDownloadChunk(ClientID, m_aCurrentImages[i], Unpacker.GetInt(), NETMSG_IMAGE_DATA);
+					break;
+				}
 			}
 		}
 		else if(Msg == NETMSG_READY)
@@ -922,6 +930,42 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
+void CServer::SendDownloadChunk(int ClientID, CDownloadFile File, int Chunk, int MsgType)
+{
+	int ChunkSize = 1024-128;
+	int Offset = Chunk * ChunkSize;
+	int Last = 0;
+
+	// drop faulty data requests
+	if(Chunk < 0 || Offset > File.m_Size)
+		return;
+
+	if(Offset+ChunkSize >= File.m_Size)
+	{
+		ChunkSize = File.m_Size-Offset;
+		if(ChunkSize < 0)
+			ChunkSize = 0;
+		Last = 1;
+	}
+
+	CMsgPacker Msg(MsgType);
+	if(MsgType == NETMSG_IMAGE_DATA)
+		Msg.AddString(File.m_aName, 0);
+	Msg.AddInt(Last);
+	Msg.AddInt(File.m_Crc);
+	Msg.AddInt(Chunk);
+	Msg.AddInt(ChunkSize);
+	Msg.AddRaw(&File.m_pData[Offset], ChunkSize);
+	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+
+	if(g_Config.m_Debug)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "sending chunk %d of %s with size %d", Chunk, File.m_aName, ChunkSize);
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+	}
+}
+
 void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 {
 	CNetChunk Packet;
@@ -1080,28 +1124,159 @@ int CServer::LoadMap(const char *pMapName)
 	// stop recording when we change map
 	m_DemoRecorder.Stop();
 
+	// free resources used for the last map
+	m_CurrentMap.Reset();
+	m_CurrentLightMap.Reset();
+	for(int i = 0; i < m_NumImages; i++)
+		m_aCurrentImages[i].Reset();
+	m_NumImages = 0;
+
 	// reinit snapshot ids
 	m_IDPool.TimeoutIDs();
 
 	// get the crc of the map
-	m_CurrentMapCrc = m_pMap->Crc();
+	m_CurrentMap.m_Crc = m_pMap->Crc();
 	char aBufMsg[256];
-	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentMapCrc);
+	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentMap.m_Crc);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
 
 	str_copy(m_aCurrentMap, pMapName, sizeof(m_aCurrentMap));
-	//map_set(df);
+	str_copy(m_CurrentMap.m_aName, pMapName, sizeof(m_CurrentMap.m_aName));
 
-	// load compelate map into memory for download
+	char aPath[128];
+	m_pStorage->GetPath(0, "", aPath, sizeof(aPath));
+
+	// extract images and generate light map
+	char aLightMapName[256];
+	str_format(aLightMapName, sizeof(aLightMapName), "_%s.map.light.tmp", pMapName);
+
+	CDataFileReader DataFileReader;
+	dbg_assert(DataFileReader.Open(m_pStorage, aBuf, IStorage::TYPE_ALL), "could not open datafile");
+	CDataFileWriter DataFileWriter;
+	DataFileWriter.Open(m_pStorage, aLightMapName);
+
+	struct CImageData
 	{
-		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
-		m_CurrentMapSize = (int)io_length(File);
-		if(m_pCurrentMapData)
-			mem_free(m_pCurrentMapData);
-		m_pCurrentMapData = (unsigned char *)mem_alloc(m_CurrentMapSize, 1);
-		io_read(File, m_pCurrentMapData, m_CurrentMapSize);
-		io_close(File);
+		int m_DataIndex;
+		int m_NameIndex;
+		char m_aName[256];
+	};
+	CImageData ImageDatas[128];
+	int NumImageDatas = 0;
+
+	for(int i = 0; i < DataFileReader.NumItems(); i++)
+	{
+		int Type, ID;
+		void *pItem = DataFileReader.GetItem(i, &Type, &ID);
+		if(Type == MAPITEMTYPE_IMAGE)
+		{
+			CMapItemImage *pImage = (CMapItemImage *)pItem;
+			CMapItemImage WriteImage = *pImage;
+			char *pName = (char *)DataFileReader.GetData(pImage->m_ImageName);
+			char aBuf[256] = "";
+
+			if(!pImage->m_External) // ignore external images
+			{
+				dbg_assert(m_NumImages < 128, "maximum number of images reached");
+
+				unsigned char *pData = (unsigned char *)DataFileReader.GetData(pImage->m_ImageData);
+				str_format(aBuf, sizeof(aBuf), "%s_%s.png.temp", aPath, pName);
+
+				png_t Png;
+				png_open_file_write(&Png, aBuf);
+				png_set_data(&Png, pImage->m_Width, pImage->m_Height, 8, PNG_TRUECOLOR_ALPHA, pData);
+				png_close_file(&Png);
+
+				DataFileReader.UnloadData(pImage->m_ImageData);
+
+				ImageDatas[NumImageDatas].m_DataIndex = pImage->m_ImageData;
+
+				// load complete png into memory for download
+				IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+				dbg_assert(File != 0, "image file not opened");
+				m_aCurrentImages[m_NumImages].m_Size = (int)io_length(File);
+				m_aCurrentImages[m_NumImages].m_pData = (unsigned char *)mem_alloc(m_aCurrentImages[m_NumImages].m_Size, 1);
+				io_read(File, m_aCurrentImages[m_NumImages].m_pData, m_aCurrentImages[m_NumImages].m_Size);
+				io_close(File);
+
+				str_copy(m_aCurrentImages[m_NumImages].m_aName, pName, sizeof(m_aCurrentImages[m_NumImages].m_aName));
+
+				unsigned Size;
+				unsigned Crc;
+				CDataFileReader::GetCrcSize(m_pStorage, aBuf, IStorage::TYPE_ALL, &Crc, &Size);
+				m_aCurrentImages[m_NumImages].m_Crc = Crc;
+
+				str_format(ImageDatas[NumImageDatas].m_aName, sizeof(ImageDatas[NumImageDatas].m_aName), "%s_%08x", pName, Crc);
+				ImageDatas[NumImageDatas].m_NameIndex = pImage->m_ImageName;
+				WriteImage.m_ImageData = -1;
+				WriteImage.m_External = 2;
+				NumImageDatas++;
+
+				m_NumImages++;
+
+				fs_remove(aBuf); // removing the temp file
+			}
+
+			DataFileReader.UnloadData(pImage->m_ImageName);
+
+			DataFileWriter.AddItem(Type, ID, sizeof(WriteImage), &WriteImage);
+		}
+		else
+			DataFileWriter.AddItem(Type, ID, DataFileReader.GetItemSize(i) - 2 * sizeof(int), pItem);
 	}
+
+	for(int i = 0; i < DataFileReader.NumData(); i++)
+	{
+		void *pData = DataFileReader.GetData(i);
+
+		int Found = 0;
+		for(int k = 0; k < NumImageDatas && !Found; k++)
+		{
+			int Temp = 0;
+			if(ImageDatas[k].m_NameIndex == i)
+			{
+				DataFileWriter.AddData(str_length(ImageDatas[k].m_aName) + 1, ImageDatas[k].m_aName);
+				Found = 1;
+			}
+			else if(ImageDatas[k].m_DataIndex == i)
+			{
+				DataFileWriter.AddData(sizeof(Temp), &Temp); // add dummy data for not corrupting the index
+				Found = 1;
+			}
+		}
+
+		if(!Found)
+			DataFileWriter.AddData(DataFileReader.GetUncompressedDataSize(i), pData);
+
+		DataFileReader.UnloadData(i);
+	}
+
+	DataFileReader.Close();
+	DataFileWriter.Finish();
+
+	// load complete light map into memory for download
+	IOHANDLE File = Storage()->OpenFile(aLightMapName, IOFLAG_READ, IStorage::TYPE_ALL);
+	dbg_assert(File != 0, "light map file not opened");
+	m_CurrentLightMap.m_Size = (int)io_length(File);
+	m_CurrentLightMap.m_pData = (unsigned char *)mem_alloc(m_CurrentLightMap.m_Size, 1);
+	io_read(File, m_CurrentLightMap.m_pData, m_CurrentLightMap.m_Size);
+	io_close(File);
+	
+	unsigned Temp;
+	CDataFileReader::GetCrcSize(Storage(), aLightMapName, IStorage::TYPE_ALL, &m_CurrentLightMap.m_Crc, &Temp); // get the crc of the light map
+
+	char aDelete[256];
+	str_format(aDelete, sizeof(aBuf), "%s%s", aPath, aLightMapName);
+	fs_remove(aDelete); // remove the temp file
+
+	// load complete map into memory for download
+	File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+	dbg_assert(File != 0, "map file not opened");
+	m_CurrentMap.m_Size = (int)io_length(File);
+	m_CurrentMap.m_pData = (unsigned char *)mem_alloc(m_CurrentMap.m_Size, 1);
+	io_read(File, m_CurrentMap.m_pData, m_CurrentMap.m_Size);
+	io_close(File);
+
 	return 1;
 }
 
@@ -1289,8 +1464,13 @@ int CServer::Run()
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
 
-	if(m_pCurrentMapData)
-		mem_free(m_pCurrentMapData);
+	m_CurrentMap.Reset();
+	m_CurrentLightMap.Reset();
+
+	for(int i = 0; i < m_NumImages; i++)
+		m_aCurrentImages[i].Reset();
+	m_NumImages = 0;
+
 	return 0;
 }
 
@@ -1485,7 +1665,7 @@ void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 		str_timestamp(aDate, sizeof(aDate));
 		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
 	}
-	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
+	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMap.m_Crc, "server");
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
@@ -1609,6 +1789,8 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfig->Init();
 	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
+
+	png_init(0, 0);
 
 	// register all console commands
 	pServer->RegisterCommands();

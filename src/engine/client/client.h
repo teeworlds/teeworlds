@@ -143,13 +143,26 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	char m_aCmdConnect[256];
 
 	// map download
-	char m_aMapdownloadFilename[256];
-	char m_aMapdownloadName[256];
-	IOHANDLE m_MapdownloadFile;
-	int m_MapdownloadChunk;
-	int m_MapdownloadCrc;
-	int m_MapdownloadAmount;
-	int m_MapdownloadTotalsize;
+	struct CDownload
+	{
+		char m_aFilename[256];
+		char m_aName[256];
+		IOHANDLE m_File;
+		int m_Chunk;
+		int m_Crc;
+		int m_Amount;
+		int m_Size;
+
+		void Reset() { if(m_File) io_close(m_File); mem_zero(this, sizeof(*this)); }
+	};
+
+	bool m_OldDownload;
+	CDownload m_MapDownload;
+	CDownload m_aImageDownloads[128];
+	int m_NumImageDownloads;
+	bool m_GotMap;
+	int m_DownloadTotalsize;
+	int m_DownloadTotalamount;
 
 	// time
 	CSmoothTime m_GameTime;
@@ -279,8 +292,15 @@ public:
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
-	virtual int MapDownloadAmount() { return m_MapdownloadAmount; }
-	virtual int MapDownloadTotalsize() { return m_MapdownloadTotalsize; }
+	void TryLoadDownloadMap();
+	void StartMapDownload();
+	void StartImageDownload(int Index);
+
+	bool SearchImage(const char *pName, int Crc, int Size);
+	bool SearchMap(const char *pName, int Crc, int Size);
+
+	virtual int MapDownloadAmount() { return m_DownloadTotalamount; }
+	virtual int MapDownloadTotalsize() { return m_DownloadTotalsize; }
 
 	void PumpNetwork();
 
