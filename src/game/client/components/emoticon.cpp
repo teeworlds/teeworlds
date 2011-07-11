@@ -102,6 +102,13 @@ void CEmoticon::OnRender()
 		return;
 	}
 
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+	{
+		m_Active = false;
+		m_WasActive = false;
+		return;
+	}
+
 	m_WasActive = true;
 
 	if (length(m_SelectorMouse) > 140)
