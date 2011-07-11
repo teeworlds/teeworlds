@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -335,7 +334,7 @@ Name
 == Nombre
 
 Name plates size
-== Máx. Caracteres para los Apodos
+== Tamaño de la Fuente (%)
 
 Netversion:
 == Versión Net
@@ -641,7 +640,7 @@ Weapon
 == Arma
 
 Welcome to Teeworlds
-== Bienvenido a Teeworlds!
+== Bienvenido/a a Teeworlds!
 
 Yes
 == Si
@@ -658,22 +657,22 @@ no limit
 ##### needs translation #####
 
 Demofile: %s
-== 
+== Archivo Demo: %s
 
 Play background music
-== 
+== Reproducir música de fondo
 
 Player country:
-== 
+== Tú Pais
 
 Spectate next
-== 
+== Observar siguiente
 
 Spectate previous
-== 
+== Observar anterior
 
 Strict gametype filter
-== 
+== Filtro estricto gametype
 
 ##### old translations #####
 
