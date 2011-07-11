@@ -48,17 +48,17 @@ static void CopyAlpha(int w, int h, CPixel *pSrc, CPixel *pDest)
 			pDest[m].a = pSrc[m].a;
 }
 
-int DilateFile(const char *FileName)
+int DilateFile(const char *pFileName)
 {
 	png_t Png;
 	CPixel *pBuffer[3] = {0,0,0};
 
 	png_init(0, 0);
-	png_open_file(&Png, FileName);
+	png_open_file(&Png, pFileName);
 
 	if(Png.color_type != PNG_TRUECOLOR_ALPHA)
 	{
-		dbg_msg("dilate", "%s : not an RGBA image", FileName);
+		dbg_msg("dilate", "%s: not an RGBA image", pFileName);
 		return 1;
 	}
 
@@ -81,7 +81,7 @@ int DilateFile(const char *FileName)
 	CopyAlpha(w, h, pBuffer[0], pBuffer[1]);
 
 	// save here
-	png_open_file_write(&Png, FileName);
+	png_open_file_write(&Png, pFileName);
 	png_set_data(&Png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pBuffer[1]);
 	png_close_file(&Png);
 
@@ -96,8 +96,8 @@ int main(int argc, const char **argv)
 		dbg_msg("Usage", "%s FILE1 [ FILE2... ]", argv[0]);
 		return -1;
 	}
-	int errors=0;
-	for(int i=1;i<argc;i++)
-		errors += DilateFile(argv[i]);
-	return errors;
+	
+	for(int i = 1; i < argc; i++)
+		DilateFile(argv[i]);
+	return 0;
 }
