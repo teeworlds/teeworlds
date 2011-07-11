@@ -4,6 +4,9 @@
 bosnian
 == Bosanski
 
+brazilian_portuguese
+== Português brasileiro
+
 bulgarian
 == Български
 

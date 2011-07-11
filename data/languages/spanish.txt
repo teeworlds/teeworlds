@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -143,6 +144,9 @@ Delete demo
 
 Demo details
 == Detellades demo
+
+Demofile: %s
+== Archivo Demo: %s
 
 Demos
 == Demos
@@ -387,8 +391,14 @@ Pistol
 Play
 == Asistir
 
+Play background music
+== Reproducir música de fondo
+
 Player
 == Jugador
+
+Player country:
+== Tú Pais
 
 Player options
 == Opciones de Jugador
@@ -537,6 +547,12 @@ Sound volume
 Spectate
 == Observar
 
+Spectate next
+== Observar siguiente
+
+Spectate previous
+== Observar anterior
+
 Spectator mode
 == Modo espectador
 
@@ -551,6 +567,9 @@ Standard map
 
 Stop record
 == Parar grabación
+
+Strict gametype filter
+== Filtro estricto gametype
 
 Sudden Death
 == Muerte Súbita
@@ -655,24 +674,6 @@ no limit
 == sin límite
 
 ##### needs translation #####
-
-Demofile: %s
-== Archivo Demo: %s
-
-Play background music
-== Reproducir música de fondo
-
-Player country:
-== Tú Pais
-
-Spectate next
-== Observar siguiente
-
-Spectate previous
-== Observar anterior
-
-Strict gametype filter
-== Filtro estricto gametype
 
 ##### old translations #####
 
