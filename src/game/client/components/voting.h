@@ -15,6 +15,7 @@ class CVoting : public CComponent
 
 	static void ConCallvote(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
+	static void ConVotes(IConsole::IResult *pResult, void *pUserData);
 
 	int64 m_Closetime;
 	char m_aDescription[VOTE_DESC_LENGTH];

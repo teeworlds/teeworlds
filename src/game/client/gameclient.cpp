@@ -177,6 +177,8 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 
+	Console()->Register("status", "", CFGFLAG_CLIENT, ConStatus, this, "List players");
+
 	// register server dummy commands for tab completion
 	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning");
@@ -1102,6 +1104,23 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 {
 	((CGameClient*)pUserData)->SendKill(-1);
+}
+
+void CGameClient::ConStatus(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pSelf = (CGameClient *)pUserData;
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CClientData *pClient = &pSelf->m_aClients[i];
+		if(pClient->m_Active)
+		{
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "id=%d name=\"%s\" clan=\"%s\" country=%d skin=\"%s\" team=%d friend=%d ignored=%d",
+				i, pClient->m_aName, pClient->m_aClan, pClient->m_Country, pClient->m_aSkinName, pClient->m_Team, pClient->m_Friend, pClient->m_ChatIgnore);
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "status", aBuf);
+		}
+	}
 }
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
