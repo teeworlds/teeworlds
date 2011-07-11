@@ -26,7 +26,7 @@
 == Zbývá sekund: %i
 
 %s wins!
-== %s zvítězil!
+== Vítězí %s!
 
 -Page %d-
 == -Strana %d-
@@ -398,7 +398,7 @@ Player
 == Hráč
 
 Player country:
-== Národnost hráče:
+== Národnost:
 
 Player options
 == Nastavení hráčů
@@ -551,7 +551,7 @@ Spectate next
 == Pozorovat dalšího
 
 Spectate previous
-== Pozorovat předchozího
+== Pozorovat minulého
 
 Spectator mode
 == Nastavit pozorování
@@ -584,7 +584,7 @@ Team chat
 == Týmový chat
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Vyšlo nové Teeworlds %s! Stáhněte si ji na www.teeworlds.com!
+== Stáhněte si nové Teeworlds %s na www.teeworlds.com!
 
 Texture Compression
 == Komprimované textury
