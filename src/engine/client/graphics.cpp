@@ -179,7 +179,16 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 
 void CGraphics_OpenGL::ClipEnable(int x, int y, int w, int h)
 {
-	//if(no_gfx) return;
+	if(x < 0)
+		w += x;
+	if(y < 0)
+		h += y;
+
+	x = clamp(x, 0, ScreenWidth());
+	y = clamp(y, 0, ScreenHeight());
+	w = clamp(w, 0, ScreenWidth()-x);
+	h = clamp(h, 0, ScreenHeight()-y);
+
 	glScissor(x, ScreenHeight()-(y+h), w, h);
 	glEnable(GL_SCISSOR_TEST);
 }
