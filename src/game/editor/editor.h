@@ -126,7 +126,7 @@ public:
 	CLayer()
 	{
 		m_Type = LAYERTYPE_INVALID;
-		m_pTypeName = "(invalid)";
+		str_copy(m_aName, "(invalid)", sizeof(m_aName));
 		m_Visible = true;
 		m_Readonly = false;
 		m_SaveToMap = true;
@@ -156,7 +156,7 @@ public:
 
 	virtual void GetSize(float *w, float *h) { *w = 0; *h = 0;}
 
-	const char *m_pTypeName;
+	char m_aName[12];
 	int m_Type;
 	int m_Flags;
 
@@ -184,7 +184,7 @@ public:
 	int m_ClipW;
 	int m_ClipH;
 
-	const char *m_pName;
+	char m_aName[12];
 	bool m_GameGroup;
 	bool m_Visible;
 	bool m_SaveToMap;
@@ -667,7 +667,7 @@ public:
 	int DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
 	int DoButton_Tab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
-	int DoButton_Ex(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners);
+	int DoButton_Ex(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize=10.0f);
 	int DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
@@ -676,7 +676,7 @@ public:
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
 
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden=false);
+	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 
 	void RenderBackground(CUIRect View, int Texture, float Size, float Brightness);
 

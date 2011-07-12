@@ -266,6 +266,9 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		GItem.m_StartLayer = LayerCount;
 		GItem.m_NumLayers = 0;
 
+		// save group name
+		StrToInts(GItem.m_aName, sizeof(GItem.m_aName)/sizeof(int), pGroup->m_aName);
+
 		for(int l = 0; l < pGroup->m_lLayers.size(); l++)
 		{
 			if(!pGroup->m_lLayers[l]->m_SaveToMap)
@@ -278,7 +281,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				pLayer->PrepareForSave();
 
 				CMapItemLayerTilemap Item;
-				Item.m_Version = 2;
+				Item.m_Version = 3;
 
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
@@ -295,6 +298,10 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				Item.m_Flags = pLayer->m_Game;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
+
+				// save layer name
+				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), pLayer->m_aName);
+
 				df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 
 				GItem.m_NumLayers++;
@@ -307,7 +314,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				if(pLayer->m_lQuads.size())
 				{
 					CMapItemLayerQuads Item;
-					Item.m_Version = 1;
+					Item.m_Version = 2;
 					Item.m_Layer.m_Flags = pLayer->m_Flags;
 					Item.m_Layer.m_Type = pLayer->m_Type;
 					Item.m_Image = pLayer->m_Image;
@@ -315,6 +322,10 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					// add the data
 					Item.m_NumQuads = pLayer->m_lQuads.size();
 					Item.m_Data = df.AddDataSwapped(pLayer->m_lQuads.size()*sizeof(CQuad), pLayer->m_lQuads.base_ptr());
+
+					// save layer name
+					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), pLayer->m_aName);
+
 					df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 
 					// clean up
@@ -489,6 +500,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					pGroup->m_ClipH = pGItem->m_ClipH;
 				}
 
+				// load group name
+				if(pGItem->m_Version >= 3)
+					IntsToStr(pGItem->m_aName, sizeof(pGroup->m_aName)/sizeof(int), pGroup->m_aName);
+
 				for(int l = 0; l < pGItem->m_NumLayers; l++)
 				{
 					CLayer *pLayer = 0;
@@ -524,6 +539,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&1;
 
+						// load layer name
+						if(pTilemapItem->m_Version >= 3)
+							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
+
 						mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
 
 						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
@@ -546,6 +565,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pQuads->m_Image = pQuadsItem->m_Image;
 						if(pQuads->m_Image < -1 || pQuads->m_Image >= m_lImages.size())
 							pQuads->m_Image = -1;
+
+						// load layer name
+						if(pQuadsItem->m_Version >= 2)
+							IntsToStr(pQuadsItem->m_aName, sizeof(pQuads->m_aName)/sizeof(int), pQuads->m_aName);
+
 						void *pData = DataFile.GetDataSwapped(pQuadsItem->m_Data);
 						pGroup->AddLayer(pQuads);
 						pQuads->m_lQuads.set_size(pQuadsItem->m_NumQuads);

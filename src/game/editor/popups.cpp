@@ -167,6 +167,17 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
+	// group name
+	if(!pEditor->GetSelectedGroup()->m_GameGroup)
+	{
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static float s_Name = 0;
+		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, -1, -1);
+		Button.VSplitLeft(40.0f, 0, &Button);
+		pEditor->DoEditBox(&s_Name, &Button, pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName, sizeof(pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName), 10.0f, &s_Name);
+	}
+
 	enum
 	{
 		PROP_ORDER=0,
@@ -241,6 +252,17 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	{
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
+	}
+
+	// layer name
+	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0))
+	{
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static float s_Name = 0;
+		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, -1, -1);
+		Button.VSplitLeft(40.0f, 0, &Button);
+		pEditor->DoEditBox(&s_Name, &Button, pEditor->GetSelectedLayer(0)->m_aName, sizeof(pEditor->GetSelectedLayer(0)->m_aName), 10.0f, &s_Name);
 	}
 
 	View.HSplitBottom(10.0f, &View, 0);
@@ -532,8 +554,8 @@ int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
 		View.HSplitBottom(40.0f, &View, 0);
 		View.VMargin(40.0f, &View);
 		View.HSplitBottom(20.0f, &View, &Label);
-		static int s_FolderBox = 0;
-		pEditor->DoEditBox(&s_FolderBox, &Label, pEditor->m_FileDialogNewFolderName, sizeof(pEditor->m_FileDialogNewFolderName), 15.0f);
+		static float s_FolderBox = 0;
+		pEditor->DoEditBox(&s_FolderBox, &Label, pEditor->m_FileDialogNewFolderName, sizeof(pEditor->m_FileDialogNewFolderName), 15.0f, &s_FolderBox);
 		View.HSplitBottom(20.0f, &View, &Label);
 		pEditor->UI()->DoLabel(&Label, "Name:", 10.0f, -1);
 
