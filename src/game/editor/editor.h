@@ -276,6 +276,34 @@ public:
 	array<CEditorImage*> m_lImages;
 	array<CEnvelope*> m_lEnvelopes;
 
+	class CMapInfo
+	{
+	public:
+		char m_aAuthorTmp[32];
+		char m_aVersionTmp[16];
+		char m_aCreditsTmp[128];
+		char m_aLicenseTmp[32];
+
+		char m_aAuthor[32];
+		char m_aVersion[16];
+		char m_aCredits[128];
+		char m_aLicense[32];
+
+		void Reset()
+		{
+			m_aAuthorTmp[0] = 0;
+			m_aVersionTmp[0] = 0;
+			m_aCreditsTmp[0] = 0;
+			m_aLicenseTmp[0] = 0;
+
+			m_aAuthor[0] = 0;
+			m_aVersion[0] = 0;
+			m_aCredits[0] = 0;
+			m_aLicense[0] = 0;
+		}
+	};
+	CMapInfo m_MapInfo;
+
 	class CLayerGame *m_pGameLayer;
 	CLayerGroup *m_pGameGroup;
 
@@ -710,6 +738,7 @@ public:
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
 	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
+	static int PopupMapInfo(CEditor *pEditor, CUIRect View);
 	static int PopupEvent(CEditor *pEditor, CUIRect View);
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
