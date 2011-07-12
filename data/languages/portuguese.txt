@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -293,7 +292,7 @@ Lht.
 == Luz
 
 Loading
-== Carregando
+== Aguarda por favor
 
 MOTD
 == MOTD
