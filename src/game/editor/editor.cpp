@@ -44,6 +44,7 @@ CLayerGroup::CLayerGroup()
 	m_aName[0] = 0;
 	m_Visible = true;
 	m_SaveToMap = true;
+	m_Collapse = false;
 	m_GameGroup = false;
 	m_OffsetX = 0;
 	m_OffsetY = 0;
@@ -1956,9 +1957,13 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	static float s_ScrollValue = 0;
 
 	for(int g = 0; g < m_Map.m_lGroups.size(); g++)
+	{
 		// Each group is 19.0f
 		// Each layer is 14.0f
-		LayersHeight += 19.0f + m_Map.m_lGroups[g]->m_lLayers.size() * 14.0f;
+		LayersHeight += 19.0f;
+		if(!m_Map.m_lGroups[g]->m_Collapse)
+			LayersHeight += m_Map.m_lGroups[g]->m_lLayers.size() * 14.0f;
+	}
 
 	float ScrollDifference = LayersHeight - LayersBox.h;
 
@@ -2009,7 +2014,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			{
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
 				Slot.VSplitLeft(12, &VisibleToggle, &Slot);
-				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, "Toggle group visibility", CUI::CORNER_L))
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", m_Map.m_lGroups[g]->m_Collapse ? 1 : 0, &VisibleToggle, 0, "Toggle group visibility", CUI::CORNER_L))
 					m_Map.m_lGroups[g]->m_Visible = !m_Map.m_lGroups[g]->m_Visible;
 
 				Slot.VSplitRight(12.0f, &Slot, &SaveCheck);
@@ -2022,7 +2027,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				while(TextRender()->TextWidth(0, FontSize, aBuf, -1) > Slot.w)
 					FontSize--;
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
-					BUTTON_CONTEXT, "Select group. Right click for properties.", 0, FontSize))
+					BUTTON_CONTEXT, m_Map.m_lGroups[g]->m_Collapse ? "Select group. Double click to expand." : "Select group. Double click to collapse.", 0, FontSize))
 				{
 					m_SelectedGroup = g;
 					m_SelectedLayer = 0;
@@ -2030,6 +2035,9 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					static int s_GroupPopupId = 0;
 					if(Result == 2)
 						UiInvokePopupMenu(&s_GroupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 220, PopupGroup);
+
+					if(m_Map.m_lGroups[g]->m_lLayers.size() && Input()->MouseDoubleClick())
+						m_Map.m_lGroups[g]->m_Collapse ^= 1;
 				}
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
 			}
@@ -2044,6 +2052,9 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					LayerCur += 14.0f;
 					continue;
 				}
+
+				if(m_Map.m_lGroups[g]->m_Collapse)
+					continue;
 
 				//visible
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
@@ -2069,7 +2080,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				while(TextRender()->TextWidth(0, FontSize, aBuf, -1) > Button.w)
 					FontSize--;
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
-					BUTTON_CONTEXT, "Select layer. Right click for properties.", 0, FontSize))
+					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
 				{
 					m_SelectedLayer = i;
 					m_SelectedGroup = g;

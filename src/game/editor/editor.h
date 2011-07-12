@@ -188,6 +188,7 @@ public:
 	bool m_GameGroup;
 	bool m_Visible;
 	bool m_SaveToMap;
+	bool m_Collapse;
 
 	CLayerGroup();
 	~CLayerGroup();
