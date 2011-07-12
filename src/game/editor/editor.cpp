@@ -840,13 +840,6 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			m_AnimateSpeed -= 0.5f;
 	}
 
-	if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && m_Dialog == DIALOG_NONE)
-		m_ZoomLevel -= 20;
-
-	if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && m_Dialog == DIALOG_NONE)
-		m_ZoomLevel += 20;
-
-	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	m_WorldZoom = m_ZoomLevel/100.0f;
 
 	TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
@@ -1976,6 +1969,20 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		LayersBox.VSplitRight(3.0f, &LayersBox, 0);	// extra spacing
 		Scroll.HMargin(5.0f, &Scroll);
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+		if(UI()->MouseInside(&Scroll) || UI()->MouseInside(&LayersBox))
+		{
+			int ScrollNum = (int)((LayersHeight-LayersBox.h)/15.0f)+1;
+			if(ScrollNum > 0)
+			{
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+					s_ScrollValue = clamp(s_ScrollValue - 1.0f/ScrollNum, 0.0f, 1.0f);
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
+			}
+			else
+				ScrollNum = 0;
+		}
 	}
 
 	float LayerStartAt = ScrollDifference * s_ScrollValue;
@@ -2272,6 +2279,20 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		ToolBox.VSplitRight(3.0f, &ToolBox, 0);	// extra spacing
 		Scroll.HMargin(5.0f, &Scroll);
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+		if(UI()->MouseInside(&Scroll) || UI()->MouseInside(&ToolBox))
+		{
+			int ScrollNum = (int)((ImagesHeight-ToolBox.h)/14.0f)+1;
+			if(ScrollNum > 0)
+			{
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+					s_ScrollValue = clamp(s_ScrollValue - 1.0f/ScrollNum, 0.0f, 1.0f);
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
+			}
+			else
+				ScrollNum = 0;
+		}
 	}
 
 	float ImageStartAt = ScrollDifference * s_ScrollValue;
@@ -3263,6 +3284,18 @@ void CEditor::Render()
 	//	a little hack for now
 	if(m_Mode == MODE_LAYERS)
 		DoMapEditor(View, ToolBar);
+
+	// do the scrolling
+	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
+	{
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+			m_ZoomLevel -= 20;
+
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+			m_ZoomLevel += 20;
+
+		m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
+	}
 
 	if(m_GuiActive)
 	{
