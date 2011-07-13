@@ -243,7 +243,26 @@ class CMenus : public CComponent
 	void FriendlistOnUpdate();
 
 	static int GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
-	
+
+	// map info
+	class CMapInfo
+	{
+	public:
+		char m_aAuthor[32];
+		char m_aVersion[16];
+		char m_aCredits[128];
+		char m_aLicense[32];
+
+		void Reset()
+		{
+			str_copy(m_aAuthor, Localize("None"), sizeof(m_aAuthor));
+			str_copy(m_aVersion, Localize("None"), sizeof(m_aVersion));
+			str_copy(m_aCredits, Localize("None"), sizeof(m_aCredits));
+			str_copy(m_aLicense, Localize("None"), sizeof(m_aLicense));
+		}
+	};
+	CMapInfo m_MapInfo;
+
 	// found in menus.cpp
 	int Render();
 	//void render_background();

@@ -1376,6 +1376,7 @@ void CMenus::SetActive(bool Active)
 
 void CMenus::OnReset()
 {
+	m_MapInfo.Reset();
 }
 
 bool CMenus::OnMouseMove(float x, float y)
@@ -1463,6 +1464,24 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_CONNECTING;
 	else if (NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK)
 	{
+
+		// get map info
+		{
+			IMap *pMap = Kernel()->RequestInterface<IMap>();
+			CMapItemInfo *pItem = (CMapItemInfo*)pMap->FindItem(MAPITEMTYPE_INFO, 0);
+			if(pItem && pItem->m_Version == 1)
+			{
+				if(pItem->m_Author > -1)
+					str_copy(m_MapInfo.m_aAuthor, (char *)pMap->GetData(pItem->m_Author), sizeof(m_MapInfo.m_aAuthor));
+				if(pItem->m_MapVersion > -1)
+					str_copy(m_MapInfo.m_aVersion, (char *)pMap->GetData(pItem->m_MapVersion), sizeof(m_MapInfo.m_aVersion));
+				if(pItem->m_Credits > -1)
+					str_copy(m_MapInfo.m_aCredits, (char *)pMap->GetData(pItem->m_Credits), sizeof(m_MapInfo.m_aCredits));
+				if(pItem->m_License > -1)
+					str_copy(m_MapInfo.m_aLicense, (char *)pMap->GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
+			}
+		}
+
 		m_Popup = POPUP_NONE;
 		SetActive(false);
 	}

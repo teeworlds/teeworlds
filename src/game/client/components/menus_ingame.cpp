@@ -272,7 +272,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
-	CUIRect View, ServerInfo, GameInfo, Motd;
+	CUIRect View, ServerInfo, GameInfo, MapInfo, Motd;
 
 	float x = 0.0f;
 	float y = 0.0f;
@@ -284,7 +284,8 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	// serverinfo
 	View.HSplitTop(View.h/2/UI()->Scale()-5.0f, &ServerInfo, &Motd);
-	ServerInfo.VSplitLeft(View.w/2/UI()->Scale()-5.0f, &ServerInfo, &GameInfo);
+	ServerInfo.VSplitLeft(View.w/2/UI()->Scale()-75.0f, &ServerInfo, &GameInfo);
+	GameInfo.VSplitLeft(GameInfo.w/2/UI()->Scale()-15.0f, &GameInfo, &MapInfo);
 	RenderTools()->DrawUIRect(&ServerInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 
 	ServerInfo.Margin(5.0f, &ServerInfo);
@@ -295,6 +296,11 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, ServerInfo.x+x, ServerInfo.y+y, 32, Localize("Server info"), 250);
 	y += 32.0f+5.0f;
 
+	char aIP[64];
+	for(int i = 0; g_Config.m_UiServerAddress[i]; i++)
+		if(g_Config.m_UiServerAddress[i] == ':')
+			str_copy(aIP, g_Config.m_UiServerAddress, i+1);
+
 	mem_zero(aBuf, sizeof(aBuf));
 	str_format(
 		aBuf,
@@ -302,10 +308,12 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		"%s\n\n"
 		"%s: %s\n"
 		"%s: %d\n"
+		"%s: %d\n"
 		"%s: %s\n"
 		"%s: %s\n",
 		CurrentServerInfo.m_aName,
-		Localize("Address"), g_Config.m_UiServerAddress,
+		Localize("Address"), aIP,
+		Localize("Port"), CurrentServerInfo.m_NetAddr.port,
 		Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency,
 		Localize("Version"), CurrentServerInfo.m_aVersion,
 		Localize("Password"), CurrentServerInfo.m_Flags &1 ? Localize("Yes") : Localize("No")
@@ -347,18 +355,49 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 			sizeof(aBuf),
 			"\n\n"
 			"%s: %s\n"
-			"%s: %s\n"
 			"%s: %d\n"
 			"%s: %d\n"
 			"\n"
 			"%s: %d/%d\n",
 			Localize("Game type"), CurrentServerInfo.m_aGameType,
-			Localize("Map"), CurrentServerInfo.m_aMap,
 			Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit,
 			Localize("Time limit"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit,
 			Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients
 		);
 		TextRender()->Text(0, GameInfo.x+x, GameInfo.y+y, 20, aBuf, 250);
+	}
+
+	// mapinfo
+	MapInfo.VSplitLeft(10.0f, 0, &MapInfo);
+	RenderTools()->DrawUIRect(&MapInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+
+	MapInfo.Margin(5.0f, &MapInfo);
+
+	x = 5.0f;
+	y = 0.0f;
+
+	TextRender()->Text(0, MapInfo.x+x, MapInfo.y+y, 32, Localize("Map info"), 250);
+	y += 32.0f+5.0f;
+
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+	{
+		mem_zero(aBuf, sizeof(aBuf));
+		str_format(
+			aBuf,
+			sizeof(aBuf),
+			"%s: %s\n"
+			"%s: %s\n"
+			"%s: %s\n"
+			"%s: %s\n"
+			"\n"
+			"%s: %s\n",
+			Localize("Map"), CurrentServerInfo.m_aMap,
+			Localize("Version"), m_MapInfo.m_aVersion,
+			Localize("Author"), m_MapInfo.m_aAuthor,
+			Localize("Credits"), m_MapInfo.m_aCredits,
+			Localize("License"), m_MapInfo.m_aLicense
+		);
+		TextRender()->Text(0, MapInfo.x+x, MapInfo.y+y, 20, aBuf, MapInfo.w-5.0f);
 	}
 
 	// motd
