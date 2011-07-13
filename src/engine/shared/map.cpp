@@ -13,6 +13,7 @@ public:
 
 	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
 	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
+	virtual int GetUncompressedDataSize(int Index) { return m_DataFile.GetUncompressedDataSize(Index); }
 	virtual void UnloadData(int Index) { m_DataFile.UnloadData(Index); }
 	virtual void *GetItem(int Index, int *pType, int *pID) { return m_DataFile.GetItem(Index, pType, pID); }
 	virtual void GetType(int Type, int *pStart, int *pNum) { m_DataFile.GetType(Type, pStart, pNum); }

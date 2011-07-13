@@ -264,6 +264,13 @@ int CDataFileReader::GetDataSize(int Index)
 	return m_pDataFile->m_Info.m_pDataOffsets[Index+1]-m_pDataFile->m_Info.m_pDataOffsets[Index];
 }
 
+int CDataFileReader::GetUncompressedDataSize(int Index)
+{
+	if(!m_pDataFile) { return 0; }
+
+	return m_pDataFile->m_Info.m_pDataSizes[Index];
+}
+
 void *CDataFileReader::GetDataImpl(int Index, int Swap)
 {
 	if(!m_pDataFile) { return 0; }
