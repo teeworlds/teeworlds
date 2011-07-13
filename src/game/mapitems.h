@@ -96,6 +96,7 @@ struct CMapItemInfo
 	int m_MapVersion;
 	int m_Credits;
 	int m_License;
+	int m_Settings;
 } ;
 
 struct CMapItemImage

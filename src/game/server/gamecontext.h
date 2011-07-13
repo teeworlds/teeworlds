@@ -141,6 +141,8 @@ public:
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
 
+	void LoadMapSettings();
+
 	// engine events
 	virtual void OnInit();
 	virtual void OnConsoleInit();

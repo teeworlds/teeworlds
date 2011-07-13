@@ -242,6 +242,34 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		else
 			Item.m_License = -1;
 
+		Item.m_Settings = -1;
+		if(m_lSettings.size())
+		{
+			int Size = 0;
+			for(int i = 0; i < m_lSettings.size(); i++)
+				Size += str_length(m_lSettings[i].m_aCommand);
+			Size += m_lSettings.size();
+
+			char *pBuf = new char[Size];
+			mem_zero(pBuf, Size);
+			int Index = 0;
+			for(int i = 0; i < m_lSettings.size(); i++)
+			{
+				int j = 0;
+				while(Index < Size)
+				{
+					pBuf[Index] = m_lSettings[i].m_aCommand[j];
+					if(!m_lSettings[i].m_aCommand[j]) // check for null termination
+						break;
+					Index++;
+					j++;
+				}
+				Index++;
+			}
+			Item.m_Settings = df.AddData(Size, pBuf);
+			delete[] pBuf;
+		}
+
 		df.AddItem(MAPITEMTYPE_INFO, 0, sizeof(Item), &Item);
 	}
 
@@ -454,6 +482,27 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					str_copy(m_MapInfo.m_aCredits, (char *)DataFile.GetData(pItem->m_Credits), sizeof(m_MapInfo.m_aCredits));
 				if(pItem->m_License > -1)
 					str_copy(m_MapInfo.m_aLicense, (char *)DataFile.GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
+
+				// load settings
+				if(pItem->m_Settings > -1)
+				{
+					int Size = DataFile.GetUncompressedDataSize(pItem->m_Settings);
+					char *pBuf = new char[Size];
+					mem_zero(pBuf, Size);
+					mem_copy(pBuf, DataFile.GetData(pItem->m_Settings), Size);
+					char *pTmp = pBuf;
+					int Index = 0;
+					while(Index < Size)
+					{
+						int StrSize = str_length(pTmp);
+						CSetting Setting;
+						str_copy(Setting.m_aCommand, pTmp, sizeof(Setting.m_aCommand));
+						pTmp += StrSize+1;
+						m_lSettings.add(Setting);
+						Index += StrSize+1;
+					}
+					delete[] pBuf;
+				}
 			}
 		}
 
