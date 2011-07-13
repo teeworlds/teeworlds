@@ -63,6 +63,8 @@ class CGameConsole : public CComponent
 	float m_StateChangeEnd;
 	float m_StateChangeDuration;
 
+	int m_ReceivedRemoteCommands;
+
 	void Toggle(int Type);
 	void Dump(int Type);
 

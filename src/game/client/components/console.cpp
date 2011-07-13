@@ -532,6 +532,16 @@ void CGameConsole::OnRender()
 
 void CGameConsole::OnMessage(int MsgType, void *pRawMsg)
 {
+	if(MsgType == NETMSGTYPE_SV_REGISTERRCONCOMMAND)
+	{
+		if(m_ReceivedRemoteCommands == 0)
+		{
+			Console()->UnRegisterAll(CFGFLAG_CLIENT); // remove all command that don't have client's flag
+			m_ReceivedRemoteCommands = 1;
+		}
+		CNetMsg_Sv_RegisterRconCommand *pMsg = (CNetMsg_Sv_RegisterRconCommand *)pRawMsg;
+		Console()->Register(strdup(pMsg->m_pName), strdup(pMsg->m_pParams), CFGFLAG_SERVER, 0, 0, strdup(pMsg->m_pHelp));
+	}
 }
 
 bool CGameConsole::OnInput(IInput::CEvent Event)
@@ -679,6 +689,8 @@ void CGameConsole::OnConsoleInit()
 
 void CGameConsole::OnStateChange(int NewState, int OldState)
 {
+	if(NewState == IClient::STATE_ONLINE)
+		m_ReceivedRemoteCommands = 0;
 	if(NewState == IClient::STATE_OFFLINE)
 		m_RemoteConsole.ClearHistory();
 }

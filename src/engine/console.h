@@ -46,15 +46,18 @@ public:
 
 	typedef void (*FPrintCallback)(const char *pStr, void *pUser);
 	typedef void (*FPossibleCallback)(const char *pCmd, void *pUser);
+	typedef void (*FCommandInfoCallback)(CCommandInfo *pCmd, void *pUser);
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask) = 0;
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
+	virtual void GetCommandsInfo(int FlagMask, FCommandInfoCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
 	virtual void Register(const char *pName, const char *pParams,
 		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
+	virtual void UnRegisterAll(int FlagMask) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
 

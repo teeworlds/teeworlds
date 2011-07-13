@@ -291,6 +291,12 @@ Messages = [
 		NetIntRange("m_Total", 0, 'MAX_CLIENTS'),
 	]),
 
+	NetMessage("Sv_RegisterRconCommand", [
+		NetStringStrict("m_pName"),
+		NetStringStrict("m_pParams"),
+		NetStringStrict("m_pHelp"),
+	]),
+
 	### Client messages
 	NetMessage("Cl_Say", [
 		NetBool("m_Team"),

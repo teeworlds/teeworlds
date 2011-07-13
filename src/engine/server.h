@@ -79,6 +79,7 @@ public:
 	virtual void OnClientDrop(int ClientID, const char *pReason) = 0;
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
+	virtual void OnClientAuth(int ClientID) = 0;
 
 	virtual bool IsClientReady(int ClientID) = 0;
 	virtual bool IsClientPlayer(int ClientID) = 0;

@@ -851,6 +851,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (admin)", ClientID);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+					GameServer()->OnClientAuth(ClientID);
 				}
 				else if(g_Config.m_SvRconModPassword[0] && str_comp(pPw, g_Config.m_SvRconModPassword) == 0)
 				{
@@ -863,6 +864,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (moderator)", ClientID);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+					GameServer()->OnClientAuth(ClientID);
 				}
 				else if(g_Config.m_SvRconMaxTries)
 				{
@@ -1516,17 +1518,17 @@ void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
-	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "");
-	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "");
-	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "");
-	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "");
-	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "");
-	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "");
+	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
+	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "Ban player with ip/id for x minutes for any reason");
+	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "Unban ip");
+	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "Show banlist");
+	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
+	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 
-	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "");
-	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");
+	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
+	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
-	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "");
+	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);

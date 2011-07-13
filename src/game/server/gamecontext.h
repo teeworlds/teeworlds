@@ -61,10 +61,13 @@ class CGameContext : public IGameServer
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
+	static void OnClientAuthCallback(IConsole::CCommandInfo *pCmd, void *pUser);
+
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
 	bool m_Resetting;
+	int m_pCurentClientID;
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
@@ -158,6 +161,7 @@ public:
 	virtual void OnClientDrop(int ClientID, const char *pReason);
 	virtual void OnClientDirectInput(int ClientID, void *pInput);
 	virtual void OnClientPredictedInput(int ClientID, void *pInput);
+	virtual void OnClientAuth(int ClientID);
 
 	virtual bool IsClientReady(int ClientID);
 	virtual bool IsClientPlayer(int ClientID);

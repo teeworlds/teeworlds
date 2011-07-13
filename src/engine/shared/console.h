@@ -145,9 +145,11 @@ public:
 
 	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask);
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) ;
+	virtual void GetCommandsInfo(int FlagMask, FCommandInfoCallback pfnCallback, void *pUser);
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);
+	virtual void UnRegisterAll(int FlagMask);
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 
