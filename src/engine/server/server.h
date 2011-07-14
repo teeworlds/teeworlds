@@ -54,6 +54,8 @@ public:
 		AUTHED_NO=0,
 		AUTHED_MOD,
 		AUTHED_ADMIN,
+
+		MAX_RCONCMD_SEND=16,
 	};
 
 	class CClient
@@ -99,6 +101,8 @@ public:
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
+
+		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();
 	};
@@ -169,6 +173,10 @@ public:
 	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 
+	void SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
+	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
+	void UpdateClientRconCommands();
+
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	void SendServerInfo(NETADDR *pAddr, int Token);
@@ -197,6 +205,7 @@ public:
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 
