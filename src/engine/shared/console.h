@@ -13,9 +13,13 @@ class CConsole : public IConsole
 	public:
 		CCommand *m_pNext;
 		int m_Flags;
-		int m_AccessLevel;
+		bool m_Temp;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
+
+		virtual const CCommandInfo *NextCommandInfo(int AccessLevel, int FlagMask) const;
+
+		void SetAccessLevel(int AccessLevel) { m_AccessLevel = clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD)); }
 	};
 
 
@@ -43,6 +47,9 @@ class CConsole : public IConsole
 	CExecFile *m_pFirstExec;
 	class IStorage *m_pStorage;
 	int m_AccessLevel;
+
+	CCommand *m_pRecycleList;
+	CHeap m_TempCommands;
 
 	static void Con_Chain(IResult *pResult, void *pUserData);
 	static void Con_Echo(IResult *pResult, void *pUserData);
@@ -138,16 +145,21 @@ class CConsole : public IConsole
 		}
 	} m_ExecutionQueue;
 
+	void AddCommandSorted(CCommand *pCommand);
 	CCommand *FindCommand(const char *pName, int FlagMask);
 
 public:
 	CConsole(int FlagMask);
 
-	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask);
-	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) ;
+	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const;
+	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp);
+	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser);
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);
+	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp);
+	virtual void DeregisterTemp(const char *pName);
+	virtual void DeregisterTempAll();
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 

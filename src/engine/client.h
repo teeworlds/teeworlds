@@ -95,6 +95,7 @@ public:
 	// remote console
 	virtual void RconAuth(const char *pUsername, const char *pPassword) = 0;
 	virtual bool RconAuthed() = 0;
+	virtual bool UseTempRconCommands() = 0;
 	virtual void Rcon(const char *pLine) = 0;
 
 	// server info

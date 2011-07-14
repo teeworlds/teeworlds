@@ -536,11 +536,6 @@ void CClient::SendReady()
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
-bool CClient::RconAuthed()
-{
-	return m_RconAuthed;
-}
-
 void CClient::RconAuth(const char *pName, const char *pPassword)
 {
 	if(RconAuthed())
@@ -549,6 +544,7 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 	CMsgPacker Msg(NETMSG_RCON_AUTH);
 	Msg.AddString(pName, 32);
 	Msg.AddString(pPassword, 32);
+	Msg.AddInt(1);
 	SendMsgEx(&Msg, MSGFLAG_VITAL);
 }
 
@@ -726,6 +722,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	//
 	m_RconAuthed = 0;
+	m_pConsole->DeregisterTempAll();
 	m_NetClient.Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
@@ -1313,11 +1310,28 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_PING_REPLY);
 			SendMsgEx(&Msg, 0);
 		}
+		else if(Msg == NETMSG_RCON_CMD_ADD)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			const char *pHelp = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			const char *pParams = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->RegisterTemp(pName, pParams, CFGFLAG_SERVER, pHelp);
+		}
+		else if(Msg == NETMSG_RCON_CMD_REM)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->DeregisterTemp(pName);
+		}
 		else if(Msg == NETMSG_RCON_AUTH_STATUS)
 		{
 			int Result = Unpacker.GetInt();
 			if(Unpacker.Error() == 0)
 				m_RconAuthed = Result;
+			m_UseTempRconCommands = Unpacker.GetInt();
+			if(Unpacker.Error() != 0)
+				m_UseTempRconCommands = 0;
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{

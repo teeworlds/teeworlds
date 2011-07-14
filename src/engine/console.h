@@ -10,6 +10,7 @@ class IConsole : public IInterface
 	MACRO_INTERFACE("console", 0)
 public:
 
+	//	TODO: rework/cleanup
 	enum
 	{
 		OUTPUT_LEVEL_STANDARD=0,
@@ -18,6 +19,10 @@ public:
 
 		ACCESS_LEVEL_ADMIN=0,
 		ACCESS_LEVEL_MOD,
+
+		TEMPCMD_NAME_LENGTH=32,
+		TEMPCMD_HELP_LENGTH=64,
+		TEMPCMD_PARAMS_LENGTH=16,
 	};
 
 	// TODO: rework this interface to reduce the amount of virtual calls
@@ -38,10 +43,18 @@ public:
 
 	class CCommandInfo
 	{
+	protected:
+		int m_AccessLevel;
 	public:
+		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
+		virtual ~CCommandInfo() {}
 		const char *m_pName;
 		const char *m_pHelp;
 		const char *m_pParams;
+
+		virtual const CCommandInfo *NextCommandInfo(int AccessLevel, int FlagMask) const = 0;
+
+		int GetAccessLevel() const { return m_AccessLevel; }
 	};
 
 	typedef void (*FPrintCallback)(const char *pStr, void *pUser);
@@ -49,12 +62,15 @@ public:
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
-	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask) = 0;
-	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
+	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const = 0;
+	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) = 0;
+	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
-	virtual void Register(const char *pName, const char *pParams,
-		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
+	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
+	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp) = 0;
+	virtual void DeregisterTemp(const char *pName) = 0;
+	virtual void DeregisterTempAll() = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
 
