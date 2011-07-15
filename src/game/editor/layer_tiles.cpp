@@ -545,7 +545,7 @@ void CLayerTiles::ModifyEnvelopeIndex(INDEX_MODIFY_FUNC Func)
 CLayerTele::CLayerTele(int w, int h)
 : CLayerTiles(w, h)
 {
-	m_pTypeName = "Tele";
+	str_copy(m_aName, "Tele", sizeof(m_aName));
 	m_Tele = 1;
 	
 	m_pTeleTile = new CTeleTile[w*h];
@@ -780,7 +780,7 @@ void CLayerTele::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 CLayerSpeedup::CLayerSpeedup(int w, int h)
 : CLayerTiles(w, h)
 {
-	m_pTypeName = "Speedup";
+	str_copy(m_aName, "Speedup", sizeof(m_aName));
 	m_Speedup = 1;
 	
 	m_pSpeedupTile = new CSpeedupTile[w*h];
