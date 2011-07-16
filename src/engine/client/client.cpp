@@ -1313,8 +1313,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		else if(Msg == NETMSG_RCON_CMD_ADD)
 		{
 			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			dbg_msg("test", "%s", pName);
 			const char *pHelp = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			dbg_msg("test", "%s", pHelp);
 			const char *pParams = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			dbg_msg("test", "%s", pParams);
 			if(Unpacker.Error() == 0)
 				m_pConsole->RegisterTemp(pName, pParams, CFGFLAG_SERVER, pHelp);
 		}

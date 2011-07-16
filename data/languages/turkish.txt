@@ -657,13 +657,409 @@ no limit
 
 ##### needs translation #####
 
+Add a server as a favorite
+== 
+
+Add a voting option
+== 
+
+Add dunnies
+== 
+
+Address to bind the server to
+== 
+
+Adjust the amount of information in the console
+== 
+
+Allow powerups like ninja
+== 
+
+Allow voting to kick players
+== 
+
+Allow voting to move players to spectators
+== 
+
+Alpha bits for framebuffer (fullscreen only)
+== 
+
+Always show name plates disregarding of distance
+== 
+
+Authenticate to rcon
+== 
+
+Bind key to execute the command
+== 
+
+Broadcast message
+== 
+
+Change map
+== 
+
+Clan of the player
+== 
+
+Clear local console
+== 
+
+Clear remote console
+== 
+
+Clear screen before rendering
+== 
+
+Clears the voting options
+== 
+
+Colors bits for framebuffer (fullscreen only)
+== 
+
+Column to sort
+== 
+
+Connect to the specified host/ip
+== 
+
+Country of the player
+== 
+
+Debug mode
+== 
+
 Demofile: %s
+== 
+
+Disable clipping
+== 
+
+Disconnect from the server
+== 
+
+Dump binds
+== 
+
+Dump local console
+== 
+
+Dump remote console
+== 
+
+Dump tuning
+== 
+
+Enable air jump indicator
+== 
+
+Enable chat with all/team mode
+== 
+
+Enables the usage of a thread to pump the events
+== 
+
+Enables window resizing
+== 
+
+External port to report to the master servers
+== 
+
+Filename to log all output to
+== 
+
+Filter out empty server in browser
+== 
+
+Filter out full server in browser
+== 
+
+Filter out non-compatible servers in browser
+== 
+
+Filter out non-standard maps in browser
+== 
+
+Filter out non-standard servers in browser
+== 
+
+Filter out password protected servers in browser
+== 
+
+Filter out servers with no friends
+== 
+
+Filter out servers with non-matching player country
+== 
+
+Filter out spectators from player numbers
+== 
+
+Force a vote to yes/no
+== 
+
+Force a voting option
+== 
+
+Game types to filter
+== 
+
+Help
+== 
+
+Hitch warnings
+== 
+
+How long to show the server message of the day
+== 
+
+How many minutes to wait before a player can rejoin after being moved to spectators by vote
+== 
+
+How many minutes to wait before autobalancing teams
+== 
+
+How many minutes to wait before taking care of inactive players
+== 
+
+How to deal with inactive players (0=move to spectator, 1=move to free spectator slot/kick, 2=kick)
+== 
+
+Interface alpha
+== 
+
+Interface color hue
+== 
+
+Interface color lightness
+== 
+
+Interface color saturation
+== 
+
+Interface page
+== 
+
+Interface scale
+== 
+
+Interface server address
+== 
+
+Kill yourself
+== 
+
+Load sound files threaded
+== 
+
+Map to use on the server
+== 
+
+Maps to rotate between
+== 
+
+Maximum number of automatically created screenshots (0 = no limit)
+== 
+
+Maximum number of automatically recorded demos (0 = no limit)
+== 
+
+Maximum number of clients that are allowed on a server
+== 
+
+Maximum number of clients with the same IP that can connect to the server
+== 
+
+Maximum number of tries for remote console authentication
+== 
+
+Message of the day to display for the clients
+== 
+
+Minimize Teeworlds
+== 
+
+Minimum number of players required to start a kick vote
+== 
+
+Mouse sensitivity
+== 
+
+Mouse sensitivity for menus/editor
+== 
+
+Name of the player
+== 
+
+Number of requests to use when refreshing server browser
+== 
+
+Number of rounds on each map before rotating
+== 
+
+Number of seconds to do warmup before round starts
+== 
+
+Number of slots to reserve for spectators
+== 
+
+Open emote selector
+== 
+
+Open spectator mode selector
+== 
+
+Password to the server
+== 
+
+Performance graphs
+== 
+
+Performance outputs
+== 
+
+Ping the current server
+== 
+
+Ping to filter by in the server browser
 == 
 
 Play background music
 == 
 
+Play the file specified
+== 
+
+Player body color
+== 
+
+Player country to filter by in the server browser
+== 
+
 Player country:
+== 
+
+Player feet color
+== 
+
+Player skin
+== 
+
+Port to use for the server
+== 
+
+Predict client movements
+== 
+
+Quit Teeworlds
+== 
+
+Record to the file
+== 
+
+Register server with master server for public listing
+== 
+
+Release focus (ESC must be hold)
+== 
+
+Remote console password (full access)
+== 
+
+Remote console password for moderators (limited access)
+== 
+
+Remove a server from favorites
+== 
+
+Remove a voting option
+== 
+
+Reset tuning
+== 
+
+Restart in x seconds
+== 
+
+Restricts information in spectator mode
+== 
+
+Say in chat
+== 
+
+Say in team chat
+== 
+
+Score limit (0 disables)
+== 
+
+Screen refresh rate
+== 
+
+Screen resolution height
+== 
+
+Screen resolution width
+== 
+
+Send specified command to rcon
+== 
+
+Server address to filter
+== 
+
+Server browser filtering string
+== 
+
+Server name
+== 
+
+Server to stress
+== 
+
+Server to use to check for new versions
+== 
+
+Set maximal mouse distance
+== 
+
+Set mouse dead zone
+== 
+
+Set mouse follow factor
+== 
+
+Set team of all players to team
+== 
+
+Set team of player to team
+== 
+
+Show active keys in editor
+== 
+
+Show ingame FPS counter
+== 
+
+Show initial settings on game start
+== 
+
+Show scoreboard
+== 
+
+Show tunings in debug hud
+== 
+
+Size of the name plates from 0 to 100%
+== 
+
+Sort order
+== 
+
+Sound buffer size
+== 
+
+Spam protection
 == 
 
 Spectate next
@@ -672,7 +1068,121 @@ Spectate next
 Spectate previous
 == 
 
+Spectate the next player
+== 
+
+Spectate the previous player
+== 
+
+Stop recording
+== 
+
+Stress network
+== 
+
+Stress systems
+== 
+
 Strict gametype filter
+== 
+
+Switch spectator mode
+== 
+
+Switch team
+== 
+
+Switch to grenade
+== 
+
+Switch to gun
+== 
+
+Switch to hammer
+== 
+
+Switch to next weapon
+== 
+
+Switch to previous weapon
+== 
+
+Switch to rifle
+== 
+
+Switch to shotgun
+== 
+
+Syntax
+== 
+
+Take a screenshot
+== 
+
+Team damage
+== 
+
+Texture quality
+== 
+
+The time a client gets banned if remote console authentication fails. 0 makes it just use kick
+== 
+
+The time to ban a player if kicked by vote. 0 makes it just use kick
+== 
+
+Throttle CPU
+== 
+
+Time limit in minutes (0 disables)
+== 
+
+Time needed to respawn after death in tdm gametype
+== 
+
+Toggle editor
+== 
+
+Toggle local console
+== 
+
+Toggle remote console
+== 
+
+Toggle usage of custom colors
+== 
+
+Toolbox page
+== 
+
+Tournament mode. When enabled, players joins the server as spectator
+== 
+
+Tune variable to value
+== 
+
+Unbind all keys
+== 
+
+Unbind key
+== 
+
+Use emote
+== 
+
+Use forceful input grabbing method
+== 
+
+Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only
+== 
+
+Vote yes/no
+== 
+
+Warn about team balance
+== 
+
+What language file to use
 == 
 
 ##### old translations #####
