@@ -1353,6 +1353,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_Layers.Init(Kernel());
 	m_Collision.Init(&m_Layers);
 
+	// load map settings from map or config
 	if(g_Config.m_SvLoadMapDefaults)
 		LoadMapSettings();
 
@@ -1423,6 +1424,14 @@ void CGameContext::OnShutdown()
 
 void CGameContext::LoadMapSettings()
 {
+	if(g_Config.m_SvLoadMapDefaults == 2)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "maps/%s.cfg", g_Config.m_SvMap);
+		if(Console()->ExecuteFile(aBuf))
+			return;
+	}
+
 	IMap *pMap = Kernel()->RequestInterface<IMap>();
 	CMapItemInfo *pItem = (CMapItemInfo *)pMap->FindItem(MAPITEMTYPE_INFO, 0);
 	if(pItem && pItem->m_Settings > -1)

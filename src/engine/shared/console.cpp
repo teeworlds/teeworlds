@@ -361,17 +361,17 @@ void CConsole::ExecuteLine(const char *pStr)
 }
 
 
-void CConsole::ExecuteFile(const char *pFilename)
+bool CConsole::ExecuteFile(const char *pFilename)
 {
 	// make sure that this isn't being executed already
 	for(CExecFile *pCur = m_pFirstExec; pCur; pCur = pCur->m_pPrev)
 		if(str_comp(pFilename, pCur->m_pFilename) == 0)
-			return;
+			return false;
 
 	if(!m_pStorage)
 		m_pStorage = Kernel()->RequestInterface<IStorage>();
 	if(!m_pStorage)
-		return;
+		return false;
 
 	// push this one to the stack
 	CExecFile ThisFile;
@@ -397,14 +397,18 @@ void CConsole::ExecuteFile(const char *pFilename)
 			ExecuteLine(pLine);
 
 		io_close(File);
+
+		m_pFirstExec = pPrev;
+		return true;
 	}
 	else
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to open '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-	}
 
-	m_pFirstExec = pPrev;
+		m_pFirstExec = pPrev;
+		return false;
+	}
 }
 
 void CConsole::Con_Echo(IResult *pResult, void *pUserData)

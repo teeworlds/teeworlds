@@ -165,7 +165,7 @@ public:
 
 	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr);
-	virtual void ExecuteFile(const char *pFilename);
+	virtual bool ExecuteFile(const char *pFilename);
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void Print(int Level, const char *pFrom, const char *pStr);
