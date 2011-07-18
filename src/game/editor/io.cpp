@@ -295,7 +295,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game;
+				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
 
@@ -516,7 +516,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
 						CLayerTiles *pTiles = 0;
 
-						if(pTilemapItem->m_Flags&1)
+						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
 							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeGameLayer(pTiles);
@@ -537,7 +537,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pGroup->AddLayer(pTiles);
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
-						pTiles->m_Game = pTilemapItem->m_Flags&1;
+						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)
