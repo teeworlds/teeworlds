@@ -353,7 +353,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				else if(pLayer->m_Speedup)
 					Item.m_Flags = 4;
 				else
-					Item.m_Flags = pLayer->m_Game;
+					Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
 				Item.m_Image = pLayer->m_Image;
 				if(pLayer->m_Tele)
 				{
@@ -628,7 +628,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
 						CLayerTiles *pTiles = 0;
 
-						if(pTilemapItem->m_Flags&1)
+						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
 							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeGameLayer(pTiles);
@@ -671,7 +671,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pGroup->AddLayer(pTiles);
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
-						pTiles->m_Game = pTilemapItem->m_Flags&1;
+						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)
