@@ -190,6 +190,24 @@ void CEditorImage::AnalyseTileFlags()
 
 }
 
+void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
+{
+	CEditor *pThis = (CEditor *)pUser;
+	if(Env < 0 || Env > pThis->m_Map.m_lEnvelopes.size())
+	{
+		pChannels[0] = 0;
+		pChannels[1] = 0;
+		pChannels[2] = 0;
+		pChannels[3] = 0;
+		return;
+	}
+
+	CEnvelope *e = pThis->m_Map.m_lEnvelopes[Env];
+	float t = pThis->m_AnimateTime+TimeOffset;
+	t *= pThis->m_AnimateSpeed;
+	e->Eval(t, pChannels);
+}
+
 /********************************************************
  OTHER
 *********************************************************/
@@ -2086,7 +2104,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					m_SelectedGroup = g;
 					static int s_LayerPopupID = 0;
 					if(Result == 2)
-						UiInvokePopupMenu(&s_LayerPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 220, PopupLayer);
+						UiInvokePopupMenu(&s_LayerPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 245, PopupLayer);
 				}
 
 				LayerCur += 14.0f;
