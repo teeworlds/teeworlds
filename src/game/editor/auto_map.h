@@ -1,5 +1,5 @@
-#ifndef GAME_EDITOR_ED_AUTO_MAP_H
-#define GAME_EDITOR_ED_AUTO_MAP_H
+#ifndef GAME_EDITOR_AUTO_MAP_H
+#define GAME_EDITOR_AUTO_MAP_H
 
 #include <base/tl/array.h>
 
