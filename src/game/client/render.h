@@ -39,6 +39,7 @@ enum
 	TILERENDERFLAG_EXTEND=4,
 };
 
+typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
 
 class CRenderTools
 {
@@ -70,8 +71,8 @@ public:
 
 	// map render methods (gc_render_map.cpp)
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
-	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser);
-	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int Flags);
+	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, ENVELOPE_EVAL pfnEval, void *pUser);
+	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
 
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,

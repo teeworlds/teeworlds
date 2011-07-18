@@ -406,6 +406,8 @@ public:
 	int m_Width;
 	int m_Height;
 	CColor m_Color;
+	int m_ColorEnv;
+	int m_ColorEnvOffset;
 	CTile *m_pTiles;
 };
 
@@ -662,6 +664,8 @@ public:
 	static const void *ms_pUiGotContext;
 
 	CEditorMap m_Map;
+
+	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
 
 	void DoMapBorder();
 	int DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
