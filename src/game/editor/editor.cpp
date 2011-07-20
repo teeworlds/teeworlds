@@ -193,7 +193,7 @@ void CEditorImage::AnalyseTileFlags()
 void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
 {
 	CEditor *pThis = (CEditor *)pUser;
-	if(Env < 0 || Env > pThis->m_Map.m_lEnvelopes.size())
+	if(Env < 0 || Env >= pThis->m_Map.m_lEnvelopes.size())
 	{
 		pChannels[0] = 0;
 		pChannels[1] = 0;
