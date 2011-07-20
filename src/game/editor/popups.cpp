@@ -177,7 +177,8 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		static float s_Name = 0;
 		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, -1, -1);
 		Button.VSplitLeft(40.0f, 0, &Button);
-		pEditor->DoEditBox(&s_Name, &Button, pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName, sizeof(pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName), 10.0f, &s_Name);
+		if(pEditor->DoEditBox(&s_Name, &Button, pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName, sizeof(pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName), 10.0f, &s_Name))
+			pEditor->m_Map.m_Modified = true;
 	}
 
 	enum
@@ -264,7 +265,8 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		static float s_Name = 0;
 		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, -1, -1);
 		Button.VSplitLeft(40.0f, 0, &Button);
-		pEditor->DoEditBox(&s_Name, &Button, pEditor->GetSelectedLayer(0)->m_aName, sizeof(pEditor->GetSelectedLayer(0)->m_aName), 10.0f, &s_Name);
+		if(pEditor->DoEditBox(&s_Name, &Button, pEditor->GetSelectedLayer(0)->m_aName, sizeof(pEditor->GetSelectedLayer(0)->m_aName), 10.0f, &s_Name))
+			pEditor->m_Map.m_Modified = true;
 	}
 
 	View.HSplitBottom(10.0f, &View, 0);
