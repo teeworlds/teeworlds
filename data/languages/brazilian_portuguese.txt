@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -356,7 +357,7 @@ Nickname
 
 No
 == Não
-	
+
 No password
 == Sem senha
 
@@ -675,3 +676,4 @@ no limit
 ##### needs translation #####
 
 ##### old translations #####
+

@@ -14,16 +14,16 @@
 == Pozostało %ds
 
 %i minute left
-== Pozostała %i minuta
+== Pozostało minut: %i
 
 %i minutes left
-== Pozostało %i minut
+== Pozostało minut: %i
 
 %i second left
-== Pozostała %i sekunda
+== Pozostało sekund: %i
 
 %i seconds left
-== Pozostało %i sekund
+== Pozostało sekund: %i
 
 %s wins!
 == Wygrał %d!
@@ -50,7 +50,7 @@ Alpha
 == Alfa
 
 Always show name plates
-== Zawsze pokazuj nicki
+== Zawsze pokazuj nicki graczy
 
 Are you sure that you want to delete the demo?
 == Czy na pewno chcesz usunąć to demo?
@@ -71,10 +71,10 @@ Automatically take game over screenshot
 == Automatycznie zrób zrzut ekranu końca gry
 
 Blue team
-== Drużyna niebieskich
+== Niebiescy
 
 Blue team wins!
-== Drużyna niebieskich wygrała!
+== Niebiescy wygrali!
 
 Body
 == Ciało
@@ -125,7 +125,7 @@ Crc:
 == Crc:
 
 Created:
-== Utworzony:
+== Utworzono:
 
 Current
 == Aktualnie
@@ -134,7 +134,7 @@ Current version: %s
 == Aktualna wersja: %s
 
 Custom colors
-== Własne kolory
+== Dostosuj kolory
 
 Delete
 == Usuń
@@ -170,7 +170,7 @@ Dynamic Camera
 == Dynamiczna kamera
 
 Emoticon
-== Emotikonka
+== Emotikona
 
 Enter
 == Wejdź
@@ -182,7 +182,7 @@ Error loading demo
 == Błąd przy ładowaniu dema
 
 FSAA samples
-== próbki FSAA (anti-aliasing)
+== Próbkowanie FSAA (Antyaliasing)
 
 Favorite
 == Ulubiony
@@ -206,7 +206,7 @@ Force vote
 == Wymuś głosowanie
 
 Free-View
-== Wolny widok
+== Wolna kamera
 
 Friends
 == Znajomi
@@ -218,7 +218,7 @@ Game
 == Gra
 
 Game info
-== Informacje o grze
+== Info o grze
 
 Game over
 == Koniec gry
@@ -245,7 +245,7 @@ Has people playing
 == Nie pokazuj pustych
 
 High Detail
-== Wysoka jakość obrazu
+== Wysoka jakość
 
 Hook
 == Hak
@@ -290,7 +290,7 @@ Length:
 == Długość:
 
 Lht.
-== Jasn.
+== Jasność
 
 Loading
 == Ładowanie
@@ -305,10 +305,10 @@ Map:
 == Mapa:
 
 Max Screenshots
-== Max. screenshotów
+== Maksymalnie screenshotów
 
 Max demos
-== Max. dem
+== Maksymalnie dem
 
 Maximum ping:
 == Maksymalny ping:
@@ -320,19 +320,19 @@ Mouse sens.
 == Czułość myszy
 
 Move left
-== Lewo
+== W lewo
 
 Move player to spectators
 == Przesuń gracza do obserwatorów
 
 Move right
-== Prawo
+== W prawo
 
 Movement
 == Ruch
 
 Mute when not active
-== Wycisz kiedy gra nieaktywna
+== Wycisz, kiedy gra nieaktywna
 
 Name
 == Nazwa
@@ -347,7 +347,7 @@ New name:
 == Nowa nazwa:
 
 News
-== Newsy
+== Wiadomości
 
 Next weapon
 == Następna broń
@@ -368,7 +368,7 @@ No servers match your filter criteria
 == Nie znaleziono serwerów spełniających twoje kryteria
 
 Ok
-== OK
+== Ok
 
 Open
 == Otwórz
@@ -389,7 +389,7 @@ Pistol
 == Pistolet
 
 Play
-== Start
+== Graj
 
 Play background music
 == Odtwarzaj muzykę w tle
@@ -434,10 +434,10 @@ Record demo
 == Nagraj demo
 
 Red team
-== Drużyna czerwonych
+== Czerwoni
 
 Red team wins!
-== Drużyna czerwonych wygrała!
+== Czerwoni wygrali!
 
 Refresh
 == Odśwież
@@ -473,10 +473,10 @@ Round
 == Runda
 
 Sample rate
-== Próbkowanie
+== Częstotliwość próbkowania
 
 Sat.
-== Nasyc.
+== Nasycenie
 
 Score
 == Wynik
@@ -566,7 +566,7 @@ Standard map
 == Standardowa mapa
 
 Stop record
-== Zatrzymaj nagrywanie
+== Zakończ REC
 
 Strict gametype filter
 == Szczegółowy filtr typu gry
@@ -584,7 +584,7 @@ Team chat
 == Chat drużynowy
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Wydano Teeworlds %s! Ściągnij je z www.teeworlds.com!
+== Nowa wersja Teeworlds %s jest dostępna! Do ściągnięcia z www.teeworlds.com!
 
 Texture Compression
 == Kompresja tekstur
@@ -593,16 +593,16 @@ The audio device couldn't be initialised.
 == Urządzenie dźwiękowe nie mogło zostać zainicjowane
 
 The server is running a non-standard tuning on a pure game type.
-== Ten serwer nie korzysta ze standardowych ustawień.
+== Ten serwer korzysta z niestandardowych ustawień.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== W edytorze jest niezapisana mapa, być może chcesz ją zapisać przed
+== W edytorze jest niezapisana mapa! Zapisz ją, jeśli nie chcesz
 
 Time limit
 == Limit czasu
 
 Time limit: %d min
-== Limit czasowy: %d min
+== Limit czasu: %d min
 
 Try again
 == Ponów próbę
@@ -629,7 +629,7 @@ Use team colors for name plates
 == Użyj koloru drużyn dla wyświetlania nicków
 
 V-Sync
-== V-Sync
+== Synchronizacja pionowa (V-Sync)
 
 Version
 == Wersja
@@ -638,7 +638,7 @@ Version:
 == Wersja:
 
 Vote command:
-== Komenda głosowania:
+== Polecenie głosowania:
 
 Vote description:
 == Opis głosowania:
@@ -665,7 +665,7 @@ Yes
 == Tak
 
 You must restart the game for all settings to take effect.
-== Gra musi zostać uruchomiona ponownie, żeby nowe ustawienia weszły w życie.
+== Uruchom ponownie grę, aby użyć nowych ustawieńn
 
 Your skin
 == Twój wygląd
@@ -676,4 +676,7 @@ no limit
 ##### needs translation #####
 
 ##### old translations #####
+
+utracić swojej pracy!
+== 
 
