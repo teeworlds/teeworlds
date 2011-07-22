@@ -99,6 +99,7 @@ public:
 	};
 
 	CClient m_aClients[MAX_CLIENTS];
+	int IdMap[MAX_CLIENTS][VANILLA_MAX_CLIENTS];
 
 	CSnapshotDelta m_SnapshotDelta;
 	CSnapshotBuilder m_SnapshotBuilder;
@@ -164,9 +165,8 @@ public:
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
 
 	void ProcessClientPacket(CNetChunk *pPacket);
-		
-	void SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket);
 
+	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
@@ -200,6 +200,8 @@ public:
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+
+	virtual int* GetIdMap(int ClientID);
 };
 
 #endif
