@@ -22,6 +22,7 @@
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
 #include <engine/shared/snapshot.h>
+#include <engine/shared/filecollection.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -1517,6 +1518,25 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_RunServer = 0;
+}
+
+void CServer::DemoRecorder_HandleAutoStart()
+{
+	if(g_Config.m_SvAutoDemoRecord)
+	{
+		m_DemoRecorder.Stop();
+		char aFilename[128];
+		char aDate[20];
+		str_timestamp(aDate, sizeof(aDate));
+		str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", "auto/autorecord", aDate);
+		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameServer()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "server");
+		if(g_Config.m_SvAutoDemoMax)
+		{
+			// clean up auto recorded demos
+			CFileCollection AutoDemos;
+			AutoDemos.Init(Storage(), "demos/server", "autorecord", ".demo", g_Config.m_SvAutoDemoMax);
+		}
+	}
 }
 
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)

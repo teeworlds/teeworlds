@@ -148,6 +148,8 @@ public:
 
 	void Kick(int ClientID, const char *pReason);
 
+	void DemoRecorder_HandleAutoStart();
+
 	//int Tick()
 	int64 TickStartTime(int Tick);
 	//int TickSpeed()
