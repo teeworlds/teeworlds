@@ -591,6 +591,9 @@ Parent Folder
 Play background music
 == 
 
+Player country:
+== 
+
 Player options
 == 
 
@@ -618,7 +621,7 @@ Server address:
 Server filter
 == 
 
-Show friends
+Show friends only
 == 
 
 Show ingame HUD

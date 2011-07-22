@@ -2,31 +2,31 @@
 ##### translated strings #####
 
 %d Bytes
-== %d Bytes
+== %d byte
 
 %d of %d servers, %d players
-== %d di %d servers, %d giocatori
+== %d di %d server, %d giocatori
 
 %d%% loaded
 == %d%% caricato
 
 %ds left
-== %ds rimanenti
+== %ds sec.
 
 %i minute left
-== %i minuto residuo
+== %i minuto rimanente
 
 %i minutes left
-== %i minuti residui
+== %i minuti rimanenti
 
 %i second left
-== %i secondo residuo
+== %i secondo rimanente
 
 %i seconds left
-== %i secondi residui
+== %i secondi rimanenti
 
 %s wins!
-== %s vittorie!
+== %s ha vinto!
 
 -Page %d-
 == -Pagina %d-
@@ -38,7 +38,7 @@ Add
 == Aggiungi
 
 Add Friend
-== Aggiungi Amico
+== Aggiungi amico
 
 Address
 == Indirizzo
@@ -50,25 +50,25 @@ Alpha
 == Alpha
 
 Always show name plates
-== Mostra sempre nomi
+== Mostra sempre i nomi
 
 Are you sure that you want to delete the demo?
 == Sicuro di voler eliminare la demo?
 
 Are you sure that you want to quit?
-== Sicuro di voler uscire?
+== Sicuro di voler chiudere il gioco?
 
 Are you sure that you want to remove the player from your friends list?
-== Sicuro di voler rimuovere il giocatore dalla lista degli amici?
+== Sicuro di voler rimuovere il giocatore dalla lista di amici?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== E' la prima volta che avvii il gioco, inserisci il tuo nickname. E' bene che tu controlli le opzioni prima di giocare per avere una migliore esperienza di gioco.
+== Essendo la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname qui sotto. Puoi cambiare le impostazioni in base alle tue preferenze prima di entrare in gioco.
 
 Automatically record demos
 == Registra automaticamente demo
 
 Automatically take game over screenshot
-== Cattura automaticamente la schermata 'game over'
+== Cattura schermata alla fine di ogni partita
 
 Blue team
 == Squadra blu
@@ -80,10 +80,10 @@ Body
 == Corpo
 
 Call vote
-== Chiama voto
+== Vota
 
 Change settings
-== Cambia configurazione
+== Cambia opzioni
 
 Chat
 == Chat
@@ -113,7 +113,7 @@ Console
 == Console
 
 Controls
-== Controlli
+== Comandi
 
 Count players only
 == Conta solo giocatori
@@ -125,7 +125,7 @@ Crc:
 == Crc:
 
 Created:
-== Creato:
+== Creata:
 
 Current
 == Attuale
@@ -145,6 +145,9 @@ Delete demo
 Demo details
 == Dettagli demo
 
+Demofile: %s
+== Demo: %s
+
 Demos
 == Demo
 
@@ -155,13 +158,13 @@ Disconnected
 == Disconnesso
 
 Display Modes
-== Modalità Display
+== Risoluzioni schermo
 
 Downloading map
-== Scaricamento mappa
+== Scaricamento mappa in corso
 
 Draw!
-== Patta!
+== Pareggio!
 
 Dynamic Camera
 == Camera dinamica
@@ -203,58 +206,58 @@ Force vote
 == Forza voto
 
 Free-View
-== Camera libera
+== Visione libera
 
 Friends
 == Amici
 
 Fullscreen
-== A tutto schermo
+== Schermo intero
 
 Game
 == Partita
 
 Game info
-== Informazioni partita
+== Info partita
 
 Game over
-== Fine partita
+== Partita finita
 
 Game type
-== Modalità di gioco
+== Tipo
 
 Game types:
-== Modalità di gioco:
+== Tipo di gioco:
 
 General
 == Generale
 
 Graphics
-== Gráfica
+== Aspetto
 
 Grenade
-== Granata
+== Lanciagranate
 
 Hammer
 == Martello
 
 Has people playing
-== Contiene giocatori
+== Con giocatori
 
 High Detail
-== Alta Risoluzione
+== Alta qualità
 
 Hook
 == Rampino
 
 Host address
-== Indirizzo Host
+== Indirizzo host
 
 Hue
 == Tinta
 
 Info
-== Informazioni
+== Info
 
 Internet
 == Internet
@@ -263,19 +266,19 @@ Invalid Demo
 == Demo non valida
 
 Join blue
-== Unisciti ai blu
+== Vai ai blu
 
 Join game
-== Unisciti alla partita
+== Entra
 
 Join red
-== Unisciti ai rossi
+== Vai ai rossi
 
 Jump
 == Salta
 
 Kick player
-== Espelli giocatore
+== Caccia giocatore
 
 LAN
 == LAN
@@ -284,7 +287,7 @@ Language
 == Lingua
 
 Length:
-== Lunghezza:
+== Durata:
 
 Lht.
 == Luminosità
@@ -302,10 +305,10 @@ Map:
 == Mappa:
 
 Max Screenshots
-== Screenshot Massimi
+== Numero massimo di catture
 
 Max demos
-== Demo massime
+== Numero massimo di demo
 
 Maximum ping:
 == Ping massimo:
@@ -314,13 +317,13 @@ Miscellaneous
 == Altro
 
 Mouse sens.
-== Sensività del mouse
+== Sensibilità
 
 Move left
 == Sinistra
 
 Move player to spectators
-== Muovi giocatore tra gli spettatori
+== Fai osservare il giocatore
 
 Move right
 == Destra
@@ -329,13 +332,13 @@ Movement
 == Movimento
 
 Mute when not active
-== Silenzioso se inattivo
+== Silenzioso quanto inattivo
 
 Name
 == Nome
 
 Name plates size
-== Lunghezza nomi
+== Dimensione nomi
 
 Netversion:
 == Versione net
@@ -344,10 +347,10 @@ New name:
 == Nuovo nome:
 
 News
-== Notizie
+== Novità
 
 Next weapon
-== Prossima arma
+== Arma seguente
 
 Nickname
 == Nickname
@@ -362,7 +365,7 @@ No servers found
 == Nessun server trovato
 
 No servers match your filter criteria
-== Nessun server rispecchia i tuoi criteri
+== Nessun server corrisponde ai tuoi criteri di ricerca
 
 Ok
 == Ok
@@ -386,10 +389,16 @@ Pistol
 == Pistola
 
 Play
-== Gioca
+== Riproduci
+
+Play background music
+== Riproduci musica di sottofondo
 
 Player
 == Giocatore
+
+Player country:
+== Filtra per paese:
 
 Player options
 == Opzioni giocatore
@@ -398,22 +407,22 @@ Players
 == Giocatori
 
 Please balance teams!
-== Bilancia le squadre!
+== Equilibra le squadre!
 
 Prev. weapon
 == Arma precedente
 
 Quality Textures
-== Qualità Textures
+== Texture di qualità
 
 Quick search:
 == Ricerca rapida:
 
 Quit
-== Esci
+== Chiudi
 
 Quit anyway?
-== Vuoi uscire comunque?
+== Vuoi chiudere comunque?
 
 REC %3d:%02d
 == REC %3d:%02d
@@ -428,7 +437,7 @@ Red team
 == Squadra rossa
 
 Red team wins!
-== La squadra rossa vince!
+== La squadra rossa ha vinto!
 
 Refresh
 == Aggiorna
@@ -440,13 +449,13 @@ Remote console
 == Console remota
 
 Remove
-== Rimuovi
+== Elimina
 
 Remove friend
-== Rimuovi amico
+== Elimina amico
 
 Rename
-== Renomina
+== Rinomina
 
 Rename demo
 == Rinomina demo
@@ -455,34 +464,34 @@ Reset filter
 == Azzera filtri
 
 Reset to defaults
-== Ripristina impostazioni iniziali
+== Reimposta
 
 Rifle
-== Mitra
+== Laser
 
 Round
-== Round
+== Turno
 
 Sample rate
-== Frequenza di campionamento
+== Frequenza
 
 Sat.
-== Sat.
+== Saturazione
 
 Score
-== Punteggi
+== Punti
 
 Score board
-== Tabella dei Punteggi
+== Punteggio
 
 Score limit
-== Punteggio Max.
+== Limite punti
 
 Scoreboard
-== Tabella dei Punteggi
+== Punteggi
 
 Screenshot
-== Schermata
+== Cattura schermata
 
 Server address:
 == Indirizzo server:
@@ -491,7 +500,7 @@ Server details
 == Dettagli server
 
 Server filter
-== Filtri server
+== Filtro server
 
 Server info
 == Info server
@@ -500,7 +509,7 @@ Server not full
 == Server non pieno
 
 Settings
-== Configurazioni
+== Opzioni
 
 Shotgun
 == Fucile
@@ -508,8 +517,8 @@ Shotgun
 Show chat
 == Mostra chat
 
-Show friends
-== Mostra amici
+Show friends only
+== Mostra solo amici
 
 Show ingame HUD
 == Mostra HUD in gioco
@@ -521,43 +530,52 @@ Show only supported
 == Mostra solo supportati
 
 Size:
-== Dimensioni:
+== Dimensione:
 
 Skins
-== Skins
+== Skin
 
 Sound
 == Suono
 
 Sound error
-== Suono errore
+== Errore suono
 
 Sound volume
 == Volume suono
 
 Spectate
-== Spettatore
+== Osserva
+
+Spectate next
+== Osserva succ.
+
+Spectate previous
+== Osserva prec.
 
 Spectator mode
-== Modalità spettatore
+== Menu osservazione
 
 Spectators
 == Spettatori
 
 Standard gametype
-== Tipo di gioco standard
+== Tipo di gioco normale
 
 Standard map
-== Mappa standard
+== Mappa normale
 
 Stop record
-== Ferma registrazione
+== Ferma reg.
+
+Strict gametype filter
+== Tipo di gioco preciso
 
 Sudden Death
-== Morte istantanea
+== Tempo supplementare
 
 Switch weapon on pickup
-== Cambia arma automaticamente
+== Cambia arma ad ogni raccolta
 
 Team
 == Squadra
@@ -566,37 +584,37 @@ Team chat
 == Chat di squadra
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworlds %s e' stato rilasciato! Scaricalo da www.teeworlds.com!
+== È uscito Teeworld %s! Scaricalo su www.teeworlds.com!
 
 Texture Compression
-== Compressione textures
+== Compressione texture
 
 The audio device couldn't be initialised.
 == Il dispositivo audio non può essere inizializzato.
 
 The server is running a non-standard tuning on a pure game type.
-== Il server è attivo con una configurazione non standard in una modalità di gioco pura.
+== Il server presenta impostazioni non standard in un tipo di gioco normale.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== C'è una mappa non salvata nell'editor, sicuramente vorrai salvarla prima di uscire.
+== C'è una mappa non salvata nell'editor, probabilmente vuoi salvarla prima di uscire.
 
 Time limit
-== Limite tempo.
+== Limite di tempo
 
 Time limit: %d min
-== Limite tempo: %d min
+== Limite di tempo: %d min
 
 Try again
-== Riprova
+== Ritenta
 
 Type
-== Tipologia
+== Tipo
 
 Type:
-== Tipologia:
+== Tipo:
 
 UI Color
-== Colore UI
+== Color interfaccia
 
 Unable to delete the demo
 == Impossibile eliminare la demo
@@ -608,10 +626,10 @@ Use sounds
 == Attiva suoni
 
 Use team colors for name plates
-== Utilizza i colori del team per i nomi
+== Usa i colori della squadra nei nomi
 
 V-Sync
-== V-Sync
+== Sincronizzazione verticale
 
 Version
 == Versione
@@ -620,7 +638,7 @@ Version:
 == Versione:
 
 Vote command:
-== Comando voto:
+== Comando di voto:
 
 Vote description:
 == Descrizione voto:
@@ -629,10 +647,10 @@ Vote no
 == Vota no
 
 Vote yes
-== Vota si
+== Vota sì
 
 Voting
-== Votazione in corso
+== Votazione
 
 Warmup
 == Riscaldamento
@@ -641,36 +659,24 @@ Weapon
 == Arma
 
 Welcome to Teeworlds
-== Benvenuto su Teeworlds!
+== Benvenuto su Teeworlds
 
 Yes
-== Si
+== Sì
 
 You must restart the game for all settings to take effect.
-== E' necessario riavviare il gioco per impostare i cambiamenti.
+== Devi riavviare il gioco per rendere effettive le modifiche.
 
 Your skin
-== Tua skin
+== La tua skin
 
 no limit
 == senza limiti
 
 ##### needs translation #####
 
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
-
 ##### old translations #####
+
+﻿
+== ## translated strings #####
 

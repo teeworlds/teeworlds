@@ -62,7 +62,7 @@ Are you sure that you want to remove the player from your friends list?
 == Weet je zeker dat je deze speler uit je vriendenlijst wilt verwijderen?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren, voordat je een spel start.
+== Omdat dit de eerste keer is dat je het spel opstart, moet je een bijnaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren voordat je een spel start.
 
 Automatically record demos
 == Automatisch demo's opnemen
@@ -144,6 +144,9 @@ Delete demo
 
 Demo details
 == Demo details
+
+Demofile: %s
+== Demobestand: %s
 
 Demos
 == Demo's
@@ -350,7 +353,7 @@ Next weapon
 == Volgend wapen
 
 Nickname
-== Nicknaam
+== Bijnaam
 
 No
 == Nee
@@ -394,6 +397,9 @@ Play background music
 Player
 == Speler
 
+Player country:
+== Speler land:
+
 Player options
 == Speler opties
 
@@ -428,10 +434,10 @@ Record demo
 == Neem demo op
 
 Red team
-== Rood
+== Rode team
 
 Red team wins!
-== Rood wint!
+== Rode team wint!
 
 Refresh
 == Vernieuwen
@@ -511,7 +517,7 @@ Shotgun
 Show chat
 == Laat chat zien
 
-Show friends
+Show friends only
 == Laat vrienden zien
 
 Show ingame HUD
@@ -562,6 +568,9 @@ Standard map
 Stop record
 == Stop met opnemen
 
+Strict gametype filter
+== Strikt speltype filter
+
 Sudden Death
 == Sudden Death
 
@@ -590,7 +599,7 @@ There's an unsaved map in the editor, you might want to save it before you quit 
 == Er is een onopgeslagen kaart in de editor, misschien wil je deze opslaan voordat je stopt.
 
 Time limit
-== Tijdlimiet
+== Tijdslimiet
 
 Time limit: %d min
 == Tijdslimiet: %d minuten
@@ -665,12 +674,6 @@ no limit
 == ongelimiteerd
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 

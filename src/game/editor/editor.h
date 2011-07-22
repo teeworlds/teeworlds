@@ -3,23 +3,26 @@
 #ifndef GAME_EDITOR_EDITOR_H
 #define GAME_EDITOR_EDITOR_H
 
-#include <base/system.h>
+#include <math.h>
+
 #include <base/math.h>
-#include <base/tl/array.h>
+#include <base/system.h>
+
 #include <base/tl/algorithm.h>
+#include <base/tl/array.h>
 #include <base/tl/sorted_array.h>
 #include <base/tl/string.h>
 
-#include <math.h>
+#include <game/client/ui.h>
 #include <game/mapitems.h>
 #include <game/client/render.h>
 
-#include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
+#include <engine/shared/datafile.h>
 #include <engine/editor.h>
 #include <engine/graphics.h>
 
-#include <game/client/ui.h>
+#include "auto_map.h"
 
 typedef void (*INDEX_MODIFY_FUNC)(int *pIndex);
 
@@ -123,7 +126,7 @@ public:
 	CLayer()
 	{
 		m_Type = LAYERTYPE_INVALID;
-		m_pTypeName = "(invalid)";
+		str_copy(m_aName, "(invalid)", sizeof(m_aName));
 		m_Visible = true;
 		m_Readonly = false;
 		m_SaveToMap = true;
@@ -153,7 +156,7 @@ public:
 
 	virtual void GetSize(float *w, float *h) { *w = 0; *h = 0;}
 
-	const char *m_pTypeName;
+	char m_aName[12];
 	int m_Type;
 	int m_Flags;
 
@@ -181,10 +184,11 @@ public:
 	int m_ClipW;
 	int m_ClipH;
 
-	const char *m_pName;
+	char m_aName[12];
 	bool m_GameGroup;
 	bool m_Visible;
 	bool m_SaveToMap;
+	bool m_Collapse;
 
 	CLayerGroup();
 	~CLayerGroup();
@@ -230,6 +234,7 @@ public:
 	CEditor *m_pEditor;
 
 	CEditorImage(CEditor *pEditor)
+	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
 		m_TexID = -1;
@@ -249,6 +254,7 @@ public:
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
+	class CAutoMapper m_AutoMapper;
 };
 
 class CEditorMap
@@ -470,6 +476,9 @@ public:
 		m_Dialog = 0;
 		m_pTooltip = 0;
 
+		m_GridActive = false;
+		m_GridFactor = 1;
+
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
 		m_ValidSaveFilename = false;
@@ -550,6 +559,9 @@ public:
 	int m_Mode;
 	int m_Dialog;
 	const char *m_pTooltip;
+
+	bool m_GridActive;
+	int m_GridFactor;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
@@ -656,7 +668,7 @@ public:
 	int DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
 	int DoButton_Tab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
-	int DoButton_Ex(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners);
+	int DoButton_Ex(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize=10.0f);
 	int DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
@@ -665,9 +677,11 @@ public:
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
 
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden=false);
+	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 
 	void RenderBackground(CUIRect View, int Texture, float Size, float Brightness);
+
+	void RenderGrid(CLayerGroup *pGroup);
 
 	void UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
 	void UiDoPopupMenu();
@@ -684,6 +698,7 @@ public:
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
+	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -694,6 +709,9 @@ public:
 
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
+	
+	void PopupSelectConfigAutoMapInvoke(float x, float y);
+	int PopupSelectConfigAutoMapResult();
 
 	vec4 ButtonColorMul(const void *pID);
 
@@ -733,6 +751,8 @@ public:
 		int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 		str_copy(pName, pExtractedName, Length);
 	}
+
+	int GetLineDistance();
 };
 
 // make sure to inline this function

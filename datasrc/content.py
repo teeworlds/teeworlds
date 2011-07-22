@@ -3,13 +3,13 @@ from datatypes import *
 
 class Sound(Struct):
 	def __init__(self, filename=""):
-		Struct.__init__(self, "SOUND")
+		Struct.__init__(self, "CDataSound")
 		self.id = Int(0)
 		self.filename = String(filename)
 
 class SoundSet(Struct):
 	def __init__(self, name="", files=[]):
-		Struct.__init__(self, "SOUNDSET")
+		Struct.__init__(self, "CDataSoundset")
 		self.name = String(name)
 		self.sounds = Array(Sound())
 		self.last = Int(-1)
@@ -18,21 +18,21 @@ class SoundSet(Struct):
 
 class Image(Struct):
 	def __init__(self, name="", filename=""):
-		Struct.__init__(self, "IMAGE")
+		Struct.__init__(self, "CDataImage")
 		self.name = String(name)
 		self.filename = String(filename)
 		self.id = Int(-1)
 
 class SpriteSet(Struct):
 	def __init__(self, name="", image=None, gridx=0, gridy=0):
-		Struct.__init__(self, "SPRITESET")
+		Struct.__init__(self, "CDataSpriteset")
 		self.image = Pointer(Image, image) # TODO
 		self.gridx = Int(gridx)
 		self.gridy = Int(gridy)
 
 class Sprite(Struct):
 	def __init__(self, name="", Set=None, x=0, y=0, w=0, h=0):
-		Struct.__init__(self, "SPRITE")
+		Struct.__init__(self, "CDataSprite")
 		self.name = String(name)
 		self.set = Pointer(SpriteSet, Set) # TODO
 		self.x = Int(x)
@@ -42,14 +42,14 @@ class Sprite(Struct):
 
 class Pickup(Struct):
 	def __init__(self, name="", respawntime=15, spawndelay=0):
-		Struct.__init__(self, "PICKUPSPEC")
+		Struct.__init__(self, "CDataPickupspec")
 		self.name = String(name)
 		self.respawntime = Int(respawntime)
 		self.spawndelay = Int(spawndelay)
 
 class AnimKeyframe(Struct):
 	def __init__(self, time=0, x=0, y=0, angle=0):
-		Struct.__init__(self, "ANIM_KEYFRAME")
+		Struct.__init__(self, "CAnimKeyframe")
 		self.time = Float(time)
 		self.x = Float(x)
 		self.y = Float(y)
@@ -57,12 +57,12 @@ class AnimKeyframe(Struct):
 
 class AnimSequence(Struct):
 	def __init__(self):
-		Struct.__init__(self, "ANIM_SEQUENCE")
+		Struct.__init__(self, "CAnimSequence")
 		self.frames = Array(AnimKeyframe())
 
 class Animation(Struct):
 	def __init__(self, name=""):
-		Struct.__init__(self, "ANIMATION")
+		Struct.__init__(self, "CAnimation")
 		self.name = String(name)
 		self.body = AnimSequence()
 		self.back_foot = AnimSequence()
@@ -71,7 +71,7 @@ class Animation(Struct):
 
 class WeaponSpec(Struct):
 	def __init__(self, container=None, name=""):
-		Struct.__init__(self, "WEAPONSPEC")
+		Struct.__init__(self, "CDataWeaponspec")
 		self.name = String(name)
 		self.sprite_body = Pointer(Sprite, Sprite())
 		self.sprite_cursor = Pointer(Sprite, Sprite())
@@ -101,12 +101,12 @@ class WeaponSpec(Struct):
 
 class Weapon_Hammer(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_HAMMER")
+		Struct.__init__(self, "CDataWeaponspecHammer")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 
 class Weapon_Gun(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_GUN")
+		Struct.__init__(self, "CDataWeaponspecGun")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.curvature = Float(1.25)
 		self.speed = Float(2200)
@@ -114,7 +114,7 @@ class Weapon_Gun(Struct):
 
 class Weapon_Shotgun(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_SHOTGUN")
+		Struct.__init__(self, "CDataWeaponspecShotgun")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.curvature = Float(1.25)
 		self.speed = Float(2200)
@@ -123,7 +123,7 @@ class Weapon_Shotgun(Struct):
 
 class Weapon_Grenade(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_GRENADE")
+		Struct.__init__(self, "CDataWeaponspecGrenade")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.curvature = Float(7.0)
 		self.speed = Float(1000)
@@ -131,7 +131,7 @@ class Weapon_Grenade(Struct):
 
 class Weapon_Rifle(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_RIFLE")
+		Struct.__init__(self, "CDataWeaponspecRifle")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.reach = Float(800.0)
 		self.bounce_delay = Int(150)
@@ -140,7 +140,7 @@ class Weapon_Rifle(Struct):
 
 class Weapon_Ninja(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPEC_NINJA")
+		Struct.__init__(self, "CDataWeaponspecNinja")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.duration = Int(15000)
 		self.movetime = Int(200)
@@ -148,7 +148,7 @@ class Weapon_Ninja(Struct):
 
 class Weapons(Struct):
 	def __init__(self):
-		Struct.__init__(self, "WEAPONSPECS")
+		Struct.__init__(self, "CDataWeaponspecs")
 		self.hammer = Weapon_Hammer()
 		self.gun = Weapon_Gun()
 		self.shotgun = Weapon_Shotgun()
@@ -159,7 +159,7 @@ class Weapons(Struct):
 
 class DataContainer(Struct):
 	def __init__(self):
-		Struct.__init__(self, "DATACONTAINER")
+		Struct.__init__(self, "CDataContainer")
 		self.sounds = Array(SoundSet())
 		self.images = Array(Image())
 		self.pickups = Array(Pickup())

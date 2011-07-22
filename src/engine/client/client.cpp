@@ -536,11 +536,6 @@ void CClient::SendReady()
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
-bool CClient::RconAuthed()
-{
-	return m_RconAuthed;
-}
-
 void CClient::RconAuth(const char *pName, const char *pPassword)
 {
 	if(RconAuthed())
@@ -549,6 +544,7 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 	CMsgPacker Msg(NETMSG_RCON_AUTH);
 	Msg.AddString(pName, 32);
 	Msg.AddString(pPassword, 32);
+	Msg.AddInt(1);
 	SendMsgEx(&Msg, MSGFLAG_VITAL);
 }
 
@@ -693,12 +689,12 @@ void CClient::Connect(const char *pAddress)
 
 	ServerInfoRequest();
 
-	if(net_host_lookup(m_aServerAddressStr, &m_ServerAddress, NETTYPE_ALL) != 0)
+	if(net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient.NetType()) != 0)
 	{
 		char aBufMsg[256];
 		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
-		net_host_lookup("localhost", &m_ServerAddress, NETTYPE_ALL);
+		net_host_lookup("localhost", &m_ServerAddress, m_NetClient.NetType());
 	}
 
 	m_RconAuthed = 0;
@@ -726,6 +722,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	//
 	m_RconAuthed = 0;
+	m_pConsole->DeregisterTempAll();
 	m_NetClient.Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
@@ -1149,7 +1146,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			str_copy(Info.m_aClients[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aName));
 			str_copy(Info.m_aClients[i].m_aClan, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aClan));
-			Info.m_aClients[i].m_Country = GameClient()->GetCountryIndex(str_toint(Up.GetString()));
+			Info.m_aClients[i].m_Country = str_toint(Up.GetString());
 			Info.m_aClients[i].m_Score = str_toint(Up.GetString());
 			Info.m_aClients[i].m_Player = str_toint(Up.GetString()) != 0 ? true : false;
 		}
@@ -1313,11 +1310,28 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_PING_REPLY);
 			SendMsgEx(&Msg, 0);
 		}
+		else if(Msg == NETMSG_RCON_CMD_ADD)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			const char *pHelp = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			const char *pParams = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->RegisterTemp(pName, pParams, CFGFLAG_SERVER, pHelp);
+		}
+		else if(Msg == NETMSG_RCON_CMD_REM)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->DeregisterTemp(pName);
+		}
 		else if(Msg == NETMSG_RCON_AUTH_STATUS)
 		{
 			int Result = Unpacker.GetInt();
 			if(Unpacker.Error() == 0)
 				m_RconAuthed = Result;
+			m_UseTempRconCommands = Unpacker.GetInt();
+			if(Unpacker.Error() != 0)
+				m_UseTempRconCommands = 0;
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{
@@ -1799,7 +1813,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_BindAddr.type);
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_NetClient.NetType());
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
@@ -1881,7 +1895,7 @@ void CClient::Run()
 	Input()->Init();
 
 	// start refreshing addresses while we load
-	MasterServer()->RefreshAddresses(m_BindAddr.type);
+	MasterServer()->RefreshAddresses(m_NetClient.NetType());
 
 	// init the editor
 	m_pEditor->Init();

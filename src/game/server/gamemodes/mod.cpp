@@ -20,8 +20,6 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 void CGameControllerMOD::Tick()
 {
 	// this is the main part of the gamemode, this function is run every tick
-	DoPlayerScoreWincheck(); // checks for winners, no teams version
-	//DoTeamScoreWincheck(); // checks for winners, two teams version
 
 	IGameController::Tick();
 

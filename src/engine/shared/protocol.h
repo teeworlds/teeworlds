@@ -65,7 +65,11 @@ enum
 	// sent by both
 	NETMSG_PING,
 	NETMSG_PING_REPLY,
-	NETMSG_ERROR
+	NETMSG_ERROR,
+
+	// sent by server (todo: move it up)
+	NETMSG_RCON_CMD_ADD,
+	NETMSG_RCON_CMD_REM,
 };
 
 // this should be revised

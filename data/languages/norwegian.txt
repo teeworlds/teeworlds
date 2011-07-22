@@ -145,6 +145,9 @@ Delete demo
 Demo details
 == Demo detaljer
 
+Demofile: %s
+== Demo fil: %s
+
 Demos
 == Demoer
 
@@ -388,8 +391,14 @@ Pistol
 Play
 == Spill
 
+Play background music
+== Spill bakrunds musikk
+
 Player
 == Spiller
+
+Player country:
+== spiller landet
 
 Player options
 == Spillerinstillinger
@@ -508,7 +517,7 @@ Shotgun
 Show chat
 == Vis samtale
 
-Show friends
+Show friends only
 == Vis venner
 
 Show ingame HUD
@@ -538,6 +547,12 @@ Sound volume
 Spectate
 == Se på
 
+Spectate next
+== Se på neste
+
+Spectate previous
+== Se på forige
+
 Spectator mode
 == Tilhenger modus
 
@@ -545,13 +560,16 @@ Spectators
 == Tilskuere:
 
 Standard gametype
-== Standard spilltyper
+== Standard spilletyper
 
 Standard map
 == Standard bane
 
 Stop record
 == Stopp inspilling
+
+Strict gametype filter
+== spilltype-filter
 
 Sudden Death
 == Brå død
@@ -656,21 +674,6 @@ no limit
 == Ingen begrensninger
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 

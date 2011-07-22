@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include <base/detect.h>
+#include <base/math.h>
 
 #include "SDL.h"
 
@@ -119,12 +120,39 @@ void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
 	}
 }
 
-unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset)
+unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
 {
-	return (pData[(v*w+u)*4+Offset]+
-	pData[(v*w+u+1)*4+Offset]+
-	pData[((v+1)*w+u)*4+Offset]+
-	pData[((v+1)*w+u+1)*4+Offset])/4;
+	int Value = 0;
+	for(int x = 0; x < ScaleW; x++)
+		for(int y = 0; y < ScaleH; y++)
+			Value += pData[((v+y)*w+(u+x))*Bpp+Offset];
+	return Value/(ScaleW*ScaleH);
+}
+
+unsigned char *CGraphics_OpenGL::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
+{
+	unsigned char *pTmpData;
+	int ScaleW = Width/NewWidth;
+	int ScaleH = Height/NewHeight;
+
+	int Bpp = 3;
+	if(Format == CImageInfo::FORMAT_RGBA)
+		Bpp = 4;
+
+	pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
+
+	int c = 0;
+	for(int y = 0; y < NewHeight; y++)
+		for(int x = 0; x < NewWidth; x++, c++)
+		{
+			pTmpData[c*Bpp] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 0, ScaleW, ScaleH, Bpp);
+			pTmpData[c*Bpp+1] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 1, ScaleW, ScaleH, Bpp);
+			pTmpData[c*Bpp+2] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 2, ScaleW, ScaleH, Bpp);
+			if(Bpp == 4)
+				pTmpData[c*Bpp+3] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 3, ScaleW, ScaleH, Bpp);
+		}
+
+	return pTmpData;
 }
 
 CGraphics_OpenGL::CGraphics_OpenGL()
@@ -151,7 +179,16 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 
 void CGraphics_OpenGL::ClipEnable(int x, int y, int w, int h)
 {
-	//if(no_gfx) return;
+	if(x < 0)
+		w += x;
+	if(y < 0)
+		h += y;
+
+	x = clamp(x, 0, ScreenWidth());
+	y = clamp(y, 0, ScreenHeight());
+	w = clamp(w, 0, ScreenWidth()-x);
+	h = clamp(h, 0, ScreenHeight()-y);
+
 	glScissor(x, ScreenHeight()-(y+h), w, h);
 	glEnable(GL_SCISSOR_TEST);
 }
@@ -205,21 +242,21 @@ void CGraphics_OpenGL::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBot
 
 void CGraphics_OpenGL::LinesBegin()
 {
-	dbg_assert(m_Drawing == 0, "called begin twice");
+	dbg_assert(m_Drawing == 0, "called Graphics()->LinesBegin twice");
 	m_Drawing = DRAWING_LINES;
 	SetColor(1,1,1,1);
 }
 
 void CGraphics_OpenGL::LinesEnd()
 {
-	dbg_assert(m_Drawing == DRAWING_LINES, "called end without begin");
+	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
 
 void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 {
-	dbg_assert(m_Drawing == DRAWING_LINES, "called draw without begin");
+	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesDraw without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -272,28 +309,23 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 	m_aTextures[Tex].m_Next = -1;
 
 	// resample if needed
-	if(!(Flags&TEXLOAD_NORESAMPLE) && g_Config.m_GfxTextureQuality==0)
+	if(!(Flags&TEXLOAD_NORESAMPLE) && (Format == CImageInfo::FORMAT_RGBA || Format == CImageInfo::FORMAT_RGB))
 	{
-		if(Width > 16 && Height > 16 && Format == CImageInfo::FORMAT_RGBA)
+		if(Width > GL_MAX_TEXTURE_SIZE || Height > GL_MAX_TEXTURE_SIZE)
 		{
-			unsigned char *pTmpData;
-			int c = 0;
-			int x, y;
-
-			pTmpData = (unsigned char *)mem_alloc(Width*Height*4, 1);
-
-			Width/=2;
-			Height/=2;
-
-			for(y = 0; y < Height; y++)
-				for(x = 0; x < Width; x++, c++)
-				{
-					pTmpData[c*4] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 0);
-					pTmpData[c*4+1] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 1);
-					pTmpData[c*4+2] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 2);
-					pTmpData[c*4+3] = Sample(Width*2, Height*2, pTexData, x*2,y*2, 3);
-				}
+			int NewWidth = min(Width, GL_MAX_TEXTURE_SIZE);
+			int NewHeight = min(Height, GL_MAX_TEXTURE_SIZE);
+			pTmpData = Rescale(Width, Height, NewWidth, NewHeight, Format, pTexData);
 			pTexData = pTmpData;
+			Width = NewWidth;
+			Height = NewHeight;
+		}
+		else if(Width > 16 && Height > 16 && g_Config.m_GfxTextureQuality == 0)
+		{
+			pTmpData = Rescale(Width, Height, Width/2, Height/2, Format, pTexData);
+			pTexData = pTmpData;
+			Width /= 2;
+			Height /= 2;
 		}
 	}
 
@@ -488,7 +520,7 @@ void CGraphics_OpenGL::Clear(float r, float g, float b)
 
 void CGraphics_OpenGL::QuadsBegin()
 {
-	dbg_assert(m_Drawing == 0, "called quads_begin twice");
+	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
 
 	QuadsSetSubset(0,0,1,1);
@@ -498,7 +530,7 @@ void CGraphics_OpenGL::QuadsBegin()
 
 void CGraphics_OpenGL::QuadsEnd()
 {
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_end without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
@@ -511,7 +543,7 @@ void CGraphics_OpenGL::QuadsSetRotation(float Angle)
 
 void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
 {
-	dbg_assert(m_Drawing != 0, "called gfx_quads_setcolorvertex without begin");
+	dbg_assert(m_Drawing != 0, "called Graphics()->SetColorVertex without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -524,7 +556,7 @@ void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
 
 void CGraphics_OpenGL::SetColor(float r, float g, float b, float a)
 {
-	dbg_assert(m_Drawing != 0, "called gfx_quads_setcolor without begin");
+	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
 	CColorVertex Array[4] = {
 		CColorVertex(0, r, g, b, a),
 		CColorVertex(1, r, g, b, a),
@@ -570,7 +602,7 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 	CPoint Center;
 	Center.z = 0;
 
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
@@ -608,7 +640,7 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 
 void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 {
-	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw_freeform without begin");
+	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawFreeform without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{

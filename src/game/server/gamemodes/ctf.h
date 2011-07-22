@@ -11,6 +11,7 @@ public:
 	class CFlag *m_apFlags[2];
 
 	CGameControllerCTF(class CGameContext *pGameServer);
+	virtual void DoWincheck();
 	virtual bool CanBeMovedOnBalance(int ClientID);
 	virtual void Snap(int SnappingClient);
 	virtual void Tick();

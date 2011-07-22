@@ -90,17 +90,6 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION_CUST; }
 const char *CGameClient::GetItemName(int Type) { return m_NetObjHandler.GetObjName(Type); }
-int CGameClient::GetCountryIndex(int Code)
-{
-	int Index = g_GameClient.m_pCountryFlags->Find(Code);
-	if(Index < 0)
-	{
-		Index = g_GameClient.m_pCountryFlags->Find(-1);
-		if(Index < 0)
-			Index = 0;
-	}
-	return Index;
-}
 
 void CGameClient::OnConsoleInit()
 {
@@ -196,7 +185,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
 	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
+	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, 0, 0, "Set team of all players to team");
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, 0, 0, "Add a voting option");
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, 0, 0, "remove a voting option");
@@ -352,6 +341,9 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_DemoSpecID = SPEC_FREEVIEW;
+	m_FlagDropTick[TEAM_RED] = 0;
+	m_FlagDropTick[TEAM_BLUE] = 0;
+	m_Tuning = CTuningParams();
 }
 
 
@@ -602,32 +594,32 @@ void CGameClient::ProcessEvents()
 
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
-			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)pData;
+			CNetEvent_DamageInd *ev = (CNetEvent_DamageInd *)pData;
 			g_GameClient.m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), GetDirection(ev->m_Angle));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
-			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)pData;
+			CNetEvent_Explosion *ev = (CNetEvent_Explosion *)pData;
 			g_GameClient.m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
-			NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)pData;
+			CNetEvent_HammerHit *ev = (CNetEvent_HammerHit *)pData;
 			g_GameClient.m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
-			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)pData;
+			CNetEvent_Spawn *ev = (CNetEvent_Spawn *)pData;
 			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
-			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)pData;
+			CNetEvent_Death *ev = (CNetEvent_Death *)pData;
 			g_GameClient.m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
-			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)pData;
+			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
 			g_GameClient.m_pSounds->Play(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
 	}
@@ -696,7 +688,7 @@ void CGameClient::OnNewSnapshot()
 				int ClientID = Item.m_ID;
 				IntsToStr(&pInfo->m_Name0, 4, m_aClients[ClientID].m_aName);
 				IntsToStr(&pInfo->m_Clan0, 3, m_aClients[ClientID].m_aClan);
-				m_aClients[ClientID].m_Country = GetCountryIndex(pInfo->m_Country);
+				m_aClients[ClientID].m_Country = pInfo->m_Country;
 				IntsToStr(&pInfo->m_Skin0, 6, m_aClients[ClientID].m_aSkinName);
 
 				m_aClients[ClientID].m_UseCustomColor = pInfo->m_UseCustomColor;
@@ -794,6 +786,20 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pGameDataObj = (const CNetObj_GameData *)pData;
 				m_Snap.m_GameDataSnapID = Item.m_ID;
+				if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_TAKEN)
+				{
+					if(m_FlagDropTick[TEAM_RED] == 0)
+						m_FlagDropTick[TEAM_RED] = Client()->GameTick();
+				}
+				else if(m_FlagDropTick[TEAM_RED] != 0)
+						m_FlagDropTick[TEAM_RED] = 0;
+				if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_TAKEN)
+				{
+					if(m_FlagDropTick[TEAM_BLUE] == 0)
+						m_FlagDropTick[TEAM_BLUE] = Client()->GameTick();
+				}
+				else if(m_FlagDropTick[TEAM_BLUE] != 0)
+						m_FlagDropTick[TEAM_BLUE] = 0;
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;

@@ -75,7 +75,7 @@ if gen_client_content_header or gen_server_content_header:
 		EmitTypeDeclaration(content.__dict__[name])
 
 	# the container pointer
-	print('extern DATACONTAINER *g_pData;')
+	print('extern CDataContainer *g_pData;')
 
 	# enums
 	EmitEnum(["IMAGE_%s"%i.name.value.upper() for i in content.container.images.items], "NUM_IMAGES")
@@ -88,7 +88,7 @@ if gen_client_content_source or gen_server_content_source:
 	if gen_server_content_source:
 		print('#include "server_data.h"')
 	EmitDefinition(content.container, "datacontainer")
-	print('DATACONTAINER *g_pData = &datacontainer;')
+	print('CDataContainer *g_pData = &datacontainer;')
 
 # NETWORK
 if gen_network_header:

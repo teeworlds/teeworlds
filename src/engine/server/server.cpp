@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <base/math.h>
 #include <base/system.h>
 
 #include <engine/config.h>
@@ -181,6 +182,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_MapReload = 0;
 
 	m_RconClientID = -1;
+	m_RconAuthLevel = AUTHED_ADMIN;
 
 	Init();
 }
@@ -278,6 +280,11 @@ void CServer::Kick(int ClientID, const char *pReason)
 	else if(m_RconClientID == ClientID)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't kick yourself");
+ 		return;
+	}
+	else if(m_aClients[ClientID].m_Authed > m_RconAuthLevel)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "kick command denied");
  		return;
 	}
 
@@ -572,8 +579,9 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
 	pThis->m_aClients[ClientID].m_aClan[0] = 0;
 	pThis->m_aClients[ClientID].m_Country = -1;
-	pThis->m_aClients[ClientID].m_Authed = 0;
+	pThis->m_aClients[ClientID].m_Authed = AUTHED_NO;
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
+	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
 	pThis->m_aClients[ClientID].Reset();
 	return 0;
 }
@@ -597,8 +605,9 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
 	pThis->m_aClients[ClientID].m_aClan[0] = 0;
 	pThis->m_aClients[ClientID].m_Country = -1;
-	pThis->m_aClients[ClientID].m_Authed = 0;
+	pThis->m_aClients[ClientID].m_Authed = AUTHED_NO;
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
+	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
 	pThis->m_aClients[ClientID].m_Snapshots.PurgeAll();
 	return 0;
 }
@@ -636,11 +645,42 @@ void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed)
+		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed >= pThis->m_RconAuthLevel)
 			pThis->SendRconLine(i, pLine);
 	}
 
 	ReentryGuard--;
+}
+
+void CServer::SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID)
+{
+	CMsgPacker Msg(NETMSG_RCON_CMD_ADD);
+	Msg.AddString(pCommandInfo->m_pName, 32);
+	Msg.AddString(pCommandInfo->m_pHelp, 64);
+	Msg.AddString(pCommandInfo->m_pParams, 16);
+	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+}
+
+void CServer::SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID)
+{
+	CMsgPacker Msg(NETMSG_RCON_CMD_REM);
+	Msg.AddString(pCommandInfo->m_pName, 256);
+	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+}
+
+void CServer::UpdateClientRconCommands()
+{
+	int ClientID = Tick() % MAX_CLIENTS;
+		
+	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed)
+	{
+		int ConsoleAccessLevel = m_aClients[ClientID].m_Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : IConsole::ACCESS_LEVEL_MOD;
+		for(int i = 0; i < MAX_RCONCMD_SEND && m_aClients[ClientID].m_pRconCmdToSend; ++i)
+		{
+			SendRconCmdAdd(m_aClients[ClientID].m_pRconCmdToSend, ClientID);
+			m_aClients[ClientID].m_pRconCmdToSend = m_aClients[ClientID].m_pRconCmdToSend->NextCommandInfo(ConsoleAccessLevel, CFGFLAG_SERVER);
+		}
+	}
 }
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
@@ -817,8 +857,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				str_format(aBuf, sizeof(aBuf), "ClientID=%d rcon='%s'", ClientID, pCmd);
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 				m_RconClientID = ClientID;
+				m_RconAuthLevel = m_aClients[ClientID].m_Authed;
+				Console()->SetAccessLevel(m_aClients[ClientID].m_Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : IConsole::ACCESS_LEVEL_MOD);
 				Console()->ExecuteLine(pCmd);
+				Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
 				m_RconClientID = -1;
+				m_RconAuthLevel = AUTHED_ADMIN;
 			}
 		}
 		else if(Msg == NETMSG_RCON_AUTH)
@@ -829,20 +873,40 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 			if(Unpacker.Error() == 0)
 			{
-				if(g_Config.m_SvRconPassword[0] == 0)
+				if(g_Config.m_SvRconPassword[0] == 0 && g_Config.m_SvRconModPassword[0])
 				{
-					SendRconLine(ClientID, "No rcon password set on server. Set sv_rcon_password to enable the remote console.");
+					SendRconLine(ClientID, "No rcon password set on server. Set sv_rcon_password and/or sv_rcon_mod_password to enable the remote console.");
 				}
-				else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+				else if(g_Config.m_SvRconPassword[0] && str_comp(pPw, g_Config.m_SvRconPassword) == 0)
 				{
 					CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-					Msg.AddInt(1);
+					Msg.AddInt(1);	//authed
+					Msg.AddInt(1);	//cmdlist
 					SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 
-					m_aClients[ClientID].m_Authed = 1;
-					SendRconLine(ClientID, "Authentication successful. Remote console access granted.");
+					m_aClients[ClientID].m_Authed = AUTHED_ADMIN;
+					int SendRconCmds = Unpacker.GetInt();
+					if(Unpacker.Error() == 0 && SendRconCmds)
+						m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
+					SendRconLine(ClientID, "Admin authentication successful. Full remote console access granted.");
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed", ClientID);
+					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (admin)", ClientID);
+					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+				}
+				else if(g_Config.m_SvRconModPassword[0] && str_comp(pPw, g_Config.m_SvRconModPassword) == 0)
+				{
+					CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+					Msg.AddInt(1);	//authed
+					Msg.AddInt(1);	//cmdlist
+					SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+
+					m_aClients[ClientID].m_Authed = AUTHED_MOD;
+					int SendRconCmds = Unpacker.GetInt();
+					if(Unpacker.Error() == 0 && SendRconCmds)
+						m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_MOD, CFGFLAG_SERVER);
+					SendRconLine(ClientID, "Moderator authentication successful. Limited remote console access granted.");
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (moderator)", ClientID);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				}
 				else if(g_Config.m_SvRconMaxTries)
@@ -1230,10 +1294,12 @@ int CServer::Run()
 			{
 				if(g_Config.m_SvHighBandwidth || (m_CurrentGameTick%2) == 0)
 					DoSnapshot();
+
+				UpdateClientRconCommands();
 			}
 
 			// master server stuff
-			m_Register.RegisterUpdate(BindAddr.type);
+			m_Register.RegisterUpdate(m_NetServer.NetType());
 
 			PumpNetwork();
 
@@ -1318,6 +1384,20 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 				pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban yourself");
 				return;
 			}
+
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(i == pServer->m_RconClientID)
+					continue;
+
+				AddrCheck = pServer->m_NetServer.ClientAddr(i);
+				AddrCheck.port = 0;
+				if(net_addr_comp(&Addr, &AddrCheck) == 0 && pServer->m_aClients[i].m_Authed > pServer->m_RconAuthLevel)
+				{
+					pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "ban command denied");
+					return;
+				}
+			}
 		}
 		pServer->BanAdd(Addr, Minutes*60, pReason);
 	}
@@ -1333,6 +1413,11 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		else if(pServer->m_RconClientID == ClientID)
 		{
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban yourself");
+			return;
+		}
+		else if(pServer->m_aClients[ClientID].m_Authed > pServer->m_RconAuthLevel)
+		{
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "ban command denied");
 			return;
 		}
 
@@ -1480,26 +1565,56 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 		((CServer *)pUserData)->m_NetServer.SetMaxClientsPerIP(pResult->GetInteger(0));
 }
 
+void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	if(pResult->NumArguments() == 2)
+	{
+		CServer *pThis = static_cast<CServer *>(pUserData);
+		const IConsole::CCommandInfo *pInfo = pThis->Console()->GetCommandInfo(pResult->GetString(0), CFGFLAG_SERVER, false);
+		int OldAccessLevel;
+		if(pInfo)
+			OldAccessLevel = pInfo->GetAccessLevel();
+		pfnCallback(pResult, pCallbackUserData);
+		if(pInfo && OldAccessLevel != pInfo->GetAccessLevel())
+		{
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY || pThis->m_aClients[i].m_Authed != CServer::AUTHED_MOD ||
+					(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0))
+					continue;
+
+				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN)
+					pThis->SendRconCmdAdd(pInfo, i);
+				else
+					pThis->SendRconCmdRem(pInfo, i);
+			}
+		}
+	}
+	else
+		pfnCallback(pResult, pCallbackUserData);
+}
+
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
-	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "");
-	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "");
-	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "");
-	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "");
-	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "");
-	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "");
+	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
+	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "Ban player with ip/id for x minutes for any reason");
+	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "Unban ip");
+	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "Show banlist");
+	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
+	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 
-	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "");
-	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");
+	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
+	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
-	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "");
+	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
+	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 }
 
 

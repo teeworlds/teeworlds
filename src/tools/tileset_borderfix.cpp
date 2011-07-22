@@ -51,18 +51,18 @@ static void TilesetBorderfix(int w, int h, CPixel *pSrc, CPixel *pDest)
 }
 
 
-int main(int argc, char **argv)
+int FixFile(const char *pFileName)
 {
 	png_t Png;
 	CPixel *pBuffer[2] = {0,0};
 
 	png_init(0, 0);
-	png_open_file(&Png, argv[1]);
+	png_open_file(&Png, pFileName);
 
 	if(Png.color_type != PNG_TRUECOLOR_ALPHA)
 	{
-		dbg_msg("dilate", "not an RGBA image");
-		return -1;
+		dbg_msg("tileset_borderfix", "%s: not an RGBA image", pFileName);
+		return 1;
 	}
 
 	int w = Png.width;
@@ -76,9 +76,23 @@ int main(int argc, char **argv)
 	TilesetBorderfix(w, h, pBuffer[0], pBuffer[1]);
 
 	// save here
-	png_open_file_write(&Png, argv[1]);
+	png_open_file_write(&Png, pFileName);
 	png_set_data(&Png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pBuffer[1]);
 	png_close_file(&Png);
 
+	return 0;
+}
+
+int main(int argc, const char **argv)
+{
+	dbg_logger_stdout();
+	if(argc == 1)
+	{
+		dbg_msg("Usage", "%s FILE1 [ FILE2... ]", argv[0]);
+		return -1;
+	}
+
+	for(int i = 1; i < argc; i++)
+		FixFile(argv[i]);
 	return 0;
 }
