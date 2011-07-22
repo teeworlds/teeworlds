@@ -110,7 +110,7 @@ public:
 	void SetSpeed(float Speed);
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
-	char *GetDemoName();
+	void GetDemoName(char *pBuffer, int BufferSize) const;
 	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
 	int GetDemoType() const;
 

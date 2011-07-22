@@ -508,8 +508,8 @@ Shotgun
 Show chat
 == Sohbeti göster
 
-Show friends
-== Arkadaşları göster
+Show friends only
+== Sadece arkadaşları göster
 
 Show ingame HUD
 == Oyun içi HUD ı göster
@@ -661,6 +661,9 @@ Demofile: %s
 == 
 
 Play background music
+== 
+
+Player country:
 == 
 
 Spectate next

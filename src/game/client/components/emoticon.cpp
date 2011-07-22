@@ -54,6 +54,7 @@ bool CEmoticon::OnMouseMove(float x, float y)
 	if(!m_Active)
 		return false;
 
+	UI()->ConvertMouseMove(&x, &y);
 	m_SelectorMouse += vec2(x,y);
 	return true;
 }
@@ -97,6 +98,13 @@ void CEmoticon::OnRender()
 	{
 		if(m_WasActive && m_SelectedEmote != -1)
 			Emote(m_SelectedEmote);
+		m_WasActive = false;
+		return;
+	}
+
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+	{
+		m_Active = false;
 		m_WasActive = false;
 		return;
 	}

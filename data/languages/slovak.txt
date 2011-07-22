@@ -14,16 +14,16 @@
 == Zostáva %ds
 
 %i minute left
-== Zostáva %i minúta
+== Zostávajúce minúty: %i
 
 %i minutes left
-== Zostáva %i minút
+== Zostávajúce minúty: %i
 
 %i second left
-== Zostáva %i sekunda
+== Zostávajúce sekundy: %i
 
 %i seconds left
-== Zostáva %i sekúnd
+== Zostávajúce sekundy: %i
 
 %s wins!
 == %s vyhráva!
@@ -62,7 +62,7 @@ Are you sure that you want to remove the player from your friends list?
 == Ste si istí, že chcete tohto hráča odstrániť zo zoznamu priateľov?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Vitajte v hre TeeWorlds. Pred tým, ako sa pripojíte na herný server, odporúčame nastaviť si hru podľa svojich požiadavkov. Napíšte do políčka nižšie meno pre Vášho tee a pokračujte kliknutím na tlačítko.
+== Vitajte v hre TeeWorlds. Predtým, ako sa pripojíte na herný server, odporúčame nastaviť si hru podľa svojich požiadavkov. Napíšte do políčka nižšie meno pre Vášho tee a pokračujte kliknutím na tlačítko.
 
 Automatically record demos
 == Automaticky nahrávať záznamy
@@ -116,7 +116,7 @@ Controls
 == Ovládanie
 
 Count players only
-== Rátať len hráčov
+== Nepočítať divákov
 
 Country
 == Krajina
@@ -144,6 +144,9 @@ Delete demo
 
 Demo details
 == Detaily nahrávky
+
+Demofile: %s
+== Nahrávka: %s
 
 Demos
 == Záznamy
@@ -254,7 +257,7 @@ Hue
 == Hue
 
 Info
-== Informácie
+== Info
 
 Internet
 == Internet
@@ -320,7 +323,7 @@ Move left
 == Pohyb vľavo
 
 Move player to spectators
-== Presunúť hráča do skupiny divákov
+== Poslať hráča pozorovať
 
 Move right
 == Pohyb vpravo
@@ -365,7 +368,7 @@ No servers match your filter criteria
 == Žiadny server nezodpovedá zadaným kritériám
 
 Ok
-== Ok
+== OK
 
 Open
 == Otvoriť
@@ -388,8 +391,14 @@ Pistol
 Play
 == Prehrať
 
+Play background music
+== Prehrať hudbu na pozadí
+
 Player
 == Hráč
+
+Player country:
+== Filter krajín:
 
 Player options
 == Nastavenia hráča
@@ -407,7 +416,7 @@ Quality Textures
 == Kvalitné textúry
 
 Quick search:
-== Rýchle hľadanie:
+== Hľadanie:
 
 Quit
 == Ukončiť
@@ -473,13 +482,13 @@ Score
 == Skóre
 
 Score board
-== Prehľad skóre
+== Tabuľka výsledkov
 
 Score limit
 == Limit skóre
 
 Scoreboard
-== Prehľad skóre
+== Tabuľka výsledkov
 
 Screenshot
 == Screenshot
@@ -508,7 +517,7 @@ Shotgun
 Show chat
 == Ukázať chat
 
-Show friends
+Show friends only
 == Ukázať priateľov
 
 Show ingame HUD
@@ -527,7 +536,7 @@ Skins
 == Skiny
 
 Sound
-== Zvuky
+== Zvuk
 
 Sound error
 == Zvuková chyba
@@ -538,6 +547,12 @@ Sound volume
 Spectate
 == Pozorovať
 
+Spectate next
+== Pozorovať ďalšieho
+
+Spectate previous
+== Pozorovať predch.
+
 Spectator mode
 == Mód diváka
 
@@ -545,13 +560,16 @@ Spectators
 == Diváci
 
 Standard gametype
-== Štandartný herný typ
+== Štandardný herný typ
 
 Standard map
-== Štandartná mapa
+== Štandardná mapa
 
 Stop record
 == Nenahrávať
+
+Strict gametype filter
+== Striktný filter módov
 
 Sudden Death
 == Rýchla Smrť
@@ -560,7 +578,7 @@ Switch weapon on pickup
 == Nastavovať zdvíhanú zbraň ako aktuálnu
 
 Team
-== Tým
+== Týmu
 
 Team chat
 == Týmový chat
@@ -575,10 +593,10 @@ The audio device couldn't be initialised.
 == Zvukové zariadenie nemohlo byť inicializované.
 
 The server is running a non-standard tuning on a pure game type.
-== Na serveri je nastavený neštandartný tuning.
+== Server používa neštandardné nastavenia na základnom hernom móde.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== V editore máte neuloženú mapu, mali by ste si ju uložiť predtým než skončíte hru.
+== V editore máte neuloženú mapu, možno si ju chcete pred skončením hry uložiť.
 
 Time limit
 == Časový limit
@@ -602,7 +620,7 @@ Unable to delete the demo
 == Nemôžem vymazať záznam
 
 Unable to rename the demo
-== Nedá sa premenovať nahrávka
+== Nahrávka sa nedá premenovať
 
 Use sounds
 == Povoliť zvuky
@@ -626,10 +644,10 @@ Vote description:
 == Popis hlasu:
 
 Vote no
-== Hlasovať proti
+== Nie
 
 Vote yes
-== Hlasovať pre
+== Áno
 
 Voting
 == Hlasovanie
@@ -638,7 +656,7 @@ Warmup
 == Rozohrávka
 
 Weapon
-== Zbraň
+== Zbrane
 
 Welcome to Teeworlds
 == Vitajte v hre Teeworlds!
@@ -656,21 +674,6 @@ no limit
 == bez limitu
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 

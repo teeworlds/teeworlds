@@ -1,11 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
+
+#include <base/math.h>
 #include <base/system.h>
-#include <engine/shared/protocol.h>
+
 #include <engine/storage.h>
-#include "console.h"
+#include <engine/shared/protocol.h>
+
 #include "config.h"
+#include "console.h"
 #include "linereader.h"
 
 const char *CConsole::CResult::GetString(unsigned Index)
@@ -27,6 +31,29 @@ float CConsole::CResult::GetFloat(unsigned Index)
 	if (Index < 0 || Index >= m_NumArgs)
 		return 0.0f;
 	return str_tofloat(m_apArgs[Index]);
+}
+
+const IConsole::CCommandInfo *CConsole::CCommand::NextCommandInfo(int AccessLevel, int FlagMask) const
+{
+	const CCommand *pInfo = m_pNext;
+	while(pInfo)
+	{
+		if(pInfo->m_Flags&FlagMask && pInfo->m_AccessLevel >= AccessLevel)
+			break;
+		pInfo = pInfo->m_pNext;
+	}
+	return pInfo;
+}
+
+const IConsole::CCommandInfo *CConsole::FirstCommandInfo(int AccessLevel, int FlagMask) const
+{
+	for(const CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		if(pCommand->m_Flags&FlagMask && pCommand->GetAccessLevel() >= AccessLevel)
+			return pCommand;
+	}
+
+	return 0;
 }
 
 // the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces
@@ -247,35 +274,47 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
+		if(!*Result.m_pCommand)
+			return;
+
 		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
 		{
-			int IsStrokeCommand = 0;
-			if(Result.m_pCommand[0] == '+')
+			if(pCommand->GetAccessLevel() >= m_AccessLevel)
 			{
-				// insert the stroke direction token
-				Result.AddArgument(m_paStrokeStr[Stroke]);
-				IsStrokeCommand = 1;
-			}
+				int IsStrokeCommand = 0;
+				if(Result.m_pCommand[0] == '+')
+				{
+					// insert the stroke direction token
+					Result.AddArgument(m_paStrokeStr[Stroke]);
+					IsStrokeCommand = 1;
+				}
 
-			if(Stroke || IsStrokeCommand)
+				if(Stroke || IsStrokeCommand)
+				{
+					if(ParseArgs(&Result, pCommand->m_pParams))
+					{
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
+						Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+					}
+					else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
+					{
+						m_ExecutionQueue.AddEntry();
+						m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
+						m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
+						m_ExecutionQueue.m_pLast->m_Result = Result;
+					}
+					else
+						pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+				}
+			}
+			else if(Stroke)
 			{
-				if(ParseArgs(&Result, pCommand->m_pParams))
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
-					Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-				}
-				else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
-				{
-					m_ExecutionQueue.AddEntry();
-					m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
-					m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
-					m_ExecutionQueue.m_pLast->m_Result = Result;
-				}
-				else
-					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "Access for command %s denied.", Result.m_pCommand);
+				Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 			}
 		}
 		else if(Stroke)
@@ -289,12 +328,11 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 	}
 }
 
-void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser)
+void CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser)
 {
-	CCommand *pCommand;
-	for(pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags&FlagMask)
+		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp)
 		{
 			if(str_find_nocase(pCommand->m_pName, pStr))
 				pfnCallback(pCommand->m_pName, pUser);
@@ -304,8 +342,7 @@ void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallbac
 
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
-	CCommand *pCommand;
-	for (pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
 		if(pCommand->m_Flags&FlagMask)
 		{
@@ -378,6 +415,62 @@ void CConsole::Con_Echo(IResult *pResult, void *pUserData)
 void CConsole::Con_Exec(IResult *pResult, void *pUserData)
 {
 	((CConsole*)pUserData)->ExecuteFile(pResult->GetString(0));
+}
+
+void CConsole::ConModCommandAccess(IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[128];
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), CFGFLAG_SERVER);
+	if(pCommand)
+	{
+		if(pResult->NumArguments() == 2)
+		{
+			pCommand->SetAccessLevel(pResult->GetInteger(1));
+			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is now %s", pResult->GetString(0), pCommand->GetAccessLevel() ? "enabled" : "disabled");
+		}
+		else
+			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is %s", pResult->GetString(0), pCommand->GetAccessLevel() ? "enabled" : "disabled");
+	}
+	else
+		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+
+	pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+}
+
+void CConsole::ConModCommandStatus(IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[240];
+	mem_zero(aBuf, sizeof(aBuf));
+	int Used = 0;
+
+	for(CCommand *pCommand = pConsole->m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		if(pCommand->m_Flags&pConsole->m_FlagMask && pCommand->GetAccessLevel() == ACCESS_LEVEL_MOD)
+		{
+			int Length = str_length(pCommand->m_pName);
+			if(Used + Length + 2 < (int)(sizeof(aBuf)))
+			{
+				if(Used > 0)
+				{
+					Used += 2;
+					str_append(aBuf, ", ", sizeof(aBuf));
+				}
+				str_append(aBuf, pCommand->m_pName, sizeof(aBuf));
+				Used += Length;
+			}
+			else
+			{
+				pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+				mem_zero(aBuf, sizeof(aBuf));
+				str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
+				Used = Length;
+			}
+		}
+	}
+	if(Used > 0)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 }
 
 struct CIntVariableData
@@ -460,6 +553,9 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 CConsole::CConsole(int FlagMask)
 {
 	m_FlagMask = FlagMask;
+	m_AccessLevel = ACCESS_LEVEL_ADMIN;
+	m_pRecycleList = 0;
+	m_TempCommands.Reset();
 	m_StoreCommands = true;
 	m_paStrokeStr[0] = "0";
 	m_paStrokeStr[1] = "1";
@@ -474,6 +570,9 @@ CConsole::CConsole(int FlagMask)
 	// register some basic commands
 	Register("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
+
+	Register("mod_command", "s?i", CFGFLAG_SERVER, ConModCommandAccess, this, "Specify command accessibility for moderators");
+	Register("mod_status", "", CFGFLAG_SERVER, ConModCommandStatus, this, "List all commands which are accessible for moderators");
 
 	// TODO: this should disappear
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
@@ -518,20 +617,131 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 	}
 }
 
+void CConsole::AddCommandSorted(CCommand *pCommand)
+{
+	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) < 0)
+	{
+		if(m_pFirstCommand && m_pFirstCommand->m_pNext)
+			pCommand->m_pNext = m_pFirstCommand;
+		else
+			pCommand->m_pNext = 0;
+		m_pFirstCommand = pCommand;
+	}
+	else
+	{
+		for(CCommand *p = m_pFirstCommand; p; p = p->m_pNext)
+		{
+			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) < 0)
+			{
+				pCommand->m_pNext = p->m_pNext;
+				p->m_pNext = pCommand;
+				break;
+			}
+		}
+	}
+}
+
 void CConsole::Register(const char *pName, const char *pParams,
 	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
 {
-	CCommand *pCommand = (CCommand *)mem_alloc(sizeof(CCommand), sizeof(void*));
+	CCommand *pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
 	pCommand->m_pfnCallback = pfnFunc;
 	pCommand->m_pUserData = pUser;
-	pCommand->m_pHelp = pHelp;
+
 	pCommand->m_pName = pName;
+	pCommand->m_pHelp = pHelp;
 	pCommand->m_pParams = pParams;
+	
 	pCommand->m_Flags = Flags;
+	pCommand->m_Temp = false;
 
+	AddCommandSorted(pCommand);
+}
 
-	pCommand->m_pNext = m_pFirstCommand;
-	m_pFirstCommand = pCommand;
+void CConsole::RegisterTemp(const char *pName, const char *pParams,	int Flags, const char *pHelp)
+{
+	CCommand *pCommand;
+	if(m_pRecycleList)
+	{
+		pCommand = m_pRecycleList;
+		str_copy(const_cast<char *>(pCommand->m_pName), pName, TEMPCMD_NAME_LENGTH);
+		str_copy(const_cast<char *>(pCommand->m_pHelp), pHelp, TEMPCMD_HELP_LENGTH);
+		str_copy(const_cast<char *>(pCommand->m_pParams), pParams, TEMPCMD_PARAMS_LENGTH);
+
+		m_pRecycleList = m_pRecycleList->m_pNext;
+	}
+	else
+	{
+		pCommand = new(m_TempCommands.Allocate(sizeof(CCommand))) CCommand;
+		char *pMem = static_cast<char *>(m_TempCommands.Allocate(TEMPCMD_NAME_LENGTH));
+		str_copy(pMem, pName, TEMPCMD_NAME_LENGTH);
+		pCommand->m_pName = pMem;
+		pMem = static_cast<char *>(m_TempCommands.Allocate(TEMPCMD_HELP_LENGTH));
+		str_copy(pMem, pHelp, TEMPCMD_HELP_LENGTH);
+		pCommand->m_pHelp = pMem;
+		pMem = static_cast<char *>(m_TempCommands.Allocate(TEMPCMD_PARAMS_LENGTH));
+		str_copy(pMem, pParams, TEMPCMD_PARAMS_LENGTH);
+		pCommand->m_pParams = pMem;
+	}
+
+	pCommand->m_pfnCallback = 0;
+	pCommand->m_pUserData = 0;	
+	pCommand->m_Flags = Flags;
+	pCommand->m_Temp = true;
+
+	AddCommandSorted(pCommand);
+}
+
+void CConsole::DeregisterTemp(const char *pName)
+{
+	if(!m_pFirstCommand)
+		return;
+
+	CCommand *pRemoved = 0;
+
+	// remove temp entry from command list
+	if(m_pFirstCommand->m_Temp && str_comp(m_pFirstCommand->m_pName, pName) == 0)
+	{
+		pRemoved = m_pFirstCommand;
+		m_pFirstCommand = m_pFirstCommand->m_pNext;
+	}
+	else
+	{
+		for(CCommand *pCommand = m_pFirstCommand; pCommand->m_pNext; pCommand = pCommand->m_pNext)
+			if(pCommand->m_pNext->m_Temp && str_comp(pCommand->m_pNext->m_pName, pName) == 0)
+			{
+				pRemoved = pCommand->m_pNext;
+				pCommand->m_pNext = pCommand->m_pNext->m_pNext;
+				break;
+			}
+	}
+	
+	// add to recycle list
+	if(pRemoved)
+	{
+		pRemoved->m_pNext = m_pRecycleList;
+		m_pRecycleList = pRemoved;
+	}
+}
+
+void CConsole::DeregisterTempAll()
+{
+	// set non temp as first one
+	for(; m_pFirstCommand && m_pFirstCommand->m_Temp; m_pFirstCommand = m_pFirstCommand->m_pNext);
+	
+	// remove temp entries from command list
+	for(CCommand *pCommand = m_pFirstCommand; pCommand && pCommand->m_pNext; pCommand = pCommand->m_pNext)
+	{
+		CCommand *pNext = pCommand->m_pNext;
+		if(pNext->m_Temp)
+		{
+			for(; pNext && pNext->m_Temp; pNext = pNext->m_pNext);
+			pCommand->m_pNext = pNext;
+		}
+	}
+
+	m_TempCommands.Reset();
+	m_pRecycleList = 0;
 }
 
 void CConsole::Con_Chain(IResult *pResult, void *pUserData)
@@ -577,9 +787,18 @@ void CConsole::StoreCommands(bool Store)
 }
 
 
-IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName, int FlagMask)
+const IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName, int FlagMask, bool Temp)
 {
-	return FindCommand(pName, FlagMask);
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp)
+		{
+			if(str_comp_nocase(pCommand->m_pName, pName) == 0)
+				return pCommand;
+		}
+	}
+
+	return 0;
 }
 
 

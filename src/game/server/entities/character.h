@@ -43,6 +43,7 @@ public:
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
+	void ResetInput();
 	void FireWeapon();
 
 	void Die(int Killer, int Weapon);

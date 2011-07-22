@@ -53,16 +53,16 @@ Always show name plates
 == Винаги показвай лентите с имената
 
 Are you sure that you want to delete the demo?
-== Сигурни ли сте че искате да изтриете това демо?
+== Сигуен ли си че искаш да изтриеш това демо?
 
 Are you sure that you want to quit?
-== Сигурни ли сте че искате да напуснете?
+== Сигурен ли си че искаш да напуснеш?
 
 Are you sure that you want to remove the player from your friends list?
-== Сигурни ли сте че искате да премахнете този играч от листа с приятели?
+== Сигурен ли си че искаш да премахнеш този играч от листа с приятели?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Тъй като стартирате играта за първи път, моля да въведете вашият ник отдолу. Препоръчително е да проверите и нагласите настройките по ваш избор преди да започнете игра.
+== Тъй като стартираш играта за първи път, моля въведи своя ник отдолу. Препоръчително е да провериш и нагласиш настройките по ваш свой избор преди да започнеш игра.
 
 Automatically record demos
 == Записвай демота автоматично
@@ -144,6 +144,9 @@ Delete demo
 
 Demo details
 == Детайли за демото
+
+Demofile: %s
+== Демофайл: %s
 
 Demos
 == Демота
@@ -347,7 +350,7 @@ News
 == Новини
 
 Next weapon
-== Следващо оръжие
+== След. оръжие
 
 Nickname
 == Ник
@@ -362,7 +365,7 @@ No servers found
 == Няма намерени сървъри
 
 No servers match your filter criteria
-== Няма сървъри съответстващи вашите настройки
+== Няма сървъри съответстващи твоите настройки
 
 Ok
 == Добре
@@ -388,8 +391,14 @@ Pistol
 Play
 == Възпроизведи
 
+Play background music
+== Пусни музика за фон
+
 Player
 == Играч
+
+Player country:
+== Страна на играча:
 
 Player options
 == Настройки на Играча
@@ -508,7 +517,7 @@ Shotgun
 Show chat
 == Показвай чата
 
-Show friends
+Show friends only
 == Покажи приятели
 
 Show ingame HUD
@@ -536,7 +545,10 @@ Sound volume
 == Сила на звука
 
 Spectate
-== Наблюдавайте
+== Наблюдавай
+
+Spectate next
+== Наблюдавай след.
 
 Spectator mode
 == Наблюдател
@@ -553,6 +565,9 @@ Standard map
 Stop record
 == Спри записа
 
+Strict gametype filter
+== Стриктен геймтайп филтър
+
 Sudden Death
 == Внезапна Смърт
 
@@ -566,13 +581,13 @@ Team chat
 == Отборен чат
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Излезна Teeworlds %s! Свалете новата версия от www.teeworlds.com!
+== Излезна Teeworlds %s! Свали новата версия от www.teeworlds.com!
 
 Texture Compression
 == Компресиране на Текстурите
 
 The audio device couldn't be initialised.
-== Аудио устройството не може да бъде стартирано
+== Аудио устройството не може да бъде стартирано.
 
 The server is running a non-standard tuning on a pure game type.
 == Този сървър използва нестандартен тунинг на стандартен тип ига.
@@ -587,7 +602,7 @@ Time limit: %d min
 == Лимит на Времето: %d мин
 
 Try again
-== Опитайте Отново
+== Опитай пак
 
 Type
 == Тип
@@ -620,10 +635,10 @@ Version:
 == Версия:
 
 Vote command:
-== Гласувай за команда:
+== Вот команда:
 
 Vote description:
-== Гласувай за обяснение:
+== Вот дефиниция:
 
 Vote no
 == Против
@@ -647,39 +662,18 @@ Yes
 == Да
 
 You must restart the game for all settings to take effect.
-== Трябва да рестартирате играта за да поемат ефект новите настройки.
+== Трябва да рестартираш играта за да поемат ефект новите настройки.
 
 Your skin
-== Вашият модел
+== Твоят модел
 
 no limit
 == Без лимит
 
 ##### needs translation #####
 
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
 Spectate previous
 == 
 
-Strict gametype filter
-== 
-
 ##### old translations #####
-
-Page %d of %d
-== Страница %d/%d
-
-Next
-== Нататък
-
-Prev
-== Назад
 

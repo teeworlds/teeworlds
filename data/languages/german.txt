@@ -397,6 +397,9 @@ Play background music
 Player
 == Spieler
 
+Player country:
+== Spielerland:
+
 Player options
 == Spieleroptionen
 
@@ -514,7 +517,7 @@ Shotgun
 Show chat
 == Chat anzeigen
 
-Show friends
+Show friends only
 == Nur Freunde zeigen
 
 Show ingame HUD

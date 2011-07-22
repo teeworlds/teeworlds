@@ -208,10 +208,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
-		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->Get(i);
-		if(pEntry == 0)
-			continue;
-
+		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
@@ -234,7 +231,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
 	if(OldSelected != NewSelected)
 	{
-		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->Get(NewSelected)->m_CountryCode;
+		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
 		m_NeedSendinfo = true;
 	}
 }
@@ -627,7 +624,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// display mode list
 	static float s_ScrollValue = 0;
 	int OldSelected = -1;
-	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth);
+	int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
+	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
 	UiDoListboxStart(&s_NumNodes , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_NumNodes; ++i)
@@ -643,7 +641,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_aModes[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth);
+			int G = gcd(s_aModes[i].m_Width, s_aModes[i].m_Height);
+			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit (%d:%d)", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth, s_aModes[i].m_Width/G, s_aModes[i].m_Height/G);
 			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, -1);
 		}
 	}
@@ -757,7 +756,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	{
 		g_Config.m_SndEnable ^= 1;
 		if(g_Config.m_SndEnable)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		{
+			if(g_Config.m_SndMusic)
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		}
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
 		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
@@ -810,10 +812,11 @@ class CLanguage
 {
 public:
 	CLanguage() {}
-	CLanguage(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+	CLanguage(const char *n, const char *f, int Code) : m_Name(n), m_FileName(f), m_CountryCode(Code) {}
 
 	string m_Name;
 	string m_FileName;
+	int m_CountryCode;
 
 	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
 };
@@ -828,6 +831,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	}
 
 	char aOrigin[128];
+	char aReplacement[128];
 	CLineReader LineReader;
 	LineReader.Init(File);
 	char *pLine;
@@ -837,14 +841,32 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 			continue;
 
 		str_copy(aOrigin, pLine, sizeof(aOrigin));
-		char *pReplacement = LineReader.Get();
-		if(!pReplacement)
+
+		pLine = LineReader.Get();
+		if(!pLine)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
 			break;
 		}
 
-		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+			(void)LineReader.Get();
+			continue;
+		}
+		str_copy(aReplacement, pLine+3, sizeof(aReplacement));
+
+		pLine = LineReader.Get();
+		if(!pLine)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
+			break;
+		}
+
+		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
@@ -854,7 +876,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 
 		char aFileName[128];
 		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
-		pLanguages->add(CLanguage(pReplacement+3, aFileName));
+		pLanguages->add(CLanguage(aReplacement, aFileName, str_toint(pLine+3)));
 	}
 	io_close(File);
 }
@@ -868,7 +890,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 
 	if(s_Languages.size() == 0)
 	{
-		s_Languages.add(CLanguage("English", ""));
+		s_Languages.add(CLanguage("English", "", 826));
 		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
 			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
@@ -887,7 +909,19 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&r.front());
 
 		if(Item.m_Visible)
-			UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+		{
+			CUIRect Rect;
+			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
+			Rect.VMargin(6.0f, &Rect);
+			Rect.HMargin(3.0f, &Rect);
+			Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(r.front().m_CountryCode)->m_Texture);
+			Graphics()->QuadsBegin();
+			IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+			Item.m_Rect.HSplitTop(2.0f, 0, &Item.m_Rect);
+ 			UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+		}
 	}
 
 	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);

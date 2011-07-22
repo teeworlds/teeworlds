@@ -1,7 +1,8 @@
 import os, re, sys
-match = re.search("(.*?)/[^/]*?$", sys.argv[0])
+match = re.search('(.*)/', sys.argv[0])
 if match != None:
-	os.chdir(os.getcwd() + "/" + match.group(1))
+	os.chdir(match.group(1))
+os.chdir('../')
 
 source_exts = [".c", ".cpp", ".h"]
 
@@ -13,7 +14,7 @@ def parse_source():
 			stringtable[fields[0]] = ""
 			process_line(fields[1])
 
-	for root, dirs, files in os.walk("../src"):
+	for root, dirs, files in os.walk("src"):
 		for name in files:
 			filename = os.path.join(root, name)
 			
@@ -80,11 +81,11 @@ srctable = parse_source()
 
 print("%-40s %8s %8s %8s" % ("filename", "total", "new", "old"))
 
-for filename in os.listdir("../data/languages"):
+for filename in os.listdir("data/languages"):
 	if not ".txt" in filename:
 		continue
 	if filename == "index.txt":
 		continue
 
-	filename = "../data/languages/" + filename
+	filename = "data/languages/" + filename
 	generate_languagefile(filename, srctable, load_languagefile(filename))

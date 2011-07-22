@@ -37,7 +37,7 @@ static void layershot_end()
 	config.cl_layershot++;
 }*/
 
-void CRenderTools::SelectSprite(SPRITE *pSpr, int Flags, int sx, int sy)
+void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
 	int y = pSpr->m_Y+sy;
@@ -232,7 +232,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			}
 
 			// draw feet
-			ANIM_KEYFRAME *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
+			CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
 			float w = BaseSize;
 			float h = BaseSize/2;

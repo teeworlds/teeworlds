@@ -27,6 +27,7 @@
 #include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
+#include "countryflags.h"
 #include "menus.h"
 #include "skins.h"
 
@@ -209,7 +210,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 
 			for(int i = 1; i <= Len; i++)
 			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset + 10 > MxRel)
+				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset > MxRel)
 				{
 					s_AtIndex = i - 1;
 					break;
@@ -251,6 +252,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	{
 		if(!UI()->MouseButton(0))
 		{
+			s_AtIndex = min(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 		}
@@ -734,6 +736,8 @@ void CMenus::OnInit()
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
+	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);
+	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
 
 	// setup load amount
 	m_LoadCurrent = 0;
@@ -1055,7 +1059,7 @@ int CMenus::Render()
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = m_DownloadSpeed > 0.0f ? (Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed : 0.0f;
+				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -1093,6 +1097,66 @@ int CMenus::Render()
 			static int s_Button = 0;
 			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EscapePressed || m_EnterPressed)
 				m_Popup = POPUP_FIRST_LAUNCH;
+		}
+		else if(m_Popup == POPUP_COUNTRY)
+		{
+			Box = Screen;
+			Box.VMargin(150.0f, &Box);
+			Box.HMargin(150.0f, &Box);
+			Box.HSplitTop(20.f, &Part, &Box);
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Box.HSplitBottom(20.f, &Box, 0);
+			Box.VMargin(20.0f, &Box);
+			
+			static int ActSelection = -2;
+			if(ActSelection == -2)
+				ActSelection = g_Config.m_BrFilterCountryIndex;
+			static float s_ScrollValue = 0.0f;
+			int OldSelected = -1;
+			UiDoListboxStart(&s_ScrollValue, &Box, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
+
+			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
+			{
+				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+				if(pEntry->m_CountryCode == ActSelection)
+					OldSelected = i;
+
+				CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
+				if(Item.m_Visible)
+				{
+					Item.m_Rect.Margin(10.0f, &Item.m_Rect);
+					float OldWidth = Item.m_Rect.w;
+					Item.m_Rect.w = Item.m_Rect.h*2;
+					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
+					Graphics()->TextureSet(pEntry->m_Texture);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+				}
+			}
+
+			const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+			if(OldSelected != NewSelected)
+				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
+
+			Part.VMargin(120.0f, &Part);
+
+			static int s_Button = 0;
+			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EnterPressed)
+			{
+				g_Config.m_BrFilterCountryIndex = ActSelection;
+				Client()->ServerBrowserUpdate();
+				m_Popup = POPUP_NONE;
+			}
+
+			if(m_EscapePressed)
+			{
+				ActSelection = g_Config.m_BrFilterCountryIndex;
+				m_Popup = POPUP_NONE;
+			}
 		}
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{
@@ -1205,7 +1269,9 @@ int CMenus::Render()
 				// remove friend
 				if(m_FriendlistSelectedIndex >= 0)
 				{
-					m_pClient->Friends()->RemoveFriend(m_FriendlistSelectedIndex);
+					m_pClient->Friends()->RemoveFriend(m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aName,
+						m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aClan);
+					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 				}
 			}
@@ -1282,6 +1348,7 @@ bool CMenus::OnMouseMove(float x, float y)
 	if(!m_MenuActive)
 		return false;
 
+	UI()->ConvertMouseMove(&x, &y);
 	m_MousePos.x += x;
 	m_MousePos.y += y;
 	if(m_MousePos.x < 0) m_MousePos.x = 0;
@@ -1332,7 +1399,8 @@ void CMenus::OnStateChange(int NewState, int OldState)
 
 	if(NewState == IClient::STATE_OFFLINE)
 	{
-		m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		if(OldState >= IClient::STATE_ONLINE)
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{

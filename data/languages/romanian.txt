@@ -145,6 +145,9 @@ Delete demo
 Demo details
 == Detalii demo
 
+Demofile: %s
+== Fișier demo: %s
+
 Demos
 == Demo
 
@@ -329,7 +332,7 @@ Movement
 == Mișcare
 
 Mute when not active
-== Mută la inactivate
+== Opreşte sunetul la inactivate
 
 Name
 == Nume
@@ -388,8 +391,14 @@ Pistol
 Play
 == Redă
 
+Play background music
+== Redă muzică în fundal
+
 Player
 == Jucător
+
+Player country:
+== Țara jucătorului:
 
 Player options
 == Opțiuni jucător
@@ -508,7 +517,7 @@ Shotgun
 Show chat
 == Afișare chat
 
-Show friends
+Show friends only
 == Arată prietenii
 
 Show ingame HUD
@@ -538,6 +547,12 @@ Sound volume
 Spectate
 == Spectator
 
+Spectate next
+== Vezi următorul
+
+Spectate previous
+== Vezi anteriorul
+
 Spectator mode
 == Mod spectator
 
@@ -552,6 +567,9 @@ Standard map
 
 Stop record
 == Stop înreg.
+
+Strict gametype filter
+== Filtru strict tip joc
 
 Sudden Death
 == Moarte subită
@@ -656,21 +674,6 @@ no limit
 == fără limită
 
 ##### needs translation #####
-
-Demofile: %s
-== 
-
-Play background music
-== 
-
-Spectate next
-== 
-
-Spectate previous
-== 
-
-Strict gametype filter
-== 
 
 ##### old translations #####
 

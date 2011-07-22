@@ -15,7 +15,7 @@
 CLayerTiles::CLayerTiles(int w, int h)
 {
 	m_Type = LAYERTYPE_TILES;
-	m_pTypeName = "Tiles";
+	str_copy(m_aName, "Tiles", sizeof(m_aName));
 	m_Width = w;
 	m_Height = h;
 	m_Image = -1;
@@ -353,19 +353,39 @@ void CLayerTiles::ShowInfo()
 			}
 			x += m_pTiles[c].m_Skip;
 		}
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
-	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-
+	
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer == this)
+	if(m_pEditor->m_Map.m_pGameLayer != this)
+	{
+		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.IsLoaded())
+		{
+			static int s_AutoMapperButton = 0;
+			pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
+			if(m_pEditor->DoButton_Editor(&s_AutoMapperButton, "Auto map", 0, &Button, 0, ""))
+				m_pEditor->PopupSelectConfigAutoMapInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
+			
+			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
+			if(Result > -1)
+			{
+				m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.Proceed(this, Result);
+				return 1;
+			}
+		}
+	}
+	else
 		InGameGroup = false;
 
 	if(InGameGroup)
 	{
+		pToolBox->HSplitBottom(2.0f, pToolBox, 0);
+		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 		static int s_ColclButton = 0;
 		if(m_pEditor->DoButton_Editor(&s_ColclButton, "Game tiles", 0, &Button, 0, "Constructs game tiles from this layer"))
 			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());

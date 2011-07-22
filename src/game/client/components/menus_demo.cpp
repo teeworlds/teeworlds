@@ -200,8 +200,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			Client()->Disconnect();
 
 		// demo name
+		char aDemoName[64] = {0};
+		DemoPlayer()->GetDemoName(aDemoName, sizeof(aDemoName));
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), DemoPlayer()->GetDemoName());
+		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), aDemoName);
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = MainView.w;
@@ -289,9 +291,9 @@ void CMenus::UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHe
 		Num = 0;
 	if(Num > 0)
 	{
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			gs_ListBoxScrollValue -= 3.0f/Num;
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
 			gs_ListBoxScrollValue += 3.0f/Num;
 
 		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
@@ -553,8 +555,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		Labels.HSplitTop(20.0f, &Left, &Labels);
 		Left.VSplitLeft(150.0f, &Left, &Right);
 		UI()->DoLabelScaled(&Left, Localize("Length:"), 14.0f, -1);
-		int Length = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16) |
-					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]);
+		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
+					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
 		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
@@ -576,9 +578,9 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		Left.VSplitLeft(20.0f, 0, &Left);
 		Left.VSplitLeft(130.0f, &Left, &Right);
 		UI()->DoLabelScaled(&Left, Localize("Size:"), 14.0f, -1);
-		Length = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
+		unsigned Size = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
 					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]);
-		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Length);
+		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Size);
 		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
 		Labels.HSplitTop(5.0f, 0, &Labels);
 		Labels.HSplitTop(20.0f, &Left, &Labels);

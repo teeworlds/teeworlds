@@ -51,7 +51,7 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_CompletionChosen = -1;
 	m_CompletionRenderOffset = 0.0f;
 
-	m_pCommand = 0x0;
+	m_IsCommand = false;
 }
 
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)
@@ -127,11 +127,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Last();
 
 			if (m_pHistoryEntry)
-			{
-				unsigned int Len = str_length(m_pHistoryEntry);
-				if (Len < sizeof(m_Input) - 1) // TODO: WTF?
-					m_Input.Set(m_pHistoryEntry);
-			}
+				m_Input.Set(m_pHistoryEntry);
 			Handled = true;
 		}
 		else if (Event.m_Key == KEY_DOWN)
@@ -140,11 +136,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 			if (m_pHistoryEntry)
-			{
-				unsigned int Len = str_length(m_pHistoryEntry);
-				if (Len < sizeof(m_Input) - 1) // TODO: WTF?
-					m_Input.Set(m_pHistoryEntry);
-			}
+				m_Input.Set(m_pHistoryEntry);
 			else
 				m_Input.Clear();
 			Handled = true;
@@ -155,14 +147,16 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			{
 				m_CompletionChosen++;
 				m_CompletionEnumerationCount = 0;
-				m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, PossibleCommandsCompleteCallback, this);
+				m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, m_Type != CGameConsole::CONSOLETYPE_LOCAL &&
+					m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands(),	PossibleCommandsCompleteCallback, this);
 
 				// handle wrapping
 				if(m_CompletionEnumerationCount && m_CompletionChosen >= m_CompletionEnumerationCount)
 				{
 					m_CompletionChosen %= m_CompletionEnumerationCount;
 					m_CompletionEnumerationCount = 0;
-					m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, PossibleCommandsCompleteCallback, this);
+					m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, m_Type != CGameConsole::CONSOLETYPE_LOCAL &&
+						m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands(),	PossibleCommandsCompleteCallback, this);
 				}
 			}
 		}
@@ -198,7 +192,17 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				aBuf[i] = *pSrc;
 			aBuf[i] = 0;
 
-			m_pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask);
+			const IConsole::CCommandInfo *pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask,
+				m_Type != CGameConsole::CONSOLETYPE_LOCAL && m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands());
+			if(pCommand)
+			{
+				m_IsCommand = true;
+				str_copy(m_aCommandName, pCommand->m_pName, IConsole::TEMPCMD_NAME_LENGTH);
+				str_copy(m_aCommandHelp, pCommand->m_pHelp, IConsole::TEMPCMD_HELP_LENGTH);
+				str_copy(m_aCommandParams, pCommand->m_pParams, IConsole::TEMPCMD_PARAMS_LENGTH);
+			}
+			else
+				m_IsCommand = false;
 		}
 	}
 }
@@ -457,19 +461,19 @@ void CGameConsole::OnRender()
 		{
 			if(pConsole->m_Input.GetString()[0] != 0)
 			{
-				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, PossibleCommandsRenderCallback, &Info);
+				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
+					Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
 				pConsole->m_CompletionRenderOffset = Info.m_Offset;
 
 				if(Info.m_EnumCount <= 0)
 				{
-					if(pConsole->m_pCommand)
+					if(pConsole->m_IsCommand)
 					{
-
 						char aBuf[512];
-						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_pCommand->m_pHelp);
+						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
 						TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 						TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-						str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_pCommand->m_pName, pConsole->m_pCommand->m_pParams);
+						str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
 						TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 					}
 				}

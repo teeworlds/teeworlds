@@ -79,6 +79,7 @@ public:
 	int m_ScoreStartTick;
 	bool m_ForceBalanced;
 	int m_LastActionTick;
+	int m_TeamChangeTick;
 	struct
 	{
 		int m_TargetX;

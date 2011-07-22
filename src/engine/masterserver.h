@@ -23,7 +23,6 @@ public:
 	virtual int RefreshAddresses(int Nettype) = 0;
 	virtual void Update() = 0;
 	virtual int IsRefreshing() = 0;
-	virtual void DumpServers() = 0;
 	virtual NETADDR GetAddr(int Index) = 0;
 	virtual const char *GetName(int Index) = 0;
 	virtual bool IsValid(int Index) = 0;
