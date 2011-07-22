@@ -20,8 +20,9 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
-	
-	for (int i = 1;i < 16;i++)
+
+	int* idMap = Server()->GetIdMap(ClientID);
+	for (int i = 1;i < VANILLA_MAX_CLIENTS;i++)
 	{
 	    idMap[i] = -1;
 	}
@@ -109,19 +110,9 @@ void CPlayer::Snap(int SnappingClient)
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
-	int id = -1;
-	int* idMap=GameServer()->m_apPlayers[SnappingClient]->idMap;
-	for (int i = 0;i < 16;i++)
-	{
-	    if (idMap[i] == m_ClientID)
-	    {
-		id = i;
-		break;
-	    }
-	}
-	if (id == -1)
-		return;
-	
+	int id = m_ClientID;
+	if (!Server()->Translate(id, SnappingClient)) return;
+
 	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, id, sizeof(CNetObj_ClientInfo)));
 
 	if(!pClientInfo)
@@ -158,6 +149,21 @@ void CPlayer::Snap(int SnappingClient)
 		pSpectatorInfo->m_X = m_ViewPos.x;
 		pSpectatorInfo->m_Y = m_ViewPos.y;
 	}
+}
+
+void CPlayer::FakeSnap(int SnappingClient)
+{
+	// WORK IN PROGRESS STUFF NOT FINISHED
+	int id = VANILLA_MAX_CLIENTS - 1;
+
+	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, id, sizeof(CNetObj_ClientInfo)));
+
+	if(!pClientInfo)
+		return;
+
+	StrToInts(&pClientInfo->m_Name0, 4, " ");
+	StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
+	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
 }
 
 void CPlayer::OnDisconnect(const char *pReason)

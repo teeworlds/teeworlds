@@ -27,6 +27,7 @@ public:
 	void Tick();
 	void PostTick();
 	void Snap(int SnappingClient);
+	void FakeSnap(int SnappingClient);
 
 	void OnDirectInput(CNetObj_PlayerInput *NewInput);
 	void OnPredictedInput(CNetObj_PlayerInput *NewInput);
@@ -83,9 +84,6 @@ public:
 		int m_TargetX;
 		int m_TargetY;
 	} m_LatestActivity;
-	
-	int idMap[16];
-	int idMapBook[16];
 
 	// network latency calculations
 	struct

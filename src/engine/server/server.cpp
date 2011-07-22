@@ -898,14 +898,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			GameServer()->OnMessage(Msg, &Unpacker, ClientID);
 	}
 }
-	
-void CServer::SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket)
-{
-	if (g_Config.m_SvAuxPort == 0)
-	{
-		m_NetServer.DropAuxSocket();
-	}
 
+void CServer::SendServerInfo(NETADDR *pAddr, int Token)
+{
 	CNetChunk Packet;
 	CPacker p;
 	char aBuf[128];
@@ -930,21 +925,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket)
 	p.AddString(aBuf, 6);
 
 	p.AddString(GameServer()->Version(), 32);
-	if (isAuxSocket)
-	{
-		str_format(aBuf, sizeof(aBuf), "%s auxiliary", g_Config.m_SvName, PlayerCount);
-		p.AddString(aBuf, 64);
-	}
-	else
-	{
-		if (PlayerCount < 16)
-			p.AddString(g_Config.m_SvName, 64);
-		else 
-		{
-			str_format(aBuf, sizeof(aBuf), "%s - %d/32 online!", g_Config.m_SvName, PlayerCount);
-			p.AddString(aBuf, 64);
-		}
-	}
+	p.AddString(g_Config.m_SvName, 64);
 	p.AddString(GetMapName(), 32);
 
 	// gametype
@@ -957,70 +938,32 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token, bool isAuxSocket)
 	str_format(aBuf, sizeof(aBuf), "%d", i);
 	p.AddString(aBuf, 2);
 
-	int PlayerCountPrimary = 0;
-	int PlayerCountAux = 0;
-	
-	if (PlayerCount < 16)
-	{
-		PlayerCountPrimary = PlayerCount;
-		PlayerCountAux = 0;
-	}
-	else
-	{
-		if (PlayerCount < 31)
-		{
-			PlayerCountPrimary = 15;
-			PlayerCountAux = PlayerCount - 15;
-		}
-		else
-		{
-			PlayerCountPrimary = PlayerCount - 16;
-			PlayerCountAux = 16;
-		}
-	}
-	
-	if(g_Config.m_SvAuxPort == 0)
-	{
-		if (PlayerCount == MAX_CLIENTS) PlayerCount = 16;
-		else if (PlayerCount > 15) PlayerCount = 15;
-	}
-	else
-	{
-		if (isAuxSocket) PlayerCount = PlayerCountAux;
-			else PlayerCount = PlayerCountPrimary;
-	}
-	
-	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
-	str_format(aBuf, sizeof(aBuf), "%d", isAuxSocket ? PlayerCountAux : 16); p.AddString(aBuf, 3); // max players
-	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num clients
-	str_format(aBuf, sizeof(aBuf), "%d", isAuxSocket ? PlayerCountAux : 16); p.AddString(aBuf, 3); // max clients
+	int MaxClients = m_NetServer.MaxClients();
+	if (PlayerCount > VANILLA_MAX_CLIENTS) PlayerCount = VANILLA_MAX_CLIENTS;
+	if (ClientCount > VANILLA_MAX_CLIENTS) ClientCount = VANILLA_MAX_CLIENTS;
+	if (MaxClients > VANILLA_MAX_CLIENTS) MaxClients = VANILLA_MAX_CLIENTS;
 
-	int SkipPlayers = isAuxSocket ? PlayerCountPrimary : 0;
+	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3); // num players
+	str_format(aBuf, sizeof(aBuf), "%d", MaxClients-g_Config.m_SvSpectatorSlots); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3); // num clients
+	str_format(aBuf, sizeof(aBuf), "%d", MaxClients); p.AddString(aBuf, 3); // max clients
+
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			if (--SkipPlayers >= 0) continue;
+			if (ClientCount-- == 0) break;
 			p.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
 			p.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
 			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6); // client country
 			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6); // client score
 			str_format(aBuf, sizeof(aBuf), "%d", GameServer()->IsClientPlayer(i)?1:0); p.AddString(aBuf, 2); // is player?
-			if (--PlayerCount == 0) break;
 		}
-	}
-	while (PlayerCount > 0)
-	{
-		PlayerCount--;
-		p.AddString("---", 48);  // player name
-		str_format(aBuf, sizeof(aBuf), "%d", 0); p.AddString(aBuf, 6);  // player score
 	}
 
 	Packet.m_ClientID = -1;
 	Packet.m_Address = *pAddr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	if (isAuxSocket) 
-		Packet.m_Flags |= NETSENDFLAG_AUX;
 	Packet.m_DataSize = p.Size();
 	Packet.m_pData = p.Data();
 	m_NetServer.Send(&Packet);
@@ -1033,7 +976,7 @@ void CServer::UpdateServerInfo()
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			NETADDR Addr = m_NetServer.ClientAddr(i);
-			SendServerInfo(&Addr, -1, false);
+			SendServerInfo(&Addr, -1);
 		}
 	}
 }
@@ -1073,11 +1016,10 @@ void CServer::PumpNetwork()
 			// stateless
 			if(!m_Register.RegisterProcessPacket(&Packet))
 			{
-				bool isAuxSocket = Packet.m_Flags & NETSENDFLAG_AUX;
 				if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETINFO)+1 &&
 					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
-					SendServerInfo(&Packet.m_Address, ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)], isAuxSocket);
+					SendServerInfo(&Packet.m_Address, ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)]);
 				}
 			}
 		}
@@ -1169,7 +1111,6 @@ int CServer::Run()
 
 	// start server
 	NETADDR BindAddr;
-	NETADDR AuxBindAddr;
 	if(g_Config.m_SvBindaddr[0] && net_host_lookup(g_Config.m_SvBindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// sweet!
@@ -1181,10 +1122,9 @@ int CServer::Run()
 		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_SvPort;
 	}
-	mem_copy(&AuxBindAddr, &BindAddr, sizeof(BindAddr));
-	AuxBindAddr.port = g_Config.m_SvAuxPort;
-	
-	if(!m_NetServer.Open(BindAddr, AuxBindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
+
+
+	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
 	{
 		dbg_msg("server", "couldn't open socket. port might already be in use");
 		return -1;
@@ -1666,3 +1606,7 @@ int main(int argc, const char **argv) // ignore_convention
 	return 0;
 }
 
+int* CServer::GetIdMap(int ClientID)
+{
+	return (int*)(IdMap + VANILLA_MAX_CLIENTS * ClientID);
+}

@@ -4,6 +4,8 @@
 #include "gameworld.h"
 #include "entity.h"
 #include "gamecontext.h"
+#include <algorithm>
+#include <utility>
 
 //////////////////////////////////////////////////
 // game world
@@ -147,6 +149,71 @@ void CGameWorld::RemoveEntities()
 		}
 }
 
+bool distCompare(std::pair<float,int> a, std::pair<float,int> b)
+{
+	return (a.first < b.first);
+}
+
+void CGameWorld::UpdatePlayerMaps()
+{
+	if (Server()->Tick() % 5 != 0) return;
+
+	std::pair<float,int> dist[MAX_CLIENTS];
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if (!Server()->ClientIngame(i)) continue;
+		int* map = Server()->GetIdMap(i);
+
+		// compute distances
+		for (int j = 0; j < MAX_CLIENTS; j++)
+		{
+			dist[j].second = j;
+			dist[j].first = 1e10;
+			if (!Server()->ClientIngame(j))
+				continue;
+			CCharacter* ch = GameServer()->m_apPlayers[j]->GetCharacter();
+			if (!ch)
+				continue;
+			dist[j].first = distance(GameServer()->m_apPlayers[i]->m_ViewPos, GameServer()->m_apPlayers[j]->m_ViewPos);
+		}
+
+		// compute reverse map
+		int rMap[MAX_CLIENTS];
+		for (int j = 0; j < MAX_CLIENTS; j++)
+		{
+			rMap[j] = -1;
+		}
+		for (int j = 0; j < VANILLA_MAX_CLIENTS; j++)
+		{
+			if (map[j] == -1) continue;
+			if (dist[map[j]].first > 1e9) map[j] = -1;
+			else rMap[map[j]] = j;
+		}
+
+		// always send the player himself
+		dist[i].first = 0;
+
+		std::nth_element(&dist[0], &dist[VANILLA_MAX_CLIENTS - 1], &dist[MAX_CLIENTS], distCompare);
+
+		int mapc = 0;
+		for (int j = 0; j < VANILLA_MAX_CLIENTS - 1; j++)
+		{
+			int k = dist[j].second;
+			if (rMap[k] != -1 || dist[k].first > 1e9) continue;
+			while (mapc < VANILLA_MAX_CLIENTS && map[mapc] != -1) mapc++;
+			if (mapc < VANILLA_MAX_CLIENTS)
+				map[mapc] = k;
+		}
+		for (int j = VANILLA_MAX_CLIENTS - 1; j < MAX_CLIENTS; j++)
+		{
+			int k = dist[j].second;
+			if (rMap[k] != -1)
+				map[rMap[k]] = -1;
+		}
+		map[VANILLA_MAX_CLIENTS - 1] = MAX_CLIENTS - 1; // player with empty name to say chat msgs
+	}
+}
+
 void CGameWorld::Tick()
 {
 	if(m_ResetRequested)
@@ -175,8 +242,9 @@ void CGameWorld::Tick()
 	}
 
 	RemoveEntities();
-}
 
+	UpdatePlayerMaps();
+}
 
 // TODO: should be more general
 CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
