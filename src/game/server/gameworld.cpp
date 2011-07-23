@@ -6,6 +6,7 @@
 #include "gamecontext.h"
 #include <algorithm>
 #include <utility>
+#include <engine/shared/config.h>
 
 //////////////////////////////////////////////////
 // game world
@@ -156,7 +157,7 @@ bool distCompare(std::pair<float,int> a, std::pair<float,int> b)
 
 void CGameWorld::UpdatePlayerMaps()
 {
-	if (Server()->Tick() % 5 != 0) return;
+	if (Server()->Tick() % g_Config.m_SvMapUpdateRate != 0) return;
 
 	std::pair<float,int> dist[MAX_CLIENTS];
 	for (int i = 0; i < MAX_CLIENTS; i++)
@@ -196,18 +197,22 @@ void CGameWorld::UpdatePlayerMaps()
 		std::nth_element(&dist[0], &dist[VANILLA_MAX_CLIENTS - 1], &dist[MAX_CLIENTS], distCompare);
 
 		int mapc = 0;
+		int demand = 0;
 		for (int j = 0; j < VANILLA_MAX_CLIENTS - 1; j++)
 		{
 			int k = dist[j].second;
 			if (rMap[k] != -1 || dist[k].first > 1e9) continue;
 			while (mapc < VANILLA_MAX_CLIENTS && map[mapc] != -1) mapc++;
-			if (mapc < VANILLA_MAX_CLIENTS)
+			if (mapc < VANILLA_MAX_CLIENTS - 1)
 				map[mapc] = k;
+			else
+				if (dist[j].first < 1300) // dont bother freeing up space for players which are too far to be displayed anyway
+					demand++;
 		}
-		for (int j = VANILLA_MAX_CLIENTS - 1; j < MAX_CLIENTS; j++)
+		for (int j = MAX_CLIENTS - 1; j > VANILLA_MAX_CLIENTS - 2; j--)
 		{
 			int k = dist[j].second;
-			if (rMap[k] != -1)
+			if (rMap[k] != -1 && demand-- > 0)
 				map[rMap[k]] = -1;
 		}
 		map[VANILLA_MAX_CLIENTS - 1] = -1; // player with empty name to say chat msgs

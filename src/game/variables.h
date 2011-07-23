@@ -136,6 +136,7 @@ MACRO_CONFIG_INT(SvLoltextVspace, sv_loltext_vspace, 14, 10, 25, CFGFLAG_SERVER,
 MACRO_CONFIG_INT(SvNowepsKnife, sv_noweps_knife, 0, 0, 1, CFGFLAG_SERVER, "")
 MACRO_CONFIG_INT(SvTakeHammerOnChatkill, sv_take_hammer_on_chatkill, 0, 0, 1, CFGFLAG_SERVER, "")
 
+MACRO_CONFIG_INT(SvMapUpdateRate, sv_mapupdaterate, 5, 1, 100, CFGFLAG_SERVER, "(Tw32) real id <-> vanilla id players map update rate")
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
