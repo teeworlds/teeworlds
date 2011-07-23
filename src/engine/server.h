@@ -41,9 +41,9 @@ public:
 	int SendPackMsg(T *pMsg, int Flags, int ClientID)
 	{
 		int result;
+		T tmp;
 		if (ClientID == -1)
 		{
-			T tmp;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 				if(ClientIngame(i))
 				{
@@ -51,7 +51,8 @@ public:
 					result = SendPackMsgTranslate(&tmp, Flags, i);
 				}
 		} else {
-			result = SendPackMsgTranslate(pMsg, Flags, ClientID);
+			mem_copy(&tmp, pMsg, sizeof(T));
+			result = SendPackMsgTranslate(&tmp, Flags, ClientID);
 		}
 		return result;
 	}
