@@ -37,20 +37,50 @@ Abort
 Add
 == Hinzufügen
 
+Add a server as a favorite
+== Fügt einen Server als Favoriten hinzu
+
+Add a voting option
+== Fügt Abstimmung hinzu
+
+Add dunnies
+== Fügt Dunnies hinzu
+
 Add Friend
 == Freund hinzufügen
+
+Address to bind the server to
+== Adresse an die der Server gebunden werden soll
 
 Address
 == Adresse
 
+Adjust the amount of information in the console
+== Stellt die Anzahl der Informationen in der Console ein
+
 All
 == Alle
+
+Allow powerups like ninja
+== Erlaubt Powerups wie z.B. Ninja
+
+Allow voting to kick players
+== Erluabt Abstimmungen um Spieler zu kicken
+
+Allow voting to move players to spectators
+== Erlaubt Abstimmungen um Spieler zu Zuschauern zu machen
 
 Alpha
 == Alpha
 
+Alpha bits for framebuffer (fullscreen only)
+== Alpha-Bits für Fframebuffer (nur Vollbild)
+
 Always show name plates
 == Spielernamen immer anzeigen
+
+Always show name plates disregarding of distance
+== Zeigt immer Spielernamen unabhängig von der Entfernung
 
 Are you sure that you want to delete the demo?
 == Möchtest du die Aufnahme wirklich löschen?
@@ -64,11 +94,17 @@ Are you sure that you want to remove the player from your friends list?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
 
+Authenticate to rcon
+== Einloggen im rcon
+
 Automatically record demos
 == Automatisch Aufnahmen erstellen
 
 Automatically take game over screenshot
 == Autom. ein Bild vom Spielergebnis erstellen
+
+Bind key to execute the command
+== Bindet die Taste um den Befehl auszuführen
 
 Blue team
 == Blaues Team
@@ -79,8 +115,14 @@ Blue team wins!
 Body
 == Körper
 
+Broadcast message
+== Globale Nachricht
+
 Call vote
 == Abstimmen
+
+Change map
+== Wechselt Map
 
 Change settings
 == Einstellungen ändern
@@ -91,17 +133,41 @@ Chat
 Clan
 == Clan
 
+Clan of the player
+== Clan des Spielers
+
+Clear local console
+== Leert lokale Konsole
+
+Clear remote console
+== Leert Remotekonsole (rcon)
+
+Clear screen before rendering
+== Säubert Bild vorm Rendering
+
+Clears the voting options
+== Löscht Abstimmungen
+
 Client
 == Client
 
 Close
 == Schließ.
 
+Colors bits for framebuffer (fullscreen only)
+== Farb-Bits für Framebuffer (nur Vollbild)
+
+Column to sort
+== Spalte für Sortierung
+
 Compatible version
 == Kompatible Version
 
 Connect
 == Verbinden
+
+Connect to the specified host/ip
+== Verbindet zum angegebenen Host oder zur IP
 
 Connecting to
 == Verbinden mit
@@ -121,6 +187,9 @@ Count players only
 Country
 == Land
 
+Country of the player
+== Land des Spielers
+
 Crc:
 == Prüfsumme:
 
@@ -135,6 +204,9 @@ Current version: %s
 
 Custom colors
 == Eigene Farben
+
+Debug mode
+== Debugmodus
 
 Delete
 == Löschen
@@ -151,8 +223,14 @@ Demofile: %s
 Demos
 == Aufnahm.
 
+Disable clipping
+== Schaltet Clipping aus
+
 Disconnect
 == Trennen
+
+Disconnect from the server
+== Trennt vom Server
 
 Disconnected
 == Verbindung getrennt
@@ -166,11 +244,35 @@ Downloading map
 Draw!
 == Unentschieden!
 
+Dump binds
+== Zeigt Binds an
+
+Dump local console
+== Speichert lokale Konsole in eine Datei
+
+Dump remote console
+== Speichert Remotekonsole (rcon) in eine Datei
+
+Dump tuning
+== Zeigt Tunings an
+
 Dynamic Camera
 == Dynamische Kamera
 
 Emoticon
 == Emoticon
+
+Enable air jump indicator
+== Aktiviert Doppelsprung Indikator
+
+Enable chat with all/team mode
+== Aktiviert Chateingabe (Eingabe: all oder team)
+
+Enables the usage of a thread to pump the events
+== Aktiviert die Anwendung eines Threads für Events
+
+Enables window resizing
+== Aktiviert Fenstergrößenänderungen
 
 Enter
 == Starten
@@ -180,6 +282,9 @@ Error
 
 Error loading demo
 == Fehler beim Laden der Aufnahme, die Datei ist ungültig.
+
+External port to report to the master servers
+== Externer Port, der an den Masterserver übermittelt wird
 
 FSAA samples
 == Vollbild Anti-Aliasing
@@ -193,14 +298,50 @@ Favorites
 Feet
 == Füße
 
+Filename to log all output to
+== Dateiname um die gesamte Ausgabe mitzuschreiben
+
 Filter
 == Filter
+
+Filter out empty server in browser
+== Rausfiltern von leeren Servern im Serverbrowser
+
+Filter out full server in browser
+== Rausfiltern von vollen Servern im Serverbrowser
+
+Filter out non-compatible servers in browser
+== Rausfiltern von inkompatiblen Servern in Serverbrowser
+
+Filter out non-standard maps in browser
+== Rausfiltern von Nicht-Standard Maps im Serverbrowser
+
+Filter out non-standard servers in browser
+== Rausfiltern von Nicht-Standard Servern im Serverbrowser
+
+Filter out password protected servers in browser
+== Rausfiltern von passwortgeschützten Servern im Serverbrowser
+
+Filter out servers with no friends
+== Rausfiltern von Servern ohne Freunde
+
+Filter out servers with non-matching player country
+== Rausfiltern von Servern mit einem anderen Land
+
+Filter out spectators from player numbers
+== Rausfiltern von Zuschauern in der Anzahl der Spieler
 
 Fire
 == Feuern
 
 Folder
 == Ordner
+
+Force a vote to yes/no
+== Erzwingt eine Abstimmung zu ja/nein (Eingabe yes or no)
+
+Force a voting option
+== Erzwingt eine Abstimmung
 
 Force vote
 == Erzwingen
@@ -226,6 +367,9 @@ Game over
 Game type
 == Spieltyp
 
+Game types to filter
+== Spieltype, der gefiltert werden soll
+
 Game types:
 == Spieltypen:
 
@@ -244,8 +388,14 @@ Hammer
 Has people playing
 == Server nicht leer
 
+Help
+== Hilfe
+
 High Detail
 == Hohe Details
+
+Hitch warnings
+== Unterbrechungswarnungen
 
 Hook
 == Haken
@@ -253,11 +403,47 @@ Hook
 Host address
 == Serveradresse
 
+How long to show the server message of the day
+== Wie lange die Servernachricht des Tages gezeigt werden soll (MOTD)
+
+How many minutes to wait before a player can rejoin after being moved to spectators by vote
+== Minuten, die gewartet wird bis ein Spieler wieder beitreten kann, wenn er Zuschauer gesetzt wurde
+
+How many minutes to wait before autobalancing teams
+== Minuten, die gewartet wird bevor die Teams ausbalanciert werden
+
+How many minutes to wait before taking care of inactive players
+== Minuten, die gewartet wird bevor inaktive Spieler behandelt werden
+
+How to deal with inactive players (0=move to spectator, 1=move to free spectator slot/kick, 2=kick)
+== Wie inaktive Spieler behandelt werden (0=Zuschauer, 1=freier Zuschaerplatz/Kickm 2=Kick)
+
 Hue
 == Farb.
 
 Info
 == Info
+
+Interface alpha
+== Interface Alpha
+
+Interface color hue
+== Interface Farbton
+
+Interface color lightness
+== Helligkeit der Farbe im Interface
+
+Interface color saturation
+== Sättigung der Farbe im Interface
+
+Interface page
+== Interfaceseite
+
+Interface scale
+== Interfacegröße
+
+Interface server address
+== Serveradresse im Interface
 
 Internet
 == Internet
@@ -280,6 +466,9 @@ Jump
 Kick player
 == Spieler kicken
 
+Kill yourself
+== Selbstmord
+
 LAN
 == LAN
 
@@ -292,6 +481,9 @@ Length:
 Lht.
 == Hell.
 
+Load sound files threaded
+== Läd Sounddateien in einem Thread
+
 Loading
 == Laden
 
@@ -301,8 +493,14 @@ MOTD
 Map
 == Karte
 
+Map to use on the server
+== Map die auf dem Server genutzt wird
+
 Map:
 == Karte:
+
+Maps to rotate between
+== Maps zwischen denen gewechselt wird
 
 Max Screenshots
 == Maximale Anzahl an Bildschirmfotos
@@ -310,14 +508,44 @@ Max Screenshots
 Max demos
 == Maximale Anzahl an Aufnahmen
 
+Maximum number of automatically created screenshots (0 = no limit)
+== Maximale Anzahl von automatisch erstellten Bildschirmfotos (0 = unendlich)
+
+Maximum number of automatically recorded demos (0 = no limit)
+== Maximale Anzahl von automatisch aufgenommenen Demos (0 = unendlich)
+
+Maximum number of clients that are allowed on a server
+== Maximale Anzahl von Spielern auf dem Server
+
+Maximum number of clients with the same IP that can connect to the server
+== Maximale Anzahl von Spielern mit der selben IP auf dem Server
+
+Maximum number of tries for remote console authentication
+== Maximale Anzahl an Loginversuchen (rcon)
+
 Maximum ping:
 == Maximaler Ping:
 
 Miscellaneous
 == Verschiedenes
 
+Minimize Teeworlds
+== Minimiert Teeworlds
+
+Minimum number of players required to start a kick vote
+== Minimale Anzahl an Spielern um eine Kick-Abstimmung zu starten
+
+Message of the day to display for the clients
+== Servernachricht des Tages für Spieler (MOTD)
+
 Mouse sens.
 == Maus-Empfindl.
+
+Mouse sensitivity
+== Maus-Empfindlichkeit
+
+Mouse sensitivity for menus/editor
+== Maussensibilität für Menü/Editor
 
 Move left
 == Nach links
@@ -336,6 +564,9 @@ Mute when not active
 
 Name
 == Name
+
+Name of the player
+== Name des Spielers
 
 Name plates size
 == Größe der Spielernamen
@@ -367,11 +598,29 @@ No servers found
 No servers match your filter criteria
 == Kein Server entspricht den Kriterien
 
+Number of requests to use when refreshing server browser
+== Anzahl der Anfragen beim Aktualisieren des Serverbrowsers
+
+Number of rounds on each map before rotating
+== Anzahl der Runden pro Map
+
+Number of seconds to do warmup before round starts
+== Warmupdauer in Sekunden vor jeder Runde
+
+Number of slots to reserve for spectators
+== Anzahl der Slots, die für Zuschauer reserviert sind
+
 Ok
 == OK
 
 Open
 == Öffnen
+
+Open emote selector
+== Öffnet Emoteauswahl
+
+Open spectator mode selector
+== Öffnet Zuschauermodusauswahl
 
 Parent Folder
 == Übergeordneter Ordner
@@ -382,8 +631,23 @@ Password
 Password incorrect
 == Passwort falsch
 
+Password to the server
+== Passwort für Server
+
+Performance graphs
+== Leistungsgrafiken
+
+Performance outputs
+== Leistungsausgaben
+
 Ping
 == Ping
+
+Ping the current server
+== Pingt den aktuellen Server
+
+Ping to filter by in the server browser
+== Ping ab dem alle Server rausgefiltert werden
 
 Pistol
 == Pistole
@@ -394,20 +658,41 @@ Play
 Play background music
 == Hintergrundmusik abspielen
 
+Play the file specified
+== Spielt die angegeben Datei
+
 Player
 == Spieler
+
+Player body color
+== Körperfarbe des Spielers
+
+Player country to filter by in the server browser
+== Land nach dem gefiltert werden soll
 
 Player country:
 == Spielerland:
 
+Player feet color
+== Fußfarbe des Spielers
+
 Player options
 == Spieleroptionen
+
+Player skin
+== Spielerskin
 
 Players
 == Spieler
 
 Please balance teams!
 == Bitte Teams ausgleichen!
+
+Port to use for the server
+== Port der für den Server genutzt werden soll
+
+Predict client movements
+== Berechnet Spielerbewegungen vorraus
 
 Prev. weapon
 == Vorherige Waffe
@@ -424,6 +709,9 @@ Quit
 Quit anyway?
 == Trotzdem beenden?
 
+Quit Teeworlds
+== Beendet Teeworlds
+
 REC %3d:%02d
 == REC %3d:%02d
 
@@ -432,6 +720,9 @@ Reason:
 
 Record demo
 == Aufnahme sta.
+
+Record to the file
+== Aufnahme zur angegebenne Datei
 
 Red team
 == Rotes team
@@ -445,11 +736,29 @@ Refresh
 Refreshing master servers
 == Aktualisiere Masterserver
 
+Register server with master server for public listing
+== Registriert den Server am Masterserver für einen öffentlichen Server
+
+Release focus (ESC must be hold)
+== Enternt Fokus (ESC muss gehalten werden)
+
 Remote console
 == Remotekonsole
 
+Remote console password (full access)
+== Passwort für Remotekonsole (voller Zugriff)
+
+Remote console password for moderators (limited access)
+== Remotekonsole für Moderatoren (limitierter Zugriff)
+
 Remove
 == Löschen
+
+Remove a server from favorites
+== Entfernt einen Server von den Favoriten
+
+Remove a voting option
+== Entfernt eine Abstimmung
 
 Remove friend
 == Freund entfernen
@@ -466,6 +775,15 @@ Reset filter
 Reset to defaults
 == Standardeinstellung
 
+Reset tuning
+== Setzt Tunings zurück
+
+Restart in x seconds
+== Startet Runde in x Skunden neu
+
+Restricts information in spectator mode
+== Limitiert Informationen im Zuschauermodus
+
 Rifle
 == Laser
 
@@ -478,6 +796,12 @@ Sample rate
 Sat.
 == Sätt.
 
+Say in chat
+== Im Chat sprechen
+
+Say in team chat
+== Im Teamchat sprechen
+
 Score
 == Score
 
@@ -487,14 +811,35 @@ Score board
 Score limit
 == Punktelimit
 
+Score limit (0 disables)
+== Punktelimit (0 keins)
+
 Scoreboard
 == Punktetafel
+
+Screen refresh rate
+== Bildwiederholrate
+
+Screen resolution height
+== Bildauflösung (Höhe)
+
+Screen resolution width
+== Bildauflösung (Breite)
 
 Screenshot
 == Bildschirmfoto
 
+Send specified command to rcon
+== Sendet angegebenen Befehl zur Remotekonsole
+
+Server address to filter
+== Serveradresse, die gefiltert werden soll
+
 Server address:
 == Serveradresse:
+
+Server browser filtering string
+== String zum Filtern des Serverbrowsers
 
 Server details
 == Serverdetails
@@ -505,8 +850,32 @@ Server filter
 Server info
 == Serverinfo
 
+Server name
+== Servername
+
 Server not full
 == Server nicht voll
+
+Server to stress
+== Server, der gestresst werden soll
+
+Server to use to check for new versions
+== Server, der genutzt werden soll um auf eine neue Version zu prüfen
+
+Set maximal mouse distance
+== Setzt maximale Mausentfernung
+
+Set mouse dead zone
+== Setzt Deadzone der Maus
+
+Set mouse follow factor
+== Setzt Folgefaktor der Maus
+
+Set team of all players to team
+== Setzt Team von allen zu dem anderen Team
+
+Set team of player to team
+== Setzt Team von Spieler zu dem anderen Team
 
 Settings
 == Optionen
@@ -514,14 +883,23 @@ Settings
 Shotgun
 == Schrotflinte
 
+Show active keys in editor
+== Zeige aktive Tasten im Editor
+
 Show chat
 == Chat anzeigen
 
 Show friends only
 == Nur Freunde zeigen
 
+Show ingame FPS counter
+== Zeige FPS im Spiel
+
 Show ingame HUD
 == Spielanzeigen
+
+Show initial settings on game start
+== Zeige Anfangseinstellungen beim Spielstart
 
 Show name plates
 == Zeige Namen
@@ -529,20 +907,38 @@ Show name plates
 Show only supported
 == Zeige nur unterstützte
 
+Show scoreboard
+== Zeige Punktetafel
+
+Show tunings in debug hud
+== Zeige Tunings im Debug-HUD
+
+Size of the name plates from 0 to 100%
+== Größe der Nameplates von 0 bis 100%
+
 Size:
 == Größe:
 
 Skins
 == Skins
 
+Sort order
+== Sortierreihenfolge
+
 Sound
 == Ton
+
+Sound buffer size
+== Soundpuffergröße
 
 Sound error
 == Audiofehler
 
 Sound volume
 == Lautstärke
+
+Spam protection
+== Schutz vor Spam
 
 Spectate
 == Zuschauen
@@ -556,6 +952,12 @@ Spectate previous
 Spectator mode
 == Zuschaueroptionen
 
+Spectate the next player
+== Folgt dem nächsten Spieler
+
+Spectate the previous player
+== Folgt dem vorherigen Spieler
+
 Spectators
 == Zuschauer
 
@@ -568,14 +970,56 @@ Standard map
 Stop record
 == Aufnahme be.
 
+Stop recording
+== Stoppt Aufnahme
+
+Stress network
+== Stresst Netzwerk
+
+Stress systems
+== Stresst System
+
 Strict gametype filter
 == Genauer Spieltyp
 
 Sudden Death
 == Sudden Death
 
+Switch spectator mode
+== Wechselt Zuschauermodus
+
+Switch team
+== Wechselt Team
+
+Switch to grenade
+== Wechselt zu Granaten
+
+Switch to gun
+== Wechselt zu Pistole
+
+Switch to hammer
+== Wechslet zu Hammer
+
+Switch to next weapon
+== Wechselt zur nächsten Waffe
+
+Switch to previous weapon
+== Wechselt zur vorherigen Waffe
+
+Switch to rifle
+== Wechslet zu Laser
+
+Switch to shotgun
+== Wechselt zur Schrotflinte
+
 Switch weapon on pickup
 == Waffe beim Aufnehmen wechseln
+
+Syntax
+== Syntax
+
+Take a screenshot
+== Macht ein Bildschirmfoto
 
 Team
 == Team
@@ -583,11 +1027,17 @@ Team
 Team chat
 == Teamchat
 
+Team damage
+== Teamschaden
+
 Teeworlds %s is out! Download it at www.teeworlds.com!
 == Teeworld %s ist da! Lade es unter www.teeworlds.com runter!
 
 Texture Compression
 == Texturkompression
+
+Texture quality
+== Texturqualität
 
 The audio device couldn't be initialised.
 == Das Audiosystem konnte nicht gestartet werden.
@@ -595,17 +1045,53 @@ The audio device couldn't be initialised.
 The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
+The time a client gets banned if remote console authentication fails. 0 makes it just use kick
+== Zeit, die ein Spieler gebannt wird nachdem der Login in der Remotekonsole fehlgeschlagen ist (0 nur Kick)
+
+The time to ban a player if kicked by vote. 0 makes it just use kick
+== Zeit, die ein Spieler gebannt wird nach einer Abstimmung (0 nur Kick)
+
 There's an unsaved map in the editor, you might want to save it before you quit the game.
 == Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern.
+
+Throttle CPU
+== Bremse CPU
 
 Time limit
 == Zeitlimit
 
+Time limit in minutes (0 disables)
+== Zeitlimit in Minuten (0 keins)
+
 Time limit: %d min
 == Zeitlimit: %d min
 
+Time needed to respawn after death in tdm gametype
+== Zeit vor Wiedereinstieg in tdm Spieltyp
+
+Toggle editor
+== Schaltet Editor um
+
+Toggle local console
+== Schaltet lokale Konsole um
+
+Toggle remote console
+== Schaltet Remotekonsole um
+
+Toggle usage of custom colors
+== Schaltet Nutzung der benutzerdefinierten Farben um
+
+Toolbox page
+== Toolboxseite
+
+Tournament mode. When enabled, players joins the server as spectator
+== Wettkampfmodus. Wenn aktiviert, dann starten treten Spieler als Zuschauer bei
+
 Try again
 == Nochmal versuchen
+
+Tune variable to value
+== Tune Variable to Wert
 
 Type
 == Typ
@@ -621,6 +1107,21 @@ Unable to delete the demo
 
 Unable to rename the demo
 == Aufnahme konnte nicht umbenannt werden
+
+Unbind all keys
+== Löst alle Tasten
+
+Unbind key
+== Löst Taste
+
+Use emote
+== Nutze Emote
+
+Use forceful input grabbing method
+== Nutze erzwungene Input-Greif-Methode
+
+Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only
+== Nutze Hohe Bandbreite. Verdoppelt die Bandbreite des Servers. LAN use only
 
 Use sounds
 == Aktiviere Ton
@@ -649,17 +1150,26 @@ Vote no
 Vote yes
 == Ja
 
+Vote yes/no
+== Abstimmen (Eingabe: yes oder no)
+
 Voting
 == Abstimmung
 
 Warmup
 == Aufwärmen
 
+Warn about team balance
+== Warnt wegen unbalancierten Team
+
 Weapon
 == Waffe
 
 Welcome to Teeworlds
 == Willkommen bei Teeworlds
+
+What language file to use
+== Welche Sprachdatei genutzt wird
 
 Yes
 == Ja

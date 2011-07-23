@@ -470,10 +470,10 @@ void CGameConsole::OnRender()
 					if(pConsole->m_IsCommand)
 					{
 						char aBuf[512];
-						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
+						str_format(aBuf, sizeof(aBuf), "%s: %s ", Localize("Help"), Localize(pConsole->m_aCommandHelp));
 						TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 						TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-						str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+						str_format(aBuf, sizeof(aBuf), "%s: %s %s", Localize("Syntax"), pConsole->m_aCommandName, pConsole->m_aCommandParams);
 						TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 					}
 				}

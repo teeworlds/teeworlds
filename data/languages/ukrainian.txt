@@ -510,10 +510,43 @@ Your skin
 Add
 == 
 
+Add a server as a favorite
+== 
+
+Add a voting option
+== 
+
+Add dunnies
+== 
+
 Add Friend
 == 
 
+Address to bind the server to
+== 
+
+Adjust the amount of information in the console
+== 
+
+Allow powerups like ninja
+== 
+
+Allow voting to kick players
+== 
+
+Allow voting to move players to spectators
+== 
+
+Alpha bits for framebuffer (fullscreen only)
+== 
+
+Always show name plates disregarding of distance
+== 
+
 Are you sure that you want to remove the player from your friends list?
+== 
+
+Authenticate to rcon
 == 
 
 Automatically record demos
@@ -522,13 +555,46 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
+Bind key to execute the command
+== 
+
+Broadcast message
+== 
+
+Change map
+== 
+
 Change settings
 == 
 
 Clan
 == 
 
+Clan of the player
+== 
+
+Clear local console
+== 
+
+Clear remote console
+== 
+
+Clear screen before rendering
+== 
+
+Clears the voting options
+== 
+
 Client
+== 
+
+Colors bits for framebuffer (fullscreen only)
+== 
+
+Column to sort
+== 
+
+Connect to the specified host/ip
 == 
 
 Count players only
@@ -537,10 +603,16 @@ Count players only
 Country
 == 
 
+Country of the player
+== 
+
 Crc:
 == 
 
 Created:
+== 
+
+Debug mode
 == 
 
 Delete demo
@@ -552,28 +624,187 @@ Demo details
 Demofile: %s
 == 
 
+Disable clipping
+== 
+
+Disconnect from the server
+== 
+
+Dump binds
+== 
+
+Dump local console
+== 
+
+Dump remote console
+== 
+
+Dump tuning
+== 
+
+Enable air jump indicator
+== 
+
+Enable chat with all/team mode
+== 
+
+Enables the usage of a thread to pump the events
+== 
+
+Enables window resizing
+== 
+
+External port to report to the master servers
+== 
+
+Filename to log all output to
+== 
+
+Filter out empty server in browser
+== 
+
+Filter out full server in browser
+== 
+
+Filter out non-compatible servers in browser
+== 
+
+Filter out non-standard maps in browser
+== 
+
+Filter out non-standard servers in browser
+== 
+
+Filter out password protected servers in browser
+== 
+
+Filter out servers with no friends
+== 
+
+Filter out servers with non-matching player country
+== 
+
+Filter out spectators from player numbers
+== 
+
+Force a vote to yes/no
+== 
+
+Force a voting option
+== 
+
 Free-View
 == 
 
 Friends
 == 
 
+Game types to filter
+== 
+
+Help
+== 
+
+Hitch warnings
+== 
+
+How long to show the server message of the day
+== 
+
+How many minutes to wait before a player can rejoin after being moved to spectators by vote
+== 
+
+How many minutes to wait before autobalancing teams
+== 
+
+How many minutes to wait before taking care of inactive players
+== 
+
+How to deal with inactive players (0=move to spectator, 1=move to free spectator slot/kick, 2=kick)
+== 
+
+Interface alpha
+== 
+
+Interface color hue
+== 
+
+Interface color lightness
+== 
+
+Interface color saturation
+== 
+
+Interface page
+== 
+
+Interface scale
+== 
+
+Interface server address
+== 
+
 Kick player
+== 
+
+Kill yourself
 == 
 
 Length:
 == 
 
+Load sound files threaded
+== 
+
+Map to use on the server
+== 
+
 Map:
 == 
 
-Max Screenshots
+Maps to rotate between
 == 
 
 Max demos
 == 
 
+Max Screenshots
+== 
+
+Maximum number of automatically created screenshots (0 = no limit)
+== 
+
+Maximum number of automatically recorded demos (0 = no limit)
+== 
+
+Maximum number of clients that are allowed on a server
+== 
+
+Maximum number of clients with the same IP that can connect to the server
+== 
+
+Maximum number of tries for remote console authentication
+== 
+
+Message of the day to display for the clients
+== 
+
+Minimize Teeworlds
+== 
+
+Minimum number of players required to start a kick vote
+== 
+
+Mouse sensitivity
+== 
+
+Mouse sensitivity for menus/editor
+== 
+
 Move player to spectators
+== 
+
+Name of the player
 == 
 
 Name plates size
@@ -585,25 +816,106 @@ Netversion:
 New name:
 == 
 
+no limit
+== 
+
+Number of requests to use when refreshing server browser
+== 
+
+Number of rounds on each map before rotating
+== 
+
+Number of seconds to do warmup before round starts
+== 
+
+Number of slots to reserve for spectators
+== 
+
+Open emote selector
+== 
+
+Open spectator mode selector
+== 
+
 Parent Folder
+== 
+
+Password to the server
+== 
+
+Performance graphs
+== 
+
+Performance outputs
+== 
+
+Ping the current server
+== 
+
+Ping to filter by in the server browser
 == 
 
 Play background music
 == 
 
+Play the file specified
+== 
+
+Player body color
+== 
+
+Player country to filter by in the server browser
+== 
+
 Player country:
+== 
+
+Player feet color
 == 
 
 Player options
 == 
 
+Player skin
+== 
+
+Port to use for the server
+== 
+
+Predict client movements
+== 
+
 Quit anyway?
+== 
+
+Quit Teeworlds
 == 
 
 REC %3d:%02d
 == 
 
+Record to the file
+== 
+
+Register server with master server for public listing
+== 
+
+Release focus (ESC must be hold)
+== 
+
+Remote console password (full access)
+== 
+
+Remote console password for moderators (limited access)
+== 
+
 Remove
+== 
+
+Remove a server from favorites
+== 
+
+Remove a voting option
 == 
 
 Remove friend
@@ -615,22 +927,109 @@ Rename
 Rename demo
 == 
 
+Reset tuning
+== 
+
+Restart in x seconds
+== 
+
+Restricts information in spectator mode
+== 
+
+Say in chat
+== 
+
+Say in team chat
+== 
+
+Score limit (0 disables)
+== 
+
+Screen refresh rate
+== 
+
+Screen resolution height
+== 
+
+Screen resolution width
+== 
+
+Send specified command to rcon
+== 
+
+Server address to filter
+== 
+
 Server address:
+== 
+
+Server browser filtering string
 == 
 
 Server filter
 == 
 
+Server name
+== 
+
+Server to stress
+== 
+
+Server to use to check for new versions
+== 
+
+Set maximal mouse distance
+== 
+
+Set mouse dead zone
+== 
+
+Set mouse follow factor
+== 
+
+Set team of all players to team
+== 
+
+Set team of player to team
+== 
+
+Show active keys in editor
+== 
+
 Show friends only
+== 
+
+Show ingame FPS counter
 == 
 
 Show ingame HUD
 == 
 
+Show initial settings on game start
+== 
+
+Show scoreboard
+== 
+
+Show tunings in debug hud
+== 
+
+Size of the name plates from 0 to 100%
+== 
+
 Size:
 == 
 
+Sort order
+== 
+
+Sound buffer size
+== 
+
 Sound error
+== 
+
+Spam protection
 == 
 
 Spectate next
@@ -639,16 +1038,106 @@ Spectate next
 Spectate previous
 == 
 
+Spectate the next player
+== 
+
+Spectate the previous player
+== 
+
 Spectator mode
+== 
+
+Stop recording
+== 
+
+Stress network
+== 
+
+Stress systems
 == 
 
 Strict gametype filter
 == 
 
+Switch spectator mode
+== 
+
+Switch team
+== 
+
+Switch to grenade
+== 
+
+Switch to gun
+== 
+
+Switch to hammer
+== 
+
+Switch to next weapon
+== 
+
+Switch to previous weapon
+== 
+
+Switch to rifle
+== 
+
+Switch to shotgun
+== 
+
+Syntax
+== 
+
+Take a screenshot
+== 
+
+Team damage
+== 
+
+Texture quality
+== 
+
 The audio device couldn't be initialised.
 == 
 
+The time a client gets banned if remote console authentication fails. 0 makes it just use kick
+== 
+
+The time to ban a player if kicked by vote. 0 makes it just use kick
+== 
+
 There's an unsaved map in the editor, you might want to save it before you quit the game.
+== 
+
+Throttle CPU
+== 
+
+Time limit in minutes (0 disables)
+== 
+
+Time needed to respawn after death in tdm gametype
+== 
+
+Toggle editor
+== 
+
+Toggle local console
+== 
+
+Toggle remote console
+== 
+
+Toggle usage of custom colors
+== 
+
+Toolbox page
+== 
+
+Tournament mode. When enabled, players joins the server as spectator
+== 
+
+Tune variable to value
 == 
 
 Type:
@@ -658,6 +1147,21 @@ Unable to delete the demo
 == 
 
 Unable to rename the demo
+== 
+
+Unbind all keys
+== 
+
+Unbind key
+== 
+
+Use emote
+== 
+
+Use forceful input grabbing method
+== 
+
+Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only
 == 
 
 Use team colors for name plates
@@ -672,7 +1176,13 @@ Vote command:
 Vote description:
 == 
 
-no limit
+Vote yes/no
+== 
+
+Warn about team balance
+== 
+
+What language file to use
 == 
 
 ##### old translations #####
