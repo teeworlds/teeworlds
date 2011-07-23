@@ -210,7 +210,7 @@ void CGameWorld::UpdatePlayerMaps()
 			if (rMap[k] != -1)
 				map[rMap[k]] = -1;
 		}
-		map[VANILLA_MAX_CLIENTS - 1] = MAX_CLIENTS - 1; // player with empty name to say chat msgs
+		map[VANILLA_MAX_CLIENTS - 1] = -1; // player with empty name to say chat msgs
 	}
 }
 
