@@ -989,7 +989,12 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 6);
 
 	p.AddString(GameServer()->Version(), 32);
-	p.AddString(g_Config.m_SvName, 64);
+	if (ClientCount < VANILLA_MAX_CLIENTS)
+		p.AddString(g_Config.m_SvName, 64);
+	else
+	{
+		str_format(aBuf, sizeof(aBuf), "%s - %d/%d online", g_Config.m_SvName, ClientCount, m_NetServer.MaxClients()); p.AddString(aBuf, 64);
+	}
 	p.AddString(GetMapName(), 32);
 
 	// gametype
@@ -1003,8 +1008,14 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 2);
 
 	int MaxClients = m_NetServer.MaxClients();
-	if (PlayerCount > VANILLA_MAX_CLIENTS) PlayerCount = VANILLA_MAX_CLIENTS;
-	if (ClientCount > VANILLA_MAX_CLIENTS) ClientCount = VANILLA_MAX_CLIENTS;
+	if (ClientCount >= VANILLA_MAX_CLIENTS)
+	{
+		if (ClientCount < MaxClients)
+			ClientCount = VANILLA_MAX_CLIENTS - 1;
+		else
+			ClientCount = VANILLA_MAX_CLIENTS;
+	}
+	if (PlayerCount > ClientCount) PlayerCount = ClientCount;
 	if (MaxClients > VANILLA_MAX_CLIENTS) MaxClients = VANILLA_MAX_CLIENTS;
 
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3); // num players
