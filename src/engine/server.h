@@ -39,7 +39,7 @@ public:
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags, int ClientID)
 	{
-		int result;
+		int result = 0;
 		T tmp;
 		if (ClientID == -1)
 		{
