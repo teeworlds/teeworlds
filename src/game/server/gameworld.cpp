@@ -201,7 +201,7 @@ void CGameWorld::UpdatePlayerMaps()
 		for (int j = 0; j < VANILLA_MAX_CLIENTS - 1; j++)
 		{
 			int k = dist[j].second;
-			if (rMap[k] != -1 || dist[k].first > 1e9) continue;
+			if (rMap[k] != -1 || dist[j].first > 1e9) continue;
 			while (mapc < VANILLA_MAX_CLIENTS && map[mapc] != -1) mapc++;
 			if (mapc < VANILLA_MAX_CLIENTS - 1)
 				map[mapc] = k;
