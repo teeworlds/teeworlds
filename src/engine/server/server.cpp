@@ -1541,6 +1541,60 @@ void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_MapReload = 1;
 }
 
+void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+	const char *pStr = (pResult->NumArguments() > 0) ? pResult->GetString(0) : "";
+
+	if(str_find(pStr, "..")) // protect the server from nasty requests
+	{
+		pServer->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", "invalid directory specified ('..' is forbidden)");
+		return;
+	}
+
+	char aPath[128];
+	str_format(aPath, sizeof(aPath), "maps/%s", pStr);
+
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "maps in %s:", aPath);
+
+	pServer->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", aBuf);
+	pServer->m_pStorage->ListDirectory(IStorage::TYPE_ALL, aPath, ConListMapsListdirCallback, pServer->m_pConsole);
+
+}
+
+int CServer::ConListMapsListdirCallback(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	unsigned Length = str_length(pName);
+	char aBuf[256];
+
+	if(Length >= sizeof(aBuf) - 1) // skip files with too long filenames
+		return 0;
+
+	str_copy(aBuf, pName, sizeof(aBuf));
+
+	if(aBuf[0] == '.') // skip hidden files
+		return 0;
+
+	if(!IsDir)
+	{
+		if(Length < 5 || str_comp(aBuf + (Length - 4), ".map") != 0) // skip files not ending with .map
+			return 0; 
+
+		aBuf[Length - 4] = 0;
+
+	}
+	else
+	{
+		aBuf[Length] = '/';
+		aBuf[Length + 1] = 0;
+	}
+
+
+	((IConsole *)pUser)->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", aBuf);
+	return 0;
+}
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1599,6 +1653,7 @@ void CServer::RegisterCommands()
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
+	Console()->Register("maps", "?s", CFGFLAG_SERVER, ConListMaps, this, "List the maps");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
