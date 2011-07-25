@@ -314,32 +314,38 @@ int CPlayer::BlockKillCheck()
 		char aKillerText[16] = {0};
 
 		killer = m_pCharacter->lastInteractionPlayer;
+		CAccount* killerAcc = GameServer()->m_apPlayers[killer]->GetAccount();
+
+		bool scorewhore = false;
+		if (killerAcc && killerAcc->Head()->m_LastLoginDate > time_timestamp() - g_Config.m_SvFrozenBlocked / 1000)
+			scorewhore = true;
+
 		double scoreStolen = min(blockScore * g_Config.m_SvScoreSteal, GameServer()->m_apPlayers[killer]->blockScore * g_Config.m_SvScoreStealLimit) / 100;
+		if (scorewhore) scoreStolen *= -3;
 		blockScore -= scoreStolen;
 
 		if (GetAccount())
 		{
 			if (g_Config.m_SvScoringDebugLog)
-				dbg_msg("score","%s killed by %s and lost %.1f, now has %1.f", GetAccount()->Name(), GameServer()->m_apPlayers[killer]->GetAccount() ? GameServer()->m_apPlayers[killer]->GetAccount()->Name() : "(unk)", scoreStolen, blockScore);
+				dbg_msg("score","%s killed by %s and lost %.1f, now has %.1f", GetAccount()->Name(), GameServer()->m_apPlayers[killer]->GetAccount() ? GameServer()->m_apPlayers[killer]->GetAccount()->Name() : "(unk)", scoreStolen, blockScore);
 			GetAccount()->Payload()->blockScore = blockScore;
-			if (scoreStolen >= .5f)
-				str_format(aVictimText, sizeof aVictimText, "-%.1f", scoreStolen);
+			if (fabs(scoreStolen) >= .5f)
+				str_format(aVictimText, sizeof aVictimText, "%+.1f", -scoreStolen);
 		}
 
-		double minSteal = (double)g_Config.m_SvScoreCreep / 1000;
-
-		if (scoreStolen < minSteal && GameServer()->m_apPlayers[killer]->GetAccount()) // if killer has account, give him score for unreg creeps
-			scoreStolen = minSteal;
-
-		GameServer()->m_apPlayers[killer]->blockScore += scoreStolen;
-
-		if (GameServer()->m_apPlayers[killer]->GetAccount())
+		if (killerAcc)
 		{
+			double minSteal = (double)g_Config.m_SvScoreCreep / 1000;
+			if (!scorewhore && scoreStolen < minSteal) // if killer has account, give him score for unreg creeps
+				scoreStolen = minSteal;
+
+			GameServer()->m_apPlayers[killer]->blockScore = max(scoreStolen + GameServer()->m_apPlayers[killer]->blockScore, 0.);
+
 			if (g_Config.m_SvScoringDebugLog)
-				dbg_msg("score","%s killed %s and gained %.1f, now has %1.f", GameServer()->m_apPlayers[killer]->GetAccount()->Name(), GetAccount() ? GetAccount()->Name() : "(unk)", scoreStolen, GameServer()->m_apPlayers[killer]->blockScore);
-			GameServer()->m_apPlayers[killer]->GetAccount()->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
-			if (scoreStolen >= .5f)
-				str_format(aKillerText, sizeof aKillerText, "+%.1f", scoreStolen);
+				dbg_msg("score","%s killed %s and gained %.1f, now has %.1f", killerAcc->Name(), GetAccount() ? GetAccount()->Name() : "(unk)", scoreStolen, GameServer()->m_apPlayers[killer]->blockScore);
+			killerAcc->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
+			if (fabs(scoreStolen) >= .5f)
+				str_format(aKillerText, sizeof aKillerText, "%+.1f", scoreStolen);
 		}
 		else
 		{
@@ -352,7 +358,7 @@ int CPlayer::BlockKillCheck()
 			}
 			str_copy(aKillerText, "!", sizeof aKillerText);
 		}
-	
+
 		CCharacter *killerchar = GameServer()->GetPlayerChar(killer);
 
 		if (*aVictimText && *aKillerText && killerchar)
