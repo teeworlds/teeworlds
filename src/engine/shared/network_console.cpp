@@ -9,25 +9,24 @@ bool CNetConsole::Open(NETADDR BindAddr, int Flags)
 	mem_zero(this, sizeof(*this));
 
 	// open socket
-	m_Socket = net_tcp_create(&BindAddr);
+	m_Socket = net_tcp_create(BindAddr);
 	if(!m_Socket.type)
 		return false;
 	if(net_tcp_listen(m_Socket, NET_MAX_CONSOLE_CLIENTS))
 		return false;
-	net_tcp_set_non_blocking(m_Socket);
+	net_set_non_blocking(m_Socket);
 
-	for(int i = 0; i < NET_MAX_CLIENTS; i++)
-		m_aSlots[i].m_Connection.Init(m_Socket);
+	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
+		m_aSlots[i].m_Connection.Reset();
 
 	return true;
 }
 
-int CNetConsole::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
+void CNetConsole::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
 {
 	m_pfnNewClient = pfnNewClient;
 	m_pfnDelClient = pfnDelClient;
 	m_UserPtr = pUser;
-	return 0;
 }
 
 int CNetConsole::Close()
@@ -38,11 +37,6 @@ int CNetConsole::Close()
 
 int CNetConsole::Drop(int ClientID, const char *pReason)
 {
-	NETADDR Addr = ClientAddr(ClientID);
-
-	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
-
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 
@@ -56,40 +50,39 @@ int CNetConsole::AcceptClient(NETSOCKET Socket, const NETADDR *pAddr)
 	char aError[256] = { 0 };
 	int FreeSlot = -1;
 	
+	// look for free slot or multiple client
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
 	{
 		if(FreeSlot == -1 && m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
 			FreeSlot = i;
 		if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE)
 		{
-			NETADDR PeerAddr = m_aSlots[i].m_Connection.PeerAddress();;
+			NETADDR PeerAddr = m_aSlots[i].m_Connection.PeerAddress();
 			if(net_addr_comp(pAddr, &PeerAddr) == 0)
 			{
-				str_copy(aError, "Only one client per IP allowed", sizeof(aError));
+				str_copy(aError, "only one client per IP allowed", sizeof(aError));
 				break;
 			}
 		}
 	}
 
+	// accept client
 	if(!aError[0] && FreeSlot != -1)
 	{
 		m_aSlots[FreeSlot].m_Connection.Init(Socket, pAddr);
 		if(m_pfnNewClient)
 			m_pfnNewClient(FreeSlot, m_UserPtr);
-		return 1;
+		return 0;
 	}
 
+	// reject client
 	if(!aError[0])
-	{
-		str_copy(aError, "No free slot available", sizeof(aError));
-	}
-	
-	dbg_msg("netconsole", "refused client, reason=\"%s\"", aError);
+		str_copy(aError, "no free slot available", sizeof(aError));
 
 	net_tcp_send(Socket, aError, str_length(aError));
 	net_tcp_close(Socket);
 
-	return 0;
+	return -1;
 }
 
 int CNetConsole::Update()
@@ -127,18 +120,10 @@ int CNetConsole::Recv(char *pLine, int MaxLength, int *pClientID)
 	return 0;
 }
 
-int CNetConsole::Broadcast(const char *pLine)
-{
-	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
-	{
-		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ONLINE)
-			Send(i, pLine);
-	}
-	return 0;
-}
-
 int CNetConsole::Send(int ClientID, const char *pLine)
 {
-	return m_aSlots[ClientID].m_Connection.Send(pLine);
+	if(m_aSlots[ClientID].m_Connection.State() == NET_CONNSTATE_ONLINE)
+		return m_aSlots[ClientID].m_Connection.Send(pLine);
+	else
+		return -1;
 }
-

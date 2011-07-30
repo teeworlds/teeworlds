@@ -661,6 +661,16 @@ void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
 	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr);
 }
 
+void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() == 1)
+	{
+		CGameConsole *pThis = static_cast<CGameConsole *>(pUserData);
+		pThis->Console()->SetPrintOutputLevel(pThis->m_PrintCBIndex, pResult->GetInteger(0));
+	}
+}
+
 void CGameConsole::PrintLine(int Type, const char *pLine)
 {
 	if(Type == CONSOLETYPE_LOCAL)
@@ -678,7 +688,7 @@ void CGameConsole::OnConsoleInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
 	//
-	Console()->RegisterPrintCallback(ClientConsolePrintCallback, this);
+	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
 
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
@@ -686,6 +696,8 @@ void CGameConsole::OnConsoleInit()
 	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
 	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console");
 	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
+
+	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 }
 
 void CGameConsole::OnStateChange(int NewState, int OldState)

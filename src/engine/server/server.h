@@ -109,26 +109,11 @@ public:
 
 	CClient m_aClients[MAX_CLIENTS];
 
-	class CEconClient
-	{
-	public:
-		enum
-		{
-			STATE_EMPTY=0,
-			STATE_CONNECTED,
-			STATE_AUTHED
-		};
-
-		int m_State;
-	};
-
-	CEconClient m_aEconClients[NET_MAX_CONSOLE_CLIENTS];
-
 	CSnapshotDelta m_SnapshotDelta;
 	CSnapshotBuilder m_SnapshotBuilder;
 	CSnapIDPool m_IDPool;
 	CNetServer m_NetServer;
-	CNetConsole m_NetConsole;
+	CEcon m_Econ;
 
 	IEngineMap *m_pMap;
 
@@ -138,8 +123,7 @@ public:
 	int m_MapReload;
 	int m_RconClientID;
 	int m_RconAuthLevel;
-
-	int m_UseEcon;
+	int m_PrintCBIndex;
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
@@ -186,14 +170,10 @@ public:
 	static int NewClientCallback(int ClientID, void *pUser);
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
-	static int NewConsoleClientCallback(int EconID, void *pUser);
-	static int DelConsoleClientCallback(int EconID, const char *pReason, void *pUser);
-
 	void SendMap(int ClientID);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
-	void SendEconLine(int EconID, const char *pLine);
-	static void SendConsoleLineAuthed(const char *pLine, void *pUser);
+	static void SendRconLineAuthed(const char *pLine, void *pUser);
 
 	void SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
@@ -206,8 +186,6 @@ public:
 
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
-
-	void EconPumpNetwork();
 
 	void PumpNetwork();
 
@@ -229,6 +207,7 @@ public:
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 

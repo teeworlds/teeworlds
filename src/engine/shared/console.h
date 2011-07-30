@@ -60,8 +60,13 @@ class CConsole : public IConsole
 	void ExecuteFileRecurse(const char *pFilename);
 	void ExecuteLineStroked(int Stroke, const char *pStr);
 
-	FPrintCallback m_pfnPrintCallback;
-	void *m_pPrintCallbackUserdata;
+	struct
+	{
+		int m_OutputLevel;
+		FPrintCallback m_pfnPrintCallback;
+		void *m_pPrintCallbackUserdata;
+	} m_aPrintCB[MAX_PRINT_CB];
+	int m_NumPrintCB;
 
 	enum
 	{
@@ -167,7 +172,8 @@ public:
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteFile(const char *pFilename);
 
-	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
+	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData);
+	virtual void SetPrintOutputLevel(int Index, int OutputLevel);
 	virtual void Print(int Level, const char *pFrom, const char *pStr);
 
 	void SetAccessLevel(int AccessLevel) { m_AccessLevel = clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD)); }
