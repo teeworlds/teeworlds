@@ -23,6 +23,8 @@ public:
 		TEMPCMD_NAME_LENGTH=32,
 		TEMPCMD_HELP_LENGTH=64,
 		TEMPCMD_PARAMS_LENGTH=16,
+
+		MAX_PRINT_CB=4,
 	};
 
 	// TODO: rework this interface to reduce the amount of virtual calls
@@ -79,7 +81,8 @@ public:
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
 	virtual void ExecuteFile(const char *pFilename) = 0;
 
-	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
+	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData) = 0;
+	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
 
 	virtual void SetAccessLevel(int AccessLevel) = 0;
