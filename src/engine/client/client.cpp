@@ -2457,7 +2457,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 }
 
-static CClient m_Client;
+static CClient *CreateClient() { return new CClient(); }
 
 /*
 	Server Time
@@ -2488,9 +2488,10 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 #endif
 
+	CClient *pClient = CreateClient();
 	IKernel *pKernel = IKernel::Create();
-	pKernel->RegisterInterface(&m_Client);
-	m_Client.RegisterInterfaces();
+	pKernel->RegisterInterface(pClient);
+	pClient->RegisterInterfaces();
 
 	// create the components
 	IEngine *pEngine = CreateEngine("Teeworlds");
@@ -2543,12 +2544,12 @@ int main(int argc, const char **argv) // ignore_convention
 	pEngineMasterServer->Load();
 
 	// register all console commands
-	m_Client.RegisterCommands();
+	pClient->RegisterCommands();
 
 	pKernel->RequestInterface<IGameClient>()->OnConsoleInit();
 
 	// init client's interfaces
-	m_Client.InitInterfaces();
+	pClient->InitInterfaces();
 
 	// execute config file
 	pConsole->ExecuteFile("settings.cfg");
@@ -2563,11 +2564,11 @@ int main(int argc, const char **argv) // ignore_convention
 	// restore empty config strings to their defaults
 	pConfig->RestoreStrings();
 
-	m_Client.Engine()->InitLogfile();
+	pClient->Engine()->InitLogfile();
 
 	// run the client
 	dbg_msg("client", "starting...");
-	m_Client.Run();
+	pClient->Run();
 
 	// write down the config and quit
 	pConfig->Save();
