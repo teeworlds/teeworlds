@@ -41,6 +41,10 @@ german
 == Deutsch
 == 276
 
+hungarian
+== Magyar
+== 348
+
 italian
 == Italiano
 == 380
