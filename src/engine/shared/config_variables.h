@@ -86,6 +86,10 @@ MACRO_CONFIG_STR(SvRconPassword, sv_rcon_password, 32, "", CFGFLAG_SERVER, "Remo
 MACRO_CONFIG_STR(SvRconModPassword, sv_rcon_mod_password, 32, "", CFGFLAG_SERVER, "Remote console password for moderators (limited access)")
 MACRO_CONFIG_INT(SvRconMaxTries, sv_rcon_max_tries, 3, 0, 100, CFGFLAG_SERVER, "Maximum number of tries for remote console authentication")
 MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick")
+MACRO_CONFIG_STR(SvEconBindaddr, sv_econ_bindaddr, 128, "localhost", CFGFLAG_SERVER, "Address to bind the external console to. Anything but 'localhost' is dangerous")
+MACRO_CONFIG_INT(SvEconPort, sv_econ_port, 0, 0, 0, CFGFLAG_SERVER, "Port to use for the external console")
+MACRO_CONFIG_INT(SvEconAuthTimeout, sv_econ_auth_timeout, 30, 1, 120, CFGFLAG_SERVER, "Time in seconds before the the econ authentification times out")
+MACRO_CONFIG_INT(SvEconTimeout, sv_econ_timeout, 300, 1, 3600, CFGFLAG_SERVER, "Time in seconds before the econ connection times out")
 
 MACRO_CONFIG_INT(Debug, debug, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Debug mode")
 MACRO_CONFIG_INT(DbgStress, dbg_stress, 0, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Stress systems")

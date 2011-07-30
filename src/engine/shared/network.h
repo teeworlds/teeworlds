@@ -49,6 +49,7 @@ enum
 	NET_MAX_CHUNKHEADERSIZE = 5,
 	NET_PACKETHEADERSIZE = 3,
 	NET_MAX_CLIENTS = 16,
+	NET_MAX_CONSOLE_CLIENTS = 16,
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
@@ -192,6 +193,41 @@ public:
 	int AckSequence() const { return m_Ack; }
 };
 
+class CConsoleNetConnection
+{
+private:
+	unsigned m_State;
+
+	NETADDR m_PeerAddr;
+	NETSOCKET m_Socket;
+
+	char m_aBuffer[NET_MAX_PACKETSIZE];
+	char *m_pBufferPos;
+
+	char m_aErrorString[256];
+
+	int m_Timeout;
+	int64 m_LastRecvTime;
+
+public:
+	void Init(NETSOCKET Socket);
+	void Init(NETSOCKET Socket, const NETADDR *pAddr);
+	int Connect(const NETADDR *pAddr);
+	void Disconnect(const char *pReason);
+
+	int State() const { return m_State; }
+	NETADDR PeerAddress() const { return m_PeerAddr; }
+	const char *ErrorString() const { return m_aErrorString; }
+
+	void SetTimeout(int Timeout) { m_Timeout = Timeout; }
+	int Timeout() const { return m_Timeout; }
+
+	void Reset();
+	int Update();
+	int Send(const char *pLine);
+	int Recv(char *pLine, int MaxLength);
+};
+
 class CNetRecvUnpacker
 {
 public:
@@ -290,6 +326,48 @@ public:
 
 	//
 	void SetMaxClientsPerIP(int Max);
+};
+
+class CNetConsole
+{
+private:
+	struct CSlot
+	{
+		CConsoleNetConnection m_Connection;
+	};
+
+	NETSOCKET m_Socket;
+	CSlot m_aSlots[NET_MAX_CLIENTS];
+
+	NETFUNC_NEWCLIENT m_pfnNewClient;
+	NETFUNC_DELCLIENT m_pfnDelClient;
+	void *m_UserPtr;
+
+	CNetRecvUnpacker m_RecvUnpacker;
+
+public:
+	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
+
+	//
+	bool Open(NETADDR BindAddr, int Flags);
+	int Close();
+
+	//
+	int Broadcast(const char *pLine);
+	int Recv(char *pLine, int MaxLength, int *pClientID = 0);
+	int Send(int ClientID, const char *pLine);
+	int Update();
+
+	//
+	int AcceptClient(NETSOCKET Socket, const NETADDR *pAddr);
+	int Drop(int ClientID, const char *pReason);
+
+	//
+	void SetTimeout(int ClientID, int Timeout) { m_aSlots[ClientID].m_Connection.SetTimeout(Timeout); }
+
+	// status requests
+	int Timeout(int ClientID) { return m_aSlots[ClientID].m_Connection.Timeout(); }
+	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
 };
 
 
