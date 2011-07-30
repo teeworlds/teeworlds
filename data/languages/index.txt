@@ -1,6 +1,10 @@
 
 ##### language indices #####
 
+belarusian
+== Беларуская
+== 112
+
 bosnian
 == Bosanski
 == 70
