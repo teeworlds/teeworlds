@@ -5,6 +5,11 @@
 
 class CEcon
 {
+	enum
+	{
+		MAX_AUTH_TRIES=3,
+	};
+
 	class CClient
 	{
 	public:
@@ -17,6 +22,7 @@ class CEcon
 
 		int m_State;
 		int64 m_TimeConnected;
+		int m_AuthTries;
 	};
 	CClient m_aClients[NET_MAX_CONSOLE_CLIENTS];
 

@@ -325,7 +325,21 @@ public:
 
 class CNetConsole
 {
-private:
+	enum
+	{
+		MAX_BANS=128,
+	};
+
+	int FindBan(NETADDR Addr);
+	void UpdateBans();
+
+	struct CBanEntry
+	{
+		NETADDR m_Addr;
+		int m_Expires;
+	} m_aBans[MAX_BANS];
+	int m_NumBans;
+
 	struct CSlot
 	{
 		CConsoleNetConnection m_Connection;
@@ -355,6 +369,8 @@ public:
 	//
 	int AcceptClient(NETSOCKET Socket, const NETADDR *pAddr);
 	int Drop(int ClientID, const char *pReason);
+
+	bool AddBan(NETADDR Addr, int Seconds);
 
 	// status requests
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
