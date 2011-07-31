@@ -7,6 +7,9 @@ bool CNetConsole::Open(NETADDR BindAddr, int Flags)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
+	m_Socket.type = NETTYPE_INVALID;
+	m_Socket.ipv4sock = -1;
+	m_Socket.ipv6sock = -1;
 
 	// open socket
 	m_Socket = net_tcp_create(BindAddr);
@@ -31,7 +34,11 @@ void CNetConsole::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT
 
 int CNetConsole::Close()
 {
-	// TODO: implement me
+	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
+		m_aSlots[i].m_Connection.Disconnect("closing console");
+
+	net_tcp_close(m_Socket);
+
 	return 0;
 }
 

@@ -145,3 +145,11 @@ void CEcon::Send(int ClientID, const char *pLine)
 	else if(ClientID >= 0 && ClientID < NET_MAX_CONSOLE_CLIENTS && m_aClients[ClientID].m_State == CClient::STATE_AUTHED)
 		m_NetConsole.Send(ClientID, pLine);
 }
+
+void CEcon::Shutdown()
+{
+	if(!m_Ready)
+		return;
+
+	m_NetConsole.Close();
+}

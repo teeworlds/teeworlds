@@ -1331,6 +1331,8 @@ int CServer::Run()
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			m_NetServer.Drop(i, "Server shutdown");
+
+		m_Econ.Shutdown();
 	}
 
 	GameServer()->OnShutdown();
