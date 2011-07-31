@@ -38,6 +38,7 @@ public:
 	void Init(IConsole *pConsole);
 	void Update();
 	void Send(int ClientID, const char *pLine);
+	void Shutdown();
 };
 
 #endif
