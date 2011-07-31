@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <new>
 
 #include <stdlib.h> // qsort
 #include <stdarg.h>
@@ -2165,7 +2166,12 @@ void CClient::RegisterCommands()
 	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 }
 
-static CClient *CreateClient() { return new CClient(); }
+static CClient *CreateClient()
+{
+	CClient *pClient = static_cast<CClient *>(mem_alloc(sizeof(CClient), 1));
+	mem_zero(pClient, sizeof(CClient));
+	return new(pClient) CClient;
+}
 
 /*
 	Server Time
