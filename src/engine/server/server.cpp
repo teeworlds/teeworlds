@@ -1364,7 +1364,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 	const char *pReason = "No reason given";
 
 	if(pResult->NumArguments() > 1)
-		Minutes = pResult->GetInteger(1);
+		Minutes = max(0, pResult->GetInteger(1));
 
 	if(pResult->NumArguments() > 2)
 		pReason = pResult->GetString(2);
