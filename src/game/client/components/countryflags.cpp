@@ -69,6 +69,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		// add entry
 		CCountryFlag CountryFlag;
 		CountryFlag.m_CountryCode = CountryCode;
+		str_copy(CountryFlag.m_aCountryCodeString, aOrigin, sizeof(CountryFlag.m_aCountryCodeString));
 		CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 		mem_free(Info.m_pData);
 		str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", aOrigin);
