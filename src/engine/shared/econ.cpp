@@ -16,6 +16,8 @@ int CEcon::NewClientCallback(int ClientID, void *pUser)
 
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_CONNECTED;
 	pThis->m_aClients[ClientID].m_TimeConnected = time_get();
+
+	pThis->m_NetConsole.Send(ClientID, "Enter password:");
 	return 0;
 }
 
