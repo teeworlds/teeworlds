@@ -16,6 +16,7 @@ int CEcon::NewClientCallback(int ClientID, void *pUser)
 
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_CONNECTED;
 	pThis->m_aClients[ClientID].m_TimeConnected = time_get();
+	pThis->m_aClients[ClientID].m_AuthTries = 0;
 
 	pThis->m_NetConsole.Send(ClientID, "Enter password:");
 	return 0;
@@ -112,7 +113,22 @@ void CEcon::Update()
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "econ", aBuf);
 			}
 			else
-				m_NetConsole.Send(ClientID, "Wrong password");
+			{
+				m_aClients[ClientID].m_AuthTries++;
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientID].m_AuthTries, MAX_AUTH_TRIES);
+				m_NetConsole.Send(ClientID, aBuf);
+				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
+				{
+					if(!g_Config.m_EcBantime)
+						m_NetConsole.Drop(ClientID, "Too many authentication tries");
+					else
+					{
+						NETADDR Addr = m_NetConsole.ClientAddr(ClientID);
+						m_NetConsole.AddBan(Addr, g_Config.m_EcBantime*60);
+					}
+				}
+			}
 		}
 		else if(m_aClients[ClientID].m_State == CClient::STATE_AUTHED)
 		{
