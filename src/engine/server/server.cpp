@@ -1587,7 +1587,7 @@ void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 	{
 		CServer *pThis = static_cast<CServer *>(pUserData);
 		const IConsole::CCommandInfo *pInfo = pThis->Console()->GetCommandInfo(pResult->GetString(0), CFGFLAG_SERVER, false);
-		int OldAccessLevel;
+		int OldAccessLevel = 0;
 		if(pInfo)
 			OldAccessLevel = pInfo->GetAccessLevel();
 		pfnCallback(pResult, pCallbackUserData);
