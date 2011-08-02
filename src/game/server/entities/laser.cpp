@@ -21,15 +21,15 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, OwnerChar);
-	if(!Hit)
+	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
+	if(!pHit)
 		return false;
 
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	Hit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_RIFLE);
+	pHit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_RIFLE);
 	return true;
 }
 
