@@ -19,6 +19,11 @@ SDL = {
 				option.use_win32sdl = true
 			end
 			
+			if platform == "win64" then
+				option.value = true
+				option.use_win32sdl = true
+			end
+			
 			if platform == "macosx" then
 				option.value = true
 				option.use_osxframework = true
