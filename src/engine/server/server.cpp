@@ -3,6 +3,7 @@
 
 #include <base/math.h>
 #include <base/system.h>
+#include <base/tl/sorted_array.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
@@ -1567,6 +1568,78 @@ void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_MapReload = 1;
 }
 
+struct CConListMapsFile
+{
+	int m_IsDir;
+	char m_aName[256];
+	bool operator<(const CConListMapsFile& Other) { return (m_IsDir != Other.m_IsDir) ? m_IsDir > Other.m_IsDir : str_comp(m_aName, Other.m_aName) < 0; };
+};
+
+struct CConListMapsCallbackUserdata
+{
+	CServer *m_pServer;
+	sorted_array<CConListMapsFile> m_Files;
+};
+
+void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+	const char *pStr = (pResult->NumArguments() > 0) ? pResult->GetString(0) : "";
+
+	if(str_find(pStr, "..")) // protect the server from nasty requests
+	{
+		pServer->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", "invalid directory specified ('..' is forbidden)");
+		return;
+	}
+
+	CConListMapsCallbackUserdata Userdata;
+	char aPath[128];
+	str_format(aPath, sizeof(aPath), "maps/%s", pStr);
+
+	pServer->m_pStorage->ListDirectory(IStorage::TYPE_ALL, aPath, ConListMapsListdirCallback, &Userdata);
+
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "maps in %s:", aPath);
+	pServer->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", aBuf);
+
+	for(sorted_array<CConListMapsFile>::range r = Userdata.m_Files.all(); !r.empty(); r.pop_front())
+		pServer->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "maps", r.front().m_aName);
+}
+
+int CServer::ConListMapsListdirCallback(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	CConListMapsCallbackUserdata *pUserdata = (CConListMapsCallbackUserdata *)pUser;
+	unsigned Length = str_length(pName);
+	CConListMapsFile File;
+
+	if(Length >= sizeof(File.m_aName) - 1) // skip files with too long filenames
+		return 0;
+
+	str_copy(File.m_aName, pName, sizeof(File.m_aName));
+
+	if(File.m_aName[0] == '.') // skip hidden files
+		return 0;
+
+	File.m_IsDir = IsDir;
+
+	if(!IsDir)
+	{
+		if(Length < 5 || str_comp(File.m_aName + (Length - 4), ".map") != 0) // skip files not ending with .map
+			return 0; 
+
+		File.m_aName[Length - 4] = 0;
+	}
+	else
+	{
+		File.m_aName[Length] = '/';
+		File.m_aName[Length + 1] = 0;
+	}
+
+	pUserdata->m_Files.add(File);
+
+	return 0;
+}
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1635,6 +1708,7 @@ void CServer::RegisterCommands()
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
+	Console()->Register("maps", "?s", CFGFLAG_SERVER, ConListMaps, this, "List the maps");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
