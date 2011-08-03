@@ -126,7 +126,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				int dy = v->m_Y - m_CenterY;
 				int Dist = (int)sqrtf((float)dx*dx+dy*dy); // float here. nasty
 				int p = IntAbs(dx);
-				if(Dist < Range)
+				if(Dist >= 0 && Dist < Range)
 				{
 					// panning
 					if(dx > 0)
