@@ -1189,6 +1189,8 @@ void CEditor::DoQuad(CQuad *q, int Index)
 				s_Operation = OP_MOVE_ALL;
 
 			UI()->SetActiveItem(pID);
+			if(m_SelectedQuad != Index)
+				m_SelectedPoints = 0;
 			m_SelectedQuad = Index;
 			s_LastWx = wx;
 			s_LastWy = wy;
@@ -1196,7 +1198,9 @@ void CEditor::DoQuad(CQuad *q, int Index)
 
 		if(UI()->MouseButton(1))
 		{
-			m_SelectedQuad = Index;
+			if(m_SelectedQuad != Index)
+				m_SelectedPoints = 0;
+			m_SelectedQuad = Index;	
 			s_Operation = OP_CONTEXT_MENU;
 			UI()->SetActiveItem(pID);
 		}
