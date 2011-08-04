@@ -2426,6 +2426,15 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 			}
 		}
+
+		// separator
+		ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
+		ImageCur += 5.0f;
+		IGraphics::CLineItem LineItem(Slot.x, Slot.y+Slot.h/2, Slot.x+Slot.w, Slot.y+Slot.h/2);
+		Graphics()->TextureSet(-1);
+		Graphics()->LinesBegin();
+		Graphics()->LinesDraw(&LineItem, 1);
+		Graphics()->LinesEnd();
 	}
 
 	if(ImageCur + 27.0f > ImageStopAt)
