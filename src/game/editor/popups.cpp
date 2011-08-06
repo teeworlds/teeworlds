@@ -458,9 +458,35 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		for(int k = 0; k < 5; ++k)
 			pQuad->m_aPoints[k].y += Offset;
 	}
-	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_POS_ENV)
+	{
+		int Index = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+		int Step = (Index-pQuad->m_PosEnv)%2;
+		if(Step != 0)
+		{
+			for(; Index >= -1 && Index < pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
+				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 3)
+				{
+					pQuad->m_PosEnv = Index;
+					break;
+				}
+		}
+	}
 	if(Prop == PROP_POS_ENV_OFFSET) pQuad->m_PosEnvOffset = NewVal;
-	if(Prop == PROP_COLOR_ENV) pQuad->m_ColorEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_COLOR_ENV)
+	{
+		int Index = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+		int Step = (Index-pQuad->m_ColorEnv)%2;
+		if(Step != 0)
+		{
+			for(; Index >= -1 && Index < pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
+				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
+				{
+					pQuad->m_ColorEnv = Index;
+					break;
+				}
+		}
+	}
 	if(Prop == PROP_COLOR_ENV_OFFSET) pQuad->m_ColorEnvOffset = NewVal;
 
 	return 0;
