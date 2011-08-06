@@ -302,7 +302,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 
-	if(m_pWorld && m_pWorld->m_Tuning.m_PlayerCollision)
+	if(m_pWorld)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -317,7 +317,7 @@ void CCharacterCore::Tick(bool UseInput)
 			// handle player <-> player collision
 			float Distance = distance(m_Pos, pCharCore->m_Pos);
 			vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
-			if(Distance < PhysSize*1.25f && Distance > 0.0f)
+			if(m_pWorld->m_Tuning.m_PlayerCollision && Distance < PhysSize*1.25f && Distance > 0.0f)
 			{
 				float a = (PhysSize*1.45f - Distance);
 				float Velocity = 0.5f;
@@ -332,7 +332,7 @@ void CCharacterCore::Tick(bool UseInput)
 			}
 
 			// handle hook influence
-			if(m_HookedPlayer == i)
+			if(m_HookedPlayer == i && m_pWorld->m_Tuning.m_PlayerHooking)
 			{
 				if(Distance > PhysSize*1.50f) // TODO: fix tweakable variable
 				{

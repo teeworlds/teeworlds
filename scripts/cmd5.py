@@ -30,6 +30,6 @@ for filename in sys.argv[1:]:
 
 hash = hashlib.md5(f).hexdigest().lower()[16:]
 #TODO 0.7: improve nethash creation
-if hash == "63d6e69c6025feff":
+if hash == "3dc531e4296de555":
 	hash = "626fce9a778df4d4"
 print('#define GAME_NETVERSION_HASH "%s"' % hash)
