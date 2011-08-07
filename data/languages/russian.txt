@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -50,7 +49,7 @@ Alpha
 == Прозрачн.
 
 Always show name plates
-== Всегда показывать ники игроков
+== Всегда показывать имена игроков
 
 Are you sure that you want to delete the demo?
 == Вы уверены, что хотите удалить демо?
@@ -62,7 +61,7 @@ Are you sure that you want to remove the player from your friends list?
 == Вы уверены, что хотите удалить игрока из друзей?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Так как это ваш первый запуск игры, пожалуйста, введите свой ник в поле ниже. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
+== Пожалуйста, введите своё имя. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
 
 Automatically record demos
 == Автоматически записывать демо
@@ -353,7 +352,7 @@ Next weapon
 == След. оружие
 
 Nickname
-== Ник
+== Имя
 
 No
 == Нет
@@ -524,7 +523,7 @@ Show ingame HUD
 == Показывать внутриигровой HUD
 
 Show name plates
-== Показывать ники игроков
+== Показывать имена игроков
 
 Show only supported
 == Показывать только поддерживаемые разрешения экрана
@@ -569,7 +568,7 @@ Stop record
 == Стоп
 
 Strict gametype filter
-== Строгий фильтр режим.
+== Строгий фильтр р-мов
 
 Sudden Death
 == Быстрая смерть
@@ -626,7 +625,7 @@ Use sounds
 == Использовать звуки
 
 Use team colors for name plates
-== Командные цвета для ников игроков
+== Командные цвета для имен игроков
 
 V-Sync
 == Вертикальная синхронизация
