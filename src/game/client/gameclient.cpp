@@ -800,6 +800,7 @@ void CGameClient::OnGameOver()
 
 void CGameClient::OnStartGame()
 {
+	m_pTeecompStats->OnReset();
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Client()->DemoRecorder_HandleAutoStart();
 }
@@ -1017,11 +1018,11 @@ void CGameClient::OnNewSnapshot()
 				m_Snap.m_pGameInfoObj = (const CNetObj_GameInfo *)pData;
 				if(!m_LastGameOver && m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 					OnGameOver();
-				else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
-					OnGameRestart();
+				/*else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+					OnStartGame();*/
 
 				if(m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
-					OnRoundStart();
+					OnStartGame();
 				
 				m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
 				m_LastRoundStartTick = m_Snap.m_pGameInfoObj->m_RoundStartTick;
@@ -1343,21 +1344,21 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
-void CGameClient::OnGameRestart()
+/*void CGameClient::OnGameRestart()
 {	
 	m_pTeecompStats->OnReset();
-}
+}*/
 
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
 }
 
-void CGameClient::OnRoundStart()
+/*void CGameClient::OnRoundStart()
 {
 	for(int i=0; i<MAX_CLIENTS; i++)
 		m_aStats[i].Reset();
-}
+}*/
 
 void CGameClient::OnFlagGrab(int ID)
 {

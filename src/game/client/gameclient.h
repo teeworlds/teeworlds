@@ -267,8 +267,6 @@ public:
 	int m_LastGameOver;
 	int m_LastRoundStartTick;
 	int m_aLastFlagCarrier[2];
-	void OnGameRestart();
-	void OnRoundStart();
 	void OnFlagGrab(int Id);
 	
 	virtual const char *GetItemName(int Type);
