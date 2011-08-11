@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
 		dbg_msg("Usage", "%s FILE1 [ FILE2... ]", argv[0]);
 		return -1;
 	}
-	
+
 	for(int i = 1; i < argc; i++)
 		DilateFile(argv[i]);
 	return 0;

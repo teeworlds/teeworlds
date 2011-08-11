@@ -971,7 +971,7 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 	CUIRect Button;
 
 	static int s_AutoMapperConfigButtons[256];
-	
+
 	for(int i = 0; i < aConfigNames.size(); ++i)
 	{
 		View.HSplitTop(2.0f, 0, &View);
@@ -994,7 +994,7 @@ int CEditor::PopupSelectConfigAutoMapResult()
 {
 	if(s_AutoMapConfigSelected < 0)
 		return -1;
-	
+
 	int Result = s_AutoMapConfigSelected;
 	s_AutoMapConfigSelected = -1;
 	return Result;

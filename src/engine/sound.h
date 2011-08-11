@@ -19,10 +19,10 @@ public:
 	virtual bool IsSoundEnabled() = 0;
 
 	virtual int LoadWV(const char *pFilename) = 0;
-	
+
 	virtual void SetChannel(int ChannelID, float Volume, float Panning) = 0;
 	virtual void SetListenerPos(float x, float y) = 0;
-	
+
 	virtual int PlayAt(int ChannelID, int SampleID, int Flags, float x, float y) = 0;
 	virtual int Play(int ChannelID, int SampleID, int Flags) = 0;
 	virtual void Stop(int SampleID) = 0;

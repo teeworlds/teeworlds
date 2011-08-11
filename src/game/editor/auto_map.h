@@ -11,7 +11,7 @@ class CAutoMapper
 		int m_Y;
 		int m_Value;
 		bool m_IndexValue;
-		
+
 		enum
 		{
 			EMPTY=0,
@@ -33,17 +33,19 @@ class CAutoMapper
 		array<CIndexRule> m_aIndexRules;
 		char m_aName[128];
 	};
-	
+
 public:
 	CAutoMapper(class CEditor *pEditor);
-	
-	void Load(char* pTileName);
+
+	void Load(const char* pTileName);
 	void Proceed(class CLayerTiles *pLayer, int ConfigID);
-	array<char*> GetConfigNames();
-	
+
+	int ConfigNamesNum() { return m_lConfigs.size(); }
+	const char* GetConfigName(int Index);
+
 	const bool IsLoaded() { return m_FileLoaded; }
 private:
-	array<CConfiguration> m_aConfigs;
+	array<CConfiguration> m_lConfigs;
 	class CEditor *m_pEditor;
 	bool m_FileLoaded;
 };

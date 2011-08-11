@@ -8,7 +8,7 @@ Predicted input sent to the server can be retrived by calling <client_get_input>
 > {
 > 	int tick;
 > 	prediction_reset();
-> 
+>
 > 	for(tick = client_tick()+1; tick <= client_predtick(); tick++)
 > 	{
 > 		MY_INPUT *input = (MY_INPUT *)client_get_input();
