@@ -685,6 +685,7 @@ void CCharacter::Tick()
 			{
 				m_pPlayer->blockScore += g_Config.m_SvRaceFinishReward;
 				m_pPlayer->GetAccount()->Payload()->blockScore = m_pPlayer->blockScore;
+				GameServer()->m_Rank.UpdateScore(m_pPlayer->GetAccount());
 			}
 			m_StartTick = 0;
 		}

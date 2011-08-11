@@ -261,6 +261,7 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 			str_copy(aBuf, "Account successfully created, logged in. Do not forget your password, there is no way to get it back if lost.", sizeof aBuf);
 			pPlayer->SetAccount(pAcc);
 			pAcc->Payload()->blockScore = 10.0; // XXX dirty
+			GameContext()->m_Rank.UpdateScore(pAcc);
 			char aName[MAX_NAME_LENGTH];
 			CAccount::OverrideName(aName, sizeof aName, pPlayer, pPlayer->m_OrigName);
 			GameContext()->Server()->SetClientName(pPlayer->GetCID(), aName);
@@ -423,4 +424,25 @@ bool CAccChatHandler::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 		return false;
 
 	return true;
+}
+
+LISTACCS_CALLBACK cb_;
+
+int lscallback(const char *name, int is_dir, int dir_type, void *user)
+{
+	if (is_dir) return 0;
+	if (str_comp_num(name, CAccount::ms_pPayloadHash, 16)) return 0;
+	char buf[50];
+	str_copy(buf, name+17, sizeof(buf));
+	buf[str_length(buf)-4] = 0;
+	CAccount acc(buf);
+	acc.Read();
+	cb_(&acc, user);
+	return 0;
+}
+
+void CAccount::ListAccs(LISTACCS_CALLBACK cb, void* user)
+{
+	cb_ = cb;
+	fs_listdir("./accounts/", lscallback, 0, user);
 }

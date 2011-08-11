@@ -15,6 +15,7 @@
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
 #include "gamemodes/mod.h"
+#include "gamemodes/rank.h"
 
 struct CMute CGameContext::m_aMutes[MAX_MUTES];
 
@@ -42,6 +43,7 @@ void CGameContext::Construct(int Resetting)
 	{
 		m_pVoteOptionHeap = new CHeap();
 		new CDDChatHnd();
+		new CRankHnd();
 		for(int z = 0; z < MAX_MUTES; ++z)
 			m_aMutes[z].m_IP[0] = 0;
 	}
@@ -1476,6 +1478,17 @@ void CGameContext::ConMutes(IConsole::IResult *pResult, void *pUserData)
 		}
 }
 
+void CGameContext::ConGive(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int ClientID = pResult->GetInteger(0);
+	int Score = pResult->GetInteger(1);
+	CAccount* acc = pSelf->m_apPlayers[ClientID]->GetAccount();
+	if (!acc) return;
+	acc->Payload()->blockScore+=Score;
+	pSelf->m_Rank.UpdateScore(acc);
+}
+
 void CGameContext::CreateLolText(CEntity *pParent, bool Follow, vec2 Pos, vec2 Vel, int Lifespan, const char *pText)
 {
 	CLoltext::Create(&m_World, pParent, Pos, Vel, Lifespan, pText, true, Follow);
@@ -1524,6 +1537,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("mutes", "", CFGFLAG_SERVER, ConMutes, this, "");
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
+
+	Console()->Register("give", "ii", CFGFLAG_SERVER, ConGive, this, "");
 }
 
 void CGameContext::OnInit(/*class IKernel *pKernel*/)
@@ -1600,6 +1615,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 #endif
 	IChatCtl::Init(this);
  	CAccount::Init(AccVersion());
+	m_Rank.Init();
 }
 
 void CGameContext::OnShutdown()

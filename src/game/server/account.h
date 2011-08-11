@@ -31,6 +31,10 @@ struct CAccPayload
 	struct CAccGamePayload m_Body;
 };
 
+class CAccount;
+
+typedef void (*LISTACCS_CALLBACK)(CAccount *account, void* user);
+
 class CAccount
 {
 private:
@@ -61,7 +65,7 @@ public:
 	static bool IsValidAccName(const char *pName);
 	static bool ParseAccline(char *pDstName, unsigned int SzName, char *pDstPass, unsigned int SzPass, const char *pLine);
 	static void OverrideName(char *pDst, unsigned SzDst, class CPlayer *pPlayer, const char *pWantedName);
-
+	static void ListAccs(LISTACCS_CALLBACK cb, void* user);
 
 };
 

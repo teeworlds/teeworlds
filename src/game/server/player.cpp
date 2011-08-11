@@ -329,6 +329,7 @@ int CPlayer::BlockKillCheck()
 			if (g_Config.m_SvScoringDebugLog)
 				dbg_msg("score","%s killed by %s and lost %.1f, now has %.1f", GetAccount()->Name(), GameServer()->m_apPlayers[killer]->GetAccount() ? GameServer()->m_apPlayers[killer]->GetAccount()->Name() : "(unk)", scoreStolen, blockScore);
 			GetAccount()->Payload()->blockScore = blockScore;
+			GameServer()->m_Rank.UpdateScore(GetAccount());
 			if (fabs(scoreStolen) >= .5f)
 				str_format(aVictimText, sizeof aVictimText, "%+.1f", -scoreStolen);
 		}
@@ -344,6 +345,7 @@ int CPlayer::BlockKillCheck()
 			if (g_Config.m_SvScoringDebugLog)
 				dbg_msg("score","%s killed %s and gained %.1f, now has %.1f", killerAcc->Name(), GetAccount() ? GetAccount()->Name() : "(unk)", scoreStolen, GameServer()->m_apPlayers[killer]->blockScore);
 			killerAcc->Payload()->blockScore = GameServer()->m_apPlayers[killer]->blockScore;
+			GameServer()->m_Rank.UpdateScore(killerAcc);
 			if (fabs(scoreStolen) >= .5f)
 				str_format(aKillerText, sizeof aKillerText, "%+.1f", scoreStolen);
 		}

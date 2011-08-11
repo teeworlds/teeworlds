@@ -5,6 +5,7 @@
 #include <engine/shared/config.h>
 
 #include "mod.h"
+#include "rank.h"
 
 CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 : IGameController(pGameServer)
