@@ -391,7 +391,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	{
 		if(!m_pClient->m_Snap.m_paInfoByTeam[i])
 			continue;
-		
+
 		int Index = m_pClient->m_Snap.m_paInfoByTeam[i]->m_ClientID;
 		if(Index == m_pClient->m_Snap.m_LocalClientID || FilterSpectators && m_pClient->m_Snap.m_paInfoByTeam[i]->m_Team == TEAM_SPECTATORS)
 			continue;

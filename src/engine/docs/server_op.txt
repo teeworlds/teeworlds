@@ -25,13 +25,13 @@ while running
 			send snapshot
 		end for
 	end
-	
+
 	process new network messages
 end while
 
 unload map
 (end)
-		
+
 
 
 Section: Reinit
