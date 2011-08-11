@@ -619,10 +619,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		
 		char *pMsgStart = str_skip_whitespaces((char*)pMsg->m_pMessage);
 
-		if (*pMsgStart == IChatCtl::ms_CmdChar)
-			IChatCtl::Dispatch(pPlayer, pMsgStart);//one could handle unhandled msgs here
-		else
-		{
 			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
 				return;
 
@@ -654,8 +650,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 			}
 			else
-				SendChat(ClientID, Team, pMsg->m_pMessage);
-		}
+			{
+				if (*pMsgStart == IChatCtl::ms_CmdChar)
+					IChatCtl::Dispatch(pPlayer, pMsgStart);//one could handle unhandled msgs here
+				else
+					SendChat(ClientID, Team, pMsg->m_pMessage);
+			}
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{
