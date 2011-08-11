@@ -755,7 +755,7 @@ void CCharacter::TickDefered()
 	}
 
 	int Events = m_Core.m_TriggeredEvents;
-	int Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
+	int64_t Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
 
 	if(Events&COREEVENT_GROUND_JUMP) GameServer()->CreateSound(m_Pos, SOUND_PLAYER_JUMP, Mask);
 
@@ -902,7 +902,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	// do damage Hit sound
 	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
-		int Mask = CmaskOne(From);
+		int64_t Mask = CmaskOne(From);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && GameServer()->m_apPlayers[i]->m_SpectatorID == From)
