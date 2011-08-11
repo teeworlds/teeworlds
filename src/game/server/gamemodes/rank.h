@@ -26,9 +26,9 @@ class CRank
 class CRankHnd : public IChatCtl
 {
 public:
-        CRankHnd();
-        virtual bool HandleChatMsg(class CPlayer *pPlayer, const char *pMsg);
-        static bool ParseLine(char *pDstEmote, unsigned int SzEmote, unsigned *pDstTime, const char *pLine);
+	CRankHnd();
+	virtual bool HandleChatMsg(class CPlayer *pPlayer, const char *pMsg);
+	static bool ParseLine(char *pDstEmote, unsigned int SzEmote, unsigned *pDstTime, const char *pLine);
 };
 
 #endif

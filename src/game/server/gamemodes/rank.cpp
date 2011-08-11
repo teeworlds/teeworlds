@@ -69,13 +69,13 @@ void CRank::Init()
 
 CRankHnd::CRankHnd()
 {
-        IChatCtl::Register(this);
+	IChatCtl::Register(this);
 }
 
 bool CRankHnd::HandleChatMsg(class CPlayer *pPlayer, const char *pMsg)
 {
-        if (str_comp_num(pMsg, "/rank", 5) != 0)
-                return false;
+	if (str_comp_num(pMsg, "/rank", 5) != 0)
+		return false;
 	if (!pPlayer->GetAccount())
 	{
 		GameContext()->SendChatTarget(pPlayer->GetCID(), "you must /register or /login to use this feature");
