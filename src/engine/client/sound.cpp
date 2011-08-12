@@ -19,7 +19,7 @@ enum
 	NUM_SAMPLES = 512,
 	NUM_VOICES = 64,
 	NUM_CHANNELS = 16,
-	
+
 	MAX_FRAMES = 1024
 };
 
@@ -89,9 +89,9 @@ static void Mix(short *pFinalOut, unsigned Frames)
 
 	// aquire lock while we are mixing
 	lock_wait(m_SoundLock);
-	
+
 	MasterVol = m_SoundVolume;
-	
+
 	for(unsigned i = 0; i < NUM_VOICES; i++)
 	{
 		if(m_aVoices[i].m_pSample)
@@ -103,7 +103,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 			int Step = v->m_pSample->m_Channels; // setup input sources
 			short *pInL = &v->m_pSample->m_pData[v->m_Tick*Step];
 			short *pInR = &v->m_pSample->m_pData[v->m_Tick*Step+1];
-			
+
 			unsigned End = v->m_pSample->m_NumFrames-v->m_Tick;
 
 			int Rvol = v->m_pChannel->m_Vol;
@@ -112,7 +112,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 			// make sure that we don't go outside the sound data
 			if(Frames < End)
 				End = Frames;
-			
+
 			// check if we have a mono sound
 			if(v->m_pSample->m_Channels == 1)
 				pInR = pInL;
@@ -133,7 +133,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 						Lvol = ((Range-p)*Lvol)/Range;
 					else
 						Rvol = ((Range-p)*Rvol)/Range;
-					
+
 					// falloff
 					Lvol = (Lvol*(Range-Dist))/Range;
 					Rvol = (Rvol*(Range-Dist))/Range;
@@ -154,7 +154,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				pInR += Step;
 				v->m_Tick++;
 			}
-			
+
 			// free voice if not used any more
 			if(v->m_Tick == v->m_pSample->m_NumFrames)
 			{
@@ -165,8 +165,8 @@ static void Mix(short *pFinalOut, unsigned Frames)
 			}
 		}
 	}
-	
-	
+
+
 	// release the lock
 	lock_release(m_SoundLock);
 
@@ -201,14 +201,14 @@ int CSound::Init()
 	m_SoundEnabled = 0;
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	
+
 	SDL_AudioSpec Format;
-	
+
 	m_SoundLock = lock_create();
-	
+
 	if(!g_Config.m_SndEnable)
 		return 0;
-	
+
 	m_MixingRate = g_Config.m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
@@ -229,7 +229,7 @@ int CSound::Init()
 		dbg_msg("client/sound", "sound init successful");
 
 	SDL_PauseAudio(0);
-	
+
 	m_SoundEnabled = 1;
 	Update(); // update the volume
 	return 0;
@@ -239,17 +239,17 @@ int CSound::Update()
 {
 	// update volume
 	int WantedVolume = g_Config.m_SndVolume;
-	
+
 	if(!m_pGraphics->WindowActive() && g_Config.m_SndNonactiveMute)
 		WantedVolume = 0;
-	
+
 	if(WantedVolume != m_SoundVolume)
 	{
 		lock_wait(m_SoundLock);
 		m_SoundVolume = WantedVolume;
 		lock_release(m_SoundLock);
 	}
-	
+
 	return 0;
 }
 
@@ -277,7 +277,7 @@ void CSound::RateConvert(int SampleID)
 	CSample *pSample = &m_aSamples[SampleID];
 	int NumFrames = 0;
 	short *pNewData = 0;
-	
+
 	// make sure that we need to convert this sound
 	if(!pSample->m_pData || pSample->m_Rate == m_MixingRate)
 		return;
@@ -285,7 +285,7 @@ void CSound::RateConvert(int SampleID)
 	// allocate new data
 	NumFrames = (int)((pSample->m_NumFrames/(float)pSample->m_Rate)*m_MixingRate);
 	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short), 1);
-	
+
 	for(int i = 0; i < NumFrames; i++)
 	{
 		// resample TODO: this should be done better, like linear atleast
@@ -293,7 +293,7 @@ void CSound::RateConvert(int SampleID)
 		int f = (int)(a*pSample->m_NumFrames);
 		if(f >= pSample->m_NumFrames)
 			f = pSample->m_NumFrames-1;
-		
+
 		// set new data
 		if(pSample->m_Channels == 1)
 			pNewData[i] = pSample->m_pData[f];
@@ -303,7 +303,7 @@ void CSound::RateConvert(int SampleID)
 			pNewData[i*2+1] = pSample->m_pData[f*2+1];
 		}
 	}
-	
+
 	// free old data and apply new
 	mem_free(pSample->m_pData);
 	pSample->m_pData = pNewData;
@@ -321,15 +321,15 @@ int CSound::LoadWV(const char *pFilename)
 	int SampleID = -1;
 	char aError[100];
 	WavpackContext *pContext;
-	
+
 	// don't waste memory on sound when we are stress testing
 	if(g_Config.m_DbgStress)
 		return -1;
-		
+
 	// no need to load sound when we are running with no sound
 	if(!m_SoundEnabled)
 		return 1;
-		
+
 	if(!m_pStorage)
 		return -1;
 
@@ -372,7 +372,7 @@ int CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
 			return -1;
 		}*/
-		
+
 		if(BitsPerSample != 16)
 		{
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
@@ -382,7 +382,7 @@ int CSound::LoadWV(const char *pFilename)
 		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels, 1);
 		WavpackUnpackSamples(pContext, pData, m_aSamples); // TODO: check return value
 		pSrc = pData;
-		
+
 		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels, 1);
 		pDst = pSample->m_pData;
 
@@ -428,9 +428,9 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 {
 	int VoiceID = -1;
 	int i;
-	
+
 	lock_wait(m_SoundLock);
-	
+
 	// search for voice
 	for(i = 0; i < NUM_VOICES; i++)
 	{
@@ -442,7 +442,7 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 			break;
 		}
 	}
-	
+
 	// voice found, use it
 	if(VoiceID != -1)
 	{
@@ -457,7 +457,7 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 		m_aVoices[VoiceID].m_X = (int)x;
 		m_aVoices[VoiceID].m_Y = (int)y;
 	}
-	
+
 	lock_release(m_SoundLock);
 	return VoiceID;
 }

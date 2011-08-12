@@ -144,7 +144,7 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 
 	if(!pSet->m_NumSounds)
 		return;
-	
+
 	int Flags = 0;
 	if(Chn == CHN_MUSIC)
 		Flags = ISound::FLAG_LOOP;
@@ -170,9 +170,9 @@ void CSounds::Stop(int SetId)
 {
 	if(m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
-	
+
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
-	
+
 	for(int i = 0; i < pSet->m_NumSounds; i++)
 		Sound()->Stop(pSet->m_aSounds[i].m_Id);
 }

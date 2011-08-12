@@ -775,7 +775,7 @@ void CDemoPlayer::GetDemoName(char *pBuffer, int BufferSize) const
 		else if(*pFileName == '.')
 			pEnd = pFileName;
 	}
-	
+
 	int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 	str_copy(pBuffer, pExtractedName, Length);
 }
