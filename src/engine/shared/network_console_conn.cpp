@@ -181,6 +181,6 @@ int CConsoleNetConnection::Send(const char *pLine)
 		pData += Send;
 		Length -= Send;
 	}
-	
+
 	return 0;
 }

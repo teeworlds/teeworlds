@@ -6,6 +6,6 @@ predtick, predintratick
  prevtick              tick                 predtick
    4                     8                    14
    |---------------------|---------------------|
-   0 <- intratick    ->  1                     
+   0 <- intratick    ->  1
    0 <- ticktime(in s)-> X
                          0 <- predintratick?-> 1

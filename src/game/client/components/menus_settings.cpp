@@ -543,7 +543,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		WeaponSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &WeaponSettings);
 		UiDoGetButtons(5, 12, WeaponSettings);
 	}
-	
+
 	// defaults
 	{
 		ResetButton.HSplitTop(10.0f, 0, &ResetButton);
@@ -554,7 +554,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
 			m_pClient->m_pBinds->SetDefaults();
 	}
-	
+
 	// voting settings
 	{
 		VotingSettings.VSplitLeft(10.0f, 0, &VotingSettings);
