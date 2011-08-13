@@ -157,7 +157,7 @@ public:
 						Added = true;
 						break;
 					}
-				
+
 				if(!Added)
 				{
 					for(int i = 0; i < MAX_MASTERSERVERS; ++i)

@@ -1108,7 +1108,7 @@ int CMenus::Render()
 			Box.HSplitBottom(24.f, &Box, &Part);
 			Box.HSplitBottom(20.f, &Box, 0);
 			Box.VMargin(20.0f, &Box);
-			
+
 			static int ActSelection = -2;
 			if(ActSelection == -2)
 				ActSelection = g_Config.m_BrFilterCountryIndex;

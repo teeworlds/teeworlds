@@ -56,7 +56,7 @@ int CNetConsole::AcceptClient(NETSOCKET Socket, const NETADDR *pAddr)
 {
 	char aError[256] = { 0 };
 	int FreeSlot = -1;
-	
+
 	// look for free slot or multiple client
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
 	{
@@ -115,7 +115,7 @@ int CNetConsole::Update()
 			}
 			else
 				str_format(aBuf, sizeof(aBuf), "You have been banned for life");
-			
+
 			net_tcp_send(Socket, aBuf, str_length(aBuf));
 			net_tcp_close(Socket);
 		}
@@ -170,7 +170,7 @@ bool CNetConsole::AddBan(NETADDR Addr, int Seconds)
 {
 	if(m_NumBans == MAX_BANS)
 		return false;
-	
+
 	Addr.port = 0;
 	int Index = FindBan(Addr);
 	if(Index == -1)
