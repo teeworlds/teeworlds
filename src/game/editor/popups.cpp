@@ -684,13 +684,17 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
 			pEditor->CallbackSaveMap(pEditor->m_aFileSaveName, IStorage::TYPE_SAVE, pEditor);
+		pEditor->m_PopupEventWasActivated = false;
 		return 1;
 	}
 	ButtonBar.VSplitRight(30.0f, &ButtonBar, 0);
 	ButtonBar.VSplitRight(110.0f, &ButtonBar, &Label);
 	static int s_AbortButton = 0;
 	if(pEditor->DoButton_Editor(&s_AbortButton, "Abort", 0, &Label, 0, 0))
+	{
+		pEditor->m_PopupEventWasActivated = false;
 		return 1;
+	}
 
 	return 0;
 }

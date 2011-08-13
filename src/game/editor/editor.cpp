@@ -749,25 +749,31 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Bottom.HSplitTop(2.5f, 0, &TB_Bottom);
 
 	// ctrl+o to open
-	if(Input()->KeyDown('o') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
+	if(Input()->KeyDown('o') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)) && m_Dialog == DIALOG_NONE)
 	{
 		if(HasUnsavedData())
 		{
-			m_PopupEventType = POPEVENT_LOAD;
-			m_PopupEventActivated = true;
+			if(!m_PopupEventWasActivated)
+			{
+				m_PopupEventType = POPEVENT_LOAD;
+				m_PopupEventActivated = true;
+			}
 		}
 		else
 			InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", CallbackOpenMap, this);
 	}
 
 	// ctrl+s to save
-	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
+	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)) && m_Dialog == DIALOG_NONE)
 	{
 		if(m_aFileName[0] && m_ValidSaveFilename)
 		{
-			str_copy(m_aFileSaveName, m_aFileName, sizeof(m_aFileSaveName));
-			m_PopupEventType = POPEVENT_SAVE;
-			m_PopupEventActivated = true;
+			if(!m_PopupEventWasActivated)
+			{
+				str_copy(m_aFileSaveName, m_aFileName, sizeof(m_aFileSaveName));
+				m_PopupEventType = POPEVENT_SAVE;
+				m_PopupEventActivated = true;
+			}
 		}
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", CallbackSaveMap, this);
@@ -3420,6 +3426,7 @@ void CEditor::Render()
 		static int s_PopupID = 0;
 		UiInvokePopupMenu(&s_PopupID, 0, Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, PopupEvent);
 		m_PopupEventActivated = false;
+		m_PopupEventWasActivated = true;
 	}
 
 
