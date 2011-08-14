@@ -821,6 +821,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		(Input()->KeyDown('i') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_ShowTileInfo = !m_ShowTileInfo;
+		m_ShowEnvelopePreview = 0;
 	}
 
 	TB_Top.VSplitLeft(15.0f, 0, &TB_Top);
@@ -1417,7 +1418,6 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-//H-Client
 void CEditor::DoQuadEnvelopes(CQuad *q, int Index, int texID)
 {
 	CEnvelope *pEnvelope = 0x0;
@@ -1894,7 +1894,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					{
 						CLayerQuads *pLayer = (CLayerQuads *)pEditLayers[k];
 
-                        m_ShowEnvelopePreview = 2;
+                        if (!m_ShowEnvelopePreview)
+                            m_ShowEnvelopePreview = 2;
 
 						Graphics()->TextureSet(-1);
 						Graphics()->QuadsBegin();
@@ -3429,6 +3430,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							}
 
                             m_SelectedQuadEnvelope = m_SelectedEnvelope;
+                            m_ShowEnvelopePreview = 1;
                             m_SelectedEnvelopeChannel = i;
 							m_Map.m_Modified = true;
 						}
