@@ -603,6 +603,10 @@ public:
 		m_ShowEnvelopeEditor = 0;
 		m_ShowServerSettingsEditor = false;
 
+		m_ShowEnvelopePreview = 0;
+		m_SelectedQuadEnvelope = -1;
+		m_SelectedEnvelopeChannel = -1;
+
 		m_CommandBox = 0.0f;
 		m_aSettingsCommand[0] = 0;
 
@@ -728,6 +732,7 @@ public:
 	float m_AnimateSpeed;
 
 	int m_ShowEnvelopeEditor;
+	int m_ShowEnvelopePreview; //Values: 0-Off|1-Selected Envelope|2-All
 	bool m_ShowServerSettingsEditor;
 	bool m_ShowPicker;
 
@@ -736,6 +741,8 @@ public:
 	int m_SelectedQuad;
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
+    int m_SelectedEnvelopeChannel;
+    int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 
 	static int ms_CheckerTexture;
@@ -809,7 +816,10 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
+	void DoQuadEnvelopes(CQuad *q, int Index, int texID = -1);
+	void DoQuadEnvPoint(CQuad *pQuad, int Index, int V);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
+
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
