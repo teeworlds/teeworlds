@@ -605,7 +605,7 @@ public:
 
 		m_ShowEnvelopePreview = 0;
 		m_SelectedQuadEnvelope = -1;
-		m_SelectedEnvelopeChannel = -1;
+		m_SelectedEnvelopePoint = -1;
 
 		m_CommandBox = 0.0f;
 		m_aSettingsCommand[0] = 0;
@@ -741,7 +741,7 @@ public:
 	int m_SelectedQuad;
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
-    int m_SelectedEnvelopeChannel;
+	int m_SelectedEnvelopePoint;
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 
@@ -816,8 +816,8 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *q, int Index, int texID = -1);
-	void DoQuadEnvPoint(CQuad *pQuad, int Index, int V);
+	void DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID = -1);
+	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
