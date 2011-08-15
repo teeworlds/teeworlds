@@ -11,15 +11,21 @@ class CRank
 {
 	private:
 
-	std::vector<double> ranked;
+	double ranked[20000];
+	unsigned int rankedI;
+	char* rankedNames[20000];
 	std::map<unsigned, double> scores;
+	char names[200000];
+	unsigned int namesI;
 
 	public:
 
 	void UpdateScore(CAccount* acc);
-	int MaxRank() const;
-	int GetRank(const char* name);
-	int GetRank(double score) const;
+	unsigned int MaxRank() const;
+	unsigned int GetRank(const char* name);
+	unsigned int GetRank(double score) const;
+	double GetScore(int rank) const;
+	const char* GetName(int rank) const;
 	void Init();
 };
 
