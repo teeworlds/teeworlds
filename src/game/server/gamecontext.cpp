@@ -989,8 +989,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	}
 	else if (MsgID == NETMSGTYPE_CL_CHANGEINFO)
 	{
-		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
+		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*2 > Server()->Tick())
+		{
+			if (pPlayer->m_LastChangeInfo < Server()->Tick())
+				pPlayer->m_LastChangeInfo += Server()->TickSpeed()/2;
 			return;
+		}
 
 		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
 		pPlayer->m_LastChangeInfo = Server()->Tick();
