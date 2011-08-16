@@ -828,12 +828,12 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// zoom group
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomOutButton = 0;
-	if(DoButton_Ex(&s_ZoomOutButton, "ZO", 0, &Button, 0, "[NumPad-] Zoom out", CUI::CORNER_L) || Input()->KeyDown(KEY_KP_MINUS))
+	if(DoButton_Ex(&s_ZoomOutButton, "ZO", 0, &Button, 0, "[NumPad-] Zoom out", CUI::CORNER_L))
 		m_ZoomLevel += 50;
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomNormalButton = 0;
-	if(DoButton_Ex(&s_ZoomNormalButton, "1:1", 0, &Button, 0, "[NumPad*] Zoom to normal and remove editor offset", 0) || Input()->KeyDown(KEY_KP_MULTIPLY))
+	if(DoButton_Ex(&s_ZoomNormalButton, "1:1", 0, &Button, 0, "[NumPad*] Zoom to normal and remove editor offset", 0))
 	{
 		m_EditorOffsetX = 0;
 		m_EditorOffsetY = 0;
@@ -842,7 +842,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomInButton = 0;
-	if(DoButton_Ex(&s_ZoomInButton, "ZI", 0, &Button, 0, "[NumPad+] Zoom in", CUI::CORNER_R) || Input()->KeyDown(KEY_KP_PLUS))
+	if(DoButton_Ex(&s_ZoomInButton, "ZI", 0, &Button, 0, "[NumPad+] Zoom in", CUI::CORNER_R))
 		m_ZoomLevel -= 50;
 
 	TB_Top.VSplitLeft(10.0f, 0, &TB_Top);
@@ -865,8 +865,6 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		if(m_AnimateSpeed > 0.5f)
 			m_AnimateSpeed -= 0.5f;
 	}
-
-	m_WorldZoom = m_ZoomLevel/100.0f;
 
 	TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
 
@@ -3598,7 +3596,17 @@ void CEditor::Render()
 	if(m_Mode == MODE_LAYERS)
 		DoMapEditor(View, ToolBar);
 
-	// do the scrolling
+	// do zooming
+	if(Input()->KeyDown(KEY_KP_MINUS))
+		m_ZoomLevel += 50;
+	if(Input()->KeyDown(KEY_KP_PLUS))
+		m_ZoomLevel -= 50;
+	if(Input()->KeyDown(KEY_KP_MULTIPLY))
+	{
+		m_EditorOffsetX = 0;
+		m_EditorOffsetY = 0;
+		m_ZoomLevel = 100;
+	}
 	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
@@ -3606,9 +3614,9 @@ void CEditor::Render()
 
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 			m_ZoomLevel += 20;
-
-		m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	}
+	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
+	m_WorldZoom = m_ZoomLevel/100.0f;
 
 	if(m_GuiActive)
 	{
