@@ -599,40 +599,6 @@ void CGameClient::OnRender()
 	bool IsTeamPlay = false;
 	if(m_Snap.m_pGameInfoObj)
 		IsTeamPlay = (m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
-		
-	// anti rainbow
-	if(g_Config.m_ClAntiRainbow && !IsTeamPlay)
-	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			// dont check for local player
-			if(i == m_Snap.m_LocalClientID)
-				continue;
-				
-			// reset if player is not active
-			if(!m_aStats[i].m_Active)
-			{
-				m_aClients[i].m_ColorChangeCount = 0;
-				m_aClients[i].m_PrevColorBody = vec4(1,1,1,1);
-				m_aClients[i].m_PrevColorFeet = vec4(1,1,1,1);
-				continue;
-			}
-			
-			// check for color change
-			if((m_aClients[i].m_RenderInfo.m_ColorBody.r != m_aClients[i].m_PrevColorBody.r) || (m_aClients[i].m_RenderInfo.m_ColorBody.g != m_aClients[i].m_PrevColorBody.g) || (m_aClients[i].m_RenderInfo.m_ColorBody.b != m_aClients[i].m_PrevColorBody.b)
-			|| (m_aClients[i].m_RenderInfo.m_ColorFeet.r != m_aClients[i].m_PrevColorFeet.r) || (m_aClients[i].m_RenderInfo.m_ColorFeet.g != m_aClients[i].m_PrevColorFeet.g) || (m_aClients[i].m_RenderInfo.m_ColorFeet.b != m_aClients[i].m_PrevColorFeet.b))
-			{
-				if(((float)m_aClients[i].m_PrevColorBody.r != 1) || ((float)m_aClients[i].m_PrevColorBody.g != 1) || ((float)m_aClients[i].m_PrevColorBody.b != 1)
-				|| ((float)m_aClients[i].m_PrevColorFeet.r != 1) || ((float)m_aClients[i].m_PrevColorFeet.g != 1) || ((float)m_aClients[i].m_PrevColorFeet.b != 1))
-				{
-					m_aClients[i].m_ColorChangeCount++;
-					dbg_msg("color", "Player: %s | Change count: %d", m_aClients[i].m_aName, m_aClients[i].m_ColorChangeCount);
-				}
-				m_aClients[i].m_PrevColorBody = m_aClients[i].m_RenderInfo.m_ColorBody;
-				m_aClients[i].m_PrevColorFeet = m_aClients[i].m_RenderInfo.m_ColorFeet;
-			}
-		}
-	}
 }
 
 void CGameClient::OnRelease()

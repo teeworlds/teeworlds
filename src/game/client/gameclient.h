@@ -183,11 +183,6 @@ public:
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
 
-		// anti rainbow
-		int m_ColorChangeCount;
-		vec4 m_PrevColorBody;
-		vec4 m_PrevColorFeet;
-
 		char m_aSkinName[64];
 		int m_SkinID;
 		int m_SkinColor;

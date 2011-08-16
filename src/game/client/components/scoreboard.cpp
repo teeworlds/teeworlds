@@ -308,17 +308,6 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		// avatar
 		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
 		
-		// anti rainbow
-		if(g_Config.m_ClAntiRainbow && (m_pClient->m_aClients[pInfo->m_ClientID].m_ColorChangeCount > g_Config.m_ClAntiRainbowCount))
-		{
-			if(g_Config.m_TcForceSkinTeam1)
-				TeeInfo.m_Texture = m_pClient->m_pSkins->Get(max(0, m_pClient->m_pSkins->Find(g_Config.m_TcForcedSkin1)))->m_OrgTexture;
-			else
-				TeeInfo.m_Texture = m_pClient->m_pSkins->Get(m_pClient->m_aClients[pInfo->m_ClientID].m_SkinID)->m_OrgTexture;
-			TeeInfo.m_ColorBody = vec4(1,1,1,1);
-			TeeInfo.m_ColorFeet = vec4(1,1,1,1);
-		}
-		
 		TeeInfo.m_Size *= TeeSizeMod;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2));
 

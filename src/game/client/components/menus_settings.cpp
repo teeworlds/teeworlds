@@ -109,24 +109,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClShowGhost, Localize("Show ghost"), g_Config.m_ClShowGhost, &Button))
 			g_Config.m_ClShowGhost ^= 1;
-
-		// anti rainbow
-		Left.HSplitTop(2.5f, 0, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClAntiRainbow, Localize("Anti rainbow"), g_Config.m_ClAntiRainbow, &Button))
-			g_Config.m_ClAntiRainbow ^= 1;
-		
-		if(g_Config.m_ClAntiRainbow)
-		{
-			Left.HSplitTop(2.5f, 0, &Left);
-			Left.VSplitLeft(20.0f, 0, &Left);
-			Left.HSplitTop(20.0f, &Label, &Left);
-			Left.HSplitTop(20.0f, &Button, &Left);
-			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Allowed color changes"), g_Config.m_ClAntiRainbowCount);
-			UI()->DoLabelScaled(&Label, aBuf, 13.0f, -1);
-			Button.HMargin(2.0f, &Button);
-			g_Config.m_ClAntiRainbowCount = (int)(DoScrollbarH(&g_Config.m_ClAntiRainbowCount, &Button, g_Config.m_ClAntiRainbowCount/10.0f)*10.0f+0.1f);
-		}
 		
 		// name plates
 		Right.HSplitTop(20.0f, &Button, &Right);

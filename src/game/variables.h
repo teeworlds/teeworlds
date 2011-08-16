@@ -73,10 +73,6 @@ MACRO_CONFIG_INT(ClAntiSpam, cl_anti_spam, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE,
 /* Laser Color */
 MACRO_CONFIG_INT(ClLaserColor, cl_laser_color, 11665217, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Laser color")
 
-/* Anti rainbow */
-MACRO_CONFIG_INT(ClAntiRainbowCount, cl_anti_rainbow_count, 2, 0, 10, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Set how many colorchanges are allowed")
-MACRO_CONFIG_INT(ClAntiRainbow, cl_anti_rainbow, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable anti rainbow")
-
 MACRO_CONFIG_INT(PlayerUseCustomColor, player_use_custom_color, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors")
 MACRO_CONFIG_INT(PlayerColorBody, player_color_body, 65408, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Player body color")
 MACRO_CONFIG_INT(PlayerColorFeet, player_color_feet, 65408, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Player feet color")
