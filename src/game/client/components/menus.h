@@ -141,6 +141,9 @@ class CMenus : public CComponent
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 
+	bool m_CursorActive;
+	bool m_PrevCursorActive;
+
 	int64 m_LastInput;
 
 	// loading

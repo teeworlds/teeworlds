@@ -71,6 +71,9 @@ CMenus::CMenus()
 	m_aCallvoteReason[0] = 0;
 
 	m_FriendlistSelectedIndex = -1;
+
+	m_CursorActive = false;
+	m_PrevCursorActive = false;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -333,6 +336,9 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	// render the cursor
 	if(UI()->LastActiveItem() == pID && !JustGotActive)
 	{
+		// set cursor active
+		m_CursorActive = true;
+
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
@@ -559,14 +565,14 @@ int CMenus::RenderMenubar(CUIRect r)
 		{
 			Box.VSplitLeft(90.0f, &Button, &Box);
 			static int s_NewsButton=0;
-			if (DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0))
+			if(DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_n)))
 				NewPage = PAGE_NEWS;
 			Box.VSplitLeft(30.0f, 0, &Box);
 		}
 
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_InternetButton=0;
-		if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL))
+		if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL) || (!m_PrevCursorActive && Input()->KeyDown(KEY_i)))
 		{
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 			NewPage = PAGE_INTERNET;
@@ -575,7 +581,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		//Box.VSplitLeft(4.0f, 0, &Box);
 		Box.VSplitLeft(80.0f, &Button, &Box);
 		static int s_LanButton=0;
-		if(DoButton_MenuTab(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0))
+		if(DoButton_MenuTab(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_l)))
 		{
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 			NewPage = PAGE_LAN;
@@ -584,7 +590,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		//box.VSplitLeft(4.0f, 0, &box);
 		Box.VSplitLeft(110.0f, &Button, &Box);
 		static int s_FavoritesButton=0;
-		if(DoButton_MenuTab(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR))
+		if(DoButton_MenuTab(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_f)))
 		{
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 			NewPage = PAGE_FAVORITES;
@@ -593,7 +599,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(4.0f*5, 0, &Box);
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_DemosButton=0;
-		if(DoButton_MenuTab(&s_DemosButton, Localize("Demos"), m_ActivePage==PAGE_DEMOS, &Button, CUI::CORNER_T))
+		if(DoButton_MenuTab(&s_DemosButton, Localize("Demos"), m_ActivePage==PAGE_DEMOS, &Button, CUI::CORNER_T) || (!m_PrevCursorActive && Input()->KeyDown(KEY_d)))
 		{
 			DemolistPopulate();
 			NewPage = PAGE_DEMOS;
@@ -604,30 +610,30 @@ int CMenus::RenderMenubar(CUIRect r)
 		// online menus
 		Box.VSplitLeft(85.0f, &Button, &Box);
 		static int s_GameButton=0;
-		if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL))
+		if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL) || (!m_PrevCursorActive && Input()->KeyDown(KEY_g)))
 			NewPage = PAGE_GAME;
 
 		Box.VSplitLeft(90.0f, &Button, &Box);
 		static int s_PlayersButton=0;
-		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
+		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_p)))
 			NewPage = PAGE_PLAYERS;
 
 		Box.VSplitLeft(120.0f, &Button, &Box);
 		static int s_ServerInfoButton=0;
-		if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
+		if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_i)))
 			NewPage = PAGE_SERVER_INFO;
 
 		if(m_pClient->m_IsRace)
 		{
 			Box.VSplitLeft(65.0f, &Button, &Box);
 			static int s_GhostButton=0;
-			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, 0))
+			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_h)))
 				NewPage = PAGE_GHOST;
 		}
 		
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_CallVoteButton=0;
-		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_v)))
 			NewPage = PAGE_CALLVOTE;
 	}
 
@@ -642,12 +648,12 @@ int CMenus::RenderMenubar(CUIRect r)
 
 	Box.VSplitRight(90.0f, &Box, &Button);
 	static int s_QuitButton=0;
-	if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR))
+	if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_q)))
 		m_Popup = POPUP_QUIT;
 
 	Box.VSplitRight(130.0f, &Box, &Button);
 	static int s_SettingsButton=0;
-	if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_TL))
+	if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_TL) || (!m_PrevCursorActive && Input()->KeyDown(KEY_s)))
 		NewPage = PAGE_SETTINGS;
 
 	if(NewPage != -1)
@@ -797,6 +803,13 @@ int CMenus::Render()
 {
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+
+	// reset cursor
+	if(m_CursorActive)
+		m_PrevCursorActive = true;
+	else
+		m_PrevCursorActive = false;
+	m_CursorActive = false;
 
 	static bool s_First = true;
 	if(s_First)
