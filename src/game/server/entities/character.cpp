@@ -784,7 +784,7 @@ void CCharacter::TickDefered()
 
 		// only allow dead reackoning for a top of 3 seconds
 		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0
-				|| (!CltInfo.m_CustClt && m_Core.m_Frozen > 0))
+				|| (Server()->Tick()%2 == 0 && m_Core.m_Frozen > 0))
 		{
 			m_ReckoningTick = Server()->Tick();
 			m_SendCore = m_Core;
