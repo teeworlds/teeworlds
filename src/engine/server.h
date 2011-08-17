@@ -99,6 +99,10 @@ public:
 
 	bool Translate(int& target, int client)
 	{
+		CClientInfo info;
+		GetClientInfo(client, &info);
+		if (info.m_CustClt)
+			return true;
 		int* map = GetIdMap(client);
 		bool found = false;
 		for (int i = 0; i < VANILLA_MAX_CLIENTS; i++)

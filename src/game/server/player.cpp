@@ -192,7 +192,11 @@ void CPlayer::Snap(int SnappingClient)
 
 void CPlayer::FakeSnap(int SnappingClient)
 {
-	// WORK IN PROGRESS STUFF NOT FINISHED
+	IServer::CClientInfo info;
+	Server()->GetClientInfo(SnappingClient, &info);
+	if (info.m_CustClt)
+		return;
+
 	int id = VANILLA_MAX_CLIENTS - 1;
 
 	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, id, sizeof(CNetObj_ClientInfo)));
