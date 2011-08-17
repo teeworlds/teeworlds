@@ -124,6 +124,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	if(Team == TEAM_SPECTATORS)
 		return;
 
+	bool upper16 = false;
+	if (Team == -3)
+	{
+		upper16 = true;
+		Team = 0;
+	}
+
 	float h = 760.0f;
 
 	// background
@@ -215,12 +222,15 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float FontSize = 24.0f;
 	CTextCursor Cursor;
 
+	int rendered = upper16?-16:0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		// make sure that we render the correct team
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paInfoByScore[i];
 		if(!pInfo || pInfo->m_Team != Team)
 			continue;
+
+		if (rendered++ < 0) continue;
 
 		// background so it's easy to find the local player or the followed one in spectator mode
 		if(pInfo->m_Local || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
@@ -288,6 +298,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 
 		y += LineHeight+Spacing;
+		if (rendered == 16) break;
 	}
 }
 
@@ -337,7 +348,16 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
 		if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS))
-			RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
+		{
+			if(m_pClient->m_Snap.m_aTeamSize[0] > 16)
+			{
+				RenderScoreboard(Width/2-w-5.0f, 150.0f, w, 0, 0);
+				RenderScoreboard(Width/2+5.0f, 150.0f, w, -3, 0);
+			} else
+			{
+				RenderScoreboard(Width/2-w/2, 150.0f, w, 0, 0);
+			}
+		}
 		else
 		{
 			const char *pRedClanName = GetClanName(TEAM_RED);
