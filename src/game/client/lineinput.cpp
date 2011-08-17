@@ -42,7 +42,7 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 
 		if (Len < StrMaxSize - CharSize && CursorPos < StrMaxSize - CharSize)
 		{
-			mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len - CursorPos + CharSize);
+			mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
 			for(int i = 0; i < CharSize; i++)
 				pStr[CursorPos+i] = Tmp[i];
 			CursorPos += CharSize;

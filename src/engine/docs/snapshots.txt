@@ -48,7 +48,7 @@ After a snapshot have been created, compression is applyed to reduce the bandwid
 
 Topic: Interval
 
-The interval for how often a client recives a snapshot changes during the course of the connection. There are three different snapshot rates. 
+The interval for how often a client recives a snapshot changes during the course of the connection. There are three different snapshot rates.
 
 - *Init*. 5 snapshots per second. Used when a client is connecting and used until the client has acknowlaged a snapshot. This mechanism is used because the first snapshot because no delta compression can be done.
 

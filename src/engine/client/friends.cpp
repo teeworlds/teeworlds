@@ -12,6 +12,7 @@
 CFriends::CFriends()
 {
 	mem_zero(m_aFriends, sizeof(m_aFriends));
+	m_NumFriends = 0;
 }
 
 void CFriends::ConAddFriend(IConsole::IResult *pResult, void *pUserData)

@@ -286,16 +286,13 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
 
-				Item.m_Color.r = pLayer->m_Color.r;
-				Item.m_Color.g = pLayer->m_Color.g;
-				Item.m_Color.b = pLayer->m_Color.b;
-				Item.m_Color.a = pLayer->m_Color.a;
-				Item.m_ColorEnv = -1; // not in use right now
-				Item.m_ColorEnvOffset = 0;
+				Item.m_Color = pLayer->m_Color;
+				Item.m_ColorEnv = pLayer->m_ColorEnv;
+				Item.m_ColorEnvOffset = pLayer->m_ColorEnvOffset;
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game;
+				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
 
@@ -516,7 +513,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
 						CLayerTiles *pTiles = 0;
 
-						if(pTilemapItem->m_Flags&1)
+						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
 							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeGameLayer(pTiles);
@@ -526,10 +523,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							pTiles->m_pEditor = m_pEditor;
-							pTiles->m_Color.r = pTilemapItem->m_Color.r;
-							pTiles->m_Color.g = pTilemapItem->m_Color.g;
-							pTiles->m_Color.b = pTilemapItem->m_Color.b;
-							pTiles->m_Color.a = pTilemapItem->m_Color.a;
+							pTiles->m_Color = pTilemapItem->m_Color;
+							pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+							pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
 						}
 
 						pLayer = pTiles;
@@ -537,7 +533,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pGroup->AddLayer(pTiles);
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
-						pTiles->m_Game = pTilemapItem->m_Flags&1;
+						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)

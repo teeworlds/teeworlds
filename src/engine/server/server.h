@@ -114,6 +114,7 @@ public:
 	CSnapshotBuilder m_SnapshotBuilder;
 	CSnapIDPool m_IDPool;
 	CNetServer m_NetServer;
+	CEcon m_Econ;
 
 	IEngineMap *m_pMap;
 
@@ -123,6 +124,7 @@ public:
 	int m_MapReload;
 	int m_RconClientID;
 	int m_RconAuthLevel;
+	int m_PrintCBIndex;
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
@@ -146,6 +148,8 @@ public:
 	virtual void SetClientScore(int ClientID, int Score);
 
 	void Kick(int ClientID, const char *pReason);
+
+	void DemoRecorder_HandleAutoStart();
 
 	//int Tick()
 	int64 TickStartTime(int Tick);
@@ -186,7 +190,6 @@ public:
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
 
-
 	void PumpNetwork();
 
 	char *GetMapName();
@@ -207,6 +210,7 @@ public:
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 
