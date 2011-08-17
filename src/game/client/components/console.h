@@ -60,6 +60,7 @@ class CGameConsole : public CComponent
 
 	CInstance *CurrentConsole();
 	float TimeNow();
+	int m_PrintCBIndex;
 
 	int m_ConsoleType;
 	int m_ConsoleState;
@@ -77,6 +78,7 @@ class CGameConsole : public CComponent
 	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 public:
 	enum

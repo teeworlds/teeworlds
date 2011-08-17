@@ -78,7 +78,7 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 	pPoint->y = (int)(x * sinf(Rotation) + y * cosf(Rotation) + pCenter->y);
 }
 
-void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser)
+void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
 {
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
@@ -162,7 +162,8 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, voi
 	Graphics()->QuadsEnd();
 }
 
-void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags)
+void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset)
 {
 	//Graphics()->TextureSet(img_get(tmap->image));
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -174,8 +175,19 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	float FinalTileSize = Scale/(ScreenX1-ScreenX0) * Graphics()->ScreenWidth();
 	float FinalTilesetScale = FinalTileSize/TilePixelSize;
 
+	float r=1, g=1, b=1, a=1;
+	if(ColorEnv >= 0)
+	{
+		float aChannels[4];
+		pfnEval(ColorEnvOffset/1000.0f, ColorEnv, aChannels, pUser);
+		r = aChannels[0];
+		g = aChannels[1];
+		b = aChannels[2];
+		a = aChannels[3];
+	}
+
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+	Graphics()->SetColor(Color.r*r, Color.g*g, Color.b*b, Color.a*a);
 
 	int StartY = (int)(ScreenY0/Scale)-1;
 	int StartX = (int)(ScreenX0/Scale)-1;

@@ -24,7 +24,7 @@ public:
 		int m_Country;
 		int m_Score;
 		bool m_Player;
-		
+
 		int m_FriendState;
 	};
 

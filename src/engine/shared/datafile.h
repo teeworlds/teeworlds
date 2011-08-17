@@ -61,16 +61,24 @@ class CDataFileWriter
 		int m_Last;
 	};
 
+	enum
+	{
+		MAX_ITEM_TYPES=0xffff,
+		MAX_ITEMS=1024,
+		MAX_DATAS=1024,
+	};
+
 	IOHANDLE m_File;
 	int m_NumItems;
 	int m_NumDatas;
 	int m_NumItemTypes;
-	CItemTypeInfo m_aItemTypes[0xffff];
-	CItemInfo m_aItems[1024];
-	CDataInfo m_aDatas[1024];
+	CItemTypeInfo *m_pItemTypes;
+	CItemInfo *m_pItems;
+	CDataInfo *m_pDatas;
 
 public:
-	CDataFileWriter() : m_File(0) {}
+	CDataFileWriter();
+	~CDataFileWriter();
 	bool Open(class IStorage *pStorage, const char *Filename);
 	int AddData(int Size, void *pData);
 	int AddDataSwapped(int Size, void *pData);

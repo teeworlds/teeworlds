@@ -128,6 +128,7 @@ public:
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 
 	virtual int* GetIdMap(int ClientID) = 0;
+	virtual void DemoRecorder_HandleAutoStart() = 0;
 };
 
 class IGameServer : public IInterface

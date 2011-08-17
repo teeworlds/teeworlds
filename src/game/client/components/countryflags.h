@@ -12,9 +12,10 @@ public:
 	struct CCountryFlag
 	{
 		int m_CountryCode;
+		char m_aCountryCodeString[8];
 		int m_Texture;
 
-		bool operator<(const CCountryFlag &Other) { return m_CountryCode < Other.m_CountryCode; }
+		bool operator<(const CCountryFlag &Other) { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
 
 	void OnInit();

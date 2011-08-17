@@ -25,6 +25,8 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Color.g = 255;
 	m_Color.b = 255;
 	m_Color.a = 255;
+	m_ColorEnv = -1;
+	m_ColorEnvOffset = 0;
 
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -62,7 +64,8 @@ void CLayerTiles::Render()
 		m_TexID = m_pEditor->m_Map.m_lImages[m_Image]->m_TexID;
 	Graphics()->TextureSet(m_TexID);
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT,
+												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -360,7 +363,7 @@ void CLayerTiles::ShowInfo()
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
-	
+
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer != this)
 	{
@@ -370,7 +373,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 			if(m_pEditor->DoButton_Editor(&s_AutoMapperButton, "Auto map", 0, &Button, 0, ""))
 				m_pEditor->PopupSelectConfigAutoMapInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
-			
+
 			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
 			if(Result > -1)
 			{
@@ -412,6 +415,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		PROP_SHIFT,
 		PROP_IMAGE,
 		PROP_COLOR,
+		PROP_COLOR_ENV,
+		PROP_COLOR_ENV_OFFSET,
 		NUM_PROPS,
 	};
 
@@ -427,6 +432,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{"Shift", 0, PROPTYPE_SHIFT, 0, 0},
 		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
 		{"Color", Color, PROPTYPE_COLOR, 0, 0},
+		{"Color Env", m_ColorEnv+1, PROPTYPE_INT_STEP, 0, m_pEditor->m_Map.m_lEnvelopes.size()+1},
+		{"Color TO", m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{0},
 	};
 
@@ -465,6 +472,22 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.b = (NewVal>>8)&0xff;
 		m_Color.a = NewVal&0xff;
 	}
+	if(Prop == PROP_COLOR_ENV)
+	{
+		int Index = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
+		int Step = (Index-m_ColorEnv)%2;
+		if(Step != 0)
+		{
+			for(; Index >= -1 && Index < m_pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
+				if(Index == -1 || m_pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
+				{
+					m_ColorEnv = Index;
+					break;
+				}
+		}
+	}
+	if(Prop == PROP_COLOR_ENV_OFFSET)
+		m_ColorEnvOffset = NewVal;
 
 	return 0;
 }

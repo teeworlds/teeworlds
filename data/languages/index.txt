@@ -1,6 +1,10 @@
 
 ##### language indices #####
 
+belarusian
+== Беларуская
+== 112
+
 bosnian
 == Bosanski
 == 70
@@ -36,6 +40,10 @@ french
 german
 == Deutsch
 == 276
+
+hungarian
+== Magyar
+== 348
 
 italian
 == Italiano
