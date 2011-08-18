@@ -77,7 +77,7 @@
 
 
 /* use gcc endianness definitions when available */
-#if defined(__GNUC__) && !defined(__APPLE__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__MINGW32__)
 	#if defined(__FreeBSD__) || defined(__OpenBSD__)
 		#include <sys/endian.h>
 	#else
