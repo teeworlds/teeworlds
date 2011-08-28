@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d Bytes
@@ -50,10 +50,10 @@ Alpha
 == Alfa
 
 Always show name plates
-== İsim etiketlerini herzaman göster
+== Oyuncu İsimlerini Her Zaman Göster
 
 Are you sure that you want to delete the demo?
-== Bu demo dosyasını silmek istediğinize eminmisiniz?
+== Demo dosyasını silmek istediğinize eminmisiniz?
 
 Are you sure that you want to quit?
 == Çıkmak istediğinize eminmisiniz?
@@ -62,7 +62,7 @@ Are you sure that you want to remove the player from your friends list?
 == Bu oyuncuyu arkadaş listenizden kaldırmak istediğinize emin misiniz?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Oyunu ilk açışınız olduğundan takma adınızı giriniz. Bir oyuna katılmadan evvel ayarlara bakmanız ve isteğinize göre özelleştirmeniz önerilir.
+== Oyunu ilk açışınız olduğundan takma adınızı giriniz. Bir oyuna katılmadan önce ayarları incelemeniz ve isteklerinize göre özelleştirmeniz önerilir.
 
 Automatically record demos
 == Otomatik olarak demo kaydet
@@ -125,7 +125,7 @@ Crc:
 == Crc :
 
 Created:
-== Hazırlandı :
+== Yaratıldı :
 
 Current
 == Şimdiki
@@ -224,7 +224,7 @@ Game type
 == Oyun türü
 
 Game types:
-== Oyun türü:
+== Oyun türleri:
 
 General
 == Genel
@@ -410,7 +410,7 @@ Quick search:
 == Hızlı Arama :
 
 Quit
-== Çıkmak
+== Çıkış
 
 Quit anyway?
 == Çıkmak istediğinize emin misiniz?
@@ -455,13 +455,13 @@ Reset filter
 == Filitreleri varsayılanlara getir
 
 Reset to defaults
-== Réinitialiser
+== Varsayılanlara getir
 
 Rifle
-== Laser
+== Lazer
 
 Round
-== Round
+== Raund
 
 Sample rate
 == Sample rate
@@ -515,7 +515,7 @@ Show ingame HUD
 == Oyun içi HUD ı göster
 
 Show name plates
-== İsim etiketlerini göster
+== Oyuncu isimlerini göster
 
 Show only supported
 == Desteklenmeyen çözünürlükleri gizle
@@ -626,10 +626,10 @@ Vote description:
 == Açıklama :
 
 Vote no
-== Hayır oyu ver
+== Olumsuz oy ver
 
 Vote yes
-== Evet oyu ver
+== Olumlu oy ver
 
 Voting
 == Oylama
@@ -641,7 +641,7 @@ Weapon
 == Silah
 
 Welcome to Teeworlds
-== Teeworlds'e hoşgeldin
+== Teeworlds'e hoşgeldiniz
 
 Yes
 == Evet
@@ -650,30 +650,32 @@ You must restart the game for all settings to take effect.
 == Bütün ayarların aktif olması için oyunu yeniden başlatmalısınız.
 
 Your skin
-== Your skin
+== Sizin görünüşünüz
 
 no limit
 == limit yok
 
-##### needs translation #####
-
 Demofile: %s
-== 
+== Demo dosyası
 
 Play background music
-== 
+== Arkaplan müziğini çal
+
+Player country:
+== Oyuncu ülkesi
 
 Player country:
 == 
 
 Spectate next
-== 
+== Sıradakini izle
 
 Spectate previous
-== 
+== Öncekini izle
 
 Strict gametype filter
-== 
+== Sıkı oyun türü filtresi 
 
+#### needs translation #####
 ##### old translations #####
 
