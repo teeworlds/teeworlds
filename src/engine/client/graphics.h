@@ -3,6 +3,8 @@
 #ifndef ENGINE_CLIENT_GRAPHICS_H
 #define ENGINE_CLIENT_GRAPHICS_H
 
+#include <engine/loader_help.h>
+
 class CGraphics_OpenGL : public IEngineGraphics
 {
 protected:
@@ -50,6 +52,29 @@ protected:
 
 	int m_InvalidTexture;
 
+	struct CTextureLoad
+	{
+		unsigned m_Id;
+		CImageInfo m_Info;
+	};
+
+	class CCreateTextureJobInfo
+	{
+	public:
+		CGraphics_OpenGL *m_pGL;
+
+		unsigned m_Version;
+
+		const char *m_pFilename;
+
+		void *m_pPngData;
+		unsigned m_PngDataSize;
+
+		CTextureLoad m_TextureLoadInfo;
+	};
+
+	TRingBufferMWSR<CTextureLoad, 512> m_TextureLoads;
+
 	struct CTexture
 	{
 		GLuint m_Tex;
@@ -57,6 +82,8 @@ protected:
 		int m_Flags;
 		int m_Next;
 	};
+
+
 
 	CTexture m_aTextures[MAX_TEXTURES];
 	int m_FirstFreeTexture;
@@ -68,7 +95,15 @@ protected:
 
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
 	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
+
+
+	static int Job_CreateTexture_LoadFile(class CJobHandler *pJobHandler, void *pData);
+	static int Job_CreateTexture_ParsePNG(class CJobHandler *pJobHandler, void *pData);
+
+	int GetTextureSlot();
+	int LoadTextureRawToSlot(int Slot, int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 public:
+
 	CGraphics_OpenGL();
 
 	virtual void ClipEnable(int x, int y, int w, int h);

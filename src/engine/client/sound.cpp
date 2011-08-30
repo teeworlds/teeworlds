@@ -25,6 +25,7 @@ enum
 
 struct CSample
 {
+	int m_InUse;
 	short *m_pData;
 	int m_NumFrames;
 	int m_Rate;
@@ -265,8 +266,11 @@ int CSound::AllocID()
 	// TODO: linear search, get rid of it
 	for(unsigned SampleID = 0; SampleID < NUM_SAMPLES; SampleID++)
 	{
-		if(m_aSamples[SampleID].m_pData == 0x0)
+		if(m_aSamples[SampleID].m_InUse == 0)
+		{
+			m_aSamples[SampleID].m_InUse = 1;
 			return SampleID;
+		}
 	}
 
 	return -1;
@@ -315,8 +319,148 @@ int CSound::ReadData(void *pBuffer, int Size)
 	return io_read(ms_File, pBuffer, Size);
 }
 
+int64 SoundLoadTime = 0;
+
+int CSound::Job_LoadSound_LoadFile(CJobHandler *pJobHandler, void *pData)
+{
+	SLoadSoundJobInfo *pInfo = reinterpret_cast<SLoadSoundJobInfo*>(pData);
+	//dbg_msg("job", "Job_CreateTexture_LoadFile %s", pInfo->m_pFilename);
+	int r = Helper_LoadFile(pInfo->m_pFilename, &pInfo->m_pWVData, &pInfo->m_WVDataSize);
+	if(r)
+	{
+		dbg_msg("", "Sound load fail, %s", pInfo->m_pFilename);
+		return r;
+	}
+	pJobHandler->Kick(0, Job_LoadSound_ParseWV, pData);
+	return 0;
+}
+
+// Ugly TLS solution
+__thread char *gt_pWVData;
+__thread int gt_WVDataSize;
+static int ThreadReadData(void *pBuffer, int ChunkSize)
+{
+	if(ChunkSize > gt_WVDataSize)
+		ChunkSize = gt_WVDataSize;
+	mem_copy(pBuffer, gt_pWVData, ChunkSize);
+	gt_pWVData += ChunkSize;
+	gt_WVDataSize -= ChunkSize;
+	return ChunkSize;
+}
+
+int CSound::Job_LoadSound_ParseWV(CJobHandler *pJobHandler, void *pData)
+{
+	SLoadSoundJobInfo *pInfo = reinterpret_cast<SLoadSoundJobInfo*>(pData);
+	//dbg_msg("job", "Job_CreateTexture_ParsePNG %s", pInfo->m_pFilename);
+	//int r = Helper_LoadPNG(pInfo->m_pPngData, pInfo->m_PngDataSize, &pInfo->m_TextureLoadInfo.m_Info);
+	char aError[100];
+	gt_pWVData = (char*)pInfo->m_pWVData;
+	gt_WVDataSize = pInfo->m_WVDataSize;
+	WavpackContext *pContext = WavpackOpenFileInput(ThreadReadData, aError);
+	if (pContext)
+	{
+		CSample *pSample = &m_aSamples[pInfo->m_Id];
+
+		int NumSamples = WavpackGetNumSamples(pContext);
+		int BitsPerSample = WavpackGetBitsPerSample(pContext);
+		unsigned int SampleRate = WavpackGetSampleRate(pContext);
+		int NumChannels = WavpackGetNumChannels(pContext);
+
+		if(NumChannels > 2)
+		{
+			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pInfo->m_pFilename);
+			return -1;
+		}
+
+		/*
+		if(snd->rate != 44100)
+		{
+			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
+			return -1;
+		}*/
+
+		if(BitsPerSample != 16)
+		{
+			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pInfo->m_pFilename);
+			return -1;
+		}
+
+		short *pFinalData = (short *)mem_alloc(2*NumSamples*NumChannels, 1);
+
+		{
+			int *pTmpData = (int *)mem_alloc(4*NumSamples*NumChannels, 1);
+			WavpackUnpackSamples(pContext, pTmpData, NumSamples); // TODO: check return value
+
+			// convert int32 to int16
+			{
+				int *pSrc = pTmpData;
+				short *pDst = pFinalData;
+				for(int i = 0; i < NumSamples*NumChannels; i++)
+					*pDst++ = (short)*pSrc++;
+			}
+
+			mem_free(pTmpData);
+		}
+
+		pSample->m_Channels = NumChannels;
+		pSample->m_Rate = SampleRate;
+		pSample->m_LoopStart = -1;
+		pSample->m_LoopEnd = -1;
+		pSample->m_PausedAt = 0;
+		pSample->m_pData = pFinalData;
+		sync_barrier(); // make sure that all parameters are written before we say how large it is
+		pSample->m_NumFrames = NumSamples;
+	}
+	else
+	{
+		dbg_msg("sound/wv", "failed to open %s: %s", pInfo->m_pFilename, aError);
+	}
+
+	//if(g_Config.m_Debug)
+	//	dbg_msg("sound/wv", "loaded %s", pFilename);
+
+	//RateConvert(SampleID);
+
+	int r = 1;
+	if(r)
+		return r;
+
+	//pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
+	return 0;
+}
+
 int CSound::LoadWV(const char *pFilename)
 {
+#if 1
+	SLoadSoundJobInfo *pInfo = g_JobHandler.AllocJobData<SLoadSoundJobInfo>();
+	pInfo->m_pSound = this;
+
+	// TODO: file io shouldn't be done here
+	char aCompleteFilename[512];
+	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
+	if(File)
+		io_close(File);
+	else
+		return -1;
+
+	int SampleID = AllocID();
+	if(SampleID < 0)
+		return -1;
+
+	int l = str_length(aCompleteFilename)+1;
+	char *pStr = (char *)mem_alloc(l, sizeof(void*));
+	pInfo->m_pFilename = pStr;
+	mem_copy(pStr, aCompleteFilename, l);
+
+	pInfo->m_Id = SampleID;
+	CSample *pSample = &m_aSamples[SampleID];
+	mem_zero(pSample, sizeof(*pSample));
+
+	g_JobHandler.Kick(0, Job_LoadSound_LoadFile, pInfo);
+
+	return SampleID;
+			
+#else
 	CSample *pSample;
 	int SampleID = -1;
 	char aError[100];
@@ -339,6 +483,8 @@ int CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
 		return -1;
 	}
+
+	int64 StartTime = time_get();
 
 	SampleID = AllocID();
 	if(SampleID < 0)
@@ -408,7 +554,13 @@ int CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
 	RateConvert(SampleID);
+
+
+	SoundLoadTime += time_get() - StartTime;
+	dbg_msg("", "sound: %d", (int)((SoundLoadTime*1000)/time_freq()));
+
 	return SampleID;
+#endif
 }
 
 void CSound::SetListenerPos(float x, float y)

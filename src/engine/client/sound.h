@@ -4,11 +4,27 @@
 #define ENGINE_CLIENT_SOUND_H
 
 #include <engine/sound.h>
+#include <engine/loader.h>
 
 class CSound : public IEngineSound
 {
 	int m_SoundEnabled;
 
+	struct SLoadSoundJobInfo
+	{
+		CSound *m_pSound;
+		int m_Id;
+
+		const char *m_pFilename;
+		void *m_pWVData;
+		unsigned m_WVDataSize;
+
+		void *m_pWaveData;
+		unsigned m_WaveDataSize;
+	};
+
+	static int Job_LoadSound_LoadFile(CJobHandler *pJobHandler, void *pData);
+	static int Job_LoadSound_ParseWV(CJobHandler *pJobHandler, void *pData);
 public:
 	IEngineGraphics *m_pGraphics;
 	IStorage *m_pStorage;
