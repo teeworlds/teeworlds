@@ -492,7 +492,7 @@ int CGraphics_OpenGL::Job_CreateTexture_ParsePNG(CJobHandler *pJobHandler, void 
 	int r = Helper_LoadPNG(pInfo->m_pPngData, pInfo->m_PngDataSize, &pInfo->m_TextureLoadInfo.m_Info);
 	if(r)
 		return r;
-	pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
+	pInfo->m_pGL->m_TextureLoads.push(pInfo->m_TextureLoadInfo);
 	return 0;
 }
 
@@ -1059,11 +1059,10 @@ void CGraphics_SDL::Swap()
 {
 	// TODO: move this
 	{
-		while(m_TextureLoads.Next())
+		while(m_TextureLoads.size())
 		{
-			CTextureLoad *pLoad = m_TextureLoads.Next();
-			LoadTextureRawToSlot(pLoad->m_Id, pLoad->m_Info.m_Width, pLoad->m_Info.m_Height, pLoad->m_Info.m_Format, pLoad->m_Info.m_pData, pLoad->m_Info.m_Format, 0);
-			m_TextureLoads.Pop();
+			CTextureLoad Load = m_TextureLoads.pop();
+			LoadTextureRawToSlot(Load.m_Id, Load.m_Info.m_Width, Load.m_Info.m_Height, Load.m_Info.m_Format, Load.m_Info.m_pData, Load.m_Info.m_Format, 0);
 		}
 	}
 

@@ -3,7 +3,7 @@
 #ifndef ENGINE_CLIENT_GRAPHICS_H
 #define ENGINE_CLIENT_GRAPHICS_H
 
-#include <engine/loader_help.h>
+#include <base/tl/ringbuffer.h>
 
 class CGraphics_OpenGL : public IEngineGraphics
 {
@@ -73,7 +73,7 @@ protected:
 		CTextureLoad m_TextureLoadInfo;
 	};
 
-	TRingBufferMWSR<CTextureLoad, 512> m_TextureLoads;
+	ringbuffer_mwsr<CTextureLoad, 512> m_TextureLoads;
 
 	struct CTexture
 	{

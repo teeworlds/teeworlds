@@ -1,6 +1,6 @@
 #include "kernel.h"
 
-#include "loader_help.h"
+#include <base/tl/ringbuffer.h>
 
 class CJobHandler
 {
@@ -35,7 +35,7 @@ public:
 
 		volatile unsigned m_WorkerCount;
 		unsigned m_MaxWorkers;
-		TRingBufferSWSR<COrder, 1024> m_Orders;
+		ringbuffer_swsr<COrder, 1024> m_Orders;
 	};
 
 	enum

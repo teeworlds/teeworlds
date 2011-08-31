@@ -22,7 +22,7 @@ void CJobHandler::Kick(int QueueId, FJob pfnJob, void *pData)
 	
 	{
 		scope_lock locker(&m_Lock); // TODO: ugly lock
-		m_aQueues[QueueId].m_Orders.Push(&Order);
+		m_aQueues[QueueId].m_Orders.push(Order);
 		sync_barrier();
 	}
 
@@ -46,10 +46,9 @@ void CJobHandler::WorkerThread(void *pUser)
 			scope_lock locker(&pJobHandler->m_Lock); // TODO: ugly lock
 			for(int i = 0; i < NUM_QUEUES; i++)
 			{
-				if(pJobHandler->m_aQueues[i].m_WorkerCount < pJobHandler->m_aQueues[i].m_MaxWorkers && pJobHandler->m_aQueues[i].m_Orders.NumElements())
+				if(pJobHandler->m_aQueues[i].m_WorkerCount < pJobHandler->m_aQueues[i].m_MaxWorkers && pJobHandler->m_aQueues[i].m_Orders.size())
 				{
-					mem_copy(&Order, pJobHandler->m_aQueues[i].m_Orders.Next(), sizeof(COrder));
-					pJobHandler->m_aQueues[i].m_Orders.Pop();
+					Order = pJobHandler->m_aQueues[i].m_Orders.pop();
 					pJobHandler->m_aQueues[i].m_WorkerCount++;
 					QueueId = i;
 					break;
@@ -74,50 +73,8 @@ void CJobHandler::WorkerThread(void *pUser)
 		}
 
 		atomic_inc(&pJobHandler->m_WorkTurns);
-	}	
+	}
 }
-
-
-#if 0
-class lock
-{
-	friend class scope_lock;
-
-	LOCK var;
-
-	void take() { lock_wait(var); }
-	void release() { lock_release(var); }
-
-public:
-	lock()
-	{
-		var = lock_create();
-	}
-
-	~lock()
-	{
-		lock_destroy(var);
-	}
-};
-
-class scope_lock
-{
-	lock *var;
-public:
-	scope_lock(lock *l)
-	{
-		var = l;
-		var->take();
-	}
-
-	~scope_lock()
-	{
-		var->release();
-	}
-		
-};
-
-#endif
 
 /*
 	Behaviours:
@@ -125,7 +82,7 @@ public:
 */
 class CLoader : public ILoader
 {
-	TRingBufferMWSR<CRequest,1024> m_Queue;
+	ringbuffer_mwsr<CRequest,1024> m_Queue;
 	semaphore m_Semaphore;
 
 	class CHandlerEntry
@@ -184,7 +141,7 @@ class CLoader : public ILoader
 	{
 		CRequest Request;
 		Request.m_Id = pResource->m_Id;
-		m_Queue.Push(&Request);
+		m_Queue.push(Request);
 		m_Semaphore.signal();
 	}
 
@@ -253,29 +210,29 @@ private:
 			m_Semaphore.wait();
 
 			// handle a request
-			CRequest *pRequest = 0;
-			while((pRequest = m_Queue.Next()) != 0)
+			while(m_Queue.size())
 			{
-				if(LoadResource(pRequest))
+				CRequest Request = m_Queue.pop();
+				if(LoadResource(&Request))
 				{
 					scope_lock locker(&m_Lock);
 
 					// dig out the resource, it might be deleted while we loaded it
-					IResource *pResource = FindResource(pRequest->m_Id);
+					IResource *pResource = FindResource(Request.m_Id);
 					if(pResource)
 					{
 						// do callback?
 						// find handler
 						for(int i = 0; i < m_lHandlers.size(); i++)
-							if(m_lHandlers[i].m_Type == pRequest->m_Id.m_Type)
+							if(m_lHandlers[i].m_Type == Request.m_Id.m_Type)
 							{
-								m_lHandlers[i].m_pHandler->Handle(pResource, pRequest);
+								m_lHandlers[i].m_pHandler->Handle(pResource, &Request);
 								break;
 							}
 					}
 					
 					// free request
-					mem_free(pRequest->m_pData);
+					mem_free(Request.m_pData);
 				}
 				else
 				{
