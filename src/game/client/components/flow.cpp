@@ -1,8 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <game/mapitems.h>
 #include <game/layers.h>
+#include "camera.h"
 #include "flow.h"
 
 CFlow::CFlow()
@@ -40,7 +42,7 @@ void CFlow::DbgRender()
 	Graphics()->LinesEnd();
 }
 
-void CFlow::Init()
+void CFlow::OnReset()
 {
 	if(m_pCells)
 	{
@@ -49,6 +51,9 @@ void CFlow::Init()
 	}
 
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
+	if(!pTilemap)
+		return;
+
 	m_Width = pTilemap->m_Width*32/m_Spacing;
 	m_Height = pTilemap->m_Height*32/m_Spacing;
 
@@ -56,17 +61,25 @@ void CFlow::Init()
 	m_pCells = (CCell *)mem_alloc(sizeof(CCell)*m_Width*m_Height, 1);
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			m_pCells[y*m_Width+x].m_Vel = vec2(0.0f, 0.0f);
+			m_pCells[y*m_Width+x].m_Vel = vec2(0,0);
 }
 
 void CFlow::Update()
 {
-	if(!m_pCells)
+	if(!m_pCells || !g_Config.m_ClRenderFLow)
 		return;
 
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
+	int StartY, StartX, EndY, EndX;
+	GetWindow(&StartY, &StartX, &EndY, &EndX);
+
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			if(y < 0 || y >= m_Height || x < 0 || x >= m_Width)
+				continue;
+
 			m_pCells[y*m_Width+x].m_Vel *= 0.85f;
+		}
 }
 
 vec2 CFlow::Get(vec2 Pos)
@@ -74,9 +87,12 @@ vec2 CFlow::Get(vec2 Pos)
 	if(!m_pCells)
 		return vec2(0,0);
 
+	int StartY, StartX, EndY, EndX;
+	GetWindow(&StartY, &StartX, &EndY, &EndX);
+
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
-	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
+	if(x < StartX || y < StartY || x >= EndX || y >= EndY)
 		return vec2(0,0);
 
 	return m_pCells[y*m_Width+x].m_Vel;
@@ -84,13 +100,29 @@ vec2 CFlow::Get(vec2 Pos)
 
 void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 {
-	if(!m_pCells)
+	if(!m_pCells || !g_Config.m_ClRenderFLow)
 		return;
+
+	int StartY, StartX, EndY, EndX;
+	GetWindow(&StartY, &StartX, &EndY, &EndX);
 
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
-	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
+	if(x < StartX || y < StartY || x >= EndX || y >= EndY)
 		return;
 
 	m_pCells[y*m_Width+x].m_Vel += Vel;
+}
+
+void CFlow::GetWindow(int *StartY, int *StartX, int *EndY, int *EndX)
+{
+	float Points[4];
+	vec2 Center = m_pClient->m_pCamera->m_Center;
+	RenderTools()->MapscreenToWorld(Center.x, Center.y, 1.0f, 1.0f,
+		0.0f, 0.0f, Graphics()->ScreenAspect(), m_pClient->m_pCamera->m_Zoom, Points);
+
+	*StartY = clamp((int)(Points[1]/m_Spacing)-1, 0, m_Height);
+	*StartX = clamp((int)(Points[0]/m_Spacing)-1, 0, m_Width);
+	*EndY = clamp((int)(Points[3]/m_Spacing)+1, 0, m_Height);
+	*EndX = clamp((int)(Points[2]/m_Spacing)+1, 0, m_Width);
 }

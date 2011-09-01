@@ -67,7 +67,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
 		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
-		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
+		m_pClient->m_pFlow->Add(PrevPos, Vel*800, 10.0f);
 
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		{
@@ -88,7 +88,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	else
 	{
 		m_pClient->m_pEffects->BulletTrail(Pos);
-		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
+		m_pClient->m_pFlow->Add(PrevPos, Vel*800, 10.0f);
 
 		if(length(Vel) > 0.00001f)
 			Graphics()->QuadsSetRotation(GetAngle(Vel));

@@ -18,7 +18,7 @@ struct CParticle
 		m_Rotspeed = 0;
 		m_Gravity = 0;
 		m_Friction = 0;
-		m_FlowAffected = 0.0f;
+		m_FlowAffected = 1.0f;
 		m_Color = vec4(1,1,1,1);
 	}
 
@@ -63,7 +63,6 @@ public:
 	CParticles();
 
 	void Add(int Group, CParticle *pPart);
-	void AddExplosion(vec2 Pos);
 
 	virtual void OnReset();
 	virtual void OnRender();
@@ -90,11 +89,6 @@ private:
 		CParticles *m_pParts;
 		virtual void OnRender() { m_pParts->RenderGroup(TGROUP); }
 	};
-
-	vec2 m_aExplosionPos[MAX_PROJECTILES];
-	int m_ExplosionCount;
-	
-	void ResetExplosions();
 	
 	CRenderGroup<GROUP_PROJECTILE_TRAIL> m_RenderTrail;
 	CRenderGroup<GROUP_EXPLOSIONS> m_RenderExplosions;

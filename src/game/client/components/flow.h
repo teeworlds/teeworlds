@@ -18,9 +18,12 @@ class CFlow : public CComponent
 	int m_Spacing;
 
 	void DbgRender();
-	void Init();
 public:
 	CFlow();
+
+	virtual void OnReset();
+
+	void GetWindow(int *StartY, int *StartX, int *EndY, int *EndX);
 
 	vec2 Get(vec2 Pos);
 	void Add(vec2 Pos, vec2 Vel, float Size);

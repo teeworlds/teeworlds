@@ -38,6 +38,7 @@ void CEffects::AirJump(vec2 Pos)
 	p.m_Rotspeed = pi*2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.7f;
+	p.m_FlowAffected = 0.0f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
 	p.m_Pos = Pos + vec2(6.0f, 16.0f);
@@ -107,8 +108,8 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 	p.m_EndSize = 0;
 	p.m_Friction = 0.7f;
 	p.m_Gravity = frandom()*-500.0f;
-	p.m_FlowAffected = 0.75f;
 	p.m_Color = vec4(0.75f,0.75f,0.75f,1.0f);
+	p.m_FlowAffected = 0.85f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
@@ -125,7 +126,7 @@ void CEffects::BulletTrail(vec2 Pos)
 	p.m_StartSize = 8.0f;
 	p.m_EndSize = 0;
 	p.m_Friction = 0.7f;
-	p.m_FlowAffected = 0.75f;
+	p.m_FlowAffected = 0.85f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_PROJECTILE_TRAIL, &p);
 }
 
@@ -146,6 +147,7 @@ void CEffects::PlayerSpawn(vec2 Pos)
 		p.m_Gravity = frandom()*-400.0f;
 		p.m_Friction = 0.7f;
 		p.m_Color = vec4(0xb5/255.0f, 0x50/255.0f, 0xcb/255.0f, 1.0f);
+		p.m_FlowAffected = 0.65f;
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
 	}
@@ -185,9 +187,9 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 		p.m_Rotspeed = (frandom()-0.5f) * pi;
 		p.m_Gravity = 800.0f;
 		p.m_Friction = 0.8f;
-		p.m_FlowAffected = 0.75f;
 		vec3 c = BloodColor * (0.75f + frandom()*0.25f);
 		p.m_Color = vec4(c.r, c.g, c.b, 0.75f);
+		p.m_FlowAffected = 0.85f;
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	}
 }
@@ -216,7 +218,6 @@ void CEffects::Explosion(vec2 Pos)
 	p.m_EndSize = 0;
 	p.m_Rot = frandom()*pi*2;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
-	m_pClient->m_pParticles->AddExplosion(Pos);
 
 	// add the smoke
 	for(int i = 0; i < 24; i++)
@@ -231,7 +232,6 @@ void CEffects::Explosion(vec2 Pos)
 		p.m_EndSize = 0;
 		p.m_Gravity = frandom()*-800.0f;
 		p.m_Friction = 0.4f;
-		p.m_FlowAffected = 0.7f;
 		p.m_Color = mix(vec4(0.75f,0.75f,0.75f,1.0f), vec4(0.5f,0.5f,0.5f,1.0f), frandom());
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	}

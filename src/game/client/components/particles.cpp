@@ -8,6 +8,7 @@
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
 #include <game/gamecore.h>
+#include "flow.h"
 #include "particles.h"
 
 CParticles::CParticles()
@@ -34,8 +35,6 @@ void CParticles::OnReset()
 
 	for(int i = 0; i < NUM_GROUPS; i++)
 		m_aFirstPart[i] = -1;
-	
-	ResetExplosions();
 }
 
 void CParticles::Add(int Group, CParticle *pPart)
@@ -69,18 +68,6 @@ void CParticles::Add(int Group, CParticle *pPart)
 	// set some parameters
 	m_aParticles[Id].m_Life = 0;
 }
-
-void CParticles::AddExplosion(vec2 Pos)
-{
-	if(m_ExplosionCount != MAX_PROJECTILES)
-		m_aExplosionPos[m_ExplosionCount++] = Pos;
-}
-
-void CParticles::ResetExplosions()
-{
-	mem_zero(&m_aExplosionPos, sizeof(m_aExplosionPos));
-	m_ExplosionCount = 0;
-}
 	
 void CParticles::Update(float TimePassed)
 {
@@ -97,7 +84,6 @@ void CParticles::Update(float TimePassed)
 		FrictionFraction -= 0.05f;
 	}
 
-	float IntraTick = Client()->PredIntraGameTick();
 	int NumItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 	
 	for(int g = 0; g < NUM_GROUPS; g++)
@@ -106,79 +92,8 @@ void CParticles::Update(float TimePassed)
 		while(i != -1)
 		{
 			int Next = m_aParticles[i].m_NextPart;
-			
-			if(g_Config.m_ClRenderFLow && m_aParticles[i].m_FlowAffected)
-			{
-				// check against players
-				for(int j = 0; j < MAX_CLIENTS; j++)
-				{
-					if(!m_pClient->m_Snap.m_aCharacters[j].m_Active)
-						continue;
-					
-					CNetObj_Character *pCur = &m_pClient->m_Snap.m_aCharacters[j].m_Cur;
-					CNetObj_Character *pPrev = &m_pClient->m_Snap.m_aCharacters[j].m_Prev;
-					vec2 Position = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCur->m_X, pCur->m_Y), IntraTick);
-					vec2 Vel = mix(vec2(pPrev->m_VelX/256.0f, pPrev->m_VelY/256.0f), vec2(pCur->m_VelX/256.0f, pCur->m_VelY/256.0f), IntraTick);
-					float VelLength = clamp(length(Vel), 0.0f, 50.0f);
-					if(distance(Position, m_aParticles[i].m_Pos) < 28.0f)
-						m_aParticles[i].m_Vel += Vel*(((1-(VelLength/40.0f)*m_aParticles[i].m_FlowAffected))+0.05f)*TimePassed*500.0f;
-				}
-			
-				// check against explosions
-				for(int j = 0; j < m_ExplosionCount; j++)
-				{
-					float Distance = distance(m_aParticles[i].m_Pos, m_aExplosionPos[j]);
-					if(Distance < 82.0f && Distance > 0.0f)
-					{
-						vec2 Dir = normalize(m_aParticles[i].m_Pos-m_aExplosionPos[j]);
-						m_aParticles[i].m_Vel += Dir*500.0f*((82.0f-Distance)/82.0f)*TimePassed*500.0f;
-					}
-				}
-				
-				// check against projectiles
-				for(int j = 0; j < NumItems; j++)
-				{
-					IClient::CSnapItem Item;
-					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, j, &Item);
 
-					if(Item.m_Type == NETOBJTYPE_PROJECTILE)
-					{
-						const CNetObj_Projectile *pProj = (const CNetObj_Projectile *)pData;
-						
-						// get positions
-						float Curvature = 0;
-						float Speed = 0;
-						if(pProj->m_Type == WEAPON_GRENADE)
-						{
-							Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
-							Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
-						}
-						else if(pProj->m_Type == WEAPON_SHOTGUN)
-						{
-							Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
-							Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
-						}
-						else if(pProj->m_Type == WEAPON_GUN)
-						{
-							Curvature = m_pClient->m_Tuning.m_GunCurvature;
-							Speed = m_pClient->m_Tuning.m_GunSpeed;
-						}
-
-						float Ct = (Client()->PrevGameTick()-pProj->m_StartTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
-						if(Ct < 0)
-							return; // projectile havn't been shot yet
-						
-						vec2 StartPos(pProj->m_X, pProj->m_Y);
-						vec2 StartVel(pProj->m_VelX/100.0f, pProj->m_VelY/100.0f);
-						vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
-						vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
-						vec2 Vel = Pos-PrevPos;
-						if(distance(Pos, m_aParticles[i].m_Pos) < 16.0f)
-							m_aParticles[i].m_Vel += Vel*10.0f*m_aParticles[i].m_FlowAffected*TimePassed*500.0f;
-					}
-				}
-			}
-			
+			m_aParticles[i].m_Vel += m_pClient->m_pFlow->Get(m_aParticles[i].m_Pos)*TimePassed * m_aParticles[i].m_FlowAffected;
 			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
 
 			for(int f = 0; f < FrictionCount; f++) // apply friction
@@ -215,9 +130,6 @@ void CParticles::Update(float TimePassed)
 			i = Next;
 		}
 	}
-	
-	// reset explosion count
-	m_ExplosionCount = 0;
 }
 
 void CParticles::OnRender()
