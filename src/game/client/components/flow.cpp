@@ -5,6 +5,7 @@
 #include <game/mapitems.h>
 #include <game/layers.h>
 #include "camera.h"
+#include "effects.h"
 #include "flow.h"
 
 CFlow::CFlow()
@@ -100,7 +101,7 @@ vec2 CFlow::Get(vec2 Pos)
 
 void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 {
-	if(!m_pCells || !g_Config.m_ClRenderFLow)
+	if(!m_pCells || !g_Config.m_ClRenderFLow || !m_pClient->m_pEffects->FrameSync())
 		return;
 
 	int StartY, StartX, EndY, EndX;

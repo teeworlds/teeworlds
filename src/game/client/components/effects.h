@@ -25,5 +25,7 @@ public:
 	void PowerupShine(vec2 Pos, vec2 Size);
 
 	void Update();
+
+	bool FrameSync() { return m_Add100hz; }
 };
 #endif
