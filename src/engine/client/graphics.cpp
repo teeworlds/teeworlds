@@ -452,7 +452,7 @@ bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 {
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	CImageInfo *pInfo = &pTexture->m_ImageInfo;
-	//dbg_msg("graphics", "%d <- %s", pTexture->m_TexSlot, pResource->m_Id.m_pName);
+	dbg_msg("graphics", "inserting %s", pResource->m_Id.m_pName);
 	m_pGL->LoadTextureRawToResource(pTexture, pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
 	return true;
 }
@@ -460,6 +460,7 @@ bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 // simple uncompressed RGBA loaders
 IResource *CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
+	dbg_msg("graphics", "loading %s", pFilename);
 	return m_pResources->GetResource(pFilename);
 }
 

@@ -148,7 +148,14 @@ class CResources : public IResources
 			return 0x0;
 
 		IResource *pResource = pHandler->Create(Id);
-		pResource->m_Id = Id; // TODO: copy the string?
+		pResource->m_Id = Id;
+
+		// copy the name
+		int NameSize = str_length(pResource->m_Id.m_pName) + 1;
+		void *pName = mem_alloc(NameSize, sizeof(void*));
+		mem_copy(pName, Id.m_pName, NameSize);
+		pResource->m_Id.m_pName = (const char *)pName;
+
 		pResource->m_pHandler = pHandler;
 		LoadResource(pResource);
 		return pResource;

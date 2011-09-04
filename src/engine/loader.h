@@ -139,7 +139,18 @@ public:
 class IResource
 {
 public:
-	virtual ~IResource() {}
+	IResource()
+	{
+		mem_zero(&m_Id, sizeof(m_Id));
+	}
+
+	virtual ~IResource()
+	{
+		if(m_Id.m_pName)
+			mem_free((void*)m_Id.m_pName);
+		m_Id.m_pName = 0x0;
+	}
+
 	IResources::CResourceId m_Id;
 	IResources::IHandler *m_pHandler;
 
