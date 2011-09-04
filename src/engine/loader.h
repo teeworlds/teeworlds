@@ -46,7 +46,6 @@ public:
 	CJobHandler() { Init(4); }
 	void Init(int ThreadCount);
 	void ConfigureQueue(int QueueId, int MaxWorkers);
-	//void Kick(int QueueId, FJob pfnJob, void *pJobData, FJobDone pfnJobDone);
 
 	void *AllocJobData(unsigned DataSize) { return mem_alloc(DataSize, sizeof(void*)); }
 	template<typename T> T *AllocJobData() { return (T *)AllocJobData(sizeof(T)); }
@@ -58,7 +57,6 @@ public:
 	unsigned volatile m_WorkTurns;
 
 private:
-
 	CQueue m_aQueues[NUM_QUEUES];
 	semaphore m_Semaphore;
 	lock m_Lock; // TODO: bad performance, this lock can be removed and everything done with waitfree queues
@@ -74,52 +72,27 @@ extern int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pData
 	Behaviours:
 		* Handlers are called from the loader thread
 */
-class ILoader : public IInterface
+class IResources : public IInterface
 {
-	MACRO_INTERFACE("loader", 0)
+	MACRO_INTERFACE("resources", 0)
 public:
 	class IHandler;
-	class CRequest;
 	class IResource;
 
 	class CResourceId
 	{
 	public:
-		unsigned m_Type;
-		unsigned m_Hash;
+		unsigned m_ContentHash;
+		unsigned m_NameHash;
 		const char *m_pName;
 	};
 
-	class CRequest
+	// TODO: do we want this?
+	class CResourceLocator // TODO: haha, rename
 	{
+		int m_iHandler;
+		int m_Index;
 	public:
-		// input
-		CResourceId m_Id;
-
-		// output
-		void *m_pData;
-		long int m_DataSize;
-
-		// callbacks?
-		IHandler *m_pHandler;
-
-		CRequest()
-		{
-			mem_zero(this, sizeof(*this));
-		}
-
-		~CRequest()
-		{
-			FreeData();
-		}
-
-		void FreeData()
-		{
-			if(m_pData)
-				mem_free(m_pData);
-			m_pData = 0;
-			m_DataSize = 0;
-		}
 	};
 
 	class IResource
@@ -127,6 +100,16 @@ public:
 	public:
 		virtual ~IResource() {}
 		CResourceId m_Id;
+		IHandler *m_pHandler;
+
+		bool IsLoaded() const;
+
+
+		/*enum
+		{
+			FLAG_LOADING,
+			xFLAG_LOADED,
+		};*/
 
 		unsigned m_Flags;
 	};
@@ -134,31 +117,43 @@ public:
 	class IHandler
 	{
 	public:
+		virtual ~IHandler() {}
+
+		// called from the main thread
 		virtual IResource *Create(CResourceId Id) = 0;
-		virtual void Handle(IResource *pResource, CRequest *pRequest) = 0; // can be called from a separate thread
+
+		// called from job thread
+		virtual bool Load(IResource *pResource, void *pData, unsigned DataSize) = 0;
+
+		// called from the main thread
+		virtual bool Insert(IResource *pResource) = 0;
 	};
 
 
-	virtual ~ILoader() {}
+	virtual ~IResources() {}
 
-	virtual void AssignHandler(unsigned Type, IHandler *pHandler) = 0;
-	//virtual void QueueRequest(IResource *pResource) = 0;
+	virtual void AssignHandler(const char *pType, IHandler *pHandler) = 0;
+
+	virtual void Update() = 0;
 
 	virtual IResource *GetResource(CResourceId Id) = 0;
 
-	template<class T>
-	T *GetResource(const char *pName)
+	/*template<class T>*/
+	IResource *GetResource(const char *pName)
 	{
 		CResourceId Id;
-		Id.m_Type = T::RESOURCE_TYPE;
 		Id.m_pName = pName;
-		Id.m_Hash = 0;
-		return static_cast<T*>(GetResource(Id));
+		Id.m_NameHash = 0;
+		Id.m_ContentHash = 0;
+		return GetResource(Id);
 	}
 
+	//FetchResource(int Id)
+
+	static IResources *CreateInstance();
 };
+
+typedef IResources::IResource IResource;
 
 #define MACRO_RESOURCETYPE(a,b,c,d) ((a<<24) | (b<<16) | (c<<8) | d)
 #define DECLARE_RESOURCE(a,b,c,d) enum { RESOURCE_TYPE = MACRO_RESOURCETYPE(a,b,c,d) };
-
-extern ILoader *CreateLoader();

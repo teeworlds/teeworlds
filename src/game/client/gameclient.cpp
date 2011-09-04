@@ -10,6 +10,7 @@
 #include <engine/storage.h>
 #include <engine/sound.h>
 #include <engine/serverbrowser.h>
+#include <engine/loader.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 
@@ -106,6 +107,7 @@ void CGameClient::OnConsoleInit()
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
+	m_pResources = Kernel()->RequestInterface<IResources>();
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -128,15 +130,15 @@ void CGameClient::OnConsoleInit()
 	m_pItems = &::gs_Items;
 
 	// make a list of all the systems, make sure to add them in the corrent render order
-	m_All.Add(m_pSkins);
-	m_All.Add(m_pCountryFlags);
+	m_All.Add(m_pSkins);		// #0: 51ms load time
+	m_All.Add(m_pCountryFlags);	// #1: 142ms
 	m_All.Add(m_pMapimages);
 	m_All.Add(m_pEffects); // doesn't render anything, just updates effects
 	m_All.Add(m_pParticles);
 	m_All.Add(m_pBinds);
 	m_All.Add(m_pControls);
 	m_All.Add(m_pCamera);
-	m_All.Add(m_pSounds);
+	m_All.Add(m_pSounds);		// #8 300ms load time
 	m_All.Add(m_pVoting);
 	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
 
@@ -246,11 +248,31 @@ void CGameClient::OnInit()
 
 	// init all components
 	for(int i = m_All.m_Num-1; i >= 0; --i)
+	{
+		int64 Start = time_get();
 		m_All.m_paComponents[i]->OnInit();
+		int64 End = time_get();
+		dbg_msg("gameclient", "#%d %p = %.2fms", i, m_All.m_paComponents[i], ((End-Start)*1000)/(float)time_freq());
+	}
 
-	// setup load amount// load textures
+	// setup load amount
+	// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
+		// testing stuff
+		/*
+		IResources::CResourceId Id;
+		int Length = str_length(g_pData->m_aImages[i].m_pFilename);
+		if(Length)
+		{
+			void *pName = mem_alloc(Length+1, 1);
+			Id.m_pName = (char *)pName;
+			mem_copy(pName, g_pData->m_aImages[i].m_pFilename, Length+1);
+			Id.m_NameHash = 0;
+			Id.m_ContentHash = 0;
+			m_pResources->GetResource(Id);
+		}*/
+
 		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		g_GameClient.m_pMenus->RenderLoading();
 	}

@@ -202,6 +202,10 @@ int CSound::Init()
 	m_SoundEnabled = 0;
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pResources = Kernel()->RequestInterface<IResources>();
+
+	m_ResourceHandler.m_pSound = this;
+	m_pResources->AssignHandler("wv", &m_ResourceHandler);
 
 	SDL_AudioSpec Format;
 
@@ -319,7 +323,35 @@ int CSound::ReadData(void *pBuffer, int Size)
 	return io_read(ms_File, pBuffer, Size);
 }
 
+#if 0
 int64 SoundLoadTime = 0;
+
+int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pDataSize)
+{
+	// do search for reasource
+	IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
+	if(hFile == 0)
+	{
+		*ppData = 0;
+		*pDataSize = 0;
+		return -1;
+	}
+
+	*pDataSize = io_length(hFile);
+	*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
+	long int Result = io_read(hFile, *ppData, *pDataSize);
+	io_close(hFile);
+
+	if(Result != *pDataSize)
+	{
+		mem_free(*ppData);
+		*ppData = 0;
+		*pDataSize = 0;
+		return -2;
+	}
+	
+	return 0;
+}
 
 int CSound::Job_LoadSound_LoadFile(CJobHandler *pJobHandler, void *pData)
 {
@@ -428,10 +460,123 @@ int CSound::Job_LoadSound_ParseWV(CJobHandler *pJobHandler, void *pData)
 	//pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
 	return 0;
 }
+#endif
+
+IResources::IResource *CSound::CResourceHandler::Create(IResources::CResourceId Id)
+{
+	return new CResource_Sound(m_pSound->AllocID());
+}
+
+
+// Ugly TLS solution
+__thread char *gt_pWVData;
+__thread int gt_WVDataSize;
+static int ThreadReadData(void *pBuffer, int ChunkSize)
+{
+	if(ChunkSize > gt_WVDataSize)
+		ChunkSize = gt_WVDataSize;
+	mem_copy(pBuffer, gt_pWVData, ChunkSize);
+	gt_pWVData += ChunkSize;
+	gt_WVDataSize -= ChunkSize;
+	return ChunkSize;
+}
+
+bool CSound::CResourceHandler::Load(IResources::IResource *pResource, void *pData, unsigned DataSize)
+{
+	CResource_Sound *pSound = static_cast<CResource_Sound*>(pResource);
+
+	char aError[100];
+	gt_pWVData = (char*)pData;
+	gt_WVDataSize = DataSize;
+	WavpackContext *pContext = WavpackOpenFileInput(ThreadReadData, aError);
+	if (pContext)
+	{
+		CSample *pSample = &m_aSamples[pSound->m_Slot];
+
+		int NumSamples = WavpackGetNumSamples(pContext);
+		int BitsPerSample = WavpackGetBitsPerSample(pContext);
+		unsigned int SampleRate = WavpackGetSampleRate(pContext);
+		int NumChannels = WavpackGetNumChannels(pContext);
+
+		if(NumChannels > 2)
+		{
+			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pResource->m_Id.m_pName);
+			return -1;
+		}
+
+		/*
+		if(snd->rate != 44100)
+		{
+			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
+			return -1;
+		}*/
+
+		if(BitsPerSample != 16)
+		{
+			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pResource->m_Id.m_pName);
+			return -1;
+		}
+
+		short *pFinalData = (short *)mem_alloc(2*NumSamples*NumChannels, 1);
+
+		{
+			int *pTmpData = (int *)mem_alloc(4*NumSamples*NumChannels, 1);
+			WavpackUnpackSamples(pContext, pTmpData, NumSamples); // TODO: check return value
+
+			// convert int32 to int16
+			{
+				int *pSrc = pTmpData;
+				short *pDst = pFinalData;
+				for(int i = 0; i < NumSamples*NumChannels; i++)
+					*pDst++ = (short)*pSrc++;
+			}
+
+			mem_free(pTmpData);
+		}
+
+		// insert it directly, we don't need to wait for anything
+		pSample->m_Channels = NumChannels;
+		pSample->m_Rate = SampleRate;
+		pSample->m_LoopStart = -1;
+		pSample->m_LoopEnd = -1;
+		pSample->m_PausedAt = 0;
+		pSample->m_pData = pFinalData;
+		sync_barrier(); // make sure that all parameters are written before we say how large it is
+		pSample->m_NumFrames = NumSamples;
+	}
+	else
+	{
+		dbg_msg("sound/wv", "failed to open %s: %s", pResource->m_Id.m_pName, aError);
+	}
+
+	//if(g_Config.m_Debug)
+	//	dbg_msg("sound/wv", "loaded %s", pFilename);
+
+	//RateConvert(SampleID);
+
+	int r = 1;
+	if(r)
+		return r;
+
+	//pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
+	return 0;
+}
+
+bool CSound::CResourceHandler::Insert(IResources::IResource *pResource)
+{
+	// sounds can be inserted directly when they are loaded
+	return true;
+}
+
 
 int CSound::LoadWV(const char *pFilename)
 {
 #if 1
+	CResource_Sound *pSound = static_cast<CResource_Sound*>(m_pResources->GetResource(pFilename));
+	if(!pSound)
+		return -1;
+	return pSound->m_Slot;
+#elif 1
 	SLoadSoundJobInfo *pInfo = g_JobHandler.AllocJobData<SLoadSoundJobInfo>();
 	pInfo->m_pSound = this;
 

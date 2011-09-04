@@ -10,6 +10,7 @@ class CSound : public IEngineSound
 {
 	int m_SoundEnabled;
 
+	/*
 	struct SLoadSoundJobInfo
 	{
 		CSound *m_pSound;
@@ -22,10 +23,50 @@ class CSound : public IEngineSound
 		void *m_pWaveData;
 		unsigned m_WaveDataSize;
 	};
-
 	static int Job_LoadSound_LoadFile(CJobHandler *pJobHandler, void *pData);
 	static int Job_LoadSound_ParseWV(CJobHandler *pJobHandler, void *pData);
+	*/
+
+	class CResource_Sound : public IResources::IResource
+	{
+	public:
+		CResource_Sound(int Slot)
+		{
+			m_Slot = Slot;
+			//m_pWaveData = 0x0;
+			//m_WaveDataSize = 0;
+			//m_TexSlot = 0;
+			//mem_zero(&m_ImageInfo, sizeof(m_ImageInfo));
+		}
+
+		int m_Slot;
+		//void *m_pWaveData;
+		//unsigned m_WaveDataSize;
+
+
+
+		//GLuint m_TexId;
+		//int m_TexSlot;
+
+		// used for loading the texture
+		// TODO: should perhaps just be stored at load time
+		//CImageInfo m_ImageInfo;
+	};
+
+	class CResourceHandler : public IResources::IHandler
+	{
+	public:
+		CSound *m_pSound;
+		//static unsigned int PngReadFunc(void *pOutput, unsigned long size, unsigned long numel, void *pUserPtr);
+		virtual IResources::IResource *Create(IResources::CResourceId Id);
+		virtual bool Load(IResources::IResource *pResource, void *pData, unsigned DataSize);
+		virtual bool Insert(IResources::IResource *pResource);
+	};
+
+	CResourceHandler m_ResourceHandler;
+
 public:
+	IResources *m_pResources;
 	IEngineGraphics *m_pGraphics;
 	IStorage *m_pStorage;
 

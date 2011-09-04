@@ -1,6 +1,10 @@
 #include <base/system.h>
 #include <base/tl/array.h>
+
 #include <engine/loader.h>
+#include <engine/storage.h>
+
+CJobHandler g_JobHandler;
 
 void CJobHandler::Init(int ThreadCount)
 {
@@ -76,22 +80,17 @@ void CJobHandler::WorkerThread(void *pUser)
 	}
 }
 
-/*
-	Behaviours:
-		* Handlers are called from the loader thread
-*/
-class CLoader : public ILoader
+class CResources : public IResources
 {
-	ringbuffer_mwsr<CRequest,1024> m_Queue;
-	semaphore m_Semaphore;
+	//ringbuffer_mwsr<CRequest,1024> m_Queue;
+	//semaphore m_Semaphore;
 
 	class CHandlerEntry
 	{
 	public:
-		unsigned m_Type;
+		const char *m_pType;
 		IHandler *m_pHandler;
 	};
-
 	array<CHandlerEntry> m_lHandlers;
 
 	array<IResource*> m_lpResources;
@@ -99,150 +98,201 @@ class CLoader : public ILoader
 
 	IResource *FindResource(CResourceId Id)
 	{
-		// TODO: linear search, bad performance
+		// TODO: bad performance, linear search, string compares
 		// TODO: check hash as well if wanted
-		// TODO: string compares, bad performance
 		for(int i = 0; i < m_lpResources.size(); i++)
 		{
-			if(m_lpResources[i]->m_Id.m_Type == Id.m_Type && str_comp(m_lpResources[i]->m_Id.m_pName, Id.m_pName) == 0)
-			{
+			if(str_comp(m_lpResources[i]->m_Id.m_pName, Id.m_pName) == 0)
 				return m_lpResources[i];
-			}
 		}
 
 		return 0x0;
 	}
 
-	IHandler *FindHandler(unsigned Type)
+	IHandler *FindHandler(const char *pType)
 	{
-		// TODO: linear search, bad performance
+		// TODO: bad performance, linear search, string compares
 		for(int i = 0; i < m_lHandlers.size(); i++)
 		{
-			if(m_lHandlers[i].m_Type == Type)
+			if(str_comp(m_lHandlers[i].m_pType, pType) == 0)
 				return m_lHandlers[i].m_pHandler;
 		}
 
 		return 0x0;
 	}
 
+	const char *GetTypeFromName(const char *pName)
+	{
+		const char *pType = 0x0;
+		for(; *pName; pName++)
+		{
+			if(*pName == '.')
+				pType = pName + 1;
+			else if(*pName == '/')
+				pType = 0x0;
+		}
+		return pType;
+	}
+
 	IResource *CreateResource(CResourceId Id)
 	{
-		IHandler *pHandler = FindHandler(Id.m_Type);
+		const char *pType = GetTypeFromName(Id.m_pName);
+		if(!pType)
+		{
+			dbg_msg("resources", "couldn't find resource type for '%s'", Id.m_pName);
+			return 0x0;
+		}
+
+		IHandler *pHandler = FindHandler(pType);
 		if(!pHandler)
 			return 0x0;
 
 		IResource *pResource = pHandler->Create(Id);
 		pResource->m_Id = Id; // TODO: copy the string?
-		QueueRequest(pResource);
+		pResource->m_pHandler = pHandler;
+		LoadResource(pResource);
 		return pResource;
 	}
 
-	void QueueRequest(IResource *pResource)
+	struct CResourceInsert
 	{
-		CRequest Request;
-		Request.m_Id = pResource->m_Id;
-		m_Queue.push(Request);
-		m_Semaphore.signal();
+		IResource *m_pResource;
+	};
+
+	ringbuffer_mwsr<CResourceInsert, 1024> m_lInserts;
+
+	struct CLoadJobInfo
+	{
+		CResources *m_pThis;
+		IResource *m_pResource;
+		void *m_pData;
+		unsigned m_DataSize;
+	};
+
+	void LoadResource(IResource *pResource)
+	{
+		CLoadJobInfo *pInfo = g_JobHandler.AllocJobData<CLoadJobInfo>();
+		pInfo->m_pThis = this;
+		pInfo->m_pResource = pResource;
+		g_JobHandler.Kick(0, Job_LoadFile, pInfo);
+	}
+
+	static int LoadWholeFile(const char *pFilename, void **ppData, unsigned *pDataSize)
+	{
+		// do search for reasource
+		IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
+		if(hFile == 0)
+		{
+			*ppData = 0;
+			*pDataSize = 0;
+			return -1;
+		}
+
+		*pDataSize = io_length(hFile);
+		*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
+		long int Result = io_read(hFile, *ppData, *pDataSize);
+		io_close(hFile);
+
+		if(Result != *pDataSize)
+		{
+			mem_free(*ppData);
+			*ppData = 0;
+			*pDataSize = 0;
+			return -2;
+		}
+		
+		return 0;
+	}
+
+	static int Job_LoadFile(CJobHandler *pJobHandler, void *pData)
+	{
+		CLoadJobInfo *pInfo = reinterpret_cast<CLoadJobInfo*>(pData);
+		
+		// TODO: use storage to figure out were the file is located
+		char const *pFilename = pInfo->m_pResource->m_Id.m_pName;
+		
+		IStorage *pStorage = pInfo->m_pThis->Kernel()->RequestInterface<IStorage>();
+
+		char aCompleteFilename[512];
+		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
+		if(File)
+			io_close(File);
+		else
+		{
+			dbg_msg("resources", "couldn't find '%s'", pFilename);
+			return -1;
+		}
+
+		//dbg_msg("resources", "loading '%s'", pFilename);
+		int r = LoadWholeFile(aCompleteFilename, &pInfo->m_pData, &pInfo->m_DataSize);
+		if(r)
+		{
+			dbg_msg("resources", "failed loading '%s'", aCompleteFilename);
+			return r;
+		}
+
+		// kick the data off to processing
+		pJobHandler->Kick(0,Job_ProcessData, pData);
+		return 0;
+	}
+
+	static int Job_ProcessData(CJobHandler *pJobHandler, void *pData)
+	{
+		CLoadJobInfo *pInfo = reinterpret_cast<CLoadJobInfo*>(pData);
+
+		// find the handler and let it load the resource
+		IHandler *pHandler = pInfo->m_pResource->m_pHandler;
+
+		//dbg_msg("resources", "processing '%s'", pInfo->m_pResource->m_Id.m_pName);
+		if(pHandler->Load(pInfo->m_pResource, pInfo->m_pData, pInfo->m_DataSize) != 0)
+		{
+			dbg_msg("resources", "failed to process '%s'", pInfo->m_pResource->m_Id.m_pName);
+			return -2;
+		}
+
+		// queue the resource for insert 
+		CResourceInsert Insert;
+		Insert.m_pResource = pInfo->m_pResource;
+		pInfo->m_pThis->m_lInserts.push(Insert);
+
+		// do some clean up the job data
+		mem_free(pInfo->m_pData);		
+		pJobHandler->FreeJobData(pInfo);
+		return 0;
 	}
 
 public:
-	CLoader()
+	CResources()
 	{
-		thread_create(LoaderThreadBnc, this);
+		//thread_create(LoaderThreadBnc, this);
 	}
 
-	virtual void AssignHandler(unsigned Type, IHandler *pHandler)
+	virtual void AssignHandler(const char *pType, IHandler *pHandler)
 	{
-		scope_lock locker(&m_Lock);
 		CHandlerEntry Entry;
-		Entry.m_Type = Type;
+		Entry.m_pType = pType;
 		Entry.m_pHandler = pHandler;
 		m_lHandlers.add(Entry);
 	}
 
 	virtual IResource *GetResource(CResourceId Id)
 	{
-		scope_lock locker(&m_Lock);
 		IResource *pResource = FindResource(Id);
 		if(pResource)
 			return pResource;
 		return CreateResource(Id);
 	}
 
-private:
-	int LoadResource(CRequest *pRequest)
+	virtual void Update()
 	{
-		do
+		// handle all resource inserts
+		while(m_lInserts.size())
 		{
-			// do search for reasource
-			IOHANDLE hFile = io_open(pRequest->m_Id.m_pName, IOFLAG_READ);
-			if(hFile == 0)
-				break;
-
-			pRequest->m_DataSize = io_length(hFile);
-			pRequest->m_pData = mem_alloc(pRequest->m_DataSize, sizeof(void*)); // TOOD: stream buffer perhaps
-			long int Result = io_read(hFile,pRequest->m_pData, pRequest->m_DataSize);
-			io_close(hFile);
-
-			if(Result != pRequest->m_DataSize)
-				break;
-
-			return 0;
-		} while(0);
-
-		// do error handling
-		if(pRequest->m_pData)
-		{
-			mem_free(pRequest->m_pData),
-			pRequest->m_pData = 0;
-		}
-		pRequest->m_DataSize = 0;
-
-		// return error
-		return -1;
-	}
-
-	void LoaderThread()
-	{
-		while(1)
-		{
-			// wait on signal
-			m_Semaphore.wait();
-
-			// handle a request
-			while(m_Queue.size())
-			{
-				CRequest Request = m_Queue.pop();
-				if(LoadResource(&Request))
-				{
-					scope_lock locker(&m_Lock);
-
-					// dig out the resource, it might be deleted while we loaded it
-					IResource *pResource = FindResource(Request.m_Id);
-					if(pResource)
-					{
-						// do callback?
-						// find handler
-						for(int i = 0; i < m_lHandlers.size(); i++)
-							if(m_lHandlers[i].m_Type == Request.m_Id.m_Type)
-							{
-								m_lHandlers[i].m_pHandler->Handle(pResource, &Request);
-								break;
-							}
-					}
-					
-					// free request
-					mem_free(Request.m_pData);
-				}
-				else
-				{
-					// report error?
-				}
-			}
+			CResourceInsert Insert = m_lInserts.pop();
+			//dbg_msg("resources", "inserting %s", Insert.m_pResource->m_Id.m_pName);
+			Insert.m_pResource->m_pHandler->Insert(Insert.m_pResource);
 		}
 	}
-	
-	static void LoaderThreadBnc(void *pThis) { ((CLoader *)pThis)->LoaderThread();}
 };
 
-ILoader *CreateLoader() { return new CLoader(); }
+IResources *IResources::CreateInstance() { return new CResources(); }

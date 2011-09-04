@@ -5,9 +5,12 @@
 
 #include <base/tl/ringbuffer.h>
 
+#include <engine/loader.h>
+
 class CGraphics_OpenGL : public IEngineGraphics
 {
 protected:
+	class IResources *m_pResources;
 	class IStorage *m_pStorage;
 	class IConsole *m_pConsole;
 
@@ -77,17 +80,45 @@ protected:
 
 	struct CTexture
 	{
+		IResource *m_pResource;
 		GLuint m_Tex;
 		int m_MemSize;
 		int m_Flags;
 		int m_Next;
 	};
 
-
-
 	CTexture m_aTextures[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
+
+	class CResource_Texture : public IResources::IResource
+	{
+	public:
+		CResource_Texture()
+		{
+			m_TexSlot = 0;
+			mem_zero(&m_ImageInfo, sizeof(m_ImageInfo));
+		}
+
+		//GLuint m_TexId;
+		int m_TexSlot;
+
+		// used for loading the texture
+		// TODO: should perhaps just be stored at load time
+		CImageInfo m_ImageInfo;
+	};
+
+	class CTextureHandler : public IResources::IHandler
+	{
+	public:
+		CGraphics_OpenGL *m_pGL;
+		static unsigned int PngReadFunc(void *pOutput, unsigned long size, unsigned long numel, void *pUserPtr);
+		virtual IResources::IResource *Create(IResources::CResourceId Id);
+		virtual bool Load(IResources::IResource *pResource, void *pData, unsigned DataSize);
+		virtual bool Insert(IResources::IResource *pResource);
+	};
+
+	CTextureHandler m_TextureHandler;
 
 	void Flush();
 	void AddVertices(int Count);
@@ -132,6 +163,7 @@ public:
 	void ScreenshotDirect(const char *pFilename);
 
 	virtual void TextureSet(int TextureID);
+	virtual void TextureSet(IResource *pResource);
 
 	virtual void Clear(float r, float g, float b);
 

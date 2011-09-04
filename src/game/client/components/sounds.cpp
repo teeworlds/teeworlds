@@ -28,8 +28,9 @@ static int LoadSoundsThread(void *pUser)
 			g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
 		}
 
-		if(pData->m_Render)
-			pData->m_pGameClient->m_pMenus->RenderLoading();
+		// TODO: this isn't needed any more
+		//if(pData->m_Render)
+		//	pData->m_pGameClient->m_pMenus->RenderLoading();
 	}
 
 	return 0;
@@ -47,6 +48,7 @@ void CSounds::OnInit()
 	ClearQueue();
 
 	// load sounds
+	/*
 	if(g_Config.m_ClThreadsoundloading)
 	{
 		g_UserData.m_pGameClient = m_pClient;
@@ -55,12 +57,12 @@ void CSounds::OnInit()
 		m_WaitForSoundJob = true;
 	}
 	else
-	{
-		g_UserData.m_pGameClient = m_pClient;
-		g_UserData.m_Render = true;
-		LoadSoundsThread(&g_UserData);
-		m_WaitForSoundJob = false;
-	}
+	{*/
+	g_UserData.m_pGameClient = m_pClient;
+	g_UserData.m_Render = true;
+	LoadSoundsThread(&g_UserData);
+	m_WaitForSoundJob = false;
+	//}
 }
 
 void CSounds::OnReset()
