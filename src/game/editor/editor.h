@@ -237,7 +237,7 @@ public:
 	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
-		m_TexID = -1;
+		m_pTexture = 0;
 		m_aName[0] = 0;
 		m_External = 0;
 		m_Width = 0;
@@ -250,7 +250,7 @@ public:
 
 	void AnalyseTileFlags();
 
-	int m_TexID;
+	IResource *m_pTexture;
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
@@ -329,7 +329,7 @@ public:
 	}
 
 	void Clean();
-	void CreateDefault(int EntitiesTexture);
+	void CreateDefault(IResource *pEntitiesTexture);
 
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);
@@ -400,7 +400,7 @@ public:
 
 	void GetSize(float *w, float *h) { *w = m_Width*32.0f; *h = m_Height*32.0f; }
 
-	int m_TexID;
+	IResource *m_pTexture;
 	int m_Game;
 	int m_Image;
 	int m_Width;
@@ -533,10 +533,10 @@ public:
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
 
-		ms_CheckerTexture = 0;
-		ms_BackgroundTexture = 0;
-		ms_CursorTexture = 0;
-		ms_EntitiesTexture = 0;
+		ms_pCheckerTexture = 0;
+		ms_pBackgroundTexture = 0;
+		ms_pCursorTexture = 0;
+		ms_pEntitiesTexture = 0;
 
 		ms_pUiGotContext = 0;
 	}
@@ -662,10 +662,11 @@ public:
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 
-	static int ms_CheckerTexture;
-	static int ms_BackgroundTexture;
-	static int ms_CursorTexture;
-	static int ms_EntitiesTexture;
+	// TODO: why are these statics?
+	static IResource *ms_pCheckerTexture;
+	static IResource *ms_pBackgroundTexture;
+	static IResource *ms_pCursorTexture;
+	static IResource *ms_pEntitiesTexture;
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
@@ -692,7 +693,7 @@ public:
 
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 
-	void RenderBackground(CUIRect View, int Texture, float Size, float Brightness);
+	void RenderBackground(CUIRect View, IResource *pTexture, float Size, float Brightness);
 
 	void RenderGrid(CLayerGroup *pGroup);
 
@@ -728,7 +729,7 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID = -1);
+	void DoQuadEnvelopes(CQuad *pQuad, int Index, IResource *pTexture = 0);
 	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 

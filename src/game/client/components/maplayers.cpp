@@ -183,7 +183,7 @@ void CMapLayers::OnRender()
 				{
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					if(pTMap->m_Image == -1)
-						Graphics()->TextureSet(-1);
+						Graphics()->TextureSet(0);
 					else
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
 
@@ -200,7 +200,7 @@ void CMapLayers::OnRender()
 				{
 					CMapItemLayerQuads *pQLayer = (CMapItemLayerQuads *)pLayer;
 					if(pQLayer->m_Image == -1)
-						Graphics()->TextureSet(-1);
+						Graphics()->TextureSet(0);
 					else
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pQLayer->m_Image));
 

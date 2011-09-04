@@ -23,9 +23,9 @@ CLayerQuads::~CLayerQuads()
 
 void CLayerQuads::Render()
 {
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
-		Graphics()->TextureSet(m_pEditor->m_Map.m_lImages[m_Image]->m_TexID);
+		Graphics()->TextureSet(m_pEditor->m_Map.m_lImages[m_Image]->m_pTexture);
 
 	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT, m_pEditor->EnvelopeEval, m_pEditor);
 }
@@ -88,7 +88,7 @@ void CLayerQuads::BrushSelecting(CUIRect Rect)
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y, Rect.x+Rect.w, Rect.y+Rect.h),
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y+Rect.h, Rect.x, Rect.y+Rect.h),
 		IGraphics::CLineItem(Rect.x, Rect.y+Rect.h, Rect.x, Rect.y)};
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->LinesBegin();
 	Graphics()->LinesDraw(Array, 4);
 	Graphics()->LinesEnd();

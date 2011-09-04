@@ -169,7 +169,7 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 
 	m_Rotation = 0;
 	m_Drawing = 0;
-	m_InvalidTexture = 0;
+	m_pInvalidTexture = 0;
 
 	m_TextureMemoryUsage = 0;
 
@@ -276,36 +276,31 @@ void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 	AddVertices(2*Num);
 }
 
-int CGraphics_OpenGL::UnloadTexture(int Index)
+int CGraphics_OpenGL::UnloadTexture(IResource *pTexture)
 {
+	// TODO: texture unload
+	return 0;
+
+	/*
+
 	if(Index == m_InvalidTexture)
 		return 0;
 
 	if(Index < 0)
 		return 0;
 
-	// TODO: texture unload
-	/*
 	glDeleteTextures(1, &m_aTextures[Index].m_Tex);
 	m_aTextures[Index].m_Next = m_FirstFreeTexture;
 	m_TextureMemoryUsage -= m_aTextures[Index].m_MemSize;
 	m_FirstFreeTexture = Index;
-	*/
 	return 0;
+	*/
 }
 
-
-int CGraphics_OpenGL::GetTextureSlot()
+IResource *CGraphics_OpenGL::LoadTextureRawToResource(IResource *pResource, int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
-	int Tex = m_FirstFreeTexture;
-	m_FirstFreeTexture = m_aTextures[Tex].m_Next;
-	m_aTextures[Tex].m_Next = -1;
+	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 
-	return Tex;
-}
-
-int CGraphics_OpenGL::LoadTextureRawToSlot(int Tex, int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
-{
 	int Mipmap = 1;
 	unsigned char *pTexData = (unsigned char *)pData;
 	unsigned char *pTmpData = 0;
@@ -314,7 +309,7 @@ int CGraphics_OpenGL::LoadTextureRawToSlot(int Tex, int Width, int Height, int F
 
 	// don't waste memory on texture if we are stress testing
 	if(g_Config.m_DbgStress)
-		return 	m_InvalidTexture;
+		return pResource;
 
 	// resample if needed
 	if(!(Flags&TEXLOAD_NORESAMPLE) && (Format == CImageInfo::FORMAT_RGBA || Format == CImageInfo::FORMAT_RGB))
@@ -361,8 +356,8 @@ int CGraphics_OpenGL::LoadTextureRawToSlot(int Tex, int Width, int Height, int F
 			StoreOglformat = GL_ALPHA;
 	}
 
-	glGenTextures(1, &m_aTextures[Tex].m_Tex);
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[Tex].m_Tex);
+	glGenTextures(1, &pTexture->m_TexId);
+	glBindTexture(GL_TEXTURE_2D, pTexture->m_TexId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
@@ -375,26 +370,28 @@ int CGraphics_OpenGL::LoadTextureRawToSlot(int Tex, int Width, int Height, int F
 		else if(StoreFormat == CImageInfo::FORMAT_ALPHA)
 			PixelSize = 1;
 
-		m_aTextures[Tex].m_MemSize = Width*Height*PixelSize;
+		pTexture->m_MemSize = Width*Height*PixelSize;
 		if(Mipmap)
 		{
 			while(Width > 2 && Height > 2)
 			{
 				Width>>=1;
 				Height>>=1;
-				m_aTextures[Tex].m_MemSize += Width*Height*PixelSize;
+				pTexture->m_MemSize += Width*Height*PixelSize;
 			}
 		}
 	}
 
-	m_TextureMemoryUsage += m_aTextures[Tex].m_MemSize;
+	m_TextureMemoryUsage += pTexture->m_MemSize;
 	mem_free(pTmpData);
-	return Tex;
+	return pResource;
 }
 
-int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
+IResource *CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
-	return LoadTextureRawToSlot(GetTextureSlot(), Width, Height, Format, pData, StoreFormat, Flags);
+	IResources::CResourceId Id;
+	IResource *pResource = m_TextureHandler.Create(Id);
+	return LoadTextureRawToResource(pResource, Width, Height, Format, pData, StoreFormat, Flags);
 }
 
 unsigned int CGraphics_OpenGL::CTextureHandler::PngReadFunc(void *pOutput, unsigned long size, unsigned long numel, void *pUserPtr)
@@ -456,172 +453,14 @@ bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	CImageInfo *pInfo = &pTexture->m_ImageInfo;
 	//dbg_msg("graphics", "%d <- %s", pTexture->m_TexSlot, pResource->m_Id.m_pName);
-	m_pGL->LoadTextureRawToSlot(pTexture->m_TexSlot, pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
+	m_pGL->LoadTextureRawToResource(pTexture, pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
 	return true;
 }
 
-#if 0
-int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pDataSize)
-{
-	// do search for reasource
-	IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
-	if(hFile == 0)
-	{
-		*ppData = 0;
-		*pDataSize = 0;
-		return -1;
-	}
-
-	*pDataSize = io_length(hFile);
-	*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
-	long int Result = io_read(hFile, *ppData, *pDataSize);
-	io_close(hFile);
-
-	if(Result != *pDataSize)
-	{
-		mem_free(*ppData);
-		*ppData = 0;
-		*pDataSize = 0;
-		return -2;
-	}
-	
-	return 0;
-}
-
-static unsigned int PngReadFunc(void *pOutput, unsigned long size, unsigned long numel, void *pUserPtr)
-{
-	unsigned char **pData = reinterpret_cast<unsigned char**>(pUserPtr);
-	unsigned long TotalSize = size*numel;
-	if(pOutput)
-		mem_copy(pOutput, *pData, TotalSize);
-	(*pData) += TotalSize;
-	return TotalSize;
-}
-
-int Helper_LoadPNG(void *pData, unsigned DataSize, CImageInfo *pInfo)
-{
-
-	// TODO: don't load the PNG here, use the job system
-	png_t Png;
-	
-	int Error = png_open(&Png, PngReadFunc, &pData); // ignore_convention
-	if(Error != PNG_NO_ERROR)
-	{
-		//dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
-		//if(Error != PNG_FILE_ERROR)
-		//	png_close_file(&Png); // ignore_convention
-		return -1;// 0;
-	}
-
-	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA)) // ignore_convention
-	{
-		//dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
-		//png_close_file(&Png); // ignore_convention
-		return -2;// 0;
-	}
-
-	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp, 1); // ignore_convention
-	png_get_data(&Png, pBuffer); // ignore_convention
-	//png_close_file(&Png); // ignore_convention
-
-	pInfo->m_Width = Png.width; // ignore_convention
-	pInfo->m_Height = Png.height; // ignore_convention
-	if(Png.color_type == PNG_TRUECOLOR) // ignore_convention
-		pInfo->m_Format = CImageInfo::FORMAT_RGB;
-	else if(Png.color_type == PNG_TRUECOLOR_ALPHA) // ignore_convention
-		pInfo->m_Format = CImageInfo::FORMAT_RGBA;
-	pInfo->m_pData = pBuffer;
-	return 0;
-}
-
-int CGraphics_OpenGL::Job_CreateTexture_LoadFile(CJobHandler *pJobHandler, void *pData)
-{
-	CCreateTextureJobInfo *pInfo = reinterpret_cast<CCreateTextureJobInfo*>(pData);
-	//dbg_msg("job", "Job_CreateTexture_LoadFile %s", pInfo->m_pFilename);
-	int r = Helper_LoadFile(pInfo->m_pFilename, &pInfo->m_pPngData, &pInfo->m_PngDataSize);
-	if(r)
-	{
-		dbg_msg("", "Graphics load fail!, %s", pInfo->m_pFilename);
-		return r;
-	}
-	pJobHandler->Kick(0, Job_CreateTexture_ParsePNG, pData);
-	return 0;
-}
-
-
-int CGraphics_OpenGL::Job_CreateTexture_ParsePNG(CJobHandler *pJobHandler, void *pData)
-{
-	CCreateTextureJobInfo *pInfo = reinterpret_cast<CCreateTextureJobInfo*>(pData);
-	//dbg_msg("job", "Job_CreateTexture_ParsePNG %s", pInfo->m_pFilename);
-	int r = Helper_LoadPNG(pInfo->m_pPngData, pInfo->m_PngDataSize, &pInfo->m_TextureLoadInfo.m_Info);
-	if(r)
-		return r;
-	pInfo->m_pGL->m_TextureLoads.push(pInfo->m_TextureLoadInfo);
-	return 0;
-}
-#endif
-
 // simple uncompressed RGBA loaders
-int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
+IResource *CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
-#if 1
-	int Tex = GetTextureSlot();
-	CResource_Texture *pTexture = static_cast<CResource_Texture*>(m_pResources->GetResource(pFilename));
-	if(!pTexture)
-		return 0;
-
-	m_aTextures[Tex].m_pResource = pTexture;
-	pTexture->m_TexSlot = Tex;
-	return Tex;
-		
-#elif 1
-	CCreateTextureJobInfo *pInfo = g_JobHandler.AllocJobData<CCreateTextureJobInfo>();
-	pInfo->m_pGL = this;
-
-	// TODO: file io shouldn't be done here
-	char aCompleteFilename[512];
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType, aCompleteFilename, sizeof(aCompleteFilename));
-	if(File)
-		io_close(File);
-	else
-		return -1;
-
-
-	int l = str_length(aCompleteFilename)+1;
-	char *pStr = (char *)mem_alloc(l, sizeof(void*));
-	pInfo->m_pFilename = pStr;
-	mem_copy(pStr, aCompleteFilename, l);
-
-	// grab texture
-	int Tex = m_FirstFreeTexture;
-	m_FirstFreeTexture = m_aTextures[Tex].m_Next;
-	m_aTextures[Tex].m_Next = -1;
-
-	//m_aTextures[Tex]. = m_InvalidTexture
-
-	pInfo->m_TextureLoadInfo.m_Id = Tex;
-	g_JobHandler.Kick(0, Job_CreateTexture_LoadFile, pInfo);
-
-	return Tex;
-#else
-	int l = str_length(pFilename);
-	int ID;
-	CImageInfo Img;
-
-	if(l < 3)
-		return -1;
-	if(LoadPNG(&Img, pFilename, StorageType))
-	{
-		if (StoreFormat == CImageInfo::FORMAT_AUTO)
-			StoreFormat = Img.m_Format;
-
-		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
-		mem_free(Img.m_pData);
-		return ID;
-	}
-
-	return m_InvalidTexture;
-#endif
+	return m_pResources->GetResource(pFilename);
 }
 
 int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
@@ -714,26 +553,19 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 	mem_free(pPixelData);
 }
 
-void CGraphics_OpenGL::TextureSet(int TextureID)
-{
-	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
-	if(TextureID == -1)
-	{
-		glDisable(GL_TEXTURE_2D);
-	}
-	else
-	{
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[TextureID].m_Tex);
-	}
-}
-
 void CGraphics_OpenGL::TextureSet(IResource *pResource)
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
-	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[pTexture->m_TexSlot].m_Tex);
+	if(pResource)
+	{
+		CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, pTexture->m_TexId);
+	}
+	else
+	{
+		glDisable(GL_TEXTURE_2D);
+	}
 }
 
 void CGraphics_OpenGL::Clear(float r, float g, float b)
@@ -939,12 +771,6 @@ bool CGraphics_OpenGL::Init()
 	for(int i = 0; i < MAX_VERTICES; i++)
 		m_aVertices[i].m_Pos.z = -5.0f;
 
-	// init textures
-	m_FirstFreeTexture = 0;
-	for(int i = 0; i < MAX_TEXTURES; i++)
-		m_aTextures[i].m_Next = i+1;
-	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
-
 	// set some default settings
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
@@ -964,7 +790,7 @@ bool CGraphics_OpenGL::Init()
 		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
 	};
 
-	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
+	m_pInvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
 
 	return true;
 }
@@ -1142,15 +968,6 @@ void CGraphics_SDL::TakeScreenshot(const char *pFilename)
 
 void CGraphics_SDL::Swap()
 {
-	// TODO: move this
-	{
-		while(m_TextureLoads.size())
-		{
-			CTextureLoad Load = m_TextureLoads.pop();
-			LoadTextureRawToSlot(Load.m_Id, Load.m_Info.m_Width, Load.m_Info.m_Height, Load.m_Info.m_Format, Load.m_Info.m_pData, Load.m_Info.m_Format, 0);
-		}
-	}
-
 	if(m_DoScreenshot)
 	{
 		ScreenshotDirect(m_aScreenshotName);

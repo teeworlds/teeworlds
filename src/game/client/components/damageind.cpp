@@ -46,7 +46,7 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 
 void CDamageInd::OnRender()
 {
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 	Graphics()->QuadsBegin();
 	for(int i = 0; i < m_NumItems;)
 	{

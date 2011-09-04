@@ -7,20 +7,21 @@
 #include <game/mapitems.h>
 #include "ui.h"
 
+class IResource;
 
 class CTeeRenderInfo
 {
 public:
 	CTeeRenderInfo()
 	{
-		m_Texture = -1;
+		m_pTexture = 0x0;
 		m_ColorBody = vec4(1,1,1,1);
 		m_ColorFeet = vec4(1,1,1,1);
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
-	int m_Texture;
+	IResource *m_pTexture;
 	vec4 m_ColorBody;
 	vec4 m_ColorFeet;
 	float m_Size;

@@ -94,7 +94,7 @@ void CHud::RenderScoreHud()
 			{
 				// draw box
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureSet(0);
 				Graphics()->QuadsBegin();
 				if(t == 0)
 					Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
@@ -114,7 +114,7 @@ void CHud::RenderScoreHud()
 					{
 						// draw flag
 						Graphics()->BlendNormal();
-						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 						Graphics()->QuadsBegin();
 						RenderTools()->SelectSprite(t==0?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE);
 						IGraphics::CQuadItem QuadItem(Whole-ScoreWidthMax-ImageSize, 246.0f+t*20, ImageSize/2, ImageSize);
@@ -185,7 +185,7 @@ void CHud::RenderScoreHud()
 			{
 				// draw box
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureSet(0);
 				Graphics()->QuadsBegin();
 				if(t == Local)
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -292,7 +292,7 @@ void CHud::RenderVoting()
 	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
 	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 46, 5.0f);
@@ -337,7 +337,7 @@ void CHud::RenderCursor()
 		return;
 
 	MapscreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup());
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 	Graphics()->QuadsBegin();
 
 	// render cursor
@@ -360,7 +360,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	// render ammo count
 	// render gui stuff
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 
 	Graphics()->QuadsBegin();
 
@@ -406,7 +406,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
 	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);

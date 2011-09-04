@@ -46,7 +46,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	HandPos += DirY * PostRotOffset.y;
 
 	//Graphics()->TextureSet(data->m_aImages[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_Texture);
+	Graphics()->TextureSet(pInfo->m_pTexture);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, pInfo->m_ColorBody.a);
 
@@ -110,10 +110,10 @@ void CPlayers::RenderHook(
 		if(Skin != -1)
 		{
 			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
+				RenderInfo.m_pTexture = m_pClient->m_pSkins->Get(Skin)->m_pColorTexture;
 			else
 			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
+				RenderInfo.m_pTexture = m_pClient->m_pSkins->Get(Skin)->m_pOrgTexture;
 				RenderInfo.m_ColorBody = vec4(1,1,1,1);
 				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
 			}
@@ -146,7 +146,7 @@ void CPlayers::RenderHook(
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 		Graphics()->QuadsBegin();
 		//Graphics()->QuadsBegin();
 
@@ -234,10 +234,10 @@ void CPlayers::RenderPlayer(
 		if(Skin != -1)
 		{
 			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
+				RenderInfo.m_pTexture = m_pClient->m_pSkins->Get(Skin)->m_pColorTexture;
 			else
 			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
+				RenderInfo.m_pTexture = m_pClient->m_pSkins->Get(Skin)->m_pOrgTexture;
 				RenderInfo.m_ColorBody = vec4(1,1,1,1);
 				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
 			}
@@ -359,7 +359,7 @@ void CPlayers::RenderPlayer(
 
 	// draw gun
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
 
@@ -502,7 +502,7 @@ void CPlayers::RenderPlayer(
 
 	if(Player.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_pResource);
 		Graphics()->QuadsBegin();
 		RenderTools()->SelectSprite(SPRITE_DOTDOT);
 		IGraphics::CQuadItem QuadItem(Position.x + 24, Position.y - 40, 64,64);
@@ -512,7 +512,7 @@ void CPlayers::RenderPlayer(
 
 	if (m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_pResource);
 		Graphics()->QuadsBegin();
 
 		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart;

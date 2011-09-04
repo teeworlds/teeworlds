@@ -567,7 +567,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		float OldWidth = Rect.w;
 		Rect.w = Rect.h*2;
 		Rect.x += (OldWidth-Rect.w)/2.0f;
-		Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(g_Config.m_BrFilterCountryIndex)->m_Texture);
+		Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(g_Config.m_BrFilterCountryIndex)->m_pTexture);
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, g_Config.m_BrFilterCountry?1.0f: 0.5f);
 		IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
@@ -766,7 +766,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 				TextRender()->TextEx(&Cursor, pClan, -1);
 
 			// flag
-			Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(pSelectedServer->m_aClients[i].m_Country)->m_Texture);
+			Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(pSelectedServer->m_aClients[i].m_Country)->m_pTexture);
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 			IGraphics::CQuadItem QuadItem(Flag.x, Flag.y, Flag.w, Flag.h);

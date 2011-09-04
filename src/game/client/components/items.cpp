@@ -52,7 +52,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 	Graphics()->QuadsBegin();
 
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
@@ -102,7 +102,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent)
 {
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 	Graphics()->QuadsBegin();
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	float Angle = 0.0f;
@@ -163,7 +163,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	float Size = 42.0f;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 	Graphics()->QuadsBegin();
 
 	if(pCurrent->m_Team == TEAM_RED)
@@ -211,7 +211,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	vec2 Out, Border;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 
 	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
@@ -246,7 +246,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	// render head
 	{
 		Graphics()->BlendNormal();
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_pResource);
 		Graphics()->QuadsBegin();
 
 		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};

@@ -12,8 +12,8 @@ public:
 	// do this better and nicer
 	struct CSkin
 	{
-		int m_OrgTexture;
-		int m_ColorTexture;
+		IResource *m_pOrgTexture;
+		IResource *m_pColorTexture;
 		char m_aName[24];
 		vec3 m_BloodColor;
 

@@ -28,7 +28,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	}
 
 	CSkin Skin;
-	Skin.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	Skin.m_pOrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 
 	int BodySize = 96; // body size
 	unsigned char *d = (unsigned char *)Info.m_pData;
@@ -98,7 +98,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			d[y*Pitch+x*4+2] = v;
 		}
 
-	Skin.m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	Skin.m_pColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
 
 	// set skin data
@@ -120,8 +120,8 @@ void CSkins::OnInit()
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load skins. folder='skins/'");
 		CSkin DummySkin;
-		DummySkin.m_OrgTexture = -1;
-		DummySkin.m_ColorTexture = -1;
+		DummySkin.m_pOrgTexture = 0;
+		DummySkin.m_pColorTexture = 0;
 		str_copy(DummySkin.m_aName, "dummy", sizeof(DummySkin.m_aName));
 		DummySkin.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 		m_aSkins.add(DummySkin);

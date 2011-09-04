@@ -273,7 +273,7 @@ void CGameClient::OnInit()
 			m_pResources->GetResource(Id);
 		}*/
 
-		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+		g_pData->m_aImages[i].m_pResource = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		g_GameClient.m_pMenus->RenderLoading();
 	}
 
@@ -735,10 +735,10 @@ void CGameClient::OnNewSnapshot()
 				}
 
 				if(m_aClients[ClientID].m_UseCustomColor)
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_ColorTexture;
+					m_aClients[ClientID].m_SkinInfo.m_pTexture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_pColorTexture;
 				else
 				{
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_OrgTexture;
+					m_aClients[ClientID].m_SkinInfo.m_pTexture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_pOrgTexture;
 					m_aClients[ClientID].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 					m_aClients[ClientID].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
 				}
@@ -1049,7 +1049,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	// force team colors
 	if(g_GameClient.m_Snap.m_pGameInfoObj && g_GameClient.m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 	{
-		m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinID)->m_ColorTexture;
+		m_RenderInfo.m_pTexture = g_GameClient.m_pSkins->Get(m_SkinID)->m_pColorTexture;
 		const int TeamColors[2] = {65387, 10223467};
 		if(m_Team >= TEAM_RED && m_Team <= TEAM_BLUE)
 		{
@@ -1076,7 +1076,7 @@ void CGameClient::CClientData::Reset()
 	m_EmoticonStart = -1;
 	m_Active = false;
 	m_ChatIgnore = false;
-	m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
+	m_SkinInfo.m_pTexture = g_GameClient.m_pSkins->Get(0)->m_pColorTexture;
 	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
 	UpdateRenderInfo();

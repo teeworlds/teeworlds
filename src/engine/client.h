@@ -6,6 +6,8 @@
 
 #include "message.h"
 
+class IResource;
+
 class IClient : public IInterface
 {
 	MACRO_INTERFACE("client", 0)
@@ -135,7 +137,7 @@ public:
 
 	virtual bool SoundInitFailed() = 0;
 
-	virtual int GetDebugFont() = 0;
+	virtual IResource *GetDebugFont() = 0;
 };
 
 class IGameClient : public IInterface

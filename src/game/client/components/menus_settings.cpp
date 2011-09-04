@@ -221,7 +221,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			float OldWidth = Item.m_Rect.w;
 			Item.m_Rect.w = Item.m_Rect.h*2;
 			Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
-			Graphics()->TextureSet(pEntry->m_Texture);
+			Graphics()->TextureSet(pEntry->m_pTexture);
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
@@ -249,13 +249,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	CTeeRenderInfo OwnSkinInfo;
 	if(g_Config.m_PlayerUseCustomColor)
 	{
-		OwnSkinInfo.m_Texture = pOwnSkin->m_ColorTexture;
+		OwnSkinInfo.m_pTexture = pOwnSkin->m_pColorTexture;
 		OwnSkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
 		OwnSkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
 	}
 	else
 	{
-		OwnSkinInfo.m_Texture = pOwnSkin->m_OrgTexture;
+		OwnSkinInfo.m_pTexture = pOwnSkin->m_pOrgTexture;
 		OwnSkinInfo.m_ColorBody = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		OwnSkinInfo.m_ColorFeet = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
@@ -373,13 +373,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CTeeRenderInfo Info;
 			if(g_Config.m_PlayerUseCustomColor)
 			{
-				Info.m_Texture = s->m_ColorTexture;
+				Info.m_pTexture = s->m_pColorTexture;
 				Info.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
 				Info.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
 			}
 			else
 			{
-				Info.m_Texture = s->m_OrgTexture;
+				Info.m_pTexture = s->m_pOrgTexture;
 				Info.m_ColorBody = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				Info.m_ColorFeet = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
@@ -391,7 +391,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			if(g_Config.m_Debug)
 			{
 				vec3 BloodColor = g_Config.m_PlayerUseCustomColor ? m_pClient->m_pSkins->GetColorV3(g_Config.m_PlayerColorBody) : s->m_BloodColor;
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureSet(0);
 				Graphics()->QuadsBegin();
 				Graphics()->SetColor(BloodColor.r, BloodColor.g, BloodColor.b, 1.0f);
 				IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, 12.0f, 12.0f);
@@ -917,7 +917,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
 			Rect.VMargin(6.0f, &Rect);
 			Rect.HMargin(3.0f, &Rect);
-			Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(r.front().m_CountryCode)->m_Texture);
+			Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(r.front().m_CountryCode)->m_pTexture);
 			Graphics()->QuadsBegin();
 			IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);

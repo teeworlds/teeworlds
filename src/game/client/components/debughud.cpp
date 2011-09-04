@@ -115,7 +115,7 @@ void CDebugHud::RenderTuning()
 
 	y = y+Count*6;
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->BlendNormal();
 	Graphics()->LinesBegin();
 	float Height = 50.0f;

@@ -84,7 +84,7 @@ vec4 CMenus::ButtonColorMul(const void *pID)
 
 int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 {
-	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_pResource);
 
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SpriteId);
@@ -97,7 +97,7 @@ int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 
 int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect)
 {
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_pResource);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(Checked?SPRITE_GUIBUTTON_ON:SPRITE_GUIBUTTON_OFF);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
@@ -654,7 +654,7 @@ void CMenus::RenderLoading()
 
 	Graphics()->BlendNormal();
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0x0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.50f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
@@ -670,7 +670,7 @@ void CMenus::RenderLoading()
 	r.h = h;
 	UI()->DoLabel(&r, pCaption, 48.0f, 0, -1);
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0x0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,0.75f);
 	RenderTools()->DrawRoundRect(x+40, y+h-75, (w-80)*Percent, 25, 5.0f);
@@ -1131,7 +1131,7 @@ int CMenus::Render()
 					float OldWidth = Item.m_Rect.w;
 					Item.m_Rect.w = Item.m_Rect.h*2;
 					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
-					Graphics()->TextureSet(pEntry->m_Texture);
+					Graphics()->TextureSet(pEntry->m_pTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
@@ -1522,7 +1522,7 @@ void CMenus::OnRender()
 		Render();
 
 	// render cursor
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_pResource);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(mx, my, 24, 24);
@@ -1548,14 +1548,15 @@ void CMenus::OnRender()
 	m_NumInputEvents = 0;
 }
 
-static int gs_TextureBlob = -1;
+// TODO: static variable, remove
+static IResource *gs_pTextureBlob = 0x0;
 
 void CMenus::RenderBackground()
 {
 	//Graphics()->Clear(1,1,1);
 	//render_sunrays(0,0);
-	if(gs_TextureBlob == -1)
-		gs_TextureBlob = Graphics()->LoadTexture("blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	if(gs_pTextureBlob == 0)
+		gs_pTextureBlob = Graphics()->LoadTexture("blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 
 	float sw = 300*Graphics()->ScreenAspect();
@@ -1563,7 +1564,7 @@ void CMenus::RenderBackground()
 	Graphics()->MapScreen(0, 0, sw, sh);
 
 	// render background color
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
 		//vec4 bottom(0, 0, 0, 1.0f);
@@ -1580,7 +1581,7 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsEnd();
 
 	// render the tiles
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 		float Size = 15.0f;
 		float OffsetTime = fmod(Client()->LocalTime()*0.15f, 2.0f);
@@ -1594,7 +1595,7 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsEnd();
 
 	// render border fade
-	Graphics()->TextureSet(gs_TextureBlob);
+	Graphics()->TextureSet(gs_pTextureBlob);
 	Graphics()->QuadsBegin();
 		Graphics()->SetColor(0,0,0,0.5f);
 		QuadItem = IGraphics::CQuadItem(-100, -100, sw+200, sh+200);

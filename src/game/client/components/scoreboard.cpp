@@ -48,7 +48,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	float h = 50.0f;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
@@ -86,7 +86,7 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
@@ -128,7 +128,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 17.0f);
@@ -225,7 +225,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		// background so it's easy to find the local player or the followed one in spectator mode
 		if(pInfo->m_Local || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 		{
-			Graphics()->TextureSet(-1);
+			Graphics()->TextureSet(0);
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
 			RenderTools()->DrawRoundRect(x, y, w-20.0f, LineHeight, 15.0f);
@@ -245,7 +245,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == pInfo->m_ClientID))
 		{
 			Graphics()->BlendNormal();
-			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 			Graphics()->QuadsBegin();
 
 			RenderTools()->SelectSprite(pInfo->m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
@@ -273,7 +273,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
 		// country flag
-		Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_Texture);
+		Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_pTexture);
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 		IGraphics::CQuadItem QuadItem(CountryOffset, y+(Spacing+TeeSizeMod*5.0f)/2.0f, CountryLength, LineHeight-Spacing-TeeSizeMod*5.0f);
@@ -298,7 +298,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 	//draw the box
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
 	RenderTools()->DrawRoundRectExt(x, 0.0f, 180.0f, 50.0f, 15.0f, CUI::CORNER_B);

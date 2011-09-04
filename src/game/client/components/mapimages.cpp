@@ -20,8 +20,8 @@ void CMapImages::OnMapLoad()
 	// unload all textures
 	for(int i = 0; i < m_Count; i++)
 	{
-		Graphics()->UnloadTexture(m_aTextures[i]);
-		m_aTextures[i] = -1;
+		Graphics()->UnloadTexture(m_apTextures[i]);
+		m_apTextures[i] = 0;
 	}
 	m_Count = 0;
 
@@ -31,7 +31,7 @@ void CMapImages::OnMapLoad()
 	// load new textures
 	for(int i = 0; i < m_Count; i++)
 	{
-		m_aTextures[i] = 0;
+		m_apTextures[i] = 0;
 
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External)
@@ -39,12 +39,12 @@ void CMapImages::OnMapLoad()
 			char Buf[256];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
-			m_aTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+			m_apTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		}
 		else
 		{
 			void *pData = pMap->GetData(pImg->m_ImageData);
-			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, 0);
+			m_apTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, 0);
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}

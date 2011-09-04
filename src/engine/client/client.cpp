@@ -88,12 +88,12 @@ void CGraph::Add(float v, float r, float g, float b)
 	m_aColors[m_Index][2] = b;
 }
 
-void CGraph::Render(IGraphics *pGraphics, int Font, float x, float y, float w, float h, const char *pDescription)
+void CGraph::Render(IGraphics *pGraphics, IResource *pFontTexture, float x, float y, float w, float h, const char *pDescription)
 {
 	//m_pGraphics->BlendNormal();
 
 
-	pGraphics->TextureSet(-1);
+	pGraphics->TextureSet(0);
 
 	pGraphics->QuadsBegin();
 	pGraphics->SetColor(0, 0, 0, 0.75f);
@@ -130,7 +130,7 @@ void CGraph::Render(IGraphics *pGraphics, int Font, float x, float y, float w, f
 	}
 	pGraphics->LinesEnd();
 
-	pGraphics->TextureSet(Font);
+	pGraphics->TextureSet(pFontTexture);
 	pGraphics->QuadsText(x+2, y+h-16, 16, 1,1,1,1, pDescription);
 
 	char aBuf[32];
@@ -590,7 +590,7 @@ void CClient::ServerInfoRequest()
 
 int CClient::LoadData()
 {
-	m_DebugFont = Graphics()->LoadTexture("debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
+	m_pDebugFont = Graphics()->LoadTexture("debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
 	return 1;
 }
 
@@ -665,7 +665,7 @@ void CClient::DebugRender()
 		return;
 
 	//m_pGraphics->BlendNormal();
-	Graphics()->TextureSet(m_DebugFont);
+	Graphics()->TextureSet(m_pDebugFont);
 	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
 
 	if(time_get()-LastSnap > time_freq())
@@ -738,9 +738,9 @@ void CClient::DebugRender()
 
 		m_FpsGraph.ScaleMax();
 		m_FpsGraph.ScaleMin();
-		m_FpsGraph.Render(Graphics(), m_DebugFont, x, sp*5, w, h, "FPS");
-		m_InputtimeMarginGraph.Render(Graphics(), m_DebugFont, x, sp*5+h+sp, w, h, "Prediction Margin");
-		m_GametimeMarginGraph.Render(Graphics(), m_DebugFont, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+		m_FpsGraph.Render(Graphics(), m_pDebugFont, x, sp*5, w, h, "FPS");
+		m_InputtimeMarginGraph.Render(Graphics(), m_pDebugFont, x, sp*5+h+sp, w, h, "Prediction Margin");
+		m_GametimeMarginGraph.Render(Graphics(), m_pDebugFont, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
 	}
 }
 

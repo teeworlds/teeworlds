@@ -156,7 +156,7 @@ void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 
 void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float Rounding)
 {
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0x0);
 
 	// TODO: FIX US
 	Graphics()->QuadsBegin();
@@ -171,7 +171,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	vec2 Position = Pos;
 
 	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_Texture);
+	Graphics()->TextureSet(pInfo->m_pTexture);
 
 	// TODO: FIX ME
 	Graphics()->QuadsBegin();

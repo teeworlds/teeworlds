@@ -75,7 +75,7 @@ void CKillMessages::OnRender()
 			if(m_aKillmsgs[r].m_ModeSpecial&1)
 			{
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 				Graphics()->QuadsBegin();
 
 				if(m_aKillmsgs[r].m_VictimTeam == TEAM_RED)
@@ -97,7 +97,7 @@ void CKillMessages::OnRender()
 		x -= 44.0f;
 		if (m_aKillmsgs[r].m_Weapon >= 0)
 		{
-			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 			Graphics()->QuadsBegin();
 			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_aKillmsgs[r].m_Weapon].m_pSpriteBody);
 			RenderTools()->DrawSprite(x, y+28, 96);
@@ -112,7 +112,7 @@ void CKillMessages::OnRender()
 				if(m_aKillmsgs[r].m_ModeSpecial&2)
 				{
 					Graphics()->BlendNormal();
-					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_pResource);
 					Graphics()->QuadsBegin();
 
 					if(m_aKillmsgs[r].m_KillerTeam == TEAM_RED)

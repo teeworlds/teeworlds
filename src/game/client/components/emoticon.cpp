@@ -127,13 +127,13 @@ void CEmoticon::OnRender()
 
 	Graphics()->BlendNormal();
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureSet(0);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.3f);
 	DrawCircle(Screen.w/2, Screen.h/2, 160, 64);
 	Graphics()->QuadsEnd();
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_pResource);
 	Graphics()->QuadsBegin();
 
 	for (int i = 0; i < NUM_EMOTICONS; i++)
@@ -155,7 +155,7 @@ void CEmoticon::OnRender()
 
 	Graphics()->QuadsEnd();
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_pResource);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);

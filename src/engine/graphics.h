@@ -5,6 +5,8 @@
 
 #include "kernel.h"
 
+class IResource;
+
 class CImageInfo
 {
 public:
@@ -77,10 +79,11 @@ public:
 	virtual int MemoryUsage() const = 0;
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
-	virtual int UnloadTexture(int Index) = 0;
-	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
-	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
-	virtual void TextureSet(int TextureID) = 0;
+
+	virtual int UnloadTexture(IResource *pTexture) = 0;
+	virtual IResource *LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
+	virtual IResource *LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
+	virtual void TextureSet(IResource *pTexture) = 0;
 
 	struct CLineItem
 	{
