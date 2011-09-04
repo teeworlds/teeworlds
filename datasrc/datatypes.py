@@ -168,6 +168,15 @@ class Pointer(BaseType):
 	def EmitDefinition(self, name):
 		return ["&"+self.target.TargetName()]
 
+class Resource(BaseType):
+	def __init__(self):
+		BaseType.__init__(self, "class IResource*")
+		#self.target = target
+	#def Set(self, target):
+	#	self.target = target
+	def EmitDefinition(self, name):
+		return ["0x0"]
+
 # helper functions
 
 def EmitTypeDeclaration(root):

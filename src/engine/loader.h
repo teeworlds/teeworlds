@@ -68,6 +68,8 @@ extern CJobHandler g_JobHandler;
 
 extern int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pDataSize);
 
+class IResource;
+
 /*
 	Behaviours:
 		* Handlers are called from the loader thread
@@ -77,7 +79,6 @@ class IResources : public IInterface
 	MACRO_INTERFACE("resources", 0)
 public:
 	class IHandler;
-	class IResource;
 
 	class CResourceId
 	{
@@ -93,25 +94,6 @@ public:
 		int m_iHandler;
 		int m_Index;
 	public:
-	};
-
-	class IResource
-	{
-	public:
-		virtual ~IResource() {}
-		CResourceId m_Id;
-		IHandler *m_pHandler;
-
-		bool IsLoaded() const;
-
-
-		/*enum
-		{
-			FLAG_LOADING,
-			xFLAG_LOADED,
-		};*/
-
-		unsigned m_Flags;
 	};
 
 	class IHandler
@@ -153,7 +135,27 @@ public:
 	static IResources *CreateInstance();
 };
 
-typedef IResources::IResource IResource;
+
+class IResource
+{
+public:
+	virtual ~IResource() {}
+	IResources::CResourceId m_Id;
+	IResources::IHandler *m_pHandler;
+
+	bool IsLoaded() const;
+
+
+	/*enum
+	{
+		FLAG_LOADING,
+		xFLAG_LOADED,
+	};*/
+
+	unsigned m_Flags;
+};
+
+//typedef IResources::IResource IResource;
 
 #define MACRO_RESOURCETYPE(a,b,c,d) ((a<<24) | (b<<16) | (c<<8) | d)
 #define DECLARE_RESOURCE(a,b,c,d) enum { RESOURCE_TYPE = MACRO_RESOURCETYPE(a,b,c,d) };

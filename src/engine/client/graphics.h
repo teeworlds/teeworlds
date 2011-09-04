@@ -91,7 +91,7 @@ protected:
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
 
-	class CResource_Texture : public IResources::IResource
+	class CResource_Texture : public IResource
 	{
 	public:
 		CResource_Texture()
@@ -113,9 +113,9 @@ protected:
 	public:
 		CGraphics_OpenGL *m_pGL;
 		static unsigned int PngReadFunc(void *pOutput, unsigned long size, unsigned long numel, void *pUserPtr);
-		virtual IResources::IResource *Create(IResources::CResourceId Id);
-		virtual bool Load(IResources::IResource *pResource, void *pData, unsigned DataSize);
-		virtual bool Insert(IResources::IResource *pResource);
+		virtual IResource *Create(IResources::CResourceId Id);
+		virtual bool Load(IResource *pResource, void *pData, unsigned DataSize);
+		virtual bool Insert(IResource *pResource);
 	};
 
 	CTextureHandler m_TextureHandler;

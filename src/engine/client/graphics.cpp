@@ -408,13 +408,13 @@ unsigned int CGraphics_OpenGL::CTextureHandler::PngReadFunc(void *pOutput, unsig
 }
 
 // called from the main thread
-IResources::IResource *CGraphics_OpenGL::CTextureHandler::Create(IResources::CResourceId Id)
+IResource *CGraphics_OpenGL::CTextureHandler::Create(IResources::CResourceId Id)
 {
 	return new CResource_Texture;
 }
 
 // called from job thread
-bool CGraphics_OpenGL::CTextureHandler::Load(IResources::IResource *pResource, void *pData, unsigned DataSize)
+bool CGraphics_OpenGL::CTextureHandler::Load(IResource *pResource, void *pData, unsigned DataSize)
 {
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 
@@ -451,7 +451,7 @@ bool CGraphics_OpenGL::CTextureHandler::Load(IResources::IResource *pResource, v
 }
 
 // called from the main thread
-bool CGraphics_OpenGL::CTextureHandler::Insert(IResources::IResource *pResource)
+bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 {
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	CImageInfo *pInfo = &pTexture->m_ImageInfo;

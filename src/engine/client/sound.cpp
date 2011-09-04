@@ -23,18 +23,6 @@ enum
 	MAX_FRAMES = 1024
 };
 
-struct CSample
-{
-	int m_InUse;
-	short *m_pData;
-	int m_NumFrames;
-	int m_Rate;
-	int m_Channels;
-	int m_LoopStart;
-	int m_LoopEnd;
-	int m_PausedAt;
-};
-
 struct CChannel
 {
 	int m_Vol;
@@ -43,7 +31,7 @@ struct CChannel
 
 struct CVoice
 {
-	CSample *m_pSample;
+	CSound::CResource_Sample *m_pSample;
 	CChannel *m_pChannel;
 	int m_Tick;
 	int m_Vol; // 0 - 255
@@ -51,7 +39,6 @@ struct CVoice
 	int m_X, m_Y;
 } ;
 
-static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
 static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
 
@@ -265,21 +252,8 @@ int CSound::Shutdown()
 	return 0;
 }
 
-int CSound::AllocID()
-{
-	// TODO: linear search, get rid of it
-	for(unsigned SampleID = 0; SampleID < NUM_SAMPLES; SampleID++)
-	{
-		if(m_aSamples[SampleID].m_InUse == 0)
-		{
-			m_aSamples[SampleID].m_InUse = 1;
-			return SampleID;
-		}
-	}
-
-	return -1;
-}
-
+/*
+// TODO: reimplement this
 void CSound::RateConvert(int SampleID)
 {
 	CSample *pSample = &m_aSamples[SampleID];
@@ -316,155 +290,11 @@ void CSound::RateConvert(int SampleID)
 	mem_free(pSample->m_pData);
 	pSample->m_pData = pNewData;
 	pSample->m_NumFrames = NumFrames;
-}
+}*/
 
-int CSound::ReadData(void *pBuffer, int Size)
+IResource *CSound::CResourceHandler::Create(IResources::CResourceId Id)
 {
-	return io_read(ms_File, pBuffer, Size);
-}
-
-#if 0
-int64 SoundLoadTime = 0;
-
-int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pDataSize)
-{
-	// do search for reasource
-	IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
-	if(hFile == 0)
-	{
-		*ppData = 0;
-		*pDataSize = 0;
-		return -1;
-	}
-
-	*pDataSize = io_length(hFile);
-	*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
-	long int Result = io_read(hFile, *ppData, *pDataSize);
-	io_close(hFile);
-
-	if(Result != *pDataSize)
-	{
-		mem_free(*ppData);
-		*ppData = 0;
-		*pDataSize = 0;
-		return -2;
-	}
-	
-	return 0;
-}
-
-int CSound::Job_LoadSound_LoadFile(CJobHandler *pJobHandler, void *pData)
-{
-	SLoadSoundJobInfo *pInfo = reinterpret_cast<SLoadSoundJobInfo*>(pData);
-	//dbg_msg("job", "Job_CreateTexture_LoadFile %s", pInfo->m_pFilename);
-	int r = Helper_LoadFile(pInfo->m_pFilename, &pInfo->m_pWVData, &pInfo->m_WVDataSize);
-	if(r)
-	{
-		dbg_msg("", "Sound load fail, %s", pInfo->m_pFilename);
-		return r;
-	}
-	pJobHandler->Kick(0, Job_LoadSound_ParseWV, pData);
-	return 0;
-}
-
-// Ugly TLS solution
-__thread char *gt_pWVData;
-__thread int gt_WVDataSize;
-static int ThreadReadData(void *pBuffer, int ChunkSize)
-{
-	if(ChunkSize > gt_WVDataSize)
-		ChunkSize = gt_WVDataSize;
-	mem_copy(pBuffer, gt_pWVData, ChunkSize);
-	gt_pWVData += ChunkSize;
-	gt_WVDataSize -= ChunkSize;
-	return ChunkSize;
-}
-
-int CSound::Job_LoadSound_ParseWV(CJobHandler *pJobHandler, void *pData)
-{
-	SLoadSoundJobInfo *pInfo = reinterpret_cast<SLoadSoundJobInfo*>(pData);
-	//dbg_msg("job", "Job_CreateTexture_ParsePNG %s", pInfo->m_pFilename);
-	//int r = Helper_LoadPNG(pInfo->m_pPngData, pInfo->m_PngDataSize, &pInfo->m_TextureLoadInfo.m_Info);
-	char aError[100];
-	gt_pWVData = (char*)pInfo->m_pWVData;
-	gt_WVDataSize = pInfo->m_WVDataSize;
-	WavpackContext *pContext = WavpackOpenFileInput(ThreadReadData, aError);
-	if (pContext)
-	{
-		CSample *pSample = &m_aSamples[pInfo->m_Id];
-
-		int NumSamples = WavpackGetNumSamples(pContext);
-		int BitsPerSample = WavpackGetBitsPerSample(pContext);
-		unsigned int SampleRate = WavpackGetSampleRate(pContext);
-		int NumChannels = WavpackGetNumChannels(pContext);
-
-		if(NumChannels > 2)
-		{
-			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pInfo->m_pFilename);
-			return -1;
-		}
-
-		/*
-		if(snd->rate != 44100)
-		{
-			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
-			return -1;
-		}*/
-
-		if(BitsPerSample != 16)
-		{
-			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pInfo->m_pFilename);
-			return -1;
-		}
-
-		short *pFinalData = (short *)mem_alloc(2*NumSamples*NumChannels, 1);
-
-		{
-			int *pTmpData = (int *)mem_alloc(4*NumSamples*NumChannels, 1);
-			WavpackUnpackSamples(pContext, pTmpData, NumSamples); // TODO: check return value
-
-			// convert int32 to int16
-			{
-				int *pSrc = pTmpData;
-				short *pDst = pFinalData;
-				for(int i = 0; i < NumSamples*NumChannels; i++)
-					*pDst++ = (short)*pSrc++;
-			}
-
-			mem_free(pTmpData);
-		}
-
-		pSample->m_Channels = NumChannels;
-		pSample->m_Rate = SampleRate;
-		pSample->m_LoopStart = -1;
-		pSample->m_LoopEnd = -1;
-		pSample->m_PausedAt = 0;
-		pSample->m_pData = pFinalData;
-		sync_barrier(); // make sure that all parameters are written before we say how large it is
-		pSample->m_NumFrames = NumSamples;
-	}
-	else
-	{
-		dbg_msg("sound/wv", "failed to open %s: %s", pInfo->m_pFilename, aError);
-	}
-
-	//if(g_Config.m_Debug)
-	//	dbg_msg("sound/wv", "loaded %s", pFilename);
-
-	//RateConvert(SampleID);
-
-	int r = 1;
-	if(r)
-		return r;
-
-	//pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
-	return 0;
-}
-#endif
-
-IResources::IResource *CSound::CResourceHandler::Create(IResources::CResourceId Id)
-{
-	return new CResource_Sound(m_pSound->AllocID());
+	return new CResource_Sample();
 }
 
 
@@ -481,9 +311,9 @@ static int ThreadReadData(void *pBuffer, int ChunkSize)
 	return ChunkSize;
 }
 
-bool CSound::CResourceHandler::Load(IResources::IResource *pResource, void *pData, unsigned DataSize)
+bool CSound::CResourceHandler::Load(IResource *pResource, void *pData, unsigned DataSize)
 {
-	CResource_Sound *pSound = static_cast<CResource_Sound*>(pResource);
+	CResource_Sample *pSample = static_cast<CResource_Sample*>(pResource);
 
 	char aError[100];
 	gt_pWVData = (char*)pData;
@@ -491,8 +321,6 @@ bool CSound::CResourceHandler::Load(IResources::IResource *pResource, void *pDat
 	WavpackContext *pContext = WavpackOpenFileInput(ThreadReadData, aError);
 	if (pContext)
 	{
-		CSample *pSample = &m_aSamples[pSound->m_Slot];
-
 		int NumSamples = WavpackGetNumSamples(pContext);
 		int BitsPerSample = WavpackGetBitsPerSample(pContext);
 		unsigned int SampleRate = WavpackGetSampleRate(pContext);
@@ -549,163 +377,20 @@ bool CSound::CResourceHandler::Load(IResources::IResource *pResource, void *pDat
 		dbg_msg("sound/wv", "failed to open %s: %s", pResource->m_Id.m_pName, aError);
 	}
 
-	//if(g_Config.m_Debug)
-	//	dbg_msg("sound/wv", "loaded %s", pFilename);
-
 	//RateConvert(SampleID);
-
-	int r = 1;
-	if(r)
-		return r;
-
-	//pInfo->m_pGL->m_TextureLoads.Push(&pInfo->m_TextureLoadInfo);
 	return 0;
 }
 
-bool CSound::CResourceHandler::Insert(IResources::IResource *pResource)
+bool CSound::CResourceHandler::Insert(IResource *pResource)
 {
 	// sounds can be inserted directly when they are loaded
 	return true;
 }
 
 
-int CSound::LoadWV(const char *pFilename)
+IResource *CSound::LoadWV(const char *pFilename)
 {
-#if 1
-	CResource_Sound *pSound = static_cast<CResource_Sound*>(m_pResources->GetResource(pFilename));
-	if(!pSound)
-		return -1;
-	return pSound->m_Slot;
-#elif 1
-	SLoadSoundJobInfo *pInfo = g_JobHandler.AllocJobData<SLoadSoundJobInfo>();
-	pInfo->m_pSound = this;
-
-	// TODO: file io shouldn't be done here
-	char aCompleteFilename[512];
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
-	if(File)
-		io_close(File);
-	else
-		return -1;
-
-	int SampleID = AllocID();
-	if(SampleID < 0)
-		return -1;
-
-	int l = str_length(aCompleteFilename)+1;
-	char *pStr = (char *)mem_alloc(l, sizeof(void*));
-	pInfo->m_pFilename = pStr;
-	mem_copy(pStr, aCompleteFilename, l);
-
-	pInfo->m_Id = SampleID;
-	CSample *pSample = &m_aSamples[SampleID];
-	mem_zero(pSample, sizeof(*pSample));
-
-	g_JobHandler.Kick(0, Job_LoadSound_LoadFile, pInfo);
-
-	return SampleID;
-			
-#else
-	CSample *pSample;
-	int SampleID = -1;
-	char aError[100];
-	WavpackContext *pContext;
-
-	// don't waste memory on sound when we are stress testing
-	if(g_Config.m_DbgStress)
-		return -1;
-
-	// no need to load sound when we are running with no sound
-	if(!m_SoundEnabled)
-		return 1;
-
-	if(!m_pStorage)
-		return -1;
-
-	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!ms_File)
-	{
-		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
-		return -1;
-	}
-
-	int64 StartTime = time_get();
-
-	SampleID = AllocID();
-	if(SampleID < 0)
-		return -1;
-	pSample = &m_aSamples[SampleID];
-
-	pContext = WavpackOpenFileInput(ReadData, aError);
-	if (pContext)
-	{
-		int m_aSamples = WavpackGetNumSamples(pContext);
-		int BitsPerSample = WavpackGetBitsPerSample(pContext);
-		unsigned int SampleRate = WavpackGetSampleRate(pContext);
-		int m_aChannels = WavpackGetNumChannels(pContext);
-		int *pData;
-		int *pSrc;
-		short *pDst;
-		int i;
-
-		pSample->m_Channels = m_aChannels;
-		pSample->m_Rate = SampleRate;
-
-		if(pSample->m_Channels > 2)
-		{
-			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
-			return -1;
-		}
-
-		/*
-		if(snd->rate != 44100)
-		{
-			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
-			return -1;
-		}*/
-
-		if(BitsPerSample != 16)
-		{
-			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
-			return -1;
-		}
-
-		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels, 1);
-		WavpackUnpackSamples(pContext, pData, m_aSamples); // TODO: check return value
-		pSrc = pData;
-
-		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels, 1);
-		pDst = pSample->m_pData;
-
-		for (i = 0; i < m_aSamples*m_aChannels; i++)
-			*pDst++ = (short)*pSrc++;
-
-		mem_free(pData);
-
-		pSample->m_NumFrames = m_aSamples;
-		pSample->m_LoopStart = -1;
-		pSample->m_LoopEnd = -1;
-		pSample->m_PausedAt = 0;
-	}
-	else
-	{
-		dbg_msg("sound/wv", "failed to open %s: %s", pFilename, aError);
-	}
-
-	io_close(ms_File);
-	ms_File = NULL;
-
-	if(g_Config.m_Debug)
-		dbg_msg("sound/wv", "loaded %s", pFilename);
-
-	RateConvert(SampleID);
-
-
-	SoundLoadTime += time_get() - StartTime;
-	dbg_msg("", "sound: %d", (int)((SoundLoadTime*1000)/time_freq()));
-
-	return SampleID;
-#endif
+	return m_pResources->GetResource(pFilename);
 }
 
 void CSound::SetListenerPos(float x, float y)
@@ -721,8 +406,9 @@ void CSound::SetChannel(int ChannelID, float Vol, float Pan)
 	m_aChannels[ChannelID].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
 }
 
-int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
+int CSound::Play(int ChannelID, IResource *pSoundResource, int Flags, float x, float y)
 {
+	CResource_Sample *pSample = static_cast<CResource_Sample*>(pSoundResource);
 	int VoiceID = -1;
 	int i;
 
@@ -743,10 +429,10 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 	// voice found, use it
 	if(VoiceID != -1)
 	{
-		m_aVoices[VoiceID].m_pSample = &m_aSamples[SampleID];
+		m_aVoices[VoiceID].m_pSample = pSample;
 		m_aVoices[VoiceID].m_pChannel = &m_aChannels[ChannelID];
 		if(Flags & FLAG_LOOP)
-			m_aVoices[VoiceID].m_Tick = m_aSamples[SampleID].m_PausedAt;
+			m_aVoices[VoiceID].m_Tick = pSample->m_PausedAt;
 		else
 			m_aVoices[VoiceID].m_Tick = 0;
 		m_aVoices[VoiceID].m_Vol = 255;
@@ -759,21 +445,22 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 	return VoiceID;
 }
 
-int CSound::PlayAt(int ChannelID, int SampleID, int Flags, float x, float y)
+int CSound::PlayAt(int ChannelID, IResource *pSoundResource, int Flags, float x, float y)
 {
-	return Play(ChannelID, SampleID, Flags|ISound::FLAG_POS, x, y);
+	return Play(ChannelID, pSoundResource, Flags|ISound::FLAG_POS, x, y);
 }
 
-int CSound::Play(int ChannelID, int SampleID, int Flags)
+int CSound::Play(int ChannelID, IResource *pSoundResource, int Flags)
 {
-	return Play(ChannelID, SampleID, Flags, 0, 0);
+	return Play(ChannelID, pSoundResource, Flags, 0, 0);
 }
 
-void CSound::Stop(int SampleID)
+void CSound::Stop(IResource *pSoundResource)
 {
+	CResource_Sample *pSample = static_cast<CResource_Sample*>(pSoundResource);
+
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
-	CSample *pSample = &m_aSamples[SampleID];
 	for(int i = 0; i < NUM_VOICES; i++)
 	{
 		if(m_aVoices[i].m_pSample == pSample)
@@ -805,8 +492,6 @@ void CSound::StopAll()
 	}
 	lock_release(m_SoundLock);
 }
-
-IOHANDLE CSound::ms_File = 0;
 
 IEngineSound *CreateEngineSound() { return new CSound; }
 

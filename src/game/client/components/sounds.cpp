@@ -24,8 +24,8 @@ static int LoadSoundsThread(void *pUser)
 	{
 		for(int i = 0; i < g_pData->m_aSounds[s].m_NumSounds; i++)
 		{
-			int Id = pData->m_pGameClient->Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
-			g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
+			g_pData->m_aSounds[s].m_aSounds[i].m_pResource = pData->m_pGameClient->Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
+			//g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
 		}
 
 		// TODO: this isn't needed any more
@@ -153,7 +153,7 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 
 	if(pSet->m_NumSounds == 1)
 	{
-		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_Id, Flags, Pos.x, Pos.y);
+		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_pResource, Flags, Pos.x, Pos.y);
 		return;
 	}
 
@@ -164,7 +164,7 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 		Id = rand() % pSet->m_NumSounds;
 	}
 	while(Id == pSet->m_Last);
-	Sound()->PlayAt(Chn, pSet->m_aSounds[Id].m_Id, Flags, Pos.x, Pos.y);
+	Sound()->PlayAt(Chn, pSet->m_aSounds[Id].m_pResource, Flags, Pos.x, Pos.y);
 	pSet->m_Last = Id;
 }
 
@@ -176,5 +176,5 @@ void CSounds::Stop(int SetId)
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
 
 	for(int i = 0; i < pSet->m_NumSounds; i++)
-		Sound()->Stop(pSet->m_aSounds[i].m_Id);
+		Sound()->Stop(pSet->m_aSounds[i].m_pResource);
 }

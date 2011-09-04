@@ -4,7 +4,7 @@ from datatypes import *
 class Sound(Struct):
 	def __init__(self, filename=""):
 		Struct.__init__(self, "CDataSound")
-		self.id = Int(0)
+		self.resource = Resource()
 		self.filename = String(filename)
 
 class SoundSet(Struct):
