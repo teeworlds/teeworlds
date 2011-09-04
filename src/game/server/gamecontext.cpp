@@ -1076,6 +1076,69 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
+void CGameContext::ConSwapTeams(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "swaped the current teams");
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		{
+			int Team = pSelf->m_apPlayers[i]->GetTeam();
+			if(Team == TEAM_RED)
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
+			else
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
+		}
+	}
+
+	(void)pSelf->m_pController->CheckTeamBalance();
+
+
+
+}
+
+void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int counterRed = 0;
+	int counterBlue = 0;
+	int PlayerTeam = (g_Config.m_SvMaxClients-g_Config.m_SvSpectatorSlots)/2;
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "shuffled the current teams");
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		{
+			if( counterRed == PlayerTeam )
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
+			else if( counterBlue == PlayerTeam )
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
+			else
+			{	
+				if(rand() % 2)
+				{
+					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
+					++counterBlue;
+				}
+				else
+				{
+					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
+					++counterRed;
+				}
+			}
+		}
+	}
+}
+
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1335,6 +1398,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Say in chat");
 	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, ConSetTeam, this, "Set team of player to team");
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "Set team of all players to team");
+	Console()->Register("swap_teams", "", CFGFLAG_SERVER, ConSwapTeams, this, "Swap the current teams");
+	Console()->Register("shuffle_teams", "", CFGFLAG_SERVER, ConShuffleTeams, this, "Shuffle the current teams");
 
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "Add a voting option");
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "remove a voting option");
