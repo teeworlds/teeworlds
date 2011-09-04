@@ -53,9 +53,6 @@ public:
 	int Update();
 	int Shutdown();
 
-	// TODO: reimplement RateConvert
-	//static void RateConvert(int SampleID);
-
 	virtual bool IsSoundEnabled() { return m_SoundEnabled != 0; }
 
 	virtual IResource *LoadWV(const char *pFilename);

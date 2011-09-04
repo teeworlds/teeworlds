@@ -252,46 +252,6 @@ int CSound::Shutdown()
 	return 0;
 }
 
-/*
-// TODO: reimplement this
-void CSound::RateConvert(int SampleID)
-{
-	CSample *pSample = &m_aSamples[SampleID];
-	int NumFrames = 0;
-	short *pNewData = 0;
-
-	// make sure that we need to convert this sound
-	if(!pSample->m_pData || pSample->m_Rate == m_MixingRate)
-		return;
-
-	// allocate new data
-	NumFrames = (int)((pSample->m_NumFrames/(float)pSample->m_Rate)*m_MixingRate);
-	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short), 1);
-
-	for(int i = 0; i < NumFrames; i++)
-	{
-		// resample TODO: this should be done better, like linear atleast
-		float a = i/(float)NumFrames;
-		int f = (int)(a*pSample->m_NumFrames);
-		if(f >= pSample->m_NumFrames)
-			f = pSample->m_NumFrames-1;
-
-		// set new data
-		if(pSample->m_Channels == 1)
-			pNewData[i] = pSample->m_pData[f];
-		else if(pSample->m_Channels == 2)
-		{
-			pNewData[i*2] = pSample->m_pData[f*2];
-			pNewData[i*2+1] = pSample->m_pData[f*2+1];
-		}
-	}
-
-	// free old data and apply new
-	mem_free(pSample->m_pData);
-	pSample->m_pData = pNewData;
-	pSample->m_NumFrames = NumFrames;
-}*/
-
 IResource *CSound::CResourceHandler::Create(IResources::CResourceId Id)
 {
 	return new CResource_Sample();
@@ -361,6 +321,40 @@ bool CSound::CResourceHandler::Load(IResource *pResource, void *pData, unsigned 
 
 			mem_free(pTmpData);
 		}
+
+		// do rate convert
+		{
+			int NewNumFrames = 0;
+			short *pNewData = 0;
+
+			// allocate new data
+			NewNumFrames = (int)((NumSamples / (float)SampleRate)*m_MixingRate);
+			pNewData = (short *)mem_alloc(NewNumFrames*NumChannels*sizeof(short), sizeof(void*));
+
+			for(int i = 0; i < NewNumFrames; i++)
+			{
+				// resample TODO: this should be done better, like linear atleast
+				float a = i/(float)NewNumFrames;
+				int f = (int)(a*NumSamples);
+				if(f >= NumSamples)
+					f = NumSamples-1;
+
+				// set new data
+				if(NumChannels == 1)
+					pNewData[i] = pFinalData[f];
+				else if(NumChannels == 2)
+				{
+					pNewData[i*2] = pFinalData[f*2];
+					pNewData[i*2+1] = pFinalData[f*2+1];
+				}
+			}
+
+			// free old data and apply new
+			mem_free(pFinalData);
+			pFinalData = pNewData;
+			NumSamples = NewNumFrames;
+		}
+
 
 		// insert it directly, we don't need to wait for anything
 		pSample->m_Channels = NumChannels;
