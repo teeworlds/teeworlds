@@ -3,8 +3,11 @@
 #ifndef ENGINE_CLIENT_SOUND_H
 #define ENGINE_CLIENT_SOUND_H
 
+#include <base/tl/base.h>
 #include <engine/sound.h>
 #include <engine/loader.h>
+
+
 
 class CSound : public IEngineSound
 {
@@ -24,6 +27,18 @@ public:
 			m_PausedAt = 0;
 		}
 
+		virtual ~CResource_Sample()
+		{
+			assert(m_pData == 0);
+		}
+
+		void FreeData()
+		{
+			if(m_pData)
+				mem_free(m_pData);
+			m_pData = 0x0;
+		}
+
 		short *m_pData;
 		int m_NumFrames;
 		int m_Rate;
@@ -40,6 +55,7 @@ public:
 		virtual IResource *Create(IResources::CResourceId Id);
 		virtual bool Load(IResource *pResource, void *pData, unsigned DataSize);
 		virtual bool Insert(IResource *pResource);
+		virtual bool Destroy(IResource *pResource);
 	};
 
 	CResourceHandler m_ResourceHandler;

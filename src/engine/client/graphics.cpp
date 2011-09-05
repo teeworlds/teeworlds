@@ -279,6 +279,7 @@ void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 int CGraphics_OpenGL::UnloadTexture(IResource *pTexture)
 {
 	// TODO: texture unload
+	pTexture->Destroy();
 	return 0;
 
 	/*
@@ -452,13 +453,21 @@ bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 {
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	CImageInfo *pInfo = &pTexture->m_ImageInfo;
-	dbg_msg("graphics", "inserting %s", pResource->m_Id.m_pName);
+	dbg_msg("graphics", "inserting %s", pResource->Name());
 	m_pGL->LoadTextureRawToResource(pTexture, pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
 	
 	// free the texture data
 	mem_free(pInfo->m_pData);
 	pInfo->m_pData = 0;
 
+	return true;
+}
+
+bool CGraphics_OpenGL::CTextureHandler::Destroy(IResource *pResource)
+{
+	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
+	glDeleteTextures(1, &pTexture->m_TexId);
+	pTexture->m_TexId = 0;
 	return true;
 }
 

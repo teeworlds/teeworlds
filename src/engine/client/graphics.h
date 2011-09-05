@@ -83,6 +83,7 @@ protected:
 		virtual IResource *Create(IResources::CResourceId Id);
 		virtual bool Load(IResource *pResource, void *pData, unsigned DataSize);
 		virtual bool Insert(IResource *pResource);
+		virtual bool Destroy(IResource *pResource);
 	};
 
 	CTextureHandler m_TextureHandler;

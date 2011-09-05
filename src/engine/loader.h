@@ -77,6 +77,7 @@ class IResource;
 class IResources : public IInterface
 {
 	MACRO_INTERFACE("resources", 0)
+	friend class IResource;
 public:
 	class IHandler;
 
@@ -86,14 +87,6 @@ public:
 		unsigned m_ContentHash;
 		unsigned m_NameHash;
 		const char *m_pName;
-	};
-
-	// TODO: do we want this?
-	class CResourceLocator // TODO: haha, rename
-	{
-		int m_iHandler;
-		int m_Index;
-	public:
 	};
 
 	class IHandler
@@ -107,8 +100,9 @@ public:
 		// called from job thread
 		virtual bool Load(IResource *pResource, void *pData, unsigned DataSize) = 0;
 
-		// called from the main thread
+		// called from the main thread during IResources::Update()
 		virtual bool Insert(IResource *pResource) = 0;
+		virtual bool Destroy(IResource *pResource) = 0;
 	};
 
 
@@ -120,7 +114,6 @@ public:
 
 	virtual IResource *GetResource(CResourceId Id) = 0;
 
-	/*template<class T>*/
 	IResource *GetResource(const char *pName)
 	{
 		CResourceId Id;
@@ -130,20 +123,21 @@ public:
 		return GetResource(Id);
 	}
 
-	//FetchResource(int Id)
-
 	static IResources *CreateInstance();
+
+private:
+	virtual	void Destroy(IResource *pResource) = 0;
 };
 
 
 class IResource
 {
-public:
-	IResource()
-	{
-		mem_zero(&m_Id, sizeof(m_Id));
-	}
+	friend class IResources;
+	friend class CResources;
 
+
+protected:
+	// only IResources can destory a resource for good
 	virtual ~IResource()
 	{
 		if(m_Id.m_pName)
@@ -151,22 +145,35 @@ public:
 		m_Id.m_pName = 0x0;
 	}
 
+	unsigned m_State;
 	IResources::CResourceId m_Id;
 	IResources::IHandler *m_pHandler;
+	IResources *m_pResources;
 
-	bool IsLoaded() const;
-
-
-	/*enum
+	enum
 	{
-		FLAG_LOADING,
-		xFLAG_LOADED,
-	};*/
+		STATE_ERROR = -1,
+		STATE_LOADING = 0,
+		STATE_LOADED,
+	};
 
-	unsigned m_Flags;
+	// only a handler should be able to create a resource
+	IResource()
+	{
+		m_State = STATE_LOADING;
+		m_pResources = 0;
+		m_pHandler = 0;
+		mem_zero(&m_Id, sizeof(m_Id));
+	}
+
+public:
+	void Destroy()
+	{
+		m_pResources->Destroy(this);
+	}
+
+	const char *Name() const { return m_Id.m_pName; }
+
+	bool IsLoading() const { return m_State == STATE_LOADING; }
+	bool IsLoaded() const { return m_State == STATE_LOADED; }
 };
-
-//typedef IResources::IResource IResource;
-
-#define MACRO_RESOURCETYPE(a,b,c,d) ((a<<24) | (b<<16) | (c<<8) | d)
-#define DECLARE_RESOURCE(a,b,c,d) enum { RESOURCE_TYPE = MACRO_RESOURCETYPE(a,b,c,d) };

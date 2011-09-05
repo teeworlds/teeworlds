@@ -288,7 +288,7 @@ bool CSound::CResourceHandler::Load(IResource *pResource, void *pData, unsigned 
 
 		if(NumChannels > 2)
 		{
-			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pResource->m_Id.m_pName);
+			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pResource->Name());
 			return -1;
 		}
 
@@ -301,7 +301,7 @@ bool CSound::CResourceHandler::Load(IResource *pResource, void *pData, unsigned 
 
 		if(BitsPerSample != 16)
 		{
-			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pResource->m_Id.m_pName);
+			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pResource->Name());
 			return -1;
 		}
 
@@ -368,7 +368,7 @@ bool CSound::CResourceHandler::Load(IResource *pResource, void *pData, unsigned 
 	}
 	else
 	{
-		dbg_msg("sound/wv", "failed to open %s: %s", pResource->m_Id.m_pName, aError);
+		dbg_msg("sound/wv", "failed to open %s: %s", pResource->Name(), aError);
 	}
 
 	//RateConvert(SampleID);
@@ -380,6 +380,19 @@ bool CSound::CResourceHandler::Insert(IResource *pResource)
 	// sounds can be inserted directly when they are loaded
 	return true;
 }
+
+
+bool CSound::CResourceHandler::Destroy(IResource *pResource)
+{
+	CResource_Sample *pSample = static_cast<CResource_Sample*>(pResource);
+
+	// make sure that the mixer isn't touching the sample
+	m_pSound->Stop(pSample);
+	pSample->FreeData();
+
+	return true;
+}
+
 
 
 IResource *CSound::LoadWV(const char *pFilename)

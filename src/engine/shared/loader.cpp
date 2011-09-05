@@ -102,7 +102,7 @@ class CResources : public IResources
 		// TODO: check hash as well if wanted
 		for(int i = 0; i < m_lpResources.size(); i++)
 		{
-			if(str_comp(m_lpResources[i]->m_Id.m_pName, Id.m_pName) == 0)
+			if(str_comp(m_lpResources[i]->Name(), Id.m_pName) == 0)
 				return m_lpResources[i];
 		}
 
@@ -161,12 +161,8 @@ class CResources : public IResources
 		return pResource;
 	}
 
-	struct CResourceInsert
-	{
-		IResource *m_pResource;
-	};
-
-	ringbuffer_mwsr<CResourceInsert, 1024> m_lInserts;
+	ringbuffer_mwsr<IResource*, 1024> m_lInserts; // job threads writes, main thread reads
+	ringbuffer_swsr<IResource*, 1024> m_lDestroys; // main thread only
 
 	struct CLoadJobInfo
 	{
@@ -227,6 +223,7 @@ class CResources : public IResources
 		else
 		{
 			dbg_msg("resources", "couldn't find '%s'", pFilename);
+			pInfo->m_pResource->m_State = IResource::STATE_ERROR;
 			return -1;
 		}
 
@@ -235,6 +232,7 @@ class CResources : public IResources
 		if(r)
 		{
 			dbg_msg("resources", "failed loading '%s'", aCompleteFilename);
+			pInfo->m_pResource->m_State = IResource::STATE_ERROR;
 			return r;
 		}
 
@@ -254,13 +252,12 @@ class CResources : public IResources
 		if(pHandler->Load(pInfo->m_pResource, pInfo->m_pData, pInfo->m_DataSize) != 0)
 		{
 			dbg_msg("resources", "failed to process '%s'", pInfo->m_pResource->m_Id.m_pName);
+			pInfo->m_pResource->m_State = IResource::STATE_ERROR;
 			return -2;
 		}
 
 		// queue the resource for insert 
-		CResourceInsert Insert;
-		Insert.m_pResource = pInfo->m_pResource;
-		pInfo->m_pThis->m_lInserts.push(Insert);
+		pInfo->m_pThis->m_lInserts.push(pInfo->m_pResource);
 
 		// do some clean up the job data
 		mem_free(pInfo->m_pData);		
@@ -292,13 +289,40 @@ public:
 
 	virtual void Update()
 	{
+		// handle all resource deletes
+		// push a null marker, we are done with the deletes when we hit this marker
+		m_lDestroys.push(0x0); 
+		while(true)
+		{
+			IResource *pResource = m_lDestroys.pop();
+			if(pResource == 0)
+				break;
+			
+			// TODO: we need to make sure that this isn't in the loading queue when we delete it
+			if(pResource->IsLoading())
+			{
+				pResource->m_pHandler->Destroy(pResource);
+				assert(pResource->Name() != 0); // make sure that the handler didn't call delete on the resource
+				delete pResource;
+			}
+			else
+			{
+				m_lDestroys.push(pResource);
+			}
+		}
+
 		// handle all resource inserts
 		while(m_lInserts.size())
 		{
-			CResourceInsert Insert = m_lInserts.pop();
-			//dbg_msg("resources", "inserting %s", Insert.m_pResource->m_Id.m_pName);
-			Insert.m_pResource->m_pHandler->Insert(Insert.m_pResource);
+			IResource *pResource = m_lInserts.pop();
+			pResource->m_pHandler->Insert(pResource);
+			pResource->m_State = IResource::STATE_LOADED;
 		}
+	}
+
+	virtual	void Destroy(IResource *pResource)
+	{
+		m_lDestroys.push(pResource);
 	}
 };
 
