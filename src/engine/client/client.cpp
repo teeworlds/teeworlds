@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 
-#include <stdlib.h> // qsort
+#include <stdlib.h> // qsort, srand
 #include <stdarg.h>
 
 #include <base/math.h>
@@ -2201,6 +2201,8 @@ int main(int argc, const char **argv) // ignore_convention
 		}
 	}
 #endif
+
+	srand((unsigned)(time_get()/time_freq()));
 
 	CClient *pClient = CreateClient();
 	IKernel *pKernel = IKernel::Create();
