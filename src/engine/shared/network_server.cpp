@@ -244,6 +244,23 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 	return 0;
 }
 
+void CNetServer::SaveBans(IOHANDLE File)
+{
+	for(CBan *pBan = m_BanPool_FirstUsed; pBan; pBan = pBan->m_pNext)
+	{
+		char aAddr[NETADDR_MAXSTRSIZE];
+		net_addr_str(&pBan->m_Info.m_Addr, aAddr, sizeof(aAddr));
+
+		int Mins = -1;
+		if(pBan->m_Info.m_Expires > -1)
+			Mins = ((pBan->m_Info.m_Expires - time_timestamp())+59)/60;
+
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "ban %s %d %s\n", aAddr, Mins, pBan->m_Info.m_Reason);
+		io_write(File, aBuf, str_length(aBuf));
+	}
+}
+
 int CNetServer::Update()
 {
 	int Now = time_timestamp();

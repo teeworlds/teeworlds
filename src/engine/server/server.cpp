@@ -1336,6 +1336,15 @@ int CServer::Run()
 		m_Econ.Shutdown();
 	}
 
+	// save bans
+	if(g_Config.m_SvBanfile)
+	{
+		IOHANDLE File = m_pStorage->OpenFile("bans.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(File)
+			m_NetServer.SaveBans(File);
+		io_close(File);
+	}
+
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
 
@@ -1726,6 +1735,10 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
+
+	// execute bans file
+	if(g_Config.m_SvBanfile)
+		pConsole->ExecuteFile(g_Config.m_SvBanfile);
 
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention

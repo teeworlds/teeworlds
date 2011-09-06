@@ -312,6 +312,7 @@ public:
 	int BanRemove(NETADDR Addr);
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow
+	void SaveBans(IOHANDLE File);
 
 	// status requests
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
