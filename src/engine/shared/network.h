@@ -310,6 +310,7 @@ public:
 	// banning
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
+	int BanRemoveAll();
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow
 
