@@ -188,6 +188,7 @@ public:
 
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
+	int BanRemoveAll();
 
 	void PumpNetwork();
 
@@ -200,6 +201,7 @@ public:
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConBan(IConsole::IResult *pResult, void *pUser);
 	static void ConUnban(IConsole::IResult *pResult, void *pUser);
+	static void ConUnbanAll(IConsole::IResult *pResult, void *pUser);
 	static void ConBans(IConsole::IResult *pResult, void *pUser);
  	static void ConStatus(IConsole::IResult *pResult, void *pUser);
 	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
