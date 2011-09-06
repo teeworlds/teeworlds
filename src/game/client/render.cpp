@@ -75,7 +75,7 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 
 void CRenderTools::SelectSprite(int Id, int Flags, int sx, int sy)
 {
-	if(Id < 0 || Id > g_pData->m_NumSprites)
+	if(Id < 0 || Id >= g_pData->m_NumSprites)
 		return;
 	SelectSprite(&g_pData->m_aSprites[Id], Flags, sx, sy);
 }
