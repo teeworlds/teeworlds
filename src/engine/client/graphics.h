@@ -59,6 +59,8 @@ protected:
 
 	class CResource_Texture : public IResource
 	{
+		friend class CGraphics_OpenGL;
+		void SetLoaded() { m_State = IResource::STATE_LOADED; }
 	public:
 		CResource_Texture()
 		{

@@ -65,15 +65,18 @@ void CJobHandler::WorkerThread(void *pUser)
 		{
 			// do the job!
 			Order.m_pfnProcess(pJobHandler, Order.m_pData);
+			//thread_sleep(100);
 
 			// no need to take a lock for this one
 			sync_barrier();
-			atomic_dec(&pJobHandler->m_aQueues[QueueId].m_WorkerCount);
+			/*unsigned Count =*/ atomic_dec(&pJobHandler->m_aQueues[QueueId].m_WorkerCount);
 			atomic_inc(&pJobHandler->m_WorkDone);
 
 			// we must signal again because there can be stuff in the queue but was blocked by
 			// the max worker count
-			pJobHandler->m_Semaphore.signal();
+			/*if(Count == pJobHandler->m_aQueues[QueueId].m_MaxWorkers)
+				pJobHandler->m_Semaphore.signal();
+				*/
 		}
 
 		atomic_inc(&pJobHandler->m_WorkTurns);
@@ -82,8 +85,12 @@ void CJobHandler::WorkerThread(void *pUser)
 
 class CResources : public IResources
 {
-	//ringbuffer_mwsr<CRequest,1024> m_Queue;
-	//semaphore m_Semaphore;
+	enum
+	{
+		// a bit ugly
+		JOBQUEUE_IO = CJobHandler::NUM_QUEUES - 1,
+		JOBQUEUE_PROCESS = JOBQUEUE_IO - 1,
+	};
 
 	class CHandlerEntry
 	{
@@ -94,7 +101,6 @@ class CResources : public IResources
 	array<CHandlerEntry> m_lHandlers;
 
 	array<IResource*> m_lpResources;
-	lock m_Lock;
 
 	IResource *FindResource(CResourceId Id)
 	{
@@ -149,6 +155,8 @@ class CResources : public IResources
 
 		IResource *pResource = pHandler->Create(Id);
 		pResource->m_Id = Id;
+		pResource->m_pResources = this;
+		pResource->m_pHandler = pHandler;
 
 		// copy the name
 		int NameSize = str_length(pResource->m_Id.m_pName) + 1;
@@ -156,7 +164,6 @@ class CResources : public IResources
 		mem_copy(pName, Id.m_pName, NameSize);
 		pResource->m_Id.m_pName = (const char *)pName;
 
-		pResource->m_pHandler = pHandler;
 		LoadResource(pResource);
 		return pResource;
 	}
@@ -177,7 +184,7 @@ class CResources : public IResources
 		CLoadJobInfo *pInfo = g_JobHandler.AllocJobData<CLoadJobInfo>();
 		pInfo->m_pThis = this;
 		pInfo->m_pResource = pResource;
-		g_JobHandler.Kick(0, Job_LoadFile, pInfo);
+		g_JobHandler.Kick(JOBQUEUE_IO, Job_LoadFile, pInfo);
 	}
 
 	static int LoadWholeFile(const char *pFilename, void **ppData, unsigned *pDataSize)
@@ -214,9 +221,9 @@ class CResources : public IResources
 		// TODO: use storage to figure out were the file is located
 		char const *pFilename = pInfo->m_pResource->m_Id.m_pName;
 		
-		IStorage *pStorage = pInfo->m_pThis->Kernel()->RequestInterface<IStorage>();
-
+		// TODO: this is scary, we are calling pStorage that has no clue that it's being called from a different thread
 		char aCompleteFilename[512];
+		IStorage *pStorage = pInfo->m_pThis->Kernel()->RequestInterface<IStorage>();
 		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
 		if(File)
 			io_close(File);
@@ -237,7 +244,7 @@ class CResources : public IResources
 		}
 
 		// kick the data off to processing
-		pJobHandler->Kick(0,Job_ProcessData, pData);
+		pJobHandler->Kick(JOBQUEUE_IO, Job_ProcessData, pData);
 		return 0;
 	}
 
@@ -295,19 +302,19 @@ public:
 		while(true)
 		{
 			IResource *pResource = m_lDestroys.pop();
-			if(pResource == 0)
+			if(pResource == 0x0)
 				break;
 			
 			// TODO: we need to make sure that this isn't in the loading queue when we delete it
 			if(pResource->IsLoading())
 			{
-				pResource->m_pHandler->Destroy(pResource);
-				assert(pResource->Name() != 0); // make sure that the handler didn't call delete on the resource
-				delete pResource;
+				m_lDestroys.push(pResource);
 			}
 			else
 			{
-				m_lDestroys.push(pResource);
+				pResource->m_pHandler->Destroy(pResource);
+				assert(pResource->Name() != 0); // make sure that the handler didn't call delete on the resource
+				delete pResource;
 			}
 		}
 
@@ -322,6 +329,7 @@ public:
 
 	virtual	void Destroy(IResource *pResource)
 	{
+		m_lpResources.remove_fast(pResource);
 		m_lDestroys.push(pResource);
 	}
 };

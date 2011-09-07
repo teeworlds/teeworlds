@@ -278,24 +278,8 @@ void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 
 int CGraphics_OpenGL::UnloadTexture(IResource *pTexture)
 {
-	// TODO: texture unload
 	pTexture->Destroy();
 	return 0;
-
-	/*
-
-	if(Index == m_InvalidTexture)
-		return 0;
-
-	if(Index < 0)
-		return 0;
-
-	glDeleteTextures(1, &m_aTextures[Index].m_Tex);
-	m_aTextures[Index].m_Next = m_FirstFreeTexture;
-	m_TextureMemoryUsage -= m_aTextures[Index].m_MemSize;
-	m_FirstFreeTexture = Index;
-	return 0;
-	*/
 }
 
 IResource *CGraphics_OpenGL::LoadTextureRawToResource(IResource *pResource, int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
@@ -392,6 +376,8 @@ IResource *CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, c
 {
 	IResources::CResourceId Id;
 	IResource *pResource = m_TextureHandler.Create(Id);
+	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
+	pTexture->SetLoaded();
 	return LoadTextureRawToResource(pResource, Width, Height, Format, pData, StoreFormat, Flags);
 }
 
@@ -421,22 +407,18 @@ bool CGraphics_OpenGL::CTextureHandler::Load(IResource *pResource, void *pData, 
 	int Error = png_open(&Png, PngReadFunc, &pData); // ignore_convention
 	if(Error != PNG_NO_ERROR)
 	{
-		//dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
-		//if(Error != PNG_FILE_ERROR)
-		//	png_close_file(&Png); // ignore_convention
+		dbg_msg("graphics", "failed to open file. name='%s'", pResource->Name());
 		return -1;// 0;
 	}
 
 	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA)) // ignore_convention
 	{
-		//dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
-		//png_close_file(&Png); // ignore_convention
+		dbg_msg("graphics", "invalid format. filename='%s'", pResource->Name());
 		return -2;// 0;
 	}
 
 	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp, 1); // ignore_convention
 	png_get_data(&Png, pBuffer); // ignore_convention
-	//png_close_file(&Png); // ignore_convention
 
 	pTexture->m_ImageInfo.m_Width = Png.width; // ignore_convention
 	pTexture->m_ImageInfo.m_Height = Png.height; // ignore_convention
@@ -453,7 +435,6 @@ bool CGraphics_OpenGL::CTextureHandler::Insert(IResource *pResource)
 {
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	CImageInfo *pInfo = &pTexture->m_ImageInfo;
-	dbg_msg("graphics", "inserting %s", pResource->Name());
 	m_pGL->LoadTextureRawToResource(pTexture, pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
 	
 	// free the texture data
@@ -468,13 +449,16 @@ bool CGraphics_OpenGL::CTextureHandler::Destroy(IResource *pResource)
 	CResource_Texture *pTexture = static_cast<CResource_Texture*>(pResource);
 	glDeleteTextures(1, &pTexture->m_TexId);
 	pTexture->m_TexId = 0;
+	m_pGL->m_TextureMemoryUsage -= pTexture->m_MemSize;
 	return true;
 }
 
 // simple uncompressed RGBA loaders
 IResource *CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
-	dbg_msg("graphics", "loading %s", pFilename);
+	(void)StorageType;
+	(void)StoreFormat;
+	(void)Flags;
 	return m_pResources->GetResource(pFilename);
 }
 

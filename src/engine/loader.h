@@ -45,7 +45,7 @@ public:
 
 	CJobHandler() { Init(4); }
 	void Init(int ThreadCount);
-	void ConfigureQueue(int QueueId, int MaxWorkers);
+	void ConfigureQueue(int QueueId, int MaxWorkers); // TODO: not working at the moment
 
 	void *AllocJobData(unsigned DataSize) { return mem_alloc(DataSize, sizeof(void*)); }
 	template<typename T> T *AllocJobData() { return (T *)AllocJobData(sizeof(T)); }
@@ -154,7 +154,7 @@ protected:
 	{
 		STATE_ERROR = -1,
 		STATE_LOADING = 0,
-		STATE_LOADED,
+		STATE_LOADED = 1,
 	};
 
 	// only a handler should be able to create a resource
