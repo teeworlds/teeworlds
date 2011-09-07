@@ -50,22 +50,22 @@ Alpha
 == Alfa
 
 Always show name plates
-== Oyuncu İsimlerini Her Zaman Göster
+== Oyuncu isimlerini her zaman göster
 
 Are you sure that you want to delete the demo?
-== Demo dosyasını silmek istediğinize eminmisiniz?
+== Demo dosyasını silmek istediğinize emin misiniz?
 
 Are you sure that you want to quit?
-== Çıkmak istediğinize eminmisiniz?
+== Çıkmak istediğinize emin misiniz?
 
 Are you sure that you want to remove the player from your friends list?
 == Bu oyuncuyu arkadaş listenizden kaldırmak istediğinize emin misiniz?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Oyunu ilk açışınız olduğundan takma adınızı giriniz. Bir oyuna katılmadan önce ayarları incelemeniz ve isteklerinize göre özelleştirmeniz önerilir.
+== Oyunu ilk açışınız olduğundan dolayı takma adınızı giriniz. Bir oyuna katılmadan önce ayarları incelemeniz ve isteklerinize göre özelleştirmeniz önerilir.
 
 Automatically record demos
-== Otomatik olarak demo kaydet
+== Demoları otomatik olarak kaydet
 
 Automatically take game over screenshot
 == Otomatik olarak oyun bitişinde ekran görüntüsü al
@@ -86,7 +86,7 @@ Change settings
 == Ayarları değiştir
 
 Chat
-== Chat
+== Sohbet
 
 Clan
 == Clan
@@ -95,7 +95,7 @@ Client
 == İstemci
 
 Close
-== Kapa
+== Kapat
 
 Compatible version
 == Uyumlu versiyon
@@ -107,7 +107,7 @@ Connecting to
 == Bağlanılıyor
 
 Connection Problems...
-== Bağlantı Hatası...
+== Bağlantı Hataları...
 
 Console
 == Konsol
@@ -122,16 +122,16 @@ Country
 == Ülke
 
 Crc:
-== Crc :
+== Crc:
 
 Created:
-== Yaratıldı :
+== Yaratıldı:
 
 Current
 == Şimdiki
 
 Current version: %s
-== Mevcut versyon : %s
+== Mevcut versiyon: %s
 
 Custom colors
 == Özel renkler
@@ -164,7 +164,7 @@ Draw!
 == Berabere!
 
 Dynamic Camera
-== Dinamik kamera
+== Dinamik Kamera
 
 Emoticon
 == Yüz ifadesi
@@ -200,7 +200,7 @@ Folder
 == Dosya
 
 Force vote
-== Oylamayı zorla
+== Oylamayı zorla 
 
 Free-View
 == Serbest Görüntü
