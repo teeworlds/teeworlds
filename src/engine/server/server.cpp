@@ -1342,9 +1342,9 @@ int CServer::Run()
 	}
 
 	// save bans
-	if(g_Config.m_SvBanfile)
+	if(g_Config.m_SvBanfile[0])
 	{
-		IOHANDLE File = m_pStorage->OpenFile("bans.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		IOHANDLE File = m_pStorage->OpenFile(g_Config.m_SvBanfile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(File)
 			m_NetServer.SaveBans(File);
 		io_close(File);
@@ -1750,7 +1750,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConsole->ExecuteFile("autoexec.cfg");
 
 	// execute bans file
-	if(g_Config.m_SvBanfile)
+	if(g_Config.m_SvBanfile[0])
 		pConsole->ExecuteFile(g_Config.m_SvBanfile);
 
 	// parse the command line arguments
