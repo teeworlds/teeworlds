@@ -63,7 +63,7 @@
 #if defined(__sun)
 	#define CONF_FAMILY_UNIX 1
 	#define CONF_FAMILY_STRING "unix"
-	#define CONF_PLATFROM_SOLARIS 1
+	#define CONF_PLATFORM_SOLARIS 1
 	#define CONF_PLATFORM_STRING "solaris"
 #endif
 
@@ -77,7 +77,7 @@
 
 
 /* use gcc endianness definitions when available */
-#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__MINGW32__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__MINGW32__) && !defined(__sun)
 	#if defined(__FreeBSD__) || defined(__OpenBSD__)
 		#include <sys/endian.h>
 	#else
