@@ -170,6 +170,34 @@ void IResources::CSource::Update()
 }
 
 
+void IResources::CSource::ForwardOrder(CLoadOrder *pOrder)
+{
+	if(!NextSource())
+		return;
+
+	NextSource()->m_lInput.push(*pOrder);
+	NextSource()->m_Semaphore.signal();
+}
+
+void IResources::CSource::FeedbackOrder(CLoadOrder *pOrder)
+{
+	if(!PrevSource())
+		return;
+	PrevSource()->m_lFeedback.push(*pOrder);
+	PrevSource()->m_Semaphore.signal();
+}
+
+void IResources::CSource::Run()
+{
+	while(1)
+	{
+		m_Semaphore.wait();
+		Update();
+	}
+}
+
+
+
 class CResources : public IResources
 {
 	enum

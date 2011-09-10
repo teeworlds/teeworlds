@@ -66,12 +66,32 @@ private:
 
 extern CJobHandler g_JobHandler;
 
-extern int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pDataSize);
-
 class IResource;
 
 
 /*
+
+this can be rendered with mscgen
+
+msc {
+	hscale = "2";
+	main, source_start, source_cache, source_disk, source_server, job;
+
+	main->source_start;
+
+	source_start -> source_cache [ label="CSource::m_lInput" ];
+	source_cache -> source_disk [  label="CSource::m_lInput" ];
+	source_disk -> source_server [ label="CSource::m_lInput" ];
+	
+	source_server -> source_disk [ label="CSource::m_lFeedback" ];
+	source_disk -> source_cache [ label="CSource::m_lFeedback" ];
+	source_cache -> source_start [ label="CSource::m_lFeedback" ];
+
+	source_start -> job [ label="Job Data" ];
+
+	job -> main [ label="CResource::m_lInserts" ];
+}
+
 	Behaviours:
 		* Handlers are called from the loader thread
 		* Each source runs on it's own thread
@@ -127,32 +147,9 @@ public:
 		ringbuffer_swsr<CLoadOrder, 1024> m_lFeedback; // next source write, this source reads
 		semaphore m_Semaphore;
 
-		void ForwardOrder(CLoadOrder *pOrder)
-		{
-			if(!NextSource())
-				return;
-
-			NextSource()->m_lInput.push(*pOrder);
-			NextSource()->m_Semaphore.signal();
-		}
-
-		void FeedbackOrder(CLoadOrder *pOrder)
-		{
-			if(!PrevSource())
-				return;
-			PrevSource()->m_lFeedback.push(*pOrder);
-			PrevSource()->m_Semaphore.signal();
-		}
-
-		void Run()
-		{
-			while(1)
-			{
-				m_Semaphore.wait();
-				Update();
-			}
-		}
-
+		void ForwardOrder(CLoadOrder *pOrder);
+		void FeedbackOrder(CLoadOrder *pOrder);
+		void Run();
 
 		static void ThreadFunc(void *pThis) { ((CSource *)pThis)->Run(); }
 	};
