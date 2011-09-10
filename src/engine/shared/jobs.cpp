@@ -49,7 +49,11 @@ int CJobPool::Init(int NumThreads)
 {
 	// start threads
 	for(int i = 0; i < NumThreads; i++)
-		thread_create(WorkerThread, this);
+	{
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "jobthread %d", i);
+		thread_create(WorkerThread, this, aBuf);
+	}
 	return 0;
 }
 

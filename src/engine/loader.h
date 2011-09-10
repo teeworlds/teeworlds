@@ -70,9 +70,11 @@ extern int Helper_LoadFile(const char *pFilename, void **ppData, unsigned *pData
 
 class IResource;
 
+
 /*
 	Behaviours:
 		* Handlers are called from the loader thread
+		* Each source runs on it's own thread
 */
 class IResources : public IInterface
 {
@@ -87,6 +89,72 @@ public:
 		unsigned m_ContentHash;
 		unsigned m_NameHash;
 		const char *m_pName;
+	};
+
+	class CSource
+	{
+		// a bit ugly
+		friend class CResources;
+	public:
+		class CLoadOrder
+		{
+		public:
+			IResource *m_pResource;
+			void *m_pData;
+			unsigned m_DataSize;
+		};
+
+		CSource(const char *pName);
+
+		virtual bool Load(CLoadOrder *pOrder) { return false; }
+		virtual void Feedback(CLoadOrder *pOrder) { }
+
+		const char *Name() const { return m_pName; }
+		IResources *Resources() const { return m_pResources; }
+
+		void Update();
+	
+	protected:
+		CSource *PrevSource() const { return m_pPrevSource; }
+		CSource *NextSource() const { return m_pNextSource; }	
+	private:
+		const char *m_pName;
+		CSource *m_pNextSource;
+		CSource *m_pPrevSource;
+		IResources *m_pResources;
+
+		ringbuffer_swsr<CLoadOrder, 1024> m_lInput; // previous source write, this source reads
+		ringbuffer_swsr<CLoadOrder, 1024> m_lFeedback; // next source write, this source reads
+		semaphore m_Semaphore;
+
+		void ForwardOrder(CLoadOrder *pOrder)
+		{
+			if(!NextSource())
+				return;
+
+			NextSource()->m_lInput.push(*pOrder);
+			NextSource()->m_Semaphore.signal();
+		}
+
+		void FeedbackOrder(CLoadOrder *pOrder)
+		{
+			if(!PrevSource())
+				return;
+			PrevSource()->m_lFeedback.push(*pOrder);
+			PrevSource()->m_Semaphore.signal();
+		}
+
+		void Run()
+		{
+			while(1)
+			{
+				m_Semaphore.wait();
+				Update();
+			}
+		}
+
+
+		static void ThreadFunc(void *pThis) { ((CSource *)pThis)->Run(); }
 	};
 
 	class IHandler
@@ -109,6 +177,7 @@ public:
 	virtual ~IResources() {}
 
 	virtual void AssignHandler(const char *pType, IHandler *pHandler) = 0;
+	virtual void AddSource(CSource *pSource) = 0;
 
 	virtual void Update() = 0;
 
@@ -129,6 +198,17 @@ private:
 	virtual	void Destroy(IResource *pResource) = 0;
 };
 
+
+class CSource_Disk : public IResources::CSource
+{
+	static int LoadWholeFile(const char *pFilename, void **ppData, unsigned *pDataSize);
+	char m_aBaseDirectory[512];
+protected:
+	virtual bool Load(CLoadOrder *pOrder);
+public:
+	CSource_Disk(const char *pBase = 0);
+	void SetBaseDirectory(const char *pBase);
+};
 
 class IResource
 {
@@ -177,3 +257,21 @@ public:
 	bool IsLoading() const { return m_State == STATE_LOADING; }
 	bool IsLoaded() const { return m_State == STATE_LOADED; }
 };
+/*
+class CResourceList
+{
+public:
+	enum
+	{
+		MAX_RESOURCES = 1024*4,
+	};
+
+	IResource *m_apResources[MAX_RESOURCES];
+
+	CResourceList()
+	{
+
+	}
+
+};
+*/

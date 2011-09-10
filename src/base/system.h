@@ -339,9 +339,10 @@ void thread_sleep(int milliseconds);
 	Parameters:
 		threadfunc - Entry point for the new thread.
 		user - Pointer to pass to the thread.
+		name - name to give to the thread
 
 */
-void *thread_create(void (*threadfunc)(void *), void *user);
+void *thread_create(void (*threadfunc)(void *), void *user, const char *name);
 
 /*
 	Function: thread_wait

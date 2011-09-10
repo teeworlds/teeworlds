@@ -1378,6 +1378,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
+		else
+		{
+			dbg_msg("client", "unknown system message %d", Msg);
+		}
 	}
 	else
 	{
@@ -2258,6 +2262,9 @@ int main(int argc, const char **argv) // ignore_convention
 		if(RegisterFail)
 			return -1;
 	}
+
+	CSource_Disk DiskSource("data");
+	pResources->AddSource(&DiskSource);
 
 	pEngine->Init();
 	pConfig->Init();

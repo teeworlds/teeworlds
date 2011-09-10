@@ -10,7 +10,11 @@ void CJobHandler::Init(int ThreadCount)
 {
 	// start threads
 	for(int i = 0; i < ThreadCount; i++)
-		thread_create(WorkerThread, this);
+	{
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "job %d", i);
+		thread_create(WorkerThread, this, aBuf);
+	}
 }
 
 void CJobHandler::ConfigureQueue(int QueueId, int MaxWorkers)
@@ -65,7 +69,6 @@ void CJobHandler::WorkerThread(void *pUser)
 		{
 			// do the job!
 			Order.m_pfnProcess(pJobHandler, Order.m_pData);
-			//thread_sleep(100);
 
 			// no need to take a lock for this one
 			sync_barrier();
@@ -82,6 +85,90 @@ void CJobHandler::WorkerThread(void *pUser)
 		atomic_inc(&pJobHandler->m_WorkTurns);
 	}
 }
+
+
+CSource_Disk::CSource_Disk(const char *pBase)
+: CSource("disk")
+{
+	SetBaseDirectory(pBase);
+}
+
+void CSource_Disk::SetBaseDirectory(const char *pBase)
+{
+	if(pBase)
+		str_copy(m_aBaseDirectory, pBase, sizeof(m_aBaseDirectory));
+	else
+		m_aBaseDirectory[0] = 0;
+}
+
+int CSource_Disk::LoadWholeFile(const char *pFilename, void **ppData, unsigned *pDataSize)
+{
+	// do search for reasource
+	IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
+	if(hFile == 0)
+	{
+		*ppData = 0;
+		*pDataSize = 0;
+		return -1;
+	}
+
+	*pDataSize = io_length(hFile);
+	*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
+	long int Result = io_read(hFile, *ppData, *pDataSize);
+	io_close(hFile);
+
+	if(Result != *pDataSize)
+	{
+		mem_free(*ppData);
+		*ppData = 0;
+		*pDataSize = 0;
+		return -2;
+	}
+	
+	return 0;
+}
+
+bool CSource_Disk::Load(CLoadOrder *pOrder)
+{
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "%s/%s", m_aBaseDirectory, pOrder->m_pResource->Name());
+	return LoadWholeFile(aFilename, &pOrder->m_pData, &pOrder->m_DataSize) == 0;
+}
+
+
+IResources::CSource::CSource(const char *pName)
+{
+	m_pName = pName;
+	m_pNextSource = 0x0;
+	m_pPrevSource = 0x0;
+}
+
+void IResources::CSource::Update()
+{
+	while(m_lFeedback.size())
+	{
+		CLoadOrder Order = m_lFeedback.pop();
+		Feedback(&Order);
+		FeedbackOrder(&Order);
+	}
+
+	while(m_lInput.size())
+	{
+		CLoadOrder Order = m_lInput.pop();
+
+		if(Load(&Order))
+		{
+			dbg_msg("resources", "[%s] loaded %s", Name(), Order.m_pResource->Name());
+			FeedbackOrder(&Order);
+		}
+		else
+		{
+			dbg_msg("resources", "[%s] sending %s", Name(), Order.m_pResource->Name());
+			ForwardOrder(&Order);
+		}
+	}
+}
+
 
 class CResources : public IResources
 {
@@ -181,71 +268,9 @@ class CResources : public IResources
 
 	void LoadResource(IResource *pResource)
 	{
-		CLoadJobInfo *pInfo = g_JobHandler.AllocJobData<CLoadJobInfo>();
-		pInfo->m_pThis = this;
-		pInfo->m_pResource = pResource;
-		g_JobHandler.Kick(JOBQUEUE_IO, Job_LoadFile, pInfo);
-	}
-
-	static int LoadWholeFile(const char *pFilename, void **ppData, unsigned *pDataSize)
-	{
-		// do search for reasource
-		IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
-		if(hFile == 0)
-		{
-			*ppData = 0;
-			*pDataSize = 0;
-			return -1;
-		}
-
-		*pDataSize = io_length(hFile);
-		*ppData = mem_alloc(*pDataSize, sizeof(void*)); // TOOD: stream buffer perhaps
-		long int Result = io_read(hFile, *ppData, *pDataSize);
-		io_close(hFile);
-
-		if(Result != *pDataSize)
-		{
-			mem_free(*ppData);
-			*ppData = 0;
-			*pDataSize = 0;
-			return -2;
-		}
-		
-		return 0;
-	}
-
-	static int Job_LoadFile(CJobHandler *pJobHandler, void *pData)
-	{
-		CLoadJobInfo *pInfo = reinterpret_cast<CLoadJobInfo*>(pData);
-		
-		// TODO: use storage to figure out were the file is located
-		char const *pFilename = pInfo->m_pResource->m_Id.m_pName;
-		
-		// TODO: this is scary, we are calling pStorage that has no clue that it's being called from a different thread
-		char aCompleteFilename[512];
-		IStorage *pStorage = pInfo->m_pThis->Kernel()->RequestInterface<IStorage>();
-		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
-		if(File)
-			io_close(File);
-		else
-		{
-			dbg_msg("resources", "couldn't find '%s'", pFilename);
-			pInfo->m_pResource->m_State = IResource::STATE_ERROR;
-			return -1;
-		}
-
-		//dbg_msg("resources", "loading '%s'", pFilename);
-		int r = LoadWholeFile(aCompleteFilename, &pInfo->m_pData, &pInfo->m_DataSize);
-		if(r)
-		{
-			dbg_msg("resources", "failed loading '%s'", aCompleteFilename);
-			pInfo->m_pResource->m_State = IResource::STATE_ERROR;
-			return r;
-		}
-
-		// kick the data off to processing
-		pJobHandler->Kick(JOBQUEUE_IO, Job_ProcessData, pData);
-		return 0;
+		CSource::CLoadOrder Order = {0,0,0};
+		Order.m_pResource = pResource;
+		m_SourceStart.AddOrder(&Order);
 	}
 
 	static int Job_ProcessData(CJobHandler *pJobHandler, void *pData)
@@ -272,10 +297,80 @@ class CResources : public IResources
 		return 0;
 	}
 
+	class CSource_StartPoint : public CSource
+	{
+	public:
+		CSource_StartPoint()
+		: CSource("startpoint")
+		{}
+
+		virtual void Feedback(CLoadOrder *pOrder)
+		{
+			// kick the data off to processing
+			dbg_msg("resources", "[%s] adding processing job for '%s'", Name(), pOrder->m_pResource->Name());
+
+			CLoadJobInfo *pInfo = g_JobHandler.AllocJobData<CLoadJobInfo>();
+			pInfo->m_pThis = (CResources *)Resources();
+			pInfo->m_pResource = pOrder->m_pResource;
+			pInfo->m_pData = pOrder->m_pData;
+			pInfo->m_DataSize = pOrder->m_DataSize;
+			g_JobHandler.Kick(JOBQUEUE_IO, Job_ProcessData, pInfo);
+		}
+
+		void AddOrder(CLoadOrder *pOrder)
+		{
+			// skip this source
+			NextSource()->m_lInput.push(*pOrder);
+			NextSource()->m_Semaphore.signal();
+		}
+	};
+
+	class CSource_EndPoint : public CSource
+	{
+	public:
+		CSource_EndPoint()
+		: CSource("endpoint")
+		{}
+				
+		virtual bool Load(CLoadOrder *pOrder)
+		{
+			// if the order has come this far, it has gone wrong.
+			dbg_msg("resources", "[%s] end station for '%s'", pOrder->m_pResource->Name());
+			// TODO: set it to a failure to load
+			return true;
+		}
+	};
+
+	virtual void AddSource(CSource *pSource)
+	{
+		CSource *pAfter = m_SourceEnd.m_pPrevSource;
+		pAfter->m_pNextSource = pSource;
+		pSource->m_pPrevSource = pAfter;
+		pSource->m_pNextSource = &m_SourceEnd;
+		m_SourceEnd.m_pPrevSource = pSource;
+
+		StartSource(pSource);
+	}
+
+	void StartSource(CSource *pSource)
+	{
+		pSource->m_pResources = this;
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "source %s", pSource->Name());
+		thread_create(CSource::ThreadFunc, pSource, aBuf);
+	}
+
+	CSource_StartPoint m_SourceStart;
+	CSource_EndPoint m_SourceEnd;
+
 public:
 	CResources()
 	{
-		//thread_create(LoaderThreadBnc, this);
+		m_SourceStart.m_pNextSource = &m_SourceEnd;
+		m_SourceEnd.m_pPrevSource = &m_SourceStart;
+
+		StartSource(&m_SourceStart);
+		StartSource(&m_SourceEnd);
 	}
 
 	virtual void AssignHandler(const char *pType, IHandler *pHandler)
