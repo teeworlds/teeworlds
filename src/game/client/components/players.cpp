@@ -102,24 +102,6 @@ void CPlayers::RenderHook(
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 
-	// check for ninja
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		// change the skin for the player to the ninja
-		int Skin = m_pClient->m_pSkins->Find("x_ninja");
-		if(Skin != -1)
-		{
-			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-			else
-			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-				RenderInfo.m_ColorBody = vec4(1,1,1,1);
-				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-			}
-		}
-	}
-
 	float IntraTick = Client()->IntraGameTick();
 
 	// set size
