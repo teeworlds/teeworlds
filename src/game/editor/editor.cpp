@@ -1426,7 +1426,7 @@ void CEditor::DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID)
 	{
 		Graphics()->TextureSet(TexID);
 		Graphics()->QuadsBegin();
-		
+
 		//Calc Env Position
 		float OffsetX =  fx2f(pEnvelope->m_lPoints[i].m_aValues[0]);
 		float OffsetY = fx2f(pEnvelope->m_lPoints[i].m_aValues[1]);
@@ -1474,7 +1474,7 @@ void CEditor::DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID)
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 		Graphics()->QuadsEnd();
-		
+
 		Graphics()->TextureSet(-1);
 		Graphics()->QuadsBegin();
 		DoQuadEnvPoint(pQuad, Index, i);
