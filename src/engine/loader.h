@@ -184,7 +184,7 @@ public:
 	{
 		CResourceId Id;
 		Id.m_pName = pName;
-		Id.m_NameHash = 0;
+		Id.m_NameHash = str_quickhash(pName);
 		Id.m_ContentHash = 0;
 		return GetResource(Id);
 	}
@@ -195,6 +195,8 @@ private:
 	virtual	void Destroy(IResource *pResource) = 0;
 };
 
+
+unsigned hash_crc32(unsigned crc, const void *data, size_t datasize);
 
 class CSource_Disk : public IResources::CSource
 {
@@ -250,6 +252,8 @@ public:
 	}
 
 	const char *Name() const { return m_Id.m_pName; }
+	unsigned NameHash() const { return m_Id.m_NameHash; }
+	unsigned ContentHash() const { return m_Id.m_ContentHash; }
 
 	bool IsLoading() const { return m_State == STATE_LOADING; }
 	bool IsLoaded() const { return m_State == STATE_LOADED; }

@@ -42,8 +42,8 @@ enum
 	// sent by server
 	NETMSG_MAP_CHANGE,		// sent when client should switch map
 	NETMSG_MAP_DATA,		// map transfer, contains a chunk of the map file
-//	NETMSG_RES_DATA,		// resource data
-//	NETMSG_RES_SET,			// set resource
+	NETMSG_RES_DATA,		// resource data
+	NETMSG_RES_SET,			// set resource
 	NETMSG_CON_READY,		// connection is ready, client should send start info
 	NETMSG_SNAP,			// normal snapshot, multiple parts
 	NETMSG_SNAPEMPTY,		// empty snapshot
@@ -63,7 +63,7 @@ enum
 	NETMSG_RCON_CMD,		//
 	NETMSG_RCON_AUTH,		//
 	NETMSG_REQUEST_MAP_DATA,//
-//	NETMSG_REQUEST_RES_DATA,// requests resource data
+	NETMSG_REQUEST_RES_DATA,// requests resource data
 
 	NETMSG_AUTH_START,		//
 	NETMSG_AUTH_RESPONSE,	//

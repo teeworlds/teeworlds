@@ -4,6 +4,12 @@
 #include <engine/loader.h>
 #include <engine/storage.h>
 
+#include <zlib.h> // crc32
+unsigned hash_crc32(unsigned crc, const void *data, size_t datasize)
+{
+	return crc32(crc, (const Bytef *)data, datasize);
+}
+
 CJobHandler g_JobHandler;
 
 void CJobHandler::Init(int ThreadCount)
@@ -163,7 +169,7 @@ void IResources::CSource::Update()
 		}
 		else
 		{
-			dbg_msg("resources", "[%s] sending %s", Name(), Order.m_pResource->Name());
+			dbg_msg("resources", "[%s] forwarding %s", Name(), Order.m_pResource->Name());
 			ForwardOrder(&Order);
 		}
 	}

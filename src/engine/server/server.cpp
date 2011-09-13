@@ -154,6 +154,85 @@ void CSnapIDPool::FreeID(int ID)
 	}
 }
 
+class CResourceList
+{
+public:
+	enum
+	{
+		MAX_RESOURCES = 1024*4,
+	};
+
+	struct CEntry
+	{
+		const char *m_pName;
+		void *m_pData;
+		unsigned m_NameHash;
+		unsigned m_DataSize;
+		unsigned m_ContentHash;
+	};
+
+	CEntry m_aList[MAX_RESOURCES];
+
+	CResourceList()
+	{
+		mem_zero(m_aList, sizeof(m_aList));
+	}
+
+	void Clear()
+	{
+		for(int i = 0; i < MAX_RESOURCES; i++)
+		{
+			if(m_aList[i].m_pData)
+				mem_free(m_aList[i].m_pData);
+			if(m_aList[i].m_pName)
+				mem_free((void *)m_aList[i].m_pName);
+			m_aList[i].m_pData = 0;
+			m_aList[i].m_pName = 0;
+			m_aList[i].m_DataSize = 0;
+			m_aList[i].m_NameHash = 0;
+			m_aList[i].m_ContentHash = 0;
+		}
+	}
+
+	CEntry *Find(unsigned NameHash, unsigned ContentHash)
+	{
+		// TODO: bad performance, linear search
+		for(int i = 0; i < MAX_RESOURCES; i++)
+		{
+			if(m_aList[i].m_pData != 0 && m_aList[i].m_NameHash == NameHash && m_aList[i].m_ContentHash == ContentHash)
+				return &m_aList[i];
+		}
+
+		return NULL;
+	}
+
+	int Add(const char *pName, void *pData, unsigned DataSize)
+	{
+		if(pData == 0)
+			return -1;
+
+		// TODO: bad performance, linear search
+		for(int i = 0; i < MAX_RESOURCES; i++)
+			if(m_aList[i].m_pData == 0)
+			{
+				int NameSize = str_length(pName) + 1;
+				void *pNameCpy = mem_alloc(NameSize, sizeof(void*));
+				mem_copy(pNameCpy, pName, NameSize);
+				m_aList[i].m_pName = (const char *)pNameCpy;
+				m_aList[i].m_NameHash = str_quickhash(m_aList[i].m_pName);
+				m_aList[i].m_pData = pData;
+				m_aList[i].m_DataSize = DataSize;
+				m_aList[i].m_ContentHash = hash_crc32(0, pData, DataSize);
+				return i;
+			}
+
+		return -1;
+	}
+};
+
+CResourceList m_ResourceList;
+
+
 void CServer::CClient::Reset()
 {
 	// reset input
@@ -936,6 +1015,44 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_PING_REPLY);
 			SendMsgEx(&Msg, 0, ClientID, true);
 		}
+		else if(Msg == NETMSG_REQUEST_RES_DATA)
+		{
+			unsigned NameHash = Unpacker.GetInt();
+			unsigned ContentHash = Unpacker.GetInt();
+			unsigned DataOffset = Unpacker.GetInt();
+
+			if(Unpacker.Error() == 0)
+			{
+				// calculate a decent blocksize
+				CResourceList::CEntry *pEntry = m_ResourceList.Find(NameHash, ContentHash);
+
+				if(pEntry && DataOffset <= pEntry->m_DataSize)
+				{
+					int BlockSize = pEntry->m_DataSize - DataOffset;
+					if(BlockSize > 1024-128) // TODO: what is a good value here?
+						BlockSize = 1024-128;
+
+					CMsgPacker Msg(NETMSG_RES_DATA);
+					Msg.AddInt(pEntry->m_ContentHash);
+					Msg.AddInt(pEntry->m_DataSize);
+					Msg.AddInt(DataOffset);
+					Msg.AddInt(BlockSize);
+					Msg.AddRaw(((const char *)pEntry->m_pData) + DataOffset, BlockSize);
+					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+				}
+				else
+				{
+					// respond with a faulty packet
+					CMsgPacker Msg(NETMSG_RES_DATA);
+					Msg.AddInt(ContentHash);
+					Msg.AddInt(-1);
+					Msg.AddInt(-1);
+					Msg.AddInt(-1);
+					Msg.AddRaw(NULL, 0);
+					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+				}
+			}
+		}		
 		else
 		{
 			if(g_Config.m_Debug)
@@ -1103,70 +1220,6 @@ char *CServer::GetMapName()
 	return pMapShortName;
 }
 
-class CResourceList
-{
-public:
-	enum
-	{
-		MAX_RESOURCES = 1024*4,
-	};
-
-	struct CEntry
-	{
-		const char *m_pName;
-		void *m_pData;
-		unsigned m_DataSize;
-		unsigned m_Hash;
-	};
-
-	CEntry m_aList[MAX_RESOURCES];
-
-	CResourceList()
-	{
-		mem_zero(m_aList, sizeof(m_aList));
-	}
-
-	void Clear()
-	{
-		for(int i = 0; i < MAX_RESOURCES; i++)
-		{
-			if(m_aList[i].m_pData)
-				mem_free(m_aList[i].m_pData);
-			if(m_aList[i].m_pName)
-				mem_free((void *)m_aList[i].m_pName);
-			m_aList[i].m_pData = 0;
-			m_aList[i].m_pName = 0;
-			m_aList[i].m_DataSize = 0;
-			m_aList[i].m_Hash = 0;
-		}
-	}
-
-	int Add(const char *pName, void *pData, unsigned DataSize)
-	{
-		if(pData == 0)
-			return -1;
-
-		// TODO: bad performance, linear search
-		for(int i = 0; i < MAX_RESOURCES; i++)
-			if(m_aList[i].m_pData == 0)
-			{
-				int NameSize = str_length(pName) + 1;
-				void *pNameCpy = mem_alloc(NameSize, sizeof(void*));
-				mem_copy(pNameCpy, pNameCpy, NameSize);
-				m_aList[i].m_pName = (const char *)pNameCpy;
-				m_aList[i].m_pData = pData;
-				m_aList[i].m_DataSize = DataSize;
-				m_aList[i].m_Hash = 0; // TODO: calculate hash
-				return i;
-			}
-
-		return -1;
-	}
-};
-
-CResourceList m_ResourceList;
-
-
 int CServer::LoadResource(const char *pName)
 {
 	// temporary behaviour
@@ -1194,19 +1247,21 @@ int CServer::LoadResource(const char *pName)
 		return -1;
 	}
 
-	int Id = m_ResourceList.Add(pName, pData, DataSize);
+	int Id = m_ResourceList.Add(aBuf, pData, DataSize); // TODO: use full filename so we confuse the client for testing purposes
+	//int Id = m_ResourceList.Add(pName, pData, DataSize);
 	dbg_msg("server", "loaded resource #%d = '%s'", Id, pName);
 	return Id;
 }
 
 void CServer::SendResource(int ClientID, int ResourceId)
 {
-	/*CMsgPacker Msg(NETMSG_RES_SET);
+	CMsgPacker Msg(NETMSG_RES_SET);
 	Msg.AddInt(ResourceId);
 	Msg.AddString(m_ResourceList.m_aList[ResourceId].m_pName, 0);
-	Msg.AddInt(m_ResourceList.m_aList[ResourceId].m_Hash);
+	Msg.AddInt(m_ResourceList.m_aList[ResourceId].m_ContentHash);
 	Msg.AddInt(m_ResourceList.m_aList[ResourceId].m_DataSize);
-	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);*/
+	dbg_msg("server", "sending %d %s %08x %d", ResourceId, m_ResourceList.m_aList[ResourceId].m_pName, m_ResourceList.m_aList[ResourceId].m_ContentHash, m_ResourceList.m_aList[ResourceId].m_DataSize);
+	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
 }
 
 void CServer::SendResourceList(int ClientID)

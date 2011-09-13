@@ -187,6 +187,7 @@ public:
 	// ----- send functions -----
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags);
 
+	int SendMsgRaw(void *pData, unsigned DataSize, int Flags, bool System);
 	int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System=true);
 	void SendInfo();
 	void SendEnterGame();

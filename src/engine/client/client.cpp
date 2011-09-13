@@ -233,6 +233,164 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		UpdateInt(Target);
 }
 
+class CSource_GameServer : public IResources::CSource
+{
+public:
+	class CChunk
+	{
+	public:
+		unsigned m_DataSize;
+		char m_aData[];
+
+		static CChunk *Create(const void *pData, unsigned DataSize)
+		{
+			CChunk *pChunk = (CChunk *)(new char[sizeof(CChunk)+ DataSize]);
+			if(pData)
+				mem_copy(pChunk->m_aData, pData, DataSize);
+			pChunk->m_DataSize = DataSize;
+			return pChunk;
+		}
+	};
+protected:
+
+
+	ringbuffer_swsr<CChunk*, 64> m_lpInputChunks; // main thread writes, source thread reads
+	ringbuffer_swsr<CChunk*, 64> m_lpOutputChunks; // source thread writes, main thread reads
+	semaphore m_NetworkActivity;
+
+	unsigned m_DataOffset;
+
+	CLoadOrder *m_pOrder;
+
+	void SendMsg(CMsgPacker *pMsg)
+	{
+		m_lpOutputChunks.push(CChunk::Create(pMsg->Data(), pMsg->Size()));
+	}
+
+	void SendNextFetch()
+	{
+		CMsgPacker Msg(NETMSG_REQUEST_RES_DATA);
+		Msg.AddInt(m_pOrder->m_pResource->NameHash());
+		Msg.AddInt(m_pOrder->m_pResource->ContentHash());
+		Msg.AddInt(m_DataOffset);
+		SendMsg(&Msg);
+	}
+
+	void ProcessChunk(CChunk *pChunk)
+	{
+		CUnpacker Unpacker;
+		Unpacker.Reset(pChunk->m_aData, pChunk->m_DataSize);
+
+		// unpack msgid and system flag
+		// TODO: hate that this has to be done here as well
+		int Msg = Unpacker.GetInt();
+		int Sys = Msg&1;
+		Msg >>= 1;
+
+		if(!Sys) // should never happen
+			return;
+
+		switch(Msg)
+		{
+		case NETMSG_RES_DATA:
+			{
+				int ContentHash = Unpacker.GetInt();
+				int ContentSize = Unpacker.GetInt();
+				unsigned BlockOffset = (unsigned)Unpacker.GetInt();
+				int BlockSize = Unpacker.GetInt();
+				const unsigned char *pBlockData = Unpacker.GetRaw(BlockSize);
+
+				// TODO: loads of sane checks here! LOADS OF EM!
+				(void)ContentHash;
+
+				// check for errors
+				if(Unpacker.Error() || BlockSize <= 0/* || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile*/)
+					return; // TODO: must bail nicly, this isn't
+
+				if(ContentSize > 16*1024*1024 || ContentSize <= 0)
+					return; // TODO: must bail nicly, this isn't
+
+				if(BlockOffset != m_DataOffset)
+					return; // TODO: must bail nicly, this isn't
+
+				// allocate the data if needed
+				if(m_pOrder->m_pData == NULL)
+				{
+					m_pOrder->m_pData = mem_alloc(ContentSize, sizeof(void*));
+					m_pOrder->m_DataSize = ContentSize;
+				}
+
+				if(m_DataOffset + BlockSize > m_pOrder->m_DataSize)
+					return;
+
+				mem_copy(((char *)m_pOrder->m_pData) + m_DataOffset, pBlockData, BlockSize);
+
+				// advance offset
+				m_DataOffset += BlockSize;
+
+				if(m_DataOffset == m_pOrder->m_DataSize)
+				{
+					// TODO: crc check data
+					unsigned HashValue = hash_crc32(0, m_pOrder->m_pData, m_pOrder->m_DataSize);
+					dbg_msg("resources", "[%s] transfer done, %08x vs %08x", Name(), HashValue, ContentHash);
+				}
+				else
+					SendNextFetch();
+			} break;
+		}
+	}
+
+	virtual bool Load(CLoadOrder *pOrder)
+	{
+		// setup and send initial fetch
+		m_pOrder = pOrder;
+		m_DataOffset = 0;
+		SendNextFetch();
+		dbg_msg("resources", "[%s] starting transfer of '%s'", Name(), m_pOrder->m_pResource->Name());
+
+		// send chunks
+		while(true)
+		{
+			m_NetworkActivity.wait();
+
+			// pump input network messages
+			while(m_lpInputChunks.size())
+			{
+				CChunk *pChunk = m_lpInputChunks.pop();
+				ProcessChunk(pChunk);
+				delete pChunk;
+			}
+
+			// check if we are done
+			if(m_DataOffset == m_pOrder->m_DataSize)
+				return true;
+
+			// TODO: check for errors
+		}
+
+		return false;
+	}
+public:
+	CSource_GameServer()
+	: CSource("gameserver")
+	{}
+
+	void QueueChunk(const void *pData, unsigned DataSize)
+	{
+		CChunk *pChunk = CChunk::Create(pData, DataSize);
+		m_lpInputChunks.push(pChunk);
+		m_NetworkActivity.signal();
+	}
+
+	CChunk *PopOutputChunk()
+	{
+		if(m_lpOutputChunks.size() == 0)
+			return 0;
+		return m_lpOutputChunks.pop();
+	}
+};
+
+CSource_GameServer m_SourceGameServer;
 
 CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
 {
@@ -303,7 +461,7 @@ int CClient::SendMsg(CMsgPacker *pMsg, int Flags)
 	return SendMsgEx(pMsg, Flags, false);
 }
 
-int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
+int CClient::SendMsgRaw(void *pData, unsigned DataSize, int Flags, bool System)
 {
 	CNetChunk Packet;
 
@@ -313,8 +471,8 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 	mem_zero(&Packet, sizeof(CNetChunk));
 
 	Packet.m_ClientID = 0;
-	Packet.m_pData = pMsg->Data();
-	Packet.m_DataSize = pMsg->Size();
+	Packet.m_pData = pData;
+	Packet.m_DataSize = DataSize;
 
 	// HACK: modify the message id in the packet and store the system flag
 	if(*((unsigned char*)Packet.m_pData) == 1 && System && Packet.m_DataSize == 1)
@@ -338,6 +496,11 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 	if(!(Flags&MSGFLAG_NOSEND))
 		m_NetClient.Send(&Packet);
 	return 0;
+}
+
+int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
+{
+	return SendMsgRaw((void*)pMsg->Data(), pMsg->Size(), Flags, System);
 }
 
 void CClient::SendInfo()
@@ -1378,6 +1541,28 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
+		else if(Msg == NETMSG_RES_SET)
+		{
+			int ResourceId = Unpacker.GetInt();
+			const char *pName = Unpacker.GetString();
+			unsigned ContentHash = Unpacker.GetInt();
+			int ContentSize = Unpacker.GetInt();
+			if(Unpacker.Error() == 0)
+			{
+				dbg_msg("client", "resource #%d = '%s' (size=%d hash=%08x)", ResourceId, pName, ContentSize, ContentHash);
+				IResources::CResourceId Id;
+				Id.m_pName = pName;
+				Id.m_NameHash = str_quickhash(pName);
+				Id.m_ContentHash = ContentHash;
+				IResource *pResource = m_pResources->GetResource(Id);
+				(void)pResource; // store this somewhere
+			}
+		}
+		else if(Msg == NETMSG_RES_DATA)
+		{
+			//
+			m_SourceGameServer.QueueChunk(pPacket->m_pData, pPacket->m_DataSize);
+		}
 		else
 		{
 			dbg_msg("client", "unknown system message %d", Msg);
@@ -1395,6 +1580,17 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 void CClient::PumpNetwork()
 {
+	// pump network parts for data
+	while(true)
+	{
+		CSource_GameServer::CChunk *pChunk = m_SourceGameServer.PopOutputChunk();
+		if(!pChunk)
+			break;
+		SendMsgRaw(pChunk->m_aData, pChunk->m_DataSize, MSGFLAG_VITAL|MSGFLAG_FLUSH, true);
+		delete pChunk;
+	}
+
+	//
 	m_NetClient.Update();
 
 	if(State() != IClient::STATE_DEMOPLAYBACK)
@@ -2194,6 +2390,8 @@ static CClient *CreateClient()
 		Upstream latency
 */
 
+
+
 #if defined(CONF_PLATFORM_MACOSX)
 extern "C" int SDL_main(int argc, const char **argv) // ignore_convention
 #else
@@ -2263,8 +2461,9 @@ int main(int argc, const char **argv) // ignore_convention
 			return -1;
 	}
 
-	CSource_Disk DiskSource("data");
-	pResources->AddSource(&DiskSource);
+	CSource_Disk SourceDisk("data");
+	pResources->AddSource(&SourceDisk);
+	pResources->AddSource(&m_SourceGameServer);
 
 	pEngine->Init();
 	pConfig->Init();
