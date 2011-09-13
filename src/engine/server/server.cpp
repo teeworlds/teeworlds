@@ -1222,16 +1222,11 @@ char *CServer::GetMapName()
 
 int CServer::LoadResource(const char *pName)
 {
-	// temporary behaviour
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "data/%s", pName);
-
 	// load the complete file into memory
-	const char *pFilename = aBuf;
-	IOHANDLE hFile = io_open(pFilename, IOFLAG_READ);
+	IOHANDLE hFile = m_pStorage->OpenFile(pName, IOFLAG_READ, IStorage::TYPE_ALL) ;
 	if(hFile == 0)
 	{
-		dbg_msg("server", "failed to load resource '%s'. error opening '%s'", pName, pFilename);
+		dbg_msg("server", "failed to load resource '%s'", pName);
 		return -1;
 	}
 
@@ -1242,12 +1237,12 @@ int CServer::LoadResource(const char *pName)
 
 	if(Result != DataSize)
 	{
-		dbg_msg("server", "failed to load resource '%s'. error reading file '%s'", pName, pFilename);
+		dbg_msg("server", "failed to load resource '%s'", pName);
 		mem_free(pData);
 		return -1;
 	}
 
-	int Id = m_ResourceList.Add(aBuf, pData, DataSize); // TODO: use full filename so we confuse the client for testing purposes
+	int Id = m_ResourceList.Add(pName, pData, DataSize);
 	//int Id = m_ResourceList.Add(pName, pData, DataSize);
 	dbg_msg("server", "loaded resource #%d = '%s'", Id, pName);
 	return Id;
@@ -1871,6 +1866,14 @@ int main(int argc, const char **argv) // ignore_convention
 	IConfig *pConfig = CreateConfig();
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);
+
+	// TEMP: add the game dir
+	if(true)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s/games/teeworlds", pStorage->GetDataPath());
+		pStorage->AddPath(aBuf);
+	}
 
 	{
 		bool RegisterFail = false;

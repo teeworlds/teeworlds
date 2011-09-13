@@ -259,6 +259,7 @@ protected:
 	semaphore m_NetworkActivity;
 
 	unsigned m_DataOffset;
+	bool m_Done;
 
 	CLoadOrder *m_pOrder;
 
@@ -276,7 +277,7 @@ protected:
 		SendMsg(&Msg);
 	}
 
-	void ProcessChunk(CChunk *pChunk)
+	bool ProcessChunk(CChunk *pChunk)
 	{
 		CUnpacker Unpacker;
 		Unpacker.Reset(pChunk->m_aData, pChunk->m_DataSize);
@@ -288,7 +289,7 @@ protected:
 		Msg >>= 1;
 
 		if(!Sys) // should never happen
-			return;
+			return false;
 
 		switch(Msg)
 		{
@@ -305,13 +306,13 @@ protected:
 
 				// check for errors
 				if(Unpacker.Error() || BlockSize <= 0/* || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile*/)
-					return; // TODO: must bail nicly, this isn't
+					return false; // TODO: must bail nicly, this isn't
 
 				if(ContentSize > 16*1024*1024 || ContentSize <= 0)
-					return; // TODO: must bail nicly, this isn't
+					return false; // TODO: must bail nicly, this isn't
 
 				if(BlockOffset != m_DataOffset)
-					return; // TODO: must bail nicly, this isn't
+					return false; // TODO: must bail nicly, this isn't
 
 				// allocate the data if needed
 				if(m_pOrder->m_pData == NULL)
@@ -321,7 +322,7 @@ protected:
 				}
 
 				if(m_DataOffset + BlockSize > m_pOrder->m_DataSize)
-					return;
+					return false;
 
 				mem_copy(((char *)m_pOrder->m_pData) + m_DataOffset, pBlockData, BlockSize);
 
@@ -333,11 +334,14 @@ protected:
 					// TODO: crc check data
 					unsigned HashValue = hash_crc32(0, m_pOrder->m_pData, m_pOrder->m_DataSize);
 					dbg_msg("resources", "[%s] transfer done, %08x vs %08x", Name(), HashValue, ContentHash);
+					m_Done = true;
 				}
 				else
 					SendNextFetch();
 			} break;
 		}
+
+		return true;
 	}
 
 	virtual bool Load(CLoadOrder *pOrder)
@@ -345,6 +349,7 @@ protected:
 		// setup and send initial fetch
 		m_pOrder = pOrder;
 		m_DataOffset = 0;
+		m_Done = false;
 		SendNextFetch();
 		dbg_msg("resources", "[%s] starting transfer of '%s'", Name(), m_pOrder->m_pResource->Name());
 
@@ -353,19 +358,24 @@ protected:
 		{
 			m_NetworkActivity.wait();
 
+			bool Error = false;
+
 			// pump input network messages
 			while(m_lpInputChunks.size())
 			{
 				CChunk *pChunk = m_lpInputChunks.pop();
-				ProcessChunk(pChunk);
+				if(!ProcessChunk(pChunk))
+					Error = true;
 				delete pChunk;
 			}
 
-			// check if we are done
-			if(m_DataOffset == m_pOrder->m_DataSize)
-				return true;
+			// check for errors
+			if(Error)
+				return false;
 
-			// TODO: check for errors
+			// check if we are done
+			if(m_Done)
+				return true;
 		}
 
 		return false;

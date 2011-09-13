@@ -285,6 +285,10 @@ class CResources : public IResources
 		mem_copy(pName, Id.m_pName, NameSize);
 		pResource->m_Id.m_pName = (const char *)pName;
 
+		// add to list of resources
+		m_lpResources.add(pResource);
+
+		// start the load of it
 		LoadResource(pResource);
 		return pResource;
 	}
@@ -369,9 +373,10 @@ class CResources : public IResources
 		virtual bool Load(CLoadOrder *pOrder)
 		{
 			// if the order has come this far, it has gone wrong.
-			dbg_msg("resources", "[%s] end station for '%s'", pOrder->m_pResource->Name());
+			dbg_msg("resources", "[%s] end station for '%s'", Name(), pOrder->m_pResource->Name());
+
 			// TODO: set it to a failure to load
-			return true;
+			return false;
 		}
 	};
 
@@ -419,7 +424,12 @@ public:
 	{
 		IResource *pResource = FindResource(Id);
 		if(pResource)
+		{
+			dbg_msg("resources", "found '%s'", Id.m_pName);
 			return pResource;
+		}
+
+		dbg_msg("resources", "creating '%s'", Id.m_pName);
 		return CreateResource(Id);
 	}
 

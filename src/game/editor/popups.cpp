@@ -600,7 +600,7 @@ int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
 			{
 				char aBuf[512];
 				str_format(aBuf, sizeof(aBuf), "%s/%s", pEditor->m_pFileDialogPath, pEditor->m_FileDialogNewFolderName);
-				if(pEditor->Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
+				if(pEditor->Storage()->CreateDirectory(aBuf, IStorage::TYPE_SAVE))
 				{
 					pEditor->FilelistPopulate(IStorage::TYPE_SAVE);
 					return 1;

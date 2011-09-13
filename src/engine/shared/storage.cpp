@@ -149,20 +149,43 @@ public:
 				str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
 				dbg_msg("storage", "added path '%s'", pPath);
 			}
+			else
+			{
+				dbg_msg("storage", "path '%s' does not exist", pPath);
+			}
 		}
+	}
+
+	virtual const char *GetDataPath()
+	{
+		return m_aDatadir;
+	}
+
+
+	bool IsDataDir(const char *pPath)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s/teeworldsdata", pPath);
+		IOHANDLE handle = io_open(aBuf, IOFLAG_READ);
+		if(handle)
+		{
+			io_close(handle);
+			return true;
+		}
+		return false;
 	}
 
 	void FindDatadir(const char *pArgv0)
 	{
 		// 1) use data-dir in PWD if present
-		if(fs_is_dir("data/mapres"))
+		if(IsDataDir("data"))
 		{
 			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
 			return;
 		}
 
 		// 2) use compiled-in data-dir if present
-		if(fs_is_dir(DATA_DIR "/mapres"))
+		if(IsDataDir(DATA_DIR))
 		{
 			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
 			return;
@@ -180,9 +203,9 @@ public:
 				char aBaseDir[MAX_PATH_LENGTH];
 				str_copy(aBaseDir, pArgv0, Pos+1);
 				str_format(m_aDatadir, sizeof(m_aDatadir), "%s/data", aBaseDir);
-				str_append(aBaseDir, "/data/mapres", sizeof(aBaseDir));
+				str_append(aBaseDir, "/data", sizeof(aBaseDir));
 
-				if(fs_is_dir(aBaseDir))
+				if(IsDataDir(aBaseDir))
 					return;
 				else
 					m_aDatadir[0] = 0;
@@ -204,9 +227,7 @@ public:
 			int i;
 			for (i = 0; i < DirsCount; i++)
 			{
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "%s/mapres", aDirs[i]);
-				if(fs_is_dir(aBuf))
+				if(IsDataDir(aDirs[i]))
 				{
 					str_copy(m_aDatadir, aDirs[i], sizeof(m_aDatadir));
 					return;
@@ -368,7 +389,7 @@ public:
 		return !fs_rename(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)), GetPath(Type, pNewFilename, aNewBuffer, sizeof (aNewBuffer)));
 	}
 
-	virtual bool CreateFolder(const char *pFoldername, int Type)
+	virtual bool CreateDirectory(const char *pFoldername, int Type)
 	{
 		if(Type < 0 || Type >= m_NumPaths)
 			return false;
