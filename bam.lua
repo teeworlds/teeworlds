@@ -187,6 +187,7 @@ function build(settings)
 	-- build the small libraries
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
+	tinyxml = Compile(settings, Collect("src/engine/external/tinyxml/*.cpp"))
 
 	-- build game components
 	engine_settings = settings:Copy()
@@ -247,7 +248,7 @@ function build(settings)
 
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
-		engine, client, game_editor, zlib, pnglite, wavpack,
+		engine, client, game_editor, zlib, pnglite, wavpack, tinyxml,
 		client_link_other, client_osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,

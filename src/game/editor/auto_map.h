@@ -5,33 +5,36 @@
 
 class CAutoMapper
 {
-	struct CPosRule
+	struct CRuleCondition
 	{
 		int m_X;
 		int m_Y;
 		int m_Value;
-		bool m_IndexValue;
 
 		enum
 		{
-			EMPTY=0,
-			FULL
+			EMPTY = -2,
+			FULL = -1
 		};
 	};
 
-	struct CIndexRule
+	struct CRule
 	{
-		int m_ID;
-		array<CPosRule> m_aRules;
-		int m_Flag;
-		int m_RandomValue;
-		bool m_BaseTile;
+		int m_Index;
+		int m_HFlip;
+		int m_VFlip;
+		int m_Random;
+		int m_Rotation;
+		
+		array<CRuleCondition> m_aConditions;
 	};
 
-	struct CConfiguration
+	struct CRuleSet
 	{
-		array<CIndexRule> m_aIndexRules;
 		char m_aName[128];
+		int m_BaseTile;
+		
+		array<CRule> m_aRules;
 	};
 
 public:
@@ -40,12 +43,12 @@ public:
 	void Load(const char* pTileName);
 	void Proceed(class CLayerTiles *pLayer, int ConfigID);
 
-	int ConfigNamesNum() { return m_lConfigs.size(); }
-	const char* GetConfigName(int Index);
+	int RuleSetNum() { return m_aRuleSets.size(); }
+	const char* GetRuleSetName(int Index);
 
 	const bool IsLoaded() { return m_FileLoaded; }
 private:
-	array<CConfiguration> m_lConfigs;
+	array<CRuleSet> m_aRuleSets;
 	class CEditor *m_pEditor;
 	bool m_FileLoaded;
 };
