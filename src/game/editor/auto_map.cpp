@@ -99,11 +99,11 @@ void CAutoMapper::Load(const char* pTileName)
 						Condition.m_Value = CRuleCondition::EMPTY;
 						if(str_comp(pValue, "full") == 0)
 							Condition.m_Value = CRuleCondition::FULL;
-						
-						NewRule.m_aConditions.add(Condition);
 					}
 					else
 						clamp(Condition.m_Value, (int)CRuleCondition::EMPTY, 255);
+					
+					NewRule.m_aConditions.add(Condition);
 				}
 				else if(str_comp(pNode->Value(), "Random") == 0)
 				{
