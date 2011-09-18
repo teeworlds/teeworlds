@@ -50,6 +50,8 @@ void CAutoMapper::Load(const char* pTileName)
 			{
 				if(pRuleNode->QueryIntAttribute("index", &NewRuleSet.m_BaseTile) != TIXML_SUCCESS)
 					NewRuleSet.m_BaseTile = 1;
+					
+				clamp(NewRuleSet.m_BaseTile, 0, 255);
 			}
 
 			if(str_comp(pRuleNode->Value(), "Rule"))
@@ -59,6 +61,8 @@ void CAutoMapper::Load(const char* pTileName)
 			CRule NewRule;
 			if(pRuleNode->QueryIntAttribute("index", &NewRule.m_Index) != TIXML_SUCCESS)
 				NewRule.m_Index = 1;
+				
+			clamp(NewRule.m_Index, 0, 255);
 			
 			NewRule.m_Random = 0;
 			
@@ -71,6 +75,9 @@ void CAutoMapper::Load(const char* pTileName)
 				NewRule.m_HFlip = 0;
 			if(pRuleNode->QueryIntAttribute("vflip", &NewRule.m_VFlip) != TIXML_SUCCESS)
 				NewRule.m_VFlip = 0;
+			
+			clamp(NewRule.m_HFlip, 0, 1);
+			clamp(NewRule.m_VFlip, 0, 1);
 			
 			// get rule's content
 			TiXmlElement* pNode = pRuleNode->FirstChildElement();
@@ -89,18 +96,21 @@ void CAutoMapper::Load(const char* pTileName)
 						// the value is not an index, check if it's full or empty
 						const char* pValue = pNode->Attribute("value");
 						
+						Condition.m_Value = CRuleCondition::EMPTY;
 						if(str_comp(pValue, "full") == 0)
 							Condition.m_Value = CRuleCondition::FULL;
-						else if(str_comp(pValue, "empty") == 0)
-							Condition.m_Value = CRuleCondition::EMPTY;
 						
 						NewRule.m_aConditions.add(Condition);
 					}
+					else
+						clamp(Condition.m_Value, (int)CRuleCondition::EMPTY, 255);
 				}
 				else if(str_comp(pNode->Value(), "Random") == 0)
 				{
 					if(pNode->QueryIntAttribute("value", &NewRule.m_Random) != TIXML_SUCCESS)
 						NewRule.m_Random = 0;
+						
+					clamp(NewRule.m_Random, 0, 99999);
 				}
 			}
 			
