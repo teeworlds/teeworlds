@@ -9,32 +9,14 @@
 
 #include <engine/external/tinyxml/tinyxml.h>
 
-CAutoMapper::CAutoMapper(CEditor *pEditor)
+CTileSetMapper::CTileSetMapper(CEditor *pEditor)
 {
 	m_pEditor = pEditor;
-	m_FileLoaded = false;
 }
 
-void CAutoMapper::Load(const char* pTileName)
+void CTileSetMapper::Load(TiXmlElement* pElement)
 {
-	char aPath[256];
-	str_format(aPath, sizeof(aPath), "data/editor/automap/%s.xml", pTileName);
-	
-	char aBuf[256];
-	
-	TiXmlDocument File(aPath);
-	m_FileLoaded = File.LoadFile();
-	
-	if(!m_FileLoaded)
-	{
-		str_format(aBuf, sizeof(aBuf),"failed to load %s.xml", pTileName);
-		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
-		return;
-	}
-	
-	// get configurations
-	TiXmlHandle hFile(&File);
-	TiXmlElement* pConfNode = hFile.FirstChildElement().Element();
+	TiXmlElement* pConfNode = pElement->FirstChildElement();
 	for(pConfNode; pConfNode; pConfNode = pConfNode->NextSiblingElement())
 	{
 		// new rule set
@@ -119,12 +101,9 @@ void CAutoMapper::Load(const char* pTileName)
 		
 		m_aRuleSets.add(NewRuleSet);
 	}
-	
-	str_format(aBuf, sizeof(aBuf),"loaded %s.xml", pTileName);
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 }
 
-const char* CAutoMapper::GetRuleSetName(int Index)
+const char* CTileSetMapper::GetRuleSetName(int Index)
 {
 	if(Index < 0 || Index >= m_aRuleSets.size())
 		return "";
@@ -132,9 +111,9 @@ const char* CAutoMapper::GetRuleSetName(int Index)
 	return m_aRuleSets[Index].m_aName;
 }
 
-void CAutoMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
+void CTileSetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 {
-	if(!m_FileLoaded || pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
+	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
 
 	CRuleSet *pConf = &m_aRuleSets[ConfigID];
@@ -142,10 +121,7 @@ void CAutoMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 	if(!pConf->m_aRules.size())
 		return;
 
-	char aBuf[256];
 	int BaseTile = pConf->m_BaseTile;
-	str_format(aBuf, sizeof(aBuf),"BaseTile: %d", ConfigID);
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 
 	// auto map !
 	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
@@ -157,7 +133,6 @@ void CAutoMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 				continue;
 
 			pTile->m_Index = BaseTile;
-			m_pEditor->m_Map.m_Modified = true;
 
 			if(y == 0 || y == pLayer->m_Height-1 || x == 0 || x == pLayer->m_Width-1)
 				continue;
@@ -211,4 +186,421 @@ void CAutoMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 				}
 			}
 		}
+	
+	m_pEditor->m_Map.m_Modified = true;
+}
+
+CDoodadMapper::CDoodadMapper(CEditor *pEditor)
+{
+	m_pEditor = pEditor;
+}
+
+int CompareRules(const void *a, const void *b)
+{
+	CDoodadMapper::CRule *ra = (CDoodadMapper::CRule*)a;
+	CDoodadMapper::CRule *rb = (CDoodadMapper::CRule*)b;
+	
+	if((ra->m_Location == CDoodadMapper::CRule::FLOOR && rb->m_Location == CDoodadMapper::CRule::FLOOR)
+		|| (ra->m_Location == CDoodadMapper::CRule::CEILING && rb->m_Location  == CDoodadMapper::CRule::CEILING))
+	{
+		if(ra->m_Size.x < rb->m_Size.x)
+        return +1;
+		if(rb->m_Size.x < ra->m_Size.x)
+			return -1;
+	}
+	else if(ra->m_Location == CDoodadMapper::CRule::WALLS && rb->m_Location == CDoodadMapper::CRule::WALLS)
+	{
+		if(ra->m_Size.y < rb->m_Size.y)
+        return +1;
+		if(rb->m_Size.y < ra->m_Size.y)
+			return -1;
+	}
+    
+    return 0;
+}
+
+void CDoodadMapper::Load(TiXmlElement* pElement)
+{
+	char aBuf[256];
+	
+	TiXmlElement* pConfNode = pElement->FirstChildElement();
+	for(pConfNode; pConfNode; pConfNode = pConfNode->NextSiblingElement())
+	{
+		// new rule set
+		CRuleSet NewRuleSet;
+		const char* pConfName = pConfNode->Value();
+		str_copy(NewRuleSet.m_aName, pConfName, sizeof(NewRuleSet.m_aName));
+		
+		/*str_format(aBuf, sizeof(aBuf),"RuleSet: %s", pConfName);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
+	
+		// get rules
+		TiXmlElement* pRuleNode = pConfNode->FirstChildElement();
+		for(pRuleNode; pRuleNode; pRuleNode = pRuleNode->NextSiblingElement())
+		{
+			if(str_comp(pRuleNode->Value(), "Rule"))
+				continue;
+			
+			// create a new rule
+			CRule NewRule;
+			if(pRuleNode->QueryIntAttribute("startid", &NewRule.m_Rect.x) != TIXML_SUCCESS)
+				NewRule.m_Rect.x = 1;
+			if(pRuleNode->QueryIntAttribute("endid", &NewRule.m_Rect.y) != TIXML_SUCCESS)
+				NewRule.m_Rect.y = 1;
+				
+			if(pRuleNode->QueryIntAttribute("rx", &NewRule.m_RelativePos.x) != TIXML_SUCCESS)
+				NewRule.m_RelativePos.x = 0;
+			if(pRuleNode->QueryIntAttribute("ry", &NewRule.m_RelativePos.y) != TIXML_SUCCESS)
+				NewRule.m_RelativePos.y = 0;
+				
+			clamp(NewRule.m_Rect.x, 0, 255);
+			clamp(NewRule.m_Rect.y, 0, 255);
+			
+			// empty or broken, skip
+			if(NewRule.m_Rect.x == NewRule.m_Rect.y || NewRule.m_Rect.x > NewRule.m_Rect.y)
+				continue;
+			
+			// width
+			NewRule.m_Size.x = abs(NewRule.m_Rect.x-NewRule.m_Rect.y)%16+1;
+			// height
+			NewRule.m_Size.y = floor((float)abs(NewRule.m_Rect.x-NewRule.m_Rect.y)/16)+1;
+			
+			NewRule.m_Random = 1;
+			
+			if(pRuleNode->QueryIntAttribute("hflip", &NewRule.m_HFlip) != TIXML_SUCCESS)
+				NewRule.m_HFlip = 0;
+			if(pRuleNode->QueryIntAttribute("vflip", &NewRule.m_VFlip) != TIXML_SUCCESS)
+				NewRule.m_VFlip = 0;
+			
+			clamp(NewRule.m_HFlip, 0, 1);
+			clamp(NewRule.m_VFlip, 0, 1);
+			
+			// get rule's content
+			TiXmlElement* pNode = pRuleNode->FirstChildElement();
+			for(pNode; pNode; pNode = pNode->NextSiblingElement())
+			{
+				if(str_comp(pNode->Value(), "Location") == 0)
+				{
+					// the value is not an index, check if it's full or empty
+					const char* pValue = pNode->Attribute("value");
+					
+					NewRule.m_Location = CRule::FLOOR;
+					if(str_comp(pValue, "floor") == 0)
+						NewRule.m_Location = CRule::FLOOR;
+					if(str_comp(pValue, "ceiling") == 0)
+						NewRule.m_Location = CRule::CEILING;
+					if(str_comp(pValue, "walls") == 0)
+						NewRule.m_Location = CRule::WALLS;
+					
+					/*str_format(aBuf, sizeof(aBuf),"Location: %s", pValue);
+					m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
+				}
+				else if(str_comp(pNode->Value(), "Random") == 0)
+				{
+					if(pNode->QueryIntAttribute("value", &NewRule.m_Random) != TIXML_SUCCESS)
+						NewRule.m_Random = 1;
+						
+					clamp(NewRule.m_Random, 1, 9999);
+					
+					/*str_format(aBuf, sizeof(aBuf),"Random: %d", NewRule.m_Random);
+					m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
+				}
+			}
+			
+			NewRuleSet.m_aRules.add(NewRule);
+		}
+		
+		m_aRuleSets.add(NewRuleSet);
+	}
+	
+	// sort
+	for(int i = 0; i < m_aRuleSets.size(); i++)
+		qsort(m_aRuleSets[i].m_aRules.base_ptr(), m_aRuleSets[i].m_aRules.size(), sizeof(m_aRuleSets[i].m_aRules[0]), CompareRules);
+	
+	str_format(aBuf, sizeof(aBuf),"Frist size: %d", m_aRuleSets[0].m_aRules[0].m_Size.x);
+	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
+}
+
+const char* CDoodadMapper::GetRuleSetName(int Index)
+{
+	if(Index < 0 || Index >= m_aRuleSets.size())
+		return "";
+
+	return m_aRuleSets[Index].m_aName;
+}
+
+void CDoodadMapper::AnalyzeGameLayer()
+{
+	// the purpose of this is to detect game layer collision's edges to place doodads in function of them
+	
+	// clear existing edges
+	m_FloorIDs.clear();
+	m_CeilingIDs.clear();
+	m_RightWallIDs.clear();
+	m_LeftWallIDs.clear();
+	
+	CLayerGame *pLayer = m_pEditor->m_Map.m_pGameLayer;
+	
+	bool FloorKeepChaining = false;
+	bool CeilingKeepChaining = false;
+	int FloorChainID = 0;
+	int CeilingChainID = 0;
+	
+	// floors and ceilings
+	// browse up to down
+	for(int y = 1; y < pLayer->m_Height-1; y++)
+	{
+		FloorKeepChaining = false;
+		CeilingKeepChaining = false;
+		
+		for(int x = 1; x < pLayer->m_Width-1; x++)
+		{
+			CTile *pTile = &(pLayer->m_pTiles[y*pLayer->m_Width+x]);
+			
+			// empty, skip
+			if(pTile->m_Index == 0)
+			{
+				FloorKeepChaining = false;
+				CeilingKeepChaining = false;
+				continue;
+			}
+			
+			// check up
+			int CheckIndex = (y-1)*pLayer->m_Width+x;
+			
+			// add a floor part
+			if(pTile->m_Index == 1 && (pLayer->m_pTiles[CheckIndex].m_Index == 0 || pLayer->m_pTiles[CheckIndex].m_Index > ENTITY_OFFSET))
+			{
+				// create an new chain
+				if(!FloorKeepChaining)
+				{
+					array<int> aChain;
+					aChain.add(y*pLayer->m_Width+x);
+					FloorChainID = m_FloorIDs.add(aChain);
+					FloorKeepChaining = true;
+				}
+				else
+				{
+					// keep chaining
+					m_FloorIDs[FloorChainID].add(y*pLayer->m_Width+x);
+				}
+			}
+			else
+				FloorKeepChaining = false;
+			
+			// check down
+			CheckIndex = (y+1)*pLayer->m_Width+x;
+			
+			// add a ceiling part
+			if(pTile->m_Index == 1 && (pLayer->m_pTiles[CheckIndex].m_Index == 0 || pLayer->m_pTiles[CheckIndex].m_Index > ENTITY_OFFSET))
+			{
+				// create an new chain
+				if(!CeilingKeepChaining)
+				{
+					array<int> aChain;
+					aChain.add(y*pLayer->m_Width+x);
+					CeilingChainID = m_CeilingIDs.add(aChain);
+					CeilingKeepChaining = true;
+				}
+				else
+				{
+					// keep chaining
+					m_CeilingIDs[CeilingChainID].add(y*pLayer->m_Width+x);
+				}
+			}
+			else
+				CeilingKeepChaining = false;
+		}
+	}
+		
+	
+	bool RWallKeepChaining = false;
+	bool LWallKeepChaining = false;
+	int RWallChainID = 0;
+	int LWallChainID = 0;
+	
+	// walls
+	// browse left to right
+	for(int x = 1; x < pLayer->m_Width-1; x++)
+	{
+		RWallKeepChaining = false;
+		LWallKeepChaining = false;
+	
+		for(int y = 1; y < pLayer->m_Height-1; y++)
+		{
+			CTile *pTile = &(pLayer->m_pTiles[y*pLayer->m_Width+x]);
+			
+			if(pTile->m_Index == 0)
+			{
+				RWallKeepChaining = false;
+				LWallKeepChaining = false;
+				continue;
+			}
+			
+			// check right
+			int CheckIndex = y*pLayer->m_Width+(x+1);
+			
+			// add a right wall part
+			if(pTile->m_Index == 1 && (pLayer->m_pTiles[CheckIndex].m_Index == 0 || pLayer->m_pTiles[CheckIndex].m_Index > ENTITY_OFFSET))
+			{
+				// create an new chain
+				if(!RWallKeepChaining)
+				{
+					array<int> aChain;
+					aChain.add(y*pLayer->m_Width+x);
+					RWallChainID = m_RightWallIDs.add(aChain);
+					RWallKeepChaining = true;
+				}
+				else
+				{
+					// keep chaining
+					m_RightWallIDs[RWallChainID].add(y*pLayer->m_Width+x);
+				}
+			}
+			else
+				RWallKeepChaining = false;
+			
+			// check left
+			CheckIndex = y*pLayer->m_Width+(x-1);
+			
+			// add a left wall part
+			if(pTile->m_Index == 1 && (pLayer->m_pTiles[CheckIndex].m_Index == 0 || pLayer->m_pTiles[CheckIndex].m_Index > ENTITY_OFFSET))
+			{
+				// create an new chain
+				if(!LWallKeepChaining)
+				{
+					array<int> aChain;
+					aChain.add(y*pLayer->m_Width+x);
+					LWallChainID = m_LeftWallIDs.add(aChain);
+					LWallKeepChaining = true;
+				}
+				else
+				{
+					// keep chaining
+					m_LeftWallIDs[LWallChainID].add(y*pLayer->m_Width+x);
+				}
+			}
+			else
+				LWallKeepChaining = false;
+		}
+	}
+	
+	char aBuf[256];
+	
+	// clean up too small chains
+	for(int i = 0; i < m_FloorIDs.size(); i++)
+	{
+		if(m_FloorIDs[i].size() < 3)
+		{
+			m_FloorIDs.remove_index_fast(i);
+			i--;
+		}
+	}
+	
+	for(int i = 0; i < m_CeilingIDs.size(); i++)
+	{
+		if(m_CeilingIDs[i].size() < 3)
+		{
+			m_CeilingIDs.remove_index_fast(i);
+			i--;
+		}
+	}
+	
+	for(int i = 0; i < m_RightWallIDs.size(); i++)
+	{
+		if(m_RightWallIDs[i].size() < 3)
+		{
+			m_RightWallIDs.remove_index_fast(i);
+			i--;
+		}
+	}
+	
+	for(int i = 0; i < m_LeftWallIDs.size(); i++)
+	{
+		if(m_LeftWallIDs[i].size() < 3)
+		{
+			m_LeftWallIDs.remove_index_fast(i);
+			i--;
+		}
+	}
+}
+
+void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Ammount)
+{
+	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
+		return;
+	
+	AnalyzeGameLayer();
+
+	CRuleSet *pConf = &m_aRuleSets[ConfigID];
+
+	if(!pConf->m_aRules.size())
+		return;
+	
+	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
+	
+	// clear tiles
+	for(int i = 0 ; i < MaxIndex; i++)
+	{
+		pLayer->m_pTiles[i].m_Index = 0;
+		pLayer->m_pTiles[i].m_Flags = 0;
+	}
+	
+	// place doodads
+	for(int i = 0 ; i < pConf->m_aRules.size(); i++)
+	{
+		CRule *pRule = &pConf->m_aRules[i];
+		
+		if(pRule->m_Location == CRule::FLOOR && m_FloorIDs.size() > 0)
+		{
+			int RandomValue = pRule->m_Random/pRule->m_Size.x/Ammount;
+			
+			for(int f = 0; f < m_FloorIDs.size(); f++)
+				for(int c = 0; c < m_FloorIDs[f].size(); c += pRule->m_Size.x)
+				{
+					if(m_FloorIDs[f].size()-c < pRule->m_Size.x)
+						break;
+						
+					if(RandomValue > 1 && !IAutoMapper::Random(RandomValue))
+						continue;
+					
+					int ID = m_FloorIDs[f][c];
+					
+					// relative position
+					ID += pRule->m_RelativePos.y*pLayer->m_Width;
+			
+					for(int y = 0; y < pRule->m_Size.y; y++)
+						for(int x = 0; x < pRule->m_Size.x; x++)
+						{
+							int Index = y*pLayer->m_Width+x+ID;
+							if(Index <= 0 || Index >= MaxIndex)
+								continue;
+							
+							pLayer->m_pTiles[Index].m_Index = pRule->m_Rect.x+y*16+x;
+						}
+					
+					// make the place occupied
+					if(RandomValue > 1)
+					{
+						array<int> aChainBefore;
+						array<int> aChainAfter;
+						
+						for(int j = 0; j < c; j++)
+							aChainBefore.add(m_FloorIDs[f][j]);
+						for(int j = c+pRule->m_Size.x; j < m_FloorIDs[f].size(); j++)
+							aChainAfter.add(m_FloorIDs[f][j]);
+						
+						m_FloorIDs.remove_index(f);
+						c = 0;
+						
+						if(aChainBefore.size() > 1)
+							m_FloorIDs.add(aChainBefore);
+						if(aChainAfter.size() > 1)
+							m_FloorIDs.add(aChainAfter);
+					}
+				}
+		}
+	}
+	
+	m_pEditor->m_Map.m_Modified = true;
 }

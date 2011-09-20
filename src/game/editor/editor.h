@@ -234,7 +234,6 @@ public:
 	CEditor *m_pEditor;
 
 	CEditorImage(CEditor *pEditor)
-	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
 		m_TexID = -1;
@@ -244,17 +243,22 @@ public:
 		m_Height = 0;
 		m_pData = 0;
 		m_Format = 0;
+		m_pAutoMapper = 0;
+		m_RulesFileLoaded = false;
 	}
 
 	~CEditorImage();
 
 	void AnalyseTileFlags();
+	void LoadAutoMapper();
 
 	int m_TexID;
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
-	class CAutoMapper m_AutoMapper;
+	
+	class IAutoMapper *m_pAutoMapper;
+	bool m_RulesFileLoaded;
 };
 
 class CEditorMap

@@ -367,7 +367,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer != this)
 	{
-		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.IsLoaded())
+		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_RulesFileLoaded)
 		{
 			static int s_AutoMapperButton = 0;
 			pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
@@ -377,7 +377,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
 			if(Result > -1)
 			{
-				m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.Proceed(this, Result);
+				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result);
+				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result, 1);
+				
 				return 1;
 			}
 		}

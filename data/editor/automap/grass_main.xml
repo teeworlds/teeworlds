@@ -1,262 +1,264 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Grass>
-	<BaseTile index="1"/>
-	
-	<!--Random bones-->
-	<Rule index="2">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="3">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="66">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="67">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="68">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<!--Top-->
-	<Rule index="16">
-		<Condition x="0" y="-1" value="empty"/>
-	</Rule>
-	
-	<!--Right-->
-	<Rule index="21">
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Bottom-->
-	<Rule index="52">
-		<Condition x="0" y="1" value="empty"/>
-	</Rule>
-	
-	<!--Left-->
-	<Rule index="20">
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Top Right-->
-	<Rule index="5">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Top Left-->
-	<Rule index="4">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Bottom Left-->
-	<Rule index="36">
-		<Condition x="0" y="1" value="empty"/>
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Bottom Right-->
-	<Rule index="37">
-		<Condition x="0" y="1" value="empty"/>
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Inside Corner Top Right-->
-	<Rule index="54">
-		<Condition x="-1" y="1" value="empty"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Top Left-->
-	<Rule index="53">
-		<Condition x="1" y="1" value="empty"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Bottom Left-->
-	<Rule index="49">
-		<Condition x="1" y="-1" value="empty"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Bottom Right-->
-	<Rule index="48">
-		<Condition x="-1" y="-1" value="empty"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-	</Rule>
-	
-	<!--Bottom Right-->
-	<Rule index="22">
-		<Condition x="-1" y="0" value="empty"/>
-		<Condition x="-1" y="1" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Bottom Left-->
-	<Rule index="38">
-		<Condition x="1" y="0" value="empty"/>
-		<Condition x="1" y="1" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Grass Corner Top Right-->
-	<Rule index="33">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="1" y="0" value="empty"/>
-		<Condition x="1" y="1" value="full"/>
-	</Rule>
-	
-	<!--Grass Corner Top Left-->
-	<Rule index="32">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="-1" y="0" value="empty"/>
-		<Condition x="-1" y="1" value="full"/>
-	</Rule>
-</Grass>
+<Tileset>
+	<Grass>
+		<BaseTile index="1"/>
+		
+		<!--Random bones-->
+		<Rule index="2">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="3">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="66">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="67">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="68">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<!--Top-->
+		<Rule index="16">
+			<Condition x="0" y="-1" value="empty"/>
+		</Rule>
+		
+		<!--Right-->
+		<Rule index="21">
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Bottom-->
+		<Rule index="52">
+			<Condition x="0" y="1" value="empty"/>
+		</Rule>
+		
+		<!--Left-->
+		<Rule index="20">
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Top Right-->
+		<Rule index="5">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Top Left-->
+		<Rule index="4">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Bottom Left-->
+		<Rule index="36">
+			<Condition x="0" y="1" value="empty"/>
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Bottom Right-->
+		<Rule index="37">
+			<Condition x="0" y="1" value="empty"/>
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Inside Corner Top Right-->
+		<Rule index="54">
+			<Condition x="-1" y="1" value="empty"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Top Left-->
+		<Rule index="53">
+			<Condition x="1" y="1" value="empty"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Bottom Left-->
+		<Rule index="49">
+			<Condition x="1" y="-1" value="empty"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Bottom Right-->
+		<Rule index="48">
+			<Condition x="-1" y="-1" value="empty"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+		</Rule>
+		
+		<!--Bottom Right-->
+		<Rule index="22">
+			<Condition x="-1" y="0" value="empty"/>
+			<Condition x="-1" y="1" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Bottom Left-->
+		<Rule index="38">
+			<Condition x="1" y="0" value="empty"/>
+			<Condition x="1" y="1" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Grass Corner Top Right-->
+		<Rule index="33">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="1" y="0" value="empty"/>
+			<Condition x="1" y="1" value="full"/>
+		</Rule>
+		
+		<!--Grass Corner Top Left-->
+		<Rule index="32">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="-1" y="0" value="empty"/>
+			<Condition x="-1" y="1" value="full"/>
+		</Rule>
+	</Grass>
 
-<Cave>
-	<BaseTile index="13"/>
-	
-	<!--Random bones-->
-	<Rule index="29">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="42">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="43">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="44">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<Rule index="45">
-		<Condition x="0" y="1" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Random value="150"/>
-	</Rule>
-	
-	<!--Top-->
-	<Rule index="26">
-		<Condition x="0" y="-1" value="empty"/>
-	</Rule>
-	
-	<!--Right-->
-	<Rule index="25">
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Bottom-->
-	<Rule index="10">
-		<Condition x="0" y="1" value="empty"/>
-	</Rule>
-	
-	<!--Left-->
-	<Rule index="24">
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Top Right-->
-	<Rule index="9">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Top Left-->
-	<Rule index="8">
-		<Condition x="0" y="-1" value="empty"/>
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Bottom Left-->
-	<Rule index="40">
-		<Condition x="0" y="1" value="empty"/>
-		<Condition x="-1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Corner Bottom Right-->
-	<Rule index="41">
-		<Condition x="0" y="1" value="empty"/>
-		<Condition x="1" y="0" value="empty"/>
-	</Rule>
-	
-	<!--Inside Corner Top Right-->
-	<Rule index="12">
-		<Condition x="-1" y="1" value="empty"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Top Left-->
-	<Rule index="11">
-		<Condition x="1" y="1" value="empty"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="0" y="1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Bottom Left-->
-	<Rule index="27">
-		<Condition x="1" y="-1" value="empty"/>
-		<Condition x="1" y="0" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-	</Rule>
-	
-	<!--Inside Corner Bottom Right-->
-	<Rule index="28">
-		<Condition x="-1" y="-1" value="empty"/>
-		<Condition x="-1" y="0" value="full"/>
-		<Condition x="0" y="-1" value="full"/>
-	</Rule>
-</Cave>
+	<Cave>
+		<BaseTile index="13"/>
+		
+		<!--Random bones-->
+		<Rule index="29">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="42">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="43">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="44">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<Rule index="45">
+			<Condition x="0" y="1" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Random value="150"/>
+		</Rule>
+		
+		<!--Top-->
+		<Rule index="26">
+			<Condition x="0" y="-1" value="empty"/>
+		</Rule>
+		
+		<!--Right-->
+		<Rule index="25">
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Bottom-->
+		<Rule index="10">
+			<Condition x="0" y="1" value="empty"/>
+		</Rule>
+		
+		<!--Left-->
+		<Rule index="24">
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Top Right-->
+		<Rule index="9">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Top Left-->
+		<Rule index="8">
+			<Condition x="0" y="-1" value="empty"/>
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Bottom Left-->
+		<Rule index="40">
+			<Condition x="0" y="1" value="empty"/>
+			<Condition x="-1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Corner Bottom Right-->
+		<Rule index="41">
+			<Condition x="0" y="1" value="empty"/>
+			<Condition x="1" y="0" value="empty"/>
+		</Rule>
+		
+		<!--Inside Corner Top Right-->
+		<Rule index="12">
+			<Condition x="-1" y="1" value="empty"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Top Left-->
+		<Rule index="11">
+			<Condition x="1" y="1" value="empty"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="0" y="1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Bottom Left-->
+		<Rule index="27">
+			<Condition x="1" y="-1" value="empty"/>
+			<Condition x="1" y="0" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+		</Rule>
+		
+		<!--Inside Corner Bottom Right-->
+		<Rule index="28">
+			<Condition x="-1" y="-1" value="empty"/>
+			<Condition x="-1" y="0" value="full"/>
+			<Condition x="0" y="-1" value="full"/>
+		</Rule>
+	</Cave>
+</Tileset>

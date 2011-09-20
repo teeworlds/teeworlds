@@ -23,6 +23,8 @@
 #include "auto_map.h"
 #include "editor.h"
 
+#include <engine/external/tinyxml/tinyxml.h>
+
 int CEditor::ms_CheckerTexture;
 int CEditor::ms_BackgroundTexture;
 int CEditor::ms_CursorTexture;
@@ -37,6 +39,9 @@ enum
 CEditorImage::~CEditorImage()
 {
 	m_pEditor->Graphics()->UnloadTexture(m_TexID);
+	
+	if(m_pAutoMapper)
+		delete m_pAutoMapper;
 }
 
 CLayerGroup::CLayerGroup()
@@ -188,6 +193,49 @@ void CEditorImage::AnalyseTileFlags()
 			}
 	}
 
+}
+
+void CEditorImage::LoadAutoMapper()
+{
+	char aPath[256];
+	str_format(aPath, sizeof(aPath), "data/editor/automap/%s.xml", m_aName);
+	
+	char aBuf[256];
+	
+	TiXmlDocument File(aPath);
+	m_RulesFileLoaded = File.LoadFile();
+	
+	if(!m_RulesFileLoaded)
+	{
+		/*str_format(aBuf, sizeof(aBuf),"failed to load %s.xml", m_aName);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
+		return;
+	}
+	
+	// get configurations
+	TiXmlHandle hFile(&File);
+	TiXmlElement* pTypeNode = hFile.FirstChildElement().Element();
+	
+	m_RulesFileLoaded = false;
+	if(str_comp(pTypeNode->Value(), "Tileset") == 0)
+	{
+		m_pAutoMapper = new CTileSetMapper(m_pEditor);
+		m_pAutoMapper->Load(pTypeNode);
+		m_RulesFileLoaded = true;
+	}
+	else if(str_comp(pTypeNode->Value(), "Doodads") == 0)
+	{
+		m_pAutoMapper = new CDoodadMapper(m_pEditor);
+		m_pAutoMapper->Load(pTypeNode);
+		m_RulesFileLoaded = true;
+	}
+	
+	if(m_RulesFileLoaded)
+	{
+		const char *aTypes[] = {"tileset", "doodad"};
+		str_format(aBuf, sizeof(aBuf),"loaded %s.xml (%s)", m_aName, aTypes[m_pAutoMapper->GetType()]);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
+	}
 }
 
 void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
@@ -2401,7 +2449,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	*pImg = ImgInfo;
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
-	pImg->m_AutoMapper.Load(pImg->m_aName);
+	pImg->LoadAutoMapper();
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
@@ -2433,7 +2481,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
-	pImg->m_AutoMapper.Load(pImg->m_aName);
+	pImg->LoadAutoMapper();
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
 	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())

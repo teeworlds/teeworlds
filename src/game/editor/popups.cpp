@@ -814,13 +814,12 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 	CLayerTiles *pLayer = static_cast<CLayerTiles*>(pEditor->GetSelectedLayer(0));
 	CUIRect Button;
 	static int s_AutoMapperConfigButtons[256];
-	CAutoMapper *pAutoMapper = &pEditor->m_Map.m_lImages[pLayer->m_Image]->m_AutoMapper;
 
-	for(int i = 0; i < pAutoMapper->RuleSetNum(); ++i)
+	for(int i = 0; i < pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum(); ++i)
 	{
 		View.HSplitTop(2.0f, 0, &View);
 		View.HSplitTop(12.0f, &Button, &View);
-		if(pEditor->DoButton_Editor(&s_AutoMapperConfigButtons[i], pAutoMapper->GetRuleSetName(i), 0, &Button, 0, 0))
+		if(pEditor->DoButton_Editor(&s_AutoMapperConfigButtons[i], pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(i), 0, &Button, 0, 0))
 			s_AutoMapConfigSelected = i;
 	}
 
@@ -833,8 +832,8 @@ void CEditor::PopupSelectConfigAutoMapInvoke(float x, float y)
 	s_AutoMapConfigSelected = -1;
 	CLayerTiles *pLayer = static_cast<CLayerTiles*>(GetSelectedLayer(0));
 	if(pLayer && pLayer->m_Image >= 0 && pLayer->m_Image < m_Map.m_lImages.size() &&
-		m_Map.m_lImages[pLayer->m_Image]->m_AutoMapper.RuleSetNum())
-		UiInvokePopupMenu(&s_AutoMapConfigSelectID, 0, x, y, 120.0f, 12.0f+14.0f*m_Map.m_lImages[pLayer->m_Image]->m_AutoMapper.RuleSetNum(), PopupSelectConfigAutoMap);
+		m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum())
+		UiInvokePopupMenu(&s_AutoMapConfigSelectID, 0, x, y, 120.0f, 12.0f+14.0f*m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum(), PopupSelectConfigAutoMap);
 }
 
 int CEditor::PopupSelectConfigAutoMapResult()

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Doodads>
+	<Vegetation>
+		<!--Small Tree-->
+		<Rule startid="1" endid="35" ry="-3">
+			<Location value="floor"/>
+			<Random value="20"/>
+		</Rule>
+		
+		<!--Small Bush-->
+		<Rule startid="44" endid="45" ry="-1">
+			<Location value="floor"/>
+			<Random value="20"/>
+		</Rule>
+		
+		<!--Bush 1-->
+		<Rule startid="56" endid="74" ry="-2">
+			<Location value="floor"/>
+			<Random value="30"/>
+		</Rule>
+		
+		<!--Bush 2-->
+		<Rule startid="59" endid="77" ry="-2">
+			<Location value="floor"/>
+			<Random value="30"/>
+		</Rule>
+		
+		<!--Big Bush-->
+		<Rule startid="48" endid="87" ry="-3">
+			<Location value="floor"/>
+			<Random value="40"/>
+		</Rule>
+		
+		<!--Tree 1-->
+		<Rule startid="96" endid="164" ry="-5">
+			<Location value="floor"/>
+			<Random value="40"/>
+		</Rule>
+		
+		<!--Tree 2-->
+		<Rule startid="101" endid="168" ry="-5">
+			<Location value="floor"/>
+			<Random value="40"/>
+		</Rule>
+		
+		<!--Tree 3-->
+		<Rule startid="90" endid="175" ry="-6">
+			<Location value="floor"/>
+			<Random value="40"/>
+		</Rule>
+	</Vegetation>
+</Doodads>
