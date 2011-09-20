@@ -822,6 +822,25 @@ int CEditor::Append(const char *pFileName, int StorageType)
 	}
 	NewMap.m_lGroups.clear();
 
+	// transfer map info
+	if(!m_Map.m_MapInfo.m_aAuthor[0] && NewMap.m_MapInfo.m_aAuthor[0])
+		str_copy(m_Map.m_MapInfo.m_aAuthor, NewMap.m_MapInfo.m_aAuthor, sizeof(m_Map.m_MapInfo.m_aAuthor));
+	if(!m_Map.m_MapInfo.m_aVersion[0] && NewMap.m_MapInfo.m_aVersion[0])
+		str_copy(m_Map.m_MapInfo.m_aVersion, NewMap.m_MapInfo.m_aVersion, sizeof(m_Map.m_MapInfo.m_aVersion));
+	if(!m_Map.m_MapInfo.m_aCredits[0] && NewMap.m_MapInfo.m_aCredits[0])
+		str_copy(m_Map.m_MapInfo.m_aCredits, NewMap.m_MapInfo.m_aCredits, sizeof(m_Map.m_MapInfo.m_aCredits));
+	if(!m_Map.m_MapInfo.m_aLicense[0] && NewMap.m_MapInfo.m_aLicense[0])
+		str_copy(m_Map.m_MapInfo.m_aLicense, NewMap.m_MapInfo.m_aLicense, sizeof(m_Map.m_MapInfo.m_aLicense));
+
+	// transfer map settings
+	for(int i = 0; i < NewMap.m_lSettings.size(); i++)
+	{
+		CEditorMap::CSetting Setting;
+		str_copy(Setting.m_aCommand, NewMap.m_lSettings[i].m_aCommand, sizeof(Setting.m_aCommand));
+		if(find_linear(m_Map.m_lSettings.all(), Setting).empty())
+			m_Map.m_lSettings.add(Setting);
+	}
+
 	// all done \o/
 	return 0;
 }

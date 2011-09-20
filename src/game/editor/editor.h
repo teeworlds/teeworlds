@@ -303,6 +303,8 @@ public:
 	struct CSetting
 	{
 		char m_aCommand[64];
+
+		bool operator==(const CSetting &Other) { return !str_comp(m_aCommand, Other.m_aCommand); }
 	};
 	array<CSetting> m_lSettings;
 
