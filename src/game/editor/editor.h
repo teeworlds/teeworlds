@@ -322,6 +322,7 @@ public:
 	}
 
 	void DeleteEnvelope(int Index);
+	void CopyEnvelope(CEnvelope *pEnvelope);
 
 	CLayerGroup *NewGroup()
 	{

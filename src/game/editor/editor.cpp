@@ -3113,19 +3113,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 	{
 		CUIRect Button;
 		CEnvelope *pNewEnv = 0;
-
-		// Delete button
-		if(m_Map.m_lEnvelopes.size())
-		{
-			ToolBar.VSplitRight(5.0f, &ToolBar, &Button);
-			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
-			static int s_DelButton = 0;
-			if(DoButton_Editor(&s_DelButton, Localize("Delete"), 0, &Button, 0, Localize("Delete this envelope")))
-				m_Map.DeleteEnvelope(m_SelectedEnvelope);
-		
-			// little space
-			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
-		}
 		
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
@@ -3156,6 +3143,21 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				m_Map.DeleteEnvelope(m_SelectedEnvelope);
 				if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size())
 					m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
+				pEnvelope = m_SelectedEnvelope >= 0 ? m_Map.m_lEnvelopes[m_SelectedEnvelope] : 0;
+			}
+		}
+
+		// Copy button
+		if(m_SelectedEnvelope >= 0)
+		{
+			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
+			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
+			static int s_DelButton = 0;
+			if(DoButton_Editor(&s_DelButton, "Copy", 0, &Button, 0, "Copy this envelope"))
+			{
+				m_Map.m_Modified = true;
+				m_Map.CopyEnvelope(m_Map.m_lEnvelopes[m_SelectedEnvelope]);
+				m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1; // switch to new envelope
 				pEnvelope = m_SelectedEnvelope >= 0 ? m_Map.m_lEnvelopes[m_SelectedEnvelope] : 0;
 			}
 		}
@@ -4002,6 +4004,17 @@ void CEditorMap::DeleteEnvelope(int Index)
 			}
 
 	m_lEnvelopes.remove_index(Index);
+}
+
+void CEditorMap::CopyEnvelope(CEnvelope *pEnvelope)
+{
+	m_Modified = true;
+
+	CEnvelope *pNewEnvelope = NewEnvelope(pEnvelope->m_Channels);
+	str_copy(pNewEnvelope->m_aName, pEnvelope->m_aName, sizeof(pNewEnvelope->m_aName));
+	pNewEnvelope->m_Bottom = pEnvelope->m_Bottom;
+	pNewEnvelope->m_Top = pEnvelope->m_Top;
+	pNewEnvelope->m_lPoints = pEnvelope->m_lPoints;
 }
 
 void CEditorMap::MakeGameLayer(CLayer *pLayer)
