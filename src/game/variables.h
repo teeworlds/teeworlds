@@ -103,11 +103,11 @@ MACRO_CONFIG_INT(ClRaceSaveGhost, cl_race_save_ghost, 1, 0, 1, CFGFLAG_CLIENT|CF
 MACRO_CONFIG_INT(ClGhostNamePlates, cl_ghost_nameplates, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ghost nameplates")
 MACRO_CONFIG_INT(ClGhostNameplatesAlways, cl_ghost_nameplates_always, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Always show ghost nameplats disregarding of distance")
 
-MACRO_CONFIG_STR(ClUsername, cl_username, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace username")
-MACRO_CONFIG_STR(ClPassword, cl_password, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace password")
-MACRO_CONFIG_STR(ClApiToken, cl_api_token, 25, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Api token for webapp")
-MACRO_CONFIG_STR(ClWebappIp, cl_webapp_ip, 32, "race.teesites.net", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Webapp IP")
-MACRO_CONFIG_STR(ClApiPath, cl_api_path, 32, "/api/1", CFGFLAG_CLIENT|CFGFLAG_SAVE, "initial path to api")
+MACRO_CONFIG_STR(WaUsername, wa_username, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace username")
+MACRO_CONFIG_STR(WaPassword, wa_password, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace password")
+MACRO_CONFIG_STR(WaApiToken, wa_api_token, 25, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Api token for webapp")
+MACRO_CONFIG_STR(WaWebappIp, wa_webapp_ip, 32, "race.teesites.net", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Webapp IP")
+MACRO_CONFIG_STR(WaApiPath, wa_api_path, 32, "/api/1", CFGFLAG_CLIENT|CFGFLAG_SAVE, "initial path to api")
 
 // teecomp
 #include "teecomp_vars.h"

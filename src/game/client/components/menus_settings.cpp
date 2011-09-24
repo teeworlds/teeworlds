@@ -1409,7 +1409,7 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	Button.VSplitLeft(80.0f, 0, &Button);
 	Button.VSplitLeft(180.0f, &Button, 0);
 	static float UserOffset = 0.0f;
-	DoEditBox(g_Config.m_ClUsername, &Button, g_Config.m_ClUsername, sizeof(g_Config.m_ClUsername), 14.0f, &UserOffset);
+	DoEditBox(g_Config.m_WaUsername, &Button, g_Config.m_WaUsername, sizeof(g_Config.m_WaUsername), 14.0f, &UserOffset);
 
 	LeftView.HSplitTop(5.0f, &Button, &LeftView);
 
@@ -1420,14 +1420,14 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	Button.VSplitLeft(80.0f, 0, &Button);
 	Button.VSplitLeft(180.0f, &Button, 0);
 	static float PassOffset = 0.0f;
-	DoEditBox(g_Config.m_ClPassword, &Button, g_Config.m_ClPassword, sizeof(g_Config.m_ClPassword), 14.0f, &PassOffset, true);
+	DoEditBox(g_Config.m_WaPassword, &Button, g_Config.m_WaPassword, sizeof(g_Config.m_WaPassword), 14.0f, &PassOffset, true);
 
 	// api token box
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Api token"));
 	UI()->DoLabel(&Button, aBuf, 14.0, -1);
 	Button.VSplitLeft(80.0f, 0, &Button);
-	UI()->DoLabel(&Button, m_pClient->Webapp()->m_ApiTokenError ? Localize("Error requesting api token") : (g_Config.m_ClApiToken[0] == 0) ? Localize("None") : g_Config.m_ClApiToken, 14.0, -1);
+	UI()->DoLabel(&Button, m_pClient->Webapp()->m_ApiTokenError ? Localize("Error requesting api token") : (g_Config.m_WaApiToken[0] == 0) ? Localize("None") : g_Config.m_WaApiToken, 14.0, -1);
 
 	LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
 	ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
@@ -1435,10 +1435,12 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	if(DoButton_Menu((void*)&s_ApiTokenButton, m_pClient->Webapp()->m_ApiTokenRequested ? Localize("Checking...") : Localize("Request api token"), m_pClient->Webapp()->m_ApiTokenRequested ? -1 : 0, &ApiButton))
 	{
 		m_pClient->Webapp()->m_ApiTokenRequested = true;
-		CWebApiToken::CParam *pParams = new CWebApiToken::CParam();
-		str_copy(pParams->m_aUsername, g_Config.m_ClUsername, sizeof(pParams->m_aUsername));
-		str_copy(pParams->m_aPassword, g_Config.m_ClPassword, sizeof(pParams->m_aPassword));
-		m_pClient->Webapp()->AddJob(CWebApiToken::GetApiToken, pParams, 0);
+
+		char aData[128];
+		str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, g_Config.m_WaPassword);
+		CRequest *pRequest = m_pClient->Webapp()->CreateRequest("anonclient/get_token/", CRequest::HTTP_POST);
+		pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
+		m_pClient->Webapp()->SendRequest(pRequest, WEB_API_TOKEN);
 	}
 }
 

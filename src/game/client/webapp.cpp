@@ -1,59 +1,36 @@
 /* CClientWebapp Class by Sushi and Redix*/
 #include <engine/shared/config.h>
 
+#include <game/http/response.h>
+
 #include "gameclient.h"
 #include "webapp.h"
 
-const char CClientWebapp::POST[] = "POST %s/%s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s";
-
 CClientWebapp::CClientWebapp(CGameClient *pGameClient)
-: CWebapp(pGameClient->Storage(), g_Config.m_ClWebappIp),
+: IWebapp(pGameClient->Storage()),
   m_pClient(pGameClient)
 {
 	m_ApiTokenError = false;
 	m_ApiTokenRequested = false;
 }
 
-CClientWebapp::~CClientWebapp() {}
-
-void CClientWebapp::Tick()
+void CClientWebapp::OnResponse(CHttpConnection *pCon)
 {
-	int Jobs = UpdateJobs();
-	if(Jobs > 0)
-		dbg_msg("webapp", "Removed %d jobs", Jobs);
-	
+	int Type = pCon->Type();
+	CResponse *pResponse = pCon->Response();
+	bool Error = pCon->Error() || pResponse->StatusCode() != 200;
+
 	// TODO: add event listener (server and client)
-	lock_wait(m_OutputLock);
-	IDataOut *pNext = 0;
-	for(IDataOut *pItem = m_pFirst; pItem; pItem = pNext)
+	if(Type == WEB_API_TOKEN)
 	{
-		int Type = pItem->m_Type;
-		if(Type == WEB_API_TOKEN)
+		// TODO: better error messages
+		if(Error || str_comp(pResponse->GetBody(), "false") == 0 || pResponse->Size() != 24+2)
+			m_ApiTokenError = true;
+		else
 		{
-			CWebApiToken::COut *pData = (CWebApiToken::COut*)pItem;
-			if(str_length(pData->m_aApiToken) != 24)
-				m_ApiTokenError = true;
-			else
-			{
-				m_ApiTokenError = false;
-				str_copy(g_Config.m_ClApiToken, pData->m_aApiToken, sizeof(g_Config.m_ClApiToken));
-			}
-			m_ApiTokenRequested = false;
+			m_ApiTokenError = false;
+			str_copy(g_Config.m_WaApiToken, pResponse->GetBody()+1, 24+1);
 		}
-		pNext = pItem->m_pNext;
-		delete pItem;
+		m_ApiTokenRequested = false;
 	}
-	m_pFirst = 0;
-	m_pLast = 0;
-	lock_release(m_OutputLock);
-}
-
-const char* CClientWebapp::ServerIP()
-{
-	return g_Config.m_ClWebappIp;
-}
-
-const char* CClientWebapp::ApiPath()
-{
-	return g_Config.m_ClApiPath;
 }

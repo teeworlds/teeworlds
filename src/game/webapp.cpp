@@ -1,16 +1,18 @@
-/* CWebapp class by Sushi and Redix*/
-#include <stdio.h>
+/* Webapp class by Sushi and Redix */
 
+#include <engine/storage.h>
+#include <engine/shared/config.h>
 #include <base/math.h>
 
+#include "http/request.h"
+#include "http/response.h"
 #include "webapp.h"
 
-CWebapp::CWebapp(IStorage *pStorage, const char* WebappIp)
-: m_pStorage(pStorage)
+IWebapp::IWebapp(IStorage *pStorage) : m_pStorage(pStorage)
 {
 	char aBuf[512];
 	int Port = 80;
-	str_copy(aBuf, WebappIp, sizeof(aBuf));
+	str_copy(aBuf, g_Config.m_WaWebappIp, sizeof(aBuf));
 
 	for(int k = 0; aBuf[k]; k++)
 	{
@@ -23,204 +25,74 @@ CWebapp::CWebapp(IStorage *pStorage, const char* WebappIp)
 	}
 
 	if(net_host_lookup(aBuf, &m_Addr, NETTYPE_IPV4) != 0)
-	{
 		net_host_lookup("localhost", &m_Addr, NETTYPE_IPV4);
-	}
-	
 	m_Addr.port = Port;
-	
-	// only one at a time
-	m_JobPool.Init(1);
-	m_Jobs.delete_all();
-	
-	m_OutputLock = lock_create();
-	m_pFirst = 0;
-	m_pLast = 0;
-	
-	m_Online = 0;
 }
 
-CWebapp::~CWebapp()
+CRequest *IWebapp::CreateRequest(const char *pURI, int Method, bool Api)
 {
-	// wait for the runnig jobs
-	do
+	char aURI[256];
+	if(Api)
 	{
-		UpdateJobs();
-	} while(m_Jobs.size() > 0);
-	m_Jobs.delete_all();
-
-	IDataOut *pNext;
-	for(IDataOut *pItem = m_pFirst; pItem; pItem = pNext)
-	{
-		pNext = pItem->m_pNext;
-		delete pItem;
+		str_format(aURI, sizeof(aURI), "%s/%s", g_Config.m_WaApiPath, pURI);
+		pURI = aURI;
 	}
-
-	lock_destroy(m_OutputLock);
+	CRequest *pRequest = new CRequest(g_Config.m_WaWebappIp, pURI, Method);
+	RegisterFields(pRequest, Api);
+	return pRequest;
 }
 
-void CWebapp::AddOutput(IDataOut *pOut)
+bool IWebapp::Send(CRequest *pRequest, CResponse *pResponse, int Type, CWebData *pUserData)
 {
-	lock_wait(m_OutputLock);
-	pOut->m_pNext = 0;
-	if(m_pLast)
-		m_pLast->m_pNext = pOut;
-	else
-		m_pFirst = pOut;
-	m_pLast = pOut;
-	lock_release(m_OutputLock);
-}
-
-bool CWebapp::Connect()
-{
-	// connect to the server
-	m_Socket = net_tcp_create(m_Addr);
-	if(m_Socket.type == NETTYPE_INVALID)
+	CHttpConnection *pCon = new CHttpConnection();
+	if(!pCon->Create(m_Addr, Type))
 		return false;
-	
+	pCon->SetRequest(pRequest);
+	pCon->SetResponse(pResponse);
+	pCon->SetUserData(pUserData);
+	m_Connections.add(pCon);
 	return true;
 }
 
-void CWebapp::Disconnect()
+bool IWebapp::SendRequest(CRequest *pRequest, int Type, CWebData *pUserData)
 {
-	net_tcp_close(m_Socket);
+	return Send(pRequest, new CResponse(), Type, pUserData);
 }
 
-int CWebapp::GetHeaderInfo(char *pStr, int MaxSize, CHeader *pHeader)
+bool IWebapp::Download(const char *pFilename, const char *pURI, int Type, class CWebData *pUserData)
 {
-	char aBuf[512] = {0};
-	char *pData = pStr;
-	while(str_comp_num(pData, "\r\n\r\n", 4) != 0)
+	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+	CRequest *pRequest = CreateRequest(pURI, CRequest::HTTP_GET, false);
+	CResponse *pResponse = new CResponse();
+	pResponse->SetFile(File, pFilename);
+	return Send(pRequest, pResponse, Type, pUserData);
+}
+
+bool IWebapp::Upload(const char *pFilename, const char *pURI, const char *pUploadName, int Type, class CWebData *pUserData, int64 StartTime)
+{
+	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+	CRequest *pRequest = CreateRequest(pURI, CRequest::HTTP_POST);
+	pRequest->SetFile(File, pFilename, pUploadName);
+	pRequest->SetStartTime(StartTime);
+	return SendRequest(pRequest, Type, pUserData);
+}
+
+void IWebapp::Update()
+{
+	int Max = 3;
+	for(int i = 0; i < min(m_Connections.size(), Max); i++)
 	{
-		pData++;
-		if(pData > pStr+MaxSize)
-			return -1;
-	}
-	pData += 4;
-	int HeaderSize = pData - pStr;
-	int BufSize = min((int)sizeof(aBuf),HeaderSize);
-	mem_copy(aBuf, pStr, BufSize);
-	
-	pData = aBuf;
-	//dbg_msg("webapp", "\n---header start---\n%s\n---header end---\n", aBuf);
-	
-	if(sscanf(pData, "HTTP/%*d.%*d %d %*s\r\n", &pHeader->m_StatusCode) != 1)
-		return -2;
-	
-	while(sscanf(pData, "Content-Length: %ld\r\n", &pHeader->m_ContentLength) != 1)
-	{
-		while(str_comp_num(pData, "\r\n", 2) != 0)
+		if(m_Connections[i]->Update() != 0)
 		{
-			pData++;
-			if(pData > aBuf+BufSize)
-				return -3;
-		}
-		pData += 2;
-	}
-	
-	return HeaderSize;
-}
-
-int CWebapp::RecvHeader(char *pBuf, int MaxSize, CHeader *pHeader)
-{
-	int HeaderSize;
-	int AddSize;
-	int Size = 0;
-	do
-	{
-		char *pWrite = pBuf + Size;
-		AddSize = net_tcp_recv(m_Socket, pWrite, MaxSize-Size);
-		Size += AddSize;
-		HeaderSize = GetHeaderInfo(pBuf, Size, pHeader);
-	} while(HeaderSize == -1 && MaxSize-Size > 0 && AddSize > 0);
-	pHeader->m_Size = HeaderSize;
-	return Size;
-}
-
-int CWebapp::SendAndReceive(const char *pInString, char **ppOutString)
-{
-	//dbg_msg("webapp", "\n---send start---\n%s\n---send end---\n", pInString);
-
-	net_tcp_connect(m_Socket, &m_Addr);
-	net_tcp_send(m_Socket, pInString, str_length(pInString));
-
-	CHeader Header;
-	int Size = 0;
-	int MemLeft = 0;
-	char *pWrite = 0;
-	do
-	{
-		char aBuf[512] = {0};
-		char *pData = aBuf;
-		if(!pWrite)
-		{
-			Size = RecvHeader(aBuf, sizeof(aBuf), &Header);
-
-			if(Header.m_Size < 0)
-				return -1;
-
-			if(Header.m_StatusCode != 200)
-				return -Header.m_StatusCode;
-
-			pData += Header.m_Size;
-			MemLeft = Header.m_ContentLength;
-			*ppOutString = (char *)mem_alloc(MemLeft+1, 1);
-			mem_zero(*ppOutString, MemLeft+1);
-			pWrite = *ppOutString;
-		}
-		else
-			Size = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
-
-		if(Size > 0)
-		{
-			int Write = Size - (pData - aBuf);
-			if(Write > MemLeft)
-			{
-				mem_free(*ppOutString);
-				return -2;
-			}
-			mem_copy(pWrite, pData, Write);
-			pWrite += Write;
-			MemLeft = *ppOutString + Header.m_ContentLength - pWrite;
-		}
-	} while(Size > 0);
-
-	if(MemLeft != 0)
-	{
-		mem_free(*ppOutString);
-		return -3;
-	}
-
-	//dbg_msg("webapp", "\n---recv start---\n%s\n---recv end---\n", *ppOutString);
-
-	return Header.m_ContentLength;
-}
-
-CJob *CWebapp::AddJob(JOBFUNC pfnFunc, IDataIn *pUserData, bool NeedOnline)
-{
-	if(NeedOnline && !m_Online)
-	{
-		delete pUserData;
-		return 0;
-	}
-
-	pUserData->m_pWebapp = this;
-	int i = m_Jobs.add(new CJob());
-	m_JobPool.Add(m_Jobs[i], pfnFunc, pUserData);
-	return m_Jobs[i];
-}
-
-int CWebapp::UpdateJobs()
-{
-	int Num = 0;
-	for(int i = 0; i < m_Jobs.size(); i++)
-	{
-		if(m_Jobs[i]->Status() == CJob::STATE_DONE)
-		{
-			delete m_Jobs[i];
-			m_Jobs.remove_index_fast(i);
-			Num++;
+			m_Connections[i]->CloseFiles();
+			OnResponse(m_Connections[i]);
+			
+			delete m_Connections[i];
+			m_Connections.remove_index_fast(i);
 		}
 	}
-	return Num;
 }

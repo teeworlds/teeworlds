@@ -1,64 +1,33 @@
-/* CWebapp Class by Sushi and Redix*/
+/* Webapp Class by Sushi and Redix */
 #ifndef GAME_WEBAPP_H
 #define GAME_WEBAPP_H
 
 #include <base/tl/array.h>
-#include <engine/shared/jobs.h>
+#include "http/http_con.h"
 
-#include "data.h"
-
-class CWebapp
+class IWebapp
 {
+	NETADDR m_Addr;
+	array<CHttpConnection*> m_Connections;
 	class IStorage *m_pStorage;
 
-	CJobPool m_JobPool;
-
-	NETADDR m_Addr;
-	NETSOCKET m_Socket;
-
-	array<CJob*> m_Jobs;
-
-	bool m_Online;
+	virtual void RegisterFields(class CRequest *pRequest, bool Api) = 0;
+	virtual void OnResponse(CHttpConnection *pCon) = 0;
+	
+	bool Send(CRequest *pRequest, class CResponse *pResponse, int Type, CWebData *pUserData);
 
 public:
+	IWebapp(IStorage *pStorage);
+	virtual ~IWebapp() { m_Connections.delete_all(); };
 
-	class CHeader
-	{
-	public:
-		int m_Size;
-		int m_StatusCode;
-		long m_ContentLength;
-	};
+	CRequest *CreateRequest(const char *pURI, int Method, bool Api = true);
+	bool SendRequest(CRequest *pRequest, int Type, class CWebData *pUserData = 0);
+	bool Download(const char *pFilename, const char *pURI, int Type, class CWebData *pUserData = 0);
+	bool Upload(const char *pFilename, const char *pURI, const char *pUploadName, int Type, class CWebData *pUserData = 0, int64 StartTime = -1);
 
-	LOCK m_OutputLock;
+	void Update();
 
-	IDataOut *m_pFirst;
-	IDataOut *m_pLast;
-
-	CWebapp(class IStorage *pStorage, const char* WebappIp);
-	virtual ~CWebapp();
-
-	class IStorage *Storage() { return m_pStorage; }
-
-	NETADDR Addr() { return m_Addr; }
-	NETSOCKET Socket() {return m_Socket; }
-
-	bool IsOnline() { return m_Online; }
-	void SetOnline(bool Online) { m_Online = Online; }
-
-	void AddOutput(class IDataOut *pOut);
-
-	bool Connect();
-	void Disconnect();
-
-	int UpdateJobs();
-
-	int GetHeaderInfo(char *pStr, int MaxSize, CHeader *pHeader);
-	int RecvHeader(char *pBuf, int MaxSize, CHeader *pHeader);
-
-	int SendAndReceive(const char *pInString, char **ppOutString);
-
-	CJob *AddJob(JOBFUNC pfnFunc, class IDataIn *pUserData, bool NeedOnline = 1);
+	IStorage *Storage() { return m_pStorage; }
 };
 
 #endif
