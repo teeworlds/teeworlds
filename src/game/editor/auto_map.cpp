@@ -525,6 +525,149 @@ void CDoodadMapper::AnalyzeGameLayer()
 	}
 }
 
+void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Ammount, int HFlip)
+{
+	if(pRule->m_Location == CRule::CEILING)
+		pRule->m_RelativePos.y++;
+	else if(pRule->m_Location == CRule::WALLS)
+		pRule->m_RelativePos.x++;
+		
+	// left walls
+	if(HFlip)
+	{
+		pRule->m_HFlip ^= HFlip;
+		pRule->m_RelativePos.x--;
+		pRule->m_RelativePos.x = -pRule->m_RelativePos.x;
+		pRule->m_RelativePos.x -= pRule->m_Size.x-1;
+	}
+	
+	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
+	int RandomValue = pRule->m_Random/pRule->m_Size.x/Ammount;
+	
+	// allow diversity with high Ammount
+	if(pRule->m_Random > 1 && RandomValue <= 1)
+		RandomValue = 2;
+	
+	for(int f = 0; f < pPositions->size(); f++)
+		for(int c = 0; c < (*pPositions)[f].size(); c += pRule->m_Size.x)
+		{
+			if((pRule->m_Location == CRule::FLOOR || pRule->m_Location == CRule::CEILING)
+				&& (*pPositions)[f].size()-c < pRule->m_Size.x)
+				break;
+				
+			if(pRule->m_Location == CRule::WALLS && (*pPositions)[f].size()-c < pRule->m_Size.y)
+				break;
+				
+			if(RandomValue > 1 && !IAutoMapper::Random(RandomValue))
+				continue;
+			
+			int ID = (*pPositions)[f][c];
+			
+			// relative position
+			ID += pRule->m_RelativePos.x;
+			ID += pRule->m_RelativePos.y*pLayer->m_Width;
+	
+			for(int y = 0; y < pRule->m_Size.y; y++)
+				for(int x = 0; x < pRule->m_Size.x; x++)
+				{
+					int Index = y*pLayer->m_Width+x+ID;
+					if(Index <= 0 || Index >= MaxIndex)
+						continue;
+					
+					pLayer->m_pTiles[Index].m_Index = pRule->m_Rect.x+y*16+x;
+				}
+
+			//hflip
+			if(pRule->m_HFlip)
+			{
+				for(int y = 0; y < pRule->m_Size.y; y++)
+					for(int x = 0; x < pRule->m_Size.x/2; x++)
+					{
+						int Index = y*pLayer->m_Width+x+ID;
+						if(Index <= 0 || Index >= MaxIndex)
+							continue;
+						
+						int CheckIndex = Index+pRule->m_Size.x-1-x*2;
+						
+						if(CheckIndex <= 0 || CheckIndex >= MaxIndex)
+							continue;
+							
+						CTile Tmp = pLayer->m_pTiles[Index];
+						pLayer->m_pTiles[Index] = pLayer->m_pTiles[CheckIndex];
+						pLayer->m_pTiles[CheckIndex] = Tmp;
+					}
+				
+				for(int y = 0; y < pRule->m_Size.y; y++)
+					for(int x = 0; x < pRule->m_Size.x; x++)
+					{
+						int Index = y*pLayer->m_Width+x+ID;
+						if(Index <= 0 || Index >= MaxIndex)
+							continue;
+							
+						pLayer->m_pTiles[Index].m_Flags ^= TILEFLAG_VFLIP;
+					}
+			}
+			
+			//vflip
+			if(pRule->m_VFlip)
+			{
+				for(int y = 0; y < pRule->m_Size.y/2; y++)
+					for(int x = 0; x < pRule->m_Size.x; x++)
+					{
+						int Index = y*pLayer->m_Width+x+ID;
+						if(Index <= 0 || Index >= MaxIndex)
+							continue;
+						
+						int CheckIndex = Index+(pRule->m_Size.y-1-y*2)*pLayer->m_Width;
+						
+						if(CheckIndex <= 0 || CheckIndex >= MaxIndex)
+							continue;
+							
+						CTile Tmp = pLayer->m_pTiles[Index];
+						pLayer->m_pTiles[Index] = pLayer->m_pTiles[CheckIndex];
+						pLayer->m_pTiles[CheckIndex] = Tmp;
+					}
+				
+				for(int y = 0; y < pRule->m_Size.y; y++)
+					for(int x = 0; x < pRule->m_Size.x; x++)
+					{
+						int Index = y*pLayer->m_Width+x+ID;
+						if(Index <= 0 || Index >= MaxIndex)
+							continue;
+							
+						pLayer->m_pTiles[Index].m_Flags ^= TILEFLAG_HFLIP;
+					}
+			}
+			
+			// make the place occupied
+			if(RandomValue > 1)
+			{
+				array<int> aChainBefore;
+				array<int> aChainAfter;
+				
+				for(int j = 0; j < c; j++)
+					aChainBefore.add((*pPositions)[f][j]);
+				
+				int Size = pRule->m_Size.x;
+				if(pRule->m_Location == CRule::WALLS)
+					Size = pRule->m_Size.y;
+				
+				for(int j = c+Size; j < (*pPositions)[f].size(); j++)
+					aChainAfter.add((*pPositions)[f][j]);
+				
+				pPositions->remove_index(f);
+				
+				// f changes, reset c
+				c = -1;
+				
+				if(aChainBefore.size() > 1)
+					pPositions->add(aChainBefore);
+				if(aChainAfter.size() > 1)
+					pPositions->add(aChainAfter);
+			}
+		}
+}
+
 void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Ammount)
 {
 	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
@@ -551,54 +694,28 @@ void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Ammount)
 	{
 		CRule *pRule = &pConf->m_aRules[i];
 		
+		// floors
 		if(pRule->m_Location == CRule::FLOOR && m_FloorIDs.size() > 0)
 		{
-			int RandomValue = pRule->m_Random/pRule->m_Size.x/Ammount;
-			
-			for(int f = 0; f < m_FloorIDs.size(); f++)
-				for(int c = 0; c < m_FloorIDs[f].size(); c += pRule->m_Size.x)
-				{
-					if(m_FloorIDs[f].size()-c < pRule->m_Size.x)
-						break;
-						
-					if(RandomValue > 1 && !IAutoMapper::Random(RandomValue))
-						continue;
-					
-					int ID = m_FloorIDs[f][c];
-					
-					// relative position
-					ID += pRule->m_RelativePos.y*pLayer->m_Width;
-			
-					for(int y = 0; y < pRule->m_Size.y; y++)
-						for(int x = 0; x < pRule->m_Size.x; x++)
-						{
-							int Index = y*pLayer->m_Width+x+ID;
-							if(Index <= 0 || Index >= MaxIndex)
-								continue;
-							
-							pLayer->m_pTiles[Index].m_Index = pRule->m_Rect.x+y*16+x;
-						}
-					
-					// make the place occupied
-					if(RandomValue > 1)
-					{
-						array<int> aChainBefore;
-						array<int> aChainAfter;
-						
-						for(int j = 0; j < c; j++)
-							aChainBefore.add(m_FloorIDs[f][j]);
-						for(int j = c+pRule->m_Size.x; j < m_FloorIDs[f].size(); j++)
-							aChainAfter.add(m_FloorIDs[f][j]);
-						
-						m_FloorIDs.remove_index(f);
-						c = 0;
-						
-						if(aChainBefore.size() > 1)
-							m_FloorIDs.add(aChainBefore);
-						if(aChainAfter.size() > 1)
-							m_FloorIDs.add(aChainAfter);
-					}
-				}
+			PlaceDoodads(pLayer, pRule, &m_FloorIDs, Ammount);
+		}
+		
+		// ceilings
+		if(pRule->m_Location == CRule::CEILING && m_CeilingIDs.size() > 0)
+		{
+			PlaceDoodads(pLayer, pRule, &m_CeilingIDs, Ammount);
+		}
+		
+		// right walls
+		if(pRule->m_Location == CRule::WALLS && m_RightWallIDs.size() > 0)
+		{
+			PlaceDoodads(pLayer, pRule, &m_RightWallIDs, Ammount);
+		}
+		
+		// left walls
+		if(pRule->m_Location == CRule::WALLS && m_LeftWallIDs.size() > 0)
+		{
+			PlaceDoodads(pLayer, pRule, &m_LeftWallIDs, Ammount, 1);
 		}
 	}
 	

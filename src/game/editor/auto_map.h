@@ -122,6 +122,8 @@ public:
 	virtual int GetType() { return IAutoMapper::TYPE_DOODADS; }
 	
 private:
+	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Ammount, int HFlip = 0);
+	
 	array<CRuleSet> m_aRuleSets;
 	
 	array<array<int>> m_FloorIDs;
