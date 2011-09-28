@@ -21,7 +21,8 @@ class CFlow : public CComponent
 public:
 	CFlow();
 
-	virtual void OnReset();
+	virtual void OnShutdown();
+	virtual void OnMapLoad();
 
 	void GetWindow(int *StartY, int *StartX, int *EndY, int *EndX);
 

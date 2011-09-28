@@ -43,7 +43,7 @@ void CFlow::DbgRender()
 	Graphics()->LinesEnd();
 }
 
-void CFlow::OnReset()
+void CFlow::OnMapLoad()
 {
 	if(m_pCells)
 	{
@@ -52,8 +52,6 @@ void CFlow::OnReset()
 	}
 
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
-	if(!pTilemap)
-		return;
 
 	m_Width = pTilemap->m_Width*32/m_Spacing;
 	m_Height = pTilemap->m_Height*32/m_Spacing;
@@ -63,6 +61,18 @@ void CFlow::OnReset()
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 			m_pCells[y*m_Width+x].m_Vel = vec2(0,0);
+}
+
+void CFlow::OnShutdown()
+{
+	if(m_pCells)
+	{
+		mem_free(m_pCells);
+		m_pCells = 0;
+	}
+
+	m_Height = 0;
+	m_Width = 0;
 }
 
 void CFlow::Update()

@@ -753,6 +753,7 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 
 void CGameClient::OnShutdown()
 {
+	m_pFlow->OnShutdown();
 	m_pRaceDemo->OnShutdown();
 	m_pGhost->OnShutdown();
 }
