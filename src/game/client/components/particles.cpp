@@ -83,8 +83,6 @@ void CParticles::Update(float TimePassed)
 		FrictionCount++;
 		FrictionFraction -= 0.05f;
 	}
-
-	int NumItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 	
 	for(int g = 0; g < NUM_GROUPS; g++)
 	{
