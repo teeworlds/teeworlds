@@ -113,7 +113,7 @@ public:
 	CDoodadMapper(class CEditor *pEditor);
 
 	virtual void Load(class TiXmlElement* pElement);
-	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount);
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Amount);
 	void AnalyzeGameLayer();
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
@@ -122,7 +122,7 @@ public:
 	virtual int GetType() { return IAutoMapper::TYPE_DOODADS; }
 	
 private:
-	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Ammount, int HFlip = 0);
+	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Amount, int LeftWall = 0);
 	
 	array<CRuleSet> m_aRuleSets;
 	

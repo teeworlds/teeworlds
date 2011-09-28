@@ -4,49 +4,56 @@
 		<!--Small Tree-->
 		<Rule startid="1" endid="35" ry="-3">
 			<Location value="floor"/>
-			<Random value="20"/>
+			<Random value="25"/>
 		</Rule>
 		
 		<!--Small Bush-->
 		<Rule startid="44" endid="45" ry="-1">
 			<Location value="floor"/>
-			<Random value="20"/>
+			<Random value="25"/>
 		</Rule>
 		
 		<!--Bush 1-->
 		<Rule startid="56" endid="74" ry="-2">
 			<Location value="floor"/>
-			<Random value="30"/>
+			<Random value="35"/>
 		</Rule>
 		
 		<!--Bush 2-->
 		<Rule startid="59" endid="77" ry="-2">
 			<Location value="floor"/>
-			<Random value="30"/>
+			<Random value="35"/>
 		</Rule>
 		
 		<!--Big Bush-->
 		<Rule startid="48" endid="87" ry="-3">
 			<Location value="floor"/>
-			<Random value="40"/>
+			<Random value="50"/>
 		</Rule>
 		
 		<!--Tree 1-->
 		<Rule startid="96" endid="164" ry="-5">
 			<Location value="floor"/>
-			<Random value="40"/>
+			<Random value="50"/>
 		</Rule>
 		
 		<!--Tree 2-->
 		<Rule startid="101" endid="168" ry="-5">
 			<Location value="floor"/>
-			<Random value="40"/>
+			<Random value="50"/>
 		</Rule>
 		
 		<!--Tree 3-->
 		<Rule startid="90" endid="175" ry="-6">
 			<Location value="floor"/>
-			<Random value="40"/>
+			<Random value="50"/>
 		</Rule>
 	</Vegetation>
+	
+	<Grass>
+		<Rule startid="42" endid="42" ry="-1">
+			<Location value="floor"/>
+			<Random value="1"/>
+		</Rule>
+	</Grass>
 </Doodads>

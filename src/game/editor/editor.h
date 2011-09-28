@@ -716,6 +716,10 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
+	
+	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
+	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
+	static int PopupDoodadAmount();
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);

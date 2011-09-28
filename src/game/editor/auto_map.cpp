@@ -230,9 +230,6 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 		CRuleSet NewRuleSet;
 		const char* pConfName = pConfNode->Value();
 		str_copy(NewRuleSet.m_aName, pConfName, sizeof(NewRuleSet.m_aName));
-		
-		/*str_format(aBuf, sizeof(aBuf),"RuleSet: %s", pConfName);
-		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
 	
 		// get rules
 		TiXmlElement* pRuleNode = pConfNode->FirstChildElement();
@@ -256,8 +253,8 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 			clamp(NewRule.m_Rect.x, 0, 255);
 			clamp(NewRule.m_Rect.y, 0, 255);
 			
-			// empty or broken, skip
-			if(NewRule.m_Rect.x == NewRule.m_Rect.y || NewRule.m_Rect.x > NewRule.m_Rect.y)
+			// broken, skip
+			if(NewRule.m_Rect.x > NewRule.m_Rect.y)
 				continue;
 			
 			// width
@@ -291,9 +288,6 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 						NewRule.m_Location = CRule::CEILING;
 					if(str_comp(pValue, "walls") == 0)
 						NewRule.m_Location = CRule::WALLS;
-					
-					/*str_format(aBuf, sizeof(aBuf),"Location: %s", pValue);
-					m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
 				}
 				else if(str_comp(pNode->Value(), "Random") == 0)
 				{
@@ -301,9 +295,6 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 						NewRule.m_Random = 1;
 						
 					clamp(NewRule.m_Random, 1, 9999);
-					
-					/*str_format(aBuf, sizeof(aBuf),"Random: %d", NewRule.m_Random);
-					m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);*/
 				}
 			}
 			
@@ -331,7 +322,7 @@ const char* CDoodadMapper::GetRuleSetName(int Index)
 
 void CDoodadMapper::AnalyzeGameLayer()
 {
-	// the purpose of this is to detect game layer collision's edges to place doodads in function of them
+	// the purpose of this is to detect game layer collision's edges to place doodads according to them
 	
 	// clear existing edges
 	m_FloorIDs.clear();
@@ -525,7 +516,7 @@ void CDoodadMapper::AnalyzeGameLayer()
 	}
 }
 
-void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Ammount, int HFlip)
+void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Amount, int LeftWall)
 {
 	if(pRule->m_Location == CRule::CEILING)
 		pRule->m_RelativePos.y++;
@@ -533,18 +524,21 @@ void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<
 		pRule->m_RelativePos.x++;
 		
 	// left walls
-	if(HFlip)
+	if(LeftWall)
 	{
-		pRule->m_HFlip ^= HFlip;
+		pRule->m_HFlip ^= LeftWall;
 		pRule->m_RelativePos.x--;
 		pRule->m_RelativePos.x = -pRule->m_RelativePos.x;
 		pRule->m_RelativePos.x -= pRule->m_Size.x-1;
 	}
 	
 	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
-	int RandomValue = pRule->m_Random/pRule->m_Size.x/Ammount;
+	int RandomValue = pRule->m_Random*((101.f-Amount)/100.0f);
 	
-	// allow diversity with high Ammount
+	if(pRule->m_Random == 1)
+		RandomValue = 1;
+	
+	// allow diversity with high Amount
 	if(pRule->m_Random > 1 && RandomValue <= 1)
 		RandomValue = 2;
 	
@@ -561,6 +555,7 @@ void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<
 			if(RandomValue > 1 && !IAutoMapper::Random(RandomValue))
 				continue;
 			
+			// where to put it
 			int ID = (*pPositions)[f][c];
 			
 			// relative position
@@ -577,7 +572,7 @@ void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<
 					pLayer->m_pTiles[Index].m_Index = pRule->m_Rect.x+y*16+x;
 				}
 
-			//hflip
+			// hflip
 			if(pRule->m_HFlip)
 			{
 				for(int y = 0; y < pRule->m_Size.y; y++)
@@ -608,7 +603,7 @@ void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<
 					}
 			}
 			
-			//vflip
+			// vflip
 			if(pRule->m_VFlip)
 			{
 				for(int y = 0; y < pRule->m_Size.y/2; y++)
@@ -668,7 +663,7 @@ void CDoodadMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<
 		}
 }
 
-void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Ammount)
+void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Amount)
 {
 	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
@@ -697,25 +692,25 @@ void CDoodadMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Ammount)
 		// floors
 		if(pRule->m_Location == CRule::FLOOR && m_FloorIDs.size() > 0)
 		{
-			PlaceDoodads(pLayer, pRule, &m_FloorIDs, Ammount);
+			PlaceDoodads(pLayer, pRule, &m_FloorIDs, Amount);
 		}
 		
 		// ceilings
 		if(pRule->m_Location == CRule::CEILING && m_CeilingIDs.size() > 0)
 		{
-			PlaceDoodads(pLayer, pRule, &m_CeilingIDs, Ammount);
+			PlaceDoodads(pLayer, pRule, &m_CeilingIDs, Amount);
 		}
 		
 		// right walls
 		if(pRule->m_Location == CRule::WALLS && m_RightWallIDs.size() > 0)
 		{
-			PlaceDoodads(pLayer, pRule, &m_RightWallIDs, Ammount);
+			PlaceDoodads(pLayer, pRule, &m_RightWallIDs, Amount);
 		}
 		
 		// left walls
 		if(pRule->m_Location == CRule::WALLS && m_LeftWallIDs.size() > 0)
 		{
-			PlaceDoodads(pLayer, pRule, &m_LeftWallIDs, Ammount, 1);
+			PlaceDoodads(pLayer, pRule, &m_LeftWallIDs, Amount, 1);
 		}
 	}
 	

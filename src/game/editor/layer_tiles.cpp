@@ -380,7 +380,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
 					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result);
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result, 1);
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result, m_pEditor->PopupDoodadAmount());
 				
 				return 1;
 			}
