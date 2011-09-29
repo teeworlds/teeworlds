@@ -413,6 +413,9 @@ public:
 	int m_ColorEnv;
 	int m_ColorEnvOffset;
 	CTile *m_pTiles;
+	
+	int m_SelectedRuleSet;
+	int m_SelectedAmount;
 };
 
 class CLayerQuads : public CLayer
@@ -719,7 +722,6 @@ public:
 	
 	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
 	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
-	static int PopupDoodadAmount();
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -732,7 +734,7 @@ public:
 	int PopupSelectGameTileOpResult();
 
 	void PopupSelectConfigAutoMapInvoke(float x, float y);
-	int PopupSelectConfigAutoMapResult();
+	bool PopupAutoMapProceedOrder();
 
 	vec4 ButtonColorMul(const void *pID);
 

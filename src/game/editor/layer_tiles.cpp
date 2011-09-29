@@ -30,6 +30,9 @@ CLayerTiles::CLayerTiles(int w, int h)
 
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
+	
+	m_SelectedRuleSet = 0;
+	m_SelectedAmount = 50;
 }
 
 CLayerTiles::~CLayerTiles()
@@ -374,15 +377,16 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			if(m_pEditor->DoButton_Editor(&s_AutoMapperButton, "Auto map", 0, &Button, 0, ""))
 				m_pEditor->PopupSelectConfigAutoMapInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
 
-			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
-			if(Result > -1)
+			bool Proceed = m_pEditor->PopupAutoMapProceedOrder();
+			if(Proceed)
 			{
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result);
+				{
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet);
+					return 1; // only close the popup when it's a tileset
+				}
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, Result, m_pEditor->PopupDoodadAmount());
-				
-				return 1;
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, m_SelectedAmount);
 			}
 		}
 	}

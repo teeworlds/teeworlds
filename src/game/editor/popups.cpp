@@ -807,34 +807,32 @@ int CEditor::PopupSelectGameTileOpResult()
 	return Result;
 }
 
-static int s_AutoMapConfigSelected = -1;
-static int s_DoodadAutoMapRuleSet = 0;
-static int s_DoodadAutoMapAmount = 50;
+static bool s_AutoMapProceedOrder = false;
 
 int CEditor::PopupDoodadAutoMap(CEditor *pEditor, CUIRect View)
 {
 	CLayerTiles *pLayer = static_cast<CLayerTiles*>(pEditor->GetSelectedLayer(0));
+	CDoodadMapper *pDMapper = (CDoodadMapper*)pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper;
 	CUIRect Rect;
 	
 	View.HSplitTop(15.0f, &Rect, &View);
 	
 	// ruleset selection
 	static int s_ChooseDoodadRuleset = 0;
-	if(pEditor->DoButton_Editor(&s_ChooseDoodadRuleset, pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(s_DoodadAutoMapRuleSet), 0, &Rect, 0, 0))
+	if(pEditor->DoButton_Editor(&s_ChooseDoodadRuleset, pDMapper->GetRuleSetName(pLayer->m_SelectedRuleSet), 0, &Rect, 0, 0))
 		pEditor->UiInvokePopupMenu(&s_ChooseDoodadRuleset, 0, pEditor->UI()->MouseX(), pEditor->UI()->MouseY()
-									, 120.0f, 12.0f+14.0f*pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum(), PopupSelectDoodadRuleSet);
+									, 120.0f, 12.0f+14.0f*pDMapper->RuleSetNum(), PopupSelectDoodadRuleSet);
 	
 	View.HMargin(3.f, &View);
 	View.HSplitTop(15.0f, &Rect, &View);
 	
-	int ID = 0;
-	CDoodadMapper *pAutoMapper = (CDoodadMapper*)(pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper);
 	
 	// Amount
-	int NewValue = pEditor->UiDoValueSelector(&ID, &Rect, "", s_DoodadAutoMapAmount, 1, 100, 1, 1.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise.");
-	if(NewValue != s_DoodadAutoMapAmount)
+	int s_DoodadSelectAmountButton = 0;
+	int NewValue = pEditor->UiDoValueSelector(&s_DoodadSelectAmountButton, &Rect, "", pLayer->m_SelectedAmount, 1, 100, 1, 1.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise.");
+	if(NewValue != pLayer->m_SelectedAmount)
 	{
-		s_DoodadAutoMapAmount = NewValue;
+		pLayer->m_SelectedAmount = NewValue;
 	}
 	
 	View.HMargin(3.f, &View);
@@ -843,7 +841,7 @@ int CEditor::PopupDoodadAutoMap(CEditor *pEditor, CUIRect View)
 	// Generate button
 	static int s_ButtonDoodadGenerate = 0;
 	if(pEditor->DoButton_Editor(&s_ButtonDoodadGenerate, "Generate", 0, &Rect, 0, 0))
-		s_AutoMapConfigSelected = s_DoodadAutoMapRuleSet; // little hack
+		s_AutoMapProceedOrder = true;
 	
 	return 0;
 }
@@ -853,24 +851,20 @@ int CEditor::PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View)
 	CLayerTiles *pLayer = static_cast<CLayerTiles*>(pEditor->GetSelectedLayer(0));
 	CUIRect Button;
 	static int s_AutoMapperDoodadButtons[256];
-
-	for(int i = 0; i < pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum(); ++i)
+	CDoodadMapper *pDMapper = (CDoodadMapper*)pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper;
+	
+	for(int i = 0; i < pDMapper->RuleSetNum(); ++i)
 	{
 		View.HSplitTop(2.0f, 0, &View);
 		View.HSplitTop(12.0f, &Button, &View);
-		if(pEditor->DoButton_Editor(&s_AutoMapperDoodadButtons[i], pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(i), 0, &Button, 0, 0))
+		if(pEditor->DoButton_Editor(&s_AutoMapperDoodadButtons[i], pDMapper->GetRuleSetName(i), 0, &Button, 0, 0))
 		{
-			s_DoodadAutoMapRuleSet = i;
+			pLayer->m_SelectedRuleSet = i;
 			return 1; // close the popup
 		}
 	}
 
 	return 0;
-}
-
-int CEditor::PopupDoodadAmount()
-{
-	return s_DoodadAutoMapAmount;
 }
 
 int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
@@ -884,7 +878,10 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 		View.HSplitTop(2.0f, 0, &View);
 		View.HSplitTop(12.0f, &Button, &View);
 		if(pEditor->DoButton_Editor(&s_AutoMapperConfigButtons[i], pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(i), 0, &Button, 0, 0))
-			s_AutoMapConfigSelected = i;
+		{
+			pLayer->m_SelectedRuleSet = i;
+			s_AutoMapProceedOrder = true;
+		}
 	}
 
 	return 0;
@@ -893,8 +890,8 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 void CEditor::PopupSelectConfigAutoMapInvoke(float x, float y)
 {
 	static int s_AutoMapConfigSelectID = 0;
-	s_AutoMapConfigSelected = -1;
 	CLayerTiles *pLayer = static_cast<CLayerTiles*>(GetSelectedLayer(0));
+	
 	if(pLayer && pLayer->m_Image >= 0 && pLayer->m_Image < m_Map.m_lImages.size() &&
 		m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum())
 	{
@@ -905,12 +902,13 @@ void CEditor::PopupSelectConfigAutoMapInvoke(float x, float y)
 	}
 }
 
-int CEditor::PopupSelectConfigAutoMapResult()
+bool CEditor::PopupAutoMapProceedOrder()
 {
-	if(s_AutoMapConfigSelected < 0)
-		return -1;
-
-	int Result = s_AutoMapConfigSelected;
-	s_AutoMapConfigSelected = -1;
-	return Result;
+	if(s_AutoMapProceedOrder)
+	{
+		s_AutoMapProceedOrder = false; //reset
+		return true;
+	}
+	
+	return false;
 }

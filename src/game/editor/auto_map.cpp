@@ -307,9 +307,6 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 	// sort
 	for(int i = 0; i < m_aRuleSets.size(); i++)
 		qsort(m_aRuleSets[i].m_aRules.base_ptr(), m_aRuleSets[i].m_aRules.size(), sizeof(m_aRuleSets[i].m_aRules[0]), CompareRules);
-	
-	str_format(aBuf, sizeof(aBuf),"Frist size: %d", m_aRuleSets[0].m_aRules[0].m_Size.x);
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 }
 
 const char* CDoodadMapper::GetRuleSetName(int Index)
