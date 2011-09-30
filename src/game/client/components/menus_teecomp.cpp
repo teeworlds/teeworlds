@@ -70,7 +70,7 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 	MainView.HSplitTop(24.0f, &Tabbar, &MainView);
 	//RenderTools()->DrawUIRect(&MainView, color_Tabbar_active, CORNER_ALL, 10.0f);
 
-	const char *pTabs[] = { Localize("Skins"), Localize("Stats"), Localize("Misc"), Localize("About") };
+	const char *pTabs[] = { Localize("Skins"), Localize("Stats"), Localize("Scores"), Localize("Misc"), Localize("About") };
 	int NumTabs = (int)(sizeof(pTabs)/sizeof(*pTabs));
 
 	for(int i=0; i<NumTabs; i++)
@@ -82,7 +82,7 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 			s_SettingsPage = i;
 	}
 
-	if(s_SettingsPage != 3)
+	if(s_SettingsPage != 4)
 		MainView.Margin(10.0f, &MainView);
 	
 	if(s_SettingsPage == 0)
@@ -90,8 +90,10 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 	else if(s_SettingsPage == 1)
 		RenderSettingsTeecompStats(MainView);
 	else if(s_SettingsPage == 2)
-		RenderSettingsTeecompMisc(MainView);
+		RenderSettingsTeecompScores(MainView);
 	else if(s_SettingsPage == 3)
+		RenderSettingsTeecompMisc(MainView);
+	else if(s_SettingsPage == 4)
 		RenderSettingsTeecompAbout(MainView);
 }
 
@@ -359,6 +361,30 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 
 	for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
 		UiDoKeybinder(pKeys[i], &MainView);
+}
+
+void CMenus::RenderSettingsTeecompScores(CUIRect MainView)
+{
+	CUIRect Button, LeftView;
+
+	MainView.VSplitLeft(MainView.w/2, &LeftView, &MainView);
+
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), "%s:",  Localize("Show in Scoreboard"));
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, aBuf, 16.0f, -1);
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_COUNTRY;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+1, Localize("Clan"), g_Config.m_TcScoreboardInfos & TC_SCORE_CLAN, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_CLAN;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+2, Localize("Ping"), g_Config.m_TcScoreboardInfos & TC_SCORE_PING, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_PING;
 }
 
 void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)

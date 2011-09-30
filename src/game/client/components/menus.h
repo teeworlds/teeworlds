@@ -320,6 +320,7 @@ class CMenus : public CComponent
 	void RenderSettingsTeecomp(CUIRect MainView);
 	void RenderSettingsTeecompSkins(CUIRect MainView);
 	void RenderSettingsTeecompStats(CUIRect MainView);
+	void RenderSettingsTeecompScores(CUIRect MainView);
 	void RenderSettingsTeecompMisc(CUIRect MainView);
 	void RenderSettingsTeecompAbout(CUIRect MainView);
 

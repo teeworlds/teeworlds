@@ -6,9 +6,34 @@
 
 class CScoreboard : public CComponent
 {
-	void RenderGoals(float x, float y, float w);
-	void RenderSpectators(float x, float y, float w);
-	void RenderScoreboard(float x, float y, float w, int Team, const char *pTitle);
+	class CColumn
+	{
+	public:
+		enum
+		{
+			ALIGN_NOTEXT=-1,
+			ALIGN_LEFT,
+			ALIGN_RIGHT,
+			ALIGN_MIDDLE,
+		};
+
+		CColumn(const char* pTitle, float Width, float Offset, int RenderAlign);
+
+		const char* m_pTitle;
+		float m_Width;
+		float m_Offset;
+		bool m_Active;
+		int m_RenderAlign;
+	};
+
+	static CColumn ms_Scoreboard[6];
+	static CColumn ms_Spectatorboard[4];
+
+	void SetActiveColumns();
+
+	int RenderGoals(float Width, float y);
+	void RenderSpectators(float Width, float y);
+	int RenderScoreboard(float Width, float y, int Team, const char *pTitle, bool TeamPlay);
 	void RenderRecordingNotification(float x);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
