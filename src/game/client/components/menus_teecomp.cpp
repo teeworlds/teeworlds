@@ -375,6 +375,10 @@ void CMenus::RenderSettingsTeecompScores(CUIRect MainView)
 	UI()->DoLabel(&Button, aBuf, 16.0f, -1);
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Column Titles"), g_Config.m_TcScoreboardInfos & TC_SCORE_TITLE, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_TITLE;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_COUNTRY;
 

@@ -158,10 +158,13 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	float HeadlineFontsize = 22.0f;
 	float HeadlineHeight = 30.0f;
 	float TitleFontsize = 28.0f;
+	float TitleHight = 50.0f;
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
 
-	float h = TitleFontsize+HeadlineHeight+NumSpectators*LineHeight+30.0f;
+	float h = TitleHight+NumSpectators*LineHeight+15.0f;
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
+		h += HeadlineHeight;
 
 	// get width
 	float w = 30.0f;
@@ -180,39 +183,41 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	Graphics()->QuadsEnd();
 	
 	// Headline
-	y += 10.0f;
-	TextRender()->Text(0, x+10.0f, y, TitleFontsize, Localize("Spectators"), w-20.0f);
+	TextRender()->Text(0, x+10.0f, y+10.0f, TitleFontsize, Localize("Spectators"), w-20.0f);
 
-	y += HeadlineHeight;
+	y += TitleHight;
 
 	// render column titles
 	float tw = 0.0f;
 	float TmpX = x+10.0f;
-	for(int i = 0; i < 4; i++)
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 	{
-		if(!ms_Spectatorboard[i].m_Active)
-			continue;
-
-		if(ms_Spectatorboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
+		for(int i = 0; i < 4; i++)
 		{
-			if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
-				TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-			else if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+			if(!ms_Spectatorboard[i].m_Active)
+				continue;
+
+			if(ms_Spectatorboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
 			{
-				tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-				TextRender()->Text(0, (TmpX+ms_Spectatorboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+				if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
+					TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+				else if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+				{
+					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					TextRender()->Text(0, (TmpX+ms_Spectatorboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+				}
+				else
+				{
+					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset+ms_Spectatorboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+				}
 			}
-			else
-			{
-				tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-				TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset+ms_Spectatorboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-			}
+
+			TmpX += ms_Spectatorboard[i].m_Width;
 		}
 
-		TmpX += ms_Spectatorboard[i].m_Width;
+		y += HeadlineHeight;
 	}
-
-	y += HeadlineFontsize*2.0f;
 
 	
 	float FontSize = 24.0f;
@@ -278,12 +283,15 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 		return 0;
 
 	float HeadlineFontsize = 22.0f;
-	float HeadlineHeight = 50.0f;
-	float TitleFontsize = 40.0f;
+	float HeadlineHeight = 30.0f;
+	float TitleFontsize = 36.0f;
+	float TitleHight = 48.0f;
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
 
-	float h = TitleFontsize+HeadlineHeight+max(m_pClient->m_Snap.m_aTeamSize[TEAM_RED], m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE])*LineHeight+15.0f;
+	float h = TitleHight+max(m_pClient->m_Snap.m_aTeamSize[TEAM_RED], m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE])*LineHeight+15.0f;
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
+		h += HeadlineHeight;
 	
 	// get width
 	float w = 30.0f;
@@ -356,36 +364,40 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 	float tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
 	TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 
-	y += 50.0f;
+	y += TitleHight;
 
 	// render column titles
 	float TmpX = x+10.0f;
-	for(int i = 0; i < 6; i++)
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 	{
-		if(!ms_Scoreboard[i].m_Active)
-			continue;
-
-		if(ms_Scoreboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
+		for(int i = 0; i < 6; i++)
 		{
-			if(ms_Scoreboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
-				TextRender()->Text(0, TmpX+ms_Scoreboard[i].m_Offset, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
-			else if(ms_Scoreboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+			if(!ms_Scoreboard[i].m_Active)
+				continue;
+
+			if(ms_Scoreboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
 			{
-				tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
-				TextRender()->Text(0, (TmpX+ms_Scoreboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+				if(ms_Scoreboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
+					TextRender()->Text(0, TmpX+ms_Scoreboard[i].m_Offset, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+				else if(ms_Scoreboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+				{
+					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+					TextRender()->Text(0, (TmpX+ms_Scoreboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+				}
+				else
+				{
+					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+					TextRender()->Text(0, TmpX+ms_Scoreboard[i].m_Offset+ms_Scoreboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
+				}
 			}
-			else
-			{
-				tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
-				TextRender()->Text(0, TmpX+ms_Scoreboard[i].m_Offset+ms_Scoreboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Scoreboard[i].m_pTitle, -1);
-			}
+
+			TmpX += ms_Scoreboard[i].m_Width;
 		}
 
-		TmpX += ms_Scoreboard[i].m_Width;
+		y += HeadlineHeight;
 	}
 
 	// render player entries
-	y += HeadlineFontsize*2.0f;
 	float FontSize = 24.0f;
 	CTextCursor Cursor;
 	for(int i = 0; i < MAX_CLIENTS; i++)
