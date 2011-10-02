@@ -31,7 +31,7 @@ class CScoreboard : public CComponent
 
 	void SetActiveColumns();
 
-	int RenderGoals(float Width, float y);
+	void RenderGoals(float Width, float Height);
 	void RenderSpectators(float Width, float y);
 	int RenderScoreboard(float Width, float y, int Team, const char *pTitle, bool TeamPlay);
 	void RenderRecordingNotification(float x);

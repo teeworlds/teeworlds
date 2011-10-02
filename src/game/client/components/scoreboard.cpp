@@ -34,7 +34,7 @@ enum
 	COLUMN_SPEC_COUNTRY,
 };
 
-CScoreboard::CColumn CScoreboard::ms_Scoreboard[] = {CScoreboard::CColumn(Localize("Score"), 60.0f, 10.0f, CScoreboard::CColumn::ALIGN_MIDDLE),
+CScoreboard::CColumn CScoreboard::ms_Scoreboard[] = {CScoreboard::CColumn(Localize("Score"), 60.0f, 10.0f, CScoreboard::CColumn::ALIGN_RIGHT),
 																CScoreboard::CColumn(0, 48.0f, 0.0f, CScoreboard::CColumn::ALIGN_NOTEXT),
 																CScoreboard::CColumn(Localize("Name"), 250.0f, 0.0f, CScoreboard::CColumn::ALIGN_LEFT),
 																CScoreboard::CColumn(Localize("Clan"), 145.0f, 0.0f, CScoreboard::CColumn::ALIGN_MIDDLE),
@@ -76,84 +76,70 @@ void CScoreboard::OnConsoleInit()
 	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard");
 }
 
-int CScoreboard::RenderGoals(float Width, float y)
+void CScoreboard::RenderGoals(float Width, float Height)
 {
 	if(!m_pClient->m_Snap.m_pGameInfoObj)
-		return 0;
+		return;
 
-	// check if there are goals
-	int Count = 0;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
-		Count++;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
-		Count++;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
-		Count++;
-
-	if(!Count)
-		return 0;
-
-	float h = 50.0f;
+	float w = 700.0f;
+	float h = 70.0f;
+	float x = Width/2-w/2;
+	float y = Height-h;
 
 	float FontSize = 20.0f;
-	float Space = 20.0f;
-
-	// text buffers
-	char aScorelimit[64] = {0};
-	char aTimeLimit[64] = {0};
-	char aRounds[64] = {0};
-
-	// text width to not calculate it twice
-	float ScoreLimitWidth = 0.0f;
-	float TimeLimitWidth = 0.0f;
-	float RoundsWidth = 0.0f;
-
-	float w = 20.0f+(Count-1)*Space;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
-	{
-		str_format(aScorelimit, sizeof(aScorelimit), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit);
-		ScoreLimitWidth = TextRender()->TextWidth(0, FontSize, aScorelimit, -1);
-		w += ScoreLimitWidth;
-	}
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
-	{
-		str_format(aTimeLimit, sizeof(aTimeLimit), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
-		TimeLimitWidth = TextRender()->TextWidth(0, FontSize, aTimeLimit, -1);
-		w += TimeLimitWidth;
-	}
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
-	{
-		str_format(aRounds, sizeof(aRounds), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum);
-		RoundsWidth = TextRender()->TextWidth(0, FontSize, aRounds, -1);
-		w += RoundsWidth;
-	}
-
-	float x = Width/2-w/2;
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
+	RenderTools()->DrawRoundRectExt(x, y, w, h, 17.0f, CUI::CORNER_T);
 	Graphics()->QuadsEnd();
 
-	// render goals
 	y += 10.0f;
-	x += 10.0f;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
-	{
-		TextRender()->Text(0, x, y, FontSize, aScorelimit, -1);
-		x += ScoreLimitWidth+Space;
-	}
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
-	{
-		TextRender()->Text(0, x, y, FontSize, aTimeLimit, -1);
-		x += TimeLimitWidth+Space;
-	}
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
-		TextRender()->Text(0, x, y, FontSize, aRounds, -1);
 
-	return h;
+	char aBuf[64];
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
+		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit);
+	else
+		str_format(aBuf, sizeof(aBuf), "%s: -", Localize("Score limit"));
+	TextRender()->Text(0, x+10.0f, y, FontSize, aBuf, -1);
+
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit)
+		str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
+	else
+		str_format(aBuf, sizeof(aBuf), Localize("%s: -"), Localize("Time limit"));
+	float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	TextRender()->Text(0, x+w/2-tw/2, y, FontSize, aBuf, -1);
+
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
+		str_format(aBuf, sizeof(aBuf), "%s: %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum);
+	else
+		str_format(aBuf, sizeof(aBuf), "%s: -/-", Localize("Round"));
+	tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	TextRender()->Text(0, x+w-tw-10.0f, y, FontSize, aBuf, -1);
+
+	y += FontSize+10.0f;
+
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Game type"), Client()->State() == IClient::STATE_DEMOPLAYBACK ? "-" : CurrentServerInfo.m_aGameType);
+	TextRender()->Text(0, x+10.0f, y, FontSize, aBuf, -1);
+
+	str_format(aBuf, sizeof(aBuf), "%s: %d/%d", Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
+	tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	TextRender()->Text(0, x+w/2-tw/2, y, FontSize, aBuf, -1);
+
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Map"), CurrentServerInfo.m_aMap);
+	else
+		str_format(aBuf, sizeof(aBuf), "%s: -", Localize("Map"));
+	tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	if(tw > w/3.0f+10.0f)
+		tw = w/3.0f+10.0f;
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, x+w-tw-10.0f, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = tw;
+	TextRender()->TextEx(&Cursor, aBuf, -1);
 }
 
 void CScoreboard::RenderSpectators(float Width, float y)
@@ -170,7 +156,7 @@ void CScoreboard::RenderSpectators(float Width, float y)
 		return;
 
 	float HeadlineFontsize = 22.0f;
-	float HeadlineHeight = 50.0f;
+	float HeadlineHeight = 30.0f;
 	float TitleFontsize = 28.0f;
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
@@ -304,7 +290,10 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 	for(int i = 0; i < 6; i++)
 	{
 		if(m_pClient->m_IsRace && i == COLUMN_SCORE_SCORE)
+		{
 			ms_Scoreboard[i].m_Width = 125.0f;
+			ms_Scoreboard[i].m_RenderAlign = CColumn::ALIGN_MIDDLE;
+		}
 
 		if(ms_Scoreboard[i].m_Active)
 			w += ms_Scoreboard[i].m_Width;
@@ -629,8 +618,8 @@ void CScoreboard::OnRender()
 		}
 	}
 
-	int GoalHeight = RenderGoals(Width, 150+ScoreboardHight+10);
-	RenderSpectators(Width, 150+ScoreboardHight+10+GoalHeight+10);
+	RenderGoals(Width, Height);
+	RenderSpectators(Width, 150+ScoreboardHight+20+10);
 	RenderRecordingNotification((Width/7)*4);
 }
 

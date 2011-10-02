@@ -468,19 +468,21 @@ void CHud::RenderSpectatorHud()
 {
 	if(!g_Config.m_ClRenderViewmode)
 		return;
-		
+
+	// store the text
+	char aBuf[128];
+	str_copy(aBuf, m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"), sizeof(aBuf));
+	float tw = TextRender()->TextWidth(0, 7.0f, aBuf, -1);
+
 	// draw the box
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);
+	RenderTools()->DrawRoundRectExt(m_Width-tw-7.0f, m_Height-13.0f, tw+7.0f, 15.0f, 5.0f, CUI::CORNER_TL);
 	Graphics()->QuadsEnd();
 
 	// draw the text
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
-		m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"));
-	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
+	TextRender()->Text(0, m_Width-tw-3.0f, m_Height-10.0f, 7.0f, aBuf, -1);
 }
 
 void CHud::RenderSpeedmeter()

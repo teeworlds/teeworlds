@@ -516,7 +516,7 @@ void CChat::OnRender()
 		// render chat input
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = Width-190.0f;
+		Cursor.m_LineWidth = m_pClient->m_pScoreboard->Active() ? 95.0f : Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
 		if(m_Mode == MODE_ALL)
