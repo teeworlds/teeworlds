@@ -631,7 +631,7 @@ void CScoreboard::OnRender()
 	}
 
 	RenderGoals(Width, Height);
-	RenderSpectators(Width, 150+ScoreboardHight+20+10);
+	RenderSpectators(Width, 150.0f+ScoreboardHight+20.0f);
 	RenderRecordingNotification((Width/7)*4);
 }
 
