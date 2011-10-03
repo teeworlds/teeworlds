@@ -482,7 +482,7 @@ void CHud::RenderSpectatorHud()
 	Graphics()->QuadsEnd();
 
 	// draw the text
-	TextRender()->Text(0, m_Width-tw-3.0f, m_Height-10.0f, 7.0f, aBuf, -1);
+	TextRender()->Text(0, m_Width-tw-3.0f, m_Height-11.0f, 7.0f, aBuf, -1);
 }
 
 void CHud::RenderSpeedmeter()
