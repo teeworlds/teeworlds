@@ -162,7 +162,11 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
 
-	float h = TitleHight+NumSpectators*LineHeight+15.0f;
+	float h = TitleHight+15.0f;
+	if(NumSpectators > 1)
+		h += (int)((NumSpectators+1)/2.0f) * LineHeight;
+	else
+		h += LineHeight;
 	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 		h += HeadlineHeight;
 
@@ -170,7 +174,12 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	float w = 30.0f;
 	for(int i = 0; i < 4; i++)
 		if(ms_Spectatorboard[i].m_Active)
-			w += ms_Spectatorboard[i].m_Width;
+		{
+			if(NumSpectators > 1)
+				w += ms_Spectatorboard[i].m_Width*2.0f;
+			else
+				w += ms_Spectatorboard[i].m_Width;
+		}
 
 	float x = Width/2-w/2;
 
@@ -194,43 +203,56 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	float TmpX = x+10.0f;
 	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 	{
-		for(int i = 0; i < 4; i++)
+		for(int s = 0; s < 2; s++)
 		{
-			if(!ms_Spectatorboard[i].m_Active)
-				continue;
-
-			if(ms_Spectatorboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
+			for(int i = 0; i < 4; i++)
 			{
-				if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
-					TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-				else if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+				if(!ms_Spectatorboard[i].m_Active)
+					continue;
+
+				if(ms_Spectatorboard[i].m_RenderAlign != CColumn::ALIGN_NOTEXT)
 				{
-					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-					TextRender()->Text(0, (TmpX+ms_Spectatorboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_LEFT)
+						TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					else if(ms_Spectatorboard[i].m_RenderAlign == CColumn::ALIGN_RIGHT)
+					{
+						tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+						TextRender()->Text(0, (TmpX+ms_Spectatorboard[i].m_Width)-tw, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					}
+					else
+					{
+						tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+						TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset+ms_Spectatorboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
+					}
 				}
-				else
-				{
-					tw = TextRender()->TextWidth(0, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-					TextRender()->Text(0, TmpX+ms_Spectatorboard[i].m_Offset+ms_Spectatorboard[i].m_Width/2-tw/2, y, HeadlineFontsize, ms_Spectatorboard[i].m_pTitle, -1);
-				}
+
+				TmpX += ms_Spectatorboard[i].m_Width;
 			}
 
-			TmpX += ms_Spectatorboard[i].m_Width;
+			if(NumSpectators > 1)
+				TmpX += 10.0f;
+			else
+				break;
 		}
 
 		y += HeadlineHeight;
 	}
 
-	
 	float FontSize = 24.0f;
 	CTextCursor Cursor;
+	int PlayerNum = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
 		if(!pInfo || pInfo->m_Team != TEAM_SPECTATORS)
 			continue;
 
-		TmpX = x+10.0f;
+		PlayerNum++;
+
+		if(PlayerNum % 2)
+			TmpX = x;
+		TmpX += 10.0f;
+
 		for(int j = 0; j < 4; j++)
 		{
 			if(!ms_Spectatorboard[j].m_Active)
@@ -274,7 +296,8 @@ void CScoreboard::RenderSpectators(float Width, float y)
 			TmpX += ms_Spectatorboard[j].m_Width;
 		}
 
-		y += LineHeight;
+		if(PlayerNum % 2 == 0)
+			y += LineHeight;
 	}
 }
 
