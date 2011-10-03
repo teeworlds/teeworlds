@@ -290,7 +290,7 @@ void CScoreboard::RenderSpectators(float Width, float y)
 			{
 				Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_Texture);
 				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.75f);
 				IGraphics::CQuadItem QuadItem(TmpX+ms_Spectatorboard[j].m_Offset, y+(TeeSizeMod*5.0f)/2.0f, ms_Spectatorboard[j].m_Width, LineHeight-TeeSizeMod*5.0f);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
@@ -544,7 +544,7 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 			{
 				Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_Texture);
 				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.75f);
 				IGraphics::CQuadItem QuadItem(TmpX+ms_Scoreboard[j].m_Offset, y+(TeeSizeMod*5.0f)/2.0f, ms_Scoreboard[j].m_Width, LineHeight-TeeSizeMod*5.0f);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
