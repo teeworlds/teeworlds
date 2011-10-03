@@ -183,7 +183,9 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	Graphics()->QuadsEnd();
 	
 	// Headline
-	TextRender()->Text(0, x+10.0f, y+10.0f, TitleFontsize, Localize("Spectators"), w-20.0f);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "%s (%d)", Localize("Spectators"), NumSpectators);
+	TextRender()->Text(0, x+10.0f, y+10.0f, TitleFontsize, aBuf, w-20.0f);
 
 	y += TitleHight;
 
@@ -222,7 +224,6 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	
 	float FontSize = 24.0f;
 	CTextCursor Cursor;
-	char aBuf[256];
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
@@ -326,6 +327,7 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 	Graphics()->QuadsEnd();
 
 	// render title
+	char aBuf[128];
 	if(!pTitle)
 	{
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
@@ -333,36 +335,41 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 		else
 			pTitle = Localize("Score board");
 	}
-	TextRender()->Text(0, x+20.0f, y, TitleFontsize, pTitle, -1);
+	str_format(aBuf, sizeof(aBuf), "%s (%d)", pTitle, m_pClient->m_Snap.m_aTeamSize[Team]);
+	TextRender()->Text(0, x+20.0f, y, TitleFontsize, aBuf, -1);
 	
-	char aBuf[128] = {0};
+	float tw = 0.0f;
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 	{
-		if(m_pClient->m_Snap.m_pGameDataObj)
+		if(m_pClient->m_Snap.m_pGameDataObj && !m_pClient->m_IsRace)
 		{
 			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue;
-			if(!m_pClient->m_IsRace)
-				str_format(aBuf, sizeof(aBuf), "%d", Score);
+			str_format(aBuf, sizeof(aBuf), "%d", Score);
+
+			tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 		}
 	}
 	else
 	{
 		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW &&
-			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID])
+			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID] && !m_pClient->m_IsRace)
 		{
 			int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
+
+			tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 		}
-		else if(m_pClient->m_Snap.m_pLocalInfo)
+		else if(m_pClient->m_Snap.m_pLocalInfo && !m_pClient->m_IsRace)
 		{
 			int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
-			if(!m_pClient->m_IsRace)
-				str_format(aBuf, sizeof(aBuf), "%d", Score);
+			str_format(aBuf, sizeof(aBuf), "%d", Score);
+
+			tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
+			TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 		}
 	}
-
-	float tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
-	TextRender()->Text(0, x+w-tw-20.0f, y, TitleFontsize, aBuf, -1);
 
 	y += TitleHight;
 
