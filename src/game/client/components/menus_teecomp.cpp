@@ -379,15 +379,15 @@ void CMenus::RenderSettingsTeecompScores(CUIRect MainView)
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_TITLE;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+1, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_COUNTRY;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+1, Localize("Clan"), g_Config.m_TcScoreboardInfos & TC_SCORE_CLAN, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+2, Localize("Clan"), g_Config.m_TcScoreboardInfos & TC_SCORE_CLAN, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_CLAN;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+2, Localize("Ping"), g_Config.m_TcScoreboardInfos & TC_SCORE_PING, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+3, Localize("Ping"), g_Config.m_TcScoreboardInfos & TC_SCORE_PING, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_PING;
 }
 
