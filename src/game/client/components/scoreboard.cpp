@@ -190,7 +190,10 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	Graphics()->SetColor(0,0,0,0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
 	Graphics()->QuadsEnd();
-	
+
+	// store position
+	m_SpectatorboardPosition = vec4(x, y, w, h);
+
 	// Headline
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "%s (%d)", Localize("Spectators"), NumSpectators);
@@ -348,6 +351,10 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 17.0f);
 	Graphics()->QuadsEnd();
+
+	// store position (only the left scoreboard needed)
+	if(Team == TEAM_RED)
+		m_ScoreboardPosition = vec4(x, y, w, h);
 
 	// render title
 	char aBuf[128];
@@ -556,6 +563,7 @@ int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pT
 
 		y += LineHeight;
 	}
+
 	return h;
 }
 
@@ -727,4 +735,14 @@ const char *CScoreboard::GetClanName(int Team)
 		return pClanName;
 	else
 		return 0;
+}
+
+vec4 CScoreboard::GetScoreboardPosition()
+{
+	return m_ScoreboardPosition;
+}
+
+vec4 CScoreboard::GetSpectatorboardPosition()
+{
+	return m_SpectatorboardPosition;
 }

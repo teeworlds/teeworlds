@@ -564,9 +564,19 @@ void CChat::OnRender()
 
 	y -= 8.0f;
 
+	// get position of scoreboard
+	vec4 ScoreboardPosition = m_pClient->m_pScoreboard->GetScoreboardPosition();
+	vec4 SpectatorboardPosition = m_pClient->m_pScoreboard->GetSpectatorboardPosition();
+
 	int64 Now = time_get();
-	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
+	float HeightLimit = m_Show ? 50.0f : 200.0f;
+	if(m_pClient->m_pScoreboard->Active())
+	{
+		if(ScoreboardPosition.x < 270.0f)
+			HeightLimit = (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4;
+		if(SpectatorboardPosition.x < 270.0f)
+			HeightLimit = (SpectatorboardPosition.y+SpectatorboardPosition.w+20.0f)/4;
+	}
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
@@ -577,8 +587,17 @@ void CChat::OnRender()
 		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
 			break;
 
+		float LineWidth = 200.0f;
+		if(m_pClient->m_pScoreboard->Active())
+		{
+			if(SpectatorboardPosition.x < 800.0f && y < (SpectatorboardPosition.y+SpectatorboardPosition.w+20.0f)/4)
+				LineWidth = (SpectatorboardPosition.x-40.0f)/4;
+			if(ScoreboardPosition.x < 800.0f && y < (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4)
+				LineWidth = (ScoreboardPosition.x-40.0f)/4;
+		}
+
 		// get the y offset (calculate it if we haven't done that yet)
-		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)
+		if(OffsetType == 1 || m_aLines[r].m_YOffset[OffsetType] < 0.0f)
 		{
 			TextRender()->SetCursor(&Cursor, Begin, 0.0f, FontSize, 0);
 			Cursor.m_LineWidth = LineWidth;

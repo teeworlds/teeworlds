@@ -41,6 +41,8 @@ class CScoreboard : public CComponent
 	const char *GetClanName(int Team);
 
 	bool m_Active;
+	vec4 m_ScoreboardPosition;
+	vec4 m_SpectatorboardPosition;
 
 public:
 	CScoreboard();
@@ -50,6 +52,8 @@ public:
 	virtual void OnRelease();
 
 	bool Active();
+	vec4 GetScoreboardPosition();
+	vec4 GetSpectatorboardPosition();
 };
 
 #endif
