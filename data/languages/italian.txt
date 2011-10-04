@@ -687,6 +687,9 @@ no limit
 Ghost
 == 
 
+Server browser
+== 
+
 Activate
 == 
 
@@ -782,6 +785,9 @@ Fonts
 Block spam
 == 
 
+Show chat history on chat input
+== 
+
 Enter the names you want to look for.
 == 
 
@@ -825,6 +831,9 @@ Warmup
 == 
 
 Votes
+== 
+
+Record info
 == 
 
 Broadcast

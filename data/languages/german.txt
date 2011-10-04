@@ -682,6 +682,9 @@ no limit
 Ghost
 == Geist
 
+Server browser
+== Serverbrowser
+
 Activate
 == Aktivieren
 
@@ -777,6 +780,9 @@ Fonts
 Block spam
 == Spam blockieren
 
+Show chat history on chat input
+== Zeige Chatverlauf beim tippen
+
 Enter the names you want to look for.
 == Gib die Namen ein, nach denen du suchen willst.
 
@@ -821,6 +827,9 @@ Warmup
 
 Votes
 == Abstimmungen
+
+Record info
+== Aufnameinformation
 
 Broadcast
 == Ankündigungen
