@@ -1234,6 +1234,10 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(DoButton_CheckBox(&g_Config.m_ClRenderScoreboard, Localize("Scoreboard"), g_Config.m_ClRenderScoreboard, &Button))
 			g_Config.m_ClRenderScoreboard ^= 1;
+
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(DoButton_CheckBox(&g_Config.m_ClRenderRecordInfo, Localize("Record info"), g_Config.m_ClRenderRecordInfo, &Button))
+			g_Config.m_ClRenderRecordInfo ^= 1;
 			
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(DoButton_CheckBox(&g_Config.m_ClRenderBroadcast, Localize("Broadcast"), g_Config.m_ClRenderBroadcast, &Button))
@@ -1318,6 +1322,7 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 		g_Config.m_ClRenderDmScore = 1;
 		g_Config.m_ClShowfps = 0;
 		g_Config.m_ClRenderScoreboard = 1;
+		g_Config.m_ClRenderRecordInfo = 1;
 		g_Config.m_ClRenderServermsg = 1;
 		g_Config.m_ClRenderChat = 1;
 		g_Config.m_ClRenderKill = 1;

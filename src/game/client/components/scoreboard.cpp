@@ -583,7 +583,7 @@ float CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *
 
 void CScoreboard::RenderRecordingNotification(float x)
 {
-	if(!m_pClient->DemoRecorder()->IsRecording())
+	if(!m_pClient->DemoRecorder()->IsRecording() || !g_Config.m_ClRenderRecordInfo)
 		return;
 
 	//draw the box
