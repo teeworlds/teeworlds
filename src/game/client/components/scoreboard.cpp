@@ -304,10 +304,10 @@ void CScoreboard::RenderSpectators(float Width, float y)
 	}
 }
 
-int CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pTitle, bool TeamPlay)
+float CScoreboard::RenderScoreboard(float Width, float y, int Team, const char *pTitle, bool TeamPlay)
 {
 	if(Team == TEAM_SPECTATORS)
-		return 0;
+		return 0.0f;
 
 	float HeadlineFontsize = 22.0f;
 	float HeadlineHeight = 30.0f;
@@ -617,7 +617,7 @@ void CScoreboard::OnRender()
 		w += 40.0f;
 
 	// scoreboard hight
-	int ScoreboardHight = 50;
+	float ScoreboardHight = 50.0f;
 
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
