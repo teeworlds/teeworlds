@@ -82,7 +82,7 @@ void CScoreboard::RenderGoals(float Width, float Height)
 		return;
 
 	float w = 700.0f;
-	float h = 70.0f;
+	float h = 95.0f;
 	float x = Width/2-w/2;
 	float y = Height-h;
 
@@ -95,9 +95,26 @@ void CScoreboard::RenderGoals(float Width, float Height)
 	RenderTools()->DrawRoundRectExt(x, y, w, h, 17.0f, CUI::CORNER_T);
 	Graphics()->QuadsEnd();
 
-	y += 10.0f;
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+
+	y += 5.0f;
 
 	char aBuf[64];
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		str_copy(aBuf, CurrentServerInfo.m_aName, sizeof(aBuf));
+	else
+		DemoPlayer()->GetDemoName(aBuf, sizeof(aBuf));
+	float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	if(tw > w-10.0f)
+		tw = w-10.0f;
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, x+w/2-tw/2, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = tw;
+	TextRender()->TextEx(&Cursor, aBuf, -1);
+
+	y += FontSize+10.0f;
+
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit)
 		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit);
 	else
@@ -108,7 +125,7 @@ void CScoreboard::RenderGoals(float Width, float Height)
 		str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
 	else
 		str_format(aBuf, sizeof(aBuf), Localize("%s: -"), Localize("Time limit"));
-	float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 	TextRender()->Text(0, x+w/2-tw/2, y, FontSize, aBuf, -1);
 
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
@@ -120,8 +137,6 @@ void CScoreboard::RenderGoals(float Width, float Height)
 
 	y += FontSize+10.0f;
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Game type"), Client()->State() == IClient::STATE_DEMOPLAYBACK ? "-" : CurrentServerInfo.m_aGameType);
 	TextRender()->Text(0, x+10.0f, y, FontSize, aBuf, -1);
 
@@ -136,7 +151,6 @@ void CScoreboard::RenderGoals(float Width, float Height)
 	tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 	if(tw > w/3.0f+10.0f)
 		tw = w/3.0f+10.0f;
-	CTextCursor Cursor;
 	TextRender()->SetCursor(&Cursor, x+w-tw-10.0f, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 	Cursor.m_LineWidth = tw;
 	TextRender()->TextEx(&Cursor, aBuf, -1);
