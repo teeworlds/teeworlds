@@ -634,7 +634,7 @@ void CHud::RenderRecord()
 		return;
 		
 	// TODO: fix this
-	if(m_Record && g_Config.m_ClShowServerRecord && g_Config.m_ClShowRecords)
+	if(m_Record && g_Config.m_ClShowServerRecord)
 	{
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s: %02d:%06.3f", Localize("Server best"), (int)m_Record/60, fmod(m_Record, 60));
