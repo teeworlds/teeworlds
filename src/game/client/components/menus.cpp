@@ -74,6 +74,8 @@ CMenus::CMenus()
 
 	m_CursorActive = false;
 	m_PrevCursorActive = false;
+
+	m_IngamebrowserControlPage = IServerBrowser::TYPE_INTERNET;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -607,31 +609,42 @@ int CMenus::RenderMenubar(CUIRect r)
 	}
 	else
 	{
+		CUIRect BoxTop, BoxBottom;
+		Box.HSplitMid(&BoxTop, &BoxBottom);
+
 		// online menus
-		Box.VSplitLeft(85.0f, &Button, &Box);
+		BoxTop.VSplitLeft(90.0f, &Button, &BoxTop);
 		static int s_GameButton=0;
 		if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL) || (!m_PrevCursorActive && Input()->KeyDown(KEY_g)))
 			NewPage = PAGE_GAME;
 
-		Box.VSplitLeft(90.0f, &Button, &Box);
+		BoxTop.VSplitLeft(90.0f, &Button, &BoxTop);
 		static int s_PlayersButton=0;
-		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_p)))
+		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, m_pClient->m_IsRace ? 0 : CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_p)))
 			NewPage = PAGE_PLAYERS;
 
-		Box.VSplitLeft(120.0f, &Button, &Box);
+		if(m_pClient->m_IsRace)
+		{
+			BoxTop.VSplitLeft(80.0f, &Button, &BoxTop);
+			static int s_GhostButton=0;
+			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_h)))
+				NewPage = PAGE_GHOST;
+		}
+
+		BoxBottom.VSplitLeft(130.0f, &Button, &BoxBottom);
 		static int s_ServerInfoButton=0;
 		if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_i)))
 			NewPage = PAGE_SERVER_INFO;
 
-		if(m_pClient->m_IsRace)
+		BoxBottom.VSplitLeft(130.0f, &Button, &BoxBottom);
+		static int s_ServerbrowserButton=0;
+		if(DoButton_MenuTab(&s_ServerbrowserButton, Localize("Server browser"), m_ActivePage==PAGE_SERVER_BROWSER, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_b)))
 		{
-			Box.VSplitLeft(65.0f, &Button, &Box);
-			static int s_GhostButton=0;
-			if(DoButton_MenuTab(&s_GhostButton, Localize("Ghost"), m_ActivePage==PAGE_GHOST, &Button, 0) || (!m_PrevCursorActive && Input()->KeyDown(KEY_h)))
-				NewPage = PAGE_GHOST;
+			ServerBrowser()->Refresh(m_IngamebrowserControlPage);
+			NewPage = PAGE_SERVER_BROWSER;
 		}
-		
-		Box.VSplitLeft(100.0f, &Button, &Box);
+
+		BoxBottom.VSplitLeft(100.0f, &Button, &BoxBottom);
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR) || (!m_PrevCursorActive && Input()->KeyDown(KEY_v)))
 			NewPage = PAGE_CALLVOTE;
@@ -645,6 +658,10 @@ int CMenus::RenderMenubar(CUIRect r)
 
 	box.VSplitRight(30.0f, &box, 0);
 	*/
+
+	// anti weird button...
+	if(Client()->State() != IClient::STATE_OFFLINE)
+		Box.HSplitMid(0, &Box);
 
 	Box.VSplitRight(90.0f, &Box, &Button);
 	static int s_QuitButton=0;
@@ -853,7 +870,10 @@ int CMenus::Render()
 	if(m_Popup == POPUP_NONE)
 	{
 		// do tab bar
-		Screen.HSplitTop(24.0f, &TabBar, &MainView);
+		if(Client()->State() == IClient::STATE_OFFLINE)
+			Screen.HSplitTop(24.0f, &TabBar, &MainView);
+		else
+			Screen.HSplitTop(48.0f, &TabBar, &MainView);
 		TabBar.VMargin(20.0f, &TabBar);
 		RenderMenubar(TabBar);
 
@@ -873,6 +893,8 @@ int CMenus::Render()
 				RenderPlayers(MainView);
 			else if(m_GamePage == PAGE_SERVER_INFO)
 				RenderServerInfo(MainView);
+			else if(m_GamePage == PAGE_SERVER_BROWSER)
+				RenderServerIngameServerbrowser(MainView);
 			else if(m_GamePage == PAGE_GHOST)
 				RenderGhost(MainView);
 			else if(m_GamePage == PAGE_CALLVOTE)
@@ -1467,6 +1489,14 @@ void CMenus::OnStateChange(int NewState, int OldState)
 			else
 				m_Popup = POPUP_DISCONNECTED;
 		}
+
+		// refresh server browser
+		if(g_Config.m_UiPage == PAGE_INTERNET)
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		else if(g_Config.m_UiPage == PAGE_LAN)
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+		else if(g_Config.m_UiPage == PAGE_FAVORITES)
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 	}
 	else if(NewState == IClient::STATE_LOADING)
 	{

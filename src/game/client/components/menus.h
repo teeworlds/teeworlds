@@ -124,6 +124,7 @@ class CMenus : public CComponent
 		PAGE_GAME,
 		PAGE_PLAYERS,
 		PAGE_SERVER_INFO,
+		PAGE_SERVER_BROWSER,
 		PAGE_GHOST,
 		PAGE_CALLVOTE,
 		PAGE_INTERNET,
@@ -172,6 +173,7 @@ class CMenus : public CComponent
 	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
 	int m_SettingPlayerPage;
+	int m_IngamebrowserControlPage;
 
 	//
 	bool m_EscapePressed;
@@ -281,6 +283,7 @@ class CMenus : public CComponent
 	void RenderGame(CUIRect MainView);
 	void RenderPlayers(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
+	void RenderServerIngameServerbrowser(CUIRect MainView);
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
 	void RenderServerControlServer(CUIRect MainView);
@@ -293,7 +296,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
-	void RenderServerbrowser(CUIRect MainView);
+	void RenderServerbrowser(CUIRect MainView, int Corners=CUI::CORNER_ALL);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 

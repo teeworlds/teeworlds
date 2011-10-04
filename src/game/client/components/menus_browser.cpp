@@ -914,7 +914,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 }
 
-void CMenus::RenderServerbrowser(CUIRect MainView)
+void CMenus::RenderServerbrowser(CUIRect MainView, int Corners)
 {
 	/*
 		+-----------------+	+-------+
@@ -930,7 +930,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	CUIRect ServerList, ToolBox, StatusBox, TabBar;
 
 	// background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, Corners, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 
 	// create server list, status box, tab bar and tool box area
@@ -1018,12 +1018,17 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		static int s_RefreshButton = 0;
 		if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || Input()->KeyDown(KEY_F5) || (!m_PrevCursorActive && Input()->KeyDown(KEY_r)))
 		{
-			if(g_Config.m_UiPage == PAGE_INTERNET)
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-			else if(g_Config.m_UiPage == PAGE_LAN)
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-			else if(g_Config.m_UiPage == PAGE_FAVORITES)
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+			if(Client()->State() == IClient::STATE_OFFLINE)
+			{
+				if(g_Config.m_UiPage == PAGE_INTERNET)
+					ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+				else if(g_Config.m_UiPage == PAGE_LAN)
+					ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+				else if(g_Config.m_UiPage == PAGE_FAVORITES)
+					ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+			}
+			else
+				ServerBrowser()->Refresh(m_IngamebrowserControlPage);
 		}
 
 		ButtonArea.HSplitTop(5.0f, 0, &ButtonArea);

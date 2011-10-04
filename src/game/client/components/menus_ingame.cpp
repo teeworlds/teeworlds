@@ -415,6 +415,43 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, (int)Motd.w);
 }
 
+void CMenus::RenderServerIngameServerbrowser(CUIRect MainView)
+{
+	// render background
+	CUIRect Bottom, TabBar, Button;
+	MainView.HSplitTop(20.0f, &Bottom, &MainView);
+	RenderTools()->DrawUIRect(&Bottom, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	MainView.HSplitTop(20.0f, &TabBar, &MainView);
+
+	// tab bar
+	{
+		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
+		static int s_Button0 = 0;
+		if(DoButton_MenuTab(&s_Button0, Localize("Internet"), m_IngamebrowserControlPage == 0, &Button, 0))
+		{
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+			m_IngamebrowserControlPage = IServerBrowser::TYPE_INTERNET;
+		}
+
+		TabBar.VSplitMid(&Button, &TabBar);
+		static int s_Button1 = 0;
+		if(DoButton_MenuTab(&s_Button1, Localize("LAN"), m_IngamebrowserControlPage == 1, &Button, 0))
+		{
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			m_IngamebrowserControlPage = IServerBrowser::TYPE_LAN;
+		}
+
+		static int s_Button2 = 0;
+		if(DoButton_MenuTab(&s_Button2, Localize("Favorites"), m_IngamebrowserControlPage == 2, &TabBar, 0))
+		{
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+			m_IngamebrowserControlPage = IServerBrowser::TYPE_FAVORITES;
+		}
+	}
+
+	RenderServerbrowser(MainView, CUI::CORNER_B);
+}
+
 void CMenus::RenderServerControlServer(CUIRect MainView)
 {
 	static int s_VoteList = 0;
