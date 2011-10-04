@@ -70,6 +70,7 @@ MACRO_CONFIG_INT(ClSpreesounds, cl_spreesounds, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_
 /* Beep-Mod */
 MACRO_CONFIG_STR(ClSearchName, cl_search_name, 64, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Names to search for in chat messages")
 MACRO_CONFIG_INT(ClAntiSpam, cl_anti_spam, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disables multiple messages")
+MACRO_CONFIG_INT(ClChatHistoryOnInput, cl_chat_history_on_input, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the chat history on chat input")
 
 /* Laser Color */
 MACRO_CONFIG_INT(ClLaserColor, cl_laser_color, 11665217, 0, 16777215, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Laser color")

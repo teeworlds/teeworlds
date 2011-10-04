@@ -569,7 +569,7 @@ void CChat::OnRender()
 	vec4 SpectatorboardPosition = m_pClient->m_pScoreboard->GetSpectatorboardPosition();
 
 	int64 Now = time_get();
-	float HeightLimit = m_Show ? 50.0f : 200.0f;
+	float HeightLimit = (m_Show || (m_Mode != MODE_NONE && g_Config.m_ClChatHistoryOnInput)) ? 50.0f : 200.0f;
 	if(m_pClient->m_pScoreboard->Active())
 	{
 		if(ScoreboardPosition.x < 270.0f)
@@ -584,7 +584,7 @@ void CChat::OnRender()
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
+		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show && (m_Mode == MODE_NONE || !g_Config.m_ClChatHistoryOnInput))
 			break;
 
 		float LineWidth = 200.0f;
@@ -618,7 +618,7 @@ void CChat::OnRender()
 		if(y < HeightLimit)
 			break;
 
-		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show && (m_Mode == MODE_NONE || !g_Config.m_ClChatHistoryOnInput) ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 		
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);

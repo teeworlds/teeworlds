@@ -1140,6 +1140,10 @@ void CMenus::RenderSettingsChat(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClAntiSpam, Localize("Block spam"), g_Config.m_ClAntiSpam, &Button))
 		g_Config.m_ClAntiSpam ^= 1;
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClChatHistoryOnInput, Localize("Show chat history on chat input"), g_Config.m_ClChatHistoryOnInput, &Button))
+		g_Config.m_ClChatHistoryOnInput ^= 1;
 	
 	MainView.HSplitTop(10.0f, &Button, &MainView);
 	
