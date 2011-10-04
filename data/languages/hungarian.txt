@@ -677,3 +677,414 @@ Strict gametype filter
 
 ##### old translations #####
 
+##### race #####
+
+Ghost
+== 
+
+Activate
+== 
+
+Deactivate
+== 
+
+Time
+== 
+
+Race specific settings
+== 
+
+Auto record
+== 
+
+Save player name
+== 
+
+Show other players
+== 
+
+Show checkpoint difference
+== 
+
+Enable Ghost
+== 
+
+Save Ghost
+== 
+
+Show ghost name plates
+== 
+
+Always show ghost name plates
+== 
+
+Show best time on server
+== 
+
+Api token
+== 
+
+Username
+== 
+
+Password
+== 
+
+Error requesting api token
+== 
+
+None
+== 
+
+Checking...
+== 
+
+Request api token
+== 
+
+Finish time
+== 
+
+Server best
+== 
+
+##### client-pack #####
+
+Particle flow (experimental)
+== 
+
+Show Client ID in scoreboard
+== 
+
+Show ghost
+== 
+
+Anti rainbow
+== 
+
+Allowed color changes
+== 
+
+Show Client ID in name plates
+== 
+
+Laser color
+== 
+
+Fonts
+== 
+
+Block spam
+== 
+
+Enter the names you want to look for.
+== 
+
+Seperate them with a simple space.
+== 
+
+General settings
+== 
+
+Show hud
+== 
+
+Clear all
+== 
+
+Special settings
+== 
+
+Server time
+== 
+
+Health
+== 
+
+Ammunition
+== 
+
+Crosshair
+== 
+
+DM score
+== 
+
+FPS
+== 
+
+Viewmode
+== 
+
+Warmup
+== 
+
+Votes
+== 
+
+Broadcast
+== 
+
+Server messages
+== 
+
+Kill messages
+== 
+
+Emoticons
+== 
+
+Team balance warning
+== 
+
+Sound settings
+== 
+
+Activate server message sound
+== 
+
+Activate chat message sound
+== 
+
+Activate spree sounds
+== 
+
+Key bindings
+== 
+
+Zoom out
+==
+
+Zoom in
+== 
+
+Hud
+== 
+
+Race
+== 
+
+Frags
+== 
+
+Deaths
+== 
+
+Suicides
+== 
+
+Ratio
+== 
+
+Net
+== 
+
+FPM
+== 
+
+Spree
+== 
+
+Best spree
+== 
+
+Caps
+== 
+
+Time played
+== 
+
+Grabs
+== 
+
+Captures
+== 
+
+Kills holding flag
+== 
+
+Deaths with flag
+== 
+
+Carriers killed
+== 
+
+Stats
+== 
+
+Misc
+== 
+
+About
+== 
+
+Teeworlds %s with TeeComp %s by spl0k
+== 
+
+Enemy based colors
+== 
+
+Use DM colors for team %s
+== 
+
+mates
+== 
+
+enemies
+== 
+
+Enemies
+== 
+
+Team mates
+== 
+
+Team 1
+== 
+
+Team 2
+== 
+
+team 2
+== 
+
+Use DM colors for %s
+== 
+
+Enemy based skins
+== 
+
+Force team %s/FFA skins
+== 
+
+Forced skin
+== 
+
+Force %s skins
+== 
+
+Show in global statboard
+== 
+
+Net score
+== 
+
+Frags per minute
+== 
+
+Current spree
+== 
+
+Weapons stats
+== 
+
+Flag captures
+== 
+
+Flag grabs
+== 
+
+Global statboard
+== 
+
+Player board
+== 
+
+Next player
+== 
+
+Name plates
+== 
+
+Show score in name plate
+== 
+
+HUD/Flag
+== 
+
+Make HUD match tees colors
+== 
+
+Make flags match tees colors
+== 
+
+Display speed meter
+== 
+
+Speed meter show acceleration
+== 
+
+Others
+== 
+
+Hide flag while carrying it
+== 
+
+Automatically take game over stat screenshot
+== 
+
+For Teeworlds
+== 
+
+Compiled
+== 
+
+By Alban 'spl0k' FERON
+== 
+
+Special thanks to:
+== 
+
+some other MonkeyStyle members
+== 
+
+and the Teeworlds.com community
+== 
+
+so you can set while u set while u set options
+== 
+
+Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs
+== 
+
+Black team
+== 
+
+Black team wins!
+== 
+
+White team
+== 
+
+White team wins!
+== 
+
+Grey team
+== 
+
+Grey team wins!
+== 
+
+Orange team
+== 
+
+Orange team wins!
+== 
+
+Yellow team
+== 
+
+Yellow team wins!
+== 
+
+Green team
+== 
+
+Green team wins!
+== 
+
+Purple team
+== 
+
+Purple team wins!
+== 

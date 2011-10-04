@@ -718,9 +718,6 @@ Show ghost name plates
 Always show ghost name plates
 == Geistnamen immer anzeigen
 
-Show records
-== Rekorde anzeigen
-
 Show best time on server
 == Beste Zeit vom Server anzeigen
 

@@ -720,9 +720,6 @@ Show ghost name plates
 Always show ghost name plates
 == 
 
-Show records
-== 
-
 Show best time on server
 == 
 
