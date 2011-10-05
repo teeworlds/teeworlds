@@ -19,6 +19,9 @@ protected:
 	float m_GameIntraTick;
 	float m_GameTickTime;
 
+	int m_CurMenuTick;
+	int64 m_MenuStartTime;
+
 	int m_PredTick;
 	float m_PredIntraTick;
 
@@ -61,6 +64,7 @@ public:
 	// tick time access
 	inline int PrevGameTick() const { return m_PrevGameTick; }
 	inline int GameTick() const { return m_CurGameTick; }
+	inline int MenuTick() const { return m_CurMenuTick; }
 	inline int PredGameTick() const { return m_PredTick; }
 	inline float IntraGameTick() const { return m_GameIntraTick; }
 	inline float PredIntraGameTick() const { return m_PredIntraTick; }
@@ -85,6 +89,8 @@ public:
 	// networking
 	virtual void EnterGame() = 0;
 
+	virtual void LoadBackgroundMap(const char *pName, const char *pFilename) = 0;
+	virtual bool MapLoaded() = 0;
 	//
 	virtual int MapDownloadAmount() = 0;
 	virtual int MapDownloadTotalsize() = 0;

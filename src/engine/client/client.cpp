@@ -497,6 +497,7 @@ void CClient::OnEnterGame()
 	m_CurrentRecvTick = 0;
 	m_CurGameTick = 0;
 	m_PrevGameTick = 0;
+	m_CurMenuTick = 0;
 }
 
 void CClient::EnterGame()
@@ -772,6 +773,24 @@ void CClient::Render()
 
 	GameClient()->OnRender();
 	DebugRender();
+}
+
+bool CClient::MapLoaded()
+{
+	return m_pMap->IsLoaded();
+}
+
+void CClient::LoadBackgroundMap(const char *pName, const char *pFilename)
+{
+	if(!m_pMap->Load(pFilename))
+		return;
+
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+
+	str_copy(m_aCurrentMap, pName, sizeof(m_aCurrentMap));
+	m_CurrentMapCrc = m_pMap->Crc();
 }
 
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
@@ -1716,6 +1735,8 @@ void CClient::Run()
 		atexit(SDL_Quit); // ignore_convention
 	}
 
+	m_MenuStartTime = time_get();
+
 	// init graphics
 	{
 		if(g_Config.m_GfxThreaded)
@@ -1935,6 +1956,14 @@ void CClient::Run()
 		if(State() == IClient::STATE_QUITING)
 			break;
 
+		// menu tick
+		if(State() == IClient::STATE_OFFLINE)
+		{
+			int64 t = time_get();
+			while(t > TickStartTime(m_CurMenuTick+1))
+				m_CurMenuTick++;
+		}
+
 		// beNice
 		if(g_Config.m_DbgStress)
 			thread_sleep(5);
@@ -1980,6 +2009,10 @@ void CClient::Run()
 	}
 }
 
+int64 CClient::TickStartTime(int Tick)
+{
+	return m_MenuStartTime + (time_freq()*Tick)/m_GameTickSpeed;
+}
 
 void CClient::Con_Connect(IConsole::IResult *pResult, void *pUserData)
 {

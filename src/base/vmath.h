@@ -45,6 +45,14 @@ public:
 	operator const T* () { return &x; }
 };
 
+template<typename T>
+inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
+{
+	angle = angle * 3.1415926535897932384626433f / 180.0f;
+	float s = sin(angle);
+	float c = cos(angle);
+	return vector2_base<T>((T)(c*a.x - s*a.y), (T)(s*a.x + c*a.y));
+}
 
 template<typename T>
 inline T length(const vector2_base<T> &a)

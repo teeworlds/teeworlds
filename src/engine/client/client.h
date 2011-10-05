@@ -181,6 +181,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
 	void GraphicsThread();
 
+	int64 TickStartTime(int Tick);
+
 public:
 	IEngine *Engine() { return m_pEngine; }
 	IEngineGraphics *Graphics() { return m_pGraphics; }
@@ -252,6 +254,8 @@ public:
 
 	virtual const char *ErrorString();
 
+	bool MapLoaded();
+	void LoadBackgroundMap(const char *pName, const char *pFilename);
 	const char *LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc);
 	const char *LoadMapSearch(const char *pMapName, int WantedCrc);
 
