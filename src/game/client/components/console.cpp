@@ -27,14 +27,6 @@
 
 #include "console.h"
 
-enum
-{
-	CONSOLE_CLOSED,
-	CONSOLE_OPENING,
-	CONSOLE_OPEN,
-	CONSOLE_CLOSING,
-};
-
 CGameConsole::CInstance::CInstance(int Type)
 {
 	m_pHistoryEntry = 0x0;
@@ -704,4 +696,9 @@ void CGameConsole::OnStateChange(int NewState, int OldState)
 {
 	if(NewState == IClient::STATE_OFFLINE)
 		m_RemoteConsole.ClearHistory();
+}
+
+int CGameConsole::State()
+{
+	return m_ConsoleState;
 }

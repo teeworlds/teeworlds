@@ -85,6 +85,11 @@ public:
 	{
 		CONSOLETYPE_LOCAL=0,
 		CONSOLETYPE_REMOTE,
+
+		CONSOLE_CLOSED=0,
+		CONSOLE_OPENING,
+		CONSOLE_OPEN,
+		CONSOLE_CLOSING,
 	};
 
 	CGameConsole();
@@ -97,5 +102,7 @@ public:
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnInput(IInput::CEvent Events);
+
+	int State();
 };
 #endif

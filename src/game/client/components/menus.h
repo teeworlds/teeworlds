@@ -328,6 +328,9 @@ class CMenus : public CComponent
 	void RenderSettingsTeecompAbout(CUIRect MainView);
 
 	void SetActive(bool Active);
+
+	bool CheckHotKey(int Key);
+
 public:
 	void RenderBackground();
 

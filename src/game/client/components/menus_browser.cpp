@@ -14,6 +14,7 @@
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/client/components/countryflags.h>
+#include <game/client/components/console.h>
 
 #include "menus.h"
 
@@ -1016,7 +1017,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, int Corners)
 		Button.VMargin(2.0f, &Button);
 
 		static int s_RefreshButton = 0;
-		if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || Input()->KeyDown(KEY_F5) || (!m_PrevCursorActive && Input()->KeyDown(KEY_r)))
+		if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || Input()->KeyDown(KEY_F5) || CheckHotKey(KEY_r))
 		{
 			if(Client()->State() == IClient::STATE_OFFLINE)
 			{
