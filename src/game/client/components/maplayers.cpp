@@ -123,6 +123,8 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 
 void CMapLayers::OnRender()
 {
+	CheckBackgroundMap();
+
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && !Client()->MapLoaded())
 		return;
 
@@ -258,3 +260,13 @@ void CMapLayers::OnRender()
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
 
+void CMapLayers::CheckBackgroundMap()
+{
+	if(Client()->State() != IClient::STATE_OFFLINE || Client()->MapLoaded())
+		return;
+
+	Client()->LoadBackgroundMap("dm1", "maps/dm1.map");
+	m_pClient->Layers()->Init(Kernel());
+	RenderTools()->RenderTilemapGenerateSkip(m_pClient->Layers());
+	m_pClient->m_pMapimages->OnMapLoad();
+}

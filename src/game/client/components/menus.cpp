@@ -572,6 +572,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_DemosButton=0;
 		if(DoButton_MenuTab(&s_DemosButton, Localize("Demos"), m_ActivePage==PAGE_DEMOS, &Button, CUI::CORNER_T) && m_ActivePage!=PAGE_DEMOS)
 		{
+			m_pClient->m_pCamera->m_RotationCenter = vec2(750.0f, 750.0f);
 			DemolistPopulate();
 			NewPage = PAGE_DEMOS;
 		}
@@ -618,7 +619,11 @@ int CMenus::RenderMenubar(CUIRect r)
 	Box.VSplitRight(130.0f, &Box, &Button);
 	static int s_SettingsButton=0;
 	if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_T))
+	{
+		if(Client()->State() == IClient::STATE_OFFLINE)
+			m_pClient->m_pCamera->m_RotationCenter = vec2(1000.0f, 500.0f);
 		NewPage = PAGE_SETTINGS;
+	}
 
 	if(NewPage != -1)
 	{
@@ -774,16 +779,29 @@ int CMenus::Render()
 	if(s_First)
 	{
 		if(g_Config.m_UiPage == PAGE_INTERNET)
+		{
+			m_pClient->m_pCamera->m_RotationCenter = vec2(500.0f, 500.0f);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		}
 		else if(g_Config.m_UiPage == PAGE_LAN)
+		{
+			m_pClient->m_pCamera->m_RotationCenter = vec2(1000.0f, 1000.0f);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+		}
 		else if(g_Config.m_UiPage == PAGE_FAVORITES)
+		{
+			m_pClient->m_pCamera->m_RotationCenter = vec2(2000.0f, 500.0f);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+		}
+		else if(g_Config.m_UiPage == PAGE_DEMOS)
+			m_pClient->m_pCamera->m_RotationCenter = vec2(750.0f, 750.0f);
+		else if(g_Config.m_UiPage == PAGE_SETTINGS)
+			m_pClient->m_pCamera->m_RotationCenter = vec2(1000.0f, 500.0f);
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
 	}
 
-	if(Client()->State() == IClient::STATE_ONLINE || Client()->MapLoaded())
+	if(Client()->State() == IClient::STATE_ONLINE || (Client()->State() == IClient::STATE_OFFLINE && Client()->MapLoaded()))
 	{
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;

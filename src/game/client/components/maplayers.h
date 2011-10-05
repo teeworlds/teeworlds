@@ -26,6 +26,7 @@ public:
 	virtual void OnRender();
 
 	void EnvelopeUpdate();
+	void CheckBackgroundMap();
 };
 
 #endif
