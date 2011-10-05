@@ -62,13 +62,27 @@ void CCamera::OnRender()
 	else
 	{
 		m_Zoom = 0.7f;
-
-		// do little rotation
 		static vec2 Dir = vec2(1.0f, 0.0f);
-		float RotPerTick = 18.0f * Client()->RenderFrameTime(); // 20 sec for one rotation (18° per sec)
-		Dir = rotate(Dir, RotPerTick);
-		m_Center = m_RotationCenter+Dir*30.0f;
+
+		if(distance(m_Center, m_RotationCenter) <= 31.0f)
+		{
+			// do little rotation
+			float RotPerTick = 18.0f * Client()->RenderFrameTime(); // 20 sec for one rotation (18° per sec)
+			Dir = rotate(Dir, RotPerTick);
+			m_Center = m_RotationCenter+Dir*30.0f;
+		}
+		else
+		{
+			Dir = normalize(m_RotationCenter-m_Center);
+			m_Center += Dir*(500.0f*Client()->RenderFrameTime());
+			Dir = normalize(m_Center-m_RotationCenter);
+		}
 	}
 
 	m_PrevCenter = m_Center;
+}
+
+void CCamera::ChangePosition(vec2 Pos)
+{
+	m_RotationCenter = Pos;
 }

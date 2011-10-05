@@ -24,6 +24,8 @@ public:
 
 	CCamera();
 	virtual void OnRender();
+
+	void ChangePosition(vec2 Pos);
 };
 
 #endif
