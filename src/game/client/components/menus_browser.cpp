@@ -686,11 +686,15 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 
 	if(pSelectedServer)
 	{
+		bool Shrink = Client()->State() == IClient::STATE_ONLINE && pSelectedServer->m_NumClients > 13;
 		ServerScoreBoard.Margin(3.0f, &ServerScoreBoard);
 		for (int i = 0; i < pSelectedServer->m_NumClients; i++)
 		{
 			CUIRect Name, Clan, Score, Flag;
-			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
+			if(Shrink)
+				ServerScoreBoard.HSplitTop(21.0f, &Name, &ServerScoreBoard);
+			else
+				ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
 			if(UI()->DoButtonLogic(&pSelectedServer->m_aClients[i], "", 0, &Name))
 			{
 				if(pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
@@ -721,7 +725,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			}
 
 			// name
-			TextRender()->SetCursor(&Cursor, Name.x, Name.y, FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			TextRender()->SetCursor(&Cursor, Name.x, Name.y, Shrink ? FontSize-4.5f : FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Name.w;
 			const char *pName = pSelectedServer->m_aClients[i].m_aName;
 			if(g_Config.m_BrFilterString[0])
@@ -743,7 +747,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 				TextRender()->TextEx(&Cursor, pName, -1);
 
 			// clan
-			TextRender()->SetCursor(&Cursor, Clan.x, Clan.y, FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			TextRender()->SetCursor(&Cursor, Clan.x, Clan.y, Shrink ? FontSize-4.5f : FontSize-2, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Clan.w;
 			const char *pClan = pSelectedServer->m_aClients[i].m_aClan;
 			if(g_Config.m_BrFilterString[0])
