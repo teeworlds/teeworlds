@@ -14,6 +14,14 @@ CCamera::CCamera()
 {
 	m_CamType = CAMTYPE_UNDEFINED;
 	m_RotationCenter = vec2(0.0f, 0.0f);
+
+	m_Positions[POS_INTERNET] = vec2(500.0f, 500.0f);
+	m_Positions[POS_LAN] = vec2(1000.0f, 1000.0f);
+	m_Positions[POS_FAVORITES] = vec2(2000.0f, 500.0f);
+	m_Positions[POS_DEMOS] = vec2(1500.0f, 1000.0f);
+	m_Positions[POS_SETTINGS] = vec2(1000.0f, 500.0f);
+
+	m_CurrentPosition = -1;
 }
 
 void CCamera::OnRender()
@@ -64,12 +72,12 @@ void CCamera::OnRender()
 		m_Zoom = 0.7f;
 		static vec2 Dir = vec2(1.0f, 0.0f);
 
-		if(distance(m_Center, m_RotationCenter) <= 31.0f)
+		if(distance(m_Center, m_RotationCenter) <= (float)g_Config.m_ClRotationRadius+0.5f)
 		{
 			// do little rotation
-			float RotPerTick = 18.0f * Client()->RenderFrameTime(); // 20 sec for one rotation (18° per sec)
+			float RotPerTick = 360.0f/(float)g_Config.m_ClRotationSpeed * Client()->FrameTime();
 			Dir = rotate(Dir, RotPerTick);
-			m_Center = m_RotationCenter+Dir*30.0f;
+			m_Center = m_RotationCenter+Dir*(float)g_Config.m_ClRotationRadius;
 		}
 		else
 		{
@@ -82,7 +90,30 @@ void CCamera::OnRender()
 	m_PrevCenter = m_Center;
 }
 
-void CCamera::ChangePosition(vec2 Pos)
+void CCamera::ChangePosition(int PositionNumber)
 {
-	m_RotationCenter = Pos;
+	m_RotationCenter = m_Positions[PositionNumber];
+	m_CurrentPosition = PositionNumber;
+}
+
+int CCamera::GetCurrentPosition()
+{
+	return m_CurrentPosition;
+}
+
+void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
+{
+	CCamera *pSelf = (CCamera *)pUserData;
+	int PositionNumber = clamp(pResult->GetInteger(0), 0, 4);
+	vec2 Position = vec2(pResult->GetInteger(1)*32.0f+16.0f, pResult->GetInteger(2)*32.0f+16.0f);
+	pSelf->m_Positions[PositionNumber] = Position;
+
+	// update
+	if(pSelf->GetCurrentPosition() == PositionNumber)
+		pSelf->ChangePosition(PositionNumber);
+}
+
+void CCamera::OnConsoleInit()
+{
+	Console()->Register("set_position", "iii", CFGFLAG_CLIENT, ConSetPosition, this, "Sets the rotation position");
 }

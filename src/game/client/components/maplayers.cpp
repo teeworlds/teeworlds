@@ -25,6 +25,7 @@ CMapLayers::CMapLayers(int t)
 	m_CurrentLocalTick = 0;
 	m_LastLocalTick = 0;
 	m_EnvelopeUpdate = false;
+	m_BackgroundMapExists = true;
 }
 
 void CMapLayers::OnInit()
@@ -125,7 +126,7 @@ void CMapLayers::OnRender()
 {
 	CheckBackgroundMap();
 
-	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && !Client()->MapLoaded())
+	if((Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && Client()->State() != IClient::STATE_OFFLINE) || !Client()->MapLoaded())
 		return;
 
 	CUIRect Screen;
@@ -260,13 +261,47 @@ void CMapLayers::OnRender()
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
 
+void CMapLayers::ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+		((CMapLayers*)pUserData)->BackgroundMapUpdate();
+}
+
+void CMapLayers::OnConsoleInit()
+{
+	Console()->Chain("cl_background_map", ConchainBackgroundMap, this);
+}
+
+void CMapLayers::BackgroundMapUpdate()
+{
+	if(m_Type == TYPE_BACKGROUND)
+	{
+		m_BackgroundMapExists = true;
+		m_pLayers = 0;
+		Client()->UnloadBackgroundMap();
+	}
+}
+
 void CMapLayers::CheckBackgroundMap()
 {
-	if(Client()->State() != IClient::STATE_OFFLINE || Client()->MapLoaded())
+	if(m_Type != TYPE_BACKGROUND || Client()->State() != IClient::STATE_OFFLINE || Client()->MapLoaded())
 		return;
 
-	Client()->LoadBackgroundMap("dm1", "maps/dm1.map");
-	m_pClient->Layers()->Init(Kernel());
-	RenderTools()->RenderTilemapGenerateSkip(m_pClient->Layers());
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClBackgroundMap);
+	const char *pError = Client()->LoadBackgroundMap(g_Config.m_ClBackgroundMap, aBuf);
+
+	if(pError)
+	{
+		str_format(aBuf, sizeof(aBuf), "background map '%s' not found", g_Config.m_ClBackgroundMap);
+		m_pClient->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+		m_BackgroundMapExists = false;
+		return;
+	}
+
+	Layers()->Init(Kernel());
+	RenderTools()->RenderTilemapGenerateSkip(Layers());
+	m_pLayers = Layers();
 	m_pClient->m_pMapimages->OnMapLoad();
 }

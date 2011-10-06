@@ -11,6 +11,7 @@ class CMapLayers : public CComponent
 	int m_CurrentLocalTick;
 	int m_LastLocalTick;
 	bool m_EnvelopeUpdate;
+	bool m_BackgroundMapExists;
 
 	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup);
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
@@ -26,6 +27,12 @@ public:
 	virtual void OnRender();
 
 	void EnvelopeUpdate();
+
+	static void ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+
+	virtual void OnConsoleInit();
+
+	void BackgroundMapUpdate();
 	void CheckBackgroundMap();
 };
 

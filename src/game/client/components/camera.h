@@ -16,8 +16,19 @@ class CCamera : public CComponent
 
 	int m_CamType;
 	vec2 m_PrevCenter;
+	vec2 m_Positions[5];
+	int m_CurrentPosition;
 
 public:
+	enum
+	{
+		POS_INTERNET=0,
+		POS_LAN,
+		POS_FAVORITES,
+		POS_DEMOS,
+		POS_SETTINGS,
+	};
+
 	vec2 m_Center;
 	vec2 m_RotationCenter;
 	float m_Zoom;
@@ -25,7 +36,12 @@ public:
 	CCamera();
 	virtual void OnRender();
 
-	void ChangePosition(vec2 Pos);
+	void ChangePosition(int PositionNumber);
+	int GetCurrentPosition();
+
+	static void ConSetPosition(IConsole::IResult *pResult, void *pUserData);
+
+	virtual void OnConsoleInit();
 };
 
 #endif

@@ -255,7 +255,8 @@ public:
 	virtual const char *ErrorString();
 
 	bool MapLoaded();
-	void LoadBackgroundMap(const char *pName, const char *pFilename);
+	const char *LoadBackgroundMap(const char *pName, const char *pFilename);
+	void UnloadBackgroundMap();
 	const char *LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc);
 	const char *LoadMapSearch(const char *pMapName, int WantedCrc);
 

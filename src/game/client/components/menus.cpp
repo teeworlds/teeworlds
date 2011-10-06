@@ -542,7 +542,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_InternetButton=0;
 		if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL) && m_ActivePage!=PAGE_INTERNET)
 		{
-			m_pClient->m_pCamera->ChangePosition(vec2(500.0f, 500.0f));
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 			NewPage = PAGE_INTERNET;
 		}
@@ -552,7 +552,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_LanButton=0;
 		if(DoButton_MenuTab(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0) && m_ActivePage!=PAGE_LAN)
 		{
-			m_pClient->m_pCamera->ChangePosition(vec2(1000.0f, 1000.0f));
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 			NewPage = PAGE_LAN;
 		}
@@ -562,7 +562,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_FavoritesButton=0;
 		if(DoButton_MenuTab(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR) && m_ActivePage!=PAGE_FAVORITES)
 		{
-			m_pClient->m_pCamera->ChangePosition(vec2(2000.0f, 500.0f));
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 			NewPage = PAGE_FAVORITES;
 		}
@@ -572,7 +572,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_DemosButton=0;
 		if(DoButton_MenuTab(&s_DemosButton, Localize("Demos"), m_ActivePage==PAGE_DEMOS, &Button, CUI::CORNER_T) && m_ActivePage!=PAGE_DEMOS)
 		{
-			m_pClient->m_pCamera->ChangePosition(vec2(1500.0f, 1000.0f));
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			DemolistPopulate();
 			NewPage = PAGE_DEMOS;
 		}
@@ -621,7 +621,7 @@ int CMenus::RenderMenubar(CUIRect r)
 	if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_T))
 	{
 		if(Client()->State() == IClient::STATE_OFFLINE)
-			m_pClient->m_pCamera->ChangePosition(vec2(1000.0f, 500.0f));
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
 		NewPage = PAGE_SETTINGS;
 	}
 
@@ -780,23 +780,23 @@ int CMenus::Render()
 	{
 		if(g_Config.m_UiPage == PAGE_INTERNET)
 		{
-			m_pClient->m_pCamera->m_RotationCenter = vec2(500.0f, 500.0f);
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 		}
 		else if(g_Config.m_UiPage == PAGE_LAN)
 		{
-			m_pClient->m_pCamera->m_RotationCenter = vec2(1000.0f, 1000.0f);
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 		}
 		else if(g_Config.m_UiPage == PAGE_FAVORITES)
 		{
-			m_pClient->m_pCamera->m_RotationCenter = vec2(2000.0f, 500.0f);
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 		}
 		else if(g_Config.m_UiPage == PAGE_DEMOS)
-			m_pClient->m_pCamera->m_RotationCenter = vec2(1500.0f, 1000.0f);
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 		else if(g_Config.m_UiPage == PAGE_SETTINGS)
-			m_pClient->m_pCamera->m_RotationCenter = vec2(1000.0f, 500.0f);
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
 	}
