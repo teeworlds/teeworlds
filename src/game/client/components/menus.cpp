@@ -77,6 +77,7 @@ CMenus::CMenus()
 	m_PrevCursorActive = false;
 
 	m_IngamebrowserControlPage = IServerBrowser::TYPE_INTERNET;
+	m_SearchedIngame = false;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -1492,12 +1493,16 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		}
 
 		// refresh server browser
-		if(g_Config.m_UiPage == PAGE_INTERNET)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-		else if(g_Config.m_UiPage == PAGE_LAN)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		else if(g_Config.m_UiPage == PAGE_FAVORITES)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+		if(m_SearchedIngame)
+		{
+			if(g_Config.m_UiPage == PAGE_INTERNET && m_IngamebrowserControlPage != IServerBrowser::TYPE_INTERNET)
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+			else if(g_Config.m_UiPage == PAGE_LAN && m_IngamebrowserControlPage != IServerBrowser::TYPE_LAN)
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			else if(g_Config.m_UiPage == PAGE_FAVORITES && m_IngamebrowserControlPage != IServerBrowser::TYPE_FAVORITES)
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+		}
+		m_SearchedIngame = false;
 	}
 	else if(NewState == IClient::STATE_LOADING)
 	{

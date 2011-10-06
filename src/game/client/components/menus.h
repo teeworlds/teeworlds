@@ -174,6 +174,7 @@ class CMenus : public CComponent
 	bool m_NeedSendinfo;
 	int m_SettingPlayerPage;
 	int m_IngamebrowserControlPage;
+	bool m_SearchedIngame;
 
 	//
 	bool m_EscapePressed;

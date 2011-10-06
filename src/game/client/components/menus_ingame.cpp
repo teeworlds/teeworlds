@@ -429,6 +429,7 @@ void CMenus::RenderServerIngameServerbrowser(CUIRect MainView)
 		static int s_Button0 = 0;
 		if(DoButton_MenuTab(&s_Button0, Localize("Internet"), m_IngamebrowserControlPage == 0, &Button, 0))
 		{
+			m_SearchedIngame = true;
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 			m_IngamebrowserControlPage = IServerBrowser::TYPE_INTERNET;
 		}
@@ -437,6 +438,7 @@ void CMenus::RenderServerIngameServerbrowser(CUIRect MainView)
 		static int s_Button1 = 0;
 		if(DoButton_MenuTab(&s_Button1, Localize("LAN"), m_IngamebrowserControlPage == 1, &Button, 0))
 		{
+			m_SearchedIngame = true;
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 			m_IngamebrowserControlPage = IServerBrowser::TYPE_LAN;
 		}
@@ -444,6 +446,7 @@ void CMenus::RenderServerIngameServerbrowser(CUIRect MainView)
 		static int s_Button2 = 0;
 		if(DoButton_MenuTab(&s_Button2, Localize("Favorites"), m_IngamebrowserControlPage == 2, &TabBar, 0))
 		{
+			m_SearchedIngame = true;
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 			m_IngamebrowserControlPage = IServerBrowser::TYPE_FAVORITES;
 		}
