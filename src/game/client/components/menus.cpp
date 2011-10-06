@@ -642,6 +642,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_ServerbrowserButton=0;
 		if(DoButton_MenuTab(&s_ServerbrowserButton, Localize("Server browser"), m_ActivePage==PAGE_SERVER_BROWSER, &Button, 0) || CheckHotKey(KEY_b))
 		{
+			m_SearchedIngame = true;
 			ServerBrowser()->Refresh(m_IngamebrowserControlPage);
 			NewPage = PAGE_SERVER_BROWSER;
 		}
