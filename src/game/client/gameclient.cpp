@@ -986,10 +986,9 @@ void CGameClient::OnNewSnapshot()
 				m_Snap.m_pGameInfoObj = (const CNetObj_GameInfo *)pData;
 				if(!m_LastGameOver && m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 					OnGameOver();
-				/*else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
-					OnStartGame();*/
-
-				if(m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
+				else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+					OnStartGame();
+				else if(!m_IsRace && m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
 					OnStartGame();
 				
 				m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
