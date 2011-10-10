@@ -60,6 +60,8 @@ CMenus::CMenus()
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
 
+	m_MenuPage = MENU_START;
+
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
@@ -829,44 +831,52 @@ int CMenus::Render()
 
 	if(m_Popup == POPUP_NONE)
 	{
-		// do tab bar
-		Screen.HSplitTop(24.0f, &TabBar, &MainView);
-		TabBar.VMargin(20.0f, &TabBar);
-		RenderMenubar(TabBar);
-
-		// news is not implemented yet
-		if(g_Config.m_UiPage <= PAGE_NEWS || g_Config.m_UiPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiPage >= PAGE_GAME && g_Config.m_UiPage <= PAGE_CALLVOTE))
+		if(m_MenuPage == MENU_START)
 		{
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-			g_Config.m_UiPage = PAGE_INTERNET;
+			RenderLogo(Screen);
+			RenderStartMenu(Screen);
 		}
-
-		// render current page
-		if(Client()->State() != IClient::STATE_OFFLINE)
+		else if(m_MenuPage == MENU_PAGE)
 		{
-			if(m_GamePage == PAGE_GAME)
-				RenderGame(MainView);
-			else if(m_GamePage == PAGE_PLAYERS)
-				RenderPlayers(MainView);
-			else if(m_GamePage == PAGE_SERVER_INFO)
-				RenderServerInfo(MainView);
-			else if(m_GamePage == PAGE_CALLVOTE)
-				RenderServerControl(MainView);
-			else if(m_GamePage == PAGE_SETTINGS)
+			// do tab bar
+			Screen.HSplitTop(24.0f, &TabBar, &MainView);
+			TabBar.VMargin(20.0f, &TabBar);
+			RenderMenubar(TabBar);
+
+			// news is not implemented yet
+			if(g_Config.m_UiPage <= PAGE_NEWS || g_Config.m_UiPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiPage >= PAGE_GAME && g_Config.m_UiPage <= PAGE_CALLVOTE))
+			{
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+				g_Config.m_UiPage = PAGE_INTERNET;
+			}
+
+			// render current page
+			if(Client()->State() != IClient::STATE_OFFLINE)
+			{
+				if(m_GamePage == PAGE_GAME)
+					RenderGame(MainView);
+				else if(m_GamePage == PAGE_PLAYERS)
+					RenderPlayers(MainView);
+				else if(m_GamePage == PAGE_SERVER_INFO)
+					RenderServerInfo(MainView);
+				else if(m_GamePage == PAGE_CALLVOTE)
+					RenderServerControl(MainView);
+				else if(m_GamePage == PAGE_SETTINGS)
+					RenderSettings(MainView);
+			}
+			else if(g_Config.m_UiPage == PAGE_NEWS)
+				RenderNews(MainView);
+			else if(g_Config.m_UiPage == PAGE_INTERNET)
+				RenderServerbrowser(MainView);
+			else if(g_Config.m_UiPage == PAGE_LAN)
+				RenderServerbrowser(MainView);
+			else if(g_Config.m_UiPage == PAGE_DEMOS)
+				RenderDemoList(MainView);
+			else if(g_Config.m_UiPage == PAGE_FAVORITES)
+				RenderServerbrowser(MainView);
+			else if(g_Config.m_UiPage == PAGE_SETTINGS)
 				RenderSettings(MainView);
 		}
-		else if(g_Config.m_UiPage == PAGE_NEWS)
-			RenderNews(MainView);
-		else if(g_Config.m_UiPage == PAGE_INTERNET)
-			RenderServerbrowser(MainView);
-		else if(g_Config.m_UiPage == PAGE_LAN)
-			RenderServerbrowser(MainView);
-		else if(g_Config.m_UiPage == PAGE_DEMOS)
-			RenderDemoList(MainView);
-		else if(g_Config.m_UiPage == PAGE_FAVORITES)
-			RenderServerbrowser(MainView);
-		else if(g_Config.m_UiPage == PAGE_SETTINGS)
-			RenderSettings(MainView);
 	}
 	else
 	{

@@ -123,11 +123,15 @@ class CMenus : public CComponent
 		PAGE_DEMOS,
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
+
+		MENU_START=0,
+		MENU_PAGE,
 	};
 
 	int m_GamePage;
 	int m_Popup;
 	int m_ActivePage;
+	int m_MenuPage;
 	bool m_MenuActive;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
@@ -242,6 +246,10 @@ class CMenus : public CComponent
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
+
+	// found in menus_start.cpp
+	void RenderStartMenu(CUIRect MainView);
+	void RenderLogo(CUIRect MainView);
 
 	// found in menus_ingame.cpp
 	void RenderGame(CUIRect MainView);
