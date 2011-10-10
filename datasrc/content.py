@@ -247,8 +247,6 @@ container.images.Add(image_demobuttons)
 container.images.Add(image_fileicons)
 container.images.Add(image_guibuttons)
 container.images.Add(image_guiicons)
-container.images.Add(Image("button_play_game", "gui_button_play_game.png"))
-container.images.Add(Image("button_editor", "gui_button_editor.png"))
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))
