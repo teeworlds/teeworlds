@@ -30,7 +30,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	MainView.HSplitTop(5.0f, 0, &MainView); // little space
 	MainView.HSplitTop(40.0f, &Button, &MainView);
 	static int s_MapEditorButton = 0;
-	if(DoButton_MenuImage(&s_MapEditorButton, Localize("Map Editor"), 0, &Button, "editor2", 15.0f, 0.5f))
+	if(DoButton_MenuImage(&s_MapEditorButton, Localize("Map Editor"), 0, &Button, "editor", 15.0f, 0.5f))
 	{
 		g_Config.m_ClEditor = 1;
 		Input()->MouseModeRelative();
@@ -39,21 +39,21 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	MainView.HSplitTop(5.0f, 0, &MainView); // little space
 	MainView.HSplitTop(40.0f, &Button, &MainView);
 	static int s_DemoButton = 0;
-	if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "play_game", 15.0f, 0.5f))
+	if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "demos", 15.0f, 0.5f))
 	{
 	}
 
 	MainView.HSplitTop(5.0f, 0, &MainView); // little space
 	MainView.HSplitTop(40.0f, &Button, &MainView);
 	static int s_LocalServerButton = 0;
-	if(DoButton_MenuImage(&s_LocalServerButton, Localize("Create Local Server"), 0, &Button, "play_game", 15.0f, 0.5f))
+	if(DoButton_MenuImage(&s_LocalServerButton, Localize("Create Local Server"), 0, &Button, "local_server", 15.0f, 0.5f))
 	{
 	}
 
 	MainView.HSplitTop(5.0f, 0, &MainView); // little space
 	MainView.HSplitTop(40.0f, &Button, &MainView);
 	static int s_SettingsButton = 0;
-	if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "play_game", 15.0f, 0.5f))
+	if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 15.0f, 0.5f))
 	{
 	}
 
