@@ -131,7 +131,7 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, r);
 	CUIRect Text, Image;
-	pRect->VSplitMid(&Text, &Image);
+	pRect->VSplitRight(pRect->h*4.0f, &Text, &Image); // always correct ratio for image
 
 	// render image
 	const CMenuImage *pImage = FindMenuImage(pImageName);
