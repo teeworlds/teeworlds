@@ -137,12 +137,33 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 	const CMenuImage *pImage = FindMenuImage(pImageName);
 	if(pImage)
 	{
-		Graphics()->TextureSet(UI()->HotItem() == pID ? pImage->m_OrgTexture : pImage->m_GreyTexture);
+		float *pFade = (float*)pID;
+		Graphics()->TextureSet(pImage->m_GreyTexture);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1,1,1,1);
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
+
+		float Seconds = 0.5f; //  0.5 seconds for fade
+		if(UI()->HotItem() == pID)
+			*pFade = Seconds;
+		else if(*pFade > 0.0f)
+		{
+			*pFade -= Client()->FrameTime();
+			if(*pFade < 0.0f)
+				*pFade = 0.0f;
+		}
+
+		if(*pFade > 0.0f)
+		{
+			Graphics()->TextureSet(pImage->m_OrgTexture);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, *pFade/Seconds);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
+		
 	}
 
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Text);
