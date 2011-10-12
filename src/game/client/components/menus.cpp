@@ -75,13 +75,18 @@ CMenus::CMenus()
 	m_FriendlistSelectedIndex = -1;
 }
 
-vec4 CMenus::ButtonColorMul(const void *pID)
+float *CMenus::ButtonFade(const void *pID, float Seconds)
 {
-	if(UI()->ActiveItem() == pID)
-		return vec4(1,1,1,0.5f);
-	else if(UI()->HotItem() == pID)
-		return vec4(1,1,1,1.5f);
-	return vec4(1,1,1,1);
+	float *pFade = (float*)pID;
+	if(UI()->HotItem() == pID)
+		*pFade = Seconds;
+	else if(*pFade > 0.0f)
+	{
+		*pFade -= Client()->FrameTime();
+		if(*pFade < 0.0f)
+			*pFade = 0.0f;
+	}
+	return pFade;
 }
 
 int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
@@ -119,7 +124,10 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, 
 
 int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor)
 {
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, r);
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
@@ -129,7 +137,10 @@ int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const
 
 int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r, float FontFactor)
 {
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, r);
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, r);
 	CUIRect Text, Image;
 	pRect->VSplitRight(pRect->h*4.0f, &Text, &Image); // always correct ratio for image
 
@@ -137,23 +148,13 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 	const CMenuImage *pImage = FindMenuImage(pImageName);
 	if(pImage)
 	{
-		float *pFade = (float*)pID;
+		
 		Graphics()->TextureSet(pImage->m_GreyTexture);
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
-
-		float Seconds = 0.5f; //  0.5 seconds for fade
-		if(UI()->HotItem() == pID)
-			*pFade = Seconds;
-		else if(*pFade > 0.0f)
-		{
-			*pFade -= Client()->FrameTime();
-			if(*pFade < 0.0f)
-				*pFade = 0.0f;
-		}
 
 		if(*pFade > 0.0f)
 		{
@@ -175,7 +176,10 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 
 void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
 	CUIRect Temp;
 	pRect->HMargin(1.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
@@ -214,9 +218,12 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	t.x += c.w;
 	t.w -= c.w;
 	t.VSplitLeft(5.0f, 0, &t);
+	
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
 
 	c.Margin(2.0f, &c);
-	RenderTools()->DrawUIRect(&c, vec4(1,1,1,0.25f)*ButtonColorMul(pID), CUI::CORNER_ALL, 3.0f);
+	RenderTools()->DrawUIRect(&c, vec4(1.0f , 1.0f, 1.0f, 0.25f+(*pFade/Seconds)*0.125f), CUI::CORNER_ALL, 3.0f);
 	c.y += 2;
 	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, 0);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, -1);
@@ -434,7 +441,11 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	Slider = Handle;
 	Slider.Margin(5.0f, &Slider);
-	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f)*ButtonColorMul(pID), CUI::CORNER_ALL, 2.5f);
+
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	RenderTools()->DrawUIRect(&Slider, vec4(1.0f , 1.0f, 1.0f, 0.25f+(*pFade/Seconds)*0.125f), CUI::CORNER_ALL, 2.5f);
 
 	return ReturnValue;
 }
@@ -490,7 +501,11 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	Slider = Handle;
 	Slider.Margin(5.0f, &Slider);
-	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f)*ButtonColorMul(pID), CUI::CORNER_ALL, 2.5f);
+
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	RenderTools()->DrawUIRect(&Slider, vec4(1.0f , 1.0f, 1.0f, 0.25f+(*pFade/Seconds)*0.125f), CUI::CORNER_ALL, 2.5f);
 
 	return ReturnValue;
 }

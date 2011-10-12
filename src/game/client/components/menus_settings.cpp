@@ -87,13 +87,15 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		// weapon pickup
 		Left.HSplitTop(5.0f, 0, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClAutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
+		static int s_AutoswitchWeapons = 0;
+		if(DoButton_CheckBox(&s_AutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 			g_Config.m_ClAutoswitchWeapons ^= 1;
 
 		// show hud
 		Left.HSplitTop(5.0f, 0, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClShowhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
+		static int s_Showhud = 0;
+		if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
 			g_Config.m_ClShowhud ^= 1;
 
 		// chat messages
@@ -104,7 +106,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 		// name plates
 		Right.HSplitTop(20.0f, &Button, &Right);
-		if(DoButton_CheckBox(&g_Config.m_ClNameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
+		static int s_Nameplates = 0;
+		if(DoButton_CheckBox(&s_Nameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
 			g_Config.m_ClNameplates ^= 1;
 
 		if(g_Config.m_ClNameplates)
@@ -112,7 +115,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Right.HSplitTop(2.5f, 0, &Right);
 			Right.VSplitLeft(30.0f, 0, &Right);
 			Right.HSplitTop(20.0f, &Button, &Right);
-			if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
+			static int s_NameplatesAlways = 0;
+			if(DoButton_CheckBox(&s_NameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 				g_Config.m_ClNameplatesAlways ^= 1;
 
 			Right.HSplitTop(2.5f, 0, &Right);
@@ -124,7 +128,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			g_Config.m_ClNameplatesSize = (int)(DoScrollbarH(&g_Config.m_ClNameplatesSize, &Button, g_Config.m_ClNameplatesSize/100.0f)*100.0f+0.1f);
 
 			Right.HSplitTop(20.0f, &Button, &Right);
-			if(DoButton_CheckBox(&g_Config.m_ClNameplatesTeamcolors, Localize("Use team colors for name plates"), g_Config.m_ClNameplatesTeamcolors, &Button))
+			static int s_NameplatesTeamcolors = 0;
+			if(DoButton_CheckBox(&s_NameplatesTeamcolors, Localize("Use team colors for name plates"), g_Config.m_ClNameplatesTeamcolors, &Button))
 				g_Config.m_ClNameplatesTeamcolors ^= 1;
 		}
 	}
@@ -142,11 +147,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		// auto demo settings
 		{
 			Left.HSplitTop(20.0f, &Button, &Left);
-			if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+			static int s_AutoDemoRecord = 0;
+			if(DoButton_CheckBox(&s_AutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
 				g_Config.m_ClAutoDemoRecord ^= 1;
 
 			Right.HSplitTop(20.0f, &Button, &Right);
-			if(DoButton_CheckBox(&g_Config.m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
+			static int s_AutoScreenshot = 0;
+			if(DoButton_CheckBox(&s_AutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
 				g_Config.m_ClAutoScreenshot ^= 1;
 
 			Left.HSplitTop(10.0f, 0, &Left);
@@ -282,7 +289,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	Button.VSplitLeft(230.0f, &Button, 0);
-	if(DoButton_CheckBox(&g_Config.m_PlayerColorBody, Localize("Custom colors"), g_Config.m_PlayerUseCustomColor, &Button))
+	static int s_PlayerColorBody = 0;
+	if(DoButton_CheckBox(&s_PlayerColorBody, Localize("Custom colors"), g_Config.m_PlayerUseCustomColor, &Button))
 	{
 		g_Config.m_PlayerUseCustomColor = g_Config.m_PlayerUseCustomColor?0:1;
 		m_NeedSendinfo = true;
@@ -627,7 +635,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// draw allmodes switch
 	ModeList.HSplitTop(20, &Button, &ModeList);
-	if(DoButton_CheckBox(&g_Config.m_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
+	static int s_GfxDisplayAllModes = 0;
+	if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
 	{
 		g_Config.m_GfxDisplayAllModes ^= 1;
 		s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
@@ -671,7 +680,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// switches
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
+	static int s_ButtonGfxBorderless = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
 	{
 		g_Config.m_GfxBorderless ^= 1;
 		if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
@@ -680,7 +690,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
+	static int s_ButtonGfxFullscreen = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
 		g_Config.m_GfxFullscreen ^= 1;
 		if(g_Config.m_GfxFullscreen && g_Config.m_GfxBorderless)
@@ -689,14 +700,16 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
+	static int s_ButtonGfxVsync = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
 	{
 		g_Config.m_GfxVsync ^= 1;
 		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox_Number(&g_Config.m_GfxFsaaSamples, Localize("FSAA samples"), g_Config.m_GfxFsaaSamples, &Button))
+	static int s_ButtonGfxFsaaSamples = 0;
+	if(DoButton_CheckBox_Number(&s_ButtonGfxFsaaSamples, Localize("FSAA samples"), g_Config.m_GfxFsaaSamples, &Button))
 	{
 		g_Config.m_GfxFsaaSamples = (g_Config.m_GfxFsaaSamples+1)%17;
 		CheckSettings = true;
@@ -704,21 +717,24 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	MainView.HSplitTop(40.0f, &Button, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxTextureQuality, Localize("Quality Textures"), g_Config.m_GfxTextureQuality, &Button))
+	static int s_ButtonGfxTextureQuality = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxTextureQuality, Localize("Quality Textures"), g_Config.m_GfxTextureQuality, &Button))
 	{
 		g_Config.m_GfxTextureQuality ^= 1;
 		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxTextureCompression, Localize("Texture Compression"), g_Config.m_GfxTextureCompression, &Button))
+	static int s_ButtonGfxTextureCompression = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxTextureCompression, Localize("Texture Compression"), g_Config.m_GfxTextureCompression, &Button))
 	{
 		g_Config.m_GfxTextureCompression ^= 1;
 		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_GfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
+	static int s_ButtonGfxHighDetail = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
 		g_Config.m_GfxHighDetail ^= 1;
 
 	// check if the new settings require a restart
@@ -776,7 +792,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	static int s_SndRate = g_Config.m_SndRate;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_SndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
+	static int s_ButtonSndEnable = 0;
+	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
 	{
 		g_Config.m_SndEnable ^= 1;
 		if(g_Config.m_SndEnable)
@@ -793,7 +810,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		return;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_SndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
+	static int s_ButtonSndMusic = 0;
+	if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 	{
 		g_Config.m_SndMusic ^= 1;
 		if(Client()->State() == IClient::STATE_OFFLINE)
@@ -806,7 +824,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_SndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
+	static int s_ButtonSndNonactiveMute = 0;
+	if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
 		g_Config.m_SndNonactiveMute ^= 1;
 
 	// sample rate box
