@@ -1097,3 +1097,15 @@ Purple team
 
 Purple team wins!
 == Lila Team gewinnt!
+
+Show in Scoreboard
+== Zeige im Scoreboard
+
+Column titles
+== Spaltentitel
+
+Hide seperator
+== Verstecke Trennlinie
+
+No color headers
+== Headers ohne Farbe

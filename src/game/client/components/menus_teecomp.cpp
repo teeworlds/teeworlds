@@ -375,19 +375,31 @@ void CMenus::RenderSettingsTeecompScores(CUIRect MainView)
 	UI()->DoLabel(&Button, aBuf, 16.0f, -1);
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Column Titles"), g_Config.m_TcScoreboardInfos & TC_SCORE_TITLE, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos, Localize("Column titles"), g_Config.m_TcScoreboardInfos & TC_SCORE_TITLE, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_TITLE;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+1, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+1, Localize("Hide border"), g_Config.m_TcScoreboardInfos & TC_SCORE_HIDEBORDER, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_HIDEBORDER;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+2, Localize("Hide seperator"), g_Config.m_TcScoreboardInfos & TC_SCORE_HIDESEPERATOR, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_HIDESEPERATOR;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+3, Localize("No color headers"), g_Config.m_TcScoreboardInfos & TC_SCORE_NOCOLORHEADERS, &Button))
+		g_Config.m_TcScoreboardInfos ^= TC_SCORE_NOCOLORHEADERS;
+
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+4, Localize("Country"), g_Config.m_TcScoreboardInfos & TC_SCORE_COUNTRY, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_COUNTRY;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+2, Localize("Clan"), g_Config.m_TcScoreboardInfos & TC_SCORE_CLAN, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+5, Localize("Clan"), g_Config.m_TcScoreboardInfos & TC_SCORE_CLAN, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_CLAN;
 
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+3, Localize("Ping"), g_Config.m_TcScoreboardInfos & TC_SCORE_PING, &Button))
+	if(DoButton_CheckBox(&g_Config.m_TcScoreboardInfos+6, Localize("Ping"), g_Config.m_TcScoreboardInfos & TC_SCORE_PING, &Button))
 		g_Config.m_TcScoreboardInfos ^= TC_SCORE_PING;
 }
 

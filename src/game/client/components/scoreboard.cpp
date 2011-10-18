@@ -215,8 +215,8 @@ void CScoreboard::RenderSpectators(float x, float y, float Width, float Height, 
 
 	float HeadlineFontsize = 22.0f;
 	float HeadlineHeight = 30.0f;
-	float TitleFontsize = 36.0f;
-	float TitleHight = 48.0f;
+	float TitleFontsize = 30.0f;
+	float TitleHight = 40.0f;
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
 
@@ -226,11 +226,14 @@ void CScoreboard::RenderSpectators(float x, float y, float Width, float Height, 
 	Graphics()->QuadsBegin();
 	if(!TeamPlay)
 	{
-		Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
+		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+		else
+			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
 		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
 		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
 			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
@@ -243,21 +246,33 @@ void CScoreboard::RenderSpectators(float x, float y, float Width, float Height, 
 	}
 	else
 	{
-		Graphics()->SetColor(0.7f, 0.0f, 1.0f, 0.5f);
+		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+		else
+			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
 		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
 		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
 			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
+			if(!(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
+			{
+				Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
+				RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+HeadlineHeight+5.0f, 5.0f, Height-TitleHight-HeadlineHeight-10.0f, 2.0f);
+			}
 		}
 		else
 		{
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 			RenderTools()->DrawRoundRectExt(x, y+TitleHight, Width, Height-TitleHight, 15.0f, CUI::CORNER_B);
+			if(!(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
+			{
+				Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
+				RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+5.0f, 5.0f, Height-TitleHight-10.0f, 2.0f);
+			}
 		}
-		RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight, 5.0f, Height-TitleHight, 0.0f);
 	}
 	Graphics()->QuadsEnd();
 
@@ -394,8 +409,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 
 	float HeadlineFontsize = 22.0f;
 	float HeadlineHeight = 30.0f;
-	float TitleFontsize = 36.0f;
-	float TitleHight = 48.0f;
+	float TitleFontsize = 30.0f;
+	float TitleHight = 40.0f;
 	float LineHeight = 40.0f;
 	float TeeSizeMod = 0.8f;
 
@@ -405,11 +420,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	Graphics()->QuadsBegin();
 	if(!TeamPlay)
 	{
-		Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
+		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+		else
+			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
 		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
 		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
 			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
@@ -422,23 +440,28 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	}
 	else
 	{
-		if(CTeecompUtils::GetForceDmColors(Team, m_pClient->m_Snap.m_pLocalInfo->m_Team))
-		{
-			if(Team == TEAM_RED)
-				Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.5f);
-			else
-				Graphics()->SetColor(0.0f, 0.0f, 1.0f, 0.5f);
-		}
+		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 		else
 		{
-			vec3 TeamColor = CTeecompUtils::GetTeamColor(Team, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
-									g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
-			Graphics()->SetColor(TeamColor.r, TeamColor.g, TeamColor.b, 0.5f);
+			if(CTeecompUtils::GetForceDmColors(Team, m_pClient->m_Snap.m_pLocalInfo->m_Team))
+			{
+				if(Team == TEAM_RED)
+					Graphics()->SetColor(1.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_HIDEBORDER ? 0.5f : 0.25f);
+				else
+					Graphics()->SetColor(0.0f, 0.0f, 1.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_HIDEBORDER ? 0.5f : 0.25f);
+			}
+			else
+			{
+				vec3 TeamColor = CTeecompUtils::GetTeamColor(Team, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+										g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+				Graphics()->SetColor(TeamColor.r, TeamColor.g, TeamColor.b, g_Config.m_TcScoreboardInfos&TC_SCORE_HIDEBORDER ? 0.5f : 0.25f);
+			}
 		}
 		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
 		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
 			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
@@ -698,8 +721,8 @@ void CScoreboard::OnRender()
 	{
 		float HeadlineFontsize = 22.0f;
 		float HeadlineHeight = 30.0f;
-		float TitleFontsize = 36.0f;
-		float TitleHight = 48.0f;
+		float TitleFontsize = 30.0f;
+		float TitleHight = 40.0f;
 		float LineHeight = 40.0f;
 		float TeeSizeMod = 0.8f;
 
@@ -757,12 +780,15 @@ void CScoreboard::OnRender()
 			h += SpectatorHeight+20.0f; // + team boards + space between
 		float x = Width/2.0f-w/2.0f;
 
-		Graphics()->BlendNormal();
-		Graphics()->TextureSet(-1);
-		Graphics()->QuadsBegin();
-		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-		RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
-		Graphics()->QuadsEnd();
+		if(!(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDEBORDER))
+		{
+			Graphics()->BlendNormal();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+			RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
+			Graphics()->QuadsEnd();
+		}
 
 		// set scoreboard position
 		m_ScoreboardPosition = vec4(x, y, w, h);

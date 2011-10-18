@@ -1096,3 +1096,15 @@ Purple team
 
 Purple team wins!
 == 
+
+Show in Scoreboard
+== 
+
+Column titles
+== 
+
+Hide seperator
+== 
+
+No color headers
+== 
