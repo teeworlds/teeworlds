@@ -83,7 +83,7 @@ void CScoreboard::RenderGoals(CUIRect View)
 
 	CUIRect Top, Middle, Bottom;
 	View.HSplitTop(40.0f, &Top, &View);
-	RenderTools()->DrawUIRect(&Top, vec4(0.5f, 0.5f, 0.5f, 0.5f), 0, 0.0f);
+	RenderTools()->DrawUIRect(&Top, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? vec4(0.0f, 0.0f, 0.0f, 0.5f) : vec4(0.5f, 0.5f, 0.5f, 0.5f), 0, 0.0f);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_B, 40.0f);
 
 	View.HSplitMid(&Middle, &Bottom);
@@ -859,9 +859,15 @@ void CScoreboard::OnRender()
 			RenderScoreboard(x+20.0f+(w/2.0f-20.0f-2.5f)+5.0f, y+20.0f, w/2.0f-20.0f-2.5f, ScoreboardHeight, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize(aText), true);
 		}
 
+		
+		RenderSpectators(x+20.0f, y+20.0f+ScoreboardHeight+20.0f, w-40.0f, SpectatorHeight, NumSpectators, TeamPlay);
+		if(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDEBORDER)
+		{
+			x += 20;
+			w -= 40;
+		}
 		CUIRect Goals = {w < 1050.0f ? Width/2-525.0f : x, 0.0f, w < 1050.0f ? 1050.0f : w, 120.0f};
 		RenderGoals(Goals);
-		RenderSpectators(x+20.0f, y+20.0f+ScoreboardHeight+20.0f, w-40.0f, SpectatorHeight, NumSpectators, TeamPlay);
 	}
 }
 
