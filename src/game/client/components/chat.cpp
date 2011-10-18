@@ -516,7 +516,7 @@ void CChat::OnRender()
 		// render chat input
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = m_pClient->m_pScoreboard->Active() ? Width-330.0f : Width-190.0f;
+		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
 		if(m_Mode == MODE_ALL)
@@ -566,7 +566,6 @@ void CChat::OnRender()
 
 	// get position of scoreboard
 	vec4 ScoreboardPosition = m_pClient->m_pScoreboard->GetScoreboardPosition();
-	vec4 SpectatorboardPosition = m_pClient->m_pScoreboard->GetSpectatorboardPosition();
 
 	int64 Now = time_get();
 	float HeightLimit = (m_Show || (m_Mode != MODE_NONE && g_Config.m_ClChatHistoryOnInput)) ? 50.0f : 200.0f;
@@ -574,8 +573,6 @@ void CChat::OnRender()
 	{
 		if(ScoreboardPosition.x < 270.0f)
 			HeightLimit = (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4;
-		if(SpectatorboardPosition.x < 270.0f)
-			HeightLimit = (SpectatorboardPosition.y+SpectatorboardPosition.w+20.0f)/4;
 	}
 	float Begin = x;
 	float FontSize = 6.0f;
@@ -590,8 +587,6 @@ void CChat::OnRender()
 		float LineWidth = 200.0f;
 		if(m_pClient->m_pScoreboard->Active())
 		{
-			if(SpectatorboardPosition.x < 800.0f && y < (SpectatorboardPosition.y+SpectatorboardPosition.w+20.0f)/4)
-				LineWidth = (SpectatorboardPosition.x-40.0f)/4;
 			if(ScoreboardPosition.x < 800.0f && y < (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4)
 				LineWidth = (ScoreboardPosition.x-40.0f)/4;
 		}
@@ -634,22 +629,22 @@ void CChat::OnRender()
 				TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
 			else if(m_aLines[r].m_NameColor == TEAM_RED)
 			{
-				if(!m_pClient->m_Snap.m_pLocalInfo)
+				if(!m_pClient->m_Snap.m_pLocalInfo || CTeecompUtils::GetForceDmColors(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo->m_Team))
 					TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend);// red
 				else
 				{
-					TColor = CTeecompUtils::GetTeamColor(0, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+					TColor = CTeecompUtils::GetTeamColor(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
 						g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}
 			}
 			else if(m_aLines[r].m_NameColor == TEAM_BLUE)
 			{
-				if(!m_pClient->m_Snap.m_pLocalInfo)
+				if(!m_pClient->m_Snap.m_pLocalInfo || CTeecompUtils::GetForceDmColors(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo->m_Team))
 					TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
 				else
 				{
-					TColor = CTeecompUtils::GetTeamColor(1, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+					TColor = CTeecompUtils::GetTeamColor(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
 							g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}	

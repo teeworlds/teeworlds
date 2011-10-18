@@ -31,10 +31,9 @@ class CScoreboard : public CComponent
 
 	void SetActiveColumns();
 
-	void RenderGoals(float Width, float Height);
-	void RenderSpectators(float Width, float y);
-	float RenderScoreboard(float Width, float y, int Team, const char *pTitle, bool TeamPlay);
-	void RenderRecordingNotification(float x);
+	void RenderGoals(CUIRect View);
+	void RenderSpectators(float x, float y, float Width, float Height, int NumSpectators, bool TeamPlay);
+	void RenderScoreboard(float x, float y, float Width, float Height, int Team, const char *pTitle, bool TeamPlay);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
 
@@ -42,7 +41,6 @@ class CScoreboard : public CComponent
 
 	bool m_Active;
 	vec4 m_ScoreboardPosition;
-	vec4 m_SpectatorboardPosition;
 
 public:
 	CScoreboard();
@@ -53,7 +51,6 @@ public:
 
 	bool Active();
 	vec4 GetScoreboardPosition();
-	vec4 GetSpectatorboardPosition();
 };
 
 #endif

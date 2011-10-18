@@ -22,6 +22,7 @@
 #include "voting.h"
 #include "binds.h"
 #include "menus.h"
+#include "scoreboard.h"
 #include "race_demo.h"
 #include "skins.h"
 
@@ -46,7 +47,7 @@ void CHud::OnReset()
 
 void CHud::RenderGameTimer()
 {
-	if(!g_Config.m_ClRenderTime)
+	if(!g_Config.m_ClRenderTime || m_pClient->m_pScoreboard->Active())
 		return;
 		
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
@@ -122,7 +123,7 @@ void CHud::RenderScoreHud()
 				Graphics()->BlendNormal();
 				Graphics()->TextureSet(-1);
 				Graphics()->QuadsBegin();
-				if(!g_Config.m_TcHudMatch)
+				if(!g_Config.m_TcHudMatch || CTeecompUtils::GetForceDmColors(t, m_pClient->m_Snap.m_pLocalInfo->m_Team))
 				{
 					if(t == 0)
 						Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
@@ -132,7 +133,7 @@ void CHud::RenderScoreHud()
 				else
 				{
 					vec3 Col = CTeecompUtils::GetTeamColor(t, m_pClient->m_Snap.m_pLocalInfo->m_Team,
-														   g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+									g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					Graphics()->SetColor(Col.r, Col.g, Col.b, 0.25f);
 				}
 				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
@@ -404,7 +405,7 @@ void CHud::RenderCursor()
 
 void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 {
-	if(!pCharacter)
+	if(!pCharacter || m_pClient->m_pScoreboard->Active())
 		return;
 
 	//mapscreen_to_group(gacenter_x, center_y, layers_game_group());
@@ -466,23 +467,18 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 
 void CHud::RenderSpectatorHud()
 {
-	if(!g_Config.m_ClRenderViewmode)
-		return;
-
-	// store the text
-	char aBuf[128];
-	str_copy(aBuf, m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"), sizeof(aBuf));
-	float tw = TextRender()->TextWidth(0, 7.0f, aBuf, -1);
-
 	// draw the box
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(m_Width-tw-7.0f, m_Height-13.0f, tw+7.0f, 15.0f, 5.0f, CUI::CORNER_TL);
+	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);
 	Graphics()->QuadsEnd();
 
 	// draw the text
-	TextRender()->Text(0, m_Width-tw-3.0f, m_Height-11.0f, 7.0f, aBuf, -1);
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
+		m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"));
+	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
 void CHud::RenderSpeedmeter()
@@ -630,7 +626,7 @@ void CHud::RenderTime()
 
 void CHud::RenderRecord()
 {
-	if(!m_pClient->m_IsRace)
+	if(!m_pClient->m_IsRace || m_pClient->m_pScoreboard->Active())
 		return;
 		
 	// TODO: fix this

@@ -46,7 +46,6 @@ MACRO_CONFIG_INT(ClRenderFLow, cl_render_flow, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_S
 //Hud-Mod
 MACRO_CONFIG_INT(ClRenderTime, cl_render_time, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the Server time on or off")
 MACRO_CONFIG_INT(ClRenderScoreboard, cl_render_scoreboard, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the game over scoreboard on or off")
-MACRO_CONFIG_INT(ClRenderRecordInfo, cl_render_record_info, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the record info on or off when showing the scoreboard")
 MACRO_CONFIG_INT(ClRenderWarmup, cl_render_warmup, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes warmup timer on or off")
 MACRO_CONFIG_INT(ClRenderBroadcast, cl_render_broadcast, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes broadcast on or off")
 MACRO_CONFIG_INT(ClRenderHp, cl_render_hp, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the hp display on or off")
