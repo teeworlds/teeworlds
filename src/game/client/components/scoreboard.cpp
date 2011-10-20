@@ -224,54 +224,31 @@ void CScoreboard::RenderSpectators(float x, float y, float Width, float Height, 
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
-	if(!TeamPlay)
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+	else
+		Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
+	RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
+	if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
 	{
-		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-		else
-			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
-		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
-		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
+		RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+		RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
+		if(TeamPlay && !(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
-			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
-		}
-		else
-		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-			RenderTools()->DrawRoundRectExt(x, y+TitleHight, Width, Height-TitleHight, 15.0f, CUI::CORNER_B);
+			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
+			RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+HeadlineHeight+5.0f, 5.0f, Height-TitleHight-HeadlineHeight-10.0f, 2.0f);
 		}
 	}
 	else
 	{
-		if(g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS)
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-		else
-			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.5f);
-		RenderTools()->DrawRoundRectExt(x, y, Width, TitleHight, 15.0f, CUI::CORNER_T);
-		if(g_Config.m_TcScoreboardInfos&TC_SCORE_TITLE)
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+		RenderTools()->DrawRoundRectExt(x, y+TitleHight, Width, Height-TitleHight, 15.0f, CUI::CORNER_B);
+		if(TeamPlay && !(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
 		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, g_Config.m_TcScoreboardInfos&TC_SCORE_NOCOLORHEADERS ? 0.5f : 0.25f);
-			RenderTools()->DrawRoundRect(x, y+TitleHight, Width, HeadlineHeight, 0.0f);
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-			RenderTools()->DrawRoundRectExt(x, y+TitleHight+HeadlineHeight, Width, Height-TitleHight-HeadlineHeight, 15.0f, CUI::CORNER_B);
-			if(!(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
-			{
-				Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
-				RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+HeadlineHeight+5.0f, 5.0f, Height-TitleHight-HeadlineHeight-10.0f, 2.0f);
-			}
-		}
-		else
-		{
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-			RenderTools()->DrawRoundRectExt(x, y+TitleHight, Width, Height-TitleHight, 15.0f, CUI::CORNER_B);
-			if(!(g_Config.m_TcScoreboardInfos&TC_SCORE_HIDESEPERATOR))
-			{
-				Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
-				RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+5.0f, 5.0f, Height-TitleHight-10.0f, 2.0f);
-			}
+			Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.25f);
+			RenderTools()->DrawRoundRect(x+Width/2-2.5f, y+TitleHight+5.0f, 5.0f, Height-TitleHight-10.0f, 2.0f);
 		}
 	}
 	Graphics()->QuadsEnd();
@@ -500,7 +477,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	TextRender()->Text(0, x+20.0f, y, TitleFontsize, aBuf, -1);
 	
 	float tw = 0.0f;
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+	if(TeamPlay)
 	{
 		if(m_pClient->m_Snap.m_pGameDataObj && !m_pClient->m_IsRace)
 		{

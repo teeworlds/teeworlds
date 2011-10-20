@@ -569,11 +569,8 @@ void CChat::OnRender()
 
 	int64 Now = time_get();
 	float HeightLimit = (m_Show || (m_Mode != MODE_NONE && g_Config.m_ClChatHistoryOnInput)) ? 50.0f : 200.0f;
-	if(m_pClient->m_pScoreboard->Active())
-	{
-		if(ScoreboardPosition.x < 270.0f)
+	if(m_pClient->m_pScoreboard->Active() && ScoreboardPosition.x < 270.0f)
 			HeightLimit = (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4;
-	}
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
@@ -585,11 +582,8 @@ void CChat::OnRender()
 			break;
 
 		float LineWidth = 200.0f;
-		if(m_pClient->m_pScoreboard->Active())
-		{
-			if(ScoreboardPosition.x < 800.0f && y < (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4)
-				LineWidth = (ScoreboardPosition.x-40.0f)/4;
-		}
+		if(m_pClient->m_pScoreboard->Active() && ScoreboardPosition.x < 800.0f && y < (ScoreboardPosition.y+ScoreboardPosition.w+20.0f)/4)
+			LineWidth = (ScoreboardPosition.x-40.0f)/4;
 
 		// get the y offset (calculate it if we haven't done that yet)
 		if(OffsetType == 1 || m_aLines[r].m_YOffset[OffsetType] < 0.0f)

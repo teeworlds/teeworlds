@@ -82,7 +82,7 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderSuddenDeath()
 {
-	if(!g_Config.m_ClRenderTime)
+	if(!g_Config.m_ClRenderTime || m_pClient->m_pScoreboard->Active())
 		return;
 	
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
