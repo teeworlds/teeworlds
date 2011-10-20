@@ -755,6 +755,9 @@ Server best
 
 ##### client-pack #####
 
+Synchronize annimation with server time
+== 
+
 Particle flow (experimental)
 == 
 

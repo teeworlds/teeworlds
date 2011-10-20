@@ -42,6 +42,7 @@ MACRO_CONFIG_INT(ClNameplateClientID, cl_nameplate_client_id, 0, 0, 1, CFGFLAG_C
 MACRO_CONFIG_INT(ClScoreboardClientID, cl_scoreboard_client_id, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the client id in scoreboard")
 MACRO_CONFIG_INT(ClShowGhost, cl_show_ghost, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Shows the ghost tee")
 MACRO_CONFIG_INT(ClRenderFLow, cl_render_flow, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Renders particle flow (experimental)")
+MACRO_CONFIG_INT(ClSyncEnvelopes, cl_sync_emvelopes, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Synchronize annimations with server time")
 
 //Hud-Mod
 MACRO_CONFIG_INT(ClRenderTime, cl_render_time, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the Server time on or off")

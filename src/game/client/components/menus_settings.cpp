@@ -814,6 +814,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		g_Config.m_GfxHighDetail ^= 1;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClSyncEnvelopes, Localize("Synchronize annimation with server time"), g_Config.m_ClSyncEnvelopes, &Button))
+		g_Config.m_ClSyncEnvelopes ^= 1;
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClRenderFLow, Localize("Particle flow (experimental)"), g_Config.m_ClRenderFLow, &Button))
 		g_Config.m_ClRenderFLow ^= 1;
 
