@@ -52,7 +52,7 @@ def copydir(src, dst, excl=[]):
 				shutil.copy(os.path.join(root, name), os.path.join(dst, root, name))
 				
 package = "%s-%s-%s" %(name, version, platform)
-package_dir = package
+package_dir = name
 
 print("cleaning target")
 shutil.rmtree(package_dir, True)
