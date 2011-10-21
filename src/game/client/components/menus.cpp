@@ -28,6 +28,7 @@
 #include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
+#include "maplayers.h"
 #include "countryflags.h"
 #include "menus.h"
 #include "skins.h"
@@ -960,7 +961,7 @@ int CMenus::Render()
 		s_First = false;
 	}
 
-	if(Client()->State() == IClient::STATE_ONLINE || (Client()->State() == IClient::STATE_OFFLINE && Client()->MapLoaded()))
+	if(Client()->State() == IClient::STATE_ONLINE || m_pClient->m_pMapLayers->MenuMapLoaded())
 	{
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;

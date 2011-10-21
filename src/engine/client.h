@@ -89,8 +89,6 @@ public:
 	// networking
 	virtual void EnterGame() = 0;
 
-	virtual const char *LoadBackgroundMap(const char *pName, const char *pFilename) = 0;
-	virtual void UnloadBackgroundMap() = 0;
 	virtual bool MapLoaded() = 0;
 	//
 	virtual int MapDownloadAmount() = 0;

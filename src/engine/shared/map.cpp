@@ -24,9 +24,10 @@ public:
 		m_DataFile.Close();
 	}
 
-	virtual bool Load(const char *pMapName)
+	virtual bool Load(const char *pMapName, IStorage *pStorage)
 	{
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
+		if(!pStorage)
+			pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
 			return false;
 		return m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL);

@@ -780,31 +780,6 @@ bool CClient::MapLoaded()
 	return m_pMap->IsLoaded();
 }
 
-const char * CClient::LoadBackgroundMap(const char *pName, const char *pFilename)
-{
-	static char aErrorMsg[128];
-
-	if(!m_pMap->Load(pFilename))
-	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map '%s' not found", pFilename);
-		return aErrorMsg;
-	}
-
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-
-	str_copy(m_aCurrentMap, pName, sizeof(m_aCurrentMap));
-	m_CurrentMapCrc = m_pMap->Crc();
-
-	return 0x0;
-}
-
-void CClient::UnloadBackgroundMap()
-{
-	m_pMap->Unload();
-}
-
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
 {
 	static char aErrorMsg[128];
