@@ -155,7 +155,7 @@ void CMapLayers::OnRender()
 	CLayers *pLayers = 0;
 	if(Client()->State() == IClient::STATE_ONLINE)
 		pLayers = Layers();
-	else
+	else if(m_pMenuMap->IsLoaded())
 		pLayers = m_pMenuLayers;
 
 	if(!pLayers)
@@ -211,7 +211,7 @@ void CMapLayers::OnRender()
 				Render = true;
 			else if(m_Type == 0)
 			{
-				if(PassedGameLayer)
+				if(PassedGameLayer && Client()->State() == IClient::STATE_ONLINE)
 					return;
 				Render = true;
 			}

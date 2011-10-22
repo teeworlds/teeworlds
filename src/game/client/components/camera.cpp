@@ -26,7 +26,7 @@ CCamera::CCamera()
 
 void CCamera::OnRender()
 {
-	if(Client()->State() != IClient::STATE_OFFLINE)
+	if(Client()->State() == IClient::STATE_ONLINE)
 	{
 		m_Zoom = 1.0f;
 
