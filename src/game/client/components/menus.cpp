@@ -796,7 +796,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 		d[i*Step+2] = v;
 	}
 
-
+	/* same grey like sinks
 	int Freq[256] = {0};
 	int OrgWeight = 0;
 	int NewWeight = 192;
@@ -830,6 +830,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 			d[y*Pitch+x*4+1] = v;
 			d[y*Pitch+x*4+2] = v;
 		}
+	*/
 
 	MenuImage.m_GreyTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
