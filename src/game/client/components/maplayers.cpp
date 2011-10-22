@@ -211,7 +211,7 @@ void CMapLayers::OnRender()
 				Render = true;
 			else if(m_Type == 0)
 			{
-				if(PassedGameLayer && Client()->State() == IClient::STATE_ONLINE)
+				if(PassedGameLayer && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK))
 					return;
 				Render = true;
 			}
