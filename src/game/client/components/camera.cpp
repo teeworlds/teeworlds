@@ -27,7 +27,7 @@ CCamera::CCamera()
 
 void CCamera::OnRender()
 {
-	if(Client()->State() == IClient::STATE_ONLINE)
+	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		m_Zoom = 1.0f;
 
@@ -123,6 +123,6 @@ void CCamera::OnStateChange(int NewState, int OldState)
 {
 	if(OldState == IClient::STATE_OFFLINE)
 		m_MenuCenter = m_Center;
-	else if(NewState != IClient::STATE_ONLINE)
+	else if(NewState != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		m_Center = m_MenuCenter;
 }

@@ -88,14 +88,14 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 
 int CMapImages::Get(int Index) const
 {
-	if(Client()->State() == IClient::STATE_ONLINE)
+	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return m_aTextures[Index];
 	return m_aMenuTextures[Index];
 }
 
 int CMapImages::Num() const
 {
-	if(Client()->State() == IClient::STATE_ONLINE)
+	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return m_Count;
 	return m_MenuCount;
 }

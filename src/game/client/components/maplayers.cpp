@@ -86,7 +86,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	CLayers *pLayers = 0;
 	{
 		int Start, Num;
-		if(pThis->Client()->State() == IClient::STATE_ONLINE)
+		if(pThis->Client()->State() == IClient::STATE_ONLINE || pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 			pLayers = pThis->Layers();
 		else
 			pLayers = pThis->m_pMenuLayers;
@@ -142,18 +142,18 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	}
 	else
 	{
-		s_Time = pThis->Client()->MenuTick() / (float)pThis->Client()->GameTickSpeed();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time, pChannels);
+		s_Time = pThis->Client()->LocalTime();
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 }
 
 void CMapLayers::OnRender()
 {
-	if((Client()->State() != IClient::STATE_ONLINE && !m_pMenuMap))
+	if((Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && !m_pMenuMap))
 		return;
 
 	CLayers *pLayers = 0;
-	if(Client()->State() == IClient::STATE_ONLINE)
+	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		pLayers = Layers();
 	else if(m_pMenuMap->IsLoaded())
 		pLayers = m_pMenuLayers;
