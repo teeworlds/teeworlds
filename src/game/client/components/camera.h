@@ -30,6 +30,7 @@ public:
 	};
 
 	vec2 m_Center;
+	vec2 m_MenuCenter;
 	vec2 m_RotationCenter;
 	float m_Zoom;
 
@@ -42,6 +43,7 @@ public:
 	static void ConSetPosition(IConsole::IResult *pResult, void *pUserData);
 
 	virtual void OnConsoleInit();
+	virtual void OnStateChange(int NewState, int OldState);
 };
 
 #endif

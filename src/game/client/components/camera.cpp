@@ -14,6 +14,7 @@ CCamera::CCamera()
 {
 	m_CamType = CAMTYPE_UNDEFINED;
 	m_RotationCenter = vec2(0.0f, 0.0f);
+	m_MenuCenter = vec2(0.0f, 0.0f);
 
 	m_Positions[POS_INTERNET] = vec2(500.0f, 500.0f);
 	m_Positions[POS_LAN] = vec2(1000.0f, 1000.0f);
@@ -116,4 +117,12 @@ void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 void CCamera::OnConsoleInit()
 {
 	Console()->Register("set_position", "iii", CFGFLAG_CLIENT, ConSetPosition, this, "Sets the rotation position");
+}
+
+void CCamera::OnStateChange(int NewState, int OldState)
+{
+	if(OldState == IClient::STATE_OFFLINE)
+		m_MenuCenter = m_Center;
+	else if(NewState != IClient::STATE_ONLINE)
+		m_Center = m_MenuCenter;
 }
