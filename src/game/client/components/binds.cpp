@@ -91,6 +91,7 @@ void CBinds::SetDefaults()
 	Bind(KEY_TAB, "+scoreboard");
 	Bind('u', "+show_chat");
 	Bind(KEY_F10, "screenshot");
+	Bind(KEY_F11, "fullscreen");
 
 	Bind('a', "+left");
 	Bind('d', "+right");

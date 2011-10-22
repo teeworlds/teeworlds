@@ -756,7 +756,7 @@ int CGraphics_SDL::TryInit()
 	Flags = SDL_OPENGL;
 	Flags |= SDL_GL_DOUBLEBUFFER;
 	Flags |= SDL_HWPALETTE;
-	if(g_Config.m_DbgResizable)
+	if(g_Config.m_GfxResizable)
 		Flags |= SDL_RESIZABLE;
 
 	if(pInfo->hw_available) // ignore_convention
@@ -883,6 +883,14 @@ void CGraphics_SDL::Shutdown()
 	SDL_Quit();
 }
 
+void CGraphics_SDL::Resize(int SizeX, int SizeY)
+{
+	g_Config.m_GfxScreenWidth = SizeX;
+	g_Config.m_GfxScreenHeight = SizeY;
+	TryInit();
+	glViewport(0, 0, g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+}
+
 void CGraphics_SDL::Minimize()
 {
 	SDL_WM_IconifyWindow();
@@ -891,6 +899,12 @@ void CGraphics_SDL::Minimize()
 void CGraphics_SDL::Maximize()
 {
 	// TODO: SDL
+}
+
+void CGraphics_SDL::ToggleFullscreen()
+{
+	g_Config.m_GfxFullscreen = not g_Config.m_GfxFullscreen;
+	TryInit();
 }
 
 int CGraphics_SDL::WindowActive()

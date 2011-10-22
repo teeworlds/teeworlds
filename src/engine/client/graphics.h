@@ -3,6 +3,12 @@
 #ifndef ENGINE_CLIENT_GRAPHICS_H
 #define ENGINE_CLIENT_GRAPHICS_H
 
+#ifdef CONF_PLATFORM_MACOSX
+	#include <OpenGL/glu.h>
+#else
+	#include <GL/glu.h>
+#endif
+
 class CGraphics_OpenGL : public IEngineGraphics
 {
 protected:
@@ -132,8 +138,10 @@ public:
 	virtual bool Init();
 	virtual void Shutdown();
 
+	virtual void Resize(int SizeX, int SizeY);
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual void ToggleFullscreen();
 
 	virtual int WindowActive();
 	virtual int WindowOpen();
