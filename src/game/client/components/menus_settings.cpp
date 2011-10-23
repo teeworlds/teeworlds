@@ -623,8 +623,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// display mode list
 	static float s_ScrollValue = 0;
 	int OldSelected = -1;
-	int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth/G, g_Config.m_GfxScreenHeight/G);
+	int g = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth/g, g_Config.m_GfxScreenHeight/g);
 	UiDoListboxStart(&s_NumNodes , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_NumNodes; ++i)
@@ -640,8 +640,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_aModes[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			int G = gcd(s_aModes[i].m_Width, s_aModes[i].m_Height);
-			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit (%d:%d)", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth, s_aModes[i].m_Width/G, s_aModes[i].m_Height/G);
+			int g = gcd(s_aModes[i].m_Width, s_aModes[i].m_Height);
+			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit (%d:%d)", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth, s_aModes[i].m_Width/g, s_aModes[i].m_Height/g);
 			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, -1);
 		}
 	}
