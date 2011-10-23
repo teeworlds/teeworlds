@@ -903,7 +903,7 @@ void CGraphics_SDL::Maximize()
 
 void CGraphics_SDL::ToggleFullscreen()
 {
-	g_Config.m_GfxFullscreen = not g_Config.m_GfxFullscreen;
+	g_Config.m_GfxFullscreen ^= 1;
 	TryInit();
 }
 

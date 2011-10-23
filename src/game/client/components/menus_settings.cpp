@@ -604,10 +604,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static const int MAX_RESOLUTIONS = 256;
 	static CVideoMode s_aModes[MAX_RESOLUTIONS];
 	static int s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
-	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
-	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
-	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
-	static int s_GfxFullscreen = g_Config.m_GfxFullscreen;
 	static int s_GfxVsync = g_Config.m_GfxVsync;
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
 	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
@@ -627,8 +623,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// display mode list
 	static float s_ScrollValue = 0;
 	int OldSelected = -1;
-	int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
-	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
+	int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth/G, g_Config.m_GfxScreenHeight/G);
 	UiDoListboxStart(&s_NumNodes , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_NumNodes; ++i)
@@ -655,17 +651,14 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		const int Depth = s_aModes[NewSelected].m_Red+s_aModes[NewSelected].m_Green+s_aModes[NewSelected].m_Blue > 16 ? 24 : 16;
 		g_Config.m_GfxColorDepth = Depth;
-		g_Config.m_GfxScreenWidth = s_aModes[NewSelected].m_Width;
-		g_Config.m_GfxScreenHeight = s_aModes[NewSelected].m_Height;
-		CheckSettings = true;
+		Kernel()->RequestInterface<IEngineGraphics>()->Resize(s_aModes[NewSelected].m_Width, s_aModes[NewSelected].m_Height);
 	}
 
 	// switches
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
-		g_Config.m_GfxFullscreen ^= 1;
-		CheckSettings = true;
+		Kernel()->RequestInterface<IEngineGraphics>()->ToggleFullscreen();
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
@@ -704,11 +697,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// check if the new settings require a restart
 	if(CheckSettings)
 	{
-		if(s_GfxScreenWidth == g_Config.m_GfxScreenWidth &&
-			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
-			s_GfxColorDepth == g_Config.m_GfxColorDepth &&
-			s_GfxFullscreen == g_Config.m_GfxFullscreen &&
-			s_GfxVsync == g_Config.m_GfxVsync &&
+		if(s_GfxVsync == g_Config.m_GfxVsync &&
 			s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 			s_GfxTextureQuality == g_Config.m_GfxTextureQuality &&
 			s_GfxTextureCompression == g_Config.m_GfxTextureCompression)
