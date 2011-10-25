@@ -645,10 +645,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// display mode list
 	static float s_ScrollValue = 0;
+	static int s_DisplayModeList = 0;
 	int OldSelected = -1;
 	int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
 	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-	UiDoListboxStart(&s_NumNodes , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_DisplayModeList , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_NumNodes; ++i)
 	{
@@ -769,6 +770,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Localize("Lht."),
 		Localize("Alpha")};
 	int *pColorSlider[4] = {&g_Config.m_UiColorHue, &g_Config.m_UiColorSat, &g_Config.m_UiColorLht, &g_Config.m_UiColorAlpha};
+	static int s_aColorSliders[4] = {0};
 	for(int s = 0; s < 4; s++)
 	{
 		CUIRect Text;
@@ -779,7 +781,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button.HSplitTop(4.0f, 0, &Button);
 
 		float k = (*pColorSlider[s]) / 255.0f;
-		k = DoScrollbarH(pColorSlider[s], &Button, k);
+		k = DoScrollbarH(&s_aColorSliders[s], &Button, k);
 		*pColorSlider[s] = (int)(k*255.0f);
 		UI()->DoLabelScaled(&Text, paLabels[s], 15.0f, -1);
 	}
