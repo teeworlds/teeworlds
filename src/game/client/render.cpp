@@ -104,7 +104,7 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 		float Sa3 = sinf(a3);
 
 		if(Corners&1) // TL
-		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x+r, y+r,
 			x+(1-Ca1)*r, y+(1-Sa1)*r,
 			x+(1-Ca3)*r, y+(1-Sa3)*r,
@@ -130,6 +130,34 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 			x+w-r+Ca1*r, y+h-r+Sa1*r,
 			x+w-r+Ca3*r, y+h-r+Sa3*r,
 			x+w-r+Ca2*r, y+h-r+Sa2*r);
+
+		if(Corners&16) // ITL
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x, y,
+			x+(1-Ca1)*r, y-r+Sa1*r,
+			x+(1-Ca3)*r, y-r+Sa3*r,
+			x+(1-Ca2)*r, y-r+Sa2*r);
+	
+		if(Corners&32) // ITR
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x+w, y,
+			x+w-r+Ca1*r, y-r+Sa1*r,
+			x+w-r+Ca3*r, y-r+Sa3*r,
+			x+w-r+Ca2*r, y-r+Sa2*r);
+	
+		if(Corners&64) // IBL
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x, y+h,
+			x+(1-Ca1)*r, y+h+(1-Sa1)*r,
+			x+(1-Ca3)*r, y+h+(1-Sa3)*r,
+			x+(1-Ca2)*r, y+h+(1-Sa2)*r);
+
+		if(Corners&128) // IBR
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x+w, y+h,
+			x+w-r+Ca1*r, y+h+(1-Sa1)*r,
+			x+w-r+Ca3*r, y+h+(1-Sa3)*r,
+			x+w-r+Ca2*r, y+h+(1-Sa2)*r);
 	}
 	Graphics()->QuadsDrawFreeform(ArrayF, NumItems);
 

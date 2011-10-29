@@ -605,7 +605,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_InternetButton=0;
-		if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL) && m_ActivePage!=PAGE_INTERNET)
+		if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL|CUI::CORNER_IBL) && m_ActivePage!=PAGE_INTERNET)
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -677,7 +677,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 	Box.VSplitRight(90.0f, &Box, &Button);
 	static int s_QuitButton=0;
-	if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_T))
+	if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
 		m_Popup = POPUP_QUIT;
 
 	Box.VSplitRight(10.0f, &Box, &Button);
@@ -999,7 +999,8 @@ int CMenus::Render()
 		{
 			// do tab bar
 			Screen.HSplitTop(24.0f, &TabBar, &MainView);
-			TabBar.VMargin(20.0f, &TabBar);
+			if(Client()->State() != IClient::STATE_OFFLINE)
+				TabBar.VMargin(20.0f, &TabBar);
 			RenderMenubar(TabBar);
 
 			// news is not implemented yet
