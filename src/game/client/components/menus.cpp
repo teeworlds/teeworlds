@@ -61,7 +61,7 @@ CMenus::CMenus()
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
 
-	m_MenuPage = MENU_START;
+	m_MenuPage = PAGE_START;
 
 	m_EscapePressed = false;
 	m_EnterPressed = false;
@@ -123,12 +123,12 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, 
 	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
 }
 
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor)
+int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor, int Corners)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds);
 
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, r);
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), Corners, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
@@ -585,7 +585,7 @@ int CMenus::RenderMenubar(CUIRect r)
 	CUIRect Box = r;
 	CUIRect Button;
 
-	m_ActivePage = g_Config.m_UiPage;
+	m_ActivePage = m_MenuPage;
 	int NewPage = -1;
 
 	if(Client()->State() != IClient::STATE_OFFLINE)
@@ -593,7 +593,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 	if(Client()->State() == IClient::STATE_OFFLINE)
 	{
-		// offline menus
+		/*/ offline menus
 		if(0) // this is not done yet
 		{
 			Box.VSplitLeft(90.0f, &Button, &Box);
@@ -640,7 +640,12 @@ int CMenus::RenderMenubar(CUIRect r)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			DemolistPopulate();
 			NewPage = PAGE_DEMOS;
-		}
+		}*/
+
+		Box.VSplitRight(90.0f, &Box, &Button);
+		static int s_MenuButton=0;
+		if(DoButton_Menu(&s_MenuButton, Localize("Menu"), 0, &Button, 10.0f, 0.0f, CUI::CORNER_T|CUI::CORNER_IBR))
+			NewPage = PAGE_START;
 	}
 	else
 	{
@@ -664,6 +669,11 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
 			NewPage = PAGE_CALLVOTE;
+
+		Box.VSplitRight(90.0f, &Box, &Button);
+		static int s_QuitButton=0;
+		if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
+			m_Popup = POPUP_QUIT;
 	}
 
 	/*
@@ -673,12 +683,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		g_Config.m_UiPage = PAGE_SYSTEM;
 
 	box.VSplitRight(30.0f, &box, 0);
-	*/
-
-	Box.VSplitRight(90.0f, &Box, &Button);
-	static int s_QuitButton=0;
-	if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
-		m_Popup = POPUP_QUIT;
+	
 
 	Box.VSplitRight(10.0f, &Box, &Button);
 	Box.VSplitRight(130.0f, &Box, &Button);
@@ -688,12 +693,12 @@ int CMenus::RenderMenubar(CUIRect r)
 		if(Client()->State() == IClient::STATE_OFFLINE)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
 		NewPage = PAGE_SETTINGS;
-	}
+	}*/
 
 	if(NewPage != -1)
 	{
 		if(Client()->State() == IClient::STATE_OFFLINE)
-			g_Config.m_UiPage = NewPage;
+			m_MenuPage = NewPage;
 		else
 			m_GamePage = NewPage;
 	}
@@ -939,24 +944,24 @@ int CMenus::Render()
 	static bool s_First = true;
 	if(s_First)
 	{
-		if(g_Config.m_UiPage == PAGE_INTERNET)
+		if(m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_START)
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 		}
-		else if(g_Config.m_UiPage == PAGE_LAN)
+		else if(m_MenuPage == PAGE_LAN)
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 		}
-		else if(g_Config.m_UiPage == PAGE_FAVORITES)
+		else if(m_MenuPage == PAGE_FAVORITES)
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 		}
-		else if(g_Config.m_UiPage == PAGE_DEMOS)
+		else if(m_MenuPage == PAGE_DEMOS)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
-		else if(g_Config.m_UiPage == PAGE_SETTINGS)
+		else if(m_MenuPage == PAGE_SETTINGS)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
@@ -990,12 +995,12 @@ int CMenus::Render()
 
 	if(m_Popup == POPUP_NONE)
 	{
-		if(m_MenuPage == MENU_START)
+		if(m_MenuPage == PAGE_START && Client()->State() == IClient::STATE_OFFLINE)
 		{
 			RenderLogo(Screen);
 			RenderStartMenu(Screen);
 		}
-		else if(m_MenuPage == MENU_PAGE)
+		else
 		{
 			// do tab bar
 			Screen.HSplitTop(24.0f, &TabBar, &MainView);
@@ -1004,11 +1009,11 @@ int CMenus::Render()
 			RenderMenubar(TabBar);
 
 			// news is not implemented yet
-			if(g_Config.m_UiPage <= PAGE_NEWS || g_Config.m_UiPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiPage >= PAGE_GAME && g_Config.m_UiPage <= PAGE_CALLVOTE))
+			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
 			{
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-				g_Config.m_UiPage = PAGE_INTERNET;
-			}
+				m_MenuPage = PAGE_INTERNET;
+			}*/
 
 			// render current page
 			if(Client()->State() != IClient::STATE_OFFLINE)
@@ -1024,18 +1029,25 @@ int CMenus::Render()
 				else if(m_GamePage == PAGE_SETTINGS)
 					RenderSettings(MainView);
 			}
-			else if(g_Config.m_UiPage == PAGE_NEWS)
-				RenderNews(MainView);
-			else if(g_Config.m_UiPage == PAGE_INTERNET)
-				RenderServerbrowser(MainView);
-			else if(g_Config.m_UiPage == PAGE_LAN)
-				RenderServerbrowser(MainView);
-			else if(g_Config.m_UiPage == PAGE_DEMOS)
-				RenderDemoList(MainView);
-			else if(g_Config.m_UiPage == PAGE_FAVORITES)
-				RenderServerbrowser(MainView);
-			else if(g_Config.m_UiPage == PAGE_SETTINGS)
-				RenderSettings(MainView);
+			else
+			{
+				if(m_MenuPage == PAGE_NEWS)
+					RenderNews(MainView);
+				else if(m_MenuPage == PAGE_INTERNET)
+					RenderServerbrowser(MainView);
+				else if(m_MenuPage == PAGE_LAN)
+					RenderServerbrowser(MainView);
+				else if(m_MenuPage == PAGE_DEMOS)
+					RenderDemoList(MainView);
+				else if(m_MenuPage == PAGE_FAVORITES)
+					RenderServerbrowser(MainView);
+				else if(m_MenuPage == PAGE_SETTINGS)
+					RenderSettings(MainView);
+
+				// handle back with esc
+				if(m_EscapePressed)
+					m_MenuPage = PAGE_START;
+			}
 		}
 	}
 	else

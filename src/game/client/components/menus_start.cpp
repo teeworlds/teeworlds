@@ -28,7 +28,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	Menu.HSplitTop(40.0f, &Button, &Menu);
 	static int s_PlayButton = 0;
 	if(DoButton_MenuImage(&s_PlayButton, Localize("Play Game"), 0, &Button, "play_game", 10.0f, 0.5f))
-		m_MenuPage = MENU_PAGE;
+		m_MenuPage = PAGE_INTERNET;
 
 	Menu.HSplitTop(5.0f, 0, &Menu); // little space
 	Menu.HSplitTop(40.0f, &Button, &Menu);
@@ -44,6 +44,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_DemoButton = 0;
 	if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "demos", 10.0f, 0.5f))
 	{
+		m_MenuPage = PAGE_DEMOS;
 	}
 
 	Menu.HSplitTop(5.0f, 0, &Menu); // little space
@@ -58,6 +59,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_SettingsButton = 0;
 	if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 10.0f, 0.5f))
 	{
+		m_MenuPage = PAGE_SETTINGS;
 	}
 
 	Menu.HSplitBottom(45.0f, &Menu, &Button);
