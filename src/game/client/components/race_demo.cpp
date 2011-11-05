@@ -179,10 +179,10 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 		char aPlayerName[MAX_NAME_LENGTH];
 		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
 		CGhost::ClearFilename(aPlayerName, MAX_NAME_LENGTH);
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%5.2f_%s.demo", pDemo, m_Time, aPlayerName);
+		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%6.3f_%s.demo", pDemo, m_Time, aPlayerName);
 	}
 	else
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%5.2f.demo", pDemo, m_Time);
+		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%6.3f.demo", pDemo, m_Time);
 
 	str_format(aOldFilename, sizeof(aOldFilename), "demos/%s_tmp.demo", m_pMap);
 	
