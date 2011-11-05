@@ -661,7 +661,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		{
 			Box.VSplitLeft(100.0f, &Button, &Box);
 			static int s_InternetButton=0;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_T|CUI::CORNER_IBL))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -672,7 +672,7 @@ int CMenus::RenderMenubar(CUIRect r)
 			//Box.VSplitLeft(4.0f, 0, &Box);
 			Box.VSplitLeft(80.0f, &Button, &Box);
 			static int s_LanButton=0;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0))
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, CUI::CORNER_T))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
@@ -683,7 +683,7 @@ int CMenus::RenderMenubar(CUIRect r)
 			//box.VSplitLeft(4.0f, 0, &box);
 			Box.VSplitLeft(110.0f, &Button, &Box);
 			static int s_FavoritesButton=0;
-			if(DoButton_MenuTabTop(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR))
+			if(DoButton_MenuTabTop(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_T))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
@@ -1054,7 +1054,8 @@ int CMenus::Render()
 		else
 		{
 			// do tab bar
-			Screen.HSplitTop(24.0f, &TabBar, &MainView);
+			Screen.VMargin(Screen.w/2-365.0f, &MainView);
+			MainView.HSplitTop(24.0f, &TabBar, &MainView);
 			if(Client()->State() != IClient::STATE_OFFLINE)
 				TabBar.VMargin(20.0f, &TabBar);
 			RenderMenubar(TabBar);
