@@ -76,10 +76,10 @@ CMenus::CMenus()
 	m_FriendlistSelectedIndex = -1;
 }
 
-float *CMenus::ButtonFade(const void *pID, float Seconds)
+float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)
 {
 	float *pFade = (float*)pID;
-	if(UI()->HotItem() == pID)
+	if(UI()->HotItem() == pID || Checked)
 		*pFade = Seconds;
 	else if(*pFade > 0.0f)
 	{
@@ -192,6 +192,20 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarActive, Corners, 10.0f);
 	else
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarInactive, Corners, 10.0f);
+	CUIRect Temp;
+	pRect->HMargin(2.0f, &Temp);
+	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
+
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+}
+
+int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
+{
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds, Checked);
+
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), Corners, 12.0f);
+
 	CUIRect Temp;
 	pRect->HMargin(2.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
@@ -642,9 +656,46 @@ int CMenus::RenderMenubar(CUIRect r)
 			NewPage = PAGE_DEMOS;
 		}*/
 
+		// render menu tabs
+		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITES)
+		{
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_InternetButton=0;
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
+			{
+				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+				NewPage = PAGE_INTERNET;
+				g_Config.m_UiBrowserPage = PAGE_INTERNET;
+			}
+
+			//Box.VSplitLeft(4.0f, 0, &Box);
+			Box.VSplitLeft(80.0f, &Button, &Box);
+			static int s_LanButton=0;
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, 0))
+			{
+				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+				NewPage = PAGE_LAN;
+				g_Config.m_UiBrowserPage = PAGE_LAN;
+			}
+
+			//box.VSplitLeft(4.0f, 0, &box);
+			Box.VSplitLeft(110.0f, &Button, &Box);
+			static int s_FavoritesButton=0;
+			if(DoButton_MenuTabTop(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR))
+			{
+				m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+				NewPage = PAGE_FAVORITES;
+				g_Config.m_UiBrowserPage = PAGE_FAVORITES;
+			}
+		}
+
+		// back to menu
 		Box.VSplitRight(90.0f, &Box, &Button);
 		static int s_MenuButton=0;
-		if(DoButton_Menu(&s_MenuButton, Localize("Menu"), 0, &Button, 10.0f, 0.0f, CUI::CORNER_T|CUI::CORNER_IBR))
+		if(DoButton_Menu(&s_MenuButton, Localize("Menu"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_T|CUI::CORNER_IBR))
 			NewPage = PAGE_START;
 	}
 	else

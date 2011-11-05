@@ -927,7 +927,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	CUIRect ServerList, ToolBox, StatusBox, TabBar;
 
 	// background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 12.0f);
 	MainView.Margin(10.0f, &MainView);
 
 	// create server list, status box, tab bar and tool box area

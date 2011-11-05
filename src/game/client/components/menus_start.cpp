@@ -28,7 +28,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	Menu.HSplitTop(40.0f, &Button, &Menu);
 	static int s_PlayButton = 0;
 	if(DoButton_MenuImage(&s_PlayButton, Localize("Play Game"), 0, &Button, "play_game", 10.0f, 0.5f))
-		m_MenuPage = PAGE_INTERNET;
+		m_MenuPage = g_Config.m_UiBrowserPage;
 
 	Menu.HSplitTop(5.0f, 0, &Menu); // little space
 	Menu.HSplitTop(40.0f, &Button, &Menu);
