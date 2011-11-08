@@ -691,6 +691,43 @@ int CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_FAVORITES;
 			}
 		}
+		else if(m_MenuPage == PAGE_SETTINGS)
+		{
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_GeneralButton=0;
+			if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_T|CUI::CORNER_IBL))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+			}
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_PlayerButton=0;
+			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button, CUI::CORNER_T))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+			}
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_ControlsButton=0;
+			if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button, CUI::CORNER_T))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
+			}
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_GraphicsButton=0;
+			if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button, CUI::CORNER_T))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+			}
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_SoundButton=0;
+			if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button, CUI::CORNER_T))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+			}
+		}
 
 		// back to menu
 		Box.VSplitRight(90.0f, &Box, &Button);
@@ -1055,6 +1092,7 @@ int CMenus::Render()
 		{
 			// do tab bar
 			Screen.VMargin(Screen.w/2-365.0f, &MainView);
+			MainView.HMargin(20.0f, &MainView);
 			MainView.HSplitTop(24.0f, &TabBar, &MainView);
 			if(Client()->State() != IClient::STATE_OFFLINE)
 				TabBar.VMargin(20.0f, &TabBar);

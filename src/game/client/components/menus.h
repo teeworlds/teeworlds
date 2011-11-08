@@ -126,6 +126,12 @@ class CMenus : public CComponent
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
 		PAGE_START,
+
+		SETTINGS_GENERAL=0,
+		SETTINGS_PLAYER,
+		SETTINGS_CONTROLS,
+		SETTINGS_GRAPHICS,
+		SETTINGS_SOUND,
 	};
 
 	int m_GamePage;
@@ -176,7 +182,6 @@ class CMenus : public CComponent
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
-	int m_SettingPlayerPage;
 
 	//
 	bool m_EscapePressed;
@@ -287,7 +292,6 @@ class CMenus : public CComponent
 	void RenderLanguageSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
-	void RenderSettingsTee(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
