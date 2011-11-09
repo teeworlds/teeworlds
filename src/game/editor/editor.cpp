@@ -3798,6 +3798,14 @@ void CEditorMap::DeleteEnvelope(int Index)
 						Layer->m_lQuads[k].m_ColorEnv--;
 				}
 			}
+			else if(m_lGroups[i]->m_lLayers[j]->m_Type == LAYERTYPE_TILES)
+			{
+				CLayerTiles *Layer = static_cast<CLayerTiles *>(m_lGroups[i]->m_lLayers[j]);
+				if(Layer->m_ColorEnv == Index)
+					Layer->m_ColorEnv = -1;
+				if(Layer->m_ColorEnv > Index)
+					Layer->m_ColorEnv--;
+			}
 
 	m_lEnvelopes.remove_index(Index);
 }
