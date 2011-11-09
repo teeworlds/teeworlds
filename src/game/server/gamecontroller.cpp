@@ -576,7 +576,7 @@ int IGameController::GetAutoTeam(int NotThisID)
 		if(aNumplayers[TEAM_RED] == aNumplayers[TEAM_BLUE])
 		{
 			if(m_aTeamscore[TEAM_RED] == m_aTeamscore[TEAM_BLUE])
-				Team = rand() % 2;
+				Team = (rand() % 2) ? TEAM_BLUE : TEAM_RED;
 			else
 				Team = m_aTeamscore[TEAM_RED] > m_aTeamscore[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
 		}
