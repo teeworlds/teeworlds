@@ -508,7 +508,7 @@ int CDataFileWriter::AddData(int Size, void *pData)
 	unsigned long s = compressBound(Size);
 	void *pCompData = mem_alloc(s, 1); // temporary buffer that we use during compression
 
-	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size); // ignore_convention
+	int Result = compress2((Bytef*)pCompData, &s, (Bytef*)pData, Size, Z_BEST_COMPRESSION); // ignore_convention
 	if(Result != Z_OK)
 	{
 		dbg_msg("datafile", "compression error %d", Result);
