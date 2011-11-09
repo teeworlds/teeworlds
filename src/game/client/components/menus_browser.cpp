@@ -19,6 +19,30 @@
 
 #include "menus.h"
 
+// filters
+CMenus::BrowserFilter::BrowserFilter(bool Custom, const char* pName)
+{
+	m_Extended = true;
+	m_Custom = Custom;
+	str_copy(m_aName, pName, sizeof(m_aName));
+	m_Filter = -1;
+}
+
+void CMenus::BrowserFilter::Switch()
+{
+	m_Extended ^= 1;
+}
+
+bool CMenus::BrowserFilter::Extended()
+{
+	return m_Extended;
+}
+
+void CMenus::RemoveFilter(int Index)
+{
+	m_lFilters.remove_index(Index);
+}
+
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {

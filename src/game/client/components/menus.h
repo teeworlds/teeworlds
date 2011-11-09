@@ -254,6 +254,24 @@ class CMenus : public CComponent
 
 	void FriendlistOnUpdate();
 
+	class BrowserFilter
+	{
+		bool m_Extended;
+		bool m_Custom;
+		char m_aName[64];
+		int m_Filter;
+
+	public:
+		BrowserFilter() {}
+		BrowserFilter(bool Custom, const char* pName);
+		void Switch();
+		bool Extended();
+	};
+
+	array<BrowserFilter> m_lFilters;
+
+	void RemoveFilter(int Index);
+		
 	// found in menus.cpp
 	int Render();
 	//void render_background();

@@ -996,6 +996,9 @@ void CMenus::OnInit()
 	exit(-1);
 	// */
 
+	// clear filter lists
+	m_lFilters.clear();
+
 	if(g_Config.m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
 	g_Config.m_ClShowWelcome = 0;
