@@ -596,10 +596,6 @@ void CGameClient::OnRender()
 		}
 		m_LastSendInfo = 0;
 	}
-	
-	bool IsTeamPlay = false;
-	if(m_Snap.m_pGameInfoObj)
-		IsTeamPlay = (m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
 }
 
 void CGameClient::OnRelease()

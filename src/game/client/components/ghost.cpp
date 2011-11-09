@@ -211,8 +211,6 @@ void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecor
 
 	float IntraTick = Client()->PredIntraGameTick();
 
-	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
-	vec2 Direction = GetDirection((int)(Angle*256.0f));
 	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 
 	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);

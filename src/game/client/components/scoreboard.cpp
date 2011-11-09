@@ -696,12 +696,9 @@ void CScoreboard::OnRender()
 
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
-		float HeadlineFontsize = 22.0f;
 		float HeadlineHeight = 30.0f;
-		float TitleFontsize = 30.0f;
 		float TitleHight = 40.0f;
 		float LineHeight = 40.0f;
-		float TeeSizeMod = 0.8f;
 
 		bool TeamPlay = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS;
 
