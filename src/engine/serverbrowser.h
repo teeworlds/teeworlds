@@ -94,12 +94,14 @@ public:
 
 	virtual int NumServers() const = 0;
 
-	virtual int NumSortedServers() const = 0;
-	virtual const CServerInfo *SortedGet(int Index) const = 0;
+	virtual int NumSortedServers(int Index) const = 0;
+	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
 
 	virtual bool IsFavorite(const NETADDR &Addr) const = 0;
 	virtual void AddFavorite(const NETADDR &Addr) = 0;
 	virtual void RemoveFavorite(const NETADDR &Addr) = 0;
+
+	virtual void AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
 };
 
 #endif

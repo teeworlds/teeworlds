@@ -152,7 +152,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	CUIRect Scroll;
 	View.VSplitRight(15, &View, &Scroll);
 
-	int NumServers = ServerBrowser()->NumSortedServers();
+	int NumServers = ServerBrowser()->NumSortedServers(0);
 
 	// display important messages in the middle of the screen so no
 	// users misses it
@@ -222,7 +222,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				m_SelectedIndex = NewIndex;
 
-				const CServerInfo *pItem = ServerBrowser()->SortedGet(m_SelectedIndex);
+				const CServerInfo *pItem = ServerBrowser()->SortedGet(0, m_SelectedIndex);
 				str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 			}
 		}
@@ -248,7 +248,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	for (int i = 0; i < NumServers; i++)
 	{
 		int ItemIndex = i;
-		const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
+		const CServerInfo *pItem = ServerBrowser()->SortedGet(0, ItemIndex);
 		NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
 		CUIRect Row;
 		CUIRect SelectHitBox;
@@ -438,7 +438,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(NewSelected != -1)
 	{
 		// select the new server
-		const CServerInfo *pItem = ServerBrowser()->SortedGet(NewSelected);
+		const CServerInfo *pItem = ServerBrowser()->SortedGet(0, NewSelected);
 		str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 		if(Input()->MouseDoubleClick())
 			Client()->Connect(g_Config.m_UiServerAddress);
@@ -479,7 +479,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(ServerBrowser()->IsRefreshing())
 		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
 	else
-		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers);
+		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(0), ServerBrowser()->NumServers(), NumPlayers);
 	Status.VSplitRight(TextRender()->TextWidth(0, 14.0f, aBuf, -1), 0, &Status);
 	UI()->DoLabelScaled(&Status, aBuf, 14.0f, -1);
 }
@@ -629,7 +629,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	CUIRect ServerDetails = View;
 	CUIRect ServerScoreBoard, ServerHeader;
 
-	const CServerInfo *pSelectedServer = ServerBrowser()->SortedGet(m_SelectedIndex);
+	const CServerInfo *pSelectedServer = ServerBrowser()->SortedGet(0, m_SelectedIndex);
 
 	// split off a piece to use for scoreboard
 	ServerDetails.HSplitTop(90.0f, &ServerDetails, &ServerScoreBoard);
@@ -868,11 +868,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	if(Activated && !m_EnterPressed && m_lFriends[m_FriendlistSelectedIndex].m_NumFound)
 	{
 		bool Found = false;
-		int NumServers = ServerBrowser()->NumSortedServers();
+		int NumServers = ServerBrowser()->NumSortedServers(0);
 		for (int i = 0; i < NumServers && !Found; i++)
 		{
 			int ItemIndex = m_SelectedIndex != -1 ? (m_SelectedIndex+i+1)%NumServers : i;
-			const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
+			const CServerInfo *pItem = ServerBrowser()->SortedGet(0, ItemIndex);
 			if(pItem->m_FriendState != IFriends::FRIEND_NO)
 			{
 				for(int j = 0; j < pItem->m_NumClients && !Found; ++j)
