@@ -657,7 +657,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		}*/
 
 		// render menu tabs
-		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITES)
+		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FRIENDS)
 		{
 			Box.VSplitLeft(100.0f, &Button, &Box);
 			static int s_InternetButton=0;
@@ -678,17 +678,6 @@ int CMenus::RenderMenubar(CUIRect r)
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
-			}
-
-			//box.VSplitLeft(4.0f, 0, &box);
-			Box.VSplitLeft(110.0f, &Button, &Box);
-			static int s_FavoritesButton=0;
-			if(DoButton_MenuTabTop(&s_FavoritesButton, Localize("Favorites"), m_ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_T))
-			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
-				NewPage = PAGE_FAVORITES;
-				g_Config.m_UiBrowserPage = PAGE_FAVORITES;
 			}
 		}
 		else if(m_MenuPage == PAGE_SETTINGS)
@@ -997,7 +986,7 @@ void CMenus::OnInit()
 	// */
 
 	// clear filter lists
-	m_lFilters.clear();
+	//m_lFilters.clear();
 
 	if(g_Config.m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
@@ -1044,11 +1033,6 @@ int CMenus::Render()
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		}
-		else if(m_MenuPage == PAGE_FAVORITES)
-		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_FAVORITES);
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
@@ -1132,7 +1116,7 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_DEMOS)
 					RenderDemoList(MainView);
-				else if(m_MenuPage == PAGE_FAVORITES)
+				else if(m_MenuPage == PAGE_FRIENDS)
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
@@ -1689,6 +1673,13 @@ bool CMenus::OnInput(IInput::CEvent e)
 		return true;
 	}
 	return false;
+}
+
+void CMenus::OnConsoleInit()
+{
+	// add filters
+	m_lFilters.add(CBrowserFilter(false, Localize("Standard"), ServerBrowser(), 79872, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(false, Localize("Favorites"), ServerBrowser(), 66560, 999, -1, "", ""));
 }
 
 void CMenus::OnStateChange(int NewState, int OldState)

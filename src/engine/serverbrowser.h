@@ -28,7 +28,7 @@ public:
 		int m_FriendState;
 	};
 
-	int m_SortedIndex;
+	//int m_SortedIndex;
 	int m_ServerIndex;
 
 	NETADDR m_NetAddr;
@@ -76,7 +76,6 @@ public:
 
 		TYPE_INTERNET = 0,
 		TYPE_LAN = 1,
-		TYPE_FAVORITES = 2,
 
 		SET_MASTER_ADD=1,
 		SET_FAV_ADD,
@@ -84,7 +83,20 @@ public:
 
 		FLAG_PASSWORD	=1,
 		FLAG_PURE		=2,
-		FLAG_PUREMAP	=4
+		FLAG_PUREMAP	=4,
+
+		FILTER_EMPTY=32,
+		FILTER_FULL=64,
+		FILTER_SPECTATORS=128,
+		FILTER_FRIENDS=256,
+		FILTER_PW=512,
+		FILTER_FAVORITE=1024,
+		FILTER_COMPAT_VERSION=2048,
+		FILTER_PURE=4096,
+		FILTER_PURE_MAP=8192,
+		FILTER_GAMETYPE_STRICT=16384,
+		FILTER_COUNTRY=32768,
+		FILTER_PING=65536,
 	};
 
 	virtual void Refresh(int Type) = 0;
@@ -101,7 +113,8 @@ public:
 	virtual void AddFavorite(const NETADDR &Addr) = 0;
 	virtual void RemoveFavorite(const NETADDR &Addr) = 0;
 
-	virtual void AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
+	virtual int AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
+	virtual void RemoveFilter(int Index) = 0;
 };
 
 #endif

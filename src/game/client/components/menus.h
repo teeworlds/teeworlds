@@ -121,7 +121,7 @@ class CMenus : public CComponent
 		PAGE_CALLVOTE,
 		PAGE_INTERNET,
 		PAGE_LAN,
-		PAGE_FAVORITES,
+		PAGE_FRIENDS,
 		PAGE_DEMOS,
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
@@ -254,21 +254,26 @@ class CMenus : public CComponent
 
 	void FriendlistOnUpdate();
 
-	class BrowserFilter
+	class CBrowserFilter
 	{
 		bool m_Extended;
 		bool m_Custom;
 		char m_aName[64];
 		int m_Filter;
+		class IServerBrowser *m_pServerBrowser;
 
 	public:
-		BrowserFilter() {}
-		BrowserFilter(bool Custom, const char* pName);
+		CBrowserFilter() {}
+		CBrowserFilter(bool Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress);
 		void Switch();
-		bool Extended();
+		bool Extended() const;
+		bool Custom() const;
+
+		int NumSortedServers() const;
+		const CServerInfo *SortedGet(int Index) const;
 	};
 
-	array<BrowserFilter> m_lFilters;
+	array<CBrowserFilter> m_lFilters;
 
 	void RemoveFilter(int Index);
 		
@@ -331,6 +336,7 @@ public:
 
 	virtual void OnInit();
 
+	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnReset();
 	virtual void OnRender();

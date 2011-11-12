@@ -31,22 +31,7 @@ public:
 	class CServerFilter
 	{
 	public:
-		enum
-		{
-			FILTER_EMPTY=16,
-			FILTER_FULL=32,
-			FILTER_SPECTATORS=64,
-			FILTER_FRIENDS=128,
-			FILTER_PW=256,
-			FILTER_COMPAT_VERSION=1024,
-			FILTER_PURE=2048,
-			FILTER_PURE_MAP=4096,
-			FILTER_GAMETYPE_STRICT=8192,
-			FILTER_COUNTRY=16384,
-			FILTER_PING=32768,
-		};
-
-		CServerBrowser *pServerBrowser;
+		CServerBrowser *m_pServerBrowser;
 
 		int m_SortHash;
 		char m_aGametype[32];
@@ -59,7 +44,7 @@ public:
 
 		int *m_pSortedServerlist;
 
-		CServerEntry **m_ppServerlist;
+		~CServerFilter();
 
 		// sorting criterions
 		bool SortCompareName(int Index1, int Index2) const;
@@ -76,7 +61,8 @@ public:
 
 	array<CServerFilter> m_lFilters;
 
-	void AddFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+	int AddFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+	void RemoveFilter(int Index);
 		
 	CServerBrowser();
 
@@ -115,6 +101,8 @@ private:
 	int m_NumFavoriteServers;
 
 	CServerEntry *m_aServerlistIp[256]; // ip hash list
+
+	CServerEntry **m_ppServerlist;
 
 	CServerEntry *m_pFirstReqServer; // request list
 	CServerEntry *m_pLastReqServer;
