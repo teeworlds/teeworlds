@@ -45,7 +45,7 @@ void CClientWebapp::OnResponse(CHttpConnection *pCon)
 	{
 		if(!Error && Json)
 		{
-			for(int i = 0; i < JsonData.size(); i++)
+			for(unsigned int i = 0; i < JsonData.size(); i++)
 			{
 				NETADDR ServerAddress;
 				if(m_pClient->Client()->CheckHost(JsonData[i].asCString(), &ServerAddress))
