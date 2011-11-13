@@ -83,9 +83,16 @@ if include_src:
 	shutil.copy("configure.lua", package_dir)
 
 if use_bundle:
-	os.system("lipo -create -output "+name+"_srv "+name+"_srv"+"_ppc "+name+"_srv"+"_x86")
-	os.system("lipo -create -output "+name+" "+name+"_ppc "+name+"_x86")
-	os.system("lipo -create -output serverlaunch serverlaunch_ppc serverlaunch_x86")
+	bins = [name, name+'_srv', 'serverlaunch']
+	platforms = ('x86', 'x86_64', 'ppc')
+	for bin in bins:
+		to_lipo = []
+		for p in platforms:
+			fname = bin+'_'+p
+			if os.path.isfile(fname):
+				to_lipo.append(fname)
+		if to_lipo:
+			os.system("lipo -create -output "+bin+" "+" ".join(to_lipo))
 
 	# create Teeworlds appfolder
 	clientbundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
