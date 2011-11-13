@@ -187,6 +187,7 @@ function build(settings)
 	-- build the small libraries
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
+	json = Compile(settings, Collect("src/engine/external/json/*.cpp"))
 
 	-- build game components
 	engine_settings = settings:Copy()
@@ -228,7 +229,7 @@ function build(settings)
 	game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), client_content_source)
 	game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), server_content_source)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
-	http = Compile(settings, Collect("src/game/http/*.cpp"))
+	game_http = Compile(settings, Collect("src/game/http/*.cpp"))
 
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
@@ -252,7 +253,7 @@ function build(settings)
 		client_link_other, client_osxlaunch, game_http, json)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
-		game_shared, game_server, zlib, server_link_other, http)
+		game_shared, game_server, zlib, server_link_other, game_http)
 
 	serverlaunch = {}
 	if platform == "macosx" then
