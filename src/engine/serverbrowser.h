@@ -42,6 +42,7 @@ public:
 	int m_NumPlayers;
 	int m_Flags;
 	int m_Favorite;
+	int m_Teerace;
 	int m_Latency; // in ms
 	char m_aGameType[16];
 	char m_aName[64];
@@ -96,6 +97,9 @@ public:
 	virtual bool IsFavorite(const NETADDR &Addr) const = 0;
 	virtual void AddFavorite(const NETADDR &Addr) = 0;
 	virtual void RemoveFavorite(const NETADDR &Addr) = 0;
+
+	virtual bool IsTeerace(const NETADDR &Addr) const = 0;
+	virtual void AddTeerace(const NETADDR &Addr) = 0;
 };
 
 #endif

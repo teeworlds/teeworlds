@@ -20,6 +20,7 @@ enum
 
 	// client
 	WEB_API_TOKEN = 0,
+	WEB_SERVER_LIST,
 };
 
 class CWebData

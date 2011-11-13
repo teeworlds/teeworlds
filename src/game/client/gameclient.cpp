@@ -377,6 +377,10 @@ void CGameClient::OnInit()
 
 	// init webapp
 	m_pWebapp = new CClientWebapp(this);
+
+	// get Teerace server list
+	CRequest *pRequest = m_pWebapp->CreateRequest("anonclient/servers/", CRequest::HTTP_GET);
+	m_pWebapp->SendRequest(pRequest, WEB_SERVER_LIST);
 }
 
 void CGameClient::DispatchInput()
@@ -1143,7 +1147,7 @@ void CGameClient::OnNewSnapshot()
 				m_IsRace = true;
 				
 				// send login
-				if(g_Config.m_WaApiToken[0])
+				if(ServerBrowser()->IsTeerace(CurrentServerInfo.m_NetAddr) && g_Config.m_WaApiToken[0])
 				{
 					char aLogin[64];
 					str_format(aLogin, sizeof(aLogin), "teerace:%s", g_Config.m_WaApiToken);

@@ -36,6 +36,7 @@ CServerBrowser::CServerBrowser()
 	m_pSortedServerlist = 0;
 
 	m_NumFavoriteServers = 0;
+	m_NumTeeraceServers = 0;
 
 	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 
@@ -186,6 +187,8 @@ void CServerBrowser::Filter()
 			Filtered = 1;
 		else if(!g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && !str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
 			Filtered = 1;
+		else if(g_Config.m_BrFilterTeerace && !m_ppServerlist[i]->m_Info.m_Teerace)
+			Filtered = 1;
 		else
 		{
 			if(g_Config.m_BrFilterCountry)
@@ -269,8 +272,9 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterPure<<11;
 	i |= g_Config.m_BrFilterPureMap<<12;
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
-	i |= g_Config.m_BrFilterCountry<<14;
-	i |= g_Config.m_BrFilterPing<<15;
+	i |= g_Config.m_BrFilterTeerace<<14;
+	i |= g_Config.m_BrFilterCountry<<15;
+	i |= g_Config.m_BrFilterPing<<16;
 	return i;
 }
 
@@ -362,8 +366,10 @@ void CServerBrowser::QueueRequest(CServerEntry *pEntry)
 void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 {
 	int Fav = pEntry->m_Info.m_Favorite;
+	int Teerace = pEntry->m_Info.m_Teerace;
 	pEntry->m_Info = Info;
 	pEntry->m_Info.m_Favorite = Fav;
+	pEntry->m_Info.m_Teerace = Teerace;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
 
 	// all these are just for nice compability
@@ -407,6 +413,13 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			pEntry->m_Info.m_Favorite = 1;
+	}
+
+	// check if it's a teerace
+	for(i = 0; i < m_NumTeeraceServers; i++)
+	{
+		if(net_addr_comp(&Addr, &m_aTeeraceServers[i]) == 0)
+			pEntry->m_Info.m_Teerace = 1;
 	}
 
 	// add to the hash list
@@ -705,6 +718,48 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 
 			return;
 		}
+	}
+}
+
+bool CServerBrowser::IsTeerace(const NETADDR &Addr) const
+{
+	// search for the address
+	int i;
+	for(i = 0; i < m_NumTeeraceServers; i++)
+	{
+		if(net_addr_comp(&Addr, &m_aTeeraceServers[i]) == 0)
+			return true;
+	}
+	return false;
+}
+
+void CServerBrowser::AddTeerace(const NETADDR &Addr)
+{
+	CServerEntry *pEntry;
+
+	if(m_NumTeeraceServers == MAX_FAVORITES)
+		return;
+
+	// make sure that we don't already have the server in our list
+	for(int i = 0; i < m_NumTeeraceServers; i++)
+	{
+		if(net_addr_comp(&Addr, &m_aTeeraceServers[i]) == 0)
+			return;
+	}
+
+	// add the server to the list
+	m_aTeeraceServers[m_NumTeeraceServers++] = Addr;
+	pEntry = Find(Addr);
+	if(pEntry)
+		pEntry->m_Info.m_Teerace = 1;
+
+	if(g_Config.m_Debug)
+	{
+		char aAddrStr[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "added teerace, %s", aAddrStr);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 }
 

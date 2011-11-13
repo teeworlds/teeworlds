@@ -24,7 +24,8 @@ public:
 
 	enum
 	{
-		MAX_FAVORITES=256
+		MAX_FAVORITES=256,
+		MAX_TEERACE=256,
 	};
 
 	CServerBrowser();
@@ -43,6 +44,9 @@ public:
 	bool IsFavorite(const NETADDR &Addr) const;
 	void AddFavorite(const NETADDR &Addr);
 	void RemoveFavorite(const NETADDR &Addr);
+
+	bool IsTeerace(const NETADDR &Addr) const;
+	void AddTeerace(const NETADDR &Addr);
 
 	//
 	void Update(bool ForceResort);
@@ -64,6 +68,9 @@ private:
 
 	NETADDR m_aFavoriteServers[MAX_FAVORITES];
 	int m_NumFavoriteServers;
+
+	NETADDR m_aTeeraceServers[MAX_TEERACE];
+	int m_NumTeeraceServers;
 
 	CServerEntry *m_aServerlistIp[256]; // ip hash list
 
