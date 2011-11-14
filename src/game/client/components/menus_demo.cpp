@@ -11,7 +11,6 @@
 
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
-#include <game/localization.h>
 
 #include <game/client/ui.h>
 

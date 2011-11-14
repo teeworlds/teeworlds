@@ -25,7 +25,6 @@
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
-#include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
 #include "maplayers.h"
@@ -74,6 +73,9 @@ CMenus::CMenus()
 	m_aCallvoteReason[0] = 0;
 
 	m_FriendlistSelectedIndex = -1;
+
+	m_SelectedServer.m_Filter = -1;
+	m_SelectedServer.m_Index = -1;
 }
 
 float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)

@@ -76,6 +76,7 @@ public:
 
 	int NumSortedServers(int Index) const { return m_lFilters[Index].m_NumSortedServers; }
 	const CServerInfo *SortedGet(int FilterIndex, int Index) const;
+	const void *GetID(int FilterIndex, int Index) const;
 
 	bool IsFavorite(const NETADDR &Addr) const;
 	void AddFavorite(const NETADDR &Addr);

@@ -18,7 +18,6 @@
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
-#include <game/localization.h>
 
 #include "binds.h"
 #include "countryflags.h"

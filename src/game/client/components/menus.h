@@ -10,6 +10,7 @@
 #include <engine/friends.h>
 
 #include <game/voting.h>
+#include <game/localization.h>
 #include <game/client/component.h>
 #include <game/client/ui.h>
 
@@ -271,12 +272,53 @@ class CMenus : public CComponent
 
 		int NumSortedServers() const;
 		const CServerInfo *SortedGet(int Index) const;
+		const void *ID(int Index) const;
 	};
 
 	array<CBrowserFilter> m_lFilters;
 
 	void RemoveFilter(int Index);
-		
+
+	struct CServerEntry
+	{
+		int m_Filter;
+		int m_Index;
+	};
+
+	CServerEntry m_SelectedServer;
+
+	enum
+	{
+		FIXED=1,
+		SPACER=2,
+
+		COL_FLAG_LOCK=0,
+		COL_FLAG_PURE,
+		COL_FLAG_FAV,
+		COL_NAME,
+		COL_GAMETYPE,
+		COL_MAP,
+		COL_PLAYERS,
+		COL_PING,
+		COL_VERSION,
+
+		NUM_COLS=10,
+	};
+
+	struct CColumn
+	{
+		int m_ID;
+		int m_Sort;
+		CLocConstString m_Caption;
+		int m_Direction;
+		float m_Width;
+		int m_Flags;
+		CUIRect m_Rect;
+		CUIRect m_Spacer;
+	};
+
+	static CColumn ms_aCols[NUM_COLS];
+
 	// found in menus.cpp
 	int Render();
 	//void render_background();
@@ -301,12 +343,12 @@ class CMenus : public CComponent
 	void RenderServerControlServer(CUIRect MainView);
 
 	// found in menus_browser.cpp
-	int m_SelectedIndex;
 	int m_ScrollOffset;
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
+	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

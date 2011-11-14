@@ -108,6 +108,7 @@ public:
 
 	virtual int NumSortedServers(int Index) const = 0;
 	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
+	virtual const void *GetID(int FilterIndex, int Index) const = 0;
 
 	virtual bool IsFavorite(const NETADDR &Addr) const = 0;
 	virtual void AddFavorite(const NETADDR &Addr) = 0;

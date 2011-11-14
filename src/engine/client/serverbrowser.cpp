@@ -94,9 +94,14 @@ const CServerInfo *CServerBrowser::SortedGet(int FilterIndex, int Index) const
 	return &m_ppServerlist[m_lFilters[FilterIndex].m_pSortedServerlist[Index]]->m_Info;
 }
 
+const void *CServerBrowser::GetID(int FilterIndex, int Index) const
+{
+	return &m_lFilters[FilterIndex].m_pSortedServerlist[Index];
+}
+
 CServerBrowser::CServerFilter::~CServerFilter()
 {
-	mem_free(m_pSortedServerlist);
+	mem_free(m_pSortedServerlist);;
 }
 
 bool CServerBrowser::CServerFilter::SortCompareName(int Index1, int Index2) const
@@ -149,7 +154,7 @@ void CServerBrowser::CServerFilter::Filter()
 	int i = 0, p = 0;
 	int NumServers = m_pServerBrowser->m_NumServers;
 	m_NumSortedServers = 0;
-	
+
 	// allocate the sorted list
 	if(m_NumSortedServersCapacity < NumServers)
 	{
@@ -467,6 +472,8 @@ void CServerBrowser::Refresh(int Type)
 	// clear out everything
 	m_ServerlistHeap.Reset();
 	m_NumServers = 0;
+	for(int i = 0; i < m_lFilters.size(); i++)
+		m_lFilters[i].m_NumSortedServers = 0;
 	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 	m_pFirstReqServer = 0;
 	m_pLastReqServer = 0;

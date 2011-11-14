@@ -6,7 +6,6 @@
 #include <engine/shared/config.h>
 
 #include <game/version.h>
-#include <game/localization.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 
