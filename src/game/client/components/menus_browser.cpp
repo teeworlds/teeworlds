@@ -100,6 +100,10 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 	{
 		if(UI()->MouseButton(0))
 			UI()->SetActiveItem(pID);
+
+		CUIRect r = *pRect;
+		r.Margin(1.5f, &r);
+		RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 4.0f);
 	}
 
 	if(Inside)
