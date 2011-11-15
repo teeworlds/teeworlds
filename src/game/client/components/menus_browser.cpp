@@ -60,6 +60,11 @@ int CMenus::CBrowserFilter::Custom() const
 	return m_Custom;
 }
 
+int CMenus::CBrowserFilter::Filter() const
+{
+	return m_Filter;
+}
+
 const char* CMenus::CBrowserFilter::Name() const
 {
 	return m_aName;
@@ -79,14 +84,47 @@ const CServerInfo *CMenus::CBrowserFilter::SortedGet(int Index) const
 {
 	return m_pServerBrowser->SortedGet(m_Filter, Index);
 }
-		
-void CMenus::RemoveFilter(int Index)
-{
-	if(!m_lFilters[Index].Custom())
-		return;
 
-	ServerBrowser()->RemoveFilter(Index);
-	m_lFilters.remove_index(Index);
+void CMenus::CBrowserFilter::SetFilter(int Num)
+{
+	m_Filter = Num;
+}
+
+void CMenus::RemoveFilter(int FilterIndex)
+{
+	int Filter = m_lFilters[FilterIndex].Filter();
+	ServerBrowser()->RemoveFilter(Filter);
+	m_lFilters.remove_index(FilterIndex);
+
+	// update filter indexes
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		CBrowserFilter *pFilter = &m_lFilters[i];
+		if(pFilter->Filter() > Filter)
+			pFilter->SetFilter(pFilter->Filter()-1);
+	}
+}
+
+void CMenus::Move(bool Up, int Filter)
+{
+	// move up
+	CBrowserFilter Temp = m_lFilters[Filter];
+	if(Up)
+	{
+		if(Filter > 0)
+		{
+			m_lFilters[Filter] = m_lFilters[Filter-1];
+			m_lFilters[Filter-1] = Temp;
+		}
+	}
+	else // move down
+	{
+		if(Filter < m_lFilters.size()-1)
+		{
+			m_lFilters[Filter] = m_lFilters[Filter+1];
+			m_lFilters[Filter+1] = Temp;
+		}
+	}
 }
 
 int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry)
@@ -256,19 +294,22 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 	return ReturnValue;
 }
 
-void CMenus::RenderFilterHeader(CUIRect View, CBrowserFilter *pFilter)
+bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 {
+	CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
+
 	RenderTools()->DrawUIRect(&View, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
 
 	CUIRect Button, Label;
 	View.HMargin(1.0f, &View);
-	View.VSplitLeft(20.0f, 0, &Button);
-	Button.VSplitLeft(15.0f, &Button, 0);
 
-	if(DoButton_SpriteClean(&pFilter->m_SwitchButton, IMAGE_BROWSERICONS, pFilter->Extended() ? SPRITE_BROWSERICON_COLLAPSE : SPRITE_BROWSERICON_EXPAND, &Button, CUI::CORNER_ALL))
+	View.VSplitLeft(20.0f, 0, &Button);
+	Button.VSplitLeft(18.0f, &Button, 0);
+	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, pFilter->Extended() ? SPRITE_BROWSERICON_COLLAPSE : SPRITE_BROWSERICON_EXPAND, &Button))
 		pFilter->Switch();
 
 	View.VSplitLeft(50.0f, 0, &Label);
+	Label.HMargin(2.0f, &Label);
 	char aBuf[256];
 	if(!pFilter->Custom())
 	{
@@ -287,13 +328,40 @@ void CMenus::RenderFilterHeader(CUIRect View, CBrowserFilter *pFilter)
 			RenderTools()->SelectSprite(SPRITE_BROWSERICON_TEE);
 		else if(pFilter->Custom() == CBrowserFilter::FILTER_FAVORITES)
 			RenderTools()->SelectSprite(SPRITE_BROWSERICON_STAR_ACTIVE);
-		IGraphics::CQuadItem QuadItem(Label.x+tw+5.0f, Label.y, 15.0f, 15.0f);
+		IGraphics::CQuadItem QuadItem(Label.x+tw+5.0f, View.y, 18.0f, 18.0f);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 
 		Label.VSplitLeft(tw+25.0f, 0, &Label);
 		UI()->DoLabel(&Label, pFilter->Name(), 12.0f, -1);
 	}
+
+	View.VSplitRight(20.0f, &Button, 0);
+	Button.VSplitRight(18.0f, &View, &Button);
+	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_CLOSE, &Button))
+	{
+		RemoveFilter(FilterIndex);
+		return true;
+	}
+
+	View.VSplitRight(2.0f, &Button, 0);
+	Button.VSplitRight(18.0f, &View, &Button);
+	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_EDIT, &Button))
+	{
+		//
+	}
+
+	View.VSplitRight(2.0f, &Button, 0);
+	Button.VSplitRight(18.0f, &View, &Button);
+	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_UP, &Button))
+		Move(true, FilterIndex);
+
+	View.VSplitRight(2.0f, &Button, 0);
+	Button.VSplitRight(18.0f, &View, &Button);
+	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_DOWN, &Button))
+		Move(false, FilterIndex);
+
+	return false;
 }
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
@@ -379,16 +447,18 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(m_lFilters[i].Extended())
 			NumServers += m_lFilters[i].NumSortedServers();
 
-	int NumListEntries = NumServers+m_lFilters.size();
+	int NumFilters = m_lFilters.size();
+	float ListHieght = (NumServers+(NumFilters-1)) * ms_aCols[0].m_Rect.h + NumFilters * 20.0f;
 
-	int Num = (int)(View.h/ms_aCols[0].m_Rect.h) + 1;
+	//int Num = (int)((ListHieght-View.h)/ms_aCols[0].m_Rect.h))+1;
+	//int Num = (int)(View.h/ms_aCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = NumListEntries-Num+1;
+	int ScrollNum = (int)((ListHieght-View.h)/ms_aCols[0].m_Rect.h)+1;
 	if(ScrollNum > 0)
 	{
 		if(m_ScrollOffset)
@@ -427,6 +497,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 							{
 								NewFilter = j;
 								NewIndex = 0;
+								break;
 							}
 						}
 					}
@@ -444,6 +515,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 							{
 								NewFilter = j;
 								NewIndex = pFilter->NumSortedServers()-1;
+								break;
 							}
 						}
 					}
@@ -458,15 +530,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				{
 					CBrowserFilter *pFilter = &m_lFilters[Filter];
 					if(pFilter->Extended())
-						TotalIndex += m_lFilters[Filter].NumSortedServers()+1;
-					else
-						TotalIndex++;
+						TotalIndex += m_lFilters[Filter].NumSortedServers();
 					Filter++;
 				}
 				TotalIndex += NewIndex+1;
 
 				//scroll
-				float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aCols[0].m_Rect.h + TotalIndex*ms_aCols[0].m_Rect.h;
+				float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aCols[0].m_Rect.h + TotalIndex*ms_aCols[0].m_Rect.h + Filter*ms_aCols[0].m_Rect.h + Filter*20.0f;
 				int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aCols[0].m_Rect.h ? 1 : 0;
 				if(Scroll)
 				{
@@ -512,66 +582,71 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 		// filter header
 		CUIRect Row;
-		View.HSplitTop(17.0f, &Row, &View);
+		View.HSplitTop(20.0f, &Row, &View);
 
 		// render header
-		RenderFilterHeader(Row, pFilter);
+		bool Deleted = RenderFilterHeader(Row, s);
+		if(Deleted && s >= m_lFilters.size())
+			break;
 
-		if(!pFilter->Extended())
-			continue;
-
-		for (int i = 0; i < pFilter->NumSortedServers(); i++)
+		if(pFilter->Extended())
 		{
-			int ItemIndex = i;
-			const CServerInfo *pItem = pFilter->SortedGet(ItemIndex);
-			NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
-			
-			CUIRect SelectHitBox;
-
-			View.HSplitTop(17.0f, &Row, &View);
-			SelectHitBox = Row;
-
-			// select server
-			if(m_SelectedServer.m_Filter == -1 || m_SelectedServer.m_Filter == s)
+			for (int i = 0; i < pFilter->NumSortedServers(); i++)
 			{
-				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
+				int ItemIndex = i;
+				const CServerInfo *pItem = pFilter->SortedGet(ItemIndex);
+				NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
+				
+				CUIRect SelectHitBox;
+
+				View.HSplitTop(17.0f, &Row, &View);
+				SelectHitBox = Row;
+
+				// select server
+				if(m_SelectedServer.m_Filter == -1 || m_SelectedServer.m_Filter == s)
 				{
-					Selected = true;
+					if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
+					{
+						Selected = true;
+						m_SelectedServer.m_Filter = s;
+						m_SelectedServer.m_Index = ItemIndex;
+					}
+				}
+
+				// make sure that only those in view can be selected
+				if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
+				{
+					if(m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
+					{
+						CUIRect r = Row;
+						r.Margin(1.5f, &r);
+						RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+					}
+				}
+				else
+				{
+					// reset active item, if not visible
+					if(UI()->ActiveItem() == pItem)
+						UI()->SetActiveItem(0);
+
+					// don't render invisible items
+					continue;
+				}
+
+				if(DoBrowserEntry(pFilter->ID(ItemIndex), &Row, pItem))
+				{
 					m_SelectedServer.m_Filter = s;
-					m_SelectedServer.m_Index = ItemIndex;
+					m_SelectedServer.m_Index = i;
+					str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+					if(Input()->MouseDoubleClick())
+						Client()->Connect(g_Config.m_UiServerAddress);
 				}
+				
 			}
-
-			// make sure that only those in view can be selected
-			if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
-			{
-				if(m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
-				{
-					CUIRect r = Row;
-					r.Margin(1.5f, &r);
-					RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
-				}
-			}
-			else
-			{
-				// reset active item, if not visible
-				if(UI()->ActiveItem() == pItem)
-					UI()->SetActiveItem(0);
-
-				// don't render invisible items
-				continue;
-			}
-
-			if(DoBrowserEntry(pFilter->ID(ItemIndex), &Row, pItem))
-			{
-				m_SelectedServer.m_Filter = s;
-				m_SelectedServer.m_Index = i;
-				str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
-				if(Input()->MouseDoubleClick())
-					Client()->Connect(g_Config.m_UiServerAddress);
-			}
-			
 		}
+
+		if(s < m_lFilters.size()-1)
+			View.HSplitTop(17.0f, &Row, &View);
 	}
 
 	UI()->ClipDisable();

@@ -260,20 +260,23 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
-int CMenus::DoButton_SpriteClean(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners)
+int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect)
 {
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
+	int Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.8f+(*pFade/Seconds)*0.2f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
 	RenderTools()->SelectSprite(SpriteID);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pID, "", false, pRect);
+	int ReturnValue = 0;
+	if(Inside && Input()->KeyDown(KEY_MOUSE_1))
+		ReturnValue = 1;
+
+	return ReturnValue;
 }
 
 int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
@@ -1696,8 +1699,9 @@ bool CMenus::OnInput(IInput::CEvent e)
 void CMenus::OnConsoleInit()
 {
 	// add filters
-	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, Localize("Standard"), ServerBrowser(), 79872, 999, -1, "", ""));
-	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), 66560, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser(), IServerBrowser::FILTER_PING, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, Localize("Standard Gametype"), ServerBrowser(), IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP|IServerBrowser::FILTER_PING, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), IServerBrowser::FILTER_FAVORITE|IServerBrowser::FILTER_PING, 999, -1, "", ""));
 }
 
 void CMenus::OnStateChange(int NewState, int OldState)
