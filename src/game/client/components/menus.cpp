@@ -260,6 +260,22 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
+int CMenus::DoButton_SpriteClean(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners)
+{
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+
+	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.8f+(*pFade/Seconds)*0.2f);
+	RenderTools()->SelectSprite(SpriteID);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	return UI()->DoButtonLogic(pID, "", false, pRect);
+}
+
 int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
 	int Inside = UI()->MouseInside(pRect);
@@ -1680,8 +1696,8 @@ bool CMenus::OnInput(IInput::CEvent e)
 void CMenus::OnConsoleInit()
 {
 	// add filters
-	m_lFilters.add(CBrowserFilter(false, Localize("Standard"), ServerBrowser(), 79872, 999, -1, "", ""));
-	m_lFilters.add(CBrowserFilter(false, Localize("Favorites"), ServerBrowser(), 66560, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, Localize("Standard"), ServerBrowser(), 79872, 999, -1, "", ""));
+	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), 66560, 999, -1, "", ""));
 }
 
 void CMenus::OnStateChange(int NewState, int OldState)

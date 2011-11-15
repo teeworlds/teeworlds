@@ -33,13 +33,16 @@ CMenus::CColumn CMenus::ms_aCols[] = {
 
 	
 // filters
-CMenus::CBrowserFilter::CBrowserFilter(bool Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress)
+CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress)
 : m_pServerBrowser(pServerBrowser)
 {
 	m_Extended = true;
 	m_Custom = Custom;
 	str_copy(m_aName, pName, sizeof(m_aName));
 	m_Filter = pServerBrowser->AddFilter(Filter, Ping, Country, pGametype, pServerAddress);
+
+	// init buttons
+	m_SwitchButton = 0;
 }
 
 void CMenus::CBrowserFilter::Switch()
@@ -52,9 +55,14 @@ bool CMenus::CBrowserFilter::Extended() const
 	return m_Extended;
 }
 
-bool CMenus::CBrowserFilter::Custom() const
+int CMenus::CBrowserFilter::Custom() const
 {
 	return m_Custom;
+}
+
+const char* CMenus::CBrowserFilter::Name() const
+{
+	return m_aName;
 }
 
 const void *CMenus::CBrowserFilter::ID(int Index) const
@@ -248,6 +256,46 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 	return ReturnValue;
 }
 
+void CMenus::RenderFilterHeader(CUIRect View, CBrowserFilter *pFilter)
+{
+	RenderTools()->DrawUIRect(&View, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+
+	CUIRect Button, Label;
+	View.HMargin(1.0f, &View);
+	View.VSplitLeft(20.0f, 0, &Button);
+	Button.VSplitLeft(15.0f, &Button, 0);
+
+	if(DoButton_SpriteClean(&pFilter->m_SwitchButton, IMAGE_BROWSERICONS, pFilter->Extended() ? SPRITE_BROWSERICON_COLLAPSE : SPRITE_BROWSERICON_EXPAND, &Button, CUI::CORNER_ALL))
+		pFilter->Switch();
+
+	View.VSplitLeft(50.0f, 0, &Label);
+	char aBuf[256];
+	if(!pFilter->Custom())
+	{
+		str_format(aBuf, sizeof(aBuf), "(%d) %s", pFilter->NumSortedServers(), pFilter->Name());
+		UI()->DoLabel(&Label, aBuf, 12.0f, -1);
+	}
+	else
+	{
+		str_format(aBuf, sizeof(aBuf), "(%d)", pFilter->NumSortedServers());
+		UI()->DoLabel(&Label, aBuf, 12.0f, -1);
+		float tw = TextRender()->TextWidth(0, 12.0f, aBuf, -1);
+
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BROWSERICONS].m_Id);
+		Graphics()->QuadsBegin();
+		if(pFilter->Custom() == CBrowserFilter::FILTER_STANDARD)
+			RenderTools()->SelectSprite(SPRITE_BROWSERICON_TEE);
+		else if(pFilter->Custom() == CBrowserFilter::FILTER_FAVORITES)
+			RenderTools()->SelectSprite(SPRITE_BROWSERICON_STAR_ACTIVE);
+		IGraphics::CQuadItem QuadItem(Label.x+tw+5.0f, Label.y, 15.0f, 15.0f);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+
+		Label.VSplitLeft(tw+25.0f, 0, &Label);
+		UI()->DoLabel(&Label, pFilter->Name(), 12.0f, -1);
+	}
+}
+
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
 	CUIRect Headers;
@@ -326,10 +374,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	// count all the servers
-	int NumServers = m_lFilters.size();
+	int NumServers = 0;
 	for(int i = 0; i < m_lFilters.size(); i++)
 		if(m_lFilters[i].Extended())
 			NumServers += m_lFilters[i].NumSortedServers();
+
+	int NumListEntries = NumServers+m_lFilters.size();
 
 	int Num = (int)(View.h/ms_aCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
@@ -338,7 +388,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = NumServers-Num+1;
+	int ScrollNum = NumListEntries-Num+1;
 	if(ScrollNum > 0)
 	{
 		if(m_ScrollOffset)
@@ -464,10 +514,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		CUIRect Row;
 		View.HSplitTop(17.0f, &Row, &View);
 
-		RenderTools()->DrawUIRect(&Row, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
-		// handle extension
-		if(UI()->MouseInside(&Row) && Input()->MouseDoubleClick())
-			pFilter->Switch();
+		// render header
+		RenderFilterHeader(Row, pFilter);
 
 		if(!pFilter->Extended())
 			continue;
@@ -566,7 +614,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(ServerBrowser()->IsRefreshing())
 		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
 	else
-		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(0), ServerBrowser()->NumServers(), NumPlayers);
+		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), NumServers, ServerBrowser()->NumServers(), NumPlayers);
 	Status.VSplitRight(TextRender()->TextWidth(0, 14.0f, aBuf, -1), 0, &Status);
 	UI()->DoLabelScaled(&Status, aBuf, 14.0f, -1);
 }

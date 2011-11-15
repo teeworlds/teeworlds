@@ -41,6 +41,7 @@ class CMenus : public CComponent
 
 	int DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect);
 	int DoButton_Sprite(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
+	int DoButton_SpriteClean(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
@@ -258,17 +259,28 @@ class CMenus : public CComponent
 	class CBrowserFilter
 	{
 		bool m_Extended;
-		bool m_Custom;
+		int m_Custom;
 		char m_aName[64];
 		int m_Filter;
 		class IServerBrowser *m_pServerBrowser;
 
 	public:
+
+		enum
+		{
+			FILTER_CUSTOM=0,
+			FILTER_STANDARD,
+			FILTER_FAVORITES,
+		};
+		// buttons var
+		int m_SwitchButton;
+
 		CBrowserFilter() {}
-		CBrowserFilter(bool Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress);
 		void Switch();
 		bool Extended() const;
-		bool Custom() const;
+		int Custom() const;
+		const char* Name() const;
 
 		int NumSortedServers() const;
 		const CServerInfo *SortedGet(int Index) const;
@@ -348,6 +360,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
+	void RenderFilterHeader(CUIRect View, CBrowserFilter *pFilter);
 	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
