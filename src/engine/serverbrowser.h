@@ -105,8 +105,10 @@ public:
 	virtual int LoadingProgression() const = 0;
 
 	virtual int NumServers() const = 0;
+	virtual int NumPlayers() const = 0;
 
 	virtual int NumSortedServers(int Index) const = 0;
+	virtual int NumSortedPlayers(int Index) const = 0;
 	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
 	virtual const void *GetID(int FilterIndex, int Index) const = 0;
 

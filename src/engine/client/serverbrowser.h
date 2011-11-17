@@ -42,6 +42,8 @@ public:
 		int m_NumSortedServers;
 		int m_NumSortedServersCapacity;
 
+		int m_NumPlayers;
+
 		int *m_pSortedServerlist;
 
 		~CServerFilter();
@@ -73,8 +75,10 @@ public:
 	int LoadingProgression() const;
 
 	int NumServers() const { return m_NumServers; }
+	int NumPlayers() const { return m_NumPlayers; }
 
 	int NumSortedServers(int Index) const { return m_lFilters[Index].m_NumSortedServers; }
+	int NumSortedPlayers(int Index) const { return m_lFilters[Index].m_NumPlayers; }
 	const CServerInfo *SortedGet(int FilterIndex, int Index) const;
 	const void *GetID(int FilterIndex, int Index) const;
 
@@ -113,6 +117,8 @@ private:
 
 	int m_NumServers;
 	int m_NumServerCapacity;
+
+	int m_NumPlayers;
 
 	// the token is to keep server refresh separated from each other
 	int m_CurrentToken;

@@ -279,6 +279,21 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 	return ReturnValue;
 }
 
+int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
+{
+	int Inside = UI()->MouseInside(pRect);
+
+	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
+	RenderTools()->SelectSprite(SpriteID);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	return Inside;
+}
+
 int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
 	int Inside = UI()->MouseInside(pRect);

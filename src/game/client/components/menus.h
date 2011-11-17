@@ -52,6 +52,8 @@ class CMenus : public CComponent
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
+	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
+
 	/*static void ui_draw_menu_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_menu_tab_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -269,7 +271,7 @@ class CMenus : public CComponent
 		enum
 		{
 			FILTER_CUSTOM=0,
-			FILTER_ALL=0,
+			FILTER_ALL,
 			FILTER_STANDARD,
 			FILTER_FAVORITES,
 		};
@@ -287,6 +289,7 @@ class CMenus : public CComponent
 		void SetFilter(int Num);
 
 		int NumSortedServers() const;
+		int NumPlayers() const;
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
 	};
@@ -296,8 +299,27 @@ class CMenus : public CComponent
 	void RemoveFilter(int FilterIndex);
 	void Move(bool Up, int Filter);
 
-	struct CServerEntry
+	class CInfoOverlay
 	{
+	public:
+		enum
+		{
+			OVERLAY_SERVERINFO=0,
+			OVERLAY_HEADERINFO,
+		};
+
+		int m_Type;
+		const void *m_pData;
+		float m_X;
+		float m_Y;
+	};
+
+	CInfoOverlay m_InfoOverlay;
+	bool m_InfoOverlayActive;
+
+	class CServerEntry
+	{
+	public:
 		int m_Filter;
 		int m_Index;
 	};
@@ -309,17 +331,16 @@ class CMenus : public CComponent
 		FIXED=1,
 		SPACER=2,
 
-		COL_FLAG_LOCK=0,
-		COL_FLAG_PURE,
-		COL_FLAG_FAV,
+		COL_FLAG=0,
 		COL_NAME,
 		COL_GAMETYPE,
 		COL_MAP,
 		COL_PLAYERS,
 		COL_PING,
-		COL_VERSION,
+		COL_FAVORITE,
+		COL_INFO,
 
-		NUM_COLS=10,
+		NUM_COLS=9,
 	};
 
 	struct CColumn
@@ -362,14 +383,16 @@ class CMenus : public CComponent
 	// found in menus_browser.cpp
 	int m_ScrollOffset;
 	void RenderServerbrowserServerList(CUIRect View);
-	void RenderServerbrowserServerDetail(CUIRect View);
+	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
+	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
 	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void SetOverlay(int Type, float x, float y, const void *pData);
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView);

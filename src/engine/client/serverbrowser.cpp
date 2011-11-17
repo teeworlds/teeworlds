@@ -46,6 +46,8 @@ CServerBrowser::CServerBrowser()
 	m_NumServers = 0;
 	m_NumServerCapacity = 0;
 
+	m_NumPlayers = 0;
+
 	// the token is to keep server refresh separated from each other
 	m_CurrentToken = 1;
 
@@ -64,6 +66,7 @@ int CServerBrowser::AddFilter(int SortHash, int Ping, int Country, const char* p
 	Filter.m_pSortedServerlist = 0;
 	Filter.m_NumSortedServers = 0;
 	Filter.m_NumSortedServersCapacity = 0;
+	Filter.m_NumPlayers = 0;
 	Filter.m_pServerBrowser = this;
 	m_lFilters.add(Filter);
 
@@ -101,7 +104,7 @@ const void *CServerBrowser::GetID(int FilterIndex, int Index) const
 
 CServerBrowser::CServerFilter::~CServerFilter()
 {
-	mem_free(m_pSortedServerlist);;
+	mem_free(m_pSortedServerlist);
 }
 
 bool CServerBrowser::CServerFilter::SortCompareName(int Index1, int Index2) const
@@ -154,6 +157,7 @@ void CServerBrowser::CServerFilter::Filter()
 	int i = 0, p = 0;
 	int NumServers = m_pServerBrowser->m_NumServers;
 	m_NumSortedServers = 0;
+	m_NumPlayers = 0;
 
 	// allocate the sorted list
 	if(m_NumSortedServersCapacity < NumServers)
@@ -257,7 +261,10 @@ void CServerBrowser::CServerFilter::Filter()
 			}
 
 			if(!(m_SortHash&FILTER_FRIENDS) || m_pServerBrowser->m_ppServerlist[i]->m_Info.m_FriendState != IFriends::FRIEND_NO)
+			{
 				m_pSortedServerlist[m_NumSortedServers++] = i;
+				m_NumPlayers += m_pServerBrowser->m_ppServerlist[i]->m_Info.m_NumPlayers;
+			}
 		}
 	}
 }
@@ -369,6 +376,9 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 		pEntry->m_Info.m_Flags |= FLAG_PUREMAP;
 	pEntry->m_Info.m_Favorite = Fav;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
+ 
+	m_NumPlayers += pEntry->m_Info.m_NumPlayers;
+
 	pEntry->m_GotInfo = 1;
 }
 
@@ -472,8 +482,12 @@ void CServerBrowser::Refresh(int Type)
 	// clear out everything
 	m_ServerlistHeap.Reset();
 	m_NumServers = 0;
+	m_NumPlayers = 0;
 	for(int i = 0; i < m_lFilters.size(); i++)
+	{
 		m_lFilters[i].m_NumSortedServers = 0;
+		m_lFilters[i].m_NumPlayers = 0;
+	}
 	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 	m_pFirstReqServer = 0;
 	m_pLastReqServer = 0;
@@ -679,6 +693,14 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 		str_format(aBuf, sizeof(aBuf), "added fav, %s", aAddrStr);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
+
+	// refresh servers in all filters where favorites are filtered
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		CServerFilter *pFilter = &m_lFilters[i];
+		if(pFilter->m_SortHash&FILTER_FAVORITE)
+			pFilter->Sort();
+	}
 }
 
 void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
@@ -697,8 +719,16 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 			if(pEntry)
 				pEntry->m_Info.m_Favorite = 0;
 
-			return;
+			break;
 		}
+	}
+
+	// refresh servers in all filters where favorites are filtered
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		CServerFilter *pFilter = &m_lFilters[i];
+		if(pFilter->m_SortHash&FILTER_FAVORITE)
+			pFilter->Sort();
 	}
 }
 
