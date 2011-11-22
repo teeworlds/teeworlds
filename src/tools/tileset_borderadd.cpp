@@ -9,7 +9,7 @@ typedef struct
 	unsigned char r, g, b, a;
 } CPixel;
 
-static void TilesetBordercopy(int w, int h, CPixel *pSrc, CPixel *pDest)
+static void TilesetBorderadd(int w, int h, CPixel *pSrc, CPixel *pDest)
 {
 	int TileW = w/16;
 	int TileH = h/16;
@@ -18,12 +18,20 @@ static void TilesetBordercopy(int w, int h, CPixel *pSrc, CPixel *pDest)
 	{
 		for(int ty = 0; ty < 16; ty++)
 		{
-			for(int x = 0; x < TileW; x++)
+			for(int x = 0; x < TileW + 4; x++)
 			{
-				for(int y = 0; y < TileH; y++)
+				for(int y = 0; y < TileH + 4; y++)
 				{
-					#define TILE_INDEX(tx_, ty_, x_, y_) (((ty_) * TileH + (y_)) * w + (tx_) * TileW + (x_))
-					pDest[TILE_INDEX(tx, ty, x, y)] = pSrc[TILE_INDEX(tx, ty, clamp(x, 2, TileW - 3), clamp(y, 2, TileH - 3))];
+					int SourceX = tx * TileW + clamp(x - 2, 0, TileW - 1);
+					int SourceY = ty * TileH + clamp(y - 2, 0, TileH - 1);
+					int DestX = tx * (TileW + 4) + x;
+					int DestY = ty * (TileH + 4) + y;
+
+					int SourceI = SourceY * w + SourceX;
+					int DestI = DestY * (w + 16 * 4) + DestX;
+
+					pDest[DestI] = pSrc[SourceI];
+
 				}
 			}
 		}
@@ -41,7 +49,7 @@ int FixFile(const char *pFileName)
 
 	if(Png.color_type != PNG_TRUECOLOR_ALPHA)
 	{
-		dbg_msg("tileset_bordercopy", "%s: not an RGBA image", pFileName);
+		dbg_msg("tileset_borderadd", "%s: not an RGBA image", pFileName);
 		return 1;
 	}
 
@@ -49,15 +57,15 @@ int FixFile(const char *pFileName)
 	int h = Png.height;
 
 	pBuffer[0] = (CPixel*)mem_alloc(w*h*sizeof(CPixel), 1);
-	pBuffer[1] = (CPixel*)mem_alloc(w*h*sizeof(CPixel), 1);
+	pBuffer[1] = (CPixel*)mem_alloc((w+16*4)*(h+16*4)*sizeof(CPixel), 1);
 	png_get_data(&Png, (unsigned char *)pBuffer[0]);
 	png_close_file(&Png);
 
-	TilesetBordercopy(w, h, pBuffer[0], pBuffer[1]);
+	TilesetBorderadd(w, h, pBuffer[0], pBuffer[1]);
 
 	// save here
 	png_open_file_write(&Png, pFileName);
-	png_set_data(&Png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pBuffer[1]);
+	png_set_data(&Png, w + 16 * 4, h + 16 * 4, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pBuffer[1]);
 	png_close_file(&Png);
 
 	return 0;
