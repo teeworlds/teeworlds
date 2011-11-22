@@ -22,8 +22,8 @@ static void TilesetBorderfix(int w, int h, CPixel *pSrc, CPixel *pDest)
 			{
 				for(int y = 0; y < TileH; y++)
 				{
-					#define TILE_INDEX(tx, ty, x, y) (((ty) * TileH + (y)) * w + (tx) * TileW + (x))
-					pDest[TILE_INDEX(tx, ty, x, y)] = pSrc[TILE_INDEX(tx, ty, clamp(x, 2, 13), clamp(y, 2, 13))];
+					#define TILE_INDEX(tx_, ty_, x_, y_) (((ty_) * TileH + (y_)) * w + (tx_) * TileW + (x_))
+					pDest[TILE_INDEX(tx, ty, x, y)] = pSrc[TILE_INDEX(tx, ty, clamp(x, 2, TileW - 3), clamp(y, 2, TileH - 3))];
 				}
 			}
 		}
