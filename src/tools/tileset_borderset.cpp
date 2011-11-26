@@ -9,7 +9,7 @@ typedef struct
 	unsigned char r, g, b, a;
 } CPixel;
 
-static void TilesetBordercopy(int w, int h, CPixel *pSrc, CPixel *pDest)
+static void TilesetBorderset(int w, int h, CPixel *pSrc, CPixel *pDest)
 {
 	int TileW = w/16;
 	int TileH = h/16;
@@ -41,7 +41,7 @@ int FixFile(const char *pFileName)
 
 	if(Png.color_type != PNG_TRUECOLOR_ALPHA)
 	{
-		dbg_msg("tileset_bordercopy", "%s: not an RGBA image", pFileName);
+		dbg_msg("tileset_borderset", "%s: not an RGBA image", pFileName);
 		return 1;
 	}
 
@@ -53,7 +53,7 @@ int FixFile(const char *pFileName)
 	png_get_data(&Png, (unsigned char *)pBuffer[0]);
 	png_close_file(&Png);
 
-	TilesetBordercopy(w, h, pBuffer[0], pBuffer[1]);
+	TilesetBorderset(w, h, pBuffer[0], pBuffer[1]);
 
 	// save here
 	png_open_file_write(&Png, pFileName);
