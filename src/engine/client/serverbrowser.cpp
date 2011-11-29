@@ -1,6 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <algorithm> // sort
+#include <algorithm> // sort  TODO: remove this
 
 #include <base/math.h>
 #include <base/system.h>
