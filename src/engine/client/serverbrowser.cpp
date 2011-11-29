@@ -26,7 +26,7 @@ class SortWrap
 	CServerBrowser *m_pThis;
 public:
 	SortWrap(CServerBrowser *t, SortFunc f) : m_pfnSort(f), m_pThis(t) {}
-	bool operator()(int a, int b) { return (m_pThis->*m_pfnSort)(a, b); }
+	bool operator()(int a, int b) { return (g_Config.m_BrSortOrder ? (m_pThis->*m_pfnSort)(b, a) : (m_pThis->*m_pfnSort)(a, b)); }
 };
 
 CServerBrowser::CServerBrowser()
@@ -293,17 +293,6 @@ void CServerBrowser::Sort()
 					g_Config.m_BrFilterSpectators ? &CServerBrowser::SortCompareNumPlayers : &CServerBrowser::SortCompareNumClients));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_GAMETYPE)
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
-
-	// invert the list if requested
-	if(g_Config.m_BrSortOrder)
-	{
-		for(i = 0; i < m_NumSortedServers/2; i++)
-		{
-			int Temp = m_pSortedServerlist[i];
-			m_pSortedServerlist[i] = m_pSortedServerlist[m_NumSortedServers-i-1];
-			m_pSortedServerlist[m_NumSortedServers-i-1] = Temp;
-		}
-	}
 
 	// set indexes
 	for(i = 0; i < m_NumSortedServers; i++)
