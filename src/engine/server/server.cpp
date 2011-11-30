@@ -1061,6 +1061,11 @@ int CServer::BanRemove(NETADDR Addr)
 	return m_NetServer.BanRemove(Addr);
 }
 
+int CServer::BanRemoveAll()
+{
+	return m_NetServer.BanRemoveAll();
+}
+
 
 void CServer::PumpNetwork()
 {
@@ -1336,6 +1341,15 @@ int CServer::Run()
 		m_Econ.Shutdown();
 	}
 
+	// save bans
+	if(g_Config.m_SvBanfile[0])
+	{
+		IOHANDLE File = m_pStorage->OpenFile(g_Config.m_SvBanfile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(File)
+			m_NetServer.SaveBans(File);
+		io_close(File);
+	}
+
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
 
@@ -1461,6 +1475,13 @@ void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
 	}
 	else
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid network address");
+}
+
+void CServer::ConUnbanAll(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+	if(!pServer->BanRemoveAll())
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "unbanned all");
 }
 
 void CServer::ConBans(IConsole::IResult *pResult, void *pUser)
@@ -1627,6 +1648,7 @@ void CServer::RegisterCommands()
 	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "Ban player with ip/id for x minutes for any reason");
 	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "Unban ip");
+	Console()->Register("unban_all", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnbanAll, this, "Clear all bans");
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "Show banlist");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
@@ -1726,6 +1748,10 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
+
+	// execute bans file
+	if(g_Config.m_SvBanfile[0])
+		pConsole->ExecuteFile(g_Config.m_SvBanfile);
 
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention

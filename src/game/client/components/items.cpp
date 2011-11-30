@@ -17,7 +17,7 @@
 
 void CItems::OnReset()
 {
-	ExtraProjectilesNum = 0;
+	m_NumExtraProjectiles = 0;
 }
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
@@ -310,23 +310,23 @@ void CItems::OnRender()
 	}
 
 	// render extra projectiles
-	for(int i = 0; i < ExtraProjectilesNum; i++)
+	for(int i = 0; i < m_NumExtraProjectiles; i++)
 	{
-		if(aExtraProjectiles[i].m_StartTick < Client()->GameTick())
+		if(m_aExtraProjectiles[i].m_StartTick < Client()->GameTick())
 		{
-			aExtraProjectiles[i] = aExtraProjectiles[ExtraProjectilesNum-1];
-			ExtraProjectilesNum--;
+			m_aExtraProjectiles[i] = m_aExtraProjectiles[m_NumExtraProjectiles-1];
+			m_NumExtraProjectiles--;
 		}
 		else
-			RenderProjectile(&aExtraProjectiles[i], 0);
+			RenderProjectile(&m_aExtraProjectiles[i], 0);
 	}
 }
 
 void CItems::AddExtraProjectile(CNetObj_Projectile *pProj)
 {
-	if(ExtraProjectilesNum != MAX_EXTRA_PROJECTILES)
+	if(m_NumExtraProjectiles != MAX_EXTRA_PROJECTILES)
 	{
-		aExtraProjectiles[ExtraProjectilesNum] = *pProj;
-		ExtraProjectilesNum++;
+		m_aExtraProjectiles[m_NumExtraProjectiles] = *pProj;
+		m_NumExtraProjectiles++;
 	}
 }
