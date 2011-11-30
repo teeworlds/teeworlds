@@ -142,7 +142,7 @@ Delete demo
 == Obriši demo-snimak
 
 Demo details
-== Detalji demo'a
+== Detalji demo-a
 
 Demofile: %s
 == Demo-snimak: %s
