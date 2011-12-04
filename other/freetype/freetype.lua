@@ -5,7 +5,7 @@ FreeType = {
 		local check = function(option, settings)
 			option.value = false
 			option.use_ftconfig = false
-			option.use_win32lib = false
+			option.use_winlib = 0
 			option.lib_path = nil
 			
 			if ExecuteSilent("freetype-config") > 0 and ExecuteSilent("freetype-config --cflags") == 0 then
@@ -15,7 +15,10 @@ FreeType = {
 				
 			if platform == "win32" then
 				option.value = true
-				option.use_win32lib = true
+				option.use_winlib = 32
+			elseif platform == "win64" then
+				option.value = true
+				option.use_winlib = 64
 			end
 		end
 		
@@ -27,8 +30,12 @@ FreeType = {
 				settings.cc.flags:Add("`freetype-config --cflags`")
 				settings.link.flags:Add("`freetype-config --libs`")
 				
-			elseif option.use_win32lib == true then
-				settings.link.libpath:Add(FreeType.basepath .. "/lib")
+			elseif option.use_winlib > 0 then
+				if option.use_winlib == 32 then
+					settings.link.libpath:Add(FreeType.basepath .. "/lib32")
+				else
+					settings.link.libpath:Add(FreeType.basepath .. "/lib64")
+				end
 				settings.link.libs:Add("freetype")
 			end
 		end
@@ -36,13 +43,14 @@ FreeType = {
 		local save = function(option, output)
 			output:option(option, "value")
 			output:option(option, "use_ftconfig")
-			output:option(option, "use_win32lib")
+			output:option(option, "use_winlib")
 		end
 		
 		local display = function(option)
 			if option.value == true then
 				if option.use_ftconfig == true then return "using freetype-config" end
-				if option.use_win32lib == true then return "using supplied win32 libraries" end
+				if option.use_winlib == 32 then return "using supplied win32 libraries" end
+				if option.use_winlib == 64 then return "using supplied win64 libraries" end
 				return "using unknown method"
 			else
 				if option.required then
