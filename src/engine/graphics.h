@@ -142,6 +142,8 @@ public:
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
+	virtual void Resize(int SizeX, int SizeY) = 0;
+	virtual void ToggleFullscreen() = 0;
 
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;

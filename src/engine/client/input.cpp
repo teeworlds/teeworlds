@@ -5,6 +5,7 @@
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
+#include <engine/client/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 
@@ -186,6 +187,13 @@ int CInput::Update()
 				// other messages
 				case SDL_QUIT:
 					return 1;
+
+				case SDL_VIDEORESIZE:
+					{
+						IEngineGraphics* pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+						pGraphics->Resize(Event.resize.w, Event.resize.h); // ignore_convention
+						break;
+					}
 			}
 
 			//
