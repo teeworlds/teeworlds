@@ -5,7 +5,7 @@ SDL = {
 		local check = function(option, settings)
 			option.value = false
 			option.use_sdlconfig = false
-			option.use_win32sdl = false
+			option.use_winlib = 0
 			option.use_osxframework = false
 			option.lib_path = nil
 			
@@ -16,7 +16,10 @@ SDL = {
 			
 			if platform == "win32" then
 				option.value = true
-				option.use_win32sdl = true
+				option.use_winlib = 32
+			elseif platform == "win64" then
+				option.value = true
+				option.use_winlib = 64
 			end
 			
 			if platform == "macosx" then
@@ -37,9 +40,13 @@ SDL = {
 				client_settings.cc.includes:Add("/Library/Frameworks/SDL.framework/Headers")
 			end
 
-			if option.use_win32sdl == true then
+			if option.use_winlib > 0 then
 				settings.cc.includes:Add(SDL.basepath .. "/include")
-				settings.link.libpath:Add(SDL.basepath .. "/vc2005libs")
+				if option.use_winlib == 32 then
+					settings.link.libpath:Add(SDL.basepath .. "/lib32")
+				else
+					settings.link.libpath:Add(SDL.basepath .. "/lib64")
+				end
 				settings.link.libs:Add("SDL")
 				settings.link.libs:Add("SDLmain")
 			end
@@ -48,14 +55,15 @@ SDL = {
 		local save = function(option, output)
 			output:option(option, "value")
 			output:option(option, "use_sdlconfig")
-			output:option(option, "use_win32sdl")
+			output:option(option, "use_winlib")
 			output:option(option, "use_osxframework")
 		end
 		
 		local display = function(option)
 			if option.value == true then
 				if option.use_sdlconfig == true then return "using sdl-config" end
-				if option.use_win32sdl == true then return "using supplied win32 libraries" end
+				if option.use_winlib == 32 then return "using supplied win32 libraries" end
+				if option.use_winlib == 64 then return "using supplied win64 libraries" end
 				if option.use_osxframework == true then return "using osx framework" end
 				return "using unknown method"
 			else
