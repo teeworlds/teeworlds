@@ -50,6 +50,7 @@ public:
 	array<CEnvPoint> m_lPoints;
 	char m_aName[32];
 	float m_Bottom, m_Top;
+	bool m_Synchronized;
 
 	CEnvelope(int Chan)
 	{
@@ -57,6 +58,7 @@ public:
 		m_aName[0] = 0;
 		m_Bottom = 0;
 		m_Top = 0;
+		m_Synchronized = true;
 	}
 
 	void Resort()

@@ -99,10 +99,13 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	}
 	else
 	{
-		if(pThis->m_pClient->m_Snap.m_pGameInfoObj && g_Config.m_ClSyncEnvelopes)
-			Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
-						(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
-						pThis->Client()->IntraGameTick());
+		if((pItem->m_Version < 2 || pItem->m_Synchronized) && g_Config.m_ClSyncEnvelopes)
+		{
+			if(pThis->m_pClient->m_Snap.m_pGameInfoObj)
+				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
+							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
+							pThis->Client()->IntraGameTick());
+		}
 		else
 			Time = pThis->Client()->LocalTime();
 		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
