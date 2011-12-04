@@ -3179,6 +3179,17 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->m_Channels-3][i], s_ActiveChannels&Bit, &Button, 0, paDescriptions[pEnvelope->m_Channels-3][i]))
 					s_ActiveChannels ^= Bit;
 			}
+
+			// sync checkbox
+			ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
+			ToolBar.VSplitLeft(12.0f, &Button, &ToolBar);
+			static int s_SyncButton;
+			if(DoButton_Editor(&s_SyncButton, pEnvelope->m_Synchronized?"X":"", 0, &Button, 0, "Enable envelope synchronization between clients"))
+				pEnvelope->m_Synchronized = !pEnvelope->m_Synchronized;
+
+			ToolBar.VSplitLeft(4.0f, &Button, &ToolBar);
+			ToolBar.VSplitLeft(80.0f, &Button, &ToolBar);
+			UI()->DoLabel(&Button, "Synchronized", 10.0f, -1, -1);
 		}
 
 		float EndTime = pEnvelope->EndTime();
