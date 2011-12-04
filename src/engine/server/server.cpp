@@ -1534,6 +1534,40 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+int CServer::ListMapsCallback(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	static char s_aDirectory[512] = "maps";
+
+	CServer *pServer = (CServer *)pUser;
+	int l = str_length(pName);
+	if(IsDir && pName[0] == '.')
+		return 0;
+	if(!IsDir && (l < 4 || str_comp(pName+l-4, ".map") != 0))
+		return 0;
+
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "%s/%s", s_aDirectory, pName);
+
+	if(IsDir)
+	{
+		char aDir[512];
+		str_copy(aDir, s_aDirectory, sizeof(s_aDirectory));
+		str_copy(s_aDirectory, aFilename, sizeof(aFilename));
+		pServer->Storage()->ListDirectory(IStorage::TYPE_ALL, aFilename, ListMapsCallback, pServer);
+		str_copy(s_aDirectory, aDir, sizeof(aDir));
+	}
+	else
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aFilename+strlen("maps/"));
+
+	return 0;
+}
+
+void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+	pServer->Storage()->ListDirectory(IStorage::TYPE_ALL, "maps", ListMapsCallback, pServer);
+}
+
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_RunServer = 0;
@@ -1647,6 +1681,7 @@ void CServer::RegisterCommands()
 	Console()->Register("unban_all", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnbanAll, this, "Clear all bans");
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "Show banlist");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
+	Console()->Register("maps", "", CFGFLAG_SERVER, ConListMaps, this, "List maps");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 
 	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");

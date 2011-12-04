@@ -195,6 +195,7 @@ public:
 
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
+	static int ListMapsCallback(const char *pName, int IsDir, int DirType, void *pUser);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
@@ -205,6 +206,7 @@ public:
 	static void ConUnbanAll(IConsole::IResult *pResult, void *pUser);
 	static void ConBans(IConsole::IResult *pResult, void *pUser);
  	static void ConStatus(IConsole::IResult *pResult, void *pUser);
+	static void ConListMaps(IConsole::IResult *pResult, void *pUser);
 	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
