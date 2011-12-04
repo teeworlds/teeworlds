@@ -143,6 +143,8 @@ void CGameClient::OnConsoleInit()
 	m_pScoreboard = &::gs_Scoreboard;
 	m_pGhost = &::gs_Ghost;
 	m_pItems = &::gs_Items;
+	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
+	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
 
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);

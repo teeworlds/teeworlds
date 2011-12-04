@@ -300,6 +300,8 @@ public:
 	//TODO: This is ugly
 	class CGhost *m_pGhost;
 	class CItems *m_pItems;
+	class CMapLayers *m_pMapLayersBackGround;
+	class CMapLayers *m_pMapLayersForeGround;
 };
 
 
