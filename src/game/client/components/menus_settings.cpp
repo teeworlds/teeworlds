@@ -616,10 +616,11 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	}
 
 	CUIRect MovementSettings, WeaponSettings, VotingSettings, ChatSettings, MiscSettings, ResetButton;
-	MainView.VSplitLeft(MainView.w/2-5.0f, &MovementSettings, &VotingSettings);
+	MainView.VSplitMid(&MovementSettings, &VotingSettings);
 
 	// movement settings
 	{
+		MovementSettings.VMargin(5.0f, &MovementSettings);
 		MovementSettings.HSplitTop(MainView.h/3+60.0f, &MovementSettings, &WeaponSettings);
 		RenderTools()->DrawUIRect(&MovementSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MovementSettings.Margin(10.0f, &MovementSettings);
@@ -662,6 +663,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		ResetButton.HMargin(10.0f, &ResetButton);
 		ResetButton.VMargin(30.0f, &ResetButton);
+		ResetButton.HSplitTop(20.0f, &ResetButton, 0);
 		static int s_DefaultButton = 0;
 		if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
 			m_pClient->m_pBinds->SetDefaults();
@@ -669,7 +671,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	// voting settings
 	{
-		VotingSettings.VSplitLeft(10.0f, 0, &VotingSettings);
+		VotingSettings.VMargin(5.0f, &VotingSettings);
 		VotingSettings.HSplitTop(MainView.h/3-75.0f, &VotingSettings, &ChatSettings);
 		RenderTools()->DrawUIRect(&VotingSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		VotingSettings.Margin(10.0f, &VotingSettings);
