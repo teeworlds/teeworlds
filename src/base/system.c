@@ -278,8 +278,13 @@ IOHANDLE io_open(const char *filename, int flags)
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
 		handle = FindFirstFile(filename, &finddata);
-		if(handle == INVALID_HANDLE_VALUE || str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName))
+		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
+		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
+		{
+			FindClose(handle);
+			return 0x0;
+		}
 		FindClose(handle);
 	#endif
 		return (IOHANDLE)fopen(filename, "rb");
