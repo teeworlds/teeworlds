@@ -8,6 +8,9 @@ class CMapLayers : public CComponent
 {
 	CLayers *m_pLayers;	// todo refactor: maybe remove it and access it through client*
 	int m_Type;
+	int m_CurrentLocalTick;
+	int m_LastLocalTick;
+	bool m_EnvelopeUpdate;
 
 	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup);
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
@@ -21,6 +24,8 @@ public:
 	CMapLayers(int Type);
 	virtual void OnInit();
 	virtual void OnRender();
+
+	void EnvelopeUpdate();
 };
 
 #endif

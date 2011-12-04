@@ -22,11 +22,25 @@ CMapLayers::CMapLayers(int t)
 {
 	m_Type = t;
 	m_pLayers = 0;
+	m_CurrentLocalTick = 0;
+	m_LastLocalTick = 0;
+	m_EnvelopeUpdate = false;
 }
 
 void CMapLayers::OnInit()
 {
 	m_pLayers = Layers();
+}
+
+void CMapLayers::EnvelopeUpdate()
+{
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+		m_CurrentLocalTick = pInfo->m_CurrentTick;
+		m_LastLocalTick = pInfo->m_CurrentTick;
+		m_EnvelopeUpdate = true;
+	}
 }
 
 
@@ -67,19 +81,17 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-		static int CurrentLocalTick = pInfo->m_CurrentTick;
-		static int LastLocalTick = pInfo->m_CurrentTick;
-
-		if(!pInfo->m_Paused)
+		
+		if(!pInfo->m_Paused || pThis->m_EnvelopeUpdate)
 		{
-			if(CurrentLocalTick != pInfo->m_CurrentTick)
+			if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
 			{
-				LastLocalTick = CurrentLocalTick;
-				CurrentLocalTick = pInfo->m_CurrentTick;
+				pThis->m_LastLocalTick = pThis->m_CurrentLocalTick;
+				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
 			}
 
-			Time = mix(LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
-						CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
+			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
+						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->Client()->IntraGameTick());
 		}
 
