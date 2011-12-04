@@ -1051,6 +1051,12 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	if(dx*dx+dy*dy < 50)
 		UI()->SetHotItem(pID);
 
+	bool IgnoreGrid;
+	if(Input()->KeyPressed(KEY_LALT) || Input()->KeyPressed(KEY_RALT))
+		IgnoreGrid = true;
+	else
+		IgnoreGrid = false;
+
 	// draw selection background
 	if(m_SelectedQuad == Index)
 	{
@@ -1066,7 +1072,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			// check if we only should move pivot
 			if(s_Operation == OP_MOVE_PIVOT)
 			{
-				if(m_GridActive)
+				if(m_GridActive && !IgnoreGrid)
 				{
 					int LineDistance = GetLineDistance();
 
@@ -1093,7 +1099,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			else if(s_Operation == OP_MOVE_ALL)
 			{
 				// move all points including pivot
-				if(m_GridActive)
+				if(m_GridActive && !IgnoreGrid)
 				{
 					int LineDistance = GetLineDistance();
 
@@ -1172,7 +1178,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		ms_pUiGotContext = pID;
 
 		Graphics()->SetColor(1,1,1,1);
-		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.";
+		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1249,6 +1255,12 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	static bool s_Moved;
 	static int s_Operation = OP_NONE;
 
+	bool IgnoreGrid;
+	if(Input()->KeyPressed(KEY_LALT) || Input()->KeyPressed(KEY_RALT))
+		IgnoreGrid = true;
+	else
+		IgnoreGrid = false;
+
 	if(UI()->ActiveItem() == pID)
 	{
 		float dx = m_MouseDeltaWx;
@@ -1263,7 +1275,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		{
 			if(s_Operation == OP_MOVEPOINT)
 			{
-				if(m_GridActive)
+				if(m_GridActive && !IgnoreGrid)
 				{
 					for(int m = 0; m < 4; m++)
 						if(m_SelectedPoints&(1<<m))
@@ -1344,7 +1356,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		ms_pUiGotContext = pID;
 
 		Graphics()->SetColor(1,1,1,1);
-		m_pTooltip = "Left mouse button to move. Hold shift to move the texture.";
+		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1514,11 +1526,17 @@ void CEditor::DoQuadEnvPoint(CQuad *pQuad, int QIndex, int PIndex)
 		s_ActQIndex = QIndex;
 	}
 
+	bool IgnoreGrid;
+	if(Input()->KeyPressed(KEY_LALT) || Input()->KeyPressed(KEY_RALT))
+		IgnoreGrid = true;
+	else
+		IgnoreGrid = false;
+
 	if(UI()->ActiveItem() == pID && s_ActQIndex == QIndex)
 	{
 		if(s_Operation == OP_MOVE)
 		{
-			if(m_GridActive)
+			if(m_GridActive && !IgnoreGrid)
 			{
 				int LineDistance = GetLineDistance();
 
@@ -1562,7 +1580,7 @@ void CEditor::DoQuadEnvPoint(CQuad *pQuad, int QIndex, int PIndex)
 		ms_pUiGotContext = pID;
 
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_pTooltip = "Left mouse button to move. Hold ctrl to rotate.";
+		m_pTooltip = "Left mouse button to move. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
