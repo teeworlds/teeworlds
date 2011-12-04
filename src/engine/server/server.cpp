@@ -390,6 +390,11 @@ bool CServer::ClientIngame(int ClientID)
 	return ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State == CServer::CClient::STATE_INGAME;
 }
 
+int CServer::MaxClients() const
+{
+	return m_NetServer.MaxClients();
+}
+
 int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientID)
 {
 	return SendMsgEx(pMsg, Flags, ClientID, false);
