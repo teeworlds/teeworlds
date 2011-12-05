@@ -1030,7 +1030,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	// render background
 	CUIRect RestartWarning;
 	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 
