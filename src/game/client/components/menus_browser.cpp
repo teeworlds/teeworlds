@@ -19,8 +19,7 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aCols[] = {
-	{-1,			-1,									" ",		-1, 2.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
-	{COL_FLAG,		-1,									" ",		-1, 42.0f, 0, {0}, {0}},
+	{COL_FLAG,		-1,									" ",		-1, 42.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
 	{COL_NAME,		IServerBrowser::SORT_NAME,			"Name",		0, 300.0f, 0, {0}, {0}},
 	{COL_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 50.0f, 0, {0}, {0}},
 	{COL_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}},
@@ -354,7 +353,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 {
 	CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
 
-	RenderTools()->DrawUIRect(&View, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+	RenderTools()->DrawUIRect(&View, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 0.0f);
 
 	CUIRect Button, Label;
 	View.HMargin(1.0f, &View);
@@ -512,15 +511,30 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// do headers
 	for(int i = 0; i < NUM_COLS; i++)
 	{
-		if(DoButton_GridHeader(ms_aCols[i].m_Caption, ms_aCols[i].m_Caption, g_Config.m_BrSort == ms_aCols[i].m_Sort, &ms_aCols[i].m_Rect))
+		// do refresh button
+		if(i == 0)
 		{
-			if(ms_aCols[i].m_Sort != -1)
+			static int s_HeaderRefreshButton = 0;
+			if(DoButton_GridHeaderIcon(&s_HeaderRefreshButton, IMAGE_BROWSERICONS, SPRITE_BROWSERICON_REFRESH, &ms_aCols[i].m_Rect, CUI::CORNER_TL))
 			{
-				if(g_Config.m_BrSort == ms_aCols[i].m_Sort)
-					g_Config.m_BrSortOrder ^= 1;
-				else
-					g_Config.m_BrSortOrder = 0;
-				g_Config.m_BrSort = ms_aCols[i].m_Sort;
+				if(m_MenuPage == PAGE_INTERNET)
+					ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+				else if(m_MenuPage == PAGE_LAN)
+					ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			}
+		}
+		else
+		{
+			if(DoButton_GridHeader(ms_aCols[i].m_Caption, ms_aCols[i].m_Caption, g_Config.m_BrSort == ms_aCols[i].m_Sort, &ms_aCols[i].m_Rect))
+			{
+				if(ms_aCols[i].m_Sort != -1)
+				{
+					if(g_Config.m_BrSort == ms_aCols[i].m_Sort)
+						g_Config.m_BrSortOrder ^= 1;
+					else
+						g_Config.m_BrSortOrder = 0;
+					g_Config.m_BrSort = ms_aCols[i].m_Sort;
+				}
 			}
 		}
 	}
@@ -1237,6 +1251,31 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 }
 
+void CMenus::RenderServerbrowserConnect(CUIRect MainView)
+{
+	CUIRect Button;
+
+	// address info
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	Button.VSplitLeft(10.0f, 0, &Button);
+	UI()->DoLabelScaled(&Button, Localize("Host address"), 14.0f, -1);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	static float Offset = 0.0f;
+	DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
+
+	// some space
+	MainView.HSplitTop(15.0f, 0, &MainView);
+
+	// connect button
+	MainView.HSplitTop(25.0f, &Button, &MainView);
+	static int s_JoinButton = 0;
+	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
+	{
+		Client()->Connect(g_Config.m_UiServerAddress);
+		m_EnterPressed = false;
+	}
+}
+
 void CMenus::RenderServerbrowser(CUIRect MainView)
 {
 	/*
@@ -1245,12 +1284,12 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		|				  |	| tool	|
 		|   server list	  |	| box 	|
 		|				  |	|	  	|
-		|				  |	|		|
-		+-----------------+	|	 	|
-			status box	tab	+-------+
+		|				  |	+-------+
+		|                 |	|connect|
+		+-----------------+	+-------+
 	*/
 
-	CUIRect ServerList, ToolBox, StatusBox, TabBar;
+	CUIRect ServerList, ToolBox, ConnectBox;
 
 	// background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 12.0f);
@@ -1258,113 +1297,24 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// create server list, status box, tab bar and tool box area
 	MainView.VSplitRight(205.0f, &ServerList, &ToolBox);
-	ServerList.HSplitBottom(70.0f, &ServerList, &StatusBox);
-	StatusBox.VSplitRight(100.0f, &StatusBox, &TabBar);
 	ServerList.VSplitRight(5.0f, &ServerList, 0);
+	ToolBox.HSplitBottom(80.0f, &ToolBox, &ConnectBox);
 
 	// server list
 	{
 		RenderServerbrowserServerList(ServerList);
 	}
 
-	int ToolboxPage = g_Config.m_UiToolboxPage;
-
-	// tab bar
-	{
-		CUIRect TabButton0, TabButton1, TabButton2;
-		TabBar.HSplitTop(5.0f, 0, &TabBar);
-		TabBar.HSplitTop(20.0f, &TabButton0, &TabBar);
-		TabBar.HSplitTop(2.5f, 0, &TabBar);
-		TabBar.HSplitTop(20.0f, &TabButton1, &TabBar);
-		TabBar.HSplitTop(2.5f, 0, &TabBar);
-		TabBar.HSplitTop(20.0f, &TabButton2, 0);
-		vec4 Active = ms_ColorTabbarActive;
-		vec4 InActive = ms_ColorTabbarInactive;
-		ms_ColorTabbarActive = vec4(0.0f, 0.0f, 0.0f, 0.3f);
-		ms_ColorTabbarInactive = vec4(0.0f, 0.0f, 0.0f, 0.15f);
-
-		static int s_FiltersTab = 0;
-		if (DoButton_MenuTab(&s_FiltersTab, Localize("Filter"), ToolboxPage==0, &TabButton0, CUI::CORNER_L))
-			ToolboxPage = 0;
-
-		static int s_InfoTab = 0;
-		if (DoButton_MenuTab(&s_InfoTab, Localize("Info"), ToolboxPage==1, &TabButton1, CUI::CORNER_L))
-			ToolboxPage = 1;
-
-		static int s_FriendsTab = 0;
-		if (DoButton_MenuTab(&s_FriendsTab, Localize("Friends"), ToolboxPage==2, &TabButton2, CUI::CORNER_L))
-			ToolboxPage = 2;
-
-		ms_ColorTabbarActive = Active;
-		ms_ColorTabbarInactive = InActive;
-		g_Config.m_UiToolboxPage = ToolboxPage;
-	}
-
 	// tool box
 	{
 		RenderTools()->DrawUIRect(&ToolBox, vec4(0.0f, 0.0f, 0.0f, 0.15f), CUI::CORNER_T, 4.0f);
 
-
-		if(ToolboxPage == 0)
-			RenderServerbrowserFilters(ToolBox);
-		//else if(ToolboxPage == 1)
-		//	RenderServerbrowserServerDetail(ToolBox);
-		else if(ToolboxPage == 2)
-			RenderServerbrowserFriends(ToolBox);
+		RenderServerbrowserFilters(ToolBox);
 	}
 
-	// status box
+	// connect box
 	{
-		CUIRect Button, ButtonArea;
-		StatusBox.HSplitTop(5.0f, 0, &StatusBox);
-
-		// version note
-		StatusBox.HSplitBottom(15.0f, &StatusBox, &Button);
-		char aBuf[64];
-		if(str_comp(Client()->LatestVersion(), "0") != 0)
-		{
-			str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
-			TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-		}
-		else
-			str_format(aBuf, sizeof(aBuf), Localize("Current version: %s"), GAME_VERSION);
-		UI()->DoLabelScaled(&Button, aBuf, 14.0f, -1);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-		// button area
-		StatusBox.VSplitRight(80.0f, &StatusBox, 0);
-		StatusBox.VSplitRight(170.0f, &StatusBox, &ButtonArea);
-		ButtonArea.VSplitRight(150.0f, 0, &ButtonArea);
-		ButtonArea.HSplitTop(20.0f, &Button, &ButtonArea);
-		Button.VMargin(2.0f, &Button);
-
-		static int s_RefreshButton = 0;
-		if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
-		{
-			if(m_MenuPage == PAGE_INTERNET)
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-			else if(m_MenuPage == PAGE_LAN)
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		}
-
-		ButtonArea.HSplitTop(5.0f, 0, &ButtonArea);
-		ButtonArea.HSplitTop(20.0f, &Button, &ButtonArea);
-		Button.VMargin(2.0f, &Button);
-
-		static int s_JoinButton = 0;
-		if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
-		{
-			Client()->Connect(g_Config.m_UiServerAddress);
-			m_EnterPressed = false;
-		}
-
-		// address info
-		StatusBox.VSplitLeft(20.0f, 0, &StatusBox);
-		StatusBox.HSplitTop(20.0f, &Button, &StatusBox);
-		UI()->DoLabelScaled(&Button, Localize("Host address"), 14.0f, -1);
-		StatusBox.HSplitTop(20.0f, &Button, 0);
-		static float Offset = 0.0f;
-		DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
+		RenderServerbrowserConnect(ConnectBox);
 	}
 
 	// render overlay if there is any

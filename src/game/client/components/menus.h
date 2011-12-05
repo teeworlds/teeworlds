@@ -62,6 +62,7 @@ class CMenus : public CComponent
 
 	int DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect);
 	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
 	//static void ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -340,7 +341,7 @@ class CMenus : public CComponent
 		COL_FAVORITE,
 		COL_INFO,
 
-		NUM_COLS=9,
+		NUM_COLS,
 	};
 
 	struct CColumn
@@ -386,6 +387,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
+	void RenderServerbrowserConnect(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
 	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry);
