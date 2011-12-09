@@ -54,6 +54,7 @@ MACRO_CONFIG_INT(ClRenderAmmo, cl_render_ammo, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_S
 MACRO_CONFIG_INT(ClRenderCrosshair, cl_render_crosshair, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the crosshair on or off")
 MACRO_CONFIG_INT(ClRenderTeamScore, cl_render_team_score, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the small team score board on or off")
 MACRO_CONFIG_INT(ClRenderDmScore, cl_render_dm_score, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the small DM score board on or off")
+MACRO_CONFIG_INT(ClRenderSpectate, cl_render_spectate, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes the small spectating display on or off")
 MACRO_CONFIG_INT(ClRenderServermsg, cl_render_servermsg, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes in game server messages on or off")
 MACRO_CONFIG_INT(ClRenderChat, cl_render_chat, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes in game chat on or off")
 MACRO_CONFIG_INT(ClRenderKill, cl_render_kill, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes kill messages on or off")

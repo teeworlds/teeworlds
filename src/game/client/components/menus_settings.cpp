@@ -1223,6 +1223,10 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			if(DoButton_CheckBox(&g_Config.m_ClRenderDmScore, Localize("DM score"), g_Config.m_ClRenderDmScore, &Button))
 				g_Config.m_ClRenderDmScore ^= 1;
+
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			if(DoButton_CheckBox(&g_Config.m_ClRenderSpectate, Localize("Spectate"), g_Config.m_ClRenderSpectate, &Button))
+				g_Config.m_ClRenderSpectate ^= 1;
 			
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			if(DoButton_CheckBox(&g_Config.m_ClShowfps, Localize("FPS"), g_Config.m_ClShowfps, &Button))

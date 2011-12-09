@@ -467,6 +467,9 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 
 void CHud::RenderSpectatorHud()
 {
+	if(!g_Config.m_ClRenderSpectate)
+		return;
+
 	// draw the box
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
