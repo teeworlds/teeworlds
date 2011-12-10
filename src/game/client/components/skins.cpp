@@ -7,6 +7,7 @@
 
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <engine/shared/config.h>
 
 #include "skins.h"
 
@@ -103,8 +104,11 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// set skin data
 	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-3));
-	str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+	if(g_Config.m_Debug)
+	{
+		str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+	}
 	pSelf->m_aSkins.add(Skin);
 
 	return 0;
