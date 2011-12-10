@@ -381,6 +381,8 @@ int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int St
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
+		if(ID != m_InvalidTexture && g_Config.m_Debug)
+			dbg_msg("graphics/texture", "loaded %s", pFilename);
 		return ID;
 	}
 
