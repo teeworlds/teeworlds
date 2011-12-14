@@ -204,14 +204,19 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 			CBan *pInsertAfter = m_BanPool_FirstUsed;
 			MACRO_LIST_FIND(pInsertAfter, m_pNext, Stamp < pInsertAfter->m_Info.m_Expires);
 
-			if(pInsertAfter)
+			if(pInsertAfter && Stamp != -1)
 				pInsertAfter = pInsertAfter->m_pPrev;
 			else
 			{
 				// add to last
-				pInsertAfter = m_BanPool_FirstUsed;
-				while(pInsertAfter->m_pNext)
-					pInsertAfter = pInsertAfter->m_pNext;
+				if (m_BanPool_FirstUsed->m_Info.m_Expires == -1)
+					pInsertAfter = 0;
+				else
+				{
+					pInsertAfter = m_BanPool_FirstUsed;
+					while(pInsertAfter->m_pNext && pInsertAfter->m_pNext->m_Info.m_Expires != -1)
+						pInsertAfter = pInsertAfter->m_pNext;
+				}
 			}
 
 			if(pInsertAfter)
