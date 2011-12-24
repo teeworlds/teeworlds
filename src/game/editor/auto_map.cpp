@@ -33,7 +33,7 @@ void CTileSetMapper::Load(TiXmlElement* pElement)
 				if(pRuleNode->QueryIntAttribute("index", &NewRuleSet.m_BaseTile) != TIXML_SUCCESS)
 					NewRuleSet.m_BaseTile = 1;
 					
-				clamp(NewRuleSet.m_BaseTile, 0, 255);
+				NewRuleSet.m_BaseTile = clamp(NewRuleSet.m_BaseTile, 0, 255);
 			}
 
 			if(str_comp(pRuleNode->Value(), "Rule"))
@@ -44,7 +44,7 @@ void CTileSetMapper::Load(TiXmlElement* pElement)
 			if(pRuleNode->QueryIntAttribute("index", &NewRule.m_Index) != TIXML_SUCCESS)
 				NewRule.m_Index = 1;
 				
-			clamp(NewRule.m_Index, 0, 255);
+			NewRule.m_Index = clamp(NewRule.m_Index, 0, 255);
 			
 			NewRule.m_Random = 0;
 			
@@ -58,8 +58,8 @@ void CTileSetMapper::Load(TiXmlElement* pElement)
 			if(pRuleNode->QueryIntAttribute("vflip", &NewRule.m_VFlip) != TIXML_SUCCESS)
 				NewRule.m_VFlip = 0;
 			
-			clamp(NewRule.m_HFlip, 0, 1);
-			clamp(NewRule.m_VFlip, 0, 1);
+			NewRule.m_HFlip = clamp(NewRule.m_HFlip, 0, 1);
+			NewRule.m_VFlip = clamp(NewRule.m_VFlip, 0, 1);
 			
 			// get rule's content
 			TiXmlElement* pNode = pRuleNode->FirstChildElement();
@@ -83,7 +83,7 @@ void CTileSetMapper::Load(TiXmlElement* pElement)
 							Condition.m_Value = CRuleCondition::FULL;
 					}
 					else
-						clamp(Condition.m_Value, (int)CRuleCondition::EMPTY, 255);
+						Condition.m_Value = clamp(Condition.m_Value, (int)CRuleCondition::EMPTY, 255);
 					
 					NewRule.m_aConditions.add(Condition);
 				}
@@ -92,7 +92,7 @@ void CTileSetMapper::Load(TiXmlElement* pElement)
 					if(pNode->QueryIntAttribute("value", &NewRule.m_Random) != TIXML_SUCCESS)
 						NewRule.m_Random = 0;
 						
-					clamp(NewRule.m_Random, 0, 99999);
+					NewRule.m_Random = clamp(NewRule.m_Random, 0, 99999);
 				}
 			}
 			
@@ -250,8 +250,8 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 			if(pRuleNode->QueryIntAttribute("ry", &NewRule.m_RelativePos.y) != TIXML_SUCCESS)
 				NewRule.m_RelativePos.y = 0;
 				
-			clamp(NewRule.m_Rect.x, 0, 255);
-			clamp(NewRule.m_Rect.y, 0, 255);
+			NewRule.m_Rect.x = clamp(NewRule.m_Rect.x, 0, 255);
+			NewRule.m_Rect.y = clamp(NewRule.m_Rect.y, 0, 255);
 			
 			// broken, skip
 			if(NewRule.m_Rect.x > NewRule.m_Rect.y)
@@ -269,8 +269,8 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 			if(pRuleNode->QueryIntAttribute("vflip", &NewRule.m_VFlip) != TIXML_SUCCESS)
 				NewRule.m_VFlip = 0;
 			
-			clamp(NewRule.m_HFlip, 0, 1);
-			clamp(NewRule.m_VFlip, 0, 1);
+			NewRule.m_HFlip = clamp(NewRule.m_HFlip, 0, 1);
+			NewRule.m_VFlip = clamp(NewRule.m_VFlip, 0, 1);
 			
 			// get rule's content
 			TiXmlElement* pNode = pRuleNode->FirstChildElement();
@@ -294,7 +294,7 @@ void CDoodadMapper::Load(TiXmlElement* pElement)
 					if(pNode->QueryIntAttribute("value", &NewRule.m_Random) != TIXML_SUCCESS)
 						NewRule.m_Random = 1;
 						
-					clamp(NewRule.m_Random, 1, 9999);
+					NewRule.m_Random = clamp(NewRule.m_Random, 1, 9999);
 				}
 			}
 			
