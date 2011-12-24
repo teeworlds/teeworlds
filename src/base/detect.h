@@ -101,7 +101,7 @@
 	#endif
 #endif
 
-#if defined(__ia64__)
+#if defined(__ia64__) || defined(_M_IA64)
 	#define CONF_ARCH_IA64 1
 	#define CONF_ARCH_STRING "ia64"
 	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
@@ -109,7 +109,7 @@
 	#endif
 #endif
 
-#if defined(__amd64__) || defined(__x86_64__)
+#if defined(__amd64__) || defined(__x86_64__) || defined(_M_X64)
 	#define CONF_ARCH_AMD64 1
 	#define CONF_ARCH_STRING "amd64"
 	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)

@@ -1,6 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <algorithm> // sort
+#include <algorithm> // sort  TODO: remove this
 
 #include <base/math.h>
 #include <base/system.h>
@@ -26,7 +26,7 @@ class SortWrap
 	CServerBrowser *m_pThis;
 public:
 	SortWrap(CServerBrowser *t, SortFunc f) : m_pfnSort(f), m_pThis(t) {}
-	bool operator()(int a, int b) { return (m_pThis->*m_pfnSort)(a, b); }
+	bool operator()(int a, int b) { return (g_Config.m_BrSortOrder ? (m_pThis->*m_pfnSort)(b, a) : (m_pThis->*m_pfnSort)(a, b)); }
 };
 
 CServerBrowser::CServerBrowser()
@@ -283,27 +283,16 @@ void CServerBrowser::Sort()
 
 	// sort
 	if(g_Config.m_BrSort == IServerBrowser::SORT_NAME)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareName));
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareName));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_PING)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortComparePing));
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortComparePing));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_MAP)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareMap));
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareMap));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_NUMPLAYERS)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this,
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this,
 					g_Config.m_BrFilterSpectators ? &CServerBrowser::SortCompareNumPlayers : &CServerBrowser::SortCompareNumClients));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_GAMETYPE)
-		std::sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
-
-	// invert the list if requested
-	if(g_Config.m_BrSortOrder)
-	{
-		for(i = 0; i < m_NumSortedServers/2; i++)
-		{
-			int Temp = m_pSortedServerlist[i];
-			m_pSortedServerlist[i] = m_pSortedServerlist[m_NumSortedServers-i-1];
-			m_pSortedServerlist[m_NumSortedServers-i-1] = Temp;
-		}
-	}
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
 
 	// set indexes
 	for(i = 0; i < m_NumSortedServers; i++)

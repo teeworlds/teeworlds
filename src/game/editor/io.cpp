@@ -342,10 +342,11 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
 		CMapItemEnvelope Item;
-		Item.m_Version = 1;
+		Item.m_Version = CMapItemEnvelope::CURRENT_VERSION;
 		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
+		Item.m_Synchronized = m_lEnvelopes[e]->m_Synchronized;
 		StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), m_lEnvelopes[e]->m_aName);
 
 		df.AddItem(MAPITEMTYPE_ENVELOPE, e, sizeof(Item), &Item);
@@ -601,6 +602,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				if(pItem->m_aName[0] != -1)	// compatibility with old maps
 					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
 				m_lEnvelopes.add(pEnv);
+				if(pItem->m_Version >= 2)
+					pEnv->m_Synchronized = pItem->m_Synchronized;
 			}
 		}
 	}

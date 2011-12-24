@@ -1,20 +1,19 @@
-
 ##### translated strings #####
 
 %d Bytes
-== %d Bytes
+== %d Bajtova
 
 %d of %d servers, %d players
 == %d od %d server(a), %d igrač(a)
 
 %d%% loaded
-== Učitano %d%%
+== %d%% učitano
 
 %ds left
 == Još %ds
 
 %i minute left
-== Još %ds
+== %i minut preostao
 
 %i minutes left
 == Preostalo: %i min.
@@ -26,7 +25,7 @@
 == Preostalo: %i sek.
 
 %s wins!
-== %s je pobijedio!
+== %s je pobedio!
 
 -Page %d-
 == -Strana %d-
@@ -68,7 +67,7 @@ Automatically record demos
 == Automatski snimi demo
 
 Automatically take game over screenshot
-== Automatski napravi screenshot
+== Automatski snimi screenshot
 
 Blue team
 == Plavi tim
@@ -104,7 +103,7 @@ Connect
 == Konektuj
 
 Connecting to
-== Konektujem na
+== Konektujem se na
 
 Connection Problems...
 == Problemi sa konekcijom...
@@ -116,7 +115,7 @@ Controls
 == Kontrole
 
 Count players only
-== Izbroj samo igrače
+== Broj samo igrače
 
 Country
 == Država
@@ -149,7 +148,7 @@ Demofile: %s
 == Demo-snimak: %s
 
 Demos
-== Demoi
+== Demo-i
 
 Disconnect
 == Diskonektuj
@@ -167,7 +166,7 @@ Draw!
 == Nerešeno!
 
 Dynamic Camera
-== Dinamička kamera
+== Dinamična kamera
 
 Emoticon
 == Emoticon
@@ -197,10 +196,10 @@ Filter
 == Filter
 
 Fire
-== Pucanje
+== Pucaj
 
 Folder
-== Direktorijum
+== Folder
 
 Force vote
 == Obavezno glasanje
@@ -248,7 +247,7 @@ High Detail
 == Visoki detalji
 
 Hook
-== Lanac
+== Kuka
 
 Host address
 == Adresa servera
@@ -338,10 +337,10 @@ Name
 == Ime
 
 Name plates size
-== Veličina pozadine za ime
+== Veličina pločice za ime
 
 Netversion:
-== Net-verzija:
+== Net verzija:
 
 New name:
 == Novo ime:
@@ -368,13 +367,13 @@ No servers match your filter criteria
 == Nijedan server ne odgovara zadatom kriteriju
 
 Ok
-== OK
+== Ok
 
 Open
 == Otvori
 
 Parent Folder
-== Prethodni direktorijum
+== Prethodni folder
 
 Password
 == Lozinka
@@ -458,7 +457,7 @@ Rename
 == Preimenuj
 
 Rename demo
-== Preimenuj demo-snimak
+== Preimenuj demo
 
 Reset filter
 == Poništi filter
@@ -467,7 +466,7 @@ Reset to defaults
 == Resetuj podešavanja
 
 Rifle
-== Laser
+== Puška
 
 Round
 == Runda
@@ -518,7 +517,7 @@ Show chat
 == Prikaži chat
 
 Show friends only
-== Prikaži isključivo prijatelje
+== Prikaži samo prijatelje
 
 Show ingame HUD
 == Prikaži HUD
@@ -548,10 +547,10 @@ Spectate
 == Posmatraj
 
 Spectate next
-== Posmatraj narednog
+== Posmatraj sledećeg
 
 Spectate previous
-== Posmatraj prethodnog
+== Posmatraj prošlog
 
 Spectator mode
 == Posmatrački mod
@@ -590,7 +589,7 @@ Texture Compression
 == Kompresija tekstura
 
 The audio device couldn't be initialised.
-== Audio-uređaj nije moguće pokrenuti.
+== Audio uređaj nije moguće pokrenuti.
 
 The server is running a non-standard tuning on a pure game type.
 == Server sadrži nestandardna podešavanja.
@@ -617,13 +616,13 @@ UI Color
 == Boja menija
 
 Unable to delete the demo
-== Demo-snimak nije moguće obrisati
+== Demo nije moguće obrisati
 
 Unable to rename the demo
-== Demo-snimak nije moguće preimenovati
+== Demo nije moguće preimenovati
 
 Use sounds
-== Aktiviraj zvuk
+== Koristi zvuk
 
 Use team colors for name plates
 == Koristi timsku boju u prikazu imena
@@ -644,10 +643,10 @@ Vote description:
 == Opis glasanja:
 
 Vote no
-== Ne
+== Protiv
 
 Vote yes
-== Da
+== Za
 
 Voting
 == Glasanje

@@ -48,16 +48,7 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket);
 
-	// setup all pointers for bans
-	for(int i = 1; i < NET_SERVER_MAXBANS-1; i++)
-	{
-		m_BanPool[i].m_pNext = &m_BanPool[i+1];
-		m_BanPool[i].m_pPrev = &m_BanPool[i-1];
-	}
-
-	m_BanPool[0].m_pNext = &m_BanPool[1];
-	m_BanPool[NET_SERVER_MAXBANS-1].m_pPrev = &m_BanPool[NET_SERVER_MAXBANS-2];
-	m_BanPool_FirstFree = &m_BanPool[0];
+	BanRemoveAll();
 
 	return true;
 }
@@ -144,6 +135,28 @@ int CNetServer::BanRemove(NETADDR Addr)
 	}
 
 	return -1;
+}
+
+int CNetServer::BanRemoveAll()
+{
+	// clear bans memory
+	mem_zero(m_aBans, sizeof(m_aBans));
+	mem_zero(m_BanPool, sizeof(m_BanPool));
+	m_BanPool_FirstFree = 0;
+	m_BanPool_FirstUsed = 0;
+
+	// setup all pointers for bans
+	for(int i = 1; i < NET_SERVER_MAXBANS-1; i++)
+	{
+		m_BanPool[i].m_pNext = &m_BanPool[i+1];
+		m_BanPool[i].m_pPrev = &m_BanPool[i-1];
+	}
+
+	m_BanPool[0].m_pNext = &m_BanPool[1];
+	m_BanPool[NET_SERVER_MAXBANS-1].m_pPrev = &m_BanPool[NET_SERVER_MAXBANS-2];
+	m_BanPool_FirstFree = &m_BanPool[0];
+
+	return 0;
 }
 
 int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)

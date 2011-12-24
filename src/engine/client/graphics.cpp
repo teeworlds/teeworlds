@@ -5,19 +5,7 @@
 #include <base/math.h>
 
 #include "SDL.h"
-
-#ifdef CONF_FAMILY_WINDOWS
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#endif
-
-#ifdef CONF_PLATFORM_MACOSX
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glu.h>
-#else
-	#include <GL/gl.h>
-	#include <GL/glu.h>
-#endif
+#include "SDL_opengl.h"
 
 #include <base/system.h>
 #include <engine/external/pnglite/pnglite.h>
@@ -31,13 +19,6 @@
 #include <math.h> // cosf, sinf
 
 #include "graphics.h"
-
-// compressed textures
-#define GL_COMPRESSED_RGB_ARB 0x84ED
-#define GL_COMPRESSED_RGBA_ARB 0x84EE
-#define GL_COMPRESSED_ALPHA_ARB 0x84E9
-
-#define TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 
 
 static CVideoMode g_aFakeModes[] = {
@@ -400,6 +381,8 @@ int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int St
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
+		if(ID != m_InvalidTexture && g_Config.m_Debug)
+			dbg_msg("graphics/texture", "loaded %s", pFilename);
 		return ID;
 	}
 
@@ -743,19 +726,14 @@ bool CGraphics_OpenGL::Init()
 
 int CGraphics_SDL::TryInit()
 {
-	const SDL_VideoInfo *pInfo;
-	int Flags = SDL_OPENGL;
-
 	m_ScreenWidth = g_Config.m_GfxScreenWidth;
 	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
-	pInfo = SDL_GetVideoInfo();
+	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
 	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 
 	// set flags
-	Flags = SDL_OPENGL;
-	Flags |= SDL_GL_DOUBLEBUFFER;
-	Flags |= SDL_HWPALETTE;
+	int Flags = SDL_OPENGL;
 	if(g_Config.m_DbgResizable)
 		Flags |= SDL_RESIZABLE;
 
