@@ -36,7 +36,7 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			{
 				pMessage++;
 				Num++;
-				if(!pMessage[0])
+				if(!pMessage[0] || Num > MAX_NAME_LENGTH)
 					return;
 			}
 			
