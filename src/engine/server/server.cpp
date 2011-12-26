@@ -1507,6 +1507,22 @@ void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_MapReload = 1;
 }
 
+void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+
+	CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+	Msg.AddInt(0);	//authed
+	Msg.AddInt(0);	//cmdlist
+	pServer->SendMsgEx(&Msg, MSGFLAG_VITAL, pServer->m_RconClientID, true);
+
+	pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
+	pServer->SendRconLine(pServer->m_RconClientID, "You've logged out");
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "ClientID=%d logged out", pServer->m_RconClientID);
+	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+}
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1567,6 +1583,7 @@ void CServer::RegisterCommands()
 	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
+	Console()->Register("logout", "", CFGFLAG_SERVER, ConLogout, this, "Logs you out of Rcon");
 
 	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
