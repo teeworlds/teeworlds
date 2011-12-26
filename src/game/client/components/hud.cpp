@@ -720,20 +720,20 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
 		{
 			const char* pMessage = pMsg->m_pMessage;
-			
+
 			int Num = 0;
 			while(str_comp_num(pMessage, " finished in: ", 14))
 			{
 				pMessage++;
 				Num++;
-				if(!pMessage[0])
+				if(!pMessage[0] || Num >= MAX_NAME_LENGTH)
 					return;
 			}
-			
+
 			// store the name
 			char PlayerName[MAX_NAME_LENGTH];
 			str_copy(PlayerName, pMsg->m_pMessage, Num+1);
-			
+
 			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName))
 			{
 				int Minutes = 0;
