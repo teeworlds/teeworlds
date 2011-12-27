@@ -172,15 +172,11 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 	if(Seconds)
 		Stamp = time_timestamp() + Seconds;
 
-	// search to see if it already exists
+	// search to remove it if it already exists
 	pBan = m_aBans[IpHash];
 	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
 	if(pBan)
-	{
-		// adjust the ban
-		pBan->m_Info.m_Expires = Stamp;
-		return 0;
-	}
+		BanRemoveByObject(pBan);
 
 	if(!m_BanPool_FirstFree)
 		return -1;
@@ -204,14 +200,19 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 			CBan *pInsertAfter = m_BanPool_FirstUsed;
 			MACRO_LIST_FIND(pInsertAfter, m_pNext, Stamp < pInsertAfter->m_Info.m_Expires);
 
-			if(pInsertAfter)
+			if(pInsertAfter && Stamp != -1)
 				pInsertAfter = pInsertAfter->m_pPrev;
 			else
 			{
 				// add to last
-				pInsertAfter = m_BanPool_FirstUsed;
-				while(pInsertAfter->m_pNext)
-					pInsertAfter = pInsertAfter->m_pNext;
+				if (m_BanPool_FirstUsed->m_Info.m_Expires == -1)
+					pInsertAfter = 0;
+				else
+				{
+					pInsertAfter = m_BanPool_FirstUsed;
+					while(pInsertAfter->m_pNext && pInsertAfter->m_pNext->m_Info.m_Expires != -1)
+						pInsertAfter = pInsertAfter->m_pNext;
+				}
 			}
 
 			if(pInsertAfter)
