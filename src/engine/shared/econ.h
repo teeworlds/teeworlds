@@ -31,6 +31,7 @@ class CEcon
 
 	bool m_Ready;
 	int m_PrintCBIndex;
+	int m_EconClientID;
 
 	static void SendLineCB(const char *pLine, void *pUserData);
 	static void ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -41,10 +42,14 @@ class CEcon
 public:
 	IConsole *Console() { return m_pConsole; }
 
+	int GetEconCID() { return m_EconClientID; }
+
 	void Init(IConsole *pConsole);
 	void Update();
 	void Send(int ClientID, const char *pLine);
+	void Drop(int ClientID, const char *pReason);
 	void Shutdown();
+
 };
 
 #endif

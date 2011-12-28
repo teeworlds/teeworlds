@@ -187,6 +187,8 @@ public:
 	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
+	void DropClient(int ClientID, const char *pReason, bool Econ);
+
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
 	int BanRemoveAll();

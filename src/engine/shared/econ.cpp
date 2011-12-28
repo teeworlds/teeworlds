@@ -55,6 +55,7 @@ void CEcon::ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUse
 void CEcon::Init(IConsole *pConsole)
 {
 	m_pConsole = pConsole;
+	m_EconClientID = -1;
 
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
 		m_aClients[i].m_State = CClient::STATE_EMPTY;
@@ -121,7 +122,7 @@ void CEcon::Update()
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
 					if(!g_Config.m_EcBantime)
-						m_NetConsole.Drop(ClientID, "Too many authentication tries");
+						Drop(ClientID, "Too many authentication tries");
 					else
 					{
 						NETADDR Addr = m_NetConsole.ClientAddr(ClientID);
@@ -135,7 +136,9 @@ void CEcon::Update()
 			char aFormatted[256];
 			str_format(aFormatted, sizeof(aBuf), "cid=%d cmd='%s'", ClientID, aBuf);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aFormatted);
+			m_EconClientID = ClientID;
 			Console()->ExecuteLine(aBuf);
+			m_EconClientID = -1;
 		}
 	}
 
@@ -143,7 +146,7 @@ void CEcon::Update()
 	{
 		if(m_aClients[i].m_State == CClient::STATE_CONNECTED &&
 			time_get() > m_aClients[i].m_TimeConnected + g_Config.m_EcAuthTimeout * time_freq())
-			m_NetConsole.Drop(i, "authentication timeout");
+			Drop(i, "authentication timeout");
 	}
 }
 
@@ -162,6 +165,11 @@ void CEcon::Send(int ClientID, const char *pLine)
 	}
 	else if(ClientID >= 0 && ClientID < NET_MAX_CONSOLE_CLIENTS && m_aClients[ClientID].m_State == CClient::STATE_AUTHED)
 		m_NetConsole.Send(ClientID, pLine);
+}
+
+void CEcon::Drop(int ClientID, const char *pReason)
+{
+	m_NetConsole.Drop(ClientID, pReason);
 }
 
 void CEcon::Shutdown()

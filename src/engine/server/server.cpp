@@ -1046,6 +1046,14 @@ void CServer::UpdateServerInfo()
 	}
 }
 
+void CServer::DropClient(int ClientID, const char *pReason, bool Econ)
+{
+	if(!Econ)
+		m_NetServer.Drop(ClientID, pReason);
+	else
+		m_Econ.Drop(ClientID, pReason);
+}
+
 int CServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 {
 	Addr.port = 0;
@@ -1588,16 +1596,28 @@ void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pServer = (CServer *)pUser;
 
-	CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-	Msg.AddInt(0);	//authed
-	Msg.AddInt(0);	//cmdlist
-	pServer->SendMsgEx(&Msg, MSGFLAG_VITAL, pServer->m_RconClientID, true);
+	if(pServer->m_RconClientID >= 0 && pServer->m_Econ.GetEconCID() == -1)
+	{
+		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+		Msg.AddInt(0);	//authed
+		Msg.AddInt(0);	//cmdlist
+		pServer->SendMsgEx(&Msg, MSGFLAG_VITAL, pServer->m_RconClientID, true);
 
-	pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
-	pServer->SendRconLine(pServer->m_RconClientID, "You've logged out");
-	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "ClientID=%d logged out", pServer->m_RconClientID);
-	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
+		pServer->SendRconLine(pServer->m_RconClientID, "You've logged out");
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "ClientID=%d logged out", pServer->m_RconClientID);
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	}
+	else if(pServer->m_Econ.GetEconCID() >= 0 && pServer->m_RconClientID == -1)
+	{
+		pServer->DropClient(pServer->m_Econ.GetEconCID(), "You've logged out", true);
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "EconClientID=%d logged out", pServer->m_Econ.GetEconCID());
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	}
+	else
+		dbg_assert(pServer->m_RconClientID == -1 && pServer->m_Econ.GetEconCID() == -1, "Both Econ and Rcon client id are set");
 }
 
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
