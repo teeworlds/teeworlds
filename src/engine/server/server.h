@@ -187,6 +187,8 @@ public:
 	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
+	void DropClient(int ClientID, const char *pReason, bool Econ);
+
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
 	int BanRemoveAll();
@@ -209,6 +211,7 @@ public:
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
+	static void ConLogout(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
