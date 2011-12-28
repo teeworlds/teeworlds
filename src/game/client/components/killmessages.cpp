@@ -99,7 +99,7 @@ void CKillMessages::OnRender()
 				if(g_Config.m_TcColoredFlags)
 				{
 					vec3 Col = CTeecompUtils::GetTeamColor(Team^1,
-						m_pClient->m_Snap.m_pLocalInfo->m_Team,
+						m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 						g_Config.m_TcColoredTeesTeam1,
 						g_Config.m_TcColoredTeesTeam2,
 						g_Config.m_TcColoredTeesMethod);
@@ -147,7 +147,7 @@ void CKillMessages::OnRender()
 					if(g_Config.m_TcColoredFlags)
 					{
 						vec3 Col = CTeecompUtils::GetTeamColor(Team^1,
-							m_pClient->m_Snap.m_pLocalInfo->m_Team,
+							m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 							g_Config.m_TcColoredTeesTeam1,
 							g_Config.m_TcColoredTeesTeam2,
 							g_Config.m_TcColoredTeesMethod);

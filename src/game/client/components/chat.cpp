@@ -623,22 +623,22 @@ void CChat::OnRender()
 				TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
 			else if(m_aLines[r].m_NameColor == TEAM_RED)
 			{
-				if(!m_pClient->m_Snap.m_pLocalInfo || CTeecompUtils::GetForceDmColors(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo->m_Team))
+				if(CTeecompUtils::GetForceDmColors(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED))
 					TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend);// red
 				else
 				{
-					TColor = CTeecompUtils::GetTeamColor(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+					TColor = CTeecompUtils::GetTeamColor(TEAM_RED, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED, g_Config.m_TcColoredTeesTeam1,
 						g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}
 			}
 			else if(m_aLines[r].m_NameColor == TEAM_BLUE)
 			{
-				if(!m_pClient->m_Snap.m_pLocalInfo || CTeecompUtils::GetForceDmColors(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo->m_Team))
+				if(CTeecompUtils::GetForceDmColors(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED))
 					TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
 				else
 				{
-					TColor = CTeecompUtils::GetTeamColor(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+					TColor = CTeecompUtils::GetTeamColor(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED, g_Config.m_TcColoredTeesTeam1,
 							g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, Blend);
 				}	

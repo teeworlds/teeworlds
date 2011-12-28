@@ -176,9 +176,9 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
-	if(g_Config.m_TcColoredFlags && m_pClient->m_Snap.m_pLocalInfo)
+	if(g_Config.m_TcColoredFlags)
 	{
-		vec3 Col = CTeecompUtils::GetTeamColor(pCurrent->m_Team, m_pClient->m_Snap.m_pLocalInfo->m_Team,
+		vec3 Col = CTeecompUtils::GetTeamColor(pCurrent->m_Team, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 			g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 		Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
 	}

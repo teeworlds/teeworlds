@@ -261,7 +261,7 @@ void CSpectator::OnRender()
 
 			if(g_Config.m_TcColoredFlags)
 			{
-				vec3 Col = CTeecompUtils::GetTeamColor(1-m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team, m_pClient->m_Snap.m_pLocalInfo->m_Team, 
+				vec3 Col = CTeecompUtils::GetTeamColor(1-m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED, 
 					g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 				Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
 			}

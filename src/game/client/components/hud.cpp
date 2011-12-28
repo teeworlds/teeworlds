@@ -123,7 +123,7 @@ void CHud::RenderScoreHud()
 				Graphics()->BlendNormal();
 				Graphics()->TextureSet(-1);
 				Graphics()->QuadsBegin();
-				if(!g_Config.m_TcHudMatch || CTeecompUtils::GetForceDmColors(t, m_pClient->m_Snap.m_pLocalInfo->m_Team))
+				if(!g_Config.m_TcHudMatch || CTeecompUtils::GetForceDmColors(t, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED))
 				{
 					if(t == 0)
 						Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
@@ -132,7 +132,7 @@ void CHud::RenderScoreHud()
 				}
 				else
 				{
-					vec3 Col = CTeecompUtils::GetTeamColor(t, m_pClient->m_Snap.m_pLocalInfo->m_Team,
+					vec3 Col = CTeecompUtils::GetTeamColor(t, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 									g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 					Graphics()->SetColor(Col.r, Col.g, Col.b, 0.25f);
 				}
@@ -160,7 +160,7 @@ void CHud::RenderScoreHud()
 						if(g_Config.m_TcColoredFlags)
 						{
 							vec3 Col = CTeecompUtils::GetTeamColor(t,
-																   m_pClient->m_Snap.m_pLocalInfo->m_Team,
+																   m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 																   g_Config.m_TcColoredTeesTeam1,
 																   g_Config.m_TcColoredTeesTeam2,
 																   g_Config.m_TcColoredTeesMethod);

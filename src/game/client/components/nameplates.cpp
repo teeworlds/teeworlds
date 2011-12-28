@@ -46,7 +46,7 @@ void CNamePlates::RenderNameplate(
 		{
 			vec3 Col = CTeecompUtils::GetTeamColor(
 				m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_Team,
-				m_pClient->m_Snap.m_pLocalInfo->m_Team,
+				m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED,
 				g_Config.m_TcColoredTeesTeam1,
 				g_Config.m_TcColoredTeesTeam2,
 				g_Config.m_TcColoredTeesMethod);
