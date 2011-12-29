@@ -285,7 +285,8 @@ class CTextRender : public IEngineTextRender
 					Oldest = i;
 			}
 
-			if(time_get()-pSizeData->m_aCharacters[Oldest].m_TouchTime < time_freq())
+			if(time_get()-pSizeData->m_aCharacters[Oldest].m_TouchTime < time_freq() &&
+				(pSizeData->m_NumXChars < MAX_CHARACTERS || pSizeData->m_NumYChars < MAX_CHARACTERS))
 			{
 				IncreaseTextureSize(pSizeData);
 				return GetSlot(pSizeData);
