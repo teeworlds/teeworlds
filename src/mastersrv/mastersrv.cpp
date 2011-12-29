@@ -1,20 +1,23 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
-#include <engine/shared/network.h>
-#include <engine/shared/config.h>
+
 #include <engine/console.h>
-#include <engine/storage.h>
 #include <engine/kernel.h>
+#include <engine/storage.h>
+
+#include <engine/shared/config.h>
+#include <engine/shared/netban.h>
+#include <engine/shared/network.h>
 
 #include "mastersrv.h"
+
 
 enum {
 	MTU = 1400,
 	MAX_SERVERS_PER_PACKET=75,
 	MAX_PACKETS=16,
 	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
-	MAX_BANS=128,
 	EXPIRE_TIME = 90
 };
 
@@ -77,14 +80,7 @@ static CCountPacketData m_CountData;
 static CCountPacketData m_CountDataLegacy;
 
 
-struct CBanEntry
-{
-	NETADDR m_Address;
-	int64 m_Expire;
-};
-
-static CBanEntry m_aBans[MAX_BANS];
-static int m_NumBans = 0;
+CNetBan m_NetBan;
 
 static CNetClient m_NetChecker; // NAT/FW checker
 static CNetClient m_NetOp; // main
@@ -217,9 +213,9 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, ServerType Type)
 	}
 
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr), true);
 	char aAltAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(pAlt, aAltAddrStr, sizeof(aAltAddrStr));
+	net_addr_str(pAlt, aAltAddrStr, sizeof(aAltAddrStr), true);
 	dbg_msg("mastersrv", "checking: %s (%s)", aAddrStr, aAltAddrStr);
 	m_aCheckServers[m_NumCheckServers].m_Address = *pInfo;
 	m_aCheckServers[m_NumCheckServers].m_AltAddress = *pAlt;
@@ -237,7 +233,7 @@ void AddServer(NETADDR *pInfo, ServerType Type)
 		if(net_addr_comp(&m_aServers[i].m_Address, pInfo) == 0)
 		{
 			char aAddrStr[NETADDR_MAXSTRSIZE];
-			net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+			net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr), true);
 			dbg_msg("mastersrv", "updated: %s", aAddrStr);
 			m_aServers[i].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
 			return;
@@ -252,7 +248,7 @@ void AddServer(NETADDR *pInfo, ServerType Type)
 	}
 
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr), true);
 	dbg_msg("mastersrv", "added: %s", aAddrStr);
 	m_aServers[m_NumServers].m_Address = *pInfo;
 	m_aServers[m_NumServers].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
@@ -271,9 +267,9 @@ void UpdateServers()
 			if(m_aCheckServers[i].m_TryCount == 10)
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
-				net_addr_str(&m_aCheckServers[i].m_Address, aAddrStr, sizeof(aAddrStr));
+				net_addr_str(&m_aCheckServers[i].m_Address, aAddrStr, sizeof(aAddrStr), true);
 				char aAltAddrStr[NETADDR_MAXSTRSIZE];
-				net_addr_str(&m_aCheckServers[i].m_AltAddress, aAltAddrStr, sizeof(aAltAddrStr));
+				net_addr_str(&m_aCheckServers[i].m_AltAddress, aAltAddrStr, sizeof(aAltAddrStr), true);
 				dbg_msg("mastersrv", "check failed: %s (%s)", aAddrStr, aAltAddrStr);
 
 				// FAIL!!
@@ -305,7 +301,7 @@ void PurgeServers()
 		{
 			// remove server
 			char aAddrStr[NETADDR_MAXSTRSIZE];
-			net_addr_str(&m_aServers[i].m_Address, aAddrStr, sizeof(aAddrStr));
+			net_addr_str(&m_aServers[i].m_Address, aAddrStr, sizeof(aAddrStr), true);
 			dbg_msg("mastersrv", "expired: %s", aAddrStr);
 			m_aServers[i] = m_aServers[m_NumServers-1];
 			m_NumServers--;
@@ -315,53 +311,9 @@ void PurgeServers()
 	}
 }
 
-bool CheckBan(NETADDR Addr)
-{
-	for(int i = 0; i < m_NumBans; i++)
-	{
-		if(net_addr_comp(&m_aBans[i].m_Address, &Addr) == 0)
-		{
-			return true;
-		}
-	}
-	Addr.port = 0;
-	for(int i = 0; i < m_NumBans; i++)
-	{
-		if(net_addr_comp(&m_aBans[i].m_Address, &Addr) == 0)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-void ConAddBan(IConsole::IResult *pResult, void *pUser)
-{
-	if(m_NumBans == MAX_BANS)
-	{
-		dbg_msg("mastersrv", "error: banlist is full");
-		return;
-	}
-
-	if(net_addr_from_str(&m_aBans[m_NumBans].m_Address, pResult->GetString(0)) != 0)
-	{
-		dbg_msg("mastersrv", "error: invalid address");
-		return;
-	}
-
-	if(CheckBan(m_aBans[m_NumBans].m_Address))
-	{
-		dbg_msg("mastersrv", "duplicate ban: %s", pResult->GetString(0));
-		return;
-	}
-
-	dbg_msg("mastersrv", "ban added: %s", pResult->GetString(0));
-	m_NumBans++;
-}
-
 void ReloadBans()
 {
-	m_NumBans = 0;
+	m_NetBan.UnbanAll();
 	m_pConsole->ExecuteFile("master.cfg");
 }
 
@@ -398,7 +350,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
 
 	m_pConsole = CreateConsole(CFGFLAG_MASTER);
-	m_pConsole->Register("ban", "s", CFGFLAG_MASTER, ConAddBan, 0, "Ban IP from mastersrv");
+	m_NetBan.Init(m_pConsole, pStorage);
 
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
@@ -418,7 +370,8 @@ int main(int argc, const char **argv) // ignore_convention
 		while(m_NetOp.Recv(&Packet))
 		{
 			// check if the server is banned
-			if(CheckBan(Packet.m_Address)) continue;
+			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
+				continue;
 
 			if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
@@ -519,7 +472,8 @@ int main(int argc, const char **argv) // ignore_convention
 		while(m_NetChecker.Recv(&Packet))
 		{
 			// check if the server is banned
-			if(CheckBan(Packet.m_Address)) continue;
+			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
+				continue;
 
 			if(Packet.m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)

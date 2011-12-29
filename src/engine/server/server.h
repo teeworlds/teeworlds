@@ -5,6 +5,7 @@
 
 #include <engine/server.h>
 
+
 class CSnapIDPool
 {
 	enum
@@ -38,6 +39,25 @@ public:
 	void TimeoutIDs();
 	void FreeID(int ID);
 };
+
+
+class CServerBan : public CNetBan
+{
+	class CServer *m_pServer;
+
+	template<class T> int BanExt(T *pBanPool, const typename T::CDataType *pData, int Seconds, const char *pReason);
+
+public:
+	class CServer *Server() const { return m_pServer; }
+
+	void Init(class IConsole *pConsole, class IStorage *pStorage, class CServer* pServer);
+
+	int BanAddr(const NETADDR *pAddr, int Seconds, const char *pReason);
+	int BanRange(const CNetRange *pRange, int Seconds, const char *pReason);
+
+	static void ConBanExt(class IConsole::IResult *pResult, void *pUser);
+};
+
 
 class CServer : public IServer
 {
@@ -114,6 +134,7 @@ public:
 	CSnapIDPool m_IDPool;
 	CNetServer m_NetServer;
 	CEcon m_Econ;
+	CServerBan m_ServerBan;
 
 	IEngineMap *m_pMap;
 
@@ -184,12 +205,8 @@ public:
 
 	void ProcessClientPacket(CNetChunk *pPacket);
 
-	void SendServerInfo(NETADDR *pAddr, int Token);
+	void SendServerInfo(const NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
-
-	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
-	int BanRemove(NETADDR Addr);
-	int BanRemoveAll();
 
 	void PumpNetwork();
 
@@ -200,11 +217,7 @@ public:
 	int Run();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
-	static void ConBan(IConsole::IResult *pResult, void *pUser);
-	static void ConUnban(IConsole::IResult *pResult, void *pUser);
-	static void ConUnbanAll(IConsole::IResult *pResult, void *pUser);
-	static void ConBans(IConsole::IResult *pResult, void *pUser);
- 	static void ConStatus(IConsole::IResult *pResult, void *pUser);
+	static void ConStatus(IConsole::IResult *pResult, void *pUser);
 	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);

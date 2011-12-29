@@ -2,14 +2,15 @@
 #include <engine/shared/config.h>
 
 #include "econ.h"
+#include "netban.h"
+
 
 int CEcon::NewClientCallback(int ClientID, void *pUser)
 {
 	CEcon *pThis = (CEcon *)pUser;
 
-	NETADDR Addr = pThis->m_NetConsole.ClientAddr(ClientID);
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pThis->m_NetConsole.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "client accepted. cid=%d addr=%s'", ClientID, aAddrStr);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "econ", aBuf);
@@ -26,9 +27,8 @@ int CEcon::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 {
 	CEcon *pThis = (CEcon *)pUser;
 
-	NETADDR Addr = pThis->m_NetConsole.ClientAddr(ClientID);
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pThis->m_NetConsole.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "client dropped. cid=%d addr=%s reason='%s'", ClientID, aAddrStr, pReason);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "econ", aBuf);
@@ -52,7 +52,7 @@ void CEcon::ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUse
 	}
 }
 
-void CEcon::Init(IConsole *pConsole)
+void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 {
 	m_pConsole = pConsole;
 
@@ -74,7 +74,7 @@ void CEcon::Init(IConsole *pConsole)
 		BindAddr.port = g_Config.m_EcPort;
 	}
 
-	if(m_NetConsole.Open(BindAddr, 0))
+	if(m_NetConsole.Open(BindAddr, pNetBan, 0))
 	{
 		m_NetConsole.SetCallbacks(NewClientCallback, DelClientCallback, this);
 		m_Ready = true;
@@ -123,10 +123,7 @@ void CEcon::Update()
 					if(!g_Config.m_EcBantime)
 						m_NetConsole.Drop(ClientID, "Too many authentication tries");
 					else
-					{
-						NETADDR Addr = m_NetConsole.ClientAddr(ClientID);
-						m_NetConsole.AddBan(Addr, g_Config.m_EcBantime*60);
-					}
+						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), g_Config.m_EcBantime*60, "Too many authentication tries");
 				}
 			}
 		}

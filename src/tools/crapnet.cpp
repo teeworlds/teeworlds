@@ -129,7 +129,7 @@ void Run(int Port, NETADDR Dest)
 			if(m_ConfigLog)
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
-				net_addr_str(&From, aAddrStr, sizeof(aAddrStr));
+				net_addr_str(&From, aAddrStr, sizeof(aAddrStr), true);
 				dbg_msg("crapnet", "<< %08d %s (%d)", p->m_ID, aAddrStr, p->m_DataSize);
 			}
 		}
@@ -193,7 +193,7 @@ void Run(int Port, NETADDR Dest)
 				if(m_ConfigLog)
 				{
 					char aAddrStr[NETADDR_MAXSTRSIZE];
-					net_addr_str(&p->m_SendTo, aAddrStr, sizeof(aAddrStr));
+					net_addr_str(&p->m_SendTo, aAddrStr, sizeof(aAddrStr), true);
 					dbg_msg("crapnet", ">> %08d %s (%d) %s", p->m_ID, aAddrStr, p->m_DataSize, aFlags);
 				}
 

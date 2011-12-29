@@ -612,16 +612,10 @@ void CGameConsole::Dump(int Type)
 	IOHANDLE io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(io)
 	{
-		#if defined(CONF_FAMILY_WINDOWS)
-			static const char Newline[] = "\r\n";
-		#else
-			static const char Newline[] = "\n";
-		#endif
-
 		for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
 		{
 			io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
-			io_write(io, Newline, sizeof(Newline)-1);
+			io_write_newline(io);
 		}
 		io_close(io);
 	}

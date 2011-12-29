@@ -125,7 +125,7 @@ static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
 {
 	io_write(logfile, line, strlen(line));
-	io_write(logfile, "\n", 1);
+	io_write_newline(logfile);
 	io_flush(logfile);
 }
 
@@ -222,8 +222,9 @@ void mem_debug_dump(IOHANDLE file)
 	{
 		while(header)
 		{
-			str_format(buf, sizeof(buf), "%s(%d): %d\n", header->filename, header->line, header->size);
+			str_format(buf, sizeof(buf), "%s(%d): %d", header->filename, header->line, header->size);
 			io_write(file, buf, strlen(buf));
+			io_write_newline(file);
 			header = header->next;
 		}
 
@@ -344,6 +345,15 @@ long int io_length(IOHANDLE io)
 unsigned io_write(IOHANDLE io, const void *buffer, unsigned size)
 {
 	return fwrite(buffer, 1, size, (FILE*)io);
+}
+
+unsigned io_write_newline(IOHANDLE io)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	return fwrite("\r\n", 1, 2, (FILE*)io);
+#else
+	return fwrite("\n", 1, 1, (FILE*)io);
+#endif
 }
 
 int io_close(IOHANDLE io)
@@ -585,18 +595,18 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b)
 	return mem_comp(a, b, sizeof(NETADDR));
 }
 
-void net_addr_str(const NETADDR *addr, char *string, int max_length)
+void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port)
 {
 	if(addr->type == NETTYPE_IPV4)
 	{
-		if(addr->port != 0)
+		if(add_port != 0)
 			str_format(string, max_length, "%d.%d.%d.%d:%d", addr->ip[0], addr->ip[1], addr->ip[2], addr->ip[3], addr->port);
 		else
 			str_format(string, max_length, "%d.%d.%d.%d", addr->ip[0], addr->ip[1], addr->ip[2], addr->ip[3]);
 	}
 	else if(addr->type == NETTYPE_IPV6)
 	{
-		if(addr->port != 0)
+		if(add_port != 0)
 			str_format(string, max_length, "[%x:%x:%x:%x:%x:%x:%x:%x]:%d",
 				(addr->ip[0]<<8)|addr->ip[1], (addr->ip[2]<<8)|addr->ip[3], (addr->ip[4]<<8)|addr->ip[5], (addr->ip[6]<<8)|addr->ip[7],
 				(addr->ip[8]<<8)|addr->ip[9], (addr->ip[10]<<8)|addr->ip[11], (addr->ip[12]<<8)|addr->ip[13], (addr->ip[14]<<8)|addr->ip[15],
@@ -1500,7 +1510,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 	return 0;
 }
 
-unsigned time_timestamp()
+int time_timestamp()
 {
 	return time(0);
 }
