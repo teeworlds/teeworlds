@@ -142,8 +142,6 @@ void dbg_logger_file(const char *filename)
 }
 /* */
 
-int memory_alloced = 0;
-
 typedef struct MEMHEADER
 {
 	const char *filename;
@@ -165,8 +163,10 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 {
 	/* TODO: fix alignment */
 	/* TODO: add debugging */
+	MEMTAIL *tail;
 	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
-	MEMTAIL *tail = (struct MEMTAIL *)(((char*)(header+1))+size);
+	dbg_assert(header != 0, "mem_alloc failure");
+	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
 	header->size = size;
 	header->filename = filename;
 	header->line = line;

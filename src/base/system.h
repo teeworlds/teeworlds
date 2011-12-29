@@ -1130,25 +1130,6 @@ void mem_debug_dump(IOHANDLE file);
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 
-/* Group: Debug levels */
-//by format
-enum {
-	DBG_FMT_RAW				= 1,	//raw output
-	DBG_FMT_TIME			= 2,	//show time
-	DBG_FMT_SYS				= 3,	//show sys
-	DBG_FMT_FULL			= 4		//show both
-};
-
-enum {
-	DBG_LEVEL_IMPORTANT			= 0,	//important always showed messages
-	DBG_LEVEL_ERROR				= 1,	//error messages
-	DBG_LEVEL_WARNING			= 2,	//warning messages
-	DBG_LEVEL_MSG				= 3,	//extra debug messages
-	DBG_LEVEL_INFO				= 4		//info messages
-};
-
-#define DBG_LEVEL_LOW DBG_LEVEL_IMPORTANT
-#define DBG_LEVEL_HIGH DBG_LEVEL_INFO
 
 typedef void (*DBG_LOGGER)(const char *line);
 void dbg_logger(DBG_LOGGER logger);
