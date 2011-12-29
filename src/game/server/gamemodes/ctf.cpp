@@ -259,6 +259,8 @@ void CGameControllerCTF::Tick()
 						else
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, c);
 					}
+					// demo record entry
+					GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, -2);
 					break;
 				}
 			}
