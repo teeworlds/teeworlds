@@ -204,7 +204,15 @@ void CGameContext::CreateSoundGlobal(int Sound, int Target)
 
 	CNetMsg_Sv_SoundGlobal Msg;
 	Msg.m_SoundID = Sound;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, Target);
+	if(Target == -2)
+		Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
+	else
+	{
+		int Flag = MSGFLAG_VITAL;
+		if(Target != -1)
+			Flag |= MSGFLAG_NORECORD;
+		Server()->SendPackMsg(&Msg, Flag, Target);
+	}
 }
 
 
