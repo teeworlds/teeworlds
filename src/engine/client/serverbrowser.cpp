@@ -370,7 +370,6 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 	}*/
 
 	pEntry->m_GotInfo = 1;
-	Sort();
 }
 
 CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
