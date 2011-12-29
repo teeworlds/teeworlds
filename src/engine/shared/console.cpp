@@ -658,7 +658,13 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 void CConsole::Register(const char *pName, const char *pParams,
 	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
 {
-	CCommand *pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+	CCommand *pCommand = FindCommand(pName, Flags);
+	bool DoAdd = false;
+	if(pCommand == 0)
+	{
+		pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+		DoAdd = true;
+	}
 	pCommand->m_pfnCallback = pfnFunc;
 	pCommand->m_pUserData = pUser;
 
@@ -669,7 +675,8 @@ void CConsole::Register(const char *pName, const char *pParams,
 	pCommand->m_Flags = Flags;
 	pCommand->m_Temp = false;
 
-	AddCommandSorted(pCommand);
+	if(DoAdd)
+		AddCommandSorted(pCommand);
 }
 
 void CConsole::RegisterTemp(const char *pName, const char *pParams,	int Flags, const char *pHelp)

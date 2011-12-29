@@ -188,16 +188,11 @@ void CMapLayers::OnRender()
 				IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 				if(File)
 				{
-					#if defined(CONF_FAMILY_WINDOWS)
-						static const char Newline[] = "\r\n";
-					#else
-						static const char Newline[] = "\n";
-					#endif
 					for(int y = 0; y < pTMap->m_Height; y++)
 					{
 						for(int x = 0; x < pTMap->m_Width; x++)
 							io_write(File, &(pTiles[y*pTMap->m_Width + x].m_Index), sizeof(pTiles[y*pTMap->m_Width + x].m_Index));
-						io_write(File, Newline, sizeof(Newline)-1);
+						io_write_newline(File);
 					}
 					io_close(File);
 				}

@@ -240,6 +240,18 @@ unsigned io_skip(IOHANDLE io, int size);
 unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
 
 /*
+	Function: io_write_newline
+		Writes newline to file.
+
+	Parameters:
+		io - Handle to the file.
+
+	Returns:
+		Number of bytes written.
+*/
+unsigned io_write_newline(IOHANDLE io);
+
+/*
 	Function: io_seek
 		Seeks to a specified offset in the file.
 
@@ -425,7 +437,7 @@ int64 time_freq();
 	Returns:
 		The time as a UNIX timestamp
 */
-unsigned time_timestamp();
+int time_timestamp();
 
 /* Group: Network General */
 typedef struct
@@ -499,12 +511,13 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b);
 		addr - Address to turn into a string.
 		string - Buffer to fill with the string.
 		max_length - Maximum size of the string.
+		add_port - add port to string or not
 
 	Remarks:
 		- The string will always be zero terminated
 
 */
-void net_addr_str(const NETADDR *addr, char *string, int max_length);
+void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port);
 
 /*
 	Function: net_addr_from_str
