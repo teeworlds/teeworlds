@@ -35,23 +35,45 @@
 	#include <windows.h>
 #endif
 
-static const char *StrLtrim(const char *pStr)
+static const char *StrUTF8Ltrim(const char *pStr)
 {
-	while(*pStr && *pStr >= 0 && *pStr <= 32)
-		pStr++;
+	while(*pStr)
+	{
+		const char *pStrOld = pStr;
+		int Code = str_utf8_decode(&pStr);
+
+		// check if unicode is not empty
+		if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+			(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
+			Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
+		{
+			return pStrOld;
+		}
+	}
 	return pStr;
 }
 
-static void StrRtrim(char *pStr)
+static void StrUTF8Rtrim(char *pStr)
 {
-	int i = str_length(pStr);
-	while(i >= 0)
+	const char *p = pStr;
+	const char *pEnd = 0;
+	while(*p)
 	{
-		if(pStr[i] < 0 || pStr[i] > 32)
-			break;
-		pStr[i] = 0;
-		i--;
+		const char *pStrOld = p;
+		int Code = str_utf8_decode(&p);
+
+		// check if unicode is not empty
+		if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+			(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
+			Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
+		{
+			pEnd = 0;
+		}
+		else if(pEnd == 0)
+			pEnd = pStrOld;
 	}
+	if(pEnd != 0)
+		*(const_cast<char *>(pEnd)) = 0;
 }
 
 
@@ -195,8 +217,8 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	char aTrimmedName[64];
 
 	// trim the name
-	str_copy(aTrimmedName, StrLtrim(pName), sizeof(aTrimmedName));
-	StrRtrim(aTrimmedName);
+	str_copy(aTrimmedName, StrUTF8Ltrim(pName), sizeof(aTrimmedName));
+	StrUTF8Rtrim(aTrimmedName);
 
 	// check if new and old name are the same
 	if(m_aClients[ClientID].m_aName[0] && str_comp(m_aClients[ClientID].m_aName, aTrimmedName) == 0)
