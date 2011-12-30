@@ -7,6 +7,7 @@
 
 #include <base/math.h>
 #include <base/system.h>
+#include <base/tl/threading.h>
 
 #include <engine/client.h>
 #include <engine/config.h>
@@ -1688,17 +1689,27 @@ void CClient::InitInterfaces()
 	m_Friends.Init();
 }
 
-void CClient::Run()
+
+enum
 {
-	int64 ReportTime = time_get();
-	int64 ReportInterval = time_freq()*1;
+	GFXSTATE_ERROR = -1,
+	GFXSTATE_INIT = 0,
+	GFXSTATE_IDLE,
+	GFXSTATE_RENDERING,
+	GFXSTATE_SWAPPING,
+};
 
-	m_LocalStartTime = time_get();
-	m_SnapshotParts = 0;
-
+void CClient::GraphicsThread()
+{
 	// init graphics
 	if(m_pGraphics->Init() != 0)
+	{
+		m_GfxState = GFXSTATE_ERROR;
+		m_GfxStateSemaphore.signal();
+		m_GfxState = GFXSTATE_ERROR;
 		return;
+	}
+
 
 	// open socket
 	{
@@ -1708,6 +1719,7 @@ void CClient::Run()
 		if(!m_NetClient.Open(BindAddr, 0))
 		{
 			dbg_msg("client", "couldn't start network");
+			m_GfxState = GFXSTATE_ERROR;
 			return;
 		}
 	}
@@ -1722,16 +1734,66 @@ void CClient::Run()
 	MasterServer()->RefreshAddresses(m_NetClient.NetType());
 
 	// init the editor
-	m_pEditor->Init();
+	//m_pEditor->Init();
 
 	// init sound, allowed to fail
 	m_SoundInitFailed = Sound()->Init() != 0;
 
 	// load data
 	if(!LoadData())
+	{
+		m_GfxState = GFXSTATE_ERROR;
 		return;
+	}
 
 	GameClient()->OnInit();
+
+
+	while(1)
+	{
+		// do idle
+		sync_barrier();
+		m_GfxState = GFXSTATE_IDLE;
+		m_GfxStateSemaphore.signal();
+		m_GfxRenderSemaphore.wait();
+		
+		// do render
+		m_GfxState = GFXSTATE_RENDERING;
+		m_GfxStateSemaphore.signal();
+		Render();
+		sync_barrier();
+
+		// do swap
+		m_GfxState = GFXSTATE_SWAPPING;
+		m_GfxStateSemaphore.signal();
+		m_pGraphics->Swap();
+	}
+
+	// do shutdown
+}
+
+void CClient::Run()
+{
+	int64 ReportTime = time_get();
+	int64 ReportInterval = time_freq()*1;
+
+	m_LocalStartTime = time_get();
+	m_SnapshotParts = 0;
+
+	m_GfxState = GFXSTATE_INIT;
+	thread_create(GraphicsThreadProxy, this);
+
+	// wait for gfx to init
+	while(1)
+	{
+		m_GfxStateSemaphore.wait();
+		if(m_GfxState == GFXSTATE_ERROR)
+			return;
+		if(m_GfxState != GFXSTATE_INIT)
+			break;
+	}
+
+
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
@@ -1847,7 +1909,27 @@ void CClient::Run()
 				m_EditorActive = false;
 
 			Update();
+			
 
+			if(m_GfxState == GFXSTATE_IDLE)
+			{
+				// issue new rendering
+				m_GfxRenderSemaphore.signal();
+
+				// wait for gfx to finish rendering
+				while(m_GfxState != GFXSTATE_SWAPPING)
+					m_GfxStateSemaphore.wait();
+
+			}
+
+			/*
+			if(m_pGraphics->AsyncSwapIsDone())
+			{
+				m_pGraphics->BeginScene();
+				Render();
+				m_pGraphics->EndScene();
+			}*/
+			/*
 			if(g_Config.m_DbgStress)
 			{
 				if((m_Frames%10) == 0)
@@ -1860,7 +1942,7 @@ void CClient::Run()
 			{
 				Render();
 				m_pGraphics->Swap();
-			}
+			}*/
 		}
 
 		AutoScreenshot_Cleanup();
