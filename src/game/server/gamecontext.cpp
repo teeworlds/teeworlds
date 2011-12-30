@@ -1066,12 +1066,12 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 	int Team = clamp(pResult->GetInteger(0), -1, 1);
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "moved all clients to team %d", Team);
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	str_format(aBuf, sizeof(aBuf), "All players were moved to the %s", pSelf->m_pController->GetTeamName(Team));
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 		if(pSelf->m_apPlayers[i])
-			pSelf->m_apPlayers[i]->SetTeam(Team);
+			pSelf->m_apPlayers[i]->SetTeam(Team, false);
 
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
@@ -1082,12 +1082,12 @@ void CGameContext::ConSwapTeams(IConsole::IResult *pResult, void *pUserData)
 	if(!pSelf->m_pController->IsTeamplay())
 		return;
 	
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "swapped the current teams");
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were swapped");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-			pSelf->m_apPlayers[i]->SetTeam(pSelf->m_apPlayers[i]->GetTeam()^1);
+			pSelf->m_apPlayers[i]->SetTeam(pSelf->m_apPlayers[i]->GetTeam()^1, false);
 	}
 
 	(void)pSelf->m_pController->CheckTeamBalance();
@@ -1107,26 +1107,26 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 			++PlayerTeam;
 	PlayerTeam = (PlayerTeam+1)/2;
 	
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "shuffled the current teams");
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were shuffled");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 		{
 			if(CounterRed == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
 			else if(CounterBlue == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
+				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
 			else
 			{	
 				if(rand() % 2)
 				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
+					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
 					++CounterBlue;
 				}
 				else
 				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
+					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
 					++CounterRed;
 				}
 			}
