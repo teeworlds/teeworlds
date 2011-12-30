@@ -12,6 +12,8 @@
 #include "console.h"
 #include "linereader.h"
 
+// todo: rework this
+
 const char *CConsole::CResult::GetString(unsigned Index)
 {
 	if (Index < 0 || Index >= m_NumArgs)
@@ -374,6 +376,14 @@ void CConsole::ExecuteLine(const char *pStr)
 	CConsole::ExecuteLineStroked(0, pStr); // then release it
 }
 
+void CConsole::ExecuteLineFlag(const char *pStr, int FlagMask)
+{
+	int Temp = m_FlagMask;
+	m_FlagMask = FlagMask;
+	ExecuteLine(pStr);
+	m_FlagMask = Temp;
+}
+
 
 void CConsole::ExecuteFile(const char *pFilename)
 {
@@ -633,7 +643,7 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 
 void CConsole::AddCommandSorted(CCommand *pCommand)
 {
-	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) < 0)
+	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) <= 0)
 	{
 		if(m_pFirstCommand && m_pFirstCommand->m_pNext)
 			pCommand->m_pNext = m_pFirstCommand;
@@ -645,7 +655,7 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 	{
 		for(CCommand *p = m_pFirstCommand; p; p = p->m_pNext)
 		{
-			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) < 0)
+			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) <= 0)
 			{
 				pCommand->m_pNext = p->m_pNext;
 				p->m_pNext = pCommand;
