@@ -143,6 +143,10 @@ public:
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
 
+	//
+	void SwapTeams();
+
+	//
 	void LoadMapSettings();
 
 	// engine events
