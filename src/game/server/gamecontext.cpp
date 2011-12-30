@@ -1079,64 +1079,61 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConSwapTeams(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->m_pController->IsTeamplay())
+		return;
 	
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "swaped the current teams");
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "swapped the current teams");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-		{
-			int Team = pSelf->m_apPlayers[i]->GetTeam();
-			if(Team == TEAM_RED)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
-			else
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
-		}
+			pSelf->m_apPlayers[i]->SetTeam(pSelf->m_apPlayers[i]->GetTeam()^1);
 	}
 
 	(void)pSelf->m_pController->CheckTeamBalance();
-
-
-
 }
 
 void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	int counterRed = 0;
-	int counterBlue = 0;
-	int PlayerTeam = (g_Config.m_SvMaxClients-g_Config.m_SvSpectatorSlots)/2;
-	
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "shuffled the current teams");
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	if(!pSelf->m_pController->IsTeamplay())
+		return;
 
+	int CounterRed = 0;
+	int CounterBlue = 0;
+	int PlayerTeam = 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+			++PlayerTeam;
+	PlayerTeam = (PlayerTeam+1)/2;
+	
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "shuffled the current teams");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 		{
-			if( counterRed == PlayerTeam )
+			if(CounterRed == PlayerTeam)
 				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
-			else if( counterBlue == PlayerTeam )
+			else if(CounterBlue == PlayerTeam)
 				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
 			else
 			{	
 				if(rand() % 2)
 				{
 					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE);
-					++counterBlue;
+					++CounterBlue;
 				}
 				else
 				{
 					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED);
-					++counterRed;
+					++CounterRed;
 				}
 			}
 		}
 	}
+
+	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
