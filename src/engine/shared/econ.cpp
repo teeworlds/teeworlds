@@ -52,6 +52,14 @@ void CEcon::ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUse
 	}
 }
 
+void CEcon::ConLogout(IConsole::IResult *pResult, void *pUserData)
+{
+	CEcon *pThis = static_cast<CEcon *>(pUserData);
+
+	if(pThis->m_UserClientID >= 0 && pThis->m_UserClientID < NET_MAX_CONSOLE_CLIENTS && pThis->m_aClients[pThis->m_UserClientID].m_State != CClient::STATE_EMPTY)
+		pThis->m_NetConsole.Drop(pThis->m_UserClientID, "Logout");
+}
+
 void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 {
 	m_pConsole = pConsole;
@@ -60,6 +68,7 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 		m_aClients[i].m_State = CClient::STATE_EMPTY;
 
 	m_Ready = false;
+	m_UserClientID = -1;
 
 	if(g_Config.m_EcPort == 0 || g_Config.m_EcPassword[0] == 0)
 		return;
@@ -84,6 +93,8 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 
 		Console()->Chain("ec_output_level", ConchainEconOutputLevelUpdate, this);
 		m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_EcOutputLevel, SendLineCB, this);
+
+		Console()->Register("logout", "", CFGFLAG_ECON, ConLogout, this, "Logout of econ");
 	}
 	else
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD,"econ", "couldn't open socket. port might already be in use");
@@ -115,9 +126,9 @@ void CEcon::Update()
 			else
 			{
 				m_aClients[ClientID].m_AuthTries++;
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientID].m_AuthTries, MAX_AUTH_TRIES);
-				m_NetConsole.Send(ClientID, aBuf);
+				char aMsg[128];
+				str_format(aMsg, sizeof(aMsg), "Wrong password %d/%d.", m_aClients[ClientID].m_AuthTries, MAX_AUTH_TRIES);
+				m_NetConsole.Send(ClientID, aMsg);
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
 					if(!g_Config.m_EcBantime)
@@ -132,7 +143,9 @@ void CEcon::Update()
 			char aFormatted[256];
 			str_format(aFormatted, sizeof(aBuf), "cid=%d cmd='%s'", ClientID, aBuf);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aFormatted);
+			m_UserClientID = ClientID;
 			Console()->ExecuteLine(aBuf);
+			m_UserClientID = -1;
 		}
 	}
 
