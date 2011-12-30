@@ -546,6 +546,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	//
 	m_RconAuthed = 0;
+	m_UseTempRconCommands = 0;
 	m_pConsole->DeregisterTempAll();
 	m_NetClient.Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
@@ -1153,9 +1154,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int Result = Unpacker.GetInt();
 			if(Unpacker.Error() == 0)
 				m_RconAuthed = Result;
+			int Old = m_UseTempRconCommands;
 			m_UseTempRconCommands = Unpacker.GetInt();
 			if(Unpacker.Error() != 0)
 				m_UseTempRconCommands = 0;
+			if(Old != 0 && m_UseTempRconCommands == 0)
+				m_pConsole->DeregisterTempAll();
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{
