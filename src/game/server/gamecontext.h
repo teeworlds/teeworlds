@@ -143,6 +143,9 @@ public:
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
 
+	//
+	void SwapTeams();
+
 	// engine events
 	virtual void OnInit();
 	virtual void OnConsoleInit();
