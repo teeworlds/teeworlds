@@ -5,6 +5,8 @@
 
 #include "kernel.h"
 
+#include <base/tl/threading.h>
+
 class CImageInfo
 {
 public:
@@ -132,6 +134,11 @@ public:
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
 
 	virtual void Swap() = 0;
+
+	// syncronization
+	virtual void InsertSignal(semaphore *pSemaphore) = 0;
+	virtual bool IsIdle() = 0;
+	virtual void WaitForIdle() = 0;
 };
 
 class IEngineGraphics : public IGraphics

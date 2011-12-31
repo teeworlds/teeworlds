@@ -45,6 +45,28 @@ static CVideoMode g_aFakeModes[] = {
 	{2048,1536,5,6,5}
 };
 
+class CCommandProcessorFragment_General
+{
+public:
+	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
+	{
+
+		switch(pBaseCommand->m_Cmd)
+		{
+		case CCommandBuffer::CMD_SIGNAL:
+			{
+				const CCommandBuffer::SCommand_Signal *pCommand = static_cast<const CCommandBuffer::SCommand_Signal *>(pBaseCommand);
+				pCommand->m_pSemaphore->signal();
+			} break;
+		default:
+			return false;
+			break;
+		}
+
+		return true;
+	}
+};
+
 
 class CCommandProcessorFragment_OpenGL
 {
@@ -154,15 +176,15 @@ public:
 		{
 		case CCommandBuffer::CMD_TEXTURE_CREATE:
 			{
-				Cmd_Texture_Create((const CCommandBuffer::SCommand_Texture_Create *)pBaseCommand);
+				Cmd_Texture_Create(static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand));
 			} break;
 		case CCommandBuffer::CMD_TEXTURE_DESTROY:
 			{
-				Cmd_Texture_Destroy((const CCommandBuffer::SCommand_Texture_Destroy *)pBaseCommand);
+				Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand));
 			} break;
 		case CCommandBuffer::CMD_TEXTURE_UPDATE:
 			{
-				Cmd_Texture_Update((const CCommandBuffer::SCommand_Texture_Update *)pBaseCommand);
+				Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand));
 			} break;
 		case CCommandBuffer::CMD_CLEAR:
 			{
@@ -172,7 +194,7 @@ public:
 			} break;
 		case CCommandBuffer::CMD_RENDER:
 			{
-				const CCommandBuffer::SCommand_Render *pCommand = (CCommandBuffer::SCommand_Render *)pBaseCommand;
+				const CCommandBuffer::SCommand_Render *pCommand = static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand);
 				SetState(pCommand->m_State);
 				
 				glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
@@ -354,7 +376,7 @@ public:
 			break;
 		case CCommandBuffer::CMD_INIT:
 			{
-				const CCommandBuffer::SCommand_Init *pCommand = (CCommandBuffer::SCommand_Init *)pBaseCommand;
+				const CCommandBuffer::SCommand_Init *pCommand = static_cast<const CCommandBuffer::SCommand_Init *>(pBaseCommand);
 				*pCommand->m_pResult = Init();
 			} break;
 		case CCommandBuffer::CMD_SHUTDOWN:
@@ -372,18 +394,18 @@ public:
 	}
 };
 
-
 class CCommandProcessor_SDL_OpenGL : public ICommandProcessor
 {
  	CCommandProcessorFragment_OpenGL m_OpenGL;
  	CCommandProcessorFragment_SDL m_SDL;
+ 	CCommandProcessorFragment_General m_General;
  public:
 	virtual void RunBuffer(CCommandBuffer *pBuffer)
 	{
 		unsigned CmdIndex = 0;
 		while(1)
 		{
-			CCommandBuffer::SCommand * const pBaseCommand = pBuffer->GetCommand(&CmdIndex);
+			const CCommandBuffer::SCommand *pBaseCommand = pBuffer->GetCommand(&CmdIndex);
 			if(pBaseCommand == 0x0)
 				break;
 			
@@ -391,6 +413,9 @@ class CCommandProcessor_SDL_OpenGL : public ICommandProcessor
 				continue;
 			
 			if(m_SDL.RunCommand(pBaseCommand))
+				continue;
+
+			if(m_General.RunCommand(pBaseCommand))
 				continue;
 			
 			dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
@@ -547,7 +572,10 @@ CGraphics_Threaded::CGraphics_Threaded()
 	m_State.m_Texture = -1;
 	m_State.m_BlendMode = CCommandBuffer::BLEND_NONE;
 
-
+	m_CurrentCommandBuffer = 0;
+	m_pCommandBuffer = 0x0;
+	m_apCommandBuffers[0] = 0x0;
+	m_apCommandBuffers[1] = 0x0;
 
 	m_NumVertices = 0;
 
@@ -748,7 +776,7 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
-	
+
 	// calculate memory usage
 	int MemUsage = MemSize;
 	while(Width > 2 && Height > 2)
@@ -1188,14 +1216,34 @@ void CGraphics_Threaded::Swap()
 		m_DoScreenshot = false;
 	}*/
 
+	// add swap command
 	CCommandBuffer::SCommand_Swap Cmd;
 	m_pCommandBuffer->AddCommand(Cmd);
-
 	m_Handler.RunBuffer(m_pCommandBuffer);
-	m_Handler.WaitForIdle();
+
+	// swap buffer
+	m_CurrentCommandBuffer ^= 1;
+	m_pCommandBuffer = m_apCommandBuffers[m_CurrentCommandBuffer];
 	m_pCommandBuffer->Reset();
 }
 
+// syncronization
+void CGraphics_Threaded::InsertSignal(semaphore *pSemaphore)
+{
+	CCommandBuffer::SCommand_Signal Cmd;
+	Cmd.m_pSemaphore = pSemaphore;
+	m_pCommandBuffer->AddCommand(Cmd);
+}
+
+bool CGraphics_Threaded::IsIdle()
+{
+	return m_Handler.IsIdle();
+}
+
+void CGraphics_Threaded::WaitForIdle()
+{
+	m_Handler.WaitForIdle();
+}
 
 int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)
 {

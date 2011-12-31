@@ -1853,18 +1853,21 @@ void CClient::Run()
 
 			Update();
 			
-			if(g_Config.m_DbgStress)
+			if(!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle())
 			{
-				if((m_Frames%10) == 0)
+				if(g_Config.m_DbgStress)
+				{
+					if((m_Frames%10) == 0)
+					{
+						Render();
+						m_pGraphics->Swap();
+					}
+				}
+				else
 				{
 					Render();
 					m_pGraphics->Swap();
 				}
-			}
-			else
-			{
-				Render();
-				m_pGraphics->Swap();
 			}
 		}
 

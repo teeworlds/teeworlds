@@ -144,6 +144,10 @@ public:
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
 
+	// syncronization
+	virtual void InsertSignal(semaphore *pSemaphore);
+	virtual bool IsIdle();
+	virtual void WaitForIdle();
 };
 
 #endif
