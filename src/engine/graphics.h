@@ -57,7 +57,8 @@ public:
 	*/
 	enum
 	{
-		TEXLOAD_NORESAMPLE=1,
+		TEXLOAD_NORESAMPLE = 1,
+		TEXLOAD_NOMIPMAPS = 2,
 	};
 
 	int ScreenWidth() const { return m_ScreenWidth; }
