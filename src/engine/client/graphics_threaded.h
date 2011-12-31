@@ -92,6 +92,13 @@ public:
 
 	enum
 	{
+		INITFLAG_FULLSCREEN = 1,
+		INITFLAG_VSYNC = 2,
+		INITFLAG_RESIZABLE = 4,
+	};
+
+	enum
+	{
 		//
 		PRIMTYPE_INVALID = 0,
 		PRIMTYPE_LINES,	
@@ -148,9 +155,22 @@ public:
 	struct SCommand_Init : public SCommand
 	{
 		SCommand_Init() : SCommand(CMD_INIT) {}
+		
+		char m_aName[256];
+
+		int m_ScreenWidth;
+		int m_ScreenHeight;
+		int m_FsaaSamples;
+		int m_Flags;
+
 		volatile int *m_pResult;
 	};
-	
+
+	struct SCommand_Shutdown : public SCommand
+	{
+		SCommand_Shutdown() : SCommand(CMD_SHUTDOWN) {}
+	};
+		
 	struct SCommand_Signal : public SCommand
 	{
 		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
@@ -337,6 +357,9 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
 	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
+
+	int IssueInit();
+	int InitWindow();
 public:
 	CGraphics_Threaded();
 
