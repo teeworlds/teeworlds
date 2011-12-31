@@ -1689,27 +1689,20 @@ void CClient::InitInterfaces()
 	m_Friends.Init();
 }
 
-
-enum
+void CClient::Run()
 {
-	GFXSTATE_ERROR = -1,
-	GFXSTATE_INIT = 0,
-	GFXSTATE_IDLE,
-	GFXSTATE_RENDERING,
-	GFXSTATE_SWAPPING,
-};
+	int64 ReportTime = time_get();
+	int64 ReportInterval = time_freq()*1;
 
-void CClient::GraphicsThread()
-{
+	m_LocalStartTime = time_get();
+	m_SnapshotParts = 0;
+
 	// init graphics
 	if(m_pGraphics->Init() != 0)
 	{
-		m_GfxState = GFXSTATE_ERROR;
-		m_GfxStateSemaphore.signal();
-		m_GfxState = GFXSTATE_ERROR;
+		dbg_msg("client", "couldn't init graphics");
 		return;
 	}
-
 
 	// open socket
 	{
@@ -1719,7 +1712,6 @@ void CClient::GraphicsThread()
 		if(!m_NetClient.Open(BindAddr, 0))
 		{
 			dbg_msg("client", "couldn't start network");
-			m_GfxState = GFXSTATE_ERROR;
 			return;
 		}
 	}
@@ -1741,58 +1733,9 @@ void CClient::GraphicsThread()
 
 	// load data
 	if(!LoadData())
-	{
-		m_GfxState = GFXSTATE_ERROR;
 		return;
-	}
 
 	GameClient()->OnInit();
-
-
-	while(1)
-	{
-		// do idle
-		sync_barrier();
-		m_GfxState = GFXSTATE_IDLE;
-		m_GfxStateSemaphore.signal();
-		m_GfxRenderSemaphore.wait();
-		
-		// do render
-		m_GfxState = GFXSTATE_RENDERING;
-		m_GfxStateSemaphore.signal();
-		Render();
-		sync_barrier();
-
-		// do swap
-		m_GfxState = GFXSTATE_SWAPPING;
-		m_GfxStateSemaphore.signal();
-		m_pGraphics->Swap();
-	}
-
-	// do shutdown
-}
-
-void CClient::Run()
-{
-	int64 ReportTime = time_get();
-	int64 ReportInterval = time_freq()*1;
-
-	m_LocalStartTime = time_get();
-	m_SnapshotParts = 0;
-
-	m_GfxState = GFXSTATE_INIT;
-	thread_create(GraphicsThreadProxy, this);
-
-	// wait for gfx to init
-	while(1)
-	{
-		m_GfxStateSemaphore.wait();
-		if(m_GfxState == GFXSTATE_ERROR)
-			return;
-		if(m_GfxState != GFXSTATE_INIT)
-			break;
-	}
-
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -1910,26 +1853,6 @@ void CClient::Run()
 
 			Update();
 			
-
-			if(m_GfxState == GFXSTATE_IDLE)
-			{
-				// issue new rendering
-				m_GfxRenderSemaphore.signal();
-
-				// wait for gfx to finish rendering
-				while(m_GfxState != GFXSTATE_SWAPPING)
-					m_GfxStateSemaphore.wait();
-
-			}
-
-			/*
-			if(m_pGraphics->AsyncSwapIsDone())
-			{
-				m_pGraphics->BeginScene();
-				Render();
-				m_pGraphics->EndScene();
-			}*/
-			/*
 			if(g_Config.m_DbgStress)
 			{
 				if((m_Frames%10) == 0)
@@ -1942,7 +1865,7 @@ void CClient::Run()
 			{
 				Render();
 				m_pGraphics->Swap();
-			}*/
+			}
 		}
 
 		AutoScreenshot_Cleanup();
