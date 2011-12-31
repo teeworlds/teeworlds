@@ -86,6 +86,8 @@ public:
 		TEXFORMAT_RGB,
 		TEXFORMAT_RGBA,
 		TEXFORMAT_ALPHA,
+
+		TEXFLAG_NOMIPMAPS = 1,
 	};
 
 	enum
@@ -186,6 +188,7 @@ public:
 		int m_Height;
 		int m_Format;
 		int m_StoreFormat;
+		int m_Flags;
 		void *m_pData; // will be freed by the command processor
 	};
 

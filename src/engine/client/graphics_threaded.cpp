@@ -163,9 +163,20 @@ public:
 
 		glGenTextures(1, &m_aTextures[pCommand->m_Slot]);
 		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, pCommand->m_Width, pCommand->m_Height, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
+
+		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, pCommand->m_Width, pCommand->m_Height, 0, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, pCommand->m_Width, pCommand->m_Height, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
+		}
+
 		mem_free(pCommand->m_pData);
 	}
 
@@ -759,6 +770,11 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 	Cmd.m_Height = Height;
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
+
+	// flags
+	Cmd.m_Flags = 0;
+	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
 
 	// calculate memory usage
 	int PixelSize = 4;
