@@ -1293,4 +1293,4 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)
 }
 
 
-extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_Threaded(); }
+extern IEngineGraphics *CreateEngineGraphicsThreaded() { return new CGraphics_Threaded(); }

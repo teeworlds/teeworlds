@@ -1676,7 +1676,7 @@ void CClient::InitInterfaces()
 	// fetch interfaces
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
-	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+	//m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
 	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
@@ -1698,10 +1698,21 @@ void CClient::Run()
 	m_SnapshotParts = 0;
 
 	// init graphics
-	if(m_pGraphics->Init() != 0)
 	{
-		dbg_msg("client", "couldn't init graphics");
-		return;
+		if(g_Config.m_GfxThreaded)
+			m_pGraphics = CreateEngineGraphicsThreaded();
+		else
+			m_pGraphics = CreateEngineGraphics();
+
+		bool RegisterFail = false;
+		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IEngineGraphics*>(m_pGraphics)); // register graphics as both
+		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics));
+
+		if(RegisterFail || m_pGraphics->Init() != 0)
+		{
+			dbg_msg("client", "couldn't init graphics");
+			return;
+		}
 	}
 
 	// open socket
@@ -2220,7 +2231,6 @@ int main(int argc, const char **argv) // ignore_convention
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
-	IEngineGraphics *pEngineGraphics = CreateEngineGraphics();
 	IEngineSound *pEngineSound = CreateEngineSound();
 	IEngineInput *pEngineInput = CreateEngineInput();
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
@@ -2233,9 +2243,6 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
-
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineGraphics*>(pEngineGraphics)); // register graphics as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IGraphics*>(pEngineGraphics));
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineSound*>(pEngineSound)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ISound*>(pEngineSound));
