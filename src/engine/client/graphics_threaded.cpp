@@ -45,47 +45,394 @@ static CVideoMode g_aFakeModes[] = {
 	{2048,1536,5,6,5}
 };
 
-void CGraphics_OpenGL::Flush()
+
+class CCommandProcessorFragment_OpenGL
+{
+public:
+	void SetState(const CCommandBuffer::SState &State)
+	{
+		// blend
+		switch(State.m_BlendMode)
+		{
+		case CCommandBuffer::BLEND_NONE:
+			glDisable(GL_BLEND);
+			break;
+		case CCommandBuffer::BLEND_ALPHA:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+		case CCommandBuffer::BLEND_ADDITIVE:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			break;
+		default:
+			dbg_msg("render", "unknown blendmode %d\n", State.m_BlendMode);
+		};
+
+		// clip
+		/*if(State.m_ClipEnable)
+		{
+			glScissor(State.m_ClipX, State.m_ClipY+State.m_ClipH, State.m_ClipW, State.m_ClipH);
+			glEnable(GL_SCISSOR_TEST);
+		}
+		else*/
+			glDisable(GL_SCISSOR_TEST);
+		
+		// texture
+		glDisable(GL_TEXTURE_2D);
+
+		// screen mapping
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
+
+	}
+
+	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
+	{
+
+		switch(pBaseCommand->m_Cmd)
+		{
+		case CCommandBuffer::CMD_TEXTURE_CREATE:
+			break;
+		case CCommandBuffer::CMD_TEXTURE_DESTROY:
+			break;
+		case CCommandBuffer::CMD_CLEAR:
+			{
+				const CCommandBuffer::SCommand_Clear *pCommand = (CCommandBuffer::SCommand_Clear *)pBaseCommand;
+				glClearColor(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			} break;
+		case CCommandBuffer::CMD_RENDER:
+			{
+				const CCommandBuffer::SCommand_Render *pCommand = (CCommandBuffer::SCommand_Render *)pBaseCommand;
+				SetState(pCommand->m_State);
+				
+				glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
+				glTexCoordPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
+				glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*5);
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+				glEnableClientState(GL_COLOR_ARRAY);
+
+				switch(pCommand->m_PrimType)
+				{
+				case CCommandBuffer::PRIMTYPE_QUADS:
+					glDrawArrays(GL_QUADS, 0, pCommand->m_PrimCount*4);
+					break;
+				case CCommandBuffer::PRIMTYPE_LINES:
+					glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount*2);
+					break;
+				default:
+					dbg_msg("render", "unknown primtype %d\n", pCommand->m_Cmd);
+				};
+			} break;
+		default:
+			return false;
+			break;
+		}
+
+		return true;
+	}
+};
+
+class CCommandProcessorFragment_SDL
+{
+	// SDL stuff
+	SDL_Surface *m_pScreenSurface;
+
+	int m_ScreenWidth;
+	int m_ScreenHeight;
+
+	int TryInit()
+	{
+		m_ScreenWidth = g_Config.m_GfxScreenWidth;
+		m_ScreenHeight = g_Config.m_GfxScreenHeight;
+
+		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
+		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+
+		// set flags
+		int Flags = SDL_OPENGL;
+		if(g_Config.m_DbgResizable)
+			Flags |= SDL_RESIZABLE;
+
+		if(pInfo->hw_available) // ignore_convention
+			Flags |= SDL_HWSURFACE;
+		else
+			Flags |= SDL_SWSURFACE;
+
+		if(pInfo->blit_hw) // ignore_convention
+			Flags |= SDL_HWACCEL;
+
+		if(g_Config.m_GfxFullscreen)
+			Flags |= SDL_FULLSCREEN;
+
+		// set gl attributes
+		if(g_Config.m_GfxFsaaSamples)
+		{
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, g_Config.m_GfxFsaaSamples);
+		}
+		else
+		{
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		}
+
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, g_Config.m_GfxVsync);
+
+		// set caption
+		SDL_WM_SetCaption("Teeworlds", "Teeworlds");
+
+		// create window
+		m_pScreenSurface = SDL_SetVideoMode(m_ScreenWidth, m_ScreenHeight, 0, Flags);
+		if(m_pScreenSurface == NULL)
+		{
+			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
+			return -1;
+		}
+
+		return 0;
+	}
+
+
+	int InitWindow()
+	{
+		if(TryInit() == 0)
+			return 0;
+
+		// try disabling fsaa
+		while(g_Config.m_GfxFsaaSamples)
+		{
+			g_Config.m_GfxFsaaSamples--;
+
+			if(g_Config.m_GfxFsaaSamples)
+				dbg_msg("gfx", "lowering FSAA to %d and trying again", g_Config.m_GfxFsaaSamples);
+			else
+				dbg_msg("gfx", "disabling FSAA and trying again");
+
+			if(TryInit() == 0)
+				return 0;
+		}
+
+		// try lowering the resolution
+		if(g_Config.m_GfxScreenWidth != 640 || g_Config.m_GfxScreenHeight != 480)
+		{
+			dbg_msg("gfx", "setting resolution to 640x480 and trying again");
+			g_Config.m_GfxScreenWidth = 640;
+			g_Config.m_GfxScreenHeight = 480;
+
+			if(TryInit() == 0)
+				return 0;
+		}
+
+		dbg_msg("gfx", "out of ideas. failed to init graphics");
+
+		return -1;
+	}
+
+	int Init()
+	{
+		{
+			int Systems = SDL_INIT_VIDEO;
+
+			if(g_Config.m_SndEnable)
+				Systems |= SDL_INIT_AUDIO;
+
+			if(g_Config.m_ClEventthread)
+				Systems |= SDL_INIT_EVENTTHREAD;
+
+			if(SDL_Init(Systems) < 0)
+			{
+				dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
+				return -1;
+			}
+		}
+
+		atexit(SDL_Quit); // ignore_convention
+
+		#ifdef CONF_FAMILY_WINDOWS
+			if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
+				putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#endif
+
+		if(InitWindow() != 0)
+			return -1;
+
+		SDL_ShowCursor(0);
+
+		// set some default settings
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		glAlphaFunc(GL_GREATER, 0);
+		glEnable(GL_ALPHA_TEST);
+		glDepthMask(0);
+
+		return 0;
+	}
+
+
+public:
+	CCommandProcessorFragment_SDL()
+	{
+		m_pScreenSurface = 0x0;
+	}
+
+	bool RunCommand(const CCommandBuffer::SCommand *pBaseCommand)
+	{
+
+		switch(pBaseCommand->m_Cmd)
+		{
+		case CCommandBuffer::CMD_NOP:
+			break;
+		case CCommandBuffer::CMD_INIT:
+			{
+				const CCommandBuffer::SCommand_Init *pCommand = (CCommandBuffer::SCommand_Init *)pBaseCommand;
+				*pCommand->m_pResult = Init();
+			} break;
+		case CCommandBuffer::CMD_SHUTDOWN:
+			break;
+		case CCommandBuffer::CMD_SWAP:
+			{
+				SDL_GL_SwapBuffers();
+			} break;
+		default:
+			return false;
+			break;
+		}
+
+		return true;
+	}
+};
+
+
+class CCommandProcessor_SDL_OpenGL : public ICommandProcessor
+{
+ 	CCommandProcessorFragment_OpenGL m_OpenGL;
+ 	CCommandProcessorFragment_SDL m_SDL;
+ public:
+	virtual void RunBuffer(CCommandBuffer *pBuffer)
+	{
+		unsigned CmdIndex = 0;
+		while(1)
+		{
+			CCommandBuffer::SCommand * const pBaseCommand = pBuffer->GetCommand(&CmdIndex);
+			if(pBaseCommand == 0x0)
+				break;
+			
+			if(m_OpenGL.RunCommand(pBaseCommand))
+				continue;
+			
+			if(m_SDL.RunCommand(pBaseCommand))
+				continue;
+			
+			dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
+		}
+	}
+};
+
+void CCommandProcessorHandler::ThreadFunc(void *pUser)
+{
+	CCommandProcessorHandler *pThis = (CCommandProcessorHandler *)pUser;
+
+	while(!pThis->m_Shutdown)
+	{
+		pThis->m_Activity.wait();
+		if(pThis->m_pBuffer)
+		{
+			pThis->m_pProcessor->RunBuffer(pThis->m_pBuffer);
+			sync_barrier();
+			pThis->m_pBuffer = 0x0;
+			pThis->m_BufferDone.signal();
+		}
+	}
+}
+
+CCommandProcessorHandler::CCommandProcessorHandler()
+{
+	m_pBuffer = 0x0;
+	m_pProcessor = 0x0;
+	m_pThread = 0x0;
+}
+
+void CCommandProcessorHandler::Start(ICommandProcessor *pProcessor)
+{
+	m_Shutdown = false;
+	m_pProcessor = pProcessor;
+	m_pThread = thread_create(ThreadFunc, this);
+	m_BufferDone.signal();
+}
+
+void CCommandProcessorHandler::RunBuffer(CCommandBuffer *pBuffer)
+{
+	WaitForIdle();
+	m_pBuffer = pBuffer;
+	m_Activity.signal();
+}
+
+void CCommandProcessorHandler::WaitForIdle()
+{
+	while(m_pBuffer != 0x0)
+		m_BufferDone.wait();
+}
+
+
+/*
+void RenderThread()
+{
+	.wait()
+	if(m_pCommandBuffer)
+		RunBuffer(m_pCommandBuffer);
+	// reset buffer?
+	m_pCommandBuffer = 0;
+}*/
+
+void CGraphics_Threaded::Flush()
 {
 	if(m_NumVertices == 0)
 		return;
 
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glVertexPointer(3, GL_FLOAT,
-			sizeof(CVertex),
-			(char*)m_aVertices);
-	glTexCoordPointer(2, GL_FLOAT,
-			sizeof(CVertex),
-			(char*)m_aVertices + sizeof(float)*3);
-	glColorPointer(4, GL_FLOAT,
-			sizeof(CVertex),
-			(char*)m_aVertices + sizeof(float)*5);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-
-	if(m_RenderEnable)
-	{
-		if(m_Drawing == DRAWING_QUADS)
-			glDrawArrays(GL_QUADS, 0, m_NumVertices);
-		else if(m_Drawing == DRAWING_LINES)
-			glDrawArrays(GL_LINES, 0, m_NumVertices);
-	}
-
-	// Reset pointer
+	int NumVerts = m_NumVertices;
 	m_NumVertices = 0;
+
+	CCommandBuffer::SCommand_Render Cmd;
+	Cmd.m_State = m_State;
+
+	if(m_Drawing == DRAWING_QUADS)
+	{
+		Cmd.m_PrimType = CCommandBuffer::PRIMTYPE_QUADS;
+		Cmd.m_PrimCount = NumVerts/4;
+	}
+	else if(m_Drawing == DRAWING_LINES)
+	{
+		Cmd.m_PrimType = CCommandBuffer::PRIMTYPE_LINES;
+		Cmd.m_PrimCount = NumVerts/2;
+	}
+	else
+		return;
+
+	Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+	if(Cmd.m_pVertices == 0x0)
+		return;
+
+	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
+	m_pCommandBuffer->AddCommand(Cmd);
 }
 
-void CGraphics_OpenGL::AddVertices(int Count)
+void CGraphics_Threaded::AddVertices(int Count)
 {
 	m_NumVertices += Count;
 	if((m_NumVertices + Count) >= MAX_VERTICES)
 		Flush();
 }
 
-void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
+void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints)
 {
 	float c = cosf(m_Rotation);
 	float s = sinf(m_Rotation);
@@ -101,7 +448,7 @@ void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
 	}
 }
 
-unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
+unsigned char CGraphics_Threaded::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
 {
 	int Value = 0;
 	for(int x = 0; x < ScaleW; x++)
@@ -110,7 +457,7 @@ unsigned char CGraphics_OpenGL::Sample(int w, int h, const unsigned char *pData,
 	return Value/(ScaleW*ScaleH);
 }
 
-unsigned char *CGraphics_OpenGL::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
+unsigned char *CGraphics_Threaded::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
 {
 	unsigned char *pTmpData;
 	int ScaleW = Width/NewWidth;
@@ -136,14 +483,23 @@ unsigned char *CGraphics_OpenGL::Rescale(int Width, int Height, int NewWidth, in
 	return pTmpData;
 }
 
-CGraphics_OpenGL::CGraphics_OpenGL()
+CGraphics_Threaded::CGraphics_Threaded()
 {
-	m_NumVertices = 0;
+	m_State.m_ScreenTL.x = 0;
+	m_State.m_ScreenTL.y = 0;
+	m_State.m_ScreenBR.x = 0;
+	m_State.m_ScreenBR.y = 0;
+	m_State.m_ClipEnable = false;
+	m_State.m_ClipX = 0;
+	m_State.m_ClipY = 0;
+	m_State.m_ClipW = 0;
+	m_State.m_ClipH = 0;
+	m_State.m_Texture = -1;
+	m_State.m_BlendMode = CCommandBuffer::BLEND_NONE;
 
-	m_ScreenX0 = 0;
-	m_ScreenY0 = 0;
-	m_ScreenX1 = 0;
-	m_ScreenY1 = 0;
+
+
+	m_NumVertices = 0;
 
 	m_ScreenWidth = -1;
 	m_ScreenHeight = -1;
@@ -158,7 +514,7 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 	m_DoScreenshot = false;
 }
 
-void CGraphics_OpenGL::ClipEnable(int x, int y, int w, int h)
+void CGraphics_Threaded::ClipEnable(int x, int y, int w, int h)
 {
 	if(x < 0)
 		w += x;
@@ -170,72 +526,69 @@ void CGraphics_OpenGL::ClipEnable(int x, int y, int w, int h)
 	w = clamp(w, 0, ScreenWidth()-x);
 	h = clamp(h, 0, ScreenHeight()-y);
 
-	glScissor(x, ScreenHeight()-(y+h), w, h);
-	glEnable(GL_SCISSOR_TEST);
+	m_State.m_ClipEnable = true;
+	m_State.m_ClipX = x;
+	m_State.m_ClipY = ScreenHeight()-(y+h);
+	m_State.m_ClipW = w;
+	m_State.m_ClipH = h;
 }
 
-void CGraphics_OpenGL::ClipDisable()
+void CGraphics_Threaded::ClipDisable()
 {
-	//if(no_gfx) return;
-	glDisable(GL_SCISSOR_TEST);
+	m_State.m_ClipEnable = false;
 }
 
-void CGraphics_OpenGL::BlendNone()
+void CGraphics_Threaded::BlendNone()
 {
-	glDisable(GL_BLEND);
+	m_State.m_BlendMode = CCommandBuffer::BLEND_NONE;
 }
 
-void CGraphics_OpenGL::BlendNormal()
+void CGraphics_Threaded::BlendNormal()
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	m_State.m_BlendMode = CCommandBuffer::BLEND_ALPHA;
 }
 
-void CGraphics_OpenGL::BlendAdditive()
+void CGraphics_Threaded::BlendAdditive()
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	m_State.m_BlendMode = CCommandBuffer::BLEND_ADDITIVE;
 }
 
-int CGraphics_OpenGL::MemoryUsage() const
+int CGraphics_Threaded::MemoryUsage() const
 {
 	return m_TextureMemoryUsage;
 }
 
-void CGraphics_OpenGL::MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
+void CGraphics_Threaded::MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
 {
-	m_ScreenX0 = TopLeftX;
-	m_ScreenY0 = TopLeftY;
-	m_ScreenX1 = BottomRightX;
-	m_ScreenY1 = BottomRightY;
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(TopLeftX, BottomRightX, BottomRightY, TopLeftY, 1.0f, 10.f);
+	m_State.m_ScreenTL.x = TopLeftX;
+	m_State.m_ScreenTL.y = TopLeftY;
+	m_State.m_ScreenBR.x = BottomRightX;
+	m_State.m_ScreenBR.y = BottomRightY;
 }
 
-void CGraphics_OpenGL::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY)
+void CGraphics_Threaded::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY)
 {
-	*pTopLeftX = m_ScreenX0;
-	*pTopLeftY = m_ScreenY0;
-	*pBottomRightX = m_ScreenX1;
-	*pBottomRightY = m_ScreenY1;
+	*pTopLeftX = m_State.m_ScreenTL.x;
+	*pTopLeftY = m_State.m_ScreenTL.y;
+	*pBottomRightX = m_State.m_ScreenBR.x;
+	*pBottomRightY = m_State.m_ScreenBR.y;
 }
 
-void CGraphics_OpenGL::LinesBegin()
+void CGraphics_Threaded::LinesBegin()
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->LinesBegin twice");
 	m_Drawing = DRAWING_LINES;
 	SetColor(1,1,1,1);
 }
 
-void CGraphics_OpenGL::LinesEnd()
+void CGraphics_Threaded::LinesEnd()
 {
 	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
 
-void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
+void CGraphics_Threaded::LinesDraw(const CLineItem *pArray, int Num)
 {
 	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesDraw without begin");
 
@@ -255,8 +608,9 @@ void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 	AddVertices(2*Num);
 }
 
-int CGraphics_OpenGL::UnloadTexture(int Index)
+int CGraphics_Threaded::UnloadTexture(int Index)
 {
+	return 0;
 	if(Index == m_InvalidTexture)
 		return 0;
 
@@ -271,8 +625,10 @@ int CGraphics_OpenGL::UnloadTexture(int Index)
 }
 
 
-int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
+int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
+	return 0;
+
 	int Mipmap = 1;
 	unsigned char *pTexData = (unsigned char *)pData;
 	unsigned char *pTmpData = 0;
@@ -366,8 +722,10 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 }
 
 // simple uncompressed RGBA loaders
-int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
+int CGraphics_Threaded::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
+	return 0;
+
 	int l = str_length(pFilename);
 	int ID;
 	CImageInfo Img;
@@ -389,8 +747,10 @@ int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int St
 	return m_InvalidTexture;
 }
 
-int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
+int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
+	return 0;
+
 	char aCompleteFilename[512];
 	unsigned char *pBuffer;
 	png_t Png; // ignore_convention
@@ -437,7 +797,7 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename, int Stora
 	return 1;
 }
 
-void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
+void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 {
 	// fetch image data
 	int y;
@@ -481,8 +841,10 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 	mem_free(pPixelData);
 }
 
-void CGraphics_OpenGL::TextureSet(int TextureID)
+void CGraphics_Threaded::TextureSet(int TextureID)
 {
+	return;
+
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
 	if(TextureID == -1)
 	{
@@ -495,13 +857,17 @@ void CGraphics_OpenGL::TextureSet(int TextureID)
 	}
 }
 
-void CGraphics_OpenGL::Clear(float r, float g, float b)
+void CGraphics_Threaded::Clear(float r, float g, float b)
 {
-	glClearColor(r,g,b,0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	CCommandBuffer::SCommand_Clear Cmd;
+	Cmd.m_Color.r = r;
+	Cmd.m_Color.g = g;
+	Cmd.m_Color.b = b;
+	Cmd.m_Color.a = 0;
+	m_pCommandBuffer->AddCommand(Cmd);
 }
 
-void CGraphics_OpenGL::QuadsBegin()
+void CGraphics_Threaded::QuadsBegin()
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
@@ -511,20 +877,20 @@ void CGraphics_OpenGL::QuadsBegin()
 	SetColor(1,1,1,1);
 }
 
-void CGraphics_OpenGL::QuadsEnd()
+void CGraphics_Threaded::QuadsEnd()
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsEnd without begin");
 	Flush();
 	m_Drawing = 0;
 }
 
-void CGraphics_OpenGL::QuadsSetRotation(float Angle)
+void CGraphics_Threaded::QuadsSetRotation(float Angle)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetRotation without begin");
 	m_Rotation = Angle;
 }
 
-void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
+void CGraphics_Threaded::SetColorVertex(const CColorVertex *pArray, int Num)
 {
 	dbg_assert(m_Drawing != 0, "called Graphics()->SetColorVertex without begin");
 
@@ -537,7 +903,7 @@ void CGraphics_OpenGL::SetColorVertex(const CColorVertex *pArray, int Num)
 	}
 }
 
-void CGraphics_OpenGL::SetColor(float r, float g, float b, float a)
+void CGraphics_Threaded::SetColor(float r, float g, float b, float a)
 {
 	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
 	CColorVertex Array[4] = {
@@ -548,7 +914,7 @@ void CGraphics_OpenGL::SetColor(float r, float g, float b, float a)
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_OpenGL::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV)
+void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
 
@@ -559,7 +925,7 @@ void CGraphics_OpenGL::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
 }
 
-void CGraphics_OpenGL::QuadsSetSubsetFree(
+void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
 	float x2, float y2, float x3, float y3)
 {
@@ -569,7 +935,7 @@ void CGraphics_OpenGL::QuadsSetSubsetFree(
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
 }
 
-void CGraphics_OpenGL::QuadsDraw(CQuadItem *pArray, int Num)
+void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
 {
 	for(int i = 0; i < Num; ++i)
 	{
@@ -580,9 +946,9 @@ void CGraphics_OpenGL::QuadsDraw(CQuadItem *pArray, int Num)
 	QuadsDrawTL(pArray, Num);
 }
 
-void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
+void CGraphics_Threaded::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
-	CPoint Center;
+	CCommandBuffer::SPoint Center;
 	Center.z = 0;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
@@ -621,7 +987,7 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 	AddVertices(4*Num);
 }
 
-void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
+void CGraphics_Threaded::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawFreeform without begin");
 
@@ -651,7 +1017,7 @@ void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 	AddVertices(4*Num);
 }
 
-void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText)
+void CGraphics_Threaded::QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText)
 {
 	float StartX = x;
 
@@ -685,8 +1051,9 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 	QuadsEnd();
 }
 
-bool CGraphics_OpenGL::Init()
+bool CGraphics_Threaded::Init()
 {
+	// fetch pointers
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
@@ -700,217 +1067,120 @@ bool CGraphics_OpenGL::Init()
 		m_aTextures[i].m_Next = i+1;
 	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
 
-	// set some default settings
-	glEnable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	// start the command processor
+	ICommandProcessor *pProcessor = new CCommandProcessor_SDL_OpenGL;
+	m_Handler.Start(pProcessor);
 
-	glAlphaFunc(GL_GREATER, 0);
-	glEnable(GL_ALPHA_TEST);
-	glDepthMask(0);
+	// create command buffers
+	m_apCommandBuffers[0] = new CCommandBuffer(1024*512, 1024*1024);
+	m_apCommandBuffers[1] = new CCommandBuffer(1024*512, 1024*1024);
+	m_pCommandBuffer = m_apCommandBuffers[0];
 
-	// create null texture, will get id=0
-	static const unsigned char aNullTextureData[] = {
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-	};
+	// issue init command
+	m_pCommandBuffer->Reset();
+	volatile int Result;
+	CCommandBuffer::SCommand_Init Cmd;
+	Cmd.m_pResult = &Result;
+	m_pCommandBuffer->AddCommand(Cmd);
+	m_Handler.RunBuffer(m_pCommandBuffer);
+	m_Handler.WaitForIdle();
 
-	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
 
-	return true;
+	if(Result == 0)
+	{
+		// create null texture, will get id=0
+		static const unsigned char aNullTextureData[] = {
+			0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
+			0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
+			0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
+			0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
+		};
+
+		m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
+	}
+
+	return Result;
 }
 
-int CGraphics_SDL::TryInit()
-{
-	m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	m_ScreenHeight = g_Config.m_GfxScreenHeight;
-
-	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
-	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-	// set flags
-	int Flags = SDL_OPENGL;
-	if(g_Config.m_DbgResizable)
-		Flags |= SDL_RESIZABLE;
-
-	if(pInfo->hw_available) // ignore_convention
-		Flags |= SDL_HWSURFACE;
-	else
-		Flags |= SDL_SWSURFACE;
-
-	if(pInfo->blit_hw) // ignore_convention
-		Flags |= SDL_HWACCEL;
-
-	if(g_Config.m_GfxFullscreen)
-		Flags |= SDL_FULLSCREEN;
-
-	// set gl attributes
-	if(g_Config.m_GfxFsaaSamples)
-	{
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, g_Config.m_GfxFsaaSamples);
-	}
-	else
-	{
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-	}
-
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, g_Config.m_GfxVsync);
-
-	// set caption
-	SDL_WM_SetCaption("Teeworlds", "Teeworlds");
-
-	// create window
-	m_pScreenSurface = SDL_SetVideoMode(m_ScreenWidth, m_ScreenHeight, 0, Flags);
-	if(m_pScreenSurface == NULL)
-	{
-		dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
-		return -1;
-	}
-
-	return 0;
-}
-
-
-int CGraphics_SDL::InitWindow()
-{
-	if(TryInit() == 0)
-		return 0;
-
-	// try disabling fsaa
-	while(g_Config.m_GfxFsaaSamples)
-	{
-		g_Config.m_GfxFsaaSamples--;
-
-		if(g_Config.m_GfxFsaaSamples)
-			dbg_msg("gfx", "lowering FSAA to %d and trying again", g_Config.m_GfxFsaaSamples);
-		else
-			dbg_msg("gfx", "disabling FSAA and trying again");
-
-		if(TryInit() == 0)
-			return 0;
-	}
-
-	// try lowering the resolution
-	if(g_Config.m_GfxScreenWidth != 640 || g_Config.m_GfxScreenHeight != 480)
-	{
-		dbg_msg("gfx", "setting resolution to 640x480 and trying again");
-		g_Config.m_GfxScreenWidth = 640;
-		g_Config.m_GfxScreenHeight = 480;
-
-		if(TryInit() == 0)
-			return 0;
-	}
-
-	dbg_msg("gfx", "out of ideas. failed to init graphics");
-
-	return -1;
-}
-
-
-CGraphics_SDL::CGraphics_SDL()
-{
-	m_pScreenSurface = 0;
-}
-
-bool CGraphics_SDL::Init()
-{
-	{
-		int Systems = SDL_INIT_VIDEO;
-
-		if(g_Config.m_SndEnable)
-			Systems |= SDL_INIT_AUDIO;
-
-		if(g_Config.m_ClEventthread)
-			Systems |= SDL_INIT_EVENTTHREAD;
-
-		if(SDL_Init(Systems) < 0)
-		{
-			dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-			return true;
-		}
-	}
-
-	atexit(SDL_Quit); // ignore_convention
-
-	#ifdef CONF_FAMILY_WINDOWS
-		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-			putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
-	#endif
-
-	if(InitWindow() != 0)
-		return true;
-
-	SDL_ShowCursor(0);
-
-	CGraphics_OpenGL::Init();
-
-	MapScreen(0,0,g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-	return false;
-}
-
-void CGraphics_SDL::Shutdown()
+void CGraphics_Threaded::Shutdown()
 {
 	// TODO: SDL, is this correct?
 	SDL_Quit();
 }
 
-void CGraphics_SDL::Minimize()
+void CGraphics_Threaded::Minimize()
 {
 	SDL_WM_IconifyWindow();
 }
 
-void CGraphics_SDL::Maximize()
+void CGraphics_Threaded::Maximize()
 {
 	// TODO: SDL
 }
 
-int CGraphics_SDL::WindowActive()
+int CGraphics_Threaded::WindowActive()
 {
 	return SDL_GetAppState()&SDL_APPINPUTFOCUS;
 }
 
-int CGraphics_SDL::WindowOpen()
+int CGraphics_Threaded::WindowOpen()
 {
 	return SDL_GetAppState()&SDL_APPACTIVE;
 
 }
 
-void CGraphics_SDL::TakeScreenshot(const char *pFilename)
+void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
 {
+	// TODO: screenshot support
+	return;
+	/*
 	char aDate[20];
 	str_timestamp(aDate, sizeof(aDate));
 	str_format(m_aScreenshotName, sizeof(m_aScreenshotName), "screenshots/%s_%s.png", pFilename?pFilename:"screenshot", aDate);
 	m_DoScreenshot = true;
+	*/
 }
 
-void CGraphics_SDL::Swap()
+void CGraphics_Threaded::Swap()
 {
+	if(0) {
+		CCommandBuffer::SCommand_Clear Cmd;
+		Cmd.m_Color.r = 1.0f;
+		Cmd.m_Color.g = 0.0f;
+		Cmd.m_Color.b = 0.0f;
+		Cmd.m_Color.a = 0.0f;
+		m_pCommandBuffer->AddCommand(Cmd);
+	}
+
+	CCommandBuffer::SCommand_Swap Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
+
+	m_Handler.RunBuffer(m_pCommandBuffer);
+	m_Handler.WaitForIdle();
+	m_pCommandBuffer->Reset();
+		
+	// TODO: screenshot support
+	/*
 	if(m_DoScreenshot)
 	{
 		ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
-	}
+	}*/
 
-	SDL_GL_SwapBuffers();
+	//SDL_GL_SwapBuffers();
 
-	if(g_Config.m_GfxFinish)
-		glFinish();
+	//if(g_Config.m_GfxFinish)
+	//	glFinish();
 }
 
 
-int CGraphics_SDL::GetVideoModes(CVideoMode *pModes, int MaxModes)
+int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)
 {
-	int NumModes = sizeof(g_aFakeModes)/sizeof(CVideoMode);
-	SDL_Rect **ppModes;
+	// TODO: fix support for video modes, using fake modes for now
+	//int NumModes = sizeof(g_aFakeModes)/sizeof(CVideoMode);
+	//SDL_Rect **ppModes;
 
-	if(g_Config.m_GfxDisplayAllModes)
+	//if(g_Config.m_GfxDisplayAllModes)
 	{
 		int Count = sizeof(g_aFakeModes)/sizeof(CVideoMode);
 		mem_copy(pModes, g_aFakeModes, sizeof(g_aFakeModes));
@@ -920,6 +1190,7 @@ int CGraphics_SDL::GetVideoModes(CVideoMode *pModes, int MaxModes)
 	}
 
 	// TODO: fix this code on osx or windows
+	/*
 
 	ppModes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
 	if(ppModes == NULL)
@@ -947,7 +1218,8 @@ int CGraphics_SDL::GetVideoModes(CVideoMode *pModes, int MaxModes)
 		}
 	}
 
-	return NumModes;
+	return NumModes;*/
 }
 
-//extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_SDL(); }
+
+extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_Threaded(); }
