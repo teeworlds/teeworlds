@@ -141,14 +141,8 @@ class CCommandProcessorFragment_SDL
 	// SDL stuff
 	SDL_Surface *m_pScreenSurface;
 
-	int m_ScreenWidth;
-	int m_ScreenHeight;
-
 	int TryInit()
 	{
-		m_ScreenWidth = g_Config.m_GfxScreenWidth;
-		m_ScreenHeight = g_Config.m_GfxScreenHeight;
-
 		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 
@@ -187,7 +181,7 @@ class CCommandProcessorFragment_SDL
 		SDL_WM_SetCaption("Teeworlds", "Teeworlds");
 
 		// create window
-		m_pScreenSurface = SDL_SetVideoMode(m_ScreenWidth, m_ScreenHeight, 0, Flags);
+		m_pScreenSurface = SDL_SetVideoMode(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, 0, Flags);
 		if(m_pScreenSurface == NULL)
 		{
 			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
@@ -381,17 +375,6 @@ void CCommandProcessorHandler::WaitForIdle()
 	while(m_pBuffer != 0x0)
 		m_BufferDone.wait();
 }
-
-
-/*
-void RenderThread()
-{
-	.wait()
-	if(m_pCommandBuffer)
-		RunBuffer(m_pCommandBuffer);
-	// reset buffer?
-	m_pCommandBuffer = 0;
-}*/
 
 void CGraphics_Threaded::Flush()
 {
@@ -1088,6 +1071,10 @@ bool CGraphics_Threaded::Init()
 
 	if(Result == 0)
 	{
+		// fetch final resolusion
+		m_ScreenWidth = g_Config.m_GfxScreenWidth;
+		m_ScreenHeight = g_Config.m_GfxScreenHeight;
+
 		// create null texture, will get id=0
 		static const unsigned char aNullTextureData[] = {
 			0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
