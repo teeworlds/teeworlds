@@ -55,6 +55,12 @@ public:
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
+	enum
+	{
+		RCON_CID_SERV=-1,
+		RCON_CID_VOTE=-2,
+	};
+	virtual void SetRconCID(int ClientID) = 0;
 	virtual bool IsAuthed(int ClientID) = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 
