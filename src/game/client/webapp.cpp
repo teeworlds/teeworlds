@@ -1,4 +1,6 @@
 /* CClientWebapp Class by Sushi and Redix*/
+#include <base/tl/array.h>
+
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 #include <engine/external/json/reader.h>
