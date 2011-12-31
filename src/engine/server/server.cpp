@@ -202,6 +202,20 @@ int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seco
 			}
 		}
 	}
+	else if(Server()->m_RconClientID == IServer::RCON_CID_VOTE)
+	{
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(Server()->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+				continue;
+
+			if(Server()->m_aClients[i].m_Authed != CServer::AUTHED_NO && NetMatch(pData, Server()->m_NetServer.ClientAddr(i)))
+			{
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban error (command denied)");
+				return -1;
+			}
+		}
+	}
 
 	int Result = Ban(pBanPool, pData, Seconds, pReason);
 	if(Result != 0)
@@ -290,7 +304,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_MapReload = 0;
 
-	m_RconClientID = -1;
+	m_RconClientID = IServer::RCON_CID_SERV;
 	m_RconAuthLevel = AUTHED_ADMIN;
 
 	Init();
@@ -429,6 +443,11 @@ int CServer::Init()
 	m_CurrentGameTick = 0;
 
 	return 0;
+}
+
+void CServer::SetRconCID(int ClientID)
+{
+	m_RconClientID = ClientID;
 }
 
 bool CServer::IsAuthed(int ClientID)
@@ -963,7 +982,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				Console()->SetAccessLevel(m_aClients[ClientID].m_Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : IConsole::ACCESS_LEVEL_MOD);
 				Console()->ExecuteLineFlag(pCmd, CFGFLAG_SERVER);
 				Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
-				m_RconClientID = -1;
+				m_RconClientID = IServer::RCON_CID_SERV;
 				m_RconAuthLevel = AUTHED_ADMIN;
 			}
 		}
