@@ -744,7 +744,7 @@ void CServerBrowser::AddTeerace(const NETADDR &Addr)
 	if(g_Config.m_Debug)
 	{
 		char aAddrStr[NETADDR_MAXSTRSIZE];
-		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr), 1);
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "added teerace, %s", aAddrStr);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
