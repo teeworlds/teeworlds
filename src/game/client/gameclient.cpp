@@ -108,7 +108,6 @@ void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
-	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_pSound = Kernel()->RequestInterface<ISound>();
 	m_pInput = Kernel()->RequestInterface<IInput>();
@@ -220,10 +219,6 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("shuffle_teams", "", CFGFLAG_SERVER, 0, 0, "Shuffle the current teams");
 
 
-	// propagate pointers
-	m_UI.SetGraphics(Graphics(), TextRender());
-	m_RenderTools.m_pGraphics = Graphics();
-	m_RenderTools.m_pUI = UI();
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->m_pClient = this;
 
@@ -247,6 +242,13 @@ void CGameClient::OnConsoleInit()
 
 void CGameClient::OnInit()
 {
+	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
+
+	// propagate pointers
+	m_UI.SetGraphics(Graphics(), TextRender());
+	m_RenderTools.m_pGraphics = Graphics();
+	m_RenderTools.m_pUI = UI();
+	
 	int64 Start = time_get();
 
 	// set the language

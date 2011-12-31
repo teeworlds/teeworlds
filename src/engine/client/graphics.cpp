@@ -978,4 +978,4 @@ void CGraphics_SDL::WaitForIdle()
 {
 }
 
-//extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_SDL(); }
+extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_SDL(); }

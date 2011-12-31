@@ -157,5 +157,6 @@ public:
 };
 
 extern IEngineGraphics *CreateEngineGraphics();
+extern IEngineGraphics *CreateEngineGraphicsThreaded();
 
 #endif
