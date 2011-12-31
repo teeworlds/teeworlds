@@ -48,34 +48,27 @@ static CVideoMode g_aFakeModes[] = {
 class CCommandProcessorFragment_General
 {
 public:
+	void Cmd_Signal(const CCommandBuffer::SCommand_Signal *pCommand)
+	{
+		pCommand->m_pSemaphore->signal();
+	}
+
 	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
 	{
-
 		switch(pBaseCommand->m_Cmd)
 		{
-		case CCommandBuffer::CMD_SIGNAL:
-			{
-				const CCommandBuffer::SCommand_Signal *pCommand = static_cast<const CCommandBuffer::SCommand_Signal *>(pBaseCommand);
-				pCommand->m_pSemaphore->signal();
-			} break;
-		default:
-			return false;
-			break;
+		case CCommandBuffer::CMD_NOP: break;
+		case CCommandBuffer::CMD_SIGNAL: Cmd_Signal(static_cast<const CCommandBuffer::SCommand_Signal *>(pBaseCommand)); break;
+		default: return false;
 		}
 
 		return true;
 	}
 };
 
-
 class CCommandProcessorFragment_OpenGL
 {
 	GLuint m_aTextures[CCommandBuffer::MAX_TEXTURES];
-public:
-	CCommandProcessorFragment_OpenGL()
-	{
-		mem_zero(m_aTextures, sizeof(m_aTextures));
-	}
 
 	void SetState(const CCommandBuffer::SState &State)
 	{
@@ -121,7 +114,7 @@ public:
 		glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
 	}
 
-	int TexFormatToOpenGLFormat(int TexFormat)
+	static int TexFormatToOpenGLFormat(int TexFormat)
 	{
 		if(TexFormat == CCommandBuffer::TEXFORMAT_RGB) return GL_RGB;
 		if(TexFormat == CCommandBuffer::TEXFORMAT_ALPHA) return GL_ALPHA;
@@ -180,56 +173,52 @@ public:
 		mem_free(pCommand->m_pData);
 	}
 
+	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand)
+	{
+		glClearColor(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+
+	void Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand)
+	{
+		SetState(pCommand->m_State);
+		
+		glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
+		glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*5);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+
+		switch(pCommand->m_PrimType)
+		{
+		case CCommandBuffer::PRIMTYPE_QUADS:
+			glDrawArrays(GL_QUADS, 0, pCommand->m_PrimCount*4);
+			break;
+		case CCommandBuffer::PRIMTYPE_LINES:
+			glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount*2);
+			break;
+		default:
+			dbg_msg("render", "unknown primtype %d\n", pCommand->m_Cmd);
+		};
+	}
+
+public:
+	CCommandProcessorFragment_OpenGL()
+	{
+		mem_zero(m_aTextures, sizeof(m_aTextures));
+	}
+
 	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
 	{
-
 		switch(pBaseCommand->m_Cmd)
 		{
-		case CCommandBuffer::CMD_TEXTURE_CREATE:
-			{
-				Cmd_Texture_Create(static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand));
-			} break;
-		case CCommandBuffer::CMD_TEXTURE_DESTROY:
-			{
-				Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand));
-			} break;
-		case CCommandBuffer::CMD_TEXTURE_UPDATE:
-			{
-				Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand));
-			} break;
-		case CCommandBuffer::CMD_CLEAR:
-			{
-				const CCommandBuffer::SCommand_Clear *pCommand = (CCommandBuffer::SCommand_Clear *)pBaseCommand;
-				glClearColor(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0f);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			} break;
-		case CCommandBuffer::CMD_RENDER:
-			{
-				const CCommandBuffer::SCommand_Render *pCommand = static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand);
-				SetState(pCommand->m_State);
-				
-				glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
-				glTexCoordPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
-				glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*5);
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-				glEnableClientState(GL_COLOR_ARRAY);
-
-				switch(pCommand->m_PrimType)
-				{
-				case CCommandBuffer::PRIMTYPE_QUADS:
-					glDrawArrays(GL_QUADS, 0, pCommand->m_PrimCount*4);
-					break;
-				case CCommandBuffer::PRIMTYPE_LINES:
-					glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount*2);
-					break;
-				default:
-					dbg_msg("render", "unknown primtype %d\n", pCommand->m_Cmd);
-				};
-			} break;
-		default:
-			return false;
-			break;
+		case CCommandBuffer::CMD_TEXTURE_CREATE: Cmd_Texture_Create(static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand)); break;
+		default: return false;
 		}
 
 		return true;
@@ -240,7 +229,8 @@ class CCommandProcessorFragment_SDL
 {
 	// SDL stuff
 	SDL_Surface *m_pScreenSurface;
-
+	bool m_SystemInited;
+	/*
 	int TryInit()
 	{
 		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
@@ -345,12 +335,6 @@ class CCommandProcessorFragment_SDL
 			}
 		}
 
-		atexit(SDL_Quit); // ignore_convention
-
-		#ifdef CONF_FAMILY_WINDOWS
-			if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-				putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
-		#endif
 
 		if(InitWindow() != 0)
 			return -1;
@@ -369,36 +353,128 @@ class CCommandProcessorFragment_SDL
 		glDepthMask(0);
 
 		return 0;
+	}*/
+
+	void Cmd_Init(const CCommandBuffer::SCommand_Init *pCommand)
+	{
+		if(!m_SystemInited)
+		{
+			int Systems = SDL_INIT_VIDEO;
+
+			if(g_Config.m_SndEnable) // TODO: remove
+				Systems |= SDL_INIT_AUDIO;
+
+			if(g_Config.m_ClEventthread) // TODO: remove
+				Systems |= SDL_INIT_EVENTTHREAD;
+
+			if(SDL_Init(Systems) < 0)
+			{
+				dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
+				*pCommand->m_pResult = -1;
+				return;
+			}
+
+			atexit(SDL_Quit); // ignore_convention
+
+			#ifdef CONF_FAMILY_WINDOWS
+				if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
+					putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+			#endif
+			
+			m_SystemInited = true;
+		}
+
+		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
+		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+
+		// set flags
+		int Flags = SDL_OPENGL;
+		if(pCommand->m_Flags&CCommandBuffer::INITFLAG_RESIZABLE)
+			Flags |= SDL_RESIZABLE;
+
+		if(pInfo->hw_available) // ignore_convention
+			Flags |= SDL_HWSURFACE;
+		else
+			Flags |= SDL_SWSURFACE;
+
+		if(pInfo->blit_hw) // ignore_convention
+			Flags |= SDL_HWACCEL;
+
+		if(pCommand->m_Flags&CCommandBuffer::INITFLAG_FULLSCREEN)
+			Flags |= SDL_FULLSCREEN;
+
+		// set gl attributes
+		if(pCommand->m_FsaaSamples)
+		{
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, pCommand->m_FsaaSamples);
+		}
+		else
+		{
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		}
+
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, pCommand->m_Flags&CCommandBuffer::INITFLAG_VSYNC ? 1 : 0);
+
+		// set caption
+		SDL_WM_SetCaption(pCommand->m_aName, pCommand->m_aName);
+
+		// create window
+		m_pScreenSurface = SDL_SetVideoMode(pCommand->m_ScreenWidth, pCommand->m_ScreenHeight, 0, Flags);
+		if(m_pScreenSurface)
+		{
+			SDL_ShowCursor(0);
+
+			// set some default settings
+			glEnable(GL_BLEND);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
+			glAlphaFunc(GL_GREATER, 0);
+			glEnable(GL_ALPHA_TEST);
+			glDepthMask(0);
+
+			*pCommand->m_pResult = 0;
+		}
+		else
+		{
+			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
+			*pCommand->m_pResult = -1;
+		}
+
+				
+		//*pCommand->m_pResult = Init();
 	}
 
+	void Cmd_Shutdown(const CCommandBuffer::SCommand_Shutdown *pCommand)
+	{
+
+	}
+
+	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
+	{
+		SDL_GL_SwapBuffers();
+	}
 
 public:
 	CCommandProcessorFragment_SDL()
 	{
+		m_SystemInited = false;
 		m_pScreenSurface = 0x0;
 	}
 
 	bool RunCommand(const CCommandBuffer::SCommand *pBaseCommand)
 	{
-
 		switch(pBaseCommand->m_Cmd)
 		{
-		case CCommandBuffer::CMD_NOP:
-			break;
-		case CCommandBuffer::CMD_INIT:
-			{
-				const CCommandBuffer::SCommand_Init *pCommand = static_cast<const CCommandBuffer::SCommand_Init *>(pBaseCommand);
-				*pCommand->m_pResult = Init();
-			} break;
-		case CCommandBuffer::CMD_SHUTDOWN:
-			break;
-		case CCommandBuffer::CMD_SWAP:
-			{
-				SDL_GL_SwapBuffers();
-			} break;
-		default:
-			return false;
-			break;
+		case CCommandBuffer::CMD_INIT: Cmd_Init(static_cast<const CCommandBuffer::SCommand_Init *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_SHUTDOWN: Cmd_Shutdown(static_cast<const CCommandBuffer::SCommand_Shutdown *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_SWAP: Cmd_Swap(static_cast<const CCommandBuffer::SCommand_Swap *>(pBaseCommand)); break;
+		default: return false;
 		}
 
 		return true;
@@ -1128,6 +1204,66 @@ void CGraphics_Threaded::QuadsText(float x, float y, float Size, float r, float 
 	QuadsEnd();
 }
 
+int CGraphics_Threaded::IssueInit()
+{
+	// issue init command
+	m_pCommandBuffer->Reset();
+	
+	volatile int Result;
+	CCommandBuffer::SCommand_Init Cmd;
+	str_copy(Cmd.m_aName, "Teeworlds", sizeof(Cmd.m_aName));
+	Cmd.m_pResult = &Result;
+	Cmd.m_ScreenWidth = g_Config.m_GfxScreenWidth;
+	Cmd.m_ScreenHeight = g_Config.m_GfxScreenHeight;
+	Cmd.m_FsaaSamples = g_Config.m_GfxFsaaSamples;
+	
+	Cmd.m_Flags = 0;
+	if(g_Config.m_GfxFullscreen) Cmd.m_Flags |= CCommandBuffer::INITFLAG_FULLSCREEN;
+	if(g_Config.m_GfxVsync) Cmd.m_Flags |= CCommandBuffer::INITFLAG_VSYNC;
+	if(g_Config.m_DbgResizable) Cmd.m_Flags |= CCommandBuffer::INITFLAG_RESIZABLE;
+
+	m_pCommandBuffer->AddCommand(Cmd);
+
+	m_Handler.RunBuffer(m_pCommandBuffer);
+	m_Handler.WaitForIdle();
+	return Result;
+}
+
+int CGraphics_Threaded::InitWindow()
+{
+	if(IssueInit() == 0)
+		return 0;
+
+	// try disabling fsaa
+	while(g_Config.m_GfxFsaaSamples)
+	{
+		g_Config.m_GfxFsaaSamples--;
+
+		if(g_Config.m_GfxFsaaSamples)
+			dbg_msg("gfx", "lowering FSAA to %d and trying again", g_Config.m_GfxFsaaSamples);
+		else
+			dbg_msg("gfx", "disabling FSAA and trying again");
+
+		if(IssueInit() == 0)
+			return 0;
+	}
+
+	// try lowering the resolution
+	if(g_Config.m_GfxScreenWidth != 640 || g_Config.m_GfxScreenHeight != 480)
+	{
+		dbg_msg("gfx", "setting resolution to 640x480 and trying again");
+		g_Config.m_GfxScreenWidth = 640;
+		g_Config.m_GfxScreenHeight = 480;
+
+		if(IssueInit() == 0)
+			return 0;
+	}
+
+	dbg_msg("gfx", "out of ideas. failed to init graphics");
+
+	return -1;
+}
+
 bool CGraphics_Threaded::Init()
 {
 	// fetch pointers
@@ -1153,34 +1289,24 @@ bool CGraphics_Threaded::Init()
 	m_apCommandBuffers[1] = new CCommandBuffer(1024*512, 1024*1024);
 	m_pCommandBuffer = m_apCommandBuffers[0];
 
-	// issue init command
-	m_pCommandBuffer->Reset();
-	volatile int Result;
-	CCommandBuffer::SCommand_Init Cmd;
-	Cmd.m_pResult = &Result;
-	m_pCommandBuffer->AddCommand(Cmd);
-	m_Handler.RunBuffer(m_pCommandBuffer);
-	m_Handler.WaitForIdle();
+	// try to init the window
+	if(InitWindow() != 0)
+		return 0;
+	
+	// fetch final resolusion
+	m_ScreenWidth = g_Config.m_GfxScreenWidth;
+	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
+	// create null texture, will get id=0
+	static const unsigned char aNullTextureData[] = {
+		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
+		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
+		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
+		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
+	};
 
-	if(Result == 0)
-	{
-		// fetch final resolusion
-		m_ScreenWidth = g_Config.m_GfxScreenWidth;
-		m_ScreenHeight = g_Config.m_GfxScreenHeight;
-
-		// create null texture, will get id=0
-		static const unsigned char aNullTextureData[] = {
-			0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-			0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-			0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-			0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-		};
-
-		m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
-	}
-
-	return Result;
+	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
+	return 0;
 }
 
 void CGraphics_Threaded::Shutdown()
