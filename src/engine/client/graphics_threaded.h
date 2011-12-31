@@ -143,11 +143,16 @@ public:
 		SColor m_Color;
 	};
 
-
 	struct SCommand_Init : public SCommand
 	{
 		SCommand_Init() : SCommand(CMD_INIT) {}
 		volatile int *m_pResult;
+	};
+	
+	struct SCommand_Signal : public SCommand
+	{
+		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
+		semaphore *m_pSemaphore;
 	};
 
 	struct SCommand_RunBuffer : public SCommand
@@ -393,4 +398,8 @@ public:
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
 
+	// syncronization
+	virtual void InsertSignal(semaphore *pSemaphore);
+	virtual bool IsIdle();
+	virtual void WaitForIdle();
 };

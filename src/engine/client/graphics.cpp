@@ -963,4 +963,19 @@ int CGraphics_SDL::GetVideoModes(CVideoMode *pModes, int MaxModes)
 	return NumModes;
 }
 
+// syncronization
+void CGraphics_SDL::InsertSignal(semaphore *pSemaphore)
+{
+	pSemaphore->signal();
+}
+
+bool CGraphics_SDL::IsIdle()
+{
+	return true;
+}
+
+void CGraphics_SDL::WaitForIdle()
+{
+}
+
 //extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_SDL(); }
