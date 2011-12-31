@@ -48,7 +48,13 @@ static CVideoMode g_aFakeModes[] = {
 
 class CCommandProcessorFragment_OpenGL
 {
+	GLuint m_aTextures[CCommandBuffer::MAX_TEXTURES];
 public:
+	CCommandProcessorFragment_OpenGL()
+	{
+		mem_zero(m_aTextures, sizeof(m_aTextures));
+	}
+
 	void SetState(const CCommandBuffer::SState &State)
 	{
 		// blend
@@ -70,22 +76,75 @@ public:
 		};
 
 		// clip
-		/*if(State.m_ClipEnable)
+		if(State.m_ClipEnable)
 		{
-			glScissor(State.m_ClipX, State.m_ClipY+State.m_ClipH, State.m_ClipW, State.m_ClipH);
+			glScissor(State.m_ClipX, State.m_ClipY, State.m_ClipW, State.m_ClipH);
 			glEnable(GL_SCISSOR_TEST);
 		}
-		else*/
+		else
 			glDisable(GL_SCISSOR_TEST);
 		
 		// texture
-		glDisable(GL_TEXTURE_2D);
+		if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
+		{
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture]);
+		}
+		else
+			glDisable(GL_TEXTURE_2D);
 
 		// screen mapping
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
+	}
 
+	int TexFormatToOpenGLFormat(int TexFormat)
+	{
+		if(TexFormat == CCommandBuffer::TEXFORMAT_RGB) return GL_RGB;
+		if(TexFormat == CCommandBuffer::TEXFORMAT_ALPHA) return GL_ALPHA;
+		if(TexFormat == CCommandBuffer::TEXFORMAT_RGBA) return GL_RGBA;
+		return GL_RGBA;
+	}
+
+	void Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height,
+			TexFormatToOpenGLFormat(pCommand->m_Format), GL_UNSIGNED_BYTE, pCommand->m_pData);
+		mem_free(pCommand->m_pData);
+	}
+
+	void Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand)
+	{
+		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot]);
+	}
+
+	void Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand)
+	{
+		int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
+
+		// upload texture
+		int StoreOglformat = Oglformat;
+		if(g_Config.m_GfxTextureCompression)
+		{
+			StoreOglformat = GL_COMPRESSED_RGBA_ARB;
+			if(pCommand->m_StoreFormat == CCommandBuffer::TEXFORMAT_RGB)
+				StoreOglformat = GL_COMPRESSED_RGB_ARB;
+			else if(Oglformat == CCommandBuffer::TEXFORMAT_ALPHA)
+				StoreOglformat = GL_COMPRESSED_ALPHA_ARB;
+		}
+		else
+		{
+			StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
+		}
+
+		glGenTextures(1, &m_aTextures[pCommand->m_Slot]);
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, pCommand->m_Width, pCommand->m_Height, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
+		mem_free(pCommand->m_pData);
 	}
 
 	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
@@ -94,9 +153,17 @@ public:
 		switch(pBaseCommand->m_Cmd)
 		{
 		case CCommandBuffer::CMD_TEXTURE_CREATE:
-			break;
+			{
+				Cmd_Texture_Create((const CCommandBuffer::SCommand_Texture_Create *)pBaseCommand);
+			} break;
 		case CCommandBuffer::CMD_TEXTURE_DESTROY:
-			break;
+			{
+				Cmd_Texture_Destroy((const CCommandBuffer::SCommand_Texture_Destroy *)pBaseCommand);
+			} break;
+		case CCommandBuffer::CMD_TEXTURE_UPDATE:
+			{
+				Cmd_Texture_Update((const CCommandBuffer::SCommand_Texture_Update *)pBaseCommand);
+			} break;
 		case CCommandBuffer::CMD_CLEAR:
 			{
 				const CCommandBuffer::SCommand_Clear *pCommand = (CCommandBuffer::SCommand_Clear *)pBaseCommand;
@@ -593,122 +660,112 @@ void CGraphics_Threaded::LinesDraw(const CLineItem *pArray, int Num)
 
 int CGraphics_Threaded::UnloadTexture(int Index)
 {
-	return 0;
 	if(Index == m_InvalidTexture)
 		return 0;
 
 	if(Index < 0)
 		return 0;
 
-	glDeleteTextures(1, &m_aTextures[Index].m_Tex);
+	CCommandBuffer::SCommand_Texture_Destroy Cmd;
+	Cmd.m_Slot = Index;
+	m_pCommandBuffer->AddCommand(Cmd);
+
 	m_aTextures[Index].m_Next = m_FirstFreeTexture;
 	m_TextureMemoryUsage -= m_aTextures[Index].m_MemSize;
 	m_FirstFreeTexture = Index;
 	return 0;
 }
 
+static int ImageFormatToTexFormat(int Format)
+{
+	if(Format == CImageInfo::FORMAT_RGB) return CCommandBuffer::TEXFORMAT_RGB;
+	if(Format == CImageInfo::FORMAT_RGBA) return CCommandBuffer::TEXFORMAT_RGBA;
+	if(Format == CImageInfo::FORMAT_ALPHA) return CCommandBuffer::TEXFORMAT_ALPHA;
+	return CCommandBuffer::TEXFORMAT_RGBA;
+}
+
+
+int CGraphics_Threaded::LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
+{
+	CCommandBuffer::SCommand_Texture_Update Cmd;
+	Cmd.m_Slot = TextureID;
+	Cmd.m_X = x;
+	Cmd.m_Y = y;
+	Cmd.m_Width = Width;
+	Cmd.m_Height = Height;
+	Cmd.m_Format = ImageFormatToTexFormat(Format);
+
+	// calculate memory usage
+	int PixelSize = 4;
+	if(Format == CImageInfo::FORMAT_RGB)
+		PixelSize = 3;
+	else if(Format == CImageInfo::FORMAT_ALPHA)
+		PixelSize = 1;
+
+	int MemSize = Width*Height*PixelSize;
+
+	// copy texture data
+	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
+	mem_copy(pTmpData, pData, MemSize);
+	Cmd.m_pData = pTmpData;
+
+	//
+	m_pCommandBuffer->AddCommand(Cmd);
+	return 0;
+}
 
 int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
-	return 0;
-
-	int Mipmap = 1;
-	unsigned char *pTexData = (unsigned char *)pData;
-	unsigned char *pTmpData = 0;
-	int Oglformat = 0;
-	int StoreOglformat = 0;
-	int Tex = 0;
-
 	// don't waste memory on texture if we are stress testing
 	if(g_Config.m_DbgStress)
-		return 	m_InvalidTexture;
+		return m_InvalidTexture;
 
 	// grab texture
-	Tex = m_FirstFreeTexture;
+	int Tex = m_FirstFreeTexture;
 	m_FirstFreeTexture = m_aTextures[Tex].m_Next;
 	m_aTextures[Tex].m_Next = -1;
 
-	// resample if needed
-	if(!(Flags&TEXLOAD_NORESAMPLE) && (Format == CImageInfo::FORMAT_RGBA || Format == CImageInfo::FORMAT_RGB))
-	{
-		if(Width > GL_MAX_TEXTURE_SIZE || Height > GL_MAX_TEXTURE_SIZE)
-		{
-			int NewWidth = min(Width, GL_MAX_TEXTURE_SIZE);
-			int NewHeight = min(Height, GL_MAX_TEXTURE_SIZE);
-			pTmpData = Rescale(Width, Height, NewWidth, NewHeight, Format, pTexData);
-			pTexData = pTmpData;
-			Width = NewWidth;
-			Height = NewHeight;
-		}
-		else if(Width > 16 && Height > 16 && g_Config.m_GfxTextureQuality == 0)
-		{
-			pTmpData = Rescale(Width, Height, Width/2, Height/2, Format, pTexData);
-			pTexData = pTmpData;
-			Width /= 2;
-			Height /= 2;
-		}
-	}
-
-	Oglformat = GL_RGBA;
-	if(Format == CImageInfo::FORMAT_RGB)
-		Oglformat = GL_RGB;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		Oglformat = GL_ALPHA;
-
-	// upload texture
-	if(g_Config.m_GfxTextureCompression)
-	{
-		StoreOglformat = GL_COMPRESSED_RGBA_ARB;
-		if(StoreFormat == CImageInfo::FORMAT_RGB)
-			StoreOglformat = GL_COMPRESSED_RGB_ARB;
-		else if(StoreFormat == CImageInfo::FORMAT_ALPHA)
-			StoreOglformat = GL_COMPRESSED_ALPHA_ARB;
-	}
-	else
-	{
-		StoreOglformat = GL_RGBA;
-		if(StoreFormat == CImageInfo::FORMAT_RGB)
-			StoreOglformat = GL_RGB;
-		else if(StoreFormat == CImageInfo::FORMAT_ALPHA)
-			StoreOglformat = GL_ALPHA;
-	}
-
-	glGenTextures(1, &m_aTextures[Tex].m_Tex);
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[Tex].m_Tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
+	CCommandBuffer::SCommand_Texture_Create Cmd;
+	Cmd.m_Slot = Tex;
+	Cmd.m_Width = Width;
+	Cmd.m_Height = Height;
+	Cmd.m_Format = ImageFormatToTexFormat(Format);
+	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 
 	// calculate memory usage
-	{
-		int PixelSize = 4;
-		if(StoreFormat == CImageInfo::FORMAT_RGB)
-			PixelSize = 3;
-		else if(StoreFormat == CImageInfo::FORMAT_ALPHA)
-			PixelSize = 1;
+	int PixelSize = 4;
+	if(Format == CImageInfo::FORMAT_RGB)
+		PixelSize = 3;
+	else if(Format == CImageInfo::FORMAT_ALPHA)
+		PixelSize = 1;
 
-		m_aTextures[Tex].m_MemSize = Width*Height*PixelSize;
-		if(Mipmap)
-		{
-			while(Width > 2 && Height > 2)
-			{
-				Width>>=1;
-				Height>>=1;
-				m_aTextures[Tex].m_MemSize += Width*Height*PixelSize;
-			}
-		}
+	int MemSize = Width*Height*PixelSize;
+
+	// copy texture data
+	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
+	mem_copy(pTmpData, pData, MemSize);
+	Cmd.m_pData = pTmpData;
+
+	//
+	m_pCommandBuffer->AddCommand(Cmd);
+	
+	// calculate memory usage
+	int MemUsage = MemSize;
+	while(Width > 2 && Height > 2)
+	{
+		Width>>=1;
+		Height>>=1;
+		MemUsage += Width*Height*PixelSize;
 	}
 
-	m_TextureMemoryUsage += m_aTextures[Tex].m_MemSize;
-	mem_free(pTmpData);
+	m_TextureMemoryUsage += MemUsage;
+	//mem_free(pTmpData);
 	return Tex;
 }
 
 // simple uncompressed RGBA loaders
 int CGraphics_Threaded::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
-	return 0;
-
 	int l = str_length(pFilename);
 	int ID;
 	CImageInfo Img;
@@ -732,8 +789,6 @@ int CGraphics_Threaded::LoadTexture(const char *pFilename, int StorageType, int 
 
 int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
-	return 0;
-
 	char aCompleteFilename[512];
 	unsigned char *pBuffer;
 	png_t Png; // ignore_convention
@@ -782,6 +837,10 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 
 void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 {
+	// TODO: screenshot support
+	return;
+
+	/*
 	// fetch image data
 	int y;
 	int w = m_ScreenWidth;
@@ -822,22 +881,13 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 
 	// clean up
 	mem_free(pPixelData);
+	*/
 }
 
 void CGraphics_Threaded::TextureSet(int TextureID)
 {
-	return;
-
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
-	if(TextureID == -1)
-	{
-		glDisable(GL_TEXTURE_2D);
-	}
-	else
-	{
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[TextureID].m_Tex);
-	}
+	m_State.m_Texture = TextureID;
 }
 
 void CGraphics_Threaded::Clear(float r, float g, float b)
@@ -1130,22 +1180,6 @@ void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
 
 void CGraphics_Threaded::Swap()
 {
-	if(0) {
-		CCommandBuffer::SCommand_Clear Cmd;
-		Cmd.m_Color.r = 1.0f;
-		Cmd.m_Color.g = 0.0f;
-		Cmd.m_Color.b = 0.0f;
-		Cmd.m_Color.a = 0.0f;
-		m_pCommandBuffer->AddCommand(Cmd);
-	}
-
-	CCommandBuffer::SCommand_Swap Cmd;
-	m_pCommandBuffer->AddCommand(Cmd);
-
-	m_Handler.RunBuffer(m_pCommandBuffer);
-	m_Handler.WaitForIdle();
-	m_pCommandBuffer->Reset();
-		
 	// TODO: screenshot support
 	/*
 	if(m_DoScreenshot)
@@ -1154,10 +1188,12 @@ void CGraphics_Threaded::Swap()
 		m_DoScreenshot = false;
 	}*/
 
-	//SDL_GL_SwapBuffers();
+	CCommandBuffer::SCommand_Swap Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
 
-	//if(g_Config.m_GfxFinish)
-	//	glFinish();
+	m_Handler.RunBuffer(m_pCommandBuffer);
+	m_Handler.WaitForIdle();
+	m_pCommandBuffer->Reset();
 }
 
 

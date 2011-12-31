@@ -10,21 +10,11 @@
 	#include <windows.h>
 #endif
 
-#ifdef CONF_PLATFORM_MACOSX
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glu.h>
-#else
-	#include <GL/gl.h>
-	#include <GL/glu.h>
-#endif
-
 // ft2 texture
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 // TODO: Refactor: clean this up
-
-
 enum
 {
 	MAX_CHARACTERS = 64,
@@ -55,7 +45,7 @@ struct CFontSizeData
 	int m_FontSize;
 	FT_Face *m_pFace;
 
-	GLuint m_aTextures[2];
+	int m_aTextures[2];
 	int m_TextureWidth;
 	int m_TextureHeight;
 
@@ -108,7 +98,7 @@ class CTextRender : public IEngineTextRender
 	float m_TextOutlineB;
 	float m_TextOutlineA;
 
-	int m_FontTextureFormat;
+	//int m_FontTextureFormat;
 
 	int m_FontMemoryUsage;
 	
@@ -160,25 +150,24 @@ class CTextRender : public IEngineTextRender
 		void *pMem = mem_alloc(Width*Height, 1);
 		mem_zero(pMem, Width*Height);
 
-		if(pSizeData->m_aTextures[0] == 0)
-			glGenTextures(2, pSizeData->m_aTextures);
-		else
-			m_FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight*2;
+		for(int i = 0; i < 2; i++)
+		{
+			if(pSizeData->m_aTextures[i] != 0)
+			{
+				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
+				m_FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;
+				pSizeData->m_aTextures[i] = 0;
+			}
+
+			pSizeData->m_aTextures[i] = Graphics()->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, 0);
+			FontMemoryUsage += Width*Height;
+		}
 
 		pSizeData->m_NumXChars = Xchars;
 		pSizeData->m_NumYChars = Ychars;
 		pSizeData->m_TextureWidth = Width;
 		pSizeData->m_TextureHeight = Height;
 		pSizeData->m_CurrentCharacter = 0;
-
-		for(int i = 0; i < 2; i++)
-		{
-			glBindTexture(GL_TEXTURE_2D, pSizeData->m_aTextures[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexImage2D(GL_TEXTURE_2D, 0, m_FontTextureFormat, Width, Height, 0, m_FontTextureFormat, GL_UNSIGNED_BYTE, pMem);
-			m_FontMemoryUsage += Width*Height;
-		}
 
 		dbg_msg("", "Font memory usage: %d", m_FontMemoryUsage);
 
@@ -256,11 +245,16 @@ class CTextRender : public IEngineTextRender
 		int x = (SlotID%pSizeData->m_NumXChars) * (pSizeData->m_TextureWidth/pSizeData->m_NumXChars);
 		int y = (SlotID/pSizeData->m_NumXChars) * (pSizeData->m_TextureHeight/pSizeData->m_NumYChars);
 
+		Graphics()->LoadTextureRawSub(pSizeData->m_aTextures[Texnum], x, y,
+			pSizeData->m_TextureWidth/pSizeData->m_NumXChars,
+			pSizeData->m_TextureHeight/pSizeData->m_NumYChars,
+			CImageInfo::FORMAT_ALPHA, pData);
+		/*
 		glBindTexture(GL_TEXTURE_2D, pSizeData->m_aTextures[Texnum]);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
 			pSizeData->m_TextureWidth/pSizeData->m_NumXChars,
 			pSizeData->m_TextureHeight/pSizeData->m_NumYChars,
-			m_FontTextureFormat, GL_UNSIGNED_BYTE, pData);
+			m_FontTextureFormat, GL_UNSIGNED_BYTE, pData);*/
 	}
 
 	// 32k of data used for rendering glyphs
@@ -458,7 +452,7 @@ public:
 		m_pFont = 0;
 
 		// GL_LUMINANCE can be good for debugging
-		m_FontTextureFormat = GL_ALPHA;
+		//m_FontTextureFormat = GL_ALPHA;
 		
 		m_FontMemoryUsage = 0;
 	}
@@ -628,11 +622,10 @@ public:
 			if(pCursor->m_Flags&TEXTFLAG_RENDER)
 			{
 				// TODO: Make this better
-				glEnable(GL_TEXTURE_2D);
 				if (i == 0)
-					glBindTexture(GL_TEXTURE_2D, pSizeData->m_aTextures[1]);
+					Graphics()->TextureSet(pSizeData->m_aTextures[1]);
 				else
-					glBindTexture(GL_TEXTURE_2D, pSizeData->m_aTextures[0]);
+					Graphics()->TextureSet(pSizeData->m_aTextures[0]);
 
 				Graphics()->QuadsBegin();
 				if (i == 0)
