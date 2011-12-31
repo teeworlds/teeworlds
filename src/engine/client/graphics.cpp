@@ -270,6 +270,18 @@ int CGraphics_OpenGL::UnloadTexture(int Index)
 	return 0;
 }
 
+int CGraphics_OpenGL::LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
+{
+	int Oglformat = GL_RGBA;
+	if(Format == CImageInfo::FORMAT_RGB)
+		Oglformat = GL_RGB;
+	else if(Format == CImageInfo::FORMAT_ALPHA)
+		Oglformat = GL_ALPHA;
+
+	glBindTexture(GL_TEXTURE_2D, m_aTextures[TextureID].m_Tex);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pData);
+	return 0;
+}
 
 int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
@@ -336,6 +348,7 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 
 	glGenTextures(1, &m_aTextures[Tex].m_Tex);
 	glBindTexture(GL_TEXTURE_2D, m_aTextures[Tex].m_Tex);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);

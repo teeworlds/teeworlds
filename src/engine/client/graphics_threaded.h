@@ -49,6 +49,11 @@ class CCommandBuffer
 public:
 	enum
 	{
+		MAX_TEXTURES=1024*4,
+	};
+
+	enum
+	{
 		//
 		CMD_NOP = 0,
 
@@ -65,6 +70,7 @@ public:
 		// texture commands
 		CMD_TEXTURE_CREATE,
 		CMD_TEXTURE_DESTROY,
+		CMD_TEXTURE_UPDATE,
 
 		// rendering
 		CMD_CLEAR,
@@ -72,6 +78,14 @@ public:
 
 		// swap
 		CMD_SWAP,
+	};
+
+	enum
+	{
+		TEXFORMAT_INVALID = 0,
+		TEXFORMAT_RGB,
+		TEXFORMAT_RGBA,
+		TEXFORMAT_ALPHA,
 	};
 
 	enum
@@ -154,6 +168,44 @@ public:
 	struct SCommand_Swap : public SCommand
 	{
 		SCommand_Swap() : SCommand(CMD_SWAP) {}
+	};
+
+	struct SCommand_Texture_Create : public SCommand
+	{
+		SCommand_Texture_Create() : SCommand(CMD_TEXTURE_CREATE) {}
+
+		// texture information
+		int m_Slot;
+
+		int m_Width;
+		int m_Height;
+		int m_Format;
+		int m_StoreFormat;
+		void *m_pData; // will be freed by the command processor
+	};
+
+	struct SCommand_Texture_Update : public SCommand
+	{
+		SCommand_Texture_Update() : SCommand(CMD_TEXTURE_UPDATE) {}
+
+		// texture information
+		int m_Slot;
+
+		int m_X;
+		int m_Y;
+		int m_Width;
+		int m_Height;
+		int m_Format;
+		void *m_pData; // will be freed by the command processor
+	};
+
+
+	struct SCommand_Texture_Destroy : public SCommand
+	{
+		SCommand_Texture_Destroy() : SCommand(CMD_TEXTURE_DESTROY) {}
+
+		// texture information
+		int m_Slot;
 	};
 	
 	//
@@ -261,7 +313,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	struct CTexture
 	{
-		GLuint m_Tex;
+		int m_State;
 		int m_MemSize;
 		int m_Flags;
 		int m_Next;
@@ -298,6 +350,7 @@ public:
 
 	virtual int UnloadTexture(int Index);
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
+	virtual int LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
 	// simple uncompressed RGBA loaders
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
