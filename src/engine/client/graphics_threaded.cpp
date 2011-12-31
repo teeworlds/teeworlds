@@ -18,7 +18,7 @@
 
 #include <math.h> // cosf, sinf
 
-#include "graphics.h"
+#include "graphics_threaded.h"
 
 
 static CVideoMode g_aFakeModes[] = {
