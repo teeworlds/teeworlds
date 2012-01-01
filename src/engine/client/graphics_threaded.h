@@ -78,6 +78,9 @@ public:
 
 		// swap
 		CMD_SWAP,
+
+		//
+		CMD_SCREENSHOT,
 	};
 
 	enum
@@ -190,6 +193,13 @@ public:
 		unsigned m_PrimType;
 		unsigned m_PrimCount;
 		SVertex *m_pVertices;
+	};
+
+	struct SCommand_Screenshot : public SCommand
+	{
+		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
+
+		CImageInfo *m_pImage; // processor will fill this out
 	};
 
 	struct SCommand_Swap : public SCommand

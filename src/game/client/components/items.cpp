@@ -25,7 +25,6 @@ void CItems::OnReset()
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
