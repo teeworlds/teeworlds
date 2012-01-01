@@ -230,130 +230,6 @@ class CCommandProcessorFragment_SDL
 	// SDL stuff
 	SDL_Surface *m_pScreenSurface;
 	bool m_SystemInited;
-	/*
-	int TryInit()
-	{
-		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-		// set flags
-		int Flags = SDL_OPENGL;
-		if(g_Config.m_DbgResizable)
-			Flags |= SDL_RESIZABLE;
-
-		if(pInfo->hw_available) // ignore_convention
-			Flags |= SDL_HWSURFACE;
-		else
-			Flags |= SDL_SWSURFACE;
-
-		if(pInfo->blit_hw) // ignore_convention
-			Flags |= SDL_HWACCEL;
-
-		if(g_Config.m_GfxFullscreen)
-			Flags |= SDL_FULLSCREEN;
-
-		// set gl attributes
-		if(g_Config.m_GfxFsaaSamples)
-		{
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, g_Config.m_GfxFsaaSamples);
-		}
-		else
-		{
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-		}
-
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, g_Config.m_GfxVsync);
-
-		// set caption
-		SDL_WM_SetCaption("Teeworlds", "Teeworlds");
-
-		// create window
-		m_pScreenSurface = SDL_SetVideoMode(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, 0, Flags);
-		if(m_pScreenSurface == NULL)
-		{
-			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
-			return -1;
-		}
-
-		return 0;
-	}
-
-
-	int InitWindow()
-	{
-		if(TryInit() == 0)
-			return 0;
-
-		// try disabling fsaa
-		while(g_Config.m_GfxFsaaSamples)
-		{
-			g_Config.m_GfxFsaaSamples--;
-
-			if(g_Config.m_GfxFsaaSamples)
-				dbg_msg("gfx", "lowering FSAA to %d and trying again", g_Config.m_GfxFsaaSamples);
-			else
-				dbg_msg("gfx", "disabling FSAA and trying again");
-
-			if(TryInit() == 0)
-				return 0;
-		}
-
-		// try lowering the resolution
-		if(g_Config.m_GfxScreenWidth != 640 || g_Config.m_GfxScreenHeight != 480)
-		{
-			dbg_msg("gfx", "setting resolution to 640x480 and trying again");
-			g_Config.m_GfxScreenWidth = 640;
-			g_Config.m_GfxScreenHeight = 480;
-
-			if(TryInit() == 0)
-				return 0;
-		}
-
-		dbg_msg("gfx", "out of ideas. failed to init graphics");
-
-		return -1;
-	}
-
-	int Init()
-	{
-		{
-			int Systems = SDL_INIT_VIDEO;
-
-			if(g_Config.m_SndEnable)
-				Systems |= SDL_INIT_AUDIO;
-
-			if(g_Config.m_ClEventthread)
-				Systems |= SDL_INIT_EVENTTHREAD;
-
-			if(SDL_Init(Systems) < 0)
-			{
-				dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-				return -1;
-			}
-		}
-
-
-		if(InitWindow() != 0)
-			return -1;
-
-		SDL_ShowCursor(0);
-
-		// set some default settings
-		glEnable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glAlphaFunc(GL_GREATER, 0);
-		glEnable(GL_ALPHA_TEST);
-		glDepthMask(0);
-
-		return 0;
-	}*/
 
 	void Cmd_Init(const CCommandBuffer::SCommand_Init *pCommand)
 	{
@@ -445,14 +321,11 @@ class CCommandProcessorFragment_SDL
 			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
 			*pCommand->m_pResult = -1;
 		}
-
-				
-		//*pCommand->m_pResult = Init();
 	}
 
 	void Cmd_Shutdown(const CCommandBuffer::SCommand_Shutdown *pCommand)
 	{
-
+		SDL_Quit();
 	}
 
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
@@ -1312,7 +1185,8 @@ bool CGraphics_Threaded::Init()
 void CGraphics_Threaded::Shutdown()
 {
 	// TODO: SDL, is this correct?
-	SDL_Quit();
+
+	//
 }
 
 void CGraphics_Threaded::Minimize()
