@@ -203,6 +203,43 @@ class CCommandProcessorFragment_OpenGL
 		};
 	}
 
+	void Cmd_Screenshot(const CCommandBuffer::SCommand_Screenshot *pCommand)
+	{
+		// fetch image data
+		GLint aViewport[4] = {0,0,0,0};
+		glGetIntegerv(GL_VIEWPORT, aViewport);
+
+		int w = aViewport[2];
+		int h = aViewport[3];
+
+		dbg_msg("graphics", "grabbing %d x %d", w, h);
+
+		// we allocate one more row to use when we are flipping the texture
+		unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+		unsigned char *pTempRow = pPixelData+w*h*3;
+
+		// fetch the pixels
+		GLint Alignment;
+		glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
+		glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
+
+		// flip the pixel because opengl works from bottom left corner
+		for(int y = 0; y < h/2; y++)
+		{
+			mem_copy(pTempRow, pPixelData+y*w*3, w*3);
+			mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
+			mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
+		}
+
+		// fill in the information
+		pCommand->m_pImage->m_Width = w;
+		pCommand->m_pImage->m_Height = h;
+		pCommand->m_pImage->m_Format = CImageInfo::FORMAT_RGB;
+		pCommand->m_pImage->m_pData = pPixelData;
+	}
+
 public:
 	CCommandProcessorFragment_OpenGL()
 	{
@@ -218,6 +255,7 @@ public:
 		case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand)); break;
 		case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); break;
 		case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_SCREENSHOT: Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_Screenshot *>(pBaseCommand)); break;
 		default: return false;
 		}
 
@@ -415,6 +453,14 @@ void CCommandProcessorHandler::Start(ICommandProcessor *pProcessor)
 	m_BufferDone.signal();
 }
 
+void CCommandProcessorHandler::Stop()
+{
+	m_Shutdown = true;
+	m_Activity.signal();
+	thread_wait(m_pThread);
+	thread_destroy(m_pThread);
+}
+
 void CCommandProcessorHandler::RunBuffer(CCommandBuffer *pBuffer)
 {
 	WaitForIdle();
@@ -428,7 +474,7 @@ void CCommandProcessorHandler::WaitForIdle()
 		m_BufferDone.wait();
 }
 
-void CGraphics_Threaded::Flush()
+void CGraphics_Threaded::FlushVertices()
 {
 	if(m_NumVertices == 0)
 		return;
@@ -464,7 +510,7 @@ void CGraphics_Threaded::AddVertices(int Count)
 {
 	m_NumVertices += Count;
 	if((m_NumVertices + Count) >= MAX_VERTICES)
-		Flush();
+		FlushVertices();
 }
 
 void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints)
@@ -622,7 +668,7 @@ void CGraphics_Threaded::LinesBegin()
 void CGraphics_Threaded::LinesEnd()
 {
 	dbg_assert(m_Drawing == DRAWING_LINES, "called Graphics()->LinesEnd without begin");
-	Flush();
+	FlushVertices();
 	m_Drawing = 0;
 }
 
@@ -828,34 +874,33 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 	return 1;
 }
 
+void CGraphics_Threaded::KickCommandBuffer()
+{
+	m_Handler.RunBuffer(m_pCommandBuffer);
+
+	// swap buffer
+	m_CurrentCommandBuffer ^= 1;
+	m_pCommandBuffer = m_apCommandBuffers[m_CurrentCommandBuffer];
+	m_pCommandBuffer->Reset();
+}
+
 void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 {
-	// TODO: screenshot support
-	return;
+	// add swap command
+	CImageInfo Image;
+	mem_zero(&Image, sizeof(Image));
 
-	/*
-	// fetch image data
-	int y;
-	int w = m_ScreenWidth;
-	int h = m_ScreenHeight;
-	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
-	unsigned char *pTempRow = pPixelData+w*h*3;
-	GLint Alignment;
-	glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
-	glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
+	CCommandBuffer::SCommand_Screenshot Cmd;
+	Cmd.m_pImage = &Image;
+	m_pCommandBuffer->AddCommand(Cmd);
 
-	// flip the pixel because opengl works from bottom left corner
-	for(y = 0; y < h/2; y++)
+	// kick the buffer and wait for the result
+	KickCommandBuffer();
+	WaitForIdle();
+
+	if(Image.m_pData)
 	{
-		mem_copy(pTempRow, pPixelData+y*w*3, w*3);
-		mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
-		mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
-	}
-
-	// find filename
-	{
+		// find filename
 		char aWholePath[1024];
 		png_t Png; // ignore_convention
 
@@ -868,13 +913,11 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		png_open_file_write(&Png, aWholePath); // ignore_convention
-		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
+		png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData); // ignore_convention
 		png_close_file(&Png); // ignore_convention
-	}
 
-	// clean up
-	mem_free(pPixelData);
-	*/
+		mem_free(Image.m_pData);
+	}
 }
 
 void CGraphics_Threaded::TextureSet(int TextureID)
@@ -906,7 +949,7 @@ void CGraphics_Threaded::QuadsBegin()
 void CGraphics_Threaded::QuadsEnd()
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsEnd without begin");
-	Flush();
+	FlushVertices();
 	m_Drawing = 0;
 }
 
@@ -1154,8 +1197,8 @@ bool CGraphics_Threaded::Init()
 	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
 
 	// start the command processor
-	ICommandProcessor *pProcessor = new CCommandProcessor_SDL_OpenGL;
-	m_Handler.Start(pProcessor);
+	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
+	m_Handler.Start(m_pProcessor);
 
 	// create command buffers
 	m_apCommandBuffers[0] = new CCommandBuffer(1024*512, 1024*1024);
@@ -1184,9 +1227,16 @@ bool CGraphics_Threaded::Init()
 
 void CGraphics_Threaded::Shutdown()
 {
-	// TODO: SDL, is this correct?
-
-	//
+	// add swap command
+	CCommandBuffer::SCommand_Shutdown Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
+	m_Handler.RunBuffer(m_pCommandBuffer);
+	
+	// wait for everything to process and then stop the command processor
+	m_Handler.WaitForIdle();
+	m_Handler.Stop();
+	delete m_pProcessor;
+	m_pProcessor = 0;
 }
 
 void CGraphics_Threaded::Minimize()
@@ -1213,34 +1263,27 @@ int CGraphics_Threaded::WindowOpen()
 void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
 {
 	// TODO: screenshot support
-	return;
-	/*
 	char aDate[20];
 	str_timestamp(aDate, sizeof(aDate));
 	str_format(m_aScreenshotName, sizeof(m_aScreenshotName), "screenshots/%s_%s.png", pFilename?pFilename:"screenshot", aDate);
 	m_DoScreenshot = true;
-	*/
 }
 
 void CGraphics_Threaded::Swap()
 {
 	// TODO: screenshot support
-	/*
 	if(m_DoScreenshot)
 	{
 		ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
-	}*/
+	}
 
 	// add swap command
 	CCommandBuffer::SCommand_Swap Cmd;
 	m_pCommandBuffer->AddCommand(Cmd);
-	m_Handler.RunBuffer(m_pCommandBuffer);
 
-	// swap buffer
-	m_CurrentCommandBuffer ^= 1;
-	m_pCommandBuffer = m_apCommandBuffers[m_CurrentCommandBuffer];
-	m_pCommandBuffer->Reset();
+	// kick the command buffer
+	KickCommandBuffer();
 }
 
 // syncronization

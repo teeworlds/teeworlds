@@ -124,7 +124,7 @@ public:
 		SPoint m_Pos;
 		STexCoord m_Tex;
 		SColor m_Color;
-	} ;
+	};
 
 	struct SCommand
 	{
@@ -198,8 +198,7 @@ public:
 	struct SCommand_Screenshot : public SCommand
 	{
 		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
-
-		CImageInfo *m_pImage; // processor will fill this out
+		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
 	};
 
 	struct SCommand_Swap : public SCommand
@@ -307,6 +306,8 @@ class CCommandProcessorHandler
 public:
 	CCommandProcessorHandler();
 	void Start(ICommandProcessor *pProcessor);
+	void Stop();
+
 	void RunBuffer(CCommandBuffer *pBuffer);
 	bool IsIdle() const { return m_pBuffer == 0; }
 	void WaitForIdle();
@@ -316,6 +317,7 @@ class CGraphics_Threaded : public IEngineGraphics
 {
 	CCommandBuffer::SState m_State;
 	CCommandProcessorHandler m_Handler;
+	ICommandProcessor *m_pProcessor;
 
 	CCommandBuffer *m_apCommandBuffers[2];
 	CCommandBuffer *m_pCommandBuffer;
@@ -361,12 +363,14 @@ class CGraphics_Threaded : public IEngineGraphics
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
 
-	void Flush();
+	void FlushVertices();
 	void AddVertices(int Count);
 	void Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints);
 
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
 	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
+
+	void KickCommandBuffer();
 
 	int IssueInit();
 	int InitWindow();
