@@ -79,8 +79,9 @@ public:
 		// swap
 		CMD_SWAP,
 
-		//
+		// misc
 		CMD_SCREENSHOT,
+		CMD_VIDEOMODES,
 	};
 
 	enum
@@ -192,13 +193,22 @@ public:
 		SState m_State;
 		unsigned m_PrimType;
 		unsigned m_PrimCount;
-		SVertex *m_pVertices;
+		SVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
 	};
 
 	struct SCommand_Screenshot : public SCommand
 	{
 		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
+	};
+
+	struct SCommand_VideoModes : public SCommand
+	{
+		SCommand_VideoModes() : SCommand(CMD_VIDEOMODES) {}
+
+		CVideoMode *m_pModes; // processor will fill this in
+		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
+		int *m_pNumModes; // processor will write to this pointer
 	};
 
 	struct SCommand_Swap : public SCommand

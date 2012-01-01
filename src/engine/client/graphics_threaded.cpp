@@ -371,6 +371,39 @@ class CCommandProcessorFragment_SDL
 		SDL_GL_SwapBuffers();
 	}
 
+	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand)
+	{
+		// TODO: fix this code on osx or windows
+		SDL_Rect **ppModes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
+		if(ppModes == NULL)
+		{
+			// no modes
+			*pCommand->m_pNumModes = 0;
+		}
+		else if(ppModes == (SDL_Rect**)-1)
+		{
+			// no modes
+			*pCommand->m_pNumModes = 0;
+		}
+		else
+		{
+			int NumModes = 0;
+			for(int i = 0; ppModes[i]; ++i)
+			{
+				if(NumModes == pCommand->m_MaxModes)
+					break;
+				pCommand->m_pModes[NumModes].m_Width = ppModes[i]->w;
+				pCommand->m_pModes[NumModes].m_Height = ppModes[i]->h;
+				pCommand->m_pModes[NumModes].m_Red = 8;
+				pCommand->m_pModes[NumModes].m_Green = 8;
+				pCommand->m_pModes[NumModes].m_Blue = 8;
+				NumModes++;
+			}
+
+			*pCommand->m_pNumModes = NumModes;
+		}
+	}
+
 public:
 	CCommandProcessorFragment_SDL()
 	{
@@ -385,6 +418,7 @@ public:
 		case CCommandBuffer::CMD_INIT: Cmd_Init(static_cast<const CCommandBuffer::SCommand_Init *>(pBaseCommand)); break;
 		case CCommandBuffer::CMD_SHUTDOWN: Cmd_Shutdown(static_cast<const CCommandBuffer::SCommand_Shutdown *>(pBaseCommand)); break;
 		case CCommandBuffer::CMD_SWAP: Cmd_Swap(static_cast<const CCommandBuffer::SCommand_Swap *>(pBaseCommand)); break;
+		case CCommandBuffer::CMD_VIDEOMODES: Cmd_VideoModes(static_cast<const CCommandBuffer::SCommand_VideoModes *>(pBaseCommand)); break;
 		default: return false;
 		}
 
@@ -1306,11 +1340,7 @@ void CGraphics_Threaded::WaitForIdle()
 
 int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)
 {
-	// TODO: fix support for video modes, using fake modes for now
-	//int NumModes = sizeof(g_aFakeModes)/sizeof(CVideoMode);
-	//SDL_Rect **ppModes;
-
-	//if(g_Config.m_GfxDisplayAllModes)
+	if(g_Config.m_GfxDisplayAllModes)
 	{
 		int Count = sizeof(g_aFakeModes)/sizeof(CVideoMode);
 		mem_copy(pModes, g_aFakeModes, sizeof(g_aFakeModes));
@@ -1319,37 +1349,21 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)
 		return Count;
 	}
 
-	// TODO: fix this code on osx or windows
-	/*
+	// add videomodes command
+	CImageInfo Image;
+	mem_zero(&Image, sizeof(Image));
 
-	ppModes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
-	if(ppModes == NULL)
-	{
-		// no modes
-		NumModes = 0;
-	}
-	else if(ppModes == (SDL_Rect**)-1)
-	{
-		// all modes
-	}
-	else
-	{
-		NumModes = 0;
-		for(int i = 0; ppModes[i]; ++i)
-		{
-			if(NumModes == MaxModes)
-				break;
-			pModes[NumModes].m_Width = ppModes[i]->w;
-			pModes[NumModes].m_Height = ppModes[i]->h;
-			pModes[NumModes].m_Red = 8;
-			pModes[NumModes].m_Green = 8;
-			pModes[NumModes].m_Blue = 8;
-			NumModes++;
-		}
-	}
+	int NumModes = 0;
+	CCommandBuffer::SCommand_VideoModes Cmd;
+	Cmd.m_pModes = pModes;
+	Cmd.m_MaxModes = MaxModes;
+	Cmd.m_pNumModes = &NumModes;
+	m_pCommandBuffer->AddCommand(Cmd);
 
-	return NumModes;*/
+	// kick the buffer and wait for the result and return it
+	KickCommandBuffer();
+	WaitForIdle();
+	return NumModes;
 }
-
 
 extern IEngineGraphics *CreateEngineGraphicsThreaded() { return new CGraphics_Threaded(); }
