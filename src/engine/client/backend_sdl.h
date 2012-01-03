@@ -27,7 +27,26 @@
 	static void GL_ReleaseContext(const SGLContext &Context) { wglMakeCurrent(Context.m_hDC, NULL); }
 	static void GL_SwapBuffers(const SGLContext &Context) { SwapBuffers(Context.m_hDC); }
 #elif defined(CONF_PLATFORM_MACOSX)
-	#error missing implementation
+	#warning Untested implementation. I have no Mac OS X machine to test on. Please test, verify, fix and then remove this warning
+
+	struct SGLContext
+	{
+		AGLDrawable m_Drawable;
+		AGLContext m_Context;
+	};
+
+	static SGLContext GL_GetCurrentContext()
+	{
+		SGLContext Context;
+		Context.m_Drawable = aglGetCurrentDrawable();
+		Context.m_Context = aglGetCurrentContext();
+		return Context;
+	}
+
+	static void GL_MakeCurrent(const SGLContext &Context) { aglMakeCurrent(Context.m_Drawable, Context.m_Context); }
+	static void GL_ReleaseContext(const SGLContext &Context) { aglMakeCurrent(Context.m_Drawable, NULL); }
+	static void GL_SwapBuffers(const SGLContext &Context) { aglSwapBuffers(Context.m_Drawable); }
+		
 #elif defined(CONF_FAMILY_UNIX)
 
 	#include <GL/glx.h>
