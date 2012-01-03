@@ -118,7 +118,7 @@ public:
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
 	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText);
 
-	virtual bool Init();
+	virtual int Init();
 };
 
 class CGraphics_SDL : public CGraphics_OpenGL
@@ -130,7 +130,7 @@ class CGraphics_SDL : public CGraphics_OpenGL
 public:
 	CGraphics_SDL();
 
-	virtual bool Init();
+	virtual int Init();
 	virtual void Shutdown();
 
 	virtual void Minimize();

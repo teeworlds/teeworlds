@@ -1690,10 +1690,23 @@ void CClient::InitInterfaces()
 	m_Friends.Init();
 }
 
+#include "SDL.h"
+
 void CClient::Run()
 {
 	m_LocalStartTime = time_get();
 	m_SnapshotParts = 0;
+
+	// init SDL
+	{
+		if(SDL_Init(0) < 0)
+		{
+			dbg_msg("client", "unable to init SDL base: %s", SDL_GetError());
+			return;
+		}
+
+		atexit(SDL_Quit); // ignore_convention
+	}
 
 	// init graphics
 	{
@@ -1712,6 +1725,9 @@ void CClient::Run()
 			return;
 		}
 	}
+
+	// init sound, allowed to fail
+	m_SoundInitFailed = Sound()->Init() != 0;
 
 	// open socket
 	{
@@ -1737,8 +1753,6 @@ void CClient::Run()
 	// init the editor
 	//m_pEditor->Init();
 
-	// init sound, allowed to fail
-	m_SoundInitFailed = Sound()->Init() != 0;
 
 	// load data
 	if(!LoadData())
@@ -1937,6 +1951,11 @@ void CClient::Run()
 
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
+
+	// shutdown SDL
+	{
+		SDL_Quit();
+	}
 }
 
 

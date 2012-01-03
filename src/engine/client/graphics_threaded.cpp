@@ -4,9 +4,6 @@
 #include <base/detect.h>
 #include <base/math.h>
 
-#include "SDL.h"
-#include "SDL_opengl.h"
-
 #include <base/system.h>
 #include <engine/external/pnglite/pnglite.h>
 
@@ -19,7 +16,6 @@
 #include <math.h> // cosf, sinf
 
 #include "graphics_threaded.h"
-
 
 static CVideoMode g_aFakeModes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
@@ -44,469 +40,6 @@ static CVideoMode g_aFakeModes[] = {
 	{1920,1200,5,6,5}, {1920,1440,5,6,5}, {1920,2400,5,6,5},
 	{2048,1536,5,6,5}
 };
-
-class CCommandProcessorFragment_General
-{
-public:
-	void Cmd_Signal(const CCommandBuffer::SCommand_Signal *pCommand)
-	{
-		pCommand->m_pSemaphore->signal();
-	}
-
-	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
-	{
-		switch(pBaseCommand->m_Cmd)
-		{
-		case CCommandBuffer::CMD_NOP: break;
-		case CCommandBuffer::CMD_SIGNAL: Cmd_Signal(static_cast<const CCommandBuffer::SCommand_Signal *>(pBaseCommand)); break;
-		default: return false;
-		}
-
-		return true;
-	}
-};
-
-class CCommandProcessorFragment_OpenGL
-{
-	GLuint m_aTextures[CCommandBuffer::MAX_TEXTURES];
-
-	void SetState(const CCommandBuffer::SState &State)
-	{
-		// blend
-		switch(State.m_BlendMode)
-		{
-		case CCommandBuffer::BLEND_NONE:
-			glDisable(GL_BLEND);
-			break;
-		case CCommandBuffer::BLEND_ALPHA:
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case CCommandBuffer::BLEND_ADDITIVE:
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			break;
-		default:
-			dbg_msg("render", "unknown blendmode %d\n", State.m_BlendMode);
-		};
-
-		// clip
-		if(State.m_ClipEnable)
-		{
-			glScissor(State.m_ClipX, State.m_ClipY, State.m_ClipW, State.m_ClipH);
-			glEnable(GL_SCISSOR_TEST);
-		}
-		else
-			glDisable(GL_SCISSOR_TEST);
-		
-		// texture
-		if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
-		{
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture]);
-		}
-		else
-			glDisable(GL_TEXTURE_2D);
-
-		// screen mapping
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
-	}
-
-	static int TexFormatToOpenGLFormat(int TexFormat)
-	{
-		if(TexFormat == CCommandBuffer::TEXFORMAT_RGB) return GL_RGB;
-		if(TexFormat == CCommandBuffer::TEXFORMAT_ALPHA) return GL_ALPHA;
-		if(TexFormat == CCommandBuffer::TEXFORMAT_RGBA) return GL_RGBA;
-		return GL_RGBA;
-	}
-
-	void Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
-	{
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height,
-			TexFormatToOpenGLFormat(pCommand->m_Format), GL_UNSIGNED_BYTE, pCommand->m_pData);
-		mem_free(pCommand->m_pData);
-	}
-
-	void Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand)
-	{
-		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot]);
-	}
-
-	void Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand)
-	{
-		int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
-
-		// upload texture
-		int StoreOglformat = Oglformat;
-		if(g_Config.m_GfxTextureCompression)
-		{
-			StoreOglformat = GL_COMPRESSED_RGBA_ARB;
-			if(pCommand->m_StoreFormat == CCommandBuffer::TEXFORMAT_RGB)
-				StoreOglformat = GL_COMPRESSED_RGB_ARB;
-			else if(Oglformat == CCommandBuffer::TEXFORMAT_ALPHA)
-				StoreOglformat = GL_COMPRESSED_ALPHA_ARB;
-		}
-		else
-		{
-			StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
-		}
-
-		glGenTextures(1, &m_aTextures[pCommand->m_Slot]);
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
-
-		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, pCommand->m_Width, pCommand->m_Height, 0, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, pCommand->m_Width, pCommand->m_Height, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
-		}
-
-		mem_free(pCommand->m_pData);
-	}
-
-	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand)
-	{
-		glClearColor(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
-
-	void Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand)
-	{
-		SetState(pCommand->m_State);
-		
-		glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
-		glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*5);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-
-		switch(pCommand->m_PrimType)
-		{
-		case CCommandBuffer::PRIMTYPE_QUADS:
-			glDrawArrays(GL_QUADS, 0, pCommand->m_PrimCount*4);
-			break;
-		case CCommandBuffer::PRIMTYPE_LINES:
-			glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount*2);
-			break;
-		default:
-			dbg_msg("render", "unknown primtype %d\n", pCommand->m_Cmd);
-		};
-	}
-
-	void Cmd_Screenshot(const CCommandBuffer::SCommand_Screenshot *pCommand)
-	{
-		// fetch image data
-		GLint aViewport[4] = {0,0,0,0};
-		glGetIntegerv(GL_VIEWPORT, aViewport);
-
-		int w = aViewport[2];
-		int h = aViewport[3];
-
-		dbg_msg("graphics", "grabbing %d x %d", w, h);
-
-		// we allocate one more row to use when we are flipping the texture
-		unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
-		unsigned char *pTempRow = pPixelData+w*h*3;
-
-		// fetch the pixels
-		GLint Alignment;
-		glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
-		glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
-
-		// flip the pixel because opengl works from bottom left corner
-		for(int y = 0; y < h/2; y++)
-		{
-			mem_copy(pTempRow, pPixelData+y*w*3, w*3);
-			mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
-			mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
-		}
-
-		// fill in the information
-		pCommand->m_pImage->m_Width = w;
-		pCommand->m_pImage->m_Height = h;
-		pCommand->m_pImage->m_Format = CImageInfo::FORMAT_RGB;
-		pCommand->m_pImage->m_pData = pPixelData;
-	}
-
-public:
-	CCommandProcessorFragment_OpenGL()
-	{
-		mem_zero(m_aTextures, sizeof(m_aTextures));
-	}
-
-	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
-	{
-		switch(pBaseCommand->m_Cmd)
-		{
-		case CCommandBuffer::CMD_TEXTURE_CREATE: Cmd_Texture_Create(static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_SCREENSHOT: Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_Screenshot *>(pBaseCommand)); break;
-		default: return false;
-		}
-
-		return true;
-	}
-};
-
-class CCommandProcessorFragment_SDL
-{
-	// SDL stuff
-	SDL_Surface *m_pScreenSurface;
-	bool m_SystemInited;
-
-	void Cmd_Init(const CCommandBuffer::SCommand_Init *pCommand)
-	{
-		if(!m_SystemInited)
-		{
-			int Systems = SDL_INIT_VIDEO;
-
-			if(g_Config.m_SndEnable) // TODO: remove
-				Systems |= SDL_INIT_AUDIO;
-
-			if(g_Config.m_ClEventthread) // TODO: remove
-				Systems |= SDL_INIT_EVENTTHREAD;
-
-			if(SDL_Init(Systems) < 0)
-			{
-				dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-				*pCommand->m_pResult = -1;
-				return;
-			}
-
-			atexit(SDL_Quit); // ignore_convention
-
-			#ifdef CONF_FAMILY_WINDOWS
-				if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-					putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
-			#endif
-			
-			m_SystemInited = true;
-		}
-
-		const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-		// set flags
-		int Flags = SDL_OPENGL;
-		if(pCommand->m_Flags&CCommandBuffer::INITFLAG_RESIZABLE)
-			Flags |= SDL_RESIZABLE;
-
-		if(pInfo->hw_available) // ignore_convention
-			Flags |= SDL_HWSURFACE;
-		else
-			Flags |= SDL_SWSURFACE;
-
-		if(pInfo->blit_hw) // ignore_convention
-			Flags |= SDL_HWACCEL;
-
-		if(pCommand->m_Flags&CCommandBuffer::INITFLAG_FULLSCREEN)
-			Flags |= SDL_FULLSCREEN;
-
-		// set gl attributes
-		if(pCommand->m_FsaaSamples)
-		{
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, pCommand->m_FsaaSamples);
-		}
-		else
-		{
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-		}
-
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, pCommand->m_Flags&CCommandBuffer::INITFLAG_VSYNC ? 1 : 0);
-
-		// set caption
-		SDL_WM_SetCaption(pCommand->m_aName, pCommand->m_aName);
-
-		// create window
-		m_pScreenSurface = SDL_SetVideoMode(pCommand->m_ScreenWidth, pCommand->m_ScreenHeight, 0, Flags);
-		if(m_pScreenSurface)
-		{
-			SDL_ShowCursor(0);
-
-			// set some default settings
-			glEnable(GL_BLEND);
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-
-			glAlphaFunc(GL_GREATER, 0);
-			glEnable(GL_ALPHA_TEST);
-			glDepthMask(0);
-
-			*pCommand->m_pResult = 0;
-		}
-		else
-		{
-			dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
-			*pCommand->m_pResult = -1;
-		}
-	}
-
-	void Cmd_Shutdown(const CCommandBuffer::SCommand_Shutdown *pCommand)
-	{
-		SDL_Quit();
-	}
-
-	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
-	{
-		SDL_GL_SwapBuffers();
-	}
-
-	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand)
-	{
-		// TODO: fix this code on osx or windows
-		SDL_Rect **ppModes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
-		if(ppModes == NULL)
-		{
-			// no modes
-			*pCommand->m_pNumModes = 0;
-		}
-		else if(ppModes == (SDL_Rect**)-1)
-		{
-			// no modes
-			*pCommand->m_pNumModes = 0;
-		}
-		else
-		{
-			int NumModes = 0;
-			for(int i = 0; ppModes[i]; ++i)
-			{
-				if(NumModes == pCommand->m_MaxModes)
-					break;
-				pCommand->m_pModes[NumModes].m_Width = ppModes[i]->w;
-				pCommand->m_pModes[NumModes].m_Height = ppModes[i]->h;
-				pCommand->m_pModes[NumModes].m_Red = 8;
-				pCommand->m_pModes[NumModes].m_Green = 8;
-				pCommand->m_pModes[NumModes].m_Blue = 8;
-				NumModes++;
-			}
-
-			*pCommand->m_pNumModes = NumModes;
-		}
-	}
-
-public:
-	CCommandProcessorFragment_SDL()
-	{
-		m_SystemInited = false;
-		m_pScreenSurface = 0x0;
-	}
-
-	bool RunCommand(const CCommandBuffer::SCommand *pBaseCommand)
-	{
-		switch(pBaseCommand->m_Cmd)
-		{
-		case CCommandBuffer::CMD_INIT: Cmd_Init(static_cast<const CCommandBuffer::SCommand_Init *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_SHUTDOWN: Cmd_Shutdown(static_cast<const CCommandBuffer::SCommand_Shutdown *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_SWAP: Cmd_Swap(static_cast<const CCommandBuffer::SCommand_Swap *>(pBaseCommand)); break;
-		case CCommandBuffer::CMD_VIDEOMODES: Cmd_VideoModes(static_cast<const CCommandBuffer::SCommand_VideoModes *>(pBaseCommand)); break;
-		default: return false;
-		}
-
-		return true;
-	}
-};
-
-class CCommandProcessor_SDL_OpenGL : public ICommandProcessor
-{
- 	CCommandProcessorFragment_OpenGL m_OpenGL;
- 	CCommandProcessorFragment_SDL m_SDL;
- 	CCommandProcessorFragment_General m_General;
- public:
-	virtual void RunBuffer(CCommandBuffer *pBuffer)
-	{
-		unsigned CmdIndex = 0;
-		while(1)
-		{
-			const CCommandBuffer::SCommand *pBaseCommand = pBuffer->GetCommand(&CmdIndex);
-			if(pBaseCommand == 0x0)
-				break;
-			
-			if(m_OpenGL.RunCommand(pBaseCommand))
-				continue;
-			
-			if(m_SDL.RunCommand(pBaseCommand))
-				continue;
-
-			if(m_General.RunCommand(pBaseCommand))
-				continue;
-			
-			dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
-		}
-	}
-};
-
-void CCommandProcessorHandler::ThreadFunc(void *pUser)
-{
-	CCommandProcessorHandler *pThis = (CCommandProcessorHandler *)pUser;
-
-	while(!pThis->m_Shutdown)
-	{
-		pThis->m_Activity.wait();
-		if(pThis->m_pBuffer)
-		{
-			pThis->m_pProcessor->RunBuffer(pThis->m_pBuffer);
-			sync_barrier();
-			pThis->m_pBuffer = 0x0;
-			pThis->m_BufferDone.signal();
-		}
-	}
-}
-
-CCommandProcessorHandler::CCommandProcessorHandler()
-{
-	m_pBuffer = 0x0;
-	m_pProcessor = 0x0;
-	m_pThread = 0x0;
-}
-
-void CCommandProcessorHandler::Start(ICommandProcessor *pProcessor)
-{
-	m_Shutdown = false;
-	m_pProcessor = pProcessor;
-	m_pThread = thread_create(ThreadFunc, this);
-	m_BufferDone.signal();
-}
-
-void CCommandProcessorHandler::Stop()
-{
-	m_Shutdown = true;
-	m_Activity.signal();
-	thread_wait(m_pThread);
-	thread_destroy(m_pThread);
-}
-
-void CCommandProcessorHandler::RunBuffer(CCommandBuffer *pBuffer)
-{
-	WaitForIdle();
-	m_pBuffer = pBuffer;
-	m_Activity.signal();
-}
-
-void CCommandProcessorHandler::WaitForIdle()
-{
-	while(m_pBuffer != 0x0)
-		m_BufferDone.wait();
-}
 
 void CGraphics_Threaded::FlushVertices()
 {
@@ -910,7 +443,7 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 
 void CGraphics_Threaded::KickCommandBuffer()
 {
-	m_Handler.RunBuffer(m_pCommandBuffer);
+	m_pBackend->RunBuffer(m_pCommandBuffer);
 
 	// swap buffer
 	m_CurrentCommandBuffer ^= 1;
@@ -1156,27 +689,12 @@ void CGraphics_Threaded::QuadsText(float x, float y, float Size, float r, float 
 
 int CGraphics_Threaded::IssueInit()
 {
-	// issue init command
-	m_pCommandBuffer->Reset();
-	
-	volatile int Result;
-	CCommandBuffer::SCommand_Init Cmd;
-	str_copy(Cmd.m_aName, "Teeworlds", sizeof(Cmd.m_aName));
-	Cmd.m_pResult = &Result;
-	Cmd.m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	Cmd.m_ScreenHeight = g_Config.m_GfxScreenHeight;
-	Cmd.m_FsaaSamples = g_Config.m_GfxFsaaSamples;
-	
-	Cmd.m_Flags = 0;
-	if(g_Config.m_GfxFullscreen) Cmd.m_Flags |= CCommandBuffer::INITFLAG_FULLSCREEN;
-	if(g_Config.m_GfxVsync) Cmd.m_Flags |= CCommandBuffer::INITFLAG_VSYNC;
-	if(g_Config.m_DbgResizable) Cmd.m_Flags |= CCommandBuffer::INITFLAG_RESIZABLE;
+	int Flags = 0;
+	if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
+	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
+	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
 
-	m_pCommandBuffer->AddCommand(Cmd);
-
-	m_Handler.RunBuffer(m_pCommandBuffer);
-	m_Handler.WaitForIdle();
-	return Result;
+	return m_pBackend->Init("Teeworlds", g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags);
 }
 
 int CGraphics_Threaded::InitWindow()
@@ -1214,7 +732,7 @@ int CGraphics_Threaded::InitWindow()
 	return -1;
 }
 
-bool CGraphics_Threaded::Init()
+int CGraphics_Threaded::Init()
 {
 	// fetch pointers
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
@@ -1230,22 +748,18 @@ bool CGraphics_Threaded::Init()
 		m_aTextures[i].m_Next = i+1;
 	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
 
-	// start the command processor
-	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
-	m_Handler.Start(m_pProcessor);
+	m_pBackend = CreateGraphicsBackend();
+	if(InitWindow() != 0)
+		return -1;
+
+	// fetch final resolusion
+	m_ScreenWidth = g_Config.m_GfxScreenWidth;
+	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// create command buffers
 	m_apCommandBuffers[0] = new CCommandBuffer(1024*512, 1024*1024);
 	m_apCommandBuffers[1] = new CCommandBuffer(1024*512, 1024*1024);
 	m_pCommandBuffer = m_apCommandBuffers[0];
-
-	// try to init the window
-	if(InitWindow() != 0)
-		return 0;
-	
-	// fetch final resolusion
-	m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// create null texture, will get id=0
 	static const unsigned char aNullTextureData[] = {
@@ -1261,36 +775,31 @@ bool CGraphics_Threaded::Init()
 
 void CGraphics_Threaded::Shutdown()
 {
-	// add swap command
-	CCommandBuffer::SCommand_Shutdown Cmd;
-	m_pCommandBuffer->AddCommand(Cmd);
-	m_Handler.RunBuffer(m_pCommandBuffer);
-	
-	// wait for everything to process and then stop the command processor
-	m_Handler.WaitForIdle();
-	m_Handler.Stop();
-	delete m_pProcessor;
-	m_pProcessor = 0;
+	// shutdown the backend
+	m_pBackend->Shutdown();
+	delete m_pBackend;
+	m_pBackend = 0x0;
 }
 
 void CGraphics_Threaded::Minimize()
 {
-	SDL_WM_IconifyWindow();
+	m_pBackend->Minimize();
 }
 
 void CGraphics_Threaded::Maximize()
 {
 	// TODO: SDL
+	m_pBackend->Maximize();
 }
 
 int CGraphics_Threaded::WindowActive()
 {
-	return SDL_GetAppState()&SDL_APPINPUTFOCUS;
+	return m_pBackend->WindowActive();
 }
 
 int CGraphics_Threaded::WindowOpen()
 {
-	return SDL_GetAppState()&SDL_APPACTIVE;
+	return m_pBackend->WindowOpen();
 
 }
 
@@ -1330,12 +839,12 @@ void CGraphics_Threaded::InsertSignal(semaphore *pSemaphore)
 
 bool CGraphics_Threaded::IsIdle()
 {
-	return m_Handler.IsIdle();
+	return m_pBackend->IsIdle();
 }
 
 void CGraphics_Threaded::WaitForIdle()
 {
-	m_Handler.WaitForIdle();
+	m_pBackend->WaitForIdle();
 }
 
 int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes)

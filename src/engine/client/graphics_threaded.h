@@ -2,6 +2,8 @@
 
 #include <base/tl/threading.h>
 
+#include <engine/graphics.h>
+
 class CCommandBuffer
 {
 	class CBuffer
@@ -54,12 +56,12 @@ public:
 
 	enum
 	{
-		//
-		CMD_NOP = 0,
+		// commadn groups
+		CMDGROUP_CORE = 0, // commands that everyone has to implement
+		CMDGROUP_PLATFORM = 10000, // commands specific to a platform
 
 		//
-		CMD_INIT,
-		CMD_SHUTDOWN,
+		CMD_NOP = CMDGROUP_CORE,
 
 		//
 		CMD_RUNBUFFER,
@@ -82,6 +84,7 @@ public:
 		// misc
 		CMD_SCREENSHOT,
 		CMD_VIDEOMODES,
+
 	};
 
 	enum
@@ -154,25 +157,6 @@ public:
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
 		SColor m_Color;
-	};
-
-	struct SCommand_Init : public SCommand
-	{
-		SCommand_Init() : SCommand(CMD_INIT) {}
-		
-		char m_aName[256];
-
-		int m_ScreenWidth;
-		int m_ScreenHeight;
-		int m_FsaaSamples;
-		int m_Flags;
-
-		volatile int *m_pResult;
-	};
-
-	struct SCommand_Shutdown : public SCommand
-	{
-		SCommand_Shutdown() : SCommand(CMD_SHUTDOWN) {}
 	};
 		
 	struct SCommand_Signal : public SCommand
@@ -269,10 +253,13 @@ public:
 	template<class T>
 	void AddCommand(const T &Command)
 	{
+		// make sure that we don't do something stupid like ->AddCommand(&Cmd);
+		(void)static_cast<const SCommand *>(&Command);
+
+		// allocate and copy the command into the buffer
 		SCommand *pCmd = (SCommand *)m_CmdBuffer.Alloc(sizeof(Command));
 		if(!pCmd)
 			return;
-
 		mem_copy(pCmd, &Command, sizeof(Command));
 		pCmd->m_Size = sizeof(Command);
 	}
@@ -294,40 +281,35 @@ public:
 	}	
 };
 
-class ICommandProcessor
+// interface for the graphics backend
+// all these functions are called on the main thread
+class IGraphicsBackend
 {
 public:
-	virtual ~ICommandProcessor() {}
+	enum
+	{
+		INITFLAG_FULLSCREEN = 1,
+		INITFLAG_VSYNC = 2,
+		INITFLAG_RESIZABLE = 4,
+	};
+
+	virtual int Init(const char *pName, int Width, int Height, int FsaaSamples, int Flags) = 0;
+	virtual int Shutdown() = 0;
+
+	virtual void Minimize() = 0;
+	virtual void Maximize() = 0;
+	virtual int WindowActive() = 0;
+	virtual int WindowOpen() = 0;
+
 	virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;
-};
-
-
-class CCommandProcessorHandler
-{
-	ICommandProcessor *m_pProcessor;
-	CCommandBuffer * volatile m_pBuffer;
-	volatile bool m_Shutdown;
-	semaphore m_Activity;
-	semaphore m_BufferDone;
-	void *m_pThread;
-
-	static void ThreadFunc(void *pUser);
-
-public:
-	CCommandProcessorHandler();
-	void Start(ICommandProcessor *pProcessor);
-	void Stop();
-
-	void RunBuffer(CCommandBuffer *pBuffer);
-	bool IsIdle() const { return m_pBuffer == 0; }
-	void WaitForIdle();
+	virtual bool IsIdle() const = 0;
+	virtual void WaitForIdle() = 0;
 };
 
 class CGraphics_Threaded : public IEngineGraphics
 {
 	CCommandBuffer::SState m_State;
-	CCommandProcessorHandler m_Handler;
-	ICommandProcessor *m_pProcessor;
+	IGraphicsBackend *m_pBackend;
 
 	CCommandBuffer *m_apCommandBuffers[2];
 	CCommandBuffer *m_pCommandBuffer;
@@ -440,7 +422,7 @@ public:
 	virtual int WindowActive();
 	virtual int WindowOpen();
 
-	virtual bool Init();
+	virtual int Init();
 	virtual void Shutdown();
 
 	virtual void TakeScreenshot(const char *pFilename);
@@ -453,3 +435,5 @@ public:
 	virtual bool IsIdle();
 	virtual void WaitForIdle();
 };
+
+extern IGraphicsBackend *CreateGraphicsBackend();
