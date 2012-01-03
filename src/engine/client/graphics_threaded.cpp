@@ -67,7 +67,17 @@ void CGraphics_Threaded::FlushVertices()
 
 	Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
 	if(Cmd.m_pVertices == 0x0)
-		return;
+	{
+		// kick command buffer and try again
+		KickCommandBuffer();
+
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		if(Cmd.m_pVertices == 0x0)
+		{
+			dbg_msg("graphics", "failed to allocate data for vertices");
+			return;
+		}
+	}
 
 	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
 	m_pCommandBuffer->AddCommand(Cmd);
@@ -757,8 +767,8 @@ int CGraphics_Threaded::Init()
 	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// create command buffers
-	m_apCommandBuffers[0] = new CCommandBuffer(1024*512, 1024*1024);
-	m_apCommandBuffers[1] = new CCommandBuffer(1024*512, 1024*1024);
+	for(int i = 0; i < NUM_CMDBUFFERS; i++)
+		m_apCommandBuffers[i] = new CCommandBuffer(128*1024, 2*1024*1024);
 	m_pCommandBuffer = m_apCommandBuffers[0];
 
 	// create null texture, will get id=0
@@ -779,6 +789,10 @@ void CGraphics_Threaded::Shutdown()
 	m_pBackend->Shutdown();
 	delete m_pBackend;
 	m_pBackend = 0x0;
+
+	// delete the command buffers
+	for(int i = 0; i < NUM_CMDBUFFERS; i++)
+		delete m_apCommandBuffers[i];
 }
 
 void CGraphics_Threaded::Minimize()

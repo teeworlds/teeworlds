@@ -50,6 +50,10 @@
 	#include <windows.h>
 #endif
 
+#include "SDL.h"
+#ifdef main
+#undef main
+#endif
 
 void CGraph::Init(float Min, float Max)
 {
@@ -1719,8 +1723,6 @@ void CClient::InitInterfaces()
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
 	m_Friends.Init();
 }
-
-#include "SDL.h"
 
 void CClient::Run()
 {

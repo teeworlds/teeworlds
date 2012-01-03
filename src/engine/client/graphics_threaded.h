@@ -46,9 +46,10 @@ class CCommandBuffer
 		unsigned DataUsed() { return m_Used; }
 	};
 
+public:
 	CBuffer m_CmdBuffer;
 	CBuffer m_DataBuffer;
-public:
+
 	enum
 	{
 		MAX_TEXTURES=1024*4,
@@ -251,7 +252,7 @@ public:
 	}
 
 	template<class T>
-	void AddCommand(const T &Command)
+	bool AddCommand(const T &Command)
 	{
 		// make sure that we don't do something stupid like ->AddCommand(&Cmd);
 		(void)static_cast<const SCommand *>(&Command);
@@ -259,9 +260,10 @@ public:
 		// allocate and copy the command into the buffer
 		SCommand *pCmd = (SCommand *)m_CmdBuffer.Alloc(sizeof(Command));
 		if(!pCmd)
-			return;
+			return false;
 		mem_copy(pCmd, &Command, sizeof(Command));
 		pCmd->m_Size = sizeof(Command);
+		return true;
 	}
 
 	SCommand *GetCommand(unsigned *pIndex)
@@ -278,7 +280,7 @@ public:
 	{
 		m_CmdBuffer.Reset();
 		m_DataBuffer.Reset();
-	}	
+	}
 };
 
 // interface for the graphics backend
@@ -308,25 +310,27 @@ public:
 
 class CGraphics_Threaded : public IEngineGraphics
 {
-	CCommandBuffer::SState m_State;
-	IGraphicsBackend *m_pBackend;
-
-	CCommandBuffer *m_apCommandBuffers[2];
-	CCommandBuffer *m_pCommandBuffer;
-	unsigned m_CurrentCommandBuffer;
-
-	//
-	class IStorage *m_pStorage;
-	class IConsole *m_pConsole;
-
 	enum
 	{
+		NUM_CMDBUFFERS = 2,
+
 		MAX_VERTICES = 32*1024,
 		MAX_TEXTURES = 1024*4,
 		
 		DRAWING_QUADS=1,
 		DRAWING_LINES=2
 	};
+
+	CCommandBuffer::SState m_State;
+	IGraphicsBackend *m_pBackend;
+
+	CCommandBuffer *m_apCommandBuffers[NUM_CMDBUFFERS];
+	CCommandBuffer *m_pCommandBuffer;
+	unsigned m_CurrentCommandBuffer;
+
+	//
+	class IStorage *m_pStorage;
+	class IConsole *m_pConsole;
 
 	CCommandBuffer::SVertex m_aVertices[MAX_VERTICES];
 	int m_NumVertices;
