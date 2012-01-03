@@ -29,7 +29,7 @@
 == %s kazandı!
 
 -Page %d-
-== -Page %d-
+== -Sayfa %d-
 
 Abort
 == İptal
@@ -47,7 +47,7 @@ All
 == Hepsi
 
 Alpha
-== Alfa
+== Şeffaflık
 
 Always show name plates
 == Oyuncu isimlerini her zaman göster
@@ -239,7 +239,7 @@ Hammer
 == Çekiç
 
 Has people playing
-== Oynayan insan bulunduran
+== Insan bulunduran
 
 High Detail
 == High Detail
@@ -302,10 +302,10 @@ Map:
 == Harita:
 
 Max Screenshots
-== Maksimum Ekran Alıntısı
+== Maksimum Ekran Alıntısı Sayısı
 
 Max demos
-== Maksimum Demo
+== Maksimum Demo Sayısı
 
 Maximum ping:
 == Maximum ping
@@ -365,7 +365,7 @@ No servers match your filter criteria
 == Filtre kriterlerinize uygun sunucu bulunamadı
 
 Ok
-== Ok
+== Tamam
 
 Open
 == Aç
@@ -578,7 +578,7 @@ The server is running a non-standard tuning on a pure game type.
 == Bu sunucu standart olmayan bir ayarı saf bir oyun türünde kullanıyor.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== Editörde kaydedilmemiş bir harita var, kapatmadan evvel kaydetmek isteyebilirsiniz.
+== Editörde kaydedilmemiş bir harita var, kapatmadan önce kaydetmek isteyebilirsiniz.
 
 Time limit
 == Süre limiti
@@ -614,7 +614,7 @@ V-Sync
 == V-Sync
 
 Version
-== Versyon
+== Sürüm
 
 Version:
 == Versyon :
