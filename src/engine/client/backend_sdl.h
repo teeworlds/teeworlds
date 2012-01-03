@@ -24,7 +24,7 @@
 	}
 
 	static void GL_MakeCurrent(const SGLContext &Context) { wglMakeCurrent(Context.m_hDC, Context.m_hGLRC); }
-	static void GL_ReleaseContext(const SGLContext &Context) { wglMakeCurrent(AGL_NONE, NULL); }
+	static void GL_ReleaseContext(const SGLContext &Context) { wglMakeCurrent(NULL, NULL); }
 	static void GL_SwapBuffers(const SGLContext &Context) { SwapBuffers(Context.m_hDC); }
 #elif defined(CONF_PLATFORM_MACOSX)
 	#warning Untested implementation. I have no Mac OS X machine to test on. Please test, verify, fix and then remove this warning
