@@ -627,6 +627,8 @@ int CMenus::RenderMenubar(CUIRect r)
 
 void CMenus::RenderLoading()
 {
+	// TODO: not supported right now due to separate render thread
+
 	static int64 LastLoadRender = 0;
 	float Percent = m_LoadCurrent++/(float)m_LoadTotal;
 

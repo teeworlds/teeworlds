@@ -5,6 +5,8 @@
 
 #include "kernel.h"
 
+#include <base/tl/threading.h>
+
 class CImageInfo
 {
 public:
@@ -55,7 +57,8 @@ public:
 	*/
 	enum
 	{
-		TEXLOAD_NORESAMPLE=1,
+		TEXLOAD_NORESAMPLE = 1,
+		TEXLOAD_NOMIPMAPS = 2,
 	};
 
 	int ScreenWidth() const { return m_ScreenWidth; }
@@ -80,6 +83,7 @@ public:
 	virtual int UnloadTexture(int Index) = 0;
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
+	virtual int LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
 	virtual void TextureSet(int TextureID) = 0;
 
 	struct CLineItem
@@ -131,13 +135,18 @@ public:
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
 
 	virtual void Swap() = 0;
+
+	// syncronization
+	virtual void InsertSignal(semaphore *pSemaphore) = 0;
+	virtual bool IsIdle() = 0;
+	virtual void WaitForIdle() = 0;
 };
 
 class IEngineGraphics : public IGraphics
 {
 	MACRO_INTERFACE("enginegraphics", 0)
 public:
-	virtual bool Init() = 0;
+	virtual int Init() = 0;
 	virtual void Shutdown() = 0;
 
 	virtual void Minimize() = 0;
@@ -149,5 +158,6 @@ public:
 };
 
 extern IEngineGraphics *CreateEngineGraphics();
+extern IEngineGraphics *CreateEngineGraphicsThreaded();
 
 #endif

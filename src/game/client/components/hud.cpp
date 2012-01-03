@@ -248,7 +248,7 @@ void CHud::RenderFps()
 	if(g_Config.m_ClShowfps)
 	{
 		// calculate avg. fps
-		float FPS = 1.0f / Client()->FrameTime();
+		float FPS = 1.0f / Client()->RenderFrameTime();
 		m_AverageFPS = (m_AverageFPS*(1.0f-(1.0f/m_AverageFPS))) + (FPS*(1.0f/m_AverageFPS));
 		char Buf[512];
 		str_format(Buf, sizeof(Buf), "%d", (int)m_AverageFPS);

@@ -38,7 +38,7 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 	if (i)
 	{
 		i->m_Pos = Pos;
-		i->m_Life = 0.75f;
+		i->m_StartTime = Client()->LocalTime();
 		i->m_Dir = Dir*-1;
 		i->m_StartAngle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
 	}
@@ -46,19 +46,19 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 
 void CDamageInd::OnRender()
 {
+
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	for(int i = 0; i < m_NumItems;)
 	{
-		vec2 Pos = mix(m_aItems[i].m_Pos+m_aItems[i].m_Dir*75.0f, m_aItems[i].m_Pos, clamp((m_aItems[i].m_Life-0.60f)/0.15f, 0.0f, 1.0f));
-
-		m_aItems[i].m_Life -= Client()->FrameTime();
-		if(m_aItems[i].m_Life < 0.0f)
+		float Life = 0.75f - (Client()->LocalTime() - m_aItems[i].m_StartTime);
+		if(Life < 0.0f)
 			DestroyI(&m_aItems[i]);
 		else
 		{
-			Graphics()->SetColor(1.0f,1.0f,1.0f, m_aItems[i].m_Life/0.1f);
-			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + m_aItems[i].m_Life * 2.0f);
+			vec2 Pos = mix(m_aItems[i].m_Pos+m_aItems[i].m_Dir*75.0f, m_aItems[i].m_Pos, clamp((Life-0.60f)/0.15f, 0.0f, 1.0f));
+			Graphics()->SetColor(1.0f,1.0f,1.0f, Life/0.1f);
+			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + Life * 2.0f);
 			RenderTools()->SelectSprite(SPRITE_STAR1);
 			RenderTools()->DrawSprite(Pos.x, Pos.y, 48.0f);
 			i++;
@@ -66,3 +66,6 @@ void CDamageInd::OnRender()
 	}
 	Graphics()->QuadsEnd();
 }
+
+
+

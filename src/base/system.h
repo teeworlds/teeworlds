@@ -400,6 +400,23 @@ int lock_try(LOCK lock);
 void lock_wait(LOCK lock);
 void lock_release(LOCK lock);
 
+
+/* Group: Semaphores */
+
+#if defined(CONF_FAMILY_UNIX)
+	#include <semaphore.h>
+	typedef sem_t SEMAPHORE;
+#elif defined(CONF_FAMILY_WINDOWS)
+	typedef void* SEMAPHORE;
+#else
+	#error missing sempahore implementation
+#endif
+
+void semaphore_init(SEMAPHORE *sem);
+void semaphore_wait(SEMAPHORE *sem);
+void semaphore_signal(SEMAPHORE *sem);
+void semaphore_destroy(SEMAPHORE *sem);
+
 /* Group: Timer */
 #ifdef __GNUC__
 /* if compiled with -pedantic-errors it will complain about long
