@@ -44,7 +44,7 @@
 	}
 
 	static void GL_MakeCurrent(const SGLContext &Context) { aglMakeCurrent(Context.m_Drawable, Context.m_Context); }
-	static void GL_ReleaseContext(const SGLContext &Context) { aglMakeCurrent(Context.m_Drawable, NULL); }
+	static void GL_ReleaseContext(const SGLContext &Context) { aglMakeCurrent(AGL_NONE, NULL); }
 	static void GL_SwapBuffers(const SGLContext &Context) { aglSwapBuffers(Context.m_Drawable); }
 		
 #elif defined(CONF_FAMILY_UNIX)
