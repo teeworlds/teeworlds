@@ -146,7 +146,7 @@ class IEngineGraphics : public IGraphics
 {
 	MACRO_INTERFACE("enginegraphics", 0)
 public:
-	virtual bool Init() = 0;
+	virtual int Init() = 0;
 	virtual void Shutdown() = 0;
 
 	virtual void Minimize() = 0;

@@ -707,7 +707,7 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 	QuadsEnd();
 }
 
-bool CGraphics_OpenGL::Init()
+int CGraphics_OpenGL::Init()
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -743,7 +743,7 @@ bool CGraphics_OpenGL::Init()
 
 	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
 
-	return true;
+	return 0;
 }
 
 int CGraphics_SDL::TryInit()
@@ -841,7 +841,7 @@ CGraphics_SDL::CGraphics_SDL()
 	m_pScreenSurface = 0;
 }
 
-bool CGraphics_SDL::Init()
+int CGraphics_SDL::Init()
 {
 	{
 		int Systems = SDL_INIT_VIDEO;
@@ -855,7 +855,7 @@ bool CGraphics_SDL::Init()
 		if(SDL_Init(Systems) < 0)
 		{
 			dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-			return true;
+			return -1;
 		}
 	}
 
@@ -867,14 +867,14 @@ bool CGraphics_SDL::Init()
 	#endif
 
 	if(InitWindow() != 0)
-		return true;
+		return -1;
 
 	SDL_ShowCursor(0);
 
 	CGraphics_OpenGL::Init();
 
 	MapScreen(0,0,g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-	return false;
+	return 0;
 }
 
 void CGraphics_SDL::Shutdown()

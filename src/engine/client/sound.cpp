@@ -209,6 +209,12 @@ int CSound::Init()
 	if(!g_Config.m_SndEnable)
 		return 0;
 
+	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+	{
+		dbg_msg("gfx", "unable to init SDL audio: %s", SDL_GetError());
+		return -1;
+	}
+
 	m_MixingRate = g_Config.m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
@@ -256,6 +262,7 @@ int CSound::Update()
 int CSound::Shutdown()
 {
 	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	lock_destroy(m_SoundLock);
 	return 0;
 }
