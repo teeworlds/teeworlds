@@ -117,7 +117,16 @@ protected:
 
 		CBan<CDataType> *First() const { return m_pFirstUsed; }
 		CBan<CDataType> *First(const CNetHash *pNetHash) const { return m_paaHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; }
-		CBan<CDataType> *Find(const CDataType *pData, const CNetHash *pNetHash) const;
+		CBan<CDataType> *Find(const CDataType *pData, const CNetHash *pNetHash) const
+		{
+			for(CBan<CDataType> *pBan = m_paaHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; pBan; pBan = pBan->m_pHashNext)
+			{
+				if(NetComp(&pBan->m_Data, pData) == 0)
+					return pBan;
+			}
+
+			return 0;
+		}
 		CBan<CDataType> *Get(int Index) const;
 
 	private:
