@@ -225,18 +225,6 @@ void CNetBan::CBanPool<T, HashCount>::Reset()
 }
 
 template<class T, int HashCount>
-typename CNetBan::CBan<T> *CNetBan::CBanPool<T, HashCount>::Find(const T *pData, const CNetHash *pNetHash) const
-{
-	for(CBan<T> *pBan = m_paaHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; pBan; pBan = pBan->m_pHashNext)
-	{
-		if(NetComp(&pBan->m_Data, pData) == 0)
-			return pBan;
-	}
-
-	return 0;
-}
-
-template<class T, int HashCount>
 typename CNetBan::CBan<T> *CNetBan::CBanPool<T, HashCount>::Get(int Index) const
 {
 	if(Index < 0 || Index >= Num())
