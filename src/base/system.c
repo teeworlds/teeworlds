@@ -511,7 +511,7 @@ void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
 void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
 void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
 #elif defined(CONF_FAMILY_WINDOWS)
-void semaphore_init(SEMAPHORE *sem) { (HANDLE)(*sem) = CreateSemaphore(0, 0, 10000, 0); }
+void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
 void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, 0L); }
 void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
 void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
