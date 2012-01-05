@@ -254,9 +254,9 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			}
 			else if(State() == NET_CONNSTATE_CONNECT)
 			{
-				// connection made
 				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
+					// send accept and go online
 					m_LastRecvTime = Now;
 					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 					m_State = NET_CONNSTATE_ONLINE;
@@ -264,16 +264,17 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						dbg_msg("connection", "got connect+accept, sending accept. connection online");
 				}
 			}
-		}
-	}
-	else
-	{
-		if(State() == NET_CONNSTATE_PENDING)
-		{
-			m_LastRecvTime = Now;
-			m_State = NET_CONNSTATE_ONLINE;
-			if(g_Config.m_Debug)
-				dbg_msg("connection", "connecting online");
+			else if(State() == NET_CONNSTATE_PENDING)
+			{
+				if(CtrlMsg == NET_CTRLMSG_ACCEPT)
+				{
+					// connection made
+					m_LastRecvTime = Now;
+					m_State = NET_CONNSTATE_ONLINE;
+					if(g_Config.m_Debug)
+						dbg_msg("connection", "got accept. connection online");
+				}
+			}
 		}
 	}
 
