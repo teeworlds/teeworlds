@@ -1738,8 +1738,11 @@ void CClient::Run()
 	// open socket
 	{
 		NETADDR BindAddr;
-		mem_zero(&BindAddr, sizeof(BindAddr));
-		BindAddr.type = NETTYPE_ALL;
+		if(g_Config.m_Bindaddr[0] == 0 || net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) != 0)
+		{
+			mem_zero(&BindAddr, sizeof(BindAddr));
+			BindAddr.type = NETTYPE_ALL;
+		}
 		if(!m_NetClient.Open(BindAddr, 0))
 		{
 			dbg_msg("client", "couldn't start network");

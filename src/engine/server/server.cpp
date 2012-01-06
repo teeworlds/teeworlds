@@ -1271,7 +1271,7 @@ int CServer::Run()
 
 	// start server
 	NETADDR BindAddr;
-	if(g_Config.m_SvBindaddr[0] && net_host_lookup(g_Config.m_SvBindaddr, &BindAddr, NETTYPE_ALL) == 0)
+	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// sweet!
 		BindAddr.port = g_Config.m_SvPort;
