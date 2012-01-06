@@ -1,4 +1,4 @@
-Copyright (C) 2007-2011 Magnus Auvinen
+Copyright (C) 2007-2012 Magnus Auvinen
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -25,4 +25,4 @@ check the individual libraries.
 ------------------------------------------------------------------------
 
 With that being said, contact us if there is anything you want to do
-that the license does not premit.
+that the license does not permit.
