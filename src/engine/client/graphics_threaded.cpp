@@ -837,6 +837,7 @@ void CGraphics_Threaded::Swap()
 
 	// add swap command
 	CCommandBuffer::SCommand_Swap Cmd;
+	Cmd.m_Finish = g_Config.m_GfxFinish;
 	m_pCommandBuffer->AddCommand(Cmd);
 
 	// kick the command buffer

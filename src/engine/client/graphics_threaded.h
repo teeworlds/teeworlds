@@ -199,6 +199,8 @@ public:
 	struct SCommand_Swap : public SCommand
 	{
 		SCommand_Swap() : SCommand(CMD_SWAP) {}
+
+		int m_Finish;
 	};
 
 	struct SCommand_Texture_Create : public SCommand
