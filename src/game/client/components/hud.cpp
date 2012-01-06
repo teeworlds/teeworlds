@@ -498,7 +498,7 @@ void CHud::RenderSpeedmeter()
 	static float SmoothTable[SMOOTH_TABLE_SIZE];
 	static int SmoothIndex = 0;
 
-	SmoothTable[SmoothIndex] = distance(m_pClient->m_LocalCharacterPos, OldPos)/Client()->FrameTime();
+	SmoothTable[SmoothIndex] = distance(m_pClient->m_LocalCharacterPos, OldPos)/Client()->RenderFrameTime();
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		float Mult = DemoPlayer()->BaseInfo()->m_Speed;
