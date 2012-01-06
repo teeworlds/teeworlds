@@ -27,25 +27,24 @@
 	static void GL_ReleaseContext(const SGLContext &Context) { wglMakeCurrent(NULL, NULL); }
 	static void GL_SwapBuffers(const SGLContext &Context) { SwapBuffers(Context.m_hDC); }
 #elif defined(CONF_PLATFORM_MACOSX)
-	#warning Untested implementation. I have no Mac OS X machine to test on. Please test, verify, fix and then remove this warning
+
+	#include <AGL/agl.h>
 
 	struct SGLContext
 	{
-		AGLDrawable m_Drawable;
 		AGLContext m_Context;
 	};
 
 	static SGLContext GL_GetCurrentContext()
 	{
 		SGLContext Context;
-		Context.m_Drawable = aglGetCurrentDrawable();
 		Context.m_Context = aglGetCurrentContext();
 		return Context;
 	}
 
-	static void GL_MakeCurrent(const SGLContext &Context) { aglMakeCurrent(Context.m_Drawable, Context.m_Context); }
-	static void GL_ReleaseContext(const SGLContext &Context) { aglMakeCurrent(AGL_NONE, NULL); }
-	static void GL_SwapBuffers(const SGLContext &Context) { aglSwapBuffers(Context.m_Drawable); }
+	static void GL_MakeCurrent(const SGLContext &Context) { aglSetCurrentContext(Context.m_Context); }
+	static void GL_ReleaseContext(const SGLContext &Context) { aglSetCurrentContext(NULL); }
+	static void GL_SwapBuffers(const SGLContext &Context) { aglSwapBuffers(Context.m_Context); }
 		
 #elif defined(CONF_FAMILY_UNIX)
 
