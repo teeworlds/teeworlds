@@ -41,6 +41,9 @@ void CChat::OnReset()
 	m_PlaceholderOffset = 0;
 	m_PlaceholderLength = 0;
 	m_pHistoryEntry = 0x0;
+
+	for(int i = 0; i < CHAT_NUM; ++i)
+		m_aLastSoundPlayed[i] = -1;
 }
 
 void CChat::OnRelease()
@@ -322,12 +325,31 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	}
 
 	// play sound
+	int64 Now = time_get();
 	if(ClientID == -1)
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+		{
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+			m_aLastSoundPlayed[CHAT_SERVER] = Now;
+		}
+	}
 	else if(Highlighted)
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+		{
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+		}
+	}
 	else
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+		{
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+			m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+		}
+	}
 }
 
 void CChat::OnRender()

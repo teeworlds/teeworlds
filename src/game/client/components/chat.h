@@ -36,6 +36,11 @@ class CChat : public CComponent
 		MODE_NONE=0,
 		MODE_ALL,
 		MODE_TEAM,
+
+		CHAT_SERVER=0,
+		CHAT_HIGHLIGHT,
+		CHAT_CLIENT,
+		CHAT_NUM,
 	};
 
 	int m_Mode;
@@ -49,6 +54,7 @@ class CChat : public CComponent
 	int m_PlaceholderLength;
 	char *m_pHistoryEntry;
 	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+	int64 m_aLastSoundPlayed[CHAT_NUM];
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
