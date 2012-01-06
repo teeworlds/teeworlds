@@ -763,7 +763,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		if(g_Config.m_SndEnable)
 		{
 			if(g_Config.m_SndMusic)
-				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
@@ -778,7 +778,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	{
 		g_Config.m_SndMusic ^= 1;
 		if(g_Config.m_SndMusic)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
 	}
