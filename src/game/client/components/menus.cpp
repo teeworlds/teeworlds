@@ -1403,7 +1403,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 
 	if(NewState == IClient::STATE_OFFLINE)
 	{
-		if(OldState >= IClient::STATE_ONLINE)
+		if(OldState >= IClient::STATE_ONLINE && NewState < IClient::STATE_QUITING)
 			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)

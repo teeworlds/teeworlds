@@ -461,6 +461,9 @@ int *CClient::GetInput(int Tick)
 // ------ state handling -----
 void CClient::SetState(int s)
 {
+	if(m_State == IClient::STATE_QUITING)
+		return;
+
 	int Old = m_State;
 	if(g_Config.m_Debug)
 	{
@@ -1842,7 +1845,10 @@ void CClient::Run()
 
 		// panic quit button
 		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyPressed('q'))
+		{
+			Quit();
 			break;
+		}
 
 		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('d'))
 			g_Config.m_Debug ^= 1;
