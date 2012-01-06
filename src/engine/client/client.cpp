@@ -1783,7 +1783,7 @@ void CClient::Run()
 	MasterServer()->RefreshAddresses(m_NetClient.NetType());
 
 	// init the editor
-	//m_pEditor->Init();
+	m_pEditor->Init();
 
 
 	// load data
@@ -1885,22 +1885,16 @@ void CClient::Run()
 		*/
 
 		// render
-		if(g_Config.m_ClEditor)
 		{
-			if(!m_EditorActive)
+			if(g_Config.m_ClEditor)
 			{
-				GameClient()->OnActivateEditor();
-				m_EditorActive = true;
+				if(!m_EditorActive)
+				{
+					GameClient()->OnActivateEditor();
+					m_EditorActive = true;
+				}
 			}
-
-			Update();
-			m_pEditor->UpdateAndRender();
-			DebugRender();
-			m_pGraphics->Swap();
-		}
-		else
-		{
-			if(m_EditorActive)
+			else if(m_EditorActive)
 				m_EditorActive = false;
 
 			Update();
@@ -1924,18 +1918,27 @@ void CClient::Run()
 				{
 					if((m_RenderFrames%10) == 0)
 					{
-						Render();
+						if(!m_EditorActive)
+							Render();
+						else
+						{
+							m_pEditor->UpdateAndRender();
+							DebugRender();
+						}
 						m_pGraphics->Swap();
 					}
 				}
 				else
 				{
-					Render();
+					if(!m_EditorActive)
+						Render();
+					else
+					{
+						m_pEditor->UpdateAndRender();
+						DebugRender();
+					}
 					m_pGraphics->Swap();
 				}
-				
-
-
 			}
 		}
 
