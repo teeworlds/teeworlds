@@ -1,4 +1,4 @@
-Copyright (c) 2011 Magnus Auvinen
+Copyright (c) 2012 Magnus Auvinen
 
 
 This software is provided 'as-is', without any express or implied
