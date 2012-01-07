@@ -145,7 +145,10 @@ function build(settings)
 		settings.cc.flags:Add("/wd4244")
 	else
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
-		if platform == "macosx" then
+		if family == "windows" then
+			-- disable visibility attribute support for gcc on windows
+			settings.cc.defines:Add("NO_VIZ")
+		elseif platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 		elseif config.stackprotector.value == 1 then
