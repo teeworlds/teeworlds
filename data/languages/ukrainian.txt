@@ -615,6 +615,9 @@ Rename
 Rename demo
 == 
 
+Respawn
+== 
+
 Server address:
 == 
 

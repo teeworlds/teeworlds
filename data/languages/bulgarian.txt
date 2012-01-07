@@ -672,6 +672,9 @@ no limit
 
 ##### needs translation #####
 
+Respawn
+== 
+
 Spectate previous
 == 
 

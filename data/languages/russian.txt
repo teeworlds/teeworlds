@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -674,4 +675,8 @@ no limit
 
 ##### needs translation #####
 
+Respawn
+== 
+
 ##### old translations #####
+
