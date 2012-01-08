@@ -52,6 +52,7 @@ enum
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
+	NET_TOKENSEED_LENGTH = 8,
 
 	NET_CONNSTATE_OFFLINE=0,
 	NET_CONNSTATE_CONNECT=1,
@@ -169,6 +170,9 @@ private:
 	void Resend();
 
 public:
+	const char *m_CurTokenSeed;
+	const char *m_PrevTokenSeed;
+
 	void Init(NETSOCKET Socket);
 	int Connect(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
@@ -183,6 +187,7 @@ public:
 	void SignalResend();
 	int State() const { return m_State; }
 	NETADDR PeerAddress() const { return m_PeerAddr; }
+	void GenerateConnectToken(char *pToken, const char *Seed);
 
 	void ResetErrorString() { m_ErrorString[0] = 0; }
 	const char *ErrorString() const { return m_ErrorString; }
@@ -257,6 +262,8 @@ private:
 	{
 	public:
 		CNetConnection m_Connection;
+		// needed to call registerfuncs for new clients <- TODO: Fix this
+		bool m_Online;
 	};
 
 	struct CBan
@@ -278,6 +285,11 @@ private:
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
+
+	// seeds for the connecttoken (new seed is generated every 10 seconds and is valid for 20 seconds)
+	char m_CurTokenSeed[NET_TOKENSEED_LENGTH];
+	char m_PrevTokenSeed[NET_TOKENSEED_LENGTH];
+	int64 m_LastTokenSeedGenerated;
 
 	CBan *m_aBans[256];
 	CBan m_BanPool[NET_SERVER_MAXBANS];
@@ -306,6 +318,7 @@ public:
 
 	//
 	int Drop(int ClientID, const char *pReason);
+	int Add(int ClientID);
 
 	// banning
 	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);

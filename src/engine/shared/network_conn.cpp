@@ -236,43 +236,80 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 		}
 		else
 		{
-			if(State() == NET_CONNSTATE_OFFLINE)
+			// If the connection isn't online always accept new connections
+			if(CtrlMsg == NET_CTRLMSG_CONNECT)
 			{
-				if(CtrlMsg == NET_CTRLMSG_CONNECT)
-				{
-					// send response and init connection
-					Reset();
-					m_State = NET_CONNSTATE_PENDING;
-					m_PeerAddr = *pAddr;
-					m_LastSendTime = Now;
-					m_LastRecvTime = Now;
-					m_LastUpdateTime = Now;
-					SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
-					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connection, sending connect+accept");
-				}
+				// send response and init connection
+				Reset();
+				m_State = NET_CONNSTATE_PENDING;
+				m_PeerAddr = *pAddr;
+				m_LastSendTime = Now;
+				m_LastRecvTime = Now;
+				m_LastUpdateTime = Now;
+				char ConnectToken[2];
+				GenerateConnectToken(ConnectToken, m_CurTokenSeed);
+				SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, 1);
+				if(g_Config.m_Debug)
+					dbg_msg("connection", "got connection, sending connect+accept");
 			}
-			else if(State() == NET_CONNSTATE_CONNECT)
+			if(State() == NET_CONNSTATE_CONNECT)
 			{
 				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
-					// send accept and go online
-					m_LastRecvTime = Now;
-					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
-					m_State = NET_CONNSTATE_ONLINE;
-					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connect+accept, sending accept. connection online");
+					if(pPacket->m_DataSize > 1)
+					{
+						// send accept with token and go online in hope it gets accepted :o
+						m_LastRecvTime = Now;
+						char aBuf[2] = {(char)pPacket->m_aChunkData[1], 0};
+						m_State = NET_CONNSTATE_ONLINE;
+						SendControl(NET_CTRLMSG_ACCEPT, aBuf, 1);
+						if(g_Config.m_Debug)
+							dbg_msg("connection", "got connect+accept with token, sending accept with token.");
+					}
+					else
+					{
+						// send accept and go online
+						m_LastRecvTime = Now;
+						m_State = NET_CONNSTATE_ONLINE;
+						SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
+						if(g_Config.m_Debug)
+							dbg_msg("connection", "got connect+accept, sending accept. connection online");
+					}
 				}
 			}
 			else if(State() == NET_CONNSTATE_PENDING)
 			{
 				if(CtrlMsg == NET_CTRLMSG_ACCEPT)
 				{
-					// connection made
-					m_LastRecvTime = Now;
-					m_State = NET_CONNSTATE_ONLINE;
-					if(g_Config.m_Debug)
-						dbg_msg("connection", "got accept. connection online");
+					// update the peer address in case somebody is flooding the server with connect packets
+					m_PeerAddr = *pAddr;
+					if(pPacket->m_DataSize > 1)
+					{
+						char aBuf[2];
+						GenerateConnectToken(aBuf, m_CurTokenSeed);
+						if(aBuf[0] == (char)pPacket->m_aChunkData[1])
+						{
+							// connection made
+							m_LastRecvTime = Now;
+							m_State = NET_CONNSTATE_ONLINE;
+							if(g_Config.m_Debug)
+								dbg_msg("connection", "got accept. connection online");
+						}
+						else
+						{
+							// connecttoken wrong, drop the client
+							m_LastRecvTime = Now;
+							m_State = NET_CONNSTATE_ERROR;
+							SetError("Connection refused. Reason: Wrong connecttoken");
+						}
+					}
+					else
+					{
+						// no connecttoken received, drop the client
+						m_LastRecvTime = Now;
+						m_State = NET_CONNSTATE_ERROR;
+						SetError("Connection refused. Reason: No connecttoken, maybe you'r connecting with a old client");
+					}
 				}
 			}
 		}
@@ -285,6 +322,17 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 	}
 
 	return 1;
+}
+
+void CNetConnection::GenerateConnectToken(char *pToken, const char *Seed)
+{
+	NETADDR Tmp = m_PeerAddr;
+	char aBuf[NETADDR_MAXSTRSIZE+NET_TOKENSEED_LENGTH];
+	net_addr_str(&Tmp, aBuf, sizeof(aBuf));
+	str_append(aBuf, Seed, sizeof(aBuf));
+	char Hash = str_quickhash(aBuf);
+	pToken[0] = (char)Hash;
+	pToken[1] = '\0';
 }
 
 int CNetConnection::Update()
@@ -343,7 +391,11 @@ int CNetConnection::Update()
 	else if(State() == NET_CONNSTATE_PENDING)
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
-			SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
+		{
+			char ConnectToken[2];
+			GenerateConnectToken(ConnectToken, m_CurTokenSeed);
+			SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, 1);
+		}
 	}
 
 	return 0;
