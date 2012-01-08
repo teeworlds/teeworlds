@@ -2781,11 +2781,13 @@ void CEditor::RenderFileDialog()
 	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.75f), CUI::CORNER_ALL, 5.0f);
 	View.Margin(10.0f, &View);
 
-	CUIRect Title, FileBox, FileBoxLabel, ButtonBar, Scroll;
+	CUIRect Title, FileBox, FileBoxLabel, ButtonBar, Scroll, PathBox;
 	View.HSplitTop(18.0f, &Title, &View);
 	View.HSplitTop(5.0f, 0, &View); // some spacing
 	View.HSplitBottom(14.0f, &View, &ButtonBar);
 	View.HSplitBottom(10.0f, &View, 0); // some spacing
+	View.HSplitBottom(14.0f, &View, &PathBox);
+	View.HSplitBottom(5.0f, &View, 0); // some spacing
 	View.HSplitBottom(14.0f, &View, &FileBox);
 	FileBox.VSplitLeft(55.0f, &FileBoxLabel, &FileBox);
 	View.HSplitBottom(10.0f, &View, 0); // some spacing
@@ -2795,6 +2797,15 @@ void CEditor::RenderFileDialog()
 	RenderTools()->DrawUIRect(&Title, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 4.0f);
 	Title.VMargin(10.0f, &Title);
 	UI()->DoLabel(&Title, m_pFileDialogTitle, 12.0f, -1, -1);
+
+	// pathbox
+	char aPath[128], aBuf[128];
+	if(m_FilesSelectedIndex != -1)
+		Storage()->GetCompletePath(m_FileList[m_FilesSelectedIndex].m_StorageType, m_pFileDialogPath, aPath, sizeof(aPath));
+	else
+		aPath[0] = 0;
+	str_format(aBuf, sizeof(aBuf), "Current path: %s", aPath);
+	UI()->DoLabel(&PathBox, aBuf, 10.0f, -1, -1);
 
 	// filebox
 	if(m_FileDialogStorageType == IStorage::TYPE_SAVE)

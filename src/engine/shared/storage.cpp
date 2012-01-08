@@ -377,6 +377,18 @@ public:
 		return !fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
 	}
 
+	virtual void GetCompletePath(int Type, const char *pDir, char *pBuffer, unsigned BufferSize)
+	{
+		if(Type < 0 || Type >= m_NumPaths)
+		{
+			if(BufferSize > 0)
+				pBuffer[0] = 0;
+			return;
+		}
+
+		GetPath(Type, pDir, pBuffer, BufferSize);
+	}
+
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
