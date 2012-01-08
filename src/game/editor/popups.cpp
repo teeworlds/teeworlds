@@ -742,13 +742,14 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 		ImageView.w *= pEditor->m_Map.m_lImages[ShowImage]->m_Width/Max;
 		ImageView.h *= pEditor->m_Map.m_lImages[ShowImage]->m_Height/Max;
 		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexID);
+		pEditor->Graphics()->BlendNormal();
+		pEditor->Graphics()->WrapClamp();
+		pEditor->Graphics()->QuadsBegin();
+		IGraphics::CQuadItem QuadItem(ImageView.x, ImageView.y, ImageView.w, ImageView.h);
+		pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
+		pEditor->Graphics()->QuadsEnd();
+		pEditor->Graphics()->WrapNormal();
 	}
-	else
-		pEditor->Graphics()->TextureSet(-1);
-	pEditor->Graphics()->QuadsBegin();
-	IGraphics::CQuadItem QuadItem(ImageView.x, ImageView.y, ImageView.w, ImageView.h);
-	pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
-	pEditor->Graphics()->QuadsEnd();
 
 	return 0;
 }
