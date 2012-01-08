@@ -1641,6 +1641,12 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			pT->ShowInfo();
 		}
 	}
+	else
+	{
+		// fix aspect ratio of the image in the picker
+		float Max = min(View.w, View.h);
+		View.w = View.h = Max;
+	}
 
 	static void *s_pEditorID = (void *)&s_pEditorID;
 	int Inside = UI()->MouseInside(&View);
@@ -1965,7 +1971,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		}
 	}
 
-	if(GetSelectedGroup() && GetSelectedGroup()->m_UseClipping)
+	if(!m_ShowPicker && GetSelectedGroup() && GetSelectedGroup()->m_UseClipping)
 	{
 		CLayerGroup *g = m_Map.m_pGameGroup;
 		g->MapScreen();
