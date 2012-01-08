@@ -799,6 +799,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		if(pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*3 > Server()->Tick()))
 			return;
 
+		if(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams)
+		{
+			pPlayer->m_LastSetTeam = Server()->Tick();
+			SendBroadcast("Teams are locked", ClientID);
+			return;
+		}
+
 		if(pPlayer->m_TeamChangeTick > Server()->Tick())
 		{
 			pPlayer->m_LastSetTeam = Server()->Tick();
@@ -1139,6 +1146,16 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
+void CGameContext::ConLockTeams(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->m_LockTeams ^= 1;
+	if(pSelf->m_LockTeams)
+		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were locked");
+	else
+		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were unlocked");
+}
+
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1400,6 +1417,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "Set team of all players to team");
 	Console()->Register("swap_teams", "", CFGFLAG_SERVER, ConSwapTeams, this, "Swap the current teams");
 	Console()->Register("shuffle_teams", "", CFGFLAG_SERVER, ConShuffleTeams, this, "Shuffle the current teams");
+	Console()->Register("lock_teams", "", CFGFLAG_SERVER, ConLockTeams, this, "Lock/unlock teams");
 
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "Add a voting option");
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "remove a voting option");
