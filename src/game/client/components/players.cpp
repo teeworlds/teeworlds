@@ -95,30 +95,7 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
-
-	// check for teamplay modes
-	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
-
-	// check for ninja
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		// change the skin for the player to the ninja
-		int Skin = m_pClient->m_pSkins->Find("x_ninja");
-		if(Skin != -1)
-		{
-			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-			else
-			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-				RenderInfo.m_ColorBody = vec4(1,1,1,1);
-				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-			}
-		}
-	}
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
 
 	float IntraTick = Client()->IntraGameTick();
 
@@ -218,31 +195,9 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
 
-	// check for teamplay modes
-	bool IsTeamplay = false;
 	bool NewTick = m_pClient->m_NewTick;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
-
-	// check for ninja
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		// change the skin for the player to the ninja
-		int Skin = m_pClient->m_pSkins->Find("x_ninja");
-		if(Skin != -1)
-		{
-			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-			else
-			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-				RenderInfo.m_ColorBody = vec4(1,1,1,1);
-				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-			}
-		}
-	}
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -546,6 +501,31 @@ void CPlayers::RenderPlayer(
 
 void CPlayers::OnRender()
 {
+	// update RenderInfo for ninja
+	bool IsTeamplay = false;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
+		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
+		{
+			// change the skin for the player to the ninja
+			int Skin = m_pClient->m_pSkins->Find("x_ninja");
+			if(Skin != -1)
+			{
+				if(IsTeamplay)
+					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
+				else
+				{
+					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
+					m_aRenderInfo[i].m_ColorBody = vec4(1,1,1,1);
+					m_aRenderInfo[i].m_ColorFeet = vec4(1,1,1,1);
+				}
+			}
+		}
+	}
+
 	// render other players in two passes, first pass we render the other, second pass we render our self
 	for(int p = 0; p < 4; p++)
 	{
