@@ -170,6 +170,7 @@ public:
 	void Kick(int ClientID, const char *pReason);
 
 	void DemoRecorder_HandleAutoStart();
+	bool DemoRecorder_IsRecording();
 
 	//int Tick()
 	int64 TickStartTime(int Tick);

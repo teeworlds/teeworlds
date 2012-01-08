@@ -1500,6 +1500,11 @@ void CServer::DemoRecorder_HandleAutoStart()
 	}
 }
 
+bool CServer::DemoRecorder_IsRecording()
+{
+	return m_DemoRecorder.IsRecording();
+}
+
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 {
 	CServer* pServer = (CServer *)pUser;
