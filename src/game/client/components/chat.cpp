@@ -266,7 +266,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 void CChat::AddLine(int ClientID, int Team, const char *pLine)
 {
 	if(ClientID != -1 && (m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
-		m_pClient->m_aClients[ClientID].m_ChatIgnore))
+		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
+		(m_pClient->m_Snap.m_LocalClientID != ClientID && g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[ClientID].m_Friend)))
 		return;
 
 	bool Highlighted = false;
