@@ -445,6 +445,8 @@ public:
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 
+	static void Hash(char *pDst, const char *pSrc);
+
 	// The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not
 	static int IsSeqInBackroom(int Seq, int Ack);
 };

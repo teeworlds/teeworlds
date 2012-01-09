@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
-
+#include <engine/external/md5/md5.h>
 
 #include "config.h"
 #include "network.h"
@@ -339,6 +339,24 @@ int CNetBase::Decompress(const void *pData, int DataSize, void *pOutput, int Out
 	return ms_Huffman.Decompress(pData, DataSize, pOutput, OutputSize);
 }
 
+void CNetBase::Hash(char *pDst, const char *pSrc)
+{
+	if(!pSrc)
+		return;
+
+	char aBuf[33];
+	md5_state_t State;
+	md5_byte_t aDigest[16];
+
+	md5_init(&State);
+	md5_append(&State, (const md5_byte_t *)pSrc, str_length(pSrc));
+	md5_finish(&State, aDigest);
+
+	for(int i = 0; i < 16; ++i)
+		str_format(aBuf + 2*i, 3, "%02x", aDigest[i]);
+
+	str_copy(pDst, aBuf, 33);
+}
 
 static const unsigned gs_aFreqTable[256+1] = {
 	1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,

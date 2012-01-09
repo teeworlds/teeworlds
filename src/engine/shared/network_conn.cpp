@@ -234,9 +234,9 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			}
 			return 0;
 		}
-		else
+		else if(State() != NET_CONNSTATE_ONLINE && State() != NET_CONNSTATE_ERROR)
 		{
-			// If the connection isn't online always accept new connections
+			// If the connection isn't fully online always accept new connections
 			if(CtrlMsg == NET_CTRLMSG_CONNECT)
 			{
 				// send response and init connection
@@ -246,23 +246,23 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				m_LastSendTime = Now;
 				m_LastRecvTime = Now;
 				m_LastUpdateTime = Now;
-				char ConnectToken[2];
+				// generate token and send it to the client
+				char ConnectToken[33];
 				GenerateConnectToken(ConnectToken, m_CurTokenSeed);
-				SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, 1);
+				SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, sizeof(ConnectToken));
 				if(g_Config.m_Debug)
-					dbg_msg("connection", "got connection, sending connect+accept");
+					dbg_msg("connection", "got connection, sending connect+accept with token");
 			}
-			if(State() == NET_CONNSTATE_CONNECT)
+			else if(State() == NET_CONNSTATE_CONNECT)
 			{
 				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
-					if(pPacket->m_DataSize > 1)
+					if(pPacket->m_DataSize > 33)
 					{
 						// send accept with token and go online in hope it gets accepted :o
 						m_LastRecvTime = Now;
-						char aBuf[2] = {(char)pPacket->m_aChunkData[1], 0};
 						m_State = NET_CONNSTATE_ONLINE;
-						SendControl(NET_CTRLMSG_ACCEPT, aBuf, 1);
+						SendControl(NET_CTRLMSG_ACCEPT, (char *)&pPacket->m_aChunkData[1], 33);
 						if(g_Config.m_Debug)
 							dbg_msg("connection", "got connect+accept with token, sending accept with token.");
 					}
@@ -283,11 +283,11 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				{
 					// update the peer address in case somebody is flooding the server with connect packets
 					m_PeerAddr = *pAddr;
-					if(pPacket->m_DataSize > 1)
+					if(pPacket->m_DataSize > 33)
 					{
-						char aBuf[2];
+						char aBuf[33];
 						GenerateConnectToken(aBuf, m_CurTokenSeed);
-						if(aBuf[0] == (char)pPacket->m_aChunkData[1])
+						if(str_comp(aBuf, (char *)&pPacket->m_aChunkData[1]) == 0)
 						{
 							// connection made
 							m_LastRecvTime = Now;
@@ -326,13 +326,11 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 
 void CNetConnection::GenerateConnectToken(char *pToken, const char *Seed)
 {
-	NETADDR Tmp = m_PeerAddr;
+	NETADDR TempAddr = m_PeerAddr;
 	char aBuf[NETADDR_MAXSTRSIZE+NET_TOKENSEED_LENGTH];
-	net_addr_str(&Tmp, aBuf, sizeof(aBuf));
+	net_addr_str(&TempAddr, aBuf, sizeof(aBuf));
 	str_append(aBuf, Seed, sizeof(aBuf));
-	char Hash = str_quickhash(aBuf);
-	pToken[0] = (char)Hash;
-	pToken[1] = '\0';
+	CNetBase::Hash(pToken, aBuf);
 }
 
 int CNetConnection::Update()
@@ -392,9 +390,9 @@ int CNetConnection::Update()
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
 		{
-			char ConnectToken[2];
+			char ConnectToken[33];
 			GenerateConnectToken(ConnectToken, m_CurTokenSeed);
-			SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, 1);
+			SendControl(NET_CTRLMSG_CONNECTACCEPT, ConnectToken, 33);
 		}
 	}
 

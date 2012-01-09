@@ -1704,6 +1704,8 @@ int main(int argc, const char **argv) // ignore_convention
 	CServer *pServer = CreateServer();
 	IKernel *pKernel = IKernel::Create();
 
+	srand((unsigned)time_get()/time_freq());
+
 	// create the components
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IEngineMap *pEngineMap = CreateEngineMap();
