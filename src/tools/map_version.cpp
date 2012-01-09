@@ -44,7 +44,7 @@ int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 int main(int argc, const char **argv) // ignore_convention
 {
 	IKernel *pKernel = IKernel::Create();
-	s_pStorage = CreateStorage("Teeworlds", argc, argv);
+	s_pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	s_pEngineMap = CreateEngineMap();
 
 	bool RegisterFail = !pKernel->RegisterInterface(s_pStorage);

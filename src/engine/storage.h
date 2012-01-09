@@ -12,7 +12,11 @@ public:
 	enum
 	{
 		TYPE_SAVE = 0,
-		TYPE_ALL = -1
+		TYPE_ALL = -1,
+
+		STORAGETYPE_BASIC = 0,
+		STORAGETYPE_SERVER,
+		STORAGETYPE_CLIENT,
 	};
 
 	virtual void ListDirectory(int Type, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser) = 0;
@@ -24,7 +28,7 @@ public:
 	virtual void GetCompletePath(int Type, const char *pDir, char *pBuffer, unsigned BufferSize) = 0;
 };
 
-extern IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments);
+extern IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments);
 
 
 #endif

@@ -6,7 +6,7 @@
 
 int main(int argc, const char **argv)
 {
-	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	int Index, ID = 0, Type = 0, Size;
 	void *pPtr;
 	char aFileName[1024];
@@ -16,7 +16,7 @@ int main(int argc, const char **argv)
 	if(!pStorage || argc != 3)
 		return -1;
 
-	str_format(aFileName, sizeof(aFileName), "maps/%s", argv[2]);
+	str_format(aFileName, sizeof(aFileName), "%s", argv[2]);
 
 	if(!DataFile.Open(pStorage, argv[1], IStorage::TYPE_ALL))
 		return -1;
