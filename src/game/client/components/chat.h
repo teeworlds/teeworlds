@@ -52,8 +52,16 @@ class CChat : public CComponent
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
-	char *m_pHistoryEntry;
-	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+
+	struct CHistoryEntry
+	{
+		int m_Team;
+		char m_aText[1];
+	};
+	CHistoryEntry *m_pHistoryEntry;
+	TStaticRingBuffer<CHistoryEntry, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+	int m_PendingChatCounter;
+	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);

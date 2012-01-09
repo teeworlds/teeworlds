@@ -41,9 +41,11 @@ void CChat::OnReset()
 	m_PlaceholderOffset = 0;
 	m_PlaceholderLength = 0;
 	m_pHistoryEntry = 0x0;
+	m_PendingChatCounter = 0;
+	m_LastChatSend = 0;
 
 	for(int i = 0; i < CHAT_NUM; ++i)
-		m_aLastSoundPlayed[i] = -1;
+		m_aLastSoundPlayed[i] = 0;
 }
 
 void CChat::OnRelease()
@@ -110,9 +112,13 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		if(m_Input.GetString()[0])
 		{
-			Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
-			char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
-			mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+			if(m_LastChatSend+time_freq() < time_get())
+				Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
+			else
+				++m_PendingChatCounter;
+			CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
+			pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
+			mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
 		}
 		m_pHistoryEntry = 0x0;
 		m_Mode = MODE_NONE;
@@ -202,26 +208,26 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
-		if (m_pHistoryEntry)
+		if(m_pHistoryEntry)
 		{
-			char *pTest = m_History.Prev(m_pHistoryEntry);
+			CHistoryEntry *pTest = m_History.Prev(m_pHistoryEntry);
 
-			if (pTest)
+			if(pTest)
 				m_pHistoryEntry = pTest;
 		}
 		else
 			m_pHistoryEntry = m_History.Last();
 
-		if (m_pHistoryEntry)
-			m_Input.Set(m_pHistoryEntry);
+		if(m_pHistoryEntry)
+			m_Input.Set(m_pHistoryEntry->m_aText);
 	}
 	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
-		if (m_pHistoryEntry)
+		if(m_pHistoryEntry)
 			m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 		if (m_pHistoryEntry)
-			m_Input.Set(m_pHistoryEntry);
+			m_Input.Set(m_pHistoryEntry->m_aText);
 		else
 			m_Input.Clear();
 	}
@@ -354,6 +360,21 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 
 void CChat::OnRender()
 {
+	// send pending chat messages
+	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
+	{
+		CHistoryEntry *pEntry = m_History.Last();
+		for(int i = m_PendingChatCounter-1; pEntry; --i, pEntry = m_History.Prev(pEntry))
+		{
+			if(i == 0)
+			{
+				Say(pEntry->m_Team, pEntry->m_aText);
+				break;
+			}
+		}
+		--m_PendingChatCounter;
+	}
+
 	float Width = 300.0f*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 5.0f;
@@ -479,6 +500,8 @@ void CChat::OnRender()
 
 void CChat::Say(int Team, const char *pLine)
 {
+	m_LastChatSend = time_get();
+
 	// send chat message
 	CNetMsg_Cl_Say Msg;
 	Msg.m_Team = Team;
