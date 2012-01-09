@@ -36,6 +36,8 @@
 #include <engine/shared/ringbuffer.h>
 #include <engine/shared/snapshot.h>
 
+#include <game/version.h>
+
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
@@ -859,23 +861,26 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionInfo.m_VersionServeraddr.m_Addr) == 0)
 	{
 		// version info
-		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(GAME_RELEASE_VERSION)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
 
 		{
-			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
-			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
+			char *pVersionData = (char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
+			int VersionMatch = !mem_comp(pVersionData, GAME_RELEASE_VERSION, sizeof(GAME_RELEASE_VERSION));
+
+			char aVersion[sizeof(GAME_RELEASE_VERSION)];
+			str_copy(aVersion, pVersionData, sizeof(aVersion));
 
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "version does %s (%d.%d.%d)",
+			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
 				VersionMatch ? "match" : "NOT match",
-				pVersionData[1], pVersionData[2], pVersionData[3]);
+				aVersion);
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
 
 			// assume version is out of date when version-data doesn't match
-			if (!VersionMatch)
+			if(!VersionMatch)
 			{
-				str_format(m_aVersionStr, sizeof(m_aVersionStr), "%d.%d.%d", pVersionData[1], pVersionData[2], pVersionData[3]);
+				str_copy(m_aVersionStr, aVersion, sizeof(m_aVersionStr));
 			}
 
 			// request the map version list now

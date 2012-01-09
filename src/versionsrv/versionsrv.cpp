@@ -4,6 +4,8 @@
 
 #include <engine/shared/network.h>
 
+#include <game/version.h>
+
 #include "versionsrv.h"
 
 enum {
@@ -57,10 +59,10 @@ void BuildPackets()
 void SendVer(NETADDR *pAddr)
 {
 	CNetChunk p;
-	unsigned char aData[sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)];
+	unsigned char aData[sizeof(VERSIONSRV_VERSION) + sizeof(GAME_RELEASE_VERSION)];
 
 	mem_copy(aData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION));
-	mem_copy(aData + sizeof(VERSIONSRV_VERSION), VERSION_DATA, sizeof(VERSION_DATA));
+	mem_copy(aData + sizeof(VERSIONSRV_VERSION), GAME_RELEASE_VERSION, sizeof(GAME_RELEASE_VERSION));
 
 	p.m_ClientID = -1;
 	p.m_Address = *pAddr;
