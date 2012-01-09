@@ -106,6 +106,12 @@ public:
 	virtual void TickDefered() {}
 
 	/*
+		Function: TickPaused
+			Called when the game is paused, to freeze the state and position of the entity.
+	*/
+	virtual void TickPaused() {}
+
+	/*
 		Function: snap
 			Called when a new snapshot is being generated for a specific
 			client.

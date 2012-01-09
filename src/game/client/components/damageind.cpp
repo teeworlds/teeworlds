@@ -60,6 +60,11 @@ void CDamageInd::OnRender()
 			else
 				m_aItems[i].m_StartTime += (Client()->LocalTime()-s_LastLocalTime)*(1.0f-pInfo->m_Speed);
 		}
+		else
+		{
+			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+				m_aItems[i].m_StartTime += Client()->LocalTime()-s_LastLocalTime;
+		}
 
 		float Life = 0.75f - (Client()->LocalTime() - m_aItems[i].m_StartTime);
 		if(Life < 0.0f)

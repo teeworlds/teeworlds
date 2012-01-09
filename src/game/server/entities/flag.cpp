@@ -23,6 +23,13 @@ void CFlag::Reset()
 	m_GrabTick = 0;
 }
 
+void CFlag::TickPaused()
+{
+	++m_DropTick;
+	if(m_GrabTick)
+		++m_GrabTick;
+}
+
 void CFlag::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))

@@ -1036,6 +1036,16 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
+void CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if(pSelf->m_pController->IsGameOver())
+		return;
+
+	pSelf->m_World.m_Paused ^= 1;
+}
+
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1409,6 +1419,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Reset tuning");
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Dump tuning");
 
+	Console()->Register("pause", "", CFGFLAG_SERVER, ConPause, this, "Pause/unpause game");
 	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
 	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");

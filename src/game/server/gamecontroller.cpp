@@ -430,8 +430,12 @@ void IGameController::Tick()
 		}
 	}
 
+	// game is Paused
+	if(GameServer()->m_World.m_Paused)
+		++m_RoundStartTick;
+
 	// do team-balancing
-	if (IsTeamplay() && m_UnbalancedTick != -1 && Server()->Tick() > m_UnbalancedTick+g_Config.m_SvTeambalanceTime*Server()->TickSpeed()*60)
+	if(IsTeamplay() && m_UnbalancedTick != -1 && Server()->Tick() > m_UnbalancedTick+g_Config.m_SvTeambalanceTime*Server()->TickSpeed()*60)
 	{
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Balancing teams");
 

@@ -30,6 +30,7 @@ public:
 	virtual void Destroy();
 	virtual void Tick();
 	virtual void TickDefered();
+	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
 	bool IsGrounded();

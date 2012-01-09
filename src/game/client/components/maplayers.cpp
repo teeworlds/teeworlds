@@ -77,7 +77,8 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 
 	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pThis->m_pLayers->Map()->GetItem(Start+Env, 0, 0);
 
-	static float Time = 0;
+	static float s_Time = 0.0f;
+	static float s_LastLocalTime = pThis->Client()->LocalTime();
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
@@ -90,25 +91,28 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
 			}
 
-			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
+			s_Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->Client()->IntraGameTick());
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 	else
 	{
-		if(pItem->m_Version < 2 || pItem->m_Synchronized)
+		if(pThis->m_pClient->m_Snap.m_pGameInfoObj && !(pThis->m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 		{
-			if(pThis->m_pClient->m_Snap.m_pGameInfoObj)
-				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
+			if(pItem->m_Version < 2 || pItem->m_Synchronized)
+			{
+				s_Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							pThis->Client()->IntraGameTick());
+			}
+			else
+				s_Time += pThis->Client()->LocalTime()-s_LastLocalTime;
 		}
-		else
-			Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		s_LastLocalTime = pThis->Client()->LocalTime();
 	}
 }
 
