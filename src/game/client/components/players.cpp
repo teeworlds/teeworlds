@@ -415,6 +415,15 @@ void CPlayers::RenderPlayer(
 				}
 
 				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+				{
+					static int s_LastIteX = IteX;
+					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+					if(pInfo->m_Paused)
+						IteX = s_LastIteX;
+					else
+						s_LastIteX = IteX;
+				}
 				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
 					float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
