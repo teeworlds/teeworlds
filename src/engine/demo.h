@@ -5,6 +5,11 @@
 
 #include "kernel.h"
 
+enum
+{
+	MAX_TIMELINE_MARKERS=64
+};
+
 struct CDemoHeader
 {
 	unsigned char m_aMarker[7];
@@ -16,6 +21,8 @@ struct CDemoHeader
 	char m_aType[8];
 	char m_aLength[4];
 	char m_aTimestamp[20];
+	char m_aNumTimelineMarkers[4];
+	char m_aTimelineMarkers[MAX_TIMELINE_MARKERS][4];
 };
 
 class IDemoPlayer : public IInterface
@@ -31,6 +38,9 @@ public:
 		int m_FirstTick;
 		int m_CurrentTick;
 		int m_LastTick;
+
+		int m_NumTimelineMarkers;
+		int m_aTimelineMarkers[MAX_TIMELINE_MARKERS];
 	};
 
 	enum
@@ -42,7 +52,7 @@ public:
 
 	~IDemoPlayer() {}
 	virtual void SetSpeed(float Speed) = 0;
-	virtual int SetPos(float Precent) = 0;
+	virtual int SetPos(float Percent) = 0;
 	virtual void Pause() = 0;
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
