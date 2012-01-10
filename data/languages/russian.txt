@@ -675,6 +675,9 @@ no limit
 
 ##### needs translation #####
 
+Game paused
+== 
+
 Respawn
 == 
 

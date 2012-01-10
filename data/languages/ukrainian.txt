@@ -558,6 +558,9 @@ Free-View
 Friends
 == 
 
+Game paused
+== 
+
 Kick player
 == 
 

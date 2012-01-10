@@ -59,6 +59,18 @@ void CHud::RenderGameTimer()
 	}
 }
 
+void CHud::RenderPauseNotification()
+{
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED &&
+		!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+	{
+		const char *pText = Localize("Game paused");
+		float FontSize = 20.0f;
+		float w = TextRender()->TextWidth(0, FontSize,pText, -1);
+		TextRender()->Text(0, 150.0f*Graphics()->ScreenAspect()+-w/2.0f, 50.0f, FontSize, pText, -1);
+	}
+}
+
 void CHud::RenderSuddenDeath()
 {
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
@@ -450,6 +462,7 @@ void CHud::OnRender()
 		}
 
 		RenderGameTimer();
+		RenderPauseNotification();
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();
