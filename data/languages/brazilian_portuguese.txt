@@ -678,5 +678,8 @@ no limit
 Respawn
 == 
 
+Show only chat messages from friends
+== 
+
 ##### old translations #####
 

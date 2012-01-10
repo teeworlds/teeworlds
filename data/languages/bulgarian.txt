@@ -675,6 +675,9 @@ no limit
 Respawn
 == 
 
+Show only chat messages from friends
+== 
+
 Spectate previous
 == 
 

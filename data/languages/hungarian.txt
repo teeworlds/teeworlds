@@ -669,6 +669,9 @@ Player country:
 Respawn
 == 
 
+Show only chat messages from friends
+== 
+
 Spectate next
 == 
 

@@ -630,6 +630,9 @@ Show friends only
 Show ingame HUD
 == 
 
+Show only chat messages from friends
+== 
+
 Size:
 == 
 
