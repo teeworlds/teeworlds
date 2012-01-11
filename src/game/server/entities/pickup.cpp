@@ -117,6 +117,12 @@ void CPickup::Tick()
 	}
 }
 
+void CPickup::TickPaused()
+{
+	if(m_SpawnTick != -1)
+		++m_SpawnTick;
+}
+
 void CPickup::Snap(int SnappingClient)
 {
 	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))

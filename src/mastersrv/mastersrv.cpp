@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 
+#include <engine/config.h>
 #include <engine/console.h>
 #include <engine/kernel.h>
 #include <engine/storage.h>
@@ -326,37 +327,46 @@ int main(int argc, const char **argv) // ignore_convention
 	dbg_logger_stdout();
 	net_init();
 
-	mem_zero(&BindAddr, sizeof(BindAddr));
-	BindAddr.type = NETTYPE_ALL;
-	BindAddr.port = MASTERSERVER_PORT;
+	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
+	mem_copy(m_CountDataLegacy.m_Header, SERVERBROWSE_COUNT_LEGACY, sizeof(SERVERBROWSE_COUNT_LEGACY));
+
+	IKernel *pKernel = IKernel::Create();
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
+	IConfig *pConfig = CreateConfig();
+	m_pConsole = CreateConsole(CFGFLAG_MASTER);
+	
+	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
+	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
+	RegisterFail |= !pKernel->RegisterInterface(pConfig);
+
+	if(RegisterFail)
+		return -1;
+
+	pConfig->Init();
+	m_NetBan.Init(m_pConsole, pStorage);
+	if(argc > 1) // ignore_convention
+		m_pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+
+	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
+		BindAddr.port = MASTERSERVER_PORT;
+	else
+	{
+		mem_zero(&BindAddr, sizeof(BindAddr));
+		BindAddr.type = NETTYPE_ALL;
+		BindAddr.port = MASTERSERVER_PORT;
+	}
 
 	if(!m_NetOp.Open(BindAddr, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
 		return -1;
 	}
-
 	BindAddr.port = MASTERSERVER_PORT+1;
 	if(!m_NetChecker.Open(BindAddr, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
 	}
-
-	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
-	mem_copy(m_CountDataLegacy.m_Header, SERVERBROWSE_COUNT_LEGACY, sizeof(SERVERBROWSE_COUNT_LEGACY));
-
-	IKernel *pKernel = IKernel::Create();
-	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
-
-	m_pConsole = CreateConsole(CFGFLAG_MASTER);
-	m_NetBan.Init(m_pConsole, pStorage);
-
-	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
-	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
-
-	if(RegisterFail)
-		return -1;
 
 	dbg_msg("mastersrv", "started");
 

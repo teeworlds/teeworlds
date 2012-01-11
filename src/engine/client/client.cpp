@@ -37,6 +37,8 @@
 #include <engine/shared/ringbuffer.h>
 #include <engine/shared/snapshot.h>
 
+#include <game/version.h>
+
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
@@ -463,6 +465,9 @@ int *CClient::GetInput(int Tick)
 // ------ state handling -----
 void CClient::SetState(int s)
 {
+	if(m_State == IClient::STATE_QUITING)
+		return;
+
 	int Old = m_State;
 	if(g_Config.m_Debug)
 	{
@@ -880,23 +885,26 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionInfo.m_VersionServeraddr.m_Addr) == 0)
 	{
 		// version info
-		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(GAME_RELEASE_VERSION)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
 
 		{
-			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
-			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
+			char *pVersionData = (char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
+			int VersionMatch = !mem_comp(pVersionData, GAME_RELEASE_VERSION, sizeof(GAME_RELEASE_VERSION));
+
+			char aVersion[sizeof(GAME_RELEASE_VERSION)];
+			str_copy(aVersion, pVersionData, sizeof(aVersion));
 
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "version does %s (%d.%d.%d)",
+			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
 				VersionMatch ? "match" : "NOT match",
-				pVersionData[1], pVersionData[2], pVersionData[3]);
+				aVersion);
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
 
 			// assume version is out of date when version-data doesn't match
-			if (!VersionMatch)
+			if(!VersionMatch)
 			{
-				str_format(m_aVersionStr, sizeof(m_aVersionStr), "%d.%d.%d", pVersionData[1], pVersionData[2], pVersionData[3]);
+				str_copy(m_aVersionStr, aVersion, sizeof(m_aVersionStr));
 			}
 
 			// request the map version list now
@@ -1764,8 +1772,11 @@ void CClient::Run()
 	// open socket
 	{
 		NETADDR BindAddr;
-		mem_zero(&BindAddr, sizeof(BindAddr));
-		BindAddr.type = NETTYPE_ALL;
+		if(g_Config.m_Bindaddr[0] == 0 || net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) != 0)
+		{
+			mem_zero(&BindAddr, sizeof(BindAddr));
+			BindAddr.type = NETTYPE_ALL;
+		}
 		if(!m_NetClient.Open(BindAddr, 0))
 		{
 			dbg_msg("client", "couldn't start network");
@@ -1865,7 +1876,10 @@ void CClient::Run()
 
 		// panic quit button
 		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyPressed('q'))
+		{
+			Quit();
 			break;
+		}
 
 		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('d'))
 			g_Config.m_Debug ^= 1;
@@ -2364,11 +2378,13 @@ static CClient *CreateClient()
 */
 
 #if defined(CONF_PLATFORM_MACOSX)
-extern "C" int SDL_main(int argc, const char **argv) // ignore_convention
+extern "C" int SDL_main(int argc, char **argv_) // ignore_convention
+{
+	const char **argv = const_cast<const char **>(argv_);
 #else
 int main(int argc, const char **argv) // ignore_convention
-#endif
 {
+#endif
 #if defined(CONF_FAMILY_WINDOWS)
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
@@ -2388,7 +2404,7 @@ int main(int argc, const char **argv) // ignore_convention
 	// create the components
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
-	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_CLIENT, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	IEngineSound *pEngineSound = CreateEngineSound();
 	IEngineInput *pEngineInput = CreateEngineInput();

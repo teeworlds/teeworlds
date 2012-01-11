@@ -64,6 +64,7 @@ public:
 	const char *m_pGameType;
 
 	bool IsTeamplay() const;
+	bool IsGameOver() const { return m_GameOverTick != -1; }
 
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController();

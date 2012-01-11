@@ -78,6 +78,9 @@ public:
 	virtual void BlendNormal();
 	virtual void BlendAdditive();
 
+	virtual void WrapNormal();
+	virtual void WrapClamp();
+
 	virtual int MemoryUsage() const;
 
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY);

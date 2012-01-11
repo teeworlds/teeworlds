@@ -652,12 +652,9 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 			}
 			else if(j == COLUMN_SCORE_COUNTRY)
 			{
-				Graphics()->TextureSet(m_pClient->m_pCountryFlags->GetByCountryCode(m_pClient->m_aClients[pInfo->m_ClientID].m_Country)->m_Texture);
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.75f);
-				IGraphics::CQuadItem QuadItem(TmpX+ms_Scoreboard[j].m_Offset, y+(TeeSizeMod*5.0f)/2.0f, ms_Scoreboard[j].m_Width, LineHeight-TeeSizeMod*5.0f);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
+				vec4 Color(1.0f, 1.0f, 1.0f, 0.5f);
+				m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &Color,
+													TmpX+ms_Scoreboard[j].m_Offset, y+(TeeSizeMod*5.0f)/2.0f, ms_Scoreboard[j].m_Width, LineHeight-TeeSizeMod*5.0f);
 			}
 			else if(j == COLUMN_SCORE_PING)
 			{

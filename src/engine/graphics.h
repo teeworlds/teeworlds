@@ -77,6 +77,8 @@ public:
 	virtual void BlendNone() = 0;
 	virtual void BlendNormal() = 0;
 	virtual void BlendAdditive() = 0;
+	virtual void WrapNormal() = 0;
+	virtual void WrapClamp() = 0;
 	virtual int MemoryUsage() const = 0;
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) =0;

@@ -104,19 +104,19 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 				switch(SpreeType)
 				{
 				case 0:
-					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_KILLINGSPREE, 0, vec2(0,0));
+					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_KILLINGSPREE, 0);
 					break;
 				case 1:
-					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_RAMPAGE, 0, vec2(0,0));
+					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_RAMPAGE, 0);
 					break;
 				case 2:
-					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_DOMINATING, 0, vec2(0,0));
+					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_DOMINATING, 0);
 					break;
 				case 3:
-					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_UNSTOPPABLE, 0, vec2(0,0));
+					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_UNSTOPPABLE, 0);
 					break;
 				case 4:
-					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_GODLIKE, 0, vec2(0,0));
+					m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_SPREE_GODLIKE, 0);
 				}
 			}
 			

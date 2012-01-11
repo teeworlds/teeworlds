@@ -101,14 +101,16 @@ int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 	return 0;
 }
 
-int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active)
 {
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
 	Graphics()->QuadsBegin();
+	if(!Active)
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 	RenderTools()->SelectSprite(Checked?SPRITE_GUIBUTTON_ON:SPRITE_GUIBUTTON_OFF);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	if((UI()->HotItem() == pID))
+	if(UI()->HotItem() == pID && Active)
 	{
 		RenderTools()->SelectSprite(SPRITE_GUIBUTTON_HOVER);
 		IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
@@ -116,7 +118,7 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect)
 	}
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pID, "", Checked, pRect);
+	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
 }
 
 int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
@@ -1216,12 +1218,8 @@ int CMenus::Render()
 					float OldWidth = Item.m_Rect.w;
 					Item.m_Rect.w = Item.m_Rect.h*2;
 					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
-					Graphics()->TextureSet(pEntry->m_Texture);
-					Graphics()->QuadsBegin();
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
+					vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
+					m_pClient->m_pCountryFlags->Render(pEntry->m_CountryCode, &Color, Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
 					UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
 				}
 			}
@@ -1488,8 +1486,8 @@ void CMenus::OnStateChange(int NewState, int OldState)
 
 	if(NewState == IClient::STATE_OFFLINE)
 	{
-		if(OldState >= IClient::STATE_ONLINE)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
+		if(OldState >= IClient::STATE_ONLINE && NewState < IClient::STATE_QUITING)
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{

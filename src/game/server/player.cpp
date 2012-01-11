@@ -60,26 +60,37 @@ void CPlayer::Tick()
 		}
 	}
 
-	if(!m_pCharacter && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
-		m_ViewPos -= vec2(clamp(m_ViewPos.x-m_LatestActivity.m_TargetX, -500.0f, 500.0f), clamp(m_ViewPos.y-m_LatestActivity.m_TargetY, -400.0f, 400.0f));
-
-	if(!m_pCharacter && m_DieTick+Server()->TickSpeed()*3 <= Server()->Tick())
-		m_Spawning = true;
-
-	if(m_pCharacter)
+	if(!GameServer()->m_World.m_Paused)
 	{
-		if(m_pCharacter->IsAlive())
+		if(!m_pCharacter && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
+			m_ViewPos -= vec2(clamp(m_ViewPos.x-m_LatestActivity.m_TargetX, -500.0f, 500.0f), clamp(m_ViewPos.y-m_LatestActivity.m_TargetY, -400.0f, 400.0f));
+
+		if(!m_pCharacter && m_DieTick+Server()->TickSpeed()*3 <= Server()->Tick())
+			m_Spawning = true;
+
+		if(m_pCharacter)
 		{
-			m_ViewPos = m_pCharacter->m_Pos;
+			if(m_pCharacter->IsAlive())
+			{
+				m_ViewPos = m_pCharacter->m_Pos;
+			}
+			else
+			{
+				delete m_pCharacter;
+				m_pCharacter = 0;
+			}
 		}
-		else
-		{
-			delete m_pCharacter;
-			m_pCharacter = 0;
-		}
+		else if(m_Spawning && m_RespawnTick <= Server()->Tick())
+			TryRespawn();
 	}
-	else if(m_Spawning && m_RespawnTick <= Server()->Tick())
-		TryRespawn();
+	else
+	{
+		++m_RespawnTick;
+		++m_DieTick;
+		++m_ScoreStartTick;
+		++m_LastActionTick;
+		++m_TeamChangeTick;
+ 	}
 }
 
 void CPlayer::PostTick()

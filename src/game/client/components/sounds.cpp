@@ -34,6 +34,30 @@ static int LoadSoundsThread(void *pUser)
 
 	return 0;
 }
+
+int CSounds::GetSampleId(int SetId)
+{
+	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+		return -1;
+	
+	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
+	if(!pSet->m_NumSounds)
+		return -1;
+
+	if(pSet->m_NumSounds == 1)
+		return pSet->m_aSounds[0].m_Id;
+
+	// return random one
+	int Id;
+	do
+	{
+		Id = rand() % pSet->m_NumSounds;
+	}
+	while(Id == pSet->m_Last);
+	pSet->m_Last = Id;
+	return pSet->m_aSounds[Id].m_Id;
+}
+
 void CSounds::OnInit()
 {
 	// setup sound channels
@@ -98,7 +122,7 @@ void CSounds::OnRender()
 		int64 Now = time_get();
 		if(m_QueueWaitTime <= Now)
 		{
-			Play(m_aQueue[0].m_Channel, m_aQueue[0].m_SetId, 1.0f, vec2(0,0));
+			Play(m_aQueue[0].m_Channel, m_aQueue[0].m_SetId, 1.0f);
 			m_QueueWaitTime = Now+time_freq()*3/10; // wait 300ms before playing the next one
 			if(--m_QueuePos > 0)
 				mem_move(m_aQueue, m_aQueue+1, m_QueuePos*sizeof(QueueEntry));
@@ -132,38 +156,39 @@ void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 	Msg.m_SoundID = SetId;
 	Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
 
-	Play(Chn, SetId, Vol, Pos);
+	Play(Chn, SetId, Vol);
 }
 
-void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
+void CSounds::Play(int Chn, int SetId, float Vol)
 {
-	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || (Chn == CHN_MUSIC && !g_Config.m_SndMusic) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
 		return;
 
-	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
-
-	if(!pSet->m_NumSounds)
+	int SampleId = GetSampleId(SetId);
+	if(SampleId == -1)
 		return;
 
 	int Flags = 0;
 	if(Chn == CHN_MUSIC)
 		Flags = ISound::FLAG_LOOP;
 
-	if(pSet->m_NumSounds == 1)
-	{
-		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_Id, Flags, Pos.x, Pos.y);
-		return;
-	}
+	Sound()->Play(Chn, SampleId, Flags);
+}
 
-	// play a random one
-	int Id;
-	do
-	{
-		Id = rand() % pSet->m_NumSounds;
-	}
-	while(Id == pSet->m_Last);
-	Sound()->PlayAt(Chn, pSet->m_aSounds[Id].m_Id, Flags, Pos.x, Pos.y);
-	pSet->m_Last = Id;
+void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
+{
+	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
+		return;
+	
+	int SampleId = GetSampleId(SetId);
+	if(SampleId == -1)
+		return;
+
+	int Flags = 0;
+	if(Chn == CHN_MUSIC)
+		Flags = ISound::FLAG_LOOP;
+
+	Sound()->PlayAt(Chn, SampleId, Flags, Pos.x, Pos.y);
 }
 
 void CSounds::Stop(int SetId)

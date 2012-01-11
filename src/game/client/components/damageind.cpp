@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/demo.h>
 #include <engine/graphics.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -46,11 +47,25 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 
 void CDamageInd::OnRender()
 {
-
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
+	static float s_LastLocalTime = Client()->LocalTime();
 	for(int i = 0; i < m_NumItems;)
 	{
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
+			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+			if(pInfo->m_Paused)
+				m_aItems[i].m_StartTime += Client()->LocalTime()-s_LastLocalTime;
+			else
+				m_aItems[i].m_StartTime += (Client()->LocalTime()-s_LastLocalTime)*(1.0f-pInfo->m_Speed);
+		}
+		else
+		{
+			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+				m_aItems[i].m_StartTime += Client()->LocalTime()-s_LastLocalTime;
+		}
+
 		float Life = 0.75f - (Client()->LocalTime() - m_aItems[i].m_StartTime);
 		if(Life < 0.0f)
 			DestroyI(&m_aItems[i]);
@@ -64,6 +79,7 @@ void CDamageInd::OnRender()
 			i++;
 		}
 	}
+	s_LastLocalTime = Client()->LocalTime();
 	Graphics()->QuadsEnd();
 }
 

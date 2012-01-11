@@ -133,6 +133,20 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	else
 		glDisable(GL_TEXTURE_2D);
 
+	switch(State.m_WrapMode)
+	{
+	case CCommandBuffer::WRAP_REPEAT:
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		break;
+	case CCommandBuffer::WRAP_CLAMP:
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		break;
+	default:
+		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapMode);
+	};
+
 	// screen mapping
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

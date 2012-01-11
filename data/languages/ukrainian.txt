@@ -558,6 +558,9 @@ Free-View
 Friends
 == 
 
+Game paused
+== 
+
 Kick player
 == 
 
@@ -615,6 +618,9 @@ Rename
 Rename demo
 == 
 
+Respawn
+== 
+
 Server address:
 == 
 
@@ -625,6 +631,9 @@ Show friends only
 == 
 
 Show ingame HUD
+== 
+
+Show only chat messages from friends
 == 
 
 Size:

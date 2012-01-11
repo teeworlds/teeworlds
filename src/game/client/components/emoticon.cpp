@@ -111,14 +111,14 @@ void CEmoticon::OnRender()
 
 	m_WasActive = true;
 
-	if (length(m_SelectorMouse) > 140)
-		m_SelectorMouse = normalize(m_SelectorMouse) * 140;
+	if (length(m_SelectorMouse) > 170.0f)
+		m_SelectorMouse = normalize(m_SelectorMouse) * 170.0f;
 
 	float SelectedAngle = GetAngle(m_SelectorMouse) + 2*pi/24;
 	if (SelectedAngle < 0)
 		SelectedAngle += 2*pi;
 
-	if (length(m_SelectorMouse) > 100)
+	if (length(m_SelectorMouse) > 110.0f)
 		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
 
 	CUIRect Screen = *UI()->Screen();
@@ -130,7 +130,7 @@ void CEmoticon::OnRender()
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.3f);
-	DrawCircle(Screen.w/2, Screen.h/2, 160, 64);
+	DrawCircle(Screen.w/2, Screen.h/2, 190.0f, 64);
 	Graphics()->QuadsEnd();
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
@@ -144,10 +144,10 @@ void CEmoticon::OnRender()
 
 		bool Selected = m_SelectedEmote == i;
 
-		float Size = Selected ? 80 : 32;
+		float Size = Selected ? 80.0f : 50.0f;
 
-		float NudgeX = 120 * cosf(Angle);
-		float NudgeY = 120 * sinf(Angle);
+		float NudgeX = 150.0f * cosf(Angle);
+		float NudgeY = 150.0f * sinf(Angle);
 		RenderTools()->SelectSprite(SPRITE_OOP + i);
 		IGraphics::CQuadItem QuadItem(Screen.w/2 + NudgeX, Screen.h/2 + NudgeY, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);

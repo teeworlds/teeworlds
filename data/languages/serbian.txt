@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -673,6 +674,15 @@ no limit
 == bez ograničenja
 
 ##### needs translation #####
+
+Game paused
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
 
 ##### old translations #####
 

@@ -660,10 +660,19 @@ no limit
 Demofile: %s
 == 
 
+Game paused
+== 
+
 Play background music
 == 
 
 Player country:
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
 == 
 
 Spectate next

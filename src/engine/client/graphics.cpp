@@ -197,6 +197,18 @@ void CGraphics_OpenGL::BlendAdditive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
+void CGraphics_OpenGL::WrapNormal()
+{
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+void CGraphics_OpenGL::WrapClamp()
+{
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
 int CGraphics_OpenGL::MemoryUsage() const
 {
 	return m_TextureMemoryUsage;

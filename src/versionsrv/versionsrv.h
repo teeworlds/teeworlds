@@ -28,8 +28,6 @@ static CMapVersion s_aMapVersionList[] = {
 };
 static const int s_NumMapVersionItems = sizeof(s_aMapVersionList)/sizeof(CMapVersion);
 
-static const unsigned char VERSION_DATA[] = {0x00, 0, 6, 0};
-
 static const unsigned char VERSIONSRV_GETVERSION[] = {255, 255, 255, 255, 'v', 'e', 'r', 'g'};
 static const unsigned char VERSIONSRV_VERSION[] = {255, 255, 255, 255, 'v', 'e', 'r', 's'};
 
