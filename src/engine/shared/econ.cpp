@@ -141,7 +141,7 @@ void CEcon::Update()
 		else if(m_aClients[ClientID].m_State == CClient::STATE_AUTHED)
 		{
 			char aFormatted[256];
-			str_format(aFormatted, sizeof(aBuf), "cid=%d cmd='%s'", ClientID, aBuf);
+			str_format(aFormatted, sizeof(aFormatted), "cid=%d cmd='%s'", ClientID, aBuf);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aFormatted);
 			m_UserClientID = ClientID;
 			Console()->ExecuteLine(aBuf);
