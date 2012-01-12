@@ -55,7 +55,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	char aBuf[128];
 	CUIRect List, Label, Button, Left, Right, Game, Client;
 	MainView.HSplitTop(200.0f, &List, &MainView);
-	MainView.HSplitTop(210.0f, &Game, &Client);
+	MainView.HSplitTop(180.0f, &Game, &Client);
 
 	// game
 	{
@@ -665,7 +665,10 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	{
 		ResetButton.HSplitTop(10.0f, 0, &ResetButton);
 		RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		ResetButton.HMargin(10.0f, &ResetButton);
+		if(Client()->State() != IClient::STATE_ONLINE)
+			ResetButton.HMargin(10.0f, &ResetButton);
+		else
+			ResetButton.HMargin(6.0f, &ResetButton);
 		ResetButton.VMargin(30.0f, &ResetButton);
 		ResetButton.HSplitTop(20.0f, &ResetButton, 0);
 		static int s_DefaultButton = 0;
@@ -1190,7 +1193,7 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_ClClearAll, Localize("Clear all"), g_Config.m_ClClearAll, &Button))
 		g_Config.m_ClClearAll ^= 1;
 	
-	LeftView.HSplitTop(40.0f, &Button, &LeftView);
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		
 	if(!g_Config.m_ClClearAll)
 	{
