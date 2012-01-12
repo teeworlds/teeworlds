@@ -82,6 +82,7 @@ public:
 	void ConvertMouseMove(float *x, float *y);
 
 	CUIRect *Screen();
+	float PixelSize();
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 

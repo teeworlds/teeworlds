@@ -12,7 +12,7 @@ if match != None:
 os.chdir('../')
 
 url_bam = "http://github.com/matricks/bam/zipball/master"
-url_teeworlds = "http://github.com/oy/teeworlds/zipball/master"
+url_teeworlds = "http://github.com/teeworlds/teeworlds/zipball/master"
 release_type = "server_release client_release"
 
 arguments = OptionParser()
