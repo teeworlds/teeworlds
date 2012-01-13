@@ -52,6 +52,7 @@ enum
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
+	NET_TOKEN_LENGTH = 16,
 	NET_TOKENSEED_LENGTH = 8,
 
 	NET_CONNSTATE_OFFLINE=0,
@@ -166,12 +167,13 @@ private:
 
 	int QueueChunkEx(int Flags, int DataSize, const void *pData, int Sequence);
 	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
+	void SendControlConnless(int ControlMsg, NETADDR *pPeerAddr, const void *pExtra, int ExtraSize);
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
 
 public:
-	const char *m_CurTokenSeed;
-	const char *m_PrevTokenSeed;
+	const char *m_pCurTokenSeed;
+	const char *m_pPrevTokenSeed;
 
 	void Init(NETSOCKET Socket);
 	int Connect(NETADDR *pAddr);
@@ -187,7 +189,7 @@ public:
 	void SignalResend();
 	int State() const { return m_State; }
 	NETADDR PeerAddress() const { return m_PeerAddr; }
-	void GenerateConnectToken(char *pToken, const char *Seed);
+	const char *GenerateConnectToken(NETADDR *pAddr, const char *pSeed);
 
 	void ResetErrorString() { m_ErrorString[0] = 0; }
 	const char *ErrorString() const { return m_ErrorString; }
@@ -335,6 +337,8 @@ public:
 
 	//
 	void SetMaxClientsPerIP(int Max);
+
+	static void Hash(char *pDst, const char *pSrc);
 };
 
 class CNetConsole
@@ -444,8 +448,6 @@ public:
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
-
-	static void Hash(char *pDst, const char *pSrc);
 
 	// The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not
 	static int IsSeqInBackroom(int Seq, int Ack);

@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <stdlib.h> // rand()
 #include <base/system.h>
+#include <engine/external/md5/md5.h>
 #include "network.h"
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
@@ -50,8 +51,8 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 	{
 		m_aSlots[i].m_Connection.Init(m_Socket);
 		// setup pointers to tokenseeds
-		m_aSlots[i].m_Connection.m_CurTokenSeed = m_CurTokenSeed;
-		m_aSlots[i].m_Connection.m_PrevTokenSeed = m_PrevTokenSeed;
+		m_aSlots[i].m_Connection.m_pCurTokenSeed = m_CurTokenSeed;
+		m_aSlots[i].m_Connection.m_pPrevTokenSeed = m_PrevTokenSeed;
 	}
 
 	BanRemoveAll();
@@ -280,10 +281,9 @@ int CNetServer::Update()
 	if(m_LastTokenSeedGenerated+time_freq()*10 < time_get())
 	{
 		// generate new tokenseed and save the old one for slow clients
-		str_copy(m_PrevTokenSeed, m_CurTokenSeed, NET_TOKENSEED_LENGTH);
+		mem_copy(m_PrevTokenSeed, m_CurTokenSeed, NET_TOKENSEED_LENGTH);
 		for(int i = 0; i < NET_TOKENSEED_LENGTH; i++)
-			m_CurTokenSeed[i] = (char)rand()%254+1;
-		m_CurTokenSeed[NET_TOKENSEED_LENGTH-1] = 0;
+			m_CurTokenSeed[i] = rand()%254+1;
 		m_LastTokenSeedGenerated = time_get();
 	}
 
@@ -375,7 +375,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			else
 			{
 				// TODO: check size here
-				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
+				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && (m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT || m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECTACCEPT))
 				{
 					Found = 0;
 
@@ -431,18 +431,6 @@ int CNetServer::Recv(CNetChunk *pChunk)
 						{
 							const char FullMsg[] = "This server is full";
 							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
-						}
-					}
-				}
-				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_ACCEPT)
-				{
-					// accept packet, find a pending connection
-					for(int i = 0; i < MaxClients(); i++)
-					{
-						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_PENDING)
-						{
-							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-							break;
 						}
 					}
 				}
@@ -512,4 +500,21 @@ void CNetServer::SetMaxClientsPerIP(int Max)
 		Max = NET_MAX_CLIENTS;
 
 	m_MaxClientsPerIP = Max;
+}
+
+void CNetServer::Hash(char *pDst, const char *pSrc)
+{
+	// TODO: Find a better fitting hash algorithm (md5 isn't really needed here)
+	if(!pSrc)
+		return;
+
+	char aBuf[NET_TOKEN_LENGTH];
+	md5_state_t State;
+	md5_byte_t aDigest[NET_TOKEN_LENGTH];
+
+	md5_init(&State);
+	md5_append(&State, (const md5_byte_t *)pSrc, str_length(pSrc));
+	md5_finish(&State, aDigest);
+
+	mem_copy(pDst, aDigest, NET_TOKEN_LENGTH);
 }
