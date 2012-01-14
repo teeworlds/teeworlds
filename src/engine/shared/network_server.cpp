@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <stdlib.h> // rand()
 #include <base/system.h>
-#include <engine/external/md5/md5.h>
+
 #include "network.h"
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
@@ -500,21 +500,4 @@ void CNetServer::SetMaxClientsPerIP(int Max)
 		Max = NET_MAX_CLIENTS;
 
 	m_MaxClientsPerIP = Max;
-}
-
-void CNetServer::Hash(char *pDst, const char *pSrc)
-{
-	// TODO: Find a better fitting hash algorithm (md5 isn't really needed here)
-	if(!pSrc)
-		return;
-
-	char aBuf[NET_TOKEN_LENGTH];
-	md5_state_t State;
-	md5_byte_t aDigest[NET_TOKEN_LENGTH];
-
-	md5_init(&State);
-	md5_append(&State, (const md5_byte_t *)pSrc, str_length(pSrc));
-	md5_finish(&State, aDigest);
-
-	mem_copy(pDst, aDigest, NET_TOKEN_LENGTH);
 }

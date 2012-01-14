@@ -257,8 +257,8 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				{
 					if(pPacket->m_DataSize == NET_TOKEN_LENGTH+1)
 					{
-						const char *pConnectToken = GenerateConnectToken(pAddr, m_pCurTokenSeed);
-						if(mem_comp(pConnectToken, &pPacket->m_aChunkData[1], NET_TOKEN_LENGTH) == 0)
+						if(mem_comp(GenerateConnectToken(pAddr, m_pCurTokenSeed), &pPacket->m_aChunkData[1], NET_TOKEN_LENGTH) == 0
+							|| mem_comp(GenerateConnectToken(pAddr, m_pPrevTokenSeed), &pPacket->m_aChunkData[1], NET_TOKEN_LENGTH) == 0)
 						{
 							// tell the client that the token got accept and wait for final accept from client
 							Reset();
@@ -274,14 +274,12 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						else
 						{
 							// connecttoken wrong, drop the client
-							Reset();
 							SendControlConnless(NET_CTRLMSG_CLOSE, pAddr, "Connection refused. Reason: Wrong connecttoken", 47);
 						}
 					}
 					else
 					{
 						// no connecttoken received, drop the client
-						Reset();
 						SendControlConnless(NET_CTRLMSG_CLOSE, pAddr, "Connection refused. Reason: No connecttoken", 44);
 					}
 				}
@@ -340,7 +338,7 @@ const char *CNetConnection::GenerateConnectToken(NETADDR *pAddr, const char *pSe
 	static char aConnectToken[NET_TOKEN_LENGTH];
 	mem_copy(aBuf, pAddr, sizeof(NETADDR));
 	mem_copy(aBuf+sizeof(NETADDR), pSeed, NET_TOKENSEED_LENGTH);
-	CNetServer::Hash(aConnectToken, aBuf);
+	CNetBase::Hash(aConnectToken, aBuf);
 	return aConnectToken;
 }
 

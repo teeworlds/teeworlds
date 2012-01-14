@@ -337,8 +337,6 @@ public:
 
 	//
 	void SetMaxClientsPerIP(int Max);
-
-	static void Hash(char *pDst, const char *pSrc);
 };
 
 class CNetConsole
@@ -443,6 +441,7 @@ public:
 	static void Init();
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
+	static void Hash(char *pDst, const char *pSrc);
 
 	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);

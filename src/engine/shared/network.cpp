@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
+#include <engine/external/md5/md5.h>
 
 #include "config.h"
 #include "network.h"
@@ -356,4 +357,21 @@ static const unsigned gs_aFreqTable[256+1] = {
 void CNetBase::Init()
 {
 	ms_Huffman.Init(gs_aFreqTable);
+}
+
+void CNetBase::Hash(char *pDst, const char *pSrc)
+{
+	// TODO: Find a better fitting hash algorithm (md5 isn't really needed here)
+	if(!pSrc)
+		return;
+
+	char aBuf[NET_TOKEN_LENGTH];
+	md5_state_t State;
+	md5_byte_t aDigest[NET_TOKEN_LENGTH];
+
+	md5_init(&State);
+	md5_append(&State, (const md5_byte_t *)pSrc, str_length(pSrc));
+	md5_finish(&State, aDigest);
+
+	mem_copy(pDst, aDigest, NET_TOKEN_LENGTH);
 }
