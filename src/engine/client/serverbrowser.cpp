@@ -73,6 +73,28 @@ int CServerBrowser::AddFilter(int SortHash, int Ping, int Country, const char* p
 	return m_lFilters.size()-1;
 }
 
+void CServerBrowser::GetFilter(int Index, int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress)
+{
+	CServerFilter *pFilter = &m_lFilters[Index];
+	*pSortHash = pFilter->m_SortHash;
+	*pPing = pFilter->m_Ping;
+	*pCountry = pFilter->m_Country;
+	str_copy(pGametype, pFilter->m_aGametype, sizeof(pFilter->m_aGametype));
+	str_copy(pServerAddress, pFilter->m_aServerAddress, sizeof(pFilter->m_aServerAddress));
+}
+
+void CServerBrowser::SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress)
+{
+	CServerFilter *pFilter = &m_lFilters[Index];
+	pFilter->m_SortHash = SortHash;
+	pFilter->m_Ping = Ping;
+	pFilter->m_Country = Country;
+	str_copy(pFilter->m_aGametype, pGametype, sizeof(pFilter->m_aGametype));
+	str_copy(pFilter->m_aServerAddress, pServerAddress, sizeof(pFilter->m_aServerAddress));
+
+	pFilter->m_pServerBrowser->Update(true);
+}
+
 void CServerBrowser::RemoveFilter(int Index)
 {
 	m_lFilters.remove_index(Index);

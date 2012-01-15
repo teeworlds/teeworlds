@@ -74,6 +74,8 @@ CMenus::CMenus()
 
 	m_FriendlistSelectedIndex = -1;
 
+	m_SelectedFilter = 0;
+
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
 }
@@ -299,6 +301,21 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 		ReturnValue = 1;
 
 	return ReturnValue;
+}
+
+int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect)
+{
+	int Inside = UI()->MouseInside(pRect);
+
+	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
+	RenderTools()->SelectSprite(SpriteID);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	return UI()->DoButtonLogic(pID, 0, 0, pRect);
 }
 
 int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
@@ -1184,6 +1201,9 @@ int CMenus::Render()
 					m_MenuPage = PAGE_START;
 			}
 		}
+
+		// do overlay popups
+		DoPopupMenu();
 	}
 	else
 	{
@@ -1451,9 +1471,18 @@ int CMenus::Render()
 			Box.HSplitBottom(20.f, &Box, 0);
 			Box.VMargin(20.0f, &Box);
 
+			// selected filter
+			CBrowserFilter *pFilter = &m_lFilters[m_SelectedFilter];
+			int SortHash = 0;
+			int Ping = 0;
+			int Country = 0;
+			char aGametype[32];
+			char aServerAddress[16];
+			pFilter->GetFilter(&SortHash, &Ping, &Country, aGametype, aServerAddress);
+
 			static int ActSelection = -2;
 			if(ActSelection == -2)
-				ActSelection = g_Config.m_BrFilterCountryIndex;
+				ActSelection = Country;
 			static float s_ScrollValue = 0.0f;
 			int OldSelected = -1;
 			UiDoListboxStart(&s_ScrollValue, &Box, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
@@ -1488,14 +1517,13 @@ int CMenus::Render()
 			static int s_Button = 0;
 			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EnterPressed)
 			{
-				g_Config.m_BrFilterCountryIndex = ActSelection;
-				Client()->ServerBrowserUpdate();
+				pFilter->SetFilter(SortHash, Ping, ActSelection, aGametype, aServerAddress);
 				m_Popup = POPUP_NONE;
 			}
 
 			if(m_EscapePressed)
 			{
-				ActSelection = g_Config.m_BrFilterCountryIndex;
+				ActSelection = Country;
 				m_Popup = POPUP_NONE;
 			}
 		}

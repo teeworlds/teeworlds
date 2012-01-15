@@ -64,6 +64,8 @@ public:
 	array<CServerFilter> m_lFilters;
 
 	int AddFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+	void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+	void GetFilter(int Index, int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress);
 	void RemoveFilter(int Index);
 		
 	CServerBrowser();

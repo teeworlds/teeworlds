@@ -117,6 +117,8 @@ public:
 	virtual void RemoveFavorite(const NETADDR &Addr) = 0;
 
 	virtual int AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
+	virtual void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
+	virtual void GetFilter(int Index, int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress) = 0;
 	virtual void RemoveFilter(int Index) = 0;
 };
 

@@ -88,9 +88,19 @@ const CServerInfo *CMenus::CBrowserFilter::SortedGet(int Index) const
 	return m_pServerBrowser->SortedGet(m_Filter, Index);
 }
 
-void CMenus::CBrowserFilter::SetFilter(int Num)
+void CMenus::CBrowserFilter::SetFilterNum(int Num)
 {
 	m_Filter = Num;
+}
+
+void CMenus::CBrowserFilter::GetFilter(int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress)
+{
+	m_pServerBrowser->GetFilter(m_Filter, pSortHash, pPing, pCountry, pGametype, pServerAddress);
+}
+
+void CMenus::CBrowserFilter::SetFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress)
+{
+	m_pServerBrowser->SetFilter(m_Filter, SortHash, Ping, Country, pGametype, pServerAddress);
 }
 
 void CMenus::RemoveFilter(int FilterIndex)
@@ -104,7 +114,7 @@ void CMenus::RemoveFilter(int FilterIndex)
 	{
 		CBrowserFilter *pFilter = &m_lFilters[i];
 		if(pFilter->Filter() > Filter)
-			pFilter->SetFilter(pFilter->Filter()-1);
+			pFilter->SetFilterNum(pFilter->Filter()-1);
 	}
 }
 
@@ -402,9 +412,11 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	View.VSplitRight(2.0f, &Button, 0);
 	Button.VSplitRight(18.0f, &View, &Button);
-	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_EDIT, &Button))
+	if(DoButton_SpriteCleanID(pFilter, IMAGE_BROWSERICONS, SPRITE_BROWSERICON_EDIT, &Button)) // TODO: using the address of filter as ID is prolly a bad idea
 	{
-		//
+		static int s_EditPopupID = 0;
+		m_SelectedFilter = FilterIndex;
+		InvokePopupMenu(&s_EditPopupID, 0, UI()->MouseX(), UI()->MouseY(), 200.0f, 310.0f, PopupFilter);
 	}
 
 	View.VSplitRight(2.0f, &Button, 0);

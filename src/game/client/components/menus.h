@@ -42,6 +42,7 @@ class CMenus : public CComponent
 	int DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect);
 	int DoButton_Sprite(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
+	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
@@ -287,15 +288,20 @@ class CMenus : public CComponent
 		int Filter() const;
 		const char* Name() const;
 
-		void SetFilter(int Num);
+		void SetFilterNum(int Num);
 
 		int NumSortedServers() const;
 		int NumPlayers() const;
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
+
+		void GetFilter(int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress);
+		void SetFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
 	};
 
 	array<CBrowserFilter> m_lFilters;
+
+	int m_SelectedFilter;
 
 	void RemoveFilter(int FilterIndex);
 	void Move(bool Up, int Filter);
@@ -406,6 +412,12 @@ class CMenus : public CComponent
 	void RenderSettings(CUIRect MainView);
 
 	void SetActive(bool Active);
+
+	void InvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra=0);
+	void DoPopupMenu();
+
+	static int PopupFilter(CMenus *pMenus, CUIRect View);
+
 public:
 	void RenderBackground();
 
