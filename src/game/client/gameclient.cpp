@@ -462,9 +462,8 @@ void CGameClient::OnRender()
 		{
 			if(str_comp(gs_apSkinVariables[p], m_aClients[m_Snap.m_LocalClientID].m_aaSkinPartNames[p]))
 				SendInfo(false);
-			else if(m_Snap.m_pGameInfoObj && !(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) && // no teamgame?
-				(*gs_apUCCVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aUseCustomColors[p] ||
-				*gs_apColorVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aSkinPartColors[p]))
+			else if(*gs_apUCCVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aUseCustomColors[p] ||
+				*gs_apColorVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aSkinPartColors[p])
 			{
 				SendInfo(false);
 			}
