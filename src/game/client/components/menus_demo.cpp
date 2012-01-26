@@ -235,6 +235,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
 		else DemoPlayer()->SetSpeed(0.05f);
 	}
+	else if(!pInfo->m_Paused && Input()->KeyDown(KEY_SPACE))
+		DemoPlayer()->Pause();
+	else if(Input()->KeyDown(KEY_SPACE))
+		DemoPlayer()->Unpause();
 }
 
 static CUIRect gs_ListBoxOriginalView;
