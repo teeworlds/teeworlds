@@ -1,0 +1,23 @@
+body_filename := standard
+body_custom_colors := true
+body_hue := 93
+body_sat := 95
+body_lgt := 163
+
+tattoo_filename := toptri
+tattoo_custom_colors := false
+
+hands_filename := standard
+hands_custom_colors := true
+hands_hue := 55
+hands_sat := 141
+hands_lgt := 170
+
+feet_filename := standard
+feet_custom_colors := true
+feet_hue := 88
+feet_sat := 97
+feet_lgt := 119
+
+eyes_filename := standard
+eyes_custom_colors := false

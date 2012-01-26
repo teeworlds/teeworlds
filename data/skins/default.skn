@@ -1,0 +1,20 @@
+body_filename := standard
+body_custom_colors := true
+body_hue := 27
+body_sat := 111
+body_lgt := 116
+
+hands_filename := standard
+hands_custom_colors := true
+hands_hue := 27
+hands_sat := 117
+hands_lgt := 158
+
+feet_filename := standard
+feet_custom_colors := true
+feet_hue := 28
+feet_sat := 135
+feet_lgt := 62
+
+eyes_filename := standard
+eyes_custom_colors := false

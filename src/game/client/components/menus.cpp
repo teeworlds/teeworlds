@@ -57,6 +57,9 @@ CMenus::CMenus()
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
 	m_NeedSendinfo = false;
+	m_TeePartSelection = NO_SELECTION;
+	m_TeePartsColorSelection = NO_SELECTION;
+	m_aSaveSkinName[0] = 0;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
 
@@ -772,6 +775,13 @@ int CMenus::RenderMenubar(CUIRect r)
 			}
 
 			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_TeeButton=0;
+			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button, CUI::CORNER_T))
+			{
+				g_Config.m_UiSettingsPage = SETTINGS_TEE;
+			}
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
 			static int s_ControlsButton=0;
 			if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button, CUI::CORNER_T))
 			{
@@ -1265,6 +1275,12 @@ int CMenus::Render()
 			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
 			ExtraAlign = -1;
 		}
+		else if(m_Popup == POPUP_SAVE_SKIN)
+		{
+			pTitle = Localize("Save skin");
+			pExtraText = Localize("Are you sure you want to save your skin ? If a skin with this name already exists, it will be replaced.");
+			ExtraAlign = -1;
+		}
 		else if(m_Popup == POPUP_SOUNDERROR)
 		{
 			pTitle = Localize("Sound error");
@@ -1643,6 +1659,30 @@ int CMenus::Render()
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 				}
+			}
+		}
+		else if(m_Popup == POPUP_SAVE_SKIN)
+		{
+			CUIRect Yes, No;
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Part.VMargin(80.0f, &Part);
+
+			Part.VSplitMid(&No, &Yes);
+
+			Yes.VMargin(20.0f, &Yes);
+			No.VMargin(20.0f, &No);
+
+			static int s_ButtonAbort = 0;
+			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static int s_ButtonTryAgain = 0;
+			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				SaveSkinfile();
+				m_aSaveSkinName[0] = 0;
 			}
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)

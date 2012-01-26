@@ -1,0 +1,33 @@
+body_filename := standard
+body_custom_colors := true
+body_hue := 246
+body_sat := 216
+body_lgt := 108
+
+tattoo_filename := donny
+tattoo_custom_colors := true
+tattoo_hue := 2
+tattoo_sat := 217
+tattoo_lgt := 202
+tattoo_alp := 255
+
+decoration_filename := unibop
+decoration_custom_colors := true
+decoration_hue := 246
+decoration_sat := 216
+decoration_lgt := 108
+
+hands_filename := standard
+hands_custom_colors := true
+hands_hue := 246
+hands_sat := 216
+hands_lgt := 108
+
+feet_filename := standard
+feet_custom_colors := true
+feet_hue := 116
+feet_sat := 85
+feet_lgt := 233
+
+eyes_filename := standard
+eyes_custom_colors := false

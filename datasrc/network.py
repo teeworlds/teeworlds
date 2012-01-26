@@ -175,13 +175,10 @@ Objects = [
 		NetIntAny("m_Country"),
 
 		# 4*6 = 24 charachters
-		NetIntAny("m_Skin0"), NetIntAny("m_Skin1"), NetIntAny("m_Skin2"),
-		NetIntAny("m_Skin3"), NetIntAny("m_Skin4"), NetIntAny("m_Skin5"),
+		NetArray(NetArray(NetIntAny("m_aaSkinPartNames"), 6), 6),
 
-		NetIntRange("m_UseCustomColor", 0, 1),
-
-		NetIntAny("m_ColorBody"),
-		NetIntAny("m_ColorFeet"),
+		NetArray(NetIntRange("m_aUseCustomColors", 0, 1), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 
 	NetObject("SpectatorInfo", [
@@ -307,20 +304,18 @@ Messages = [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),
-		NetStringStrict("m_pSkin"),
-		NetBool("m_UseCustomColor"),
-		NetIntAny("m_ColorBody"),
-		NetIntAny("m_ColorFeet"),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 
 	NetMessage("Cl_ChangeInfo", [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),
-		NetStringStrict("m_pSkin"),
-		NetBool("m_UseCustomColor"),
-		NetIntAny("m_ColorBody"),
-		NetIntAny("m_ColorFeet"),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 
 	NetMessage("Cl_Kill", []),

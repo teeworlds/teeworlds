@@ -26,6 +26,18 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 };
 
+enum
+{
+	NO_SELECTION=0,
+	SELECTION_SKIN=1,
+	SELECTION_BODY=2,
+	SELECTION_TATTOO=4,
+	SELECTION_DECORATION=8,
+	SELECTION_HANDS=16,
+	SELECTION_FEET=32,
+	SELECTION_EYES=64
+};
+
 class CMenus : public CComponent
 {
 	static vec4 ms_GuiColor;
@@ -48,6 +60,7 @@ class CMenus : public CComponent
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
 	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoButton_Customize(const void *pID, int Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
@@ -113,6 +126,7 @@ class CMenus : public CComponent
 		POPUP_DELETE_DEMO,
 		POPUP_RENAME_DEMO,
 		POPUP_REMOVE_FRIEND,
+		POPUP_SAVE_SKIN,
 		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT,
@@ -135,6 +149,7 @@ class CMenus : public CComponent
 
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
+		SETTINGS_TEE,
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,
 		SETTINGS_SOUND,
@@ -188,6 +203,12 @@ class CMenus : public CComponent
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
+	int m_TeePartSelection;
+	int m_TeePartsColorSelection;
+	char m_aSaveSkinName[24];
+
+	void SaveSkinfile();
+	void WriteLineSkinfile(IOHANDLE File, char *pLine);
 
 	//
 	bool m_EscapePressed;
@@ -404,8 +425,12 @@ class CMenus : public CComponent
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView);
+	void RenderHSLPicker(CUIRect Picker);
+	void RenderSkinSelection(CUIRect MainView);
+	void RenderSkinPartSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
+	void RenderSettingsTee(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);

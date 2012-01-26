@@ -46,9 +46,10 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	HandPos += DirY * PostRotOffset.y;
 
 	//Graphics()->TextureSet(data->m_aImages[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_Texture);
+	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, pInfo->m_ColorBody.a);
+	vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
+	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 
 	// two passes
 	for (int i = 0; i < 2; i++)
@@ -477,14 +478,11 @@ void CPlayers::RenderPlayer(
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;
-		Ghost.m_ColorBody.a = 0.5f;
-		Ghost.m_ColorFeet.a = 0.5f;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+			Ghost.m_aColors[p].a *= 0.5f;
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
 
-	RenderInfo.m_Size = 64.0f; // force some settings
-	RenderInfo.m_ColorBody.a = 1.0f;
-	RenderInfo.m_ColorFeet.a = 1.0f;
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
 
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
@@ -546,13 +544,16 @@ void CPlayers::OnRender()
 			int Skin = m_pClient->m_pSkins->Find("x_ninja");
 			if(Skin != -1)
 			{
-				if(IsTeamplay)
-					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-				else
+				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
+				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
-					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-					m_aRenderInfo[i].m_ColorBody = vec4(1,1,1,1);
-					m_aRenderInfo[i].m_ColorFeet = vec4(1,1,1,1);
+					if(IsTeamplay)
+						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
+					else
+					{
+						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_OrgTexture;
+						m_aRenderInfo[i].m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+					}
 				}
 			}
 		}

@@ -1,0 +1,29 @@
+body_filename := bear
+body_custom_colors := true
+body_hue := 0
+body_sat := 0
+body_lgt := 184
+
+tattoo_filename := bear
+tattoo_hue := 21
+tattoo_sat := 12
+tattoo_lgt := 226
+tattoo_alp := 255
+
+decoration_filename := hair
+decoration_custom_colors := false
+
+hands_filename := standard
+hands_custom_colors := true
+hands_hue := 0
+hands_sat := 0
+hands_lgt := 184
+
+feet_filename := standard
+feet_custom_colors := true
+feet_hue := 149
+feet_sat := 4
+feet_lgt := 71
+
+eyes_filename := standard
+eyes_custom_colors := false

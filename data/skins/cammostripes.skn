@@ -1,0 +1,27 @@
+body_filename := standard
+body_custom_colors := true
+body_hue := 81
+body_sat := 101
+body_lgt := 70
+
+tattoo_filename := cammostripes
+tattoo_custom_colors := true
+tattoo_hue := 29
+tattoo_sat := 142
+tattoo_lgt := 0
+tattoo_alp := 255
+
+hands_filename := standard
+hands_custom_colors := true
+hands_hue := 11
+hands_sat := 117
+hands_lgt := 0
+
+feet_filename := standard
+feet_custom_colors := true
+feet_hue := 29
+feet_sat := 173
+feet_lgt := 87
+
+eyes_filename := standard
+eyes_custom_colors := false

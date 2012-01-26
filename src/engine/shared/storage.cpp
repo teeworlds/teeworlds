@@ -61,6 +61,13 @@ public:
 				fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/bodies", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/decoration", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/eyes", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/feet", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/hands", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "skins/tattoos", aPath, sizeof(aPath)));
 			}
 			fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));

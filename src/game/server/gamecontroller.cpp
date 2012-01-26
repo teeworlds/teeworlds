@@ -335,21 +335,6 @@ void IGameController::OnPlayerDisconnect(CPlayer *pPlayer, const char *pReason)
 
 void IGameController::OnPlayerInfoChange(CPlayer *pPlayer)
 {
-	const int aTeamColors[2] = {65387, 10223467};
-	if(IsTeamplay())
-	{
-		pPlayer->m_TeeInfos.m_UseCustomColor = 1;
-		if(pPlayer->GetTeam() >= TEAM_RED && pPlayer->GetTeam() <= TEAM_BLUE)
-		{
-			pPlayer->m_TeeInfos.m_ColorBody = aTeamColors[pPlayer->GetTeam()];
-			pPlayer->m_TeeInfos.m_ColorFeet = aTeamColors[pPlayer->GetTeam()];
-		}
-		else
-		{
-			pPlayer->m_TeeInfos.m_ColorBody = 12895054;
-			pPlayer->m_TeeInfos.m_ColorFeet = 12895054;
-		}
-	}
 }
 
 void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)

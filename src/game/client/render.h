@@ -13,16 +13,17 @@ class CTeeRenderInfo
 public:
 	CTeeRenderInfo()
 	{
-		m_Texture = -1;
-		m_ColorBody = vec4(1,1,1,1);
-		m_ColorFeet = vec4(1,1,1,1);
+		for(int i = 0; i < 6; i++)
+		{
+			m_aTextures[i] = -1;
+			m_aColors[i] = vec4(1,1,1,1);
+		}
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
-	int m_Texture;
-	vec4 m_ColorBody;
-	vec4 m_ColorFeet;
+	int m_aTextures[6];
+	vec4 m_aColors[6];
 	float m_Size;
 	int m_GotAirJump;
 };

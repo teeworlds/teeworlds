@@ -454,14 +454,20 @@ void CGameClient::OnRender()
 		// resend if client info differs
 		if(str_comp(g_Config.m_PlayerName, m_aClients[m_Snap.m_LocalClientID].m_aName) ||
 			str_comp(g_Config.m_PlayerClan, m_aClients[m_Snap.m_LocalClientID].m_aClan) ||
-			g_Config.m_PlayerCountry != m_aClients[m_Snap.m_LocalClientID].m_Country ||
-			str_comp(g_Config.m_PlayerSkin, m_aClients[m_Snap.m_LocalClientID].m_aSkinName) ||
-			(m_Snap.m_pGameInfoObj && !(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) &&	// no teamgame?
-			(g_Config.m_PlayerUseCustomColor != m_aClients[m_Snap.m_LocalClientID].m_UseCustomColor ||
-			g_Config.m_PlayerColorBody != m_aClients[m_Snap.m_LocalClientID].m_ColorBody ||
-			g_Config.m_PlayerColorFeet != m_aClients[m_Snap.m_LocalClientID].m_ColorFeet)))
+			g_Config.m_PlayerCountry != m_aClients[m_Snap.m_LocalClientID].m_Country)
 		{
 			SendInfo(false);
+		}
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if(str_comp(gs_apSkinVariables[p], m_aClients[m_Snap.m_LocalClientID].m_aaSkinPartNames[p]))
+				SendInfo(false);
+			else if(m_Snap.m_pGameInfoObj && !(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) && // no teamgame?
+				(*gs_apUCCVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aUseCustomColors[p] ||
+				*gs_apColorVariables[p] != m_aClients[m_Snap.m_LocalClientID].m_aSkinPartColors[p]))
+			{
+				SendInfo(false);
+			}
 		}
 		m_LastSendInfo = 0;
 	}
@@ -692,42 +698,48 @@ void CGameClient::OnNewSnapshot()
 			{
 				const CNetObj_ClientInfo *pInfo = (const CNetObj_ClientInfo *)pData;
 				int ClientID = Item.m_ID;
-				IntsToStr(&pInfo->m_Name0, 4, m_aClients[ClientID].m_aName);
-				IntsToStr(&pInfo->m_Clan0, 3, m_aClients[ClientID].m_aClan);
-				m_aClients[ClientID].m_Country = pInfo->m_Country;
-				IntsToStr(&pInfo->m_Skin0, 6, m_aClients[ClientID].m_aSkinName);
+				CClientData *pClient = &m_aClients[ClientID];
 
-				m_aClients[ClientID].m_UseCustomColor = pInfo->m_UseCustomColor;
-				m_aClients[ClientID].m_ColorBody = pInfo->m_ColorBody;
-				m_aClients[ClientID].m_ColorFeet = pInfo->m_ColorFeet;
+				IntsToStr(&pInfo->m_Name0, 4, pClient->m_aName);
+				IntsToStr(&pInfo->m_Clan0, 3, pClient->m_aClan);
+				pClient->m_Country = pInfo->m_Country;
 
-				// prepare the info
-				if(m_aClients[ClientID].m_aSkinName[0] == 'x' || m_aClients[ClientID].m_aSkinName[1] == '_')
-					str_copy(m_aClients[ClientID].m_aSkinName, "default", 64);
-
-				m_aClients[ClientID].m_SkinInfo.m_ColorBody = m_pSkins->GetColorV4(m_aClients[ClientID].m_ColorBody);
-				m_aClients[ClientID].m_SkinInfo.m_ColorFeet = m_pSkins->GetColorV4(m_aClients[ClientID].m_ColorFeet);
-				m_aClients[ClientID].m_SkinInfo.m_Size = 64;
-
-				// find new skin
-				m_aClients[ClientID].m_SkinID = g_GameClient.m_pSkins->Find(m_aClients[ClientID].m_aSkinName);
-				if(m_aClients[ClientID].m_SkinID < 0)
+				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
-					m_aClients[ClientID].m_SkinID = g_GameClient.m_pSkins->Find("default");
-					if(m_aClients[ClientID].m_SkinID < 0)
-						m_aClients[ClientID].m_SkinID = 0;
+					IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
+					pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
+					pClient->m_aSkinPartColors[p] = pInfo->m_aSkinPartColors[p];
 				}
 
-				if(m_aClients[ClientID].m_UseCustomColor)
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_ColorTexture;
-				else
+				pClient->m_SkinInfo.m_Size = 64;
+
+				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_OrgTexture;
-					m_aClients[ClientID].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
-					m_aClients[ClientID].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
+					if(pClient->m_aaSkinPartNames[p][0] == 'x' && pClient->m_aaSkinPartNames[p][1] == '_')
+						str_copy(pClient->m_aaSkinPartNames[p], "default", 24);
+
+					pClient->m_SkinPartIDs[p] = m_pSkins->FindSkinPart(p, pClient->m_aaSkinPartNames[p]);
+					if(pClient->m_SkinPartIDs[p] < 0)
+					{
+						pClient->m_SkinPartIDs[p] = m_pSkins->Find("default");
+						if(pClient->m_SkinPartIDs[p] < 0)
+							pClient->m_SkinPartIDs[p] = 0;
+					}
+
+					const CSkins::CSkinPart *pSkinPart = m_pSkins->GetSkinPart(p, pClient->m_SkinPartIDs[p]);
+					if(pClient->m_aUseCustomColors[p])
+					{
+						pClient->m_SkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+						pClient->m_SkinInfo.m_aColors[p] = m_pSkins->GetColorV4(pClient->m_aSkinPartColors[p], p==SKINPART_TATTOO);
+					}
+					else
+					{
+						pClient->m_SkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+						pClient->m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+					}
 				}
 
-				m_aClients[ClientID].UpdateRenderInfo();
+				pClient->UpdateRenderInfo();
 
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
@@ -1029,17 +1041,11 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	// force team colors
 	if(g_GameClient.m_Snap.m_pGameInfoObj && g_GameClient.m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 	{
-		m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinID)->m_ColorTexture;
-		const int TeamColors[2] = {65387, 10223467};
-		if(m_Team >= TEAM_RED && m_Team <= TEAM_BLUE)
+		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
-			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
-		}
-		else
-		{
-			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(12895054);
-			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(12895054);
+			m_RenderInfo.m_aTextures[p] = g_GameClient.m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
+			int ColorVal = g_GameClient.m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
+			m_RenderInfo.m_aColors[p] = g_GameClient.m_pSkins->GetColorV4(ColorVal, p==SKINPART_TATTOO);
 		}
 	}
 }
@@ -1049,16 +1055,18 @@ void CGameClient::CClientData::Reset()
 	m_aName[0] = 0;
 	m_aClan[0] = 0;
 	m_Country = -1;
-	m_SkinID = 0;
 	m_Team = 0;
 	m_Angle = 0;
 	m_Emoticon = 0;
 	m_EmoticonStart = -1;
 	m_Active = false;
 	m_ChatIgnore = false;
-	m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
-	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
-	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		m_SkinPartIDs[p] = 0;
+		m_SkinInfo.m_aTextures[p] = g_GameClient.m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
+		m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f , 1.0f);
+	}
 	UpdateRenderInfo();
 }
 
@@ -1077,10 +1085,12 @@ void CGameClient::SendInfo(bool Start)
 		Msg.m_pName = g_Config.m_PlayerName;
 		Msg.m_pClan = g_Config.m_PlayerClan;
 		Msg.m_Country = g_Config.m_PlayerCountry;
-		Msg.m_pSkin = g_Config.m_PlayerSkin;
-		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
-		Msg.m_ColorFeet = g_Config.m_PlayerColorFeet;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			Msg.m_apSkinPartNames[p] = gs_apSkinVariables[p];
+			Msg.m_aUseCustomColors[p] = *gs_apUCCVariables[p];
+			Msg.m_aSkinPartColors[p] = *gs_apColorVariables[p];
+		}
 		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 	}
 	else
@@ -1089,10 +1099,12 @@ void CGameClient::SendInfo(bool Start)
 		Msg.m_pName = g_Config.m_PlayerName;
 		Msg.m_pClan = g_Config.m_PlayerClan;
 		Msg.m_Country = g_Config.m_PlayerCountry;
-		Msg.m_pSkin = g_Config.m_PlayerSkin;
-		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
-		Msg.m_ColorFeet = g_Config.m_PlayerColorFeet;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			Msg.m_apSkinPartNames[p] = gs_apSkinVariables[p];
+			Msg.m_aUseCustomColors[p] = *gs_apUCCVariables[p];
+			Msg.m_aSkinPartColors[p] = *gs_apColorVariables[p];
+		}
 		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 
 		// activate timer to resend the info if it gets filtered

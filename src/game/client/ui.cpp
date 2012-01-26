@@ -48,7 +48,7 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 
 int CUI::MouseInside(const CUIRect *r)
 {
-	if(m_MouseX >= r->x && m_MouseX <= r->x+r->w && m_MouseY >= r->y && m_MouseY <= r->y+r->h)
+	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
 		return 1;
 	return 0;
 }
@@ -309,6 +309,43 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 
 	return ReturnValue;
 }
+
+int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, int *pX, int *pY)
+{
+	int Inside = MouseInside(pRect);
+
+	if(ActiveItem() == pID)
+	{
+		if(!MouseButton(0))
+			SetActiveItem(0);
+	}
+	else if(HotItem() == pID)
+	{
+		if(MouseButton(0))
+			SetActiveItem(pID);
+	}
+	else if(Inside)
+		SetHotItem(pID);
+
+	if(ActiveItem() != pID || !Inside)
+		return 0;
+
+	if(pX)
+		*pX = (m_MouseX - pRect->x) / Scale();
+	if(pY)
+		*pY = (m_MouseY - pRect->y) / Scale();
+
+	return 1;
+}
+
+int CUI::DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton) // it's counter logic! FIXME
+{
+	if(MouseButtonClicked(0) && MouseInside(pRect) && !MouseInside(pButton))
+		return 1;
+	else
+		return 0;
+}
+
 /*
 int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *r, ui_draw_button_func draw_func, const void *extra)
 {
