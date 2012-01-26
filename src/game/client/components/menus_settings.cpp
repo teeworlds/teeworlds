@@ -1047,7 +1047,16 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 	}
 
-	if(m_TeePartSelection != NO_SELECTION || m_TeePartsColorSelection == NO_SELECTION)
+	if(m_TeePartsColorSelection == NO_SELECTION)
+		return;
+
+	bool None = true;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && gs_apSkinVariables[p][0])
+			None = false;
+	}
+	if(None)
 		return;
 
 	int CheckedUCC = 0;
@@ -1083,7 +1092,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 		Picker.HSplitTop(10.0f, 0, &Picker);
 		Picker.VSplitLeft(20.0f, 0, &Picker);
-		if(m_TeePartSelection == NO_SELECTION && m_TeePartsColorSelection != NO_SELECTION)
+		if(m_TeePartsColorSelection != NO_SELECTION)
 			RenderHSLPicker(Picker);
 	}
 }
