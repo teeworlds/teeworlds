@@ -307,20 +307,20 @@ int CSkins::FindSkinPart(int Part, const char *pName)
 	return -1;
 }
 
-vec3 CSkins::GetColorV3(int v)
+vec3 CSkins::GetColorV3(int v) const
 {
 	float Dark = DARKEST_COLOR_LGT/255.0f;
 	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, Dark+(v&0xff)/255.0f*(1.0f-Dark)));
 }
 
-vec4 CSkins::GetColorV4(int v, bool UseAlpha)
+vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
 {
 	vec3 r = GetColorV3(v);
 	float Alpha = UseAlpha ? ((v>>24)&0xff)/255.0f : 1.0f;
 	return vec4(r.r, r.g, r.b, Alpha);
 }
 
-int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
+int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
 {
 	static const int s_aTeamColors[3] = {12895054, 65387, 10223467};
 	if(!UseCustomColors)

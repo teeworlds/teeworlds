@@ -47,16 +47,16 @@ public:
 
 	void OnInit();
 
-	vec3 GetColorV3(int v);
-	vec4 GetColorV4(int v, bool UseAlpha);
-	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part);
-
 	int Num();
 	int NumSkinPart(int Part);
 	const CSkin *Get(int Index);
 	int Find(const char *pName);
 	const CSkinPart *GetSkinPart(int Part, int Index);
 	int FindSkinPart(int Part, const char *pName);
+
+	vec3 GetColorV3(int v) const;
+	vec4 GetColorV4(int v, bool UseAlpha) const;
+	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
 private:
 	int m_ScanningPart;
