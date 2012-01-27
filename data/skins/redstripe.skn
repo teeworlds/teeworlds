@@ -1,23 +1,23 @@
-body_filename := standard
-body_custom_colors := true
-body_hue := 248
-body_sat := 214
-body_lgt := 123
+body.filename := standard
+body.custom_colors := true
+body.hue := 248
+body.sat := 214
+body.lgt := 123
 
-tattoo_filename := stripe
-tattoo_custom_colors := false
+tattoo.filename := stripe
+tattoo.custom_colors := false
 
-hands_filename := standard
-hands_custom_colors := true
-hands_hue := 0
-hands_sat := 0
-hands_lgt := 184
+hands.filename := standard
+hands.custom_colors := true
+hands.hue := 0
+hands.sat := 0
+hands.lgt := 184
 
-feet_filename := standard
-feet_custom_colors := true
-feet_hue := 149
-feet_sat := 4
-feet_lgt := 71
+feet.filename := standard
+feet.custom_colors := true
+feet.hue := 149
+feet.sat := 4
+feet.lgt := 71
 
-eyes_filename := standard
-eyes_custom_colors := false
+eyes.filename := standard
+eyes.custom_colors := false

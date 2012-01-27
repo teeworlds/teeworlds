@@ -1,27 +1,27 @@
-body_filename := standard
-body_custom_colors := true
-body_hue := 52
-body_sat := 156
-body_lgt := 124
+body.filename := standard
+body.custom_colors := true
+body.hue := 52
+body.sat := 156
+body.lgt := 124
 
-tattoo_filename := twintri
-tattoo_custom_colors := true
-tattoo_hue := 40
-tattoo_sat := 219
-tattoo_lgt := 227
-tattoo_alp := 255
+tattoo.filename := twintri
+tattoo.custom_colors := true
+tattoo.hue := 40
+tattoo.sat := 219
+tattoo.lgt := 227
+tattoo.alp := 255
 
-hands_filename := standard
-hands_custom_colors := true
-hands_hue := 0
-hands_sat := 0
-hands_lgt := 184
+hands.filename := standard
+hands.custom_colors := true
+hands.hue := 0
+hands.sat := 0
+hands.lgt := 184
 
-feet_filename := standard
-feet_custom_colors := true
-feet_hue := 149
-feet_sat := 4
-feet_lgt := 71
+feet.filename := standard
+feet.custom_colors := true
+feet.hue := 149
+feet.sat := 4
+feet.lgt := 71
 
-eyes_filename := standard
-eyes_custom_colors := false
+eyes.filename := standard
+eyes.custom_colors := false

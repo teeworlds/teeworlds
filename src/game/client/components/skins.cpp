@@ -140,8 +140,8 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 		pStr = str_skip_whitespaces(pStr);
 		char *pValue = pStr;
 
-		static const char *const apParts[6] = {"body_", "tattoo_", "decoration_",
-											"hands_", "feet_", "eyes_"};
+		static const char *const apParts[6] = {"body.", "tattoo.", "decoration.",
+												"hands.", "feet.", "eyes."};
 		int Part = -1;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
