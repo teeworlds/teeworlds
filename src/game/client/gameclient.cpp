@@ -210,10 +210,20 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("player_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("player_clan", ConchainSpecialInfoupdate, this);
 	Console()->Chain("player_country", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_use_custom_color", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_color_body", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_color_feet", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_skin", ConchainSpecialInfoupdate, this);
+
+	static const char *const s_apParts[6] = {"body", "tattoo", "decoration", "hands", "feet", "eyes"};
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "player_color_%s", s_apParts[p]);
+		Console()->Chain(aBuf, ConchainSpecialInfoupdate, this);
+		str_format(aBuf, sizeof(aBuf), "player_use_custom_color_%s", s_apParts[p]);
+		Console()->Chain(aBuf, ConchainSpecialInfoupdate, this);
+		str_format(aBuf, sizeof(aBuf), "player_skin_%s", s_apParts[p]);
+		Console()->Chain(aBuf, ConchainSpecialInfoupdate, this);
+	}
+
+	Console()->Chain("player_skin", ConchainUpdateSkinParts, this);
 
 	//
 	m_SuppressEvents = false;
@@ -1144,6 +1154,24 @@ void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pU
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 		((CGameClient*)pUserData)->SendInfo(false);
+}
+
+void CGameClient::ConchainUpdateSkinParts(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	CGameClient *pSelf = (CGameClient*)pUserData;
+	if(pResult->NumArguments() && pSelf->m_pSkins->Num() > 0)
+	{
+		int SkinID = pSelf->m_pSkins->Find(g_Config.m_PlayerSkin);
+		const CSkins::CSkin *s = pSelf->m_pSkins->Get(SkinID);
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			mem_copy(gs_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
+			*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
+			*gs_apColorVariables[p] = s->m_aPartColors[p];
+		}
+		pSelf->SendInfo(false);
+	}
 }
 
 IGameClient *CreateGameClient()

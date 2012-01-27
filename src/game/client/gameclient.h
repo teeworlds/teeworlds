@@ -63,6 +63,7 @@ class CGameClient : public IGameClient
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainUpdateSkinParts(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
