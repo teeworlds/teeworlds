@@ -994,7 +994,7 @@ void CGameClient::OnNewSnapshot()
 					OnGameOver();
 				else if(m_LastGameOver && !m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 					OnStartGame();
-				else if(!m_IsRace && m_LastRoundStartTick != m_Snap.m_pGameInfoObj->m_RoundStartTick)
+				else if(!m_IsRace && m_Snap.m_pGameInfoObj->m_RoundStartTick-m_LastRoundStartTick > 2)
 					OnStartGame();
 				
 				m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
