@@ -704,7 +704,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// reset friend counter
 	for(int i = 0; i < m_lFriends.size(); m_lFriends[i++].m_NumFound = 0);
 
-	bool Selected = false;
 	for(int s = 0; s < m_lFilters.size(); s++)
 	{
 		CBrowserFilter *pFilter = &m_lFilters[s];
@@ -735,7 +734,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				{
 					if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 					{
-						Selected = true;
 						m_SelectedServer.m_Filter = s;
 						m_SelectedServer.m_Index = ItemIndex;
 					}
@@ -778,9 +776,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	UI()->ClipDisable();
-
-	if(!Selected)
-		m_SelectedServer.m_Filter = -1;
 
 	RenderTools()->DrawUIRect(&Status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
 	Status.Margin(5.0f, &Status);
