@@ -834,28 +834,14 @@ int CMenus::RenderMenubar(CUIRect r)
 
 		Box.VSplitRight(90.0f, &Box, &Button);
 		static int s_QuitButton=0;
-		if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
+		if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR))
 			m_Popup = POPUP_QUIT;
+
+		Box.VSplitRight(130.0f, &Box, &Button);
+		static int s_SettingsButton=0;
+		if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_TL))
+			NewPage = PAGE_SETTINGS;
 	}
-
-	/*
-	box.VSplitRight(110.0f, &box, &button);
-	static int system_button=0;
-	if (UI()->DoButton(&system_button, "System", g_Config.m_UiPage==PAGE_SYSTEM, &button))
-		g_Config.m_UiPage = PAGE_SYSTEM;
-
-	box.VSplitRight(30.0f, &box, 0);
-	
-
-	Box.VSplitRight(10.0f, &Box, &Button);
-	Box.VSplitRight(130.0f, &Box, &Button);
-	static int s_SettingsButton=0;
-	if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_T))
-	{
-		if(Client()->State() == IClient::STATE_OFFLINE)
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
-		NewPage = PAGE_SETTINGS;
-	}*/
 
 	if(NewPage != -1)
 	{
