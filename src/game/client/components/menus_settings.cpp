@@ -1047,7 +1047,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 	}
 
-	if(m_TeePartsColorSelection == NO_SELECTION)
+	if(m_TeePartsColorSelection == NO_SELECTION || m_TeePartSelection != NO_SELECTION)
 		return;
 
 	bool None = true;
@@ -1092,8 +1092,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 		Picker.HSplitTop(10.0f, 0, &Picker);
 		Picker.VSplitLeft(20.0f, 0, &Picker);
-		if(m_TeePartsColorSelection != NO_SELECTION)
-			RenderHSLPicker(Picker);
+		RenderHSLPicker(Picker);
 	}
 }
 
