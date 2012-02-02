@@ -1095,20 +1095,13 @@ int CMenus::Render()
 	static bool s_First = true;
 	if(s_First)
 	{
-		if(m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_START)
-		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-		}
-		else if(m_MenuPage == PAGE_LAN)
-		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
+		// refresh server browser before we are in browser menu to save time
+		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
+		if(g_Config.m_UiBrowserPage == PAGE_LAN)
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		}
-		else if(m_MenuPage == PAGE_DEMOS)
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
-		else if(m_MenuPage == PAGE_SETTINGS)
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS);
+		else
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
 	}

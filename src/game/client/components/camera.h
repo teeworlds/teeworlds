@@ -7,26 +7,17 @@
 
 class CCamera : public CComponent
 {
-	enum
-	{
-		CAMTYPE_UNDEFINED=-1,
-		CAMTYPE_SPEC,
-		CAMTYPE_PLAYER,
-	};
-
-	int m_CamType;
-	vec2 m_PrevCenter;
-	vec2 m_Positions[5];
-	int m_CurrentPosition;
-
 public:
 	enum
 	{
-		POS_INTERNET=0,
+		POS_START=0,
+		POS_INTERNET,
 		POS_LAN,
 		POS_FAVORITES,
 		POS_DEMOS,
 		POS_SETTINGS,
+
+		NUM_POS,
 	};
 
 	vec2 m_Center;
@@ -44,6 +35,19 @@ public:
 
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
+
+public:
+	enum
+	{
+		CAMTYPE_UNDEFINED=-1,
+		CAMTYPE_SPEC,
+		CAMTYPE_PLAYER,
+	};
+
+	int m_CamType;
+	vec2 m_PrevCenter;
+	vec2 m_Positions[NUM_POS];
+	int m_CurrentPosition;
 };
 
 #endif
