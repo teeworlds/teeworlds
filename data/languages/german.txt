@@ -223,6 +223,9 @@ Game info
 Game over
 == Spiel vorbei
 
+Game paused
+== Spiel pausiert
+
 Game type
 == Spieltyp
 
@@ -466,6 +469,10 @@ Reset filter
 Reset to defaults
 == Standardeinstellung
 
+Respawn
+== Respawn
+# Literally "Wiederbelebung" or "Wiederherstellung", but these words aren't usual in a game
+
 Rifle
 == Laser
 
@@ -525,6 +532,9 @@ Show ingame HUD
 
 Show name plates
 == Zeige Namen
+
+Show only chat messages from friends
+== Nur Chatnachrichten von Freunden zeigen
 
 Show only supported
 == Zeige nur unterstützte
@@ -675,14 +685,4 @@ no limit
 
 ##### needs translation #####
 
-Game paused
-== 
-
-Respawn
-== 
-
-Show only chat messages from friends
-== 
-
 ##### old translations #####
-
