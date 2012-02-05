@@ -119,7 +119,10 @@ int CCountryFlags::Num() const
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCode) const
 {
-	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]-1);
+	int Index = m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]-1;
+	if(Index < 0)
+		Index = m_CodeIndexLUT[0]-1;
+	return GetByIndex(Index);
 }
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
