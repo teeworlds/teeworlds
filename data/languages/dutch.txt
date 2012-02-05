@@ -223,6 +223,9 @@ Game info
 Game over
 == Spel afgelopen
 
+Game paused
+== Spel gestopt
+
 Game type
 == Speltype
 
@@ -466,6 +469,9 @@ Reset filter
 Reset to defaults
 == Standaardinstellingen
 
+Respawn
+== Respawn
+
 Rifle
 == Laser
 
@@ -525,6 +531,9 @@ Show ingame HUD
 
 Show name plates
 == Laat naamplaat zien
+
+Show only chat messages from friends
+== Laat alleen chatberichten van vrienden zien
 
 Show only supported
 == Laat alleen compatibele servers zien
@@ -675,14 +684,4 @@ no limit
 
 ##### needs translation #####
 
-Game paused
-== 
-
-Respawn
-== 
-
-Show only chat messages from friends
-== 
-
 ##### old translations #####
-
