@@ -3,6 +3,7 @@
 
 #include <base/detect.h>
 #include <base/math.h>
+#include <base/tl/threading.h>
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -764,7 +765,7 @@ int CGraphics_SDL::TryInit()
 	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
-	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE); // prevent stuck mouse cursor sdl-bug when loosing fullscreen focus in windows
 
 	// set flags
 	int Flags = SDL_OPENGL;

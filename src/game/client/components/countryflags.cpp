@@ -87,13 +87,28 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 			str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", aOrigin);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
 		}
-		m_aCountryFlags.add(CountryFlag);
+		m_aCountryFlags.add_unsorted(CountryFlag);
 	}
 	io_close(File);
+	m_aCountryFlags.sort_range();
 
-	mem_zero(m_CodeIndexLUT, sizeof(m_CodeIndexLUT));
+	// find index of default item
+	int DefaultIndex = 0, Index = 0;
+	for(sorted_array<CCountryFlag>::range r = m_aCountryFlags.all(); !r.empty(); r.pop_front(), ++Index)
+		if(r.front().m_CountryCode == -1)
+		{
+			DefaultIndex = Index;
+			break;
+		}
+	
+	// init LUT
+	if(DefaultIndex != 0)
+		for(int i = 0; i < CODE_RANGE; ++i)
+			m_CodeIndexLUT[i] = DefaultIndex;
+	else
+		mem_zero(m_CodeIndexLUT, sizeof(m_CodeIndexLUT));
 	for(int i = 0; i < m_aCountryFlags.size(); ++i)
-		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i+1;
+		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i;
 }
 
 void CCountryFlags::OnInit()
@@ -119,7 +134,7 @@ int CCountryFlags::Num() const
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCode) const
 {
-	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]-1);
+	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]);
 }
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const

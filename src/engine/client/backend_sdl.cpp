@@ -2,6 +2,8 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 
+#include <base/tl/threading.h>
+
 #include "graphics_threaded.h"
 #include "backend_sdl.h"
 
@@ -403,6 +405,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Width, int Height, 
 	}
 
 	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE); // prevent stuck mouse cursor sdl-bug when loosing fullscreen focus in windows
 
 	// set flags
 	int SdlFlags = SDL_OPENGL;
