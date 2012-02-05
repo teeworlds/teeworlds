@@ -1,4 +1,10 @@
-import shutil, os, sys, zipfile
+import shutil, os, re, sys, zipfile
+if sys.version_info[0] == 2:
+	import urllib
+	url_lib = urllib
+elif sys.version_info[0] == 3:
+	import urllib.request
+	url_lib = urllib.request
 
 #valid_platforms = ["win32", "linux86", "linux86_64", "src"]
 
@@ -8,6 +14,7 @@ if len(sys.argv) != 3:
 	sys.exit(-1)
 
 name = "teeworlds"
+url_languages = "https://github.com/teeworlds/teeworlds-translation/zipball/master"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
@@ -40,6 +47,29 @@ if  platform == 'osx':
 	use_gz = 0
 	use_bundle = 1
 
+def fetch_file(url):
+	try:
+		print("trying %s" % url)
+		real_url = url_lib.urlopen(url).geturl()
+		local = real_url.split("/")
+		local = local[len(local)-1].split("?")
+		local = local[0]
+		url_lib.urlretrieve(real_url, local)
+		return local
+	except:
+		return False
+
+def unzip(filename, where):
+	try:
+		z = zipfile.ZipFile(filename, "r")
+	except:
+		return False
+	for name in z.namelist():
+                if "/data/languages/" in name:
+                        z.extract(name, where)
+	z.close()
+	return z.namelist()[0]
+
 def copydir(src, dst, excl=[]):
 	for root, dirs, files in os.walk(src, topdown=True):
 		if "/." in root or "\\." in root:
@@ -50,13 +80,31 @@ def copydir(src, dst, excl=[]):
 		for name in files:
 			if name[0] != '.':
 				shutil.copy(os.path.join(root, name), os.path.join(dst, root, name))
-				
+
+def clean():
+	print("*** cleaning ***")
+	try:
+                shutil.rmtree(package_dir)
+                shutil.rmtree(languages_dir)
+                os.remove(src_package_languages)
+	except: pass
+	
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
 
 print("cleaning target")
 shutil.rmtree(package_dir, True)
 os.mkdir(package_dir)
+
+print("download and extract languages")
+src_package_languages = fetch_file(url_languages)
+if not src_package_languages:
+        print("couldn't download languages")
+        sys.exit(-1)
+languages_dir = unzip(src_package_languages, ".")
+if not languages_dir:
+        print("couldn't unzip languages")
+        sys.exit(-1)
 
 print("adding files")
 shutil.copy("readme.txt", package_dir)
@@ -66,6 +114,9 @@ shutil.copy("storage.cfg", package_dir)
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
 	copydir("data", package_dir)
+	os.chdir(languages_dir)
+	copydir("data", "../"+package_dir)
+	os.chdir("..")
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 		shutil.copy("SDL.dll", package_dir)
@@ -106,6 +157,9 @@ if use_bundle:
 	os.mkdir(clientbundle_framework_dir)
 	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
 	copydir("data", clientbundle_resource_dir)
+	os.chdir(languages_dir)
+	copydir("data", "../"+clientbundle_resource_dir)
+	os.chdir("..")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
@@ -193,5 +247,7 @@ if use_dmg:
 	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
 	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
 	os.system("rm -f %s_temp.dmg" % package)
+
+clean()
 	
 print("done")
