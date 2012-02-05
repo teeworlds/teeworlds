@@ -5,7 +5,6 @@
 
 #include "kernel.h"
 
-#include <base/tl/threading.h>
 
 class CImageInfo
 {
@@ -139,7 +138,7 @@ public:
 	virtual void Swap() = 0;
 
 	// syncronization
-	virtual void InsertSignal(semaphore *pSemaphore) = 0;
+	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
 	virtual bool IsIdle() = 0;
 	virtual void WaitForIdle() = 0;
 };

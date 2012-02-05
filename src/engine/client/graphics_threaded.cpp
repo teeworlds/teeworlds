@@ -3,6 +3,7 @@
 
 #include <base/detect.h>
 #include <base/math.h>
+#include <base/tl/threading.h>
 
 #include <base/system.h>
 #include <engine/external/pnglite/pnglite.h>

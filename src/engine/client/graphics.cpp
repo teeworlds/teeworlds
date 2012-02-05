@@ -3,6 +3,7 @@
 
 #include <base/detect.h>
 #include <base/math.h>
+#include <base/tl/threading.h>
 
 #include "SDL.h"
 #include "SDL_opengl.h"
