@@ -183,15 +183,18 @@ void CMenus::RenderPlayers(CUIRect MainView)
 		ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
 		Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
 		Button.VSplitLeft(Button.h, &Button, 0);
-		if(DoButton_Toggle(&s_aPlayerIDs[Index][0], m_pClient->m_aClients[Index].m_ChatIgnore, &Button))
-			m_pClient->m_aClients[Index].m_ChatIgnore ^= 1;
+		if(&g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[Index].m_Friend)
+			DoButton_Toggle(&s_aPlayerIDs[Index][0], 1, &Button, false);
+		else
+			if(DoButton_Toggle(&s_aPlayerIDs[Index][0], m_pClient->m_aClients[Index].m_ChatIgnore, &Button, true))
+				m_pClient->m_aClients[Index].m_ChatIgnore ^= 1;
 
 		// friend button
 		ButtonBar.VSplitLeft(20.0f, &Button, &ButtonBar);
 		ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
 		Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
 		Button.VSplitLeft(Button.h, &Button, 0);
-		if(DoButton_Toggle(&s_aPlayerIDs[Index][1], m_pClient->m_aClients[Index].m_Friend, &Button))
+		if(DoButton_Toggle(&s_aPlayerIDs[Index][1], m_pClient->m_aClients[Index].m_Friend, &Button, true))
 		{
 			if(m_pClient->m_aClients[Index].m_Friend)
 				m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[Index].m_aName, m_pClient->m_aClients[Index].m_aClan);

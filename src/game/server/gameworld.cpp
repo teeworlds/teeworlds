@@ -173,6 +173,17 @@ void CGameWorld::Tick()
 				pEnt = m_pNextTraverseEntity;
 			}
 	}
+	else
+	{
+		// update all objects
+		for(int i = 0; i < NUM_ENTTYPES; i++)
+			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
+			{
+				m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
+				pEnt->TickPaused();
+				pEnt = m_pNextTraverseEntity;
+			}
+	}
 
 	RemoveEntities();
 }

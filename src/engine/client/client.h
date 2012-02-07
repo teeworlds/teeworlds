@@ -84,9 +84,12 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int64 m_LocalStartTime;
 
 	int m_DebugFont;
-	float m_FrameTimeLow;
-	float m_FrameTimeHigh;
-	int m_Frames;
+	
+	int64 m_LastRenderTime;
+	float m_RenderFrameTimeLow;
+	float m_RenderFrameTimeHigh;
+	int m_RenderFrames;
+
 	NETADDR m_ServerAddress;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
@@ -171,6 +174,12 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		int m_State;
 		class CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
+
+	semaphore m_GfxRenderSemaphore;
+	semaphore m_GfxStateSemaphore;
+	volatile int m_GfxState;
+	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
+	void GraphicsThread();
 
 public:
 	IEngine *Engine() { return m_pEngine; }
@@ -280,6 +289,7 @@ public:
 	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
+	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
@@ -288,6 +298,7 @@ public:
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
+	void DemoRecorder_AddDemoMarker();
 
 	void AutoScreenshot_Start();
 	void AutoScreenshot_Cleanup();

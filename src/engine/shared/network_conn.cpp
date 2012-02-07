@@ -305,6 +305,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					{
 						// send accept with token and wait for accept
 						m_LastRecvTime = Now;
+						m_LastSendTime = Now;
 						SendControl(NET_CTRLMSG_CONNECTACCEPT, (char *)&pPacket->m_aChunkData[1], NET_TOKEN_LENGTH);
 						if(g_Config.m_Debug)
 							dbg_msg("connection", "got connect+accept with token, sending connect+accept with token.");
@@ -314,6 +315,8 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				{
 					// token accepted, go online
 					m_LastRecvTime = Now;
+					m_LastSendTime = Now;
+					m_LastUpdateTime = Now;
 					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 					m_State = NET_CONNSTATE_ONLINE;
 					if(g_Config.m_Debug)

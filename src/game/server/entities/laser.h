@@ -12,6 +12,7 @@ public:
 
 	virtual void Reset();
 	virtual void Tick();
+	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
 protected:

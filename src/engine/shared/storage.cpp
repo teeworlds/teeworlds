@@ -30,7 +30,7 @@ public:
 		m_aUserdir[0] = 0;
 	}
 
-	int Init(const char *pApplicationName, int NumArgs, const char **ppArguments)
+	int Init(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)
 	{
 		// get userdir
 		fs_storage_path(pApplicationName, m_aUserdir, sizeof(m_aUserdir));
@@ -52,14 +52,17 @@ public:
 		}
 
 		// add save directories
-		if(m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir(m_aaStoragePaths[TYPE_SAVE])))
+		if(StorageType != STORAGETYPE_BASIC && m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir(m_aaStoragePaths[TYPE_SAVE])))
 		{
 			char aPath[MAX_PATH_LENGTH];
-			fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
-			fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
-			fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
+			if(StorageType == STORAGETYPE_CLIENT)
+			{
+				fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
+			}
 			fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
-			fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
 		}
@@ -377,10 +380,22 @@ public:
 		return !fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
 	}
 
-	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
+	virtual void GetCompletePath(int Type, const char *pDir, char *pBuffer, unsigned BufferSize)
+	{
+		if(Type < 0 || Type >= m_NumPaths)
+		{
+			if(BufferSize > 0)
+				pBuffer[0] = 0;
+			return;
+		}
+
+		GetPath(Type, pDir, pBuffer, BufferSize);
+	}
+
+	static IStorage *Create(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
-		if(p && p->Init(pApplicationName, NumArgs, ppArguments))
+		if(p && p->Init(pApplicationName, StorageType, NumArgs, ppArguments))
 		{
 			dbg_msg("storage", "initialisation failed");
 			delete p;
@@ -390,4 +405,4 @@ public:
 	}
 };
 
-IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, NumArgs, ppArguments); }
+IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, StorageType, NumArgs, ppArguments); }

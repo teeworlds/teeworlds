@@ -22,7 +22,6 @@ void CItems::OnReset()
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
@@ -42,7 +41,10 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		Speed = m_pClient->m_Tuning.m_GunSpeed;
 	}
 
-	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
+	static float s_LastGameTickTime = Client()->GameTickTime();
+	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+		s_LastGameTickTime = Client()->GameTickTime();
+	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
 		return; // projectile havn't been shot yet
 
@@ -64,28 +66,27 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
 		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
-		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
+		static float s_Time = 0.0f;
+		static float s_LastLocalTime = Client()->LocalTime();
 
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		{
 			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-			static float Time = 0;
-			static float LastLocalTime = Client()->LocalTime();
-
 			if(!pInfo->m_Paused)
-				Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
-
-			Graphics()->QuadsSetRotation(Time*pi*2*2 + ItemID);
-
-			LastLocalTime = Client()->LocalTime();
+				s_Time += (Client()->LocalTime()-s_LastLocalTime)*pInfo->m_Speed;
 		}
 		else
-			Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemID);
+		{
+			if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+				s_Time += Client()->LocalTime()-s_LastLocalTime;
+		}
+
+		Graphics()->QuadsSetRotation(s_Time*pi*2*2 + ItemID);
+		s_LastLocalTime = Client()->LocalTime();
 	}
 	else
 	{
 		m_pClient->m_pEffects->BulletTrail(Pos);
-		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
 
 		if(length(Vel) > 0.00001f)
 			Graphics()->QuadsSetRotation(GetAngle(Vel));
@@ -133,26 +134,23 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 
 	Graphics()->QuadsSetRotation(Angle);
 
+	static float s_Time = 0.0f;
+	static float s_LastLocalTime = Client()->LocalTime();
 	float Offset = Pos.y/32.0f + Pos.x/32.0f;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		static float Time = 0;
-		static float LastLocalTime = Client()->LocalTime();
-
 		if(!pInfo->m_Paused)
-			Time += (Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
-
-		Pos.x += cosf(Time*2.0f+Offset)*2.5f;
-		Pos.y += sinf(Time*2.0f+Offset)*2.5f;
-
-		LastLocalTime = Client()->LocalTime();
+			s_Time += (Client()->LocalTime()-s_LastLocalTime)*pInfo->m_Speed;
 	}
 	else
 	{
-		Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
-		Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
-	}
+		if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			s_Time += Client()->LocalTime()-s_LastLocalTime;
+ 	}
+	Pos.x += cosf(s_Time*2.0f+Offset)*2.5f;
+	Pos.y += sinf(s_Time*2.0f+Offset)*2.5f;
+	s_LastLocalTime = Client()->LocalTime();
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }

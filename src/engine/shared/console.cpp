@@ -12,6 +12,8 @@
 #include "console.h"
 #include "linereader.h"
 
+// todo: rework this
+
 const char *CConsole::CResult::GetString(unsigned Index)
 {
 	if (Index < 0 || Index >= m_NumArgs)
@@ -374,6 +376,14 @@ void CConsole::ExecuteLine(const char *pStr)
 	CConsole::ExecuteLineStroked(0, pStr); // then release it
 }
 
+void CConsole::ExecuteLineFlag(const char *pStr, int FlagMask)
+{
+	int Temp = m_FlagMask;
+	m_FlagMask = FlagMask;
+	ExecuteLine(pStr);
+	m_FlagMask = Temp;
+}
+
 
 void CConsole::ExecuteFile(const char *pFilename)
 {
@@ -564,6 +574,75 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
+void CConsole::ConToggle(IConsole::IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[128] = {0};
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), pConsole->m_FlagMask);
+	if(pCommand)
+	{
+		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
+		void *pUserData = pCommand->m_pUserData;
+
+		// check for chain
+		if(pCommand->m_pfnCallback == Con_Chain)
+		{
+			CChain *pChainInfo = static_cast<CChain *>(pCommand->m_pUserData);
+			pfnCallback = pChainInfo->m_pfnCallback;
+			pUserData = pChainInfo->m_pCallbackUserData;
+		}
+
+		if(pfnCallback == IntVariableCommand)
+		{
+			CIntVariableData *pData = static_cast<CIntVariableData *>(pUserData);
+			int Val = *(pData->m_pVariable)==pResult->GetInteger(1) ? pResult->GetInteger(2) : pResult->GetInteger(1);
+			str_format(aBuf, sizeof(aBuf), "%s %i", pResult->GetString(0), Val);
+			pConsole->ExecuteLine(aBuf);
+			aBuf[0] = 0;
+		}
+		else
+			str_format(aBuf, sizeof(aBuf), "Invalid command: '%s'.", pResult->GetString(0));
+	}
+	else
+		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+
+	if(aBuf[0] != 0)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+}
+
+void CConsole::ConToggleStroke(IConsole::IResult *pResult, void *pUser)
+{
+	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	char aBuf[128] = {0};
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(1), pConsole->m_FlagMask);
+	if(pCommand)
+	{
+		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
+
+		// check for chain
+		if(pCommand->m_pfnCallback == Con_Chain)
+		{
+			CChain *pChainInfo = static_cast<CChain *>(pCommand->m_pUserData);
+			pfnCallback = pChainInfo->m_pfnCallback;
+		}
+
+		if(pfnCallback == IntVariableCommand)
+		{
+			int Val = pResult->GetInteger(0)==0 ? pResult->GetInteger(3) : pResult->GetInteger(2);
+			str_format(aBuf, sizeof(aBuf), "%s %i", pResult->GetString(1), Val);
+			pConsole->ExecuteLine(aBuf);
+			aBuf[0] = 0;
+		}
+		else
+			str_format(aBuf, sizeof(aBuf), "Invalid command: '%s'.", pResult->GetString(1));
+	}
+	else
+		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(1));
+
+	if(aBuf[0] != 0)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+}
+
 CConsole::CConsole(int FlagMask)
 {
 	m_FlagMask = FlagMask;
@@ -584,6 +663,9 @@ CConsole::CConsole(int FlagMask)
 	// register some basic commands
 	Register("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
+
+	Register("toggle", "sii", CFGFLAG_SERVER|CFGFLAG_CLIENT, ConToggle, this, "Toggle config value");
+	Register("+toggle", "sii", CFGFLAG_CLIENT, ConToggleStroke, this, "Toggle config value via keypress");
 
 	Register("mod_command", "s?i", CFGFLAG_SERVER, ConModCommandAccess, this, "Specify command accessibility for moderators");
 	Register("mod_status", "", CFGFLAG_SERVER, ConModCommandStatus, this, "List all commands which are accessible for moderators");
@@ -633,7 +715,7 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 
 void CConsole::AddCommandSorted(CCommand *pCommand)
 {
-	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) < 0)
+	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) <= 0)
 	{
 		if(m_pFirstCommand && m_pFirstCommand->m_pNext)
 			pCommand->m_pNext = m_pFirstCommand;
@@ -645,7 +727,7 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 	{
 		for(CCommand *p = m_pFirstCommand; p; p = p->m_pNext)
 		{
-			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) < 0)
+			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) <= 0)
 			{
 				pCommand->m_pNext = p->m_pNext;
 				p->m_pNext = pCommand;
@@ -658,7 +740,13 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 void CConsole::Register(const char *pName, const char *pParams,
 	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
 {
-	CCommand *pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+	CCommand *pCommand = FindCommand(pName, Flags);
+	bool DoAdd = false;
+	if(pCommand == 0)
+	{
+		pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+		DoAdd = true;
+	}
 	pCommand->m_pfnCallback = pfnFunc;
 	pCommand->m_pUserData = pUser;
 
@@ -669,7 +757,8 @@ void CConsole::Register(const char *pName, const char *pParams,
 	pCommand->m_Flags = Flags;
 	pCommand->m_Temp = false;
 
-	AddCommandSorted(pCommand);
+	if(DoAdd)
+		AddCommandSorted(pCommand);
 }
 
 void CConsole::RegisterTemp(const char *pName, const char *pParams,	int Flags, const char *pHelp)

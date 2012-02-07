@@ -12,7 +12,7 @@ class CDamageInd : public CComponent
 	{
 		vec2 m_Pos;
 		vec2 m_Dir;
-		float m_Life;
+		float m_StartTime;
 		float m_StartAngle;
 	};
 

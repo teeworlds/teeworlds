@@ -78,6 +78,9 @@ public:
 	virtual void BlendNormal();
 	virtual void BlendAdditive();
 
+	virtual void WrapNormal();
+	virtual void WrapClamp();
+
 	virtual int MemoryUsage() const;
 
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY);
@@ -89,6 +92,7 @@ public:
 
 	virtual int UnloadTexture(int Index);
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
+	virtual int LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
 	// simple uncompressed RGBA loaders
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
@@ -117,7 +121,7 @@ public:
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
 	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText);
 
-	virtual bool Init();
+	virtual int Init();
 };
 
 class CGraphics_SDL : public CGraphics_OpenGL
@@ -129,7 +133,7 @@ class CGraphics_SDL : public CGraphics_OpenGL
 public:
 	CGraphics_SDL();
 
-	virtual bool Init();
+	virtual int Init();
 	virtual void Shutdown();
 
 	virtual void Minimize();
@@ -143,6 +147,10 @@ public:
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
 
+	// syncronization
+	virtual void InsertSignal(semaphore *pSemaphore);
+	virtual bool IsIdle();
+	virtual void WaitForIdle();
 };
 
 #endif

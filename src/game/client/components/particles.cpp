@@ -43,6 +43,11 @@ void CParticles::Add(int Group, CParticle *pPart)
 		if(pInfo->m_Paused)
 			return;
 	}
+	else
+	{
+		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+			return;
+	}
 
 	if (m_FirstFree == -1)
 		return;
@@ -142,7 +147,10 @@ void CParticles::OnRender()
 			Update((float)((t-LastTime)/(double)time_freq())*pInfo->m_Speed);
 	}
 	else
-		Update((float)((t-LastTime)/(double)time_freq()));
+	{
+		if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			Update((float)((t-LastTime)/(double)time_freq()));
+	}
 
 	LastTime = t;
 }

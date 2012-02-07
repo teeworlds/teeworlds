@@ -1,8 +1,11 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
+
 #include <engine/graphics.h>
 #include <engine/storage.h>
+
 #include <engine/shared/config.h>
 
 #include "SDL.h"
@@ -19,8 +22,6 @@ enum
 	NUM_SAMPLES = 512,
 	NUM_VOICES = 64,
 	NUM_CHANNELS = 16,
-
-	MAX_FRAMES = 1024
 };
 
 struct CSample
@@ -63,7 +64,8 @@ static int m_MixingRate = 48000;
 static volatile int m_SoundVolume = 100;
 
 static int m_NextVoice = 0;
-
+static int *m_pMixBuffer = 0;	// buffer only used by the thread callback function
+static unsigned m_MaxFrames = 0;
 
 // TODO: there should be a faster way todo this
 static short Int2Short(int i)
@@ -84,8 +86,9 @@ static int IntAbs(int i)
 
 static void Mix(short *pFinalOut, unsigned Frames)
 {
-	int aMixBuffer[MAX_FRAMES*2] = {0};
 	int MasterVol;
+	mem_zero(m_pMixBuffer, m_MaxFrames*2*sizeof(int));
+	Frames = min(Frames, m_MaxFrames);
 
 	// aquire lock while we are mixing
 	lock_wait(m_SoundLock);
@@ -98,7 +101,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 		{
 			// mix voice
 			CVoice *v = &m_aVoices[i];
-			int *pOut = aMixBuffer;
+			int *pOut = m_pMixBuffer;
 
 			int Step = v->m_pSample->m_Channels; // setup input sources
 			short *pInL = &v->m_pSample->m_pData[v->m_Tick*Step];
@@ -176,8 +179,8 @@ static void Mix(short *pFinalOut, unsigned Frames)
 		for(unsigned i = 0; i < Frames; i++)
 		{
 			int j = i<<1;
-			int vl = ((aMixBuffer[j]*MasterVol)/101)>>8;
-			int vr = ((aMixBuffer[j+1]*MasterVol)/101)>>8;
+			int vl = ((m_pMixBuffer[j]*MasterVol)/101)>>8;
+			int vr = ((m_pMixBuffer[j+1]*MasterVol)/101)>>8;
 
 			pFinalOut[j] = Int2Short(vl);
 			pFinalOut[j+1] = Int2Short(vr);
@@ -209,6 +212,12 @@ int CSound::Init()
 	if(!g_Config.m_SndEnable)
 		return 0;
 
+	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+	{
+		dbg_msg("gfx", "unable to init SDL audio: %s", SDL_GetError());
+		return -1;
+	}
+
 	m_MixingRate = g_Config.m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
@@ -227,6 +236,9 @@ int CSound::Init()
 	}
 	else
 		dbg_msg("client/sound", "sound init successful");
+
+	m_MaxFrames = g_Config.m_SndBufferSize*2;
+	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int), 1);
 
 	SDL_PauseAudio(0);
 
@@ -256,7 +268,13 @@ int CSound::Update()
 int CSound::Shutdown()
 {
 	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	lock_destroy(m_SoundLock);
+	if(m_pMixBuffer)
+	{
+		mem_free(m_pMixBuffer);
+		m_pMixBuffer = 0;
+	}
 	return 0;
 }
 

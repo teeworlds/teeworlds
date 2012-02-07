@@ -74,6 +74,11 @@ CUIRect *CUI::Screen()
 	return &m_Screen;
 }
 
+float CUI::PixelSize()
+{
+	return Screen()->w/Graphics()->ScreenWidth();
+}
+
 void CUI::SetScale(float s)
 {
 	g_Config.m_UiScale = (int)(s*100.0f);

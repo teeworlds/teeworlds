@@ -21,6 +21,7 @@ public:
 	CFlag(CGameWorld *pGameWorld, int Team);
 
 	virtual void Reset();
+	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 };
 

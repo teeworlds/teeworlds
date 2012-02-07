@@ -111,13 +111,8 @@ public:
 	{
 		if(!m_ConfigFile)
 			return;
-#if defined(CONF_FAMILY_WINDOWS)
-		static const char Newline[] = "\r\n";
-#else
-		static const char Newline[] = "\n";
-#endif
 		io_write(m_ConfigFile, pLine, str_length(pLine));
-		io_write(m_ConfigFile, Newline, sizeof(Newline)-1);
+		io_write_newline(m_ConfigFile);
 	}
 };
 

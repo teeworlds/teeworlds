@@ -2,14 +2,15 @@
 #include <engine/shared/config.h>
 
 #include "econ.h"
+#include "netban.h"
+
 
 int CEcon::NewClientCallback(int ClientID, void *pUser)
 {
 	CEcon *pThis = (CEcon *)pUser;
 
-	NETADDR Addr = pThis->m_NetConsole.ClientAddr(ClientID);
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pThis->m_NetConsole.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "client accepted. cid=%d addr=%s'", ClientID, aAddrStr);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "econ", aBuf);
@@ -26,9 +27,8 @@ int CEcon::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 {
 	CEcon *pThis = (CEcon *)pUser;
 
-	NETADDR Addr = pThis->m_NetConsole.ClientAddr(ClientID);
 	char aAddrStr[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	net_addr_str(pThis->m_NetConsole.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "client dropped. cid=%d addr=%s reason='%s'", ClientID, aAddrStr, pReason);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "econ", aBuf);
@@ -52,7 +52,15 @@ void CEcon::ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUse
 	}
 }
 
-void CEcon::Init(IConsole *pConsole)
+void CEcon::ConLogout(IConsole::IResult *pResult, void *pUserData)
+{
+	CEcon *pThis = static_cast<CEcon *>(pUserData);
+
+	if(pThis->m_UserClientID >= 0 && pThis->m_UserClientID < NET_MAX_CONSOLE_CLIENTS && pThis->m_aClients[pThis->m_UserClientID].m_State != CClient::STATE_EMPTY)
+		pThis->m_NetConsole.Drop(pThis->m_UserClientID, "Logout");
+}
+
+void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 {
 	m_pConsole = pConsole;
 
@@ -60,6 +68,7 @@ void CEcon::Init(IConsole *pConsole)
 		m_aClients[i].m_State = CClient::STATE_EMPTY;
 
 	m_Ready = false;
+	m_UserClientID = -1;
 
 	if(g_Config.m_EcPort == 0 || g_Config.m_EcPassword[0] == 0)
 		return;
@@ -74,7 +83,7 @@ void CEcon::Init(IConsole *pConsole)
 		BindAddr.port = g_Config.m_EcPort;
 	}
 
-	if(m_NetConsole.Open(BindAddr, 0))
+	if(m_NetConsole.Open(BindAddr, pNetBan, 0))
 	{
 		m_NetConsole.SetCallbacks(NewClientCallback, DelClientCallback, this);
 		m_Ready = true;
@@ -84,6 +93,8 @@ void CEcon::Init(IConsole *pConsole)
 
 		Console()->Chain("ec_output_level", ConchainEconOutputLevelUpdate, this);
 		m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_EcOutputLevel, SendLineCB, this);
+
+		Console()->Register("logout", "", CFGFLAG_ECON, ConLogout, this, "Logout of econ");
 	}
 	else
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD,"econ", "couldn't open socket. port might already be in use");
@@ -115,27 +126,26 @@ void CEcon::Update()
 			else
 			{
 				m_aClients[ClientID].m_AuthTries++;
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientID].m_AuthTries, MAX_AUTH_TRIES);
-				m_NetConsole.Send(ClientID, aBuf);
+				char aMsg[128];
+				str_format(aMsg, sizeof(aMsg), "Wrong password %d/%d.", m_aClients[ClientID].m_AuthTries, MAX_AUTH_TRIES);
+				m_NetConsole.Send(ClientID, aMsg);
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
 					if(!g_Config.m_EcBantime)
 						m_NetConsole.Drop(ClientID, "Too many authentication tries");
 					else
-					{
-						NETADDR Addr = m_NetConsole.ClientAddr(ClientID);
-						m_NetConsole.AddBan(Addr, g_Config.m_EcBantime*60);
-					}
+						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), g_Config.m_EcBantime*60, "Too many authentication tries");
 				}
 			}
 		}
 		else if(m_aClients[ClientID].m_State == CClient::STATE_AUTHED)
 		{
 			char aFormatted[256];
-			str_format(aFormatted, sizeof(aBuf), "cid=%d cmd='%s'", ClientID, aBuf);
+			str_format(aFormatted, sizeof(aFormatted), "cid=%d cmd='%s'", ClientID, aBuf);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aFormatted);
+			m_UserClientID = ClientID;
 			Console()->ExecuteLine(aBuf);
+			m_UserClientID = -1;
 		}
 	}
 

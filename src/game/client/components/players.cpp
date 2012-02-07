@@ -95,30 +95,7 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
-
-	// check for teamplay modes
-	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
-
-	// check for ninja
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		// change the skin for the player to the ninja
-		int Skin = m_pClient->m_pSkins->Find("x_ninja");
-		if(Skin != -1)
-		{
-			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-			else
-			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-				RenderInfo.m_ColorBody = vec4(1,1,1,1);
-				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-			}
-		}
-	}
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
 
 	float IntraTick = Client()->IntraGameTick();
 
@@ -218,31 +195,9 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[pInfo.m_ClientID].m_RenderInfo;
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
 
-	// check for teamplay modes
-	bool IsTeamplay = false;
 	bool NewTick = m_pClient->m_NewTick;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
-
-	// check for ninja
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		// change the skin for the player to the ninja
-		int Skin = m_pClient->m_pSkins->Find("x_ninja");
-		if(Skin != -1)
-		{
-			if(IsTeamplay)
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
-			else
-			{
-				RenderInfo.m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
-				RenderInfo.m_ColorBody = vec4(1,1,1,1);
-				RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-			}
-		}
-	}
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -330,14 +285,17 @@ void CPlayers::RenderPlayer(
 	else if(!WantOtherDir)
 		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 
+	static float s_LastGameTickTime = Client()->GameTickTime();
+	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+		s_LastGameTickTime = Client()->GameTickTime();
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
-		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
+		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
 	}
 	if (Player.m_Weapon == WEAPON_NINJA)
 	{
-		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
+		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
 	}
 
@@ -347,7 +305,7 @@ void CPlayers::RenderPlayer(
 		static int64 SkidSoundTime = 0;
 		if(time_get()-SkidSoundTime > time_freq()/10)
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
+			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
 			SkidSoundTime = time_get();
 		}
 
@@ -409,11 +367,18 @@ void CPlayers::RenderPlayer(
 			if ((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
 			{
 				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				static int s_LastIteX = IteX;
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 				{
-					static int s_LastIteX = IteX;
 					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 					if(pInfo->m_Paused)
+						IteX = s_LastIteX;
+					else
+						s_LastIteX = IteX;
+				}
+				else
+				{
+					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -438,7 +403,11 @@ void CPlayers::RenderPlayer(
 		{
 			// TODO: should be an animation
 			Recoil = 0;
-			float a = (Client()->GameTick()-Player.m_AttackTick+IntraTick)/5.0f;
+			static float s_LastIntraTick = IntraTick;
+			if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+				s_LastIntraTick = IntraTick;
+
+			float a = (Client()->GameTick()-Player.m_AttackTick+s_LastIntraTick)/5.0f;
 			if(a < 1)
 				Recoil = sinf(a*pi);
 			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
@@ -460,6 +429,22 @@ void CPlayers::RenderPlayer(
 				}
 
 				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				static int s_LastIteX = IteX;
+				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+				{
+					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+					if(pInfo->m_Paused)
+						IteX = s_LastIteX;
+					else
+						s_LastIteX = IteX;
+				}
+				else
+				{
+					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+						IteX = s_LastIteX;
+					else
+						s_LastIteX = IteX;
+				}
 				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
 					float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
@@ -546,6 +531,31 @@ void CPlayers::RenderPlayer(
 
 void CPlayers::OnRender()
 {
+	// update RenderInfo for ninja
+	bool IsTeamplay = false;
+	if(m_pClient->m_Snap.m_pGameInfoObj)
+		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
+		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
+		{
+			// change the skin for the player to the ninja
+			int Skin = m_pClient->m_pSkins->Find("x_ninja");
+			if(Skin != -1)
+			{
+				if(IsTeamplay)
+					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_ColorTexture;
+				else
+				{
+					m_aRenderInfo[i].m_Texture = m_pClient->m_pSkins->Get(Skin)->m_OrgTexture;
+					m_aRenderInfo[i].m_ColorBody = vec4(1,1,1,1);
+					m_aRenderInfo[i].m_ColorFeet = vec4(1,1,1,1);
+				}
+			}
+		}
+	}
+
 	// render other players in two passes, first pass we render the other, second pass we render our self
 	for(int p = 0; p < 4; p++)
 	{

@@ -5,4 +5,5 @@
 #include "generated/nethash.cpp"
 #define GAME_VERSION "0.6 trunk"
 #define GAME_NETVERSION "0.6 " GAME_NETVERSION_HASH
+static const char GAME_RELEASE_VERSION[8] = {'0', '.', '6', '1', 0};
 #endif

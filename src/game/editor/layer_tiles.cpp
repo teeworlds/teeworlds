@@ -159,6 +159,8 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 	if(m_Readonly)
 		return;
 
+	Snap(&Rect);
+
 	int sx = ConvertX(Rect.x);
 	int sy = ConvertY(Rect.y);
 	int w = ConvertX(Rect.w);
@@ -166,9 +168,9 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 
 	CLayerTiles *pLt = static_cast<CLayerTiles*>(pBrush);
 
-	for(int y = 0; y <= h; y++)
+	for(int y = 0; y < h; y++)
 	{
-		for(int x = 0; x <= w; x++)
+		for(int x = 0; x < w; x++)
 		{
 			int fx = x+sx;
 			int fy = y+sy;
