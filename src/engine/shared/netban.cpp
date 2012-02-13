@@ -583,7 +583,7 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 	{
 		int Min = pBan->m_Info.m_Expires>-1 ? (pBan->m_Info.m_Expires-Now+59)/60 : -1;
 		net_addr_str(&pBan->m_Data, aAddrStr1, sizeof(aAddrStr1), false);
-		str_format(aBuf, sizeof(aBuf), "ban_ip %s %i %s", aAddrStr1, Min, pBan->m_Info.m_aReason);
+		str_format(aBuf, sizeof(aBuf), "ban %s %i %s", aAddrStr1, Min, pBan->m_Info.m_aReason);
 		io_write(File, aBuf, str_length(aBuf));
 		io_write_newline(File);
 	}
@@ -592,7 +592,7 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 		int Min = pBan->m_Info.m_Expires>-1 ? (pBan->m_Info.m_Expires-Now+59)/60 : -1;
 		net_addr_str(&pBan->m_Data.m_LB, aAddrStr1, sizeof(aAddrStr1), false);
 		net_addr_str(&pBan->m_Data.m_UB, aAddrStr2, sizeof(aAddrStr2), false);
-		str_format(aBuf, sizeof(aBuf), "ban_range %s %i %s", aAddrStr1, aAddrStr2, Min, pBan->m_Info.m_aReason);
+		str_format(aBuf, sizeof(aBuf), "ban_range %s %s %i %s", aAddrStr1, aAddrStr2, Min, pBan->m_Info.m_aReason);
 		io_write(File, aBuf, str_length(aBuf));
 		io_write_newline(File);
 	}
