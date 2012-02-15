@@ -233,7 +233,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			{
 				Graphics()->TextureSet(-1);
 				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha);
 				RenderTools()->DrawRoundRect(x, y, w-20.0f, LineHeight, 15.0f);
 				Graphics()->QuadsEnd();
 			}

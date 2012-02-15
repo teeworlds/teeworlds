@@ -28,6 +28,7 @@ class IGameController
 		TBALANCE_CHECK=-2,
 		TBALANCE_OK,
 	};
+	int m_aTeamSize[NUM_TEAMS];
 	int m_UnbalancedTick;
 
 	virtual bool CanBeMovedOnBalance(int ClientID) const;
@@ -35,22 +36,30 @@ class IGameController
 	void DoTeamBalance();
 
 	// game
-	enum
-	{	
-		// start countdown types
-		SCT_PAUSED,			// unpause the game
-		SCT_ROUNDOVER,		// start new round
-		SCT_DEFAULT,		// start new match
-	};
-	int m_GameState;
+	enum EGameState
+	{
+		// internal game states
+		IGS_WARMUP_GAME,		// warmup started by game because there're not enough players (infinite)
+		IGS_WARMUP_USER,		// warmup started by user action via rcon or new match (infinite or timer)
+
+		IGS_START_COUNTDOWN,	// start countown to unpause the game or start match/round (tick timer)
+
+		IGS_GAME_PAUSED,		// game paused (infinite or tick timer)
+		IGS_GAME_RUNNING,		// game running (infinite)
+		
+		IGS_END_MATCH,			// match is over (tick timer)
+		IGS_END_ROUND,			// round is over (tick timer)
+ 	};
+	EGameState m_GameState;
 	int m_GameStateTimer;
-	int m_StartCountdownType;
 
 	virtual void DoWincheckMatch();
 	virtual void DoWincheckRound() {};
+	bool HasEnoughPlayers() const { return (IsTeamplay() && m_aTeamSize[TEAM_RED] > 0 && m_aTeamSize[TEAM_BLUE] > 0) || (!IsTeamplay() && m_aTeamSize[TEAM_RED] > 1); }
 	void ResetGame();
-	void SetGameState(int GameState, int Seconds=0);
+	void SetGameState(EGameState GameState, int Timer=0);
 	void StartMatch();
+	void StartRound();
 
 	// map
 	char m_aMapWish[128];
@@ -91,8 +100,8 @@ protected:
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
 
-	void EndMatch();
-	void EndRound();
+	void EndMatch() { SetGameState(IGS_END_MATCH, 10); }
+	void EndRound() { SetGameState(IGS_END_ROUND, 10); }
 
 	// info
 	int m_GameFlags;
@@ -138,27 +147,19 @@ public:
 	virtual bool OnEntity(int Index, vec2 Pos);
 
 	void OnPlayerDisconnect(class CPlayer *pPlayer, const char *pReason);
-	void OnPlayerInfoChange(class CPlayer *pPlayer);	
+	void OnPlayerInfoChange(class CPlayer *pPlayer);
+	void OnPlayerReadyChange(class CPlayer *pPlayer);
 
 	void OnReset();
 
 	// game
 	enum
 	{
-		GS_WARMUP,
-		GS_STARTCOUNTDOWN,
-		GS_GAME,
-		GS_PAUSED,
-		GS_ROUNDOVER,
-		GS_GAMEOVER,
-
 		TIMER_INFINITE = -1,
-		TIMER_STARTCOUNTDOWN = 3,
 	};
 
-	void DoPause(int Seconds) { SetGameState(GS_PAUSED, Seconds); }
-	void DoRestart() { SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN); }
-	void DoWarmup(int Seconds) { SetGameState(GS_WARMUP, Seconds); }
+	void DoPause(int Seconds) { SetGameState(IGS_GAME_PAUSED, Seconds); }
+	void DoWarmup(int Seconds) { SetGameState(IGS_WARMUP_USER, Seconds); }
 
 	// general
 	virtual void Snap(int SnappingClient);
@@ -166,10 +167,11 @@ public:
 
 	// info
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
+	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
 	bool IsPlayerReadyMode() const;
+	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
 	
-	int GetGameState() const { return m_GameState; }
 	const char *GetGameType() const { return m_pGameType; }
 	const char *GetTeamName(int Team) const;
 	
@@ -186,7 +188,7 @@ public:
 
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg=true);
 	
-	int GetStartTeam(int NotThisID);
+	int GetStartTeam();
 };
 
 #endif

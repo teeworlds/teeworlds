@@ -122,6 +122,18 @@ void CHud::RenderStartCountdown()
 	}
 }
 
+void CHud::RenderDeadNotification()
+{
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags == 0 && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS &&
+		(m_pClient->m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD))
+	{
+		const char *pText = Localize("Wait for next round");
+		float FontSize = 16.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
+	}
+}
+
 void CHud::RenderSuddenDeath()
 {
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
@@ -329,7 +341,7 @@ void CHud::RenderWarmupTimer()
 			else if(NotReadyCount > 1)
 				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), NotReadyCount);
 			else
-				return;
+				str_format(aBuf, sizeof(aBuf), Localize("wait for more players"));
 		}
 		else
 		{
@@ -551,6 +563,7 @@ void CHud::OnRender()
 		RenderGameTimer();
 		RenderPauseTimer();
 		RenderStartCountdown();
+		RenderDeadNotification();
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();

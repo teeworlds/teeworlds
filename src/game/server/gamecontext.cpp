@@ -776,7 +776,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			m_VoteUpdate = true;
 		}
 	}
-	else if (MsgID == NETMSGTYPE_CL_SETTEAM && !m_World.m_Paused)
+	else if(MsgID == NETMSGTYPE_CL_SETTEAM && m_pController->IsTeamChangeAllowed())
 	{
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
@@ -975,13 +975,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		pPlayer->m_LastKill = Server()->Tick();
 		pPlayer->KillCharacter(WEAPON_SELF);
 	}
-	else if (MsgID == NETMSGTYPE_CL_READYCHANGE && g_Config.m_SvPlayerReadyMode)
+	else if (MsgID == NETMSGTYPE_CL_READYCHANGE)
 	{
 		if(pPlayer->m_LastReadyChange && pPlayer->m_LastReadyChange+Server()->TickSpeed()*1 > Server()->Tick())
 			return;
 
 		pPlayer->m_LastReadyChange = Server()->Tick();
-		pPlayer->m_IsReadyToPlay ^= 1;
+		m_pController->OnPlayerReadyChange(pPlayer);
 	}
 }
 
@@ -1031,7 +1031,7 @@ void CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments())
 		pSelf->m_pController->DoPause(clamp(pResult->GetInteger(0), -1, 1000));
 	else
-		pSelf->m_pController->DoPause(pSelf->m_pController->GetGameState() == IGameController::GS_PAUSED ? 0 : IGameController::TIMER_INFINITE);
+		pSelf->m_pController->DoPause(pSelf->m_pController->IsGamePaused() ? 0 : IGameController::TIMER_INFINITE);
 }
 
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
@@ -1046,7 +1046,7 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments())
 		pSelf->m_pController->DoWarmup(clamp(pResult->GetInteger(0), -1, 1000));
 	else
-		pSelf->m_pController->DoRestart();
+		pSelf->m_pController->DoWarmup(0);
 }
 
 void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)

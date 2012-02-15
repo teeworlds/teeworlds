@@ -19,13 +19,12 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_ScoreStartTick = Server()->Tick();
 	m_pCharacter = 0;
 	m_ClientID = ClientID;
-	m_Team = GameServer()->m_pController->GetStartTeam(ClientID);
+	m_Team = GameServer()->m_pController->GetStartTeam();
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
 	m_TeamChangeTick = Server()->Tick();
 	m_Dummy = Dummy;
-	m_IsReadyToPlay = GameServer()->m_pController->GetGameState() != IGameController::GS_WARMUP &&
-						GameServer()->m_pController->GetGameState() != IGameController::GS_PAUSED;
+	m_IsReadyToPlay = !GameServer()->m_pController->IsPlayerReadyMode();
 	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 	m_DeadSpecMode = false;
 	m_Spawning = 0;
@@ -71,7 +70,7 @@ void CPlayer::Tick()
 		m_pCharacter = 0;
 	}
 
-	if(GameServer()->m_pController->GetGameState() != IGameController::GS_PAUSED &&	GameServer()->m_pController->GetGameState() != IGameController::GS_STARTCOUNTDOWN)
+	if(!GameServer()->m_pController->IsGamePaused())
 	{
 		if(!m_pCharacter && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
 			m_ViewPos -= vec2(clamp(m_ViewPos.x-m_LatestActivity.m_TargetX, -500.0f, 500.0f), clamp(m_ViewPos.y-m_LatestActivity.m_TargetY, -400.0f, 400.0f));
