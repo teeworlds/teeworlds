@@ -13,6 +13,7 @@
 #include "entities/character.h"
 #include "gamemodes/ctf.h"
 #include "gamemodes/dm.h"
+#include "gamemodes/lms.h"
 #include "gamemodes/mod.h"
 #include "gamemodes/sur.h"
 #include "gamemodes/tdm.h"
@@ -371,8 +372,9 @@ void CGameContext::CheckPureTuning()
 
 	if(	str_comp(m_pController->GetGameType(), "DM")==0 ||
 		str_comp(m_pController->GetGameType(), "TDM")==0 ||
-		str_comp(m_pController->GetGameType(), "SUR")==0 ||
-		str_comp(m_pController->GetGameType(), "CTF")==0)
+		str_comp(m_pController->GetGameType(), "CTF")==0 ||
+		str_comp(m_pController->GetGameType(), "LMS")==0 ||
+		str_comp(m_pController->GetGameType(), "SUR")==0)
 	{
 		CTuningParams p;
 		if(mem_comp(&p, &m_Tuning, sizeof(p)) != 0)
@@ -1446,6 +1448,8 @@ void CGameContext::OnInit()
 		m_pController = new CGameControllerMOD(this);
 	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
+	else if(str_comp(g_Config.m_SvGametype, "lms") == 0)
+		m_pController = new CGameControllerLMS(this);
 	else if(str_comp(g_Config.m_SvGametype, "sur") == 0)
 		m_pController = new CGameControllerSUR(this);
 	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)

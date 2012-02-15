@@ -7,7 +7,7 @@
 #include <game/server/player.h>
 #include "sur.h"
 
-CGameControllerSUR::CGameControllerSUR(class CGameContext *pGameServer) : IGameController(pGameServer)
+CGameControllerSUR::CGameControllerSUR(CGameContext *pGameServer) : IGameController(pGameServer)
 {
 	m_pGameType = "SUR";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_SURVIVAL;

@@ -314,7 +314,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			{
 				if(	str_comp(pItem->m_aGameType, "DM") == 0 ||
 					str_comp(pItem->m_aGameType, "TDM") == 0 ||
-					str_comp(pItem->m_aGameType, "CTF") == 0)
+					str_comp(pItem->m_aGameType, "CTF") == 0 ||
+					str_comp(pItem->m_aGameType, "LMS") == 0 ||
+					str_comp(pItem->m_aGameType, "SUR") == 0)
 				{
 					// pure server
 				}

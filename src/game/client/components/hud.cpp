@@ -274,6 +274,8 @@ void CHud::RenderScoreHud()
 			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1));
 			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 
+			// todo: add core hud for LMS
+
 			for(int t = 0; t < 2; t++)
 			{
 				// draw box

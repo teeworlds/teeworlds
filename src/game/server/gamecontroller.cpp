@@ -26,6 +26,7 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_GameStateTimer = TIMER_INFINITE;
 	m_GameStartTick = Server()->Tick();
 	m_MatchCount = 0;
+	m_RoundCount = 0;
 	m_SuddenDeath = 0;
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
@@ -388,8 +389,11 @@ void IGameController::OnReset()
 			GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 			GameServer()->m_apPlayers[i]->Respawn();
 			GameServer()->m_apPlayers[i]->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
-			GameServer()->m_apPlayers[i]->m_Score = 0;
-			GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
+			if(m_RoundCount == 0)
+			{
+				GameServer()->m_apPlayers[i]->m_Score = 0;
+				GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
+			}
 			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = true;
 		}
 	}
@@ -584,6 +588,7 @@ void IGameController::StartMatch()
 {
 	ResetGame();
 
+	m_RoundCount = 0;
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
 
@@ -602,6 +607,8 @@ void IGameController::StartMatch()
 void IGameController::StartRound()
 {
 	ResetGame();
+
+	++m_RoundCount;
 
 	// start countdown if there're enough players, otherwise abort to warmup
 	if(HasEnoughPlayers())

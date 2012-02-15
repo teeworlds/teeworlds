@@ -97,6 +97,7 @@ protected:
 	// game
 	int m_GameStartTick;
 	int m_MatchCount;
+	int m_RoundCount;
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
 
