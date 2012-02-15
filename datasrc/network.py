@@ -7,7 +7,7 @@ GameStateFlags = ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "S
 
 Emoticons = ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"]
 
-Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
+Pickups = ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"]
 
 RawHeader = '''
 
@@ -40,7 +40,7 @@ RawSource = '''
 
 Enums = [
 	Enum("EMOTE", Emotes),
-	Enum("POWERUP", Powerups),
+	Enum("PICKUP", Pickups),
 	Enum("EMOTICON", Emoticons)
 ]
 
@@ -92,7 +92,6 @@ Objects = [
 		NetIntAny("m_Y"),
 
 		NetIntRange("m_Type", 0, 'max_int'),
-		NetIntRange("m_Subtype", 0, 'max_int'),
 	]),
 
 	NetObject("Flag", [

@@ -241,7 +241,7 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 		pChr->GiveWeapon(WEAPON_GUN, 10);
 		pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 		pChr->GiveWeapon(WEAPON_GRENADE, 10);
-		pChr->GiveWeapon(WEAPON_RIFLE, 5);
+		pChr->GiveWeapon(WEAPON_LASER, 5);
 
 		// prevent respawn
 		pChr->GetPlayer()->m_RespawnDisabled = GetStartRespawnState();
@@ -267,7 +267,6 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	}
 
 	int Type = -1;
-	int SubType = 0;
 
 	switch(Index)
 	{
@@ -281,34 +280,28 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
 		break;
 	case ENTITY_ARMOR_1:
-		Type = POWERUP_ARMOR;
+		Type = PICKUP_ARMOR;
 		break;
 	case ENTITY_HEALTH_1:
-		Type = POWERUP_HEALTH;
+		Type = PICKUP_HEALTH;
 		break;
 	case ENTITY_WEAPON_SHOTGUN:
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_SHOTGUN;
+		Type = PICKUP_SHOTGUN;
 		break;
 	case ENTITY_WEAPON_GRENADE:
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_GRENADE;
+		Type = PICKUP_GRENADE;
 		break;
-	case ENTITY_WEAPON_RIFLE:
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_RIFLE;
+	case ENTITY_WEAPON_LASER:
+		Type = PICKUP_LASER;
 		break;
 	case ENTITY_POWERUP_NINJA:
 		if(g_Config.m_SvPowerups)
-		{
-			Type = POWERUP_NINJA;
-			SubType = WEAPON_NINJA;
-		}
+			Type = PICKUP_NINJA;
 	}
 
 	if(Type != -1)
 	{
-		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SubType);
+		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type);
 		pPickup->m_Pos = Pos;
 		return true;
 	}

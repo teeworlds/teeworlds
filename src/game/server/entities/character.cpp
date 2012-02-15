@@ -252,7 +252,7 @@ void CCharacter::FireWeapon()
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	bool FullAuto = false;
-	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
+	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER)
 		FullAuto = true;
 
 
@@ -400,10 +400,10 @@ void CCharacter::FireWeapon()
 			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
 		} break;
 
-		case WEAPON_RIFLE:
+		case WEAPON_LASER:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
-			GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE);
 		} break;
 
 		case WEAPON_NINJA:
