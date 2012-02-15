@@ -174,7 +174,8 @@ void CGameWorld::Tick()
 				pEnt = m_pNextTraverseEntity;
 			}
 	}
-	else if(GameServer()->m_pController->GetGameState() == IGameController::GS_PAUSED)
+	else if(GameServer()->m_pController->GetGameState() == IGameController::GS_PAUSED ||
+			GameServer()->m_pController->GetGameState() == IGameController::GS_STARTCOUNTDOWN)
 	{
 		// update all objects
 		for(int i = 0; i < NUM_ENTTYPES; i++)

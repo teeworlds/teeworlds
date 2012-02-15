@@ -63,7 +63,7 @@ void CHud::RenderGameTimer()
 
 void CHud::RenderPauseTimer()
 {
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+	if((m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED)) == GAMESTATEFLAG_PAUSED)
 	{
 		char aBuf[256];
 		const char *pText = Localize("Game paused");
@@ -96,6 +96,27 @@ void CHud::RenderPauseTimer()
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", Seconds);
 		}
+		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
+	}
+}
+
+void CHud::RenderStartCountdown()
+{
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_STARTCOUNTDOWN)
+	{
+		char aBuf[256];
+		const char *pText = Localize("Game starts in");
+		float FontSize = 20.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
+
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer == -1)
+			return;
+		
+		FontSize = 16.0f;
+		int Seconds = (m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer+SERVER_TICK_SPEED-1)/SERVER_TICK_SPEED;
+		str_format(aBuf, sizeof(aBuf), "%d", Seconds);
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
 	}
@@ -513,6 +534,7 @@ void CHud::OnRender()
 
 		RenderGameTimer();
 		RenderPauseTimer();
+		RenderStartCountdown();
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();

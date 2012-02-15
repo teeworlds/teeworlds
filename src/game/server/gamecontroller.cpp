@@ -24,7 +24,10 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_GameStateTimer = TIMER_INFINITE;
 	m_RoundStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
-	SetGameState(GS_WARMUP, g_Config.m_SvWarmup);
+	if(g_Config.m_SvWarmup)
+		SetGameState(GS_WARMUP, g_Config.m_SvWarmup);
+	else
+		SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN);
 
 	// info
 	m_GameFlags = 0;
@@ -421,12 +424,23 @@ void IGameController::SetGameState(int GameState, int Seconds)
 				else
 					SetGameState(GS_GAME);
 			}
-			break;
 		}
+		break;
+	case GS_STARTCOUNTDOWN:
+		{
+			if(m_GameState == GS_GAME || m_GameState == GS_STARTCOUNTDOWN)
+			{
+				m_GameState = GS_STARTCOUNTDOWN;
+				m_GameStateTimer = Seconds*Server()->TickSpeed();
+				GameServer()->m_World.m_Paused = true;
+			}
+		}
+		break;
 	case GS_GAME:
 		{
 			m_GameState = GS_GAME;
 			m_GameStateTimer = TIMER_INFINITE;
+			m_StartCountdownReset = true;
 			SetPlayersReadyState(true);
 			GameServer()->m_World.m_Paused = false;
 		}
@@ -449,7 +463,15 @@ void IGameController::SetGameState(int GameState, int Seconds)
 					GameServer()->m_World.m_Paused = true;
 				}
  				else
+				{
+					bool NeedStartCountdown = m_GameStateTimer != 0;
 					SetGameState(GS_GAME);
+					if(NeedStartCountdown)
+					{
+						SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN);
+						m_StartCountdownReset = false;
+					}
+				}
 			}
 		}
 		break;
@@ -501,6 +523,10 @@ void IGameController::Snap(int SnappingClient)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_WARMUP;
 		pGameInfoObj->m_GameStateTimer = m_GameStateTimer;
 		break;
+	case GS_STARTCOUNTDOWN:
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED;
+		pGameInfoObj->m_GameStateTimer = m_GameStateTimer;
+		break;
 	case GS_PAUSED:
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
 		pGameInfoObj->m_GameStateTimer = m_GameStateTimer;
@@ -533,7 +559,23 @@ void IGameController::Tick()
 		{
 		case GS_WARMUP:
 			if(m_GameStateTimer == 0 || (m_GameStateTimer == TIMER_INFINITE && (!g_Config.m_SvPlayerReadyMode || GetPlayersReadyState())))
-				StartRound();
+			{
+				if(m_GameStateTimer == 0)
+					StartRound();
+				else
+					SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN);
+			}
+			break;
+		case GS_STARTCOUNTDOWN:
+			if(m_GameStateTimer == 0)
+			{
+				if(m_StartCountdownReset)
+					StartRound();
+				else
+					SetGameState(GS_GAME);
+			}
+			else
+				++m_RoundStartTick;
 			break;
 		case GS_PAUSED:
 			if(m_GameStateTimer == 0 || (m_GameStateTimer == TIMER_INFINITE && g_Config.m_SvPlayerReadyMode && GetPlayersReadyState()))

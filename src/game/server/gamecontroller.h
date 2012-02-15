@@ -37,6 +37,7 @@ class IGameController
 	// game
 	int m_GameState;
 	int m_GameStateTimer;
+	bool m_StartCountdownReset;
 
 	virtual void DoWincheck();
 	void SetGameState(int GameState, int Seconds=0);
@@ -136,15 +137,17 @@ public:
 	enum
 	{
 		GS_WARMUP,
+		GS_STARTCOUNTDOWN,
 		GS_GAME,
 		GS_PAUSED,
 		GS_GAMEOVER,
 
 		TIMER_INFINITE = -1,
+		TIMER_STARTCOUNTDOWN = 3,
 	};
 
 	void DoPause(int Seconds) { SetGameState(GS_PAUSED, Seconds); }
-	void DoRestart() { StartRound(); }
+	void DoRestart() { SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN); }
 	void DoWarmup(int Seconds) { SetGameState(GS_WARMUP, Seconds); }
 
 	// general
