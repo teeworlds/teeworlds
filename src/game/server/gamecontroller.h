@@ -35,7 +35,11 @@ class IGameController
 	void DoTeamBalance();
 
 	// game
+	int m_GameState;
+	int m_GameStateTimer;
+
 	virtual void DoWincheck();
+	void SetGameState(int GameState, int Seconds=0);
 
 	// map
 	char m_aMapWish[128];
@@ -71,16 +75,14 @@ protected:
 	IServer *Server() const { return m_pServer; }
 
 	// game
-	int m_GameOverTick;
-	int m_Paused;
 	int m_RoundCount;
 	int m_RoundStartTick;
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
-	int m_Warmup;	
 
 	void EndRound();
 	void ResetGame();
+	void StartRound();
 
 	// info
 	int m_GameFlags;
@@ -131,10 +133,19 @@ public:
 	void OnReset();
 
 	// game
-	void DoPause(int Seconds);
-	void DoWarmup(int Seconds);
+	enum
+	{
+		GS_WARMUP,
+		GS_GAME,
+		GS_PAUSED,
+		GS_GAMEOVER,
 
-	void StartRound();
+		TIMER_INFINITE = -1,
+	};
+
+	void DoPause(int Seconds) { SetGameState(GS_PAUSED, Seconds); }
+	void DoRestart() { StartRound(); }
+	void DoWarmup(int Seconds) { SetGameState(GS_WARMUP, Seconds); }
 
 	// general
 	virtual void Snap(int SnappingClient);
@@ -142,12 +153,10 @@ public:
 
 	// info
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
-	bool IsGameOver() const { return m_GameOverTick != -1; }
-	bool IsPaused() const { return m_Paused != 0; }
 	bool IsPlayerReadyMode() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
-	bool IsWarmup() const { return m_Warmup != 0; }
 	
+	int GetGameState() const { return m_GameState; }
 	const char *GetGameType() const { return m_pGameType; }
 	const char *GetTeamName(int Team) const;
 	

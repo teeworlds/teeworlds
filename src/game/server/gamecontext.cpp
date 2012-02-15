@@ -983,7 +983,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		pPlayer->m_LastKill = Server()->Tick();
 		pPlayer->KillCharacter(WEAPON_SELF);
 	}
-	else if (MsgID == NETMSGTYPE_CL_READYCHANGE && g_Config.m_SvPlayerReadyMode && !m_pController->IsGameOver())
+	else if (MsgID == NETMSGTYPE_CL_READYCHANGE && g_Config.m_SvPlayerReadyMode)
 	{
 		if(pPlayer->m_LastReadyChange && pPlayer->m_LastReadyChange+Server()->TickSpeed()*1 > Server()->Tick())
 			return;
@@ -1039,7 +1039,7 @@ void CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments())
 		pSelf->m_pController->DoPause(clamp(pResult->GetInteger(0), -1, 1000));
 	else
-		pSelf->m_pController->DoPause(pSelf->m_pController->IsPaused() ? 0 : -1);
+		pSelf->m_pController->DoPause(pSelf->m_pController->GetGameState() == IGameController::GS_PAUSED ? 0 : IGameController::TIMER_INFINITE);
 }
 
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
@@ -1054,7 +1054,7 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments())
 		pSelf->m_pController->DoWarmup(clamp(pResult->GetInteger(0), -1, 1000));
 	else
-		pSelf->m_pController->StartRound();
+		pSelf->m_pController->DoRestart();
 }
 
 void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)
