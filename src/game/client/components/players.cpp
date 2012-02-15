@@ -107,7 +107,7 @@ void CPlayers::RenderHook(
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_GAMEOVER)))
+			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 		}
 		else
@@ -241,7 +241,7 @@ void CPlayers::RenderPlayer(
 	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_GAMEOVER)))
+			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 		}
 		else

@@ -235,6 +235,7 @@ image_guiicons = Image("guiicons", "gui_icons.png")
 
 container.images.Add(image_null)
 container.images.Add(image_game)
+container.images.Add(Image("deadtee", "deadtee.png"))
 container.images.Add(image_particles)
 container.images.Add(Image("cursor", "gui_cursor.png"))
 container.images.Add(Image("banner", "gui_logo.png"))

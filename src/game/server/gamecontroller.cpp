@@ -570,6 +570,10 @@ void IGameController::Snap(int SnappingClient)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
 		pGameInfoObj->m_GameStateTimer = m_GameStateTimer;
 		break;
+	case GS_ROUNDOVER:
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_ROUNDOVER;
+		pGameInfoObj->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
+		break;
 	case GS_GAMEOVER:
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
 		pGameInfoObj->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;

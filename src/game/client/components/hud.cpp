@@ -39,10 +39,10 @@ void CHud::RenderGameTimer()
 		{
 			Time = m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_GameStartTick)/Client()->GameTickSpeed());
 
-			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
 				Time = 0;
 		}
-		else if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+		else if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
 			Time = m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer/Client()->GameTickSpeed();
 		else
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_GameStartTick)/Client()->GameTickSpeed();
@@ -137,7 +137,7 @@ void CHud::RenderSuddenDeath()
 void CHud::RenderScoreHud()
 {
 	// render small score hud
-	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 	{
 		int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 		float Whole = 300*Graphics()->ScreenAspect();
@@ -199,6 +199,22 @@ void CHud::RenderScoreHud()
 						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
 							vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*20));
 					}
+				}
+
+				if(GameFlags&GAMEFLAG_SURVIVAL)
+				{
+					// draw number of alive players
+					int Count = 0;
+					for(int i = 0; i < MAX_CLIENTS; ++i)
+					{
+						if(m_pClient->m_Snap.m_paPlayerInfos[i] && !(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD) &&
+							m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == t)
+							++Count;
+					}
+					char aBuf[32];
+					str_format(aBuf, sizeof(aBuf), Count==1?Localize("%d player left"):Localize("%d players left"), Count);
+					float w = TextRender()->TextWidth(0, 8.0f, aBuf, -1);
+					TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, aBuf, -1);
 				}
 				StartY += 8.0f;
 			}
@@ -523,7 +539,7 @@ void CHud::OnRender()
 
 	if(g_Config.m_ClShowhud)
 	{
-		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
 		else if(m_pClient->m_Snap.m_SpecInfo.m_Active)
 		{

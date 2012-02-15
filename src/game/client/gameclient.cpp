@@ -359,7 +359,8 @@ void CGameClient::UpdatePositions()
 	// local character position
 	if(g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_Snap.m_pLocalCharacter || (m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_GAMEOVER)))
+		if(!m_Snap.m_pLocalCharacter ||
+			(m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 			// don't use predicted
 		}
