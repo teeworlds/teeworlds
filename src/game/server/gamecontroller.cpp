@@ -21,6 +21,7 @@ IGameController::IGameController(CGameContext *pGameServer)
 
 	// game
 	m_GameOverTick = -1;
+	m_Paused = 0;
 	m_RoundCount = 0;
 	m_RoundStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
@@ -80,6 +81,26 @@ void IGameController::DoActivityCheck()
 				}
 			}
 		}
+	}
+}
+
+bool IGameController::GetPlayersReadyState()
+{
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && !GameServer()->m_apPlayers[i]->m_IsReadyToPlay)
+			return false;
+	}
+
+	return true;
+}
+
+void IGameController::SetPlayersReadyState(bool ReadyState)
+{
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = ReadyState;
 	}
 }
 
@@ -316,18 +337,55 @@ void IGameController::OnReset()
 			GameServer()->m_apPlayers[i]->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 			GameServer()->m_apPlayers[i]->m_Score = 0;
 			GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
+			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = true;
 		}
 	}
 }
 
 // game
+void IGameController::DoPause(int Seconds)
+{
+	if(IsGameOver() || IsWarmup())
+		return;
+	
+	if(Seconds != 0)
+	{
+		if(Seconds < 0)
+		{
+			m_Paused = -1;
+			SetPlayersReadyState(false);
+		}
+		else
+			m_Paused = Seconds*Server()->TickSpeed();
+
+		GameServer()->m_World.m_Paused = true;
+	}
+ 	else
+	{
+		m_Paused = 0;
+		SetPlayersReadyState(true);
+		GameServer()->m_World.m_Paused = false;
+	}
+}
+
 void IGameController::DoWarmup(int Seconds)
 {
-	if(Seconds < 0)
-		m_Warmup = 0;
+	if(IsGameOver() || IsPaused())
+		return;
+
+	if(Seconds < 0 && g_Config.m_SvPlayerReadyMode)
+	{
+		m_Warmup = -1;
+		SetPlayersReadyState(false);
+	}
+	else if(Seconds > 0)
+ 		m_Warmup = Seconds*Server()->TickSpeed();
 	else
-		m_Warmup = Seconds*Server()->TickSpeed();
-}
+	{
+		m_Warmup = 0;
+		SetPlayersReadyState(true);
+	}
+ }
 
 void IGameController::DoWincheck()
 {
@@ -376,7 +434,7 @@ void IGameController::DoWincheck()
 
 void IGameController::EndRound()
 {
-	if(m_Warmup) // game can't end when we are running warmup
+	if(IsWarmup() || IsPaused()) // game can't end when we are running warmup or pause
 		return;
 
 	GameServer()->m_World.m_Paused = true;
@@ -394,10 +452,13 @@ void IGameController::StartRound()
 	ResetGame();
 
 	m_GameOverTick = -1;
+	m_Paused = 0;
 	m_RoundStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
+	m_Warmup = 0;
+	SetPlayersReadyState(true);
 
 	if(m_UnbalancedTick == TBALANCE_CHECK)
 		CheckTeamBalance();
@@ -420,15 +481,25 @@ void IGameController::Snap(int SnappingClient)
 		return;
 
 	pGameInfoObj->m_GameFlags = m_GameFlags;
+
 	pGameInfoObj->m_GameStateFlags = 0;
-	if(m_GameOverTick != -1)
+	pGameInfoObj->m_GameStateTimer = 0;
+	if(IsGameOver())
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
 	if(m_SuddenDeath)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;
-	if(GameServer()->m_World.m_Paused)
+	if(IsWarmup())
+	{
+		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_WARMUP;
+		pGameInfoObj->m_GameStateTimer = m_Warmup;
+	}
+	if(IsPaused())
+	{
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
+		pGameInfoObj->m_GameStateTimer |= m_Paused;
+	}
+
 	pGameInfoObj->m_RoundStartTick = m_RoundStartTick;
-	pGameInfoObj->m_WarmupTimer = m_Warmup;
 
 	pGameInfoObj->m_ScoreLimit = g_Config.m_SvScorelimit;
 	pGameInfoObj->m_TimeLimit = g_Config.m_SvTimelimit;
@@ -440,14 +511,18 @@ void IGameController::Snap(int SnappingClient)
 void IGameController::Tick()
 {
 	// do warmup
-	if(m_Warmup)
+	if(IsWarmup())
 	{
-		m_Warmup--;
-		if(!m_Warmup)
+		if(m_Warmup > 0)
+			--m_Warmup;
+		else if(!g_Config.m_SvPlayerReadyMode || GetPlayersReadyState())
+			m_Warmup = 0;
+
+		if(!IsWarmup())
 			StartRound();
 	}
 
-	if(m_GameOverTick != -1)
+	if(IsGameOver())
 	{
 		// game over.. wait for restart
 		if(Server()->Tick() > m_GameOverTick+Server()->TickSpeed()*10)
@@ -458,9 +533,23 @@ void IGameController::Tick()
 		}
 	}
 
-	// game is Paused
-	if(GameServer()->m_World.m_Paused)
-		++m_RoundStartTick;
+	// check if the game needs to be paused
+	if(!IsPaused() && g_Config.m_SvPlayerReadyMode && !GetPlayersReadyState())
+		DoPause(-1);
+
+	// do pause
+	if(IsPaused())
+	{
+		if(m_Paused > 0)
+			--m_Paused;
+		else if(g_Config.m_SvPlayerReadyMode && GetPlayersReadyState())
+			m_Paused = 0;
+
+		if(!IsPaused())
+			DoPause(0);
+		else
+			++m_RoundStartTick;
+	}
 
 	// do team-balancing
 	if(IsTeamplay())
@@ -475,7 +564,7 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if(m_GameOverTick == -1 && !m_Warmup && !GameServer()->m_World.m_ResetRequested)
+	if(!IsGameOver() && !IsWarmup() && !IsPaused() && !GameServer()->m_World.m_ResetRequested)
 		DoWincheck();
 }
 
@@ -495,6 +584,11 @@ bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2) const
 	}
 
 	return false;
+}
+
+bool IGameController::IsPlayerReadyMode() const
+{
+	return g_Config.m_SvPlayerReadyMode != 0 && (m_Warmup == -1 || m_Paused == -1);
 }
 
 const char *IGameController::GetTeamName(int Team) const
@@ -753,6 +847,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	m_UnbalancedTick = TBALANCE_CHECK;
+	pPlayer->m_IsReadyToPlay = IsWarmup() || IsPaused() ? false : true;
 	OnPlayerInfoChange(pPlayer);
 }
 

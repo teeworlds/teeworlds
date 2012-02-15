@@ -60,6 +60,7 @@ class CGameClient : public IGameClient
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
+	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
@@ -221,7 +222,8 @@ public:
 	// TODO: move these
 	void SendSwitchTeam(int Team);
 	void SendInfo(bool Start);
-	void SendKill(int ClientID);
+	void SendKill();
+	void SendReadyChange();
 
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;

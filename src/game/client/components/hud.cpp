@@ -35,7 +35,7 @@ void CHud::RenderGameTimer()
 	{
 		char Buf[32];
 		int Time = 0;
-		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && !m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
 		{
 			Time = m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed());
 
@@ -49,7 +49,7 @@ void CHud::RenderGameTimer()
 		float FontSize = 10.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Buf, -1);
 		// last 60 sec red, last 10 sec blink
-		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60 && !m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60 && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
 		{
 			float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
 			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
@@ -59,15 +59,44 @@ void CHud::RenderGameTimer()
 	}
 }
 
-void CHud::RenderPauseNotification()
+void CHud::RenderPauseTimer()
 {
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED &&
 		!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 	{
+		char aBuf[256];
 		const char *pText = Localize("Game paused");
 		float FontSize = 20.0f;
-		float w = TextRender()->TextWidth(0, FontSize,pText, -1);
-		TextRender()->Text(0, 150.0f*Graphics()->ScreenAspect()+-w/2.0f, 50.0f, FontSize, pText, -1);
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
+
+		FontSize = 16.0f;
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer == -1)
+		{
+			int NotReadyCount = 0;
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(m_pClient->m_Snap.m_paPlayerInfos[i] && m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team != TEAM_SPECTATORS &&
+					!(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
+						++NotReadyCount;
+			}
+			if(NotReadyCount == 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), NotReadyCount);
+			else if(NotReadyCount > 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), NotReadyCount);
+			else
+				return;
+		}
+		else
+		{
+			int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer/SERVER_TICK_SPEED;
+			if(Seconds < 5)
+				str_format(aBuf, sizeof(aBuf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer*10/SERVER_TICK_SPEED)%10);
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", Seconds);
+		}
+		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
 	}
 }
 
@@ -240,20 +269,40 @@ void CHud::RenderScoreHud()
 void CHud::RenderWarmupTimer()
 {
 	// render warmup timer
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
+	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_WARMUP)
 	{
-		char Buf[256];
+		char aBuf[256];
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Localize("Warmup"), -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, Localize("Warmup"), -1);
 
-		int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer/SERVER_TICK_SPEED;
-		if(Seconds < 5)
-			str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer*10/SERVER_TICK_SPEED)%10);
+		FontSize = 16.0f;
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer == -1)
+		{
+			int NotReadyCount = 0;
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(m_pClient->m_Snap.m_paPlayerInfos[i] && m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team != TEAM_SPECTATORS &&
+					!(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
+						++NotReadyCount;
+			}
+			if(NotReadyCount == 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), NotReadyCount);
+			else if(NotReadyCount > 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), NotReadyCount);
+			else
+				return;
+		}
 		else
-			str_format(Buf, sizeof(Buf), "%d", Seconds);
-		w = TextRender()->TextWidth(0, FontSize, Buf, -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, Buf, -1);
+		{
+			int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer/SERVER_TICK_SPEED;
+			if(Seconds < 5)
+				str_format(aBuf, sizeof(aBuf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameInfoObj->m_GameStateTimer*10/SERVER_TICK_SPEED)%10);
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", Seconds);
+		}
+		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
 	}
 }
 
@@ -462,7 +511,7 @@ void CHud::OnRender()
 		}
 
 		RenderGameTimer();
-		RenderPauseNotification();
+		RenderPauseTimer();
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();

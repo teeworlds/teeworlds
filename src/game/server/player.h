@@ -55,7 +55,8 @@ public:
 	// used for spectator mode
 	int m_SpectatorID;
 
-	bool m_IsReady;
+	bool m_IsReadyToEnter;
+	bool m_IsReadyToPlay;
 
 	//
 	int m_Vote;
@@ -69,6 +70,7 @@ public:
 	int m_LastChangeInfo;
 	int m_LastEmote;
 	int m_LastKill;
+	int m_LastReadyChange;
 
 	// TODO: clean this up
 	struct

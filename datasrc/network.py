@@ -1,9 +1,9 @@
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
-PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD"]
+PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD", "READY"]
 GameFlags = ["TEAMS", "FLAGS"]
-GameStateFlags = ["GAMEOVER", "SUDDENDEATH", "PAUSED"]
+GameStateFlags = ["WARMUP", "SUDDENDEATH", "GAMEOVER", "PAUSED"]
 
 Emoticons = ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"]
 
@@ -106,7 +106,7 @@ Objects = [
 		NetIntRange("m_GameFlags", 0, 256),
 		NetIntRange("m_GameStateFlags", 0, 256),
 		NetTick("m_RoundStartTick"),
-		NetIntRange("m_WarmupTimer", 0, 'max_int'),
+		NetIntRange("m_GameStateTimer", 0, 'max_int'),
 
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
@@ -145,7 +145,6 @@ Objects = [
 	]),
 
 	NetObject("Character:CharacterCore", [
-		NetIntRange("m_PlayerFlags", 0, 256),
 		NetIntRange("m_Health", 0, 10),
 		NetIntRange("m_Armor", 0, 10),
 		NetIntRange("m_AmmoCount", 0, 10),
@@ -155,6 +154,7 @@ Objects = [
 	]),
 
 	NetObject("PlayerInfo", [
+		NetIntRange("m_PlayerFlags", 0, 256),
 		NetIntRange("m_Local", 0, 1),
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
@@ -323,6 +323,8 @@ Messages = [
 	]),
 
 	NetMessage("Cl_Kill", []),
+
+	NetMessage("Cl_ReadyChange", []),
 
 	NetMessage("Cl_Emoticon", [
 		NetIntRange("m_Emoticon", 0, 'NUM_EMOTICONS-1'),

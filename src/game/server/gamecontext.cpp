@@ -523,8 +523,7 @@ void CGameContext::OnTick()
 // Server hooks
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
-	if(!m_World.m_Paused)
-		m_apPlayers[ClientID]->OnDirectInput((CNetObj_PlayerInput *)pInput);
+	m_apPlayers[ClientID]->OnDirectInput((CNetObj_PlayerInput *)pInput);
 }
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
@@ -843,7 +842,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	}
 	else if (MsgID == NETMSGTYPE_CL_STARTINFO)
 	{
-		if(pPlayer->m_IsReady)
+		if(pPlayer->m_IsReadyToEnter)
 			return;
 
 		CNetMsg_Cl_StartInfo *pMsg = (CNetMsg_Cl_StartInfo *)pRawMsg;
@@ -935,7 +934,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		SendTuningParams(ClientID);
 
 		// client is ready to enter
-		pPlayer->m_IsReady = true;
+		pPlayer->m_IsReadyToEnter = true;
 		CNetMsg_Sv_ReadyToEnter m;
 		Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 	}
@@ -984,6 +983,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		pPlayer->m_LastKill = Server()->Tick();
 		pPlayer->KillCharacter(WEAPON_SELF);
 	}
+	else if (MsgID == NETMSGTYPE_CL_READYCHANGE && g_Config.m_SvPlayerReadyMode && !m_pController->IsGameOver())
+	{
+		if(pPlayer->m_LastReadyChange && pPlayer->m_LastReadyChange+Server()->TickSpeed()*1 > Server()->Tick())
+			return;
+
+		pPlayer->m_LastReadyChange = Server()->Tick();
+		pPlayer->m_IsReadyToPlay ^= 1;
+	}
 }
 
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
@@ -1029,10 +1036,10 @@ void CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(pSelf->m_pController->IsGameOver())
-		return;
-
-	pSelf->m_World.m_Paused ^= 1;
+	if(pResult->NumArguments())
+		pSelf->m_pController->DoPause(clamp(pResult->GetInteger(0), -1, 1000));
+	else
+		pSelf->m_pController->DoPause(pSelf->m_pController->IsPaused() ? 0 : -1);
 }
 
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
@@ -1045,7 +1052,7 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(pResult->NumArguments())
-		pSelf->m_pController->DoWarmup(pResult->GetInteger(0));
+		pSelf->m_pController->DoWarmup(clamp(pResult->GetInteger(0), -1, 1000));
 	else
 		pSelf->m_pController->StartRound();
 }
@@ -1408,7 +1415,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Reset tuning");
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Dump tuning");
 
-	Console()->Register("pause", "", CFGFLAG_SERVER, ConPause, this, "Pause/unpause game");
+	Console()->Register("pause", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConPause, this, "Pause/unpause game");
 	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
 	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");
@@ -1516,7 +1523,7 @@ void CGameContext::OnPostSnap()
 
 bool CGameContext::IsClientReady(int ClientID)
 {
-	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_IsReady ? true : false;
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_IsReadyToEnter ? true : false;
 }
 
 bool CGameContext::IsClientPlayer(int ClientID)

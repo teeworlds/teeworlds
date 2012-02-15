@@ -262,9 +262,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2));
 
 		// name
+		// todo: improve visual player ready state
+		if(!(pInfo->m_PlayerFlags&PLAYERFLAG_READY))
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);
 		TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = NameLength;
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// clan
 		tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
@@ -382,8 +386,8 @@ bool CScoreboard::Active()
 
 	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 	{
-		// we are not a spectator, check if we are dead
-		if(!m_pClient->m_Snap.m_pLocalCharacter)
+		// we are not a spectator, check if we are dead and the game isn't paused
+		if(!m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 			return true;
 	}
 

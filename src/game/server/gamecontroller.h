@@ -19,6 +19,8 @@ class IGameController
 
 	// activity
 	void DoActivityCheck();
+	bool GetPlayersReadyState();
+	void SetPlayersReadyState(bool ReadyState);
 
 	// balancing
 	enum
@@ -70,6 +72,7 @@ protected:
 
 	// game
 	int m_GameOverTick;
+	int m_Paused;
 	int m_RoundCount;
 	int m_RoundStartTick;
 	int m_SuddenDeath;
@@ -128,6 +131,7 @@ public:
 	void OnReset();
 
 	// game
+	void DoPause(int Seconds);
 	void DoWarmup(int Seconds);
 
 	void StartRound();
@@ -139,7 +143,10 @@ public:
 	// info
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
 	bool IsGameOver() const { return m_GameOverTick != -1; }
+	bool IsPaused() const { return m_Paused != 0; }
+	bool IsPlayerReadyMode() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
+	bool IsWarmup() const { return m_Warmup != 0; }
 	
 	const char *GetGameType() const { return m_pGameType; }
 	const char *GetTeamName(int Team) const;

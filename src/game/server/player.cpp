@@ -24,6 +24,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_LastActionTick = Server()->Tick();
 	m_TeamChangeTick = Server()->Tick();
 	m_Dummy = Dummy;
+	m_IsReadyToPlay = GameServer()->m_pController->IsWarmup() || GameServer()->m_pController->IsPaused() ? false : true;
 }
 
 CPlayer::~CPlayer()
@@ -131,6 +132,9 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pPlayerInfo)
 		return;
 
+	pPlayerInfo->m_PlayerFlags = m_PlayerFlags&PLAYERFLAG_CHATTING;
+	if(!GameServer()->m_pController->IsPlayerReadyMode() || m_IsReadyToPlay)
+		pPlayerInfo->m_PlayerFlags |= PLAYERFLAG_READY;
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
@@ -169,6 +173,12 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
+	if(GameServer()->m_World.m_Paused)
+	{
+		m_PlayerFlags = NewInput->m_PlayerFlags;
+		return;
+	}
+
 	if(NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		// skip the input if chat is active

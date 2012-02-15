@@ -177,6 +177,7 @@ void CGameClient::OnConsoleInit()
 	// add the some console commands
 	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
+	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
 	// register server dummy commands for tab completion
 	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
@@ -1114,9 +1115,15 @@ void CGameClient::SendInfo(bool Start)
 	}
 }
 
-void CGameClient::SendKill(int ClientID)
+void CGameClient::SendKill()
 {
 	CNetMsg_Cl_Kill Msg;
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
+void CGameClient::SendReadyChange()
+{
+	CNetMsg_Cl_ReadyChange Msg;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
@@ -1127,7 +1134,12 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 {
-	((CGameClient*)pUserData)->SendKill(-1);
+	((CGameClient*)pUserData)->SendKill();
+}
+
+void CGameClient::ConReadyChange(IConsole::IResult *pResult, void *pUserData)
+{
+	((CGameClient*)pUserData)->SendReadyChange();
 }
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
