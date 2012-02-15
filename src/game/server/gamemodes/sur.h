@@ -9,6 +9,9 @@ class CGameControllerSUR : public IGameController
 public:
 	CGameControllerSUR(class CGameContext *pGameServer);
 
+	// game
+	virtual void DoWincheckRound();
+
 	// general
 	virtual void Snap(int SnappingClient);
 };

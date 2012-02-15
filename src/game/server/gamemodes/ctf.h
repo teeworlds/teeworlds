@@ -13,7 +13,7 @@ class CGameControllerCTF : public IGameController
 	// game
 	class CFlag *m_apFlags[2];
 
-	virtual void DoWincheck();
+	virtual void DoWincheckMatch();
 
 public:
 	CGameControllerCTF(class CGameContext *pGameServer);

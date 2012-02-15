@@ -231,12 +231,27 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 
 void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 {
-	// default health
-	pChr->IncreaseHealth(10);
+	if(m_GameFlags&GAMEFLAG_SURVIVAL)
+	{
+		// give start equipment
+		pChr->IncreaseHealth(10);
+		pChr->IncreaseArmor(5);
 
-	// give default weapons
-	pChr->GiveWeapon(WEAPON_HAMMER, -1);
-	pChr->GiveWeapon(WEAPON_GUN, 10);
+		pChr->GiveWeapon(WEAPON_HAMMER, -1);
+		pChr->GiveWeapon(WEAPON_GUN, 10);
+		pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
+		pChr->GiveWeapon(WEAPON_GRENADE, 10);
+		pChr->GiveWeapon(WEAPON_RIFLE, 5);
+	}
+	else
+	{
+		// default health
+		pChr->IncreaseHealth(10);
+
+		// give default weapons
+		pChr->GiveWeapon(WEAPON_HAMMER, -1);
+		pChr->GiveWeapon(WEAPON_GUN, 10);
+	}
 }
 
 bool IGameController::OnEntity(int Index, vec2 Pos)
@@ -347,7 +362,7 @@ void IGameController::OnReset()
 }
 
 // game
-void IGameController::DoWincheck()
+void IGameController::DoWincheckMatch()
 {
 	if(IsTeamplay())
 	{
@@ -395,6 +410,11 @@ void IGameController::DoWincheck()
 void IGameController::EndMatch()
 {
 	SetGameState(GS_GAMEOVER, 10);
+}
+
+void IGameController::EndRound()
+{
+	SetGameState(GS_ROUNDOVER, 10);
 }
 
 void IGameController::ResetGame()
@@ -476,6 +496,17 @@ void IGameController::SetGameState(int GameState, int Seconds)
 						m_StartCountdownReset = false;
 					}
 				}
+			}
+		}
+		break;
+	case GS_ROUNDOVER:
+		{
+			if(GetGameState() != GS_WARMUP && GetGameState() != GS_PAUSED)
+			{
+				m_GameState = GS_ROUNDOVER;
+				m_GameStateTimer = Seconds*Server()->TickSpeed();
+				m_SuddenDeath = 0;
+				GameServer()->m_World.m_Paused = true;			
 			}
 		}
 		break;
@@ -587,6 +618,15 @@ void IGameController::Tick()
 			else
 				++m_GameStartTick;
 			break;
+		case GS_ROUNDOVER:
+			if(m_GameStateTimer == 0)
+			{
+				ResetGame();
+				DoWincheckMatch();
+				SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN);
+				m_StartCountdownReset = false;
+			}
+			break;
 		case GS_GAMEOVER:
 			if(m_GameStateTimer == 0)
 			{
@@ -615,7 +655,12 @@ void IGameController::Tick()
 
 	// win check
 	if(GetGameState() == GS_GAME && !GameServer()->m_World.m_ResetRequested)
-		DoWincheck();
+	{
+		if(m_GameFlags&GAMEFLAG_SURVIVAL)
+			DoWincheckRound();
+		else
+			DoWincheckMatch();
+	}
 }
 
 // info

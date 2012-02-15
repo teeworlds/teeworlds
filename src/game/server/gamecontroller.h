@@ -39,8 +39,11 @@ class IGameController
 	int m_GameStateTimer;
 	bool m_StartCountdownReset;
 
-	virtual void DoWincheck();
+	virtual void DoWincheckMatch();
+	virtual void DoWincheckRound() {};
+	void ResetGame();
 	void SetGameState(int GameState, int Seconds=0);
+	void StartMatch();
 
 	// map
 	char m_aMapWish[128];
@@ -82,8 +85,7 @@ protected:
 	int m_aTeamscore[NUM_TEAMS];
 
 	void EndMatch();
-	void ResetGame();
-	void StartMatch();
+	void EndRound();
 
 	// info
 	int m_GameFlags;
@@ -140,6 +142,7 @@ public:
 		GS_STARTCOUNTDOWN,
 		GS_GAME,
 		GS_PAUSED,
+		GS_ROUNDOVER,
 		GS_GAMEOVER,
 
 		TIMER_INFINITE = -1,

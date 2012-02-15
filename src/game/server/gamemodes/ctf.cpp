@@ -85,7 +85,7 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 }
 
 // game
-void CGameControllerCTF::DoWincheck()
+void CGameControllerCTF::DoWincheckMatch()
 {
 	// check score win condition
 	if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
