@@ -13,7 +13,7 @@ class CPlayer
 	MACRO_ALLOC_POOL_ID()
 
 public:
-	CPlayer(CGameContext *pGameServer, int ClientID, int Team);
+	CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy);
 	~CPlayer();
 
 	void Init(int CID);
@@ -23,6 +23,7 @@ public:
 	void SetTeam(int Team, bool DoChatMsg=true);
 	int GetTeam() const { return m_Team; };
 	int GetCID() const { return m_ClientID; };
+	bool IsDummy() const { return m_Dummy; }
 
 	void Tick();
 	void PostTick();
@@ -30,7 +31,7 @@ public:
 
 	void OnDirectInput(CNetObj_PlayerInput *NewInput);
 	void OnPredictedInput(CNetObj_PlayerInput *NewInput);
-	void OnDisconnect(const char *pReason);
+	void OnDisconnect();
 
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
@@ -76,7 +77,6 @@ public:
 	int m_DieTick;
 	int m_Score;
 	int m_ScoreStartTick;
-	bool m_ForceBalanced;
 	int m_LastActionTick;
 	int m_TeamChangeTick;
 	struct
@@ -107,6 +107,7 @@ private:
 	bool m_Spawning;
 	int m_ClientID;
 	int m_Team;
+	bool m_Dummy;
 };
 
 #endif

@@ -8,6 +8,6 @@ class CGameControllerDM : public IGameController
 {
 public:
 	CGameControllerDM(class CGameContext *pGameServer);
-	virtual void Tick();
 };
+
 #endif

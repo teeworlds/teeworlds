@@ -4,6 +4,7 @@
 #define GAME_SERVER_GAMECONTROLLER_H
 
 #include <base/vmath.h>
+#include <game/generated/protocol.h>
 
 /*
 	Class: Game Controller
@@ -12,16 +13,33 @@
 */
 class IGameController
 {
-	vec2 m_aaSpawnPoints[3][64];
-	int m_aNumSpawnPoints[3];
-
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;
 
-protected:
-	CGameContext *GameServer() const { return m_pGameServer; }
-	IServer *Server() const { return m_pServer; }
+	// activity
+	void DoActivityCheck();
 
+	// balancing
+	enum
+	{
+		TBALANCE_CHECK=-2,
+		TBALANCE_OK,
+	};
+	int m_UnbalancedTick;
+
+	virtual bool CanBeMovedOnBalance(int ClientID) const;
+	void CheckTeamBalance();
+	void DoTeamBalance();
+
+	// game
+	virtual void DoWincheck();
+
+	// map
+	char m_aMapWish[128];
+	
+	void CycleMap();
+
+	// spawn
 	struct CSpawnEval
 	{
 		CSpawnEval()
@@ -36,59 +54,58 @@ protected:
 		int m_FriendlyTeam;
 		float m_Score;
 	};
+	vec2 m_aaSpawnPoints[3][64];
+	int m_aNumSpawnPoints[3];
+	
+	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const;
+	void EvaluateSpawnType(CSpawnEval *pEval, int Type) const;
 
-	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos);
-	void EvaluateSpawnType(CSpawnEval *pEval, int Type);
-	bool EvaluateSpawn(class CPlayer *pP, vec2 *pPos);
+	// team
+	int ClampTeam(int Team) const;
 
-	void CycleMap();
+protected:
+	CGameContext *GameServer() const { return m_pGameServer; }
+	IServer *Server() const { return m_pServer; }
+
+	// game
+	int m_GameOverTick;
+	int m_RoundCount;
+	int m_RoundStartTick;
+	int m_SuddenDeath;
+	int m_aTeamscore[NUM_TEAMS];
+	int m_Warmup;	
+
+	void EndRound();
 	void ResetGame();
 
-	char m_aMapWish[128];
-
-
-	int m_RoundStartTick;
-	int m_GameOverTick;
-	int m_SuddenDeath;
-
-	int m_aTeamscore[2];
-
-	int m_Warmup;
-	int m_RoundCount;
-
+	// info
 	int m_GameFlags;
-	int m_UnbalancedTick;
-	bool m_ForceBalanced;
-
-public:
 	const char *m_pGameType;
 
-	bool IsTeamplay() const;
-	bool IsGameOver() const { return m_GameOverTick != -1; }
-
+public:
 	IGameController(class CGameContext *pGameServer);
-	virtual ~IGameController();
+	virtual ~IGameController() {};
 
-	virtual void DoWincheck();
-
-	void DoWarmup(int Seconds);
-
-	void StartRound();
-	void EndRound();
-	void ChangeMap(const char *pToMap);
-
-	bool IsFriendlyFire(int ClientID1, int ClientID2);
-
-	bool IsForceBalanced();
-
+	// event
 	/*
+		Function: on_CCharacter_death
+			Called when a CCharacter in the world dies.
 
+		Arguments:
+			victim - The CCharacter that died.
+			killer - The player that killed it.
+			weapon - What weapon that killed it. Can be -1 for undefined
+				weapon when switching team or player suicides.
 	*/
-	virtual bool CanBeMovedOnBalance(int ClientID);
+	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	/*
+		Function: on_CCharacter_spawn
+			Called when a CCharacter spawns into the game world.
 
-	virtual void Tick();
-
-	virtual void Snap(int SnappingClient);
+		Arguments:
+			chr - The CCharacter that was spawned.
+	*/
+	virtual void OnCharacterSpawn(class CCharacter *pChr);
 
 	/*
 		Function: on_entity
@@ -104,44 +121,41 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 
-	/*
-		Function: on_CCharacter_spawn
-			Called when a CCharacter spawns into the game world.
+	void OnPlayerDisconnect(class CPlayer *pPlayer, const char *pReason);
+	void OnPlayerInfoChange(class CPlayer *pPlayer);	
 
-		Arguments:
-			chr - The CCharacter that was spawned.
-	*/
-	virtual void OnCharacterSpawn(class CCharacter *pChr);
+	void OnReset();
 
-	/*
-		Function: on_CCharacter_death
-			Called when a CCharacter in the world dies.
+	// game
+	void DoWarmup(int Seconds);
 
-		Arguments:
-			victim - The CCharacter that died.
-			killer - The player that killed it.
-			weapon - What weapon that killed it. Can be -1 for undefined
-				weapon when switching team or player suicides.
-	*/
-	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	void StartRound();
 
+	// general
+	virtual void Snap(int SnappingClient);
+	virtual void Tick();
 
-	virtual void OnPlayerInfoChange(class CPlayer *pP);
+	// info
+	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
+	bool IsGameOver() const { return m_GameOverTick != -1; }
+	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
+	
+	const char *GetGameType() const { return m_pGameType; }
+	const char *GetTeamName(int Team) const;
+	
+	// map
+	void ChangeMap(const char *pToMap);
 
-	//
-	virtual bool CanSpawn(int Team, vec2 *pPos);
+	//spawn
+	bool CanSpawn(int Team, vec2 *pPos) const;
 
-	/*
+	// team
+	bool CanJoinTeam(int Team, int NotThisID) const;
+	bool CanChangeTeam(CPlayer *pPplayer, int JoinTeam) const;
 
-	*/
-	virtual const char *GetTeamName(int Team);
-	virtual int GetAutoTeam(int NotThisID);
-	virtual bool CanJoinTeam(int Team, int NotThisID);
-	bool CheckTeamBalance();
-	bool CanChangeTeam(CPlayer *pPplayer, int JoinTeam);
-	int ClampTeam(int Team);
-
-	virtual void PostReset();
+	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg=true);
+	
+	int GetStartTeam(int NotThisID);
 };
 
 #endif

@@ -9,7 +9,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
 
-CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
+CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 {
 	m_pGameServer = pGameServer;
 	m_RespawnTick = Server()->Tick();
@@ -17,10 +17,11 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_ScoreStartTick = Server()->Tick();
 	m_pCharacter = 0;
 	m_ClientID = ClientID;
-	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	m_Team = GameServer()->m_pController->GetStartTeam(ClientID);
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
 	m_TeamChangeTick = Server()->Tick();
+	m_Dummy = Dummy;
 }
 
 CPlayer::~CPlayer()
@@ -31,10 +32,7 @@ CPlayer::~CPlayer()
 
 void CPlayer::Tick()
 {
-#ifdef CONF_DEBUG
-	if(!g_Config.m_DbgDummies || m_ClientID < MAX_CLIENTS-g_Config.m_DbgDummies)
-#endif
-	if(!Server()->ClientIngame(m_ClientID))
+	if(!IsDummy() && !Server()->ClientIngame(m_ClientID))
 		return;
 
 	Server()->SetClientScore(m_ClientID, m_Score);
@@ -112,10 +110,7 @@ void CPlayer::PostTick()
 
 void CPlayer::Snap(int SnappingClient)
 {
-#ifdef CONF_DEBUG
-	if(!g_Config.m_DbgDummies || m_ClientID < MAX_CLIENTS-g_Config.m_DbgDummies)
-#endif
-	if(!Server()->ClientIngame(m_ClientID))
+	if(!IsDummy() && !Server()->ClientIngame(m_ClientID))
 		return;
 
 	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CNetObj_ClientInfo)));
@@ -155,22 +150,9 @@ void CPlayer::Snap(int SnappingClient)
 	}
 }
 
-void CPlayer::OnDisconnect(const char *pReason)
+void CPlayer::OnDisconnect()
 {
 	KillCharacter();
-
-	if(Server()->ClientIngame(m_ClientID))
-	{
-		char aBuf[512];
-		if(pReason && *pReason)
-			str_format(aBuf, sizeof(aBuf), "'%s' has left the game (%s)", Server()->ClientName(m_ClientID), pReason);
-		else
-			str_format(aBuf, sizeof(aBuf), "'%s' has left the game", Server()->ClientName(m_ClientID));
-		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-
-		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
-	}
 }
 
 void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
@@ -243,29 +225,14 @@ void CPlayer::Respawn()
 
 void CPlayer::SetTeam(int Team, bool DoChatMsg)
 {
-	// clamp the team
-	Team = GameServer()->m_pController->ClampTeam(Team);
-	if(m_Team == Team)
-		return;
-
-	char aBuf[512];
-	if(DoChatMsg)
-	{
-		str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));
-		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-	}
-
 	KillCharacter();
 
 	m_Team = Team;
 	m_LastActionTick = Server()->Tick();
+	
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-
-	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
-
+	
 	if(Team == TEAM_SPECTATORS)
 	{
 		// update spectator modes

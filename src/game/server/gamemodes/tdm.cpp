@@ -12,6 +12,7 @@ CGameControllerTDM::CGameControllerTDM(class CGameContext *pGameServer) : IGameC
 	m_GameFlags = GAMEFLAG_TEAMS;
 }
 
+// event
 int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
 	IGameController::OnCharacterDeath(pVictim, pKiller, Weapon);
@@ -31,6 +32,7 @@ int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return 0;
 }
 
+// general
 void CGameControllerTDM::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);
@@ -44,9 +46,4 @@ void CGameControllerTDM::Snap(int SnappingClient)
 
 	pGameDataObj->m_FlagCarrierRed = 0;
 	pGameDataObj->m_FlagCarrierBlue = 0;
-}
-
-void CGameControllerTDM::Tick()
-{
-	IGameController::Tick();
 }

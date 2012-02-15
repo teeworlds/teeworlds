@@ -10,35 +10,34 @@
 #include <game/server/gamecontext.h>
 #include "ctf.h"
 
-CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
+CGameControllerCTF::CGameControllerCTF(CGameContext *pGameServer)
 : IGameController(pGameServer)
 {
+	// game
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
 	m_pGameType = "CTF";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
-bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
+// balancing
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
 {
-	if(IGameController::OnEntity(Index, Pos))
-		return true;
-
-	int Team = -1;
-	if(Index == ENTITY_FLAGSTAND_RED) Team = TEAM_RED;
-	if(Index == ENTITY_FLAGSTAND_BLUE) Team = TEAM_BLUE;
-	if(Team == -1 || m_apFlags[Team])
-		return false;
-
-	CFlag *F = new CFlag(&GameServer()->m_World, Team);
-	F->m_StandPos = Pos;
-	F->m_Pos = Pos;
-	m_apFlags[Team] = F;
-	GameServer()->m_World.InsertEntity(F);
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
+	if(Character)
+	{
+		for(int fi = 0; fi < 2; fi++)
+		{
+			CFlag *F = m_apFlags[fi];
+			if(F->m_pCarryingCharacter == Character)
+				return false;
+		}
+	}
 	return true;
 }
 
-int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
+// event
+int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, int WeaponID)
 {
 	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
 	int HadFlag = 0;
@@ -66,45 +65,48 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	return HadFlag;
 }
 
-void CGameControllerCTF::DoWincheck()
+bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 {
-	if(m_GameOverTick == -1 && !m_Warmup)
-	{
-		// check score win condition
-		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
-			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
-		{
-			if(m_SuddenDeath)
-			{
-				if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
-					EndRound();
-			}
-			else
-			{
-				if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
-					EndRound();
-				else
-					m_SuddenDeath = 1;
-			}
-		}
-	}
-}
+	if(IGameController::OnEntity(Index, Pos))
+		return true;
 
-bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
-{
-	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
-	if(Character)
-	{
-		for(int fi = 0; fi < 2; fi++)
-		{
-			CFlag *F = m_apFlags[fi];
-			if(F->m_pCarryingCharacter == Character)
-				return false;
-		}
-	}
+	int Team = -1;
+	if(Index == ENTITY_FLAGSTAND_RED) Team = TEAM_RED;
+	if(Index == ENTITY_FLAGSTAND_BLUE) Team = TEAM_BLUE;
+	if(Team == -1 || m_apFlags[Team])
+		return false;
+
+	CFlag *F = new CFlag(&GameServer()->m_World, Team);
+	F->m_StandPos = Pos;
+	F->m_Pos = Pos;
+	m_apFlags[Team] = F;
+	GameServer()->m_World.InsertEntity(F);
 	return true;
 }
 
+// game
+void CGameControllerCTF::DoWincheck()
+{
+	// check score win condition
+	if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
+		(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+	{
+		if(m_SuddenDeath)
+		{
+			if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
+				EndRound();
+		}
+		else
+		{
+			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
+				EndRound();
+			else
+				m_SuddenDeath = 1;
+		}
+	}
+}
+
+// general
 void CGameControllerCTF::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);

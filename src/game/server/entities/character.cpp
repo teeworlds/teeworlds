@@ -544,15 +544,6 @@ void CCharacter::ResetInput()
 
 void CCharacter::Tick()
 {
-	if(m_pPlayer->m_ForceBalanced)
-	{
-		char Buf[128];
-		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", GameServer()->m_pController->GetTeamName(m_pPlayer->GetTeam()));
-		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
-
-		m_pPlayer->m_ForceBalanced = false;
-	}
-
 	m_Core.m_Input = m_Input;
 	m_Core.Tick(true);
 
@@ -723,7 +714,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
 	m_Core.m_Vel += Force;
 
-	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
+	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From))
 		return false;
 
 	// m_pPlayer only inflicts half damage on self
