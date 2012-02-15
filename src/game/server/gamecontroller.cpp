@@ -4,9 +4,11 @@
 
 #include <game/mapitems.h>
 
+#include "entities/character.h"
 #include "entities/pickup.h"
-#include "gamecontroller.h"
 #include "gamecontext.h"
+#include "gamecontroller.h"
+#include "player.h"
 
 
 IGameController::IGameController(CGameContext *pGameServer)

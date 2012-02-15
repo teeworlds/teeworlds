@@ -1,18 +1,22 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <new>
 #include <base/math.h>
+
 #include <engine/shared/config.h>
+#include <engine/shared/memheap.h>
 #include <engine/map.h>
-#include <engine/console.h>
-#include "gamecontext.h"
-#include <game/version.h>
+
 #include <game/collision.h>
 #include <game/gamecore.h>
-#include "gamemodes/dm.h"
-#include "gamemodes/tdm.h"
+#include <game/version.h>
+
+#include "entities/character.h"
 #include "gamemodes/ctf.h"
+#include "gamemodes/dm.h"
 #include "gamemodes/mod.h"
+#include "gamemodes/tdm.h"
+#include "gamecontext.h"
+#include "player.h"
 
 enum
 {

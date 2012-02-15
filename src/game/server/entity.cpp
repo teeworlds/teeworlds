@@ -3,6 +3,7 @@
 
 #include "entity.h"
 #include "gamecontext.h"
+#include "player.h"
 
 //////////////////////////////////////////////////
 // Entity

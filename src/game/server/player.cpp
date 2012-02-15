@@ -1,7 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <new>
-#include <engine/shared/config.h>
+
+#include "entities/character.h"
+#include "gamecontext.h"
+#include "gamecontroller.h"
 #include "player.h"
 
 

@@ -3,17 +3,14 @@
 #ifndef GAME_SERVER_GAMECONTEXT_H
 #define GAME_SERVER_GAMECONTEXT_H
 
-#include <engine/server.h>
 #include <engine/console.h>
-#include <engine/shared/memheap.h>
+#include <engine/server.h>
 
 #include <game/layers.h>
 #include <game/voting.h>
 
 #include "eventhandler.h"
-#include "gamecontroller.h"
 #include "gameworld.h"
-#include "player.h"
 
 /*
 	Tick
@@ -81,9 +78,9 @@ public:
 	void Clear();
 
 	CEventHandler m_Events;
-	CPlayer *m_apPlayers[MAX_CLIENTS];
+	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
-	IGameController *m_pController;
+	class IGameController *m_pController;
 	CGameWorld m_World;
 
 	// helper functions
@@ -113,7 +110,7 @@ public:
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
 	};
-	CHeap *m_pVoteOptionHeap;
+	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
 	CVoteOptionServer *m_pVoteOptionLast;
 

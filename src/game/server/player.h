@@ -3,9 +3,15 @@
 #ifndef GAME_SERVER_PLAYER_H
 #define GAME_SERVER_PLAYER_H
 
-// this include should perhaps be removed
-#include "entities/character.h"
-#include "gamecontext.h"
+#include "alloc.h"
+
+
+enum
+{
+	WEAPON_GAME = -3, // team switching etc
+	WEAPON_SELF = -2, // console kill command
+	WEAPON_WORLD = -1, // death tiles etc
+};
 
 // player object
 class CPlayer
