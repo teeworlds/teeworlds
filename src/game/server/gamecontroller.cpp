@@ -24,7 +24,7 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_GameStateTimer = TIMER_INFINITE;
 	m_GameStartTick = Server()->Tick();
 	m_MatchCount = 0;
-	m_StartCountdownReset = false;
+	m_StartCountdownReset = true;
 	m_SuddenDeath = 0;
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
@@ -242,6 +242,9 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 		pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 		pChr->GiveWeapon(WEAPON_GRENADE, 10);
 		pChr->GiveWeapon(WEAPON_RIFLE, 5);
+
+		// prevent respawn
+		pChr->GetPlayer()->m_RespawnDisabled = true;
 	}
 	else
 	{
@@ -357,6 +360,7 @@ void IGameController::OnReset()
 			GameServer()->m_apPlayers[i]->m_Score = 0;
 			GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
 			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = true;
+			GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 		}
 	}
 }
@@ -456,6 +460,7 @@ void IGameController::SetGameState(int GameState, int Seconds)
 			{
 				m_GameState = GS_STARTCOUNTDOWN;
 				m_GameStateTimer = Seconds*Server()->TickSpeed();
+				m_StartCountdownReset = true;
 				GameServer()->m_World.m_Paused = true;
 			}
 		}
@@ -464,7 +469,6 @@ void IGameController::SetGameState(int GameState, int Seconds)
 		{
 			m_GameState = GS_GAME;
 			m_GameStateTimer = TIMER_INFINITE;
-			m_StartCountdownReset = true;
 			SetPlayersReadyState(true);
 			GameServer()->m_World.m_Paused = false;
 		}
@@ -875,6 +879,19 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 	}
 }
 
+bool IGameController::GetStartRespawnState() const
+{
+	if(m_GameFlags&GAMEFLAG_SURVIVAL)
+	{
+		if(GetGameState() == GS_GAME)
+			return true;
+		else
+			return false;
+	}
+	else
+		return false;
+}
+
 // team
 bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam) const
 {
@@ -943,6 +960,8 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 
 	m_UnbalancedTick = TBALANCE_CHECK;
 	pPlayer->m_IsReadyToPlay = GetGameState() != GS_WARMUP && GetGameState() != GS_PAUSED;
+	if(m_GameFlags&GAMEFLAG_SURVIVAL)
+		pPlayer->m_RespawnDisabled = true;
 	OnPlayerInfoChange(pPlayer);
 }
 

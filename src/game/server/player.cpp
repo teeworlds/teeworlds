@@ -26,6 +26,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_Dummy = Dummy;
 	m_IsReadyToPlay = GameServer()->m_pController->GetGameState() != IGameController::GS_WARMUP &&
 						GameServer()->m_pController->GetGameState() != IGameController::GS_PAUSED;
+	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 }
 
 CPlayer::~CPlayer()
@@ -74,7 +75,7 @@ void CPlayer::Tick()
 			m_ViewPos -= vec2(clamp(m_ViewPos.x-m_LatestActivity.m_TargetX, -500.0f, 500.0f), clamp(m_ViewPos.y-m_LatestActivity.m_TargetY, -400.0f, 400.0f));
 
 		if(!m_pCharacter && m_DieTick+Server()->TickSpeed()*3 <= Server()->Tick())
-			m_Spawning = true;
+			Respawn();
 
 		if(m_pCharacter)
 		{
@@ -135,6 +136,8 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_PlayerFlags = m_PlayerFlags&PLAYERFLAG_CHATTING;
 	if(!GameServer()->m_pController->IsPlayerReadyMode() || m_IsReadyToPlay)
 		pPlayerInfo->m_PlayerFlags |= PLAYERFLAG_READY;
+	if(m_RespawnDisabled && (!GetCharacter() || !GetCharacter()->IsAlive()))
+		pPlayerInfo->m_PlayerFlags |= PLAYERFLAG_DEAD;
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
@@ -199,7 +202,7 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 		m_pCharacter->OnDirectInput(NewInput);
 
 	if(!m_pCharacter && m_Team != TEAM_SPECTATORS && (NewInput->m_Fire&1))
-		m_Spawning = true;
+		Respawn();
 
 	// check for activity
 	if(NewInput->m_Direction || m_LatestActivity.m_TargetX != NewInput->m_TargetX ||
@@ -231,6 +234,12 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
+	if(m_RespawnDisabled)
+	{
+		// todo: enable spectate mode
+		return;
+	}
+
 	if(m_Team != TEAM_SPECTATORS)
 		m_Spawning = true;
 }

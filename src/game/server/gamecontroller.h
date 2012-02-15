@@ -171,6 +171,7 @@ public:
 
 	//spawn
 	bool CanSpawn(int Team, vec2 *pPos) const;
+	bool GetStartRespawnState() const;
 
 	// team
 	bool CanJoinTeam(int Team, int NotThisID) const;

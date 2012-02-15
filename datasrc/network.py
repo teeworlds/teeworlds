@@ -1,7 +1,7 @@
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
-PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD", "READY"]
+PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD", "READY", "DEAD"]
 GameFlags = ["TEAMS", "FLAGS", "SURVIVAL"]
 GameStateFlags = ["WARMUP", "SUDDENDEATH", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"]
 

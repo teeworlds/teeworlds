@@ -58,6 +58,8 @@ public:
 	bool m_IsReadyToEnter;
 	bool m_IsReadyToPlay;
 
+	bool m_RespawnDisabled;
+
 	//
 	int m_Vote;
 	int m_VotePos;
