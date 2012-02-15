@@ -129,7 +129,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	case PICKUP_LASER:
 		Size = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
 		break;
-	case SPRITE_PICKUP_NINJA:
+	case PICKUP_NINJA:
 		m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
 		Size *= 2.0f;
 		Pos.x -= 10.0f;

@@ -53,7 +53,11 @@ public:
 	int m_aActLatency[MAX_CLIENTS];
 
 	// used for spectator mode
-	int m_SpectatorID;
+	int GetSpectatorID() const { return m_SpectatorID; }
+	bool SetSpectatorID(int SpectatorID);
+	bool m_DeadSpecMode;
+	bool DeadCanFollow(CPlayer *pPlayer) const;
+	void UpdateDeadSpecMode();
 
 	bool m_IsReadyToEnter;
 	bool m_IsReadyToPlay;
@@ -118,6 +122,9 @@ private:
 	int m_ClientID;
 	int m_Team;
 	bool m_Dummy;
+
+	// used for spectator mode
+	int m_SpectatorID;
 };
 
 #endif

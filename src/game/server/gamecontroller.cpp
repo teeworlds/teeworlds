@@ -226,6 +226,16 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 	}
 	if(Weapon == WEAPON_SELF)
 		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3.0f;
+
+
+	// update spectator modes for dead players in survival
+	if(m_GameFlags&GAMEFLAG_SURVIVAL)
+	{
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_DeadSpecMode)
+				GameServer()->m_apPlayers[i]->UpdateDeadSpecMode();
+	}
+
 	return 0;
 }
 

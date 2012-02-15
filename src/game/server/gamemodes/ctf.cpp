@@ -254,7 +254,8 @@ void CGameControllerCTF::Tick()
 						if(!pPlayer)
 							continue;
 
-						if(pPlayer->GetTeam() == TEAM_SPECTATORS && pPlayer->m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[pPlayer->m_SpectatorID] && GameServer()->m_apPlayers[pPlayer->m_SpectatorID]->GetTeam() == fi)
+						if((pPlayer->GetTeam() == TEAM_SPECTATORS || pPlayer->m_DeadSpecMode) && pPlayer->GetSpectatorID() != SPEC_FREEVIEW &&
+							GameServer()->m_apPlayers[pPlayer->GetSpectatorID()] && GameServer()->m_apPlayers[pPlayer->GetSpectatorID()]->GetTeam() == fi)
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
 						else if(pPlayer->GetTeam() == fi)
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
