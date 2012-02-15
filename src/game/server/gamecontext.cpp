@@ -14,6 +14,7 @@
 #include "gamemodes/ctf.h"
 #include "gamemodes/dm.h"
 #include "gamemodes/mod.h"
+#include "gamemodes/sur.h"
 #include "gamemodes/tdm.h"
 #include "gamecontext.h"
 #include "player.h"
@@ -370,6 +371,7 @@ void CGameContext::CheckPureTuning()
 
 	if(	str_comp(m_pController->GetGameType(), "DM")==0 ||
 		str_comp(m_pController->GetGameType(), "TDM")==0 ||
+		str_comp(m_pController->GetGameType(), "SUR")==0 ||
 		str_comp(m_pController->GetGameType(), "CTF")==0)
 	{
 		CTuningParams p;
@@ -1454,6 +1456,8 @@ void CGameContext::OnInit()
 		m_pController = new CGameControllerMOD(this);
 	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
+	else if(str_comp(g_Config.m_SvGametype, "sur") == 0)
+		m_pController = new CGameControllerSUR(this);
 	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
 	else
