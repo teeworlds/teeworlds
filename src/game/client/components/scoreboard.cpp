@@ -98,9 +98,11 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 
 	// spectator names
 	y += 30.0f;
-	char aBuffer[1024*4];
-	aBuffer[0] = 0;
 	bool Multiple = false;
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, x+10.0f, y, 22.0f, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = w-20.0f;
+	Cursor.m_MaxLines = 4;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
@@ -108,15 +110,13 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 			continue;
 
 		if(Multiple)
-			str_append(aBuffer, ", ", sizeof(aBuffer));
-		str_append(aBuffer, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, sizeof(aBuffer));
+			TextRender()->TextEx(&Cursor, ", ", -1);
+		if(pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
+			TextRender()->TextColor(1.0f, 1.0f, 0.0f, 1.0f);
+		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		Multiple = true;
 	}
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, x+10.0f, y, 22.0f, TEXTFLAG_RENDER);
-	Cursor.m_LineWidth = w-20.0f;
-	Cursor.m_MaxLines = 4;
-	TextRender()->TextEx(&Cursor, aBuffer, -1);
 }
 
 void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const char *pTitle)
@@ -282,7 +282,9 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			// name
 			// todo: improve visual player ready state
 			if(!(pInfo->m_PlayerFlags&PLAYERFLAG_READY))
-				TextRender()->TextColor(1.0f, 0.5f, 0.5f,ColorAlpha);
+				TextRender()->TextColor(1.0f, 0.5f, 0.5f, ColorAlpha);
+			else if(RenderDead && pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
+				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
