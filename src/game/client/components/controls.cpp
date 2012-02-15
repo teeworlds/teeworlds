@@ -114,10 +114,8 @@ int CControls::SnapInput(int *pData)
 	// update player state
 	if(m_pClient->m_pChat->IsActive())
 		m_InputData.m_PlayerFlags = PLAYERFLAG_CHATTING;
-	else if(m_pClient->m_pMenus->IsActive())
-		m_InputData.m_PlayerFlags = PLAYERFLAG_IN_MENU;
 	else
-		m_InputData.m_PlayerFlags = PLAYERFLAG_PLAYING;
+		m_InputData.m_PlayerFlags = 0;
 
 	if(m_pClient->m_pScoreboard->Active())
 		m_InputData.m_PlayerFlags |= PLAYERFLAG_SCOREBOARD;
@@ -128,7 +126,7 @@ int CControls::SnapInput(int *pData)
 	m_LastData.m_PlayerFlags = m_InputData.m_PlayerFlags;
 
 	// we freeze the input if chat or menu is activated
-	if(!(m_InputData.m_PlayerFlags&PLAYERFLAG_PLAYING))
+	if(m_pClient->m_pChat->IsActive() || m_pClient->m_pMenus->IsActive())
 	{
 		OnReset();
 
