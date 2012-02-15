@@ -35,9 +35,16 @@ class IGameController
 	void DoTeamBalance();
 
 	// game
+	enum
+	{	
+		// start countdown types
+		SCT_PAUSED,			// unpause the game
+		SCT_ROUNDOVER,		// start new round
+		SCT_DEFAULT,		// start new match
+	};
 	int m_GameState;
 	int m_GameStateTimer;
-	bool m_StartCountdownReset;
+	int m_StartCountdownType;
 
 	virtual void DoWincheckMatch();
 	virtual void DoWincheckRound() {};
