@@ -105,7 +105,7 @@ void IGameController::SetPlayersReadyState(bool ReadyState)
 {
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && (ReadyState || !GameServer()->m_apPlayers[i]->m_DeadSpecMode))
 			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = ReadyState;
 	}
 }
@@ -354,7 +354,7 @@ void IGameController::OnPlayerInfoChange(CPlayer *pPlayer)
 
 void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 {
-	if(g_Config.m_SvPlayerReadyMode)
+	if(g_Config.m_SvPlayerReadyMode && pPlayer->GetTeam() != TEAM_SPECTATORS && !pPlayer->m_DeadSpecMode)
 	{
 		// change players ready state
 		pPlayer->m_IsReadyToPlay ^= 1;

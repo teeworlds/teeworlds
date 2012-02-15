@@ -256,6 +256,7 @@ void CPlayer::Respawn()
 	{
 		// enable spectate mode for dead players
 		m_DeadSpecMode = true;
+		m_IsReadyToPlay = true;
 		UpdateDeadSpecMode();
 		return;
 	}
