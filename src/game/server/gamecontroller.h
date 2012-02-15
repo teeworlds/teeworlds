@@ -76,14 +76,14 @@ protected:
 	IServer *Server() const { return m_pServer; }
 
 	// game
-	int m_RoundCount;
-	int m_RoundStartTick;
+	int m_GameStartTick;
+	int m_MatchCount;
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
 
-	void EndRound();
+	void EndMatch();
 	void ResetGame();
-	void StartRound();
+	void StartMatch();
 
 	// info
 	int m_GameFlags;

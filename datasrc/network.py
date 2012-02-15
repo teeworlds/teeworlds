@@ -105,14 +105,14 @@ Objects = [
 	NetObject("GameInfo", [
 		NetIntRange("m_GameFlags", 0, 256),
 		NetIntRange("m_GameStateFlags", 0, 256),
-		NetTick("m_RoundStartTick"),
+		NetTick("m_GameStartTick"),
 		NetIntRange("m_GameStateTimer", 0, 'max_int'),
 
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
-		NetIntRange("m_RoundNum", 0, 'max_int'),
-		NetIntRange("m_RoundCurrent", 0, 'max_int'),
+		NetIntRange("m_MatchNum", 0, 'max_int'),
+		NetIntRange("m_MatchCurrent", 0, 'max_int'),
 	]),
 
 	NetObject("GameData", [

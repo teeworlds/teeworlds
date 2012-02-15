@@ -22,8 +22,12 @@ IGameController::IGameController(CGameContext *pGameServer)
 	// game
 	m_GameState = GS_GAME;
 	m_GameStateTimer = TIMER_INFINITE;
-	m_RoundStartTick = Server()->Tick();
+	m_GameStartTick = Server()->Tick();
+	m_MatchCount = 0;
+	m_StartCountdownReset = false;
 	m_SuddenDeath = 0;
+	m_aTeamscore[TEAM_RED] = 0;
+	m_aTeamscore[TEAM_BLUE] = 0;
 	if(g_Config.m_SvWarmup)
 		SetGameState(GS_WARMUP, g_Config.m_SvWarmup);
 	else
@@ -349,10 +353,10 @@ void IGameController::DoWincheck()
 	{
 		// check score win condition
 		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
-			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_GameStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
 		{
 			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
-				EndRound();
+				EndMatch();
 			else
 				m_SuddenDeath = 1;
 		}
@@ -378,17 +382,17 @@ void IGameController::DoWincheck()
 
 		// check score win condition
 		if((g_Config.m_SvScorelimit > 0 && Topscore >= g_Config.m_SvScorelimit) ||
-			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_GameStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
 		{
 			if(TopscoreCount == 1)
-				EndRound();
+				EndMatch();
 			else
 				m_SuddenDeath = 1;
 		}
 	}
 }
 
-void IGameController::EndRound()
+void IGameController::EndMatch()
 {
 	SetGameState(GS_GAMEOVER, 10);
 }
@@ -398,7 +402,7 @@ void IGameController::ResetGame()
 	GameServer()->m_World.m_ResetRequested = true;
 	
 	SetGameState(GS_GAME);
-	m_RoundStartTick = Server()->Tick();
+	m_GameStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
 }
 
@@ -488,7 +492,7 @@ void IGameController::SetGameState(int GameState, int Seconds)
 	}
 }
 
-void IGameController::StartRound()
+void IGameController::StartMatch()
 {
 	ResetGame();
 
@@ -502,7 +506,7 @@ void IGameController::StartRound()
 
 	Server()->DemoRecorder_HandleAutoStart();
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
+	str_format(aBuf, sizeof(aBuf), "start match type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 }
 
@@ -533,18 +537,18 @@ void IGameController::Snap(int SnappingClient)
 		break;
 	case GS_GAMEOVER:
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
-		pGameInfoObj->m_GameStateTimer = Server()->Tick()-m_RoundStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
+		pGameInfoObj->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
 	}
 	if(m_SuddenDeath)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;
 
-	pGameInfoObj->m_RoundStartTick = m_RoundStartTick;
+	pGameInfoObj->m_GameStartTick = m_GameStartTick;
 
 	pGameInfoObj->m_ScoreLimit = g_Config.m_SvScorelimit;
 	pGameInfoObj->m_TimeLimit = g_Config.m_SvTimelimit;
 
-	pGameInfoObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap : 0;
-	pGameInfoObj->m_RoundCurrent = m_RoundCount+1;
+	pGameInfoObj->m_MatchNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvMatchesPerMap) ? g_Config.m_SvMatchesPerMap : 0;
+	pGameInfoObj->m_MatchCurrent = m_MatchCount+1;
 }
 
 void IGameController::Tick()
@@ -561,7 +565,7 @@ void IGameController::Tick()
 			if(m_GameStateTimer == 0 || (m_GameStateTimer == TIMER_INFINITE && (!g_Config.m_SvPlayerReadyMode || GetPlayersReadyState())))
 			{
 				if(m_GameStateTimer == 0)
-					StartRound();
+					StartMatch();
 				else
 					SetGameState(GS_STARTCOUNTDOWN, TIMER_STARTCOUNTDOWN);
 			}
@@ -570,25 +574,25 @@ void IGameController::Tick()
 			if(m_GameStateTimer == 0)
 			{
 				if(m_StartCountdownReset)
-					StartRound();
+					StartMatch();
 				else
 					SetGameState(GS_GAME);
 			}
 			else
-				++m_RoundStartTick;
+				++m_GameStartTick;
 			break;
 		case GS_PAUSED:
 			if(m_GameStateTimer == 0 || (m_GameStateTimer == TIMER_INFINITE && g_Config.m_SvPlayerReadyMode && GetPlayersReadyState()))
 				SetGameState(GS_PAUSED, 0);
 			else
-				++m_RoundStartTick;
+				++m_GameStartTick;
 			break;
 		case GS_GAMEOVER:
 			if(m_GameStateTimer == 0)
 			{
 				CycleMap();
-				StartRound();
-				m_RoundCount++;
+				StartMatch();
+				m_MatchCount++;
 			}
 		}
 	}
@@ -661,7 +665,7 @@ static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c =
 void IGameController::ChangeMap(const char *pToMap)
 {
 	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
-	EndRound();
+	EndMatch();
 }
 
 void IGameController::CycleMap()
@@ -673,15 +677,15 @@ void IGameController::CycleMap()
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		str_copy(g_Config.m_SvMap, m_aMapWish, sizeof(g_Config.m_SvMap));
 		m_aMapWish[0] = 0;
-		m_RoundCount = 0;
+		m_MatchCount = 0;
 		return;
 	}
 	if(!str_length(g_Config.m_SvMaprotation))
 		return;
 
-	if(m_RoundCount < g_Config.m_SvRoundsPerMap-1)
+	if(m_MatchCount < g_Config.m_SvMatchesPerMap-1)
 	{
-		if(g_Config.m_SvRoundSwap)
+		if(g_Config.m_SvMatchSwap)
 			GameServer()->SwapTeams();
 		return;
 	}
@@ -732,7 +736,7 @@ void IGameController::CycleMap()
 	while(IsSeparator(aBuf[i]))
 		i++;
 
-	m_RoundCount = 0;
+	m_MatchCount = 0;
 
 	char aBufMsg[256];
 	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);

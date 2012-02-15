@@ -70,10 +70,10 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit);
 			TextRender()->Text(0, x+230.0f, y, 20.0f, aBuf, -1);
 		}
-		if(m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_MatchNum && m_pClient->m_Snap.m_pGameInfoObj->m_MatchCurrent)
 		{
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum);
+			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Match"), m_pClient->m_Snap.m_pGameInfoObj->m_MatchCurrent, m_pClient->m_Snap.m_pGameInfoObj->m_MatchNum);
 			float tw = TextRender()->TextWidth(0, 20.0f, aBuf, -1);
 			TextRender()->Text(0, x+w-tw-10.0f, y, 20.0f, aBuf, -1);
 		}
