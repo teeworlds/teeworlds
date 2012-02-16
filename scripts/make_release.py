@@ -14,7 +14,7 @@ if len(sys.argv) != 3:
 	sys.exit(-1)
 
 name = "teeworlds"
-url_languages = "https://github.com/teeworlds/teeworlds-translation/zipball/master"
+url_languages = "https://github.com/SushiTee/teeworlds-translation/zipball/Client-Pack"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
