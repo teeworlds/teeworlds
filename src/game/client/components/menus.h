@@ -315,7 +315,6 @@ class CMenus : public CComponent
 	void RenderSettingsHudMod(CUIRect MainView);
 	void RenderSettingsChat(CUIRect MainView);
 	void RenderSettingsRace(CUIRect MainView);
-	void RenderSettingsLvlx(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
 	// TeeComp related
