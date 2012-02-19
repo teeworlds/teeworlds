@@ -9,14 +9,22 @@
 /*
 
 CURRENT:
-	packet header: 3 bytes
+	packet header: 11 bytes
+		unsigned char padding[3]; // 24bit extra (must be 0x000000) to ensure compatiblity with the 0.5/0.6 protocol
+		unsigned char version; // 8bit version (must be 0x01)
+		unsigned char token[4]; // 32bit token (0xffffffff for connless packets)
+		unsigned char flags_ack; // 4bit flags, 4bit ack (0xff for connless packets)
+		unsigned char ack; // 8 bit ack (0xff for connless packets)
+		unsigned char num_chunks; // 8 bit chunks (0xff for connless packets)
+
+	legacy packet header: 3-6 bytes
 		unsigned char flags_ack; // 4bit flags, 4bit ack
 		unsigned char ack; // 8 bit ack
 		unsigned char num_chunks; // 8 bit chunks
 
-		(unsigned char padding[3])	// 24 bit extra incase it's a connection less packet
-									// this is to make sure that it's compatible with the
-									// old protocol
+		(unsigned char padding[3]) // 24 bit extra incase it's a connection less packet
+		                           // this is to make sure that it's compatible with the
+		                           // old protocol
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -49,17 +57,23 @@ enum
 	NET_MAX_PACKETSIZE = 1400,
 	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-6,
 	NET_MAX_CHUNKHEADERSIZE = 3,
-	NET_PACKETHEADERSIZE = 3,
+	NET_PACKETHEADERSIZE = 11,
+	NET_PACKETHEADERSIZE_LEGACY = 3,
 	NET_MAX_CLIENTS = 16,
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
+	NET_TOKEN_NONE = 0xffffffff,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
 	NET_CONNSTATE_OFFLINE=0,
-	NET_CONNSTATE_CONNECT=1,
-	NET_CONNSTATE_PENDING=2,
-	NET_CONNSTATE_ONLINE=3,
-	NET_CONNSTATE_ERROR=4,
+	NET_CONNSTATE_TOKEN=1,
+	NET_CONNSTATE_CONNECT=2,
+	NET_CONNSTATE_PENDING=3,
+	NET_CONNSTATE_ONLINE=4,
+	NET_CONNSTATE_ERROR=5,
+
+	NET_PACKETVERSION_LEGACY=0,
+	NET_PACKETVERSION=1,
 
 	NET_PACKETFLAG_CONTROL=1,
 	NET_PACKETFLAG_CONNLESS=2,
@@ -74,6 +88,7 @@ enum
 	NET_CTRLMSG_CONNECTACCEPT=2,
 	NET_CTRLMSG_ACCEPT=3,
 	NET_CTRLMSG_CLOSE=4,
+	NET_CTRLMSG_TOKEN=5,
 
 	NET_CONN_BUFFERSIZE=1024*32,
 
@@ -121,6 +136,8 @@ public:
 class CNetPacketConstruct
 {
 public:
+	int m_Version;
+	unsigned int m_Token;
 	int m_Flags;
 	int m_Ack;
 	int m_NumChunks;
@@ -141,7 +158,6 @@ private:
 	unsigned short m_PeerAck;
 	unsigned m_State;
 
-	int m_Token;
 	int m_RemoteClosed;
 	bool m_BlockCloseMsg;
 
@@ -155,7 +171,10 @@ private:
 
 	CNetPacketConstruct m_Construct;
 
+	unsigned int m_Token;
+	unsigned int m_PeerToken;
 	NETADDR m_PeerAddr;
+
 	NETSOCKET m_Socket;
 	NETSTATS m_Stats;
 
@@ -167,13 +186,18 @@ private:
 
 	int QueueChunkEx(int Flags, int DataSize, const void *pData, int Sequence);
 	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
+	void SendToken();
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
+
+	static unsigned int GenerateToken(const NETADDR *pPeerAddr);
 
 public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
+
+	void SetToken(unsigned int Token);
 
 	int Update();
 	int Flush();
@@ -378,8 +402,9 @@ public:
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
-	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);
+	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token);
+	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 
