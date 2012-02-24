@@ -3,6 +3,7 @@
 
 #include <base/math.h>
 #include <base/system.h>
+#include <base/tl/sorted_array.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
@@ -280,6 +281,10 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
+
+	m_NumMapEntries = 0;
+	m_pFirstMapEntry = 0;
+	m_pLastMapEntry = 0;
 
 	m_MapReload = 0;
 
@@ -692,6 +697,7 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
 	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
 	pThis->m_aClients[ClientID].m_Quitting = false;
+	pThis->m_aClients[ClientID].m_pMapListEntryToSend = 0;
 	pThis->m_aClients[ClientID].Reset();
 	return 0;
 }
@@ -721,6 +727,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
 	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
 	pThis->m_aClients[ClientID].m_Quitting = false;
+	pThis->m_aClients[ClientID].m_pMapListEntryToSend = 0;
 	pThis->m_aClients[ClientID].m_Snapshots.PurgeAll();
 	return 0;
 }
@@ -794,6 +801,35 @@ void CServer::UpdateClientRconCommands()
 		{
 			SendRconCmdAdd(m_aClients[ClientID].m_pRconCmdToSend, ClientID);
 			m_aClients[ClientID].m_pRconCmdToSend = m_aClients[ClientID].m_pRconCmdToSend->NextCommandInfo(ConsoleAccessLevel, CFGFLAG_SERVER);
+		}
+	}
+}
+
+void CServer::SendMapListEntryAdd(const MapListEntry *pMapListEntry, int ClientID)
+{
+	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_ADD);
+	Msg.AddString(pMapListEntry->m_aName, 256);
+	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+}
+
+void CServer::SendMapListEntryRem(const MapListEntry *pMapListEntry, int ClientID)
+{
+	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_REM);
+	Msg.AddString(pMapListEntry->m_aName, 256);
+	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+}
+
+
+void CServer::UpdateClientMapListEntries()
+{
+	int ClientID = Tick() % MAX_CLIENTS;
+
+	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed)
+	{
+		for(int i = 0; i < MAX_MAPLISTENTRY_SEND && m_aClients[ClientID].m_pMapListEntryToSend; ++i)
+		{
+			SendMapListEntryAdd(m_aClients[ClientID].m_pMapListEntryToSend, ClientID);
+			m_aClients[ClientID].m_pMapListEntryToSend = m_aClients[ClientID].m_pMapListEntryToSend->m_pNext;
 		}
 	}
 }
@@ -991,6 +1027,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 					m_aClients[ClientID].m_Authed = AUTHED_ADMIN;
 					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
+					m_aClients[ClientID].m_pMapListEntryToSend = m_pFirstMapEntry;
 					SendRconLine(ClientID, "Admin authentication successful. Full remote console access granted.");
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (admin)", ClientID);
@@ -1004,6 +1041,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_aClients[ClientID].m_Authed = AUTHED_MOD;
 					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_MOD, CFGFLAG_SERVER);
 					SendRconLine(ClientID, "Moderator authentication successful. Limited remote console access granted.");
+					int SendMapList = Unpacker.GetInt();
+					const IConsole::CCommandInfo *pInfo = Console()->GetCommandInfo("sv_map", CFGFLAG_SERVER, false);
+					if(Unpacker.Error() == 0 && SendMapList && pInfo->GetAccessLevel() == IConsole::ACCESS_LEVEL_MOD)
+						m_aClients[ClientID].m_pMapListEntryToSend = m_pFirstMapEntry;
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (moderator)", ClientID);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
@@ -1233,6 +1274,10 @@ int CServer::Run()
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
+	// list maps
+	CHeap *m_MapListHeap= new CHeap();
+	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, this);
+
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
 	{
@@ -1415,6 +1460,46 @@ int CServer::Run()
 	return 0;
 }
 
+int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
+{
+	CServer *pThis = (CServer *) pUser;
+	unsigned Length = str_length(pFilename);
+
+	if(Length >= sizeof(pFilename) - 1) // too long names
+		return 0;
+
+	if(pFilename[0] == '.') // hidden files
+		return 0;
+
+	MapListEntry *pEntry;
+	pEntry = (MapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(MapListEntry));
+	pThis->m_NumMapEntries++;
+	pEntry->m_pNext = 0;
+	pEntry->m_pPrev = pThis->m_pLastMapEntry;
+	if(pEntry->m_pPrev)
+		pEntry->m_pPrev->m_pNext = pEntry;
+	pThis->m_pLastMapEntry = pEntry;
+	if(!pThis->m_pFirstMapEntry)
+		pThis->m_pFirstMapEntry = pEntry;
+
+	str_copy(pEntry->m_aName, pFilename, sizeof(pEntry->m_aName));
+	pEntry->m_IsDir = IsDir;
+
+	if(!IsDir)
+	{
+		if(Length < 5 || str_comp((const char *)pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
+			return 0;
+
+		pEntry->m_aName[Length - 4] = 0;
+	}
+	else
+	 {
+		pEntry->m_aName[Length] = '/';
+		pEntry->m_aName[Length + 1] = 0;
+	 }
+	return 0;
+}
+
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
 {
 	if(pResult->NumArguments() > 1)
@@ -1502,6 +1587,13 @@ void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_DemoRecorder.Stop();
 }
 
+void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pServer = (CServer *)pUser;
+
+
+}
+
 void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_MapReload = 1;
@@ -1520,6 +1612,7 @@ void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 		pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
 		pServer->m_aClients[pServer->m_RconClientID].m_AuthTries = 0;
 		pServer->m_aClients[pServer->m_RconClientID].m_pRconCmdToSend = 0;
+		pServer->m_aClients[pServer->m_RconClientID].m_pMapListEntryToSend = 0;
 		pServer->SendRconLine(pServer->m_RconClientID, "Logout successful.");
 		char aBuf[32];
 		str_format(aBuf, sizeof(aBuf), "ClientID=%d logged out", pServer->m_RconClientID);
@@ -1559,10 +1652,30 @@ void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 					(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0))
 					continue;
 
-				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN)
+				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN) {
+					if(pInfo->m_pName == "sv_map") // handle the access to the sv_map command
+					{
+						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+						Msg.AddInt(1);	//authed
+						Msg.AddInt(1);	//cmdlist
+						Msg.AddInt(1);  //maplist
+						pThis->SendMsgEx(&Msg, MSGFLAG_VITAL, pThis->m_RconClientID, true);
+						pThis->m_aClients[pThis->m_RconClientID].m_pMapListEntryToSend = pThis->m_pFirstMapEntry;
+					}
 					pThis->SendRconCmdAdd(pInfo, i);
-				else
+				}
+				else {
+					if(pInfo->m_pName == "sv_map") // handle the removal of access to the sv_map command
+					{
+						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+						Msg.AddInt(1);	//authed
+						Msg.AddInt(1);	//cmdlist
+						Msg.AddInt(0);  //maplist
+						pThis->SendMsgEx(&Msg, MSGFLAG_VITAL, pThis->m_RconClientID, true);
+						pThis->m_aClients[pThis->m_RconClientID].m_pMapListEntryToSend = 0;
+					}
 					pThis->SendRconCmdRem(pInfo, i);
+				}
 			}
 		}
 	}
@@ -1596,6 +1709,7 @@ void CServer::RegisterCommands()
 	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
+	Console()->Register("maps", "", CFGFLAG_SERVER, ConListMaps, this, "List the maps");
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
