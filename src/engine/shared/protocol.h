@@ -70,6 +70,8 @@ enum
 	// sent by server (todo: move it up)
 	NETMSG_RCON_CMD_ADD,
 	NETMSG_RCON_CMD_REM,
+	NETMSG_MAPLIST_ENTRY_ADD,
+	NETMSG_MAPLIST_ENTRY_REM,
 };
 
 // this should be revised

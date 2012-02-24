@@ -4,7 +4,7 @@
 #define ENGINE_SERVER_SERVER_H
 
 #include <engine/server.h>
-
+#include <engine/shared/memheap.h>
 
 class CSnapIDPool
 {
@@ -76,7 +76,10 @@ public:
 		AUTHED_ADMIN,
 
 		MAX_RCONCMD_SEND=16,
+		MAX_MAPLISTENTRY_SEND=64,
 	};
+
+	struct MapListEntry;
 
 	class CClient
 	{
@@ -123,6 +126,7 @@ public:
 		int m_AuthTries;
 
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
+		const MapListEntry *m_pMapListEntryToSend;
 
 		void Reset();
 	};
@@ -148,6 +152,20 @@ public:
 
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
+
+	struct MapListEntry
+	{
+		MapListEntry *m_pPrev;
+		MapListEntry *m_pNext;
+		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
+		int m_IsDir;
+	};
+
+	CHeap *m_pMapListHeap;
+	MapListEntry *m_pLastMapEntry;
+	MapListEntry *m_pFirstMapEntry;
+	int m_NumMapEntries;
+
 
 	char m_aCurrentMap[64];
 	unsigned m_CurrentMapCrc;
@@ -205,6 +223,10 @@ public:
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void UpdateClientRconCommands();
 
+	void SendMapListEntryAdd(const MapListEntry *pMapListEntry, int ClientID);
+	void SendMapListEntryRem(const MapListEntry *pMapListEntry, int ClientID);
+	void UpdateClientMapListEntries();
+
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	void SendServerInfo(const NETADDR *pAddr, int Token);
@@ -218,11 +240,14 @@ public:
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 
+	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
+
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConStatus(IConsole::IResult *pResult, void *pUser);
 	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
+	static void ConListMaps(IConsole::IResult *pResult, void *pUser);
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
 	static void ConLogout(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
