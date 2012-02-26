@@ -91,7 +91,7 @@ int CNetServer::Update()
 		// generate new tokenseed and save the old one for slow clients
 		mem_copy(m_PrevTokenSeed, m_CurTokenSeed, NET_TOKENSEED_LENGTH);
 		for(int i = 0; i < NET_TOKENSEED_LENGTH; i++)
-			m_CurTokenSeed[i] = rand()%254+1;
+			m_CurTokenSeed[i] = rand()&0xff;
 		m_LastTokenSeedGenerated = time_get();
 	}
 
