@@ -162,6 +162,7 @@ void CHud::RenderScoreHud()
 			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue);
 			float aScoreTeamWidth[2] = { TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1) };
 			int FlagCarrier[2] = { m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed, m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue };
+			int FlagDropTick[2] = { m_pClient->m_Snap.m_pGameDataObj->m_FlagDropTickRed, m_pClient->m_Snap.m_pGameDataObj->m_FlagDropTickBlue };
 			float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 			float Split = 3.0f;
 			float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
@@ -184,8 +185,7 @@ void CHud::RenderScoreHud()
 
 				if(GameFlags&GAMEFLAG_FLAGS)
 				{
-					int BlinkTimer = (m_pClient->m_FlagDropTick[t] != 0 &&
-										(Client()->GameTick()-m_pClient->m_FlagDropTick[t])/Client()->GameTickSpeed() >= 25) ? 10 : 20;
+					int BlinkTimer = (FlagDropTick[t] != 0 && (Client()->GameTick()-FlagDropTick[t])/Client()->GameTickSpeed() >= 25) ? 10 : 20;
 					if(FlagCarrier[t] == FLAG_ATSTAND || (FlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick()/BlinkTimer)&1)))
 					{
 						// draw flag

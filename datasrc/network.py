@@ -120,6 +120,8 @@ Objects = [
 
 		NetIntRange("m_FlagCarrierRed", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
 		NetIntRange("m_FlagCarrierBlue", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetTick("m_FlagDropTickRed"),
+		NetTick("m_FlagDropTickBlue"),
 	]),
 
 	NetObject("CharacterCore", [

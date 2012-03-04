@@ -47,4 +47,6 @@ void CGameControllerTDM::Snap(int SnappingClient)
 
 	pGameDataObj->m_FlagCarrierRed = 0;
 	pGameDataObj->m_FlagCarrierBlue = 0;
+	pGameDataObj->m_FlagDropTickRed = 0;
+	pGameDataObj->m_FlagDropTickBlue = 0;
 }
