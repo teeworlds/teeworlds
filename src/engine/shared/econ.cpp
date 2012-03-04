@@ -75,7 +75,11 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 
 	NETADDR BindAddr;
 	if(g_Config.m_EcBindaddr[0] && net_host_lookup(g_Config.m_EcBindaddr, &BindAddr, NETTYPE_ALL) == 0)
+	{
+		// got bindaddr
+		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_EcPort;
+	}
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));

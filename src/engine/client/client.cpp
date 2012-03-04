@@ -1746,14 +1746,19 @@ void CClient::Run()
 	// open socket
 	{
 		NETADDR BindAddr;
-		if(g_Config.m_Bindaddr[0] == 0 || net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) != 0)
+		if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
+		{
+			// got bindaddr
+			BindAddr.type = NETTYPE_ALL;
+		}
+		else
 		{
 			mem_zero(&BindAddr, sizeof(BindAddr));
 			BindAddr.type = NETTYPE_ALL;
 		}
 		if(!m_NetClient.Open(BindAddr, 0))
 		{
-			dbg_msg("client", "couldn't start network");
+			dbg_msg("client", "couldn't open socket");
 			return;
 		}
 	}

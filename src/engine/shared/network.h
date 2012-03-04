@@ -353,7 +353,7 @@ public:
 	int ResetErrorString();
 
 	// error and state
-	int NetType() { return m_Socket.type; }
+	int NetType() const { return m_Socket.type; }
 	int State();
 	int GotProblems();
 	const char *ErrorString();
