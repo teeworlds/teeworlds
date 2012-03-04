@@ -843,7 +843,8 @@ void CGraphics_Threaded::Swap()
 	// TODO: screenshot support
 	if(m_DoScreenshot)
 	{
-		ScreenshotDirect(m_aScreenshotName);
+		if(WindowActive())
+			ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 
