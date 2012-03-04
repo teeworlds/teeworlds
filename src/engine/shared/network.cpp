@@ -161,7 +161,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check the size
 	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
 	{
-		dbg_msg("", "packet too small, %d", Size);
+		dbg_msg("network", "packet too small, %d", Size);
 		return -1;
 	}
 
@@ -177,15 +177,11 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 	// read the packet
 	pPacket->m_Flags = pBuffer[0]>>4;
-	pPacket->m_Ack = ((pBuffer[0]&0xf)<<8) | pBuffer[1];
-	pPacket->m_NumChunks = pBuffer[2];
-	pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
-
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
 	{
 		if(Size < 6)
 		{
-			dbg_msg("", "connection less packet too small, %d", Size);
+			dbg_msg("network", "connection less packet too small, %d", Size);
 			return -1;
 		}
 
@@ -197,6 +193,15 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 	else
 	{
+		if(Size-NET_PACKETHEADERSIZE > NET_MAX_PAYLOAD)
+		{
+			dbg_msg("network", "packet too big, %d", Size);
+			return -1;
+		}
+
+		pPacket->m_Ack = ((pBuffer[0]&0xf)<<8) | pBuffer[1];
+		pPacket->m_NumChunks = pBuffer[2];
+		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
 		if(pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION)
 			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[3], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
 		else
@@ -244,12 +249,12 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int Con
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
 {
-	pData[0] = ((m_Flags&3)<<6)|((m_Size>>4)&0x3f);
-	pData[1] = (m_Size&0xf);
+	pData[0] = ((m_Flags&0x03)<<6) | ((m_Size>>6)&0x3F);
+	pData[1] = (m_Size&0x3F);
 	if(m_Flags&NET_CHUNKFLAG_VITAL)
 	{
-		pData[1] |= (m_Sequence>>2)&0xf0;
-		pData[2] = m_Sequence&0xff;
+		pData[1] |= (m_Sequence>>2)&0xC0;
+		pData[2] = m_Sequence&0xFF;
 		return pData + 3;
 	}
 	return pData + 2;
@@ -257,12 +262,12 @@ unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
 
 unsigned char *CNetChunkHeader::Unpack(unsigned char *pData)
 {
-	m_Flags = (pData[0]>>6)&3;
-	m_Size = ((pData[0]&0x3f)<<4) | (pData[1]&0xf);
+	m_Flags = (pData[0]>>6)&0x03;
+	m_Size = ((pData[0]&0x3F)<<6) | (pData[1]&0x3F);
 	m_Sequence = -1;
 	if(m_Flags&NET_CHUNKFLAG_VITAL)
 	{
-		m_Sequence = ((pData[1]&0xf0)<<2) | pData[2];
+		m_Sequence = ((pData[1]&0xC0)<<2) | pData[2];
 		return pData + 3;
 	}
 	return pData + 2;

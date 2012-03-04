@@ -903,6 +903,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 	NETSOCKET sock = invalid_socket;
 	NETADDR tmpbindaddr = bindaddr;
 	int broadcast = 1;
+	int recvsize = 65536;
 
 	if(bindaddr.type&NETTYPE_IPV4)
 	{
@@ -917,13 +918,13 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		{
 			sock.type |= NETTYPE_IPV4;
 			sock.ipv4sock = socket;
+
+			/* set broadcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
 
 	if(bindaddr.type&NETTYPE_IPV6)
@@ -939,14 +940,17 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		{
 			sock.type |= NETTYPE_IPV6;
 			sock.ipv6sock = socket;
+
+			/* set broadcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
+
+	/* set non-blocking */
+	net_set_non_blocking(sock);
 
 	/* return */
 	return sock;

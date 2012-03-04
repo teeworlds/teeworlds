@@ -121,6 +121,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	char m_aMapdownloadName[256];
 	IOHANDLE m_MapdownloadFile;
 	int m_MapdownloadChunk;
+	int m_MapdownloadChunkNum;
+	int m_MapDownloadChunkSize;
 	int m_MapdownloadCrc;
 	int m_MapdownloadAmount;
 	int m_MapdownloadTotalsize;

@@ -1028,6 +1028,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 			int MapCrc = Unpacker.GetInt();
 			int MapSize = Unpacker.GetInt();
+			int MapChunkNum = Unpacker.GetInt();
+			int MapChunkSize = Unpacker.GetInt();
 			const char *pError = 0;
 
 			if(Unpacker.Error())
@@ -1037,13 +1039,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(!m_MapChecker.IsMapValid(pMap, MapCrc, MapSize))
 				pError = "invalid standard map";
 
-			for(int i = 0; pMap[i]; i++) // protect the player from nasty map names
+			// protect the player from nasty map names
+			for(int i = 0; pMap[i]; i++)
 			{
 				if(pMap[i] == '/' || pMap[i] == '\\')
 					pError = "strange character in map name";
 			}
 
-			if(MapSize < 0)
+			if(MapSize <= 0)
 				pError = "invalid map size";
 
 			if(pError)
@@ -1059,52 +1062,50 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 				else
 				{
+					// start map download
 					str_format(m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename), "downloadedmaps/%s_%08x.map", pMap, MapCrc);
 
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "starting to download map to '%s'", m_aMapdownloadFilename);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
 
-					m_MapdownloadChunk = 0;
 					str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
 					if(m_MapdownloadFile)
 						io_close(m_MapdownloadFile);
 					m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+					m_MapdownloadChunk = 0;
+					m_MapdownloadChunkNum = MapChunkNum;
+					m_MapDownloadChunkSize = MapChunkSize;
 					m_MapdownloadCrc = MapCrc;
 					m_MapdownloadTotalsize = MapSize;
 					m_MapdownloadAmount = 0;
 
+					// request first chunk package of map data
 					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-					Msg.AddInt(m_MapdownloadChunk);
 					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 					if(g_Config.m_Debug)
-					{
-						str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
-						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
-					}
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested first chunk package");
 				}
 			}
 		}
 		else if(Msg == NETMSG_MAP_DATA)
 		{
-			int Last = Unpacker.GetInt();
-			int MapCRC = Unpacker.GetInt();
-			int Chunk = Unpacker.GetInt();
-			int Size = Unpacker.GetInt();
-			const unsigned char *pData = Unpacker.GetRaw(Size);
-
-			// check fior errors
-			if(Unpacker.Error() || Size <= 0 || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile)
+			if(!m_MapdownloadFile)
 				return;
 
+			int Size = min(m_MapDownloadChunkSize, m_MapdownloadTotalsize-m_MapdownloadAmount);
+			const unsigned char *pData = Unpacker.GetRaw(Size);
+			if(Unpacker.Error())
+				return;
+ 
 			io_write(m_MapdownloadFile, pData, Size);
-
+			++m_MapdownloadChunk;
 			m_MapdownloadAmount += Size;
 
-			if(Last)
+			if(m_MapdownloadAmount == m_MapdownloadTotalsize)
 			{
-				const char *pError;
+				// map download complete
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
 
 				if(m_MapdownloadFile)
@@ -1114,7 +1115,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				m_MapdownloadTotalsize = -1;
 
 				// load map
-				pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
+				const char *pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
@@ -1123,21 +1124,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				else
 					DisconnectWithReason(pError);
 			}
-			else
+			else if(m_MapdownloadChunk%m_MapdownloadChunkNum == 0)
 			{
-				// request new chunk
-				m_MapdownloadChunk++;
-
+				// request next chunk package of map data
 				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-				Msg.AddInt(m_MapdownloadChunk);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 				if(g_Config.m_Debug)
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
-				}
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested next chunk package");
 			}
 		}
 		else if(Msg == NETMSG_CON_READY)

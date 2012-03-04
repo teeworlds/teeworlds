@@ -122,6 +122,7 @@ public:
 		int m_Authed;
 		int m_AuthTries;
 
+		int m_MapChunk;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();
@@ -149,10 +150,16 @@ public:
 	int64 m_Lastheartbeat;
 	//static NETADDR4 master_server;
 
+	// map
+	enum
+	{
+		MAP_CHUNK_SIZE=NET_MAX_PAYLOAD-NET_MAX_CHUNKHEADERSIZE-4, // msg type
+	};
 	char m_aCurrentMap[64];
 	unsigned m_CurrentMapCrc;
 	unsigned char *m_pCurrentMapData;
 	int m_CurrentMapSize;
+	int m_MapChunksPerRequest;
 
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
