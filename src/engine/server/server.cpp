@@ -1307,7 +1307,7 @@ int CServer::Run()
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
 	// list maps
-	CHeap *m_MapListHeap= new CHeap();
+	m_pMapListHeap= new CHeap();
 	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, this);
 
 	// load map

@@ -1163,6 +1163,18 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(Unpacker.Error() == 0)
 				m_pConsole->DeregisterTemp(pName);
 		}
+		else if(Msg == NETMSG_MAPLIST_ENTRY_ADD)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->RegisterTempMap(pName);
+		}
+		else if(Msg == NETMSG_MAPLIST_ENTRY_REM)
+		{
+			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(Unpacker.Error() == 0)
+				m_pConsole->DeregisterTempMap(pName);
+		}
 		else if(Msg == NETMSG_RCON_AUTH_STATUS)
 		{
 			int Result = Unpacker.GetInt();
@@ -1174,6 +1186,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				m_UseTempRconCommands = 0;
 			if(Old != 0 && m_UseTempRconCommands == 0)
 				m_pConsole->DeregisterTempAll();
+			int MapOld = m_UseTempMapEntries;
+			m_UseTempMapEntries = Unpacker.GetInt();
+			if(Unpacker.Error() != 0)
+				m_UseTempMapEntries = 0;
+			if(MapOld != 0 && m_UseTempMapEntries == 0)
+				m_pConsole->DeregisterTempMapAll();
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{
