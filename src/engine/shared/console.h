@@ -155,6 +155,17 @@ class CConsole : public IConsole
 	void AddCommandSorted(CCommand *pCommand);
 	CCommand *FindCommand(const char *pName, int FlagMask);
 
+	struct MapListEntryTemp {
+		MapListEntryTemp *m_pPrev;
+		MapListEntryTemp *m_pNext;
+		char m_aName[TEMPMAP_NAME_LENGTH];
+	};
+
+	CHeap *m_pTempMapListHeap;
+	int m_pNumMapListEntries;
+	MapListEntryTemp *m_pFirstMapEntry;
+	MapListEntryTemp *m_pLastMapEntry;
+
 public:
 	CConsole(int FlagMask);
 
@@ -167,6 +178,9 @@ public:
 	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp);
 	virtual void DeregisterTemp(const char *pName);
 	virtual void DeregisterTempAll();
+	virtual void RegisterTempMap(const char *pName);
+	virtual void DeregisterTempMap(const char *pName);
+	virtual void DeregisterTempMapAll();
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 

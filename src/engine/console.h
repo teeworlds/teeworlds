@@ -24,6 +24,8 @@ public:
 		TEMPCMD_HELP_LENGTH=96,
 		TEMPCMD_PARAMS_LENGTH=16,
 
+		TEMPMAP_NAME_LENGTH=32,
+
 		MAX_PRINT_CB=4,
 	};
 
@@ -73,6 +75,9 @@ public:
 	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp) = 0;
 	virtual void DeregisterTemp(const char *pName) = 0;
 	virtual void DeregisterTempAll() = 0;
+	virtual void RegisterTempMap(const char *pName) = 0;
+	virtual void DeregisterTempMap(const char *pName) = 0;
+	virtual void DeregisterTempMapAll() = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
 
