@@ -1538,40 +1538,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 
 	CUIRect RestartWarning;
 	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
-
-	if(Client()->State() != IClient::STATE_OFFLINE) // in game only
-	{
-		CUIRect Temp, TabBar;
-
-		// render background
-		MainView.VSplitRight(120.0f, &MainView, &TabBar);
-		RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
-		TabBar.HSplitTop(50.0f, &Temp, &TabBar);
-		RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
-
-		// tabs
-		CUIRect Button;
-
-		const char *aTabs[] = {
-			Localize("General"),
-			Localize("Player"),
-			("Tee"),
-			Localize("Controls"),
-			Localize("Graphics"),
-			Localize("Sound")};
-
-		int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
-
-		for(int i = 0; i < NumTabs; i++)
-		{
-			TabBar.HSplitTop(10, &Button, &TabBar);
-			TabBar.HSplitTop(26, &Button, &TabBar);
-			if(DoButton_MenuTab(aTabs[i], aTabs[i], g_Config.m_UiSettingsPage == i, &Button, CUI::CORNER_R))
-				g_Config.m_UiSettingsPage = i;
-		}
-	}
-	else
-		RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f); // background
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 

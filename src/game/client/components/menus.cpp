@@ -812,35 +812,75 @@ int CMenus::RenderMenubar(CUIRect r)
 	else
 	{
 		// online menus
-		Box.VSplitLeft(90.0f, &Button, &Box);
-		static int s_GameButton=0;
-		if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL))
-			NewPage = PAGE_GAME;
+		if(m_GamePage != PAGE_SETTINGS) // Game stuff
+		{
+			Box.VSplitLeft(90.0f, &Button, &Box);
+			static int s_GameButton=0;
+			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL))
+				NewPage = PAGE_GAME;
 
-		Box.VSplitLeft(90.0f, &Button, &Box);
-		static int s_PlayersButton=0;
-		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
-			NewPage = PAGE_PLAYERS;
+			Box.VSplitLeft(90.0f, &Button, &Box);
+			static int s_PlayersButton=0;
+			if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
+				NewPage = PAGE_PLAYERS;
 
-		Box.VSplitLeft(130.0f, &Button, &Box);
-		static int s_ServerInfoButton=0;
-		if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
-			NewPage = PAGE_SERVER_INFO;
+			Box.VSplitLeft(130.0f, &Button, &Box);
+			static int s_ServerInfoButton=0;
+			if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
+				NewPage = PAGE_SERVER_INFO;
 
-		Box.VSplitLeft(130.0f, &Button, &Box);
-		static int s_CallVoteButton=0;
-		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
-			NewPage = PAGE_CALLVOTE;
+			Box.VSplitLeft(130.0f, &Button, &Box);
+			static int s_CallVoteButton=0;
+			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+				NewPage = PAGE_CALLVOTE;
 
-		Box.VSplitRight(90.0f, &Box, &Button);
-		static int s_QuitButton=0;
-		if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR))
-			m_Popup = POPUP_QUIT;
+			Box.VSplitRight(90.0f, &Box, &Button);
+			static int s_QuitButton=0;
+			if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TR))
+				m_Popup = POPUP_QUIT;
 
-		Box.VSplitRight(130.0f, &Box, &Button);
-		static int s_SettingsButton=0;
-		if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), m_ActivePage==PAGE_SETTINGS, &Button, CUI::CORNER_TL))
-			NewPage = PAGE_SETTINGS;
+			Box.VSplitRight(130.0f, &Box, &Button);
+			static int s_SettingsButton=0;
+			if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TL))
+				NewPage = PAGE_SETTINGS;
+		}
+		else // settings menu
+		{
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_InGameGeneralButton=0;
+			if(DoButton_MenuTab(&s_InGameGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_TL))
+				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_InGamePlayerButton=0;
+			if(DoButton_MenuTab(&s_InGamePlayerButton, Localize("Players"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button, 0))
+				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+
+			Box.VSplitLeft(60.0f, &Button, &Box);
+			static int s_InGameTeeButton=0;
+			if(DoButton_MenuTab(&s_InGameTeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button, 0))
+				g_Config.m_UiSettingsPage = SETTINGS_TEE;
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_InGameControlsButton=0;
+			if(DoButton_MenuTab(&s_InGameControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button, 0))
+				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
+
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_InGameGraphicsButton=0;
+			if(DoButton_MenuTab(&s_InGameGraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button, 0))
+				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+
+			Box.VSplitLeft(90.0f, &Button, &Box);
+			static int s_InGameSoundButton=0;
+			if(DoButton_MenuTab(&s_InGameSoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button, CUI::CORNER_TR))
+				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+
+			Box.VSplitRight(90.0f, &Box, &Button);
+			static int s_InGameMenuButton=0;
+			if(DoButton_Menu(&s_InGameMenuButton, Localize("Back"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_T))
+				NewPage = PAGE_GAME;
+		}
 	}
 
 	if(NewPage != -1)

@@ -134,7 +134,7 @@ class CMenus : public CComponent
 
 	enum
 	{
-		PAGE_NEWS=1,
+		PAGE_NEWS=0,
 		PAGE_GAME,
 		PAGE_PLAYERS,
 		PAGE_SERVER_INFO,
