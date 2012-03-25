@@ -1120,39 +1120,29 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 	if(!pSelf->m_pController->IsTeamplay())
 		return;
 
-	int CounterRed = 0;
-	int CounterBlue = 0;
+	int rnd = 0;
 	int PlayerTeam = 0;
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	int aPlayer[MAX_CLIENTS];
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-			++PlayerTeam;
-	PlayerTeam = (PlayerTeam+1)/2;
-	
+			aPlayer[PlayerTeam++]=i;
+
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were shuffled");
 
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	//creating random permutation
+	for(int i = PlayerTeam; i > 1; i--)
 	{
-		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-		{
-			if(CounterRed == PlayerTeam)
-				pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[i], TEAM_BLUE, false);
-			else if(CounterBlue == PlayerTeam)
-				pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[i], TEAM_RED, false);
-			else
-			{	
-				if(rand() % 2)
-				{
-					pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[i], TEAM_BLUE, false);
-					++CounterBlue;
-				}
-				else
-				{
-					pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[i], TEAM_RED, false);
-					++CounterRed;
-				}
-			}
-		}
+		rnd = rand() % i;
+		int tmp = aPlayer[rnd];
+		aPlayer[rnd] = aPlayer[i-1];
+		aPlayer[i-1] = tmp;
 	}
+	//uneven Number of Players?
+	rnd = PlayerTeam % 2 ? rand() % 2 : 0;
+
+	for(int i = 0; i < PlayerTeam; i++)
+		pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[aPlayer[i]], i < (PlayerTeam+rnd)/2 ? TEAM_RED : TEAM_BLUE, false); 
 }
 
 void CGameContext::ConLockTeams(IConsole::IResult *pResult, void *pUserData)
@@ -1458,15 +1448,15 @@ void CGameContext::OnInit()
 	m_Collision.Init(&m_Layers);
 
 	// select gametype
-	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
+	if(str_comp_nocase(g_Config.m_SvGametype, "mod") == 0)
 		m_pController = new CGameControllerMOD(this);
-	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
+	else if(str_comp_nocase(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
-	else if(str_comp(g_Config.m_SvGametype, "lms") == 0)
+	else if(str_comp_nocase(g_Config.m_SvGametype, "lms") == 0)
 		m_pController = new CGameControllerLMS(this);
-	else if(str_comp(g_Config.m_SvGametype, "sur") == 0)
+	else if(str_comp_nocase(g_Config.m_SvGametype, "sur") == 0)
 		m_pController = new CGameControllerSUR(this);
-	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
+	else if(str_comp_nocase(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
 	else
 		m_pController = new CGameControllerDM(this);
