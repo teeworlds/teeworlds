@@ -17,6 +17,9 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 	// init
 	m_Socket = Socket;
 	m_Connection.Init(m_Socket, false);
+
+	m_TokenManager.Init(Socket);
+
 	return true;
 }
 

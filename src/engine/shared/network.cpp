@@ -82,6 +82,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		pChunk->m_Flags = 0;
 		pChunk->m_DataSize = Header.m_Size;
 		pChunk->m_pData = pData;
+		pChunk->m_ResponseToken = NET_TOKEN_NONE;
 		return 1;
 	}
 }

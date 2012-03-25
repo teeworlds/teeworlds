@@ -101,10 +101,11 @@ typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUser);
 
 struct CNetChunk
 {
-	// -1 means that it's a stateless packet
+	// -1 means that it's a connless packet
 	// 0 on the client means the server
 	int m_ClientID;
-	NETADDR m_Address; // only used when client_id == -1
+	NETADDR m_Address; // only used when cid == -1
+	unsigned int m_ResponseToken; // only used when cid == -1
 	int m_Flags;
 	int m_DataSize;
 	const void *m_pData;
@@ -144,6 +145,28 @@ public:
 	int m_NumChunks;
 	int m_DataSize;
 	unsigned char m_aChunkData[NET_MAX_PAYLOAD];
+};
+
+
+class CNetTokenManager
+{
+public:
+	void Init(NETSOCKET Socket);
+
+	void GenerateSeed();
+
+	void ProcessTokenMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket);
+
+	bool CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken);
+	bool ConnectionToken(unsigned int Token);
+
+	static unsigned int GenerateToken(const NETADDR *pAddr, int64 Seed);
+
+private:
+	NETSOCKET m_Socket;
+
+	int64 m_Seed;
+	int64 m_PrevSeed;
 };
 
 
@@ -288,6 +311,8 @@ class CNetServer
 
 	CNetRecvUnpacker m_RecvUnpacker;
 
+	CNetTokenManager m_TokenManager;
+
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
@@ -330,6 +355,8 @@ class CNetConsole
 	void *m_UserPtr;
 
 	CNetRecvUnpacker m_RecvUnpacker;
+
+	CNetTokenManager m_TokenManager;
 
 public:
 	void SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);

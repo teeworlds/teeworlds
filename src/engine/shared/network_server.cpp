@@ -18,6 +18,8 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	if(!m_Socket.type)
 		return false;
 
+	m_TokenManager.Init(m_Socket);
+
 	m_pNetBan = pNetBan;
 
 	// clamp clients
@@ -117,6 +119,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				pChunk->m_Address = Addr;
 				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
+				pChunk->m_ResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
 				return 1;
 			}
 			else
