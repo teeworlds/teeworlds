@@ -9,22 +9,24 @@
 /*
 
 CURRENT:
-	packet header: 11 bytes
+	packet header: 11 bytes (15 bytes for connless)
 		unsigned char padding[3]; // 24bit extra (must be 0x000000) to ensure compatiblity with the 0.5/0.6 protocol
 		unsigned char version; // 8bit version (must be 0x01)
-		unsigned char token[4]; // 32bit token (0xffffffff for connless packets)
+		unsigned char token[4]; // 32bit token (0xffffffff means none)
 		unsigned char flags_ack; // 4bit flags, 4bit ack (0xff for connless packets)
-		unsigned char ack; // 8 bit ack (0xff for connless packets)
-		unsigned char num_chunks; // 8 bit chunks (0xff for connless packets)
+		unsigned char ack; // 8bit ack (0xff for connless packets)
+		unsigned char num_chunks; // 8bit chunks (0xff for connless packets)
 
-	legacy packet header: 3-6 bytes
+		(unsigned char response_token[4];) // 32bit response token (only in case it's a connless packet)
+
+	legacy packet header: 3 bytes (6 bytes for connless)
 		unsigned char flags_ack; // 4bit flags, 4bit ack
-		unsigned char ack; // 8 bit ack
-		unsigned char num_chunks; // 8 bit chunks
+		unsigned char ack; // 8bit ack
+		unsigned char num_chunks; // 8bit chunks
 
-		(unsigned char padding[3]) // 24 bit extra incase it's a connection less packet
-		                           // this is to make sure that it's compatible with the
-		                           // old protocol
+		(unsigned char padding[3];) // 24bit extra incase it's a connection less packet
+		                            // this is to make sure that it's compatible with the
+		                            // old protocol
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -138,6 +140,7 @@ class CNetPacketConstruct
 public:
 	int m_Version;
 	unsigned int m_Token;
+	unsigned int m_ResponseToken; // only used in connless packets
 	int m_Flags;
 	int m_Ack;
 	int m_NumChunks;
@@ -403,8 +406,8 @@ public:
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
 	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token);
-	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, const void *pData, int DataSize);
+	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken = NET_TOKEN_NONE);
+	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, unsigned int ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 

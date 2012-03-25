@@ -87,15 +87,15 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 }
 
 // packs the data tight and sends it
-void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, const void *pData, int DataSize)
+void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, unsigned int ResponseToken, const void *pData, int DataSize)
 {
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
 
-	dbg_assert(NET_PACKETVERSION_LEGACY <= Version && Version <= NET_PACKETVERSION_LEGACY, "CNetBase::SendPacketConnless: packet version out of range");
-	dbg_assert(DataSize + 11 <= NET_MAX_PACKETSIZE, "CNetBase::SendPacketConnless: packet data size too high");
+	dbg_assert(NET_PACKETVERSION_LEGACY <= Version && Version <= NET_PACKETVERSION, "CNetBase::SendPacketConnless: packet version out of range");
 
 	if(Version == NET_PACKETVERSION_LEGACY)
 	{
+		dbg_assert(DataSize + 6 <= NET_MAX_PACKETSIZE, "CNetBase::SendPacketConnless: packet data size too high");
 		aBuffer[0] = 0xff;
 		aBuffer[1] = 0xff;
 		aBuffer[2] = 0xff;
@@ -107,19 +107,25 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version,
 	}
 	else
 	{
-		aBuffer[0] = 0x00;
+		dbg_assert(DataSize + 15 <= NET_MAX_PACKETSIZE, "CNetBase::SendPacketConnless: packet data size too high");
+		aBuffer[0] = 0x00; // padding
 		aBuffer[1] = 0x00;
 		aBuffer[2] = 0x00;
-		aBuffer[3] = 0x01;
-		aBuffer[4] = (Token>>24)&0xff;
+		aBuffer[3] = 0x01; // version
+		aBuffer[4] = (Token>>24)&0xff; // token
 		aBuffer[5] = (Token>>16)&0xff;
 		aBuffer[6] = (Token>>8)&0xff;
 		aBuffer[7] = (Token)&0xff;
-		aBuffer[8] = 0xff;
+		aBuffer[8] = 0xff; // flags and data for not connless packets
 		aBuffer[9] = 0xff;
 		aBuffer[10] = 0xff;
-		mem_copy(&aBuffer[11], pData, DataSize);
-		net_udp_send(Socket, pAddr, aBuffer, 11+DataSize);
+		aBuffer[11] = (ResponseToken>>24)&0xff; // response token
+		aBuffer[12] = (ResponseToken>>16)&0xff;
+		aBuffer[13] = (ResponseToken>>8)&0xff;
+		aBuffer[14] = (ResponseToken)&0xff;
+
+		mem_copy(&aBuffer[15], pData, DataSize);
+		net_udp_send(Socket, pAddr, aBuffer, 15+DataSize);
 	}
 }
 
@@ -130,7 +136,7 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 	int FinalSize = -1;
 	int HeaderSize;
 
-	dbg_assert(NET_PACKETVERSION_LEGACY <= pPacket->m_Version && pPacket->m_Version <= NET_PACKETVERSION_LEGACY, "CNetBase::SendPacket: packet version out of range");
+	dbg_assert(NET_PACKETVERSION_LEGACY <= pPacket->m_Version && pPacket->m_Version <= NET_PACKETVERSION, "CNetBase::SendPacket: packet version out of range");
 
 	// log the data
 	if(ms_DataLogSent)
@@ -176,17 +182,17 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		}
 		else
 		{
-			aBuffer[0] = 0x00;
+			aBuffer[0] = 0x00; // padding
 			aBuffer[1] = 0x00;
 			aBuffer[2] = 0x00;
-			aBuffer[3] = 0x01;
-			aBuffer[4] = (pPacket->m_Token>>24)&0xff;
+			aBuffer[3] = 0x01; // version
+			aBuffer[4] = (pPacket->m_Token>>24)&0xff; // token
 			aBuffer[5] = (pPacket->m_Token>>16)&0xff;
 			aBuffer[6] = (pPacket->m_Token>>8)&0xff;
 			aBuffer[7] = (pPacket->m_Token)&0xff;
-			aBuffer[8] = ((pPacket->m_Flags<<4)&0xf0)|((pPacket->m_Ack>>8)&0xf);
-			aBuffer[9] = pPacket->m_Ack&0xff;
-			aBuffer[10] = pPacket->m_NumChunks;
+			aBuffer[8] = ((pPacket->m_Flags<<4)&0xf0)|((pPacket->m_Ack>>8)&0xf); // flags & ack
+			aBuffer[9] = pPacket->m_Ack&0xff; // ack
+			aBuffer[10] = pPacket->m_NumChunks; // num_chunks
 		}
 
 		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
@@ -232,6 +238,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		// read the packet
 		pPacket->m_Version = NET_PACKETVERSION_LEGACY;
 		pPacket->m_Token = NET_TOKEN_NONE;
+		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 
 		pPacket->m_Flags = pBuffer[0]>>4;
 		pPacket->m_Ack = ((pBuffer[0]&0xf)<<8) | pBuffer[1];
@@ -260,6 +267,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		// finally read the packet
 		pPacket->m_Version = NET_PACKETVERSION;
 		pPacket->m_Token = (pBuffer[4]<<24) | (pBuffer[5]<<16) | (pBuffer[6]<<8) | pBuffer[7];
+		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 
 		pPacket->m_Flags = pBuffer[8]>>4;
 		pPacket->m_Ack = ((pBuffer[8]&0xf)<<8) | pBuffer[9];
@@ -270,24 +278,30 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
 	{
-		if(Size < 6)
-		{
-			if(g_Config.m_Debug)
-				dbg_msg("network", "connection less packet too small, size=%d", Size);
-			return -1;
-		}
-
 		pPacket->m_Flags = NET_PACKETFLAG_CONNLESS;
 		pPacket->m_Ack = 0;
 		pPacket->m_NumChunks = 0;
 		if(pPacket->m_Version == NET_PACKETVERSION_LEGACY)
 		{
+			if(Size < 6)
+			{
+				dbg_msg("net", "connless packet too small, size=%d", Size);
+				return -1;
+			}
+
 			pPacket->m_DataSize = Size - 6;
 			mem_copy(pPacket->m_aChunkData, &pBuffer[6], pPacket->m_DataSize);
 		}
 		else
 		{
-			pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
+			if(Size < 15)
+			{
+				dbg_msg("net", "new-style connless packet too small, size=%d", Size);
+				return -1;
+			}
+
+			pPacket->m_DataSize = Size - 15;
+			pPacket->m_ResponseToken = (pBuffer[11]<<24) | (pBuffer[12]<<16) | (pBuffer[13]<<8) | pBuffer[14];
 			mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize);
 		}
 	}
@@ -352,7 +366,7 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, uns
 }
 
 
-void CNetBase::SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token)
+void CNetBase::SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken)
 {
 	char aToken[4];
 	aToken[0] = (Token>>24)&0xff;
@@ -360,7 +374,7 @@ void CNetBase::SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token)
 	aToken[2] = (Token>>8)&0xff;
 	aToken[3] = (Token)&0xff;
 
-	SendControlMsg(Socket, pAddr, NET_PACKETVERSION, NET_TOKEN_NONE, 0, NET_CTRLMSG_TOKEN, aToken, sizeof(aToken));
+	SendControlMsg(Socket, pAddr, NET_PACKETVERSION, ResponseToken, 0, NET_CTRLMSG_TOKEN, aToken, sizeof(aToken));
 }
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
