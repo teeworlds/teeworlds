@@ -3,7 +3,6 @@
 #include <base/system.h>
 #include "memheap.h"
 
-static const int CHUNK_SIZE = 1024*64;
 
 // allocates a new chunk to be used
 void CHeap::NewChunk()
