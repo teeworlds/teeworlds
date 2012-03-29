@@ -836,19 +836,19 @@ int CMenus::RenderMenubar(CUIRect r)
 
 			Box.VSplitRight(90.0f, &Box, &Button);
 			static int s_QuitButton=0;
-			if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TR|CUI::CORNER_IBR))
+			if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR|CUI::CORNER_IBR))
 				m_Popup = POPUP_QUIT;
 
 			Box.VSplitRight(130.0f, &Box, &Button);
 			static int s_SettingsButton=0;
-			if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TL))
+			if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_TL))
 				NewPage = PAGE_SETTINGS;
 		}
 		else // settings menu
 		{
 			Box.VSplitLeft(100.0f, &Button, &Box);
 			static int s_InGameGeneralButton=0;
-			if(DoButton_MenuTab(&s_InGameGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_TL))
+			if(DoButton_MenuTab(&s_InGameGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
 				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
 
 			Box.VSplitLeft(100.0f, &Button, &Box);
@@ -878,7 +878,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 			Box.VSplitRight(90.0f, &Box, &Button);
 			static int s_InGameMenuButton=0;
-			if(DoButton_Menu(&s_InGameMenuButton, Localize("Back"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_T|CUI::CORNER_IBR))
+			if(DoButton_MenuTab(&s_InGameMenuButton, Localize("Back"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
 				NewPage = PAGE_GAME;
 		}
 	}
