@@ -816,7 +816,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		{
 			Box.VSplitLeft(90.0f, &Button, &Box);
 			static int s_GameButton=0;
-			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL))
+			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
 				NewPage = PAGE_GAME;
 
 			Box.VSplitLeft(90.0f, &Button, &Box);
@@ -836,7 +836,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 			Box.VSplitRight(90.0f, &Box, &Button);
 			static int s_QuitButton=0;
-			if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TR))
+			if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_TR|CUI::CORNER_IBR))
 				m_Popup = POPUP_QUIT;
 
 			Box.VSplitRight(130.0f, &Box, &Button);
@@ -878,7 +878,7 @@ int CMenus::RenderMenubar(CUIRect r)
 
 			Box.VSplitRight(90.0f, &Box, &Button);
 			static int s_InGameMenuButton=0;
-			if(DoButton_Menu(&s_InGameMenuButton, Localize("Back"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_T))
+			if(DoButton_Menu(&s_InGameMenuButton, Localize("Back"), 0, &Button, 12.0f, 0.0f, CUI::CORNER_T|CUI::CORNER_IBR))
 				NewPage = PAGE_GAME;
 		}
 	}
@@ -1185,8 +1185,6 @@ int CMenus::Render()
 			Screen.VMargin(Screen.w/2-365.0f, &MainView);
 			MainView.HMargin(20.0f, &MainView);
 			MainView.HSplitTop(24.0f, &TabBar, &MainView);
-			if(Client()->State() != IClient::STATE_OFFLINE)
-				TabBar.VMargin(20.0f, &TabBar);
 			RenderMenubar(TabBar);
 
 			// news is not implemented yet
