@@ -37,9 +37,11 @@ CURRENT:
 enum
 {
 	NETFLAG_ALLOWSTATELESS=1,
+	NETFLAG_ALLOWOLDSTYLE=2,
 	NETSENDFLAG_VITAL=1,
 	NETSENDFLAG_CONNLESS=2,
 	NETSENDFLAG_FLUSH=4,
+	NETSENDFLAG_STATELESS=8, // for connless packets only
 
 	NETSTATE_OFFLINE=0,
 	NETSTATE_CONNECTING,
@@ -105,7 +107,6 @@ struct CNetChunk
 	// 0 on the client means the server
 	int m_ClientID;
 	NETADDR m_Address; // only used when cid == -1
-	unsigned int m_ResponseToken; // only used when cid == -1
 	int m_Flags;
 	int m_DataSize;
 	const void *m_pData;
@@ -155,14 +156,14 @@ public:
 
 	void GenerateSeed();
 
-	void ProcessTokenMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket);
+	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
 
-	bool CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken);
-	bool ConnectionToken(unsigned int Token);
-
-	static unsigned int GenerateToken(const NETADDR *pAddr, int64 Seed);
+	bool CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken, bool Notify);
+	unsigned int GenerateToken(const NETADDR *pAddr);
 
 private:
+	static unsigned int GenerateToken(const NETADDR *pAddr, int64 Seed);
+
 	NETSOCKET m_Socket;
 
 	int64 m_Seed;
@@ -313,6 +314,7 @@ class CNetServer
 
 	CNetTokenManager m_TokenManager;
 
+	int m_Flags;
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
@@ -320,9 +322,9 @@ public:
 	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags);
 	int Close();
 
-	//
-	int Recv(CNetChunk *pChunk);
-	int Send(CNetChunk *pChunk);
+	// the token and version parameter are only used for connless packets
+	int Recv(CNetChunk *pChunk, unsigned int *pResponseToken = 0, int *pVersion = 0);
+	int Send(CNetChunk *pChunk, unsigned int Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
 	int Update();
 
 	//
@@ -387,7 +389,9 @@ class CNetClient
 	NETADDR m_ServerAddr;
 	CNetConnection m_Connection;
 	CNetRecvUnpacker m_RecvUnpacker;
+	CNetTokenManager m_TokenManager;
 	NETSOCKET m_Socket;
+	int m_Flags;
 public:
 	// openness
 	bool Open(NETADDR BindAddr, int Flags);
@@ -398,8 +402,8 @@ public:
 	int Connect(NETADDR *Addr);
 
 	// communication
-	int Recv(CNetChunk *Chunk);
-	int Send(CNetChunk *Chunk);
+	int Recv(CNetChunk *pChunk, unsigned int *pResponseToken = 0, int *pVersion = 0);
+	int Send(CNetChunk *pChunk, unsigned int Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
 
 	// pumping
 	int Update();

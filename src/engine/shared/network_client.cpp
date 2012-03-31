@@ -20,6 +20,8 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 
 	m_TokenManager.Init(Socket);
 
+	m_Flags = Flags;
+
 	return true;
 }
 
@@ -57,7 +59,7 @@ int CNetClient::ResetErrorString()
 	return 0;
 }
 
-int CNetClient::Recv(CNetChunk *pChunk)
+int CNetClient::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVersion)
 {
 	while(1)
 	{
@@ -75,26 +77,45 @@ int CNetClient::Recv(CNetChunk *pChunk)
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
-			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
+			if(net_addr_comp(m_Connection.PeerAddress(), &Addr) == 0)
 			{
+				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
+					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
+			}
+			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
+			{
+				if(!(m_Flags&NETFLAG_ALLOWOLDSTYLE) && m_RecvUnpacker.m_Data.m_Version != NET_PACKETVERSION)
+					continue;
+
+				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, false);
+				if(!Accept)
+					continue;
+
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+
+				if(Accept < 0)
+				{
+					if(!(m_Flags&NETFLAG_ALLOWSTATELESS))
+						continue;
+					pChunk->m_Flags |= NETSENDFLAG_STATELESS;
+				}
 				pChunk->m_ClientID = -1;
 				pChunk->m_Address = Addr;
 				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
+
+				if(pVersion)
+					*pVersion = m_RecvUnpacker.m_Data.m_Version;
+				if(pResponseToken)
+					*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
 				return 1;
-			}
-			else
-			{
-				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
-					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
 			}
 		}
 	}
 	return 0;
 }
 
-int CNetClient::Send(CNetChunk *pChunk)
+int CNetClient::Send(CNetChunk *pChunk, unsigned int Token, int Version)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
@@ -105,7 +126,7 @@ int CNetClient::Send(CNetChunk *pChunk)
 		}
 
 		// send connectionless packet
-		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 	}
 	else
 	{

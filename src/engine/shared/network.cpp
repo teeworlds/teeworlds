@@ -82,7 +82,6 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		pChunk->m_Flags = 0;
 		pChunk->m_DataSize = Header.m_Size;
 		pChunk->m_pData = pData;
-		pChunk->m_ResponseToken = NET_TOKEN_NONE;
 		return 1;
 	}
 }
@@ -248,6 +247,8 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 	else
 	{
+		// new-style packet
+
 		// check size first
 		if(Size < NET_PACKETHEADERSIZE_LEGACY + 1)
 		{
@@ -303,7 +304,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 			pPacket->m_DataSize = Size - 15;
 			pPacket->m_ResponseToken = (pBuffer[11]<<24) | (pBuffer[12]<<16) | (pBuffer[13]<<8) | pBuffer[14];
-			mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize);
+			mem_copy(pPacket->m_aChunkData, &pBuffer[15], pPacket->m_DataSize);
 		}
 	}
 	else
@@ -333,6 +334,20 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		if(g_Config.m_Debug)
 			dbg_msg("network", "error during packet decoding");
 		return -1;
+	}
+
+	// set the response token (a bit hacky because this function doesn't know about control packets)
+	if(pPacket->m_Version == NET_PACKETVERSION && (pPacket->m_Flags&NET_PACKETFLAG_CONTROL))
+	{
+		if(pPacket->m_DataSize >= 5) // control byte + token
+		{
+			if(pPacket->m_aChunkData[0] == NET_CTRLMSG_CONNECT
+				|| pPacket->m_aChunkData[0] == NET_CTRLMSG_TOKEN)
+			{
+				pPacket->m_ResponseToken = (pPacket->m_aChunkData[1]<<24) | (pPacket->m_aChunkData[2]<<16)
+					| (pPacket->m_aChunkData[3]<<8) | pPacket->m_aChunkData[4];
+			}
+		}
 	}
 
 	// log the data
