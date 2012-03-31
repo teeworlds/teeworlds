@@ -103,6 +103,8 @@ enum
 typedef int (*NETFUNC_DELCLIENT)(int ClientID, const char* pReason, void *pUser);
 typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUser);
 
+typedef unsigned int TOKEN;
+
 struct CNetChunk
 {
 	// -1 means that it's a connless packet
@@ -141,8 +143,8 @@ class CNetPacketConstruct
 {
 public:
 	int m_Version;
-	unsigned int m_Token;
-	unsigned int m_ResponseToken; // only used in connless packets
+	TOKEN m_Token;
+	TOKEN m_ResponseToken; // only used in connless packets
 	int m_Flags;
 	int m_Ack;
 	int m_NumChunks;
@@ -160,11 +162,11 @@ public:
 
 	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
 
-	bool CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken, bool Notify);
-	unsigned int GenerateToken(const NETADDR *pAddr);
+	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify);
+	TOKEN GenerateToken(const NETADDR *pAddr);
 
 private:
-	static unsigned int GenerateToken(const NETADDR *pAddr, int64 Seed);
+	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
 
 	NETSOCKET m_Socket;
 
@@ -198,8 +200,8 @@ private:
 
 	CNetPacketConstruct m_Construct;
 
-	unsigned int m_Token;
-	unsigned int m_PeerToken;
+	TOKEN m_Token;
+	TOKEN m_PeerToken;
 	NETADDR m_PeerAddr;
 
 	NETSOCKET m_Socket;
@@ -217,14 +219,14 @@ private:
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
 
-	static unsigned int GenerateToken(const NETADDR *pPeerAddr);
+	static TOKEN GenerateToken(const NETADDR *pPeerAddr);
 
 public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
 
-	void SetToken(unsigned int Token);
+	void SetToken(TOKEN Token);
 
 	int Update();
 	int Flush();
@@ -327,8 +329,8 @@ public:
 	int Close();
 
 	// the token and version parameter are only used for connless packets
-	int Recv(CNetChunk *pChunk, unsigned int *pResponseToken = 0, int *pVersion = 0);
-	int Send(CNetChunk *pChunk, unsigned int Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
+	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0, int *pVersion = 0);
+	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
 	int Update();
 
 	//
@@ -405,8 +407,8 @@ public:
 	int Connect(NETADDR *Addr);
 
 	// communication
-	int Recv(CNetChunk *pChunk, unsigned int *pResponseToken = 0, int *pVersion = 0);
-	int Send(CNetChunk *pChunk, unsigned int Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
+	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0, int *pVersion = 0);
+	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
 
 	// pumping
 	int Update();
@@ -436,9 +438,9 @@ public:
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
-	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken = NET_TOKEN_NONE);
-	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, unsigned int ResponseToken, const void *pData, int DataSize);
+	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken = NET_TOKEN_NONE);
+	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 

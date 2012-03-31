@@ -9,10 +9,10 @@
 
 #include "network.h"
 
-static unsigned int Hash(char *pData, int Size)
+static TOKEN Hash(char *pData, int Size)
 {
 	md5_state_t State;
-	unsigned int Result;
+	TOKEN Result;
 	md5_byte_t aDigest[sizeof(Result)];
 
 	md5_init(&State);
@@ -70,12 +70,12 @@ void CNetTokenManager::GenerateSeed()
 	}
 }
 
-unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr)
+TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr)
 {
 	return GenerateToken(pAddr, m_Seed);
 }
 
-unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
+TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 {
 	char aBuf[sizeof(NETADDR) + sizeof(int64)];
 	int Result;
@@ -89,9 +89,9 @@ unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	return Result;
 }
 
-bool CNetTokenManager::CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken, bool Notify)
+bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify)
 {
-	unsigned int CurrentToken = GenerateToken(pAddr, m_Seed);
+	TOKEN CurrentToken = GenerateToken(pAddr, m_Seed);
 	if(CurrentToken == Token)
 		return true;
 

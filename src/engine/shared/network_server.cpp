@@ -95,7 +95,7 @@ int CNetServer::Update()
 /*
 	TODO: chopp up this function into smaller working parts
 */
-int CNetServer::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVersion)
+int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 {
 	while(1)
 	{
@@ -231,7 +231,7 @@ int CNetServer::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVers
 	return 0;
 }
 
-int CNetServer::Send(CNetChunk *pChunk, unsigned int Token, int Version)
+int CNetServer::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{

@@ -59,7 +59,7 @@ int CNetClient::ResetErrorString()
 	return 0;
 }
 
-int CNetClient::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVersion)
+int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 {
 	while(1)
 	{
@@ -115,7 +115,7 @@ int CNetClient::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVers
 	return 0;
 }
 
-int CNetClient::Send(CNetChunk *pChunk, unsigned int Token, int Version)
+int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
