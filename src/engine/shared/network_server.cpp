@@ -34,6 +34,8 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, true);
 
+	m_Flags = Flags;
+
 	return true;
 }
 
@@ -93,7 +95,7 @@ int CNetServer::Update()
 /*
 	TODO: chopp up this function into smaller working parts
 */
-int CNetServer::Recv(CNetChunk *pChunk)
+int CNetServer::Recv(CNetChunk *pChunk, unsigned int *pResponseToken, int *pVersion)
 {
 	while(1)
 	{
@@ -112,23 +114,52 @@ int CNetServer::Recv(CNetChunk *pChunk)
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
-			// check if we just should drop the packet
+			// try to find matching slot
+			for(int i = 0; i < MaxClients(); i++)
+			{
+				if(net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
+				{
+					if(m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
+					{
+						if(m_RecvUnpacker.m_Data.m_DataSize)
+							m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
+					}
+					continue;
+				}
+			}
+
+			// no matching slot, check for bans
 			char aBuf[128];
 			if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
 			{
 				// banned, reply with a message
-				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
+				CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
 				continue;
 			}
 
+			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+			if(!Accept)
+				continue;
+
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
+				if(!(m_Flags&NETFLAG_ALLOWOLDSTYLE) && m_RecvUnpacker.m_Data.m_Version != NET_PACKETVERSION)
+					continue;
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+				if(Accept < 0)
+				{
+					if(!(m_Flags&NETFLAG_ALLOWSTATELESS))
+						continue;
+					pChunk->m_Flags |= NETSENDFLAG_STATELESS;
+				}
 				pChunk->m_ClientID = -1;
 				pChunk->m_Address = Addr;
 				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-				pChunk->m_ResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
+				if(pVersion)
+					*pVersion = m_RecvUnpacker.m_Data.m_Version;
+				if(pResponseToken)
+					*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
 				return 1;
 			}
 			else
@@ -169,7 +200,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								{
 									char aBuf[128];
 									str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
-									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+									CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
 									return 0;
 								}
 							}
@@ -190,22 +221,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 						if(!Found)
 						{
 							const char FullMsg[] = "This server is full";
-							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
-						}
-					}
-				}
-				else
-				{
-					// normal packet, find matching slot
-					for(int i = 0; i < MaxClients(); i++)
-					{
-						if(net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
-						{
-							if(m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
-							{
-								if(m_RecvUnpacker.m_Data.m_DataSize)
-									m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
-							}
+							CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 						}
 					}
 				}
@@ -215,7 +231,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 	return 0;
 }
 
-int CNetServer::Send(CNetChunk *pChunk)
+int CNetServer::Send(CNetChunk *pChunk, unsigned int Token, int Version)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
@@ -226,7 +242,7 @@ int CNetServer::Send(CNetChunk *pChunk)
 		}
 
 		// send connectionless packet
-		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 	}
 	else
 	{

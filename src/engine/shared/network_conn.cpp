@@ -41,8 +41,7 @@ void CNetConnection::SetToken(unsigned int Token)
 
 unsigned int CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
 {
-	return ((rand() & 0xff) << 24) | ((rand() & 0xff) << 16)
-		| ((rand() & 0xff) << 8) | (rand() & 0xff);
+	return ((rand() & 0xffff) << 16) | (rand() & 0xffff);
 }
 
 const char *CNetConnection::ErrorString()

@@ -29,9 +29,9 @@ void CNetTokenManager::Init(NETSOCKET Socket)
 	GenerateSeed();
 }
 
-int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket)
+int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify)
 {
-	if(pPacket->m_Token != NET_TOKEN_NONE && !CheckToken(pAddr, pPacket->m_Token))
+	if(pPacket->m_Token != NET_TOKEN_NONE && !CheckToken(pAddr, pPacket->m_Token, pPacket->m_ResponseToken, Notify))
 		return 0; // wrong token, silent ignore
 
 	bool Verified = pPacket->m_Token != NET_TOKEN_NONE;
@@ -53,12 +53,7 @@ int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConst
 		return 0; // everything is fine, token exchange complete
 
 	// client requesting token
-	unsigned int RemoteToken = (pPacket->m_aChunkData[0]<<24)
-				   | (pPacket->m_aChunkData[1]<<16)
-				   | (pPacket->m_aChunkData[2]<<8)
-				   | (pPacket->m_aChunkData[3]);
-
-	CNetBase::SendToken(m_Socket, (NETADDR *)pAddr, GenerateToken(pAddr, m_Seed), RemoteToken);
+	CNetBase::SendToken(m_Socket, (NETADDR *)pAddr, GenerateToken(pAddr, m_Seed), pPacket->m_ResponseToken);
 	return 0; // no need to process NET_CTRLMSG_TOKEN further
 }
 
@@ -75,6 +70,11 @@ void CNetTokenManager::GenerateSeed()
 	}
 }
 
+unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr)
+{
+	return GenerateToken(pAddr, m_Seed);
+}
+
 unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 {
 	char aBuf[sizeof(NETADDR) + sizeof(int64)];
@@ -89,7 +89,7 @@ unsigned int CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	return Result;
 }
 
-bool CNetTokenManager::CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken)
+bool CNetTokenManager::CheckToken(const NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken, bool Notify)
 {
 	unsigned int CurrentToken = GenerateToken(pAddr, m_Seed);
 	if(CurrentToken == Token)
@@ -97,7 +97,8 @@ bool CNetTokenManager::CheckToken(const NETADDR *pAddr, unsigned int Token, unsi
 
 	if(GenerateToken(pAddr, m_PrevSeed) == Token)
 	{
-		CNetBase::SendToken(m_Socket, (NETADDR *)pAddr, CurrentToken, ResponseToken); // notify the peer about the new token
+		if(Notify)
+			CNetBase::SendToken(m_Socket, (NETADDR *)pAddr, CurrentToken, ResponseToken); // notify the peer about the new token
 		return true;
 	}
 
