@@ -87,7 +87,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 }
 
 // packs the data tight and sends it
-void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, unsigned int ResponseToken, const void *pData, int DataSize)
+void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize)
 {
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
 
@@ -365,7 +365,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 }
 
 
-void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, unsigned int Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize)
+void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize)
 {
 	CNetPacketConstruct Construct;
 	Construct.m_Version = Version;
@@ -382,7 +382,7 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, uns
 }
 
 
-void CNetBase::SendToken(NETSOCKET Socket, NETADDR *pAddr, unsigned int Token, unsigned int ResponseToken)
+void CNetBase::SendToken(NETSOCKET Socket, NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken)
 {
 	char aToken[4];
 	aToken[0] = (Token>>24)&0xff;

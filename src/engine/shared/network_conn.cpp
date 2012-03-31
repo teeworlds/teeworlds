@@ -30,7 +30,7 @@ void CNetConnection::Reset()
 	mem_zero(&m_Construct, sizeof(m_Construct));
 }
 
-void CNetConnection::SetToken(unsigned int Token)
+void CNetConnection::SetToken(TOKEN Token)
 {
 	if(State() != NET_CONNSTATE_OFFLINE)
 		return;
@@ -38,7 +38,7 @@ void CNetConnection::SetToken(unsigned int Token)
 	m_Token = Token;
 }
 
-unsigned int CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
+TOKEN CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
 {
 	return ((rand() & 0xffff) << 16) | (rand() & 0xffff);
 }
