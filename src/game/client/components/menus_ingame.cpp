@@ -24,6 +24,7 @@
 #include <game/client/ui.h>
 #include <game/client/teecomp.h>
 
+#include "maplayers.h"
 #include "ghost.h"
 #include "menus.h"
 #include "motd.h"
@@ -123,7 +124,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 void CMenus::RenderPlayers(CUIRect MainView)
 {
-	CUIRect Button, ButtonBar, Options, Player;
+	CUIRect Button, ButtonBar, Options, Player, LayersBox, Layer;
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
 	// player options
@@ -133,10 +134,17 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	Options.HSplitTop(50.0f, &Button, &Options);
 	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, -1);
 
-	// headline
+	// headlines
 	Options.HSplitTop(34.0f, &ButtonBar, &Options);
-	ButtonBar.VSplitRight(220.0f, &Player, &ButtonBar);
+	ButtonBar.VSplitRight(320.0f, &Player, &ButtonBar);
 	UI()->DoLabelScaled(&Player, Localize("Player"), 24.0f, -1);
+
+	ButtonBar.VSplitMid(&ButtonBar, &Layer);
+	UI()->DoLabelScaled(&Layer, Localize("Layers"), 24.0f, 0);
+
+	// layers box
+	Options.VSplitRight(160.0f, 0, &LayersBox);
+	RenderTools()->DrawUIRect(&LayersBox, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	ButtonBar.HMargin(1.0f, &ButtonBar);
 	float Width = ButtonBar.h*2.0f;
@@ -171,7 +179,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 		Options.HSplitTop(28.0f, &ButtonBar, &Options);
 		if(Count++%2 == 0)
 			RenderTools()->DrawUIRect(&ButtonBar, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
-		ButtonBar.VSplitRight(220.0f, &Player, &ButtonBar);
+		ButtonBar.VSplitRight(320.0f, &Player, &ButtonBar);
 
 		// player info
 		Player.VSplitLeft(28.0f, &Button, &Player);
@@ -212,6 +220,117 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[Index].m_aName, m_pClient->m_aClients[Index].m_aClan);
 			else
 				m_pClient->Friends()->AddFriend(m_pClient->m_aClients[Index].m_aName, m_pClient->m_aClients[Index].m_aClan);
+		}
+	}
+
+	LayersBox.Margin(5.0f, &LayersBox);
+	CUIRect Slot;
+	char aBuf[64];
+
+	float GroupHeight = 20.0f;
+	float LayerHeight = 18.0f;
+	float LayersHeight = m_pClient->Layers()->NumGroups()*GroupHeight + m_pClient->Layers()->NumLayers() * LayerHeight;
+	static int s_ScrollBar = 0;
+	static float s_ScrollValue = 0;
+
+	float ScrollDifference = LayersHeight - LayersBox.h;
+
+	if(LayersHeight > LayersBox.h)	// Do we even need a scrollbar?
+	{
+		CUIRect Scroll;
+		LayersBox.VSplitRight(15.0f, &LayersBox, &Scroll);
+		LayersBox.VSplitRight(3.0f, &LayersBox, 0);	// extra spacing
+		Scroll.HMargin(5.0f, &Scroll);
+		s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+		if(UI()->MouseInside(&Scroll) || UI()->MouseInside(&LayersBox))
+		{
+			int ScrollNum = (int)((LayersHeight-LayersBox.h)/18.0f)+1;
+			if(ScrollNum > 0)
+			{
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+					s_ScrollValue = clamp(s_ScrollValue - 1.0f/ScrollNum, 0.0f, 1.0f);
+				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
+			}
+			else
+				ScrollNum = 0;
+		}
+	}
+
+	float LayerStartAt = ScrollDifference * s_ScrollValue;
+	if(LayerStartAt < 0.0f)
+		LayerStartAt = 0.0f;
+
+	float LayerStopAt = LayersHeight - ScrollDifference * (1 - s_ScrollValue);
+	float LayerCur = 0;
+
+	// render layers
+	{
+		for(int g = 0; g < m_pClient->Layers()->NumGroups(); g++)
+		{
+			CMapItemGroup *pGroup = m_pClient->Layers()->GetGroup(g);
+
+			if(pGroup == m_pClient->Layers()->GameGroup() && pGroup->m_NumLayers == 1) // dont show game group if there only is the gamelayer
+				continue;
+
+			if(LayerCur > LayerStopAt)
+				break;
+			else if(LayerCur + pGroup->m_NumLayers * LayerHeight + GroupHeight < LayerStartAt)
+			{
+				LayerCur += pGroup->m_NumLayers * LayerHeight + GroupHeight;
+				continue;
+			}
+
+			if(LayerCur >= LayerStartAt)
+			{
+				LayersBox.HSplitTop(GroupHeight-2.0f, &Slot, &LayersBox);
+
+				str_format(aBuf, sizeof(aBuf), "%s #%d", Localize("Group"), g);
+				UI()->DoLabelScaled(&Slot, aBuf, 14.0f, -1);
+
+				Slot.VSplitRight(LayerHeight, 0, &Button);
+				if(DoButton_Toggle(m_pClient->Layers()->GetGroup(g), m_pClient->m_pMapLayersBackGround->Active(CMapLayers::TYPE_GROUP, g), &Button, true))
+				{
+					m_pClient->m_pMapLayersBackGround->SwitchRender(CMapLayers::TYPE_GROUP, g);
+					m_pClient->m_pMapLayersForeGround->SwitchRender(CMapLayers::TYPE_GROUP, g);
+				}
+
+				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
+			}
+			LayerCur += LayerHeight;
+
+			for(int i = 0; i < pGroup->m_NumLayers; i++)
+			{
+				if(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i) == (CMapItemLayer*)m_pClient->Layers()->GameLayer()) // skip game layer
+					continue;
+
+				if(LayerCur > LayerStopAt)
+					break;
+				else if(LayerCur < LayerStartAt)
+				{
+					LayerCur += LayerHeight;
+					continue;
+				}
+
+				LayersBox.HSplitTop(LayerHeight-2.0f, &Slot, &LayersBox);
+				Slot.VSplitLeft(12.0f, 0, &Button);
+
+				str_format(aBuf, sizeof(aBuf), "%s #%d", Localize("Layer"), i);
+				UI()->DoLabelScaled(&Button, aBuf, 14.0f, -1);
+
+				Slot.VSplitRight(LayerHeight, 0, &Button);
+				if(DoButton_Toggle(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i), m_pClient->m_pMapLayersBackGround->Active(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i), &Button, true))
+				{
+					m_pClient->m_pMapLayersBackGround->SwitchRender(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i);
+					m_pClient->m_pMapLayersForeGround->SwitchRender(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i);
+				}
+
+				LayerCur += LayerHeight;
+				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
+			}
+
+			LayerCur += 5.0f;
 		}
 	}
 
