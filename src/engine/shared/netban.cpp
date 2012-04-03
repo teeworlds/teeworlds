@@ -461,7 +461,7 @@ bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) co
 	{
 		for(CBanRange *pBan = m_BanRangePool.First(&aHash[i]); pBan; pBan = pBan->m_pHashNext)
 		{
-			if(NetMatch(&pBan->m_Data, pAddr, i, Length))
+			if(NetMatch(&pBan->m_Data, pAddr))
 			{
 				MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
 				return true;
