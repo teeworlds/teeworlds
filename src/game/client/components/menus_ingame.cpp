@@ -285,7 +285,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			{
 				LayersBox.HSplitTop(GroupHeight-2.0f, &Slot, &LayersBox);
 
-				str_format(aBuf, sizeof(aBuf), "%s #%d", Localize("Group"), g);
+				str_copy(aBuf, GetGroupLayerName(TYPE_GROUP, g), sizeof(aBuf));
 				UI()->DoLabelScaled(&Slot, aBuf, 14.0f, -1);
 
 				Slot.VSplitRight(LayerHeight, 0, &Button);
@@ -296,9 +296,9 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			}
 			LayerCur += LayerHeight;
 
-			for(int i = 0; i < pGroup->m_NumLayers; i++)
+			for(int l = 0; l < pGroup->m_NumLayers; l++)
 			{
-				if(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i) == (CMapItemLayer*)m_pClient->Layers()->GameLayer()) // skip game layer
+				if(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+l) == (CMapItemLayer*)m_pClient->Layers()->GameLayer()) // skip game layer
 					continue;
 
 				if(LayerCur > LayerStopAt)
@@ -312,12 +312,12 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				LayersBox.HSplitTop(LayerHeight-2.0f, &Slot, &LayersBox);
 				Slot.VSplitLeft(12.0f, 0, &Button);
 
-				str_format(aBuf, sizeof(aBuf), "%s #%d", Localize("Layer"), i);
+				str_copy(aBuf, GetGroupLayerName(TYPE_LAYER, pGroup->m_StartLayer+l), sizeof(aBuf));
 				UI()->DoLabelScaled(&Button, aBuf, 14.0f, -1);
 
 				Slot.VSplitRight(LayerHeight, 0, &Button);
-				if(DoButton_Toggle(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i), GroupLayerActive(TYPE_LAYER, pGroup->m_StartLayer+i), &Button, true))
-					SwitchGroupLayerRender(TYPE_LAYER, pGroup->m_StartLayer+i);
+				if(DoButton_Toggle(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+l), GroupLayerActive(TYPE_LAYER, pGroup->m_StartLayer+l), &Button, true))
+					SwitchGroupLayerRender(TYPE_LAYER, pGroup->m_StartLayer+l);
 
 				LayerCur += LayerHeight;
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);

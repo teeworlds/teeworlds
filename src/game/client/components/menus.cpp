@@ -1436,10 +1436,57 @@ void CMenus::OnMapLoad()
 	for(int g = 0; g < m_pClient->Layers()->NumGroups(); g++)
 	{
 		CMapItemGroup *pGroup = m_pClient->Layers()->GetGroup(g);
-		m_lGroups.add(CGroupLayer());
+
+		char aBuf[16];
+
+		// load group name
+		if(m_pClient->Layers()->GameGroup() != pGroup && pGroup->m_Version >= 3)
+		{
+			IntsToStr(pGroup->m_aName, sizeof(aBuf)/sizeof(int), aBuf);
+
+			if(aBuf[0] == 0)
+				str_format(aBuf, sizeof(aBuf), "Group #%d", g);
+			else
+				str_format(aBuf, sizeof(aBuf), "%s #%d", aBuf, g);
+		}
+		else
+		{
+			if(m_pClient->Layers()->GameGroup() == pGroup)
+				str_format(aBuf, sizeof(aBuf), "Game #%d", g);
+			else
+				str_format(aBuf, sizeof(aBuf), "Group #%d", g);
+		}
+
+		m_lGroups.add(CGroupLayer(aBuf));
 
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
-			m_lLayers.add(CGroupLayer());
+		{
+			CMapItemLayer *pLayer = m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+l);
+
+			// load layer name
+			if(m_pClient->Layers()->GameLayer() != (CMapItemLayerTilemap*)pLayer) // game layer dont need a name
+			{
+				if(pLayer->m_Version >= 3)
+				{
+					if(pLayer->m_Type == LAYERTYPE_QUADS)
+						IntsToStr(((CMapItemLayerQuads*)pLayer)->m_aName, sizeof(aBuf)/sizeof(int), aBuf);
+					else
+						IntsToStr(((CMapItemLayerTilemap*)pLayer)->m_aName, sizeof(aBuf)/sizeof(int), aBuf);
+
+					if(aBuf[0] == 0)
+						str_copy(aBuf, "Layer", sizeof(aBuf));
+				}
+				else
+				{
+					if(pLayer->m_Type == LAYERTYPE_QUADS)
+						str_copy(aBuf, "Quads", sizeof(aBuf));
+					else
+						str_copy(aBuf, "Tiles", sizeof(aBuf));
+				}
+			}
+
+			m_lLayers.add(CGroupLayer(aBuf));
+		}
 	}
 }
 
@@ -1457,6 +1504,14 @@ bool CMenus::GroupLayerActive(int Type, int Index)
 		return m_lGroups[Index].Active();
 
 	return m_lLayers[Index].Active();
+}
+
+const char *CMenus::GetGroupLayerName(int Type, int Index)
+{
+	if(Type == TYPE_GROUP)
+		return m_lGroups[Index].GetName();
+
+	return m_lLayers[Index].GetName();
 }
 
 bool CMenus::OnMouseMove(float x, float y)

@@ -273,10 +273,17 @@ class CMenus : public CComponent
 	class CGroupLayer
 	{
 		bool m_Render;
+		char m_aName[16];
 	public:
-		CGroupLayer() : m_Render(true) {}
+		CGroupLayer() {}
+		CGroupLayer(const char* pName) : m_Render(true)
+		{
+			str_copy(m_aName, pName, sizeof(m_aName));
+		}
+
 		void SwitchRender() { m_Render ^= 1; }
 		bool Active() { return m_Render; }
+		const char *GetName() { return m_aName; }
 	};
 
 	array<CGroupLayer> m_lGroups;
@@ -415,6 +422,7 @@ public:
 
 	void SwitchGroupLayerRender(int Type, int Index);
 	bool GroupLayerActive(int Type, int Index);
+	const char *GetGroupLayerName(int Type, int Index);
 
 	void GhostlistPopulate();
 };
