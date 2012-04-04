@@ -142,7 +142,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	UI()->DoLabelScaled(&Layer, Localize("Layers"), 24.0f, 0);
 
 	// layers box
-	Options.VSplitRight(160.0f, 0, &LayersBox);
+	Options.VSplitRight(160.0f, &Options, &LayersBox);
 	RenderTools()->DrawUIRect(&LayersBox, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	ButtonBar.HMargin(1.0f, &ButtonBar);
@@ -176,9 +176,10 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			continue;
 
 		Options.HSplitTop(28.0f, &ButtonBar, &Options);
+		ButtonBar.VSplitRight(10.0f, &ButtonBar, 0);
 		if(Count++%2 == 0)
 			RenderTools()->DrawUIRect(&ButtonBar, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
-		ButtonBar.VSplitRight(320.0f, &Player, &ButtonBar);
+		ButtonBar.VSplitRight(150.0f, &Player, &ButtonBar);
 
 		// player info
 		Player.VSplitLeft(28.0f, &Button, &Player);
