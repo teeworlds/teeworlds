@@ -299,7 +299,10 @@ void CMenus::RenderPlayers(CUIRect MainView)
 
 			for(int l = 0; l < pGroup->m_NumLayers; l++)
 			{
-				if(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+l) == (CMapItemLayer*)m_pClient->Layers()->GameLayer()) // skip game layer
+				CMapItemLayer *pLayer = m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+l);
+
+				// filter layers such as game layer and what ever
+				if(pLayer->m_Type == LAYERTYPE_TILES && ((CMapItemLayerTilemap*)pLayer)->m_Flags)
 					continue;
 
 				if(LayerCur > LayerStopAt)
