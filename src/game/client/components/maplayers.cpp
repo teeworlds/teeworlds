@@ -15,7 +15,7 @@
 #include <game/client/components/camera.h>
 #include <game/client/components/mapimages.h>
 
-
+#include "menus.h"
 #include "maplayers.h"
 
 CMapLayers::CMapLayers(int t)
@@ -32,20 +32,6 @@ void CMapLayers::OnInit()
 	m_pLayers = Layers();
 }
 
-void CMapLayers::OnMapLoad()
-{
-	m_lGroups.clear();
-	m_lLayers.clear();
-
-	for(int g = 0; g < m_pLayers->NumGroups(); g++)
-	{
-		CMapItemGroup *pGroup = m_pLayers->GetGroup(g);
-		m_lGroups.add(CGroupLayer());
-
-		for(int l = 0; l < pGroup->m_NumLayers; l++)
-			m_lLayers.add(CGroupLayer());
-	}
-}
 void CMapLayers::EnvelopeUpdate()
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -178,7 +164,7 @@ void CMapLayers::OnRender()
 			}
 
 			// skip rendering if detail layers if not wanted
-			if(((pLayer->m_Flags&LAYERFLAG_DETAIL && !g_Config.m_GfxHighDetail) || !m_lGroups[g].Active() || !m_lLayers[pGroup->m_StartLayer+l].Active())&& !IsGameLayer)
+			if(((pLayer->m_Flags&LAYERFLAG_DETAIL && !g_Config.m_GfxHighDetail) || !m_pClient->m_pMenus->GroupLayerActive(CMenus::TYPE_GROUP, g) || !m_pClient->m_pMenus->GroupLayerActive(CMenus::TYPE_LAYER, pGroup->m_StartLayer+l))&& !IsGameLayer)
 				continue;
 
 			if(m_Type == -1)
@@ -271,20 +257,4 @@ void CMapLayers::OnRender()
 
 	// reset the screen like it was before
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
-}
-
-void CMapLayers::SwitchRender(int Type, int Index)
-{
-	if(Type == TYPE_GROUP)
-		m_lGroups[Index].SwitchRender();
-	else
-		m_lLayers[Index].SwitchRender();
-}
-
-bool CMapLayers::Active(int Type, int Index)
-{
-	if(Type == TYPE_GROUP)
-		return m_lGroups[Index].Active();
-
-	return m_lLayers[Index].Active();
 }

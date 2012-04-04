@@ -269,6 +269,19 @@ class CMenus : public CComponent
 	};
 	CMapInfo m_MapInfo;
 
+	// groups layers
+	class CGroupLayer
+	{
+		bool m_Render;
+	public:
+		CGroupLayer() : m_Render(true) {}
+		void SwitchRender() { m_Render ^= 1; }
+		bool Active() { return m_Render; }
+	};
+
+	array<CGroupLayer> m_lGroups;
+	array<CGroupLayer> m_lLayers;
+
 	// found in menus.cpp
 	int Render();
 	//void render_background();
@@ -370,6 +383,7 @@ public:
 
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnReset();
+	virtual void OnMapLoad();
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
@@ -391,7 +405,17 @@ public:
 	
 	sorted_array<CGhostItem> m_lGhosts;
 	CGhostItem *m_OwnGhost;
-	
+
+	// groups layers
+	enum
+	{
+		TYPE_GROUP=0,
+		TYPE_LAYER,
+	};
+
+	void SwitchGroupLayerRender(int Type, int Index);
+	bool GroupLayerActive(int Type, int Index);
+
 	void GhostlistPopulate();
 };
 #endif

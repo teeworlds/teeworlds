@@ -1428,6 +1428,37 @@ void CMenus::OnReset()
 	m_MapInfo.Reset();
 }
 
+void CMenus::OnMapLoad()
+{
+	m_lGroups.clear();
+	m_lLayers.clear();
+
+	for(int g = 0; g < m_pClient->Layers()->NumGroups(); g++)
+	{
+		CMapItemGroup *pGroup = m_pClient->Layers()->GetGroup(g);
+		m_lGroups.add(CGroupLayer());
+
+		for(int l = 0; l < pGroup->m_NumLayers; l++)
+			m_lLayers.add(CGroupLayer());
+	}
+}
+
+void CMenus::SwitchGroupLayerRender(int Type, int Index)
+{
+	if(Type == TYPE_GROUP)
+		m_lGroups[Index].SwitchRender();
+	else
+		m_lLayers[Index].SwitchRender();
+}
+
+bool CMenus::GroupLayerActive(int Type, int Index)
+{
+	if(Type == TYPE_GROUP)
+		return m_lGroups[Index].Active();
+
+	return m_lLayers[Index].Active();
+}
+
 bool CMenus::OnMouseMove(float x, float y)
 {
 	m_LastInput = time_get();

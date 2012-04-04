@@ -24,7 +24,6 @@
 #include <game/client/ui.h>
 #include <game/client/teecomp.h>
 
-#include "maplayers.h"
 #include "ghost.h"
 #include "menus.h"
 #include "motd.h"
@@ -290,11 +289,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				UI()->DoLabelScaled(&Slot, aBuf, 14.0f, -1);
 
 				Slot.VSplitRight(LayerHeight, 0, &Button);
-				if(DoButton_Toggle(m_pClient->Layers()->GetGroup(g), m_pClient->m_pMapLayersBackGround->Active(CMapLayers::TYPE_GROUP, g), &Button, true))
-				{
-					m_pClient->m_pMapLayersBackGround->SwitchRender(CMapLayers::TYPE_GROUP, g);
-					m_pClient->m_pMapLayersForeGround->SwitchRender(CMapLayers::TYPE_GROUP, g);
-				}
+				if(DoButton_Toggle(m_pClient->Layers()->GetGroup(g), GroupLayerActive(TYPE_GROUP, g), &Button, true))
+					SwitchGroupLayerRender(TYPE_GROUP, g);
 
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
 			}
@@ -320,11 +316,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				UI()->DoLabelScaled(&Button, aBuf, 14.0f, -1);
 
 				Slot.VSplitRight(LayerHeight, 0, &Button);
-				if(DoButton_Toggle(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i), m_pClient->m_pMapLayersBackGround->Active(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i), &Button, true))
-				{
-					m_pClient->m_pMapLayersBackGround->SwitchRender(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i);
-					m_pClient->m_pMapLayersForeGround->SwitchRender(CMapLayers::TYPE_LAYER, pGroup->m_StartLayer+i);
-				}
+				if(DoButton_Toggle(m_pClient->Layers()->GetLayer(pGroup->m_StartLayer+i), GroupLayerActive(TYPE_LAYER, pGroup->m_StartLayer+i), &Button, true))
+					SwitchGroupLayerRender(TYPE_LAYER, pGroup->m_StartLayer+i);
 
 				LayerCur += LayerHeight;
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
