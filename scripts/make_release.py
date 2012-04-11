@@ -42,7 +42,7 @@ if platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
-if  platform == 'osx':
+if platform == 'osx':
 	use_dmg = 1
 	use_gz = 0
 	use_bundle = 1
@@ -65,8 +65,8 @@ def unzip(filename, where):
 	except:
 		return False
 	for name in z.namelist():
-                if "/data/languages/" in name:
-                        z.extract(name, where)
+				if "/data/languages/" in name:
+						z.extract(name, where)
 	z.close()
 	return z.namelist()[0]
 
@@ -84,9 +84,9 @@ def copydir(src, dst, excl=[]):
 def clean():
 	print("*** cleaning ***")
 	try:
-                shutil.rmtree(package_dir)
-                shutil.rmtree(languages_dir)
-                os.remove(src_package_languages)
+				shutil.rmtree(package_dir)
+				shutil.rmtree(languages_dir)
+				os.remove(src_package_languages)
 	except: pass
 	
 package = "%s-%s-%s" %(name, version, platform)
@@ -99,12 +99,12 @@ os.mkdir(package_dir)
 print("download and extract languages")
 src_package_languages = fetch_file(url_languages)
 if not src_package_languages:
-        print("couldn't download languages")
-        sys.exit(-1)
+		print("couldn't download languages")
+		sys.exit(-1)
 languages_dir = unzip(src_package_languages, ".")
 if not languages_dir:
-        print("couldn't unzip languages")
-        sys.exit(-1)
+		print("couldn't unzip languages")
+		sys.exit(-1)
 
 print("adding files")
 shutil.copy("readme.txt", package_dir)
@@ -168,20 +168,20 @@ if use_bundle:
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-        <key>CFBundleDevelopmentRegion</key>
-        <string>English</string>
-        <key>CFBundleExecutable</key>
-        <string>teeworlds</string>
-        <key>CFBundleIconFile</key>
-        <string>Teeworlds</string>
-        <key>CFBundleInfoDictionaryVersion</key>
-        <string>6.0</string>
-        <key>CFBundlePackageType</key>
-        <string>APPL</string>
-        <key>CFBundleSignature</key>
-        <string>????</string>
-        <key>CFBundleVersion</key>
-        <string>%s</string>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>English</string>
+		<key>CFBundleExecutable</key>
+		<string>teeworlds</string>
+		<key>CFBundleIconFile</key>
+		<string>Teeworlds</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>%s</string>
 </dict>
 </plist>
 	""" % (version))
@@ -207,20 +207,20 @@ if use_bundle:
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-        <key>CFBundleDevelopmentRegion</key>
-        <string>English</string>
-        <key>CFBundleExecutable</key>
-        <string>teeworlds_server</string>
-        <key>CFBundleIconFile</key>
-        <string>Teeworlds_srv</string>
-        <key>CFBundleInfoDictionaryVersion</key>
-        <string>6.0</string>
-        <key>CFBundlePackageType</key>
-        <string>APPL</string>
-        <key>CFBundleSignature</key>
-        <string>????</string>
-        <key>CFBundleVersion</key>
-        <string>%s</string>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>English</string>
+		<key>CFBundleExecutable</key>
+		<string>teeworlds_server</string>
+		<key>CFBundleIconFile</key>
+		<string>Teeworlds_srv</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>%s</string>
 </dict>
 </plist>
 	""" % (version))
