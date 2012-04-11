@@ -10,12 +10,29 @@
 #include "gameclient.h"
 #include "webapp.h"
 
+static LOCK gs_CheckHostLock = 0;
+
+struct CCheckHostData
+{
+	CGameClient *m_pClient;
+	char m_aAddr[128];
+};
+
 CClientWebapp::CClientWebapp(CGameClient *pGameClient)
 : IWebapp(pGameClient->Storage()),
   m_pClient(pGameClient)
 {
+	if(gs_CheckHostLock == 0)
+		gs_CheckHostLock = lock_create();
+
 	m_ApiTokenError = false;
 	m_ApiTokenRequested = false;
+}
+
+CClientWebapp::~CClientWebapp()
+{
+	lock_wait(gs_CheckHostLock);
+	lock_release(gs_CheckHostLock);
 }
 
 void CClientWebapp::OnResponse(CHttpConnection *pCon)
@@ -48,11 +65,32 @@ void CClientWebapp::OnResponse(CHttpConnection *pCon)
 		if(!Error && Json)
 		{
 			for(unsigned int i = 0; i < JsonData.size(); i++)
-			{
-				NETADDR ServerAddress;
-				if(m_pClient->Client()->CheckHost(JsonData[i].asCString(), &ServerAddress))
-					m_pClient->ServerBrowser()->AddTeerace(ServerAddress);
-			}
+				CheckHost(JsonData[i].asCString());
 		}
 	}
+}
+
+void CClientWebapp::CheckHost(const char* pAddr)
+{
+	CCheckHostData *pTmp = new CCheckHostData();
+	pTmp->m_pClient = m_pClient;
+	str_copy(pTmp->m_aAddr, pAddr, sizeof(pTmp->m_aAddr));
+
+	void *LoadThread = thread_create(CheckHostThread, pTmp);
+	thread_detach(LoadThread);
+}
+
+void CClientWebapp::CheckHostThread(void *pUser)
+{
+	lock_wait(gs_CheckHostLock);
+
+	CCheckHostData *pData = (CCheckHostData*)pUser;
+
+	NETADDR ServerAddress;
+	if(pData->m_pClient->Client()->CheckHost(pData->m_aAddr, &ServerAddress))
+		pData->m_pClient->ServerBrowser()->AddTeerace(ServerAddress);
+
+	delete pData;
+
+	lock_release(gs_CheckHostLock);
 }

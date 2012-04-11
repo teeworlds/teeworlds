@@ -13,9 +13,12 @@ class CClientWebapp : public IWebapp
 	void RegisterFields(class CRequest *pRequest, bool Api) {}
 	void OnResponse(class CHttpConnection *pCon);
 
+	void CheckHost(const char* pAddr);
+	static void CheckHostThread(void *pUser);
+
 public:
 	CClientWebapp(class CGameClient *pGameClient);
-	virtual ~CClientWebapp() {}
+	virtual ~CClientWebapp();
 
 	// api token vars
 	bool m_ApiTokenRequested;
