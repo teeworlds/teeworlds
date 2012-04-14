@@ -126,7 +126,13 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 		}
 
 		// send connectionless packet
-		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+		if(pChunk->m_ClientID == -1)
+			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+		else
+		{
+			dbg_assert(pChunk->m_ClientID == 0, "errornous client id");
+			m_Connection.SendPacketConnless((const char *)pChunk->m_pData, pChunk->m_DataSize);
+		}
 	}
 	else
 	{
