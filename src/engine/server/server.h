@@ -212,8 +212,8 @@ public:
 
 	void ProcessClientPacket(CNetChunk *pPacket);
 
-	void SendServerInfo(const NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
+	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();
 

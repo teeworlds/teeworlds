@@ -228,11 +228,16 @@ public:
 
 	void SetToken(TOKEN Token);
 
+	TOKEN Token() const { return m_Token; }
+	TOKEN PeerToken() const { return m_PeerToken; }
+	NETSOCKET Socket() const { return m_Socket; }
+
 	int Update();
 	int Flush();
 
 	int Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr);
 	int QueueChunk(int Flags, int DataSize, const void *pData);
+	void SendPacketConnless(const char *pData, int DataSize);
 
 	const char *ErrorString();
 	void SignalResend();

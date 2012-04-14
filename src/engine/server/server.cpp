@@ -1068,10 +1068,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
+void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 {
-	CNetChunk Packet;
-	CPacker Packer;
+	char aBuf[128];
 
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
@@ -1086,55 +1085,59 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 		}
 	}
 
-	Packer.Reset();
+	pPacker->Reset();
 
-	Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	Packer.AddInt(Token);
+	pPacker->AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+	pPacker->AddInt(Token);
 
-	Packer.AddString(GameServer()->Version(), 32);
-	Packer.AddString(g_Config.m_SvName, 64);
-	Packer.AddString(g_Config.m_SvHostname, 128);
-	Packer.AddString(GetMapName(), 32);
+	pPacker->AddString(GameServer()->Version(), 32);
+	pPacker->AddString(g_Config.m_SvName, 64);
+	pPacker->AddString(g_Config.m_SvHostname, 128);
+	pPacker->AddString(GetMapName(), 32);
 
 	// gametype
-	Packer.AddString(GameServer()->GameType(), 16);
+	pPacker->AddString(GameServer()->GameType(), 16);
 
 	// flags
 	int Flag = g_Config.m_Password[0] ? SERVERINFO_FLAG_PASSWORD : 0;	// password set
-	Packer.AddInt(Flag);
+	pPacker->AddInt(Flag);
 
-	Packer.AddInt(g_Config.m_SvSkillLevel);	// server skill level
-	Packer.AddInt(PlayerCount); // num players
-	Packer.AddInt(m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); // max players
-	Packer.AddInt(ClientCount); // num clients
-	Packer.AddInt(m_NetServer.MaxClients()); // max clients
+	pPacker->AddInt(g_Config.m_SvSkillLevel);	// server skill level
+	pPacker->AddInt(PlayerCount); // num players
+	pPacker->AddInt(m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); // max players
+	pPacker->AddInt(ClientCount); // num clients
+	pPacker->AddInt(m_NetServer.MaxClients()); // max clients
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-			Packer.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-			Packer.AddInt(m_aClients[i].m_Country); // client country
-			Packer.AddInt(m_aClients[i].m_Score); // client score
-			Packer.AddInt(GameServer()->IsClientPlayer(i)?1:0); // is player?
+			pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+			pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+			pPacker->AddInt(m_aClients[i].m_Country); // client country
+			pPacker->AddInt(m_aClients[i].m_Score); // client score
+			pPacker->AddInt(GameServer()->IsClientPlayer(i)?1:0); // is player?
 		}
 	}
-
-	Packet.m_ClientID = -1;
-	Packet.m_Address = *pAddr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = Packer.Size();
-	Packet.m_pData = Packer.Data();
-	m_NetServer.Send(&Packet);
 }
 
 void CServer::UpdateServerInfo()
 {
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	CPacker Packer;
+	CNetChunk Packet;
+
+	GenerateServerInfo(&Packer, -1);
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_pData = Packer.Data();
+	Packet.m_DataSize = Packer.Size();
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-			SendServerInfo(m_NetServer.ClientAddr(i), -1);
+		{
+			Packet.m_ClientID = i;
+			m_NetServer.Send(&Packet);
+		}
 	}
 }
 
@@ -1142,26 +1145,38 @@ void CServer::UpdateServerInfo()
 void CServer::PumpNetwork()
 {
 	CNetChunk Packet;
+	TOKEN ResponseToken;
 
 	m_NetServer.Update();
 
 	// process packets
-	while(m_NetServer.Recv(&Packet))
+	while(m_NetServer.Recv(&Packet, &ResponseToken))
 	{
 		if(Packet.m_ClientID == -1)
 		{
 			// stateless
-			if(!m_Register.RegisterProcessPacket(&Packet))
+			if(m_Register.RegisterProcessPacket(&Packet))
+				continue;
+			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETINFO) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 			{
-				if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETINFO) &&
-					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
-				{
-					CUnpacker Unpacker;
-					Unpacker.Reset((unsigned char*)Packet.m_pData+sizeof(SERVERBROWSE_GETINFO), Packet.m_DataSize-sizeof(SERVERBROWSE_GETINFO));
-					int Token = Unpacker.GetInt();
-					if(!Unpacker.Error())
-						SendServerInfo(&Packet.m_Address, Token);
-				}
+				CUnpacker Unpacker;
+				Unpacker.Reset((unsigned char*)Packet.m_pData+sizeof(SERVERBROWSE_GETINFO), Packet.m_DataSize-sizeof(SERVERBROWSE_GETINFO));
+				int SrvBrwsToken = Unpacker.GetInt();
+				if(Unpacker.Error())
+					continue;
+
+				CPacker Packer;
+				CNetChunk Response;
+				
+				GenerateServerInfo(&Packer, SrvBrwsToken);
+
+				Response.m_ClientID = -1;
+				Response.m_Address = Packet.m_Address;
+				Response.m_Flags = NETSENDFLAG_CONNLESS;
+				Response.m_pData = Packer.Data();
+				Response.m_DataSize = Packer.Size();
+				m_NetServer.Send(&Response, ResponseToken);
 			}
 		}
 		else
@@ -1259,7 +1274,7 @@ int CServer::Run()
 		BindAddr.port = g_Config.m_SvPort;
 	}
 
-	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
+	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, NETFLAG_ALLOWSTATELESS))
 	{
 		dbg_msg("server", "couldn't open socket. port %d might already be in use", g_Config.m_SvPort);
 		return -1;

@@ -166,6 +166,11 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, NET_PACKETVERSION, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
 }
 
+void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
+{
+	CNetBase::SendPacketConnless(m_Socket, &m_PeerAddr, NET_PACKETVERSION, m_PeerToken, m_Token, pData, DataSize);
+}
+
 void CNetConnection::SendToken()
 {
 	m_LastSendTime = time_get();
