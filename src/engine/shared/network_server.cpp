@@ -122,7 +122,15 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 					if(m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 					{
 						if(m_RecvUnpacker.m_Data.m_DataSize)
-							m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
+							if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
+								m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
+							else
+							{
+								pChunk->m_ClientID = i;
+								pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
+								pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
+								return 1;
+							}
 					}
 					continue;
 				}
