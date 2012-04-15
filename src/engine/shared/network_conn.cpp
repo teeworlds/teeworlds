@@ -227,12 +227,18 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 {
 	int64 Now = time_get();
 
+	if(pPacket->m_Version != NET_PACKETVERSION)
+		return 0;
+
 	if(pPacket->m_Token == NET_TOKEN_NONE || pPacket->m_Token != m_Token)
 		return 0;
 
 	// check if resend is requested
 	if(pPacket->m_Flags&NET_PACKETFLAG_RESEND)
 		Resend();
+
+	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
+		return 1;
 
 	//
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONTROL)
