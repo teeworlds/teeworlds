@@ -12,15 +12,13 @@
 static TOKEN Hash(char *pData, int Size)
 {
 	md5_state_t State;
-	TOKEN Result;
-	md5_byte_t aDigest[sizeof(Result)];
+	unsigned int aDigest[4]; // make sure this is 16 byte
 
 	md5_init(&State);
 	md5_append(&State, (const md5_byte_t *)pData, Size);
-	md5_finish(&State, aDigest);
+	md5_finish(&State, (md5_byte_t *)aDigest);
 
-	mem_copy(&Result, aDigest, sizeof(Result));
-	return Result;
+	return aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3];
 }
 
 void CNetTokenManager::Init(NETSOCKET Socket)
