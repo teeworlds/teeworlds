@@ -783,10 +783,13 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_SndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 	{
 		g_Config.m_SndMusic ^= 1;
-		if(g_Config.m_SndMusic)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		else
-			m_pClient->m_pSounds->Stop(SOUND_MENU);
+		if(Client()->State() == IClient::STATE_OFFLINE)
+		{
+			if(g_Config.m_SndMusic)
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+			else
+				m_pClient->m_pSounds->Stop(SOUND_MENU);
+		}
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
