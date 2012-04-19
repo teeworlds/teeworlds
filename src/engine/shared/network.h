@@ -52,6 +52,8 @@ enum
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
+	NET_TOKEN_LENGTH = 16,
+	NET_TOKENSEED_LENGTH = 8,
 
 	NET_CONNSTATE_OFFLINE=0,
 	NET_CONNSTATE_CONNECT=1,
@@ -163,10 +165,14 @@ private:
 
 	int QueueChunkEx(int Flags, int DataSize, const void *pData, int Sequence);
 	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
+	void SendControlConnless(int ControlMsg, NETADDR *pPeerAddr, const void *pExtra, int ExtraSize);
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
 
 public:
+	const char *m_pCurTokenSeed;
+	const char *m_pPrevTokenSeed;
+
 	void Init(NETSOCKET Socket);
 	int Connect(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
@@ -181,6 +187,7 @@ public:
 	void SignalResend();
 	int State() const { return m_State; }
 	const NETADDR *PeerAddress() const { return &m_PeerAddr; }
+	const char *GenerateConnectToken(NETADDR *pAddr, const char *pSeed);
 
 	void ResetErrorString() { m_ErrorString[0] = 0; }
 	const char *ErrorString() const { return m_ErrorString; }
@@ -246,6 +253,8 @@ class CNetServer
 	{
 	public:
 		CNetConnection m_Connection;
+		// needed to call registerfuncs for new clients <- TODO: Fix this
+		bool m_Online;
 	};
 
 	NETSOCKET m_Socket;
@@ -253,6 +262,11 @@ class CNetServer
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
+
+	// seeds for the connecttoken (new seed is generated every 10 seconds and is valid for 20 seconds)
+	char m_CurTokenSeed[NET_TOKENSEED_LENGTH];
+	char m_PrevTokenSeed[NET_TOKENSEED_LENGTH];
+	int64 m_LastTokenSeedGenerated;
 
 	NETFUNC_NEWCLIENT m_pfnNewClient;
 	NETFUNC_DELCLIENT m_pfnDelClient;
@@ -274,6 +288,7 @@ public:
 
 	//
 	int Drop(int ClientID, const char *pReason);
+	int Add(int ClientID);
 
 	// status requests
 	const NETADDR *ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
@@ -373,6 +388,7 @@ public:
 	static void Init();
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
+	static void Hash(char *pDst, const char *pSrc);
 
 	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);

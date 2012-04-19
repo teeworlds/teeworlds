@@ -147,6 +147,13 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, m_Ack, ControlMsg, pExtra, ExtraSize);
 }
 
+void CNetConnection::SendControlConnless(int ControlMsg, NETADDR *pPeerAddr, const void *pExtra, int ExtraSize)
+{
+	// send the control message
+	m_LastSendTime = time_get();
+	CNetBase::SendControlMsg(m_Socket, pPeerAddr, m_Ack, ControlMsg, pExtra, ExtraSize);
+}
+
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)
 {
 	QueueChunkEx(pResend->m_Flags|NET_CHUNKFLAG_RESEND, pResend->m_DataSize, pResend->m_pData, pResend->m_Sequence);
@@ -240,40 +247,82 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			{
 				if(CtrlMsg == NET_CTRLMSG_CONNECT)
 				{
-					// send response and init connection
-					Reset();
-					m_State = NET_CONNSTATE_PENDING;
-					m_PeerAddr = *pAddr;
+					// generate token and send it to the client
+					const char *pConnectToken = GenerateConnectToken(pAddr, m_pCurTokenSeed);
+					SendControlConnless(NET_CTRLMSG_CONNECTACCEPT, pAddr, pConnectToken, NET_TOKEN_LENGTH);
+					if(g_Config.m_Debug)
+						dbg_msg("connection", "got connect, sending connect+accept with token");
+				}
+				else if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
+				{
+					if(pPacket->m_DataSize == NET_TOKEN_LENGTH+1)
+					{
+						if(mem_comp(GenerateConnectToken(pAddr, m_pCurTokenSeed), &pPacket->m_aChunkData[1], NET_TOKEN_LENGTH) == 0
+							|| mem_comp(GenerateConnectToken(pAddr, m_pPrevTokenSeed), &pPacket->m_aChunkData[1], NET_TOKEN_LENGTH) == 0)
+						{
+							// tell the client that the token got accept and wait for final accept from client
+							Reset();
+							m_State = NET_CONNSTATE_PENDING;
+							m_PeerAddr = *pAddr;
+							m_LastSendTime = Now;
+							m_LastRecvTime = Now;
+							m_LastUpdateTime = Now;
+							SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
+							if(g_Config.m_Debug)
+								dbg_msg("connection", "got connect+accept with token. sending accept");
+						}
+						else
+						{
+							// connecttoken wrong, drop the client
+							SendControlConnless(NET_CTRLMSG_CLOSE, pAddr, "Connection refused. Reason: Wrong connecttoken", 47);
+						}
+					}
+					else
+					{
+						// no connecttoken received, drop the client
+						SendControlConnless(NET_CTRLMSG_CLOSE, pAddr, "Connection refused. Reason: No connecttoken", 44);
+					}
+				}
+			}
+			else if(State() == NET_CONNSTATE_PENDING)
+			{
+				if(CtrlMsg == NET_CTRLMSG_ACCEPT)
+				{
+					// connection made
+					m_State = NET_CONNSTATE_ONLINE;
 					m_LastSendTime = Now;
 					m_LastRecvTime = Now;
 					m_LastUpdateTime = Now;
-					SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
 					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connection, sending connect+accept");
+						dbg_msg("connection", "got accept. connection online");
 				}
 			}
 			else if(State() == NET_CONNSTATE_CONNECT)
 			{
-				// connection made
 				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
+					if(pPacket->m_DataSize == NET_TOKEN_LENGTH+1)
+					{
+						// send accept with token and wait for accept
+						m_LastRecvTime = Now;
+						m_LastSendTime = Now;
+						SendControl(NET_CTRLMSG_CONNECTACCEPT, (char *)&pPacket->m_aChunkData[1], NET_TOKEN_LENGTH);
+						if(g_Config.m_Debug)
+							dbg_msg("connection", "got connect+accept with token, sending connect+accept with token.");
+					}
+				}
+				else if(CtrlMsg == NET_CTRLMSG_ACCEPT)
+				{
+					// token accepted, go online
 					m_LastRecvTime = Now;
+					m_LastSendTime = Now;
+					m_LastUpdateTime = Now;
 					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 					m_State = NET_CONNSTATE_ONLINE;
 					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connect+accept, sending accept. connection online");
+						dbg_msg("connection", "got accept, sending accept. connection online");
 				}
 			}
-		}
-	}
-	else
-	{
-		if(State() == NET_CONNSTATE_PENDING)
-		{
-			m_LastRecvTime = Now;
-			m_State = NET_CONNSTATE_ONLINE;
-			if(g_Config.m_Debug)
-				dbg_msg("connection", "connecting online");
 		}
 	}
 
@@ -284,6 +333,16 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 	}
 
 	return 1;
+}
+
+const char *CNetConnection::GenerateConnectToken(NETADDR *pAddr, const char *pSeed)
+{
+	char aBuf[sizeof(NETADDR)+NET_TOKENSEED_LENGTH];
+	static char aConnectToken[NET_TOKEN_LENGTH];
+	mem_copy(aBuf, pAddr, sizeof(NETADDR));
+	mem_copy(aBuf+sizeof(NETADDR), pSeed, NET_TOKENSEED_LENGTH);
+	CNetBase::Hash(aConnectToken, aBuf);
+	return aConnectToken;
 }
 
 int CNetConnection::Update()
@@ -338,11 +397,6 @@ int CNetConnection::Update()
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect every 500ms
 			SendControl(NET_CTRLMSG_CONNECT, 0, 0);
-	}
-	else if(State() == NET_CONNSTATE_PENDING)
-	{
-		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
-			SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
 	}
 
 	return 0;

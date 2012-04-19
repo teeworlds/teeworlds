@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <stdlib.h> // rand()
 #include <base/system.h>
 
 #include <engine/console.h>
@@ -30,7 +31,12 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	m_MaxClientsPerIP = MaxClientsPerIP;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
+	{
 		m_aSlots[i].m_Connection.Init(m_Socket);
+		// setup pointers to tokenseeds
+		m_aSlots[i].m_Connection.m_pCurTokenSeed = m_CurTokenSeed;
+		m_aSlots[i].m_Connection.m_pPrevTokenSeed = m_PrevTokenSeed;
+	}
 
 	return true;
 }
@@ -63,17 +69,40 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
+	m_aSlots[ClientID].m_Online = false;
+
+	return 0;
+}
+
+int CNetServer::Add(int ClientID)
+{
+	if(m_pfnNewClient)
+		m_pfnNewClient(ClientID, m_UserPtr);
+
+	m_aSlots[ClientID].m_Online = true;
 
 	return 0;
 }
 
 int CNetServer::Update()
 {
+	if(m_LastTokenSeedGenerated+time_freq()*10 < time_get())
+	{
+		// generate new tokenseed and save the old one for slow clients
+		mem_copy(m_PrevTokenSeed, m_CurTokenSeed, NET_TOKENSEED_LENGTH);
+		for(int i = 0; i < NET_TOKENSEED_LENGTH; i++)
+			m_CurTokenSeed[i] = rand()&0xff;
+		m_LastTokenSeedGenerated = time_get();
+	}
+
+
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		m_aSlots[i].m_Connection.Update();
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 			Drop(i, m_aSlots[i].m_Connection.ErrorString());
+		else if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ONLINE && !m_aSlots[i].m_Online)
+			Add(i);
 	}
 
 	return 0;
@@ -122,7 +151,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			else
 			{
 				// TODO: check size here
-				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
+				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && (m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT || m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECTACCEPT))
 				{
 					bool Found = false;
 
@@ -165,12 +194,10 @@ int CNetServer::Recv(CNetChunk *pChunk)
 
 						for(int i = 0; i < MaxClients(); i++)
 						{
-							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+							if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_ONLINE)
 							{
 								Found = true;
 								m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-								if(m_pfnNewClient)
-									m_pfnNewClient(i, m_UserPtr);
 								break;
 							}
 						}
