@@ -356,10 +356,16 @@ void CGameContext::SendVoteStatus(int ClientID, int Total, int Yes, int No)
 
 }
 
-void CGameContext::AbortVoteKickOnDisconnect(int ClientID)
+void CGameContext::AbortVoteOnDisconnect(int ClientID)
 {
-	if(m_VoteCloseTime && ((!str_comp_num(m_aVoteCommand, "kick ", 5) && str_toint(&m_aVoteCommand[5]) == ClientID) ||
-		(!str_comp_num(m_aVoteCommand, "set_team ", 9) && str_toint(&m_aVoteCommand[9]) == ClientID)))
+	if(m_VoteCloseTime && ClientID == m_VoteClientID && (!str_comp_num(m_aVoteCommand, "kick ", 5) ||
+		!str_comp_num(m_aVoteCommand, "set_team ", 9) || (!str_comp_num(m_aVoteCommand, "ban ", 4) && Server()->IsBanned(ClientID))))
+		m_VoteCloseTime = -1;
+}
+
+void CGameContext::AbortVoteOnTeamChange(int ClientID)
+{
+	if(m_VoteCloseTime && ClientID == m_VoteClientID && !str_comp_num(m_aVoteCommand, "set_team ", 9))
 		m_VoteCloseTime = -1;
 }
 
@@ -567,9 +573,15 @@ void CGameContext::OnClientConnected(int ClientID, bool Dummy)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
+void CGameContext::OnClientTeamChange(int ClientID)
+{
+	if(m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS)
+		AbortVoteOnTeamChange(ClientID);
+}
+
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
-	AbortVoteKickOnDisconnect(ClientID);
+	AbortVoteOnDisconnect(ClientID);
 	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID], pReason);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
@@ -726,6 +738,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
 				str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aAddrStr, g_Config.m_SvVoteKickBantime);
 			}
+			m_VoteClientID = KickID;
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
 		{
@@ -750,6 +763,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to move '%s' to spectators (%s)", Server()->ClientName(ClientID), Server()->ClientName(SpectateID), pReason);
 			str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));
 			str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
+			m_VoteClientID = SpectateID;
 		}
 
 		if(aCmd[0])

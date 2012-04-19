@@ -456,6 +456,11 @@ bool CServer::IsAuthed(int ClientID)
 	return m_aClients[ClientID].m_Authed;
 }
 
+bool CServer::IsBanned(int ClientID)
+{
+	return m_ServerBan.IsBanned(m_NetServer.ClientAddr(ClientID), 0, 0);
+}
+
 int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)
 {
 	dbg_assert(ClientID >= 0 && ClientID < MAX_CLIENTS, "client_id is not valid");

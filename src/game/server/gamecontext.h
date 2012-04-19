@@ -93,7 +93,8 @@ public:
 	void EndVote();
 	void SendVoteSet(int ClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
-	void AbortVoteKickOnDisconnect(int ClientID);
+	void AbortVoteOnDisconnect(int ClientID);
+	void AbortVoteOnTeamChange(int ClientID);
 
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
@@ -102,6 +103,7 @@ public:
 	char m_aVoteDescription[VOTE_DESC_LENGTH];
 	char m_aVoteCommand[VOTE_CMD_LENGTH];
 	char m_aVoteReason[VOTE_REASON_LENGTH];
+	int m_VoteClientID;
 	int m_NumVoteOptions;
 	int m_VoteEnforce;
 	enum
@@ -161,6 +163,7 @@ public:
 
 	virtual void OnClientConnected(int ClientID) { OnClientConnected(ClientID, false); }
 	void OnClientConnected(int ClientID, bool Dummy);
+	void OnClientTeamChange(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
 	virtual void OnClientDirectInput(int ClientID, void *pInput);

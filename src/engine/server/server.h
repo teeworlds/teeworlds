@@ -187,6 +187,7 @@ public:
 
 	void SetRconCID(int ClientID);
 	bool IsAuthed(int ClientID);
+	bool IsBanned(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
 	const char *ClientName(int ClientID);

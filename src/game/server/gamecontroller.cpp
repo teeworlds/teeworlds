@@ -1047,6 +1047,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 			pPlayer->m_RespawnDisabled = GetStartRespawnState();
 	}
 	OnPlayerInfoChange(pPlayer);
+	GameServer()->OnClientTeamChange(ClientID);
 }
 
 int IGameController::GetStartTeam()
