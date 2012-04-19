@@ -112,13 +112,25 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		if(m_Input.GetString()[0])
 		{
+			bool AddEntry = false;
+
 			if(m_LastChatSend+time_freq() < time_get())
+			{
 				Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
-			else
+				AddEntry = true;
+			}
+			else if(m_PendingChatCounter < 3)
+			{
 				++m_PendingChatCounter;
-			CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
-			pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
-			mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
+				AddEntry = true;
+			}
+
+			if(AddEntry)
+			{
+				CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
+				pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
+				mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
+			}
 		}
 		m_pHistoryEntry = 0x0;
 		m_Mode = MODE_NONE;
