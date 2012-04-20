@@ -30,7 +30,7 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	m_MaxClientsPerIP = MaxClientsPerIP;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
-		m_aSlots[i].m_Connection.Init(m_Socket);
+		m_aSlots[i].m_Connection.Init(m_Socket, true);
 
 	return true;
 }
