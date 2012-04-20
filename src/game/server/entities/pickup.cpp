@@ -36,7 +36,7 @@ void CPickup::Tick()
 			// respawn
 			m_SpawnTick = -1;
 
-			if(m_Type == PICKUP_GRENADE | m_Type == PICKUP_SHOTGUN | m_Type == PICKUP_LASER)
+			if(m_Type == PICKUP_GRENADE || m_Type == PICKUP_SHOTGUN || m_Type == PICKUP_LASER)
 				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN);
 		}
 		else

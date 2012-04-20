@@ -376,6 +376,13 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 			// all players are ready -> unpause the game
 			if(GetPlayersReadyState())
 				SetGameState(IGS_GAME_PAUSED, 0);
+			break;
+		case IGS_WARMUP_GAME:
+		case IGS_START_COUNTDOWN:
+		case IGS_END_MATCH:
+		case IGS_END_ROUND:
+			// not effected
+			break;
 		}
 	}
 }
@@ -650,6 +657,10 @@ void IGameController::Snap(int SnappingClient)
 	case IGS_END_MATCH:
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
 		pGameInfoObj->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
+		break;
+	case IGS_GAME_RUNNING:
+		// not effected
+		break;
 	}
 	if(m_SuddenDeath)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;
@@ -699,6 +710,11 @@ void IGameController::Tick()
 				CycleMap();
 				StartMatch();
 				m_MatchCount++;
+				break;
+			case IGS_WARMUP_GAME:
+			case IGS_GAME_RUNNING:
+				// not effected
+				break;
 			}
 		}
 		else
@@ -715,6 +731,13 @@ void IGameController::Tick()
 			case IGS_GAME_PAUSED:
 				// freeze the game
 				++m_GameStartTick;
+				break;
+			case IGS_WARMUP_GAME:
+			case IGS_GAME_RUNNING:
+			case IGS_END_MATCH:
+			case IGS_END_ROUND:
+				// not effected
+				break;
  			}
 		}
 	}
