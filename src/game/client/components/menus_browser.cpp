@@ -225,7 +225,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		int ItemIndex = i;
 		const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
-		NumPlayers += pItem->m_NumPlayers;
+		NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
 		CUIRect Row;
 		CUIRect SelectHitBox;
 
