@@ -434,12 +434,6 @@ void CGameConsole::OnRender()
 
 		x = Cursor.m_X;
 
-		// render console input (wrap line)
-		int Lines = TextRender()->TextLineCount(0, FontSize, pConsole->m_Input.GetString(), Screen.w - 10.0f - x);
-		y -= (Lines - 1) * FontSize;
-		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = Screen.w - 10.0f - x;
-
 		//hide rcon password
 		char aInputString[256];
 		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
@@ -449,10 +443,22 @@ void CGameConsole::OnRender()
 				aInputString[i] = '*';
 		}
 
+		// render console input (wrap line)
+		TextRender()->SetCursor(&Cursor, x, y, FontSize, 0);
+		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
+		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
+		int Lines = Cursor.m_LineCount;
+		
+		y -= (Lines - 1) * FontSize;
+		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1)/3;
 		CTextCursor Marker = Cursor;
 		Marker.m_X -= MarkerOffset;
+		Marker.m_LineWidth = -1;
 		TextRender()->TextEx(&Marker, "|", -1);
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
 
