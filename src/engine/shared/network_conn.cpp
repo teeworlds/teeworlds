@@ -25,6 +25,8 @@ void CNetConnection::Reset()
 	m_Buffer.Init();
 
 	mem_zero(&m_Construct, sizeof(m_Construct));
+
+	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 }
 
 const char *CNetConnection::ErrorString()
@@ -44,7 +46,6 @@ void CNetConnection::Init(NETSOCKET Socket, bool BlockCloseMsg)
 
 	m_Socket = Socket;
 	m_BlockCloseMsg = BlockCloseMsg;
-	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 }
 
 void CNetConnection::AckChunks(int Ack)
@@ -168,7 +169,6 @@ int CNetConnection::Connect(NETADDR *pAddr)
 	// init connection
 	Reset();
 	m_PeerAddr = *pAddr;
-	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 	m_State = NET_CONNSTATE_CONNECT;
 	SendControl(NET_CTRLMSG_CONNECT, 0, 0);
 	return 0;
