@@ -263,7 +263,7 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket)
 	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWOK) &&
 		mem_comp(pPacket->m_pData, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
 	{
-		if(m_RegisterFirst)
+		if(m_RegisterFirst && m_RegisterState != REGISTERSTATE_REGISTERED)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "no firewall/nat problems detected");
 		RegisterNewState(REGISTERSTATE_REGISTERED);
 		return 1;
