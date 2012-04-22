@@ -1,54 +1,137 @@
 #ifndef GAME_EDITOR_AUTO_MAP_H
 #define GAME_EDITOR_AUTO_MAP_H
 
+#include <stdlib.h> // rand
 #include <base/tl/array.h>
+#include <base/vmath.h>
 
-class CAutoMapper
+class IAutoMapper
 {
-	struct CPosRule
+public:
+	virtual void Load(class TiXmlElement* pElement) = 0;
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID) {}
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes
+
+	virtual int RuleSetNum() = 0;
+	virtual const char* GetRuleSetName(int Index) = 0;
+	
+	virtual int GetType() = 0;
+	
+	static bool Random(int Value)
+	{
+		return ((int)((float)rand() / ((float)RAND_MAX + 1) * Value) == 1);
+	}
+	
+	enum
+	{
+		TYPE_TILESET,
+		TYPE_DOODADS
+	};
+};
+
+class CTileSetMapper: public IAutoMapper
+{
+	struct CRuleCondition
 	{
 		int m_X;
 		int m_Y;
 		int m_Value;
-		bool m_IndexValue;
 
 		enum
 		{
-			EMPTY=0,
-			FULL
+			EMPTY = -2,
+			FULL = -1
 		};
 	};
 
-	struct CIndexRule
+	struct CRule
 	{
-		int m_ID;
-		array<CPosRule> m_aRules;
-		int m_Flag;
-		int m_RandomValue;
-		bool m_BaseTile;
+		int m_Index;
+		int m_HFlip;
+		int m_VFlip;
+		int m_Random;
+		int m_Rotation;
+		
+		array<CRuleCondition> m_aConditions;
 	};
 
-	struct CConfiguration
+	struct CRuleSet
 	{
-		array<CIndexRule> m_aIndexRules;
 		char m_aName[128];
+		int m_BaseTile;
+		
+		array<CRule> m_aRules;
 	};
 
 public:
-	CAutoMapper(class CEditor *pEditor);
+	CTileSetMapper(class CEditor *pEditor);
 
-	void Load(const char* pTileName);
-	void Proceed(class CLayerTiles *pLayer, int ConfigID);
+	virtual void Load(class TiXmlElement* pElement);
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID);
 
-	int ConfigNamesNum() { return m_lConfigs.size(); }
-	const char* GetConfigName(int Index);
-
-	const bool IsLoaded() { return m_FileLoaded; }
+	virtual int RuleSetNum() { return m_aRuleSets.size(); }
+	virtual const char* GetRuleSetName(int Index);
+	
+	virtual int GetType() { return IAutoMapper::TYPE_TILESET; }
+	
 private:
-	array<CConfiguration> m_lConfigs;
+	array<CRuleSet> m_aRuleSets;
 	class CEditor *m_pEditor;
-	bool m_FileLoaded;
 };
 
+class CDoodadMapper: public IAutoMapper
+{
+public:
+	struct CRule
+	{
+		ivec2 m_Rect;
+		ivec2 m_Size;
+		ivec2 m_RelativePos;
+		
+		int m_Location;
+		int m_Random;
+		
+		int m_HFlip;
+		int m_VFlip;
+		
+		enum
+		{
+			FLOOR=0,
+			CEILING,
+			WALLS
+		};
+	};
+	
+	struct CRuleSet
+	{
+		char m_aName[128];
+		
+		array<CRule> m_aRules;
+	};
+
+
+	CDoodadMapper(class CEditor *pEditor);
+
+	virtual void Load(class TiXmlElement* pElement);
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Amount);
+	void AnalyzeGameLayer();
+
+	virtual int RuleSetNum() { return m_aRuleSets.size(); }
+	virtual const char* GetRuleSetName(int Index);
+	
+	virtual int GetType() { return IAutoMapper::TYPE_DOODADS; }
+	
+private:
+	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int>> *pPositions, int Amount, int LeftWall = 0);
+	
+	array<CRuleSet> m_aRuleSets;
+	
+	array<array<int>> m_FloorIDs;
+	array<array<int>> m_CeilingIDs;
+	array<array<int>> m_RightWallIDs;
+	array<array<int>> m_LeftWallIDs;
+	
+	class CEditor *m_pEditor;
+};
 
 #endif

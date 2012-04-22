@@ -236,7 +236,6 @@ public:
 	CEditor *m_pEditor;
 
 	CEditorImage(CEditor *pEditor)
-	: m_AutoMapper(pEditor)
 	{
 		m_pEditor = pEditor;
 		m_TexID = -1;
@@ -246,17 +245,22 @@ public:
 		m_Height = 0;
 		m_pData = 0;
 		m_Format = 0;
+		m_pAutoMapper = 0;
+		m_RulesFileLoaded = false;
 	}
 
 	~CEditorImage();
 
 	void AnalyseTileFlags();
+	void LoadAutoMapper();
 
 	int m_TexID;
 	int m_External;
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
-	class CAutoMapper m_AutoMapper;
+	
+	class IAutoMapper *m_pAutoMapper;
+	bool m_RulesFileLoaded;
 };
 
 class CEditorMap
@@ -439,6 +443,9 @@ public:
 	int m_ColorEnv;
 	int m_ColorEnvOffset;
 	CTile *m_pTiles;
+	
+	int m_SelectedRuleSet;
+	int m_SelectedAmount;
 };
 
 class CLayerQuads : public CLayer
@@ -745,6 +752,9 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
+	
+	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
+	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -757,7 +767,7 @@ public:
 	int PopupSelectGameTileOpResult();
 
 	void PopupSelectConfigAutoMapInvoke(float x, float y);
-	int PopupSelectConfigAutoMapResult();
+	bool PopupAutoMapProceedOrder();
 
 	vec4 ButtonColorMul(const void *pID);
 
