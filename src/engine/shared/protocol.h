@@ -47,6 +47,10 @@ enum
 	NETMSG_INPUTTIMING,		// reports how off the input was
 	NETMSG_RCON_AUTH_STATUS,// result of the authentication
 	NETMSG_RCON_LINE,		// line that should be printed to the remote console
+	NETMSG_RCON_CMD_ADD,
+	NETMSG_RCON_CMD_REM,
+	NETMSG_MAPLIST_ENTRY_ADD,
+	NETMSG_MAPLIST_ENTRY_REM,
 
 	NETMSG_AUTH_CHALLANGE,	//
 	NETMSG_AUTH_RESULT,		//
@@ -66,12 +70,6 @@ enum
 	NETMSG_PING,
 	NETMSG_PING_REPLY,
 	NETMSG_ERROR,
-
-	// sent by server (todo: move it up)
-	NETMSG_RCON_CMD_ADD,
-	NETMSG_RCON_CMD_REM,
-	NETMSG_MAPLIST_ENTRY_ADD,
-	NETMSG_MAPLIST_ENTRY_REM,
 };
 
 // this should be revised

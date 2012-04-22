@@ -1,13 +1,13 @@
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
-PlayerFlags = ["PLAYING", "IN_MENU", "CHATTING", "SCOREBOARD"]
-GameFlags = ["TEAMS", "FLAGS"]
-GameStateFlags = ["GAMEOVER", "SUDDENDEATH", "PAUSED"]
+PlayerFlags = ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"]
+GameFlags = ["TEAMS", "FLAGS", "SURVIVAL"]
+GameStateFlags = ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"]
 
 Emoticons = ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"]
 
-Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
+Pickups = ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"]
 
 RawHeader = '''
 
@@ -23,6 +23,7 @@ enum
 	TEAM_SPECTATORS=-1,
 	TEAM_RED,
 	TEAM_BLUE,
+	NUM_TEAMS,
 
 	FLAG_MISSING=-3,
 	FLAG_ATSTAND,
@@ -39,7 +40,7 @@ RawSource = '''
 
 Enums = [
 	Enum("EMOTE", Emotes),
-	Enum("POWERUP", Powerups),
+	Enum("PICKUP", Pickups),
 	Enum("EMOTICON", Emoticons)
 ]
 
@@ -91,7 +92,6 @@ Objects = [
 		NetIntAny("m_Y"),
 
 		NetIntRange("m_Type", 0, 'max_int'),
-		NetIntRange("m_Subtype", 0, 'max_int'),
 	]),
 
 	NetObject("Flag", [
@@ -104,14 +104,14 @@ Objects = [
 	NetObject("GameInfo", [
 		NetIntRange("m_GameFlags", 0, 256),
 		NetIntRange("m_GameStateFlags", 0, 256),
-		NetTick("m_RoundStartTick"),
-		NetIntRange("m_WarmupTimer", 0, 'max_int'),
+		NetTick("m_GameStartTick"),
+		NetIntRange("m_GameStateTimer", 0, 'max_int'),
 
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
-		NetIntRange("m_RoundNum", 0, 'max_int'),
-		NetIntRange("m_RoundCurrent", 0, 'max_int'),
+		NetIntRange("m_MatchNum", 0, 'max_int'),
+		NetIntRange("m_MatchCurrent", 0, 'max_int'),
 	]),
 
 	NetObject("GameData", [
@@ -120,6 +120,8 @@ Objects = [
 
 		NetIntRange("m_FlagCarrierRed", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
 		NetIntRange("m_FlagCarrierBlue", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetTick("m_FlagDropTickRed"),
+		NetTick("m_FlagDropTickBlue"),
 	]),
 
 	NetObject("CharacterCore", [
@@ -144,7 +146,6 @@ Objects = [
 	]),
 
 	NetObject("Character:CharacterCore", [
-		NetIntRange("m_PlayerFlags", 0, 256),
 		NetIntRange("m_Health", 0, 10),
 		NetIntRange("m_Armor", 0, 10),
 		NetIntRange("m_AmmoCount", 0, 10),
@@ -154,6 +155,7 @@ Objects = [
 	]),
 
 	NetObject("PlayerInfo", [
+		NetIntRange("m_PlayerFlags", 0, 256),
 		NetIntRange("m_Local", 0, 1),
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
@@ -202,10 +204,6 @@ Objects = [
 
 	NetEvent("Death:Common", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
-	]),
-
-	NetEvent("SoundGlobal:Common", [ #TODO 0.7: remove me
-		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
 	NetEvent("SoundWorld:Common", [
@@ -326,6 +324,8 @@ Messages = [
 	]),
 
 	NetMessage("Cl_Kill", []),
+
+	NetMessage("Cl_ReadyChange", []),
 
 	NetMessage("Cl_Emoticon", [
 		NetIntRange("m_Emoticon", 0, 'NUM_EMOTICONS-1'),

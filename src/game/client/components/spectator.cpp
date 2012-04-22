@@ -195,28 +195,33 @@ void CSpectator::OnRender()
 	float LineHeight = 60.0f;
 	bool Selected = false;
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
+	if(m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
 	{
-		Graphics()->TextureSet(-1);
-		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
-		RenderTools()->DrawRoundRect(Width/2.0f-280.0f, Height/2.0f-280.0f, 270.0f, 60.0f, 20.0f);
-		Graphics()->QuadsEnd();
-	}
+		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
+		{
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
+			RenderTools()->DrawRoundRect(Width/2.0f-280.0f, Height/2.0f-280.0f, 270.0f, 60.0f, 20.0f);
+			Graphics()->QuadsEnd();
+		}
 
-	if(m_SelectorMouse.x >= -280.0f && m_SelectorMouse.x <= -10.0f &&
-		m_SelectorMouse.y >= -280.0f && m_SelectorMouse.y <= -220.0f)
-	{
-		m_SelectedSpectatorID = SPEC_FREEVIEW;
-		Selected = true;
+		if(m_SelectorMouse.x >= -280.0f && m_SelectorMouse.x <= -10.0f &&
+			m_SelectorMouse.y >= -280.0f && m_SelectorMouse.y <= -220.0f)
+		{
+			m_SelectedSpectatorID = SPEC_FREEVIEW;
+			Selected = true;
+		}
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
+		TextRender()->Text(0, Width/2.0f-240.0f, Height/2.0f-265.0f, FontSize, Localize("Free-View"), -1);
 	}
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
-	TextRender()->Text(0, Width/2.0f-240.0f, Height/2.0f-265.0f, FontSize, Localize("Free-View"), -1);
 
 	float x = -270.0f, y = StartY;
 	for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS ||
+			(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD ||
+			m_pClient->m_Snap.m_pLocalInfo->m_Team != m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team || i == m_pClient->m_Snap.m_LocalClientID)))
 			continue;
 
 		if(++Count%9 == 0)

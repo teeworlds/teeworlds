@@ -302,7 +302,7 @@ public:
 		INITFLAG_RESIZABLE = 4,
 	};
 
-	virtual int Init(const char *pName, int Width, int Height, int FsaaSamples, int Flags) = 0;
+	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual void Minimize() = 0;

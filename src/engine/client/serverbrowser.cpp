@@ -154,7 +154,9 @@ void CServerBrowser::Filter()
 		else if(g_Config.m_BrFilterPure &&
 			(str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "DM") != 0 &&
 			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "TDM") != 0 &&
-			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CTF") != 0))
+			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CTF") != 0 &&
+			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "SUR") != 0 &&
+			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "LMS") != 0))
 		{
 			Filtered = 1;
 		}
@@ -354,21 +356,6 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 	pEntry->m_Info = Info;
 	pEntry->m_Info.m_Favorite = Fav;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
-
-	// all these are just for nice compability
-	if(pEntry->m_Info.m_aGameType[0] == '0' && pEntry->m_Info.m_aGameType[1] == 0)
-		str_copy(pEntry->m_Info.m_aGameType, "DM", sizeof(pEntry->m_Info.m_aGameType));
-	else if(pEntry->m_Info.m_aGameType[0] == '1' && pEntry->m_Info.m_aGameType[1] == 0)
-		str_copy(pEntry->m_Info.m_aGameType, "TDM", sizeof(pEntry->m_Info.m_aGameType));
-	else if(pEntry->m_Info.m_aGameType[0] == '2' && pEntry->m_Info.m_aGameType[1] == 0)
-		str_copy(pEntry->m_Info.m_aGameType, "CTF", sizeof(pEntry->m_Info.m_aGameType));
-
-	/*if(!request)
-	{
-		pEntry->m_Info.latency = (time_get()-pEntry->request_time)*1000/time_freq();
-		RemoveRequest(pEntry);
-	}*/
-
 	pEntry->m_GotInfo = 1;
 }
 
@@ -495,7 +482,7 @@ void CServerBrowser::Refresh(int Type)
 		/* do the broadcast version */
 		Packet.m_ClientID = -1;
 		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_Address.type = NETTYPE_ALL|NETTYPE_LINK_BROADCAST;
+		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS;
 		Packet.m_DataSize = sizeof(Buffer);
 		Packet.m_pData = Buffer;

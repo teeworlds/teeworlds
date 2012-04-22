@@ -25,6 +25,8 @@ void CNetConnection::Reset()
 	m_Buffer.Init();
 
 	mem_zero(&m_Construct, sizeof(m_Construct));
+
+	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 }
 
 const char *CNetConnection::ErrorString()
@@ -37,13 +39,13 @@ void CNetConnection::SetError(const char *pString)
 	str_copy(m_ErrorString, pString, sizeof(m_ErrorString));
 }
 
-void CNetConnection::Init(NETSOCKET Socket)
+void CNetConnection::Init(NETSOCKET Socket, bool BlockCloseMsg)
 {
 	Reset();
 	ResetStats();
 
 	m_Socket = Socket;
-	mem_zero(m_ErrorString, sizeof(m_ErrorString));
+	m_BlockCloseMsg = BlockCloseMsg;
 }
 
 void CNetConnection::AckChunks(int Ack)
@@ -167,7 +169,6 @@ int CNetConnection::Connect(NETADDR *pAddr)
 	// init connection
 	Reset();
 	m_PeerAddr = *pAddr;
-	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 	m_State = NET_CONNSTATE_CONNECT;
 	SendControl(NET_CTRLMSG_CONNECT, 0, 0);
 	return 0;
@@ -213,21 +214,24 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				m_State = NET_CONNSTATE_ERROR;
 				m_RemoteClosed = 1;
 
-				if(pPacket->m_DataSize)
+				if(!m_BlockCloseMsg)
 				{
-					// make sure to sanitize the error string form the other party
-					char Str[128];
-					if(pPacket->m_DataSize < 128)
-						str_copy(Str, (char *)pPacket->m_aChunkData, pPacket->m_DataSize);
-					else
-						str_copy(Str, (char *)pPacket->m_aChunkData, sizeof(Str));
-					str_sanitize_strong(Str);
+					if(pPacket->m_DataSize)
+					{
+						// make sure to sanitize the error string form the other party
+						char Str[128];
+						if(pPacket->m_DataSize < 128)
+							str_copy(Str, (char *)pPacket->m_aChunkData, pPacket->m_DataSize);
+						else
+							str_copy(Str, (char *)pPacket->m_aChunkData, sizeof(Str));
+						str_sanitize_strong(Str);
 
-					// set the error string
-					SetError(Str);
+						// set the error string
+						SetError(Str);
+					}
+					else
+						SetError("No reason given");
 				}
-				else
-					SetError("No reason given");
 
 				if(g_Config.m_Debug)
 					dbg_msg("conn", "closed reason='%s'", ErrorString());

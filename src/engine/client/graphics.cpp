@@ -761,11 +761,18 @@ int CGraphics_OpenGL::Init()
 
 int CGraphics_SDL::TryInit()
 {
-	m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	m_ScreenHeight = g_Config.m_GfxScreenHeight;
-
 	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
 	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE); // prevent stuck mouse cursor sdl-bug when loosing fullscreen focus in windows
+
+	// use current resolution as default
+	if(g_Config.m_GfxScreenWidth == 0 || g_Config.m_GfxScreenHeight == 0)
+	{
+		g_Config.m_GfxScreenWidth = pInfo->current_w;
+		g_Config.m_GfxScreenHeight = pInfo->current_h;
+	}
+
+	m_ScreenWidth = g_Config.m_GfxScreenWidth;
+	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// set flags
 	int Flags = SDL_OPENGL;
@@ -929,7 +936,8 @@ void CGraphics_SDL::Swap()
 {
 	if(m_DoScreenshot)
 	{
-		ScreenshotDirect(m_aScreenshotName);
+		if(WindowActive())
+			ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 

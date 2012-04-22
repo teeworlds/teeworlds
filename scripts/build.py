@@ -82,11 +82,8 @@ work_dir = root_dir + "scripts/work"
 def fetch_file(url):
 	try:
 		print("trying %s" % url)
-		real_url = url_lib.urlopen(url).geturl()
-		local = real_url.split("/")
-		local = local[len(local)-1].split("?")
-		local = local[0]
-		url_lib.urlretrieve(real_url, local)
+		local = dict(url_lib.urlopen(url).info())['content-disposition'].split('=')[1]
+		url_lib.urlretrieve(url, local)
 		return local
 	except:
 		return False

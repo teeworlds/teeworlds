@@ -108,29 +108,33 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	float Angle = 0.0f;
 	float Size = 64.0f;
-	if (pCurrent->m_Type == POWERUP_WEAPON)
-	{
-		Angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Subtype, 0, NUM_WEAPONS-1)].m_pSpriteBody);
-		Size = g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Subtype, 0, NUM_WEAPONS-1)].m_VisualSize;
-	}
-	else
-	{
-		const int c[] = {
-			SPRITE_PICKUP_HEALTH,
-			SPRITE_PICKUP_ARMOR,
-			SPRITE_PICKUP_WEAPON,
-			SPRITE_PICKUP_NINJA
-			};
-		RenderTools()->SelectSprite(c[pCurrent->m_Type]);
+	const int c[] = {
+		SPRITE_PICKUP_HEALTH,
+		SPRITE_PICKUP_ARMOR,
+		SPRITE_PICKUP_GRENADE,
+		SPRITE_PICKUP_SHOTGUN,
+		SPRITE_PICKUP_LASER,
+		SPRITE_PICKUP_NINJA
+		};
+	RenderTools()->SelectSprite(c[pCurrent->m_Type]);
 
-		if(c[pCurrent->m_Type] == SPRITE_PICKUP_NINJA)
-		{
-			m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
-			Size *= 2.0f;
-			Pos.x -= 10.0f;
-		}
+	switch(pCurrent->m_Type)
+	{
+	case PICKUP_GRENADE:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_VisualSize;
+		break;
+	case PICKUP_SHOTGUN:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_VisualSize;
+		break;
+	case PICKUP_LASER:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
+		break;
+	case PICKUP_NINJA:
+		m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
+		Size *= 2.0f;
+		Pos.x -= 10.0f;
 	}
+	
 
 	Graphics()->QuadsSetRotation(Angle);
 

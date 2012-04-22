@@ -1,9 +1,12 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "gameworld.h"
+#include "entities/character.h"
 #include "entity.h"
 #include "gamecontext.h"
+#include "gamecontroller.h"
+#include "gameworld.h"
+
 
 //////////////////////////////////////////////////
 // game world
@@ -125,7 +128,7 @@ void CGameWorld::Reset()
 		}
 	RemoveEntities();
 
-	GameServer()->m_pController->PostReset();
+	GameServer()->m_pController->OnReset();
 	RemoveEntities();
 
 	m_ResetRequested = false;
@@ -154,8 +157,6 @@ void CGameWorld::Tick()
 
 	if(!m_Paused)
 	{
-		if(GameServer()->m_pController->IsForceBalanced())
-			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "Teams have been balanced");
 		// update all objects
 		for(int i = 0; i < NUM_ENTTYPES; i++)
 			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
@@ -173,7 +174,7 @@ void CGameWorld::Tick()
 				pEnt = m_pNextTraverseEntity;
 			}
 	}
-	else
+	else if(GameServer()->m_pController->IsGamePaused())
 	{
 		// update all objects
 		for(int i = 0; i < NUM_ENTTYPES; i++)

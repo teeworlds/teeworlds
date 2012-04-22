@@ -16,7 +16,7 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 
 	// init
 	m_Socket = Socket;
-	m_Connection.Init(m_Socket);
+	m_Connection.Init(m_Socket, false);
 	return true;
 }
 
@@ -93,19 +93,25 @@ int CNetClient::Recv(CNetChunk *pChunk)
 
 int CNetClient::Send(CNetChunk *pChunk)
 {
-	if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
-	{
-		dbg_msg("netclient", "chunk payload too big. %d. dropping chunk", pChunk->m_DataSize);
-		return -1;
-	}
-
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
+		if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
+		{
+			dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
+			return -1;
+		}
+
 		// send connectionless packet
 		CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
 	}
 	else
 	{
+		if(pChunk->m_DataSize+NET_MAX_CHUNKHEADERSIZE >= NET_MAX_PAYLOAD)
+		{
+			dbg_msg("netclient", "chunk payload too big. %d. dropping chunk", pChunk->m_DataSize);
+			return -1;
+		}
+
 		int Flags = 0;
 		dbg_assert(pChunk->m_ClientID == 0, "errornous client id");
 

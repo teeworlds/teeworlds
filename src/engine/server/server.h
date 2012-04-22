@@ -125,6 +125,7 @@ public:
 		int m_Authed;
 		int m_AuthTries;
 
+		int m_MapChunk;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 		const MapListEntry *m_pMapListEntryToSend;
 
@@ -166,11 +167,17 @@ public:
 	MapListEntry *m_pFirstMapEntry;
 	int m_NumMapEntries;
 
+	// map
+	enum
+	{
+		MAP_CHUNK_SIZE=NET_MAX_PAYLOAD-NET_MAX_CHUNKHEADERSIZE-4, // msg type
+	};
 
 	char m_aCurrentMap[64];
 	unsigned m_CurrentMapCrc;
 	unsigned char *m_pCurrentMapData;
 	int m_CurrentMapSize;
+	int m_MapChunksPerRequest;
 
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
@@ -198,6 +205,7 @@ public:
 
 	void SetRconCID(int ClientID);
 	bool IsAuthed(int ClientID);
+	bool IsBanned(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
 	const char *ClientName(int ClientID);

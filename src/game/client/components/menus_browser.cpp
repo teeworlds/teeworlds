@@ -225,7 +225,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		int ItemIndex = i;
 		const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
-		NumPlayers += pItem->m_NumPlayers;
+		NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
 		CUIRect Row;
 		CUIRect SelectHitBox;
 
@@ -314,7 +314,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			{
 				if(	str_comp(pItem->m_aGameType, "DM") == 0 ||
 					str_comp(pItem->m_aGameType, "TDM") == 0 ||
-					str_comp(pItem->m_aGameType, "CTF") == 0)
+					str_comp(pItem->m_aGameType, "CTF") == 0 ||
+					str_comp(pItem->m_aGameType, "LMS") == 0 ||
+					str_comp(pItem->m_aGameType, "SUR") == 0)
 				{
 					// pure server
 				}

@@ -129,9 +129,9 @@ class Weapon_Grenade(Struct):
 		self.speed = Float(1000)
 		self.lifetime = Float(2.0)
 
-class Weapon_Rifle(Struct):
+class Weapon_Laser(Struct):
 	def __init__(self):
-		Struct.__init__(self, "CDataWeaponspecRifle")
+		Struct.__init__(self, "CDataWeaponspecLaser")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
 		self.reach = Float(800.0)
 		self.bounce_delay = Int(150)
@@ -153,7 +153,7 @@ class Weapons(Struct):
 		self.gun = Weapon_Gun()
 		self.shotgun = Weapon_Shotgun()
 		self.grenade = Weapon_Grenade()
-		self.rifle = Weapon_Rifle()
+		self.laser = Weapon_Laser()
 		self.ninja = Weapon_Ninja()
 		self.id = Array(WeaponSpec())
 
@@ -181,8 +181,8 @@ container.sounds.Add(SoundSet("hammer_hit", FileList("audio/wp_hammer_hit-%02d.w
 container.sounds.Add(SoundSet("ninja_fire", FileList("audio/wp_ninja_attack-%02d.wv", 3)))
 container.sounds.Add(SoundSet("grenade_explode", FileList("audio/wp_flump_explo-%02d.wv", 3)))
 container.sounds.Add(SoundSet("ninja_hit", FileList("audio/wp_ninja_hit-%02d.wv", 3)))
-container.sounds.Add(SoundSet("rifle_fire", FileList("audio/wp_rifle_fire-%02d.wv", 3)))
-container.sounds.Add(SoundSet("rifle_bounce", FileList("audio/wp_rifle_bnce-%02d.wv", 3)))
+container.sounds.Add(SoundSet("laser_fire", FileList("audio/wp_laser_fire-%02d.wv", 3)))
+container.sounds.Add(SoundSet("laser_bounce", FileList("audio/wp_laser_bnce-%02d.wv", 3)))
 container.sounds.Add(SoundSet("weapon_switch", FileList("audio/wp_switch-%02d.wv", 3)))
 
 container.sounds.Add(SoundSet("player_pain_short", FileList("audio/vo_teefault_pain_short-%02d.wv", 12)))
@@ -235,6 +235,7 @@ image_guiicons = Image("guiicons", "gui_icons.png")
 
 container.images.Add(image_null)
 container.images.Add(image_game)
+container.images.Add(Image("deadtee", "deadtee.png"))
 container.images.Add(image_particles)
 container.images.Add(Image("cursor", "gui_cursor.png"))
 container.images.Add(Image("banner", "gui_logo.png"))
@@ -249,7 +250,9 @@ container.images.Add(image_guiicons)
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))
-container.pickups.Add(Pickup("weapon"))
+container.pickups.Add(Pickup("grenade"))
+container.pickups.Add(Pickup("shotgun"))
+container.pickups.Add(Pickup("laser"))
 container.pickups.Add(Pickup("ninja", 90, 90))
 
 set_particles = SpriteSet("particles", image_particles, 8, 8)
@@ -329,9 +332,9 @@ container.sprites.Add(Sprite("weapon_ninja_body", set_game, 2,10,8,2))
 container.sprites.Add(Sprite("weapon_ninja_cursor", set_game, 0,10,2,2))
 container.sprites.Add(Sprite("weapon_ninja_proj", set_game, 0,0,0,0))
 
-container.sprites.Add(Sprite("weapon_rifle_body", set_game, 2,12,7,3))
-container.sprites.Add(Sprite("weapon_rifle_cursor", set_game, 0,12,2,2))
-container.sprites.Add(Sprite("weapon_rifle_proj", set_game, 10,12,2,2))
+container.sprites.Add(Sprite("weapon_laser_body", set_game, 2,12,7,3))
+container.sprites.Add(Sprite("weapon_laser_cursor", set_game, 0,12,2,2))
+container.sprites.Add(Sprite("weapon_laser_proj", set_game, 10,12,2,2))
 
 container.sprites.Add(Sprite("hook_chain", set_game, 2,0,1,1))
 container.sprites.Add(Sprite("hook_head", set_game, 3,0,2,1))
@@ -342,7 +345,9 @@ container.sprites.Add(Sprite("weapon_ninja_muzzle3", set_game, 25,8,7,4))
 
 container.sprites.Add(Sprite("pickup_health", set_game, 10,2,2,2))
 container.sprites.Add(Sprite("pickup_armor", set_game, 12,2,2,2))
-container.sprites.Add(Sprite("pickup_weapon", set_game, 3,0,6,2))
+container.sprites.Add(Sprite("pickup_grenade", set_game, 2,8,7,2))
+container.sprites.Add(Sprite("pickup_shotgun", set_game, 2,6,8,2))
+container.sprites.Add(Sprite("pickup_laser", set_game, 2,12,7,3))
 container.sprites.Add(Sprite("pickup_ninja", set_game, 2,10,8,2))
 
 container.sprites.Add(Sprite("flag_blue", set_game, 12,8,4,8))
@@ -495,13 +500,13 @@ weapon.offsety.Set(-2)
 container.weapons.grenade.base.Set(weapon)
 container.weapons.id.Add(weapon)
 
-weapon = WeaponSpec(container, "rifle")
+weapon = WeaponSpec(container, "laser")
 weapon.firedelay.Set(800)
 weapon.visual_size.Set(92)
 weapon.damage.Set(5)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
-container.weapons.rifle.base.Set(weapon)
+container.weapons.laser.base.Set(weapon)
 container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "ninja")

@@ -188,7 +188,7 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 	ICommandProcessor *m_pProcessor;
 	SGLContext m_GLContext;
 public:
-	virtual int Init(const char *pName, int Width, int Height, int FsaaSamples, int Flags);
+	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags);
 	virtual int Shutdown();
 
 	virtual void Minimize();
