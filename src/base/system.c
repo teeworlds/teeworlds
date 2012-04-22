@@ -1660,7 +1660,7 @@ int str_comp_num(const char *a, const char *b, const int num)
 	return strncmp(a, b, num);
 }
 
-int str_comp_filenames(const char *a, const char *b)
+int str_comp_filenames(const char *a, const char *b, int sensitive)
 {
 	int result;
 
@@ -1688,7 +1688,7 @@ int str_comp_filenames(const char *a, const char *b)
 		if(*a != *b)
 			break;
 	}
-	return *a - *b;
+	return sensitive ? *a - *b : str_comp_nocase(a, b);
 }
 
 const char *str_find_nocase(const char *haystack, const char *needle)
