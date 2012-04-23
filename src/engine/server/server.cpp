@@ -1,6 +1,5 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-
 #include <base/math.h>
 #include <base/system.h>
 #include <base/tl/sorted_array.h>
@@ -1471,6 +1470,17 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(pFilename[0] == '.') // hidden files
 		return 0;
 
+	if(IsDir)
+	{
+		SubdirCallbackUserdata Userdata;
+		Userdata.m_pServer = pThis;
+		str_copy(Userdata.m_aName, pFilename, sizeof(Userdata.m_aName));
+		char FindPath[512];
+		str_format(FindPath, sizeof(FindPath), "maps/%s/", pFilename);
+		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, SubdirEntryCallback, &Userdata);
+		return 0;
+	}
+
 	MapListEntry *pEntry;
 	pEntry = (MapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(MapListEntry));
 	pThis->m_NumMapEntries++;
@@ -1498,6 +1508,45 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		pEntry->m_aName[Length + 1] = 0;
 	 }
 	return 0;
+}
+
+int CServer::SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
+{
+	SubdirCallbackUserdata *pUserdata = (SubdirCallbackUserdata *) pUser;
+	CServer *pThis = pUserdata->m_pServer;
+	unsigned Length = str_length(pFilename);
+
+	if(Length >= sizeof(pFilename) - 1) // too long names
+		return 0;
+
+	if(pFilename[0] == '.') // hidden files
+		return 0;
+
+	if(IsDir)
+		return 0;
+
+	MapListEntry *pEntry;
+	pEntry = (MapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(MapListEntry));
+	pThis->m_NumMapEntries++;
+	pEntry->m_pNext = 0;
+	pEntry->m_pPrev = pThis->m_pLastMapEntry;
+	if(pEntry->m_pPrev)
+		pEntry->m_pPrev->m_pNext = pEntry;
+	pThis->m_pLastMapEntry = pEntry;
+	if(!pThis->m_pFirstMapEntry)
+		pThis->m_pFirstMapEntry = pEntry;
+
+	char Filename[512];
+	str_format(Filename, sizeof(Filename), "%s/%s", pUserdata->m_aName, pFilename);
+
+	str_copy(pEntry->m_aName, Filename, sizeof(pEntry->m_aName));
+	pEntry->m_IsDir = IsDir;
+
+	if(Length < 5 || str_comp((const char *)pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
+		return 0;
+
+	pEntry->m_aName[Length - 4] = 0;
+
 }
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
