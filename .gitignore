@@ -1,10 +1,12 @@
 bam
 .bam
 config.lua
-datasrc/__pycache__
-datasrc/*.pyc
 objs
-src/game/generated
+__pycache__/
+*.pyc
+*.pyo
+scripts/work/
+src/game/generated/
 SDL.dll
 freetype.dll
 autoexec.cfg
