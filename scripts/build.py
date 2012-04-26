@@ -1,31 +1,12 @@
 import imp, optparse, os, re, shutil, sys, zipfile
-from optparse import OptionParser
-if sys.version_info[0] == 2:
-	import urllib
-	url_lib = urllib
-elif sys.version_info[0] == 3:
-	import urllib.request
-	url_lib = urllib.request
-match = re.search('(.*)/', sys.argv[0])
-if match != None:
-	os.chdir(match.group(1))
-os.chdir('../')
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
+import twlib
 
-url_bam = "http://github.com/matricks/bam/zipball/master"
-url_teeworlds = "http://github.com/teeworlds/teeworlds/zipball/master"
-release_type = "server_release client_release"
-
-arguments = OptionParser()
-arguments.add_option("-b", "--url_bam", dest = "url_bam")
-arguments.add_option("-t", "--url_teeworlds", dest = "url_teeworlds")
-arguments.add_option("-r", "--release_type", dest = "release_type")
+arguments = optparse.OptionParser()
+arguments.add_option("-b", "--url-bam", default = "http://github.com/matricks/bam/zipball/master", help = "URL from which the bam source code will be downloaded")
+arguments.add_option("-t", "--url-teeworlds", default = "http://github.com/teeworlds/teeworlds/zipball/master", help = "URL from which the teeworlds source code will be downloaded")
+arguments.add_option("-r", "--release-type", default = "server_release client_release", help = "Parts of the game which should be builded (for example client_release, debug, server_release or a combination of any of them)")
 (options, arguments) = arguments.parse_args()
-if options.url_bam == None:
-	options.url_bam = url_bam
-if options.url_teeworlds == None:
-	options.url_teeworlds = url_teeworlds
-if options.release_type == None:
-	options.release_type = release_type
 
 bam = options.url_bam[7:].split("/")
 version_bam = re.search(r"\d\.\d\.\d", bam[len(bam)-1])
@@ -78,15 +59,6 @@ print("%s-%s-%s" % (name, version_teeworlds, platform))
 
 root_dir = os.getcwd() + os.sep
 work_dir = root_dir + "scripts/work"
-
-def fetch_file(url):
-	try:
-		print("trying %s" % url)
-		local = dict(url_lib.urlopen(url).info())['content-disposition'].split('=')[1]
-		url_lib.urlretrieve(url, local)
-		return local
-	except:
-		return False
 
 def unzip(filename, where):
 	try:
@@ -157,7 +129,7 @@ os.chdir(work_dir)
 # download
 if flag_download:
 	print("*** downloading bam source package ***")
-	src_package_bam = fetch_file(options.url_bam)
+	src_package_bam = twlib.fetch_file(options.url_bam)
 	if src_package_bam:
 		if version_bam == 'trunk':
 			version = re.search(r"-[^-]*?([^-]*?)\.[^.]*$", src_package_bam)
@@ -167,7 +139,7 @@ if flag_download:
 		bail("couldn't find bam source package and couldn't download it")
 
 	print("*** downloading %s source package ***" % name)
-	src_package_teeworlds = fetch_file(options.url_teeworlds)
+	src_package_teeworlds = twlib.fetch_file(options.url_teeworlds)
 	if src_package_teeworlds:
 		if version_teeworlds == 'trunk':
 			version = re.search(r"-[^-]*?([^-]*?)\.[^.]*$", src_package_teeworlds)
@@ -271,7 +243,7 @@ if flag_make_release:
 		if not src_dir_teeworlds:
 			bail("couldn't find %s source" % name)
 	os.chdir(src_dir_teeworlds)
-	command = '"%s/%s/scripts/make_release.py" %s %s' % (work_dir, src_dir_teeworlds, version_teeworlds, platform)
+	command = '"%s/%s/scripts/make_release.py" -p "%s" -s "%s/%s" -v "%s"' % (work_dir, src_dir_teeworlds, platform, work_dir, src_dir_teeworlds, version_teeworlds)
 	if os.name != "nt":
 		command = "python %s" % command
 	if os.system(command) != 0:
