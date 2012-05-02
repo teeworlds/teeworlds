@@ -17,7 +17,7 @@ public:
 		char m_aName[24];
 		vec3 m_BloodColor;
 
-		bool operator<(const CSkin &Other) { return str_comp(m_aName, Other.m_aName) < 0; }
+		bool operator<(const CSkin &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
 	};
 
 	void OnInit();

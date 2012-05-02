@@ -190,7 +190,7 @@ class CMenus : public CComponent
 
 		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
-														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+														str_comp_filenames(m_aFilename, Other.m_aFilename, 0) < 0; }
 	};
 
 	sorted_array<CDemoItem> m_lDemos;
@@ -218,11 +218,11 @@ class CMenus : public CComponent
 				return false;
 			else
 			{
-				int Result = str_comp(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
+				int Result = str_comp_nocase(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
 				if(Result)
 					return Result < 0;
 				else
-					return str_comp(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
+					return str_comp_nocase(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
 			}
 		}
 	};

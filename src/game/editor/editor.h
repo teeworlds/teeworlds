@@ -652,7 +652,7 @@ public:
 
 		bool operator<(const CFilelistItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
-														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+														str_comp_filenames(m_aFilename, Other.m_aFilename, 0) < 0; }
 	};
 	sorted_array<CFilelistItem> m_FileList;
 	int m_FilesStartAt;
