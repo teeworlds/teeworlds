@@ -38,6 +38,7 @@ protected:
 
 	unsigned char m_aInputState[2][1024];
 	int m_InputCurrent;
+	bool m_InputDispatched;
 
 	int KeyWasPressed(int Key) { return m_aInputState[m_InputCurrent^1][Key]; }
 
@@ -51,7 +52,11 @@ public:
 
 	// events
 	int NumEvents() const { return m_NumEvents; }
-	void ClearEvents() { m_NumEvents = 0; }
+	void ClearEvents() 
+	{ 
+		m_NumEvents = 0;
+		m_InputDispatched = true;
+	}
 	CEvent GetEvent(int Index) const
 	{
 		if(Index < 0 || Index >= m_NumEvents)
