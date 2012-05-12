@@ -372,6 +372,9 @@ int main(int argc, const char **argv) // ignore_convention
 		return -1;
 	}
 
+	// process pending commands
+	m_pConsole->StoreCommands(false);
+
 	dbg_msg("mastersrv", "started");
 
 	while(1)
