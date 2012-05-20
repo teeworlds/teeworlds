@@ -376,6 +376,8 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			SetDriversCL(settings)
 		elseif option.driver == "gcc" then
 			SetDriversGCC(settings)
+		elseif option.driver == "clang" then
+			SetDriversClang(settings)
 		else
 			error(option.driver.." is not a known c/c++ compile driver")
 		end
@@ -393,7 +395,7 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 	local printhelp = function(option)
 		local a = ""
 		if option.desc then a = "for "..option.desc end
-		print("\t"..option.name.."=gcc|cl")
+		print("\t"..option.name.."=gcc|cl|clang")
 		print("\t\twhat c/c++ compile driver to use"..a)
 		print("\t"..option.name..".c=FILENAME")
 		print("\t\twhat c compiler executable to use"..a)
