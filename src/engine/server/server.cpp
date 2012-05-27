@@ -1309,6 +1309,9 @@ int CServer::Run()
 	m_pMapListHeap= new CHeap();
 	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, this);
 
+	for(MapListEntry *pEntry=m_pFirstMapEntry; pEntry->m_pNext; pEntry = pEntry->m_pNext)
+		dbg_msg("maplist","mapname=%s", pEntry->m_aName);
+
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
 	{
@@ -1495,9 +1498,6 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	CServer *pThis = (CServer *) pUser;
 	unsigned Length = str_length(pFilename);
 
-	if(Length >= sizeof(pFilename) - 1) // too long names
-		return 0;
-
 	if(pFilename[0] == '.') // hidden files
 		return 0;
 
@@ -1528,7 +1528,7 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 
 	if(!IsDir)
 	{
-		if(Length < 5 || str_comp((const char *)pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
+		if(Length < 5 || str_comp(&pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
 			return 0;
 
 		pEntry->m_aName[Length - 4] = 0;
@@ -1545,10 +1545,6 @@ int CServer::SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, 
 {
 	SubdirCallbackUserdata *pUserdata = (SubdirCallbackUserdata *) pUser;
 	CServer *pThis = pUserdata->m_pServer;
-	unsigned Length = str_length(pFilename);
-
-	if(Length >= sizeof(pFilename) - 1) // too long names
-		return 0;
 
 	if(pFilename[0] == '.') // hidden files
 		return 0;
@@ -1573,10 +1569,13 @@ int CServer::SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, 
 	str_copy(pEntry->m_aName, Filename, sizeof(pEntry->m_aName));
 	pEntry->m_IsDir = IsDir;
 
-	if(Length < 5 || str_comp((const char *)pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
+	unsigned Length = str_length(Filename);
+
+	if(Length < 5 || str_comp(&pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
 		return 0;
 
 	pEntry->m_aName[Length - 4] = 0;
+	return 0;
 
 }
 
@@ -1731,7 +1730,7 @@ void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 					continue;
 
 				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN) {
-					if(pInfo->m_pName == "sv_map") // handle the access to the sv_map command
+					if(str_comp(pInfo->m_pName,"sv_map")) // handle the access to the sv_map command
 					{
 						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 						Msg.AddInt(1);	//authed
@@ -1743,7 +1742,7 @@ void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 					pThis->SendRconCmdAdd(pInfo, i);
 				}
 				else {
-					if(pInfo->m_pName == "sv_map") // handle the removal of access to the sv_map command
+					if(str_comp(pInfo->m_pName,"sv_map")) // handle the removal of access to the sv_map command
 					{
 						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 						Msg.AddInt(1);	//authed
