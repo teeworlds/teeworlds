@@ -563,9 +563,9 @@ void CServerBrowser::Refresh(int Type)
 		Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentToken;
 
 		/* do the broadcast version */
-		Packet.m_ClientID = -1;
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
+		Packet.m_ClientID = -1;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS;
 		Packet.m_DataSize = sizeof(Buffer);
 		Packet.m_pData = Buffer;

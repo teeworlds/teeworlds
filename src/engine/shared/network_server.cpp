@@ -80,6 +80,8 @@ int CNetServer::Update()
 			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 	}
 
+	m_TokenManager.Update();
+
 	return 0;
 }
 
@@ -105,6 +107,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
+			bool Found = false;
 			// try to find matching slot
 			for(int i = 0; i < MaxClients(); i++)
 			{
@@ -123,9 +126,12 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 								return 1;
 							}
 					}
-					continue;
+					Found = true;
 				}
 			}
+
+			if(Found)
+				continue;
 
 			// no matching slot, check for bans
 			char aBuf[128];
@@ -168,60 +174,47 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 				{
 					bool Found = false;
 
-					// check if we already got this client
+					// only allow a specific number of players with the same ip
+					NETADDR ThisAddr = Addr, OtherAddr;
+					int FoundAddr = 1;
+					ThisAddr.port = 0;
 					for(int i = 0; i < MaxClients(); i++)
 					{
-						if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
-							net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
+						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+							continue;
+
+						OtherAddr = *m_aSlots[i].m_Connection.PeerAddress();
+						OtherAddr.port = 0;
+						if(!net_addr_comp(&ThisAddr, &OtherAddr))
 						{
-							Found = true; // silent ignore.. we got this client already
+							if(FoundAddr++ >= m_MaxClientsPerIP)
+							{
+								char aBuf[128];
+								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
+								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+								return 0;
+							}
+						}
+					}
+
+					for(int i = 0; i < MaxClients(); i++)
+					{
+						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+						{
+							Found = true;
+							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token);
+							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token); // HACK!
+							if(m_pfnNewClient)
+								m_pfnNewClient(i, m_UserPtr);
 							break;
 						}
 					}
 
-					// client that wants to connect
 					if(!Found)
 					{
-						// only allow a specific number of players with the same ip
-						NETADDR ThisAddr = Addr, OtherAddr;
-						int FoundAddr = 1;
-						ThisAddr.port = 0;
-						for(int i = 0; i < MaxClients(); ++i)
-						{
-							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
-								continue;
-
-							OtherAddr = *m_aSlots[i].m_Connection.PeerAddress();
-							OtherAddr.port = 0;
-							if(!net_addr_comp(&ThisAddr, &OtherAddr))
-							{
-								if(FoundAddr++ >= m_MaxClientsPerIP)
-								{
-									char aBuf[128];
-									str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
-									CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
-									return 0;
-								}
-							}
-						}
-
-						for(int i = 0; i < MaxClients(); i++)
-						{
-							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
-							{
-								Found = true;
-								m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-								if(m_pfnNewClient)
-									m_pfnNewClient(i, m_UserPtr);
-								break;
-							}
-						}
-
-						if(!Found)
-						{
-							const char FullMsg[] = "This server is full";
-							CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
-						}
+						const char FullMsg[] = "This server is full";
+						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 					}
 				}
 			}

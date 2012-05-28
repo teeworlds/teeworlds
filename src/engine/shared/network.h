@@ -56,6 +56,7 @@ enum
 {
 	NET_VERSION = 2,
 
+	NET_SEEDTIME = 10,
 	NET_MAX_PACKETSIZE = 1400,
 	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-6,
 	NET_MAX_CHUNKHEADERSIZE = 3,
@@ -154,7 +155,8 @@ public:
 class CNetTokenManager
 {
 public:
-	void Init(NETSOCKET Socket);
+	void Init(NETSOCKET Socket, int SeedTime = NET_SEEDTIME);
+	void Update();
 
 	void GenerateSeed();
 
@@ -170,6 +172,12 @@ private:
 
 	int64 m_Seed;
 	int64 m_PrevSeed;
+
+	TOKEN m_GlobalToken;
+	TOKEN m_PrevGlobalToken;
+
+	int m_SeedTime;
+	int64 m_NextSeedTime;
 };
 
 
@@ -212,7 +220,7 @@ private:
 
 	int QueueChunkEx(int Flags, int DataSize, const void *pData, int Sequence);
 	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
-	void SendToken();
+	void SendControlWithToken(int ControlMsg);
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
 
@@ -441,7 +449,7 @@ public:
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
 	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendToken(NETSOCKET Socket, NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken = NET_TOKEN_NONE);
+	static void SendControlMsgWithToken(NETSOCKET Socket, NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
