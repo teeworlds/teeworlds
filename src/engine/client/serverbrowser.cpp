@@ -568,6 +568,7 @@ void CServerBrowser::Refresh(int Type)
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_ClientID = -1;
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
+		Packet.m_ClientID = -1;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS;
 		Packet.m_DataSize = Packer.Size();
 		Packet.m_pData = Packer.Data();

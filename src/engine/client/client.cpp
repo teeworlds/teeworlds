@@ -1762,7 +1762,7 @@ void CClient::Run()
 			mem_zero(&BindAddr, sizeof(BindAddr));
 			BindAddr.type = NETTYPE_ALL;
 		}
-		if(!m_NetClient.Open(BindAddr, BindAddr.port ? 0 : NETCREATE_FLAG_RANDOMPORT))
+		if(!m_NetClient.Open(BindAddr, (BindAddr.port ? 0 : NETCREATE_FLAG_RANDOMPORT)|NETFLAG_ALLOWSTATELESS))
 		{
 			dbg_msg("client", "couldn't open socket(net)");
 			return;
