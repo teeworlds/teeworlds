@@ -120,6 +120,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 								m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
 							else
 							{
+								pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 								pChunk->m_ClientID = i;
 								pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 								pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;

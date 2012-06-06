@@ -1752,7 +1752,7 @@ void CClient::Run()
 			mem_zero(&BindAddr, sizeof(BindAddr));
 			BindAddr.type = NETTYPE_ALL;
 		}
-		if(!m_NetClient.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
+		if(!m_NetClient.Open(BindAddr, 0))
 		{
 			dbg_msg("client", "couldn't open socket");
 			return;

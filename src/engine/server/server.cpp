@@ -1147,11 +1147,12 @@ void CServer::PumpNetwork()
 	// process packets
 	while(m_NetServer.Recv(&Packet, &ResponseToken))
 	{
-		if(Packet.m_ClientID == -1)
+		if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
 		{
-			// stateless
-			if(m_Register.RegisterProcessPacket(&Packet))
-				continue;
+			// stateless?
+			if(!(Packet.m_Flags&NETSENDFLAG_STATELESS))
+				if(m_Register.RegisterProcessPacket(&Packet))
+					continue;
 			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETINFO)+1 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 			{
