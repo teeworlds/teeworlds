@@ -8,6 +8,7 @@ Import("other/freetype/freetype.lua")
 config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
+config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
@@ -149,8 +150,12 @@ function build(settings)
 			-- disable visibility attribute support for gcc on windows
 			settings.cc.defines:Add("NO_VIZ")
 		elseif platform == "macosx" then
-			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
-			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
+			settings.cc.flags:Add("-mmacosx-version-min=10.5")
+			settings.link.flags:Add("-mmacosx-version-min=10.5")
+			if config.minmacosxsdk.value == 1 then
+				settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
+				settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
+			end
 		elseif config.stackprotector.value == 1 then
 			settings.cc.flags:Add("-fstack-protector", "-fstack-protector-all")
 			settings.link.flags:Add("-fstack-protector", "-fstack-protector-all")
