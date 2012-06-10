@@ -64,6 +64,9 @@ enum
 	NET_MAX_CHUNKHEADERSIZE = 3,
 	NET_PACKETHEADERSIZE = 11,
 	NET_PACKETHEADERSIZE_LEGACY = 3,
+	NET_TOKENCACHE_SIZE = 16,
+	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME/2,
+	NET_TOKENCACHE_PACKETEXPIRY = NET_TOKENCACHE_ADDRESSEXPIRY,
 	NET_MAX_CLIENTS = 16,
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
@@ -153,6 +156,44 @@ public:
 	unsigned char m_aChunkData[NET_MAX_PAYLOAD];
 };
 
+
+class CNetTokenCache
+{
+public:
+	void Init(NETSOCKET Socket, const TOKEN *pToken);
+	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize);
+	void FetchToken(const NETADDR *pAddr);
+	void ProcessTokenMessage(const NETADDR *pAddr, TOKEN PeerToken);
+	TOKEN GetToken(const NETADDR *pAddr);
+	void Update();
+
+private:
+	struct CConnlessPacketInfo
+	{
+		NETADDR m_Addr;
+		int m_DataSize;
+		char m_aData[NET_MAX_PAYLOAD];
+		int64 m_Expiry;
+
+		CConnlessPacketInfo *m_pNext;
+	};
+
+	struct CAddressInfo
+	{
+		NETADDR m_Addr;
+		TOKEN m_Token;
+		int64 m_Expiry;
+	};
+
+	TStaticRingBuffer<CAddressInfo,
+	                  NET_TOKENCACHE_SIZE * sizeof(CAddressInfo),
+	                  CRingBufferBase::FLAG_RECYCLE> m_TokenCache;
+
+	CConnlessPacketInfo *m_pConnlessPacketList; // TODO: enhance this, dynamic linked lists
+	                                            // are bad for performance
+	NETSOCKET m_Socket;
+	const TOKEN *m_pToken;
+};
 
 class CNetTokenManager
 {
@@ -451,10 +492,10 @@ public:
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
-	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendControlMsgWithToken(NETSOCKET Socket, NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
-	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
-	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
+	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
+	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
+	static void SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 
 	// The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not

@@ -131,3 +131,99 @@ bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN Respo
 	return false;
 }
 
+void CNetTokenCache::Init(NETSOCKET Socket, const TOKEN *pToken)
+{
+	m_TokenCache.Init();
+	m_Socket = Socket;
+	m_pToken = pToken;
+}
+
+void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize)
+{
+	TOKEN Token = GetToken(pAddr);
+	if(Token != NET_TOKEN_NONE)
+	{
+		CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION, Token, *m_pToken, pData, DataSize);
+	}
+	else
+	{
+		FetchToken(pAddr);
+
+		// store the packet for future sending
+		CConnlessPacketInfo **ppInfo = &m_pConnlessPacketList;
+		while(*ppInfo)
+			ppInfo = &(*ppInfo)->m_pNext;
+		*ppInfo = new CConnlessPacketInfo();
+		mem_copy((*ppInfo)->m_aData, pData, DataSize);
+		(*ppInfo)->m_DataSize = DataSize;
+		(*ppInfo)->m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
+	}
+}
+
+TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
+{
+	CAddressInfo *pInfo = m_TokenCache.Last();
+	while(pInfo)
+	{
+		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
+			return pInfo->m_Token;
+		pInfo = m_TokenCache.Prev(pInfo);
+	}
+	return NET_TOKEN_NONE;
+}
+
+void CNetTokenCache::FetchToken(const NETADDR *pAddr)
+{
+	CNetBase::SendControlMsgWithToken(m_Socket, pAddr, NET_TOKEN_NONE, 0, NET_CTRLMSG_TOKEN, *m_pToken);
+}
+
+void CNetTokenCache::ProcessTokenMessage(const NETADDR *pAddr, TOKEN Token)
+{
+	if(Token == NET_TOKEN_NONE)
+		return;
+	CAddressInfo Info;
+	Info.m_Addr = *pAddr;
+	Info.m_Token = Token;
+	Info.m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_ADDRESSEXPIRY;
+
+	(*m_TokenCache.Allocate(sizeof(Info))) = Info;
+
+	// search the list of packets to be sent
+	// for this address
+	CConnlessPacketInfo **ppPrevNext = &m_pConnlessPacketList;
+		// pointer to the next element pointer of the previous element
+	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
+	while(pInfo)
+	{
+		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
+		{
+			CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION, Token, *m_pToken, pInfo->m_aData, pInfo->m_DataSize);
+			*ppPrevNext = pInfo->m_pNext;
+			delete pInfo;
+			pInfo = *ppPrevNext;
+		}
+		else
+			pInfo = pInfo->m_pNext;
+	}
+}
+
+void CNetTokenCache::Update()
+{
+	int64 Now = time_get();
+
+	// drop expired address info
+	CAddressInfo *pAddrInfo;
+	while((pAddrInfo = m_TokenCache.First()) && (pAddrInfo->m_Expiry <= Now))
+		m_TokenCache.PopFirst();
+
+
+	// drop expired packets
+	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
+	while(pInfo && pInfo->m_Expiry <= Now)
+	{
+		m_pConnlessPacketList = pInfo->m_pNext;
+		delete pInfo;
+		pInfo = m_pConnlessPacketList;
+	}
+}
+
