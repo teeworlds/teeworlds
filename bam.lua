@@ -369,9 +369,9 @@ if platform == "macosx" then
 		PseudoTarget("release", ppc_r, x86_r, x86_64_r)
 		PseudoTarget("debug", ppc_d, x86_d, x86_64_d)
 		PseudoTarget("server_release", "server_release_x86", "server_release_x86_64", "server_release_ppc")
-		PseudoTarget("server_debug", "server_debug_x86", "server_release_x86_64", "server_debug_ppc")
-		PseudoTarget("client_release", "client_release_x86", "server_release_x86_64", "client_release_ppc")
-		PseudoTarget("client_debug", "client_debug_x86", "server_release_x86_64", "client_debug_ppc")
+		PseudoTarget("server_debug", "server_debug_x86", "server_debug_x86_64", "server_debug_ppc")
+		PseudoTarget("client_release", "client_release_x86", "client_release_x86_64", "client_release_ppc")
+		PseudoTarget("client_debug", "client_debug_x86", "client_debug_x86_64", "client_debug_ppc")
 	else
 		PseudoTarget("release", ppc_r)
 		PseudoTarget("debug", ppc_d)
