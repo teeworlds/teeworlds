@@ -177,8 +177,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		class CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
 
-	semaphore m_GfxRenderSemaphore;
-	semaphore m_GfxStateSemaphore;
 	volatile int m_GfxState;
 	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
 	void GraphicsThread();
