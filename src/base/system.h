@@ -403,19 +403,21 @@ void lock_release(LOCK lock);
 
 /* Group: Semaphores */
 
-#if defined(CONF_FAMILY_UNIX)
-	#include <semaphore.h>
-	typedef sem_t SEMAPHORE;
-#elif defined(CONF_FAMILY_WINDOWS)
-	typedef void* SEMAPHORE;
-#else
-	#error missing sempahore implementation
-#endif
+#if !defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_FAMILY_UNIX)
+		#include <semaphore.h>
+		typedef sem_t SEMAPHORE;
+	#elif defined(CONF_FAMILY_WINDOWS)
+		typedef void* SEMAPHORE;
+	#else
+		#error missing sempahore implementation
+	#endif
 
-void semaphore_init(SEMAPHORE *sem);
-void semaphore_wait(SEMAPHORE *sem);
-void semaphore_signal(SEMAPHORE *sem);
-void semaphore_destroy(SEMAPHORE *sem);
+	void semaphore_init(SEMAPHORE *sem);
+	void semaphore_wait(SEMAPHORE *sem);
+	void semaphore_signal(SEMAPHORE *sem);
+	void semaphore_destroy(SEMAPHORE *sem);
+#endif
 
 /* Group: Timer */
 #ifdef __GNUC__

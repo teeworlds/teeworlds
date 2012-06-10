@@ -22,6 +22,20 @@
 #include "graphics.h"
 
 
+#if defined(CONF_PLATFORM_MACOSX)
+
+	class semaphore
+	{
+		SDL_sem *sem;
+	public:
+		semaphore() { sem = SDL_CreateSemaphore(0); }
+		~semaphore() { SDL_DestroySemaphore(sem); }
+		void wait() { SDL_SemWait(sem); }
+		void signal() { SDL_SemPost(sem); }
+	};
+#endif
+
+
 static CVideoMode g_aFakeModes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
 	{720,400,8,8,8}, {768,576,8,8,8}, {800,600,8,8,8},
