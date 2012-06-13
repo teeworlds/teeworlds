@@ -3928,6 +3928,7 @@ void CEditorMap::CreateDefault(int EntitiesTexture)
 	pQuad->m_aPoints[1].x = pQuad->m_aPoints[3].x = Width;
 	pQuad->m_aPoints[0].y = pQuad->m_aPoints[1].y = -Height;
 	pQuad->m_aPoints[2].y = pQuad->m_aPoints[3].y = Height;
+	pQuad->m_aPoints[4].x = pQuad->m_aPoints[4].y = 0;
 	pQuad->m_aColors[0].r = pQuad->m_aColors[1].r = 94;
 	pQuad->m_aColors[0].g = pQuad->m_aColors[1].g = 132;
 	pQuad->m_aColors[0].b = pQuad->m_aColors[1].b = 174;
