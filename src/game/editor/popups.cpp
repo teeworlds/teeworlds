@@ -393,8 +393,8 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	// square button
 	View.HSplitBottom(6.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
-	static int s_Button = 0;
-	if(pEditor->DoButton_Editor(&s_Button, "Square", 0, &Button, 0, "Squares the current quad"))
+	static int s_SquareButton = 0;
+	if(pEditor->DoButton_Editor(&s_SquareButton, "Square", 0, &Button, 0, "Squares the current quad"))
 	{
 		int Top = pQuad->m_aPoints[0].y;
 		int Left = pQuad->m_aPoints[0].x;
@@ -417,6 +417,30 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
+	// center pivot button
+	View.HSplitBottom(6.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_CenterButton = 0;
+	if(pEditor->DoButton_Editor(&s_CenterButton, "Center pivot", 0, &Button, 0, "Centers the pivot of the current quad"))
+	{
+		int Top = pQuad->m_aPoints[0].y;
+		int Left = pQuad->m_aPoints[0].x;
+		int Bottom = pQuad->m_aPoints[0].y;
+		int Right = pQuad->m_aPoints[0].x;
+
+		for(int k = 1; k < 4; k++)
+		{
+			if(pQuad->m_aPoints[k].y < Top) Top = pQuad->m_aPoints[k].y;
+			if(pQuad->m_aPoints[k].x < Left) Left = pQuad->m_aPoints[k].x;
+			if(pQuad->m_aPoints[k].y > Bottom) Bottom = pQuad->m_aPoints[k].y;
+			if(pQuad->m_aPoints[k].x > Right) Right = pQuad->m_aPoints[k].x;
+		}
+
+		pQuad->m_aPoints[4].x = Left+int((Right-Left)/2);
+		pQuad->m_aPoints[4].y = Top+int((Bottom-Top)/2);
+		pEditor->m_Map.m_Modified = true;
+		return 1;
+	}
 
 	enum
 	{
