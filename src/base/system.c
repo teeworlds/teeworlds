@@ -1687,10 +1687,10 @@ int str_comp_filenames(const char *a, const char *b)
 				return result;
 		}
 
-		if(*a != *b)
+		if(tolower(*a) != tolower(*b))
 			break;
 	}
-	return *a - *b;
+	return tolower(*a) - tolower(*b);
 }
 
 const char *str_find_nocase(const char *haystack, const char *needle)
