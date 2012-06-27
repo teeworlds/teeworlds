@@ -427,6 +427,13 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	if(pInfo->blit_hw) // ignore_convention
 		SdlFlags |= SDL_HWACCEL;
 
+	dbg_assert(!(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
+		|| !(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN),
+		"only one of borderless and fullscreen may be activated at the same time");
+
+	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
+		SdlFlags |= SDL_NOFRAME;
+
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
 		SdlFlags |= SDL_FULLSCREEN;
 
