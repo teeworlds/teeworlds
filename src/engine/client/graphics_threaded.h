@@ -98,13 +98,6 @@ public:
 
 	enum
 	{
-		INITFLAG_FULLSCREEN = 1,
-		INITFLAG_VSYNC = 2,
-		INITFLAG_RESIZABLE = 4,
-	};
-
-	enum
-	{
 		//
 		PRIMTYPE_INVALID = 0,
 		PRIMTYPE_LINES,	
