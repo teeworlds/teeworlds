@@ -98,13 +98,6 @@ public:
 
 	enum
 	{
-		INITFLAG_FULLSCREEN = 1,
-		INITFLAG_VSYNC = 2,
-		INITFLAG_RESIZABLE = 4,
-	};
-
-	enum
-	{
 		//
 		PRIMTYPE_INVALID = 0,
 		PRIMTYPE_LINES,	
@@ -300,6 +293,7 @@ public:
 		INITFLAG_FULLSCREEN = 1,
 		INITFLAG_VSYNC = 2,
 		INITFLAG_RESIZABLE = 4,
+		INITFLAG_BORDERLESS = 8,
 	};
 
 	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;

@@ -615,6 +615,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
 	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
 	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
+	static int s_GfxBorderless = g_Config.m_GfxBorderless;
 	static int s_GfxFullscreen = g_Config.m_GfxFullscreen;
 	static int s_GfxVsync = g_Config.m_GfxVsync;
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
@@ -670,9 +671,20 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// switches
 	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_GfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
+	{
+		g_Config.m_GfxBorderless ^= 1;
+		if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+			g_Config.m_GfxFullscreen = 0;
+		CheckSettings = true;
+	}
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
 		g_Config.m_GfxFullscreen ^= 1;
+		if(g_Config.m_GfxFullscreen && g_Config.m_GfxBorderless)
+			g_Config.m_GfxBorderless = 0;
 		CheckSettings = true;
 	}
 
@@ -715,6 +727,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(s_GfxScreenWidth == g_Config.m_GfxScreenWidth &&
 			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
 			s_GfxColorDepth == g_Config.m_GfxColorDepth &&
+			s_GfxBorderless == g_Config.m_GfxBorderless &&
 			s_GfxFullscreen == g_Config.m_GfxFullscreen &&
 			s_GfxVsync == g_Config.m_GfxVsync &&
 			s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&

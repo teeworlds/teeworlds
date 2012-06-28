@@ -801,7 +801,15 @@ int CGraphics_SDL::TryInit()
 	if(pInfo->blit_hw) // ignore_convention
 		Flags |= SDL_HWACCEL;
 
-	if(g_Config.m_GfxFullscreen)
+	if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+	{
+		dbg_msg("gfx", "both borderless and fullscreen activated, disabling borderless");
+		g_Config.m_GfxBorderless = 0;
+	}
+
+	if(g_Config.m_GfxBorderless)
+		Flags |= SDL_NOFRAME;
+	else if(g_Config.m_GfxFullscreen)
 		Flags |= SDL_FULLSCREEN;
 
 	// set gl attributes
