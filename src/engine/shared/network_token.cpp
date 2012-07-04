@@ -36,7 +36,8 @@ void CNetTokenManager::Update()
 
 int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify)
 {
-	if(pPacket->m_Token != NET_TOKEN_NONE && !CheckToken(pAddr, pPacket->m_Token, pPacket->m_ResponseToken, Notify))
+	if(pPacket->m_Token != NET_TOKEN_NONE
+		&& !CheckToken(pAddr, pPacket->m_Token, pPacket->m_ResponseToken, Notify))
 		return 0; // wrong token, silent ignore
 
 	bool Verified = pPacket->m_Token != NET_TOKEN_NONE;
@@ -57,10 +58,12 @@ int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConst
 	}
 
 	if(Verified && TokenMessage)
-		return 0; // everything is fine, token exchange complete
+		return 1; // everything is fine, token exchange complete
 
 	// client requesting token
-	CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr, pPacket->m_ResponseToken, 0, NET_CTRLMSG_TOKEN, GenerateToken(pAddr));
+	CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
+		pPacket->m_ResponseToken, 0, NET_CTRLMSG_TOKEN,
+		GenerateToken(pAddr));
 	return 0; // no need to process NET_CTRLMSG_TOKEN further
 }
 
@@ -83,7 +86,7 @@ void CNetTokenManager::GenerateSeed()
 	m_NextSeedTime = time_get() + time_freq() * m_SeedTime;
 }
 
-TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr)
+TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr) const
 {
 	return GenerateToken(pAddr, m_Seed);
 }
@@ -91,13 +94,16 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr)
 TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 {
 	static const NETADDR NullAddr = { 0 };
+	NETADDR Addr;
 	char aBuf[sizeof(NETADDR) + sizeof(int64)];
 	int Result;
 
 	if(pAddr->type & NETTYPE_LINK_BROADCAST)
 		return GenerateToken(&NullAddr, Seed);
 
-	mem_copy(aBuf, pAddr, sizeof(NETADDR));
+	Addr = *pAddr;
+	Addr.port = 0;
+	mem_copy(aBuf, &Addr, sizeof(NETADDR));
 	mem_copy(aBuf + sizeof(NETADDR), &Seed, sizeof(int64));
 
 	Result = Hash(aBuf, sizeof(aBuf));
@@ -116,7 +122,9 @@ bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN Respo
 	if(GenerateToken(pAddr, m_PrevSeed) == Token)
 	{
 		if(Notify)
-			CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr, ResponseToken, 0, NET_CTRLMSG_TOKEN, CurrentToken); // notify the peer about the new token
+			CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
+				ResponseToken, 0, NET_CTRLMSG_TOKEN, CurrentToken);
+				// notify the peer about the new token
 		return true;
 	}
 	else if(Token == m_GlobalToken)
@@ -124,18 +132,41 @@ bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN Respo
 	else if(Token == m_PrevGlobalToken)
 	{
 		if(Notify)
-			CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr, ResponseToken, 0, NET_CTRLMSG_TOKEN, m_GlobalToken); // notify the peer about the new token
+			CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
+				ResponseToken, 0, NET_CTRLMSG_TOKEN, m_GlobalToken);
+				// notify the peer about the new token
 		return true;
 	}
 
 	return false;
 }
 
-void CNetTokenCache::Init(NETSOCKET Socket, const TOKEN *pToken)
+
+CNetTokenCache::CNetTokenCache()
 {
+	m_pTokenManager = 0;
+	m_pConnlessPacketList = 0;
+}
+
+CNetTokenCache::~CNetTokenCache()
+{
+	// delete the linked list
+	while(m_pConnlessPacketList)
+	{
+		CConnlessPacketInfo *pTemp = m_pConnlessPacketList->m_pNext;
+		delete m_pConnlessPacketList;
+		m_pConnlessPacketList = pTemp;
+	}
+}
+
+void CNetTokenCache::Init(NETSOCKET Socket, const CNetTokenManager *pTokenManager)
+{
+	// call the destructor to clear the linked list
+	this->~CNetTokenCache();
+
 	m_TokenCache.Init();
 	m_Socket = Socket;
-	m_pToken = pToken;
+	m_pTokenManager = pTokenManager;
 }
 
 void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize)
@@ -143,7 +174,8 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 	TOKEN Token = GetToken(pAddr);
 	if(Token != NET_TOKEN_NONE)
 	{
-		CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION, Token, *m_pToken, pData, DataSize);
+		CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION,
+			Token, m_pTokenManager->GenerateToken(pAddr), pData, DataSize);
 	}
 	else
 	{
@@ -155,6 +187,7 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 			ppInfo = &(*ppInfo)->m_pNext;
 		*ppInfo = new CConnlessPacketInfo();
 		mem_copy((*ppInfo)->m_aData, pData, DataSize);
+		(*ppInfo)->m_Addr = *pAddr;
 		(*ppInfo)->m_DataSize = DataSize;
 		(*ppInfo)->m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
 	}
@@ -174,13 +207,15 @@ TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
 
 void CNetTokenCache::FetchToken(const NETADDR *pAddr)
 {
-	CNetBase::SendControlMsgWithToken(m_Socket, pAddr, NET_TOKEN_NONE, 0, NET_CTRLMSG_TOKEN, *m_pToken);
+	CNetBase::SendControlMsgWithToken(m_Socket, pAddr, NET_TOKEN_NONE, 0, 
+		NET_CTRLMSG_TOKEN, m_pTokenManager->GenerateToken(pAddr));
 }
 
-void CNetTokenCache::ProcessTokenMessage(const NETADDR *pAddr, TOKEN Token)
+void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 {
 	if(Token == NET_TOKEN_NONE)
 		return;
+
 	CAddressInfo Info;
 	Info.m_Addr = *pAddr;
 	Info.m_Token = Token;
@@ -197,7 +232,10 @@ void CNetTokenCache::ProcessTokenMessage(const NETADDR *pAddr, TOKEN Token)
 	{
 		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
 		{
-			CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION, Token, *m_pToken, pInfo->m_aData, pInfo->m_DataSize);
+			CNetBase::SendPacketConnless(m_Socket, pAddr,
+				NET_PACKETVERSION, Token,
+				m_pTokenManager->GenerateToken(pAddr),
+				pInfo->m_aData, pInfo->m_DataSize);
 			*ppPrevNext = pInfo->m_pNext;
 			delete pInfo;
 			pInfo = *ppPrevNext;
@@ -218,12 +256,12 @@ void CNetTokenCache::Update()
 
 
 	// drop expired packets
-	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
-	while(pInfo && pInfo->m_Expiry <= Now)
+	while(m_pConnlessPacketList && m_pConnlessPacketList->m_Expiry <= Now)
 	{
-		m_pConnlessPacketList = pInfo->m_pNext;
-		delete pInfo;
-		pInfo = m_pConnlessPacketList;
+		CConnlessPacketInfo *pNewList;
+		pNewList = m_pConnlessPacketList->m_pNext;
+		delete m_pConnlessPacketList;
+		m_pConnlessPacketList = pNewList;
 	}
 }
 

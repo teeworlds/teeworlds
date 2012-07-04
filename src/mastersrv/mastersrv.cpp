@@ -29,6 +29,7 @@ struct CCheckServer
 	NETADDR m_AltAddress;
 	int m_TryCount;
 	int64 m_TryTime;
+	TOKEN m_Token;
 };
 
 static CCheckServer m_aCheckServers[MAX_SERVERS];
@@ -168,7 +169,7 @@ void BuildPackets()
 	}
 }
 
-void SendOk(NETADDR *pAddr)
+void SendOk(NETADDR *pAddr, TOKEN Token)
 {
 	CNetChunk p;
 	p.m_ClientID = -1;
@@ -178,11 +179,11 @@ void SendOk(NETADDR *pAddr)
 	p.m_pData = SERVERBROWSE_FWOK;
 
 	// send on both to be sure
-	m_NetChecker.Send(&p);
-	m_NetOp.Send(&p);
+	m_NetChecker.Send(&p, Token);
+	m_NetOp.Send(&p, Token);
 }
 
-void SendError(NETADDR *pAddr)
+void SendError(NETADDR *pAddr, TOKEN Token)
 {
 	CNetChunk p;
 	p.m_ClientID = -1;
@@ -190,10 +191,10 @@ void SendError(NETADDR *pAddr)
 	p.m_Flags = NETSENDFLAG_CONNLESS;
 	p.m_DataSize = sizeof(SERVERBROWSE_FWERROR);
 	p.m_pData = SERVERBROWSE_FWERROR;
-	m_NetOp.Send(&p);
+	m_NetOp.Send(&p, Token);
 }
 
-void SendCheck(NETADDR *pAddr)
+void SendCheck(NETADDR *pAddr, TOKEN Token)
 {
 	CNetChunk p;
 	p.m_ClientID = -1;
@@ -201,10 +202,10 @@ void SendCheck(NETADDR *pAddr)
 	p.m_Flags = NETSENDFLAG_CONNLESS;
 	p.m_DataSize = sizeof(SERVERBROWSE_FWCHECK);
 	p.m_pData = SERVERBROWSE_FWCHECK;
-	m_NetChecker.Send(&p);
+	m_NetChecker.Send(&p, Token);
 }
 
-void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, ServerType Type)
+void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, ServerType Type, TOKEN Token)
 {
 	// add server
 	if(m_NumCheckServers == MAX_SERVERS)
@@ -223,6 +224,7 @@ void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt, ServerType Type)
 	m_aCheckServers[m_NumCheckServers].m_TryCount = 0;
 	m_aCheckServers[m_NumCheckServers].m_TryTime = 0;
 	m_aCheckServers[m_NumCheckServers].m_Type = Type;
+	m_aCheckServers[m_NumCheckServers].m_Token = Token;
 	m_NumCheckServers++;
 }
 
@@ -274,7 +276,7 @@ void UpdateServers()
 				dbg_msg("mastersrv", "check failed: %s (%s)", aAddrStr, aAltAddrStr);
 
 				// FAIL!!
-				SendError(&m_aCheckServers[i].m_Address);
+				SendError(&m_aCheckServers[i].m_Address, m_aCheckServers[i].m_Token);
 				m_aCheckServers[i] = m_aCheckServers[m_NumCheckServers-1];
 				m_NumCheckServers--;
 				i--;
@@ -284,9 +286,9 @@ void UpdateServers()
 				m_aCheckServers[i].m_TryCount++;
 				m_aCheckServers[i].m_TryTime = Now;
 				if(m_aCheckServers[i].m_TryCount&1)
-					SendCheck(&m_aCheckServers[i].m_Address);
+					SendCheck(&m_aCheckServers[i].m_Address, m_aCheckServers[i].m_Token);
 				else
-					SendCheck(&m_aCheckServers[i].m_AltAddress);
+					SendCheck(&m_aCheckServers[i].m_AltAddress, m_aCheckServers[i].m_Token);
 			}
 		}
 	}
@@ -361,13 +363,13 @@ int main(int argc, const char **argv) // ignore_convention
 		BindAddr.port = MASTERSERVER_PORT;
 	}
 
-	if(!m_NetOp.Open(BindAddr, 0))
+	if(!m_NetOp.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
 		return -1;
 	}
 	BindAddr.port = MASTERSERVER_PORT+1;
-	if(!m_NetChecker.Open(BindAddr, 0))
+	if(!m_NetChecker.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
 	{
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
@@ -385,7 +387,8 @@ int main(int argc, const char **argv) // ignore_convention
 
 		// process m_aPackets
 		CNetChunk Packet;
-		while(m_NetOp.Recv(&Packet))
+		TOKEN Token;
+		while(m_NetOp.Recv(&Packet, &Token))
 		{
 			// check if the server is banned
 			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
@@ -402,9 +405,9 @@ int main(int argc, const char **argv) // ignore_convention
 					d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
 
 				// add it
-				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_NORMAL);
+				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_NORMAL, Token);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
+			/*else if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT_LEGACY, sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)) == 0)
 			{
 				NETADDR Alt;
@@ -416,8 +419,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 				// add it
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_LEGACY);
-			}
-
+			}*/
 			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
 			{
@@ -431,9 +433,9 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_pData = &m_CountData;
 				m_CountData.m_High = (m_NumServers>>8)&0xff;
 				m_CountData.m_Low = m_NumServers&0xff;
-				m_NetOp.Send(&p);
+				m_NetOp.Send(&p, Token);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
+			/*else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
@@ -447,7 +449,7 @@ int main(int argc, const char **argv) // ignore_convention
 				m_CountDataLegacy.m_High = (m_NumServers>>8)&0xff;
 				m_CountDataLegacy.m_Low = m_NumServers&0xff;
 				m_NetOp.Send(&p);
-			}
+			}*/
 			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
@@ -463,10 +465,10 @@ int main(int argc, const char **argv) // ignore_convention
 				{
 					p.m_DataSize = m_aPackets[i].m_Size;
 					p.m_pData = &m_aPackets[i].m_Data;
-					m_NetOp.Send(&p);
+					m_NetOp.Send(&p, Token);
 				}
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
+			/*else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST_LEGACY, sizeof(SERVERBROWSE_GETLIST_LEGACY)) == 0)
 			{
 				// someone requested the list
@@ -483,11 +485,11 @@ int main(int argc, const char **argv) // ignore_convention
 					p.m_pData = &m_aPacketsLegacy[i].m_Data;
 					m_NetOp.Send(&p);
 				}
-			}
+			}*/
 		}
 
 		// process m_aPackets
-		while(m_NetChecker.Recv(&Packet))
+		while(m_NetChecker.Recv(&Packet, &Token))
 		{
 			// check if the server is banned
 			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
@@ -515,7 +517,7 @@ int main(int argc, const char **argv) // ignore_convention
 					continue;
 
 				AddServer(&Packet.m_Address, Type);
-				SendOk(&Packet.m_Address);
+				SendOk(&Packet.m_Address, Token);
 			}
 		}
 
