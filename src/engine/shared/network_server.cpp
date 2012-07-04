@@ -19,6 +19,7 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 		return false;
 
 	m_TokenManager.Init(m_Socket);
+	m_TokenCache.Init(m_Socket, &m_TokenManager);
 
 	m_pNetBan = pNetBan;
 
@@ -81,6 +82,7 @@ int CNetServer::Update()
 	}
 
 	m_TokenManager.Update();
+	m_TokenCache.Update();
 
 	return 0;
 }
@@ -147,7 +149,59 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 			if(!Accept)
 				continue;
 
-			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
+			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
+			{
+				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
+				{
+					bool Found = false;
+
+					// only allow a specific number of players with the same ip
+					NETADDR ThisAddr = Addr, OtherAddr;
+					int FoundAddr = 1;
+					ThisAddr.port = 0;
+					for(int i = 0; i < MaxClients(); i++)
+					{
+						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+							continue;
+
+						OtherAddr = *m_aSlots[i].m_Connection.PeerAddress();
+						OtherAddr.port = 0;
+						if(!net_addr_comp(&ThisAddr, &OtherAddr))
+						{
+							if(FoundAddr++ >= m_MaxClientsPerIP)
+							{
+								char aBuf[128];
+								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
+								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+								return 0;
+							}
+						}
+					}
+
+					for(int i = 0; i < MaxClients(); i++)
+					{
+						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+						{
+							Found = true;
+							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token);
+							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token); // HACK!
+							if(m_pfnNewClient)
+								m_pfnNewClient(i, m_UserPtr);
+							break;
+						}
+					}
+
+					if(!Found)
+					{
+						const char FullMsg[] = "This server is full";
+						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+					}
+				}
+				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
+					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken);
+			}
+			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
 				if(!(m_Flags&NETFLAG_ALLOWOLDSTYLE) && m_RecvUnpacker.m_Data.m_Version != NET_PACKETVERSION)
 					continue;
@@ -234,14 +288,28 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 			return -1;
 		}
 
-		// send connectionless packet
-		if(pChunk->m_ClientID == -1)
+		if(pChunk->m_Flags&NETSENDFLAG_STATELESS || Token != NET_TOKEN_NONE)
+		{
+			if(pChunk->m_Flags&NETSENDFLAG_STATELESS)
+			{
+				dbg_assert(pChunk->m_ClientID == -1, "errornous client id, connless packets can only be sent to cid=-1");
+				dbg_assert(Token == NET_TOKEN_NONE, "stateless packets can't have a token");
+			}
 			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+		}
 		else
 		{
-			dbg_assert(pChunk->m_ClientID >= 0, "errornous client id");
-			dbg_assert(pChunk->m_ClientID < MaxClients(), "errornous client id");
-			m_aSlots[pChunk->m_ClientID].m_Connection.SendPacketConnless((const char *)pChunk->m_pData, pChunk->m_DataSize);
+			if(pChunk->m_ClientID == -1)
+			{
+				m_TokenCache.SendPacketConnless(&pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+			}
+			else
+			{
+				dbg_assert(pChunk->m_ClientID >= 0, "errornous client id");
+				dbg_assert(pChunk->m_ClientID < MaxClients(), "errornous client id");
+
+				m_aSlots[pChunk->m_ClientID].m_Connection.SendPacketConnless((const char *)pChunk->m_pData, pChunk->m_DataSize);
+			}
 		}
 	}
 	else

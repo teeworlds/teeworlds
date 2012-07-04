@@ -155,13 +155,43 @@ public:
 };
 
 
+class CNetTokenManager
+{
+public:
+	void Init(NETSOCKET Socket, int SeedTime = NET_SEEDTIME);
+	void Update();
+
+	void GenerateSeed();
+
+	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
+
+	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify);
+	TOKEN GenerateToken(const NETADDR *pAddr) const;
+	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
+
+private:
+	NETSOCKET m_Socket;
+
+	int64 m_Seed;
+	int64 m_PrevSeed;
+
+	TOKEN m_GlobalToken;
+	TOKEN m_PrevGlobalToken;
+
+	int m_SeedTime;
+	int64 m_NextSeedTime;
+};
+
+
 class CNetTokenCache
 {
 public:
-	void Init(NETSOCKET Socket, const TOKEN *pToken);
+	CNetTokenCache();
+	~CNetTokenCache();
+	void Init(NETSOCKET Socket, const CNetTokenManager *pTokenManager);
 	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize);
 	void FetchToken(const NETADDR *pAddr);
-	void ProcessTokenMessage(const NETADDR *pAddr, TOKEN PeerToken);
+	void AddToken(const NETADDR *pAddr, TOKEN PeerToken);
 	TOKEN GetToken(const NETADDR *pAddr);
 	void Update();
 
@@ -190,35 +220,7 @@ private:
 	CConnlessPacketInfo *m_pConnlessPacketList; // TODO: enhance this, dynamic linked lists
 	                                            // are bad for performance
 	NETSOCKET m_Socket;
-	const TOKEN *m_pToken;
-};
-
-class CNetTokenManager
-{
-public:
-	void Init(NETSOCKET Socket, int SeedTime = NET_SEEDTIME);
-	void Update();
-
-	void GenerateSeed();
-
-	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
-
-	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify);
-	TOKEN GenerateToken(const NETADDR *pAddr);
-
-private:
-	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
-
-	NETSOCKET m_Socket;
-
-	int64 m_Seed;
-	int64 m_PrevSeed;
-
-	TOKEN m_GlobalToken;
-	TOKEN m_PrevGlobalToken;
-
-	int m_SeedTime;
-	int64 m_NextSeedTime;
+	const CNetTokenManager *m_pTokenManager;
 };
 
 
@@ -369,6 +371,7 @@ class CNetServer
 	CNetRecvUnpacker m_RecvUnpacker;
 
 	CNetTokenManager m_TokenManager;
+	CNetTokenCache m_TokenCache;
 
 	int m_Flags;
 public:
@@ -414,8 +417,6 @@ class CNetConsole
 
 	CNetRecvUnpacker m_RecvUnpacker;
 
-	CNetTokenManager m_TokenManager;
-
 public:
 	void SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
@@ -445,7 +446,10 @@ class CNetClient
 	NETADDR m_ServerAddr;
 	CNetConnection m_Connection;
 	CNetRecvUnpacker m_RecvUnpacker;
+
+	CNetTokenCache m_TokenCache;
 	CNetTokenManager m_TokenManager;
+
 	NETSOCKET m_Socket;
 	int m_Flags;
 public:

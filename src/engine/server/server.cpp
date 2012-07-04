@@ -1151,7 +1151,7 @@ void CServer::PumpNetwork()
 		{
 			// stateless?
 			if(!(Packet.m_Flags&NETSENDFLAG_STATELESS))
-				if(m_Register.RegisterProcessPacket(&Packet))
+				if(m_Register.RegisterProcessPacket(&Packet, ResponseToken))
 					continue;
 			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETINFO)+1 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
