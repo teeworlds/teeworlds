@@ -289,6 +289,13 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 
 int CNetServer::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 {
+	if(Version != NET_PACKETVERSION)
+	{
+		dbg_assert(m_Flags&NETFLAG_ALLOWOLDSTYLE && m_Flags&NETFLAG_ALLOWSTATELESS, "oldstyle packet sending not enabled");
+		dbg_assert(pChunk->m_Flags&NETSENDFLAG_CONNLESS && pChunk->m_ClientID == -1, "only connless packets allowed for oldstyle network");
+		dbg_assert(pChunk->m_Flags&NETSENDFLAG_STATELESS && Token == NET_TOKEN_NONE, "tokens can't be used in oldstyle packets");
+	}
+
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
