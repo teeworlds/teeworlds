@@ -218,11 +218,11 @@ class CMenus : public CComponent
 				return false;
 			else
 			{
-				int Result = str_comp(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
+				int Result = str_comp_nocase(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
 				if(Result)
 					return Result < 0;
 				else
-					return str_comp(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
+					return str_comp_nocase(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
 			}
 		}
 	};
