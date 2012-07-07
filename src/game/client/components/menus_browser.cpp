@@ -307,24 +307,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			if(ID == COL_FLAG_LOCK)
 			{
-				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
+				if(pItem->m_Flags&IServerBrowser::FLAG_PASSWORD)
 					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK, &Button);
 			}
 			else if(ID == COL_FLAG_PURE)
 			{
-				if(	str_comp(pItem->m_aGameType, "DM") == 0 ||
-					str_comp(pItem->m_aGameType, "TDM") == 0 ||
-					str_comp(pItem->m_aGameType, "CTF") == 0 ||
-					str_comp(pItem->m_aGameType, "LMS") == 0 ||
-					str_comp(pItem->m_aGameType, "SUR") == 0)
-				{
-					// pure server
-				}
-				else
-				{
-					// unpure
+				if(!(pItem->m_Flags&IServerBrowser::FLAG_PURE))
 					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE, &Button);
-				}
 			}
 			else if(ID == COL_FLAG_FAV)
 			{

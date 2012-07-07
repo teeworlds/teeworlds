@@ -968,7 +968,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
 		str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
 		str_copy(Info.m_aGameType, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aGameType));
-		Info.m_Flags = str_toint(Up.GetString());
+		Info.m_Flags = (str_toint(Up.GetString())&SERVER_FLAG_PASSWORD) ? IServerBrowser::FLAG_PASSWORD : 0;
 		Info.m_NumPlayers = str_toint(Up.GetString());
 		Info.m_MaxPlayers = str_toint(Up.GetString());
 		Info.m_NumClients = str_toint(Up.GetString());

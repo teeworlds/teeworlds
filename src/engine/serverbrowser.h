@@ -80,7 +80,11 @@ public:
 
 		SET_MASTER_ADD=1,
 		SET_FAV_ADD,
-		SET_TOKEN
+		SET_TOKEN,
+
+		FLAG_PASSWORD	=1,
+		FLAG_PURE		=2,
+		FLAG_PUREMAP	=4
 	};
 
 	virtual void Refresh(int Type) = 0;

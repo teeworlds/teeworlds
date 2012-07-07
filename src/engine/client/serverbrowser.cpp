@@ -94,14 +94,15 @@ bool CServerBrowser::SortCompareMap(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return str_comp_nocase(a->m_Info.m_aMap, b->m_Info.m_aMap) < 0;
+	int Result = str_comp_nocase(a->m_Info.m_aMap, b->m_Info.m_aMap);
+	return Result < 0 || (Result == 0 && (a->m_Info.m_Flags&FLAG_PURE));
 }
 
 bool CServerBrowser::SortComparePing(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return a->m_Info.m_Latency < b->m_Info.m_Latency;
+	return a->m_Info.m_Latency < b->m_Info.m_Latency || (a->m_Info.m_Latency == b->m_Info.m_Latency && (a->m_Info.m_Flags&FLAG_PURE));
 }
 
 bool CServerBrowser::SortCompareGametype(int Index1, int Index2) const
@@ -115,14 +116,14 @@ bool CServerBrowser::SortCompareNumPlayers(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return a->m_Info.m_NumPlayers < b->m_Info.m_NumPlayers;
+	return a->m_Info.m_NumPlayers < b->m_Info.m_NumPlayers || (a->m_Info.m_NumPlayers == b->m_Info.m_NumPlayers && !(a->m_Info.m_Flags&FLAG_PURE));
 }
 
 bool CServerBrowser::SortCompareNumClients(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return a->m_Info.m_NumClients < b->m_Info.m_NumClients;
+	return a->m_Info.m_NumClients < b->m_Info.m_NumClients || (a->m_Info.m_NumClients == b->m_Info.m_NumClients && !(a->m_Info.m_Flags&FLAG_PURE));
 }
 
 void CServerBrowser::Filter()
@@ -149,35 +150,12 @@ void CServerBrowser::Filter()
 		else if(g_Config.m_BrFilterFull && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == m_ppServerlist[i]->m_Info.m_MaxPlayers) ||
 				m_ppServerlist[i]->m_Info.m_NumClients == m_ppServerlist[i]->m_Info.m_MaxClients))
 			Filtered = 1;
-		else if(g_Config.m_BrFilterPw && m_ppServerlist[i]->m_Info.m_Flags&SERVER_FLAG_PASSWORD)
+		else if(g_Config.m_BrFilterPw && m_ppServerlist[i]->m_Info.m_Flags&FLAG_PASSWORD)
 			Filtered = 1;
-		else if(g_Config.m_BrFilterPure &&
-			(str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "DM") != 0 &&
-			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "TDM") != 0 &&
-			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CTF") != 0 &&
-			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "SUR") != 0 &&
-			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "LMS") != 0))
-		{
+		else if(g_Config.m_BrFilterPure && !(m_ppServerlist[i]->m_Info.m_Flags&FLAG_PURE))
 			Filtered = 1;
-		}
-		else if(g_Config.m_BrFilterPureMap &&
-			!(str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm1") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm2") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm6") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm7") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm8") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "dm9") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf1") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf2") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf3") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf4") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf5") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf6") == 0 ||
-			str_comp(m_ppServerlist[i]->m_Info.m_aMap, "ctf7") == 0)
-		)
-		{
+		else if(g_Config.m_BrFilterPureMap && !(m_ppServerlist[i]->m_Info.m_Flags&FLAG_PUREMAP))
 			Filtered = 1;
-		}
 		else if(g_Config.m_BrFilterPing < m_ppServerlist[i]->m_Info.m_Latency)
 			Filtered = 1;
 		else if(g_Config.m_BrFilterCompatversion && str_comp_num(m_ppServerlist[i]->m_Info.m_aVersion, m_aNetVersion, 3) != 0)
@@ -354,6 +332,16 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 {
 	int Fav = pEntry->m_Info.m_Favorite;
 	pEntry->m_Info = Info;
+	pEntry->m_Info.m_Flags &= FLAG_PASSWORD;
+	if(str_comp(pEntry->m_Info.m_aGameType, "DM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "TDM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "CTF") == 0 ||
+		str_comp(pEntry->m_Info.m_aGameType, "SUR") == 0 ||	str_comp(pEntry->m_Info.m_aGameType, "LMS") == 0)
+		pEntry->m_Info.m_Flags |= FLAG_PURE;
+	if(str_comp(pEntry->m_Info.m_aMap, "dm1") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm2") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm6") == 0 ||
+		str_comp(pEntry->m_Info.m_aMap, "dm7") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm8") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm9") == 0 ||
+		str_comp(pEntry->m_Info.m_aMap, "ctf1") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf2") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf3") == 0 ||
+		str_comp(pEntry->m_Info.m_aMap, "ctf4") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf5") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf6") == 0 ||
+		str_comp(pEntry->m_Info.m_aMap, "ctf7") == 0)
+		pEntry->m_Info.m_Flags |= FLAG_PUREMAP;
 	pEntry->m_Info.m_Favorite = Fav;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
 	pEntry->m_GotInfo = 1;
