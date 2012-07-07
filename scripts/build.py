@@ -243,7 +243,7 @@ if flag_make_release:
 		if not src_dir_teeworlds:
 			bail("couldn't find %s source" % name)
 	os.chdir(src_dir_teeworlds)
-	command = '"%s/%s/scripts/make_release.py" -p "%s" -s "%s/%s" -v "%s"' % (work_dir, src_dir_teeworlds, platform, work_dir, src_dir_teeworlds, version_teeworlds)
+	command = '"%s/%s/scripts/make_release.py" %s %s' % (work_dir, src_dir_teeworlds, version_teeworlds, platform)
 	if os.name != "nt":
 		command = "python %s" % command
 	if os.system(command) != 0:
