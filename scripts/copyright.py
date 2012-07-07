@@ -1,8 +1,5 @@
-import os, re, sys
-match = re.search('(.*)/', sys.argv[0])
-if match != None:
-	os.chdir(match.group(1))
-os.chdir('../')
+import os, sys
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 
 notice = [b"/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */\n", b"/* If you are missing that file, acquire a complete release at teeworlds.com.                */\n"]
 exclude = ["src%sengine%sexternal" % (os.sep, os.sep), "src%sosxlaunch" % os.sep]

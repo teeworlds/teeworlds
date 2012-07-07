@@ -1,22 +1,31 @@
-import shutil, os, re, sys, zipfile
-if sys.version_info[0] == 2:
-	import urllib
-	url_lib = urllib
-elif sys.version_info[0] == 3:
-	import urllib.request
-	url_lib = urllib.request
+import shutil, optparse, os, re, sys, zipfile
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
+import twlib
 
-#valid_platforms = ["win32", "linux86", "linux86_64", "src"]
+arguments = optparse.OptionParser()
+arguments.add_option("-l", "--url-languages", default = "http://github.com/teeworlds/teeworlds-translation/zipball/master", help = "URL from which the teeworlds language files will be downloaded")
+arguments.add_option("-p", "--platform", help = "Target platform for the package (for example linux86, linux86_64, osx, src, win32)")
+arguments.add_option("-s", "--source-dir", help = "Source directory which is used for building the package")
+arguments.add_option("-v", "--version", help = "Version number which the package should get")
+(options, arguments) = arguments.parse_args()
+if options.platform == None:
+	print("-p, --platform needed")
+	exit(1)
+elif options.source_dir == None:
+	print("-s, --source-dir")
+	exit(1)
+elif os.path.exists(options.source_dir) == False:
+	print("Source directory " + options.source_dir + " doesn't exist")
+	exit(1)
+elif options.version == None:
+	print("-v, --version")
+	exit(1)
 
-if len(sys.argv) != 3:
-	print("wrong number of arguments")
-	print(sys.argv[0], "VERSION PLATFORM")
-	sys.exit(-1)
+#valid_platforms = ["win32", "osx", "linux86", "linux86_64", "src"]
+
+os.chdir(options.source_dir)
 
 name = "teeworlds"
-url_languages = "https://github.com/teeworlds/teeworlds-translation/zipball/master"
-version = sys.argv[1]
-platform = sys.argv[2]
 exe_ext = ""
 use_zip = 0
 use_gz = 1
@@ -26,35 +35,23 @@ include_data = True
 include_exe = True
 include_src = False
 
-if platform == "src":
-	include_data = True
-	include_exe = False
-	include_src = True
-	use_zip = 1
-	use_gz = 1
-
-#if not platform in valid_platforms:
+#if not options.platform in valid_platforms:
 #	print("not a valid platform")
 #	print(valid_platforms)
 #	sys.exit(-1)
 
-if platform == 'win32':
+if options.platform == "src":
+	include_exe = False
+	include_src = True
+	use_zip = 1
+elif options.platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
-if platform == 'osx':
+elif options.platform == 'osx':
 	use_dmg = 1
 	use_gz = 0
 	use_bundle = 1
-
-def fetch_file(url):
-	try:
-		print("trying %s" % url)
-		local = dict(url_lib.urlopen(url).info())['content-disposition'].split('=')[1]
-		url_lib.urlretrieve(url, local)
-		return local
-	except:
-		return False
 
 def unzip(filename, where):
 	try:
@@ -62,8 +59,8 @@ def unzip(filename, where):
 	except:
 		return False
 	for name in z.namelist():
-				if "/data/languages/" in name:
-						z.extract(name, where)
+		if "/data/languages/" in name:
+				z.extract(name, where)
 	z.close()
 	return z.namelist()[0]
 
@@ -81,12 +78,12 @@ def copydir(src, dst, excl=[]):
 def clean():
 	print("*** cleaning ***")
 	try:
-				shutil.rmtree(package_dir)
-				shutil.rmtree(languages_dir)
-				os.remove(src_package_languages)
+		shutil.rmtree(package_dir)
+		shutil.rmtree(languages_dir)
+		os.remove(src_package_languages)
 	except: pass
 	
-package = "%s-%s-%s" %(name, version, platform)
+package = "%s-%s-%s" %(name, options.version, options.platform)
 package_dir = package
 
 print("cleaning target")
@@ -94,14 +91,14 @@ shutil.rmtree(package_dir, True)
 os.mkdir(package_dir)
 
 print("download and extract languages")
-src_package_languages = fetch_file(url_languages)
+src_package_languages = twlib.fetch_file(options.url_languages)
 if not src_package_languages:
-		print("couldn't download languages")
-		sys.exit(-1)
+	print("couldn't download languages")
+	sys.exit(-1)
 languages_dir = unzip(src_package_languages, ".")
 if not languages_dir:
-		print("couldn't unzip languages")
-		sys.exit(-1)
+	print("couldn't unzip languages")
+	sys.exit(-1)
 
 print("adding files")
 shutil.copy("readme.txt", package_dir)
@@ -114,7 +111,7 @@ if include_data and not use_bundle:
 	os.chdir(languages_dir)
 	copydir("data", "../"+package_dir)
 	os.chdir("..")
-	if platform[:3] == "win":
+	if options.platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 		shutil.copy("SDL.dll", package_dir)
 		shutil.copy("freetype.dll", package_dir)
@@ -165,23 +162,23 @@ if use_bundle:
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>English</string>
-		<key>CFBundleExecutable</key>
-		<string>teeworlds</string>
-		<key>CFBundleIconFile</key>
-		<string>Teeworlds</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>%s</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>teeworlds</string>
+	<key>CFBundleIconFile</key>
+	<string>Teeworlds</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>%s</string>
 </dict>
 </plist>
-	""" % (version))
+	""" % (options.version))
 	file(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 	# create Teeworlds Server appfolder
@@ -204,23 +201,23 @@ if use_bundle:
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>English</string>
-		<key>CFBundleExecutable</key>
-		<string>teeworlds_server</string>
-		<key>CFBundleIconFile</key>
-		<string>Teeworlds_srv</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>%s</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>teeworlds_server</string>
+	<key>CFBundleIconFile</key>
+	<string>Teeworlds_srv</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>%s</string>
 </dict>
 </plist>
-	""" % (version))
+	""" % (options.version))
 	file(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 if use_zip:
