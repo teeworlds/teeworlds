@@ -360,7 +360,11 @@ int CSound::LoadWV(const char *pFilename)
 
 	SampleID = AllocID();
 	if(SampleID < 0)
+	{
+		io_close(ms_File);
+		ms_File = 0;
 		return -1;
+	}
 	pSample = &m_aSamples[SampleID];
 
 	pContext = WavpackOpenFileInput(ReadData, aError);
@@ -381,6 +385,8 @@ int CSound::LoadWV(const char *pFilename)
 		if(pSample->m_Channels > 2)
 		{
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
+			io_close(ms_File);
+			ms_File = 0;
 			return -1;
 		}
 
@@ -394,6 +400,8 @@ int CSound::LoadWV(const char *pFilename)
 		if(BitsPerSample != 16)
 		{
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
+			io_close(ms_File);
+			ms_File = 0;
 			return -1;
 		}
 
