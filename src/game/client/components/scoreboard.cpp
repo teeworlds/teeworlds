@@ -201,6 +201,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	// render headlines
 	y += 50.0f;
 	float HeadlineFontsize = 22.0f;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.7f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
 	TextRender()->Text(0, ScoreOffset+ScoreLength-tw, y, HeadlineFontsize, Localize("Score"), -1);
 
@@ -211,6 +212,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
 	TextRender()->Text(0, PingOffset+PingLength-tw, y, HeadlineFontsize, Localize("Ping"), -1);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// render player entries
 	y += HeadlineFontsize*2.0f;
@@ -303,11 +305,12 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 			// ping
 			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, 0, 1000));
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.7f);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->SetCursor(&Cursor, PingOffset+PingLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = PingLength;
 			TextRender()->TextEx(&Cursor, aBuf, -1);
-
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			y += LineHeight+Spacing;
 		}
 	}
