@@ -581,7 +581,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 	case IGS_END_ROUND:
 	case IGS_END_MATCH:
 		// only possible when game is running or over
-		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_END_MATCH || m_GameState == IGS_END_ROUND)
+		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_END_MATCH || m_GameState == IGS_END_ROUND || m_GameState == IGS_GAME_PAUSED)
 		{
 			m_GameState = GameState;
 			m_GameStateTimer = Timer*Server()->TickSpeed();
@@ -762,7 +762,7 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if(m_GameState == IGS_GAME_RUNNING && !GameServer()->m_World.m_ResetRequested)
+	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World.m_ResetRequested)
 	{
 		if(m_GameFlags&GAMEFLAG_SURVIVAL)
 			DoWincheckRound();
