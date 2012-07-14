@@ -542,6 +542,46 @@ void CHud::RenderSpectatorHud()
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
+void CHud::RenderNinjaCountdown()
+{
+	/* Brandon Foltz (JayWalker)
+	Quick and dirty implementation of feature requested in issue #955
+	Show number of seconds remaining of ninja powerup after you acquire it. */
+    
+        static int GotNinjaTick;
+        static int NinjaDurationTicks;
+        static int NinjaEndTick;
+        
+        //variables for calculating font size as it 'pulses' for each second
+        static float FontSize = 20.0f;
+        static float FontScaleFactor = 0.33f; //reduce size by this much (* 100 = percent)
+    
+        //check if we JUST picked up the ninja, and record time
+        if (m_pClient->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_NINJA &&
+            m_pClient->m_Snap.m_pLocalPrevCharacter->m_Weapon != WEAPON_NINJA )
+        {
+                //we just picked up the ninja powerup!
+                GotNinjaTick = m_pClient->m_Snap.m_pLocalCharacter->m_Tick;
+                NinjaDurationTicks = (g_pData->m_Weapons.m_Ninja.m_Duration / 1000) * m_pClient->Client()->GameTickSpeed();;
+                NinjaEndTick = GotNinjaTick + NinjaDurationTicks;
+        }
+        
+        if (m_pClient->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_NINJA)
+        {
+            float RemainingTimeInSecs = (float)(NinjaEndTick - m_pClient->m_Snap.m_pLocalCharacter->m_Tick) / m_pClient->Client()->GameTickSpeed();;
+            
+            char aBuf[64];
+            str_format(aBuf, sizeof(aBuf), "%d", (int)ceil(RemainingTimeInSecs));
+            
+            //calculate font size for 'pulsing' effect
+            float FontScaledSize = FontSize - ((ceil(RemainingTimeInSecs) - RemainingTimeInSecs) * (FontSize * FontScaleFactor));
+            
+            float w = TextRender()->TextWidth(0, FontScaledSize, aBuf, -1);
+            float h = 200; //(Graphics()->ScreenHeight() / 2); // - (Graphics()->ScreenHeight() / 10);
+            TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, h, FontScaledSize, aBuf, -1);
+        }
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameInfoObj)
@@ -562,6 +602,7 @@ void CHud::OnRender()
 			RenderSpectatorHud();
 		}
 
+                RenderNinjaCountdown(); //render under everything else...
 		RenderGameTimer();
 		RenderPauseTimer();
 		RenderStartCountdown();
