@@ -65,7 +65,7 @@ void CCamera::OnRender()
 
 		// do little rotation
 		static vec2 Dir = vec2(1.0f, 0.0f);
-		float RotPerTick = 18.0f * Client()->FrameTime(); // 20 sec for one rotation (18° per sec)
+		float RotPerTick = 18.0f * Client()->RenderFrameTime(); // 20 sec for one rotation (18° per sec)
 		Dir = rotate(Dir, RotPerTick);
 		m_Center = m_RotationCenter+Dir*30.0f;
 	}
