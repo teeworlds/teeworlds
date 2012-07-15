@@ -961,7 +961,7 @@ int CMenus::Render()
 		s_First = false;
 	}
 
-	if(Client()->State() == IClient::STATE_ONLINE || m_pClient->m_pMapLayers->MenuMapLoaded())
+	if(Client()->State() == IClient::STATE_ONLINE || m_pClient->m_pMapLayersBackGround->MenuMapLoaded())
 	{
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;
