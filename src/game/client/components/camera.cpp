@@ -75,7 +75,7 @@ void CCamera::OnRender()
 		if(distance(m_Center, m_RotationCenter) <= (float)g_Config.m_ClRotationRadius+0.5f)
 		{
 			// do little rotation
-			float RotPerTick = 360.0f/(float)g_Config.m_ClRotationSpeed * Client()->FrameTime();
+			float RotPerTick = 360.0f/(float)g_Config.m_ClRotationSpeed * Client()->RenderFrameTime();
 			Dir = rotate(Dir, RotPerTick);
 			m_Center = m_RotationCenter+Dir*(float)g_Config.m_ClRotationRadius;
 		}
