@@ -641,7 +641,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		// chat messages
 		Left.HSplitTop(5.0f, 0, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClShowChatFriends, Localize("Show only chat messages from friends"), g_Config.m_ClShowChatFriends, &Button))
+		static int s_friendchat = 0;
+		if(DoButton_CheckBox(&s_friendchat, Localize("Show only chat messages from friends"), g_Config.m_ClShowChatFriends, &Button))
 			g_Config.m_ClShowChatFriends ^= 1;
 
 		// name plates
