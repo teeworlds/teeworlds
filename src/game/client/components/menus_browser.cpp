@@ -141,12 +141,12 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 
 		if(ID == COL_FLAG_LOCK)
 		{
-			if(pItem->m_Flags&IServerBrowser::FLAG_PASSWORD)
+			if(pEntry->m_Flags&IServerBrowser::FLAG_PASSWORD)
 				DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK, &Button);
 		}
 		else if(ID == COL_FLAG_PURE)
 		{
-			if(!(pItem->m_Flags&IServerBrowser::FLAG_PURE))
+			if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
 				DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE, &Button);
 		}
 		else if(ID == COL_FLAG_FAV)
