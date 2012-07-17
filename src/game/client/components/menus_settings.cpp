@@ -803,172 +803,288 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	if(DoEditBox(g_Config.m_PlayerClan, &Button, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), 14.0f, &s_OffsetClan))
 		m_NeedSendinfo = true;
 
-	// custom colour selector
+	// country flag selector
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(230.0f, &Button, 0);
-	static int s_PlayerColorBody = 0;
-	if(DoButton_CheckBox(&s_PlayerColorBody, Localize("Custom colors"), g_Config.m_PlayerUseCustomColor, &Button))
-	{
-		g_Config.m_PlayerUseCustomColor = g_Config.m_PlayerUseCustomColor?0:1;
-		m_NeedSendinfo = true;
-	}
-
-	if(g_Config.m_PlayerUseCustomColor)
-	{
-		MainView.HSplitTop(5.0f, 0, &MainView);
-		MainView.HSplitTop(82.5f, &Label, &MainView);
-
-		CUIRect aRects[2];
-		Label.VSplitMid(&aRects[0], &aRects[1]);
-		aRects[0].VSplitRight(10.0f, &aRects[0], 0);
-		aRects[1].VSplitLeft(10.0f, 0, &aRects[1]);
-
-		int *paColors[2];
-		paColors[0] = &g_Config.m_PlayerColorBody;
-		paColors[1] = &g_Config.m_PlayerColorFeet;
-
-		const char *paParts[] = {
-			Localize("Body"),
-			Localize("Feet")};
-		const char *paLabels[] = {
-			Localize("Hue"),
-			Localize("Sat."),
-			Localize("Lht.")};
-		static int s_aColorSlider[2][3] = {{0}};
-
-		for(int i = 0; i < 2; i++)
-		{
-			aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
-			UI()->DoLabelScaled(&Label, paParts[i], 14.0f, -1);
-			aRects[i].VSplitLeft(20.0f, 0, &aRects[i]);
-			aRects[i].HSplitTop(2.5f, 0, &aRects[i]);
-
-			int PrevColor = *paColors[i];
-			int Color = 0;
-			for(int s = 0; s < 3; s++)
-			{
-				aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
-				Label.VSplitLeft(100.0f, &Label, &Button);
-				Button.HMargin(2.0f, &Button);
-
-				float k = ((PrevColor>>((2-s)*8))&0xff) / 255.0f;
-				k = DoScrollbarH(&s_aColorSlider[i][s], &Button, k);
-				Color <<= 8;
-				Color += clamp((int)(k*255), 0, 255);
-				UI()->DoLabelScaled(&Label, paLabels[s], 14.0f, -1);
-			}
-
-			if(PrevColor != Color)
-				m_NeedSendinfo = true;
-
-			*paColors[i] = Color;
-		}
-	}
-
-	// skin selector
-	MainView.HSplitTop(20.0f, 0, &MainView);
-	static bool s_InitSkinlist = true;
-	static sorted_array<const CSkins::CSkin *> s_paSkinList;
 	static float s_ScrollValue = 0.0f;
-	if(s_InitSkinlist)
-	{
-		s_paSkinList.clear();
-		for(int i = 0; i < m_pClient->m_pSkins->Num(); ++i)
-		{
-			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
-			// no special skins
-			if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
-				continue;
-			s_paSkinList.add(s);
-		}
-		s_InitSkinlist = false;
-	}
-
 	int OldSelected = -1;
-	UiDoListboxStart(&s_InitSkinlist, &MainView, 50.0f, Localize("Skins"), "", s_paSkinList.size(), 4, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_ScrollValue, &MainView, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
 
-	for(int i = 0; i < s_paSkinList.size(); ++i)
+	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
-		const CSkins::CSkin *s = s_paSkinList[i];
-		if(s == 0)
-			continue;
-
-		if(str_comp(s->m_aName, g_Config.m_PlayerSkin) == 0)
+		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paSkinList[i], OldSelected == i);
+		CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
 		if(Item.m_Visible)
 		{
-			CTeeRenderInfo Info;
-			if(g_Config.m_PlayerUseCustomColor)
-			{
-				Info.m_Texture = s->m_ColorTexture;
-				Info.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
-				Info.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
-			}
-			else
-			{
-				Info.m_Texture = s->m_OrgTexture;
-				Info.m_ColorBody = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-				Info.m_ColorFeet = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-			}
-
-			Info.m_Size = UI()->Scale()*50.0f;
-			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
-
-			if(g_Config.m_Debug)
-			{
-				vec3 BloodColor = g_Config.m_PlayerUseCustomColor ? m_pClient->m_pSkins->GetColorV3(g_Config.m_PlayerColorBody) : s->m_BloodColor;
-				Graphics()->TextureSet(-1);
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(BloodColor.r, BloodColor.g, BloodColor.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, 12.0f, 12.0f);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
-			}
+			CUIRect Label;
+			Item.m_Rect.Margin(5.0f, &Item.m_Rect);
+			Item.m_Rect.HSplitBottom(10.0f, &Item.m_Rect, &Label);
+			float OldWidth = Item.m_Rect.w;
+			Item.m_Rect.w = Item.m_Rect.h*2;
+			Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
+			Graphics()->TextureSet(pEntry->m_Texture);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+			UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
 		}
 	}
 
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
 	if(OldSelected != NewSelected)
 	{
-		mem_copy(g_Config.m_PlayerSkin, s_paSkinList[NewSelected]->m_aName, sizeof(g_Config.m_PlayerSkin));
+		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
 		m_NeedSendinfo = true;
 	}
+}
 
-	// country flag selector
-	static float s_CountryScrollValue = 0.0f;
-	int OldCountrySelected = -1;
-	UiDoListboxStart(&s_CountryScrollValue, &Country, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_CountryScrollValue);
+void CMenus::RenderSettingsTee(CUIRect MainView)
+{
+	CUIRect Button, Label, EditBox;
+	CUIRect YourSkin, Preview, CustomizeSkin, Left, Mid, SaveSkin, Selection, UCC, Picker;
+	MainView.VMargin(20.0f, &MainView);
+	MainView.HMargin(10.0f, &MainView);
+	MainView.VSplitLeft(420.0f, 0, &Selection);
+	MainView.HSplitTop(65.0f, &YourSkin, &CustomizeSkin);
 
-	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
+	// Preview :
 	{
-		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
-		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
-			OldCountrySelected = i;
+		YourSkin.VSplitLeft(80.0f, &YourSkin, &Button);
+		YourSkin.HSplitTop(18.0f, 0, &Label);
+		UI()->DoLabelScaled(&Label, Localize("Your skin:"), 14.0f, -1);
 
-		CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldCountrySelected == i);
-		if(Item.m_Visible)
+		float tw = TextRender()->TextWidth(0, 14.0f, g_Config.m_PlayerSkin, -1);
+		Button.VSplitLeft(16.0f + 50.0f+tw, &Button, 0);
+		Button.HSplitTop(12.0f + 40.0f, &Button, 0);
+		static int s_SkinButton = 0;
+		if(DoButton_Menu(&s_SkinButton, "", 0, &Button))
 		{
-			Item.m_Rect.Margin(5.0f, &Item.m_Rect);
-			Item.m_Rect.HSplitBottom(10.0f, &Item.m_Rect, &Label);
-			float OldWidth = Item.m_Rect.w;
-			Item.m_Rect.w = Item.m_Rect.h*2;
-			Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
-			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
-			m_pClient->m_pCountryFlags->Render(pEntry->m_CountryCode, &Color, Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
-			if(pEntry->m_Texture != -1)
-				UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
+			m_TeePartSelection = SELECTION_SKIN;
+			m_TeePartsColorSelection = NO_SELECTION;
+		}
+
+		Button.VSplitLeft(24.0f, 0, &Preview);
+		Preview.HSplitTop(30.0f, 0, &Preview);
+		CTeeRenderInfo OwnSkinInfo;
+		OwnSkinInfo.m_Size = 50.0f*UI()->Scale();
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+			if(*gs_apUCCVariables[p])
+			{
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[p], p==SKINPART_TATTOO);
+			}
+			else
+			{
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
+
+		Button.VSplitLeft(50.0f, 0, &Label);
+		Label.HSplitTop(18.0f, 0, &Label);
+		UI()->DoLabelScaled(&Label, g_Config.m_PlayerSkin, 14.0f, -1);
+
+		if(m_TeePartSelection == NO_SELECTION)
+		{
+			// draw tee with red team color
+			Button.VSplitLeft(150.0f, 0, &Preview);
+			Preview.VSplitLeft(100.0f, &Label, &Preview);
+			Label.HSplitTop(18.0f, 0, &Label);
+			UI()->DoLabelScaled(&Label, Localize("Red team:"), 14.0f, -1);
+
+			Preview.HSplitTop(30.0f, 0, &Preview);
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_RED, p);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+			}
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
+
+			// draw tee with blue team color
+			Button.VSplitLeft(300.0f, 0, &Preview);
+			Preview.VSplitLeft(100.0f, &Label, &Preview);
+			Label.HSplitTop(18.0f, 0, &Label);
+			UI()->DoLabelScaled(&Label, Localize("Blue team:"), 14.0f, -1);
+
+			Preview.HSplitTop(30.0f, 0, &Preview);
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_BLUE, p);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+			}
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 		}
 	}
 
-	const int NewCountrySelected = UiDoListboxEnd(&s_CountryScrollValue, 0);
-	if(OldCountrySelected != NewCountrySelected)
+	// Selection :
 	{
-		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewCountrySelected)->m_CountryCode;
-		m_NeedSendinfo = true;
+		if(m_TeePartSelection == SELECTION_SKIN)
+			RenderSkinSelection(Selection);
+		else if(m_TeePartSelection != NO_SELECTION)
+			RenderSkinPartSelection(Selection);
+	}
+
+	// Skin Customization :
+	{
+		CustomizeSkin.HSplitTop(20.0f, &Button, &Left);
+		static int s_CustomizeSkinButton = 0;
+		if(DoButton_CheckBox(&s_CustomizeSkinButton, Localize("Customize skin"), g_Config.m_ClCustomizeSkin, &Button))
+		{
+			g_Config.m_ClCustomizeSkin ^= 1;
+			if(!g_Config.m_ClCustomizeSkin)
+			{
+				m_TeePartSelection = NO_SELECTION;
+				m_TeePartsColorSelection = NO_SELECTION;
+			}
+		}
+	}
+
+	if(!g_Config.m_ClCustomizeSkin)
+		return;
+
+	// Parts Customization :
+	{
+		Left.HSplitTop(10.0f, 0, &Left);
+		Left.VSplitLeft(15.0f, 0, &Left);
+		Left.HSplitTop(260.0f, &Left, &SaveSkin);
+		Left.VSplitLeft(180.0f, &Left, &Mid);
+		Mid.VSplitLeft(10.0f, 0, &Mid);
+		Mid.VSplitLeft(165.0f, &Mid, &UCC);
+
+		const char *const apNames[6] = {Localize("Body:"), Localize("Tattoo:"), Localize("Decoration:"),
+										Localize("Hands:"), Localize("Feet:"), Localize("Eyes:")};
+		CUIRect *const apColumns[6] = {&Left, &Left, &Left,
+										&Mid, &Mid, &Mid};
+		static int const s_aSprites[6] = {SPRITE_TEE_BODY, SPRITE_TEE_TATTOO, SPRITE_TEE_DECORATION,
+											SPRITE_TEE_HAND, SPRITE_TEE_FOOT, SPRITE_TEE_EYES_NORMAL};
+		static int s_aButtons[6];
+
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			int Tex = g_pData->m_aImages[IMAGE_NO_SKINPART].m_Id;
+			int Sprite = -1;
+			if(gs_apSkinVariables[p][0])
+			{
+				int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+				Tex = pSkinPart->m_OrgTexture;
+				Sprite = s_aSprites[p];
+			}
+
+			CUIRect ColorSelection;
+			apColumns[p]->HSplitTop(80.0f, &ColorSelection, apColumns[p]);
+			ColorSelection.HMargin(5.0f, &ColorSelection);
+			if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+				RenderTools()->DrawUIRect(&ColorSelection, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			ColorSelection.HSplitTop(5.0f, 0, &ColorSelection);
+			ColorSelection.VSplitRight(70.0f, &Label, &Button);
+			Label.HSplitTop(20.0f, 0, &Label);
+			Label.VSplitLeft(5.0f, 0, &Label);
+			UI()->DoLabelScaled(&Label, apNames[p], 14.0f, -1);
+			Button.HSplitTop(60.0f, &Button, 0);
+			Button.VSplitLeft(60.0f, &Button, 0);
+			float ImageRatio = p==SKINPART_EYES?2.0f:1.0f;
+			if(DoButton_Customize(&s_aButtons[p], Tex, Sprite, &Button, ImageRatio))
+			{
+				m_TeePartSelection = gs_aSelectionParts[p];
+				m_TeePartsColorSelection = gs_aSelectionParts[p];
+			}
+			if(UI()->DoColorSelectionLogic(&ColorSelection, &Button))
+			{
+				static int s_InitialSelectedPart = -1;
+				int AddSelection = NO_SELECTION;
+				if(Input()->KeyPressed(KEY_RSHIFT) || Input()->KeyPressed(KEY_LSHIFT))
+				{
+					if(s_InitialSelectedPart != -1)
+					{
+						int Min = p < s_InitialSelectedPart ? p : s_InitialSelectedPart;
+						int Max = p > s_InitialSelectedPart ? p : s_InitialSelectedPart;
+						for(int p2 = Min; p2 <= Max; p2++)
+							AddSelection |= gs_aSelectionParts[p2];
+					}
+				}
+				else
+				{
+					AddSelection = gs_aSelectionParts[p];
+					s_InitialSelectedPart = p;
+				}
+				if(Input()->KeyPressed(KEY_RCTRL) || Input()->KeyPressed(KEY_LCTRL))
+				{
+					if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+						m_TeePartsColorSelection &= ~AddSelection;
+					else
+						m_TeePartsColorSelection |= AddSelection;
+				}
+				else
+					m_TeePartsColorSelection = AddSelection;
+				m_TeePartSelection = NO_SELECTION;
+			}
+		}
+	}
+
+	// Save Skin :
+	{
+		SaveSkin.HSplitTop(20.0f, &SaveSkin, 0);
+		SaveSkin.VSplitLeft(160.0f, &EditBox, &Button);
+		Button.VSplitLeft(10.0f, 0, &Button);
+		Button.VSplitLeft(80.0f, &Button, 0);
+		static float s_OffsetSkin = 0.0f;
+		static int s_EditBox;
+		DoEditBox(&s_EditBox, &EditBox, m_aSaveSkinName, sizeof(m_aSaveSkinName), 14.0f, &s_OffsetSkin);
+		static int s_SaveButton;
+		if(DoButton_Menu(&s_SaveButton, Localize("Save skin"), 0, &Button) || (UI()->LastActiveItem() == &s_EditBox && m_EnterPressed))
+		{
+			if(m_aSaveSkinName[0])
+				m_Popup = POPUP_SAVE_SKIN;
+		}
+	}
+
+	if(m_TeePartSelection != NO_SELECTION || m_TeePartsColorSelection == NO_SELECTION)
+		return;
+
+	int CheckedUCC = 0;
+
+	// Use Custom Color :
+	{
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p])
+				CheckedUCC = 1;
+		}
+
+		UCC.VSplitLeft(40.0f, 0, &UCC);
+		UCC.HSplitTop(5.0f, 0, &UCC);
+		UCC.HSplitTop(20.0f, &Button, &Picker);
+		static int s_UCCButton = 0;
+		if(DoButton_CheckBox(&s_UCCButton, Localize("Custom colors"), CheckedUCC, &Button))
+		{
+			CheckedUCC ^= 1;
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+					*gs_apUCCVariables[p] = CheckedUCC;
+			}
+			m_NeedSendinfo = true;
+		}
+	}
+
+	if(!CheckedUCC)
+		return;
+
+	// HSL Picker :
+	{
+		Picker.HSplitTop(10.0f, 0, &Picker);
+		Picker.VSplitLeft(20.0f, 0, &Picker);
+		if(m_TeePartSelection == NO_SELECTION && m_TeePartsColorSelection != NO_SELECTION)
+			RenderHSLPicker(Picker);
 	}
 }
 

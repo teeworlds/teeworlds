@@ -161,16 +161,13 @@ public:
 	// client data
 	struct CClientData
 	{
-		int m_UseCustomColor;
-		int m_ColorBody;
-		int m_ColorFeet;
-
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
-		char m_aSkinName[64];
-		int m_SkinID;
-		int m_SkinColor;
+		char m_aaSkinPartNames[6][24];
+		int m_aUseCustomColors[6];
+		int m_aSkinPartColors[6];
+		int m_SkinPartIDs[6];
 		int m_Team;
 		int m_Emoticon;
 		int m_EmoticonStart;
