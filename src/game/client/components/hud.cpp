@@ -542,14 +542,12 @@ void CHud::RenderSpectatorHud()
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
+/* Brandon Foltz (JayWalker)
+Implementation of feature requested in issue #955
+Show number of seconds remaining of ninja powerup after you acquire it. 
+The number of seconds remaining pulses as each second passes. */
 void CHud::RenderNinjaCountdown()
 {
-	/* Brandon Foltz (JayWalker)
-	Quick and dirty implementation of feature requested in issue #955
-	Show number of seconds remaining of ninja powerup after you acquire it. */
-    
-	//static int GotNinjaTick;
-	//static int NinjaDurationTicks;
 	static int NinjaEndTick;
 
 	//variables for calculating font size as it 'pulses' for each second
@@ -563,9 +561,6 @@ void CHud::RenderNinjaCountdown()
 			m_pClient->m_Snap.m_pLocalPrevCharacter->m_Weapon != WEAPON_NINJA )
 		{
 			//we just picked up the ninja powerup!
-			//GotNinjaTick = m_pClient->m_Snap.m_pLocalCharacter->m_Tick;
-			//NinjaDurationTicks = (g_pData->m_Weapons.m_Ninja.m_Duration * m_pClient->Client()->GameTickSpeed()) / 1000;
-			//NinjaEndTick = GotNinjaTick + NinjaDurationTicks;
 			NinjaEndTick = m_pClient->Client()->PredGameTick() + ((g_pData->m_Weapons.m_Ninja.m_Duration * m_pClient->Client()->GameTickSpeed()) / 1000);
 		}
 
@@ -580,7 +575,7 @@ void CHud::RenderNinjaCountdown()
 			float FontScaledSize = FontSize - ((ceil(RemainingTimeInSecs) - RemainingTimeInSecs) * (FontSize * FontScaleFactor));
 
 			float w = TextRender()->TextWidth(0, FontScaledSize, aBuf, -1);
-			float h = 70;
+			float h = 100;
 
 			if (RemainingTimeInSecs > 0)
 				TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, h, FontScaledSize, aBuf, -1);
