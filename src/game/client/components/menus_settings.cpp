@@ -86,10 +86,10 @@ void CMenus::SaveSkinfile()
 		if(!gs_apSkinVariables[p][0])
 			continue;
 
-		str_format(aBuf, sizeof(aBuf), "%s_filename := %s", apParts[p], gs_apSkinVariables[p]);
+		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", apParts[p], gs_apSkinVariables[p]);
 		WriteLineSkinfile(File, aBuf);
 
-		str_format(aBuf, sizeof(aBuf), "%s_custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
+		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
 		WriteLineSkinfile(File, aBuf);
 
 		if(*gs_apUCCVariables[p])
@@ -97,13 +97,13 @@ void CMenus::SaveSkinfile()
 			for(int c = 0; c < 3; c++)
 			{
 				int Val = (*gs_apColorVariables[p] >> (2-c)*8) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s_%s := %d", apParts[p], apComponents[c], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[c], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 			if(p == SKINPART_TATTOO)
 			{
 				int Val = (*gs_apColorVariables[p] >> 24) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s_%s := %d", apParts[p], apComponents[3], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[3], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 		}
