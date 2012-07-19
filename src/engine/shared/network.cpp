@@ -161,7 +161,8 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check the size
 	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
 	{
-		dbg_msg("network", "packet too small, %d", Size);
+		if(g_Config.m_Debug)
+			dbg_msg("network", "packet too small, %d", Size);
 		return -1;
 	}
 
@@ -181,7 +182,8 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	{
 		if(Size < 6)
 		{
-			dbg_msg("network", "connection less packet too small, %d", Size);
+			if(g_Config.m_Debug)
+				dbg_msg("network", "connection less packet too small, %d", Size);
 			return -1;
 		}
 
@@ -195,7 +197,8 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	{
 		if(Size-NET_PACKETHEADERSIZE > NET_MAX_PAYLOAD)
 		{
-			dbg_msg("network", "packet too big, %d", Size);
+			if(g_Config.m_Debug)
+				dbg_msg("network", "packet too big, %d", Size);
 			return -1;
 		}
 
