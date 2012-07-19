@@ -52,26 +52,28 @@ public:
 		}
 
 		// add save directories
-		if(StorageType != STORAGETYPE_BASIC && m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir(m_aaStoragePaths[TYPE_SAVE])))
+		if(StorageType != STORAGETYPE_BASIC)
 		{
-			char aPath[MAX_PATH_LENGTH];
-			if(StorageType == STORAGETYPE_CLIENT)
+			if(m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir(m_aaStoragePaths[TYPE_SAVE])))
 			{
-				fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/bodies", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/decoration", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/eyes", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/feet", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/hands", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "skins/tattoos", aPath, sizeof(aPath)));
+				char aPath[MAX_PATH_LENGTH];
+				if(StorageType == STORAGETYPE_CLIENT)
+				{
+					fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
+					fs_makedir(GetPath(TYPE_SAVE, "screenshots/auto", aPath, sizeof(aPath)));
+					fs_makedir(GetPath(TYPE_SAVE, "maps", aPath, sizeof(aPath)));
+					fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
+					fs_makedir(GetPath(TYPE_SAVE, "skins", aPath, sizeof(aPath)));
+				}
+				fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
 			}
-			fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
-			fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
-			fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
+			else
+			{
+				dbg_msg("storage", "unable to create save directory");
+				return 1;
+			}
 		}
 
 		return m_NumPaths ? 0 : 1;
