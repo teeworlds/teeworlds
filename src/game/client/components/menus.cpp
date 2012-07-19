@@ -1248,6 +1248,7 @@ int CMenus::Render()
 			pTitle = m_aMessageTopic;
 			pExtraText = m_aMessageBody;
 			pButtonText = m_aMessageButton;
+			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{

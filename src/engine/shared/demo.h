@@ -86,6 +86,7 @@ private:
 	class IConsole *m_pConsole;
 	IOHANDLE m_File;
 	char m_aFilename[256];
+	char m_aErrorMsg[256];
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
@@ -105,7 +106,7 @@ public:
 
 	void SetListner(IListner *pListner);
 
-	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType);
+	const char *Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion);
 	int Play();
 	void Pause();
 	void Unpause();

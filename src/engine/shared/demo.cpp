@@ -319,6 +319,7 @@ void CDemoRecorder::AddDemoMarker()
 CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta)
 {
 	m_File = 0;
+	m_aErrorMsg[0] = 0;
 	m_pKeyFrames = 0;
 
 	m_pSnapshotDelta = pSnapshotDelta;
@@ -577,16 +578,16 @@ void CDemoPlayer::Unpause()
 	}
 }
 
-int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType)
+const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion)
 {
 	m_pConsole = pConsole;
+	m_aErrorMsg[0] = 0;
 	m_File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
 	if(!m_File)
 	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "could not open '%s'", pFilename);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", aBuf);
-		return -1;
+		str_format(m_aErrorMsg, sizeof(m_aErrorMsg), "could not open '%s'", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", m_aErrorMsg);
+		return m_aErrorMsg;
 	}
 
 	// store the filename
@@ -607,22 +608,29 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	io_read(m_File, &m_Info.m_Header, sizeof(m_Info.m_Header));
 	if(mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
 	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "'%s' is not a demo file", pFilename);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", aBuf);
+		str_format(m_aErrorMsg, sizeof(m_aErrorMsg), "'%s' is not a demo file", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", m_aErrorMsg);
 		io_close(m_File);
 		m_File = 0;
-		return -1;
+		return m_aErrorMsg;
 	}
 
 	if(m_Info.m_Header.m_Version < gs_ActVersion)
 	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "demo version %d is not supported", m_Info.m_Header.m_Version);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", aBuf);
+		str_format(m_aErrorMsg, sizeof(m_aErrorMsg), "demo version %d is not supported", m_Info.m_Header.m_Version);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", m_aErrorMsg);
 		io_close(m_File);
 		m_File = 0;
-		return -1;
+		return m_aErrorMsg;
+	}
+
+	if(str_comp(m_Info.m_Header.m_aNetversion, pNetversion) != 0)
+	{
+		str_format(m_aErrorMsg, sizeof(m_aErrorMsg), "net version '%s' is not supported", m_Info.m_Header.m_aNetversion);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", m_aErrorMsg);
+		io_close(m_File);
+		m_File = 0;
+		return m_aErrorMsg;
 	}
 
 	// get demo type

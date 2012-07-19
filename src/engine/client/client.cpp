@@ -2094,15 +2094,16 @@ void CClient::Con_RemoveFavorite(IConsole::IResult *pResult, void *pUserData)
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;
-	const char *pError;
+	
 	Disconnect();
 	m_NetClient.ResetErrorString();
 
 	// try to start playback
 	m_DemoPlayer.SetListner(this);
 
-	if(m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType))
-		return "error loading demo";
+	const char *pError = m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
+	if(pError)
+		return pError;
 
 	// load map
 	Crc = (m_DemoPlayer.Info()->m_Header.m_aMapCrc[0]<<24)|
