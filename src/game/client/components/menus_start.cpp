@@ -44,6 +44,8 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "demos", 10.0f, 0.5f))
 	{
 		m_MenuPage = PAGE_DEMOS;
+		DemolistPopulate();
+		DemolistOnUpdate(false);
 	}
 
 	Menu.HSplitTop(5.0f, 0, &Menu); // little space
