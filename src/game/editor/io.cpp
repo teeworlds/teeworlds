@@ -264,8 +264,31 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		if(pImg->m_External)
 			Item.m_ImageData = -1;
 		else
-			Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pImg->m_pData);
+		{
+			if(pImg->m_Format == CImageInfo::FORMAT_RGB)
+			{
+				void *pBuf = mem_alloc(Item.m_Width*Item.m_Height*4, 1);
+				mem_copy(pBuf, pImg->m_pData, Item.m_Width*Item.m_Height*3);
+				//convert RGB to RGBA
+				char alpha =  0xff;
+				char* pDest = (char*)pBuf + Item.m_Width*Item.m_Height*4;
+				char* pSrc = (char*)pBuf + Item.m_Width*Item.m_Height*3;
+				for( int i = 0; i < Item.m_Width*Item.m_Height; i++)
+				{
+					*(--pDest) =  alpha;
+					*(--pDest) = *(--pSrc);
+					*(--pDest) = *(--pSrc);
+					*(--pDest) = *(--pSrc);
+				}
+
+				Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pBuf);
+				mem_free(pBuf);
+			}
+			else //FORMAT_RGBA
+				Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pImg->m_pData);
+		}
 		df.AddItem(MAPITEMTYPE_IMAGE, i, sizeof(Item), &Item);
+	
 	}
 
 	// save layers
