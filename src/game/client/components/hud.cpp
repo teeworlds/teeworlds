@@ -475,28 +475,41 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	if(!pCharacter)
 		return;
 
-	//mapscreen_to_group(gacenter_x, center_y, layers_game_group());
-
 	float x = 5;
 	float y = 5;
-
-	// render ammo count
-	// render gui stuff
-
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-
-	Graphics()->QuadsBegin();
-
-	// if weaponstage is active, put a "glow" around the stage ammo
-	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
-	IGraphics::CQuadItem Array[10];
 	int i;
-	for (i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
-		Array[i] = IGraphics::CQuadItem(x+i*12,y+24,10,10);
-	Graphics()->QuadsDrawTL(Array, i);
-	Graphics()->QuadsEnd();
+	IGraphics::CQuadItem Array[10];
 
-	Graphics()->QuadsBegin();
+	// render ammo
+	if(pCharacter->m_Weapon == WEAPON_NINJA)
+	{
+		Graphics()->TextureSet(-1);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(0.8f, 0.8f, 0.8f, 0.5f);
+		RenderTools()->DrawRoundRectExt(x,y+24, 118.0f, 10.0f, 0.0f, 0);
+
+		int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
+		float Width = 116.0f * clamp(pCharacter->m_AmmoCount-Client()->GameTick(), 0, Max) / Max;
+		Graphics()->SetColor(0.9f, 0.2f, 0.2f, 0.85f);
+		RenderTools()->DrawRoundRectExt(x+1.0f, y+25.0f, Width, 8.0f, 0.0f, 0);
+		Graphics()->QuadsEnd();
+
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_NINJA].m_pSpriteBody);
+		RenderTools()->DrawRoundRectExt(x+40.0f,y+25, 32.0f, 8.0f, 0.0f, 0);
+	}
+	else
+	{
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->QuadsBegin();
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
+		for(i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
+			Array[i] = IGraphics::CQuadItem(x+i*12,y+24,10,10);
+		Graphics()->QuadsDrawTL(Array, i);
+	}
+
 	int h = 0;
 
 	// render health
