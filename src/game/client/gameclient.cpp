@@ -178,24 +178,6 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
-	// register server dummy commands for tab completion
-	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning");
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning");
-	Console()->Register("change_map", "?r", CFGFLAG_SERVER, 0, 0, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds");
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
-	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
-	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
-	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, 0, 0, "Set team of all players to team");
-	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, 0, 0, "Add a voting option");
-	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, 0, 0, "remove a voting option");
-	Console()->Register("force_vote", "ss?r", CFGFLAG_SERVER, 0, 0, "Force a voting option");
-	Console()->Register("clear_votes", "", CFGFLAG_SERVER, 0, 0, "Clears the voting options");
-	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
-	Console()->Register("swap_teams", "", CFGFLAG_SERVER, 0, 0, "Swap the current teams");
-	Console()->Register("shuffle_teams", "", CFGFLAG_SERVER, 0, 0, "Shuffle the current teams");
-
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->m_pClient = this;

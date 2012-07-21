@@ -2230,16 +2230,6 @@ void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUse
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	// register server dummy commands for tab completion
-	m_pConsole->Register("kick", "i?r", CFGFLAG_SERVER, 0, 0, "Kick player with specified id for any reason");
-	m_pConsole->Register("ban", "s?ir", CFGFLAG_SERVER, 0, 0, "Ban player with ip/id for x minutes for any reason");
-	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, 0, 0, "Unban ip");
-	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
-	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
-	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
-	m_pConsole->Register("record", "?s", CFGFLAG_SERVER, 0, 0, "Record to a file");
-	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
-	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
