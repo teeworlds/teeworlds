@@ -374,9 +374,7 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 		return;
 
 	CMsgPacker Msg(NETMSG_RCON_AUTH);
-	Msg.AddString(pName, 32);
 	Msg.AddString(pPassword, 32);
-	Msg.AddInt(1);
 	SendMsgEx(&Msg, MSGFLAG_VITAL);
 }
 
@@ -1163,17 +1161,17 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(Unpacker.Error() == 0)
 				m_pConsole->DeregisterTemp(pName);
 		}
-		else if(Msg == NETMSG_RCON_AUTH_STATUS)
+		else if(Msg == NETMSG_RCON_AUTH_ON)
 		{
-			int Result = Unpacker.GetInt();
-			if(Unpacker.Error() == 0)
-				m_RconAuthed = Result;
-			int Old = m_UseTempRconCommands;
-			m_UseTempRconCommands = Unpacker.GetInt();
-			if(Unpacker.Error() != 0)
-				m_UseTempRconCommands = 0;
-			if(Old != 0 && m_UseTempRconCommands == 0)
+			m_RconAuthed = 1;
+			m_UseTempRconCommands = 1;
+		}
+		else if(Msg == NETMSG_RCON_AUTH_OFF)
+		{
+			m_RconAuthed = 0;
+			if(m_UseTempRconCommands)
 				m_pConsole->DeregisterTempAll();
+			m_UseTempRconCommands = 0;
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{

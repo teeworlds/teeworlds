@@ -982,9 +982,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_RCON_AUTH)
 		{
-			const char *pPw;
-			Unpacker.GetString(); // login name, not used
-			pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			const char *pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 
 			if(Unpacker.Error() == 0)
 			{
@@ -994,15 +992,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 				else if(g_Config.m_SvRconPassword[0] && str_comp(pPw, g_Config.m_SvRconPassword) == 0)
 				{
-					CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-					Msg.AddInt(1);	//authed
-					Msg.AddInt(1);	//cmdlist
+					CMsgPacker Msg(NETMSG_RCON_AUTH_ON);
 					SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 
 					m_aClients[ClientID].m_Authed = AUTHED_ADMIN;
-					int SendRconCmds = Unpacker.GetInt();
-					if(Unpacker.Error() == 0 && SendRconCmds)
-						m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
+					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
 					SendRconLine(ClientID, "Admin authentication successful. Full remote console access granted.");
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (admin)", ClientID);
@@ -1010,15 +1004,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 				else if(g_Config.m_SvRconModPassword[0] && str_comp(pPw, g_Config.m_SvRconModPassword) == 0)
 				{
-					CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-					Msg.AddInt(1);	//authed
-					Msg.AddInt(1);	//cmdlist
+					CMsgPacker Msg(NETMSG_RCON_AUTH_ON);
 					SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
 
 					m_aClients[ClientID].m_Authed = AUTHED_MOD;
-					int SendRconCmds = Unpacker.GetInt();
-					if(Unpacker.Error() == 0 && SendRconCmds)
-						m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_MOD, CFGFLAG_SERVER);
+					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_MOD, CFGFLAG_SERVER);
 					SendRconLine(ClientID, "Moderator authentication successful. Limited remote console access granted.");
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (moderator)", ClientID);
@@ -1529,9 +1519,7 @@ void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 	if(pServer->m_RconClientID >= 0 && pServer->m_RconClientID < MAX_CLIENTS &&
 		pServer->m_aClients[pServer->m_RconClientID].m_State != CServer::CClient::STATE_EMPTY)
 	{
-		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-		Msg.AddInt(0);	//authed
-		Msg.AddInt(0);	//cmdlist
+		CMsgPacker Msg(NETMSG_RCON_AUTH_OFF);
 		pServer->SendMsgEx(&Msg, MSGFLAG_VITAL, pServer->m_RconClientID, true);
 
 		pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
