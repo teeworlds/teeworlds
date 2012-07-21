@@ -164,35 +164,42 @@ int CLayerGroup::SwapLayers(int Index0, int Index1)
 
 void CEditorImage::AnalyseTileFlags()
 {
-	mem_zero(m_aTileFlags, sizeof(m_aTileFlags));
-
-	int tw = m_Width/16; // tilesizes
-	int th = m_Height/16;
-	if ( tw == th )
+	if(m_Format == CImageInfo::FORMAT_RGB)
 	{
-		unsigned char *pPixelData = (unsigned char *)m_pData;
-
-		int TileID = 0;
-		for(int ty = 0; ty < 16; ty++)
-			for(int tx = 0; tx < 16; tx++, TileID++)
-			{
-				bool Opaque = true;
-				for(int x = 0; x < tw; x++)
-					for(int y = 0; y < th; y++)
-					{
-						int p = (ty*tw+y)*m_Width + tx*tw+x;
-						if(pPixelData[p*4+3] < 250)
-						{
-							Opaque = false;
-							break;
-						}
-					}
-
-				if(Opaque)
-					m_aTileFlags[TileID] |= TILEFLAG_OPAQUE;
-			}
+		for(int i = 0; i < 256; ++i)
+			m_aTileFlags[i] = TILEFLAG_OPAQUE;
 	}
+	else
+	{
+		mem_zero(m_aTileFlags, sizeof(m_aTileFlags));
 
+		int tw = m_Width/16; // tilesizes
+		int th = m_Height/16;
+		if(tw == th)
+		{
+			unsigned char *pPixelData = (unsigned char *)m_pData;
+
+			int TileID = 0;
+			for(int ty = 0; ty < 16; ty++)
+				for(int tx = 0; tx < 16; tx++, TileID++)
+				{
+					bool Opaque = true;
+					for(int x = 0; x < tw; x++)
+						for(int y = 0; y < th; y++)
+						{
+							int p = (ty*tw+y)*m_Width + tx*tw+x;
+							if(pPixelData[p*4+3] < 250)
+							{
+								Opaque = false;
+								break;
+							}
+						}
+
+					if(Opaque)
+						m_aTileFlags[TileID] |= TILEFLAG_OPAQUE;
+				}
+		}
+	}
 }
 
 void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)

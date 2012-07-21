@@ -35,7 +35,7 @@ void CMapImages::OnMapLoad()
 		m_aTextures[i] = 0;
 
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
-		if(pImg->m_External)
+		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
 			char Buf[256];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
@@ -45,7 +45,7 @@ void CMapImages::OnMapLoad()
 		else
 		{
 			void *pData = pMap->GetData(pImg->m_ImageData);
-			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, 0);
+			m_aMenuTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, 0);
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}
@@ -70,7 +70,7 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 		m_aMenuTextures[i] = 0;
 
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
-		if(pImg->m_External)
+		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
 			char Buf[256];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
@@ -80,7 +80,7 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 		else
 		{
 			void *pData = pMap->GetData(pImg->m_ImageData);
-			m_aMenuTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, 0);
+			m_aMenuTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, 0);
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}

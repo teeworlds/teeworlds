@@ -99,7 +99,7 @@ struct CMapItemInfo
 	int m_License;
 } ;
 
-struct CMapItemImage
+struct CMapItemImage_v1
 {
 	int m_Version;
 	int m_Width;
@@ -108,6 +108,12 @@ struct CMapItemImage
 	int m_ImageName;
 	int m_ImageData;
 } ;
+
+struct CMapItemImage : public CMapItemImage_v1
+{
+	enum { CURRENT_VERSION=2 };
+	int m_Format;
+};
 
 struct CMapItemGroup_v1
 {
