@@ -5,7 +5,7 @@
 
 #include <base/system.h>
 
-inline void assert(bool statement)
+inline void tl_assert(bool statement)
 {
 	dbg_assert(statement, "assert!");
 }
