@@ -1409,6 +1409,7 @@ int CServer::Run()
 					DoSnapshot();
 
 				UpdateClientRconCommands();
+				UpdateClientMapListEntries();
 			}
 
 			// master server stuff

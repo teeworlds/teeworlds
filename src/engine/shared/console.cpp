@@ -652,6 +652,10 @@ CConsole::CConsole(int FlagMask)
 	m_StoreCommands = true;
 	m_paStrokeStr[0] = "0";
 	m_paStrokeStr[1] = "1";
+	m_pTempMapListHeap = 0;
+	m_pNumMapListEntries = 0;
+	m_pFirstMapEntry = 0;
+	m_pLastMapEntry = 0;
 	m_ExecutionQueue.Reset();
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
@@ -888,7 +892,7 @@ void CConsole::DeregisterTempMap(const char *pName)
 		MapListEntryTemp *pDst = (MapListEntryTemp *)pNewTempMapListHeap->Allocate(sizeof(MapListEntryTemp));
 		pDst->m_pNext = 0;
 		pDst->m_pPrev = m_pLastMapEntry;
-		if(pDst->m_pPrev = 0)
+		if(pDst->m_pPrev)
 			pDst->m_pPrev->m_pNext = pDst;
 		m_pLastMapEntry = pDst;
 		if(!m_pFirstMapEntry)

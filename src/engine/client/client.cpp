@@ -1159,6 +1159,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		else if(Msg == NETMSG_MAPLIST_ENTRY_ADD)
 		{
 			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			dbg_msg("maplist","mapname=%s", pName);
 			if(Unpacker.Error() == 0)
 				m_pConsole->RegisterTempMap(pName);
 		}
