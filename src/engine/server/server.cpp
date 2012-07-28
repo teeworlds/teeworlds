@@ -1481,6 +1481,21 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::ConAuthStatus(IConsole::IResult *pResult, void *pUser)
+{
+	CServer* pServer = (CServer *)pUser;
+	char aBuf[128];
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(pServer->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY || pServer->m_aClients[i].m_Authed == CServer::AUTHED_NO)
+			continue;
+
+		bool Admin = pServer->m_aClients[i].m_Authed == CServer::AUTHED_ADMIN;
+		str_format(aBuf, sizeof(aBuf), "ID:%d, %s: %s", i, pServer->ClientName(i), (Admin) ? "Admin" : "Moderator");
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+	}
+}
+
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_RunServer = 0;
@@ -1621,6 +1636,7 @@ void CServer::RegisterCommands()
 	// register console commands
 	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
+	Console()->Register("authstatus", "", CFGFLAG_SERVER, ConAuthStatus, this, "Lists authed clients and their levels");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 	Console()->Register("logout", "", CFGFLAG_SERVER, ConLogout, this, "Logout of rcon");
 
