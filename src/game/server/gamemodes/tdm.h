@@ -11,9 +11,6 @@ public:
 
 	// event
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
-
-	// general
-	virtual void Snap(int SnappingClient);
 };
 
 #endif

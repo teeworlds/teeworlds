@@ -107,6 +107,11 @@ protected:
 	// info
 	int m_GameFlags;
 	const char *m_pGameType;
+	int m_MatchNum;
+	int m_ScoreLimit;
+	int m_TimeLimit;
+
+	void UpdateGameInfo(int ClientID);
 
 public:
 	IGameController(class CGameContext *pGameServer);
@@ -147,6 +152,7 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 
+	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer, const char *pReason);
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);

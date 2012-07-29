@@ -25,7 +25,7 @@ void CGameControllerSUR::DoWincheckRound()
 			++Count[GameServer()->m_apPlayers[i]->GetTeam()];
 	}
 
-	if(Count[TEAM_RED]+Count[TEAM_BLUE] == 0 || (g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_GameStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+	if(Count[TEAM_RED]+Count[TEAM_BLUE] == 0 || (m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_TimeLimit*Server()->TickSpeed()*60))
 	{
 		++m_aTeamscore[TEAM_BLUE];
 		++m_aTeamscore[TEAM_RED];
@@ -41,22 +41,4 @@ void CGameControllerSUR::DoWincheckRound()
 		++m_aTeamscore[TEAM_RED];
 		EndRound();
 	}
-}
-
-// general
-void CGameControllerSUR::Snap(int SnappingClient)
-{
-	IGameController::Snap(SnappingClient);
-
-	CNetObj_GameData *pGameDataObj = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
-	if(!pGameDataObj)
-		return;
-
-	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
-	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-
-	pGameDataObj->m_FlagCarrierRed = 0;
-	pGameDataObj->m_FlagCarrierBlue = 0;
-	pGameDataObj->m_FlagDropTickRed = 0;
-	pGameDataObj->m_FlagDropTickBlue = 0;
 }

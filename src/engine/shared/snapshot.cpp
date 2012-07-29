@@ -492,6 +492,24 @@ void CSnapshotBuilder::Init()
 	m_NumItems = 0;
 }
 
+void CSnapshotBuilder::Init(const CSnapshot *pSnapshot)
+{
+	if(pSnapshot->m_DataSize > CSnapshot::MAX_SIZE || pSnapshot->m_NumItems > MAX_ITEMS)
+	{
+		dbg_assert(m_DataSize < CSnapshot::MAX_SIZE, "too much data");
+		dbg_assert(m_NumItems < MAX_ITEMS, "too many items");
+		dbg_msg("snapshot", "invalid snapshot"); // remove me
+		m_DataSize = 0;
+		m_NumItems = 0;
+		return;
+	}
+
+	m_DataSize = pSnapshot->m_DataSize;
+	m_NumItems = pSnapshot->m_NumItems;
+	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int)*m_NumItems);
+	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
+}
+
 CSnapshotItem *CSnapshotBuilder::GetItem(int Index)
 {
 	return (CSnapshotItem *)&(m_aData[m_aOffsets[Index]]);

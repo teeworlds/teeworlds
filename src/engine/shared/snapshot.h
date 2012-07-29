@@ -125,6 +125,7 @@ class CSnapshotBuilder
 
 public:
 	void Init();
+	void Init(const CSnapshot *pSnapshot);
 
 	void *NewItem(int Type, int ID, int Size);
 

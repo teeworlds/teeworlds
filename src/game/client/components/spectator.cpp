@@ -221,7 +221,7 @@ void CSpectator::OnRender()
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i] || m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS ||
 			(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD ||
-			m_pClient->m_Snap.m_pLocalInfo->m_Team != m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team || i == m_pClient->m_Snap.m_LocalClientID)))
+			m_pClient->m_Snap.m_pLocalInfo->m_Team != m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team || i == m_pClient->m_LocalClientID)))
 			continue;
 
 		if(++Count%9 == 0)
@@ -250,9 +250,9 @@ void CSpectator::OnRender()
 		TextRender()->Text(0, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, m_pClient->m_aClients[i].m_aName, 220.0f);
 
 		// flag
-		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_FLAGS &&
-			m_pClient->m_Snap.m_pGameDataObj && (m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed == m_pClient->m_Snap.m_paPlayerInfos[i]->m_ClientID ||
-			m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == m_pClient->m_Snap.m_paPlayerInfos[i]->m_ClientID))
+		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS &&
+			m_pClient->m_Snap.m_pGameDataFlag && (m_pClient->m_Snap.m_pGameDataFlag->m_FlagCarrierRed == i ||
+			m_pClient->m_Snap.m_pGameDataFlag->m_FlagCarrierBlue == i))
 		{
 			Graphics()->BlendNormal();
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);

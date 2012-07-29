@@ -197,7 +197,7 @@ int CControls::SnapInput(int *pData)
 void CControls::OnRender()
 {
 	// update target pos
-	if(m_pClient->m_Snap.m_pGameInfoObj && !m_pClient->m_Snap.m_SpecInfo.m_Active)
+	if(m_pClient->m_Snap.m_pGameData && !m_pClient->m_Snap.m_SpecInfo.m_Active)
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
 	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
 		m_TargetPos = m_pClient->m_Snap.m_SpecInfo.m_Position + m_MousePos;
@@ -207,7 +207,7 @@ void CControls::OnRender()
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)) ||
+	if((m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)) ||
 		(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_pChat->IsActive()))
 		return false;
 

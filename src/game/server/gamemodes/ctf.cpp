@@ -88,8 +88,8 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 void CGameControllerCTF::DoWincheckMatch()
 {
 	// check score win condition
-	if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
-		(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_GameStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+	if((m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_ScoreLimit)) ||
+		(m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_TimeLimit*Server()->TickSpeed()*60))
 	{
 		if(m_SuddenDeath)
 		{
@@ -111,43 +111,40 @@ void CGameControllerCTF::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);
 
-	CNetObj_GameData *pGameDataObj = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
-	if(!pGameDataObj)
+	CNetObj_GameDataFlag *pGameDataFlag = static_cast<CNetObj_GameDataFlag *>(Server()->SnapNewItem(NETOBJTYPE_GAMEDATAFLAG, 0, sizeof(CNetObj_GameDataFlag)));
+	if(!pGameDataFlag)
 		return;
 
-	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
-	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-
-	pGameDataObj->m_FlagDropTickRed = 0;
+	pGameDataFlag->m_FlagDropTickRed = 0;
 	if(m_apFlags[TEAM_RED])
 	{
 		if(m_apFlags[TEAM_RED]->m_AtStand)
-			pGameDataObj->m_FlagCarrierRed = FLAG_ATSTAND;
+			pGameDataFlag->m_FlagCarrierRed = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_RED]->m_pCarryingCharacter && m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer())
-			pGameDataObj->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
+			pGameDataFlag->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
 		else
 		{
-			pGameDataObj->m_FlagCarrierRed = FLAG_TAKEN;
-			pGameDataObj->m_FlagDropTickRed = m_apFlags[TEAM_RED]->m_DropTick;
+			pGameDataFlag->m_FlagCarrierRed = FLAG_TAKEN;
+			pGameDataFlag->m_FlagDropTickRed = m_apFlags[TEAM_RED]->m_DropTick;
 		}
 	}
 	else
-		pGameDataObj->m_FlagCarrierRed = FLAG_MISSING;
-	pGameDataObj->m_FlagDropTickBlue = 0;
+		pGameDataFlag->m_FlagCarrierRed = FLAG_MISSING;
+	pGameDataFlag->m_FlagDropTickBlue = 0;
 	if(m_apFlags[TEAM_BLUE])
 	{
 		if(m_apFlags[TEAM_BLUE]->m_AtStand)
-			pGameDataObj->m_FlagCarrierBlue = FLAG_ATSTAND;
+			pGameDataFlag->m_FlagCarrierBlue = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_BLUE]->m_pCarryingCharacter && m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer())
-			pGameDataObj->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
+			pGameDataFlag->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
 		else
 		{
-			pGameDataObj->m_FlagCarrierBlue = FLAG_TAKEN;
-			pGameDataObj->m_FlagDropTickBlue = m_apFlags[TEAM_BLUE]->m_DropTick;
+			pGameDataFlag->m_FlagCarrierBlue = FLAG_TAKEN;
+			pGameDataFlag->m_FlagDropTickBlue = m_apFlags[TEAM_BLUE]->m_DropTick;
 		}
 	}
 	else
-		pGameDataObj->m_FlagCarrierBlue = FLAG_MISSING;
+		pGameDataFlag->m_FlagCarrierBlue = FLAG_MISSING;
 }
 
 void CGameControllerCTF::Tick()

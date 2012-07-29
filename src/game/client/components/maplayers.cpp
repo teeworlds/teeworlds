@@ -126,12 +126,12 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
-		if(pThis->m_pClient->m_Snap.m_pGameInfoObj && !(pThis->m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+		if(pThis->m_pClient->m_Snap.m_pGameData && !(pThis->m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
-				s_Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
-							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
+				s_Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
+							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							pThis->Client()->IntraGameTick());
 			}
 			else

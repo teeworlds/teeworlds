@@ -32,21 +32,3 @@ int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 
 	return 0;
 }
-
-// general
-void CGameControllerTDM::Snap(int SnappingClient)
-{
-	IGameController::Snap(SnappingClient);
-
-	CNetObj_GameData *pGameDataObj = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
-	if(!pGameDataObj)
-		return;
-
-	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
-	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-
-	pGameDataObj->m_FlagCarrierRed = 0;
-	pGameDataObj->m_FlagCarrierBlue = 0;
-	pGameDataObj->m_FlagDropTickRed = 0;
-	pGameDataObj->m_FlagDropTickBlue = 0;
-}

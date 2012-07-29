@@ -657,6 +657,13 @@ int CClient::SnapNumItems(int SnapID)
 	return m_aSnapshots[SnapID]->m_pSnap->NumItems();
 }
 
+void *CClient::SnapNewItem(int Type, int ID, int Size)
+{
+	dbg_assert(Type >= 0 && Type <=0xffff, "incorrect type");
+	dbg_assert(ID >= 0 && ID <=0xffff, "incorrect id");
+	return ID < 0 ? 0 : m_DemoRecSnapshotBuilder.NewItem(Type, ID, Size);
+}
+
 void CClient::SnapSetStaticsize(int ItemType, int Size)
 {
 	m_SnapshotDelta.SetStaticsize(ItemType, Size);
@@ -1356,6 +1363,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					// add snapshot to demo
 					if(m_DemoRecorder.IsRecording())
 					{
+						// build up snapshot and add local messages
+						m_DemoRecSnapshotBuilder.Init(pTmpBuffer3);
+						GameClient()->OnDemoRecSnap();
+						SnapSize = m_DemoRecSnapshotBuilder.Finish(pTmpBuffer3);
+
 						// write snapshot
 						m_DemoRecorder.RecordSnapshot(GameTick, pTmpBuffer3, SnapSize);
 					}
@@ -1397,10 +1409,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 	else
 	{
 		// game message
-		if(m_DemoRecorder.IsRecording())
-			m_DemoRecorder.RecordMessage(pPacket->m_pData, pPacket->m_DataSize);
-
 		GameClient()->OnMessage(Msg, &Unpacker);
+
+		if(m_RecordGameMessage && m_DemoRecorder.IsRecording())
+			m_DemoRecorder.RecordMessage(pPacket->m_pData, pPacket->m_DataSize);
 	}
 }
 

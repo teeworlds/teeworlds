@@ -31,7 +31,7 @@ int CGameControllerLMS::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 void CGameControllerLMS::DoWincheckRound()
 {
 	// check for time based win
-	if(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_GameStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60)
+	if(m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_TimeLimit*Server()->TickSpeed()*60)
 	{
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{

@@ -11,9 +11,6 @@ public:
 
 	// game
 	virtual void DoWincheckRound();
-
-	// general
-	virtual void Snap(int SnappingClient);
 };
 
 #endif

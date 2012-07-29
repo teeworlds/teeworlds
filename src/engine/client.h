@@ -83,6 +83,7 @@ public:
 	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
+	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
 
@@ -119,6 +120,8 @@ public:
 	virtual void *SnapFindItem(int SnapID, int Type, int ID) = 0;
 	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) = 0;
 	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
+	
+	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
@@ -153,6 +156,7 @@ public:
 	virtual void OnRconLine(const char *pLine) = 0;
 	virtual void OnInit() = 0;
 	virtual void OnNewSnapshot() = 0;
+	virtual void OnDemoRecSnap() = 0;
 	virtual void OnEnterGame() = 0;
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;

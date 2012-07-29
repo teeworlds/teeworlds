@@ -87,7 +87,8 @@ void CPlayers::RenderHook(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
 	const CNetObj_PlayerInfo *pPrevInfo,
-	const CNetObj_PlayerInfo *pPlayerInfo
+	const CNetObj_PlayerInfo *pPlayerInfo,
+	int ClientID
 	)
 {
 	CNetObj_Character Prev;
@@ -96,7 +97,7 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
 	float IntraTick = Client()->IntraGameTick();
 
@@ -105,10 +106,10 @@ void CPlayers::RenderHook(
 
 
 	// use preditect players if needed
-	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
+			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 		}
 		else
@@ -134,7 +135,7 @@ void CPlayers::RenderHook(
 
 		if(pPlayerChar->m_HookedPlayer != -1)
 		{
-			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_Snap.m_pLocalInfo->m_ClientID)
+			if(m_pClient->m_Snap.m_pLocalInfo && pPlayerChar->m_HookedPlayer == m_pClient->m_LocalClientID)
 			{
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
 					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
@@ -142,7 +143,7 @@ void CPlayers::RenderHook(
 					HookPos = mix(vec2(m_pClient->m_PredictedPrevChar.m_Pos.x, m_pClient->m_PredictedPrevChar.m_Pos.y),
 						vec2(m_pClient->m_PredictedChar.m_Pos.x, m_pClient->m_PredictedChar.m_Pos.y), Client()->PredIntraGameTick());
 			}
-			else if(pInfo.m_Local)
+			else if(m_pClient->m_LocalClientID == ClientID)
 			{
 				HookPos = mix(vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
 					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
@@ -188,7 +189,8 @@ void CPlayers::RenderPlayer(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
 	const CNetObj_PlayerInfo *pPrevInfo,
-	const CNetObj_PlayerInfo *pPlayerInfo
+	const CNetObj_PlayerInfo *pPlayerInfo,
+	int ClientID
 	)
 {
 	CNetObj_Character Prev;
@@ -197,7 +199,7 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
-	CTeeRenderInfo RenderInfo = m_aRenderInfo[pInfo.m_ClientID];
+	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
 	bool NewTick = m_pClient->m_NewTick;
 
@@ -210,7 +212,7 @@ void CPlayers::RenderPlayer(
 
 	//float angle = 0;
 
-	if(pInfo.m_Local && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
 		Angle = GetAngle(m_pClient->m_pControls->m_MousePos);
@@ -239,10 +241,10 @@ void CPlayers::RenderPlayer(
 	}
 
 	// use preditect players if needed
-	if(pInfo.m_Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
+			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 		}
 		else
@@ -289,7 +291,7 @@ void CPlayers::RenderPlayer(
 		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
-	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+	if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 		s_LastGameTickTime = Client()->GameTickTime();
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
@@ -381,7 +383,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -407,7 +409,7 @@ void CPlayers::RenderPlayer(
 			// TODO: should be an animation
 			Recoil = 0;
 			static float s_LastIntraTick = IntraTick;
-			if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 				s_LastIntraTick = IntraTick;
 
 			float a = (Client()->GameTick()-Player.m_AttackTick+s_LastIntraTick)/5.0f;
@@ -443,7 +445,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -474,7 +476,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee
-	if(pInfo.m_Local && g_Config.m_Debug)
+	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_Debug)
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;
@@ -495,13 +497,13 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsEnd();
 	}
 
-	if (m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+	if (m_pClient->m_aClients[ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
 
-		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart;
-		int FromEnd = m_pClient->m_aClients[pInfo.m_ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
+		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[ClientID].m_EmoticonStart;
+		int FromEnd = m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
 
 		float a = 1;
 
@@ -522,7 +524,7 @@ void CPlayers::RenderPlayer(
 
 		Graphics()->SetColor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[pInfo.m_ClientID].m_Emoticon);
+		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
@@ -532,9 +534,7 @@ void CPlayers::RenderPlayer(
 void CPlayers::OnRender()
 {
 	// update RenderInfo for ninja
-	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS) != 0;
+	bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
@@ -574,7 +574,7 @@ void CPlayers::OnRender()
 			if(pPrevInfo && pInfo)
 			{
 				//
-				bool Local = ((const CNetObj_PlayerInfo *)pInfo)->m_Local !=0;
+				bool Local = m_pClient->m_LocalClientID == i;
 				if((p % 2) == 0 && Local) continue;
 				if((p % 2) == 1 && !Local) continue;
 
@@ -586,14 +586,16 @@ void CPlayers::OnRender()
 							&PrevChar,
 							&CurChar,
 							(const CNetObj_PlayerInfo *)pPrevInfo,
-							(const CNetObj_PlayerInfo *)pInfo
+							(const CNetObj_PlayerInfo *)pInfo,
+							i
 						);
 				else
 					RenderPlayer(
 							&PrevChar,
 							&CurChar,
 							(const CNetObj_PlayerInfo *)pPrevInfo,
-							(const CNetObj_PlayerInfo *)pInfo
+							(const CNetObj_PlayerInfo *)pInfo,
+							i
 						);
 			}
 		}

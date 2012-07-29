@@ -111,6 +111,12 @@ public:
 	CCharacterCore m_PredictedPrevChar;
 	CCharacterCore m_PredictedChar;
 
+	struct CPlayerInfoItem
+	{
+		const CNetObj_PlayerInfo *m_pPlayerInfo;
+		int m_ClientID;
+	};
+
 	// snap pointers
 	struct CSnapState
 	{
@@ -120,15 +126,15 @@ public:
 		const CNetObj_SpectatorInfo *m_pSpectatorInfo;
 		const CNetObj_SpectatorInfo *m_pPrevSpectatorInfo;
 		const CNetObj_Flag *m_paFlags[2];
-		const CNetObj_GameInfo *m_pGameInfoObj;
-		const CNetObj_GameData *m_pGameDataObj;
-		int m_GameDataSnapID;
+		const CNetObj_GameData *m_pGameData;
+		const CNetObj_GameDataTeam *m_pGameDataTeam;
+		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		int m_GameDataFlagSnapID;
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
-		const CNetObj_PlayerInfo *m_paInfoByScore[MAX_CLIENTS];
-		const CNetObj_PlayerInfo *m_paInfoByTeam[MAX_CLIENTS];
+		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
+		CPlayerInfoItem m_aInfoByTeam[MAX_CLIENTS];
 
-		int m_LocalClientID;
 		int m_NumPlayers;
 		int m_aTeamSize[2];
 
@@ -187,6 +193,18 @@ public:
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
+	int m_LocalClientID;
+
+	struct CGameInfo
+	{
+		int m_GameFlags;
+		int m_ScoreLimit;
+		int m_TimeLimit;
+		int m_MatchNum;
+		int m_MatchCurrent;
+	};
+
+	CGameInfo m_GameInfo;
 
 	CRenderTools m_RenderTools;
 
@@ -201,6 +219,7 @@ public:
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker);
 	virtual void OnNewSnapshot();
+	virtual void OnDemoRecSnap();
 	virtual void OnPredict();
 	virtual void OnActivateEditor();
 	virtual int OnSnapInput(int *pData);

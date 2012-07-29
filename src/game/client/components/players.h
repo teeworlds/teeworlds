@@ -12,13 +12,15 @@ class CPlayers : public CComponent
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,
 		const CNetObj_PlayerInfo *pPrevInfo,
-		const CNetObj_PlayerInfo *pPlayerInfo
+		const CNetObj_PlayerInfo *pPlayerInfo,
+		int ClientID
 	);
 	void RenderHook(
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,
 		const CNetObj_PlayerInfo *pPrevInfo,
-		const CNetObj_PlayerInfo *pPlayerInfo
+		const CNetObj_PlayerInfo *pPlayerInfo,
+		int ClientID
 	);
 
 public:

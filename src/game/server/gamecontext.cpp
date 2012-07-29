@@ -544,16 +544,47 @@ void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 
 void CGameContext::OnClientEnter(int ClientID)
 {
-	//world.insert_entity(&players[client_id]);
-	m_apPlayers[ClientID]->Respawn();
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetTeam()));
-	SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientID, Server()->ClientName(ClientID), m_apPlayers[ClientID]->GetTeam());
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	m_pController->OnPlayerConnect(m_apPlayers[ClientID]);
 
 	m_VoteUpdate = true;
+
+	// update client infos
+	CNetMsg_Sv_ClientInfo NewClientInfoMsg;
+	NewClientInfoMsg.m_ClientID = ClientID;
+	NewClientInfoMsg.m_Local = 1;
+	NewClientInfoMsg.m_pName = Server()->ClientName(ClientID);
+	NewClientInfoMsg.m_pClan = Server()->ClientClan(ClientID);
+	NewClientInfoMsg.m_Country = Server()->ClientCountry(ClientID);
+	for(int p = 0; p < 6; p++)
+	{
+		NewClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
+		NewClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
+		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
+	}
+	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	NewClientInfoMsg.m_Local = 0;
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(i == ClientID || !IsClientReady(i))
+			continue;
+
+		Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+
+		CNetMsg_Sv_ClientInfo ClientInfoMsg;
+		ClientInfoMsg.m_ClientID = i;
+		ClientInfoMsg.m_Local = 0;
+		ClientInfoMsg.m_pName = Server()->ClientName(i);
+		ClientInfoMsg.m_pClan = Server()->ClientClan(i);
+		ClientInfoMsg.m_Country = Server()->ClientCountry(i);
+		for(int p = 0; p < 6; p++)
+		{
+			ClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[i]->m_TeeInfos.m_aaSkinPartNames[p];
+			ClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[i]->m_TeeInfos.m_aUseCustomColors[p];
+			ClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartColors[p];
+		}
+		Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	}
 }
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy)
@@ -1515,11 +1546,11 @@ void CGameContext::OnSnap(int ClientID)
 	CTuningParams StandardTuning;
 	if(ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
 	{
-		CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
-		int *pParams = (int *)&m_Tuning;
-		for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
-			Msg.AddInt(pParams[i]);
-		Server()->SendMsg(&Msg, MSGFLAG_RECORD|MSGFLAG_NOSEND, ClientID);
+		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+		if(!pTuneParams)
+			return;
+
+		mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
 	}
 
 	m_World.Snap(ClientID);
