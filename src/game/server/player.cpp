@@ -135,7 +135,6 @@ void CPlayer::Snap(int SnappingClient)
 		pPlayerInfo->m_PlayerFlags |= PLAYERFLAG_WATCHING;
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Score = m_Score;
-	pPlayerInfo->m_Team = m_Team;
 
 	if(m_ClientID == SnappingClient && (m_Team == TEAM_SPECTATORS || m_DeadSpecMode))
 	{
@@ -156,6 +155,7 @@ void CPlayer::Snap(int SnappingClient)
 			return;
 
 		pClientInfo->m_Local = 0;
+		pClientInfo->m_Team = m_Team;
 		StrToInts(pClientInfo->m_aName, 4, Server()->ClientName(m_ClientID));
 		StrToInts(pClientInfo->m_aClan, 3, Server()->ClientClan(m_ClientID));
 		pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);

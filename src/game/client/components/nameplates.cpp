@@ -37,9 +37,9 @@ void CNamePlates::RenderNameplate(
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
 		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			if(pPlayerInfo->m_Team == TEAM_RED)
+			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
-			else if(pPlayerInfo->m_Team == TEAM_BLUE)
+			else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
 				TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
 		}
 

@@ -151,8 +151,6 @@ Objects = [
 
 	NetObject("PlayerInfo", [
 		NetIntRange("m_PlayerFlags", 0, 256),
-		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
-
 		NetIntAny("m_Score"),
 		NetIntAny("m_Latency"),
 	]),
@@ -167,6 +165,7 @@ Objects = [
 
 	NetObject("De_ClientInfo", [
 		NetIntRange("m_Local", 0, 1),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 
 		NetArray(NetIntAny("m_aName"), 4),
 		NetArray(NetIntAny("m_aClan"), 3),
@@ -235,6 +234,12 @@ Messages = [
 		NetString("m_pMessage"),
 	]),
 
+	NetMessage("Sv_Team", [
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
+		NetIntRange("m_Silent", 0, 1),
+	]),
+
 	NetMessage("Sv_KillMsg", [
 		NetIntRange("m_Killer", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Victim", 0, 'MAX_CLIENTS-1'),
@@ -295,6 +300,7 @@ Messages = [
 	NetMessage("Sv_ClientInfo", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Local", 0, 1),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),

@@ -1097,13 +1097,15 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	pPlayer->SetTeam(Team);
 
 	int ClientID = pPlayer->GetCID();
-	char aBuf[128];
-	if(DoChatMsg)
-	{
-		str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(ClientID), GetTeamName(Team));
-		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-	}
 
+	// notify clients
+	CNetMsg_Sv_Team Msg;
+	Msg.m_ClientID = ClientID;
+	Msg.m_Team = Team;
+	Msg.m_Silent = DoChatMsg ? 0 : 1;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
+
+	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", ClientID, Server()->ClientName(ClientID), Team);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 

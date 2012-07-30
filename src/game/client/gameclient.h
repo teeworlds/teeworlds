@@ -188,7 +188,7 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo();
+		void UpdateRenderInfo(bool UpdateSkinInfo);
 		void Reset();
 	};
 
@@ -232,6 +232,7 @@ public:
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();
 	virtual const char *NetVersion();
+	const char *GetTeamName(int Team, bool Teamplay) const;
 
 
 	// actions

@@ -77,9 +77,9 @@ void CHud::RenderPauseTimer()
 			int NotReadyCount = 0;
 			for(int i = 0; i < MAX_CLIENTS; ++i)
 			{
-				if(m_pClient->m_Snap.m_paPlayerInfos[i] && m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team != TEAM_SPECTATORS &&
-					!(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
-						++NotReadyCount;
+				if(m_pClient->m_aClients[i].m_Team != TEAM_SPECTATORS &&
+					m_pClient->m_Snap.m_paPlayerInfos[i] && !(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
+					++NotReadyCount;
 			}
 			if(NotReadyCount == 1)
 				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), NotReadyCount);
@@ -124,8 +124,8 @@ void CHud::RenderStartCountdown()
 
 void CHud::RenderDeadNotification()
 {
-	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags == 0 && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS &&
-		(m_pClient->m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD))
+	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags == 0 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+		m_pClient->m_Snap.m_pLocalInfo && (m_pClient->m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD))
 	{
 		const char *pText = Localize("Wait for next round");
 		float FontSize = 16.0f;
@@ -188,7 +188,7 @@ void CHud::RenderScoreHud()
 					for(int i = 0; i < MAX_CLIENTS; ++i)
 					{
 						if(m_pClient->m_Snap.m_paPlayerInfos[i] && !(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD) &&
-							m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == t)
+							m_pClient->m_aClients[i].m_Team == t)
 							++Count;
 					}
 					char aBuf[32];
@@ -245,7 +245,7 @@ void CHud::RenderScoreHud()
 			int i = 0;
 			for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
 			{
-				if(m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo->m_Team != TEAM_SPECTATORS)
+				if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
 				{
 					aPlayerInfo[t] = m_pClient->m_Snap.m_aInfoByScore[i];
 					if(aPlayerInfo[t].m_ClientID == m_pClient->m_LocalClientID)
@@ -254,11 +254,11 @@ void CHud::RenderScoreHud()
 				}
 			}
 			// search local player info if not a spectator, nor within top2 scores
-			if(Local == -1 && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+			if(Local == -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
 			{
 				for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
 				{
-					if(m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo->m_Team != TEAM_SPECTATORS)
+					if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
 						++aPos[1];
 					if(m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID == m_pClient->m_LocalClientID)
 					{
@@ -340,8 +340,8 @@ void CHud::RenderWarmupTimer()
 			int NotReadyCount = 0;
 			for(int i = 0; i < MAX_CLIENTS; ++i)
 			{
-				if(m_pClient->m_Snap.m_paPlayerInfos[i] && m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team != TEAM_SPECTATORS &&
-					!(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
+				if(m_pClient->m_aClients[i].m_Team != TEAM_SPECTATORS &&
+					m_pClient->m_Snap.m_paPlayerInfos[i] &&	!(m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
 						++NotReadyCount;
 			}
 			if(NotReadyCount == 1)
