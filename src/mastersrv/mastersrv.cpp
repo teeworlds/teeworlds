@@ -70,7 +70,7 @@ void IMastersrvSlave::NetaddrToMastersrv(CMastersrvAddr *pOut, const NETADDR *pI
 		mem_copy(pOut->m_aIp + 12, pIn->ip, 4);
 	}
 
-	pOut->m_aPort[0] = (pIn->port>>8)&0xff;
+	pOut->m_aPort[0] = (pIn->port>>8)&0xff; // big endian
 	pOut->m_aPort[1] = (pIn->port>>0)&0xff;
 }
 
@@ -195,13 +195,13 @@ int CMastersrv::Init()
 		BindAddr.port = MASTERSERVER_PORT;
 	}
 
-	if(!m_NetOp.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
+	if(!m_NetOp.Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
 		return -1;
 	}
 	BindAddr.port = MASTERSERVER_PORT+1;
-	if(!m_NetChecker.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
+	if(!m_NetChecker.Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
 	{
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
@@ -362,8 +362,6 @@ void CMastersrv::BuildPackets()
 			dbg_assert(BytesWritten >= 0, "build packet initialisation failed");
 			pPacket->m_Size += BytesWritten;
 
-			pSlaveData->m_NumPackets++;
-
 			aPreparePacket[pServer->m_Version] = false;
 		}
 
@@ -452,8 +450,7 @@ void CMastersrv::BuildPackets()
 				sizeof(m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aIp));
 			// 0.5 has the port in little endian on the network
 			m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aPort[0] = pCurrent->m_Address.port&0xff;
-			m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aPort[1] = (pCurrent->m_Address.port>>8)&0xff;
-
+			m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Data.m_aServers[PacketIndexLegacy].m_aPort[1] = (pCurrent->m_Address.port>>8)&0xff; 
 			PacketIndexLegacy++;
 
 			m_aPacketsLegacy[m_NumPacketsLegacy-1].m_Size = sizeof(SERVERBROWSE_LIST_LEGACY) + sizeof(CMastersrvAddrLegacy)*PacketIndexLegacy;
@@ -560,6 +557,7 @@ void CMastersrv::AddCheckserver(const NETADDR *pAddr, const NETADDR *pAltAddr, v
 		{
 			dbg_msg("mastersrv/check", "warning: updated: %s", aAddrStr);
 			m_aCheckServers[i].m_AltAddress = *pAltAddr;
+			m_aCheckServers[i].m_Version = Version;
 			m_aCheckServers[i].m_pSlaveUserData = pUserData;
 			m_aCheckServers[i].m_TryCount = 0;
 			m_aCheckServers[i].m_TryTime = 0;
@@ -577,6 +575,7 @@ void CMastersrv::AddCheckserver(const NETADDR *pAddr, const NETADDR *pAltAddr, v
 	dbg_msg("mastersrv/check", "added: %s", aAddrStr);
 	m_aCheckServers[m_NumCheckServers].m_Address = *pAddr;
 	m_aCheckServers[m_NumCheckServers].m_AltAddress = *pAltAddr;
+	m_aCheckServers[m_NumCheckServers].m_Version = Version;
 	m_aCheckServers[m_NumCheckServers].m_pSlaveUserData = pUserData;
 	m_aCheckServers[m_NumCheckServers].m_TryCount = 0;
 	m_aCheckServers[m_NumCheckServers].m_TryTime = 0;
@@ -588,6 +587,8 @@ void CMastersrv::SendList(const NETADDR *pAddr, void *pUserData, int Version)
 	dbg_assert(Version >= 0 && Version < NUM_MASTERSRV, "version out of range");
 	IMastersrvSlave *pSlave = m_aSlaves[Version].m_pSlave;
 	dbg_assert(pSlave != 0, "attempting to access uninitalised slave");
+
+	dbg_msg("mastersrv", "requested, responding with %d packets", m_aSlaves[Version].m_NumPackets);
 
 	for(int i = 0; i < m_aSlaves[Version].m_NumPackets; i++)
 	{
