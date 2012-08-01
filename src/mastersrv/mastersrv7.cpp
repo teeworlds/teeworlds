@@ -49,10 +49,10 @@ CMastersrvSlave_0_7::CMastersrvSlave_0_7(IMastersrv *pOwner)
 
 int CMastersrvSlave_0_7::BuildPacketStart(void *pData, int MaxLength)
 {
-	if(MaxLength < sizeof(SERVERBROWSE_GETLIST))
+	if(MaxLength < sizeof(SERVERBROWSE_LIST))
 		return -1;
-	mem_copy(pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST));
-	return sizeof(SERVERBROWSE_GETLIST);
+	mem_copy(pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+	return sizeof(SERVERBROWSE_LIST);
 }
 
 int CMastersrvSlave_0_7::BuildPacketAdd(void *pData, int MaxLength, const NETADDR *pAddr, void *pUserData)
@@ -123,7 +123,6 @@ void CMastersrvSlave_0_7::SendPacket(int PacketType, const NETADDR *pAddr, void 
 	m_aPackets[PacketType].m_Address = *pAddr;
 	m_pOwner->Send((PacketType != PACKET_CHECK) ? IMastersrv::SOCKET_OP : IMastersrv::SOCKET_CHECKER,
 		&m_aPackets[PacketType], (TOKEN) (long int) pUserData, NET_PACKETVERSION);
-		
 }
 
 IMastersrvSlave *CreateSlave_0_7(IMastersrv *pOwner)
