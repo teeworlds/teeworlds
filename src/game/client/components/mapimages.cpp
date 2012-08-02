@@ -45,7 +45,7 @@ void CMapImages::OnMapLoad()
 		else
 		{
 			void *pData = pMap->GetData(pImg->m_ImageData);
-			m_aMenuTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, 0);
+			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, 0);
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}
