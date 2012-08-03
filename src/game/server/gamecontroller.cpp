@@ -642,29 +642,32 @@ void IGameController::Snap(int SnappingClient)
 
 	pGameData->m_GameStartTick = m_GameStartTick;
 	pGameData->m_GameStateFlags = 0;
-	pGameData->m_GameStateTimer = 0;
+	pGameData->m_GameStateEndTick = 0; // no timer/infinite = 0, on end = GameEndTick, otherwise = GameStateEndTick
 	switch(m_GameState)
 	{
 	case IGS_WARMUP_GAME:
 	case IGS_WARMUP_USER:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_WARMUP;
-		pGameData->m_GameStateTimer = m_GameStateTimer;
+		if(m_GameStateTimer != TIMER_INFINITE)
+			pGameData->m_GameStateEndTick = Server()->Tick()+m_GameStateTimer;
 		break;
 	case IGS_START_COUNTDOWN:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED;
-		pGameData->m_GameStateTimer = m_GameStateTimer;
+		if(m_GameStateTimer != TIMER_INFINITE)
+			pGameData->m_GameStateEndTick = Server()->Tick()+m_GameStateTimer;
 		break;
 	case IGS_GAME_PAUSED:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
-		pGameData->m_GameStateTimer = m_GameStateTimer;
+		if(m_GameStateTimer != TIMER_INFINITE)
+			pGameData->m_GameStateEndTick = Server()->Tick()+m_GameStateTimer;
 		break;
 	case IGS_END_ROUND:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_ROUNDOVER;
-		pGameData->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
+		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END*Server()->TickSpeed()+m_GameStateTimer;
 		break;
 	case IGS_END_MATCH:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
-		pGameData->m_GameStateTimer = Server()->Tick()-m_GameStartTick-10*Server()->TickSpeed()+m_GameStateTimer;
+		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END*Server()->TickSpeed()+m_GameStateTimer;
 		break;
 	case IGS_GAME_RUNNING:
 		// not effected

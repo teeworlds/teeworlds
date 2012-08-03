@@ -101,8 +101,8 @@ protected:
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
 
-	void EndMatch() { SetGameState(IGS_END_MATCH, 10); }
-	void EndRound() { SetGameState(IGS_END_ROUND, 10); }
+	void EndMatch() { SetGameState(IGS_END_MATCH, TIMER_END); }
+	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END); }
 
 	// info
 	int m_GameFlags;
@@ -163,6 +163,7 @@ public:
 	enum
 	{
 		TIMER_INFINITE = -1,
+		TIMER_END = 10,
 	};
 
 	void DoPause(int Seconds) { SetGameState(IGS_GAME_PAUSED, Seconds); }

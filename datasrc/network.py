@@ -103,7 +103,7 @@ Objects = [
 	NetObject("GameData", [
 		NetTick("m_GameStartTick"),
 		NetFlag("m_GameStateFlags", GameStateFlags),
-		NetIntRange("m_GameStateTimer", 0, 'max_int'),
+		NetTick("m_GameStateEndTick"),
 	]),
 
 	NetObject("GameDataTeam", [

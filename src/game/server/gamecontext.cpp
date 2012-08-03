@@ -575,7 +575,7 @@ void CGameContext::OnClientEnter(int ClientID)
 		CNetMsg_Sv_ClientInfo ClientInfoMsg;
 		ClientInfoMsg.m_ClientID = i;
 		ClientInfoMsg.m_Local = 0;
-		NewClientInfoMsg.m_Team = m_apPlayers[i]->GetTeam();
+		ClientInfoMsg.m_Team = m_apPlayers[i]->GetTeam();
 		ClientInfoMsg.m_pName = Server()->ClientName(i);
 		ClientInfoMsg.m_pClan = Server()->ClientClan(i);
 		ClientInfoMsg.m_Country = Server()->ClientCountry(i);

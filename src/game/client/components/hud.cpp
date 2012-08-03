@@ -43,7 +43,7 @@ void CHud::RenderGameTimer()
 				Time = 0;
 		}
 		else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
-			Time = m_pClient->m_Snap.m_pGameData->m_GameStateTimer/Client()->GameTickSpeed();
+			Time = m_pClient->m_Snap.m_pGameData->m_GameStateEndTick/Client()->GameTickSpeed();
 		else
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed();
 
@@ -72,7 +72,7 @@ void CHud::RenderPauseTimer()
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
 
 		FontSize = 16.0f;
-		if(m_pClient->m_Snap.m_pGameData->m_GameStateTimer == -1)
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 		{
 			int NotReadyCount = 0;
 			for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -90,11 +90,11 @@ void CHud::RenderPauseTimer()
 		}
 		else
 		{
-			int Seconds = m_pClient->m_Snap.m_pGameData->m_GameStateTimer/SERVER_TICK_SPEED;
+			float Seconds = static_cast<float>(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick-Client()->GameTick())/SERVER_TICK_SPEED;
 			if(Seconds < 5)
-				str_format(aBuf, sizeof(aBuf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameData->m_GameStateTimer*10/SERVER_TICK_SPEED)%10);
+				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
 			else
-				str_format(aBuf, sizeof(aBuf), "%d", Seconds);
+				str_format(aBuf, sizeof(aBuf), "%d", round(Seconds));
 		}
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
@@ -105,17 +105,17 @@ void CHud::RenderStartCountdown()
 {
 	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_STARTCOUNTDOWN)
 	{
-		char aBuf[256];
 		const char *pText = Localize("Game starts in");
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
 
-		if(m_pClient->m_Snap.m_pGameData->m_GameStateTimer == -1)
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 			return;
 		
 		FontSize = 16.0f;
-		int Seconds = (m_pClient->m_Snap.m_pGameData->m_GameStateTimer+SERVER_TICK_SPEED-1)/SERVER_TICK_SPEED;
+		char aBuf[32];
+		int Seconds = (m_pClient->m_Snap.m_pGameData->m_GameStateEndTick-Client()->GameTick()+SERVER_TICK_SPEED-1)/SERVER_TICK_SPEED;
 		str_format(aBuf, sizeof(aBuf), "%d", Seconds);
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
@@ -335,7 +335,7 @@ void CHud::RenderWarmupTimer()
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, Localize("Warmup"), -1);
 
 		FontSize = 16.0f;
-		if(m_pClient->m_Snap.m_pGameData->m_GameStateTimer == -1)
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 		{
 			int NotReadyCount = 0;
 			for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -353,11 +353,11 @@ void CHud::RenderWarmupTimer()
 		}
 		else
 		{
-			int Seconds = m_pClient->m_Snap.m_pGameData->m_GameStateTimer/SERVER_TICK_SPEED;
+			float Seconds = static_cast<float>(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick-Client()->GameTick())/SERVER_TICK_SPEED;
 			if(Seconds < 5)
-				str_format(aBuf, sizeof(aBuf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameData->m_GameStateTimer*10/SERVER_TICK_SPEED)%10);
+				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
 			else
-				str_format(aBuf, sizeof(aBuf), "%d", Seconds);
+				str_format(aBuf, sizeof(aBuf), "%d", round(Seconds));
 		}
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
