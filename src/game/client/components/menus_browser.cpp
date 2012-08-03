@@ -375,7 +375,6 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	View.VSplitLeft(50.0f, 0, &Label);
 	Label.HMargin(2.0f, &Label);
-	char aBuf[256];
 	if(pFilter->Custom() <= CBrowserFilter::FILTER_ALL)
 		UI()->DoLabel(&Label, pFilter->Name(), 12.0f, -1);
 	else

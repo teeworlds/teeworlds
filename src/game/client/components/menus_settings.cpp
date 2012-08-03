@@ -115,7 +115,7 @@ void CMenus::SaveSkinfile()
 	io_close(File);
 }
 
-void CMenus::WriteLineSkinfile(IOHANDLE File, char *pLine)
+void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
 {
 	io_write(File, pLine, str_length(pLine));
 	io_write_newline(File);
@@ -1522,8 +1522,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 void CMenus::RenderSettings(CUIRect MainView)
 {
-	static int s_SettingsPage = 0;
-
 	CUIRect RestartWarning;
 	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);

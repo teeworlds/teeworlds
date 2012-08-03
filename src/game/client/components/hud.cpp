@@ -228,7 +228,7 @@ void CHud::RenderScoreHud()
 		{
 			int Local = -1;
 			int aPos[2] = { 1, 2 };
-			CGameClient::CPlayerInfoItem aPlayerInfo[2] = {0};
+			CGameClient::CPlayerInfoItem aPlayerInfo[2] = {{0}};
 			int i = 0;
 			for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
 			{

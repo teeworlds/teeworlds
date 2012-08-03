@@ -96,7 +96,6 @@ void CPlayers::RenderHook(
 	Prev = *pPrevChar;
 	Player = *pPlayerChar;
 
-	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
 	float IntraTick = Client()->IntraGameTick();

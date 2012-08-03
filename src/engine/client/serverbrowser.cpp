@@ -315,8 +315,6 @@ int CServerBrowser::CServerFilter::SortHash() const
 
 void CServerBrowser::CServerFilter::Sort()
 {
-	int i;
-
 	// create filtered list
 	Filter();
 
