@@ -1,13 +1,12 @@
 from datatypes import *
 
-Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
-PlayerFlags = ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"]
-GameFlags = ["TEAMS", "FLAGS", "SURVIVAL"]
-GameStateFlags = ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"]
+Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"])
+Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"])
+Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 
-Emoticons = ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"]
-
-Pickups = ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"]
+PlayerFlags = Flags("PLAYERFLAG", ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
+GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
+GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 
 RawHeader = '''
 
@@ -39,31 +38,31 @@ RawSource = '''
 '''
 
 Enums = [
-	Enum("EMOTE", Emotes),
-	Enum("PICKUP", Pickups),
-	Enum("EMOTICON", Emoticons)
+	Pickups,
+	Emotes,
+	Emoticons
 ]
 
 Flags = [
-	Flags("PLAYERFLAG", PlayerFlags),
-	Flags("GAMEFLAG", GameFlags),
-	Flags("GAMESTATEFLAG", GameStateFlags)
+	PlayerFlags,
+	GameFlags,
+	GameStateFlags
 ]
 
 Objects = [
 
 	NetObject("PlayerInput", [
-		NetIntAny("m_Direction"),
+		NetIntRange("m_Direction", -1, 1),
 		NetIntAny("m_TargetX"),
 		NetIntAny("m_TargetY"),
 
-		NetIntAny("m_Jump"),
+		NetBool("m_Jump"),
 		NetIntAny("m_Fire"),
-		NetIntAny("m_Hook"),
+		NetBool("m_Hook"),
 
-		NetIntRange("m_PlayerFlags", 0, 256),
+		NetFlag("m_PlayerFlags", PlayerFlags),
 
-		NetIntAny("m_WantedWeapon"),
+		NetIntRange("m_WantedWeapon", 0, 'NUM_WEAPONS-1'),
 		NetIntAny("m_NextWeapon"),
 		NetIntAny("m_PrevWeapon"),
 	]),
@@ -91,7 +90,7 @@ Objects = [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 
-		NetIntRange("m_Type", 0, 'max_int'),
+		NetEnum("m_Type", Pickups),
 	]),
 
 	NetObject("Flag", [
@@ -103,7 +102,7 @@ Objects = [
 
 	NetObject("GameData", [
 		NetTick("m_GameStartTick"),
-		NetIntRange("m_GameStateFlags", 0, 256),
+		NetFlag("m_GameStateFlags", GameStateFlags),
 		NetIntRange("m_GameStateTimer", 0, 'max_int'),
 	]),
 
@@ -120,7 +119,7 @@ Objects = [
 	]),
 
 	NetObject("CharacterCore", [
-		NetIntAny("m_Tick"),
+		NetTick("m_Tick"),
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 		NetIntAny("m_VelX"),
@@ -145,12 +144,12 @@ Objects = [
 		NetIntRange("m_Armor", 0, 10),
 		NetIntAny("m_AmmoCount"),
 		NetIntRange("m_Weapon", 0, 'NUM_WEAPONS-1'),
-		NetIntRange("m_Emote", 0, len(Emotes)),
-		NetIntRange("m_AttackTick", 0, 'max_int'),
+		NetEnum("m_Emote", Emotes),
+		NetTick("m_AttackTick"),
 	]),
 
 	NetObject("PlayerInfo", [
-		NetIntRange("m_PlayerFlags", 0, 256),
+		NetFlag("m_PlayerFlags", PlayerFlags),
 		NetIntAny("m_Score"),
 		NetIntAny("m_Latency"),
 	]),
@@ -164,7 +163,7 @@ Objects = [
 	## Demo
 
 	NetObject("De_ClientInfo", [
-		NetIntRange("m_Local", 0, 1),
+		NetBool("m_Local"),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 
 		NetArray(NetIntAny("m_aName"), 4),
@@ -173,12 +172,12 @@ Objects = [
 		NetIntAny("m_Country"),
 
 		NetArray(NetArray(NetIntAny("m_aaSkinPartNames"), 6), 6),
-		NetArray(NetIntRange("m_aUseCustomColors", 0, 1), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 
 	NetObject("De_GameInfo", [
-		NetIntRange("m_GameFlags", 0, 256),
+		NetFlag("m_GameFlags", GameFlags),
 		
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
@@ -237,7 +236,7 @@ Messages = [
 	NetMessage("Sv_Team", [
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
-		NetIntRange("m_Silent", 0, 1),
+		NetBool("m_Silent"),
 	]),
 
 	NetMessage("Sv_KillMsg", [
@@ -261,7 +260,7 @@ Messages = [
 
 	NetMessage("Sv_Emoticon", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
-		NetIntRange("m_Emoticon", 0, 'NUM_EMOTICONS-1'),
+		NetEnum("m_Emoticon", Emoticons),
 	]),
 
 	NetMessage("Sv_VoteClearOptions", [
@@ -299,7 +298,7 @@ Messages = [
 
 	NetMessage("Sv_ClientInfo", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
-		NetIntRange("m_Local", 0, 1),
+		NetBool("m_Local"),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
@@ -310,7 +309,7 @@ Messages = [
 	]),
 
 	NetMessage("Sv_GameInfo", [
-		NetIntRange("m_GameFlags", 0, 256),
+		NetFlag("m_GameFlags", GameFlags),
 		
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
@@ -356,7 +355,7 @@ Messages = [
 	NetMessage("Cl_ReadyChange", []),
 
 	NetMessage("Cl_Emoticon", [
-		NetIntRange("m_Emoticon", 0, 'NUM_EMOTICONS-1'),
+		NetEnum("m_Emoticon", Emoticons),
 	]),
 
 	NetMessage("Cl_Vote", [

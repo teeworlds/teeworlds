@@ -320,6 +320,24 @@ class NetIntRange(NetIntAny):
 	def emit_unpack_check(self):
 		return ["if(pMsg->%s < %s || pMsg->%s > %s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.min, self.name, self.max, self.name)]
 
+class NetEnum(NetIntRange):
+	def __init__(self, name, enum):
+		NetIntRange.__init__(self, name, 0, len(enum.values))
+
+class NetFlag(NetIntAny):
+	def __init__(self, name, flag):
+		NetIntAny.__init__(self, name)
+		if len(flag.values) > 0:
+			self.mask = "%s_%s" % (flag.name, flag.values[0])
+			for i in flag.values[1:]:
+				self.mask += "|%s_%s" % (flag.name, i)
+		else:
+			self.mask = "0"
+	def emit_validate(self):
+		return ["ClampFlag(\"%s\", pObj->%s, %s);"%(self.name, self.name, self.mask)]
+	def emit_unpack_check(self):
+		return ["if(pMsg->%s & (%s) != pMsg->%s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.mask, self.name, self.name)]
+
 class NetBool(NetIntRange):
 	def __init__(self, name):
 		NetIntRange.__init__(self,name,0,1)

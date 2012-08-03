@@ -127,6 +127,7 @@ class CNetObjHandler
 	char m_aMsgData[1024];
 	int m_NumObjCorrections;
 	int ClampInt(const char *pErrorMsg, int Value, int Min, int Max);
+	int ClampFlag(const char *pErrorMsg, int Value, int Mask);
 
 	static const char *ms_apObjNames[];
 	static int ms_aObjSizes[];
@@ -176,6 +177,7 @@ if gen_network_source:
 	lines += ['']
 
 	lines += ['static const int max_int = 0x7fffffff;']
+	lines += ['']
 
 	lines += ['int CNetObjHandler::ClampInt(const char *pErrorMsg, int Value, int Min, int Max)']
 	lines += ['{']
@@ -183,6 +185,14 @@ if gen_network_source:
 	lines += ['\tif(Value > Max) { m_pObjCorrectedOn = pErrorMsg; m_NumObjCorrections++; return Max; }']
 	lines += ['\treturn Value;']
 	lines += ['}']
+	lines += ['']
+
+	lines += ['int CNetObjHandler::ClampFlag(const char *pErrorMsg, int Value, int Mask)']
+	lines += ['{']
+	lines += ['\tif((Value&Mask) != Value) { m_pObjCorrectedOn = pErrorMsg; m_NumObjCorrections++; return (Value&Mask); }']
+	lines += ['\treturn Value;']
+	lines += ['}']
+	lines += ['']
 
 	lines += ["const char *CNetObjHandler::ms_apObjNames[] = {"]
 	lines += ['\t"invalid",']

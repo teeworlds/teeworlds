@@ -160,8 +160,8 @@ int CControls::SnapInput(int *pData)
 			float t = Client()->LocalTime();
 			mem_zero(&m_InputData, sizeof(m_InputData));
 
-			m_InputData.m_Direction = ((int)t/2)&1;
-			m_InputData.m_Jump = ((int)t);
+			m_InputData.m_Direction = ((int)t/2)%3-1;
+			m_InputData.m_Jump = ((int)t)&1;
 			m_InputData.m_Fire = ((int)(t*10));
 			m_InputData.m_Hook = ((int)(t*2))&1;
 			m_InputData.m_WantedWeapon = ((int)t)%NUM_WEAPONS;
