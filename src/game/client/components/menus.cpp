@@ -743,7 +743,7 @@ int CMenus::RenderMenubar(CUIRect r)
 		{
 			Box.VSplitLeft(100.0f, &Button, &Box);
 			static int s_InternetButton=0;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_T|CUI::CORNER_IBL))
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_T|CUI::CORNER_IBL) && m_ActivePage!=PAGE_INTERNET)
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -754,7 +754,7 @@ int CMenus::RenderMenubar(CUIRect r)
 			//Box.VSplitLeft(4.0f, 0, &Box);
 			Box.VSplitLeft(80.0f, &Button, &Box);
 			static int s_LanButton=0;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, CUI::CORNER_T))
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, CUI::CORNER_T) && m_ActivePage!=PAGE_LAN)
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
