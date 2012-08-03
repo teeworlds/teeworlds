@@ -131,9 +131,6 @@ public:
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByTeam[MAX_CLIENTS];
 
-		int m_NumPlayers;
-		int m_aTeamSize[2];
-
 		// spectate data
 		struct CSpectateInfo
 		{
@@ -198,6 +195,9 @@ public:
 		int m_TimeLimit;
 		int m_MatchNum;
 		int m_MatchCurrent;
+
+		int m_NumPlayers;
+		int m_aTeamSize[NUM_TEAMS];
 	};
 
 	CGameInfo m_GameInfo;

@@ -172,13 +172,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	float LineHeight = 60.0f;
 	float TeeSizeMod = 1.0f;
 	float Spacing = 16.0f;
-	if(m_pClient->m_Snap.m_aTeamSize[Team] > 12)
+	if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 12)
 	{
 		LineHeight = 40.0f;
 		TeeSizeMod = 0.8f;
 		Spacing = 0.0f;
 	}
-	else if(m_pClient->m_Snap.m_aTeamSize[Team] > 8)
+	else if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 8)
 	{
 		LineHeight = 50.0f;
 		TeeSizeMod = 0.9f;

@@ -335,6 +335,8 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_LocalClientID = -1;
+	m_GameInfo.m_NumPlayers = 0;
+	m_GameInfo.m_aTeamSize[TEAM_RED] = m_GameInfo.m_aTeamSize[TEAM_BLUE] = 0;
 	m_DemoSpecID = SPEC_FREEVIEW;
 	m_Tuning = CTuningParams();
 }
@@ -548,6 +550,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_aClients[pMsg->m_ClientID].m_Friend = Friends()->IsFriend(m_aClients[pMsg->m_ClientID].m_aName, m_aClients[pMsg->m_ClientID].m_aClan, true);
 
 		m_aClients[pMsg->m_ClientID].UpdateRenderInfo(true);
+
+		m_GameInfo.m_NumPlayers++;
+		// calculate team-balance
+		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
+			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]++;
 	}
 	else if(MsgId == NETMSGTYPE_SV_CLIENTDROP)
 	{
@@ -567,6 +574,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game"), m_aClients[pMsg->m_ClientID].m_aName);
 		m_pChat->AddLine(-1, 0, aBuf);
 
+		m_GameInfo.m_NumPlayers--;
+		// calculate team-balance
+		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
+			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]--;
+
 		m_aClients[pMsg->m_ClientID].Reset();
 	}
 	else if(MsgId == NETMSGTYPE_SV_GAMEINFO)
@@ -584,7 +596,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	else if(MsgId == NETMSGTYPE_SV_TEAM)
 	{
 		CNetMsg_Sv_Team *pMsg = (CNetMsg_Sv_Team *)pRawMsg;
+		// calculate team-balance
+		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
+			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]--;
 		m_aClients[pMsg->m_ClientID].m_Team = pMsg->m_Team;
+		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
+			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]++;
 		if(pMsg->m_Silent == 0)
 		{
 			char aBuf[128];
@@ -754,8 +771,6 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
-		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
-
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
 		{
@@ -805,7 +820,6 @@ void CGameClient::OnNewSnapshot()
 				m_Snap.m_paPlayerInfos[ClientID] = pInfo;
 				m_Snap.m_aInfoByScore[ClientID].m_pPlayerInfo = pInfo;
 				m_Snap.m_aInfoByScore[ClientID].m_ClientID = ClientID;
-				m_Snap.m_NumPlayers++;
 
 				if(m_LocalClientID == ClientID)
 				{
@@ -817,10 +831,6 @@ void CGameClient::OnNewSnapshot()
 						m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
 					}
 				}
-
-				// calculate team-balance
-				if(m_aClients[ClientID].m_Team != TEAM_SPECTATORS)
-					m_Snap.m_aTeamSize[m_aClients[ClientID].m_Team]++;
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
