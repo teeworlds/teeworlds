@@ -123,6 +123,7 @@ public:
 		int m_AuthTries;
 
 		int m_MapChunk;
+		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();

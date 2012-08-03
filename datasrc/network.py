@@ -318,6 +318,11 @@ Messages = [
 		NetIntRange("m_MatchCurrent", 0, 'max_int'),
 	]),
 
+	NetMessage("Sv_ClientDrop", [
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetStringStrict("m_pReason"),
+	]),
+
 	### Client messages
 	NetMessage("Cl_Say", [
 		NetBool("m_Team"),
@@ -333,15 +338,6 @@ Messages = [
 	]),
 
 	NetMessage("Cl_StartInfo", [
-		NetStringStrict("m_pName"),
-		NetStringStrict("m_pClan"),
-		NetIntAny("m_Country"),
-		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
-		NetArray(NetBool("m_aUseCustomColors"), 6),
-		NetArray(NetIntAny("m_aSkinPartColors"), 6),
-	]),
-
-	NetMessage("Cl_ChangeInfo", [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),

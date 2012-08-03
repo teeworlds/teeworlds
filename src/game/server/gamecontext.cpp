@@ -570,10 +570,10 @@ void CGameContext::OnClientEnter(int ClientID)
 
 	m_VoteUpdate = true;
 
-	// update client infos
+	// update client infos (others before local)
 	CNetMsg_Sv_ClientInfo NewClientInfoMsg;
 	NewClientInfoMsg.m_ClientID = ClientID;
-	NewClientInfoMsg.m_Local = 1;
+	NewClientInfoMsg.m_Local = 0;
 	NewClientInfoMsg.m_Team = m_apPlayers[ClientID]->GetTeam();
 	NewClientInfoMsg.m_pName = Server()->ClientName(ClientID);
 	NewClientInfoMsg.m_pClan = Server()->ClientClan(ClientID);
@@ -584,16 +584,17 @@ void CGameContext::OnClientEnter(int ClientID)
 		NewClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
 		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
-	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
-	NewClientInfoMsg.m_Local = 0;
+	
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(i == ClientID || !IsClientReady(i))
+		if(i == ClientID || !Server()->ClientIngame(i))
 			continue;
 
+		// new info for others
 		Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 
+		// existing infos for new player
 		CNetMsg_Sv_ClientInfo ClientInfoMsg;
 		ClientInfoMsg.m_ClientID = i;
 		ClientInfoMsg.m_Local = 0;
@@ -609,6 +610,10 @@ void CGameContext::OnClientEnter(int ClientID)
 		}
 		Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 	}
+
+	// local info
+	NewClientInfoMsg.m_Local = 1;
+	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);	
 }
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy)
@@ -637,9 +642,15 @@ void CGameContext::OnClientTeamChange(int ClientID)
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
 	AbortVoteOnDisconnect(ClientID);
-	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID], pReason);
+	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
+
+	// update clients on drop
+	CNetMsg_Sv_ClientDrop Msg;
+	Msg.m_ClientID = ClientID;
+	Msg.m_pReason = pReason;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	m_VoteUpdate = true;
 }
@@ -1004,36 +1015,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		pPlayer->m_IsReadyToEnter = true;
 		CNetMsg_Sv_ReadyToEnter m;
 		Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
-	}
-	else if (MsgID == NETMSGTYPE_CL_CHANGEINFO)
-	{
-		if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
-			return;
-
-		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
-		pPlayer->m_LastChangeInfo = Server()->Tick();
-
-		// set infos
-		char aOldName[MAX_NAME_LENGTH];
-		str_copy(aOldName, Server()->ClientName(ClientID), sizeof(aOldName));
-		Server()->SetClientName(ClientID, pMsg->m_pName);
-		if(str_comp(aOldName, Server()->ClientName(ClientID)) != 0)
-		{
-			char aChatText[256];
-			str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientID));
-			SendChat(-1, CGameContext::CHAT_ALL, aChatText);
-		}
-		Server()->SetClientClan(ClientID, pMsg->m_pClan);
-		Server()->SetClientCountry(ClientID, pMsg->m_Country);
-
-		for(int p = 0; p < 6; p++)
-		{
-			str_copy(pPlayer->m_TeeInfos.m_aaSkinPartNames[p], pMsg->m_apSkinPartNames[p], 24);
-			pPlayer->m_TeeInfos.m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
-			pPlayer->m_TeeInfos.m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
-		}
-
-		m_pController->OnPlayerInfoChange(pPlayer);
 	}
 	else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
 	{

@@ -56,14 +56,9 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
-	int64 m_LastSendInfo;
-
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
-
-	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	static void ConchainUpdateSkinParts(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
@@ -238,7 +233,7 @@ public:
 	// actions
 	// TODO: move these
 	void SendSwitchTeam(int Team);
-	void SendInfo(bool Start);
+	void SendStartInfo();
 	void SendKill();
 	void SendReadyChange();
 

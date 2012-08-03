@@ -296,7 +296,6 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		}
 		if(UseAlpha)
 			g_Config.m_PlayerColorTattoo = (Alp << 24) + NewVal;
-		m_NeedSendinfo = true;
 	}
 }
 
@@ -365,7 +364,6 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
 				*gs_apColorVariables[p] = s->m_aPartColors[p];
 			}
-			m_NeedSendinfo = true;
 		}
 		m_TeePartSelection = NO_SELECTION;
 	}
@@ -453,7 +451,6 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		{
 			const CSkins::CSkinPart *s = s_paList[p][NewSelected];
 			mem_copy(gs_apSkinVariables[p], s->m_aName, 24);
-			m_NeedSendinfo = true;
 		}
 		m_TeePartSelection = NO_SELECTION;
 	}
@@ -784,8 +781,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 	UI()->DoLabelScaled(&Label, aBuf, 14.0, -1);
 	static float s_OffsetName = 0.0f;
-	if(DoEditBox(g_Config.m_PlayerName, &Button, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 14.0f, &s_OffsetName))
-		m_NeedSendinfo = true;
+	DoEditBox(g_Config.m_PlayerName, &Button, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 14.0f, &s_OffsetName);
 
 	// player clan
 	MainView.HSplitTop(5.0f, 0, &MainView);
@@ -795,8 +791,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
 	UI()->DoLabelScaled(&Label, aBuf, 14.0, -1);
 	static float s_OffsetClan = 0.0f;
-	if(DoEditBox(g_Config.m_PlayerClan, &Button, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), 14.0f, &s_OffsetClan))
-		m_NeedSendinfo = true;
+	DoEditBox(g_Config.m_PlayerClan, &Button, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), 14.0f, &s_OffsetClan);
 
 	// country flag selector
 	MainView.HSplitTop(20.0f, 0, &MainView);
@@ -833,7 +828,6 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	if(OldSelected != NewSelected)
 	{
 		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
-		m_NeedSendinfo = true;
 	}
 }
 
@@ -1076,7 +1070,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
 					*gs_apUCCVariables[p] = CheckedUCC;
 			}
-			m_NeedSendinfo = true;
 		}
 	}
 

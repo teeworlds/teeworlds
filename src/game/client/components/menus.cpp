@@ -56,7 +56,6 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_NeedSendinfo = false;
 	m_TeePartSelection = NO_SELECTION;
 	m_TeePartsColorSelection = NO_SELECTION;
 	m_aSaveSkinName[0] = 0;
@@ -1752,12 +1751,6 @@ void CMenus::SetActive(bool Active)
 	m_MenuActive = Active;
 	if(!m_MenuActive)
 	{
-		if(m_NeedSendinfo)
-		{
-			m_pClient->SendInfo(false);
-			m_NeedSendinfo = false;
-		}
-
 		if(Client()->State() == IClient::STATE_ONLINE)
 		{
 			m_pClient->OnRelease();
