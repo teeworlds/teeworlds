@@ -196,6 +196,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[Index].m_aName, m_pClient->m_aClients[Index].m_aClan);
 			else
 				m_pClient->Friends()->AddFriend(m_pClient->m_aClients[Index].m_aName, m_pClient->m_aClients[Index].m_aClan);
+
+			m_pClient->m_aClients[Index].m_Friend ^= 1;
 		}
 	}
 

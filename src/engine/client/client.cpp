@@ -2355,10 +2355,10 @@ int main(int argc, const char **argv) // ignore_convention
 	// register all console commands
 	pClient->RegisterCommands();
 
-	pKernel->RequestInterface<IGameClient>()->OnConsoleInit();
-
 	// init client's interfaces
 	pClient->InitInterfaces();
+
+	pKernel->RequestInterface<IGameClient>()->OnConsoleInit();
 
 	// execute config file
 	pConsole->ExecuteFile("settings.cfg");
