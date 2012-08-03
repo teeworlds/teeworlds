@@ -107,9 +107,13 @@ protected:
 	// info
 	int m_GameFlags;
 	const char *m_pGameType;
-	int m_MatchNum;
-	int m_ScoreLimit;
-	int m_TimeLimit;
+	struct CGameInfo
+	{
+		int m_MatchCurrent;
+		int m_MatchNum;
+		int m_ScoreLimit;
+		int m_TimeLimit;
+	} m_GameInfo;
 
 	void UpdateGameInfo(int ClientID);
 

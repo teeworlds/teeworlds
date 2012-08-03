@@ -588,7 +588,7 @@ void CGameContext::OnClientEnter(int ClientID)
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(i == ClientID || !Server()->ClientIngame(i))
+		if(i == ClientID || !m_apPlayers[i] || !Server()->ClientIngame(i))
 			continue;
 
 		// new info for others

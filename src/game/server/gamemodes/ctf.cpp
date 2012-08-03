@@ -88,8 +88,8 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 void CGameControllerCTF::DoWincheckMatch()
 {
 	// check score win condition
-	if((m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_ScoreLimit)) ||
-		(m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_TimeLimit*Server()->TickSpeed()*60))
+	if((m_GameInfo.m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_GameInfo.m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_GameInfo.m_ScoreLimit)) ||
+		(m_GameInfo.m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_GameInfo.m_TimeLimit*Server()->TickSpeed()*60))
 	{
 		if(m_SuddenDeath)
 		{
