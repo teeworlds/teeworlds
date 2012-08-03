@@ -244,7 +244,7 @@ int CMenus::DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, 
 
 	CUIRect Image;
 	pRect->HMargin(2.0f, &Image);
-	pRect->VMargin(pRect->w/2.0f-Image.h, &Image);
+	pRect->VMargin((Image.w-Image.h)/2.0f, &Image);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
