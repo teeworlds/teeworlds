@@ -250,8 +250,7 @@ void CGameClient::OnInit()
 		g_GameClient.m_pMenus->RenderLoading();
 	}
 
-	for(int i = 0; i < m_All.m_Num; i++)
-		m_All.m_paComponents[i]->OnReset();
+	OnReset();
 
 	int64 End = time_get();
 	char aBuf[256];
@@ -511,7 +510,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		{
 			if(m_LocalClientID != -1)
 			{
-				//if(g_Config.m_Debug)
+				if(g_Config.m_Debug)
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid local clientinfo");
 				return;
 			}
@@ -521,7 +520,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		{
 			if(m_aClients[pMsg->m_ClientID].m_Active)
 			{
-				//if(g_Config.m_Debug)
+				if(g_Config.m_Debug)
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid clientinfo");
 				return;
 			}
@@ -562,8 +561,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		if(m_LocalClientID == pMsg->m_ClientID || !m_aClients[pMsg->m_ClientID].m_Active)
 		{
-			//if(g_Config.m_Debug)
-				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid clientinfo");
+			if(g_Config.m_Debug)
+				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid clientdrop");
 			return;
 		}
 
@@ -816,19 +815,21 @@ void CGameClient::OnNewSnapshot()
 			{
 				const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
 				int ClientID = Item.m_ID;
-
-				m_Snap.m_paPlayerInfos[ClientID] = pInfo;
-				m_Snap.m_aInfoByScore[ClientID].m_pPlayerInfo = pInfo;
-				m_Snap.m_aInfoByScore[ClientID].m_ClientID = ClientID;
-
-				if(m_LocalClientID == ClientID)
+				if(m_aClients[ClientID].m_Active)
 				{
-					m_Snap.m_pLocalInfo = pInfo;
+					m_Snap.m_paPlayerInfos[ClientID] = pInfo;
+					m_Snap.m_aInfoByScore[ClientID].m_pPlayerInfo = pInfo;
+					m_Snap.m_aInfoByScore[ClientID].m_ClientID = ClientID;
 
-					if(m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
+					if(m_LocalClientID == ClientID)
 					{
-						m_Snap.m_SpecInfo.m_Active = true;
-						m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+						m_Snap.m_pLocalInfo = pInfo;
+
+						if(m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
+						{
+							m_Snap.m_SpecInfo.m_Active = true;
+							m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+						}
 					}
 				}
 			}
@@ -924,19 +925,21 @@ void CGameClient::OnNewSnapshot()
 			}
 		}
 	}
-	// sort player infos by team
-	int Teams[3] = { TEAM_RED, TEAM_BLUE, TEAM_SPECTATORS };
-	int Index = 0;
-	for(int Team = 0; Team < 3; ++Team)
+
+	// calc some player stats
+	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		for(int i = 0; i < MAX_CLIENTS && Index < MAX_CLIENTS; ++i)
-		{
-			if(m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Team == Teams[Team])
-			{
-				m_Snap.m_aInfoByTeam[Index].m_pPlayerInfo = m_Snap.m_paPlayerInfos[i];
-				m_Snap.m_aInfoByTeam[Index++].m_ClientID = i;
-			}
-		}
+		if(!m_Snap.m_paPlayerInfos[i])
+			continue;
+
+		// count not ready players
+		if((m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) &&
+			m_Snap.m_pGameData->m_GameStateEndTick == 0 && m_aClients[i].m_Team != TEAM_SPECTATORS && !(m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
+			m_Snap.m_NotReadyCount++;
+
+		// count alive players per team
+		if((m_GameInfo.m_GameFlags&GAMEFLAG_SURVIVAL) && m_aClients[i].m_Team != TEAM_SPECTATORS && !(m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))
+			m_Snap.m_AliveCount[m_aClients[i].m_Team]++;
 	}
 
 	CServerInfo CurrentServerInfo;

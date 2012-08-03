@@ -126,10 +126,12 @@ public:
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
 		int m_GameDataFlagSnapID;
+		
+		int m_NotReadyCount;
+		int m_AliveCount[NUM_TEAMS];
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
-		CPlayerInfoItem m_aInfoByTeam[MAX_CLIENTS];
 
 		// spectate data
 		struct CSpectateInfo

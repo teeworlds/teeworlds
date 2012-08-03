@@ -186,7 +186,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
 		// make sure to use predicted position if we are the carrier
-		if(m_pClient->m_Snap.m_pLocalInfo &&
+		if(m_pClient->m_LocalClientID != -1 &&
 			((pCurrent->m_Team == TEAM_RED && pCurGameDataFlag->m_FlagCarrierRed == m_pClient->m_LocalClientID) ||
 			(pCurrent->m_Team == TEAM_BLUE && pCurGameDataFlag->m_FlagCarrierBlue == m_pClient->m_LocalClientID)))
 			Pos = m_pClient->m_LocalCharacterPos;

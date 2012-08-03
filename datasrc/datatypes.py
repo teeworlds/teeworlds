@@ -336,7 +336,7 @@ class NetFlag(NetIntAny):
 	def emit_validate(self):
 		return ["ClampFlag(\"%s\", pObj->%s, %s);"%(self.name, self.name, self.mask)]
 	def emit_unpack_check(self):
-		return ["if(pMsg->%s & (%s) != pMsg->%s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.mask, self.name, self.name)]
+		return ["if((pMsg->%s & (%s)) != pMsg->%s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.mask, self.name, self.name)]
 
 class NetBool(NetIntRange):
 	def __init__(self, name):

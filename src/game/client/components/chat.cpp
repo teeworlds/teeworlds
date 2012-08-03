@@ -158,7 +158,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
 			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
-			if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
+			if(!m_pClient->m_aClients[Index].m_Active)
 				continue;
 
 			bool Found = false;

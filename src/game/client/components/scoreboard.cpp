@@ -399,10 +399,11 @@ void CScoreboard::OnRender()
 			RenderScoreboard(Width/2-w-5.0f, 150.0f, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"));
 			RenderScoreboard(Width/2+5.0f, 150.0f, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"));
 		}
+
+		RenderGoals(Width/2-w/2, 150+760+10, w);
+		RenderSpectators(Width/2-w/2, 150+760+10+50+10, w);
 	}
 
-	RenderGoals(Width/2-w/2, 150+760+10, w);
-	RenderSpectators(Width/2-w/2, 150+760+10+50+10, w);
 	RenderRecordingNotification((Width/7)*4);
 }
 
@@ -412,7 +413,7 @@ bool CScoreboard::Active()
 	if(m_Active)
 		return true;
 
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
 	{
 		// we are not a spectator, check if we are dead, don't follow a player and the game isn't paused
 		if(!m_pClient->m_Snap.m_pLocalCharacter && !m_pClient->m_Snap.m_SpecInfo.m_Active &&
@@ -433,18 +434,17 @@ const char *CScoreboard::GetClanName(int Team)
 	const char *pClanName = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
-		if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team)
+		if(!m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Team)
 			continue;
 
 		if(!pClanName)
 		{
-			pClanName = m_pClient->m_aClients[pInfo->m_ClientID].m_aClan;
+			pClanName = m_pClient->m_aClients[i].m_aClan;
 			ClanPlayers++;
 		}
 		else
 		{
-			if(str_comp(m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, pClanName) == 0)
+			if(str_comp(m_pClient->m_aClients[i].m_aClan, pClanName) == 0)
 				ClanPlayers++;
 			else
 				return 0;

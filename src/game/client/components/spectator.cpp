@@ -37,7 +37,7 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
 			NewSpectatorID = i;
@@ -49,7 +49,7 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 	{
 		for(int i = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID + 1; i < MAX_CLIENTS; i++)
 		{
-			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
 			NewSpectatorID = i;
@@ -61,7 +61,7 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 		{
 			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
 			{
-				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 					continue;
 
 				NewSpectatorID = i;
@@ -84,7 +84,7 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 	{
 		for(int i = MAX_CLIENTS -1; i > -1; i--)
 		{
-			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
 			NewSpectatorID = i;
@@ -96,7 +96,7 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 	{
 		for(int i = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID - 1; i > -1; i--)
 		{
-			if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
 			NewSpectatorID = i;
@@ -108,7 +108,7 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 		{
 			for(int i = MAX_CLIENTS - 1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
 			{
-				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 					continue;
 
 			NewSpectatorID = i;
