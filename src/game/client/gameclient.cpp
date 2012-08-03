@@ -1013,8 +1013,8 @@ void CGameClient::OnPredict()
 	if(m_LocalClientID == -1 || !m_Snap.m_aCharacters[m_LocalClientID].m_Active)
 		return;
 
-	// don't predict anything if we are paused
-	if(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+	// don't predict anything if we are paused or round/game is over
+	if(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
 	{
 		if(m_Snap.m_pLocalCharacter)
 			m_PredictedChar.Read(m_Snap.m_pLocalCharacter);
