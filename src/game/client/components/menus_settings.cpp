@@ -76,9 +76,9 @@ void CMenus::SaveSkinfile()
 	if(!File)
 		return;
 
-	static const char *const apParts[6] = {"body", "tattoo", "decoration",
+	static const char *const s_apParts[6] = {"body", "tattoo", "decoration",
 											"hands", "feet", "eyes"};
-	static const char *const apComponents[4] = {"hue", "sat", "lgt", "alp"};
+	static const char *const s_apComponents[4] = {"hue", "sat", "lgt", "alp"};
 
 	char aBuf[256];
 	for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -86,10 +86,10 @@ void CMenus::SaveSkinfile()
 		if(!gs_apSkinVariables[p][0])
 			continue;
 
-		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", apParts[p], gs_apSkinVariables[p]);
+		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", s_apParts[p], gs_apSkinVariables[p]);
 		WriteLineSkinfile(File, aBuf);
 
-		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
+		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", s_apParts[p], *gs_apUCCVariables[p]?"true":"false");
 		WriteLineSkinfile(File, aBuf);
 
 		if(*gs_apUCCVariables[p])
@@ -97,13 +97,13 @@ void CMenus::SaveSkinfile()
 			for(int c = 0; c < 3; c++)
 			{
 				int Val = (*gs_apColorVariables[p] >> (2-c)*8) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[c], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[c], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 			if(p == SKINPART_TATTOO)
 			{
 				int Val = (*gs_apColorVariables[p] >> 24) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[3], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[3], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 		}
@@ -121,49 +121,97 @@ void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
 	io_write_newline(File);
 }
 
+void CMenus::RenderColorSlider(const int *pIDs, CUIRect Slider, int Component, int Hue, int Sat, int Lgt, int *pVal, int Min, int Max)
+{
+	CUIRect Label, Button, Bar;
+
+	// button <
+	Slider.VSplitLeft(20.0f, &Button, &Bar);
+	if(DoButton_Menu(&pIDs[0], "<", 0, &Button, 5.0f, 0.0f, CUI::CORNER_TL|CUI::CORNER_BL))
+	{
+		*pVal = max(Min, *pVal-1);
+	}
+
+	// bar
+	Bar.VSplitLeft(256/2, &Bar, &Button);
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	for(int v = 0; v < 256/2; v++)
+	{
+		float Val = Min + v*2/255.0f*(Max-Min);
+		vec3 rgb;
+		float Dark = DARKEST_COLOR_LGT/255.0f;
+		if(Component == 0)
+			rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.42f));
+		else if(Component == 1)
+			rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+		else if(Component == 2)
+			rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
+		else
+			rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+		if(Component == 3)
+			Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
+		else
+			Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
+		IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+	}
+
+	// bar marker
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
+	float MarkerX = (*pVal-Min)/2.0f/(Max-Min)*255.0f;
+	IGraphics::CQuadItem QuadItem(Bar.x + min(127.0f, MarkerX)*UI()->Scale(), Bar.y, UI()->PixelSize(), Bar.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	// button >
+	Button.VSplitLeft(20.0f, &Button, &Label);
+	if(DoButton_Menu(&pIDs[1], ">", 0, &Button, 5.0f, 0.0f, CUI::CORNER_TR|CUI::CORNER_BR))
+	{
+		*pVal = min(Max, *pVal+1);
+	}
+
+	// label value
+	char aBuf[16];
+	str_format(aBuf, sizeof(aBuf), "%d", *pVal);
+	UI()->DoLabelScaled(&Label, aBuf, 12.0f, -1);
+
+	// logic
+	int X;
+	int Logic = UI()->DoPickerLogic(&pIDs[2], &Bar, &X, 0);
+	if(Logic)
+		*pVal = Min + X*2/255.0f*(Max-Min);
+}
+
 void CMenus::RenderHSLPicker(CUIRect Picker)
 {
-	CUIRect Label, Button;
-	bool Modified = false;
+	CUIRect Label, Button, Sliders;
+	bool UseAlpha = m_TeePartsColorSelection & SELECTION_TATTOO;
 
-	int ConfigColor = -1;
+	bool Modified = false;
+	bool aModifiedComponents[4];
+	for(int c = 0; c < 4; c++)
+		aModifiedComponents[c] = false;
+
+	int Hue = -1;
+	int Sat = -1;
+	int Lgt = -1;
+	int Alp = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
 			continue;
-		int Val = (*gs_apColorVariables[p])&0xffffff;
-		if(ConfigColor != -1 && ConfigColor != Val)
-		{
-			ConfigColor = -1;
-			break;
-		}
-		ConfigColor = Val;
+		Hue = (*gs_apColorVariables[p]>>16)&0xff;
+		Sat = (*gs_apColorVariables[p]>>8)&0xff;
+		Lgt = *gs_apColorVariables[p]&0xff;
+		if(p == SKINPART_TATTOO)
+			Alp = (*gs_apColorVariables[p]>>24)&0xff;
 	}
-
-	bool UseAlpha = m_TeePartsColorSelection & SELECTION_TATTOO;
-
-	int Hue, Sat, Lgt, Alp;
-	if(ConfigColor != -1)
-	{
-		Hue = (ConfigColor>>16)&0xff;
-		Sat = (ConfigColor>>8)&0xff;
-		Lgt = ConfigColor&0xff;
-	}
-	else
-	{
-		Hue = -1;
-		Sat = -1;
-		Lgt = -1;
-	}
-	if(UseAlpha)
-		Alp = (g_Config.m_PlayerColorTattoo>>24)&0xff;
-	else
-		Alp = -1;
 
 	// Hue/Lgt picker :
 	{
+		Picker.HSplitTop(128.0f, &Picker, &Sliders);
 		Picker.VSplitLeft(256.0f, &Picker, 0);
-		Picker.HSplitTop(128.0f, &Picker, 0);
 
 		// picker
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_HLPICKER].m_Id);
@@ -209,12 +257,15 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 			Hue = X;
 			Lgt = 255 - Y*2;
 			Modified = true;
+			aModifiedComponents[0] = true;
+			aModifiedComponents[2] = true;
 		}
 	}
 
 	// H/S/L/A sliders :
 	{
-		static float const aPos[4] = {130.0f, 147.0f, 164.0f, 181.0f};
+		Sliders.HSplitTop(5.0f, 0, &Sliders);
+
 		const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
@@ -222,80 +273,121 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		int NumBars = UseAlpha ? 4 : 3;
 		for(int i = 0; i < NumBars; i++)
 		{
-			CUIRect Bar;
-			// label
-			Picker.HSplitTop(aPos[i], 0, &Label);
-			Label.HSplitTop(15.0f, &Label, 0);
-			Label.VSplitLeft(30.0f, &Label, &Button);
+			CUIRect Slider;
+			Sliders.HSplitTop(2.0f, 0, &Sliders);
+			Sliders.HSplitTop(15.0f, &Slider, &Sliders);
+
+			Slider.VSplitLeft(30.0f, &Label, &Slider);
 			UI()->DoLabelScaled(&Label, apNames[i], 12.0f, -1);
-			// button <
-			Button.VSplitLeft(20.0f, &Button, &Bar);
-			if(DoButton_Menu(&s_aButtons[i*3], "<", 0, &Button, 5.0f, 0.0f, CUI::CORNER_TL|CUI::CORNER_BL))
+
+			int Val = *apVars[i];
+			RenderColorSlider(&s_aButtons[3*i], Slider, i, Hue, Sat, Lgt, &Val);
+			if(*apVars[i] != Val)
 			{
-				*apVars[i] = max(0, *apVars[i]-1);
+				*apVars[i] = Val;
 				Modified = true;
-			}
-			// bar
-			Bar.VSplitLeft(256/2, &Bar, &Button);
-			Graphics()->TextureSet(-1);
-			Graphics()->QuadsBegin();
-			for(int v = 0; v < 256/2; v++)
-			{
-				int Val = v*2;
-				vec3 rgb;
-				float Dark = DARKEST_COLOR_LGT/255.0f;
-				if(i == 0)
-					rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
-				else if(i == 1)
-					rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				else if(i == 2)
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
-				else
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				if(i == 3)
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
-				else
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-			}
-			// bar marker
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
-			IGraphics::CQuadItem QuadItem(Bar.x + min(127.0f, *apVars[i]/2.0f)*UI()->Scale(), Bar.y, UI()->PixelSize(), Bar.h);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-			Graphics()->QuadsEnd();
-			// button >
-			Button.VSplitLeft(20.0f, &Button, &Label);
-			if(DoButton_Menu(&s_aButtons[i*3+1], ">", 0, &Button, 5.0f, 0.0f, CUI::CORNER_TR|CUI::CORNER_BR))
-			{
-				*apVars[i] = min(255, *apVars[i]+1);
-				Modified = true;
-			}
-			// label value
-			char aBuf[16];
-			str_format(aBuf, sizeof(aBuf), "%d", *apVars[i]);
-			UI()->DoLabelScaled(&Label, aBuf, 12.0f, -1);
-			// logic
-			int X;
-			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
-			if(Logic)
-			{
-				*apVars[i] = X*2;
-				Modified = true;
+				aModifiedComponents[i] = true;
 			}
 		}
 	}
 
+	// Custom color modified :
 	if(Modified)
 	{
-		int NewVal = (Hue << 16) + (Sat << 8) + Lgt;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			if(m_TeePartsColorSelection & gs_aSelectionParts[p])
-				*gs_apColorVariables[p] = NewVal;
+			{
+				int NewHue = aModifiedComponents[0] ? Hue : (*gs_apColorVariables[p]>>16)&0xff;
+				int NewSat = aModifiedComponents[1] ? Sat : (*gs_apColorVariables[p]>>8)&0xff;
+				int NewLgt = aModifiedComponents[2] ? Lgt : *gs_apColorVariables[p]&0xff;
+				int NewAlp = aModifiedComponents[3] ? Alp : (*gs_apColorVariables[p]>>24)&0xff;
+				if(p == SKINPART_TATTOO)
+					*gs_apColorVariables[p] = (NewAlp<<24) + (NewHue<<16) + (NewSat<<8) + NewLgt;
+				else
+					*gs_apColorVariables[p] = (NewHue<<16) + (NewSat<<8) + NewLgt;
+			}
 		}
-		if(UseAlpha)
-			g_Config.m_PlayerColorTattoo = (Alp << 24) + NewVal;
+	}
+
+	// Red team color :
+	{
+		int RedHue = RED_TEAM_HUE;
+		bool First = true;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
+				continue;
+			int Val = *gs_apRedColorVariables[p];
+			if(First)
+			{
+				RedHue = Val;
+				First = false;
+			}
+			else if(RedHue != Val)
+			{
+				RedHue = RED_TEAM_HUE;
+				break;
+			}
+		}
+
+		CUIRect RedTeamColor;
+		Sliders.HSplitTop(7.0f, 0, &Sliders);
+		Sliders.HSplitTop(15.0f, &RedTeamColor, &Sliders);
+		RedTeamColor.VSplitLeft(65.0f, &Label, &RedTeamColor);
+		UI()->DoLabelScaled(&Label, Localize("Red team:"), 12.0f, -1);
+
+		static int s_aButtons[3];
+		int NewVal = RedHue;
+		RenderColorSlider(s_aButtons, RedTeamColor, 0, RedHue, TEAM_SAT, TEAM_LGT, &NewVal, -32, 32);
+		if(NewVal != RedHue)
+		{
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+					*gs_apRedColorVariables[p] = NewVal;
+			}
+		}
+	}
+
+	// Blue team color :
+	{
+		int BlueHue = BLUE_TEAM_HUE;
+		bool First = true;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
+				continue;
+			int Val = *gs_apBlueColorVariables[p];
+			if(First)
+			{
+				BlueHue = Val;
+				First = false;
+			}
+			else if(BlueHue != Val)
+			{
+				BlueHue = BLUE_TEAM_HUE;
+				break;
+			}
+		}
+
+		CUIRect BlueTeamColor;
+		Sliders.HSplitTop(2.0f, 0, &Sliders);
+		Sliders.HSplitTop(15.0f, &BlueTeamColor, &Sliders);
+		BlueTeamColor.VSplitLeft(65.0f, &Label, &BlueTeamColor);
+		UI()->DoLabelScaled(&Label, Localize("Blue team:"), 12.0f, -1);
+
+		static int s_aButtons[3];
+		int NewVal = BlueHue;
+		RenderColorSlider(s_aButtons, BlueTeamColor, 0, BlueHue, TEAM_SAT, TEAM_LGT, &NewVal, 123, 187);
+		if(NewVal != BlueHue)
+		{
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+					*gs_apBlueColorVariables[p] = NewVal;
+			}
+		}
 	}
 }
 
@@ -883,6 +975,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		if(m_TeePartSelection == NO_SELECTION)
 		{
+			// select color texture
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+			}
+
 			// draw tee with red team color
 			Button.VSplitLeft(150.0f, 0, &Preview);
 			Preview.VSplitLeft(100.0f, &Label, &Preview);
@@ -892,7 +992,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Preview.HSplitTop(30.0f, 0, &Preview);
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_RED, p);
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apRedColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_RED, p);
 				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
@@ -906,7 +1006,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Preview.HSplitTop(30.0f, 0, &Preview);
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_BLUE, p);
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apBlueColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_BLUE, p);
 				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
@@ -1048,14 +1148,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(None)
 		return;
 
-	int CheckedUCC = 0;
+	int CheckedUCC = 1;
 
 	// Use Custom Color :
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p])
-				CheckedUCC = 1;
+			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p] == false)
+				CheckedUCC = 0;
 		}
 
 		UCC.VSplitLeft(40.0f, 0, &UCC);

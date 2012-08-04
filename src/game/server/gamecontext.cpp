@@ -583,6 +583,8 @@ void CGameContext::OnClientEnter(int ClientID)
 		NewClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
 		NewClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
 		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
+		NewClientInfoMsg.m_aSkinPartRedColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartRedColors[p];
+		NewClientInfoMsg.m_aSkinPartBlueColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartBlueColors[p];
 	}
 	
 
@@ -607,6 +609,8 @@ void CGameContext::OnClientEnter(int ClientID)
 			ClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[i]->m_TeeInfos.m_aaSkinPartNames[p];
 			ClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[i]->m_TeeInfos.m_aUseCustomColors[p];
 			ClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartColors[p];
+			ClientInfoMsg.m_aSkinPartRedColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartRedColors[p];
+			ClientInfoMsg.m_aSkinPartBlueColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartBlueColors[p];
 		}
 		Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 	}
@@ -932,6 +936,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			str_copy(pPlayer->m_TeeInfos.m_aaSkinPartNames[p], pMsg->m_apSkinPartNames[p], 24);
 			pPlayer->m_TeeInfos.m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
 			pPlayer->m_TeeInfos.m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
+			pPlayer->m_TeeInfos.m_aSkinPartRedColors[p] = pMsg->m_aSkinPartRedColors[p];
+			pPlayer->m_TeeInfos.m_aSkinPartBlueColors[p] = pMsg->m_aSkinPartBlueColors[p];
 		}
 
 		m_pController->OnPlayerInfoChange(pPlayer);

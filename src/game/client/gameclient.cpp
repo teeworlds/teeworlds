@@ -543,6 +543,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			str_copy(m_aClients[pMsg->m_ClientID].m_aaSkinPartNames[i], pMsg->m_apSkinPartNames[i], 24);
 			m_aClients[pMsg->m_ClientID].m_aUseCustomColors[i] = pMsg->m_aUseCustomColors[i];
 			m_aClients[pMsg->m_ClientID].m_aSkinPartColors[i] = pMsg->m_aSkinPartColors[i];
+			m_aClients[pMsg->m_ClientID].m_aSkinPartRedColors[i] = pMsg->m_aSkinPartRedColors[i];
+			m_aClients[pMsg->m_ClientID].m_aSkinPartBlueColors[i] = pMsg->m_aSkinPartBlueColors[i];
 		}
 
 		// update friend state
@@ -797,6 +799,8 @@ void CGameClient::OnNewSnapshot()
 						IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
 						pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
 						pClient->m_aSkinPartColors[p] = pInfo->m_aSkinPartColors[p];
+						pClient->m_aSkinPartRedColors[p] = pInfo->m_aSkinPartRedColors[p];
+						pClient->m_aSkinPartBlueColors[p] = pInfo->m_aSkinPartBlueColors[p];
 					}
 
 					pClient->UpdateRenderInfo(true);
@@ -977,6 +981,8 @@ void CGameClient::OnDemoRecSnap()
 			StrToInts(pClientInfo->m_aaSkinPartNames[p], 6, m_aClients[i].m_aaSkinPartNames[p]);
 			pClientInfo->m_aUseCustomColors[p] = m_aClients[i].m_aUseCustomColors[p];
 			pClientInfo->m_aSkinPartColors[p] = m_aClients[i].m_aSkinPartColors[p];
+			pClientInfo->m_aSkinPartRedColors[p] = m_aClients[i].m_aSkinPartRedColors[p];
+			pClientInfo->m_aSkinPartBlueColors[p] = m_aClients[i].m_aSkinPartBlueColors[p];
 		}
 	}
 
@@ -1176,7 +1182,8 @@ void CGameClient::CClientData::UpdateRenderInfo(bool UpdateSkinInfo)
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			m_RenderInfo.m_aTextures[p] = g_GameClient.m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
-			int ColorVal = g_GameClient.m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
+			int ColorHue = m_Team == TEAM_RED ? m_aSkinPartRedColors[p] : m_aSkinPartBlueColors[p];
+			int ColorVal = g_GameClient.m_pSkins->GetTeamColor(m_aUseCustomColors[p], ColorHue, (m_aSkinPartColors[p]>>24)&0xff, m_Team, p);
 			m_RenderInfo.m_aColors[p] = g_GameClient.m_pSkins->GetColorV4(ColorVal, p==SKINPART_TATTOO);
 		}
 	}
@@ -1221,6 +1228,8 @@ void CGameClient::SendStartInfo()
 		Msg.m_apSkinPartNames[p] = gs_apSkinVariables[p];
 		Msg.m_aUseCustomColors[p] = *gs_apUCCVariables[p];
 		Msg.m_aSkinPartColors[p] = *gs_apColorVariables[p];
+		Msg.m_aSkinPartRedColors[p] = *gs_apRedColorVariables[p];
+		Msg.m_aSkinPartBlueColors[p] = *gs_apBlueColorVariables[p];
 	}
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }

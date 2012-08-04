@@ -174,6 +174,8 @@ Objects = [
 		NetArray(NetArray(NetIntAny("m_aaSkinPartNames"), 6), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartRedColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartBlueColors"), 6),
 	]),
 
 	NetObject("De_GameInfo", [
@@ -306,6 +308,8 @@ Messages = [
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartRedColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartBlueColors"), 6),
 	]),
 
 	NetMessage("Sv_GameInfo", [
@@ -344,6 +348,8 @@ Messages = [
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartRedColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartBlueColors"), 6),
 	]),
 
 	NetMessage("Cl_Kill", []),

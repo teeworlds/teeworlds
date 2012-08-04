@@ -8,7 +8,11 @@
 
 enum
 {
-	DARKEST_COLOR_LGT=61
+	DARKEST_COLOR_LGT=61,
+	RED_TEAM_HUE=0,
+	BLUE_TEAM_HUE=155,
+	TEAM_SAT=255,
+	TEAM_LGT=107
 };
 
 enum
@@ -56,7 +60,7 @@ public:
 
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, bool UseAlpha) const;
-	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
+	int GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const;
 
 private:
 	int m_ScanningPart;
@@ -71,5 +75,7 @@ private:
 extern char *const gs_apSkinVariables[NUM_SKINPARTS];
 extern int *const gs_apUCCVariables[NUM_SKINPARTS]; // use custom color
 extern int *const gs_apColorVariables[NUM_SKINPARTS];
+extern int *const gs_apRedColorVariables[NUM_SKINPARTS];
+extern int *const gs_apBlueColorVariables[NUM_SKINPARTS];
 
 #endif
