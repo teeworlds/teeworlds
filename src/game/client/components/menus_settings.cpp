@@ -76,9 +76,9 @@ void CMenus::SaveSkinfile()
 	if(!File)
 		return;
 
-	static const char *const apParts[6] = {"body", "tattoo", "decoration",
+	static const char *const s_apParts[6] = {"body", "tattoo", "decoration",
 											"hands", "feet", "eyes"};
-	static const char *const apComponents[4] = {"hue", "sat", "lgt", "alp"};
+	static const char *const s_apComponents[4] = {"hue", "sat", "lgt", "alp"};
 
 	char aBuf[256];
 	for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -86,10 +86,10 @@ void CMenus::SaveSkinfile()
 		if(!gs_apSkinVariables[p][0])
 			continue;
 
-		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", apParts[p], gs_apSkinVariables[p]);
+		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", s_apParts[p], gs_apSkinVariables[p]);
 		WriteLineSkinfile(File, aBuf);
 
-		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
+		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", s_apParts[p], *gs_apUCCVariables[p]?"true":"false");
 		WriteLineSkinfile(File, aBuf);
 
 		if(*gs_apUCCVariables[p])
@@ -97,13 +97,13 @@ void CMenus::SaveSkinfile()
 			for(int c = 0; c < 3; c++)
 			{
 				int Val = (*gs_apColorVariables[p] >> (2-c)*8) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[c], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[c], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 			if(p == SKINPART_TATTOO)
 			{
 				int Val = (*gs_apColorVariables[p] >> 24) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[3], Val);
+				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[3], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
 		}
@@ -142,7 +142,7 @@ void CMenus::RenderColorSlider(const int *pIDs, CUIRect Slider, int Component, i
 		vec3 rgb;
 		float Dark = DARKEST_COLOR_LGT/255.0f;
 		if(Component == 0)
-			rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
+			rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.42f));
 		else if(Component == 1)
 			rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
 		else if(Component == 2)
@@ -189,38 +189,24 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 	bool UseAlpha = m_TeePartsColorSelection & SELECTION_TATTOO;
 
 	bool Modified = false;
+	bool aModifiedComponents[4];
+	for(int c = 0; c < 4; c++)
+		aModifiedComponents[c] = false;
 
-	int ConfigColor = -1;
+	int Hue = -1;
+	int Sat = -1;
+	int Lgt = -1;
+	int Alp = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
 			continue;
-		int Val = (*gs_apColorVariables[p])&0xffffff;
-		if(ConfigColor != -1 && ConfigColor != Val)
-		{
-			ConfigColor = -1;
-			break;
-		}
-		ConfigColor = Val;
+		Hue = (*gs_apColorVariables[p]>>16)&0xff;
+		Sat = (*gs_apColorVariables[p]>>8)&0xff;
+		Lgt = *gs_apColorVariables[p]&0xff;
+		if(p == SKINPART_TATTOO)
+			Alp = (*gs_apColorVariables[p]>>24)&0xff;
 	}
-
-	int Hue, Sat, Lgt, Alp;
-	if(ConfigColor != -1)
-	{
-		Hue = (ConfigColor>>16)&0xff;
-		Sat = (ConfigColor>>8)&0xff;
-		Lgt = ConfigColor&0xff;
-	}
-	else
-	{
-		Hue = -1;
-		Sat = -1;
-		Lgt = -1;
-	}
-	if(UseAlpha)
-		Alp = (g_Config.m_PlayerColorTattoo>>24)&0xff;
-	else
-		Alp = -1;
 
 	// Hue/Lgt picker :
 	{
@@ -271,11 +257,15 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 			Hue = X;
 			Lgt = 255 - Y*2;
 			Modified = true;
+			aModifiedComponents[0] = true;
+			aModifiedComponents[2] = true;
 		}
 	}
 
 	// H/S/L/A sliders :
 	{
+		Sliders.HSplitTop(5.0f, 0, &Sliders);
+
 		const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
@@ -296,6 +286,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 			{
 				*apVars[i] = Val;
 				Modified = true;
+				aModifiedComponents[i] = true;
 			}
 		}
 	}
@@ -303,14 +294,20 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 	// Custom color modified :
 	if(Modified)
 	{
-		int NewVal = (Hue << 16) + (Sat << 8) + Lgt;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			if(m_TeePartsColorSelection & gs_aSelectionParts[p])
-				*gs_apColorVariables[p] = NewVal;
+			{
+				int NewHue = aModifiedComponents[0] ? Hue : (*gs_apColorVariables[p]>>16)&0xff;
+				int NewSat = aModifiedComponents[1] ? Sat : (*gs_apColorVariables[p]>>8)&0xff;
+				int NewLgt = aModifiedComponents[2] ? Lgt : *gs_apColorVariables[p]&0xff;
+				int NewAlp = aModifiedComponents[3] ? Alp : (*gs_apColorVariables[p]>>24)&0xff;
+				if(p == SKINPART_TATTOO)
+					*gs_apColorVariables[p] = (NewAlp<<24) + (NewHue<<16) + (NewSat<<8) + NewLgt;
+				else
+					*gs_apColorVariables[p] = (NewHue<<16) + (NewSat<<8) + NewLgt;
+			}
 		}
-		if(UseAlpha)
-			g_Config.m_PlayerColorTattoo = (Alp << 24) + NewVal;
 	}
 
 	// Red team color :
