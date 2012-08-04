@@ -615,6 +615,14 @@ void CGameContext::OnClientEnter(int ClientID)
 	// local info
 	NewClientInfoMsg.m_Local = 1;
 	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);	
+
+	if(Server()->DemoRecorder_IsRecording())
+	{
+		CNetMsg_De_ClientEnter Msg;
+		Msg.m_pName = NewClientInfoMsg.m_pName;
+		Msg.m_Team = NewClientInfoMsg.m_Team;
+		Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
+	}
 }
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy)
@@ -642,16 +650,27 @@ void CGameContext::OnClientTeamChange(int ClientID)
 
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
+	// update clients on drop
+	if(Server()->ClientIngame(ClientID))
+	{
+		if(Server()->DemoRecorder_IsRecording())
+		{
+			CNetMsg_De_ClientLeave Msg;
+			Msg.m_pName = Server()->ClientName(ClientID);
+			Msg.m_pReason = pReason;
+			Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
+		}
+		
+		CNetMsg_Sv_ClientDrop Msg;
+		Msg.m_ClientID = ClientID;
+		Msg.m_pReason = pReason;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
+	}
+
 	AbortVoteOnDisconnect(ClientID);
 	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
-
-	// update clients on drop
-	CNetMsg_Sv_ClientDrop Msg;
-	Msg.m_ClientID = ClientID;
-	Msg.m_pReason = pReason;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 
 	m_VoteUpdate = true;
 }

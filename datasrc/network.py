@@ -323,6 +323,17 @@ Messages = [
 		NetStringStrict("m_pReason"),
 	]),
 
+	## Demo messages
+	NetMessage("De_ClientEnter", [
+		NetStringStrict("m_pName"),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
+	]),
+
+	NetMessage("De_ClientLeave", [
+		NetStringStrict("m_pName"),
+		NetStringStrict("m_pReason"),
+	]),
+
 	### Client messages
 	NetMessage("Cl_Say", [
 		NetBool("m_Team"),
