@@ -975,6 +975,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		if(m_TeePartSelection == NO_SELECTION)
 		{
+			// select color texture
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+			}
+
 			// draw tee with red team color
 			Button.VSplitLeft(150.0f, 0, &Preview);
 			Preview.VSplitLeft(100.0f, &Label, &Preview);
@@ -984,10 +992,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Preview.HSplitTop(30.0f, 0, &Preview);
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
-				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apRedColorVariables[p], TEAM_RED, p);
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apRedColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_RED, p);
 				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
@@ -1001,10 +1006,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Preview.HSplitTop(30.0f, 0, &Preview);
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
-				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apBlueColorVariables[p], TEAM_BLUE, p);
+				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apBlueColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_BLUE, p);
 				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));

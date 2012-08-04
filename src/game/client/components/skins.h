@@ -60,7 +60,7 @@ public:
 
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, bool UseAlpha) const;
-	int GetTeamColor(int UseCustomColors, int PartHue, int Team, int Part) const;
+	int GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const;
 
 private:
 	int m_ScanningPart;

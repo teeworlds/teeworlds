@@ -1183,7 +1183,7 @@ void CGameClient::CClientData::UpdateRenderInfo(bool UpdateSkinInfo)
 		{
 			m_RenderInfo.m_aTextures[p] = g_GameClient.m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
 			int ColorHue = m_Team == TEAM_RED ? m_aSkinPartRedColors[p] : m_aSkinPartBlueColors[p];
-			int ColorVal = g_GameClient.m_pSkins->GetTeamColor(m_aUseCustomColors[p], ColorHue, m_Team, p);
+			int ColorVal = g_GameClient.m_pSkins->GetTeamColor(m_aUseCustomColors[p], ColorHue, (m_aSkinPartColors[p]>>24)&0xff, m_Team, p);
 			m_RenderInfo.m_aColors[p] = g_GameClient.m_pSkins->GetColorV4(ColorVal, p==SKINPART_TATTOO);
 		}
 	}

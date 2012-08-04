@@ -324,7 +324,7 @@ vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
 	return vec4(r.r, r.g, r.b, Alpha);
 }
 
-int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int Team, int Part) const
+int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const
 {
 	if(Team == TEAM_SPECTATORS)
 		return 12895054;
@@ -349,10 +349,8 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int Team, int Part) c
 			PartHue += 256;
 	}
 
-	int ColorVal = (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
-
 	if(Part == SKINPART_TATTOO)
-		ColorVal += 255 << 24;
-
-	return ColorVal;
+		return (PartAlp<<24) + (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
+	else
+		return (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
 }
