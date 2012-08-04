@@ -84,6 +84,8 @@ public:
 		char m_aaSkinPartNames[6][24];
 		int m_aUseCustomColors[6];
 		int m_aSkinPartColors[6];
+		int m_aSkinPartRedColors[6];
+		int m_aSkinPartBlueColors[6];
 	} m_TeeInfos;
 
 	int m_RespawnTick;

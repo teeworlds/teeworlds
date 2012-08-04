@@ -19,6 +19,10 @@ int *const gs_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorB
 													&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes};
 int *const gs_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorTattoo, &g_Config.m_PlayerColorDecoration,
 													&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes};
+int *const gs_apRedColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerRedColorBody, &g_Config.m_PlayerRedColorTattoo, &g_Config.m_PlayerRedColorDecoration,
+													&g_Config.m_PlayerRedColorHands, &g_Config.m_PlayerRedColorFeet, &g_Config.m_PlayerRedColorEyes};
+int *const gs_apBlueColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerBlueColorBody, &g_Config.m_PlayerBlueColorTattoo, &g_Config.m_PlayerBlueColorDecoration,
+													&g_Config.m_PlayerBlueColorHands, &g_Config.m_PlayerBlueColorFeet, &g_Config.m_PlayerBlueColorEyes};
 
 static const char *const gs_apFolders[NUM_SKINPARTS] = {"bodies", "tattoos", "decoration",
 														"hands", "feet", "eyes"};
@@ -320,49 +324,35 @@ vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
 	return vec4(r.r, r.g, r.b, Alpha);
 }
 
-int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
+int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int Team, int Part) const
 {
-	static const int s_aTeamColors[3] = {12895054, 65387, 10223467};
+	if(Team == TEAM_SPECTATORS)
+		return 12895054;
+
 	if(!UseCustomColors)
 	{
-		int ColorVal = s_aTeamColors[Team+1];
-		if(Part == SKINPART_TATTOO)
-			ColorVal |= 0xff000000;
-		return ColorVal;
-	}
-
-	/*blue128:  128/PI*ARCSIN(COS((PI*(x+10)/128)))+182 // (decoration, tattoo, hands)
-	blue64:  64/PI*ARCSIN(COS((PI*(x-76)/64)))+172 // (body, feet, eyes)
-	red128:   Mod((128/PI*ARCSIN(COS((PI*(x-105)/128)))+297),256)
-	red64:    Mod((64/PI*ARCSIN(COS((PI*(x-56)/64)))+280),256)*/
-
-	int MinSat = 160;
-	int MaxSat = 255;
-	float Dark = DARKEST_COLOR_LGT/255.0f;
-	int MinLgt = Dark + 64*(1.0f-Dark);
-	int MaxLgt = Dark + 191*(1.0f-Dark);
-
-	int Hue = (PartColor>>16)&0xff;
-	int Sat = (PartColor>>8)&0xff;
-	int Lgt = PartColor&0xff;
-
-	int NewHue;
-	if(Team == TEAM_RED)
-	{
-		if(Part == SKINPART_TATTOO || Part == SKINPART_DECORATION || Part == SKINPART_HANDS)
-			NewHue = (int)(128.0f/pi*asinf(cosf(pi/128.0f*(Hue-105.0f))) + 297.0f) % 256;
+		if(Team == TEAM_RED)
+			PartHue = RED_TEAM_HUE;
 		else
-			NewHue = (int)(64.0f/pi*asinf(cosf(pi/64.0f*(Hue-56.0f))) + 280.0f) % 256;
+			PartHue = BLUE_TEAM_HUE;
 	}
 	else
-		NewHue = 64.0f/pi*asinf(cosf(pi/64.0f*(Hue-76.0f))) + 172.0f;
+	{
+		PartHue %= 256;
 
-	int NewSat = clamp(Sat, MinSat, MaxSat);
-	int NewLgt = clamp(Lgt, MinLgt, MaxLgt);
-	int ColorVal = (NewHue<<16) + (NewSat<<8) + NewLgt;
+		if(Team == TEAM_RED && absolute(PartHue-RED_TEAM_HUE) > 32)
+			PartHue = RED_TEAM_HUE;
+		if(Team == TEAM_BLUE && absolute(PartHue-BLUE_TEAM_HUE) > 32)
+			PartHue = BLUE_TEAM_HUE;
+
+		if(PartHue < 0)
+			PartHue += 256;
+	}
+
+	int ColorVal = (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
 
 	if(Part == SKINPART_TATTOO)
-		ColorVal += PartColor&0xff000000;
+		ColorVal += 255 << 24;
 
 	return ColorVal;
 }

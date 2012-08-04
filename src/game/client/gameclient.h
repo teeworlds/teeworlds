@@ -169,6 +169,8 @@ public:
 		char m_aaSkinPartNames[6][24];
 		int m_aUseCustomColors[6];
 		int m_aSkinPartColors[6];
+		int m_aSkinPartRedColors[6];
+		int m_aSkinPartBlueColors[6];
 		int m_SkinPartIDs[6];
 		int m_Team;
 		int m_Emoticon;
