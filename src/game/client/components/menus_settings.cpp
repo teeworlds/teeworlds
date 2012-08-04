@@ -1146,14 +1146,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(None)
 		return;
 
-	int CheckedUCC = 0;
+	int CheckedUCC = 1;
 
 	// Use Custom Color :
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p])
-				CheckedUCC = 1;
+			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p] == false)
+				CheckedUCC = 0;
 		}
 
 		UCC.VSplitLeft(40.0f, 0, &UCC);
