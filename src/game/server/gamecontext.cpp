@@ -588,11 +588,12 @@ void CGameContext::OnClientEnter(int ClientID)
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(i == ClientID || !m_apPlayers[i] || !Server()->ClientIngame(i))
+		if(i == ClientID || !m_apPlayers[i] || (!Server()->ClientIngame(i) && !m_apPlayers[i]->IsDummy()))
 			continue;
 
 		// new info for others
-		Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+		if(Server()->ClientIngame(i))
+			Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 
 		// existing infos for new player
 		CNetMsg_Sv_ClientInfo ClientInfoMsg;
@@ -650,7 +651,7 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 	CNetMsg_Sv_ClientDrop Msg;
 	Msg.m_ClientID = ClientID;
 	Msg.m_pReason = pReason;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 
 	m_VoteUpdate = true;
 }
