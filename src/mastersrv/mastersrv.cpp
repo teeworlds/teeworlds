@@ -110,8 +110,7 @@ private:
 	IConsole *m_pConsole;
 
 	CNetBan m_NetBan;
-	CNetClient m_NetOp;
-	CNetClient m_NetChecker;
+	CNetClient m_aNets[NUM_SOCKETS];
 
 	int64 m_BanRefreshTime;
 	int64 m_PacketRefreshTime;
@@ -181,30 +180,51 @@ int CMastersrv::Init()
 
 	m_NetBan.Init(m_pConsole, Kernel()->RequestInterface<IStorage>());
 
+	int Services = 0;
+	if(str_find(g_Config.m_MsServices, "5"))
+		Services |= 1<<MASTERSRV_0_5;
+	if(str_find(g_Config.m_MsServices, "6"))
+		Services |= 1<<MASTERSRV_0_6;
+	if(str_find(g_Config.m_MsServices, "7"))
+		Services |= 1<<MASTERSRV_0_7;
+	if(str_find(g_Config.m_MsServices, "v"))
+		Services |= 1<<MASTERSRV_VER;
+
 	NETADDR BindAddr;
 	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// got bindaddr
 		BindAddr.type = NETTYPE_ALL;
-		BindAddr.port = MASTERSERVER_PORT;
 	}
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));
 		BindAddr.type = NETTYPE_ALL;
-		BindAddr.port = MASTERSERVER_PORT;
 	}
 
-	if(!m_NetOp.Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+	if(Services&((1<<MASTERSRV_0_5)|(1<<MASTERSRV_0_6)|(1<<MASTERSRV_0_7)))
 	{
-		dbg_msg("mastersrv", "couldn't start network (op)");
-		return -1;
+		BindAddr.port = MASTERSERVER_PORT;
+		if(!m_aNets[SOCKET_OP].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		{
+			dbg_msg("mastersrv", "couldn't start network (op)");
+			return -1;
+		}
+		BindAddr.port = MASTERSERVER_CHECKER_PORT;
+		if(!m_aNets[SOCKET_CHECKER].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		{
+			dbg_msg("mastersrv", "couldn't start network (checker)");
+			return -1;
+		}
 	}
-	BindAddr.port = MASTERSERVER_PORT+1;
-	if(!m_NetChecker.Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+	if(Services&(1<<MASTERSRV_VER))
 	{
-		dbg_msg("mastersrv", "couldn't start network (checker)");
-		return -1;
+		BindAddr.port = VERSIONSERVER_PORT;
+		if(!m_aNets[SOCKET_VERSION].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		{
+			dbg_msg("mastersrv", "couldn't start network (version)");
+			return -1;
+		}
 	}
 
 	// process pending commands
@@ -213,9 +233,14 @@ int CMastersrv::Init()
 	for(int s = 0; s < NUM_MASTERSRV; s++)
 		m_aSlaves[s].m_NumPackets = 0;
 
-	m_aSlaves[MASTERSRV_0_5].m_pSlave = CreateSlave_0_5(this);
-	m_aSlaves[MASTERSRV_0_6].m_pSlave = CreateSlave_0_6(this);
-	m_aSlaves[MASTERSRV_0_7].m_pSlave = CreateSlave_0_7(this);
+	if(Services&(1<<MASTERSRV_0_5))
+		m_aSlaves[MASTERSRV_0_5].m_pSlave = CreateSlave_0_5(this);
+	if(Services&(1<<MASTERSRV_0_6))
+		m_aSlaves[MASTERSRV_0_6].m_pSlave = CreateSlave_0_6(this);
+	if(Services&(1<<MASTERSRV_0_7))
+		m_aSlaves[MASTERSRV_0_7].m_pSlave = CreateSlave_0_7(this);
+	if(Services&(1<<MASTERSRV_VER))
+		m_aSlaves[MASTERSRV_VER].m_pSlave = CreateSlave_Ver(this);
 
 	return 0;
 }
@@ -226,38 +251,28 @@ int CMastersrv::Run()
 
 	while(1)
 	{
-		m_NetOp.Update();
-		m_NetChecker.Update();
+		for(int i = 0; i < NUM_SOCKETS; i++)
+			m_aNets[i].Update();
 
-		// process packets
-		CNetChunk Packet;
-		TOKEN Token;
-		int Version;
-		while(m_NetOp.Recv(&Packet, &Token, &Version))
+		for(int i = 0; i < NUM_SOCKETS; i++)
 		{
-			// check if the server is banned
-			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
-				continue;
+			// process packets
+			CNetChunk Packet;
+			TOKEN Token;
+			int Version;
+			while(m_aNets[i].Recv(&Packet, &Token, &Version))
+			{
+				// check if the server is banned
+				if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
+					continue;
 
-			for(int s = 0; s < NUM_MASTERSRV; s++)
-				if(m_aSlaves[s].m_pSlave)
-				{
-					if(m_aSlaves[s].m_pSlave->ProcessMessage(SOCKET_OP, &Packet, Token, Version) != 0)
-						break;
-				}
-		}
-
-		// process packets
-		while(m_NetChecker.Recv(&Packet, &Token, &Version))
-		{
-			// check if the server is banned
-			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
-				continue;
-
-			for(int s = 0; s < NUM_MASTERSRV; s++)
-				if(m_aSlaves[s].m_pSlave)
-					if(m_aSlaves[s].m_pSlave->ProcessMessage(SOCKET_CHECKER, &Packet, Token, Version) != 0)
-						break;
+				for(int s = 0; s < NUM_MASTERSRV; s++)
+					if(m_aSlaves[s].m_pSlave)
+					{
+						if(m_aSlaves[s].m_pSlave->ProcessMessage(i, &Packet, Token, Version) != 0)
+							break;
+					}
+			}
 		}
 
 		int64 Now = time_get();
@@ -328,6 +343,8 @@ void CMastersrv::UpdateServers()
 void CMastersrv::BuildPackets()
 {
 	bool aPreparePacket[NUM_MASTERSRV];
+	int BytesWritten;
+
 	for(int s = 0; s < NUM_MASTERSRV; s++)
 	{
 		m_aSlaves[s].m_NumPackets = 0;
@@ -344,14 +361,13 @@ void CMastersrv::BuildPackets()
 		CMastersrvSlave::CPacket *pPacket = &pSlaveData->m_aPackets[pSlaveData->m_NumPackets - 1];
 		dbg_assert(pSlave != 0, "attempting to access uninitalised slave");
 
-		int BytesWritten;
-
 		if(aPreparePacket[pServer->m_Version])
 		{
 			if(pSlaveData->m_NumPackets != 0)
 			{
 				BytesWritten = pSlave->BuildPacketFinalize(&pPacket->m_aData[pPacket->m_Size], NET_MAX_PAYLOAD - pPacket->m_Size);
 				dbg_assert(BytesWritten >= 0, "build packet finalisation failed");
+				pPacket->m_Size += BytesWritten;
 			}
 
 			pPacket = &pSlaveData->m_aPackets[pSlaveData->m_NumPackets];
@@ -380,12 +396,15 @@ void CMastersrv::BuildPackets()
 	{
 		CMastersrvSlave *pSlaveData = &m_aSlaves[s];
 		IMastersrvSlave *pSlave = pSlaveData->m_pSlave;
+
 		if(m_aSlaves[s].m_NumPackets > 0)
 		{
 			dbg_assert(pSlave != 0, "attempting to finalise packet for non-existant slave");
 
 			CMastersrvSlave::CPacket *pPacket = &pSlaveData->m_aPackets[pSlaveData->m_NumPackets - 1];
-			dbg_assert(pSlave->BuildPacketFinalize(&pPacket->m_aData[pPacket->m_Size], NET_MAX_PAYLOAD - pPacket->m_Size) >= 0, "final build packet finalisation failed");
+			BytesWritten = pSlave->BuildPacketFinalize(&pPacket->m_aData[pPacket->m_Size], NET_MAX_PAYLOAD - pPacket->m_Size);
+			dbg_assert(BytesWritten >= 0, "final build packet finalisation failed");
+			pPacket->m_Size += BytesWritten;
 		}
 	}
 
@@ -471,13 +490,7 @@ int CMastersrv::Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, in
 {
 	dbg_assert(Socket >= 0 && Socket < NUM_SOCKETS, "attempting to send via non-existant socket");
 
-	CNetClient *pNet = 0;
-	if(Socket == SOCKET_OP)
-		pNet = &m_NetOp;
-	else if(Socket == SOCKET_CHECKER)
-		pNet = &m_NetChecker;
-
-	pNet->Send((CNetChunk *)pPacket, PacketToken, PacketVersion);
+	m_aNets[Socket].Send((CNetChunk *)pPacket, PacketToken, PacketVersion);
 
 	return 0;
 }
