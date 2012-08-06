@@ -61,6 +61,8 @@ CMastersrvSlave_0_5::CMastersrvSlave_0_5(IMastersrv *pOwner)
 
 	m_aPackets[PACKET_ERROR].m_DataSize = sizeof(SERVERBROWSE_FWERROR);
 	m_aPackets[PACKET_ERROR].m_pData = SERVERBROWSE_FWERROR;
+
+	dbg_msg("mastersrv", "started mastersrv 0.5");
 }
 
 int CMastersrvSlave_0_5::BuildPacketStart(void *pData, int MaxLength)

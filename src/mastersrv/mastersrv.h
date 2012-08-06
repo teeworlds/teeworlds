@@ -35,6 +35,8 @@ class IMastersrv;
 enum
 {
 	MASTERSERVER_PORT=8300,
+	MASTERSERVER_CHECKER_PORT=MASTERSERVER_PORT+1,
+	VERSIONSERVER_PORT=8302,
 };
 
 class IMastersrv : public IInterface
@@ -46,10 +48,12 @@ public:
 		MASTERSRV_0_7=0,
 		MASTERSRV_0_6,
 		MASTERSRV_0_5,
+		MASTERSRV_VER,
 		NUM_MASTERSRV,
 
 		SOCKET_OP=0,
 		SOCKET_CHECKER,
+		SOCKET_VERSION,
 		NUM_SOCKETS,
 	};
 
@@ -139,6 +143,7 @@ IMastersrv *CreateMastersrv();
 IMastersrvSlave *CreateSlave_0_5(IMastersrv *pOwner);
 IMastersrvSlave *CreateSlave_0_6(IMastersrv *pOwner);
 IMastersrvSlave *CreateSlave_0_7(IMastersrv *pOwner);
+IMastersrvSlave *CreateSlave_Ver(IMastersrv *pOwner);
 
 
 #endif
