@@ -97,7 +97,6 @@ public:
 	void ClipDisable();
 
 	// TODO: Refactor: Redo UI scaling
-	void SetScale(float s);
 	float Scale();
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);

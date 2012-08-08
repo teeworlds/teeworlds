@@ -65,7 +65,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	MainView.VSplitLeft(50.0f, 0, &MainView);
 	MainView.VSplitRight(450.0f, &MainView, 0);
 
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
 
 	MainView.Margin(5.0f, &MainView);
 
@@ -537,7 +537,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	}
 
 	// render background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 
 	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect, RenameRect, FileIcon, ListBox;

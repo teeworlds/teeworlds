@@ -1418,36 +1418,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		else
 			m_NeedRestartGraphics = true;
 	}
-
-	//
-
-	CUIRect Text;
-	MainView.HSplitTop(20.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Text, &MainView);
-	//text.VSplitLeft(15.0f, 0, &text);
-	UI()->DoLabelScaled(&Text, Localize("UI Color"), 14.0f, -1);
-
-	const char *paLabels[] = {
-		Localize("Hue"),
-		Localize("Sat."),
-		Localize("Lht."),
-		Localize("Alpha")};
-	int *pColorSlider[4] = {&g_Config.m_UiColorHue, &g_Config.m_UiColorSat, &g_Config.m_UiColorLht, &g_Config.m_UiColorAlpha};
-	static int s_aColorSliders[4] = {0};
-	for(int s = 0; s < 4; s++)
-	{
-		CUIRect Text;
-		MainView.HSplitTop(19.0f, &Button, &MainView);
-		Button.VMargin(15.0f, &Button);
-		Button.VSplitLeft(100.0f, &Text, &Button);
-		//Button.VSplitRight(5.0f, &Button, 0);
-		Button.HSplitTop(4.0f, 0, &Button);
-
-		float k = (*pColorSlider[s]) / 255.0f;
-		k = DoScrollbarH(&s_aColorSliders[s], &Button, k);
-		*pColorSlider[s] = (int)(k*255.0f);
-		UI()->DoLabelScaled(&Text, paLabels[s], 15.0f, -1);
-	}
 }
 
 void CMenus::RenderSettingsSound(CUIRect MainView)
@@ -1524,7 +1494,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 {
 	CUIRect RestartWarning;
 	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 

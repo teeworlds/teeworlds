@@ -26,7 +26,7 @@ void CMenus::RenderGame(CUIRect MainView)
 {
 	CUIRect Button, ButtonBar;
 	MainView.HSplitTop(45.0f, &ButtonBar, &MainView);
-	RenderTools()->DrawUIRect(&ButtonBar, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&ButtonBar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	// button bar
 	ButtonBar.HSplitTop(10.0f, 0, &ButtonBar);
@@ -108,7 +108,7 @@ void CMenus::RenderGame(CUIRect MainView)
 void CMenus::RenderPlayers(CUIRect MainView)
 {
 	CUIRect Button, ButtonBar, Options, Player;
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	// player options
 	MainView.Margin(10.0f, &Options);
@@ -212,7 +212,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Client()->GetServerInfo(&CurrentServerInfo);
 
 	// render background
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 
 	CUIRect View, ServerInfo, GameInfo, Motd;
 
@@ -379,9 +379,9 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	// render background
 	CUIRect Bottom, Extended, TabBar, Button;
 	MainView.HSplitTop(20.0f, &Bottom, &MainView);
-	RenderTools()->DrawUIRect(&Bottom, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+	RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 
