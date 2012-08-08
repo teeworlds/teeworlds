@@ -40,14 +40,6 @@ enum
 
 class CMenus : public CComponent
 {
-	static vec4 ms_GuiColor;
-	static vec4 ms_ColorTabbarInactiveOutgame;
-	static vec4 ms_ColorTabbarActiveOutgame;
-	static vec4 ms_ColorTabbarInactiveIngame;
-	static vec4 ms_ColorTabbarActiveIngame;
-	static vec4 ms_ColorTabbarInactive;
-	static vec4 ms_ColorTabbarActive;
-
 	float *ButtonFade(const void *pID, float Seconds, int Checked=0);
 
 

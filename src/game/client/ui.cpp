@@ -79,19 +79,14 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-void CUI::SetScale(float s)
-{
-	g_Config.m_UiScale = (int)(s*100.0f);
-}
-
 float CUI::Scale()
 {
-	return g_Config.m_UiScale/100.0f;
+	return 1.0f;
 }
 
 float CUIRect::Scale() const
 {
-	return g_Config.m_UiScale/100.0f;
+	return 1.0f;
 }
 
 void CUI::ClipEnable(const CUIRect *r)
