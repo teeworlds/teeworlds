@@ -342,7 +342,7 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 	int MinLgt = Dark + 64*(1.0f-Dark);
 	int MaxLgt = Dark + 191*(1.0f-Dark);
 
-	int Hue = (PartColor>>16)&0xff;
+	int Hue = 0;
 	int Sat = (PartColor>>8)&0xff;
 	int Lgt = PartColor&0xff;
 
