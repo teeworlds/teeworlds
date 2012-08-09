@@ -64,27 +64,78 @@ bool CCollision::IsTileSolid(int x, int y)
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
-// TODO: rewrite this smarter!
+/* Intersect line checks all tiles on the line for collisions. */
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	float Distance = distance(Pos0, Pos1);
-	int End(Distance+1);
+	vec2 Cur = Pos0;
+	vec2 Dist = Pos1 - Pos0;
 	vec2 Last = Pos0;
+	int DirX;
+	int DirY;
 
-	for(int i = 0; i < End; i++)
-	{
-		float a = i/Distance;
-		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+	if (Dist.x > 0) {
+		DirX = 1;
+	} else {
+		DirX = -1;
+	}
+	if (Dist.y > 0) {
+		DirY = 1;
+	} else {
+		DirY = -1;
+	}
+
+	/* Move along the line Pos0 -> Pos1 by jumping between tile border points */
+	while ((Pos1.x - Cur.x) * DirX >= 0 && (Pos1.y - Cur.y) * DirY >= 0) {
+		if(CheckPoint(Cur.x, Cur.y))
 		{
 			if(pOutCollision)
-				*pOutCollision = Pos;
+				*pOutCollision = Cur;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+			return GetCollisionAt(Cur.x, Cur.y);
 		}
-		Last = Pos;
+
+		Last = Cur;
+		vec2 Next;
+
+		/* Calculate the next border point in X and Y direction */
+		if (DirX > 0) {
+			Next.x = ((int)Cur.x/32 + 1) * 32;
+		} else {
+			Next.x = ((int)Cur.x/32) * 32 - 0.5001;
+		}
+		if (DirY > 0) {
+			Next.y = ((int)Cur.y/32 + 1) * 32;
+		} else {
+			Next.y = ((int)Cur.y/32) * 32 - 0.5001;
+		}
+
+		/* Calculate remaining distances and which intersection point
+		 * (X or Y) is closer on the Pos0->Pos1 line. */
+		vec2 RemainDist;
+		RemainDist.x = (Next.x - Cur.x) / Dist.x;
+		RemainDist.y = (Next.y - Cur.y) / Dist.y;
+
+		/* Create the the next position to check */
+		if (RemainDist.x < RemainDist.y) {
+			Cur.x += RemainDist.x * Dist.x;
+			Cur.y += RemainDist.x * Dist.y;
+		} else {
+			Cur.x += RemainDist.y * Dist.x;
+			Cur.y += RemainDist.y * Dist.y;
+		}
 	}
+
+	/* Also check the Pos1 tile */
+	if(CheckPoint(Pos1.x, Pos1.y))
+	{
+		if(pOutCollision)
+			*pOutCollision = Pos1;
+		if(pOutBeforeCollision)
+			*pOutBeforeCollision = Last;
+		return GetCollisionAt(Pos1.x, Pos1.y);
+	}
+
 	if(pOutCollision)
 		*pOutCollision = Pos1;
 	if(pOutBeforeCollision)
