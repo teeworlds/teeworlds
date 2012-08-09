@@ -125,12 +125,17 @@ int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds);
+	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), Corners, r);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f), Corners, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
+	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
+	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -138,8 +143,9 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds);
+	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, r);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f), CUI::CORNER_ALL, r);
 	CUIRect Text, Image;
 	pRect->VSplitRight(pRect->h*4.0f, &Text, &Image); // always correct ratio for image
 
@@ -166,10 +172,14 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 		
 	}
 
-	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Text);
+	Text.HMargin(pRect->h>=20.0f?2.0f:1.0f, &Text);
 	Text.HMargin((Text.h*FontFactor)/2.0f, &Text);
 	Text.VSplitLeft(r, 0, &Text);
-	UI()->DoLabel(&Text, pText, Text.h*ms_FontmodHeight, -1);
+	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
+	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
+	UI()->DoLabel(&Text, pText, Text.h*ms_FontmodHeight, 0);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -1146,7 +1156,7 @@ int CMenus::Render()
 	CUIRect MainView;
 
 	// some margin around the screen
-	Screen.Margin(10.0f, &Screen);
+	//Screen.Margin(10.0f, &Screen);
 
 	static bool s_SoundCheck = false;
 	if(!s_SoundCheck && m_Popup == POPUP_NONE)
@@ -1160,8 +1170,8 @@ int CMenus::Render()
 	{
 		if(m_MenuPage == PAGE_START && Client()->State() == IClient::STATE_OFFLINE)
 		{
-			RenderLogo(Screen);
 			RenderStartMenu(Screen);
+			RenderLogo(Screen);
 		}
 		else
 		{

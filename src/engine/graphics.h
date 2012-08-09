@@ -3,6 +3,8 @@
 #ifndef ENGINE_GRAPHICS_H
 #define ENGINE_GRAPHICS_H
 
+#include <base/vmath.h>
+
 #include "kernel.h"
 
 
@@ -131,6 +133,7 @@ public:
 	};
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
+	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;

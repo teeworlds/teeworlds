@@ -61,8 +61,10 @@ public:
 	// rects
 	void DrawRoundRect(float x, float y, float w, float h, float r);
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
+	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
 
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
+	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);
 
 	// larger rendering methods
 	void RenderTilemapGenerateSkip(class CLayers *pLayers);

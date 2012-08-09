@@ -413,6 +413,7 @@ public:
 
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num);
 	virtual void SetColor(float r, float g, float b, float a);
+	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV);
 	virtual void QuadsSetSubsetFree(
