@@ -19,7 +19,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	MainView.VMargin(MainView.w/2-190.0f, &TopMenu);
 	TopMenu.HSplitTop(365.0f, &TopMenu, &BottomMenu);
 	//TopMenu.HSplitBottom(145.0f, &TopMenu, 0);
-	RenderTools()->DrawUIRect4(&TopMenu, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect4(&TopMenu, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
 
 	TopMenu.HSplitTop(145.0f, 0, &TopMenu);
 
@@ -115,7 +115,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
-	RenderTools()->DrawUIRect4(&BottomMenu, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect4(&BottomMenu, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 10.0f);
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
 	static int s_QuitButton = 0;
