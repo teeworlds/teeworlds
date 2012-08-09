@@ -25,41 +25,41 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	CUIRect Button;
 
-	TopMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_PlayButton = 0;
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static int s_SettingsButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
-	}
-	else
-	{
-		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
-	}
-
-	TopMenu.HSplitTop(5.0f, 0, &TopMenu); // little space
-	TopMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_MapEditorButton = 0;
-	if(g_Config.m_ClShowStartMenuImages)
-	{
-		if(DoButton_MenuImage(&s_MapEditorButton, Localize("Editor"), 0, &Button, "editor", 10.0f, 0.5f))
+		if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 10.0f, 0.5f))
 		{
-			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
+			m_MenuPage = PAGE_SETTINGS;
 		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, 10.0f, 0.5f))
 		{
-			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
+			m_MenuPage = PAGE_SETTINGS;
 		}
 	}
 
-	TopMenu.HSplitTop(5.0f, 0, &TopMenu); // little space
-	TopMenu.HSplitTop(40.0f, &Button, &TopMenu);
+	/*TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Bottom);
+	static int s_LocalServerButton = 0;
+	if(g_Config.m_ClShowStartMenuImages)
+	{
+		if(DoButton_MenuImage(&s_LocalServerButton, Localize("Local server"), 0, &Button, "local_server", 10.0f, 0.5f))
+		{
+		}
+	}
+	else
+	{
+		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, 10.0f, 0.5f))
+		{
+		}
+	}*/
+
+	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static int s_DemoButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
@@ -80,38 +80,38 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		}
 	}
 
-	TopMenu.HSplitTop(5.0f, 0, &TopMenu); // little space
-	TopMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_LocalServerButton = 0;
+	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static int s_MapEditorButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_LocalServerButton, Localize("Local server"), 0, &Button, "local_server", 10.0f, 0.5f))
+		if(DoButton_MenuImage(&s_MapEditorButton, Localize("Editor"), 0, &Button, "editor", 10.0f, 0.5f))
 		{
+			g_Config.m_ClEditor = 1;
+			Input()->MouseModeRelative();
 		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, 10.0f, 0.5f))
 		{
+			g_Config.m_ClEditor = 1;
+			Input()->MouseModeRelative();
 		}
 	}
 
-	TopMenu.HSplitTop(5.0f, 0, &TopMenu); // little space
-	TopMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_SettingsButton = 0;
+	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static int s_PlayButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_SETTINGS;
-		}
+		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
+			m_MenuPage = g_Config.m_UiBrowserPage;
 	}
 	else
 	{
-		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_SETTINGS;
-		}
+		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, 10.0f, 0.5f))
+			m_MenuPage = g_Config.m_UiBrowserPage;
 	}
 
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
@@ -143,7 +143,7 @@ void CMenus::RenderLogo(CUIRect MainView)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 35, 280, 70);
+	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }
