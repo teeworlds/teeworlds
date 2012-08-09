@@ -199,7 +199,6 @@ public:
 	// ----- send functions -----
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags);
 
-	int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System=true);
 	void SendInfo();
 	void SendEnterGame();
 	void SendReady();

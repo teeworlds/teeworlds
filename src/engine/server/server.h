@@ -198,7 +198,6 @@ public:
 	int MaxClients() const;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
-	int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System);
 
 	void DoSnapshot();
 

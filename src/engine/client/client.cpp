@@ -307,29 +307,15 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 // ----- send functions -----
 int CClient::SendMsg(CMsgPacker *pMsg, int Flags)
 {
-	return SendMsgEx(pMsg, Flags, false);
-}
-
-int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
-{
 	CNetChunk Packet;
 
 	if(State() == IClient::STATE_OFFLINE)
 		return 0;
 
 	mem_zero(&Packet, sizeof(CNetChunk));
-
 	Packet.m_ClientID = 0;
 	Packet.m_pData = pMsg->Data();
 	Packet.m_DataSize = pMsg->Size();
-
-	// HACK: modify the message id in the packet and store the system flag
-	if(*((unsigned char*)Packet.m_pData) == 1 && System && Packet.m_DataSize == 1)
-		dbg_break();
-
-	*((unsigned char*)Packet.m_pData) <<= 1;
-	if(System)
-		*((unsigned char*)Packet.m_pData) |= 1;
 
 	if(Flags&MSGFLAG_VITAL)
 		Packet.m_Flags |= NETSENDFLAG_VITAL;
@@ -349,23 +335,23 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 
 void CClient::SendInfo()
 {
-	CMsgPacker Msg(NETMSG_INFO);
+	CMsgPacker Msg(NETMSG_INFO, true);
 	Msg.AddString(GameClient()->NetVersion(), 128);
 	Msg.AddString(g_Config.m_Password, 128);
-	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
 
 void CClient::SendEnterGame()
 {
-	CMsgPacker Msg(NETMSG_ENTERGAME);
-	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	CMsgPacker Msg(NETMSG_ENTERGAME, true);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
 void CClient::SendReady()
 {
-	CMsgPacker Msg(NETMSG_READY);
-	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	CMsgPacker Msg(NETMSG_READY, true);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
 void CClient::RconAuth(const char *pName, const char *pPassword)
@@ -373,16 +359,16 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 	if(RconAuthed())
 		return;
 
-	CMsgPacker Msg(NETMSG_RCON_AUTH);
+	CMsgPacker Msg(NETMSG_RCON_AUTH, true);
 	Msg.AddString(pPassword, 32);
-	SendMsgEx(&Msg, MSGFLAG_VITAL);
+	SendMsg(&Msg, MSGFLAG_VITAL);
 }
 
 void CClient::Rcon(const char *pCmd)
 {
-	CMsgPacker Msg(NETMSG_RCON_CMD);
+	CMsgPacker Msg(NETMSG_RCON_CMD, true);
 	Msg.AddString(pCmd, 256);
-	SendMsgEx(&Msg, MSGFLAG_VITAL);
+	SendMsg(&Msg, MSGFLAG_VITAL);
 }
 
 bool CClient::ConnectionProblems()
@@ -392,16 +378,15 @@ bool CClient::ConnectionProblems()
 
 void CClient::DirectInput(int *pInput, int Size)
 {
-	int i;
-	CMsgPacker Msg(NETMSG_INPUT);
+	CMsgPacker Msg(NETMSG_INPUT, true);
 	Msg.AddInt(m_AckGameTick);
 	Msg.AddInt(m_PredTick);
 	Msg.AddInt(Size);
 
-	for(i = 0; i < Size/4; i++)
+	for(int i = 0; i < Size/4; i++)
 		Msg.AddInt(pInput[i]);
 
-	SendMsgEx(&Msg, 0);
+	SendMsg(&Msg, 0);
 }
 
 
@@ -419,7 +404,7 @@ void CClient::SendInput()
 		return;
 
 	// pack input
-	CMsgPacker Msg(NETMSG_INPUT);
+	CMsgPacker Msg(NETMSG_INPUT, true);
 	Msg.AddInt(m_AckGameTick);
 	Msg.AddInt(m_PredTick);
 	Msg.AddInt(Size);
@@ -435,7 +420,7 @@ void CClient::SendInput()
 	m_CurrentInput++;
 	m_CurrentInput%=200;
 
-	SendMsgEx(&Msg, MSGFLAG_FLUSH);
+	SendMsg(&Msg, MSGFLAG_FLUSH);
 }
 
 const char *CClient::LatestVersion()
@@ -1092,8 +1077,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_MapdownloadAmount = 0;
 
 					// request first chunk package of map data
-					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
+					SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 					if(g_Config.m_Debug)
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested first chunk package");
@@ -1138,8 +1123,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			else if(m_MapdownloadChunk%m_MapdownloadChunkNum == 0)
 			{
 				// request next chunk package of map data
-				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
+				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 				if(g_Config.m_Debug)
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested next chunk package");
@@ -1151,8 +1136,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_PING)
 		{
-			CMsgPacker Msg(NETMSG_PING_REPLY);
-			SendMsgEx(&Msg, 0);
+			CMsgPacker Msg(NETMSG_PING_REPLY, true);
+			SendMsg(&Msg, 0);
 		}
 		else if(Msg == NETMSG_RCON_CMD_ADD)
 		{
@@ -2039,8 +2024,8 @@ void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
 
-	CMsgPacker Msg(NETMSG_PING);
-	pSelf->SendMsgEx(&Msg, 0);
+	CMsgPacker Msg(NETMSG_PING, true);
+	pSelf->SendMsg(&Msg, 0);
 	pSelf->m_PingStartTime = time_get();
 }
 
