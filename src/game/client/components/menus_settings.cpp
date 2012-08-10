@@ -1568,11 +1568,20 @@ void CMenus::RenderSettings(CUIRect MainView)
 	MainView.HSplitBottom(60.0f, 0, &MainView);
 
 	// reset warning
-	CUIRect RestartWarning;
-	MainView.HSplitTop(25.0f, &RestartWarning, 0);
-
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
-		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, 0);
+	{
+		// background
+		CUIRect RestartWarning;
+		MainView.HSplitTop(25.0f, &RestartWarning, 0);
+		RestartWarning.VMargin(140.0f, &RestartWarning);
+		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+		// text
+		TextRender()->TextColor(0.973f, 0.863f, 0.207, 1.0f);
+		RestartWarning.y += 2.0f;
+		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, 0);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	// same size like tabs in top but variables not really needed
 	float Spacing = 3.0f;
