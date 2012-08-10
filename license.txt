@@ -18,6 +18,11 @@ freely, subject to the following restrictions:
 
 ------------------------------------------------------------------------
 
+All content under 'data' except the font (which has its own license) is
+released under CC-BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/).
+
+------------------------------------------------------------------------
+
 IMPORTANT NOTE! The source under src/engine/external are stripped
 libraries with their own licenses. Mostly BSD or zlib/libpng license but
 check the individual libraries.

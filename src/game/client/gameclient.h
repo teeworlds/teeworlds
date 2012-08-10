@@ -232,6 +232,10 @@ public:
 	virtual const char *NetVersion();
 	const char *GetTeamName(int Team, bool Teamplay) const;
 
+	//
+	void DoEnterMessage(const char *pName, int Team);
+	void DoLeaveMessage(const char *pName, const char *pReason);
+	void DoTeamChangeMessage(const char *pName, int Team);
 
 	// actions
 	// TODO: move these

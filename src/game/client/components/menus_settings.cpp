@@ -1441,10 +1441,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 void CMenus::RenderSettings(CUIRect MainView)
 {
-	CUIRect RestartWarning;
-	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
-	//RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
-
 	// handle which page should be rendered
 	if(g_Config.m_UiSettingsPage == SETTINGS_GENERAL)
 		RenderSettingsGeneral(MainView);
@@ -1460,6 +1456,9 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsSound(MainView);
 
 	// reset warning
+	CUIRect RestartWarning;
+	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
+
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);
 }
