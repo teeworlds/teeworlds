@@ -581,7 +581,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
-	CUIRect Label, Button, Game, Client, Language;
+	CUIRect Label, Button, Game, Client, Language, BottomView;
 
 	// render game menu backgrounds
 	int NumOptions = g_Config.m_ClNameplates ? 8 : 5;
@@ -709,6 +709,36 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// render language selection
 	MainView.HSplitTop(115.0f, &Language, &MainView);
 	RenderLanguageSelection(Language);
+
+	// reset button
+	MainView.HSplitBottom(60.0f, 0, &BottomView);
+
+	float Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	Button = BottomView;
+	static int s_ResetButton=0;
+	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
+	{
+		g_Config.m_ClMouseFollowfactor = 60;
+		g_Config.m_ClMouseMaxDistance = 1000;
+		g_Config.m_ClMouseDeadzone = 300;
+		g_Config.m_ClAutoswitchWeapons = 1;
+		g_Config.m_ClShowhud = 1;
+		g_Config.m_ClShowChatFriends = 0;
+		g_Config.m_ClNameplates = 1;
+		g_Config.m_ClNameplatesAlways = 1;
+		g_Config.m_ClNameplatesSize = 50;
+		g_Config.m_ClNameplatesTeamcolors = 1;
+		g_Config.m_ClAutoDemoRecord = 0;
+		g_Config.m_ClAutoDemoMax = 10;
+		g_Config.m_ClAutoScreenshot = 0;
+		g_Config.m_ClAutoScreenshotMax = 10;
+	}
 }
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
@@ -721,6 +751,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	float BackgroundHeight = 2.0f*ButtonHeight+Spaceing;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitBottom(80.0f, &MainView, 0); // now we have the total rect for the settings
 	MainView.HSplitTop(BackgroundHeight, &TopView, &MainView);
 	RenderTools()->DrawUIRect(&TopView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -1372,12 +1403,37 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 void CMenus::RenderSettingsSound(CUIRect MainView)
 {
-	CUIRect Button;
-	MainView.VSplitMid(&MainView, 0);
+	CUIRect Label, Button, Sound, Detail, BottomView;
+
+	// render sound menu backgrounds
+	int NumOptions = g_Config.m_SndEnable ? 3 : 1;
+	float ButtonHeight = 20.0f;
+	float Spaceing = 2.0f;
+	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spaceing;
+
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &Sound, &MainView);
+	RenderTools()->DrawUIRect(&Sound, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// render detail menu background
+	if(g_Config.m_SndEnable)
+	{
+		BackgroundHeight = 2.0f*ButtonHeight+Spaceing;
+
+		MainView.HSplitTop(10.0f, 0, &MainView);
+		MainView.HSplitTop(BackgroundHeight, &Detail, &MainView);
+		RenderTools()->DrawUIRect(&Detail, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	}
+
 	static int s_SndEnable = g_Config.m_SndEnable;
 	static int s_SndRate = g_Config.m_SndRate;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	// render sound menu
+	Sound.HSplitTop(ButtonHeight, &Label, &Sound);
+	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*ms_FontmodHeight, 0);
+
+	Sound.HSplitTop(Spaceing, 0, &Sound);
+	Sound.HSplitTop(ButtonHeight, &Button, &Sound);
 	static int s_ButtonSndEnable = 0;
 	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
 	{
@@ -1392,50 +1448,104 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
 	}
 
-	if(!g_Config.m_SndEnable)
-		return;
-
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	static int s_ButtonSndMusic = 0;
-	if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
+	if(g_Config.m_SndEnable)
 	{
-		g_Config.m_SndMusic ^= 1;
-		if(Client()->State() == IClient::STATE_OFFLINE)
+		Sound.HSplitTop(Spaceing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndMusic = 0;
+		if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 		{
-			if(g_Config.m_SndMusic)
-				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-			else
-				m_pClient->m_pSounds->Stop(SOUND_MENU);
+			g_Config.m_SndMusic ^= 1;
+			if(Client()->State() == IClient::STATE_OFFLINE)
+			{
+				if(g_Config.m_SndMusic)
+					m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+				else
+					m_pClient->m_pSounds->Stop(SOUND_MENU);
+			}
 		}
+
+		Sound.HSplitTop(Spaceing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndNonactiveMute = 0;
+		if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
+			g_Config.m_SndNonactiveMute ^= 1;
+
+		// render detail menu
+		Detail.HSplitTop(ButtonHeight, &Label, &Detail);
+		UI()->DoLabel(&Label, Localize("Detail"), ButtonHeight*ms_FontmodHeight, 0);
+
+		// split menu
+		CUIRect Left, Right;
+		Detail.HSplitTop(Spaceing, 0, &Detail);
+		Detail.VSplitMid(&Left, &Right);
+		Left.VSplitRight(1.5f, &Left, 0);
+		Right.VSplitLeft(1.5f, 0, &Right);
+
+		// sample rate thingy
+		{
+			Left.HSplitTop(ButtonHeight, &Button, &Left);
+
+			RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			CUIRect Text, Value, Unit;
+			Button.VSplitLeft(Button.w/3.0f, &Text, &Button);
+			Button.VSplitMid(&Value, &Unit);
+
+			char aBuf[32];
+			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Sample rate"));
+			Text.y += 2.0f;
+			UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, 0);
+
+			Unit.y += 2.0f;
+			UI()->DoLabel(&Unit, "kHz", Unit.h*ms_FontmodHeight*0.8f, 0);
+
+			if(g_Config.m_SndRate != 48000 && g_Config.m_SndRate != 44100)
+				g_Config.m_SndRate = 48000;
+			if(g_Config.m_SndRate == 48000)
+				str_copy(aBuf, "48.0", sizeof(aBuf));
+			else
+				str_copy(aBuf, "44.1", sizeof(aBuf));
+			static int s_SampleRateButton = 0;
+			if(DoButton_Menu(&s_SampleRateButton, aBuf, 0, &Value))
+			{
+				if(g_Config.m_SndRate == 48000)
+					g_Config.m_SndRate = 44100;
+				else
+					g_Config.m_SndRate = 48000;
+			}
+
+			m_NeedRestartSound = !s_SndEnable || s_SndRate != g_Config.m_SndRate;
+		}
+
+		Right.HSplitTop(ButtonHeight, &Button, &Right);
+		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 110.0f, 0, 100);
 	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	static int s_ButtonSndNonactiveMute = 0;
-	if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
-		g_Config.m_SndNonactiveMute ^= 1;
+	// reset button
+	MainView.HSplitBottom(60.0f, 0, &BottomView);
 
-	// sample rate box
-	{
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_SndRate);
-		MainView.HSplitTop(20.0f, &Button, &MainView);
-		UI()->DoLabelScaled(&Button, Localize("Sample rate"), 14.0f, -1);
-		Button.VSplitLeft(190.0f, 0, &Button);
-		static float Offset = 0.0f;
-		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f, &Offset);
-		g_Config.m_SndRate = max(1, str_toint(aBuf));
-		m_NeedRestartSound = !s_SndEnable || s_SndRate != g_Config.m_SndRate;
-	}
+	float Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
-	// volume slider
+	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	Button = BottomView;
+	static int s_ResetButton=0;
+	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		CUIRect Button, Label;
-		MainView.HSplitTop(5.0f, &Button, &MainView);
-		MainView.HSplitTop(20.0f, &Button, &MainView);
-		Button.VSplitLeft(190.0f, &Label, &Button);
-		UI()->DoLabelScaled(&Label, Localize("Sound volume"), 14.0f, -1);
-		g_Config.m_SndVolume = (int)(DoScrollbarH(&g_Config.m_SndVolume, &Button, g_Config.m_SndVolume/100.0f)*100.0f);
-		MainView.HSplitTop(20.0f, 0, &MainView);
+		g_Config.m_SndEnable = 1;
+		if(!g_Config.m_SndMusic)
+		{
+			g_Config.m_SndMusic = 1;
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+		}
+		g_Config.m_SndNonactiveMute = 0;
+		g_Config.m_SndRate = 48000;
+		g_Config.m_SndVolume = 100;
 	}
 }
 
@@ -1455,10 +1565,28 @@ void CMenus::RenderSettings(CUIRect MainView)
 	else if(g_Config.m_UiSettingsPage == SETTINGS_SOUND)
 		RenderSettingsSound(MainView);
 
+	MainView.HSplitBottom(60.0f, 0, &MainView);
+
 	// reset warning
 	CUIRect RestartWarning;
-	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
+	MainView.HSplitTop(25.0f, &RestartWarning, 0);
 
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
-		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);
+		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, 0);
+
+	// same size like tabs in top but variables not really needed
+	float Spacing = 3.0f;
+	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	// render background
+	MainView.VSplitLeft(ButtonWidth, &MainView, 0);
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	// back to main menu
+	CUIRect Button;
+	MainView.HSplitTop(25.0f, &MainView, 0);
+	Button = MainView;
+	static int s_MenuButton=0;
+	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
+		m_MenuPage = PAGE_START;
 }

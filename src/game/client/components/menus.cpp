@@ -1086,27 +1086,6 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 }
 
-void CMenus::RenderBottomButtons(CUIRect r)
-{
-	CUIRect Box = r;
-	CUIRect Button;
-
-	// same size like tabs in top but variables not really needed
-	float Spacing = 3.0f;
-	float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
-
-	// render background
-	Box.VSplitLeft(ButtonWidth, &Box, 0);
-	RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
-
-	// back to main menu
-	Box.HSplitTop(25.0f, &Box, 0);
-	Button = Box;
-	static int s_MenuButton=0;
-	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
-		m_MenuPage = PAGE_START;
-}
-
 void CMenus::RenderLoading()
 {
 	// TODO: not supported right now due to separate render thread
@@ -1386,8 +1365,6 @@ int CMenus::Render()
 			Screen.VMargin(Screen.w/2-365.0f, &MainView);
 			MainView.HSplitTop(60.0f, &TabBar, &MainView);
 			RenderMenubar(TabBar);
-			MainView.HSplitBottom(60.0f, &MainView, &BottomView);
-			RenderBottomButtons(BottomView);
 
 			// news is not implemented yet
 			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
