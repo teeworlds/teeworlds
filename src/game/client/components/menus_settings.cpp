@@ -713,34 +713,42 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
 {
-	CUIRect Button, Label;
-	MainView.HSplitTop(10.0f, 0, &MainView);
+	CUIRect Button, Left, Right, TopView, Label;
 
-	// player name
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(80.0f, &Label, &Button);
-	Button.VSplitLeft(150.0f, &Button, 0);
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
-	UI()->DoLabelScaled(&Label, aBuf, 14.0, -1);
+	// render game menu backgrounds
+	float ButtonHeight = 20.0f;
+	float Spaceing = 2.0f;
+	float BackgroundHeight = 2.0f*ButtonHeight+Spaceing;
+
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &TopView, &MainView);
+	RenderTools()->DrawUIRect(&TopView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// render game menu
+	TopView.HSplitTop(ButtonHeight, &Label, &TopView);
+	UI()->DoLabel(&Label, Localize("Personal"), ButtonHeight*ms_FontmodHeight, 0);
+
+	// split menu
+	TopView.HSplitTop(Spaceing, 0, &TopView);
+	TopView.VSplitMid(&Left, &Right);
+	Left.VSplitRight(1.5f, &Left, 0);
+	Right.VSplitLeft(1.5f, 0, &Right);
+
+	// left menu
+	Left.HSplitTop(ButtonHeight, &Button, &Left);
 	static float s_OffsetName = 0.0f;
-	DoEditBox(g_Config.m_PlayerName, &Button, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 14.0f, &s_OffsetName);
+	DoEditBoxOption(g_Config.m_PlayerName, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), &Button, Localize("Name"),  100.0f, &s_OffsetName);
 
-	// player clan
-	MainView.HSplitTop(5.0f, 0, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(80.0f, &Label, &Button);
-	Button.VSplitLeft(150.0f, &Button, 0);
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
-	UI()->DoLabelScaled(&Label, aBuf, 14.0, -1);
+	// right menu
+	Right.HSplitTop(ButtonHeight, &Button, &Right);
 	static float s_OffsetClan = 0.0f;
-	DoEditBox(g_Config.m_PlayerClan, &Button, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), 14.0f, &s_OffsetClan);
+	DoEditBoxOption(g_Config.m_PlayerClan, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), &Button, Localize("Clan"),  100.0f, &s_OffsetClan);
 
 	// country flag selector
-	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(10.0f, 0, &MainView);
 	static float s_ScrollValue = 0.0f;
 	int OldSelected = -1;
-	UiDoListboxStart(&s_ScrollValue, &MainView, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_ScrollValue, &MainView, 40.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{

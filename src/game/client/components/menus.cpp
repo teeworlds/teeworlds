@@ -350,7 +350,7 @@ int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 	return Inside;
 }
 
-int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
+int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
 	int Inside = UI()->MouseInside(pRect);
 	bool ReturnValue = false;
@@ -372,10 +372,11 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 			s_DoScroll = true;
 			s_ScrollStart = UI()->MouseX();
 			int MxRel = (int)(UI()->MouseX() - pRect->x);
+			float Offset = pRect->w/2.0f-TextRender()->TextWidth(0, FontSize, pStr, -1)/2.0f;
 
 			for(int i = 1; i <= Len; i++)
 			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset > MxRel)
+				if(Offset + TextRender()->TextWidth(0, FontSize, pStr, i) - *pOffset > MxRel)
 				{
 					s_AtIndex = i - 1;
 					break;
@@ -436,7 +437,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		UI()->SetHotItem(pID);
 
 	CUIRect Textbox = *pRect;
-	RenderTools()->DrawUIRect(&Textbox, vec4(1, 1, 1, 0.5f), Corners, 3.0f);
+	RenderTools()->DrawUIRect(&Textbox, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 5.0f);
 	Textbox.VMargin(2.0f, &Textbox);
 	Textbox.HMargin(2.0f, &Textbox);
 
@@ -458,38 +459,39 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || m_NumInputEvents))
 	{
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
-		if(w-*Offset > Textbox.w)
+		if(w-*pOffset > Textbox.w)
 		{
 			// move to the left
 			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1);
 			do
 			{
-				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
+				*pOffset += min(wt-*pOffset-Textbox.w, Textbox.w/3);
 			}
-			while(w-*Offset > Textbox.w);
+			while(w-*pOffset > Textbox.w);
 		}
-		else if(w-*Offset < 0.0f)
+		else if(w-*pOffset < 0.0f)
 		{
 			// move to the right
 			do
 			{
-				*Offset = max(0.0f, *Offset-Textbox.w/3);
+				*pOffset = max(0.0f, *pOffset-Textbox.w/3);
 			}
-			while(w-*Offset < 0.0f);
+			while(w-*pOffset < 0.0f);
 		}
 	}
 	UI()->ClipEnable(pRect);
-	Textbox.x -= *Offset;
+	Textbox.x -= *pOffset;
 
-	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, -1);
+	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, 0);
 
 	// render the cursor
 	if(UI()->LastActiveItem() == pID && !JustGotActive)
 	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
+		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1);
 		Textbox = *pRect;
-		Textbox.VSplitLeft(2.0f, 0, &Textbox);
-		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1)/2);
+		Textbox.x += Textbox.w/2.0f-w/2.0f;
+		w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
+		Textbox.x += (w-*pOffset-TextRender()->TextWidth(0, FontSize, "|", -1)/2);
 
 		if((2*time_get()/time_freq()) % 2)	// make it blink
 			UI()->DoLabel(&Textbox, "|", FontSize, -1);
@@ -497,6 +499,21 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	UI()->ClipDisable();
 
 	return ReturnValue;
+}
+
+void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset)
+{
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	CUIRect Label, EditBox;
+	pRect->VSplitLeft(VSplitVal, &Label, &EditBox);
+
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, 0);
+
+	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset);
 }
 
 void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite)
