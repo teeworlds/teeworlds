@@ -10,7 +10,6 @@
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
-#include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
@@ -274,15 +273,19 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	t.x += c.w;
 	t.w -= c.w;
 	t.VSplitLeft(5.0f, 0, &t);
-	
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
 
 	c.Margin(2.0f, &c);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHECKBOXICONS].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
 	if(Checked)
-		RenderTools()->DrawUIRect(&c, vec4(1.0f , 1.0f, 1.0f, 1.0f), CUI::CORNER_ALL, 3.0f);
+		RenderTools()->SelectSprite(SPRITE_CHECKBOX_ACTIVE);
 	else
-		RenderTools()->DrawUIRect(&c, vec4(1.0f , 1.0f, 1.0f, 0.25f+(*pFade/Seconds)*0.125f), CUI::CORNER_ALL, 3.0f);
+		RenderTools()->SelectSprite(SPRITE_CHECKBOX_INACTIVE);
+	IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
 	t.y += 2.0f; // lame fix
 	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, 0);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, -1);
@@ -667,6 +670,134 @@ void CMenus::UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHe
 
 	// list background
 	View.HSplitTop(2.0f, 0, &View);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 0.0f);
+
+	// prepare the scroll
+	View.VSplitRight(20.0f, &View, &Scroll);
+
+	// setup the variables
+	gs_ListBoxOriginalView = View;
+	gs_ListBoxSelectedIndex = SelectedIndex;
+	gs_ListBoxNewSelected = SelectedIndex;
+	gs_ListBoxItemIndex = 0;
+	gs_ListBoxRowHeight = RowHeight;
+	gs_ListBoxNumItems = NumItems;
+	gs_ListBoxItemsPerRow = ItemsPerRow;
+	gs_ListBoxDoneEvents = 0;
+	gs_ListBoxScrollValue = ScrollValue;
+	gs_ListBoxItemActivated = false;
+
+	// do the scrollbar
+	View.HSplitTop(gs_ListBoxRowHeight, &Row, 0);
+
+	int NumViewable = (int)(gs_ListBoxOriginalView.h/Row.h) + 1;
+	int Num = (NumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+	if(Num < 0)
+		Num = 0;
+	if(Num > 0)
+	{
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+			gs_ListBoxScrollValue -= 3.0f/Num;
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+			gs_ListBoxScrollValue += 3.0f/Num;
+
+		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
+		if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+	}
+
+	Scroll.HMargin(5.0f, &Scroll);
+	gs_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, gs_ListBoxScrollValue);
+
+	// the list
+	gs_ListBoxView = gs_ListBoxOriginalView;
+	gs_ListBoxView.VMargin(5.0f, &gs_ListBoxView);
+	UI()->ClipEnable(&gs_ListBoxView);
+	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
+}
+
+void CMenus::UiDoListboxStartVideo(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+								int ItemsPerRow, int SelectedIndex, float ScrollValue, float ButtonHeight, float Spaceing)
+{
+	CUIRect Scroll, Row, Left, Right;
+	CUIRect View = *pRect;
+	CUIRect Header, Footer;
+
+	// background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// draw header
+	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
+	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight, 0);
+
+	// supported modes button
+	View.HSplitTop(Spaceing, 0, &View);
+	View.HSplitTop(ButtonHeight, &Left, &View);
+	Left.VSplitMid(&Left, &Right);
+	Left.VSplitRight(1.5f, &Left, 0);
+	Right.VSplitLeft(1.5f, 0, &Right);
+	static int s_GfxDisplayAllModes = 0;
+	if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Left))
+	{
+		g_Config.m_GfxDisplayAllModes ^= 1;
+		m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+		UpdateVideoFormats();
+
+		bool Found = false;
+		for(int i = 0; i < m_NumVideoFormats; i++)
+		{
+			int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+			if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
+			{
+				m_CurrentVideoFormat = i;
+				Found = true;
+				break;
+			}
+
+		}
+
+		if(!Found)
+			m_CurrentVideoFormat = 0;
+
+		UpdatedFilteredVideoModes();
+	}
+
+	// format changer
+	{
+		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		CUIRect Text, Value, Unit;
+		Right.VSplitLeft(Right.w/3.0f, &Text, &Right);
+		Right.VSplitMid(&Value, &Unit);
+
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Format"));
+		Text.y += 2.0f;
+		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, 0);
+
+		Unit.y += 2.0f;
+		if((float)m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue/(float)m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue >= 1.55f)
+			UI()->DoLabel(&Unit, Localize("Wide"), Unit.h*ms_FontmodHeight*0.8f, 0);
+		else
+			UI()->DoLabel(&Unit, Localize("Letterbox"), Unit.h*ms_FontmodHeight*0.8f, 0);
+
+		str_format(aBuf, sizeof(aBuf), "%d:%d", m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue, m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue);
+		static int s_VideoFormatButton = 0;
+		if(DoButton_Menu(&s_VideoFormatButton, aBuf, 0, &Value))
+		{
+			m_CurrentVideoFormat++;
+			if(m_CurrentVideoFormat == m_NumVideoFormats)
+				m_CurrentVideoFormat = 0;
+
+			UpdatedFilteredVideoModes();
+		}
+	}
+
+	// draw footers
+	View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
+	Footer.VSplitLeft(10.0f, 0, &Footer);
+	UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight, 0);
+
+	// list background
+	View.HSplitTop(Spaceing, 0, &View);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 0.0f);
 
 	// prepare the scroll
@@ -1235,8 +1366,83 @@ const CMenus::CMenuImage *CMenus::FindMenuImage(const char *pName)
 	return 0;
 }
 
+void CMenus::UpdateVideoFormats()
+{
+	m_NumVideoFormats = 0;
+	for(int i = 0; i < m_NumModes; i++)
+	{
+		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
+		int Width = m_aModes[i].m_Width/G;
+		int Height = m_aModes[i].m_Height/G;
+
+		// check if we already have the format
+		bool Found = false;
+		for(int j = 0; j < m_NumVideoFormats; j++)
+		{
+			if(Width == m_aVideoFormats[j].m_WidthValue && Height == m_aVideoFormats[j].m_HeightValue)
+			{
+				Found = true;
+				break;
+			}
+		}
+		
+		if(!Found)
+		{
+			m_aVideoFormats[m_NumVideoFormats].m_WidthValue = Width;
+			m_aVideoFormats[m_NumVideoFormats].m_HeightValue = Height;
+			m_NumVideoFormats++;
+
+			// sort the array
+			for(int k = 0; k < m_NumVideoFormats-1; k++) // ffs, bubblesort
+			{
+				for(int j = 0; j < m_NumVideoFormats-k-1; j++)
+				{
+					if((float)m_aVideoFormats[j].m_WidthValue/(float)m_aVideoFormats[j].m_HeightValue > (float)m_aVideoFormats[j+1].m_WidthValue/(float)m_aVideoFormats[j+1].m_HeightValue)
+					{
+						CVideoFormat Tmp = m_aVideoFormats[j];
+						m_aVideoFormats[j] = m_aVideoFormats[j+1];
+						m_aVideoFormats[j+1] = Tmp;
+					}
+				}
+			}
+		}
+	}
+}
+
+void CMenus::UpdatedFilteredVideoModes()
+{
+	m_NumFilteredVideoModes = 0;
+	for(int i = 0; i < m_NumModes; i++)
+	{
+		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
+		if(m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue == m_aModes[i].m_Width/G && m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue == m_aModes[i].m_Height/G)
+			m_aFilteredVideoModes[m_NumFilteredVideoModes++] = m_aModes[i];
+	}
+}
+
 void CMenus::OnInit()
 {
+	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+	UpdateVideoFormats();
+
+	bool Found = false;
+	for(int i = 0; i < m_NumVideoFormats; i++)
+	{
+		int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+		if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
+		{
+			m_CurrentVideoFormat = i;
+			Found = true;
+			break;
+		}
+
+	}
+
+	if(!Found)
+		m_CurrentVideoFormat = 0;
+
+	UpdatedFilteredVideoModes();
+
 	// load menu images
 	m_lMenuImages.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "menuimages", MenuImageScan, this);

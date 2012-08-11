@@ -581,7 +581,11 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
-	CUIRect Label, Button, Game, Client, Language, BottomView;
+	CUIRect Label, Button, Game, Client, BottomView;
+
+	// cut view
+	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render game menu backgrounds
 	int NumOptions = g_Config.m_ClNameplates ? 8 : 5;
@@ -707,12 +711,9 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	MainView.HSplitTop(10.0f, 0, &MainView);
 
 	// render language selection
-	MainView.HSplitTop(115.0f, &Language, &MainView);
-	RenderLanguageSelection(Language);
+	RenderLanguageSelection(MainView);
 
 	// reset button
-	MainView.HSplitBottom(60.0f, 0, &BottomView);
-
 	float Spacing = 3.0f;
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
@@ -1258,13 +1259,9 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
-	CUIRect Button;
 	char aBuf[128];
 	bool CheckSettings = false;
 
-	static const int MAX_RESOLUTIONS = 256;
-	static CVideoMode s_aModes[MAX_RESOLUTIONS];
-	static int s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
 	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
 	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
 	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
@@ -1275,67 +1272,36 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
 	static int s_GfxTextureCompression = g_Config.m_GfxTextureCompression;
 
-	CUIRect ModeList;
-	MainView.VSplitLeft(300.0f, &MainView, &ModeList);
+	CUIRect Label, Button, Screen, Texture, BottomView;
 
-	// draw allmodes switch
-	ModeList.HSplitTop(20, &Button, &ModeList);
-	static int s_GfxDisplayAllModes = 0;
-	if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
-	{
-		g_Config.m_GfxDisplayAllModes ^= 1;
-		s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
-	}
+	// cut view
+	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	BottomView.HSplitTop(20.f, 0, &BottomView);
 
-	// display mode list
-	static float s_ScrollValue = 0;
-	static int s_DisplayModeList = 0;
-	int OldSelected = -1;
-	int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
-	str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-	UiDoListboxStart(&s_DisplayModeList , &ModeList, 24.0f, Localize("Display Modes"), aBuf, s_NumNodes, 1, OldSelected, s_ScrollValue);
+	// render screen menu background
+	int NumOptions = g_Config.m_GfxFullscreen ? 3 : 4;
+	float ButtonHeight = 20.0f;
+	float Spaceing = 2.0f;
+	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spaceing;
 
-	for(int i = 0; i < s_NumNodes; ++i)
-	{
-		const int Depth = s_aModes[i].m_Red+s_aModes[i].m_Green+s_aModes[i].m_Blue > 16 ? 24 : 16;
-		if(g_Config.m_GfxColorDepth == Depth &&
-			g_Config.m_GfxScreenWidth == s_aModes[i].m_Width &&
-			g_Config.m_GfxScreenHeight == s_aModes[i].m_Height)
-		{
-			OldSelected = i;
-		}
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &Screen, &MainView);
+	RenderTools()->DrawUIRect(&Screen, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		CListboxItem Item = UiDoListboxNextItem(&s_aModes[i], OldSelected == i);
-		if(Item.m_Visible)
-		{
-			int G = gcd(s_aModes[i].m_Width, s_aModes[i].m_Height);
-			str_format(aBuf, sizeof(aBuf), " %dx%d %d bit (%d:%d)", s_aModes[i].m_Width, s_aModes[i].m_Height, Depth, s_aModes[i].m_Width/G, s_aModes[i].m_Height/G);
-			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, -1);
-		}
-	}
+	// render textures menu background
+	NumOptions = 3;
+	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spaceing;
 
-	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
-	if(OldSelected != NewSelected)
-	{
-		const int Depth = s_aModes[NewSelected].m_Red+s_aModes[NewSelected].m_Green+s_aModes[NewSelected].m_Blue > 16 ? 24 : 16;
-		g_Config.m_GfxColorDepth = Depth;
-		g_Config.m_GfxScreenWidth = s_aModes[NewSelected].m_Width;
-		g_Config.m_GfxScreenHeight = s_aModes[NewSelected].m_Height;
-		CheckSettings = true;
-	}
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &Texture, &MainView);
+	RenderTools()->DrawUIRect(&Texture, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	// switches
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	static int s_ButtonGfxBorderless = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
-	{
-		g_Config.m_GfxBorderless ^= 1;
-		if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
-			g_Config.m_GfxFullscreen = 0;
-		CheckSettings = true;
-	}
+	// render screen menu
+	Screen.HSplitTop(ButtonHeight, &Label, &Screen);
+	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight, 0);
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	Screen.HSplitTop(Spaceing, 0, &Screen);
+	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
 	static int s_ButtonGfxFullscreen = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
@@ -1345,7 +1311,23 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CheckSettings = true;
 	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(!g_Config.m_GfxFullscreen)
+	{
+		Screen.HSplitTop(Spaceing, 0, &Screen);
+		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonGfxBorderless = 0;
+		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
+		{
+			g_Config.m_GfxBorderless ^= 1;
+			if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+				g_Config.m_GfxFullscreen = 0;
+			CheckSettings = true;
+		}
+	}
+
+	Screen.HSplitTop(Spaceing, 0, &Screen);
+	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
 	static int s_ButtonGfxVsync = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
 	{
@@ -1353,16 +1335,41 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CheckSettings = true;
 	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	static int s_ButtonGfxFsaaSamples = 0;
-	if(DoButton_CheckBox_Number(&s_ButtonGfxFsaaSamples, Localize("FSAA samples"), g_Config.m_GfxFsaaSamples, &Button))
+	// FSAA button
 	{
-		g_Config.m_GfxFsaaSamples = (g_Config.m_GfxFsaaSamples+1)%17;
-		CheckSettings = true;
+		Screen.HSplitTop(Spaceing, 0, &Screen);
+		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		CUIRect Text;
+		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
+		Button.VSplitLeft(100.0f, &Text, &Button);
+
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Anti Aliasing"));
+		Text.y += 2.0f;
+		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, -1);
+
+		Button.VSplitLeft(70.0f, &Button, 0);
+		str_format(aBuf, sizeof(aBuf), "%dx", g_Config.m_GfxFsaaSamples);
+		static int s_ButtonGfxFsaaSamples = 0;
+		if(DoButton_Menu(&s_ButtonGfxFsaaSamples, aBuf, 0, &Button))
+		{
+			if(!g_Config.m_GfxFsaaSamples)
+				g_Config.m_GfxFsaaSamples = 2;
+			else if(g_Config.m_GfxFsaaSamples == 16)
+				g_Config.m_GfxFsaaSamples = 0;
+			else
+				g_Config.m_GfxFsaaSamples *= 2;
+			CheckSettings = true;
+		}
 	}
 
-	MainView.HSplitTop(40.0f, &Button, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	// render texture menu
+	Texture.HSplitTop(ButtonHeight, &Label, &Texture);
+	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*ms_FontmodHeight, 0);
+
+	Texture.HSplitTop(Spaceing, 0, &Texture);
+	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxTextureQuality = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxTextureQuality, Localize("Quality Textures"), g_Config.m_GfxTextureQuality, &Button))
 	{
@@ -1370,7 +1377,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CheckSettings = true;
 	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	Texture.HSplitTop(Spaceing, 0, &Texture);
+	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxTextureCompression = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxTextureCompression, Localize("Texture Compression"), g_Config.m_GfxTextureCompression, &Button))
 	{
@@ -1378,10 +1386,104 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CheckSettings = true;
 	}
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	Texture.HSplitTop(Spaceing, 0, &Texture);
+	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxHighDetail = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
 		g_Config.m_GfxHighDetail ^= 1;
+
+	// render screen modes
+	MainView.HSplitTop(10.0f, 0, &MainView);
+
+	// display mode list
+	{
+		static float s_ScrollValue = 0;
+		static int s_DisplayModeList = 0;
+		int OldSelected = -1;
+		int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
+		str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
+		UiDoListboxStartVideo(&s_DisplayModeList , &MainView, 24.0f, Localize("Display Modes"), aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, ButtonHeight, Spaceing); // ugly
+
+		for(int i = 0; i < m_NumFilteredVideoModes; ++i)
+		{
+			const int Depth = m_aFilteredVideoModes[i].m_Red+m_aFilteredVideoModes[i].m_Green+m_aFilteredVideoModes[i].m_Blue > 16 ? 24 : 16;
+			if(g_Config.m_GfxColorDepth == Depth &&
+				g_Config.m_GfxScreenWidth == m_aFilteredVideoModes[i].m_Width &&
+				g_Config.m_GfxScreenHeight == m_aFilteredVideoModes[i].m_Height)
+			{
+				OldSelected = i;
+			}
+
+			CListboxItem Item = UiDoListboxNextItem(&m_aFilteredVideoModes[i], OldSelected == i);
+			if(Item.m_Visible)
+			{
+				int G = gcd(m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height);
+				str_format(aBuf, sizeof(aBuf), " %dx%d %d bit", m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height, Depth);
+				UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, 0);
+			}
+		}
+
+		const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+		if(OldSelected != NewSelected)
+		{
+			const int Depth = m_aFilteredVideoModes[NewSelected].m_Red+m_aFilteredVideoModes[NewSelected].m_Green+m_aFilteredVideoModes[NewSelected].m_Blue > 16 ? 24 : 16;
+			g_Config.m_GfxColorDepth = Depth;
+			g_Config.m_GfxScreenWidth = m_aFilteredVideoModes[NewSelected].m_Width;
+			g_Config.m_GfxScreenHeight = m_aFilteredVideoModes[NewSelected].m_Height;
+			CheckSettings = true;
+		}
+	}
+
+	// reset button
+	float Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	Button = BottomView;
+	static int s_ResetButton=0;
+	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
+	{
+		g_Config.m_GfxScreenWidth = Graphics()->GetDesktopScreenWidth();
+		g_Config.m_GfxScreenHeight = Graphics()->GetDesktopScreenHeight();
+		g_Config.m_GfxColorDepth = 24;
+		g_Config.m_GfxBorderless = 0;
+		g_Config.m_GfxFullscreen = 1;
+		g_Config.m_GfxVsync = 1;
+		g_Config.m_GfxFsaaSamples = 0;
+		g_Config.m_GfxTextureQuality = 1;
+		g_Config.m_GfxTextureCompression = 0;
+		g_Config.m_GfxHighDetail = 1;
+
+		if(g_Config.m_GfxDisplayAllModes)
+		{
+			g_Config.m_GfxDisplayAllModes = 0;
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			UpdateVideoFormats();
+
+			bool Found = false;
+			for(int i = 0; i < m_NumVideoFormats; i++)
+			{
+				int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+				if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
+				{
+					m_CurrentVideoFormat = i;
+					Found = true;
+					break;
+				}
+
+			}
+
+			if(!Found)
+				m_CurrentVideoFormat = 0;
+
+			UpdatedFilteredVideoModes();
+		}
+
+		CheckSettings = true;
+	}
 
 	// check if the new settings require a restart
 	if(CheckSettings)
@@ -1405,7 +1507,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 {
 	CUIRect Label, Button, Sound, Detail, BottomView;
 
-	// render sound menu backgrounds
+	// render sound menu background
 	int NumOptions = g_Config.m_SndEnable ? 3 : 1;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;

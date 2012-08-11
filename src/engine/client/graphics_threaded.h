@@ -296,7 +296,7 @@ public:
 		INITFLAG_BORDERLESS = 8,
 	};
 
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;
+	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual void Minimize() = 0;
@@ -438,6 +438,9 @@ public:
 	virtual void Swap();
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
+
+	virtual int GetDesktopScreenWidth() { return m_DesktopScreenWidth; }
+	virtual int GetDesktopScreenHeight() { return m_DesktopScreenHeight; }
 
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);

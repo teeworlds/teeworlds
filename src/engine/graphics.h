@@ -52,6 +52,8 @@ class IGraphics : public IInterface
 protected:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
+	int m_DesktopScreenWidth;
+	int m_DesktopScreenHeight;
 public:
 	/* Constants: Texture Loading Flags
 		TEXLOAD_NORESAMPLE - Prevents the texture from any resampling
@@ -137,6 +139,9 @@ public:
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
+
+	virtual int GetDesktopScreenWidth() = 0;
+	virtual int GetDesktopScreenHeight() = 0;
 
 	virtual void Swap() = 0;
 

@@ -388,7 +388,7 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -413,6 +413,10 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		*Width = pInfo->current_w;
 		*Height = pInfo->current_h;
 	}
+
+	// store desktop resolution for settings reset button
+	*pDesktopWidth = pInfo->current_w;
+	*pDesktopHeight = pInfo->current_h;
 
 	// set flags
 	int SdlFlags = SDL_OPENGL;

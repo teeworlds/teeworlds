@@ -799,6 +799,10 @@ int CGraphics_SDL::TryInit()
 	m_ScreenWidth = g_Config.m_GfxScreenWidth;
 	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
+	// store desktop resolution for settings reset button
+	m_DesktopScreenWidth = pInfo->current_w;
+	m_DesktopScreenHeight = pInfo->current_h;
+
 	// set flags
 	int Flags = SDL_OPENGL;
 	if(g_Config.m_DbgResizable)

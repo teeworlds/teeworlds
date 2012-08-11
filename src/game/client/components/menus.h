@@ -6,6 +6,7 @@
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
 
+#include <engine/graphics.h>
 #include <engine/demo.h>
 #include <engine/friends.h>
 
@@ -100,6 +101,8 @@ class CMenus : public CComponent
 
 	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 						int ItemsPerRow, int SelectedIndex, float ScrollValue);
+	void UiDoListboxStartVideo(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
+						int ItemsPerRow, int SelectedIndex, float ScrollValue, float ButtonHeight, float Spaceing);
 	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
@@ -377,6 +380,28 @@ class CMenus : public CComponent
 	};
 
 	static CColumn ms_aCols[NUM_COLS];
+
+	enum
+	{
+		MAX_RESOLUTIONS=256,
+	};
+
+	CVideoMode m_aModes[MAX_RESOLUTIONS];
+	int m_NumModes;
+
+	struct CVideoFormat
+	{
+		int m_WidthValue;
+		int m_HeightValue;
+	};
+	
+	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
+	CVideoMode m_aFilteredVideoModes[MAX_RESOLUTIONS];
+	int m_NumVideoFormats;
+	int m_CurrentVideoFormat;
+	int m_NumFilteredVideoModes; 
+	void UpdateVideoFormats();
+	void UpdatedFilteredVideoModes();
 
 	// found in menus.cpp
 	int Render();
