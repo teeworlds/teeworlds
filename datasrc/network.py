@@ -8,6 +8,22 @@ PlayerFlags = Flags("PLAYERFLAG", ["CHATTING", "SCOREBOARD", "READY", "DEAD", "W
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 
+GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "VOTE_ABORT", "VOTE_PASS", "VOTE_FAIL", "VOTE_DENY_SPECCALL", "VOTE_DENY_ACTIVE", "VOTE_DENY_KICK", "VOTE_DENY_KICKID",
+							"VOTE_DENY_KICKSELF", "VOTE_DENY_KICKADMIN", "VOTE_DENY_SPEC", "VOTE_DENY_SPECID", "VOTE_DENY_SPECSELF", "SPEC_INVALIDID", "TEAM_SHUFFLE",
+							"TEAM_LOCK", "TEAM_UNLOCK", "TEAM_BALANCE", "TEAM_DENY_LOCK", "TEAM_DENY_BALANCE", "CTF_DROP", "CTF_RETURN",
+							
+							"VOTE_DENY_WAIT", "VOTE_DENY_KICKMIN", "TEAM_ALL", "TEAM_DENY_MAX", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
+							
+							"TEAM_DENY_WAIT",
+							
+							"CTF_CAPTURE",
+							
+							"VOTE_DENY_INVALIDOP", "VOTE_KICKYOU", "VOTE_FORCE",
+							
+							"VOTE_FORCEOP", "VOTE_FORCESPEC",
+							
+							"VOTE_CALLOP", "VOTE_CALLKICK", "VOTE_CALLSPEC"])
+
 RawHeader = '''
 
 #include <engine/message.h>
@@ -40,7 +56,8 @@ RawSource = '''
 Enums = [
 	Pickups,
 	Emotes,
-	Emoticons
+	Emoticons,
+	GameMsgIDs,
 ]
 
 Flags = [
@@ -223,10 +240,6 @@ Messages = [
 		NetString("m_pMessage"),
 	]),
 
-	NetMessage("Sv_Broadcast", [
-		NetString("m_pMessage"),
-	]),
-
 	NetMessage("Sv_Chat", [
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
@@ -244,10 +257,6 @@ Messages = [
 		NetIntRange("m_Victim", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Weapon", -3, 'NUM_WEAPONS-1'),
 		NetIntAny("m_ModeSpecial"),
-	]),
-
-	NetMessage("Sv_SoundGlobal", [
-		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
 	NetMessage("Sv_TuneParams", []),
@@ -323,6 +332,8 @@ Messages = [
 		NetStringStrict("m_pReason"),
 	]),
 
+	NetMessage("Sv_GameMsg", []),
+
 	## Demo messages
 	NetMessage("De_ClientEnter", [
 		NetStringStrict("m_pName"),
@@ -332,6 +343,10 @@ Messages = [
 	NetMessage("De_ClientLeave", [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pReason"),
+	]),
+
+	NetMessage("De_SoundGlobal", [
+		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
 	### Client messages

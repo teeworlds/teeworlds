@@ -185,7 +185,6 @@ public:
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
 	
 	const char *GetGameType() const { return m_pGameType; }
-	const char *GetTeamName(int Team) const;
 	
 	// map
 	void ChangeMap(const char *pToMap);

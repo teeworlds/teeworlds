@@ -106,6 +106,75 @@ const char *CGameClient::GetTeamName(int Team, bool Teamplay) const
 	return Localize("spectators");
 }
 
+enum
+{
+	DO_CHAT=0,
+	DO_BROADCAST,
+	DO_SPECIAL,
+
+	PARA_NONE=0,
+	PARA_I,
+	PARA_II,
+	PARA_III,
+	PARA_S,
+	PARA_SS,
+	PARA_SSS,
+};
+
+struct CGameMsg
+{
+	int m_Action;
+	int m_ParaType;
+	const char *m_pText;
+};
+
+static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
+	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"},
+	{/*GAMEMSG_VOTE_ABORT*/ DO_CHAT, PARA_NONE, "Vote aborted"},
+	{/*GAMEMSG_VOTE_PASS*/ DO_CHAT, PARA_NONE, "Vote passed"},
+	{/*GAMEMSG_VOTE_FAIL*/ DO_CHAT, PARA_NONE, "Vote failed"},
+	{/*GAMEMSG_VOTE_DENY_SPECCALL*/ DO_CHAT, PARA_NONE, "Spectators aren't allowed to start a vote."},
+	{/*GAMEMSG_VOTE_DENY_ACTIVE*/ DO_CHAT, PARA_NONE, "Wait for current vote to end before calling a new one."},
+	{/*GAMEMSG_VOTE_DENY_KICK*/ DO_CHAT, PARA_NONE, "Server does not allow voting to kick players"},
+	{/*GAMEMSG_VOTE_DENY_KICKID*/ DO_CHAT, PARA_NONE, "Invalid client id to kick"},
+	{/*GAMEMSG_VOTE_DENY_KICKSELF*/ DO_CHAT, PARA_NONE, "You can't kick yourself"},
+	{/*GAMEMSG_VOTE_DENY_KICKADMIN*/ DO_CHAT, PARA_NONE, "You can't kick admins"},
+	{/*GAMEMSG_VOTE_DENY_SPEC*/ DO_CHAT, PARA_NONE, "Server does not allow voting to move players to spectators"},
+	{/*GAMEMSG_VOTE_DENY_SPECID*/ DO_CHAT, PARA_NONE, "Invalid client id to move"},
+	{/*GAMEMSG_VOTE_DENY_SPECSELF*/ DO_CHAT, PARA_NONE, "You can't move yourself"},
+	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},
+	{/*GAMEMSG_TEAM_SHUFFLE*/ DO_CHAT, PARA_NONE, "Teams were shuffled"},
+	{/*GAMEMSG_TEAM_LOCK*/ DO_CHAT, PARA_NONE, "Teams were locked"},
+	{/*GAMEMSG_TEAM_UNLOCK*/ DO_CHAT, PARA_NONE, "Teams were unlocked"},
+	{/*GAMEMSG_TEAM_BALANCE*/ DO_CHAT, PARA_NONE, "Teams have been balanced"},
+	{/*GAMEMSG_TEAM_DENY_LOCK*/ DO_BROADCAST, PARA_NONE, "Teams are locked"},
+	{/*GAMEMSG_TEAM_DENY_BALANCE*/ DO_BROADCAST, PARA_NONE, "Teams must be balanced, please join other team"},
+	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
+	{/*GAMEMSG_CTF_RETURN*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf return sound
+
+	{/*GAMEMSG_VOTE_DENY_WAIT*/ DO_CHAT, PARA_I, "You must wait %d seconds before making another vote"},
+	{/*GAMEMSG_VOTE_DENY_KICKMIN*/ DO_CHAT, PARA_I, "Kick voting requires %d players on the server"},
+	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, "All players were moved to the %s"},	// special - add team name
+	{/*GAMEMSG_TEAM_DENY_MAX*/ DO_BROADCAST, PARA_I, "Only %d active players are allowed"},
+	{/*GAMEMSG_TEAM_BALANCE_VICTIM*/ DO_SPECIAL, PARA_I, "You were moved to %s due to team balancing"},	// special - add team name
+	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
+
+	{/*GAMEMSG_TEAM_DENY_WAIT*/ DO_BROADCAST, PARA_II, "Time to wait before changing team: %02d:%02d"},
+
+	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
+
+	{/*GAMEMSG_VOTE_DENY_INVALIDOP*/ DO_CHAT, PARA_S, "'%s' isn't an option on this server"},
+	{/*GAMEMSG_VOTE_KICKYOU*/ DO_CHAT, PARA_S, "'%s' called for vote to kick you"},
+	{/*GAMEMSG_VOTE_FORCE*/ DO_CHAT, PARA_S, "admin forced vote %s"},
+
+	{/*GAMEMSG_VOTE_FORCEOP*/ DO_CHAT, PARA_SS, "admin forced server option '%s' (%s)"},
+	{/*GAMEMSG_S2_VOTE_FORCESPEC*/ DO_CHAT, PARA_SS, "admin moved '%s' to spectator (%s)"},
+
+	{/*GAMEMSG_VOTE_CALLOP*/ DO_CHAT, PARA_SSS, "'%s' called vote to change server option '%s' (%s)"},
+	{/*GAMEMSG_VOTE_CALLKICK*/ DO_CHAT, PARA_SSS, "'%s' called for vote to kick '%s' (%s)"},
+	{/*GAMEMSG_VOTE_CALLSPEC*/ DO_CHAT, PARA_SSS, "'%s' called for vote to move '%s' to spectators (%s)"}
+};
+
 void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
@@ -123,6 +192,7 @@ void CGameClient::OnConsoleInit()
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
+	m_pBroadcast = &::gs_Broadcast;
 	m_pGameConsole = &::gs_GameConsole;
 	m_pParticles = &::gs_Particles;
 	m_pMenus = &::gs_Menus;
@@ -486,6 +556,109 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_Tuning = NewTuning;
 		return;
 	}
+	else if(MsgId == NETMSGTYPE_SV_GAMEMSG)
+	{
+		int GameMsgID = pUnpacker->GetInt();
+
+		int aParaI[3];
+		int NumParaI = 0;
+		const char *apParaS[3];
+		int NumParaS = 0;
+
+		// get paras
+		switch(gs_GameMsgList[GameMsgID].m_ParaType)
+		{
+		case PARA_III:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+		case PARA_II:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+		case PARA_I:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+			break;
+		case PARA_SSS:
+			apParaS[NumParaS++] = pUnpacker->GetString();
+		case PARA_SS:
+			apParaS[NumParaS++] = pUnpacker->GetString();
+		case PARA_S:
+			apParaS[NumParaS++] = pUnpacker->GetString();
+			break;
+		}
+
+		// check for unpacking errors
+		if(pUnpacker->Error())
+			return;
+
+		// handle special messages
+		static char aBuf[256];
+		if(gs_GameMsgList[GameMsgID].m_Action == DO_SPECIAL)
+		{
+			switch(GameMsgID)
+			{
+			case GAMEMSG_CTF_DROP:
+				if(m_SuppressEvents)
+					return;
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_DROP);
+				break;
+			case GAMEMSG_CTF_RETURN:
+				if(m_SuppressEvents)
+					return;
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_RETURN);
+				break;
+			case GAMEMSG_TEAM_BALANCE_VICTIM:
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+				m_pBroadcast->DoBroadcast(aBuf);
+				break;
+			case GAMEMSG_CTF_GRAB:
+				if(m_SuppressEvents)
+					return;
+				if(m_LocalClientID != -1 && (m_aClients[m_LocalClientID].m_Team != aParaI[0] ||
+					(m_Snap.m_SpecInfo.m_Active && m_Snap.m_SpecInfo.m_SpectatorID != -1 && m_aClients[m_Snap.m_SpecInfo.m_SpectatorID].m_Team != aParaI[0])))
+					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_PL);
+				else
+					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_EN);
+				break;
+			case GAMEMSG_CTF_CAPTURE:
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
+				if(aParaI[2] <= 60*Client()->GameTickSpeed())
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%.2f seconds)", aParaI[0] ? "blue" : "red", m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
+				else
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", aParaI[0] ? "blue" : "red", m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
+				m_pChat->AddLine(-1, 0, aBuf);
+			}
+			return;
+		}
+
+		// build message
+		const char *pText = "";
+		if(NumParaI == 0 && NumParaS == 0)
+			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
+		else
+		{
+			if(NumParaI == 1)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0]);
+			else if(NumParaI == 2)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1]);
+			else if(NumParaI == 3)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1], aParaI[2]);
+			else if(NumParaS == 1)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0]);
+			else if(NumParaS == 2)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0], apParaS[1]);
+			else if(NumParaS == 3)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0], apParaS[1], apParaS[2]);
+			pText = aBuf;
+		}
+
+		// handle message
+		switch(gs_GameMsgList[GameMsgID].m_Action)
+		{
+		case DO_CHAT:
+			m_pChat->AddLine(-1, 0, pText);
+			break;
+		case DO_BROADCAST:
+			m_pBroadcast->DoBroadcast(pText);
+		}
+	}
 
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
 	if(!pRawMsg)
@@ -630,19 +803,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_aClients[pMsg->m_ClientID].m_Emoticon = pMsg->m_Emoticon;
 		m_aClients[pMsg->m_ClientID].m_EmoticonStart = Client()->GameTick();
 	}
-	else if(MsgId == NETMSGTYPE_SV_SOUNDGLOBAL)
+	else if(MsgId == NETMSGTYPE_DE_SOUNDGLOBAL)
 	{
 		if(m_SuppressEvents)
 			return;
 
-		// don't enqueue pseudo-global sounds from demos (created by PlayAndRecord)
-		CNetMsg_Sv_SoundGlobal *pMsg = (CNetMsg_Sv_SoundGlobal *)pRawMsg;
-		if(pMsg->m_SoundID == SOUND_CTF_DROP || pMsg->m_SoundID == SOUND_CTF_RETURN ||
-			pMsg->m_SoundID == SOUND_CTF_CAPTURE || pMsg->m_SoundID == SOUND_CTF_GRAB_EN ||
-			pMsg->m_SoundID == SOUND_CTF_GRAB_PL)
-			g_GameClient.m_pSounds->Enqueue(CSounds::CHN_GLOBAL, pMsg->m_SoundID);
-		else
-			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
+		CNetMsg_De_SoundGlobal *pMsg = (CNetMsg_De_SoundGlobal *)pRawMsg;
+		g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
 	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTENTER && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{

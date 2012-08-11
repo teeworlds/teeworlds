@@ -192,14 +192,12 @@ void IGameController::DoTeamBalance()
 		DoTeamChange(pPlayer, BiggerTeam^1);
 		pPlayer->m_LastActionTick = Temp;
 		pPlayer->Respawn();
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "You were moved to %s due to team balancing", GetTeamName(pPlayer->GetTeam()));
-		GameServer()->SendBroadcast(aBuf, pPlayer->GetCID());
+		GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE_VICTIM, pPlayer->GetTeam(), pPlayer->GetCID());
 	}
 	while(--NumBalance);
 
 	m_UnbalancedTick = TBALANCE_OK;
-	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "Teams have been balanced");
+	GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE, -1);
 }
 
 // event
@@ -823,21 +821,6 @@ bool IGameController::IsPlayerReadyMode() const
 bool IGameController::IsTeamChangeAllowed() const
 {
 	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
-}
-
-const char *IGameController::GetTeamName(int Team) const
-{
-	if(IsTeamplay())
-	{
-		if(Team == TEAM_RED)
-			return "red team";
-		else if(Team == TEAM_BLUE)
-			return "blue team";
-	}
-	else if(Team == 0)
-		return "game";
-
-	return "spectators";
 }
 
 void IGameController::UpdateGameInfo(int ClientID)

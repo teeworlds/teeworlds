@@ -6,15 +6,17 @@
 
 class CBroadcast : public CComponent
 {
-	// broadcasts
-	char m_aBroadcastText[1024];
+	char m_aBroadcastText[128];
 	int64 m_BroadcastTime;
 	float m_BroadcastRenderOffset;
 
 public:
+	CBroadcast();
+
+	void DoBroadcast(const char *pText);
+
 	virtual void OnReset();
 	virtual void OnRender();
-	virtual void OnMessage(int MsgType, void *pRawMsg);
 };
 
 #endif

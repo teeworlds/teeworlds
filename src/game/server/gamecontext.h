@@ -124,7 +124,6 @@ public:
 	void CreatePlayerSpawn(vec2 Pos);
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
-	void CreateSoundGlobal(int Sound, int Target=-1);
 
 
 	enum
@@ -140,8 +139,14 @@ public:
 	void SendChat(int ClientID, int Team, const char *pText);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
-	void SendBroadcast(const char *pText, int ClientID);
 
+	void SendGameMsg(int GameMsgID, int ClientID);
+	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
+	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ClientID);
+	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
+	void SendGameMsg(int GameMsgID, const char *pParaS1, int ClientID);
+	void SendGameMsg(int GameMsgID, const char *pParaS1, const char *pParaS2, int ClientID);
+	void SendGameMsg(int GameMsgID, const char *pParaS1, const char *pParaS2, const char *pParaS3, int ClientID);
 
 	//
 	void CheckPureTuning();
