@@ -213,7 +213,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	vec2 Out, Border;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
 	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);

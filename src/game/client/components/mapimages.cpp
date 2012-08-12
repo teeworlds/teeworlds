@@ -22,7 +22,7 @@ void CMapImages::OnMapLoad()
 	for(int i = 0; i < m_Count; i++)
 	{
 		Graphics()->UnloadTexture(m_aTextures[i]);
-		m_aTextures[i] = -1;
+		m_aTextures[i] = IGraphics::CTextureHandle();
 	}
 	m_Count = 0;
 
@@ -32,8 +32,6 @@ void CMapImages::OnMapLoad()
 	// load new textures
 	for(int i = 0; i < m_Count; i++)
 	{
-		m_aTextures[i] = 0;
-
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
@@ -57,7 +55,7 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 	for(int i = 0; i < m_MenuCount; i++)
 	{
 		Graphics()->UnloadTexture(m_aMenuTextures[i]);
-		m_aMenuTextures[i] = -1;
+		m_aMenuTextures[i] = IGraphics::CTextureHandle();
 	}
 	m_MenuCount = 0;
 
@@ -67,8 +65,6 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 	// load new textures
 	for(int i = 0; i < m_MenuCount; i++)
 	{
-		m_aMenuTextures[i] = 0;
-
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
@@ -86,7 +82,7 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 	}
 }
 
-int CMapImages::Get(int Index) const
+IGraphics::CTextureHandle CMapImages::Get(int Index) const
 {
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return m_aTextures[Index];

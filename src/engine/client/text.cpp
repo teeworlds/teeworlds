@@ -44,7 +44,7 @@ struct CFontSizeData
 	int m_FontSize;
 	FT_Face *m_pFace;
 
-	int m_aTextures[2];
+	IGraphics::CTextureHandle m_aTextures[2];
 	int m_TextureWidth;
 	int m_TextureHeight;
 
@@ -154,7 +154,7 @@ class CTextRender : public IEngineTextRender
 			{
 				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
 				FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;
-				pSizeData->m_aTextures[i] = 0;
+				pSizeData->m_aTextures[i] = IGraphics::CTextureHandle();
 			}
 
 			pSizeData->m_aTextures[i] = Graphics()->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, IGraphics::TEXLOAD_NOMIPMAPS);

@@ -51,7 +51,7 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 static int const gs_aSelectionParts[6] = {SELECTION_BODY, SELECTION_TATTOO, SELECTION_DECORATION,
 											SELECTION_HANDS, SELECTION_FEET, SELECTION_EYES};
 
-int CMenus::DoButton_Customize(const void *pID, int Texture, int SpriteID, const CUIRect *pRect, float ImageRatio)
+int CMenus::DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds);
@@ -191,7 +191,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 
 		// marker
 		vec2 Marker = vec2(Hue*UI()->Scale(), max(0.0f, 127-Lgt/2.0f)*UI()->Scale());
-		Graphics()->TextureSet(-1);
+		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
 		IGraphics::CQuadItem aMarker[2];
@@ -237,7 +237,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 			}
 			// bar
 			Bar.VSplitLeft(256/2, &Bar, &Button);
-			Graphics()->TextureSet(-1);
+			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
 			for(int v = 0; v < 256/2; v++)
 			{
@@ -958,7 +958,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int Tex = g_pData->m_aImages[IMAGE_NO_SKINPART].m_Id;
+			IGraphics::CTextureHandle Tex = g_pData->m_aImages[IMAGE_NO_SKINPART].m_Id;
 			int Sprite = -1;
 			if(gs_apSkinVariables[p][0])
 			{

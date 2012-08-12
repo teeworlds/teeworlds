@@ -21,7 +21,7 @@ class Image(Struct):
 		Struct.__init__(self, "CDataImage")
 		self.name = String(name)
 		self.filename = String(filename)
-		self.id = Int(-1)
+		self.id = TextureHandle()
 
 class SpriteSet(Struct):
 	def __init__(self, name="", image=None, gridx=0, gridy=0):

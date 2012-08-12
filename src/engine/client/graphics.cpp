@@ -165,7 +165,6 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 
 	m_Rotation = 0;
 	m_Drawing = 0;
-	m_InvalidTexture = 0;
 
 	m_TextureMemoryUsage = 0;
 
@@ -282,7 +281,7 @@ void CGraphics_OpenGL::LinesDraw(const CLineItem *pArray, int Num)
 	AddVertices(2*Num);
 }
 
-int CGraphics_OpenGL::UnloadTexture(int Index)
+int CGraphics_OpenGL::UnloadTexture(IGraphics::CTextureHandle Index)
 {
 	if(Index == m_InvalidTexture)
 		return 0;
@@ -297,7 +296,7 @@ int CGraphics_OpenGL::UnloadTexture(int Index)
 	return 0;
 }
 
-int CGraphics_OpenGL::LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
+int CGraphics_OpenGL::LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
 	int Oglformat = GL_RGBA;
 	if(Format == CImageInfo::FORMAT_RGB)
@@ -310,7 +309,7 @@ int CGraphics_OpenGL::LoadTextureRawSub(int TextureID, int x, int y, int Width, 
 	return 0;
 }
 
-int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
+IGraphics::CTextureHandle CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
 	int Mipmap = 1;
 	unsigned char *pTexData = (unsigned char *)pData;
@@ -321,7 +320,7 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 
 	// don't waste memory on texture if we are stress testing
 	if(g_Config.m_DbgStress)
-		return 	m_InvalidTexture;
+		return m_InvalidTexture;
 
 	// grab texture
 	Tex = m_FirstFreeTexture;
@@ -411,18 +410,18 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 
 	m_TextureMemoryUsage += m_aTextures[Tex].m_MemSize;
 	mem_free(pTmpData);
-	return Tex;
+	return CreateTextureHandle(Tex);
 }
 
 // simple uncompressed RGBA loaders
-int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
+IGraphics::CTextureHandle CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
 	int l = str_length(pFilename);
 	int ID;
 	CImageInfo Img;
 
 	if(l < 3)
-		return -1;
+		return m_InvalidTexture;
 	if(LoadPNG(&Img, pFilename, StorageType))
 	{
 		if (StoreFormat == CImageInfo::FORMAT_AUTO)
@@ -430,9 +429,7 @@ int CGraphics_OpenGL::LoadTexture(const char *pFilename, int StorageType, int St
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
-		if(ID != m_InvalidTexture && g_Config.m_Debug)
-			dbg_msg("graphics/texture", "loaded %s", pFilename);
-		return ID;
+		return CreateTextureHandle(ID);
 	}
 
 	return m_InvalidTexture;
@@ -530,17 +527,17 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 	mem_free(pPixelData);
 }
 
-void CGraphics_OpenGL::TextureSet(int TextureID)
+void CGraphics_OpenGL::TextureSet(IGraphics::CTextureHandle Texture)
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
-	if(TextureID == -1)
+	if(Texture < 0)
 	{
 		glDisable(GL_TEXTURE_2D);
 	}
 	else
 	{
 		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[TextureID].m_Tex);
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[Texture].m_Tex);
 	}
 }
 

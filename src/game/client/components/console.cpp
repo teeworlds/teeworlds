@@ -271,7 +271,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1);
-		pInfo->m_pSelf->Graphics()->TextureSet(-1);
+		pInfo->m_pSelf->Graphics()->TextureClear();
 		pInfo->m_pSelf->Graphics()->QuadsBegin();
 			pInfo->m_pSelf->Graphics()->SetColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
 			pInfo->m_pSelf->RenderTools()->DrawRoundRect(pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4, pInfo->m_Cursor.m_FontSize/3);
@@ -351,7 +351,7 @@ void CGameConsole::OnRender()
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
 	// do console shadow
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	IGraphics::CColorVertex Array[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.5f),
@@ -375,7 +375,7 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsEnd();
 
 	// do small bar shadow
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Array[0] = IGraphics::CColorVertex(0, 0,0,0, 0.0f);
 	Array[1] = IGraphics::CColorVertex(1, 0,0,0, 0.0f);

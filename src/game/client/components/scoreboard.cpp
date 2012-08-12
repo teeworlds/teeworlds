@@ -48,7 +48,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	float h = 50.0f;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
@@ -83,7 +83,7 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
@@ -125,7 +125,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
 	RenderTools()->DrawRoundRect(x, y, w, h, 17.0f);
@@ -228,7 +228,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			// background so it's easy to find the local player or the followed one in spectator mode
 			if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 			{
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureClear();
 				Graphics()->QuadsBegin();
 				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha);
 				RenderTools()->DrawRoundRect(x, y, w-20.0f, LineHeight, 15.0f);
@@ -319,7 +319,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 	//draw the box
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
 	RenderTools()->DrawRoundRectExt(x, 0.0f, 180.0f, 50.0f, 15.0f, CUI::CORNER_B);

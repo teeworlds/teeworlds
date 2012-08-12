@@ -168,6 +168,12 @@ class Pointer(BaseType):
 	def EmitDefinition(self, name):
 		return ["&"+self.target.TargetName()]
 
+class TextureHandle(BaseType):
+	def __init__(self):
+		BaseType.__init__(self, "IGraphics::CTextureHandle")
+	def EmitDefinition(self, name):
+		return ["IGraphics::CTextureHandle()"]	
+
 # helper functions
 
 def EmitTypeDeclaration(root):
