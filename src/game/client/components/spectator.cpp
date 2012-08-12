@@ -179,7 +179,7 @@ void CSpectator::OnRender()
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f);
 	RenderTools()->DrawRoundRect(Width/2.0f-300.0f, Height/2.0f-300.0f, 600.0f, 600.0f, 20.0f);
@@ -199,7 +199,7 @@ void CSpectator::OnRender()
 	{
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 		{
-			Graphics()->TextureSet(-1);
+			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
 			RenderTools()->DrawRoundRect(Width/2.0f-280.0f, Height/2.0f-280.0f, 270.0f, 60.0f, 20.0f);
@@ -232,7 +232,7 @@ void CSpectator::OnRender()
 
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == i)
 		{
-			Graphics()->TextureSet(-1);
+			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
 			RenderTools()->DrawRoundRect(Width/2.0f+x-10.0f, Height/2.0f+y-10.0f, 270.0f, 60.0f, 20.0f);

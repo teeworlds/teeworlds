@@ -48,7 +48,7 @@ protected:
 	float m_ScreenX1;
 	float m_ScreenY1;
 
-	int m_InvalidTexture;
+	IGraphics::CTextureHandle m_InvalidTexture;
 
 	struct CTexture
 	{
@@ -90,17 +90,17 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(int Index);
-	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
-	virtual int LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
+	virtual int UnloadTexture(IGraphics::CTextureHandle Index);
+	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
+	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
 	// simple uncompressed RGBA loaders
-	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
+	virtual IGraphics::CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
 
 	void ScreenshotDirect(const char *pFilename);
 
-	virtual void TextureSet(int TextureID);
+	virtual void TextureSet(IGraphics::CTextureHandle TextureID);
 
 	virtual void Clear(float r, float g, float b);
 

@@ -217,8 +217,6 @@ void CSkins::OnInit()
 		{
 			CSkinPart NoneSkinPart;
 			str_copy(NoneSkinPart.m_aName, "", sizeof(NoneSkinPart.m_aName));
-			NoneSkinPart.m_OrgTexture = -1;
-			NoneSkinPart.m_ColorTexture = -1;
 			NoneSkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(NoneSkinPart);
 		}
@@ -234,8 +232,6 @@ void CSkins::OnInit()
 		{
 			CSkinPart DummySkinPart;
 			str_copy(DummySkinPart.m_aName, "dummy", sizeof(DummySkinPart.m_aName));
-			DummySkinPart.m_OrgTexture = -1;
-			DummySkinPart.m_ColorTexture = -1;
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(DummySkinPart);
 		}
