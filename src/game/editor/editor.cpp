@@ -2430,6 +2430,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 
 	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
 	int External = pImg->m_External;
+	pEditor->Graphics()->UnloadTexture(pImg->m_Texture);
 	pImg->m_Texture = IGraphics::CTextureHandle();
 	if(pImg->m_pData)
 	{
