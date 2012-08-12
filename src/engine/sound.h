@@ -16,17 +16,38 @@ public:
 		FLAG_ALL=3
 	};
 
+	class CSampleHandle
+	{
+		friend class ISound;
+		int m_Id;
+	public:
+		CSampleHandle()
+		: m_Id(-1)
+		{}
+
+		bool IsValid() const { return Id() >= 0; }
+		int Id() const { return m_Id; }
+	};
+
 	virtual bool IsSoundEnabled() = 0;
 
-	virtual int LoadWV(const char *pFilename) = 0;
+	virtual CSampleHandle LoadWV(const char *pFilename) = 0;
 
 	virtual void SetChannel(int ChannelID, float Volume, float Panning) = 0;
 	virtual void SetListenerPos(float x, float y) = 0;
 
-	virtual int PlayAt(int ChannelID, int SampleID, int Flags, float x, float y) = 0;
-	virtual int Play(int ChannelID, int SampleID, int Flags) = 0;
-	virtual void Stop(int SampleID) = 0;
+	virtual int PlayAt(int ChannelID, CSampleHandle Sound, int Flags, float x, float y) = 0;
+	virtual int Play(int ChannelID, CSampleHandle Sound, int Flags) = 0;
+	virtual void Stop(CSampleHandle Sound) = 0;
 	virtual void StopAll() = 0;
+
+protected:
+	inline CSampleHandle CreateSampleHandle(int Index)
+	{
+		CSampleHandle Tex;
+		Tex.m_Id = Index;
+		return Tex;
+	}
 };
 
 

@@ -80,8 +80,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 			CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 			mem_free(Info.m_pData);
 		}
-		else
-			CountryFlag.m_Texture = -1;
+		
 		if(g_Config.m_Debug)
 		{
 			str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", aOrigin);
@@ -121,7 +120,6 @@ void CCountryFlags::OnInit()
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");
 		CCountryFlag DummyEntry;
 		DummyEntry.m_CountryCode = -1;
-		DummyEntry.m_Texture = -1;
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
@@ -145,7 +143,7 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
 void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h)
 {
 	const CCountryFlag *pFlag = GetByCountryCode(CountryCode);
-	if(pFlag->m_Texture != -1)
+	if(pFlag->m_Texture.IsValid())
 	{
 		Graphics()->TextureSet(pFlag->m_Texture);
 		Graphics()->QuadsBegin();

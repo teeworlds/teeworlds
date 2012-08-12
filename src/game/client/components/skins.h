@@ -28,8 +28,8 @@ public:
 	struct CSkinPart
 	{
 		char m_aName[24];
-		int m_OrgTexture;
-		int m_ColorTexture;
+		IGraphics::CTextureHandle m_OrgTexture;
+		IGraphics::CTextureHandle m_ColorTexture;
 		vec3 m_BloodColor;
 
 		bool operator<(const CSkinPart &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }

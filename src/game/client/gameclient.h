@@ -61,6 +61,9 @@ class CGameClient : public IGameClient
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
+
+	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
+
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
@@ -183,8 +186,8 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo(bool UpdateSkinInfo);
-		void Reset();
+		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
+		void Reset(CGameClient *pGameClient);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];

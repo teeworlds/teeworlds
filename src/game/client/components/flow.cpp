@@ -20,7 +20,7 @@ void CFlow::DbgRender()
 
 	IGraphics::CLineItem Array[1024];
 	int NumItems = 0;
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
