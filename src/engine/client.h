@@ -5,6 +5,7 @@
 #include "kernel.h"
 
 #include "message.h"
+#include "graphics.h"
 
 class IClient : public IInterface
 {
@@ -143,7 +144,7 @@ public:
 
 	virtual bool SoundInitFailed() = 0;
 
-	virtual int GetDebugFont() = 0;
+	virtual IGraphics::CTextureHandle GetDebugFont() = 0; // TODO: remove this function
 };
 
 class IGameClient : public IInterface

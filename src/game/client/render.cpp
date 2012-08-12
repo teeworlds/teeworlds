@@ -184,7 +184,7 @@ void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 
 void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float Rounding)
 {
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 
 	// TODO: FIX US
 	Graphics()->QuadsBegin();
@@ -220,7 +220,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				IGraphics::CQuadItem Item;
 
 				// draw decoration
-				if(pInfo->m_aTextures[2] != -1)
+				if(pInfo->m_aTextures[2].IsValid())
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[2]);
 					Graphics()->QuadsBegin();
@@ -251,7 +251,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsEnd();
 
 				// draw tattoo
-				if(pInfo->m_aTextures[1] != -1 && !OutLine)
+				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[1]);
 					Graphics()->QuadsBegin();
