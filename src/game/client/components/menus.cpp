@@ -126,7 +126,7 @@ int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const
 	float *pFade = ButtonFade(pID, Seconds);
 	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f), Corners, r);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
@@ -144,7 +144,7 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 	float *pFade = ButtonFade(pID, Seconds);
 	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f), CUI::CORNER_ALL, r);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), CUI::CORNER_ALL, r);
 	CUIRect Text, Image;
 	pRect->VSplitRight(pRect->h*4.0f, &Text, &Image); // always correct ratio for image
 
