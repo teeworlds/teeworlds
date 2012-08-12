@@ -150,7 +150,7 @@ class CTextRender : public IEngineTextRender
 
 		for(int i = 0; i < 2; i++)
 		{
-			if(pSizeData->m_aTextures[i] != 0)
+			if(pSizeData->m_aTextures[i].IsValid())
 			{
 				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
 				FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;

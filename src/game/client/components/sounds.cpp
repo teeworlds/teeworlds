@@ -165,7 +165,7 @@ void CSounds::Play(int Chn, int SetId, float Vol)
 		return;
 
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
-	if(SampleId == -1)
+	if(!SampleId.IsValid())
 		return;
 
 	int Flags = 0;
@@ -181,7 +181,7 @@ void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 		return;
 	
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
-	if(SampleId == -1)
+	if(!SampleId.IsValid())
 		return;
 
 	int Flags = 0;

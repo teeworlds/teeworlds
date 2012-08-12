@@ -70,7 +70,8 @@ public:
 		: m_Id(-1)
 		{}
 
-		operator int() const { return m_Id; }
+		bool IsValid() const { return Id() >= 0; }
+		int Id() const { return m_Id; }
 	};
 
 	int ScreenWidth() const { return m_ScreenWidth; }

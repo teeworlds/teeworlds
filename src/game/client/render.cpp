@@ -220,7 +220,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				IGraphics::CQuadItem Item;
 
 				// draw decoration
-				if(pInfo->m_aTextures[2] != -1)
+				if(pInfo->m_aTextures[2].IsValid())
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[2]);
 					Graphics()->QuadsBegin();
@@ -251,7 +251,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsEnd();
 
 				// draw tattoo
-				if(pInfo->m_aTextures[1] != -1 && !OutLine)
+				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[1]);
 					Graphics()->QuadsBegin();

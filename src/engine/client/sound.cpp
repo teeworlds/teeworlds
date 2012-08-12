@@ -452,7 +452,7 @@ void CSound::SetChannel(int ChannelID, float Vol, float Pan)
 
 int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y)
 {
-	if(SampleID < 0)
+	if(!SampleID.IsValid())
 		return -1;
 
 	int VoiceID = -1;
@@ -475,10 +475,10 @@ int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, floa
 	// voice found, use it
 	if(VoiceID != -1)
 	{
-		m_aVoices[VoiceID].m_pSample = &m_aSamples[SampleID];
+		m_aVoices[VoiceID].m_pSample = &m_aSamples[SampleID.Id()];
 		m_aVoices[VoiceID].m_pChannel = &m_aChannels[ChannelID];
 		if(Flags & FLAG_LOOP)
-			m_aVoices[VoiceID].m_Tick = m_aSamples[SampleID].m_PausedAt;
+			m_aVoices[VoiceID].m_Tick = m_aSamples[SampleID.Id()].m_PausedAt;
 		else
 			m_aVoices[VoiceID].m_Tick = 0;
 		m_aVoices[VoiceID].m_Vol = 255;
@@ -505,7 +505,7 @@ void CSound::Stop(CSampleHandle SampleID)
 {
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
-	CSample *pSample = &m_aSamples[SampleID];
+	CSample *pSample = &m_aSamples[SampleID.Id()];
 	for(int i = 0; i < NUM_VOICES; i++)
 	{
 		if(m_aVoices[i].m_pSample == pSample)

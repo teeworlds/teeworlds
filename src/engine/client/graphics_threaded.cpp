@@ -282,19 +282,19 @@ void CGraphics_Threaded::LinesDraw(const CLineItem *pArray, int Num)
 
 int CGraphics_Threaded::UnloadTexture(CTextureHandle Index)
 {
-	if(Index == m_InvalidTexture)
+	if(Index.Id() == m_InvalidTexture.Id())
 		return 0;
 
-	if(Index < 0)
+	if(!Index.IsValid())
 		return 0;
 
 	CCommandBuffer::SCommand_Texture_Destroy Cmd;
-	Cmd.m_Slot = Index;
+	Cmd.m_Slot = Index.Id();
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextures[Index].m_Next = m_FirstFreeTexture;
-	m_TextureMemoryUsage -= m_aTextures[Index].m_MemSize;
-	m_FirstFreeTexture = Index;
+	m_aTextures[Index.Id()].m_Next = m_FirstFreeTexture;
+	m_TextureMemoryUsage -= m_aTextures[Index.Id()].m_MemSize;
+	m_FirstFreeTexture = Index.Id();
 	return 0;
 }
 
@@ -310,7 +310,7 @@ static int ImageFormatToTexFormat(int Format)
 int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
 	CCommandBuffer::SCommand_Texture_Update Cmd;
-	Cmd.m_Slot = TextureID;
+	Cmd.m_Slot = TextureID.Id();
 	Cmd.m_X = x;
 	Cmd.m_Y = y;
 	Cmd.m_Width = Width;
@@ -394,7 +394,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags)
 {
 	int l = str_length(pFilename);
-	int ID;
+	IGraphics::CTextureHandle ID;
 	CImageInfo Img;
 
 	if(l < 3)
@@ -406,9 +406,9 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
-		if(ID != m_InvalidTexture && g_Config.m_Debug)
+		if(ID.Id() != m_InvalidTexture.Id() && g_Config.m_Debug)
 			dbg_msg("graphics/texture", "loaded %s", pFilename);
-		return CreateTextureHandle(ID);
+		return ID;
 	}
 
 	return m_InvalidTexture;
@@ -511,7 +511,7 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
-	m_State.m_Texture = TextureID;
+	m_State.m_Texture = TextureID.Id();
 }
 
 void CGraphics_Threaded::Clear(float r, float g, float b)

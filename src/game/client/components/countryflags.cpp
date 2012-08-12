@@ -143,7 +143,7 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
 void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h)
 {
 	const CCountryFlag *pFlag = GetByCountryCode(CountryCode);
-	if(pFlag->m_Texture != -1)
+	if(pFlag->m_Texture.IsValid())
 	{
 		Graphics()->TextureSet(pFlag->m_Texture);
 		Graphics()->QuadsBegin();
