@@ -99,10 +99,9 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 
-	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, float ScrollValue);
-	void UiDoListboxStartVideo(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, float ScrollValue, float ButtonHeight, float Spaceing);
+	void UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spaceing);
+	void UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
+						int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect=0);
 	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);

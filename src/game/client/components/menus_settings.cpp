@@ -318,7 +318,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		s_InitSkinlist = false;
 	}
 
-	UiDoListboxStart(&s_InitSkinlist, &MainView, 50.0f, Localize("Skins"), "", s_paSkinList.size(), 4, -1, s_ScrollValue);
+	UiDoListboxHeader(&MainView, Localize("Skins"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_InitSkinlist, 50.0f, "", s_paSkinList.size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -404,7 +405,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
 											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
-	UiDoListboxStart(&s_InitSkinPartList, &MainView, 50.0f, s_apTitles[p], "", s_paList[p].size(), 4, -1, s_ScrollValue);
+	UiDoListboxHeader(&MainView, s_apTitles[p], 20.0f, 2.0f);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, "", s_paList[p].size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[p].size(); ++i)
 	{
@@ -551,7 +553,8 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+	UiDoListboxHeader(&MainView, Localize("Language"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_LanguageList, 24.0f, "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
@@ -780,7 +783,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	MainView.HSplitTop(10.0f, 0, &MainView);
 	static float s_ScrollValue = 0.0f;
 	int OldSelected = -1;
-	UiDoListboxStart(&s_ScrollValue, &MainView, 40.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
+	UiDoListboxHeader(&MainView, Localize("Country"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ScrollValue, 40.0f, "", m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
@@ -1397,12 +1401,85 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// display mode list
 	{
+		// custom list header
+		CUIRect Header, Left, Right;
+		MainView.HSplitTop(ButtonHeight*2.0f+Spaceing*2.0f, &Header, 0);
+		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+
+		// draw header
+		MainView.HSplitTop(ButtonHeight, &Header, &MainView);
+		UI()->DoLabel(&Header, Localize("Resolutions"), Header.h*ms_FontmodHeight, 0);
+
+		// supported modes button
+		MainView.HSplitTop(Spaceing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Left, &MainView);
+		Left.VSplitMid(&Left, &Right);
+		Left.VSplitRight(1.5f, &Left, 0);
+		Right.VSplitLeft(1.5f, 0, &Right);
+		static int s_GfxDisplayAllModes = 0;
+		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Left))
+		{
+			g_Config.m_GfxDisplayAllModes ^= 1;
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			UpdateVideoFormats();
+
+			bool Found = false;
+			for(int i = 0; i < m_NumVideoFormats; i++)
+			{
+				int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+				if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
+				{
+					m_CurrentVideoFormat = i;
+					Found = true;
+					break;
+				}
+
+			}
+
+			if(!Found)
+				m_CurrentVideoFormat = 0;
+
+			UpdatedFilteredVideoModes();
+		}
+
+		// format changer
+		{
+			RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			CUIRect Text, Value, Unit;
+			Right.VSplitLeft(Right.w/3.0f, &Text, &Right);
+			Right.VSplitMid(&Value, &Unit);
+
+			char aBuf[32];
+			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Format"));
+			Text.y += 2.0f;
+			UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, 0);
+
+			Unit.y += 2.0f;
+			if((float)m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue/(float)m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue >= 1.55f)
+				UI()->DoLabel(&Unit, Localize("Wide"), Unit.h*ms_FontmodHeight*0.8f, 0);
+			else
+				UI()->DoLabel(&Unit, Localize("Letterbox"), Unit.h*ms_FontmodHeight*0.8f, 0);
+
+			str_format(aBuf, sizeof(aBuf), "%d:%d", m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue, m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue);
+			static int s_VideoFormatButton = 0;
+			if(DoButton_Menu(&s_VideoFormatButton, aBuf, 0, &Value))
+			{
+				m_CurrentVideoFormat++;
+				if(m_CurrentVideoFormat == m_NumVideoFormats)
+					m_CurrentVideoFormat = 0;
+
+				UpdatedFilteredVideoModes();
+			}
+		}
+
+		MainView.HSplitTop(Spaceing, 0, &MainView);
+
 		static float s_ScrollValue = 0;
 		static int s_DisplayModeList = 0;
 		int OldSelected = -1;
 		int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
 		str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-		UiDoListboxStartVideo(&s_DisplayModeList , &MainView, 24.0f, Localize("Display Modes"), aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, ButtonHeight, Spaceing); // ugly
+		UiDoListboxStart(&s_DisplayModeList, 24.0f, aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, &MainView);
 
 		for(int i = 0; i < m_NumFilteredVideoModes; ++i)
 		{

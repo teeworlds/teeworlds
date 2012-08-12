@@ -649,147 +649,37 @@ static int gs_ListBoxItemsPerRow;
 static float gs_ListBoxScrollValue;
 static bool gs_ListBoxItemActivated;
 
-void CMenus::UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-								int ItemsPerRow, int SelectedIndex, float ScrollValue)
+void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spaceing)
 {
-	CUIRect Scroll, Row;
+	CUIRect Header;
 	CUIRect View = *pRect;
-	CUIRect Header, Footer;
 
 	// background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	View.HSplitTop(ms_ListheaderHeight+Spaceing, &Header, 0);
+	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
 	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
 	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight, 0);
 
-	// draw footers
-	View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
-	Footer.VSplitLeft(10.0f, 0, &Footer);
-	UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight, 0);
-
-	// list background
-	View.HSplitTop(2.0f, 0, &View);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 0.0f);
-
-	// prepare the scroll
-	View.VSplitRight(20.0f, &View, &Scroll);
+	View.HSplitTop(Spaceing, &Header, &View);
 
 	// setup the variables
 	gs_ListBoxOriginalView = View;
-	gs_ListBoxSelectedIndex = SelectedIndex;
-	gs_ListBoxNewSelected = SelectedIndex;
-	gs_ListBoxItemIndex = 0;
-	gs_ListBoxRowHeight = RowHeight;
-	gs_ListBoxNumItems = NumItems;
-	gs_ListBoxItemsPerRow = ItemsPerRow;
-	gs_ListBoxDoneEvents = 0;
-	gs_ListBoxScrollValue = ScrollValue;
-	gs_ListBoxItemActivated = false;
-
-	// do the scrollbar
-	View.HSplitTop(gs_ListBoxRowHeight, &Row, 0);
-
-	int NumViewable = (int)(gs_ListBoxOriginalView.h/Row.h) + 1;
-	int Num = (NumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
-	if(Num < 0)
-		Num = 0;
-	if(Num > 0)
-	{
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			gs_ListBoxScrollValue -= 3.0f/Num;
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			gs_ListBoxScrollValue += 3.0f/Num;
-
-		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
-		if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
-	}
-
-	Scroll.HMargin(5.0f, &Scroll);
-	gs_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, gs_ListBoxScrollValue);
-
-	// the list
-	gs_ListBoxView = gs_ListBoxOriginalView;
-	gs_ListBoxView.VMargin(5.0f, &gs_ListBoxView);
-	UI()->ClipEnable(&gs_ListBoxView);
-	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
 }
 
-void CMenus::UiDoListboxStartVideo(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-								int ItemsPerRow, int SelectedIndex, float ScrollValue, float ButtonHeight, float Spaceing)
+void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
+								int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect)
 {
-	CUIRect Scroll, Row, Left, Right;
-	CUIRect View = *pRect;
+	CUIRect View, Scroll, Row;
+	if(pRect)
+		View = *pRect;
+	else
+		View = gs_ListBoxOriginalView;
 	CUIRect Header, Footer;
 
 	// background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	// draw header
-	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
-	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight, 0);
-
-	// supported modes button
-	View.HSplitTop(Spaceing, 0, &View);
-	View.HSplitTop(ButtonHeight, &Left, &View);
-	Left.VSplitMid(&Left, &Right);
-	Left.VSplitRight(1.5f, &Left, 0);
-	Right.VSplitLeft(1.5f, 0, &Right);
-	static int s_GfxDisplayAllModes = 0;
-	if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Left))
-	{
-		g_Config.m_GfxDisplayAllModes ^= 1;
-		m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
-		UpdateVideoFormats();
-
-		bool Found = false;
-		for(int i = 0; i < m_NumVideoFormats; i++)
-		{
-			int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-			if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
-			{
-				m_CurrentVideoFormat = i;
-				Found = true;
-				break;
-			}
-
-		}
-
-		if(!Found)
-			m_CurrentVideoFormat = 0;
-
-		UpdatedFilteredVideoModes();
-	}
-
-	// format changer
-	{
-		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-		CUIRect Text, Value, Unit;
-		Right.VSplitLeft(Right.w/3.0f, &Text, &Right);
-		Right.VSplitMid(&Value, &Unit);
-
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Format"));
-		Text.y += 2.0f;
-		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, 0);
-
-		Unit.y += 2.0f;
-		if((float)m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue/(float)m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue >= 1.55f)
-			UI()->DoLabel(&Unit, Localize("Wide"), Unit.h*ms_FontmodHeight*0.8f, 0);
-		else
-			UI()->DoLabel(&Unit, Localize("Letterbox"), Unit.h*ms_FontmodHeight*0.8f, 0);
-
-		str_format(aBuf, sizeof(aBuf), "%d:%d", m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue, m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue);
-		static int s_VideoFormatButton = 0;
-		if(DoButton_Menu(&s_VideoFormatButton, aBuf, 0, &Value))
-		{
-			m_CurrentVideoFormat++;
-			if(m_CurrentVideoFormat == m_NumVideoFormats)
-				m_CurrentVideoFormat = 0;
-
-			UpdatedFilteredVideoModes();
-		}
-	}
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
 	View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
@@ -797,7 +687,6 @@ void CMenus::UiDoListboxStartVideo(const void *pID, const CUIRect *pRect, float 
 	UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight, 0);
 
 	// list background
-	View.HSplitTop(Spaceing, 0, &View);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 0.0f);
 
 	// prepare the scroll
@@ -1906,7 +1795,8 @@ int CMenus::Render()
 				ActSelection = Country;
 			static float s_ScrollValue = 0.0f;
 			int OldSelected = -1;
-			UiDoListboxStart(&s_ScrollValue, &Box, 50.0f, Localize("Country"), "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
+			UiDoListboxHeader(&Box, Localize("Country"), 20.0f, 2.0f);
+			UiDoListboxStart(&s_ScrollValue, 50.0f, "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
 
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
