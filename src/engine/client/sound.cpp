@@ -333,7 +333,7 @@ int CSound::ReadData(void *pBuffer, int Size)
 	return io_read(ms_File, pBuffer, Size);
 }
 
-int CSound::LoadWV(const char *pFilename)
+ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 {
 	CSample *pSample;
 	int SampleID = -1;
@@ -342,20 +342,20 @@ int CSound::LoadWV(const char *pFilename)
 
 	// don't waste memory on sound when we are stress testing
 	if(g_Config.m_DbgStress)
-		return -1;
+		return CSampleHandle();
 
 	// no need to load sound when we are running with no sound
 	if(!m_SoundEnabled)
-		return 1;
+		return CSampleHandle();
 
 	if(!m_pStorage)
-		return -1;
+		return CSampleHandle();
 
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
-		return -1;
+		return CSampleHandle();
 	}
 
 	SampleID = AllocID();
@@ -363,7 +363,7 @@ int CSound::LoadWV(const char *pFilename)
 	{
 		io_close(ms_File);
 		ms_File = 0;
-		return -1;
+		return CSampleHandle();
 	}
 	pSample = &m_aSamples[SampleID];
 
@@ -387,7 +387,7 @@ int CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
 			io_close(ms_File);
 			ms_File = 0;
-			return -1;
+			return CSampleHandle();
 		}
 
 		/*
@@ -402,7 +402,7 @@ int CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
 			io_close(ms_File);
 			ms_File = 0;
-			return -1;
+			return CSampleHandle();
 		}
 
 		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels, 1);
@@ -434,7 +434,7 @@ int CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
 	RateConvert(SampleID);
-	return SampleID;
+	return CreateSampleHandle(SampleID);
 }
 
 void CSound::SetListenerPos(float x, float y)
@@ -450,8 +450,11 @@ void CSound::SetChannel(int ChannelID, float Vol, float Pan)
 	m_aChannels[ChannelID].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
 }
 
-int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
+int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y)
 {
+	if(SampleID < 0)
+		return -1;
+
 	int VoiceID = -1;
 	int i;
 
@@ -488,17 +491,17 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 	return VoiceID;
 }
 
-int CSound::PlayAt(int ChannelID, int SampleID, int Flags, float x, float y)
+int CSound::PlayAt(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y)
 {
 	return Play(ChannelID, SampleID, Flags|ISound::FLAG_POS, x, y);
 }
 
-int CSound::Play(int ChannelID, int SampleID, int Flags)
+int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags)
 {
 	return Play(ChannelID, SampleID, Flags, 0, 0);
 }
 
-void CSound::Stop(int SampleID)
+void CSound::Stop(CSampleHandle SampleID)
 {
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);

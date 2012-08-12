@@ -24,7 +24,7 @@ static int LoadSoundsThread(void *pUser)
 	{
 		for(int i = 0; i < g_pData->m_aSounds[s].m_NumSounds; i++)
 		{
-			int Id = pData->m_pGameClient->Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
+			ISound::CSampleHandle Id = pData->m_pGameClient->Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
 			g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
 		}
 
@@ -35,14 +35,14 @@ static int LoadSoundsThread(void *pUser)
 	return 0;
 }
 
-int CSounds::GetSampleId(int SetId)
+ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 {
 	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
-		return -1;
+		return ISound::CSampleHandle();
 	
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
 	if(!pSet->m_NumSounds)
-		return -1;
+		return ISound::CSampleHandle();
 
 	if(pSet->m_NumSounds == 1)
 		return pSet->m_aSounds[0].m_Id;
@@ -164,7 +164,7 @@ void CSounds::Play(int Chn, int SetId, float Vol)
 	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
 		return;
 
-	int SampleId = GetSampleId(SetId);
+	ISound::CSampleHandle SampleId = GetSampleId(SetId);
 	if(SampleId == -1)
 		return;
 
@@ -180,7 +180,7 @@ void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
 		return;
 	
-	int SampleId = GetSampleId(SetId);
+	ISound::CSampleHandle SampleId = GetSampleId(SetId);
 	if(SampleId == -1)
 		return;
 
