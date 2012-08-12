@@ -1402,8 +1402,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// display mode list
 	{
 		// custom list header
-		CUIRect Header, Left, Right;
-		MainView.HSplitTop(ButtonHeight*2.0f+Spaceing*2.0f, &Header, 0);
+		NumOptions = 2;
+
+		CUIRect Header, Button;
+		MainView.HSplitTop(ButtonHeight*(float)(NumOptions+1)+Spaceing*(float)(NumOptions+1), &Header, 0);
 		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 		// draw header
@@ -1412,12 +1414,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		// supported modes button
 		MainView.HSplitTop(Spaceing, 0, &MainView);
-		MainView.HSplitTop(ButtonHeight, &Left, &MainView);
-		Left.VSplitMid(&Left, &Right);
-		Left.VSplitRight(1.5f, &Left, 0);
-		Right.VSplitLeft(1.5f, 0, &Right);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 		static int s_GfxDisplayAllModes = 0;
-		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Left))
+		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
 		{
 			g_Config.m_GfxDisplayAllModes ^= 1;
 			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
@@ -1444,10 +1443,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		// format changer
 		{
-			RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			MainView.HSplitTop(Spaceing, 0, &MainView);
+			MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+			RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 			CUIRect Text, Value, Unit;
-			Right.VSplitLeft(Right.w/3.0f, &Text, &Right);
-			Right.VSplitMid(&Value, &Unit);
+			Button.VSplitLeft(Button.w/3.0f, &Text, &Button);
+			Button.VSplitMid(&Value, &Unit);
 
 			char aBuf[32];
 			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Format"));
