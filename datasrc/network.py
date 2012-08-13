@@ -7,6 +7,7 @@ Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", 
 PlayerFlags = Flags("PLAYERFLAG", ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
+CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
 
 GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "VOTE_ABORT", "VOTE_PASS", "VOTE_FAIL", "VOTE_DENY_SPECCALL", "VOTE_DENY_ACTIVE", "VOTE_DENY_KICK", "VOTE_DENY_KICKID",
 							"VOTE_DENY_KICKSELF", "VOTE_DENY_KICKADMIN", "VOTE_DENY_SPEC", "VOTE_DENY_SPECID", "VOTE_DENY_SPECSELF", "SPEC_INVALIDID", "TEAM_SHUFFLE",
@@ -63,7 +64,8 @@ Enums = [
 Flags = [
 	PlayerFlags,
 	GameFlags,
-	GameStateFlags
+	GameStateFlags,
+	CoreEventFlags,
 ]
 
 Objects = [
@@ -163,6 +165,7 @@ Objects = [
 		NetIntRange("m_Weapon", 0, 'NUM_WEAPONS-1'),
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
+		NetFlag("m_TriggeredEvents", CoreEventFlags),
 	]),
 
 	NetObject("PlayerInfo", [
@@ -343,10 +346,6 @@ Messages = [
 	NetMessage("De_ClientLeave", [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pReason"),
-	]),
-
-	NetMessage("De_SoundGlobal", [
-		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
 	### Client messages

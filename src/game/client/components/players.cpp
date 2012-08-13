@@ -264,15 +264,6 @@ void CPlayers::RenderPlayer(
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
 
-
-	// detect events
-	if(NewTick)
-	{
-		// detect air jump
-		if(!RenderInfo.m_GotAirJump && !(Prev.m_Jumped&2))
-			m_pClient->m_pEffects->AirJump(Position);
-	}
-
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);

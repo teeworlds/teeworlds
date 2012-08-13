@@ -22,6 +22,7 @@ public:
 	virtual void TickDefered();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
+	virtual void PostSnap();
 
 	bool IsGrounded();
 
@@ -102,6 +103,8 @@ private:
 
 	int m_Health;
 	int m_Armor;
+
+	int m_TriggeredEvents;
 
 	// ninja
 	struct

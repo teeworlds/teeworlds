@@ -803,14 +803,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_aClients[pMsg->m_ClientID].m_Emoticon = pMsg->m_Emoticon;
 		m_aClients[pMsg->m_ClientID].m_EmoticonStart = Client()->GameTick();
 	}
-	else if(MsgId == NETMSGTYPE_DE_SOUNDGLOBAL)
-	{
-		if(m_SuppressEvents)
-			return;
-
-		CNetMsg_De_SoundGlobal *pMsg = (CNetMsg_De_SoundGlobal *)pRawMsg;
-		g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
-	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTENTER && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientEnter *pMsg = (CNetMsg_De_ClientEnter *)pRawMsg;
@@ -897,6 +889,27 @@ void CGameClient::ProcessEvents()
 			g_GameClient.m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
 	}
+}
+
+void CGameClient::ProcessTriggeredEvents(int Events, vec2 Pos)
+{
+	if(m_SuppressEvents)
+		return;
+
+	if(Events&COREEVENTFLAG_GROUND_JUMP)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_AIR_JUMP)
+		m_pEffects->AirJump(Pos);
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_GROUND)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_HIT_NOHOOK)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
+	/*if(Events&COREEVENTFLAG_HOOK_LAUNCH)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_RETRACT)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);*/
 }
 
 void CGameClient::OnNewSnapshot()
@@ -1050,6 +1063,9 @@ void CGameClient::OnNewSnapshot()
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
 						Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
 				}
+
+				if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+					ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
 			{
@@ -1291,23 +1307,7 @@ void CGameClient::OnPredict()
 			m_NewPredictedTick = true;
 
 			if(m_LocalClientID != -1 && World.m_apCharacters[m_LocalClientID])
-			{
-				vec2 Pos = World.m_apCharacters[m_LocalClientID]->m_Pos;
-				int Events = World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents;
-				if(Events&COREEVENT_GROUND_JUMP) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
-
-				/*if(events&COREEVENT_AIR_JUMP)
-				{
-					GameClient.effects->air_jump(pos);
-					GameClient.sounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
-				}*/
-
-				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(Events&COREEVENT_HOOK_ATTACH_GROUND) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
-				if(Events&COREEVENT_HOOK_HIT_NOHOOK) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
-				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-			}
+				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos);
 		}
 
 		if(Tick == Client()->PredGameTick() && World.m_apCharacters[m_LocalClientID])

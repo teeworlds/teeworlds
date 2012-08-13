@@ -51,6 +51,7 @@ class CGameClient : public IGameClient
 
 	void DispatchInput();
 	void ProcessEvents();
+	void ProcessTriggeredEvents(int Events, vec2 Pos);
 	void UpdatePositions();
 
 	int m_PredictedTick;

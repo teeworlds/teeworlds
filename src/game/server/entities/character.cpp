@@ -47,6 +47,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_ProximityRadius = ms_PhysSize;
 	m_Health = 0;
 	m_Armor = 0;
+	m_TriggeredEvents = 0;
 }
 
 void CCharacter::Reset()
@@ -614,16 +615,8 @@ void CCharacter::TickDefered()
 			StartVelX.u, StartVelY.u);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	}
-
-	int Events = m_Core.m_TriggeredEvents;
-	int Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
-
-	if(Events&COREEVENT_GROUND_JUMP) GameServer()->CreateSound(m_Pos, SOUND_PLAYER_JUMP, Mask);
-
-	if(Events&COREEVENT_HOOK_ATTACH_PLAYER) GameServer()->CreateSound(m_Pos, SOUND_HOOK_ATTACH_PLAYER, CmaskAll());
-	if(Events&COREEVENT_HOOK_ATTACH_GROUND) GameServer()->CreateSound(m_Pos, SOUND_HOOK_ATTACH_GROUND, Mask);
-	if(Events&COREEVENT_HOOK_HIT_NOHOOK) GameServer()->CreateSound(m_Pos, SOUND_HOOK_NOATTACH, Mask);
-
+	
+	m_TriggeredEvents |= m_Core.m_TriggeredEvents;
 
 	if(m_pPlayer->GetTeam() == TEAM_SPECTATORS)
 	{
@@ -842,6 +835,7 @@ void CCharacter::Snap(int SnappingClient)
 	pCharacter->m_AmmoCount = 0;
 	pCharacter->m_Health = 0;
 	pCharacter->m_Armor = 0;
+	pCharacter->m_TriggeredEvents = m_TriggeredEvents;
 
 	pCharacter->m_Weapon = m_ActiveWeapon;
 	pCharacter->m_AttackTick = m_AttackTick;
@@ -864,4 +858,9 @@ void CCharacter::Snap(int SnappingClient)
 		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
 			pCharacter->m_Emote = EMOTE_BLINK;
 	}
+}
+
+void CCharacter::PostSnap()
+{
+	m_TriggeredEvents = 0;
 }
