@@ -1,11 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/vmath.h>
+
 #include <engine/shared/config.h>
 
-#include <game/generated/protocol.h>
-#include <base/vmath.h>
 #include <game/client/render.h>
+#include <game/generated/protocol.h>
+
+#include "chat.h"
 #include "voting.h"
+
 
 void CVoting::ConCallvote(IConsole::IResult *pResult, void *pUserData)
 {
@@ -190,15 +194,62 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_VOTESET)
 	{
 		CNetMsg_Sv_VoteSet *pMsg = (CNetMsg_Sv_VoteSet *)pRawMsg;
+		OnReset();
+		char aBuf[128];
 		if(pMsg->m_Timeout)
 		{
-			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
+			if(pMsg->m_ClientID != -1)
+			{
+				switch(pMsg->m_Type)
+				{
+				case VOTE_START_OP:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called vote to change server option '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					break;
+				case VOTE_START_KICK:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					break;
+				case VOTE_START_SPEC:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				}
+			}
 		}
 		else
-			OnReset();
+		{
+			switch(pMsg->m_Type)
+			{
+			case VOTE_START_OP:
+				str_format(aBuf, sizeof(aBuf), Localize("Admin forced server option '%s' (%s)"), pMsg->m_pDescription, pMsg->m_pReason);
+				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				break;
+			case VOTE_START_SPEC:
+				str_format(aBuf, sizeof(aBuf), Localize("Admin moved '%s' to spectator (%s)"), pMsg->m_pDescription, pMsg->m_pReason);
+				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				break;
+			case VOTE_END_ABORT:
+				m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote aborted"));
+				break;
+			case VOTE_END_PASS:
+				if(pMsg->m_ClientID == -1)
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote yes"));
+				else
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote passed"));
+				break;
+			case  VOTE_END_FAIL:
+				if(pMsg->m_ClientID == -1)
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote no"));
+				else
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote failed"));
+			}
+		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_VOTESTATUS)
 	{

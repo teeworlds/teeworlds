@@ -117,8 +117,6 @@ enum
 	PARA_II,
 	PARA_III,
 	PARA_S,
-	PARA_SS,
-	PARA_SSS,
 };
 
 struct CGameMsg
@@ -130,9 +128,6 @@ struct CGameMsg
 
 static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"},
-	{/*GAMEMSG_VOTE_ABORT*/ DO_CHAT, PARA_NONE, "Vote aborted"},
-	{/*GAMEMSG_VOTE_PASS*/ DO_CHAT, PARA_NONE, "Vote passed"},
-	{/*GAMEMSG_VOTE_FAIL*/ DO_CHAT, PARA_NONE, "Vote failed"},
 	{/*GAMEMSG_VOTE_DENY_SPECCALL*/ DO_CHAT, PARA_NONE, "Spectators aren't allowed to start a vote."},
 	{/*GAMEMSG_VOTE_DENY_ACTIVE*/ DO_CHAT, PARA_NONE, "Wait for current vote to end before calling a new one."},
 	{/*GAMEMSG_VOTE_DENY_KICK*/ DO_CHAT, PARA_NONE, "Server does not allow voting to kick players"},
@@ -164,15 +159,7 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
 
 	{/*GAMEMSG_VOTE_DENY_INVALIDOP*/ DO_CHAT, PARA_S, "'%s' isn't an option on this server"},
-	{/*GAMEMSG_VOTE_KICKYOU*/ DO_CHAT, PARA_S, "'%s' called for vote to kick you"},
-	{/*GAMEMSG_VOTE_FORCE*/ DO_CHAT, PARA_S, "admin forced vote %s"},
-
-	{/*GAMEMSG_VOTE_FORCEOP*/ DO_CHAT, PARA_SS, "admin forced server option '%s' (%s)"},
-	{/*GAMEMSG_S2_VOTE_FORCESPEC*/ DO_CHAT, PARA_SS, "admin moved '%s' to spectator (%s)"},
-
-	{/*GAMEMSG_VOTE_CALLOP*/ DO_CHAT, PARA_SSS, "'%s' called vote to change server option '%s' (%s)"},
-	{/*GAMEMSG_VOTE_CALLKICK*/ DO_CHAT, PARA_SSS, "'%s' called for vote to kick '%s' (%s)"},
-	{/*GAMEMSG_VOTE_CALLSPEC*/ DO_CHAT, PARA_SSS, "'%s' called for vote to move '%s' to spectators (%s)"}
+	{/*GAMEMSG_VOTE_KICKYOU*/ DO_CHAT, PARA_S, "'%s' called for vote to kick you"}
 };
 
 void CGameClient::OnConsoleInit()
@@ -562,8 +549,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		int aParaI[3];
 		int NumParaI = 0;
-		const char *apParaS[3];
-		int NumParaS = 0;
+		const char *pParaS = 0;
 
 		// get paras
 		switch(gs_GameMsgList[GameMsgID].m_ParaType)
@@ -575,12 +561,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		case PARA_I:
 			aParaI[NumParaI++] = pUnpacker->GetInt();
 			break;
-		case PARA_SSS:
-			apParaS[NumParaS++] = pUnpacker->GetString();
-		case PARA_SS:
-			apParaS[NumParaS++] = pUnpacker->GetString();
 		case PARA_S:
-			apParaS[NumParaS++] = pUnpacker->GetString();
+			pParaS = pUnpacker->GetString();
 			break;
 		}
 
@@ -620,9 +602,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
 				if(aParaI[2] <= 60*Client()->GameTickSpeed())
-					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%.2f seconds)", aParaI[0] ? "blue" : "red", m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%.2f seconds)", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
 				else
-					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", aParaI[0] ? "blue" : "red", m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
 				m_pChat->AddLine(-1, 0, aBuf);
 			}
 			return;
@@ -630,7 +612,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		// build message
 		const char *pText = "";
-		if(NumParaI == 0 && NumParaS == 0)
+		if(NumParaI == 0 && pParaS == 0)
 			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
 		else
 		{
@@ -640,12 +622,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1]);
 			else if(NumParaI == 3)
 				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1], aParaI[2]);
-			else if(NumParaS == 1)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0]);
-			else if(NumParaS == 2)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0], apParaS[1]);
-			else if(NumParaS == 3)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), apParaS[0], apParaS[1], apParaS[2]);
+			else if(pParaS != 0)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), pParaS);
 			pText = aBuf;
 		}
 

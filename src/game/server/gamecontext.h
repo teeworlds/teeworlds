@@ -90,9 +90,9 @@ public:
 	int m_LockTeams;
 
 	// voting
-	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
-	void EndVote();
-	void SendVoteSet(int ClientID);
+	void StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason);
+	void EndVote(int Type, bool Force);
+	void SendVoteSet(int Type, int ToClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
 	void AbortVoteOnDisconnect(int ClientID);
 	void AbortVoteOnTeamChange(int ClientID);
@@ -112,6 +112,8 @@ public:
 		VOTE_ENFORCE_UNKNOWN=0,
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
+
+		VOTE_TIME=25,
 	};
 	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
@@ -145,8 +147,6 @@ public:
 	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
 	void SendGameMsg(int GameMsgID, const char *pParaS1, int ClientID);
-	void SendGameMsg(int GameMsgID, const char *pParaS1, const char *pParaS2, int ClientID);
-	void SendGameMsg(int GameMsgID, const char *pParaS1, const char *pParaS2, const char *pParaS3, int ClientID);
 
 	//
 	void CheckPureTuning();
