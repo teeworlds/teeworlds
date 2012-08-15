@@ -189,7 +189,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			}
 			if(Component < 0)
 				continue;
-			if(Part != SKINPART_TATTOO && Component == 3)
+			if(pSelf->IsUsingAlpha(Part) && Component == 3)
 				continue;
 			int OldVal = Skin.m_aPartColors[Part];
 			int Val = str_toint(pValue);
@@ -268,7 +268,7 @@ void CSkins::OnInit()
 		m_DummySkin.m_apParts[p] = GetSkinPart(p, Default);
 		m_DummySkin.m_aMirrored[p] = 0;
 		m_DummySkin.m_aUseCustomColors[p] = 0;
-		m_DummySkin.m_aPartColors[p] = p==SKINPART_TATTOO ? (255<<24)+65408 : 65408;
+		m_DummySkin.m_aPartColors[p] = IsUsingAlpha(p) ? (255<<24)+65408 : 65408;
 	}
 
 	// load skins
@@ -327,10 +327,10 @@ vec3 CSkins::GetColorV3(int v) const
 	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, Dark+(v&0xff)/255.0f*(1.0f-Dark)));
 }
 
-vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
+vec4 CSkins::GetColorV4(int v, int Part) const
 {
 	vec3 r = GetColorV3(v);
-	float Alpha = UseAlpha ? ((v>>24)&0xff)/255.0f : 1.0f;
+	float Alpha = IsUsingAlpha(Part) ? ((v>>24)&0xff)/255.0f : 1.0f;
 	return vec4(r.r, r.g, r.b, Alpha);
 }
 
@@ -359,7 +359,7 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team
 			PartHue += 256;
 	}
 
-	if(Part == SKINPART_TATTOO)
+	if(IsUsingAlpha(Part))
 		return (PartAlp<<24) + (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
 	else
 		return (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
@@ -368,4 +368,9 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team
 bool CSkins::IsMirrorable(int Part) const
 {
 	return gs_apMirroredVariables[Part] != 0;
+}
+
+bool CSkins::IsUsingAlpha(int Part) const
+{
+	return Part == SKINPART_TATTOO;
 }

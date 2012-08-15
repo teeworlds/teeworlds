@@ -106,7 +106,7 @@ void CMenus::SaveSkinfile()
 				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[c], Val);
 				WriteLineSkinfile(File, aBuf);
 			}
-			if(p == SKINPART_TATTOO)
+			if(m_pClient->m_pSkins->IsUsingAlpha(p))
 			{
 				int Val = (*gs_apColorVariables[p] >> 24) & 0xff;
 				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", s_apParts[p], s_apComponents[3], Val);
@@ -210,7 +210,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		Hue = (*gs_apColorVariables[p]>>16)&0xff;
 		Sat = (*gs_apColorVariables[p]>>8)&0xff;
 		Lgt = *gs_apColorVariables[p]&0xff;
-		if(p == SKINPART_TATTOO)
+		if(m_pClient->m_pSkins->IsUsingAlpha(p))
 			Alp = (*gs_apColorVariables[p]>>24)&0xff;
 	}
 
@@ -308,7 +308,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 				int NewSat = aModifiedComponents[1] ? Sat : (*gs_apColorVariables[p]>>8)&0xff;
 				int NewLgt = aModifiedComponents[2] ? Lgt : *gs_apColorVariables[p]&0xff;
 				int NewAlp = aModifiedComponents[3] ? Alp : (*gs_apColorVariables[p]>>24)&0xff;
-				if(p == SKINPART_TATTOO)
+				if(m_pClient->m_pSkins->IsUsingAlpha(p))
 					*gs_apColorVariables[p] = (NewAlp<<24) + (NewHue<<16) + (NewSat<<8) + NewLgt;
 				else
 					*gs_apColorVariables[p] = (NewHue<<16) + (NewSat<<8) + NewLgt;
@@ -433,7 +433,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				if(s->m_aUseCustomColors[p])
 				{
 					Info.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
-					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==SKINPART_TATTOO);
+					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p);
 				}
 				else
 				{
@@ -528,7 +528,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 						Info.m_aTextures[j] = s->m_ColorTexture;
 					else
 						Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
-					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[j], j==SKINPART_TATTOO);
+					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[j], j);
 				}
 				else
 				{
@@ -971,7 +971,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			if(*gs_apUCCVariables[p])
 			{
 				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[p], p==SKINPART_TATTOO);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[p], p);
 			}
 			else
 			{
@@ -1007,7 +1007,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
 				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apRedColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_RED, p);
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 
@@ -1021,7 +1021,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
 				int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apBlueColorVariables[p], (*gs_apColorVariables[p]>>24)&0xff, TEAM_BLUE, p);
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p);
 			}
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 		}

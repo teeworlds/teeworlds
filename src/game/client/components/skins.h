@@ -60,9 +60,10 @@ public:
 	int FindSkinPart(int Part, const char *pName);
 
 	vec3 GetColorV3(int v) const;
-	vec4 GetColorV4(int v, bool UseAlpha) const;
+	vec4 GetColorV4(int v, int Part) const;
 	int GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const;
 	bool IsMirrorable(int Part) const;
+	bool IsUsingAlpha(int Part) const;
 
 private:
 	int m_ScanningPart;
