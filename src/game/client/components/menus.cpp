@@ -185,12 +185,17 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
+	float *pFade = ButtonFade(pID, Seconds, Checked);
+	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f , 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), CUI::CORNER_ALL, 5.0f);
 	CUIRect Temp;
 	pRect->HMargin(1.0f, &Temp);
+	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
+	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 }
 
 int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
@@ -537,6 +542,55 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	*pOption = static_cast<int>(DoScrollbarH(pOption, &ScrollBar, (float)(*pOption-Min)/(float)(Max-Min))*(float)(Max-Min)+(float)Min+0.1f);
+}
+
+float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback)
+{
+	CUIRect View = *pRect;
+	CUIRect Header, Label;
+
+	bool Active = pID == m_pActiveDropdown;
+	int Corners = Active ? CUI::CORNER_T : CUI::CORNER_ALL;
+
+	View.HSplitTop(HeaderHeight, &Header, &View);
+
+	// background
+	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 5.0f);
+
+	// render icon
+	CUIRect Button;
+	Header.VSplitLeft(Header.h, &Button, 0);
+	Button.Margin(2.0f, &Button);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FOLDICONS].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
+	if(Active)
+		RenderTools()->SelectSprite(SPRITE_FOLD_EXPANDED);
+	else
+		RenderTools()->SelectSprite(SPRITE_FOLD_COLLAPSED);
+	IGraphics::CQuadItem QuadItem(Button.x, Button.y, Button.w, Button.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->QuadsEnd();
+
+	// label
+	Label = Header;
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, pStr, Header.h*ms_FontmodHeight*0.8f, 0);
+
+	if(UI()->DoButtonLogic(pID, 0, 0, &Header))
+	{
+		if(Active)
+			m_pActiveDropdown = 0;
+		else
+			m_pActiveDropdown = (int*)pID;
+	}
+
+	// render content of expanded menu
+	if(Active)
+		return HeaderHeight + pfnCallback(View, this);
+
+	return HeaderHeight;
 }
 
 float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)

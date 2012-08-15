@@ -1071,194 +1071,50 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 }
 
-typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
-
-typedef struct
-{
-	CLocConstString m_Name;
-	const char *m_pCommand;
-	int m_KeyId;
-} CKeyInfo;
-
-static CKeyInfo gs_aKeys[] =
-{
-	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
-	{ "Move right", "+right", 0 },
-	{ "Jump", "+jump", 0 },
-	{ "Fire", "+fire", 0 },
-	{ "Hook", "+hook", 0 },
-	{ "Hammer", "+weapon1", 0 },
-	{ "Pistol", "+weapon2", 0 },
-	{ "Shotgun", "+weapon3", 0 },
-	{ "Grenade", "+weapon4", 0 },
-	{ "Laser", "+weapon5", 0 },
-	{ "Next weapon", "+nextweapon", 0 },
-	{ "Prev. weapon", "+prevweapon", 0 },
-	{ "Vote yes", "vote yes", 0 },
-	{ "Vote no", "vote no", 0 },
-	{ "Chat", "chat all", 0 },
-	{ "Team chat", "chat team", 0 },
-	{ "Show chat", "+show_chat", 0 },
-	{ "Emoticon", "+emote", 0 },
-	{ "Spectator mode", "+spectate", 0 },
-	{ "Spectate next", "spectate_next", 0 },
-	{ "Spectate previous", "spectate_previous", 0 },
-	{ "Console", "toggle_local_console", 0 },
-	{ "Remote console", "toggle_remote_console", 0 },
-	{ "Screenshot", "screenshot", 0 },
-	{ "Scoreboard", "+scoreboard", 0 },
-	{ "Respawn", "kill", 0 },
-	{ "Ready", "ready_change", 0 },
-};
-
-/*	This is for scripts/update_localization.py to work, don't remove!
-	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
-	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Laser");Localize("Next weapon");Localize("Prev. weapon");
-	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
-	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");
-	Localize("Screenshot");Localize("Scoreboard");Localize("Respawn");Localize("Ready");
-*/
-
-const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
-
-void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View)
-{
-	for (int i = Start; i < Stop; i++)
-	{
-		CKeyInfo &Key = gs_aKeys[i];
-		CUIRect Button, Label;
-		View.HSplitTop(20.0f, &Button, &View);
-		Button.VSplitLeft(135.0f, &Label, &Button);
-
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s:", (const char *)Key.m_Name);
-
-		UI()->DoLabelScaled(&Label, aBuf, 13.0f, -1);
-		int OldId = Key.m_KeyId;
-		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
-		if(NewId != OldId)
-		{
-			if(OldId != 0 || NewId == 0)
-				m_pClient->m_pBinds->Bind(OldId, "");
-			if(NewId != 0)
-				m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
-		}
-		View.HSplitTop(5.0f, 0, &View);
-	}
-}
+//typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
 
 void CMenus::RenderSettingsControls(CUIRect MainView)
 {
-	// this is kinda slow, but whatever
-	for(int i = 0; i < g_KeyCount; i++)
-		gs_aKeys[i].m_KeyId = 0;
+	MainView.HSplitTop(20.0f, 0, &MainView);
 
-	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
-	{
-		const char *pBind = m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+	// cut view
+	CUIRect BottomView, Button;
+	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	BottomView.HSplitTop(20.f, 0, &BottomView);
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
-	}
+	float HeaderHeight = 20.0f;
 
-	CUIRect MovementSettings, WeaponSettings, VotingSettings, ChatSettings, MiscSettings, ResetButton;
-	MainView.VSplitMid(&MovementSettings, &VotingSettings);
+	static int s_MovementDropdown = 0;
+	float Split = DoDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement);
 
-	// movement settings
-	{
-		MovementSettings.VMargin(5.0f, &MovementSettings);
-		MovementSettings.HSplitTop(MainView.h/3+32.0f, &MovementSettings, &WeaponSettings);
-		RenderTools()->DrawUIRect(&MovementSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		MovementSettings.Margin(10.0f, &MovementSettings);
+	MainView.HSplitTop(Split+10.0f, 0, &MainView);
+	static int s_WeaponDropdown = 0;
+	Split = DoDropdownMenu(&s_WeaponDropdown, &MainView, Localize("Weapon"), HeaderHeight, RenderSettingsControlsWeapon);
 
-		TextRender()->Text(0, MovementSettings.x, MovementSettings.y, 14.0f*UI()->Scale(), Localize("Movement"), -1);
+	MainView.HSplitTop(Split+10.0f, 0, &MainView);
+	static int s_VotingDropdown = 0;
+	Split = DoDropdownMenu(&s_VotingDropdown, &MainView, Localize("Voting"), HeaderHeight, RenderSettingsControlsVoting);
 
-		MovementSettings.HSplitTop(14.0f+7.0f, 0, &MovementSettings);
+	MainView.HSplitTop(Split+10.0f, 0, &MainView);
+	static int s_ChatDropdown = 0;
+	Split = DoDropdownMenu(&s_ChatDropdown, &MainView, Localize("Chat"), HeaderHeight, RenderSettingsControlsChat);
 
-		{
-			CUIRect Button, Label;
-			MovementSettings.HSplitTop(20.0f, &Button, &MovementSettings);
-			Button.VSplitLeft(135.0f, &Label, &Button);
-			UI()->DoLabel(&Label, Localize("Mouse sens."), 14.0f*UI()->Scale(), -1);
-			static int s_InpMousesense = 0;
-			g_Config.m_InpMousesens = (int)(DoScrollbarH(&s_InpMousesense, &Button, (g_Config.m_InpMousesens-5)/500.0f)*500.0f)+5;
-			//*key.key = ui_do_key_reader(key.key, &Button, *key.key);
-			MovementSettings.HSplitTop(10.0f, 0, &MovementSettings);
-		}
+	MainView.HSplitTop(Split+10.0f, 0, &MainView);
+	static int s_MiscDropdown = 0;
+	Split = DoDropdownMenu(&s_MiscDropdown, &MainView, Localize("Misc"), HeaderHeight, RenderSettingsControlsMisc);
 
-		UiDoGetButtons(0, 5, MovementSettings);
+	// reset button
+	float Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
-	}
+	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
-	// weapon settings
-	{
-		WeaponSettings.HSplitTop(10.0f, 0, &WeaponSettings);
-		WeaponSettings.HSplitTop(MainView.h/3+52.0f, &WeaponSettings, &ResetButton);
-		RenderTools()->DrawUIRect(&WeaponSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		WeaponSettings.Margin(10.0f, &WeaponSettings);
-
-		TextRender()->Text(0, WeaponSettings.x, WeaponSettings.y, 14.0f*UI()->Scale(), Localize("Weapon"), -1);
-
-		WeaponSettings.HSplitTop(14.0f+7.0f, 0, &WeaponSettings);
-		UiDoGetButtons(5, 12, WeaponSettings);
-	}
-
-	// defaults
-	{
-		ResetButton.HSplitTop(10.0f, 0, &ResetButton);
-		RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		ResetButton.HMargin(17.0f, &ResetButton);
-		ResetButton.VMargin(30.0f, &ResetButton);
-		ResetButton.HSplitTop(20.0f, &ResetButton, 0);
-		static int s_DefaultButton = 0;
-		if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
-			m_pClient->m_pBinds->SetDefaults();
-	}
-
-	// voting settings
-	{
-		VotingSettings.VMargin(5.0f, &VotingSettings);
-		VotingSettings.HSplitTop(MainView.h/3-73.0f, &VotingSettings, &ChatSettings);
-		RenderTools()->DrawUIRect(&VotingSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		VotingSettings.Margin(10.0f, &VotingSettings);
-
-		TextRender()->Text(0, VotingSettings.x, VotingSettings.y, 14.0f*UI()->Scale(), Localize("Voting"), -1);
-
-		VotingSettings.HSplitTop(14.0f+7.0f, 0, &VotingSettings);
-		UiDoGetButtons(12, 14, VotingSettings);
-	}
-
-	// chat settings
-	{
-		ChatSettings.HSplitTop(10.0f, 0, &ChatSettings);
-		ChatSettings.HSplitTop(MainView.h/3-48.0f, &ChatSettings, &MiscSettings);
-		RenderTools()->DrawUIRect(&ChatSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		ChatSettings.Margin(10.0f, &ChatSettings);
-
-		TextRender()->Text(0, ChatSettings.x, ChatSettings.y, 14.0f*UI()->Scale(), Localize("Chat"), -1);
-
-		ChatSettings.HSplitTop(14.0f+7.0f, 0, &ChatSettings);
-		UiDoGetButtons(14, 17, ChatSettings);
-	}
-
-	// misc settings
-	{
-		MiscSettings.HSplitTop(10.0f, 0, &MiscSettings);
-		RenderTools()->DrawUIRect(&MiscSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		MiscSettings.Margin(10.0f, &MiscSettings);
-
-		TextRender()->Text(0, MiscSettings.x, MiscSettings.y, 14.0f*UI()->Scale(), Localize("Miscellaneous"), -1);
-
-		MiscSettings.HSplitTop(14.0f+7.0f, 0, &MiscSettings);
-		UiDoGetButtons(17, 26, MiscSettings);
-	}
-
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	Button = BottomView;
+	static int s_ResetButton=0;
+	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
+		m_pClient->m_pBinds->SetDefaults();
 }
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)

@@ -41,6 +41,8 @@ enum
 
 class CMenus : public CComponent
 {
+	typedef float (*FDropdownCallback)(CUIRect View, void *pUser);
+
 	float *ButtonFade(const void *pID, float Seconds, int Checked=0);
 
 
@@ -81,6 +83,7 @@ class CMenus : public CComponent
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite=false);
+	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
 	//static int ui_do_edit_box(void *id, const CUIRect *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
@@ -89,7 +92,7 @@ class CMenus : public CComponent
 	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
-	void UiDoGetButtons(int Start, int Stop, CUIRect View);
+	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spaceing);
 
 	struct CListboxItem
 	{
@@ -219,6 +222,9 @@ class CMenus : public CComponent
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
+
+	// for callbacks
+	int *m_pActiveDropdown;
 
 	// demo
 	struct CDemoItem
@@ -452,6 +458,13 @@ class CMenus : public CComponent
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+
+	// found in menu_callback.cpp
+	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
+	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
+	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
+	static float RenderSettingsControlsChat(CUIRect View, void *pUser);
+	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
 
 	void SetActive(bool Active);
 

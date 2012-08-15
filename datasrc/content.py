@@ -234,6 +234,7 @@ image_guibuttons = Image("guibuttons", "gui_buttons.png")
 image_guiicons = Image("guiicons", "gui_icons.png")
 image_browsericons = Image("browsericons", "gui_browser_icons.png")
 image_checkboxicons = Image("checkboxicons", "menu_buttons.png")
+image_foldicons = Image("foldicons", "menu_fold.png")
 
 container.images.Add(image_null)
 container.images.Add(image_game)
@@ -253,6 +254,7 @@ container.images.Add(image_browsericons)
 container.images.Add(Image("no_skinpart", "no_skinpart.png"))
 container.images.Add(Image("hlpicker", "hlpicker.png"))
 container.images.Add(image_checkboxicons)
+container.images.Add(image_foldicons)
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))
@@ -277,6 +279,7 @@ set_guibuttons = SpriteSet("guibuttons", image_guibuttons, 12, 4)
 set_guiicons = SpriteSet("guiicons", image_guiicons, 8, 2)
 set_browsericons = SpriteSet("browsericons", image_browsericons, 14, 1)
 set_checkboxicons = SpriteSet("checkboxicons", image_checkboxicons, 2, 1)
+set_foldicons = SpriteSet("foldicons", image_foldicons, 2, 1)
 
 container.spritesets.Add(set_particles)
 container.spritesets.Add(set_game)
@@ -294,6 +297,7 @@ container.spritesets.Add(set_guibuttons)
 container.spritesets.Add(set_guiicons)
 container.spritesets.Add(set_browsericons)
 container.spritesets.Add(set_checkboxicons)
+container.spritesets.Add(set_foldicons)
 
 container.sprites.Add(Sprite("part_slice", set_particles, 0,0,1,1))
 container.sprites.Add(Sprite("part_ball", set_particles, 1,0,1,1))
@@ -452,6 +456,9 @@ container.sprites.Add(Sprite("browsericon_heart_inactive", set_browsericons, 13,
 
 container.sprites.Add(Sprite("checkbox_active", set_checkboxicons, 0,0,1,1))
 container.sprites.Add(Sprite("checkbox_inactive", set_checkboxicons, 1,0,1,1))
+
+container.sprites.Add(Sprite("fold_expanded", set_foldicons, 0,0,1,1))
+container.sprites.Add(Sprite("fold_collapsed", set_foldicons, 1,0,1,1))
 
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))
