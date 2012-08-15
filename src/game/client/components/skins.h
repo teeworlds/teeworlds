@@ -43,8 +43,9 @@ public:
 	{
 		char m_aName[24];
 		const CSkinPart *m_apParts[NUM_SKINPARTS];
-		int m_aPartColors[NUM_SKINPARTS];
+		int m_aMirrored[NUM_SKINPARTS];
 		int m_aUseCustomColors[NUM_SKINPARTS];
+		int m_aPartColors[NUM_SKINPARTS];
 
 		bool operator<(const CSkin &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
 	};
@@ -61,6 +62,7 @@ public:
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, bool UseAlpha) const;
 	int GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const;
+	bool IsMirrorable(int Part) const;
 
 private:
 	int m_ScanningPart;
@@ -73,6 +75,7 @@ private:
 };
 
 extern char *const gs_apSkinVariables[NUM_SKINPARTS];
+extern int *const gs_apMirroredVariables[NUM_SKINPARTS];
 extern int *const gs_apUCCVariables[NUM_SKINPARTS]; // use custom color
 extern int *const gs_apColorVariables[NUM_SKINPARTS];
 extern int *const gs_apRedColorVariables[NUM_SKINPARTS];

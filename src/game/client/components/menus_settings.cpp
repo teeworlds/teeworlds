@@ -89,6 +89,12 @@ void CMenus::SaveSkinfile()
 		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", s_apParts[p], gs_apSkinVariables[p]);
 		WriteLineSkinfile(File, aBuf);
 
+		if(m_pClient->m_pSkins->IsMirrorable(p))
+		{
+			str_format(aBuf, sizeof(aBuf), "%s.mirrored := %s", s_apParts[p], *gs_apMirroredVariables[p]?"true":"false");
+			WriteLineSkinfile(File, aBuf);
+		}
+
 		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", s_apParts[p], *gs_apUCCVariables[p]?"true":"false");
 		WriteLineSkinfile(File, aBuf);
 
@@ -186,7 +192,7 @@ void CMenus::RenderColorSlider(const int *pIDs, CUIRect Slider, int Component, i
 void CMenus::RenderHSLPicker(CUIRect Picker)
 {
 	CUIRect Label, Button, Sliders;
-	bool UseAlpha = m_TeePartsColorSelection & SELECTION_TATTOO;
+	bool UseAlpha = m_TeePartsEditingSelection & SELECTION_TATTOO;
 
 	bool Modified = false;
 	bool aModifiedComponents[4];
@@ -199,7 +205,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 	int Alp = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
+		if(!(m_TeePartsEditingSelection & gs_aSelectionParts[p]))
 			continue;
 		Hue = (*gs_apColorVariables[p]>>16)&0xff;
 		Sat = (*gs_apColorVariables[p]>>8)&0xff;
@@ -296,7 +302,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+			if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
 			{
 				int NewHue = aModifiedComponents[0] ? Hue : (*gs_apColorVariables[p]>>16)&0xff;
 				int NewSat = aModifiedComponents[1] ? Sat : (*gs_apColorVariables[p]>>8)&0xff;
@@ -316,7 +322,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		bool First = true;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
+			if(!(m_TeePartsEditingSelection & gs_aSelectionParts[p]))
 				continue;
 			int Val = *gs_apRedColorVariables[p];
 			if(First)
@@ -344,7 +350,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		{
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+				if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
 					*gs_apRedColorVariables[p] = NewVal;
 			}
 		}
@@ -356,7 +362,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		bool First = true;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(!(m_TeePartsColorSelection & gs_aSelectionParts[p]))
+			if(!(m_TeePartsEditingSelection & gs_aSelectionParts[p]))
 				continue;
 			int Val = *gs_apBlueColorVariables[p];
 			if(First)
@@ -384,7 +390,7 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 		{
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+				if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
 					*gs_apBlueColorVariables[p] = NewVal;
 			}
 		}
@@ -434,6 +440,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 					Info.m_aTextures[p] = s->m_apParts[p]->m_OrgTexture;
 					Info.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				if(m_pClient->m_pSkins->IsMirrorable(p))
+					Info.m_aMirrored[p] = s->m_aMirrored[p];
 			}
 
 			Info.m_Size = UI()->Scale()*50.0f;
@@ -453,6 +461,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
 				mem_copy(gs_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
+				if(m_pClient->m_pSkins->IsMirrorable(p))
+					*gs_apMirroredVariables[p] = s->m_aMirrored[p];
 				*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
 				*gs_apColorVariables[p] = s->m_aPartColors[p];
 			}
@@ -528,6 +538,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 						Info.m_aTextures[j] = pSkinPart->m_OrgTexture;
 					Info.m_aColors[j] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				if(m_pClient->m_pSkins->IsMirrorable(j))
+					Info.m_aMirrored[j] = *gs_apMirroredVariables[j];
 			}
 			Info.m_Size = UI()->Scale()*50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
@@ -926,7 +938,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
 	CUIRect Button, Label, EditBox;
-	CUIRect YourSkin, Preview, CustomizeSkin, Left, Mid, SaveSkin, Selection, UCC, Picker;
+	CUIRect YourSkin, Preview, CustomizeSkin, Left, Mid, SaveSkin, Selection, Right, Picker;
 	MainView.VMargin(20.0f, &MainView);
 	MainView.HMargin(10.0f, &MainView);
 	MainView.VSplitLeft(420.0f, 0, &Selection);
@@ -945,7 +957,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		if(DoButton_Menu(&s_SkinButton, "", 0, &Button))
 		{
 			m_TeePartSelection = SELECTION_SKIN;
-			m_TeePartsColorSelection = NO_SELECTION;
+			m_TeePartsEditingSelection = NO_SELECTION;
 		}
 
 		Button.VSplitLeft(24.0f, 0, &Preview);
@@ -966,6 +978,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
 				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
+			if(m_pClient->m_pSkins->IsMirrorable(p))
+				OwnSkinInfo.m_aMirrored[p] = *gs_apMirroredVariables[p];
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 
@@ -1031,7 +1045,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			if(!g_Config.m_ClCustomizeSkin)
 			{
 				m_TeePartSelection = NO_SELECTION;
-				m_TeePartsColorSelection = NO_SELECTION;
+				m_TeePartsEditingSelection = NO_SELECTION;
 			}
 		}
 	}
@@ -1046,7 +1060,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Left.HSplitTop(260.0f, &Left, &SaveSkin);
 		Left.VSplitLeft(180.0f, &Left, &Mid);
 		Mid.VSplitLeft(10.0f, 0, &Mid);
-		Mid.VSplitLeft(165.0f, &Mid, &UCC);
+		Mid.VSplitLeft(165.0f, &Mid, &Right);
 
 		const char *const apNames[6] = {Localize("Body:"), Localize("Tattoo:"), Localize("Decoration:"),
 										Localize("Hands:"), Localize("Feet:"), Localize("Eyes:")};
@@ -1071,7 +1085,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CUIRect ColorSelection;
 			apColumns[p]->HSplitTop(80.0f, &ColorSelection, apColumns[p]);
 			ColorSelection.HMargin(5.0f, &ColorSelection);
-			if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+			if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
 				RenderTools()->DrawUIRect(&ColorSelection, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 			ColorSelection.HSplitTop(5.0f, 0, &ColorSelection);
 			ColorSelection.VSplitRight(70.0f, &Label, &Button);
@@ -1084,7 +1098,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			if(DoButton_Customize(&s_aButtons[p], Tex, Sprite, &Button, ImageRatio))
 			{
 				m_TeePartSelection = gs_aSelectionParts[p];
-				m_TeePartsColorSelection = gs_aSelectionParts[p];
+				m_TeePartsEditingSelection = gs_aSelectionParts[p];
 			}
 			if(UI()->DoColorSelectionLogic(&ColorSelection, &Button))
 			{
@@ -1107,13 +1121,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				}
 				if(Input()->KeyPressed(KEY_RCTRL) || Input()->KeyPressed(KEY_LCTRL))
 				{
-					if(m_TeePartsColorSelection & gs_aSelectionParts[p])
-						m_TeePartsColorSelection &= ~AddSelection;
+					if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
+						m_TeePartsEditingSelection &= ~AddSelection;
 					else
-						m_TeePartsColorSelection |= AddSelection;
+						m_TeePartsEditingSelection |= AddSelection;
 				}
 				else
-					m_TeePartsColorSelection = AddSelection;
+					m_TeePartsEditingSelection = AddSelection;
 				m_TeePartSelection = NO_SELECTION;
 			}
 		}
@@ -1136,17 +1150,51 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 	}
 
-	if(m_TeePartsColorSelection == NO_SELECTION || m_TeePartSelection != NO_SELECTION)
+	if(m_TeePartsEditingSelection == NO_SELECTION || m_TeePartSelection != NO_SELECTION)
 		return;
 
 	bool None = true;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && gs_apSkinVariables[p][0])
+		if((m_TeePartsEditingSelection & gs_aSelectionParts[p]) && gs_apSkinVariables[p][0])
 			None = false;
 	}
 	if(None)
 		return;
+
+	// Mirror :
+	{
+		bool Mirrorable = true;
+		int Mirrored = 1;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if((m_TeePartsEditingSelection & gs_aSelectionParts[p]))
+			{
+				if(!m_pClient->m_pSkins->IsMirrorable(p))
+					Mirrorable = false;
+				else if(*gs_apMirroredVariables[p] == 0)
+					Mirrored = 0;
+			}
+		}
+
+		Right.VSplitLeft(40.0f, 0, &Right);
+
+		if(Mirrorable)
+		{
+			Right.HSplitTop(5.0f, 0, &Right);
+			Right.HSplitTop(20.0f, &Button, &Right);
+			static int s_MirrorButton = 0;
+			if(DoButton_CheckBox(&s_MirrorButton, Localize("Mirrored"), Mirrored, &Button))
+			{
+				Mirrored ^= 1;
+				for(int p = 0; p < NUM_SKINPARTS; p++)
+				{
+					if((m_TeePartsEditingSelection & gs_aSelectionParts[p]) && m_pClient->m_pSkins->IsMirrorable(p))
+						*gs_apMirroredVariables[p] = Mirrored;
+				}
+			}
+		}
+	}
 
 	int CheckedUCC = 1;
 
@@ -1154,20 +1202,19 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if((m_TeePartsColorSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p] == false)
+			if((m_TeePartsEditingSelection & gs_aSelectionParts[p]) && *gs_apUCCVariables[p] == 0)
 				CheckedUCC = 0;
 		}
 
-		UCC.VSplitLeft(40.0f, 0, &UCC);
-		UCC.HSplitTop(5.0f, 0, &UCC);
-		UCC.HSplitTop(20.0f, &Button, &Picker);
+		Right.HSplitTop(5.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Button, &Right);
 		static int s_UCCButton = 0;
 		if(DoButton_CheckBox(&s_UCCButton, Localize("Custom colors"), CheckedUCC, &Button))
 		{
 			CheckedUCC ^= 1;
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
-				if(m_TeePartsColorSelection & gs_aSelectionParts[p])
+				if(m_TeePartsEditingSelection & gs_aSelectionParts[p])
 					*gs_apUCCVariables[p] = CheckedUCC;
 			}
 		}
@@ -1178,8 +1225,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	// HSL Picker :
 	{
-		Picker.HSplitTop(10.0f, 0, &Picker);
-		Picker.VSplitLeft(20.0f, 0, &Picker);
+		Right.HSplitTop(10.0f, 0, &Right);
+		Right.VSplitLeft(20.0f, 0, &Picker);
 		RenderHSLPicker(Picker);
 	}
 }

@@ -16,6 +16,7 @@ public:
 		for(int i = 0; i < 6; i++)
 		{
 			m_aTextures[i] = -1;
+			m_aMirrored[i] = 0;
 			m_aColors[i] = vec4(1,1,1,1);
 		}
 		m_Size = 1.0f;
@@ -23,6 +24,7 @@ public:
 	};
 
 	int m_aTextures[6];
+	int m_aMirrored[6];
 	vec4 m_aColors[6];
 	float m_Size;
 	int m_GotAirJump;

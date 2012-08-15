@@ -48,6 +48,11 @@ MACRO_CONFIG_STR(PlayerSkinHands, player_skin_hands, 24, "standard", CFGFLAG_CLI
 MACRO_CONFIG_STR(PlayerSkinFeet, player_skin_feet, 24, "standard", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Player skin feet")
 MACRO_CONFIG_STR(PlayerSkinEyes, player_skin_eyes, 24, "standard", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Player skin eyes")
 
+MACRO_CONFIG_INT(PlayerMirroredBody, player_mirrored_body, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles mirroring of body")
+MACRO_CONFIG_INT(PlayerMirroredTattoo, player_mirrored_tattoo, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles mirroring of tattoo")
+MACRO_CONFIG_INT(PlayerMirroredDecoration, player_mirrored_decoration, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles mirroring of decoration")
+MACRO_CONFIG_INT(PlayerMirroredEyes, player_mirrored_eyes, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles mirroring of eyes")
+
 MACRO_CONFIG_INT(PlayerUseCustomColorBody, player_use_custom_color_body, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors for body")
 MACRO_CONFIG_INT(PlayerUseCustomColorTattoo, player_use_custom_color_tattoo, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors for tattoo")
 MACRO_CONFIG_INT(PlayerUseCustomColorDecoration, player_use_custom_color_decoration, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors for decoration")

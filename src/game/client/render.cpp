@@ -228,6 +228,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
 					SelectSprite(OutLine?SPRITE_TEE_DECORATION_OUTLINE:SPRITE_TEE_DECORATION, 0, 0, 0);
 					Item = BodyItem;
+					if(pInfo->m_aMirrored[2])
+						Item.m_Width = -Item.m_Width;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
@@ -247,6 +249,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
 				}
 				Item = BodyItem;
+				if(pInfo->m_aMirrored[0])
+					Item.m_Width = -Item.m_Width;
 				Graphics()->QuadsDraw(&Item, 1);
 				Graphics()->QuadsEnd();
 
@@ -259,6 +263,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
 					SelectSprite(SPRITE_TEE_TATTOO, 0, 0, 0);
 					Item = BodyItem;
+					if(pInfo->m_aMirrored[1])
+						Item.m_Width = -Item.m_Width;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
@@ -274,6 +280,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					{
 						SelectSprite(t==0?SPRITE_TEE_BODY_SHADOW:SPRITE_TEE_BODY_UPPER_OUTLINE, 0, 0, 0);
 						Item = BodyItem;
+						if(t!=0 && pInfo->m_aMirrored[0])
+							Item.m_Width = -Item.m_Width;
 						Graphics()->QuadsDraw(&Item, 1);
 					}
 					Graphics()->QuadsEnd();
@@ -309,6 +317,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					float h = Emote == EMOTE_BLINK ? BaseSize*0.15f/2.0f : EyeScale/2.0f;
 					vec2 Offset = vec2(Direction.x*0.125f, -0.05f+Direction.y*0.10f)*BaseSize;
 					IGraphics::CQuadItem QuadItem(BodyPos.x+Offset.x, BodyPos.y+Offset.y, EyeScale, h);
+					if(pInfo->m_aMirrored[5])
+						QuadItem.m_Width = -QuadItem.m_Width;
 					Graphics()->QuadsDraw(&QuadItem, 1);
 				}
 				Graphics()->QuadsEnd();

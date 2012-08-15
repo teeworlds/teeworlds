@@ -15,6 +15,8 @@
 
 char *const gs_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinTattoo, g_Config.m_PlayerSkinDecoration,
 													g_Config.m_PlayerSkinHands, g_Config.m_PlayerSkinFeet, g_Config.m_PlayerSkinEyes};
+int *const gs_apMirroredVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerMirroredBody, &g_Config.m_PlayerMirroredTattoo, &g_Config.m_PlayerMirroredDecoration,
+													0, 0, &g_Config.m_PlayerMirroredEyes};
 int *const gs_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorTattoo, &g_Config.m_PlayerUseCustomColorDecoration,
 													&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes};
 int *const gs_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorTattoo, &g_Config.m_PlayerColorDecoration,
@@ -162,6 +164,13 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 				continue;
 			Skin.m_apParts[Part] = pSelf->GetSkinPart(Part, SkinPart);
 		}
+		else if(str_comp(pVariable, "mirrored") == 0)
+		{
+			if(str_comp(pValue, "true") == 0)
+				Skin.m_aMirrored[Part] = 1;
+			else if(str_comp(pValue, "false") == 0)
+				Skin.m_aMirrored[Part] = 0;
+		}
 		else if(str_comp(pVariable, "custom_colors") == 0)
 		{
 			if(str_comp(pValue, "true") == 0)
@@ -257,8 +266,9 @@ void CSkins::OnInit()
 		if(Default < 0)
 			Default = 0;
 		m_DummySkin.m_apParts[p] = GetSkinPart(p, Default);
-		m_DummySkin.m_aPartColors[p] = p==SKINPART_TATTOO ? (255<<24)+65408 : 65408;
+		m_DummySkin.m_aMirrored[p] = 0;
 		m_DummySkin.m_aUseCustomColors[p] = 0;
+		m_DummySkin.m_aPartColors[p] = p==SKINPART_TATTOO ? (255<<24)+65408 : 65408;
 	}
 
 	// load skins
@@ -353,4 +363,9 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team
 		return (PartAlp<<24) + (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
 	else
 		return (PartHue<<16) + (TEAM_SAT<<8) + TEAM_LGT;
+}
+
+bool CSkins::IsMirrorable(int Part) const
+{
+	return gs_apMirroredVariables[Part] != 0;
 }

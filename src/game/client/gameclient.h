@@ -167,6 +167,7 @@ public:
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
 		char m_aaSkinPartNames[6][24];
+		int m_aSkinPartMirrored[6];
 		int m_aUseCustomColors[6];
 		int m_aSkinPartColors[6];
 		int m_aSkinPartRedColors[6];
