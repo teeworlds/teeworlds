@@ -319,7 +319,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	}
 
 	UiDoListboxHeader(&MainView, Localize("Skins"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinlist, 50.0f, "", s_paSkinList.size(), 4, -1, s_ScrollValue);
+	UiDoListboxStart(&s_InitSkinlist, 50.0f, 0, s_paSkinList.size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -406,7 +406,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
 	UiDoListboxHeader(&MainView, s_apTitles[p], 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, "", s_paList[p].size(), 4, -1, s_ScrollValue);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[p].size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[p].size(); ++i)
 	{
@@ -554,7 +554,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 	int OldSelected = s_SelectedLanguage;
 
 	UiDoListboxHeader(&MainView, Localize("Language"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_LanguageList, 24.0f, "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+	UiDoListboxStart(&s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
@@ -568,8 +568,17 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 			Rect.HMargin(3.0f, &Rect);
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
-			Item.m_Rect.HSplitTop(2.0f, 0, &Item.m_Rect);
- 			UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+			Item.m_Rect.y += 2.0f;
+			if(!str_comp(s_Languages[s_SelectedLanguage].m_Name, r.front().m_Name))
+			{
+				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, -1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			}
+			else
+ 				UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, -1);
 		}
 	}
 
@@ -612,7 +621,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	// render game menu
 	Game.HSplitTop(ButtonHeight, &Label, &Game);
-	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	Game.HSplitTop(Spaceing, 0, &Game);
 	Game.HSplitTop(ButtonHeight, &Button, &Game);
@@ -681,7 +691,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	// render client menu
 	Client.HSplitTop(ButtonHeight, &Label, &Client);
-	UI()->DoLabel(&Label, Localize("Client"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Client"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	Client.HSplitTop(Spaceing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
@@ -761,7 +772,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	// render game menu
 	TopView.HSplitTop(ButtonHeight, &Label, &TopView);
-	UI()->DoLabel(&Label, Localize("Personal"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Personal"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	// split menu
 	TopView.HSplitTop(Spaceing, 0, &TopView);
@@ -784,7 +796,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	static float s_ScrollValue = 0.0f;
 	int OldSelected = -1;
 	UiDoListboxHeader(&MainView, Localize("Country"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ScrollValue, 40.0f, "", m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_ScrollValue, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
@@ -807,7 +819,16 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
-			UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
+			if(i == OldSelected)
+			{
+				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			}
+			else
+				UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
 		}
 	}
 
@@ -1158,7 +1179,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// render screen menu
 	Screen.HSplitTop(ButtonHeight, &Label, &Screen);
-	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	Screen.HSplitTop(Spaceing, 0, &Screen);
 	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
@@ -1226,7 +1248,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// render texture menu
 	Texture.HSplitTop(ButtonHeight, &Label, &Texture);
-	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	Texture.HSplitTop(Spaceing, 0, &Texture);
 	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
@@ -1266,7 +1289,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		// draw header
 		MainView.HSplitTop(ButtonHeight, &Header, &MainView);
-		UI()->DoLabel(&Header, Localize("Resolutions"), Header.h*ms_FontmodHeight, 0);
+		Header.y += 2.0f;
+		UI()->DoLabel(&Header, Localize("Resolutions"), Header.h*ms_FontmodHeight*0.8f, 0);
 
 		// supported modes button
 		MainView.HSplitTop(Spaceing, 0, &MainView);
@@ -1336,7 +1360,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		int OldSelected = -1;
 		int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
 		str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-		UiDoListboxStart(&s_DisplayModeList, 24.0f, aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, &MainView);
+		UiDoListboxStart(&s_DisplayModeList, 20.0f, aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, &MainView);
 
 		for(int i = 0; i < m_NumFilteredVideoModes; ++i)
 		{
@@ -1353,7 +1377,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			{
 				int G = gcd(m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height);
 				str_format(aBuf, sizeof(aBuf), " %dx%d %d bit", m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height, Depth);
-				UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, 0);
+				if(i == OldSelected)
+				{
+					TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+					TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+					Item.m_Rect.y += 2.0f;
+					UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+					TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				}
+				else
+					UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
 			}
 		}
 
@@ -1466,7 +1500,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 	// render sound menu
 	Sound.HSplitTop(ButtonHeight, &Label, &Sound);
-	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*ms_FontmodHeight, 0);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	Sound.HSplitTop(Spaceing, 0, &Sound);
 	Sound.HSplitTop(ButtonHeight, &Button, &Sound);
@@ -1511,7 +1546,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 		// render detail menu
 		Detail.HSplitTop(ButtonHeight, &Label, &Detail);
-		UI()->DoLabel(&Label, Localize("Detail"), ButtonHeight*ms_FontmodHeight, 0);
+		Label.y += 2.0f;
+		UI()->DoLabel(&Label, Localize("Detail"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 		// split menu
 		CUIRect Left, Right;

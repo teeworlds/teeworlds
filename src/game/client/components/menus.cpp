@@ -714,7 +714,8 @@ void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float H
 
 	// draw header
 	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
-	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight, 0);
+	Header.y += 2.0f;
+	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, 0);
 
 	View.HSplitTop(Spaceing, &Header, &View);
 
@@ -736,12 +737,16 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
-	View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
-	Footer.VSplitLeft(10.0f, 0, &Footer);
-	UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight, 0);
+	if(pBottomText)
+	{
+		View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
+		Footer.VSplitLeft(10.0f, 0, &Footer);
+		Footer.y += 2.0f;
+		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, 0);
+	}
 
 	// list background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 0.0f);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// prepare the scroll
 	View.VSplitRight(20.0f, &View, &Scroll);
@@ -898,7 +903,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
 		//selected_index = i;
 		CUIRect r = Item.m_Rect;
 		r.Margin(1.5f, &r);
-		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
 	}
 
 	return Item;
