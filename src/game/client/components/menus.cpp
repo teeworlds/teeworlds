@@ -56,6 +56,7 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
+	m_UpdateSkinlist = true;
 	m_TeePartSelection = NO_SELECTION;
 	m_TeePartsEditingSelection = NO_SELECTION;
 	m_aSaveSkinName[0] = 0;
@@ -1704,7 +1705,12 @@ int CMenus::Render()
 			{
 				m_Popup = POPUP_NONE;
 				SaveSkinfile();
+				char aFilename[256];
+				str_format(aFilename, sizeof(aFilename), "%s.skn", m_aSaveSkinName);
+				m_pClient->m_pSkins->SkinScan(aFilename);
+				m_pClient->m_pSkins->SelectSkin(m_aSaveSkinName);
 				m_aSaveSkinName[0] = 0;
+				m_UpdateSkinlist = true;
 			}
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)

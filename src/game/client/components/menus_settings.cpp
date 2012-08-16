@@ -399,10 +399,8 @@ void CMenus::RenderHSLPicker(CUIRect Picker)
 
 void CMenus::RenderSkinSelection(CUIRect MainView)
 {
-	static bool s_InitSkinlist = true;
 	static sorted_array<const CSkins::CSkin *> s_paSkinList;
-	static float s_ScrollValue = 0.0f;
-	if(s_InitSkinlist)
+	if(m_UpdateSkinlist)
 	{
 		s_paSkinList.clear();
 		for(int i = 0; i < m_pClient->m_pSkins->Num(); ++i)
@@ -413,10 +411,12 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				continue;
 			s_paSkinList.add(s);
 		}
-		s_InitSkinlist = false;
+		m_UpdateSkinlist = false;
 	}
 
-	UiDoListboxStart(&s_InitSkinlist, &MainView, 50.0f, Localize("Skins"), "", s_paSkinList.size(), 4, -1, s_ScrollValue);
+	static float s_ScrollValue = 0.0f;
+	static int s_ListBoxID;
+	UiDoListboxStart(&s_ListBoxID, &MainView, 50.0f, Localize("Skins"), "", s_paSkinList.size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -457,15 +457,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		if(NewSelected != OldSelected)
 		{
 			const CSkins::CSkin *s = s_paSkinList[NewSelected];
-			mem_copy(g_Config.m_PlayerSkin, s->m_aName, sizeof(g_Config.m_PlayerSkin));
-			for(int p = 0; p < NUM_SKINPARTS; p++)
-			{
-				mem_copy(gs_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
-				if(m_pClient->m_pSkins->IsMirrorable(p))
-					*gs_apMirroredVariables[p] = s->m_aMirrored[p];
-				*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
-				*gs_apColorVariables[p] = s->m_aPartColors[p];
-			}
+			m_pClient->m_pSkins->SelectSkin(s->m_aName);
 		}
 		m_TeePartSelection = NO_SELECTION;
 	}
@@ -476,7 +468,6 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
 	static sorted_array<const CSkins::CSkinPart *> s_paList[6];
-	static float s_ScrollValue = 0.0f;
 	if(s_InitSkinPartList)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -506,7 +497,9 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
 											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
-	UiDoListboxStart(&s_InitSkinPartList, &MainView, 50.0f, s_apTitles[p], "", s_paList[p].size(), 4, -1, s_ScrollValue);
+	static float s_ScrollValue = 0.0f;
+	static int s_ListBoxID;
+	UiDoListboxStart(&s_ListBoxID, &MainView, 50.0f, s_apTitles[p], "", s_paList[p].size(), 4, -1, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[p].size(); ++i)
 	{

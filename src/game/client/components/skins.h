@@ -51,16 +51,19 @@ public:
 	};
 
 	void OnInit();
+	void SkinScan(const char *pName);
+	void SkinPartScan(const char *pName, int p);
 
-	int Num();
-	int NumSkinPart(int Part);
-	const CSkin *Get(int Index);
-	int Find(const char *pName);
-	const CSkinPart *GetSkinPart(int Part, int Index);
-	int FindSkinPart(int Part, const char *pName);
+	int Num() const;
+	int NumSkinPart(int Part) const;
+	const CSkin *Get(int Index) const;
+	int Find(const char *pName) const;
+	const CSkinPart *GetSkinPart(int Part, int Index) const;
+	int FindSkinPart(int Part, const char *pName) const;
 
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, int Part) const;
+	void SelectSkin(const char *pName) const;
 	int GetTeamColor(int UseCustomColors, int PartHue, int PartAlp, int Team, int Part) const;
 	bool IsMirrorable(int Part) const;
 	bool IsUsingAlpha(int Part) const;
@@ -71,8 +74,8 @@ private:
 	sorted_array<CSkin> m_aSkins;
 	CSkin m_DummySkin;
 
-	static int SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser);
-	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int SkinScanCb(const char *pName, int IsDir, int DirType, void *pUser);
+	static int SkinPartScanCb(const char *pName, int IsDir, int DirType, void *pUser);
 };
 
 extern char *const gs_apSkinVariables[NUM_SKINPARTS];
