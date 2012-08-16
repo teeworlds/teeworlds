@@ -6,6 +6,7 @@
 #include <engine/storage.h>
 
 #include <versionsrv/versionsrv.h>
+#include <versionsrv/mapversions.h>
 
 #include "datafile.h"
 #include "memheap.h"

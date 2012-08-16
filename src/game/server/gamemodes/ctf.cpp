@@ -21,7 +21,7 @@ CGameControllerCTF::CGameControllerCTF(CGameContext *pGameServer)
 }
 
 // balancing
-bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID) const
 {
 	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
 	if(Character)
