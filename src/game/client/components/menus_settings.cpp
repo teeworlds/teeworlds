@@ -1387,7 +1387,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 				}
 				else
+				{
+					Item.m_Rect.y += 2.0f;
 					UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+				}
 			}
 		}
 
@@ -1654,20 +1657,4 @@ void CMenus::RenderSettings(CUIRect MainView)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-
-	// same size like tabs in top but variables not really needed
-	float Spacing = 3.0f;
-	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-
-	// render background
-	MainView.VSplitLeft(ButtonWidth, &MainView, 0);
-	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
-
-	// back to main menu
-	CUIRect Button;
-	MainView.HSplitTop(25.0f, &MainView, 0);
-	Button = MainView;
-	static int s_MenuButton=0;
-	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
-		m_MenuPage = PAGE_START;
 }

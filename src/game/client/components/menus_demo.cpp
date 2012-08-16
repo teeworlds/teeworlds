@@ -300,6 +300,13 @@ void CMenus::DemolistOnUpdate(bool Reset)
 
 void CMenus::RenderDemoList(CUIRect MainView)
 {
+	CUIRect BottomView;
+	MainView.HSplitTop(20.0f, 0, &MainView);
+
+	// cut view
+	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	BottomView.HSplitTop(20.f, 0, &BottomView);
+
 	static int s_Inited = 0;
 	if(!s_Inited)
 	{
@@ -332,92 +339,13 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 
-	// render background
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
-	MainView.Margin(10.0f, &MainView);
-
-	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect, RenameRect, FileIcon, ListBox;
-	MainView.HSplitBottom(ms_ButtonHeight+5.0f, &MainView, &ButtonBar);
-	ButtonBar.HSplitTop(5.0f, 0, &ButtonBar);
-	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
-	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
-	ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
-	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
-	ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
-	ButtonBar.VSplitLeft(120.0f, &RenameRect, &ButtonBar);
-	MainView.HSplitBottom(140.0f, &ListBox, &MainView);
-
-	// render demo info
-	MainView.VMargin(5.0f, &MainView);
-	MainView.HSplitBottom(5.0f, &MainView, 0);
-	RenderTools()->DrawUIRect(&MainView, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
-	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
-	{
-		CUIRect Left, Right, Labels;
-		MainView.Margin(20.0f, &MainView);
-		MainView.VSplitMid(&Labels, &MainView);
-
-		// left side
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Created:"), 14.0f, -1);
-		UI()->DoLabelScaled(&Right, m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Type:"), 14.0f, -1);
-		UI()->DoLabelScaled(&Right, m_lDemos[m_DemolistSelectedIndex].m_Info.m_aType, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Length:"), 14.0f, -1);
-		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
-					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
-		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Version:"), 14.0f, -1);
-		str_format(aBuf, sizeof(aBuf), "%d", m_lDemos[m_DemolistSelectedIndex].m_Info.m_Version);
-		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
-
-		// right side
-		Labels = MainView;
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Map:"), 14.0f, -1);
-		UI()->DoLabelScaled(&Right, m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapName, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(20.0f, 0, &Left);
-		Left.VSplitLeft(130.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Size:"), 14.0f, -1);
-		unsigned Size = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
-					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]);
-		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Size);
-		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(20.0f, 0, &Left);
-		Left.VSplitLeft(130.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Crc:"), 14.0f, -1);
-		unsigned Crc = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
-					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
-		str_format(aBuf, sizeof(aBuf), "%08x", Crc);
-		UI()->DoLabelScaled(&Right, aBuf, 14.0f, -1);
-		Labels.HSplitTop(5.0f, 0, &Labels);
-		Labels.HSplitTop(20.0f, &Left, &Labels);
-		Left.VSplitLeft(150.0f, &Left, &Right);
-		UI()->DoLabelScaled(&Left, Localize("Netversion:"), 14.0f, -1);
-		UI()->DoLabelScaled(&Right, m_lDemos[m_DemolistSelectedIndex].m_Info.m_aNetversion, 14.0f, -1);
-	}
+	CUIRect ListBox, Button, Label, FileIcon;
+	MainView.HSplitTop(230.0f, &ListBox, &MainView);
 
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
-	UiDoListboxHeader(&ListBox, Localize("Demos"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_DemoListId, 17.0f, aFooterLabel, m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
+	UiDoListboxHeader(&ListBox, Localize("Recorded"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_DemoListId, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
@@ -425,23 +353,140 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			Item.m_Rect.VSplitLeft(Item.m_Rect.h, &FileIcon, &Item.m_Rect);
 			Item.m_Rect.VSplitLeft(5.0f, 0, &Item.m_Rect);
+			FileIcon.Margin(3.0f, &FileIcon);
+			FileIcon.x += 3.0f;
 			DoButton_Icon(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon);
-			UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight, -1);
+			if(!str_comp(m_lDemos[m_DemolistSelectedIndex].m_aName, r.front().m_aName))
+			{
+				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				Item.m_Rect.y += 2.0f;
+				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			}
+			else
+			{
+				Item.m_Rect.y += 2.0f;
+				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+			}
 		}
 	}
 	bool Activated = false;
 	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);
 	DemolistOnUpdate(false);
 
+	// render demo info
+	int NumOptions = (!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid) ? 8 : 0;
+	float ButtonHeight = 20.0f;
+	float Spacing = 2.0f;
+	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
+
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &MainView, 0);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, aFooterLabel, ButtonHeight*ms_FontmodHeight*0.8f, 0);
+	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
+	{
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		DoInfoBox(&Button, Localize("Created"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		DoInfoBox(&Button, Localize("Type"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aType);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
+					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
+		DoInfoBox(&Button, Localize("Length"), aBuf);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		str_format(aBuf, sizeof(aBuf), "%d", m_lDemos[m_DemolistSelectedIndex].m_Info.m_Version);
+		DoInfoBox(&Button, Localize("Version"), aBuf);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		DoInfoBox(&Button, Localize("Map"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapName);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		unsigned Size = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
+					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]);
+		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Size);
+		DoInfoBox(&Button, Localize("Size"), aBuf);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		unsigned Crc = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
+					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
+		str_format(aBuf, sizeof(aBuf), "%08x", Crc);
+		DoInfoBox(&Button, Localize("Crc"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		DoInfoBox(&Button, Localize("Netversion"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aNetversion);
+	}
+
+	// demo buttons
+	int NumButtons = m_DemolistSelectedIsDir ? 2 : 4;
+	Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
+	float BackgroundWidth = ButtonWidth*(float)NumButtons+(float)(NumButtons-1)*Spacing;
+
+	BottomView.VSplitRight(BackgroundWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_RefreshButton = 0;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshRect))
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
 	{
 		DemolistPopulate();
 		DemolistOnUpdate(false);
 	}
 
+	if(!m_DemolistSelectedIsDir)
+	{
+		BottomView.VSplitLeft(Spacing, 0, &BottomView);
+		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
+		static int s_DeleteButton = 0;
+		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
+		{
+			if(m_DemolistSelectedIndex >= 0)
+			{
+				UI()->SetActiveItem(0);
+				m_Popup = POPUP_DELETE_DEMO;
+				return;
+			}
+		}
+
+		BottomView.VSplitLeft(Spacing, 0, &BottomView);
+		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
+		static int s_RenameButton = 0;
+		if(DoButton_Menu(&s_RenameButton, Localize("Rename"), 0, &Button))
+		{
+			if(m_DemolistSelectedIndex >= 0)
+			{
+				UI()->SetActiveItem(0);
+				m_Popup = POPUP_RENAME_DEMO;
+				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
+				return;
+			}
+		}
+	}
+
+	BottomView.VSplitLeft(Spacing, 0, &BottomView);
+	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_PlayButton = 0;
-	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play"), 0, &PlayRect) || Activated)
+	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play"), 0, &Button) || Activated)
 	{
 		if(m_DemolistSelectedIndex >= 0)
 		{
@@ -471,32 +516,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					UI()->SetActiveItem(0);
 					return;
 				}
-			}
-		}
-	}
-
-	if(!m_DemolistSelectedIsDir)
-	{
-		static int s_DeleteButton = 0;
-		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
-		{
-			if(m_DemolistSelectedIndex >= 0)
-			{
-				UI()->SetActiveItem(0);
-				m_Popup = POPUP_DELETE_DEMO;
-				return;
-			}
-		}
-
-		static int s_RenameButton = 0;
-		if(DoButton_Menu(&s_RenameButton, Localize("Rename"), 0, &RenameRect))
-		{
-			if(m_DemolistSelectedIndex >= 0)
-			{
-				UI()->SetActiveItem(0);
-				m_Popup = POPUP_RENAME_DEMO;
-				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
-				return;
 			}
 		}
 	}

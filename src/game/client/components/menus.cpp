@@ -593,6 +593,24 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 	return HeaderHeight;
 }
 
+void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pValue)
+{
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	CUIRect Label, Value;
+	pRect->VSplitMid(&Label, &Value);
+
+	RenderTools()->DrawUIRect(&Value, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%s:", pLabel);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, 0);
+
+	Value.y += 2.0f;
+	UI()->DoLabel(&Value, pValue, pRect->h*ms_FontmodHeight*0.8f, 0);
+}
+
 float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
 	CUIRect Handle;
@@ -1081,6 +1099,17 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 			}
 		}
+		else if(m_MenuPage == PAGE_DEMOS)
+		{
+			// make the header look like an active tab
+			RenderTools()->DrawUIRect(&Box, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 5.0f);
+			Box.HMargin(2.0f, &Box);
+			TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+			TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+			UI()->DoLabel(&Box, Localize("Demo"), Box.h*ms_FontmodHeight, 0);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+		}
 	}
 	else
 	{
@@ -1557,6 +1586,23 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
+		
+				// same size like tabs in top but variables not really needed
+				float Spacing = 3.0f;
+				float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+				// render background
+				MainView.HSplitBottom(60.0f, 0, &MainView);
+				MainView.VSplitLeft(ButtonWidth, &MainView, 0);
+				RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+				// back to main menu
+				CUIRect Button;
+				MainView.HSplitTop(25.0f, &MainView, 0);
+				Button = MainView;
+				static int s_MenuButton=0;
+				if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
+					m_MenuPage = PAGE_START;
 
 				// handle back with esc
 				if(m_EscapePressed)
