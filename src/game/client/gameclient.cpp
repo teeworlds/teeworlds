@@ -128,15 +128,9 @@ struct CGameMsg
 
 static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"},
-	{/*GAMEMSG_VOTE_DENY_SPECCALL*/ DO_CHAT, PARA_NONE, "Spectators aren't allowed to start a vote."},
-	{/*GAMEMSG_VOTE_DENY_ACTIVE*/ DO_CHAT, PARA_NONE, "Wait for current vote to end before calling a new one."},
 	{/*GAMEMSG_VOTE_DENY_KICK*/ DO_CHAT, PARA_NONE, "Server does not allow voting to kick players"},
-	{/*GAMEMSG_VOTE_DENY_KICKID*/ DO_CHAT, PARA_NONE, "Invalid client id to kick"},
-	{/*GAMEMSG_VOTE_DENY_KICKSELF*/ DO_CHAT, PARA_NONE, "You can't kick yourself"},
 	{/*GAMEMSG_VOTE_DENY_KICKADMIN*/ DO_CHAT, PARA_NONE, "You can't kick admins"},
 	{/*GAMEMSG_VOTE_DENY_SPEC*/ DO_CHAT, PARA_NONE, "Server does not allow voting to move players to spectators"},
-	{/*GAMEMSG_VOTE_DENY_SPECID*/ DO_CHAT, PARA_NONE, "Invalid client id to move"},
-	{/*GAMEMSG_VOTE_DENY_SPECSELF*/ DO_CHAT, PARA_NONE, "You can't move yourself"},
 	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},
 	{/*GAMEMSG_TEAM_SHUFFLE*/ DO_CHAT, PARA_NONE, "Teams were shuffled"},
 	{/*GAMEMSG_TEAM_LOCK*/ DO_CHAT, PARA_NONE, "Teams were locked"},
@@ -147,7 +141,6 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
 	{/*GAMEMSG_CTF_RETURN*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf return sound
 
-	{/*GAMEMSG_VOTE_DENY_WAIT*/ DO_CHAT, PARA_I, "You must wait %d seconds before making another vote"},
 	{/*GAMEMSG_VOTE_DENY_KICKMIN*/ DO_CHAT, PARA_I, "Kick voting requires %d players on the server"},
 	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, "All players were moved to the %s"},	// special - add team name
 	{/*GAMEMSG_TEAM_DENY_MAX*/ DO_BROADCAST, PARA_I, "Only %d active players are allowed"},

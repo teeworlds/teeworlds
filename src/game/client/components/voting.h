@@ -21,6 +21,7 @@ class CVoting : public CComponent
 	char m_aReason[VOTE_REASON_LENGTH];
 	int m_Voted;
 	int m_Yes, m_No, m_Pass, m_Total;
+	int m_CallvoteBlockTick;
 
 	void AddOption(const char *pDescription);
 	void ClearOptions();
@@ -55,6 +56,7 @@ public:
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }
 	const char *VoteReason() const { return m_aReason; }
+	int CallvoteBlockTime() const { return m_CallvoteBlockTick > Client()->GameTick() ? (m_CallvoteBlockTick-Client()->GameTick())/Client()->GameTickSpeed() : 0; }
 };
 
 #endif

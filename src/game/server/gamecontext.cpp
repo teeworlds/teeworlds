@@ -503,7 +503,7 @@ void CGameContext::OnTick()
 				}
 			}
 
-			if(m_VoteEnforce == VOTE_ENFORCE_YES || Yes >= Total/2+1)
+			if(m_VoteEnforce == VOTE_ENFORCE_YES || (m_VoteUpdate && Yes >= Total/2+1))
 			{
 				Server()->SetRconCID(IServer::RCON_CID_VOTE);
 				Console()->ExecuteLine(m_aVoteCommand);
@@ -513,7 +513,7 @@ void CGameContext::OnTick()
 				if(m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_LastVoteCall = 0;
 			}
-			else if(m_VoteEnforce == VOTE_ENFORCE_NO || No >= (Total+1)/2 || time_get() > m_VoteCloseTime)
+			else if(m_VoteEnforce == VOTE_ENFORCE_NO || (m_VoteUpdate && No >= (Total+1)/2) || time_get() > m_VoteCloseTime)
 				EndVote(VOTE_END_FAIL, m_VoteEnforce==VOTE_ENFORCE_NO);
 			else if(m_VoteUpdate)
 			{
@@ -722,29 +722,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{
-		if(g_Config.m_SvSpamprotection && pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry+Server()->TickSpeed()*3 > Server()->Tick())
+		if((g_Config.m_SvSpamprotection && ((pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry+Server()->TickSpeed()*3 > Server()->Tick()) ||
+			(pPlayer->m_LastVoteCall && pPlayer->m_LastVoteCall+Server()->TickSpeed()*VOTE_COOLDOWN > Server()->Tick()))) ||
+			pPlayer->GetTeam() == TEAM_SPECTATORS || m_VoteCloseTime)
 			return;
 
 		int64 Now = Server()->Tick();
 		pPlayer->m_LastVoteTry = Now;
-		if(pPlayer->GetTeam() == TEAM_SPECTATORS)
-		{
-			SendGameMsg(GAMEMSG_VOTE_DENY_SPECCALL, ClientID);
-			return;
-		}
-
-		if(m_VoteCloseTime)
-		{
-			SendGameMsg(GAMEMSG_VOTE_DENY_ACTIVE, ClientID);
-			return;
-		}
-
-		int Timeleft = pPlayer->m_LastVoteCall + Server()->TickSpeed()*60 - Now;
-		if(pPlayer->m_LastVoteCall && Timeleft > 0)
-		{
-			SendGameMsg(GAMEMSG_VOTE_DENY_WAIT, (Timeleft/Server()->TickSpeed())+1, ClientID);
-			return;
-		}
 
 		int Type = VOTE_UNKNOWN;
 		char aDesc[VOTE_DESC_LENGTH] = {0};
@@ -769,10 +753,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 
 			if(!pOption)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_INVALIDOP, pMsg->m_Value, ClientID);
 				return;
-			}
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
 		{
@@ -797,16 +778,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 
 			int KickID = str_toint(pMsg->m_Value);
-			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID])
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_KICKID, ClientID);
+			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID] || KickID == ClientID)
 				return;
-			}
-			if(KickID == ClientID)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_KICKSELF, ClientID);
-				return;
-			}
 			if(Server()->IsAuthed(KickID))
 			{
 				SendGameMsg(GAMEMSG_VOTE_DENY_KICKADMIN, ClientID);
@@ -835,16 +808,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 
 			int SpectateID = str_toint(pMsg->m_Value);
-			if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_SPECID, ClientID);
+			if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS || SpectateID == ClientID)
 				return;
-			}
-			if(SpectateID == ClientID)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_SPECSELF, ClientID);
-				return;
-			}
 
 			Type = VOTE_START_SPEC;
 			str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));

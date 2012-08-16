@@ -374,7 +374,33 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 
 void CMenus::RenderServerControl(CUIRect MainView)
 {
+	if(m_pClient->m_LocalClientID == -1)
+		return;
+
 	static int s_ControlPage = 0;
+	const char *pNotification = 0;
+	char aBuf[64];
+	if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+		pNotification = Localize("Spectators aren't allowed to start a vote.");
+	else if(m_pClient->m_pVoting->IsVoting())
+		pNotification = Localize("Wait for current vote to end before calling a new one.");
+	else if(m_pClient->m_pVoting->CallvoteBlockTime() != 0)
+	{
+		str_format(aBuf, sizeof(aBuf), Localize("You must wait %d seconds before making another vote"), m_pClient->m_pVoting->CallvoteBlockTime());
+		pNotification = aBuf;
+	}
+
+	bool Authed = Client()->RconAuthed();
+	if(pNotification && !Authed)
+	{
+		// only print notice
+		CUIRect Bar;
+		MainView.HSplitTop(45.0f, &Bar, &MainView);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+		Bar.HMargin(15.0f, &Bar);
+		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, 0);
+		return;
+	}
 
 	// render background
 	CUIRect Bottom, Extended, TabBar, Button;
@@ -415,34 +441,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 	// vote menu
 	{
-		CUIRect Button;
 		Bottom.VSplitRight(120.0f, &Bottom, &Button);
-
-		static int s_CallVoteButton = 0;
-		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
-		{
-			if(s_ControlPage == 0)
-				m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
-			else if(s_ControlPage == 1)
-			{
-				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-					m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-				{
-					m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-					SetActive(false);
-				}
-			}
-			else if(s_ControlPage == 2)
-			{
-				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-					m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-				{
-					m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-					SetActive(false);
-				}
-			}
-			m_aCallvoteReason[0] = 0;
-		}
 
 		// render kick reason
 		CUIRect Reason;
@@ -456,8 +455,43 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		static float s_Offset = 0.0f;
 		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
 
+		if(pNotification == 0)
+		{
+			// call vote
+			static int s_CallVoteButton = 0;
+			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
+			{
+				if(s_ControlPage == 0)
+					m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
+				else if(s_ControlPage == 1)
+				{
+					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
+					{
+						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
+						SetActive(false);
+					}
+				}
+				else if(s_ControlPage == 2)
+				{
+					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
+					{
+						m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason);
+						SetActive(false);
+					}
+				}
+				m_aCallvoteReason[0] = 0;
+			}
+		}
+		else
+		{
+			// print notice
+			UI()->DoLabelScaled(&Bottom, pNotification, 14.0f, -1);
+		}		
+
 		// extended features (only available when authed in rcon)
-		if(Client()->RconAuthed())
+		if(Authed)
 		{
 			// background
 			Extended.Margin(10.0f, &Extended);

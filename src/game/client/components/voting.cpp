@@ -181,6 +181,7 @@ void CVoting::OnReset()
 	m_aReason[0] = 0;
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
+	m_CallvoteBlockTick = 0;
 }
 
 void CVoting::OnConsoleInit()
@@ -194,6 +195,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_VOTESET)
 	{
 		CNetMsg_Sv_VoteSet *pMsg = (CNetMsg_Sv_VoteSet *)pRawMsg;
+		int BlockTick = m_CallvoteBlockTick;
 		OnReset();
 		char aBuf[128];
 		if(pMsg->m_Timeout)
@@ -220,6 +222,8 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 								pMsg->m_pDescription, pMsg->m_pReason);
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 				}
+				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)
+					m_CallvoteBlockTick = Client()->GameTick()+Client()->GameTickSpeed()*VOTE_COOLDOWN;
 			}
 		}
 		else
@@ -248,6 +252,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote no"));
 				else
 					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote failed"));
+				m_CallvoteBlockTick = BlockTick;
 			}
 		}
 	}
