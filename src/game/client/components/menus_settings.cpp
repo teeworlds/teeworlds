@@ -930,8 +930,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
-	CUIRect Button, Label, EditBox;
-	CUIRect YourSkin, Preview, CustomizeSkin, Left, Mid, SaveSkin, Selection, Right, Picker;
+	CUIRect Button, Label, EditBox, Preview;
+	CUIRect YourSkin, RedTeam, BlueTeam, CustomizeSkin, Left, Mid, SaveSkin, Selection, Right, Picker;
 	MainView.VMargin(20.0f, &MainView);
 	MainView.HMargin(10.0f, &MainView);
 	MainView.VSplitLeft(420.0f, 0, &Selection);
@@ -939,12 +939,12 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	// Preview :
 	{
-		YourSkin.VSplitLeft(80.0f, &YourSkin, &Button);
-		YourSkin.HSplitTop(18.0f, 0, &Label);
+		YourSkin.VSplitLeft(80.0f, &Label, &Button);
+		Label.HSplitTop(18.0f, 0, &Label);
 		UI()->DoLabelScaled(&Label, Localize("Your skin:"), 14.0f, -1);
 
 		float tw = TextRender()->TextWidth(0, 14.0f, g_Config.m_PlayerSkin, -1);
-		Button.VSplitLeft(16.0f + 50.0f+tw, &Button, 0);
+		Button.VSplitLeft(16.0f + 50.0f+tw, &Button, &RedTeam);
 		Button.HSplitTop(12.0f + 40.0f, &Button, 0);
 		static int s_SkinButton = 0;
 		if(DoButton_Menu(&s_SkinButton, "", 0, &Button))
@@ -954,6 +954,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 
 		Button.VSplitLeft(24.0f, 0, &Preview);
+		Preview.VSplitLeft(26.0f, &Preview, &Label);
+
 		Preview.HSplitTop(30.0f, 0, &Preview);
 		CTeeRenderInfo OwnSkinInfo;
 		OwnSkinInfo.m_Size = 50.0f*UI()->Scale();
@@ -976,7 +978,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 
-		Button.VSplitLeft(50.0f, 0, &Label);
 		Label.HSplitTop(18.0f, 0, &Label);
 		UI()->DoLabelScaled(&Label, g_Config.m_PlayerSkin, 14.0f, -1);
 
@@ -991,8 +992,9 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 
 			// draw tee with red team color
-			Button.VSplitLeft(150.0f, 0, &Preview);
-			Preview.VSplitLeft(100.0f, &Label, &Preview);
+			RedTeam.VSplitLeft(20.0f, 0, &RedTeam);
+			RedTeam.VSplitLeft(140.0f, &RedTeam, &BlueTeam);
+			RedTeam.VSplitLeft(100.0f, &Label, &Preview);
 			Label.HSplitTop(18.0f, 0, &Label);
 			UI()->DoLabelScaled(&Label, Localize("Red team:"), 14.0f, -1);
 
@@ -1005,8 +1007,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Preview.x, Preview.y));
 
 			// draw tee with blue team color
-			Button.VSplitLeft(300.0f, 0, &Preview);
-			Preview.VSplitLeft(100.0f, &Label, &Preview);
+			BlueTeam.VSplitLeft(100.0f, &Label, &Preview);
 			Label.HSplitTop(18.0f, 0, &Label);
 			UI()->DoLabelScaled(&Label, Localize("Blue team:"), 14.0f, -1);
 
@@ -1031,6 +1032,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	// Skin Customization :
 	{
 		CustomizeSkin.HSplitTop(20.0f, &Button, &Left);
+		Button.VSplitLeft(360.0f, &Button, 0);
 		static int s_CustomizeSkinButton = 0;
 		if(DoButton_CheckBox(&s_CustomizeSkinButton, Localize("Customize skin"), g_Config.m_ClCustomizeSkin, &Button))
 		{
