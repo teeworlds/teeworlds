@@ -428,7 +428,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		unsigned Crc = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
 					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
 		str_format(aBuf, sizeof(aBuf), "%08x", Crc);
-		DoInfoBox(&Button, Localize("Crc"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);
+		DoInfoBox(&Button, Localize("Crc"), aBuf);
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
