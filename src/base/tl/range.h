@@ -154,7 +154,7 @@ public:
 	void pop_back() { tl_assert(!empty()); end--; }
 	T& front() { tl_assert(!empty()); return *begin; }
 	T& back() { tl_assert(!empty()); return *(end-1); }
-	T& index(unsigned i) { tl_assert(i >= 0 && i < (unsigned)(end-begin)); return begin[i]; }
+	T& index(unsigned i) { tl_assert(i < (unsigned)(end-begin)); return begin[i]; }
 	unsigned size() const { return (unsigned)(end-begin); }
 	plain_range slice(unsigned startindex, unsigned endindex)
 	{

@@ -296,6 +296,8 @@ public:
 		INITFLAG_BORDERLESS = 8,
 	};
 
+	virtual ~IGraphicsBackend() {}
+
 	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;
 	virtual int Shutdown() = 0;
 

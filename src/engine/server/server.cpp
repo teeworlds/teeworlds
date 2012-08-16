@@ -145,7 +145,7 @@ void CSnapIDPool::FreeID(int ID)
 }
 
 
-void CServerBan::Init(IConsole *pConsole, IStorage *pStorage, CServer* pServer)
+void CServerBan::InitServerBan(IConsole *pConsole, IStorage *pStorage, CServer* pServer)
 {
 	CNetBan::Init(pConsole, pStorage);
 
@@ -1618,7 +1618,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 
 	// register console commands in sub parts
-	m_ServerBan.Init(Console(), Storage(), this);
+	m_ServerBan.InitServerBan(Console(), Storage(), this);
 	m_pGameServer->OnConsoleInit();
 }
 
