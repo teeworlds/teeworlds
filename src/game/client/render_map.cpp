@@ -237,7 +237,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 				unsigned char Flags = pTiles[c].m_Flags;
 
 				bool Render = false;
-				if(Flags&TILEFLAG_OPAQUE && Color.a*a > 250/255.0f)
+				if(Flags&TILEFLAG_OPAQUE && Color.a*a > 254.0f/255.0f)
 				{
 					if(RenderFlags&LAYERRENDERFLAG_OPAQUE)
 						Render = true;
