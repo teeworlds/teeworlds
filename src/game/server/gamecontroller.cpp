@@ -281,8 +281,8 @@ void IGameController::CycleMap()
 		pNextMap = pMapRotation;
 
 	// cut out the next map
-	char aBuf[512];
-	for(int i = 0; i < 512; i++)
+	char aBuf[512] = {0};
+	for(int i = 0; i < 511; i++)
 	{
 		aBuf[i] = pNextMap[i];
 		if(IsSeparator(pNextMap[i]) || pNextMap[i] == 0)

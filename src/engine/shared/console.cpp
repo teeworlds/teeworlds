@@ -68,7 +68,7 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	if(Length < Len)
 		Len = Length;
 
-	str_copy(pResult->m_aStringStorage, pString, Length);
+	str_copy(pResult->m_aStringStorage, pString, Len);
 	pStr = pResult->m_aStringStorage;
 
 	// get command

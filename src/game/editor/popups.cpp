@@ -554,7 +554,6 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 		{
 			if(pEditor->m_SelectedPoints&(1<<v))
 			{
-				Color = 0;
 				pQuad->m_aColors[v].r = (NewVal>>24)&0xff;
 				pQuad->m_aColors[v].g = (NewVal>>16)&0xff;
 				pQuad->m_aColors[v].b = (NewVal>>8)&0xff;
