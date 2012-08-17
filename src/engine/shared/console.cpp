@@ -16,21 +16,21 @@
 
 const char *CConsole::CResult::GetString(unsigned Index)
 {
-	if (Index < 0 || Index >= m_NumArgs)
+	if (Index >= m_NumArgs)
 		return "";
 	return m_apArgs[Index];
 }
 
 int CConsole::CResult::GetInteger(unsigned Index)
 {
-	if (Index < 0 || Index >= m_NumArgs)
+	if (Index >= m_NumArgs)
 		return 0;
 	return str_toint(m_apArgs[Index]);
 }
 
 float CConsole::CResult::GetFloat(unsigned Index)
 {
-	if (Index < 0 || Index >= m_NumArgs)
+	if (Index >= m_NumArgs)
 		return 0.0f;
 	return str_tofloat(m_apArgs[Index]);
 }
@@ -68,7 +68,7 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	if(Length < Len)
 		Len = Length;
 
-	str_copy(pResult->m_aStringStorage, pString, Length);
+	str_copy(pResult->m_aStringStorage, pString, Len);
 	pStr = pResult->m_aStringStorage;
 
 	// get command

@@ -170,7 +170,7 @@ public:
 	class IStorage *Storage() const { return m_pStorage; }
 
 	virtual ~CNetBan() {}
-	virtual void Init(class IConsole *pConsole, class IStorage *pStorage);
+	void Init(class IConsole *pConsole, class IStorage *pStorage);
 	void Update();
 
 	virtual int BanAddr(const NETADDR *pAddr, int Seconds, const char *pReason);
