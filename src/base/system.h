@@ -33,6 +33,13 @@ void dbg_assert(int test, const char *msg);
 #define dbg_assert(test,msg) dbg_assert_imp(__FILE__, __LINE__, test, msg)
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg);
 
+
+#ifdef __clang_analyzer__
+#include <assert.h>
+#undef dbg_assert
+#define dbg_assert(test,msg) assert(test)
+#endif
+
 /*
 	Function: dbg_break
 		Breaks into the debugger.
