@@ -47,8 +47,7 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_TeePartSelection = NO_SELECTION;
-	m_TeePartsColorSelection = NO_SELECTION;
+	m_TeePartSelected = 0;
 	m_aSaveSkinName[0] = 0;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
@@ -2063,7 +2062,7 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_SAVE_SKIN)
 		{
-			CUIRect Yes, No;
+			CUIRect Yes, No, EditBox;
 			Box.HSplitBottom(20.f, &Box, &Part);
 			Box.HSplitBottom(24.f, &Box, &Part);
 			Part.VMargin(80.0f, &Part);
@@ -2073,16 +2072,25 @@ int CMenus::Render()
 			Yes.VMargin(20.0f, &Yes);
 			No.VMargin(20.0f, &No);
 
+			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
+			Box.HSplitTop(20.0f, &EditBox, &Box);
+
+			static float s_OffsetSaveSkin = 0.0f;
+			DoEditBoxOption(m_aSaveSkinName, m_aSaveSkinName, sizeof(m_aSaveSkinName), &EditBox, Localize("Skin name"), 100.0f, &s_OffsetSaveSkin);
+
 			static int s_ButtonAbort = 0;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
-			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			if(m_aSaveSkinName[0])
 			{
-				m_Popup = POPUP_NONE;
-				SaveSkinfile();
-				m_aSaveSkinName[0] = 0;
+				static int s_ButtonTryAgain = 0;
+				if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+				{
+					m_Popup = POPUP_NONE;
+					SaveSkinfile();
+					m_aSaveSkinName[0] = 0;
+				}
 			}
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)

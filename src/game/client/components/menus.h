@@ -29,14 +29,12 @@ public:
 
 enum
 {
-	NO_SELECTION=0,
-	SELECTION_SKIN=1,
-	SELECTION_BODY=2,
-	SELECTION_TATTOO=4,
-	SELECTION_DECORATION=8,
-	SELECTION_HANDS=16,
-	SELECTION_FEET=32,
-	SELECTION_EYES=64
+	SELECTION_BODY=0,
+	SELECTION_TATTOO,
+	SELECTION_DECORATION,
+	SELECTION_HANDS,
+	SELECTION_FEET,
+	SELECTION_EYES
 };
 
 class CMenus : public CComponent
@@ -81,7 +79,7 @@ class CMenus : public CComponent
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset);
+	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite=false);
 	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
@@ -202,8 +200,7 @@ class CMenus : public CComponent
 	// for settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
-	int m_TeePartSelection;
-	int m_TeePartsColorSelection;
+	int m_TeePartSelected;
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
@@ -455,6 +452,8 @@ class CMenus : public CComponent
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsTee(CUIRect MainView);
+	void RenderSettingsTeeBasic(CUIRect MainView);
+	void RenderSettingsTeeCustom(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
