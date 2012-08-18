@@ -1128,7 +1128,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
 	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
-	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
 	static int s_GfxBorderless = g_Config.m_GfxBorderless;
 	static int s_GfxFullscreen = g_Config.m_GfxFullscreen;
 	static int s_GfxVsync = g_Config.m_GfxVsync;
@@ -1342,24 +1341,22 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		static int s_DisplayModeList = 0;
 		int OldSelected = -1;
 		int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
-		str_format(aBuf, sizeof(aBuf), "%s: %dx%d %d bit (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxColorDepth, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-		UiDoListboxStart(&s_DisplayModeList, 20.0f, aBuf, m_NumFilteredVideoModes, 1, OldSelected, s_ScrollValue, &MainView);
+		str_format(aBuf, sizeof(aBuf), "%s: %dx%d (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
+		UiDoListboxStart(&s_DisplayModeList, 20.0f, aBuf, m_lFilteredVideoModes.size(), 1, OldSelected, s_ScrollValue, &MainView);
 
-		for(int i = 0; i < m_NumFilteredVideoModes; ++i)
+		for(int i = 0; i < m_lFilteredVideoModes.size(); ++i)
 		{
-			const int Depth = m_aFilteredVideoModes[i].m_Red+m_aFilteredVideoModes[i].m_Green+m_aFilteredVideoModes[i].m_Blue > 16 ? 24 : 16;
-			if(g_Config.m_GfxColorDepth == Depth &&
-				g_Config.m_GfxScreenWidth == m_aFilteredVideoModes[i].m_Width &&
-				g_Config.m_GfxScreenHeight == m_aFilteredVideoModes[i].m_Height)
+			if(g_Config.m_GfxScreenWidth == m_lFilteredVideoModes[i].m_Width &&
+				g_Config.m_GfxScreenHeight == m_lFilteredVideoModes[i].m_Height)
 			{
 				OldSelected = i;
 			}
 
-			CListboxItem Item = UiDoListboxNextItem(&m_aFilteredVideoModes[i], OldSelected == i);
+			CListboxItem Item = UiDoListboxNextItem(&m_lFilteredVideoModes[i], OldSelected == i);
 			if(Item.m_Visible)
 			{
-				int G = gcd(m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height);
-				str_format(aBuf, sizeof(aBuf), " %dx%d %d bit", m_aFilteredVideoModes[i].m_Width, m_aFilteredVideoModes[i].m_Height, Depth);
+				int G = gcd(m_lFilteredVideoModes[i].m_Width, m_lFilteredVideoModes[i].m_Height);
+				str_format(aBuf, sizeof(aBuf), " %dx%d", m_lFilteredVideoModes[i].m_Width, m_lFilteredVideoModes[i].m_Height);
 				if(i == OldSelected)
 				{
 					TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1380,10 +1377,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
 		if(OldSelected != NewSelected)
 		{
-			const int Depth = m_aFilteredVideoModes[NewSelected].m_Red+m_aFilteredVideoModes[NewSelected].m_Green+m_aFilteredVideoModes[NewSelected].m_Blue > 16 ? 24 : 16;
-			g_Config.m_GfxColorDepth = Depth;
-			g_Config.m_GfxScreenWidth = m_aFilteredVideoModes[NewSelected].m_Width;
-			g_Config.m_GfxScreenHeight = m_aFilteredVideoModes[NewSelected].m_Height;
+			g_Config.m_GfxScreenWidth = m_lFilteredVideoModes[NewSelected].m_Width;
+			g_Config.m_GfxScreenHeight = m_lFilteredVideoModes[NewSelected].m_Height;
 			CheckSettings = true;
 		}
 	}
@@ -1402,7 +1397,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		g_Config.m_GfxScreenWidth = Graphics()->GetDesktopScreenWidth();
 		g_Config.m_GfxScreenHeight = Graphics()->GetDesktopScreenHeight();
-		g_Config.m_GfxColorDepth = 24;
 		g_Config.m_GfxBorderless = 0;
 		g_Config.m_GfxFullscreen = 1;
 		g_Config.m_GfxVsync = 1;
@@ -1444,7 +1438,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		if(s_GfxScreenWidth == g_Config.m_GfxScreenWidth &&
 			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
-			s_GfxColorDepth == g_Config.m_GfxColorDepth &&
 			s_GfxBorderless == g_Config.m_GfxBorderless &&
 			s_GfxFullscreen == g_Config.m_GfxFullscreen &&
 			s_GfxVsync == g_Config.m_GfxVsync &&

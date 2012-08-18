@@ -1387,12 +1387,12 @@ void CMenus::UpdateVideoFormats()
 
 void CMenus::UpdatedFilteredVideoModes()
 {
-	m_NumFilteredVideoModes = 0;
+	m_lFilteredVideoModes.clear();
 	for(int i = 0; i < m_NumModes; i++)
 	{
 		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
 		if(m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue == m_aModes[i].m_Width/G && m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue == m_aModes[i].m_Height/G)
-			m_aFilteredVideoModes[m_NumFilteredVideoModes++] = m_aModes[i];
+			m_lFilteredVideoModes.add(m_aModes[i]);
 	}
 }
 

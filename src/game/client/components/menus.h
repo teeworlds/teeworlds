@@ -399,10 +399,9 @@ class CMenus : public CComponent
 	};
 	
 	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
-	CVideoMode m_aFilteredVideoModes[MAX_RESOLUTIONS];
+	sorted_array<CVideoMode> m_lFilteredVideoModes;
 	int m_NumVideoFormats;
 	int m_CurrentVideoFormat;
-	int m_NumFilteredVideoModes; 
 	void UpdateVideoFormats();
 	void UpdatedFilteredVideoModes();
 
