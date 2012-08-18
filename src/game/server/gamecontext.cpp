@@ -335,6 +335,17 @@ void CGameContext::EndVote(int Type, bool Force)
 	SendVoteSet(Type, -1);
 }
 
+void CGameContext::ForceVote(int Type, const char *pDescription, const char *pReason)
+{
+	CNetMsg_Sv_VoteSet Msg;
+	Msg.m_Type = Type;
+	Msg.m_Timeout = 0;
+	Msg.m_ClientID = -1;
+	Msg.m_pDescription = pDescription;
+	Msg.m_pReason = pReason;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+}
+
 void CGameContext::SendVoteSet(int Type, int ToClientID)
 {
 	CNetMsg_Sv_VoteSet Msg;
@@ -348,19 +359,11 @@ void CGameContext::SendVoteSet(int Type, int ToClientID)
 	}
 	else
 	{
-		Msg.m_ClientID = m_VoteCreator;
 		Msg.m_Type = Type;
 		Msg.m_Timeout = 0;
-		if(m_VoteCreator == -1)
-		{
-			Msg.m_pDescription = m_aVoteDescription;
-			Msg.m_pReason = m_aVoteReason;
-		}
-		else
-		{
-			Msg.m_pDescription = "";
-			Msg.m_pReason = "";
-		}
+		Msg.m_ClientID = m_VoteCreator;
+		Msg.m_pDescription = "";
+		Msg.m_pReason = "";
 	}
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ToClientID);
 }
@@ -510,10 +513,10 @@ void CGameContext::OnTick()
 				Server()->SetRconCID(IServer::RCON_CID_VOTE);
 				Console()->ExecuteLine(m_aVoteCommand);
 				Server()->SetRconCID(IServer::RCON_CID_SERV);
-				EndVote(VOTE_END_PASS, m_VoteEnforce==VOTE_ENFORCE_YES);
-
-				if(m_apPlayers[m_VoteCreator])
+				if(m_VoteCreator != -1 && m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_LastVoteCall = 0;
+
+				EndVote(VOTE_END_PASS, m_VoteEnforce==VOTE_ENFORCE_YES);
 			}
 			else if(m_VoteEnforce == VOTE_ENFORCE_NO || (m_VoteUpdate && No >= (Total+1)/2) || time_get() > m_VoteCloseTime)
 				EndVote(VOTE_END_FAIL, m_VoteEnforce==VOTE_ENFORCE_NO);
@@ -725,17 +728,23 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{
-		if((g_Config.m_SvSpamprotection && ((pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry+Server()->TickSpeed()*3 > Server()->Tick()) ||
-			(pPlayer->m_LastVoteCall && pPlayer->m_LastVoteCall+Server()->TickSpeed()*VOTE_COOLDOWN > Server()->Tick()))) ||
-			pPlayer->GetTeam() == TEAM_SPECTATORS || m_VoteCloseTime)
-			return;
-
 		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
-		if(pMsg->m_Force && !Server()->IsAuthed(ClientID))
-			return;
-
 		int64 Now = Server()->Tick();
-		pPlayer->m_LastVoteTry = Now;
+
+		if(pMsg->m_Force)
+		{
+			if(!Server()->IsAuthed(ClientID))
+				return;
+		}
+		else
+		{
+			if((g_Config.m_SvSpamprotection && ((pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry+Server()->TickSpeed()*3 > Now) ||
+				(pPlayer->m_LastVoteCall && pPlayer->m_LastVoteCall+Server()->TickSpeed()*VOTE_COOLDOWN > Now))) ||
+				pPlayer->GetTeam() == TEAM_SPECTATORS || m_VoteCloseTime)
+				return;
+				
+			pPlayer->m_LastVoteTry = Now;
+		}
 
 		int Type = VOTE_UNKNOWN;
 		char aDesc[VOTE_DESC_LENGTH] = {0};
@@ -753,10 +762,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
 					if(pMsg->m_Force)
 					{
-						EndVote(VOTE_START_OP, true);
 						Server()->SetRconCID(ClientID);
 						Console()->ExecuteLine(aCmd);
 						Server()->SetRconCID(IServer::RCON_CID_SERV);
+						ForceVote(VOTE_START_OP, aDesc, pReason);
 						return;
 					}
 					Type = VOTE_START_OP;
@@ -810,10 +819,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
 			if(pMsg->m_Force)
 			{
-				EndVote(VOTE_START_SPEC, true);
 				Server()->SetRconCID(ClientID);
 				Console()->ExecuteLine(aCmd);
 				Server()->SetRconCID(IServer::RCON_CID_SERV);
+				ForceVote(VOTE_START_SPEC, aDesc, pReason);
 				return;
 			}
 			Type = VOTE_START_SPEC;

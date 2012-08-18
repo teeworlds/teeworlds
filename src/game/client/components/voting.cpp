@@ -165,10 +165,10 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_VoteSet *pMsg = (CNetMsg_Sv_VoteSet *)pRawMsg;
 		int BlockTick = m_CallvoteBlockTick;
-		OnReset();
 		char aBuf[128];
 		if(pMsg->m_Timeout)
 		{
+			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
@@ -208,15 +208,18 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 				break;
 			case VOTE_END_ABORT:
+				OnReset();
 				m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote aborted"));
 				break;
 			case VOTE_END_PASS:
+				OnReset();
 				if(pMsg->m_ClientID == -1)
 					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote yes"));
 				else
 					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote passed"));
 				break;
 			case  VOTE_END_FAIL:
+				OnReset();
 				if(pMsg->m_ClientID == -1)
 					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote no"));
 				else

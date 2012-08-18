@@ -92,6 +92,7 @@ public:
 	// voting
 	void StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote(int Type, bool Force);
+	void ForceVote(int Type, const char *pDescription, const char *pReason);
 	void SendVoteSet(int Type, int ToClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
 	void AbortVoteOnDisconnect(int ClientID);
