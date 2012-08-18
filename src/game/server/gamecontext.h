@@ -62,6 +62,7 @@ class CGameContext : public IGameServer
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainSettingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
@@ -141,10 +142,11 @@ public:
 	void SendChat(int ClientID, int Team, const char *pText);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
+	void SendMotd(int ClientID);
+	void SendSettings(int ClientID);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
-	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
 	void SendGameMsg(int GameMsgID, const char *pParaS1, int ClientID);
 

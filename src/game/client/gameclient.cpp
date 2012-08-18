@@ -128,31 +128,19 @@ struct CGameMsg
 
 static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"},
-	{/*GAMEMSG_VOTE_DENY_KICK*/ DO_CHAT, PARA_NONE, "Server does not allow voting to kick players"},
-	{/*GAMEMSG_VOTE_DENY_KICKADMIN*/ DO_CHAT, PARA_NONE, "You can't kick admins"},
-	{/*GAMEMSG_VOTE_DENY_SPEC*/ DO_CHAT, PARA_NONE, "Server does not allow voting to move players to spectators"},
-	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},
+	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},	//!
 	{/*GAMEMSG_TEAM_SHUFFLE*/ DO_CHAT, PARA_NONE, "Teams were shuffled"},
-	{/*GAMEMSG_TEAM_LOCK*/ DO_CHAT, PARA_NONE, "Teams were locked"},
-	{/*GAMEMSG_TEAM_UNLOCK*/ DO_CHAT, PARA_NONE, "Teams were unlocked"},
 	{/*GAMEMSG_TEAM_BALANCE*/ DO_CHAT, PARA_NONE, "Teams have been balanced"},
-	{/*GAMEMSG_TEAM_DENY_LOCK*/ DO_BROADCAST, PARA_NONE, "Teams are locked"},
-	{/*GAMEMSG_TEAM_DENY_BALANCE*/ DO_BROADCAST, PARA_NONE, "Teams must be balanced, please join other team"},
 	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
 	{/*GAMEMSG_CTF_RETURN*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf return sound
 
-	{/*GAMEMSG_VOTE_DENY_KICKMIN*/ DO_CHAT, PARA_I, "Kick voting requires %d players on the server"},
 	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, "All players were moved to the %s"},	// special - add team name
-	{/*GAMEMSG_TEAM_DENY_MAX*/ DO_BROADCAST, PARA_I, "Only %d active players are allowed"},
 	{/*GAMEMSG_TEAM_BALANCE_VICTIM*/ DO_SPECIAL, PARA_I, "You were moved to %s due to team balancing"},	// special - add team name
 	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
 
-	{/*GAMEMSG_TEAM_DENY_WAIT*/ DO_BROADCAST, PARA_II, "Time to wait before changing team: %02d:%02d"},
-
 	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
 
-	{/*GAMEMSG_VOTE_DENY_INVALIDOP*/ DO_CHAT, PARA_S, "'%s' isn't an option on this server"},
-	{/*GAMEMSG_VOTE_KICKYOU*/ DO_CHAT, PARA_S, "'%s' called for vote to kick you"}
+	{/*GAMEMSG_VOTE_DENY_INVALIDOP*/ DO_CHAT, PARA_S, "'%s' isn't an option on this server"},	//!
 };
 
 void CGameClient::OnConsoleInit()
@@ -239,7 +227,6 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pBinds);
 
 	// add the some console commands
-	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
@@ -384,6 +371,7 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_LocalClientID = -1;
+	m_TeamCooldownTick = 0;
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecID = SPEC_FREEVIEW;
 	m_Tuning = CTuningParams();
@@ -741,6 +729,22 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_GameInfo.m_MatchNum = pMsg->m_MatchNum;
 		m_GameInfo.m_MatchCurrent = pMsg->m_MatchCurrent;
 	}
+	else if(MsgId == NETMSGTYPE_SV_SERVERSETTINGS && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		Client()->RecordGameMessage(false);
+		CNetMsg_Sv_ServerSettings *pMsg = (CNetMsg_Sv_ServerSettings *)pRawMsg;
+
+		if(!m_ServerSettings.m_TeamLock && pMsg->m_TeamLock)
+			m_pChat->AddLine(-1, 0, Localize("Teams were locked"));
+		else if(m_ServerSettings.m_TeamLock && !pMsg->m_TeamLock)
+			m_pChat->AddLine(-1, 0, Localize("Teams were unlocked"));
+		m_ServerSettings.m_KickVote = pMsg->m_KickVote;
+		m_ServerSettings.m_KickMin = pMsg->m_KickMin;
+		m_ServerSettings.m_SpecVote = pMsg->m_SpecVote;
+		m_ServerSettings.m_TeamLock = pMsg->m_TeamLock;
+		m_ServerSettings.m_TeamBalance = pMsg->m_TeamBalance;
+		m_ServerSettings.m_PlayerSlots = pMsg->m_PlayerSlots;
+	}
 	else if(MsgId == NETMSGTYPE_SV_TEAM)
 	{
 		CNetMsg_Sv_Team *pMsg = (CNetMsg_Sv_Team *)pRawMsg;
@@ -755,6 +759,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]++;
 
 			m_aClients[pMsg->m_ClientID].UpdateRenderInfo(false);
+
+			if(pMsg->m_ClientID == m_LocalClientID)
+				m_TeamCooldownTick = pMsg->m_CooldownTick;
 		}
 
 		if(pMsg->m_Silent == 0)
@@ -1439,11 +1446,6 @@ void CGameClient::SendReadyChange()
 {
 	CNetMsg_Cl_ReadyChange Msg;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-}
-
-void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
-{
-	((CGameClient*)pUserData)->SendSwitchTeam(pResult->GetInteger(0));
 }
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)

@@ -254,6 +254,25 @@ void CGameContext::SendWeaponPickup(int ClientID, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
+void CGameContext::SendMotd(int ClientID)
+{
+	CNetMsg_Sv_Motd Msg;
+	Msg.m_pMessage = g_Config.m_SvMotd;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
+void CGameContext::SendSettings(int ClientID)
+{
+	CNetMsg_Sv_ServerSettings Msg;
+	Msg.m_KickVote = g_Config.m_SvVoteKick;
+	Msg.m_KickMin = g_Config.m_SvVoteKickMin;
+	Msg.m_SpecVote = g_Config.m_SvVoteSpectate;
+	Msg.m_TeamLock = m_LockTeams != 0;
+	Msg.m_TeamBalance = g_Config.m_SvTeambalanceTime != 0;
+	Msg.m_PlayerSlots = Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
 
 void CGameContext::SendGameMsg(int GameMsgID, int ClientID)
 {
@@ -267,15 +286,6 @@ void CGameContext::SendGameMsg(int GameMsgID, int ParaI1, int ClientID)
 	CMsgPacker Msg(NETMSGTYPE_SV_GAMEMSG);
 	Msg.AddInt(GameMsgID);
 	Msg.AddInt(ParaI1);
-	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
-}
-
-void CGameContext::SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ClientID)
-{
-	CMsgPacker Msg(NETMSGTYPE_SV_GAMEMSG);
-	Msg.AddInt(GameMsgID);
-	Msg.AddInt(ParaI1);
-	Msg.AddInt(ParaI2);
 	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -644,9 +654,10 @@ void CGameContext::OnClientConnected(int ClientID, bool Dummy)
 		SendVoteSet(VOTE_UNKNOWN, ClientID);
 
 	// send motd
-	CNetMsg_Sv_Motd Msg;
-	Msg.m_pMessage = g_Config.m_SvMotd;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+	SendMotd(ClientID);
+
+	// send settings
+	SendSettings(ClientID);
 }
 
 void CGameContext::OnClientTeamChange(int ClientID)
@@ -757,35 +768,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
 		{
-			if(!g_Config.m_SvVoteKick)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_KICK, ClientID);
+			if(!g_Config.m_SvVoteKick || m_pController->GetRealPlayerNum() < g_Config.m_SvVoteKickMin)
 				return;
-			}
-
-			if(g_Config.m_SvVoteKickMin)
-			{
-				int PlayerNum = 0;
-				for(int i = 0; i < MAX_CLIENTS; ++i)
-					if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-						++PlayerNum;
-
-				if(PlayerNum < g_Config.m_SvVoteKickMin)
-				{
-					SendGameMsg(GAMEMSG_VOTE_DENY_KICKMIN, g_Config.m_SvVoteKickMin, ClientID);
-					return;
-				}
-			}
 
 			int KickID = str_toint(pMsg->m_Value);
-			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID] || KickID == ClientID)
+			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID] || KickID == ClientID || Server()->IsAuthed(KickID))
 				return;
-			if(Server()->IsAuthed(KickID))
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_KICKADMIN, ClientID);
-				SendGameMsg(GAMEMSG_VOTE_KICKYOU, Server()->ClientName(ClientID), KickID);
-				return;
-			}
 
 			Type = VOTE_START_KICK;
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickID));
@@ -802,10 +790,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
 		{
 			if(!g_Config.m_SvVoteSpectate)
-			{
-				SendGameMsg(GAMEMSG_VOTE_DENY_SPEC, ClientID);
 				return;
-			}
 
 			int SpectateID = str_toint(pMsg->m_Value);
 			if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS || SpectateID == ClientID)
@@ -846,40 +831,21 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	{
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
-		if(pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*3 > Server()->Tick()))
+		if(pPlayer->GetTeam() == pMsg->m_Team ||
+			(g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*3 > Server()->Tick()) || 
+			(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams) || pPlayer->m_TeamChangeTick > Server()->Tick())
 			return;
 
-		if(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams)
-		{
-			pPlayer->m_LastSetTeam = Server()->Tick();
-			SendGameMsg(GAMEMSG_TEAM_DENY_LOCK, ClientID);
-			return;
-		}
-
-		if(pPlayer->m_TeamChangeTick > Server()->Tick())
-		{
-			pPlayer->m_LastSetTeam = Server()->Tick();
-			int TimeLeft = (pPlayer->m_TeamChangeTick - Server()->Tick())/Server()->TickSpeed();
-			SendGameMsg(GAMEMSG_TEAM_DENY_WAIT, TimeLeft/60, TimeLeft%60, ClientID);
-			return;
-		}
+		pPlayer->m_LastSetTeam = Server()->Tick();
 
 		// Switch team on given client and kill/respawn him
-		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientID))
+		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientID) && m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
 		{
-			if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
-			{
-				pPlayer->m_LastSetTeam = Server()->Tick();
-				if(pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
-					m_VoteUpdate = true;
-				m_pController->DoTeamChange(pPlayer, pMsg->m_Team);
-				pPlayer->m_TeamChangeTick = Server()->Tick();
-			}
-			else
-				SendGameMsg(GAMEMSG_TEAM_DENY_BALANCE, ClientID);
+			if(pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
+				m_VoteUpdate = true;
+			pPlayer->m_TeamChangeTick = Server()->Tick()+Server()->TickSpeed()*3;
+			m_pController->DoTeamChange(pPlayer, pMsg->m_Team);
 		}
-		else
-			SendGameMsg(GAMEMSG_TEAM_DENY_MAX, Server()->MaxClients()-g_Config.m_SvSpectatorSlots, ClientID);
 	}
 	else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_World.m_Paused)
 	{
@@ -1163,10 +1129,7 @@ void CGameContext::ConLockTeams(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->m_LockTeams ^= 1;
-	if(pSelf->m_LockTeams)
-		pSelf->SendGameMsg(GAMEMSG_TEAM_LOCK, -1);
-	else
-		pSelf->SendGameMsg(GAMEMSG_TEAM_UNLOCK, -1);
+	pSelf->SendSettings(-1);
 }
 
 void CGameContext::ConForceTeamBalance(IConsole::IResult *pResult, void *pUserData)
@@ -1415,12 +1378,18 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 	{
-		CNetMsg_Sv_Motd Msg;
-		Msg.m_pMessage = g_Config.m_SvMotd;
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
-			if(pSelf->m_apPlayers[i])
-				pSelf->Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+		pSelf->SendMotd(-1);
+	}
+}
+
+void CGameContext::ConchainSettingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+	{
+		CGameContext *pSelf = (CGameContext *)pUserData;
+		pSelf->SendSettings(-1);
 	}
 }
 
@@ -1451,6 +1420,12 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Force a vote to yes/no");
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
+
+	Console()->Chain("sv_vote_kick", ConchainSettingUpdate, this);
+	Console()->Chain("sv_vote_kick_min", ConchainSettingUpdate, this);
+	Console()->Chain("sv_vote_spectate", ConchainSettingUpdate, this);
+	Console()->Chain("sv_teambalance_time", ConchainSettingUpdate, this);
+	Console()->Chain("sv_spectator_slots", ConchainSettingUpdate, this);
 }
 
 void CGameContext::OnInit()

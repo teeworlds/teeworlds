@@ -11,12 +11,6 @@
 #include "voting.h"
 
 
-void CVoting::ConCallvote(IConsole::IResult *pResult, void *pUserData)
-{
-	CVoting *pSelf = (CVoting*)pUserData;
-	pSelf->Callvote(pResult->GetString(0), pResult->GetString(1), pResult->NumArguments() > 2 ? pResult->GetString(2) : "");
-}
-
 void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CVoting *pSelf = (CVoting *)pUserData;
@@ -186,7 +180,6 @@ void CVoting::OnReset()
 
 void CVoting::OnConsoleInit()
 {
-	Console()->Register("callvote", "ss?r", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
 	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
 }
 

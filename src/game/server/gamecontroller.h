@@ -200,6 +200,7 @@ public:
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg=true);
 	void ForceTeamBalance() { if(!(m_GameFlags&GAMEFLAG_SURVIVAL)) DoTeamBalance(); }
 	
+	int GetRealPlayerNum() const { return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE]; }
 	int GetStartTeam();
 };
 

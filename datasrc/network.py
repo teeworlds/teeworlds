@@ -5,21 +5,18 @@ Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"])
 
-PlayerFlags = Flags("PLAYERFLAG", ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
+PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
 
-GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "VOTE_DENY_KICK", "VOTE_DENY_KICKADMIN", "VOTE_DENY_SPEC", "SPEC_INVALIDID", "TEAM_SHUFFLE",
-							"TEAM_LOCK", "TEAM_UNLOCK", "TEAM_BALANCE", "TEAM_DENY_LOCK", "TEAM_DENY_BALANCE", "CTF_DROP", "CTF_RETURN",
+GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
 							
-							"VOTE_DENY_KICKMIN", "TEAM_ALL", "TEAM_DENY_MAX", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
-							
-							"TEAM_DENY_WAIT",
+							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
 							
 							"CTF_CAPTURE",
 							
-							"VOTE_DENY_INVALIDOP", "VOTE_KICKYOU"])
+							"VOTE_DENY_INVALIDOP"])
 
 
 RawHeader = '''
@@ -251,6 +248,7 @@ Messages = [
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetBool("m_Silent"),
+		NetTick("m_CooldownTick"),
 	]),
 
 	NetMessage("Sv_KillMsg", [
@@ -306,6 +304,15 @@ Messages = [
 		NetIntRange("m_No", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Total", 0, 'MAX_CLIENTS'),
+	]),
+
+	NetMessage("Sv_ServerSettings", [
+		NetBool("m_KickVote"),
+		NetIntRange("m_KickMin", 0, 'MAX_CLIENTS'),
+		NetBool("m_SpecVote"),
+		NetBool("m_TeamLock"),
+		NetBool("m_TeamBalance"),
+		NetIntRange("m_PlayerSlots", 0, 'MAX_CLIENTS'),
 	]),
 
 	NetMessage("Sv_ClientInfo", [

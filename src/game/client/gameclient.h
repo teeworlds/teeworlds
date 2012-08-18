@@ -57,7 +57,6 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
-	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -190,6 +189,7 @@ public:
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
+	int m_TeamCooldownTick;
 
 	struct CGameInfo
 	{
@@ -204,6 +204,16 @@ public:
 	};
 
 	CGameInfo m_GameInfo;
+
+	struct CServerSettings
+	{
+		bool m_KickVote;
+		int m_KickMin;
+		bool m_SpecVote;
+		bool m_TeamLock;
+		bool m_TeamBalance;
+		int m_PlayerSlots;
+	} m_ServerSettings;
 
 	CRenderTools m_RenderTools;
 

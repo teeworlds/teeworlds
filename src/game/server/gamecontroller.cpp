@@ -1049,11 +1049,12 @@ bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam) const
 
 bool IGameController::CanJoinTeam(int Team, int NotThisID) const
 {
-	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS))
+	if(Team == TEAM_SPECTATORS)
 		return true;
 
 	// check if there're enough player slots left
-	return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	int TeamMod = GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS ? -1 : 0;
+	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
 }
 
 int IGameController::ClampTeam(int Team) const
@@ -1081,6 +1082,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	Msg.m_ClientID = ClientID;
 	Msg.m_Team = Team;
 	Msg.m_Silent = DoChatMsg ? 0 : 1;
+	Msg.m_CooldownTick = pPlayer->m_TeamChangeTick;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	char aBuf[128];
