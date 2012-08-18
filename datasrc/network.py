@@ -14,9 +14,7 @@ GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TE
 							
 							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
 							
-							"CTF_CAPTURE",
-							
-							"VOTE_DENY_INVALIDOP"])
+							"CTF_CAPTURE"])
 
 
 RawHeader = '''
@@ -394,5 +392,6 @@ Messages = [
 		NetStringStrict("m_Type"),
 		NetStringStrict("m_Value"),
 		NetStringStrict("m_Reason"),
+		NetBool("m_Force"),
 	]),
 ]

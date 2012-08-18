@@ -20,45 +20,28 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Vote(-1);
 }
 
-void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason)
+void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
 {
 	CNetMsg_Cl_CallVote Msg = {0};
 	Msg.m_Type = pType;
 	Msg.m_Value = pValue;
 	Msg.m_Reason = pReason;
+	Msg.m_Force = ForceVote;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
 void CVoting::CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote)
 {
-	if(ForceVote)
-	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "set_team %d -1", ClientID);
-		Client()->Rcon(aBuf);
-	}
-	else
-	{
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-		Callvote("spectate", aBuf, pReason);
-	}
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+	Callvote("spectate", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 {
-	if(ForceVote)
-	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "force_vote kick %d %s", ClientID, pReason);
-		Client()->Rcon(aBuf);
-	}
-	else
-	{
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-		Callvote("kick", aBuf, pReason);
-	}
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+	Callvote("kick", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
@@ -68,14 +51,7 @@ void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
 	{
 		if(OptionID == 0)
 		{
-			if(ForceVote)
-			{
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "force_vote option \"%s\" %s", pOption->m_aDescription, pReason);
-				Client()->Rcon(aBuf);
-			}
-			else
-				Callvote("option", pOption->m_aDescription, pReason);
+			Callvote("option", pOption->m_aDescription, pReason, ForceVote);
 			break;
 		}
 

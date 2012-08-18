@@ -299,14 +299,6 @@ void CGameContext::SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3
 	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
-void CGameContext::SendGameMsg(int GameMsgID, const char *pParaS1, int ClientID)
-{
-	CMsgPacker Msg(NETMSGTYPE_SV_GAMEMSG);
-	Msg.AddInt(GameMsgID);
-	Msg.AddString(pParaS1, -1);
-	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
-}
-
 //
 void CGameContext::StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason)
 {
@@ -738,13 +730,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->GetTeam() == TEAM_SPECTATORS || m_VoteCloseTime)
 			return;
 
+		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
+		if(pMsg->m_Force && !Server()->IsAuthed(ClientID))
+			return;
+
 		int64 Now = Server()->Tick();
 		pPlayer->m_LastVoteTry = Now;
 
 		int Type = VOTE_UNKNOWN;
 		char aDesc[VOTE_DESC_LENGTH] = {0};
 		char aCmd[VOTE_CMD_LENGTH] = {0};
-		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
 		const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
 
 		if(str_comp_nocase(pMsg->m_Type, "option") == 0)
@@ -754,9 +749,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
 				{
-					Type = VOTE_START_OP;
 					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
+					if(pMsg->m_Force)
+					{
+						EndVote(VOTE_START_OP, true);
+						Server()->SetRconCID(ClientID);
+						Console()->ExecuteLine(aCmd);
+						Server()->SetRconCID(IServer::RCON_CID_SERV);
+						return;
+					}
+					Type = VOTE_START_OP;
 					break;
 				}
 
@@ -775,7 +778,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID] || KickID == ClientID || Server()->IsAuthed(KickID))
 				return;
 
-			Type = VOTE_START_KICK;
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickID));
 			if (!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d Kicked by vote", KickID);
@@ -785,6 +787,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
 				str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aAddrStr, g_Config.m_SvVoteKickBantime);
 			}
+			if(pMsg->m_Force)
+			{
+				Server()->SetRconCID(ClientID);
+				Console()->ExecuteLine(aCmd);
+				Server()->SetRconCID(IServer::RCON_CID_SERV);
+				return;
+			}
+			Type = VOTE_START_KICK;
 			m_VoteClientID = KickID;
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
@@ -796,9 +806,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS || SpectateID == ClientID)
 				return;
 
-			Type = VOTE_START_SPEC;
 			str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));
 			str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
+			if(pMsg->m_Force)
+			{
+				EndVote(VOTE_START_SPEC, true);
+				Server()->SetRconCID(ClientID);
+				Console()->ExecuteLine(aCmd);
+				Server()->SetRconCID(IServer::RCON_CID_SERV);
+				return;
+			}
+			Type = VOTE_START_SPEC;
 			m_VoteClientID = SpectateID;
 		}
 
@@ -1272,77 +1290,6 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_NumVoteOptions = NumVoteOptions;
 }
 
-void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	const char *pType = pResult->GetString(0);
-	const char *pValue = pResult->GetString(1);
-	const char *pReason = pResult->NumArguments() > 2 && pResult->GetString(2)[0] ? pResult->GetString(2) : "No reason given";
-	char aBuf[128] = {0};
-
-	if(str_comp_nocase(pType, "option") == 0)
-	{
-		CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
-		while(pOption)
-		{
-			if(str_comp_nocase(pValue, pOption->m_aDescription) == 0)
-			{
-				str_copy(pSelf->m_aVoteDescription, pValue, sizeof(pSelf->m_aVoteDescription));
-				str_copy(pSelf->m_aVoteReason, pReason, sizeof(pSelf->m_aVoteReason));
-				pSelf->EndVote(VOTE_START_OP, true);
-				pSelf->Console()->ExecuteLine(pOption->m_aCommand);
-				break;
-			}
-
-			pOption = pOption->m_pNext;
-		}
-
-		if(!pOption)
-		{
-			str_format(aBuf, sizeof(aBuf), "'%s' isn't an option on this server", pValue);
-			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-			return;
-		}
-	}
-	else if(str_comp_nocase(pType, "kick") == 0)
-	{
-		int KickID = str_toint(pValue);
-		if(KickID < 0 || KickID >= MAX_CLIENTS || !pSelf->m_apPlayers[KickID])
-		{
-			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to kick");
-			return;
-		}
-
-		if (!g_Config.m_SvVoteKickBantime)
-		{
-			str_format(aBuf, sizeof(aBuf), "kick %d %s", KickID, pReason);
-			pSelf->Console()->ExecuteLine(aBuf);
-		}
-		else
-		{
-			char aAddrStr[NETADDR_MAXSTRSIZE] = {0};
-			pSelf->Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
-			str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aAddrStr, g_Config.m_SvVoteKickBantime, pReason);
-			pSelf->Console()->ExecuteLine(aBuf);
-		}
-	}
-	else if(str_comp_nocase(pType, "spectate") == 0)
-	{
-		int SpectateID = str_toint(pValue);
-		if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
-		{
-			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to move");
-			return;
-		}
-
-		str_copy(pSelf->m_aVoteDescription, pSelf->Server()->ClientName(SpectateID), sizeof(pSelf->m_aVoteDescription));
-		str_copy(pSelf->m_aVoteReason, pReason, sizeof(pSelf->m_aVoteReason));
-		pSelf->EndVote(VOTE_START_SPEC, true);
-		str_format(aBuf, sizeof(aBuf), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
-		pSelf->Console()->ExecuteLine(aBuf);
-	}
-}
-
 void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1415,7 +1362,6 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("add_vote", "sr", CFGFLAG_SERVER, ConAddVote, this, "Add a voting option");
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "remove a voting option");
-	Console()->Register("force_vote", "ss?r", CFGFLAG_SERVER, ConForceVote, this, "Force a voting option");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the voting options");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Force a vote to yes/no");
 

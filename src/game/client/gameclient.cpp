@@ -116,7 +116,6 @@ enum
 	PARA_I,
 	PARA_II,
 	PARA_III,
-	PARA_S,
 };
 
 struct CGameMsg
@@ -139,8 +138,6 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
 
 	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
-
-	{/*GAMEMSG_VOTE_DENY_INVALIDOP*/ DO_CHAT, PARA_S, "'%s' isn't an option on this server"},	//!
 };
 
 void CGameClient::OnConsoleInit()
@@ -530,7 +527,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		int aParaI[3];
 		int NumParaI = 0;
-		const char *pParaS = 0;
 
 		// get paras
 		switch(gs_GameMsgList[GameMsgID].m_ParaType)
@@ -541,10 +537,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			aParaI[NumParaI++] = pUnpacker->GetInt();
 		case PARA_I:
 			aParaI[NumParaI++] = pUnpacker->GetInt();
-			break;
-		case PARA_S:
-			pParaS = pUnpacker->GetString();
-			break;
 		}
 
 		// check for unpacking errors
@@ -593,7 +585,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		// build message
 		const char *pText = "";
-		if(NumParaI == 0 && pParaS == 0)
+		if(NumParaI == 0)
 			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
 		else
 		{
@@ -603,8 +595,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1]);
 			else if(NumParaI == 3)
 				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1], aParaI[2]);
-			else if(pParaS != 0)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), pParaS);
 			pText = aBuf;
 		}
 

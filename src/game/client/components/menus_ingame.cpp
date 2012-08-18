@@ -410,6 +410,31 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	m_CallvoteSelectedPlayer = Selected != -1 ? aPlayerIDs[Selected] : -1;
 }
 
+void CMenus::HandleCallvote(int Page, bool Force)
+{
+	if(Page == 0)
+		m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason, Force);
+	else if(Page == 1)
+	{
+		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
+		{
+			m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			SetActive(false);
+		}
+	}
+	else if(Page == 2)
+	{
+		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
+		{
+			m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			SetActive(false);
+		}
+	}
+	m_aCallvoteReason[0] = 0;
+}
+
 void CMenus::RenderServerControl(CUIRect MainView)
 {
 	if(m_pClient->m_LocalClientID == -1)
@@ -523,29 +548,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			// call vote
 			static int s_CallVoteButton = 0;
 			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
-			{
-				if(s_ControlPage == 0)
-					m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason);
-				else if(s_ControlPage == 1)
-				{
-					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-					{
-						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-						SetActive(false);
-					}
-				}
-				else if(s_ControlPage == 2)
-				{
-					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-					{
-						m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason);
-						SetActive(false);
-					}
-				}
-				m_aCallvoteReason[0] = 0;
-			}
+				HandleCallvote(s_ControlPage, false);
 		}
 		else
 		{
@@ -566,29 +569,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
 			static int s_ForceVoteButton = 0;
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
-			{
-				if(s_ControlPage == 0)
-					m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason, true);
-				else if(s_ControlPage == 1)
-				{
-					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-					{
-						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
-						SetActive(false);
-					}
-				}
-				else if(s_ControlPage == 2)
-				{
-					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
-					{
-						m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
-						SetActive(false);
-					}
-				}
-				m_aCallvoteReason[0] = 0;
-			}
+				HandleCallvote(s_ControlPage, true);
 
 			if(s_ControlPage == 0)
 			{

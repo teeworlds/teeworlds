@@ -24,7 +24,7 @@ class CVoting : public CComponent
 
 	void AddOption(const char *pDescription);
 	void ClearOptions();
-	void Callvote(const char *pType, const char *pValue, const char *pReason);
+	void Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
 
 public:
 	int m_NumVoteOptions;
