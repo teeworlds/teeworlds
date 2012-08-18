@@ -69,10 +69,15 @@ vec2 CCollision::NextTile(vec2 Pos, vec2 Dir)
 {
 	vec2 Next;
 
-	/* Calculate the next border point in X and Y direction */
+	// Calculate the next border point in X and Y direction
+	//
+	// Teeworlds works with rounded position values. This shifts the correct
+	// tile order by 0.5. So it is not possible to use the exact correct tile
+	// borders. Instead we also shift it by 0.5 or 0.51, depending on the
+	// side of the tile we want.
 	if (Dir.x > 0)
 	{
-		Next.x = (round(Pos.x)/32 + 1) * 32;
+		Next.x = (round(Pos.x)/32 + 1) * 32 - 0.5;
 	}
 	else
 	{
@@ -80,7 +85,7 @@ vec2 CCollision::NextTile(vec2 Pos, vec2 Dir)
 	}
 	if (Dir.y > 0)
 	{
-		Next.y = (round(Pos.y)/32 + 1) * 32;
+		Next.y = (round(Pos.y)/32 + 1) * 32 - 0.5;
 	}
 	else
 	{
