@@ -1287,7 +1287,7 @@ void CGameClient::SendStartInfo()
 		Msg.m_aUseCustomColors[p] = *gs_apUCCVariables[p];
 		Msg.m_aSkinPartColors[p] = *gs_apColorVariables[p];
 	}
-	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
 void CGameClient::SendKill()
