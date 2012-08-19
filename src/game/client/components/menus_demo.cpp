@@ -414,25 +414,27 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		DoInfoBox(&Button, Localize("Netversion"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aNetversion);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 		DoInfoBox(&Button, Localize("Map"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapName);
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
-		unsigned Size = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
-					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]);
-		str_format(aBuf, sizeof(aBuf), Localize("%d Bytes"), Size);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		float Size = float((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
+					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]))/1024.0f;
+		str_format(aBuf, sizeof(aBuf), Localize("%.3f KiB"), Size);
 		DoInfoBox(&Button, Localize("Size"), aBuf);
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		unsigned Crc = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
 					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
 		str_format(aBuf, sizeof(aBuf), "%08x", Crc);
 		DoInfoBox(&Button, Localize("Crc"), aBuf);
-
-		MainView.HSplitTop(Spacing, 0, &MainView);
-		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
-		DoInfoBox(&Button, Localize("Netversion"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aNetversion);
 	}
 
 	// demo buttons

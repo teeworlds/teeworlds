@@ -999,6 +999,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
+		dbg_msg("color", "r: %d g: %d b: %d", (int)(OwnSkinInfo.m_aColors[0].r*255.0f), (int)(OwnSkinInfo.m_aColors[0].g*255.0f), (int)(OwnSkinInfo.m_aColors[0].b*255.0f));
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		// handle right (team skins)
