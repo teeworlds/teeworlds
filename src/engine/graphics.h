@@ -3,6 +3,8 @@
 #ifndef ENGINE_GRAPHICS_H
 #define ENGINE_GRAPHICS_H
 
+#include <base/vmath.h>
+
 #include "kernel.h"
 
 
@@ -42,6 +44,8 @@ class CVideoMode
 public:
 	int m_Width, m_Height;
 	int m_Red, m_Green, m_Blue;
+
+	bool operator<(const CVideoMode &Other) { return Other.m_Width < m_Width; }
 };
 
 class IGraphics : public IInterface
@@ -50,6 +54,8 @@ class IGraphics : public IInterface
 protected:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
+	int m_DesktopScreenWidth;
+	int m_DesktopScreenHeight;
 public:
 	/* Constants: Texture Loading Flags
 		TEXLOAD_NORESAMPLE - Prevents the texture from any resampling
@@ -147,9 +153,13 @@ public:
 	};
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
+	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
+
+	virtual int GetDesktopScreenWidth() = 0;
+	virtual int GetDesktopScreenHeight() = 0;
 
 	virtual void Swap() = 0;
 

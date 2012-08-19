@@ -177,6 +177,152 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 	Graphics()->QuadsDrawTL(ArrayQ, NumItems);
 }
 
+void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners)
+{
+	int Num = 8;
+	for(int i = 0; i < Num; i+=2)
+	{
+		float a1 = i/(float)Num * pi/2;
+		float a2 = (i+1)/(float)Num * pi/2;
+		float a3 = (i+2)/(float)Num * pi/2;
+		float Ca1 = cosf(a1);
+		float Ca2 = cosf(a2);
+		float Ca3 = cosf(a3);
+		float Sa1 = sinf(a1);
+		float Sa2 = sinf(a2);
+		float Sa3 = sinf(a3);
+
+		if(Corners&1) // TL
+		{
+			Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+r, y+r,
+									x+(1-Ca1)*r, y+(1-Sa1)*r,
+									x+(1-Ca3)*r, y+(1-Sa3)*r,
+									x+(1-Ca2)*r, y+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&2) // TR
+		{
+			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w-r, y+r,
+									x+w-r+Ca1*r, y+(1-Sa1)*r,
+									x+w-r+Ca3*r, y+(1-Sa3)*r,
+									x+w-r+Ca2*r, y+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&4) // BL
+		{
+			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+r, y+h-r,
+									x+(1-Ca1)*r, y+h-r+Sa1*r,
+									x+(1-Ca3)*r, y+h-r+Sa3*r,
+									x+(1-Ca2)*r, y+h-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&8) // BR
+		{
+			Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w-r, y+h-r,
+									x+w-r+Ca1*r, y+h-r+Sa1*r,
+									x+w-r+Ca3*r, y+h-r+Sa3*r,
+									x+w-r+Ca2*r, y+h-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&16) // ITL
+		{
+			Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x, y,
+									x+(1-Ca1)*r, y-r+Sa1*r,
+									x+(1-Ca3)*r, y-r+Sa3*r,
+									x+(1-Ca2)*r, y-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	
+		if(Corners&32) // ITR
+		{
+			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w, y,
+									x+w-r+Ca1*r, y-r+Sa1*r,
+									x+w-r+Ca3*r, y-r+Sa3*r,
+									x+w-r+Ca2*r, y-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	
+		if(Corners&64) // IBL
+		{
+			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x, y+h,
+									x+(1-Ca1)*r, y+h+(1-Sa1)*r,
+									x+(1-Ca3)*r, y+h+(1-Sa3)*r,
+									x+(1-Ca2)*r, y+h+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&128) // IBR
+		{
+			Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w, y+h,
+									x+w-r+Ca1*r, y+h+(1-Sa1)*r,
+									x+w-r+Ca3*r, y+h+(1-Sa3)*r,
+									x+w-r+Ca2*r, y+h+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	}
+
+	Graphics()->SetColor4(ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
+	IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+r, y+r, w-r*2, h-r*2); // center
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopLeft, ColorTopRight, ColorTopLeft, ColorTopRight);
+	ItemQ = IGraphics::CQuadItem(x+r, y, w-r*2, r); // top
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorBottomLeft, ColorBottomRight, ColorBottomLeft, ColorBottomRight);
+	ItemQ = IGraphics::CQuadItem(x+r, y+h-r, w-r*2, r); // bottom
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopLeft, ColorTopLeft, ColorBottomLeft, ColorBottomLeft);
+	ItemQ = IGraphics::CQuadItem(x, y+r, r, h-r*2); // left
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopRight, ColorTopRight, ColorBottomRight, ColorBottomRight);
+	ItemQ = IGraphics::CQuadItem(x+w-r, y+r, r, h-r*2); // right
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+
+	if(!(Corners&1))
+	{
+		Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x, y, r, r); // TL
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&2))
+	{
+		Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+w, y, -r, r); // TR
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&4))
+	{
+		Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x, y+h, r, -r); // BL
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&8))
+	{
+		Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+w, y+h, -r, -r); // BR
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+}
+
 void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 {
 	DrawRoundRectExt(x,y,w,h,r,0xf);
@@ -190,6 +336,15 @@ void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float R
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 	DrawRoundRectExt(r->x,r->y,r->w,r->h,Rounding*UI()->Scale(), Corners);
+	Graphics()->QuadsEnd();
+}
+
+void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding)
+{
+	Graphics()->TextureClear();
+
+	Graphics()->QuadsBegin();
+	DrawRoundRectExt4(r->x,r->y,r->w,r->h,ColorTopLeft,ColorTopRight,ColorBottomLeft,ColorBottomRight,Rounding*UI()->Scale(), Corners);
 	Graphics()->QuadsEnd();
 }
 

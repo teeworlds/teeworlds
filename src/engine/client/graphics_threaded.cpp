@@ -19,27 +19,18 @@
 #include "graphics_threaded.h"
 
 static CVideoMode g_aFakeModes[] = {
-	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
+	{320,200,8,8,8}, {320,240,8,8,8}, {400,300,8,8,8},
+	{512,384,8,8,8}, {640,400,8,8,8}, {640,480,8,8,8},
 	{720,400,8,8,8}, {768,576,8,8,8}, {800,600,8,8,8},
 	{1024,600,8,8,8}, {1024,768,8,8,8}, {1152,864,8,8,8},
-	{1280,768,8,8,8}, {1280,800,8,8,8}, {1280,960,8,8,8},
-	{1280,1024,8,8,8}, {1368,768,8,8,8}, {1400,1050,8,8,8},
-	{1440,900,8,8,8}, {1440,1050,8,8,8}, {1600,1000,8,8,8},
-	{1600,1200,8,8,8}, {1680,1050,8,8,8}, {1792,1344,8,8,8},
-	{1800,1440,8,8,8}, {1856,1392,8,8,8}, {1920,1080,8,8,8},
-	{1920,1200,8,8,8}, {1920,1440,8,8,8}, {1920,2400,8,8,8},
-	{2048,1536,8,8,8},
-
-	{320,240,5,6,5}, {400,300,5,6,5}, {640,480,5,6,5},
-	{720,400,5,6,5}, {768,576,5,6,5}, {800,600,5,6,5},
-	{1024,600,5,6,5}, {1024,768,5,6,5}, {1152,864,5,6,5},
-	{1280,768,5,6,5}, {1280,800,5,6,5}, {1280,960,5,6,5},
-	{1280,1024,5,6,5}, {1368,768,5,6,5}, {1400,1050,5,6,5},
-	{1440,900,5,6,5}, {1440,1050,5,6,5}, {1600,1000,5,6,5},
-	{1600,1200,5,6,5}, {1680,1050,5,6,5}, {1792,1344,5,6,5},
-	{1800,1440,5,6,5}, {1856,1392,5,6,5}, {1920,1080,5,6,5},
-	{1920,1200,5,6,5}, {1920,1440,5,6,5}, {1920,2400,5,6,5},
-	{2048,1536,5,6,5}
+	{1280,600,8,8,8}, {1280,720,8,8,8}, {1280,768,8,8,8},
+	{1280,800,8,8,8}, {1280,960,8,8,8}, {1280,1024,8,8,8},
+	{1360,768,8,8,8}, {1366,768,8,8,8}, {1368,768,8,8,8},
+	{1400,1050,8,8,8}, {1440,900,8,8,8}, {1440,1050,8,8,8},
+	{1600,900,8,8,8}, {1600,1000,8,8,8}, {1600,1200,8,8,8},
+	{1680,1050,8,8,8}, {1792,1344,8,8,8}, {1800,1440,8,8,8},
+	{1856,1392,8,8,8}, {1920,1080,8,8,8}, {1920,1200,8,8,8},
+	{1920,1440,8,8,8}, {1920,2400,8,8,8}, {2048,1536,8,8,8}
 };
 
 void CGraphics_Threaded::FlushVertices()
@@ -571,6 +562,17 @@ void CGraphics_Threaded::SetColor(float r, float g, float b, float a)
 	SetColorVertex(Array, 4);
 }
 
+void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight)
+{
+	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
+	CColorVertex Array[4] = {
+		CColorVertex(0, TopLeft.r, TopLeft.g, TopLeft.b, TopLeft.a),
+		CColorVertex(1, TopRight.r, TopRight.g, TopRight.b, TopRight.a),
+		CColorVertex(2, BottomRight.r, BottomRight.g, BottomRight.b, BottomRight.a),
+		CColorVertex(3, BottomLeft.r, BottomLeft.g, BottomLeft.b, BottomLeft.a)};
+	SetColorVertex(Array, 4);
+}
+
 void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
@@ -722,7 +724,7 @@ int CGraphics_Threaded::IssueInit()
 	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
 	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
 
-	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags);
+	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
 }
 
 int CGraphics_Threaded::InitWindow()

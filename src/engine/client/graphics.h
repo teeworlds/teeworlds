@@ -110,6 +110,7 @@ public:
 
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num);
 	virtual void SetColor(float r, float g, float b, float a);
+	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV);
 	virtual void QuadsSetSubsetFree(
@@ -146,6 +147,9 @@ public:
 	virtual void Swap();
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
+
+	virtual int GetDesktopScreenWidth() { return m_DesktopScreenWidth; }
+	virtual int GetDesktopScreenHeight() { return m_DesktopScreenHeight; }
 
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);

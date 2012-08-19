@@ -6,6 +6,7 @@
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
 
+#include <engine/graphics.h>
 #include <engine/demo.h>
 #include <engine/friends.h>
 
@@ -28,18 +29,18 @@ public:
 
 enum
 {
-	NO_SELECTION=0,
-	SELECTION_SKIN=1,
-	SELECTION_BODY=2,
-	SELECTION_TATTOO=4,
-	SELECTION_DECORATION=8,
-	SELECTION_HANDS=16,
-	SELECTION_FEET=32,
-	SELECTION_EYES=64
+	SELECTION_BODY=0,
+	SELECTION_TATTOO,
+	SELECTION_DECORATION,
+	SELECTION_HANDS,
+	SELECTION_FEET,
+	SELECTION_EYES
 };
 
 class CMenus : public CComponent
 {
+	typedef float (*FDropdownCallback)(CUIRect View, void *pUser);
+
 	float *ButtonFade(const void *pID, float Seconds, int Checked=0);
 
 
@@ -51,10 +52,10 @@ class CMenus : public CComponent
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
 	int DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
 
-	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
+	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
@@ -77,7 +78,11 @@ class CMenus : public CComponent
 	static void ui_draw_checkbox(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
+	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
+	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset);
+	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite=false);
+	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
+	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
 	//static int ui_do_edit_box(void *id, const CUIRect *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
@@ -86,7 +91,7 @@ class CMenus : public CComponent
 	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
-	void UiDoGetButtons(int Start, int Stop, CUIRect View);
+	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spaceing);
 
 	struct CListboxItem
 	{
@@ -96,8 +101,9 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 
-	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, float ScrollValue);
+	void UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spaceing);
+	void UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
+						int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect=0);
 	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
@@ -194,8 +200,7 @@ class CMenus : public CComponent
 	// for settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
-	int m_TeePartSelection;
-	int m_TeePartsColorSelection;
+	int m_TeePartSelected;
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
@@ -215,6 +220,9 @@ class CMenus : public CComponent
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
+
+	// for callbacks
+	int *m_pActiveDropdown;
 
 	// demo
 	struct CDemoItem
@@ -376,11 +384,32 @@ class CMenus : public CComponent
 
 	static CColumn ms_aCols[NUM_COLS];
 
+	enum
+	{
+		MAX_RESOLUTIONS=256,
+	};
+
+	CVideoMode m_aModes[MAX_RESOLUTIONS];
+	int m_NumModes;
+
+	struct CVideoFormat
+	{
+		int m_WidthValue;
+		int m_HeightValue;
+	};
+	
+	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
+	sorted_array<CVideoMode> m_lFilteredVideoModes;
+	int m_NumVideoFormats;
+	int m_CurrentVideoFormat;
+	void UpdateVideoFormats();
+	void UpdatedFilteredVideoModes();
+
 	// found in menus.cpp
 	int Render();
 	//void render_background();
 	//void render_loading(float percent);
-	int RenderMenubar(CUIRect r);
+	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 
 	// found in menus_demo.cpp
@@ -423,10 +452,19 @@ class CMenus : public CComponent
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsTee(CUIRect MainView);
+	void RenderSettingsTeeBasic(CUIRect MainView);
+	void RenderSettingsTeeCustom(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+
+	// found in menu_callback.cpp
+	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
+	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
+	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
+	static float RenderSettingsControlsChat(CUIRect View, void *pUser);
+	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
 
 	void SetActive(bool Active);
 
