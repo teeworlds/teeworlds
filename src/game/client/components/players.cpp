@@ -200,8 +200,6 @@ void CPlayers::RenderPlayer(
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
-	bool NewTick = m_pClient->m_NewTick;
-
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
@@ -252,7 +250,6 @@ void CPlayers::RenderPlayer(
 			m_pClient->m_PredictedChar.Write(&Player);
 			m_pClient->m_PredictedPrevChar.Write(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
-			NewTick = m_pClient->m_NewPredictedTick;
 		}
 	}
 

@@ -88,8 +88,6 @@ public:
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
 	bool m_SuppressEvents;
-	bool m_NewTick;
-	bool m_NewPredictedTick;
 
 	// TODO: move this
 	CTuningParams m_Tuning;
