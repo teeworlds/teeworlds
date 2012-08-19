@@ -578,7 +578,6 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 		{
 			if(pEditor->m_SelectedPoints&(1<<v))
 			{
-				Color = 0;
 				pQuad->m_aColors[v].r = (NewVal>>24)&0xff;
 				pQuad->m_aColors[v].g = (NewVal>>16)&0xff;
 				pQuad->m_aColors[v].b = (NewVal>>8)&0xff;
@@ -833,7 +832,7 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 		float Max = (float)(max(pEditor->m_Map.m_lImages[ShowImage]->m_Width, pEditor->m_Map.m_lImages[ShowImage]->m_Height));
 		ImageView.w *= pEditor->m_Map.m_lImages[ShowImage]->m_Width/Max;
 		ImageView.h *= pEditor->m_Map.m_lImages[ShowImage]->m_Height/Max;
-		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexID);
+		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_Texture);
 		pEditor->Graphics()->BlendNormal();
 		pEditor->Graphics()->WrapClamp();
 		pEditor->Graphics()->QuadsBegin();

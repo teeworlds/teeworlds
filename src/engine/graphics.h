@@ -60,6 +60,20 @@ public:
 		TEXLOAD_NOMIPMAPS = 2,
 	};
 
+
+	class CTextureHandle
+	{
+		friend class IGraphics;
+		int m_Id;
+	public:
+		CTextureHandle()
+		: m_Id(-1)
+		{}
+
+		bool IsValid() const { return Id() >= 0; }
+		int Id() const { return m_Id; }
+	};
+
 	int ScreenWidth() const { return m_ScreenWidth; }
 	int ScreenHeight() const { return m_ScreenHeight; }
 	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
@@ -81,11 +95,13 @@ public:
 	virtual int MemoryUsage() const = 0;
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
-	virtual int UnloadTexture(int Index) = 0;
-	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
-	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
-	virtual int LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
-	virtual void TextureSet(int TextureID) = 0;
+
+	virtual int UnloadTexture(CTextureHandle Index) = 0;
+	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
+	virtual int LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
+	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
+	virtual void TextureSet(CTextureHandle Texture) = 0;
+	void TextureClear() { TextureSet(CTextureHandle()); }
 
 	struct CLineItem
 	{
@@ -141,6 +157,14 @@ public:
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
 	virtual bool IsIdle() = 0;
 	virtual void WaitForIdle() = 0;
+
+protected:
+	inline CTextureHandle CreateTextureHandle(int Index)
+	{
+		CTextureHandle Tex;
+		Tex.m_Id = Index;
+		return Tex;
+	}
 };
 
 class IEngineGraphics : public IGraphics

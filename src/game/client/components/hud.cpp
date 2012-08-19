@@ -162,7 +162,7 @@ void CHud::RenderScoreHud()
 			{
 				// draw box
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureClear();
 				Graphics()->QuadsBegin();
 				if(t == 0)
 					Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
@@ -273,7 +273,7 @@ void CHud::RenderScoreHud()
 			{
 				// draw box
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(-1);
+				Graphics()->TextureClear();
 				Graphics()->QuadsBegin();
 				if(t == Local)
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -398,7 +398,7 @@ void CHud::RenderVoting()
 	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
 	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 46, 5.0f);
@@ -466,7 +466,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	// render ammo
 	if(pCharacter->m_Weapon == WEAPON_NINJA)
 	{
-		Graphics()->TextureSet(-1);
+		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.8f, 0.8f, 0.8f, 0.5f);
 		RenderTools()->DrawRoundRectExt(x,y+24, 118.0f, 10.0f, 0.0f, 0);
@@ -525,7 +525,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
 	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);

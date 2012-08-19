@@ -4,7 +4,7 @@ from datatypes import *
 class Sound(Struct):
 	def __init__(self, filename=""):
 		Struct.__init__(self, "CDataSound")
-		self.id = Int(0)
+		self.id = SampleHandle()
 		self.filename = String(filename)
 
 class SoundSet(Struct):
@@ -21,7 +21,7 @@ class Image(Struct):
 		Struct.__init__(self, "CDataImage")
 		self.name = String(name)
 		self.filename = String(filename)
-		self.id = Int(-1)
+		self.id = TextureHandle()
 
 class SpriteSet(Struct):
 	def __init__(self, name="", image=None, gridx=0, gridy=0):

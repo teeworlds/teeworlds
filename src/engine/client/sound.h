@@ -27,15 +27,15 @@ public:
 
 	virtual bool IsSoundEnabled() { return m_SoundEnabled != 0; }
 
-	virtual int LoadWV(const char *pFilename);
+	virtual CSampleHandle LoadWV(const char *pFilename);
 
 	virtual void SetListenerPos(float x, float y);
 	virtual void SetChannel(int ChannelID, float Vol, float Pan);
 
-	int Play(int ChannelID, int SampleID, int Flags, float x, float y);
-	virtual int PlayAt(int ChannelID, int SampleID, int Flags, float x, float y);
-	virtual int Play(int ChannelID, int SampleID, int Flags);
-	virtual void Stop(int SampleID);
+	int Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y);
+	virtual int PlayAt(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y);
+	virtual int Play(int ChannelID, CSampleHandle SampleID, int Flags);
+	virtual void Stop(CSampleHandle SampleID);
 	virtual void StopAll();
 };
 
