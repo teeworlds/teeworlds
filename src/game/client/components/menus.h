@@ -29,12 +29,12 @@ public:
 
 enum
 {
-	SELECTION_BODY=0,
-	SELECTION_TATTOO,
-	SELECTION_DECORATION,
-	SELECTION_HANDS,
-	SELECTION_FEET,
-	SELECTION_EYES
+	SELECTION_BODY=1,
+	SELECTION_TATTOO=2,
+	SELECTION_DECORATION=4,
+	SELECTION_HANDS=8,
+	SELECTION_FEET=16,
+	SELECTION_EYES=32
 };
 
 class CMenus : public CComponent
@@ -200,7 +200,7 @@ class CMenus : public CComponent
 	// for settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
-	int m_TeePartSelected;
+	int m_TeePartsSelected;
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();

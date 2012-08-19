@@ -123,13 +123,30 @@ void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
 
 void CMenus::RenderHSLPicker(CUIRect MainView)
 {
+	// check if we need the color stuff
+	bool Checked = false;
+	for(int i = 0; i < NUM_SKINPARTS; i++)
+	{
+		if(m_TeePartsSelected&(1<<i))
+		{
+			if(*gs_apUCCVariables[i])
+			{
+				Checked = true;
+				break;
+			}
+		}
+	}
+
+	if(!Checked)
+		return;
+
 	CUIRect Label, Button, Picker;
 	bool Modified = false;
 
 	int ConfigColor = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		if(p != m_TeePartSelected)
+		if(!(m_TeePartsSelected&(1<<p)))
 			continue;
 		int Val = (*gs_apColorVariables[p])&0xffffff;
 		if(ConfigColor != -1 && ConfigColor != Val)
@@ -151,18 +168,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
-	// custom color button
-	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
-	static int s_CustomColors = 0;
-	if(DoButton_CheckBox(&s_CustomColors, Localize("Custom colors"), *gs_apUCCVariables[m_TeePartSelected], &Button))
-		*gs_apUCCVariables[m_TeePartSelected] ^= 1;
-
-	if(!(*gs_apUCCVariables[m_TeePartSelected]))
-		return;
-
-	MainView.HSplitTop(Spacing, 0, &MainView);
-
-	bool UseAlpha = m_TeePartSelected == SELECTION_TATTOO;
+	bool UseAlpha = (m_TeePartsSelected & SELECTION_TATTOO) && *gs_apUCCVariables[SKINPART_TATTOO];
 
 	int Hue, Sat, Lgt, Alp;
 	if(ConfigColor != -1)
@@ -182,7 +188,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	else
 		Alp = -1;
 
-	MainView.HSplitTop(UseAlpha ? 144.0f : 186.0f, &Picker, &MainView);
+	MainView.HSplitTop(UseAlpha ? 186.0f : 208.0f, &Picker, &MainView);
 	RenderTools()->DrawUIRect(&Picker, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// Hue/Lgt picker :
@@ -328,7 +334,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		int NewVal = (Hue << 16) + (Sat << 8) + Lgt;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(m_TeePartSelected == p)
+			if(m_TeePartsSelected&(1<<p))
 				*gs_apColorVariables[p] = NewVal;
 		}
 		if(UseAlpha)
@@ -431,19 +437,28 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		s_InitSkinPartList = false;
 	}
 
+	int p = -1;
+	for(int i = 0; i < NUM_SKINPARTS; i++)
+	{
+		if(m_TeePartsSelected == 1<<i)
+			p = i;
+	}
+	if(p < 0)
+		return;
+
 	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
 											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
-	UiDoListboxHeader(&MainView, s_apTitles[m_TeePartSelected], 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 6, -1, s_ScrollValue);
+	UiDoListboxHeader(&MainView, s_apTitles[p], 20.0f, 2.0f);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[p].size(), 6, -1, s_ScrollValue);
 
-	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
+	for(int i = 0; i < s_paList[p].size(); ++i)
 	{
-		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][i];
+		const CSkins::CSkinPart *s = s_paList[p][i];
 		if(s == 0)
 			continue;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], false);
+		CListboxItem Item = UiDoListboxNextItem(&s_paList[p][i], false);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -453,7 +468,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
 				if(*gs_apUCCVariables[j])
 				{
-					if(m_TeePartSelected == j)
+					if(p == j)
 						Info.m_aTextures[j] = s->m_ColorTexture;
 					else
 						Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
@@ -461,7 +476,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 				}
 				else
 				{
-					if(m_TeePartSelected == j)
+					if(p == j)
 						Info.m_aTextures[j] = s->m_OrgTexture;
 					else
 						Info.m_aTextures[j] = pSkinPart->m_OrgTexture;
@@ -480,8 +495,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	{
 		if(NewSelected != OldSelected)
 		{
-			const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-			mem_copy(gs_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
+			const CSkins::CSkinPart *s = s_paList[p][NewSelected];
+			mem_copy(gs_apSkinVariables[p], s->m_aName, 24);
 		}
 	}
 	OldSelected = NewSelected;
@@ -874,7 +889,7 @@ void CMenus::RenderSettingsTeeBasic(CUIRect MainView)
 
 void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 {
-	CUIRect Label, Button, Left, Right;
+	CUIRect Label, Patterns, Button, Left, Right;
 
 	// render skin preview background
 	float SpacingH = 2.0f;
@@ -891,37 +906,38 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	// skin part selection
+	static const char *const apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
+											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
+
 	MainView.HSplitTop(SpacingH, 0, &MainView);
-	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
-	RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
+	RenderTools()->DrawUIRect(&Patterns, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	Label.VSplitLeft(Label.h, &Left, &Label);
-	Label.VSplitRight(Label.h, &Label, &Right);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Patterns"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
+	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
-	static int s_PatternButtonLeft = 0;
-	if(DoButton_Menu(&s_PatternButtonLeft, "<", 0, &Left, 5.0f, 0.0f, CUI::CORNER_L))
+	static int s_PatternButtons[6] = {0};
+	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
-		m_TeePartSelected--;
-		if(m_TeePartSelected < 0)
-			m_TeePartSelected = NUM_SKINPARTS-1;
-	}
-
-	static int s_PatternButtonRight = 0;
-	if(DoButton_Menu(&s_PatternButtonRight, ">", 0, &Right, 5.0f, 0.0f, CUI::CORNER_R))
-	{
-		m_TeePartSelected++;
-		if(m_TeePartSelected >= NUM_SKINPARTS)
-			m_TeePartSelected = 0;
+		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
+		if(DoButton_MenuTabTop(&s_PatternButtons[i], apParts[i], m_TeePartsSelected&(1<<i), &Button))
+		{
+			m_TeePartsSelected ^= 1<<i;
+		}
+		Patterns.VSplitLeft(SpacingW, 0, &Patterns);
 	}
 
 	MainView.HSplitTop(SpacingH, 0, &MainView);
-	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
-	Label.y += 2.0f;
-	char aBuf[8];
-	str_format(aBuf, sizeof(aBuf), "%d/%d", m_TeePartSelected+1, NUM_SKINPARTS);
-	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, 0);
+	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
+	static int s_PatternUCCBoxes[6] = {0};
+	for(int i = 0; i < NUM_SKINPARTS; i++)
+	{
+		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
+		if(DoButton_CheckBox(&s_PatternUCCBoxes[i], Localize("Custom Color"), *gs_apUCCVariables[i], &Button))
+		{
+			*gs_apUCCVariables[i] ^= 1;
+		}
+		Patterns.VSplitLeft(SpacingW, 0, &Patterns);
+	}
 
 	MainView.HSplitTop(SpacingH, 0, &MainView);
 	MainView.VSplitMid(&Left, &Right);
@@ -999,7 +1015,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
-		dbg_msg("color", "r: %d g: %d b: %d", (int)(OwnSkinInfo.m_aColors[0].r*255.0f), (int)(OwnSkinInfo.m_aColors[0].g*255.0f), (int)(OwnSkinInfo.m_aColors[0].b*255.0f));
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		// handle right (team skins)

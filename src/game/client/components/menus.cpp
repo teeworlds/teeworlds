@@ -47,7 +47,7 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_TeePartSelected = 0;
+	m_TeePartsSelected = SELECTION_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
