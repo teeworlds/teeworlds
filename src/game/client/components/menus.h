@@ -52,7 +52,7 @@ class CMenus : public CComponent
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r=5.0f, float FontFactor=0.0f, int Corners=CUI::CORNER_ALL);
+	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
 	int DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
