@@ -208,14 +208,14 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 	}
 
 	CUIRect Temp;
-	pRect->HMargin(2.0f, &Temp);
+	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor, int Corners)
+int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds, Checked);
@@ -1112,6 +1112,7 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else
 	{
+		Box.HSplitBottom(25.0f, 0, &Box);
 		// online menus
 		if(m_GamePage != PAGE_SETTINGS) // Game stuff
 		{
