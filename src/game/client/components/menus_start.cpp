@@ -36,7 +36,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_SETTINGS;
 		}
@@ -53,7 +53,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 		}
 	}*/
@@ -72,7 +72,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_DEMOS;
 			DemolistPopulate();
@@ -93,7 +93,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			g_Config.m_ClEditor = 1;
 			Input()->MouseModeRelative();
@@ -110,7 +110,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 			m_MenuPage = g_Config.m_UiBrowserPage;
 	}
 
@@ -119,7 +119,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
 	static int s_QuitButton = 0;
-	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 10.0f, 0.5f))
+	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		m_Popup = POPUP_QUIT;
 
 	// render version
