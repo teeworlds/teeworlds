@@ -37,6 +37,17 @@ enum
 	TILERENDERFLAG_EXTEND=4,
 };
 
+enum
+{
+	SELECTION_BODY=1,
+	SELECTION_TATTOO=2,
+	SELECTION_DECORATION=4,
+	SELECTION_HANDS=8,
+	SELECTION_FEET=16,
+	SELECTION_EYES=32,
+	SELECTION_DEFAULT = SELECTION_BODY|SELECTION_TATTOO|SELECTION_DECORATION|SELECTION_FEET|SELECTION_EYES
+};
+
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
 
 class CRenderTools
@@ -67,7 +78,7 @@ public:
 	void RenderTilemapGenerateSkip(class CLayers *pLayers);
 
 	// object render methods (gc_render_obj.cpp)
-	void RenderTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
+	void RenderTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, int Parts=SELECTION_DEFAULT, bool RenderBackground = false);
 
 	// map render methods (gc_render_map.cpp)
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);

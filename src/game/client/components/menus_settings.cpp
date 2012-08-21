@@ -137,10 +137,26 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		}
 	}
 
-	if(!Checked)
-		return;
+	CUIRect Label;
 
-	CUIRect Label, Button, Picker;
+	// background
+	float Spacing = 2.0f;
+	float ButtonHeight = 20.0f;
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("Coloration"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
+
+	// dont do all the rest if not needed
+	if(!Checked)
+	{
+		// render background of color selection here anyway
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		return;
+	}
+
 	bool Modified = false;
 
 	int ConfigColor = -1;
@@ -157,15 +173,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		ConfigColor = Val;
 	}
 
-	// background
-	float Spacing = 2.0f;
-	float ButtonHeight = 20.0f;
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Coloration"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
-
+	CUIRect Button, Picker;
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
 	bool UseAlpha = (m_TeePartsSelected & SELECTION_TATTOO) && *gs_apUCCVariables[SKINPART_TATTOO];
@@ -444,21 +452,36 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			p = i;
 	}
 	if(p < 0)
+	{
+		// fake list layout for better looks
+		CUIRect Label;
+		float Spacing = 2.0f;
+		float ButtonHeight = 20.0f;
+		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+		MainView.HSplitTop(ButtonHeight, &Label, &MainView);
+		Label.y += 2.0f;
+		UI()->DoLabel(&Label, Localize("Selection"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
 		return;
+	}
 
-	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
-											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
-
-	UiDoListboxHeader(&MainView, s_apTitles[p], 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[p].size(), 6, -1, s_ScrollValue);
+	int OldSelected = -1;
+	UiDoListboxHeader(&MainView, Localize("Selection"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[p].size(), 6, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[p].size(); ++i)
 	{
 		const CSkins::CSkinPart *s = s_paList[p][i];
 		if(s == 0)
 			continue;
+		if(!str_comp(s->m_aName, gs_apSkinVariables[p]))
+			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paList[p][i], false);
+		CListboxItem Item = UiDoListboxNextItem(&s_paList[p][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -485,12 +508,11 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			}
 			Info.m_Size = 40.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2), m_TeePartsSelected, true);
 		}
 	}
 
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
-	static int OldSelected = -1;
 	if(NewSelected != -1)
 	{
 		if(NewSelected != OldSelected)
@@ -921,7 +943,10 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
 		if(DoButton_MenuTabTop(&s_PatternButtons[i], apParts[i], m_TeePartsSelected&(1<<i), &Button))
 		{
-			m_TeePartsSelected ^= 1<<i;
+			if(Input()->KeyPressed(KEY_RCTRL) || Input()->KeyPressed(KEY_LCTRL))
+				m_TeePartsSelected ^= 1<<i;
+			else
+				m_TeePartsSelected = 1<<i;
 		}
 		Patterns.VSplitLeft(SpacingW, 0, &Patterns);
 	}

@@ -27,16 +27,6 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 };
 
-enum
-{
-	SELECTION_BODY=1,
-	SELECTION_TATTOO=2,
-	SELECTION_DECORATION=4,
-	SELECTION_HANDS=8,
-	SELECTION_FEET=16,
-	SELECTION_EYES=32
-};
-
 class CMenus : public CComponent
 {
 	typedef float (*FDropdownCallback)(CUIRect View, void *pUser);

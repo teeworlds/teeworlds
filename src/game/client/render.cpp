@@ -348,7 +348,7 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 	Graphics()->QuadsEnd();
 }
 
-void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
+void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, int Parts, bool RenderBackground)
 {
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
@@ -358,68 +358,92 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	// TODO: FIX ME
 	//Graphics()->QuadsDraw(pos.x, pos.y-128, 128, 128);
 
+	float AnimScale = pInfo->m_Size * 1.0f/64.0f;
+	float BaseSize = pInfo->m_Size;
+	vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
+
 	// first pass we draw the outline
 	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
 	{
-		int OutLine = p==0 ? 1 : 0;
+		bool OutLine = p==0 ? 1 : 0;
 
 		for(int f = 0; f < 2; f++)
 		{
-			float AnimScale = pInfo->m_Size * 1.0f/64.0f;
-			float BaseSize = pInfo->m_Size;
 			if(f == 1)
 			{
-				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
 				IGraphics::CQuadItem BodyItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
 				IGraphics::CQuadItem Item;
 
-				// draw decoration
-				if(pInfo->m_aTextures[2].IsValid())
+				// draw hands (only if selected)
+				if(Parts&SELECTION_HANDS)
 				{
-					Graphics()->TextureSet(pInfo->m_aTextures[2]);
+					vec2 HandPos = BodyPos + vec2(7.0f, 0.0f);
+					Graphics()->TextureSet(pInfo->m_aTextures[3]);
 					Graphics()->QuadsBegin();
-					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-					Graphics()->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
-					SelectSprite(OutLine?SPRITE_TEE_DECORATION_OUTLINE:SPRITE_TEE_DECORATION, 0, 0, 0);
-					Item = BodyItem;
-					Graphics()->QuadsDraw(&Item, 1);
+					vec4 Color = pInfo->m_aColors[3];
+					Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+					SelectSprite(OutLine?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
+					IGraphics::CQuadItem QuadItem(HandPos.x, HandPos.y, BaseSize/2.0f, BaseSize/2.0f);
+					Graphics()->QuadsDraw(&QuadItem, 1);
 					Graphics()->QuadsEnd();
+				}
+
+				// draw decoration
+				if(Parts&SELECTION_DECORATION || (OutLine && RenderBackground))
+				{
+					if(pInfo->m_aTextures[2].IsValid())
+					{
+						Graphics()->TextureSet(pInfo->m_aTextures[2]);
+						Graphics()->QuadsBegin();
+						Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+						Graphics()->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
+						SelectSprite(OutLine?SPRITE_TEE_DECORATION_OUTLINE:SPRITE_TEE_DECORATION, 0, 0, 0);
+						Item = BodyItem;
+						Graphics()->QuadsDraw(&Item, 1);
+						Graphics()->QuadsEnd();
+					}
 				}
 
 				// draw body (behind tattoo)
-				Graphics()->TextureSet(pInfo->m_aTextures[0]);
-				Graphics()->QuadsBegin();
-				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-				if(OutLine)
+				if(Parts&SELECTION_BODY || (OutLine && RenderBackground))
 				{
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-					SelectSprite(SPRITE_TEE_BODY_OUTLINE, 0, 0, 0);
-				}
-				else
-				{
-					Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
-					SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
-				}
-				Item = BodyItem;
-				Graphics()->QuadsDraw(&Item, 1);
-				Graphics()->QuadsEnd();
-
-				// draw tattoo
-				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
-				{
-					Graphics()->TextureSet(pInfo->m_aTextures[1]);
+					Graphics()->TextureSet(pInfo->m_aTextures[0]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
-					SelectSprite(SPRITE_TEE_TATTOO, 0, 0, 0);
+					if(OutLine)
+					{
+						Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+						SelectSprite(SPRITE_TEE_BODY_OUTLINE, 0, 0, 0);
+					}
+					else
+					{
+						Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
+						SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
+					}
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
 
+				// draw tattoo
+				if(Parts&SELECTION_TATTOO && !OutLine)
+				{
+					if(pInfo->m_aTextures[1].IsValid())
+					{
+						Graphics()->TextureSet(pInfo->m_aTextures[1]);
+						Graphics()->QuadsBegin();
+						Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+						Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
+						SelectSprite(SPRITE_TEE_TATTOO, 0, 0, 0);
+						Item = BodyItem;
+						Graphics()->QuadsDraw(&Item, 1);
+						Graphics()->QuadsEnd();
+					}
+				}
+
 				// draw body (in front of tattoo)
-				if(!OutLine)
+				if(Parts&SELECTION_BODY && !OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[0]);
 					Graphics()->QuadsBegin();
@@ -435,12 +459,12 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 
 				// draw eyes
-				Graphics()->TextureSet(pInfo->m_aTextures[5]);
-				Graphics()->QuadsBegin();
-				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-				Graphics()->SetColor(pInfo->m_aColors[5].r, pInfo->m_aColors[5].g, pInfo->m_aColors[5].b, pInfo->m_aColors[5].a);
-				if(p == 1)
+				if(Parts&SELECTION_EYES && !OutLine)
 				{
+					Graphics()->TextureSet(pInfo->m_aTextures[5]);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+					Graphics()->SetColor(pInfo->m_aColors[5].r, pInfo->m_aColors[5].g, pInfo->m_aColors[5].b, pInfo->m_aColors[5].a);
 					switch (Emote)
 					{
 						case EMOTE_PAIN:
@@ -465,38 +489,41 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					vec2 Offset = vec2(Direction.x*0.125f, -0.05f+Direction.y*0.10f)*BaseSize;
 					IGraphics::CQuadItem QuadItem(BodyPos.x+Offset.x, BodyPos.y+Offset.y, EyeScale, h);
 					Graphics()->QuadsDraw(&QuadItem, 1);
+					Graphics()->QuadsEnd();
 				}
-				Graphics()->QuadsEnd();
 			}
 
 			// draw feet
-			Graphics()->TextureSet(pInfo->m_aTextures[4]);
-			Graphics()->QuadsBegin();
-			CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
-
-			float w = BaseSize/2.0f;
-			float h = w;
-
-			Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
-
-			if(OutLine)
+			if(Parts&SELECTION_FEET || (OutLine && RenderBackground))
 			{
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
-			}
-			else
-			{
-				bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
-				float cs = 1.0f; // color scale
-				if(Indicate)
-					cs = 0.5f;
-				Graphics()->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a);
-				SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
-			}
+				Graphics()->TextureSet(pInfo->m_aTextures[4]);
+				Graphics()->QuadsBegin();
+				CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
-			IGraphics::CQuadItem QuadItem(Position.x+pFoot->m_X*AnimScale, Position.y+pFoot->m_Y*AnimScale, w, h);
-			Graphics()->QuadsDraw(&QuadItem, 1);
-			Graphics()->QuadsEnd();
+				float w = BaseSize/2.0f;
+				float h = w;
+
+				Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
+
+				if(OutLine)
+				{
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+				}
+				else
+				{
+					bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
+					float cs = 1.0f; // color scale
+					if(Indicate)
+						cs = 0.5f;
+					Graphics()->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a);
+					SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
+				}
+
+				IGraphics::CQuadItem QuadItem(Position.x+pFoot->m_X*AnimScale, Position.y+pFoot->m_Y*AnimScale, w, h);
+				Graphics()->QuadsDraw(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+			}
 		}
 	}
 }
