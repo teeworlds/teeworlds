@@ -446,7 +446,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 
 				// draw body (in front of tattoo)
-				if(Parts&SELECTION_BODY && !OutLine)
+				if((Parts&SELECTION_BODY || (Parts&SELECTION_EYES && RenderBackground)) && !OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[0]);
 					Graphics()->QuadsBegin();
