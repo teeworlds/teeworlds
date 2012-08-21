@@ -406,7 +406,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 
 				// draw body (behind tattoo)
-				if(Parts&SELECTION_BODY || (OutLine && RenderBackground))
+				if(Parts&SELECTION_BODY || (OutLine && RenderBackground) || (RenderBackground && Parts&SELECTION_EYES))
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[0]);
 					Graphics()->QuadsBegin();
@@ -418,7 +418,10 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					}
 					else
 					{
-						Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
+						if(!(Parts&SELECTION_BODY) && Parts&SELECTION_EYES)
+							Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+						else
+							Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
 						SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
 					}
 					Item = BodyItem;
