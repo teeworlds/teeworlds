@@ -2357,8 +2357,8 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsBegin();
 		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
 		//vec4 bottom(0, 0, 0, 1.0f);
-		vec4 Bottom(0.25f, 0.25f, 0.25f, 1.0f);
-		vec4 Top(0.25f, 0.25f, 0.25f, 1.0f);
+		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
 		IGraphics::CColorVertex Array[4] = {
 			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
 			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),
