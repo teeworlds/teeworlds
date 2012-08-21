@@ -119,7 +119,7 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, 
 	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
 }
 
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor, int Corners)
+int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds);
