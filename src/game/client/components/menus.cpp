@@ -48,8 +48,11 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_TeePartSelected = SKINPART_BODY;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+		m_aSelectedTeeParts[p] = false;
+	m_aSelectedTeeParts[SKINPART_BODY] = true;
 	m_aSaveSkinName[0] = 0;
+
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
 

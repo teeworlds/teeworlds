@@ -191,7 +191,7 @@ class CMenus : public CComponent
 	// for settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
-	int m_TeePartSelected;
+	bool m_aSelectedTeeParts[6];
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
