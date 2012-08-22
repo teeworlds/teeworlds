@@ -48,9 +48,6 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 	return false;
 }
 
-static int const gs_aSelectionParts[6] = {SELECTION_BODY, SELECTION_TATTOO, SELECTION_DECORATION,
-											SELECTION_HANDS, SELECTION_FEET, SELECTION_EYES};
-
 int CMenus::DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
@@ -162,7 +159,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
-	bool UseAlpha = m_TeePartSelected == SELECTION_TATTOO;
+	bool UseAlpha = m_TeePartSelected == SKINPART_TATTOO;
 
 	int Hue, Sat, Lgt, Alp;
 	if(ConfigColor != -1)
