@@ -27,6 +27,16 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 };
 
+enum
+{
+	SELECTION_BODY=0,
+	SELECTION_TATTOO,
+	SELECTION_DECORATION,
+	SELECTION_HANDS,
+	SELECTION_FEET,
+	SELECTION_EYES
+};
+
 class CMenus : public CComponent
 {
 	typedef float (*FDropdownCallback)(CUIRect View, void *pUser);
@@ -190,7 +200,7 @@ class CMenus : public CComponent
 	// for settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
-	int m_TeePartsSelected;
+	int m_TeePartSelected;
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
