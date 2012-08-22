@@ -176,7 +176,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			}
 			if(Component < 0)
 				continue;
-			if(Part != SKINPART_TATTOO && Component == 3)
+			if(!pSelf->IsUsingAlpha(Part) && Component == 3)
 				continue;
 			int OldVal = Skin.m_aPartColors[Part];
 			int Val = str_toint(pValue);
@@ -249,7 +249,7 @@ void CSkins::OnInit()
 		if(Default < 0)
 			Default = 0;
 		m_DummySkin.m_apParts[p] = GetSkinPart(p, Default);
-		m_DummySkin.m_aPartColors[p] = p==SKINPART_TATTOO ? (255<<24)+65408 : 65408;
+		m_DummySkin.m_aPartColors[p] = IsUsingAlpha(p) ? (255<<24)+65408 : 65408;
 		m_DummySkin.m_aUseCustomColors[p] = 0;
 	}
 
@@ -309,10 +309,10 @@ vec3 CSkins::GetColorV3(int v) const
 	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, Dark+(v&0xff)/255.0f*(1.0f-Dark)));
 }
 
-vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
+vec4 CSkins::GetColorV4(int v, int Part) const
 {
 	vec3 r = GetColorV3(v);
-	float Alpha = UseAlpha ? ((v>>24)&0xff)/255.0f : 1.0f;
+	float Alpha = IsUsingAlpha(Part) ? ((v>>24)&0xff)/255.0f : 1.0f;
 	return vec4(r.r, r.g, r.b, Alpha);
 }
 
@@ -322,7 +322,7 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 	if(!UseCustomColors)
 	{
 		int ColorVal = s_aTeamColors[Team+1];
-		if(Part == SKINPART_TATTOO)
+		if(IsUsingAlpha(Part))
 			ColorVal |= 0xff000000;
 		return ColorVal;
 	}
@@ -357,8 +357,13 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 	int NewLgt = clamp(Lgt, MinLgt, MaxLgt);
 	int ColorVal = (NewHue<<16) + (NewSat<<8) + NewLgt;
 
-	if(Part == SKINPART_TATTOO)
+	if(IsUsingAlpha(Part))
 		ColorVal += PartColor&0xff000000;
 
 	return ColorVal;
+}
+
+bool CSkins::IsUsingAlpha(int Part) const
+{
+	return Part == SKINPART_TATTOO;
 }
