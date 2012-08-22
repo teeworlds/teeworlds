@@ -118,6 +118,78 @@ void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
 	io_write_newline(File);
 }
 
+void CMenus::RenderColorSlider(const int *pIDs, CUIRect Slider, int Component, int Hue, int Sat, int Lgt, int *pVal, int Min, int Max)
+{
+	CUIRect Label, Button, Bar;
+
+	const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
+
+	// label
+	Label = Slider;
+	RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Label.VSplitLeft((Label.w-168.0f)/2.0f, &Label, &Button);
+	Label.y += 2.0f;
+	UI()->DoLabelScaled(&Label, apNames[Component], Label.h*ms_FontmodHeight*0.8f, 0);
+
+	// button <
+	Button.VSplitLeft(Button.h, &Button, &Bar);
+	if(DoButton_Menu(&pIDs[0], "<", 0, &Button, CUI::CORNER_TL|CUI::CORNER_BL))
+	{
+		*pVal = max(Min, *pVal-1);
+	}
+
+	// bar
+	Bar.VSplitLeft(256/2, &Bar, &Button);
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	for(int v = 0; v < 256/2; v++)
+	{
+		float Val = Min + v*2/255.0f*(Max-Min);
+		vec3 rgb;
+		float Dark = DARKEST_COLOR_LGT/255.0f;
+		if(Component == 0)
+			rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
+		else if(Component == 1)
+			rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+		else if(Component == 2)
+			rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
+		else
+			rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+		if(Component == 3)
+			Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
+		else
+			Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
+		IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+	}
+
+	// bar marker
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
+	float MarkerX = (*pVal-Min)/2.0f/(Max-Min)*255.0f;
+	IGraphics::CQuadItem QuadItem(Bar.x + min(127.0f, MarkerX)*UI()->Scale(), Bar.y, UI()->PixelSize(), Bar.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	// button >
+	Button.VSplitLeft(Button.h, &Button, &Label);
+	if(DoButton_Menu(&pIDs[1], ">", 0, &Button, CUI::CORNER_TR|CUI::CORNER_BR))
+	{
+		*pVal = min(Max, *pVal+1);
+	}
+
+	// value label
+	char aBuf[16];
+	str_format(aBuf, sizeof(aBuf), "%d", *pVal);
+	Label.y += 2.0f;
+	UI()->DoLabelScaled(&Label, aBuf, Label.h*ms_FontmodHeight*0.8f, 0);
+
+	// logic
+	int X;
+	int Logic = UI()->DoPickerLogic(&pIDs[2], &Bar, &X, 0);
+	if(Logic)
+		*pVal = Min + X*2/255.0f*(Max-Min);
+}
+
 void CMenus::RenderHSLPicker(CUIRect MainView)
 {
 	CUIRect Label, Button, Picker;
@@ -248,83 +320,22 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	// H/S/L/A sliders :
 	{
 		int NumBars = UseAlpha ? 4 : 3;
-		const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
 		float SliderHeight = 16.0f;
 
 		for(int i = 0; i < NumBars; i++)
 		{
-			CUIRect Bar;
+			CUIRect Slider;
 
-			MainView.HSplitTop(SliderHeight, &Label, &MainView);
+			MainView.HSplitTop(SliderHeight, &Slider, &MainView);
 			MainView.HSplitTop(Spacing, 0, &MainView);
 
-			// label
-			RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-			Label.VSplitLeft((Label.w-168.0f)/2.0f, &Label, &Button);
-			Label.y += 2.0f;
-			UI()->DoLabelScaled(&Label, apNames[i], SliderHeight*ms_FontmodHeight*0.8f, 0);
-
-			// button <
-			Button.VSplitLeft(Button.h, &Button, &Bar);
-			if(DoButton_Menu(&s_aButtons[i*3], "<", 0, &Button, CUI::CORNER_TL|CUI::CORNER_BL))
+			int Val = *apVars[i];
+			RenderColorSlider(&s_aButtons[3*i], Slider, i, Hue, Sat, Lgt, &Val);
+			if(*apVars[i] != Val)
 			{
-				*apVars[i] = max(0, *apVars[i]-1);
-				Modified = true;
-			}
-
-			// bar
-			Bar.VSplitLeft(256.0f/2.0f, &Bar, &Button);
-			Graphics()->TextureClear();
-			Graphics()->QuadsBegin();
-			for(int v = 0; v < 256/2; v++)
-			{
-				int Val = v*2;
-				vec3 rgb;
-				float Dark = DARKEST_COLOR_LGT/255.0f;
-				if(i == 0)
-					rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
-				else if(i == 1)
-					rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				else if(i == 2)
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
-				else
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				if(i == 3)
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
-				else
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-			}
-
-			// bar marker
-			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
-			IGraphics::CQuadItem QuadItem(Bar.x + min(127.0f, *apVars[i]/2.0f)*UI()->Scale(), Bar.y, UI()->PixelSize(), Bar.h);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-			Graphics()->QuadsEnd();
-
-			// button >
-			Button.VSplitLeft(Button.h, &Button, &Label);
-			if(DoButton_Menu(&s_aButtons[i*3+1], ">", 0, &Button, CUI::CORNER_TR|CUI::CORNER_BR))
-			{
-				*apVars[i] = min(255, *apVars[i]+1);
-				Modified = true;
-			}
-
-			// value label
-			char aBuf[16];
-			str_format(aBuf, sizeof(aBuf), "%d", *apVars[i]);
-			Label.y += 2.0f;
-			UI()->DoLabelScaled(&Label, aBuf, SliderHeight*ms_FontmodHeight*0.8f, 0);
-
-			// logic
-			int X;
-			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
-			if(Logic)
-			{
-				*apVars[i] = X*2;
+				*apVars[i] = Val;
 				Modified = true;
 				aModifiedComponents[i] = true;
 			}
