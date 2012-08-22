@@ -69,7 +69,7 @@ class CMenus : public CComponent
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset);
+	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden=false);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite=false);
 	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
@@ -81,7 +81,7 @@ class CMenus : public CComponent
 	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
-	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spaceing);
+	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
 
 	struct CListboxItem
 	{
@@ -91,9 +91,9 @@ class CMenus : public CComponent
 		CUIRect m_HitRect;
 	};
 
-	void UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spaceing);
+	void UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
 	void UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect=0);
+						int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect=0, bool Background=true);
 	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
@@ -174,8 +174,9 @@ class CMenus : public CComponent
 	char m_aMessageTopic[512];
 	char m_aMessageBody[512];
 	char m_aMessageButton[512];
+	int m_NextPopup;
 
-	void PopupMessage(const char *pTopic, const char *pBody, const char *pButton);
+	void PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next=POPUP_NONE);
 
 	// TODO: this is a bit ugly but.. well.. yeah
 	enum { MAX_INPUTEVENTS = 32 };
@@ -434,7 +435,7 @@ class CMenus : public CComponent
 	void SetOverlay(int Type, float x, float y, const void *pData);
 
 	// found in menus_settings.cpp
-	void RenderLanguageSelection(CUIRect MainView);
+	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
 	void RenderHSLPicker(CUIRect Picker);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);

@@ -597,7 +597,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void CMenus::RenderLanguageSelection(CUIRect MainView)
+void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 {
 	static int s_LanguageList = 0;
 	static int s_SelectedLanguage = 0;
@@ -618,8 +618,9 @@ void CMenus::RenderLanguageSelection(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	UiDoListboxHeader(&MainView, Localize("Language"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+	if(Header)
+		UiDoListboxHeader(&MainView, Localize("Language"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue, Header?0:&MainView, Header?true:false);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
