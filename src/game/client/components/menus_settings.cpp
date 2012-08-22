@@ -891,8 +891,8 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	// skin part selection
-	static const char *const apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
-											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
+	static const char *const s_apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
+												Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
 	MainView.HSplitTop(SpacingH, 0, &MainView);
 	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
@@ -900,11 +900,11 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
-	static int s_PatternButtons[6] = {0};
+	static int s_aPatternButtons[6] = {0};
 	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
-		if(DoButton_MenuTabTop(&s_PatternButtons[i], apParts[i], m_TeePartSelected==i, &Button))
+		if(DoButton_MenuTabTop(&s_aPatternButtons[i], s_apParts[i], m_TeePartSelected==i, &Button))
 		{
 			m_TeePartSelected = i;
 		}
