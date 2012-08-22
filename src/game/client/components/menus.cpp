@@ -1017,7 +1017,64 @@ void CMenus::RenderMenubar(CUIRect r)
 	if(Client()->State() != IClient::STATE_OFFLINE)
 		m_ActivePage = m_GamePage;
 
-	if(Client()->State() == IClient::STATE_OFFLINE)
+	if(m_MenuPage == PAGE_SETTINGS || m_GamePage == PAGE_SETTINGS)
+	{
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		// render header background
+		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+		Box.HSplitBottom(25.0f, 0, &Box);
+
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_GeneralButton=0;
+		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_PlayerButton=0;
+		if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_TeeButton=0;
+		if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_TEE;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_ControlsButton=0;
+		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_GraphicsButton=0;
+		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_SoundButton=0;
+		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+		}
+	}
+	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// render header background
 		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
@@ -1048,58 +1105,6 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
 		}
-		else if(m_MenuPage == PAGE_SETTINGS)
-		{
-			float Spacing = 3.0f;
-			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
-
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_GeneralButton=0;
-			if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_PlayerButton=0;
-			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_TeeButton=0;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_TEE;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_ControlsButton=0;
-			if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_GraphicsButton=0;
-			if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_SoundButton=0;
-			if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
-			}
-		}
 		else if(m_MenuPage == PAGE_DEMOS)
 		{
 			// make the header look like an active tab
@@ -1114,76 +1119,48 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else
 	{
-		Box.HSplitBottom(25.0f, 0, &Box);
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		// render header backgrounds
+		CUIRect Left, Right;
+		Box.VSplitLeft(ButtonWidth*4.0f+Spacing*3.0f, &Left, 0);
+		Box.VSplitRight(ButtonWidth, 0, &Right);
+		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+		Left.HSplitBottom(25.0f, 0, &Left);
+		Right.HSplitBottom(25.0f, 0, &Right);
+
 		// online menus
 		if(m_GamePage != PAGE_SETTINGS) // Game stuff
 		{
-			Box.VSplitLeft(90.0f, &Button, &Box);
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_GameButton=0;
-			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
+			if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
 				NewPage = PAGE_GAME;
 
-			Box.VSplitLeft(90.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_PlayersButton=0;
-			if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
+			if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
 				NewPage = PAGE_PLAYERS;
 
-			Box.VSplitLeft(130.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_ServerInfoButton=0;
-			if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
+			if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
 				NewPage = PAGE_SERVER_INFO;
 
-			Box.VSplitLeft(130.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_CallVoteButton=0;
-			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+			if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
 				NewPage = PAGE_CALLVOTE;
 
-			Box.VSplitRight(90.0f, &Box, &Button);
-			static int s_QuitButton=0;
-			if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR|CUI::CORNER_IBR))
-				m_Popup = POPUP_QUIT;
-
-			Box.VSplitRight(130.0f, &Box, &Button);
 			static int s_SettingsButton=0;
-			if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_TL))
+			if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), 0, &Right))
 				NewPage = PAGE_SETTINGS;
-		}
-		else // settings menu
-		{
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameGeneralButton=0;
-			if(DoButton_MenuTab(&s_InGameGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
-				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGamePlayerButton=0;
-			if(DoButton_MenuTab(&s_InGamePlayerButton, Localize("Players"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
-
-			Box.VSplitLeft(60.0f, &Button, &Box);
-			static int s_InGameTeeButton=0;
-			if(DoButton_MenuTab(&s_InGameTeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_TEE;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameControlsButton=0;
-			if(DoButton_MenuTab(&s_InGameControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameGraphicsButton=0;
-			if(DoButton_MenuTab(&s_InGameGraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
-
-			Box.VSplitLeft(90.0f, &Button, &Box);
-			static int s_InGameSoundButton=0;
-			if(DoButton_MenuTab(&s_InGameSoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button, CUI::CORNER_TR))
-				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
-
-			Box.VSplitRight(90.0f, &Box, &Button);
-			static int s_InGameMenuButton=0;
-			if(DoButton_MenuTab(&s_InGameMenuButton, Localize("Back"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
-				NewPage = PAGE_GAME;
 		}
 	}
 
@@ -1573,7 +1550,30 @@ int CMenus::Render()
 				else if(m_GamePage == PAGE_CALLVOTE)
 					RenderServerControl(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
+				{
 					RenderSettings(MainView);
+
+					// same size like tabs in top but variables not really needed
+					float Spacing = 3.0f;
+					float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+					// render background
+					MainView.HSplitBottom(60.0f, 0, &MainView);
+					MainView.VSplitLeft(ButtonWidth, &MainView, 0);
+					RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+					// back to main menu
+					CUIRect Button;
+					MainView.HSplitTop(25.0f, &MainView, 0);
+					Button = MainView;
+					static int s_MenuButton=0;
+					if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
+						m_GamePage = PAGE_GAME;
+
+					// handle back with esc
+					if(m_EscapePressed)
+						m_GamePage = PAGE_GAME;
+				}
 			}
 			else
 			{
