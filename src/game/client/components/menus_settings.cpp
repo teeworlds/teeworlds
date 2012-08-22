@@ -431,16 +431,19 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
 											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
+	static int OldSelected = -1;
 	UiDoListboxHeader(&MainView, s_apTitles[m_TeePartSelected], 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 6, -1, s_ScrollValue);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 6, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
 	{
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][i];
 		if(s == 0)
 			continue;
+		if(!str_comp(s->m_aName, gs_apSkinVariables[m_TeePartSelected]))
+			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], false);
+		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -472,7 +475,6 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	}
 
 	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
-	static int OldSelected = -1;
 	if(NewSelected != -1)
 	{
 		if(NewSelected != OldSelected)
