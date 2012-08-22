@@ -428,11 +428,11 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		s_InitSkinPartList = false;
 	}
 
-	const char *const s_apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
-											Localize("Hands"), Localize("Feet"), Localize("Eyes")};
+	const char *const apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
+										Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
 	static int OldSelected = -1;
-	UiDoListboxHeader(&MainView, s_apTitles[m_TeePartSelected], 20.0f, 2.0f);
+	UiDoListboxHeader(&MainView, apTitles[m_TeePartSelected], 20.0f, 2.0f);
 	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
@@ -890,8 +890,8 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	// skin part selection
-	static const char *const s_apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
-												Localize("Hands"), Localize("Feet"), Localize("Eyes")};
+	const char *const apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
+									Localize("Hands"), Localize("Feet"), Localize("Eyes")};
 
 	MainView.HSplitTop(SpacingH, 0, &MainView);
 	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
@@ -903,7 +903,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
-		if(DoButton_MenuTabTop(&s_aPatternButtons[i], s_apParts[i], m_TeePartSelected==i, &Button))
+		if(DoButton_MenuTabTop(&s_aPatternButtons[i], apParts[i], m_TeePartSelected==i, &Button))
 		{
 			m_TeePartSelected = i;
 		}
