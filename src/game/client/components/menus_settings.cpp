@@ -354,7 +354,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 
 	int OldSelected = -1;
 	UiDoListboxHeader(&MainView, Localize("Skins"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinlist, 50.0f, 0, s_paSkinList.size(), 12, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_InitSkinlist, 50.0f, 0, s_paSkinList.size(), 10, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -382,7 +382,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				}
 			}
 
-			Info.m_Size = 40.0f;
+			Info.m_Size = 50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
 		}
@@ -433,7 +433,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 
 	static int OldSelected = -1;
 	UiDoListboxHeader(&MainView, s_apTitles[m_TeePartSelected], 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 6, OldSelected, s_ScrollValue);
+	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
 	{
@@ -468,7 +468,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 					Info.m_aColors[j] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 			}
-			Info.m_Size = 40.0f;
+			Info.m_Size = 50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
 		}
@@ -936,7 +936,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	float SpacingH = 2.0f;
 	float SpacingW = 3.0f;
 	float ButtonHeight = 20.0f;
-	float SkinHeight = 45.0f;
+	float SkinHeight = 50.0f;
 	float BackgroundHeight = ButtonHeight+SpacingH+SkinHeight;
 	if(!s_CustomSkinMenu)
 		BackgroundHeight = (ButtonHeight+SpacingH)*2.0f+SkinHeight;
@@ -964,13 +964,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		Left.VSplitMid(&Label, &Left);
-		Label.y += 14.0f;
+		Label.y += 17.0f;
 		UI()->DoLabelScaled(&Label, Localize("Normal:"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		CTeeRenderInfo OwnSkinInfo;
-		OwnSkinInfo.m_Size = 40.0f;
+		OwnSkinInfo.m_Size = 50.0f;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
@@ -992,7 +992,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		Right.VSplitLeft(Right.w/3.0f+SpacingW/2.0f, &Label, &Right);
-		Label.y += 14.0f;
+		Label.y += 17.0f;
 		UI()->DoLabelScaled(&Label, Localize("Team:"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 		Right.VSplitMid(&Left, &Right);
