@@ -121,34 +121,20 @@ void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
 void CMenus::RenderHSLPicker(CUIRect MainView)
 {
 	CUIRect Label, Button, Picker;
-	bool Modified = false;
-
-	int ConfigColor = -1;
-	for(int p = 0; p < NUM_SKINPARTS; p++)
-	{
-		if(p != m_TeePartSelected)
-			continue;
-		int Val = (*gs_apColorVariables[p])&0xffffff;
-		if(ConfigColor != -1 && ConfigColor != Val)
-		{
-			ConfigColor = -1;
-			break;
-		}
-		ConfigColor = Val;
-	}
 
 	// background
 	float Spacing = 2.0f;
-	float ButtonHeight = 20.0f;
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
+	// color header
+	float HeaderHeight = 20.0f;
+	MainView.HSplitTop(HeaderHeight, &Label, &MainView);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Coloration"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
-
+	UI()->DoLabel(&Label, Localize("Color"), HeaderHeight*ms_FontmodHeight*0.8f, 0);
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
-	// custom color button
+	// use custom color checkbox
+	float ButtonHeight = 20.0f;
 	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 	static int s_CustomColors = 0;
 	if(DoButton_CheckBox(&s_CustomColors, Localize("Custom colors"), *gs_apUCCVariables[m_TeePartSelected], &Button))
@@ -159,35 +145,24 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
+	bool Modified = false;
 	bool UseAlpha = m_TeePartSelected == SKINPART_TATTOO;
+	int Color = *gs_apColorVariables[m_TeePartSelected];
 
 	int Hue, Sat, Lgt, Alp;
-	if(ConfigColor != -1)
-	{
-		Hue = (ConfigColor>>16)&0xff;
-		Sat = (ConfigColor>>8)&0xff;
-		Lgt = ConfigColor&0xff;
-	}
-	else
-	{
-		Hue = -1;
-		Sat = -1;
-		Lgt = -1;
-	}
+	Hue = (Color>>16)&0xff;
+	Sat = (Color>>8)&0xff;
+	Lgt = Color&0xff;
 	if(UseAlpha)
-		Alp = (g_Config.m_PlayerColorTattoo>>24)&0xff;
-	else
-		Alp = -1;
+		Alp = (Color>>24)&0xff;
 
-	MainView.HSplitTop(UseAlpha ? 144.0f : 186.0f, &Picker, &MainView);
+	MainView.HSplitTop(144.0f, &Picker, &MainView);
 	RenderTools()->DrawUIRect(&Picker, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// Hue/Lgt picker :
 	{
 		Picker.VMargin((Picker.w-256.0f)/2.0f, &Picker);
 		Picker.HMargin((Picker.h-128.0f)/2.0f, &Picker);
-		//Picker.VSplitLeft(256.0f, &Picker, 0);
-		//Picker.HSplitTop(128.0f, &Picker, 0);
 
 		// picker
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_HLPICKER].m_Id);
@@ -244,18 +219,20 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
+		float SliderHeight = 16.0f;
 
 		for(int i = 0; i < NumBars; i++)
 		{
 			CUIRect Bar;
-			// label
-			MainView.HSplitTop(ButtonHeight, &Label, &MainView);
-			MainView.HSplitTop(Spacing, 0, &MainView);
-			RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+			MainView.HSplitTop(SliderHeight, &Label, &MainView);
+			MainView.HSplitTop(Spacing, 0, &MainView);
+
+			// label
+			RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 			Label.VSplitLeft((Label.w-168.0f)/2.0f, &Label, &Button);
 			Label.y += 2.0f;
-			UI()->DoLabelScaled(&Label, apNames[i], ButtonHeight*ms_FontmodHeight*0.8f, 0);
+			UI()->DoLabelScaled(&Label, apNames[i], SliderHeight*ms_FontmodHeight*0.8f, 0);
 
 			// button <
 			Button.VSplitLeft(Button.h, &Button, &Bar);
@@ -304,11 +281,12 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 				Modified = true;
 			}
 
-			// label value
+			// value label
 			char aBuf[16];
 			str_format(aBuf, sizeof(aBuf), "%d", *apVars[i]);
 			Label.y += 2.0f;
-			UI()->DoLabelScaled(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, 0);
+			UI()->DoLabelScaled(&Label, aBuf, SliderHeight*ms_FontmodHeight*0.8f, 0);
+
 			// logic
 			int X;
 			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
