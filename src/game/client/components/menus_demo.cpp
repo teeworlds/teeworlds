@@ -303,6 +303,9 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	CUIRect BottomView;
 	MainView.HSplitTop(20.0f, 0, &MainView);
 
+	// back button
+	RenderBackButton(MainView);
+
 	// cut view
 	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);

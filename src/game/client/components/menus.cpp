@@ -1229,6 +1229,31 @@ void CMenus::RenderNews(CUIRect MainView)
 	RenderTools()->DrawUIRect(&MainView, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 }
 
+void CMenus::RenderBackButton(CUIRect MainView)
+{
+	// same size like tabs in top but variables not really needed
+	float Spacing = 3.0f;
+	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	// render background
+	MainView.HSplitBottom(60.0f, 0, &MainView);
+	MainView.VSplitLeft(ButtonWidth, &MainView, 0);
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	// back to main menu
+	CUIRect Button;
+	MainView.HSplitTop(25.0f, &MainView, 0);
+	Button = MainView;
+	static int s_MenuButton=0;
+	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
+	{
+		if(Client()->State() != IClient::STATE_OFFLINE)
+			m_GamePage = PAGE_GAME;
+		else
+			m_MenuPage = PAGE_START;
+	}
+}
+
 int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
@@ -1550,30 +1575,7 @@ int CMenus::Render()
 				else if(m_GamePage == PAGE_CALLVOTE)
 					RenderServerControl(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
-				{
 					RenderSettings(MainView);
-
-					// same size like tabs in top but variables not really needed
-					float Spacing = 3.0f;
-					float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-
-					// render background
-					MainView.HSplitBottom(60.0f, 0, &MainView);
-					MainView.VSplitLeft(ButtonWidth, &MainView, 0);
-					RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
-
-					// back to main menu
-					CUIRect Button;
-					MainView.HSplitTop(25.0f, &MainView, 0);
-					Button = MainView;
-					static int s_MenuButton=0;
-					if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
-						m_GamePage = PAGE_GAME;
-
-					// handle back with esc
-					if(m_EscapePressed)
-						m_GamePage = PAGE_GAME;
-				}
 			}
 			else
 			{
@@ -1589,27 +1591,6 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
-		
-				// same size like tabs in top but variables not really needed
-				float Spacing = 3.0f;
-				float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-
-				// render background
-				MainView.HSplitBottom(60.0f, 0, &MainView);
-				MainView.VSplitLeft(ButtonWidth, &MainView, 0);
-				RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
-
-				// back to main menu
-				CUIRect Button;
-				MainView.HSplitTop(25.0f, &MainView, 0);
-				Button = MainView;
-				static int s_MenuButton=0;
-				if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
-					m_MenuPage = PAGE_START;
-
-				// handle back with esc
-				if(m_EscapePressed)
-					m_MenuPage = PAGE_START;
 			}
 		}
 

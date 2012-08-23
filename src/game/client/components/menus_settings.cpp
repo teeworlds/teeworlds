@@ -1599,4 +1599,6 @@ void CMenus::RenderSettings(CUIRect MainView)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
+
+	RenderBackButton(MainView);
 }

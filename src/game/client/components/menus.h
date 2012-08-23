@@ -402,6 +402,7 @@ class CMenus : public CComponent
 	//void render_loading(float percent);
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
+	void RenderBackButton(CUIRect MainView);
 
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
