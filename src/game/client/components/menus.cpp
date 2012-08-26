@@ -239,9 +239,10 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 {
 	if(Checked)
 		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), 0, 0.0f);
-	CUIRect t;
-	pRect->VSplitLeft(5.0f, 0, &t);
-	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight, -1);
+	CUIRect Label;
+	pRect->VSplitLeft(5.0f, 0, &Label);
+	Label.y+=2.0f;
+	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, -1);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -1076,17 +1077,26 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
-		// render header background
-		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-
-		Box.HSplitBottom(25.0f, 0, &Box);
-
 		// render menu tabs
 		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FRIENDS)
 		{
-			Box.VSplitLeft(100.0f, &Button, &Box);
+			float Spacing = 3.0f;
+			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+			CUIRect Left, Right;
+			Box.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
+			Box.VSplitRight(ButtonWidth, 0, &Right);
+
+			// render header backgrounds
+			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+			RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+			Left.HSplitBottom(25.0f, 0, &Left);
+			Right.HSplitBottom(25.0f, 0, &Right);
+
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_InternetButton=0;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_T|CUI::CORNER_IBL) && m_ActivePage!=PAGE_INTERNET)
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -1094,19 +1104,30 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_INTERNET;
 			}
 
-			//Box.VSplitLeft(4.0f, 0, &Box);
-			Box.VSplitLeft(80.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_LanButton=0;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, CUI::CORNER_T) && m_ActivePage!=PAGE_LAN)
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
+
+			static int s_FilterButton=0;
+			if(DoButton_Menu(&s_FilterButton, Localize("Filter"), 0, &Right))
+			{
+				// TODO
+			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
 		{
+			// render header background
+			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+			Box.HSplitBottom(25.0f, 0, &Box);
+
 			// make the header look like an active tab
 			RenderTools()->DrawUIRect(&Box, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 5.0f);
 			Box.HMargin(2.0f, &Box);

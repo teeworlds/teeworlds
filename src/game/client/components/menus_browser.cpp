@@ -19,7 +19,7 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aCols[] = {
-	{COL_FLAG,		-1,									" ",		-1, 42.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
+	{COL_FLAG,		-1,									" ",		-1, 80.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
 	{COL_NAME,		IServerBrowser::SORT_NAME,			"Name",		0, 300.0f, 0, {0}, {0}},
 	{COL_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 50.0f, 0, {0}, {0}},
 	{COL_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}},
@@ -214,33 +214,29 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 
 		if(ID == COL_FLAG)
 		{
-			CUIRect Icon = Button;
-			Button.HMargin(1.5f, &Button);
+			CUIRect Rect = Button;
+			CUIRect Icon;
 
-			if(pEntry->m_Flags&IServerBrowser::FLAG_PURE)
-			{
-				Button.VSplitRight(14.0f, &Button, &Icon);
-				DoButton_Icon(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_TEE, &Icon);
-				Button.VSplitRight(1.0f, &Button, 0);
- 			}
-
+			Rect.HMargin(1.0f, &Rect);
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			if(pEntry->m_Flags&IServerBrowser::FLAG_PASSWORD)
- 			{
-				Button.VSplitRight(14.0f, &Button, &Icon);
-				DoButton_Icon(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_LOCK, &Icon);
-				Button.VSplitRight(1.0f, &Button, 0);
-			}
+				DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK_A, &Icon);
 
-			if(pEntry->m_FriendState != IFriends::FRIEND_NO)
-			{
-				Button.VSplitRight(14.0f, &Button, &Icon);
-				DoButton_Icon(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_HEART_ACTIVE, &Icon);
- 			}
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
+			if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
+				DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
+
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
+			if(pEntry->m_Favorite)
+				DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Icon);
 		}
 		else if(ID == COL_NAME)
 		{
 			CTextCursor Cursor;
-			TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Button.w;
 
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, TextAplpha);
@@ -338,7 +334,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		else if(ID == COL_FAVORITE)
 		{
 			Button.HMargin(1.5f, &Button);
-			if(DoButton_SpriteClean(IMAGE_BROWSERICONS, pEntry->m_Favorite ? SPRITE_BROWSERICON_STAR_ACTIVE : SPRITE_BROWSERICON_STAR_INACTIVE, &Button))
+			if(DoButton_SpriteClean(IMAGE_BROWSEICONS, pEntry->m_Favorite ? SPRITE_BROWSE_STAR_A : SPRITE_BROWSE_STAR_B, &Button))
 			{
 				if(!pEntry->m_Favorite)
 					ServerBrowser()->AddFavorite(pEntry->m_NetAddr);
@@ -349,7 +345,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		else if(ID == COL_INFO)
 		{
 			Button.HMargin(1.5f, &Button);
-			if(DoButton_MouseOver(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_INFO, &Button))
+			if(DoButton_MouseOver(IMAGE_BROWSEICONS, SPRITE_BROWSE_INFO_A, &Button))
 				SetOverlay(CInfoOverlay::OVERLAY_SERVERINFO, Button.x, Button.y, pEntry);
 		}
 	}
@@ -363,14 +359,14 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 {
 	CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
 
-	RenderTools()->DrawUIRect(&View, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 0.0f);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, Label;
 	View.HMargin(1.0f, &View);
 
 	View.VSplitLeft(20.0f, 0, &Button);
 	Button.VSplitLeft(18.0f, &Button, 0);
-	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, pFilter->Extended() ? SPRITE_BROWSERICON_COLLAPSE : SPRITE_BROWSERICON_EXPAND, &Button))
+	if(DoButton_SpriteClean(IMAGE_FOLDICONS, pFilter->Extended() ? SPRITE_FOLD_EXPANDED : SPRITE_FOLD_COLLAPSED, &Button))
 		pFilter->Switch();
 
 	View.VSplitLeft(50.0f, 0, &Label);
@@ -379,12 +375,12 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 		UI()->DoLabel(&Label, pFilter->Name(), 12.0f, -1);
 	else
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BROWSERICONS].m_Id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BROWSEICONS].m_Id);
 		Graphics()->QuadsBegin();
 		if(pFilter->Custom() == CBrowserFilter::FILTER_STANDARD)
-			RenderTools()->SelectSprite(SPRITE_BROWSERICON_TEE);
+			RenderTools()->SelectSprite(SPRITE_BROWSE_STAR_B);
 		else if(pFilter->Custom() == CBrowserFilter::FILTER_FAVORITES)
-			RenderTools()->SelectSprite(SPRITE_BROWSERICON_STAR_ACTIVE);
+			RenderTools()->SelectSprite(SPRITE_BROWSE_STAR_A);
 		IGraphics::CQuadItem QuadItem(Label.x, View.y, 18.0f, 18.0f);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
@@ -397,7 +393,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	Button.VSplitRight(18.0f, &View, &Button);
 	if(pFilter->Custom() == CBrowserFilter::FILTER_CUSTOM)
 	{
-		if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_CLOSE, &Button))
+		if(DoButton_SpriteClean(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Button))
 		{
 			RemoveFilter(FilterIndex);
 			return true;
@@ -406,12 +402,12 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	View.VSplitRight(2.0f, &Button, 0);
 	Button.VSplitRight(18.0f, &View, &Button);
-	if(DoButton_MouseOver(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_INFO, &Button))
+	if(DoButton_MouseOver(IMAGE_BROWSEICONS, SPRITE_BROWSE_INFO_A, &Button))
 		SetOverlay(CInfoOverlay::OVERLAY_HEADERINFO, Button.x, Button.y, pFilter);
 
 	View.VSplitRight(2.0f, &Button, 0);
 	Button.VSplitRight(18.0f, &View, &Button);
-	if(DoButton_SpriteCleanID(pFilter, IMAGE_BROWSERICONS, SPRITE_BROWSERICON_EDIT, &Button)) // TODO: using the address of filter as ID is prolly a bad idea
+	if(DoButton_SpriteCleanID(pFilter, IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Button)) // TODO: using the address of filter as ID is prolly a bad idea
 	{
 		static int s_EditPopupID = 0;
 		m_SelectedFilter = FilterIndex;
@@ -420,12 +416,12 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	View.VSplitRight(2.0f, &Button, 0);
 	Button.VSplitRight(18.0f, &View, &Button);
-	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_UP, &Button))
+	if(DoButton_SpriteClean(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Button))
 		Move(true, FilterIndex);
 
 	View.VSplitRight(2.0f, &Button, 0);
 	Button.VSplitRight(18.0f, &View, &Button);
-	if(DoButton_SpriteClean(IMAGE_BROWSERICONS, SPRITE_BROWSERICON_DOWN, &Button))
+	if(DoButton_SpriteClean(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_B, &Button))
 		Move(false, FilterIndex);
 
 	return false;
@@ -482,11 +478,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	CUIRect Headers;
 	CUIRect Status;
 
+	// background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(28.0f, &View, &Status);
 
-	// split of the scrollbar
-	RenderTools()->DrawUIRect(&Headers, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f);
 	Headers.VSplitRight(20.0f, &Headers, 0);
 
 	// do layout
@@ -522,38 +519,41 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// do headers
 	for(int i = 0; i < NUM_COLS; i++)
 	{
-		// do refresh button
-		if(i == 0)
+		if(i == COL_FLAG)
 		{
-			static int s_HeaderRefreshButton = 0;
-			if(DoButton_GridHeaderIcon(&s_HeaderRefreshButton, IMAGE_BROWSERICONS, SPRITE_BROWSERICON_REFRESH, &ms_aCols[i].m_Rect, CUI::CORNER_TL))
-			{
-				if(m_MenuPage == PAGE_INTERNET)
-					ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-				else if(m_MenuPage == PAGE_LAN)
-					ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-			}
+			CUIRect Rect = ms_aCols[i].m_Rect;
+			CUIRect Icon;
+
+			Rect.HMargin(1.0f, &Rect);
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
+			DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK_A, &Icon);
+
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
+			DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
+
+			Rect.VSplitLeft(2.0f, 0, &Rect);
+			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
+			DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Icon);
 		}
-		else
+		else if(DoButton_GridHeader(ms_aCols[i].m_Caption, ms_aCols[i].m_Caption, g_Config.m_BrSort == ms_aCols[i].m_Sort, &ms_aCols[i].m_Rect))
 		{
-			if(DoButton_GridHeader(ms_aCols[i].m_Caption, ms_aCols[i].m_Caption, g_Config.m_BrSort == ms_aCols[i].m_Sort, &ms_aCols[i].m_Rect))
+			if(ms_aCols[i].m_Sort != -1)
 			{
-				if(ms_aCols[i].m_Sort != -1)
-				{
-					if(g_Config.m_BrSort == ms_aCols[i].m_Sort)
-						g_Config.m_BrSortOrder ^= 1;
-					else
-						g_Config.m_BrSortOrder = 0;
-					g_Config.m_BrSort = ms_aCols[i].m_Sort;
-				}
+				if(g_Config.m_BrSort == ms_aCols[i].m_Sort)
+					g_Config.m_BrSortOrder ^= 1;
+				else
+					g_Config.m_BrSortOrder = 0;
+				g_Config.m_BrSort = ms_aCols[i].m_Sort;
 			}
 		}
 	}
 
-	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.15f), 0, 0);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Scroll;
-	View.VSplitRight(15, &View, &Scroll);
+	View.VSplitRight(20.0f, &View, &Scroll);
 
 	// display important messages in the middle of the screen so no
 	// users misses it
@@ -780,7 +780,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	UI()->ClipDisable();
 
-	RenderTools()->DrawUIRect(&Status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
 	Status.Margin(5.0f, &Status);
 
 	// render quick search
@@ -1262,47 +1261,71 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 }
 
-void CMenus::RenderServerbrowserConnect(CUIRect MainView)
+void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 {
+	// same size like tabs in top but variables not really needed
+	float Spacing = 3.0f;
+	float ButtonWidth = MainView.w/2.0f-Spacing/2.0f;
+
+	// render background
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	// back to main menu
 	CUIRect Button;
+	MainView.HSplitTop(25.0f, &MainView, 0);
+	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
+	static int s_RefreshButton=0;
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
+	{
+		if(m_MenuPage == PAGE_INTERNET)
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		else if(m_MenuPage == PAGE_LAN)
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+	}
 
-	// address info
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitLeft(10.0f, 0, &Button);
-	UI()->DoLabelScaled(&Button, Localize("Host address"), 14.0f, -1);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	static float Offset = 0.0f;
-	DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
-
-	// some space
-	MainView.HSplitTop(15.0f, 0, &MainView);
-
-	// connect button
-	MainView.HSplitTop(25.0f, &Button, &MainView);
+	MainView.VSplitLeft(Spacing, 0, &MainView); // little space
+	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
 	static int s_JoinButton = 0;
-	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
+	if(DoButton_Menu(&s_JoinButton, Localize("Join"), 0, &Button) || m_EnterPressed)
 	{
 		Client()->Connect(g_Config.m_UiServerAddress);
 		m_EnterPressed = false;
 	}
+
+	// address info
+	/*MainView.HSplitTop(20.0f, &Button, &MainView);
+	Button.VSplitLeft(10.0f, 0, &Button);
+	UI()->DoLabelScaled(&Button, Localize("Host address"), 14.0f, -1);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	static float Offset = 0.0f;
+	DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);*/
 }
 
 void CMenus::RenderServerbrowser(CUIRect MainView)
 {
 	/*
-		+-----------------+	+-------+
-		|				  |	|		|
-		|				  |	| tool	|
-		|   server list	  |	| box 	|
-		|				  |	|	  	|
-		|				  |	+-------+
-		|                 |	|connect|
-		+-----------------+	+-------+
+		+---------------------------+
+		|							|
+		|							|
+		|		server list			|
+		|							|
+		|---------------------------+
+		| back |	   | bottom box |
+		+------+       +------------+
 	*/
 
-	CUIRect ServerList, ToolBox, ConnectBox;
+	CUIRect ServerList, ToolBox, BottomBox;
 
-	// background
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(MainView.h/2.0f, &ServerList, &MainView);
+
+
+	// server list
+	{
+		RenderServerbrowserServerList(ServerList);
+	}
+
+	/*// background
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 12.0f);
 	MainView.Margin(10.0f, &MainView);
 
@@ -1311,22 +1334,26 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	ServerList.VSplitRight(5.0f, &ServerList, 0);
 	ToolBox.HSplitBottom(80.0f, &ToolBox, &ConnectBox);
 
-	// server list
-	{
-		RenderServerbrowserServerList(ServerList);
-	}
-
 	// tool box
 	{
 		RenderTools()->DrawUIRect(&ToolBox, vec4(0.0f, 0.0f, 0.0f, 0.15f), CUI::CORNER_T, 4.0f);
 
 		RenderServerbrowserFilters(ToolBox);
-	}
+	}*/
+
+	float Spacing = 3.0f;
+	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	MainView.HSplitBottom(60.0f, 0, &BottomBox);
+	BottomBox.VSplitRight(ButtonWidth*2.0f+Spacing, 0, &BottomBox);
 
 	// connect box
 	{
-		RenderServerbrowserConnect(ConnectBox);
+		RenderServerbrowserBottomBox(BottomBox);
 	}
+
+	// back button
+	RenderBackButton(MainView);
 
 	// render overlay if there is any
 	RenderServerbrowserOverlay();
