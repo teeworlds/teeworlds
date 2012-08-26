@@ -11,6 +11,9 @@
 
 void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 {
+	#ifdef CONF_PLATFORM_MACOSX
+		CAutoreleasePool AutoreleasePool;
+	#endif
 	CGraphicsBackend_Threaded *pThis = (CGraphicsBackend_Threaded *)pUser;
 
 	while(!pThis->m_Shutdown)
