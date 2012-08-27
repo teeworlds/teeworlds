@@ -176,6 +176,16 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
 	int StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
 
+	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_COMPRESSED)
+	{
+		switch(StoreOglformat)
+		{
+			case GL_RGB: StoreOglformat = GL_COMPRESSED_RGB_ARB;
+			case GL_ALPHA: StoreOglformat = GL_COMPRESSED_ALPHA_ARB;
+			case GL_RGBA: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
+			default: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
+		}
+	}
 	glGenTextures(1, &m_aTextures[pCommand->m_Slot]);
 	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
 
