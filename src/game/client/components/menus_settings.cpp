@@ -86,6 +86,12 @@ void CMenus::SaveSkinfile()
 		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", apParts[p], gs_apSkinVariables[p]);
 		WriteLineSkinfile(File, aBuf);
 
+		if(m_pClient->m_pSkins->IsMirrorable(p))
+		{
+			str_format(aBuf, sizeof(aBuf), "%s.mirrored := %s", apParts[p], *gs_apMirroredVariables[p]?"true":"false");
+			WriteLineSkinfile(File, aBuf);
+		}
+
 		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
 		WriteLineSkinfile(File, aBuf);
 
@@ -206,6 +212,39 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		UI()->DoLabel(&Label, Localize("Color"), HeaderHeight*ms_FontmodHeight*0.8f, 0);
 		MainView.HSplitTop(Spacing, 0, &MainView);
 	}
+
+	// Mirrored checkbox
+	{
+		bool Mirrorable = true;
+		bool Mirrored = true;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if(m_aSelectedTeeParts[p])
+			{
+				if(!m_pClient->m_pSkins->IsMirrorable(p))
+					Mirrorable = false;
+				else if(*gs_apMirroredVariables[p] == 0)
+					Mirrored = false;
+			}
+		}
+
+		if(Mirrorable)
+		{
+			float ButtonHeight = 20.0f;
+			MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+			static int s_Mirrored = 0;
+			if(DoButton_CheckBox(&s_Mirrored, Localize("Mirrored"), Mirrored, &Button))
+			{
+				for(int p = 0; p < NUM_SKINPARTS; p++)
+				{
+					if(m_aSelectedTeeParts[p])
+						*gs_apMirroredVariables[p] = !Mirrored;
+				}
+			}
+		}
+	}
+
+	MainView.HSplitTop(Spacing, 0, &MainView);
 
 	// Use custom color checkbox
 	{
@@ -411,6 +450,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 					Info.m_aTextures[p] = s->m_apParts[p]->m_OrgTexture;
 					Info.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				if(m_pClient->m_pSkins->IsMirrorable(p))
+					Info.m_aMirrored[p] = s->m_aPartMirrored[p];
 			}
 
 			Info.m_Size = 50.0f;
@@ -429,6 +470,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
 				mem_copy(gs_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
+				if(m_pClient->m_pSkins->IsMirrorable(p))
+					*gs_apMirroredVariables[p] = s->m_aPartMirrored[p];
 				*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
 				*gs_apColorVariables[p] = s->m_aPartColors[p];
 			}
@@ -512,6 +555,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 						Info.m_aTextures[j] = pSkinPart->m_OrgTexture;
 					Info.m_aColors[j] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
+				if(m_pClient->m_pSkins->IsMirrorable(j))
+					Info.m_aMirrored[j] = *gs_apMirroredVariables[j];
 			}
 			Info.m_Size = 50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
@@ -1074,6 +1119,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
 				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
+			if(m_pClient->m_pSkins->IsMirrorable(p))
+				OwnSkinInfo.m_aMirrored[p] = *gs_apMirroredVariables[p];
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 

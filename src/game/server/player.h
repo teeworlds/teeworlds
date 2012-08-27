@@ -82,6 +82,7 @@ public:
 	struct
 	{
 		char m_aaSkinPartNames[6][24];
+		int m_aSkinPartMirrored[6];
 		int m_aUseCustomColors[6];
 		int m_aSkinPartColors[6];
 	} m_TeeInfos;

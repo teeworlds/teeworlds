@@ -172,6 +172,7 @@ Objects = [
 		NetIntAny("m_Country"),
 
 		NetArray(NetArray(NetIntAny("m_aaSkinPartNames"), 6), 6),
+		NetArray(NetBool("m_aSkinPartMirrored"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
@@ -304,6 +305,7 @@ Messages = [
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aSkinPartMirrored"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
@@ -353,6 +355,7 @@ Messages = [
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aSkinPartMirrored"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),

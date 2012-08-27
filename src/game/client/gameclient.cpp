@@ -541,11 +541,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		str_copy(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_pName, sizeof(m_aClients[pMsg->m_ClientID].m_aName));
 		str_copy(m_aClients[pMsg->m_ClientID].m_aClan, pMsg->m_pClan, sizeof(m_aClients[pMsg->m_ClientID].m_aClan));
 		m_aClients[pMsg->m_ClientID].m_Country = pMsg->m_Country;
-		for(int i = 0; i < 6; i++)
+		for(int p = 0; p < 6; p++)
 		{
-			str_copy(m_aClients[pMsg->m_ClientID].m_aaSkinPartNames[i], pMsg->m_apSkinPartNames[i], 24);
-			m_aClients[pMsg->m_ClientID].m_aUseCustomColors[i] = pMsg->m_aUseCustomColors[i];
-			m_aClients[pMsg->m_ClientID].m_aSkinPartColors[i] = pMsg->m_aSkinPartColors[i];
+			str_copy(m_aClients[pMsg->m_ClientID].m_aaSkinPartNames[p], pMsg->m_apSkinPartNames[p], 24);
+			m_aClients[pMsg->m_ClientID].m_aSkinPartMirrored[p] = pMsg->m_aSkinPartMirrored[p];
+			m_aClients[pMsg->m_ClientID].m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
+			m_aClients[pMsg->m_ClientID].m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
 		}
 
 		// update friend state
@@ -811,6 +812,7 @@ void CGameClient::OnNewSnapshot()
 					for(int p = 0; p < NUM_SKINPARTS; p++)
 					{
 						IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
+						pClient->m_aSkinPartMirrored[p] = pInfo->m_aSkinPartMirrored[p];
 						pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
 						pClient->m_aSkinPartColors[p] = pInfo->m_aSkinPartColors[p];
 					}
@@ -1015,6 +1017,7 @@ void CGameClient::OnDemoRecSnap()
 		for(int p = 0; p < 6; p++)
 		{
 			StrToInts(pClientInfo->m_aaSkinPartNames[p], 6, m_aClients[i].m_aaSkinPartNames[p]);
+			pClientInfo->m_aSkinPartMirrored[p] = m_aClients[i].m_aSkinPartMirrored[p];
 			pClientInfo->m_aUseCustomColors[p] = m_aClients[i].m_aUseCustomColors[p];
 			pClientInfo->m_aSkinPartColors[p] = m_aClients[i].m_aSkinPartColors[p];
 		}
@@ -1206,6 +1209,8 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 				m_SkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
 				m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
+			if(pGameClient->m_pSkins->IsMirrorable(p))
+				m_SkinInfo.m_aMirrored[p] = m_aSkinPartMirrored[p];
 		}
 	}
 
@@ -1239,6 +1244,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 	{
 		m_SkinPartIDs[p] = 0;
 		m_SkinInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
+		m_SkinInfo.m_aMirrored[p] = 0;
 		m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f , 1.0f);
 	}
 	UpdateRenderInfo(pGameClient, false);
@@ -1284,6 +1290,7 @@ void CGameClient::SendStartInfo()
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		Msg.m_apSkinPartNames[p] = gs_apSkinVariables[p];
+		Msg.m_aSkinPartMirrored[p] = m_pSkins->IsMirrorable(p) ? *gs_apMirroredVariables[p] : 0;
 		Msg.m_aUseCustomColors[p] = *gs_apUCCVariables[p];
 		Msg.m_aSkinPartColors[p] = *gs_apColorVariables[p];
 	}

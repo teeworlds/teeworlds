@@ -13,13 +13,17 @@ class CTeeRenderInfo
 public:
 	CTeeRenderInfo()
 	{
-		for(int i = 0; i < 6; i++)
-			m_aColors[i] = vec4(1,1,1,1);
+		for(int p = 0; p < 6; p++)
+		{
+			m_aMirrored[p] = 0;
+			m_aColors[p] = vec4(1,1,1,1);
+		}
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
 	IGraphics::CTextureHandle m_aTextures[6];
+	int m_aMirrored[6];
 	vec4 m_aColors[6];
 	float m_Size;
 	int m_GotAirJump;

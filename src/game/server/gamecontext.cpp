@@ -581,6 +581,7 @@ void CGameContext::OnClientEnter(int ClientID)
 	for(int p = 0; p < 6; p++)
 	{
 		NewClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
+		NewClientInfoMsg.m_aSkinPartMirrored[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartMirrored[p];
 		NewClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
 		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
@@ -606,6 +607,7 @@ void CGameContext::OnClientEnter(int ClientID)
 		for(int p = 0; p < 6; p++)
 		{
 			ClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[i]->m_TeeInfos.m_aaSkinPartNames[p];
+			ClientInfoMsg.m_aSkinPartMirrored[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartMirrored[p];
 			ClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[i]->m_TeeInfos.m_aUseCustomColors[p];
 			ClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartColors[p];
 		}
@@ -953,6 +955,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		for(int p = 0; p < 6; p++)
 		{
 			str_copy(pPlayer->m_TeeInfos.m_aaSkinPartNames[p], pMsg->m_apSkinPartNames[p], 24);
+			pPlayer->m_TeeInfos.m_aSkinPartMirrored[p] = pMsg->m_aSkinPartMirrored[p];
 			pPlayer->m_TeeInfos.m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
 			pPlayer->m_TeeInfos.m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
 		}
