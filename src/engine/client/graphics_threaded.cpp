@@ -359,6 +359,8 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 	Cmd.m_Flags = 0;
 	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
+	if(g_Config.m_GfxTextureCompression)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
 
 	// calculate memory usage
 	int PixelSize = 4;
