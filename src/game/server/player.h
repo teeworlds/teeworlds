@@ -31,6 +31,8 @@ public:
 	int GetCID() const { return m_ClientID; };
 	bool IsDummy() const { return m_Dummy; }
 
+	int GetProtectionTick() const { return m_ProtectionTick; }
+
 	void Tick();
 	void PostTick();
 	void Snap(int SnappingClient);
@@ -127,6 +129,7 @@ private:
 
 	// used for spectator mode
 	int m_SpectatorID;
+	int m_ProtectionTick;
 };
 
 #endif

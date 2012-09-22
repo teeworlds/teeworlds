@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <engine/shared/config.h>
 #include "entities/character.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
@@ -29,6 +30,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 	m_DeadSpecMode = false;
 	m_Spawning = 0;
+	m_ProtectionTick = Server()->Tick() + g_Config.m_SvVoteKickProtection * 60 * Server()->TickSpeed();
 }
 
 CPlayer::~CPlayer()
@@ -338,10 +340,10 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	m_LastActionTick = Server()->Tick();
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_DeadSpecMode = false;
-	
+
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
-	
+
 	if(Team == TEAM_SPECTATORS)
 	{
 		// update spectator modes
