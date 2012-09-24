@@ -75,21 +75,27 @@ vec2 CCollision::NextTile(vec2 Pos, vec2 Dir)
 	// tile order by 0.5. So it is not possible to use the exact correct tile
 	// borders. Instead we also shift it by 0.5 or 0.51, depending on the
 	// side of the tile we want.
+	//
+	// Notice: the unsigned int conversion is necessary for correct NextTile
+	// behaviour around 0 coordinates. At 0 or below, the /32 arithmetic
+	// works the other way round. By using unsigned int arithmetics we wrap
+	// the positive number space around, which allows correct positive only
+	// calculations
 	if (Dir.x > 0)
 	{
-		Next.x = (round(Pos.x)/32 + 1) * 32 - 0.5;
+		Next.x = (int)(((unsigned int)round(Pos.x)/32 + 1) * 32) - 0.5;
 	}
 	else
 	{
-		Next.x = (round(Pos.x)/32) * 32 - 0.51;
+		Next.x = (int)(((unsigned int)round(Pos.x)/32) * 32) - 0.51;
 	}
 	if (Dir.y > 0)
 	{
-		Next.y = (round(Pos.y)/32 + 1) * 32 - 0.5;
+		Next.y = (int)(((unsigned int)round(Pos.y)/32 + 1) * 32) - 0.5;
 	}
 	else
 	{
-		Next.y = (round(Pos.y)/32) * 32 - 0.51;
+		Next.y = (int)(((unsigned int)round(Pos.y)/32) * 32) - 0.51;
 	}
 
 	// Calculate remaining distances and which intersection point
