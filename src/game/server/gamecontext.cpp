@@ -792,9 +792,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			if (m_apPlayers[KickID]->GetProtectionTick() > Server()->Tick())
 			{
-				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "Player '%s' has kick protection.", Server()->ClientName(KickID));
-				SendChatTarget(ClientID, aBuf);
+				SendChatTarget(ClientID, "You can't kickvote players who just joined!");
 				return;
 			}
 
