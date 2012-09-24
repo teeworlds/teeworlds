@@ -30,7 +30,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 	m_DeadSpecMode = false;
 	m_Spawning = 0;
-	m_ProtectionTick = Server()->Tick() + g_Config.m_SvVoteKickProtection * 60 * Server()->TickSpeed();
+	m_ProtectionTick = Server()->Tick() + g_Config.m_SvVoteKickProtection * Server()->TickSpeed();
 }
 
 CPlayer::~CPlayer()
