@@ -93,7 +93,6 @@ int CNetConnection::Flush()
 	// send of the packets
 	m_Construct.m_Ack = m_Ack;
 	m_Construct.m_Token = m_PeerToken;
-	m_Construct.m_Version = NET_PACKETVERSION;
 	CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct);
 
 	// update send times
@@ -164,12 +163,12 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 {
 	// send the control message
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, NET_PACKETVERSION, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
+	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
 }
 
 void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
 {
-	CNetBase::SendPacketConnless(m_Socket, &m_PeerAddr, NET_PACKETVERSION, m_PeerToken, m_Token, pData, DataSize);
+	CNetBase::SendPacketConnless(m_Socket, &m_PeerAddr, m_PeerToken, m_Token, pData, DataSize);
 }
 
 void CNetConnection::SendControlWithToken(int ControlMsg)
@@ -246,9 +245,6 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 	m_PeerAck = pPacket->m_Ack;
 
 	int64 Now = time_get();
-
-	if(pPacket->m_Version != NET_PACKETVERSION)
-		return 0;
 
 	if(pPacket->m_Token == NET_TOKEN_NONE || pPacket->m_Token != m_Token)
 		return 0;

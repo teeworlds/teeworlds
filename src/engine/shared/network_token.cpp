@@ -174,8 +174,8 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 	TOKEN Token = GetToken(pAddr);
 	if(Token != NET_TOKEN_NONE)
 	{
-		CNetBase::SendPacketConnless(m_Socket, pAddr, NET_PACKETVERSION,
-			Token, m_pTokenManager->GenerateToken(pAddr), pData, DataSize);
+		CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
+			m_pTokenManager->GenerateToken(pAddr), pData, DataSize);
 	}
 	else
 	{
@@ -232,8 +232,7 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 	{
 		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
 		{
-			CNetBase::SendPacketConnless(m_Socket, pAddr,
-				NET_PACKETVERSION, Token,
+			CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
 				m_pTokenManager->GenerateToken(pAddr),
 				pInfo->m_aData, pInfo->m_DataSize);
 			*ppPrevNext = pInfo->m_pNext;

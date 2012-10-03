@@ -99,7 +99,7 @@ int CNetServer::Update()
 /*
 	TODO: chopp up this function into smaller working parts
 */
-int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
+int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 {
 	while(1)
 	{
@@ -150,7 +150,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 			if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
 			{
 				// banned, reply with a message
-				CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
+				CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
 				continue;
 			}
 
@@ -181,7 +181,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 							{
 								char aBuf[128];
 								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
-								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
 								return 0;
 							}
 						}
@@ -204,7 +204,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 					if(!Found)
 					{
 						const char FullMsg[] = "This server is full";
-						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
@@ -212,8 +212,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 			}
 			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
-				if(!(m_Flags&NETFLAG_ALLOWOLDSTYLE) && m_RecvUnpacker.m_Data.m_Version != NET_PACKETVERSION)
-					continue;
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				if(Accept < 0)
 				{
@@ -225,8 +223,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 				pChunk->m_Address = Addr;
 				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-				if(pVersion)
-					*pVersion = m_RecvUnpacker.m_Data.m_Version;
 				if(pResponseToken)
 					*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
 				return 1;
@@ -255,7 +251,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 							{
 								char aBuf[128];
 								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
-								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+								CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
 								return 0;
 							}
 						}
@@ -278,7 +274,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 					if(!Found)
 					{
 						const char FullMsg[] = "This server is full";
-						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_Version, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 					}
 				}
 			}
@@ -287,15 +283,8 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 	return 0;
 }
 
-int CNetServer::Send(CNetChunk *pChunk, TOKEN Token, int Version)
+int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 {
-	if(Version != NET_PACKETVERSION)
-	{
-		dbg_assert(m_Flags&NETFLAG_ALLOWOLDSTYLE && m_Flags&NETFLAG_ALLOWSTATELESS, "oldstyle packet sending not enabled");
-		dbg_assert(pChunk->m_Flags&NETSENDFLAG_CONNLESS && pChunk->m_ClientID == -1, "only connless packets allowed for oldstyle network");
-		dbg_assert(pChunk->m_Flags&NETSENDFLAG_STATELESS && Token == NET_TOKEN_NONE, "tokens can't be used in oldstyle packets");
-	}
-
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
@@ -311,7 +300,7 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 				dbg_assert(pChunk->m_ClientID == -1, "errornous client id, connless packets can only be sent to cid=-1");
 				dbg_assert(Token == NET_TOKEN_NONE, "stateless packets can't have a token");
 			}
-			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 		}
 		else
 		{

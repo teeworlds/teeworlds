@@ -61,7 +61,7 @@ int CNetClient::ResetErrorString()
 	return 0;
 }
 
-int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
+int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 {
 	while(1)
 	{
@@ -97,7 +97,6 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 			}
 			else
 			{
-				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, false);
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 				{
 					if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
@@ -105,9 +104,7 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 				}
 				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 				{
-					if(!(m_Flags&NETFLAG_ALLOWOLDSTYLE) && m_RecvUnpacker.m_Data.m_Version != NET_PACKETVERSION)
-						continue;
-
+					int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, false);
 					if(!Accept)
 						continue;
 
@@ -124,8 +121,6 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 					pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 					pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
 
-					if(pVersion)
-						*pVersion = m_RecvUnpacker.m_Data.m_Version;
 					if(pResponseToken)
 						*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
 					return 1;
@@ -136,15 +131,8 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken, int *pVersion)
 	return 0;
 }
 
-int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, int Version)
+int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
 {
-	if(Version != NET_PACKETVERSION)
-	{
-		dbg_assert(m_Flags&NETFLAG_ALLOWOLDSTYLE && m_Flags&NETFLAG_ALLOWSTATELESS, "oldstyle packet sending not enabled");
-		dbg_assert(pChunk->m_Flags&NETSENDFLAG_CONNLESS && pChunk->m_ClientID == -1, "only connless packets allowed for oldstyle network");
-		dbg_assert(pChunk->m_Flags&NETSENDFLAG_STATELESS && Token == NET_TOKEN_NONE, "tokens can't be used in oldstyle packets");
-	}
-
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
@@ -160,7 +148,7 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, int Version)
 				dbg_assert(pChunk->m_ClientID == -1, "errornous client id, connless packets can only be sent to cid=-1");
 				dbg_assert(Token == NET_TOKEN_NONE, "stateless packets can't have a token");
 			}
-			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Version, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 		}
 		else
 		{
