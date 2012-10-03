@@ -9,8 +9,7 @@
 /*
 
 CURRENT:
-	packet header: 11 bytes (15 bytes for connless)
-		unsigned char padding[3]; // 24bit extra (must be 0x000000) to ensure compatiblity with the 0.5/0.6 protocol
+	packet header: 8 bytes (12 bytes for connless)
 		unsigned char version; // 8bit version (must be 0x01)
 		unsigned char token[4]; // 32bit token (0xffffffff means none)
 		unsigned char flags_ack; // 4bit flags, 4bit ack (0xff for connless packets)
@@ -18,15 +17,6 @@ CURRENT:
 		unsigned char num_chunks; // 8bit chunks (0xff for connless packets)
 
 		(unsigned char response_token[4];) // 32bit response token (only in case it's a connless packet)
-
-	legacy packet header: 3 bytes (6 bytes for connless)
-		unsigned char flags_ack; // 4bit flags, 4bit ack
-		unsigned char ack; // 8bit ack
-		unsigned char num_chunks; // 8bit chunks
-
-		(unsigned char padding[3];) // 24bit extra incase it's a connection less packet
-		                            // this is to make sure that it's compatible with the
-		                            // old protocol
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -37,7 +27,6 @@ CURRENT:
 enum
 {
 	NETFLAG_ALLOWSTATELESS=1,
-	NETFLAG_ALLOWOLDSTYLE=2,
 	NETSENDFLAG_VITAL=1,
 	NETSENDFLAG_CONNLESS=2,
 	NETSENDFLAG_FLUSH=4,
@@ -60,8 +49,8 @@ enum
 	NET_MAX_PACKETSIZE = 1400,
 	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-15,
 	NET_MAX_CHUNKHEADERSIZE = 3,
-	NET_PACKETHEADERSIZE = 11,
-	NET_PACKETHEADERSIZE_LEGACY = 3,
+	NET_PACKETHEADERSIZE = 8,
+	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 4,
 	NET_TOKENCACHE_SIZE = 16,
 	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME/2,
 	NET_TOKENCACHE_PACKETEXPIRY = NET_TOKENCACHE_ADDRESSEXPIRY,
@@ -78,7 +67,6 @@ enum
 	NET_CONNSTATE_ONLINE=4,
 	NET_CONNSTATE_ERROR=5,
 
-	NET_PACKETVERSION_LEGACY=0,
 	NET_PACKETVERSION=1,
 
 	NET_PACKETFLAG_CONTROL=1,
@@ -144,7 +132,6 @@ public:
 class CNetPacketConstruct
 {
 public:
-	int m_Version;
 	TOKEN m_Token;
 	TOKEN m_ResponseToken; // only used in connless packets
 	int m_Flags;
@@ -382,8 +369,8 @@ public:
 	int Close();
 
 	// the token and version parameter are only used for connless packets
-	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0, int *pVersion = 0);
-	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
+	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
+	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();
 
 	//
@@ -462,8 +449,8 @@ public:
 	int Connect(NETADDR *Addr);
 
 	// communication
-	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0, int *pVersion = 0);
-	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, int Version = NET_PACKETVERSION);
+	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
+	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 
 	// pumping
 	int Update();
@@ -493,9 +480,9 @@ public:
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
-	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, int Version, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
-	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, int Version, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
+	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 
