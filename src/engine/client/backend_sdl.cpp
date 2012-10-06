@@ -180,9 +180,9 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	{
 		switch(StoreOglformat)
 		{
-			case GL_RGB: StoreOglformat = GL_COMPRESSED_RGB_ARB;
-			case GL_ALPHA: StoreOglformat = GL_COMPRESSED_ALPHA_ARB;
-			case GL_RGBA: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
+			case GL_RGB: StoreOglformat = GL_COMPRESSED_RGB_ARB; break;
+			case GL_ALPHA: StoreOglformat = GL_COMPRESSED_ALPHA_ARB; break;
+			case GL_RGBA: StoreOglformat = GL_COMPRESSED_RGBA_ARB; break;
 			default: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
 		}
 	}
