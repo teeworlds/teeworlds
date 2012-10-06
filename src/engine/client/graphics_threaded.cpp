@@ -218,7 +218,7 @@ void CGraphics_Threaded::WrapClamp()
 
 int CGraphics_Threaded::MemoryUsage() const
 {
-	return m_TextureMemoryUsage;
+	return m_pBackend->MemoryUsage();
 }
 
 void CGraphics_Threaded::MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
@@ -283,8 +283,7 @@ int CGraphics_Threaded::UnloadTexture(CTextureHandle Index)
 	Cmd.m_Slot = Index.Id();
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextures[Index.Id()].m_Next = m_FirstFreeTexture;
-	m_TextureMemoryUsage -= m_aTextures[Index.Id()].m_MemSize;
+	m_aTextureIndices[Index.Id()] = m_FirstFreeTexture;
 	m_FirstFreeTexture = Index.Id();
 	return 0;
 }
@@ -295,6 +294,16 @@ static int ImageFormatToTexFormat(int Format)
 	if(Format == CImageInfo::FORMAT_RGBA) return CCommandBuffer::TEXFORMAT_RGBA;
 	if(Format == CImageInfo::FORMAT_ALPHA) return CCommandBuffer::TEXFORMAT_ALPHA;
 	return CCommandBuffer::TEXFORMAT_RGBA;
+}
+
+static int ImageFormatToPixelSize(int Format)
+{
+	switch(Format)
+	{
+	case CImageInfo::FORMAT_RGB: return 3;
+	case CImageInfo::FORMAT_ALPHA: return 1;
+	default: return 4;
+	}
 }
 
 
@@ -309,13 +318,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 
 	// calculate memory usage
-	int PixelSize = 4;
-	if(Format == CImageInfo::FORMAT_RGB)
-		PixelSize = 3;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		PixelSize = 1;
-
-	int MemSize = Width*Height*PixelSize;
+	int MemSize = Width*Height*ImageFormatToPixelSize(Format);
 
 	// copy texture data
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
@@ -335,13 +338,14 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 
 	// grab texture
 	int Tex = m_FirstFreeTexture;
-	m_FirstFreeTexture = m_aTextures[Tex].m_Next;
-	m_aTextures[Tex].m_Next = -1;
+	m_FirstFreeTexture = m_aTextureIndices[Tex];
+	m_aTextureIndices[Tex] = -1;
 
 	CCommandBuffer::SCommand_Texture_Create Cmd;
 	Cmd.m_Slot = Tex;
 	Cmd.m_Width = Width;
 	Cmd.m_Height = Height;
+	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 
@@ -352,16 +356,8 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	if(g_Config.m_GfxTextureCompression)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
 
-	// calculate memory usage
-	int PixelSize = 4;
-	if(Format == CImageInfo::FORMAT_RGB)
-		PixelSize = 3;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		PixelSize = 1;
-
-	int MemSize = Width*Height*PixelSize;
-
 	// copy texture data
+	int MemSize = Width*Height*Cmd.m_PixelSize;
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
 	mem_copy(pTmpData, pData, MemSize);
 	Cmd.m_pData = pTmpData;
@@ -369,17 +365,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	// calculate memory usage
-	int MemUsage = MemSize;
-	while(Width > 2 && Height > 2)
-	{
-		Width>>=1;
-		Height>>=1;
-		MemUsage += Width*Height*PixelSize;
-	}
-
-	m_TextureMemoryUsage += MemUsage;
-	//mem_free(pTmpData);
 	return CreateTextureHandle(Tex);
 }
 
@@ -776,9 +761,9 @@ int CGraphics_Threaded::Init()
 
 	// init textures
 	m_FirstFreeTexture = 0;
-	for(int i = 0; i < MAX_TEXTURES; i++)
-		m_aTextures[i].m_Next = i+1;
-	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
+	for(int i = 0; i < MAX_TEXTURES-1; i++)
+		m_aTextureIndices[i] = i+1;
+	m_aTextureIndices[MAX_TEXTURES-1] = -1;
 
 	m_pBackend = CreateGraphicsBackend();
 	if(InitWindow() != 0)
