@@ -133,7 +133,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
 	{
 		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture]);
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture].m_Tex);
 	}
 	else
 		glDisable(GL_TEXTURE_2D);
@@ -158,9 +158,14 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
 }
 
+void CCommandProcessorFragment_OpenGL::Cmd_Init(const SCommand_Init *pCommand)
+{
+	m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
+}
+
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
 {
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
+	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height,
 		TexFormatToOpenGLFormat(pCommand->m_Format), GL_UNSIGNED_BYTE, pCommand->m_pData);
 	mem_free(pCommand->m_pData);
@@ -168,7 +173,8 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand)
 {
-	glDeleteTextures(1, &m_aTextures[pCommand->m_Slot]);
+	glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex);
+	*m_pTextureMemoryUsage -= m_aTextures[pCommand->m_Slot].m_MemSize;
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand)
@@ -186,8 +192,8 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			default: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
 		}
 	}
-	glGenTextures(1, &m_aTextures[pCommand->m_Slot]);
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot]);
+	glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex);
+	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex);
 
 	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
 	{
@@ -201,6 +207,18 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 		gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, pCommand->m_Width, pCommand->m_Height, Oglformat, GL_UNSIGNED_BYTE, pCommand->m_pData);
 	}
+
+	// calculate memory usage
+	int Width = pCommand->m_Width;
+	int Height = pCommand->m_Height;
+	m_aTextures[pCommand->m_Slot].m_MemSize = Width*Height*pCommand->m_PixelSize;
+	while(Width > 2 && Height > 2)
+	{
+		Width>>=1;
+		Height>>=1;
+		m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
+	}
+	*m_pTextureMemoryUsage += m_aTextures[pCommand->m_Slot].m_MemSize;
 
 	mem_free(pCommand->m_pData);
 }
@@ -273,12 +291,14 @@ void CCommandProcessorFragment_OpenGL::Cmd_Screenshot(const CCommandBuffer::SCom
 CCommandProcessorFragment_OpenGL::CCommandProcessorFragment_OpenGL()
 {
 	mem_zero(m_aTextures, sizeof(m_aTextures));
+	m_pTextureMemoryUsage = 0;
 }
 
 bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::SCommand * pBaseCommand)
 {
 	switch(pBaseCommand->m_Cmd)
 	{
+	case CMD_INIT: Cmd_Init(static_cast<const SCommand_Init *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_CREATE: Cmd_Texture_Create(static_cast<const CCommandBuffer::SCommand_Texture_Create *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand)); break;
@@ -487,11 +507,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
 	StartProcessor(m_pProcessor);
 
-	// issue a init command
+	// issue init commands for OpenGL and SDL
 	CCommandBuffer CmdBuffer(1024, 512);
-	CCommandProcessorFragment_SDL::SCommand_Init Cmd;
-	Cmd.m_Context = m_GLContext;
-	CmdBuffer.AddCommand(Cmd);
+	CCommandProcessorFragment_OpenGL::SCommand_Init CmdOpenGL;
+	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
+	CmdBuffer.AddCommand(CmdOpenGL);
+	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
+	CmdSDL.m_Context = m_GLContext;
+	CmdBuffer.AddCommand(CmdSDL);
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
 
@@ -515,6 +538,11 @@ int CGraphicsBackend_SDL_OpenGL::Shutdown()
 
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	return 0;
+}
+
+int CGraphicsBackend_SDL_OpenGL::MemoryUsage() const
+{
+	return m_TextureMemoryUsage;
 }
 
 void CGraphicsBackend_SDL_OpenGL::Minimize()

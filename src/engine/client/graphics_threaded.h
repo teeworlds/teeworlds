@@ -57,7 +57,8 @@ public:
 	{
 		// commadn groups
 		CMDGROUP_CORE = 0, // commands that everyone has to implement
-		CMDGROUP_PLATFORM = 10000, // commands specific to a platform
+		CMDGROUP_PLATFORM_OPENGL = 10000, // commands specific to a platform
+		CMDGROUP_PLATFORM_SDL = 20000,
 
 		//
 		CMD_NOP = CMDGROUP_CORE,
@@ -211,6 +212,7 @@ public:
 
 		int m_Width;
 		int m_Height;
+		int m_PixelSize;
 		int m_Format;
 		int m_StoreFormat;
 		int m_Flags;
@@ -302,6 +304,8 @@ public:
 	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;
 	virtual int Shutdown() = 0;
 
+	virtual int MemoryUsage() const = 0;
+
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
 	virtual int WindowActive() = 0;
@@ -351,15 +355,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	int m_InvalidTexture;
 
-	struct CTexture
-	{
-		int m_State;
-		int m_MemSize;
-		int m_Flags;
-		int m_Next;
-	};
-
-	CTexture m_aTextures[MAX_TEXTURES];
+	int m_aTextureIndices[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
 
