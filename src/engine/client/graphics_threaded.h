@@ -94,6 +94,7 @@ public:
 		TEXFORMAT_ALPHA,
 
 		TEXFLAG_NOMIPMAPS = 1,
+		TEXFLAG_COMPRESSED = 2,
 	};
 
 	enum
