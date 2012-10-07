@@ -1066,7 +1066,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 {
 	CNetChunk Packet;
-	CPacker p;
+	CPacker Packer;
 	char aBuf[128];
 
 	// count the players
@@ -1082,48 +1082,44 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 		}
 	}
 
-	p.Reset();
+	Packer.Reset();
 
-	p.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	str_format(aBuf, sizeof(aBuf), "%d", Token);
-	p.AddString(aBuf, 6);
+	Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+	Packer.AddInt(Token);
 
-	p.AddString(GameServer()->Version(), 32);
-	p.AddString(g_Config.m_SvName, 64);
-	p.AddString(GetMapName(), 32);
+	Packer.AddString(GameServer()->Version(), 32);
+	Packer.AddString(g_Config.m_SvName, 64);
+	Packer.AddString(GetMapName(), 32);
 
 	// gametype
-	p.AddString(GameServer()->GameType(), 16);
+	Packer.AddString(GameServer()->GameType(), 16);
 
 	// flags
-	int i = 0;
-	if(g_Config.m_Password[0]) // password set
-		i |= SERVER_FLAG_PASSWORD;
-	str_format(aBuf, sizeof(aBuf), "%d", i);
-	p.AddString(aBuf, 2);
+	int Flag = g_Config.m_Password[0] ? SERVER_FLAG_PASSWORD : 0;	// password set
+	Packer.AddInt(Flag);
 
-	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3); // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); p.AddString(aBuf, 3); // max players
-	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3); // num clients
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max clients
+	Packer.AddInt(PlayerCount); // num players
+	Packer.AddInt(m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); // max players
+	Packer.AddInt(ClientCount); // num clients
+	Packer.AddInt(m_NetServer.MaxClients()); // max clients
 
-	for(i = 0; i < MAX_CLIENTS; i++)
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			p.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-			p.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6); // client country
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6); // client score
-			str_format(aBuf, sizeof(aBuf), "%d", GameServer()->IsClientPlayer(i)?1:0); p.AddString(aBuf, 2); // is player?
+			Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+			Packer.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+			Packer.AddInt(m_aClients[i].m_Country); // client country
+			Packer.AddInt(m_aClients[i].m_Score); // client score
+			Packer.AddInt(GameServer()->IsClientPlayer(i)?1:0); // is player?
 		}
 	}
 
 	Packet.m_ClientID = -1;
 	Packet.m_Address = *pAddr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = p.Size();
-	Packet.m_pData = p.Data();
+	Packet.m_DataSize = Packer.Size();
+	Packet.m_pData = Packer.Data();
 	m_NetServer.Send(&Packet);
 }
 

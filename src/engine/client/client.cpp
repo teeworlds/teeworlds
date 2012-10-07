@@ -959,16 +959,16 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		CServerInfo Info = {0};
 
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
-		int Token = str_toint(Up.GetString());
+		int Token = Up.GetInt();
 		str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
 		str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
 		str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
 		str_copy(Info.m_aGameType, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aGameType));
-		Info.m_Flags = (str_toint(Up.GetString())&SERVER_FLAG_PASSWORD) ? IServerBrowser::FLAG_PASSWORD : 0;
-		Info.m_NumPlayers = str_toint(Up.GetString());
-		Info.m_MaxPlayers = str_toint(Up.GetString());
-		Info.m_NumClients = str_toint(Up.GetString());
-		Info.m_MaxClients = str_toint(Up.GetString());
+		Info.m_Flags = (Up.GetInt()&SERVER_FLAG_PASSWORD) ? IServerBrowser::FLAG_PASSWORD : 0;
+		Info.m_NumPlayers = Up.GetInt();
+		Info.m_MaxPlayers = Up.GetInt();
+		Info.m_NumClients = Up.GetInt();
+		Info.m_MaxClients = Up.GetInt();
 
 		// don't add invalid info to the server browser list
 		if(Info.m_NumClients < 0 || Info.m_NumClients > MAX_CLIENTS || Info.m_MaxClients < 0 || Info.m_MaxClients > MAX_CLIENTS ||
@@ -981,9 +981,9 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			str_copy(Info.m_aClients[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aName));
 			str_copy(Info.m_aClients[i].m_aClan, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aClients[i].m_aClan));
-			Info.m_aClients[i].m_Country = str_toint(Up.GetString());
-			Info.m_aClients[i].m_Score = str_toint(Up.GetString());
-			Info.m_aClients[i].m_Player = str_toint(Up.GetString()) != 0 ? true : false;
+			Info.m_aClients[i].m_Country = Up.GetInt();
+			Info.m_aClients[i].m_Score = Up.GetInt();
+			Info.m_aClients[i].m_Player = Up.GetInt() != 0 ? true : false;
 		}
 
 		if(!Up.Error())
