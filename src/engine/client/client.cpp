@@ -1720,10 +1720,7 @@ void CClient::Run()
 
 	// init graphics
 	{
-		if(g_Config.m_GfxThreaded)
-			m_pGraphics = CreateEngineGraphicsThreaded();
-		else
-			m_pGraphics = CreateEngineGraphics();
+		m_pGraphics = CreateEngineGraphicsThreaded();
 
 		bool RegisterFail = false;
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IEngineGraphics*>(m_pGraphics)); // register graphics as both
