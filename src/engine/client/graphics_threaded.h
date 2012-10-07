@@ -96,6 +96,7 @@ public:
 
 		TEXFLAG_NOMIPMAPS = 1,
 		TEXFLAG_COMPRESSED = 2,
+		TEXFLAG_QUALITY = 4,
 	};
 
 	enum
@@ -362,9 +363,6 @@ class CGraphics_Threaded : public IEngineGraphics
 	void FlushVertices();
 	void AddVertices(int Count);
 	void Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints);
-
-	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
-	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
 
 	void KickCommandBuffer();
 
