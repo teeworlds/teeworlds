@@ -46,6 +46,7 @@ public:
 	int m_Latency; // in ms
 	char m_aGameType[16];
 	char m_aName[64];
+	char m_aHostname[128];
 	char m_aMap[32];
 	char m_aVersion[32];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
@@ -78,10 +79,6 @@ public:
 		TYPE_INTERNET = 0,
 		TYPE_LAN = 1,
 
-		SET_MASTER_ADD=1,
-		SET_FAV_ADD,
-		SET_TOKEN,
-
 		FLAG_PASSWORD	=1,
 		FLAG_PURE		=2,
 		FLAG_PUREMAP	=4,
@@ -113,9 +110,9 @@ public:
 	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
 	virtual const void *GetID(int FilterIndex, int Index) const = 0;
 
-	virtual bool IsFavorite(const NETADDR &Addr) const = 0;
-	virtual void AddFavorite(const NETADDR &Addr) = 0;
-	virtual void RemoveFavorite(const NETADDR &Addr) = 0;
+	virtual bool IsFavorite(const NETADDR &Addr) = 0;	// todo: remove this
+	virtual void AddFavorite(const CServerInfo *pEntry) = 0;
+	virtual void RemoveFavorite(const CServerInfo *pEntry) = 0;
 
 	virtual int AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
 	virtual void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;

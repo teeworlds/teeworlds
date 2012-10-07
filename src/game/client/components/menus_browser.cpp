@@ -341,9 +341,9 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 			if(DoButton_SpriteClean(IMAGE_BROWSERICONS, pEntry->m_Favorite ? SPRITE_BROWSERICON_STAR_ACTIVE : SPRITE_BROWSERICON_STAR_INACTIVE, &Button))
 			{
 				if(!pEntry->m_Favorite)
-					ServerBrowser()->AddFavorite(pEntry->m_NetAddr);
+					ServerBrowser()->AddFavorite(pEntry);
 				else
-					ServerBrowser()->RemoveFavorite(pEntry->m_NetAddr);
+					ServerBrowser()->RemoveFavorite(pEntry);
 			}
 		}
 		else if(ID == COL_INFO)

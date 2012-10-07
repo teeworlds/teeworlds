@@ -1089,6 +1089,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 
 	Packer.AddString(GameServer()->Version(), 32);
 	Packer.AddString(g_Config.m_SvName, 64);
+	Packer.AddString(g_Config.m_SvHostname, 128);
 	Packer.AddString(GetMapName(), 32);
 
 	// gametype

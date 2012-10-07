@@ -294,15 +294,15 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	{
 		CUIRect Button;
-		int IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
+		bool IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_AddFavButton = 0;
 		if(DoButton_CheckBox(&s_AddFavButton, Localize("Favorite"), IsFavorite, &Button))
 		{
 			if(IsFavorite)
-				ServerBrowser()->RemoveFavorite(CurrentServerInfo.m_NetAddr);
+				ServerBrowser()->RemoveFavorite(&CurrentServerInfo);
 			else
-				ServerBrowser()->AddFavorite(CurrentServerInfo.m_NetAddr);
+				ServerBrowser()->AddFavorite(&CurrentServerInfo);
 		}
 	}
 

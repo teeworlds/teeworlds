@@ -350,9 +350,6 @@ void CGameClient::OnConnected()
 		m_All.m_paComponents[i]->OnReset();
 	}
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
-
 	m_ServerMode = SERVERMODE_PURE;
 
 	// send the inital info
