@@ -107,41 +107,6 @@ void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommand
 	}
 }
 
-unsigned char CGraphics_Threaded::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
-{
-	int Value = 0;
-	for(int x = 0; x < ScaleW; x++)
-		for(int y = 0; y < ScaleH; y++)
-			Value += pData[((v+y)*w+(u+x))*Bpp+Offset];
-	return Value/(ScaleW*ScaleH);
-}
-
-unsigned char *CGraphics_Threaded::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
-{
-	unsigned char *pTmpData;
-	int ScaleW = Width/NewWidth;
-	int ScaleH = Height/NewHeight;
-
-	int Bpp = 3;
-	if(Format == CImageInfo::FORMAT_RGBA)
-		Bpp = 4;
-
-	pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
-
-	int c = 0;
-	for(int y = 0; y < NewHeight; y++)
-		for(int x = 0; x < NewWidth; x++, c++)
-		{
-			pTmpData[c*Bpp] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 0, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+1] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 1, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+2] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 2, ScaleW, ScaleH, Bpp);
-			if(Bpp == 4)
-				pTmpData[c*Bpp+3] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 3, ScaleW, ScaleH, Bpp);
-		}
-
-	return pTmpData;
-}
-
 CGraphics_Threaded::CGraphics_Threaded()
 {
 	m_State.m_ScreenTL.x = 0;
@@ -365,6 +330,8 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
 	if(g_Config.m_GfxTextureCompression)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
+	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
 
 	// copy texture data
 	int MemSize = Width*Height*Cmd.m_PixelSize;
