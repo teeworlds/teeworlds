@@ -434,7 +434,6 @@ void CMenus::HandleCallvote(int Page, bool Force)
 			SetActive(false);
 		}
 	}
-	m_aCallvoteReason[0] = 0;
 }
 
 void CMenus::RenderServerControl(CUIRect MainView)
@@ -534,16 +533,27 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Bottom.VSplitRight(120.0f, &Bottom, &Button);
 
 		// render kick reason
-		CUIRect Reason;
+		CUIRect Reason, ClearButton;
 		Bottom.VSplitRight(40.0f, &Bottom, 0);
 		Bottom.VSplitRight(160.0f, &Bottom, &Reason);
 		Reason.HSplitTop(5.0f, 0, &Reason);
+		Reason.VSplitRight(Reason.h, &Reason, &ClearButton);		
 		const char *pLabel = Localize("Reason:");
 		UI()->DoLabelScaled(&Reason, pLabel, 14.0f, -1);
 		float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
 		Reason.VSplitLeft(w+10.0f, 0, &Reason);
 		static float s_Offset = 0.0f;
-		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
+		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_L);
+		
+		// clear button
+		{
+			static int s_ClearButton = 0;
+			float *pClearButtonFade = ButtonFade(&s_ClearButton, 0.6f);
+			RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+(*pClearButtonFade/0.6f)*0.165f), CUI::CORNER_R, 3.0f);
+			UI()->DoLabel(&ClearButton, "x", ClearButton.h*ms_FontmodHeight, 0);
+			if(UI()->DoButtonLogic(&s_ClearButton, "x", 0, &ClearButton))
+				m_aCallvoteReason[0] = 0;
+		}
 
 		if(pNotification == 0)
 		{
