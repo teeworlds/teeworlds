@@ -41,6 +41,7 @@ public:
 	int m_MaxPlayers;
 	int m_NumPlayers;
 	int m_Flags;
+	int m_ServerLevel;
 	int m_Favorite;
 	int m_Latency; // in ms
 	char m_aGameType[16];

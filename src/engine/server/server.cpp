@@ -1095,9 +1095,10 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 	Packer.AddString(GameServer()->GameType(), 16);
 
 	// flags
-	int Flag = g_Config.m_Password[0] ? SERVER_FLAG_PASSWORD : 0;	// password set
+	int Flag = g_Config.m_Password[0] ? SERVERINFO_FLAG_PASSWORD : 0;	// password set
 	Packer.AddInt(Flag);
 
+	Packer.AddInt(g_Config.m_SvSkillLevel);	// server skill level
 	Packer.AddInt(PlayerCount); // num players
 	Packer.AddInt(m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); // max players
 	Packer.AddInt(ClientCount); // num clients
