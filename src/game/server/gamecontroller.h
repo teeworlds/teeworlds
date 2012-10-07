@@ -171,7 +171,13 @@ public:
 	};
 
 	void DoPause(int Seconds) { SetGameState(IGS_GAME_PAUSED, Seconds); }
-	void DoWarmup(int Seconds) { SetGameState(IGS_WARMUP_USER, Seconds); }
+	void DoWarmup(int Seconds)
+	{
+		if(m_GameState==IGS_WARMUP_GAME)
+			SetGameState(IGS_WARMUP_GAME, 0);
+		else
+			SetGameState(IGS_WARMUP_USER, Seconds);
+	}
 
 	// general
 	virtual void Snap(int SnappingClient);
