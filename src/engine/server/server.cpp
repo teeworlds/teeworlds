@@ -1067,7 +1067,6 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token)
 {
 	CNetChunk Packet;
 	CPacker Packer;
-	char aBuf[128];
 
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
