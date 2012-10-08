@@ -42,12 +42,13 @@ int CMenus::m_NumInputEvents;
 CMenus::CMenus()
 {
 	m_Popup = POPUP_NONE;
+	m_NextPopup = POPUP_NONE;
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_TeePartSelected = 0;
+	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
@@ -119,10 +120,10 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, 
 	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
 }
 
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor, int Corners)
+int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
+	float *pFade = ButtonFade(pID, Seconds, Checked);
 	float FadeVal = *pFade/Seconds;
 
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
@@ -208,14 +209,14 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 	}
 
 	CUIRect Temp;
-	pRect->HMargin(2.0f, &Temp);
+	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, float r, float FontFactor, int Corners)
+int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds, Checked);
@@ -508,7 +509,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	return ReturnValue;
 }
 
-void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset)
+void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset, bool Hidden)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -520,7 +521,7 @@ void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const C
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, 0);
 
-	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset);
+	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
 void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite)
@@ -720,13 +721,13 @@ static int gs_ListBoxItemsPerRow;
 static float gs_ListBoxScrollValue;
 static bool gs_ListBoxItemActivated;
 
-void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spaceing)
+void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing)
 {
 	CUIRect Header;
 	CUIRect View = *pRect;
 
 	// background
-	View.HSplitTop(ms_ListheaderHeight+Spaceing, &Header, 0);
+	View.HSplitTop(ms_ListheaderHeight+Spacing, &Header, 0);
 	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
@@ -734,14 +735,14 @@ void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float H
 	Header.y += 2.0f;
 	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, 0);
 
-	View.HSplitTop(Spaceing, &Header, &View);
+	View.HSplitTop(Spacing, &Header, &View);
 
 	// setup the variables
 	gs_ListBoxOriginalView = View;
 }
 
 void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-								int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect)
+								int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect, bool Background)
 {
 	CUIRect View, Scroll, Row;
 	if(pRect)
@@ -751,7 +752,8 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 	CUIRect Header, Footer;
 
 	// background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	if(Background)
+		RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
 	if(pBottomText)
@@ -1015,7 +1017,64 @@ void CMenus::RenderMenubar(CUIRect r)
 	if(Client()->State() != IClient::STATE_OFFLINE)
 		m_ActivePage = m_GamePage;
 
-	if(Client()->State() == IClient::STATE_OFFLINE)
+	if(m_MenuPage == PAGE_SETTINGS || m_GamePage == PAGE_SETTINGS)
+	{
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		// render header background
+		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+		Box.HSplitBottom(25.0f, 0, &Box);
+
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_GeneralButton=0;
+		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_PlayerButton=0;
+		if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_TeeButton=0;
+		if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_TEE;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_ControlsButton=0;
+		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_GraphicsButton=0;
+		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_SoundButton=0;
+		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
+		{
+			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+		}
+	}
+	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// render header background
 		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
@@ -1046,58 +1105,6 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
 		}
-		else if(m_MenuPage == PAGE_SETTINGS)
-		{
-			float Spacing = 3.0f;
-			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
-
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_GeneralButton=0;
-			if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_PlayerButton=0;
-			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_TeeButton=0;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_TEE;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_ControlsButton=0;
-			if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_GraphicsButton=0;
-			if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
-			}
-
-			Box.VSplitLeft(Spacing, 0, &Box); // little space
-			Box.VSplitLeft(ButtonWidth, &Button, &Box);
-			static int s_SoundButton=0;
-			if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
-			{
-				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
-			}
-		}
 		else if(m_MenuPage == PAGE_DEMOS)
 		{
 			// make the header look like an active tab
@@ -1112,75 +1119,48 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else
 	{
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		// render header backgrounds
+		CUIRect Left, Right;
+		Box.VSplitLeft(ButtonWidth*4.0f+Spacing*3.0f, &Left, 0);
+		Box.VSplitRight(ButtonWidth, 0, &Right);
+		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+		Left.HSplitBottom(25.0f, 0, &Left);
+		Right.HSplitBottom(25.0f, 0, &Right);
+
 		// online menus
 		if(m_GamePage != PAGE_SETTINGS) // Game stuff
 		{
-			Box.VSplitLeft(90.0f, &Button, &Box);
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_GameButton=0;
-			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
+			if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
 				NewPage = PAGE_GAME;
 
-			Box.VSplitLeft(90.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_PlayersButton=0;
-			if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
+			if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
 				NewPage = PAGE_PLAYERS;
 
-			Box.VSplitLeft(130.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_ServerInfoButton=0;
-			if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
+			if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
 				NewPage = PAGE_SERVER_INFO;
 
-			Box.VSplitLeft(130.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_CallVoteButton=0;
-			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+			if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
 				NewPage = PAGE_CALLVOTE;
 
-			Box.VSplitRight(90.0f, &Box, &Button);
-			static int s_QuitButton=0;
-			if(DoButton_MenuTab(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_TR|CUI::CORNER_IBR))
-				m_Popup = POPUP_QUIT;
-
-			Box.VSplitRight(130.0f, &Box, &Button);
 			static int s_SettingsButton=0;
-			if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_TL))
+			if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), 0, &Right))
 				NewPage = PAGE_SETTINGS;
-		}
-		else // settings menu
-		{
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameGeneralButton=0;
-			if(DoButton_MenuTab(&s_InGameGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
-				g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGamePlayerButton=0;
-			if(DoButton_MenuTab(&s_InGamePlayerButton, Localize("Players"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
-
-			Box.VSplitLeft(60.0f, &Button, &Box);
-			static int s_InGameTeeButton=0;
-			if(DoButton_MenuTab(&s_InGameTeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_TEE;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameControlsButton=0;
-			if(DoButton_MenuTab(&s_InGameControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
-
-			Box.VSplitLeft(100.0f, &Button, &Box);
-			static int s_InGameGraphicsButton=0;
-			if(DoButton_MenuTab(&s_InGameGraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button, 0))
-				g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
-
-			Box.VSplitLeft(90.0f, &Button, &Box);
-			static int s_InGameSoundButton=0;
-			if(DoButton_MenuTab(&s_InGameSoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button, CUI::CORNER_TR))
-				g_Config.m_UiSettingsPage = SETTINGS_SOUND;
-
-			Box.VSplitRight(90.0f, &Box, &Button);
-			static int s_InGameMenuButton=0;
-			if(DoButton_MenuTab(&s_InGameMenuButton, Localize("Back"), 0, &Button, CUI::CORNER_T|CUI::CORNER_IBR))
-				NewPage = PAGE_GAME;
 		}
 	}
 
@@ -1247,6 +1227,31 @@ void CMenus::RenderLoading()
 void CMenus::RenderNews(CUIRect MainView)
 {
 	RenderTools()->DrawUIRect(&MainView, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+}
+
+void CMenus::RenderBackButton(CUIRect MainView)
+{
+	// same size like tabs in top but variables not really needed
+	float Spacing = 3.0f;
+	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	// render background
+	MainView.HSplitBottom(60.0f, 0, &MainView);
+	MainView.VSplitLeft(ButtonWidth, &MainView, 0);
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	// back to main menu
+	CUIRect Button;
+	MainView.HSplitTop(25.0f, &MainView, 0);
+	Button = MainView;
+	static int s_MenuButton=0;
+	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
+	{
+		if(Client()->State() != IClient::STATE_OFFLINE)
+			m_GamePage = PAGE_GAME;
+		else
+			m_MenuPage = PAGE_START;
+	}
 }
 
 int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
@@ -1487,7 +1492,7 @@ void CMenus::OnInit()
 		m_LoadTotal += g_pData->m_NumSounds;
 }
 
-void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton)
+void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next)
 {
 	// reset active item
 	UI()->SetActiveItem(0);
@@ -1496,6 +1501,7 @@ void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pBu
 	str_copy(m_aMessageBody, pBody, sizeof(m_aMessageBody));
 	str_copy(m_aMessageButton, pButton, sizeof(m_aMessageButton));
 	m_Popup = POPUP_MESSAGE;
+	m_NextPopup = Next;
 }
 
 
@@ -1585,27 +1591,6 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
-		
-				// same size like tabs in top but variables not really needed
-				float Spacing = 3.0f;
-				float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-
-				// render background
-				MainView.HSplitBottom(60.0f, 0, &MainView);
-				MainView.VSplitLeft(ButtonWidth, &MainView, 0);
-				RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
-
-				// back to main menu
-				CUIRect Button;
-				MainView.HSplitTop(25.0f, &MainView, 0);
-				Button = MainView;
-				static int s_MenuButton=0;
-				if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button))
-					m_MenuPage = PAGE_START;
-
-				// handle back with esc
-				if(m_EscapePressed)
-					m_MenuPage = PAGE_START;
 			}
 		}
 
@@ -1622,31 +1607,42 @@ int CMenus::Render()
 		const char *pExtraText = "";
 		const char *pButtonText = "";
 		int ExtraAlign = 0;
+		int NumOptions = 4;
 
 		if(m_Popup == POPUP_MESSAGE)
 		{
 			pTitle = m_aMessageTopic;
 			pExtraText = m_aMessageBody;
 			pButtonText = m_aMessageButton;
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{
 			pTitle = Localize("Connecting to");
-			pExtraText = g_Config.m_UiServerAddress; // TODO: query the client about the address
 			pButtonText = Localize("Abort");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
 				pTitle = Localize("Downloading map");
 				pExtraText = "";
+				NumOptions = 5;
 			}
+		}
+		else if(m_Popup == POPUP_LANGUAGE)
+		{
+			pTitle = Localize("Language");
+			pButtonText = Localize("Ok");
+			NumOptions = 7;
+		}
+		else if(m_Popup == POPUP_COUNTRY)
+		{
+			pTitle = Localize("Country");
+			pButtonText = Localize("Ok");
+			NumOptions = 8;
 		}
 		else if(m_Popup == POPUP_DISCONNECTED)
 		{
 			pTitle = Localize("Disconnected");
 			pExtraText = Client()->ErrorString();
 			pButtonText = Localize("Ok");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_PURE)
 		{
@@ -1659,24 +1655,23 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Delete demo");
 			pExtraText = Localize("Are you sure that you want to delete the demo?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_RENAME_DEMO)
 		{
 			pTitle = Localize("Rename demo");
-			pExtraText = "";
-			ExtraAlign = -1;
+			pExtraText = Localize("Are you sure you want to rename the demo?");
+			NumOptions = 6;
 		}
 		else if(m_Popup == POPUP_REMOVE_FRIEND)
 		{
 			pTitle = Localize("Remove friend");
 			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_SAVE_SKIN)
 		{
 			pTitle = Localize("Save skin");
-			pExtraText = Localize("Are you sure you want to save your skin ? If a skin with this name already exists, it will be replaced.");
+			pExtraText = Localize("Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.");
+			NumOptions = 6;
 			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_SOUNDERROR)
@@ -1689,64 +1684,71 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = "";
-			pButtonText = Localize("Try again");
+			pExtraText = "Please enter the password.";
 		}
 		else if(m_Popup == POPUP_QUIT)
 		{
 			pTitle = Localize("Quit");
 			pExtraText = Localize("Are you sure that you want to quit?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
 			pTitle = Localize("Welcome to Teeworlds");
 			pExtraText = Localize("As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.");
-			pButtonText = Localize("Ok");
+			pButtonText = Localize("Enter");
+			NumOptions = 6;
 			ExtraAlign = -1;
 		}
 
-		CUIRect Box, Part;
+		CUIRect Box, Part, BottomBar;
+		float ButtonHeight = 20.0f;
+		float ButtonHeightBig = ButtonHeight+5.0f;
+		float SpacingH = 2.0f;
+		float SpacingW = 3.0f;
 		Box = Screen;
-		Box.VMargin(150.0f/UI()->Scale(), &Box);
-		Box.HMargin(150.0f/UI()->Scale(), &Box);
+		Box.VMargin(Box.w/2.0f-(365.0f), &Box);
+		float ButtonWidth = (Box.w/6.0f)-(SpacingW*5.0)/6.0f;
+		Box.VMargin(ButtonWidth+SpacingW, &Box);
+		Box.HMargin(Box.h/2.0f-((int)(NumOptions+1)*ButtonHeight+(int)(NumOptions)*SpacingH)/2.0f-10.0f, &Box);
 
 		// render the box
-		RenderTools()->DrawUIRect(&Box, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 15.0f);
+		RenderTools()->DrawUIRect(&Box, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
-		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
-		UI()->DoLabelScaled(&Part, pTitle, 24.f, 0);
-		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
-		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
-		Part.VMargin(20.f/UI()->Scale(), &Part);
+		// headline
+		Box.HSplitTop(ButtonHeightBig, &Part, &Box);
+		Part.y += 3.0f;
+		UI()->DoLabel(&Part, pTitle, Part.h*ms_FontmodHeight*0.8f, 0);
 
-		if(ExtraAlign == -1)
-			UI()->DoLabelScaled(&Part, pExtraText, 20.f, -1, (int)Part.w);
-		else
-			UI()->DoLabelScaled(&Part, pExtraText, 20.f, 0, -1);
+		// inner box
+		Box.HSplitTop(SpacingH, 0, &Box);
+		Box.HSplitBottom(ButtonHeight+5.0f+SpacingH, &Box, &BottomBar);
+		BottomBar.HSplitTop(SpacingH, 0, &BottomBar);
+		RenderTools()->DrawUIRect(&Box, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		if(m_Popup == POPUP_QUIT)
 		{
 			CUIRect Yes, No;
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
 
 			// additional info
-			Box.HSplitTop(10.0f, 0, &Box);
-			Box.VMargin(20.f/UI()->Scale(), &Box);
 			if(m_pClient->Editor()->HasUnsavedData())
 			{
-				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "%s\n%s", Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), Localize("Quit anyway?"));
-				UI()->DoLabelScaled(&Box, aBuf, 20.f, -1, Part.w-20.0f);
+				Box.HSplitTop(12.0f, 0, &Part);
+				UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				Part.HSplitTop(12.0f, 0, &Part);
+				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor,"), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				Part.HSplitTop(12.0f, 0, &Part);
+				UI()->DoLabel(&Part, Localize("you might want to save it before you quit the game."), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+			}
+			else
+			{
+				Box.HSplitTop(27.0f, 0, &Box);
+				UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 
 			// buttons
-			Part.VMargin(80.0f, &Part);
-			Part.VSplitMid(&No, &Yes);
-			Yes.VMargin(20.0f, &Yes);
-			No.VMargin(20.0f, &No);
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonAbort = 0;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
@@ -1758,16 +1760,21 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
-			CUIRect Label, TextBox, TryAgain, Abort;
+			CUIRect Label, EditBox, TryAgain, Abort;
 
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
+			Box.HSplitTop(12.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
-			Part.VSplitMid(&Abort, &TryAgain);
+			Box.HSplitBottom(ButtonHeight*1.7f, 0, &Box);
+			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			TryAgain.VMargin(20.0f, &TryAgain);
-			Abort.VMargin(20.0f, &Abort);
+			static float s_OffsetPassword = 0.0f;
+			DoEditBoxOption(g_Config.m_Password, g_Config.m_Password, sizeof(g_Config.m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
+
+			// buttons
+			BottomBar.VSplitMid(&Abort, &TryAgain);
+			Abort.VSplitRight(SpacingW/2.0f, &Abort, 0);
+			TryAgain.VSplitLeft(SpacingW/2.0f, 0, &TryAgain);
 
 			static int s_ButtonAbort = 0;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
@@ -1778,29 +1785,11 @@ int CMenus::Render()
 			{
 				Client()->Connect(g_Config.m_UiServerAddress);
 			}
-
-			Box.HSplitBottom(60.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-
-			Part.VSplitLeft(60.0f, 0, &Label);
-			Label.VSplitLeft(100.0f, 0, &TextBox);
-			TextBox.VSplitLeft(20.0f, 0, &TextBox);
-			TextBox.VSplitRight(60.0f, &TextBox, 0);
-			UI()->DoLabel(&Label, Localize("Password"), 18.0f, -1);
-			static float Offset = 0.0f;
-			DoEditBox(&g_Config.m_Password, &TextBox, g_Config.m_Password, sizeof(g_Config.m_Password), 12.0f, &Offset, true);
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{
-			Box = Screen;
-			Box.VMargin(150.0f, &Box);
-			Box.HMargin(150.0f, &Box);
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(120.0f, &Part);
-
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &Part) || m_EscapePressed || m_EnterPressed)
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
 			{
 				Client()->Disconnect();
 				m_Popup = POPUP_NONE;
@@ -1828,10 +1817,10 @@ int CMenus::Render()
 					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
 				}
 
-				Box.HSplitTop(64.f, 0, &Box);
-				Box.HSplitTop(24.f, &Part, &Box);
+				Box.HSplitTop(15.f, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
 				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed/1024.0f);
-				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
+				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, 0, -1);
 
 				// time left
 				const char *pTimeLeftString;
@@ -1843,48 +1832,35 @@ int CMenus::Render()
 				}
 				else
 					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
-				Box.HSplitTop(20.f, 0, &Box);
-				Box.HSplitTop(24.f, &Part, &Box);
+				Box.HSplitTop(SpacingH, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
 				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
-				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
+				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, 0, -1);
 
 				// progress bar
-				Box.HSplitTop(20.f, 0, &Box);
-				Box.HSplitTop(24.f, &Part, &Box);
+				Box.HSplitTop(SpacingH, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
 				Part.VMargin(40.0f, &Part);
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 				Part.w = max(10.0f, (Part.w*Client()->MapDownloadAmount())/Client()->MapDownloadTotalsize());
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
 			}
+			else
+			{
+				Box.HSplitTop(27.0f, 0, &Box);
+				UI()->DoLabel(&Box, g_Config.m_UiServerAddress, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
 		{
-			Box = Screen;
-			Box.VMargin(150.0f, &Box);
-			Box.HMargin(150.0f, &Box);
-			Box.HSplitTop(20.f, &Part, &Box);
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Box.HSplitBottom(20.f, &Box, 0);
-			Box.VMargin(20.0f, &Box);
-			RenderLanguageSelection(Box);
-			Part.VMargin(120.0f, &Part);
+			RenderLanguageSelection(Box, false);
 
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EscapePressed || m_EnterPressed)
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
 				m_Popup = POPUP_FIRST_LAUNCH;
 		}
 		else if(m_Popup == POPUP_COUNTRY)
 		{
-			Box = Screen;
-			Box.VMargin(150.0f, &Box);
-			Box.HMargin(150.0f, &Box);
-			Box.HSplitTop(20.f, &Part, &Box);
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Box.HSplitBottom(20.f, &Box, 0);
-			Box.VMargin(20.0f, &Box);
-
 			// selected filter
 			CBrowserFilter *pFilter = &m_lFilters[m_SelectedFilter];
 			int SortHash = 0;
@@ -1899,8 +1875,7 @@ int CMenus::Render()
 				ActSelection = Country;
 			static float s_ScrollValue = 0.0f;
 			int OldSelected = -1;
-			UiDoListboxHeader(&Box, Localize("Country"), 20.0f, 2.0f);
-			UiDoListboxStart(&s_ScrollValue, 50.0f, "", m_pClient->m_pCountryFlags->Num(), 6, OldSelected, s_ScrollValue);
+			UiDoListboxStart(&s_ScrollValue, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, s_ScrollValue, &Box, false);
 
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
@@ -1917,9 +1892,22 @@ int CMenus::Render()
 					float OldWidth = Item.m_Rect.w;
 					Item.m_Rect.w = Item.m_Rect.h*2;
 					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
-					vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
-					m_pClient->m_pCountryFlags->Render(pEntry->m_CountryCode, &Color, Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
-					UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
+					Graphics()->TextureSet(pEntry->m_Texture);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+					if(i == OldSelected)
+					{
+						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+						TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+						UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
+						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+						TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+					}
+					else
+						UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, 0);
 				}
 			}
 
@@ -1930,9 +1918,10 @@ int CMenus::Render()
 			Part.VMargin(120.0f, &Part);
 
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EnterPressed)
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
 				pFilter->SetFilter(SortHash, Ping, ActSelection, aGametype, aServerAddress);
+				g_Config.m_BrFilterCountryIndex = ActSelection;
 				m_Popup = POPUP_NONE;
 			}
 
@@ -1945,21 +1934,20 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{
 			CUIRect Yes, No;
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
+			Box.HSplitTop(27.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
-			Part.VSplitMid(&No, &Yes);
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
-			Yes.VMargin(20.0f, &Yes);
-			No.VMargin(20.0f, &No);
-
-			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+			static int s_ButtonNo = 0;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
-			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			static int s_ButtonYes = 0;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
 				// delete demo
@@ -1979,75 +1967,71 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_RENAME_DEMO)
 		{
-			CUIRect Label, TextBox, Ok, Abort;
+			CUIRect Yes, No, EditBox;
 
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
+			Box.HSplitTop(27.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
-			Part.VSplitMid(&Abort, &Ok);
+			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
+			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			Ok.VMargin(20.0f, &Ok);
-			Abort.VMargin(20.0f, &Abort);
+			static float s_OffsetRenameDemo = 0.0f;
+			DoEditBoxOption(m_aCurrentDemoFile, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), &EditBox, Localize("Name"), ButtonWidth, &s_OffsetRenameDemo);
 
-			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
+
+			static int s_ButtonNo = 0;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
-			static int s_ButtonOk = 0;
-			if(DoButton_Menu(&s_ButtonOk, Localize("Ok"), 0, &Ok) || m_EnterPressed)
+			static int s_ButtonYes = 0;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aCurrentDemoFile[0], &Yes) || m_EnterPressed)
 			{
-				m_Popup = POPUP_NONE;
-				// rename demo
-				if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
+				if(m_aCurrentDemoFile[0])
 				{
-					char aBufOld[512];
-					str_format(aBufOld, sizeof(aBufOld), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-					int Length = str_length(m_aCurrentDemoFile);
-					char aBufNew[512];
-					if(Length <= 4 || m_aCurrentDemoFile[Length-5] != '.' || str_comp_nocase(m_aCurrentDemoFile+Length-4, "demo"))
-						str_format(aBufNew, sizeof(aBufNew), "%s/%s.demo", m_aCurrentDemoFolder, m_aCurrentDemoFile);
-					else
-						str_format(aBufNew, sizeof(aBufNew), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
-					if(Storage()->RenameFile(aBufOld, aBufNew, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
+					m_Popup = POPUP_NONE;
+					// rename demo
+					if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
 					{
-						DemolistPopulate();
-						DemolistOnUpdate(false);
+						char aBufOld[512];
+						str_format(aBufOld, sizeof(aBufOld), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+						int Length = str_length(m_aCurrentDemoFile);
+						char aBufNew[512];
+						if(Length <= 4 || m_aCurrentDemoFile[Length-5] != '.' || str_comp_nocase(m_aCurrentDemoFile+Length-4, "demo"))
+							str_format(aBufNew, sizeof(aBufNew), "%s/%s.demo", m_aCurrentDemoFolder, m_aCurrentDemoFile);
+						else
+							str_format(aBufNew, sizeof(aBufNew), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
+						if(Storage()->RenameFile(aBufOld, aBufNew, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
+						{
+							DemolistPopulate();
+							DemolistOnUpdate(false);
+						}
+						else
+							PopupMessage(Localize("Error"), Localize("Unable to rename the demo"), Localize("Ok"), POPUP_RENAME_DEMO);
 					}
-					else
-						PopupMessage(Localize("Error"), Localize("Unable to rename the demo"), Localize("Ok"));
 				}
 			}
-
-			Box.HSplitBottom(60.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-
-			Part.VSplitLeft(60.0f, 0, &Label);
-			Label.VSplitLeft(120.0f, 0, &TextBox);
-			TextBox.VSplitLeft(20.0f, 0, &TextBox);
-			TextBox.VSplitRight(60.0f, &TextBox, 0);
-			UI()->DoLabel(&Label, Localize("New name:"), 18.0f, -1);
-			static float Offset = 0.0f;
-			DoEditBox(&Offset, &TextBox, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), 12.0f, &Offset);
 		}
 		else if(m_Popup == POPUP_REMOVE_FRIEND)
 		{
 			CUIRect Yes, No;
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
+			Box.HSplitTop(27.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
-			Part.VSplitMid(&No, &Yes);
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
-			Yes.VMargin(20.0f, &Yes);
-			No.VMargin(20.0f, &No);
-
-			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+			static int s_ButtonNo = 0;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
-			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			static int s_ButtonYes = 0;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
 				// remove friend
@@ -2063,29 +2047,30 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_SAVE_SKIN)
 		{
 			CUIRect Yes, No, EditBox;
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
 
-			Part.VSplitMid(&No, &Yes);
-
-			Yes.VMargin(20.0f, &Yes);
-			No.VMargin(20.0f, &No);
+			Box.HSplitTop(24.0f, 0, &Box);
+			Box.VMargin(10.0f, &Part);
+			UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, Box.w-20.0f);
 
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static float s_OffsetSaveSkin = 0.0f;
-			DoEditBoxOption(m_aSaveSkinName, m_aSaveSkinName, sizeof(m_aSaveSkinName), &EditBox, Localize("Skin name"), 100.0f, &s_OffsetSaveSkin);
+			DoEditBoxOption(m_aSaveSkinName, m_aSaveSkinName, sizeof(m_aSaveSkinName), &EditBox, Localize("Name"), ButtonWidth, &s_OffsetSaveSkin);
+
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonAbort = 0;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
-			if(m_aSaveSkinName[0])
+			static int s_ButtonTryAgain = 0;
+			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || m_EnterPressed)
 			{
-				static int s_ButtonTryAgain = 0;
-				if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+				if(m_aSaveSkinName[0])
 				{
 					m_Popup = POPUP_NONE;
 					SaveSkinfile();
@@ -2095,36 +2080,38 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
-			CUIRect Label, TextBox;
+			CUIRect EditBox;
 
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(80.0f, &Part);
+			Box.HSplitTop(20.0f, 0, &Box);
+			Box.VMargin(10.0f, &Part);
+			UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, Box.w-20.0f);
 
+			Box.HSplitBottom(ButtonHeight*2.0f, 0, &Box);
+			Box.HSplitTop(ButtonHeight, &EditBox, &Box);
+
+			static float s_OffsetName = 0.0f;
+			DoEditBoxOption(g_Config.m_PlayerName, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
+
+			// button
 			static int s_EnterButton = 0;
-			if(DoButton_Menu(&s_EnterButton, Localize("Enter"), 0, &Part) || m_EnterPressed)
-				m_Popup = POPUP_NONE;
-
-			Box.HSplitBottom(40.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-
-			Part.VSplitLeft(60.0f, 0, &Label);
-			Label.VSplitLeft(100.0f, 0, &TextBox);
-			TextBox.VSplitLeft(20.0f, 0, &TextBox);
-			TextBox.VSplitRight(60.0f, &TextBox, 0);
-			UI()->DoLabel(&Label, Localize("Nickname"), 18.0f, -1);
-			static float Offset = 0.0f;
-			DoEditBox(&g_Config.m_PlayerName, &TextBox, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 12.0f, &Offset);
+			if(DoButton_Menu(&s_EnterButton, pButtonText, 0, &BottomBar) || m_EnterPressed)
+			{
+				if(g_Config.m_PlayerName[0])
+					m_Popup = POPUP_NONE;
+				else
+					PopupMessage(Localize("Error"), Localize("Nickname is empty."), Localize("Ok"), POPUP_FIRST_LAUNCH);
+			}
 		}
 		else
 		{
-			Box.HSplitBottom(20.f, &Box, &Part);
-			Box.HSplitBottom(24.f, &Box, &Part);
-			Part.VMargin(120.0f, &Part);
+			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Part);
+			UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, -1);
 
+			// button
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &Part) || m_EscapePressed || m_EnterPressed)
-				m_Popup = POPUP_NONE;
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+				m_Popup = m_NextPopup;
 		}
 	}
 
@@ -2357,8 +2344,8 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsBegin();
 		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
 		//vec4 bottom(0, 0, 0, 1.0f);
-		vec4 Bottom(0.25f, 0.25f, 0.25f, 1.0f);
-		vec4 Top(0.25f, 0.25f, 0.25f, 1.0f);
+		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
 		IGraphics::CColorVertex Array[4] = {
 			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
 			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),

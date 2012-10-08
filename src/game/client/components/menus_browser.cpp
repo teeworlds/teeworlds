@@ -576,9 +576,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			NumServers += m_lFilters[i].NumSortedServers();
 
 	int NumFilters = m_lFilters.size();
-	float ListHieght = (NumServers+(NumFilters-1)) * ms_aCols[0].m_Rect.h + NumFilters * 20.0f;
+	float ListHeight = (NumServers+(NumFilters-1)) * ms_aCols[0].m_Rect.h + NumFilters * 20.0f;
 
-	//int Num = (int)((ListHieght-View.h)/ms_aCols[0].m_Rect.h))+1;
+	//int Num = (int)((ListHeight-View.h)/ms_aCols[0].m_Rect.h))+1;
 	//int Num = (int)(View.h/ms_aCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
@@ -586,7 +586,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = (int)((ListHieght-View.h)/ms_aCols[0].m_Rect.h)+1;
+	int ScrollNum = (int)((ListHeight-View.h)/ms_aCols[0].m_Rect.h)+1;
 	if(ScrollNum > 0)
 	{
 		if(m_ScrollOffset)
@@ -729,7 +729,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				
 				CUIRect SelectHitBox;
 
-				View.HSplitTop(17.0f, &Row, &View);
+				View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 				SelectHitBox = Row;
 
 				// select server
@@ -775,7 +775,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 
 		if(s < m_lFilters.size()-1)
-			View.HSplitTop(17.0f, &Row, &View);
+			View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 	}
 
 	UI()->ClipDisable();

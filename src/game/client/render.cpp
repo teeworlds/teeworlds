@@ -362,7 +362,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
 	{
-		int OutLine = p==0 ? 1 : 0;
+		bool OutLine = p==0;
 
 		for(int f = 0; f < 2; f++)
 		{

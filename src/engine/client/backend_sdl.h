@@ -1,9 +1,6 @@
-
-#include "SDL.h"
-#include "SDL_opengl.h"
+#pragma once
 
 #include "graphics_threaded.h"
-
 
 
 // platform dependent implementations for transfering render context from the main thread to the graphics thread
