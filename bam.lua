@@ -9,6 +9,7 @@ config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
 config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk"))
+config:Add(OptTestCompileC("macosxppc", "int main(){return 0;}", "-arch ppc"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
@@ -363,27 +364,45 @@ if platform == "macosx" then
 
 	DefaultTarget("game_debug_x86")
 	
-	if arch == "ia32" then
-		PseudoTarget("release", ppc_r, x86_r)
-		PseudoTarget("debug", ppc_d, x86_d)
-		PseudoTarget("server_release", "server_release_x86", "server_release_ppc")
-		PseudoTarget("server_debug", "server_debug_x86", "server_debug_ppc")
-		PseudoTarget("client_release", "client_release_x86", "client_release_ppc")
-		PseudoTarget("client_debug", "client_debug_x86", "client_debug_ppc")
-	elseif arch == "amd64" then
-		PseudoTarget("release", ppc_r, x86_r, x86_64_r)
-		PseudoTarget("debug", ppc_d, x86_d, x86_64_d)
-		PseudoTarget("server_release", "server_release_x86", "server_release_x86_64", "server_release_ppc")
-		PseudoTarget("server_debug", "server_debug_x86", "server_debug_x86_64", "server_debug_ppc")
-		PseudoTarget("client_release", "client_release_x86", "client_release_x86_64", "client_release_ppc")
-		PseudoTarget("client_debug", "client_debug_x86", "client_debug_x86_64", "client_debug_ppc")
+	if config.macosxppc.value == 1 then
+		if arch == "ia32" then
+			PseudoTarget("release", ppc_r, x86_r)
+			PseudoTarget("debug", ppc_d, x86_d)
+			PseudoTarget("server_release", "server_release_ppc", "server_release_x86")
+			PseudoTarget("server_debug", "server_debug_ppc", "server_debug_x86")
+			PseudoTarget("client_release", "client_release_ppc", "client_release_x86")
+			PseudoTarget("client_debug", "client_debug_ppc", "client_debug_x86")
+		elseif arch == "amd64" then
+			PseudoTarget("release", ppc_r, x86_r, x86_64_r)
+			PseudoTarget("debug", ppc_d, x86_d, x86_64_d)
+			PseudoTarget("server_release", "server_release_ppc", "server_release_x86", "server_release_x86_64")
+			PseudoTarget("server_debug", "server_debug_ppc", "server_debug_x86", "server_debug_x86_64")
+			PseudoTarget("client_release", "client_release_ppc", "client_release_x86", "client_release_x86_64")
+			PseudoTarget("client_debug", "client_debug_ppc", "client_debug_x86", "client_debug_x86_64")
+		else
+			PseudoTarget("release", ppc_r)
+			PseudoTarget("debug", ppc_d)
+			PseudoTarget("server_release", "server_release_ppc")
+			PseudoTarget("server_debug", "server_debug_ppc")
+			PseudoTarget("client_release", "client_release_ppc")
+			PseudoTarget("client_debug", "client_debug_ppc")
+		end
 	else
-		PseudoTarget("release", ppc_r)
-		PseudoTarget("debug", ppc_d)
-		PseudoTarget("server_release", "server_release_ppc")
-		PseudoTarget("server_debug", "server_debug_ppc")
-		PseudoTarget("client_release", "client_release_ppc")
-		PseudoTarget("client_debug", "client_debug_ppc")
+		if arch == "ia32" then
+			PseudoTarget("release", x86_r)
+			PseudoTarget("debug", x86_d)
+			PseudoTarget("server_release", "server_release_x86")
+			PseudoTarget("server_debug", "server_debug_x86")
+			PseudoTarget("client_release", "client_release_x86")
+			PseudoTarget("client_debug", "client_debug_x86")
+		elseif arch == "amd64" then
+			PseudoTarget("release", x86_r, x86_64_r)
+			PseudoTarget("debug", x86_d, x86_64_d)
+			PseudoTarget("server_release", "server_release_x86", "server_release_x86_64")
+			PseudoTarget("server_debug", "server_debug_x86", "server_debug_x86_64")
+			PseudoTarget("client_release", "client_release_x86", "client_release_x86_64")
+			PseudoTarget("client_debug", "client_debug_x86", "client_debug_x86_64")
+		end
 	end
 else
 	build(debug_settings)

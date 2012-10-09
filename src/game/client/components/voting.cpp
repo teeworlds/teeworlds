@@ -1,17 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/vmath.h>
+
 #include <engine/shared/config.h>
 
-#include <game/generated/protocol.h>
-#include <base/vmath.h>
 #include <game/client/render.h>
+#include <game/generated/protocol.h>
+
+#include "chat.h"
 #include "voting.h"
 
-void CVoting::ConCallvote(IConsole::IResult *pResult, void *pUserData)
-{
-	CVoting *pSelf = (CVoting*)pUserData;
-	pSelf->Callvote(pResult->GetString(0), pResult->GetString(1), pResult->NumArguments() > 2 ? pResult->GetString(2) : "");
-}
 
 void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
@@ -22,45 +20,28 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Vote(-1);
 }
 
-void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason)
+void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
 {
 	CNetMsg_Cl_CallVote Msg = {0};
 	Msg.m_Type = pType;
 	Msg.m_Value = pValue;
 	Msg.m_Reason = pReason;
+	Msg.m_Force = ForceVote;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
 void CVoting::CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote)
 {
-	if(ForceVote)
-	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "set_team %d -1", ClientID);
-		Client()->Rcon(aBuf);
-	}
-	else
-	{
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-		Callvote("spectate", aBuf, pReason);
-	}
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+	Callvote("spectate", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 {
-	if(ForceVote)
-	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "force_vote kick %d %s", ClientID, pReason);
-		Client()->Rcon(aBuf);
-	}
-	else
-	{
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-		Callvote("kick", aBuf, pReason);
-	}
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
+	Callvote("kick", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
@@ -70,14 +51,7 @@ void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
 	{
 		if(OptionID == 0)
 		{
-			if(ForceVote)
-			{
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "force_vote option \"%s\" %s", pOption->m_aDescription, pReason);
-				Client()->Rcon(aBuf);
-			}
-			else
-				Callvote("option", pOption->m_aDescription, pReason);
+			Callvote("option", pOption->m_aDescription, pReason, ForceVote);
 			break;
 		}
 
@@ -177,11 +151,11 @@ void CVoting::OnReset()
 	m_aReason[0] = 0;
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
+	m_CallvoteBlockTick = 0;
 }
 
 void CVoting::OnConsoleInit()
 {
-	Console()->Register("callvote", "ss?r", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
 	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
 }
 
@@ -190,15 +164,69 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_VOTESET)
 	{
 		CNetMsg_Sv_VoteSet *pMsg = (CNetMsg_Sv_VoteSet *)pRawMsg;
+		int BlockTick = m_CallvoteBlockTick;
+		char aBuf[128];
 		if(pMsg->m_Timeout)
 		{
 			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
+			if(pMsg->m_ClientID != -1)
+			{
+				switch(pMsg->m_Type)
+				{
+				case VOTE_START_OP:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called vote to change server option '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					break;
+				case VOTE_START_KICK:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					break;
+				case VOTE_START_SPEC:
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+								pMsg->m_pDescription, pMsg->m_pReason);
+					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				}
+				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)
+					m_CallvoteBlockTick = Client()->GameTick()+Client()->GameTickSpeed()*VOTE_COOLDOWN;
+			}
 		}
 		else
-			OnReset();
+		{
+			switch(pMsg->m_Type)
+			{
+			case VOTE_START_OP:
+				str_format(aBuf, sizeof(aBuf), Localize("Admin forced server option '%s' (%s)"), pMsg->m_pDescription, pMsg->m_pReason);
+				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				break;
+			case VOTE_START_SPEC:
+				str_format(aBuf, sizeof(aBuf), Localize("Admin moved '%s' to spectator (%s)"), pMsg->m_pDescription, pMsg->m_pReason);
+				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				break;
+			case VOTE_END_ABORT:
+				OnReset();
+				m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote aborted"));
+				break;
+			case VOTE_END_PASS:
+				OnReset();
+				if(pMsg->m_ClientID == -1)
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote yes"));
+				else
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote passed"));
+				break;
+			case  VOTE_END_FAIL:
+				OnReset();
+				if(pMsg->m_ClientID == -1)
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Admin forced vote no"));
+				else
+					m_pClient->m_pChat->AddLine(-1, 0, Localize("Vote failed"));
+				m_CallvoteBlockTick = BlockTick;
+			}
+		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_VOTESTATUS)
 	{
@@ -211,32 +239,6 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_VOTECLEAROPTIONS)
 	{
 		ClearOptions();
-	}
-	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONLISTADD)
-	{
-		CNetMsg_Sv_VoteOptionListAdd *pMsg = (CNetMsg_Sv_VoteOptionListAdd *)pRawMsg;
-		int NumOptions = pMsg->m_NumOptions;
-		for(int i = 0; i < NumOptions; ++i)
-		{
-			switch(i)
-			{
-			case 0: AddOption(pMsg->m_pDescription0); break;
-			case 1: AddOption(pMsg->m_pDescription1); break;
-			case 2: AddOption(pMsg->m_pDescription2); break;
-			case 3: AddOption(pMsg->m_pDescription3); break;
-			case 4: AddOption(pMsg->m_pDescription4); break;
-			case 5: AddOption(pMsg->m_pDescription5); break;
-			case 6: AddOption(pMsg->m_pDescription6); break;
-			case 7: AddOption(pMsg->m_pDescription7); break;
-			case 8: AddOption(pMsg->m_pDescription8); break;
-			case 9: AddOption(pMsg->m_pDescription9); break;
-			case 10: AddOption(pMsg->m_pDescription10); break;
-			case 11: AddOption(pMsg->m_pDescription11); break;
-			case 12: AddOption(pMsg->m_pDescription12); break;
-			case 13: AddOption(pMsg->m_pDescription13); break;
-			case 14: AddOption(pMsg->m_pDescription14);
-			}
-		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTIONADD)
 	{

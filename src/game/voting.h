@@ -10,6 +10,9 @@ enum
 	VOTE_REASON_LENGTH=16,
 
 	MAX_VOTE_OPTIONS=128,
+	MAX_VOTE_OPTION_ADD=21,
+
+	VOTE_COOLDOWN=60,
 };
 
 struct CVoteOptionClient

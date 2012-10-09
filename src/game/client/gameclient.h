@@ -51,12 +51,12 @@ class CGameClient : public IGameClient
 
 	void DispatchInput();
 	void ProcessEvents();
+	void ProcessTriggeredEvents(int Events, vec2 Pos);
 	void UpdatePositions();
 
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
-	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -88,8 +88,6 @@ public:
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
 	bool m_SuppressEvents;
-	bool m_NewTick;
-	bool m_NewPredictedTick;
 
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -192,6 +190,7 @@ public:
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
+	int m_TeamCooldownTick;
 
 	struct CGameInfo
 	{
@@ -206,6 +205,16 @@ public:
 	};
 
 	CGameInfo m_GameInfo;
+
+	struct CServerSettings
+	{
+		bool m_KickVote;
+		int m_KickMin;
+		bool m_SpecVote;
+		bool m_TeamLock;
+		bool m_TeamBalance;
+		int m_PlayerSlots;
+	} m_ServerSettings;
 
 	CRenderTools m_RenderTools;
 
@@ -250,6 +259,7 @@ public:
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;
 	class CBinds *m_pBinds;
+	class CBroadcast *m_pBroadcast;
 	class CParticles *m_pParticles;
 	class CMenus *m_pMenus;
 	class CSkins *m_pSkins;

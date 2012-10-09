@@ -794,7 +794,7 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 		View = *pRect;
 	else
 		View = gs_ListBoxOriginalView;
-	CUIRect Header, Footer;
+	CUIRect Footer;
 
 	// background
 	if(Background)
@@ -1594,8 +1594,7 @@ int CMenus::Render()
 	if(Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded())
 		RenderBackground();
 
-	CUIRect TabBar, BottomView;
-	CUIRect MainView;
+	CUIRect TabBar, MainView;
 
 	// some margin around the screen
 	//Screen.Margin(10.0f, &Screen);
@@ -1824,7 +1823,7 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
-			CUIRect Label, EditBox, TryAgain, Abort;
+			CUIRect EditBox, TryAgain, Abort;
 
 			Box.HSplitTop(12.0f, 0, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);

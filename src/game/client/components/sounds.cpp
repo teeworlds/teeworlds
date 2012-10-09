@@ -150,15 +150,6 @@ void CSounds::Enqueue(int Channel, int SetId)
 	}
 }
 
-void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
-{
-	CNetMsg_Sv_SoundGlobal Msg;
-	Msg.m_SoundID = SetId;
-	Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
-
-	Play(Chn, SetId, Vol);
-}
-
 void CSounds::Play(int Chn, int SetId, float Vol)
 {
 	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)

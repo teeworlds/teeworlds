@@ -22,6 +22,7 @@ public:
 	virtual void TickDefered();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
+	virtual void PostSnap();
 
 	bool IsGrounded();
 
@@ -87,6 +88,7 @@ private:
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;
+	int m_LastNoAmmoSound;
 
 	// these are non-heldback inputs
 	CNetObj_PlayerInput m_LatestPrevInput;
@@ -102,6 +104,8 @@ private:
 
 	int m_Health;
 	int m_Armor;
+
+	int m_TriggeredEvents;
 
 	// ninja
 	struct

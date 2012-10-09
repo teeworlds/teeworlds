@@ -1321,7 +1321,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CListboxItem Item = UiDoListboxNextItem(&m_lFilteredVideoModes[i], OldSelected == i);
 			if(Item.m_Visible)
 			{
-				int G = gcd(m_lFilteredVideoModes[i].m_Width, m_lFilteredVideoModes[i].m_Height);
 				str_format(aBuf, sizeof(aBuf), " %dx%d", m_lFilteredVideoModes[i].m_Width, m_lFilteredVideoModes[i].m_Height);
 				if(i == OldSelected)
 				{

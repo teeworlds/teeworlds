@@ -379,19 +379,17 @@ void CHud::RenderConnectionWarning()
 void CHud::RenderTeambalanceWarning()
 {
 	// render prompt about team-balance
-	bool Flash = time_get()/(time_freq()/2)%2 == 0;
-	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClWarningTeambalance && m_pClient->m_ServerSettings.m_TeamBalance &&
+		absolute(m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]-m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]) >= NUM_TEAMS)
 	{
-		if(g_Config.m_ClWarningTeambalance && absolute(m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]-m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]) >= 2)
-		{
-			const char *pText = Localize("Please balance teams!");
-			if(Flash)
-				TextRender()->TextColor(1,1,0.5f,1);
-			else
-				TextRender()->TextColor(0.7f,0.7f,0.2f,1.0f);
-			TextRender()->Text(0x0, 5, 50, 6, pText, -1);
-			TextRender()->TextColor(1,1,1,1);
-		}
+		bool Flash = time_get()/(time_freq()/2)%2 == 0;
+		const char *pText = Localize("Please balance teams!");
+		if(Flash)
+			TextRender()->TextColor(1,1,0.5f,1);
+		else
+			TextRender()->TextColor(0.7f,0.7f,0.2f,1.0f);
+		TextRender()->Text(0x0, 5, 50, 6, pText, -1);
+		TextRender()->TextColor(1,1,1,1);
 	}
 }
 

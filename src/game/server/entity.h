@@ -83,6 +83,8 @@ public:
 	*/
 	virtual void Snap(int SnappingClient) {}
 
+	virtual void PostSnap() {}
+
 	/*
 		Function: networkclipped(int snapping_client)
 			Performs a series of test to see if a client can see the

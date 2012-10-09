@@ -13,7 +13,6 @@ class CVoting : public CComponent
 {
 	CHeap m_Heap;
 
-	static void ConCallvote(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 
 	int64 m_Closetime;
@@ -21,10 +20,10 @@ class CVoting : public CComponent
 	char m_aReason[VOTE_REASON_LENGTH];
 	int m_Voted;
 	int m_Yes, m_No, m_Pass, m_Total;
+	int m_CallvoteBlockTick;
 
-	void AddOption(const char *pDescription);
 	void ClearOptions();
-	void Callvote(const char *pType, const char *pValue, const char *pReason);
+	void Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
 
 public:
 	int m_NumVoteOptions;
@@ -45,6 +44,7 @@ public:
 	void CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote = false);
 	void CallvoteKick(int ClientID, const char *pReason, bool ForceVote = false);
 	void CallvoteOption(int OptionID, const char *pReason, bool ForceVote = false);
+	void AddOption(const char *pDescription);
 	void RemovevoteOption(int OptionID);
 	void AddvoteOption(const char *pDescription, const char *pCommand);
 
@@ -55,6 +55,7 @@ public:
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }
 	const char *VoteReason() const { return m_aReason; }
+	int CallvoteBlockTime() const { return m_CallvoteBlockTick > Client()->GameTick() ? (m_CallvoteBlockTick-Client()->GameTick())/Client()->GameTickSpeed() : 0; }
 };
 
 #endif

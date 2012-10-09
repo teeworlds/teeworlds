@@ -1,0 +1,3 @@
+[submodule "data/languages"]
+	path = data/languages
+	url = git://github.com/teeworlds/teeworlds-translation.git

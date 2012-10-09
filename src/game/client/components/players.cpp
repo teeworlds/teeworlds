@@ -200,8 +200,6 @@ void CPlayers::RenderPlayer(
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
-	bool NewTick = m_pClient->m_NewTick;
-
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
@@ -252,7 +250,6 @@ void CPlayers::RenderPlayer(
 			m_pClient->m_PredictedChar.Write(&Player);
 			m_pClient->m_PredictedPrevChar.Write(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
-			NewTick = m_pClient->m_NewPredictedTick;
 		}
 	}
 
@@ -263,15 +260,6 @@ void CPlayers::RenderPlayer(
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
-
-
-	// detect events
-	if(NewTick)
-	{
-		// detect air jump
-		if(!RenderInfo.m_GotAirJump && !(Prev.m_Jumped&2))
-			m_pClient->m_pEffects->AirJump(Position);
-	}
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);

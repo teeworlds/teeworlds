@@ -104,6 +104,40 @@ const char *CGameClient::GetTeamName(int Team, bool Teamplay) const
 	return Localize("spectators");
 }
 
+enum
+{
+	DO_CHAT=0,
+	DO_BROADCAST,
+	DO_SPECIAL,
+
+	PARA_NONE=0,
+	PARA_I,
+	PARA_II,
+	PARA_III,
+};
+
+struct CGameMsg
+{
+	int m_Action;
+	int m_ParaType;
+	const char *m_pText;
+};
+
+static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
+	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"},
+	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},	//!
+	{/*GAMEMSG_TEAM_SHUFFLE*/ DO_CHAT, PARA_NONE, "Teams were shuffled"},
+	{/*GAMEMSG_TEAM_BALANCE*/ DO_CHAT, PARA_NONE, "Teams have been balanced"},
+	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
+	{/*GAMEMSG_CTF_RETURN*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf return sound
+
+	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, "All players were moved to the %s"},	// special - add team name
+	{/*GAMEMSG_TEAM_BALANCE_VICTIM*/ DO_SPECIAL, PARA_I, "You were moved to %s due to team balancing"},	// special - add team name
+	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
+
+	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
+};
+
 void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
@@ -121,6 +155,7 @@ void CGameClient::OnConsoleInit()
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
+	m_pBroadcast = &::gs_Broadcast;
 	m_pGameConsole = &::gs_GameConsole;
 	m_pParticles = &::gs_Particles;
 	m_pMenus = &::gs_Menus;
@@ -187,7 +222,6 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pBinds);
 
 	// add the some console commands
-	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
@@ -226,8 +260,10 @@ void CGameClient::OnInit()
 
 	// load default font
 	static CFont *pDefaultFont = 0;
+	char aFontName[256];
+	str_format(aFontName, sizeof(aFontName), "fonts/%s", g_Config.m_ClFontfile);
 	char aFilename[512];
-	IOHANDLE File = Storage()->OpenFile("fonts/DejaVuSans.ttf", IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+	IOHANDLE File = Storage()->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
 	{
 		io_close(File);
@@ -235,7 +271,11 @@ void CGameClient::OnInit()
 		TextRender()->SetDefaultFont(pDefaultFont);
 	}
 	if(!pDefaultFont)
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load font. filename='fonts/DejaVuSans.ttf'");
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
+	}
 
 	// init all components
 	for(int i = m_All.m_Num-1; i >= 0; --i)
@@ -310,9 +350,6 @@ void CGameClient::OnConnected()
 		m_All.m_paComponents[i]->OnReset();
 	}
 
-	CServerInfo CurrentServerInfo;
-	Client()->GetServerInfo(&CurrentServerInfo);
-
 	m_ServerMode = SERVERMODE_PURE;
 
 	// send the inital info
@@ -332,6 +369,7 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_LocalClientID = -1;
+	m_TeamCooldownTick = 0;
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecID = SPEC_FREEVIEW;
 	m_Tuning = CTuningParams();
@@ -429,10 +467,6 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
-
-	// clear new tick flags
-	m_NewTick = false;
-	m_NewPredictedTick = false;
 }
 
 void CGameClient::OnRelease()
@@ -483,6 +517,105 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// apply new tuning
 		m_Tuning = NewTuning;
 		return;
+	}
+	else if(MsgId == NETMSGTYPE_SV_VOTEOPTIONLISTADD)
+	{
+		int NumOptions = pUnpacker->GetInt();
+		for(int i = 0; i < NumOptions; i++)
+		{
+			const char *pDescription = pUnpacker->GetString(CUnpacker::SANITIZE_CC);
+			if(pUnpacker->Error())
+				return;
+
+			m_pVoting->AddOption(pDescription);
+		}
+	}
+	else if(MsgId == NETMSGTYPE_SV_GAMEMSG)
+	{
+		int GameMsgID = pUnpacker->GetInt();
+
+		int aParaI[3];
+		int NumParaI = 0;
+
+		// get paras
+		switch(gs_GameMsgList[GameMsgID].m_ParaType)
+		{
+		case PARA_III:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+		case PARA_II:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+		case PARA_I:
+			aParaI[NumParaI++] = pUnpacker->GetInt();
+		}
+
+		// check for unpacking errors
+		if(pUnpacker->Error())
+			return;
+
+		// handle special messages
+		static char aBuf[256];
+		if(gs_GameMsgList[GameMsgID].m_Action == DO_SPECIAL)
+		{
+			switch(GameMsgID)
+			{
+			case GAMEMSG_CTF_DROP:
+				if(m_SuppressEvents)
+					return;
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_DROP);
+				break;
+			case GAMEMSG_CTF_RETURN:
+				if(m_SuppressEvents)
+					return;
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_RETURN);
+				break;
+			case GAMEMSG_TEAM_BALANCE_VICTIM:
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+				m_pBroadcast->DoBroadcast(aBuf);
+				break;
+			case GAMEMSG_CTF_GRAB:
+				if(m_SuppressEvents)
+					return;
+				if(m_LocalClientID != -1 && (m_aClients[m_LocalClientID].m_Team != aParaI[0] ||
+					(m_Snap.m_SpecInfo.m_Active && m_Snap.m_SpecInfo.m_SpectatorID != -1 && m_aClients[m_Snap.m_SpecInfo.m_SpectatorID].m_Team != aParaI[0])))
+					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_PL);
+				else
+					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_EN);
+				break;
+			case GAMEMSG_CTF_CAPTURE:
+				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
+				if(aParaI[2] <= 60*Client()->GameTickSpeed())
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%.2f seconds)", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
+				else
+					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
+				m_pChat->AddLine(-1, 0, aBuf);
+			}
+			return;
+		}
+
+		// build message
+		const char *pText = "";
+		if(NumParaI == 0)
+			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
+		else
+		{
+			if(NumParaI == 1)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0]);
+			else if(NumParaI == 2)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1]);
+			else if(NumParaI == 3)
+				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1], aParaI[2]);
+			pText = aBuf;
+		}
+
+		// handle message
+		switch(gs_GameMsgList[GameMsgID].m_Action)
+		{
+		case DO_CHAT:
+			m_pChat->AddLine(-1, 0, pText);
+			break;
+		case DO_BROADCAST:
+			m_pBroadcast->DoBroadcast(pText);
+		}
 	}
 
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
@@ -595,6 +728,22 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_GameInfo.m_MatchNum = pMsg->m_MatchNum;
 		m_GameInfo.m_MatchCurrent = pMsg->m_MatchCurrent;
 	}
+	else if(MsgId == NETMSGTYPE_SV_SERVERSETTINGS && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		Client()->RecordGameMessage(false);
+		CNetMsg_Sv_ServerSettings *pMsg = (CNetMsg_Sv_ServerSettings *)pRawMsg;
+
+		if(!m_ServerSettings.m_TeamLock && pMsg->m_TeamLock)
+			m_pChat->AddLine(-1, 0, Localize("Teams were locked"));
+		else if(m_ServerSettings.m_TeamLock && !pMsg->m_TeamLock)
+			m_pChat->AddLine(-1, 0, Localize("Teams were unlocked"));
+		m_ServerSettings.m_KickVote = pMsg->m_KickVote;
+		m_ServerSettings.m_KickMin = pMsg->m_KickMin;
+		m_ServerSettings.m_SpecVote = pMsg->m_SpecVote;
+		m_ServerSettings.m_TeamLock = pMsg->m_TeamLock;
+		m_ServerSettings.m_TeamBalance = pMsg->m_TeamBalance;
+		m_ServerSettings.m_PlayerSlots = pMsg->m_PlayerSlots;
+	}
 	else if(MsgId == NETMSGTYPE_SV_TEAM)
 	{
 		CNetMsg_Sv_Team *pMsg = (CNetMsg_Sv_Team *)pRawMsg;
@@ -609,6 +758,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]++;
 
 			m_aClients[pMsg->m_ClientID].UpdateRenderInfo(this, false);
+
+			if(pMsg->m_ClientID == m_LocalClientID)
+				m_TeamCooldownTick = pMsg->m_CooldownTick;
 		}
 
 		if(pMsg->m_Silent == 0)
@@ -627,20 +779,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// apply
 		m_aClients[pMsg->m_ClientID].m_Emoticon = pMsg->m_Emoticon;
 		m_aClients[pMsg->m_ClientID].m_EmoticonStart = Client()->GameTick();
-	}
-	else if(MsgId == NETMSGTYPE_SV_SOUNDGLOBAL)
-	{
-		if(m_SuppressEvents)
-			return;
-
-		// don't enqueue pseudo-global sounds from demos (created by PlayAndRecord)
-		CNetMsg_Sv_SoundGlobal *pMsg = (CNetMsg_Sv_SoundGlobal *)pRawMsg;
-		if(pMsg->m_SoundID == SOUND_CTF_DROP || pMsg->m_SoundID == SOUND_CTF_RETURN ||
-			pMsg->m_SoundID == SOUND_CTF_CAPTURE || pMsg->m_SoundID == SOUND_CTF_GRAB_EN ||
-			pMsg->m_SoundID == SOUND_CTF_GRAB_PL)
-			m_pSounds->Enqueue(CSounds::CHN_GLOBAL, pMsg->m_SoundID);
-		else
-			m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
 	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTENTER && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
@@ -730,10 +868,29 @@ void CGameClient::ProcessEvents()
 	}
 }
 
+void CGameClient::ProcessTriggeredEvents(int Events, vec2 Pos)
+{
+	if(m_SuppressEvents)
+		return;
+
+	if(Events&COREEVENTFLAG_GROUND_JUMP)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_AIR_JUMP)
+		m_pEffects->AirJump(Pos);
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_GROUND)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_HIT_NOHOOK)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
+	/*if(Events&COREEVENTFLAG_HOOK_LAUNCH)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, Pos);
+	if(Events&COREEVENTFLAG_HOOK_RETRACT)
+		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);*/
+}
+
 void CGameClient::OnNewSnapshot()
 {
-	m_NewTick = true;
-
 	// clear out the invalid pointers
 	mem_zero(&m_Snap, sizeof(m_Snap));
 
@@ -881,6 +1038,9 @@ void CGameClient::OnNewSnapshot()
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
 						EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
 				}
+
+				if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+					ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
 			{
@@ -1119,27 +1279,9 @@ void CGameClient::OnPredict()
 		if(Tick > m_LastNewPredictedTick)
 		{
 			m_LastNewPredictedTick = Tick;
-			m_NewPredictedTick = true;
 
 			if(m_LocalClientID != -1 && World.m_apCharacters[m_LocalClientID])
-			{
-				vec2 Pos = World.m_apCharacters[m_LocalClientID]->m_Pos;
-				int Events = World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents;
-				if(Events&COREEVENT_GROUND_JUMP) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
-
-				/*
-				if(Events&COREEVENT_AIR_JUMP)
-				{
-					m_pEffects->air_jump(pos);
-					m_pSounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
-				}*/
-
-				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(Events&COREEVENT_HOOK_ATTACH_GROUND) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
-				if(Events&COREEVENT_HOOK_HIT_NOHOOK) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
-				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-			}
+				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos);
 		}
 
 		if(Tick == Client()->PredGameTick() && World.m_apCharacters[m_LocalClientID])
@@ -1300,11 +1442,6 @@ void CGameClient::SendReadyChange()
 {
 	CNetMsg_Cl_ReadyChange Msg;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-}
-
-void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
-{
-	((CGameClient*)pUserData)->SendSwitchTeam(pResult->GetInteger(0));
 }
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)

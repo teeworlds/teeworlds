@@ -3,10 +3,19 @@ from datatypes import *
 Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"])
 Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"])
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
+Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"])
 
-PlayerFlags = Flags("PLAYERFLAG", ["CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
+PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
+CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
+
+GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
+							
+							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
+							
+							"CTF_CAPTURE"])
+
 
 RawHeader = '''
 
@@ -40,13 +49,16 @@ RawSource = '''
 Enums = [
 	Pickups,
 	Emotes,
-	Emoticons
+	Emoticons,
+	Votes,
+	GameMsgIDs,
 ]
 
 Flags = [
 	PlayerFlags,
 	GameFlags,
-	GameStateFlags
+	GameStateFlags,
+	CoreEventFlags,
 ]
 
 Objects = [
@@ -146,6 +158,7 @@ Objects = [
 		NetIntRange("m_Weapon", 0, 'NUM_WEAPONS-1'),
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
+		NetFlag("m_TriggeredEvents", CoreEventFlags),
 	]),
 
 	NetObject("PlayerInfo", [
@@ -223,10 +236,6 @@ Messages = [
 		NetString("m_pMessage"),
 	]),
 
-	NetMessage("Sv_Broadcast", [
-		NetString("m_pMessage"),
-	]),
-
 	NetMessage("Sv_Chat", [
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
@@ -237,6 +246,7 @@ Messages = [
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetBool("m_Silent"),
+		NetTick("m_CooldownTick"),
 	]),
 
 	NetMessage("Sv_KillMsg", [
@@ -244,10 +254,6 @@ Messages = [
 		NetIntRange("m_Victim", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Weapon", -3, 'NUM_WEAPONS-1'),
 		NetIntAny("m_ModeSpecial"),
-	]),
-
-	NetMessage("Sv_SoundGlobal", [
-		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
 	NetMessage("Sv_TuneParams", []),
@@ -263,17 +269,9 @@ Messages = [
 		NetEnum("m_Emoticon", Emoticons),
 	]),
 
-	NetMessage("Sv_VoteClearOptions", [
-	]),
+	NetMessage("Sv_VoteClearOptions", []),
 
-	NetMessage("Sv_VoteOptionListAdd", [
-		NetIntRange("m_NumOptions", 1, 15),
-		NetStringStrict("m_pDescription0"), NetStringStrict("m_pDescription1"),	NetStringStrict("m_pDescription2"),
-		NetStringStrict("m_pDescription3"),	NetStringStrict("m_pDescription4"),	NetStringStrict("m_pDescription5"),
-		NetStringStrict("m_pDescription6"), NetStringStrict("m_pDescription7"), NetStringStrict("m_pDescription8"),
-		NetStringStrict("m_pDescription9"), NetStringStrict("m_pDescription10"), NetStringStrict("m_pDescription11"),
-		NetStringStrict("m_pDescription12"), NetStringStrict("m_pDescription13"), NetStringStrict("m_pDescription14"),
-	]),
+	NetMessage("Sv_VoteOptionListAdd", []),
 
 	NetMessage("Sv_VoteOptionAdd", [
 		NetStringStrict("m_pDescription"),
@@ -284,6 +282,8 @@ Messages = [
 	]),
 
 	NetMessage("Sv_VoteSet", [
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
+		NetEnum("m_Type", Votes),
 		NetIntRange("m_Timeout", 0, 60),
 		NetStringStrict("m_pDescription"),
 		NetStringStrict("m_pReason"),
@@ -294,6 +294,15 @@ Messages = [
 		NetIntRange("m_No", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Total", 0, 'MAX_CLIENTS'),
+	]),
+
+	NetMessage("Sv_ServerSettings", [
+		NetBool("m_KickVote"),
+		NetIntRange("m_KickMin", 0, 'MAX_CLIENTS'),
+		NetBool("m_SpecVote"),
+		NetBool("m_TeamLock"),
+		NetBool("m_TeamBalance"),
+		NetIntRange("m_PlayerSlots", 0, 'MAX_CLIENTS'),
 	]),
 
 	NetMessage("Sv_ClientInfo", [
@@ -322,6 +331,8 @@ Messages = [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pReason"),
 	]),
+
+	NetMessage("Sv_GameMsg", []),
 
 	## Demo messages
 	NetMessage("De_ClientEnter", [
@@ -373,5 +384,6 @@ Messages = [
 		NetStringStrict("m_Type"),
 		NetStringStrict("m_Value"),
 		NetStringStrict("m_Reason"),
+		NetBool("m_Force"),
 	]),
 ]

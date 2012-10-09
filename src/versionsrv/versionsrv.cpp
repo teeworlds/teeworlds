@@ -7,6 +7,7 @@
 #include <game/version.h>
 
 #include "versionsrv.h"
+#include "mapversions.h"
 
 enum {
 	MAX_MAPS_PER_PACKET=48,

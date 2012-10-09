@@ -118,13 +118,13 @@ void CCharacterCore::Tick(bool UseInput)
 			{
 				if(Grounded)
 				{
-					m_TriggeredEvents |= COREEVENT_GROUND_JUMP;
+					m_TriggeredEvents |= COREEVENTFLAG_GROUND_JUMP;
 					m_Vel.y = -m_pWorld->m_Tuning.m_GroundJumpImpulse;
 					m_Jumped |= 1;
 				}
 				else if(!(m_Jumped&2))
 				{
-					m_TriggeredEvents |= COREEVENT_AIR_JUMP;
+					m_TriggeredEvents |= COREEVENTFLAG_AIR_JUMP;
 					m_Vel.y = -m_pWorld->m_Tuning.m_AirJumpImpulse;
 					m_Jumped |= 3;
 				}
@@ -143,7 +143,7 @@ void CCharacterCore::Tick(bool UseInput)
 				m_HookDir = TargetDirection;
 				m_HookedPlayer = -1;
 				m_HookTick = 0;
-				m_TriggeredEvents |= COREEVENT_HOOK_LAUNCH;
+				//m_TriggeredEvents |= COREEVENTFLAG_HOOK_LAUNCH;
 			}
 		}
 		else
@@ -182,7 +182,7 @@ void CCharacterCore::Tick(bool UseInput)
 	else if(m_HookState == HOOK_RETRACT_END)
 	{
 		m_HookState = HOOK_RETRACTED;
-		m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+		//m_TriggeredEvents |= COREEVENTFLAG_HOOK_RETRACT;
 		m_HookState = HOOK_RETRACTED;
 	}
 	else if(m_HookState == HOOK_FLYING)
@@ -221,7 +221,7 @@ void CCharacterCore::Tick(bool UseInput)
 				{
 					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
-						m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_PLAYER;
+						m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
 						m_HookedPlayer = i;
 						Distance = distance(m_HookPos, pCharCore->m_Pos);
@@ -235,12 +235,12 @@ void CCharacterCore::Tick(bool UseInput)
 			// check against ground
 			if(GoingToHitGround)
 			{
-				m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_GROUND;
+				m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_GROUND;
 				m_HookState = HOOK_GRABBED;
 			}
 			else if(GoingToRetract)
 			{
-				m_TriggeredEvents |= COREEVENT_HOOK_HIT_NOHOOK;
+				m_TriggeredEvents |= COREEVENTFLAG_HOOK_HIT_NOHOOK;
 				m_HookState = HOOK_RETRACT_START;
 			}
 

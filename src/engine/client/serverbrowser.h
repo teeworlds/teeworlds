@@ -9,6 +9,13 @@
 class CServerBrowser : public IServerBrowser
 {
 public:
+	enum
+	{
+		SET_MASTER_ADD=1,
+		SET_FAV_ADD,
+		SET_TOKEN,
+	};
+
 	class CServerEntry
 	{
 	public:
@@ -21,11 +28,6 @@ public:
 
 		CServerEntry *m_pPrevReq; // request list
 		CServerEntry *m_pNextReq;
-	};
-
-	enum
-	{
-		MAX_FAVORITES=256
 	};
 
 	class CServerFilter
@@ -72,8 +74,8 @@ public:
 
 	// interface functions
 	void Refresh(int Type);
-	bool IsRefreshing() const;
-	bool IsRefreshingMasters() const;
+	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
+	bool IsRefreshingMasters() const { return m_pMasterServer->IsRefreshing(); }
 	int LoadingProgression() const;
 
 	int NumServers() const { return m_NumServers; }
@@ -84,9 +86,9 @@ public:
 	const CServerInfo *SortedGet(int FilterIndex, int Index) const;
 	const void *GetID(int FilterIndex, int Index) const;
 
-	bool IsFavorite(const NETADDR &Addr) const;
-	void AddFavorite(const NETADDR &Addr);
-	void RemoveFavorite(const NETADDR &Addr);
+	bool IsFavorite(const NETADDR &Addr) { return FindFavoriteByAddr(Addr, 0) != 0; }
+	void AddFavorite(const CServerInfo *pEntry) { AddFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr, true); }
+	void RemoveFavorite(const CServerInfo *pEntry) { RemoveFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr); }
 
 	//
 	void Update(bool ForceResort);
@@ -99,14 +101,49 @@ private:
 	CNetClient *m_pNetClient;
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
+	class IEngine *m_pEngine;
 	class IFriends *m_pFriends;
 	char m_aNetVersion[128];
 
 	CHeap m_ServerlistHeap;
 
-	NETADDR m_aFavoriteServers[MAX_FAVORITES];
+	// favourite
+	enum
+	{
+		FAVSTATE_LOOKUP=0,
+		FAVSTATE_LOOKUPCHECK,
+		FAVSTATE_INVALID,
+		FAVSTATE_ADDR,
+		FAVSTATE_HOST,
+
+		MAX_FAVORITES=256,
+	};
+
+	struct CFavoriteServer
+	{
+		char m_aHostname[128];
+		NETADDR m_Addr;
+		int m_State;
+	} m_aFavoriteServers[MAX_FAVORITES];
+
 	int m_NumFavoriteServers;
 
+	struct CFavoriteLookup
+	{
+		class CHostLookup m_HostLookup;
+		int m_FavoriteIndex;
+		int m_LookupCount;
+		bool m_Active;
+	} m_FavLookup;
+
+	void UpdateFavorites();
+	CFavoriteServer *FindFavoriteByAddr(const NETADDR &Addr, int *Index);
+	CFavoriteServer *FindFavoriteByHostname(const char *pHostname, int *Index);
+	void RemoveFavoriteEntry(int Index);
+	void AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck);
+	void RemoveFavoriteEx(const char *pHostname, const NETADDR *Addr);
+
+	//
 	CServerEntry *m_aServerlistIp[256]; // ip hash list
 
 	CServerEntry **m_ppServerlist;
@@ -138,6 +175,8 @@ private:
 
 	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info);
 
+	static void ConAddFavorite(IConsole::IResult *pResult, void *pUserData);
+	static void ConRemoveFavorite(IConsole::IResult *pResult, void *pUserData);
 	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
 };
 

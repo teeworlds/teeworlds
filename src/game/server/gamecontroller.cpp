@@ -192,14 +192,12 @@ void IGameController::DoTeamBalance()
 		DoTeamChange(pPlayer, BiggerTeam^1);
 		pPlayer->m_LastActionTick = Temp;
 		pPlayer->Respawn();
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "You were moved to %s due to team balancing", GetTeamName(pPlayer->GetTeam()));
-		GameServer()->SendBroadcast(aBuf, pPlayer->GetCID());
+		GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE_VICTIM, pPlayer->GetTeam(), pPlayer->GetCID());
 	}
 	while(--NumBalance);
 
 	m_UnbalancedTick = TBALANCE_OK;
-	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "Teams have been balanced");
+	GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE, -1);
 }
 
 // event
@@ -825,21 +823,6 @@ bool IGameController::IsTeamChangeAllowed() const
 	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
 }
 
-const char *IGameController::GetTeamName(int Team) const
-{
-	if(IsTeamplay())
-	{
-		if(Team == TEAM_RED)
-			return "red team";
-		else if(Team == TEAM_BLUE)
-			return "blue team";
-	}
-	else if(Team == 0)
-		return "game";
-
-	return "spectators";
-}
-
 void IGameController::UpdateGameInfo(int ClientID)
 {
 	CNetMsg_Sv_GameInfo GameInfoMsg;
@@ -1066,11 +1049,12 @@ bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam) const
 
 bool IGameController::CanJoinTeam(int Team, int NotThisID) const
 {
-	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS))
+	if(Team == TEAM_SPECTATORS)
 		return true;
 
 	// check if there're enough player slots left
-	return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	int TeamMod = GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS ? -1 : 0;
+	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
 }
 
 int IGameController::ClampTeam(int Team) const
@@ -1098,6 +1082,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	Msg.m_ClientID = ClientID;
 	Msg.m_Team = Team;
 	Msg.m_Silent = DoChatMsg ? 0 : 1;
+	Msg.m_CooldownTick = pPlayer->m_TeamChangeTick;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	char aBuf[128];

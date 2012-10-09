@@ -171,7 +171,13 @@ public:
 	};
 
 	void DoPause(int Seconds) { SetGameState(IGS_GAME_PAUSED, Seconds); }
-	void DoWarmup(int Seconds) { SetGameState(IGS_WARMUP_USER, Seconds); }
+	void DoWarmup(int Seconds)
+	{
+		if(m_GameState==IGS_WARMUP_GAME)
+			SetGameState(IGS_WARMUP_GAME, 0);
+		else
+			SetGameState(IGS_WARMUP_USER, Seconds);
+	}
 
 	// general
 	virtual void Snap(int SnappingClient);
@@ -185,7 +191,6 @@ public:
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
 	
 	const char *GetGameType() const { return m_pGameType; }
-	const char *GetTeamName(int Team) const;
 	
 	// map
 	void ChangeMap(const char *pToMap);
@@ -201,6 +206,7 @@ public:
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg=true);
 	void ForceTeamBalance() { if(!(m_GameFlags&GAMEFLAG_SURVIVAL)) DoTeamBalance(); }
 	
+	int GetRealPlayerNum() const { return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE]; }
 	int GetStartTeam();
 };
 
