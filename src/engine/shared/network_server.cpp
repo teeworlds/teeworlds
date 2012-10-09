@@ -146,11 +146,11 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			}
 
 			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
-			if(!Accept)
-				continue;
 
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 			{
+				if(!Accept)
+					continue;
 				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
 					bool Found = false;
@@ -220,6 +220,9 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			}
 			else
 			{
+				if(!Accept)
+					continue;
+
 				// TODO: check size here
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
