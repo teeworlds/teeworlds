@@ -105,8 +105,8 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN 
 	aBuffer[10] = (ResponseToken>>8)&0xff;
 	aBuffer[11] = (ResponseToken)&0xff;
 
-	mem_copy(&aBuffer[15], pData, DataSize);
-	net_udp_send(Socket, pAddr, aBuffer, 15+DataSize);
+	mem_copy(&aBuffer[NET_PACKETHEADERSIZE_CONNLESS], pData, DataSize);
+	net_udp_send(Socket, pAddr, aBuffer, NET_PACKETHEADERSIZE_CONNLESS+DataSize);
 }
 
 void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket)
