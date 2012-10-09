@@ -566,7 +566,7 @@ void CServerBrowser::Refresh(int Type)
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
 		Packet.m_ClientID = -1;
-		Packet.m_Flags = NETSENDFLAG_CONNLESS;
+		Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
 		Packet.m_DataSize = sizeof(Buffer);
 		Packet.m_pData = Buffer;
 		m_BroadcastTime = time_get();
