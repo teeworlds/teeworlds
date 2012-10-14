@@ -761,7 +761,7 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID = -1);
+	void DoQuadEnvelopes(CQuad *pQuad, int Num, int TexID = -1);
 	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 

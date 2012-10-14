@@ -338,6 +338,7 @@ void CLayerTiles::ShowInfo()
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+	Graphics()->QuadsBegin();
 
 	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
 	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
@@ -352,17 +353,18 @@ void CLayerTiles::ShowInfo()
 			{
 				char aBuf[64];
 				str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
-				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, 1,1,1,1, aBuf);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, aBuf);
 
 				char aFlags[4] = {	m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
 									m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
 									m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ',
 									0};
-				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, 1,1,1,1, aFlags);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, aFlags);
 			}
 			x += m_pTiles[c].m_Skip;
 		}
 
+	Graphics()->QuadsEnd();
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 

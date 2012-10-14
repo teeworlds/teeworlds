@@ -137,14 +137,16 @@ void CGraph::Render(IGraphics *pGraphics, int Font, float x, float y, float w, f
 	pGraphics->LinesEnd();
 
 	pGraphics->TextureSet(Font);
-	pGraphics->QuadsText(x+2, y+h-16, 16, 1,1,1,1, pDescription);
+	pGraphics->QuadsBegin();
+	pGraphics->QuadsText(x+2, y+h-16, 16, pDescription);
 
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%.2f", m_Max);
-	pGraphics->QuadsText(x+w-8*str_length(aBuf)-8, y+2, 16, 1,1,1,1, aBuf);
+	pGraphics->QuadsText(x+w-8*str_length(aBuf)-8, y+2, 16, aBuf);
 
 	str_format(aBuf, sizeof(aBuf), "%.2f", m_Min);
-	pGraphics->QuadsText(x+w-8*str_length(aBuf)-8, y+h-16, 16, 1,1,1,1, aBuf);
+	pGraphics->QuadsText(x+w-8*str_length(aBuf)-8, y+h-16, 16, aBuf);
+	pGraphics->QuadsEnd();
 }
 
 
@@ -678,6 +680,7 @@ void CClient::DebugRender()
 	//m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(m_DebugFont);
 	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
+	Graphics()->QuadsBegin();
 
 	if(time_get()-LastSnap > time_freq())
 	{
@@ -699,7 +702,7 @@ void CClient::DebugRender()
 		mem_stats()->total_allocations,
 		Graphics()->MemoryUsage()/1024,
 		(int)(1.0f/FrameTimeAvg + 0.5f));
-	Graphics()->QuadsText(2, 2, 16, 1,1,1,1, aBuffer);
+	Graphics()->QuadsText(2, 2, 16, aBuffer);
 
 
 	{
@@ -715,7 +718,7 @@ void CClient::DebugRender()
 		str_format(aBuffer, sizeof(aBuffer), "send: %3d %5d+%4d=%5d (%3d kbps) avg: %5d\nrecv: %3d %5d+%4d=%5d (%3d kbps) avg: %5d",
 			SendPackets, SendBytes, SendPackets*42, SendTotal, (SendTotal*8)/1024, SendBytes/SendPackets,
 			RecvPackets, RecvBytes, RecvPackets*42, RecvTotal, (RecvTotal*8)/1024, RecvBytes/RecvPackets);
-		Graphics()->QuadsText(2, 14, 16, 1,1,1,1, aBuffer);
+		Graphics()->QuadsText(2, 14, 16, aBuffer);
 	}
 
 	// render rates
@@ -728,7 +731,7 @@ void CClient::DebugRender()
 			{
 				str_format(aBuffer, sizeof(aBuffer), "%4d %20s: %8d %8d %8d", i, GameClient()->GetItemName(i), m_SnapshotDelta.GetDataRate(i)/8, m_SnapshotDelta.GetDataUpdates(i),
 					(m_SnapshotDelta.GetDataRate(i)/m_SnapshotDelta.GetDataUpdates(i))/8);
-				Graphics()->QuadsText(2, 100+y*12, 16, 1,1,1,1, aBuffer);
+				Graphics()->QuadsText(2, 100+y*12, 16, aBuffer);
 				y++;
 			}
 		}
@@ -736,7 +739,8 @@ void CClient::DebugRender()
 
 	str_format(aBuffer, sizeof(aBuffer), "pred: %d ms",
 		(int)((m_PredictedTime.Get(Now)-m_GameTime.Get(Now))*1000/(float)time_freq()));
-	Graphics()->QuadsText(2, 70, 16, 1,1,1,1, aBuffer);
+	Graphics()->QuadsText(2, 70, 16, aBuffer);
+	Graphics()->QuadsEnd();
 
 	// render graphs
 	if(g_Config.m_DbgGraphs)
