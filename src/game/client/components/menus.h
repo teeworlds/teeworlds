@@ -324,6 +324,7 @@ class CMenus : public CComponent
 		{
 			OVERLAY_SERVERINFO=0,
 			OVERLAY_HEADERINFO,
+			OVERLAY_PLAYERSINFO,
 		};
 
 		int m_Type;
