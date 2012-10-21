@@ -755,7 +755,7 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *pQuad, int Index, IGraphics::CTextureHandle Texture = IGraphics::CTextureHandle());
+	void DoQuadEnvelopes(CQuad *pQuad, int Num, IGraphics::CTextureHandle Texture = IGraphics::CTextureHandle());
 	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
