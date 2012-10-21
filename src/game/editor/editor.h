@@ -761,8 +761,8 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *pQuad, int Num, int TexID = -1);
-	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
+	void DoQuadEnvelopes(const array<CQuad> &m_lQuads, int TexID = -1);
+	void DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
