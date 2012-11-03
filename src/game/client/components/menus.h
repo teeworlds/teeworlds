@@ -35,11 +35,11 @@ class CMenus : public CComponent
 
 
 	int DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect);
-	int DoButton_Sprite(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
+	int DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
 	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
-	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
+	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
 	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
 	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
@@ -57,7 +57,7 @@ class CMenus : public CComponent
 	static void ui_draw_settings_tab_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
 
-	int DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect);
+	int DoIcon(int ImageId, int SpriteId, const CUIRect *pRect);
 	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
@@ -355,8 +355,8 @@ class CMenus : public CComponent
 		COL_MAP,
 		COL_PLAYERS,
 		COL_PING,
-		COL_FAVORITE,
-		COL_INFO,
+		//COL_FAVORITE,
+		//COL_INFO,
 
 		NUM_COLS,
 	};
@@ -427,10 +427,10 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
-	void RenderServerbrowserConnect(CUIRect View);
+	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
-	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry);
+	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, bool Selected);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

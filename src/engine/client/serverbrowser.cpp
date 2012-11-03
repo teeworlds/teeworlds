@@ -152,7 +152,7 @@ bool CServerBrowser::CServerFilter::SortCompareMap(int Index1, int Index2) const
 	CServerEntry *a = m_pServerBrowser->m_ppServerlist[Index1];
 	CServerEntry *b = m_pServerBrowser->m_ppServerlist[Index2];
 	int Result = str_comp_nocase(a->m_Info.m_aMap, b->m_Info.m_aMap);
-	return Result < 0 || (Result == 0 && (a->m_Info.m_Flags&FLAG_PURE));
+	return Result < 0 || (Result == 0 && (a->m_Info.m_Flags&FLAG_PURE) && !(b->m_Info.m_Flags&FLAG_PURE));
 }
 
 bool CServerBrowser::CServerFilter::SortComparePing(int Index1, int Index2) const

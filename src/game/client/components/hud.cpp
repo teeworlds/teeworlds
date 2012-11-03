@@ -11,6 +11,7 @@
 #include <game/client/animstate.h>
 #include <game/client/render.h>
 
+#include "menus.h"
 #include "controls.h"
 #include "camera.h"
 #include "hud.h"
@@ -541,6 +542,10 @@ void CHud::RenderSpectatorHud()
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameData)
+		return;
+
+	// dont render hud if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
 		return;
 
 	m_Width = 300.0f*Graphics()->ScreenAspect();

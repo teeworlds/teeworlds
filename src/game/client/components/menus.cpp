@@ -87,7 +87,7 @@ float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)
 	return pFade;
 }
 
-int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
+int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)
 {
 	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
 
@@ -120,21 +120,29 @@ int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, 
 	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
 }
 
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
+int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor, vec4 ColorHot, bool TextFade)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
 	float *pFade = ButtonFade(pID, Seconds, Checked);
 	float FadeVal = *pFade/Seconds;
 
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
+	vec4 Color = mix(vec4(0.0f, 0.0f, 0.0f, 0.25f), ColorHot, FadeVal);
+
+	RenderTools()->DrawUIRect(pRect, Color, Corners, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
-	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
-	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
+	if(TextFade)
+	{
+		TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
+		TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
+	}
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	if(TextFade)
+	{
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	}
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -238,10 +246,23 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 //void CMenus::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
 	if(Checked)
-		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), 0, 0.0f);
-	CUIRect t;
-	pRect->VSplitLeft(5.0f, 0, &t);
-	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight, -1);
+	{
+		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
+		TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+	}
+
+	CUIRect Label;
+	pRect->VSplitLeft(5.0f, 0, &Label);
+	Label.y+=2.0f;
+	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, 0);
+
+	if(Checked)
+	{
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	}
+
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -280,13 +301,13 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	t.VSplitLeft(5.0f, 0, &t);
 
 	c.Margin(2.0f, &c);
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHECKBOXICONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
 	if(Checked)
-		RenderTools()->SelectSprite(SPRITE_CHECKBOX_ACTIVE);
+		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_ACTIVE);
 	else
-		RenderTools()->SelectSprite(SPRITE_CHECKBOX_INACTIVE);
+		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_INACTIVE);
 	IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
@@ -307,6 +328,30 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d", Checked);
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
+}
+
+int CMenus::DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners, float r, bool Fade)
+{
+	float Seconds = 0.6f; //  0.6 seconds for fade
+	float *pFade = ButtonFade(pID, Seconds);
+	float FadeVal = *pFade/Seconds;
+
+	CUIRect Icon = *pRect;
+	Icon.Margin(2.0f, &Icon);
+
+	if(Fade)
+		RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
+	else
+		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, r);
+	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	RenderTools()->SelectSprite(SpriteID);
+	IGraphics::CQuadItem QuadItem(Icon.x, Icon.y, Icon.w, Icon.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	return UI()->DoButtonLogic(pID, "", false, pRect);
 }
 
 int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect)
@@ -561,13 +606,13 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 	CUIRect Button;
 	Header.VSplitLeft(Header.h, &Button, 0);
 	Button.Margin(2.0f, &Button);
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FOLDICONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
 	if(Active)
-		RenderTools()->SelectSprite(SPRITE_FOLD_EXPANDED);
+		RenderTools()->SelectSprite(SPRITE_MENU_EXPANDED);
 	else
-		RenderTools()->SelectSprite(SPRITE_FOLD_COLLAPSED);
+		RenderTools()->SelectSprite(SPRITE_MENU_COLLAPSED);
 	IGraphics::CQuadItem QuadItem(Button.x, Button.y, Button.w, Button.h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -764,11 +809,14 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, 0);
 	}
 
-	// list background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
 	// prepare the scroll
 	View.VSplitRight(20.0f, &View, &Scroll);
+
+	// scroll background
+	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// list background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// setup the variables
 	gs_ListBoxOriginalView = View;
@@ -805,7 +853,6 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 
 	// the list
 	gs_ListBoxView = gs_ListBoxOriginalView;
-	gs_ListBoxView.VMargin(5.0f, &gs_ListBoxView);
 	UI()->ClipEnable(&gs_ListBoxView);
 	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
 }
@@ -921,7 +968,6 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
 
 		//selected_index = i;
 		CUIRect r = Item.m_Rect;
-		r.Margin(1.5f, &r);
 		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
 	}
 
@@ -1076,17 +1122,26 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
-		// render header background
-		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-
-		Box.HSplitBottom(25.0f, 0, &Box);
-
 		// render menu tabs
 		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FRIENDS)
 		{
-			Box.VSplitLeft(100.0f, &Button, &Box);
+			float Spacing = 3.0f;
+			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+			CUIRect Left, Right;
+			Box.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
+			Box.VSplitRight(ButtonWidth, 0, &Right);
+
+			// render header backgrounds
+			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+			RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+			Left.HSplitBottom(25.0f, 0, &Left);
+			Right.HSplitBottom(25.0f, 0, &Right);
+
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_InternetButton=0;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Internet"), m_ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_T|CUI::CORNER_IBL) && m_ActivePage!=PAGE_INTERNET)
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -1094,19 +1149,30 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_INTERNET;
 			}
 
-			//Box.VSplitLeft(4.0f, 0, &Box);
-			Box.VSplitLeft(80.0f, &Button, &Box);
+			Left.VSplitLeft(Spacing, 0, &Left); // little space
+			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_LanButton=0;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("LAN"), m_ActivePage==PAGE_LAN, &Button, CUI::CORNER_T) && m_ActivePage!=PAGE_LAN)
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
+
+			static int s_FilterButton=0;
+			if(DoButton_Menu(&s_FilterButton, Localize("Filter"), 0, &Right))
+			{
+				// TODO
+			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
 		{
+			// render header background
+			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+			Box.HSplitBottom(25.0f, 0, &Box);
+
 			// make the header look like an active tab
 			RenderTools()->DrawUIRect(&Box, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 5.0f);
 			Box.HMargin(2.0f, &Box);
@@ -1734,9 +1800,7 @@ int CMenus::Render()
 				Box.HSplitTop(12.0f, 0, &Part);
 				UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 				Part.HSplitTop(12.0f, 0, &Part);
-				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor,"), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
-				Part.HSplitTop(12.0f, 0, &Part);
-				UI()->DoLabel(&Part, Localize("you might want to save it before you quit the game."), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 			else
 			{

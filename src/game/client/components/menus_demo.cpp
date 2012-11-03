@@ -29,23 +29,6 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRec
 	return UI()->DoButtonLogic(pID, pText, false, pRect);
 }
 
-int CMenus::DoButton_Sprite(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
-
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), Corners, 5.0f);
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return UI()->DoButtonLogic(pID, "", false, pRect);
-}
-
 void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
 	const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
@@ -169,12 +152,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_PlayPauseButton = 0;
 		if(!pInfo->m_Paused)
 		{
-			if(DoButton_Sprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, &Button, CUI::CORNER_ALL))
+			if(DoButton_SpriteID(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, &Button, CUI::CORNER_ALL))
 				DemoPlayer()->Pause();
 		}
 		else
 		{
-			if(DoButton_Sprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PLAY, &Button, CUI::CORNER_ALL))
+			if(DoButton_SpriteID(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PLAY, &Button, CUI::CORNER_ALL))
 				DemoPlayer()->Unpause();
 		}
 
@@ -183,7 +166,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;
-		if(DoButton_Sprite(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, &Button, CUI::CORNER_ALL))
+		if(DoButton_SpriteID(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, &Button, CUI::CORNER_ALL))
 		{
 			m_pClient->OnReset();
 			DemoPlayer()->Pause();
@@ -194,14 +177,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_Sprite(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 			DecreaseDemoSpeed = true;
 
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_FastForwardButton = 0;
-		if(DoButton_Sprite(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, &Button, CUI::CORNER_ALL))
+		if(DoButton_SpriteID(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, &Button, CUI::CORNER_ALL))
 			IncreaseDemoSpeed = true;
 
 		// speed meter
@@ -358,7 +341,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			Item.m_Rect.VSplitLeft(5.0f, 0, &Item.m_Rect);
 			FileIcon.Margin(3.0f, &FileIcon);
 			FileIcon.x += 3.0f;
-			DoButton_Icon(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon);
+			DoIcon(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon);
 			if(!str_comp(m_lDemos[m_DemolistSelectedIndex].m_aName, r.front().m_aName))
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
