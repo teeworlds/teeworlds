@@ -755,8 +755,8 @@ public:
 
 	vec4 ButtonColorMul(const void *pID);
 
-	void DoQuadEnvelopes(CQuad *pQuad, int Index, IGraphics::CTextureHandle Texture = IGraphics::CTextureHandle());
-	void DoQuadEnvPoint(CQuad *pQuad, int QIndex, int pIndex);
+	void DoQuadEnvelopes(const array<CQuad> &m_lQuads, IGraphics::CTextureHandle Texture);
+	void DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
