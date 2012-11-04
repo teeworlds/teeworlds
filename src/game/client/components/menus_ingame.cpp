@@ -78,7 +78,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	Left.VSplitLeft(ButtonWidth, &Button, &Left);
 	Left.VSplitLeft(Spacing, 0, &Left);
 	static int s_SpectateButton = 0;
-	if(DoButton_Menu(&s_SpectateButton, Localize(Team != TEAM_SPECTATORS ? "Spectate" : "Spactating"), Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && AllowSpec)
+	if(DoButton_Menu(&s_SpectateButton, Localize(Team != TEAM_SPECTATORS ? "Spectate" : "Spectating"), Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && AllowSpec)	// Localize("Spectating");
 	{
 		m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 		SetActive(false);
@@ -99,7 +99,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			Left.VSplitLeft(Spacing, 0, &Left);
 			static int s_RedButton = 0;
-			if(DoButton_Menu(&s_RedButton, Localize(Team != TEAM_RED ? "Join red" : "Joined red"), Team == TEAM_RED, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED)
+			if(DoButton_Menu(&s_RedButton, Localize(Team != TEAM_RED ? "Join red" : "Joined red"), Team == TEAM_RED, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED)	// Localize("Join red");Localize("Joined red");
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
@@ -107,7 +107,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_BlueButton = 0;
-			if(DoButton_Menu(&s_BlueButton, Localize(Team != TEAM_BLUE ? "Join blue" : "Joined blue"), Team == TEAM_BLUE, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE)
+			if(DoButton_Menu(&s_BlueButton, Localize(Team != TEAM_BLUE ? "Join blue" : "Joined blue"), Team == TEAM_BLUE, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE)	// Localize("Join blue");Localize("Joined blue");
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
 				SetActive(false);
@@ -117,7 +117,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		{
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_JoinButton = 0;
-			if(DoButton_Menu(&s_JoinButton, Localize(Team != TEAM_RED ? "Join" : "Joined"), Team == TEAM_RED, &Button) && Team != TEAM_RED)
+			if(DoButton_Menu(&s_JoinButton, Localize(Team != TEAM_RED ? "Join" : "Joined"), Team == TEAM_RED, &Button) && Team != TEAM_RED)	//Localize("Join");Localize("Joined");
 			{
 				m_pClient->SendSwitchTeam(0);
 				SetActive(false);
@@ -128,7 +128,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	// Record button
 	static int s_DemoButton = 0;
 	bool Recording = DemoRecorder()->IsRecording();
-	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Middle))
+	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Middle))	// Localize("Stop record");Localize("Record");
 	{
 		if(!Recording)
 			Client()->DemoRecorder_Start("demo", true);
