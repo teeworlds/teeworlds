@@ -322,13 +322,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		else if(ID == COL_PLAYERS)
 		{
 			// handle mouse over
-			if(UI()->MouseInside(&Button))
+			if(m_InfoMode && UI()->MouseInside(&Button))
 			{
 				// overlay
 				SetOverlay(CInfoOverlay::OVERLAY_PLAYERSINFO, UI()->MouseX(), UI()->MouseY(), pEntry);
 
 				// rect
-				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 1.0f), CUI::CORNER_ALL, 5.0f);
+				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 0.75f), CUI::CORNER_ALL, 5.0f);
 			}
 
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
@@ -788,9 +788,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		InfoButton.Margin(2.0f, &InfoButton);
 		static int s_InfoButton = 0;
-		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, SPRITE_INFO_A, &InfoButton))
+		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, ((m_InfoMode && !UI()->MouseInside(&InfoButton)) || (!m_InfoMode && UI()->MouseInside(&InfoButton))) ? SPRITE_INFO_B : SPRITE_INFO_A, &InfoButton, false))
 		{
-
+			m_InfoMode ^= 1;
 		}
 	}
 
