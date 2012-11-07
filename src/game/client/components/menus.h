@@ -150,6 +150,7 @@ class CMenus : public CComponent
 	bool m_MenuActive;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
+	vec2 m_PrevMousePos;
 	bool m_InfoMode;
 
 	// images
@@ -332,6 +333,7 @@ class CMenus : public CComponent
 		const void *m_pData;
 		float m_X;
 		float m_Y;
+		bool m_Reset;
 	};
 
 	CInfoOverlay m_InfoOverlay;

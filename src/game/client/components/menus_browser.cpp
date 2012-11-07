@@ -142,11 +142,15 @@ void CMenus::Move(bool Up, int Filter)
 
 void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 {
-	m_InfoOverlayActive = true;
-	m_InfoOverlay.m_Type = Type;
-	m_InfoOverlay.m_X = x;
-	m_InfoOverlay.m_Y = y;
-	m_InfoOverlay.m_pData = pData;
+	if(m_InfoOverlay.m_Reset)
+	{
+		m_InfoOverlayActive = true;
+		m_InfoOverlay.m_Type = Type;
+		m_InfoOverlay.m_X = x;
+		m_InfoOverlay.m_Y = y;
+		m_InfoOverlay.m_pData = pData;
+		m_InfoOverlay.m_Reset = false;
+	}
 }
 
 int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, bool Selected)
@@ -524,16 +528,23 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 void CMenus::RenderServerbrowserOverlay()
 {
 	if(!m_InfoOverlayActive)
+	{
+		m_InfoOverlay.m_Reset = true;
 		return;
+	}
 
 	int Type = m_InfoOverlay.m_Type;
+	CUIRect View;
 
 	if(Type == CInfoOverlay::OVERLAY_HEADERINFO)
 	{
 		CBrowserFilter *pFilter = (CBrowserFilter*)m_InfoOverlay.m_pData;
 
 		// get position
-		CUIRect View = { m_InfoOverlay.m_X-100.0f, m_InfoOverlay.m_Y, 100.0f, 30.0f };
+		View.x = m_InfoOverlay.m_X-100.0f;
+		View.y = m_InfoOverlay.m_Y;
+		View.w = 100.0f;
+		View.h = 30.0f;
 
 		// render background
 		RenderTools()->DrawUIRect(&View, vec4(0.25f, 0.25f, 0.25f, 1.0f), CUI::CORNER_ALL, 6.0f);
@@ -553,7 +564,10 @@ void CMenus::RenderServerbrowserOverlay()
 		const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
 
 		// get position
-		CUIRect View = { m_InfoOverlay.m_X-210.0f, m_InfoOverlay.m_Y, 210.0f, pInfo->m_NumClients ? 98.0f + pInfo->m_NumClients*25.0f : 72.0f };
+		View.x = m_InfoOverlay.m_X-210.0f;
+		View.y = m_InfoOverlay.m_Y;
+		View.w = 210.0f;
+		View.h = pInfo->m_NumClients ? 98.0f + pInfo->m_NumClients*25.0f : 72.0f;
 		if(View.y+View.h >= 590.0f)
 			View.y -= View.y+View.h - 590.0f;
 
@@ -575,7 +589,10 @@ void CMenus::RenderServerbrowserOverlay()
 		if(pInfo && pInfo->m_NumClients)
 		{
 			// get position
-			CUIRect View = { m_InfoOverlay.m_X+25.0f, m_InfoOverlay.m_Y, 250.0f, pInfo->m_NumClients*ButtonHeight };
+			View.x = m_InfoOverlay.m_X+25.0f;
+			View.y = m_InfoOverlay.m_Y;
+			View.w = 250.0f;
+			View.h = pInfo->m_NumClients*ButtonHeight;
 			if(View.x+View.w > Screen.w-5.0f)
 			{
 				View.y += 25.0f;
@@ -674,7 +691,10 @@ void CMenus::RenderServerbrowserOverlay()
 		}
 		else
 		{
-			CUIRect View = { m_InfoOverlay.m_X+25.0f, m_InfoOverlay.m_Y, 150.0f, ButtonHeight };
+			View.x = m_InfoOverlay.m_X+25.0f;
+			View.y = m_InfoOverlay.m_Y;
+			View.w = 150.0f;
+			View.h = ButtonHeight;
 			if(View.x+View.w > Screen.w-5.0f)
 			{
 				View.y += 25.0f;
@@ -695,7 +715,14 @@ void CMenus::RenderServerbrowserOverlay()
 	}
 
 	// deactivate it
-	m_InfoOverlayActive = false;
+	vec2 OverlayCenter = vec2(View.x+View.w/2.0f, View.y+View.h/2.0f);
+	float MouseDistance = distance(m_MousePos, OverlayCenter);
+	float PrefMouseDistance = distance(m_PrevMousePos, OverlayCenter);
+	if(PrefMouseDistance > MouseDistance && !UI()->MouseInside(&View))
+	{
+		m_InfoOverlayActive = false;
+		m_InfoOverlay.m_Reset = true;
+	}
 }
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)

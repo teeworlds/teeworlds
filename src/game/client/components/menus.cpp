@@ -2212,6 +2212,9 @@ bool CMenus::OnMouseMove(float x, float y)
 	if(!m_MenuActive)
 		return false;
 
+	// prev mouse position
+	m_PrevMousePos = m_MousePos;
+
 	UI()->ConvertMouseMove(&x, &y);
 	m_MousePos.x += x;
 	m_MousePos.y += y;
