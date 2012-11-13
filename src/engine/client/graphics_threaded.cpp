@@ -80,13 +80,18 @@ void CGraphics_Threaded::FlushVertices()
 		}
 	}
 
-	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
-
 	// check if we have enough free memory in the commandbuffer
 	if(!m_pCommandBuffer->AddCommand(Cmd))
 	{
 		// kick command buffer and try again
 		KickCommandBuffer();
+		
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		if(Cmd.m_pVertices == 0x0)
+		{
+			dbg_msg("graphics", "failed to allocate data for vertices");
+			return;
+		}
 
 		if(!m_pCommandBuffer->AddCommand(Cmd))
 		{
@@ -94,6 +99,8 @@ void CGraphics_Threaded::FlushVertices()
 			return;
 		}
 	}
+
+	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
 }
 
 void CGraphics_Threaded::AddVertices(int Count)
