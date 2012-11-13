@@ -81,7 +81,19 @@ void CGraphics_Threaded::FlushVertices()
 	}
 
 	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
-	m_pCommandBuffer->AddCommand(Cmd);
+
+	// check if we have enough free memory in the commandbuffer
+	if(!m_pCommandBuffer->AddCommand(Cmd))
+	{
+		// kick command buffer and try again
+		KickCommandBuffer();
+
+		if(!m_pCommandBuffer->AddCommand(Cmd))
+		{
+			dbg_msg("graphics", "failed to allocate memory for render command");
+			return;
+		}
+	}
 }
 
 void CGraphics_Threaded::AddVertices(int Count)
