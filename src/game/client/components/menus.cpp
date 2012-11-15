@@ -1163,10 +1163,17 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
 
+			char aBuf[32];
+			if(m_BorwserPage == PAGE_BROWSER_BROWSER)
+				str_copy(aBuf, Localize("Friends"), sizeof(aBuf));
+			else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
+				str_copy(aBuf, Localize("Browser"), sizeof(aBuf));
 			static int s_FilterButton=0;
-			if(DoButton_Menu(&s_FilterButton, Localize("Filter"), 0, &Right))
+			if(DoButton_Menu(&s_FilterButton, aBuf, 0, &Right))
 			{
-				// TODO
+				m_BorwserPage++;
+				if(m_BorwserPage >= NUM_PAGE_BROWSER)
+					m_BorwserPage = 0;
 			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)

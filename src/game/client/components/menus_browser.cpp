@@ -1622,9 +1622,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 
 	// server list
-	{
+	if(m_BorwserPage == PAGE_BROWSER_BROWSER)
 		RenderServerbrowserServerList(ServerList);
-	}
+	else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
+		RenderServerbrowserFriendList(ServerList);
 
 	/*// background
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 12.0f);
@@ -1658,6 +1659,19 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// render overlay if there is any
 	RenderServerbrowserOverlay();
+}
+
+// firend list
+
+void CMenus::RenderServerbrowserFriendList(CUIRect View)
+{
+	//CUIRect Headers, Status, InfoButton;
+
+	//float SpacingH = 2.0f;
+	//float ButtonHeight = 20.0f;
+
+	// background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 }
 
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

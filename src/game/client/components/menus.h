@@ -135,6 +135,10 @@ class CMenus : public CComponent
 		PAGE_SYSTEM,
 		PAGE_START,
 
+		PAGE_BROWSER_BROWSER=0,
+		PAGE_BROWSER_FRIENDS,
+		NUM_PAGE_BROWSER,
+
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,
@@ -147,6 +151,7 @@ class CMenus : public CComponent
 	int m_Popup;
 	int m_ActivePage;
 	int m_MenuPage;
+	int m_BorwserPage;
 	bool m_MenuActive;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
@@ -428,6 +433,7 @@ class CMenus : public CComponent
 	// found in menus_browser.cpp
 	int m_ScrollOffset;
 	void RenderServerbrowserServerList(CUIRect View);
+	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowserFriends(CUIRect View);
