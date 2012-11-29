@@ -808,14 +808,14 @@ void CServer::SendMapListEntryAdd(const MapListEntry *pMapListEntry, int ClientI
 {
 	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_ADD);
 	Msg.AddString(pMapListEntry->m_aName, 256);
-	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 void CServer::SendMapListEntryRem(const MapListEntry *pMapListEntry, int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_REM);
 	Msg.AddString(pMapListEntry->m_aName, 256);
-	SendMsgEx(&Msg, MSGFLAG_VITAL, ClientID, true);
+	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 
@@ -1701,30 +1701,10 @@ void CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 					(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0))
 					continue;
 
-				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN) {
-					if(str_comp(pInfo->m_pName,"sv_map")) // handle the access to the sv_map command
-					{
-						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-						Msg.AddInt(1);	//authed
-						Msg.AddInt(1);	//cmdlist
-						Msg.AddInt(1);  //maplist
-						pThis->SendMsgEx(&Msg, MSGFLAG_VITAL, pThis->m_RconClientID, true);
-						pThis->m_aClients[pThis->m_RconClientID].m_pMapListEntryToSend = pThis->m_pFirstMapEntry;
-					}
+				if(OldAccessLevel == IConsole::ACCESS_LEVEL_ADMIN)
 					pThis->SendRconCmdAdd(pInfo, i);
-				}
-				else {
-					if(str_comp(pInfo->m_pName,"sv_map")) // handle the removal of access to the sv_map command
-					{
-						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-						Msg.AddInt(1);	//authed
-						Msg.AddInt(1);	//cmdlist
-						Msg.AddInt(0);  //maplist
-						pThis->SendMsgEx(&Msg, MSGFLAG_VITAL, pThis->m_RconClientID, true);
-						pThis->m_aClients[pThis->m_RconClientID].m_pMapListEntryToSend = 0;
-					}
+				else
 					pThis->SendRconCmdRem(pInfo, i);
-				}
 			}
 		}
 	}
