@@ -12,7 +12,6 @@
 
 CDamageInd::CDamageInd()
 {
-	m_Lastupdate = 0;
 	m_NumItems = 0;
 }
 
@@ -83,5 +82,7 @@ void CDamageInd::OnRender()
 	Graphics()->QuadsEnd();
 }
 
-
-
+void CDamageInd::OnReset()
+{
+	m_NumItems = 0;
+}
