@@ -1436,7 +1436,7 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 		const CPoint *pPoints = lQuads[j].m_aPoints;
 		for(int i = 0; i < apEnvelope[j]->m_lPoints.size()-1; i++)
 		{
-			float OffsetX =  fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
+			float OffsetX = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
 			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
 			vec2 Pos0 = vec2(fx2f(pPoints[4].x)+OffsetX, fx2f(pPoints[4].y)+OffsetY);
 
@@ -1466,7 +1466,7 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 		for(int i = 0; i < apEnvelope[j]->m_lPoints.size(); i++)
 		{
 			//Calc Env Position
-			float OffsetX =  fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
+			float OffsetX = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
 			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
 			float Rot = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[2])/360.0f*pi*2;
 
@@ -1522,8 +1522,7 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 		if(!apEnvelope[j])
 			continue;
 
-		//QuadParams
-		for(int i = 0; i < apEnvelope[j]->m_lPoints.size()-1; i++)
+		for(int i = 0; i < apEnvelope[j]->m_lPoints.size(); i++)
 			DoQuadEnvPoint(&lQuads[j], j, i);
 	}
 	Graphics()->QuadsEnd();
