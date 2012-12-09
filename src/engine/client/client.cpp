@@ -2341,7 +2341,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfig->Save();
 
 	// free components
-	delete pClient;
+	mem_free(pClient);
 	delete pKernel;
 	delete pEngine;
 	delete pConsole;
