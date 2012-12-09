@@ -55,6 +55,8 @@ CMenus::CMenus()
 
 	m_MenuPage = PAGE_START;
 
+	m_InfoMode = false;
+
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
@@ -373,13 +375,13 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 	return ReturnValue;
 }
 
-int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect)
+int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend)
 {
 	int Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, !Blend || Inside ? 1.0f : 0.6f);
 	RenderTools()->SelectSprite(SpriteID);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
@@ -410,12 +412,13 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
 	static bool s_DoScroll = false;
-	static float s_ScrollStart = 0.0f;
 
 	FontSize *= UI()->Scale();
 
 	if(UI()->LastActiveItem() == pID)
 	{
+		static float s_ScrollStart = 0.0f;
+
 		int Len = str_length(pStr);
 		if(Len == 0)
 			s_AtIndex = 0;
@@ -1160,10 +1163,17 @@ void CMenus::RenderMenubar(CUIRect r)
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
 
+			char aBuf[32];
+			if(m_BorwserPage == PAGE_BROWSER_BROWSER)
+				str_copy(aBuf, Localize("Friends"), sizeof(aBuf));
+			else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
+				str_copy(aBuf, Localize("Browser"), sizeof(aBuf));
 			static int s_FilterButton=0;
-			if(DoButton_Menu(&s_FilterButton, Localize("Filter"), 0, &Right))
+			if(DoButton_Menu(&s_FilterButton, aBuf, 0, &Right))
 			{
-				// TODO
+				m_BorwserPage++;
+				if(m_BorwserPage >= NUM_PAGE_BROWSER)
+					m_BorwserPage = 0;
 			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
@@ -1667,7 +1677,6 @@ int CMenus::Render()
 		// make sure that other windows doesn't do anything funnay!
 		//UI()->SetHotItem(0);
 		//UI()->SetActiveItem(0);
-		char aBuf[128];
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		const char *pButtonText = "";
@@ -1860,6 +1869,7 @@ int CMenus::Render()
 
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
+				char aBuf[128];
 				int64 Now = time_get();
 				if(Now-m_DownloadLastCheckTime >= time_freq())
 				{
@@ -2208,6 +2218,9 @@ bool CMenus::OnMouseMove(float x, float y)
 
 	if(!m_MenuActive)
 		return false;
+
+	// prev mouse position
+	m_PrevMousePos = m_MousePos;
 
 	UI()->ConvertMouseMove(&x, &y);
 	m_MousePos.x += x;

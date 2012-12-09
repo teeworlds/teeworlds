@@ -20,7 +20,7 @@
 
 CMenus::CColumn CMenus::ms_aCols[] = {
 	{COL_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
-	{COL_NAME,		IServerBrowser::SORT_NAME,			"Name",		0, 300.0f, 0, {0}, {0}},
+	{COL_NAME,		IServerBrowser::SORT_NAME,			"Server",		0, 300.0f, 0, {0}, {0}},
 	{COL_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f, 0, {0}, {0}},
 	{COL_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}},
 	{COL_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
@@ -142,11 +142,15 @@ void CMenus::Move(bool Up, int Filter)
 
 void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 {
-	m_InfoOverlayActive = true;
-	m_InfoOverlay.m_Type = Type;
-	m_InfoOverlay.m_X = x;
-	m_InfoOverlay.m_Y = y;
-	m_InfoOverlay.m_pData = pData;
+	if(m_InfoOverlay.m_Reset)
+	{
+		m_InfoOverlayActive = true;
+		m_InfoOverlay.m_Type = Type;
+		m_InfoOverlay.m_X = x;
+		m_InfoOverlay.m_Y = y;
+		m_InfoOverlay.m_pData = pData;
+		m_InfoOverlay.m_Reset = false;
+	}
 }
 
 int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, bool Selected)
@@ -321,6 +325,16 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		}
 		else if(ID == COL_PLAYERS)
 		{
+			// handle mouse over
+			if(m_InfoMode && UI()->MouseInside(&Button))
+			{
+				// overlay
+				SetOverlay(CInfoOverlay::OVERLAY_PLAYERSINFO, UI()->MouseX(), UI()->MouseY(), pEntry);
+
+				// rect
+				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 0.75f), CUI::CORNER_ALL, 5.0f);
+			}
+
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
 
 			if(g_Config.m_BrFilterSpectators)
@@ -336,24 +350,33 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		{
 			int Ping = pEntry->m_Latency;
 
-			vec4 StartColor;
-			vec4 EndColor;
-			float MixVal;
-			if(Ping <= 125)
+			vec4 Color;
+			if(Selected || Inside)
 			{
-				StartColor = vec4(0.0f, 1.0f, 0.0f, TextAplpha);
-				EndColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
-				
-				MixVal = (Ping-50.0f)/75.0f;
+				Color = vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
 			}
 			else
 			{
-				StartColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
-				EndColor = vec4(1.0f, 0.0f, 0.0f, TextAplpha);
-				
-				MixVal = (Ping-125.0f)/75.0f;
+				vec4 StartColor;
+				vec4 EndColor;
+				float MixVal;
+				if(Ping <= 125)
+				{
+					StartColor = vec4(0.0f, 1.0f, 0.0f, TextAplpha);
+					EndColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
+					
+					MixVal = (Ping-50.0f)/75.0f;
+				}
+				else
+				{
+					StartColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
+					EndColor = vec4(1.0f, 0.0f, 0.0f, TextAplpha);
+					
+					MixVal = (Ping-125.0f)/75.0f;
+				}
+				Color = mix(StartColor, EndColor, MixVal);
 			}
-			vec4 Color = mix(StartColor, EndColor, MixVal);
+			
 			str_format(aTemp, sizeof(aTemp), "%d", pEntry->m_Latency);
 			TextRender()->TextColor(Color.r, Color.g, Color.b, Color.a);
 			Button.y += 2.0f;
@@ -418,8 +441,9 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	View.VSplitLeft(Spacing, 0, &View);
 	View.VSplitRight((ButtonHeight+Spacing)*4.0f, &View, &EditButtons);
 
+	View.VSplitLeft(20.0f, 0, &View); // little space
 	View.y += 2.0f;
-	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*ms_FontmodHeight*0.8f, 0);
+	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*ms_FontmodHeight*0.8f, -1);
 
 	/*if(pFilter->Custom() <= CBrowserFilter::FILTER_ALL)
 		UI()->DoLabel(&View, pFilter->Name(), 12.0f, -1);
@@ -504,16 +528,23 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 void CMenus::RenderServerbrowserOverlay()
 {
 	if(!m_InfoOverlayActive)
+	{
+		m_InfoOverlay.m_Reset = true;
 		return;
+	}
 
 	int Type = m_InfoOverlay.m_Type;
+	CUIRect View;
 
 	if(Type == CInfoOverlay::OVERLAY_HEADERINFO)
 	{
 		CBrowserFilter *pFilter = (CBrowserFilter*)m_InfoOverlay.m_pData;
 
 		// get position
-		CUIRect View = { m_InfoOverlay.m_X-100.0f, m_InfoOverlay.m_Y, 100.0f, 30.0f };
+		View.x = m_InfoOverlay.m_X-100.0f;
+		View.y = m_InfoOverlay.m_Y;
+		View.w = 100.0f;
+		View.h = 30.0f;
 
 		// render background
 		RenderTools()->DrawUIRect(&View, vec4(0.25f, 0.25f, 0.25f, 1.0f), CUI::CORNER_ALL, 6.0f);
@@ -533,7 +564,10 @@ void CMenus::RenderServerbrowserOverlay()
 		const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
 
 		// get position
-		CUIRect View = { m_InfoOverlay.m_X-210.0f, m_InfoOverlay.m_Y, 210.0f, pInfo->m_NumClients ? 98.0f + pInfo->m_NumClients*25.0f : 72.0f };
+		View.x = m_InfoOverlay.m_X-210.0f;
+		View.y = m_InfoOverlay.m_Y;
+		View.w = 210.0f;
+		View.h = pInfo->m_NumClients ? 98.0f + pInfo->m_NumClients*25.0f : 72.0f;
 		if(View.y+View.h >= 590.0f)
 			View.y -= View.y+View.h - 590.0f;
 
@@ -542,15 +576,158 @@ void CMenus::RenderServerbrowserOverlay()
 
 		RenderServerbrowserServerDetail(View, pInfo);
 	}
+	else if(Type == CInfoOverlay::OVERLAY_PLAYERSINFO)
+	{
+		const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
+
+		CUIRect Screen = *UI()->Screen();
+		float ButtonHeight = 20.0f;
+
+		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+		TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+		if(pInfo && pInfo->m_NumClients)
+		{
+			// get position
+			View.x = m_InfoOverlay.m_X+25.0f;
+			View.y = m_InfoOverlay.m_Y;
+			View.w = 250.0f;
+			View.h = pInfo->m_NumClients*ButtonHeight;
+			if(View.x+View.w > Screen.w-5.0f)
+			{
+				View.y += 25.0f;
+				View.x -= View.x+View.w-Screen.w+5.0f;
+			}
+			if(View.y+View.h >= 590.0f)
+				View.y -= View.y+View.h - 590.0f;
+
+			// render background
+			RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 6.0f);
+
+			CUIRect ServerScoreBoard = View;
+			CTextCursor Cursor;
+			const float FontSize = 12.0f;
+			for (int i = 0; i < pInfo->m_NumClients; i++)
+			{
+				CUIRect Name, Clan, Score, Flag;
+				ServerScoreBoard.HSplitTop(ButtonHeight, &Name, &ServerScoreBoard);
+				if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
+				{
+					if(pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
+						m_pClient->Friends()->RemoveFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
+					else
+						m_pClient->Friends()->AddFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
+					FriendlistOnUpdate();
+					Client()->ServerBrowserUpdate();
+				}
+
+				vec4 Colour = pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_NO ? vec4(1.0f, 1.0f, 1.0f, (i%2+1)*0.05f) :
+																									vec4(0.5f, 1.0f, 0.5f, 0.15f+(i%2+1)*0.05f);
+				RenderTools()->DrawUIRect(&Name, Colour, CUI::CORNER_ALL, 4.0f);
+				Name.VSplitLeft(5.0f, 0, &Name);
+				Name.VSplitLeft(30.0f, &Score, &Name);
+				Name.VSplitRight(34.0f, &Name, &Flag);
+				Flag.HMargin(4.0f, &Flag);
+				Name.VSplitRight(40.0f, &Name, &Clan);
+
+				// score
+				if(pInfo->m_aClients[i].m_Player)
+				{
+					char aTemp[16];
+					str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
+					TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+					Cursor.m_LineWidth = Score.w;
+					TextRender()->TextEx(&Cursor, aTemp, -1);
+				}
+
+				// name
+				TextRender()->SetCursor(&Cursor, Name.x, Name.y+(Name.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Name.w;
+				const char *pName = pInfo->m_aClients[i].m_aName;
+				if(g_Config.m_BrFilterString[0])
+				{
+					// highlight the parts that matches
+					const char *s = str_find_nocase(pName, g_Config.m_BrFilterString);
+					if(s)
+					{
+						TextRender()->TextEx(&Cursor, pName, (int)(s-pName));
+						TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+						TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
+						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+						TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
+					}
+					else
+						TextRender()->TextEx(&Cursor, pName, -1);
+				}
+				else
+					TextRender()->TextEx(&Cursor, pName, -1);
+
+				// clan
+				TextRender()->SetCursor(&Cursor, Clan.x, Clan.y+(Clan.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Clan.w;
+				const char *pClan = pInfo->m_aClients[i].m_aClan;
+				if(g_Config.m_BrFilterString[0])
+				{
+					// highlight the parts that matches
+					const char *s = str_find_nocase(pClan, g_Config.m_BrFilterString);
+					if(s)
+					{
+						TextRender()->TextEx(&Cursor, pClan, (int)(s-pClan));
+						TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+						TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
+						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+						TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
+					}
+					else
+						TextRender()->TextEx(&Cursor, pClan, -1);
+				}
+				else
+					TextRender()->TextEx(&Cursor, pClan, -1);
+
+				// flag
+				vec4 Color(1.0f, 1.0f, 1.0f, 0.75f);
+				m_pClient->m_pCountryFlags->Render(pInfo->m_aClients[i].m_Country, &Color, Flag.x, Flag.y, Flag.w, Flag.h);
+			}
+		}
+		else
+		{
+			View.x = m_InfoOverlay.m_X+25.0f;
+			View.y = m_InfoOverlay.m_Y;
+			View.w = 150.0f;
+			View.h = ButtonHeight;
+			if(View.x+View.w > Screen.w-5.0f)
+			{
+				View.y += 25.0f;
+				View.x -= View.x+View.w-Screen.w+5.0f;
+			}
+			if(View.y+View.h >= 590.0f)
+				View.y -= View.y+View.h - 590.0f;
+
+			// render background
+			RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 6.0f);
+
+			View.y += 2.0f;
+			UI()->DoLabel(&View, Localize("no players"), View.h*ms_FontmodHeight*0.8f, 0);
+		}
+
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	}
 
 	// deactivate it
-	m_InfoOverlayActive = false;
+	vec2 OverlayCenter = vec2(View.x+View.w/2.0f, View.y+View.h/2.0f);
+	float MouseDistance = distance(m_MousePos, OverlayCenter);
+	float PrefMouseDistance = distance(m_PrevMousePos, OverlayCenter);
+	if(PrefMouseDistance > MouseDistance && !UI()->MouseInside(&View))
+	{
+		m_InfoOverlayActive = false;
+		m_InfoOverlay.m_Reset = true;
+	}
 }
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
-	CUIRect Headers;
-	CUIRect Status;
+	CUIRect Headers, Status, InfoButton;
 
 	float SpacingH = 2.0f;
 	float ButtonHeight = 20.0f;
@@ -561,7 +738,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
 
-	Headers.VSplitRight(20.0f, &Headers, 0);
+	Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
 
 	// do layout
 	for(int i = 0; i < NUM_COLS; i++)
@@ -631,6 +808,16 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					g_Config.m_BrSortOrder = 0;
 				g_Config.m_BrSort = ms_aCols[i].m_Sort;
 			}
+		}
+	}
+
+	// do info icon at the end of the list header
+	{
+		InfoButton.Margin(2.0f, &InfoButton);
+		static int s_InfoButton = 0;
+		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, ((m_InfoMode && !UI()->MouseInside(&InfoButton)) || (!m_InfoMode && UI()->MouseInside(&InfoButton))) ? SPRITE_INFO_B : SPRITE_INFO_A, &InfoButton, false))
+		{
+			m_InfoMode ^= 1;
 		}
 	}
 
@@ -1435,9 +1622,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 
 	// server list
-	{
+	if(m_BorwserPage == PAGE_BROWSER_BROWSER)
 		RenderServerbrowserServerList(ServerList);
-	}
+	else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
+		RenderServerbrowserFriendList(ServerList);
 
 	/*// background
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 12.0f);
@@ -1471,6 +1659,19 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// render overlay if there is any
 	RenderServerbrowserOverlay();
+}
+
+// firend list
+
+void CMenus::RenderServerbrowserFriendList(CUIRect View)
+{
+	//CUIRect Headers, Status, InfoButton;
+
+	//float SpacingH = 2.0f;
+	//float ButtonHeight = 20.0f;
+
+	// background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 }
 
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
