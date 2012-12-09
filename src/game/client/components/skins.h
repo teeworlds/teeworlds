@@ -25,18 +25,27 @@ enum
 class CSkins : public CComponent
 {
 public:
+	enum
+	{
+		SKINTYPE_STANDARD,
+		SKINTYPE_SPECIAL,
+	};
+
 	struct CSkinPart
 	{
+		int m_Type;
 		char m_aName[24];
 		IGraphics::CTextureHandle m_OrgTexture;
 		IGraphics::CTextureHandle m_ColorTexture;
 		vec3 m_BloodColor;
+
 
 		bool operator<(const CSkinPart &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
 	};
 
 	struct CSkin
 	{
+		int m_Type;
 		char m_aName[24];
 		const CSkinPart *m_apParts[NUM_SKINPARTS];
 		int m_aPartColors[NUM_SKINPARTS];
@@ -50,9 +59,10 @@ public:
 	int Num();
 	int NumSkinPart(int Part);
 	const CSkin *Get(int Index);
-	int Find(const char *pName);
+	int Find(const char *pName, bool AllowSpecialSkin);
 	const CSkinPart *GetSkinPart(int Part, int Index);
-	int FindSkinPart(int Part, const char *pName);
+	int FindSkinPart(int Part, const char *pName, bool AllowSpecialPart);
+	const CSkin *GetDummySkin() const { return &m_DummySkin; }
 
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, bool UseAlpha) const;

@@ -86,6 +86,9 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	mem_free(Info.m_pData);
 
 	// set skin part data
+	Part.m_Type = SKINTYPE_STANDARD;
+	if(pName[0] == 'x' && pName[1] == '_')
+		Part.m_Type = SKINTYPE_SPECIAL;
 	str_copy(Part.m_aName, pName, min((int)sizeof(Part.m_aName),l-3));
 	if(g_Config.m_Debug)
 	{
@@ -104,13 +107,14 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".skn") != 0)
 		return 0;
 
-	CSkin Skin = pSelf->m_DummySkin;
-
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
 	IOHANDLE File = pSelf->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return 0;
+
+	CSkin Skin = pSelf->m_DummySkin;
+	bool SpecialSkin = pName[0] == 'x' & pName[1] == '_';
 	CLineReader LineReader;
 	LineReader.Init(File);
 
@@ -153,7 +157,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 		pVariable += str_length(apParts[Part]);
 		if(str_comp(pVariable, "filename") == 0)
 		{
-			int SkinPart = pSelf->FindSkinPart(Part, pValue);
+			int SkinPart = pSelf->FindSkinPart(Part, pValue, SpecialSkin);
 			if(SkinPart < 0)
 				continue;
 			Skin.m_apParts[Part] = pSelf->GetSkinPart(Part, SkinPart);
@@ -194,6 +198,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	io_close(File);
 
 	// set skin data
+	Skin.m_Type = SpecialSkin ? SKINTYPE_SPECIAL : SKINTYPE_STANDARD;
 	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-3));
 	if(g_Config.m_Debug)
 	{
@@ -231,6 +236,7 @@ void CSkins::OnInit()
 		if(!m_aaSkinParts[p].size())
 		{
 			CSkinPart DummySkinPart;
+			DummySkinPart.m_Type = SKINTYPE_STANDARD;
 			str_copy(DummySkinPart.m_aName, "dummy", sizeof(DummySkinPart.m_aName));
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(DummySkinPart);
@@ -238,14 +244,15 @@ void CSkins::OnInit()
 	}
 
 	// create dummy skin
+	m_DummySkin.m_Type = SKINTYPE_STANDARD;
 	str_copy(m_DummySkin.m_aName, "dummy", sizeof(m_DummySkin.m_aName));
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		int Default;
 		if(p == SKINPART_TATTOO || p == SKINPART_DECORATION)
-			Default = FindSkinPart(p, "");
+			Default = FindSkinPart(p, "", false);
 		else
-			Default = FindSkinPart(p, "standard");
+			Default = FindSkinPart(p, "standard", false);
 		if(Default < 0)
 			Default = 0;
 		m_DummySkin.m_apParts[p] = GetSkinPart(p, Default);
@@ -277,11 +284,11 @@ const CSkins::CSkin *CSkins::Get(int Index)
 	return &m_aSkins[max(0, Index%m_aSkins.size())];
 }
 
-int CSkins::Find(const char *pName)
+int CSkins::Find(const char *pName, bool AllowSpecialSkin)
 {
 	for(int i = 0; i < m_aSkins.size(); i++)
 	{
-		if(str_comp(m_aSkins[i].m_aName, pName) == 0)
+		if(str_comp(m_aSkins[i].m_aName, pName) == 0 && (m_aSkins[i].m_Type != SKINTYPE_SPECIAL || AllowSpecialSkin))
 			return i;
 	}
 	return -1;
@@ -293,11 +300,11 @@ const CSkins::CSkinPart *CSkins::GetSkinPart(int Part, int Index)
 	return &m_aaSkinParts[Part][max(0, Index%Size)];
 }
 
-int CSkins::FindSkinPart(int Part, const char *pName)
+int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
 {
 	for(int i = 0; i < m_aaSkinParts[Part].size(); i++)
 	{
-		if(str_comp(m_aaSkinParts[Part][i].m_aName, pName) == 0)
+		if(str_comp(m_aaSkinParts[Part][i].m_aName, pName) == 0 && (m_aaSkinParts[Part][i].m_Type != SKINTYPE_SPECIAL || AllowSpecialPart))
 			return i;
 	}
 	return -1;

@@ -323,9 +323,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		{
 			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
 			// no special skins
-			if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
-				continue;
-			s_paSkinList.add(s);
+			if(s->m_Type == CSkins::SKINTYPE_STANDARD)
+				s_paSkinList.add(s);
 		}
 		s_InitSkinlist = false;
 	}
@@ -398,9 +397,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			{
 				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(p, i);
 				// no special skins
-				if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
-					continue;
-				s_paList[p].add(s);
+				if(s->m_Type == CSkins::SKINTYPE_STANDARD)
+					s_paList[p].add(s);
 			}
 		}
 		s_InitSkinPartList = false;
@@ -427,7 +425,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			CTeeRenderInfo Info;
 			for(int j = 0; j < NUM_SKINPARTS; j++)
 			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, gs_apSkinVariables[j]);
+				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, gs_apSkinVariables[j], false);
 				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
 				if(*gs_apUCCVariables[j])
 				{
@@ -952,7 +950,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		OwnSkinInfo.m_Size = 50.0f;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p], false);
 			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
 			if(*gs_apUCCVariables[p])
 			{

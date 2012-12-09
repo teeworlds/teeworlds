@@ -1,0 +1,21 @@
+body.filename := x_ninja
+body.custom_colors := true
+body.hue := 0
+body.sat := 0
+body.lgt := 0
+
+tattoo.filename := uppy
+tattoo.custom_colors := true
+tattoo.hue := 0
+tattoo.sat := 0
+tattoo.lgt := 255
+tattoo.alp := 127
+
+hands.filename := standard
+hands.custom_colors := false
+
+feet.filename := standard
+feet.custom_colors := false
+
+eyes.filename := x_ninja
+eyes.custom_colors := false

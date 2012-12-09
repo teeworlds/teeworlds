@@ -1326,16 +1326,21 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(m_aaSkinPartNames[p][0] == 'x' && m_aaSkinPartNames[p][1] == '_')
-				str_copy(m_aaSkinPartNames[p], "default", 24);
-
-			m_SkinPartIDs[p] = pGameClient->m_pSkins->FindSkinPart(p, m_aaSkinPartNames[p]);
-			if(m_SkinPartIDs[p] < 0)
+			int ID = pGameClient->m_pSkins->FindSkinPart(p, m_aaSkinPartNames[p], false);
+			if(ID < 0)
 			{
-				m_SkinPartIDs[p] = pGameClient->m_pSkins->Find("default");
-				if(m_SkinPartIDs[p] < 0)
+				if(p == SKINPART_TATTOO || p == SKINPART_DECORATION)
+					ID = pGameClient->m_pSkins->FindSkinPart(p, "", false);
+				else
+					ID = pGameClient->m_pSkins->FindSkinPart(p, "standard", false);
+
+				if(ID < 0)
 					m_SkinPartIDs[p] = 0;
+				else
+					m_SkinPartIDs[p] = ID;
 			}
+			else
+				m_SkinPartIDs[p] = ID;
 
 			const CSkins::CSkinPart *pSkinPart = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p]);
 			if(m_aUseCustomColors[p])
