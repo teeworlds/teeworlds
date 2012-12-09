@@ -26,7 +26,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
 
-	float BaseSize = 10.0f;
+	float BaseSize = 15.0f;
 	//dir = normalize(hook_pos-pos);
 
 	vec2 HandPos = CenterPos + Dir;
