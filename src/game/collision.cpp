@@ -64,27 +64,91 @@ bool CCollision::IsTileSolid(int x, int y)
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
-// TODO: rewrite this smarter!
+// Calculate next tile in the given direction
+vec2 CCollision::NextTile(vec2 Pos, vec2 Dir)
+{
+	vec2 Next;
+
+	// Calculate the next border point in X and Y direction
+	//
+	// Teeworlds works with rounded position values. This shifts the correct
+	// tile order by 0.5. So it is not possible to use the exact correct tile
+	// borders. Instead we also shift it by 0.5 or 0.51, depending on the
+	// side of the tile we want.
+	//
+	// Notice: the unsigned int conversion is necessary for correct NextTile
+	// behaviour around 0 coordinates. At 0 or below, the /32 arithmetic
+	// works the other way round. By using unsigned int arithmetics we wrap
+	// the positive number space around, which allows correct positive only
+	// calculations
+	if (Dir.x > 0)
+	{
+		Next.x = (int)(((unsigned int)round(Pos.x)/32 + 1) * 32) - 0.5;
+	}
+	else
+	{
+		Next.x = (int)(((unsigned int)round(Pos.x)/32) * 32) - 0.51;
+	}
+	if (Dir.y > 0)
+	{
+		Next.y = (int)(((unsigned int)round(Pos.y)/32 + 1) * 32) - 0.5;
+	}
+	else
+	{
+		Next.y = (int)(((unsigned int)round(Pos.y)/32) * 32) - 0.51;
+	}
+
+	// Calculate remaining distances and which intersection point
+	// (X or Y) is closer on the Pos0->Pos1 line.
+	vec2 RemainDist;
+	RemainDist.x = (Next.x - Pos.x) / Dir.x;
+	RemainDist.y = (Next.y - Pos.y) / Dir.y;
+
+	/* Create the the next position to check */
+	if (RemainDist.x < RemainDist.y)
+	{
+		Pos.x += RemainDist.x * Dir.x;
+		Pos.y += RemainDist.x * Dir.y;
+	}
+	else
+	{
+		Pos.x += RemainDist.y * Dir.x;
+		Pos.y += RemainDist.y * Dir.y;
+	}
+	return Pos;
+}
+
+// Intersect line checks all tiles on the line for collisions.
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	float Distance = distance(Pos0, Pos1);
-	int End(Distance+1);
-	vec2 Last = Pos0;
+	vec2 Cur = Pos0;
+	vec2 Dir = Pos1 - Pos0;
 
-	for(int i = 0; i < End; i++)
+	// Move along the line Pos0 -> Pos1 by jumping between tile border points
+	while ((Pos1.x - Cur.x) * Dir.x >= 0 && (Pos1.y - Cur.y) * Dir.y >= 0)
 	{
-		float a = i/Distance;
-		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		if(CheckPoint(Cur.x, Cur.y))
 		{
 			if(pOutCollision)
-				*pOutCollision = Pos;
+				*pOutCollision = Cur;
 			if(pOutBeforeCollision)
-				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+				*pOutBeforeCollision = NextTile(Cur, vec2(-Dir.x, -Dir.y));
+			return GetCollisionAt(Cur.x, Cur.y);
 		}
-		Last = Pos;
+
+		Cur = NextTile(Cur, Dir);
 	}
+
+	// Also check the Pos1 tile
+	if(CheckPoint(Pos1.x, Pos1.y))
+	{
+		if(pOutCollision)
+			*pOutCollision = Pos1;
+		if(pOutBeforeCollision)
+			*pOutBeforeCollision = NextTile(Pos1, vec2(-Dir.x, -Dir.y));
+		return GetCollisionAt(Pos1.x, Pos1.y);
+	}
+
 	if(pOutCollision)
 		*pOutCollision = Pos1;
 	if(pOutBeforeCollision)
