@@ -88,6 +88,7 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					else
 					{
 						pChunk->m_ClientID = 0; // the server
+						pChunk->m_Address = *m_Connection.PeerAddress();
 						pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 						pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
 						return 1;
@@ -140,6 +141,10 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
 			dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
 			return -1;
 		}
+
+		if(pChunk->m_ClientID == -1 && net_addr_comp(&pChunk->m_Address, m_Connection.PeerAddress()) == 0)
+			pChunk->m_ClientID = 0;
+
 
 		if(pChunk->m_Flags&NETSENDFLAG_STATELESS || Token != NET_TOKEN_NONE)
 		{

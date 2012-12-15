@@ -1433,7 +1433,7 @@ void CClient::PumpNetwork()
 	CNetChunk Packet;
 	while(m_NetClient.Recv(&Packet))
 	{
-		if(Packet.m_ClientID == -1)
+		if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
 			ProcessConnlessPacket(&Packet);
 		else
 			ProcessServerPacket(&Packet);
