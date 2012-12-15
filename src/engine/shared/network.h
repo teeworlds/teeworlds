@@ -1,5 +1,4 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */ /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_NETWORK_H
 #define ENGINE_SHARED_NETWORK_H
 
@@ -9,14 +8,32 @@
 /*
 
 CURRENT:
-	packet header: 8 bytes (12 bytes for connless)
-		unsigned char version; // 8bit version (must be 0x01)
-		unsigned char token[4]; // 32bit token (0xffffffff means none)
-		unsigned char flags_ack; // 4bit flags, 4bit ack (0xff for connless packets)
-		unsigned char ack; // 8bit ack (0xff for connless packets)
-		unsigned char num_chunks; // 8bit chunks (0xff for connless packets)
+	packet header: 5 bytes (6 bytes for connless)
+		unsigned char token[2]; // 16bit token
+		unsigned char token_flags; // 4bit token, 4bit flags
+		unsigned char ack; // 8bit ack
+		unsigned char ack_numchunks; // 2bit ack, 6bit chunks
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTffff
+		// aaaaaaaa
+		// aaNNNNNN
 
-		(unsigned char response_token[4];) // 32bit response token (only in case it's a connless packet)
+	packet header (CONNLESS):
+		unsigned char token[2]; // 16bit token
+		unsigned char token_flag_version; // 4bit token, 1bit flag, 3bit version
+		unsigned char version_responsetoken; // 4bit version, 4bit response token
+		unsigned char responsetoken[2]; // 16bit response token
+
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTfvvv
+		// vvvvRRRR
+		// RRRRRRRR
+		// RRRRRRRR
+
+	if the token isn't explicitely set by any means, it must be set to
+	0xfffff
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -51,15 +68,17 @@ enum
 	NET_MAX_PACKETSIZE = 1400,
 	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-15,
 	NET_MAX_CHUNKHEADERSIZE = 3,
-	NET_PACKETHEADERSIZE = 8,
-	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 4,
+	NET_PACKETHEADERSIZE = 5,
+	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 1,
 	NET_TOKENCACHE_SIZE = 16,
 	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME/2,
 	NET_TOKENCACHE_PACKETEXPIRY = NET_TOKENCACHE_ADDRESSEXPIRY,
 	NET_MAX_CLIENTS = 16,
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
-	NET_TOKEN_NONE = 0xffffffff,
+	NET_TOKEN_MAX = 0xfffff,
+	NET_TOKEN_NONE = NET_TOKEN_MAX,
+	NET_TOKEN_MASK = NET_TOKEN_MAX,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
 	NET_CONNSTATE_OFFLINE=0,
@@ -72,9 +91,11 @@ enum
 	NET_PACKETVERSION=1,
 
 	NET_PACKETFLAG_CONTROL=1,
-	NET_PACKETFLAG_CONNLESS=2,
-	NET_PACKETFLAG_RESEND=4,
-	NET_PACKETFLAG_COMPRESSION=8,
+	NET_PACKETFLAG_RESEND=2,
+	NET_PACKETFLAG_COMPRESSION=4,
+	NET_PACKETFLAG_CONNLESS=8,
+		// warning: the code assumes that the connless flag
+		// is the highest
 
 	NET_CHUNKFLAG_VITAL=1,
 	NET_CHUNKFLAG_RESEND=2,

@@ -41,7 +41,7 @@ void CNetConnection::SetToken(TOKEN Token)
 
 TOKEN CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
 {
-	return ((rand() & 0xffff) << 16) | (rand() & 0xffff);
+	return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & NET_TOKEN_MASK;
 }
 
 const char *CNetConnection::ErrorString()
@@ -294,20 +294,17 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 		{
 			if(CtrlMsg == NET_CTRLMSG_TOKEN)
 			{
-				if(pPacket->m_DataSize == 1 + 4) // control byte + token
-				{
-					m_PeerToken = pPacket->m_ResponseToken;
+				m_PeerToken = pPacket->m_ResponseToken;
 
-					if(State() == NET_CONNSTATE_TOKEN)
-					{
-						m_LastRecvTime = Now;
-						m_State = NET_CONNSTATE_CONNECT;
-						SendControlWithToken(NET_CTRLMSG_CONNECT);
-						dbg_msg("connection", "got token, replying, token=%x mytoken=%x", m_PeerToken, m_Token);
-					}
-					else if(g_Config.m_Debug)
-						dbg_msg("connection", "got token, token=%x", m_PeerToken);
+				if(State() == NET_CONNSTATE_TOKEN)
+				{
+					m_LastRecvTime = Now;
+					m_State = NET_CONNSTATE_CONNECT;
+					SendControlWithToken(NET_CTRLMSG_CONNECT);
+					dbg_msg("connection", "got token, replying, token=%x mytoken=%x", m_PeerToken, m_Token);
 				}
+				else if(g_Config.m_Debug)
+					dbg_msg("connection", "got token, token=%x", m_PeerToken);
 			}
 			else
 			{

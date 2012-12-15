@@ -92,21 +92,24 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN 
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
 
 	dbg_assert(DataSize + 15 <= NET_MAX_PACKETSIZE, "packet data size too high");
-	aBuffer[0] = NET_PACKETVERSION; // version
-	aBuffer[1] = (Token>>24)&0xff; // token
-	aBuffer[2] = (Token>>16)&0xff;
-	aBuffer[3] = (Token>>8)&0xff;
-	aBuffer[4] = (Token)&0xff;
-	aBuffer[5] = 0xff; // flags and data for not connless packets
-	aBuffer[6] = 0xff;
-	aBuffer[7] = 0xff;
-	aBuffer[8] = (ResponseToken>>24)&0xff; // response token
-	aBuffer[9] = (ResponseToken>>16)&0xff;
-	aBuffer[10] = (ResponseToken>>8)&0xff;
-	aBuffer[11] = (ResponseToken)&0xff;
+	dbg_assert((Token&~NET_TOKEN_MASK) == 0, "token out of range");
+	dbg_assert((ResponseToken&~NET_TOKEN_MASK) == 0, "resp token out of range");
 
-	mem_copy(&aBuffer[NET_PACKETHEADERSIZE_CONNLESS], pData, DataSize);
-	net_udp_send(Socket, pAddr, aBuffer, NET_PACKETHEADERSIZE_CONNLESS+DataSize);
+	int i = 0;
+	aBuffer[i++] = (Token>>12)&0xff; // token
+	aBuffer[i++] = (Token>>4)&0xff;
+	aBuffer[i++] = ((Token&0xf)<<4)
+		| NET_PACKETFLAG_CONNLESS // connless flag
+		| ((NET_PACKETVERSION&0x70)>>4); // version
+	aBuffer[i++] = ((NET_PACKETVERSION<<4)&0xf0)
+		| (ResponseToken>>16); // response token
+	aBuffer[i++] = (ResponseToken>>8)&0xff;
+	aBuffer[i++] = ResponseToken&0xff;
+
+	dbg_assert(i == NET_PACKETHEADERSIZE_CONNLESS, "inconsistency");
+
+	mem_copy(&aBuffer[i], pData, DataSize);
+	net_udp_send(Socket, pAddr, aBuffer, i+DataSize);
 }
 
 void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket)
@@ -124,6 +127,8 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 		io_write(ms_DataLogSent, &pPacket->m_aChunkData, pPacket->m_DataSize);
 		io_flush(ms_DataLogSent);
 	}
+
+	dbg_assert((pPacket->m_Token&~NET_TOKEN_MASK) == 0, "token out of range");
 
 	// compress if not ctrl msg
 	if(!(pPacket->m_Flags&NET_PACKETFLAG_CONTROL))
@@ -147,14 +152,17 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 	if(FinalSize >= 0)
 	{
 		FinalSize += NET_PACKETHEADERSIZE;
-		aBuffer[0] = NET_PACKETVERSION; // version
-		aBuffer[1] = (pPacket->m_Token>>24)&0xff; // token
-		aBuffer[2] = (pPacket->m_Token>>16)&0xff;
-		aBuffer[3] = (pPacket->m_Token>>8)&0xff;
-		aBuffer[4] = (pPacket->m_Token)&0xff;
-		aBuffer[5] = ((pPacket->m_Flags<<4)&0xf0)|((pPacket->m_Ack>>8)&0xf); // flags & ack
-		aBuffer[6] = pPacket->m_Ack&0xff; // ack
-		aBuffer[7] = pPacket->m_NumChunks; // num_chunks
+
+		int i = 0;
+		aBuffer[i++] = (pPacket->m_Token>>12)&0xff; // token
+		aBuffer[i++] = (pPacket->m_Token>>4)&0xff;
+		aBuffer[i++] = ((pPacket->m_Token<<4)&0xf0)
+			| (pPacket->m_Flags); // flags
+		aBuffer[i++] = (pPacket->m_Ack>>2)&0xff; // ack
+		aBuffer[i++] = ((pPacket->m_Ack<<6)&0xc0)
+			| (pPacket->m_NumChunks&0x3f);
+
+		dbg_assert(i == NET_PACKETHEADERSIZE, "inconsistency");
 
 		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
 
@@ -173,14 +181,6 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 // TODO: rename this function
 int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket)
 {
-	// check the size
-	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
-	{
-		if(g_Config.m_Debug)
-			dbg_msg("network", "packet too small, size=%d", Size);
-		return -1;
-	}
-
 	// log the data
 	if(ms_DataLogRecv)
 	{
@@ -191,24 +191,31 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		io_flush(ms_DataLogRecv);
 	}
 
-	if(pBuffer[0] != NET_PACKETVERSION)
-		return -1; // wrong version, silent ignore
+	// check the size
+	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
+	{
+		if(g_Config.m_Debug)
+			dbg_msg("network", "packet too small, size=%d", Size);
+		return -1;
+	}
 
-	// finally read the packet
-	pPacket->m_Token = (pBuffer[1]<<24) | (pBuffer[2]<<16) | (pBuffer[3]<<8) | pBuffer[4];
-	pPacket->m_ResponseToken = NET_TOKEN_NONE;
-
-	pPacket->m_Flags = pBuffer[5]>>4;
-	pPacket->m_Ack = ((pBuffer[5]&0xf)<<8) | pBuffer[6];
-	pPacket->m_NumChunks = pBuffer[7];
-	pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
-
+	// read the packet
+	pPacket->m_Token = (pBuffer[0]<<12) | (pBuffer[1]<<4) | (pBuffer[2]>>4);
+		// TTTTTTTT TTTTTTTT TTTTxxxx
+	pPacket->m_Flags = pBuffer[2]&0xf;
+		// xxxxFFFF
 
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
 	{
 		pPacket->m_Flags = NET_PACKETFLAG_CONNLESS;
 		pPacket->m_Ack = 0;
 		pPacket->m_NumChunks = 0;
+		int Version = ((pBuffer[2]&0x07)<<4) | (pBuffer[3]>>4);
+			// xxxxxVVV VVVVxxxx
+
+		if(Version != NET_PACKETVERSION)
+			return -1;
+
 		if(Size < NET_PACKETHEADERSIZE_CONNLESS)
 		{
 			if(g_Config.m_Debug)
@@ -217,11 +224,19 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		}
 
 		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE_CONNLESS;
-		pPacket->m_ResponseToken = (pBuffer[8]<<24) | (pBuffer[9]<<16) | (pBuffer[10]<<8) | pBuffer[11];
+		pPacket->m_ResponseToken = ((pBuffer[3]&0xf)<<16) | (pBuffer[4]<<8) | pBuffer[4];
+			// xxxxRRRR RRRRRRRR RRRRRRRR
 		mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE_CONNLESS], pPacket->m_DataSize);
 	}
 	else
 	{
+		pPacket->m_Ack = (pBuffer[3]<<2) | ((pBuffer[4]&0xc0)>>6);
+			// AAAAAAAA AAxxxxxx
+		pPacket->m_NumChunks = pBuffer[4]&0x3f;
+			// xxNNNNNN
+
+		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
+		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 		if(Size - NET_PACKETHEADERSIZE > NET_MAX_PAYLOAD)
 		{
 			if(g_Config.m_Debug)
@@ -243,16 +258,16 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		return -1;
 	}
 
-	// set the response token (a bit hacky because this function doesn't know about control packets)
+	// set the response token (a bit hacky because this function shouldn't know about control packets)
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONTROL)
 	{
-		if(pPacket->m_DataSize >= 5) // control byte + token
+		if(pPacket->m_DataSize >= 4) // control byte + token
 		{
 			if(pPacket->m_aChunkData[0] == NET_CTRLMSG_CONNECT
 				|| pPacket->m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 			{
-				pPacket->m_ResponseToken = (pPacket->m_aChunkData[1]<<24) | (pPacket->m_aChunkData[2]<<16)
-					| (pPacket->m_aChunkData[3]<<8) | pPacket->m_aChunkData[4];
+				pPacket->m_ResponseToken = ((pPacket->m_aChunkData[1]&0xf)<<16)
+					| (pPacket->m_aChunkData[2]<<8) | pPacket->m_aChunkData[3];
 			}
 		}
 	}
@@ -290,11 +305,13 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Toke
 
 void CNetBase::SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken)
 {
-	char aToken[4];
-	aToken[0] = (MyToken>>24)&0xff;
-	aToken[1] = (MyToken>>16)&0xff;
-	aToken[2] = (MyToken>>8)&0xff;
-	aToken[3] = (MyToken)&0xff;
+	dbg_assert((Token&~NET_TOKEN_MASK) == 0, "token out of range");
+	dbg_assert((MyToken&~NET_TOKEN_MASK) == 0, "resp token out of range");
+
+	char aToken[3];
+	aToken[0] = (MyToken>>16)&0xff;
+	aToken[1] = (MyToken>>8)&0xff;
+	aToken[2] = (MyToken)&0xff;
 
 	SendControlMsg(Socket, pAddr, Token, 0, ControlMsg, aToken, sizeof(aToken));
 }

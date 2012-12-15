@@ -1436,7 +1436,7 @@ void CClient::PumpNetwork()
 	CNetChunk Packet;
 	while(m_NetClient.Recv(&Packet))
 	{
-		if(Packet.m_ClientID != -1)
+		if(!(Packet.m_Flags&NETSENDFLAG_CONNLESS))
 			ProcessServerPacket(&Packet);
 	}
 
@@ -1444,7 +1444,7 @@ void CClient::PumpNetwork()
 	m_ContactClient.Update();
 	while(m_ContactClient.Recv(&Packet))
 	{
-		if(Packet.m_ClientID == -1)
+		if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
 			ProcessConnlessPacket(&Packet);
 	}
 }

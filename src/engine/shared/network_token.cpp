@@ -18,7 +18,7 @@ static TOKEN Hash(char *pData, int Size)
 	md5_append(&State, (const md5_byte_t *)pData, Size);
 	md5_finish(&State, (md5_byte_t *)aDigest);
 
-	return aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3];
+	return (aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3]) & NET_TOKEN_MASK;
 }
 
 void CNetTokenManager::Init(NETSOCKET Socket, int SeedTime)
@@ -108,7 +108,7 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 
 	Result = Hash(aBuf, sizeof(aBuf));
 	if(Result == NET_TOKEN_NONE)
-		Result++;
+		Result--;
 
 	return Result;
 }
@@ -195,6 +195,8 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 
 TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
 {
+	// traverse the list in the reverse direction
+	// newest caches are the best
 	CAddressInfo *pInfo = m_TokenCache.Last();
 	while(pInfo)
 	{

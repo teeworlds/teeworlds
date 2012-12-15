@@ -127,16 +127,21 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					if(m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 					{
 						if(m_RecvUnpacker.m_Data.m_DataSize)
+						{
 							if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
 								m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
 							else
 							{
 								pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+								pChunk->m_Address = *m_aSlots[i].m_Connection.PeerAddress();
 								pChunk->m_ClientID = i;
 								pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
 								pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
+								if(pResponseToken)
+									*pResponseToken = NET_TOKEN_NONE;
 								return 1;
 							}
+						}
 					}
 					Found = true;
 				}
@@ -282,7 +287,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				}
 			}
 		}
-	}
 	return 0;
 }
 
@@ -295,6 +299,14 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 			dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
 			return -1;
 		}
+
+		if(pChunk->m_ClientID == -1)
+			for(int i = 0; i < MaxClients(); i++)
+				if(net_addr_comp(&pChunk->m_Address, m_aSlots[i].m_Connection.PeerAddress()) == 0)
+				{
+					pChunk->m_ClientID = i;
+					break;
+				}
 
 		if(pChunk->m_Flags&NETSENDFLAG_STATELESS || Token != NET_TOKEN_NONE)
 		{
