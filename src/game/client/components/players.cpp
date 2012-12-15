@@ -534,13 +534,6 @@ void CPlayers::OnRender()
 				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
 				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
-					/*if(IsTeamplay)
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-					else
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_OrgTexture;
-						m_aRenderInfo[i].m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-					}*/
 					if(IsTeamplay)
 					{
 						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
