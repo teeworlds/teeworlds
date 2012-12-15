@@ -91,7 +91,6 @@ public:
 	// networking
 	virtual void EnterGame() = 0;
 
-	virtual bool MapLoaded() = 0;
 	//
 	virtual int MapDownloadAmount() = 0;
 	virtual int MapDownloadTotalsize() = 0;

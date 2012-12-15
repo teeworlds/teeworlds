@@ -769,11 +769,6 @@ void CClient::Render()
 	DebugRender();
 }
 
-bool CClient::MapLoaded()
-{
-	return m_pMap->IsLoaded();
-}
-
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
 {
 	static char aErrorMsg[128];
