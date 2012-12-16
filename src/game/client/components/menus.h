@@ -11,8 +11,8 @@
 #include <engine/friends.h>
 
 #include <game/voting.h>
-#include <game/localization.h>
 #include <game/client/component.h>
+#include <game/client/localization.h>
 #include <game/client/ui.h>
 
 

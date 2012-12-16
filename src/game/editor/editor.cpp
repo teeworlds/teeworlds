@@ -14,8 +14,8 @@
 #include <engine/textrender.h>
 
 #include <game/gamecore.h>
-#include <game/localization.h>
 #include <game/client/lineinput.h>
+#include <game/client/localization.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/generated/client_data.h>

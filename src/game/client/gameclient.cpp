@@ -16,8 +16,8 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
-#include <game/localization.h>
 #include <game/version.h>
+#include "localization.h"
 #include "render.h"
 
 #include "gameclient.h"
