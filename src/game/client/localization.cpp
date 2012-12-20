@@ -85,12 +85,13 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	const json_value &rStart = (*pJsonData)["translated strings"];
 	if(rStart.type == json_array)
 	{
-		for(int i = 0; i < rStart.u.array.length; ++i)
+		for(unsigned i = 0; i < rStart.u.array.length; ++i)
 			AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"]);
 	}
 
 	// clean up
 	json_value_free(pJsonData);
+	mem_free(pFileData);
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }

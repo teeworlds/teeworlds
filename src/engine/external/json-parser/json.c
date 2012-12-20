@@ -201,6 +201,7 @@ json_value * json_parse_ex (json_settings * settings, const json_char * json, ch
    long num_digits, num_fraction, num_e;
 
    error[0] = '\0';
+   num_digits = num_fraction = num_e = 0;
 
    memset (&state, 0, sizeof (json_state));
    memcpy (&state.settings, settings, sizeof (json_settings));
@@ -220,6 +221,8 @@ json_value * json_parse_ex (json_settings * settings, const json_char * json, ch
 
       top = root = 0;
       flags = flag_seek_value;
+	  string_length = 0;
+	  string = 0;
 
       cur_line = 1;
       cur_line_begin = json;

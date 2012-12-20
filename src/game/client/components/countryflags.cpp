@@ -47,13 +47,13 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		{
 			NUM_INDICES = 2,
 		};
-		char *paIndices[NUM_INDICES] = {"custom", "ISO 3166-1"};
+		const char *paIndices[NUM_INDICES] = {"custom", "ISO 3166-1"};
 		for(int Index = 0; Index < NUM_INDICES; ++Index)
 		{
-			const json_value &rStart = rInit[paIndices[Index]];
+			const json_value &rStart = rInit[(const char *)paIndices[Index]];
 			if(rStart.type == json_array)
 			{
-				for(int i = 0; i < rStart.u.array.length; ++i)
+				for(unsigned i = 0; i < rStart.u.array.length; ++i)
 				{
 					char aBuf[64];
 
@@ -101,6 +101,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 
 	// clean up
 	json_value_free(pJsonData);
+	mem_free(pFileData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item

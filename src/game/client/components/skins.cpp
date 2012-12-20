@@ -114,7 +114,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 		return 0;
 
 	CSkin Skin = pSelf->m_DummySkin;
-	bool SpecialSkin = pName[0] == 'x' & pName[1] == '_';
+	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
 	CLineReader LineReader;
 	LineReader.Init(File);
 

@@ -505,7 +505,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	const json_value &rStart = (*pJsonData)["language indices"];
 	if(rStart.type == json_array)
 	{
-		for(int i = 0; i < rStart.u.array.length; ++i)
+		for(unsigned i = 0; i < rStart.u.array.length; ++i)
 		{
 			char aFileName[128];
 			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)rStart[i]["file"]);
@@ -515,6 +515,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 
 	// clean up
 	json_value_free(pJsonData);
+	mem_free(pFileData);
 }
 
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
