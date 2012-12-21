@@ -1,0 +1,316 @@
+{"tileset": [
+	{"grass":
+		{
+			"basetile": 1,
+
+			"rules": [
+			{
+				"index": 2,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 3,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 66,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 67,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 68,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 16,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 21,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 52,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 20,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 5,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 4,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 36,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 37,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 54,
+				"condition": [
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 53,
+				"condition": [
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 49,
+				"condition": [
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 48,
+				"condition": [
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 22,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 38,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 33,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 1, "value": "full"},
+				]
+			},
+			{
+				"index": 32,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 1, "value": "full"}
+				]
+			}]
+		}
+	},
+	{"cave":
+		{
+			"basetile": 13,
+
+			"rules": [
+			{
+				"index": 29,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 42,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 43,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 44,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 45,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
+				],
+				"random": 150
+			},
+			{
+				"index": 26,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 25,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 10,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 24,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 9,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 8,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 40,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 41,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"}
+				]
+			},
+			{
+				"index": 12,
+				"condition": [
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 11,
+				"condition": [
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 27,
+				"condition": [
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 28,
+				"condition": [
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			}]
+		}
+	}]
+}

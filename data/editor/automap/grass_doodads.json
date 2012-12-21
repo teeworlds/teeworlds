@@ -1,0 +1,75 @@
+{"doodads": [
+	{"vegetation":
+		{
+			"rules": [
+			{
+				"startid": 1,
+				"endid": 35,
+				"ry": -3,
+				"Location": "floor",
+				"random": 25
+			},
+			{
+				"startid": 44,
+				"endid": 45,
+				"ry": -1,
+				"location": "floor",
+				"random": 25
+			},
+			{
+				"startid": 56,
+				"endid": 74,
+				"ry": -2,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 59,
+				"endid": 77,
+				"ry": -2,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 48,
+				"endid": 87,
+				"ry": -3,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 96,
+				"endid": 164,
+				"ry": -5,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 101,
+				"endid": 168,
+				"ry": -5,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 90,
+				"endid": 175,
+				"ry": -6,
+				"location": "floor",
+				"random": 50
+			}]
+		}
+	},
+	{"grass":
+		{
+			"rules": [
+			{
+				"startid": 42,
+				"endid": 42,
+				"ry": -1,
+				"location": "floor",
+				"random": 1
+			}]
+		}
+	}]
+}

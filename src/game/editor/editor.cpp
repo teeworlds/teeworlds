@@ -38,6 +38,11 @@ CEditorImage::~CEditorImage()
 		mem_free(m_pData);
 		m_pData = 0;
 	}
+	if(m_pAutoMapper)
+	{
+		delete m_pAutoMapper;
+		m_pAutoMapper = 0;
+	}
 }
 
 CLayerGroup::CLayerGroup()
@@ -195,6 +200,61 @@ void CEditorImage::AnalyseTileFlags()
 						m_aTileFlags[TileID] |= TILEFLAG_OPAQUE;
 				}
 		}
+	}
+}
+
+void CEditorImage::LoadAutoMapper()
+{
+	if(m_pAutoMapper)
+		return;
+
+	// read file data into buffer
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "editor/automap/%s.json", m_aName);
+	IOHANDLE File = m_pEditor->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
+		return;
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
+	io_close(File);
+
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
+	{
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", aError);
+		return;
+	}
+
+	// generate configurations
+	const json_value &rTileset = (*pJsonData)[(const char *)IAutoMapper::GetTypeName(IAutoMapper::TYPE_TILESET)];
+	if(rTileset.type == json_array)
+	{
+		m_pAutoMapper = new CTilesetMapper(m_pEditor);
+		m_pAutoMapper->Load(rTileset);
+	}
+	else
+	{
+		const json_value &rDoodads = (*pJsonData)[(const char *)IAutoMapper::GetTypeName(IAutoMapper::TYPE_DOODADS)];
+		if(rDoodads.type == json_array)
+		{
+			m_pAutoMapper = new CDoodadsMapper(m_pEditor);
+			m_pAutoMapper->Load(rDoodads);
+		}
+	}
+
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
+	if(m_pAutoMapper && g_Config.m_Debug)
+	{
+		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 	}
 }
 
@@ -2456,10 +2516,15 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 		mem_free(pImg->m_pData);
 		pImg->m_pData = 0;
 	}
+	if(pImg->m_pAutoMapper)
+	{
+		delete pImg->m_pAutoMapper;
+		pImg->m_pAutoMapper = 0;
+	}
 	*pImg = ImgInfo;
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
-	pImg->m_AutoMapper.Load(pImg->m_aName);
+	pImg->LoadAutoMapper();
 	pImg->m_Texture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	ImgInfo.m_pData = 0;
 	pEditor->SortImages();
@@ -2493,7 +2558,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	ImgInfo.m_pData = 0;
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
-	pImg->m_AutoMapper.Load(pImg->m_aName);
+	pImg->LoadAutoMapper();
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
 	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())
