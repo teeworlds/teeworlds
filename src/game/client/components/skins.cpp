@@ -5,23 +5,24 @@
 #include <base/system.h>
 #include <base/math.h>
 
-#include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
-#include <engine/shared/linereader.h>
 
 #include "skins.h"
 
-char *const gs_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinTattoo, g_Config.m_PlayerSkinDecoration,
+
+const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "tattoo", "decoration", "hands", "feet", "eyes"};
+const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
+
+char *const CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinTattoo, g_Config.m_PlayerSkinDecoration,
 													g_Config.m_PlayerSkinHands, g_Config.m_PlayerSkinFeet, g_Config.m_PlayerSkinEyes};
-int *const gs_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorTattoo, &g_Config.m_PlayerUseCustomColorDecoration,
+int *const CSkins::ms_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorTattoo, &g_Config.m_PlayerUseCustomColorDecoration,
 													&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes};
-int *const gs_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorTattoo, &g_Config.m_PlayerColorDecoration,
+int *const CSkins::ms_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorTattoo, &g_Config.m_PlayerColorDecoration,
 													&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes};
 
-static const char *const gs_apFolders[NUM_SKINPARTS] = {"bodies", "tattoos", "decoration",
-														"hands", "feet", "eyes"};
 
 int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
@@ -31,12 +32,12 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		return 0;
 
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", gs_apFolders[pSelf->m_ScanningPart], pName);
+	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
 	{
-		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s'", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		return 0;
 	}
 
@@ -93,7 +94,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(g_Config.m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 	}
 	pSelf->m_aaSkinParts[pSelf->m_ScanningPart].add(Part);
 
@@ -102,108 +103,103 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
-	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
-	if(l < 4 || IsDir || str_comp(pName+l-4, ".skn") != 0)
+	if(l < 5 || IsDir || str_comp(pName+l-5, ".json") != 0)
 		return 0;
 
+	CSkins *pSelf = (CSkins *)pUser;
+
+	// read file data into buffer
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
 	IOHANDLE File = pSelf->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return 0;
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
+	io_close(File);
 
+	// init
 	CSkin Skin = pSelf->m_DummySkin;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
-	CLineReader LineReader;
-	LineReader.Init(File);
 
-	while(1)
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
 	{
-		char *pLine = LineReader.Get();
-		if(!pLine)
-			break;
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
+		mem_free(pFileData);
+		return 0;
+	}
 
-		char aBuffer[1024];
-		str_copy(aBuffer, pLine, sizeof(aBuffer));
-		char *pStr = aBuffer;
-
-		pStr = str_skip_whitespaces(pStr);
-		char *pVariable = pStr;
-		pStr = str_skip_to_whitespace(pStr);
-		if(!pStr[0])
-			continue;
-		pStr[0] = 0;
-		pStr++;
-		pStr = str_skip_whitespaces(pStr);
-		if(pStr[0] != ':' || pStr[1] != '=')
-			continue;
-		pStr += 2;
-		if(!pStr[0])
-			continue;
-		pStr = str_skip_whitespaces(pStr);
-		char *pValue = pStr;
-
-		static const char *const apParts[6] = {"body.", "tattoo.", "decoration.",
-												"hands.", "feet.", "eyes."};
-		int Part = -1;
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+	// extract data
+	const json_value &rStart = (*pJsonData)["skin"];
+	if(rStart.type == json_object)
+	{
+		for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; ++PartIndex)
 		{
-			if(str_comp_num(pVariable, apParts[p], str_length(apParts[p])) == 0)
-				Part = p;
-		}
-		if(Part < 0)
-			continue;
-		pVariable += str_length(apParts[Part]);
-		if(str_comp(pVariable, "filename") == 0)
-		{
-			int SkinPart = pSelf->FindSkinPart(Part, pValue, SpecialSkin);
-			if(SkinPart < 0)
+			const json_value &rPart = rStart[(const char *)ms_apSkinPartNames[PartIndex]];
+			if(rPart.type != json_object)
 				continue;
-			Skin.m_apParts[Part] = pSelf->GetSkinPart(Part, SkinPart);
-		}
-		else if(str_comp(pVariable, "custom_colors") == 0)
-		{
-			if(str_comp(pValue, "true") == 0)
-				Skin.m_aUseCustomColors[Part] = 1;
-			else if(str_comp(pValue, "false") == 0)
-				Skin.m_aUseCustomColors[Part] = 0;
-		}
-		else
-		{
-			static const char *const apComponents[4] = {"hue", "sat", "lgt", "alp"};
-			int Component = -1;
-			for(int i = 0; i < 4; i++)
+			
+			// filename
+			const json_value &rFilename = rPart["filename"];
+			if(rFilename.type == json_string)
 			{
-				if(str_comp(pVariable, apComponents[i]) == 0)
-					Component = i;
+				int SkinPart = pSelf->FindSkinPart(PartIndex, (const char *)rFilename, SpecialSkin);
+				if(SkinPart > -1)
+					Skin.m_apParts[PartIndex] = pSelf->GetSkinPart(PartIndex, SkinPart);
 			}
-			if(Component < 0)
+
+			// use custom colors
+			bool UseCustomColors = false;
+			const json_value &rColour = rPart["custom_colors"];
+			if(rColour.type == json_string)
+			{
+				UseCustomColors = str_comp((const char *)rColour, "true") == 0;
+			}
+			Skin.m_aUseCustomColors[PartIndex] = UseCustomColors;
+
+			// color components
+			if(!UseCustomColors)
 				continue;
-			if(Part != SKINPART_TATTOO && Component == 3)
-				continue;
-			int OldVal = Skin.m_aPartColors[Part];
-			int Val = str_toint(pValue);
-			if(Component == 0)
-				Skin.m_aPartColors[Part] = (OldVal&0xFF00FFFF) | (Val << 16);
-			else if(Component == 1)
-				Skin.m_aPartColors[Part] = (OldVal&0xFFFF00FF) | (Val << 8);
-			else if(Component == 2)
-				Skin.m_aPartColors[Part] = (OldVal&0xFFFFFF00) | Val;
-			else if(Component == 3)
-				Skin.m_aPartColors[Part] = (OldVal&0x00FFFFFF) | (Val << 24);
+				
+			for(int i = 0; i < NUM_COLOR_COMPONENTS; i++)
+			{
+				if(PartIndex != SKINPART_TATTOO && i == 3)
+					continue;
+
+				const json_value &rComponent = rPart[(const char *)ms_apColorComponents[i]];
+				if(rComponent.type == json_integer)
+				{
+					switch(i)
+					{
+					case 0: Skin.m_aPartColors[PartIndex] = (Skin.m_aPartColors[PartIndex]&0xFF00FFFF) | (rComponent.u.integer << 16); break;
+					case 1:	Skin.m_aPartColors[PartIndex] = (Skin.m_aPartColors[PartIndex]&0xFFFF00FF) | (rComponent.u.integer << 8); break;
+					case 2: Skin.m_aPartColors[PartIndex] = (Skin.m_aPartColors[PartIndex]&0xFFFFFF00) | rComponent.u.integer; break;
+					case 3: Skin.m_aPartColors[PartIndex] = (Skin.m_aPartColors[PartIndex]&0x00FFFFFF) | (rComponent.u.integer << 24); break;
+					}
+				}
+			}
 		}
 	}
 
-	io_close(File);
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
 
 	// set skin data
 	Skin.m_Type = SpecialSkin ? SKINTYPE_SPECIAL : SKINTYPE_STANDARD;
-	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-3));
+	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-4));
 	if(g_Config.m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 	}
 	pSelf->m_aSkins.add(Skin);
 
@@ -228,7 +224,7 @@ void CSkins::OnInit()
 
 		// load skin parts
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "skins/%s", gs_apFolders[p]);
+		str_format(aBuf, sizeof(aBuf), "skins/%s", ms_apSkinPartNames[p]);
 		m_ScanningPart = p;
 		Storage()->ListDirectory(IStorage::TYPE_ALL, aBuf, SkinPartScan, this);
 

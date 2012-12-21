@@ -1,0 +1,27 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 27,
+		"sat": 111,
+		"lgt": 116
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 27,
+		"sat": 117,
+		"lgt": 158
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 28,
+		"sat": 135,
+		"lgt": 62
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

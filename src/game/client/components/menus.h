@@ -202,7 +202,6 @@ class CMenus : public CComponent
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
-	void WriteLineSkinfile(IOHANDLE File, const char *pLine);
 
 	//
 	bool m_EscapePressed;

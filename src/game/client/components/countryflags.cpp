@@ -16,7 +16,8 @@
 void CCountryFlags::LoadCountryflagsIndexfile()
 {
 	// read file data into buffer
-	IOHANDLE File = Storage()->OpenFile("countryflags/index.json", IOFLAG_READ, IStorage::TYPE_ALL);
+	const char *pFilename = "countryflags/index.json";
+	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", "couldn't open index file");
@@ -35,7 +36,8 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
 	if(pJsonData == 0)
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aError);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		mem_free(pFileData);
 		return;
 	}
 

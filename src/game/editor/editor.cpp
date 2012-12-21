@@ -227,7 +227,8 @@ void CEditorImage::LoadAutoMapper()
 	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
 	if(pJsonData == 0)
 	{
-		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", aError);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
+		mem_free(pFileData);
 		return;
 	}
 
