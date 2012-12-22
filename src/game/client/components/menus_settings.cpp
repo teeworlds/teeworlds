@@ -175,37 +175,32 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	MainView.HSplitTop(144.0f, &Picker, &MainView);
 	RenderTools()->DrawUIRect(&Picker, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	float Dark = CSkins::DARKEST_COLOR_LGT/255.0f;
+	IGraphics::CColorVertex ColorArray[4];
+
 	// Hue/Lgt picker :
 	{
-		Picker.VMargin((Picker.w-256.0f)/2.0f, &Picker);
+		Picker.VMargin((Picker.w-128)/2.0f, &Picker);
 		Picker.HMargin((Picker.h-128.0f)/2.0f, &Picker);
 
 		// picker
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_HLPICKER].m_Id);
+		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark));
+		ColorArray[0] = IGraphics::CColorVertex(0, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark));
+		ColorArray[1] = IGraphics::CColorVertex(1, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark+(1.0f-Dark)));
+		ColorArray[2] = IGraphics::CColorVertex(2, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+(1.0f-Dark)));
+		ColorArray[3] = IGraphics::CColorVertex(3, c.r, c.g, c.b, 1.0f);
+		Graphics()->SetColorVertex(ColorArray, 4);
 		IGraphics::CQuadItem QuadItem(Picker.x, Picker.y, Picker.w, Picker.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 
-		/*Graphics()->TextureSet(-1);
-		Graphics()->QuadsBegin();
-		for(int i = 0; i < 256; i++)
-		{
-			for(int j = 0; j < 256-DARKEST_COLOR_LGT; j++)
-			{
-				int H = i;
-				int L = 255-j;
-				vec3 rgb = HslToRgb(vec3(H/255.0f, Sat/255.0f, L/255.0f));
-				Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Picker.x+i, Picker.y+j, 1.0f, 1.0f);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-			}
-		}
-		Graphics()->QuadsEnd();*/
-
 		// marker
-		vec2 Marker = vec2(Hue*UI()->Scale(), max(0.0f, 127-Lgt/2.0f)*UI()->Scale());
+		vec2 Marker = vec2(Sat/2*UI()->Scale(), Lgt/2.0f*UI()->Scale());
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -216,13 +211,13 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		Graphics()->QuadsEnd();
 
 		// logic
-		int X, Y;
+		float X, Y;
 		static int s_HLPicker;
 		int Logic = UI()->DoPickerLogic(&s_HLPicker, &Picker, &X, &Y);
 		if(Logic)
 		{
-			Hue = X;
-			Lgt = 255 - Y*2;
+			Sat = (int)(2*X) & 255;
+			Lgt = (int)(Y*2) & 255;
 			Modified = true;
 		}
 	}
@@ -236,6 +231,8 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
 		float SliderHeight = 16.0f;
+		static const float s_aColorIndices[7][3] = {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+													{0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}};
 
 		for(int i = 0; i < NumBars; i++)
 		{
@@ -246,7 +243,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// label
 			RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-			Label.VSplitLeft((Label.w-168.0f)/2.0f, &Label, &Button);
+			Label.VSplitLeft((Label.w-160.0f)/2.0f, &Label, &Button);
 			Label.y += 2.0f;
 			UI()->DoLabelScaled(&Label, apNames[i], SliderHeight*ms_FontmodHeight*0.8f, 0);
 
@@ -259,27 +256,53 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			}
 
 			// bar
-			Bar.VSplitLeft(256.0f/2.0f, &Bar, &Button);
+			Bar.VSplitLeft(128.0f, &Bar, &Button);
+			int NumQuads = i == 0 ? 6 : 1;
+			float Length = Bar.w/NumQuads;
+			vec4 ColorL, ColorR;
+
 			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
-			for(int v = 0; v < 256/2; v++)
+			for(int j = 0; j < NumQuads; ++j)
 			{
-				int Val = v*2;
-				vec3 rgb;
-				float Dark = CSkins::DARKEST_COLOR_LGT/255.0f;
-				if(i == 0)
-					rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
-				else if(i == 1)
-					rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				else if(i == 2)
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
-				else
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				if(i == 3)
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
-				else
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
+				switch(i)
+				{
+				case 0:
+					{
+						ColorL = vec4(s_aColorIndices[j][0], s_aColorIndices[j][1], s_aColorIndices[j][2], 1.0f);
+						ColorR = vec4(s_aColorIndices[j+1][0], s_aColorIndices[j+1][1], s_aColorIndices[j+1][2], 1.0f);
+					}
+					break;
+				case 1:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorL = vec4(c.r, c.g, c.b, 1.0f);
+						c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+					break;
+				case 2:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark));
+						ColorL = vec4(c.r, c.g, c.b, 1.0f);
+						c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+(1.0f-Dark)));
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+					break;
+				default:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorL = vec4(c.r, c.g, c.b, 0.0f);
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+				}
+
+				ColorArray[0] = IGraphics::CColorVertex(0, ColorL.r, ColorL.g, ColorL.b, ColorL.a);
+				ColorArray[1] = IGraphics::CColorVertex(1, ColorR.r, ColorR.g, ColorR.b, ColorR.a);
+				ColorArray[2] = IGraphics::CColorVertex(2, ColorR.r, ColorR.g, ColorR.b, ColorR.a);
+				ColorArray[3] = IGraphics::CColorVertex(3, ColorL.r, ColorL.g, ColorL.b, ColorL.a);
+				Graphics()->SetColorVertex(ColorArray, 4);
+				IGraphics::CQuadItem QuadItem(Bar.x+Length*j, Bar.y, Length, Bar.h);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 			}
 
@@ -304,7 +327,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			UI()->DoLabelScaled(&Label, aBuf, SliderHeight*ms_FontmodHeight*0.8f, 0);
 
 			// logic
-			int X;
+			float X;
 			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
 			if(Logic)
 			{
