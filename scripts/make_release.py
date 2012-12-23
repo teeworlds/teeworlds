@@ -3,7 +3,8 @@ os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
 arguments = optparse.OptionParser(usage="usage: %prog VERSION PLATFORM [options]\n\nVERSION  - Version number\nPLATFORM - Target platform (f.e. linux86, linux86_64, osx, src, win32)")
-arguments.add_option("-l", "--url-languages", default = "http://github.com/teeworlds/teeworlds-translation/zipball/master", help = "URL from which the teeworlds language files will be downloaded")
+arguments.add_option("-l", "--url-languages", default = "http://github.com/teeworlds/teeworlds-translation/archive/master.zip", help = "URL from which the teeworlds language files will be downloaded")
+arguments.add_option("-m", "--url-maps", default = "http://github.com/teeworlds/teeworlds-maps/archive/master.zip", help = "URL from which the teeworlds maps files will be downloaded")
 arguments.add_option("-s", "--source-dir", help = "Source directory which is used for building the package")
 (options, arguments) = arguments.parse_args()
 if len(sys.argv) != 3:
@@ -54,8 +55,7 @@ def unzip(filename, where):
 	except:
 		return False
 	for name in z.namelist():
-		if "/data/languages/" in name:
-				z.extract(name, where)
+		z.extract(name, where)
 	z.close()
 	return z.namelist()[0]
 
@@ -70,12 +70,19 @@ def copydir(src, dst, excl=[]):
 			if name[0] != '.':
 				shutil.copy(os.path.join(root, name), os.path.join(dst, root, name))
 
+def copyfiles(src, dst):
+	dir = os.listdir(src)
+	for files in dir:
+		shutil.copy(os.path.join(src, files), os.path.join(dst, files))
+
 def clean():
 	print("*** cleaning ***")
 	try:
 		shutil.rmtree(package_dir)
 		shutil.rmtree(languages_dir)
+		shutil.rmtree(maps_dir)
 		os.remove(src_package_languages)
+		os.remove(src_package_maps)
 	except: pass
 	
 package = "%s-%s-%s" %(name, version, platform)
@@ -95,6 +102,16 @@ if not languages_dir:
 	print("couldn't unzip languages")
 	sys.exit(-1)
 
+print("download and extract maps")
+src_package_maps = twlib.fetch_file(options.url_maps)
+if not src_package_maps:
+	print("couldn't download maps")
+	sys.exit(-1)
+maps_dir = unzip(src_package_maps, ".")
+if not maps_dir:
+	print("couldn't unzip maps")
+	sys.exit(-1)
+
 print("adding files")
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
@@ -102,10 +119,11 @@ shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
+	os.mkdir(os.path.join(package_dir, "data/languages"))
+	os.mkdir(os.path.join(package_dir, "data/maps"))
 	copydir("data", package_dir)
-	os.chdir(languages_dir)
-	copydir("data", "../"+package_dir)
-	os.chdir("..")
+	copyfiles(languages_dir, package_dir+"/data/languages")
+	copyfiles(maps_dir, package_dir+"/data/maps")
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 		shutil.copy("SDL.dll", package_dir)

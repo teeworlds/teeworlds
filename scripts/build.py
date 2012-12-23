@@ -3,8 +3,8 @@ os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
 arguments = optparse.OptionParser()
-arguments.add_option("-b", "--url-bam", default = "http://github.com/matricks/bam/zipball/master", help = "URL from which the bam source code will be downloaded")
-arguments.add_option("-t", "--url-teeworlds", default = "http://github.com/teeworlds/teeworlds/zipball/master", help = "URL from which the teeworlds source code will be downloaded")
+arguments.add_option("-b", "--url-bam", default = "http://github.com/matricks/bam/archive/master.zip", help = "URL from which the bam source code will be downloaded")
+arguments.add_option("-t", "--url-teeworlds", default = "http://github.com/teeworlds/teeworlds/archive/master.zip", help = "URL from which the teeworlds source code will be downloaded")
 arguments.add_option("-r", "--release-type", default = "server_release client_release", help = "Parts of the game which should be builded (for example client_release, debug, server_release or a combination of any of them)")
 (options, arguments) = arguments.parse_args()
 
