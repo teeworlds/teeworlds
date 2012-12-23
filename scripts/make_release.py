@@ -119,8 +119,6 @@ shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
-	os.mkdir(os.path.join(package_dir, "data/languages"))
-	os.mkdir(os.path.join(package_dir, "data/maps"))
 	copydir("data", package_dir)
 	copyfiles(languages_dir, package_dir+"/data/languages")
 	copyfiles(maps_dir, package_dir+"/data/maps")
