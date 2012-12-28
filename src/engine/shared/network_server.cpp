@@ -278,6 +278,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				}
 			}
 		}
+	}
 	return 0;
 }
 
@@ -295,6 +296,8 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 			for(int i = 0; i < MaxClients(); i++)
 				if(net_addr_comp(&pChunk->m_Address, m_aSlots[i].m_Connection.PeerAddress()) == 0)
 				{
+					// upgrade the packet, now that we know its recipent
+					pChunk->m_Flags &= ~NETSENDFLAG_STATELESS;
 					pChunk->m_ClientID = i;
 					break;
 				}

@@ -202,7 +202,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// read the packet
 	pPacket->m_Token = (pBuffer[0]<<12) | (pBuffer[1]<<4) | (pBuffer[2]>>4);
 		// TTTTTTTT TTTTTTTT TTTTxxxx
-	pPacket->m_Flags = pBuffer[2]&0xf;
+	pPacket->m_Flags = pBuffer[2]&0x0f;
 		// xxxxFFFF
 
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
@@ -224,7 +224,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		}
 
 		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE_CONNLESS;
-		pPacket->m_ResponseToken = ((pBuffer[3]&0xf)<<16) | (pBuffer[4]<<8) | pBuffer[4];
+		pPacket->m_ResponseToken = ((pBuffer[3]&0x0f)<<16) | (pBuffer[4]<<8) | pBuffer[5];
 			// xxxxRRRR RRRRRRRR RRRRRRRR
 		mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE_CONNLESS], pPacket->m_DataSize);
 	}

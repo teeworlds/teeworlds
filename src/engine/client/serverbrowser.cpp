@@ -609,7 +609,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
 	Packet.m_DataSize = sizeof(Buffer);
 	Packet.m_pData = Buffer;
 

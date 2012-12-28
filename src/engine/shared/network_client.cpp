@@ -143,7 +143,11 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
 		}
 
 		if(pChunk->m_ClientID == -1 && net_addr_comp(&pChunk->m_Address, m_Connection.PeerAddress()) == 0)
+		{
+			// upgrade the packet, now that we know its recipent
+			pChunk->m_Flags &= ~NETSENDFLAG_STATELESS;
 			pChunk->m_ClientID = 0;
+		}
 
 
 		if(pChunk->m_Flags&NETSENDFLAG_STATELESS || Token != NET_TOKEN_NONE)
