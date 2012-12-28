@@ -612,7 +612,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	CNetChunk Packet;
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
 	Packet.m_DataSize = Packer.Size();
 	Packet.m_pData = Packer.Data();
 

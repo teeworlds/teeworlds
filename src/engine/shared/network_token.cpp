@@ -9,7 +9,7 @@
 
 #include "network.h"
 
-static TOKEN Hash(char *pData, int Size)
+static unsigned int Hash(char *pData, int Size)
 {
 	md5_state_t State;
 	unsigned int aDigest[4]; // make sure this is 16 byte
@@ -18,7 +18,7 @@ static TOKEN Hash(char *pData, int Size)
 	md5_append(&State, (const md5_byte_t *)pData, Size);
 	md5_finish(&State, (md5_byte_t *)aDigest);
 
-	return (aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3]) & NET_TOKEN_MASK;
+	return (aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3]);
 }
 
 void CNetTokenManager::Init(NETSOCKET Socket, int SeedTime)
@@ -106,7 +106,7 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	mem_copy(aBuf, &Addr, sizeof(NETADDR));
 	mem_copy(aBuf + sizeof(NETADDR), &Seed, sizeof(int64));
 
-	Result = Hash(aBuf, sizeof(aBuf));
+	Result = Hash(aBuf, sizeof(aBuf)) & NET_TOKEN_MASK;
 	if(Result == NET_TOKEN_NONE)
 		Result--;
 
