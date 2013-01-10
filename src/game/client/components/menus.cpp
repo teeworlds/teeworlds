@@ -68,11 +68,18 @@ CMenus::CMenus()
 	m_aCallvoteReason[0] = 0;
 
 	m_FriendlistSelectedIndex = -1;
+	m_pFriendIndexes = 0;
 
 	m_SelectedFilter = 0;
 
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
+}
+
+CMenus::~CMenus()
+{
+	if(m_pFriendIndexes)
+		mem_free(m_pFriendIndexes);
 }
 
 float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)

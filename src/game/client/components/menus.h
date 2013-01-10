@@ -255,28 +255,29 @@ class CMenus : public CComponent
 	{
 		const CFriendInfo *m_pFriendInfo;
 		int m_NumFound;
-
-		bool operator<(const CFriendItem &Other)
-		{
-			if(m_NumFound && !Other.m_NumFound)
-				return true;
-			else if(!m_NumFound && Other.m_NumFound)
-				return false;
-			else
-			{
-				int Result = str_comp_nocase(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
-				if(Result)
-					return Result < 0;
-				else
-					return str_comp_nocase(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
-			}
-		}
+		const CServerInfo *m_pServerInfo;
 	};
 
-	sorted_array<CFriendItem> m_lFriends;
+	enum
+	{
+		FRIENDS_SORT_NAME=0,
+		FRIENDS_SORT_CLAN,
+		FRIENDS_SORT_SERVER,
+		FRIENDS_SORT_TYPE,
+	};
+
+	int *m_pFriendIndexes;
+	int m_FriendSortCol;
+	array<CFriendItem> m_lFriends;
 	int m_FriendlistSelectedIndex;
 
+	bool SortCompareName(int Index1, int Index2) const;
+	bool SortCompareClan(int Index1, int Index2) const;
+	bool SortCompareServer(int Index1, int Index2) const;
+	bool SortCompareType(int Index1, int Index2) const;
+
 	void FriendlistOnUpdate();
+	void SortFriends();
 
 	class CBrowserFilter
 	{
@@ -358,16 +359,23 @@ class CMenus : public CComponent
 		FIXED=1,
 		SPACER=2,
 
-		COL_FLAG=0,
-		COL_NAME,
-		COL_GAMETYPE,
-		COL_MAP,
-		COL_PLAYERS,
-		COL_PING,
-		//COL_FAVORITE,
-		//COL_INFO,
+		COL_BROWSER_FLAG=0,
+		COL_BROWSER_NAME,
+		COL_BROWSER_GAMETYPE,
+		COL_BROWSER_MAP,
+		COL_BROWSER_PLAYERS,
+		COL_BROWSER_PING,
+		//COL_BROWSER_FAVORITE,
+		//COL_BROWSER_INFO,
 
-		NUM_COLS,
+		NUM_BROWSER_COLS,
+
+		COL_FRIEND_NAME=0,
+		COL_FRIEND_CLAN,
+		COL_FRIEND_SERVER,
+		COL_FRIEND_TYPE,
+
+		NUM_FRIEND_COLS,
 	};
 
 	struct CColumn
@@ -382,7 +390,8 @@ class CMenus : public CComponent
 		CUIRect m_Spacer;
 	};
 
-	static CColumn ms_aCols[NUM_COLS];
+	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
+	static CColumn ms_aFriendCols[NUM_FRIEND_COLS];
 
 	enum
 	{
@@ -436,7 +445,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
-	void RenderServerbrowserFriends(CUIRect View);
+	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
@@ -484,6 +493,7 @@ public:
 	static CMenusKeyBinder m_Binder;
 
 	CMenus();
+	~CMenus();
 
 	void RenderLoading();
 
