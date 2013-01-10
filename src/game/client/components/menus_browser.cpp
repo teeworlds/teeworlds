@@ -1642,7 +1642,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		+------+       +------------+
 	*/
 
-	CUIRect ServerList, ToolBox, BottomBox;
+	CUIRect ServerList, BottomBox;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitBottom(80.0f, &ServerList, &MainView);

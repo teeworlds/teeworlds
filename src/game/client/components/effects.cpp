@@ -156,11 +156,11 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 
 	if(ClientID >= 0)
 	{
-		if(m_pClient->m_aClients[ClientID].m_aUseCustomColors[SKINPART_BODY])
-			BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY]);
+		if(m_pClient->m_aClients[ClientID].m_aUseCustomColors[CSkins::SKINPART_BODY])
+			BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_aSkinPartColors[CSkins::SKINPART_BODY]);
 		else
 		{
-			const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[SKINPART_BODY]);
+			const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(CSkins::SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[CSkins::SKINPART_BODY]);
 			if(s)
 				BloodColor = s->m_BloodColor;
 		}

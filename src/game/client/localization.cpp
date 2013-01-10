@@ -4,7 +4,7 @@
 #include "localization.h"
 #include <base/tl/algorithm.h>
 
-#include <engine/shared/linereader.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/console.h>
 #include <engine/storage.h>
 
@@ -54,47 +54,45 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		return true;
 	}
 
-	IOHANDLE IoHandle = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!IoHandle)
+	// read file data into buffer
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
 		return false;
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
+	io_close(File);
 
-	char aBuf[256];
+	// init
+	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
 
-	char aOrigin[512];
-	CLineReader LineReader;
-	LineReader.Init(IoHandle);
-	char *pLine;
-	while((pLine = LineReader.Get()))
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
 	{
-		if(!str_length(pLine))
-			continue;
-
-		if(pLine[0] == '#') // skip comments
-			continue;
-
-		str_copy(aOrigin, pLine, sizeof(aOrigin));
-		char *pReplacement = LineReader.Get();
-		if(!pReplacement)
-		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of file");
-			break;
-		}
-
-		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
-		{
-			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			continue;
-		}
-
-		pReplacement += 3;
-		AddString(aOrigin, pReplacement);
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		mem_free(pFileData);
+		return false;
 	}
-	io_close(IoHandle);
 
+	// extract data
+	const json_value &rStart = (*pJsonData)["translated strings"];
+	if(rStart.type == json_array)
+	{
+		for(unsigned i = 0; i < rStart.u.array.length; ++i)
+			AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"]);
+	}
+
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }

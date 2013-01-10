@@ -3,8 +3,8 @@ os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
 arguments = optparse.OptionParser()
-arguments.add_option("-b", "--url-bam", default = "http://github.com/matricks/bam/zipball/master", help = "URL from which the bam source code will be downloaded")
-arguments.add_option("-t", "--url-teeworlds", default = "http://github.com/teeworlds/teeworlds/zipball/master", help = "URL from which the teeworlds source code will be downloaded")
+arguments.add_option("-b", "--url-bam", default = "http://github.com/matricks/bam/archive/master.zip", help = "URL from which the bam source code will be downloaded")
+arguments.add_option("-t", "--url-teeworlds", default = "http://github.com/teeworlds/teeworlds/archive/master.zip", help = "URL from which the teeworlds source code will be downloaded")
 arguments.add_option("-r", "--release-type", default = "server_release client_release", help = "Parts of the game which should be builded (for example client_release, debug, server_release or a combination of any of them)")
 (options, arguments) = arguments.parse_args()
 
@@ -172,17 +172,13 @@ if flag_build_bam:
 	print("*** building bam ***")
 	os.chdir("%s/%s" % (work_dir, src_dir_bam))
 	if os.name == "nt":
-		bam_compiled = False
-		compiler_bam = ["cl", "gcc"]
-		for compiler in compiler_bam:
-			if compiler == "cl":
-				os.system("make_win32_msvc.bat")
-			elif compiler == "gcc":
-				os.system("make_win32_mingw.bat")
-			if file_exists("%sbam.exe" % bam_execution_path) == True:
-				bam_compiled = True
-				break
-		if bam_compiled == False:
+		if os.system("g++ -v >nul 2>&1") == 0:
+			print("using gcc")
+			os.system("make_win32_mingw.bat")
+		else:
+			print("using cl")
+			os.system("make_win32_msvc.bat")
+		if file_exists("%sbam.exe" % bam_execution_path) == False:
 			bail("failed to build bam")
 	else:
 		os.system("sh make_unix.sh")
@@ -210,24 +206,30 @@ if flag_build_teeworlds:
 			bail("couldn't find %s source" % name)
 	command = 1
 	if os.name == "nt":
-		file = open("build.bat", "wb")
-		content = "@echo off\n"
-		content += "@REM check if we already have the tools in the environment\n"
-		content += "if exist \"%VCINSTALLDIR%\" (\ngoto compile\n)\n"
-		content += "@REM Check for Visual Studio\n"
-		content += "if exist \"%VS100COMNTOOLS%\" (\nset VSPATH=\"%VS100COMNTOOLS%\"\ngoto set_env\n)\n"
-		content += "if exist \"%VS90COMNTOOLS%\" (\nset VSPATH=\"%VS90COMNTOOLS%\"\ngoto set_env\n)\n"
-		content += "if exist \"%VS80COMNTOOLS%\" (\nset VSPATH=\"%VS80COMNTOOLS%\"\ngoto set_env\n)\n\n"
-		content += "echo You need Microsoft Visual Studio 8, 9 or 10 installed\n"
-		content += "exit\n"
-		content += "@ setup the environment\n"
-		content += ":set_env\n"
-		content += "call %VSPATH%vsvars32.bat\n\n"
-		content += ":compile\n"
-		content += 'cd %s\n"%s\\%s%sbam" config\n"%s\\%s%sbam" %s' % (src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, work_dir, src_dir_bam, bam_execution_path, options.release_type)
-		file.write(content.encode())
-		file.close()
-		command = os.system("build.bat")
+		if os.system("g++ -v >nul 2>&1") == 0:
+			print("using gcc")
+			os.chdir(src_dir_teeworlds)
+			command = os.system('"%s\\%s%sbam" %s' % (work_dir, src_dir_bam, bam_execution_path, options.release_type))
+		else:
+			print("using cl")
+			file = open("build.bat", "wb")
+			content = "@echo off\n"
+			content += "@REM check if we already have the tools in the environment\n"
+			content += "if exist \"%VCINSTALLDIR%\" (\ngoto compile\n)\n"
+			content += "@REM Check for Visual Studio\n"
+			content += "if exist \"%VS100COMNTOOLS%\" (\nset VSPATH=\"%VS100COMNTOOLS%\"\ngoto set_env\n)\n"
+			content += "if exist \"%VS90COMNTOOLS%\" (\nset VSPATH=\"%VS90COMNTOOLS%\"\ngoto set_env\n)\n"
+			content += "if exist \"%VS80COMNTOOLS%\" (\nset VSPATH=\"%VS80COMNTOOLS%\"\ngoto set_env\n)\n\n"
+			content += "echo You need Microsoft Visual Studio 8, 9 or 10 installed\n"
+			content += "exit\n"
+			content += "@ setup the environment\n"
+			content += ":set_env\n"
+			content += "call %VSPATH%vsvars32.bat\n\n"
+			content += ":compile\n"
+			content += 'cd %s\n"%s\\%s%sbam" config\n"%s\\%s%sbam" %s' % (src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, work_dir, src_dir_bam, bam_execution_path, options.release_type)
+			file.write(content.encode())
+			file.close()
+			command = os.system("build.bat")
 	else:
 		os.chdir(src_dir_teeworlds)
 		command = os.system("%s/%s%sbam %s" % (work_dir, src_dir_bam, bam_execution_path, options.release_type))

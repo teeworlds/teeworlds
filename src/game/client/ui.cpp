@@ -305,7 +305,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	return ReturnValue;
 }
 
-int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, int *pX, int *pY)
+int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
 {
 	int Inside = MouseInside(pRect);
 

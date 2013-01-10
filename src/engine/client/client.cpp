@@ -769,11 +769,6 @@ void CClient::Render()
 	DebugRender();
 }
 
-bool CClient::MapLoaded()
-{
-	return m_pMap->IsLoaded();
-}
-
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
 {
 	static char aErrorMsg[128];
@@ -932,10 +927,10 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			NETADDR Addr;
 
-			static char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+			static unsigned char s_aIPV4Mapping[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
 
 			// copy address
-			if(!mem_comp(IPV4Mapping, pAddrs[i].m_aIp, sizeof(IPV4Mapping)))
+			if(!mem_comp(s_aIPV4Mapping, pAddrs[i].m_aIp, sizeof(s_aIPV4Mapping)))
 			{
 				mem_zero(&Addr, sizeof(Addr));
 				Addr.type = NETTYPE_IPV4;
@@ -1908,21 +1903,8 @@ void CClient::Run()
 
 				m_LastRenderTime = Now;
 
-				if(g_Config.m_DbgStress)
-				{
-					if((m_RenderFrames%10) == 0)
-					{
-						if(!m_EditorActive)
-							Render();
-						else
-						{
-							m_pEditor->UpdateAndRender();
-							DebugRender();
-						}
-						m_pGraphics->Swap();
-					}
-				}
-				else
+				// when we are stress testing only render every 10th frame
+				if(!g_Config.m_DbgStress || (m_RenderFrames%10) == 0 )
 				{
 					if(!m_EditorActive)
 						Render();
@@ -2352,6 +2334,19 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// write down the config and quit
 	pConfig->Save();
+
+	// free components
+	mem_free(pClient);
+	delete pKernel;
+	delete pEngine;
+	delete pConsole;
+	delete pStorage;
+	delete pConfig;
+	delete pEngineSound;
+	delete pEngineInput;
+	delete pEngineTextRender;
+	delete pEngineMap;
+	delete pEngineMasterServer;
 
 	return 0;
 }

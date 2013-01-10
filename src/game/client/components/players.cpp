@@ -26,7 +26,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
 
-	float BaseSize = 10.0f;
+	float BaseSize = 15.0f;
 	//dir = normalize(hook_pos-pos);
 
 	vec2 HandPos = CenterPos + Dir;
@@ -46,9 +46,9 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	HandPos += DirY * PostRotOffset.y;
 
 	//Graphics()->TextureSet(data->m_aImages[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
+	Graphics()->TextureSet(pInfo->m_aTextures[CSkins::SKINPART_HANDS]);
 	Graphics()->QuadsBegin();
-	vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
+	vec4 Color = pInfo->m_aColors[CSkins::SKINPART_HANDS];
 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 
 	// two passes
@@ -467,7 +467,7 @@ void CPlayers::RenderPlayer(
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 			Ghost.m_aColors[p].a *= 0.5f;
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
@@ -528,14 +528,23 @@ void CPlayers::OnRender()
 		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
 		{
 			// change the skin for the player to the ninja
-			int Skin = m_pClient->m_pSkins->Find("x_ninja");
+			int Skin = m_pClient->m_pSkins->Find("x_ninja", true);
 			if(Skin != -1)
 			{
 				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
-				for(int p = 0; p < NUM_SKINPARTS; p++)
+				for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 				{
 					if(IsTeamplay)
+					{
 						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
+						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
+						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_TATTOO);
+					}
+					else if(pNinja->m_aUseCustomColors[p])
+					{
+						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
+						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(pNinja->m_aPartColors[p], p==CSkins::SKINPART_TATTOO);
+					}
 					else
 					{
 						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_OrgTexture;

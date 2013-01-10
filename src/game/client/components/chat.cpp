@@ -11,10 +11,10 @@
 #include <game/generated/client_data.h>
 
 #include <game/client/gameclient.h>
+#include <game/client/localization.h>
 
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
-#include <game/localization.h>
 
 #include "menus.h"
 #include "chat.h"

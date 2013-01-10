@@ -7,88 +7,103 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
-#include <engine/shared/linereader.h>
 
 #include "countryflags.h"
 
 
 void CCountryFlags::LoadCountryflagsIndexfile()
 {
-	IOHANDLE File = Storage()->OpenFile("countryflags/index.txt", IOFLAG_READ, IStorage::TYPE_ALL);
+	// read file data into buffer
+	const char *pFilename = "countryflags/index.json";
+	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", "couldn't open index file");
 		return;
 	}
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
+	io_close(File);
 
-	char aOrigin[128];
-	CLineReader LineReader;
-	LineReader.Init(File);
-	char *pLine;
-	while((pLine = LineReader.Get()))
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
 	{
-		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
-			continue;
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		mem_free(pFileData);
+		return;
+	}
 
-		str_copy(aOrigin, pLine, sizeof(aOrigin));
-		char *pReplacement = LineReader.Get();
-		if(!pReplacement)
+	// extract data
+	const json_value &rInit = (*pJsonData)["country codes"];
+	if(rInit.type == json_object)
+	{
+		enum
 		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", "unexpected end of index file");
-			break;
-		}
-
-		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+			NUM_INDICES = 2,
+		};
+		const char *paIndices[NUM_INDICES] = {"custom", "ISO 3166-1"};
+		for(int Index = 0; Index < NUM_INDICES; ++Index)
 		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
-			continue;
-		}
-
-		int CountryCode = str_toint(pReplacement+3);
-		if(CountryCode < CODE_LB || CountryCode > CODE_UB)
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
-			continue;
-		}
-
-		// load the graphic file
-		char aBuf[128];
-		CImageInfo Info;
-		if(g_Config.m_ClLoadCountryFlags)
-		{
-			str_format(aBuf, sizeof(aBuf), "countryflags/%s.png", aOrigin);
-			if(!Graphics()->LoadPNG(&Info, aBuf, IStorage::TYPE_ALL))
+			const json_value &rStart = rInit[(const char *)paIndices[Index]];
+			if(rStart.type == json_array)
 			{
-				char aMsg[128];
-				str_format(aMsg, sizeof(aMsg), "failed to load '%s'", aBuf);
-				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aMsg);
-				continue;
+				for(unsigned i = 0; i < rStart.u.array.length; ++i)
+				{
+					char aBuf[64];
+
+					// validate country code
+					int CountryCode = (long)rStart[i]["code"];
+					if(CountryCode < CODE_LB || CountryCode > CODE_UB)
+					{
+						str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
+						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
+						continue;
+					}
+					
+					// add entry
+					const char *pCountryName = rStart[i]["id"];
+					CCountryFlag CountryFlag;
+					CountryFlag.m_CountryCode = CountryCode;
+					str_copy(CountryFlag.m_aCountryCodeString, pCountryName, sizeof(CountryFlag.m_aCountryCodeString));
+					if(g_Config.m_ClLoadCountryFlags)
+					{
+						// load the graphic file
+						CImageInfo Info;
+						str_format(aBuf, sizeof(aBuf), "countryflags/%s.png", pCountryName);
+						if(!Graphics()->LoadPNG(&Info, aBuf, IStorage::TYPE_ALL))
+						{
+							char aMsg[64];
+							str_format(aMsg, sizeof(aMsg), "failed to load '%s'", aBuf);
+							Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aMsg);
+							continue;
+						}
+						CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+						mem_free(Info.m_pData);
+					}
+					m_aCountryFlags.add_unsorted(CountryFlag);
+		
+					// print message
+					if(g_Config.m_Debug)
+					{
+						str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", pCountryName);
+						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
+					}
+				}
 			}
 		}
-
-		// add entry
-		CCountryFlag CountryFlag;
-		CountryFlag.m_CountryCode = CountryCode;
-		str_copy(CountryFlag.m_aCountryCodeString, aOrigin, sizeof(CountryFlag.m_aCountryCodeString));
-		if(g_Config.m_ClLoadCountryFlags)
-		{
-			CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
-			mem_free(Info.m_pData);
-		}
-		
-		if(g_Config.m_Debug)
-		{
-			str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", aOrigin);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
-		}
-		m_aCountryFlags.add_unsorted(CountryFlag);
 	}
-	io_close(File);
+
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item

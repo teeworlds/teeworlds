@@ -7,8 +7,8 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
-#include <engine/shared/linereader.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -67,55 +67,71 @@ int CMenus::DoButton_Customize(const void *pID, IGraphics::CTextureHandle Textur
 
 void CMenus::SaveSkinfile()
 {
-	char aFilename[256];
-	str_format(aFilename, sizeof(aFilename), "skins/%s.skn", m_aSaveSkinName);
-	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "skins/%s.json", m_aSaveSkinName);
+	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return;
 
-	static const char *const apParts[6] = {"body", "tattoo", "decoration",
-											"hands", "feet", "eyes"};
-	static const char *const apComponents[4] = {"hue", "sat", "lgt", "alp"};
+	// file start
+	const char *p = "{\"skin\": {";
+	io_write(File, p, str_length(p));
+	int Count = 0;
 
-	char aBuf[256];
-	for(int p = 0; p < NUM_SKINPARTS; p++)
+	for(int PartIndex = 0; PartIndex < CSkins::NUM_SKINPARTS; PartIndex++)
 	{
-		if(!gs_apSkinVariables[p][0])
+		if(!CSkins::ms_apSkinVariables[PartIndex][0])
 			continue;
-
-		str_format(aBuf, sizeof(aBuf), "%s.filename := %s", apParts[p], gs_apSkinVariables[p]);
-		WriteLineSkinfile(File, aBuf);
-
-		str_format(aBuf, sizeof(aBuf), "%s.custom_colors := %s", apParts[p], *gs_apUCCVariables[p]?"true":"false");
-		WriteLineSkinfile(File, aBuf);
-
-		if(*gs_apUCCVariables[p])
+		
+		// part start
+		if(Count == 0)
 		{
-			for(int c = 0; c < 3; c++)
+			p = "\n";
+			io_write(File, p, str_length(p));
+		}
+		else
+		{
+			p = ",\n"; 
+			io_write(File, p, str_length(p));
+		}
+		str_format(aBuf, sizeof(aBuf), "\t\"%s\": {\n", CSkins::ms_apSkinPartNames[PartIndex]);
+		io_write(File, aBuf, str_length(aBuf));
+
+		// part content
+		str_format(aBuf, sizeof(aBuf), "\t\t\"filename\": \"%s\",\n", CSkins::ms_apSkinVariables[PartIndex]);
+		io_write(File, aBuf, str_length(aBuf));
+
+		str_format(aBuf, sizeof(aBuf), "\t\t\"custom_colors\": \"%s\"", *CSkins::ms_apUCCVariables[PartIndex]?"true":"false");
+		io_write(File, aBuf, str_length(aBuf));
+
+		if(*CSkins::ms_apUCCVariables[PartIndex])
+		{
+			for(int c = 0; c < CSkins::NUM_COLOR_COMPONENTS-1; c++)
 			{
-				int Val = (*gs_apColorVariables[p] >> (2-c)*8) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[c], Val);
-				WriteLineSkinfile(File, aBuf);
+				int Val = (*CSkins::ms_apColorVariables[PartIndex] >> (2-c)*8) & 0xff;
+				str_format(aBuf, sizeof(aBuf), ",\n\t\t\"%s\": %d", CSkins::ms_apColorComponents[c], Val);
+				io_write(File, aBuf, str_length(aBuf));
 			}
-			if(p == SKINPART_TATTOO)
+			if(PartIndex == CSkins::SKINPART_TATTOO)
 			{
-				int Val = (*gs_apColorVariables[p] >> 24) & 0xff;
-				str_format(aBuf, sizeof(aBuf), "%s.%s := %d", apParts[p], apComponents[3], Val);
-				WriteLineSkinfile(File, aBuf);
+				int Val = (*CSkins::ms_apColorVariables[PartIndex] >> 24) & 0xff;
+				str_format(aBuf, sizeof(aBuf), ",\n\t\t\"%s\": %d", CSkins::ms_apColorComponents[3], Val);
+				io_write(File, aBuf, str_length(aBuf));
 			}
 		}
 
-		if(p != NUM_SKINPARTS-1)
-			WriteLineSkinfile(File, "");
+		// part end
+		p = "\n\t}";
+		io_write(File, p, str_length(p));
+
+		++Count;
 	}
 
-	io_close(File);
-}
+	// file end
+	p = "}\n}\n";
+	io_write(File, p, str_length(p));
 
-void CMenus::WriteLineSkinfile(IOHANDLE File, const char *pLine)
-{
-	io_write(File, pLine, str_length(pLine));
-	io_write_newline(File);
+	io_close(File);
 }
 
 void CMenus::RenderHSLPicker(CUIRect MainView)
@@ -137,17 +153,17 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	float ButtonHeight = 20.0f;
 	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 	static int s_CustomColors = 0;
-	if(DoButton_CheckBox(&s_CustomColors, Localize("Custom colors"), *gs_apUCCVariables[m_TeePartSelected], &Button))
-		*gs_apUCCVariables[m_TeePartSelected] ^= 1;
+	if(DoButton_CheckBox(&s_CustomColors, Localize("Custom colors"), *CSkins::ms_apUCCVariables[m_TeePartSelected], &Button))
+		*CSkins::ms_apUCCVariables[m_TeePartSelected] ^= 1;
 
-	if(!(*gs_apUCCVariables[m_TeePartSelected]))
+	if(!(*CSkins::ms_apUCCVariables[m_TeePartSelected]))
 		return;
 
 	MainView.HSplitTop(Spacing, 0, &MainView);
 
 	bool Modified = false;
-	bool UseAlpha = m_TeePartSelected == SKINPART_TATTOO;
-	int Color = *gs_apColorVariables[m_TeePartSelected];
+	bool UseAlpha = m_TeePartSelected == CSkins::SKINPART_TATTOO;
+	int Color = *CSkins::ms_apColorVariables[m_TeePartSelected];
 
 	int Hue, Sat, Lgt, Alp;
 	Hue = (Color>>16)&0xff;
@@ -159,37 +175,32 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	MainView.HSplitTop(144.0f, &Picker, &MainView);
 	RenderTools()->DrawUIRect(&Picker, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	float Dark = CSkins::DARKEST_COLOR_LGT/255.0f;
+	IGraphics::CColorVertex ColorArray[4];
+
 	// Hue/Lgt picker :
 	{
-		Picker.VMargin((Picker.w-256.0f)/2.0f, &Picker);
+		Picker.VMargin((Picker.w-128)/2.0f, &Picker);
 		Picker.HMargin((Picker.h-128.0f)/2.0f, &Picker);
 
 		// picker
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_HLPICKER].m_Id);
+		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark));
+		ColorArray[0] = IGraphics::CColorVertex(0, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark));
+		ColorArray[1] = IGraphics::CColorVertex(1, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark+(1.0f-Dark)));
+		ColorArray[2] = IGraphics::CColorVertex(2, c.r, c.g, c.b, 1.0f);
+		c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+(1.0f-Dark)));
+		ColorArray[3] = IGraphics::CColorVertex(3, c.r, c.g, c.b, 1.0f);
+		Graphics()->SetColorVertex(ColorArray, 4);
 		IGraphics::CQuadItem QuadItem(Picker.x, Picker.y, Picker.w, Picker.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 
-		/*Graphics()->TextureSet(-1);
-		Graphics()->QuadsBegin();
-		for(int i = 0; i < 256; i++)
-		{
-			for(int j = 0; j < 256-DARKEST_COLOR_LGT; j++)
-			{
-				int H = i;
-				int L = 255-j;
-				vec3 rgb = HslToRgb(vec3(H/255.0f, Sat/255.0f, L/255.0f));
-				Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Picker.x+i, Picker.y+j, 1.0f, 1.0f);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-			}
-		}
-		Graphics()->QuadsEnd();*/
-
 		// marker
-		vec2 Marker = vec2(Hue*UI()->Scale(), max(0.0f, 127-Lgt/2.0f)*UI()->Scale());
+		vec2 Marker = vec2(Sat/2*UI()->Scale(), Lgt/2.0f*UI()->Scale());
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -200,13 +211,13 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		Graphics()->QuadsEnd();
 
 		// logic
-		int X, Y;
+		float X, Y;
 		static int s_HLPicker;
 		int Logic = UI()->DoPickerLogic(&s_HLPicker, &Picker, &X, &Y);
 		if(Logic)
 		{
-			Hue = X;
-			Lgt = 255 - Y*2;
+			Sat = (int)(2*X) & 255;
+			Lgt = (int)(Y*2) & 255;
 			Modified = true;
 		}
 	}
@@ -220,6 +231,8 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
 		static int s_aButtons[12];
 		float SliderHeight = 16.0f;
+		static const float s_aColorIndices[7][3] = {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+													{0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}};
 
 		for(int i = 0; i < NumBars; i++)
 		{
@@ -230,7 +243,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// label
 			RenderTools()->DrawUIRect(&Label, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-			Label.VSplitLeft((Label.w-168.0f)/2.0f, &Label, &Button);
+			Label.VSplitLeft((Label.w-160.0f)/2.0f, &Label, &Button);
 			Label.y += 2.0f;
 			UI()->DoLabelScaled(&Label, apNames[i], SliderHeight*ms_FontmodHeight*0.8f, 0);
 
@@ -243,27 +256,53 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			}
 
 			// bar
-			Bar.VSplitLeft(256.0f/2.0f, &Bar, &Button);
+			Bar.VSplitLeft(128.0f, &Bar, &Button);
+			int NumQuads = i == 0 ? 6 : 1;
+			float Length = Bar.w/NumQuads;
+			vec4 ColorL, ColorR;
+
 			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
-			for(int v = 0; v < 256/2; v++)
+			for(int j = 0; j < NumQuads; ++j)
 			{
-				int Val = v*2;
-				vec3 rgb;
-				float Dark = DARKEST_COLOR_LGT/255.0f;
-				if(i == 0)
-					rgb = HslToRgb(vec3(Val/255.0f, 1.0f, 0.5f));
-				else if(i == 1)
-					rgb = HslToRgb(vec3(Hue/255.0f, Val/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				else if(i == 2)
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Val/255.0f*(1.0f-Dark)));
-				else
-					rgb = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
-				if(i == 3)
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, Val/255.0f);
-				else
-					Graphics()->SetColor(rgb.r, rgb.g, rgb.b, 1.0f);
-				IGraphics::CQuadItem QuadItem(Bar.x+v*UI()->Scale(), Bar.y, 1.0f*UI()->Scale(), Bar.h);
+				switch(i)
+				{
+				case 0:
+					{
+						ColorL = vec4(s_aColorIndices[j][0], s_aColorIndices[j][1], s_aColorIndices[j][2], 1.0f);
+						ColorR = vec4(s_aColorIndices[j+1][0], s_aColorIndices[j+1][1], s_aColorIndices[j+1][2], 1.0f);
+					}
+					break;
+				case 1:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorL = vec4(c.r, c.g, c.b, 1.0f);
+						c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+					break;
+				case 2:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark));
+						ColorL = vec4(c.r, c.g, c.b, 1.0f);
+						c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+(1.0f-Dark)));
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+					break;
+				default:
+					{
+						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
+						ColorL = vec4(c.r, c.g, c.b, 0.0f);
+						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+					}
+				}
+
+				ColorArray[0] = IGraphics::CColorVertex(0, ColorL.r, ColorL.g, ColorL.b, ColorL.a);
+				ColorArray[1] = IGraphics::CColorVertex(1, ColorR.r, ColorR.g, ColorR.b, ColorR.a);
+				ColorArray[2] = IGraphics::CColorVertex(2, ColorR.r, ColorR.g, ColorR.b, ColorR.a);
+				ColorArray[3] = IGraphics::CColorVertex(3, ColorL.r, ColorL.g, ColorL.b, ColorL.a);
+				Graphics()->SetColorVertex(ColorArray, 4);
+				IGraphics::CQuadItem QuadItem(Bar.x+Length*j, Bar.y, Length, Bar.h);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 			}
 
@@ -288,7 +327,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			UI()->DoLabelScaled(&Label, aBuf, SliderHeight*ms_FontmodHeight*0.8f, 0);
 
 			// logic
-			int X;
+			float X;
 			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
 			if(Logic)
 			{
@@ -301,10 +340,10 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	if(Modified)
 	{
 		int NewVal = (Hue << 16) + (Sat << 8) + Lgt;
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
 			if(m_TeePartSelected == p)
-				*gs_apColorVariables[p] = NewVal;
+				*CSkins::ms_apColorVariables[p] = NewVal;
 		}
 		if(UseAlpha)
 			g_Config.m_PlayerColorTattoo = (Alp << 24) + NewVal;
@@ -323,9 +362,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		{
 			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
 			// no special skins
-			if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
-				continue;
-			s_paSkinList.add(s);
+			if(s->m_Type == CSkins::SKINTYPE_STANDARD)
+				s_paSkinList.add(s);
 		}
 		s_InitSkinlist = false;
 	}
@@ -346,12 +384,12 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
-			for(int p = 0; p < NUM_SKINPARTS; p++)
+			for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 			{
 				if(s->m_aUseCustomColors[p])
 				{
 					Info.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
-					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==SKINPART_TATTOO);
+					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==CSkins::SKINPART_TATTOO);
 				}
 				else
 				{
@@ -373,11 +411,11 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		{
 			const CSkins::CSkin *s = s_paSkinList[NewSelected];
 			mem_copy(g_Config.m_PlayerSkin, s->m_aName, sizeof(g_Config.m_PlayerSkin));
-			for(int p = 0; p < NUM_SKINPARTS; p++)
+			for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 			{
-				mem_copy(gs_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
-				*gs_apUCCVariables[p] = s->m_aUseCustomColors[p];
-				*gs_apColorVariables[p] = s->m_aPartColors[p];
+				mem_copy(CSkins::ms_apSkinVariables[p], s->m_apParts[p]->m_aName, 24);
+				*CSkins::ms_apUCCVariables[p] = s->m_aUseCustomColors[p];
+				*CSkins::ms_apColorVariables[p] = s->m_aPartColors[p];
 			}
 		}
 	}
@@ -391,26 +429,22 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	static float s_ScrollValue = 0.0f;
 	if(s_InitSkinPartList)
 	{
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
 			s_paList[p].clear();
 			for(int i = 0; i < m_pClient->m_pSkins->NumSkinPart(p); ++i)
 			{
 				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(p, i);
 				// no special skins
-				if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
-					continue;
-				s_paList[p].add(s);
+				if(s->m_Type == CSkins::SKINTYPE_STANDARD)
+					s_paList[p].add(s);
 			}
 		}
 		s_InitSkinPartList = false;
 	}
 
-	const char *const apTitles[6] = {Localize("Bodies"), Localize("Tattoos"), Localize("Decoration"),
-										Localize("Hands"), Localize("Feet"), Localize("Eyes")};
-
 	static int OldSelected = -1;
-	UiDoListboxHeader(&MainView, apTitles[m_TeePartSelected], 20.0f, 2.0f);
+	UiDoListboxHeader(&MainView, CSkins::ms_apSkinPartNames[m_TeePartSelected], 20.0f, 2.0f);
 	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected, s_ScrollValue);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
@@ -418,24 +452,24 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][i];
 		if(s == 0)
 			continue;
-		if(!str_comp(s->m_aName, gs_apSkinVariables[m_TeePartSelected]))
+		if(!str_comp(s->m_aName, CSkins::ms_apSkinVariables[m_TeePartSelected]))
 			OldSelected = i;
 
 		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
-			for(int j = 0; j < NUM_SKINPARTS; j++)
+			for(int j = 0; j < CSkins::NUM_SKINPARTS; j++)
 			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, gs_apSkinVariables[j]);
+				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, CSkins::ms_apSkinVariables[j], false);
 				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
-				if(*gs_apUCCVariables[j])
+				if(*CSkins::ms_apUCCVariables[j])
 				{
 					if(m_TeePartSelected == j)
 						Info.m_aTextures[j] = s->m_ColorTexture;
 					else
 						Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
-					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[j], j==SKINPART_TATTOO);
+					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[j], j==CSkins::SKINPART_TATTOO);
 				}
 				else
 				{
@@ -458,7 +492,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		if(NewSelected != OldSelected)
 		{
 			const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-			mem_copy(gs_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
+			mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
 		}
 	}
 	OldSelected = NewSelected;
@@ -479,62 +513,47 @@ public:
 
 void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
 {
-	IOHANDLE File = pStorage->OpenFile("languages/index.txt", IOFLAG_READ, IStorage::TYPE_ALL);
+	// read file data into buffer
+	const char *pFilename = "languages/index.json";
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 	{
 		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
 		return;
 	}
-
-	char aOrigin[128];
-	char aReplacement[128];
-	CLineReader LineReader;
-	LineReader.Init(File);
-	char *pLine;
-	while((pLine = LineReader.Get()))
-	{
-		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
-			continue;
-
-		str_copy(aOrigin, pLine, sizeof(aOrigin));
-
-		pLine = LineReader.Get();
-		if(!pLine)
-		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
-			break;
-		}
-
-		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			(void)LineReader.Get();
-			continue;
-		}
-		str_copy(aReplacement, pLine+3, sizeof(aReplacement));
-
-		pLine = LineReader.Get();
-		if(!pLine)
-		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
-			break;
-		}
-
-		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			continue;
-		}
-
-		char aFileName[128];
-		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
-		pLanguages->add(CLanguage(aReplacement, aFileName, str_toint(pLine+3)));
-	}
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
 	io_close(File);
+
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		mem_free(pFileData);
+		return;
+	}
+
+	// extract data
+	const json_value &rStart = (*pJsonData)["language indices"];
+	if(rStart.type == json_array)
+	{
+		for(unsigned i = 0; i < rStart.u.array.length; ++i)
+		{
+			char aFileName[128];
+			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)rStart[i]["file"]);
+			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (long)rStart[i]["code"]));
+		}
+	}
+
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
 }
 
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
@@ -869,9 +888,6 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
 	// skin part selection
-	const char *const apParts[6] = {Localize("Body"), Localize("Tattoo"), Localize("Decoration"),
-									Localize("Hands"), Localize("Feet"), Localize("Eyes")};
-
 	MainView.HSplitTop(SpacingH, 0, &MainView);
 	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
 	RenderTools()->DrawUIRect(&Patterns, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -879,10 +895,10 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
 	static int s_aPatternButtons[6] = {0};
-	for(int i = 0; i < NUM_SKINPARTS; i++)
+	for(int i = 0; i < CSkins::NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
-		if(DoButton_MenuTabTop(&s_aPatternButtons[i], apParts[i], m_TeePartSelected==i, &Button))
+		if(DoButton_MenuTabTop(&s_aPatternButtons[i], CSkins::ms_apSkinPartNames[i], m_TeePartSelected==i, &Button))
 		{
 			m_TeePartSelected = i;
 		}
@@ -950,14 +966,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		CTeeRenderInfo OwnSkinInfo;
 		OwnSkinInfo.m_Size = 50.0f;
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, gs_apSkinVariables[p]);
+			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, CSkins::ms_apSkinVariables[p], false);
 			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
-			if(*gs_apUCCVariables[p])
+			if(*CSkins::ms_apUCCVariables[p])
 			{
 				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*gs_apColorVariables[p], p==SKINPART_TATTOO);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==CSkins::SKINPART_TATTOO);
 			}
 			else
 			{
@@ -980,19 +996,19 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_RED, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_RED, p);
+			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_TATTOO);
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		for(int p = 0; p < NUM_SKINPARTS; p++)
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*gs_apUCCVariables[p], *gs_apColorVariables[p], TEAM_BLUE, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_TATTOO);
+			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_BLUE, p);
+			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_TATTOO);
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Right.x+Right.w/2.0f, Right.y+Right.h/2.0f+2.0f));
 	}
