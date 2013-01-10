@@ -89,6 +89,8 @@ public:
 
 	bool m_SuppressEvents;
 
+	bool m_EditorActive;
+
 	// TODO: move this
 	CTuningParams m_Tuning;
 
@@ -185,7 +187,7 @@ public:
 		bool m_Friend;
 
 		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
-		void Reset(CGameClient *pGameClient);
+		void Reset(CGameClient *pGameClient, int ClientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];

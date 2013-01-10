@@ -11,6 +11,7 @@
 
 #include <game/generated/client_data.h>
 
+#include "camera.h"
 #include "menus.h"
 
 void CMenus::RenderStartMenu(CUIRect MainView)
@@ -29,16 +30,20 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_SettingsButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 10.0f, 0.5f))
+		if(DoButtonStart(&s_SettingsButton, Localize("Settings"), &Button, "settings", 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL+g_Config.m_UiSettingsPage);
 			m_MenuPage = PAGE_SETTINGS;
+			m_ResetFades = FADE_ALL;
 		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButtonDefault(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL+g_Config.m_UiSettingsPage);
 			m_MenuPage = PAGE_SETTINGS;
+			m_ResetFades = FADE_ALL;
 		}
 	}
 
@@ -47,13 +52,13 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_LocalServerButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_LocalServerButton, Localize("Local server"), 0, &Button, "local_server", 10.0f, 0.5f))
+		if(DoButtonStart(&s_LocalServerButton, Localize("Local server"), &Button, "local_server", 10.0f, 0.5f))
 		{
 		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButtonDefault(&s_LocalServerButton, Localize("Local server"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 		}
 	}*/
@@ -63,18 +68,22 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_DemoButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "demos", 10.0f, 0.5f))
+		if(DoButtonStart(&s_DemoButton, Localize("Demos"), &Button, "demos", 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			m_MenuPage = PAGE_DEMOS;
+			m_ResetFades = FADE_ALL;
 			DemolistPopulate();
 			DemolistOnUpdate(false);
 		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButtonDefault(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			m_MenuPage = PAGE_DEMOS;
+			m_ResetFades = FADE_ALL;
 			DemolistPopulate();
 			DemolistOnUpdate(false);
 		}
@@ -85,7 +94,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_MapEditorButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_MapEditorButton, Localize("Editor"), 0, &Button, "editor", 10.0f, 0.5f))
+		if(DoButtonStart(&s_MapEditorButton, Localize("Editor"), &Button, "editor", 10.0f, 0.5f))
 		{
 			g_Config.m_ClEditor = 1;
 			Input()->MouseModeRelative();
@@ -93,7 +102,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButtonDefault(&s_MapEditorButton, Localize("Editor"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			g_Config.m_ClEditor = 1;
 			Input()->MouseModeRelative();
@@ -105,13 +114,19 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_PlayButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
+		if(DoButtonStart(&s_PlayButton, Localize("Play"), &Button, "play_game", 10.0f, 0.5f))
+		{
 			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_ResetFades = FADE_ALL;
+		}
 	}
 	else
 	{
-		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButtonDefault(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		{
 			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_ResetFades = FADE_ALL;
+		}
 	}
 
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
@@ -119,7 +134,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
 	static int s_QuitButton = 0;
-	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+	if(DoButtonDefault(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		m_Popup = POPUP_QUIT;
 
 	// render version
@@ -134,7 +149,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		UI()->DoLabelScaled(&Version, aBuf, 14.0f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);	
+	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);
 }
 
 void CMenus::RenderLogo(CUIRect MainView)

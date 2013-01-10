@@ -35,23 +35,20 @@ class CMenus : public CComponent
 
 	float *ButtonFade(const void *pID, float Seconds, int Checked=0);
 
+	int DoButtonDefault(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
+	int DoButtonStart(const void *pID, const char *pText, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
+	int DoTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool Fade=true);
+	int DoButtonSprite(const void *pID, int ImageID, int SpriteID1, const CUIRect *pRect, bool Draw=false);
+	int DoSwitchSprite(const void *pID, int ImageID, int SpriteIDInactive, int SpriteIDActive, int Checked, const CUIRect *pRect);
+	int DoButtonToggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
+	int DoButtonMouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
 
-	int DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect);
-	int DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
-	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
-	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
-	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
-	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
-	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
-	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
-	int DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
+	int DoButtonGridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButtonGridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
-	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
-	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-
-	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
+	int DoButtonCheckBoxCommon(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
+	int DoButtonCheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButtonCheckBoxNumber(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	/*static void ui_draw_menu_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -60,8 +57,6 @@ class CMenus : public CComponent
 	*/
 
 	int DoIcon(int ImageId, int SpriteId, const CUIRect *pRect);
-	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
 	//static void ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -79,7 +74,7 @@ class CMenus : public CComponent
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	void DoButtonKeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
@@ -142,6 +137,7 @@ class CMenus : public CComponent
 		PAGE_BROWSER_FRIENDS,
 		NUM_PAGE_BROWSER,
 
+		// order here should be the same like enum for settings background map positions in camera
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,
@@ -160,6 +156,18 @@ class CMenus : public CComponent
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
 	bool m_InfoMode;
+
+	// reset fade
+	bool m_ResetFade;
+	int m_ResetFades;
+	enum
+	{
+		FADE_NONE=0,
+		FADE_INNERMENU=1,
+		FADE_MENUTABS=2,
+		FADE_STARTMENU=4,
+		FADE_ALL=FADE_INNERMENU|FADE_MENUTABS|FADE_STARTMENU,
+	};
 
 	// images
 	struct CMenuImage
@@ -255,32 +263,82 @@ class CMenus : public CComponent
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 
 	// friends
-	struct CFriendItem
+	class CFriendItem
 	{
-		const CFriendInfo *m_pFriendInfo;
-		int m_NumFound;
-
-		bool operator<(const CFriendItem &Other)
+	public:
+		class CClanFriendItem
 		{
-			if(m_NumFound && !Other.m_NumFound)
-				return true;
-			else if(!m_NumFound && Other.m_NumFound)
-				return false;
-			else
+		public:
+			CClanFriendItem()
 			{
-				int Result = str_comp_nocase(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
-				if(Result)
-					return Result < 0;
-				else
-					return str_comp_nocase(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
 			}
+
+			~CClanFriendItem()
+			{
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
+			}
+
+			array<CFriendInfo> m_lFriendInfos;
+			array<const CServerInfo*> m_lServerInfos;
+		};
+
+		int m_NumFound;
+		const CFriendInfo *m_pFriendInfo;
+		const CServerInfo *m_pServerInfo;
+
+		CClanFriendItem m_ClanFriend;
+
+		CFriendItem()
+		{
+			m_pFriendInfo = 0;
+			m_pServerInfo = 0;
+		}
+
+		bool IsClanFriend()
+		{
+			return m_pFriendInfo->m_aClan[0] && !m_pFriendInfo->m_aName[0];
+		}
+
+		void Reset()
+		{
+			m_NumFound = 0;
+			m_ClanFriend.m_lFriendInfos.clear();
+			m_ClanFriend.m_lServerInfos.clear();
 		}
 	};
 
-	sorted_array<CFriendItem> m_lFriends;
+	struct CSelectedFriend
+	{
+		bool m_ClanFriend;
+		bool m_FakeFriend;
+		int m_NameHash;
+		int m_ClanHash;
+	};
+
+	enum
+	{
+		FRIENDS_SORT_TYPE=0,
+		FRIENDS_SORT_SERVER,
+		FRIENDS_SORT_NAME,
+		FRIENDS_SORT_CLAN,
+	};
+
+	int *m_pFriendIndexes;
+	array<CFriendItem> m_lFriends;
 	int m_FriendlistSelectedIndex;
+	const CFriendInfo *m_pDeleteFriendInfo;
+	CSelectedFriend m_SelectedFriend;
+
+	bool SortCompareName(int Index1, int Index2) const;
+	bool SortCompareClan(int Index1, int Index2) const;
+	bool SortCompareServer(int Index1, int Index2) const;
+	bool SortCompareType(int Index1, int Index2) const;
 
 	void FriendlistOnUpdate();
+	void SortFriends();
 
 	class CBrowserFilter
 	{
@@ -362,16 +420,24 @@ class CMenus : public CComponent
 		FIXED=1,
 		SPACER=2,
 
-		COL_FLAG=0,
-		COL_NAME,
-		COL_GAMETYPE,
-		COL_MAP,
-		COL_PLAYERS,
-		COL_PING,
-		//COL_FAVORITE,
-		//COL_INFO,
+		COL_BROWSER_FLAG=0,
+		COL_BROWSER_NAME,
+		COL_BROWSER_GAMETYPE,
+		COL_BROWSER_MAP,
+		COL_BROWSER_PLAYERS,
+		COL_BROWSER_PING,
+		//COL_BROWSER_FAVORITE,
+		//COL_BROWSER_INFO,
 
-		NUM_COLS,
+		NUM_BROWSER_COLS,
+
+		COL_FRIEND_TYPE=0,
+		COL_FRIEND_SERVER,
+		COL_FRIEND_NAME,
+		COL_FRIEND_CLAN,
+		COL_FRIEND_DELETE,
+
+		NUM_FRIEND_COLS,
 	};
 
 	struct CColumn
@@ -386,7 +452,8 @@ class CMenus : public CComponent
 		CUIRect m_Spacer;
 	};
 
-	static CColumn ms_aCols[NUM_COLS];
+	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
+	static CColumn ms_aFriendCols[NUM_FRIEND_COLS];
 
 	enum
 	{
@@ -440,7 +507,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
-	void RenderServerbrowserFriends(CUIRect View);
+	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
@@ -448,7 +515,9 @@ class CMenus : public CComponent
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const CFriendInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan=false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
+	void UpdateFriendCounter(const CServerInfo *pEntry);
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
@@ -488,6 +557,7 @@ public:
 	static CMenusKeyBinder m_Binder;
 
 	CMenus();
+	~CMenus();
 
 	void RenderLoading();
 

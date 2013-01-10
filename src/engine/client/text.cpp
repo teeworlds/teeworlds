@@ -515,10 +515,12 @@ public:
 		TextEx(&Cursor, pText, -1);
 	}
 
-	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int Length)
+	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int Length, int Flags, float MaxWidth)
 	{
 		CTextCursor Cursor;
-		SetCursor(&Cursor, 0, 0, Size, 0);
+		SetCursor(&Cursor, 0, 0, Size, Flags&(~TEXTFLAG_RENDER));
+		if(MaxWidth)
+			Cursor.m_LineWidth = MaxWidth;
 		TextEx(&Cursor, pText, Length);
 		return Cursor.m_X;
 	}

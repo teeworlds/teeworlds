@@ -36,10 +36,10 @@ void CMapLayers::OnInit()
 		m_pMenuMap = CreateEngineMap();
 
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "bgmaps/%s.map", g_Config.m_ClBackgroundMap);
 		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClBackgroundMap);
+			str_format(aBuf, sizeof(aBuf), "background map '%s' not found", g_Config.m_ClBackgroundMap);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 			return;
 		}
@@ -313,10 +313,10 @@ void CMapLayers::BackgroundMapUpdate()
 		m_pMenuMap->Unload();
 
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "bgmaps/%s.map", g_Config.m_ClBackgroundMap);
 		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClBackgroundMap);
+			str_format(aBuf, sizeof(aBuf), "background map '%s' not found", g_Config.m_ClBackgroundMap);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 			return;
 		}
