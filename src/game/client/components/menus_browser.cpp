@@ -1796,11 +1796,22 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 		{
 			if(ms_aFriendCols[i].m_Sort != -1)
 			{
+				int FriendListSelectedID = m_pFriendIndexes[m_FriendlistSelectedIndex];
 				if(g_Config.m_BrFriendSort == ms_aFriendCols[i].m_Sort)
 					g_Config.m_BrFriendSortOrder ^= 1;
 				else
 					g_Config.m_BrFriendSortOrder = 0;
 				g_Config.m_BrFriendSort = ms_aFriendCols[i].m_Sort;
+				SortFriends();
+
+				for(int j = 0; j < m_lFriends.size(); j++)
+				{
+					if(m_pFriendIndexes[j] == FriendListSelectedID)
+					{
+						m_FriendlistSelectedIndex = j;
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -1922,7 +1933,7 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 		CUIRect Row;
 		View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 
-		const CFriendItem *pFriend = &m_lFriends[i];
+		const CFriendItem *pFriend = &m_lFriends[m_pFriendIndexes[i]];
 
 		// entry background for selected item
 		if(m_FriendlistSelectedIndex == i)
@@ -1951,7 +1962,7 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 			UI()->SetHotItem(pFriend);
 
 		// select server in case the friend is online
-		if(pFriend->m_NumFound)
+		if(pFriend->m_NumFound && m_FriendlistSelectedIndex == i)
 			str_copy(g_Config.m_UiServerAddress, pFriend->m_pServerInfo->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 
 		vec3 TextBaseColor = vec3(1.0f, 1.0f, 1.0f);
