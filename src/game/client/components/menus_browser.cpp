@@ -32,10 +32,10 @@ CMenus::CColumn CMenus::ms_aBrowserCols[] = {
 };
 
 CMenus::CColumn CMenus::ms_aFriendCols[] = {
-	{COL_FRIEND_NAME,		FRIENDS_SORT_NAME,			"Name",		0, 300.0f, 0, {0}, {0}},
-	{COL_FRIEND_CLAN,		FRIENDS_SORT_CLAN,			"Clan",		1, 70.0f, 0, {0}, {0}},
-	{COL_FRIEND_SERVER,		FRIENDS_SORT_SERVER,		"Server",	1, 100.0f, 0, {0}, {0}},
-	{COL_FRIEND_TYPE,		FRIENDS_SORT_TYPE,			"Type",		1, 60.0f, 0, {0}, {0}},
+	{COL_FRIEND_NAME,		FRIENDS_SORT_NAME,			"Name",		-1, 150.0f, 0, {0}, {0}},
+	{COL_FRIEND_CLAN,		FRIENDS_SORT_CLAN,			"Clan",		-1, 120.0f, 0, {0}, {0}},
+	{COL_FRIEND_SERVER,		FRIENDS_SORT_SERVER,		"Server",	0, 300.0f, 0, {0}, {0}},
+	{COL_FRIEND_TYPE,		FRIENDS_SORT_TYPE,			"Type",		1, 70.0f, 0, {0}, {0}},
 };
 
 
@@ -1739,13 +1739,286 @@ void CMenus::SortFriends()
 
 void CMenus::RenderServerbrowserFriendList(CUIRect View)
 {
-	//CUIRect Headers, Status, InfoButton;
+	static int s_Inited = 0;
+	if(!s_Inited)
+	{
+		FriendlistOnUpdate();
+		s_Inited = 1;
+	}
 
-	//float SpacingH = 2.0f;
-	//float ButtonHeight = 20.0f;
+	CUIRect Headers, Status, InfoButton;
+
+	float SpacingH = 2.0f;
+	float ButtonHeight = 20.0f;
 
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
+	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
+
+	Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
+
+	// do layout
+	for(int i = 0; i < NUM_FRIEND_COLS; i++)
+	{
+		if(ms_aFriendCols[i].m_Direction == -1)
+		{
+			Headers.VSplitLeft(ms_aFriendCols[i].m_Width, &ms_aFriendCols[i].m_Rect, &Headers);
+
+			if(i+1 < NUM_FRIEND_COLS)
+			{
+				//Cols[i].flags |= SPACER;
+				Headers.VSplitLeft(2, &ms_aFriendCols[i].m_Spacer, &Headers);
+			}
+		}
+	}
+
+	for(int i = NUM_FRIEND_COLS-1; i >= 0; i--)
+	{
+		if(ms_aFriendCols[i].m_Direction == 1)
+		{
+			Headers.VSplitRight(ms_aFriendCols[i].m_Width, &Headers, &ms_aFriendCols[i].m_Rect);
+			Headers.VSplitRight(2, &Headers, &ms_aFriendCols[i].m_Spacer);
+		}
+	}
+
+	for(int i = 0; i < NUM_FRIEND_COLS; i++)
+	{
+		if(ms_aFriendCols[i].m_Direction == 0)
+			ms_aFriendCols[i].m_Rect = Headers;
+	}
+
+	// do headers
+	for(int i = 0; i < NUM_FRIEND_COLS; i++)
+	{
+		if(DoButton_GridHeader(ms_aFriendCols[i].m_Caption, ms_aFriendCols[i].m_Caption, g_Config.m_BrFriendSort == ms_aFriendCols[i].m_Sort, &ms_aFriendCols[i].m_Rect))
+		{
+			if(ms_aFriendCols[i].m_Sort != -1)
+			{
+				if(g_Config.m_BrFriendSort == ms_aFriendCols[i].m_Sort)
+					g_Config.m_BrFriendSortOrder ^= 1;
+				else
+					g_Config.m_BrFriendSortOrder = 0;
+				g_Config.m_BrFriendSort = ms_aFriendCols[i].m_Sort;
+			}
+		}
+	}
+
+	// do info icon at the end of the list header
+	{
+		InfoButton.Margin(2.0f, &InfoButton);
+		static int s_InfoButton = 0;
+		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, ((m_InfoMode && !UI()->MouseInside(&InfoButton)) || (!m_InfoMode && UI()->MouseInside(&InfoButton))) ? SPRITE_INFO_B : SPRITE_INFO_A, &InfoButton, false))
+		{
+			m_InfoMode ^= 1;
+		}
+	}
+
+	// split scrollbar from view
+	CUIRect Scroll;
+	View.VSplitRight(20.0f, &View, &Scroll);
+
+	// scrollbar background
+	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// list background
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	{
+		int Column = g_Config.m_BrFriendSort;
+
+		CUIRect Rect = View;
+		Rect.x = CMenus::ms_aFriendCols[Column].m_Rect.x;
+		Rect.w = CMenus::ms_aFriendCols[Column].m_Rect.w;
+		RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.05f), CUI::CORNER_ALL, 5.0f);
+	}
+
+	// count all the servers
+	int NumFriends = m_lFriends.size();
+
+	float ListHeight = ms_aBrowserCols[0].m_Rect.h + NumFriends * 20.0f;
+
+	//int Num = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h))+1;
+	//int Num = (int)(View.h/ms_aBrowserCols[0].m_Rect.h) + 1;
+	static int s_ScrollBar = 0;
+	static float s_ScrollValue = 0;
+
+	Scroll.HMargin(5.0f, &Scroll);
+	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+1;
+	if(ScrollNum > 0)
+	{
+		if(m_ScrollOffset)
+		{
+			s_ScrollValue = (float)(m_ScrollOffset)/ScrollNum;
+			m_ScrollOffset = 0;
+		}
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+			s_ScrollValue -= 3.0f/ScrollNum;
+		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+			s_ScrollValue += 3.0f/ScrollNum;
+	}
+	else
+		ScrollNum = 0;
+
+	int SelectedIndex = m_FriendlistSelectedIndex;
+	if(SelectedIndex > -1)
+	{
+		for(int i = 0; i < m_NumInputEvents; i++)
+		{
+			int NewIndex = -1;
+			if(m_aInputEvents[i].m_Flags&IInput::FLAG_PRESS)
+			{
+				if(m_aInputEvents[i].m_Key == KEY_DOWN)
+				{
+					NewIndex = SelectedIndex + 1;
+					if(NewIndex >= NumFriends)
+						NewIndex = NumFriends;
+				}
+				else if(m_aInputEvents[i].m_Key == KEY_UP)
+				{
+					NewIndex = SelectedIndex - 1;
+					if(NewIndex < 0)
+						NewIndex = 0;
+				}
+			}
+
+			if(NewIndex > -1 && NewIndex < NumFriends)
+			{
+				//scroll
+				float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aFriendCols[0].m_Rect.h + NewIndex*ms_aFriendCols[0].m_Rect.h;
+				int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aFriendCols[0].m_Rect.h ? 1 : 0;
+				if(Scroll)
+				{
+					if(Scroll < 0)
+					{
+						int NumScrolls = (View.y-IndexY+ms_aFriendCols[0].m_Rect.h-1.0f)/ms_aFriendCols[0].m_Rect.h;
+						s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
+					}
+					else
+					{
+						int NumScrolls = (IndexY+ms_aFriendCols[0].m_Rect.h-(View.y+View.h)+ms_aFriendCols[0].m_Rect.h-1.0f)/ms_aFriendCols[0].m_Rect.h;
+						s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
+					}
+				}
+
+				m_FriendlistSelectedIndex = NewIndex;
+			}
+		}
+	}
+
+	if(s_ScrollValue < 0) s_ScrollValue = 0;
+	if(s_ScrollValue > 1) s_ScrollValue = 1;
+
+	// set clipping
+	UI()->ClipEnable(&View);
+
+	CUIRect OriginalView = View;
+	View.y -= s_ScrollValue*ScrollNum*ms_aFriendCols[0].m_Rect.h;
+
+	for(int i = 0; i < NumFriends; i++)
+	{
+		CUIRect Row;
+		View.HSplitTop(ms_ListheaderHeight, &Row, &View);
+
+		const CFriendItem *pFriend = &m_lFriends[i];
+
+		// entry background for selected item
+		if(m_FriendlistSelectedIndex == i)
+			RenderTools()->DrawUIRect(&Row, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
+
+		int Inside = UI()->MouseInside(&Row);
+
+		if(UI()->ActiveItem() == pFriend)
+		{
+			if(!UI()->MouseButton(0))
+				UI()->SetActiveItem(0);
+		}
+		if(UI()->HotItem() == pFriend)
+		{
+			if(UI()->MouseButton(0))
+			{
+				m_FriendlistSelectedIndex = i;
+				UI()->SetActiveItem(pFriend);
+			}
+
+			CUIRect r = Row;
+			RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
+		}
+
+		if(Inside)
+			UI()->SetHotItem(pFriend);
+
+		// select server in case the friend is online
+		if(pFriend->m_NumFound)
+			str_copy(g_Config.m_UiServerAddress, pFriend->m_pServerInfo->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+
+		vec3 TextBaseColor = vec3(1.0f, 1.0f, 1.0f);
+		if(m_FriendlistSelectedIndex == i || Inside)
+		{
+			TextBaseColor = vec3(0.0f, 0.0f, 0.0f);
+			TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+		}
+
+		for(int c = 0; c < NUM_FRIEND_COLS; c++)
+		{
+			CUIRect Button;
+			char aTemp[64];
+			Button.x = ms_aFriendCols[c].m_Rect.x;
+			Button.y = Row.y;
+			Button.h = Row.h;
+			Button.w = ms_aFriendCols[c].m_Rect.w;
+
+			int ID = ms_aFriendCols[c].m_ID;
+
+			char aBuf[128];
+			CTextCursor Cursor;
+			switch(ID)
+			{
+				case COL_FRIEND_NAME:
+					str_copy(aBuf, pFriend->m_pFriendInfo->m_aName, sizeof(aBuf));
+					break;
+				case COL_FRIEND_CLAN:
+					str_copy(aBuf, pFriend->m_pFriendInfo->m_aClan, sizeof(aBuf));
+					break;
+				case COL_FRIEND_SERVER:
+					str_copy(aBuf, pFriend->m_NumFound ? pFriend->m_pServerInfo->m_aName : "-", sizeof(aBuf));
+					break;
+				case COL_FRIEND_TYPE:
+					if(pFriend->m_NumFound)
+					{
+						TextBaseColor = vec3(0.0f, 1.0f, 0.0f);
+						str_copy(aBuf, "On", sizeof(aBuf));
+					}	
+					else
+					{
+						TextBaseColor = vec3(1.0f, 0.0f, 0.0f);
+						str_copy(aBuf, "Off", sizeof(aBuf));
+					}
+			}
+			if(!aBuf[0])
+				str_copy(aBuf, "-", sizeof(aBuf));
+
+			float tw = TextRender()->TextWidth(0, 12.0f, aBuf, -1);
+			if(tw < Button.w)
+				TextRender()->SetCursor(&Cursor, Button.x+Button.w/2.0f-tw/2.0f, Button.y, 12.0f, TEXTFLAG_RENDER);
+			else
+			{
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+			}
+			
+			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, 1.0f);
+
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+		}
+
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+
+	UI()->ClipDisable();
 }
 
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
