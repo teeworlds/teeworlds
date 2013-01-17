@@ -186,21 +186,42 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		// picker
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark));
+
+		// base: grey - hue
+		vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, 0.5f));
 		ColorArray[0] = IGraphics::CColorVertex(0, c.r, c.g, c.b, 1.0f);
-		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark));
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, 0.5f));
 		ColorArray[1] = IGraphics::CColorVertex(1, c.r, c.g, c.b, 1.0f);
-		c = HslToRgb(vec3(Hue/255.0f, 1.0f, Dark+(1.0f-Dark)));
+		c = HslToRgb(vec3(Hue/255.0f, 1.0f, 0.5f));
 		ColorArray[2] = IGraphics::CColorVertex(2, c.r, c.g, c.b, 1.0f);
-		c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+(1.0f-Dark)));
+		c = HslToRgb(vec3(Hue/255.0f, 0.0f, 0.5f));
 		ColorArray[3] = IGraphics::CColorVertex(3, c.r, c.g, c.b, 1.0f);
 		Graphics()->SetColorVertex(ColorArray, 4);
 		IGraphics::CQuadItem QuadItem(Picker.x, Picker.y, Picker.w, Picker.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
+
+		// white blending
+		ColorArray[0] = IGraphics::CColorVertex(0, 1.0f, 1.0f, 1.0f, 0.0f);
+		ColorArray[1] = IGraphics::CColorVertex(1, 1.0f, 1.0f, 1.0f, 0.0f);
+		ColorArray[2] = IGraphics::CColorVertex(2, 1.0f, 1.0f, 1.0f, 1.0f);
+		ColorArray[3] = IGraphics::CColorVertex(3, 1.0f, 1.0f, 1.0f, 1.0f);
+		Graphics()->SetColorVertex(ColorArray, 4);
+		IGraphics::CQuadItem WhiteGradient(Picker.x, Picker.y + Picker.h*(1-2*Dark)/((1-Dark)*2), Picker.w, Picker.h/((1-Dark)*2));
+		Graphics()->QuadsDrawTL(&WhiteGradient, 1);
+
+		// black blending
+		ColorArray[0] = IGraphics::CColorVertex(0, 0.0f, 0.0f, 0.0f, 1.0f-2*Dark);
+		ColorArray[1] = IGraphics::CColorVertex(1, 0.0f, 0.0f, 0.0f, 1.0f-2*Dark);
+		ColorArray[2] = IGraphics::CColorVertex(2, 0.0f, 0.0f, 0.0f, 0.0f);
+		ColorArray[3] = IGraphics::CColorVertex(3, 0.0f, 0.0f, 0.0f, 0.0f);
+		Graphics()->SetColorVertex(ColorArray, 4);
+		IGraphics::CQuadItem BlackGradient(Picker.x, Picker.y, Picker.w, Picker.h*(1-2*Dark)/((1-Dark)*2));
+		Graphics()->QuadsDrawTL(&BlackGradient, 1);
+
 		Graphics()->QuadsEnd();
 
 		// marker
-		vec2 Marker = vec2(Sat/2*UI()->Scale(), Lgt/2.0f*UI()->Scale());
+		vec2 Marker = vec2(Sat/2.0f*UI()->Scale(), Lgt/2.0f*UI()->Scale());
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -216,8 +237,8 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		int Logic = UI()->DoPickerLogic(&s_HLPicker, &Picker, &X, &Y);
 		if(Logic)
 		{
-			Sat = (int)(2*X) & 255;
-			Lgt = (int)(Y*2) & 255;
+			Sat = (int)(256.0f*X/Picker.w);
+			Lgt = (int)(256.0f*Y/Picker.h);
 			Modified = true;
 		}
 	}
@@ -257,8 +278,16 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// bar
 			Bar.VSplitLeft(128.0f, &Bar, &Button);
-			int NumQuads = i == 0 ? 6 : 1;
+			int NumQuads = 1;
+			if( i == 0)
+				NumQuads = 6;
+			else if ( i == 2)
+				NumQuads = 2;
+			else
+				NumQuads = 1;
+
 			float Length = Bar.w/NumQuads;
+			float Offset = Length;
 			vec4 ColorL, ColorR;
 
 			Graphics()->TextureClear();
@@ -267,13 +296,13 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			{
 				switch(i)
 				{
-				case 0:
+				case 0: // Hue
 					{
 						ColorL = vec4(s_aColorIndices[j][0], s_aColorIndices[j][1], s_aColorIndices[j][2], 1.0f);
 						ColorR = vec4(s_aColorIndices[j+1][0], s_aColorIndices[j+1][1], s_aColorIndices[j+1][2], 1.0f);
 					}
 					break;
-				case 1:
+				case 1: // Sat
 					{
 						vec3 c = HslToRgb(vec3(Hue/255.0f, 0.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
 						ColorL = vec4(c.r, c.g, c.b, 1.0f);
@@ -281,15 +310,29 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 						ColorR = vec4(c.r, c.g, c.b, 1.0f);
 					}
 					break;
-				case 2:
+				case 2: // Lgt
 					{
-						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark));
-						ColorL = vec4(c.r, c.g, c.b, 1.0f);
-						c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+(1.0f-Dark)));
-						ColorR = vec4(c.r, c.g, c.b, 1.0f);
+						if(j == 0)
+						{
+							// Dark - 0.5f
+							vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark));
+							ColorL = vec4(c.r, c.g, c.b, 1.0f);
+							c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, 0.5f));
+							ColorR = vec4(c.r, c.g, c.b, 1.0f);
+							Length = Offset = Bar.w - Bar.w/((1-Dark)*2);
+						}
+						else
+						{
+							// 0.5f - 0.0f
+							vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, 0.5f));
+							ColorL = vec4(c.r, c.g, c.b, 1.0f);
+							c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, 1.0f));
+							ColorR = vec4(c.r, c.g, c.b, 1.0f);
+							Length = Bar.w/((1-Dark)*2);
+						}
 					}
 					break;
-				default:
+				default: // Alpha
 					{
 						vec3 c = HslToRgb(vec3(Hue/255.0f, Sat/255.0f, Dark+Lgt/255.0f*(1.0f-Dark)));
 						ColorL = vec4(c.r, c.g, c.b, 0.0f);
@@ -302,7 +345,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 				ColorArray[2] = IGraphics::CColorVertex(2, ColorR.r, ColorR.g, ColorR.b, ColorR.a);
 				ColorArray[3] = IGraphics::CColorVertex(3, ColorL.r, ColorL.g, ColorL.b, ColorL.a);
 				Graphics()->SetColorVertex(ColorArray, 4);
-				IGraphics::CQuadItem QuadItem(Bar.x+Length*j, Bar.y, Length, Bar.h);
+				IGraphics::CQuadItem QuadItem(Bar.x+Offset*j, Bar.y, Length, Bar.h);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 			}
 
@@ -331,7 +374,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
 			if(Logic)
 			{
-				*apVars[i] = X*2;
+				*apVars[i] = X*256.0f/Bar.w;
 				Modified = true;
 			}
 		}
