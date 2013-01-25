@@ -201,29 +201,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		UI()->SetHotItem(pID);
 
 	// update friend counter
-	if(pEntry->m_FriendState != IFriends::FRIEND_NO)
-	{
-		for(int j = 0; j < pEntry->m_NumClients; ++j)
-		{
-			if(pEntry->m_aClients[j].m_FriendState != IFriends::FRIEND_NO)
-			{
-				unsigned NameHash = str_quickhash(pEntry->m_aClients[j].m_aName);
-				unsigned ClanHash = str_quickhash(pEntry->m_aClients[j].m_aClan);
-				for(int f = 0; f < m_lFriends.size(); ++f)
-				{
-					if(ClanHash == m_lFriends[f].m_pFriendInfo->m_ClanHash &&
-						(!m_lFriends[f].m_pFriendInfo->m_aName[0] || NameHash == m_lFriends[f].m_pFriendInfo->m_NameHash))
-					{
-						m_lFriends[f].m_NumFound++;
-						if(m_lFriends[f].m_NumFound == 1)
-							m_lFriends[f].m_pServerInfo = pEntry;
-						if(m_lFriends[f].m_pFriendInfo->m_aName[0])
-							break;
-					}
-				}
-			}
-		}
-	}
+	UpdateFriendCounter(pEntry);
 
 	vec3 TextBaseColor = vec3(1.0f, 1.0f, 1.0f);
 	if(Selected || Inside)
@@ -1737,6 +1715,33 @@ void CMenus::SortFriends()
 	}
 }
 
+void CMenus::UpdateFriendCounter(const CServerInfo *pEntry)
+{
+	if(pEntry->m_FriendState != IFriends::FRIEND_NO)
+	{
+		for(int j = 0; j < pEntry->m_NumClients; ++j)
+		{
+			if(pEntry->m_aClients[j].m_FriendState != IFriends::FRIEND_NO)
+			{
+				unsigned NameHash = str_quickhash(pEntry->m_aClients[j].m_aName);
+				unsigned ClanHash = str_quickhash(pEntry->m_aClients[j].m_aClan);
+				for(int f = 0; f < m_lFriends.size(); ++f)
+				{
+					if(ClanHash == m_lFriends[f].m_pFriendInfo->m_ClanHash &&
+						(!m_lFriends[f].m_pFriendInfo->m_aName[0] || NameHash == m_lFriends[f].m_pFriendInfo->m_NameHash))
+					{
+						m_lFriends[f].m_NumFound++;
+						if(m_lFriends[f].m_NumFound == 1)
+							m_lFriends[f].m_pServerInfo = pEntry;
+						if(m_lFriends[f].m_pFriendInfo->m_aName[0])
+							break;
+					}
+				}
+			}
+		}
+	}
+}
+
 void CMenus::RenderServerbrowserFriendList(CUIRect View)
 {
 	static int s_Inited = 0;
@@ -1921,6 +1926,23 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 
 	if(s_ScrollValue < 0) s_ScrollValue = 0;
 	if(s_ScrollValue > 1) s_ScrollValue = 1;
+
+	// reset friend counter
+	for(int i = 0; i < m_lFriends.size(); m_lFriends[i++].m_NumFound = 0);
+	
+	// get all the friends only from all filter
+	for(int s = 0; s < m_lFilters.size(); s++)
+	{
+		CBrowserFilter *pFilter = &m_lFilters[s];
+		if(pFilter->Custom() == CBrowserFilter::FILTER_ALL)
+		{
+			for (int i = 0; i < pFilter->NumSortedServers(); i++)
+			{
+				const CServerInfo *pItem = pFilter->SortedGet(i);
+				UpdateFriendCounter(pItem);
+			}
+		}
+	}
 
 	// set clipping
 	UI()->ClipEnable(&View);

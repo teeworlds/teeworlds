@@ -453,6 +453,7 @@ class CMenus : public CComponent
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void SetOverlay(int Type, float x, float y, const void *pData);
+	void UpdateFriendCounter(const CServerInfo *pEntry);
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
