@@ -2105,6 +2105,7 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 		m_pClient->Friends()->RemoveFriend(m_pDeleteFriendInfo->m_aName, m_pDeleteFriendInfo->m_aClan);
 		FriendlistOnUpdate();
 		m_pDeleteFriendInfo = 0;
+		UI()->SetActiveItem(0); // reset active item!
 	}
 }
 
