@@ -250,25 +250,74 @@ class CMenus : public CComponent
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 
 	// friends
-	struct CFriendItem
+	class CFriendItem
 	{
-		const CFriendInfo *m_pFriendInfo;
+	public:
+		class CClanFriendItem
+		{
+		public:
+			CClanFriendItem()
+			{
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
+			}
+
+			~CClanFriendItem()
+			{
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
+			}
+
+			array<CFriendInfo> m_lFriendInfos;
+			array<const CServerInfo*> m_lServerInfos;
+		};
+
 		int m_NumFound;
+		const CFriendInfo *m_pFriendInfo;
 		const CServerInfo *m_pServerInfo;
+
+		CClanFriendItem m_ClanFriend;
+
+		CFriendItem()
+		{
+			m_pFriendInfo = 0;
+			m_pServerInfo = 0;
+		}
+
+		bool IsClanFriend()
+		{
+			return m_pFriendInfo->m_aClan[0] && !m_pFriendInfo->m_aName[0];
+		}
+
+		void Reset()
+		{
+			m_NumFound = 0;
+			m_ClanFriend.m_lFriendInfos.clear();
+			m_ClanFriend.m_lServerInfos.clear();
+		}
+	};
+
+	struct CSelectedFriend
+	{
+		bool m_ClanFriend;
+		bool m_FakeFriend;
+		int m_NameHash;
+		int m_ClanHash;
 	};
 
 	enum
 	{
-		FRIENDS_SORT_NAME=0,
-		FRIENDS_SORT_CLAN,
+		FRIENDS_SORT_TYPE=0,
 		FRIENDS_SORT_SERVER,
-		FRIENDS_SORT_TYPE,
+		FRIENDS_SORT_NAME,
+		FRIENDS_SORT_CLAN,
 	};
 
 	int *m_pFriendIndexes;
-	int m_FriendSortCol;
 	array<CFriendItem> m_lFriends;
 	int m_FriendlistSelectedIndex;
+	const CFriendInfo *m_pDeleteFriendInfo;
+	CSelectedFriend m_SelectedFriend;
 
 	bool SortCompareName(int Index1, int Index2) const;
 	bool SortCompareClan(int Index1, int Index2) const;
@@ -369,10 +418,11 @@ class CMenus : public CComponent
 
 		NUM_BROWSER_COLS,
 
-		COL_FRIEND_NAME=0,
-		COL_FRIEND_CLAN,
+		COL_FRIEND_TYPE=0,
 		COL_FRIEND_SERVER,
-		COL_FRIEND_TYPE,
+		COL_FRIEND_NAME,
+		COL_FRIEND_CLAN,
+		COL_FRIEND_DELETE,
 
 		NUM_FRIEND_COLS,
 	};
@@ -452,6 +502,7 @@ class CMenus : public CComponent
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const CFriendInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan=false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
 	void UpdateFriendCounter(const CServerInfo *pEntry);
 

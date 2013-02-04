@@ -74,6 +74,8 @@ CMenus::CMenus()
 
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
+
+	m_pDeleteFriendInfo = 0;
 }
 
 CMenus::~CMenus()
@@ -261,10 +263,13 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 	}
 
-	CUIRect Label;
-	pRect->VSplitLeft(5.0f, 0, &Label);
-	Label.y+=2.0f;
-	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, 0);
+	if(pText)
+	{
+		CUIRect Label;
+		pRect->VSplitLeft(5.0f, 0, &Label);
+		Label.y+=2.0f;
+		UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, 0);
+	}
 
 	if(Checked)
 	{
