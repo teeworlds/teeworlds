@@ -48,6 +48,13 @@ int CNet::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelC
 	return 0;
 }
 
+int CNet::SetRecvRawCallback(NETFUNC_RECVRAW pfnRecvRaw, void *pUserData)
+{
+	m_pfnRecvRaw = pfnRecvRaw;
+	m_RecvRawUserData = pUserData;
+	return 0;
+}
+
 int CNet::Close()
 {
 	// TODO: implement me
@@ -108,6 +115,12 @@ int CNet::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 		// TODO: empty the recvinfo
 		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
+
+		if(m_pfnRecvRaw)
+		{
+			if(m_pfnRecvRaw(&Addr, m_RecvUnpacker.m_aBuffer, Bytes, m_RecvRawUserData))
+				continue;
+		}
 
 		// no more packets for now
 		if(Bytes <= 0)
@@ -287,6 +300,12 @@ int CNet::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			}
 		}
 	}
+	return 0;
+}
+
+int CNet::SendRaw(const NETADDR *pAddr, const void *pData, int DataSize)
+{
+	net_udp_send(m_Socket, pAddr, pData, DataSize);
 	return 0;
 }
 

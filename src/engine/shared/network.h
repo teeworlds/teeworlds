@@ -115,8 +115,9 @@ enum
 };
 
 
-typedef int (*NETFUNC_DELCLIENT)(int ClientID, const char* pReason, void *pUser);
-typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUser);
+typedef int (*NETFUNC_DELCLIENT)(int ClientID, const char* pReason, void *pUserData);
+typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUserData);
+typedef int (*NETFUNC_RECVRAW)(const NETADDR *pAddr, const void *pData, int DataSize, void *pUserData);
 
 typedef unsigned int TOKEN;
 
@@ -361,7 +362,7 @@ public:
 	int FetchChunk(CNetChunk *pChunk);
 };
 
-// server side
+// generalized net server&client
 class CNet
 {
 	struct CSlot
@@ -389,6 +390,9 @@ class CNet
 	NETFUNC_DELCLIENT m_pfnDelClient;
 	void *m_UserData;
 
+	NETFUNC_RECVRAW m_pfnRecvRaw;
+	void *m_RecvRawUserData;
+
 public:
 	bool Open(const NETADDR *pBindAddr, class CNetBan *pNetBan, int MaxClients, int Flags);
 
@@ -398,10 +402,14 @@ public:
 	// the token and version parameter are only used for connless packets
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
+
+	int SendRaw(const NETADDR *pAddr, const void *pData, int DataSize);
+
 	int Update();
 
 	// stuff for listening
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUserData);
+	int SetRecvRawCallback(NETFUNC_RECVRAW pfnRecvRaw, void *pUserData);
 	void SetMaxClientsPerIP(int MaxClientPerIP);
 
 	// listening alias for Disconnect()
