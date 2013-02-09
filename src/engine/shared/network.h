@@ -1,4 +1,5 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */ /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_NETWORK_H
 #define ENGINE_SHARED_NETWORK_H
 
@@ -43,7 +44,10 @@ CURRENT:
 
 enum
 {
-	NETFLAG_ALLOWSTATELESS=1,
+	NETFLAG_ACCEPTCONNS=1,
+	NETFLAG_ALLOWSTATELESS=2,
+	NETFLAG_IGNOREPEERCLOSEMSG=4,
+
 	NETSENDFLAG_VITAL=1,
 	NETSENDFLAG_CONNLESS=2,
 	NETSENDFLAG_FLUSH=4,
@@ -358,7 +362,7 @@ public:
 };
 
 // server side
-class CNetServer
+class CNet
 {
 	struct CSlot
 	{
@@ -370,11 +374,6 @@ class CNetServer
 	class CNetBan *m_pNetBan;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
-	int m_MaxClientsPerIP;
-
-	NETFUNC_NEWCLIENT m_pfnNewClient;
-	NETFUNC_DELCLIENT m_pfnDelClient;
-	void *m_UserPtr;
 
 	CNetRecvUnpacker m_RecvUnpacker;
 
@@ -382,11 +381,18 @@ class CNetServer
 	CNetTokenCache m_TokenCache;
 
 	int m_Flags;
+
+	// listening
+	int m_MaxClientsPerIP;
+
+	NETFUNC_NEWCLIENT m_pfnNewClient;
+	NETFUNC_DELCLIENT m_pfnDelClient;
+	void *m_UserData;
+
 public:
-	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
+	bool Open(const NETADDR *pBindAddr, class CNetBan *pNetBan, int MaxClients, int Flags);
 
 	//
-	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags);
 	int Close();
 
 	// the token and version parameter are only used for connless packets
@@ -394,8 +400,16 @@ public:
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();
 
-	//
-	int Drop(int ClientID, const char *pReason);
+	// stuff for listening
+	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUserData);
+	void SetMaxClientsPerIP(int MaxClientPerIP);
+
+	// listening alias for Disconnect()
+	int Drop(int ClientID, const char *pReason) { return Disconnect(ClientID, pReason); }
+
+	// stuff for active connection
+	int Connect(int ClientID, const NETADDR *pAddr);
+	int Disconnect(int ClientID, const char *pReason);
 
 	// status requests
 	const NETADDR *ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
@@ -403,9 +417,10 @@ public:
 	class CNetBan *NetBan() const { return m_pNetBan; }
 	int NetType() const { return m_Socket.type; }
 	int MaxClients() const { return m_MaxClients; }
-
-	//
-	void SetMaxClientsPerIP(int Max);
+	int State(int ClientID);
+	int GotProblems(int ClientID);
+	const char *ErrorString(int ClientID) { return m_aSlots[ClientID].m_Connection.ErrorString(); }
+	int ResetErrorString(int ClientID) { m_aSlots[ClientID].m_Connection.ResetErrorString(); return 0; }
 };
 
 class CNetConsole
@@ -446,44 +461,28 @@ public:
 	class CNetBan *NetBan() const { return m_pNetBan; }
 };
 
-
+// server side
+class CNetServer : public CNet
+{
+public:
+	bool Open(const NETADDR *pBindAddr, class CNetBan *pNetBan, int MaxClients, int Flags)
+	{
+		return CNet::Open(pBindAddr, pNetBan, MaxClients, Flags|NETFLAG_ACCEPTCONNS|NETFLAG_IGNOREPEERCLOSEMSG);
+	}
+};
 
 // client side
-class CNetClient
+class CNetClient : public CNet
 {
-	NETADDR m_ServerAddr;
-	CNetConnection m_Connection;
-	CNetRecvUnpacker m_RecvUnpacker;
-
-	CNetTokenCache m_TokenCache;
-	CNetTokenManager m_TokenManager;
-
-	NETSOCKET m_Socket;
-	int m_Flags;
 public:
-	// openness
-	bool Open(NETADDR BindAddr, int Flags);
-	int Close();
-
-	// connection state
-	int Disconnect(const char *Reason);
-	int Connect(NETADDR *Addr);
-
-	// communication
-	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
-	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
-
-	// pumping
-	int Update();
-	int Flush();
-
-	int ResetErrorString();
-
-	// error and state
-	int NetType() const { return m_Socket.type; }
-	int State();
-	int GotProblems();
-	const char *ErrorString();
+	// just overwrite these to provide easier access to client functions
+	bool Open(const NETADDR *pBindAddr, int Flags) { return CNet::Open(pBindAddr, 0, 1, Flags); }
+	int Connect(const NETADDR *pAddr) { return CNet::Connect(0, pAddr); }
+	int Disconnect(const char *pReason) { return CNet::Disconnect(0, pReason); }
+	int GotProblems() { return CNet::GotProblems(0); }
+	int State() { return CNet::State(0); }
+	const char *ErrorString() { return CNet::ErrorString(0); }
+	int ResetErrorString() { return CNet::ResetErrorString(0); }
 };
 
 

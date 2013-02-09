@@ -8,13 +8,15 @@
 #include "network.h"
 
 
-bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags)
+bool CNet::Open(const NETADDR *pBindAddr, CNetBan *pNetBan, int MaxClients, int Flags)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
 
+	m_Flags = Flags;
+
 	// open socket
-	m_Socket = net_udp_create(BindAddr);
+	m_Socket = net_udp_create(*pBindAddr);
 	if(!m_Socket.type)
 		return false;
 
@@ -30,31 +32,35 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	if(m_MaxClients < 1)
 		m_MaxClients = 1;
 
-	m_MaxClientsPerIP = MaxClientsPerIP;
+	m_MaxClientsPerIP = NET_MAX_CLIENTS;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
-		m_aSlots[i].m_Connection.Init(m_Socket, true);
-
-	m_Flags = Flags;
+		m_aSlots[i].m_Connection.Init(m_Socket, (bool)(m_Flags&NETFLAG_IGNOREPEERCLOSEMSG));
 
 	return true;
 }
 
-int CNetServer::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
+int CNet::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUserData)
 {
 	m_pfnNewClient = pfnNewClient;
 	m_pfnDelClient = pfnDelClient;
-	m_UserPtr = pUser;
+	m_UserData = pUserData;
 	return 0;
 }
 
-int CNetServer::Close()
+int CNet::Close()
 {
 	// TODO: implement me
 	return 0;
 }
 
-int CNetServer::Drop(int ClientID, const char *pReason)
+int CNet::Connect(int ClientID, const NETADDR *pAddr)
+{
+	m_aSlots[ClientID].m_Connection.Connect((NETADDR *)pAddr);
+	return 0;
+}
+
+int CNet::Disconnect(int ClientID, const char *pReason)
 {
 	// TODO: insert lots of checks here
 	/*NETADDR Addr = ClientAddr(ClientID);
@@ -65,14 +71,14 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 		pReason
 		);*/
 	if(m_pfnDelClient)
-		m_pfnDelClient(ClientID, pReason, m_UserPtr);
+		m_pfnDelClient(ClientID, pReason, m_UserData);
 
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 
 	return 0;
 }
 
-int CNetServer::Update()
+int CNet::Update()
 {
 	for(int i = 0; i < MaxClients(); i++)
 	{
@@ -90,7 +96,7 @@ int CNetServer::Update()
 /*
 	TODO: chopp up this function into smaller working parts
 */
-int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
+int CNet::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 {
 	while(1)
 	{
@@ -154,6 +160,8 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 			{
+				if(!(m_Flags&NETFLAG_ACCEPTCONNS))
+					continue;
 				if(!Accept)
 					continue;
 				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
@@ -192,7 +200,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
 							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token); // HACK!
 							if(m_pfnNewClient)
-								m_pfnNewClient(i, m_UserPtr);
+								m_pfnNewClient(i, m_UserData);
 							break;
 						}
 					}
@@ -265,7 +273,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
 							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token); // HACK!
 							if(m_pfnNewClient)
-								m_pfnNewClient(i, m_UserPtr);
+								m_pfnNewClient(i, m_UserData);
 							break;
 						}
 					}
@@ -282,7 +290,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 	return 0;
 }
 
-int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
+int CNet::Send(CNetChunk *pChunk, TOKEN Token)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
@@ -354,7 +362,23 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 	return 0;
 }
 
-void CNetServer::SetMaxClientsPerIP(int Max)
+int CNet::GotProblems(int ClientID)
+{
+	if(time_get() - m_aSlots[ClientID].m_Connection.LastRecvTime() > time_freq())
+		return 1;
+	return 0;
+}
+
+int CNet::State(int ClientID)
+{
+	if(m_aSlots[ClientID].m_Connection.State() == NET_CONNSTATE_ONLINE)
+		return NETSTATE_ONLINE;
+	if(m_aSlots[ClientID].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+		return NETSTATE_OFFLINE;
+	return NETSTATE_CONNECTING;
+}
+
+void CNet::SetMaxClientsPerIP(int Max)
 {
 	// clamp
 	if(Max < 1)
