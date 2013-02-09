@@ -115,8 +115,6 @@ int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 			return 1;
 		}
 	}
-	else
-		dbg_assert(0, "invalid socket type");
 
 	return 0;
 }

@@ -39,7 +39,7 @@
 #include <game/version.h>
 
 #include <mastersrv/mastersrv.h>
-#include <versionsrv/versionsrv.h>
+#include <mastersrv/versionsrv.h>
 
 #include "friends.h"
 #include "serverbrowser.h"
@@ -1663,13 +1663,13 @@ void CClient::VersionUpdate()
 
 			mem_zero(&Packet, sizeof(Packet));
 
-			m_VersionInfo.m_VersionServeraddr.m_Addr.port = VERSIONSRV_PORT;
+			m_VersionInfo.m_VersionServeraddr.m_Addr.port = VERSIONSERVER_PORT;
 
 			Packet.m_ClientID = -1;
 			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
 			Packet.m_pData = VERSIONSRV_GETVERSION;
 			Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
-			Packet.m_Flags = NETSENDFLAG_CONNLESS;
+			Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
 
 			m_NetClient.Send(&Packet);
 			m_VersionInfo.m_State = CVersionInfo::STATE_READY;

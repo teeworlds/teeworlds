@@ -120,8 +120,6 @@ int CMastersrvSlave_0_6::ProcessMessageRaw(int Socket, const NETADDR *pAddress, 
 			return 0; // for 0.5 compatiblity
 		}
 	}
-	else
-		dbg_assert(0, "invalid socket type");
 
 	return 0;
 }

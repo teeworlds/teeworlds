@@ -109,6 +109,6 @@ MACRO_CONFIG_INT(DbgHitch, dbg_hitch, 0, 0, 0, CFGFLAG_SERVER, "Hitch warnings")
 MACRO_CONFIG_STR(DbgStressServer, dbg_stress_server, 32, "localhost", CFGFLAG_CLIENT, "Server to stress")
 MACRO_CONFIG_INT(DbgResizable, dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables window resizing")
 
-MACRO_CONFIG_STR(MsServices, ms_services, 8, "567", CFGFLAG_MASTER, "Specifies the services to start. Accepted values: 567v")
+MACRO_CONFIG_STR(MsServices, ms_services, 8, "567vw", CFGFLAG_MASTER, "Specifies the services to start. Accepted values: 567vw")
 
 #endif

@@ -49,6 +49,7 @@ public:
 		MASTERSRV_0_6,
 		MASTERSRV_0_5,
 		MASTERSRV_VER,
+		MASTERSRV_VER_LEGACY,
 		NUM_MASTERSRV,
 
 		SOCKET_OP=0,
@@ -146,6 +147,7 @@ IMastersrvSlave *CreateSlave_0_5(IMastersrv *pOwner);
 IMastersrvSlave *CreateSlave_0_6(IMastersrv *pOwner);
 IMastersrvSlave *CreateSlave_0_7(IMastersrv *pOwner);
 IMastersrvSlave *CreateSlave_Ver(IMastersrv *pOwner);
+IMastersrvSlave *CreateSlave_VerLegacy(IMastersrv *pOwner);
 
 
 #endif
