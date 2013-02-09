@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "mastersrv.h"
-
+/*
 class CMastersrvSlave_0_6 : public IMastersrvSlaveAdv
 {
 public:
@@ -122,9 +122,9 @@ void CMastersrvSlave_0_6::SendPacket(int PacketType, const NETADDR *pAddr, void 
 	m_pOwner->Send((PacketType != PACKET_CHECK) ? IMastersrv::SOCKET_OP : IMastersrv::SOCKET_CHECKER,
 		&m_aPackets[PacketType], NET_TOKEN_NONE, NET_PACKETVERSION_LEGACY);
 }
-
+*/
 IMastersrvSlave *CreateSlave_0_6(IMastersrv *pOwner)
 {
-	return new CMastersrvSlave_0_6(pOwner);
+	return 0;//new CMastersrvSlave_0_6(pOwner);
 }
 

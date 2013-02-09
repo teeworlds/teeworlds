@@ -11,7 +11,7 @@ public:
 
 	virtual int BuildPacketStart(void *pData, int MaxLength);
 	virtual int BuildPacketAdd(void *pData, int MaxLength, const NETADDR *pAddr, void *pUserData);
-	virtual int ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion);
+	virtual int ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken);
 
 	virtual void SendPacket(int PacketType, const NETADDR *pAddr, void *pUserData);
 
@@ -51,7 +51,7 @@ CMastersrvSlave_0_7::CMastersrvSlave_0_7(IMastersrv *pOwner)
 
 int CMastersrvSlave_0_7::BuildPacketStart(void *pData, int MaxLength)
 {
-	if(MaxLength < sizeof(SERVERBROWSE_LIST))
+	if(MaxLength < (int)sizeof(SERVERBROWSE_LIST))
 		return -1;
 	mem_copy(pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 	return sizeof(SERVERBROWSE_LIST);
@@ -59,16 +59,19 @@ int CMastersrvSlave_0_7::BuildPacketStart(void *pData, int MaxLength)
 
 int CMastersrvSlave_0_7::BuildPacketAdd(void *pData, int MaxLength, const NETADDR *pAddr, void *pUserData)
 {
-	if(MaxLength < sizeof(CMastersrvAddr))
+	if(MaxLength < (int)sizeof(CMastersrvAddr))
 		return -1;
 	NetaddrToMastersrv((CMastersrvAddr *)pData, pAddr);
 	return sizeof(CMastersrvAddr);
 }
 
-int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion)
+int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken)
 {
-	if(PacketVersion != NET_PACKETVERSION || !(pPacket->m_Flags&NETSENDFLAG_CONNLESS))
+	if(!(pPacket->m_Flags&NETSENDFLAG_CONNLESS))
 		return 0;
+
+	char aAddrBuf[NETADDR_MAXSTRSIZE];
+	net_addr_str(&pPacket->m_Address, aAddrBuf, sizeof(aAddrBuf), 1);
 
 	if(Socket == IMastersrv::SOCKET_OP)
 	{
@@ -82,7 +85,7 @@ int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 			Alt = pPacket->m_Address;
 			Alt.port = (d[sizeof(SERVERBROWSE_HEARTBEAT)]<<8)
 				| d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
-			AddCheckserver(&pPacket->m_Address, &Alt, (void *)PacketToken);
+			AddCheckserver(&pPacket->m_Address, &Alt, (void *)(long int)PacketToken);
 			return 1;
 		}
 		else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
@@ -91,7 +94,7 @@ int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 			int Count = m_pOwner->GetCount();
 			m_CountData.m_High = (Count>>8)&0xff;
 			m_CountData.m_Low = Count&0xff;
-			SendPacket(PACKET_COUNT, &pPacket->m_Address, (void *)PacketToken);
+			SendCount(&pPacket->m_Address, (void *)(long int)PacketToken);
 			return 1;
 		}
 		else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
@@ -99,7 +102,7 @@ int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 		{
 			if(pPacket->m_Flags&NETSENDFLAG_STATELESS)
 				return -1;
-			IMastersrvSlave::SendList(&pPacket->m_Address, (void *)PacketToken);
+			IMastersrvSlave::SendList(&pPacket->m_Address, (void *)(long int)PacketToken);
 			return 1;
 		}
 	}
@@ -108,7 +111,7 @@ int CMastersrvSlave_0_7::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 		if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
 			mem_comp(pPacket->m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 		{
-			AddServer(&pPacket->m_Address, (void *)PacketToken);
+			AddServer(&pPacket->m_Address, (void *)(long int)PacketToken);
 			return 1;
 		}
 	}
@@ -124,7 +127,7 @@ void CMastersrvSlave_0_7::SendPacket(int PacketType, const NETADDR *pAddr, void 
 
 	m_aPackets[PacketType].m_Address = *pAddr;
 	m_pOwner->Send((PacketType != PACKET_CHECK) ? IMastersrv::SOCKET_OP : IMastersrv::SOCKET_CHECKER,
-		&m_aPackets[PacketType], (TOKEN) (long int) pUserData, NET_PACKETVERSION);
+		&m_aPackets[PacketType], (TOKEN) (long int) pUserData);
 }
 
 IMastersrvSlave *CreateSlave_0_7(IMastersrv *pOwner)

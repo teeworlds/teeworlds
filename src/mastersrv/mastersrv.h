@@ -68,7 +68,8 @@ public:
 	virtual void SendList(const NETADDR *pAddr, void *pUserData, int Version) = 0;
 	virtual int GetCount() const = 0;
 
-	virtual int Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion) = 0;
+	virtual int Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken) = 0;
+	virtual int SendRaw(int Socket, const NETADDR *pAddr, const void *pData, int DataSize) = 0;
 };
 
 class IMastersrvSlave
@@ -91,7 +92,8 @@ public:
 
 	// interface for packet receiving
 	//   this function shall return 0 if the packet should be furtherly processed
-	virtual int ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion) = 0;
+	virtual int ProcessMessageRaw(int Socket, const NETADDR *pAddr, const void *pData, int DataSize) { return 0; }
+	virtual int ProcessMessage(int Socket, const CNetChunk *pPacket, TOKEN PacketToken) = 0;
 
 	// interface for network
 	virtual void SendCheck(const NETADDR *pAddr, void *pUserData) = 0;

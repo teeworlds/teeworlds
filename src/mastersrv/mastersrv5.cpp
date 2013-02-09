@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "mastersrv.h"
-
+/*
 static const unsigned char SERVERBROWSE_HEARTBEAT_LEGACY[] = {255, 255, 255, 255, 'b', 'e', 'a', 't'};
 
 static const unsigned char SERVERBROWSE_GETLIST_LEGACY[] = {255, 255, 255, 255, 'r', 'e', 'q', 't'};
@@ -147,9 +147,9 @@ void CMastersrvSlave_0_5::NetaddrToMastersrv(CMastersrvAddrLegacy *pOut, const N
 	pOut->m_aPort[0] = (pIn->port>>0)&0xff; // little endian
 	pOut->m_aPort[1] = (pIn->port>>8)&0xff;
 }
-
+*/
 IMastersrvSlave *CreateSlave_0_5(IMastersrv *pOwner)
 {
-	return new CMastersrvSlave_0_5(pOwner);
+	return 0;//new CMastersrvSlave_0_5(pOwner);
 }
 

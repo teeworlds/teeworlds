@@ -98,7 +98,8 @@ public:
 	virtual void SendList(const NETADDR *pAddr, void *pUserData, int Version);
 	virtual int GetCount() const;
 
-	virtual int Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion);
+	virtual int Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken);
+	virtual int SendRaw(int Socket, const NETADDR *pAddr, const void *pData, int DataSize);
 
 	void PurgeServers();
 	void UpdateServers();
@@ -110,7 +111,7 @@ private:
 	IConsole *m_pConsole;
 
 	CNetBan m_NetBan;
-	CNetClient m_aNets[NUM_SOCKETS];
+	CNet m_aNets[NUM_SOCKETS];
 
 	int64 m_BanRefreshTime;
 	int64 m_PacketRefreshTime;
@@ -205,13 +206,13 @@ int CMastersrv::Init()
 	if(Services&((1<<MASTERSRV_0_5)|(1<<MASTERSRV_0_6)|(1<<MASTERSRV_0_7)))
 	{
 		BindAddr.port = MASTERSERVER_PORT;
-		if(!m_aNets[SOCKET_OP].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		if(!m_aNets[SOCKET_OP].Open(&BindAddr, 0, 0, NETFLAG_ALLOWSTATELESS))
 		{
 			dbg_msg("mastersrv", "couldn't start network (op)");
 			return -1;
 		}
 		BindAddr.port = MASTERSERVER_CHECKER_PORT;
-		if(!m_aNets[SOCKET_CHECKER].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		if(!m_aNets[SOCKET_CHECKER].Open(&BindAddr, 0, 0, NETFLAG_ALLOWSTATELESS))
 		{
 			dbg_msg("mastersrv", "couldn't start network (checker)");
 			return -1;
@@ -220,7 +221,7 @@ int CMastersrv::Init()
 	if(Services&(1<<MASTERSRV_VER))
 	{
 		BindAddr.port = VERSIONSERVER_PORT;
-		if(!m_aNets[SOCKET_VERSION].Open(BindAddr, NETFLAG_ALLOWSTATELESS|NETFLAG_ALLOWOLDSTYLE))
+		if(!m_aNets[SOCKET_VERSION].Open(&BindAddr, 0, 0, NETFLAG_ALLOWSTATELESS))
 		{
 			dbg_msg("mastersrv", "couldn't start network (version)");
 			return -1;
@@ -259,8 +260,7 @@ int CMastersrv::Run()
 			// process packets
 			CNetChunk Packet;
 			TOKEN Token;
-			int Version;
-			while(m_aNets[i].Recv(&Packet, &Token, &Version))
+			while(m_aNets[i].Recv(&Packet, &Token))
 			{
 				// check if the server is banned
 				if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
@@ -269,7 +269,7 @@ int CMastersrv::Run()
 				for(int s = 0; s < NUM_MASTERSRV; s++)
 					if(m_aSlaves[s].m_pSlave)
 					{
-						if(m_aSlaves[s].m_pSlave->ProcessMessage(i, &Packet, Token, Version) != 0)
+						if(m_aSlaves[s].m_pSlave->ProcessMessage(i, &Packet, Token) != 0)
 							break;
 					}
 			}
@@ -486,14 +486,24 @@ void CMastersrv::BuildPackets()
 */
 }
 
-int CMastersrv::Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken, int PacketVersion)
+int CMastersrv::Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken)
 {
 	dbg_assert(Socket >= 0 && Socket < NUM_SOCKETS, "attempting to send via non-existant socket");
 
-	m_aNets[Socket].Send((CNetChunk *)pPacket, PacketToken, PacketVersion);
+	m_aNets[Socket].Send((CNetChunk *)pPacket, PacketToken);
 
 	return 0;
 }
+
+int CMastersrv::SendRaw(int Socket, const NETADDR *pAddr, const void *pData, int DataSize)
+{
+	dbg_assert(Socket >= 0 && Socket < NUM_SOCKETS, "attempting to send via non-existant socket");
+
+	m_aNets[Socket].SendRaw(pAddr, pData, DataSize);
+
+	return 0;
+}
+
 
 void CMastersrv::AddServer(const NETADDR *pAddr, void *pUserData, int Version)
 {

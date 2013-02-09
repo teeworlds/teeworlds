@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "mastersrv.h"
-
+/*
 #include <game/version.h>
 
 struct CMapVersion
@@ -147,9 +147,9 @@ int CMastersrvSlave_Ver::ProcessMessage(int Socket, const CNetChunk *pPacket, TO
 	}
 	return 0;
 }
-
+*/
 IMastersrvSlave *CreateSlave_Ver(IMastersrv *pOwner)
 {
-	return new CMastersrvSlave_Ver(pOwner);
+	return 0;//new CMastersrvSlave_Ver(pOwner);
 }
 

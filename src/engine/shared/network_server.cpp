@@ -173,12 +173,12 @@ int CNet::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 			{
-				if(!(m_Flags&NETFLAG_ACCEPTCONNS))
-					continue;
 				if(!Accept)
 					continue;
 				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
+					if(!(m_Flags&NETFLAG_ACCEPTCONNS))
+						continue;
 					bool Found = false;
 
 					// only allow a specific number of players with the same ip
