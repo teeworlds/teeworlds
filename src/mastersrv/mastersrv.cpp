@@ -101,6 +101,19 @@ public:
 	virtual int Send(int Socket, const CNetChunk *pPacket, TOKEN PacketToken);
 	virtual int SendRaw(int Socket, const NETADDR *pAddr, const void *pData, int DataSize);
 
+	struct CRecvRawUserData
+	{
+		CMastersrv *m_pSelf;
+		int m_Socket;
+	};
+	static int RecvRaw(const NETADDR *pAddr, const void *pData, int DataSize, void *pUserData)
+	{
+		CRecvRawUserData *pInfo = (CRecvRawUserData *)pUserData;
+		return pInfo->m_pSelf->RecvRawImpl(pInfo->m_Socket, pAddr, pData, DataSize);
+	}
+	int RecvRawImpl(int Socket, const NETADDR *pAddr, const void *pData, int DataSize);
+	CRecvRawUserData m_aRecvRawUserData[NUM_SOCKETS];
+
 	void PurgeServers();
 	void UpdateServers();
 	void BuildPackets();
@@ -181,6 +194,9 @@ int CMastersrv::Init()
 
 	m_NetBan.Init(m_pConsole, Kernel()->RequestInterface<IStorage>());
 
+	ReloadBans();
+	m_BanRefreshTime = time_get() + time_freq() * BAN_REFRESH_TIME;
+
 	int Services = 0;
 	if(str_find(g_Config.m_MsServices, "5"))
 		Services |= 1<<MASTERSRV_0_5;
@@ -190,6 +206,12 @@ int CMastersrv::Init()
 		Services |= 1<<MASTERSRV_0_7;
 	if(str_find(g_Config.m_MsServices, "v"))
 		Services |= 1<<MASTERSRV_VER;
+
+	for(int i = 0; i < NUM_SOCKETS; i++)
+	{
+		m_aRecvRawUserData[i].m_pSelf = this;
+		m_aRecvRawUserData[i].m_Socket = i;
+	}
 
 	NETADDR BindAddr;
 	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
@@ -217,6 +239,9 @@ int CMastersrv::Init()
 			dbg_msg("mastersrv", "couldn't start network (checker)");
 			return -1;
 		}
+
+		m_aNets[SOCKET_OP].SetRecvRawCallback(RecvRaw, &m_aRecvRawUserData[SOCKET_OP]);
+		m_aNets[SOCKET_CHECKER].SetRecvRawCallback(RecvRaw, &m_aRecvRawUserData[SOCKET_CHECKER]);
 	}
 	if(Services&(1<<MASTERSRV_VER))
 	{
@@ -226,6 +251,8 @@ int CMastersrv::Init()
 			dbg_msg("mastersrv", "couldn't start network (version)");
 			return -1;
 		}
+
+		m_aNets[SOCKET_VERSION].SetRecvRawCallback(RecvRaw, &m_aRecvRawUserData[SOCKET_VERSION]);
 	}
 
 	// process pending commands
@@ -501,6 +528,21 @@ int CMastersrv::SendRaw(int Socket, const NETADDR *pAddr, const void *pData, int
 
 	m_aNets[Socket].SendRaw(pAddr, pData, DataSize);
 
+	return 0;
+}
+
+int CMastersrv::RecvRawImpl(int Socket, const NETADDR *pAddr, const void *pData, int DataSize)
+{
+	// check if the server is banned
+	if(m_NetBan.IsBanned(pAddr, 0, 0))
+		return 0;
+
+	for(int s = 0; s < NUM_MASTERSRV; s++)
+		if(m_aSlaves[s].m_pSlave)
+		{
+			if(m_aSlaves[s].m_pSlave->ProcessMessageRaw(Socket, pAddr, pData, DataSize) != 0)
+				return 1;
+		}
 	return 0;
 }
 

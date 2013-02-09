@@ -116,15 +116,16 @@ int CNet::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 		// TODO: empty the recvinfo
 		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
 
+		// no more packets for now
+		if(Bytes <= 0)
+			break;
+
+		// callback
 		if(m_pfnRecvRaw)
 		{
 			if(m_pfnRecvRaw(&Addr, m_RecvUnpacker.m_aBuffer, Bytes, m_RecvRawUserData))
 				continue;
 		}
-
-		// no more packets for now
-		if(Bytes <= 0)
-			break;
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
