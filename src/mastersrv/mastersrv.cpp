@@ -579,6 +579,9 @@ void CMastersrv::AddServer(const NETADDR *pAddr, void *pUserData, int Version)
 			dbg_msg("mastersrv", "updated: %s", aAddrStr);
 			m_aServers[i].m_pSlaveUserData = pUserData;
 			m_aServers[i].m_Expire = time_get() + time_freq() * EXPIRE_TIME;
+			IMastersrvSlave *pSlave = m_aSlaves[Version].m_pSlave;
+			dbg_assert(pSlave != 0, "attempting to access uninitalised slave");
+			pSlave->SendOk(pAddr, pUserData);
 			return;
 		}
 	}
