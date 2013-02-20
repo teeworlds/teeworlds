@@ -234,11 +234,10 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		// logic
 		float X, Y;
 		static int s_HLPicker;
-		int Logic = UI()->DoPickerLogic(&s_HLPicker, &Picker, &X, &Y);
-		if(Logic)
+		if(UI()->DoPickerLogic(&s_HLPicker, &Picker, &X, &Y))
 		{
-			Sat = (int)(256.0f*X/Picker.w);
-			Lgt = (int)(256.0f*Y/Picker.h);
+			Sat = (int)(255.0f*X/Picker.w);
+			Lgt = (int)(255.0f*Y/Picker.h);
 			Modified = true;
 		}
 	}
@@ -371,10 +370,9 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// logic
 			float X;
-			int Logic = UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0);
-			if(Logic)
+			if(UI()->DoPickerLogic(&s_aButtons[i*3+2], &Bar, &X, 0))
 			{
-				*apVars[i] = X*256.0f/Bar.w;
+				*apVars[i] = X*255.0f/Bar.w;
 				Modified = true;
 			}
 		}
