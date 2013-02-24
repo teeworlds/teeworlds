@@ -841,6 +841,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
 		{
+			if(m_aClients[ClientID].m_State < CClient::STATE_CONNECTING)
+				return;
+
 			int Chunk = Unpacker.GetInt();
 			int ChunkSize = 1024-128;
 			int Offset = Chunk * ChunkSize;
