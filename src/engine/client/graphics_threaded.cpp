@@ -277,7 +277,7 @@ int CGraphics_Threaded::UnloadTexture(int Index)
 	Cmd.m_Slot = Index;
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextures[Index] = m_FirstFreeTexture;
+	m_aTextureIndices[Index] = m_FirstFreeTexture;
 	m_FirstFreeTexture = Index;
 	return 0;
 }

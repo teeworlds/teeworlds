@@ -700,12 +700,9 @@ void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 	AddVertices(4*Num);
 }
 
-void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText)
+void CGraphics_OpenGL::QuadsText(float x, float y, float Size, const char *pText)
 {
 	float StartX = x;
-
-	QuadsBegin();
-	SetColor(r,g,b,a);
 
 	while(*pText)
 	{
@@ -730,8 +727,6 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 			x += Size/2;
 		}
 	}
-
-	QuadsEnd();
 }
 
 int CGraphics_OpenGL::Init()
