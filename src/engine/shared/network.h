@@ -188,6 +188,7 @@ public:
 
 	// Needed for GotProblems in NetClient
 	int64 LastRecvTime() const { return m_LastRecvTime; }
+	int64 ConnectTime() const { return m_LastUpdateTime; }
 
 	int AckSequence() const { return m_Ack; }
 };
