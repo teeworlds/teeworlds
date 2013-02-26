@@ -1,7 +1,7 @@
 /bam
 /.bam
 /config.lua
-/objs
+/build
 __pycache__/
 *.pyc
 *.pyo
@@ -11,16 +11,3 @@ other/icons/*.res
 /SDL.dll
 /freetype.dll
 /autoexec.cfg
-
-/crapnet*
-/dilate*
-/fake_server*
-/map_resave*
-/map_version*
-/mastersrv*
-/packetgen*
-/teeworlds*
-/teeworlds_srv*
-/serverlaunch*
-/tileset_border*
-/versionsrv*
