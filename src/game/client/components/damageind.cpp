@@ -2,8 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/demo.h>
 #include <engine/graphics.h>
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 
 #include <game/client/ui.h>
 #include <game/client/render.h>

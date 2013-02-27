@@ -4,8 +4,8 @@
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 #include <game/layers.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>

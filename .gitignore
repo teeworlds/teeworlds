@@ -6,8 +6,6 @@ __pycache__/
 *.pyc
 *.pyo
 scripts/work/
-src/game/generated/
-other/icons/*.res
 /SDL.dll
 /freetype.dll
 /autoexec.cfg
