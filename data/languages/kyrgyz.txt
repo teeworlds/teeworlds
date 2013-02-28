@@ -1,0 +1,687 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d байт
+
+%d of %d servers, %d players
+== %d/%d сервер, %d оюнчу
+
+%d%% loaded
+== %d%% жүктөлдү
+
+%ds left
+== %d сек. калды
+
+%i minute left
+== %i минута калды!
+
+%i minutes left
+== %i минута калды!
+
+%i second left
+== %i секунда калды!
+
+%i seconds left
+== %i секунда калды!
+
+%s wins!
+== %s утту!
+
+-Page %d-
+== -Барак %d-
+
+Abort
+== Жокко чыгаруу
+
+Add
+== Кошуу
+
+Add Friend
+== Досту кошуу
+
+Address
+== Дареги
+
+All
+== Баары
+
+Alpha
+== Тунук.
+
+Always show name plates
+== Оюнчулардын аттарын дайыма көрсөтүү
+
+Are you sure that you want to delete the demo?
+== Сиз анык эле демонун өчүрүлүшүн каалайсызбы?
+
+Are you sure that you want to quit?
+== Сиз анык эле оюндан чыгууну каалайсызбы?
+
+Are you sure that you want to remove the player from your friends list?
+== Сиз анык эле бул оюнчуну достор тизмесинен өчүрүүнү каалайсызбы?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Бул оюндун биринчи жүргүзүлүшү болгону үчүн, төмөн жакка такма атыңызды киргизип, жана ырастоолорду текшерип коюңуз.
+
+Automatically record demos
+== Демону автоматтуу түрдө жазуу
+
+Automatically take game over screenshot
+== Оюн натыйжаларын сүрөткө тартуу
+
+Blue team
+== Көктөр
+
+Blue team wins!
+== Көктөр утту!
+
+Body
+== Дене
+
+Call vote
+== Добуш берүү
+
+Change settings
+== Ырастоолорду өзгөртүү
+
+Chat
+== Чат
+
+Clan
+== Кланы
+
+Client
+== Клиент
+
+Close
+== Чыгуу
+
+Compatible version
+== Батышуучу версия
+
+Connect
+== Туташуу
+
+Connecting to
+== Туташтыруу
+
+Connection Problems...
+== Байланыш көйгөйлөрү...
+
+Console
+== Консоль
+
+Controls
+== Башкаруу
+
+Count players only
+== Оюнчуларды гана саноо
+
+Country
+== Өлкө
+
+Crc:
+== Crc:
+
+Created:
+== Жаратылганы:
+
+Current
+== Кезектеги
+
+Current version: %s
+== Кезектеги версиясы: %s
+
+Custom colors
+== Өз түстөр
+
+Delete
+== Өчүрүү
+
+Delete demo
+== Демону өчүрүү
+
+Demo details
+== Демо деталдары
+
+Demofile: %s
+== Демо: %s
+
+Demos
+== Демо
+
+Disconnect
+== Өчүрүү
+
+Disconnected
+== Өчүрүлдү
+
+Display Modes
+== Экран чечими
+
+Downloading map
+== Картаны жүктөө
+
+Draw!
+== Тең!
+
+Dynamic Camera
+== Динамикалык камера
+
+Emoticon
+== Эмоциялар
+
+Enter
+== Кирүү
+
+Error
+== Ката
+
+Error loading demo
+== Демону жүктөө учурундагы ката
+
+FSAA samples
+== FSAA сэмплдери
+
+Favorite
+== Тандалма
+
+Favorites
+== Тандалмалар
+
+Feet
+== Бут
+
+Filter
+== Фильтр
+
+Fire
+== Атуу
+
+Folder
+== Папка
+
+Force vote
+== Тездетүү
+
+Free-View
+== Эркин сереп
+
+Friends
+== Достор
+
+Fullscreen
+== Толук экран режими
+
+Game
+== Оюн
+
+Game info
+== Оюн жөнүндө
+
+Game over
+== Оюн бүттү
+
+Game type
+== Оюн түрү
+
+Game types:
+== Оюн түрү:
+
+General
+== Негизги
+
+Graphics
+== Графика
+
+Grenade
+== Гранатомёт
+
+Hammer
+== Барскан
+
+Has people playing
+== Бош эмес сервер
+
+High Detail
+== Жогорку детализация
+
+Hook
+== Илмек
+
+Host address
+== Сервер дареги
+
+Hue
+== Түсү
+
+Info
+== Маалымат
+
+Internet
+== Интернет
+
+Invalid Demo
+== Жарабаган демо
+
+Join blue
+== Көктөргө
+
+Join game
+== Оюноо
+
+Join red
+== Кызылдарга
+
+Jump
+== Секирүү
+
+Kick player
+== Оюнчуну бан кылуу
+
+LAN
+== LAN
+
+Language
+== Тил
+
+Length:
+== Узун.:
+
+Lht.
+== Ач. түс.
+
+Loading
+== Жүктөө
+
+MOTD
+== Күндүн билдирүүсү
+
+Map
+== Картасы
+
+Map:
+== Картасы:
+
+Max Screenshots
+== Максималдуу сүрөт саны
+
+Max demos
+== Максималдуу демо саны
+
+Maximum ping:
+== Макс. пинги:
+
+Miscellaneous
+== Кошумча
+
+Mouse sens.
+== Чычкан сезгич.
+
+Move left
+== Солго басуу
+
+Move player to spectators
+== Оюнчуну байкоочу кылуу
+
+Move right
+== Оңго басуу
+
+Movement
+== Аракет
+
+Mute when not active
+== Активдүү эмес кезде колдонбоо
+
+Name
+== Аты
+
+Name plates size
+== Өлчөм
+
+Netversion:
+== Версиясы:
+
+New name:
+== Жаңы ат:
+
+News
+== Жаңылыктар
+
+Next weapon
+== Кийин. курал
+
+Nickname
+== Такма ат
+
+No
+== Жок
+
+No password
+== Сырсөзсүз
+
+No servers found
+== Серверлер табылган жок
+
+No servers match your filter criteria
+== Сиздин фильтриңизге жарай турган серверлер жок
+
+Ok
+== ОК
+
+Open
+== Ачуу
+
+Parent Folder
+== Ата-энелик каталог
+
+Password
+== Сырсөзү
+
+Password incorrect
+== Сырсөз
+
+Ping
+== Пинги
+
+Pistol
+== Тапанча
+
+Play
+== Көрүү
+
+Play background music
+== Фон музыкасын ойнотуу
+
+Player
+== Оюнчу
+
+Player country:
+== Өлкөсү:
+
+Player options
+== Оюнчу опциялары
+
+Players
+== Оюнчулары
+
+Please balance teams!
+== Команадаларды баланстаңыз!
+
+Prev. weapon
+== Мурун. курал
+
+Quality Textures
+== Сапаттуу текстуралар
+
+Quick search:
+== Тез издөө:
+
+Quit
+== Чыгуу
+
+Quit anyway?
+== Чыгуу?
+
+REC %3d:%02d
+== ЖАЗУУ %3d:%02d
+
+Reason:
+== Себеп:
+
+Record demo
+== Демо жазуу
+
+Red team
+== Кызылдар
+
+Red team wins!
+== Кызылдар утту!
+
+Refresh
+== Жаңылоо
+
+Refreshing master servers
+== Мастер-серверлер тизмесин жаңылоо
+
+Remote console
+== Сервер консолу
+
+Remove
+== Өчүрүү
+
+Remove friend
+== Досту өчүрүү
+
+Rename
+== Атын өзгөрт.
+
+Rename demo
+== Демо атын өзгөртүү
+
+Reset filter
+== Фильтрлерди түшүрүү
+
+Reset to defaults
+== Ырастоолорду түшүрүү
+
+Rifle
+== Бластер
+
+Round
+== Раунду
+
+Sample rate
+== Жыштыгы
+
+Sat.
+== Канык.
+
+Score
+== Упайы
+
+Score board
+== Табло
+
+Score limit
+== Упай лимити
+
+Scoreboard
+== Табло
+
+Screenshot
+== Сүрөт
+
+Server address:
+== Сервер дареги:
+
+Server details
+== Сервер деталдары
+
+Server filter
+== Сервер фильтри
+
+Server info
+== Маалымат
+
+Server not full
+== Сервер толук эмес
+
+Settings
+== Ырастоолор
+
+Shotgun
+== Мылтык
+
+Show chat
+== Чатты көрсөтүү
+
+Show friends only
+== Достор менен гана
+
+Show ingame HUD
+== Оюн ичиндеги HUD'ни көрсөтүү
+
+Show name plates
+== Оюнчулардын аттарын көрсөтүү
+
+Show only supported
+== Колдолгон чечимдерди гана көрсөтүү
+
+Size:
+== Өлчөмү:
+
+Skins
+== Скиндер
+
+Sound
+== Үн
+
+Sound error
+== Үн катасы
+
+Sound volume
+== Үн катуулугу
+
+Spectate
+== Байкоо
+
+Spectate next
+== Кийин. байкоо
+
+Spectate previous
+== Мурун. байкоо
+
+Spectator mode
+== Байкоочу
+
+Spectators
+== Байкоочулар
+
+Standard gametype
+== Стандарттуу оюн түрү
+
+Standard map
+== Стандарттуу карта
+
+Stop record
+== Токтотуу
+
+Strict gametype filter
+== Оюн түрүнүн так фильтри
+
+Sudden Death
+== Тез өлүм
+
+Switch weapon on pickup
+== Көтөрүлгөн куралга которуу
+
+Team
+== Команда
+
+Team chat
+== Команда чаты
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s чыкты! www.teeworlds.com сайтынан жүктөп алыңыз!
+
+Texture Compression
+== Текстура кысылышы
+
+The audio device couldn't be initialised.
+== Аудио түзмөгүн инициализациялап алууга мүмкүн эмес.
+
+The server is running a non-standard tuning on a pure game type.
+== Бул сервер стандартту эмес ырастоолор менен таза оюн түрүндө иштеп жатат.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Редактордо сакталбаган карта бар, аны оюндан чыгаар алдында сактасаңыз болот.
+
+Time limit
+== Убакыт лимити
+
+Time limit: %d min
+== Убакыт лимити: %d мин.
+
+Try again
+== ОК
+
+Type
+== Түрү
+
+Type:
+== Түрү:
+
+UI Color
+== Интерфейс түсү
+
+Unable to delete the demo
+== Демону өчүрүү мүмкүн эмес
+
+Unable to rename the demo
+== Демо атын өзгөртүү мүмкүн эмес
+
+Use sounds
+== Үндөрдү колдонуу
+
+Use team colors for name plates
+== Аттар үчүн команданын түсүн колдонуу
+
+V-Sync
+== Вертикалдык синхронизация
+
+Version
+== Версиясы
+
+Version:
+== Версиясы:
+
+Vote command:
+== Добуш коммандасы:
+
+Vote description:
+== Добуш баяндамасы:
+
+Vote no
+== Каршы
+
+Vote yes
+== Макул
+
+Voting
+== Добуш берүү
+
+Warmup
+== Даярдануу
+
+Weapon
+== Курал
+
+Welcome to Teeworlds
+== Teeworlds'ко кош келиңиз!
+
+Yes
+== Ооба
+
+You must restart the game for all settings to take effect.
+== Өзгөртүүлөрдү колдонуу үчүн оюнду кайта жүргүзүңүз.
+
+Your skin
+== Скиниңиз
+
+no limit
+== лимитсиз
+
+Game paused
+== Оюн бир азга токтотулду
+
+Respawn
+== Респаун
+
+Show only chat messages from friends
+== Достордун гана чат билдирүүлөрүн көрсөтүү
+
+##### needs translation #####
+
+##### old translations #####
