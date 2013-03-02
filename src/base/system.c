@@ -108,7 +108,16 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 
 static void logger_stdout(const char *line)
 {
+#if defined(CONF_FAMILY_WINDOWS)
+	wchar_t wline[1024*8] = {0};
+	wchar_t * p_wline = wline;
+	const char * p_line = line;
+	while (*p_wline++ = str_utf8_decode(&p_line));
+	*p_wline++ = L'\n';
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wline, p_wline - wline, NULL, NULL);
+#else
 	printf("%s\n", line);
+#endif
 	fflush(stdout);
 }
 
