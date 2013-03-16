@@ -886,32 +886,27 @@ int CMenus::Render()
 			pTitle = Localize("Disconnected");
 			pExtraText = Localize("The server is running a non-standard tuning on a pure game type.");
 			pButtonText = Localize("Ok");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{
 			pTitle = Localize("Delete demo");
 			pExtraText = Localize("Are you sure that you want to delete the demo?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_RENAME_DEMO)
 		{
 			pTitle = Localize("Rename demo");
 			pExtraText = "";
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_REMOVE_FRIEND)
 		{
 			pTitle = Localize("Remove friend");
 			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_SOUNDERROR)
 		{
 			pTitle = Localize("Sound error");
 			pExtraText = Localize("The audio device couldn't be initialised.");
 			pButtonText = Localize("Ok");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
@@ -923,7 +918,6 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Quit");
 			pExtraText = Localize("Are you sure that you want to quit?");
-			ExtraAlign = -1;
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
