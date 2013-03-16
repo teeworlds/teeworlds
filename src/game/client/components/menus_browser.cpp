@@ -1461,6 +1461,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	// friends list(remove friend)
 	static float s_ScrollValue = 0;
 	static int s_FriendsList = 0;
+	if(m_FriendlistSelectedIndex >= m_lFriends.size())
+		m_FriendlistSelectedIndex = m_lFriends.size()-1;
 	UiDoListboxHeader(&List, "", 20.0f, 2.0f);
 	UiDoListboxStart(&s_FriendsList, 30.0f, "", m_lFriends.size(), 1, m_FriendlistSelectedIndex, s_ScrollValue);
 
