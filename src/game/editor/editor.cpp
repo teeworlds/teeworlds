@@ -277,7 +277,8 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
 			Len = str_length(pStr);
-			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, &Len, &s_AtIndex);
+			int NumChars = Len;
+			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
 		}
 	}
 

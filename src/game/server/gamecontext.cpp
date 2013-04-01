@@ -612,26 +612,45 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	{
 		if(MsgID == NETMSGTYPE_CL_SAY)
 		{
-			CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
-			int Team = pMsg->m_Team;
-			if(Team)
-				Team = pPlayer->GetTeam();
-			else
-				Team = CGameContext::CHAT_ALL;
-
 			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
 				return;
 
-			pPlayer->m_LastChat = Server()->Tick();
+			CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
+			int Team = pMsg->m_Team ? pPlayer->GetTeam() : CGameContext::CHAT_ALL;
+			
+			// trim right and set maximum length to 128 utf8-characters
+			int Length = 0;
+			const char *p = pMsg->m_pMessage;
+			const char *pEnd = 0;
+			while(*p)
+ 			{
+				const char *pStrOld = p;
+				int Code = str_utf8_decode(&p);
 
-			// check for invalid chars
-			unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
-			while (*pMessage)
-			{
-				if(*pMessage < 32)
-					*pMessage = ' ';
-				pMessage++;
-			}
+				// check if unicode is not empty
+				if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+					(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
+					Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
+				{
+					pEnd = 0;
+				}
+				else if(pEnd == 0)
+					pEnd = pStrOld;
+
+				if(++Length >= 127)
+				{
+					*(const_cast<char *>(p)) = 0;
+					break;
+				}
+ 			}
+			if(pEnd != 0)
+				*(const_cast<char *>(pEnd)) = 0;
+
+			// drop empty and autocreated spam messages (more than 16 characters per second)
+			if(Length == 0 || (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed()*((15+Length)/16) > Server()->Tick()))
+				return;
+
+			pPlayer->m_LastChat = Server()->Tick();
 
 			SendChat(ClientID, Team, pMsg->m_pMessage);
 		}

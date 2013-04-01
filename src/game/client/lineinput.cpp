@@ -13,6 +13,7 @@ void CLineInput::Clear()
 	mem_zero(m_Str, sizeof(m_Str));
 	m_Len = 0;
 	m_CursorPos = 0;
+	m_NumChars = 0;
 }
 
 void CLineInput::Set(const char *pString)
@@ -20,10 +21,18 @@ void CLineInput::Set(const char *pString)
 	str_copy(m_Str, pString, sizeof(m_Str));
 	m_Len = str_length(m_Str);
 	m_CursorPos = m_Len;
+	m_NumChars = 0;
+	int Offset = 0;
+	while(pString[Offset])
+	{
+		Offset = str_utf8_forward(pString, Offset);
+		++m_NumChars;
+	}
 }
 
-bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *pStrLenPtr, int *pCursorPosPtr)
+bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr)
 {
+	int NumChars = *pNumCharsPtr;
 	int CursorPos = *pCursorPosPtr;
 	int Len = *pStrLenPtr;
 	bool Changes = false;
@@ -40,13 +49,15 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 		char Tmp[8];
 		int CharSize = str_utf8_encode(Tmp, Code);
 
-		if (Len < StrMaxSize - CharSize && CursorPos < StrMaxSize - CharSize)
+		if (Len < StrMaxSize - CharSize && CursorPos < StrMaxSize - CharSize && NumChars < StrMaxChars)
 		{
 			mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
 			for(int i = 0; i < CharSize; i++)
 				pStr[CursorPos+i] = Tmp[i];
 			CursorPos += CharSize;
 			Len += CharSize;
+			if(CharSize > 0)
+				++NumChars;
 			Changes = true;
 		}
 	}
@@ -60,6 +71,8 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 			mem_move(pStr+NewCursorPos, pStr+CursorPos, Len - NewCursorPos - CharSize + 1); // +1 == null term
 			CursorPos = NewCursorPos;
 			Len -= CharSize;
+			if(CharSize > 0)
+				--NumChars;
 			Changes = true;
 		}
 		else if (k == KEY_DELETE && CursorPos < Len)
@@ -68,6 +81,8 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 			int CharSize = p-CursorPos;
 			mem_move(pStr + CursorPos, pStr + CursorPos + CharSize, Len - CursorPos - CharSize + 1); // +1 == null term
 			Len -= CharSize;
+			if(CharSize > 0)
+				--NumChars;
 			Changes = true;
 		}
 		else if (k == KEY_LEFT && CursorPos > 0)
@@ -80,6 +95,7 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 			CursorPos = Len;
 	}
 
+	*pNumCharsPtr = NumChars;
 	*pCursorPosPtr = CursorPos;
 	*pStrLenPtr = Len;
 
@@ -88,5 +104,5 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 
 void CLineInput::ProcessInput(IInput::CEvent e)
 {
-	Manipulate(e, m_Str, sizeof(m_Str), &m_Len, &m_CursorPos);
+	Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars);
 }
