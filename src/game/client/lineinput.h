@@ -8,11 +8,17 @@
 // line input helter
 class CLineInput
 {
-	char m_Str[256];
+	enum
+	{
+		MAX_SIZE=512,
+		MAX_CHARS=MAX_SIZE/4,
+	};
+	char m_Str[MAX_SIZE];
 	int m_Len;
 	int m_CursorPos;
+	int m_NumChars;
 public:
-	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *pStrLenPtr, int *pCursorPosPtr);
+	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr);
 
 	class CCallback
 	{
