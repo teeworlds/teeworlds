@@ -7,19 +7,19 @@
 	atomic_inc - should return the value after increment
 	atomic_dec - should return the value after decrement
 	atomic_compswap - should return the value before the eventual swap
-	
+	sync_barrier - creates a full hardware fence
 */
 
 #if defined(__GNUC__)
 
 	inline unsigned atomic_inc(volatile unsigned *pValue)
 	{
-		return __sync_fetch_and_add(pValue, 1);
+		return __sync_add_and_fetch(pValue, 1);
 	}
 
 	inline unsigned atomic_dec(volatile unsigned *pValue)
 	{
-		return __sync_fetch_and_add(pValue, -1);
+		return __sync_add_and_fetch(pValue, -1);
 	}
 
 	inline unsigned atomic_compswap(volatile unsigned *pValue, unsigned comperand, unsigned value)
@@ -52,7 +52,7 @@
 
 	inline void sync_barrier()
 	{
-		_ReadWriteBarrier();
+		_mm_mfence();
 	}
 #else
 	#error missing atomic implementation for this compiler
