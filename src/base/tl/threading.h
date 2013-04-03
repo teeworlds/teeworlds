@@ -35,6 +35,9 @@
 #elif defined(_MSC_VER)
 	#include <intrin.h>
 
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
+
 	inline unsigned atomic_inc(volatile unsigned *pValue)
 	{
 		return _InterlockedIncrement((volatile long *)pValue);
@@ -52,7 +55,7 @@
 
 	inline void sync_barrier()
 	{
-		_mm_mfence();
+		MemoryBarrier();
 	}
 #else
 	#error missing atomic implementation for this compiler
