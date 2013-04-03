@@ -806,14 +806,14 @@ void CServer::UpdateClientRconCommands()
 
 void CServer::SendMapListEntryAdd(const MapListEntry *pMapListEntry, int ClientID)
 {
-	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_ADD);
+	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_ADD, true);
 	Msg.AddString(pMapListEntry->m_aName, 256);
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 void CServer::SendMapListEntryRem(const MapListEntry *pMapListEntry, int ClientID)
 {
-	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_REM);
+	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_REM, true);
 	Msg.AddString(pMapListEntry->m_aName, 256);
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
@@ -1481,6 +1481,11 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, SubdirEntryCallback, &Userdata);
 		return 0;
 	}
+	else
+	{
+		if(Length < 5 || str_comp(&pFilename[Length-4], ".map") != 0) // not ending with .map
+			return 0;
+	}
 
 	MapListEntry *pEntry;
 	pEntry = (MapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(MapListEntry));
@@ -1497,17 +1502,12 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	pEntry->m_IsDir = IsDir;
 
 	if(!IsDir)
-	{
-		if(Length < 5 || str_comp(&pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
-			return 0;
-
 		pEntry->m_aName[Length - 4] = 0;
-	}
 	else
-	 {
+	{
 		pEntry->m_aName[Length] = '/';
 		pEntry->m_aName[Length + 1] = 0;
-	 }
+	}
 	return 0;
 }
 
@@ -1522,6 +1522,13 @@ int CServer::SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, 
 	if(IsDir)
 		return 0;
 
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "%s/%s", pUserdata->m_aName, pFilename);
+	unsigned Length = str_length(aFilename);
+
+	if(Length < 5 || str_comp(&aFilename[Length-4], ".map") != 0) // not ending with .map
+		return 0;
+
 	MapListEntry *pEntry;
 	pEntry = (MapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(MapListEntry));
 	pThis->m_NumMapEntries++;
@@ -1533,16 +1540,8 @@ int CServer::SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, 
 	if(!pThis->m_pFirstMapEntry)
 		pThis->m_pFirstMapEntry = pEntry;
 
-	char Filename[512];
-	str_format(Filename, sizeof(Filename), "%s/%s", pUserdata->m_aName, pFilename);
-
-	str_copy(pEntry->m_aName, Filename, sizeof(pEntry->m_aName));
+	str_copy(pEntry->m_aName, aFilename, sizeof(pEntry->m_aName));
 	pEntry->m_IsDir = IsDir;
-
-	unsigned Length = str_length(Filename);
-
-	if(Length < 5 || str_comp(&pEntry->m_aName[Length-4], ".map") != 0) // not ending with .map
-		return 0;
 
 	pEntry->m_aName[Length - 4] = 0;
 	return 0;
