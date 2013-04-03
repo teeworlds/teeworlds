@@ -57,7 +57,7 @@ class CConsole : public IConsole
 	static void ConToggle(IResult *pResult, void *pUser);
 	static void ConToggleStroke(IResult *pResult, void *pUser);
 	static void ConModCommandAccess(IResult *pResult, void *pUser);
-	static void ConModCommandStatus(IConsole::IResult *pResult, void *pUser);
+	static void ConModCommandStatus(IResult *pResult, void *pUser);
 
 	void ExecuteFileRecurse(const char *pFilename);
 	void ExecuteLineStroked(int Stroke, const char *pStr);
@@ -162,7 +162,7 @@ class CConsole : public IConsole
 	};
 
 	CHeap *m_pTempMapListHeap;
-	int m_pNumMapListEntries;
+	int m_NumMapListEntries;
 	MapListEntryTemp *m_pFirstMapEntry;
 	MapListEntryTemp *m_pLastMapEntry;
 

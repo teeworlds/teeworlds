@@ -1638,7 +1638,33 @@ void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pServer = (CServer *)pUser;
+	char aBuf[260];
+	mem_zero(aBuf, sizeof(aBuf));
+	int Used = 0;
 
+	for(MapListEntry *pMapEntry = pServer->m_pFirstMapEntry; pMapEntry; pMapEntry = pMapEntry->m_pNext)
+	{
+		int Length = str_length(pMapEntry->m_aName);
+		if(Used + Length + 2 < (int)(sizeof(aBuf)))
+		{
+			if(Used > 0)
+			{
+				Used += 2;
+				str_append(aBuf, ", ", sizeof(aBuf));
+			}
+			str_append(aBuf, pMapEntry->m_aName, sizeof(aBuf));
+			Used += Length;
+		}
+		else
+		{
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+			mem_zero(aBuf, sizeof(aBuf));
+			str_copy(aBuf, pMapEntry->m_aName, sizeof(aBuf));
+			Used = Length;
+		}
+	}
+	if(Used > 0)
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 
 }
 
@@ -1737,7 +1763,7 @@ void CServer::RegisterCommands()
 	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
-	Console()->Register("maps", "", CFGFLAG_SERVER, ConListMaps, this, "List the maps");
+	Console()->Register("maps", "", CFGFLAG_SERVER, ConListMaps, this, "List all available maps");
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
