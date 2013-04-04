@@ -1280,9 +1280,6 @@ int CServer::Run()
 	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
 	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
 
-	for(MapListEntry *pEntry=m_pFirstMapEntry; pEntry->m_pNext; pEntry = pEntry->m_pNext)
-		dbg_msg("maplist","mapname=%s", pEntry->m_aName);
-
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
 	{
