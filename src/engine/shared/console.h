@@ -172,6 +172,7 @@ public:
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int FlagMask) const;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp);
 	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser);
+	virtual void PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser);
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);

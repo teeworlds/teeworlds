@@ -1475,7 +1475,11 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		return 0;
 
 	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "%s/%s", pUserdata->m_aName, pFilename);
+	if(pUserdata->m_aName[0])
+		str_format(aFilename, sizeof(aFilename), "%s/%s", pUserdata->m_aName, pFilename);
+	else
+		str_format(aFilename, sizeof(aFilename), "%s", pFilename);
+
 	unsigned Length = str_length(aFilename);
 
 	if(IsDir)
@@ -1545,7 +1549,7 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 			}
 			else
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s connecting", i, aAddrStr);
-			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		}
 	}
 }
@@ -1622,14 +1626,14 @@ void CServer::ConListMaps(IConsole::IResult *pResult, void *pUser)
 		}
 		else
 		{
-			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 			mem_zero(aBuf, sizeof(aBuf));
 			str_copy(aBuf, pMapEntry->m_aName, sizeof(aBuf));
 			Used = Length;
 		}
 	}
 	if(Used > 0)
-		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
 }
 
