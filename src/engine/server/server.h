@@ -167,10 +167,8 @@ public:
 		MapListEntry *m_pPrev;
 		MapListEntry *m_pNext;
 		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
-		int m_IsDir;
 	};
 
-	//Probably a HACK
 	struct SubdirCallbackUserdata
 	{
 		CServer *m_pServer;
@@ -257,7 +255,6 @@ public:
 	int Run();
 
 	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
-	static int SubdirEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConStatus(IConsole::IResult *pResult, void *pUser);
