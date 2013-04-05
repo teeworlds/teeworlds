@@ -1172,19 +1172,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		{
 			m_RconAuthed = 1;
 			m_UseTempRconCommands = 1;
-			m_UseTempRconCommands = 0;
 		}
 		else if(Msg == NETMSG_RCON_AUTH_OFF)
 		{
 			m_RconAuthed = 0;
 			if(m_UseTempRconCommands)
 				m_pConsole->DeregisterTempAll();
-			int MapOld = m_UseTempMapEntries;
-			m_UseTempMapEntries = Unpacker.GetInt();
-			if(Unpacker.Error() != 0)
-				m_UseTempMapEntries = 0;
-			if(MapOld != 0 && m_UseTempMapEntries == 0)
-				m_pConsole->DeregisterTempMapAll();
+			m_pConsole->DeregisterTempMapAll();
 		}
 		else if(Msg == NETMSG_RCON_LINE)
 		{

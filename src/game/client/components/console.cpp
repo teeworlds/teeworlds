@@ -184,7 +184,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 
 				// maplist completion
-				if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0)
+				if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0 && m_Type != CGameConsole::CONSOLETYPE_LOCAL)
 				{
 					m_CompletionMapChosen++;
 					m_CompletionMapEnumerationCount = 0;

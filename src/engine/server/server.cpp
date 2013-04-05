@@ -1040,9 +1040,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_aClients[ClientID].m_Authed = AUTHED_MOD;
 					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_MOD, CFGFLAG_SERVER);
 					SendRconLine(ClientID, "Moderator authentication successful. Limited remote console access granted.");
-					int SendMapList = Unpacker.GetInt();
 					const IConsole::CCommandInfo *pInfo = Console()->GetCommandInfo("sv_map", CFGFLAG_SERVER, false);
-					if(Unpacker.Error() == 0 && SendMapList && pInfo->GetAccessLevel() == IConsole::ACCESS_LEVEL_MOD)
+					if(Unpacker.Error() == 0 && pInfo->GetAccessLevel() == IConsole::ACCESS_LEVEL_MOD)
 						m_aClients[ClientID].m_pMapListEntryToSend = m_pFirstMapEntry;
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (moderator)", ClientID);
