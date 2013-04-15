@@ -33,6 +33,20 @@ inline T mix(const T a, const T b, TB amount)
 	return a + (b-a)*amount;
 }
 
+inline int pow2next(int val)
+{
+	if(val <= 0)
+		return 0;
+	--val;
+	val |= (val >> 1);
+	val |= (val >> 2);
+	val |= (val >> 4);
+	val |= (val >> 8);
+	val |= (val >> 16);
+	++val;
+	return val;
+}
+
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
 // float to fixed
