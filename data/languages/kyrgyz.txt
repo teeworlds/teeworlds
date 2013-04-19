@@ -568,7 +568,7 @@ Stop record
 == Токтотуу
 
 Strict gametype filter
-== Так оюн түрүнүн фильтри
+== Оюн түрүнүн так фильтри
 
 Sudden Death
 == Тез өлүм
