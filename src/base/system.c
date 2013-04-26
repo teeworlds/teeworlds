@@ -1829,9 +1829,9 @@ int str_toint(const char *str) { return atoi(str); }
 float str_tofloat(const char *str) { return atof(str); }
 
 
-char *str_utf8_skip_whitespaces(char *str)
+const char *str_utf8_skip_whitespaces(const char *str)
 {
-	char *str_old;
+	const char *str_old;
 	int code;
 
 	while(*str)
