@@ -40,7 +40,7 @@ if platform == "src":
 	include_exe = False
 	include_src = True
 	use_zip = 1
-elif platform == 'win32':
+elif platform == 'win32' or platform == 'win64':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
