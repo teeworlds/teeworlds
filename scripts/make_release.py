@@ -31,7 +31,7 @@ if platform == "src":
 #	print(valid_platforms)
 #	sys.exit(-1)
 
-if platform == 'win32':
+if platform == 'win32' or platform == 'win64':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
