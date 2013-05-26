@@ -711,6 +711,11 @@ void CEditor::CallbackOpenMap(const char *pFileName, int StorageType, void *pUse
 		pEditor->m_Dialog = DIALOG_NONE;
 		pEditor->m_Map.m_Modified = false;
 	}
+	else
+	{
+		pEditor->Reset();
+		pEditor->m_aFileName[0] = 0;
+	}
 }
 void CEditor::CallbackAppendMap(const char *pFileName, int StorageType, void *pUser)
 {
