@@ -43,7 +43,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	CSkinPart Part;
 	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
-
+	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 
 	unsigned char *d = (unsigned char *)Info.m_pData;
 	int Pitch = Info.m_Width*4;
@@ -217,6 +217,7 @@ void CSkins::OnInit()
 		if(p == SKINPART_TATTOO || p == SKINPART_DECORATION)
 		{
 			CSkinPart NoneSkinPart;
+			NoneSkinPart.m_Type = SKINTYPE_STANDARD;
 			str_copy(NoneSkinPart.m_aName, "", sizeof(NoneSkinPart.m_aName));
 			NoneSkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(NoneSkinPart);

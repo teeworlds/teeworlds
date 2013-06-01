@@ -36,7 +36,6 @@ public:
 		IGraphics::CTextureHandle m_ColorTexture;
 		vec3 m_BloodColor;
 
-
 		bool operator<(const CSkinPart &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
 	};
 
