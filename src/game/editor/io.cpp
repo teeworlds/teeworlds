@@ -441,7 +441,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 		*/
 		return 0;
 	}
-	else if(pItem->m_Version == 1)
+	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
 	{
 		//editor.reset(false);
 
