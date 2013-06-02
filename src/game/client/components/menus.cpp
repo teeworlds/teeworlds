@@ -50,6 +50,8 @@ CMenus::CMenus()
 	m_NeedRestartSound = false;
 	m_TeePartSelected = CSkins::SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
+	m_RefreshSkinSelector = true;
+	m_pSelectedSkin = 0;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
 
@@ -1748,6 +1750,11 @@ int CMenus::Render()
 			NumOptions = 6;
 			ExtraAlign = -1;
 		}
+		else if(m_Popup == POPUP_DELETE_SKIN)
+		{
+			pTitle = Localize("Delete skin");
+			pExtraText = Localize("Are you sure that you want to delete the skin?");
+		}
 		else if(m_Popup == POPUP_SOUNDERROR)
 		{
 			pTitle = Localize("Sound error");
@@ -2148,6 +2155,42 @@ int CMenus::Render()
 					m_Popup = POPUP_NONE;
 					SaveSkinfile();
 					m_aSaveSkinName[0] = 0;
+					m_RefreshSkinSelector = true;
+				}
+			}
+		}
+		else if(m_Popup == POPUP_DELETE_SKIN)
+		{
+			CUIRect Yes, No;
+			Box.HSplitTop(27.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW/2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
+
+			static int s_ButtonNo = 0;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static int s_ButtonYes = 0;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				// delete demo
+				if(m_pSelectedSkin)
+				{
+					char aBuf[512];
+					str_format(aBuf, sizeof(aBuf), "skins/%s.json", m_pSelectedSkin->m_aName);
+					if(Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
+					{
+						m_pClient->m_pSkins->RemoveSkin(m_pSelectedSkin);
+						m_RefreshSkinSelector = true;
+						m_pSelectedSkin = 0;
+					}
+					else
+						PopupMessage(Localize("Error"), Localize("Unable to delete the skin"), Localize("Ok"));
 				}
 			}
 		}
