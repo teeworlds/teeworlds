@@ -20,10 +20,8 @@ void CMapImages::OnMapLoad()
 
 	// unload all textures
 	for(int i = 0; i < m_Count; i++)
-	{
-		Graphics()->UnloadTexture(m_aTextures[i]);
-		m_aTextures[i] = IGraphics::CTextureHandle();
-	}
+		Graphics()->UnloadTexture(&m_aTextures[i]);
+
 	m_Count = 0;
 
 	int Start;
@@ -53,10 +51,8 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 {
 	// unload all textures
 	for(int i = 0; i < m_MenuCount; i++)
-	{
-		Graphics()->UnloadTexture(m_aMenuTextures[i]);
-		m_aMenuTextures[i] = IGraphics::CTextureHandle();
-	}
+		Graphics()->UnloadTexture(&m_aMenuTextures[i]);
+
 	m_MenuCount = 0;
 
 	int Start;

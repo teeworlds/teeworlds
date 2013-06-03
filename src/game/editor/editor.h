@@ -36,6 +36,10 @@ enum
 
 	DIALOG_NONE=0,
 	DIALOG_FILE,
+	DIALOG_FILE_IMAGE,
+
+	BRUSH_MODE_NORMAL=0,
+	BRUSH_MODE_ADDITION,
 };
 
 struct CEntity
@@ -450,7 +454,7 @@ public:
 	~CLayerQuads();
 
 	virtual void Render();
-	CQuad *NewQuad();
+	CQuad *NewQuad(int _x, int _y);
 
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
@@ -576,7 +580,7 @@ public:
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
-		void (*pfnFunc)(const char *pFilename, int StorageType, void *pUser), void *pUser);
+		void (*pfnFunc)(const char *pFilename, int StorageType, void *pUser), void *pUser, int DialogMode = DIALOG_FILE);
 
 	void Reset(bool CreateDefault=true);
 	int Save(const char *pFilename);
@@ -697,6 +701,7 @@ public:
 	IGraphics::CTextureHandle m_EntitiesTexture;
 
 	CLayerGroup m_Brush;
+	int m_BrushMode;
 	CLayerTiles m_TilesetPicker;
 
 	static const void *ms_pUiGotContext;
@@ -718,6 +723,7 @@ public:
 
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
+	int DoButton_MenuItemCheck(const void *pID, const char *pText, int Checked, int CheckU, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
 
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 
@@ -741,6 +747,8 @@ public:
 	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
+	static int PopupMenuView(CEditor *pEditor, CUIRect View);
+	static int PopupMenuBrushMode(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
 
 	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
@@ -782,6 +790,7 @@ public:
 
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
+	void RenderFileImageDialog();
 
 	void AddFileDialogEntry(int Index, CUIRect *pView);
 	void SortImages();

@@ -76,7 +76,7 @@ void CGraphics_Threaded::FlushVertices()
 	{
 		// kick command buffer and try again
 		KickCommandBuffer();
-		
+
 		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
@@ -255,20 +255,19 @@ void CGraphics_Threaded::LinesDraw(const CLineItem *pArray, int Num)
 	AddVertices(2*Num);
 }
 
-int CGraphics_Threaded::UnloadTexture(CTextureHandle Index)
+int CGraphics_Threaded::UnloadTexture(CTextureHandle *pTextureHandler)
 {
-	if(Index.Id() == m_InvalidTexture.Id())
-		return 0;
-
-	if(!Index.IsValid())
+	if(!pTextureHandler || pTextureHandler->Id() == m_InvalidTexture.Id() || !pTextureHandler->IsValid())
 		return 0;
 
 	CCommandBuffer::SCommand_Texture_Destroy Cmd;
-	Cmd.m_Slot = Index.Id();
+	Cmd.m_Slot = pTextureHandler->Id();
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextureIndices[Index.Id()] = m_FirstFreeTexture;
-	m_FirstFreeTexture = Index.Id();
+	m_aTextureIndices[pTextureHandler->Id()] = m_FirstFreeTexture;
+	m_FirstFreeTexture = pTextureHandler->Id();
+
+	pTextureHandler->Reset();
 	return 0;
 }
 
