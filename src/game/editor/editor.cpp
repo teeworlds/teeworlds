@@ -1057,9 +1057,9 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				int AddX = f2fx(Mapping[0] + (Mapping[2]-Mapping[0])/2);
 				int AddY = f2fx(Mapping[1] + (Mapping[3]-Mapping[1])/2);
 
-                 CQuad *q = 0x0;
+                CQuad *q = 0x0;
                 if ((Input()->KeyDown('q') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
-                    q = pQLayer->NewQuad(UI()->MouseWorldX()-32, UI()->MouseWorldY()-32);
+                    q = pQLayer->NewQuad(UI()->MouseWorldX()-32-g->m_OffsetX, UI()->MouseWorldY()-32-g->m_OffsetY);
                 else
                     q = pQLayer->NewQuad(0, 0);
 
@@ -2473,7 +2473,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				continue;
 			}
 
-			CUIRect VisibleToggle, SaveCheck, PreviewImg, Extra; //H-Client
+			CUIRect VisibleToggle, SaveCheck, PreviewImg, Extra;
 			if(LayerCur >= LayerStartAt)
 			{
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
@@ -2527,7 +2527,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
                 if(m_Map.m_pGameLayer != m_Map.m_lGroups[g]->m_lLayers[i] && (m_Map.m_lGroups[g]->m_lLayers[i]->m_Type == LAYERTYPE_QUADS || m_Map.m_lGroups[g]->m_lLayers[i]->m_Type == LAYERTYPE_TILES))
                 {
                     LayersBox.HSplitTop(42.0f, &Slot, &LayersBox);
-                    Slot.HSplitTop(12.0f, &Slot, &Extra); //H-Client
+                    Slot.HSplitTop(12.0f, &Slot, &Extra);
                     Extra.VSplitLeft(12.0f, 0, &Extra);
                     cornerA = CUI::CORNER_TL;
                     cornerB = CUI::CORNER_TR;
@@ -2565,7 +2565,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 						UiInvokePopupMenu(&s_LayerPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 245, PopupLayer);
 				}
 
-				//H-Client: Preview & Extra options
+				//Preview & Extra options
                 if(m_Map.m_lGroups[g]->m_lLayers[i]->m_Type == LAYERTYPE_QUADS)
                 {
 						CLayerQuads *pLayer = (CLayerQuads *)m_Map.m_lGroups[g]->m_lLayers[i];
