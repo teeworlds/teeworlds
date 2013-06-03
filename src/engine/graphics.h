@@ -78,6 +78,7 @@ public:
 
 		bool IsValid() const { return Id() >= 0; }
 		int Id() const { return m_Id; }
+		void Reset() { m_Id = -1; }
 	};
 
 	int ScreenWidth() const { return m_ScreenWidth; }
@@ -102,7 +103,7 @@ public:
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
 
-	virtual int UnloadTexture(CTextureHandle Index) = 0;
+	virtual int UnloadTexture(CTextureHandle *pTextureHandler) = 0;
 	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
 	virtual int LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
 	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
