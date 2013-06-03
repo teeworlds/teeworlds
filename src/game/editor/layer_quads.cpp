@@ -34,7 +34,7 @@ void CLayerQuads::Render()
 	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_TRANSPARENT, m_pEditor->EnvelopeEval, m_pEditor);
 }
 
-CQuad *CLayerQuads::NewQuad()
+CQuad *CLayerQuads::NewQuad(int _x, int _y)
 {
 	m_pEditor->m_Map.m_Modified = true;
 
@@ -44,7 +44,7 @@ CQuad *CLayerQuads::NewQuad()
 	q->m_ColorEnv = -1;
 	q->m_PosEnvOffset = 0;
 	q->m_ColorEnvOffset = 0;
-	int x = 0, y = 0;
+	int x = _x, y = _y;
 	q->m_aPoints[0].x = x;
 	q->m_aPoints[0].y = y;
 	q->m_aPoints[1].x = x+64;

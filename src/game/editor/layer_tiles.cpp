@@ -211,6 +211,9 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
 
+            if (m_pEditor->m_BrushMode == BRUSH_MODE_ADDITION && l->m_pTiles[y*l->m_Width+x].m_Index == 0)
+                continue;
+
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
 	m_pEditor->m_Map.m_Modified = true;

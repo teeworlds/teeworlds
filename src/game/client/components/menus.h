@@ -15,8 +15,6 @@
 #include <game/client/localization.h>
 #include <game/client/ui.h>
 
-#include "skins.h"
-
 
 // compnent to fetch keypresses, override all other input
 class CMenusKeyBinder : public CComponent
@@ -117,7 +115,6 @@ class CMenus : public CComponent
 		POPUP_RENAME_DEMO,
 		POPUP_REMOVE_FRIEND,
 		POPUP_SAVE_SKIN,
-		POPUP_DELETE_SKIN,
 		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT,
@@ -205,8 +202,6 @@ class CMenus : public CComponent
 	char m_aSaveSkinName[24];
 
 	void SaveSkinfile();
-	bool m_RefreshSkinSelector;
-	const CSkins::CSkin *m_pSelectedSkin;
 
 	//
 	bool m_EscapePressed;

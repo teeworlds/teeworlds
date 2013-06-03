@@ -87,11 +87,9 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	mem_free(Info.m_pData);
 
 	// set skin part data
-	Part.m_Flags = 0;
+	Part.m_Type = SKINTYPE_STANDARD;
 	if(pName[0] == 'x' && pName[1] == '_')
-		Part.m_Flags |= SKINFLAG_SPECIAL;
-	if(DirType != IStorage::TYPE_SAVE)
-		Part.m_Flags |= SKINFLAG_STANDARD;
+		Part.m_Type = SKINTYPE_SPECIAL;
 	str_copy(Part.m_aName, pName, min((int)sizeof(Part.m_aName),l-3));
 	if(g_Config.m_Debug)
 	{
@@ -196,9 +194,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	mem_free(pFileData);
 
 	// set skin data
-	Skin.m_Flags = SpecialSkin ? SKINFLAG_SPECIAL : 0;
-	if(DirType != IStorage::TYPE_SAVE)
-		Skin.m_Flags |= SKINFLAG_STANDARD;
+	Skin.m_Type = SpecialSkin ? SKINTYPE_SPECIAL : SKINTYPE_STANDARD;
 	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-4));
 	if(g_Config.m_Debug)
 	{
@@ -221,7 +217,7 @@ void CSkins::OnInit()
 		if(p == SKINPART_TATTOO || p == SKINPART_DECORATION)
 		{
 			CSkinPart NoneSkinPart;
-			NoneSkinPart.m_Flags = SKINFLAG_STANDARD;
+			NoneSkinPart.m_Type = SKINTYPE_STANDARD;
 			str_copy(NoneSkinPart.m_aName, "", sizeof(NoneSkinPart.m_aName));
 			NoneSkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(NoneSkinPart);
@@ -237,7 +233,7 @@ void CSkins::OnInit()
 		if(!m_aaSkinParts[p].size())
 		{
 			CSkinPart DummySkinPart;
-			DummySkinPart.m_Flags = SKINFLAG_STANDARD;
+			DummySkinPart.m_Type = SKINTYPE_STANDARD;
 			str_copy(DummySkinPart.m_aName, "dummy", sizeof(DummySkinPart.m_aName));
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(DummySkinPart);
@@ -245,7 +241,7 @@ void CSkins::OnInit()
 	}
 
 	// create dummy skin
-	m_DummySkin.m_Flags = SKINFLAG_STANDARD;
+	m_DummySkin.m_Type = SKINTYPE_STANDARD;
 	str_copy(m_DummySkin.m_aName, "dummy", sizeof(m_DummySkin.m_aName));
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
@@ -270,27 +266,6 @@ void CSkins::OnInit()
 		m_aSkins.add(m_DummySkin);
 }
 
-void CSkins::AddSkin(const char *pSkinName)
-{
-	CSkin Skin = m_DummySkin;
-	Skin.m_Flags = 0;
-	str_copy(Skin.m_aName, pSkinName, sizeof(Skin.m_aName));
-	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; ++PartIndex)
-	{
-		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
-		if(SkinPart > -1)
-			Skin.m_apParts[PartIndex] = GetSkinPart(PartIndex, SkinPart);
-		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[PartIndex];
-		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[PartIndex];
-	}
-	m_aSkins.add(Skin);
-}
-
-void CSkins::RemoveSkin(const CSkin *pSkin)
-{
-	m_aSkins.remove(*pSkin);
-}
-
 int CSkins::Num()
 {
 	return m_aSkins.size();
@@ -310,7 +285,7 @@ int CSkins::Find(const char *pName, bool AllowSpecialSkin)
 {
 	for(int i = 0; i < m_aSkins.size(); i++)
 	{
-		if(str_comp(m_aSkins[i].m_aName, pName) == 0 && ((m_aSkins[i].m_Flags&SKINFLAG_SPECIAL) == 0 || AllowSpecialSkin))
+		if(str_comp(m_aSkins[i].m_aName, pName) == 0 && (m_aSkins[i].m_Type != SKINTYPE_SPECIAL || AllowSpecialSkin))
 			return i;
 	}
 	return -1;
@@ -326,7 +301,7 @@ int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
 {
 	for(int i = 0; i < m_aaSkinParts[Part].size(); i++)
 	{
-		if(str_comp(m_aaSkinParts[Part][i].m_aName, pName) == 0 && ((m_aaSkinParts[Part][i].m_Flags&SKINFLAG_SPECIAL) == 0 || AllowSpecialPart))
+		if(str_comp(m_aaSkinParts[Part][i].m_aName, pName) == 0 && (m_aaSkinParts[Part][i].m_Type != SKINTYPE_SPECIAL || AllowSpecialPart))
 			return i;
 	}
 	return -1;
