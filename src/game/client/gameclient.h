@@ -305,6 +305,6 @@ inline vec3 HslToRgb(vec3 HSL)
 }
 
 
-extern const char *Localize(const char *Str);
+extern const char *Localize(const char *Str, const char *pContext="");
 
 #endif

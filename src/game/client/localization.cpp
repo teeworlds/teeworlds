@@ -8,23 +8,24 @@
 #include <engine/console.h>
 #include <engine/storage.h>
 
-const char *Localize(const char *pStr)
+const char *Localize(const char *pStr, const char *pContext)
 {
-	const char *pNewStr = g_Localization.FindString(str_quickhash(pStr));
+	const char *pNewStr = g_Localization.FindString(str_quickhash(pStr), str_quickhash(pContext));
 	return pNewStr ? pNewStr : pStr;
 }
 
-CLocConstString::CLocConstString(const char *pStr)
+CLocConstString::CLocConstString(const char *pStr, const char *pContext)
 {
 	m_pDefaultStr = pStr;
 	m_Hash = str_quickhash(m_pDefaultStr);
+    m_ContextHash = str_quickhash(pContext);
 	m_Version = -1;
 }
 
 void CLocConstString::Reload()
 {
 	m_Version = g_Localization.Version();
-	const char *pNewStr = g_Localization.FindString(m_Hash);
+	const char *pNewStr = g_Localization.FindString(m_Hash, m_ContextHash);
 	m_pCurrentStr = pNewStr;
 	if(!m_pCurrentStr)
 		m_pCurrentStr = m_pDefaultStr;
@@ -36,10 +37,11 @@ CLocalizationDatabase::CLocalizationDatabase()
 	m_CurrentVersion = 0;
 }
 
-void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
+void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr, const char *pContext)
 {
 	CString s;
 	s.m_Hash = str_quickhash(pOrgStr);
+    s.m_ContextHash = str_quickhash(pContext);
 	s.m_Replacement = *pNewStr ? pNewStr : pOrgStr;
 	m_Strings.add(s);
 }
@@ -87,7 +89,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	if(rStart.type == json_array)
 	{
 		for(unsigned i = 0; i < rStart.u.array.length; ++i)
-			AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"]);
+			AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"], (const char *)rStart[i]["context"]);
 	}
 
 	// clean up
@@ -97,14 +99,26 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	return true;
 }
 
-const char *CLocalizationDatabase::FindString(unsigned Hash)
+const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHash)
 {
 	CString String;
 	String.m_Hash = Hash;
 	sorted_array<CString>::range r = ::find_binary(m_Strings.all(), String);
 	if(r.empty())
 		return 0;
-	return r.front().m_Replacement;
+    
+    unsigned DefaultHash = str_quickhash("");
+    unsigned DefaultIndex = 0;
+    for(unsigned i = 0; i < r.size(); ++i)
+    {
+        const CString &rStr = r.index(i);
+        if(rStr.m_ContextHash == ContextHash)
+            return rStr.m_Replacement;
+        else if(rStr.m_ContextHash == DefaultHash)
+            DefaultIndex = i;
+    }
+	
+    return r.index(DefaultIndex).m_Replacement;
 }
 
 CLocalizationDatabase g_Localization;
