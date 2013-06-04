@@ -18,7 +18,7 @@ CLocConstString::CLocConstString(const char *pStr, const char *pContext)
 {
 	m_pDefaultStr = pStr;
 	m_Hash = str_quickhash(m_pDefaultStr);
-    m_ContextHash = str_quickhash(pContext);
+	m_ContextHash = str_quickhash(pContext);
 	m_Version = -1;
 }
 
@@ -41,7 +41,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr, 
 {
 	CString s;
 	s.m_Hash = str_quickhash(pOrgStr);
-    s.m_ContextHash = str_quickhash(pContext);
+	s.m_ContextHash = str_quickhash(pContext);
 	s.m_Replacement = *pNewStr ? pNewStr : pOrgStr;
 	m_Strings.add(s);
 }
@@ -106,17 +106,17 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 	sorted_array<CString>::range r = ::find_binary(m_Strings.all(), String);
 	if(r.empty())
 		return 0;
-    
-    unsigned DefaultHash = str_quickhash("");
-    unsigned DefaultIndex = 0;
-    for(unsigned i = 0; i < r.size(); ++i)
-    {
-        const CString &rStr = r.index(i);
-        if(rStr.m_ContextHash == ContextHash)
-            return rStr.m_Replacement;
-        else if(rStr.m_ContextHash == DefaultHash)
-            DefaultIndex = i;
-    }
+
+	unsigned DefaultHash = str_quickhash("");
+	unsigned DefaultIndex = 0;
+	for(unsigned i = 0; i < r.size(); ++i)
+	{
+		const CString &rStr = r.index(i);
+		if(rStr.m_ContextHash == ContextHash)
+			return rStr.m_Replacement;
+		else if(rStr.m_ContextHash == DefaultHash)
+			DefaultIndex = i;
+	}
 	
     return r.index(DefaultIndex).m_Replacement;
 }

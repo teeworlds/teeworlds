@@ -11,7 +11,7 @@ class CLocalizationDatabase
 	{
 	public:
 		unsigned m_Hash;
-        unsigned m_ContextHash;
+		unsigned m_ContextHash;
 
 		// TODO: do this as an const char * and put everything on a incremental heap
 		string m_Replacement;
@@ -43,10 +43,10 @@ class CLocConstString
 	const char *m_pDefaultStr;
 	const char *m_pCurrentStr;
 	unsigned m_Hash;
-    unsigned m_ContextHash;
+	unsigned m_ContextHash;
 	int m_Version;
 public:
-    CLocConstString(const char *pStr, const char *pContext="");
+	CLocConstString(const char *pStr, const char *pContext="");
 	void Reload();
 
 	inline operator const char *()
