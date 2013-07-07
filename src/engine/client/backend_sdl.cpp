@@ -414,12 +414,14 @@ void CCommandProcessorFragment_SDL::Cmd_Swap(const CCommandBuffer::SCommand_Swap
 void CCommandProcessorFragment_SDL::Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand)
 {
 	SDL_DisplayMode mode;
-	*pCommand->m_pNumModes = SDL_GetNumDisplayModes(0);
-	for(int i = 0; i < *pCommand->m_pNumModes; i++)
+	int maxModes = SDL_GetNumDisplayModes(0),
+		numModes = 0;
+	for(int i = 0; i < maxModes; i++)
 	{
 		if(SDL_GetDisplayMode(0, i, &mode) < 0)
 		{
 			dbg_msg("gfx", "unable to get display mode: %s", SDL_GetError());
+			continue;
 		}
 
 		pCommand->m_pModes[i].m_Width = mode.w;
@@ -427,7 +429,9 @@ void CCommandProcessorFragment_SDL::Cmd_VideoModes(const CCommandBuffer::SComman
 		pCommand->m_pModes[i].m_Red = 8;
 		pCommand->m_pModes[i].m_Green = 8;
 		pCommand->m_pModes[i].m_Blue = 8;
+		numModes++;
 	}
+	*pCommand->m_pNumModes = numModes;
 }
 
 CCommandProcessorFragment_SDL::CCommandProcessorFragment_SDL()
