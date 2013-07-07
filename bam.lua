@@ -1,7 +1,8 @@
 CheckVersion("0.4")
 
 Import("configure.lua")
-Import("other/sdl/sdl.lua")
+--Import("other/sdl/sdl.lua")
+Import("other/sdl2/sdl2.lua")
 Import("other/freetype/freetype.lua")
 
 --- Setup Config -------
@@ -11,7 +12,8 @@ config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk"))
 config:Add(OptTestCompileC("macosxppc", "int main(){return 0;}", "-arch ppc"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
-config:Add(SDL.OptFind("sdl", true))
+--config:Add(SDL.OptFind("sdl", true))
+config:Add(SDL2.OptFind("sdl2", true))
 config:Add(FreeType.OptFind("freetype", true))
 config:Finalize("config.lua")
 
@@ -117,10 +119,10 @@ server_link_other = {}
 if family == "windows" then
 	if platform == "win32" then
 		table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib32\\freetype.dll"))
-		table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\lib32\\SDL.dll"))
+		table.insert(client_depends, CopyToDirectory(".", "other\\sdl2\\lib32\\SDL2.dll"))
 	else
 		table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib64\\freetype.dll"))
-		table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\lib64\\SDL.dll"))
+		table.insert(client_depends, CopyToDirectory(".", "other\\sdl2\\lib64\\SDL2.dll"))
 	end
 
 	if config.compiler.driver == "cl" then
@@ -229,7 +231,7 @@ function build(settings)
 	end
 
 	-- apply sdl settings
-	config.sdl:Apply(client_settings)
+	config.sdl2:Apply(client_settings)
 	-- apply freetype settings
 	config.freetype:Apply(client_settings)
 

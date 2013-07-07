@@ -252,7 +252,8 @@ class CCommandProcessor_SDL_OpenGL : public CGraphicsBackend_Threaded::ICommandP
 // graphics backend implemented with SDL and OpenGL
 class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 {
-	SDL_Surface *m_pScreenSurface;
+    SDL_Window *m_pWindow;
+    SDL_Renderer *m_pRenderer;
 	ICommandProcessor *m_pProcessor;
 	SGLContext m_GLContext;
 	volatile int m_TextureMemoryUsage;

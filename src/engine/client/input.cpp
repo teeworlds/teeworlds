@@ -46,8 +46,8 @@ CInput::CInput()
 void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
-	SDL_EnableUNICODE(1);
-	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+	//SDL_EnableUNICODE(1);
+	//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
 void CInput::MouseRelative(float *x, float *y)
@@ -62,7 +62,7 @@ void CInput::MouseRelative(float *x, float *y)
 		if(m_InputGrabbed)
 		{
 			SDL_GetMouseState(&nx,&ny);
-			SDL_WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
+			//SDL_WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
 			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
 		}
 	}
@@ -75,16 +75,16 @@ void CInput::MouseModeAbsolute()
 {
 	SDL_ShowCursor(1);
 	m_InputGrabbed = 0;
-	if(g_Config.m_InpGrab)
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
+	//if(g_Config.m_InpGrab)
+	//	SDL_SetWindowGrab(SDL_FALSE);
 }
 
 void CInput::MouseModeRelative()
 {
 	SDL_ShowCursor(0);
 	m_InputGrabbed = 1;
-	if(g_Config.m_InpGrab)
-		SDL_WM_GrabInput(SDL_GRAB_ON);
+	//if(g_Config.m_InpGrab)
+	//	SDL_SetWindowGrab(SDL_TRUE);
 }
 
 int CInput::MouseDoubleClick()
@@ -128,10 +128,10 @@ int CInput::Update()
 
 	{
 		int i;
-		Uint8 *pState = SDL_GetKeyState(&i);
-		if(i >= KEY_LAST)
-			i = KEY_LAST-1;
-		mem_copy(m_aInputState[m_InputCurrent], pState, i);
+		//Uint8 *pState = SDL_GetKeyState(&i);
+		//if(i >= KEY_LAST)
+		//	i = KEY_LAST-1;
+		//mem_copy(m_aInputState[m_InputCurrent], pState, i);
 	}
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
@@ -181,8 +181,8 @@ int CInput::Update()
 					if(Event.button.button == SDL_BUTTON_LEFT) Key = KEY_MOUSE_1; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_WHEELUP) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_WHEELDOWN) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+					//if(Event.button.button == SDL_BUTTON_WHEELUP) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
+					//if(Event.button.button == SDL_BUTTON_WHEELDOWN) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
 					if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
 					if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
 					if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention

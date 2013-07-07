@@ -1720,6 +1720,7 @@ void CClient::Run()
 
 	m_MenuStartTime = time_get();
 
+    SDL_Window *window = NULL;
 	// init graphics
 	{
 		m_pGraphics = CreateEngineGraphicsThreaded();
@@ -1728,7 +1729,7 @@ void CClient::Run()
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IEngineGraphics*>(m_pGraphics)); // register graphics as both
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics));
 
-		if(RegisterFail || m_pGraphics->Init() != 0)
+		if(RegisterFail || m_pGraphics->Init(&window) != 0)
 		{
 			dbg_msg("client", "couldn't init graphics");
 			return;
