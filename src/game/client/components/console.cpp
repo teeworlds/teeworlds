@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
-#include <iostream>
+#include <string>
 
 #include <game/generated/client_data.h>
 
@@ -327,7 +327,6 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 
 void CGameConsole::OnRender()
 {
-    Input()->KeyPressed(KEY_LCTRL);
 	CUIRect Screen = *UI()->Screen();
 	float ConsoleMaxHeight = Screen.h*3/5.0f;
 	float ConsoleHeight;
