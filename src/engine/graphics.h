@@ -187,6 +187,9 @@ public:
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
 
+    virtual void GrabWindow(bool grab) = 0;
+	virtual void WarpMouse(int x, int y) = 0;
+
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 

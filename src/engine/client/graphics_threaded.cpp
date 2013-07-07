@@ -793,6 +793,16 @@ void CGraphics_Threaded::Maximize()
 	m_pBackend->Maximize();
 }
 
+void CGraphics_Threaded::GrabWindow(bool grab)
+{
+    m_pBackend->GrabWindow(grab);
+}
+
+void CGraphics_Threaded::WarpMouse(int x, int y)
+{
+	m_pBackend->WarpMouse(x, y);
+}
+
 int CGraphics_Threaded::WindowActive()
 {
 	return m_pBackend->WindowActive();

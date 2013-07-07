@@ -618,6 +618,16 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 	SDL_MinimizeWindow(m_pWindow);
 }
 
+void CGraphicsBackend_SDL_OpenGL::GrabWindow(bool grab)
+{
+	SDL_SetWindowGrab(m_pWindow, grab ? SDL_TRUE : SDL_FALSE);
+}
+
+void CGraphicsBackend_SDL_OpenGL::WarpMouse(int x, int y)
+{
+	SDL_WarpMouseInWindow(m_pWindow, x, y);
+}
+
 int CGraphicsBackend_SDL_OpenGL::WindowActive()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_INPUT_FOCUS;
