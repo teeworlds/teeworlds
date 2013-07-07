@@ -1003,7 +1003,6 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 void str_timestamp(char *buffer, int buffer_size);
 
 /*
-    H-Client
 	Function: set_clipboard_text
 		Copies to clipboard content the string
 
@@ -1012,7 +1011,6 @@ void str_timestamp(char *buffer, int buffer_size);
 */
 void set_clipboard_text(const char *pText);
 /*
-    H-Client
 	Function: get_clipboard_text
 		Copies the clipboard content to string
 
