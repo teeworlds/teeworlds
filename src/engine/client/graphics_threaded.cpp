@@ -790,7 +790,6 @@ void CGraphics_Threaded::Minimize()
 
 void CGraphics_Threaded::Maximize()
 {
-	// TODO: SDL
 	m_pBackend->Maximize();
 }
 
