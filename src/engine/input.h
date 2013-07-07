@@ -52,8 +52,8 @@ public:
 
 	// events
 	int NumEvents() const { return m_NumEvents; }
-	void ClearEvents() 
-	{ 
+	void ClearEvents()
+	{
 		m_NumEvents = 0;
 		m_InputDispatched = true;
 	}
@@ -80,6 +80,9 @@ public:
 	virtual int MouseDoubleClick() = 0;
 
 	virtual void MouseRelative(float *x, float *y) = 0;
+
+    virtual void NativeMousePos(int *x, int *y) = 0;
+	virtual bool NativeMousePressed(int index) = 0;
 };
 
 

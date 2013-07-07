@@ -1002,6 +1002,26 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 */
 void str_timestamp(char *buffer, int buffer_size);
 
+/*
+    H-Client
+	Function: set_clipboard_text
+		Copies to clipboard content the string
+
+	Parameters:
+		pTest - Pointer to a buffer string.
+*/
+void set_clipboard_text(const char *pText);
+/*
+    H-Client
+	Function: get_clipboard_text
+		Copies the clipboard content to string
+
+	Parameters:
+		dest - Pointer to a buffer that shall receive the text string.
+		size - Size of the buffer.
+*/
+void get_clipboard_text(char *dest, unsigned int size);
+
 /* Group: Filesystem */
 
 /*

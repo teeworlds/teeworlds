@@ -109,6 +109,21 @@ int CInput::KeyState(int Key)
 	return m_aInputState[m_InputCurrent][Key];
 }
 
+void CInput::NativeMousePos(int *x, int *y)
+{
+    int nx = 0, ny = 0;
+    SDL_GetMouseState(&nx,&ny);
+
+    *x = nx;
+    *y = ny;
+}
+
+bool CInput::NativeMousePressed(int index)
+{
+    int i = SDL_GetMouseState(NULL, NULL);
+    return i&SDL_BUTTON(index);
+}
+
 int CInput::Update()
 {
 	if(m_InputGrabbed && !Graphics()->WindowActive())

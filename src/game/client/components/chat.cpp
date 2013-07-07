@@ -219,6 +219,26 @@ bool CChat::OnInput(IInput::CEvent Event)
 		m_Input.ProcessInput(Event);
 		m_InputUpdate = true;
 	}
+
+    //Cliboard Paste
+	static bool makeCopy = false;
+	if(!makeCopy && Input()->KeyPressed(KEY_LCTRL) && Input()->KeyDown('v'))
+	{
+	    char aBuf[256]={0}, str[256]={0};
+
+        str_copy(aBuf, m_Input.GetString(), sizeof(aBuf));
+
+	    get_clipboard_text(str, sizeof(str));
+	    str_append(aBuf, str, sizeof(aBuf));
+
+        m_Input.Set(aBuf);
+        m_Input.SetCursorOffset(str_length(aBuf));
+        m_InputUpdate = true;
+        makeCopy = true;
+	} else if (makeCopy)
+        makeCopy = false;
+	//
+
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
 		if(m_pHistoryEntry)
