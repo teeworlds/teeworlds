@@ -156,14 +156,21 @@ int CInput::Update()
 			{
 				// handle keys
 				case SDL_KEYDOWN:
-					// skip private use area of the BMP(contains the unicodes for keyboard function keys on MacOS)
 					if(Event.key.keysym.unicode < 0xE000 || Event.key.keysym.unicode > 0xF8FF)	// ignore_convention
 						AddEvent(Event.key.keysym.unicode, 0, 0); // ignore_convention
-					Key = Event.key.keysym.sym; // ignore_convention
+
+					if(Event.key.keysym.sym & SDLK_SCANCODE_MASK)
+						Key = Event.key.keysym.sym ^ SDLK_SCANCODE_MASK;
+					else
+						Key = SDL_GetScancodeFromKey(Event.key.keysym.sym);
 					break;
 				case SDL_KEYUP:
 					Action = IInput::FLAG_RELEASE;
-					Key = Event.key.keysym.sym; // ignore_convention
+					if(Event.key.keysym.sym & SDLK_SCANCODE_MASK)
+						Key = Event.key.keysym.sym ^ SDLK_SCANCODE_MASK;
+					else
+						Key = SDL_GetScancodeFromKey(Event.key.keysym.sym);
+
 					break;
 
 				// handle mouse buttons
