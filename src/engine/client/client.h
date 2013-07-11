@@ -195,6 +195,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	} m_VersionInfo;
 
 	int64 TickStartTime(int Tick);
+	vec3 GetColorV3(int v);
 
 public:
 	IEngine *Engine() { return m_pEngine; }

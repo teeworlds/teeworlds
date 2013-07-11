@@ -6,7 +6,9 @@
 #include <stdarg.h>
 #include <climits>
 
+#include <base/color.h>
 #include <base/math.h>
+#include <base/vmath.h>
 #include <base/system.h>
 
 #include <game/client/gameclient.h>
@@ -889,13 +891,21 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
-	if(g_Config.m_GfxClear || g_Config.m_ClShowEntities)
+	if(g_Config.m_ClShowEntities)
 		Graphics()->Clear(0.3f,0.3f,0.6f);
 	else if(g_Config.m_GfxClear)
-		Graphics()->Clear(1,1,0);
+	{
+		vec3 bg = GetColorV3(g_Config.m_ClBackground);
+		Graphics()->Clear(bg.r, bg.g, bg.b);
+	}
 
 	GameClient()->OnRender();
 	DebugRender();
+}
+
+vec3 CClient::GetColorV3(int v)
+{
+	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
 }
 
 const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc)
