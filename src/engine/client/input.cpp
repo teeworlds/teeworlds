@@ -194,6 +194,8 @@ int CInput::Update()
 				case SDL_MOUSEWHEEL:
 					if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
 					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+					AddEvent(0, Key, Action);
+					Action = IInput::FLAG_RELEASE;
 					break;
 
 				// other messages
