@@ -1,7 +1,6 @@
 CheckVersion("0.4")
 
 Import("configure.lua")
---Import("other/sdl/sdl.lua")
 Import("other/sdl2/sdl2.lua")
 Import("other/freetype/freetype.lua")
 
@@ -12,7 +11,6 @@ config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk"))
 config:Add(OptTestCompileC("macosxppc", "int main(){return 0;}", "-arch ppc"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
---config:Add(SDL.OptFind("sdl", true))
 config:Add(SDL2.OptFind("sdl2", true))
 config:Add(FreeType.OptFind("freetype", true))
 config:Finalize("config.lua")
