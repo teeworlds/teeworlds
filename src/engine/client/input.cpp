@@ -164,18 +164,11 @@ int CInput::Update()
 				}
 				// handle keys
 				case SDL_KEYDOWN:
-					if(Event.key.keysym.sym & SDLK_SCANCODE_MASK)
-						Key = Event.key.keysym.sym ^ SDLK_SCANCODE_MASK;
-					else
-						Key = SDL_GetScancodeFromKey(Event.key.keysym.sym);
+					Key = SDL_GetScancodeFromName(SDL_GetKeyName(Event.key.keysym.sym));
 					break;
 				case SDL_KEYUP:
 					Action = IInput::FLAG_RELEASE;
-					if(Event.key.keysym.sym & SDLK_SCANCODE_MASK)
-						Key = Event.key.keysym.sym ^ SDLK_SCANCODE_MASK;
-					else
-						Key = SDL_GetScancodeFromKey(Event.key.keysym.sym);
-
+					Key = SDL_GetScancodeFromName(SDL_GetKeyName(Event.key.keysym.sym));
 					break;
 
 				// handle mouse buttons
