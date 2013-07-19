@@ -414,11 +414,11 @@ void CCommandProcessorFragment_SDL::Cmd_Swap(const CCommandBuffer::SCommand_Swap
 void CCommandProcessorFragment_SDL::Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand)
 {
 	SDL_DisplayMode mode;
-	int maxModes = SDL_GetNumDisplayModes(pCommand->m_Screen - 1),
+	int maxModes = SDL_GetNumDisplayModes(pCommand->m_Screen),
 		numModes = 0;
 	for(int i = 0; i < maxModes; i++)
 	{
-		if(SDL_GetDisplayMode(pCommand->m_Screen - 1, i, &mode) < 0)
+		if(SDL_GetDisplayMode(pCommand->m_Screen, i, &mode) < 0)
 		{
 			dbg_msg("gfx", "unable to get display mode: %s", SDL_GetError());
 			continue;
@@ -494,21 +494,21 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		#endif
 	}
 
-	SDL_DisplayMode mode;
-	if(SDL_GetCurrentDisplayMode(0, &mode) < 0)
+	SDL_Rect ScreenBounds;
+	if(SDL_GetDisplayBounds(Screen, &ScreenBounds) < 0)
 	{
-		dbg_msg("gfx", "unable to get current display mode: %s", SDL_GetError());
+		dbg_msg("gfx", "unable to get current screen bounds: %s", SDL_GetError());
 		return -1;
 	}
 
 	if(*Width == 0 || *Height == 0)
 	{
-		*Width = mode.w;
-		*Height = mode.h; 
+		*Width = ScreenBounds.w;
+		*Height = ScreenBounds.h; 
 	}
 
-	*pDesktopWidth = mode.w;
-	*pDesktopHeight = mode.h;
+	*pDesktopWidth = ScreenBounds.w;
+	*pDesktopHeight = ScreenBounds.h;
 
 	if(FsaaSamples)
 	{
@@ -537,15 +537,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
-
-	SDL_Rect ScreenBounds;
-	if(SDL_GetDisplayBounds(Screen - 1, &ScreenBounds) < 0)
-	{
-		dbg_msg("gfx", "unable to get current screen bounds: %s", SDL_GetError());
-		return -1;
-	}
-
-	dbg_msg("gfx", "create window on screen %d at %dx%d", Screen - 1, ScreenBounds.x, ScreenBounds.y);
 
 	m_pWindow = SDL_CreateWindow(
 		pName,

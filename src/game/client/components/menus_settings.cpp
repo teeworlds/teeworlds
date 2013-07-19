@@ -1217,12 +1217,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, -1);
 
 		Button.VSplitLeft(70.0f, &Button, 0);
-		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_GfxScreen);
+		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_GfxScreen + 1);
 		static int s_ButtonGfxScreen = 0;
 		if(DoButton_Menu(&s_ButtonGfxScreen, aBuf, 0, &Button))
 		{
-			if(g_Config.m_GfxScreen >= NumScreens)
-				g_Config.m_GfxScreen = 1;
+			if(g_Config.m_GfxScreen + 1 >= NumScreens)
+				g_Config.m_GfxScreen = 0;
 			else
 				g_Config.m_GfxScreen++;
 
