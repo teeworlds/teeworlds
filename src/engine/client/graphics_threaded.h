@@ -195,6 +195,7 @@ public:
 		CVideoMode *m_pModes; // processor will fill this in
 		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
 		int *m_pNumModes; // processor will write to this pointer
+		int m_Screen; // video modes of screen
 	};
 
 	struct SCommand_Swap : public SCommand
@@ -302,7 +303,7 @@ public:
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
+	virtual int Init(const char *pName, int *Width, int *Height, int Screen, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
@@ -313,6 +314,7 @@ public:
 	virtual void WarpMouse(int x, int y) = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
+	virtual int GetNumScreens() = 0;
 
 	virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;
 	virtual bool IsIdle() const = 0;
@@ -439,7 +441,8 @@ public:
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
 
-	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int screen);
+	virtual int GetNumScreens();
 
 	virtual int GetDesktopScreenWidth() { return m_DesktopScreenWidth; }
 	virtual int GetDesktopScreenHeight() { return m_DesktopScreenHeight; }

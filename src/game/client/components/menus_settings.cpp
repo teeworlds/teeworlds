@@ -1201,6 +1201,39 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, 0);
 
+	int NumScreens = Graphics()->GetNumScreens();
+	if(NumScreens > 1)
+	{
+		Screen.HSplitTop(Spacing, 0, &Screen);
+		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		CUIRect Text;
+		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
+		Button.VSplitLeft(100.0f, &Text, &Button);
+
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Screen"));
+		Text.y += 2.0f;
+		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, -1);
+
+		Button.VSplitLeft(70.0f, &Button, 0);
+		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_GfxScreen);
+		static int s_ButtonGfxScreen = 0;
+		if(DoButton_Menu(&s_ButtonGfxScreen, aBuf, 0, &Button))
+		{
+			if(g_Config.m_GfxScreen >= NumScreens)
+				g_Config.m_GfxScreen = 1;
+			else
+				g_Config.m_GfxScreen++;
+
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
+			UpdateVideoFormats();
+			UpdatedFilteredVideoModes();
+
+			CheckSettings = true;
+		}
+	}
+
 	Screen.HSplitTop(Spacing, 0, &Screen);
 	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
 	static int s_ButtonGfxFullscreen = 0;
@@ -1318,7 +1351,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
 		{
 			g_Config.m_GfxDisplayAllModes ^= 1;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 			UpdateVideoFormats();
 
 			bool Found = false;
@@ -1444,7 +1477,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(g_Config.m_GfxDisplayAllModes)
 		{
 			g_Config.m_GfxDisplayAllModes = 0;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 			UpdateVideoFormats();
 
 			bool Found = false;

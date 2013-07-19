@@ -258,7 +258,7 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 	SGLContext m_GLContext;
 	volatile int m_TextureMemoryUsage;
 public:
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
+	virtual int Init(const char *pName, int *Width, int *Height, int Screen, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
@@ -269,4 +269,5 @@ public:
 	virtual void WarpMouse(int x, int y);
 	virtual int WindowActive();
 	virtual int WindowOpen();
+	virtual int GetNumScreens();
 };

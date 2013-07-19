@@ -414,11 +414,11 @@ void CCommandProcessorFragment_SDL::Cmd_Swap(const CCommandBuffer::SCommand_Swap
 void CCommandProcessorFragment_SDL::Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand)
 {
 	SDL_DisplayMode mode;
-	int maxModes = SDL_GetNumDisplayModes(0),
+	int maxModes = SDL_GetNumDisplayModes(pCommand->m_Screen - 1),
 		numModes = 0;
 	for(int i = 0; i < maxModes; i++)
 	{
-		if(SDL_GetDisplayMode(0, i, &mode) < 0)
+		if(SDL_GetDisplayMode(pCommand->m_Screen - 1, i, &mode) < 0)
 		{
 			dbg_msg("gfx", "unable to get display mode: %s", SDL_GetError());
 			continue;
@@ -478,7 +478,7 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height, int Screen, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -538,10 +538,19 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 
+	SDL_Rect ScreenBounds;
+	if(SDL_GetDisplayBounds(Screen - 1, &ScreenBounds) < 0)
+	{
+		dbg_msg("gfx", "unable to get current screen bounds: %s", SDL_GetError());
+		return -1;
+	}
+
+	dbg_msg("gfx", "create window on screen %d at %dx%d", Screen - 1, ScreenBounds.x, ScreenBounds.y);
+
 	m_pWindow = SDL_CreateWindow(
 		pName,
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
+		ScreenBounds.x,
+		ScreenBounds.y,
 		*Width,
 		*Height,
 		SdlFlags
@@ -640,6 +649,14 @@ int CGraphicsBackend_SDL_OpenGL::WindowActive()
 int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
+}
+
+int CGraphicsBackend_SDL_OpenGL::GetNumScreens()
+{
+	int num = SDL_GetNumVideoDisplays();
+	if(num < 1)
+		num = 1;
+	return num;
 }
 
 
