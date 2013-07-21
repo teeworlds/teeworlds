@@ -33,8 +33,9 @@ CInput::CInput()
 	mem_zero(m_aInputCount, sizeof(m_aInputCount));
 	mem_zero(m_aInputState, sizeof(m_aInputState));
 
+	m_MouseModes = 0;
+
 	m_InputCurrent = 0;
-	m_MouseMode = MOUSE_MODE_ABSOLUTE;
 	m_InputDispatched = false;
 
 	m_LastRelease = 0;
@@ -49,6 +50,54 @@ void CInput::Init()
 	SDL_StartTextInput();
 }
 
+void CInput::SetMouseModes(int modes)
+{
+	m_MouseModes = modes;
+}
+
+int CInput::GetMouseModes()
+{;
+	return m_MouseModes;
+}
+
+void CInput::GetMousePosition(float *x, float *y)
+{
+	if(GetMouseModes() & MOUSE_MODE_NO_MOUSE)
+	{
+		*x = m_LastMousePosX;
+		*y = m_LastMousePosY;
+		return;
+	}
+
+	float Sens = g_Config.m_InpMousesens/100.0f;
+	int nx = 0, ny = 0;
+	SDL_GetMouseState(&nx, &ny);
+	*x = nx * Sens;
+	*y = ny * Sens;
+
+	m_LastMousePosX = *x;
+	m_LastMousePosY = *y;
+
+	if(GetMouseModes() & MOUSE_MODE_WARP_CENTER)
+		m_pGraphics->WarpMouse( Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
+}
+
+void CInput::GetRelativePosition(float *x, float *y)
+{
+	*x *= (float)100/g_Config.m_InpMousesens;
+	*y *= (float)100/g_Config.m_InpMousesens;
+	*x -= Graphics()->ScreenWidth()/2;
+	*y -= Graphics()->ScreenHeight()/2;
+}
+
+bool CInput::MouseMoved()
+{
+	int x = 0, y = 0;
+	SDL_GetRelativeMouseState(&x, &y);
+	return x != 0 || y != 0;
+}
+
+#if 0
 void CInput::ShowCursor(bool show)
 {
 	SDL_ShowCursor(show);
@@ -103,7 +152,7 @@ bool CInput::MouseMoved()
 	SDL_GetRelativeMouseState(&x, &y);
 	return x != 0 || y != 0;
 }
-
+#endif
 #if 0
 void CInput::MouseRelative(float *x, float *y)
 {

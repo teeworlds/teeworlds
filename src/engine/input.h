@@ -75,16 +75,15 @@ public:
 	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
 	enum MouseMode {
-		MOUSE_MODE_RELATIVE,
-		MOUSE_MODE_ABSOLUTE,
+		MOUSE_MODE_WARP_CENTER = 1 << 0,
+		MOUSE_MODE_NO_MOUSE = 1 << 1
 	};
 
 	//
-	virtual void ShowCursor(bool show) = 0;
-	virtual bool GetShowCursor() = 0;
-	virtual void SetMouseMode(MouseMode mode) = 0;
-	virtual MouseMode GetMouseMode() = 0;
+	virtual void SetMouseModes(int modes) = 0;
+	virtual int GetMouseModes() = 0;
 	virtual void GetMousePosition(float *x, float *y) = 0;
+	virtual void GetRelativePosition(float *x, float *y) = 0;
 	virtual bool MouseMoved() = 0;
 	virtual int MouseDoubleClick() = 0;
 };

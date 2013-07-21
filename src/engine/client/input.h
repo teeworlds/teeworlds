@@ -7,7 +7,10 @@ class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
 
-	MouseMode m_MouseMode;
+	int m_MouseModes;
+
+	int m_LastMousePosX;
+	int m_LastMousePosY;
 
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;
@@ -21,11 +24,10 @@ public:
 
 	virtual void Init();
 
-	virtual void ShowCursor(bool show);
-	virtual bool GetShowCursor();
-	virtual void SetMouseMode(MouseMode mode);
-	virtual MouseMode GetMouseMode();
+	virtual void SetMouseModes(int modes);
+	virtual int GetMouseModes();
 	virtual void GetMousePosition(float *x, float *y);
+	virtual void GetRelativePosition(float *x, float *y);
 	virtual bool MouseMoved();
 	virtual int MouseDoubleClick();
 

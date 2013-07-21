@@ -670,6 +670,8 @@ public:
 	float m_MouseDeltaY;
 	float m_MouseDeltaWx;
 	float m_MouseDeltaWy;
+	float m_LastMouseX;
+	float m_LastMouseY;
 
 	bool m_ShowTileInfo;
 	bool m_ShowDetail;

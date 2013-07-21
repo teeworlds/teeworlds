@@ -55,7 +55,9 @@ int CUI::MouseInside(const CUIRect *r)
 
 void CUI::ConvertMouseMove(float *x, float *y)
 {
-	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
+	float Fac = (float)100/g_Config.m_InpMousesens;
+	if(!g_Config.m_InpHWCursor)
+		Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
 	*x = *x*Fac;
 	*y = *y*Fac;
 }
