@@ -81,7 +81,6 @@ void CInput::GetMousePosition(float *x, float *y)
 
 	if(m_FirstWarp)
 	{
-		dbg_msg("input", "save position %d, %d for warping back", nx, ny);
 		m_LastMousePosX = nx;
 		m_LastMousePosY = ny;
 		m_FirstWarp = false;
