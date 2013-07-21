@@ -52,7 +52,7 @@ void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
-	//SDL_ShowCursor(0);
+	SDL_ShowCursor(0);
 }
 
 void CInput::SetMouseModes(int modes)
@@ -114,101 +114,6 @@ bool CInput::MouseMoved()
 	SDL_GetRelativeMouseState(&x, &y);
 	return x != 0 || y != 0;
 }
-
-#if 0
-void CInput::ShowCursor(bool show)
-{
-	SDL_ShowCursor(show);
-}
-
-bool CInput::GetShowCursor()
-{
-	return SDL_ShowCursor(-1);
-}
-
-void CInput::SetMouseMode(CInput::MouseMode mode)
-{
-	if(m_MouseMode == mode)
-		return;
-
-	m_MouseMode = mode;
-	if(g_Config.m_InpGrab)
-	{
-		if(mode == MOUSE_MODE_RELATIVE)
-			m_pGraphics->GrabWindow(true);
-		else if(mode == MOUSE_MODE_ABSOLUTE)
-			m_pGraphics->GrabWindow(false);
-	}
-}
-
-CInput::MouseMode CInput::GetMouseMode()
-{
-	return m_MouseMode;
-}
-
-void CInput::GetMousePosition(float *x, float *y)
-{
-	int nx = 0, ny = 0;
-	if(m_MouseMode == MOUSE_MODE_RELATIVE)
-	{
-		float Sens = g_Config.m_InpMousesens/100.0f;
-		SDL_GetRelativeMouseState(&nx, &ny);
-		nx *= Sens;
-		ny *= Sens;
-	}
-	else if(m_MouseMode == MOUSE_MODE_ABSOLUTE)
-	{
-		SDL_GetMouseState(&nx, &ny);
-	}
-	*x = nx;
-	*y = ny;
-}
-
-bool CInput::MouseMoved()
-{
-	int x = 0, y = 0;
-	SDL_GetRelativeMouseState(&x, &y);
-	return x != 0 || y != 0;
-}
-#endif
-#if 0
-void CInput::MouseRelative(float *x, float *y)
-{
-	int nx = 0, ny = 0;
-	float Sens = g_Config.m_InpMousesens/100.0f;
-
-	if(g_Config.m_InpGrab)
-		SDL_GetRelativeMouseState(&nx, &ny);
-	else
-	{
-		if(m_InputGrabbed)
-		{
-			SDL_GetMouseState(&nx,&ny);
-			m_pGraphics->WarpMouse( Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
-			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
-		}
-	}
-
-	*x = nx*Sens;
-	*y = ny*Sens;
-}
-
-void CInput::MouseModeAbsolute()
-{
-	SDL_ShowCursor(1);
-	m_InputGrabbed = 0;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(false);
-}
-
-void CInput::MouseModeRelative()
-{
-	SDL_ShowCursor(0);
-	m_InputGrabbed = 1;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(true);
-}
-#endif
 
 int CInput::MouseDoubleClick()
 {
