@@ -75,6 +75,7 @@ public:
 	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
 	enum MouseMode {
+		MOUSE_MODE_NONE,
 		MOUSE_MODE_WARP_CENTER = 1 << 0,
 		MOUSE_MODE_NO_MOUSE = 1 << 1
 	};

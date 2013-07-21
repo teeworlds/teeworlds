@@ -11,6 +11,7 @@ class CInput : public IEngineInput
 
 	int m_LastMousePosX;
 	int m_LastMousePosY;
+	bool m_FirstWarp;
 
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;

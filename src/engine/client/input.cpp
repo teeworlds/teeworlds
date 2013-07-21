@@ -38,6 +38,10 @@ CInput::CInput()
 	m_InputCurrent = 0;
 	m_InputDispatched = false;
 
+	m_FirstWarp = false;
+	m_LastMousePosX = 0;
+	m_LastMousePosY = 0;
+
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
 
@@ -48,11 +52,16 @@ void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
-	SDL_ShowCursor(0);
+	//SDL_ShowCursor(0);
 }
 
 void CInput::SetMouseModes(int modes)
 {
+	if((m_MouseModes & MOUSE_MODE_WARP_CENTER) && !(modes & MOUSE_MODE_WARP_CENTER))
+		m_pGraphics->WarpMouse(m_LastMousePosX, m_LastMousePosY);
+	else if(!(m_MouseModes & MOUSE_MODE_WARP_CENTER) && (modes & MOUSE_MODE_WARP_CENTER))
+		m_FirstWarp = true;
+
 	m_MouseModes = modes;
 }
 
@@ -64,20 +73,22 @@ int CInput::GetMouseModes()
 void CInput::GetMousePosition(float *x, float *y)
 {
 	if(GetMouseModes() & MOUSE_MODE_NO_MOUSE)
-	{
-		*x = m_LastMousePosX;
-		*y = m_LastMousePosY;
 		return;
-	}
 
 	float Sens = g_Config.m_InpMousesens/100.0f;
 	int nx = 0, ny = 0;
 	SDL_GetMouseState(&nx, &ny);
+
+	if(m_FirstWarp)
+	{
+		dbg_msg("input", "save position %d, %d for warping back", nx, ny);
+		m_LastMousePosX = nx;
+		m_LastMousePosY = ny;
+		m_FirstWarp = false;
+	}
+
 	*x = nx * Sens;
 	*y = ny * Sens;
-
-	m_LastMousePosX = *x;
-	m_LastMousePosY = *y;
 
 	if(GetMouseModes() & MOUSE_MODE_WARP_CENTER)
 		m_pGraphics->WarpMouse( Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
@@ -85,6 +96,13 @@ void CInput::GetMousePosition(float *x, float *y)
 
 void CInput::GetRelativePosition(float *x, float *y)
 {
+	if(m_FirstWarp)
+	{
+		*x = 0;
+		*y = 0;
+		return;
+	}
+
 	*x *= (float)100/g_Config.m_InpMousesens;
 	*y *= (float)100/g_Config.m_InpMousesens;
 	*x -= Graphics()->ScreenWidth()/2;
