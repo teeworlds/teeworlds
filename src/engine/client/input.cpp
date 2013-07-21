@@ -48,6 +48,7 @@ void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
+	SDL_ShowCursor(0);
 }
 
 void CInput::SetMouseModes(int modes)
