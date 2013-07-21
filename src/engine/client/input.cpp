@@ -34,7 +34,7 @@ CInput::CInput()
 	mem_zero(m_aInputState, sizeof(m_aInputState));
 
 	m_InputCurrent = 0;
-	m_InputGrabbed = 0;
+	m_MouseMode = MOUSE_MODE_ABSOLUTE;
 	m_InputDispatched = false;
 
 	m_LastRelease = 0;
@@ -49,6 +49,62 @@ void CInput::Init()
 	SDL_StartTextInput();
 }
 
+void CInput::ShowCursor(bool show)
+{
+	SDL_ShowCursor(show);
+}
+
+bool CInput::GetShowCursor()
+{
+	return SDL_ShowCursor(-1);
+}
+
+void CInput::SetMouseMode(CInput::MouseMode mode)
+{
+	if(m_MouseMode == mode)
+		return;
+
+	m_MouseMode = mode;
+	if(g_Config.m_InpGrab)
+	{
+		if(mode == MOUSE_MODE_RELATIVE)
+			m_pGraphics->GrabWindow(true);
+		else if(mode == MOUSE_MODE_ABSOLUTE)
+			m_pGraphics->GrabWindow(false);
+	}
+}
+
+CInput::MouseMode CInput::GetMouseMode()
+{
+	return m_MouseMode;
+}
+
+void CInput::GetMousePosition(float *x, float *y)
+{
+	int nx = 0, ny = 0;
+	if(m_MouseMode == MOUSE_MODE_RELATIVE)
+	{
+		float Sens = g_Config.m_InpMousesens/100.0f;
+		SDL_GetRelativeMouseState(&nx, &ny);
+		nx *= Sens;
+		ny *= Sens;
+	}
+	else if(m_MouseMode == MOUSE_MODE_ABSOLUTE)
+	{
+		SDL_GetMouseState(&nx, &ny);
+	}
+	*x = nx;
+	*y = ny;
+}
+
+bool CInput::MouseMoved()
+{
+	int x = 0, y = 0;
+	SDL_GetRelativeMouseState(&x, &y);
+	return x != 0 || y != 0;
+}
+
+#if 0
 void CInput::MouseRelative(float *x, float *y)
 {
 	int nx = 0, ny = 0;
@@ -85,6 +141,7 @@ void CInput::MouseModeRelative()
 	if(g_Config.m_InpGrab)
 		m_pGraphics->GrabWindow(true);
 }
+#endif
 
 int CInput::MouseDoubleClick()
 {
@@ -110,8 +167,8 @@ int CInput::KeyState(int Key)
 
 int CInput::Update()
 {
-	if(m_InputGrabbed && !Graphics()->WindowActive())
-		MouseModeAbsolute();
+//	if(m_InputGrabbed && !Graphics()->WindowActive())
+//		MouseModeAbsolute();
 
 	/*if(!input_grabbed && Graphics()->WindowActive())
 		Input()->MouseModeRelative();*/

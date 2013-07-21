@@ -74,12 +74,19 @@ public:
 	int KeyDown(int Key) { return KeyPressed(Key)&&!KeyWasPressed(Key); }
 	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
-	//
-	virtual void MouseModeRelative() = 0;
-	virtual void MouseModeAbsolute() = 0;
-	virtual int MouseDoubleClick() = 0;
+	enum MouseMode {
+		MOUSE_MODE_RELATIVE,
+		MOUSE_MODE_ABSOLUTE,
+	};
 
-	virtual void MouseRelative(float *x, float *y) = 0;
+	//
+	virtual void ShowCursor(bool show) = 0;
+	virtual bool GetShowCursor() = 0;
+	virtual void SetMouseMode(MouseMode mode) = 0;
+	virtual MouseMode GetMouseMode() = 0;
+	virtual void GetMousePosition(float *x, float *y) = 0;
+	virtual bool MouseMoved() = 0;
+	virtual int MouseDoubleClick() = 0;
 };
 
 

@@ -324,7 +324,6 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 
 	if(ActiveItem() != pID)
 		return 0;
-
 	if(pX)
 		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w) / Scale();
 	if(pY)
