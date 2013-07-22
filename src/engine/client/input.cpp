@@ -5,6 +5,7 @@
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
+#include <engine/storage.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 
@@ -42,6 +43,9 @@ CInput::CInput()
 	m_LastMousePosX = 0;
 	m_LastMousePosY = 0;
 
+	m_pCursorSurface = NULL;
+	m_pCursor = NULL;
+
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
 
@@ -52,7 +56,36 @@ void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
-	SDL_ShowCursor(0);
+	ShowCursor(true);
+}
+
+void CInput::LoadHardwareCursor()
+{
+	if(m_pCursor != NULL)
+		return;
+
+	CImageInfo CursorImg;
+	if(!m_pGraphics->LoadPNG(&CursorImg, "gui_cursor_small.png", IStorage::TYPE_ALL))
+		return;
+
+	m_pCursorSurface = SDL_CreateRGBSurfaceFrom(
+		CursorImg.m_pData, CursorImg.m_Width, CursorImg.m_Height,
+		32, 4*CursorImg.m_Width,
+		0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+	if(!m_pCursorSurface)
+		return;
+
+	m_pCursor = SDL_CreateColorCursor(m_pCursorSurface, 0, 0);
+}
+
+int CInput::ShowCursor(bool show)
+{
+	if(g_Config.m_InpHWCursor)
+	{
+		LoadHardwareCursor();
+		SDL_SetCursor(m_pCursor);
+	}
+	return SDL_ShowCursor(show);
 }
 
 void CInput::SetMouseModes(int modes)

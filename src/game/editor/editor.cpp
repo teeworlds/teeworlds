@@ -3880,7 +3880,7 @@ void CEditor::Render()
 		}
 	}
 
-	if(m_ShowMousePointer)
+	if(m_ShowMousePointer && !g_Config.m_InpHWCursor)
 	{
 		// render butt ugly mouse cursor
 		float mx = UI()->MouseX();

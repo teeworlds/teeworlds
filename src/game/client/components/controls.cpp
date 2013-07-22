@@ -212,6 +212,7 @@ bool CControls::OnMouseMove(float x, float y)
 		return false;
 
 	Input()->SetMouseModes(IInput::MOUSE_MODE_WARP_CENTER);
+	Input()->ShowCursor(false);
 
 	Input()->GetRelativePosition(&x, &y);
 

@@ -2266,6 +2266,7 @@ bool CMenus::OnMouseMove(float x, float y)
 		return false;
 
 	Input()->SetMouseModes(0);
+	Input()->ShowCursor(g_Config.m_InpHWCursor);
 
 	// prev mouse position
 	m_PrevMousePos = m_MousePos;
@@ -2423,13 +2424,16 @@ void CMenus::OnRender()
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Render();
 
-	// render cursor
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(mx, my, 24, 24);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+	if(!g_Config.m_InpHWCursor)
+	{
+		// render cursor
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1,1,1,1);
+		IGraphics::CQuadItem QuadItem(mx, my, 24, 24);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	}
 
 	// render debug information
 	if(g_Config.m_Debug)

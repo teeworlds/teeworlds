@@ -13,6 +13,9 @@ class CInput : public IEngineInput
 	int m_LastMousePosY;
 	bool m_FirstWarp;
 
+	SDL_Surface *m_pCursorSurface;
+	SDL_Cursor *m_pCursor;
+
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;
 
@@ -31,6 +34,10 @@ public:
 	virtual void GetRelativePosition(float *x, float *y);
 	virtual bool MouseMoved();
 	virtual int MouseDoubleClick();
+
+	virtual int ShowCursor(bool show);
+
+	void LoadHardwareCursor();
 
 	void ClearKeyStates();
 	int KeyState(int Key);
