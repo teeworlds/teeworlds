@@ -553,11 +553,13 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		return -1;
 	}
 
+#if 0
 	int RenderFlags = SDL_RENDERER_ACCELERATED;
 	if(Flags&IGraphicsBackend::INITFLAG_VSYNC)
 		RenderFlags |= SDL_RENDERER_PRESENTVSYNC;
+#endif
 
-	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, RenderFlags);
+	m_pRenderer = SDL_GL_CreateContext(m_pWindow);
 
 	if(m_pRenderer == NULL)
 	{
@@ -601,7 +603,7 @@ int CGraphicsBackend_SDL_OpenGL::Shutdown()
 	delete m_pProcessor;
 	m_pProcessor = 0;
 
-	SDL_DestroyRenderer(m_pRenderer);
+	SDL_GL_DeleteContext(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	return 0;
