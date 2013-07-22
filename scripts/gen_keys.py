@@ -13,7 +13,7 @@ print >>f, "#define ENGINE_KEYS_H"
 # KEY_EXECUTE already exists on windows platforms
 print >>f, "#if defined(CONF_FAMILY_WINDOWS)"
 print >>f, "	#undef KEY_EXECUTE"
-print >>fm "#endif"
+print >>f, "#endif"
 
 
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
