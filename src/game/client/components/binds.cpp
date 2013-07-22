@@ -89,11 +89,11 @@ void CBinds::SetDefaults()
 	Bind(KEY_F1, "toggle_local_console");
 	Bind(KEY_F2, "toggle_remote_console");
 	Bind(KEY_TAB, "+scoreboard");
-	Bind('u', "+show_chat");
+	Bind(KEY_U, "+show_chat");
 	Bind(KEY_F10, "screenshot");
 
-	Bind('a', "+left");
-	Bind('d', "+right");
+	Bind(KEY_A, "+left");
+	Bind(KEY_D, "+right");
 
 	Bind(KEY_SPACE, "+jump");
 	Bind(KEY_MOUSE_1, "+fire");
@@ -103,22 +103,22 @@ void CBinds::SetDefaults()
 	Bind(KEY_RIGHT, "spectate_next");
 	Bind(KEY_LEFT, "spectate_previous");
 
-	Bind('1', "+weapon1");
-	Bind('2', "+weapon2");
-	Bind('3', "+weapon3");
-	Bind('4', "+weapon4");
-	Bind('5', "+weapon5");
+	Bind(KEY_1, "+weapon1");
+	Bind(KEY_2, "+weapon2");
+	Bind(KEY_3, "+weapon3");
+	Bind(KEY_4, "+weapon4");
+	Bind(KEY_5, "+weapon5");
 
 	Bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
 	Bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
 
-	Bind('t', "chat all");
-	Bind('y', "chat team");
+	Bind(KEY_T, "chat all");
+	Bind(KEY_Y, "chat team");
 
 	Bind(KEY_F3, "vote yes");
 	Bind(KEY_F4, "vote no");
 
-	Bind('r', "ready_change");
+	Bind(KEY_R, "ready_change");
 }
 
 void CBinds::OnConsoleInit()
