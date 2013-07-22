@@ -3880,7 +3880,7 @@ void CEditor::Render()
 		}
 	}
 
-	if(m_ShowMousePointer)
+	if(m_ShowMousePointer && !g_Config.m_InpHWCursor)
 	{
 		// render butt ugly mouse cursor
 		float mx = UI()->MouseX();
@@ -3926,6 +3926,8 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaY = 0;
 	m_MouseDeltaWx = 0;
 	m_MouseDeltaWy = 0;
+	m_LastMouseX = 0;
+	m_LastMouseY = 0;
 
 	m_Map.m_Modified = false;
 
@@ -4107,15 +4109,23 @@ void CEditor::UpdateAndRender()
 	float mx, my, Mwx, Mwy;
 	float rx, ry;
 	{
-		Input()->MouseRelative(&rx, &ry);
+		Input()->GetMousePosition(&rx, &ry);
 		UI()->ConvertMouseMove(&rx, &ry);
-		m_MouseDeltaX = rx;
-		m_MouseDeltaY = ry;
+
+	    CUIRect *pScreen = UI()->Screen();
+	    rx = (rx/(float)Graphics()->ScreenWidth())*pScreen->w;
+	    ry = (ry/(float)Graphics()->ScreenHeight())*pScreen->h;
+
+		m_MouseDeltaX = rx - m_LastMouseX;
+		m_MouseDeltaY = ry - m_LastMouseY;
+
+        m_LastMouseX = rx;
+        m_LastMouseY = ry;
 
 		if(!m_LockMouse)
 		{
-			s_MouseX += rx;
-			s_MouseY += ry;
+			s_MouseX = rx;
+			s_MouseY = ry;
 		}
 
 		s_MouseX = clamp(s_MouseX, 0.0f, UI()->Screen()->w);

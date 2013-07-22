@@ -5,6 +5,7 @@
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
+#include <engine/storage.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 
@@ -33,9 +34,17 @@ CInput::CInput()
 	mem_zero(m_aInputCount, sizeof(m_aInputCount));
 	mem_zero(m_aInputState, sizeof(m_aInputState));
 
+	m_MouseModes = 0;
+
 	m_InputCurrent = 0;
-	m_InputGrabbed = 0;
 	m_InputDispatched = false;
+
+	m_FirstWarp = false;
+	m_LastMousePosX = 0;
+	m_LastMousePosY = 0;
+
+	m_pCursorSurface = NULL;
+	m_pCursor = NULL;
 
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
@@ -47,43 +56,96 @@ void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
+	ShowCursor(true);
 }
 
-void CInput::MouseRelative(float *x, float *y)
+void CInput::LoadHardwareCursor()
 {
-	int nx = 0, ny = 0;
-	float Sens = g_Config.m_InpMousesens/100.0f;
+	if(m_pCursor != NULL)
+		return;
 
-	if(g_Config.m_InpGrab)
-		SDL_GetRelativeMouseState(&nx, &ny);
-	else
+	CImageInfo CursorImg;
+	if(!m_pGraphics->LoadPNG(&CursorImg, "gui_cursor_small.png", IStorage::TYPE_ALL))
+		return;
+
+	m_pCursorSurface = SDL_CreateRGBSurfaceFrom(
+		CursorImg.m_pData, CursorImg.m_Width, CursorImg.m_Height,
+		32, 4*CursorImg.m_Width,
+		0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+	if(!m_pCursorSurface)
+		return;
+
+	m_pCursor = SDL_CreateColorCursor(m_pCursorSurface, 0, 0);
+}
+
+int CInput::ShowCursor(bool show)
+{
+	if(g_Config.m_InpHWCursor)
 	{
-		if(m_InputGrabbed)
-		{
-			SDL_GetMouseState(&nx,&ny);
-			m_pGraphics->WarpMouse( Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
-			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
-		}
+		LoadHardwareCursor();
+		SDL_SetCursor(m_pCursor);
+	}
+	return SDL_ShowCursor(show);
+}
+
+void CInput::SetMouseModes(int modes)
+{
+	if((m_MouseModes & MOUSE_MODE_WARP_CENTER) && !(modes & MOUSE_MODE_WARP_CENTER))
+		m_pGraphics->WarpMouse(m_LastMousePosX, m_LastMousePosY);
+	else if(!(m_MouseModes & MOUSE_MODE_WARP_CENTER) && (modes & MOUSE_MODE_WARP_CENTER))
+		m_FirstWarp = true;
+
+	m_MouseModes = modes;
+}
+
+int CInput::GetMouseModes()
+{;
+	return m_MouseModes;
+}
+
+void CInput::GetMousePosition(float *x, float *y)
+{
+	if(GetMouseModes() & MOUSE_MODE_NO_MOUSE)
+		return;
+
+	float Sens = g_Config.m_InpMousesens/100.0f;
+	int nx = 0, ny = 0;
+	SDL_GetMouseState(&nx, &ny);
+
+	if(m_FirstWarp)
+	{
+		m_LastMousePosX = nx;
+		m_LastMousePosY = ny;
+		m_FirstWarp = false;
 	}
 
-	*x = nx*Sens;
-	*y = ny*Sens;
+	*x = nx * Sens;
+	*y = ny * Sens;
+
+	if(GetMouseModes() & MOUSE_MODE_WARP_CENTER)
+		m_pGraphics->WarpMouse( Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
 }
 
-void CInput::MouseModeAbsolute()
+void CInput::GetRelativePosition(float *x, float *y)
 {
-	SDL_ShowCursor(1);
-	m_InputGrabbed = 0;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(false);
+	if(m_FirstWarp)
+	{
+		*x = 0;
+		*y = 0;
+		return;
+	}
+
+	*x *= (float)100/g_Config.m_InpMousesens;
+	*y *= (float)100/g_Config.m_InpMousesens;
+	*x -= Graphics()->ScreenWidth()/2;
+	*y -= Graphics()->ScreenHeight()/2;
 }
 
-void CInput::MouseModeRelative()
+bool CInput::MouseMoved()
 {
-	SDL_ShowCursor(0);
-	m_InputGrabbed = 1;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(true);
+	int x = 0, y = 0;
+	SDL_GetRelativeMouseState(&x, &y);
+	return x != 0 || y != 0;
 }
 
 int CInput::MouseDoubleClick()
@@ -110,8 +172,8 @@ int CInput::KeyState(int Key)
 
 int CInput::Update()
 {
-	if(m_InputGrabbed && !Graphics()->WindowActive())
-		MouseModeAbsolute();
+//	if(m_InputGrabbed && !Graphics()->WindowActive())
+//		MouseModeAbsolute();
 
 	/*if(!input_grabbed && Graphics()->WindowActive())
 		Input()->MouseModeRelative();*/

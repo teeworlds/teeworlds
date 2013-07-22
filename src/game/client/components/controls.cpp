@@ -211,6 +211,11 @@ bool CControls::OnMouseMove(float x, float y)
 		(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_pChat->IsActive()))
 		return false;
 
+	Input()->SetMouseModes(IInput::MOUSE_MODE_WARP_CENTER);
+	Input()->ShowCursor(false);
+
+	Input()->GetRelativePosition(&x, &y);
+
 	m_MousePos += vec2(x, y); // TODO: ugly
 	ClampMousePos();
 

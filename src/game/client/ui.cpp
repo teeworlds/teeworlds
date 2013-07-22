@@ -55,7 +55,9 @@ int CUI::MouseInside(const CUIRect *r)
 
 void CUI::ConvertMouseMove(float *x, float *y)
 {
-	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
+	float Fac = (float)100/g_Config.m_InpMousesens;
+	if(!g_Config.m_InpHWCursor)
+		Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
 	*x = *x*Fac;
 	*y = *y*Fac;
 }
@@ -324,7 +326,6 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 
 	if(ActiveItem() != pID)
 		return 0;
-
 	if(pX)
 		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w) / Scale();
 	if(pY)

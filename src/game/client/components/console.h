@@ -66,6 +66,7 @@ class CGameConsole : public CComponent
 	int m_ConsoleState;
 	float m_StateChangeEnd;
 	float m_StateChangeDuration;
+	int m_OldMouseModes;
 
 	void Toggle(int Type);
 	void Dump(int Type);

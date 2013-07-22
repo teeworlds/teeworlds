@@ -104,6 +104,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_RconAuthed;
 	int m_UseTempRconCommands;
 
+	int m_MouseModes;
+
 	// version-checking
 	char m_aVersionStr[10];
 

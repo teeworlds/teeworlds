@@ -302,8 +302,8 @@ void CGameClient::DispatchInput()
 {
 	// handle mouse movement
 	float x = 0.0f, y = 0.0f;
-	Input()->MouseRelative(&x, &y);
-	if(x != 0.0f || y != 0.0f)
+	Input()->GetMousePosition(&x, &y);
+	if(Input()->MouseMoved())
 	{
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
