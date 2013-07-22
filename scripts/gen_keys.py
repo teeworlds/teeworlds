@@ -9,6 +9,13 @@ for i in range(0, 512):
 
 print >>f, "#ifndef ENGINE_KEYS_H"
 print >>f, "#define ENGINE_KEYS_H"
+
+# KEY_EXECUTE already exists on windows platforms
+print >>f, "#if defined(CONF_FAMILY_WINDOWS)"
+print >>f, "	#undef KEY_EXECUTE"
+print >>fm "#endif"
+
+
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
 print >>f, "enum"
 print >>f, "{"
