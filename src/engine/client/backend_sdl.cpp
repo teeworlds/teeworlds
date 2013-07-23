@@ -7,6 +7,7 @@
 
 #include "graphics_threaded.h"
 #include "backend_sdl.h"
+#include <unistd.h>
 
 // ------------ CGraphicsBackend_Threaded
 
@@ -423,13 +424,24 @@ void CCommandProcessorFragment_SDL::Cmd_VideoModes(const CCommandBuffer::SComman
 			dbg_msg("gfx", "unable to get display mode: %s", SDL_GetError());
 			continue;
 		}
+		bool Skip = false;
+		for(int j = 0; j < numModes; j++)
+		{
+			if(pCommand->m_pModes[j].m_Width == mode.w && pCommand->m_pModes[j].m_Height == mode.h)
+			{
+				Skip = true; break;
+			}
+		}
+		if(Skip)
+			continue;
 
-		pCommand->m_pModes[i].m_Width = mode.w;
-		pCommand->m_pModes[i].m_Height = mode.h;
-		pCommand->m_pModes[i].m_Red = 8;
-		pCommand->m_pModes[i].m_Green = 8;
-		pCommand->m_pModes[i].m_Blue = 8;
+		pCommand->m_pModes[numModes].m_Width = mode.w;
+		pCommand->m_pModes[numModes].m_Height = mode.h;
+		pCommand->m_pModes[numModes].m_Red = 8;
+		pCommand->m_pModes[numModes].m_Green = 8;
+		pCommand->m_pModes[numModes].m_Blue = 8;
 		numModes++;
+
 	}
 	*pCommand->m_pNumModes = numModes;
 }
@@ -527,17 +539,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	int SdlFlags = SDL_WINDOW_OPENGL;
 	if(Flags&IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
+	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
+		SdlFlags |= SDL_WINDOW_BORDERLESS;
 
 	dbg_assert(!(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		|| !(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN),
 		"only one of borderless and fullscreen may be activated at the same time");
 
-	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
-		SdlFlags |= SDL_WINDOW_BORDERLESS;
-
-	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-		SdlFlags |= SDL_WINDOW_FULLSCREEN;
-
+	// CreateWindow apparently doesn't care about the window position in fullscreen
 	m_pWindow = SDL_CreateWindow(
 		pName,
 		SDL_WINDOWPOS_UNDEFINED,
@@ -546,6 +555,26 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		*Height,
 		SdlFlags
 	);
+
+	// so we start in window mode and move the window to the correct screen
+	SDL_SetWindowPosition(m_pWindow, ScreenBounds.x, ScreenBounds.y);
+	SDL_SetWindowSize(m_pWindow, *Width, *Height);
+
+	// hack to give the wm time to move the window around
+	int64 time = time_get();
+	while(time_get() < time + (10000 * /* hundrets */ 50))
+		;
+
+	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
+	{
+		// TODO: chech if Height and Width are supported in fullscreen
+		int Fullscreen = SDL_WINDOW_FULLSCREEN;
+		if(*pDesktopWidth == *Width && *pDesktopHeight == *Height)
+			Fullscreen = SDL_WINDOW_FULLSCREEN_DESKTOP;
+		SDL_SetWindowFullscreen(m_pWindow, Fullscreen);
+		*pDesktopWidth = *Width;
+		*pDesktopHeight = *Height;
+	}
 
 	if(m_pWindow == NULL)
 	{
