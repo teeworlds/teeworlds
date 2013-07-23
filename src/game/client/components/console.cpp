@@ -96,6 +96,41 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 {
 	bool Handled = false;
 
+	if(m_pGameConsole->Input()->KeyPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyDown(KEY_V))
+	{
+		const char *Text = m_pGameConsole->Input()->GetClipboardText();	
+		char Line[256];
+		int i, Begin = 0;
+		for(i = 0; i < str_length(Text); i++)
+		{
+			if(Text[i] == '\n')
+			{
+				if(i == Begin)
+				{
+					Begin++;
+					continue;
+				}
+				int max = i - Begin + 1;
+				if(max > (int)sizeof(Line))
+					max = sizeof(Line);
+				str_copy(Line, Text + Begin, max);
+				Begin = i+1;
+				ExecuteLine(Line);
+			}
+		}
+		int max = i - Begin + 1;
+		if(max > (int)sizeof(Line))
+			max = sizeof(Line);
+		str_copy(Line, Text + Begin, max);
+		Begin = i+1;
+		m_Input.Add(Line);
+	}
+
+	if(m_pGameConsole->Input()->KeyPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyDown(KEY_C))
+	{
+		m_pGameConsole->Input()->SetClipboardText(m_Input.GetString());
+	}
+
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)

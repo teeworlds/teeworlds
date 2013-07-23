@@ -97,6 +97,21 @@ int CInput::MouseDoubleClick()
 	return 0;
 }
 
+const char* CInput::GetClipboardText()
+{
+	if(m_pClipboardText)
+	{
+		free(m_pClipboardText);
+	}
+	m_pClipboardText = SDL_GetClipboardText();
+	return m_pClipboardText;
+}
+
+void CInput::SetClipboardText(const char *Text)
+{
+	SDL_SetClipboardText(Text);
+}
+
 void CInput::ClearKeyStates()
 {
 	mem_zero(m_aInputState, sizeof(m_aInputState));

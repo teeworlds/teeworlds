@@ -8,6 +8,7 @@ class CInput : public IEngineInput
 	IEngineGraphics *m_pGraphics;
 
 	int m_InputGrabbed;
+	char *m_pClipboardText;
 
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;
@@ -25,6 +26,8 @@ public:
 	virtual void MouseModeAbsolute();
 	virtual void MouseModeRelative();
 	virtual int MouseDoubleClick();
+	virtual const char* GetClipboardText();
+	virtual void SetClipboardText(const char *Text);
 
 	void ClearKeyStates();
 	int KeyState(int Key);
