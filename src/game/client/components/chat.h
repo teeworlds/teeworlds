@@ -80,6 +80,8 @@ public:
 
 	void Say(int Team, const char *pLine);
 
+	void SayChat(const char *pLine);
+
 	virtual void OnReset();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);

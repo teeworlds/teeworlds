@@ -22,6 +22,15 @@ void CLineInput::Set(const char *pString)
 	m_CursorPos = m_Len;
 }
 
+void CLineInput::Add(const char *pString)
+{
+	if((int)sizeof(m_Str) - m_Len <= (int)str_length(pString))
+		return;
+	str_copy(m_Str + m_Len, pString, sizeof(m_Str) - m_Len);
+	m_Len = str_length(m_Str);
+	m_CursorPos = m_Len;
+}
+
 bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *pStrLenPtr, int *pCursorPosPtr)
 {
 	int CursorPos = *pCursorPosPtr;
