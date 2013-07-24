@@ -506,8 +506,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		#endif
 	}
 
-	SDL_DisplayMode mode;
-	if(SDL_GetCurrentDisplayMode(0, &mode) < 0)
+	SDL_Rect ScreenBounds;
+	if(SDL_GetDisplayBounds(0, &ScreenBounds) < 0)
 	{
 		dbg_msg("gfx", "unable to get current display mode: %s", SDL_GetError());
 		return -1;
@@ -515,12 +515,12 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 
 	if(*Width == 0 || *Height == 0)
 	{
-		*Width = mode.w;
-		*Height = mode.h; 
+		*Width = ScreenBounds.w;
+		*Height = ScreenBounds.h; 
 	}
 
-	*pDesktopWidth = mode.w;
-	*pDesktopHeight = mode.h;
+	*pDesktopWidth = ScreenBounds.w;
+	*pDesktopHeight = ScreenBounds.h;
 
 	if(FsaaSamples)
 	{
