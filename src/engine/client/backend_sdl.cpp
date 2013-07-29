@@ -541,6 +541,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
+	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
+		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 
 	dbg_assert(!(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		|| !(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN),
@@ -549,32 +551,12 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	// CreateWindow apparently doesn't care about the window position in fullscreen
 	m_pWindow = SDL_CreateWindow(
 		pName,
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
+		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
 		*Width,
 		*Height,
 		SdlFlags
 	);
-
-	// so we start in window mode and move the window to the correct screen
-	SDL_SetWindowPosition(m_pWindow, ScreenBounds.x, ScreenBounds.y);
-	SDL_SetWindowSize(m_pWindow, *Width, *Height);
-
-	// hack to give the wm time to move the window around
-	int64 time = time_get();
-	while(time_get() < time + (10000 * /* hundrets */ 50))
-		;
-
-	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-	{
-		// TODO: chech if Height and Width are supported in fullscreen
-		int Fullscreen = SDL_WINDOW_FULLSCREEN;
-		if(*pDesktopWidth == *Width && *pDesktopHeight == *Height)
-			Fullscreen = SDL_WINDOW_FULLSCREEN_DESKTOP;
-		SDL_SetWindowFullscreen(m_pWindow, Fullscreen);
-		*pDesktopWidth = *Width;
-		*pDesktopHeight = *Height;
-	}
 
 	if(m_pWindow == NULL)
 	{
