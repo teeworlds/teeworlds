@@ -7,7 +7,6 @@
 
 #include "graphics_threaded.h"
 #include "backend_sdl.h"
-#include <unistd.h>
 
 // ------------ CGraphicsBackend_Threaded
 
