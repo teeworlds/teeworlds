@@ -143,6 +143,7 @@ function build(settings)
 	
 	--settings.objdir = Path("objs")
 	settings.cc.Output = Intermediate_Output
+	settings.link.libs:Add("z")
 	settings.link.libs:Add("pnglite")
 	--settings.link.flags:Add('-lpng12')
 
@@ -187,18 +188,6 @@ function build(settings)
 		settings.link.libs:Add("ws2_32")
 		settings.link.libs:Add("ole32")
 		settings.link.libs:Add("shell32")
-	end
-
-	-- compile zlib if needed
-	if config.zlib.value == 1 then
-		settings.link.libs:Add("z")
-		if config.zlib.include_path then
-			settings.cc.includes:Add(config.zlib.include_path)
-		end
-		zlib = {}
-	else
-		zlib = Compile(settings, Collect("src/engine/external/zlib/*.c"))
-		settings.cc.includes:Add("src/engine/external/zlib")
 	end
 
 	-- build the small libraries
