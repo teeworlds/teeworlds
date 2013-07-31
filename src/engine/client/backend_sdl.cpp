@@ -1,7 +1,13 @@
 
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include <base/detect.h>
+
+#if defined(CONF_PLATFORM_MACOSX)
+#include <OpenGL/glu.h>
+#else
 #include <GL/glu.h>
+#endif
 
 #include <base/tl/threading.h>
 
