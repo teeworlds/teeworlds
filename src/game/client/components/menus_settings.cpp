@@ -594,7 +594,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		{
 			char aFileName[128];
 			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)rStart[i]["file"]);
-			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (long)rStart[i]["code"]));
+			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (json_int_t)rStart[i]["code"]));
 		}
 	}
 

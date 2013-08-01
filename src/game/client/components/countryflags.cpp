@@ -60,7 +60,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					char aBuf[64];
 
 					// validate country code
-					int CountryCode = (long)rStart[i]["code"];
+					int CountryCode = (json_int_t)rStart[i]["code"];
 					if(CountryCode < CODE_LB || CountryCode > CODE_UB)
 					{
 						str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
