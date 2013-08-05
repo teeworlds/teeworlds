@@ -439,8 +439,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 		editor->reset();
 		editor_load_old(df, this);
 		*/
+		return 0;
 	}
-	else if(pItem->m_Version == 1)
+	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
 	{
 		//editor.reset(false);
 
@@ -655,6 +656,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 			}
 		}
 	}
+	else
+		return 0;
 
 	return 1;
 }
