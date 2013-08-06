@@ -18,9 +18,6 @@
 
 void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 {
-	#ifdef CONF_PLATFORM_MACOSX
-		CAutoreleasePool AutoreleasePool;
-	#endif
 	CGraphicsBackend_Threaded *pThis = (CGraphicsBackend_Threaded *)pUser;
 
 	while(!pThis->m_Shutdown)
@@ -389,8 +386,9 @@ bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::SCommand
 
 void CCommandProcessorFragment_SDL::Cmd_Init(const SCommand_Init *pCommand)
 {
-	m_GLContext = pCommand->m_Context;
-	GL_MakeCurrent(m_GLContext);
+	m_GLContext = pCommand->m_GLContext;
+	m_pWindow = pCommand->m_pWindow;
+	SDL_GL_MakeCurrent(m_pWindow, m_GLContext);
 
 	// set some default settings
 	glEnable(GL_BLEND);
@@ -406,12 +404,13 @@ void CCommandProcessorFragment_SDL::Cmd_Init(const SCommand_Init *pCommand)
 
 void CCommandProcessorFragment_SDL::Cmd_Shutdown(const SCommand_Shutdown *pCommand)
 {
-	GL_ReleaseContext(m_GLContext);
+	// Release the context from this thread
+	SDL_GL_MakeCurrent(NULL, NULL);
 }
 
 void CCommandProcessorFragment_SDL::Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
 {
-	GL_SwapBuffers(m_GLContext);
+	SDL_GL_SwapWindow(m_pWindow);
 
 	if(pCommand->m_Finish)
 		glFinish();
@@ -575,17 +574,16 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		RenderFlags |= SDL_RENDERER_PRESENTVSYNC;
 #endif
 
-	m_pRenderer = SDL_GL_CreateContext(m_pWindow);
+	m_GLContext = SDL_GL_CreateContext(m_pWindow);
 
-	if(m_pRenderer == NULL)
+	if(m_GLContext == NULL)
 	{
 		dbg_msg("gfx", "unable to create renderer: %s", SDL_GetError());
 		return -1;
 	}
 
-	// fetch gl contexts and release the context from this thread
-	m_GLContext = GL_GetCurrentContext();
-	GL_ReleaseContext(m_GLContext);
+	// release the current GL context from this thread
+	SDL_GL_MakeCurrent(NULL, NULL);
 
 	// start the command processor
 	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
@@ -597,7 +595,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
 	CmdBuffer.AddCommand(CmdOpenGL);
 	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
-	CmdSDL.m_Context = m_GLContext;
+	CmdSDL.m_GLContext = m_GLContext;
+	CmdSDL.m_pWindow = m_pWindow;
 	CmdBuffer.AddCommand(CmdSDL);
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
@@ -619,7 +618,7 @@ int CGraphicsBackend_SDL_OpenGL::Shutdown()
 	delete m_pProcessor;
 	m_pProcessor = 0;
 
-	SDL_GL_DeleteContext(m_pRenderer);
+	SDL_GL_DeleteContext(m_GLContext);
 	SDL_DestroyWindow(m_pWindow);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	return 0;
