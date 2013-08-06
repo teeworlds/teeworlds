@@ -13,6 +13,8 @@ class CInput : public IEngineInput
 	int m_LastMousePosY;
 	bool m_FirstWarp;
 	char *m_pClipboardText;
+	bool m_MouseLeft;
+	bool m_MouseEntered;
 
 	SDL_Surface *m_pCursorSurface;
 	SDL_Cursor *m_pCursor;
@@ -37,6 +39,8 @@ public:
 	virtual int MouseDoubleClick();
 	virtual const char* GetClipboardText();
 	virtual void SetClipboardText(const char *Text);
+	virtual bool MouseLeft();
+	virtual bool MouseEntered();
 
 	virtual int ShowCursor(bool show);
 

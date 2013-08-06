@@ -49,6 +49,9 @@ CInput::CInput()
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
 
+	m_MouseLeft = false;
+	m_MouseEntered = false;
+
 	m_NumEvents = 0;
 }
 
@@ -57,6 +60,7 @@ void CInput::Init()
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_StartTextInput();
 	ShowCursor(true);
+	//m_pGraphics->GrabWindow(true);
 }
 
 void CInput::LoadHardwareCursor()
@@ -174,6 +178,16 @@ void CInput::SetClipboardText(const char *Text)
 	SDL_SetClipboardText(Text);
 }
 
+bool CInput::MouseLeft()
+{
+	return m_MouseLeft;
+}
+
+bool CInput::MouseEntered()
+{
+	return m_MouseEntered;
+}
+
 void CInput::ClearKeyStates()
 {
 	mem_zero(m_aInputState, sizeof(m_aInputState));
@@ -209,6 +223,9 @@ int CInput::Update()
 			i = KEY_LAST-1;
 		mem_copy(m_aInputState[m_InputCurrent], pState, i);
 	}
+
+	m_MouseLeft = false;
+	m_MouseEntered = false;
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
 	int i = SDL_GetMouseState(NULL, NULL);
@@ -273,6 +290,11 @@ int CInput::Update()
 					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
 					AddEvent(0, Key, Action);
 					Action = IInput::FLAG_RELEASE;
+					break;
+
+				case SDL_WINDOWEVENT:
+					if(Event.window.event == SDL_WINDOWEVENT_ENTER) m_MouseEntered = true;
+					if(Event.window.event == SDL_WINDOWEVENT_LEAVE) m_MouseLeft = true;
 					break;
 
 				// other messages
