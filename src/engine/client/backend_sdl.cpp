@@ -22,6 +22,9 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 
 	while(!pThis->m_Shutdown)
 	{
+		#ifdef CONF_PLATFORM_MACOSX
+			CAutoreleasePool AutoreleasePool;
+		#endif
 		pThis->m_Activity.wait();
 		if(pThis->m_pBuffer)
 		{

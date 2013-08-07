@@ -16,6 +16,29 @@
 		void wait() { SDL_SemWait(sem); }
 		void signal() { SDL_SemPost(sem); }
 	};
+
+	#include <objc/objc-runtime.h>
+	
+	class CAutoreleasePool
+	{
+	private:
+		id m_Pool;
+
+	public:
+		CAutoreleasePool()
+		{
+			Class NSAutoreleasePoolClass = (Class) objc_getClass("NSAutoreleasePool");
+			m_Pool = class_createInstance(NSAutoreleasePoolClass, 0);
+			SEL selector = sel_registerName("init");
+			objc_msgSend(m_Pool, selector);
+		}
+
+		~CAutoreleasePool()
+		{
+			SEL selector = sel_registerName("drain");
+			objc_msgSend(m_Pool, selector);
+		}
+	};	
 #endif
 
 // basic threaded backend, abstract, missing init and shutdown functions
