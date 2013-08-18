@@ -394,7 +394,7 @@ extern DECLSPEC Uint32 SDLCALL SDL_GetWindowPixelFormat(SDL_Window * window);
  *  \param h     The height of the window.
  *  \param flags The flags for the window, a mask of any of the following:
  *               ::SDL_WINDOW_FULLSCREEN, ::SDL_WINDOW_OPENGL,
- *               ::SDL_WINDOW_SHOWN,      ::SDL_WINDOW_BORDERLESS,
+ *               ::SDL_WINDOW_HIDDEN,     ::SDL_WINDOW_BORDERLESS,
  *               ::SDL_WINDOW_RESIZABLE,  ::SDL_WINDOW_MAXIMIZED,
  *               ::SDL_WINDOW_MINIMIZED,  ::SDL_WINDOW_INPUT_GRABBED.
  *
