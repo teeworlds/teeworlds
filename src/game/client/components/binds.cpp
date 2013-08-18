@@ -7,7 +7,7 @@
 bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 {
 	// don't handle invalid events and keys that arn't set to anything
-	if(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F15 && m_pBinds->m_aaKeyBindings[Event.m_Key][0] != 0)
+	if(IsFKey(Event.m_Key) && m_pBinds->m_aaKeyBindings[Event.m_Key][0] != 0)
 	{
 		int Stroke = 0;
 		if(Event.m_Flags&IInput::FLAG_PRESS)
@@ -18,6 +18,12 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 	}
 
 	return false;
+}
+
+bool CBinds::CBindsSpecial::IsFKey(int Key)
+{
+	return	(Key >= KEY_F1 && Key <= KEY_F12) ||
+			(Key >= KEY_F13 && Key <= KEY_F24);
 }
 
 CBinds::CBinds()

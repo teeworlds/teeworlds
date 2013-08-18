@@ -27,6 +27,7 @@ public:
 	public:
 		CBinds *m_pBinds;
 		virtual bool OnInput(IInput::CEvent Event);
+		bool IsFKey(int Key);
 	};
 
 	CBindsSpecial m_SpecialBinds;
