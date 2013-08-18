@@ -49,7 +49,7 @@ typedef struct SDL_Thread SDL_Thread;
 typedef unsigned long SDL_threadID;
 
 /* Thread local storage ID, 0 is the invalid ID */
-typedef unsigned SDL_TLSID;
+typedef unsigned int SDL_TLSID;
 
 /* The SDL thread priority
  *
@@ -109,7 +109,7 @@ SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
 /**
  *  Create a thread.
  */
-#define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, _beginthreadex, _endthreadex)
+#define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthreadex, (pfnSDL_CurrentEndThread)_endthreadex)
 
 #else
 
