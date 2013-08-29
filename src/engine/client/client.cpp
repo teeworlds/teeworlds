@@ -892,7 +892,10 @@ const char *CClient::ErrorString() const
 void CClient::Render()
 {
 	if(g_Config.m_ClShowEntities)
-		Graphics()->Clear(0.3f,0.3f,0.6f);
+	{
+		vec3 bg = GetColorV3(g_Config.m_ClBackgroundEntities);
+		Graphics()->Clear(bg.r, bg.g, bg.b);
+	}
 	else if(g_Config.m_GfxClear)
 	{
 		vec3 bg = GetColorV3(g_Config.m_ClBackground);
