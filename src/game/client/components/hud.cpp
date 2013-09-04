@@ -331,7 +331,10 @@ void CHud::RenderWarmupTimer()
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
 		}
 		else
+		{
+			TextRender()->TextColor(1, 1, 0.5f, 1);
 			TextRender()->Text(0x0, 10, 45, 8, pText, -1);
+		}
 			
 		FontSize = 16.0f;
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
@@ -362,7 +365,10 @@ void CHud::RenderWarmupTimer()
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
 		}
 		else
+		{
 			TextRender()->Text(0x0, 10, 54, 6, aBuf, -1);
+			TextRender()->TextColor(1, 1, 1, 1);
+		}
 	}
 	else if((m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0 && m_pClient->m_Snap.m_NotReadyCount > 0) || m_pClient->m_Snap.m_pGameData->m_GameStateEndTick != 0)
 		m_WarmupHideTick = 0;
