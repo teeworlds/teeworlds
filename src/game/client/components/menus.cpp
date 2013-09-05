@@ -1323,7 +1323,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	MainView.HSplitTop(25.0f, &MainView, 0);
 	Button = MainView;
 	static int s_MenuButton=0;
-	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
+	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || (m_EscapePressed && Client()->State() != IClient::STATE_ONLINE))
 	{
 		if(Client()->State() != IClient::STATE_OFFLINE)
 			m_GamePage = PAGE_GAME;
