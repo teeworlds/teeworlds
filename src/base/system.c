@@ -1624,37 +1624,30 @@ void str_sanitize(char *str_in)
 /* removes leading and trailing spaces and limits the use of multiple spaces */
 void str_clean_whitespaces(char *str_in)
 {
-	int Len = strlen(str_in);
-	int FirstIndex;
-	int LastIndex;
-	int SpaceStart = -1;
-	int i;
+    char* r = str_in;
+    int c = 0;
 	
-	// remove leading and trailing spaces
-	for(FirstIndex = 0; FirstIndex < Len; FirstIndex++)
-		if(str_in[FirstIndex] != ' ')
-			break;
-			
-	for(LastIndex = Len - 1; LastIndex > FirstIndex; LastIndex--)
-		if(str_in[LastIndex] != ' ')
-			break;
+    while(*r == ' ')
+		++r;
 	
-	str_copy(str_in, str_in + FirstIndex, LastIndex - FirstIndex + 2);
-	
-	// remove multiple spaces
-	Len = strlen(str_in);
-	
-	for(i = 0; i < Len; i++)
+    while(*str_in)
 	{
-		if(str_in[i] == ' ' && SpaceStart == -1)
-			SpaceStart = i;
-		else if(str_in[i] != ' ' && SpaceStart != -1)
+        for(; *r == ' '; ++r)
+			c = 1;
+			
+        if(*r)
 		{
-			str_copy(str_in + SpaceStart + 1, str_in + i, Len - i + 1);
-			i = SpaceStart + 1;
-			SpaceStart = -1;
-		}
-	}
+            if(c)
+			{
+                *str_in++ = ' ';
+				c = 0;
+			}
+			
+            *str_in++ = *r++;
+        }
+		else
+			*str_in = 0;
+    }
 }
 
 char *str_skip_to_whitespace(char *str)
