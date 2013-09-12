@@ -45,6 +45,7 @@ CInput::CInput()
 
 	m_pCursorSurface = NULL;
 	m_pCursor = NULL;
+	m_pClipboardText = NULL;
 
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
