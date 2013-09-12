@@ -103,7 +103,7 @@ void CInput::SetMouseModes(int modes)
 }
 
 int CInput::GetMouseModes()
-{;
+{
 	return m_MouseModes;
 }
 
