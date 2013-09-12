@@ -4,6 +4,7 @@
 #define ENGINE_INPUT_H
 
 #include "kernel.h"
+#include "keys.h"
 
 extern const char g_aaKeyStrings[512][20];
 
@@ -73,6 +74,7 @@ public:
 	int KeyPresses(int Key) { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
 	int KeyDown(int Key) { return KeyPressed(Key)&&!KeyWasPressed(Key); }
 	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
+	bool IsFKey(int Key) { return (Key >= KEY_F1 && Key <= KEY_F12) || (Key >= KEY_F13 && Key <= KEY_F24); }
 
 	enum MouseMode {
 		MOUSE_MODE_NONE,

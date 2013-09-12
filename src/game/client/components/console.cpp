@@ -595,7 +595,7 @@ bool CGameConsole::OnInput(IInput::CEvent Event)
 {
 	if(m_ConsoleState == CONSOLE_CLOSED)
 		return false;
-	if(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F15)
+	if(Input()->IsFKey(Event.m_Key))
 		return false;
 
 	if(Event.m_Key == KEY_ESCAPE && (Event.m_Flags&IInput::FLAG_PRESS))
