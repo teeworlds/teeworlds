@@ -1543,13 +1543,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 		{
 			g_Config.m_SndMusic ^= 1;
-			if(Client()->State() == IClient::STATE_OFFLINE)
-			{
-				if(g_Config.m_SndMusic)
-					m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-				else
-					m_pClient->m_pSounds->Stop(SOUND_MENU);
-			}
+			ToggleMusic();
 		}
 
 		Sound.HSplitTop(Spacing, 0, &Sound);

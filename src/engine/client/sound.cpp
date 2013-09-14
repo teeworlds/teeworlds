@@ -538,6 +538,22 @@ void CSound::StopAll()
 	lock_release(m_SoundLock);
 }
 
+bool CSound::IsPlaying(CSampleHandle SampleID)
+{
+	bool Ret = false;
+	lock_wait(m_SoundLock);
+	CSample *pSample = &m_aSamples[SampleID.Id()];
+	for(int i = 0; i < NUM_VOICES; i++)
+	{
+		if(m_aVoices[i].m_pSample == pSample)
+		{
+			Ret = true;
+		}
+	}
+	lock_release(m_SoundLock);
+	return Ret;
+}
+
 IOHANDLE CSound::ms_File = 0;
 
 IEngineSound *CreateEngineSound() { return new CSound; }

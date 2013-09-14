@@ -40,6 +40,7 @@ public:
 	virtual int Play(int ChannelID, CSampleHandle Sound, int Flags) = 0;
 	virtual void Stop(CSampleHandle Sound) = 0;
 	virtual void StopAll() = 0;
+	virtual bool IsPlaying(CSampleHandle Sound) = 0;
 
 protected:
 	inline CSampleHandle CreateSampleHandle(int Index)
