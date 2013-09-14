@@ -160,7 +160,6 @@ class Weapons(Struct):
 class Explosion(Struct):
 	def __init__(self):
 		Struct.__init__(self, "CDataExplosion")
-		self.max_damage = Int(6)
 		self.radius = Float(135)
 		self.max_force = Float(12)
 
@@ -563,7 +562,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "grenade")
 weapon.firedelay.Set(500) # TODO: fix this
-weapon.damage.Set(0)
+weapon.damage.Set(6)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
