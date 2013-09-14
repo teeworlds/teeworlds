@@ -6,6 +6,7 @@
 #include <engine/shared/memheap.h>
 #include <engine/map.h>
 
+#include <game/generated/server_data.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
 #include <game/version.h>
@@ -136,20 +137,24 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	{
 		// deal damage
 		CCharacter *apEnts[MAX_CLIENTS];
-		float Radius = 135.0f;
+		float Radius = g_pData->m_Explosion.m_Radius;
 		float InnerRadius = 48.0f;
+		float MaxForce = g_pData->m_Explosion.m_MaxForce;
+		int MaxDamage = g_pData->m_Explosion.m_MaxDamage;
 		int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		for(int i = 0; i < Num; i++)
 		{
 			vec2 Diff = apEnts[i]->m_Pos - Pos;
-			vec2 ForceDir(0,1);
+			vec2 Force(0, MaxForce);
 			float l = length(Diff);
 			if(l)
-				ForceDir = normalize(Diff);
-			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
-			float Dmg = 6 * l;
-			if((int)Dmg)
-				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
+				Force = normalize(Diff) * MaxForce;
+			float Factor = 1 - clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
+			Force *= Factor;
+			if(NoDamage)
+				apEnts[i]->TakeDamage(Force, 0, Owner, Weapon);
+			else
+				apEnts[i]->TakeDamage(Force, (int)(Factor * MaxDamage), Owner, Weapon);
 		}
 	}
 }
