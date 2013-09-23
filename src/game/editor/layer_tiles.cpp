@@ -30,6 +30,9 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
 
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
+
 	m_SelectedRuleSet = 0;
 	m_SelectedAmount = 50;
 }
@@ -37,19 +40,91 @@ CLayerTiles::CLayerTiles(int w, int h)
 CLayerTiles::~CLayerTiles()
 {
 	delete [] m_pTiles;
+	m_pTiles = 0;
+	delete [] m_pSaveTiles;
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
 }
 
 void CLayerTiles::PrepareForSave()
 {
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
+		{
 			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+			if(m_pTiles[y*m_Width+x].m_Index == 0)
+				m_pTiles[y*m_Width+x].m_Flags = 0;
+		}
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags |= m_pEditor->m_Map.m_lImages[m_Image]->m_aTileFlags[m_pTiles[y*m_Width+x].m_Index];
+	}
+
+	int NumSaveTiles = 0; // number of unique tiles that we have to save
+	CTile Tile; // current tile to be duplicated
+	Tile.m_Skip = MAX_SKIP; // tell the code that we can't skip the first tile
+
+	int NumHitMaxSkip = -1;
+
+	for(int i = 0; i < m_Width * m_Height; i++)
+	{
+		// we can only store MAX_SKIP empty tiles in one tile
+		if(Tile.m_Skip == MAX_SKIP)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+			NumHitMaxSkip++;
+		}
+		// tile is different from last one? - can't skip it
+		else if(m_pTiles[i].m_Index != Tile.m_Index || m_pTiles[i].m_Flags != Tile.m_Flags)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+		}
+		// if the tile is the same as the previous one - no need to
+		// save it separately
+		else
+			Tile.m_Skip++;
+	}
+
+	if(m_pSaveTiles)
+		delete [] m_pSaveTiles;
+
+	m_pSaveTiles = new CTile[NumSaveTiles];
+	m_SaveTilesSize = sizeof(CTile) * NumSaveTiles;
+
+	int NumWrittenSaveTiles = 0;
+	Tile.m_Skip = MAX_SKIP;
+	for(int i = 0; i < m_Width * m_Height + 1; i++)
+	{
+		// again, if an tile is the same as the previous one
+		// and we have place to store it, skip it!
+		// if we are at the end of the layer, write one more tile
+		if(i != m_Width * m_Height && Tile.m_Skip != MAX_SKIP && m_pTiles[i].m_Index == Tile.m_Index && m_pTiles[i].m_Flags == Tile.m_Flags)
+		{
+			Tile.m_Skip++;
+		}
+		// tile is not skippable
+		else
+		{
+			// if this is not the first tile, we have to save the previous
+			// tile beforehand
+			if(i != 0)
+				m_pSaveTiles[NumWrittenSaveTiles++] = Tile;
+
+			// if this isn't the last tile, store it so we can check how
+			// many tiles to skip
+			if(i != m_Width * m_Height)
+			{
+				Tile = m_pTiles[i];
+				Tile.m_Skip = 0;
+			}
+		}
 	}
 }
 
