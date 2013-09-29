@@ -64,6 +64,7 @@ public:
 	{
 		TEXLOAD_NORESAMPLE = 1,
 		TEXLOAD_NOMIPMAPS = 2,
+		TEXLOAD_ARRAY_256 = 4,
 	};
 
 
@@ -122,8 +123,8 @@ public:
 	virtual void QuadsBegin() = 0;
 	virtual void QuadsEnd() = 0;
 	virtual void QuadsSetRotation(float Angle) = 0;
-	virtual void QuadsSetSubset(float TopLeftY, float TopLeftV, float BottomRightU, float BottomRightV) = 0;
-	virtual void QuadsSetSubsetFree(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) = 0;
+	virtual void QuadsSetSubset(float TopLeftY, float TopLeftV, float BottomRightU, float BottomRightV, int TextureIndex = 0) = 0;
+	virtual void QuadsSetSubsetFree(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int TextureIndex = 0) = 0;
 
 	struct CQuadItem
 	{

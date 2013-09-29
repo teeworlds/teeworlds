@@ -167,6 +167,7 @@ class CCommandProcessorFragment_OpenGL
 	struct CTexture
 	{
 		GLuint m_Tex;
+		int m_Dimentions;
 		int m_MemSize;
 	};
 	CTexture m_aTextures[CCommandBuffer::MAX_TEXTURES];

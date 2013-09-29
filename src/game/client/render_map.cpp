@@ -164,7 +164,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 }
 
 void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
-									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset)
+									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset, bool UseArray)
 {
 	//Graphics()->TextureSet(img_get(tmap->image));
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -257,15 +257,34 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 					int Py0 = ty*(1024/16);
 					int Px1 = Px0+(1024/16)-1;
 					int Py1 = Py0+(1024/16)-1;
+					/*
 
-					float x0 = Nudge + Px0/TexSize+Frac;
-					float y0 = Nudge + Py0/TexSize+Frac;
-					float x1 = Nudge + Px1/TexSize-Frac;
-					float y1 = Nudge + Py0/TexSize+Frac;
-					float x2 = Nudge + Px1/TexSize-Frac;
-					float y2 = Nudge + Py1/TexSize-Frac;
-					float x3 = Nudge + Px0/TexSize+Frac;
-					float y3 = Nudge + Py1/TexSize-Frac;
+					*/
+
+					float x0, y0, x1, y1, x2, y2, x3, y3;
+
+					if(UseArray)
+					{
+						x0 = 0;
+						y0 = 0;
+						x1 = 1;
+						y1 = 0;
+						x2 = 1;
+						y2 = 1;
+						x3 = 0;
+						y3 = 1;
+					}
+					else
+					{
+						x0 = Nudge + Px0/TexSize+Frac;
+						y0 = Nudge + Py0/TexSize+Frac;
+						x1 = Nudge + Px1/TexSize-Frac;
+						y1 = Nudge + Py0/TexSize+Frac;
+						x2 = Nudge + Px1/TexSize-Frac;
+						y2 = Nudge + Py1/TexSize-Frac;
+						x3 = Nudge + Px0/TexSize+Frac;
+						y3 = Nudge + Py1/TexSize-Frac;
+					}
 
 					if(Flags&TILEFLAG_VFLIP)
 					{
@@ -297,7 +316,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 						y1 = Tmp;
  					}
 
-					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3);
+					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
 					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 				}

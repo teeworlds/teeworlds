@@ -332,6 +332,8 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
+	Cmd.m_Depth = 1;
+
 
 	// flags
 	Cmd.m_Flags = 0;
@@ -342,11 +344,42 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
 
-	// copy texture data
-	int MemSize = Width*Height*Cmd.m_PixelSize;
-	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
-	mem_copy(pTmpData, pData, MemSize);
-	Cmd.m_pData = pTmpData;
+
+	// 3d texture?
+	if(Flags&IGraphics::TEXLOAD_ARRAY_256)
+	{
+		Cmd.m_Width /= 16;
+		Cmd.m_Height /= 16;
+		Cmd.m_Depth = 256;
+
+		// copy and reorder texture data
+		int MemSize = Width*Height*Cmd.m_PixelSize;
+		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
+
+		const int TileSize = (Cmd.m_Height * Cmd.m_Width) * Cmd.m_PixelSize;
+		const int TileRowSize = Cmd.m_Width * Cmd.m_PixelSize;
+		const int ImagePitch = Width * Cmd.m_PixelSize;
+		mem_zero(pTmpData, MemSize);
+		for(int i = 0; i < 256; i++)
+		{
+			const int px = (i%16) * Cmd.m_Width;
+			const int py = (i/16) * Cmd.m_Height;
+			const char *pTileData = (const char *)pData + (py * Width + px) * Cmd.m_PixelSize;
+			for(int y = 0; y < Cmd.m_Height; y++)
+				mem_copy(pTmpData + i*TileSize + y*TileRowSize, pTileData + y * ImagePitch, TileRowSize);
+		}
+
+		Cmd.m_pData = pTmpData;
+	}
+	else
+	{
+		// copy texture data
+		int MemSize = Width*Height*Cmd.m_PixelSize;
+		void *pTmpData = mem_alloc(MemSize, sizeof(void*));
+		mem_copy(pTmpData, pData, MemSize);
+		Cmd.m_pData = pTmpData;
+	}
+
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
@@ -493,7 +526,7 @@ void CGraphics_Threaded::QuadsBegin()
 	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
 
-	QuadsSetSubset(0,0,1,1);
+	QuadsSetSubset(0,0,1,1,0);
 	QuadsSetRotation(0);
 	SetColor(1,1,1,1);
 }
@@ -546,7 +579,7 @@ void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft,
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV)
+void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
 
@@ -555,16 +588,20 @@ void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float B
 
 	m_aTexture[3].u = TlU;	m_aTexture[2].u = BrU;
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
+
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
 }
 
 void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
-	float x2, float y2, float x3, float y3)
+	float x2, float y2, float x3, float y3, int TextureIndex)
 {
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
 	m_aTexture[1].u = x1; m_aTexture[1].v = y1;
 	m_aTexture[2].u = x2; m_aTexture[2].v = y2;
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
+
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
 }
 
 void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
