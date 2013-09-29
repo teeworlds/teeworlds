@@ -1092,6 +1092,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			s_CustomSkinMenu = false;
 		else
 			s_CustomSkinMenu = true;
+
+		m_ResetFades |= FADE_INNERMENU;
 	}
 }
 

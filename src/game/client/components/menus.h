@@ -157,6 +157,18 @@ class CMenus : public CComponent
 	vec2 m_PrevMousePos;
 	bool m_InfoMode;
 
+	// reset fade
+	bool m_ResetFade;
+	int m_ResetFades;
+	enum
+	{
+		FADE_NONE=0,
+		FADE_INNERMENU=1,
+		FADE_MENUTABS=2,
+		FADE_STARTMENU=4,
+		FADE_ALL=FADE_INNERMENU|FADE_MENUTABS|FADE_STARTMENU,
+	};
+
 	// images
 	struct CMenuImage
 	{

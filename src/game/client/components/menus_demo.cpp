@@ -153,7 +153,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		// stop button
-
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;

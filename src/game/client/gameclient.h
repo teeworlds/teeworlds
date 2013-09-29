@@ -89,6 +89,8 @@ public:
 
 	bool m_SuppressEvents;
 
+	bool m_EditorActive;
+
 	// TODO: move this
 	CTuningParams m_Tuning;
 

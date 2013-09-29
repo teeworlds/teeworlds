@@ -78,6 +78,9 @@ CMenus::CMenus()
 	m_SelectedServer.m_Index = -1;
 
 	m_pDeleteFriendInfo = 0;
+
+	m_ResetFade = false;
+	m_ResetFades = FADE_NONE;
 }
 
 CMenus::~CMenus()
@@ -325,12 +328,22 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 		if(Active)
 			m_pActiveDropdown = 0;
 		else
+		{
 			m_pActiveDropdown = (int*)pID;
+			m_ResetFades |= FADE_INNERMENU;
+		}
 	}
 
 	// render content of expanded menu
 	if(Active)
-		return HeaderHeight + pfnCallback(View, this);
+	{
+		if(m_ResetFades&FADE_INNERMENU)
+			m_ResetFade = true;
+		float Height = HeaderHeight + pfnCallback(View, this);
+		if(m_ResetFade)
+			m_ResetFade = false;
+		return Height;
+	}
 
 	return HeaderHeight;
 }
@@ -775,6 +788,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
@@ -783,6 +797,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
@@ -791,6 +806,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_TEE;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
@@ -799,6 +815,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
@@ -807,6 +824,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
@@ -815,6 +833,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		if(DoTab(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
+			m_ResetFades |= FADE_INNERMENU;
 		}
 	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
@@ -844,6 +863,7 @@ void CMenus::RenderMenubar(CUIRect r)
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 				NewPage = PAGE_INTERNET;
 				g_Config.m_UiBrowserPage = PAGE_INTERNET;
+				m_ResetFades |= FADE_INNERMENU;
 			}
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
@@ -855,6 +875,7 @@ void CMenus::RenderMenubar(CUIRect r)
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
+				m_ResetFades |= FADE_INNERMENU;
 			}
 
 			char aBuf[32];
@@ -868,6 +889,7 @@ void CMenus::RenderMenubar(CUIRect r)
 				m_BorwserPage++;
 				if(m_BorwserPage >= NUM_PAGE_BROWSER)
 					m_BorwserPage = 0;
+				m_ResetFades |= FADE_INNERMENU;
 			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
@@ -908,29 +930,44 @@ void CMenus::RenderMenubar(CUIRect r)
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_GameButton=0;
 			if(DoTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
+			{
 				NewPage = PAGE_GAME;
+				m_ResetFades |= FADE_INNERMENU;
+			}
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_PlayersButton=0;
 			if(DoTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
+			{
+				m_ResetFades |= FADE_INNERMENU;
 				NewPage = PAGE_PLAYERS;
+			}
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_ServerInfoButton=0;
 			if(DoTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
+			{
+				m_ResetFades |= FADE_INNERMENU;
 				NewPage = PAGE_SERVER_INFO;
+			}
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_CallVoteButton=0;
 			if(DoTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
+			{
+				m_ResetFades |= FADE_INNERMENU;
 				NewPage = PAGE_CALLVOTE;
+			}
 
 			static int s_SettingsButton=0;
 			if(DoTab(&s_SettingsButton, Localize("Settings"), 0, &Right))
+			{
+				m_ResetFades |= FADE_INNERMENU;
 				NewPage = PAGE_SETTINGS;
+			}
 		}
 	}
 
@@ -1021,6 +1058,8 @@ void CMenus::RenderBackButton(CUIRect MainView)
 			m_GamePage = PAGE_GAME;
 		else
 			m_MenuPage = PAGE_START;
+
+		m_ResetFades = FADE_ALL;
 	}
 }
 
@@ -1313,17 +1352,36 @@ int CMenus::Render()
 
 	if(m_Popup == POPUP_NONE)
 	{
+		// reset fade after closing the editor
+		if(m_pClient->m_EditorActive)
+		{
+			m_ResetFades = FADE_ALL;
+			m_pClient->m_EditorActive = false;
+		}
+
 		if(m_MenuPage == PAGE_START && Client()->State() == IClient::STATE_OFFLINE)
 		{
+			if(m_ResetFades&FADE_STARTMENU)
+				m_ResetFade = true;
+
 			RenderStartMenu(Screen);
 			RenderLogo(Screen);
+
+			if(m_ResetFade)
+				m_ResetFade = false;
 		}
 		else
 		{
+			if(m_ResetFades&FADE_MENUTABS)
+				m_ResetFade = true;
+
 			// do tab bar
 			Screen.VMargin(Screen.w/2-365.0f, &MainView);
 			MainView.HSplitTop(60.0f, &TabBar, &MainView);
 			RenderMenubar(TabBar);
+
+			if(m_ResetFade)
+				m_ResetFade = false;
 
 			// news is not implemented yet
 			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
@@ -1331,6 +1389,9 @@ int CMenus::Render()
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 				m_MenuPage = PAGE_INTERNET;
 			}*/
+
+			if(m_ResetFades&FADE_INNERMENU)
+				m_ResetFade = true;
 
 			// render current page
 			if(Client()->State() != IClient::STATE_OFFLINE)
@@ -1361,7 +1422,19 @@ int CMenus::Render()
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
 			}
+
+			if(m_ResetFade)
+				m_ResetFade = false;
 		}
+
+		static bool s_FadeReset = false;
+		if(s_FadeReset)
+		{
+			s_FadeReset = false;
+			m_ResetFades = FADE_NONE;
+		}
+		if(m_ResetFades)
+			s_FadeReset = true;
 
 		// do overlay popups
 		DoPopupMenu();
@@ -2033,6 +2106,8 @@ void CMenus::OnStateChange(int NewState, int OldState)
 			else
 				m_Popup = POPUP_DISCONNECTED;
 		}
+
+		m_ResetFades = FADE_ALL;
 	}
 	else if(NewState == IClient::STATE_LOADING)
 	{
@@ -2048,6 +2123,8 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	{
 		m_Popup = POPUP_NONE;
 		SetActive(false);
+
+		m_ResetFades = FADE_ALL;
 	}
 }
 

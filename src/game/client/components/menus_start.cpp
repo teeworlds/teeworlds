@@ -32,6 +32,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButtonStart(&s_SettingsButton, Localize("Settings"), &Button, "settings", 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_SETTINGS;
+			m_ResetFades = FADE_ALL;
 		}
 	}
 	else
@@ -39,6 +40,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButtonDefault(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_SETTINGS;
+			m_ResetFades = FADE_ALL;
 		}
 	}
 
@@ -66,6 +68,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButtonStart(&s_DemoButton, Localize("Demos"), &Button, "demos", 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_DEMOS;
+			m_ResetFades = FADE_ALL;
 			DemolistPopulate();
 			DemolistOnUpdate(false);
 		}
@@ -75,6 +78,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButtonDefault(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			m_MenuPage = PAGE_DEMOS;
+			m_ResetFades = FADE_ALL;
 			DemolistPopulate();
 			DemolistOnUpdate(false);
 		}
@@ -106,12 +110,18 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	if(g_Config.m_ClShowStartMenuImages)
 	{
 		if(DoButtonStart(&s_PlayButton, Localize("Play"), &Button, "play_game", 10.0f, 0.5f))
+		{
 			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_ResetFades = FADE_ALL;
+		}
 	}
 	else
 	{
 		if(DoButtonDefault(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		{
 			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_ResetFades = FADE_ALL;
+		}
 	}
 
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
@@ -134,7 +144,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		UI()->DoLabelScaled(&Version, aBuf, 14.0f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);	
+	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);
 }
 
 void CMenus::RenderLogo(CUIRect MainView)

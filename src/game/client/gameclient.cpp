@@ -296,6 +296,8 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 
 	m_ServerMode = SERVERMODE_PURE;
+
+	m_EditorActive = false;
 }
 
 void CGameClient::DispatchInput()
@@ -1314,6 +1316,10 @@ void CGameClient::OnPredict()
 
 void CGameClient::OnActivateEditor()
 {
+	// variable for active editor, used for resetting the menu button fade after closing the editor, resetted in menu
+	if(!m_EditorActive)
+		m_EditorActive = true;
+
 	OnRelease();
 }
 

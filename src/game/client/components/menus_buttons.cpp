@@ -15,9 +15,14 @@ float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)
 		*pFade = Seconds;
 	else if(*pFade > 0.0f)
 	{
-		*pFade -= Client()->RenderFrameTime();
-		if(*pFade < 0.0f)
+		if(m_ResetFade)
 			*pFade = 0.0f;
+		else
+		{
+			*pFade -= Client()->RenderFrameTime();
+			if(*pFade < 0.0f)
+				*pFade = 0.0f;
+		}
 	}
 	return pFade;
 }
