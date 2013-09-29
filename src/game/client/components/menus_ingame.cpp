@@ -101,7 +101,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		Left.VSplitLeft(Spacing, 0, &Left);
 		static int s_SpectateButton = 0;
-		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && AllowSpec && !pNotification)
+		if(DoButtonDefault(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && AllowSpec && !pNotification)
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 			SetActive(false);
@@ -123,7 +123,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			Left.VSplitLeft(Spacing, 0, &Left);
 			static int s_RedButton = 0;
-			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !pNotification)
+			if(DoButtonDefault(&s_RedButton, aBuf, Team == TEAM_RED, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
@@ -141,7 +141,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_BlueButton = 0;
-			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !pNotification)
+			if(DoButtonDefault(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
 				SetActive(false);
@@ -161,7 +161,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_JoinButton = 0;
-			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !pNotification)
+			if(DoButtonDefault(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(0);
 				SetActive(false);
@@ -172,7 +172,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	// Record button
 	static int s_DemoButton = 0;
 	bool Recording = DemoRecorder()->IsRecording();
-	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Middle))	// Localize("Stop record");Localize("Record");
+	if(DoButtonDefault(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Middle))	// Localize("Stop record");Localize("Record");
 	{
 		if(!Recording)
 			Client()->DemoRecorder_Start("demo", true);
@@ -182,7 +182,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	// disconnect button
 	static int s_DisconnectButton = 0;
-	if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Right))
+	if(DoButtonDefault(&s_DisconnectButton, Localize("Disconnect"), 0, &Right))
 		Client()->Disconnect();
 }
 
@@ -260,9 +260,9 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
 			Button.VSplitLeft(Button.h, &Button, 0);
 			if(g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[i].m_Friend)
-				DoButton_Toggle(&s_aPlayerIDs[i][0], 1, &Button, false);
+				DoButtonToggle(&s_aPlayerIDs[i][0], 1, &Button, false);
 			else
-				if(DoButton_Toggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Button, true))
+				if(DoButtonToggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Button, true))
 					m_pClient->m_aClients[i].m_ChatIgnore ^= 1;
 
 			// friend button
@@ -270,7 +270,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
 			Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
 			Button.VSplitLeft(Button.h, &Button, 0);
-			if(DoButton_Toggle(&s_aPlayerIDs[i][1], m_pClient->m_aClients[i].m_Friend, &Button, true))
+			if(DoButtonToggle(&s_aPlayerIDs[i][1], m_pClient->m_aClients[i].m_Friend, &Button, true))
 			{
 				if(m_pClient->m_aClients[i].m_Friend)
 					m_pClient->Friends()->RemoveFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
@@ -341,7 +341,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		bool IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_AddFavButton = 0;
-		if(DoButton_CheckBox(&s_AddFavButton, Localize("Favorite"), IsFavorite, &Button))
+		if(DoButtonCheckBox(&s_AddFavButton, Localize("Favorite"), IsFavorite, &Button))
 		{
 			if(IsFavorite)
 				ServerBrowser()->RemoveFavorite(&CurrentServerInfo);
@@ -519,16 +519,16 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	{
 		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
 		static int s_Button0 = 0;
-		if(DoButton_MenuTab(&s_Button0, Localize("Change settings"), s_ControlPage == 0, &Button, 0))
+		if(DoTab(&s_Button0, Localize("Change settings"), s_ControlPage == 0, &Button, 0, 0, 0, vec4(1.0f, 1.0f, 1.0f, 0.25f), false))
 			s_ControlPage = 0;
 
 		TabBar.VSplitMid(&Button, &TabBar);
 		static int s_Button1 = 0;
-		if(DoButton_MenuTab(&s_Button1, Localize("Kick player"), s_ControlPage == 1, &Button, 0))
+		if(DoTab(&s_Button1, Localize("Kick player"), s_ControlPage == 1, &Button, 0, 0, 0, vec4(1.0f, 1.0f, 1.0f, 0.25f), false))
 			s_ControlPage = 1;
 
 		static int s_Button2 = 0;
-		if(DoButton_MenuTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == 2, &TabBar, 0))
+		if(DoTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == 2, &TabBar, 0, 0, 0, vec4(1.0f, 1.0f, 1.0f, 0.25f), false))
 			s_ControlPage = 2;
 	}
 
@@ -603,7 +603,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		{
 			// call vote
 			static int s_CallVoteButton = 0;
-			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
+			if(DoButtonDefault(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
 				HandleCallvote(s_ControlPage, false);
 		}
 		else
@@ -624,7 +624,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitLeft(5.0f, 0, &Bottom);
 			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
 			static int s_ForceVoteButton = 0;
-			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
+			if(DoButtonDefault(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 				HandleCallvote(s_ControlPage, true);
 
 			if(s_ControlPage == 0)
@@ -633,7 +633,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
 				Bottom.VSplitRight(120.0f, 0, &Button);
 				static int s_RemoveVoteButton = 0;
-				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
+				if(DoButtonDefault(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
 					m_pClient->m_pVoting->RemovevoteOption(m_CallvoteSelectedOption);
 
 
@@ -652,7 +652,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
 				Bottom.VSplitRight(120.0f, &Bottom, &Button);
 				static int s_AddVoteButton = 0;
-				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
+				if(DoButtonDefault(&s_AddVoteButton, Localize("Add"), 0, &Button))
 					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
 						m_pClient->m_pVoting->AddvoteOption(s_aVoteDescription, s_aVoteCommand);
 

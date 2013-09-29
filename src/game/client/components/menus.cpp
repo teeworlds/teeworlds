@@ -86,20 +86,6 @@ CMenus::~CMenus()
 		mem_free(m_pFriendIndexes);
 }
 
-float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)
-{
-	float *pFade = (float*)pID;
-	if(UI()->HotItem() == pID || Checked)
-		*pFade = Seconds;
-	else if(*pFade > 0.0f)
-	{
-		*pFade -= Client()->RenderFrameTime();
-		if(*pFade < 0.0f)
-			*pFade = 0.0f;
-	}
-	return pFade;
-}
-
 int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)
 {
 	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
@@ -111,312 +97,6 @@ int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)
 	Graphics()->QuadsEnd();
 
 	return 0;
-}
-
-int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active)
-{
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
-	Graphics()->QuadsBegin();
-	if(!Active)
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-	RenderTools()->SelectSprite(Checked?SPRITE_GUIBUTTON_ON:SPRITE_GUIBUTTON_OFF);
-	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	if(UI()->HotItem() == pID && Active)
-	{
-		RenderTools()->SelectSprite(SPRITE_GUIBUTTON_HOVER);
-		IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-	}
-	Graphics()->QuadsEnd();
-
-	return Active ? UI()->DoButtonLogic(pID, "", Checked, pRect) : 0;
-}
-
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor, vec4 ColorHot, bool TextFade)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds, Checked);
-	float FadeVal = *pFade/Seconds;
-
-	vec4 Color = mix(vec4(0.0f, 0.0f, 0.0f, 0.25f), ColorHot, FadeVal);
-
-	RenderTools()->DrawUIRect(pRect, Color, Corners, r);
-	CUIRect Temp;
-	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
-	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
-	if(TextFade)
-	{
-		TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
-		TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	}
-	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-	if(TextFade)
-	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-	}
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r, float FontFactor)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
-	float FadeVal = *pFade/Seconds;
-
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), CUI::CORNER_ALL, r);
-	CUIRect Text, Image;
-	pRect->VSplitRight(pRect->h*4.0f, &Text, &Image); // always correct ratio for image
-
-	// render image
-	const CMenuImage *pImage = FindMenuImage(pImageName);
-	if(pImage)
-	{
-		
-		Graphics()->TextureSet(pImage->m_GreyTexture);
-		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-
-		if(*pFade > 0.0f)
-		{
-			Graphics()->TextureSet(pImage->m_OrgTexture);
-			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, *pFade/Seconds);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-			Graphics()->QuadsEnd();
-		}
-		
-	}
-
-	Text.HMargin(pRect->h>=20.0f?2.0f:1.0f, &Text);
-	Text.HMargin((Text.h*FontFactor)/2.0f, &Text);
-	Text.VSplitLeft(r, 0, &Text);
-	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
-	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	UI()->DoLabel(&Text, pText, Text.h*ms_FontmodHeight, 0);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds, Checked);
-	float FadeVal = *pFade/Seconds;
-
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), CUI::CORNER_ALL, 5.0f);
-	CUIRect Temp;
-	pRect->HMargin(1.0f, &Temp);
-	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
-	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-}
-
-int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
-{
-	if(Checked)
-		RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.25f), Corners, 10.0f);
-	else
-	{
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 10.0f);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.7f);
-	}
-
-	CUIRect Temp;
-	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
-	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-int CMenus::DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, float r, float FontFactor)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds, Checked);
-	float FadeVal = *pFade/Seconds;
-
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
-	CUIRect Temp;
-	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
-	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
-	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
-	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, 0);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-//void CMenus::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
-{
-	if(Checked)
-	{
-		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
-		TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-	}
-
-	if(pText)
-	{
-		CUIRect Label;
-		pRect->VSplitLeft(5.0f, 0, &Label);
-		Label.y+=2.0f;
-		UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, 0);
-	}
-
-	if(Checked)
-	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-	}
-
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-int CMenus::DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
-
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), Corners, 5.0f);
-
-	CUIRect Image;
-	pRect->HMargin(2.0f, &Image);
-	pRect->VMargin((Image.w-Image.h)/2.0f, &Image);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return UI()->DoButtonLogic(pID, "", false, pRect);
-}
-
-int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked)
-//void CMenus::ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const CUIRect *r, const void *extra)
-{
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	CUIRect c = *pRect;
-	CUIRect t = *pRect;
-	c.w = c.h;
-	t.x += c.w;
-	t.w -= c.w;
-	t.VSplitLeft(5.0f, 0, &t);
-
-	c.Margin(2.0f, &c);
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
-	if(Checked)
-		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_ACTIVE);
-	else
-		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_INACTIVE);
-	IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	t.y += 2.0f; // lame fix
-	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, 0);
-	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, -1);
-	return UI()->DoButtonLogic(pID, pText, 0, pRect);
-}
-
-int CMenus::DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-{
-	return DoButton_CheckBox_Common(pID, pText, "", pRect, Checked);
-}
-
-int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-{
-	char aBuf[16];
-	str_format(aBuf, sizeof(aBuf), "%d", Checked);
-	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
-}
-
-int CMenus::DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners, float r, bool Fade)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
-	float FadeVal = *pFade/Seconds;
-
-	CUIRect Icon = *pRect;
-	Icon.Margin(2.0f, &Icon);
-
-	if(Fade)
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
-	else
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, r);
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(Icon.x, Icon.y, Icon.w, Icon.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return UI()->DoButtonLogic(pID, "", false, pRect);
-}
-
-int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect)
-{
-	int Inside = UI()->MouseInside(pRect);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	int ReturnValue = 0;
-	if(Inside && Input()->KeyDown(KEY_MOUSE_1))
-		ReturnValue = 1;
-
-	return ReturnValue;
-}
-
-int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend)
-{
-	int Inside = UI()->MouseInside(pRect);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, !Blend || Inside ? 1.0f : 0.6f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return UI()->DoButtonLogic(pID, 0, 0, pRect);
-}
-
-int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
-{
-	int Inside = UI()->MouseInside(pRect);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Inside ? 1.0f : 0.6f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return Inside;
 }
 
 int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
@@ -1058,13 +738,13 @@ int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 
 	// draw
 	if (UI()->ActiveItem() == pID && ButtonUsed == 0)
-		DoButton_KeySelect(pID, "???", 0, pRect);
+		DoButtonKeySelect(pID, "???", 0, pRect);
 	else
 	{
 		if(Key == 0)
-			DoButton_KeySelect(pID, "", 0, pRect);
+			DoButtonKeySelect(pID, "", 0, pRect);
 		else
-			DoButton_KeySelect(pID, Input()->KeyName(Key), 0, pRect);
+			DoButtonKeySelect(pID, Input()->KeyName(Key), 0, pRect);
 	}
 	return NewKey;
 }
@@ -1092,7 +772,7 @@ void CMenus::RenderMenubar(CUIRect r)
 
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_GeneralButton=0;
-		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
+		if(DoTab(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
 		}
@@ -1100,7 +780,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_PlayerButton=0;
-		if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
+		if(DoTab(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
 		}
@@ -1108,7 +788,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_TeeButton=0;
-		if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
+		if(DoTab(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_TEE;
 		}
@@ -1116,7 +796,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_ControlsButton=0;
-		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
+		if(DoTab(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
 		}
@@ -1124,7 +804,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_GraphicsButton=0;
-		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
+		if(DoTab(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
 		}
@@ -1132,7 +812,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static int s_SoundButton=0;
-		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
+		if(DoTab(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
 		{
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 		}
@@ -1158,7 +838,7 @@ void CMenus::RenderMenubar(CUIRect r)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_InternetButton=0;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button))
+			if(DoTab(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
@@ -1169,7 +849,7 @@ void CMenus::RenderMenubar(CUIRect r)
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_LanButton=0;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button))
+			if(DoTab(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
@@ -1183,7 +863,7 @@ void CMenus::RenderMenubar(CUIRect r)
 			else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
 				str_copy(aBuf, Localize("Browser"), sizeof(aBuf));
 			static int s_FilterButton=0;
-			if(DoButton_Menu(&s_FilterButton, aBuf, 0, &Right))
+			if(DoButtonDefault(&s_FilterButton, aBuf, 0, &Right))
 			{
 				m_BorwserPage++;
 				if(m_BorwserPage >= NUM_PAGE_BROWSER)
@@ -1227,29 +907,29 @@ void CMenus::RenderMenubar(CUIRect r)
 		{
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_GameButton=0;
-			if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
+			if(DoTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
 				NewPage = PAGE_GAME;
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_PlayersButton=0;
-			if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
+			if(DoTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
 				NewPage = PAGE_PLAYERS;
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_ServerInfoButton=0;
-			if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
+			if(DoTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
 				NewPage = PAGE_SERVER_INFO;
 
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static int s_CallVoteButton=0;
-			if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
+			if(DoTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
 				NewPage = PAGE_CALLVOTE;
 
 			static int s_SettingsButton=0;
-			if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), 0, &Right))
+			if(DoTab(&s_SettingsButton, Localize("Settings"), 0, &Right))
 				NewPage = PAGE_SETTINGS;
 		}
 	}
@@ -1335,7 +1015,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	MainView.HSplitTop(25.0f, &MainView, 0);
 	Button = MainView;
 	static int s_MenuButton=0;
-	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
+	if(DoButtonDefault(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
 	{
 		if(Client()->State() != IClient::STATE_OFFLINE)
 			m_GamePage = PAGE_GAME;
@@ -1842,11 +1522,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 				Client()->Quit();
 		}
 		else if(m_Popup == POPUP_PASSWORD)
@@ -1868,11 +1548,11 @@ int CMenus::Render()
 			TryAgain.VSplitLeft(SpacingW/2.0f, 0, &TryAgain);
 
 			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || m_EnterPressed)
 			{
 				Client()->Connect(g_Config.m_UiServerAddress);
 			}
@@ -1880,7 +1560,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_CONNECTING)
 		{
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+			if(DoButtonDefault(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
 			{
 				Client()->Disconnect();
 				m_Popup = POPUP_NONE;
@@ -1948,7 +1628,7 @@ int CMenus::Render()
 			RenderLanguageSelection(Box, false);
 
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+			if(DoButtonDefault(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
 				m_Popup = POPUP_FIRST_LAUNCH;
 		}
 		else if(m_Popup == POPUP_COUNTRY)
@@ -2010,7 +1690,7 @@ int CMenus::Render()
 			Part.VMargin(120.0f, &Part);
 
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EnterPressed)
+			if(DoButtonDefault(&s_Button, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
 				pFilter->SetFilter(SortHash, Ping, ActSelection, aGametype, aServerAddress);
 				g_Config.m_BrFilterCountryIndex = ActSelection;
@@ -2035,11 +1715,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonNo = 0;
-			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonYes = 0;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
 				// delete demo
@@ -2076,11 +1756,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonNo = 0;
-			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonYes = 0;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aCurrentDemoFile[0], &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonYes, Localize("Yes"), !m_aCurrentDemoFile[0], &Yes) || m_EnterPressed)
 			{
 				if(m_aCurrentDemoFile[0])
 				{
@@ -2119,11 +1799,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonNo = 0;
-			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonYes = 0;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
 				// remove friend
@@ -2156,11 +1836,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonAbort = 0;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonTryAgain = 0;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || m_EnterPressed)
 			{
 				if(m_aSaveSkinName[0])
 				{
@@ -2183,11 +1863,11 @@ int CMenus::Render()
 			Yes.VSplitLeft(SpacingW/2.0f, 0, &Yes);
 
 			static int s_ButtonNo = 0;
-			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+			if(DoButtonDefault(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
 				m_Popup = POPUP_NONE;
 
 			static int s_ButtonYes = 0;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			if(DoButtonDefault(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
 				// delete demo
@@ -2222,7 +1902,7 @@ int CMenus::Render()
 
 			// button
 			static int s_EnterButton = 0;
-			if(DoButton_Menu(&s_EnterButton, pButtonText, 0, &BottomBar) || m_EnterPressed)
+			if(DoButtonDefault(&s_EnterButton, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
 				if(g_Config.m_PlayerName[0])
 					m_Popup = POPUP_NONE;
@@ -2238,7 +1918,7 @@ int CMenus::Render()
 
 			// button
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+			if(DoButtonDefault(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
 				m_Popup = m_NextPopup;
 		}
 

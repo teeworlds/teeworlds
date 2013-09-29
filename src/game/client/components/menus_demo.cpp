@@ -19,15 +19,6 @@
 #include "maplayers.h"
 #include "menus.h"
 
-int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
-
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
-	UI()->DoLabel(pRect, pText, 14.0f, 0);
-	return UI()->DoButtonLogic(pID, pText, false, pRect);
-}
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
@@ -152,12 +143,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_PlayPauseButton = 0;
 		if(!pInfo->m_Paused)
 		{
-			if(DoButton_SpriteID(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, &Button, CUI::CORNER_ALL))
+			if(DoButtonSprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, &Button, true))
 				DemoPlayer()->Pause();
 		}
 		else
 		{
-			if(DoButton_SpriteID(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PLAY, &Button, CUI::CORNER_ALL))
+			if(DoButtonSprite(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PLAY, &Button, true))
 				DemoPlayer()->Unpause();
 		}
 
@@ -166,7 +157,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;
-		if(DoButton_SpriteID(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, &Button, CUI::CORNER_ALL))
+		if(DoButtonSprite(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, &Button, true))
 		{
 			m_pClient->OnReset();
 			DemoPlayer()->Pause();
@@ -177,14 +168,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		if(DoButtonSprite(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, true) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 			DecreaseDemoSpeed = true;
 
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_FastForwardButton = 0;
-		if(DoButton_SpriteID(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, &Button, CUI::CORNER_ALL))
+		if(DoButtonSprite(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, &Button, true))
 			IncreaseDemoSpeed = true;
 
 		// speed meter
@@ -199,7 +190,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
 		static int s_ExitButton = 0;
-		if(DoButton_DemoPlayer(&s_ExitButton, Localize("Close"), &Button))
+		if(DoButtonDefault(&s_ExitButton, Localize("Close"), 0, &Button))
 			Client()->Disconnect();
 
 		// demo name
@@ -435,7 +426,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_RefreshButton = 0;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
+	if(DoButtonDefault(&s_RefreshButton, Localize("Refresh"), 0, &Button))
 	{
 		DemolistPopulate();
 		DemolistOnUpdate(false);
@@ -446,7 +437,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		BottomView.VSplitLeft(Spacing, 0, &BottomView);
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static int s_DeleteButton = 0;
-		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
+		if(DoButtonDefault(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
 		{
 			if(m_DemolistSelectedIndex >= 0)
 			{
@@ -459,7 +450,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		BottomView.VSplitLeft(Spacing, 0, &BottomView);
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static int s_RenameButton = 0;
-		if(DoButton_Menu(&s_RenameButton, Localize("Rename"), 0, &Button))
+		if(DoButtonDefault(&s_RenameButton, Localize("Rename"), 0, &Button))
 		{
 			if(m_DemolistSelectedIndex >= 0)
 			{
@@ -474,7 +465,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_PlayButton = 0;
-	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || Activated)
+	if(DoButtonDefault(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || Activated)
 	{
 		if(m_DemolistSelectedIndex >= 0)
 		{

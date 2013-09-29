@@ -35,23 +35,21 @@ class CMenus : public CComponent
 
 	float *ButtonFade(const void *pID, float Seconds, int Checked=0);
 
+	int DoButtonDefault(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
+	int DoButtonStart(const void *pID, const char *pText, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
+	int DoTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool Fade=true);
+	int DoButtonSprite(const void *pID, int ImageID, int SpriteID1, const CUIRect *pRect, bool Draw=false);
+	int DoButtonTwoSprite(const void *pID, int ImageID, int SpriteID1, int SpriteID2, const CUIRect *pRect);
+	int DoSwitchSprite(const void *pID, int ImageID, int SpriteIDInactive, int SpriteIDActive, int Checked, const CUIRect *pRect);
+	int DoButtonToggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
+	int DoButtonMouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
 
-	int DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect);
-	int DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
-	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
-	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
-	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
-	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
-	int DoButton_MenuImage(const void *pID, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
-	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_MenuTabTop(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
-	int DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
+	int DoButtonGridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButtonGridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
-	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
-	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-
-	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
+	int DoButtonCheckBoxCommon(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
+	int DoButtonCheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButtonCheckBoxNumber(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	/*static void ui_draw_menu_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -60,8 +58,6 @@ class CMenus : public CComponent
 	*/
 
 	int DoIcon(int ImageId, int SpriteId, const CUIRect *pRect);
-	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_GridHeaderIcon(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, int Corners);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
 	//static void ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
@@ -79,7 +75,7 @@ class CMenus : public CComponent
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	void DoButtonKeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
