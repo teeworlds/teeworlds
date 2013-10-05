@@ -77,6 +77,9 @@ public:
 	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
 	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
 	
+	void RenderTilemapOld(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
+	void RenderTilemapNew(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
+
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
 		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);

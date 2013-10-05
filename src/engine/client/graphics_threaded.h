@@ -120,17 +120,6 @@ public:
 		WRAP_CLAMP,
 	};
 
-	struct SPoint { float x, y, z; };
-	struct STexCoord { float u, v; };
-	struct SColor { float r, g, b, a; };
-
-	struct SVertex
-	{
-		SPoint m_Pos;
-		STexCoord m_Tex;
-		SColor m_Color;
-	};
-
 	struct SCommand
 	{
 	public:
@@ -144,8 +133,8 @@ public:
 		int m_BlendMode;
 		int m_WrapMode;
 		int m_Texture;
-		SPoint m_ScreenTL;
-		SPoint m_ScreenBR;
+		IGraphics::CPoint m_ScreenTL;
+		IGraphics::CPoint m_ScreenBR;
 
 		// clip
 		bool m_ClipEnable;
@@ -158,7 +147,7 @@ public:
 	struct SCommand_Clear : public SCommand
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
-		SColor m_Color;
+		IGraphics::CColor m_Color;
 	};
 		
 	struct SCommand_Signal : public SCommand
@@ -179,7 +168,7 @@ public:
 		SState m_State;
 		unsigned m_PrimType;
 		unsigned m_PrimCount;
-		SVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
+		IGraphics::CVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
 	};
 
 	struct SCommand_Screenshot : public SCommand
@@ -341,11 +330,11 @@ class CGraphics_Threaded : public IEngineGraphics
 	class IStorage *m_pStorage;
 	class IConsole *m_pConsole;
 
-	CCommandBuffer::SVertex m_aVertices[MAX_VERTICES];
+	IGraphics::CVertex m_aVertices[MAX_VERTICES];
 	int m_NumVertices;
 
-	CCommandBuffer::SColor m_aColor[4];
-	CCommandBuffer::STexCoord m_aTexture[4];
+	IGraphics::CColor m_aColor[4];
+	IGraphics::CTexCoord m_aTexture[4];
 
 	bool m_RenderEnable;
 
@@ -362,7 +351,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	void FlushVertices();
 	void AddVertices(int Count);
-	void Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints);
+	void Rotate4(const IGraphics::CPoint &rCenter, IGraphics::CVertex *pPoints);
 
 	void KickCommandBuffer();
 
@@ -403,6 +392,8 @@ public:
 	virtual void TextureSet(int TextureID);
 
 	virtual void Clear(float r, float g, float b);
+
+	virtual void RenderQuads(CVertex *pVertices, int NumVertices);
 
 	virtual void QuadsBegin();
 	virtual void QuadsEnd();

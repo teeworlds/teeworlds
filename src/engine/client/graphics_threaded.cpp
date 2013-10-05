@@ -66,13 +66,13 @@ void CGraphics_Threaded::FlushVertices()
 	else
 		return;
 
-	Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+	Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVerts);
 	if(Cmd.m_pVertices == 0x0)
 	{
 		// kick command buffer and try again
 		KickCommandBuffer();
 
-		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
 			dbg_msg("graphics", "failed to allocate data for vertices");
@@ -86,7 +86,7 @@ void CGraphics_Threaded::FlushVertices()
 		// kick command buffer and try again
 		KickCommandBuffer();
 		
-		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
 			dbg_msg("graphics", "failed to allocate data for vertices");
@@ -100,7 +100,7 @@ void CGraphics_Threaded::FlushVertices()
 		}
 	}
 
-	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
+	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(IGraphics::CVertex)*NumVerts);
 }
 
 void CGraphics_Threaded::AddVertices(int Count)
@@ -110,7 +110,7 @@ void CGraphics_Threaded::AddVertices(int Count)
 		FlushVertices();
 }
 
-void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints)
+void CGraphics_Threaded::Rotate4(const IGraphics::CPoint &rCenter, IGraphics::CVertex *pPoints)
 {
 	float c = cosf(m_Rotation);
 	float s = sinf(m_Rotation);
@@ -579,8 +579,7 @@ void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
 
 void CGraphics_Threaded::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
-	CCommandBuffer::SPoint Center;
-	Center.z = 0;
+	IGraphics::CPoint Center;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
@@ -616,6 +615,56 @@ void CGraphics_Threaded::QuadsDrawTL(const CQuadItem *pArray, int Num)
 	}
 
 	AddVertices(4*Num);
+}
+
+void CGraphics_Threaded::RenderQuads(CVertex *pVertices, int NumVertices)
+{
+	if(NumVertices == 0)
+		return;
+
+	CCommandBuffer::SCommand_Render Cmd;
+	Cmd.m_State = m_State;
+	Cmd.m_PrimType = CCommandBuffer::PRIMTYPE_QUADS;
+	Cmd.m_PrimCount = NumVertices/4;
+	Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVertices);
+
+	if(Cmd.m_pVertices == 0x0)
+	{
+		// kick command buffer and try again
+		KickCommandBuffer();
+
+		Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVertices);
+		if(Cmd.m_pVertices == 0x0)
+		{
+			dbg_msg("graphics", "failed to allocate data for vertices (%d)", sizeof(IGraphics::CVertex)*NumVertices);
+			return;
+		}
+	}
+
+	// check if we have enough free memory in the commandbuffer
+	if(!m_pCommandBuffer->AddCommand(Cmd))
+	{
+		dbg_msg("graphics", "failed to allocate memory for render command");
+		return;
+
+		// kick command buffer and try again
+		KickCommandBuffer();
+		
+		Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVertices);
+		if(Cmd.m_pVertices == 0x0)
+		{
+			dbg_msg("graphics", "failed to allocate data for vertices");
+			return;
+		}
+
+		if(!m_pCommandBuffer->AddCommand(Cmd))
+		{
+			dbg_msg("graphics", "failed to allocate memory for render command");
+			return;
+		}
+	}
+
+	mem_copy(Cmd.m_pVertices, pVertices, sizeof(IGraphics::CVertex)*NumVertices);
 }
 
 void CGraphics_Threaded::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
@@ -734,10 +783,6 @@ int CGraphics_Threaded::Init()
 	// fetch pointers
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-
-	// Set all z to -5.0f
-	for(int i = 0; i < MAX_VERTICES; i++)
-		m_aVertices[i].m_Pos.z = -5.0f;
 
 	// init textures
 	m_FirstFreeTexture = 0;
