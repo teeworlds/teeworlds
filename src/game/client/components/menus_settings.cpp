@@ -2198,6 +2198,52 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		g_Config.m_ClColoredBroadcast ^= 1;
 	*/
 
+	CUIRect aRects[2];
+	MainView.HSplitTop(5.0f, 0, &MainView);
+	MainView.HSplitTop(82.5f, &Label, &MainView);
+
+	Label.VSplitMid(&aRects[0], &aRects[1]);
+	aRects[0].VSplitRight(10.0f, &aRects[0], 0);
+	aRects[1].VSplitLeft(10.0f, 0, &aRects[1]);
+
+	int *pColorSlider[2][3] = {{&g_Config.m_ClBackgroundHue, &g_Config.m_ClBackgroundSat, &g_Config.m_ClBackgroundLht}, {&g_Config.m_ClBackgroundEntitiesHue, &g_Config.m_ClBackgroundEntitiesSat, &g_Config.m_ClBackgroundEntitiesLht}};
+
+	const char *paParts[] = {
+		Localize("Background (when quads disabled or zoomed out)"),
+		Localize("Background (when entities are enabled)")};
+	const char *paLabels[] = {
+		Localize("Hue"),
+		Localize("Sat."),
+		Localize("Lht.")};
+	static int s_aColorSlider[2][3] = {{0}};
+
+	for(int i = 0; i < 2; i++)
+	{
+		aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
+		UI()->DoLabel(&Label, paParts[i], 14.0f, CUI::ALIGN_CENTER, -1);
+		aRects[i].VSplitLeft(20.0f, 0, &aRects[i]);
+		aRects[i].HSplitTop(2.5f, 0, &aRects[i]);
+
+		for(int s = 0; s < 3; s++)
+		{
+			//CUIRect Text;
+			//MainView.HSplitTop(19.0f, &Button, &MainView);
+			//Button.VMargin(15.0f, &Button);
+			//Button.VSplitLeft(100.0f, &Text, &Button);
+			////Button.VSplitRight(5.0f, &Button, 0);
+			//Button.HSplitTop(4.0f, 0, &Button);
+
+			aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
+			Label.VSplitLeft(100.0f, &Label, &Button);
+			Button.HMargin(2.0f, &Button);
+
+			float k = (*pColorSlider[i][s]) / 255.0f;
+			k = DoScrollbarH(pColorSlider[i][s], &Button, k);
+			*pColorSlider[i][s] = (int)(k*255.0f);
+			UI()->DoLabel(&Label, paLabels[s], 15.0f, CUI::ALIGN_CENTER, -1);
+		}
+	}
+
 	// reset button
 	Spacing = 3.0f;
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;

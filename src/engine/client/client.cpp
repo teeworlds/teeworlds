@@ -893,12 +893,12 @@ void CClient::Render()
 {
 	if(g_Config.m_ClShowEntities)
 	{
-		vec3 bg = GetColorV3(g_Config.m_ClBackgroundEntities);
+		vec3 bg = HslToRgb(vec3(g_Config.m_ClBackgroundEntitiesHue/255.0f, g_Config.m_ClBackgroundEntitiesSat/255.0f, g_Config.m_ClBackgroundEntitiesLht/255.0f));
 		Graphics()->Clear(bg.r, bg.g, bg.b);
 	}
 	else if(g_Config.m_GfxClear)
 	{
-		vec3 bg = GetColorV3(g_Config.m_ClBackground);
+		vec3 bg = HslToRgb(vec3(g_Config.m_ClBackgroundHue/255.0f, g_Config.m_ClBackgroundSat/255.0f, g_Config.m_ClBackgroundLht/255.0f));
 		Graphics()->Clear(bg.r, bg.g, bg.b);
 	}
 
