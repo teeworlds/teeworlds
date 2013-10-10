@@ -338,7 +338,6 @@ void CClient::SendInfo()
 {
 	CMsgPacker Msg(NETMSG_INFO, true);
 	Msg.AddString(GameClient()->NetVersion(), 128);
-	Msg.AddString(g_Config.m_Password, 128);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
@@ -520,7 +519,7 @@ void CClient::Connect(const char *pAddress)
 	m_RconAuthed = 0;
 	if(m_ServerAddress.port == 0)
 		m_ServerAddress.port = Port;
-	m_NetClient.Connect(&m_ServerAddress);
+	m_NetClient.Connect(&m_ServerAddress, g_Config.m_Password);
 	SetState(IClient::STATE_CONNECTING);
 
 	if(m_DemoRecorder.IsRecording())

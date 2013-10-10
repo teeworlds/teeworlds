@@ -113,7 +113,8 @@ static int Run()
 	int64 NextHeartBeat = 0;
 	NETADDR BindAddr = {NETTYPE_IPV4, {0},0};
 
-	if(!pNet->Open(BindAddr, 0, 0, 0, 0, 0))
+	static int s_ReservedSlots = 0;
+	if(!pNet->Open(BindAddr, 0, "", 0, 0, 0, &s_ReservedSlots, ""))
 		return 0;
 
 	while(1)

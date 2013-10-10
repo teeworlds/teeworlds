@@ -42,10 +42,10 @@ int CNetClient::Update()
 	return 0;
 }
 
-int CNetClient::Connect(NETADDR *pAddr)
+int CNetClient::Connect(NETADDR *pAddr, const char *pPassword)
 {
 	m_QueuePos = -1;
-	m_Connection.Connect(pAddr);
+	m_Connection.Connect(pAddr, pPassword);
 	return 0;
 }
 

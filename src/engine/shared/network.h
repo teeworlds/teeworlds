@@ -150,6 +150,7 @@ private:
 	int64 m_LastRecvTime;
 	int64 m_LastSendTime;
 
+	const char *m_pConnectPassword;
 	char m_ErrorString[256];
 
 	CNetPacketConstruct m_Construct;
@@ -171,7 +172,7 @@ private:
 
 public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
-	int Connect(NETADDR *pAddr);
+	int Connect(NETADDR *pAddr, const char *pPassword);
 	void Disconnect(const char *pReason);
 
 	int Update();
@@ -261,6 +262,7 @@ class CNetServer
 	NETSOCKET m_Socket;
 	class CNetBan *m_pNetBan;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
+	const char *m_pPassword;
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
 
@@ -269,6 +271,9 @@ class CNetServer
 	CClientQueue *m_pClientsQueueTail;
 	int m_ClientsQueueSize;
 
+	const int *m_pNumReservedSlots;
+	const char *m_pPasswordVIP;
+
 	NETFUNC_NEWCLIENT m_pfnNewClient;
 	NETFUNC_DELCLIENT m_pfnDelClient;
 	void *m_UserPtr;
@@ -276,6 +281,7 @@ class CNetServer
 	CNetRecvUnpacker m_RecvUnpacker;
 
 	// TODO: remove thoses functions and use some tl instead
+	void QueueAdd(const NETADDR *pAddr);
 	int QueueFind(const NETADDR *pAddr, bool Update=false);
 	void QueuePurge();
 	void QueueRemove(const NETADDR *pAddr);
@@ -284,8 +290,9 @@ public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
-	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int MaxClients,
-			  int MaxClientsPerIP, int MaxClientsQueue, int Flags);
+	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, const char *pPassword,
+			  int MaxClients, int MaxClientsPerIP, int MaxClientsQueue,
+			  const int *pNumReservedSlots, const char *pPasswordVIP);
 	int Close();
 
 	//
@@ -362,7 +369,7 @@ public:
 
 	// connection state
 	int Disconnect(const char *Reason);
-	int Connect(NETADDR *Addr);
+	int Connect(NETADDR *Addr, const char *pPassword);
 
 	// communication
 	int Recv(CNetChunk *Chunk);

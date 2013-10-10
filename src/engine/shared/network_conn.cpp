@@ -160,7 +160,7 @@ void CNetConnection::Resend()
 		ResendChunk(pResend);
 }
 
-int CNetConnection::Connect(NETADDR *pAddr)
+int CNetConnection::Connect(NETADDR *pAddr, const char *pPassword)
 {
 	if(State() != NET_CONNSTATE_OFFLINE)
 		return -1;
@@ -171,7 +171,8 @@ int CNetConnection::Connect(NETADDR *pAddr)
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 	m_State = NET_CONNSTATE_CONNECT;
 	m_InQueue = false;
-	SendControl(NET_CTRLMSG_CONNECT, 0, 0);
+	m_pConnectPassword = pPassword;
+	SendControl(NET_CTRLMSG_CONNECT, pPassword, str_length(pPassword)+1);
 	return 0;
 }
 
@@ -349,7 +350,7 @@ int CNetConnection::Update()
 	else if(State() == NET_CONNSTATE_CONNECT)
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect every 500ms
-			SendControl(NET_CTRLMSG_CONNECT, 0, 0);
+			SendControl(NET_CTRLMSG_CONNECT, m_pConnectPassword, str_length(m_pConnectPassword)+1);
 	}
 	else if(State() == NET_CONNSTATE_PENDING)
 	{

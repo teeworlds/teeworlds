@@ -1708,6 +1708,7 @@ int CMenus::Render()
 				pTitle = Localize("In queue");
 				str_format(aExtraTextBuf, sizeof(aExtraTextBuf), Localize("Place in queue: %d"), m_QueuePos+1);
 				pExtraText = aExtraTextBuf;
+				NumOptions = 5;
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -1876,7 +1877,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_CONNECTING)
 		{
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed)
 			{
 				Client()->Disconnect();
 				m_Popup = POPUP_NONE;
@@ -1935,8 +1936,21 @@ int CMenus::Render()
 			}
 			else
 			{
+				// extra text
 				Box.HSplitTop(27.0f, 0, &Box);
 				UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+
+				// vip password editbox
+				if(m_QueuePos != -1)
+				{
+					CUIRect EditBox;
+					Box.HSplitBottom(ButtonHeight*1.7f, 0, &Box);
+					Box.HSplitTop(20.0f, &EditBox, &Box);
+
+					static float s_OffsetPassword = 0.0f;
+					DoEditBoxOption(g_Config.m_Password, g_Config.m_Password, sizeof(g_Config.m_Password), &EditBox,
+									Localize("VIP password"), ButtonWidth, &s_OffsetPassword, true);
+				}
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2345,7 +2359,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
-			if(str_find(Client()->ErrorString(), "password"))
+			if(str_find(Client()->ErrorString(), "password") || str_find(Client()->ErrorString(), "VIP"))
 			{
 				m_Popup = POPUP_PASSWORD;
 				UI()->SetHotItem(&g_Config.m_Password);

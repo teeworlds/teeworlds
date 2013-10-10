@@ -8,8 +8,9 @@
 #include "network.h"
 
 
-bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients,
-					  int MaxClientsPerIP, int MaxClientsQueue, int Flags)
+bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, const char *pPassword,
+					  int MaxClients, int MaxClientsPerIP, int MaxClientsQueue,
+					  const int *pNumReservedSlots, const char *pPasswordVIP)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -20,6 +21,7 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients,
 		return false;
 
 	m_pNetBan = pNetBan;
+	m_pPassword = pPassword;
 
 	// clamp clients
 	m_MaxClients = MaxClients;
@@ -34,6 +36,9 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients,
 	m_pClientsQueueHead = 0;
 	m_pClientsQueueTail = 0;
 	m_ClientsQueueSize = 0;
+
+	m_pNumReservedSlots = pNumReservedSlots;
+	m_pPasswordVIP = pPasswordVIP;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, true);
@@ -71,6 +76,22 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 
 	return 0;
+}
+
+void CNetServer::QueueAdd(const NETADDR *pAddr)
+{
+	CClientQueue *pNewClient = new CClientQueue();
+	pNewClient->m_Addr = *pAddr;
+	pNewClient->m_LastRecvTime = time_get();
+	pNewClient->m_pNext = 0;
+
+	if(m_ClientsQueueSize > 0)
+		m_pClientsQueueTail->m_pNext = pNewClient;
+	else
+		m_pClientsQueueHead = pNewClient;
+
+	m_pClientsQueueTail = pNewClient;
+	m_ClientsQueueSize++;
 }
 
 int CNetServer::QueueFind(const NETADDR *pAddr, bool Update)
@@ -247,25 +268,73 @@ int CNetServer::Recv(CNetChunk *pChunk)
 							}
 						}
 
+						// parse password
+						char aPassword[128] = {0};
+						if(m_RecvUnpacker.m_Data.m_DataSize > 1)
+						{
+							// make sure to sanitize the error string form the other party
+							if(m_RecvUnpacker.m_Data.m_DataSize < sizeof(aPassword))
+								str_copy(aPassword, (char *)&m_RecvUnpacker.m_Data.m_aChunkData[1], m_RecvUnpacker.m_Data.m_DataSize);
+							else
+								str_copy(aPassword, (char *)&m_RecvUnpacker.m_Data.m_aChunkData[1], sizeof(aPassword));
+							str_sanitize_strong(aPassword);
+						}
+
+						// check if client has VIP access
+						bool IsVIP = false;
+						bool IsRealVIP = false;
+						if(!m_pPasswordVIP[0]) // no password set, everyone can use reserved slots
+							IsVIP = true;
+						else if(str_comp(aPassword, m_pPasswordVIP) == 0)
+						{
+							IsVIP = true;
+							IsRealVIP = true;
+						}
+
+						// check if server is VIP-only
+						if(!IsVIP && *m_pNumReservedSlots >= m_MaxClients)
+						{
+							const char aMsg[] = "This server VIP-only";
+							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aMsg, sizeof(aMsg));
+							continue;
+						}
+
 						// check if client is in queue
 						int QueuePos = QueueFind(&Addr, true);
 						bool InQueue = (QueuePos != -1);
 
-						// if there is no queue or he's the first in queue...
-						if(m_ClientsQueueSize == 0 || (InQueue && QueuePos == 0))
+						// check if password matches
+						if(!IsRealVIP && !InQueue) // don't check again if he is already in queue
+						{
+							if(m_pPassword[0] && str_comp(aPassword, m_pPassword) != 0)
+							{
+								const char aMsg[] = "Wrong password";
+								CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aMsg, sizeof(aMsg));
+								continue;
+							}
+						}
+
+						// if he is VIP, if there is no queue or if he's the first in queue...
+						if(IsVIP || m_ClientsQueueSize == 0 || (InQueue && QueuePos == 0))
 						{
 							// ... then look for a free slot for this guy
+							int ReservedSlots = *m_pNumReservedSlots;
 							for(int i = 0; i < MaxClients(); i++)
 							{
 								if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
 								{
-									Found = true;
-									if(InQueue)
-										QueueRemove(&Addr);
-									m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-									if(m_pfnNewClient)
-										m_pfnNewClient(i, m_UserPtr);
-									break;
+									if(!IsVIP && ReservedSlots > 0) // let some slots for VIPs
+										ReservedSlots--;
+									else
+									{
+										Found = true;
+										if(InQueue)
+											QueueRemove(&Addr);
+										m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+										if(m_pfnNewClient)
+											m_pfnNewClient(i, m_UserPtr);
+										break;
+									}
 								}
 							}
 						}
@@ -284,19 +353,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 
 								// there is a place for him in queue, so add him to the tail
 								QueuePos = m_ClientsQueueSize;
-
-								CClientQueue *pNewClient = new CClientQueue();
-								pNewClient->m_Addr = Addr;
-								pNewClient->m_LastRecvTime = time_get();
-								pNewClient->m_pNext = 0;
-
-								if(m_ClientsQueueSize > 0)
-									m_pClientsQueueTail->m_pNext = pNewClient;
-								else
-									m_pClientsQueueHead = pNewClient;
-
-								m_pClientsQueueTail = pNewClient;
-								m_ClientsQueueSize++;
+								QueueAdd(&Addr);
 							}
 
 							// send queue position
