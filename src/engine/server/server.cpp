@@ -439,7 +439,7 @@ void CServer::SetRconCID(int ClientID)
 
 bool CServer::IsAuthed(int ClientID)
 {
-	return m_aClients[ClientID].m_Authed;
+	return m_aClients[ClientID].m_Authed != AUTHED_NO;
 }
 
 bool CServer::IsBanned(int ClientID)

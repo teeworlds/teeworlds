@@ -846,7 +846,7 @@ int png_get_data(png_t* png, unsigned char* data)
 
 int png_set_data(png_t* png, unsigned width, unsigned height, char depth, int color, unsigned char* data)
 {
-	int i;
+	unsigned i;
 	unsigned char *filtered;
 	png->width = width;
 	png->height = height;

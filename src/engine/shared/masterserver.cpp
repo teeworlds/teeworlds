@@ -92,7 +92,7 @@ public:
 		}
 	}
 
-	virtual int IsRefreshing()
+	virtual bool IsRefreshing()
 	{
 		return m_State != STATE_READY;
 	}

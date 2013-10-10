@@ -1664,7 +1664,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		// text
-		TextRender()->TextColor(0.973f, 0.863f, 0.207, 1.0f);
+		TextRender()->TextColor(0.973f, 0.863f, 0.207f, 1.0f);
 		RestartWarning.y += 2.0f;
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
