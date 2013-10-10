@@ -170,6 +170,7 @@ int CNetConnection::Connect(NETADDR *pAddr)
 	m_PeerAddr = *pAddr;
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 	m_State = NET_CONNSTATE_CONNECT;
+	m_InQueue = false;
 	SendControl(NET_CTRLMSG_CONNECT, 0, 0);
 	return 0;
 }
@@ -257,8 +258,16 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			}
 			else if(State() == NET_CONNSTATE_CONNECT)
 			{
+				// in queue
+				if(CtrlMsg == NET_CTRLMSG_QUEUEPOSITION)
+				{
+					m_LastRecvTime = Now;
+					m_InQueue = true;
+					if(g_Config.m_Debug)
+						dbg_msg("connection", "got queue position, waiting");
+				}
 				// connection made
-				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
+				else if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
 					m_LastRecvTime = Now;
 					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
@@ -298,7 +307,7 @@ int CNetConnection::Update()
 
 	// check for timeout
 	if(State() != NET_CONNSTATE_OFFLINE &&
-		State() != NET_CONNSTATE_CONNECT &&
+		(State() != NET_CONNSTATE_CONNECT || m_InQueue) &&
 		(Now-m_LastRecvTime) > time_freq()*10)
 	{
 		m_State = NET_CONNSTATE_ERROR;

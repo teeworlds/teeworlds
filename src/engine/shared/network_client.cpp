@@ -44,6 +44,7 @@ int CNetClient::Update()
 
 int CNetClient::Connect(NETADDR *pAddr)
 {
+	m_QueuePos = -1;
 	m_Connection.Connect(pAddr);
 	return 0;
 }
@@ -83,6 +84,15 @@ int CNetClient::Recv(CNetChunk *pChunk)
 			}
 			else
 			{
+				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_QUEUEPOSITION)
+				{
+					if(m_RecvUnpacker.m_Data.m_DataSize >= 3)
+					{
+						unsigned char *pExtraData = &m_RecvUnpacker.m_Data.m_aChunkData[1];
+						m_QueuePos = (pExtraData[0] << 8) | pExtraData[1];
+					}
+				}
+
 				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
 			}
@@ -126,7 +136,7 @@ int CNetClient::Send(CNetChunk *pChunk)
 	return 0;
 }
 
-int CNetClient::State()
+int CNetClient::State() const
 {
 	if(m_Connection.State() == NET_CONNSTATE_ONLINE)
 		return NETSTATE_ONLINE;
@@ -140,14 +150,14 @@ int CNetClient::Flush()
 	return m_Connection.Flush();
 }
 
-int CNetClient::GotProblems()
+int CNetClient::GotProblems() const
 {
 	if(time_get() - m_Connection.LastRecvTime() > time_freq())
 		return 1;
 	return 0;
 }
 
-const char *CNetClient::ErrorString()
+const char *CNetClient::ErrorString() const
 {
 	return m_Connection.ErrorString();
 }

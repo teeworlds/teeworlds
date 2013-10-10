@@ -1418,6 +1418,24 @@ void CClient::PumpNetwork()
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		}
 
+		// update queue pos
+		if(State() == IClient::STATE_CONNECTING && m_NetClient.State() == NETSTATE_CONNECTING)
+		{
+			static int s_QueuePos = -1;
+			int NewQueuePos = m_NetClient.QueuePos();
+			if(s_QueuePos != NewQueuePos)
+			{
+				char aBuf[256];
+				if(NewQueuePos == -1)
+					str_format(aBuf, sizeof(aBuf), "out of queue");
+				else
+					str_format(aBuf, sizeof(aBuf), "in queue, pos %d", NewQueuePos);
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
+				GameClient()->OnQueuePos(NewQueuePos);
+				s_QueuePos = NewQueuePos;
+			}
+		}
+
 		//
 		if(State() == IClient::STATE_CONNECTING && m_NetClient.State() == NETSTATE_ONLINE)
 		{

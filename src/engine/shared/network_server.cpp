@@ -8,7 +8,8 @@
 #include "network.h"
 
 
-bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags)
+bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients,
+					  int MaxClientsPerIP, int MaxClientsQueue, int Flags)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -28,6 +29,11 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 		m_MaxClients = 1;
 
 	m_MaxClientsPerIP = MaxClientsPerIP;
+
+	m_MaxClientsQueue = MaxClientsQueue;
+	m_pClientsQueueHead = 0;
+	m_pClientsQueueTail = 0;
+	m_ClientsQueueSize = 0;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, true);
@@ -67,6 +73,81 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 	return 0;
 }
 
+int CNetServer::QueueFind(const NETADDR *pAddr, bool Update)
+{
+	int QueuePos = 0;
+	for(CClientQueue *pClient = m_pClientsQueueHead; pClient; pClient = pClient->m_pNext)
+	{
+		if(net_addr_comp(&pClient->m_Addr, pAddr) == 0)
+		{
+			if(Update)
+				pClient->m_LastRecvTime = time_get();
+			return QueuePos;
+		}
+		QueuePos++;
+	}
+	return -1;
+}
+
+void CNetServer::QueuePurge()
+{
+	int64 Now = time_get();
+
+	CClientQueue *pPrevClient = 0;
+	CClientQueue *pClient = m_pClientsQueueHead;
+	while(pClient)
+	{
+		if(Now-pClient->m_LastRecvTime > time_freq()*10)
+		{
+			const char *pMsg = "Timeout";
+			CNetBase::SendControlMsg(m_Socket, &pClient->m_Addr, 0, NET_CTRLMSG_CLOSE, pMsg, str_length(pMsg)+1);
+
+			CClientQueue *pNextClient = pClient->m_pNext;
+			delete pClient;
+			if(pPrevClient)
+				pPrevClient->m_pNext = pNextClient;
+			else
+				m_pClientsQueueHead = pNextClient;
+			if(!pNextClient)
+				m_pClientsQueueTail = pPrevClient;
+			m_ClientsQueueSize--;
+
+			pClient = pNextClient;
+		}
+		else
+		{
+			pPrevClient = pClient;
+			pClient = pClient->m_pNext;
+		}
+	}
+}
+
+void CNetServer::QueueRemove(const NETADDR *pAddr)
+{
+	CClientQueue *pPrevClient = 0;
+	CClientQueue *pClient = m_pClientsQueueHead;
+	while(pClient)
+	{
+		if(net_addr_comp(&pClient->m_Addr, pAddr) == 0)
+			break;
+		pPrevClient = pClient;
+		pClient = pClient->m_pNext;
+	}
+
+	if(!pClient) // not found
+		return;
+
+	CClientQueue *pNextClient = pClient->m_pNext;
+	delete pClient;
+	if(pPrevClient)
+		pPrevClient->m_pNext = pNextClient;
+	else
+		m_pClientsQueueHead = pNextClient;
+	if(!pNextClient)
+		m_pClientsQueueTail = pPrevClient;
+	m_ClientsQueueSize--;
+}
+
 int CNetServer::Update()
 {
 	for(int i = 0; i < MaxClients(); i++)
@@ -84,6 +165,9 @@ int CNetServer::Update()
 */
 int CNetServer::Recv(CNetChunk *pChunk)
 {
+	// purge queue
+	QueuePurge();
+
 	while(1)
 	{
 		NETADDR Addr;
@@ -163,27 +247,72 @@ int CNetServer::Recv(CNetChunk *pChunk)
 							}
 						}
 
-						for(int i = 0; i < MaxClients(); i++)
+						// check if client is in queue
+						int QueuePos = QueueFind(&Addr, true);
+						bool InQueue = (QueuePos != -1);
+
+						// if there is no queue or he's the first in queue...
+						if(m_ClientsQueueSize == 0 || (InQueue && QueuePos == 0))
 						{
-							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+							// ... then look for a free slot for this guy
+							for(int i = 0; i < MaxClients(); i++)
 							{
-								Found = true;
-								m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-								if(m_pfnNewClient)
-									m_pfnNewClient(i, m_UserPtr);
-								break;
+								if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+								{
+									Found = true;
+									if(InQueue)
+										QueueRemove(&Addr);
+									m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+									if(m_pfnNewClient)
+										m_pfnNewClient(i, m_UserPtr);
+									break;
+								}
 							}
 						}
 
+						// no free slot slot for him
 						if(!Found)
 						{
-							const char FullMsg[] = "This server is full";
-							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+							if(!InQueue) // client is not in the queue
+							{
+								if(m_ClientsQueueSize >= m_MaxClientsQueue) // queue is full
+								{
+									const char aFullMsg[] = "This server is full";
+									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aFullMsg, sizeof(aFullMsg));
+									continue;
+								}
+
+								// there is a place for him in queue, so add him to the tail
+								QueuePos = m_ClientsQueueSize;
+
+								CClientQueue *pNewClient = new CClientQueue();
+								pNewClient->m_Addr = Addr;
+								pNewClient->m_LastRecvTime = time_get();
+								pNewClient->m_pNext = 0;
+
+								if(m_ClientsQueueSize > 0)
+									m_pClientsQueueTail->m_pNext = pNewClient;
+								else
+									m_pClientsQueueHead = pNewClient;
+
+								m_pClientsQueueTail = pNewClient;
+								m_ClientsQueueSize++;
+							}
+
+							// send queue position
+							unsigned char aQueuePos[2];
+							aQueuePos[0] = (QueuePos >> 8) & 0xff;
+							aQueuePos[1] = QueuePos & 0xff;
+							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_QUEUEPOSITION, aQueuePos, sizeof(aQueuePos));
 						}
 					}
 				}
 				else
 				{
+					// remove client from queue if he quits
+					if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CLOSE)
+						QueueRemove(&Addr);
+
 					// normal packet, find matching slot
 					for(int i = 0; i < MaxClients(); i++)
 					{

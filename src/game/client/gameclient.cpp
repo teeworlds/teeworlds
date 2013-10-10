@@ -803,6 +803,11 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 		m_All.m_paComponents[i]->OnStateChange(NewState, OldState);
 }
 
+void CGameClient::OnQueuePos(int Pos)
+{
+	m_pMenus->SetQueuePos(Pos);
+}
+
 void CGameClient::OnShutdown() {}
 void CGameClient::OnEnterGame() {}
 

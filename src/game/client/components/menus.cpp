@@ -1682,6 +1682,7 @@ int CMenus::Render()
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		const char *pButtonText = "";
+		char aExtraTextBuf[1024];
 		int ExtraAlign = 0;
 		int NumOptions = 4;
 
@@ -1695,11 +1696,18 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Connecting to");
 			pButtonText = Localize("Abort");
+			pExtraText = g_Config.m_UiServerAddress;
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
 				pTitle = Localize("Downloading map");
 				pExtraText = "";
 				NumOptions = 5;
+			}
+			else if(m_QueuePos != -1)
+			{
+				pTitle = Localize("In queue");
+				str_format(aExtraTextBuf, sizeof(aExtraTextBuf), Localize("Place in queue: %d"), m_QueuePos+1);
+				pExtraText = aExtraTextBuf;
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -1928,7 +1936,7 @@ int CMenus::Render()
 			else
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, g_Config.m_UiServerAddress, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2238,6 +2246,11 @@ int CMenus::Render()
 }
 
 
+void CMenus::SetQueuePos(int Pos)
+{
+	m_QueuePos = Pos;
+}
+
 void CMenus::SetActive(bool Active)
 {
 	m_MenuActive = Active;
@@ -2348,10 +2361,14 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
 		m_DownloadSpeed = 0.0f;
+		m_QueuePos = -1;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
+	{
 		m_Popup = POPUP_CONNECTING;
+		m_QueuePos = -1;
+	}
 	else if (NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK)
 	{
 		m_Popup = POPUP_NONE;
