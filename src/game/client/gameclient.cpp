@@ -365,7 +365,7 @@ void CGameClient::OnReset()
 	mem_zero(&m_Snap, sizeof(m_Snap));
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].Reset(this);
+		m_aClients[i].Reset(this, i);
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
@@ -717,7 +717,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
 			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]--;
 
-		m_aClients[pMsg->m_ClientID].Reset(this);
+		m_aClients[pMsg->m_ClientID].Reset(this, pMsg->m_ClientID);
 	}
 	else if(MsgId == NETMSGTYPE_SV_GAMEINFO && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
@@ -818,6 +818,9 @@ void CGameClient::OnStartGame()
 {
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Client()->DemoRecorder_HandleAutoStart();
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		m_pScoreboard->ResetPlayerStats(i);
 }
 
 void CGameClient::OnRconLine(const char *pLine)
@@ -1376,7 +1379,7 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 	}
 }
 
-void CGameClient::CClientData::Reset(CGameClient *pGameClient)
+void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 {
 	m_aName[0] = 0;
 	m_aClan[0] = 0;
@@ -1394,6 +1397,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 		m_SkinInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
 		m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f , 1.0f);
 	}
+	pGameClient->m_pScoreboard->ResetPlayerStats(ClientID);
 	UpdateRenderInfo(pGameClient, false);
 }
 

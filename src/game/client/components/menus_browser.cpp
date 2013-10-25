@@ -435,7 +435,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	CUIRect Button, EditButtons;
 	View.VSplitLeft(20.0f, &Button, &View);
 	Button.Margin(2.0f, &Button);
-	if(DoButtonSprite(0, IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button))
+	if(DoSwitchSprite(0, IMAGE_MENUICONS, SPRITE_MENU_COLLAPSED, SPRITE_MENU_EXPANDED, pFilter->Extended(), &Button))
 		pFilter->Switch();
 
 	// split buttons from label

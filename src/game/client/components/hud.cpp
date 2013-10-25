@@ -11,6 +11,7 @@
 #include <game/client/animstate.h>
 #include <game/client/render.h>
 
+#include "scoreboard.h"
 #include "menus.h"
 #include "controls.h"
 #include "camera.h"
@@ -564,12 +565,15 @@ void CHud::OnRender()
 		}
 
 		RenderGameTimer();
-		RenderPauseTimer();
-		RenderStartCountdown();
-		RenderDeadNotification();
+		if(!m_pClient->m_pScoreboard->Active())
+		{
+			RenderPauseTimer();
+			RenderStartCountdown();
+			RenderDeadNotification();
+			RenderWarmupTimer();
+		}
 		RenderSuddenDeath();
 		RenderScoreHud();
-		RenderWarmupTimer();
 		RenderFps();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();

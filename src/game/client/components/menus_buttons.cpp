@@ -130,7 +130,7 @@ int CMenus::DoButtonSprite(const void *pID, int ImageID, int SpriteID, const CUI
 {
 	int Inside = UI()->MouseInside(pRect);
 
-	float FadeVal = 1.0f;
+	float FadeVal = 0.0f;
 
 	if(pID)
 	{
@@ -138,12 +138,14 @@ int CMenus::DoButtonSprite(const void *pID, int ImageID, int SpriteID, const CUI
 		float *pFade = ButtonFade(pID, Seconds, 0);
 		FadeVal = *pFade/Seconds;
 	}
+	else if(Inside)
+		FadeVal = 1.0f;
 
 	if(Draw)
 		RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Icon = *pRect;
-	Icon.Margin(2.0f, &Icon);
+	//Icon.Margin(2.0f, &Icon);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -163,39 +165,11 @@ int CMenus::DoButtonSprite(const void *pID, int ImageID, int SpriteID, const CUI
 	return ReturnValue;
 }
 
-int CMenus::DoButtonTwoSprite(const void *pID, int ImageID, int SpriteID1, int SpriteID2, const CUIRect *pRect)
-{
-	int Inside = UI()->MouseInside(pRect);
-
-	CUIRect Icon = *pRect;
-	Icon.Margin(2.0f, &Icon);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	if(Inside)
-		RenderTools()->SelectSprite(SpriteID2);
-	else
-		RenderTools()->SelectSprite(SpriteID1);
-	IGraphics::CQuadItem QuadItem(Icon.x, Icon.y, Icon.w, Icon.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	if(pID)
-		return UI()->DoButtonLogic(pID, "", false, pRect);
-
-	int ReturnValue = 0;
-	if(Inside && Input()->KeyDown(KEY_MOUSE_1))
-		ReturnValue = 1;
-
-	return ReturnValue;
-}
-
 int CMenus::DoSwitchSprite(const void *pID, int ImageID, int SpriteIDInactive, int SpriteIDActive, int Checked, const CUIRect *pRect)
 {
 	int Inside = UI()->MouseInside(pRect);
 
-	float FadeVal = 1.0f;
+	float FadeVal = 0.0f;
 
 	if(pID)
 	{
@@ -203,9 +177,11 @@ int CMenus::DoSwitchSprite(const void *pID, int ImageID, int SpriteIDInactive, i
 		float *pFade = ButtonFade(pID, Seconds, 0);
 		FadeVal = *pFade/Seconds;
 	}
+	else if(Inside)
+		FadeVal = 1.0f;
 
 	CUIRect Icon = *pRect;
-	Icon.Margin(1.0f, &Icon);
+	//Icon.Margin(1.0f, &Icon);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();

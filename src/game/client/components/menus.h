@@ -39,7 +39,6 @@ class CMenus : public CComponent
 	int DoButtonStart(const void *pID, const char *pText, const CUIRect *pRect, const char *pImageName, float r=5.0f, float FontFactor=0.0f);
 	int DoTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool Fade=true);
 	int DoButtonSprite(const void *pID, int ImageID, int SpriteID1, const CUIRect *pRect, bool Draw=false);
-	int DoButtonTwoSprite(const void *pID, int ImageID, int SpriteID1, int SpriteID2, const CUIRect *pRect);
 	int DoSwitchSprite(const void *pID, int ImageID, int SpriteIDInactive, int SpriteIDActive, int Checked, const CUIRect *pRect);
 	int DoButtonToggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
 	int DoButtonMouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
