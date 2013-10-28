@@ -62,7 +62,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	Middle.VSplitLeft(ButtonWidth, &Middle, &Right);
 	Right.VSplitRight(ButtonWidth, 0, &Right);
 	if(!(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS))
-		Left.VSplitLeft(ButtonWidth, &Left, 0);
+		Left.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
 
 	// do backgrounds
 	RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
