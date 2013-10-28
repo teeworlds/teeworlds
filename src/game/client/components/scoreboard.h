@@ -7,8 +7,8 @@
 class CScoreboard : public CComponent
 {
 	void RenderGoals(float x, float y, float w);
-	void RenderSpectators(float x, float y, float w);
-	void RenderScoreboard(float x, float y, float w, int Team, const char *pTitle, int Align);
+	float RenderSpectators(float x, float y, float w);
+	float RenderScoreboard(float x, float y, float w, int Team, const char *pTitle, int Align);
 	void RenderRecordingNotification(float x);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
@@ -16,8 +16,9 @@ class CScoreboard : public CComponent
 	const char *GetClanName(int Team);
 
 	bool m_Active;
-	int m_ScoreboardHeight;
 	int m_PlayerLines;
+
+	class CUIRect m_TotalRect;
 
 	class CPlayerStats
 	{
@@ -40,6 +41,8 @@ public:
 
 	bool Active();
 	void ResetPlayerStats(int ClientID);
+
+	class CUIRect GetScoreboardRect(); 
 };
 
 #endif
