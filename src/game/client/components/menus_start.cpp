@@ -88,7 +88,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButton_MenuImage(&s_MapEditorButton, Localize("Editor"), 0, &Button, "editor", 10.0f, 0.5f))
 		{
 			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
+//			Input()->MouseModeRelative();
 		}
 	}
 	else
@@ -96,7 +96,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
 			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
+//			Input()->MouseModeRelative();
 		}
 	}
 

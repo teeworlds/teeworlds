@@ -259,7 +259,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_GameTickSpeed = SERVER_TICK_SPEED;
 
-	m_WindowMustRefocus = 0;
+	m_MouseIsFree = false;
 	m_SnapCrcErrors = 0;
 	m_AutoScreenshotRecycle = false;
 	m_EditorActive = false;
@@ -1794,7 +1794,7 @@ void CClient::Run()
 	// never start with the editor
 	g_Config.m_ClEditor = 0;
 
-	Input()->MouseModeRelative();
+	Input()->ShowCursor(g_Config.m_InpHWCursor);
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
@@ -1812,6 +1812,9 @@ void CClient::Run()
 			m_aCmdConnect[0] = 0;
 		}
 
+        if(m_MouseIsFree)
+            Input()->SetMouseModes(0);
+
 		// update input
 		if(Input()->Update())
 			break;	// SDL_QUIT
@@ -1820,52 +1823,34 @@ void CClient::Run()
 		Sound()->Update();
 
 		// release focus
-		if(!m_pGraphics->WindowActive())
+		if(!m_MouseIsFree &&
+		    (Input()->MouseLeft() || (g_Config.m_DbgFocus && Input()->KeyPressed(KEY_ESCAPE)) ))
 		{
-			if(m_WindowMustRefocus == 0)
-				Input()->MouseModeAbsolute();
-			m_WindowMustRefocus = 1;
+			m_MouseModes = Input()->GetMouseModes();
+			Input()->SetMouseModes(0);
+			m_MouseIsFree = true;
 		}
-		else if (g_Config.m_DbgFocus && Input()->KeyPressed(KEY_ESCAPE))
+		if(m_MouseIsFree && (Input()->MouseEntered() || Input()->KeyPressed(KEY_MOUSE_1)))
 		{
-			Input()->MouseModeAbsolute();
-			m_WindowMustRefocus = 1;
-		}
-
-		// refocus
-		if(m_WindowMustRefocus && m_pGraphics->WindowActive())
-		{
-			if(m_WindowMustRefocus < 3)
-			{
-				Input()->MouseModeAbsolute();
-				m_WindowMustRefocus++;
-			}
-
-			if(m_WindowMustRefocus >= 3 || Input()->KeyPressed(KEY_MOUSE_1))
-			{
-				Input()->MouseModeRelative();
-				m_WindowMustRefocus = 0;
-			}
+			Input()->SetMouseModes(m_MouseModes);
+			m_MouseIsFree = false; 
 		}
 
 		// panic quit button
-		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyPressed('q'))
+		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyPressed(KEY_Q))
 		{
 			Quit();
 			break;
 		}
 
-		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('d'))
+		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown(KEY_D))
 			g_Config.m_Debug ^= 1;
 
-		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('g'))
+		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown(KEY_G))
 			g_Config.m_DbgGraphs ^= 1;
 
-		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('e'))
-		{
+		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown(KEY_E))
 			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
-			Input()->MouseModeRelative();
-		}
 
 		/*
 		if(!gfx_window_open())
@@ -1879,11 +1864,19 @@ void CClient::Run()
 				if(!m_EditorActive)
 				{
 					GameClient()->OnActivateEditor();
+        			m_MouseModes = Input()->GetMouseModes();
+    			    Input()->SetMouseModes(0);
+    			    m_ShowCursor = Input()->ShowCursor(-1);
+    			    Input()->ShowCursor(1);
 					m_EditorActive = true;
 				}
 			}
 			else if(m_EditorActive)
+			{
+			    Input()->SetMouseModes(m_MouseModes);
+			    Input()->ShowCursor(m_ShowCursor);
 				m_EditorActive = false;
+			}
 
 			Update();
 			

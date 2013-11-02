@@ -3,7 +3,6 @@
 #ifndef GAME_CLIENT_COMPONENTS_BINDS_H
 #define GAME_CLIENT_COMPONENTS_BINDS_H
 #include <game/client/component.h>
-#include <engine/keys.h>
 
 class CBinds : public CComponent
 {
@@ -36,6 +35,7 @@ public:
 	void UnbindAll();
 	const char *Get(int KeyID);
 	const char *GetKey(const char *pBindStr);
+	bool IsFKey(int Key);
 
 	virtual void OnConsoleInit();
 	virtual bool OnInput(IInput::CEvent Event);

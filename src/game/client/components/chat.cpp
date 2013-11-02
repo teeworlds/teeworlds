@@ -104,6 +104,39 @@ bool CChat::OnInput(IInput::CEvent Event)
 	if(m_Mode == MODE_NONE)
 		return false;
 
+	if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyDown(KEY_V))
+	{
+		const char *text = Input()->GetClipboardText();
+		// if the text has more than one line, we send all lines except the last one
+		// the last one is set as in the text field
+		char Line[256];
+		int i, Begin = 0;
+		for(i = 0; i < str_length(text); i++)
+		{
+			if(text[i] == '\n')
+			{
+				int max = i - Begin + 1;
+				if(max > (int)sizeof(Line))
+					max = sizeof(Line);
+				str_copy(Line, text + Begin, max);
+				Begin = i+1;
+				SayChat(Line);
+			    while(text[i] == '\n') i++;
+			}
+		}
+		int max = i - Begin + 1;
+		if(max > (int)sizeof(Line))
+			max = sizeof(Line);
+		str_copy(Line, text + Begin, max);
+		Begin = i+1;
+		m_Input.Add(Line);
+	}
+
+	if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyDown(KEY_C))
+	{
+		Input()->SetClipboardText(m_Input.GetString());
+	}
+
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
 	{
 		m_Mode = MODE_NONE;
@@ -111,28 +144,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
-		if(m_Input.GetString()[0])
-		{
-			bool AddEntry = false;
-
-			if(m_LastChatSend+time_freq() < time_get())
-			{
-				Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
-				AddEntry = true;
-			}
-			else if(m_PendingChatCounter < 3)
-			{
-				++m_PendingChatCounter;
-				AddEntry = true;
-			}
-
-			if(AddEntry)
-			{
-				CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
-				pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
-				mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
-			}
-		}
+		SayChat(m_Input.GetString());
 		m_pHistoryEntry = 0x0;
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
@@ -525,4 +537,30 @@ void CChat::Say(int Team, const char *pLine)
 	Msg.m_Team = Team;
 	Msg.m_pMessage = pLine;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
+void CChat::SayChat(const char *pLine)
+{
+	if(!pLine || str_length(pLine) < 1)
+		return;
+
+	bool AddEntry = false;
+
+	if(m_LastChatSend+time_freq() < time_get())
+	{
+		Say(m_Mode == MODE_ALL ? 0 : 1, pLine);
+		AddEntry = true;
+	}
+	else if(m_PendingChatCounter < 3)
+	{
+		++m_PendingChatCounter;
+		AddEntry = true;
+	}
+
+	if(AddEntry)
+	{
+		CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+str_length(pLine)-1);
+		pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
+		mem_copy(pEntry->m_aText, pLine, str_length(pLine));
+	}
 }

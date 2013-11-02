@@ -156,7 +156,8 @@ public:
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
-	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int screen) = 0;
+	virtual int GetNumScreens() = 0;
 
 	virtual int GetDesktopScreenWidth() = 0;
 	virtual int GetDesktopScreenHeight() = 0;
@@ -186,6 +187,9 @@ public:
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
+
+    virtual void GrabWindow(bool grab) = 0;
+	virtual void WarpMouse(int x, int y) = 0;
 
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;

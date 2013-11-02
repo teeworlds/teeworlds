@@ -1,32 +1,12 @@
 #pragma once
 
 #include "graphics_threaded.h"
+#include "SDL.h"
+#include "SDL_opengl.h"
 
 
-// platform dependent implementations for transfering render context from the main thread to the graphics thread
-// TODO: when SDL 1.3 comes, this can be removed
-#if defined(CONF_FAMILY_WINDOWS)
-	struct SGLContext
-	{
-		HDC m_hDC;
-		HGLRC m_hGLRC;
-	};
-
-	static SGLContext GL_GetCurrentContext()
-	{
-		SGLContext Context;
-		Context.m_hDC = wglGetCurrentDC();
-		Context.m_hGLRC = wglGetCurrentContext();
-		return Context;
-	}
-
-	static void GL_MakeCurrent(const SGLContext &Context) { wglMakeCurrent(Context.m_hDC, Context.m_hGLRC); }
-	static void GL_ReleaseContext(const SGLContext &Context) { wglMakeCurrent(NULL, NULL); }
-	static void GL_SwapBuffers(const SGLContext &Context) { SwapBuffers(Context.m_hDC); }
-#elif defined(CONF_PLATFORM_MACOSX)
-
-	#include <objc/objc-runtime.h>
-
+// Use SDL semaphores on Mac OS X, because (unnamed) posix semaphores are not available
+#if defined(CONF_PLATFORM_MACOSX)
 	class semaphore
 	{
 		SDL_sem *sem;
@@ -37,39 +17,8 @@
 		void signal() { SDL_SemPost(sem); }
 	};
 
-	struct SGLContext
-	{
-		id m_Context;
-	};
-
-	static SGLContext GL_GetCurrentContext()
-	{
-		SGLContext Context;
-		Class NSOpenGLContextClass = (Class) objc_getClass("NSOpenGLContext");
-		SEL selector = sel_registerName("currentContext");
-		Context.m_Context = objc_msgSend((objc_object*) NSOpenGLContextClass, selector);
-		return Context;
-	}
-
-	static void GL_MakeCurrent(const SGLContext &Context)
-	{
-		SEL selector = sel_registerName("makeCurrentContext");
-		objc_msgSend(Context.m_Context, selector);
-	}
-
-	static void GL_ReleaseContext(const SGLContext &Context)
-	{
-		Class NSOpenGLContextClass = (Class) objc_getClass("NSOpenGLContext");
-		SEL selector = sel_registerName("clearCurrentContext");
-		objc_msgSend((objc_object*) NSOpenGLContextClass, selector);
-	}
-
-	static void GL_SwapBuffers(const SGLContext &Context)
-	{
-		SEL selector = sel_registerName("flushBuffer");
-		objc_msgSend(Context.m_Context, selector);
-	}
-
+	#include <objc/objc-runtime.h>
+	
 	class CAutoreleasePool
 	{
 	private:
@@ -89,41 +38,14 @@
 			SEL selector = sel_registerName("drain");
 			objc_msgSend(m_Pool, selector);
 		}
-	};							
-
-#elif defined(CONF_FAMILY_UNIX)
-
-	#include <GL/glx.h>
-
-	struct SGLContext
-	{
-		Display *m_pDisplay;
-		GLXDrawable m_Drawable;
-		GLXContext m_Context;
-	};
-
-	static SGLContext GL_GetCurrentContext()
-	{
-		SGLContext Context;
-		Context.m_pDisplay = glXGetCurrentDisplay();
-		Context.m_Drawable = glXGetCurrentDrawable();
-		Context.m_Context = glXGetCurrentContext();
-		return Context;
-	}
-
-	static void GL_MakeCurrent(const SGLContext &Context) { glXMakeCurrent(Context.m_pDisplay, Context.m_Drawable, Context.m_Context); }
-	static void GL_ReleaseContext(const SGLContext &Context) { glXMakeCurrent(Context.m_pDisplay, None, 0x0); }
-	static void GL_SwapBuffers(const SGLContext &Context) { glXSwapBuffers(Context.m_pDisplay, Context.m_Drawable); }
-#else
-	#error missing implementation
+	};	
 #endif
-
 
 // basic threaded backend, abstract, missing init and shutdown functions
 class CGraphicsBackend_Threaded : public IGraphicsBackend
 {
 public:
-	// constructed on the main thread, the rest of the functions is runned on the render thread
+	// constructed on the main thread, the rest of the functions is run on the render thread
 	class ICommandProcessor
 	{
 	public:
@@ -209,7 +131,8 @@ public:
 class CCommandProcessorFragment_SDL
 {
 	// SDL stuff
-	SGLContext m_GLContext;
+	SDL_GLContext m_GLContext;
+	SDL_Window * m_pWindow;
 public:
 	enum
 	{
@@ -220,7 +143,8 @@ public:
 	struct SCommand_Init : public CCommandBuffer::SCommand
 	{
 		SCommand_Init() : SCommand(CMD_INIT) {}
-		SGLContext m_Context;
+		SDL_GLContext m_GLContext;
+		SDL_Window * m_pWindow;
 	};
 
 	struct SCommand_Shutdown : public CCommandBuffer::SCommand
@@ -252,18 +176,21 @@ class CCommandProcessor_SDL_OpenGL : public CGraphicsBackend_Threaded::ICommandP
 // graphics backend implemented with SDL and OpenGL
 class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 {
-	SDL_Surface *m_pScreenSurface;
+    SDL_Window *m_pWindow;
+    SDL_GLContext m_GLContext;
 	ICommandProcessor *m_pProcessor;
-	SGLContext m_GLContext;
 	volatile int m_TextureMemoryUsage;
 public:
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
+	virtual int Init(const char *pName, int *Width, int *Height, int Screen, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
 
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual void GrabWindow(bool);
+	virtual void WarpMouse(int x, int y);
 	virtual int WindowActive();
 	virtual int WindowOpen();
+	virtual int GetNumScreens();
 };

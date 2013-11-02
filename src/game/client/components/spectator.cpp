@@ -139,6 +139,8 @@ bool CSpectator::OnMouseMove(float x, float y)
 	if(!m_Active)
 		return false;
 
+	Input()->SetMouseModes(0);
+
 	UI()->ConvertMouseMove(&x, &y);
 	m_SelectorMouse += vec2(x,y);
 	return true;

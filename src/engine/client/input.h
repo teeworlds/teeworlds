@@ -7,7 +7,17 @@ class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
 
-	int m_InputGrabbed;
+	int m_MouseModes;
+
+	int m_LastMousePosX;
+	int m_LastMousePosY;
+	bool m_FirstWarp;
+	char *m_pClipboardText;
+	bool m_MouseLeft;
+	bool m_MouseEntered;
+
+	SDL_Surface *m_pCursorSurface;
+	SDL_Cursor *m_pCursor;
 
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;
@@ -21,10 +31,20 @@ public:
 
 	virtual void Init();
 
-	virtual void MouseRelative(float *x, float *y);
-	virtual void MouseModeAbsolute();
-	virtual void MouseModeRelative();
+	virtual void SetMouseModes(int modes);
+	virtual int GetMouseModes();
+	virtual void GetMousePosition(float *x, float *y);
+	virtual void GetRelativePosition(float *x, float *y);
+	virtual bool MouseMoved();
 	virtual int MouseDoubleClick();
+	virtual const char* GetClipboardText();
+	virtual void SetClipboardText(const char *Text);
+	virtual bool MouseLeft();
+	virtual bool MouseEntered();
+
+	virtual int ShowCursor(bool show);
+
+	void LoadHardwareCursor();
 
 	void ClearKeyStates();
 	int KeyState(int Key);

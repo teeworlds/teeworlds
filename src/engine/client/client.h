@@ -91,7 +91,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_RenderFrames;
 
 	NETADDR m_ServerAddress;
-	int m_WindowMustRefocus;
+	bool m_MouseIsFree;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
 	bool m_EditorActive;
@@ -103,6 +103,9 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_CurrentRecvTick;
 	int m_RconAuthed;
 	int m_UseTempRconCommands;
+
+	int m_MouseModes;
+	bool m_ShowCursor;
 
 	// version-checking
 	char m_aVersionStr[10];
