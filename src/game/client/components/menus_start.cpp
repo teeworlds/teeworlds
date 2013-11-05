@@ -11,6 +11,7 @@
 
 #include <game/generated/client_data.h>
 
+#include "camera.h"
 #include "menus.h"
 
 void CMenus::RenderStartMenu(CUIRect MainView)
@@ -31,6 +32,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		if(DoButtonStart(&s_SettingsButton, Localize("Settings"), &Button, "settings", 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL+g_Config.m_UiSettingsPage);
 			m_MenuPage = PAGE_SETTINGS;
 			m_ResetFades = FADE_ALL;
 		}
@@ -39,6 +41,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		if(DoButtonDefault(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL+g_Config.m_UiSettingsPage);
 			m_MenuPage = PAGE_SETTINGS;
 			m_ResetFades = FADE_ALL;
 		}
@@ -67,6 +70,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		if(DoButtonStart(&s_DemoButton, Localize("Demos"), &Button, "demos", 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			m_MenuPage = PAGE_DEMOS;
 			m_ResetFades = FADE_ALL;
 			DemolistPopulate();
@@ -77,6 +81,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		if(DoButtonDefault(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_DEMOS);
 			m_MenuPage = PAGE_DEMOS;
 			m_ResetFades = FADE_ALL;
 			DemolistPopulate();

@@ -137,6 +137,7 @@ class CMenus : public CComponent
 		PAGE_BROWSER_FRIENDS,
 		NUM_PAGE_BROWSER,
 
+		// order here should be the same like enum for settings background map positions in camera
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,

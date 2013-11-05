@@ -787,6 +787,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_GeneralButton=0;
 		if(DoTab(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL);
 			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
 			m_ResetFades |= FADE_INNERMENU;
 		}
@@ -796,6 +797,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_PlayerButton=0;
 		if(DoTab(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage==SETTINGS_PLAYER, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_PLAYER);
 			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
 			m_ResetFades |= FADE_INNERMENU;
 		}
@@ -805,6 +807,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_TeeButton=0;
 		if(DoTab(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage==SETTINGS_TEE, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
 			g_Config.m_UiSettingsPage = SETTINGS_TEE;
 			m_ResetFades |= FADE_INNERMENU;
 		}
@@ -814,6 +817,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_ControlsButton=0;
 		if(DoTab(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_CONTROLS);
 			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
 			m_ResetFades |= FADE_INNERMENU;
 		}
@@ -823,6 +827,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_GraphicsButton=0;
 		if(DoTab(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GRAPHICS);
 			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
 			m_ResetFades |= FADE_INNERMENU;
 		}
@@ -832,6 +837,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static int s_SoundButton=0;
 		if(DoTab(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_SOUND);
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 			m_ResetFades |= FADE_INNERMENU;
 		}
