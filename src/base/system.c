@@ -370,6 +370,58 @@ int io_flush(IOHANDLE io)
 	return 0;
 }
 
+void set_clipboard_text(const char *pText)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+    HANDLE hData;
+    char *ptrData = NULL;
+    int nStrLen = str_length(pText);
+
+    hData = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE, nStrLen + 1);
+    ptrData = (char*)GlobalLock(hData);
+    if (ptrData == NULL)
+        return;
+
+    memcpy(ptrData, pText, nStrLen + 1);
+    GlobalUnlock(hData);
+    if (hData == NULL)
+        return;
+
+    OpenClipboard(NULL);
+    EmptyClipboard();
+    SetClipboardData(CF_TEXT, hData);
+    CloseClipboard();
+
+#endif
+}
+
+void get_clipboard_text(char *dest, unsigned int size)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+    HGLOBAL hglb;
+    LPTSTR lptstr;
+
+    if (!IsClipboardFormatAvailable(CF_TEXT))
+        return;
+    if (!OpenClipboard(NULL))
+        return;
+
+    hglb = GetClipboardData(CF_TEXT);
+    if (hglb != NULL)
+    {
+        lptstr = GlobalLock(hglb);
+        if (lptstr != NULL)
+        {
+            str_copy(dest, lptstr, size);
+
+            GlobalUnlock(hglb);
+        }
+    }
+    CloseClipboard();
+#endif
+}
+
+
 void *thread_create(void (*threadfunc)(void *), void *u)
 {
 #if defined(CONF_FAMILY_UNIX)
