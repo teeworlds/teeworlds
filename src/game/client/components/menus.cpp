@@ -324,7 +324,7 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 
 int CMenus::DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	return DoButton_CheckBox_Common(pID, pText, "", pRect, Checked);
+	return DoButton_CheckBox_Common(pID, pText, "", pRect, Checked != 0);
 }
 
 int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
@@ -360,7 +360,7 @@ int CMenus::DoButton_SpriteID(const void *pID, int ImageID, int SpriteID, const 
 
 int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -379,7 +379,7 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 
 int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -394,7 +394,7 @@ int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, c
 
 int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -409,7 +409,7 @@ int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 
 int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 	bool ReturnValue = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
@@ -672,7 +672,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	// logic
 	float ReturnValue = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
 
 	if(UI()->ActiveItem() == pID)
 	{
@@ -721,7 +721,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	// logic
 	float ReturnValue = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
 
 	if(UI()->ActiveItem() == pID)
 	{
@@ -996,7 +996,7 @@ int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 	static void *pGrabbedID = 0;
 	static bool MouseReleased = true;
 	static int ButtonUsed = 0;
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 	int NewKey = Key;
 
 	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pID)
@@ -1683,6 +1683,7 @@ int CMenus::Render()
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		const char *pButtonText = "";
+		char aExtraTextBuf[1024];
 		int ExtraAlign = 0;
 		int NumOptions = 4;
 
@@ -1696,10 +1697,18 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Connecting to");
 			pButtonText = Localize("Abort");
+			pExtraText = g_Config.m_UiServerAddress;
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
 				pTitle = Localize("Downloading map");
 				pExtraText = "";
+				NumOptions = 5;
+			}
+			else if(m_QueuePos != -1)
+			{
+				pTitle = Localize("In queue");
+				str_format(aExtraTextBuf, sizeof(aExtraTextBuf), Localize("Place in queue: %d"), m_QueuePos+1);
+				pExtraText = aExtraTextBuf;
 				NumOptions = 5;
 			}
 		}
@@ -1869,7 +1878,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_CONNECTING)
 		{
 			static int s_Button = 0;
-			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed || m_EnterPressed)
+			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EscapePressed)
 			{
 				Client()->Disconnect();
 				m_Popup = POPUP_NONE;
@@ -1928,8 +1937,21 @@ int CMenus::Render()
 			}
 			else
 			{
+				// extra text
 				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, g_Config.m_UiServerAddress, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+
+				// vip password editbox
+				if(m_QueuePos != -1)
+				{
+					CUIRect EditBox;
+					Box.HSplitBottom(ButtonHeight*1.7f, 0, &Box);
+					Box.HSplitTop(20.0f, &EditBox, &Box);
+
+					static float s_OffsetPassword = 0.0f;
+					DoEditBoxOption(g_Config.m_Password, g_Config.m_Password, sizeof(g_Config.m_Password), &EditBox,
+									Localize("VIP password"), ButtonWidth, &s_OffsetPassword, true);
+				}
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2239,6 +2261,11 @@ int CMenus::Render()
 }
 
 
+void CMenus::SetQueuePos(int Pos)
+{
+	m_QueuePos = Pos;
+}
+
 void CMenus::SetActive(bool Active)
 {
 	m_MenuActive = Active;
@@ -2333,7 +2360,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
-			if(str_find(Client()->ErrorString(), "password"))
+			if(str_find(Client()->ErrorString(), "password") || str_find(Client()->ErrorString(), "VIP"))
 			{
 				m_Popup = POPUP_PASSWORD;
 				UI()->SetHotItem(&g_Config.m_Password);
@@ -2349,10 +2376,14 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
 		m_DownloadSpeed = 0.0f;
+		m_QueuePos = -1;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
+	{
 		m_Popup = POPUP_CONNECTING;
+		m_QueuePos = -1;
+	}
 	else if (NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK)
 	{
 		m_Popup = POPUP_NONE;

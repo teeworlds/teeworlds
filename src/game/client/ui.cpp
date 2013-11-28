@@ -46,11 +46,11 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 	return 0;
 }
 
-int CUI::MouseInside(const CUIRect *r)
+bool CUI::MouseInside(const CUIRect *r)
 {
 	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
-		return 1;
-	return 0;
+		return true;
+	return false;
 }
 
 void CUI::ConvertMouseMove(float *x, float *y)
@@ -272,7 +272,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = MouseInside(pRect);
+	bool Inside = MouseInside(pRect);
 	static int ButtonUsed = 0;
 
 	if(ActiveItem() == pID)
@@ -307,7 +307,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 
 int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
 {
-	int Inside = MouseInside(pRect);
+	bool Inside = MouseInside(pRect);
 
 	if(ActiveItem() == pID)
 	{

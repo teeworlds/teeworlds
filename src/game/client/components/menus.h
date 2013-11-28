@@ -213,10 +213,11 @@ class CMenus : public CComponent
 	bool m_EnterPressed;
 	bool m_DeletePressed;
 
-	// for map download popup
+	// for connecting popup
 	int64 m_DownloadLastCheckTime;
 	int m_DownloadLastCheckSize;
 	float m_DownloadSpeed;
+	int m_QueuePos;
 
 	// for call vote
 	int m_CallvoteSelectedOption;
@@ -490,6 +491,7 @@ public:
 	CMenus();
 
 	void RenderLoading();
+	void SetQueuePos(int Pos);
 
 	bool IsActive() const { return m_MenuActive; }
 

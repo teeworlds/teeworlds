@@ -147,7 +147,7 @@ class Float(BaseType):
 	def Set(self, value):
 		self.value = value
 	def EmitDefinition(self, name):
-		return ["%f"%self.value]
+		return ["%ff"%self.value]
 		#return ["%d /* %s */"%(self.value, self._target_name)]
 
 class String(BaseType):

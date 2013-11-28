@@ -157,14 +157,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	if(UI()->ActiveItem() == pID)
 	{
 		if(!UI()->MouseButton(0))
 		{
-			if(Inside >= 0)
-				ReturnValue = 1;
+			ReturnValue = 1;
 			UI()->SetActiveItem(0);
 		}
 	}
@@ -332,7 +331,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 				SetOverlay(CInfoOverlay::OVERLAY_PLAYERSINFO, UI()->MouseX(), UI()->MouseY(), pEntry);
 
 				// rect
-				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 0.75f), CUI::CORNER_ALL, 5.0f);
+				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207f, 0.75f), CUI::CORNER_ALL, 5.0f);
 			}
 
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);

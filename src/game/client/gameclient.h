@@ -227,6 +227,7 @@ public:
 	virtual void OnInit();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
+	virtual void OnQueuePos(int Pos);
 	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker);
 	virtual void OnNewSnapshot();
 	virtual void OnDemoRecSnap();

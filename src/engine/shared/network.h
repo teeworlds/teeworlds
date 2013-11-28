@@ -69,9 +69,10 @@ enum
 
 	NET_CTRLMSG_KEEPALIVE=0,
 	NET_CTRLMSG_CONNECT=1,
-	NET_CTRLMSG_CONNECTACCEPT=2,
-	NET_CTRLMSG_ACCEPT=3,
-	NET_CTRLMSG_CLOSE=4,
+	NET_CTRLMSG_QUEUEPOSITION=2,
+	NET_CTRLMSG_CONNECTACCEPT=3,
+	NET_CTRLMSG_ACCEPT=4,
+	NET_CTRLMSG_CLOSE=5,
 
 	NET_CONN_BUFFERSIZE=1024*32,
 
@@ -137,6 +138,7 @@ private:
 	unsigned short m_Sequence;
 	unsigned short m_Ack;
 	unsigned m_State;
+	bool m_InQueue;
 
 	int m_Token;
 	int m_RemoteClosed;
@@ -148,6 +150,7 @@ private:
 	int64 m_LastRecvTime;
 	int64 m_LastSendTime;
 
+	const char *m_pConnectPassword;
 	char m_ErrorString[256];
 
 	CNetPacketConstruct m_Construct;
@@ -169,7 +172,7 @@ private:
 
 public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
-	int Connect(NETADDR *pAddr);
+	int Connect(NETADDR *pAddr, const char *pPassword);
 	void Disconnect(const char *pReason);
 
 	int Update();
@@ -250,11 +253,27 @@ class CNetServer
 		CNetConnection m_Connection;
 	};
 
+	struct CClientQueue
+	{
+		NETADDR m_Addr;
+		int64 m_LastRecvTime;
+		CClientQueue *m_pNext;
+	};
+
 	NETSOCKET m_Socket;
 	class CNetBan *m_pNetBan;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
+	const char *m_pPassword;
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
+
+	int m_MaxClientsQueue;
+	CClientQueue *m_pClientsQueueHead;
+	CClientQueue *m_pClientsQueueTail;
+	int m_ClientsQueueSize;
+
+	const int *m_pNumReservedSlots;
+	const char *m_pPasswordVIP;
 
 	NETFUNC_NEWCLIENT m_pfnNewClient;
 	NETFUNC_DELCLIENT m_pfnDelClient;
@@ -262,11 +281,19 @@ class CNetServer
 
 	CNetRecvUnpacker m_RecvUnpacker;
 
+	// TODO: remove thoses functions and use some tl instead
+	void QueueAdd(const NETADDR *pAddr);
+	int QueueFind(const NETADDR *pAddr, bool Update=false);
+	void QueuePurge();
+	void QueueRemove(const NETADDR *pAddr);
+
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
-	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags);
+	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, const char *pPassword,
+			  int MaxClients, int MaxClientsPerIP, int MaxClientsQueue,
+			  const int *pNumReservedSlots, const char *pPasswordVIP);
 	int Close();
 
 	//
@@ -335,6 +362,7 @@ class CNetClient
 	CNetConnection m_Connection;
 	CNetRecvUnpacker m_RecvUnpacker;
 	NETSOCKET m_Socket;
+	int m_QueuePos;
 public:
 	// openness
 	bool Open(NETADDR BindAddr, int Flags);
@@ -342,7 +370,7 @@ public:
 
 	// connection state
 	int Disconnect(const char *Reason);
-	int Connect(NETADDR *Addr);
+	int Connect(NETADDR *Addr, const char *pPassword);
 
 	// communication
 	int Recv(CNetChunk *Chunk);
@@ -356,9 +384,10 @@ public:
 
 	// error and state
 	int NetType() const { return m_Socket.type; }
-	int State();
-	int GotProblems();
-	const char *ErrorString();
+	int State() const;
+	int QueuePos() const { return m_QueuePos; }
+	int GotProblems() const;
+	const char *ErrorString() const;
 };
 
 

@@ -101,7 +101,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, 0);
 
 		// do the logic
-		int Inside = UI()->MouseInside(&SeekBar);
+		bool Inside = UI()->MouseInside(&SeekBar);
 
 		if(UI()->ActiveItem() == id)
 		{

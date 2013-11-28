@@ -439,7 +439,7 @@ void CServer::SetRconCID(int ClientID)
 
 bool CServer::IsAuthed(int ClientID)
 {
-	return m_aClients[ClientID].m_Authed;
+	return m_aClients[ClientID].m_Authed != AUTHED_NO;
 }
 
 bool CServer::IsBanned(int ClientID)
@@ -826,14 +826,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					char aReason[256];
 					str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), pVersion);
 					m_NetServer.Drop(ClientID, aReason);
-					return;
-				}
-
-				const char *pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
-				{
-					// wrong password
-					m_NetServer.Drop(ClientID, "Wrong password");
 					return;
 				}
 
@@ -1256,7 +1248,9 @@ int CServer::Run()
 		BindAddr.port = g_Config.m_SvPort;
 	}
 
-	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
+	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_Password,
+						 g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, g_Config.m_SvMaxClientsQueue,
+						 &g_Config.m_SvReservedSlots, g_Config.m_SvPasswordVIP))
 	{
 		dbg_msg("server", "couldn't open socket. port %d might already be in use", g_Config.m_SvPort);
 		return -1;
