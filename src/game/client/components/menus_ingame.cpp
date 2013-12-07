@@ -96,7 +96,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				str_copy(aBuf, Localize("locked"), sizeof(aBuf));
 		}
 		else
-			str_copy(aBuf, Localize(Team != TEAM_SPECTATORS ? "Spectate" : "Spactating"), sizeof(aBuf)); // Localize("Spectating");
+			str_copy(aBuf, Localize(Team != TEAM_SPECTATORS ? "Spectate" : "Spectating"), sizeof(aBuf)); // Localize("Spectating");
 
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		Left.VSplitLeft(Spacing, 0, &Left);

@@ -136,7 +136,7 @@ const char *CUnpacker::GetString(int SanitizeType)
 		str_sanitize(pPtr);
 	else if(SanitizeType&SANITIZE_CC)
 		str_sanitize_cc(pPtr);
-	return SanitizeType&SKIP_START_WHITESPACES ? str_skip_whitespaces(pPtr) : pPtr;
+	return SanitizeType&SKIP_START_WHITESPACES ? str_utf8_skip_whitespaces(pPtr) : pPtr;
 }
 
 const unsigned char *CUnpacker::GetRaw(int Size)

@@ -343,7 +343,7 @@ const char g_aaKeyStrings[512][16] =
 	"mouse8",
 	"mousewheelup",
 	"mousewheeldown",
-	"&333",
+	"mouse9",
 	"&334",
 	"&335",
 	"&336",

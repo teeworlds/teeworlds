@@ -781,7 +781,9 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 				return -1;
 		}
 #else
-		if(inet_pton(AF_INET6, buf, &sa6) != 1)
+		sa6.sin6_family = AF_INET6;
+
+		if(inet_pton(AF_INET6, buf, &sa6.sin6_addr) != 1)
 			return -1;
 #endif
 		sockaddr_to_netaddr((struct sockaddr *)&sa6, addr);
@@ -1829,6 +1831,27 @@ int str_toint(const char *str) { return atoi(str); }
 float str_tofloat(const char *str) { return atof(str); }
 
 
+char *str_utf8_skip_whitespaces(char *str)
+{
+	char *str_old;
+	int code;
+
+	while(*str)
+	{
+		str_old = str;
+		code = str_utf8_decode(&str);
+
+		// check if unicode is not empty
+		if(code > 0x20 && code != 0xA0 && code != 0x034F && (code < 0x2000 || code > 0x200F) && (code < 0x2028 || code > 0x202F) &&
+			(code < 0x205F || code > 0x2064) && (code < 0x206A || code > 0x206F) && (code < 0xFE00 || code > 0xFE0F) &&
+			code != 0xFEFF && (code < 0xFFF9 || code > 0xFFFC))
+		{
+			return str_old;
+		}
+	}
+
+	return str;
+}
 
 static int str_utf8_isstart(char c)
 {

@@ -586,9 +586,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
 				if(aParaI[2] <= 60*Client()->GameTickSpeed())
-					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%.2f seconds)", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
+					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%s' (%.2f seconds)"), aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
 				else
-					str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%s'"), aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
 				m_pChat->AddLine(-1, 0, aBuf);
 			}
 			return;
@@ -1147,16 +1147,13 @@ void CGameClient::OnNewSnapshot()
 
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
-	if(CurrentServerInfo.m_aGameType[0] != '0')
-	{
-		if(str_comp(CurrentServerInfo.m_aGameType, "DM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "TDM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "CTF") != 0 &&
-			str_comp(CurrentServerInfo.m_aGameType, "LMS") != 0 && str_comp(CurrentServerInfo.m_aGameType, "SUR") != 0)
-			m_ServerMode = SERVERMODE_MOD;
-		else if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) == 0)
-			m_ServerMode = SERVERMODE_PURE;
-		else
-			m_ServerMode = SERVERMODE_PUREMOD;
-	}
+	if(str_comp(CurrentServerInfo.m_aGameType, "DM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "TDM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "CTF") != 0 &&
+		str_comp(CurrentServerInfo.m_aGameType, "LMS") != 0 && str_comp(CurrentServerInfo.m_aGameType, "SUR") != 0)
+		m_ServerMode = SERVERMODE_MOD;
+	else if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) == 0)
+		m_ServerMode = SERVERMODE_PURE;
+	else
+		m_ServerMode = SERVERMODE_PUREMOD;
 }
 
 void CGameClient::OnDemoRecSnap()

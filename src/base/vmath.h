@@ -41,6 +41,7 @@ public:
 	const vector2_base &operator /=(const vector2_base &v) { x /= v.x; y /= v.y; return *this; }
 
 	bool operator ==(const vector2_base &v) const { return x == v.x && y == v.y; } //TODO: do this with an eps instead
+	bool operator !=(const vector2_base &v) const { return x != v.y || y != v.y; }
 
 	operator const T* () { return &x; }
 };
@@ -133,6 +134,7 @@ public:
 	const vector3_base &operator /=(const vector3_base &v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
 
 	bool operator ==(const vector3_base &v) const { return x == v.x && y == v.y && z == v.z; } //TODO: do this with an eps instead
+	bool operator !=(const vector3_base &v) const { return x != v.x || y != v.y || z != v.z; }
 
 	operator const T* () { return &x; }
 };
@@ -213,6 +215,7 @@ public:
 	const vector4_base &operator /=(const vector4_base &v) { x /= v.x; y /= v.y; z /= v.z; w /= v.w; return *this; }
 
 	bool operator ==(const vector4_base &v) const { return x == v.x && y == v.y && z == v.z && w == v.w; } //TODO: do this with an eps instead
+	bool operator !=(const vector4_base &v) const { return x != v.x || y != v.y || z != v.z || w != v.w; }
 
 	operator const T* () { return &x; }
 };
