@@ -112,47 +112,47 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterEmpty = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterEmpty, Localize("Has people playing"), SortHash&IServerBrowser::FILTER_EMPTY, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterEmpty, Localize("Has people playing"), SortHash&IServerBrowser::FILTER_EMPTY, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_EMPTY, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterSpectators = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterSpectators, Localize("Count players only"), SortHash&IServerBrowser::FILTER_SPECTATORS, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterSpectators, Localize("Count players only"), SortHash&IServerBrowser::FILTER_SPECTATORS, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_SPECTATORS, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterFull = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterFull, Localize("Server not full"), SortHash&IServerBrowser::FILTER_FULL, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterFull, Localize("Server not full"), SortHash&IServerBrowser::FILTER_FULL, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_FULL, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterFriends = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterFriends, Localize("Show friends only"), SortHash&IServerBrowser::FILTER_FRIENDS, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterFriends, Localize("Show friends only"), SortHash&IServerBrowser::FILTER_FRIENDS, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_FRIENDS, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterPw = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterPw, Localize("No password"), SortHash&IServerBrowser::FILTER_PW, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterPw, Localize("No password"), SortHash&IServerBrowser::FILTER_PW, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_PW, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterCompatversion = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterCompatversion, Localize("Compatible version"), SortHash&IServerBrowser::FILTER_COMPAT_VERSION, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterCompatversion, Localize("Compatible version"), SortHash&IServerBrowser::FILTER_COMPAT_VERSION, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_COMPAT_VERSION, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterPure = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), SortHash&IServerBrowser::FILTER_PURE, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterPure, Localize("Standard gametype"), SortHash&IServerBrowser::FILTER_PURE, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_PURE, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterPureMap = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterPureMap, Localize("Standard map"), SortHash&IServerBrowser::FILTER_PURE_MAP, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterPureMap, Localize("Standard map"), SortHash&IServerBrowser::FILTER_PURE_MAP, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_PURE_MAP, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterGametypeStrict = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterGametypeStrict, Localize("Strict gametype filter"), SortHash&IServerBrowser::FILTER_GAMETYPE_STRICT, &Button))
+	if(pMenus->DoButtonCheckBox(&s_BrFilterGametypeStrict, Localize("Strict gametype filter"), SortHash&IServerBrowser::FILTER_GAMETYPE_STRICT, &Button))
 		pFilter->SetFilter(SortHash^IServerBrowser::FILTER_GAMETYPE_STRICT, Ping, Country, aGametype, aServerAddress);
 
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
@@ -201,7 +201,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		Button.VSplitRight(60.0f, &Button, &Rect);
 		Button.HMargin(3.0f, &Button);
 		static int s_BrFilterCountry = 0;
-		if(pMenus->DoButton_CheckBox(&s_BrFilterCountry, Localize("Player country:"), SortHash&IServerBrowser::FILTER_COUNTRY, &Button))
+		if(pMenus->DoButtonCheckBox(&s_BrFilterCountry, Localize("Player country:"), SortHash&IServerBrowser::FILTER_COUNTRY, &Button))
 			pFilter->SetFilter(SortHash^IServerBrowser::FILTER_COUNTRY, Ping, Country, aGametype, aServerAddress);
 
 		float OldWidth = Rect.w;

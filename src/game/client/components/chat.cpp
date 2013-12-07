@@ -12,6 +12,7 @@
 
 #include <game/client/gameclient.h>
 #include <game/client/localization.h>
+#include <game/client/ui.h>
 
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
@@ -478,9 +479,15 @@ void CChat::OnRender()
 
 	y -= 8.0f;
 
+	// get scoreboard rect and change to chat map screen
+	CUIRect ScoreboardRect = m_pClient->m_pScoreboard->GetScoreboardRect();
+	ScoreboardRect.x /= 2.0f;
+	ScoreboardRect.y /= 2.0f;
+	ScoreboardRect.w /= 2.0f;
+	ScoreboardRect.h /= 2.0f;
+
 	int64 Now = time_get();
-	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
+	float HeightLimit = m_pClient->m_pScoreboard->Active() ? ScoreboardRect.x < 100.0f ? max(ScoreboardRect.y+ScoreboardRect.h+5.0f, 50.0f) : 50.0f : m_Show ? 50.0f : 200.0f;
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
@@ -490,6 +497,10 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
 			break;
+
+		float LineWidth = 200.0f;
+		if(m_pClient->m_pScoreboard->Active() && y < ScoreboardRect.y+ScoreboardRect.h+5.0f)
+			LineWidth = min(ScoreboardRect.x-5.0f, 200.0f);
 
 		// get the y offset (calculate it if we haven't done that yet)
 		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)

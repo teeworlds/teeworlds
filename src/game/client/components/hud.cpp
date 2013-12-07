@@ -11,6 +11,7 @@
 #include <game/client/animstate.h>
 #include <game/client/render.h>
 
+#include "scoreboard.h"
 #include "menus.h"
 #include "controls.h"
 #include "camera.h"
@@ -88,7 +89,7 @@ void CHud::RenderPauseTimer()
 			if(Seconds < 5)
 				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
 			else
-				str_format(aBuf, sizeof(aBuf), "%d", round(Seconds));
+				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
 		}
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
@@ -338,7 +339,7 @@ void CHud::RenderWarmupTimer()
 			if(Seconds < 5)
 				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
 			else
-				str_format(aBuf, sizeof(aBuf), "%d", round(Seconds));
+				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
 		}
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
@@ -564,12 +565,15 @@ void CHud::OnRender()
 		}
 
 		RenderGameTimer();
-		RenderPauseTimer();
-		RenderStartCountdown();
-		RenderDeadNotification();
+		if(!m_pClient->m_pScoreboard->Active())
+		{
+			RenderPauseTimer();
+			RenderStartCountdown();
+			RenderDeadNotification();
+			RenderWarmupTimer();
+		}
 		RenderSuddenDeath();
 		RenderScoreHud();
-		RenderWarmupTimer();
 		RenderFps();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();

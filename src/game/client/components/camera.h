@@ -15,7 +15,12 @@ public:
 		POS_LAN,
 		POS_FAVORITES,
 		POS_DEMOS,
-		POS_SETTINGS,
+		POS_SETTINGS_GENERAL, // order here should be the same like enum for settings pages in menu
+		POS_SETTINGS_PLAYER,
+		POS_SETTINGS_TEE,
+		POS_SETTINGS_CONTROLS,
+		POS_SETTINGS_GRAPHICS,
+		POS_SETTINGS_SOUND,
 
 		NUM_POS,
 	};
@@ -23,6 +28,8 @@ public:
 	vec2 m_Center;
 	vec2 m_MenuCenter;
 	vec2 m_RotationCenter;
+	vec2 m_AnimationStartPos;
+	float m_MoveTime;
 	float m_Zoom;
 
 	CCamera();
