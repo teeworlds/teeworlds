@@ -464,7 +464,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_PlayButton = 0;
-	if(DoButtonDefault(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || Activated)
+	if(DoButtonDefault(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play"), 0, &Button) || Activated)
 	{
 		if(m_DemolistSelectedIndex >= 0)
 		{

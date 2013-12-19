@@ -562,6 +562,19 @@ void CScoreboard::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Victim != pMsg->m_Killer)
 			m_aPlayerStats[pMsg->m_Killer].m_Kills++;
 	}
+	else if(MsgType == NETMSGTYPE_SV_CLIENTDROP && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		CNetMsg_Sv_ClientDrop *pMsg = (CNetMsg_Sv_ClientDrop *)pRawMsg;
+
+		if(m_pClient->m_LocalClientID == pMsg->m_ClientID || !m_pClient->m_aClients[pMsg->m_ClientID].m_Active)
+		{
+			if(g_Config.m_Debug)
+				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid clientdrop");
+			return;
+		}
+
+		ResetPlayerStats(pMsg->m_ClientID);
+	}
 }
 
 bool CScoreboard::Active()
