@@ -214,7 +214,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	float HeadlineHeight = 40.0f;
 	float TitleFontsize = 20.0f;
-	float HeadlineFontsize = m_pClient->m_GameInfo.m_aTeamSize[Team] > 16 ? 8.0f : 12.0f;
+	float HeadlineFontsize = m_pClient->m_GameInfo.m_aTeamSize[Team] > 32 ? 8.0f : 12.0f;
 	float LineHeight = 20.0f;
 	float TeeSizeMod = 1.0f;
 	float Spacing = 2.0f;
@@ -244,7 +244,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		ScoreOffset = DeathOffset+DeathLength, ScoreLength = Race ? 83.0f : 35.0f;
 	}
 	float tw = 0.0f;
-	if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 16)
+	if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 32)
 	{
 		LineHeight = 10.0f;
 		TeeSizeMod = 0.4f;
@@ -477,7 +477,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			if(HighlightedLine)
 			{
 				CUIRect Rect = {x, y, w, LineHeight};
-				if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 16)
+				if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 32)
 					RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha), 3.0f);
 				else
 					RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha), 5.0f);
