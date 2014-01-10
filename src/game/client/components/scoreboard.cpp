@@ -187,6 +187,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	if(Team == TEAM_SPECTATORS)
 		return 0.0f;
 
+	bool lower16 = false;
 	bool upper16 = false;
 	bool lower32 = false;
 	bool upper32 = false;
@@ -203,6 +204,11 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	else if(Team == -5)
 	{
 		upper32 = true;
+		Team = 0;
+	}
+	else if(Team == -6)
+	{
+		lower16 = true;
 		Team = 0;
 	}
 
@@ -272,7 +278,12 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	else
 		Color = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 	CUIRect Rect = {x, y, w, HeadlineHeight};
-	RenderTools()->DrawRoundRect(&Rect, Color, 5.0f);
+	if(upper16 || upper32)
+		RenderTools()->DrawUIRect(&Rect, Color, 10, 5.0f);
+	else if(lower16 || lower32)
+		RenderTools()->DrawUIRect(&Rect, Color, 5, 5.0f);
+	else
+		RenderTools()->DrawRoundRect(&Rect, Color, 5.0f);
 
 	// render title
 	if(NoTitle)
@@ -290,33 +301,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			str_format(aBuf, sizeof(aBuf), "(%d) %s", NumPlayers, pTitle);
 		else
 			str_format(aBuf, sizeof(aBuf), "%s (%d)", pTitle, NumPlayers);
-	}
-
-	if(Align == -1)
-	{
-		tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
-		TextRender()->Text(0, x+20.0f, y+5.0f, TitleFontsize, pTitle, -1.0f);
-		if(!NoTitle)
-		{
-			str_format(aBuf, sizeof(aBuf), " (%d)", NumPlayers);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-			TextRender()->Text(0, x+20.0f+tw, y+5.0f, TitleFontsize, aBuf, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		}
-	}
-	else
-	{
-		tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
-		if(!NoTitle)
-		{
-			str_format(aBuf, sizeof(aBuf), "(%d) ", NumPlayers);
-			float PlayersTextWidth = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-			TextRender()->Text(0, x+w-tw-PlayersTextWidth-20.0f, y+5.0f, TitleFontsize, aBuf, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		}
-		tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
-		TextRender()->Text(0, x+w-tw-20.0f, y+5.0f, TitleFontsize, pTitle, -1.0f);
 	}
 
 	if(Race)
@@ -338,6 +322,35 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				TextRender()->Text(0, x+20.0f, y+3.0f, HeadlineFontsize, pMapRecordStr, -1.0f);
 				TextRender()->Text(0, x+20.0f, y+HeadlineFontsize+3.0f, MapRecordFontsize, aBuf, -1.0f);
 			}
+		}
+	}
+	if (lower16 || lower32)
+	{
+		if(Align == -1)
+		{
+			tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
+			TextRender()->Text(0, x+20.0f, y+5.0f, TitleFontsize, pTitle, -1.0f);
+			if(!NoTitle)
+			{
+				str_format(aBuf, sizeof(aBuf), " (%d)", NumPlayers);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->Text(0, x+20.0f+tw, y+5.0f, TitleFontsize, aBuf, -1.0f);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+		else
+		{
+			tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
+			if(!NoTitle)
+			{
+				str_format(aBuf, sizeof(aBuf), "(%d) ", NumPlayers);
+				float PlayersTextWidth = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1, -1.0f);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->Text(0, x+w-tw-PlayersTextWidth-20.0f, y+5.0f, TitleFontsize, aBuf, -1.0f);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+			tw = TextRender()->TextWidth(0, TitleFontsize, pTitle, -1, -1.0f);
+			TextRender()->Text(0, x+w-tw-20.0f, y+5.0f, TitleFontsize, pTitle, -1.0f);
 		}
 	}
 	else
@@ -733,13 +746,13 @@ void CScoreboard::OnRender()
 			float ScoreboardHeight;
 			if(m_pClient->m_GameInfo.m_aTeamSize[0] > 32)
 			{
-				ScoreboardHeight = RenderScoreboard(Width/2-w-5.0f, y, w, -4, 0, -1);
-				RenderScoreboard(Width/2+5.0f, y, w, -5, 0, 1);
+				ScoreboardHeight = RenderScoreboard(Width/2-w, y, w, -4, 0, -1);
+				RenderScoreboard(Width/2, y, w, -5, 0, 1);
 			}
 			else if(m_pClient->m_GameInfo.m_aTeamSize[0] > 16)
 			{
-				ScoreboardHeight = RenderScoreboard(Width/2-w-5.0f, y, w, 0, 0, -1);
-				RenderScoreboard(Width/2+5.0f, y, w, -3, 0, 1);
+				ScoreboardHeight = RenderScoreboard(Width/2-w, y, w, -6, 0, -1);
+				RenderScoreboard(Width/2, y, w, -3, 0, 1);
 			}
 			else
 			{
