@@ -188,19 +188,19 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		return 0.0f;
 
 	bool upper16 = false;
+	bool lower32 = false;
+	bool upper32 = false;
 	if(Team == -3)
 	{
 		upper16 = true;
 		Team = 0;
 	}
-	bool lower32 = false;
-	bool upper32 = false;
-	if(Team == -4)
+	else if(Team == -4)
 	{
 		lower32 = true;
 		Team = 0;
 	}
-	if(Team == -5)
+	else if(Team == -5)
 	{
 		upper32 = true;
 		Team = 0;
