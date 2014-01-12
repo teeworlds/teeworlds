@@ -650,8 +650,13 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			if(g_Config.m_ClDDRaceScoreBoard)
 			{
-				int Time = pInfo->m_pPlayerInfo->m_Score == -9999 ? 0 : abs(pInfo->m_pPlayerInfo->m_Score);
-				str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+				if(pInfo->m_pPlayerInfo->m_Score == -9999)
+					aBuf[0] = 0;
+				else
+				{
+					int Time = abs(pInfo->m_pPlayerInfo->m_Score);
+					str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+				}
 			}
 			else
 			{
