@@ -5,5 +5,7 @@
 #include "generated/nethash.cpp"
 #define GAME_VERSION "0.7 trunk"
 #define GAME_NETVERSION "0.7 " GAME_NETVERSION_HASH
-static const char GAME_RELEASE_VERSION[8] = {'0', '.', '6', '1', 0};
+
+// before changing the format (!) (not the value), check src/mastersrv/versionsrv.cpp
+static const char GAME_RELEASE_VERSION[8] = {'0', '.', '6', '.', '1', 0};
 #endif

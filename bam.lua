@@ -202,6 +202,7 @@ function build(settings)
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 	jsonparser = Compile(settings, Collect("src/engine/external/json-parser/*.c"))
+	md5 = Compile(settings, Collect("src/engine/external/md5/*.c"))
 
 	-- build game components
 	engine_settings = settings:Copy()
@@ -237,7 +238,6 @@ function build(settings)
 	client = Compile(client_settings, Collect("src/engine/client/*.cpp"))
 	server = Compile(server_settings, Collect("src/engine/server/*.cpp"))
 
-	versionserver = Compile(settings, Collect("src/versionsrv/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source)
 	game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), client_content_source)
@@ -257,34 +257,30 @@ function build(settings)
 	tools = {}
 	for i,v in ipairs(tools_src) do
 		toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, Compile(settings, v), engine, zlib, pnglite)
+		tools[i] = Link(settings, toolname, Compile(settings, v), engine, zlib, pnglite, md5)
 	end
 
-	-- build client, server, version server and master server
+	-- build client, server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
-		engine, client, game_editor, zlib, pnglite, wavpack, jsonparser,
+		engine, client, game_editor, zlib, pnglite, wavpack, md5, jsonparser,
 		client_link_other, client_osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
-		game_shared, game_server, zlib, server_link_other)
+		game_shared, game_server, zlib, md5, server_link_other)
 
 	serverlaunch = {}
 	if platform == "macosx" then
 		serverlaunch = Link(launcher_settings, "serverlaunch", server_osxlaunch)
 	end
 
-	versionserver_exe = Link(server_settings, "versionsrv", versionserver,
-		engine, zlib)
-
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
-		engine, zlib)
+		engine, zlib, md5)
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe, client_depends)
 	s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
 
-	v = PseudoTarget("versionserver".."_"..settings.config_name, versionserver_exe)
 	m = PseudoTarget("masterserver".."_"..settings.config_name, masterserver_exe)
 	t = PseudoTarget("tools".."_"..settings.config_name, tools)
 

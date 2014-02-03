@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef VERSIONSRV_MAPVERSIONS_H
-#define VERSIONSRV_MAPVERSIONS_H
+#ifndef MASTERSRV_MAPVERSIONS_H
+#define MASTERSRV_MAPVERSIONS_H
 
 static CMapVersion s_aMapVersionList[] = {
 	{"ctf1", {0x06, 0xb5, 0xf1, 0x17}, {0x00, 0x00, 0x12, 0x38}},
