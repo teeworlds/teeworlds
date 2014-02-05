@@ -145,6 +145,9 @@ function build(settings)
 
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
+		if settings.debug == 1 then
+			settings.link.flags:Add("/NODEFAULTLIB:libcmt.lib")
+		end
 	else
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 		if family == "windows" then
