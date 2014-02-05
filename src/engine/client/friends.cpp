@@ -82,7 +82,7 @@ bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) 
 
 void CFriends::AddFriend(const char *pName, const char *pClan)
 {
-	if(m_NumFriends == MAX_FRIENDS || (pName[0] == 0 && pClan[0] == 0))
+	if(m_NumFriends == MAX_FRIENDS || pName[0] == 0)
 		return;
 
 	// make sure we don't have the friend already
