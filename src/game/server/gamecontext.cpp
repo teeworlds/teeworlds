@@ -523,7 +523,7 @@ void CGameContext::OnTick()
 			else if(m_VoteUpdate)
 			{
 				m_VoteUpdate = false;
-				SendVoteStatus(-1, Total, Yes, No);
+				SendVoteStatus(-1, Total, Yes, Total - Yes);
 			}
 		}
 	}
