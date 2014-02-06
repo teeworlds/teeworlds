@@ -1,17 +1,28 @@
-import os, re, sys
-match = re.search('(.*)/', sys.argv[0])
-if match != None:
-	os.chdir(match.group(1))
+import json
+import os
+import sys
 
-source_exts = [".c", ".cpp", ".h"]
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
+
 content_author = ""
 
+format = "{0:40} {1:8} {2:8} {3:8}".format
+SOURCE_EXTS = [".c", ".cpp", ".h"]
+
+JSON_KEY_AUTHORS="authors"
+JSON_KEY_TRANSL="translated strings"
+JSON_KEY_UNTRANSL="needs translation"
+JSON_KEY_OLDTRANSL="old translations"
+JSON_KEY_OR="or"
+JSON_KEY_TR="tr"
+
 def parse_source():
-	stringtable = {}
+	l10n = []
+
 	def process_line(line):
-		if 'Localize("'.encode() in line:
-			fields = line.split('Localize("'.encode(), 1)[1].split('"'.encode(), 1)
-			stringtable[fields[0]] = ""
+		if b"Localize(\"" in line:
+			fields = line.split(b"Localize(\"", 1)[1].split(b"\"", 1)
+			l10n.append(fields[0].decode())
 			process_line(fields[1])
 
 	for root, dirs, files in os.walk("src"):
@@ -20,90 +31,69 @@ def parse_source():
 			
 			if os.sep + "external" + os.sep in filename:
 				continue
-			
-			if filename[-2:] in source_exts or filename[-4:] in source_exts:
-				for line in open(filename, "rb"):
+
+			if os.path.splitext(filename)[1] in SOURCE_EXTS:
+				# HACK: Open source as binary file.
+				# Necessary some of teeworlds source files
+				# aren't utf-8 yet for some reason
+				for line in open(filename, 'rb'):
 					process_line(line)
 
-	return stringtable
+	return l10n
 
 def load_languagefile(filename):
-	f = open(filename, "rb")
-	lines = f.readlines()
-	f.close()
+	return json.load(open(filename))
 
-	stringtable = {}
-	authorpart = 0
-	global content_author
+def write_languagefile(outputfilename, l10n_src, old_l10n_data):
+	result = {}
 
-	for i in range(0, len(lines)-1):
-		if authorpart == 0 and "\"authors\":".encode() in lines[i]:
-			authorpart = 1
-			content_author = lines[i]
-		elif authorpart == 1:
-			if  "\"translated strings\":".encode() in lines[i]:
-				authorpart = 2
-			else:
-				content_author += lines[i]
-		elif "\"or\":".encode() in lines[i]:
-				stringtable[lines[i].strip()[7:-2]] = lines[i+1].strip()[7:-1]
+	result[JSON_KEY_AUTHORS] = old_l10n_data[JSON_KEY_AUTHORS]
 
-	return stringtable
+	translations = {}
+	for type_ in (
+		JSON_KEY_OLDTRANSL,
+		JSON_KEY_UNTRANSL,
+		JSON_KEY_TRANSL,
+	):
+		translations.update({
+			t[JSON_KEY_OR]: t[JSON_KEY_TR]
+			for t in old_l10n_data[type_]
+			if t[JSON_KEY_TR]
+		})
 
-def generate_languagefile(outputfilename, srctable, loctable):
-	f = open(outputfilename, "wb")
+	num_items = set(translations) | set(l10n_src)
+	tsl_items = set(translations) & set(l10n_src)
+	new_items = set(translations) - set(l10n_src)
+	old_items = set(l10n_src) - set(translations)
 
-	num_items = 0
-	new_items = 0
-	old_items = 0
+	def to_transl(set_):
+		return [
+			{
+				JSON_KEY_OR: x,
+				JSON_KEY_TR: translations.get(x, ""),
+			}
+			for x in set_
+		]
 
-	srctable_keys = []
-	for key in srctable:
-		srctable_keys.append(key)
-	srctable_keys.sort()
+	result[JSON_KEY_TRANSL] = to_transl(tsl_items)
+	result[JSON_KEY_UNTRANSL] = to_transl(new_items)
+	result[JSON_KEY_OLDTRANSL] = to_transl(old_items)
 
-	content = content_author
+	json.dump(result, open(outputfilename, 'w'), sort_keys=True, indent=2)
 
-	content += "\"translated strings\": [\n".encode()
-	for k in srctable_keys:
-		if k in loctable and len(loctable[k]):
-			if not num_items == 0:
-				content += ",\n".encode()
-			content += "\t{\n\t\t\"or\": \"".encode() + k + "\",\n\t\t\"tr\": \"".encode() + loctable[k] + "\"\n\t}".encode()
-			num_items += 1
-	content += "],\n".encode()
+	print(format(outputfilename, len(num_items), len(new_items), len(old_items)))
 
-	content += "\"needs translation\": [\n".encode()
-	for k in srctable_keys:
-		if not k in loctable or len(loctable[k]) == 0:
-			if not new_items == 0:
-				content += ",\n".encode()
-			content += "\t{\n\t\t\"or\": \"".encode() + k + "\",\n\t\t\"tr\": \"\"\n\t}".encode()
-			num_items += 1
-			new_items += 1
-	content += "],\n".encode()
 
-	content += "\"old translations\": [\n".encode()
-	for k in loctable:
-		if not k in srctable:
-			if not old_items == 0:
-				content += ",\n".encode()
-			content += "\t{\n\t\t\"or\": \"".encode() + k + "\",\n\t\t\"tr\": \"".encode() + loctable[k] + "\"\n\t}".encode()
-			num_items += 1
-			old_items += 1
-	content += "]\n}\n".encode()
+if __name__ == '__main__':
+	l10n_src = parse_source()
+	print(format("filename", *(x.rjust(8) for x in ("total", "new", "old"))))
+	for filename in os.listdir("data/languages"):
+		try:
+			if (os.path.splitext(filename)[1] == ".json"
+					and filename != "index.json"):
+				filename = "data/languages/" + filename
+				write_languagefile(filename, l10n_src, load_languagefile(filename))
+		except Exception as e:
+			print("Failed on {0}, re-raising for traceback".format(filename))
+			raise
 
-	f.write(content)
-	f.close()
-	print("%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items))
-
-srctable = parse_source()
-
-print("%-40s %8s %8s %8s" % ("filename", "total", "new", "old"))
-
-for filename in os.listdir("data/languages"):
-	if not filename[-5:] == ".json" or filename == "index.json":
-		continue
-
-	filename = "data/languages/" + filename
-	generate_languagefile(filename, srctable, load_languagefile(filename))
