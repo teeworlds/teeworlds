@@ -171,11 +171,6 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	//Graphics()->MapScreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
 
-	// calculate the final pixelsize for the tiles
-	float TilePixelSize = 1024/32.0f;
-	float FinalTileSize = Scale/(ScreenX1-ScreenX0) * Graphics()->ScreenWidth();
-	float FinalTilesetScale = FinalTileSize/TilePixelSize;
-
 	float r=1, g=1, b=1, a=1;
 	if(ColorEnv >= 0)
 	{
@@ -195,10 +190,17 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	int EndY = (int)(ScreenY1/Scale)+1;
 	int EndX = (int)(ScreenX1/Scale)+1;
 
-	// adjust the texture shift according to mipmap level
+	// calculate the final pixelsize for the tiles
 	float TexSize = 1024.0f;
-	float Frac = (1.25f/TexSize) * (1/FinalTilesetScale);
-	float Nudge = (0.5f/TexSize) * (1/FinalTilesetScale);
+	float TilePixelSize = TexSize/16;
+	float FinalTilesetScale = (Scale/TilePixelSize)*(Graphics()->ScreenWidth()/(ScreenX1-ScreenX0));
+
+	// adjust the texture shift according to mipmap level (min: 2 Texel, max: 32 Texel)
+	// Approximation: 2^(lod-1) < scale/(2^0.5) <= 2^lod
+	int lodMult = (int)(ceil((1/FinalTilesetScale)/sqrtf(2)));
+	lodMult = clamp(pow2next(lodMult), 4, 64);
+
+	float Frac = (0.5 * lodMult)/TexSize;
 
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
@@ -255,17 +257,17 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 					int ty = Index/16;
 					int Px0 = tx*(1024/16);
 					int Py0 = ty*(1024/16);
-					int Px1 = Px0+(1024/16)-1;
-					int Py1 = Py0+(1024/16)-1;
+					int Px1 = Px0+(1024/16);
+					int Py1 = Py0+(1024/16);
 
-					float x0 = Nudge + Px0/TexSize+Frac;
-					float y0 = Nudge + Py0/TexSize+Frac;
-					float x1 = Nudge + Px1/TexSize-Frac;
-					float y1 = Nudge + Py0/TexSize+Frac;
-					float x2 = Nudge + Px1/TexSize-Frac;
-					float y2 = Nudge + Py1/TexSize-Frac;
-					float x3 = Nudge + Px0/TexSize+Frac;
-					float y3 = Nudge + Py1/TexSize-Frac;
+					float x0 = Px0/TexSize+Frac;
+					float y0 = Py0/TexSize+Frac;
+					float x1 = Px1/TexSize-Frac;
+					float y1 = Py0/TexSize+Frac;
+					float x2 = Px1/TexSize-Frac;
+					float y2 = Py1/TexSize-Frac;
+					float x3 = Px0/TexSize+Frac;
+					float y3 = Py1/TexSize-Frac;
 
 					if(Flags&TILEFLAG_VFLIP)
 					{
