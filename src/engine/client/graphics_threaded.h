@@ -103,7 +103,7 @@ public:
 	{
 		//
 		PRIMTYPE_INVALID = 0,
-		PRIMTYPE_LINES,	
+		PRIMTYPE_LINES,
 		PRIMTYPE_QUADS,
 	};
 
@@ -154,13 +154,13 @@ public:
 		int m_ClipW;
 		int m_ClipH;
 	};
-		
+
 	struct SCommand_Clear : public SCommand
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
 		SColor m_Color;
 	};
-		
+
 	struct SCommand_Signal : public SCommand
 	{
 		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
@@ -243,7 +243,7 @@ public:
 		// texture information
 		int m_Slot;
 	};
-	
+
 	//
 	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
 	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
@@ -325,7 +325,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 		MAX_VERTICES = 32*1024,
 		MAX_TEXTURES = 1024*4,
-		
+
 		DRAWING_QUADS=1,
 		DRAWING_LINES=2
 	};
@@ -390,7 +390,7 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(IGraphics::CTextureHandle Index);
+	virtual int UnloadTexture(IGraphics::CTextureHandle *pTextureHandler);
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 

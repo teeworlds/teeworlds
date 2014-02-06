@@ -152,9 +152,8 @@ class CTextRender : public IEngineTextRender
 		{
 			if(pSizeData->m_aTextures[i].IsValid())
 			{
-				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
+				Graphics()->UnloadTexture(&pSizeData->m_aTextures[i]);
 				FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;
-				pSizeData->m_aTextures[i] = IGraphics::CTextureHandle();
 			}
 
 			pSizeData->m_aTextures[i] = Graphics()->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, IGraphics::TEXLOAD_NOMIPMAPS);
@@ -166,7 +165,7 @@ class CTextRender : public IEngineTextRender
 		pSizeData->m_TextureWidth = Width;
 		pSizeData->m_TextureHeight = Height;
 		pSizeData->m_CurrentCharacter = 0;
-		
+
 		dbg_msg("", "pFont memory usage: %d", FontMemoryUsage);
 
 		mem_free(pMem);
