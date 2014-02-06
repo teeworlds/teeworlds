@@ -1,7 +1,11 @@
-import os, re, sys
-match = re.search('(.*)/', sys.argv[0])
+import os, re
+from os.path import dirname, normpath, realpath
+
+file_dir = dirname(realpath(__file__))
+file_dir = file_dir.replace("\\", "/") # for windows
+match = re.search('(.*)/scripts$', file_dir)
 if match != None:
-	os.chdir(match.group(1))
+	os.chdir(normpath(match.group(1)))
 
 source_exts = [".c", ".cpp", ".h"]
 content_author = ""
@@ -22,8 +26,10 @@ def parse_source():
 				continue
 			
 			if filename[-2:] in source_exts or filename[-4:] in source_exts:
-				for line in open(filename, "rb"):
+				f = open(filename, "rb")
+				for line in f:
 					process_line(line)
+				f.close()
 
 	return stringtable
 
@@ -60,7 +66,7 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	srctable_keys = []
 	for key in srctable:
 		srctable_keys.append(key)
-	srctable_keys.sort()
+	srctable_keys = sorted(srctable_keys, key=lambda s: s.lower())
 
 	content = content_author
 
@@ -83,8 +89,13 @@ def generate_languagefile(outputfilename, srctable, loctable):
 			new_items += 1
 	content += "],\n".encode()
 
+	loctable_keys = []
+	for key in loctable:
+		loctable_keys.append(key)
+	loctable_keys = sorted(loctable_keys, key=lambda s: s.lower())
+
 	content += "\"old translations\": [\n".encode()
-	for k in loctable:
+	for k in loctable_keys:
 		if not k in srctable:
 			if not old_items == 0:
 				content += ",\n".encode()
