@@ -178,7 +178,7 @@ public:
 	int UnbanByAddr(const NETADDR *pAddr);
 	int UnbanByRange(const CNetRange *pRange);
 	int UnbanByIndex(int Index);
-	void UnbanAll() { m_BanAddrPool.Reset(); m_BanRangePool.Reset(); }
+	void UnbanAll();
 	bool IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) const;
 
 	static void ConBan(class IConsole::IResult *pResult, void *pUser);

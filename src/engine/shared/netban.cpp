@@ -443,6 +443,12 @@ int CNetBan::UnbanByIndex(int Index)
 	return Result;
 }
 
+void CNetBan::UnbanAll()
+{
+	m_BanAddrPool.Reset();
+	m_BanRangePool.Reset();
+}
+
 bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) const
 {
 	CNetHash aHash[17];

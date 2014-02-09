@@ -22,7 +22,6 @@ class CRingBufferBase
 	CItem *m_pFirst;
 	CItem *m_pLast;
 
-	void *m_pMemory;
 	int m_Size;
 	int m_Flags;
 
