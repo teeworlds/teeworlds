@@ -6,8 +6,12 @@
 
 class CMapImages : public CComponent
 {
-	IGraphics::CTextureHandle m_aTextures[64];
-	IGraphics::CTextureHandle m_aMenuTextures[64];
+	enum
+	{
+		MAX_TEXTURES=64
+	};
+	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
+	IGraphics::CTextureHandle m_aMenuTextures[MAX_TEXTURES];
 	int m_Count;
 	int m_MenuCount;
 public:

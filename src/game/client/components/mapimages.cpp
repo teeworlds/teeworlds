@@ -28,6 +28,7 @@ void CMapImages::OnMapLoad()
 
 	int Start;
 	pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_Count);
+	m_Count = clamp(m_Count, 0, int(MAX_TEXTURES));
 
 	// load new textures
 	for(int i = 0; i < m_Count; i++)
@@ -72,6 +73,7 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 
 	int Start;
 	pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_MenuCount);
+	m_MenuCount = clamp(m_Count, 0, int(MAX_TEXTURES));
 
 	// load new textures
 	for(int i = 0; i < m_MenuCount; i++)
@@ -107,8 +109,8 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 IGraphics::CTextureHandle CMapImages::Get(int Index) const
 {
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		return m_aTextures[Index];
-	return m_aMenuTextures[Index];
+		return m_aTextures[clamp(Index, 0, m_Count)];
+	return m_aMenuTextures[clamp(Index, 0, m_MenuCount)];
 }
 
 int CMapImages::Num() const
