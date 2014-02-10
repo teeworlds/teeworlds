@@ -39,6 +39,9 @@ inline float frandom() { return rand()/(float)(RAND_MAX); }
 inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
 inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
 
+// int to fixed
+inline int i2fx(int v) { return v<<10; }
+
 inline int gcd(int a, int b)
 {
 	while(b != 0)
