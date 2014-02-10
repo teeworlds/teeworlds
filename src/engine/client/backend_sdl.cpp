@@ -7,6 +7,11 @@
 #include "graphics_threaded.h"
 #include "backend_sdl.h"
 
+
+#if defined(CONF_FAMILY_WINDOWS)
+	PFNGLTEXIMAGE3DPROC glTexImage3D;
+#endif
+
 // ------------ CGraphicsBackend_Threaded
 
 void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
@@ -602,6 +607,15 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 		//*pCommand->m_pResult = -1;
 		return -1;
 	}		
+
+	#if defined(CONF_FAMILY_WINDOWS)
+		glTexImage3D = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
+		if(glTexImage3D == 0)
+		{
+			dbg_msg("gfx", "glTexImage3D not supported");
+			return -1;
+		}
+	#endif
 
 	SDL_ShowCursor(0);
 
