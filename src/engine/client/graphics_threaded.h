@@ -97,6 +97,7 @@ public:
 		TEXFLAG_NOMIPMAPS = 1,
 		TEXFLAG_COMPRESSED = 2,
 		TEXFLAG_QUALITY = 4,
+		TEXFLAG_TEXTURE3D = 8,
 	};
 
 	enum
@@ -213,7 +214,6 @@ public:
 
 		int m_Width;
 		int m_Height;
-		int m_Depth;
 		int m_PixelSize;
 		int m_Format;
 		int m_StoreFormat;

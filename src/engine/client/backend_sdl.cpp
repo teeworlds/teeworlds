@@ -240,7 +240,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 {
 	int Width = pCommand->m_Width;
 	int Height = pCommand->m_Height;
-	int Depth = pCommand->m_Depth;
+	int Depth = 1;
 	void *pTexData = pCommand->m_pData;
 
 	// resample if needed
@@ -270,6 +270,34 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			mem_free(pTexData);
 			pTexData = pTmpData;
 		}
+	}
+	
+	// 3d texture?
+	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+	{
+		Width /= 16;
+		Height /= 16;
+		Depth = 256;
+
+		// copy and reorder texture data
+		int MemSize = Width*Height*Depth*pCommand->m_PixelSize;
+		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
+
+		const int TileSize = (Height * Width) * pCommand->m_PixelSize;
+		const int TileRowSize = Width * pCommand->m_PixelSize;
+		const int ImagePitch = Width*16 * pCommand->m_PixelSize;
+		mem_zero(pTmpData, MemSize);
+		for(int i = 0; i < 256; i++)
+		{
+			const int px = (i%16) * Width;
+			const int py = (i/16) * Height;
+			const char *pTileData = (const char *)pTexData + (py * Width*16 + px) * pCommand->m_PixelSize;
+			for(int y = 0; y < Height; y++)
+				mem_copy(pTmpData + i*TileSize + y*TileRowSize, pTileData + y * ImagePitch, TileRowSize);
+		}
+
+		mem_free(pTexData);
+		pTexData = pTmpData;
 	}
 
 	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);

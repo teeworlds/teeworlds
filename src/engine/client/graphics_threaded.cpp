@@ -332,7 +332,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
-	Cmd.m_Depth = 1;
 
 
 	// flags
@@ -343,43 +342,16 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
 	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
-
-
-	// 3d texture?
 	if(Flags&IGraphics::TEXLOAD_ARRAY_256)
-	{
-		Cmd.m_Width /= 16;
-		Cmd.m_Height /= 16;
-		Cmd.m_Depth = 256;
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
 
-		// copy and reorder texture data
-		int MemSize = Width*Height*Cmd.m_PixelSize;
-		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
-
-		const int TileSize = (Cmd.m_Height * Cmd.m_Width) * Cmd.m_PixelSize;
-		const int TileRowSize = Cmd.m_Width * Cmd.m_PixelSize;
-		const int ImagePitch = Width * Cmd.m_PixelSize;
-		mem_zero(pTmpData, MemSize);
-		for(int i = 0; i < 256; i++)
-		{
-			const int px = (i%16) * Cmd.m_Width;
-			const int py = (i/16) * Cmd.m_Height;
-			const char *pTileData = (const char *)pData + (py * Width + px) * Cmd.m_PixelSize;
-			for(int y = 0; y < Cmd.m_Height; y++)
-				mem_copy(pTmpData + i*TileSize + y*TileRowSize, pTileData + y * ImagePitch, TileRowSize);
-		}
-
-		Cmd.m_pData = pTmpData;
-	}
-	else
-	{
-		// copy texture data
-		int MemSize = Width*Height*Cmd.m_PixelSize;
-		void *pTmpData = mem_alloc(MemSize, sizeof(void*));
-		mem_copy(pTmpData, pData, MemSize);
-		Cmd.m_pData = pTmpData;
-	}
-
+	
+	// copy texture data
+	int MemSize = Width*Height*Cmd.m_PixelSize;
+	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
+	mem_copy(pTmpData, pData, MemSize);
+	Cmd.m_pData = pTmpData;
+	
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
