@@ -164,10 +164,18 @@ public:
 // takes care of opengl related rendering
 class CCommandProcessorFragment_OpenGL
 {
-	struct CTexture
+	class CTexture
 	{
-		GLuint m_Tex;
-		int m_Dimentions;
+	public:
+		enum
+		{
+			STATE_EMPTY = 0,
+			STATE_TEX2D = 1,
+			STATE_TEX3D = 2,
+		};
+		GLuint m_Tex2D;
+		GLuint m_Tex3D;
+		int m_State;
 		int m_MemSize;
 	};
 	CTexture m_aTextures[CCommandBuffer::MAX_TEXTURES];

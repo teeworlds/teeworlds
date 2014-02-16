@@ -34,15 +34,18 @@ void CMapImages::OnMapLoad()
 	for(int i = 0; i < m_Count; i++)
 	{
 		int TextureFlags = 0;
+		bool FoundQuadLayer = false;
+		bool FoundTileLayer = false;
 		for(int k = 0; k < Layers()->NumLayers(); k++)
 		{
 			const CMapItemLayer * const pLayer = Layers()->GetLayer(k);
-			if(pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
-			{
-				TextureFlags = IGraphics::TEXLOAD_ARRAY_256;
-				break;
-			}
+			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && ((const CMapItemLayerQuads * const)pLayer)->m_Image == i)
+				FoundQuadLayer = true;
+			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
+				FoundTileLayer = true;
 		}
+		if(FoundTileLayer)
+			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION : IGraphics::TEXLOAD_ARRAY_256;
 
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
@@ -79,15 +82,18 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 	for(int i = 0; i < m_MenuCount; i++)
 	{
 		int TextureFlags = 0;
+		bool FoundQuadLayer = false;
+		bool FoundTileLayer = false;
 		for(int k = 0; k < Layers()->NumLayers(); k++)
 		{
 			const CMapItemLayer * const pLayer = Layers()->GetLayer(k);
-			if(pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
-			{
-				TextureFlags = IGraphics::TEXLOAD_ARRAY_256;
-				break;
-			}
+			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && ((const CMapItemLayerQuads * const)pLayer)->m_Image == i)
+				FoundQuadLayer = true;
+			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
+				FoundTileLayer = true;
 		}
+		if(FoundTileLayer)
+			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION : IGraphics::TEXLOAD_ARRAY_256;
 	
 		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))

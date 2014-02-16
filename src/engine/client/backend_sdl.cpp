@@ -175,16 +175,18 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	glDisable(GL_TEXTURE_3D);
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
 	{
-		if(m_aTextures[State.m_Texture].m_Dimentions == 2)
+		if(State.m_Dimension == 2 && (m_aTextures[State.m_Texture].m_State&CTexture::STATE_TEX2D))
 		{
 			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture].m_Tex);
+			glBindTexture(GL_TEXTURE_2D, m_aTextures[State.m_Texture].m_Tex2D);
 		}
-		else if(m_aTextures[State.m_Texture].m_Dimentions == 3)
+		else if(State.m_Dimension == 3 && (m_aTextures[State.m_Texture].m_State&CTexture::STATE_TEX3D))
 		{
 			glEnable(GL_TEXTURE_3D);
-			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex);
+			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D);
 		}
+		else
+			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
 	}
 
 	switch(State.m_WrapMode)
@@ -201,7 +203,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapMode);
 	};
 
-	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES && m_aTextures[State.m_Texture].m_Dimentions == 3)
+	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES && State.m_Dimension == 3)
 	{
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -224,16 +226,24 @@ void CCommandProcessorFragment_OpenGL::Cmd_Init(const SCommand_Init *pCommand)
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
 {
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height,
-		TexFormatToOpenGLFormat(pCommand->m_Format), GL_UNSIGNED_BYTE, pCommand->m_pData);
+	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX2D)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex2D);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, pCommand->m_X, pCommand->m_Y, pCommand->m_Width, pCommand->m_Height,
+			TexFormatToOpenGLFormat(pCommand->m_Format), GL_UNSIGNED_BYTE, pCommand->m_pData);
+	}
 	mem_free(pCommand->m_pData);
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand)
 {
-	glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex);
+	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX2D)
+		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
+	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX3D)
+		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
 	*m_pTextureMemoryUsage -= m_aTextures[pCommand->m_Slot].m_MemSize;
+	m_aTextures[pCommand->m_Slot].m_State = CTexture::STATE_EMPTY;
+	m_aTextures[pCommand->m_Slot].m_MemSize = 0;
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand)
@@ -272,7 +282,53 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		}
 	}
 	
-	// 3d texture?
+	//
+	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
+	int StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
+
+	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_COMPRESSED)
+	{
+		switch(StoreOglformat)
+		{
+			case GL_RGB: StoreOglformat = GL_COMPRESSED_RGB_ARB; break;
+			case GL_ALPHA: StoreOglformat = GL_COMPRESSED_ALPHA_ARB; break;
+			case GL_RGBA: StoreOglformat = GL_COMPRESSED_RGBA_ARB; break;
+			default: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
+		}
+	}
+
+	// 2D texture
+	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
+	{
+		glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
+		m_aTextures[pCommand->m_Slot].m_State |= CTexture::STATE_TEX2D;
+		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex2D);
+		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, Width, Height, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
+		}
+
+		// calculate memory usage
+		m_aTextures[pCommand->m_Slot].m_MemSize = Width*Height*pCommand->m_PixelSize;
+		int TexWidth = Width;
+		int TexHeight = Height;
+		while(TexWidth > 2 && TexHeight > 2)
+		{
+			TexWidth>>=1;
+			TexHeight>>=1;
+			m_aTextures[pCommand->m_Slot].m_MemSize += TexWidth*TexHeight*pCommand->m_PixelSize;
+		}
+	}
+	
+	// 3D texture
 	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
 	{
 		Width /= 16;
@@ -298,60 +354,18 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 
 		mem_free(pTexData);
 		pTexData = pTmpData;
-	}
-
-	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
-	int StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
-
-	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_COMPRESSED)
-	{
-		switch(StoreOglformat)
-		{
-			case GL_RGB: StoreOglformat = GL_COMPRESSED_RGB_ARB; break;
-			case GL_ALPHA: StoreOglformat = GL_COMPRESSED_ALPHA_ARB; break;
-			case GL_RGBA: StoreOglformat = GL_COMPRESSED_RGBA_ARB; break;
-			default: StoreOglformat = GL_COMPRESSED_RGBA_ARB;
-		}
-	}
-
-	glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex);
-	if(Depth > 1)
-	{
-		m_aTextures[pCommand->m_Slot].m_Dimentions = 3;
-		glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex);
+		
+		//
+		glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
+		m_aTextures[pCommand->m_Slot].m_State |= CTexture::STATE_TEX3D;
+		glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex3D);
 
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexImage3D(GL_TEXTURE_3D, 0, StoreOglformat, Width, Height, Depth, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 
-		m_aTextures[pCommand->m_Slot].m_MemSize = Width*Height*pCommand->m_PixelSize;
-	}
-	else
-	{
-		m_aTextures[pCommand->m_Slot].m_Dimentions = 2;
-		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex);
-		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, Width, Height, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
-		}
-
-		// calculate memory usage
-		m_aTextures[pCommand->m_Slot].m_MemSize = Width*Height*pCommand->m_PixelSize;
-		while(Width > 2 && Height > 2)
-		{
-			Width>>=1;
-			Height>>=1;
-			m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
-		}
-	}
+		m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
+	}	
 
 	*m_pTextureMemoryUsage += m_aTextures[pCommand->m_Slot].m_MemSize;
 

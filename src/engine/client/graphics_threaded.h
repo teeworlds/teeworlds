@@ -98,6 +98,7 @@ public:
 		TEXFLAG_COMPRESSED = 2,
 		TEXFLAG_QUALITY = 4,
 		TEXFLAG_TEXTURE3D = 8,
+		TEXFLAG_TEXTURE2D = 16,
 	};
 
 	enum
@@ -145,6 +146,7 @@ public:
 		int m_BlendMode;
 		int m_WrapMode;
 		int m_Texture;
+		int m_Dimension;
 		SPoint m_ScreenTL;
 		SPoint m_ScreenBR;
 
@@ -413,10 +415,10 @@ public:
 	virtual void SetColor(float r, float g, float b, float a);
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
-	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = 0);
+	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = 0, bool Use3DTexture = false);
 	virtual void QuadsSetSubsetFree(
 		float x0, float y0, float x1, float y1,
-		float x2, float y2, float x3, float y3, int TextureIndex = 0);
+		float x2, float y2, float x3, float y3, int TextureIndex = 0, bool Use3DTexture = false);
 
 	virtual void QuadsDraw(CQuadItem *pArray, int Num);
 	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num);

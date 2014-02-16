@@ -335,7 +335,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 
 
 	// flags
-	Cmd.m_Flags = 0;
+	Cmd.m_Flags = CCommandBuffer::TEXFLAG_TEXTURE2D;
 	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
 	if(g_Config.m_GfxTextureCompression)
@@ -343,6 +343,11 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
 	if(Flags&IGraphics::TEXLOAD_ARRAY_256)
+	{
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
+		Cmd.m_Flags &= ~CCommandBuffer::TEXFLAG_TEXTURE2D;
+	}
+	if(Flags&IGraphics::TEXLOAD_MULTI_DIMENSION)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
 
 	
@@ -481,6 +486,7 @@ void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
 	m_State.m_Texture = TextureID.Id();
+	m_State.m_Dimension = 2;
 }
 
 void CGraphics_Threaded::Clear(float r, float g, float b)
@@ -551,7 +557,7 @@ void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft,
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex)
+void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex, bool Use3DTexture)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
 
@@ -562,11 +568,12 @@ void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float B
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
 
 	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_State.m_Dimension = Use3DTexture ? 3 : 2;
 }
 
 void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
-	float x2, float y2, float x3, float y3, int TextureIndex)
+	float x2, float y2, float x3, float y3, int TextureIndex, bool Use3DTexture)
 {
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
 	m_aTexture[1].u = x1; m_aTexture[1].v = y1;
@@ -574,6 +581,7 @@ void CGraphics_Threaded::QuadsSetSubsetFree(
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
 
 	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_State.m_Dimension = Use3DTexture ? 3 : 2;
 }
 
 void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)

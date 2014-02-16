@@ -316,7 +316,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 						y1 = Tmp;
  					}
 
-					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
+					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index, UseArray);
 					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 				}
