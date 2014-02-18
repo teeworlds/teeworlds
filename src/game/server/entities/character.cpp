@@ -360,7 +360,7 @@ void CCharacter::FireWeapon()
 			for(int i = -ShotSpread; i <= ShotSpread; ++i)
 			{
 				float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
-				float a = GetAngle(Direction);
+				float a = angle(Direction);
 				a += Spreading[i+2];
 				float v = 1-(absolute(i)/(float)ShotSpread);
 				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);

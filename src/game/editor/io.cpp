@@ -5,7 +5,7 @@
 #include <engine/graphics.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
-#include <game/gamecore.h>
+#include <game/gamecore.h> // StrToInts, IntsToStr
 #include "editor.h"
 
 template<typename T>

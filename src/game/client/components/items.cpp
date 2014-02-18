@@ -5,7 +5,6 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
@@ -89,7 +88,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		m_pClient->m_pEffects->BulletTrail(Pos);
 
 		if(length(Vel) > 0.00001f)
-			Graphics()->QuadsSetRotation(GetAngle(Vel));
+			Graphics()->QuadsSetRotation(angle(Vel));
 		else
 			Graphics()->QuadsSetRotation(0);
 
