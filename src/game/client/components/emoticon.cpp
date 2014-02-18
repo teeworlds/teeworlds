@@ -5,7 +5,6 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include "emoticon.h"
@@ -114,7 +113,7 @@ void CEmoticon::OnRender()
 	if (length(m_SelectorMouse) > 170.0f)
 		m_SelectorMouse = normalize(m_SelectorMouse) * 170.0f;
 
-	float SelectedAngle = GetAngle(m_SelectorMouse) + 2*pi/24;
+	float SelectedAngle = angle(m_SelectorMouse) + 2*pi/24;
 	if (SelectedAngle < 0)
 		SelectedAngle += 2*pi;
 
