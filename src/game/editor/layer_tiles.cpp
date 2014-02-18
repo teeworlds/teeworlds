@@ -68,10 +68,10 @@ void CLayerTiles::Render()
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
 	Graphics()->BlendNone();
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
-												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset, false);
+												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
 	Graphics()->BlendNormal();
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
-												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset, false);
+												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }

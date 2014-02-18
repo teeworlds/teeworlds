@@ -359,7 +359,7 @@ public:
 	}
 
 	void Clean();
-	void CreateDefault(IGraphics::CTextureHandle EntitiesTexture);
+	void CreateDefault();
 
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);

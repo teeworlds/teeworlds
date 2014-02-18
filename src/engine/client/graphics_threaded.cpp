@@ -504,7 +504,7 @@ void CGraphics_Threaded::QuadsBegin()
 	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
 
-	QuadsSetSubset(0,0,1,1,0);
+	QuadsSetSubset(0,0,1,1,-1);
 	QuadsSetRotation(0);
 	SetColor(1,1,1,1);
 }
@@ -557,7 +557,7 @@ void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft,
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex, bool Use3DTexture)
+void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
 
@@ -568,12 +568,12 @@ void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float B
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
 
 	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
-	m_State.m_Dimension = Use3DTexture ? 3 : 2;
+	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
 void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
-	float x2, float y2, float x3, float y3, int TextureIndex, bool Use3DTexture)
+	float x2, float y2, float x3, float y3, int TextureIndex)
 {
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
 	m_aTexture[1].u = x1; m_aTexture[1].v = y1;
@@ -581,7 +581,7 @@ void CGraphics_Threaded::QuadsSetSubsetFree(
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
 
 	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
-	m_State.m_Dimension = Use3DTexture ? 3 : 2;
+	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
 void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
