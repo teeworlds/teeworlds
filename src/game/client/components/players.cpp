@@ -7,7 +7,6 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
@@ -30,7 +29,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	//dir = normalize(hook_pos-pos);
 
 	vec2 HandPos = CenterPos + Dir;
-	float Angle = GetAngle(Dir);
+	float Angle = angle(Dir);
 	if (Dir.x < 0)
 		Angle -= AngleOffset;
 	else
@@ -159,7 +158,7 @@ void CPlayers::RenderHook(
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos-HookPos);
 
-		Graphics()->QuadsSetRotation(GetAngle(Dir)+pi);
+		Graphics()->QuadsSetRotation(angle(Dir)+pi);
 
 		// render head
 		RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
@@ -212,7 +211,7 @@ void CPlayers::RenderPlayer(
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
-		Angle = GetAngle(m_pClient->m_pControls->m_MousePos);
+		Angle = angle(m_pClient->m_pControls->m_MousePos);
 	}
 	else
 	{
@@ -253,7 +252,7 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	vec2 Direction = GetDirection((int)(Angle*256.0f));
+	vec2 Direction = vec2(direction(Angle));
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
 
@@ -379,8 +378,8 @@ void CPlayers::RenderPlayer(
 				{
 					vec2 Dir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
 					Dir = normalize(Dir);
-					float HadOkenAngle = GetAngle(Dir);
-					Graphics()->QuadsSetRotation(HadOkenAngle );
+					float HadokenAngle = angle(Dir);
+					Graphics()->QuadsSetRotation(HadokenAngle );
 					//float offsety = -data->weapons[iw].muzzleoffsety;
 					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX], 0);
 					vec2 DirY(-Dir.y,Dir.x);

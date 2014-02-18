@@ -47,28 +47,6 @@ public:
 	bool Get(const char *pName, float *pValue);
 };
 
-
-inline vec2 GetDirection(int Angle)
-{
-	float a = Angle/256.0f;
-	return vec2(cosf(a), sinf(a));
-}
-
-inline vec2 GetDir(float Angle)
-{
-	return vec2(cosf(Angle), sinf(Angle));
-}
-
-inline float GetAngle(vec2 Dir)
-{
-	if(Dir.x == 0 && Dir.y == 0)
-		return 0.0f;
-	float a = atanf(Dir.y/Dir.x);
-	if(Dir.x < 0)
-		a = a+pi;
-	return a;
-}
-
 inline void StrToInts(int *pInts, int Num, const char *pStr)
 {
 	int Index = 0;
