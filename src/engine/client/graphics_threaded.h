@@ -76,6 +76,7 @@ public:
 
 		// rendering
 		CMD_CLEAR,
+		CMD_CLEARSTENCIL,
 		CMD_RENDER,
 
 		// swap
@@ -153,12 +154,25 @@ public:
 		int m_ClipY;
 		int m_ClipW;
 		int m_ClipH;
+
+		// stencil
+		int m_StencilMode;
+		int m_StencilRef, m_StencilMask;
+		int m_StencilOp_SFail;
+		int m_StencilOp_ZFail;
+		int m_StencilOp_Pass;
 	};
 		
 	struct SCommand_Clear : public SCommand
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
 		SColor m_Color;
+	};
+
+	struct SCommand_ClearStencil : public SCommand
+	{
+		SCommand_ClearStencil() : SCommand(CMD_CLEARSTENCIL) {}
+		int m_ClearValue;
 	};
 		
 	struct SCommand_Signal : public SCommand
@@ -403,6 +417,7 @@ public:
 	virtual void TextureSet(CTextureHandle TextureID);
 
 	virtual void Clear(float r, float g, float b);
+	virtual void ClearStencil(int value);
 
 	virtual void QuadsBegin();
 	virtual void QuadsEnd();
@@ -411,6 +426,9 @@ public:
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num);
 	virtual void SetColor(float r, float g, float b, float a);
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
+
+	virtual void SetStencil(int Mode, int Reference, unsigned int Mask);
+	virtual void StencilOp(int StencilFail, int DepthFail, int Pass);
 
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV);
 	virtual void QuadsSetSubsetFree(

@@ -100,6 +100,19 @@ int CCommandProcessorFragment_OpenGL::TexFormatToOpenGLFormat(int TexFormat)
 	return GL_RGBA;
 }
 
+int CCommandProcessorFragment_OpenGL::StencilOpToOpenGLEnum(int StencilOp)
+{
+	switch(StencilOp)
+	{
+	case IGraphics::STENCIL_OP_KEEP: return GL_KEEP;
+	case IGraphics::STENCIL_OP_INCR: return GL_INCR;
+
+	default:
+		dbg_msg("render", "unknown stencilop %d\n", StencilOp);
+		return -1;
+	}
+}
+
 unsigned char CCommandProcessorFragment_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
 {
 	int Value = 0;
@@ -163,6 +176,24 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	}
 	else
 		glDisable(GL_SCISSOR_TEST);
+
+	// stencil
+	switch(State.m_StencilMode)
+	{
+	case IGraphics::STENCIL_NONE:
+		glDisable(GL_STENCIL_TEST);
+		break;
+	case IGraphics::STENCIL_EQUAL:
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_EQUAL, State.m_StencilRef, State.m_StencilMask);
+		break;
+	default:
+		dbg_msg("render", "unknown stencilmode %d\n", State.m_StencilMode);
+	}
+
+	glStencilOp(StencilOpToOpenGLEnum(State.m_StencilOp_SFail),
+				StencilOpToOpenGLEnum(State.m_StencilOp_ZFail),
+				StencilOpToOpenGLEnum(State.m_StencilOp_Pass));
 	
 	// texture
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
@@ -295,6 +326,12 @@ void CCommandProcessorFragment_OpenGL::Cmd_Clear(const CCommandBuffer::SCommand_
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void CCommandProcessorFragment_OpenGL::Cmd_ClearStencil(const CCommandBuffer::SCommand_ClearStencil *pCommand)
+{
+	glClearStencil(pCommand->m_ClearValue);
+	glClear(GL_STENCIL_BUFFER_BIT);
+}
+
 void CCommandProcessorFragment_OpenGL::Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand)
 {
 	SetState(pCommand->m_State);
@@ -369,6 +406,7 @@ bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::SCommand
 	case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::SCommand_Texture_Destroy *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::SCommand_Texture_Update *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::SCommand_Clear *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_CLEARSTENCIL: Cmd_ClearStencil(static_cast<const CCommandBuffer::SCommand_ClearStencil *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::SCommand_Render *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_SCREENSHOT: Cmd_Screenshot(static_cast<const CCommandBuffer::SCommand_Screenshot *>(pBaseCommand)); break;
 	default: return false;
@@ -389,6 +427,7 @@ void CCommandProcessorFragment_SDL::Cmd_Init(const SCommand_Init *pCommand)
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_STENCIL_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 

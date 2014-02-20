@@ -131,6 +131,11 @@ CGraphics_Threaded::CGraphics_Threaded()
 	m_State.m_Texture = -1;
 	m_State.m_BlendMode = CCommandBuffer::BLEND_NONE;
 	m_State.m_WrapMode = CCommandBuffer::WRAP_REPEAT;
+	m_State.m_StencilMode = IGraphics::STENCIL_NONE;
+	m_State.m_StencilRef = m_State.m_StencilMask = 0x0;
+	m_State.m_StencilOp_SFail = IGraphics::STENCIL_OP_KEEP;
+	m_State.m_StencilOp_ZFail = IGraphics::STENCIL_OP_KEEP;
+	m_State.m_StencilOp_Pass  = IGraphics::STENCIL_OP_KEEP;
 
 	m_CurrentCommandBuffer = 0;
 	m_pCommandBuffer = 0x0;
@@ -198,6 +203,20 @@ void CGraphics_Threaded::WrapNormal()
 void CGraphics_Threaded::WrapClamp()
 {
 	m_State.m_WrapMode = CCommandBuffer::WRAP_CLAMP;
+}
+
+void CGraphics_Threaded::SetStencil(int Mode, int Reference, unsigned int Mask)
+{
+	m_State.m_StencilMode = Mode;
+	m_State.m_StencilRef = Reference;
+	m_State.m_StencilMask = Mask;
+}
+
+void CGraphics_Threaded::StencilOp(int StencilFail, int DepthFail, int Pass)
+{
+	m_State.m_StencilOp_SFail = StencilFail;
+	m_State.m_StencilOp_ZFail = DepthFail;
+	m_State.m_StencilOp_Pass = Pass;
 }
 
 int CGraphics_Threaded::MemoryUsage() const
@@ -485,6 +504,13 @@ void CGraphics_Threaded::Clear(float r, float g, float b)
 	Cmd.m_Color.g = g;
 	Cmd.m_Color.b = b;
 	Cmd.m_Color.a = 0;
+	m_pCommandBuffer->AddCommand(Cmd);
+}
+
+void CGraphics_Threaded::ClearStencil(int value)
+{
+	CCommandBuffer::SCommand_ClearStencil Cmd;
+	Cmd.m_ClearValue = value;
 	m_pCommandBuffer->AddCommand(Cmd);
 }
 
