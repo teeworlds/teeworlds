@@ -85,6 +85,7 @@ public:
 	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
 
 	virtual void Clear(float r, float g, float b) = 0;
+	virtual void ClearStencil(int value) = 0;
 
 	virtual void ClipEnable(int x, int y, int w, int h) = 0;
 	virtual void ClipDisable() = 0;
@@ -154,6 +155,17 @@ public:
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
+
+	enum
+	{
+		STENCIL_NONE = 0,
+		STENCIL_EQUAL,
+
+		STENCIL_OP_KEEP = 0,
+		STENCIL_OP_INCR,
+	};
+	virtual void SetStencil(int Mode, int Reference, unsigned int Mask) = 0;
+	virtual void StencilOp(int StencilFail, int DepthFail, int Pass) = 0;
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;

@@ -620,6 +620,10 @@ public:
 				else
 					Graphics()->TextureSet(pSizeData->m_aTextures[0]);
 
+				Graphics()->SetStencil(IGraphics::STENCIL_EQUAL, 0, 0xFF);
+				Graphics()->StencilOp(IGraphics::STENCIL_OP_KEEP, IGraphics::STENCIL_OP_KEEP, IGraphics::STENCIL_OP_INCR);
+				Graphics()->ClearStencil(0x0);
+
 				Graphics()->QuadsBegin();
 				if (i == 0)
 					Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
@@ -722,7 +726,10 @@ public:
 			}
 
 			if(pCursor->m_Flags&TEXTFLAG_RENDER)
+			{
 				Graphics()->QuadsEnd();
+				Graphics()->SetStencil(IGraphics::STENCIL_NONE, 0, 0);
+			}
 		}
 
 		pCursor->m_X = DrawX;

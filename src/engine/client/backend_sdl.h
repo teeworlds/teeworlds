@@ -186,6 +186,7 @@ public:
 
 private:
 	static int TexFormatToOpenGLFormat(int TexFormat);
+	static int StencilOpToOpenGLEnum(int StencilOp);
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
 	static void *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
 
@@ -196,6 +197,7 @@ private:
 	void Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand);
 	void Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand);
 	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand);
+	void Cmd_ClearStencil(const CCommandBuffer::SCommand_ClearStencil *pCommand);
 	void Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand);
 	void Cmd_Screenshot(const CCommandBuffer::SCommand_Screenshot *pCommand);
 
