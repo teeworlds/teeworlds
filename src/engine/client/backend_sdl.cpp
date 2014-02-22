@@ -258,6 +258,15 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	{
 		int MaxTexSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MaxTexSize);
+		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+		{
+			int Max3DTexSize;
+			glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &Max3DTexSize);
+			if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
+				MaxTexSize = min(MaxTexSize, Max3DTexSize*16);
+			else
+				MaxTexSize = Max3DTexSize*16;
+		}
 		if(Width > MaxTexSize || Height > MaxTexSize)
 		{
 			do
