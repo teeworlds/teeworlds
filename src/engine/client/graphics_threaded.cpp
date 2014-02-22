@@ -777,14 +777,44 @@ int CGraphics_Threaded::Init()
 	m_pCommandBuffer = m_apCommandBuffers[0];
 
 	// create null texture, will get id=0
-	static const unsigned char aNullTextureData[] = {
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-	};
+	unsigned char aNullTextureData[4*32*32];
+	for(int x = 0; x < 32; ++x)
+		for(int y = 0; y < 32; ++y)
+		{
+			if(x < 16)
+			{
+				if(y < 16)
+				{
+					aNullTextureData[4*(y*32+x)+0] = y*8+x*8+15;
+					aNullTextureData[4*(y*32+x)+1] = 0;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+				else
+				{
+					aNullTextureData[4*(y*32+x)+0] = 0;
+					aNullTextureData[4*(y*32+x)+1] = y*8+x*8-113;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+			}
+			else
+			{
+				if(y < 16)
+				{
+					aNullTextureData[4*(y*32+x)+0] = 0;
+					aNullTextureData[4*(y*32+x)+1] = 0;
+					aNullTextureData[4*(y*32+x)+2] = y*8+x*8-113;
+				}
+				else
+				{
+					aNullTextureData[4*(y*32+x)+0] = y*8+x*8-496;
+					aNullTextureData[4*(y*32+x)+1] = y*8+x*8-496;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+			}
+			aNullTextureData[4*(y*32+x)+3] = 255;
+		}
 
-	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
+	m_InvalidTexture = LoadTextureRaw(32,32,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE|TEXLOAD_MULTI_DIMENSION);
 	return 0;
 }
 
