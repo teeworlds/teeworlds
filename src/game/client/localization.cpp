@@ -109,7 +109,7 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 
 	unsigned DefaultHash = str_quickhash("");
 	unsigned DefaultIndex = 0;
-	for(unsigned i = 0; i < r.size(); ++i)
+	for(unsigned i = 0; i < r.size() && r.index(i).m_Hash == Hash; ++i)
 	{
 		const CString &rStr = r.index(i);
 		if(rStr.m_ContextHash == ContextHash)
