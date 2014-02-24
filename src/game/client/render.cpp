@@ -474,7 +474,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			Graphics()->QuadsBegin();
 			CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
-			float w = BaseSize/2.25f;
+			float w = BaseSize/2.1f;
 			float h = w;
 
 			Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
