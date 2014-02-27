@@ -987,6 +987,8 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			Info.m_aClients[i].m_Score = Up.GetInt();
 			Info.m_aClients[i].m_Player = Up.GetInt() != 0 ? true : false;
 		}
+		
+		str_clean_whitespaces(Info.m_aName);
 
 		if(!Up.Error())
 		{
