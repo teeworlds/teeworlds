@@ -13,7 +13,7 @@
 #include "skins.h"
 
 
-const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "tattoo", "decoration", "hands", "feet", "eyes"};
+const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "tattoo", "decoration", "hands", "feet", "eyes"}; /* Localize("body");Localize("tattoo");Localize("decoration");Localize("hands");Localize("feet");Localize("eyes"); */
 const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
 char *const CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinTattoo, g_Config.m_PlayerSkinDecoration,
