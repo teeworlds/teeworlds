@@ -22,10 +22,13 @@ CHud::CHud()
 {
 	// won't work if zero
 	m_AverageFPS = 1.0f;
+	
+	m_WarmupHideTick = 0;
 }
 
 void CHud::OnReset()
 {
+	m_WarmupHideTick = 0;
 }
 
 void CHud::RenderGameTimer()
@@ -319,9 +322,20 @@ void CHud::RenderWarmupTimer()
 	{
 		char aBuf[256];
 		float FontSize = 20.0f;
-		float w = TextRender()->TextWidth(0, FontSize, Localize("Warmup"), -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, Localize("Warmup"), -1);
-
+		float w = 0.0f;
+		const char *pText = Localize("Warmup");
+		
+		if(m_WarmupHideTick == 0 || (time_get() - m_WarmupHideTick) / time_freq() < 10)
+		{
+			w = TextRender()->TextWidth(0, FontSize, pText, -1);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, pText, -1);
+		}
+		else
+		{
+			TextRender()->TextColor(1, 1, 0.5f, 1);
+			TextRender()->Text(0x0, 10, 45, 8, pText, -1);
+		}
+			
 		FontSize = 16.0f;
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 		{
@@ -330,7 +344,11 @@ void CHud::RenderWarmupTimer()
 			else if(m_pClient->m_Snap.m_NotReadyCount > 1)
 				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), m_pClient->m_Snap.m_NotReadyCount);
 			else
+			{
 				str_format(aBuf, sizeof(aBuf), Localize("wait for more players"));
+				if(m_WarmupHideTick == 0)
+					m_WarmupHideTick = time_get();
+			}
 		}
 		else
 		{
@@ -340,9 +358,20 @@ void CHud::RenderWarmupTimer()
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
 		}
-		w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
+		
+		if(m_WarmupHideTick == 0 || (time_get() - m_WarmupHideTick) / time_freq() < 10)
+		{
+			w = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, aBuf, -1);
+		}
+		else
+		{
+			TextRender()->Text(0x0, 10, 54, 6, aBuf, -1);
+			TextRender()->TextColor(1, 1, 1, 1);
+		}
 	}
+	else if((m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0 && m_pClient->m_Snap.m_NotReadyCount > 0) || m_pClient->m_Snap.m_pGameData->m_GameStateEndTick != 0)
+		m_WarmupHideTick = 0;
 }
 
 void CHud::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
