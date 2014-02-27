@@ -124,6 +124,10 @@ void CCharacter::HandleNinja()
 		// time's up, return
 		m_aWeapons[WEAPON_NINJA].m_Got = false;
 		m_ActiveWeapon = m_LastWeapon;
+		
+		// reset velocity
+		if(m_Ninja.m_CurrentMoveTime > 0)
+			m_Core.m_Vel = m_Ninja.m_ActivationDir*m_Ninja.m_OldVelAmount;
 
 		SetWeapon(m_ActiveWeapon);
 		return;
@@ -490,6 +494,7 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 void CCharacter::GiveNinja()
 {
 	m_Ninja.m_ActivationTick = Server()->Tick();
+	m_Ninja.m_CurrentMoveTime = -1;
 	m_aWeapons[WEAPON_NINJA].m_Got = true;
 	m_aWeapons[WEAPON_NINJA].m_Ammo = -1;
 	if (m_ActiveWeapon != WEAPON_NINJA)
