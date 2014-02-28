@@ -63,8 +63,8 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
 
 	num_items = set(translations) | set(l10n_src)
 	tsl_items = set(translations) & set(l10n_src)
-	new_items = set(translations) - set(l10n_src)
-	old_items = set(l10n_src) - set(translations)
+	old_items = set(translations) - set(l10n_src)
+	new_items = set(l10n_src) - set(translations)
 
 	def to_transl(set_):
 		return [
