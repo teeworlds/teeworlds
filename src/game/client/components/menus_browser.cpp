@@ -11,7 +11,6 @@
 #include <game/generated/client_data.h>
 #include <game/generated/protocol.h>
 
-#include <game/version.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/client/components/countryflags.h>
