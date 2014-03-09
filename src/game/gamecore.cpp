@@ -65,6 +65,7 @@ void CCharacterCore::Reset()
 {
 	m_Pos = vec2(0,0);
 	m_Vel = vec2(0,0);
+	m_VelDiff = vec2(0,0);
 	m_HookPos = vec2(0,0);
 	m_HookDir = vec2(0,0);
 	m_HookTick = 0;
@@ -143,7 +144,6 @@ void CCharacterCore::Tick(bool UseInput)
 				m_HookDir = TargetDirection;
 				m_HookedPlayer = -1;
 				m_HookTick = 0;
-				//m_TriggeredEvents |= COREEVENTFLAG_HOOK_LAUNCH;
 			}
 		}
 		else
@@ -158,9 +158,9 @@ void CCharacterCore::Tick(bool UseInput)
 
 	// add the speed modification according to players wanted direction
 	if(m_Direction < 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
+		m_Vel.x += SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
 	if(m_Direction > 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
+		m_Vel.x += SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
 	if(m_Direction == 0)
 		m_Vel.x *= Friction;
 
@@ -183,8 +183,6 @@ void CCharacterCore::Tick(bool UseInput)
 	}
 	else if(m_HookState == HOOK_RETRACT_END)
 	{
-		m_HookState = HOOK_RETRACTED;
-		//m_TriggeredEvents |= COREEVENTFLAG_HOOK_RETRACT;
 		m_HookState = HOOK_RETRACTED;
 	}
 	else if(m_HookState == HOOK_FLYING)
@@ -264,13 +262,9 @@ void CCharacterCore::Tick(bool UseInput)
 				m_HookState = HOOK_RETRACTED;
 				m_HookPos = m_Pos;
 			}
-
-			// keep players hooked for a max of 1.5sec
-			//if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
-				//release_hooked();
 		}
 
-		// don't do this hook rutine when we are hook to a player
+		// don't do this hook routine when we are hook to a player
 		if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
 		{
 			vec2 HookVel = normalize(m_HookPos-m_Pos)*m_pWorld->m_Tuning.m_HookDragAccel;
@@ -294,7 +288,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 		}
 
-		// release hook (max hook time is 1.25
+		// release hook (max hook time is 1.25)
 		m_HookTick++;
 		if(m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]))
 		{
@@ -312,8 +306,7 @@ void CCharacterCore::Tick(bool UseInput)
 			if(!pCharCore)
 				continue;
 
-			//player *p = (player*)ent;
-			if(pCharCore == this) // || !(p->flags&FLAG_ALIVE)
+			if(pCharCore == this)
 				continue; // make sure that we don't nudge our self
 
 			// handle player <-> player collision
@@ -342,12 +335,12 @@ void CCharacterCore::Tick(bool UseInput)
 					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
 
 					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
+					pCharCore->m_VelDiff.x += SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x + pCharCore->m_VelDiff.x, Accel*Dir.x*1.5f);
+					pCharCore->m_VelDiff.y += SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y + pCharCore->m_VelDiff.y, Accel*Dir.y*1.5f);
 
 					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					m_Vel.x += SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
+					m_Vel.y += SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
 				}
 			}
 		}
@@ -356,6 +349,14 @@ void CCharacterCore::Tick(bool UseInput)
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
 		m_Vel = normalize(m_Vel) * 6000;
+}
+
+void CCharacterCore::PostTick()
+{
+	// apply velocity difference caused by external forces AFTER the tick 
+	// to prevent errors in physics calculation (e.g different hook strengths)
+	m_Vel += m_VelDiff;
+	m_VelDiff = vec2(0,0);
 }
 
 void CCharacterCore::Move()
