@@ -77,7 +77,7 @@ void CLayerGroup::Convert(CUIRect *pRect)
 
 void CLayerGroup::Mapping(float *pPoints)
 {
-	m_pMap->m_pEditor->RenderTools()->MapscreenToWorld(
+	m_pMap->m_pEditor->RenderTools()->MapScreenToWorld(
 		m_pMap->m_pEditor->m_WorldOffsetX, m_pMap->m_pEditor->m_WorldOffsetY,
 		m_ParallaxX/100.0f, m_ParallaxY/100.0f,
 		m_OffsetX, m_OffsetY,
@@ -2115,7 +2115,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			float aPoints[4];
 			float Aspect = Start + (End-Start)*(i/(float)NumSteps);
 
-			RenderTools()->MapscreenToWorld(
+			RenderTools()->MapScreenToWorld(
 				m_WorldOffsetX, m_WorldOffsetY,
 				1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
 
@@ -2157,7 +2157,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				float aAspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
 				float Aspect = aAspects[i];
 
-				RenderTools()->MapscreenToWorld(
+				RenderTools()->MapScreenToWorld(
 					m_WorldOffsetX, m_WorldOffsetY,
 					1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
 

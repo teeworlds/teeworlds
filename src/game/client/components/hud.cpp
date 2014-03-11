@@ -374,14 +374,6 @@ void CHud::RenderWarmupTimer()
 		m_WarmupHideTick = 0;
 }
 
-void CHud::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
-{
-	float Points[4];
-	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), m_pClient->m_pCamera->m_Zoom, Points);
-	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
-}
-
 void CHud::RenderFps()
 {
 	if(g_Config.m_ClShowfps)
@@ -472,7 +464,7 @@ void CHud::RenderCursor()
 	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	MapscreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup());
+	RenderTools()->MapScreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup(), m_pClient->m_pCamera->m_Zoom);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 

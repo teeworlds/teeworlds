@@ -75,8 +75,9 @@ public:
 	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
 
 	// helpers
-	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
-		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);
+	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
+		float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4]);
+	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom);
 
 };
 

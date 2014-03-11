@@ -521,8 +521,8 @@ static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect,
 	}
 }
 
-void CRenderTools::MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
-	float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints)
+void CRenderTools::MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
+	float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4])
 {
 	float Width, Height;
 	CalcScreenParams(1150*1000, 1500, 1050, Aspect, &Width, &Height);
@@ -530,10 +530,18 @@ void CRenderTools::MapscreenToWorld(float CenterX, float CenterY, float Parallax
 	CenterY *= ParallaxY;
 	Width *= Zoom;
 	Height *= Zoom;
-	pPoints[0] = OffsetX+CenterX-Width/2;
-	pPoints[1] = OffsetY+CenterY-Height/2;
-	pPoints[2] = pPoints[0]+Width;
-	pPoints[3] = pPoints[1]+Height;
+	aPoints[0] = OffsetX+CenterX-Width/2;
+	aPoints[1] = OffsetY+CenterY-Height/2;
+	aPoints[2] = aPoints[0]+Width;
+	aPoints[3] = aPoints[1]+Height;
+}
+
+void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
+{
+	float aPoints[4];
+	MapScreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), Zoom, aPoints);
+	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
 void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
