@@ -236,8 +236,43 @@ public:
 
 	bool IsEmpty() const
 	{
-		return m_lLayers.size() == 0;
+		return m_lLayers.size() == 0; // stupid function, since its bad for Fillselection: TODO add a function for Fillselection that returns whether a specific tile is used in the given layer
 	}
+
+	/*bool IsUsedInThisLayer(int Layer, int Index) // <--------- this is what i meant but cause i dont know which Indexes belongs to which layers i cant finish yet
+	{
+		switch Layer
+		{
+			case LAYERTYPE_GAME: // security
+				return true;
+			case LAYERTYPE_FRONT:
+				return true;
+			case LAYERTYPE_TELE:
+			{
+				if (Index ==) // you could add an 2D array into mapitems.h which defines which Indexes belong to which layer(s)
+			}
+			case LAYERTYPE_SPEEDUP:
+			{
+				if (Index == TILE_BOOST)
+					return true;
+				else
+					return false;
+			}
+			case LAYERTYPE_SWITCH:
+			{
+				
+			}
+			case LAYERTYPE_TUNE:
+			{
+				if (Index == TILE_TUNE1)
+					return true;
+				else
+					return false;
+			}
+			default:
+				return false;
+		}
+	}*/
 
 	void Clear()
 	{
@@ -330,6 +365,7 @@ public:
 	class CLayerSpeedup *m_pSpeedupLayer;
 	class CLayerFront *m_pFrontLayer;
 	class CLayerSwitch *m_pSwitchLayer;
+	class CLayerTune *m_pTuneLayer;
 	CLayerGroup *m_pGameGroup;
 
 	CEnvelope *NewEnvelope(int Channels)
@@ -393,6 +429,7 @@ public:
 	void MakeSpeedupLayer(CLayer *pLayer);
 	void MakeFrontLayer(CLayer *pLayer);
 	void MakeSwitchLayer(CLayer *pLayer);
+	void MakeTuneLayer(CLayer *pLayer);
 };
 
 
@@ -460,6 +497,7 @@ public:
 	int m_Speedup;
 	int m_Front;
 	int m_Switch;
+	int m_Tune;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -555,6 +593,24 @@ public:
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
+};
+
+class CLayerTune : public CLayerTiles
+{
+public:
+	CLayerTune(int w, int h);
+	~CLayerTune();
+
+	CTuneTile *m_pTuneTile;
+	unsigned char m_TuningNumber;
+
+	virtual void Resize(int NewW, int NewH);
+	virtual void Shift(int Direction);
+	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void BrushFlipX();
+	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
 };
 
@@ -655,6 +711,7 @@ public:
 
 		m_TeleNum = 1;
 		m_SwitchNum = 1;
+		m_TuningNum = 1;
 
 		m_SpeedupForce = 50;
 		m_SpeedupMaxSpeed = 0;
@@ -927,6 +984,7 @@ public:
 
 	// DDRace
 
+	unsigned char m_TuningNum;
 	unsigned char m_TeleNum;
 
 	unsigned char m_SpeedupForce;
