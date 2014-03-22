@@ -86,7 +86,7 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
 			msgid=msg,
 			msgstr=translations.get(msg, ""),
 			obsolete=(msg in old_items),
-			occurences=l10n_src[msg],
+			occurrences=l10n_src[msg],
 		))
 	po.save(outputfilename)
 
