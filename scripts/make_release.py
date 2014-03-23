@@ -81,7 +81,6 @@ def clean():
 		shutil.rmtree(package_dir)
 		shutil.rmtree(languages_dir)
 		shutil.rmtree(maps_dir)
-		shutil.rmtree(libs_dir)
 		os.remove(src_package_languages)
 		os.remove(src_package_maps)
 	except: pass
@@ -151,22 +150,6 @@ if use_bundle:
 		if to_lipo:
 			os.system("lipo -create -output "+bin+" "+" ".join(to_lipo))
 
-	libs_dir = "libs"
-	os.mkdir(libs_dir)
-	libfreetype_full = os.popen("otool -L "+name+" | grep 'libfreetype' | awk -F' ' '{ print $1 }'").readline().rstrip()
-	libpng_full = os.popen("otool -L "+name+" | grep 'libpng' | awk -F' ' '{ print $1 }'").readline().rstrip()
-	libfreetype = os.popen("basename "+libfreetype_full).readline().rstrip()
-	shutil.copy(libfreetype_full, libs_dir)
-	bins = [name, os.path.join(libs_dir, libfreetype)]
-	if libpng_full:
-		libpng = os.popen("basename "+libpng_full).readline().rstrip()
-		shutil.copy(libpng_full, libs_dir)
-		bins.append(os.path.join(libs_dir,libpng))
-	for bin in bins:
-		os.system("install_name_tool -change "+libfreetype_full+" @rpath/"+libfreetype+" "+bin)
-		if libpng_full:
-			os.system("install_name_tool -change "+libpng_full+" @rpath/"+libpng+" "+bin)
-
 	# create Teeworlds appfolder
 	clientbundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
 	clientbundle_bin_dir = os.path.join(clientbundle_content_dir, "MacOS")
@@ -182,9 +165,21 @@ if use_bundle:
 	copyfiles(languages_dir, clientbundle_resource_dir+"/data/languages")
 	copyfiles(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
+	libfreetype_full = os.popen("otool -L "+name+exe_ext+" | grep 'libfreetype' | awk -F' ' '{ print $1 }'").readline().rstrip()
+	libpng_full = os.popen("otool -L "+name+exe_ext+" | grep 'libpng' | awk -F' ' '{ print $1 }'").readline().rstrip()
+	libfreetype = os.popen("basename "+libfreetype_full).readline().rstrip()
+	shutil.copy(libfreetype_full, clientbundle_framework_dir)
+	bins = [name+exe_ext, os.path.join(clientbundle_framework_dir, libfreetype)]
+	if libpng_full:
+		libpng = os.popen("basename "+libpng_full).readline().rstrip()
+		shutil.copy(libpng_full, clientbundle_framework_dir)
+		bins.append(os.path.join(clientbundle_framework_dir, libpng))
+	for bin in bins:
+		os.system("install_name_tool -change "+libfreetype_full+" @rpath/"+libfreetype+" "+bin)
+		if libpng_full:
+			os.system("install_name_tool -change "+libpng_full+" @rpath/"+libpng+" "+bin)
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
-	copyfiles(libs_dir, clientbundle_framework_dir)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
