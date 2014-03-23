@@ -219,6 +219,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 		-- disable visibility attribute support for gcc on windows
 		settings.cc.defines:Add("NO_VIZ")
+		settings.cc.defines:Add("_WIN32_WINNT=0x0501")
 	end
 
 	local icons = SharedIcons(compiler)
