@@ -165,19 +165,46 @@ if use_bundle:
 	copyfiles(languages_dir, clientbundle_resource_dir+"/data/languages")
 	copyfiles(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
-	libfreetype_full = os.popen("otool -L "+name+exe_ext+" | grep 'libfreetype' | awk -F' ' '{ print $1 }'").readline().rstrip()
-	libpng_full = os.popen("otool -L "+name+exe_ext+" | grep 'libpng' | awk -F' ' '{ print $1 }'").readline().rstrip()
-	libfreetype = os.popen("basename "+libfreetype_full).readline().rstrip()
-	shutil.copy(libfreetype_full, clientbundle_framework_dir)
-	bins = [name+exe_ext, os.path.join(clientbundle_framework_dir, libfreetype)]
-	if libpng_full:
-		libpng = os.popen("basename "+libpng_full).readline().rstrip()
-		shutil.copy(libpng_full, clientbundle_framework_dir)
-		bins.append(os.path.join(clientbundle_framework_dir, libpng))
+
+	otool_output = os.popen("otool -L "+name+exe_ext)
+	lines = []
+	while 1:
+		line = otool_output.readline()
+		if not line: break
+		lines.append(line)
+
+	regex_libfreetype_full = re.compile("/.*libfreetype.*dylib")
+	regex_libpng_full = re.compile("/.*libpng.*dylib")
+
+	libs = []
+	for line in lines:
+		m = regex_libfreetype_full.search(line)
+		if m:
+			libfreetype_full = m.group(0)
+			regex_libfreetype = re.compile("(?<=/)libfreetype.*dylib")
+			libfreetype_short = regex_libfreetype.search(libfreetype_full).group(0)
+			libfreetype = {'full': libfreetype_full, 'short': libfreetype_short}
+			shutil.copy(libfreetype['full'], clientbundle_framework_dir)
+			libs.append(libfreetype)
+
+		m = regex_libpng_full.search(line)
+		if m:
+			libpng_full = m.group(0)
+			regex_libpng = re.compile("(?<=/)libpng.*dylib")
+			libpng_short = regex_libpng.search(libpng_full).group(0)
+			libpng = {'full': libpng_full, 'short': libpng_short}
+			libs.append(libpng)
+
+	bins = [name+exe_ext]
+
+	for lib in libs:
+		bins.append(os.path.join(clientbundle_framework_dir, lib['short']))
+		shutil.copy(lib['full'], clientbundle_framework_dir)
+
 	for bin in bins:
-		os.system("install_name_tool -change "+libfreetype_full+" @rpath/"+libfreetype+" "+bin)
-		if libpng_full:
-			os.system("install_name_tool -change "+libpng_full+" @rpath/"+libpng+" "+bin)
+		for lib in libs:
+			os.system("install_name_tool -change "+lib['full']+" @rpath/"+lib['short']+" "+bin)
+
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
