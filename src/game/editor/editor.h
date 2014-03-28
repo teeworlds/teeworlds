@@ -675,6 +675,9 @@ public:
 	char m_FileDialogNewFolderName[64];
 	char m_FileDialogErrString[64];
 	float m_FilesSearchBoxID;
+	int m_FilePreviewImage;
+	CImageInfo m_FilePreviewImageInfo;
+
 
 	struct CFilelistItem
 	{
