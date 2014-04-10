@@ -127,11 +127,9 @@ if gen_network_header:
 class CNetObjHandler
 {
 	const char *m_pMsgFailedOn;
-	const char *m_pObjCorrectedOn;
 	char m_aMsgData[1024];
-	int m_NumObjCorrections;
-	int ClampInt(const char *pErrorMsg, int Value, int Min, int Max);
-	int ClampFlag(const char *pErrorMsg, int Value, int Mask);
+	bool CheckInt(const char *pErrorMsg, int Value, int Min, int Max);
+	bool CheckFlag(const char *pErrorMsg, int Value, int Mask);
 
 	static const char *ms_apObjNames[];
 	static int ms_aObjSizes[];
@@ -143,8 +141,6 @@ public:
 	int ValidateObj(int Type, const void *pData, int Size);
 	const char *GetObjName(int Type) const;
 	int GetObjSize(int Type) const;
-	int NumObjCorrections() const;
-	const char *CorrectedObjOn() const;
 
 	const char *GetMsgName(int Type) const;
 	void *SecureUnpackMsg(int Type, CUnpacker *pUnpacker);
@@ -167,13 +163,15 @@ if gen_network_source:
 	lines += ['CNetObjHandler::CNetObjHandler()']
 	lines += ['{']
 	lines += ['\tm_pMsgFailedOn = "";']
-	lines += ['\tm_pObjCorrectedOn = "";']
-	lines += ['\tm_NumObjCorrections = 0;']
 	lines += ['}']
 	lines += ['']
+<<<<<<< HEAD
 	lines += ['int CNetObjHandler::NumObjCorrections() const { return m_NumObjCorrections; }']
 	lines += ['const char *CNetObjHandler::CorrectedObjOn() const { return m_pObjCorrectedOn; }']
 	lines += ['const char *CNetObjHandler::FailedMsgOn() const { return m_pMsgFailedOn; }']
+=======
+	lines += ['const char *CNetObjHandler::FailedMsgOn() { return m_pMsgFailedOn; }']
+>>>>>>> 49fddbb... fixed #1211: netobjs containing integers and flags out of range are discarded
 	lines += ['']
 	lines += ['']
 	lines += ['']
@@ -183,18 +181,17 @@ if gen_network_source:
 	lines += ['static const int max_int = 0x7fffffff;']
 	lines += ['']
 
-	lines += ['int CNetObjHandler::ClampInt(const char *pErrorMsg, int Value, int Min, int Max)']
+	lines += ['bool CNetObjHandler::CheckInt(const char *pErrorMsg, int Value, int Min, int Max)']
 	lines += ['{']
-	lines += ['\tif(Value < Min) { m_pObjCorrectedOn = pErrorMsg; m_NumObjCorrections++; return Min; }']
-	lines += ['\tif(Value > Max) { m_pObjCorrectedOn = pErrorMsg; m_NumObjCorrections++; return Max; }']
-	lines += ['\treturn Value;']
+	lines += ['\tif(Value < Min || Value > Max) { m_pMsgFailedOn = pErrorMsg; return false; }']
+	lines += ['\treturn true;']
 	lines += ['}']
 	lines += ['']
 
-	lines += ['int CNetObjHandler::ClampFlag(const char *pErrorMsg, int Value, int Mask)']
+	lines += ['bool CNetObjHandler::CheckFlag(const char *pErrorMsg, int Value, int Mask)']
 	lines += ['{']
-	lines += ['\tif((Value&Mask) != Value) { m_pObjCorrectedOn = pErrorMsg; m_NumObjCorrections++; return (Value&Mask); }']
-	lines += ['\treturn Value;']
+	lines += ['\tif((Value&Mask) != Value) { m_pMsgFailedOn = pErrorMsg; return false; }']
+	lines += ['\treturn true;']
 	lines += ['}']
 	lines += ['']
 

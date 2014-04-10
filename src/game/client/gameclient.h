@@ -84,9 +84,6 @@ public:
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 
-	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
-	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
-
 	bool m_SuppressEvents;
 
 	// TODO: move this

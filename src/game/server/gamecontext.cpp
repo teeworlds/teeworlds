@@ -542,35 +542,14 @@ void CGameContext::OnTick()
 // Server hooks
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
-	int NumCorrections = m_NetObjHandler.NumObjCorrections();
 	if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
-	{
-		if(g_Config.m_Debug && NumCorrections != m_NetObjHandler.NumObjCorrections())
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT corrected on '%s'", m_NetObjHandler.CorrectedObjOn());
-			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
-		}
 		m_apPlayers[ClientID]->OnDirectInput((CNetObj_PlayerInput *)pInput);
-	}
 }
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 {
-	if(!m_World.m_Paused)
-	{
-		int NumCorrections = m_NetObjHandler.NumObjCorrections();
-		if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
-		{
-			if(g_Config.m_Debug && NumCorrections != m_NetObjHandler.NumObjCorrections())
-			{
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT corrected on '%s'", m_NetObjHandler.CorrectedObjOn());
-				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
-			}
-			m_apPlayers[ClientID]->OnPredictedInput((CNetObj_PlayerInput *)pInput);
-		}
-	}
+	if(!m_World.m_Paused && m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
+		m_apPlayers[ClientID]->OnPredictedInput((CNetObj_PlayerInput *)pInput);
 }
 
 void CGameContext::OnClientEnter(int ClientID)
