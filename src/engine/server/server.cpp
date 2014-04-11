@@ -1176,16 +1176,11 @@ char *CServer::GetMapName()
 
 int CServer::LoadMap(const char *pMapName)
 {
-	//DATAFILE *df;
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
-
-	/*df = datafile_load(buf);
-	if(!df)
-		return 0;*/
-
+	
 	// check for valid standard map
-	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL))
+	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "mapchecker", "invalid standard map");
 		return 0;
