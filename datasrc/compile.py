@@ -128,6 +128,8 @@ class CNetObjHandler
 {
 	const char *m_pMsgFailedOn;
 	char m_aMsgData[1024];
+	const char *m_pObjFailedOn;
+	int m_NumObjFailures;
 	bool CheckInt(const char *pErrorMsg, int Value, int Min, int Max);
 	bool CheckFlag(const char *pErrorMsg, int Value, int Mask);
 
@@ -141,8 +143,10 @@ public:
 	int ValidateObj(int Type, const void *pData, int Size);
 	const char *GetObjName(int Type) const;
 	int GetObjSize(int Type) const;
-
-	const char *GetMsgName(int Type) const;
+	const char *FailedObjOn();
+	int NumObjFailures();
+	
+	const char *GetMsgName(int Type);
 	void *SecureUnpackMsg(int Type, CUnpacker *pUnpacker);
 	const char *FailedMsgOn() const;
 };
@@ -163,16 +167,22 @@ if gen_network_source:
 	lines += ['CNetObjHandler::CNetObjHandler()']
 	lines += ['{']
 	lines += ['\tm_pMsgFailedOn = "";']
+	lines += ['\tm_pObjFailedOn = "";']
+	lines += ['\tm_NumObjFailures = 0;']
 	lines += ['}']
 	lines += ['']
+<<<<<<< HEAD
 <<<<<<< HEAD
 	lines += ['int CNetObjHandler::NumObjCorrections() const { return m_NumObjCorrections; }']
 	lines += ['const char *CNetObjHandler::CorrectedObjOn() const { return m_pObjCorrectedOn; }']
 	lines += ['const char *CNetObjHandler::FailedMsgOn() const { return m_pMsgFailedOn; }']
 =======
+=======
+	lines += ['const char *CNetObjHandler::FailedObjOn() { return m_pObjFailedOn; }']
+	lines += ['int CNetObjHandler::NumObjFailures() { return m_NumObjFailures; }']
+>>>>>>> 96a2ded... separate netmsg failures from netobj failures, count latter ones
 	lines += ['const char *CNetObjHandler::FailedMsgOn() { return m_pMsgFailedOn; }']
 >>>>>>> 49fddbb... fixed #1211: netobjs containing integers and flags out of range are discarded
-	lines += ['']
 	lines += ['']
 	lines += ['']
 	lines += ['']
@@ -183,14 +193,14 @@ if gen_network_source:
 
 	lines += ['bool CNetObjHandler::CheckInt(const char *pErrorMsg, int Value, int Min, int Max)']
 	lines += ['{']
-	lines += ['\tif(Value < Min || Value > Max) { m_pMsgFailedOn = pErrorMsg; return false; }']
+	lines += ['\tif(Value < Min || Value > Max) { m_pObjFailedOn = pErrorMsg; m_NumObjFailures++; return false; }']
 	lines += ['\treturn true;']
 	lines += ['}']
 	lines += ['']
 
 	lines += ['bool CNetObjHandler::CheckFlag(const char *pErrorMsg, int Value, int Mask)']
 	lines += ['{']
-	lines += ['\tif((Value&Mask) != Value) { m_pMsgFailedOn = pErrorMsg; return false; }']
+	lines += ['\tif((Value&Mask) != Value) { m_pObjFailedOn = pErrorMsg; m_NumObjFailures++; return false; }']
 	lines += ['\treturn true;']
 	lines += ['}']
 	lines += ['']
@@ -297,6 +307,7 @@ if gen_network_source:
 	lines += ['void *CNetObjHandler::SecureUnpackMsg(int Type, CUnpacker *pUnpacker)']
 	lines += ['{']
 	lines += ['\tm_pMsgFailedOn = 0;']
+	lines += ['\tm_pObjFailedOn = 0;']
 	lines += ['\tswitch(Type)']
 	lines += ['\t{']
 
@@ -314,9 +325,10 @@ if gen_network_source:
 	lines += ['\tif(pUnpacker->Error())']
 	lines += ['\t\tm_pMsgFailedOn = "(unpack error)";']
 	lines += ['\t']
-	lines += ['\tif(m_pMsgFailedOn)']
+	lines += ['\tif(m_pMsgFailedOn || m_pObjFailedOn)']
 	lines += ['\t\treturn 0;']
 	lines += ['\tm_pMsgFailedOn = "";']
+	lines += ['\tm_pObjFailedOn = "";']
 	lines += ['\treturn m_aMsgData;']
 	lines += ['};']
 	lines += ['']
