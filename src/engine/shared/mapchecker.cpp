@@ -82,16 +82,10 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 	{
 		if(str_comp(pCurrent->m_aMapName, aMapName) == 0)
 		{
-			dbg_msg("DEBUG", "CHECKING MAP: %s", aMapName);
 			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
 			bool CrcSizeMatch = false;
 			if(!pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize, &CrcSizeMatch))
-			{
-				dbg_msg("DEBUG", "FindFile returned false");
 				return true;
-			}
-			
-			dbg_msg("DEBUG", "FindFile returned true, CrcSizeMatch: %s", CrcSizeMatch ? "y" : "n");
 			
 			// output filename
 			if(pBuffer != 0 && BufferSize > 0)

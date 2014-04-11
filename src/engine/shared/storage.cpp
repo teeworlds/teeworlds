@@ -323,30 +323,27 @@ public:
 			if(Data->pBuffer[0])
 				return 1;
 		}
-		else
+		else if(!str_comp(pName, Data->pFilename))
 		{
-			if(!str_comp(pName, Data->pFilename))
+			// found the file
+			str_format(Data->pBuffer, Data->BufferSize, "%s/%s", Data->pPath, Data->pFilename);
+			
+			// check crc and size
+			if(Data->pCrcSizeMatch != 0)
 			{
-				// found the file
-				str_format(Data->pBuffer, Data->BufferSize, "%s/%s", Data->pPath, Data->pFilename);
-				
-				// check crc and size
-				if(Data->pCrcSizeMatch != 0)
+				unsigned Crc = 0;
+				unsigned Size = 0;
+				if(!Data->pStorage->GetCrcSize(Data->pBuffer, Type, &Crc, &Size) || Crc != Data->WantedCrc || Size != Data->WantedSize)
 				{
-					unsigned Crc = 0;
-					unsigned Size = 0;
-					if(!Data->pStorage->GetCrcSize(Data->pBuffer, Type, &Crc, &Size) || Crc != Data->WantedCrc || Size != Data->WantedSize)
-					{
-						*Data->pCrcSizeMatch = false;
-						Data->pBuffer[0] = 0;
-						return 0;
-					}
-					else
-						*Data->pCrcSizeMatch = true;
+					*Data->pCrcSizeMatch = false;
+					Data->pBuffer[0] = 0;
+					return 0;
 				}
-				
-				return 1;
+				else
+					*Data->pCrcSizeMatch = true;
 			}
+			
+			return 1;
 		}
 
 		return 0;
