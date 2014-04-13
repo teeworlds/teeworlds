@@ -545,14 +545,37 @@ void CGameContext::OnTick()
 // Server hooks
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
-	if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
+	int NumFailures = m_NetObjHandler.NumObjFailures();
+	if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
+	{
+		if(g_Config.m_Debug && NumFailures != m_NetObjHandler.NumObjFailures())
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT failed on '%s'", m_NetObjHandler.FailedObjOn());
+			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+		}
+	}
+	else
 		m_apPlayers[ClientID]->OnDirectInput((CNetObj_PlayerInput *)pInput);
 }
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 {
-	if(!m_World.m_Paused && m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
-		m_apPlayers[ClientID]->OnPredictedInput((CNetObj_PlayerInput *)pInput);
+	if(!m_World.m_Paused)
+	{
+		int NumFailures = m_NetObjHandler.NumObjFailures();
+		if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
+		{
+			if(g_Config.m_Debug && NumFailures != m_NetObjHandler.NumObjFailures())
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT corrected on '%s'", m_NetObjHandler.FailedObjOn());
+				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+			}
+		}
+		else
+			m_apPlayers[ClientID]->OnPredictedInput((CNetObj_PlayerInput *)pInput);
+	}
 }
 
 void CGameContext::OnClientEnter(int ClientID)
