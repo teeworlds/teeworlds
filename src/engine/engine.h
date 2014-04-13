@@ -23,6 +23,7 @@ protected:
 	class CJobPool m_JobPool;
 
 public:
+	virtual ~IEngine() {}
 	virtual void Init() = 0;
 	virtual void InitLogfile() = 0;
 	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype) = 0;

@@ -119,25 +119,112 @@ static void logger_debugger(const char *line)
 #endif
 }
 
+typedef struct LOGJOB
+{
+	struct LOGJOB *next;
+	char *line;
+} LOGJOB;
 
-static IOHANDLE logfile = 0;
+typedef struct LOGFILE
+{
+	IOHANDLE file;
+	void *thread;
+	volatile int shutdown;
+	LOCK lock;
+	struct LOGJOB *first_job;
+	struct LOGJOB *last_job;
+} LOGFILE;
+
+static LOGFILE *logfile = 0;
+
+void logworker(void *user)
+{
+	LOGFILE *log = (LOGFILE*)user;
+	while(log->shutdown == 0)
+	{
+		LOGJOB *job = 0;
+		lock_wait(log->lock);
+		if(log->first_job)
+		{
+			job = log->first_job;
+			log->first_job = log->first_job->next;
+			if(log->first_job == 0)
+				log->last_job = 0;
+		}
+		lock_release(log->lock);
+		
+		if(job)
+		{
+			io_write(log->file, job->line, strlen(job->line));
+			io_write_newline(log->file);
+			io_flush(log->file);
+	
+			mem_free(job->line);
+			mem_free(job);
+		}
+		else
+			thread_sleep(25);
+	}
+}
+
 static void logger_file(const char *line)
 {
-	io_write(logfile, line, strlen(line));
-	io_write_newline(logfile);
-	io_flush(logfile);
+	int len = strlen(line)+1; // +1: null terminator
+	LOGJOB *new_job = (LOGJOB*)mem_alloc(sizeof(LOGJOB), 1);
+	new_job->next = 0;
+	new_job->line = (char*)mem_alloc(len*sizeof(char), 1);
+	str_copy(new_job->line, line, len);
+	lock_wait(logfile->lock);
+	if(logfile->last_job == 0)
+	{
+		logfile->first_job = new_job;
+		logfile->last_job = new_job;
+	}
+	else
+	{
+		logfile->last_job->next = new_job;
+		logfile->last_job = new_job;
+	}
+	lock_release(logfile->lock);
 }
 
 void dbg_logger_stdout() { dbg_logger(logger_stdout); }
 void dbg_logger_debugger() { dbg_logger(logger_debugger); }
 void dbg_logger_file(const char *filename)
 {
-	logfile = io_open(filename, IOFLAG_WRITE);
-	if(logfile)
+	IOHANDLE file = io_open(filename, IOFLAG_WRITE);
+	if(file)
+	{
+		logfile = (LOGFILE*)mem_alloc(sizeof(LOGFILE), 1);
+		logfile->file = file;
+		logfile->shutdown = 0;
+		logfile->lock = lock_create();
+		logfile->first_job = 0;
+		logfile->last_job = 0;
+		logfile->thread = thread_create(logworker, logfile);
 		dbg_logger(logger_file);
+	}
 	else
 		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
+}
 
+void dbg_logger_file_shutdown()
+{
+	logfile->shutdown = 1;
+	thread_wait(logfile->thread);
+	thread_destroy(logfile->thread);
+	
+	lock_destroy(logfile->lock);
+	while(logfile->first_job != 0)
+	{
+		LOGJOB *tmp = logfile->first_job;
+		logfile->first_job = logfile->first_job->next;
+		mem_free(tmp->line);
+		mem_free(tmp);
+	}
+	io_close(logfile->file);
+	mem_free(logfile);
+	logfile = 0;
 }
 /* */
 

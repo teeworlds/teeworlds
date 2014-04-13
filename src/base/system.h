@@ -1188,6 +1188,7 @@ void dbg_logger(DBG_LOGGER logger);
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
+void dbg_logger_file_shutdown();
 
 typedef struct
 {
