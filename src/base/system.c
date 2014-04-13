@@ -485,8 +485,10 @@ void thread_destroy(void *thread)
 #if defined(CONF_FAMILY_UNIX)
 	void *r = 0;
 	pthread_join((pthread_t)thread, &r);
-#else
+#elif defined(CONF_FAMILY_WINDOWS)
 	TerminateThread((HANDLE)thread, 0);
+#else
+	#error not implemented
 #endif
 }
 
