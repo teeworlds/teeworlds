@@ -399,7 +399,7 @@ void thread_destroy(void *thread)
 	void *r = 0;
 	pthread_join((pthread_t)thread, &r);
 #else
-	/*#error not implemented*/
+	TerminateThread((HANDLE)thread, 0);
 #endif
 }
 
