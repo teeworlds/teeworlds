@@ -296,51 +296,51 @@ public:
 
 	struct CFindCBData
 	{
-		CStorage *pStorage;
-		const char *pFilename;
-		const char *pPath;
-		char *pBuffer;
-		int BufferSize;
-		unsigned WantedCrc;
-		unsigned WantedSize;
-		bool *pCrcSizeMatch;
+		CStorage *m_pStorage;
+		const char *m_pFilename;
+		const char *m_pPath;
+		char *m_pBuffer;
+		int m_BufferSize;
+		unsigned m_WantedCrc;
+		unsigned m_WantedSize;
+		bool *m_pCrcSizeMatch;
 	};
 
 	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
 	{
-		CFindCBData *Data = static_cast<CFindCBData *>(pUser);
+		CFindCBData *pData = static_cast<CFindCBData *>(pUser);
 		if(IsDir)
 		{
 			if(pName[0] == '.')
 				return 0;
-				
+
 			// search within the folder
 			char aBuf[MAX_PATH_LENGTH];
 			char aPath[MAX_PATH_LENGTH];
-			str_format(aPath, sizeof(aPath), "%s/%s", Data->pPath, pName);
-			Data->pPath = aPath;
-			fs_listdir(Data->pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, Data);
-			if(Data->pBuffer[0])
+			str_format(aPath, sizeof(aPath), "%s/%s", pData->m_pPath, pName);
+			pData->m_pPath = aPath;
+			fs_listdir(pData->m_pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, pData);
+			if(pData->m_pBuffer[0])
 				return 1;
 		}
-		else if(!str_comp(pName, Data->pFilename))
+		else if(!str_comp(pName, pData->m_pFilename))
 		{
 			// found the file
-			str_format(Data->pBuffer, Data->BufferSize, "%s/%s", Data->pPath, Data->pFilename);
+			str_format(pData->m_pBuffer, pData->m_BufferSize, "%s/%s", pData->m_pPath, pData->m_pFilename);
 			
 			// check crc and size
-			if(Data->pCrcSizeMatch != 0)
+			if(pData->m_pCrcSizeMatch != 0)
 			{
 				unsigned Crc = 0;
 				unsigned Size = 0;
-				if(!Data->pStorage->GetCrcSize(Data->pBuffer, Type, &Crc, &Size) || Crc != Data->WantedCrc || Size != Data->WantedSize)
+				if(!pData->m_pStorage->GetCrcSize(pData->m_pBuffer, Type, &Crc, &Size) || Crc != pData->m_WantedCrc || Size != pData->m_WantedSize)
 				{
-					*Data->pCrcSizeMatch = false;
-					Data->pBuffer[0] = 0;
+					*pData->m_pCrcSizeMatch = false;
+					pData->m_pBuffer[0] = 0;
 					return 0;
 				}
 				else
-					*Data->pCrcSizeMatch = true;
+					*pData->m_pCrcSizeMatch = true;
 			}
 			
 			return 1;
@@ -349,24 +349,24 @@ public:
 		return 0;
 	}
 
-	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc, unsigned WantedSize, bool *pCrcSizeMatch)
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc = 0, unsigned WantedSize = 0, bool *pCrcSizeMatch = 0)
 	{
 		if(BufferSize < 1)
 			return false;
-		
+
 		pBuffer[0] = 0;
 		*pCrcSizeMatch = false;
 		
 		char aBuf[MAX_PATH_LENGTH];
 		CFindCBData Data;
-		Data.pStorage = this;
-		Data.pFilename = pFilename;
-		Data.pPath = pPath;
-		Data.pBuffer = pBuffer;
-		Data.BufferSize = BufferSize;
-		Data.WantedCrc = WantedCrc;
-		Data.WantedSize = WantedSize;
-		Data.pCrcSizeMatch = pCrcSizeMatch;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_WantedCrc = WantedCrc;
+		Data.m_WantedSize = WantedSize;
+		Data.m_pCrcSizeMatch = pCrcSizeMatch;
 		
 		if(Type == TYPE_ALL)
 		{
