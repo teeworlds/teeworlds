@@ -149,4 +149,15 @@ MACRO_CONFIG_INT(ClTextEntitiesSize, cl_text_entities_size, 100, 0, 100, CFGFLAG
 
 MACRO_CONFIG_INT(ClShowAdmins, cl_show_admins, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display admins in the scoreboard")
 
+// dummy
+MACRO_CONFIG_STR(DummyName, dummy_name, 16, "brainless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the Dummy")
+MACRO_CONFIG_STR(DummyClan, dummy_clan, 12, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Clan of the Dummy")
+MACRO_CONFIG_INT(DummyCountry, dummy_country, -1, -1, 1000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Country of the Dummy")
+MACRO_CONFIG_INT(DummyUseCustomColor, dummy_use_custom_color, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors")
+MACRO_CONFIG_INT(DummyColorBody, dummy_color_body, 65408, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Dummy body color")
+MACRO_CONFIG_INT(DummyColorFeet, dummy_color_feet, 65408, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Dummy feet color")
+MACRO_CONFIG_STR(DummySkin, dummy_skin, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Dummy skin")
+MACRO_CONFIG_INT(ClDummy, cl_dummy, 0, 0, 1, CFGFLAG_CLIENT, "0 - player / 1 - dummy")
+MACRO_CONFIG_INT(ClSelectCountry, cl_select_country, 0, 0, 1, CFGFLAG_CLIENT, "Select Country in Dummy menu")
+
 #endif

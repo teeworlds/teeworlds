@@ -1768,7 +1768,7 @@ void CGameClient::SendSwitchTeam(int Team)
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CGameClient::SendStartInfo()
+void CGameClient::SendStartInfo(bool IsDummy)
 {
 	CNetMsg_Cl_StartInfo Msg;
 	Msg.m_pName = g_Config.m_PlayerName;
@@ -1780,7 +1780,14 @@ void CGameClient::SendStartInfo()
 		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
 		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
 	}
-	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	if(IsDummy)
+	{
+		CMsgPacker Packer(Msg.MsgID(), false);
+		Msg.Pack(&Packer);
+		Client()->SendMsgExY(&Packer, MSGFLAG_VITAL|MSGFLAG_FLUSH, 1);
+	}
+	else
+		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
 void CGameClient::SendKill()

@@ -88,7 +88,12 @@ public:
 	virtual void AutoStatScreenshot_Start() = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
-	
+
+	// dummy
+	virtual void DummyDisconnect(const char *pReason) = 0;
+	virtual void DummyConnect(int NetClient = 1) = 0;
+	virtual bool DummyConnected() = 0;
+
 	// gfx
 	virtual void SwitchWindowScreen(int Index) = 0;
 	virtual void ToggleFullscreen() = 0;
@@ -136,6 +141,9 @@ public:
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags) = 0;
+
+	virtual int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1) = 0;
+
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)
@@ -186,6 +194,7 @@ public:
 	virtual const char *NetVersionHashReal() const = 0;
 	virtual int ClientVersion() const = 0;
 
+	virtual void SendStartInfo(bool IsDummy = false) = 0;
 };
 
 extern IGameClient *CreateGameClient();

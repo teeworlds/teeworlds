@@ -191,8 +191,8 @@ void CMenus::RenderGame(CUIRect MainView)
 			Client()->Disconnect();
 
 		// Record button
-		ButtonRow.VSplitRight(50.0f, &ButtonRow, 0);
-		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
+		ButtonRow.VSplitRight(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? 10.0f : 50.0f, &ButtonRow, 0);
+		ButtonRow.VSplitRight(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? ButtonWidth - 20.0f : ButtonWidth, &ButtonRow, &Button);
 		static CButtonContainer s_DemoButton;
 		bool Recording = DemoRecorder()->IsRecording();
 		if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Button))	// Localize("Stop record");Localize("Record");
@@ -201,6 +201,22 @@ void CMenus::RenderGame(CUIRect MainView)
 				Client()->DemoRecorder_Start("demo", true);
 			else
 				Client()->DemoRecorder_Stop();
+		}
+
+		ButtonRow.VSplitLeft(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? 3.0f : 10.0f, 0, &ButtonRow);
+		ButtonRow.VSplitLeft(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? ButtonWidth : ButtonWidth + 20.0f, &Button, &ButtonRow);
+
+		static CButtonContainer s_DummyButton;
+		if(DoButton_Menu(&s_DummyButton, Localize(Client()->DummyConnected() ? "Disconnect dummy" : "Connect dummy"), 0, &Button))
+		{
+			if(!Client()->DummyConnected())
+			{
+				Client()->DummyConnect(false);
+			}
+			else
+			{
+				Client()->DummyDisconnect(0);
+			}
 		}
 	}
 }
