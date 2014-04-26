@@ -54,7 +54,7 @@ function ResCompile(scriptfile)
 	if config.compiler.driver == "cl" then
 		output = PathJoin(generated_icon_dir, PathBase(PathFilename(scriptfile)) .. ".res")
 		AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
-	elseif config.compiler.driver == "gcc" then
+	elseif config.compiler.driver == "gcc" or config.compiler.driver == "clang" then
 		output = PathJoin(generated_icon_dir, PathBase(PathFilename(scriptfile)) .. ".coff")
 		AddJob(output, "windres " .. scriptfile, "windres -i " .. scriptfile .. " -o " .. output)
 	end
@@ -76,7 +76,7 @@ end
 
 
 function GenerateCommonSettings(settings)
-	if compiler == "gcc" then
+	if compiler == "gcc" or compiler == "clang" then
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 	end
 
@@ -205,7 +205,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 			os.exit(1)
 		end
 		settings.cc.flags:Add("/wd4244")
-	elseif compiler == "gcc" then
+	elseif compiler == "gcc" or config.compiler.driver == "clang" then
 		if target_arch == "x86" then
 			settings.cc.flags:Add("-m32")
 			settings.link.flags:Add("-m32")
@@ -359,6 +359,8 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	-- Set compiler if explicitly requested
 	if compiler == "gcc" then
 		SetDriversGCC(settings)
+	elseif compiler == "clang" then
+		SetDriversClang(settings)
 	elseif compiler == "cl" then
 		SetDriversCL(settings)
 	else
