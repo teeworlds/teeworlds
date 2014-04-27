@@ -1,4 +1,4 @@
-import shutil, optparse, os, re, sys, zipfile
+import shutil, optparse, os, re, sys, zipfile, subprocess
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
@@ -113,7 +113,7 @@ if not maps_dir:
 	sys.exit(-1)
 
 print("adding files")
-shutil.copy("readme.txt", package_dir)
+shutil.copy("readme.md", package_dir)
 shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 
@@ -148,7 +148,9 @@ if use_bundle:
 			if os.path.isfile(fname):
 				to_lipo.append(fname)
 		if to_lipo:
-			os.system("lipo -create -output "+bin+" "+" ".join(to_lipo))
+			args = ["lipo", "-create", "-output", bin]
+			args.extend(to_lipo)
+			subprocess.check_call(args)
 
 	# create Teeworlds appfolder
 	clientbundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
@@ -162,12 +164,40 @@ if use_bundle:
 	os.mkdir(clientbundle_framework_dir)
 	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
 	copydir("data", clientbundle_resource_dir)
-	os.chdir(languages_dir)
-	copydir("data", "../"+clientbundle_resource_dir)
-	os.chdir("..")
+	copyfiles(languages_dir, clientbundle_resource_dir+"/data/languages")
+	copyfiles(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
+
+	lines = subprocess.check_output(["otool", "-L", name + exe_ext]).splitlines()
+	libs = []
+	for line in lines:
+		m = re.search("/.*libfreetype.*dylib", line)
+		if m:
+			libfreetype_full = m.group(0)
+			libfreetype_short = re.search("(?<=/)libfreetype.*dylib", libfreetype_full).group(0)
+			libfreetype = {'full': libfreetype_full, 'short': libfreetype_short}
+			shutil.copy(libfreetype['full'], clientbundle_framework_dir)
+			libs.append(libfreetype)
+
+		m = re.search("/.*libpng.*dylib", line)
+		if m:
+			libpng_full = m.group(0)
+			libpng_short = re.search("(?<=/)libpng.*dylib", libpng_full).group(0)
+			libpng = {'full': libpng_full, 'short': libpng_short}
+			libs.append(libpng)
+
+	bins = [name+exe_ext]
+
+	for lib in libs:
+		bins.append(os.path.join(clientbundle_framework_dir, lib['short']))
+		shutil.copy(lib['full'], clientbundle_framework_dir)
+
+	for bin in bins:
+		for lib in libs:
+			subprocess.check_call(["install_name_tool", "-change", lib['full'], "@rpath/" + lib['short'], bin])
+
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
-	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
+	shutil.copytree("/Library/Frameworks/SDL.framework", os.path.join(clientbundle_framework_dir, "SDL.framework"), True)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -202,8 +232,7 @@ if use_bundle:
 	os.mkdir(serverbundle_resource_dir)
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
-	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
-	copydir("data/maps", serverbundle_resource_dir)
+	copyfiles(maps_dir, serverbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
@@ -244,14 +273,15 @@ if use_zip:
 	
 if use_gz:
 	print("making tar.gz archive")
-	os.system("tar czf %s.tar.gz %s" % (package, package_dir))
+	subprocess.check_call(["tar", "czf", package+".tar.gz", package_dir])
 
 if use_dmg:
 	print("making disk image")
-	os.system("rm -f %s.dmg %s_temp.dmg" % (package, package))
-	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
-	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
-	os.system("rm -f %s_temp.dmg" % package)
+	if os.path.isfile(package+".dmg"): os.remove(package+".dmg")
+	if os.path.isfile(package+"_temp.dmg"): os.remove(package+"_temp.dmg")
+	subprocess.check_call(["hdiutil", "create", "-srcfolder", package_dir, "-volname", "Teeworlds", "-quiet", package+"_temp"])
+	subprocess.check_call(["hdiutil", "convert", package+"_temp.dmg", "-format", "UDBZ", "-o", package+".dmg", "-quiet"])
+	os.remove(package+"_temp.dmg")
 
 clean()
 	
