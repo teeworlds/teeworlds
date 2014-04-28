@@ -563,6 +563,8 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 void CGameClient::ZillyWoodsTick()
 {
 	// dbg_msg("debug", "localid=%d  [%d,%d]", m_LocalClientID, Client()->GetLocalClientID(0), Client()->GetLocalClientID(1));
+	if(g_Config.m_ClDummy && !Client()->DummyConnected())
+		g_Config.m_ClDummy = 0;
 }
 
 void CGameClient::OnRender()
@@ -1906,6 +1908,8 @@ void CGameClient::ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserDa
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
 	if(pResult->NumArguments())
 	{
+		if(g_Config.m_ClDummy && !((CGameClient*)pUserData)->Client()->DummyConnected())
+			g_Config.m_ClDummy = 0;
 		pClient->m_LocalClientID = pClient->Client()->GetLocalClientID(g_Config.m_ClDummy);
 	}
 }
