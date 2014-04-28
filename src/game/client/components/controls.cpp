@@ -16,6 +16,8 @@
 CControls::CControls()
 {
 	mem_zero(&m_LastData, sizeof(m_LastData));
+	m_LastDummy = 0;
+	m_OtherFire = 0;
 }
 
 void CControls::OnReset()
@@ -169,6 +171,14 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_WantedWeapon = ((int)t)%NUM_WEAPONS;
 			m_InputData.m_TargetX = (int)(sinf(t*3)*100.0f);
 			m_InputData.m_TargetY = (int)(cosf(t*3)*100.0f);
+		}
+
+		if (g_Config.m_ClDummy != m_LastDummy)
+		{
+			int tmp = m_OtherFire;
+			m_OtherFire = m_InputData.m_Fire;
+			m_InputData.m_Fire = tmp;
+			m_LastDummy = g_Config.m_ClDummy;
 		}
 
 		// check if we need to send input

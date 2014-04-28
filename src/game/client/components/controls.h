@@ -16,6 +16,8 @@ public:
 	int m_InputDirectionLeft;
 	int m_InputDirectionRight;
 	bool m_ShowHookColl;
+	bool m_LastDummy;
+	int m_OtherFire;
 
 	CControls();
 
