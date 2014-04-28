@@ -244,6 +244,7 @@ public:
 	virtual void DummyConnect(int NetClient = 1);
 	virtual bool DummyConnected();
 	int m_DummyConnected;
+	int m_DummyConnecting;
 	int m_LastDummyConnectTime;
 	int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1);
 

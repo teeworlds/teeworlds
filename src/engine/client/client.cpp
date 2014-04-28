@@ -615,6 +615,7 @@ void CClient::DummyConnect(int NetClient)
 
 	//connecting to the server
 	m_DummyConnected = 1;
+	m_DummyConnecting = 1;
 	m_NetClient[NetClient].Connect(&m_ServerAddress);
 
 	// send client info
@@ -1231,6 +1232,16 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				return;
 			const SHA256_DIGEST *pMapSha256 = (const SHA256_DIGEST *)Unpacker.GetRaw(sizeof(*pMapSha256));
 			const char *pError = 0;
+
+			if(m_DummyConnecting)
+			{
+				m_DummyConnecting = 0;
+			}
+			else
+			{
+				m_DummyConnected = 0;
+				g_Config.m_ClDummy = 0;
+			}
 
 			// check for valid standard map
 			if(!m_MapChecker.IsMapValid(pMap, pMapSha256, MapCrc, MapSize))
