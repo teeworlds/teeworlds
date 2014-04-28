@@ -592,25 +592,11 @@ void CClient::DummyConnect(int NetClient)
 		return;
 
 	char aBuf[512];
-	int Port = 8303;
-	NETADDR ServerAddr;
 
 	m_NetClient[NetClient].Disconnect(0);
 
-	net_addr_from_str(&ServerAddr, g_Config.m_UiServerAddress);
 	str_copy(aBuf, g_Config.m_UiServerAddress, sizeof(aBuf));
 
-	for(int k = 0; aBuf[k]; k++)
-	{
-		if(aBuf[k] == ':')
-		{
-			Port = str_toint(aBuf+k+1);
-			aBuf[k] = 0;
-			break;
-		}
-	}
-
-	ServerAddr.port = Port;
 	m_RconAuthed[1] = 0;
 
 	if(net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient[NetClient].NetType()) != 0)
@@ -623,7 +609,7 @@ void CClient::DummyConnect(int NetClient)
 
 	//connecting to the server
 	m_DummyConnected = 1;
-	m_NetClient[NetClient].Connect(&ServerAddr);
+	m_NetClient[NetClient].Connect(&m_ServerAddress);
 
 	// send client info
 	CMsgPacker MsgInfo(NETMSG_INFO, true);
