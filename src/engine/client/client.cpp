@@ -265,8 +265,10 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_AutoStatScreenshotRecycle = false;
 	m_EditorActive = false;
 
-	m_AckGameTick = -1;
-	m_CurrentRecvTick = 0;
+	m_AckGameTick[0] = -1;
+	m_AckGameTick[1] = -1;
+	m_CurrentRecvTick[0] = 0;
+	m_CurrentRecvTick[1] = 0;
 	m_RconAuthed[0] = 0;
 	m_RconAuthed[1] = 0;
 
@@ -390,7 +392,7 @@ void CClient::SendInput()
 {
 	int64 Now = time_get();
 
-	if(m_PredTick <= 0)
+	if(m_PredTick[g_Config.m_ClDummy] <= 0)
 		return;
 
 	// fetch input
@@ -401,12 +403,12 @@ void CClient::SendInput()
 
 	// pack input
 	CMsgPacker Msg(NETMSG_INPUT, true);
-	Msg.AddInt(m_AckGameTick);
-	Msg.AddInt(m_PredTick);
+	Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
+	Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
 	Msg.AddInt(Size);
 
-	m_aInputs[m_CurrentInput].m_Tick = m_PredTick;
-	m_aInputs[m_CurrentInput].m_PredictedTime = m_PredictedTime.Get(Now);
+	m_aInputs[m_CurrentInput].m_Tick = m_PredTick[g_Config.m_ClDummy];
+	m_aInputs[m_CurrentInput].m_PredictedTime = m_PredictedTime[g_Config.m_ClDummy].Get(Now);
 	m_aInputs[m_CurrentInput].m_Time = Now;
 
 	// pack it
@@ -415,7 +417,7 @@ void CClient::SendInput()
 
 	int PingCorrection = 0;
 	int64 TagTime;
-	if(m_SnapshotStorage.Get(m_AckGameTick, &TagTime, 0, 0) >= 0)
+	if(m_SnapshotStorage.Get(m_AckGameTick[g_Config.m_ClDummy], &TagTime, 0, 0) >= 0)
 		PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
 	Msg.AddInt(PingCorrection);
 
@@ -478,10 +480,14 @@ void CClient::OnEnterGame()
 	m_SnapshotStorage.PurgeAll();
 	m_RecivedSnapshots = 0;
 	m_SnapshotParts = 0;
-	m_PredTick = 0;
-	m_CurrentRecvTick = 0;
-	m_CurGameTick = 0;
-	m_PrevGameTick = 0;
+	m_PredTick[0] = 0;
+	m_PredTick[1] = 0;
+	m_CurrentRecvTick[0] = 0;
+	m_CurrentRecvTick[1] = 0;
+	m_CurGameTick[0] = 0;
+	m_CurGameTick[1] = 0;
+	m_PrevGameTick[0] = 0;
+	m_PrevGameTick[1] = 0;
 	m_CurMenuTick = 0;
 }
 
@@ -770,7 +776,7 @@ void CClient::DebugRender()
 	*/
 	FrameTimeAvg = FrameTimeAvg*0.9f + m_RenderFrameTime*0.1f;
 	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d gfxmem: %dk fps: %3d",
-		m_CurGameTick, m_PredTick,
+		m_CurGameTick[g_Config.m_ClDummy], m_PredTick[g_Config.m_ClDummy],
 		Graphics()->MemoryUsage()/1024,
 		(int)(1.0f/FrameTimeAvg + 0.5f));
 	Graphics()->QuadsText(2, 2, 16, aBuffer);
@@ -809,7 +815,7 @@ void CClient::DebugRender()
 	}
 
 	str_format(aBuffer, sizeof(aBuffer), "pred: %d ms",
-		(int)((m_PredictedTime.Get(Now)-m_GameTime.Get(Now))*1000/(float)time_freq()));
+		(int)((m_PredictedTime[g_Config.m_ClDummy].Get(Now)-m_GameTime[g_Config.m_ClDummy].Get(Now))*1000/(float)time_freq()));
 	Graphics()->QuadsText(2, 70, 16, aBuffer);
 	Graphics()->QuadsEnd();
 
@@ -1414,7 +1420,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			}
 
 			if(Target)
-				m_PredictedTime.Update(&m_InputtimeMarginGraph, Target, TimeLeft, 1);
+				m_PredictedTime[g_Config.m_ClDummy].Update(&m_InputtimeMarginGraph, Target, TimeLeft, 1);
 		}
 		else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 		{
@@ -1448,12 +1454,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
 				return;
 
-			if(GameTick >= m_CurrentRecvTick)
+			if(GameTick >= m_CurrentRecvTick[g_Config.m_ClDummy])
 			{
-				if(GameTick != m_CurrentRecvTick)
+				if(GameTick != m_CurrentRecvTick[g_Config.m_ClDummy])
 				{
 					m_SnapshotParts = 0;
-					m_CurrentRecvTick = GameTick;
+					m_CurrentRecvTick[g_Config.m_ClDummy] = GameTick;
 				}
 
 				// TODO: clean this up abit
@@ -1498,7 +1504,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 							// ack snapshot
 							// TODO: combine this with the input message
-							m_AckGameTick = -1;
+							m_AckGameTick[g_Config.m_ClDummy] = -1;
 							return;
 						}
 					}
@@ -1540,7 +1546,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 						if(m_SnapCrcErrors > 10)
 						{
 							// to many errors, send reset
-							m_AckGameTick = -1;
+							m_AckGameTick[g_Config.m_ClDummy] = -1;
 							SendInput();
 							m_SnapCrcErrors = 0;
 						}
@@ -1578,15 +1584,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					// apply snapshot, cycle pointers
 					m_RecivedSnapshots++;
 
-					m_CurrentRecvTick = GameTick;
+					m_CurrentRecvTick[g_Config.m_ClDummy] = GameTick;
 
 					// we got two snapshots until we see us self as connected
 					if(m_RecivedSnapshots == 2)
 					{
 						// start at 200ms and work from there
-						m_PredictedTime.Init(GameTick*time_freq()/50);
-						m_PredictedTime.SetAdjustSpeed(1, 1000.0f);
-						m_GameTime.Init((GameTick-1)*time_freq()/50);
+						m_PredictedTime[g_Config.m_ClDummy].Init(GameTick*time_freq()/50);
+						m_PredictedTime[g_Config.m_ClDummy].SetAdjustSpeed(1, 1000.0f);
+						m_GameTime[g_Config.m_ClDummy].Init((GameTick-1)*time_freq()/50);
 						m_aSnapshots[SNAP_PREV] = m_SnapshotStorage.m_pFirst;
 						m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 						SetState(IClient::STATE_ONLINE);
@@ -1596,14 +1602,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					// adjust game time
 					if(m_RecivedSnapshots > 2)
 					{
-						int64 Now = m_GameTime.Get(time_get());
+						int64 Now = m_GameTime[g_Config.m_ClDummy].Get(time_get());
 						int64 TickStart = GameTick*time_freq()/50;
 						int64 TimeLeft = (TickStart-Now)*1000 / time_freq();
-						m_GameTime.Update(&m_GametimeMarginGraph, (GameTick-1)*time_freq()/50, TimeLeft, 0);
+						m_GameTime[g_Config.m_ClDummy].Update(&m_GametimeMarginGraph, (GameTick-1)*time_freq()/50, TimeLeft, 0);
 					}
 
 					// ack snapshot
-					m_AckGameTick = GameTick;
+					m_AckGameTick[g_Config.m_ClDummy] = GameTick;
 				}
 			}
 		}
@@ -1675,8 +1681,8 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	// update ticks, they could have changed
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
 	CSnapshotStorage::CHolder *pTemp;
-	m_CurGameTick = pInfo->m_Info.m_CurrentTick;
-	m_PrevGameTick = pInfo->m_PreviousTick;
+	m_CurGameTick[g_Config.m_ClDummy] = pInfo->m_Info.m_CurrentTick;
+	m_PrevGameTick[g_Config.m_ClDummy] = pInfo->m_PreviousTick;
 
 	// handle snapshots
 	pTemp = m_aSnapshots[SNAP_PREV];
@@ -1746,10 +1752,10 @@ void CClient::Update()
 		{
 			// update timers
 			const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-			m_CurGameTick = pInfo->m_Info.m_CurrentTick;
-			m_PrevGameTick = pInfo->m_PreviousTick;
-			m_GameIntraTick = pInfo->m_IntraTick;
-			m_GameTickTime = pInfo->m_TickTime;
+			m_CurGameTick[g_Config.m_ClDummy] = pInfo->m_Info.m_CurrentTick;
+			m_PrevGameTick[g_Config.m_ClDummy] = pInfo->m_PreviousTick;
+			m_GameIntraTick[g_Config.m_ClDummy] = pInfo->m_IntraTick;
+			m_GameTickTime[g_Config.m_ClDummy] = pInfo->m_TickTime;
 		}
 		else
 		{
@@ -1762,8 +1768,8 @@ void CClient::Update()
 		// switch snapshot
 		int Repredict = 0;
 		int64 Freq = time_freq();
-		int64 Now = m_GameTime.Get(time_get());
-		int64 PredNow = m_PredictedTime.Get(time_get());
+		int64 Now = m_GameTime[g_Config.m_ClDummy].Get(time_get());
+		int64 PredNow = m_PredictedTime[g_Config.m_ClDummy].Get(time_get());
 
 		while(1)
 		{
@@ -1779,8 +1785,8 @@ void CClient::Update()
 					m_aSnapshots[SNAP_CURRENT] = pNext;
 
 					// set ticks
-					m_CurGameTick = m_aSnapshots[SNAP_CURRENT]->m_Tick;
-					m_PrevGameTick = m_aSnapshots[SNAP_PREV]->m_Tick;
+					m_CurGameTick[g_Config.m_ClDummy] = m_aSnapshots[SNAP_CURRENT]->m_Tick;
+					m_PrevGameTick[g_Config.m_ClDummy] = m_aSnapshots[SNAP_PREV]->m_Tick;
 
 					if(m_aSnapshots[SNAP_CURRENT] && m_aSnapshots[SNAP_PREV])
 					{
@@ -1802,22 +1808,22 @@ void CClient::Update()
 			int PrevPredTick = (int)(PredNow*50/time_freq());
 			int NewPredTick = PrevPredTick+1;
 
-			m_GameIntraTick = (Now - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
-			m_GameTickTime = (Now - PrevtickStart) / (float)Freq; //(float)SERVER_TICK_SPEED);
+			m_GameIntraTick[g_Config.m_ClDummy] = (Now - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
+			m_GameTickTime[g_Config.m_ClDummy] = (Now - PrevtickStart) / (float)Freq; //(float)SERVER_TICK_SPEED);
 
 			CurtickStart = NewPredTick*time_freq()/50;
 			PrevtickStart = PrevPredTick*time_freq()/50;
-			m_PredIntraTick = (PredNow - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
+			m_PredIntraTick[g_Config.m_ClDummy] = (PredNow - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
 
 			if(NewPredTick < m_aSnapshots[SNAP_PREV]->m_Tick-SERVER_TICK_SPEED || NewPredTick > m_aSnapshots[SNAP_PREV]->m_Tick+SERVER_TICK_SPEED)
 			{
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "prediction time reset!");
-				m_PredictedTime.Init(m_aSnapshots[SNAP_CURRENT]->m_Tick*time_freq()/50);
+				m_PredictedTime[g_Config.m_ClDummy].Init(m_aSnapshots[SNAP_CURRENT]->m_Tick*time_freq()/50);
 			}
 
-			if(NewPredTick > m_PredTick)
+			if(NewPredTick > m_PredTick[g_Config.m_ClDummy])
 			{
-				m_PredTick = NewPredTick;
+				m_PredTick[g_Config.m_ClDummy] = NewPredTick;
 				Repredict = 1;
 
 				// send input
@@ -1828,7 +1834,7 @@ void CClient::Update()
 		// only do sane predictions
 		if(Repredict)
 		{
-			if(m_PredTick > m_CurGameTick && m_PredTick < m_CurGameTick+50)
+			if(m_PredTick[g_Config.m_ClDummy] > m_CurGameTick[g_Config.m_ClDummy] && m_PredTick[g_Config.m_ClDummy] < m_CurGameTick[g_Config.m_ClDummy]+50)
 				GameClient()->OnPredict();
 		}
 	}
