@@ -482,7 +482,6 @@ void CClient::SendInput()
 			CNetObj_Character Main = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[g_Config.m_ClDummy]].m_Cur;
 			CNetObj_Character Dummy = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[!g_Config.m_ClDummy]].m_Cur;
 			vec2 Dir = vec2(Main.m_X - Dummy.m_X, Main.m_Y - Dummy.m_Y);
-			HammerInput.m_Direction = angle(Dir);
 			HammerInput.m_TargetX = Dir.x;
 			HammerInput.m_TargetY = Dir.y;
 
