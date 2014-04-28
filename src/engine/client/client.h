@@ -4,6 +4,7 @@
 #define ENGINE_CLIENT_CLIENT_H
 
 #include <base/hash.h>
+#include <generated/protocol.h>
 
 class CGraph
 {
@@ -153,6 +154,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	} m_aInputs[200];
 
 	int m_CurrentInput;
+	bool m_LastDummy;
+	CNetObj_PlayerInput DummyInput;
 
 	// graphs
 	CGraph m_InputtimeMarginGraph;

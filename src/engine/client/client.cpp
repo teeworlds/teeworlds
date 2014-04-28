@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <stdarg.h>
+#include <climits>
 
 #include <base/math.h>
 #include <base/system.h>
@@ -299,6 +300,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_MapdownloadTotalsize = -1;
 
 	m_CurrentInput = 0;
+	m_LastDummy = 0;
 
 	m_State = IClient::STATE_OFFLINE;
 	m_aServerAddressStr[0] = 0;
@@ -425,6 +427,27 @@ void CClient::SendInput()
 	m_CurrentInput%=200;
 
 	SendMsg(&Msg, MSGFLAG_FLUSH);
+
+	if(m_LastDummy != g_Config.m_ClDummy)
+	{
+		mem_copy(&DummyInput, &m_aInputs[(m_CurrentInput-2)%200], sizeof(DummyInput));
+		m_LastDummy = g_Config.m_ClDummy;
+	}
+
+	if(m_DummyConnected)
+	{
+		// pack input
+		CMsgPacker Msg(NETMSG_INPUT, true);
+		Msg.AddInt(INT_MAX);
+		Msg.AddInt(INT_MAX);
+		Msg.AddInt(sizeof(DummyInput));
+
+		// pack it
+		for(unsigned int i = 0; i < sizeof(DummyInput)/4; i++)
+			Msg.AddInt(((int*) &DummyInput)[i]);
+
+		SendMsgExY(&Msg, MSGFLAG_FLUSH, !g_Config.m_ClDummy);
+	}
 }
 
 const char *CClient::LatestVersion() const
