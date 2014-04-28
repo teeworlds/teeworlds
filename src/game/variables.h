@@ -158,6 +158,6 @@ MACRO_CONFIG_INT(DummyColorBody, dummy_color_body, 65408, 0, 0xFFFFFF, CFGFLAG_C
 MACRO_CONFIG_INT(DummyColorFeet, dummy_color_feet, 65408, 0, 0xFFFFFF, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Dummy feet color")
 MACRO_CONFIG_STR(DummySkin, dummy_skin, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Dummy skin")
 MACRO_CONFIG_INT(ClDummy, cl_dummy, 0, 0, 1, CFGFLAG_CLIENT, "0 - player / 1 - dummy")
-MACRO_CONFIG_INT(ClSelectCountry, cl_select_country, 0, 0, 1, CFGFLAG_CLIENT, "Select Country in Dummy menu")
+MACRO_CONFIG_INT(ClDummyHammer, cl_dummy_hammer, 0, 0, 1, CFGFLAG_CLIENT, "Whether dummy is hammering for a hammerfly")
 
 #endif

@@ -249,6 +249,8 @@ public:
 	int m_DummyConnected;
 	int m_DummyConnecting;
 	int m_LastDummyConnectTime;
+	int m_LocalIDs[2];
+	int m_Fire;
 	int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1);
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo) const;

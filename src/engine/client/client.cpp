@@ -9,6 +9,8 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <game/client/gameclient.h>
+
 #include <engine/client.h>
 #include <engine/config.h>
 #include <engine/console.h>
@@ -301,6 +303,9 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_CurrentInput = 0;
 	m_LastDummy = 0;
+	m_LocalIDs[0] = -1;
+	m_LocalIDs[1] = -1;
+	m_Fire = 0;
 
 	m_State = IClient::STATE_OFFLINE;
 	m_aServerAddressStr[0] = 0;
@@ -400,53 +405,92 @@ void CClient::SendInput()
 	// fetch input
 	int Size = GameClient()->OnSnapInput(m_aInputs[m_CurrentInput].m_aData);
 
-	if(!Size)
-		return;
-
-	// pack input
-	CMsgPacker Msg(NETMSG_INPUT, true);
-	Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
-	Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
-	Msg.AddInt(Size);
-
-	m_aInputs[m_CurrentInput].m_Tick = m_PredTick[g_Config.m_ClDummy];
-	m_aInputs[m_CurrentInput].m_PredictedTime = m_PredictedTime[g_Config.m_ClDummy].Get(Now);
-	m_aInputs[m_CurrentInput].m_Time = Now;
-
-	// pack it
-	for(int i = 0; i < Size/4; i++)
-		Msg.AddInt(m_aInputs[m_CurrentInput].m_aData[i]);
-
-	int PingCorrection = 0;
-	int64 TagTime;
-	if(m_SnapshotStorage.Get(m_AckGameTick[g_Config.m_ClDummy], &TagTime, 0, 0) >= 0)
-		PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
-	Msg.AddInt(PingCorrection);
-
-	m_CurrentInput++;
-	m_CurrentInput%=200;
-
-	SendMsg(&Msg, MSGFLAG_FLUSH);
-
-	if(m_LastDummy != g_Config.m_ClDummy)
+	if(Size)
 	{
-		mem_copy(&DummyInput, &m_aInputs[(m_CurrentInput-2)%200], sizeof(DummyInput));
-		m_LastDummy = g_Config.m_ClDummy;
+		// pack input
+		CMsgPacker Msg(NETMSG_INPUT, true);
+		Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
+		Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
+		Msg.AddInt(Size);
+
+		m_aInputs[m_CurrentInput].m_Tick = m_PredTick[g_Config.m_ClDummy];
+		m_aInputs[m_CurrentInput].m_PredictedTime = m_PredictedTime[g_Config.m_ClDummy].Get(Now);
+		m_aInputs[m_CurrentInput].m_Time = Now;
+
+		// pack it
+		for(int i = 0; i < Size/4; i++)
+			Msg.AddInt(m_aInputs[m_CurrentInput].m_aData[i]);
+
+		int PingCorrection = 0;
+		int64 TagTime;
+		if(m_SnapshotStorage.Get(m_AckGameTick[g_Config.m_ClDummy], &TagTime, 0, 0) >= 0)
+			PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
+		Msg.AddInt(PingCorrection);
+
+		m_CurrentInput++;
+		m_CurrentInput%=200;
+
+		SendMsg(&Msg, MSGFLAG_FLUSH);
+
+		if(m_LastDummy != g_Config.m_ClDummy)
+		{
+			mem_copy(&DummyInput, &m_aInputs[(m_CurrentInput-2)%200], sizeof(DummyInput));
+			m_LastDummy = g_Config.m_ClDummy;
+		}
 	}
 
 	if(m_DummyConnected)
 	{
-		// pack input
-		CMsgPacker Msg(NETMSG_INPUT, true);
-		Msg.AddInt(INT_MAX);
-		Msg.AddInt(INT_MAX);
-		Msg.AddInt(sizeof(DummyInput));
+		if(!g_Config.m_ClDummy)
+			m_LocalIDs[0] = GetLocalClientID(g_Config.m_ClDummy);
+		else
+			m_LocalIDs[1] = GetLocalClientID(g_Config.m_ClDummy);
 
-		// pack it
-		for(unsigned int i = 0; i < sizeof(DummyInput)/4; i++)
-			Msg.AddInt(((int*) &DummyInput)[i]);
+			m_Fire++;
+			if((((float) m_Fire / 12.5) - (int ((float) m_Fire / 12.5))) > 0.01)
+				return;
 
-		SendMsgExY(&Msg, MSGFLAG_FLUSH, !g_Config.m_ClDummy);
+		if(!g_Config.m_ClDummyHammer)
+		{
+			// pack input
+			CMsgPacker Msg(NETMSG_INPUT, true);
+			Msg.AddInt(INT_MAX);
+			Msg.AddInt(INT_MAX);
+			Msg.AddInt(sizeof(DummyInput));
+
+			// pack it
+			for(unsigned int i = 0; i < sizeof(DummyInput)/4; i++)
+				Msg.AddInt(((int*) &DummyInput)[i]);
+
+			SendMsgExY(&Msg, MSGFLAG_FLUSH, !g_Config.m_ClDummy);
+		}
+		else
+		{
+			CNetObj_PlayerInput DummyData;
+			mem_zero(&DummyData, sizeof(DummyData));
+
+			DummyData.m_Fire = (int) ((float) m_Fire / 12.5);
+			DummyData.m_WantedWeapon = WEAPON_HAMMER+1;
+
+			CNetObj_Character Main = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[g_Config.m_ClDummy]].m_Cur;
+			CNetObj_Character Dummy = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[!g_Config.m_ClDummy]].m_Cur;
+			vec2 Dir = vec2(Main.m_X - Dummy.m_X, Main.m_Y - Dummy.m_Y);
+			DummyData.m_Direction = angle(Dir);
+			DummyData.m_TargetX = Dir.x;
+			DummyData.m_TargetY = Dir.y;
+
+			// pack input
+			CMsgPacker Msg(NETMSG_INPUT, true);
+			Msg.AddInt(INT_MAX);
+			Msg.AddInt(INT_MAX);
+			Msg.AddInt(sizeof(DummyData));
+
+			// pack it
+			for(unsigned int i = 0; i < sizeof(DummyData)/4; i++)
+				Msg.AddInt(((int*) &DummyData)[i]);
+
+			SendMsgExY(&Msg, MSGFLAG_FLUSH, !g_Config.m_ClDummy);
+		}
 	}
 }
 
