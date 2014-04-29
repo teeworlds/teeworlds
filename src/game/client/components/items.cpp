@@ -22,18 +22,18 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	float Speed = 0;
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
-		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
-		Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
+		Curvature = m_pClient->m_Tuning[g_Config.m_ClDummy].m_GrenadeCurvature;
+		Speed = m_pClient->m_Tuning[g_Config.m_ClDummy].m_GrenadeSpeed;
 	}
 	else if(pCurrent->m_Type == WEAPON_SHOTGUN)
 	{
-		Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
-		Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
+		Curvature = m_pClient->m_Tuning[g_Config.m_ClDummy].m_ShotgunCurvature;
+		Speed = m_pClient->m_Tuning[g_Config.m_ClDummy].m_ShotgunSpeed;
 	}
 	else if(pCurrent->m_Type == WEAPON_GUN)
 	{
-		Curvature = m_pClient->m_Tuning.m_GunCurvature;
-		Speed = m_pClient->m_Tuning.m_GunSpeed;
+		Curvature = m_pClient->m_Tuning[g_Config.m_ClDummy].m_GunCurvature;
+		Speed = m_pClient->m_Tuning[g_Config.m_ClDummy].m_GunSpeed;
 	}
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
@@ -201,7 +201,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 
 	float Ticks = (Client()->GameTick() - pCurrent->m_StartTick) + Client()->IntraGameTick();
 	float Ms = (Ticks/50.0f) * 1000.0f;
-	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
+	float a = Ms / m_pClient->m_Tuning[g_Config.m_ClDummy].m_LaserBounceDelay;
 	a = clamp(a, 0.0f, 1.0f);
 	float Ia = 1-a;
 

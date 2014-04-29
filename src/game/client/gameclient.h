@@ -100,7 +100,7 @@ public:
 	bool m_SuppressEvents;
 
 	// TODO: move this
-	CTuningParams m_Tuning;
+	CTuningParams m_Tuning[2];
 
 	enum
 	{
