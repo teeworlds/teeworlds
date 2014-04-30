@@ -483,8 +483,7 @@ void CGameClient::OnReset()
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecMode = SPEC_FREEVIEW;
 	m_DemoSpecID = -1;
-	m_Tuning[0] = CTuningParams();
-	m_Tuning[1] = CTuningParams();
+	m_Tuning[g_Config.m_ClDummy] = CTuningParams();
 	m_MuteServerBroadcast = false;
 	m_LastGameStartTick = -1;
 	m_LastFlagCarrierRed = FLAG_MISSING;
