@@ -1571,7 +1571,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					{
 						int DeltashotSize = m_SnapshotStorage.Get(DeltaTick, 0, &pDeltaShot, 0);
 
-						if(DeltashotSize < 0)
+						if(DeltashotSize < 0 || g_Config.m_ClDummy != m_LastDummy)
 						{
 							// couldn't find the delta snapshots that the server used
 							// to compress this snapshot. force the server to resync
