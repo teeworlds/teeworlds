@@ -439,16 +439,20 @@ void CClient::SendInput()
 		}
 	}
 
+	if(!g_Config.m_ClDummy)
+		m_LocalIDs[0] = GetLocalClientID(g_Config.m_ClDummy);
+	else
+		m_LocalIDs[1] = GetLocalClientID(g_Config.m_ClDummy);
+
 	if(m_DummyConnected)
 	{
-		if(!g_Config.m_ClDummy)
-			m_LocalIDs[0] = GetLocalClientID(g_Config.m_ClDummy);
-		else
-			m_LocalIDs[1] = GetLocalClientID(g_Config.m_ClDummy);
-
 		if(!g_Config.m_ClDummyHammer)
 		{
-			m_Fire = 25;
+			if(m_Fire != 25)
+			{
+				DummyInput.m_Fire = HammerInput.m_Fire;
+				m_Fire = 25;
+			}
 			// pack input
 			CMsgPacker Msg(NETMSG_INPUT, true);
 			Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
@@ -470,28 +474,27 @@ void CClient::SendInput()
 			}
 			m_Fire++;
 
-			CNetObj_PlayerInput DummyData;
-			mem_zero(&DummyData, sizeof(DummyData));
+			mem_zero(&HammerInput, sizeof(HammerInput));
 
-			DummyData.m_Fire = (int) ((float) m_Fire / 12.5);
-			DummyData.m_WantedWeapon = WEAPON_HAMMER+1;
+			HammerInput.m_Fire = (int) ((float) m_Fire / 12.5);
+			HammerInput.m_WantedWeapon = WEAPON_HAMMER+1;
 
 			CNetObj_Character Main = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[g_Config.m_ClDummy]].m_Cur;
 			CNetObj_Character Dummy = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[!g_Config.m_ClDummy]].m_Cur;
 			vec2 Dir = vec2(Main.m_X - Dummy.m_X, Main.m_Y - Dummy.m_Y);
-			DummyData.m_Direction = angle(Dir);
-			DummyData.m_TargetX = Dir.x;
-			DummyData.m_TargetY = Dir.y;
+			HammerInput.m_Direction = angle(Dir);
+			HammerInput.m_TargetX = Dir.x;
+			HammerInput.m_TargetY = Dir.y;
 
 			// pack input
 			CMsgPacker Msg(NETMSG_INPUT, true);
 			Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
 			Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
-			Msg.AddInt(sizeof(DummyData));
+			Msg.AddInt(sizeof(HammerInput));
 
 			// pack it
-			for(unsigned int i = 0; i < sizeof(DummyData)/4; i++)
-				Msg.AddInt(((int*) &DummyData)[i]);
+			for(unsigned int i = 0; i < sizeof(HammerInput)/4; i++)
+				Msg.AddInt(((int*) &HammerInput)[i]);
 
 			SendMsgExY(&Msg, MSGFLAG_FLUSH, !g_Config.m_ClDummy);
 		}

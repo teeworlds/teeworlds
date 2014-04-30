@@ -156,6 +156,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_CurrentInput;
 	bool m_LastDummy;
 	CNetObj_PlayerInput DummyInput;
+	CNetObj_PlayerInput HammerInput;
 
 	// graphs
 	CGraph m_InputtimeMarginGraph;
