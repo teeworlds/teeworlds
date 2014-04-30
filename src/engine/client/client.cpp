@@ -305,7 +305,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_LastDummy = 0;
 	m_LocalIDs[0] = -1;
 	m_LocalIDs[1] = -1;
-	m_Fire = 0;
+	m_Fire = 25;
 
 	m_State = IClient::STATE_OFFLINE;
 	m_aServerAddressStr[0] = 0;
@@ -446,12 +446,9 @@ void CClient::SendInput()
 		else
 			m_LocalIDs[1] = GetLocalClientID(g_Config.m_ClDummy);
 
-			m_Fire++;
-			if((((float) m_Fire / 12.5) - (int ((float) m_Fire / 12.5))) > 0.01)
-				return;
-
 		if(!g_Config.m_ClDummyHammer)
 		{
+			m_Fire = 25;
 			// pack input
 			CMsgPacker Msg(NETMSG_INPUT, true);
 			Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
@@ -466,6 +463,13 @@ void CClient::SendInput()
 		}
 		else
 		{
+			if ((((float) m_Fire / 12.5) - (int ((float) m_Fire / 12.5))) > 0.01)
+			{
+				m_Fire++;
+				return;
+			}
+			m_Fire++;
+
 			CNetObj_PlayerInput DummyData;
 			mem_zero(&DummyData, sizeof(DummyData));
 
