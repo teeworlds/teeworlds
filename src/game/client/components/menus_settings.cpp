@@ -2241,6 +2241,14 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		}
 	}
 
+	GameLeft.HSplitTop(5.0f, &Button, &GameLeft);
+	GameLeft.HSplitTop(20.0f, &Button, &GameLeft);
+	Button.VSplitLeft(190.0f, &Label, &Button);
+	Button.HMargin(2.0f, &Button);
+	UI()->DoLabel(&Label, Localize("Overlay entities"), 14.0f, CUI::ALIGN_LEFT, -1);
+	g_Config.m_ClOverlayEntities = (int)(DoScrollbarH(&g_Config.m_ClOverlayEntities, &Button, g_Config.m_ClOverlayEntities/100.0f)*100.0f);
+	GameLeft.HSplitTop(20.0f, 0, &GameLeft);
+
 	// reset button
 	Spacing = 3.0f;
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
@@ -2260,6 +2268,7 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		g_Config.m_ClOldGunPosition = 0;
 		g_Config.m_ClOldChatSounds = 0;
 		g_Config.m_ClClientRecognition = 0;
+		g_Config.m_ClOverlayEntities = 0;
 	}
 }
 

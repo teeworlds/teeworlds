@@ -889,7 +889,7 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
-	if(g_Config.m_ClShowEntities)
+	if(g_Config.m_ClOverlayEntities)
 	{
 		vec3 bg = HslToRgb(vec3(g_Config.m_ClBackgroundEntitiesHue/255.0f, g_Config.m_ClBackgroundEntitiesSat/255.0f, g_Config.m_ClBackgroundEntitiesLht/255.0f));
 		Graphics()->Clear(bg.r, bg.g, bg.b);
