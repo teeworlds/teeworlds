@@ -94,10 +94,10 @@ def osx_add_libs_recursive(file, libs, lib_names):
 				lib_full = m.group(0)
 				lib_short = re.search("(?<=/)"+lib_name+".*dylib", lib_full).group(0)
 				lib = {'full': lib_full, 'short': lib_short}
-				shutil.copy(lib['full'], clientbundle_framework_dir)
-				libs.append(lib)
-				lib_names.remove(lib_name)
-				osx_add_libs_recursive(lib_full, libs, lib_names)
+				if lib not in libs:
+					shutil.copy(lib['full'], clientbundle_framework_dir)
+					libs.append(lib)
+					osx_add_libs_recursive(lib_full, libs, lib_names)
 	
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
