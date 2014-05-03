@@ -187,7 +187,7 @@ public:
 	virtual void OnUpdate() = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnConnected() = 0;
-	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker) = 0;
+	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, bool IsDummy = 0) = 0;
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
 

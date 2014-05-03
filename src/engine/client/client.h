@@ -280,6 +280,7 @@ public:
 	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
+	void ProcessServerPacketDummy(CNetChunk *pPacket);
 
 	const char *GetCurrentMapName() const { return m_aCurrentMap; }
 	const char *GetCurrentMapPath() const { return m_aCurrentMapPath; }

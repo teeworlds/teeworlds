@@ -248,7 +248,7 @@ public:
 	virtual void OnInit();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
-	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker);
+	virtual void OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy = 0);
 	virtual void OnNewSnapshot();
 	virtual void OnDemoRecSnap();
 	virtual void OnPredict();

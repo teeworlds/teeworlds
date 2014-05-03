@@ -588,12 +588,12 @@ void CGameClient::OnRelease()
 		m_All.m_paComponents[i]->OnRelease();
 }
 
-void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
+void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 {
 	Client()->RecordGameMessage(true);
 
 	// special messages
-	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS && Client()->State() != IClient::STATE_DEMOPLAYBACK && !IsDummy)
 	{
 		Client()->RecordGameMessage(false);
 		// unpack the new tuning
@@ -765,6 +765,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			break;
 		}
 	}
+	
+	if(IsDummy)
+		return; // no need of all that stuff for the dummy
 
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
 	if(!pRawMsg)
