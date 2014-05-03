@@ -164,10 +164,10 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	CGraph m_FpsGraph;
 
 	// the game snapshots are modifiable by the game
-	class CSnapshotStorage m_SnapshotStorage;
-	CSnapshotStorage::CHolder *m_aSnapshots[NUM_SNAPSHOT_TYPES];
+	class CSnapshotStorage m_SnapshotStorage[2];
+	CSnapshotStorage::CHolder *m_aSnapshots[2][NUM_SNAPSHOT_TYPES];
 
-	int m_RecivedSnapshots;
+	int m_RecivedSnapshots[2];
 	char m_aSnapshotIncommingData[CSnapshot::MAX_SIZE];
 
 	class CSnapshotStorage::CHolder m_aDemorecSnapshotHolders[NUM_SNAPSHOT_TYPES];
