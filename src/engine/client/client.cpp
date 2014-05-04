@@ -458,8 +458,8 @@ void CClient::SendInput()
 			}
 			// pack input
 			CMsgPacker Msg(NETMSG_INPUT, true);
-			Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
-			Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
+			Msg.AddInt(m_AckGameTick[!g_Config.m_ClDummy]);
+			Msg.AddInt(m_PredTick[!g_Config.m_ClDummy]);
 			Msg.AddInt(sizeof(DummyInput));
 
 			// pack it
@@ -490,8 +490,8 @@ void CClient::SendInput()
 
 			// pack input
 			CMsgPacker Msg(NETMSG_INPUT, true);
-			Msg.AddInt(m_AckGameTick[g_Config.m_ClDummy]);
-			Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
+			Msg.AddInt(m_AckGameTick[!g_Config.m_ClDummy]);
+			Msg.AddInt(m_PredTick[!g_Config.m_ClDummy]);
 			Msg.AddInt(sizeof(HammerInput));
 
 			// pack it
