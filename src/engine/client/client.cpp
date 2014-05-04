@@ -482,9 +482,9 @@ void CClient::SendInput()
 			HammerInput.m_Fire = (int) ((float) m_Fire / 12.5);
 			HammerInput.m_WantedWeapon = WEAPON_HAMMER+1;
 
-			CNetObj_Character Main = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[g_Config.m_ClDummy]].m_Cur;
-			CNetObj_Character Dummy = ((CGameClient *)GameClient())->m_Snap.m_aCharacters[m_LocalIDs[!g_Config.m_ClDummy]].m_Cur;
-			vec2 Dir = vec2(Main.m_X - Dummy.m_X, Main.m_Y - Dummy.m_Y);
+			vec2 Main = ((CGameClient *)GameClient())->m_LocalCharacterPos;
+			vec2 Dummy = ((CGameClient *)GameClient())->m_aClients[m_LocalIDs[!g_Config.m_ClDummy]].m_Predicted.m_Pos;
+			vec2 Dir = Main - Dummy;
 			HammerInput.m_TargetX = Dir.x;
 			HammerInput.m_TargetY = Dir.y;
 
