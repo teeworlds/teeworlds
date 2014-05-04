@@ -1,6 +1,7 @@
 import json
 import polib
 import os
+import re
 import time
 import sys
 
@@ -18,14 +19,18 @@ JSON_KEY_OLDTRANSL="old translations"
 JSON_KEY_OR="or"
 JSON_KEY_TR="tr"
 
+SOURCE_LOCALIZE_RE=re.compile(br'Localize\("(?P<str>([^"\\]|\\.)*)"(, "(?P<ctxt>([^"\\]|\\.)*)")?\)')
+
 def parse_source():
 	l10n = defaultdict(lambda: [])
 
 	def process_line(line, filename, lineno):
-		if b"Localize(\"" in line:
-			fields = line.split(b"Localize(\"", 1)[1].split(b"\"", 1)
-			l10n[fields[0].decode()].append((filename, lineno))
-			process_line(fields[1], filename, lineno)
+		for match in SOURCE_LOCALIZE_RE.finditer(line):
+			str_ = match.group('str').decode()
+			ctxt = match.group('ctxt')
+			if ctxt is not None:
+				ctxt = ctxt.decode()
+			l10n[(str_, ctxt)].append((filename, lineno))
 
 	for root, dirs, files in os.walk("src"):
 		for name in files:
@@ -104,8 +109,8 @@ if __name__ == '__main__':
 		'Content-Type': 'text/plain; charset=utf-8',
 		'Content-Transfer-Encoding': '8bit',
 	}
-	for msg, occurrences in l10n_src.items():
-		po.append(polib.POEntry(msgid=msg, msgstr="", occurrences=occurrences))
+	for (msg, ctxt), occurrences in l10n_src.items():
+		po.append(polib.POEntry(msgid=msg, msgstr="", occurrences=occurrences, msgctxt=ctxt))
 	po.save('data/languages/base.pot')
 
 	for filename in os.listdir("data/languages"):
