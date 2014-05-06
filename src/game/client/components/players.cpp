@@ -392,6 +392,8 @@ void CPlayers::RenderPlayer(
 				Recoil = sinf(a*pi);
 			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
+			if (Player.m_Weapon == WEAPON_GUN && !g_Config.m_ClOldGunPosition)
+				p.y += 8;
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
 
