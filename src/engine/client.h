@@ -32,6 +32,7 @@ protected:
 
 	int m_GameTickSpeed;
 public:
+	int m_LocalIDs[2];
 
 	class CSnapItem
 	{
