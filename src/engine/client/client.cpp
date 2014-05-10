@@ -441,7 +441,7 @@ void CClient::SendInput()
 
 		if(m_LastDummy != g_Config.m_ClDummy)
 		{
-			mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-2)%200], sizeof(DummyInput));
+			mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-1)%200], sizeof(DummyInput));
 			m_LastDummy = g_Config.m_ClDummy;
 		}
 	}
