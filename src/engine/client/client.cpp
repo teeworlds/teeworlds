@@ -301,7 +301,8 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_MapdownloadAmount = -1;
 	m_MapdownloadTotalsize = -1;
 
-	m_CurrentInput = 0;
+	m_CurrentInput[0] = 0;
+	m_CurrentInput[1] = 0;
 	m_LastDummy = 0;
 	m_LastDummy2 = 0;
 	m_LocalIDs[0] = 0;
@@ -409,7 +410,7 @@ void CClient::SendInput()
 		return;
 
 	// fetch input
-	int Size = GameClient()->OnSnapInput(m_aInputs[m_CurrentInput].m_aData);
+	int Size = GameClient()->OnSnapInput(m_aInputs[g_Config.m_ClDummy][m_CurrentInput[g_Config.m_ClDummy]].m_aData);
 
 	if(Size)
 	{
@@ -419,13 +420,13 @@ void CClient::SendInput()
 		Msg.AddInt(m_PredTick[g_Config.m_ClDummy]);
 		Msg.AddInt(Size);
 
-		m_aInputs[m_CurrentInput].m_Tick = m_PredTick[g_Config.m_ClDummy];
-		m_aInputs[m_CurrentInput].m_PredictedTime = m_PredictedTime.Get(Now);
-		m_aInputs[m_CurrentInput].m_Time = Now;
+		m_aInputs[g_Config.m_ClDummy][m_CurrentInput[g_Config.m_ClDummy]].m_Tick = m_PredTick[g_Config.m_ClDummy];
+		m_aInputs[g_Config.m_ClDummy][m_CurrentInput[g_Config.m_ClDummy]].m_PredictedTime = m_PredictedTime.Get(Now);
+		m_aInputs[g_Config.m_ClDummy][m_CurrentInput[g_Config.m_ClDummy]].m_Time = Now;
 
 		// pack it
 		for(int i = 0; i < Size/4; i++)
-			Msg.AddInt(m_aInputs[m_CurrentInput].m_aData[i]);
+			Msg.AddInt(m_aInputs[g_Config.m_ClDummy][m_CurrentInput[g_Config.m_ClDummy]].m_aData[i]);
 
 		int PingCorrection = 0;
 		int64 TagTime;
@@ -433,14 +434,14 @@ void CClient::SendInput()
 			PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
 		Msg.AddInt(PingCorrection);
 
-		m_CurrentInput++;
-		m_CurrentInput%=200;
+		m_CurrentInput[g_Config.m_ClDummy]++;
+		m_CurrentInput[g_Config.m_ClDummy]%=200;
 
 		SendMsg(&Msg, MSGFLAG_FLUSH);
 
 		if(m_LastDummy != g_Config.m_ClDummy)
 		{
-			mem_copy(&DummyInput, &m_aInputs[(m_CurrentInput+200-2)%200], sizeof(DummyInput));
+			mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-2)%200], sizeof(DummyInput));
 			m_LastDummy = g_Config.m_ClDummy;
 		}
 	}
@@ -515,12 +516,12 @@ const int *CClient::GetInput(int Tick) const
 	int Best = -1;
 	for(int i = 0; i < 200; i++)
 	{
-		if(m_aInputs[i].m_Tick <= Tick && (Best == -1 || m_aInputs[Best].m_Tick < m_aInputs[i].m_Tick))
+		if(m_aInputs[g_Config.m_ClDummy][i].m_Tick <= Tick && (Best == -1 || m_aInputs[g_Config.m_ClDummy][Best].m_Tick < m_aInputs[g_Config.m_ClDummy][i].m_Tick))
 			Best = i;
 	}
 
 	if(Best != -1)
-		return (const int *)m_aInputs[Best].m_aData;
+		return (const int *)m_aInputs[g_Config.m_ClDummy][Best].m_aData;
 	return 0;
 }
 
@@ -548,8 +549,12 @@ void CClient::OnEnterGame()
 	// reset input
 	int i;
 	for(i = 0; i < 200; i++)
-		m_aInputs[i].m_Tick = -1;
-	m_CurrentInput = 0;
+	{
+		m_aInputs[0][i].m_Tick = -1;
+		m_aInputs[1][i].m_Tick = -1;
+	}
+	m_CurrentInput[0] = 0;
+	m_CurrentInput[1] = 0;
 
 	// reset snapshots
 	m_aSnapshots[g_Config.m_ClDummy][SNAP_CURRENT] = 0;
@@ -1482,9 +1487,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int64 Target = 0;
 			for(int k = 0; k < 200; k++)
 			{
-				if(m_aInputs[k].m_Tick == InputPredTick)
+				if(m_aInputs[g_Config.m_ClDummy][k].m_Tick == InputPredTick)
 				{
-					Target = m_aInputs[k].m_PredictedTime + (time_get() - m_aInputs[k].m_Time);
+					Target = m_aInputs[g_Config.m_ClDummy][k].m_PredictedTime + (time_get() - m_aInputs[g_Config.m_ClDummy][k].m_Time);
 					Target = Target - (int64)(((TimeLeft-PREDICTION_MARGIN)/1000.0f)*time_freq());
 					break;
 				}

@@ -8,14 +8,14 @@
 class CControls : public CComponent
 {
 public:
-	vec2 m_MousePos;
-	vec2 m_TargetPos;
+	vec2 m_MousePos[2];
+	vec2 m_TargetPos[2];
 
-	CNetObj_PlayerInput m_InputData;
-	CNetObj_PlayerInput m_LastData;
-	int m_InputDirectionLeft;
-	int m_InputDirectionRight;
-	int m_ShowHookColl;
+	CNetObj_PlayerInput m_InputData[2];
+	CNetObj_PlayerInput m_LastData[2];
+	int m_InputDirectionLeft[2];
+	int m_InputDirectionRight[2];
+	int m_ShowHookColl[2];
 	int m_LastDummy;
 	int m_OtherFire;
 

@@ -28,7 +28,7 @@ void CNamePlates::RenderNameplate(
 	{
 		float a = 1;
 		if(g_Config.m_ClNameplatesAlways == 0)
-			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
+			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos[g_Config.m_ClDummy], Position)/200.0f,16.0f), 0.0f, 1.0f);
 
 
 		char aName[64];

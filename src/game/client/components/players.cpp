@@ -170,7 +170,7 @@ void CPlayers::RenderPlayer(
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
-		Angle = angle(m_pClient->m_pControls->m_MousePos);
+		Angle = angle(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy]);
 	}
 	else
 	{
@@ -272,7 +272,7 @@ void CPlayers::RenderPlayer(
 
 	// draw gun
 	{
-		if(m_pClient->m_pControls->m_ShowHookColl && m_pClient->m_LocalClientID == ClientID)
+		if(m_pClient->m_pControls->m_ShowHookColl[g_Config.m_ClDummy] && m_pClient->m_LocalClientID == ClientID)
 		{
 			Graphics()->TextureClear();
 			vec2 initPos = Position + Direction * 42.0f;

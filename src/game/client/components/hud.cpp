@@ -493,7 +493,7 @@ void CHud::RenderCursor()
 	// render cursor
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteCursor);
 	float CursorSize = 64;
-	RenderTools()->DrawSprite(m_pClient->m_pControls->m_TargetPos.x, m_pClient->m_pControls->m_TargetPos.y, CursorSize);
+	RenderTools()->DrawSprite(m_pClient->m_pControls->m_TargetPos[g_Config.m_ClDummy].x, m_pClient->m_pControls->m_TargetPos[g_Config.m_ClDummy].y, CursorSize);
 	Graphics()->QuadsEnd();
 }
 

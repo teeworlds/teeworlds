@@ -56,11 +56,11 @@ void CCamera::OnRender()
 		{
 			if(m_CamType != CAMTYPE_SPEC)
 			{
-				m_pClient->m_pControls->m_MousePos = m_PrevCenter;
+				m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy] = m_PrevCenter;
 				m_pClient->m_pControls->ClampMousePos();
 				m_CamType = CAMTYPE_SPEC;
 			}
-			m_Center = m_pClient->m_pControls->m_MousePos;
+			m_Center = m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy];
 		}
 		else
 		{
@@ -72,14 +72,14 @@ void CCamera::OnRender()
 
 			vec2 CameraOffset(0, 0);
 
-			float l = length(m_pClient->m_pControls->m_MousePos);
+			float l = length(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy]);
 			if(g_Config.m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
 			{
 				float DeadZone = g_Config.m_ClMouseDeadzone;
 				float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
-				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
+				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy])*OffsetAmount;
 			}
 
 			if(m_pClient->m_Snap.m_SpecInfo.m_Active)
