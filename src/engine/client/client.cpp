@@ -675,6 +675,9 @@ void CClient::DummyConnect(int NetClient)
 	if(m_LastDummyConnectTime > GameTick())
 		return;
 
+	if(m_NetClient[0].State() != NET_CONNSTATE_ONLINE)
+		return;
+
 	char aBuf[512];
 
 	m_NetClient[NetClient].Disconnect(0);
