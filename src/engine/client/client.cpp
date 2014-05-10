@@ -438,12 +438,12 @@ void CClient::SendInput()
 		m_CurrentInput[g_Config.m_ClDummy]%=200;
 
 		SendMsg(&Msg, MSGFLAG_FLUSH);
+	}
 
-		if(m_LastDummy != g_Config.m_ClDummy)
-		{
-			mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-1)%200], sizeof(DummyInput));
-			m_LastDummy = g_Config.m_ClDummy;
-		}
+	if(m_LastDummy != g_Config.m_ClDummy)
+	{
+		mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-1)%200], sizeof(DummyInput));
+		m_LastDummy = g_Config.m_ClDummy;
 	}
 
 	if(!g_Config.m_ClDummy)
