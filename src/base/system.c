@@ -1625,30 +1625,33 @@ void str_sanitize(char *str_in)
 /* removes leading and trailing spaces and limits the use of multiple spaces */
 void str_clean_whitespaces(char *str_in)
 {
-    char* r = str_in;
-    int c = 0;
-	
-    while(*r == ' ')
-		++r;
-	
-    while(*str_in)
+	char *read = str_in;
+	char *write = str_in;
+
+	/* skip initial whitespace */
+	while(*read == ' ')
+		read++;
+
+	/* end of read string is detected in the loop */
+	while(1)
 	{
-        for(; *r == ' '; ++r)
-			c = 1;
-			
-        if(*r)
+		/* skip whitespace */
+		int found_whitespace = 0;
+		for(; *read == ' '; read++)
+			found_whitespace = 1;
+		/* if not at the end of the string, put a found whitespace here */
+		if(*read)
 		{
-            if(c)
-			{
-                *str_in++ = ' ';
-				c = 0;
-			}
-			
-            *str_in++ = *r++;
-        }
+			if(found_whitespace)
+				*write++ = ' ';
+			*write++ = *read++;
+		}
 		else
-			*str_in = 0;
-    }
+		{
+			*write = 0;
+			break;
+		}
+	}
 }
 
 char *str_skip_to_whitespace(char *str)
