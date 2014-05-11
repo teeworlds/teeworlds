@@ -1561,6 +1561,7 @@ void CMenus::OnInit()
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
+	Console()->Chain("snd_enable_music", ConchainToggleMusic, this);
 
 	m_TextureBlob = Graphics()->LoadTexture("blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
@@ -2505,3 +2506,25 @@ void CMenus::RenderBackground()
 	{CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);}
 }
+
+void CMenus::ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	CMenus *pSelf = (CMenus *)pUserData;
+	if(pResult->NumArguments())
+	{
+		pSelf->ToggleMusic();
+	}
+}
+
+void CMenus::ToggleMusic()
+{
+	if(Client()->State() == IClient::STATE_OFFLINE)
+	{
+		if(g_Config.m_SndMusic && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+		else if(!g_Config.m_SndMusic && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+			m_pClient->m_pSounds->Stop(SOUND_MENU);
+	}
+}
+

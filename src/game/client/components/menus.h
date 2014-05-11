@@ -448,6 +448,7 @@ class CMenus : public CComponent
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void SetOverlay(int Type, float x, float y, const void *pData);
 
 	// found in menus_settings.cpp
@@ -480,6 +481,8 @@ class CMenus : public CComponent
 	static int PopupFilter(CMenus *pMenus, CUIRect View);
 
 	IGraphics::CTextureHandle m_TextureBlob;
+
+	void ToggleMusic();
 public:
 	void RenderBackground();
 

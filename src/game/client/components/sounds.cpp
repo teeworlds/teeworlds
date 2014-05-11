@@ -192,3 +192,17 @@ void CSounds::Stop(int SetId)
 	for(int i = 0; i < pSet->m_NumSounds; i++)
 		Sound()->Stop(pSet->m_aSounds[i].m_Id);
 }
+
+bool CSounds::IsPlaying(int SetId)
+{
+	if(m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+		return false;
+
+	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
+	for(int i = 0; i < pSet->m_NumSounds; i++)
+	{
+		if(Sound()->IsPlaying(pSet->m_aSounds[i].m_Id))
+			return true;
+	}
+	return false;
+}

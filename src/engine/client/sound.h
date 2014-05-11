@@ -37,6 +37,7 @@ public:
 	virtual int Play(int ChannelID, CSampleHandle SampleID, int Flags);
 	virtual void Stop(CSampleHandle SampleID);
 	virtual void StopAll();
+	virtual bool IsPlaying(CSampleHandle SampleID);
 };
 
 #endif
