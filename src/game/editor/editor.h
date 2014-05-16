@@ -562,7 +562,7 @@ public:
 
 		m_ShowEnvelopeEditor = 0;
 
-		m_ShowEnvelopePreview = 0;
+		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
 
@@ -679,7 +679,14 @@ public:
 	float m_AnimateSpeed;
 
 	int m_ShowEnvelopeEditor;
-	int m_ShowEnvelopePreview; //Values: 0-Off|1-Selected Envelope|2-All
+
+	enum
+	{
+		SHOWENV_NONE = 0,
+		SHOWENV_SELECTED,
+		SHOWENV_ALL
+	};
+	int m_ShowEnvelopePreview;
 	bool m_ShowPicker;
 
 	int m_SelectedLayer;

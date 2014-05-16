@@ -895,7 +895,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		(Input()->KeyDown('i') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_ShowTileInfo = !m_ShowTileInfo;
-		m_ShowEnvelopePreview = 0;
+		m_ShowEnvelopePreview = SHOWENV_NONE;
 	}
 
 	TB_Top.VSplitLeft(15.0f, 0, &TB_Top);
@@ -1485,7 +1485,7 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 	mem_zero(apEnvelope, sizeof(CEnvelope*)*Num);
 	for(int i = 0; i < Num; i++)
 	{
-		if((m_ShowEnvelopePreview == 1 && lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == 2)
+		if((m_ShowEnvelopePreview == SHOWENV_SELECTED && lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == SHOWENV_ALL)
 			if(lQuads[i].m_PosEnv >= 0 && lQuads[i].m_PosEnv < m_Map.m_lEnvelopes.size())
 				apEnvelope[i] = m_Map.m_lEnvelopes[lQuads[i].m_PosEnv];
 	}
@@ -2020,8 +2020,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					{
 						CLayerQuads *pLayer = (CLayerQuads *)pEditLayers[k];
 
-						if(!m_ShowEnvelopePreview)
-							m_ShowEnvelopePreview = 2;
+						if(m_ShowEnvelopePreview != SHOWENV_NONE)
+							m_ShowEnvelopePreview = SHOWENV_ALL;
 
 						Graphics()->TextureClear();
 						Graphics()->QuadsBegin();
@@ -2180,7 +2180,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		Graphics()->LinesEnd();
 	}
 
-	if (!m_ShowPicker && m_ShowTileInfo && m_ShowEnvelopePreview != 0 && GetSelectedLayer(0) && GetSelectedLayer(0)->m_Type == LAYERTYPE_QUADS)
+	if (!m_ShowPicker && m_ShowTileInfo && m_ShowEnvelopePreview != SHOWENV_NONE && GetSelectedLayer(0) && GetSelectedLayer(0)->m_Type == LAYERTYPE_QUADS)
 	{
 		GetSelectedGroup()->MapScreen();
 
@@ -2190,7 +2190,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			Texture = m_Map.m_lImages[pLayer->m_Image]->m_Texture;
 
 		DoQuadEnvelopes(pLayer->m_lQuads, Texture);
-		m_ShowEnvelopePreview = 0;
+		m_ShowEnvelopePreview = SHOWENV_NONE;
     }
 
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
@@ -3387,7 +3387,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					m_Map.m_Modified = true;
 				}
 
-				m_ShowEnvelopePreview = 1;
+				m_ShowEnvelopePreview = SHOWENV_SELECTED;
 				m_pTooltip = "Press right mouse button to create a new point";
 			}
 		}
@@ -3556,7 +3556,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							}
 
 							m_SelectedQuadEnvelope = m_SelectedEnvelope;
-							m_ShowEnvelopePreview = 1;
+							m_ShowEnvelopePreview = SHOWENV_SELECTED;
 							m_SelectedEnvelopePoint = i;
 							m_Map.m_Modified = true;
 						}
@@ -3580,7 +3580,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							m_Map.m_Modified = true;
 						}
 
-						m_ShowEnvelopePreview = 1;
+						m_ShowEnvelopePreview = SHOWENV_SELECTED;
 						ColorMod = 100.0f;
 						Graphics()->SetColor(1,0.75f,0.75f,1);
 						m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.";
@@ -3926,7 +3926,7 @@ void CEditor::Reset(bool CreateDefault)
 
 	m_Map.m_Modified = false;
 
-	m_ShowEnvelopePreview = 0;
+	m_ShowEnvelopePreview = SHOWENV_NONE;
 }
 
 int CEditor::GetLineDistance()
