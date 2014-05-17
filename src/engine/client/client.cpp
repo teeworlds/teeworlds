@@ -327,6 +327,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_aLocalClientID[0] = -1;
 	m_aLocalClientID[1] = -1;
+	m_LastDummyConnectTime = 0;
 }
 
 // ----- send functions -----
@@ -567,6 +568,8 @@ void CClient::OnEnterGame()
 	m_CurGameTick[g_Config.m_ClDummy] = 0;
 	m_PrevGameTick[g_Config.m_ClDummy] = 0;
 	m_CurMenuTick = 0;
+
+	m_LastDummyConnectTime = 0;
 }
 
 void CClient::EnterGame()
