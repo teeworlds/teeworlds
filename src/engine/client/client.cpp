@@ -1724,15 +1724,7 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 
 	if(Sys)
 	{
-		if(Msg == NETMSG_CON_READY)
-		{
-			//GameClient()->OnConnected();
-			m_DummyConnected = true;
-			m_LastDummyConnectTime = GameTick();
-			g_Config.m_ClDummy = 1;
-			GameClient()->SwitchDummy();
-		}
-		else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
+		if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 		{
 			int NumParts = 1;
 			int Part = 0;
@@ -1906,6 +1898,12 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 						m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT] = m_SnapshotStorage[!g_Config.m_ClDummy].m_pLast;
 						m_LocalStartTime = time_get();
 						SetState(IClient::STATE_ONLINE);
+
+						m_DummyConnected = true;
+						m_LastDummyConnectTime = GameTick;
+						g_Config.m_ClDummy = 1;
+						GameClient()->SwitchDummy();
+
 						//DemoRecorder_HandleAutoStart();
 					}
 
