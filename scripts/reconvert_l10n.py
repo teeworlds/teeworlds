@@ -8,7 +8,7 @@ JSON_KEY_TR="tr"
 JSON_KEY_CO="context"
 
 if __name__ == '__main__':
-	po = polib.pofile(open(sys.argv[1]).read())
+	po = polib.pofile(open(sys.argv[1], encoding='utf-8').read())
 	translations = []
 
 	for entry in po:
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 	json.dump(
 		result,
-		open(sys.argv[1] + '.json', 'w'),
+		open(sys.argv[1] + '.json', 'w', encoding='utf-8'),
 		ensure_ascii=False,
 		indent="\t",
 		separators=(',', ': '),
