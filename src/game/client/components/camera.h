@@ -51,7 +51,7 @@ private:
 	float m_Zoom;
 	int m_CamType;
 	vec2 m_PrevCenter;
-	vec2 m_Positions[NUM_POS];
+	vec2 m_Positions[2][NUM_POS];
 	int m_CurrentPosition;
 	vec2 m_AnimationStartPos;
 	float m_MoveTime;
