@@ -6,6 +6,117 @@
 
 #include "render.h"
 
+void validateFCurve(vec2& p0, vec2& p1, vec2& p2, vec2& p3)
+{
+	// validate the bezier curve
+	p1.x = clamp(p1.x, p0.x, p3.x);
+	p2.x = clamp(p2.x, p0.x, p3.x);
+}
+
+double cubicrt(double x)
+{
+	if(x == 0.0)
+		return 0.0;
+	else if(x < 0.0)
+		return -exp(log(-x)/3.0);
+	else
+		return exp(log(x)/3.0);
+}
+
+float solveBezier(float x, float p0, float p1, float p2, float p3)
+{
+	// check for valid f-curve
+	// we only take care of monotonic bezier curves, so there has to be exactly 1 real solution
+	tl_assert(p0 <= x && x <= p3);
+	tl_assert((p0 <= p1 && p1 <= p3) && (p0 <= p2 && p2 <= p3));
+
+	double a, b, c, t;
+	double x3 = -p0 + 3*p1 - 3*p2 + p3;
+	double x2 = 3*p0 - 6*p1 + 3*p2;
+	double x1 = -3*p0 + 3*p1;
+	double x0 = p0 - x;
+
+	if(x3 == 0.0 && x2 == 0.0)
+	{
+		// linear
+		// a*t + b = 0
+		a = x1;
+		b = x0;
+		return -a/b;
+	}
+	else if(x3 == 0.0)
+	{
+		// quadratic
+		// a*t*t + b*t +c = 0
+		a = x2;
+		b = x1;
+		c = x0;
+
+		if(c == 0.0)
+			return 0.0f;
+
+		double D = b*b - 4*a*c;
+		return (-b + sqrt(D))/(2*a);
+	}
+	else
+	{
+		// cubic
+		// t*t*t + a*t*t + b*t*t + c = 0
+		a = x2 / x3;
+		b = x1 / x3;
+		c = x0 / x3;
+
+		// substitute t = y - a/3
+		double sub = a/3.0;
+
+		// depressed form x^3 + px + q = 0
+		// cardano's method
+		double p = b/3 - sub*sub; // = (b - a*a/3) / 3
+		double q = (2*sub*sub*sub - sub*b + c) / 2; // = (2*a*a*/27 - a*b/3 + c) / 2
+		
+		double D = q * q + p * p * p;
+
+		if(D > 0.0)
+		{
+			// only one 'real' solution
+			double s = sqrt(D);
+			return cubicrt(s-q) - cubicrt(s+q) - sub;
+		}
+		else if(D == 0.0)
+		{
+			// one single, one double solution or triple solution
+			double s = cubicrt(-q);
+			t = 2*s - sub;
+			
+			if(0.0 <= t && t <= 1.0)
+				return t;
+			else
+				return (-s - sub);
+
+		}
+		else
+		{
+			// Casus irreductibilis ... ,_,
+			double phi = acos(-q / sqrt(-(p*p*p))) / 3;
+			double s = 2*sqrt(-p);
+
+			t = s*cos(phi) - sub;
+
+			if(0.0 <= t && t <= 1.0)
+				return t;
+
+			t = -s*cos(phi+pi/3) - sub;
+
+			if(0.0 <= t && t <= 1.0)
+				return t;
+			else
+				return -s*cos(phi-pi/3) - sub;
+		}
+	}
+
+	return 0.0f;
+}
+
 void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
 {
 	if(NumPoints == 0)
@@ -34,28 +145,53 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 			float Delta = pPoints[i+1].m_Time-pPoints[i].m_Time;
 			float a = (Time-pPoints[i].m_Time)/Delta;
 
-
-			if(pPoints[i].m_Curvetype == CURVETYPE_SMOOTH)
-				a = -2*a*a*a + 3*a*a; // second hermite basis
-			else if(pPoints[i].m_Curvetype == CURVETYPE_SLOW)
-				a = a*a*a;
-			else if(pPoints[i].m_Curvetype == CURVETYPE_FAST)
+			switch(pPoints[i].m_Curvetype)
 			{
+			case CURVETYPE_STEP:
+				a = 0;
+				break;
+			case CURVETYPE_SMOOTH:
+				a = -2*a*a*a + 3*a*a; // second hermite basis
+				break;
+			case CURVETYPE_SLOW:
+				a = a*a*a;
+				break;
+			case CURVETYPE_FAST:
 				a = 1-a;
 				a = 1-a*a*a;
-			}
-			else if (pPoints[i].m_Curvetype == CURVETYPE_STEP)
-				a = 0;
-			else
-			{
-				// linear
-			}
+				break;
+			case CURVETYPE_BEZIER:
+				for(int c = 0; c < Channels; c++)
+				{
+					// monotonic 2d cubic bezier curve
+					vec2 p0, p1, p2, p3;
+					vec2 inTang, outTang;
 
+					p0 = vec2(pPoints[i].m_Time/1000.0f, fx2f(pPoints[i].m_aValues[c]));
+					p3 = vec2(pPoints[i+1].m_Time/1000.0f, fx2f(pPoints[i+1].m_aValues[c]));
+
+					outTang = vec2(pPoints[i].m_aOutTangentdx[c]/1000.0f, fx2f(pPoints[i].m_aOutTangentdy[c]));
+					inTang = -vec2(pPoints[i+1].m_aInTangentdx[c]/1000.0f, fx2f(pPoints[i+1].m_aInTangentdy[c]));					
+					p1 = p0 + outTang;
+					p2 = p3 - inTang;
+
+					// validate bezier curve
+					validateFCurve(p0, p1, p2, p3);
+
+					// solve x(a) = time for a
+					a = solveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x);
+
+					// value = y(t)
+					pResult[c] =  bezier(p0.y, p1.y, p2.y, p3.y, a);
+				}
+				return;
+			}
+			
 			for(int c = 0; c < Channels; c++)
 			{
 				float v0 = fx2f(pPoints[i].m_aValues[c]);
 				float v1 = fx2f(pPoints[i+1].m_aValues[c]);
-				pResult[c] = v0 + (v1-v0) * a;
+				pResult[c] = mix(v0, v1, a);
 			}
 
 			return;
@@ -68,7 +204,6 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	pResult[3] = fx2f(pPoints[NumPoints-1].m_aValues[3]);
 	return;
 }
-
 
 static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 {

@@ -16,27 +16,6 @@
 static float gs_SpriteWScale;
 static float gs_SpriteHScale;
 
-
-/*
-static void layershot_begin()
-{
-	if(!config.cl_layershot)
-		return;
-
-	Graphics()->Clear(0,0,0);
-}
-
-static void layershot_end()
-{
-	if(!config.cl_layershot)
-		return;
-
-	char buf[256];
-	str_format(buf, sizeof(buf), "screenshots/layers_%04d.png", config.cl_layershot);
-	gfx_screenshot_direct(buf);
-	config.cl_layershot++;
-}*/
-
 void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
@@ -347,7 +326,24 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 	DrawRoundRectExt4(r->x,r->y,r->w,r->h,ColorTopLeft,ColorTopRight,ColorBottomLeft,ColorBottomRight,Rounding*UI()->Scale(), Corners);
 	Graphics()->QuadsEnd();
 }
+/*
+void CRenderTools::DrawCurve(const CAnimFCurve *pCurve, vec4 Color, float x, float y, float w, float h)
+{
+	Graphics()->TextureClear();
 
+	Graphics()->QuadsBegin();
+	{
+		for(int i = 0; i < w; i++)
+		{
+			float a = float(i)/w;
+			float val = pCurve->Eval(a*100);
+			IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+i-1.0f, y+val-1.0f, 2.0f, 2.0f);
+			Graphics()->QuadsDrawTL(&ItemQ, 1);
+		}
+	}
+	Graphics()->QuadsEnd();
+}
+*/
 void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
 {
 	vec2 Direction = Dir;

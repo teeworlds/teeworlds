@@ -7,6 +7,7 @@
 
 #include <base/math.h>
 #include <base/system.h>
+#include <base/vmath.h>
 
 #include <base/tl/algorithm.h>
 #include <base/tl/array.h>
@@ -101,6 +102,13 @@ public:
 		p.m_aValues[2] = v2;
 		p.m_aValues[3] = v3;
 		p.m_Curvetype = CURVETYPE_LINEAR;
+		for(int c = 0; c < 4; c++)
+		{
+			p.m_aInTangentdx[c] = -f2fx(0.3);
+			p.m_aInTangentdy[c] = 0;
+			p.m_aOutTangentdx[c] = f2fx(0.3);
+			p.m_aOutTangentdy[c] = 0;
+		}
 		m_lPoints.add(p);
 		Resort();
 	}

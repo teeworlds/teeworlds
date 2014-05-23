@@ -5,6 +5,7 @@
 
 #include <engine/graphics.h>
 #include <base/vmath.h>
+#include <base/tl/sorted_array.h>
 #include <game/mapitems.h>
 #include "ui.h"
 
@@ -47,8 +48,6 @@ public:
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
-
-	//typedef struct SPRITE;
 
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
