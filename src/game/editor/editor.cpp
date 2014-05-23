@@ -1503,16 +1503,26 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 		const CPoint *pPoints = lQuads[j].m_aPoints;
 		for(int i = 0; i < apEnvelope[j]->m_lPoints.size()-1; i++)
 		{
-			float OffsetX = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
-			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
-			vec2 Pos0 = vec2(fx2f(pPoints[4].x)+OffsetX, fx2f(pPoints[4].y)+OffsetY);
+			float aResults[4];
+			vec2 Pos0 = vec2(0,0);
 
-			OffsetX = fx2f(apEnvelope[j]->m_lPoints[i+1].m_aValues[0]);
-			OffsetY = fx2f(apEnvelope[j]->m_lPoints[i+1].m_aValues[1]);
-			vec2 Pos1 = vec2(fx2f(pPoints[4].x)+OffsetX, fx2f(pPoints[4].y)+OffsetY);
+			apEnvelope[j]->Eval(apEnvelope[j]->m_lPoints[i].m_Time/1000.0f, aResults);
+			Pos0 = vec2(fx2f(pPoints[4].x)+aResults[0], fx2f(pPoints[4].y)+aResults[1]);
 
-			IGraphics::CLineItem Line = IGraphics::CLineItem(Pos0.x, Pos0.y, Pos1.x, Pos1.y);
-			Graphics()->LinesDraw(&Line, 1);
+			const int Steps = 10;
+			for(int n = 1; n <= Steps; n++)
+			{
+				float a = (float)n/Steps;
+				float time = mix(apEnvelope[j]->m_lPoints[i].m_Time, apEnvelope[j]->m_lPoints[i+1].m_Time, a);
+				apEnvelope[j]->Eval(time/1000.0f - 0.000001f, aResults);
+
+				vec2 Pos1 = vec2(fx2f(pPoints[4].x)+aResults[0], fx2f(pPoints[4].y)+aResults[1]);
+
+				IGraphics::CLineItem Line = IGraphics::CLineItem(Pos0.x, Pos0.y, Pos1.x, Pos1.y);
+				Graphics()->LinesDraw(&Line, 1);
+
+				Pos0 = Pos1;
+			}
 		}
 	}
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
