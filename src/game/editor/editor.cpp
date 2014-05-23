@@ -2020,7 +2020,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					{
 						CLayerQuads *pLayer = (CLayerQuads *)pEditLayers[k];
 
-						if(m_ShowEnvelopePreview != SHOWENV_NONE)
+						if(m_ShowEnvelopePreview == SHOWENV_NONE)
 							m_ShowEnvelopePreview = SHOWENV_ALL;
 
 						Graphics()->TextureClear();
