@@ -203,6 +203,7 @@ public:
 
 	virtual void SendStartInfo(bool IsDummy = false) = 0;
 	virtual void SwitchDummy() = 0;
+	virtual void OnDummyDisconnect() = 0;
 };
 
 extern IGameClient *CreateGameClient();

@@ -723,6 +723,7 @@ void CClient::DummyDisconnect(const char *pReason)
 	m_DummyConnected = false;
 	g_Config.m_ClDummy = 0;
 	GameClient()->SwitchDummy();
+	GameClient()->OnDummyDisconnect();
 }
 
 int CClient::SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient)

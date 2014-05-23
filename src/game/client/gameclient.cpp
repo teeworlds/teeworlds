@@ -467,7 +467,8 @@ void CGameClient::OnConnected()
 void CGameClient::OnReset()
 {
 	// clear out the invalid pointers
-	m_LastNewPredictedTick = -1;
+	m_LastNewPredictedTick[0] = -1;
+	m_LastNewPredictedTick[1] = -1;
 	mem_zero(&m_Snap, sizeof(m_Snap));
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -579,6 +580,11 @@ void CGameClient::OnRender()
 
 	// clear all events/input for this frame
 	Input()->Clear();
+}
+
+void CGameClient::OnDummyDisconnect()
+{
+	m_LastNewPredictedTick[1] = -1;
 }
 
 void CGameClient::OnRelease()
@@ -1590,9 +1596,9 @@ void CGameClient::OnPredict()
 		}
 
 		// check if we want to trigger effects
-		if(Tick > m_LastNewPredictedTick)
+		if(Tick > m_LastNewPredictedTick[g_Config.m_ClDummy])
 		{
-			m_LastNewPredictedTick = Tick;
+			m_LastNewPredictedTick[g_Config.m_ClDummy] = Tick;
 
 			if(m_LocalClientID != -1 && World.m_apCharacters[m_LocalClientID])
 				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos);

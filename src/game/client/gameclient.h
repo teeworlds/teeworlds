@@ -55,7 +55,7 @@ class CGameClient : public IGameClient
 	void UpdatePositions();
 
 	int m_PredictedTick;
-	int m_LastNewPredictedTick;
+	int m_LastNewPredictedTick[2];
 
 	int m_LastGameStartTick;
 	int m_LastFlagCarrierRed;
@@ -243,6 +243,7 @@ public:
 	// hooks
 	virtual void OnConnected();
 	virtual void OnRender();
+	virtual void OnDummyDisconnect();
 	virtual void OnUpdate();
 	virtual void OnRelease();
 	virtual void OnInit();
