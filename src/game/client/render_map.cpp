@@ -88,7 +88,7 @@ float solveBezier(float x, float p0, float p1, float p2, float p3)
 			double s = cubicrt(-q);
 			t = 2*s - sub;
 			
-			if(0.0 <= t && t <= 1.0)
+			if(0.0 <= t && t <= 1.000001f)
 				return t;
 			else
 				return (-s - sub);
@@ -102,12 +102,12 @@ float solveBezier(float x, float p0, float p1, float p2, float p3)
 
 			t = s*cos(phi) - sub;
 
-			if(0.0 <= t && t <= 1.0)
+			if(0.0 <= t && t <= 1.000001f)
 				return t;
 
 			t = -s*cos(phi+pi/3) - sub;
 
-			if(0.0 <= t && t <= 1.0)
+			if(0.0 <= t && t <= 1.000001f)
 				return t;
 			else
 				return -s*cos(phi-pi/3) - sub;
@@ -138,6 +138,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	}
 
 	Time = fmod(Time, pPoints[NumPoints-1].m_Time/1000.0f)*1000.0f;
+
 	for(int i = 0; i < NumPoints-1; i++)
 	{
 		if(Time >= pPoints[i].m_Time && Time <= pPoints[i+1].m_Time)
@@ -179,7 +180,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 					validateFCurve(p0, p1, p2, p3);
 
 					// solve x(a) = time for a
-					a = solveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x);
+					a = clamp(solveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x), 0.0f, 1.0f);
 
 					// value = y(t)
 					pResult[c] =  bezier(p0.y, p1.y, p2.y, p3.y, a);
