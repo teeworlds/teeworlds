@@ -3421,7 +3421,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					{
 						// Out-Tangent
 						float x_out = px + (pEnvelope->m_lPoints[i].m_aOutTangentdx[c]/1000.0f/EndTime);
-						float y_out = py + (fx2f(pEnvelope->m_lPoints[i].m_aOutTangentdy[c])-Bottom)/(Top-Bottom);
+						float y_out = py + fx2f(pEnvelope->m_lPoints[i].m_aOutTangentdy[c])/(Top-Bottom);
 
 						if (m_SelectedQuadEnvelope == m_SelectedEnvelope && m_SelectedEnvelopePoint == i)
 							Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.4f);
@@ -3436,7 +3436,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					{
 						// In-Tangent
 						float x_in = px + (pEnvelope->m_lPoints[i].m_aInTangentdx[c]/1000.0f/EndTime);
-						float y_in = py + (fx2f(pEnvelope->m_lPoints[i].m_aInTangentdy[c])-Bottom)/(Top-Bottom);
+						float y_in = py + fx2f(pEnvelope->m_lPoints[i].m_aInTangentdy[c])/(Top-Bottom);
 
 						if (m_SelectedQuadEnvelope == m_SelectedEnvelope && m_SelectedEnvelopePoint == i)
 							Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.4f);
@@ -3670,7 +3670,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						{
 							// Out-Tangent handle
 							float x_out = px + (pEnvelope->m_lPoints[i].m_aOutTangentdx[c]/1000.0f/EndTime);
-							float y_out = py + (fx2f(pEnvelope->m_lPoints[i].m_aOutTangentdy[c])-Bottom)/(Top-Bottom);
+							float y_out = py + fx2f(pEnvelope->m_lPoints[i].m_aOutTangentdy[c])/(Top-Bottom);
 
 							CUIRect Final;
 							Final.x = View.x + x_out*View.w; 
@@ -3751,7 +3751,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						{
 							// In-Tangent handle
 							float x_in = px + (pEnvelope->m_lPoints[i].m_aInTangentdx[c]/1000.0f/EndTime);
-							float y_in = py + (fx2f(pEnvelope->m_lPoints[i].m_aInTangentdy[c])-Bottom)/(Top-Bottom);
+							float y_in = py + fx2f(pEnvelope->m_lPoints[i].m_aInTangentdy[c])/(Top-Bottom);
 
 							CUIRect Final;
 							Final.x = View.x + x_in*View.w; 
@@ -3821,7 +3821,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							if (m_SelectedQuadEnvelope == m_SelectedEnvelope && m_SelectedEnvelopePoint == i)
 								Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 							else
-								Graphics()->SetColor(aColors[c].r, aColors[c].g, aColors[c].b, 0.5f);
+								Graphics()->SetColor(aColors[c].r*ColorMod, aColors[c].g*ColorMod, aColors[c].b*ColorMod, 0.5f);
 
 							// draw triangle
 							IGraphics::CFreeformItem FreeformItem(Final.x+Final.w/2, Final.y, Final.x+Final.w/2, Final.y, 

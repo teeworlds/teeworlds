@@ -79,9 +79,28 @@ public:
 			{
 				if(ChannelMask&(1<<c))
 				{
-					float v = fx2f(m_lPoints[i].m_aValues[c]);
-					if(v > m_Top) m_Top = v;
-					if(v < m_Bottom) m_Bottom = v;
+					{
+						// value handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
+
+					if(m_lPoints[i].m_Curvetype == CURVETYPE_BEZIER)
+					{
+						// out-tangent handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]+m_lPoints[i].m_aOutTangentdy[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
+
+					if((i>0) && m_lPoints[i-1].m_Curvetype == CURVETYPE_BEZIER)
+					{
+						// in-tangent handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]+m_lPoints[i].m_aInTangentdy[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
 				}
 			}
 		}
