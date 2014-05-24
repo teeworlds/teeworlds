@@ -123,9 +123,9 @@ public:
 		p.m_Curvetype = CURVETYPE_LINEAR;
 		for(int c = 0; c < 4; c++)
 		{
-			p.m_aInTangentdx[c] = -f2fx(0.3);
+			p.m_aInTangentdx[c] = 0;
 			p.m_aInTangentdy[c] = 0;
-			p.m_aOutTangentdx[c] = f2fx(0.3);
+			p.m_aOutTangentdx[c] = 0;
 			p.m_aOutTangentdy[c] = 0;
 		}
 		m_lPoints.add(p);

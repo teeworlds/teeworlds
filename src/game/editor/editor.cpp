@@ -1506,10 +1506,10 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 			float aResults[4];
 			vec2 Pos0 = vec2(0,0);
 
-			apEnvelope[j]->Eval(apEnvelope[j]->m_lPoints[i].m_Time/1000.0f, aResults);
+			apEnvelope[j]->Eval(apEnvelope[j]->m_lPoints[i].m_Time/1000.0f + 0.000001f, aResults);
 			Pos0 = vec2(fx2f(pPoints[4].x)+aResults[0], fx2f(pPoints[4].y)+aResults[1]);
 
-			const int Steps = 10;
+			const int Steps = 15;
 			for(int n = 1; n <= Steps; n++)
 			{
 				float a = (float)n/Steps;
@@ -3605,6 +3605,11 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 											pEnvelope->m_lPoints[i].m_Time = pEnvelope->m_lPoints[i-1].m_Time + 1;
 										if(i+1 != pEnvelope->m_lPoints.size() && pEnvelope->m_lPoints[i].m_Time > pEnvelope->m_lPoints[i+1].m_Time)
 											pEnvelope->m_lPoints[i].m_Time = pEnvelope->m_lPoints[i+1].m_Time - 1;
+
+										// clamp tangents
+										pEnvelope->m_lPoints[i].m_aInTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aInTangentdx[c], -pEnvelope->m_lPoints[i].m_Time, 0);
+										pEnvelope->m_lPoints[i].m_aOutTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aOutTangentdx[c], 0, 
+																						(int)(EndTime*1000.f - pEnvelope->m_lPoints[i].m_Time));
 									}
 								}
 								else
@@ -3709,6 +3714,10 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 										pEnvelope->m_lPoints[i].m_aOutTangentdy[c] -=  f2fx(m_MouseDeltaY*ValueScale);
 									}
 
+									// clamp time value
+									pEnvelope->m_lPoints[i].m_aOutTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aOutTangentdx[c], 0, 
+																						(int)(EndTime*1000.f - pEnvelope->m_lPoints[i].m_Time));
+
 									//
 									m_SelectedQuadEnvelope = m_SelectedEnvelope;
 									m_ShowEnvelopePreview = SHOWENV_SELECTED;
@@ -3790,6 +3799,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 										pEnvelope->m_lPoints[i].m_aInTangentdy[c] -=  f2fx(m_MouseDeltaY*ValueScale);
 									}
 
+									// clamp time value
+									pEnvelope->m_lPoints[i].m_aInTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aInTangentdx[c], -pEnvelope->m_lPoints[i].m_Time, 0);
+																			
 									//
 									m_SelectedQuadEnvelope = m_SelectedEnvelope;
 									m_ShowEnvelopePreview = SHOWENV_SELECTED;
