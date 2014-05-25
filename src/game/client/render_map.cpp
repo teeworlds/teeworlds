@@ -6,14 +6,14 @@
 
 #include "render.h"
 
-void validateFCurve(vec2& p0, vec2& p1, vec2& p2, vec2& p3)
+void ValidateFCurve(const vec2& p0, vec2& p1, vec2& p2, const vec2& p3)
 {
 	// validate the bezier curve
 	p1.x = clamp(p1.x, p0.x, p3.x);
 	p2.x = clamp(p2.x, p0.x, p3.x);
 }
 
-double cubicrt(double x)
+double CubicRoot(double x)
 {
 	if(x == 0.0)
 		return 0.0;
@@ -23,7 +23,7 @@ double cubicrt(double x)
 		return exp(log(x)/3.0);
 }
 
-float solveBezier(float x, float p0, float p1, float p2, float p3)
+float SolveBezier(float x, float p0, float p1, float p2, float p3)
 {
 	// check for valid f-curve
 	// we only take care of monotonic bezier curves, so there has to be exactly 1 real solution
@@ -42,21 +42,30 @@ float solveBezier(float x, float p0, float p1, float p2, float p3)
 		// a*t + b = 0
 		a = x1;
 		b = x0;
-		return -a/b;
+
+		if(a == 0.0)
+			return 0.0f;
+		else
+			return -b/a;
 	}
 	else if(x3 == 0.0)
 	{
 		// quadratic
-		// a*t*t + b*t +c = 0
-		a = x2;
-		b = x1;
-		c = x0;
+		// t*t + b*t +c = 0
+		b = x1/x2;
+		c = x0/x2;
 
 		if(c == 0.0)
 			return 0.0f;
 
-		double D = b*b - 4*a*c;
-		return (-b + sqrt(D))/(2*a);
+		double D = b*b - 4*c;
+
+		t = (-b + sqrt(D))/2;
+
+		if(0.0 <= t && t <= 1.0001f)
+			return t;
+		else
+			return (-b - sqrt(D))/2;
 	}
 	else
 	{
@@ -71,24 +80,24 @@ float solveBezier(float x, float p0, float p1, float p2, float p3)
 
 		// depressed form x^3 + px + q = 0
 		// cardano's method
-		double p = b/3 - sub*sub; // = (b - a*a/3) / 3
-		double q = (2*sub*sub*sub - sub*b + c) / 2; // = (2*a*a*/27 - a*b/3 + c) / 2
+		double p = b/3 - a*a/9;
+		double q = (2*a*a*a/27 - a*b/3 + c)/2;
 		
-		double D = q * q + p * p * p;
+		double D = q*q + p*p*p;
 
 		if(D > 0.0)
 		{
 			// only one 'real' solution
 			double s = sqrt(D);
-			return cubicrt(s-q) - cubicrt(s+q) - sub;
+			return CubicRoot(s-q) - CubicRoot(s+q) - sub;
 		}
 		else if(D == 0.0)
 		{
 			// one single, one double solution or triple solution
-			double s = cubicrt(-q);
+			double s = CubicRoot(-q);
 			t = 2*s - sub;
 			
-			if(0.0 <= t && t <= 1.000001f)
+			if(0.0 <= t && t <= 1.0001f)
 				return t;
 			else
 				return (-s - sub);
@@ -102,12 +111,12 @@ float solveBezier(float x, float p0, float p1, float p2, float p3)
 
 			t = s*cos(phi) - sub;
 
-			if(0.0 <= t && t <= 1.000001f)
+			if(0.0 <= t && t <= 1.0001f)
 				return t;
 
 			t = -s*cos(phi+pi/3) - sub;
 
-			if(0.0 <= t && t <= 1.000001f)
+			if(0.0 <= t && t <= 1.0001f)
 				return t;
 			else
 				return -s*cos(phi-pi/3) - sub;
@@ -177,15 +186,17 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 					p2 = p3 - inTang;
 
 					// validate bezier curve
-					validateFCurve(p0, p1, p2, p3);
+					ValidateFCurve(p0, p1, p2, p3);
 
 					// solve x(a) = time for a
-					a = clamp(solveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x), 0.0f, 1.0f);
+					a = clamp(SolveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x), 0.0f, 1.0f);
 
 					// value = y(t)
 					pResult[c] =  bezier(p0.y, p1.y, p2.y, p3.y, a);
 				}
 				return;
+			case CURVETYPE_LINEAR:
+				break;
 			}
 			
 			for(int c = 0; c < Channels; c++)

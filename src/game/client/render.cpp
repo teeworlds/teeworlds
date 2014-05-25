@@ -326,24 +326,7 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 	DrawRoundRectExt4(r->x,r->y,r->w,r->h,ColorTopLeft,ColorTopRight,ColorBottomLeft,ColorBottomRight,Rounding*UI()->Scale(), Corners);
 	Graphics()->QuadsEnd();
 }
-/*
-void CRenderTools::DrawCurve(const CAnimFCurve *pCurve, vec4 Color, float x, float y, float w, float h)
-{
-	Graphics()->TextureClear();
 
-	Graphics()->QuadsBegin();
-	{
-		for(int i = 0; i < w; i++)
-		{
-			float a = float(i)/w;
-			float val = pCurve->Eval(a*100);
-			IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+i-1.0f, y+val-1.0f, 2.0f, 2.0f);
-			Graphics()->QuadsDrawTL(&ItemQ, 1);
-		}
-	}
-	Graphics()->QuadsEnd();
-}
-*/
 void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
 {
 	vec2 Direction = Dir;

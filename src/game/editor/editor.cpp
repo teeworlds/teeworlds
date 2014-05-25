@@ -1512,7 +1512,9 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 			const int Steps = 15;
 			for(int n = 1; n <= Steps; n++)
 			{
-				float a = (float)n/Steps;
+				float a = n/(float)Steps;
+
+				// little offset to prevent looping due to fmod
 				float time = mix(apEnvelope[j]->m_lPoints[i].m_Time, apEnvelope[j]->m_lPoints[i+1].m_Time, a);
 				apEnvelope[j]->Eval(time/1000.0f - 0.000001f, aResults);
 
