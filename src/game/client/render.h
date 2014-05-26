@@ -5,7 +5,6 @@
 
 #include <engine/graphics.h>
 #include <base/vmath.h>
-#include <base/tl/sorted_array.h>
 #include <game/mapitems.h>
 #include "ui.h"
 

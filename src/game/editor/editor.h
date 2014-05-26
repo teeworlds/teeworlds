@@ -11,6 +11,7 @@
 
 #include <base/tl/algorithm.h>
 #include <base/tl/array.h>
+#include <base/tl/sorted_array.h>
 #include <base/tl/string.h>
 
 #include <game/client/ui.h>
