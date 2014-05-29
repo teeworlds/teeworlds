@@ -631,13 +631,12 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 		// load envelopes
 		{
-			CEnvPoint *pPoints = 0;
-
+			CEnvPoint *pEnvPoints = 0;
 			{
 				int Start, Num;
 				DataFile.GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
 				if(Num)
-					pPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
+					pEnvPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
 			}
 
 			int Start, Num;
@@ -647,7 +646,42 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
 				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
-				mem_copy(pEnv->m_lPoints.base_ptr(), &pPoints[pItem->m_StartPoint], sizeof(CEnvPoint)*pItem->m_NumPoints);
+				for(int n = 0; n < pItem->m_NumPoints; n++)
+				{
+					CEnvPoint *pPoint = 0x0; 
+					if(pItem->m_Version >= 3)
+						pPoint = &pEnvPoints[pItem->m_StartPoint + n];
+					else
+						pPoint = (CEnvPoint *)(&((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n]); // ugly ...
+
+					pEnv->m_lPoints[n].m_Time = pPoint->m_Time;
+					pEnv->m_lPoints[n].m_Curvetype = pPoint->m_Curvetype;
+					for(int c = 0; c < pItem->m_Channels; c++)
+						pEnv->m_lPoints[n].m_aValues[c] = pPoint->m_aValues[c];
+					
+					if(pItem->m_Version >= 3)
+					{
+						for(int c = 0; c < pItem->m_Channels; c++)
+						{
+							pEnv->m_lPoints[n].m_aInTangentdx[c] = pPoint->m_aInTangentdx[c];
+							pEnv->m_lPoints[n].m_aInTangentdy[c] = pPoint->m_aInTangentdy[c];
+							pEnv->m_lPoints[n].m_aOutTangentdx[c] = pPoint->m_aOutTangentdx[c];
+							pEnv->m_lPoints[n].m_aOutTangentdy[c] = pPoint->m_aOutTangentdy[c];
+						}
+					}
+					else
+					{
+						// backwards compatibility
+						for(int c = 0; c < pItem->m_Channels; c++)
+						{
+							pEnv->m_lPoints[n].m_aInTangentdx[c] = 0;
+							pEnv->m_lPoints[n].m_aInTangentdy[c] = 0;
+							pEnv->m_lPoints[n].m_aOutTangentdx[c] = 0;
+							pEnv->m_lPoints[n].m_aOutTangentdy[c] = 0;
+						}
+					}
+				}
+
 				if(pItem->m_aName[0] != -1)	// compatibility with old maps
 					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
 				m_lEnvelopes.add(pEnv);

@@ -7,6 +7,7 @@
 
 #include <base/math.h>
 #include <base/system.h>
+#include <base/vmath.h>
 
 #include <base/tl/algorithm.h>
 #include <base/tl/array.h>
@@ -78,9 +79,28 @@ public:
 			{
 				if(ChannelMask&(1<<c))
 				{
-					float v = fx2f(m_lPoints[i].m_aValues[c]);
-					if(v > m_Top) m_Top = v;
-					if(v < m_Bottom) m_Bottom = v;
+					{
+						// value handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
+
+					if(m_lPoints[i].m_Curvetype == CURVETYPE_BEZIER)
+					{
+						// out-tangent handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]+m_lPoints[i].m_aOutTangentdy[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
+
+					if((i>0) && m_lPoints[i-1].m_Curvetype == CURVETYPE_BEZIER)
+					{
+						// in-tangent handle
+						float v = fx2f(m_lPoints[i].m_aValues[c]+m_lPoints[i].m_aInTangentdy[c]);
+						if(v > m_Top) m_Top = v;
+						if(v < m_Bottom) m_Bottom = v;
+					}
 				}
 			}
 		}
@@ -101,6 +121,13 @@ public:
 		p.m_aValues[2] = v2;
 		p.m_aValues[3] = v3;
 		p.m_Curvetype = CURVETYPE_LINEAR;
+		for(int c = 0; c < 4; c++)
+		{
+			p.m_aInTangentdx[c] = 0;
+			p.m_aInTangentdy[c] = 0;
+			p.m_aOutTangentdx[c] = 0;
+			p.m_aOutTangentdy[c] = 0;
+		}
 		m_lPoints.add(p);
 		Resort();
 	}
@@ -562,7 +589,7 @@ public:
 
 		m_ShowEnvelopeEditor = 0;
 
-		m_ShowEnvelopePreview = 0;
+		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
 
@@ -679,7 +706,14 @@ public:
 	float m_AnimateSpeed;
 
 	int m_ShowEnvelopeEditor;
-	int m_ShowEnvelopePreview; //Values: 0-Off|1-Selected Envelope|2-All
+
+	enum
+	{
+		SHOWENV_NONE = 0,
+		SHOWENV_SELECTED,
+		SHOWENV_ALL
+	};
+	int m_ShowEnvelopePreview;
 	bool m_ShowPicker;
 
 	int m_SelectedLayer;

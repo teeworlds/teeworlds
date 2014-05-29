@@ -16,27 +16,6 @@
 static float gs_SpriteWScale;
 static float gs_SpriteHScale;
 
-
-/*
-static void layershot_begin()
-{
-	if(!config.cl_layershot)
-		return;
-
-	Graphics()->Clear(0,0,0);
-}
-
-static void layershot_end()
-{
-	if(!config.cl_layershot)
-		return;
-
-	char buf[256];
-	str_format(buf, sizeof(buf), "screenshots/layers_%04d.png", config.cl_layershot);
-	gfx_screenshot_direct(buf);
-	config.cl_layershot++;
-}*/
-
 void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
