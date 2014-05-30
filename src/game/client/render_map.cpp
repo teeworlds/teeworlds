@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 #include <base/math.h>
+#include <base/tl/base.h>
 #include <engine/graphics.h>
 
 #include "render.h"
