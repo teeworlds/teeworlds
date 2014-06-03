@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/tl/array.h>
+
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/demo.h>
@@ -73,7 +75,6 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	pChannels[3] = 0;
 
 	CEnvPoint *pPoints = 0;
-
 	CLayers *pLayers = 0;
 	{
 		int Start, Num;
@@ -94,6 +95,39 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 
 	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
 
+	array<CEnvPoint> lEnvPoints;
+	lEnvPoints.set_size(pItem->m_NumPoints);
+
+	if(pItem->m_Version >= 3)
+	{
+		for(int i = 0; i < pItem->m_NumPoints; i++)
+			lEnvPoints[i] = pPoints[i + pItem->m_StartPoint];
+	}
+	else
+	{
+		// backwards compatibility
+		for(int i = 0; i < pItem->m_NumPoints; i++)
+		{
+			// convert CEnvPoint_v1 -> CEnvPoint
+			CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pPoints)[i + pItem->m_StartPoint];
+			CEnvPoint p;
+
+			p.m_Time = pEnvPoint_v1->m_Time;
+			p.m_Curvetype = pEnvPoint_v1->m_Curvetype;
+
+			for(int c = 0; c < pItem->m_Channels; c++)
+			{
+				p.m_aValues[c] = pEnvPoint_v1->m_aValues[c];
+				p.m_aInTangentdx[c] = 0;
+				p.m_aInTangentdy[c] = 0;
+				p.m_aOutTangentdx[c] = 0;
+				p.m_aOutTangentdy[c] = 0;
+			}
+
+			lEnvPoints[i] = p;
+		}
+	}	
+
 	static float s_Time = 0.0f;
 	static float s_LastLocalTime = pThis->Client()->LocalTime();
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -113,7 +147,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 						pThis->Client()->IntraGameTick());
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(lEnvPoints.base_ptr(), pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
@@ -128,13 +162,13 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 			else
 				s_Time += pThis->Client()->LocalTime()-s_LastLocalTime;
 		}
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(lEnvPoints.base_ptr(), pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 		s_LastLocalTime = pThis->Client()->LocalTime();
 	}
 	else
 	{
 		s_Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(lEnvPoints.base_ptr(), pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 }
 
