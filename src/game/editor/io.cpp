@@ -216,14 +216,14 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	// save version
 	{
 		CMapItemVersion Item;
-		Item.m_Version = 1;
+		Item.m_Version = CMapItemVersion::CURRENT_VERSION;
 		df.AddItem(MAPITEMTYPE_VERSION, 0, sizeof(Item), &Item);
 	}
 
 	// save map info
 	{
 		CMapItemInfo Item;
-		Item.m_Version = 1;
+		Item.m_Version = CMapItemInfo::CURRENT_VERSION;
 
 		if(m_MapInfo.m_aAuthor[0])
 			Item.m_Author = df.AddData(str_length(m_MapInfo.m_aAuthor)+1, m_MapInfo.m_aAuthor);
@@ -310,7 +310,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				pLayer->PrepareForSave();
 
 				CMapItemLayerTilemap Item;
-				Item.m_Version = 3;
+				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
 
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
@@ -340,7 +340,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				if(pLayer->m_lQuads.size())
 				{
 					CMapItemLayerQuads Item;
-					Item.m_Version = 2;
+					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
 					Item.m_Layer.m_Flags = pLayer->m_Flags;
 					Item.m_Layer.m_Type = pLayer->m_Type;
 					Item.m_Image = pLayer->m_Image;
