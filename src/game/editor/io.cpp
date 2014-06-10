@@ -12,189 +12,6 @@ template<typename T>
 static int MakeVersion(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
-// backwards compatiblity
-/*
-void editor_load_old(DATAFILE *df, MAP *map)
-{
-	class mapres_image
-	{
-	public:
-		int width;
-		int height;
-		int image_data;
-	};
-
-	struct mapres_tilemap
-	{
-		int image;
-		int width;
-		int height;
-		int x, y;
-		int scale;
-		int data;
-		int main;
-	};
-
-	struct mapres_entity
-	{
-		int x, y;
-		int data[1];
-	};
-
-	struct mapres_spawnpoint
-	{
-		int x, y;
-	};
-
-	struct mapres_item
-	{
-		int x, y;
-		int type;
-	};
-
-	struct mapres_flagstand
-	{
-		int x, y;
-	};
-
-	enum
-	{
-		MAPRES_ENTS_START=1,
-		MAPRES_SPAWNPOINT=1,
-		MAPRES_ITEM=2,
-		MAPRES_SPAWNPOINT_RED=3,
-		MAPRES_SPAWNPOINT_BLUE=4,
-		MAPRES_FLAGSTAND_RED=5,
-		MAPRES_FLAGSTAND_BLUE=6,
-		MAPRES_ENTS_END,
-
-		ITEM_NULL=0,
-		ITEM_WEAPON_GUN=0x00010001,
-		ITEM_WEAPON_SHOTGUN=0x00010002,
-		ITEM_WEAPON_ROCKET=0x00010003,
-		ITEM_WEAPON_SNIPER=0x00010004,
-		ITEM_WEAPON_HAMMER=0x00010005,
-		ITEM_HEALTH =0x00020001,
-		ITEM_ARMOR=0x00030001,
-		ITEM_NINJA=0x00040001,
-	};
-
-	enum
-	{
-		MAPRES_REGISTERED=0x8000,
-		MAPRES_IMAGE=0x8001,
-		MAPRES_TILEMAP=0x8002,
-		MAPRES_COLLISIONMAP=0x8003,
-		MAPRES_TEMP_THEME=0x8fff,
-	};
-
-	// load tilemaps
-	int game_width = 0;
-	int game_height = 0;
-	{
-		int start, num;
-		datafile_get_type(df, MAPRES_TILEMAP, &start, &num);
-		for(int t = 0; t < num; t++)
-		{
-			mapres_tilemap *tmap = (mapres_tilemap *)datafile_get_item(df, start+t,0,0);
-
-			CLayerTiles *l = new CLayerTiles(tmap->width, tmap->height);
-
-			if(tmap->main)
-			{
-				// move game layer to correct position
-				for(int i = 0; i < map->groups[0]->layers.len()-1; i++)
-				{
-					if(map->groups[0]->layers[i] == pEditor->map.game_layer)
-						map->groups[0]->swap_layers(i, i+1);
-				}
-
-				game_width = tmap->width;
-				game_height = tmap->height;
-			}
-
-			// add new layer
-			map->groups[0]->add_layer(l);
-
-			// process the data
-			unsigned char *src_data = (unsigned char *)datafile_get_data(df, tmap->data);
-			CTile *dst_data = l->tiles;
-
-			for(int y = 0; y < tmap->height; y++)
-				for(int x = 0; x < tmap->width; x++, dst_data++, src_data+=2)
-				{
-					dst_data->index = src_data[0];
-					dst_data->flags = src_data[1];
-				}
-
-			l->image = tmap->image;
-		}
-	}
-
-	// load images
-	{
-		int start, count;
-		datafile_get_type(df, MAPRES_IMAGE, &start, &count);
-		for(int i = 0; i < count; i++)
-		{
-			mapres_image *imgres = (mapres_image *)datafile_get_item(df, start+i, 0, 0);
-			void *data = datafile_get_data(df, imgres->image_data);
-
-			EDITOR_IMAGE *img = new EDITOR_IMAGE;
-			img->width = imgres->width;
-			img->height = imgres->height;
-			img->format = CImageInfo::FORMAT_RGBA;
-
-			// copy image data
-			img->data = mem_alloc(img->width*img->height*4, 1);
-			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, CImageInfo::FORMAT_AUTO, 0);
-			map->images.add(img);
-
-			// unload image
-			datafile_unload_data(df, imgres->image_data);
-		}
-	}
-
-	// load entities
-	{
-		CLayerGame *g = map->game_layer;
-		g->resize(game_width, game_height);
-		for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
-		{
-			// fetch entities of this class
-			int start, num;
-			datafile_get_type(df, t, &start, &num);
-
-
-			for(int i = 0; i < num; i++)
-			{
-				mapres_entity *e = (mapres_entity *)datafile_get_item(df, start+i,0,0);
-				int x = e->x/32;
-				int y = e->y/32;
-				int id = -1;
-
-				if(t == MAPRES_SPAWNPOINT) id = ENTITY_SPAWN;
-				else if(t == MAPRES_SPAWNPOINT_RED) id = ENTITY_SPAWN_RED;
-				else if(t == MAPRES_SPAWNPOINT_BLUE) id = ENTITY_SPAWN_BLUE;
-				else if(t == MAPRES_FLAGSTAND_RED) id = ENTITY_FLAGSTAND_RED;
-				else if(t == MAPRES_FLAGSTAND_BLUE) id = ENTITY_FLAGSTAND_BLUE;
-				else if(t == MAPRES_ITEM)
-				{
-					if(e->data[0] == ITEM_WEAPON_SHOTGUN) id = ENTITY_WEAPON_SHOTGUN;
-					else if(e->data[0] == ITEM_WEAPON_ROCKET) id = ENTITY_WEAPON_GRENADE;
-					else if(e->data[0] == ITEM_NINJA) id = ENTITY_POWERUP_NINJA;
-					else if(e->data[0] == ITEM_ARMOR) id = ENTITY_ARMOR_1;
-					else if(e->data[0] == ITEM_HEALTH) id = ENTITY_HEALTH_1;
-				}
-
-				if(id > 0 && x >= 0 && x < g->width && y >= 0 && y < g->height)
-					g->tiles[y*g->width+x].index = id+ENTITY_OFFSET;
-			}
-		}
-	}
-}*/
-
 int CEditor::Save(const char *pFilename)
 {
 	return m_Map.Save(Kernel()->RequestInterface<IStorage>(), pFilename);
@@ -354,9 +171,6 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 					df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 
-					// clean up
-					//mem_free(quads);
-
 					GItem.m_NumLayers++;
 					LayerCount++;
 				}
@@ -424,7 +238,6 @@ int CEditor::Load(const char *pFileName, int StorageType)
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
 {
 	CDataFileReader DataFile;
-	//DATAFILE *df = datafile_load(filename);
 	if(!DataFile.Open(pStorage, pFileName, StorageType))
 		return 0;
 
@@ -434,17 +247,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 	CMapItemVersion *pItem = (CMapItemVersion *)DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
 	if(!pItem)
 	{
-		// import old map
-		/*MAP old_mapstuff;
-		editor->reset();
-		editor_load_old(df, this);
-		*/
 		return 0;
 	}
 	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
 	{
-		//editor.reset(false);
-
 		// load map info
 		{
 			CMapItemInfo *pItem = (CMapItemInfo *)DataFile.FindItem(MAPITEMTYPE_INFO, 0);
