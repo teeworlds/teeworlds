@@ -75,7 +75,7 @@ public:
 	{
 		ALIGN_LEFT,
 		ALIGN_CENTER,
-		ALIGN_RIGHT
+		ALIGN_RIGHT,
 	};
 
 	int Update(float mx, float my, float Mwx, float Mwy, int m_Buttons);

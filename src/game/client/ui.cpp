@@ -390,16 +390,19 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Al
 	case ALIGN_CENTER:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth); break;
+		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth);
+		break;
 	}
 	case ALIGN_LEFT:
 	{
-		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth); break;
+		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth);
+		break;
 	}
 	case ALIGN_RIGHT:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth); break;
+		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth);
+		break;
 	}
 	}
 }
