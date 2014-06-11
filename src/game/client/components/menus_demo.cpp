@@ -25,7 +25,7 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRec
 	float *pFade = ButtonFade(pID, Seconds);
 
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
-	UI()->DoLabel(pRect, pText, 14.0f, 0);
+	UI()->DoLabel(pRect, pText, 14.0f, CUI::ALIGN_CENTER);
 	return UI()->DoButtonLogic(pID, pText, false, pRect);
 }
 
@@ -98,7 +98,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		str_format(aBuffer, sizeof(aBuffer), "%d:%02d / %d:%02d",
 			CurrentTick/SERVER_TICK_SPEED/60, (CurrentTick/SERVER_TICK_SPEED)%60,
 			TotalTicks/SERVER_TICK_SPEED/60, (TotalTicks/SERVER_TICK_SPEED)%60);
-		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, 0);
+		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, CUI::ALIGN_CENTER);
 
 		// do the logic
 		int Inside = UI()->MouseInside(&SeekBar);
@@ -194,7 +194,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			str_format(aBuffer, sizeof(aBuffer), "x%.0f", pInfo->m_Speed);
 		else
 			str_format(aBuffer, sizeof(aBuffer), "x%.2f", pInfo->m_Speed);
-		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, -1);
+		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, CUI::ALIGN_LEFT);
 
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
@@ -347,14 +347,14 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 			}
 			else
 			{
 				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, 0);
+				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 			}
 		}
 	}
@@ -374,7 +374,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aFooterLabel, ButtonHeight*ms_FontmodHeight*0.8f, 0);
+	UI()->DoLabel(&Label, aFooterLabel, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
 	{
 		MainView.HSplitTop(Spacing, 0, &MainView);

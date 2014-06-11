@@ -381,25 +381,30 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
 	return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, int Align, int MaxWidth)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
-	if(Align == 0)
+	switch(Align)
+	{
+	case ALIGN_CENTER:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth);
+		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth); break;
 	}
-	else if(Align < 0)
-		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth);
-	else if(Align > 0)
+	case ALIGN_LEFT:
+	{
+		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth); break;
+	}
+	case ALIGN_RIGHT:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth);
+		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth); break;
+	}
 	}
 }
 
-void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, int Align, int MaxWidth)
+void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
 {
 	DoLabel(r, pText, Size*Scale(), Align, MaxWidth);
 }

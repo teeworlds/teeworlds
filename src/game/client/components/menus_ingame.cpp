@@ -81,7 +81,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
 		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
 		Bar.HMargin(15.0f, &Bar);
-		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, 0);
+		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 	}
 
 	// join buttons
@@ -196,12 +196,12 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Options, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 	Options.Margin(10.0f, &Options);
 	Options.HSplitTop(50.0f, &Button, &Options);
-	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, -1);
+	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, CUI::ALIGN_LEFT);
 
 	// headline
 	Options.HSplitTop(34.0f, &ButtonBar, &Options);
 	ButtonBar.VSplitRight(220.0f, &Player, &ButtonBar);
-	UI()->DoLabelScaled(&Player, Localize("Player"), 24.0f, -1);
+	UI()->DoLabelScaled(&Player, Localize("Player"), 24.0f, CUI::ALIGN_LEFT);
 
 	ButtonBar.HMargin(1.0f, &ButtonBar);
 	float Width = ButtonBar.h*2.0f;
@@ -405,7 +405,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(pOption);
 
 		if(Item.m_Visible)
-			UI()->DoLabelScaled(&Item.m_Rect, pOption->m_aDescription, 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, pOption->m_aDescription, 16.0f, CUI::ALIGN_LEFT);
 	}
 
 	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);
@@ -448,7 +448,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
-			UI()->DoLabelScaled(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, CUI::ALIGN_LEFT);
 		}
 	}
 
@@ -507,7 +507,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
 		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
 		Bar.HMargin(15.0f, &Bar);
-		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, 0);
+		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
 	}
 
@@ -552,7 +552,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
 		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
 		Bar.HMargin(15.0f, &Bar);
-		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, 0);
+		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
 	}
 
@@ -583,7 +583,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Reason.HSplitTop(5.0f, 0, &Reason);
 		Reason.VSplitRight(Reason.h, &Reason, &ClearButton);		
 		const char *pLabel = Localize("Reason:");
-		UI()->DoLabelScaled(&Reason, pLabel, 14.0f, -1);
+		UI()->DoLabelScaled(&Reason, pLabel, 14.0f, CUI::ALIGN_LEFT);
 		float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
 		Reason.VSplitLeft(w+10.0f, 0, &Reason);
 		static float s_Offset = 0.0f;
@@ -594,7 +594,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			static int s_ClearButton = 0;
 			float *pClearButtonFade = ButtonFade(&s_ClearButton, 0.6f);
 			RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+(*pClearButtonFade/0.6f)*0.165f), CUI::CORNER_R, 3.0f);
-			UI()->DoLabel(&ClearButton, "x", ClearButton.h*ms_FontmodHeight, 0);
+			UI()->DoLabel(&ClearButton, "x", ClearButton.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 			if(UI()->DoButtonLogic(&s_ClearButton, "x", 0, &ClearButton))
 				m_aCallvoteReason[0] = 0;
 		}
@@ -609,7 +609,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		else
 		{
 			// print notice
-			UI()->DoLabelScaled(&Bottom, pNotification, 14.0f, -1, Bottom.w);
+			UI()->DoLabelScaled(&Bottom, pNotification, 14.0f, CUI::ALIGN_LEFT, Bottom.w);
 		}		
 
 		// extended features (only available when authed in rcon)
@@ -641,10 +641,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Extended.HSplitTop(20.0f, &Bottom, &Extended);
 				Bottom.VSplitLeft(5.0f, 0, &Bottom);
 				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
-				UI()->DoLabelScaled(&Button, Localize("Vote description:"), 14.0f, -1);
+				UI()->DoLabelScaled(&Button, Localize("Vote description:"), 14.0f, CUI::ALIGN_LEFT);
 
 				Bottom.VSplitLeft(20.0f, 0, &Button);
-				UI()->DoLabelScaled(&Button, Localize("Vote command:"), 14.0f, -1);
+				UI()->DoLabelScaled(&Button, Localize("Vote command:"), 14.0f, CUI::ALIGN_LEFT);
 
 				static char s_aVoteDescription[64] = {0};
 				static char s_aVoteCommand[512] = {0};
