@@ -31,6 +31,9 @@ public:
 
 	int ButtonPressed(int Button) { return m_aInputState[m_InputCurrent][Button]; }
 
+	bool NativeMousePressed(int index);
+    void NativeMousePos(int *x, int *y);
+
 	virtual int Update();
 };
 

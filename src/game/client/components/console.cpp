@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
+#include <string>
 
 #include <game/generated/client_data.h>
 
@@ -170,6 +171,20 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			if(m_BacklogActPage < 0)
 				m_BacklogActPage = 0;
 		}
+
+        else if (Event.m_Key == KEY_v && m_pGameConsole->Input()->KeyPressed(KEY_LCTRL))
+        {
+            char aBuf[256]={0}, str[256]={0};
+
+            str_copy(aBuf, m_Input.GetString(), sizeof(aBuf));
+
+            get_clipboard_text(str, sizeof(str));
+            str_append(aBuf, str, sizeof(aBuf));
+
+            m_Input.Set(aBuf);
+            m_Input.SetCursorOffset(str_length(aBuf));
+            Handled = true;
+        }
 	}
 
 	if(!Handled)
@@ -405,6 +420,18 @@ void CGameConsole::OnRender()
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
 
+        //Clipboard Selection
+        static bool mousePress = false;
+        static float copyStart = -1.0f;
+        static float copyEnd = -1.0f;
+        static int copyIndexStart = -1;
+        static int copyIndexEnd = -1;
+        static int selectedLine = -1;
+        static CUIRect textRect;
+        textRect.h = FontSize+3.0f;
+        static std::string sText;
+        //
+
 		CRenderInfo Info;
 		Info.m_pSelf = this;
 		Info.m_WantedCompletion = pConsole->m_CompletionChosen;
@@ -443,17 +470,26 @@ void CGameConsole::OnRender()
 				aInputString[i] = '*';
 		}
 
+        //Clipboard Selection
+        if (copyIndexStart != -1)
+        {
+            textRect.x = copyStart;
+            textRect.w = copyEnd-copyStart;
+            RenderTools()->DrawUIRect(&textRect, vec4(0.0f,0.0f,1.0f,1.0f), 0, 0.0f);
+        }
+        //
+
 		// render console input (wrap line)
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, 0);
 		Cursor.m_LineWidth = Screen.w - 10.0f - x;
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
 		int Lines = Cursor.m_LineCount;
-		
+
 		y -= (Lines - 1) * FontSize;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Screen.w - 10.0f - x;
-		
+
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1)/3;
 		CTextCursor Marker = Cursor;
@@ -493,6 +529,7 @@ void CGameConsole::OnRender()
 		float LineOffset = 1.0f;
 		for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
 		{
+		    int lineNum=0;
 			while(pEntry)
 			{
 				// get y offset (calculate it if we haven't yet)
@@ -512,11 +549,86 @@ void CGameConsole::OnRender()
 				//	just render output from actual backlog page (render bottom up)
 				if(Page == pConsole->m_BacklogActPage)
 				{
+                    //Clipboard Selection
+                    int mx, my;
+                    Input()->NativeMousePos(&mx, &my);
+                    Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+                    mx = (mx/(float)Graphics()->ScreenWidth())*Screen.w;
+                    my = (my/(float)Graphics()->ScreenHeight())*Screen.h;
+
+                    int strWidth = TextRender()->TextWidth(Cursor.m_pFont, FontSize, sText.c_str(), sText.length());
+                    CUIRect seltextRect = {0, y-OffsetY, strWidth, FontSize+3.0f};
+
+                    if (my > seltextRect.y && my < seltextRect.y+seltextRect.h)
+                    {
+                        if (selectedLine == -1)
+                            sText = pEntry->m_aText;
+
+                        float offacumx = 0;
+                        float charwi = 0;
+                        int i=0;
+                        for (i=0; i<sText.length(); i++)
+                        {
+                            char toAn[2] = { sText.at(i), '\0' };
+                            charwi = TextRender()->TextWidth(0, FontSize, toAn, 1);
+                            if (mx >= offacumx && mx <= offacumx+charwi)
+                                break;
+
+                            offacumx+=charwi;
+                        }
+
+                        if (mousePress && copyStart == -1)
+                        {
+                            textRect.y = seltextRect.y;
+                            textRect.h = seltextRect.h;
+                            copyStart = offacumx;
+                            copyEnd = offacumx+charwi;
+                            copyIndexStart = i;
+                            copyIndexEnd = i+1;
+                            selectedLine = lineNum;
+                        }
+                        if (mousePress && copyStart != -1)
+                        {
+                            copyEnd = offacumx;
+                            if (copyEnd < copyStart)
+                            {
+                                copyEnd = copyStart;
+                                copyIndexEnd = copyIndexStart;
+                            }
+                            else
+                                copyIndexEnd = i;
+                        }
+
+                        if (Input()->NativeMousePressed(1))
+                        {
+                            mousePress = true;
+                        }
+                    }
+
+                    if (!Input()->NativeMousePressed(1) && mousePress)
+                    {
+                        if (copyIndexStart != -1 && !sText.empty() && copyIndexEnd <= sText.length())
+                        {
+                            set_clipboard_text(sText.substr(copyIndexStart, copyIndexEnd-copyIndexStart).c_str());
+                            //dbg_msg("Clipboard", "Copied '%s' to clipboard...", sText.substr(copyIndexStart, copyIndexEnd-copyIndexStart).c_str());
+                        }
+
+                        copyStart = -1.0f;
+                        copyEnd = -1.0f;
+                        copyIndexStart = -1;
+                        copyIndexEnd = -1;
+                        selectedLine = -1;
+                        sText.clear();
+                        mousePress = false;
+                    }
+                    //
+
 					TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER);
 					Cursor.m_LineWidth = Screen.w-10.0f;
 					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
 				}
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
+				lineNum++;
 			}
 
 			//	actual backlog page number is too high, render last available page (current checked one, render top down)
