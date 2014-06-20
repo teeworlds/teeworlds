@@ -5,7 +5,6 @@
 
 #include <engine/shared/config.h>
 
-#include <game/version.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 
@@ -134,7 +133,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		UI()->DoLabelScaled(&Version, aBuf, 14.0f, 0);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);	
+	UI()->DoLabelScaled(&Version, m_pClient->Version(), 14.0f, 1);	
 }
 
 void CMenus::RenderLogo(CUIRect MainView)
