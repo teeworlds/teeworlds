@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/tl/array.h>
+
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/demo.h>
@@ -53,6 +55,76 @@ void CMapLayers::OnInit()
 	}
 }
 
+void CMapLayers::OnMapLoad()
+{
+	if(m_Type == TYPE_BACKGROUND)
+	{
+		if(Layers())
+			LoadEnvPoints(Layers(), m_lEnvPoints);
+		else if(m_pMenuLayers)
+			LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
+	}
+}
+
+void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints)
+{
+	lEnvPoints.clear();
+
+	// get envelope points
+	CEnvPoint *pPoints = 0x0;
+	{
+		int Start, Num;
+		pLayers->Map()->GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
+
+		if(!Num)
+			return;
+
+		pPoints = (CEnvPoint *)pLayers->Map()->GetItem(Start, 0, 0);
+	}
+
+	// get envelopes
+	int Start, Num;
+	pLayers->Map()->GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
+	if(!Num)
+		return;
+	
+
+	for(int env = 0; env < Num; env++)
+	{
+		CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+env, 0, 0);
+
+		if(pItem->m_Version >= 3)
+		{
+			for(int i = 0; i < pItem->m_NumPoints; i++)
+				lEnvPoints.add(pPoints[i + pItem->m_StartPoint]);
+		}
+		else
+		{
+			// backwards compatibility
+			for(int i = 0; i < pItem->m_NumPoints; i++)
+			{
+				// convert CEnvPoint_v1 -> CEnvPoint
+				CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pPoints)[i + pItem->m_StartPoint];
+				CEnvPoint p;
+
+				p.m_Time = pEnvPoint_v1->m_Time;
+				p.m_Curvetype = pEnvPoint_v1->m_Curvetype;
+
+				for(int c = 0; c < pItem->m_Channels; c++)
+				{
+					p.m_aValues[c] = pEnvPoint_v1->m_aValues[c];
+					p.m_aInTangentdx[c] = 0;
+					p.m_aInTangentdy[c] = 0;
+					p.m_aOutTangentdx[c] = 0;
+					p.m_aOutTangentdy[c] = 0;
+				}
+
+				lEnvPoints.add(p);
+			}
+		}
+	}
+}
+
 void CMapLayers::EnvelopeUpdate()
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -73,17 +145,18 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	pChannels[3] = 0;
 
 	CEnvPoint *pPoints = 0;
-
 	CLayers *pLayers = 0;
 	{
-		int Start, Num;
 		if(pThis->Client()->State() == IClient::STATE_ONLINE || pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
 			pLayers = pThis->Layers();
+			pPoints = pThis->m_lEnvPoints.base_ptr();
+		}
 		else
+		{
 			pLayers = pThis->m_pMenuLayers;
-		pLayers->Map()->GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
-		if(Num)
-			pPoints = (CEnvPoint *)pLayers->Map()->GetItem(Start, 0, 0);
+			pPoints = pThis->m_lEnvPointsMenu.base_ptr();
+		}
 	}
 
 	int Start, Num;
@@ -92,7 +165,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(Env >= Num)
 		return;
 
-	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
+	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);	
 
 	static float s_Time = 0.0f;
 	static float s_LastLocalTime = pThis->Client()->LocalTime();
@@ -113,7 +186,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 						pThis->Client()->IntraGameTick());
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
@@ -128,13 +201,13 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 			else
 				s_Time += pThis->Client()->LocalTime()-s_LastLocalTime;
 		}
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 		s_LastLocalTime = pThis->Client()->LocalTime();
 	}
 	else
 	{
 		s_Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 	}
 }
 

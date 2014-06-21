@@ -648,32 +648,21 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
 				for(int n = 0; n < pItem->m_NumPoints; n++)
 				{
-					CEnvPoint *pPoint = 0x0; 
-					if(pItem->m_Version >= 3)
-						pPoint = &pEnvPoints[pItem->m_StartPoint + n];
-					else
-						pPoint = (CEnvPoint *)(&((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n]); // ugly ...
-
-					pEnv->m_lPoints[n].m_Time = pPoint->m_Time;
-					pEnv->m_lPoints[n].m_Curvetype = pPoint->m_Curvetype;
-					for(int c = 0; c < pItem->m_Channels; c++)
-						pEnv->m_lPoints[n].m_aValues[c] = pPoint->m_aValues[c];
-					
 					if(pItem->m_Version >= 3)
 					{
-						for(int c = 0; c < pItem->m_Channels; c++)
-						{
-							pEnv->m_lPoints[n].m_aInTangentdx[c] = pPoint->m_aInTangentdx[c];
-							pEnv->m_lPoints[n].m_aInTangentdy[c] = pPoint->m_aInTangentdy[c];
-							pEnv->m_lPoints[n].m_aOutTangentdx[c] = pPoint->m_aOutTangentdx[c];
-							pEnv->m_lPoints[n].m_aOutTangentdy[c] = pPoint->m_aOutTangentdy[c];
-						}
+						pEnv->m_lPoints[n] = pEnvPoints[pItem->m_StartPoint + n];
 					}
 					else
 					{
 						// backwards compatibility
+						CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n];
+
+						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
+						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
+
 						for(int c = 0; c < pItem->m_Channels; c++)
 						{
+							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
 							pEnv->m_lPoints[n].m_aInTangentdx[c] = 0;
 							pEnv->m_lPoints[n].m_aInTangentdy[c] = 0;
 							pEnv->m_lPoints[n].m_aOutTangentdx[c] = 0;
