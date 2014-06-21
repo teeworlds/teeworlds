@@ -48,13 +48,13 @@ function CHash(output, ...)
 	return output
 end
 
-function ResCompile(scriptfile)
+function ResCompile(scriptfile, compiler)
 	scriptfile = Path(scriptfile)
 	local output = nil
-	if config.compiler.driver == "cl" then
+	if compiler == "cl" then
 		output = PathJoin(generated_icon_dir, PathBase(PathFilename(scriptfile)) .. ".res")
 		AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
-	elseif config.compiler.driver == "gcc" or config.compiler.driver == "clang" then
+	elseif compiler == "gcc" or compiler == "clang" then
 		output = PathJoin(generated_icon_dir, PathBase(PathFilename(scriptfile)) .. ".coff")
 		AddJob(output, "windres " .. scriptfile, "windres -i " .. scriptfile .. " -o " .. output)
 	end
@@ -299,8 +299,8 @@ end
 shared_icons = {}
 function SharedIcons(compiler)
 	if not shared_icons[compiler] then
-		local server_icon = ResCompile("other/icons/teeworlds_srv_" .. compiler .. ".rc")
-		local client_icon = ResCompile("other/icons/teeworlds_" .. compiler .. ".rc")
+		local server_icon = ResCompile("other/icons/teeworlds_srv_" .. compiler .. ".rc", compiler)
+		local client_icon = ResCompile("other/icons/teeworlds_" .. compiler .. ".rc", compiler)
 		shared_icons[compiler] = {server=server_icon, client=client_icon}
 	end
 	return shared_icons[compiler]
