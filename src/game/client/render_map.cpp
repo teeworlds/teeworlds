@@ -256,12 +256,30 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		if(!Opaque && !(RenderFlags&LAYERRENDERFLAG_TRANSPARENT))
 			continue;
 
+		vec2 aTexCoords[4];
+		for(int k = 0; k < 4; k++)
+		{
+			aTexCoords[k].x = fx2f(q->m_aTexcoords[k].x);
+			aTexCoords[k].y = fx2f(q->m_aTexcoords[k].y);
+		}
+
+		// Check if we want to repeat the texture
+		// Otherwise clamp to the edge to prevent texture bleeding
+		Graphics()->WrapClamp();
+		for(int k = 0; k < 4; k++)
+		{
+			if(aTexCoords[k].x < 0.0f || aTexCoords[k].x > 1.0f)
+			{
+				Graphics()->WrapNormal();
+				break;
+			}
+		}
+
 		Graphics()->QuadsSetSubsetFree(
-			fx2f(q->m_aTexcoords[0].x), fx2f(q->m_aTexcoords[0].y),
-			fx2f(q->m_aTexcoords[1].x), fx2f(q->m_aTexcoords[1].y),
-			fx2f(q->m_aTexcoords[2].x), fx2f(q->m_aTexcoords[2].y),
-			fx2f(q->m_aTexcoords[3].x), fx2f(q->m_aTexcoords[3].y)
-		);
+			aTexCoords[0].x, aTexCoords[0].y,
+			aTexCoords[1].x, aTexCoords[1].y,
+			aTexCoords[2].x, aTexCoords[2].y,
+			aTexCoords[3].x, aTexCoords[3].y);
 
 		float OffsetX = 0;
 		float OffsetY = 0;
@@ -309,6 +327,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
