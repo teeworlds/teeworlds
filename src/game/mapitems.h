@@ -93,6 +93,7 @@ public:
 
 struct CMapItemInfo
 {
+	enum { CURRENT_VERSION=1 };
 	int m_Version;
 	int m_Author;
 	int m_MapVersion;
@@ -151,6 +152,8 @@ struct CMapItemLayer
 
 struct CMapItemLayerTilemap
 {
+	enum { CURRENT_VERSION=3 };
+
 	CMapItemLayer m_Layer;
 	int m_Version;
 
@@ -170,6 +173,8 @@ struct CMapItemLayerTilemap
 
 struct CMapItemLayerQuads
 {
+	enum { CURRENT_VERSION=2 };
+
 	CMapItemLayer m_Layer;
 	int m_Version;
 
