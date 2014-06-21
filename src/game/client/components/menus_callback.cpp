@@ -70,7 +70,7 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeigh
 		str_format(aBuf, sizeof(aBuf), "%s:", (const char *)Key.m_Name);
 
 		Label.y += 2.0f;
-		UI()->DoLabelScaled(&Label, aBuf, 13.0f, 0);
+		UI()->DoLabelScaled(&Label, aBuf, 13.0f, CUI::ALIGN_CENTER);
 		int OldId = Key.m_KeyId;
 		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
 		if(NewId != OldId)

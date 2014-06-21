@@ -71,6 +71,13 @@ public:
 		CORNER_INV_ALL=CORNER_IT|CORNER_IB
 	};
 
+	enum EAlignment
+	{
+		ALIGN_LEFT,
+		ALIGN_CENTER,
+		ALIGN_RIGHT,
+	};
+
 	int Update(float mx, float my, float Mwx, float Mwy, int m_Buttons);
 
 	float MouseX() const { return m_MouseX; }
@@ -104,8 +111,8 @@ public:
 	int DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton);
 
 	// TODO: Refactor: Remove this?
-	void DoLabel(const CUIRect *pRect, const char *pText, float Size, int Align, int MaxWidth = -1);
-	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, int Align, int MaxWidth = -1);
+	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
+	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
 };
 
 

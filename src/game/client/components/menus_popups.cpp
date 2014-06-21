@@ -103,7 +103,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	ServerFilter.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFilter);
 	pMenus->RenderTools()->DrawUIRect(&FilterHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	pMenus->RenderTools()->DrawUIRect(&ServerFilter, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
-	pMenus->UI()->DoLabelScaled(&FilterHeader, Localize("Server filter"), FontSize+2.0f, 0);
+	pMenus->UI()->DoLabelScaled(&FilterHeader, Localize("Server filter"), FontSize+2.0f, CUI::ALIGN_CENTER);
 	CUIRect Button;
 
 	ServerFilter.VSplitLeft(5.0f, 0, &ServerFilter);
@@ -158,7 +158,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
 
 	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
-	pMenus->UI()->DoLabelScaled(&Button, Localize("Game types:"), FontSize, -1);
+	pMenus->UI()->DoLabelScaled(&Button, Localize("Game types:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	static float Offset = 0.0f;
@@ -171,7 +171,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		CUIRect EditBox;
 		Button.VSplitRight(60.0f, &Button, &EditBox);
 
-		pMenus->UI()->DoLabelScaled(&Button, Localize("Maximum ping:"), FontSize, -1);
+		pMenus->UI()->DoLabelScaled(&Button, Localize("Maximum ping:"), FontSize, CUI::ALIGN_LEFT);
 
 		char aBuf[5];
 		str_format(aBuf, sizeof(aBuf), "%d", Ping);
@@ -186,7 +186,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	// server address
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
-	pMenus->UI()->DoLabelScaled(&Button, Localize("Server address:"), FontSize, -1);
+	pMenus->UI()->DoLabelScaled(&Button, Localize("Server address:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
 	static float OffsetAddr = 0.0f;
 	static int s_BrFilterServerAddress = 0;

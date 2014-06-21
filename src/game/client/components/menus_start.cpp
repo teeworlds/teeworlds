@@ -131,10 +131,10 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
 		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-		UI()->DoLabelScaled(&Version, aBuf, 14.0f, 0);
+		UI()->DoLabelScaled(&Version, aBuf, 14.0f, CUI::ALIGN_CENTER);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);	
+	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, CUI::ALIGN_RIGHT);	
 }
 
 void CMenus::RenderLogo(CUIRect MainView)

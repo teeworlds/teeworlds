@@ -307,7 +307,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "%d", m_Yes);
-				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, 0);
+				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 			}
 
 			PassArea.x += YesArea.w;
@@ -325,7 +325,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "%d", m_No);
-				UI()->DoLabel(&NoArea, Buf, Bars.h*0.75f, 0);
+				UI()->DoLabel(&NoArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 			}
 
 			PassArea.w -= NoArea.w;
@@ -335,7 +335,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 		{
 			char Buf[256];
 			str_format(Buf, sizeof(Buf), "%d", m_Pass);
-			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, 0);
+			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 		}
 	}
 }
