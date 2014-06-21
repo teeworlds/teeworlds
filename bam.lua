@@ -217,6 +217,7 @@ function build(settings)
 			client_settings.link.frameworks:Add("Carbon")
 			client_settings.link.frameworks:Add("Cocoa")
 			launcher_settings.link.frameworks:Add("Cocoa")
+			client_settings.link.flags:Add("-Wl,-rpath,@loader_path/../Frameworks")
 		else
 			client_settings.link.libs:Add("X11")
 			client_settings.link.libs:Add("GL")
