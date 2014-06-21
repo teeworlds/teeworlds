@@ -4,11 +4,15 @@ SDL = {
 	OptFind = function (name, required)
 		local check = function(option, settings)
 			option.value = false
+			option.use_pkgconfig = false
 			option.use_sdlconfig = false
 			option.use_winlib = 0
 			option.lib_path = nil
 			
-			if ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
+			if ExecuteSilent("pkg-config sdl") == 0 then
+				option.value = true
+				option.use_pkgconfig = true
+			elseif ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
 				option.value = true
 				option.use_sdlconfig = true
 			end
@@ -23,7 +27,10 @@ SDL = {
 		end
 		
 		local apply = function(option, settings)
-			if option.use_sdlconfig == true then
+			if option.use_pkgconfig == true then
+				settings.cc.flags:Add("`pkg-config --cflags sdl`")
+				settings.link.flags:Add("`pkg-config --libs sdl`")
+			elseif option.use_sdlconfig == true then
 				settings.cc.flags:Add("`sdl-config --cflags`")
 				settings.link.flags:Add("`sdl-config --libs`")
 			elseif option.use_winlib > 0 then
@@ -40,12 +47,14 @@ SDL = {
 		
 		local save = function(option, output)
 			output:option(option, "value")
+			output:option(option, "use_pkgconfig")
 			output:option(option, "use_sdlconfig")
 			output:option(option, "use_winlib")
 		end
 		
 		local display = function(option)
 			if option.value == true then
+				if option.use_pkgconfig == true then return "using pkg-config" end
 				if option.use_sdlconfig == true then return "using sdl-config" end
 				if option.use_winlib == 32 then return "using supplied win32 libraries" end
 				if option.use_winlib == 64 then return "using supplied win64 libraries" end

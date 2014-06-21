@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include <base/system.h>
 

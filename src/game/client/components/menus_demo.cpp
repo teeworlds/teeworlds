@@ -14,7 +14,7 @@
 
 #include <game/client/ui.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include "maplayers.h"
 #include "menus.h"

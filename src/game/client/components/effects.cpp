@@ -5,7 +5,7 @@
 
 #include <engine/shared/config.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include <game/client/components/particles.h>
 #include <game/client/components/skins.h>

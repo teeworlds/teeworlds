@@ -7,8 +7,8 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
-#include <game/generated/client_data.h>
-#include <game/generated/protocol.h>
+#include <generated/client_data.h>
+#include <generated/protocol.h>
 #include <game/layers.h>
 #include "animstate.h"
 #include "render.h"

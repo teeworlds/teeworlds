@@ -3,7 +3,7 @@
 #include <engine/engine.h>
 #include <engine/sound.h>
 #include <engine/shared/config.h>
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 #include <game/client/gameclient.h>
 #include <game/client/components/camera.h>
 #include <game/client/components/menus.h>

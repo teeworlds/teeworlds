@@ -9,7 +9,7 @@
 #include <math.h>
 #include "collision.h"
 #include <engine/shared/protocol.h>
-#include <game/generated/protocol.h>
+#include <generated/protocol.h>
 
 
 class CTuneParam

@@ -5,7 +5,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/render.h>
-#include <game/generated/protocol.h>
+#include <generated/protocol.h>
 
 #include "chat.h"
 #include "voting.h"

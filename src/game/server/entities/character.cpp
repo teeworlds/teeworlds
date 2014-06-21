@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/shared/config.h>
 
-#include <game/generated/server_data.h>
+#include <generated/server_data.h>
 #include <game/server/gamecontext.h>
 #include <game/server/gamecontroller.h>
 #include <game/server/player.h>
