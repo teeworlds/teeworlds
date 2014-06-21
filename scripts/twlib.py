@@ -7,10 +7,17 @@ elif sys.version_info[0] == 3:
 	url_lib = urllib.request
 
 def fetch_file(url):
+	print("trying %s" % url)
 	try:
-		print("trying %s" % url)
-		local = dict(url_lib.urlopen(url).info())["content-disposition"].split("=")[1]
+		local = dict(url_lib.urlopen(url).info())
+		if "Content-Disposition" in local:
+			key_name = "Content-Disposition"
+		elif "content-disposition" in local:
+			key_name = "content-disposition"
+		else:
+			return False
+		local = local[key_name].split("=")[1]
 		url_lib.urlretrieve(url, local)
 		return local
-	except:
+	except IOError:
 		return False

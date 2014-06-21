@@ -113,7 +113,7 @@ if not maps_dir:
 	sys.exit(-1)
 
 print("adding files")
-shutil.copy("readme.txt", package_dir)
+shutil.copy("readme.md", package_dir)
 shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 
