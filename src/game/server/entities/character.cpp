@@ -572,10 +572,6 @@ void CCharacter::Tick()
 
 	// handle Weapons
 	HandleWeapons();
-
-	// Previnput
-	m_PrevInput = m_Input;
-	return;
 }
 
 void CCharacter::TickDefered()
