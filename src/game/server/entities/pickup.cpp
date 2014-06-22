@@ -47,47 +47,47 @@ void CPickup::Tick()
 	if(pChr && pChr->IsAlive())
 	{
 		// player picked us up, is someone was hooking us, let them go
-		int RespawnTime = -1;
+		bool Picked = false;
 		switch (m_Type)
 		{
 			case PICKUP_HEALTH:
 				if(pChr->IncreaseHealth(1))
 				{
+					Picked = true;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 				}
 				break;
 
 			case PICKUP_ARMOR:
 				if(pChr->IncreaseArmor(1))
 				{
+					Picked = true;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 				}
 				break;
 
 			case PICKUP_GRENADE:
-				if(pChr->GiveWeapon(WEAPON_GRENADE, 10))
+				if(pChr->GiveWeapon(WEAPON_GRENADE, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo))
 				{
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					Picked = true;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
 					if(pChr->GetPlayer())
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
 				}
 				break;
 			case PICKUP_SHOTGUN:
-				if(pChr->GiveWeapon(WEAPON_SHOTGUN, 10))
+				if(pChr->GiveWeapon(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo))
 				{
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					Picked = true;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
 					if(pChr->GetPlayer())
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
 				}
 				break;
 			case PICKUP_LASER:
-				if(pChr->GiveWeapon(WEAPON_LASER, 10))
+				if(pChr->GiveWeapon(WEAPON_LASER, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo))
 				{
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					Picked = true;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
 					if(pChr->GetPlayer())
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
@@ -96,9 +96,9 @@ void CPickup::Tick()
 
 			case PICKUP_NINJA:
 				{
+					Picked = true;
 					// activate ninja on target player
 					pChr->GiveNinja();
-					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 
 					// loop through all players, setting their emotes
 					CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
@@ -116,13 +116,15 @@ void CPickup::Tick()
 				break;
 		};
 
-		if(RespawnTime >= 0)
+		if(Picked)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "pickup player='%d:%s' item=%d/%d",
 				pChr->GetPlayer()->GetCID(), Server()->ClientName(pChr->GetPlayer()->GetCID()), m_Type);
 			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-			m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * RespawnTime;
+			int RespawnTime = g_pData->m_aPickups[m_Type].m_RespawnTime;
+			if(RespawnTime >= 0)
+				m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * RespawnTime;
 		}
 	}
 }

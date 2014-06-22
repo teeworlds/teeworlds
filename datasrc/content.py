@@ -157,6 +157,12 @@ class Weapons(Struct):
 		self.ninja = Weapon_Ninja()
 		self.id = Array(WeaponSpec())
 
+class Explosion(Struct):
+	def __init__(self):
+		Struct.__init__(self, "CDataExplosion")
+		self.radius = Float(135)
+		self.max_force = Float(12)
+
 class DataContainer(Struct):
 	def __init__(self):
 		Struct.__init__(self, "CDataContainer")
@@ -167,6 +173,7 @@ class DataContainer(Struct):
 		self.sprites = Array(Sprite())
 		self.animations = Array(Animation())
 		self.weapons = Weapons()
+		self.explosion = Explosion()
 
 def FileList(format, num):
 	return [format%(x+1) for x in range(0,num)]
@@ -532,6 +539,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "gun")
 weapon.firedelay.Set(125)
+weapon.damage.Set(1)
 weapon.ammoregentime.Set(500)
 weapon.visual_size.Set(64)
 weapon.offsetx.Set(32)
@@ -543,6 +551,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "shotgun")
 weapon.firedelay.Set(500)
+weapon.damage.Set(1)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
@@ -553,6 +562,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "grenade")
 weapon.firedelay.Set(500) # TODO: fix this
+weapon.damage.Set(6)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
@@ -561,8 +571,8 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "laser")
 weapon.firedelay.Set(800)
-weapon.visual_size.Set(92)
 weapon.damage.Set(5)
+weapon.visual_size.Set(92)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
 container.weapons.laser.base.Set(weapon)
