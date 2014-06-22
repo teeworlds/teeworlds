@@ -1326,7 +1326,7 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 			int ID = pGameClient->m_pSkins->FindSkinPart(p, m_aaSkinPartNames[p], false);
 			if(ID < 0)
 			{
-				if(p == CSkins::SKINPART_TATTOO || p == CSkins::SKINPART_DECORATION)
+				if(p == CSkins::SKINPART_MARKING || p == CSkins::SKINPART_DECORATION)
 					ID = pGameClient->m_pSkins->FindSkinPart(p, "", false);
 				else
 					ID = pGameClient->m_pSkins->FindSkinPart(p, "standard", false);
@@ -1343,7 +1343,7 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 			if(m_aUseCustomColors[p])
 			{
 				m_SkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				m_SkinInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(m_aSkinPartColors[p], p==CSkins::SKINPART_TATTOO);
+				m_SkinInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(m_aSkinPartColors[p], p==CSkins::SKINPART_MARKING);
 			}
 			else
 			{
@@ -1362,7 +1362,7 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 		{
 			m_RenderInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
 			int ColorVal = pGameClient->m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
-			m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_TATTOO);
+			m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
 		}
 	}
 }

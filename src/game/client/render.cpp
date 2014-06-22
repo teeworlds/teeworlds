@@ -366,7 +366,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->QuadsEnd();
 				}
 
-				// draw body (behind tattoo)
+				// draw body (behind marking)
 				Graphics()->TextureSet(pInfo->m_aTextures[0]);
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
@@ -384,20 +384,20 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsDraw(&Item, 1);
 				Graphics()->QuadsEnd();
 
-				// draw tattoo
+				// draw marking
 				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[1]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
-					SelectSprite(SPRITE_TEE_TATTOO, 0, 0, 0);
+					SelectSprite(SPRITE_TEE_MARKING, 0, 0, 0);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
 
-				// draw body (in front of tattoo)
+				// draw body (in front of marking)
 				if(!OutLine)
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[0]);
