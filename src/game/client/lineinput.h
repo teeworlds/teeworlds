@@ -11,7 +11,7 @@ class CLineInput
 	enum
 	{
 		MAX_SIZE=512,
-		MAX_CHARS=MAX_SIZE/4,
+		MAX_CHARS=MAX_SIZE/4-1,
 	};
 	char m_Str[MAX_SIZE];
 	int m_Len;
