@@ -6,7 +6,7 @@
 #include <engine/shared/memheap.h>
 #include <engine/map.h>
 
-#include <game/generated/server_data.h>
+#include <generated/server_data.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
 #include <game/version.h>
