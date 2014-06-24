@@ -579,7 +579,7 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -599,10 +599,10 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE); // prevent stuck mouse cursor sdl-bug when loosing fullscreen focus in windows
 
 	// use current resolution as default
-	if(*Width == 0 || *Height == 0)
+	if(*pWidth == 0 || *pHeight == 0)
 	{
-		*Width = pInfo->current_w;
-		*Height = pInfo->current_h;
+		*pWidth = pInfo->current_w;
+		*pHeight = pInfo->current_h;
 	}
 
 	// store desktop resolution for settings reset button
@@ -651,7 +651,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Width, int *Height
 	SDL_WM_SetCaption(pName, pName);
 
 	// create window
-	m_pScreenSurface = SDL_SetVideoMode(*Width, *Height, 0, SdlFlags);
+	m_pScreenSurface = SDL_SetVideoMode(*pWidth, *pHeight, 0, SdlFlags);
 	if(!m_pScreenSurface)
 	{
 		dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
