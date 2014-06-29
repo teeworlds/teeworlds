@@ -155,6 +155,16 @@ int CInput::Update()
 			int Action = IInput::FLAG_PRESS;
 			switch (Event.type)
 			{
+				case SDL_TEXTINPUT:
+				{
+					int TextLength, i;
+					TextLength = strlen(Event.text.text);
+					for(i = 0; i < TextLength; i++)
+					{
+						AddEvent(Event.text.text[i], 0, 0);
+					}
+				}
+
 				// handle keys
 				case SDL_KEYDOWN:
 					Key = SDL_GetScancodeFromName(SDL_GetKeyName(Event.key.keysym.sym));
@@ -188,6 +198,8 @@ int CInput::Update()
 				case SDL_MOUSEWHEEL:
 					if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
 					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+					AddEvent(0, Key, Action);
+					Action = IInput::FLAG_RELEASE;
 					break;
 
 				// other messages

@@ -5,7 +5,7 @@
 
 #include "kernel.h"
 
-extern const char g_aaKeyStrings[512][16];
+extern const char g_aaKeyStrings[512][20];
 
 class IInput : public IInterface
 {
