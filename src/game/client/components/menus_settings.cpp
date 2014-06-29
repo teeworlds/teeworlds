@@ -1318,7 +1318,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
 		{
 			g_Config.m_GfxDisplayAllModes ^= 1;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 			UpdateVideoFormats();
 
 			bool Found = false;
@@ -1444,7 +1444,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(g_Config.m_GfxDisplayAllModes)
 		{
 			g_Config.m_GfxDisplayAllModes = 0;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 			UpdateVideoFormats();
 
 			bool Found = false;

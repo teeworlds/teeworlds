@@ -218,7 +218,8 @@ public:
 class CCommandProcessorFragment_SDL
 {
 	// SDL stuff
-	SGLContext m_GLContext;
+	SDL_Window *m_pWindow;
+	SDL_GLContext m_GLContext;
 public:
 	enum
 	{
@@ -229,7 +230,8 @@ public:
 	struct SCommand_Init : public CCommandBuffer::SCommand
 	{
 		SCommand_Init() : SCommand(CMD_INIT) {}
-		SGLContext m_Context;
+		SDL_Window *m_pWindow;
+		SDL_GLContext m_GLContext;
 	};
 
 	struct SCommand_Shutdown : public CCommandBuffer::SCommand
@@ -261,12 +263,12 @@ class CCommandProcessor_SDL_OpenGL : public CGraphicsBackend_Threaded::ICommandP
 // graphics backend implemented with SDL and OpenGL
 class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 {
-	SDL_Surface *m_pScreenSurface;
+	SDL_Window *m_pWindow;
+	SDL_GLContext m_GLContext;
 	ICommandProcessor *m_pProcessor;
-	SGLContext m_GLContext;
 	volatile int m_TextureMemoryUsage;
 public:
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
+	virtual int Init(const char *pName, int Screen, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
