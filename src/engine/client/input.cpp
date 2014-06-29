@@ -48,6 +48,8 @@ void CInput::Init()
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	// FIXME: unicode handling: use SDL_StartTextInput/SDL_StopTextInput on inputs
 	// FIXME: key repeat: not a global setting anymore; need to do manually
+
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void CInput::MouseRelative(float *x, float *y)
@@ -61,9 +63,7 @@ void CInput::MouseRelative(float *x, float *y)
 	{
 		if(m_InputGrabbed)
 		{
-			SDL_GetMouseState(&nx,&ny);
-			m_pGraphics->WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
-			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
+			SDL_GetRelativeMouseState(&nx,&ny);
 		}
 	}
 
@@ -77,6 +77,7 @@ void CInput::MouseModeAbsolute()
 	m_InputGrabbed = 0;
 	if(g_Config.m_InpGrab)
 		m_pGraphics->GrabWindow(false);
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 void CInput::MouseModeRelative()
@@ -85,6 +86,7 @@ void CInput::MouseModeRelative()
 	m_InputGrabbed = 1;
 	if(g_Config.m_InpGrab)
 		m_pGraphics->GrabWindow(true);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 int CInput::MouseDoubleClick()
