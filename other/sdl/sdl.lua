@@ -40,8 +40,8 @@ SDL = {
 				else
 					settings.link.libpath:Add(SDL.basepath .. "/lib64")
 				end
-				settings.link.libs:Add("SDL")
-				settings.link.libs:Add("SDLmain")
+				settings.link.libs:Add("SDL2")
+				settings.link.libs:Add("SDL2main")
 			end
 		end
 		

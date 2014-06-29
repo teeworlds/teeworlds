@@ -1,7 +1,6 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
 #include <GL/glu.h>
 
 #include <base/tl/threading.h>
@@ -630,7 +629,11 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
+	#if defined(CONF_FAMILY_WINDOWS)
+		SdlFlags |= SDL_WINDOW_FULLSCREEN;
+	#else
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	#endif
 
 	// set gl attributes
 	if(FsaaSamples)
@@ -661,11 +664,20 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 		return -1;
 	}
 
+	#if defined(CONF_FAMILY_WINDOWS)
+		glTexImage3D = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
+		if(glTexImage3D == 0)
+		{
+			dbg_msg("gfx", "glTexImage3D not supported");
+			return -1;
+		}
+	#endif
+
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
 
 	if(m_GLContext == NULL)
 	{
-		dbg_msg("gfx", "unable to create renderer: %s", SDL_GetError());
+		dbg_msg("gfx", "unable to create OpenGL context: %s", SDL_GetError());
 		return -1;
 	}
 
