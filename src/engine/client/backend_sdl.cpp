@@ -477,6 +477,7 @@ bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::SCommand
 void CCommandProcessorFragment_SDL::Cmd_Init(const SCommand_Init *pCommand)
 {
 	m_GLContext = pCommand->m_GLContext;
+	m_pWindow = pCommand->m_pWindow;
 	SDL_GL_MakeCurrent(m_pWindow, m_GLContext);
 
 	// set some default settings
@@ -629,7 +630,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-		SdlFlags |= SDL_WINDOW_FULLSCREEN;
+		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
 	// set gl attributes
 	if(FsaaSamples)
@@ -668,6 +669,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 		return -1;
 	}
 
+	SDL_GL_MakeCurrent(NULL, NULL);
+
 	// start the command processor
 	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
 	StartProcessor(m_pProcessor);
@@ -678,6 +681,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
 	CmdBuffer.AddCommand(CmdOpenGL);
 	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
+	CmdSDL.m_pWindow = m_pWindow;
 	CmdSDL.m_GLContext = m_GLContext;
 	CmdBuffer.AddCommand(CmdSDL);
 	RunBuffer(&CmdBuffer);
@@ -729,6 +733,16 @@ int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
 
+}
+
+void CGraphicsBackend_SDL_OpenGL::WarpMouse(int x, int y)
+{
+    SDL_WarpMouseInWindow(m_pWindow, x, y);
+}
+
+void CGraphicsBackend_SDL_OpenGL::GrabWindow(bool grab)
+{
+    SDL_SetWindowGrab(m_pWindow, grab ? SDL_TRUE : SDL_FALSE);
 }
 
 

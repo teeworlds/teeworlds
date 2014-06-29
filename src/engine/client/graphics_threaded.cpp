@@ -852,6 +852,16 @@ int CGraphics_Threaded::WindowOpen()
 
 }
 
+void CGraphics_Threaded::WarpMouse(int x, int y)
+{
+	m_pBackend->WarpMouse(x, y);
+}
+
+void CGraphics_Threaded::GrabWindow(bool grab)
+{
+	m_pBackend->GrabWindow(grab);
+}
+
 void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
 {
 	// TODO: screenshot support

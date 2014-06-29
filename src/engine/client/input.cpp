@@ -1,6 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #include <base/system.h>
 #include <engine/shared/config.h>
@@ -46,8 +46,8 @@ CInput::CInput()
 void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
-	SDL_EnableUNICODE(1);
-	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+	// FIXME: unicode handling: use SDL_StartTextInput/SDL_StopTextInput on inputs
+	// FIXME: key repeat: not a global setting anymore; need to do manually
 }
 
 void CInput::MouseRelative(float *x, float *y)
@@ -62,7 +62,7 @@ void CInput::MouseRelative(float *x, float *y)
 		if(m_InputGrabbed)
 		{
 			SDL_GetMouseState(&nx,&ny);
-			SDL_WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
+			m_pGraphics->WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
 			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
 		}
 	}
@@ -76,7 +76,7 @@ void CInput::MouseModeAbsolute()
 	SDL_ShowCursor(1);
 	m_InputGrabbed = 0;
 	if(g_Config.m_InpGrab)
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
+		m_pGraphics->GrabWindow(false);
 }
 
 void CInput::MouseModeRelative()
@@ -84,7 +84,7 @@ void CInput::MouseModeRelative()
 	SDL_ShowCursor(0);
 	m_InputGrabbed = 1;
 	if(g_Config.m_InpGrab)
-		SDL_WM_GrabInput(SDL_GRAB_ON);
+		m_pGraphics->GrabWindow(true);
 }
 
 int CInput::MouseDoubleClick()
@@ -128,7 +128,7 @@ int CInput::Update()
 
 	{
 		int i;
-		Uint8 *pState = SDL_GetKeyState(&i);
+		const Uint8 *pState = SDL_GetKeyboardState(&i);
 		if(i >= KEY_LAST)
 			i = KEY_LAST-1;
 		mem_copy(m_aInputState[m_InputCurrent], pState, i);
@@ -157,14 +157,11 @@ int CInput::Update()
 			{
 				// handle keys
 				case SDL_KEYDOWN:
-					// skip private use area of the BMP(contains the unicodes for keyboard function keys on MacOS)
-					if(Event.key.keysym.unicode < 0xE000 || Event.key.keysym.unicode > 0xF8FF)	// ignore_convention
-						AddEvent(Event.key.keysym.unicode, 0, 0); // ignore_convention
-					Key = Event.key.keysym.sym; // ignore_convention
+					Key = SDL_GetScancodeFromName(SDL_GetKeyName(Event.key.keysym.sym));
 					break;
 				case SDL_KEYUP:
 					Action = IInput::FLAG_RELEASE;
-					Key = Event.key.keysym.sym; // ignore_convention
+					Key = SDL_GetScancodeFromName(SDL_GetKeyName(Event.key.keysym.sym));
 					break;
 
 				// handle mouse buttons
@@ -182,12 +179,15 @@ int CInput::Update()
 					if(Event.button.button == SDL_BUTTON_LEFT) Key = KEY_MOUSE_1; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_WHEELUP) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_WHEELDOWN) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
 					if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
 					if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
 					if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
 					if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
+					break;
+
+				case SDL_MOUSEWHEEL:
+					if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
+					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
 					break;
 
 				// other messages

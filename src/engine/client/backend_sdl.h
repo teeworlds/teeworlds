@@ -277,4 +277,6 @@ public:
 	virtual void Maximize();
 	virtual int WindowActive();
 	virtual int WindowOpen();
+	virtual void WarpMouse(int x, int y);
+	virtual void GrabWindow(bool grab);
 };
