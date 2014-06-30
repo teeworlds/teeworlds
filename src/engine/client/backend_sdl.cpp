@@ -668,14 +668,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 		return -1;
 	}
 
-	#if defined(CONF_FAMILY_WINDOWS)
-		glTexImage3D = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
-		if(glTexImage3D == 0)
-		{
-			dbg_msg("gfx", "glTexImage3D not supported");
-			return -1;
-		}
-	#endif
+	SDL_GetWindowSize(m_pWindow, Width, Height);
 
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
 
@@ -684,6 +677,15 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 		dbg_msg("gfx", "unable to create OpenGL context: %s", SDL_GetError());
 		return -1;
 	}
+
+	#if defined(CONF_FAMILY_WINDOWS)
+		glTexImage3D = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
+		if(glTexImage3D == 0)
+		{
+			dbg_msg("gfx", "glTexImage3D not supported");
+			return -1;
+		}
+	#endif
 
 	SDL_GL_MakeCurrent(NULL, NULL);
 
