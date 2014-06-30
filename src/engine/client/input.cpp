@@ -57,14 +57,9 @@ void CInput::MouseRelative(float *x, float *y)
 	int nx = 0, ny = 0;
 	float Sens = g_Config.m_InpMousesens/100.0f;
 
-	if(g_Config.m_InpGrab)
-		SDL_GetRelativeMouseState(&nx, &ny);
-	else
+	if(m_InputGrabbed)
 	{
-		if(m_InputGrabbed)
-		{
-			SDL_GetRelativeMouseState(&nx,&ny);
-		}
+		SDL_GetRelativeMouseState(&nx,&ny);
 	}
 
 	*x = nx*Sens;
@@ -73,19 +68,13 @@ void CInput::MouseRelative(float *x, float *y)
 
 void CInput::MouseModeAbsolute()
 {
-	SDL_ShowCursor(1);
 	m_InputGrabbed = 0;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(false);
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 void CInput::MouseModeRelative()
 {
-	SDL_ShowCursor(0);
 	m_InputGrabbed = 1;
-	if(g_Config.m_InpGrab)
-		m_pGraphics->GrabWindow(true);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 

@@ -1,7 +1,11 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#if defined(CONF_PLATFORM_MACOSX)
+#include <OpenGL/glu.h>
+#else
 #include <GL/glu.h>
+#endif
 
 #include <base/tl/threading.h>
 
@@ -717,6 +721,8 @@ int CGraphicsBackend_SDL_OpenGL::Shutdown()
 	delete m_pProcessor;
 	m_pProcessor = 0;
 
+	SDL_GL_DeleteContext(m_GLContext);
+	SDL_DestroyWindow(m_pWindow);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	return 0;
 }
@@ -745,16 +751,6 @@ int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
 
-}
-
-void CGraphicsBackend_SDL_OpenGL::WarpMouse(int x, int y)
-{
-    SDL_WarpMouseInWindow(m_pWindow, x, y);
-}
-
-void CGraphicsBackend_SDL_OpenGL::GrabWindow(bool grab)
-{
-    SDL_SetWindowGrab(m_pWindow, grab ? SDL_TRUE : SDL_FALSE);
 }
 
 
