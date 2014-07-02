@@ -1,10 +1,10 @@
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#include <base/detect.h>
+#include "SDL.h"
+#include "SDL_opengl.h"
 #if defined(CONF_PLATFORM_MACOSX)
-#include <OpenGL/glu.h>
+#include "OpenGL/glu.h"
 #else
-#include <GL/glu.h>
+#include "GL/glu.h"
 #endif
 
 #include <base/tl/threading.h>
@@ -21,9 +21,6 @@
 
 void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 {
-	#ifdef CONF_PLATFORM_MACOSX
-		CAutoreleasePool AutoreleasePool;
-	#endif
 	CGraphicsBackend_Threaded *pThis = (CGraphicsBackend_Threaded *)pUser;
 
 	while(!pThis->m_Shutdown)
@@ -31,6 +28,9 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 		pThis->m_Activity.wait();
 		if(pThis->m_pBuffer)
 		{
+			#ifdef CONF_PLATFORM_MACOSX
+				CAutoreleasePool AutoreleasePool;
+			#endif
 			pThis->m_pProcessor->RunBuffer(pThis->m_pBuffer);
 			sync_barrier();
 			pThis->m_pBuffer = 0x0;
