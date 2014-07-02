@@ -640,6 +640,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 	#endif
 
 	// set gl attributes
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	if(FsaaSamples)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
@@ -650,9 +651,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 	}
-
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(Flags&IGraphicsBackend::INITFLAG_VSYNC ? 1 : 0);
 
 	m_pWindow = SDL_CreateWindow(
 		pName,
@@ -686,6 +684,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *Width,
 			return -1;
 		}
 	#endif
+
+	SDL_GL_SetSwapInterval(Flags&IGraphicsBackend::INITFLAG_VSYNC ? 1 : 0);
 
 	SDL_GL_MakeCurrent(NULL, NULL);
 
