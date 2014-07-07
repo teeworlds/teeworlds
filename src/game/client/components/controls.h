@@ -31,5 +31,6 @@ public:
 
 	int SnapInput(int *pData);
 	void ClampMousePos();
+	void ResetDummyInput();
 };
 #endif

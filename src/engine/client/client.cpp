@@ -445,6 +445,16 @@ void CClient::SendInput()
 	{
 		mem_copy(&DummyInput, &m_aInputs[!g_Config.m_ClDummy][(m_CurrentInput[!g_Config.m_ClDummy]+200-1)%200], sizeof(DummyInput));
 		m_LastDummy = g_Config.m_ClDummy;
+
+		if (g_Config.m_ClDummyResetOnSwitch)
+		{
+			DummyInput.m_Jump = 0;
+			DummyInput.m_Hook = 0;
+			if(DummyInput.m_Fire & 1)
+				DummyInput.m_Fire++;
+			DummyInput.m_Direction = 0;
+			GameClient()->ResetDummyInput();
+		}
 	}
 
 	if(!g_Config.m_ClDummy)

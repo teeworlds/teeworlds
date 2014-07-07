@@ -261,6 +261,7 @@ public:
 	virtual void OnGameOver();
 	virtual void OnStartGame();
 
+	virtual void ResetDummyInput();
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
