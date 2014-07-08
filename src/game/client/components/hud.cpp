@@ -302,23 +302,26 @@ void CHud::RenderScoreHud()
 				{
 					// draw name
 					int ID = aPlayerInfo[t].m_ClientID;
-					char aName[64];
-					str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
-					float w = TextRender()->TextWidth(0, 8.0f, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(8.0f);
+					if(ID >= 0 && ID < MAX_CLIENTS)
+					{
+						char aName[64];
+						str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+						float w = TextRender()->TextWidth(0, 8.0f, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(8.0f);
 
-					CTextCursor Cursor;
-					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
-					float y = StartY+(t+1)*20.0f-3.0f;
-					TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+						CTextCursor Cursor;
+						float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
+						float y = StartY+(t+1)*20.0f-3.0f;
+						TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
 
-					RenderTools()->DrawClientID(TextRender(), &Cursor, ID);
-					TextRender()->TextEx(&Cursor, aName, -1);
+						RenderTools()->DrawClientID(TextRender(), &Cursor, ID);
+						TextRender()->TextEx(&Cursor, aName, -1);
 
-					// draw tee
-					CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
-					Info.m_Size = 18.0f;
-					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
-						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*20));
+						// draw tee
+						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
+						Info.m_Size = 18.0f;
+						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+							vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*20));
+					}
 				}
 
 				// draw position
