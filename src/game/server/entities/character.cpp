@@ -102,6 +102,7 @@ void CCharacter::SetWeapon(int W)
 
 	if(m_ActiveWeapon < 0 || m_ActiveWeapon >= NUM_WEAPONS)
 		m_ActiveWeapon = 0;
+	m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 }
 
 bool CCharacter::IsGrounded()
