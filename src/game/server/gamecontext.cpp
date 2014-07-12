@@ -94,7 +94,7 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 
 void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
 {
-	float a = 3 * 3.14159f / 2 + Angle;
+	float a = 3*pi/2 + Angle;
 	//float a = get_angle(dir);
 	float s = a-pi/3;
 	float e = a+pi/3;
