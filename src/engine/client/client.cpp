@@ -309,6 +309,8 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_LocalIDs[1] = 0;
 	m_Fire = 0;
 
+	mem_zero(&m_aInputs, sizeof(m_aInputs));
+	mem_zero(&DummyInput, sizeof(DummyInput));
 	mem_zero(&HammerInput, sizeof(HammerInput));
 	HammerInput.m_Fire = 0;
 
