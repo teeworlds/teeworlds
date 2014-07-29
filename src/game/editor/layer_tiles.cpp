@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/color.h>
 #include <base/math.h>
 
 #include <engine/client.h>
@@ -123,9 +124,11 @@ void CLayerTiles::Clamp(RECTi *pRect)
 
 void CLayerTiles::BrushSelecting(CUIRect Rect)
 {
+	vec4 fillColor = HexToRgba(g_Config.m_EdColorSelectionTile);
+
 	Graphics()->TextureClear();
 	m_pEditor->Graphics()->QuadsBegin();
-	m_pEditor->Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.4f);
+	m_pEditor->Graphics()->SetColor(fillColor.r, fillColor.g, fillColor.b, fillColor.a);
 	Snap(&Rect);
 	IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
 	m_pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
