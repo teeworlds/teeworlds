@@ -546,6 +546,23 @@ int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, co
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
+int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, bool Used)
+{
+	// darken the button if not used
+	vec4 ButtonColor = GetButtonColor(pID, Checked);
+	if(!Used) ButtonColor.a /= 2.0f;
+
+	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
+	CUIRect NewRect = *pRect;
+	NewRect.y += NewRect.h/2.0f-7.0f;
+	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1), NewRect.w);
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = NewRect.w;
+	TextRender()->TextEx(&Cursor, pText, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
+
 int CEditor::DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	if(Checked)
@@ -2770,8 +2787,30 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			str_copy(aBuf, m_Map.m_lImages[i]->m_aName, sizeof(aBuf));
 			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 
-			if(int Result = DoButton_Editor(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
-				BUTTON_CONTEXT, "Select image"))
+			// check if images is used
+			bool Used = false;
+			for(int g = 0; !Used && (g < m_Map.m_lGroups.size()); g++)
+			{
+				CLayerGroup *pGroup = m_Map.m_lGroups[g];
+				for(int l = 0; !Used && (l < pGroup->m_lLayers.size()); l++)
+				{
+					if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
+					{
+						CLayerTiles *pLayer = static_cast<CLayerTiles *>(pGroup->m_lLayers[l]);
+						if(pLayer->m_Image == i)
+							Used = true;
+					}
+					else if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_QUADS)
+					{
+						CLayerQuads *pLayer = static_cast<CLayerQuads *>(pGroup->m_lLayers[l]);
+						if(pLayer->m_Image == i)
+							Used = true;
+					}
+				}
+			}
+
+			if(int Result = DoButton_Image(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
+				BUTTON_CONTEXT, "Select image", Used))
 			{
 				m_SelectedImage = i;
 
