@@ -33,8 +33,9 @@ public:
 
 	virtual CSampleHandle LoadWV(const char *pFilename) = 0;
 
-	virtual void SetChannel(int ChannelID, float Volume, float Panning) = 0;
+	virtual void SetChannelVolume(int ChannelID, float Volume) = 0;
 	virtual void SetListenerPos(float x, float y) = 0;
+	virtual void SetMaxDistance(float Distance) = 0;
 
 	virtual int PlayAt(int ChannelID, CSampleHandle Sound, int Flags, float x, float y) = 0;
 	virtual int Play(int ChannelID, CSampleHandle Sound, int Flags) = 0;
