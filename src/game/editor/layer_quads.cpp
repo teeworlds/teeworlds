@@ -81,7 +81,7 @@ CQuad *CLayerQuads::NewQuad()
 void CLayerQuads::BrushSelecting(CUIRect Rect)
 {
 	// draw selection rectangle
-	vec4 rectColor = HexToRgba(g_Config.m_EdColorSelectionQuad);
+	vec4 RectColor = HexToRgba(g_Config.m_EdColorSelectionQuad);
 	IGraphics::CLineItem Array[4] = {
 		IGraphics::CLineItem(Rect.x, Rect.y, Rect.x+Rect.w, Rect.y),
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y, Rect.x+Rect.w, Rect.y+Rect.h),
@@ -89,7 +89,7 @@ void CLayerQuads::BrushSelecting(CUIRect Rect)
 		IGraphics::CLineItem(Rect.x, Rect.y+Rect.h, Rect.x, Rect.y)};
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
-	Graphics()->SetColor(rectColor.r, rectColor.g, rectColor.b, rectColor.a);
+	Graphics()->SetColor(RectColor.r, RectColor.g, RectColor.b, RectColor.a);
 	Graphics()->LinesDraw(Array, 4);
 	Graphics()->LinesEnd();
 }

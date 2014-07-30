@@ -620,7 +620,7 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	if(!m_GridActive)
 		return;
 
-	vec4 gridColor;
+	vec4 GridColor;
 	float aGroupPoints[4];
 	pGroup->Mapping(aGroupPoints);
 
@@ -640,20 +640,20 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	for(int i = 0; i < (int)w; i++)
 	{
 		if((i+YGridOffset) % m_GridFactor == 0)
-			gridColor = HexToRgba(g_Config.m_EdColorGridOuter);
+			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
 		else
-			gridColor = HexToRgba(g_Config.m_EdColorGridInner);
+			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
 
-		Graphics()->SetColor(gridColor.r, gridColor.g, gridColor.b, gridColor.a);
+		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		IGraphics::CLineItem Line = IGraphics::CLineItem(LineDistance*XOffset, LineDistance*i+LineDistance*YOffset, w+aGroupPoints[2], LineDistance*i+LineDistance*YOffset);
 		Graphics()->LinesDraw(&Line, 1);
 
 		if((i+XGridOffset) % m_GridFactor == 0)
-			gridColor = HexToRgba(g_Config.m_EdColorGridOuter);
+			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
 		else
-			gridColor = HexToRgba(g_Config.m_EdColorGridInner);
+			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
 
-		Graphics()->SetColor(gridColor.r, gridColor.g, gridColor.b, gridColor.a);
+		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		Line = IGraphics::CLineItem(LineDistance*i+LineDistance*XOffset, LineDistance*YOffset, LineDistance*i+LineDistance*XOffset, h+aGroupPoints[3]);
 		Graphics()->LinesDraw(&Line, 1);
 	}
@@ -1144,7 +1144,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
 
-	vec4 pivotColor;
+	vec4 PivotColor;
 
 	if(UI()->ActiveItem() == pID)
 	{
@@ -1252,13 +1252,13 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			}
 		}
 
-		pivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		pivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1296,9 +1296,9 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		}
 	}
 	else
-		pivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
 
-	Graphics()->SetColor(pivotColor.r, pivotColor.g, pivotColor.b, pivotColor.a);
+	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }

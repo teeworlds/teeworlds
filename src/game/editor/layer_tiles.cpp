@@ -124,11 +124,11 @@ void CLayerTiles::Clamp(RECTi *pRect)
 
 void CLayerTiles::BrushSelecting(CUIRect Rect)
 {
-	vec4 fillColor = HexToRgba(g_Config.m_EdColorSelectionTile);
+	vec4 FillColor = HexToRgba(g_Config.m_EdColorSelectionTile);
 
 	Graphics()->TextureClear();
 	m_pEditor->Graphics()->QuadsBegin();
-	m_pEditor->Graphics()->SetColor(fillColor.r, fillColor.g, fillColor.b, fillColor.a);
+	m_pEditor->Graphics()->SetColor(FillColor.r, FillColor.g, FillColor.b, FillColor.a);
 	Snap(&Rect);
 	IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
 	m_pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
