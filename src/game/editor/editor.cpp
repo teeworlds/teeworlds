@@ -550,7 +550,8 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 {
 	// darken the button if not used
 	vec4 ButtonColor = GetButtonColor(pID, Checked);
-	if(!Used) ButtonColor.a /= 2.0f;
+	if(!Used)
+		ButtonColor *= vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
