@@ -454,8 +454,8 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	};
 
 	CProperty aProps[] = {
-		{"Pos X", pQuad->m_aPoints[4].x/1000, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", pQuad->m_aPoints[4].y/1000, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos X", fx2i(pQuad->m_aPoints[4].x), PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", fx2i(pQuad->m_aPoints[4].y), PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Pos. Env", pQuad->m_PosEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
 		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Color Env", pQuad->m_ColorEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
@@ -472,13 +472,13 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 
 	if(Prop == PROP_POS_X)
 	{
-		float Offset = NewVal*1000-pQuad->m_aPoints[4].x;
+		float Offset = i2fx(NewVal)-pQuad->m_aPoints[4].x;
 		for(int k = 0; k < 5; ++k)
 			pQuad->m_aPoints[k].x += Offset;
 	}
 	if(Prop == PROP_POS_Y)
 	{
-		float Offset = NewVal*1000-pQuad->m_aPoints[4].y;
+		float Offset = i2fx(NewVal)-pQuad->m_aPoints[4].y;
 		for(int k = 0; k < 5; ++k)
 			pQuad->m_aPoints[k].y += Offset;
 	}
@@ -525,11 +525,14 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 		PROP_POS_X=0,
 		PROP_POS_Y,
 		PROP_COLOR,
+		PROP_TEX_U,
+		PROP_TEX_V,
 		NUM_PROPS,
 	};
 
 	int Color = 0;
 	int x = 0, y = 0;
+	int tu = 0, tv = 0;
 
 	for(int v = 0; v < 4; v++)
 	{
@@ -541,8 +544,10 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 			Color |= pQuad->m_aColors[v].b<<8;
 			Color |= pQuad->m_aColors[v].a;
 
-			x = pQuad->m_aPoints[v].x/1000;
-			y = pQuad->m_aPoints[v].y/1000;
+			x = fx2i(pQuad->m_aPoints[v].x);
+			y = fx2i(pQuad->m_aPoints[v].y);
+			tu = fx2f(pQuad->m_aTexcoords[v].x)*1024;
+			tv = fx2f(pQuad->m_aTexcoords[v].y)*1024;
 		}
 	}
 
@@ -551,6 +556,8 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 		{"Pos X", x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Pos Y", y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Color", Color, PROPTYPE_COLOR, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{"Tex U", tu, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Tex V", tv, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{0},
 	};
 
@@ -564,13 +571,13 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 	{
 		for(int v = 0; v < 4; v++)
 			if(pEditor->m_SelectedPoints&(1<<v))
-				pQuad->m_aPoints[v].x = NewVal*1000;
+				pQuad->m_aPoints[v].x = i2fx(NewVal);
 	}
 	if(Prop == PROP_POS_Y)
 	{
 		for(int v = 0; v < 4; v++)
 			if(pEditor->m_SelectedPoints&(1<<v))
-				pQuad->m_aPoints[v].y = NewVal*1000;
+				pQuad->m_aPoints[v].y = i2fx(NewVal);
 	}
 	if(Prop == PROP_COLOR)
 	{
@@ -584,6 +591,18 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 				pQuad->m_aColors[v].a = NewVal&0xff;
 			}
 		}
+	}
+	if(Prop == PROP_TEX_U)
+	{
+		for(int v = 0; v < 4; v++)
+			if(pEditor->m_SelectedPoints&(1<<v))
+				pQuad->m_aTexcoords[v].x = f2fx(NewVal/1024.0f);
+	}
+	if(Prop == PROP_TEX_V)
+	{
+		for(int v = 0; v < 4; v++)
+			if(pEditor->m_SelectedPoints&(1<<v))
+				pQuad->m_aTexcoords[v].y = f2fx(NewVal/1024.0f);
 	}
 
 	return 0;

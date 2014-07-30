@@ -55,6 +55,7 @@ inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
 
 // int to fixed
 inline int i2fx(int v) { return v<<10; }
+inline int fx2i(int v) { return v>>10; }
 
 inline int gcd(int a, int b)
 {
