@@ -1738,6 +1738,7 @@ void CClient::Run()
 
 	// init sound, allowed to fail
 	m_SoundInitFailed = Sound()->Init() != 0;
+	Sound()->SetMaxDistance(1.5f*Graphics()->ScreenWidth()/2.0f);
 
 	// open socket
 	{

@@ -37,9 +37,8 @@ struct CSample
 
 struct CChannel
 {
-	int m_Vol;
-	int m_Pan;
-} ;
+	int m_Vol; // 0 - 255
+};
 
 struct CVoice
 {
@@ -49,16 +48,18 @@ struct CVoice
 	int m_Vol; // 0 - 255
 	int m_Flags;
 	int m_X, m_Y;
-} ;
+};
 
 static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
-static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
+static CChannel m_aChannels[NUM_CHANNELS] = { {255} };
 
 static LOCK m_SoundLock = 0;
 
 static int m_CenterX = 0;
 static int m_CenterY = 0;
+
+static int m_MaxDistance = 1500;
 
 static int m_MixingRate = 48000;
 static volatile int m_SoundVolume = 100;
@@ -121,25 +122,28 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				pInR = pInL;
 
 			// volume calculation
-			if(v->m_Flags&ISound::FLAG_POS && v->m_pChannel->m_Pan)
+			if(v->m_Flags&ISound::FLAG_POS)
 			{
-				// TODO: we should respect the channel panning value
-				const int Range = 1500; // magic value, remove
 				int dx = v->m_X - m_CenterX;
 				int dy = v->m_Y - m_CenterY;
-				int Dist = (int)sqrtf((float)dx*dx+dy*dy); // float here. nasty
-				int p = IntAbs(dx);
-				if(Dist >= 0 && Dist < Range)
+				float Dist = sqrtf((float)dx*dx+dy*dy);
+				if(Dist >= 0.0f && Dist < m_MaxDistance)
 				{
-					// panning
-					if(dx > 0)
-						Lvol = ((Range-p)*Lvol)/Range;
+					// constant panning (-3dB center)
+					float a = 0.5f;
+					if(dx < 0)
+						a -= (Dist/m_MaxDistance)/2.0f;
 					else
-						Rvol = ((Range-p)*Rvol)/Range;
+						a += (Dist/m_MaxDistance)/2.0f;
+					
+					float Lgain = sinf((1-a)*pi/2.0f);
+					float Rgain = sinf(a*pi/2.0f);
 
-					// falloff
-					Lvol = (Lvol*(Range-Dist))/Range;
-					Rvol = (Rvol*(Range-Dist))/Range;
+					// linear falloff
+					float Falloff = 1.0f - Dist/m_MaxDistance;
+
+					Lvol = (int)Lvol*Lgain*Falloff;
+					Rvol = (int)Rvol*Rgain*Falloff;
 				}
 				else
 				{
@@ -443,11 +447,14 @@ void CSound::SetListenerPos(float x, float y)
 	m_CenterY = (int)y;
 }
 
+void CSound::SetMaxDistance(float Distance)
+{
+	m_MaxDistance = Distance;
+}
 
-void CSound::SetChannel(int ChannelID, float Vol, float Pan)
+void CSound::SetChannelVolume(int ChannelID, float Vol)
 {
 	m_aChannels[ChannelID].m_Vol = (int)(Vol*255.0f);
-	m_aChannels[ChannelID].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
 }
 
 int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y)
