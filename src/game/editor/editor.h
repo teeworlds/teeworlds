@@ -836,6 +836,7 @@ public:
 	}
 
 	int GetLineDistance();
+	void ZoomMouseTarget(float ZoomFactor);
 };
 
 // make sure to inline this function
