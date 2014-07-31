@@ -116,12 +116,6 @@ public:
 		BLEND_ADDITIVE,
 	};
 
-	enum
-	{
-		WRAP_REPEAT = 0,
-		WRAP_CLAMP,
-	};
-
 	struct SPoint { float x, y, z; };
 	struct STexCoord { float u, v, i; };
 	struct SColor { float r, g, b, a; };
@@ -144,7 +138,8 @@ public:
 	struct SState
 	{
 		int m_BlendMode;
-		int m_WrapMode;
+		int m_WrapModeU;
+		int m_WrapModeV;
 		int m_Texture;
 		int m_Dimension;
 		SPoint m_ScreenTL;
@@ -383,6 +378,7 @@ public:
 
 	virtual void WrapNormal();
 	virtual void WrapClamp();
+	virtual void WrapMode(int WrapU, int WrapV);
 
 	virtual int MemoryUsage() const;
 

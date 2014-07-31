@@ -71,6 +71,12 @@ public:
 		TEXLOAD_MULTI_DIMENSION = 8,
 	};
 
+	/* Constants: Wrap Modes */
+	enum
+	{
+		WRAP_REPEAT = 0,
+		WRAP_CLAMP,
+	};
 
 	class CTextureHandle
 	{
@@ -103,6 +109,7 @@ public:
 	virtual void BlendAdditive() = 0;
 	virtual void WrapNormal() = 0;
 	virtual void WrapClamp() = 0;
+	virtual void WrapMode(int WrapU, int WrapV) = 0;
 	virtual int MemoryUsage() const = 0;
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
