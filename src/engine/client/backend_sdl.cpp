@@ -189,18 +189,29 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
 	}
 
-	switch(State.m_WrapMode)
+	// wrap mode
+	switch(State.m_WrapModeU)
 	{
-	case CCommandBuffer::WRAP_REPEAT:
+	case IGraphics::WRAP_REPEAT:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		break;
+	case IGraphics::WRAP_CLAMP:
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		break;
+	default:
+		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapModeU);
+	};
+
+	switch(State.m_WrapModeV)
+	{
+	case IGraphics::WRAP_REPEAT:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		break;
-	case CCommandBuffer::WRAP_CLAMP:
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	case IGraphics::WRAP_CLAMP:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		break;
 	default:
-		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapMode);
+		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapModeV);
 	};
 
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES && State.m_Dimension == 3)

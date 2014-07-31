@@ -265,15 +265,17 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 
 		// Check if we want to repeat the texture
 		// Otherwise clamp to the edge to prevent texture bleeding
-		Graphics()->WrapClamp();
+		bool RepeatU = false, RepeatV = false;
 		for(int k = 0; k < 4; k++)
 		{
 			if(aTexCoords[k].x < 0.0f || aTexCoords[k].x > 1.0f)
-			{
-				Graphics()->WrapNormal();
-				break;
-			}
+				RepeatU = true;
+			if(aTexCoords[k].y < 0.0f || aTexCoords[k].y > 1.0f)
+				RepeatV = true;
 		}
+		Graphics()->WrapMode(
+			RepeatU ? IGraphics::WRAP_REPEAT : IGraphics::WRAP_CLAMP,
+			RepeatV ? IGraphics::WRAP_REPEAT : IGraphics::WRAP_CLAMP);
 
 		Graphics()->QuadsSetSubsetFree(
 			aTexCoords[0].x, aTexCoords[0].y,
