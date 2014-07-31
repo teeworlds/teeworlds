@@ -4074,10 +4074,18 @@ void CEditor::Render()
 	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+		{
 			m_ZoomLevel -= 20;
+			if(g_Config.m_EdZoomTarget)
+				ZoomMouseTarget((float)m_ZoomLevel/(m_ZoomLevel+20));
+		}
 
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		{
 			m_ZoomLevel += 20;
+			if(g_Config.m_EdZoomTarget)
+				ZoomMouseTarget((float)m_ZoomLevel/(m_ZoomLevel-20));
+		}
 	}
 	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	m_WorldZoom = m_ZoomLevel/100.0f;
@@ -4231,6 +4239,16 @@ int CEditor::GetLineDistance()
 		LineDistance = 256;
 
 	return LineDistance;
+}
+
+void CEditor::ZoomMouseTarget(float ZoomFactor)
+{
+	// zoom to the current mouse position
+	float mx = UI()->MouseWorldX();
+	float my = UI()->MouseWorldY();
+
+	m_EditorOffsetX += (mx-m_EditorOffsetX) * (1-ZoomFactor);
+	m_EditorOffsetY += (my-m_EditorOffsetY) * (1-ZoomFactor);
 }
 
 void CEditorMap::DeleteEnvelope(int Index)
