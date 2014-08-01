@@ -4075,16 +4075,18 @@ void CEditor::Render()
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
 		{
-			m_ZoomLevel -= 20;
+			float OldLevel = m_ZoomLevel;
+			m_ZoomLevel = clamp(m_ZoomLevel-20, 50, 2000);
 			if(g_Config.m_EdZoomTarget)
-				ZoomMouseTarget((float)m_ZoomLevel/(m_ZoomLevel+20));
+				ZoomMouseTarget((float)m_ZoomLevel/OldLevel);
 		}
 
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 		{
-			m_ZoomLevel += 20;
+			float OldLevel = m_ZoomLevel;
+			m_ZoomLevel = clamp(m_ZoomLevel+20, 50, 2000);
 			if(g_Config.m_EdZoomTarget)
-				ZoomMouseTarget((float)m_ZoomLevel/(m_ZoomLevel-20));
+				ZoomMouseTarget((float)m_ZoomLevel/OldLevel);
 		}
 	}
 	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
@@ -4244,11 +4246,21 @@ int CEditor::GetLineDistance()
 void CEditor::ZoomMouseTarget(float ZoomFactor)
 {
 	// zoom to the current mouse position
-	float mx = UI()->MouseWorldX();
-	float my = UI()->MouseWorldY();
+	// get absolute mouse position
+	float aPoints[4];
+	RenderTools()->MapScreenToWorld(
+		m_WorldOffsetX, m_WorldOffsetY,
+		1.0f, 1.0f, 0.0f, 0.0f, Graphics()->ScreenAspect(), m_WorldZoom, aPoints);
 
-	m_EditorOffsetX += (mx-m_EditorOffsetX) * (1-ZoomFactor);
-	m_EditorOffsetY += (my-m_EditorOffsetY) * (1-ZoomFactor);
+	float WorldWidth = aPoints[2]-aPoints[0];
+	float WorldHeight = aPoints[3]-aPoints[1];
+
+	float Mwx = aPoints[0] + WorldWidth * (UI()->MouseX()/UI()->Screen()->w);
+	float Mwy = aPoints[1] + WorldHeight * (UI()->MouseY()/UI()->Screen()->h);
+
+	// adjust camera
+	m_WorldOffsetX += (Mwx-m_WorldOffsetX) * (1-ZoomFactor);
+	m_WorldOffsetY += (Mwy-m_WorldOffsetY) * (1-ZoomFactor);
 }
 
 void CEditorMap::DeleteEnvelope(int Index)
