@@ -4033,20 +4033,19 @@ void CEditor::Render()
 	}
 	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
 	{
+		// Determines in which direction to zoom.
+		int Zoom = 0;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
-		{
-			float OldLevel = m_ZoomLevel;
-			m_ZoomLevel = clamp(m_ZoomLevel-20, 50, 2000);
-			if(g_Config.m_EdZoomTarget)
-				ZoomMouseTarget((float)m_ZoomLevel/OldLevel);
-		}
-
+			Zoom--;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+			Zoom++;
+
+		if(Zoom != 0)
 		{
 			float OldLevel = m_ZoomLevel;
-			m_ZoomLevel = clamp(m_ZoomLevel+20, 50, 2000);
+			m_ZoomLevel = clamp(m_ZoomLevel + Zoom * 20, 50, 2000);
 			if(g_Config.m_EdZoomTarget)
-				ZoomMouseTarget((float)m_ZoomLevel/OldLevel);
+				ZoomMouseTarget((float)m_ZoomLevel / OldLevel);
 		}
 	}
 	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
