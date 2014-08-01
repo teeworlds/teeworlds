@@ -52,6 +52,7 @@ void CMapLayers::OnInit()
 		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
 		RenderTools()->RenderTilemapGenerateSkip(m_pMenuLayers);
 		m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
+		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 	}
 }
 
@@ -59,8 +60,6 @@ void CMapLayers::OnMapLoad()
 {
 	if(Layers())
 		LoadEnvPoints(Layers(), m_lEnvPoints);
-	if(m_pMenuLayers)
-		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 }
 
 void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints)
@@ -382,5 +381,6 @@ void CMapLayers::BackgroundMapUpdate()
 		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
 		RenderTools()->RenderTilemapGenerateSkip(m_pMenuLayers);
 		m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
+		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 	}
 }
