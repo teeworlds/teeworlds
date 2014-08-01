@@ -57,13 +57,10 @@ void CMapLayers::OnInit()
 
 void CMapLayers::OnMapLoad()
 {
-	if(m_Type == TYPE_BACKGROUND)
-	{
-		if(Layers())
-			LoadEnvPoints(Layers(), m_lEnvPoints);
-		else if(m_pMenuLayers)
-			LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
-	}
+	if(Layers())
+		LoadEnvPoints(Layers(), m_lEnvPoints);
+	if(m_pMenuLayers)
+		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 }
 
 void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints)
@@ -306,8 +303,6 @@ void CMapLayers::OnRender()
 
 			if(Render && !IsGameLayer)
 			{
-				//layershot_begin();
-
 				if(pLayer->m_Type == LAYERTYPE_TILES)
 				{
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
@@ -340,8 +335,6 @@ void CMapLayers::OnRender()
 					Graphics()->BlendNormal();
 					RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, this);
 				}
-
-				//layershot_end();
 			}
 		}
 		if(!g_Config.m_GfxNoclip)
@@ -371,7 +364,7 @@ void CMapLayers::BackgroundMapUpdate()
 {
 	if(m_Type == TYPE_BACKGROUND && m_pMenuMap)
 	{
-		// uload map
+		// unload map
 		m_pMenuMap->Unload();
 
 		char aBuf[128];
