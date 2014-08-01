@@ -76,7 +76,10 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 
 	int Start;
 	pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_MenuCount);
-	m_MenuCount = clamp(m_Count, 0, int(MAX_TEXTURES));
+	m_MenuCount = clamp(m_MenuCount, 0, int(MAX_TEXTURES));
+
+	CLayers MenuLayers;
+	MenuLayers.Init(Kernel(), pMap);
 
 	// load new textures
 	for(int i = 0; i < m_MenuCount; i++)
@@ -84,9 +87,9 @@ void CMapImages::OnMenuMapLoad(IMap *pMap)
 		int TextureFlags = 0;
 		bool FoundQuadLayer = false;
 		bool FoundTileLayer = false;
-		for(int k = 0; k < Layers()->NumLayers(); k++)
+		for(int k = 0; k < MenuLayers.NumLayers(); k++)
 		{
-			const CMapItemLayer * const pLayer = Layers()->GetLayer(k);
+			const CMapItemLayer * const pLayer = MenuLayers.GetLayer(k);
 			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && ((const CMapItemLayerQuads * const)pLayer)->m_Image == i)
 				FoundQuadLayer = true;
 			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
