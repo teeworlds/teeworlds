@@ -240,7 +240,7 @@ void sort_merge(R range)
 	array<typename R::type> temp;
 	int size = range.size();
 	temp.set_size(size/2);
-	array<typename R::type>::range rtemp = temp.all();
+	typename array<typename R::type>::range rtemp = temp.all();
 	typename R::type *front = &range.front();
 	typename R::type *tfront = &rtemp.front();
 	typename R::type *back = &range.back();
