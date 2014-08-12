@@ -71,4 +71,12 @@ public:
 	virtual int Length() const = 0;
 };
 
+class IDemoEditor : public IInterface
+{
+	MACRO_INTERFACE("demoeditor", 0)
+public:
+
+	virtual void Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick) = 0;
+};
+
 #endif
