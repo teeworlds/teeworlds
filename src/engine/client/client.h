@@ -76,6 +76,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CNetClient m_ContactClient;
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
+	class CDemoEditor m_DemoEditor;
 	class CServerBrowser m_ServerBrowser;
 	class CFriends m_Friends;
 	class CBlacklist m_Blacklist;
@@ -307,6 +308,10 @@ public:
 	static void ConchainWindowBordered(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainWindowVSync(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+
+	static void Con_DemoSlice(IConsole::IResult *pResult, void *pUserData);
+	static void Con_DemoSliceStart(IConsole::IResult *pResult, void *pUserData);
+	static void Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData);
 
 	void RegisterCommands();
 

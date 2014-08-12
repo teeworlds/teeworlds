@@ -66,6 +66,13 @@ public:
 		float m_TickTime;
 	};
 
+	struct CMapInfo
+	{
+		char m_aName[128];
+		int m_Crc;
+		int m_Size;
+	};
+
 private:
 	IListner *m_pListner;
 
@@ -88,6 +95,7 @@ private:
 	char m_aFilename[256];
 	char m_aErrorMsg[256];
 	CKeyFrame *m_pKeyFrames;
+	CMapInfo m_MapInfo;
 
 	CPlaybackInfo m_Info;
 	int m_DemoType;
@@ -116,12 +124,35 @@ public:
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	void GetDemoName(char *pBuffer, int BufferSize) const;
 	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
+	const char *GetDemoFileName() { return m_aFilename; };
 	int GetDemoType() const;
 
-	int Update();
+	int Update(bool RealTime=true);
 
 	const CPlaybackInfo *Info() const { return &m_Info; }
 	int IsPlaying() const { return m_File != 0; }
+	const CMapInfo *GetMapInfo() { return &m_MapInfo; };
+};
+
+class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListner
+{
+	CDemoPlayer *m_pDemoPlayer;
+	CDemoRecorder *m_pDemoRecorder;
+	IConsole *m_pConsole;
+	IStorage *m_pStorage;
+	class CSnapshotDelta *m_pSnapshotDelta;
+	const char *m_pNetVersion;
+
+	bool m_Stop;
+	int m_SliceFrom;
+	int m_SliceTo;
+
+public:
+	virtual void Init(const char *pNetVersion, class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage);
+	virtual void Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick);
+
+	virtual void OnDemoPlayerSnapshot(void *pData, int Size);
+	virtual void OnDemoPlayerMessage(void *pData, int Size);
 };
 
 #endif
