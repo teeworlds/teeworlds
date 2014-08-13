@@ -2257,7 +2257,7 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 void CClient::DemoSliceBegin()
 {
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-	g_Config.m_ClDemoSliceStart = pInfo->m_Info.m_CurrentTick;
+	g_Config.m_ClDemoSliceBegin = pInfo->m_Info.m_CurrentTick;
 }
 
 void CClient::DemoSliceEnd()
@@ -2294,7 +2294,7 @@ void CClient::DemoSlice()
 		char aDstName[256];
 		str_format(aDstName, sizeof(aDstName), "%s_sliced.demo", aPathNoExt);
 
-		m_DemoEditor.Slice(pDemoFileName, aDstName, g_Config.m_ClDemoSliceStart, g_Config.m_ClDemoSliceEnd);
+		m_DemoEditor.Slice(pDemoFileName, aDstName, g_Config.m_ClDemoSliceBegin, g_Config.m_ClDemoSliceEnd);
 	}
 }
 
