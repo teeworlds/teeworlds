@@ -6,6 +6,8 @@
 #include <engine/console.h>
 #include <engine/storage.h>
 
+#include <engine/shared/config.h>
+
 #include "compression.h"
 #include "datafile.h"
 #include "demo.h"
@@ -726,6 +728,10 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 
 	// scan the file for interessting points
 	ScanFile();
+
+	// reset slice markers
+	g_Config.m_ClDemoSliceBegin = -1;
+	g_Config.m_ClDemoSliceEnd = -1;
 
 	// ready for playback
 	return 0;
