@@ -226,6 +226,27 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			str_format(aBuffer, sizeof(aBuffer), "x%.2f", pInfo->m_Speed);
 		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, CUI::ALIGN_LEFT);
 
+		// slice begin button
+		ButtonBar.VSplitLeft(Margins*10, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
+		static int s_SliceBeginButton = 0;
+		if(DoButton_Sprite(&s_SliceBeginButton, IMAGE_DEMOBUTTONS2, SPRITE_DEMOBUTTON_SLICE_BEGIN, 0, &Button, CUI::CORNER_ALL))
+			Client()->DemoSliceBegin();
+
+		// slice end button
+		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
+		static int s_SliceEndButton = 0;
+		if(DoButton_Sprite(&s_SliceEndButton, IMAGE_DEMOBUTTONS2, SPRITE_DEMOBUTTON_SLICE_END, 0, &Button, CUI::CORNER_ALL))
+			Client()->DemoSliceEnd();
+
+		// slice save button
+		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
+		static int s_SliceSaveButton = 0;
+		if(DoButton_Sprite(&s_SliceSaveButton, IMAGE_FILEICONS, SPRITE_FILE_DEMO2, 0, &Button, CUI::CORNER_ALL))
+			Client()->DemoSlice();
+
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
 		static CButtonContainer s_ExitButton;

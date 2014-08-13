@@ -2275,42 +2275,54 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 	pSelf->RconAuth("", pResult->GetString(0));
 }
 
-void CClient::Con_DemoSliceStart(IConsole::IResult *pResult, void *pUserData)
+void CClient::DemoSliceBegin()
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
+	g_Config.m_ClDemoSliceStart = pInfo->m_Info.m_CurrentTick;
+}
+
+void CClient::DemoSliceEnd()
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
+	g_Config.m_ClDemoSliceEnd = pInfo->m_Info.m_CurrentTick;
+}
+
+void CClient::Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-
-	const CDemoPlayer::CPlaybackInfo *pInfo = pSelf->m_DemoPlayer.Info();
-	g_Config.m_ClDemoSliceStart = pInfo->m_Info.m_CurrentTick;
+	pSelf->DemoSliceBegin();	
 }
 
 void CClient::Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-
-	const CDemoPlayer::CPlaybackInfo *pInfo = pSelf->m_DemoPlayer.Info();
-	g_Config.m_ClDemoSliceEnd = pInfo->m_Info.m_CurrentTick;
+	pSelf->DemoSliceEnd();
 }
 
-void CClient::Con_DemoSlice(IConsole::IResult *pResult, void *pUserData)
+void CClient::DemoSlice()
 {
-	CClient *pSelf = (CClient *)pUserData;
-
-	if(pSelf->m_DemoPlayer.IsPlaying())
+	if(m_DemoPlayer.IsPlaying())
 	{
-		const char *pDemoFileName = pSelf->m_DemoPlayer.GetDemoFileName();
-
+		const char *pDemoFileName = m_DemoPlayer.GetDemoFileName();
+		
 		char aPathNoExt[512];
 		str_copy(aPathNoExt, pDemoFileName, str_length(pDemoFileName)-5+1);
 
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "slice '%s'", pDemoFileName);
-		pSelf->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_editor", aBuf);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_editor", aBuf);
 
 		char aDstName[256];
 		str_format(aDstName, sizeof(aDstName), "%s_sliced.demo", aPathNoExt);
 
-		pSelf->m_DemoEditor.Slice(pDemoFileName, aDstName, g_Config.m_ClDemoSliceStart, g_Config.m_ClDemoSliceEnd);
+		m_DemoEditor.Slice(pDemoFileName, aDstName, g_Config.m_ClDemoSliceStart, g_Config.m_ClDemoSliceEnd);
 	}
+}
+
+void CClient::Con_DemoSlice(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoSlice();
 }
 
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
@@ -2550,7 +2562,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_demomarker", "", CFGFLAG_CLIENT, Con_AddDemoMarker, this, "Add demo timeline marker");
 	m_pConsole->Register("demo_slice", "", CFGFLAG_CLIENT, Con_DemoSlice, this, "");
-	m_pConsole->Register("demo_slice_start", "", CFGFLAG_CLIENT, Con_DemoSliceStart, this, "");
+	m_pConsole->Register("demo_slice_start", "", CFGFLAG_CLIENT, Con_DemoSliceBegin, this, "");
 	m_pConsole->Register("demo_slice_end", "", CFGFLAG_CLIENT, Con_DemoSliceEnd, this, "");
 
 	// used for server browser update

@@ -310,7 +310,7 @@ public:
 	static void ConchainWindowVSync(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	static void Con_DemoSlice(IConsole::IResult *pResult, void *pUserData);
-	static void Con_DemoSliceStart(IConsole::IResult *pResult, void *pUserData);
+	static void Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData);
 	static void Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData);
 
 	void RegisterCommands();
@@ -320,6 +320,9 @@ public:
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
 	void DemoRecorder_AddDemoMarker();
+	virtual void DemoSliceBegin() = 0;
+	virtual void DemoSliceEnd() = 0;
+	virtual void DemoSlice() = 0;
 	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 
 	void AutoScreenshot_Start();
