@@ -373,6 +373,8 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 	}
 
 	// play sound
+	if(!g_Config.m_ClShowsocial)
+		return;
 	int64 Now = time_get();
 	if(ClientID == -1)
 	{
@@ -402,6 +404,8 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 
 void CChat::OnRender()
 {
+	if(!g_Config.m_ClShowsocial)
+		return;
 	// send pending chat messages
 	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
 	{

@@ -59,6 +59,8 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
+	if(!g_Config.m_ClShowsocial)
+		return;
 	if (!g_Config.m_ClNameplates)
 		return;
 

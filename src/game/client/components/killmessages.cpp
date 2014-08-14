@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <generated/protocol.h>
@@ -58,14 +59,16 @@ void CKillMessages::OnRender()
 			continue;
 
 		float FontSize = 36.0f;
-		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
-		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
+		const char *killerName = (g_Config.m_ClShowsocial ? m_aKillmsgs[r].m_aKillerName : "some tee");
+		const char *victimName = (g_Config.m_ClShowsocial ? m_aKillmsgs[r].m_aVictimName : "some tee");
+		float KillerNameW = TextRender()->TextWidth(0, FontSize, killerName, -1);
+		float VictimNameW = TextRender()->TextWidth(0, FontSize, victimName, -1);
 
 		float x = StartX;
 
 		// render victim name
 		x -= VictimNameW;
-		TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
+		TextRender()->Text(0, x, y, FontSize, victimName, -1);
 
 		// render victim tee
 		x -= 24.0f;
@@ -134,7 +137,7 @@ void CKillMessages::OnRender()
 
 			// render killer name
 			x -= KillerNameW;
-			TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
+			TextRender()->Text(0, x, y, FontSize, killerName, -1);
 		}
 
 		y += 46.0f;

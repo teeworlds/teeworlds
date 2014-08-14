@@ -517,7 +517,8 @@ void CPlayers::RenderPlayer(
 		// client_datas::emoticon is an offset from the first emoticon
 		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
-		Graphics()->QuadsDraw(&QuadItem, 1);
+		if(g_Config.m_ClShowsocial)
+			Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
 }

@@ -37,6 +37,8 @@ void CBroadcast::OnReset()
 
 void CBroadcast::OnRender()
 {
+	if(!g_Config.m_ClShowsocial)
+		return;
 	if(m_pClient->m_pScoreboard->Active() || m_pClient->m_pMotd->IsActive())
 		return;
 

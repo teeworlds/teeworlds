@@ -93,6 +93,8 @@ void CEmoticon::DrawCircle(float x, float y, float r, int Segments)
 
 void CEmoticon::OnRender()
 {
+	if(!g_Config.m_ClShowsocial)
+		return;
 	if(!m_Active)
 	{
 		if(m_WasActive && m_SelectedEmote != -1)
