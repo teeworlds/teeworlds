@@ -1321,8 +1321,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const SHA256_DIGEST *pMapSha256 = (const SHA256_DIGEST *)Unpacker.GetRaw(sizeof(*pMapSha256));
 			const char *pError = 0;
 
-			g_Config.m_ClDummy = 0;
-			m_DummyConnected = false;
+			if(m_DummyConnected)
+				DummyDisconnect(0);
 
 			// check for valid standard map
 			if(!m_MapChecker.IsMapValid(pMap, pMapSha256, MapCrc, MapSize))
