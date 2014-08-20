@@ -732,7 +732,7 @@ public:
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
 	int m_SelectedEnvelopePoint;
-    int m_SelectedQuadEnvelope;
+	int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 	
 	vec4 m_SelectedColor;
@@ -746,6 +746,7 @@ public:
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
+	CLayerQuads m_QuadsetPicker;
 
 	static const void *ms_pUiGotContext;
 
