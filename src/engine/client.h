@@ -86,7 +86,7 @@ public:
 	virtual void DemoRecorder_Stop() = 0;
 	virtual void DemoSliceBegin() = 0;
 	virtual void DemoSliceEnd() = 0;
-	virtual void DemoSlice() = 0;
+	virtual void DemoSlice(const char *pDstPath) = 0;
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoStatScreenshot_Start() = 0;
 	virtual void AutoScreenshot_Start() = 0;
