@@ -2299,30 +2299,13 @@ void CClient::Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoSliceEnd();
 }
 
-void CClient::DemoSlice()
+void CClient::DemoSlice(const char *pDstPath)
 {
 	if(m_DemoPlayer.IsPlaying())
 	{
 		const char *pDemoFileName = m_DemoPlayer.GetDemoFileName();
-		
-		char aPathNoExt[512];
-		str_copy(aPathNoExt, pDemoFileName, str_length(pDemoFileName)-5+1);
-
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "slice '%s'", pDemoFileName);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_editor", aBuf);
-
-		char aDstName[256];
-		str_format(aDstName, sizeof(aDstName), "%s_sliced.demo", aPathNoExt);
-
-		m_DemoEditor.Slice(pDemoFileName, aDstName, g_Config.m_ClDemoSliceBegin, g_Config.m_ClDemoSliceEnd);
+		m_DemoEditor.Slice(pDemoFileName, pDstPath, g_Config.m_ClDemoSliceBegin, g_Config.m_ClDemoSliceEnd);
 	}
-}
-
-void CClient::Con_DemoSlice(IConsole::IResult *pResult, void *pUserData)
-{
-	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoSlice();
 }
 
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
@@ -2561,7 +2544,12 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_demomarker", "", CFGFLAG_CLIENT, Con_AddDemoMarker, this, "Add demo timeline marker");
+<<<<<<< HEAD
 	m_pConsole->Register("demo_slice", "", CFGFLAG_CLIENT, Con_DemoSlice, this, "");
+=======
+	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
+	m_pConsole->Register("remove_favorite", "s", CFGFLAG_CLIENT, Con_RemoveFavorite, this, "Remove a server from favorites");
+>>>>>>> 8624d0a74... DemoPlayer: Save dialog added
 	m_pConsole->Register("demo_slice_start", "", CFGFLAG_CLIENT, Con_DemoSliceBegin, this, "");
 	m_pConsole->Register("demo_slice_end", "", CFGFLAG_CLIENT, Con_DemoSliceEnd, this, "");
 

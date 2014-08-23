@@ -89,6 +89,7 @@ CMenus::CMenus()
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
 	m_ActiveListBox = ACTLB_NONE;
+	m_DemoPlayerState = DEMOPLAYER_NONE;
 }
 
 float CMenus::ButtonFade(CButtonContainer *pBC, float Seconds, int Checked)
