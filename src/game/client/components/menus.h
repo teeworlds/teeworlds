@@ -743,5 +743,93 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
+<<<<<<< HEAD
+=======
+
+	enum
+	{
+		PAGE_NEWS=1,
+		PAGE_GAME,
+		PAGE_PLAYERS,
+		PAGE_SERVER_INFO,
+		PAGE_CALLVOTE,
+		PAGE_INTERNET,
+		PAGE_LAN,
+		PAGE_FAVORITES,
+		PAGE_DEMOS,
+		PAGE_SETTINGS,
+		PAGE_SYSTEM,
+		PAGE_DDRace,
+		PAGE_BROWSER,
+		PAGE_GHOST
+	};
+
+	// DDRace
+	int64 _my_rtime; // reconnect time
+	int DoButton_CheckBox_DontCare(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	sorted_array<CDemoItem> m_lDemos;
+	void DemolistPopulate();
+
+	// Ghost
+	struct CGhostItem
+	{
+		char m_aFilename[256];
+		char m_aPlayer[MAX_NAME_LENGTH];
+
+		float m_Time;
+
+		bool m_Active;
+		int m_ID;
+
+		bool operator<(const CGhostItem &Other) { return m_Time < Other.m_Time; }
+		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
+	};
+
+	sorted_array<CGhostItem> m_lGhosts;
+	CGhostItem *m_OwnGhost;
+	int m_DDRacePage;
+	void GhostlistPopulate();
+	void setPopup(int Popup) { m_Popup = Popup; }
+
+	int m_DemoPlayerState;
+	char m_aDemoPlayerPopupHint[256];
+
+	enum
+	{
+		POPUP_NONE=0,
+		POPUP_FIRST_LAUNCH,
+		POPUP_CONNECTING,
+		POPUP_MESSAGE,
+		POPUP_DISCONNECTED,
+		POPUP_PURE,
+		POPUP_LANGUAGE,
+		POPUP_COUNTRY,
+		POPUP_DELETE_DEMO,
+		POPUP_RENAME_DEMO,
+		POPUP_REMOVE_FRIEND,
+		POPUP_SOUNDERROR,
+		POPUP_PASSWORD,
+		POPUP_QUIT,
+		POPUP_AUTOUPDATE,
+		POPUP_DISCONNECT,
+
+		// demo player states
+		DEMOPLAYER_NONE=0,
+		DEMOPLAYER_SLICE_SAVE,
+	};
+
+private:
+
+	static int GhostlistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+
+	// found in menus_ingame.cpp
+	void RenderInGameDDRace(CUIRect MainView);
+	void RenderGhost(CUIRect MainView);
+	void RenderInGameBrowser(CUIRect MainView);
+
+	// found in menus_settings.cpp
+	void RenderSettingsDDRace(CUIRect MainView);
+	void RenderSettingsHUD(CUIRect MainView);
+>>>>>>> 862a52085... DemoPlayer: Refuse to overwrite demo
 };
 #endif

@@ -62,6 +62,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
 		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
 		Part.VMargin(20.f/UI()->Scale(), &Part);
+		UI()->DoLabelScaled(&Part, m_aDemoPlayerPopupHint, 24.f, 0);
 
 
 		CUIRect Label, TextBox, Ok, Abort;
@@ -86,11 +87,16 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_ButtonOk = 0;
 		if(DoButton_Menu(&s_ButtonOk, Localize("Ok"), 0, &Ok) || m_EnterPressed)
 		{
-			m_DemoPlayerState = DEMOPLAYER_NONE;
+			if(str_comp(m_lDemos[m_DemolistSelectedIndex].m_aFilename, m_aCurrentDemoFile) == 0)
+				str_copy(m_aDemoPlayerPopupHint, "Please use a different name", sizeof(m_aDemoPlayerPopupHint));
+			else
+			{
+				m_DemoPlayerState = DEMOPLAYER_NONE;
 
-			char aPath[512];
-			str_format(aPath, sizeof(aPath), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
-			Client()->DemoSlice(aPath);
+				char aPath[512];
+				str_format(aPath, sizeof(aPath), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
+				Client()->DemoSlice(aPath);
+			}
 		}
 
 		Box.HSplitBottom(60.f, &Box, &Part);
@@ -342,8 +348,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(DoButton_Sprite(&s_SliceSaveButton, IMAGE_FILEICONS, SPRITE_FILE_DEMO2, 0, &Button, CUI::CORNER_ALL))
 		{
 			str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
+			m_aDemoPlayerPopupHint[0] = '\0';
 			m_DemoPlayerState = DEMOPLAYER_SLICE_SAVE;
-			//Client()->DemoSlice();
 		}
 
 		// close button
