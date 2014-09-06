@@ -45,6 +45,10 @@ void CCamera::OnRender()
 			m_MenuZoom = false;
 			m_Zoom = 1.0f;
 		}
+		CServerInfo Info;
+		Client()->GetServerInfo(&Info);
+		if(!(m_pClient->m_Snap.m_SpecInfo.m_Active || (str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap")) || Client()->State() == IClient::STATE_DEMOPLAYBACK))
+			m_Zoom = 1.0f;
 
 		// update camera center
 		if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition &&
