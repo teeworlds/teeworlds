@@ -328,7 +328,7 @@ class NetIntRange(NetIntAny):
 		self.min = str(min)
 		self.max = str(max)
 	def emit_validate(self):
-		return ["ClampInt(\"%s\", pObj->%s, %s, %s);"%(self.name,self.name, self.min, self.max)]
+		return ["pObj->%s = ClampInt(\"%s\", pObj->%s, %s, %s);"%(self.name, self.name, self.name, self.min, self.max)]
 	def emit_unpack_check(self):
 		return ["if(pMsg->%s < %s || pMsg->%s > %s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.min, self.name, self.max, self.name)]
 
@@ -346,7 +346,7 @@ class NetFlag(NetIntAny):
 		else:
 			self.mask = "0"
 	def emit_validate(self):
-		return ["ClampFlag(\"%s\", pObj->%s, %s);"%(self.name, self.name, self.mask)]
+		return ["pObj->%s = ClampFlag(\"%s\", pObj->%s, %s);"%(self.name, self.name, self.name, self.mask)]
 	def emit_unpack_check(self):
 		return ["if((pMsg->%s & (%s)) != pMsg->%s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.mask, self.name, self.name)]
 
