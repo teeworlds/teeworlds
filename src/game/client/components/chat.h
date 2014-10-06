@@ -53,6 +53,8 @@ class CChat : public CComponent
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
 
+	bool m_ReverseTAB;
+
 	struct CHistoryEntry
 	{
 		int m_Team;
