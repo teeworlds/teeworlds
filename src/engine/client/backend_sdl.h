@@ -275,4 +275,5 @@ public:
 	virtual void Maximize();
 	virtual int WindowActive();
 	virtual int WindowOpen();
+	virtual void NotifyWindow();
 };

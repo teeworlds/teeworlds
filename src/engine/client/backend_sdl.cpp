@@ -1,6 +1,7 @@
 
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include "SDL_syswm.h"
 
 #include <base/tl/threading.h>
 
@@ -745,7 +746,29 @@ int CGraphicsBackend_SDL_OpenGL::WindowActive()
 int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
 	return SDL_GetAppState()&SDL_APPACTIVE;
+}
 
+void CGraphicsBackend_SDL_OpenGL::NotifyWindow()
+{
+	// get window handle
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
+	if(!SDL_GetWMInfo(&info))
+	{
+		dbg_msg("gfx", "unable to obtain window handle");
+		return;
+	}
+
+	#if defined(CONF_FAMILY_WINDOWS)
+		FLASHWINFO desc;
+		desc.cbSize = sizeof(desc);
+		desc.hwnd = info.window;
+		desc.dwFlags = FLASHW_TRAY;
+		desc.uCount = 3; // flash 3 times
+		desc.dwTimeout = 0;
+
+		FlashWindowEx(&desc);
+	#endif
 }
 
 

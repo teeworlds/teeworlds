@@ -858,7 +858,11 @@ int CGraphics_Threaded::WindowActive()
 int CGraphics_Threaded::WindowOpen()
 {
 	return m_pBackend->WindowOpen();
+}
 
+void CGraphics_Threaded::NotifyWindow()
+{
+	return m_pBackend->NotifyWindow();
 }
 
 void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
