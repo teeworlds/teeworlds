@@ -3,6 +3,11 @@
 #include "SDL_opengl.h"
 #include "SDL_syswm.h"
 
+#if defined(SDL_VIDEO_DRIVER_X11)
+	#include <X11/Xutil.h>
+	#include <X11/Xlib.h>
+#endif
+
 #include <base/tl/threading.h>
 
 #include "graphics_threaded.h"
@@ -768,6 +773,26 @@ void CGraphicsBackend_SDL_OpenGL::NotifyWindow()
 		desc.dwTimeout = 0;
 
 		FlashWindowEx(&desc);
+	#elif defined(SDL_VIDEO_DRIVER_X11)
+		Display *dpy = info.info.x11.display;
+		Window win;
+		if(m_pScreenSurface->flags & SDL_FULLSCREEN)
+			win = info.info.x11.fswindow;
+		else
+			win = info.info.x11.wmwindow;
+
+		// Old hints
+		XWMHints *wmhints;
+		wmhints = XAllocWMHints();
+		wmhints->flags = XUrgencyHint;
+		XSetWMHints(dpy, win, wmhints);
+		XFree(wmhints);
+
+		// More modern way of notifying
+		static Atom demandsAttention = XInternAtom(dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", true);
+		static Atom wmState = XInternAtom(dpy, "_NET_WM_STATE", true);
+		XChangeProperty(dpy, win, wmState, XA_ATOM, 32, PropModeReplace,
+			(unsigned char *) &demandsAttention, 1);
 	#endif
 }
 
