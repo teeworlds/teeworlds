@@ -3263,13 +3263,17 @@ void CEditor::RenderFileDialog()
 
 		if (m_FileDialogFileType == CEditor::FILETYPE_IMG && m_FilePreviewImage == 0 && m_FilesSelectedIndex > -1)
 		{
-			char aBuffer[1024];
-			str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_pFileDialogPath, m_FileList[m_FilesSelectedIndex].m_aFilename);
-
-			if(Graphics()->LoadPNG(&m_FilePreviewImageInfo, aBuffer, IStorage::TYPE_ALL))
+			int Length = str_length(m_FileList[m_FilesSelectedIndex].m_aFilename);
+			if (Length >= 4 && !str_comp(m_FileList[m_FilesSelectedIndex].m_aFilename+Length-4, ".png"))
 			{
-				m_FilePreviewImage = Graphics()->LoadTextureRaw(m_FilePreviewImageInfo.m_Width, m_FilePreviewImageInfo.m_Height, m_FilePreviewImageInfo.m_Format, m_FilePreviewImageInfo.m_pData, m_FilePreviewImageInfo.m_Format, IGraphics::TEXLOAD_NORESAMPLE);
-				mem_free(m_FilePreviewImageInfo.m_pData);
+				char aBuffer[1024];
+				str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_pFileDialogPath, m_FileList[m_FilesSelectedIndex].m_aFilename);
+
+				if(Graphics()->LoadPNG(&m_FilePreviewImageInfo, aBuffer, IStorage::TYPE_ALL))
+				{
+					m_FilePreviewImage = Graphics()->LoadTextureRaw(m_FilePreviewImageInfo.m_Width, m_FilePreviewImageInfo.m_Height, m_FilePreviewImageInfo.m_Format, m_FilePreviewImageInfo.m_pData, m_FilePreviewImageInfo.m_Format, IGraphics::TEXLOAD_NORESAMPLE);
+					mem_free(m_FilePreviewImageInfo.m_pData);
+				}
 			}
 		}
 		if (m_FilePreviewImage)
