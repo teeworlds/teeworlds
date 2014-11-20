@@ -845,8 +845,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				return;
 
 			int Chunk = Unpacker.GetInt();
-			int ChunkSize = 1024-128;
-			int Offset = Chunk * ChunkSize;
+			unsigned int ChunkSize = 1024-128;
+			unsigned int Offset = Chunk * ChunkSize;
 			int Last = 0;
 
 			// drop faulty map data requests
