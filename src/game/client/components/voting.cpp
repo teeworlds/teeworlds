@@ -22,6 +22,7 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 
 void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
 {
+	m_Voted = 1;
 	CNetMsg_Cl_CallVote Msg = {0};
 	Msg.m_Type = pType;
 	Msg.m_Value = pValue;
@@ -87,6 +88,7 @@ void CVoting::AddvoteOption(const char *pDescription, const char *pCommand)
 
 void CVoting::Vote(int v)
 {
+	m_Voted = 1;
 	CNetMsg_Cl_Vote Msg = {v};
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
@@ -286,7 +288,14 @@ void CVoting::OnRender()
 
 void CVoting::RenderBars(CUIRect Bars, bool Text)
 {
+	if(m_Voted)
+	{
 	RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, Bars.h/3);
+	}
+	else
+	{
+		RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.2f,1.0f), CUI::CORNER_ALL, Bars.h/3);
+	}
 
 	CUIRect Splitter = Bars;
 	Splitter.x = Splitter.x+Splitter.w/2;
@@ -301,7 +310,8 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 		{
 			CUIRect YesArea = Bars;
 			YesArea.w *= m_Yes/(float)m_Total;
-			RenderTools()->DrawUIRect(&YesArea, vec4(0.2f,0.9f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
+			if(m_Voted)
+				RenderTools()->DrawUIRect(&YesArea, vec4(0.2f,0.9f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
 
 			if(Text)
 			{
@@ -319,7 +329,8 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			CUIRect NoArea = Bars;
 			NoArea.w *= m_No/(float)m_Total;
 			NoArea.x = (Bars.x + Bars.w)-NoArea.w;
-			RenderTools()->DrawUIRect(&NoArea, vec4(0.9f,0.2f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
+			if(m_Voted)
+				RenderTools()->DrawUIRect(&NoArea, vec4(0.9f,0.2f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
 
 			if(Text)
 			{
