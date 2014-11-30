@@ -143,6 +143,19 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	bool IncreaseDemoSpeed = false, DecreaseDemoSpeed = false;
 
+	//add spacebar for toggling Play/Pause
+	if(Input()->KeyDown(KEY_SPACE))
+	{
+		if(!pInfo->m_Paused)
+		{
+			DemoPlayer()->Pause();
+		}
+		else
+		{
+			DemoPlayer()->Unpause();
+		}
+	}
+	
 	if(m_MenuActive)
 	{
 		// do buttons
