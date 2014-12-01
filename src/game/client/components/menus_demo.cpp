@@ -48,7 +48,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	MainView.VSplitLeft(50.0f, 0, &MainView);
 	MainView.VSplitRight(450.0f, &MainView, 0);
 
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
+	if (m_SeekBarActive || m_MenuActive) // only draw the background if SeekBar or Menu is active
+		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
 
 	MainView.Margin(5.0f, &MainView);
 
@@ -57,15 +58,28 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
 	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
 
-	if(m_MenuActive)
+	// we can toggle the seekbar using SHIFT or CTRL
+	if(Input()->KeyDown(KEY_LSHIFT) || Input()->KeyDown(KEY_RSHIFT) || Input()->KeyDown(KEY_LCTRL) || Input()->KeyDown(KEY_RCTRL))
+	{
+		if (m_SeekBarActive)
+			m_SeekBarActive = false;
+		else
+			m_SeekBarActive = true,
+			m_SeekBarActivatedTick = CurrentTick; // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
+	}
+
+	if (m_SeekBarActivatedTick < CurrentTick - SERVER_TICK_SPEED * 3.5)
+		m_SeekBarActive = false;
+	
+	if(m_MenuActive || m_SeekBarActive)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
 		NameBar.HSplitTop(4.0f, 0, &NameBar);
+		// causes bug which makes the seek bar fill the whole menu if (m_MenuActive && m_SeekBarActive) == true
+		/*SeekBar = MainView;*/
 	}
-	else
-		SeekBar = MainView;
 
 	// do seekbar
 	{
