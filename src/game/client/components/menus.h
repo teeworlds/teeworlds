@@ -18,7 +18,7 @@
 #include "skins.h"
 
 
-// compnent to fetch keypresses, override all other input
+// component to fetch keypresses, override all other input
 class CMenusKeyBinder : public CComponent
 {
 public:
@@ -249,6 +249,8 @@ class CMenus : public CComponent
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
+	int m_SeekBarActivatedTick;
+	bool m_SeekBarActive;
 
 	void DemolistOnUpdate(bool Reset);
 	void DemolistPopulate();
