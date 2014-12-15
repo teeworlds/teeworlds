@@ -97,6 +97,9 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	f.close()
 	print("%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items))
 
+# back to root dir
+os.chdir("..")
+
 srctable = parse_source()
 
 print("%-40s %8s %8s %8s" % ("filename", "total", "new", "old"))
