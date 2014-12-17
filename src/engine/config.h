@@ -4,6 +4,7 @@
 #define ENGINE_CONFIG_H
 
 #include "kernel.h"
+#include "console.h"
 
 class IConfig : public IInterface
 {
@@ -15,6 +16,7 @@ public:
 	virtual void Reset() = 0;
 	virtual void RestoreStrings() = 0;
 	virtual void Save() = 0;
+	virtual int SaveServerConfigs(const char *filename) = 0;
 
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) = 0;
 

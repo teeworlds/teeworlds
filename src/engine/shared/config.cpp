@@ -99,6 +99,32 @@ public:
 		m_ConfigFile = 0;
 	}
 
+	virtual int SaveServerConfigs(const char *filename)
+	{
+		if(!m_pStorage)
+			return -1;
+
+		IOHANDLE serverConfig =  m_pStorage->OpenFile(filename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+
+		if (!serverConfig)
+			return -1;
+
+		char aLineBuf[1024*2];
+		char aEscapeBuf[1024*2];
+
+		#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc) if((flags)&CFGFLAG_SERVER){ str_format(aLineBuf, sizeof(aLineBuf), "%s %i", #ScriptName, g_Config.m_##Name); WriteLineToConfigFile(aLineBuf, serverConfig); }
+		#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) if((flags)&CFGFLAG_SERVER){ EscapeParam(aEscapeBuf, g_Config.m_##Name, sizeof(aEscapeBuf)); str_format(aLineBuf, sizeof(aLineBuf), "%s \"%s\"", #ScriptName, aEscapeBuf); WriteLineToConfigFile(aLineBuf, serverConfig); }
+
+		#include "config_variables.h"
+
+		#undef MACRO_CONFIG_INT
+		#undef MACRO_CONFIG_STR
+
+		io_close(serverConfig);
+		serverConfig = 0;
+		return 0;
+	}
+
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData)
 	{
 		dbg_assert(m_NumCallbacks < MAX_CALLBACKS, "too many config callbacks");
@@ -111,9 +137,17 @@ public:
 	{
 		if(!m_ConfigFile)
 			return;
-		io_write(m_ConfigFile, pLine, str_length(pLine));
-		io_write_newline(m_ConfigFile);
+		WriteLineToConfigFile(pLine, m_ConfigFile);
 	}
+
+private:
+
+	void WriteLineToConfigFile(const char *pLine, const IOHANDLE hConfig)
+	{
+		io_write(hConfig, pLine, str_length(pLine));
+		io_write_newline(hConfig);
+	}
+
 };
 
 IConfig *CreateConfig() { return new CConfig; }
