@@ -1,7 +1,9 @@
 import os, re, sys
 match = re.search('(.*)/', sys.argv[0])
 if match != None:
-	os.chdir(match.group(1))
+	os.chdir(match.group(1) + '/..')
+else:
+  os.chdir('..')
 
 source_exts = [".c", ".cpp", ".h"]
 content_author = ""
@@ -96,9 +98,6 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	f.write(content)
 	f.close()
 	print("%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items))
-
-# back to root dir
-os.chdir("..")
 
 srctable = parse_source()
 
