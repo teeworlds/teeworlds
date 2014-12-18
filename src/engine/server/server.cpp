@@ -1504,17 +1504,26 @@ void CServer::ConSaveConfig(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pThis = ((CServer *)pUser);
 	IConfig* currentConfig = pThis->Kernel()->RequestInterface<IConfig>();
-	const char *pFileName = pResult->GetString(0);
+	
+	char aFilename[128];
+	if(pResult->NumArguments())
+		str_format(aFilename, sizeof(aFilename), "%s.cfg", pResult->GetString(0));
+	else
+	{
+		char aDate[20];
+		str_timestamp(aDate, sizeof(aDate));
+		str_format(aFilename, sizeof(aFilename), "server_config_%s.cfg", aDate);
+	}
 	
 	char aBuf[256];
-	if (currentConfig->SaveServerConfigs(pFileName) == 0)
+	if (currentConfig->SaveServerConfigs(aFilename) == 0)
 	{
-		str_format(aBuf, sizeof(aBuf), "saved server configuration to %s", pFileName);
+		str_format(aBuf, sizeof(aBuf), "saved server configuration to %s", aFilename);
 		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 	}
 	else
 	{
-		str_format(aBuf, sizeof(aBuf), "failed to save server configuration to %s", pFileName);
+		str_format(aBuf, sizeof(aBuf), "failed to save server configuration to %s", aFilename);
 		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 	}
 }
@@ -1613,7 +1622,7 @@ void CServer::RegisterCommands()
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
-	Console()->Register("save_conf", "s", CFGFLAG_SERVER, ConSaveConfig, this, "Save current configuration to file");
+	Console()->Register("save_conf", "?s", CFGFLAG_SERVER, ConSaveConfig, this, "Save current configuration to file");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
