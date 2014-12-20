@@ -1493,6 +1493,7 @@ void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 		str_timestamp(aDate, sizeof(aDate));
 		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
 	}
+	str_sanitize_pathname_from_character(aFilename, 6);
 	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
 }
 
@@ -1513,14 +1514,15 @@ void CServer::ConSaveConfig(IConsole::IResult *pResult, void *pUser)
 	
 	char aFilename[128];
 	if(pResult->NumArguments())
-		str_format(aFilename, sizeof(aFilename), "%s.cfg", pResult->GetString(0));
+		str_format(aFilename, sizeof(aFilename), "serverconf/%s.cfg", (pResult->GetString(0)));
 	else
 	{
 		char aDate[20];
 		str_timestamp(aDate, sizeof(aDate));
-		str_format(aFilename, sizeof(aFilename), "server_config_%s.cfg", aDate);
+		str_format(aFilename, sizeof(aFilename), "serverconf/server_config_%s.cfg", aDate);
 	}
 	
+	str_sanitize_pathname_from_character(aFilename, 11);
 	char aBuf[256];
 	if (currentConfig->SaveServerConfigs(aFilename) == 0)
 	{
@@ -1628,7 +1630,7 @@ void CServer::RegisterCommands()
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
 
-	Console()->Register("save_conf", "?s", CFGFLAG_SERVER, ConSaveConfig, this, "Save current configuration to file");
+	Console()->Register("saveserverconf", "?s", CFGFLAG_SERVER, ConSaveConfig, this, "Save current configuration to file");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);

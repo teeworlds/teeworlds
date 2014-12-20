@@ -814,6 +814,25 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
+	Function: str_sanitize_pathname_from_character
+		Replaces all characters '/' '\' and '~' which can lead path
+		hijacking, with '-', starting from character at position str_in fromCharN
+
+	Parameters:
+		str - String to sanitize.
+		fromCharN - Positive integer of the first character to check (form 0)
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+void str_sanitize_pathname_from_character(char* str_in, unsigned int fromCharN);
+
+/*
+	Same as the function above but starting from first character
+*/
+void str_sanitize_pathname(char* str_in);
+
+/*
 	Function: str_clean_whitespaces
 		Removes leading and trailing spaces and limits the use of multiple spaces.
 
