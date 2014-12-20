@@ -68,6 +68,7 @@ public:
 				fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "serverconf", aPath, sizeof(aPath)));
 			}
 			else
 			{
