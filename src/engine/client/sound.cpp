@@ -59,7 +59,7 @@ static LOCK m_SoundLock = 0;
 static int m_CenterX = 0;
 static int m_CenterY = 0;
 
-static int m_MaxDistance = 1500;
+static float m_MaxDistance = 1500.0f;
 
 static int m_MixingRate = 48000;
 static volatile int m_SoundVolume = 100;
@@ -75,13 +75,6 @@ static short Int2Short(int i)
 		return 0x7fff;
 	else if(i < -0x7fff)
 		return -0x7fff;
-	return i;
-}
-
-static int IntAbs(int i)
-{
-	if(i<0)
-		return -i;
 	return i;
 }
 
@@ -142,8 +135,8 @@ static void Mix(short *pFinalOut, unsigned Frames)
 					// linear falloff
 					float Falloff = 1.0f - Dist/m_MaxDistance;
 
-					Lvol = (int)Lvol*Lgain*Falloff;
-					Rvol = (int)Rvol*Rgain*Falloff;
+					Lvol = Lvol*Lgain*Falloff;
+					Rvol = Rvol*Rgain*Falloff;
 				}
 				else
 				{
