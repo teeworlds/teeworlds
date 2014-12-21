@@ -573,12 +573,20 @@ void CNetBan::ConBans(IConsole::IResult *pResult, void *pUser)
 void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 {
 	CNetBan *pThis = static_cast<CNetBan *>(pUser);
-
 	char aBuf[256];
-	IOHANDLE File = pThis->Storage()->OpenFile(pResult->GetString(0), IOFLAG_WRITE, IStorage::TYPE_SAVE);
+
+	const char *pFilename = pResult->GetString(0);
+	if (str_safe_as_pathname(pFilename) != 0)
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to save server banlist: '%s' is not an allowed path", pFilename);
+		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
+		return;
+	}
+
+	IOHANDLE File = pThis->Storage()->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 	{
-		str_format(aBuf, sizeof(aBuf), "failed to save banlist to '%s'", pResult->GetString(0));
+		str_format(aBuf, sizeof(aBuf), "failed to save banlist to '%s'", pFilename);
 		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
 		return;
 	}
@@ -604,6 +612,6 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 	}
 
 	io_close(File);
-	str_format(aBuf, sizeof(aBuf), "saved banlist to '%s'", pResult->GetString(0));
+	str_format(aBuf, sizeof(aBuf), "saved banlist to '%s'", pFilename);
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
 }

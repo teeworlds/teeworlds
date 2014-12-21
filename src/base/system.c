@@ -1610,20 +1610,16 @@ void str_sanitize_cc(char *str_in)
 	}
 }
 
-void str_sanitize_pathname(char* str_in)
+int str_safe_as_pathname(const char* str_in)
 {
-	str_sanitize_pathname_from_character(str_in, 0);
-}
-
-void str_sanitize_pathname_from_character(char* str_in, unsigned int fromCharN)
-{
-	unsigned char *str = ((unsigned char *) str_in) + fromCharN;
+	unsigned char *str = (unsigned char *)str_in;
 	while(*str)
 	{
-		if (*str == '\\' || *str == '/' || *str == '~')
-			*str = '-';
+		if (*str == '\\' || *str == '/')
+			return -1;
 		str++;
 	}
+	return 0;
 }
 
 /* makes sure that the string only contains the characters between 32 and 255 + \r\n\t */
