@@ -1817,8 +1817,9 @@ int CMenus::Render()
 			{
 				Box.HSplitTop(12.0f, 0, &Part);
 				UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
-				Part.HSplitTop(12.0f, 0, &Part);
-				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				Part.HSplitTop(20.0f, 0, &Part);
+				Part.VMargin(5.0f, &Part);
+				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT, Part.w);
 			}
 			else
 			{
