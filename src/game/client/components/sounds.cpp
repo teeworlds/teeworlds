@@ -61,10 +61,10 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 void CSounds::OnInit()
 {
 	// setup sound channels
-	Sound()->SetChannel(CSounds::CHN_GUI, 1.0f, 0.0f);
-	Sound()->SetChannel(CSounds::CHN_MUSIC, 1.0f, 0.0f);
-	Sound()->SetChannel(CSounds::CHN_WORLD, 0.9f, 1.0f);
-	Sound()->SetChannel(CSounds::CHN_GLOBAL, 1.0f, 0.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_GUI, 1.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_MUSIC, 1.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_WORLD, 0.9f);
+	Sound()->SetChannelVolume(CSounds::CHN_GLOBAL, 1.0f);
 
 	Sound()->SetListenerPos(0.0f, 0.0f);
 
