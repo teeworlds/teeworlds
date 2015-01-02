@@ -65,6 +65,12 @@ int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 	return HadFlag;
 }
 
+void CGameControllerCTF::OnFlagReturn(CFlag *pFlag)
+{
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
+	GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
+}
+
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 {
 	if(IGameController::OnEntity(Index, Pos))
@@ -76,9 +82,7 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 	if(Team == -1 || m_apFlags[Team])
 		return false;
 
-	CFlag *F = new CFlag(&GameServer()->m_World, Team);
-	F->m_StandPos = Pos;
-	F->m_Pos = Pos;
+	CFlag *F = new CFlag(&GameServer()->m_World, Team, Pos);
 	m_apFlags[Team] = F;
 	GameServer()->m_World.InsertEntity(F);
 	return true;
@@ -161,24 +165,12 @@ void CGameControllerCTF::Tick()
 		if(!F)
 			continue;
 
-		// flag hits death-tile or left the game layer, reset it
-		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
-		{
-			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
-			GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
-			F->Reset();
-			continue;
-		}
-
 		//
 		if(F->m_pCarryingCharacter)
 		{
-			// update flag position
-			F->m_Pos = F->m_pCarryingCharacter->m_Pos;
-
 			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
 			{
-				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
+				if(distance(F->GetPos(), m_apFlags[fi^1]->GetPos()) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
 				{
 					// CAPTURE! \o/
 					m_aTeamscore[fi^1] += 100;
@@ -199,10 +191,10 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(F->GetPos(), CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
-				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->GetPos(), apCloseCCharacters[i]->GetPos(), NULL, NULL))
 					continue;
 
 				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
@@ -242,20 +234,6 @@ void CGameControllerCTF::Tick()
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 					GameServer()->SendGameMsg(GAMEMSG_CTF_GRAB, fi, -1);
 					break;
-				}
-			}
-
-			if(!F->m_pCarryingCharacter && !F->m_AtStand)
-			{
-				if(Server()->Tick() > F->m_DropTick + Server()->TickSpeed()*30)
-				{
-					GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
-					F->Reset();
-				}
-				else
-				{
-					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 				}
 			}
 		}

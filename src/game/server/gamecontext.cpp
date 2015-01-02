@@ -141,7 +141,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamag
 	int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
-		vec2 Diff = apEnts[i]->m_Pos - Pos;
+		vec2 Diff = apEnts[i]->GetPos() - Pos;
 		vec2 Force(0, MaxForce);
 		float l = length(Diff);
 		if(l)

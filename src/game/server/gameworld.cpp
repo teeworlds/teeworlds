@@ -79,7 +79,7 @@ void CGameWorld::InsertEntity(CEntity *pEnt)
 
 void CGameWorld::DestroyEntity(CEntity *pEnt)
 {
-	pEnt->m_MarkedForDestroy = true;
+	pEnt->MarkForDestroy();
 }
 
 void CGameWorld::RemoveEntity(CEntity *pEnt)
@@ -152,7 +152,7 @@ void CGameWorld::RemoveEntities()
 		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 		{
 			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			if(pEnt->m_MarkedForDestroy)
+			if(pEnt->IsMarkedForDestroy())
 			{
 				RemoveEntity(pEnt);
 				pEnt->Destroy();

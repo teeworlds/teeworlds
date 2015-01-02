@@ -3,6 +3,9 @@
 #ifndef GAME_SERVER_ENTITIES_CHARACTER_H
 #define GAME_SERVER_ENTITIES_CHARACTER_H
 
+#include <generated/protocol.h>
+
+#include <game/gamecore.h>
 #include <game/server/entity.h>
 
 

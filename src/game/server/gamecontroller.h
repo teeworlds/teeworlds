@@ -142,6 +142,8 @@ public:
 	*/
 	virtual void OnCharacterSpawn(class CCharacter *pChr);
 
+	virtual void OnFlagReturn(class CFlag *pFlag);
+
 	/*
 		Function: on_entity
 			Called when the map is loaded to process an entity
