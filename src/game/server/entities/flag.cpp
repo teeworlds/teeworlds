@@ -10,28 +10,43 @@ CFlag::CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, StandPos, ms_PhysSize)
 {
 	m_Team = Team;
-	m_pCarryingCharacter = NULL;
 	m_StandPos = StandPos;
-	m_GrabTick = 0;
+
+	GameServer()->m_World.InsertEntity(this);
 
 	Reset();
 }
 
 void CFlag::Reset()
 {
-	m_pCarryingCharacter = NULL;
-	m_AtStand = 1;
+	m_pCarrier = 0;
+	m_AtStand = true;
 	m_Pos = m_StandPos;
 	m_Vel = vec2(0, 0);
 	m_GrabTick = 0;
 }
 
+void CFlag::Grab(CCharacter *pChar)
+{
+	m_AtStand = false;
+	m_pCarrier = pChar;
+	if(m_AtStand)
+		m_GrabTick = Server()->Tick();
+}
+
+void CFlag::Drop()
+{
+	m_pCarrier = 0;
+	m_Vel = vec2(0, 0);
+	m_DropTick = Server()->Tick();
+}
+
 void CFlag::Tick()
 {
-	if(m_pCarryingCharacter)
+	if(m_pCarrier)
 	{
 		// update flag position
-		m_Pos = m_pCarryingCharacter->GetPos();
+		m_Pos = m_pCarrier->GetPos();
 	}
 	else
 	{
