@@ -82,7 +82,7 @@ void CPlayer::Tick()
 		if(m_pCharacter)
 		{
 			if(m_pCharacter->IsAlive())
-				m_ViewPos = m_pCharacter->m_Pos;
+				m_ViewPos = m_pCharacter->GetPos();
 		}
 		else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 			TryRespawn();

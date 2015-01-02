@@ -7,11 +7,10 @@
 #include "character.h"
 #include "pickup.h"
 
-CPickup::CPickup(CGameWorld *pGameWorld, int Type)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP)
+CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP, Pos, PickupPhysSize)
 {
 	m_Type = Type;
-	m_ProximityRadius = PickupPhysSize;
 
 	Reset();
 
@@ -140,7 +139,7 @@ void CPickup::Snap(int SnappingClient)
 	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))
 		return;
 
-	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_ID, sizeof(CNetObj_Pickup)));
+	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, GetID(), sizeof(CNetObj_Pickup)));
 	if(!pP)
 		return;
 

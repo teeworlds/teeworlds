@@ -18,11 +18,12 @@ public:
 	int m_DropTick;
 	int m_GrabTick;
 
-	CFlag(CGameWorld *pGameWorld, int Team);
+	CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos);
 
 	virtual void Reset();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
+	virtual void Tick();
 };
 
 #endif
