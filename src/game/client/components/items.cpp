@@ -311,7 +311,8 @@ void CItems::OnRender()
 	}
 
 	// render extra projectiles
-	for(int i = 0; i < m_NumExtraProjectiles; i++)
+	int i = 0;
+	while(i < m_NumExtraProjectiles)
 	{
 		if(m_aExtraProjectiles[i].m_StartTick < Client()->GameTick())
 		{
@@ -319,7 +320,10 @@ void CItems::OnRender()
 			m_NumExtraProjectiles--;
 		}
 		else
+		{
 			RenderProjectile(&m_aExtraProjectiles[i], 0);
+			i++;
+		}
 	}
 }
 
