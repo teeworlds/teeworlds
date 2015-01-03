@@ -4,6 +4,12 @@
 
 #include <game/mapitems.h>
 
+#include "entities/pickups/weapons/grenade.h"
+#include "entities/pickups/weapons/laser.h"
+#include "entities/pickups/weapons/shotgun.h"
+#include "entities/pickups/armor.h"
+#include "entities/pickups/health.h"
+#include "entities/pickups/ninja.h"
 #include "entities/character.h"
 #include "entities/pickup.h"
 #include "gamecontext.h"
@@ -271,8 +277,7 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 			return false;
 	}
 
-	int Type = -1;
-
+	CPickup *pPickup = 0;
 	switch(Index)
 	{
 	case ENTITY_SPAWN:
@@ -285,32 +290,26 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
 		break;
 	case ENTITY_ARMOR_1:
-		Type = PICKUP_ARMOR;
+		pPickup = new CPickupArmor(&GameServer()->m_World, Pos);
 		break;
 	case ENTITY_HEALTH_1:
-		Type = PICKUP_HEALTH;
+		pPickup = new CPickupHealth(&GameServer()->m_World, Pos);
 		break;
 	case ENTITY_WEAPON_SHOTGUN:
-		Type = PICKUP_SHOTGUN;
+		pPickup = new CPickupWeaponShotgun(&GameServer()->m_World, Pos);
 		break;
 	case ENTITY_WEAPON_GRENADE:
-		Type = PICKUP_GRENADE;
+		pPickup = new CPickupWeaponGrenade(&GameServer()->m_World, Pos);
 		break;
 	case ENTITY_WEAPON_LASER:
-		Type = PICKUP_LASER;
+		pPickup = new CPickupWeaponLaser(&GameServer()->m_World, Pos);
 		break;
 	case ENTITY_POWERUP_NINJA:
 		if(g_Config.m_SvPowerups)
-			Type = PICKUP_NINJA;
+			pPickup = new CPickupNinja(&GameServer()->m_World, Pos);
 	}
 
-	if(Type != -1)
-	{
-		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, Pos);
-		return true;
-	}
-
-	return false;
+	return pPickup != 0;
 }
 
 void IGameController::OnPlayerConnect(CPlayer *pPlayer)
