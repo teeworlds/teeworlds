@@ -3,6 +3,9 @@
 #include <engine/shared/config.h>
 
 #include <generated/server_data.h>
+#include <game/server/entities/projectiles/grenade.h>
+#include <game/server/entities/projectiles/gun.h>
+#include <game/server/entities/projectiles/shotgun.h>
 #include <game/server/gamecontext.h>
 #include <game/server/gamecontroller.h>
 #include <game/server/player.h>
@@ -333,12 +336,8 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GUN:
 		{
-			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GUN,
-				m_pPlayer->GetCID(),
-				ProjStartPos,
-				Direction,
-				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
-				g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
+			CProjectile *pProj = new CProjectileGun(GameWorld(), m_pPlayer->GetCID(),
+				Direction, ProjStartPos);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -368,12 +367,9 @@ void CCharacter::FireWeapon()
 				a += Spreading[i+2];
 				float v = 1-(absolute(i)/(float)ShotSpread);
 				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
-				CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
-					m_pPlayer->GetCID(),
-					ProjStartPos,
-					vec2(cosf(a), sinf(a))*Speed,
-					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_ShotgunLifetime),
-					g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, 0, -1, WEAPON_SHOTGUN);
+
+				CProjectile *pProj = new CProjectileShotgun(GameWorld(), m_pPlayer->GetCID(),
+					vec2(cosf(a), sinf(a))*Speed, ProjStartPos);
 
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
@@ -390,12 +386,8 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GRENADE:
 		{
-			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
-				m_pPlayer->GetCID(),
-				ProjStartPos,
-				Direction,
-				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
-				g_pData->m_Weapons.m_Grenade.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+			CProjectile *pProj = new CProjectileGrenade(GameWorld(), m_pPlayer->GetCID(),
+				Direction, ProjStartPos);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;

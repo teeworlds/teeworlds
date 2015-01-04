@@ -3,31 +3,46 @@
 #ifndef GAME_SERVER_ENTITIES_PROJECTILE_H
 #define GAME_SERVER_ENTITIES_PROJECTILE_H
 
+#include <game/server/entity.h>
+
 class CProjectile : public CEntity
 {
+private:
+	/* Identity */
+	int m_Type;
+	int m_Owner;
+	vec2 m_Dir;
+
+	/* State */
+	int m_StartTick;
+
+protected:
+	/* Functions */
+	virtual void OnLifeOver(vec2 Pos) = 0;
+	virtual bool OnCharacterHit(vec2 Pos, class CCharacter *pChar) = 0;
+	virtual bool OnGroundHit(vec2 Pos) = 0;
+
 public:
-	CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
-		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon);
+	/* Constructor */
+	CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Dir, vec2 Pos);
 
-	vec2 GetPos(float Time);
-	void FillInfo(CNetObj_Projectile *pProj);
+	/* Getters */
+	int GetType() const		{ return m_Type; }
+	int GetOwner() const	{ return m_Owner; }
+	vec2 GetDir() const		{ return m_Dir; }
+	virtual float GetCurvature() = 0;
+	virtual float GetSpeed() = 0;
+	virtual float GetLifeSpan() = 0;
 
+	/* CEntity functions */
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
-private:
-	vec2 m_Direction;
-	int m_LifeSpan;
-	int m_Owner;
-	int m_Type;
-	int m_Damage;
-	int m_SoundImpact;
-	int m_Weapon;
-	float m_Force;
-	int m_StartTick;
-	bool m_Explosive;
+	/* Other functions */
+	vec2 GetPos(float Time);
+	void FillInfo(CNetObj_Projectile *pProj);
 };
 
 #endif
