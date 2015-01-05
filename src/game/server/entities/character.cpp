@@ -404,7 +404,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_LASER:
 		{
-			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
+			new CLaser(GameWorld(), m_pPlayer->GetCID(), m_Pos, Direction);
 			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE);
 		} break;
 
