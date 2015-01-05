@@ -27,25 +27,36 @@ CEntity::~CEntity()
 	Server()->SnapFreeID(m_ID);
 }
 
-int CEntity::NetworkClipped(int SnappingClient)
+bool CEntity::NetworkClipped(int SnappingClient)
 {
 	return NetworkClipped(SnappingClient, m_Pos);
 }
 
-int CEntity::NetworkClipped(int SnappingClient, vec2 CheckPos)
+bool CEntity::NetworkClipped(int SnappingClient, vec2 CheckPos)
 {
 	if(SnappingClient == -1)
-		return 0;
+		return false;
 
 	float dx = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.x-CheckPos.x;
 	float dy = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.y-CheckPos.y;
 
 	if(absolute(dx) > 1000.0f || absolute(dy) > 800.0f)
-		return 1;
+		return true;
 
 	if(distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, CheckPos) > 1100.0f)
-		return 1;
-	return 0;
+		return true;
+	return false;
+}
+
+bool CEntity::NetworkClipped(int SnappingClient, vec2 CheckLinePoint1, vec2 CheckLinePoint2)
+{
+	if(SnappingClient == -1)
+		return false;
+
+	vec2 ViewPos = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos;
+	vec2 ClosestPoint = closest_point_on_line(CheckLinePoint1, CheckLinePoint2, ViewPos);
+
+	return NetworkClipped(SnappingClient, ClosestPoint);
 }
 
 bool CEntity::GameLayerClipped(vec2 CheckPos)

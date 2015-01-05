@@ -135,8 +135,9 @@ public:
 		Returns:
 			Non-zero if the entity doesn't have to be in the snapshot.
 	*/
-	int NetworkClipped(int SnappingClient);
-	int NetworkClipped(int SnappingClient, vec2 CheckPos);
+	bool NetworkClipped(int SnappingClient);
+	bool NetworkClipped(int SnappingClient, vec2 CheckPos);
+	bool NetworkClipped(int SnappingClient, vec2 CheckLinePoint1, vec2 CheckLinePoint2);
 
 	bool GameLayerClipped(vec2 CheckPos);
 };
