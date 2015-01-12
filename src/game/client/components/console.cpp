@@ -365,6 +365,7 @@ void CGameConsole::OnRender()
 
 	// do background
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
+	Graphics()->WrapNormal();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
 	if(m_ConsoleType == CONSOLETYPE_REMOTE)
