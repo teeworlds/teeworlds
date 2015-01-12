@@ -182,7 +182,7 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
-		
+		Graphics()->WrapNormal();
 	}
 
 	Text.HMargin(pRect->h>=20.0f?2.0f:1.0f, &Text);
