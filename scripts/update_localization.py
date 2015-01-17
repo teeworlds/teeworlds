@@ -1,7 +1,9 @@
 import os, re, sys
 match = re.search('(.*)/', sys.argv[0])
 if match != None:
-	os.chdir(match.group(1))
+	os.chdir(match.group(1) + '/..')
+else:
+  os.chdir('..')
 
 source_exts = [".c", ".cpp", ".h"]
 content_author = ""
