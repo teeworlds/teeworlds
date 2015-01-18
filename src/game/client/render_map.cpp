@@ -123,8 +123,6 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 				return -s*cos(phi-pi/3) - sub;
 		}
 	}
-
-	return 0.0f;
 }
 
 void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
