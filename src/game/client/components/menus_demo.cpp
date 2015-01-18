@@ -147,13 +147,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	if(Input()->KeyDown(KEY_SPACE))
 	{
 		if(!pInfo->m_Paused)
-		{
 			DemoPlayer()->Pause();
-		}
 		else
-		{
 			DemoPlayer()->Unpause();
-		}
 	}
 	
 	if(m_MenuActive)
@@ -227,7 +223,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 	}
 
-	if(IncreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+	if(IncreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) || Input()->KeyDown(KEY_PLUS) || Input()->KeyDown(KEY_KP_PLUS))
 	{
 		if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
 		else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
@@ -238,7 +234,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else DemoPlayer()->SetSpeed(8.0f);
 	}
-	else if(DecreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+	else if(DecreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyDown(KEY_MINUS) || Input()->KeyDown(KEY_KP_MINUS))
 	{
 		if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
