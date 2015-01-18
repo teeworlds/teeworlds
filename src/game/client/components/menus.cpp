@@ -1343,7 +1343,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 		return 0;
 
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "menuimages/%s", pName);
+	str_format(aBuf, sizeof(aBuf), "ui/menuimages/%s", pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
 	{
@@ -1507,7 +1507,7 @@ void CMenus::OnInit()
 
 	// load menu images
 	m_lMenuImages.clear();
-	Storage()->ListDirectory(IStorage::TYPE_ALL, "menuimages", MenuImageScan, this);
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageScan, this);
 
 	/*
 	array<string> my_strings;
@@ -1565,7 +1565,7 @@ void CMenus::OnInit()
 	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("snd_enable_music", ConchainToggleMusic, this);
 
-	m_TextureBlob = Graphics()->LoadTexture("blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	m_TextureBlob = Graphics()->LoadTexture("ui/blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	// setup load amount
 	m_LoadCurrent = 0;

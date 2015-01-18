@@ -17,6 +17,7 @@ config:Finalize("config.lua")
 generated_src_dir = "build/src"
 generated_icon_dir = "build/icons"
 builddir = "build/%(arch)s/%(conf)s"
+content_src_dir = "datasrc/"
 
 -- data compiler
 function Python(name)
@@ -154,6 +155,9 @@ function GenerateMacOSXSettings(settings, conf, arch)
 	config.sdl:Apply(settings)
 	settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
 	BuildClient(settings)
+
+	-- Content
+	BuildContent(settings)
 end
 
 function GenerateLinuxSettings(settings, conf, arch)
@@ -188,6 +192,9 @@ function GenerateLinuxSettings(settings, conf, arch)
 	settings.link.libs:Add("GL")
 	settings.link.libs:Add("GLU")
 	BuildClient(settings)
+
+	-- Content
+	BuildContent(settings)
 end
 
 function GenerateSolarisSettings(settings, conf, arch)
@@ -253,6 +260,9 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.libs:Add("glu32")
 	settings.link.libs:Add("winmm")
 	BuildClient(settings)
+
+	-- Content
+	BuildContent(settings)
 end
 
 function SharedCommonFiles()
@@ -352,6 +362,12 @@ function BuildVersionserver(settings)
 	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"])
 end
 
+function BuildContent(settings)
+	local content = {}
+	table.insert(content, CopyToDir(settings.link.Output(settings, "data"), CollectRecursive(content_src_dir .. "*.png", content_src_dir .. "*.wav", content_src_dir .. "*.ttf", content_src_dir .. "*.txt", content_src_dir .. "*.map", content_src_dir .. "*.rules")))
+	PseudoTarget(settings.link.Output(settings, "content") .. settings.link.extension, content)
+end
+
 -- create all targets for specified configuration & architecture
 function GenerateSettings(conf, arch, builddir, compiler)
 	local settings = NewSettings()
@@ -416,6 +432,14 @@ function interp(s, tab)
 			end))
 end
 
+function CopyToDir(dst, ...)
+	local output = {}
+	for filename in TableWalk({...}) do
+		table.insert(output, CopyFile(PathJoin(dst, string.sub(filename, string.len(content_src_dir)+1)), filename))
+	end
+	return output
+end
+
 function split(str, sep)
 	local vals = {}
 	str:gsub("([^,]+)", function(val) table.insert(vals, val) end)
@@ -453,7 +477,7 @@ end
 
 targets = {client="teeworlds", server="teeworlds_srv",
            versionserver="versionsrv", masterserver="mastersrv",
-           tools="pseudo_tools"}
+           tools="pseudo_tools", content="content"}
 
 subtargets = {}
 for t, cur_target in pairs(targets) do
@@ -473,5 +497,5 @@ for cur_name, cur_target in pairs(targets) do
 	PseudoTarget(cur_name, subtargets[cur_target])
 end
 
-PseudoTarget("game", "client", "server")
+PseudoTarget("game", "client", "server", "content")
 DefaultTarget("game")
