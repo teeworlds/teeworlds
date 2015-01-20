@@ -40,7 +40,7 @@ protected:
 	int m_InputCurrent;
 	bool m_InputDispatched;
 
-	int KeyWasPressed(int Key) { return m_aInputState[m_InputCurrent^1][Key]; }
+	int KeyWasPressed(int Key) const { return m_aInputState[m_InputCurrent^1][Key]; }
 
 public:
 	enum
@@ -68,11 +68,11 @@ public:
 	}
 
 	// keys
-	int KeyPressed(int Key) { return m_aInputState[m_InputCurrent][Key]; }
-	int KeyReleases(int Key) { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
-	int KeyPresses(int Key) { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
-	int KeyDown(int Key) { return KeyPressed(Key)&&!KeyWasPressed(Key); }
-	const char *KeyName(int Key) { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
+	int KeyPressed(int Key) const { return m_aInputState[m_InputCurrent][Key]; }
+	int KeyReleases(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
+	int KeyPresses(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
+	int KeyDown(int Key) const { return KeyPressed(Key)&&!KeyWasPressed(Key); }
+	const char *KeyName(int Key) const { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
 	//
 	virtual void MouseModeRelative() = 0;

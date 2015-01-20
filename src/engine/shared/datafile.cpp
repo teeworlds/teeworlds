@@ -250,14 +250,14 @@ bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename
 	return true;
 }
 
-int CDataFileReader::NumData()
+int CDataFileReader::NumData() const
 {
 	if(!m_pDataFile) { return 0; }
 	return m_pDataFile->m_Header.m_NumRawData;
 }
 
 // always returns the size in the file
-int CDataFileReader::GetDataSize(int Index)
+int CDataFileReader::GetDataSize(int Index) const
 {
 	if(!m_pDataFile) { return 0; }
 
@@ -341,7 +341,7 @@ void CDataFileReader::UnloadData(int Index)
 	m_pDataFile->m_ppDataPtrs[Index] = 0x0;
 }
 
-int CDataFileReader::GetItemSize(int Index)
+int CDataFileReader::GetItemSize(int Index) const
 {
 	if(!m_pDataFile) { return 0; }
 	if(Index == m_pDataFile->m_Header.m_NumItems-1)
@@ -396,7 +396,7 @@ void *CDataFileReader::FindItem(int Type, int ID)
 	return 0;
 }
 
-int CDataFileReader::NumItems()
+int CDataFileReader::NumItems() const
 {
 	if(!m_pDataFile) return 0;
 	return m_pDataFile->m_Header.m_NumItems;
@@ -418,7 +418,7 @@ bool CDataFileReader::Close()
 	return true;
 }
 
-unsigned CDataFileReader::Crc()
+unsigned CDataFileReader::Crc() const
 {
 	if(!m_pDataFile) return 0xFFFFFFFF;
 	return m_pDataFile->m_Crc;

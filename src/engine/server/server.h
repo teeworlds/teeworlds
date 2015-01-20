@@ -187,14 +187,14 @@ public:
 	int Init();
 
 	void SetRconCID(int ClientID);
-	bool IsAuthed(int ClientID);
-	bool IsBanned(int ClientID);
-	int GetClientInfo(int ClientID, CClientInfo *pInfo);
-	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
-	const char *ClientName(int ClientID);
-	const char *ClientClan(int ClientID);
-	int ClientCountry(int ClientID);
-	bool ClientIngame(int ClientID);
+	bool IsAuthed(int ClientID) const;
+	bool IsBanned(int ClientID) const;
+	int GetClientInfo(int ClientID, CClientInfo *pInfo) const;
+	void GetClientAddr(int ClientID, char *pAddrStr, int Size) const;
+	const char *ClientName(int ClientID) const;
+	const char *ClientClan(int ClientID) const;
+	int ClientCountry(int ClientID) const;
+	bool ClientIngame(int ClientID) const;
 	int MaxClients() const;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
@@ -220,7 +220,7 @@ public:
 
 	void PumpNetwork();
 
-	char *GetMapName();
+	char *GetMapName() const;
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);

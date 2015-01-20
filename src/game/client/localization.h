@@ -30,10 +30,10 @@ public:
 
 	bool Load(const char *pFilename, class IStorage *pStorage, class IConsole *pConsole);
 
-	int Version() { return m_CurrentVersion; }
+	int Version() const { return m_CurrentVersion; }
 
 	void AddString(const char *pOrgStr, const char *pNewStr, const char *pContext);
-	const char *FindString(unsigned Hash, unsigned ContextHash);
+	const char *FindString(unsigned Hash, unsigned ContextHash) const;
 };
 
 extern CLocalizationDatabase g_Localization;

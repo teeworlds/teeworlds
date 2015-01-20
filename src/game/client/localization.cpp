@@ -99,7 +99,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	return true;
 }
 
-const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHash)
+const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHash) const
 {
 	CString String;
 	String.m_Hash = Hash;

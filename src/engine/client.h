@@ -92,20 +92,20 @@ public:
 	virtual void EnterGame() = 0;
 
 	//
-	virtual int MapDownloadAmount() = 0;
-	virtual int MapDownloadTotalsize() = 0;
+	virtual int MapDownloadAmount() const = 0;
+	virtual int MapDownloadTotalsize() const = 0;
 
 	// input
-	virtual int *GetInput(int Tick) = 0;
+	virtual int *GetInput(int Tick) const = 0;
 
 	// remote console
 	virtual void RconAuth(const char *pUsername, const char *pPassword) = 0;
-	virtual bool RconAuthed() = 0;
-	virtual bool UseTempRconCommands() = 0;
+	virtual bool RconAuthed() const = 0;
+	virtual bool UseTempRconCommands() const = 0;
 	virtual void Rcon(const char *pLine) = 0;
 
 	// server info
-	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;
+	virtual void GetServerInfo(class CServerInfo *pServerInfo) const = 0;
 
 	// snapshot interface
 
@@ -116,9 +116,9 @@ public:
 	};
 
 	// TODO: Refactor: should redo this a bit i think, too many virtual calls
-	virtual int SnapNumItems(int SnapID) = 0;
-	virtual void *SnapFindItem(int SnapID, int Type, int ID) = 0;
-	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) = 0;
+	virtual int SnapNumItems(int SnapID) const = 0;
+	virtual void *SnapFindItem(int SnapID, int Type, int ID) const = 0;
+	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const = 0;
 	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
 	
 	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
@@ -137,13 +137,13 @@ public:
 	}
 
 	//
-	virtual const char *ErrorString() = 0;
-	virtual const char *LatestVersion() = 0;
-	virtual bool ConnectionProblems() = 0;
+	virtual const char *ErrorString() const = 0;
+	virtual const char *LatestVersion() const = 0;
+	virtual bool ConnectionProblems() const = 0;
 
-	virtual bool SoundInitFailed() = 0;
+	virtual bool SoundInitFailed() const = 0;
 
-	virtual IGraphics::CTextureHandle GetDebugFont() = 0; // TODO: remove this function
+	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
 };
 
 class IGameClient : public IInterface
@@ -168,9 +168,9 @@ public:
 
 	virtual int OnSnapInput(int *pData) = 0;
 
-	virtual const char *GetItemName(int Type) = 0;
-	virtual const char *Version() = 0;
-	virtual const char *NetVersion() = 0;
+	virtual const char *GetItemName(int Type) const = 0;
+	virtual const char *Version() const = 0;
+	virtual const char *NetVersion() const = 0;
 
 };
 
