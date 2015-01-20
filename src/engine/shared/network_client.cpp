@@ -126,7 +126,7 @@ int CNetClient::Send(CNetChunk *pChunk)
 	return 0;
 }
 
-int CNetClient::State()
+int CNetClient::State() const
 {
 	if(m_Connection.State() == NET_CONNSTATE_ONLINE)
 		return NETSTATE_ONLINE;
@@ -140,14 +140,12 @@ int CNetClient::Flush()
 	return m_Connection.Flush();
 }
 
-int CNetClient::GotProblems()
+bool CNetClient::GotProblems() const
 {
-	if(time_get() - m_Connection.LastRecvTime() > time_freq())
-		return 1;
-	return 0;
+	return (time_get() - m_Connection.LastRecvTime() > time_freq());
 }
 
-const char *CNetClient::ErrorString()
+const char *CNetClient::ErrorString() const
 {
 	return m_Connection.ErrorString();
 }

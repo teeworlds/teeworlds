@@ -102,7 +102,7 @@ void CTilesetMapper::Load(const json_value &rElement)
 	}
 }
 
-const char* CTilesetMapper::GetRuleSetName(int Index)
+const char* CTilesetMapper::GetRuleSetName(int Index) const
 {
 	if(Index < 0 || Index >= m_aRuleSets.size())
 		return "";
@@ -310,7 +310,7 @@ void CDoodadsMapper::Load(const json_value &rElement)
 		qsort(m_aRuleSets[i].m_aRules.base_ptr(), m_aRuleSets[i].m_aRules.size(), sizeof(m_aRuleSets[i].m_aRules[0]), CompareRules);
 }
 
-const char* CDoodadsMapper::GetRuleSetName(int Index)
+const char* CDoodadsMapper::GetRuleSetName(int Index) const
 {
 	if(Index < 0 || Index >= m_aRuleSets.size())
 		return "";

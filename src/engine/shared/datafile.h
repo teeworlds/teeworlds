@@ -21,17 +21,17 @@ public:
 
 	void *GetData(int Index);
 	void *GetDataSwapped(int Index); // makes sure that the data is 32bit LE ints when saved
-	int GetDataSize(int Index);
+	int GetDataSize(int Index) const;
 	void UnloadData(int Index);
 	void *GetItem(int Index, int *pType, int *pID);
-	int GetItemSize(int Index);
+	int GetItemSize(int Index) const;
 	void GetType(int Type, int *pStart, int *pNum);
 	void *FindItem(int Type, int ID);
-	int NumItems();
-	int NumData();
+	int NumItems() const;
+	int NumData() const;
 	void Unload();
 
-	unsigned Crc();
+	unsigned Crc() const;
 };
 
 // write access

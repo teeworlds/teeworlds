@@ -26,12 +26,12 @@ public:
 	int TickSpeed() const { return m_TickSpeed; }
 
 	virtual int MaxClients() const = 0;
-	virtual const char *ClientName(int ClientID) = 0;
-	virtual const char *ClientClan(int ClientID) = 0;
-	virtual int ClientCountry(int ClientID) = 0;
-	virtual bool ClientIngame(int ClientID) = 0;
-	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) = 0;
-	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) = 0;
+	virtual const char *ClientName(int ClientID) const = 0;
+	virtual const char *ClientClan(int ClientID) const = 0;
+	virtual int ClientCountry(int ClientID) const = 0;
+	virtual bool ClientIngame(int ClientID) const = 0;
+	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) const = 0;
+	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) const = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
 
@@ -61,8 +61,8 @@ public:
 		RCON_CID_VOTE=-2,
 	};
 	virtual void SetRconCID(int ClientID) = 0;
-	virtual bool IsAuthed(int ClientID) = 0;
-	virtual bool IsBanned(int ClientID) = 0;
+	virtual bool IsAuthed(int ClientID) const = 0;
+	virtual bool IsBanned(int ClientID) const = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
@@ -91,12 +91,12 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 
-	virtual bool IsClientReady(int ClientID) = 0;
-	virtual bool IsClientPlayer(int ClientID) = 0;
+	virtual bool IsClientReady(int ClientID) const = 0;
+	virtual bool IsClientPlayer(int ClientID) const = 0;
 
-	virtual const char *GameType() = 0;
-	virtual const char *Version() = 0;
-	virtual const char *NetVersion() = 0;
+	virtual const char *GameType() const = 0;
+	virtual const char *Version() const = 0;
+	virtual const char *NetVersion() const = 0;
 };
 
 extern IGameServer *CreateGameServer();

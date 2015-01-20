@@ -182,7 +182,7 @@ void CLayerQuads::BrushRotate(float Amount)
 	}
 }
 
-void CLayerQuads::GetSize(float *w, float *h)
+void CLayerQuads::GetSize(float *w, float *h) const
 {
 	*w = 0; *h = 0;
 

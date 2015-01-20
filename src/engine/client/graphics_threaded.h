@@ -40,8 +40,8 @@ class CCommandBuffer
 		}
 
 		unsigned char *DataPtr() { return m_pData; }
-		unsigned DataSize() { return m_Size; }
-		unsigned DataUsed() { return m_Used; }
+		unsigned DataSize() const { return m_Size; }
+		unsigned DataUsed() const { return m_Used; }
 	};
 
 public:
@@ -435,12 +435,12 @@ public:
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
 
-	virtual int GetDesktopScreenWidth() { return m_DesktopScreenWidth; }
-	virtual int GetDesktopScreenHeight() { return m_DesktopScreenHeight; }
+	virtual int GetDesktopScreenWidth() const { return m_DesktopScreenWidth; }
+	virtual int GetDesktopScreenHeight() const { return m_DesktopScreenHeight; }
 
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);
-	virtual bool IsIdle();
+	virtual bool IsIdle() const;
 	virtual void WaitForIdle();
 };
 
