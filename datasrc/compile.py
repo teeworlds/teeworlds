@@ -140,7 +140,7 @@ class CNetObjHandler
 public:
 	CNetObjHandler();
 
-	int ValidateObj(int Type, void *pData, int Size);
+	int ValidateObj(int Type, const void *pData, int Size);
 	const char *GetObjName(int Type) const;
 	int GetObjSize(int Type) const;
 	int NumObjCorrections() const;
@@ -265,7 +265,7 @@ if gen_network_source:
 		lines += ["};", ""]
 
 	lines = []
-	lines += ['int CNetObjHandler::ValidateObj(int Type, void *pData, int Size)']
+	lines += ['int CNetObjHandler::ValidateObj(int Type, const void *pData, int Size)']
 	lines += ['{']
 	lines += ['\tswitch(Type)']
 	lines += ['\t{']
