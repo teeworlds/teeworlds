@@ -84,9 +84,10 @@ public:
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 
-	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
-	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
-
+	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
+	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
+	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
+	
 	bool m_SuppressEvents;
 
 	// TODO: move this

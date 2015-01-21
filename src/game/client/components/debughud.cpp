@@ -31,7 +31,7 @@ void CDebugHud::RenderNetCorrections()
 	float Velspeed = length(vec2(m_pClient->m_Snap.m_pLocalCharacter->m_VelX/256.0f, m_pClient->m_Snap.m_pLocalCharacter->m_VelY/256.0f))*50;
 	float Ramp = VelocityRamp(Velspeed, m_pClient->m_Tuning.m_VelrampStart, m_pClient->m_Tuning.m_VelrampRange, m_pClient->m_Tuning.m_VelrampCurvature);
 
-	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netobj corrections", " num:", " on:"};
+	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netmsg failed on:", "netobj num failures:", "netobj failed on:"};
 	const int Num = sizeof(paStrings)/sizeof(char *);
 	const float LineHeight = 6.0f;
 	const float Fontsize = 5.0f;
@@ -61,13 +61,16 @@ void CDebugHud::RenderNetCorrections()
 	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Y/32);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
-	y += 2*LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->NetobjNumCorrections());
+	y += LineHeight;
+	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetmsgFailedOn(), -1);
+	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetmsgFailedOn(), -1);
+	y += LineHeight;
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->NetobjNumFailures());
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1);
 	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1);
 	y += LineHeight;
-	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetobjCorrectedOn(), -1);
-	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetobjCorrectedOn(), -1);
+	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetobjFailedOn(), -1);
+	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetobjFailedOn(), -1);
 }
 
 void CDebugHud::RenderTuning()
