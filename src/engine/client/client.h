@@ -212,7 +212,7 @@ public:
 	void SendInput();
 
 	// TODO: OPT: do this alot smarter!
-	virtual int *GetInput(int Tick) const;
+	virtual const int *GetInput(int Tick) const;
 
 	const char *LatestVersion() const;
 	void VersionUpdate();
@@ -236,9 +236,9 @@ public:
 
 	// ---
 
-	void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const;
+	const void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const;
 	void SnapInvalidateItem(int SnapID, int Index);
-	void *SnapFindItem(int SnapID, int Type, int ID) const;
+	const void *SnapFindItem(int SnapID, int Type, int ID) const;
 	int SnapNumItems(int SnapID) const;
 	void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);

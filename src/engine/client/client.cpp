@@ -429,7 +429,7 @@ const char *CClient::LatestVersion() const
 }
 
 // TODO: OPT: do this alot smarter!
-int *CClient::GetInput(int Tick) const
+const int *CClient::GetInput(int Tick) const
 {
 	int Best = -1;
 	for(int i = 0; i < 200; i++)
@@ -439,7 +439,7 @@ int *CClient::GetInput(int Tick) const
 	}
 
 	if(Best != -1)
-		return (int *)m_aInputs[Best].m_aData;
+		return (const int *)m_aInputs[Best].m_aData;
 	return 0;
 }
 
@@ -591,7 +591,7 @@ int CClient::LoadData()
 
 // ---
 
-void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
+const void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
 {
 	CSnapshotItem *i;
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
@@ -617,7 +617,7 @@ void CClient::SnapInvalidateItem(int SnapID, int Index)
 	}
 }
 
-void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
+const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 {
 	// TODO: linear search. should be fixed.
 	int i;
