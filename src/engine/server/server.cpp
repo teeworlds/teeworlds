@@ -1162,7 +1162,7 @@ void CServer::PumpNetwork()
 	m_Econ.Update();
 }
 
-char *CServer::GetMapName() const
+const char *CServer::GetMapName() const
 {
 	// get the name of the map without his path
 	char *pMapShortName = &g_Config.m_SvMap[0];
@@ -1176,13 +1176,8 @@ char *CServer::GetMapName() const
 
 int CServer::LoadMap(const char *pMapName)
 {
-	//DATAFILE *df;
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
-
-	/*df = datafile_load(buf);
-	if(!df)
-		return 0;*/
 
 	// check for valid standard map
 	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL))
@@ -1207,7 +1202,6 @@ int CServer::LoadMap(const char *pMapName)
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
 
 	str_copy(m_aCurrentMap, pMapName, sizeof(m_aCurrentMap));
-	//map_set(df);
 
 	// load complete map into memory for download
 	{

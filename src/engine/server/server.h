@@ -141,7 +141,6 @@ public:
 	IEngineMap *m_pMap;
 
 	int64 m_GameStartTime;
-	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
 	int m_RconClientID;
@@ -149,7 +148,6 @@ public:
 	int m_PrintCBIndex;
 
 	int64 m_Lastheartbeat;
-	//static NETADDR4 master_server;
 
 	// map
 	enum
@@ -180,9 +178,7 @@ public:
 	void DemoRecorder_HandleAutoStart();
 	bool DemoRecorder_IsRecording();
 
-	//int Tick()
 	int64 TickStartTime(int Tick);
-	//int TickSpeed()
 
 	int Init();
 
@@ -220,7 +216,7 @@ public:
 
 	void PumpNetwork();
 
-	char *GetMapName() const;
+	const char *GetMapName() const;
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);

@@ -750,14 +750,14 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 	return Current;
 }
 
-CLayerGroup *CEditor::GetSelectedGroup() const
+CLayerGroup *CEditor::GetSelectedGroup()
 {
 	if(m_SelectedGroup >= 0 && m_SelectedGroup < m_Map.m_lGroups.size())
 		return m_Map.m_lGroups[m_SelectedGroup];
 	return 0x0;
 }
 
-CLayer *CEditor::GetSelectedLayer(int Index) const
+CLayer *CEditor::GetSelectedLayer(int Index)
 {
 	CLayerGroup *pGroup = GetSelectedGroup();
 	if(!pGroup)
@@ -768,7 +768,7 @@ CLayer *CEditor::GetSelectedLayer(int Index) const
 	return 0x0;
 }
 
-CLayer *CEditor::GetSelectedLayerType(int Index, int Type) const
+CLayer *CEditor::GetSelectedLayerType(int Index, int Type)
 {
 	CLayer *p = GetSelectedLayer(Index);
 	if(p && p->m_Type == Type)
@@ -776,7 +776,7 @@ CLayer *CEditor::GetSelectedLayerType(int Index, int Type) const
 	return 0x0;
 }
 
-CQuad *CEditor::GetSelectedQuad() const
+CQuad *CEditor::GetSelectedQuad()
 {
 	CLayerQuads *ql = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
 	if(!ql)

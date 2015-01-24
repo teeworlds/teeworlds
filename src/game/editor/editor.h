@@ -602,10 +602,10 @@ public:
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
-	CQuad *GetSelectedQuad() const;
-	CLayer *GetSelectedLayerType(int Index, int Type) const;
-	CLayer *GetSelectedLayer(int Index) const;
-	CLayerGroup *GetSelectedGroup() const;
+	CQuad *GetSelectedQuad();
+	CLayer *GetSelectedLayerType(int Index, int Type);
+	CLayer *GetSelectedLayer(int Index);
+	CLayerGroup *GetSelectedGroup();
 
 	int DoProperties(CUIRect *pToolbox, CProperty *pProps, int *pIDs, int *pNewVal);
 
