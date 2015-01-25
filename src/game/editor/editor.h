@@ -306,11 +306,6 @@ public:
 	class CMapInfo
 	{
 	public:
-		char m_aAuthorTmp[32];
-		char m_aVersionTmp[16];
-		char m_aCreditsTmp[128];
-		char m_aLicenseTmp[32];
-
 		char m_aAuthor[32];
 		char m_aVersion[16];
 		char m_aCredits[128];
@@ -318,11 +313,6 @@ public:
 
 		void Reset()
 		{
-			m_aAuthorTmp[0] = 0;
-			m_aVersionTmp[0] = 0;
-			m_aCreditsTmp[0] = 0;
-			m_aLicenseTmp[0] = 0;
-
 			m_aAuthor[0] = 0;
 			m_aVersion[0] = 0;
 			m_aCredits[0] = 0;
@@ -330,6 +320,7 @@ public:
 		}
 	};
 	CMapInfo m_MapInfo;
+	CMapInfo m_MapInfoTmp;
 
 	class CLayerGame *m_pGameLayer;
 	CLayerGroup *m_pGameGroup;
@@ -455,7 +446,7 @@ public:
 
 	void PrepareForSave();
 
-	void GetSize(float *w, float *h) { *w = m_Width*32.0f; *h = m_Height*32.0f; }
+	void GetSize(float *w, float *h) const { *w = m_Width*32.0f; *h = m_Height*32.0f; }
 
 	IGraphics::CTextureHandle m_Texture;
 	int m_Game;
@@ -491,7 +482,7 @@ public:
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc);
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
 
-	void GetSize(float *w, float *h);
+	void GetSize(float *w, float *h) const;
 
 	int m_Image;
 	array<CQuad> m_lQuads;
@@ -598,7 +589,7 @@ public:
 
 	virtual void Init();
 	virtual void UpdateAndRender();
-	virtual bool HasUnsavedData() { return m_Map.m_Modified; }
+	virtual bool HasUnsavedData() const { return m_Map.m_Modified; }
 
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
@@ -836,7 +827,7 @@ public:
 		str_copy(pName, pExtractedName, Length);
 	}
 
-	int GetLineDistance();
+	int GetLineDistance() const;
 	void ZoomMouseTarget(float ZoomFactor);
 };
 

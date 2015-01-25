@@ -43,8 +43,8 @@ public:
 	static int Num() { return sizeof(CTuningParams)/sizeof(int); }
 	bool Set(int Index, float Value);
 	bool Set(const char *pName, float Value);
-	bool Get(int Index, float *pValue);
-	bool Get(const char *pName, float *pValue);
+	bool Get(int Index, float *pValue) const;
+	bool Get(const char *pName, float *pValue) const;
 };
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)

@@ -239,9 +239,9 @@ public:
 	virtual void OnGameOver();
 	virtual void OnStartGame();
 
-	virtual const char *GetItemName(int Type);
-	virtual const char *Version();
-	virtual const char *NetVersion();
+	virtual const char *GetItemName(int Type) const;
+	virtual const char *Version() const;
+	virtual const char *NetVersion() const;
 	const char *GetTeamName(int Team, bool Teamplay) const;
 
 	//

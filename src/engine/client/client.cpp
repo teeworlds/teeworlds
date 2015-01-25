@@ -371,7 +371,7 @@ void CClient::Rcon(const char *pCmd)
 	SendMsg(&Msg, MSGFLAG_VITAL);
 }
 
-bool CClient::ConnectionProblems()
+bool CClient::ConnectionProblems() const
 {
 	return m_NetClient.GotProblems() != 0;
 }
@@ -423,13 +423,13 @@ void CClient::SendInput()
 	SendMsg(&Msg, MSGFLAG_FLUSH);
 }
 
-const char *CClient::LatestVersion()
+const char *CClient::LatestVersion() const
 {
 	return m_aVersionStr;
 }
 
 // TODO: OPT: do this alot smarter!
-int *CClient::GetInput(int Tick)
+const int *CClient::GetInput(int Tick) const
 {
 	int Best = -1;
 	for(int i = 0; i < 200; i++)
@@ -439,7 +439,7 @@ int *CClient::GetInput(int Tick)
 	}
 
 	if(Best != -1)
-		return (int *)m_aInputs[Best].m_aData;
+		return (const int *)m_aInputs[Best].m_aData;
 	return 0;
 }
 
@@ -572,7 +572,7 @@ void CClient::Disconnect()
 }
 
 
-void CClient::GetServerInfo(CServerInfo *pServerInfo)
+void CClient::GetServerInfo(CServerInfo *pServerInfo) const
 {
 	mem_copy(pServerInfo, &m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
 }
@@ -591,7 +591,7 @@ int CClient::LoadData()
 
 // ---
 
-void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem)
+const void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
 {
 	CSnapshotItem *i;
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
@@ -617,7 +617,7 @@ void CClient::SnapInvalidateItem(int SnapID, int Index)
 	}
 }
 
-void *CClient::SnapFindItem(int SnapID, int Type, int ID)
+const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 {
 	// TODO: linear search. should be fixed.
 	int i;
@@ -634,7 +634,7 @@ void *CClient::SnapFindItem(int SnapID, int Type, int ID)
 	return 0x0;
 }
 
-int CClient::SnapNumItems(int SnapID)
+int CClient::SnapNumItems(int SnapID) const
 {
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
 	if(!m_aSnapshots[SnapID])
@@ -753,7 +753,7 @@ void CClient::Quit()
 	SetState(IClient::STATE_QUITING);
 }
 
-const char *CClient::ErrorString()
+const char *CClient::ErrorString() const
 {
 	return m_NetClient.ErrorString();
 }

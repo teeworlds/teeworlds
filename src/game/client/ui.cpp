@@ -46,14 +46,14 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 	return 0;
 }
 
-int CUI::MouseInside(const CUIRect *r)
+int CUI::MouseInside(const CUIRect *r) const
 {
 	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
 		return 1;
 	return 0;
 }
 
-void CUI::ConvertMouseMove(float *x, float *y)
+void CUI::ConvertMouseMove(float *x, float *y) const
 {
 	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
 	*x = *x*Fac;
@@ -79,7 +79,7 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-float CUI::Scale()
+float CUI::Scale() const
 {
 	return 1.0f;
 }

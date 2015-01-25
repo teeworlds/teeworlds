@@ -12,7 +12,7 @@ public:
 	virtual ~IEditor() {}
 	virtual void Init() = 0;
 	virtual void UpdateAndRender() = 0;
-	virtual bool HasUnsavedData() = 0;
+	virtual bool HasUnsavedData() const = 0;
 };
 
 extern IEditor *CreateEditor();

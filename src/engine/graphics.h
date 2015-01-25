@@ -170,14 +170,14 @@ public:
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
 
-	virtual int GetDesktopScreenWidth() = 0;
-	virtual int GetDesktopScreenHeight() = 0;
+	virtual int GetDesktopScreenWidth() const = 0;
+	virtual int GetDesktopScreenHeight() const = 0;
 
 	virtual void Swap() = 0;
 
 	// syncronization
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
-	virtual bool IsIdle() = 0;
+	virtual bool IsIdle() const = 0;
 	virtual void WaitForIdle() = 0;
 
 protected:
