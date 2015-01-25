@@ -17,8 +17,6 @@ public:
 	bool Open(class IStorage *pStorage, const char *pFilename, int StorageType);
 	bool Close();
 
-	static bool GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize);
-
 	void *GetData(int Index);
 	void *GetDataSwapped(int Index); // makes sure that the data is 32bit LE ints when saved
 	int GetDataSize(int Index);
