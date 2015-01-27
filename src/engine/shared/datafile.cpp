@@ -79,7 +79,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 
 
 	// take the CRC of the file and store it
-	unsigned Crc = 0;
+	unsigned Crc = crc32(0L, 0x0, 0);
 	{
 		enum
 		{
@@ -231,7 +231,7 @@ bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename
 		return false;
 
 	// get crc and size
-	unsigned Crc = 0;
+	unsigned Crc = crc32(0L, 0x0, 0);
 	unsigned Size = 0;
 	unsigned char aBuffer[64*1024];
 	while(1)
