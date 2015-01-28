@@ -814,6 +814,20 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
+	Function: str_sanitize_pathname_from_character
+		Checks whether the input string contains \ or / characters, that could 
+		indicate an attempt of path hijacking.
+		Returns 0 if string is safe, -1 otherwise.
+
+	Parameters:
+		str - String to check.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_safe_as_pathname(const char* str_in);
+
+/*
 	Function: str_clean_whitespaces
 		Removes leading and trailing spaces and limits the use of multiple spaces.
 
