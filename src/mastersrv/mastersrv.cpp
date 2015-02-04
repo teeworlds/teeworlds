@@ -530,9 +530,10 @@ int main(int argc, const char **argv) // ignore_convention
 			LastBuild = time_get();
 
 			PurgeServers();
-			UpdateServers();
 			BuildPackets();
 		}
+
+		UpdateServers();
 
 		// be nice to the CPU
 		thread_sleep(1);
