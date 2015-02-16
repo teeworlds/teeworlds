@@ -199,6 +199,27 @@ int CControls::SnapInput(int *pData)
 		if(!m_InputDirectionLeft[g_Config.m_ClDummy] && m_InputDirectionRight[g_Config.m_ClDummy])
 			m_InputData[g_Config.m_ClDummy].m_Direction = 1;
 
+		// dummy copy moves
+		if(g_Config.m_ClDummyCopyMoves)
+		{
+			CNetObj_PlayerInput *DummyInput = &Client()->DummyInput;
+			DummyInput->m_Direction = m_InputData[g_Config.m_ClDummy].m_Direction;
+			DummyInput->m_Hook = m_InputData[g_Config.m_ClDummy].m_Hook;
+			DummyInput->m_Jump = m_InputData[g_Config.m_ClDummy].m_Jump;
+			DummyInput->m_PlayerFlags = m_InputData[g_Config.m_ClDummy].m_PlayerFlags;
+			DummyInput->m_TargetX = m_InputData[g_Config.m_ClDummy].m_TargetX;
+			DummyInput->m_TargetY = m_InputData[g_Config.m_ClDummy].m_TargetY;
+			DummyInput->m_WantedWeapon = m_InputData[g_Config.m_ClDummy].m_WantedWeapon;
+
+
+
+			DummyInput->m_Fire += m_InputData[g_Config.m_ClDummy].m_Fire - m_LastData[g_Config.m_ClDummy].m_Fire;
+			DummyInput->m_NextWeapon += m_InputData[g_Config.m_ClDummy].m_NextWeapon - m_LastData[g_Config.m_ClDummy].m_NextWeapon;
+			DummyInput->m_PrevWeapon += m_InputData[g_Config.m_ClDummy].m_PrevWeapon - m_LastData[g_Config.m_ClDummy].m_PrevWeapon;
+
+			m_InputData[!g_Config.m_ClDummy] = *DummyInput;
+		}
+
 		// stress testing
 		if(g_Config.m_DbgStress)
 		{

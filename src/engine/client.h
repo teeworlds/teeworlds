@@ -7,6 +7,7 @@
 #include "message.h"
 #include "graphics.h"
 #include <engine/shared/config.h>
+#include <generated/protocol.h>
 
 class IClient : public IInterface
 {
@@ -33,6 +34,8 @@ protected:
 	int m_GameTickSpeed;
 public:
 	int m_LocalIDs[2];
+
+	CNetObj_PlayerInput DummyInput;
 
 	class CSnapItem
 	{
