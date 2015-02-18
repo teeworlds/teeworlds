@@ -1838,6 +1838,12 @@ void CGameClient::SendKill()
 {
 	CNetMsg_Cl_Kill Msg;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+
+	if(g_Config.m_ClDummyCopyMoves)
+	{
+		CMsgPacker Msg(NETMSGTYPE_CL_KILL);
+		Client()->SendMsgExY(&Msg, MSGFLAG_VITAL, !g_Config.m_ClDummy);
+	}
 }
 
 void CGameClient::SendReadyChange()
