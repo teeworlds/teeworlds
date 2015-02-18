@@ -1610,14 +1610,25 @@ void str_sanitize_cc(char *str_in)
 	}
 }
 
-int str_safe_as_pathname(const char* str_in)
+/* check if the string contains '.' or '..' paths */
+int str_check_pathname(const char* str)
 {
-	unsigned char *str = (unsigned char *)str_in;
+	int parse_counter = 1;
 	while(*str)
 	{
-		if (*str == '\\' || *str == '/')
-			return -1;
-		str++;
+		if(*str == '\\' || *str == '/')
+		{
+			if(parse_counter >= 2 && parse_counter <= 3)
+				return -1;
+			else
+				parse_counter = 1;
+		}
+		else if(*str != '.')
+			parse_counter = 0;
+		else
+			++parse_counter;
+
+		++str;
 	}
 	return 0;
 }

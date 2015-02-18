@@ -2261,8 +2261,9 @@ int main(int argc, const char **argv) // ignore_convention
 	pClient->RegisterInterfaces();
 
 	// create the components
+	int FlagMask = CFGFLAG_CLIENT;
 	IEngine *pEngine = CreateEngine("Teeworlds");
-	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
+	IConsole *pConsole = CreateConsole(FlagMask);
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_CLIENT, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	IEngineSound *pEngineSound = CreateEngineSound();
@@ -2302,7 +2303,7 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 
 	pEngine->Init();
-	pConfig->Init();
+	pConfig->Init(FlagMask);
 	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
 

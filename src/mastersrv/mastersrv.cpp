@@ -330,10 +330,11 @@ int main(int argc, const char **argv) // ignore_convention
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 	mem_copy(m_CountDataLegacy.m_Header, SERVERBROWSE_COUNT_LEGACY, sizeof(SERVERBROWSE_COUNT_LEGACY));
 
+	int FlagMask = CFGFLAG_MASTER;
 	IKernel *pKernel = IKernel::Create();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	IConfig *pConfig = CreateConfig();
-	m_pConsole = CreateConsole(CFGFLAG_MASTER);
+	m_pConsole = CreateConsole(FlagMask);
 	
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
@@ -342,7 +343,7 @@ int main(int argc, const char **argv) // ignore_convention
 	if(RegisterFail)
 		return -1;
 
-	pConfig->Init();
+	pConfig->Init(FlagMask);
 	m_NetBan.Init(m_pConsole, pStorage);
 	if(argc > 1) // ignore_convention
 		m_pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention

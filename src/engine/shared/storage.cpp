@@ -68,7 +68,7 @@ public:
 				fs_makedir(GetPath(TYPE_SAVE, "dumps", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
 				fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
-				fs_makedir(GetPath(TYPE_SAVE, "serverconf", aPath, sizeof(aPath)));
+				fs_makedir(GetPath(TYPE_SAVE, "configs", aPath, sizeof(aPath)));
 			}
 			else
 			{
@@ -263,6 +263,14 @@ public:
 			BufferSize = sizeof(aBuffer);
 		}
 
+		// check for valid path
+		if(str_check_pathname(pFilename) != 0)
+		{
+			pBuffer[0] = 0;
+			return 0;
+		}
+
+		// open file
 		if(Flags&IOFLAG_WRITE)
 		{
 			return io_open(GetPath(TYPE_SAVE, pFilename, pBuffer, BufferSize), Flags);

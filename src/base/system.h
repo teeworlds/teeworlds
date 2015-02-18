@@ -16,6 +16,7 @@ extern "C" {
 
 /* Group: Debug */
 /*
+
 	Function: dbg_assert
 		Breaks into the debugger based on a test.
 
@@ -814,18 +815,19 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
-	Function: str_sanitize_pathname_from_character
-		Checks whether the input string contains \ or / characters, that could 
-		indicate an attempt of path hijacking.
-		Returns 0 if string is safe, -1 otherwise.
+	Function: str_check_pathnam
+		Check if the string contains '.' or '..' paths.
 
 	Parameters:
 		str - String to check.
 
+	Returns:
+		Returns 0 if the path is valid, -1 otherwise.
+
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-int str_safe_as_pathname(const char* str_in);
+int str_check_pathname(const char* str);
 
 /*
 	Function: str_clean_whitespaces

@@ -574,15 +574,8 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 {
 	CNetBan *pThis = static_cast<CNetBan *>(pUser);
 	char aBuf[256];
-
 	const char *pFilename = pResult->GetString(0);
-	if (str_safe_as_pathname(pFilename) != 0)
-	{
-		str_format(aBuf, sizeof(aBuf), "failed to save server banlist: '%s' is not an allowed path", pFilename);
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", aBuf);
-		return;
-	}
-
+	
 	IOHANDLE File = pThis->Storage()->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 	{
