@@ -700,9 +700,10 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 				ExecuteFile(ppArguments[i+1]);
 			i++;
 		}
-		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
+		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]) ||
+				!str_comp("-d", ppArguments[i]) || !str_comp("--default", ppArguments[i]))
 		{
-			// skip silent param
+			// skip silent, default param
 			continue;
 		}
 		else

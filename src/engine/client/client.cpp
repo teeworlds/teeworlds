@@ -2255,6 +2255,16 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 #endif
 
+	bool UseDefaultConfig = false;
+	for(int i = 1; i < argc; i++) // ignore_convention
+	{
+		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0) // ignore_convention
+		{
+			UseDefaultConfig = true;
+			break;
+		}
+	}
+
 	CClient *pClient = CreateClient();
 	IKernel *pKernel = IKernel::Create();
 	pKernel->RegisterInterface(pClient);
@@ -2315,15 +2325,18 @@ int main(int argc, const char **argv) // ignore_convention
 
 	pKernel->RequestInterface<IGameClient>()->OnConsoleInit();
 
-	// execute config file
-	pConsole->ExecuteFile("settings.cfg");
+	if(!UseDefaultConfig)
+	{
+		// execute config file
+		pConsole->ExecuteFile("settings.cfg");
 
-	// execute autoexec file
-	pConsole->ExecuteFile("autoexec.cfg");
+		// execute autoexec file
+		pConsole->ExecuteFile("autoexec.cfg");
 
-	// parse the command line arguments
-	if(argc > 1) // ignore_convention
-		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+		// parse the command line arguments
+		if(argc > 1) // ignore_convention
+			pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+	}
 
 	// restore empty config strings to their defaults
 	pConfig->RestoreStrings();
