@@ -176,6 +176,7 @@ class CCommandProcessorFragment_OpenGL
 		GLuint m_Tex2D;
 		GLuint m_Tex3D;
 		int m_State;
+		int m_Format;
 		int m_MemSize;
 	};
 	CTexture m_aTextures[CCommandBuffer::MAX_TEXTURES];

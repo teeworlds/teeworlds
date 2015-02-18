@@ -142,24 +142,6 @@ void *CCommandProcessorFragment_OpenGL::Rescale(int Width, int Height, int NewWi
 
 void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &State)
 {
-	// blend
-	switch(State.m_BlendMode)
-	{
-	case CCommandBuffer::BLEND_NONE:
-		glDisable(GL_BLEND);
-		break;
-	case CCommandBuffer::BLEND_ALPHA:
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		break;
-	case CCommandBuffer::BLEND_ADDITIVE:
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		break;
-	default:
-		dbg_msg("render", "unknown blendmode %d\n", State.m_BlendMode);
-	};
-
 	// clip
 	if(State.m_ClipEnable)
 	{
@@ -171,6 +153,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	
 
 	// texture
+	int SrcBlendMode = GL_SRC_ALPHA;
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_TEXTURE_3D);
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
@@ -187,7 +170,28 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 		}
 		else
 			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
+
+		if(m_aTextures[State.m_Texture].m_Format == CCommandBuffer::TEXFORMAT_RGBA)
+			SrcBlendMode = GL_ONE;
 	}
+
+	// blend
+	switch(State.m_BlendMode)
+	{
+	case CCommandBuffer::BLEND_NONE:
+		glDisable(GL_BLEND);
+		break;
+	case CCommandBuffer::BLEND_ALPHA:
+		glEnable(GL_BLEND);
+		glBlendFunc(SrcBlendMode, GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case CCommandBuffer::BLEND_ADDITIVE:
+		glEnable(GL_BLEND);
+		glBlendFunc(SrcBlendMode, GL_ONE);
+		break;
+	default:
+		dbg_msg("render", "unknown blendmode %d\n", State.m_BlendMode);
+	};
 
 	// wrap mode
 	switch(State.m_WrapModeU)
@@ -301,6 +305,20 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			pTexData = pTmpData;
 		}
 	}
+
+	// use premultiplied alpha for rgba textures
+	if(pCommand->m_Format == CCommandBuffer::TEXFORMAT_RGBA)
+	{
+		unsigned char *pTexels = (unsigned char *)pTexData;
+		for(int i = 0; i < Width * Height; ++i)
+		{
+			const float a = (pTexels[i*4+3]/255.0f);
+			pTexels[i*4+0] = (unsigned char)(pTexels[i*4+0] * a);
+			pTexels[i*4+1] = (unsigned char)(pTexels[i*4+1] * a);
+			pTexels[i*4+2] = (unsigned char)(pTexels[i*4+2] * a);
+		}
+	}
+	m_aTextures[pCommand->m_Slot].m_Format = pCommand->m_Format;
 	
 	//
 	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
