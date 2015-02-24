@@ -238,9 +238,9 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		{
 			float aChannels[4];
 			pfnEval(q->m_ColorEnvOffset/1000.0f, q->m_ColorEnv, aChannels, pUser);
-			r = aChannels[0];
-			g = aChannels[1];
-			b = aChannels[2];
+			r = aChannels[0]*aChannels[3];
+			g = aChannels[1]*aChannels[3];
+			b = aChannels[2]*aChannels[3];
 			a = aChannels[3];
 		}
 

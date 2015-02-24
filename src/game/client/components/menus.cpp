@@ -178,7 +178,7 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 			Graphics()->TextureSet(pImage->m_OrgTexture);
 			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, *pFade/Seconds);
+			Graphics()->SetColor(1.0f*FadeVal, 1.0f*FadeVal, 1.0f*FadeVal, FadeVal);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
