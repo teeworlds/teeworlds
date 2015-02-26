@@ -1644,6 +1644,9 @@ int str_check_pathname(const char* str)
 
 		++str;
 	}
+	// If there's "." or ".." at the end, fail too.
+	if(parse_counter >= 1 && parse_counter <= 2)
+		return -1;
 	return 0;
 }
 
