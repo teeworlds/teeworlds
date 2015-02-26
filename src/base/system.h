@@ -815,8 +815,11 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
-	Function: str_check_pathnam
+	Function: str_check_pathname
 		Check if the string contains '.' or '..' paths.
+
+		NOTE: This does not check whether the path is absolute, other
+		checking must be in place for this case.
 
 	Parameters:
 		str - String to check.
