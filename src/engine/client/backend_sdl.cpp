@@ -153,7 +153,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	
 
 	// texture
-	int SrcBlendMode = GL_SRC_ALPHA;
+	int SrcBlendMode = GL_ONE;
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_TEXTURE_3D);
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES)
@@ -173,6 +173,8 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 
 		if(m_aTextures[State.m_Texture].m_Format == CCommandBuffer::TEXFORMAT_RGBA)
 			SrcBlendMode = GL_ONE;
+		else
+			SrcBlendMode = GL_SRC_ALPHA;
 	}
 
 	// blend

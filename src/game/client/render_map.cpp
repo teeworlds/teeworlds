@@ -238,22 +238,22 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		{
 			float aChannels[4];
 			pfnEval(q->m_ColorEnvOffset/1000.0f, q->m_ColorEnv, aChannels, pUser);
-			r = aChannels[0]*aChannels[3];
-			g = aChannels[1]*aChannels[3];
-			b = aChannels[2]*aChannels[3];
+			r = aChannels[0];
+			g = aChannels[1];
+			b = aChannels[2];
 			a = aChannels[3];
 		}
 
-		bool Opaque = false;
-		/* TODO: Analyze quadtexture
+		/*bool Opaque = false;
+		 TODO: Analyze quadtexture
 		if(a < 0.01f || (q->m_aColors[0].a < 0.01f && q->m_aColors[1].a < 0.01f && q->m_aColors[2].a < 0.01f && q->m_aColors[3].a < 0.01f))
 			Opaque = true;
-		*/
+		
 		if(Opaque && !(RenderFlags&LAYERRENDERFLAG_OPAQUE))
 			continue;
 		if(!Opaque && !(RenderFlags&LAYERRENDERFLAG_TRANSPARENT))
 			continue;
-
+		*/
 		vec2 aTexCoords[4];
 		for(int k = 0; k < 4; k++)
 		{
@@ -296,10 +296,10 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		}
 
 		IGraphics::CColorVertex Array[4] = {
-			IGraphics::CColorVertex(0, q->m_aColors[0].r*Conv*r, q->m_aColors[0].g*Conv*g, q->m_aColors[0].b*Conv*b, q->m_aColors[0].a*Conv*a),
-			IGraphics::CColorVertex(1, q->m_aColors[1].r*Conv*r, q->m_aColors[1].g*Conv*g, q->m_aColors[1].b*Conv*b, q->m_aColors[1].a*Conv*a),
-			IGraphics::CColorVertex(2, q->m_aColors[2].r*Conv*r, q->m_aColors[2].g*Conv*g, q->m_aColors[2].b*Conv*b, q->m_aColors[2].a*Conv*a),
-			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r, q->m_aColors[3].g*Conv*g, q->m_aColors[3].b*Conv*b, q->m_aColors[3].a*Conv*a)};
+			IGraphics::CColorVertex(0, q->m_aColors[0].r*Conv*r*q->m_aColors[0].a*Conv*a, q->m_aColors[0].g*Conv*g*q->m_aColors[0].a*Conv*a, q->m_aColors[0].b*Conv*b*q->m_aColors[0].a*Conv*a, q->m_aColors[0].a*Conv*a),
+			IGraphics::CColorVertex(1, q->m_aColors[1].r*Conv*r*q->m_aColors[1].a*Conv*a, q->m_aColors[1].g*Conv*g*q->m_aColors[1].a*Conv*a, q->m_aColors[1].b*Conv*b*q->m_aColors[1].a*Conv*a, q->m_aColors[1].a*Conv*a),
+			IGraphics::CColorVertex(2, q->m_aColors[2].r*Conv*r*q->m_aColors[2].a*Conv*a, q->m_aColors[2].g*Conv*g*q->m_aColors[2].a*Conv*a, q->m_aColors[2].b*Conv*b*q->m_aColors[2].a*Conv*a, q->m_aColors[2].a*Conv*a),
+			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r*q->m_aColors[3].a*Conv*a, q->m_aColors[3].g*Conv*g*q->m_aColors[3].a*Conv*a, q->m_aColors[3].b*Conv*b*q->m_aColors[3].a*Conv*a, q->m_aColors[3].a*Conv*a)};
 		Graphics()->SetColorVertex(Array, 4);
 
 		CPoint *pPoints = q->m_aPoints;
