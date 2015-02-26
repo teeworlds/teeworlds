@@ -2054,6 +2054,52 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				if(g)
 					g->MapScreen();
 
+				// adjust z-index
+				{
+					CLayerQuads *pQuadLayer = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
+					if(pQuadLayer && (m_SelectedQuad >= 0 && m_SelectedQuad < pQuadLayer->m_lQuads.size()))
+					{
+						if(Input()->KeyDown(KEY_PAGEUP))
+						{
+							// move up
+							if(m_SelectedQuad < pQuadLayer->m_lQuads.size()-1)
+							{
+								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
+								m_SelectedQuad++;
+							}
+						}
+						else if(Input()->KeyDown(KEY_PAGEDOWN))
+						{
+							// move down
+							if(m_SelectedQuad > 0)
+							{
+								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
+								m_SelectedQuad--;
+							}
+						}
+						else if(Input()->KeyDown(KEY_HOME))
+						{
+							// move to front
+							int NumQuads = pQuadLayer->m_lQuads.size();
+							while(m_SelectedQuad < NumQuads-1)
+							{
+								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
+								m_SelectedQuad++;
+							}
+						}
+						else if(Input()->KeyDown(KEY_END))
+						{
+							// move to back
+							while(m_SelectedQuad > 0)
+							{
+								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
+								m_SelectedQuad--;
+							}
+						}
+					}
+				}
+				
+
 				for(int k = 0; k < NumEditLayers; k++)
 				{
 					if(pEditLayers[k]->m_Type == LAYERTYPE_QUADS)
