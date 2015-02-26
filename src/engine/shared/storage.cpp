@@ -254,6 +254,8 @@ public:
 		return pBuffer;
 	}
 
+	// Open a file. This checks that the path appears to be a subdirectory
+	// of one of the storage paths.
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
@@ -263,7 +265,14 @@ public:
 			BufferSize = sizeof(aBuffer);
 		}
 
-		// check for valid path
+		// Check whether the path contains sole '..' or '.'. We'd
+		// normally still have to check whether it is an absolute path
+		// (starts with a path separator (or a drive name on windows)),
+		// but since we concatenate this path with another path later
+		// on, this can't become absolute.
+		//
+		// E. g. "/etc/passwd" => "/path/to/storage//etc/passwd", which
+		// is safe.
 		if(str_check_pathname(pFilename) != 0)
 		{
 			pBuffer[0] = 0;
