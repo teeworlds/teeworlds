@@ -1610,7 +1610,7 @@ void str_sanitize_cc(char *str_in)
 	}
 }
 
-/* check if the string contains '.' or '..' paths */
+/* check if the string contains '..' (parent directory) paths */
 int str_check_pathname(const char* str)
 {
 	// State machine. Non-negative numbers mean that we're at the beginning
@@ -1625,9 +1625,9 @@ int str_check_pathname(const char* str)
 			// A path separator. Check how many dots we found since
 			// the last path separator.
 			//
-			// One or two dots => "." or ".." contained in the
-			// path. Return an error.
-			if(parse_counter >= 1 && parse_counter <= 2)
+			// Two dots => ".." contained in the path. Return an
+			// error.
+			if(parse_counter == 2)
 				return -1;
 			else
 				parse_counter = 0;
@@ -1644,8 +1644,8 @@ int str_check_pathname(const char* str)
 
 		++str;
 	}
-	// If there's "." or ".." at the end, fail too.
-	if(parse_counter >= 1 && parse_counter <= 2)
+	// If there's a ".." at the end, fail too.
+	if(parse_counter == 2)
 		return -1;
 	return 0;
 }
