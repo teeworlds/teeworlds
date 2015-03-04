@@ -1613,8 +1613,8 @@ void str_sanitize_cc(char *str_in)
 /* check if the string contains '..' (parent directory) paths */
 int str_check_pathname(const char* str)
 {
-	// State machine. Non-negative numbers mean that we're at the beginning
-	// of a new directory/filename, and the number represents the number of
+	// State machine. 0 means that we're at the beginning
+	// of a new directory/filename, and a positive number represents the number of
 	// dots ('.') we found. -1 means we encountered a different character
 	// since the last path separator (or the beginning of the string).
 	int parse_counter = 0;

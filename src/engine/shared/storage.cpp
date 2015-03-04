@@ -265,7 +265,7 @@ public:
 			BufferSize = sizeof(aBuffer);
 		}
 
-		// Check whether the path contains sole '..' or '.'. We'd
+		// Check whether the path contains '..' (parent directory) paths. We'd
 		// normally still have to check whether it is an absolute path
 		// (starts with a path separator (or a drive name on windows)),
 		// but since we concatenate this path with another path later
