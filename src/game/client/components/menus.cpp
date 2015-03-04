@@ -53,6 +53,8 @@ CMenus::CMenus()
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
+	m_SeekBarActivatedTick = 0;
+	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
 
 	m_MenuPage = PAGE_START;
