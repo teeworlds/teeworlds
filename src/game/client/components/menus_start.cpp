@@ -119,7 +119,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
 	static int s_QuitButton = 0;
-	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EscapePressed)
 		m_Popup = POPUP_QUIT;
 
 	// render version
