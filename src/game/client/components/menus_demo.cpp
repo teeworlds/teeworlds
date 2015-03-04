@@ -58,30 +58,35 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
 	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
 
-	// we can toggle the seekbar using SHIFT or CTRL
-	if(Input()->KeyDown(KEY_LSHIFT) || Input()->KeyDown(KEY_RSHIFT) || Input()->KeyDown(KEY_LCTRL) || Input()->KeyDown(KEY_RCTRL))
+	// we can toggle the seekbar using CTRL
+	if(!m_MenuActive && (Input()->KeyDown(KEY_LCTRL) || Input()->KeyDown(KEY_RCTRL)))
 	{
 		if (m_SeekBarActive)
 			m_SeekBarActive = false;
 		else
+		{
 			m_SeekBarActive = true,
-			m_SeekBarActivatedTick = CurrentTick; // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
+			m_SeekBarActivatedTime = time_get(); // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
+		}
 	}
 
-	if (m_SeekBarActivatedTick < CurrentTick - SERVER_TICK_SPEED * 3.5)
+	if(m_SeekBarActivatedTime < time_get() - 5*time_freq())
 		m_SeekBarActive = false;
 	
-	if(m_MenuActive || m_SeekBarActive)
+	if(m_MenuActive)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
 		NameBar.HSplitTop(4.0f, 0, &NameBar);
-		// causes bug which makes the seek bar fill the whole menu if (m_MenuActive && m_SeekBarActive) == true
-		/*SeekBar = MainView;*/
+		m_SeekBarActive = true,
+		m_SeekBarActivatedTime = time_get();
 	}
+	else
+		SeekBar = MainView;
 
 	// do seekbar
+	if(m_SeekBarActive || m_MenuActive)
 	{
 		static int s_SeekBarID = 0;
 		void *id = &s_SeekBarID;

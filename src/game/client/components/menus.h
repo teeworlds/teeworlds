@@ -249,7 +249,7 @@ class CMenus : public CComponent
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
-	int m_SeekBarActivatedTick;
+	int64 m_SeekBarActivatedTime;
 	bool m_SeekBarActive;
 
 	void DemolistOnUpdate(bool Reset);

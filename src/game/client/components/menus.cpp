@@ -53,7 +53,7 @@ CMenus::CMenus()
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
-	m_SeekBarActivatedTick = 0;
+	m_SeekBarActivatedTime = 0;
 	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
 
