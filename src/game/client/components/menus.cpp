@@ -57,7 +57,7 @@ CMenus::CMenus()
 	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
 
-	m_MenuPage = PAGE_START;
+	SetMenuPage(PAGE_START);
 
 	m_InfoMode = false;
 
@@ -1250,7 +1250,7 @@ void CMenus::RenderMenubar(CUIRect r)
 	if(NewPage != -1)
 	{
 		if(Client()->State() == IClient::STATE_OFFLINE)
-			m_MenuPage = NewPage;
+			SetMenuPage(NewPage);
 		else
 			m_GamePage = NewPage;
 	}
@@ -1333,7 +1333,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 		if(Client()->State() != IClient::STATE_OFFLINE)
 			m_GamePage = PAGE_GAME;
 		else
-			m_MenuPage = PAGE_START;
+			SetMenuPage(PAGE_START);
 	}
 }
 
@@ -2533,3 +2533,26 @@ void CMenus::ToggleMusic()
 	}
 }
 
+void CMenus::SetMenuPage(int NewPage) {
+	if(NewPage == m_MenuPage)
+		return;
+
+	m_MenuPage = NewPage;
+	
+	// update camera position
+	{
+		int CameraPos = -1;
+
+		switch(m_MenuPage)
+		{
+		case PAGE_START: CameraPos = CCamera::POS_START; break;
+		case PAGE_DEMOS: CameraPos = CCamera::POS_DEMOS; break;
+		case PAGE_SETTINGS: CameraPos = CCamera::POS_SETTINGS; break;
+		case PAGE_INTERNET: CameraPos = CCamera::POS_INTERNET; break;
+		case PAGE_LAN: CameraPos = CCamera::POS_LAN; break;
+		}
+
+		if(CameraPos != -1 && m_pClient && m_pClient->m_pCamera)
+			m_pClient->m_pCamera->ChangePosition(CameraPos);
+	}
+}
