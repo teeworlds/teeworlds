@@ -106,7 +106,7 @@ int CCamera::GetCurrentPosition()
 void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
-	int PositionNumber = clamp(pResult->GetInteger(0), 0, 4);
+	int PositionNumber = clamp(pResult->GetInteger(0), 0, NUM_POS-1);
 	vec2 Position = vec2(pResult->GetInteger(1)*32.0f+16.0f, pResult->GetInteger(2)*32.0f+16.0f);
 	pSelf->m_Positions[PositionNumber] = Position;
 
