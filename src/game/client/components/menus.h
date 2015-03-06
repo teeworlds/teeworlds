@@ -483,6 +483,8 @@ class CMenus : public CComponent
 	IGraphics::CTextureHandle m_TextureBlob;
 
 	void ToggleMusic();
+
+	void SetMenuPage(int NewPage);
 public:
 	void RenderBackground();
 
