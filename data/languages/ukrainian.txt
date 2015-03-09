@@ -522,6 +522,9 @@ Automatically record demos
 Automatically take game over screenshot
 == 
 
+Borderless window
+== 
+
 Change settings
 == 
 
@@ -559,6 +562,9 @@ Friends
 == 
 
 Game paused
+== 
+
+Handle rendering async from updates
 == 
 
 Kick player
@@ -658,6 +664,12 @@ The audio device couldn't be initialised.
 == 
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
 == 
 
 Type:

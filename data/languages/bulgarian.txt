@@ -672,7 +672,13 @@ no limit
 
 ##### needs translation #####
 
+Borderless window
+== 
+
 Game paused
+== 
+
+Handle rendering async from updates
 == 
 
 Respawn
@@ -682,6 +688,12 @@ Show only chat messages from friends
 == 
 
 Spectate previous
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
 == 
 
 ##### old translations #####

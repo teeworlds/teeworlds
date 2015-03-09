@@ -684,4 +684,17 @@ no limit
 
 ##### needs translation #####
 
+Borderless window
+== 
+
+Handle rendering async from updates
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
 ##### old translations #####
+

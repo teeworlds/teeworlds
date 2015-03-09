@@ -657,10 +657,16 @@ no limit
 
 ##### needs translation #####
 
+Borderless window
+== 
+
 Demofile: %s
 == 
 
 Game paused
+== 
+
+Handle rendering async from updates
 == 
 
 Play background music
@@ -682,6 +688,12 @@ Spectate previous
 == 
 
 Strict gametype filter
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
 == 
 
 ##### old translations #####

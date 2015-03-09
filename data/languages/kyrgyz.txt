@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -221,6 +222,9 @@ Game info
 
 Game over
 == Оюн бүттү
+
+Game paused
+== Оюн бир азга токтотулду
 
 Game type
 == Оюн түрү
@@ -465,6 +469,9 @@ Reset filter
 Reset to defaults
 == Жарыяланбаска түшүрүү
 
+Respawn
+== Кайра жаралуу
+
 Rifle
 == Бластер
 
@@ -524,6 +531,9 @@ Show ingame HUD
 
 Show name plates
 == Оюнчулардын аттарын көрсөтүү
+
+Show only chat messages from friends
+== Достордун гана маек билдирүүлөрүн көрсөтүү
 
 Show only supported
 == Колдолгонду гана көрсөтүү
@@ -672,15 +682,19 @@ Your skin
 no limit
 == чексиз
 
-Game paused
-== Оюн бир азга токтотулду
-
-Respawn
-== Кайра жаралуу
-
-Show only chat messages from friends
-== Достордун гана маек билдирүүлөрүн көрсөтүү
-
 ##### needs translation #####
 
+Borderless window
+== 
+
+Handle rendering async from updates
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
 ##### old translations #####
+

@@ -672,7 +672,13 @@ no limit
 
 ##### needs translation #####
 
+Borderless window
+== 
+
 Game paused
+== 
+
+Handle rendering async from updates
 == 
 
 Player country:
@@ -682,6 +688,12 @@ Respawn
 == 
 
 Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
 == 
 
 ##### old translations #####
