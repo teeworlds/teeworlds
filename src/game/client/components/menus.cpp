@@ -2548,8 +2548,8 @@ void CMenus::SetMenuPage(int NewPage) {
 		case PAGE_START: CameraPos = CCamera::POS_START; break;
 		case PAGE_DEMOS: CameraPos = CCamera::POS_DEMOS; break;
 		case PAGE_SETTINGS: CameraPos = CCamera::POS_SETTINGS; break;
-		case PAGE_INTERNET: CameraPos = CCamera::POS_INTERNET; break;
-		case PAGE_LAN: CameraPos = CCamera::POS_LAN; break;
+		case PAGE_INTERNET:
+		case PAGE_LAN: CameraPos = CCamera::POS_INTERNET;
 		}
 
 		if(CameraPos != -1 && m_pClient && m_pClient->m_pCamera)
