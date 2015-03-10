@@ -309,6 +309,7 @@ public:
 	virtual void Maximize() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
+	virtual void NotifyWindow() = 0;
 
 	virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;
 	virtual bool IsIdle() const = 0;
@@ -426,6 +427,8 @@ public:
 
 	virtual int WindowActive();
 	virtual int WindowOpen();
+
+	virtual void NotifyWindow();
 
 	virtual int Init();
 	virtual void Shutdown();

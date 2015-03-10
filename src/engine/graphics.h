@@ -179,6 +179,7 @@ public:
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
 	virtual bool IsIdle() const = 0;
 	virtual void WaitForIdle() = 0;
+	virtual void NotifyWindow() = 0;
 
 protected:
 	inline CTextureHandle CreateTextureHandle(int Index)
@@ -201,7 +202,6 @@ public:
 
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
-
 };
 
 extern IEngineGraphics *CreateEngineGraphics();
