@@ -2054,7 +2054,7 @@ int secure_random_init()
 		return 0;
 	}
 #if defined(CONF_FAMILY_WINDOWS)
-	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, 0))
+	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
 	{
 		secure_random_data.initialized = 1;
 		return 0;
