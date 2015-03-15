@@ -96,6 +96,8 @@ public:
 	void Request(const NETADDR &Addr) const;
 
 	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
+	int LoadServersFromFile();
+	int SaveServersToFile();
 
 private:
 	CNetClient *m_pNetClient;
@@ -103,6 +105,7 @@ private:
 	class IConsole *m_pConsole;
 	class IEngine *m_pEngine;
 	class IFriends *m_pFriends;
+	class IStorage *m_pStorage;
 	char m_aNetVersion[128];
 
 	CHeap m_ServerlistHeap;

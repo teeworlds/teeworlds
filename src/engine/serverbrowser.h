@@ -97,6 +97,8 @@ public:
 		FILTER_PING=65536,
 	};
 
+	static const char* SERVER_CACHE_FILENAME;
+
 	virtual void Refresh(int Type) = 0;
 	virtual bool IsRefreshing() const = 0;
 	virtual bool IsRefreshingMasters() const = 0;

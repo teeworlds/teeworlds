@@ -14,11 +14,13 @@
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
+#include <engine/storage.h>
 #include <engine/masterserver.h>
 
 #include <mastersrv/mastersrv.h>
 
 #include "serverbrowser.h"
+#include "engine/shared/linereader.h"
 
 class SortWrap
 {
@@ -29,6 +31,8 @@ public:
 	SortWrap(CServerBrowser::CServerFilter *t, SortFunc f) : m_pfnSort(f), m_pThis(t) {}
 	bool operator()(int a, int b) { return (g_Config.m_BrSortOrder ? (m_pThis->*m_pfnSort)(b, a) : (m_pThis->*m_pfnSort)(a, b)); }
 };
+
+const char* CServerBrowser::SERVER_CACHE_FILENAME = "servercache.cfg";
 
 CServerBrowser::CServerBrowser()
 {
@@ -113,12 +117,77 @@ void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVers
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
 	if(pConfig)
 		pConfig->RegisterCallback(ConfigSaveCallback, this);
 
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, ConAddFavorite, this, "Add a server as a favorite");
 	m_pConsole->Register("remove_favorite", "s", CFGFLAG_CLIENT, ConRemoveFavorite, this, "Remove a server from favorites");
+}
+
+int CServerBrowser::LoadServersFromFile()
+{
+	if(!m_pStorage)
+		return -1;
+
+	// try to open file
+	IOHANDLE File = m_pStorage->OpenFile(CServerBrowser::SERVER_CACHE_FILENAME, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+		return -1;
+
+	CLineReader LineReader;
+	LineReader.Init(File);
+	const char *pLine = LineReader.Get();
+	while(pLine)
+	{
+		if(!pLine)
+			break;
+
+		char aAddrStr[NETADDR_MAXSTRSIZE];
+		NETADDR Addr;
+
+		// parse line of format "ip:port"
+		if(sscanf(pLine, "%47s", aAddrStr) == 1 && net_addr_from_str(&Addr, aAddrStr) == 0)
+		{
+			Set(Addr, CServerBrowser::SET_MASTER_ADD, -1, 0x0);
+		}
+		pLine = LineReader.Get();
+	}
+
+	io_close(File);
+	return 0;
+}
+
+int CServerBrowser::SaveServersToFile()
+{
+	if(!m_pStorage)
+		return -1;
+
+	// try to open file
+	IOHANDLE File = m_pStorage->OpenFile(CServerBrowser::SERVER_CACHE_FILENAME, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return -1;
+
+	CServerEntry* pEntry = m_pFirstReqServer;
+	while(!pEntry)
+	{
+		if (pEntry->m_Addr.type != NETTYPE_INVALID)
+		{
+			char aAddrStr[NETADDR_MAXSTRSIZE];
+			net_addr_str(&(pEntry->m_Addr), aAddrStr, sizeof(aAddrStr), true);
+			char aBuf[256];
+			//str_format(aBuf, sizeof(aBuf), "%s %s", m_aMasterServers[i].m_aHostname, aAddrStr);
+			str_format(aBuf, sizeof(aBuf), "%s", aAddrStr);
+			io_write(File, aBuf, str_length(aBuf));
+			io_write_newline(File);
+		}
+
+		pEntry = pEntry->m_pNextReq;
+	}
+
+	io_close(File);
+	return 0;
 }
 
 const CServerInfo *CServerBrowser::SortedGet(int FilterIndex, int Index) const

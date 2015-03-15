@@ -137,12 +137,10 @@ public:
 
 		CLineReader LineReader;
 		LineReader.Init(File);
-		while(1)
+		const char *pLine = LineReader.Get();
+		while(!pLine)
 		{
 			CMasterInfo Info = {{0}};
-			const char *pLine = LineReader.Get();
-			if(!pLine)
-				break;
 
 			// parse line
 			char aAddrStr[NETADDR_MAXSTRSIZE];
@@ -172,6 +170,7 @@ public:
 				if(!Added)
 					break;
 			}
+			pLine = LineReader.Get();
 		}
 
 		io_close(File);

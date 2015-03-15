@@ -1002,6 +1002,10 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			}
 			else
 				m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
+
+			// save the files to the cache file for next time
+			if (m_ServerBrowser.NumServers() > 0)
+				m_ServerBrowser.SaveServersToFile();
 		}
 	}
 }
@@ -1640,7 +1644,7 @@ void CClient::Update()
 	// pump the network
 	PumpNetwork();
 
-	// update the maser server registry
+	// update the master server registry
 	MasterServer()->Update();
 
 	// update the server browser
@@ -1700,6 +1704,8 @@ void CClient::InitInterfaces()
 
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
+	if (m_ServerBrowser.LoadServersFromFile() !=0)
+		dbg_msg("client", "unable to read initial server list from servercache.cfg");
 	m_Friends.Init();
 }
 

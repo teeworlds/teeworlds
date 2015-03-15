@@ -1597,12 +1597,16 @@ int CMenus::Render()
 	static bool s_First = true;
 	if(s_First)
 	{
-		// refresh server browser before we are in browser menu to save time
 		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
-		if(g_Config.m_UiBrowserPage == PAGE_LAN)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		else
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		// refresh server browser before we are in browser menu to save time,
+		// but only if it has no servers (not read from file)
+		if(ServerBrowser()->NumServers() == 0)
+		{
+			if(g_Config.m_UiBrowserPage == PAGE_LAN)
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			else
+				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		}
 
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
