@@ -19,9 +19,18 @@ public:
 	class CServerEntry
 	{
 	public:
+		enum
+		{
+			STATE_INVALID=0,
+			STATE_PENDING,
+			STATE_READY,
+			MAX_TOKEN=0xFF
+		};
+
 		NETADDR m_Addr;
 		int64 m_RequestTime;
-		int m_GotInfo;
+		int m_InfoState;
+		int m_CurrentToken;	// the token is to keep server refresh separated from each other
 		CServerInfo m_Info;
 
 		CServerEntry *m_pNextIp; // ip hashed list
@@ -160,7 +169,7 @@ private:
 	int m_NumPlayers;
 
 	// the token is to keep server refresh separated from each other
-	int m_CurrentToken;
+	int m_CurrentLanToken;
 
 	int m_ServerlistType;
 	int64 m_BroadcastTime;
