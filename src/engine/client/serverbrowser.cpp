@@ -55,7 +55,7 @@ CServerBrowser::CServerBrowser()
 	m_aFilterGametypeString[0] = 0;
 
 	// the token is to keep server refresh separated from each other
-	m_CurrentToken = 1;
+	m_CurrentLanToken = 1;
 
 	m_ServerlistType = 0;
 	m_BroadcastTime = 0;
@@ -86,8 +86,8 @@ bool CServerBrowser::SortCompareName(int Index1, int Index2) const
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
 	//	make sure empty entries are listed last
-	return (a->m_GotInfo && b->m_GotInfo) || (!a->m_GotInfo && !b->m_GotInfo) ? str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0 :
-			a->m_GotInfo ? true : false;
+	return (a->m_InfoState == CServerEntry::STATE_READY && b->m_InfoState == CServerEntry::STATE_READY) || (a->m_InfoState != CServerEntry::STATE_READY && b->m_InfoState != CServerEntry::STATE_READY) ? str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0 :
+			a->m_InfoState == CServerEntry::STATE_READY;
 }
 
 bool CServerBrowser::SortCompareMap(int Index1, int Index2) const
@@ -369,21 +369,21 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 		RemoveRequest(pEntry);
 	}*/
 
-	pEntry->m_GotInfo = 1;
+	pEntry->m_InfoState = CServerEntry::STATE_READY;
 }
 
 CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 {
 	int Hash = Addr.ip[0];
-	CServerEntry *pEntry = 0;
-	int i;
 
 	// create new pEntry
-	pEntry = (CServerEntry *)m_ServerlistHeap.Allocate(sizeof(CServerEntry));
+	CServerEntry *pEntry = (CServerEntry *)m_ServerlistHeap.Allocate(sizeof(CServerEntry));
 	mem_zero(pEntry, sizeof(CServerEntry));
 
 	// set the info
 	pEntry->m_Addr = Addr;
+	pEntry->m_InfoState = CServerEntry::STATE_INVALID;
+	pEntry->m_CurrentToken = rand()%CServerEntry::MAX_TOKEN;
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
@@ -391,7 +391,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	str_copy(pEntry->m_Info.m_aName, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aName));
 
 	// check if it's a favorite
-	for(i = 0; i < m_NumFavoriteServers; i++)
+	for(int i = 0; i < m_NumFavoriteServers; i++)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			pEntry->m_Info.m_Favorite = 1;
@@ -446,13 +446,13 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 	}
 	else if(Type == IServerBrowser::SET_TOKEN)
 	{
-		if(Token != m_CurrentToken)
+		if(m_ServerlistType == IServerBrowser::TYPE_LAN && Token != m_CurrentLanToken)
 			return;
 
 		pEntry = Find(Addr);
-		if(!pEntry)
+		if(!pEntry && m_ServerlistType == IServerBrowser::TYPE_LAN)
 			pEntry = Add(Addr);
-		if(pEntry)
+		if(pEntry && pEntry->m_InfoState == CServerEntry::STATE_PENDING && Token == pEntry->m_CurrentToken)
 		{
 			SetInfo(pEntry, *pInfo);
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
@@ -478,7 +478,7 @@ void CServerBrowser::Refresh(int Type)
 	m_NumRequests = 0;
 
 	// next token
-	m_CurrentToken = (m_CurrentToken+1)&0xff;
+	m_CurrentLanToken = (m_CurrentLanToken+1)&0xff;
 
 	//
 	m_ServerlistType = Type;
@@ -490,7 +490,7 @@ void CServerBrowser::Refresh(int Type)
 		int i;
 
 		mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-		Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentToken;
+		Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentLanToken;
 
 		/* do the broadcast version */
 		Packet.m_ClientID = -1;
@@ -534,7 +534,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	}
 
 	mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-	Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentToken;
+	Buffer[sizeof(SERVERBROWSE_GETINFO)] = pEntry->m_CurrentToken;
 
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
@@ -545,7 +545,10 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	m_pNetClient->Send(&Packet);
 
 	if(pEntry)
+	{
 		pEntry->m_RequestTime = time_get();
+		pEntry->m_InfoState = CServerEntry::STATE_PENDING;
+	}
 }
 
 void CServerBrowser::Request(const NETADDR &Addr) const
