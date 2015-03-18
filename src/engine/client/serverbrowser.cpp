@@ -452,7 +452,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 		pEntry = Find(Addr);
 		if(!pEntry && m_ServerlistType == IServerBrowser::TYPE_LAN)
 			pEntry = Add(Addr);
-		if(pEntry && pEntry->m_InfoState == CServerEntry::STATE_PENDING && Token == pEntry->m_CurrentToken)
+		if(pEntry && ((pEntry->m_InfoState == CServerEntry::STATE_PENDING && Token == pEntry->m_CurrentToken) || m_ServerlistType == IServerBrowser::TYPE_LAN))
 		{
 			SetInfo(pEntry, *pInfo);
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
@@ -534,7 +534,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	}
 
 	mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-	Buffer[sizeof(SERVERBROWSE_GETINFO)] = pEntry->m_CurrentToken;
+	Buffer[sizeof(SERVERBROWSE_GETINFO)] = pEntry ? pEntry->m_CurrentToken : m_CurrentLanToken;
 
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
