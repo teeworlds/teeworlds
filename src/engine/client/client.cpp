@@ -1022,7 +1022,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 	if(Sys)
 	{
 		// system message
-		if(Msg == NETMSG_MAP_CHANGE)
+		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_CHANGE)
 		{
 			const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 			int MapCrc = Unpacker.GetInt();
@@ -1088,7 +1088,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_MAP_DATA)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_DATA)
 		{
 			if(!m_MapdownloadFile)
 				return;
@@ -1133,7 +1133,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested next chunk package");
 			}
 		}
-		else if(Msg == NETMSG_CON_READY)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_CON_READY)
 		{
 			GameClient()->OnConnected();
 		}
@@ -1142,7 +1142,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_PING_REPLY, true);
 			SendMsg(&Msg, 0);
 		}
-		else if(Msg == NETMSG_RCON_CMD_ADD)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_CMD_ADD)
 		{
 			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			const char *pHelp = Unpacker.GetString(CUnpacker::SANITIZE_CC);
@@ -1150,25 +1150,25 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(Unpacker.Error() == 0)
 				m_pConsole->RegisterTemp(pName, pParams, CFGFLAG_SERVER, pHelp);
 		}
-		else if(Msg == NETMSG_RCON_CMD_REM)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_CMD_REM)
 		{
 			const char *pName = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			if(Unpacker.Error() == 0)
 				m_pConsole->DeregisterTemp(pName);
 		}
-		else if(Msg == NETMSG_RCON_AUTH_ON)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_AUTH_ON)
 		{
 			m_RconAuthed = 1;
 			m_UseTempRconCommands = 1;
 		}
-		else if(Msg == NETMSG_RCON_AUTH_OFF)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_AUTH_OFF)
 		{
 			m_RconAuthed = 0;
 			if(m_UseTempRconCommands)
 				m_pConsole->DeregisterTempAll();
 			m_UseTempRconCommands = 0;
 		}
-		else if(Msg == NETMSG_RCON_LINE)
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_LINE)
 		{
 			const char *pLine = Unpacker.GetString();
 			if(Unpacker.Error() == 0)
@@ -1395,11 +1395,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 	}
 	else
 	{
-		// game message
-		GameClient()->OnMessage(Msg, &Unpacker);
+		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0)
+		{
+			// game message
+			GameClient()->OnMessage(Msg, &Unpacker);
 
-		if(m_RecordGameMessage && m_DemoRecorder.IsRecording())
-			m_DemoRecorder.RecordMessage(pPacket->m_pData, pPacket->m_DataSize);
+			if(m_RecordGameMessage && m_DemoRecorder.IsRecording())
+				m_DemoRecorder.RecordMessage(pPacket->m_pData, pPacket->m_DataSize);
+		}
 	}
 }
 

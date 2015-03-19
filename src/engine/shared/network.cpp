@@ -80,7 +80,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		// fill in the info
 		pChunk->m_ClientID = m_ClientID;
 		pChunk->m_Address = m_Addr;
-		pChunk->m_Flags = 0;
+		pChunk->m_Flags = Header.m_Flags;
 		pChunk->m_DataSize = Header.m_Size;
 		pChunk->m_pData = pData;
 		return 1;
