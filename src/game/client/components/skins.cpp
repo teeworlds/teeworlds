@@ -126,6 +126,9 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// init
 	CSkin Skin = pSelf->m_DummySkin;
+	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-4));
+	if(pSelf->Find(Skin.m_aName, true) != -1)
+		return 0;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
 
 	// parse json data
@@ -200,7 +203,6 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	Skin.m_Flags = SpecialSkin ? SKINFLAG_SPECIAL : 0;
 	if(DirType != IStorage::TYPE_SAVE)
 		Skin.m_Flags |= SKINFLAG_STANDARD;
-	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-4));
 	if(g_Config.m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);

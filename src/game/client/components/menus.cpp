@@ -2157,7 +2157,7 @@ int CMenus::Render()
 			static int s_ButtonTryAgain = 0;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || m_EnterPressed)
 			{
-				if(m_aSaveSkinName[0])
+				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
 				{
 					m_Popup = POPUP_NONE;
 					SaveSkinfile();
