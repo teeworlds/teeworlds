@@ -1486,7 +1486,7 @@ void CMenus::UpdatedFilteredVideoModes()
 
 void CMenus::OnInit()
 {
-	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS);
+	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 	UpdateVideoFormats();
 
 	bool Found = false;

@@ -188,11 +188,13 @@ public:
 
 	struct SCommand_VideoModes : public SCommand
 	{
-		SCommand_VideoModes() : SCommand(CMD_VIDEOMODES) {}
+		SCommand_VideoModes(int screen) : SCommand(CMD_VIDEOMODES),
+										  m_Screen(screen) {}
 
 		CVideoMode *m_pModes; // processor will fill this in
 		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
 		int *m_pNumModes; // processor will write to this pointer
+		int m_Screen;
 	};
 
 	struct SCommand_Swap : public SCommand
@@ -300,7 +302,7 @@ public:
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
+	virtual int Init(const char *pName, int Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
@@ -433,7 +435,7 @@ public:
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
 
-	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 
 	virtual int GetDesktopScreenWidth() const { return m_DesktopScreenWidth; }
 	virtual int GetDesktopScreenHeight() const { return m_DesktopScreenHeight; }
