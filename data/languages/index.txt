@@ -16,6 +16,10 @@ bulgarian
 == Български
 == 100
 
+chuvash
+== Чăвашла
+== 643
+
 czech
 == Česky
 == 203
