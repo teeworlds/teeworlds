@@ -204,8 +204,8 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 
 		// white blending
-		ColorArray[0] = IGraphics::CColorVertex(0, 1.0f, 1.0f, 1.0f, 0.0f);
-		ColorArray[1] = IGraphics::CColorVertex(1, 1.0f, 1.0f, 1.0f, 0.0f);
+		ColorArray[0] = IGraphics::CColorVertex(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		ColorArray[1] = IGraphics::CColorVertex(1, 0.0f, 0.0f, 0.0f, 0.0f);
 		ColorArray[2] = IGraphics::CColorVertex(2, 1.0f, 1.0f, 1.0f, 1.0f);
 		ColorArray[3] = IGraphics::CColorVertex(3, 1.0f, 1.0f, 1.0f, 1.0f);
 		Graphics()->SetColorVertex(ColorArray, 4);
