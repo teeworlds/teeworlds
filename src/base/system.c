@@ -1539,6 +1539,16 @@ int time_timestamp()
 	return time(0);
 }
 
+int time_houroftheday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	return time_info->tm_hour;
+}
+
 void str_append(char *dst, const char *src, int dst_size)
 {
 	int s = strlen(dst);

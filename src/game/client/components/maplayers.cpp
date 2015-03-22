@@ -30,6 +30,27 @@ CMapLayers::CMapLayers(int t)
 	m_pMenuLayers = 0;
 }
 
+void CMapLayers::LoadBackgroundMap()
+{
+	int HourOfTheDay = time_houroftheday();
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
+	if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+	{
+		str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+		return;
+	}
+
+	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+
+	m_pMenuLayers->Init(Kernel(), m_pMenuMap);
+	RenderTools()->RenderTilemapGenerateSkip(m_pMenuLayers);
+	m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
+	LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
+}
+
 void CMapLayers::OnInit()
 {
 	if(m_Type == TYPE_BACKGROUND)
@@ -37,24 +58,7 @@ void CMapLayers::OnInit()
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
 
-		int HourOfTheDay = (time_timestamp()/3600)%24;
-
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
-		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
-		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-			return;
-		}
-
-		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-
-		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
-		RenderTools()->RenderTilemapGenerateSkip(m_pMenuLayers);
-		m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
-		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
+		LoadBackgroundMap();
 	}
 }
 
@@ -368,23 +372,6 @@ void CMapLayers::BackgroundMapUpdate()
 		// unload map
 		m_pMenuMap->Unload();
 
-		int HourOfTheDay = (time_timestamp()/3600)%24;
-
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
-		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
-		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-			return;
-		}
-
-		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-
-		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
-		RenderTools()->RenderTilemapGenerateSkip(m_pMenuLayers);
-		m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
-		LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
+		LoadBackgroundMap();
 	}
 }

@@ -466,6 +466,15 @@ int64 time_freq();
 */
 int time_timestamp();
 
+/*
+	Function: time_houroftheday
+		Retrives the hours since midnight (0..23)
+
+	Returns:
+		The current hour of the day
+*/
+int time_houroftheday();
+
 /* Group: Network General */
 typedef struct
 {
