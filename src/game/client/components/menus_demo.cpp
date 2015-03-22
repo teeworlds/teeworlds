@@ -65,7 +65,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			m_SeekBarActive = false;
 		else
 		{
-			m_SeekBarActive = true,
+			m_SeekBarActive = true;
 			m_SeekBarActivatedTime = time_get(); // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
 		}
 	}
