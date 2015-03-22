@@ -284,7 +284,11 @@ void CSkins::AddSkin(const char *pSkinName)
 		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[PartIndex];
 		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[PartIndex];
 	}
-	m_aSkins.add(Skin);
+	int SkinIndex = Find(pSkinName, false);
+	if(SkinIndex != -1)
+		m_aSkins[SkinIndex] = Skin;
+	else
+		m_aSkins.add(Skin);
 }
 
 void CSkins::RemoveSkin(const CSkin *pSkin)
