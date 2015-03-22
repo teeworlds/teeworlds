@@ -687,8 +687,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 		pName,
 		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
 		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
-		*Width,
-		*Height,
+		*pWidth,
+		*pHeight,
 		SdlFlags);
 
 	if(m_pWindow == NULL)
@@ -697,7 +697,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 		return -1;
 	}
 
-	SDL_GetWindowSize(m_pWindow, Width, Height);
+	SDL_GetWindowSize(m_pWindow, pWidth, pHeight);
 
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
 
