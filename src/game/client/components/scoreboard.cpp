@@ -46,13 +46,10 @@ void CScoreboard::OnConsoleInit()
 void CScoreboard::RenderGoals(float x, float y, float w)
 {
 	float h = 50.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 10.0f);
 
 	// render goals
 	y += 10.0f;
@@ -80,14 +77,11 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 void CScoreboard::RenderSpectators(float x, float y, float w)
 {
 	float h = 140.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 10.0f);
 
 	// Headline
 	y += 10.0f;
@@ -122,14 +116,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		return;
 
 	float h = 760.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 17.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 17.0f);
 
 	// render title
 	float TitleFontsize = 40.0f;
@@ -228,11 +219,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			// background so it's easy to find the local player or the followed one in spectator mode
 			if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 			{
-				Graphics()->TextureClear();
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha);
-				RenderTools()->DrawRoundRect(x, y, w-20.0f, LineHeight, 15.0f);
-				Graphics()->QuadsEnd();
+				Rect.x = x;
+				Rect.y = y;
+				Rect.w = w-20.0f;
+				Rect.h = LineHeight;
+				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha), 15.0f);
 			}
 
 			// score
@@ -318,18 +309,16 @@ void CScoreboard::RenderRecordingNotification(float x)
 		return;
 
 	//draw the box
+	CUIRect Rect = {x, 0.0f, 180.0f, 50.0f};
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(x, 0.0f, 180.0f, 50.0f, 15.0f, CUI::CORNER_B);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_B, 15.0f);
 
 	//draw the red dot
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-	RenderTools()->DrawRoundRect(x+20, 15.0f, 20.0f, 20.0f, 10.0f);
-	Graphics()->QuadsEnd();
+	Rect.x = x+20;
+	Rect.y = 15.0f;
+	Rect.w = 20.0f;
+	Rect.h = 20.0f;
+	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 0.0f, 0.0f, 1.0f), 10.0f);
 
 	//draw the text
 	char aBuf[64];

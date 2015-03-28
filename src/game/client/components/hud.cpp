@@ -165,15 +165,9 @@ void CHud::RenderScoreHud()
 			for(int t = 0; t < NUM_TEAMS; t++)
 			{
 				// draw box
+				CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split, StartY+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f};
 				Graphics()->BlendNormal();
-				Graphics()->TextureClear();
-				Graphics()->QuadsBegin();
-				if(t == 0)
-					Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
-				else
-					Graphics()->SetColor(0.0f, 0.0f, 1.0f, 0.25f);
-				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split, StartY+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
-				Graphics()->QuadsEnd();
+				RenderTools()->DrawUIRect(&Rect, t == 0 ? vec4(1.0f, 0.0f, 0.0f, 0.25f) : vec4(0.0f, 0.0f, 1.0f, 0.25f), CUI::CORNER_L, 5.0f);
 
 				// draw score
 				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreTeamWidth[t])/2-Split, StartY+t*20, 14.0f, aScoreTeam[t], -1);
@@ -276,15 +270,9 @@ void CHud::RenderScoreHud()
 			for(int t = 0; t < 2; t++)
 			{
 				// draw box
+				CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*20, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f};
 				Graphics()->BlendNormal();
-				Graphics()->TextureClear();
-				Graphics()->QuadsBegin();
-				if(t == Local)
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
-				else
-					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
-				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*20, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f, 5.0f, CUI::CORNER_L);
-				Graphics()->QuadsEnd();
+				RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
 
 				// draw score
 				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20, 14.0f, aScore[t], -1);
@@ -420,11 +408,8 @@ void CHud::RenderVoting()
 	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.40f);
-	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 46, 5.0f);
-	Graphics()->QuadsEnd();
+	CUIRect Rect = {-10.0f, 58.0f, 119.0f, 46.0f};
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), 5.0f);
 
 	TextRender()->TextColor(1,1,1,1);
 
@@ -488,22 +473,22 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	// render ammo
 	if(pCharacter->m_Weapon == WEAPON_NINJA)
 	{
-		Graphics()->TextureClear();
-		Graphics()->QuadsBegin();
-		Graphics()->SetColor(0.8f, 0.8f, 0.8f, 0.5f);
-		RenderTools()->DrawRoundRectExt(x,y+24, 118.0f, 10.0f, 0.0f, 0);
+		CUIRect Rect = {x, y+24.0f, 118.0f, 10.0f};
+		RenderTools()->DrawUIRect(&Rect, vec4(0.8f, 0.8f, 0.8f, 0.5f), 0, 0.0f);
 
 		int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
-		float Width = 116.0f * clamp(pCharacter->m_AmmoCount-Client()->GameTick(), 0, Max) / Max;
-		Graphics()->SetColor(0.9f, 0.2f, 0.2f, 0.85f);
-		RenderTools()->DrawRoundRectExt(x+1.0f, y+25.0f, Width, 8.0f, 0.0f, 0);
-		Graphics()->QuadsEnd();
+		Rect.x = x+1.0f;
+		Rect.y = y+25.0f;
+		Rect.w = 116.0f * clamp(pCharacter->m_AmmoCount-Client()->GameTick(), 0, Max) / Max;
+		Rect.h = 8.0f;
+		RenderTools()->DrawUIRect(&Rect, vec4(0.9f, 0.2f, 0.2f, 0.85f), 0, 0.0f);
 
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_NINJA].m_pSpriteBody);
-		RenderTools()->DrawRoundRectExt(x+40.0f,y+25, 32.0f, 8.0f, 0.0f, 0);
+		Array[0] = IGraphics::CQuadItem(x+40.0f,y+25, 32.0f, 8.0f);
+		Graphics()->QuadsDrawTL(Array, 1);
 	}
 	else
 	{
@@ -547,11 +532,8 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f, 5.0f, CUI::CORNER_TL);
-	Graphics()->QuadsEnd();
+	CUIRect Rect = {m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f};
+	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_TL, 5.0f);
 
 	// draw the text
 	char aBuf[128];

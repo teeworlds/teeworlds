@@ -41,6 +41,9 @@ typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void 
 
 class CRenderTools
 {
+	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
+	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
+
 public:
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
@@ -54,9 +57,7 @@ public:
 	void DrawSprite(float x, float y, float size);
 
 	// rects
-	void DrawRoundRect(float x, float y, float w, float h, float r);
-	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
-	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
+	void DrawRoundRect(const CUIRect *r, vec4 Color, float Rounding);
 
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
 	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);

@@ -1279,30 +1279,24 @@ void CMenus::RenderLoading()
 	float h = 200;
 	float x = Screen.w/2-w/2;
 	float y = Screen.h/2-h/2;
+	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.50f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
-	Graphics()->QuadsEnd();
-
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
 	const char *pCaption = Localize("Loading");
 
-	CUIRect r;
-	r.x = x;
-	r.y = y+20;
-	r.w = w;
-	r.h = h;
-	UI()->DoLabel(&r, pCaption, 48.0f, CUI::ALIGN_CENTER);
+	Rect.x = x;
+	Rect.y = y+20;
+	Rect.w = w;
+	Rect.h = h;
+	UI()->DoLabel(&Rect, pCaption, 48.0f, CUI::ALIGN_CENTER);
 
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,0.75f);
-	RenderTools()->DrawRoundRect(x+40, y+h-75, (w-80)*Percent, 25, 5.0f);
-	Graphics()->QuadsEnd();
+	Rect.x = x+40.0f;
+	Rect.y = y+h-75.0f;
+	Rect.w = (w-80.0f)*Percent;
+	Rect.h = 25.0f;
+	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f), 5.0f);
 
 	Graphics()->Swap();
 }

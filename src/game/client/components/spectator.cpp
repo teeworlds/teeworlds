@@ -178,12 +178,9 @@ void CSpectator::OnRender()
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
+	CUIRect Rect = {Width/2.0f-300.0f, Height/2.0f-300.0f, 600.0f, 600.0f};
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f);
-	RenderTools()->DrawRoundRect(Width/2.0f-300.0f, Height/2.0f-300.0f, 600.0f, 600.0f, 20.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.3f), 20.0f);
 
 	// clamp mouse position to selector area
 	m_SelectorMouse.x = clamp(m_SelectorMouse.x, -280.0f, 280.0f);
@@ -199,11 +196,11 @@ void CSpectator::OnRender()
 	{
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 		{
-			Graphics()->TextureClear();
-			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
-			RenderTools()->DrawRoundRect(Width/2.0f-280.0f, Height/2.0f-280.0f, 270.0f, 60.0f, 20.0f);
-			Graphics()->QuadsEnd();
+			Rect.x = Width/2.0f-280.0f;
+			Rect.y = Height/2.0f-280.0f;
+			Rect.w = 270.0f;
+			Rect.h = 60.0f;
+			RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 		}
 
 		if(m_SelectorMouse.x >= -280.0f && m_SelectorMouse.x <= -10.0f &&
@@ -232,11 +229,11 @@ void CSpectator::OnRender()
 
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == i)
 		{
-			Graphics()->TextureClear();
-			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
-			RenderTools()->DrawRoundRect(Width/2.0f+x-10.0f, Height/2.0f+y-10.0f, 270.0f, 60.0f, 20.0f);
-			Graphics()->QuadsEnd();
+			Rect.x = Width/2.0f+x-10.0f;
+			Rect.y = Height/2.0f+y-10.0f;
+			Rect.w = 270.0f;
+			Rect.h = 60.0f;
+			RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 		}
 
 		Selected = false;
