@@ -79,7 +79,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
 		NameBar.HSplitTop(4.0f, 0, &NameBar);
-		m_SeekBarActive = true,
+		m_SeekBarActive = true;
 		m_SeekBarActivatedTime = time_get();
 	}
 	else
