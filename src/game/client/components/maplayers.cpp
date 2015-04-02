@@ -362,7 +362,7 @@ void CMapLayers::ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserDa
 
 void CMapLayers::OnConsoleInit()
 {
-	Console()->Chain("cl_background_map", ConchainBackgroundMap, this);
+	Console()->Chain("cl_menu_map", ConchainBackgroundMap, this);
 }
 
 void CMapLayers::BackgroundMapUpdate()
