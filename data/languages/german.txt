@@ -122,7 +122,7 @@ Country
 == Land
 
 Crc:
-== Prüfsumme:
+== Prüfsumme(CRC32):
 
 Created:
 == Erstellt:
@@ -326,7 +326,7 @@ Move left
 == Nach links
 
 Move player to spectators
-== Spieler zu Zuschauer machen
+== Spieler zum Zuschauer machen
 
 Move right
 == Nach rechts
@@ -356,7 +356,7 @@ Next weapon
 == Nächste Waffe
 
 Nickname
-== Spitzname
+== Spielername
 
 No
 == Nein
@@ -452,7 +452,7 @@ Remote console
 == Remotekonsole
 
 Remove
-== Löschen
+== Entfernen
 
 Remove friend
 == Freund entfernen
@@ -485,7 +485,7 @@ Sat.
 == Sätt.
 
 Score
-== Score
+== Punktestand
 
 Score board
 == Punktetafel
@@ -524,10 +524,10 @@ Show chat
 == Chat anzeigen
 
 Show friends only
-== Nur Freunde zeigen
+== Nur Freunde anzeigen
 
 Show ingame HUD
-== Spielanzeigen
+== Spielanzeigen darstellen
 
 Show name plates
 == Zeige Namen
@@ -681,8 +681,6 @@ Your skin
 
 no limit
 == Keine Begrenzung
-
-##### needs translation #####
 
 Borderless window
 == Randloses Fenster
