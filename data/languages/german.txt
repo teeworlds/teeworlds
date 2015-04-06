@@ -602,7 +602,7 @@ The audio device couldn't be initialised.
 == Das Audiosystem konnte nicht gestartet werden.
 
 The server is running a non-standard tuning on a pure game type.
-== Der Server läuft nicht mit Standardeinstellungen.
+== Der Server läuft nicht mit standardmäßigen Tuning-Einstellungen auf einem Vanilla-Spieltypen.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
 == Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern, bevor du das Spiel beendest.
@@ -688,13 +688,13 @@ Borderless window
 == Randloses Fenster
 
 Handle rendering async from updates
-== Rendere asynchron zu den Updates.
+== Zeichne das Bild asynchron zu den Updates.
 
 Threaded rendering
-== Stückweises Rendern
+== Paralleles zeichnen des Bildes
 
 Threaded sound loading
-== Stückweises Laden des Tons
+== Paralleles Laden des Tons zum Spiel
 
 ##### old translations #####
 
