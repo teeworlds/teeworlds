@@ -686,13 +686,13 @@ Borderless window
 == Randloses Fenster
 
 Handle rendering async from updates
-== Zeichne das Bild asynchron zu den Updates.
+== Anzeige asynchron zu den Updates behandeln
 
 Threaded rendering
-== Paralleles zeichnen des Bildes
+== Paralleles Zeichnen des Bildes
 
 Threaded sound loading
-== Paralleles Laden des Tons zum Spiel
+== Paralleles Laden der Audiodateien zum Spiel
 
 ##### old translations #####
 
