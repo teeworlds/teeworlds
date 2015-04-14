@@ -689,7 +689,7 @@ Handle rendering async from updates
 == spielunabhängige Bilddarstellung
 
 Threaded rendering
-== Paralleles Zeichnen des Bildes zum Spiel
+== Parallele Darstellung des Bildes zum Spiel
 
 Threaded sound loading
 == Paralleles Laden der Audiodateien zum Spiel
