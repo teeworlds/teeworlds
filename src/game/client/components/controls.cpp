@@ -22,35 +22,23 @@ CControls::CControls()
 
 void CControls::OnReset()
 {
-	m_LastData[g_Config.m_ClDummy].m_Direction = 0;
-	m_LastData[g_Config.m_ClDummy].m_Hook = 0;
-	// simulate releasing the fire button
-	if((m_LastData[g_Config.m_ClDummy].m_Fire&1) != 0)
-		m_LastData[g_Config.m_ClDummy].m_Fire++;
-	m_LastData[g_Config.m_ClDummy].m_Fire &= INPUT_STATE_MASK;
-	m_LastData[g_Config.m_ClDummy].m_Jump = 0;
-	m_InputData[g_Config.m_ClDummy] = m_LastData[g_Config.m_ClDummy];
-
-	m_InputDirectionLeft[g_Config.m_ClDummy] = 0;
-	m_InputDirectionRight[g_Config.m_ClDummy] = 0;
+	ResetInput(0);
+	ResetInput(1);
 }
 
-void CControls::ResetDummyInput()
+void CControls::ResetInput(int dummy)
 {
-	m_LastData[!g_Config.m_ClDummy].m_Direction = 0;
-	if(m_LastData[!g_Config.m_ClDummy].m_Fire & 1)
-		m_LastData[!g_Config.m_ClDummy].m_Fire++;
-	m_LastData[!g_Config.m_ClDummy].m_Hook = 0;
-	m_LastData[!g_Config.m_ClDummy].m_Jump = 0;
+	m_LastData[dummy].m_Direction = 0;
+	//m_LastData.m_Hook = 0;
+	// simulate releasing the fire button
+	if((m_LastData[dummy].m_Fire&1) != 0)
+		m_LastData[dummy].m_Fire++;
+	m_LastData[dummy].m_Fire &= INPUT_STATE_MASK;
+	m_LastData[dummy].m_Jump = 0;
+	m_InputData[dummy] = m_LastData[dummy];
 
-	m_InputData[!g_Config.m_ClDummy].m_Direction = 0;
-	if(m_InputData[!g_Config.m_ClDummy].m_Fire & 1)
-		m_InputData[!g_Config.m_ClDummy].m_Fire++;
-	m_InputData[!g_Config.m_ClDummy].m_Hook = 0;
-	m_InputData[!g_Config.m_ClDummy].m_Jump = 0;
-
-	m_InputDirectionLeft[!g_Config.m_ClDummy] = 0;
-	m_InputDirectionRight[!g_Config.m_ClDummy] = 0;
+	m_InputDirectionLeft[dummy] = 0;
+	m_InputDirectionRight[dummy] = 0;
 }
 
 void CControls::OnRelease()
@@ -173,7 +161,7 @@ int CControls::SnapInput(int *pData)
 	// we freeze the input if chat or menu is activated
 	if(m_pClient->m_pChat->IsActive() || m_pClient->m_pMenus->IsActive())
 	{
-		OnReset();
+		ResetInput(g_Config.m_ClDummy);
 
 		mem_copy(pData, &m_InputData[g_Config.m_ClDummy], sizeof(m_InputData[0]));
 

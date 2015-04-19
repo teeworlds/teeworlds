@@ -208,7 +208,7 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 
 void CGameClient::ResetDummyInput()
 {
-	m_pControls->ResetDummyInput();
+	m_pControls->ResetInput(!g_Config.m_ClDummy);
 }
 
 void CGameClient::OnConsoleInit()
