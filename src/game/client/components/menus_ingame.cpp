@@ -56,6 +56,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	CSwitchTeamInfo Info = {{0}};
 	GetSwitchTeamInfo(&Info);
 	CUIRect Button, ButtonRow, Label;
+	bool DummyConnecting = m_pClient->Client()->DummyConnecting();
 
 	float Spacing = 3.0f;
 	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
@@ -118,7 +119,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			if(Team == TEAM_BLUE)
 				--BlueTeamSizeNew;
 			bool BlockRed = m_pClient->m_ServerSettings.m_TeamBalance && (RedTeamSizeNew - BlueTeamSizeNew >= NUM_TEAMS);
-			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed)
+			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed || DummyConnecting)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -131,7 +132,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 			static CButtonContainer s_RedButton;
-			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]) && !BlockRed)
+			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]) && !BlockRed && !DummyConnecting)
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
@@ -144,7 +145,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			if(Team != TEAM_BLUE)
 				++BlueTeamSizeNew;
 			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
-			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue)
+			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue || DummyConnecting)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -157,7 +158,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 			static CButtonContainer s_BlueButton;
-			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]) && !BlockBlue)
+			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]) && !BlockBlue && !DummyConnecting)
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
 				SetActive(false);
@@ -165,7 +166,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 		else
 		{
-			if(Info.m_aNotification[0] && Team != TEAM_RED)
+			if(DummyConnecting || (Info.m_aNotification[0] && Team != TEAM_RED))
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -177,7 +178,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 			static CButtonContainer s_JoinButton;
-			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !(Info.m_aNotification[0]))
+			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !(Info.m_aNotification[0] && !DummyConnecting))
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
@@ -187,7 +188,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		// disconnect button
 		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
 		static CButtonContainer s_DisconnectButton;
-		if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
+		if(!DummyConnecting && DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
 			Client()->Disconnect();
 
 		// Record button
@@ -207,7 +208,11 @@ void CMenus::RenderGame(CUIRect MainView)
 		ButtonRow.VSplitLeft(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? ButtonWidth : ButtonWidth + 20.0f, &Button, &ButtonRow);
 
 		static CButtonContainer s_DummyButton;
-		if(DoButton_Menu(&s_DummyButton, Localize(Client()->DummyConnected() ? "Disconnect dummy" : "Connect dummy"), 0, &Button))
+		if(DummyConnecting)
+		{
+			DoButton_Menu(&s_DummyButton, Localize("Connecting dummy"), 1, &Button);
+		}
+		else if(DoButton_Menu(&s_DummyButton, Localize(Client()->DummyConnected() ? "Disconnect dummy" : "Connect dummy"), 0, &Button))
 		{
 			if(!Client()->DummyConnected())
 			{

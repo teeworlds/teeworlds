@@ -247,6 +247,7 @@ public:
 	virtual void DummyDisconnect(const char *pReason);
 	virtual void DummyConnect(int NetClient = 1);
 	virtual bool DummyConnected();
+	virtual bool DummyConnecting();
 	int m_DummyConnected;
 	int m_LastDummyConnectTime;
 	int m_Fire;

@@ -98,6 +98,7 @@ public:
 	virtual void DummyDisconnect(const char *pReason) = 0;
 	virtual void DummyConnect(int NetClient = 1) = 0;
 	virtual bool DummyConnected() = 0;
+	virtual bool DummyConnecting() = 0;
 
 	// gfx
 	virtual void SwitchWindowScreen(int Index) = 0;

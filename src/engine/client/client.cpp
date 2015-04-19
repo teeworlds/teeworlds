@@ -689,6 +689,11 @@ bool CClient::DummyConnected()
 	return m_DummyConnected;
 }
 
+bool CClient::DummyConnecting()
+{
+	return !m_DummyConnected && m_LastDummyConnectTime > 0 && m_LastDummyConnectTime + GameTickSpeed() * 5 > GameTick();
+}
+
 void CClient::DummyConnect(int NetClient)
 {
 	if(m_LastDummyConnectTime > 0 && m_LastDummyConnectTime + GameTickSpeed() * 5 > GameTick())
