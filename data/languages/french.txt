@@ -68,7 +68,7 @@ Automatically record demos
 == Enregistrer automatiquement une démo
 
 Automatically take game over screenshot
-== Sauvegarder les résultats à la fin de la partie
+== Prendre une capture d'écran des résultats
 
 Blue team
 == Équipe bleue
@@ -539,10 +539,10 @@ Sound
 == Son
 
 Sound error
-== Erreur de son
+== Erreur audio
 
 Sound volume
-== Volume du son
+== Volume audio
 
 Spectate
 == Regarder
@@ -673,28 +673,26 @@ Your skin
 no limit
 == pas de limite
 
-##### needs translation #####
-
 Borderless window
-== 
+== Fenêtre sans bordure
 
 Game paused
-== 
+== Jeu en pause
 
 Handle rendering async from updates
-== 
+== Rendre sans attendre les mises à jour
 
 Respawn
-== 
+== Revivre
 
 Show only chat messages from friends
-== 
+== Afficher seulement les message des amis
 
 Threaded rendering
-== 
+== Rendu en parallèle
 
 Threaded sound loading
-== 
+== Chargement des sons en paralèlle
 
 ##### old translations #####
 
