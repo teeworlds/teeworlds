@@ -683,7 +683,7 @@ Handle rendering async from updates
 == Rendre sans attendre les mises à jour
 
 Respawn
-== Revivre
+== Réapparaître
 
 Show only chat messages from friends
 == Afficher seulement les message des amis
