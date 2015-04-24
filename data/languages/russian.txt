@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d Bytes
@@ -676,25 +675,24 @@ no limit
 ##### needs translation #####
 
 Borderless window
-== 
+== Окно без рамки
 
 Game paused
-== 
+== Игра остановлена
 
 Handle rendering async from updates
-== 
+== Обрабатывать прорисовку асинхронно из обновлений
 
 Respawn
-== 
+== Возрождение
 
 Show only chat messages from friends
-== 
+== Показывать сообщения только от друзей
 
 Threaded rendering
-== 
+== Потоковая прорисовка
 
 Threaded sound loading
-== 
+== Потоковая загрузка звука
 
 ##### old translations #####
-
