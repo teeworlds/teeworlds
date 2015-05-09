@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -77,6 +78,9 @@ Blue team wins!
 
 Body
 == Тело
+
+Borderless window
+== Окно без рамки
 
 Call vote
 == Голосовать
@@ -222,6 +226,9 @@ Game info
 Game over
 == Игра окончена
 
+Game paused
+== Игра остановлена
+
 Game type
 == Тип игры
 
@@ -239,6 +246,9 @@ Grenade
 
 Hammer
 == Молот
+
+Handle rendering async from updates
+== Обрабатывать прорисовку асинхронно из обновлений
 
 Has people playing
 == Не пустой сервер
@@ -465,6 +475,9 @@ Reset filter
 Reset to defaults
 == Сбросить настройки
 
+Respawn
+== Возрождение
+
 Rifle
 == Бластер
 
@@ -524,6 +537,9 @@ Show ingame HUD
 
 Show name plates
 == Показывать имена игроков
+
+Show only chat messages from friends
+== Показывать сообщения только от друзей
 
 Show only supported
 == Показывать только поддерживаемые разрешения экрана
@@ -596,6 +612,12 @@ The server is running a non-standard tuning on a pure game type.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
 == Есть несохранённая карта в редакторе, Вы можете сохранить её перед тем, как выйти.
+
+Threaded rendering
+== Потоковая прорисовка
+
+Threaded sound loading
+== Потоковая загрузка звука
 
 Time limit
 == Лимит времени
@@ -674,25 +696,5 @@ no limit
 
 ##### needs translation #####
 
-Borderless window
-== Окно без рамки
-
-Game paused
-== Игра остановлена
-
-Handle rendering async from updates
-== Обрабатывать прорисовку асинхронно из обновлений
-
-Respawn
-== Возрождение
-
-Show only chat messages from friends
-== Показывать сообщения только от друзей
-
-Threaded rendering
-== Потоковая прорисовка
-
-Threaded sound loading
-== Потоковая загрузка звука
-
 ##### old translations #####
+

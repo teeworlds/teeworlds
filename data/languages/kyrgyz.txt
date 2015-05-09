@@ -244,11 +244,11 @@ Graphics
 Grenade
 == Гранатомёт
 
-Handle rendering async from updates
-== Handle rendering async from updates
-
 Hammer
 == Барскан
+
+Handle rendering async from updates
+== Handle rendering async from updates
 
 Has people playing
 == Оюнчулары бар сервер
