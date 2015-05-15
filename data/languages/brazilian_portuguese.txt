@@ -323,7 +323,7 @@ Move left
 == Esquerda
 
 Move player to spectators
-== Mover jogador para espectadores
+== Mover jogador para observador
 
 Move right
 == Direita
@@ -554,10 +554,10 @@ Spectate previous
 == Observar anterior
 
 Spectator mode
-== Modo espectador
+== Modo observador
 
 Spectators
-== Espectadores
+== Observadores
 
 Standard gametype
 == Tipo de jogo padrão
@@ -572,7 +572,7 @@ Strict gametype filter
 == Filtrar tipo de jogo exato
 
 Sudden Death
-== Morte Súbita
+== Morte súbita
 
 Switch weapon on pickup
 == Equipar arma ao pegá-la
@@ -673,28 +673,26 @@ Your skin
 no limit
 == sem limite
 
-##### needs translation #####
-
 Borderless window
-== 
+== Janela sem borda
 
 Game paused
-== 
+== Jogo pausado
 
 Handle rendering async from updates
-== 
+== Lidar com renderização assíncrona de atualizações
 
 Respawn
-== 
+== Reaparecer
 
 Show only chat messages from friends
-== 
+== Mostrar apenas mensagens de chat de amigos
 
 Threaded rendering
-== 
+== Renderização em paralelo
 
 Threaded sound loading
-== 
+== Carregamento de som em paralelo
 
 ##### old translations #####
 
