@@ -2,6 +2,7 @@ import urllib.request
 import os
 import zipfile
 import sys
+import re
 
 def _downloadZip(url, filePath):
     # create full path, if it doesn't exists
@@ -19,14 +20,22 @@ def downloadAll(arch, conf):
     builddir = "../build/" + arch + "/" + conf + "/"
     files = (downloadUrl.format("SDL2.dll"     + "-" + arch), builddir            ),\
             (downloadUrl.format("freetype.dll" + "-" + arch), builddir            ),\
-            (downloadUrl.format("sdl"                      ), "../other/sdl/"     ),\
-            (downloadUrl.format("freetype"                 ), "../other/freetype/")
+            (downloadUrl.format("sdl"                      ), "other/sdl/"     ),\
+            (downloadUrl.format("freetype"                 ), "other/freetype/")
     for elem in files:
-        _downloadZip(elem[0], elem[1])
+        for i in range(1,len(sys.argv)):
+            sTmp = re.search('master/(.+?).zip', elem[0])
+            curr_pack = sTmp.group(1)
+            if sys.argv[i] == "+pack" and sys.argv[i + 1] == curr_pack:
+                _downloadZip(elem[0], elem[1])
 
 def main():
-    arch = sys.argv[1] if len(sys.argv) >= 2 else "x86"
-    conf = sys.argv[2] if len(sys.argv) >= 3 else "debug"
+    arch = "x86"
+    conf = "debug"
+    for i in range(1,len(sys.argv)): # this is expandable infinitly for more args
+        if sys.argv[i] == "-arch": arch = sys.argv[i + 1] 
+        if sys.argv[i] == "-conf": conf = sys.argv[i + 1]
+
     downloadAll(arch, conf)
 
 if __name__ == '__main__':
