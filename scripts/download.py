@@ -15,28 +15,29 @@ def _downloadZip(url, filePath):
         myzip.extractall(filePath)
     os.remove(temp_filePath)
 
-def downloadAll(arch, conf):
-    downloadUrl = "https://github.com/Zwelf/tw-downloads/raw/master/{}.zip"
-    builddir = "../build/" + arch + "/" + conf + "/"
-    files = (downloadUrl.format("SDL2.dll"     + "-" + arch), builddir            ),\
-            (downloadUrl.format("freetype.dll" + "-" + arch), builddir            ),\
-            (downloadUrl.format("sdl"                      ), "other/sdl/"     ),\
-            (downloadUrl.format("freetype"                 ), "other/freetype/")
-    for elem in files:
-        for i in range(1,len(sys.argv)):
-            sTmp = re.search('master/(.+?).zip', elem[0])
-            curr_pack = sTmp.group(1)
-            if sys.argv[i] == "+pack" and sys.argv[i + 1] == curr_pack:
-                _downloadZip(elem[0], elem[1])
+def downloadAll(arch, conf, targets):
+    download_url = "https://github.com/Zwelf/tw-downloads/raw/master/{}.zip".format
+    builddir = "build/" + arch + "/" + conf + "/"
+    files = {
+        "SDL2.dll":     ("SDL2.dll"     + "-" + arch, builddir),
+        "freetype.dll": ("freetype.dll" + "-" + arch, builddir),
+        "sdl":          ("sdl",                       "other/sdl/"),
+        "freetype":     ("freetype",                  "other/freetype/"),
+    }
+
+    for target in targets:
+        download_file, target_dir = files[target]
+        _downloadZip(download_url(download_file), target_dir)
 
 def main():
-    arch = "x86"
-    conf = "debug"
-    for i in range(1,len(sys.argv)): # this is expandable infinitly for more args
-        if sys.argv[i] == "-arch": arch = sys.argv[i + 1] 
-        if sys.argv[i] == "-conf": conf = sys.argv[i + 1]
+    import argparse
+    p = argparse.ArgumentParser(description="Download freetype and SDL library and header files for Windows.")
+    p.add_argument("--arch", default="x86", choices=["x86", "x86_64"], help="Architecture for the downloaded libraries (Default: x86)")
+    p.add_argument("--conf", default="debug", choices=["debug", "release"], help="Build type (Default: debug)")
+    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["SDL.dll", "freetype.dll", "sdl", "freetype"], help='Target to download. Valid choices are "SDL.dll", "freetype.dll", "sdl" and "freetype"')
+    args = p.parse_args()
 
-    downloadAll(arch, conf)
+    downloadAll(args.arch, args.conf, args.targets)
 
 if __name__ == '__main__':
     main()
