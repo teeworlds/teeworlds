@@ -76,6 +76,10 @@ russian
 == Русский
 == 643
 
+sakha
+== Саха тыла
+== 643
+
 serbian
 == Srpski
 == 688
