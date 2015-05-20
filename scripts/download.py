@@ -34,7 +34,7 @@ def main():
     p = argparse.ArgumentParser(description="Download freetype and SDL library and header files for Windows.")
     p.add_argument("--arch", default="x86", choices=["x86", "x86_64"], help="Architecture for the downloaded libraries (Default: x86)")
     p.add_argument("--conf", default="debug", choices=["debug", "release"], help="Build type (Default: debug)")
-    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["SDL.dll", "freetype.dll", "sdl", "freetype"], help='Target to download. Valid choices are "SDL.dll", "freetype.dll", "sdl" and "freetype"')
+    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["SDL2.dll", "freetype.dll", "sdl", "freetype"], help='Target to download. Valid choices are "SDL.dll", "freetype.dll", "sdl" and "freetype"')
     args = p.parse_args()
 
     downloadAll(args.arch, args.conf, args.targets)

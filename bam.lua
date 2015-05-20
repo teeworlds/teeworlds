@@ -486,22 +486,24 @@ end
 for a, cur_arch in ipairs(archs) do
 	for c, cur_conf in ipairs(confs) do
 		cur_builddir = interp(builddir, {platform=family, arch=cur_arch, target=cur_target, conf=cur_conf, compiler=compiler})
+		if family == "windows" then
+			dl = Python("scripts/download.py")
+			dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
+			AddJob(cur_builddir .. "/SDL2.dll", "Downloading SDL.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll") -- TODO: Make me working!
+			AddJob(cur_builddir .. "/freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
+		end
 		local settings = GenerateSettings(cur_conf, cur_arch, cur_builddir, compiler)
 		for t, cur_target in pairs(targets) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))
-			if family == "windows" then
-				dl = Python("scripts/download.py")
-				dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
-				AddJob(cur_target .. "SDL2.dll", "Downloading SDL2.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll")
-				AddJob(cur_target .. "freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
-			end
 		end
 	end
 end
 
 if family == "windows" then
-	AddJob("other/sdl/include/SDL.h", "Downloading sdl and freetype", dl .. " sdl freetype") -- TODO: remove freetype from sdl-download
-	AddJob("other/freetype/include/freetype.h", "Downloading freetype", dl .. " freetype")   -- TODO: MAKE ME WORKING (why don't I...!?)
+	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
+	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
+	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl.obj","other/sdl/include/SDL.h")
+	AddDependency(cur_builddir .. "/objs/engine/client/text.obj","other/freetype/include/ft2build.h")
 end
 
 for cur_name, cur_target in pairs(targets) do
