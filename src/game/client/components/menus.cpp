@@ -1697,6 +1697,7 @@ int CMenus::Render()
 			pButtonText = Localize("Abort");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
+				char aBuf[512];
 				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
 				pTitle = aBuf;
 				pExtraText = "";
