@@ -532,9 +532,7 @@ void CGameContext::OnTick()
 				for(int i=0;i<MAX_CLIENTS; i++)
 				{
 					if(m_apPlayers[i])
-					{
 						SendVoteStatus(i, Total, Yes, No, (!m_apPlayers[i]->m_Vote)&&g_Config.m_SvVoteHideUntilVoted);
-					}
 				}
 			}
 		}
