@@ -155,11 +155,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-
-			if(m_ReverseTAB)
-				m_CompletionChosen = (m_CompletionChosen-1 + 2*MAX_CLIENTS)%(2*MAX_CLIENTS);
-			else
-				m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+		if(m_ReverseTAB)
+			m_CompletionChosen = (m_CompletionChosen-1 + 2*MAX_CLIENTS)%(2*MAX_CLIENTS);
+		else
+			m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
 
 		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
