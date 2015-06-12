@@ -34,6 +34,7 @@ void CChat::OnReset()
 		m_aLines[i].m_aName[0] = 0;
 	}
 
+	m_ReverseTAB = false;
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
@@ -154,11 +155,27 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-		m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+		if(m_ReverseTAB)
+			m_CompletionChosen = (m_CompletionChosen-1 + 2*MAX_CLIENTS)%(2*MAX_CLIENTS);
+		else
+			m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+
 		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
-			int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+			int SearchType;
+			int Index;
+
+			if(m_ReverseTAB)
+			{
+				SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+				Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
+			}
+			else
+			{
+				SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+				Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+			}
+
 			if(!m_pClient->m_aClients[Index].m_Active)
 				continue;
 
@@ -213,12 +230,18 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		// reset name completion process
 		if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key != KEY_TAB)
-			m_CompletionChosen = -1;
+			if(Event.m_Key != KEY_LSHIFT)
+				m_CompletionChosen = -1;
 
 		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(Event);
 		m_InputUpdate = true;
 	}
+	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LSHIFT)
+		m_ReverseTAB = true;
+	else if(Event.m_Flags&IInput::FLAG_RELEASE && Event.m_Key == KEY_LSHIFT)
+		m_ReverseTAB = false;
+	
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
 		if(m_pHistoryEntry)
