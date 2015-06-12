@@ -176,7 +176,6 @@ bool CChat::OnInput(IInput::CEvent Event)
 				Index = (m_CompletionChosen+i)%MAX_CLIENTS;
 			}
 
-
 			if(!m_pClient->m_aClients[Index].m_Active)
 				continue;
 
@@ -239,13 +238,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 		m_InputUpdate = true;
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LSHIFT)
-	{
 		m_ReverseTAB = true;
-	}
 	else if(Event.m_Flags&IInput::FLAG_RELEASE && Event.m_Key == KEY_LSHIFT)
-	{
 		m_ReverseTAB = false;
-	}
+	
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
 		if(m_pHistoryEntry)
