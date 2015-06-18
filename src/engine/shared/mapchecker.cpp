@@ -48,13 +48,18 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 
 bool CMapChecker::IsMapValid(const char *pMapName, unsigned MapCrc, unsigned MapSize)
 {
+	bool StandardMap = false;
 	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext)
 	{
-		if(str_comp(pCurrent->m_aMapName, pMapName) == 0 && pCurrent->m_MapCrc == MapCrc && pCurrent->m_MapSize == MapSize)
-			return true;
+		if(str_comp(pCurrent->m_aMapName, pMapName) == 0)
+		{
+			StandardMap = true;
+			if(pCurrent->m_MapCrc == MapCrc && pCurrent->m_MapSize == MapSize)
+				return true;
+		}
 	}
-	
-	return false;
+
+	return !StandardMap;
 }
 
 bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType, char *pBuffer, int BufferSize)
@@ -62,8 +67,10 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 	// extract map name
 	char aMapName[MAX_MAP_LENGTH];
 	char aMapNameExt[MAX_MAP_LENGTH+4];
+	bool StandardMap = false;
 	const char *pExtractedName = pFilename;
 	const char *pEnd = 0;
+
 	for(const char *pSrc = pFilename; *pSrc; ++pSrc)
 	{
 		if(*pSrc == '/' || *pSrc == '\\')
@@ -71,6 +78,7 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 		else if(*pSrc == '.')
 			pEnd = pSrc;
 	}
+
 	int Length = (int)(pEnd - pExtractedName);
 	if(Length <= 0 || Length >= MAX_MAP_LENGTH)
 		return true;
@@ -82,6 +90,7 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 	{
 		if(str_comp(pCurrent->m_aMapName, aMapName) == 0)
 		{
+			StandardMap = true;
 			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
 			bool CrcSizeMatch = false;
 			if(!pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize, &CrcSizeMatch))
@@ -94,6 +103,6 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 			return CrcSizeMatch;
 		}
 	}
-	
-	return false;
+
+	return !StandardMap;
 }
