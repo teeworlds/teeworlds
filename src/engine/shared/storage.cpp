@@ -355,7 +355,8 @@ public:
 			return false;
 
 		pBuffer[0] = 0;
-		*pCrcSizeMatch = false;
+		if(pCrcSizeMatch != 0)
+			*pCrcSizeMatch = false;
 		
 		char aBuf[MAX_PATH_LENGTH];
 		CFindCBData Data;
