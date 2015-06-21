@@ -232,6 +232,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.libs:Add("ws2_32")
 	settings.link.libs:Add("ole32")
 	settings.link.libs:Add("shell32")
+	settings.link.libs:Add("advapi32")
 
 	GenerateCommonSettings(settings, conf, target_arch)
 
