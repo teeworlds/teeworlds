@@ -1664,6 +1664,12 @@ int main(int argc, const char **argv) // ignore_convention
 	}
 #endif
 
+	if(secure_random_init() != 0)
+	{
+		dbg_msg("secure", "could not initialize secure RNG");
+		return -1;
+	}
+
 	CServer *pServer = CreateServer();
 	IKernel *pKernel = IKernel::Create();
 

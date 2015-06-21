@@ -1294,6 +1294,27 @@ int str_utf8_encode(char *ptr, int chr);
 */
 int str_utf8_check(const char *str);
 
+/*
+	Function: secure_random_init
+		Initializes the secure random module.
+		You *MUST* check the return value of this function.
+
+	Returns:
+		0 - Initialization succeeded.
+		1 - Initialization failed.
+*/
+int secure_random_init();
+
+/*
+	Function: secure_random_fill
+		Fills the buffer with the specified amount of random bytes.
+
+	Parameters:
+		bytes - Pointer to the start of the buffer.
+		length - Length of the buffer.
+*/
+void secure_random_fill(void *bytes, unsigned length);
+
 #ifdef __cplusplus
 }
 #endif
