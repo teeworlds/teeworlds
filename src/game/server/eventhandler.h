@@ -3,30 +3,51 @@
 #ifndef GAME_SERVER_EVENTHANDLER_H
 #define GAME_SERVER_EVENTHANDLER_H
 
-//
+#include <engine/shared/protocol.h>
+#include <generated/protocol.h>
+
 class CEventHandler
 {
-	static const int MAX_EVENTS = 128;
-	static const int MAX_DATASIZE = 128*64;
+private:
+	/* Types */
+	struct CEventInfo
+	{
+		const CNetEvent_Common *m_pEvent;
+		int m_Type;
+		int m_Size;
+		int m_ClientMask;
+	};
 
-	int m_aTypes[MAX_EVENTS]; // TODO: remove some of these arrays
-	int m_aOffsets[MAX_EVENTS];
-	int m_aSizes[MAX_EVENTS];
-	int m_aClientMasks[MAX_EVENTS];
-	char m_aData[MAX_DATASIZE];
+	/* Constants */
+	static const int MAX_EVENTS = MAX_CLIENTS * 8;
+	static const int MAX_DATASIZE = MAX_EVENTS * 32;
+	static const int MAX_SNAP_RANGE = 1500;
 
+	/* Identity */
 	class CGameContext *m_pGameServer;
 
-	int m_CurrentOffset;
+	/* State */
+	CEventInfo m_aEvents[MAX_EVENTS];
+	unsigned char m_aData[MAX_DATASIZE];
 	int m_NumEvents;
+	int m_DataSize;
+
+	/* Functions */
+	CNetEvent_Common *CreateEvent(int Type, int Size, int Mask);
+	void SnapEvent(const CEventInfo *pInfo, int EventId) const;
+
 public:
+	/* Constructor */
+	CEventHandler();
+
+	/* Getters / Setters */
 	CGameContext *GameServer() const { return m_pGameServer; }
 	void SetGameServer(CGameContext *pGameServer);
 
-	CEventHandler();
-	void *Create(int Type, int Size, int Mask = -1);
+	/* Functions */
+	template <typename T> T *Create(int Type, int Mask=-1) { return (T *) CreateEvent(Type, sizeof(T), Mask); }
 	void Clear();
-	void Snap(int SnappingClient);
+	void Snap(int SnappingClient) const;
 };
 
 #endif
