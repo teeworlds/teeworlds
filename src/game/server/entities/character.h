@@ -7,6 +7,7 @@
 
 #include <game/gamecore.h>
 #include <game/server/entity.h>
+#include <game/server/weapon.h>
 
 
 class CCharacter : public CEntity
@@ -29,12 +30,8 @@ public:
 
 	bool IsGrounded();
 
-	void SetWeapon(int W);
 	void HandleWeaponSwitch();
 	void DoWeaponSwitch();
-
-	void HandleWeapons();
-	void HandleNinja();
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
@@ -50,13 +47,18 @@ public:
 	bool IncreaseHealth(int Amount);
 	bool IncreaseArmor(int Amount);
 
+	bool GotWeapon(int Weapon) const;
 	bool GiveWeapon(int Weapon, int Ammo);
-	void GiveNinja();
+	bool SetWeapon(int Weapon);
+	void RemoveWeapon(int Weapon);
 
 	void SetEmote(int Emote, int Tick);
+	void SetReloadTimer(int ReloadTimer);
 
 	bool IsAlive() const { return m_Alive; }
+	bool IsReloading() const { return m_ReloadTimer > 0; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
+	CCharacterCore *GetCore() { return &m_Core; }
 
 private:
 	// player controlling this character
@@ -65,16 +67,7 @@ private:
 	bool m_Alive;
 
 	// weapon info
-	CEntity *m_apHitObjects[10];
-	int m_NumObjectsHit;
-
-	struct WeaponStat
-	{
-		int m_AmmoRegenStart;
-		int m_Ammo;
-		bool m_Got;
-
-	} m_aWeapons[NUM_WEAPONS];
+	CWeapon *m_apWeapons[NUM_WEAPONS];
 
 	int m_ActiveWeapon;
 	int m_LastWeapon;
@@ -108,15 +101,6 @@ private:
 
 	int m_TriggeredEvents;
 
-	// ninja
-	struct
-	{
-		vec2 m_ActivationDir;
-		int m_ActivationTick;
-		int m_CurrentMoveTime;
-		int m_OldVelAmount;
-	} m_Ninja;
-
 	// the player core for the physics
 	CCharacterCore m_Core;
 
@@ -125,6 +109,7 @@ private:
 	CCharacterCore m_SendCore; // core that we should send
 	CCharacterCore m_ReckoningCore; // the dead reckoning core
 
+	CWeapon *GetActiveWeapon();
 };
 
 #endif

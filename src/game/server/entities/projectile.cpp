@@ -67,7 +67,7 @@ void CProjectile::TickPaused()
 	m_StartTick++;
 }
 
-void CProjectile::FillInfo(CNetObj_Projectile *pProj)
+void CProjectile::FillInfo(CNetObj_Projectile *pProj) const
 {
 	pProj->m_X = (int)m_Pos.x;
 	pProj->m_Y = (int)m_Pos.y;

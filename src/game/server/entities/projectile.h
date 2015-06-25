@@ -42,7 +42,7 @@ public:
 
 	/* Other functions */
 	vec2 GetPos(float Time);
-	void FillInfo(CNetObj_Projectile *pProj);
+	void FillInfo(CNetObj_Projectile *pProj) const;
 };
 
 #endif

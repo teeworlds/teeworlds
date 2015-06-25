@@ -15,7 +15,7 @@ CPickupNinja::CPickupNinja(CGameWorld *pGameWorld, vec2 Pos)
 bool CPickupNinja::OnPickup(CCharacter *pChar)
 {
 	// activate ninja on target player
-	pChar->GiveNinja();
+	pChar->GiveWeapon(WEAPON_NINJA, -1);
 
 	// loop through all players, setting their emotes
 	CCharacter *c = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
