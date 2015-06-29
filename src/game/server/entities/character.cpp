@@ -53,6 +53,15 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_TriggeredEvents = 0;
 }
 
+CCharacter::~CCharacter()
+{
+	for(int i = 0; i < NUM_WEAPONS; i++)
+	{
+		delete m_apWeapons[i];
+		m_apWeapons[i] = 0;
+	}
+}
+
 void CCharacter::Reset()
 {
 	Destroy();
@@ -94,12 +103,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 void CCharacter::Destroy()
 {
-	for(int i = 0; i < NUM_WEAPONS; i++)
-	{
-		delete m_apWeapons[i];
-		m_apWeapons[i] = 0;
-	}
-
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
 }

@@ -56,6 +56,7 @@ void CFlag::Tick()
 		{
 			Reset();
 			GameServer()->m_pController->OnFlagReturn(this);
+			return;
 		}
 
 		if(!m_AtStand)
