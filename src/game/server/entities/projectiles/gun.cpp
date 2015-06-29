@@ -8,7 +8,7 @@
 #include "gun.h"
 
 CProjectileGun::CProjectileGun(CGameWorld *pGameWorld, int Owner, vec2 Dir, vec2 Pos)
-: CProjectile(pGameWorld, WEAPON_GUN, Owner, Dir, Pos)
+: CProjectile(pGameWorld, PROJECTILE_GUN, Owner, Dir, Pos)
 {
 }
 

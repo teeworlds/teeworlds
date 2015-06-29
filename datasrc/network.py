@@ -1,6 +1,7 @@
 from datatypes import *
 
-Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"])
+Projectiles = Enum("PROJECTILE", ["GUN", "SHOTGUN", "GRENADE"])
+Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "SHOTGUN", "GRENADE", "LASER", "NINJA"])
 Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"])
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"])
@@ -47,6 +48,7 @@ RawSource = '''
 '''
 
 Enums = [
+	Projectiles,
 	Pickups,
 	Emotes,
 	Emoticons,
@@ -85,7 +87,7 @@ Objects = [
 		NetIntAny("m_VelX"),
 		NetIntAny("m_VelY"),
 
-		NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),
+		NetEnum("m_Type", Projectiles),
 		NetTick("m_StartTick"),
 	]),
 

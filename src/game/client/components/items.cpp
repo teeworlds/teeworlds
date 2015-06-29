@@ -24,20 +24,20 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
-	if(pCurrent->m_Type == WEAPON_GRENADE)
+	if(pCurrent->m_Type == PROJECTILE_GUN)
 	{
-		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
-		Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
+		Curvature = m_pClient->m_Tuning.m_GunCurvature;
+		Speed = m_pClient->m_Tuning.m_GunSpeed;
 	}
-	else if(pCurrent->m_Type == WEAPON_SHOTGUN)
+	else if(pCurrent->m_Type == PROJECTILE_SHOTGUN)
 	{
 		Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
 		Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
 	}
-	else if(pCurrent->m_Type == WEAPON_GUN)
+	else if(pCurrent->m_Type == PROJECTILE_GRENADE)
 	{
-		Curvature = m_pClient->m_Tuning.m_GunCurvature;
-		Speed = m_pClient->m_Tuning.m_GunSpeed;
+		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
+		Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
 	}
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
@@ -56,13 +56,18 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
-	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
+	const int c[] = {
+		SPRITE_WEAPON_GUN_PROJ,
+		SPRITE_WEAPON_SHOTGUN_PROJ,
+		SPRITE_WEAPON_GRENADE_PROJ
+		};
+	RenderTools()->SelectSprite(c[pCurrent->m_Type]);
 	vec2 Vel = Pos-PrevPos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), Client()->IntraGameTick());
 
 
 	// add particle for this projectile
-	if(pCurrent->m_Type == WEAPON_GRENADE)
+	if(pCurrent->m_Type == PROJECTILE_GRENADE)
 	{
 		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
 		static float s_Time = 0.0f;
@@ -110,8 +115,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	const int c[] = {
 		SPRITE_PICKUP_HEALTH,
 		SPRITE_PICKUP_ARMOR,
-		SPRITE_PICKUP_GRENADE,
 		SPRITE_PICKUP_SHOTGUN,
+		SPRITE_PICKUP_GRENADE,
 		SPRITE_PICKUP_LASER,
 		SPRITE_PICKUP_NINJA
 		};
@@ -119,11 +124,11 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 
 	switch(pCurrent->m_Type)
 	{
-	case PICKUP_GRENADE:
-		Size = g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_VisualSize;
-		break;
 	case PICKUP_SHOTGUN:
 		Size = g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_VisualSize;
+		break;
+	case PICKUP_GRENADE:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_VisualSize;
 		break;
 	case PICKUP_LASER:
 		Size = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;

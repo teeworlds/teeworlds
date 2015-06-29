@@ -8,7 +8,7 @@
 #include "grenade.h"
 
 CProjectileGrenade::CProjectileGrenade(CGameWorld *pGameWorld, int Owner, vec2 Dir, vec2 Pos)
-: CProjectile(pGameWorld, WEAPON_GRENADE, Owner, Dir, Pos)
+: CProjectile(pGameWorld, PROJECTILE_GRENADE, Owner, Dir, Pos)
 {
 }
 

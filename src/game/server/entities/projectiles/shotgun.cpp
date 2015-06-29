@@ -8,7 +8,7 @@
 #include "shotgun.h"
 
 CProjectileShotgun::CProjectileShotgun(CGameWorld *pGameWorld, int Owner, vec2 Dir, vec2 Pos)
-: CProjectile(pGameWorld, WEAPON_SHOTGUN, Owner, Dir, Pos)
+: CProjectile(pGameWorld, PROJECTILE_SHOTGUN, Owner, Dir, Pos)
 {
 }
 
