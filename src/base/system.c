@@ -1952,54 +1952,79 @@ int str_utf8_encode(char *ptr, int chr)
 	return 0;
 }
 
+static unsigned char str_byte_next(const char **ptr)
+{
+	unsigned char byte = **ptr;
+	(*ptr)++;
+	return byte;
+}
+
+static void str_byte_rewind(const char **ptr)
+{
+	(*ptr)--;
+}
+
 int str_utf8_decode(const char **ptr)
 {
-	const char *buf = *ptr;
-	int ch = 0;
-
-	do
+	// As per https://encoding.spec.whatwg.org/#utf-8-decoder.
+	unsigned char utf8_lower_boundary = 0x80;
+	unsigned char utf8_upper_boundary = 0xBF;
+	int utf8_code_point = 0;
+	int utf8_bytes_seen = 0;
+	int utf8_bytes_needed = 0;
+	while(1)
 	{
-		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
+		unsigned char byte = str_byte_next(ptr);
+		if(utf8_bytes_needed == 0)
 		{
-			ch = *buf;
-			buf++;
+			if(0x00 <= byte && byte <= 0x7F)
+			{
+				return byte;
+			}
+			else if(0x80 <= byte && byte <= 0xDF)
+			{
+				utf8_bytes_needed = 1;
+				utf8_code_point = byte - 0xC0;
+			}
+			else if(0xE0 <= byte && byte <= 0xEF)
+			{
+				if(byte == 0xE0) utf8_lower_boundary = 0xA0;
+				if(byte == 0xED) utf8_upper_boundary = 0x9F;
+				utf8_bytes_needed = 2;
+				utf8_code_point = byte - 0xE0;
+			}
+			else if(0xF0 <= byte && byte <= 0xF4)
+			{
+				if(byte == 0xF0) utf8_lower_boundary = 0x90;
+				if(byte == 0xF4) utf8_upper_boundary = 0x8F;
+				utf8_bytes_needed = 3;
+				utf8_code_point = byte - 0xF0;
+			}
+			else
+			{
+				return -1; // Error.
+			}
+			utf8_code_point = utf8_code_point << (6 * utf8_bytes_needed);
+			continue;
 		}
-		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
+		if(!(utf8_lower_boundary <= byte && byte <= utf8_upper_boundary))
 		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			// Resetting variables not necessary, will be done when
+			// the function is called again.
+			str_byte_rewind(ptr);
+			return -1;
 		}
-		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
+		utf8_lower_boundary = 0x80;
+		utf8_upper_boundary = 0xBF;
+		utf8_bytes_seen += 1;
+		utf8_code_point = utf8_code_point + ((byte - 0x80) << (6 * (utf8_bytes_needed - utf8_bytes_seen)));
+		if(utf8_bytes_seen != utf8_bytes_needed)
 		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			continue;
 		}
-		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
-		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else
-		{
-			/* invalid */
-			buf++;
-			break;
-		}
-
-		*ptr = buf;
-		return ch;
-	} while(0);
-
-	/* out of bounds */
-	*ptr = buf;
-	return -1;
-
+		// Resetting variables not necessary, see above.
+		return utf8_code_point;
+	}
 }
 
 int str_utf8_check(const char *str)

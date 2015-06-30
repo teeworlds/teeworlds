@@ -1250,16 +1250,17 @@ int str_utf8_forward(const char *str, int cursor);
 
 /*
 	Function: str_utf8_decode
-		Decodes an utf8 character
+		Decodes a utf8 codepoint
 
 	Parameters:
-		ptr - pointer to an utf8 string. this pointer will be moved forward
+		ptr - Pointer to a utf8 string. This pointer will be moved forward.
 
 	Returns:
-		Unicode value for the character. -1 for invalid characters and 0 for end of string.
+		The Unicode codepoint. -1 for invalid input and 0 for end of string.
 
 	Remarks:
 		- This function will also move the pointer forward.
+		- You may call this function again after an error occured.
 */
 int str_utf8_decode(const char **ptr);
 
@@ -1268,7 +1269,7 @@ int str_utf8_decode(const char **ptr);
 		Encode an utf8 character
 
 	Parameters:
-		ptr - Pointer to a buffer that should recive the data. Should be able to hold at least 4 bytes.
+		ptr - Pointer to a buffer that should receive the data. Should be able to hold at least 4 bytes.
 
 	Returns:
 		Number of bytes put into the buffer.
