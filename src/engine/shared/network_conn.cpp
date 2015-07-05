@@ -187,9 +187,13 @@ void CNetConnection::Disconnect(const char *pReason)
 		else
 			SendControl(NET_CTRLMSG_CLOSE, 0, 0);
 
-		m_ErrorString[0] = 0;
-		if(pReason)
-			str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+		if(pReason != m_ErrorString)
+		{
+			if(pReason)
+				str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+			else
+				m_ErrorString[0] = 0;
+		}
 	}
 
 	Reset();
