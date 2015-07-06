@@ -22,11 +22,11 @@ bool CPickupNinja::OnPickup(CCharacter *pChar)
 	for(; c; c = (CCharacter *)c->TypeNext())
 	{
 		if(c != pChar)
-			c->SetEmote(EMOTE_SURPRISE, Server()->Tick() + Server()->TickSpeed());
+			c->SetEmote(EMOTE_SURPRISE, Server()->TickSpeed());
 	}
 
 	// set emote on target player
-	pChar->SetEmote(EMOTE_ANGRY, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
+	pChar->SetEmote(EMOTE_ANGRY, 1200 * Server()->TickSpeed() / 1000);
 
 	return true;
 }

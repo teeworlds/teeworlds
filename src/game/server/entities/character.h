@@ -14,13 +14,76 @@ class CCharacter : public CEntity
 {
 	MACRO_ALLOC_POOL_ID()
 
+private:
+	/* Types */
+	struct CInputCount
+	{
+		int m_Presses;
+		int m_Releases;
+	};
+
+	/* Objects */
+	class CPlayer *m_pPlayer;
+
+	/* State (status) */
+	bool m_Alive;
+	int m_Health;
+	int m_Armor;
+
+	/* State (misc) */
+	int m_DamageTaken;
+	int m_DamageTakenTick;
+	int m_EmoteType;
+	int m_EmoteStopTick;
+
+	/* State (weapons) */
+	CWeapon *m_apWeapons[NUM_WEAPONS];
+	int m_ActiveWeapon;
+	int m_LastWeapon;
+	int m_QueuedWeapon;
+	int m_ReloadTimer;
+	int m_AttackTick;
+	int m_LastNoAmmoSound;
+
+	/* State (input) */
+	int m_LastAction; // last tick that the player took any action ie some input
+	CNetObj_PlayerInput m_LatestPrevInput; // non-heldback input
+	CNetObj_PlayerInput m_LatestInput; // non-heldback input
+	CNetObj_PlayerInput m_Input;
+	int m_InputsCount;
+
+	/* State (core) */
+	CCharacterCore m_Core; // the character core for the physics
+	int m_TriggeredEvents;
+
+	/* State (dead reckoning) */
+	int m_ReckoningTick; // tick that we are performing dead reckoning from
+	CCharacterCore m_SendCore; // core that we should send
+	CCharacterCore m_ReckoningCore; // the dead reckoning core
+
+	/* Functions (weapons) */
+	CWeapon *GetActiveWeapon();
+	void DoWeaponSwitch();
+	void HandleWeaponSwitch();
+	void FireWeapon();
+
 public:
-	//character's size
+	/* Constants */
 	static const int ms_PhysSize = 28;
 
-	CCharacter(CGameWorld *pWorld);
+	/* Constructor */
+	CCharacter(CGameWorld *pWorld, class CPlayer *pPlayer);
+
+	/* Destructor */
 	~CCharacter();
 
+	/* Getters */
+	class CPlayer *GetPlayer()	{ return m_pPlayer; }
+	CCharacterCore *GetCore()	{ return &m_Core; }
+	bool IsAlive() const		{ return m_Alive; }
+	bool IsReloading() const	{ return m_ReloadTimer > 0; }
+
+	/* CEntity functions */
 	virtual void Reset();
 	virtual void Destroy();
 	virtual void Tick();
@@ -29,88 +92,28 @@ public:
 	virtual void Snap(int SnappingClient);
 	virtual void PostSnap();
 
-	bool IsGrounded();
+	/* Functions (status) */
+	void Spawn(vec2 Pos);
+	void Die(int Killer, int Weapon);
+	bool IncreaseHealth(int Amount);
+	bool IncreaseArmor(int Amount);
+	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
 
-	void HandleWeaponSwitch();
-	void DoWeaponSwitch();
+	/* Functions (misc) */
+	void SetEmote(int Emote, int DurationTicks);
 
+	/* Functions (weapons) */
+	bool GotWeapon(int Weapon) const;
+	bool GiveWeapon(int Weapon, int Ammo);
+	void RemoveWeapon(int Weapon);
+	bool SetWeapon(int Weapon);
+	void SetReloadTimer(int ReloadTimer);
+
+	/* Functions (input) */
+	static CInputCount CountInput(int Prev, int Cur);
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
 	void ResetInput();
-	void FireWeapon();
-
-	void Die(int Killer, int Weapon);
-	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
-
-	bool Spawn(class CPlayer *pPlayer, vec2 Pos);
-	bool Remove();
-
-	bool IncreaseHealth(int Amount);
-	bool IncreaseArmor(int Amount);
-
-	bool GotWeapon(int Weapon) const;
-	bool GiveWeapon(int Weapon, int Ammo);
-	bool SetWeapon(int Weapon);
-	void RemoveWeapon(int Weapon);
-
-	void SetEmote(int Emote, int Tick);
-	void SetReloadTimer(int ReloadTimer);
-
-	bool IsAlive() const { return m_Alive; }
-	bool IsReloading() const { return m_ReloadTimer > 0; }
-	class CPlayer *GetPlayer() { return m_pPlayer; }
-	CCharacterCore *GetCore() { return &m_Core; }
-
-private:
-	// player controlling this character
-	class CPlayer *m_pPlayer;
-
-	bool m_Alive;
-
-	// weapon info
-	CWeapon *m_apWeapons[NUM_WEAPONS];
-
-	int m_ActiveWeapon;
-	int m_LastWeapon;
-	int m_QueuedWeapon;
-
-	int m_ReloadTimer;
-	int m_AttackTick;
-
-	int m_DamageTaken;
-
-	int m_EmoteType;
-	int m_EmoteStop;
-
-	// last tick that the player took any action ie some input
-	int m_LastAction;
-	int m_LastNoAmmoSound;
-
-	// these are non-heldback inputs
-	CNetObj_PlayerInput m_LatestPrevInput;
-	CNetObj_PlayerInput m_LatestInput;
-
-	// input
-	CNetObj_PlayerInput m_Input;
-	int m_NumInputs;
-	int m_Jumped;
-
-	int m_DamageTakenTick;
-
-	int m_Health;
-	int m_Armor;
-
-	int m_TriggeredEvents;
-
-	// the player core for the physics
-	CCharacterCore m_Core;
-
-	// info for dead reckoning
-	int m_ReckoningTick; // tick that we are performing dead reckoning From
-	CCharacterCore m_SendCore; // core that we should send
-	CCharacterCore m_ReckoningCore; // the dead reckoning core
-
-	CWeapon *GetActiveWeapon();
 };
 
 #endif
