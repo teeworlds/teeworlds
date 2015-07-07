@@ -1,33 +1,18 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "entities/character.h"
 #include "entity.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "gameworld.h"
 
-
-//////////////////////////////////////////////////
-// game world
-//////////////////////////////////////////////////
 CGameWorld::CGameWorld()
 {
-	m_pGameServer = 0x0;
-	m_pServer = 0x0;
+	m_pGameServer = 0;
+	m_pServer = 0;
 
 	m_Paused = false;
-	m_ResetRequested = false;
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		m_apFirstEntityTypes[i] = 0;
-}
-
-CGameWorld::~CGameWorld()
-{
-	// delete all entities
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		while(m_apFirstEntityTypes[i])
-			delete m_apFirstEntityTypes[i];
+	m_Resetting = false;
 }
 
 void CGameWorld::SetGameServer(CGameContext *pGameServer)
@@ -36,25 +21,100 @@ void CGameWorld::SetGameServer(CGameContext *pGameServer)
 	m_pServer = m_pGameServer->Server();
 }
 
-CEntity *CGameWorld::FindFirst(int Type)
+void CGameWorld::InsertEntity(CEntity *pEnt)
 {
-	return Type < 0 || Type >= NUM_ENTTYPES ? 0 : m_apFirstEntityTypes[Type];
+	m_aLists[pEnt->GetEntType()].Insert(pEnt);
 }
 
-int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type)
+void CGameWorld::DestroyEntity(CEntity *pEnt)
 {
-	if(Type < 0 || Type >= NUM_ENTTYPES)
-		return 0;
+	if(!pEnt->IsMarkedForDestroy())
+	{
+		pEnt->MarkForDestroy();
+		m_aLists[pEnt->GetEntType()].Remove(pEnt);
+		m_DestroyList.Insert(pEnt);
+	}
+}
+
+void CGameWorld::Reset()
+{
+	// reset all entities
+	for(int i = 0; i < NUM_ENTTYPES; i++)
+		for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+			e.Get()->Reset();
+	CleanupEntities();
+
+	GameServer()->m_pController->OnReset();
+	CleanupEntities();
+
+	m_Resetting = false;
+}
+
+void CGameWorld::CleanupEntities()
+{
+	// destroy objects marked for destruction
+	m_DestroyList.DeleteAll();
+}
+
+void CGameWorld::Tick()
+{
+	if(m_Resetting)
+		Reset();
+
+	if(!m_Paused)
+	{
+		for(int i = 0; i < NUM_ENTTYPES; i++)
+			for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+				e.Get()->Tick();
+
+		for(int i = 0; i < NUM_ENTTYPES; i++)
+			for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+				e.Get()->TickDefered();
+	}
+	else if(GameServer()->m_pController->IsGamePaused())
+	{
+		for(int i = 0; i < NUM_ENTTYPES; i++)
+			for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+				e.Get()->TickPaused();
+	}
+
+	CleanupEntities();
+}
+
+void CGameWorld::Snap(int SnappingClient)
+{
+	for(int i = 0; i < NUM_ENTTYPES; i++)
+		for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+			e.Get()->Snap(SnappingClient);
+}
+
+void CGameWorld::PostSnap()
+{
+	for(int i = 0; i < NUM_ENTTYPES; i++)
+		for(CEntityList::CIterator e = m_aLists[i]; e.Exists(); e.Next())
+			e.Get()->PostSnap();
+}
+
+CEntity *CGameWorld::GetFirst(int Type)
+{
+	dbg_assert(Type >= 0 && Type < NUM_ENTTYPES, "Invalid entity type");
+	return m_aLists[Type].GetFirst();
+}
+
+int CGameWorld::FindEntities(int Type, vec2 Pos, float Radius, CEntity **ppEnts, int MaxEnts)
+{
+	dbg_assert(Type >= 0 && Type < NUM_ENTTYPES, "Invalid entity type");
 
 	int Num = 0;
-	for(CEntity *pEnt = m_apFirstEntityTypes[Type];	pEnt; pEnt = pEnt->m_pNextTypeEntity)
+	for(CEntity *pEnt = GetFirst(Type); pEnt; pEnt = pEnt->GetNextEntity())
 	{
-		if(distance(pEnt->m_Pos, Pos) < Radius+pEnt->m_ProximityRadius)
+		float Len = distance(Pos, pEnt->GetPos());
+		if(Len < Radius+pEnt->GetProximityRadius())
 		{
 			if(ppEnts)
 				ppEnts[Num] = pEnt;
 			Num++;
-			if(Num == Max)
+			if(Num == MaxEnts)
 				break;
 		}
 	}
@@ -62,161 +122,19 @@ int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, 
 	return Num;
 }
 
-void CGameWorld::InsertEntity(CEntity *pEnt)
+CEntity *CGameWorld::IntersectEntity(int Type, vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, CEntity *pNotThis)
 {
-#ifdef CONF_DEBUG
-	for(CEntity *pCur = m_apFirstEntityTypes[pEnt->m_ObjType]; pCur; pCur = pCur->m_pNextTypeEntity)
-		dbg_assert(pCur != pEnt, "err");
-#endif
-
-	// insert it
-	if(m_apFirstEntityTypes[pEnt->m_ObjType])
-		m_apFirstEntityTypes[pEnt->m_ObjType]->m_pPrevTypeEntity = pEnt;
-	pEnt->m_pNextTypeEntity = m_apFirstEntityTypes[pEnt->m_ObjType];
-	pEnt->m_pPrevTypeEntity = 0x0;
-	m_apFirstEntityTypes[pEnt->m_ObjType] = pEnt;
-}
-
-void CGameWorld::DestroyEntity(CEntity *pEnt)
-{
-	pEnt->MarkForDestroy();
-}
-
-void CGameWorld::RemoveEntity(CEntity *pEnt)
-{
-	// not in the list
-	if(!pEnt->m_pNextTypeEntity && !pEnt->m_pPrevTypeEntity && m_apFirstEntityTypes[pEnt->m_ObjType] != pEnt)
-		return;
-
-	// remove
-	if(pEnt->m_pPrevTypeEntity)
-		pEnt->m_pPrevTypeEntity->m_pNextTypeEntity = pEnt->m_pNextTypeEntity;
-	else
-		m_apFirstEntityTypes[pEnt->m_ObjType] = pEnt->m_pNextTypeEntity;
-	if(pEnt->m_pNextTypeEntity)
-		pEnt->m_pNextTypeEntity->m_pPrevTypeEntity = pEnt->m_pPrevTypeEntity;
-
-	// keep list traversing valid
-	if(m_pNextTraverseEntity == pEnt)
-		m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-
-	pEnt->m_pNextTypeEntity = 0;
-	pEnt->m_pPrevTypeEntity = 0;
-}
-
-//
-void CGameWorld::Snap(int SnappingClient)
-{
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-		{
-			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Snap(SnappingClient);
-			pEnt = m_pNextTraverseEntity;
-		}
-}
-
-void CGameWorld::PostSnap()
-{
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-		{
-			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->PostSnap();
-			pEnt = m_pNextTraverseEntity;
-		}
-}
-
-void CGameWorld::Reset()
-{
-	// reset all entities
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-		{
-			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Reset();
-			pEnt = m_pNextTraverseEntity;
-		}
-	RemoveEntities();
-
-	GameServer()->m_pController->OnReset();
-	RemoveEntities();
-
-	m_ResetRequested = false;
-}
-
-void CGameWorld::RemoveEntities()
-{
-	// destroy objects marked for destruction
-	for(int i = 0; i < NUM_ENTTYPES; i++)
-		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-		{
-			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			if(pEnt->IsMarkedForDestroy())
-			{
-				RemoveEntity(pEnt);
-				pEnt->Destroy();
-			}
-			pEnt = m_pNextTraverseEntity;
-		}
-}
-
-void CGameWorld::Tick()
-{
-	if(m_ResetRequested)
-		Reset();
-
-	if(!m_Paused)
-	{
-		// update all objects
-		for(int i = 0; i < NUM_ENTTYPES; i++)
-			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-			{
-				m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-				pEnt->Tick();
-				pEnt = m_pNextTraverseEntity;
-			}
-
-		for(int i = 0; i < NUM_ENTTYPES; i++)
-			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-			{
-				m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-				pEnt->TickDefered();
-				pEnt = m_pNextTraverseEntity;
-			}
-	}
-	else if(GameServer()->m_pController->IsGamePaused())
-	{
-		// update all objects
-		for(int i = 0; i < NUM_ENTTYPES; i++)
-			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
-			{
-				m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-				pEnt->TickPaused();
-				pEnt = m_pNextTraverseEntity;
-			}
-	}
-
-	RemoveEntities();
-}
-
-
-// TODO: should be more general
-CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
-{
-	// Find other players
 	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
-	CCharacter *pClosest = 0;
+	CEntity *pClosest = 0;
 
-	CCharacter *p = (CCharacter *)FindFirst(ENTTYPE_CHARACTER);
-	for(; p; p = (CCharacter *)p->TypeNext())
+	for(CEntity *p = GetFirst(Type); p; p = p->GetNextEntity())
  	{
 		if(p == pNotThis)
 			continue;
 
-		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
-		float Len = distance(p->m_Pos, IntersectPos);
-		if(Len < p->m_ProximityRadius+Radius)
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->GetPos());
+		float Len = distance(p->GetPos(), IntersectPos);
+		if(Len < p->GetProximityRadius()+Radius)
 		{
 			Len = distance(Pos0, IntersectPos);
 			if(Len < ClosestLen)
@@ -231,21 +149,18 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	return pClosest;
 }
 
-
-CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
+CEntity *CGameWorld::ClosestEntity(int Type, vec2 Pos, float Radius, CEntity *pNotThis)
 {
-	// Find other players
 	float ClosestRange = Radius*2;
-	CCharacter *pClosest = 0;
+	CEntity *pClosest = 0;
 
-	CCharacter *p = (CCharacter *)GameServer()->m_World.FindFirst(ENTTYPE_CHARACTER);
-	for(; p; p = (CCharacter *)p->TypeNext())
+	for(CEntity *p = GetFirst(Type); p; p = p->GetNextEntity())
  	{
 		if(p == pNotThis)
 			continue;
 
-		float Len = distance(Pos, p->m_Pos);
-		if(Len < p->m_ProximityRadius+Radius)
+		float Len = distance(Pos, p->GetPos());
+		if(Len < p->GetProximityRadius()+Radius)
 		{
 			if(Len < ClosestRange)
 			{

@@ -16,8 +16,7 @@ void CWeaponHammer::OnFire(vec2 Direction, vec2 ProjStartPos)
 {
 	CCharacter *apEnts[MAX_CLIENTS];
 	float HammerRadius = GetOwner()->GetProximityRadius() * 0.5f;
-	int Num = GameServer()->m_World.FindEntities(ProjStartPos, HammerRadius, (CEntity**)apEnts,
-													MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+	int Num = GameServer()->m_World.FindEntities<CCharacter>(ProjStartPos, HammerRadius, apEnts, MAX_CLIENTS);
 
 	int Hits = 0;
 	for(int i = 0; i < Num; i++)

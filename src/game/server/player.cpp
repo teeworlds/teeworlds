@@ -33,8 +33,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 
 CPlayer::~CPlayer()
 {
-	delete m_pCharacter;
-	m_pCharacter = 0;
+	if(m_pCharacter)
+		GameServer()->m_World.DestroyEntity(m_pCharacter);
 }
 
 void CPlayer::Tick()
@@ -63,12 +63,6 @@ void CPlayer::Tick()
 			m_Latency.m_AccumMin = 1000;
 			m_Latency.m_AccumMax = 0;
 		}
-	}
-
-	if(m_pCharacter && !m_pCharacter->IsAlive())
-	{
-		delete m_pCharacter;
-		m_pCharacter = 0;
 	}
 
 	if(!GameServer()->m_pController->IsGamePaused())
@@ -203,7 +197,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World.IsPaused())
 	{
 		m_PlayerFlags = NewInput->m_PlayerFlags;
 		return;
@@ -253,11 +247,7 @@ CCharacter *CPlayer::GetCharacter()
 void CPlayer::KillCharacter(int Weapon)
 {
 	if(m_pCharacter)
-	{
 		m_pCharacter->Die(m_ClientID, Weapon);
-		delete m_pCharacter;
-		m_pCharacter = 0;
-	}
 }
 
 void CPlayer::Respawn()

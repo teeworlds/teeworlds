@@ -6,20 +6,18 @@
 #include "projectile.h"
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Dir, vec2 Pos)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, Pos)
+: CEntity(pGameWorld, ENTTYPE_PROJECTILE, Pos)
 {
 	m_Type = Type;
 	m_Owner = Owner;
 	m_Dir = Dir;
 
 	m_StartTick = Server()->Tick();
-
-	GameWorld()->InsertEntity(this);
 }
 
 void CProjectile::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	GameWorld()->DestroyEntity(this);
 }
 
 vec2 CProjectile::GetPos(float Time)
@@ -35,13 +33,13 @@ void CProjectile::Tick()
 	vec2 CurPos = GetPos(CurTime);
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &CurPos, 0);
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pTargetChar = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, pOwnerChar);
+	CCharacter *pTargetChar = GameWorld()->IntersectEntity<CCharacter>(PrevPos, CurPos, 6.0f, CurPos, pOwnerChar);
 
 	if(pTargetChar)
 	{
 		if(OnCharacterHit(CurPos, pTargetChar))
 		{
-			GameServer()->m_World.DestroyEntity(this);
+			GameWorld()->DestroyEntity(this);
 			return;
 		}
 	}
@@ -50,7 +48,7 @@ void CProjectile::Tick()
 	{
 		if(OnGroundHit(CurPos))
 		{
-			GameServer()->m_World.DestroyEntity(this);
+			GameWorld()->DestroyEntity(this);
 			return;
 		}
 	}
@@ -58,7 +56,7 @@ void CProjectile::Tick()
 	if(GetLifeSpan() > 0.0f && Server()->Tick() > m_StartTick + Server()->TickSpeed() * GetLifeSpan())
 	{
 		OnLifeOver(CurPos);
-		GameServer()->m_World.DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 	}
 }
 

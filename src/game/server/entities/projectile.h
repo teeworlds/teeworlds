@@ -23,6 +23,9 @@ protected:
 	virtual bool OnGroundHit(vec2 Pos) = 0;
 
 public:
+	/* Constants */
+	static const int ms_EntType = ENTTYPE_PROJECTILE;
+
 	/* Constructor */
 	CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Dir, vec2 Pos);
 

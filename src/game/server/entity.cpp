@@ -5,26 +5,37 @@
 #include "gamecontext.h"
 #include "player.h"
 
-CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRadius)
+CEntity::CEntity(CGameWorld *pGameWorld, int EntType, vec2 Pos, int ProximityRadius)
 {
 	m_pGameWorld = pGameWorld;
 
-	m_pPrevTypeEntity = 0;
-	m_pNextTypeEntity = 0;
+	m_pPrevEntity = 0;
+	m_pNextEntity = 0;
 
 	m_ID = Server()->SnapNewID();
-	m_ObjType = ObjType;
+	m_EntType = EntType;
 
 	m_ProximityRadius = ProximityRadius;
 
 	m_MarkedForDestroy = false;
 	m_Pos = Pos;
+
+	pGameWorld->InsertEntity(this);
 }
 
 CEntity::~CEntity()
 {
-	GameWorld()->RemoveEntity(this);
+	dbg_assert(m_MarkedForDestroy, "An entity was deleted without removing it from the world");
 	Server()->SnapFreeID(m_ID);
+}
+
+void CEntity::MarkForDestroy()
+{
+	if(!m_MarkedForDestroy)
+	{
+		m_MarkedForDestroy = true;
+		Destroy();
+	}
 }
 
 bool CEntity::NetworkClipped(int SnappingClient)

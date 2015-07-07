@@ -24,6 +24,9 @@ private:
 	void DoBounce();
 
 public:
+	/* Constants */
+	static const int ms_EntType = ENTTYPE_LASER;
+
 	/* Constructor */
 	CLaser(CGameWorld *pGameWorld, int Owner, vec2 Pos, vec2 Dir);
 

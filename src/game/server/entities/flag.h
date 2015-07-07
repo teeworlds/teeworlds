@@ -21,7 +21,8 @@ private:
 
 public:
 	/* Constants */
-	static int const ms_PhysSize = 14;
+	static const int ms_EntType = ENTTYPE_FLAG;
+	static const int ms_PhysSize = 14;
 
 	/* Constructor */
 	CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos);

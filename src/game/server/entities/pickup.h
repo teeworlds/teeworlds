@@ -22,7 +22,8 @@ protected:
 
 public:
 	/* Constants */
-	static int const ms_PhysSize = 14;
+	static const int ms_EntType = ENTTYPE_PICKUP;
+	static const int ms_PhysSize = 14;
 
 	/* Constructor */
 	CPickup(CGameWorld *pGameWorld, int Type, int PickupSound, int RespawnSound, vec2 Pos);

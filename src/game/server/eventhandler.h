@@ -45,7 +45,7 @@ public:
 	void SetGameServer(CGameContext *pGameServer);
 
 	/* Functions */
-	template <typename T> T *Create(int Type, int Mask=-1) { return (T *) CreateEvent(Type, sizeof(T), Mask); }
+	template <class T> T *Create(int Type, int Mask=-1) { return (T *) CreateEvent(Type, sizeof(T), Mask); }
 	void Clear();
 	void Snap(int SnappingClient) const;
 };

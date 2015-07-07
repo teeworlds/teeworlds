@@ -62,7 +62,7 @@ void CWeaponNinja::OnTick()
 		vec2 Dir = GetOwner()->GetPos() - OldPos;
 		float Radius = CharRadius * 2.0f;
 		vec2 Center = OldPos + Dir * 0.5f;
-		int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World.FindEntities<CCharacter>(Center, Radius, apEnts, MAX_CLIENTS);
 
 		for(int i = 0; i < Num; i++)
 		{

@@ -18,8 +18,8 @@ bool CPickupNinja::OnPickup(CCharacter *pChar)
 	pChar->GiveWeapon(WEAPON_NINJA, -1);
 
 	// loop through all players, setting their emotes
-	CCharacter *c = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
-	for(; c; c = (CCharacter *)c->TypeNext())
+	CCharacter *c = GameWorld()->GetFirst<CCharacter>();
+	for(; c; c = (CCharacter *)c->GetNextEntity())
 	{
 		if(c != pChar)
 			c->SetEmote(EMOTE_SURPRISE, Server()->TickSpeed());

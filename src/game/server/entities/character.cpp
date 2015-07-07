@@ -19,7 +19,7 @@
 MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 CCharacter::CCharacter(CGameWorld *pWorld, CPlayer *pPlayer)
-: CEntity(pWorld, CGameWorld::ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize)
+: CEntity(pWorld, ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize)
 {
 	m_pPlayer = pPlayer;
 	m_Alive = false;
@@ -36,13 +36,14 @@ CCharacter::~CCharacter()
 
 void CCharacter::Reset()
 {
-	Destroy();
+	GameWorld()->DestroyEntity(this);
 }
 
 void CCharacter::Destroy()
 {
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
+	GameWorld()->GetCore()->m_apCharacters[m_pPlayer->GetCID()] = 0;
+	m_pPlayer->UnsetCharacter();
 }
 
 void CCharacter::Spawn(vec2 Pos)
@@ -73,9 +74,9 @@ void CCharacter::Spawn(vec2 Pos)
 	m_InputsCount = 0;
 
 	m_Core.Reset();
-	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
+	m_Core.Init(GameWorld()->GetCore(), GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
+	GameWorld()->GetCore()->m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
 	m_TriggeredEvents = 0;
 
@@ -83,15 +84,12 @@ void CCharacter::Spawn(vec2 Pos)
 	mem_zero(&m_SendCore, sizeof(m_SendCore));
 	mem_zero(&m_ReckoningCore, sizeof(m_ReckoningCore));
 
-	GameServer()->m_World.InsertEntity(this);
-
 	GameServer()->m_pController->OnCharacterSpawn(this);
 }
 
 void CCharacter::Die(int Killer, int Weapon)
 {
 	// we got to wait 0.5 secs before respawning
-	m_Alive = false;
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
@@ -115,9 +113,9 @@ void CCharacter::Die(int Killer, int Weapon)
 	// this is for auto respawn after 3 secs
 	m_pPlayer->m_DieTick = Server()->Tick();
 
-	GameServer()->m_World.RemoveEntity(this);
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
+
+	GameWorld()->DestroyEntity(this);
 }
 
 bool CCharacter::IncreaseHealth(int Amount)
@@ -620,7 +618,7 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	// write down the core
-	if(m_ReckoningTick < 0 || GameServer()->m_World.m_Paused)
+	if(m_ReckoningTick < 0 || GameWorld()->IsPaused())
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning

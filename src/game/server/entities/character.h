@@ -22,7 +22,7 @@ private:
 		int m_Releases;
 	};
 
-	/* Objects */
+	/* Identity */
 	class CPlayer *m_pPlayer;
 
 	/* State (status) */
@@ -69,6 +69,7 @@ private:
 
 public:
 	/* Constants */
+	static const int ms_EntType = ENTTYPE_CHARACTER;
 	static const int ms_PhysSize = 28;
 
 	/* Constructor */

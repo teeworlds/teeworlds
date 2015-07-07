@@ -17,42 +17,24 @@ class CEntity
 	MACRO_ALLOC_HEAP()
 
 private:
-	/* Friend classes */
-	friend class CGameWorld; // for entity list handling
-
 	/* Identity */
 	class CGameWorld *m_pGameWorld;
-
-	CEntity *m_pPrevTypeEntity;
-	CEntity *m_pNextTypeEntity;
-
 	int m_ID;
-	int m_ObjType;
-
-	/*
-		Variable: m_ProximityRadius
-			Contains the physical size of the entity.
-	*/
+	int m_EntType;
 	float m_ProximityRadius;
 
 	/* State */
+	CEntity *m_pPrevEntity;
+	CEntity *m_pNextEntity;
 	bool m_MarkedForDestroy;
 
 protected:
 	/* State */
-
-	/*
-		Variable: m_Pos
-			Contains the current posititon of the entity.
-	*/
 	vec2 m_Pos;
-
-	/* Getters */
-	int GetID() const					{ return m_ID; }
 
 public:
 	/* Constructor */
-	CEntity(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0);
+	CEntity(CGameWorld *pGameWorld, int EntType, vec2 Pos, int ProximityRadius=0);
 
 	/* Destructor */
 	virtual ~CEntity();
@@ -63,22 +45,26 @@ public:
 	class IServer *Server()				{ return m_pGameWorld->Server(); }
 
 	/* Getters */
-	CEntity *TypeNext()					{ return m_pNextTypeEntity; }
-	CEntity *TypePrev()					{ return m_pPrevTypeEntity; }
-	const vec2 &GetPos() const			{ return m_Pos; }
+	int GetID() const					{ return m_ID; }
+	int GetEntType() const				{ return m_EntType; }
 	float GetProximityRadius() const	{ return m_ProximityRadius; }
+	CEntity *GetPrevEntity()			{ return m_pPrevEntity; }
+	CEntity *GetNextEntity()			{ return m_pNextEntity; }
 	bool IsMarkedForDestroy() const		{ return m_MarkedForDestroy; }
+	vec2 GetPos() const					{ return m_Pos; }
 
 	/* Setters */
-	void MarkForDestroy()				{ m_MarkedForDestroy = true; }
+	void SetPrevEntity(CEntity *pEnt)	{ m_pPrevEntity = pEnt; }
+	void SetNextEntity(CEntity *pEnt)	{ m_pNextEntity = pEnt; }
 
-	/* Other functions */
+	/* Functions */
+	void MarkForDestroy();
 
 	/*
 		Function: Destroy
-			Destroys the entity.
+			Called when the entity has been removed from the world.
 	*/
-	virtual void Destroy() { delete this; }
+	virtual void Destroy() { }
 
 	/*
 		Function: Reset

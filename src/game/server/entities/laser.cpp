@@ -8,7 +8,7 @@
 #include "laser.h"
 
 CLaser::CLaser(CGameWorld *pGameWorld, int Owner, vec2 Pos, vec2 Dir)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, Pos)
+: CEntity(pGameWorld, ENTTYPE_LASER, Pos)
 {
 	m_Owner = Owner;
 
@@ -16,14 +16,12 @@ CLaser::CLaser(CGameWorld *pGameWorld, int Owner, vec2 Pos, vec2 Dir)
 	m_Energy = GameServer()->Tuning()->m_LaserReach;
 	m_Bounces = 0;
 
-	GameWorld()->InsertEntity(this);
-
 	DoBounce();
 }
 
 void CLaser::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	GameWorld()->DestroyEntity(this);
 }
 
 void CLaser::DepleteEnergy()
@@ -35,7 +33,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.0f, At, pOwnerChar);
+	CCharacter *pHit = GameWorld()->IntersectEntity<CCharacter>(m_Pos, To, 0.0f, At, pOwnerChar);
 	if(!pHit)
 		return false;
 
@@ -56,7 +54,7 @@ void CLaser::DoBounce()
 	// check energy
 	if(m_Energy < 0)
 	{
-		GameServer()->m_World.DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 		return;
 	}
 

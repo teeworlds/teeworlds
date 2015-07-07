@@ -451,7 +451,7 @@ void IGameController::DoWincheckMatch()
 void IGameController::ResetGame()
 {
 	// reset the game
-	GameServer()->m_World.m_ResetRequested = true;
+	GameServer()->m_World.SetResetting(true);
 	
 	SetGameState(IGS_GAME_RUNNING);
 	m_GameStartTick = Server()->Tick();
@@ -545,7 +545,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		{
 			m_GameState = GameState;
 			m_GameStateTimer = 3*Server()->TickSpeed();
-			GameServer()->m_World.m_Paused = true;
+			GameServer()->m_World.SetPaused(true);
 		}
 		break;
 	case IGS_GAME_RUNNING:
@@ -554,7 +554,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = TIMER_INFINITE;
 			SetPlayersReadyState(true);
-			GameServer()->m_World.m_Paused = false;
+			GameServer()->m_World.SetPaused(false);
 		}
 		break;
 	case IGS_GAME_PAUSED:
@@ -577,7 +577,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 
 				m_GameState = GameState;
-				GameServer()->m_World.m_Paused = true;
+				GameServer()->m_World.SetPaused(true);
 			}
 			else
 			{
@@ -594,7 +594,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = Timer*Server()->TickSpeed();
 			m_SuddenDeath = 0;
-			GameServer()->m_World.m_Paused = true;
+			GameServer()->m_World.SetPaused(true);
 		}
 	}
 }
@@ -788,7 +788,7 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World.m_ResetRequested)
+	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World.IsResetting())
 	{
 		if(m_GameFlags&GAMEFLAG_SURVIVAL)
 			DoWincheckRound();
@@ -822,7 +822,7 @@ bool IGameController::IsPlayerReadyMode() const
 
 bool IGameController::IsTeamChangeAllowed() const
 {
-	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
+	return !GameServer()->m_World.IsPaused() || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
 }
 
 void IGameController::UpdateGameInfo(int ClientID)
@@ -937,7 +937,7 @@ void IGameController::CycleMap()
 bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 {
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_World.m_Paused || GameServer()->m_World.m_ResetRequested)
+	if(Team == TEAM_SPECTATORS || GameServer()->m_World.IsPaused() || GameServer()->m_World.IsResetting())
 		return false;
 
 	CSpawnEval Eval;
@@ -969,8 +969,8 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
 {
 	float Score = 0.0f;
-	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
-	for(; pC; pC = (CCharacter *)pC->TypeNext())
+	CCharacter *pC = GameServer()->m_World.GetFirst<CCharacter>();
+	for(; pC; pC = (CCharacter *)pC->GetNextEntity())
 	{
 		// team mates are not as dangerous as enemies
 		float Scoremod = 1.0f;
@@ -991,7 +991,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World.FindEntities<CCharacter>(m_aaSpawnPoints[Type][i], 64, aEnts, MAX_CLIENTS);
 		vec2 Positions[5] = { vec2(0.0f, 0.0f), vec2(-32.0f, 0.0f), vec2(0.0f, -32.0f), vec2(32.0f, 0.0f), vec2(0.0f, 32.0f) };	// start, left, up, right, down
 		int Result = -1;
 		for(int Index = 0; Index < 5 && Result == -1; ++Index)

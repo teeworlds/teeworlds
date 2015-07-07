@@ -9,13 +9,11 @@
 #include "pickup.h"
 
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, int PickupSound, int RespawnSound, vec2 Pos)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP, Pos, ms_PhysSize)
+: CEntity(pGameWorld, ENTTYPE_PICKUP, Pos, ms_PhysSize)
 {
 	m_Type = Type;
 	m_PickupSound = PickupSound;
 	m_RespawnSound = RespawnSound;
-
-	GameWorld()->InsertEntity(this);
 
 	Reset();
 }
@@ -45,7 +43,7 @@ void CPickup::Tick()
 	}
 
 	// check if a player intersected us
-	CCharacter *pChar = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
+	CCharacter *pChar = GameWorld()->ClosestEntity<CCharacter>(m_Pos, 20.0f);
 	if(pChar && pChar->IsAlive())
 	{
 		if(OnPickup(pChar))

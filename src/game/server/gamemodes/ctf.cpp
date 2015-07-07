@@ -152,7 +152,7 @@ void CGameControllerCTF::Tick()
 {
 	IGameController::Tick();
 
-	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World.IsResetting() || GameServer()->m_World.IsPaused())
 		return;
 
 	for(int fi = 0; fi < 2; fi++)
@@ -188,7 +188,7 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->GetPos(), CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities<CCharacter>(F->GetPos(), CFlag::ms_PhysSize, apCloseCCharacters, MAX_CLIENTS);
 			for(int i = 0; i < Num; i++)
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->GetPos(), apCloseCCharacters[i]->GetPos(), NULL, NULL))
