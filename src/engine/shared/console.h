@@ -156,6 +156,7 @@ class CConsole : public IConsole
 
 public:
 	CConsole(int FlagMask);
+	~CConsole();
 
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int FlagMask) const;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp);

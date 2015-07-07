@@ -4,147 +4,88 @@
 #define GAME_SERVER_GAMEWORLD_H
 
 #include <game/gamecore.h>
+#include "entitylist.h"
 
-class CEntity;
-class CCharacter;
+enum
+{
+	ENTTYPE_PROJECTILE = 0,
+	ENTTYPE_LASER,
+	ENTTYPE_PICKUP,
+	ENTTYPE_FLAG,
+	ENTTYPE_CHARACTER,
+	NUM_ENTTYPES
+};
 
-/*
-	Class: Game World
-		Tracks all entities in the game. Propagates tick and
-		snap calls to all entities.
-*/
 class CGameWorld
 {
-public:
-	enum
-	{
-		ENTTYPE_PROJECTILE = 0,
-		ENTTYPE_LASER,
-		ENTTYPE_PICKUP,
-		ENTTYPE_FLAG,
-		ENTTYPE_CHARACTER,
-		NUM_ENTTYPES
-	};
-
 private:
-	void Reset();
-	void RemoveEntities();
-
-	CEntity *m_pNextTraverseEntity;
-	CEntity *m_apFirstEntityTypes[NUM_ENTTYPES];
-
+	/* Identity */
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;
 
-public:
-	class CGameContext *GameServer() { return m_pGameServer; }
-	class IServer *Server() { return m_pServer; }
+	/* State */
+	CEntityList m_aLists[NUM_ENTTYPES];
+	CEntityList m_DestroyList;
 
-	bool m_ResetRequested;
-	bool m_Paused;
 	CWorldCore m_Core;
+	bool m_Resetting;
+	bool m_Paused;
 
+	/* Functions */
+	void Reset();
+	void CleanupEntities();
+
+	CEntity *GetFirst(int Type);
+	int FindEntities(int Type, vec2 Pos, float Radius, CEntity **ppEnts, int MaxEnts);
+	CEntity *IntersectEntity(int Type, vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, CEntity *pNotThis = 0);
+	CEntity *ClosestEntity(int Type, vec2 Pos, float Radius, CEntity *pNotThis = 0);
+
+public:
+	/* Constructor */
 	CGameWorld();
-	~CGameWorld();
 
+	/* Objects */
+	class CGameContext *GameServer()	{ return m_pGameServer; }
+	class IServer *Server()				{ return m_pServer; }
+
+	/* Getters */
+	CWorldCore *GetCore()				{ return &m_Core; }
+	bool IsResetting() const			{ return m_Resetting; }
+	bool IsPaused() const				{ return m_Paused; }
+
+	/* Setters */
+	void SetResetting(bool Resetting)	{ m_Resetting = Resetting; }
+	void SetPaused(bool Paused)			{ m_Paused = Paused; }
+
+	/* Functions */
 	void SetGameServer(CGameContext *pGameServer);
 
-	CEntity *FindFirst(int Type);
-
-	/*
-		Function: find_entities
-			Finds entities close to a position and returns them in a list.
-
-		Arguments:
-			pos - Position.
-			radius - How close the entities have to be.
-			ents - Pointer to a list that should be filled with the pointers
-				to the entities.
-			max - Number of entities that fits into the ents array.
-			type - Type of the entities to find.
-
-		Returns:
-			Number of entities found and added to the ents array.
-	*/
-	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type);
-
-	/*
-		Function: interserct_CCharacter
-			Finds the closest CCharacter that intersects the line.
-
-		Arguments:
-			pos0 - Start position
-			pos2 - End position
-			radius - How for from the line the CCharacter is allowed to be.
-			new_pos - Intersection position
-			notthis - Entity to ignore intersecting with
-
-		Returns:
-			Returns a pointer to the closest hit or NULL of there is no intersection.
-	*/
-	class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis = 0);
-
-	/*
-		Function: closest_CCharacter
-			Finds the closest CCharacter to a specific point.
-
-		Arguments:
-			pos - The center position.
-			radius - How far off the CCharacter is allowed to be
-			notthis - Entity to ignore
-
-		Returns:
-			Returns a pointer to the closest CCharacter or NULL if no CCharacter is close enough.
-	*/
-	class CCharacter *ClosestCharacter(vec2 Pos, float Radius, CEntity *ppNotThis);
-
-	/*
-		Function: insert_entity
-			Adds an entity to the world.
-
-		Arguments:
-			entity - Entity to add
-	*/
 	void InsertEntity(CEntity *pEntity);
-
-	/*
-		Function: remove_entity
-			Removes an entity from the world.
-
-		Arguments:
-			entity - Entity to remove
-	*/
-	void RemoveEntity(CEntity *pEntity);
-
-	/*
-		Function: destroy_entity
-			Destroys an entity in the world.
-
-		Arguments:
-			entity - Entity to destroy
-	*/
 	void DestroyEntity(CEntity *pEntity);
 
-	/*
-		Function: snap
-			Calls snap on all the entities in the world to create
-			the snapshot.
-
-		Arguments:
-			snapping_client - ID of the client which snapshot
-			is being created.
-	*/
+	void Tick();
 	void Snap(int SnappingClient);
-	
 	void PostSnap();
 
-	/*
-		Function: tick
-			Calls tick on all the entities in the world to progress
-			the world to the next tick.
+	template <class T> T *GetFirst()
+	{
+		return static_cast<T *>(GetFirst(T::ms_EntType));
+	}
 
-	*/
-	void Tick();
+	template <class T> int FindEntities(vec2 Pos, float Radius, T **ppEnts, int MaxEnts)
+	{
+		return FindEntities(T::ms_EntType, Pos, Radius, (CEntity **) ppEnts, MaxEnts);
+	}
+
+	template <class T> T *IntersectEntity(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, T *pNotThis = 0)
+	{
+		return static_cast<T *>(IntersectEntity(T::ms_EntType, Pos0, Pos1, Radius, NewPos, pNotThis));
+	}
+
+	template <class T> T *ClosestEntity(vec2 Pos, float Radius, T *pNotThis = 0)
+	{
+		return static_cast<T *>(ClosestEntity(T::ms_EntType, Pos, Radius, pNotThis));
+	}
 };
 
 #endif

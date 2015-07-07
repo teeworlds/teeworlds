@@ -21,6 +21,7 @@ CJobPool::~CJobPool()
 		thread_wait(m_apThreads[i]);
 		thread_destroy(m_apThreads[i]);
 	}
+	lock_destroy(m_Lock);
 }
 
 void CJobPool::WorkerThread(void *pUser)

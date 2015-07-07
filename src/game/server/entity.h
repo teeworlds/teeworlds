@@ -5,9 +5,8 @@
 
 #include <base/vmath.h>
 
-#include <game/server/gameworld.h>
-
 #include "alloc.h"
+#include "gameworld.h"
 
 /*
 	Class: Entity
@@ -17,50 +16,73 @@ class CEntity
 {
 	MACRO_ALLOC_HEAP()
 
-	friend class CGameWorld;	// entity list handling
-	CEntity *m_pPrevTypeEntity;
-	CEntity *m_pNextTypeEntity;
-
+private:
+	/* Identity */
 	class CGameWorld *m_pGameWorld;
-protected:
-	bool m_MarkedForDestroy;
 	int m_ID;
-	int m_ObjType;
+	int m_EntType;
+	float m_ProximityRadius;
+
+	/* State */
+	CEntity *m_pPrevEntity;
+	CEntity *m_pNextEntity;
+	bool m_MarkedForDestroy;
+
+protected:
+	/* State */
+	vec2 m_Pos;
+
 public:
-	CEntity(CGameWorld *pGameWorld, int Objtype);
+	/* Constructor */
+	CEntity(CGameWorld *pGameWorld, int EntType, vec2 Pos, int ProximityRadius=0);
+
+	/* Destructor */
 	virtual ~CEntity();
 
-	class CGameWorld *GameWorld() { return m_pGameWorld; }
-	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
-	class IServer *Server() { return GameWorld()->Server(); }
+	/* Objects */
+	class CGameWorld *GameWorld()		{ return m_pGameWorld; }
+	class CGameContext *GameServer()	{ return m_pGameWorld->GameServer(); }
+	class IServer *Server()				{ return m_pGameWorld->Server(); }
 
+	/* Getters */
+	int GetID() const					{ return m_ID; }
+	int GetEntType() const				{ return m_EntType; }
+	float GetProximityRadius() const	{ return m_ProximityRadius; }
+	CEntity *GetPrevEntity()			{ return m_pPrevEntity; }
+	CEntity *GetNextEntity()			{ return m_pNextEntity; }
+	bool IsMarkedForDestroy() const		{ return m_MarkedForDestroy; }
+	vec2 GetPos() const					{ return m_Pos; }
 
-	CEntity *TypeNext() { return m_pNextTypeEntity; }
-	CEntity *TypePrev() { return m_pPrevTypeEntity; }
+	/* Setters */
+	void SetPrevEntity(CEntity *pEnt)	{ m_pPrevEntity = pEnt; }
+	void SetNextEntity(CEntity *pEnt)	{ m_pNextEntity = pEnt; }
+
+	/* Functions */
+	void MarkForDestroy();
 
 	/*
-		Function: destroy
-			Destorys the entity.
+		Function: Destroy
+			Called when the entity has been removed from the world.
 	*/
-	virtual void Destroy() { delete this; }
+	virtual void Destroy() { }
 
 	/*
-		Function: reset
+		Function: Reset
 			Called when the game resets the map. Puts the entity
-			back to it's starting state or perhaps destroys it.
+			back to its starting state or perhaps destroys it.
 	*/
 	virtual void Reset() {}
 
 	/*
-		Function: tick
-			Called progress the entity to the next tick. Updates
-			and moves the entity to it's new state and position.
+		Function: Tick
+			Called to progress the entity to the next tick. Updates
+			and moves the entity to its new state and position.
 	*/
 	virtual void Tick() {}
 
 	/*
-		Function: tick_defered
-			Called after all entities tick() function has been called.
+		Function: TickDefered
+			Called after all entities Tick() function has been called.
 	*/
 	virtual void TickDefered() {}
 
@@ -71,12 +93,12 @@ public:
 	virtual void TickPaused() {}
 
 	/*
-		Function: snap
+		Function: Snap
 			Called when a new snapshot is being generated for a specific
 			client.
 
 		Arguments:
-			snapping_client - ID of the client which snapshot is
+			SnappingClient - ID of the client which snapshot is
 				being generated. Could be -1 to create a complete
 				snapshot of everything in the game for demo
 				recording.
@@ -91,7 +113,7 @@ public:
 			entity.
 
 		Arguments:
-			snapping_client - ID of the client which snapshot is
+			SnappingClient - ID of the client which snapshot is
 				being generated. Could be -1 to create a complete
 				snapshot of everything in the game for demo
 				recording.
@@ -99,22 +121,11 @@ public:
 		Returns:
 			Non-zero if the entity doesn't have to be in the snapshot.
 	*/
-	int NetworkClipped(int SnappingClient);
-	int NetworkClipped(int SnappingClient, vec2 CheckPos);
+	bool NetworkClipped(int SnappingClient);
+	bool NetworkClipped(int SnappingClient, vec2 CheckPos);
+	bool NetworkClipped(int SnappingClient, vec2 CheckLinePoint1, vec2 CheckLinePoint2);
 
 	bool GameLayerClipped(vec2 CheckPos);
-
-	/*
-		Variable: proximity_radius
-			Contains the physical size of the entity.
-	*/
-	float m_ProximityRadius;
-
-	/*
-		Variable: pos
-			Contains the current posititon of the entity.
-	*/
-	vec2 m_Pos;
 };
 
 #endif

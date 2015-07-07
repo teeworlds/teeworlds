@@ -5,6 +5,8 @@
 
 #include <new>
 
+#include <base/system.h>
+
 #define MACRO_ALLOC_HEAP() \
 	public: \
 	void *operator new(size_t Size) \

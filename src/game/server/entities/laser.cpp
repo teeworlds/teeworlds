@@ -1,37 +1,49 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <generated/server_data.h>
+
 #include <game/server/gamecontext.h>
 
 #include "character.h"
 #include "laser.h"
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER)
+CLaser::CLaser(CGameWorld *pGameWorld, int Owner, vec2 Pos, vec2 Dir)
+: CEntity(pGameWorld, ENTTYPE_LASER, Pos)
 {
-	m_Pos = Pos;
 	m_Owner = Owner;
-	m_Energy = StartEnergy;
-	m_Dir = Direction;
+
+	m_Dir = Dir;
+	m_Energy = GameServer()->Tuning()->m_LaserReach;
 	m_Bounces = 0;
-	m_EvalTick = 0;
-	GameWorld()->InsertEntity(this);
+
 	DoBounce();
 }
 
+void CLaser::Reset()
+{
+	GameWorld()->DestroyEntity(this);
+}
+
+void CLaser::DepleteEnergy()
+{
+	m_Energy = -1;
+}
 
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
+	CCharacter *pHit = GameWorld()->IntersectEntity<CCharacter>(m_Pos, To, 0.0f, At, pOwnerChar);
 	if(!pHit)
 		return false;
 
 	m_From = From;
 	m_Pos = At;
-	m_Energy = -1;
-	pHit->TakeDamage(vec2(0.f, 0.f), g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Damage, m_Owner, WEAPON_LASER);
+	DepleteEnergy();
+
+	int Damage = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Damage;
+	pHit->TakeDamage(vec2(0, 0), Damage, m_Owner, WEAPON_LASER);
+
 	return true;
 }
 
@@ -39,52 +51,54 @@ void CLaser::DoBounce()
 {
 	m_EvalTick = Server()->Tick();
 
+	// check energy
 	if(m_Energy < 0)
 	{
-		GameServer()->m_World.DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 		return;
 	}
 
+	// guess new position
 	vec2 To = m_Pos + m_Dir * m_Energy;
 
-	if(GameServer()->Collision()->IntersectLine(m_Pos, To, 0x0, &To))
+	// check ground collision
+	bool Collide = GameServer()->Collision()->IntersectLine(m_Pos, To, 0, &To);
+
+	// check player collision
+	if(HitCharacter(m_Pos, To))
+		return;
+
+	// update position
+	m_From = m_Pos;
+	m_Pos = To;
+
+	if(Collide) // intersected with ground
 	{
-		if(!HitCharacter(m_Pos, To))
-		{
-			// intersected
-			m_From = m_Pos;
-			m_Pos = To;
+		// find new direction
+		vec2 TempPos = m_Pos;
+		vec2 TempDir = m_Dir * 4.0f;
 
-			vec2 TempPos = m_Pos;
-			vec2 TempDir = m_Dir * 4.0f;
+		GameServer()->Collision()->MovePoint(&TempPos, &TempDir, 1.0f, 0);
 
-			GameServer()->Collision()->MovePoint(&TempPos, &TempDir, 1.0f, 0);
-			m_Pos = TempPos;
-			m_Dir = normalize(TempDir);
+		m_Pos = TempPos;
+		m_Dir = normalize(TempDir);
 
-			m_Energy -= distance(m_From, m_Pos) + GameServer()->Tuning()->m_LaserBounceCost;
-			m_Bounces++;
+		// update state
+		m_Energy -= distance(m_From, m_Pos) + GameServer()->Tuning()->m_LaserBounceCost;
 
-			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
-				m_Energy = -1;
+		// check bounces amount
+		m_Bounces++;
+		if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
+			DepleteEnergy();
 
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE);
-		}
+		// play sound
+		GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE);
 	}
-	else
+	else // not intersected with ground
 	{
-		if(!HitCharacter(m_Pos, To))
-		{
-			m_From = m_Pos;
-			m_Pos = To;
-			m_Energy = -1;
-		}
+		// affect energy
+		DepleteEnergy();
 	}
-}
-
-void CLaser::Reset()
-{
-	GameServer()->m_World.DestroyEntity(this);
 }
 
 void CLaser::Tick()
@@ -95,21 +109,21 @@ void CLaser::Tick()
 
 void CLaser::TickPaused()
 {
-	++m_EvalTick;
+	m_EvalTick++;
 }
 
 void CLaser::Snap(int SnappingClient)
 {
-	if(NetworkClipped(SnappingClient))
+	if(NetworkClipped(SnappingClient, m_From, m_Pos))
 		return;
 
-	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_ID, sizeof(CNetObj_Laser)));
-	if(!pObj)
+	CNetObj_Laser *pLaser = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(), sizeof(CNetObj_Laser)));
+	if(!pLaser)
 		return;
 
-	pObj->m_X = (int)m_Pos.x;
-	pObj->m_Y = (int)m_Pos.y;
-	pObj->m_FromX = (int)m_From.x;
-	pObj->m_FromY = (int)m_From.y;
-	pObj->m_StartTick = m_EvalTick;
+	pLaser->m_X = (int)m_Pos.x;
+	pLaser->m_Y = (int)m_Pos.y;
+	pLaser->m_FromX = (int)m_From.x;
+	pLaser->m_FromY = (int)m_From.y;
+	pLaser->m_StartTick = m_EvalTick;
 }

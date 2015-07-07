@@ -1,4 +1,7 @@
-#pragma once
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#ifndef ENGINE_CLIENT_BACKEND_SDL_H
+#define ENGINE_CLIENT_BACKEND_SDL_H
 
 #include "graphics_threaded.h"
 
@@ -198,3 +201,5 @@ public:
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };
+
+#endif

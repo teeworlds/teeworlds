@@ -20,6 +20,7 @@ public:
 	
 	// event
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	virtual void OnFlagReturn(class CFlag *pFlag);
 	virtual bool OnEntity(int Index, vec2 Pos);
 
 	// general

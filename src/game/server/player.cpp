@@ -33,8 +33,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 
 CPlayer::~CPlayer()
 {
-	delete m_pCharacter;
-	m_pCharacter = 0;
+	if(m_pCharacter)
+		GameServer()->m_World.DestroyEntity(m_pCharacter);
 }
 
 void CPlayer::Tick()
@@ -65,12 +65,6 @@ void CPlayer::Tick()
 		}
 	}
 
-	if(m_pCharacter && !m_pCharacter->IsAlive())
-	{
-		delete m_pCharacter;
-		m_pCharacter = 0;
-	}
-
 	if(!GameServer()->m_pController->IsGamePaused())
 	{
 		if(!m_pCharacter && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
@@ -82,7 +76,7 @@ void CPlayer::Tick()
 		if(m_pCharacter)
 		{
 			if(m_pCharacter->IsAlive())
-				m_ViewPos = m_pCharacter->m_Pos;
+				m_ViewPos = m_pCharacter->GetPos();
 		}
 		else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 			TryRespawn();
@@ -203,7 +197,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World.IsPaused())
 	{
 		m_PlayerFlags = NewInput->m_PlayerFlags;
 		return;
@@ -253,11 +247,7 @@ CCharacter *CPlayer::GetCharacter()
 void CPlayer::KillCharacter(int Weapon)
 {
 	if(m_pCharacter)
-	{
 		m_pCharacter->Die(m_ClientID, Weapon);
-		delete m_pCharacter;
-		m_pCharacter = 0;
-	}
 }
 
 void CPlayer::Respawn()
@@ -366,7 +356,7 @@ void CPlayer::TryRespawn()
 		return;
 
 	m_Spawning = false;
-	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
-	m_pCharacter->Spawn(this, SpawnPos);
+	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World, this);
+	m_pCharacter->Spawn(SpawnPos);
 	GameServer()->CreatePlayerSpawn(SpawnPos);
 }

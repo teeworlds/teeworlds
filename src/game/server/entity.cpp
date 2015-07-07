@@ -5,53 +5,75 @@
 #include "gamecontext.h"
 #include "player.h"
 
-//////////////////////////////////////////////////
-// Entity
-//////////////////////////////////////////////////
-CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
+CEntity::CEntity(CGameWorld *pGameWorld, int EntType, vec2 Pos, int ProximityRadius)
 {
 	m_pGameWorld = pGameWorld;
 
-	m_ObjType = ObjType;
-	m_Pos = vec2(0,0);
-	m_ProximityRadius = 0;
+	m_pPrevEntity = 0;
+	m_pNextEntity = 0;
+
+	m_ID = Server()->SnapNewID();
+	m_EntType = EntType;
+
+	m_ProximityRadius = ProximityRadius;
 
 	m_MarkedForDestroy = false;
-	m_ID = Server()->SnapNewID();
+	m_Pos = Pos;
 
-	m_pPrevTypeEntity = 0;
-	m_pNextTypeEntity = 0;
+	pGameWorld->InsertEntity(this);
 }
 
 CEntity::~CEntity()
 {
-	GameWorld()->RemoveEntity(this);
+	dbg_assert(m_MarkedForDestroy, "An entity was deleted without removing it from the world");
 	Server()->SnapFreeID(m_ID);
 }
 
-int CEntity::NetworkClipped(int SnappingClient)
+void CEntity::MarkForDestroy()
+{
+	if(!m_MarkedForDestroy)
+	{
+		m_MarkedForDestroy = true;
+		Destroy();
+	}
+}
+
+bool CEntity::NetworkClipped(int SnappingClient)
 {
 	return NetworkClipped(SnappingClient, m_Pos);
 }
 
-int CEntity::NetworkClipped(int SnappingClient, vec2 CheckPos)
+bool CEntity::NetworkClipped(int SnappingClient, vec2 CheckPos)
 {
 	if(SnappingClient == -1)
-		return 0;
+		return false;
 
 	float dx = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.x-CheckPos.x;
 	float dy = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.y-CheckPos.y;
 
 	if(absolute(dx) > 1000.0f || absolute(dy) > 800.0f)
-		return 1;
+		return true;
 
 	if(distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, CheckPos) > 1100.0f)
-		return 1;
-	return 0;
+		return true;
+	return false;
+}
+
+bool CEntity::NetworkClipped(int SnappingClient, vec2 CheckLinePoint1, vec2 CheckLinePoint2)
+{
+	if(SnappingClient == -1)
+		return false;
+
+	vec2 ViewPos = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos;
+	vec2 ClosestPoint = closest_point_on_line(CheckLinePoint1, CheckLinePoint2, ViewPos);
+
+	return NetworkClipped(SnappingClient, ClosestPoint);
 }
 
 bool CEntity::GameLayerClipped(vec2 CheckPos)
 {
-	return round_to_int(CheckPos.x)/32 < -200 || round_to_int(CheckPos.x)/32 > GameServer()->Collision()->GetWidth()+200 ||
-			round_to_int(CheckPos.y)/32 < -200 || round_to_int(CheckPos.y)/32 > GameServer()->Collision()->GetHeight()+200 ? true : false;
+	int rx = round_to_int(CheckPos.x) / 32;
+	int ry = round_to_int(CheckPos.y) / 32;
+	return (rx < -200 || rx >= GameServer()->Collision()->GetWidth()+200)
+			|| (ry < -200 || ry >= GameServer()->Collision()->GetHeight()+200);
 }
