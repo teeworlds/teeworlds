@@ -18,6 +18,7 @@ IGameController::IGameController(class CGameContext *pGameServer)
 
 	//
 	DoWarmup(g_Config.m_SvWarmup);
+	m_UnpauseTimer = 0;
 	m_GameOverTick = -1;
 	m_SuddenDeath = 0;
 	m_RoundStartTick = Server()->Tick();
@@ -376,6 +377,30 @@ void IGameController::DoWarmup(int Seconds)
 		m_Warmup = Seconds*Server()->TickSpeed();
 }
 
+void IGameController::TogglePause()
+{
+	if(IsGameOver())
+		return;
+
+	if(GameServer()->m_World.m_Paused)
+	{
+		// unpause
+		if(g_Config.m_SvUnpauseTimer > 0)
+			m_UnpauseTimer = g_Config.m_SvUnpauseTimer*Server()->TickSpeed();
+		else
+		{
+			GameServer()->m_World.m_Paused = false;
+			m_UnpauseTimer = 0;
+		}
+	}
+	else
+	{
+		// pause
+		GameServer()->m_World.m_Paused = true;
+		m_UnpauseTimer = 0;
+	}
+}
+
 bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2)
 {
 	if(ClientID1 == ClientID2)
@@ -412,7 +437,7 @@ bool IGameController::CanBeMovedOnBalance(int ClientID)
 void IGameController::Tick()
 {
 	// do warmup
-	if(m_Warmup)
+	if(!GameServer()->m_World.m_Paused && m_Warmup)
 	{
 		m_Warmup--;
 		if(!m_Warmup)
@@ -428,6 +453,12 @@ void IGameController::Tick()
 			StartRound();
 			m_RoundCount++;
 		}
+	}
+	else if(GameServer()->m_World.m_Paused && m_UnpauseTimer)
+	{
+		--m_UnpauseTimer;
+		if(!m_UnpauseTimer)
+			GameServer()->m_World.m_Paused = false;
 	}
 
 	// game is Paused
@@ -561,7 +592,7 @@ void IGameController::Snap(int SnappingClient)
 	if(GameServer()->m_World.m_Paused)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
 	pGameInfoObj->m_RoundStartTick = m_RoundStartTick;
-	pGameInfoObj->m_WarmupTimer = m_Warmup;
+	pGameInfoObj->m_WarmupTimer = GameServer()->m_World.m_Paused ? m_UnpauseTimer : m_Warmup;
 
 	pGameInfoObj->m_ScoreLimit = g_Config.m_SvScorelimit;
 	pGameInfoObj->m_TimeLimit = g_Config.m_SvTimelimit;

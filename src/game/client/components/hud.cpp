@@ -68,6 +68,18 @@ void CHud::RenderPauseNotification()
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize,pText, -1);
 		TextRender()->Text(0, 150.0f*Graphics()->ScreenAspect()+-w/2.0f, 50.0f, FontSize, pText, -1);
+
+		if(m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
+		{
+			char Buf[256];
+			int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer/SERVER_TICK_SPEED;
+			if(Seconds < 5)
+				str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer*10/SERVER_TICK_SPEED)%10);
+			else
+				str_format(Buf, sizeof(Buf), "%d", Seconds);
+			w = TextRender()->TextWidth(0, FontSize, Buf, -1);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, Buf, -1);
+		}
 	}
 }
 
@@ -240,7 +252,7 @@ void CHud::RenderScoreHud()
 void CHud::RenderWarmupTimer()
 {
 	// render warmup timer
-	if(m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
+	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED) && m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)
 	{
 		char Buf[256];
 		float FontSize = 20.0f;
