@@ -1966,22 +1966,22 @@ int str_utf8_decode(const char **ptr)
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
 		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x3F) << 6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
 			if(ch < 0x80 || ch > 0x7FF) ch = -1;
 		}
 		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
 		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x1F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
 			if(ch < 0x800 || ch > 0xFFFF) ch = -1;
 		}
 		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
 		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x0F) << 18; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
 			if(ch < 0x10000 || ch > 0x10FFFF) ch = -1;
 		}
