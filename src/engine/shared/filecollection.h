@@ -20,16 +20,19 @@ class CFileCollection
 	int m_FileExtLength;
 	char m_aPath[512];
 	IStorage *m_pStorage;
+	int64 m_Remove; // Timestamp we want to remove
 
 	bool IsFilenameValid(const char *pFilename);
 	int64 ExtractTimestamp(const char *pTimestring);
 	void BuildTimestring(int64 Timestamp, char *pTimestring);
+	int64 GetTimestamp(const char *pFilename);
 
 public:
 	void Init(IStorage *pStorage, const char *pPath, const char *pFileDesc, const char *pFileExt, int MaxEntries);
 	void AddEntry(int64 Timestamp);
 
 	static int FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
+	static int RemoveCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
 };
 
 #endif
