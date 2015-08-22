@@ -9,13 +9,14 @@
 
 #include "system.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
 	#include <unistd.h>
 
 	/* unix net includes */
-	#include <sys/stat.h>
-	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
 	#include <errno.h>
