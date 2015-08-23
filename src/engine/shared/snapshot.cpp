@@ -331,6 +331,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 
 		Type = *pData++;
 		ID = *pData++;
+		if(Type < 0)
+			return -2;
 		if(m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else
@@ -527,10 +529,10 @@ int *CSnapshotBuilder::GetItemData(int Key)
 	return 0;
 }
 
-int CSnapshotBuilder::Finish(void *SpnapData)
+int CSnapshotBuilder::Finish(void *pSnapData)
 {
 	// flattern and make the snapshot
-	CSnapshot *pSnap = (CSnapshot *)SpnapData;
+	CSnapshot *pSnap = (CSnapshot *)pSnapData;
 	int OffsetSize = sizeof(int)*m_NumItems;
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;
