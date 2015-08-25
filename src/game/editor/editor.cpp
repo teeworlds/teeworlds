@@ -620,7 +620,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 
 	if(UI()->ActiveItem() == pID)
 	{
-		if(!UI()->MouseButton(0))
+		if(!UI()->MouseButton(0) || Input()->KeyDown(KEY_ESCAPE))
 		{
 			m_LockMouse = false;
 			UI()->SetActiveItem(0);
