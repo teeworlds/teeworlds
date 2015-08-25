@@ -481,25 +481,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	Client()->RecordGameMessage(true);
 
 	// special messages
-	if(MsgId == NETMSGTYPE_SV_EXTRAPROJECTILE)
-	{
-		int Num = pUnpacker->GetInt();
-
-		for(int k = 0; k < Num; k++)
-		{
-			CNetObj_Projectile Proj;
-			for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
-				((int *)&Proj)[i] = pUnpacker->GetInt();
-
-			if(pUnpacker->Error())
-				return;
-
-			m_pItems->AddExtraProjectile(&Proj);
-		}
-
-		return;
-	}
-	else if(MsgId == NETMSGTYPE_SV_TUNEPARAMS && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		Client()->RecordGameMessage(false);
 		// unpack the new tuning
