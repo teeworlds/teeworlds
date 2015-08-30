@@ -62,7 +62,7 @@ bool CMapChecker::IsMapValid(const char *pMapName, unsigned MapCrc, unsigned Map
 	return !StandardMap;
 }
 
-bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType, char *pBuffer, int BufferSize)
+bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType)
 {
 	// extract map name
 	char aMapName[MAX_MAP_LENGTH];
@@ -92,16 +92,11 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 		{
 			StandardMap = true;
 			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
-			bool CrcSizeMatch = false;
-			if(!pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize, &CrcSizeMatch))
+			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize))
 				return true;
-			
-			// output filename
-			if(pBuffer != 0 && BufferSize > 0)
-				str_format(pBuffer, BufferSize, "%s", aBuffer);
-				
-			return CrcSizeMatch;
 		}
+		else if(StandardMap)
+			break;
 	}
 
 	return !StandardMap;
