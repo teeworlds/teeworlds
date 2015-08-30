@@ -29,7 +29,7 @@ public:
 
 	CLineInput();
 	void Clear();
-	void ProcessInput(IInput::CEvent e);
+	bool ProcessInput(IInput::CEvent e);
 	void Set(const char *pString);
 	const char *GetString() const { return m_Str; }
 	int GetLength() const { return m_Len; }

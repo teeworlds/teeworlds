@@ -212,13 +212,14 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else
 	{
-		// reset name completion process
-		if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key != KEY_TAB)
-			m_CompletionChosen = -1;
-
 		m_OldChatStringLength = m_Input.GetLength();
-		m_Input.ProcessInput(Event);
-		m_InputUpdate = true;
+		if(m_Input.ProcessInput(Event))
+		{
+			m_InputUpdate = true;
+			
+			// reset name completion process
+			m_CompletionChosen = -1;
+		}
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{

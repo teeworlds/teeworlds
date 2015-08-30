@@ -102,7 +102,7 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int St
 	return Changes;
 }
 
-void CLineInput::ProcessInput(IInput::CEvent e)
+bool CLineInput::ProcessInput(IInput::CEvent e)
 {
-	Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars);
+	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars);
 }
