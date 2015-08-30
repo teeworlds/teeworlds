@@ -213,13 +213,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 		end
 		settings.cc.flags:Add("/wd4244")
 	elseif compiler == "gcc" or config.compiler.driver == "clang" then
-		if target_arch == "x86" then
-			settings.cc.flags:Add("-m32")
-			settings.link.flags:Add("-m32")
-		elseif target_arch == "x86_64" then
-			settings.cc.flags:Add("-m64")
-			settings.link.flags:Add("-m64")
-		else
+		if target_arch ~= "x86" and target_arch ~= "x86_64" then
 			print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
 			os.exit(1)
 		end
