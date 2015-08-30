@@ -24,7 +24,6 @@ public:
 			STATE_INVALID=0,
 			STATE_PENDING,
 			STATE_READY,
-			MAX_TOKEN=0xFF
 		};
 
 		NETADDR m_Addr;

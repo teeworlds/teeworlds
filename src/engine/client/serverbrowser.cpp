@@ -8,6 +8,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
 #include <engine/shared/network.h>
+#include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
 
 #include <engine/config.h>
@@ -438,7 +439,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	// set the info
 	pEntry->m_Addr = Addr;
 	pEntry->m_InfoState = CServerEntry::STATE_INVALID;
-	pEntry->m_CurrentToken = rand()%CServerEntry::MAX_TOKEN;
+	pEntry->m_CurrentToken = rand();
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
@@ -557,23 +558,22 @@ void CServerBrowser::Refresh(int Type)
 
 	if(Type == IServerBrowser::TYPE_LAN)
 	{
-		unsigned char Buffer[sizeof(SERVERBROWSE_GETINFO)+1];
-		CNetChunk Packet;
-		int i;
-
-		mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-		Buffer[sizeof(SERVERBROWSE_GETINFO)] = m_CurrentLanToken;
+		CPacker Packer;
+		Packer.Reset();
+		Packer.AddRaw(SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
+		Packer.AddInt(m_CurrentLanToken);
 
 		/* do the broadcast version */
-		Packet.m_ClientID = -1;
+		CNetChunk Packet;
 		mem_zero(&Packet, sizeof(Packet));
+		Packet.m_ClientID = -1;
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS;
-		Packet.m_DataSize = sizeof(Buffer);
-		Packet.m_pData = Buffer;
+		Packet.m_DataSize = Packer.Size();
+		Packet.m_pData = Packer.Data();
 		m_BroadcastTime = time_get();
 
-		for(i = 8303; i <= 8310; i++)
+		for(int i = 8303; i <= 8310; i++)
 		{
 			Packet.m_Address.port = i;
 			m_pNetClient->Send(&Packet);
@@ -594,9 +594,6 @@ void CServerBrowser::Refresh(int Type)
 
 void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const
 {
-	unsigned char Buffer[sizeof(SERVERBROWSE_GETINFO)+1];
-	CNetChunk Packet;
-
 	if(g_Config.m_Debug)
 	{
 		char aAddrStr[NETADDR_MAXSTRSIZE];
@@ -606,14 +603,17 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 
-	mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-	Buffer[sizeof(SERVERBROWSE_GETINFO)] = pEntry ? pEntry->m_CurrentToken : m_CurrentLanToken;
-
+	CPacker Packer;
+	Packer.Reset();
+	Packer.AddRaw(SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
+	Packer.AddInt(pEntry ? pEntry->m_CurrentToken : m_CurrentLanToken);
+	
+	CNetChunk Packet;
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = sizeof(Buffer);
-	Packet.m_pData = Buffer;
+	Packet.m_DataSize = Packer.Size();
+	Packet.m_pData = Packer.Data();
 
 	m_pNetClient->Send(&Packet);
 
