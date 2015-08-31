@@ -1828,6 +1828,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		{
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
+			m_TilesetPicker.m_Game = t->m_Game;
 			m_TilesetPicker.Render();
 			if(m_ShowTileInfo)
 				m_TilesetPicker.ShowInfo();
