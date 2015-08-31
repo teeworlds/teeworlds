@@ -35,6 +35,7 @@ void CChat::OnReset()
 	}
 
 	m_Mode = MODE_NONE;
+	m_ReverseCompletion = false;
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
@@ -155,11 +156,27 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-		m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+		if(m_ReverseCompletion)
+			m_CompletionChosen = (m_CompletionChosen-1 + 2*MAX_CLIENTS)%(2*MAX_CLIENTS);
+		else
+			m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+
 		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
-			int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+			int SearchType;
+			int Index;
+
+			if(m_ReverseCompletion)
+			{
+				SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+				Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
+			}
+			else
+			{
+				SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+				Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+			}
+
 			if(!m_pClient->m_aClients[Index].m_Active)
 				continue;
 
@@ -221,6 +238,12 @@ bool CChat::OnInput(IInput::CEvent Event)
 			m_CompletionChosen = -1;
 		}
 	}
+
+	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LCTRL)
+		m_ReverseCompletion = true;
+	else if(Event.m_Flags&IInput::FLAG_RELEASE && Event.m_Key == KEY_LCTRL)
+		m_ReverseCompletion = false;
+
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
 		if(m_pHistoryEntry)
