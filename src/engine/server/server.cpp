@@ -285,6 +285,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_RconClientID = IServer::RCON_CID_SERV;
 	m_RconAuthLevel = AUTHED_ADMIN;
 
+	m_RconPasswordSet = 0;
 	m_GeneratedRconPassword = 0;
 
 	Init();
@@ -510,9 +511,9 @@ int CServer::MaxClients() const
 	return m_NetServer.MaxClients();
 }
 
-void CServer::InitRconPasswordIfEmpty()
+void CServer::InitRconPasswordIfUnset()
 {
-	if(g_Config.m_SvRconPassword[0])
+	if(m_RconPasswordSet)
 	{
 		return;
 	}
@@ -1614,6 +1615,16 @@ void CServer::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void 
 	}
 }
 
+void CServer::ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() >= 1)
+	{
+		dbg_msg("dbg", "huh?");
+		static_cast<CServer *>(pUserData)->m_RconPasswordSet = 1;
+	}
+}
+
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -1638,6 +1649,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
+	Console()->Chain("sv_rcon_password", ConchainRconPasswordSet, this);
 
 	// register console commands in sub parts
 	m_ServerBan.InitServerBan(Console(), Storage(), this);
@@ -1755,7 +1767,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	pEngine->InitLogfile();
 
-	pServer->InitRconPasswordIfEmpty();
+	pServer->InitRconPasswordIfUnset();
 
 	// run the server
 	dbg_msg("server", "starting...");
