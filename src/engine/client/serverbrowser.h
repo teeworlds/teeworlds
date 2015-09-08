@@ -3,9 +3,9 @@
 #ifndef ENGINE_CLIENT_SERVERBROWSER_H
 #define ENGINE_CLIENT_SERVERBROWSER_H
 
-#include <engine/serverbrowser.h>
+#include <engine/external/http_parser/http_parser.h>
 
-#include <http_parser.h>
+#include <engine/serverbrowser.h>
 
 class CServerBrowser : public IServerBrowser
 {

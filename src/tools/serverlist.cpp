@@ -13,7 +13,11 @@ void SendRequest(NETSOCKET Socket, const char *pHostname)
 {
 	char aBuf[BUFFER_SIZE];
 	// E: Buf too small.
-	str_format(aBuf, sizeof(aBuf), "GET /6 HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", pHostname);
+	str_format(aBuf, sizeof(aBuf),
+		"GET /teeworlds/serverlist/0.6 HTTP/1.1\r\n"
+		"Host: %s\r\n"
+		"Connection: close\r\n"
+		"\r\n", pHostname);
 	// E: Buf not completely sent.
 	net_tcp_send(Socket, aBuf, str_length(aBuf)); // exclude zero termination
 }
