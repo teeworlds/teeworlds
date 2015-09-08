@@ -1,4 +1,5 @@
 #include <base/system.h>
+#include <game/version.h>
 
 #include <http_parser.h>
 
@@ -16,6 +17,7 @@ void SendRequest(NETSOCKET Socket, const char *pHostname)
 	str_format(aBuf, sizeof(aBuf),
 		"GET /teeworlds/serverlist/0.6 HTTP/1.1\r\n"
 		"Host: %s\r\n"
+		"User-Agent: Teeworlds_serverlist/" GAME_VERSION "\r\n"
 		"Connection: close\r\n"
 		"\r\n", pHostname);
 	// E: Buf not completely sent.
@@ -27,7 +29,7 @@ void LineCallback(const char *pLine)
 	dbg_msg("lc", "%s", pLine);
 }
 
-struct ReceiveCallbackData
+struct CReceiveCallbackData
 {
 	char m_aBuf[BUFFER_SIZE+1];
 	size_t m_BufSize;
@@ -37,7 +39,7 @@ struct ReceiveCallbackData
 
 int ReceiveCallback(http_parser *pParser, const char *pData, size_t DataSize)
 {
-	ReceiveCallbackData *pCbData = (ReceiveCallbackData *)pParser->data;
+	CReceiveCallbackData *pCbData = (CReceiveCallbackData *)pParser->data;
 
 	for(size_t i = 0; i < DataSize; i++)
 	{
@@ -90,7 +92,7 @@ void Receive(NETSOCKET Socket, http_parser *pParser)
 	Settings.on_body = ReceiveCallback;
 	Settings.on_status = ReceiveStatusCallback;
 
-	ReceiveCallbackData CbData = { 0 };
+	CReceiveCallbackData CbData = { 0 };
 	CbData.m_LineCallback = LineCallback;
 	pParser->data = &CbData;
 
