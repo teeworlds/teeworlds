@@ -59,6 +59,9 @@ CServerBrowser::CServerBrowser()
 
 	m_ServerlistType = 0;
 	m_BroadcastTime = 0;
+
+	http_parser_settings_init(&m_HttpParserSettings);
+	m_HttpParserSettings.on_body = CServerBrowser::ServerListCallback;
 }
 
 void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVersion)
@@ -567,30 +570,102 @@ void CServerBrowser::Update(bool ForceResort)
 	// do server list requests
 	if(m_NeedRefresh && !m_pMasterServer->IsRefreshing())
 	{
-		NETADDR Addr;
-		CNetChunk Packet;
-		int i;
-
 		m_NeedRefresh = 0;
 
-		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_ClientID = -1;
-		Packet.m_Flags = NETSENDFLAG_CONNLESS;
-		Packet.m_DataSize = sizeof(SERVERBROWSE_GETLIST);
-		Packet.m_pData = SERVERBROWSE_GETLIST;
+		static const char aFormat[] =
+			"GET /teeworlds/serverlist/0.6 HTTP/1.1\r\n"
+			"Host: %s\r\n"
+			"Connection: close\r\n"
+			"\r\n";
 
-		for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 		{
 			if(!m_pMasterServer->IsValid(i))
 				continue;
 
-			Addr = m_pMasterServer->GetAddr(i);
-			Packet.m_Address = Addr;
-			m_pNetClient->Send(&Packet);
+			if(m_aMasters[i].m_State != MASTERSTATE_NONE)
+			{
+				net_tcp_close(m_aMasters[i].m_Socket);
+				m_aMasters[i].m_State = MASTERSTATE_NONE;
+			}
+
+			str_format(m_aMasters[i].m_aRequest, sizeof(m_aMasters[i].m_aRequest), aFormat, m_pMasterServer->GetName(i));
+			// Don't include null termination in request.
+			m_aMasters[i].m_RequestSize = str_length(m_aMasters[i].m_aRequest);
+
+			NETADDR BindAddr = { 0 };
+			BindAddr.type = NETTYPE_ALL;
+			m_aMasters[i].m_Socket = net_tcp_create(BindAddr);
+			net_set_non_blocking(m_aMasters[i].m_Socket);
+
+			NETADDR Addr = m_pMasterServer->GetAddr(i);
+			net_tcp_connect(&m_aMasters[i].m_Socket, &Addr);
+
+			m_aMasters[i].m_State = MASTERSTATE_CONNECTING;
+			m_aMasters[i].m_RequestSentSize = 0;
 		}
 
 		if(g_Config.m_Debug)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "requesting server list");
+	}
+
+	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+	{
+		switch(m_aMasters[i].m_State)
+		{
+		case MASTERSTATE_CONNECTING:
+		{
+			int AlreadySent = m_aMasters[i].m_RequestSentSize;
+			char *pRequest = m_aMasters[i].m_aRequest + AlreadySent;
+			int Size = m_aMasters[i].m_RequestSize - AlreadySent;
+			int Sent = net_tcp_send(m_aMasters[i].m_Socket, pRequest, Size);
+			if(Sent == -1)
+			{
+				if(!net_would_block())
+				{
+					dbg_msg("dbg", "conn failed %d", i);
+					// Connection failed.
+					net_tcp_close(m_aMasters[i].m_Socket);
+					m_aMasters[i].m_State = MASTERSTATE_NONE;
+				}
+				break;
+			}
+			m_aMasters[i].m_RequestSentSize += Sent;
+			if(m_aMasters[i].m_RequestSentSize == m_aMasters[i].m_RequestSize)
+			{
+				dbg_msg("dbg", "conn successful %d", i);
+				m_aMasters[i].m_State = MASTERSTATE_AWAITING_RESPONSE;
+				http_parser_init(&m_aMasters[i].m_Parser, HTTP_RESPONSE);
+			}
+			break;
+		}
+		case MASTERSTATE_AWAITING_RESPONSE:
+		{
+			dbg_msg("dbg", "huh %d", i);
+			char aBuf[1024];
+			int Recv = net_tcp_recv(m_aMasters[i].m_Socket, aBuf, sizeof(aBuf));
+			if(Recv < 0)
+			{
+				if(!net_would_block())
+				{
+					// Connection failed.
+					net_tcp_close(m_aMasters[i].m_Socket);
+					m_aMasters[i].m_State = MASTERSTATE_NONE;
+				}
+				break;
+			}
+			m_aMasters[i].m_Parser.data = &m_aMasters[i].m_CallbackData;
+			m_aMasters[i].m_CallbackData.m_pThis = this;
+			http_parser_execute(&m_aMasters[i].m_Parser, &m_HttpParserSettings, aBuf, Recv);
+			if(Recv == 0)
+			{
+				net_tcp_close(m_aMasters[i].m_Socket);
+				m_aMasters[i].m_State = MASTERSTATE_NONE;
+				break;
+			}
+			break;
+		}
+		}
 	}
 
 	// do timeouts
@@ -733,4 +808,59 @@ void CServerBrowser::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		str_format(aBuffer, sizeof(aBuffer), "add_favorite %s", aAddrStr);
 		pConfig->WriteLine(aBuffer);
 	}
+}
+
+int CServerBrowser::ServerListCallback(http_parser *pParser, const char *pData, size_t DataSize)
+{
+	if(pParser->status_code != 200)
+		return 0;
+
+	CServerBrowser::CReceiveCallbackData *pCbData = (CServerBrowser::CReceiveCallbackData *)pParser->data;
+
+	for(size_t i = 0; i < DataSize; i++)
+	{
+		if(pCbData->m_Invalid)
+		{
+			if(pData[i] == '\n')
+			{
+				pCbData->m_BufSize = 0;
+				pCbData->m_Invalid = false;
+			}
+			continue;
+		}
+
+		if(pData[i] < 32)
+		{
+			// Null termination.
+			pCbData->m_aBuf[pCbData->m_BufSize] = '\0';
+			pCbData->m_pThis->ServerListServerCallback(pCbData->m_aBuf);
+			pCbData->m_BufSize = 0;
+			if(pData[i] != '\n')
+			{
+				pCbData->m_Invalid = true;
+			}
+			continue;
+		}
+
+		// Leave one byte for zero termination.
+		if(pCbData->m_BufSize == sizeof(pCbData->m_aBuf) - 1)
+		{
+			pCbData->m_Invalid = true;
+			continue;
+		}
+
+		pCbData->m_aBuf[pCbData->m_BufSize] = pData[i];
+		pCbData->m_BufSize++;
+	}
+
+	return 0;
+}
+
+void CServerBrowser::ServerListServerCallback(const char *pServerAddr)
+{
+	NETADDR Addr;
+	if(net_addr_from_str(&Addr, pServerAddr) == -1)
+		return; // could not parse address
+
+	Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 }

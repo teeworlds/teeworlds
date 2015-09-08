@@ -5,6 +5,8 @@
 
 #include <engine/serverbrowser.h>
 
+#include <http_parser.h>
+
 class CServerBrowser : public IServerBrowser
 {
 public:
@@ -61,7 +63,34 @@ public:
 	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
 
 private:
+	enum
+	{
+		MASTERSTATE_NONE=0,
+		MASTERSTATE_CONNECTING,
+		MASTERSTATE_AWAITING_RESPONSE,
+	};
+
+	struct CReceiveCallbackData
+	{
+		char m_aBuf[1024];
+		size_t m_BufSize;
+		bool m_Invalid;
+		CServerBrowser *m_pThis;
+	};
+
+	struct CMaster
+	{
+		NETSOCKET m_Socket;
+		int m_State;
+		char m_aRequest[1024];
+		int m_RequestSize;
+		int m_RequestSentSize;
+		http_parser m_Parser;
+		CReceiveCallbackData m_CallbackData;
+	};
+
 	CNetClient *m_pNetClient;
+	CMaster m_aMasters[IMasterServer::MAX_MASTERSERVERS];
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
 	class IFriends *m_pFriends;
@@ -97,6 +126,8 @@ private:
 	int m_ServerlistType;
 	int64 m_BroadcastTime;
 
+	http_parser_settings m_HttpParserSettings;
+
 	// sorting criterions
 	bool SortCompareName(int Index1, int Index2) const;
 	bool SortCompareMap(int Index1, int Index2) const;
@@ -121,6 +152,9 @@ private:
 	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info);
 
 	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+
+	static int ServerListCallback(http_parser *pParser, const char *pData, size_t DataSize);
+	void ServerListServerCallback(const char *pServerAddr);
 };
 
 #endif

@@ -172,6 +172,7 @@ function build(settings)
 			settings.link.frameworks:Add("AppKit")
 		else
 			settings.link.libs:Add("pthread")
+			settings.link.libs:Add("http_parser")
 		end
 		
 		if platform == "solaris" then

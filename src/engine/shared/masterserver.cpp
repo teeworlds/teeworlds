@@ -77,7 +77,7 @@ public:
 				if(m_aMasterServers[i].m_Lookup.m_Job.Result() == 0)
 				{
 					m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
-					m_aMasterServers[i].m_Addr.port = 8300;
+					m_aMasterServers[i].m_Addr.port = 80;
 					m_aMasterServers[i].m_Valid = true;
 				}
 				else
@@ -148,7 +148,7 @@ public:
 			char aAddrStr[NETADDR_MAXSTRSIZE];
 			if(sscanf(pLine, "%127s %47s", Info.m_aHostname, aAddrStr) == 2 && net_addr_from_str(&Info.m_Addr, aAddrStr) == 0)
 			{
-				Info.m_Addr.port = 8300;
+				Info.m_Addr.port = 80;
 				bool Added = false;
 				for(int i = 0; i < MAX_MASTERSERVERS; ++i)
 					if(str_comp(m_aMasterServers[i].m_aHostname, Info.m_aHostname) == 0)

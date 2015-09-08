@@ -1223,32 +1223,42 @@ int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *a)
 	return -1;
 }
 
-int net_tcp_connect(NETSOCKET sock, const NETADDR *a)
+int net_tcp_connect(NETSOCKET *sock, const NETADDR *a)
 {
+	int ipv4sock = sock->ipv4sock;
+	int ipv6sock = sock->ipv6sock;
+
+	sock->ipv4sock = -1;
+	sock->ipv6sock = -1;
+
 	if(a->type&NETTYPE_IPV4)
 	{
+		sock->ipv4sock = ipv4sock;
+
 		struct sockaddr_in addr;
 		netaddr_to_sockaddr_in(a, &addr);
-		return connect(sock.ipv4sock, (struct sockaddr *)&addr, sizeof(addr));
+		return connect(sock->ipv4sock, (struct sockaddr *)&addr, sizeof(addr));
 	}
 
 	if(a->type&NETTYPE_IPV6)
 	{
+		sock->ipv6sock = ipv6sock;
+
 		struct sockaddr_in6 addr;
 		netaddr_to_sockaddr_in6(a, &addr);
-		return connect(sock.ipv6sock, (struct sockaddr *)&addr, sizeof(addr));
+		return connect(sock->ipv6sock, (struct sockaddr *)&addr, sizeof(addr));
 	}
 
 	return -1;
 }
 
-int net_tcp_connect_non_blocking(NETSOCKET sock, NETADDR bindaddr)
+int net_tcp_connect_non_blocking(NETSOCKET *sock, NETADDR bindaddr)
 {
 	int res = 0;
 
-	net_set_non_blocking(sock);
+	net_set_non_blocking(*sock);
 	res = net_tcp_connect(sock, &bindaddr);
-	net_set_blocking(sock);
+	net_set_blocking(*sock);
 
 	return res;
 }
@@ -1269,6 +1279,7 @@ int net_tcp_recv(NETSOCKET sock, void *data, int maxsize)
 {
 	int bytes = -1;
 
+	// NOTE: This looks very wrong.
 	if(sock.ipv4sock >= 0)
 		bytes = recv((int)sock.ipv4sock, (char*)data, maxsize, 0);
 	if(sock.ipv6sock >= 0)
