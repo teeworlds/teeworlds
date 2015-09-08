@@ -1166,6 +1166,10 @@ int net_would_block();
 
 int net_socket_read_wait(NETSOCKET sock, int time);
 
+int net_socket_error(NETSOCKET sock);
+
+int net_socket_writable(NETSOCKET sock);
+
 void mem_debug_dump(IOHANDLE file);
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);

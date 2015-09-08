@@ -614,6 +614,20 @@ void CServerBrowser::Update(bool ForceResort)
 		switch(m_aMasters[i].m_State)
 		{
 		case MASTERSTATE_CONNECTING:
+			if(!net_socket_writable(m_aMasters[i].m_Socket))
+			{
+				break;
+			}
+			if(net_socket_error(m_aMasters[i].m_Socket))
+			{
+				// Connection failed.
+				net_tcp_close(m_aMasters[i].m_Socket);
+				m_aMasters[i].m_State = MASTERSTATE_NONE;
+				break;
+			}
+			m_aMasters[i].m_State = MASTERSTATE_SENDING;
+			// FALLTHROUGH!
+		case MASTERSTATE_SENDING:
 		{
 			int AlreadySent = m_aMasters[i].m_RequestSentSize;
 			char *pRequest = m_aMasters[i].m_aRequest + AlreadySent;

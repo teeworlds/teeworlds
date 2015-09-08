@@ -1563,6 +1563,46 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 	return 0;
 }
 
+int net_socket_error(NETSOCKET sock)
+{
+	int result = 0;
+	socklen_t result_len = sizeof(result);
+	if(sock.ipv4sock >= 0)
+	{
+		getsockopt(sock.ipv6sock, SOL_SOCKET, SO_ERROR, &result, &result_len);
+	}
+	if(sock.ipv6sock >= 0)
+	{
+		getsockopt(sock.ipv6sock, SOL_SOCKET, SO_ERROR, &result, &result_len);
+	}
+	return result;
+}
+
+int net_socket_writable(NETSOCKET sock)
+{
+	struct timeval tv;
+	fd_set writefds;
+	int sockid;
+
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	sockid = 0;
+
+	FD_ZERO(&writefds);
+	if(sock.ipv4sock >= 0)
+	{
+		FD_SET(sock.ipv4sock, &writefds);
+		sockid = sock.ipv4sock;
+	}
+	if(sock.ipv6sock >= 0)
+	{
+		FD_SET(sock.ipv6sock, &writefds);
+		sockid = sock.ipv6sock;
+	}
+
+	return select(sockid+1, NULL, &writefds, NULL, &tv) > 0;
+}
+
 int time_timestamp()
 {
 	return time(0);
