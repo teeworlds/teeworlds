@@ -211,6 +211,8 @@ public:
 				"/usr/share/games/teeworlds/data",
 				"/usr/local/share/teeworlds/data",
 				"/usr/local/share/games/teeworlds/data",
+				"/usr/pkg/share/teeworlds/data",
+				"/usr/pkg/share/games/teeworlds/data",
 				"/opt/teeworlds/data"
 			};
 			const int DirsCount = sizeof(aDirs) / sizeof(aDirs[0]);
