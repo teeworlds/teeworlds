@@ -4,7 +4,7 @@
 #include "config.h"
 #include "network.h"
 
-#include <stdlib.h>
+#include <stdlib.h>	// rand
 
 void CNetConnection::ResetStats()
 {
@@ -316,7 +316,6 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						TOKEN Token = m_Token;
 						Reset();
 						m_State = NET_CONNSTATE_PENDING;
-						m_Token = Token;
 						m_PeerAddr = *pAddr;
 						m_PeerToken = pPacket->m_ResponseToken;
 						m_Token = Token;
