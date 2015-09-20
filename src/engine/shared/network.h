@@ -1,4 +1,5 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */ /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_NETWORK_H
 #define ENGINE_SHARED_NETWORK_H
 
@@ -393,7 +394,7 @@ public:
 	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags);
 	int Close();
 
-	// the token and version parameter are only used for connless packets
+	// the token parameter is only used for connless packets
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();

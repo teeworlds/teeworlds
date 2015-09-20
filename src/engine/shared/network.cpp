@@ -7,7 +7,8 @@
 #include "network.h"
 #include "huffman.h"
 
-void CNetRecvUnpacker::Clear() {
+void CNetRecvUnpacker::Clear()
+{
 	m_Valid = false;
 }
 
