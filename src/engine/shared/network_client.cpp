@@ -79,9 +79,9 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
-			if(net_addr_comp(m_Connection.PeerAddress(), &Addr) == 0)
+			if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && net_addr_comp(m_Connection.PeerAddress(), &Addr) == 0)
 			{
-				if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
+				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 				{
 					if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
 						m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
@@ -94,10 +94,13 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 						return 1;
 					}
 				}
-
 			}
 			else
 			{
+				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+				if(!Accept)
+					continue;
+
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 				{
 					if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
@@ -105,15 +108,11 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				}
 				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 				{
-					int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, false);
-					if(!Accept)
-						continue;
-
 					pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 
 					if(Accept < 0)
 					{
-						if(!(m_Flags&NETFLAG_ALLOWSTATELESS))
+						if(!(m_Flags&NETCREATE_FLAG_ALLOWSTATELESS))
 							continue;
 						pChunk->m_Flags |= NETSENDFLAG_STATELESS;
 					}

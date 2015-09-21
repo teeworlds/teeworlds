@@ -220,7 +220,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				if(Accept < 0)
 				{
-					if(!(m_Flags&NETFLAG_ALLOWSTATELESS))
+					if(!(m_Flags&NETCREATE_FLAG_ALLOWSTATELESS))
 						continue;
 					pChunk->m_Flags |= NETSENDFLAG_STATELESS;
 				}

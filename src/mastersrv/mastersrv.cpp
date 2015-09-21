@@ -292,10 +292,11 @@ int main(int argc, const char **argv) // ignore_convention
 
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 
+	int FlagMask = CFGFLAG_MASTER;
 	IKernel *pKernel = IKernel::Create();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	IConfig *pConfig = CreateConfig();
-	m_pConsole = CreateConsole(CFGFLAG_MASTER);
+	m_pConsole = CreateConsole(FlagMask);
 	
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
@@ -304,7 +305,7 @@ int main(int argc, const char **argv) // ignore_convention
 	if(RegisterFail)
 		return -1;
 
-	pConfig->Init();
+	pConfig->Init(FlagMask);
 	m_NetBan.Init(m_pConsole, pStorage);
 	if(argc > 1) // ignore_convention
 		m_pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
@@ -322,13 +323,13 @@ int main(int argc, const char **argv) // ignore_convention
 		BindAddr.port = MASTERSERVER_PORT;
 	}
 
-	if(!m_NetOp.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
+	if(!m_NetOp.Open(BindAddr, NETCREATE_FLAG_ALLOWSTATELESS))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
 		return -1;
 	}
 	BindAddr.port = MASTERSERVER_PORT+1;
-	if(!m_NetChecker.Open(BindAddr, NETFLAG_ALLOWSTATELESS))
+	if(!m_NetChecker.Open(BindAddr, NETCREATE_FLAG_ALLOWSTATELESS))
 	{
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
@@ -385,7 +386,7 @@ int main(int argc, const char **argv) // ignore_convention
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
 				// someone requested the list
-				dbg_msg("mastersrv", "requested, responding with %d m_aServers", m_NumServers);
+				dbg_msg("mastersrv", "requested, responding with %d servers", m_NumServers);
 
 				CNetChunk p;
 				p.m_ClientID = -1;
@@ -401,7 +402,7 @@ int main(int argc, const char **argv) // ignore_convention
 			}
 		}
 
-		// process m_aPackets
+		// process packets
 		while(m_NetChecker.Recv(&Packet, &Token))
 		{
 			// check if the server is banned

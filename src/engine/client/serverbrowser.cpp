@@ -566,7 +566,6 @@ void CServerBrowser::Refresh(int Type)
 		/* do the broadcast version */
 		CNetChunk Packet;
 		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_ClientID = -1;
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
 		Packet.m_ClientID = -1;
 		Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
@@ -658,8 +657,7 @@ void CServerBrowser::Update(bool ForceResort)
 			if(!m_pMasterServer->IsValid(i))
 				continue;
 
-			Addr = m_pMasterServer->GetAddr(i);
-			Packet.m_Address = Addr;
+			Packet.m_Address = m_pMasterServer->GetAddr(i);
 			m_pNetClient->Send(&Packet);
 		}
 
