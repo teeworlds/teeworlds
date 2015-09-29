@@ -85,14 +85,6 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				{
 					if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
 						m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
-					else
-					{
-						pChunk->m_ClientID = 0; // the server
-						pChunk->m_Address = *m_Connection.PeerAddress();
-						pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
-						pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-						return 1;
-					}
 				}
 			}
 			else
