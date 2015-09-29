@@ -664,12 +664,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-	#if defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_MACOSX)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
-	#else
-		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-	#endif
-
+	
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	if(FsaaSamples)
