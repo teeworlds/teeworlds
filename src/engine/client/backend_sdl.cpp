@@ -628,11 +628,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 			dbg_msg("gfx", "unable to init SDL video: %s", SDL_GetError());
 			return -1;
 		}
-
-		#ifdef CONF_FAMILY_WINDOWS
-			if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-				putenv("SDL_VIDEO_WINDOW_POS=center"); // ignore_convention
-		#endif
 	}
 
 	SDL_Rect ScreenBounds;
@@ -681,8 +676,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 
 	m_pWindow = SDL_CreateWindow(
 		pName,
-		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
-		SDL_WINDOWPOS_UNDEFINED_DISPLAY(0),
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
 		*pWidth,
 		*pHeight,
 		SdlFlags);
