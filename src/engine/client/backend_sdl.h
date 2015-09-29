@@ -195,6 +195,7 @@ public:
 
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual bool Fullscreen(bool State);	// on=true/off=false
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };

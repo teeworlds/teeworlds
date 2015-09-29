@@ -752,6 +752,11 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 	// TODO: SDL
 }
 
+bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
+{
+	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;
+}
+
 int CGraphicsBackend_SDL_OpenGL::WindowActive()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_INPUT_FOCUS;

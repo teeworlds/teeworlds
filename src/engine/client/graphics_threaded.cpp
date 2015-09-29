@@ -850,6 +850,11 @@ void CGraphics_Threaded::Maximize()
 	m_pBackend->Maximize();
 }
 
+bool CGraphics_Threaded::Fullscreen(bool State)
+{
+	return m_pBackend->Fullscreen(State);
+}
+
 int CGraphics_Threaded::WindowActive()
 {
 	return m_pBackend->WindowActive();
