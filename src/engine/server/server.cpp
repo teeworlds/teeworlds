@@ -1070,8 +1070,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 {
-	char aBuf[128];
-
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1158,7 +1156,7 @@ void CServer::PumpNetwork()
 			if(!(Packet.m_Flags&NETSENDFLAG_STATELESS))
 				if(m_Register.RegisterProcessPacket(&Packet, ResponseToken))
 					continue;
-			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETINFO) &&
+			if(Packet.m_DataSize >= int(sizeof(SERVERBROWSE_GETINFO)) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 			{
 				CUnpacker Unpacker;

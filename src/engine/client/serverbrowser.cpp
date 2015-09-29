@@ -640,9 +640,7 @@ void CServerBrowser::Update(bool ForceResort)
 	// do server list requests
 	if(m_NeedRefresh && !m_pMasterServer->IsRefreshing())
 	{
-		NETADDR Addr;
 		CNetChunk Packet;
-		int i;
 
 		m_NeedRefresh = 0;
 
@@ -652,7 +650,7 @@ void CServerBrowser::Update(bool ForceResort)
 		Packet.m_DataSize = sizeof(SERVERBROWSE_GETLIST);
 		Packet.m_pData = SERVERBROWSE_GETLIST;
 
-		for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 		{
 			if(!m_pMasterServer->IsValid(i))
 				continue;

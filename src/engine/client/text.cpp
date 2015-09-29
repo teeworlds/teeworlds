@@ -299,7 +299,7 @@ class CTextRender : public IEngineTextRender
 		int SlotSize = SlotW*SlotH;
 		int x = 1;
 		int y = 1;
-		int px, py;
+		unsigned int px, py;
 
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 
@@ -340,9 +340,9 @@ class CTextRender : public IEngineTextRender
 				}
 		}
 
-		if(0) for(py = 0; py < SlotW; py++)
+		/*for(py = 0; py < SlotW; py++)
 			for(px = 0; px < SlotH; px++)
-				ms_aGlyphData[py*SlotW+px] = 255;
+				ms_aGlyphData[py*SlotW+px] = 255;*/
 
 		// upload the glyph
 		UploadGlyph(pSizeData, 0, SlotID, Chr, ms_aGlyphData);
