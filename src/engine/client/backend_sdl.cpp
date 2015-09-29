@@ -630,23 +630,15 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 		}
 	}
 
-	SDL_Rect ScreenBounds;
-	if(SDL_GetDisplayBounds(Screen, &ScreenBounds) < 0)
+	// store desktop resolution for settings reset button
+	SDL_DisplayMode DisplayMode;
+	if(SDL_GetDesktopDisplayMode(Screen, &DisplayMode))
 	{
-		dbg_msg("gfx", "unable to get current screen bounds: %s", SDL_GetError());
+		dbg_msg("gfx", "unable to get desktop resolution: %s", SDL_GetError());
 		return -1;
 	}
-
-	// use current resolution as default
-	if(*pWidth == 0 || *pHeight == 0)
-	{
-		*pWidth = ScreenBounds.w;
-		*pHeight = ScreenBounds.h;
-	}
-
-	// store desktop resolution for settings reset button
-	*pDesktopWidth = ScreenBounds.w;
-	*pDesktopHeight = ScreenBounds.h;
+	*pDesktopWidth = DisplayMode.w;
+	*pDesktopHeight = DisplayMode.h;
 
 	dbg_assert(!(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		|| !(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN),
@@ -659,7 +651,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-		SdlFlags |= SDL_WINDOW_FULLSCREEN;
+		SdlFlags |= (*pWidth == 0 || *pHeight == 0) ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;	// use desktop resolution as default
 	
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -674,14 +666,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 	}
 
-	m_pWindow = SDL_CreateWindow(
-		pName,
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		*pWidth,
-		*pHeight,
-		SdlFlags);
-
+	// create window
+	m_pWindow = SDL_CreateWindow(pName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, *pWidth, *pHeight, SdlFlags);
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
@@ -690,8 +676,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 
 	SDL_GetWindowSize(m_pWindow, pWidth, pHeight);
 
+	// create gl context
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
-
 	if(m_GLContext == NULL)
 	{
 		dbg_msg("gfx", "unable to create OpenGL context: %s", SDL_GetError());
