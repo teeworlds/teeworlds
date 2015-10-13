@@ -80,10 +80,11 @@ void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData)
 void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 {
 	const char *pMode = pResult->GetString(0);
+	int Answer = pResult->GetInteger(1);
 	if(str_comp(pMode, "all") == 0)
-		((CChat*)pUserData)->EnableMode(0);
+		((CChat*)pUserData)->EnableMode(0, Answer);
 	else if(str_comp(pMode, "team") == 0)
-		((CChat*)pUserData)->EnableMode(1);
+		((CChat*)pUserData)->EnableMode(1, Answer);
 	else
 		((CChat*)pUserData)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "expected all or team as mode");
 }
@@ -97,7 +98,7 @@ void CChat::OnConsoleInit()
 {
 	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
 	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
-	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode");
+	Console()->Register("chat", "s?i", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode, pass 1 to answer somebody");
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 }
 
@@ -274,7 +275,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 }
 
 
-void CChat::EnableMode(int Team)
+void CChat::EnableMode(int Team, int Answer)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
@@ -285,10 +286,17 @@ void CChat::EnableMode(int Team)
 			m_Mode = MODE_TEAM;
 		else
 			m_Mode = MODE_ALL;
-
-		m_Input.Clear();
+		if(Answer > 0 && m_ChatPartner[Answer-1][0])
+		{
+			char aBuf[16+2];
+			str_format(aBuf, sizeof(aBuf), "%s: ", m_ChatPartner[Answer-1]);
+			m_Input.Set(aBuf);
+		}
+		else
+			m_Input.Clear();
 		Input()->ClearEvents();
 		m_CompletionChosen = -1;
+
 	}
 }
 
@@ -390,6 +398,14 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 
 			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientID].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), ": %s", pLine);
+
+			if(Highlighted)
+			{
+				// advance all indices by 1
+				for(int i = 15; i > 0; i--)
+					str_copy(m_ChatPartner[i], m_ChatPartner[i-1], sizeof(m_ChatPartner[i]));
+				str_copy(m_ChatPartner[0], m_aLines[m_CurrentLine].m_aName, sizeof(m_ChatPartner[0]));
+			}
 		}
 
 		char aBuf[1024];

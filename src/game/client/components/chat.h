@@ -29,6 +29,7 @@ class CChat : public CComponent
 
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
+	char m_ChatPartner[16][16];
 
 	// chat
 	enum
@@ -77,7 +78,7 @@ public:
 
 	void AddLine(int ClientID, int Team, const char *pLine);
 
-	void EnableMode(int Team);
+	void EnableMode(int Team, int Answer=0);
 
 	void Say(int Team, const char *pLine);
 
