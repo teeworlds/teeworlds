@@ -188,6 +188,7 @@ public:
 	// info
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
+	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
 	bool IsPlayerReadyMode() const;
 	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
