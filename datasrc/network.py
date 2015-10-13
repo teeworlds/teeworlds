@@ -224,6 +224,7 @@ Objects = [
 
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
+		NetBool("m_SelfDamage"),
 	]),
 ]
 

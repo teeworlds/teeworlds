@@ -92,7 +92,7 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 	return m_apPlayers[ClientID]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
+void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount, bool SelfDamage)
 {
 	float a = 3*pi/2 + Angle;
 	//float a = get_angle(dir);
@@ -107,6 +107,7 @@ void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
 			pEvent->m_Angle = (int)(f*256.0f);
+			pEvent->m_SelfDamage = SelfDamage;
 		}
 	}
 }

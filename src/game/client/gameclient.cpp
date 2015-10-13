@@ -820,7 +820,7 @@ void CGameClient::ProcessEvents()
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
 			CNetEvent_DamageInd *ev = (CNetEvent_DamageInd *)pData;
-			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), direction(ev->m_Angle/256.0f));
+			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), direction(ev->m_Angle/256.0f), ev->m_SelfDamage);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{

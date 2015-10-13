@@ -31,7 +31,7 @@ void CDamageInd::DestroyI(CDamageInd::CItem *i)
 	*i = m_aItems[m_NumItems];
 }
 
-void CDamageInd::Create(vec2 Pos, vec2 Dir)
+void CDamageInd::Create(vec2 Pos, vec2 Dir, bool SelfDamage)
 {
 	CItem *i = CreateI();
 	if (i)
@@ -40,6 +40,7 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 		i->m_StartTime = Client()->LocalTime();
 		i->m_Dir = Dir*-1;
 		i->m_StartAngle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
+		i->m_SelfDamage = SelfDamage;
 	}
 }
 
@@ -70,7 +71,10 @@ void CDamageInd::OnRender()
 		else
 		{
 			vec2 Pos = mix(m_aItems[i].m_Pos+m_aItems[i].m_Dir*75.0f, m_aItems[i].m_Pos, clamp((Life-0.60f)/0.15f, 0.0f, 1.0f));
-			Graphics()->SetColor(1.0f,1.0f,1.0f, Life/0.1f);
+			if(m_aItems[i].m_SelfDamage)
+				Graphics()->SetColor(1.0f,0.1f,0.3f, Life/0.1f);
+			else
+				Graphics()->SetColor(1.0f,1.0f,1.0f, Life/0.1f);
 			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + Life * 2.0f);
 			RenderTools()->SelectSprite(SPRITE_STAR1);
 			RenderTools()->DrawSprite(Pos.x, Pos.y, 48.0f);
