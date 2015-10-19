@@ -746,7 +746,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->m_LastChat = Server()->Tick();
 
 			// don't allow spectators to disturb players during a running game in tournament mode
-			if(g_Config.m_SvTournamentMode &&
+			if((g_Config.m_SvTournamentMode == 2) &&
 				pPlayer->GetTeam() == TEAM_SPECTATORS &&
 				m_pController->IsGameRunning() &&
 				!Server()->IsAuthed(ClientID))
