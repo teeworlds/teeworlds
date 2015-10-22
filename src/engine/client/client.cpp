@@ -2210,8 +2210,19 @@ void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUse
 
 void CClient::SwitchWindowScreen(int Index)
 {
-	if(Graphics()->SetWindowScreen(Index))
-		g_Config.m_GfxScreen = Index;
+	// Todo: remove this if fixed by SDL
+	if(g_Config.m_GfxFullscreen)
+	{
+		ToggleFullscreen();
+		if(Graphics()->SetWindowScreen(Index))
+			g_Config.m_GfxScreen = Index;
+		ToggleFullscreen();
+	}
+	else
+	{
+		if(Graphics()->SetWindowScreen(Index))
+			g_Config.m_GfxScreen = Index;
+	}
 }
 
 void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
