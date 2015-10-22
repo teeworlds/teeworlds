@@ -163,6 +163,7 @@ private:
 	void Cmd_Init(const SCommand_Init *pCommand);
 	void Cmd_Shutdown(const SCommand_Shutdown *pCommand);
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand);
+	void Cmd_VSync(const CCommandBuffer::SCommand_VSync *pCommand);
 	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand);
 public:
 	CCommandProcessorFragment_SDL();

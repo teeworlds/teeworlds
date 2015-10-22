@@ -82,6 +82,7 @@ public:
 		CMD_SWAP,
 
 		// misc
+		CMD_VSYNC,
 		CMD_SCREENSHOT,
 		CMD_VIDEOMODES,
 
@@ -202,6 +203,14 @@ public:
 		SCommand_Swap() : SCommand(CMD_SWAP) {}
 
 		int m_Finish;
+	};
+
+	struct SCommand_VSync : public SCommand
+	{
+		SCommand_VSync() : SCommand(CMD_VSYNC) {}
+
+		int m_VSync;
+		bool *m_pRetOk;
 	};
 
 	struct SCommand_Texture_Create : public SCommand
@@ -438,6 +447,7 @@ public:
 
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
+	virtual bool SetVSync(bool State);
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 

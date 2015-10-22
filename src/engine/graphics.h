@@ -174,6 +174,7 @@ public:
 	virtual int GetDesktopScreenHeight() const = 0;
 
 	virtual void Swap() = 0;
+	virtual bool SetVSync(bool State) = 0;
 
 	// syncronization
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
