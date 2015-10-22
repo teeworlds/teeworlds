@@ -87,6 +87,9 @@ public:
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
+	
+	// gfx
+	virtual void SwitchWindowScreen(int Index) = 0;
 	virtual void ToggleFullscreen() = 0;
 	virtual void ToggleWindowBordered() = 0;
 	virtual void ToggleWindowVSync() = 0;

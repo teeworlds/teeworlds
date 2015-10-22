@@ -641,7 +641,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	int NumScreens = SDL_GetNumVideoDisplays();
 	if(NumScreens > 0)
 	{
-		clamp(*Screen, 0, NumScreens);
+		clamp(*Screen, 0, NumScreens-1);
 		if(SDL_GetDisplayBounds(*Screen, &ScreenPos) != 0)
 		{
 			dbg_msg("gfx", "unable to retrieve screen information: %s", SDL_GetError());
@@ -781,6 +781,22 @@ bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 void CGraphicsBackend_SDL_OpenGL::SetWindowBordered(bool State)
 {
 	SDL_SetWindowBordered(m_pWindow, SDL_bool(State));
+}
+
+bool CGraphicsBackend_SDL_OpenGL::SetWindowScreen(int Index)
+{
+	int NumScreens = SDL_GetNumVideoDisplays();
+	if(Index >= 0 && Index < NumScreens)
+	{
+		SDL_Rect ScreenPos;
+		if(SDL_GetDisplayBounds(Index, &ScreenPos) == 0)
+		{
+			SDL_SetWindowPosition(m_pWindow, ScreenPos.x, ScreenPos.y);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 int CGraphicsBackend_SDL_OpenGL::WindowActive()

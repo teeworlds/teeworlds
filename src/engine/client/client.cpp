@@ -2208,6 +2208,24 @@ void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUse
 		((CClient *)pUserData)->ServerBrowserUpdate();
 }
 
+void CClient::SwitchWindowScreen(int Index)
+{
+	if(Graphics()->SetWindowScreen(Index))
+		g_Config.m_GfxScreen = Index;
+}
+
+void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	if(pSelf->Graphics() && pResult->NumArguments())
+	{
+		if(g_Config.m_GfxScreen != pResult->GetInteger(0))
+			pSelf->SwitchWindowScreen(pResult->GetInteger(0));
+	}
+	else
+		pfnCallback(pResult, pCallbackUserData);
+}
+
 void CClient::ToggleFullscreen()
 {
 	if(Graphics()->Fullscreen(g_Config.m_GfxFullscreen^1))
@@ -2285,6 +2303,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Chain("br_filter_gametype", ConchainServerBrowserUpdate, this);
 	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 
+	m_pConsole->Chain("gfx_screen", ConchainWindowScreen, this);
 	m_pConsole->Chain("gfx_fullscreen", ConchainFullscreen, this);
 	m_pConsole->Chain("gfx_borderless", ConchainWindowBordered, this);
 	m_pConsole->Chain("gfx_vsync", ConchainWindowVSync, this);
