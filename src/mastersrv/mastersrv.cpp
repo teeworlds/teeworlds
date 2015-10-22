@@ -348,7 +348,11 @@ int main(int argc, const char **argv) // ignore_convention
 		m_pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
 	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
+	{
+		// got bindaddr
+		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = MASTERSERVER_PORT;
+	}
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));
@@ -367,6 +371,9 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;
 	}
+
+	// process pending commands
+	m_pConsole->StoreCommands(false);
 
 	dbg_msg("mastersrv", "started");
 

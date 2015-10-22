@@ -224,7 +224,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		int ItemIndex = i;
 		const CServerInfo *pItem = ServerBrowser()->SortedGet(ItemIndex);
-		NumPlayers += pItem->m_NumPlayers;
+		NumPlayers += g_Config.m_BrFilterSpectators ? pItem->m_NumPlayers : pItem->m_NumClients;
 		CUIRect Row;
 		CUIRect SelectHitBox;
 
@@ -813,6 +813,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 	// friends list(remove friend)
 	static float s_ScrollValue = 0;
+	if(m_FriendlistSelectedIndex >= m_lFriends.size())
+		m_FriendlistSelectedIndex = m_lFriends.size()-1;
 	UiDoListboxStart(&m_lFriends, &List, 30.0f, "", "", m_lFriends.size(), 1, m_FriendlistSelectedIndex, s_ScrollValue);
 
 	m_lFriends.sort_range();

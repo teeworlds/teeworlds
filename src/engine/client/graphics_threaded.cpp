@@ -80,8 +80,27 @@ void CGraphics_Threaded::FlushVertices()
 		}
 	}
 
+	// check if we have enough free memory in the commandbuffer
+	if(!m_pCommandBuffer->AddCommand(Cmd))
+	{
+		// kick command buffer and try again
+		KickCommandBuffer();
+		
+		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		if(Cmd.m_pVertices == 0x0)
+		{
+			dbg_msg("graphics", "failed to allocate data for vertices");
+			return;
+		}
+
+		if(!m_pCommandBuffer->AddCommand(Cmd))
+		{
+			dbg_msg("graphics", "failed to allocate memory for render command");
+			return;
+		}
+	}
+
 	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
-	m_pCommandBuffer->AddCommand(Cmd);
 }
 
 void CGraphics_Threaded::AddVertices(int Count)
@@ -105,41 +124,6 @@ void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommand
 		pPoints[i].m_Pos.x = x * c - y * s + rCenter.x;
 		pPoints[i].m_Pos.y = x * s + y * c + rCenter.y;
 	}
-}
-
-unsigned char CGraphics_Threaded::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
-{
-	int Value = 0;
-	for(int x = 0; x < ScaleW; x++)
-		for(int y = 0; y < ScaleH; y++)
-			Value += pData[((v+y)*w+(u+x))*Bpp+Offset];
-	return Value/(ScaleW*ScaleH);
-}
-
-unsigned char *CGraphics_Threaded::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
-{
-	unsigned char *pTmpData;
-	int ScaleW = Width/NewWidth;
-	int ScaleH = Height/NewHeight;
-
-	int Bpp = 3;
-	if(Format == CImageInfo::FORMAT_RGBA)
-		Bpp = 4;
-
-	pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
-
-	int c = 0;
-	for(int y = 0; y < NewHeight; y++)
-		for(int x = 0; x < NewWidth; x++, c++)
-		{
-			pTmpData[c*Bpp] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 0, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+1] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 1, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+2] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 2, ScaleW, ScaleH, Bpp);
-			if(Bpp == 4)
-				pTmpData[c*Bpp+3] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 3, ScaleW, ScaleH, Bpp);
-		}
-
-	return pTmpData;
 }
 
 CGraphics_Threaded::CGraphics_Threaded()
@@ -228,7 +212,7 @@ void CGraphics_Threaded::WrapClamp()
 
 int CGraphics_Threaded::MemoryUsage() const
 {
-	return m_TextureMemoryUsage;
+	return m_pBackend->MemoryUsage();
 }
 
 void CGraphics_Threaded::MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
@@ -293,8 +277,7 @@ int CGraphics_Threaded::UnloadTexture(int Index)
 	Cmd.m_Slot = Index;
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextures[Index].m_Next = m_FirstFreeTexture;
-	m_TextureMemoryUsage -= m_aTextures[Index].m_MemSize;
+	m_aTextureIndices[Index] = m_FirstFreeTexture;
 	m_FirstFreeTexture = Index;
 	return 0;
 }
@@ -305,6 +288,16 @@ static int ImageFormatToTexFormat(int Format)
 	if(Format == CImageInfo::FORMAT_RGBA) return CCommandBuffer::TEXFORMAT_RGBA;
 	if(Format == CImageInfo::FORMAT_ALPHA) return CCommandBuffer::TEXFORMAT_ALPHA;
 	return CCommandBuffer::TEXFORMAT_RGBA;
+}
+
+static int ImageFormatToPixelSize(int Format)
+{
+	switch(Format)
+	{
+	case CImageInfo::FORMAT_RGB: return 3;
+	case CImageInfo::FORMAT_ALPHA: return 1;
+	default: return 4;
+	}
 }
 
 
@@ -319,13 +312,7 @@ int CGraphics_Threaded::LoadTextureRawSub(int TextureID, int x, int y, int Width
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 
 	// calculate memory usage
-	int PixelSize = 4;
-	if(Format == CImageInfo::FORMAT_RGB)
-		PixelSize = 3;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		PixelSize = 1;
-
-	int MemSize = Width*Height*PixelSize;
+	int MemSize = Width*Height*ImageFormatToPixelSize(Format);
 
 	// copy texture data
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
@@ -345,13 +332,14 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 
 	// grab texture
 	int Tex = m_FirstFreeTexture;
-	m_FirstFreeTexture = m_aTextures[Tex].m_Next;
-	m_aTextures[Tex].m_Next = -1;
+	m_FirstFreeTexture = m_aTextureIndices[Tex];
+	m_aTextureIndices[Tex] = -1;
 
 	CCommandBuffer::SCommand_Texture_Create Cmd;
 	Cmd.m_Slot = Tex;
 	Cmd.m_Width = Width;
 	Cmd.m_Height = Height;
+	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 
@@ -359,17 +347,13 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 	Cmd.m_Flags = 0;
 	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
-
-	// calculate memory usage
-	int PixelSize = 4;
-	if(Format == CImageInfo::FORMAT_RGB)
-		PixelSize = 3;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		PixelSize = 1;
-
-	int MemSize = Width*Height*PixelSize;
+	if(g_Config.m_GfxTextureCompression)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
+	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
 
 	// copy texture data
+	int MemSize = Width*Height*Cmd.m_PixelSize;
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
 	mem_copy(pTmpData, pData, MemSize);
 	Cmd.m_pData = pTmpData;
@@ -377,17 +361,6 @@ int CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	// calculate memory usage
-	int MemUsage = MemSize;
-	while(Width > 2 && Height > 2)
-	{
-		Width>>=1;
-		Height>>=1;
-		MemUsage += Width*Height*PixelSize;
-	}
-
-	m_TextureMemoryUsage += MemUsage;
-	//mem_free(pTmpData);
 	return Tex;
 }
 
@@ -675,12 +648,9 @@ void CGraphics_Threaded::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 	AddVertices(4*Num);
 }
 
-void CGraphics_Threaded::QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText)
+void CGraphics_Threaded::QuadsText(float x, float y, float Size, const char *pText)
 {
 	float StartX = x;
-
-	QuadsBegin();
-	SetColor(r,g,b,a);
 
 	while(*pText)
 	{
@@ -705,18 +675,23 @@ void CGraphics_Threaded::QuadsText(float x, float y, float Size, float r, float 
 			x += Size/2;
 		}
 	}
-
-	QuadsEnd();
 }
 
 int CGraphics_Threaded::IssueInit()
 {
 	int Flags = 0;
-	if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
+	if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+	{
+		dbg_msg("gfx", "both borderless and fullscreen activated, disabling borderless");
+		g_Config.m_GfxBorderless = 0;
+	}
+
+	if(g_Config.m_GfxBorderless) Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
+	else if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
 	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
 	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
 
-	return m_pBackend->Init("Teeworlds", g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags);
+	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags);
 }
 
 int CGraphics_Threaded::InitWindow()
@@ -766,9 +741,9 @@ int CGraphics_Threaded::Init()
 
 	// init textures
 	m_FirstFreeTexture = 0;
-	for(int i = 0; i < MAX_TEXTURES; i++)
-		m_aTextures[i].m_Next = i+1;
-	m_aTextures[MAX_TEXTURES-1].m_Next = -1;
+	for(int i = 0; i < MAX_TEXTURES-1; i++)
+		m_aTextureIndices[i] = i+1;
+	m_aTextureIndices[MAX_TEXTURES-1] = -1;
 
 	m_pBackend = CreateGraphicsBackend();
 	if(InitWindow() != 0)
@@ -843,7 +818,8 @@ void CGraphics_Threaded::Swap()
 	// TODO: screenshot support
 	if(m_DoScreenshot)
 	{
-		ScreenshotDirect(m_aScreenshotName);
+		if(WindowActive())
+			ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 

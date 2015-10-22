@@ -14,6 +14,7 @@
 
 static const unsigned char gs_aHeaderMarker[7] = {'T', 'W', 'D', 'E', 'M', 'O', 0};
 static const unsigned char gs_ActVersion = 4;
+static const unsigned char gs_OldVersion = 3;
 static const int gs_LengthOffset = 152;
 static const int gs_NumMarkersOffset = 176;
 
@@ -29,6 +30,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, unsigned Crc, const char *pType)
 {
 	CDemoHeader Header;
+	CTimelineMarkers TimelineMarkers;
 	if(m_File)
 		return -1;
 
@@ -90,9 +92,8 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
 	// Header.m_Length - add this on stop
 	str_timestamp(Header.m_aTimestamp, sizeof(Header.m_aTimestamp));
-	// Header.m_aNumTimelineMarkers - add this on stop
-	// Header.m_aTimelineMarkers - add this on stop
 	io_write(DemoFile, &Header, sizeof(Header));
+	io_write(DemoFile, &TimelineMarkers, sizeof(TimelineMarkers)); // fill this on stop
 
 	// write map data
 	while(1)
@@ -615,7 +616,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		return -1;
 	}
 
-	if(m_Info.m_Header.m_Version < gs_ActVersion)
+	if(m_Info.m_Header.m_Version < gs_OldVersion)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "demo version %d is not supported", m_Info.m_Header.m_Version);
@@ -624,6 +625,8 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		m_File = 0;
 		return -1;
 	}
+	else if(m_Info.m_Header.m_Version > gs_OldVersion)
+		io_read(m_File, &m_Info.m_TimelineMarkers, sizeof(m_Info.m_TimelineMarkers));
 
 	// get demo type
 	if(!str_comp(m_Info.m_Header.m_aType, "client"))
@@ -663,15 +666,18 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		mem_free(pMapData);
 	}
 
-	// get timeline markers
-	int Num = ((m_Info.m_Header.m_aNumTimelineMarkers[0]<<24)&0xFF000000) | ((m_Info.m_Header.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
-				((m_Info.m_Header.m_aNumTimelineMarkers[2]<<8)&0xFF00) | (m_Info.m_Header.m_aNumTimelineMarkers[3]&0xFF);
-	m_Info.m_Info.m_NumTimelineMarkers = Num;
-	for(int i = 0; i < Num && i < MAX_TIMELINE_MARKERS; i++)
+	if(m_Info.m_Header.m_Version > gs_OldVersion)
 	{
-		char *pTimelineMarker = m_Info.m_Header.m_aTimelineMarkers[i];
-		m_Info.m_Info.m_aTimelineMarkers[i] = ((pTimelineMarker[0]<<24)&0xFF000000) | ((pTimelineMarker[1]<<16)&0xFF0000) |
-												((pTimelineMarker[2]<<8)&0xFF00) | (pTimelineMarker[3]&0xFF);
+		// get timeline markers
+		int Num = ((m_Info.m_TimelineMarkers.m_aNumTimelineMarkers[0]<<24)&0xFF000000) | ((m_Info.m_TimelineMarkers.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
+					((m_Info.m_TimelineMarkers.m_aNumTimelineMarkers[2]<<8)&0xFF00) | (m_Info.m_TimelineMarkers.m_aNumTimelineMarkers[3]&0xFF);
+		m_Info.m_Info.m_NumTimelineMarkers = Num;
+		for(int i = 0; i < Num && i < MAX_TIMELINE_MARKERS; i++)
+		{
+			char *pTimelineMarker = m_Info.m_TimelineMarkers.m_aTimelineMarkers[i];
+			m_Info.m_Info.m_aTimelineMarkers[i] = ((pTimelineMarker[0]<<24)&0xFF000000) | ((pTimelineMarker[1]<<16)&0xFF0000) |
+													((pTimelineMarker[2]<<8)&0xFF00) | (pTimelineMarker[3]&0xFF);
+		}
 	}
 
 	// scan the file for interessting points
@@ -843,7 +849,7 @@ bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, i
 		return false;
 
 	io_read(File, pDemoHeader, sizeof(CDemoHeader));
-	if(mem_comp(pDemoHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pDemoHeader->m_Version < gs_ActVersion)
+	if(mem_comp(pDemoHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pDemoHeader->m_Version < gs_OldVersion)
 	{
 		io_close(File);
 		return false;

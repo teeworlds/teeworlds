@@ -37,6 +37,11 @@ enum
 CEditorImage::~CEditorImage()
 {
 	m_pEditor->Graphics()->UnloadTexture(m_TexID);
+	if(m_pData)
+	{
+		mem_free(m_pData);
+		m_pData = 0;
+	}
 }
 
 CLayerGroup::CLayerGroup()
@@ -159,35 +164,42 @@ int CLayerGroup::SwapLayers(int Index0, int Index1)
 
 void CEditorImage::AnalyseTileFlags()
 {
-	mem_zero(m_aTileFlags, sizeof(m_aTileFlags));
-
-	int tw = m_Width/16; // tilesizes
-	int th = m_Height/16;
-	if ( tw == th )
+	if(m_Format == CImageInfo::FORMAT_RGB)
 	{
-		unsigned char *pPixelData = (unsigned char *)m_pData;
-
-		int TileID = 0;
-		for(int ty = 0; ty < 16; ty++)
-			for(int tx = 0; tx < 16; tx++, TileID++)
-			{
-				bool Opaque = true;
-				for(int x = 0; x < tw; x++)
-					for(int y = 0; y < th; y++)
-					{
-						int p = (ty*tw+y)*m_Width + tx*tw+x;
-						if(pPixelData[p*4+3] < 250)
-						{
-							Opaque = false;
-							break;
-						}
-					}
-
-				if(Opaque)
-					m_aTileFlags[TileID] |= TILEFLAG_OPAQUE;
-			}
+		for(int i = 0; i < 256; ++i)
+			m_aTileFlags[i] = TILEFLAG_OPAQUE;
 	}
+	else
+	{
+		mem_zero(m_aTileFlags, sizeof(m_aTileFlags));
 
+		int tw = m_Width/16; // tilesizes
+		int th = m_Height/16;
+		if(tw == th)
+		{
+			unsigned char *pPixelData = (unsigned char *)m_pData;
+
+			int TileID = 0;
+			for(int ty = 0; ty < 16; ty++)
+				for(int tx = 0; tx < 16; tx++, TileID++)
+				{
+					bool Opaque = true;
+					for(int x = 0; x < tw; x++)
+						for(int y = 0; y < th; y++)
+						{
+							int p = (ty*tw+y)*m_Width + tx*tw+x;
+							if(pPixelData[p*4+3] < 250)
+							{
+								Opaque = false;
+								break;
+							}
+						}
+
+					if(Opaque)
+						m_aTileFlags[TileID] |= TILEFLAG_OPAQUE;
+				}
+		}
+	}
 }
 
 void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
@@ -272,7 +284,8 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
 			Len = str_length(pStr);
-			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, &Len, &s_AtIndex);
+			int NumChars = Len;
+			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
 		}
 	}
 
@@ -607,7 +620,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 
 	if(UI()->ActiveItem() == pID)
 	{
-		if(!UI()->MouseButton(0))
+		if(!UI()->MouseButton(0) || Input()->KeyDown(KEY_ESCAPE))
 		{
 			m_LockMouse = false;
 			UI()->SetActiveItem(0);
@@ -704,6 +717,11 @@ void CEditor::CallbackOpenMap(const char *pFileName, int StorageType, void *pUse
 		pEditor->SortImages();
 		pEditor->m_Dialog = DIALOG_NONE;
 		pEditor->m_Map.m_Modified = false;
+	}
+	else
+	{
+		pEditor->Reset();
+		pEditor->m_aFileName[0] = 0;
 	}
 }
 void CEditor::CallbackAppendMap(const char *pFileName, int StorageType, void *pUser)
@@ -1040,7 +1058,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	}
 }
 
-static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
+static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
 {
 	int x = pPoint->x - pCenter->x;
 	int y = pPoint->y - pCenter->y;
@@ -1430,99 +1448,126 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoQuadEnvelopes(CQuad *pQuad, int Index, int TexID)
+void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, int TexID)
 {
-	CEnvelope *pEnvelope = 0x0;
-	if(pQuad->m_PosEnv >= 0 && pQuad->m_PosEnv < m_Map.m_lEnvelopes.size())
-		pEnvelope = m_Map.m_lEnvelopes[pQuad->m_PosEnv];
-	if (!pEnvelope)
-		return;
-
-	//QuadParams
-	CPoint *pPoints = pQuad->m_aPoints;
+	int Num = lQuads.size();
+	CEnvelope **apEnvelope = new CEnvelope*[Num];
+	mem_zero(apEnvelope, sizeof(CEnvelope*)*Num);
+	for(int i = 0; i < Num; i++)
+	{
+		if((m_ShowEnvelopePreview == 1 && lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == 2)
+			if(lQuads[i].m_PosEnv >= 0 && lQuads[i].m_PosEnv < m_Map.m_lEnvelopes.size())
+				apEnvelope[i] = m_Map.m_lEnvelopes[lQuads[i].m_PosEnv];
+	}
 
 	//Draw Lines
 	Graphics()->TextureSet(-1);
 	Graphics()->LinesBegin();
-		Graphics()->SetColor(80.0f/255, 150.0f/255, 230.f/255, 0.5f);
-		for(int i = 0; i < pEnvelope->m_lPoints.size()-1; i++)
+	Graphics()->SetColor(80.0f/255, 150.0f/255, 230.f/255, 0.5f);
+	for(int j = 0; j < Num; j++)
+	{
+		if(!apEnvelope[j])
+			continue;
+
+		//QuadParams
+		const CPoint *pPoints = lQuads[j].m_aPoints;
+		for(int i = 0; i < apEnvelope[j]->m_lPoints.size()-1; i++)
 		{
-			float OffsetX =  fx2f(pEnvelope->m_lPoints[i].m_aValues[0]);
-			float OffsetY = fx2f(pEnvelope->m_lPoints[i].m_aValues[1]);
+			float OffsetX =  fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
+			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
 			vec2 Pos0 = vec2(fx2f(pPoints[4].x)+OffsetX, fx2f(pPoints[4].y)+OffsetY);
 
-			OffsetX = fx2f(pEnvelope->m_lPoints[i+1].m_aValues[0]);
-			OffsetY = fx2f(pEnvelope->m_lPoints[i+1].m_aValues[1]);
+			OffsetX = fx2f(apEnvelope[j]->m_lPoints[i+1].m_aValues[0]);
+			OffsetY = fx2f(apEnvelope[j]->m_lPoints[i+1].m_aValues[1]);
 			vec2 Pos1 = vec2(fx2f(pPoints[4].x)+OffsetX, fx2f(pPoints[4].y)+OffsetY);
 
 			IGraphics::CLineItem Line = IGraphics::CLineItem(Pos0.x, Pos0.y, Pos1.x, Pos1.y);
 			Graphics()->LinesDraw(&Line, 1);
 		}
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	Graphics()->LinesEnd();
 
 	//Draw Quads
-	for(int i = 0; i < pEnvelope->m_lPoints.size(); i++)
+	Graphics()->TextureSet(TexID);
+	Graphics()->QuadsBegin();
+	
+	for(int j = 0; j < Num; j++)
 	{
-		Graphics()->TextureSet(TexID);
-		Graphics()->QuadsBegin();
-		
-		//Calc Env Position
-		float OffsetX =  fx2f(pEnvelope->m_lPoints[i].m_aValues[0]);
-		float OffsetY = fx2f(pEnvelope->m_lPoints[i].m_aValues[1]);
-		float Rot = fx2f(pEnvelope->m_lPoints[i].m_aValues[2])/360.0f*pi*2;
+		if(!apEnvelope[j])
+			continue;
 
-		//Set Colours
-		float Alpha = (m_SelectedQuadEnvelope == pQuad->m_PosEnv && m_SelectedEnvelopePoint == i) ? 0.65f : 0.35f;
-		IGraphics::CColorVertex aArray[4] = {
-			IGraphics::CColorVertex(0, pQuad->m_aColors[0].r, pQuad->m_aColors[0].g, pQuad->m_aColors[0].b, Alpha),
-			IGraphics::CColorVertex(1, pQuad->m_aColors[1].r, pQuad->m_aColors[1].g, pQuad->m_aColors[1].b, Alpha),
-			IGraphics::CColorVertex(2, pQuad->m_aColors[2].r, pQuad->m_aColors[2].g, pQuad->m_aColors[2].b, Alpha),
-			IGraphics::CColorVertex(3, pQuad->m_aColors[3].r, pQuad->m_aColors[3].g, pQuad->m_aColors[3].b, Alpha)};
-		Graphics()->SetColorVertex(aArray, 4);
+		//QuadParams
+		const CPoint *pPoints = lQuads[j].m_aPoints;
 
-		//Rotation
-		if(Rot != 0)
+		for(int i = 0; i < apEnvelope[j]->m_lPoints.size(); i++)
 		{
-			static CPoint aRotated[4];
-			aRotated[0] = pQuad->m_aPoints[0];
-			aRotated[1] = pQuad->m_aPoints[1];
-			aRotated[2] = pQuad->m_aPoints[2];
-			aRotated[3] = pQuad->m_aPoints[3];
-			pPoints = aRotated;
+			//Calc Env Position
+			float OffsetX =  fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[0]);
+			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
+			float Rot = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[2])/360.0f*pi*2;
 
-			Rotate(&pQuad->m_aPoints[4], &aRotated[0], Rot);
-			Rotate(&pQuad->m_aPoints[4], &aRotated[1], Rot);
-			Rotate(&pQuad->m_aPoints[4], &aRotated[2], Rot);
-			Rotate(&pQuad->m_aPoints[4], &aRotated[3], Rot);
+			//Set Colours
+			float Alpha = (m_SelectedQuadEnvelope == lQuads[j].m_PosEnv && m_SelectedEnvelopePoint == i) ? 0.65f : 0.35f;
+			IGraphics::CColorVertex aArray[4] = {
+				IGraphics::CColorVertex(0, lQuads[j].m_aColors[0].r, lQuads[j].m_aColors[0].g, lQuads[j].m_aColors[0].b, Alpha),
+				IGraphics::CColorVertex(1, lQuads[j].m_aColors[1].r, lQuads[j].m_aColors[1].g, lQuads[j].m_aColors[1].b, Alpha),
+				IGraphics::CColorVertex(2, lQuads[j].m_aColors[2].r, lQuads[j].m_aColors[2].g, lQuads[j].m_aColors[2].b, Alpha),
+				IGraphics::CColorVertex(3, lQuads[j].m_aColors[3].r, lQuads[j].m_aColors[3].g, lQuads[j].m_aColors[3].b, Alpha)};
+			Graphics()->SetColorVertex(aArray, 4);
+
+			//Rotation
+			if(Rot != 0)
+			{
+				static CPoint aRotated[4];
+				aRotated[0] = lQuads[j].m_aPoints[0];
+				aRotated[1] = lQuads[j].m_aPoints[1];
+				aRotated[2] = lQuads[j].m_aPoints[2];
+				aRotated[3] = lQuads[j].m_aPoints[3];
+				pPoints = aRotated;
+
+				Rotate(&lQuads[j].m_aPoints[4], &aRotated[0], Rot);
+				Rotate(&lQuads[j].m_aPoints[4], &aRotated[1], Rot);
+				Rotate(&lQuads[j].m_aPoints[4], &aRotated[2], Rot);
+				Rotate(&lQuads[j].m_aPoints[4], &aRotated[3], Rot);
+			}
+
+			//Set Texture Coords
+			Graphics()->QuadsSetSubsetFree(
+				fx2f(lQuads[j].m_aTexcoords[0].x), fx2f(lQuads[j].m_aTexcoords[0].y),
+				fx2f(lQuads[j].m_aTexcoords[1].x), fx2f(lQuads[j].m_aTexcoords[1].y),
+				fx2f(lQuads[j].m_aTexcoords[2].x), fx2f(lQuads[j].m_aTexcoords[2].y),
+				fx2f(lQuads[j].m_aTexcoords[3].x), fx2f(lQuads[j].m_aTexcoords[3].y)
+			);
+
+			//Set Quad Coords & Draw
+			IGraphics::CFreeformItem Freeform(
+				fx2f(pPoints[0].x)+OffsetX, fx2f(pPoints[0].y)+OffsetY,
+				fx2f(pPoints[1].x)+OffsetX, fx2f(pPoints[1].y)+OffsetY,
+				fx2f(pPoints[2].x)+OffsetX, fx2f(pPoints[2].y)+OffsetY,
+				fx2f(pPoints[3].x)+OffsetX, fx2f(pPoints[3].y)+OffsetY);
+			Graphics()->QuadsDrawFreeform(&Freeform, 1);
 		}
-
-		//Set Texture Coords
-		Graphics()->QuadsSetSubsetFree(
-			fx2f(pQuad->m_aTexcoords[0].x), fx2f(pQuad->m_aTexcoords[0].y),
-			fx2f(pQuad->m_aTexcoords[1].x), fx2f(pQuad->m_aTexcoords[1].y),
-			fx2f(pQuad->m_aTexcoords[2].x), fx2f(pQuad->m_aTexcoords[2].y),
-			fx2f(pQuad->m_aTexcoords[3].x), fx2f(pQuad->m_aTexcoords[3].y)
-		);
-
-		//Set Quad Coords & Draw
-		IGraphics::CFreeformItem Freeform(
-			fx2f(pPoints[0].x)+OffsetX, fx2f(pPoints[0].y)+OffsetY,
-			fx2f(pPoints[1].x)+OffsetX, fx2f(pPoints[1].y)+OffsetY,
-			fx2f(pPoints[2].x)+OffsetX, fx2f(pPoints[2].y)+OffsetY,
-			fx2f(pPoints[3].x)+OffsetX, fx2f(pPoints[3].y)+OffsetY);
-		Graphics()->QuadsDrawFreeform(&Freeform, 1);
-
-		Graphics()->QuadsEnd();
-		
-		Graphics()->TextureSet(-1);
-		Graphics()->QuadsBegin();
-		DoQuadEnvPoint(pQuad, Index, i);
-		Graphics()->QuadsEnd();
 	}
+	Graphics()->QuadsEnd();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+
+	// Draw QuadPoints
+	for(int j = 0; j < Num; j++)
+	{
+		if(!apEnvelope[j])
+			continue;
+
+		//QuadParams
+		for(int i = 0; i < apEnvelope[j]->m_lPoints.size()-1; i++)
+			DoQuadEnvPoint(&lQuads[j], j, i);
+	}
+	Graphics()->QuadsEnd();
+	delete[] apEnvelope;
 }
 
-void CEditor::DoQuadEnvPoint(CQuad *pQuad, int QIndex, int PIndex)
+void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 {
 	enum
 	{
@@ -2120,12 +2165,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		if(pLayer->m_Image >= 0 && pLayer->m_Image < m_Map.m_lImages.size())
 			TexID = m_Map.m_lImages[pLayer->m_Image]->m_TexID;
 
-		for(int i = 0; i < pLayer->m_lQuads.size(); i++)
-		{
-			if((m_ShowEnvelopePreview == 1 && pLayer->m_lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == 2)
-				DoQuadEnvelopes(&pLayer->m_lQuads[i], i, TexID);
-		}
-
+		DoQuadEnvelopes(pLayer->m_lQuads, TexID);
 		m_ShowEnvelopePreview = 0;
     }
 
@@ -2319,8 +2359,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
 			}
-			else
-				ScrollNum = 0;
 		}
 	}
 
@@ -2457,10 +2495,16 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
 	int External = pImg->m_External;
 	pEditor->Graphics()->UnloadTexture(pImg->m_TexID);
+	if(pImg->m_pData)
+	{
+		mem_free(pImg->m_pData);
+		pImg->m_pData = 0;
+	}
 	*pImg = ImgInfo;
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	ImgInfo.m_pData = 0;
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
 	{
@@ -2489,6 +2533,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	CEditorImage *pImg = new CEditorImage(pEditor);
 	*pImg = ImgInfo;
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	ImgInfo.m_pData = 0;
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
 
@@ -2638,8 +2683,6 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
 					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
 			}
-			else
-				ScrollNum = 0;
 		}
 	}
 

@@ -7,19 +7,19 @@
 	atomic_inc - should return the value after increment
 	atomic_dec - should return the value after decrement
 	atomic_compswap - should return the value before the eventual swap
-	
+	sync_barrier - creates a full hardware fence
 */
 
 #if defined(__GNUC__)
 
 	inline unsigned atomic_inc(volatile unsigned *pValue)
 	{
-		return __sync_fetch_and_add(pValue, 1);
+		return __sync_add_and_fetch(pValue, 1);
 	}
 
 	inline unsigned atomic_dec(volatile unsigned *pValue)
 	{
-		return __sync_fetch_and_add(pValue, -1);
+		return __sync_add_and_fetch(pValue, -1);
 	}
 
 	inline unsigned atomic_compswap(volatile unsigned *pValue, unsigned comperand, unsigned value)
@@ -34,6 +34,9 @@
 
 #elif defined(_MSC_VER)
 	#include <intrin.h>
+
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
 
 	inline unsigned atomic_inc(volatile unsigned *pValue)
 	{
@@ -52,21 +55,27 @@
 
 	inline void sync_barrier()
 	{
-		_ReadWriteBarrier();
+		MemoryBarrier();
 	}
 #else
 	#error missing atomic implementation for this compiler
 #endif
 
-class semaphore
-{
-	SEMAPHORE sem;
-public:
-	semaphore() { semaphore_init(&sem); }
-	~semaphore() { semaphore_destroy(&sem); }
-	void wait() { semaphore_wait(&sem); }
-	void signal() { semaphore_signal(&sem); }
-};
+#if defined(CONF_PLATFORM_MACOSX)
+	/*
+		use semaphore provided by SDL on macosx
+	*/
+#else
+	class semaphore
+	{
+		SEMAPHORE sem;
+	public:
+		semaphore() { semaphore_init(&sem); }
+		~semaphore() { semaphore_destroy(&sem); }
+		void wait() { semaphore_wait(&sem); }
+		void signal() { semaphore_signal(&sem); }
+	};
+#endif
 
 class lock
 {

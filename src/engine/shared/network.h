@@ -36,7 +36,9 @@ enum
 	NETSTATE_ONLINE,
 
 	NETBANTYPE_SOFT=1,
-	NETBANTYPE_DROP=2
+	NETBANTYPE_DROP=2,
+
+	NETCREATE_FLAG_RANDOMPORT=1
 };
 
 
@@ -136,10 +138,12 @@ class CNetConnection
 private:
 	unsigned short m_Sequence;
 	unsigned short m_Ack;
+	unsigned short m_PeerAck;
 	unsigned m_State;
 
 	int m_Token;
 	int m_RemoteClosed;
+	bool m_BlockCloseMsg;
 
 	TStaticRingBuffer<CNetChunkResend, NET_CONN_BUFFERSIZE> m_Buffer;
 
@@ -167,7 +171,7 @@ private:
 	void Resend();
 
 public:
-	void Init(NETSOCKET Socket);
+	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
 
@@ -187,6 +191,7 @@ public:
 
 	// Needed for GotProblems in NetClient
 	int64 LastRecvTime() const { return m_LastRecvTime; }
+	int64 ConnectTime() const { return m_LastUpdateTime; }
 
 	int AckSequence() const { return m_Ack; }
 };
@@ -353,7 +358,7 @@ public:
 	int ResetErrorString();
 
 	// error and state
-	int NetType() { return m_Socket.type; }
+	int NetType() const { return m_Socket.type; }
 	int State();
 	int GotProblems();
 	const char *ErrorString();

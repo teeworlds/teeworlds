@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bytes
+
+%d of %d servers, %d players
+== %d av %d servrar, %d spelare
+
+%d%% loaded
+== %d%% laddat
+
+%ds left
+== %d sekunder kvar
+
+%i minute left
+== %i minut kvar
+
+%i minutes left
+== %i minuter kvar
+
+%i second left
+== %i sekund kvar
+
+%i seconds left
+== %i sekunder kvar
+
+%s wins!
+== %s vinner!
+
+-Page %d-
+== -Sida %d-
+
+Abort
+== Avbryt
+
+Add
+== Lägg till
+
+Add Friend
+== Lägg till kompis
+
+Address
+== Adress
+
+All
+== Alla
+
+Alpha
+== Alpha
+
+Always show name plates
+== Visa alltid namnskyltar
+
+Are you sure that you want to delete the demo?
+== Är du säker på att du vill ta bort detta demo?
+
+Are you sure that you want to quit?
+== Är du säker på att du vill avsluta?
+
+Are you sure that you want to remove the player from your friends list?
+== Är du säker på att du vill ta bort denna spelaren från din kompislista?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kontrollera inställningarna och justerar dom till din preferens innan du börjar spela.
+
+Automatically record demos
+== Spela in demon automatiskt
+
+Automatically take game over screenshot
+== Ta skärmdumpar vid matchslut
+
+Blue team
+== Blå laget
+
+Blue team wins!
+== Blå laget vann!
+
+Body
+== Kropp
+
+Call vote
+== Röstning
+
+Change settings
+== Ändra inställningar
+
+Chat
+== Chatt
+
+Clan
+== Klan
+
+Client
+== Klient
+
+Close
+== Stäng
+
+Compatible version
+== Kompatibel version
+
+Connect
+== Anslut
+
+Connecting to
+== Ansluter till
+
+Connection Problems...
+== Anslutningsproblem...
+
+Console
+== Konsol
+
+Controls
+== Kontroller
+
+Count players only
+== Räkna endast spelare
+
+Country
+== Land
+
+Crc:
+== Crc:
+
+Created:
+== Skapad:
+
+Current
+== Nuvarande
+
+Current version: %s
+== Nuvarande version: %s
+
+Custom colors
+== Egna färger
+
+Delete
+== Ta bort
+
+Delete demo
+== Ta bort demo
+
+Demo details
+== Demoinformation
+
+Demofile: %s
+== Demofil: %s
+
+Demos
+== Demon
+
+Disconnect
+== Avsluta
+
+Disconnected
+== Frånkopplad
+
+Display Modes
+== Skärmlägen
+
+Downloading map
+== Laddar ner karta
+
+Draw!
+== Oavgjort!
+
+Dynamic Camera
+== Dynamisk kamera
+
+Emoticon
+== Känsloikon
+
+Enter
+== Fortsätt
+
+Error
+== Fel
+
+Error loading demo
+== Kunde inte ladda demot
+
+FSAA samples
+== FSAA-samplingar
+
+Favorite
+== Favorit
+
+Favorites
+== Favoriter
+
+Feet
+== Fötter
+
+Filter
+== Filter
+
+Fire
+== Skjuta
+
+Folder
+== Mapp
+
+Force vote
+== Tvinga omröstning
+
+Free-View
+== Friläge
+
+Friends
+== Kompisar
+
+Fullscreen
+== Fullskärm
+
+Game
+== Spel
+
+Game info
+== Spelinfo
+
+Game over
+== Slutspelat
+
+Game type
+== Speltyp
+
+Game types:
+== Speltyper:
+
+General
+== Generellt
+
+Graphics
+== Grafik
+
+Grenade
+== Granater
+
+Hammer
+== Hammare
+
+Has people playing
+== Inte tom
+
+High Detail
+== Extra detaljer
+
+Hook
+== Haken
+
+Host address
+== Serveraddress
+
+Hue
+== Nyans
+
+Info
+== Info
+
+Internet
+== Internet
+
+Invalid Demo
+== Ogiltigt deo
+
+Join blue
+== Spela i blått
+
+Join game
+== Spela
+
+Join red
+== Spela i rött
+
+Jump
+== Hoppa
+
+Kick player
+== Kicka spelare
+
+LAN
+== LAN
+
+Language
+== Språk
+
+Length:
+== Längd
+
+Lht.
+== Ljusstyrka
+
+Loading
+== Laddar
+
+MOTD
+== Meddelande
+
+Map
+== Bana
+
+Map:
+== Bana
+
+Max Screenshots
+== Max antal skärmdumpar
+
+Max demos
+== Max antal demon
+
+Maximum ping:
+== Högsta ping:
+
+Miscellaneous
+== Övrigt
+
+Mouse sens.
+== Muskänslighet
+
+Move left
+== Gå vänster
+
+Move player to spectators
+== Flytta till åskådarna
+
+Move right
+== Gå höger
+
+Movement
+== Förflyttning
+
+Mute when not active
+== Stäng av ljudet när spelet inte är aktivt
+
+Name
+== Namn
+
+Name plates size
+== Storlek på namnskyltar
+
+Netversion:
+== Nätversion:
+
+New name:
+== Nytt namn:
+
+News
+== Nyheter
+
+Next weapon
+== Nästa vapen
+
+Nickname
+== Smeknamn
+
+No
+== Nej
+
+No password
+== Inget lösenord
+
+No servers found
+== Inga servrar hittade
+
+No servers match your filter criteria
+== Inga servrar matchar dina filterkriterer
+
+Ok
+== Ok
+
+Open
+== Öppna
+
+Parent Folder
+== Uppliggande mapp
+
+Password
+== Lösenord
+
+Password incorrect
+== Felaktigt lösenord
+
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Spela
+
+Play background music
+== Aktivera bakgrundsmusik
+
+Player
+== Spelare
+
+Player country:
+== Land
+
+Player options
+== Spelaralternativ
+
+Players
+== Spelare
+
+Please balance teams!
+== Balansera lagen!
+
+Prev. weapon
+== Föregående vapen
+
+Quality Textures
+== Kvalitetstexturer
+
+Quick search:
+== Snabbsök:
+
+Quit
+== Avsluta
+
+Quit anyway?
+== Avsluta i alla fall?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Anledning:
+
+Record demo
+== Spela in demo
+
+Red team
+== Röda laget
+
+Red team wins!
+== Röda laget vann!
+
+Refresh
+== Uppdatera
+
+Refreshing master servers
+== Uppdaterar huvudservrar
+
+Remote console
+== Serverkonsol
+
+Remove
+== Ta bort
+
+Remove friend
+== Ta bort kompis
+
+Rename
+== Byt namn
+
+Rename demo
+== Byt namn på demo
+
+Reset filter
+== Återställ filter
+
+Reset to defaults
+== Återställ till standard
+
+Rifle
+== Gevär
+
+Round
+== Runda
+
+Sample rate
+== Samplingsfrekvens
+
+Sat.
+== Mättnad
+
+Score
+== Poäng
+
+Score board
+== Poängtavla
+
+Score limit
+== Poängmål
+
+Scoreboard
+== Poänglista
+
+Screenshot
+== Skärmdump
+
+Server address:
+== Serveradress
+
+Server details
+== Serverdetaljer
+
+Server filter
+== Serverfilter
+
+Server info
+== Serverinfo
+
+Server not full
+== Lediga platser
+
+Settings
+== Inställningar
+
+Shotgun
+== Hagelgevär
+
+Show chat
+== Visa chatten
+
+Show friends only
+== Visa kompisar
+
+Show ingame HUD
+== Visa HUD i spel
+
+Show name plates
+== Visa namnskyltar
+
+Show only supported
+== Visa endast upplösningar som stöds
+
+Size:
+== Storlek:
+
+Skins
+== Utseende
+
+Sound
+== Ljud
+
+Sound error
+== Ljudfel
+
+Sound volume
+== Volym
+
+Spectate
+== Åskåda
+
+Spectate next
+== Se på nästa
+
+Spectate previous
+== Se på föregående
+
+Spectator mode
+== Åskådarläge
+
+Spectators
+== Åskådare
+
+Standard gametype
+== Standard speltyp
+
+Standard map
+== Standardkarta
+
+Stop record
+== Sluta spela in
+
+Strict gametype filter
+== Strikt speltypsfilter
+
+Sudden Death
+== Plötslig död
+
+Switch weapon on pickup
+== Byt vapen vid anskaffning
+
+Team
+== Lag
+
+Team chat
+== Lagchatt
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s är ute nu! Ladda ner det från www.teeworlds.com.
+
+Texture Compression
+== Texturkompression
+
+The audio device couldn't be initialised.
+== Ljudet kunde inte startas
+
+The server is running a non-standard tuning on a pure game type.
+== Denna server kör inte standardinställningar på en reserverad speltyp.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Det finns en osparad bana i redigeraden, du kanske vill spara den innan du avslutar.
+
+Time limit
+== Tidsbegränsning
+
+Time limit: %d min
+== Tidsgräns: %d min
+
+Try again
+== Försök igen
+
+Type
+== Typ
+
+Type:
+== Typ:
+
+UI Color
+== Gränssnittfärg
+
+Unable to delete the demo
+== Kunde inte ta bort demot
+
+Unable to rename the demo
+== Kunde inte byta namn på demot
+
+Use sounds
+== Aktivera ljudeffekter
+
+Use team colors for name plates
+== Använd lagfärger i namnskyltar
+
+V-Sync
+== V-Synk
+
+Version
+== Version
+
+Version:
+== Version:
+
+Vote command:
+== Omröstningskommando:
+
+Vote description:
+== Beskrivning:
+
+Vote no
+== Rösta nej
+
+Vote yes
+== Rösta ja
+
+Voting
+== Röstning
+
+Warmup
+== Uppvärmning
+
+Weapon
+== Vapen
+
+Welcome to Teeworlds
+== Välkommen till Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du måste starta om spelet för att ändringarna skall verkställas.
+
+Your skin
+== Ditt skin
+
+no limit
+== Ingen gräns
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+

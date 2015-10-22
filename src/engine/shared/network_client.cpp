@@ -7,7 +7,7 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 {
 	// open socket
 	NETSOCKET Socket;
-	Socket = net_udp_create(BindAddr);
+	Socket = net_udp_create(BindAddr, (Flags&NETCREATE_FLAG_RANDOMPORT) ? 1 : 0);
 	if(!Socket.type)
 		return false;
 
@@ -16,7 +16,7 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 
 	// init
 	m_Socket = Socket;
-	m_Connection.Init(m_Socket);
+	m_Connection.Init(m_Socket, false);
 	return true;
 }
 
@@ -83,7 +83,8 @@ int CNetClient::Recv(CNetChunk *pChunk)
 			}
 			else
 			{
-				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
+				if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && net_addr_comp(m_Connection.PeerAddress(), &Addr) == 0
+					&& m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
 			}
 		}

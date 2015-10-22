@@ -728,11 +728,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
 	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
 	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
+	static int s_GfxBorderless = g_Config.m_GfxBorderless;
 	static int s_GfxFullscreen = g_Config.m_GfxFullscreen;
 	static int s_GfxVsync = g_Config.m_GfxVsync;
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
 	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
 	static int s_GfxTextureCompression = g_Config.m_GfxTextureCompression;
+	static int s_GfxThreaded = g_Config.m_GfxThreaded;
 
 	CUIRect ModeList;
 	MainView.VSplitLeft(300.0f, &MainView, &ModeList);
@@ -783,9 +785,20 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// switches
 	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_GfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
+	{
+		g_Config.m_GfxBorderless ^= 1;
+		if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+			g_Config.m_GfxFullscreen = 0;
+		CheckSettings = true;
+	}
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
 		g_Config.m_GfxFullscreen ^= 1;
+		if(g_Config.m_GfxFullscreen && g_Config.m_GfxBorderless)
+			g_Config.m_GfxBorderless = 0;
 		CheckSettings = true;
 	}
 
@@ -802,8 +815,25 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		g_Config.m_GfxFsaaSamples = (g_Config.m_GfxFsaaSamples+1)%17;
 		CheckSettings = true;
 	}
+	
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_GfxThreaded, Localize("Threaded rendering"), g_Config.m_GfxThreaded, &Button))
+	{
+		g_Config.m_GfxThreaded ^= 1;
+		CheckSettings = true;
+	}
 
-	MainView.HSplitTop(40.0f, &Button, &MainView);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(g_Config.m_GfxThreaded)
+	{
+		Button.VSplitLeft(20.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_GfxAsyncRender, Localize("Handle rendering async from updates"), g_Config.m_GfxAsyncRender, &Button))
+		{
+			g_Config.m_GfxAsyncRender ^= 1;
+			CheckSettings = true;
+		}
+	}
+		
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxTextureQuality, Localize("Quality Textures"), g_Config.m_GfxTextureQuality, &Button))
 	{
@@ -836,11 +866,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(s_GfxScreenWidth == g_Config.m_GfxScreenWidth &&
 			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
 			s_GfxColorDepth == g_Config.m_GfxColorDepth &&
+			s_GfxBorderless == g_Config.m_GfxBorderless &&
 			s_GfxFullscreen == g_Config.m_GfxFullscreen &&
 			s_GfxVsync == g_Config.m_GfxVsync &&
 			s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 			s_GfxTextureQuality == g_Config.m_GfxTextureQuality &&
-			s_GfxTextureCompression == g_Config.m_GfxTextureCompression)
+			s_GfxTextureCompression == g_Config.m_GfxTextureCompression &&
+			s_GfxThreaded == g_Config.m_GfxThreaded)
 			m_NeedRestartGraphics = false;
 		else
 			m_NeedRestartGraphics = true;
@@ -904,15 +936,22 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_SndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 	{
 		g_Config.m_SndMusic ^= 1;
-		if(g_Config.m_SndMusic)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		else
-			m_pClient->m_pSounds->Stop(SOUND_MENU);
+		if(Client()->State() == IClient::STATE_OFFLINE)
+		{
+			if(g_Config.m_SndMusic)
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+			else
+				m_pClient->m_pSounds->Stop(SOUND_MENU);
+		}
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_SndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
 		g_Config.m_SndNonactiveMute ^= 1;
+
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClThreadsoundloading, Localize("Threaded sound loading"), g_Config.m_ClThreadsoundloading, &Button))
+		g_Config.m_ClThreadsoundloading ^= 1;
 
 	// sample rate box
 	{

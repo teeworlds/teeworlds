@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bajtov
+
+%d of %d servers, %d players
+== %d z %d serverov, %d hráčov online
+
+%d%% loaded
+== %d%% načítaných
+
+%ds left
+== Zostáva %ds
+
+%i minute left
+== Zostávajúce minúty: %i
+
+%i minutes left
+== Zostávajúce minúty: %i
+
+%i second left
+== Zostávajúce sekundy: %i
+
+%i seconds left
+== Zostávajúce sekundy: %i
+
+%s wins!
+== %s vyhráva!
+
+-Page %d-
+== -Strana %d-
+
+Abort
+== Zrušiť
+
+Add
+== Pridať
+
+Add Friend
+== Pridať Priateľa
+
+Address
+== Adresa
+
+All
+== Všetkým
+
+Alpha
+== Alpha
+
+Always show name plates
+== Vždy zobrazovať menovky
+
+Are you sure that you want to delete the demo?
+== Určite chcete vymazať tento záznam?
+
+Are you sure that you want to quit?
+== Ukončiť hru?
+
+Are you sure that you want to remove the player from your friends list?
+== Ste si istí, že chcete tohto hráča odstrániť zo zoznamu priateľov?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Vitajte v hre TeeWorlds. Predtým, ako sa pripojíte na herný server, odporúčame nastaviť si hru podľa svojich požiadavkov. Napíšte do políčka nižšie meno pre Vášho tee a pokračujte kliknutím na tlačítko.
+
+Automatically record demos
+== Automaticky nahrávať záznamy
+
+Automatically take game over screenshot
+== Automaticky vyfotiť koniec kola
+
+Blue team
+== Modrý tým
+
+Blue team wins!
+== Modrý tým vyhráva!
+
+Body
+== Telo
+
+Call vote
+== Hlasovať
+
+Change settings
+== Zmeniť nastavenia
+
+Chat
+== Chat
+
+Clan
+== Klan
+
+Client
+== Klient
+
+Close
+== Zavrieť
+
+Compatible version
+== Kompatibilná verzia
+
+Connect
+== Pripojiť
+
+Connecting to
+== Pripojujem sa k
+
+Connection Problems...
+== Problémy s pripojením...
+
+Console
+== Konzola
+
+Controls
+== Ovládanie
+
+Count players only
+== Nepočítať divákov
+
+Country
+== Krajina
+
+Crc:
+== Crc:
+
+Created:
+== Vytvorené:
+
+Current
+== Aktuálne
+
+Current version: %s
+== Aktuálna verzia: %s
+
+Custom colors
+== Vlastné farby
+
+Delete
+== Vymazať
+
+Delete demo
+== Vymazať záznam
+
+Demo details
+== Detaily nahrávky
+
+Demofile: %s
+== Nahrávka: %s
+
+Demos
+== Záznamy
+
+Disconnect
+== Odpojiť
+
+Disconnected
+== Prerušené spojenie
+
+Display Modes
+== Možnosti zobrazenia
+
+Downloading map
+== Sťahujem mapu
+
+Draw!
+== Remíza!
+
+Dynamic Camera
+== Dynamická kamera
+
+Emoticon
+== Smajlíci
+
+Enter
+== Vstúpiť
+
+Error
+== Chyba
+
+Error loading demo
+== Problém s otvorením záznamu
+
+FSAA samples
+== Anti-aliasing
+
+Favorite
+== Obľúbený
+
+Favorites
+== Obľúbené
+
+Feet
+== Nohy
+
+Filter
+== Filter
+
+Fire
+== Streľba
+
+Folder
+== Zložka
+
+Force vote
+== Zvoliť
+
+Free-View
+== Voľná Kamera
+
+Friends
+== Priatelia
+
+Fullscreen
+== Celá obrazovka
+
+Game
+== Hra
+
+Game info
+== Info o hre
+
+Game over
+== Koniec hry
+
+Game type
+== Herný typ
+
+Game types:
+== Herné typy:
+
+General
+== Hlavné
+
+Graphics
+== Grafika
+
+Grenade
+== Granátomet
+
+Hammer
+== Kladivo
+
+Has people playing
+== Nie je prázdny
+
+High Detail
+== Detaily
+
+Hook
+== Hook/Lano
+
+Host address
+== Hostiteľ
+
+Hue
+== Hue
+
+Info
+== Info
+
+Internet
+== Internet
+
+Invalid Demo
+== Neplatný Záznam
+
+Join blue
+== K modrým
+
+Join game
+== Hrať
+
+Join red
+== K červeným
+
+Jump
+== Skok
+
+Kick player
+== Vyhodiť hráča
+
+LAN
+== LAN
+
+Language
+== Jazyk
+
+Length:
+== Dĺžka:
+
+Lht.
+== Lht.
+
+Loading
+== Nahrávam
+
+MOTD
+== MOTD
+
+Map
+== Mapa
+
+Map:
+== Mapa:
+
+Max Screenshots
+== Maximum obrázkov
+
+Max demos
+== Maximum nahrávok
+
+Maximum ping:
+== Maximálny ping:
+
+Miscellaneous
+== Ostatné
+
+Mouse sens.
+== Citlivosť myši
+
+Move left
+== Pohyb vľavo
+
+Move player to spectators
+== Poslať hráča pozorovať
+
+Move right
+== Pohyb vpravo
+
+Movement
+== Pohyb
+
+Mute when not active
+== Stlmiť pri neaktivite
+
+Name
+== Meno
+
+Name plates size
+== Veľkosť menoviek
+
+Netversion:
+== Netversion:
+
+New name:
+== Nové meno:
+
+News
+== Novinky
+
+Next weapon
+== Ďalšia zbraň
+
+Nickname
+== Prezývka
+
+No
+== Nie
+
+No password
+== Bez hesla
+
+No servers found
+== Nenájdené žiadne servery
+
+No servers match your filter criteria
+== Žiadny server nezodpovedá zadaným kritériám
+
+Ok
+== OK
+
+Open
+== Otvoriť
+
+Parent Folder
+== Nadradený Priečinok
+
+Password
+== Heslo
+
+Password incorrect
+== Nesprávne heslo
+
+Ping
+== Ping
+
+Pistol
+== Pištoľ
+
+Play
+== Prehrať
+
+Play background music
+== Prehrať hudbu na pozadí
+
+Player
+== Hráč
+
+Player country:
+== Filter krajín:
+
+Player options
+== Nastavenia hráča
+
+Players
+== Hráči
+
+Please balance teams!
+== Prosím vyrovnajte týmy!
+
+Prev. weapon
+== Predošlá zbraň
+
+Quality Textures
+== Kvalitné textúry
+
+Quick search:
+== Hľadanie:
+
+Quit
+== Ukončiť
+
+Quit anyway?
+== Aj tak ukončiť?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Dôvod:
+
+Record demo
+== Nahrávať
+
+Red team
+== Červený tým
+
+Red team wins!
+== Červený tým vyhráva!
+
+Refresh
+== Obnoviť
+
+Refreshing master servers
+== Obnovujem master servery
+
+Remote console
+== Vzdialená konzola
+
+Remove
+== Odstrániť
+
+Remove friend
+== Vymazať priateľa
+
+Rename
+== Premenovať
+
+Rename demo
+== Premenovať nahrávku
+
+Reset filter
+== Obnoviť filter
+
+Reset to defaults
+== Vrátiť na pôvodné
+
+Rifle
+== Laser
+
+Round
+== Kolo
+
+Sample rate
+== Sample rate
+
+Sat.
+== Sat.
+
+Score
+== Skóre
+
+Score board
+== Tabuľka výsledkov
+
+Score limit
+== Limit skóre
+
+Scoreboard
+== Tabuľka výsledkov
+
+Screenshot
+== Screenshot
+
+Server address:
+== Adresa servera:
+
+Server details
+== Detaily servera
+
+Server filter
+== Filter serverov
+
+Server info
+== Informácie
+
+Server not full
+== Nie je plný
+
+Settings
+== Nastavenia
+
+Shotgun
+== Brokovnica
+
+Show chat
+== Ukázať chat
+
+Show friends only
+== Ukázať priateľov
+
+Show ingame HUD
+== Ukázať HUD
+
+Show name plates
+== Zobrazovať menovky
+
+Show only supported
+== Zobraziť len podporované
+
+Size:
+== Veľkosť:
+
+Skins
+== Skiny
+
+Sound
+== Zvuk
+
+Sound error
+== Zvuková chyba
+
+Sound volume
+== Hlasitosť
+
+Spectate
+== Pozorovať
+
+Spectate next
+== Pozorovať ďalšieho
+
+Spectate previous
+== Pozorovať predch.
+
+Spectator mode
+== Mód diváka
+
+Spectators
+== Diváci
+
+Standard gametype
+== Štandardný herný typ
+
+Standard map
+== Štandardná mapa
+
+Stop record
+== Nenahrávať
+
+Strict gametype filter
+== Striktný filter módov
+
+Sudden Death
+== Rýchla Smrť
+
+Switch weapon on pickup
+== Nastavovať zdvíhanú zbraň ako aktuálnu
+
+Team
+== Týmu
+
+Team chat
+== Týmový chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Vyšla nová verzia hry: %s! Stiahnite si ju na www.teeworlds.com!
+
+Texture Compression
+== Kompresia textúr
+
+The audio device couldn't be initialised.
+== Zvukové zariadenie nemohlo byť inicializované.
+
+The server is running a non-standard tuning on a pure game type.
+== Server používa neštandardné nastavenia na základnom hernom móde.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== V editore máte neuloženú mapu, možno si ju chcete pred skončením hry uložiť.
+
+Time limit
+== Časový limit
+
+Time limit: %d min
+== Časový limit: %d min
+
+Try again
+== Skúsiť znovu
+
+Type
+== Typ
+
+Type:
+== Typ:
+
+UI Color
+== Farba prostredia
+
+Unable to delete the demo
+== Nemôžem vymazať záznam
+
+Unable to rename the demo
+== Nahrávka sa nedá premenovať
+
+Use sounds
+== Povoliť zvuky
+
+Use team colors for name plates
+== Zafarbiť menovky podľa farieb týmov
+
+V-Sync
+== V-Sync
+
+Version
+== Verzia
+
+Version:
+== Verzia:
+
+Vote command:
+== Príkaz hlasu:
+
+Vote description:
+== Popis hlasu:
+
+Vote no
+== Nie
+
+Vote yes
+== Áno
+
+Voting
+== Hlasovanie
+
+Warmup
+== Rozohrávka
+
+Weapon
+== Zbrane
+
+Welcome to Teeworlds
+== Vitajte v hre Teeworlds!
+
+Yes
+== Áno
+
+You must restart the game for all settings to take effect.
+== Zmeny sa prejavia po reštartovaní hry.
+
+Your skin
+== Váš skin
+
+no limit
+== bez limitu
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+

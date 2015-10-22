@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d байт
+
+%d of %d servers, %d players
+== %d-тан %d сервер, %d оонньооччу
+
+%d%% loaded
+== %d%% хачайданна
+
+%ds left
+== %d сөк. хаалла
+
+%i minute left
+== %i мүнүүтэ хаалла!
+
+%i minutes left
+== %i мүнүүтэ хаалла!
+
+%i second left
+== %i сөкүүндэ хаалла!
+
+%i seconds left
+== %i сөкүүндэ хаалла!
+
+%s wins!
+== %s кыайда!
+
+-Page %d-
+== -%d страница-
+
+Abort
+== Уурат
+
+Add
+== Эп
+
+Add Friend
+== Доҕоргун эп
+
+Address
+== Аадырыс
+
+All
+== Барыта
+
+Alpha
+== Дьэҥкирэ
+
+Always show name plates
+== Оонньооччулар ааттарын наар көрдөрөр
+
+Are you sure that you want to delete the demo?
+== Демоны сотторорго сөбүлэһэҕит дуо?
+
+Are you sure that you want to quit?
+== Кырдьык тахсыаххытын баҕараҕыт дуо?
+
+Are you sure that you want to remove the player from your friends list?
+== Оонньооччуну доҕордоргут испииһигиттэн кырдьык соттороҕут дуо?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Бастакы оонньуургут быһыытынан, ааккытын баһаалыста манна суруйуҥ. Оонньуоххут иннинэ онньуу туруорууларын көрөр сүбэлэнэр.
+
+Automatically record demos
+== Демоны автоматическайдык уһул
+
+Automatically take game over screenshot
+== Оонньуу бүтүүтү скриншоттаа
+
+Blue team
+== Күөхтэр
+
+Blue team wins!
+== Күөхтэр кыайдылар!
+
+Body
+== Эттик
+
+Borderless window
+== Араамката суох түннүк
+
+Call vote
+== Куоластаа
+
+Change settings
+== Туруорууларын уларыт
+
+Chat
+== Чат
+
+Clan
+== Клан
+
+Client
+== Клиент
+
+Close
+== Таҕыс
+
+Compatible version
+== Түбэсиһэр версия
+
+Connect
+== Холбон
+
+Connecting to
+== Холбонобут
+
+Connection Problems...
+== Сибээс быһылынна...
+
+Console
+== Консоль
+
+Controls
+== Салайыы
+
+Count players only
+== Ооннь. эрэ аах
+
+Country
+== Дойдугут былааҕа
+
+Crc:
+== Crc:
+
+Created:
+== Оҥоһулунна:
+
+Current
+== Билиҥҥи
+
+Current version: %s
+== Билиҥҥи версия: %s
+
+Custom colors
+== Бэйэҥ өҥнөрүн
+
+Delete
+== Соттор
+
+Delete demo
+== Демоны соттор
+
+Demo details
+== Детали демо
+
+Demofile: %s
+== Демо: %s
+
+Demos
+== Демо
+
+Disconnect
+== Сибээһи быс
+
+Disconnected
+== Сибээс быһылынна
+
+Display Modes
+== Экран разрешенията
+
+Downloading map
+== Хачайданар карта
+
+Draw!
+== Ким да кыайбата!
+
+Dynamic Camera
+== Хамсыыр камера
+
+Emoticon
+== Эмоциялар
+
+Enter
+== Киир
+
+Error
+== Сыыһа
+
+Error loading demo
+== Демо сатаан аһыллыбата
+
+FSAA samples
+== FSAA сэмпллара
+
+Favorite
+== Сөбүлүүр
+
+Favorites
+== Сөбүлүүр
+
+Feet
+== Атахтар
+
+Filter
+== Фильтр
+
+Fire
+== Ытыы
+
+Folder
+== Папка
+
+Force vote
+== Куоластат
+
+Free-View
+== Көҥүл көрөр
+
+Friends
+== Доҕордор
+
+Fullscreen
+== Полноэкраннай режим
+
+Game
+== Оонньуу
+
+Game info
+== Оонньуу туһунан
+
+Game over
+== Оонньуу бүттэ
+
+Game paused
+== Оонньуу тохтоото
+
+Game type
+== Ооньуу көрүҥэ
+
+Game types:
+== Оонньуу көрүҥэ:
+
+General
+== Бастыҥ
+
+Graphics
+== Графика
+
+Grenade
+== Гранатомёт
+
+Hammer
+== Өтүйэ
+
+Handle rendering async from updates
+== Рендериҥы саҥардааһынтан туспа оҥор
+
+Has people playing
+== Оонньооччулардаах
+
+High Detail
+== Үрдук хаачыстыбалаах
+
+Hook
+== Тордуох
+
+Host address
+== Сервер аадырыһа
+
+Hue
+== Өҥүн быһыыта
+
+Info
+== Информация
+
+Internet
+== Интернет
+
+Invalid Demo
+== Сатаммат демо
+
+Join blue
+== Күөхтэргэ
+
+Join game
+== Киир
+
+Join red
+== Кыһылларга
+
+Jump
+== Ыстан
+
+Kick player
+== Кикайдаа
+
+LAN
+== LAN
+
+Language
+== Тыл
+
+Length:
+== Устата
+
+Lht.
+== Сырдыга
+
+Loading
+== Бэлэмнээһин
+
+MOTD
+== MOTD
+
+Map
+== Карта
+
+Map:
+== Карта:
+
+Max Screenshots
+== Скриншот макс. ахсаана
+
+Max demos
+== Демо макс. ахсаана
+
+Maximum ping:
+== Пинг макс.:
+
+Miscellaneous
+== Өссө
+
+Mouse sens.
+== Мышка билимтиэтэ
+
+Move left
+== Хаҥас хаам
+
+Move player to spectators
+== Көрөөччү гын
+
+Move right
+== Уҥа хаам
+
+Movement
+== Хаамар
+
+Mute when not active
+== Тыаһын бүөлээ паузаҕа
+
+Name
+== Аат
+
+Name plates size
+== Размера
+
+Netversion:
+== Версия:
+
+New name:
+== Саҥа аат
+
+News
+== Сонун
+
+Next weapon
+== Аныг. саа
+
+Nickname
+== Аат
+
+No
+== Суох
+
+No password
+== Пөрүөлэ суох
+
+No servers found
+== Сервер көстубэтэ
+
+No servers match your filter criteria
+== Фильтрдаммыт сервер көстубэтэ
+
+Ok
+== ОК
+
+Open
+== Ас
+
+Parent Folder
+== Төрүт директория
+
+Password
+== Пөрүөл
+
+Password incorrect
+== Сыыһа пөрүөл
+
+Ping
+== Пинг
+
+Pistol
+== Бэстэлиэт
+
+Play
+== Көр
+
+Play background music
+== Тас музыканы иһит
+
+Player
+== Оонньооччу
+
+Player country:
+== Дойдута:
+
+Player options
+== Оонньооччулар опциялара
+
+Players
+== Ооннь.
+
+Please balance teams!
+== Командалары баланстааҥ!
+
+Prev. weapon
+== Инники саа
+
+Quality Textures
+== Үчүгэй текстуралар
+
+Quick search:
+== Түргэнник көрдөө:
+
+Quit
+== Таҕыс
+
+Quit anyway?
+== Син биир тахсаҕыт?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Сылтах:
+
+Record demo
+== Демоны уһул
+
+Red team
+== Кыһыллар
+
+Red team wins!
+== Кыһыллар кыайдылар!
+
+Refresh
+== Саҥардат
+
+Refreshing master servers
+== Мастер-сервер испииһэгин саҥардабыт
+
+Remote console
+== Сервер консола
+
+Remove
+== Соттор
+
+Remove friend
+== Доҕоргун соттор
+
+Rename
+== Аатынык ааттаа
+
+Rename demo
+== Демоны атыннык ааттаа
+
+Reset filter
+== Фильтры сбростаа
+
+Reset to defaults
+== Туруоруулары сбростаа
+
+Respawn
+== Хаттан төрүүр
+
+Rifle
+== Бластер
+
+Round
+== Раунд
+
+Sample rate
+== Тыас частотата
+
+Sat.
+== Контраһа
+
+Score
+== Очко
+
+Score board
+== Табло
+
+Score limit
+== Очко лимита
+
+Scoreboard
+== Табло
+
+Screenshot
+== Скриншот
+
+Server address:
+== Сервер аадырыһа
+
+Server details
+== Сервер опциялара
+
+Server filter
+== Сервер фильтра
+
+Server info
+== Информация
+
+Server not full
+== Толорута суох сервер
+
+Settings
+== Туруоруулар
+
+Shotgun
+== Саа
+
+Show chat
+== Чаты көрдөр
+
+Show friends only
+== Доҕордоргун эрэ көрдөр
+
+Show ingame HUD
+== Оонньуу интерфейһын көрдөр
+
+Show name plates
+== Оонньооччулар ааттарын көрдөр
+
+Show only chat messages from friends
+== Доҕордоргут эрэ суруктарын көрдөр
+
+Show only supported
+== Барсар эрэ разрешенияны көрдөр
+
+Size:
+== Кээмэй:
+
+Skins
+== Тириилэр
+
+Sound
+== Тыас
+
+Sound error
+== Тыастар сыыһалара
+
+Sound volume
+== Тыас улахана
+
+Spectate
+== Көр
+
+Spectate next
+== Аныг. көр
+
+Spectate previous
+== Инникини кор
+
+Spectator mode
+== Көрөөччү буол
+
+Spectators
+== Көрөөччүлэр
+
+Standard gametype
+== Стандартнай ооннь. көрүҥэ
+
+Standard map
+== Стандартнай карта
+
+Stop record
+== Устан бүт
+
+Strict gametype filter
+== Ооннь. көр. строго фильтрдаа
+
+Sudden Death
+== Түргэн өлүү
+
+Switch weapon on pickup
+== Сааны булан ылар буол
+
+Team
+== Команда
+
+Team chat
+== Команда чата
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s таҕыста! www.teeworlds.com хачайдааҥ!
+
+Texture Compression
+== Текстураны кыччат
+
+The audio device couldn't be initialised.
+== Тыас сэбэ сатаан бэлэмнэммэтэ
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер станд. онньуу көрүҥҥэ атын опциялары кытта үлэлиир.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Редакторга суруллабатах карта баар, оонньууттан тахсыа иликкитинэ суруйуҥ.
+
+Threaded rendering
+== Потоковай рендеринг
+
+Threaded sound loading
+== Потоковая тыас бэлэмниитэ
+
+Time limit
+== Оонньуу бириэмэтэ
+
+Time limit: %d min
+== Оонньуу бириэмэтэ: %d
+
+Try again
+== ОК
+
+Type
+== Көрүҥ
+
+Type:
+== Көрүҥ:
+
+UI Color
+== Интерфейс өҥө
+
+Unable to delete the demo
+== Демо сатаан сотуллабата
+
+Unable to rename the demo
+== Демо аатын сатаан уларыйбата
+
+Use sounds
+== Тыаһы холбоо
+
+Use team colors for name plates
+== Оонньоочу аатыгар команда өҥүнэн гын
+
+V-Sync
+== Вертикальнай синхронизация
+
+Version
+== Версия
+
+Version:
+== Версия:
+
+Vote command:
+== Куоластыыр команда:
+
+Vote description:
+== Куолас сылтаҕа:
+
+Vote no
+== Сөбүлэспэт
+
+Vote yes
+== Сөп диир
+
+Voting
+== Куоластыыр
+
+Warmup
+== Разминка
+
+Weapon
+== Саа
+
+Welcome to Teeworlds
+== Teeworlds оонньуу, баһаалыста!
+
+Yes
+== Сөп
+
+You must restart the game for all settings to take effect.
+== Саһа туруоруулары холбоору оонньууну хаттаан холбоон.
+
+Your skin
+== Эһиги тириигит
+
+no limit
+== лимита суох
+
+##### needs translation #####
+
+##### old translations #####
+

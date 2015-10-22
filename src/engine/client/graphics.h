@@ -119,7 +119,7 @@ public:
 	virtual void QuadsDraw(CQuadItem *pArray, int Num);
 	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num);
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
-	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText);
+	virtual void QuadsText(float x, float y, float Size, const char *pText);
 
 	virtual int Init();
 };

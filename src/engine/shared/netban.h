@@ -34,7 +34,7 @@ protected:
 
 	bool NetMatch(const CNetRange *pRange, const NETADDR *pAddr, int Start, int Length) const
 	{
-		return pRange->m_LB.type == pAddr->type &&
+		return pRange->m_LB.type == pAddr->type && (Start == 0 || mem_comp(&pRange->m_LB.ip[0], &pAddr->ip[0], Start) == 0) &&
 			mem_comp(&pRange->m_LB.ip[Start], &pAddr->ip[Start], Length-Start) <= 0 && mem_comp(&pRange->m_UB.ip[Start], &pAddr->ip[Start], Length-Start) >= 0;
 	}
 
@@ -170,7 +170,7 @@ public:
 	class IStorage *Storage() const { return m_pStorage; }
 
 	virtual ~CNetBan() {}
-	virtual void Init(class IConsole *pConsole, class IStorage *pStorage);
+	void Init(class IConsole *pConsole, class IStorage *pStorage);
 	void Update();
 
 	virtual int BanAddr(const NETADDR *pAddr, int Seconds, const char *pReason);

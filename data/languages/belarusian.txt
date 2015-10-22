@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d байт
+
+%d of %d servers, %d players
+== %d з %d сервераў, %d гульцоў
+
+%d%% loaded
+== %d%% загружана
+
+%ds left
+== засталося %d сек.
+
+%i minute left
+== Засталася %i хвіліна!
+
+%i minutes left
+== Засталося %i хвілін!
+
+%i second left
+== Засталася %i секунда!
+
+%i seconds left
+== Засталося %i секунд!
+
+%s wins!
+== %s перамог!
+
+-Page %d-
+== -Старонка %d-
+
+Abort
+== Адмена
+
+Add
+== Дадаць
+
+Add Friend
+== Дадаць сябра
+
+Address
+== Адрас
+
+All
+== Усё
+
+Alpha
+== Празрыст.
+
+Always show name plates
+== Заўсёды паказваць нікі гульцоў
+
+Are you sure that you want to delete the demo?
+== Вы ўпэўнены, што жадаеце выдаліць дэма?
+
+Are you sure that you want to quit?
+== Вы сапраўды жадаеце выйсці?
+
+Are you sure that you want to remove the player from your friends list?
+== Вы ўпэўнены, што жадаеце выдаліць гульца з сяброў?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Бо гэта ваш першы запуск гульні, калі ласка, увядзіце свой нік у поле ніжэй. Таксама рекоммендуется праверыць налады гульні і памяняць некаторыя з іх перад тым, як пачаць гуляць.
+
+Automatically record demos
+== Аўтаматычна запісваць дэма
+
+Automatically take game over screenshot
+== Рабіць здымак вынікаў гульні
+
+Blue team
+== Сінія
+
+Blue team wins!
+== Сінія перамаглі!
+
+Body
+== Цела
+
+Borderless window
+== Акно без рамкі
+
+Call vote
+== Галасаваць
+
+Change settings
+== Змяніць налады
+
+Chat
+== Чат
+
+Clan
+== Клан
+
+Client
+== Кліент
+
+Close
+== Выйсці
+
+Compatible version
+== Сумяшчальная версія
+
+Connect
+== Падлучыцца
+
+Connecting to
+== Падлучэнне да
+
+Connection Problems...
+== Праблемы з сувяззю...
+
+Console
+== Кансоль
+
+Controls
+== Кіраванне
+
+Count players only
+== Лічыць толькі гульцоў
+
+Country
+== Сцяг вашай краіны
+
+Crc:
+== Crc:
+
+Created:
+== Створаны:
+
+Current
+== Бягучы
+
+Current version: %s
+== Бягучая версія: %s
+
+Custom colors
+== Свае колеры
+
+Delete
+== Выдаліць
+
+Delete demo
+== Выдаліць дэма
+
+Demo details
+== Дэталі дэма
+
+Demofile: %s
+== Дэма: %s
+
+Demos
+== Дэма
+
+Disconnect
+== Адключыць
+
+Disconnected
+== Адключана
+
+Display Modes
+== Дазвол экрана
+
+Downloading map
+== Спампоўка карты
+
+Draw!
+== Нічыя!
+
+Dynamic Camera
+== Дынамічная камера
+
+Emoticon
+== Эмоцыі
+
+Enter
+== Уваход
+
+Error
+== Памылка
+
+Error loading demo
+== памылка пры загрузцы дэма
+
+FSAA samples
+== Сэмплаў FSAA
+
+Favorite
+== Абраны
+
+Favorites
+== Абраныя
+
+Feet
+== Ногі
+
+Filter
+== Фільтр
+
+Fire
+== Стрэл
+
+Folder
+== Тэчка
+
+Force vote
+== Фарсіраваць
+
+Free-View
+== Вольны агляд
+
+Friends
+== Сябры
+
+Fullscreen
+== Поўнаэкранны рэжым
+
+Game
+== Гульня
+
+Game info
+== Інфа пра гульню
+
+Game over
+== Гульня скончана
+
+Game paused
+== Гульня спынена
+
+Game type
+== Тып гульні
+
+Game types:
+== Тып гульні:
+
+General
+== Асноўныя
+
+Graphics
+== Графіка
+
+Grenade
+== Гранатамёт
+
+Hammer
+== Молат
+
+Handle rendering async from updates
+== Асінхронны рэндэрынг
+
+Has people playing
+== Не пусты сервер
+
+High Detail
+== Высокая дэталізацыя
+
+Hook
+== Крук
+
+Host address
+== Адрас сервера
+
+Hue
+== Адценне
+
+Info
+== Інфа
+
+Internet
+== Інтэрнэт
+
+Invalid Demo
+== Недапушчальнае дэма
+
+Join blue
+== За сініх
+
+Join game
+== Гуляць
+
+Join red
+== За чырвоных
+
+Jump
+== Скачок
+
+Kick player
+== Забаніць гульца
+
+LAN
+== LAN
+
+Language
+== Мова
+
+Length:
+== Даўжыня
+
+Lht.
+== Яркасць
+
+Loading
+== Загрузка
+
+MOTD
+== MOTD
+
+Map
+== Карта
+
+Map:
+== Карта:
+
+Max Screenshots
+== Максімальная колькасць здымкаў
+
+Max demos
+== Максімальная колькасць дэма
+
+Maximum ping:
+== Макс. пінг:
+
+Miscellaneous
+== Дадаткова
+
+Mouse sens.
+== Адчув. мышы
+
+Move left
+== Крок налева
+
+Move player to spectators
+== Зрабіць назіральнікам
+
+Move right
+== Крок направа
+
+Movement
+== Перасоўванне
+
+Mute when not active
+== Глушыць гукі, калі гульня неактыўная
+
+Name
+== Імя
+
+Name plates size
+== Памер
+
+Netversion:
+== Версія:
+
+New name:
+== Новае імя
+
+News
+== Навіны
+
+Next weapon
+== След. зброя
+
+Nickname
+== Нік
+
+No
+== Не
+
+No password
+== Без пароля
+
+No servers found
+== Сервера не знойдзены
+
+No servers match your filter criteria
+== Няма сервераў, падыходных пад ваш фільтр
+
+Ok
+== ОК
+
+Open
+== Адкрыць
+
+Parent Folder
+== Бацькоўскі каталог
+
+Password
+== Пароль
+
+Password incorrect
+== Пароль
+
+Ping
+== Пінг
+
+Pistol
+== Пісталет
+
+Play
+== Прагляд
+
+Play background music
+== Гуляць фонавую музыку
+
+Player
+== Гулец
+
+Player country:
+== Краіна:
+
+Player options
+== Опцыі гульца
+
+Players
+== Гульцы
+
+Please balance teams!
+== Збалансуйце каманды!
+
+Prev. weapon
+== Прад. зброя
+
+Quality Textures
+== Якасныя тэкстуры
+
+Quick search:
+== Хуткі пошук:
+
+Quit
+== Выйсце
+
+Quit anyway?
+== Выйсці?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Чыннік:
+
+Record demo
+== Запісаць дэма
+
+Red team
+== Чырвоныя
+
+Red team wins!
+== Чырвоныя перамаглі!
+
+Refresh
+== Абнавіць
+
+Refreshing master servers
+== Абнаўленне спісу майстар-сервераў
+
+Remote console
+== Кансоль сервера
+
+Remove
+== Выдаліць
+
+Remove friend
+== Выдаліць сябра
+
+Rename
+== Пераназв.
+
+Rename demo
+== Пераназваць дэма
+
+Reset filter
+== Скінуць фільтры
+
+Reset to defaults
+== Скінуць налады
+
+Respawn
+== Адраджэнне
+
+Rifle
+== Бласцер
+
+Round
+== Раўнд
+
+Sample rate
+== Чашчыня
+
+Sat.
+== Кантраст
+
+Score
+== Ачкі
+
+Score board
+== Табло
+
+Score limit
+== Ліміт ачкоў
+
+Scoreboard
+== Табло
+
+Screenshot
+== Здымак
+
+Server address:
+== Адрас сервера
+
+Server details
+== Дэталі сервера
+
+Server filter
+== Фільтр сервераў
+
+Server info
+== Інфармацыя
+
+Server not full
+== Сервер не запоўнены
+
+Settings
+== Налады
+
+Shotgun
+== Драбавік
+
+Show chat
+== Паказаць чат
+
+Show friends only
+== Толькі з сябрамі
+
+Show ingame HUD
+== Паказваць нутрагульнявы HUD
+
+Show name plates
+== Паказваць нікі гульцоў
+
+Show only chat messages from friends
+== Паказваць паведамлення толькі ад сяброў
+
+Show only supported
+== Паказваць толькі падтрымоўваныя дазволы экрана
+
+Size:
+== Памер:
+
+Skins
+== Скіны
+
+Sound
+== Гук
+
+Sound error
+== Гукавая памылка
+
+Sound volume
+== Гучнасць
+
+Spectate
+== Назіраць
+
+Spectate next
+== Назіраць наст.
+
+Spectate previous
+== Назіраць папяр.
+
+Spectator mode
+== Назіральнік
+
+Spectators
+== Назіральнікі
+
+Standard gametype
+== Стандартны тып гульні
+
+Standard map
+== Стандартная карта
+
+Stop record
+== Стоп
+
+Strict gametype filter
+== Строгі фільтр рэжым.
+
+Sudden Death
+== Хуткая смерць
+
+Switch weapon on pickup
+== Перамыкаць зброю пры падборы
+
+Team
+== Каманда
+
+Team chat
+== Камандны чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Выйшла Teeworlds %s! Спампоўвайце на www.teeworlds.com!
+
+Texture Compression
+== Сціск тэкстур
+
+The audio device couldn't be initialised.
+== Аўдыё прылада не можа быць ініцыялізавана
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер запушчаны з нестандартнымі наладамі на стандартным тыпе гульні.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Ёсць незахаваная карта ў рэдактары, Вы можаце захаваць яе перад тым, як выйсці.
+
+Threaded rendering
+== Струменны рэндэрынг
+
+Threaded sound loading
+== Струменная загрузка гуку
+
+Time limit
+== Ліміт часу
+
+Time limit: %d min
+== Ліміт часу: %d
+
+Try again
+== ОК
+
+Type
+== Тып
+
+Type:
+== Тып:
+
+UI Color
+== Колер інтэрфейсу
+
+Unable to delete the demo
+== Немагчыма выдаліць дэма
+
+Unable to rename the demo
+== Немагчыма пераназваць дэма
+
+Use sounds
+== Выкарыстоўваць гукі
+
+Use team colors for name plates
+== Камандныя колеры для нікаў гульцоў
+
+V-Sync
+== Вертыкальная сінхранізацыя
+
+Version
+== Версія
+
+Version:
+== Версія:
+
+Vote command:
+== Камманда галасавання:
+
+Vote description:
+== Апісанне галасавання:
+
+Vote no
+== Супраць
+
+Vote yes
+== За
+
+Voting
+== Галасаванне
+
+Warmup
+== Размінка
+
+Weapon
+== Зброя
+
+Welcome to Teeworlds
+== Сардэчна запрашаем у Teeworlds!
+
+Yes
+== Так
+
+You must restart the game for all settings to take effect.
+== Перазапусціце гульню для ўжывання змен.
+
+Your skin
+== Ваш скін
+
+no limit
+== Без ліміту
+
+##### needs translation #####
+
+##### old translations #####
+

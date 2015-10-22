@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bytes
+
+%d of %d servers, %d players
+== %d van %d Servers, %d spelers
+
+%d%% loaded
+== %d%% is geladen
+
+%ds left
+== %ds over
+
+%i minute left
+== nog %i minuut
+
+%i minutes left
+== nog %i minuten
+
+%i second left
+== nog %i seconde
+
+%i seconds left
+== nog %i seconden
+
+%s wins!
+== %s wint!
+
+-Page %d-
+== -Pagina %d-
+
+Abort
+== Afbreken
+
+Add
+== Toevoegen
+
+Add Friend
+== Voeg vriend toe
+
+Address
+== Adres
+
+All
+== Alle
+
+Alpha
+== Alpha
+
+Always show name plates
+== Altijd naamplaten laten zien
+
+Are you sure that you want to delete the demo?
+== Weet je zeker dat je de demo wil verwijderen?
+
+Are you sure that you want to quit?
+== Weet je zeker dat je wil stoppen?
+
+Are you sure that you want to remove the player from your friends list?
+== Weet je zeker dat je deze speler uit je vriendenlijst wilt verwijderen?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Omdat dit de eerste keer is dat je het spel opstart, moet je een bijnaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren voordat je een spel start.
+
+Automatically record demos
+== Automatisch demo's opnemen
+
+Automatically take game over screenshot
+== Automatisch schermafbeeldingen nemen
+
+Blue team
+== Blauwe team
+
+Blue team wins!
+== Blauwe team wint!
+
+Body
+== Lichaam
+
+Borderless window
+== Randloos scherm
+
+Call vote
+== Stem
+
+Change settings
+== Verander instellingen
+
+Chat
+== Chat
+
+Clan
+== Clan
+
+Client
+== Client
+
+Close
+== Sluiten
+
+Compatible version
+== Samenwerkende versie
+
+Connect
+== Verbinden
+
+Connecting to
+== Verbinden met
+
+Connection Problems...
+== Verbindingsproblemen...
+
+Console
+== Console
+
+Controls
+== Besturing
+
+Count players only
+== Tel alleen spelers
+
+Country
+== Land
+
+Crc:
+== Crc:
+
+Created:
+== Gemaakt:
+
+Current
+== Huidig
+
+Current version: %s
+== Huidige versie: %s
+
+Custom colors
+== Aangepaste kleuren
+
+Delete
+== Verwijder
+
+Delete demo
+== Verwijder demo
+
+Demo details
+== Demo details
+
+Demofile: %s
+== Demobestand: %s
+
+Demos
+== Demo's
+
+Disconnect
+== Stoppen
+
+Disconnected
+== Verbinding verbroken
+
+Display Modes
+== Laat modes zien
+
+Downloading map
+== Kaart downloaden
+
+Draw!
+== Gelijkspel!
+
+Dynamic Camera
+== Dynamische camera
+
+Emoticon
+== Emoticon
+
+Enter
+== Starten
+
+Error
+== Fout
+
+Error loading demo
+== Fout bij laden demo
+
+FSAA samples
+== FSAA samples
+
+Favorite
+== Favoriet
+
+Favorites
+== Favorieten
+
+Feet
+== Voeten
+
+Filter
+== Filter
+
+Fire
+== Schieten
+
+Folder
+== Map
+
+Force vote
+== Forceer stem
+
+Free-View
+== Vrij bewegen
+
+Friends
+== Vrienden
+
+Fullscreen
+== Volledig scherm
+
+Game
+== Spel
+
+Game info
+== Spelinfo
+
+Game over
+== Spel afgelopen
+
+Game paused
+== Spel gestopt
+
+Game type
+== Speltype
+
+Game types:
+== Speltypes:
+
+General
+== Algemeen
+
+Graphics
+== Beeld
+
+Grenade
+== Granaat
+
+Hammer
+== Hamer
+
+Handle rendering async from updates
+== Behandelen renderen async van updates
+
+Has people playing
+== Mensen in server
+
+High Detail
+== Veel details
+
+Hook
+== Haak
+
+Host address
+== Server adres
+
+Hue
+== Tint
+
+Info
+== Info
+
+Internet
+== Internet
+
+Invalid Demo
+== Ongeldige demo
+
+Join blue
+== Ga bij blauw
+
+Join game
+== Binnenkomen
+
+Join red
+== Ga bij rood
+
+Jump
+== Springen
+
+Kick player
+== Kick speler
+
+LAN
+== LAN
+
+Language
+== Taal
+
+Length:
+== Lengte:
+
+Lht.
+== Licht
+
+Loading
+== Laden
+
+MOTD
+== MOTD
+
+Map
+== Kaart
+
+Map:
+== Kaart:
+
+Max Screenshots
+== Maximaal aantal schermafbeeldingen
+
+Max demos
+== Maximaal aantal demo's
+
+Maximum ping:
+== Hoogste ping:
+
+Miscellaneous
+== Diverse
+
+Mouse sens.
+== Muis resolutie
+
+Move left
+== Naar links
+
+Move player to spectators
+== Verplaats speler naar toeschouwers
+
+Move right
+== Naar rechts
+
+Movement
+== Bewegen
+
+Mute when not active
+== Dempen wanneer inactief
+
+Name
+== Naam
+
+Name plates size
+== Grootte naamplaat
+
+Netversion:
+== Netversie:
+
+New name:
+== Nieuwe naam:
+
+News
+== Nieuws
+
+Next weapon
+== Volgend wapen
+
+Nickname
+== Bijnaam
+
+No
+== Nee
+
+No password
+== Geen wachtwoord
+
+No servers found
+== Geen servers gevonden
+
+No servers match your filter criteria
+== Geen servers gevonden op zoekopdracht
+
+Ok
+== Oké
+
+Open
+== Open
+
+Parent Folder
+== Bovenliggende map
+
+Password
+== Wachtwoord
+
+Password incorrect
+== Wachtwoord verkeerd
+
+Ping
+== Ping
+
+Pistol
+== Pistool
+
+Play
+== Spelen
+
+Play background music
+== Speel achtergrondmuziek
+
+Player
+== Speler
+
+Player country:
+== Speler land:
+
+Player options
+== Speler opties
+
+Players
+== Spelers
+
+Please balance teams!
+== Balanceer teams!
+
+Prev. weapon
+== Vorig wapen
+
+Quality Textures
+== Structuurkwaliteit
+
+Quick search:
+== Snel zoeken:
+
+Quit
+== Afsluiten
+
+Quit anyway?
+== Toch afsluiten?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Reden:
+
+Record demo
+== Neem demo op
+
+Red team
+== Rode team
+
+Red team wins!
+== Rode team wint!
+
+Refresh
+== Vernieuwen
+
+Refreshing master servers
+== Masterservers vernieuwen
+
+Remote console
+== Remote console
+
+Remove
+== Verwijderen
+
+Remove friend
+== Verwijder vriend
+
+Rename
+== Hernoem
+
+Rename demo
+== Hernoem demo
+
+Reset filter
+== Herstel filter
+
+Reset to defaults
+== Standaardinstellingen
+
+Respawn
+== Respawn
+
+Rifle
+== Laser
+
+Round
+== Ronde
+
+Sample rate
+== Voorbeeldssnelheid
+
+Sat.
+== Verz.
+
+Score
+== Score
+
+Score board
+== Score bord
+
+Score limit
+== Score limiet
+
+Scoreboard
+== Scorebord
+
+Screenshot
+== Schermafbeelding
+
+Server address:
+== Serveradres:
+
+Server details
+== Serverdetails
+
+Server filter
+== Serverfilter
+
+Server info
+== Serverinfo
+
+Server not full
+== Server niet vol
+
+Settings
+== Instellingen
+
+Shotgun
+== Geweer
+
+Show chat
+== Laat chat zien
+
+Show friends only
+== Laat vrienden zien
+
+Show ingame HUD
+== Laat ingame HUD zien
+
+Show name plates
+== Laat naamplaat zien
+
+Show only chat messages from friends
+== Laat alleen chatberichten van vrienden zien
+
+Show only supported
+== Laat alleen compatibele servers zien
+
+Size:
+== Grootte:
+
+Skins
+== Skins
+
+Sound
+== Geluid
+
+Sound error
+== Geluidsfout
+
+Sound volume
+== Volume
+
+Spectate
+== Toekijken
+
+Spectate next
+== Volg volgende speler
+
+Spectate previous
+== Volg vorige speler
+
+Spectator mode
+== Toeschouwer modus
+
+Spectators
+== Toeschouwers
+
+Standard gametype
+== Standaard speltype
+
+Standard map
+== Standaard kaart
+
+Stop record
+== Stop met opnemen
+
+Strict gametype filter
+== Strikt speltype filter
+
+Sudden Death
+== Sudden Death
+
+Switch weapon on pickup
+== Verander wapen bij het oppakken
+
+Team
+== Team
+
+Team chat
+== Team chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s is uit! Download het op www.teeworlds.com!
+
+Texture Compression
+== Structuurscompressie
+
+The audio device couldn't be initialised.
+== Het geluid kon niet worden geladen.
+
+The server is running a non-standard tuning on a pure game type.
+== The server draait geen standaard spel type.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Er is een onopgeslagen kaart in de editor, misschien wil je deze opslaan voordat je stopt.
+
+Threaded rendering
+== Renderen draadmodule
+
+Threaded sound loading
+== Laden geluidslijn
+
+Time limit
+== Tijdslimiet
+
+Time limit: %d min
+== Tijdslimiet: %d minuten
+
+Try again
+== Probeer opnieuw
+
+Type
+== Type
+
+Type:
+== Type:
+
+UI Color
+== UI kleur
+
+Unable to delete the demo
+== Demo kon niet worden verwijderd
+
+Unable to rename the demo
+== Niet mogelijk om de demo te hernoemen
+
+Use sounds
+== Gebruik geluid
+
+Use team colors for name plates
+== Gebruik teamkleuren voor naamplaten
+
+V-Sync
+== V-Sync
+
+Version
+== Versie
+
+Version:
+== Versie:
+
+Vote command:
+== Stem commando:
+
+Vote description:
+== Stem omschrijving:
+
+Vote no
+== Stem nee
+
+Vote yes
+== Stem ja
+
+Voting
+== Stemmen
+
+Warmup
+== Opwarmen
+
+Weapon
+== Wapen
+
+Welcome to Teeworlds
+== Welkom bij Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== U moet het spel herstarten voordat de veranderingen effect hebben.
+
+Your skin
+== Jouw skin
+
+no limit
+== ongelimiteerd
+
+##### needs translation #####
+
+##### old translations #####
+

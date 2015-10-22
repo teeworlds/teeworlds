@@ -91,6 +91,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	};
 
 	class CNetClient m_NetClient;
+	class CNetClient m_ContactClient;
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
 	class CGhostRecorder m_GhostRecorder;
@@ -196,8 +197,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		class CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
 
-	semaphore m_GfxRenderSemaphore;
-	semaphore m_GfxStateSemaphore;
 	volatile int m_GfxState;
 	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
 	void GraphicsThread();

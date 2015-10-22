@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bytes
+
+%d of %d servers, %d players
+== %d av %d servere, %d spillere
+
+%d%% loaded
+== %d%% lastet
+
+%ds left
+== %d sekunder igjen
+
+%i minute left
+== %i minutt igjen
+
+%i minutes left
+== %i minutter igjen
+
+%i second left
+== %i sekund igjen
+
+%i seconds left
+== %i sekunder igjen
+
+%s wins!
+== %s Vinner!
+
+-Page %d-
+== -Side %d-
+
+Abort
+== Avbryt
+
+Add
+== Legg til
+
+Add Friend
+== Legg til venn
+
+Address
+== Adresse
+
+All
+== Alle
+
+Alpha
+== Synlighet
+
+Always show name plates
+== Vis alltid navnskilt
+
+Are you sure that you want to delete the demo?
+== Er du sikker på at du vil slette denne demoen?
+
+Are you sure that you want to quit?
+== Er du sikker på at du vil avslutte?
+
+Are you sure that you want to remove the player from your friends list?
+== Er du sikker på at du vil fjerne denne spilleren fra vennelisten?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Siden dette er første gang du starter spillet, må du skrive inn et kallenavn nedenfor. Det anbefales at du sjekker innstillingene for å justere dem slik du ønsker før du kobler til en server.
+
+Automatically record demos
+== Spill inn demoer automatisk
+
+Automatically take game over screenshot
+== Ta skjermbilder når runden er over
+
+Blue team
+== Blått lag
+
+Blue team wins!
+== Blått lag vant!
+
+Body
+== Kropp
+
+Borderless window
+== Vindu uten kanter
+
+Call vote
+== Stem
+
+Change settings
+== Endre innstillinger
+
+Chat
+== Chat
+
+Clan
+== Klan
+
+Client
+== Klient
+
+Close
+== Lukk
+
+Compatible version
+== Kompitabel versjon
+
+Connect
+== Koble til
+
+Connecting to
+== Kobler til
+
+Connection Problems...
+== Tilkoblingsproblemer...
+
+Console
+== Konsoll
+
+Controls
+== Kontroller
+
+Count players only
+== Tell bare spillere
+
+Country
+== Land
+
+Crc:
+== Crc:
+
+Created:
+== Opprettet:
+
+Current
+== Nåværende
+
+Current version: %s
+== Nåværende versjon: %s
+
+Custom colors
+== Egendefinerte farger
+
+Delete
+== Slett
+
+Delete demo
+== Slett demo
+
+Demo details
+== Demo detaljer
+
+Demofile: %s
+== Demo fil: %s
+
+Demos
+== Demoer
+
+Disconnect
+== Koble fra
+
+Disconnected
+== Frakoblet
+
+Display Modes
+== Skjerm moduser
+
+Downloading map
+== Laster ned banen
+
+Draw!
+== Uavgjort!
+
+Dynamic Camera
+== Dynamisk kamera
+
+Emoticon
+== Uttrykksikoner
+
+Enter
+== Enter
+
+Error
+== Feil
+
+Error loading demo
+== Kunne ikke laste in Demo`en
+
+FSAA samples
+== FSAA prøver
+
+Favorite
+== Favoritt
+
+Favorites
+== Favoritter
+
+Feet
+== Føtter
+
+Filter
+== Filter
+
+Fire
+== Skyt
+
+Folder
+== Mappe
+
+Force vote
+== Tvungen valg
+
+Free-View
+== fri-visning
+
+Friends
+== Venner
+
+Fullscreen
+== Fullskjerm
+
+Game
+== Spill
+
+Game info
+== Spill info
+
+Game over
+== Spill avsluttet
+
+Game paused
+== Pause spill
+
+Game type
+== Spilltype
+
+Game types:
+== Spilletyper:
+
+General
+== Generelt
+
+Graphics
+== Grafikk
+
+Grenade
+== Granat
+
+Hammer
+== Hammer
+
+Handle rendering async from updates
+== Håndtere rendring async fra oppdateringer
+
+Has people playing
+== Har spillere
+
+High Detail
+== Høye detaljer
+
+Hook
+== Gripe tang
+
+Host address
+== Serveradresse
+
+Hue
+== Farge
+
+Info
+== Info
+
+Internet
+== Internett
+
+Invalid Demo
+== Ugyldig Demo
+
+Join blue
+== Join blå
+
+Join game
+== Join spillet
+
+Join red
+== Join rød
+
+Jump
+== Hopp
+
+Kick player
+== Kast ut spiller
+
+LAN
+== LAN
+
+Language
+== Språk
+
+Length:
+== Lengde
+
+Lht.
+== Lysstyrke
+
+Loading
+== Laster inn
+
+MOTD
+== Dagens melding
+
+Map
+== Bane
+
+Map:
+== Bane:
+
+Max Screenshots
+== Maks antall skjermbilder
+
+Max demos
+== Maks antall demoer
+
+Maximum ping:
+== Maks ping:
+
+Miscellaneous
+== Diverse
+
+Mouse sens.
+== Mushastighet
+
+Move left
+== Gå til venstre
+
+Move player to spectators
+== Gjør spiller til tilskuer
+
+Move right
+== Gå til høyre
+
+Movement
+== Beveglighet
+
+Mute when not active
+== Slå av lyd når spillet ikke er aktivt
+
+Name
+== Navn
+
+Name plates size
+== Størrelse på navnskilt
+
+Netversion:
+== Net versjon:
+
+New name:
+== Nytt navn:
+
+News
+== Nyheter
+
+Next weapon
+== Neste Våpen
+
+Nickname
+== Kallenavn
+
+No
+== Nei
+
+No password
+== ikke passord
+
+No servers found
+== Ingen servere funnet
+
+No servers match your filter criteria
+== Ingen servere tilsvarer dine filter kriterier
+
+Ok
+== Ok
+
+Open
+== Åpne
+
+Parent Folder
+== Forrige mappe
+
+Password
+== Passord
+
+Password incorrect
+== Feil passord
+
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Spill
+
+Play background music
+== Spill bakrunds musikk
+
+Player
+== Spiller
+
+Player country:
+== spiller landet
+
+Player options
+== Spillerinstillinger
+
+Players
+== Spillere
+
+Please balance teams!
+== Balanser lagene!
+
+Prev. weapon
+== Forrige våpen
+
+Quality Textures
+== Teksturkvalitet
+
+Quick search:
+== Raskt Søk:
+
+Quit
+== Avslutt
+
+Quit anyway?
+== Avslutt uansett?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Grunn:
+
+Record demo
+== Record demo
+
+Red team
+== Rødt lag
+
+Red team wins!
+== Rødt lag vant!
+
+Refresh
+== Oppdater
+
+Refreshing master servers
+== Opdaterer master servere
+
+Remote console
+== Server konsoll
+
+Remove
+== Ta bort
+
+Remove friend
+== Ta bort venn
+
+Rename
+== Gi nytt navn
+
+Rename demo
+== Gi nytt navn på Demo
+
+Reset filter
+== Tilbakestill filteret
+
+Reset to defaults
+== Tilbakestill standardinstillinger
+
+Respawn
+== Respawn
+
+Rifle
+== Laser
+
+Round
+== Runde
+
+Sample rate
+== Enkel frekvens
+
+Sat.
+== Metning
+
+Score
+== Poeng
+
+Score board
+== Poengliste
+
+Score limit
+== Poenggrense
+
+Scoreboard
+== Poengliste
+
+Screenshot
+== Skjermbilde
+
+Server address:
+== Serveradresse
+
+Server details
+== Serverdetaljer
+
+Server filter
+== Serverfilter
+
+Server info
+== Serverinfo
+
+Server not full
+== Serveren er ikke full
+
+Settings
+== Instillinger
+
+Shotgun
+== Hagle
+
+Show chat
+== Vis samtale
+
+Show friends only
+== Vis venner
+
+Show ingame HUD
+== Vis HUD i spillet
+
+Show name plates
+== Vis navnskilt
+
+Show only chat messages from friends
+== Vis bare chat meldinger fra venner
+
+Show only supported
+== Vis kompatible
+
+Size:
+== Størrelse:
+
+Skins
+== Utseender
+
+Sound
+== Lyd
+
+Sound error
+== Lydfeil
+
+Sound volume
+== Lydvolum
+
+Spectate
+== Se på
+
+Spectate next
+== Se på neste
+
+Spectate previous
+== Se på forige
+
+Spectator mode
+== Tilhenger modus
+
+Spectators
+== Tilskuere:
+
+Standard gametype
+== Standard spilletyper
+
+Standard map
+== Standard bane
+
+Stop record
+== Stopp inspilling
+
+Strict gametype filter
+== spilltype-filter
+
+Sudden Death
+== Brå død
+
+Switch weapon on pickup
+== Bytt våpen ved innsamling
+
+Team
+== Lag
+
+Team chat
+== Lagsamtale
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s er ute! Last ned på www.teeworlds.com!
+
+Texture Compression
+== Teksturkompressjon
+
+The audio device couldn't be initialised.
+== Lydenheten kunne ikke initialiseres.
+
+The server is running a non-standard tuning on a pure game type.
+== Denne serveren kjører ikke standard-innstillinger på standard spilltype.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Det er en ulagret bane i baneredigereren, du vil kanskje lagre den før du avslutter.
+
+Threaded rendering
+== Threaded rendering
+
+Threaded sound loading
+== Threaded sound loading
+
+Time limit
+== Tidsbegrensning
+
+Time limit: %d min
+== Tidsgrense: %d min
+
+Try again
+== Prøv igjen
+
+Type
+== Type
+
+Type:
+== Type:
+
+UI Color
+== Menyfarge
+
+Unable to delete the demo
+== Kunne ikke slette demoen
+
+Unable to rename the demo
+== Kunne ikke endre navn på demoen
+
+Use sounds
+== Lyd på
+
+Use team colors for name plates
+== Bruk lagfarger for navnskilt
+
+V-Sync
+== V-Sync
+
+Version
+== Versjon
+
+Version:
+== Versjon:
+
+Vote command:
+== Stemmingskommando:
+
+Vote description:
+== Stemmebeskrivelse:
+
+Vote no
+== Stem Nei
+
+Vote yes
+== Stem Ja
+
+Voting
+== Stemming
+
+Warmup
+== Oppvarming
+
+Weapon
+== Våpen
+
+Welcome to Teeworlds
+== Velkommen til Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du må starte spillet på nytt før alle endringene tar effekt.
+
+Your skin
+== Ditt utseende
+
+no limit
+== Ingen begrensninger
+
+##### needs translation #####
+
+##### old translations #####
+

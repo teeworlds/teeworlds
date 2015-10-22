@@ -102,9 +102,10 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		}
 
 		bool Opaque = false;
+		/* TODO: Analyze quadtexture
 		if(a < 0.01f || (q->m_aColors[0].a < 0.01f && q->m_aColors[1].a < 0.01f && q->m_aColors[2].a < 0.01f && q->m_aColors[3].a < 0.01f))
 			Opaque = true;
-
+		*/
 		if(Opaque && !(RenderFlags&LAYERRENDERFLAG_OPAQUE))
 			continue;
 		if(!Opaque && !(RenderFlags&LAYERRENDERFLAG_TRANSPARENT))
@@ -239,7 +240,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 				unsigned char Flags = pTiles[c].m_Flags;
 
 				bool Render = false;
-				if(Flags&TILEFLAG_OPAQUE)
+				if(Flags&TILEFLAG_OPAQUE && Color.a*a > 254.0f/255.0f)
 				{
 					if(RenderFlags&LAYERRENDERFLAG_OPAQUE)
 						Render = true;

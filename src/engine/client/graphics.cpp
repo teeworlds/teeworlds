@@ -22,6 +22,20 @@
 #include "graphics.h"
 
 
+#if defined(CONF_PLATFORM_MACOSX)
+
+	class semaphore
+	{
+		SDL_sem *sem;
+	public:
+		semaphore() { sem = SDL_CreateSemaphore(0); }
+		~semaphore() { SDL_DestroySemaphore(sem); }
+		void wait() { SDL_SemWait(sem); }
+		void signal() { SDL_SemPost(sem); }
+	};
+#endif
+
+
 static CVideoMode g_aFakeModes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
 	{720,400,8,8,8}, {768,576,8,8,8}, {800,600,8,8,8},
@@ -686,12 +700,9 @@ void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
 	AddVertices(4*Num);
 }
 
-void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText)
+void CGraphics_OpenGL::QuadsText(float x, float y, float Size, const char *pText)
 {
 	float StartX = x;
-
-	QuadsBegin();
-	SetColor(r,g,b,a);
 
 	while(*pText)
 	{
@@ -716,8 +727,6 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 			x += Size/2;
 		}
 	}
-
-	QuadsEnd();
 }
 
 int CGraphics_OpenGL::Init()
@@ -761,11 +770,18 @@ int CGraphics_OpenGL::Init()
 
 int CGraphics_SDL::TryInit()
 {
-	m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	m_ScreenHeight = g_Config.m_GfxScreenHeight;
-
 	const SDL_VideoInfo *pInfo = SDL_GetVideoInfo();
 	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE); // prevent stuck mouse cursor sdl-bug when loosing fullscreen focus in windows
+
+	// use current resolution as default
+	if(g_Config.m_GfxScreenWidth == 0 || g_Config.m_GfxScreenHeight == 0)
+	{
+		g_Config.m_GfxScreenWidth = pInfo->current_w;
+		g_Config.m_GfxScreenHeight = pInfo->current_h;
+	}
+
+	m_ScreenWidth = g_Config.m_GfxScreenWidth;
+	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// set flags
 	int Flags = SDL_OPENGL;
@@ -780,7 +796,15 @@ int CGraphics_SDL::TryInit()
 	if(pInfo->blit_hw) // ignore_convention
 		Flags |= SDL_HWACCEL;
 
-	if(g_Config.m_GfxFullscreen)
+	if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
+	{
+		dbg_msg("gfx", "both borderless and fullscreen activated, disabling borderless");
+		g_Config.m_GfxBorderless = 0;
+	}
+
+	if(g_Config.m_GfxBorderless)
+		Flags |= SDL_NOFRAME;
+	else if(g_Config.m_GfxFullscreen)
 		Flags |= SDL_FULLSCREEN;
 
 	// set gl attributes
@@ -876,7 +900,7 @@ int CGraphics_SDL::Init()
 
 	#ifdef CONF_FAMILY_WINDOWS
 		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-			putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+			putenv("SDL_VIDEO_WINDOW_POS=center"); // ignore_convention
 	#endif
 
 	if(InitWindow() != 0)
@@ -929,7 +953,8 @@ void CGraphics_SDL::Swap()
 {
 	if(m_DoScreenshot)
 	{
-		ScreenshotDirect(m_aScreenshotName);
+		if(WindowActive())
+			ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 

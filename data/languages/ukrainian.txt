@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d/%d серверів, %d гравців
+
+%d%% loaded
+== %d%% завантажено
+
+%ds left
+== залишилось %d сек.
+
+Abort
+== Відміна
+
+Address
+== Адреса
+
+All
+== Всі
+
+Alpha
+== Прозор..
+
+Always show name plates
+== Завжди показувати ніки гравців
+
+Are you sure that you want to delete the demo?
+== Ви впевнені, що хочете видалити демо?
+
+Are you sure that you want to quit?
+== Ви дійсно бажаєте вийти?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Так як це ваш перший запуск гри, будь ласка, введіть свій нік у полі нижче. Також рекомендуємо перевірити налаштування гри і змінити деякі з них, перед тим, як почати грати.
+
+Blue team
+== Сині
+
+Blue team wins!
+== Сині перемогли!
+
+Body
+== Тіло
+
+Call vote
+== Голосувати
+
+Chat
+== Чат
+
+Close
+== Зачинити
+
+Compatible version
+== Сумісна версія
+
+Connect
+== Під’єднатись
+
+Connecting to
+== Підключення до
+
+Connection Problems...
+== Проблеми зі з'єднанням...
+
+Console
+== Консоль
+
+Controls
+== Управління
+
+Current
+== Поточний
+
+Current version: %s
+== Поточна версія: %s
+
+Custom colors
+== Особистий колір
+
+Delete
+== Видалити
+
+Demos
+== Демо
+
+Disconnect
+== Від'єднатись
+
+Disconnected
+== Від'єднанно
+
+Display Modes
+== Режими дисплея
+
+Downloading map
+== Завантаження карти
+
+Draw!
+== Нічия!
+
+Dynamic Camera
+== Динамічна камера
+
+Emoticon
+== Емоція
+
+Enter
+== Вхід
+
+Error
+== Помилка
+
+Error loading demo
+== Помилка при завантаженні демо
+
+FSAA samples
+== Семплів FSAA
+
+Favorite
+== Обраний
+
+Favorites
+== Обрані
+
+Feet
+== Ноги
+
+Filter
+== Фільтр
+
+Fire
+== Постріл
+
+Folder
+== Папка
+
+Force vote
+== Форсувати
+
+Fullscreen
+== Повноекранний режим
+
+Game
+== Гра
+
+Game info
+== Інфо по грі
+
+Game over
+== Гра закінчена
+
+Game type
+== Тип гри
+
+Game types:
+== Типи гри:
+
+General
+== Основні
+
+Graphics
+== Графіка
+
+Grenade
+== Ракетниця
+
+Hammer
+== Молоток
+
+Has people playing
+== Сервер не порожній
+
+High Detail
+== Висока деталізація
+
+Hook
+== Гак
+
+Host address
+== Адреса сервера
+
+Hue
+== Відтінок
+
+Info
+== Інфо
+
+Internet
+== Інтернет
+
+Invalid Demo
+== Невірне демо
+
+Join blue
+== За синіх
+
+Join game
+== Приєднатись до гри
+
+Join red
+== За червоних
+
+Jump
+== Стрибок
+
+LAN
+== LAN
+
+Language
+== Мова
+
+Lht.
+== Яскравість
+
+Loading
+== Завантаження
+
+MOTD
+== MOTD
+
+Map
+== Карта
+
+Maximum ping:
+== Макс. пінг:
+
+Miscellaneous
+== Додатково
+
+Mouse sens.
+== Чутлив. миші
+
+Move left
+== Вліво
+
+Move right
+== Вправо
+
+Movement
+== Переміщення
+
+Mute when not active
+== Глушити звуки, коли гра неактивна
+
+Name
+== Ім'я
+
+News
+== Новини
+
+Next weapon
+== Наступ. зброя
+
+Nickname
+== Нік
+
+No
+== Ні
+
+No password
+== Без пароля
+
+No servers found
+== Сервера не знайдені
+
+No servers match your filter criteria
+== Не знайдено ні одного сервара, який би відповідав вашим критеріям
+
+Ok
+== Ок
+
+Open
+== Відкрити
+
+Password
+== Пароль
+
+Password incorrect
+== пароль введено невірно
+
+Ping
+== Пінг
+
+Pistol
+== Пістолет
+
+Play
+== Перегляд
+
+Player
+== Гравець
+
+Players
+== Гравці
+
+Please balance teams!
+== Збалансуйте команди!
+
+Prev. weapon
+== Попер. зброя
+
+Quality Textures
+== Якісні текстури
+
+Quick search:
+== Швидкий пошук:
+
+Quit
+== Вихід
+
+Reason:
+== Причина:
+
+Record demo
+== Запис демо
+
+Red team
+== Червоні
+
+Red team wins!
+== Червоні перемогли!
+
+Refresh
+== Оновити
+
+Refreshing master servers
+== Оновлення списку майстер-сервера
+
+Remote console
+== Консоль сервера
+
+Reset filter
+== Скинути фільтри
+
+Reset to defaults
+== Скинути налаштування
+
+Rifle
+== Лазер
+
+Round
+== Раунд
+
+Sample rate
+== Частота
+
+Sat.
+== Контраст.
+
+Score
+== Очки
+
+Score board
+== Табло
+
+Score limit
+== Ліміт очок
+
+Scoreboard
+== Хід гри
+
+Screenshot
+== Скріншот
+
+Server details
+== Деталі сервера
+
+Server info
+== Інформація
+
+Server not full
+== Сервер не заповнений
+
+Settings
+== Налаштування
+
+Shotgun
+== Дробовик
+
+Show chat
+== Показати чат
+
+Show name plates
+== Показувати ніки гравців
+
+Show only supported
+== Тільки підтримувані режими
+
+Skins
+== Скіни
+
+Sound
+== Звук
+
+Sound volume
+== Гучність звуку
+
+Spectate
+== Спостерігати
+
+Spectators
+== Спостерігачі
+
+Standard gametype
+== Стандартний тип гри
+
+Standard map
+== Стандартна карта
+
+Stop record
+== Зупинити запис
+
+Sudden Death
+== Швидка смерть
+
+Switch weapon on pickup
+== Перемикати зброю при підборі
+
+Team
+== Команда
+
+Team chat
+== Командний чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Вийшла Teeworlds %s! Завантажуйте на www.teeworlds.com!
+
+Texture Compression
+== Стиснення текстур
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер запущено з нестандартними налаштуваннями на стандартному типі гри.
+
+Time limit
+== Ліміт часу
+
+Time limit: %d min
+== Ліміт часу: %d хв
+
+Try again
+== Спробувати знову
+
+Type
+== Тип
+
+UI Color
+== колір інтерфейсу
+
+Use sounds
+== Використовувати звуки
+
+V-Sync
+== Вертикальна синхронізація
+
+Version
+== Версія
+
+Vote no
+== Проти
+
+Vote yes
+== За
+
+Voting
+== Голосування
+
+Warmup
+== Розминка
+
+Weapon
+== зброя
+
+Welcome to Teeworlds
+== Ласкаво просимо в Teeworlds!
+
+Yes
+== Так
+
+You must restart the game for all settings to take effect.
+== Перезапустіть гру для застосування змін.
+
+Your skin
+== Ваш скін
+
+##### needs translation #####
+
+%d Bytes
+== 
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
+%s wins!
+== 
+
+-Page %d-
+== 
+
+Add
+== 
+
+Add Friend
+== 
+
+Are you sure that you want to remove the player from your friends list?
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Borderless window
+== 
+
+Change settings
+== 
+
+Clan
+== 
+
+Client
+== 
+
+Count players only
+== 
+
+Country
+== 
+
+Crc:
+== 
+
+Created:
+== 
+
+Delete demo
+== 
+
+Demo details
+== 
+
+Demofile: %s
+== 
+
+Free-View
+== 
+
+Friends
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Kick player
+== 
+
+Length:
+== 
+
+Map:
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Move player to spectators
+== 
+
+Name plates size
+== 
+
+Netversion:
+== 
+
+New name:
+== 
+
+Parent Folder
+== 
+
+Play background music
+== 
+
+Player country:
+== 
+
+Player options
+== 
+
+Quit anyway?
+== 
+
+REC %3d:%02d
+== 
+
+Remove
+== 
+
+Remove friend
+== 
+
+Rename
+== 
+
+Rename demo
+== 
+
+Respawn
+== 
+
+Server address:
+== 
+
+Server filter
+== 
+
+Show friends only
+== 
+
+Show ingame HUD
+== 
+
+Show only chat messages from friends
+== 
+
+Size:
+== 
+
+Sound error
+== 
+
+Spectate next
+== 
+
+Spectate previous
+== 
+
+Spectator mode
+== 
+
+Strict gametype filter
+== 
+
+The audio device couldn't be initialised.
+== 
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+Type:
+== 
+
+Unable to delete the demo
+== 
+
+Unable to rename the demo
+== 
+
+Use team colors for name plates
+== 
+
+Version:
+== 
+
+Vote command:
+== 
+
+Vote description:
+== 
+
+no limit
+== 
+
+##### old translations #####
+

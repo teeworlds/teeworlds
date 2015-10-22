@@ -80,7 +80,7 @@ void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
 
 void dbg_break()
 {
-	*((unsigned*)0) = 0x0;
+	*((volatile unsigned*)0) = 0x0;
 }
 
 void dbg_msg(const char *sys, const char *fmt, ...)
@@ -166,6 +166,8 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 	MEMTAIL *tail;
 	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
 	dbg_assert(header != 0, "mem_alloc failure");
+	if(!header)
+		return NULL;
 	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
 	header->size = size;
 	header->filename = filename;
@@ -477,7 +479,7 @@ int lock_try(LOCK lock)
 #if defined(CONF_FAMILY_UNIX)
 	return pthread_mutex_trylock((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
-	return TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
+	return !TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -505,18 +507,20 @@ void lock_release(LOCK lock)
 #endif
 }
 
-#if defined(CONF_FAMILY_UNIX)
-void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
-void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
-void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
-void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
-#elif defined(CONF_FAMILY_WINDOWS)
-void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
-void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, 0L); }
-void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
-void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
-#else
-	#error not implemented on this platform
+#if !defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_FAMILY_UNIX)
+	void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
+	void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
+	void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
+	void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
+	#elif defined(CONF_FAMILY_WINDOWS)
+	void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
+	void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
+	void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
+	void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
+	#else
+		#error not implemented on this platform
+	#endif
 #endif
 
 
@@ -848,7 +852,7 @@ static int priv_net_close_all_sockets(NETSOCKET sock)
 	return 0;
 }
 
-static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen)
+static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen, int use_random_port)
 {
 	int sock, e;
 
@@ -878,31 +882,51 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 #endif
 
 	/* bind the socket */
-	e = bind(sock, addr, sockaddrlen);
-	if(e != 0 && type != SOCK_STREAM) // TODO: find out why e is -1 but no error
+	while(1)
 	{
+		/* pick random port */
+		if(use_random_port)
+		{
+			int port = htons(rand()%16384+49152);	/* 49152 to 65535 */
+			if(domain == AF_INET)
+				((struct sockaddr_in *)(addr))->sin_port = port;
+			else
+				((struct sockaddr_in6 *)(addr))->sin6_port = port;
+		}
+
+		e = bind(sock, addr, sockaddrlen);
+		if(e == 0)
+			break;
+		else
+		{
 #if defined(CONF_FAMILY_WINDOWS)
-		char buf[128];
-		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
+			char buf[128];
+			int error = WSAGetLastError();
+			if(error == WSAEADDRINUSE && use_random_port)
+				continue;
+			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
+				buf[0] = 0;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
+			if(errno == EADDRINUSE && use_random_port)
+				continue;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
 #endif
-		priv_net_close_socket(sock);
-		return -1;
+			priv_net_close_socket(sock);
+			return -1;
+		}
 	}
 
 	/* return the newly created socket */
 	return sock;
 }
 
-NETSOCKET net_udp_create(NETADDR bindaddr)
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port)
 {
 	NETSOCKET sock = invalid_socket;
 	NETADDR tmpbindaddr = bindaddr;
 	int broadcast = 1;
+	int recvsize = 65536;
 
 	if(bindaddr.type&NETTYPE_IPV4)
 	{
@@ -912,18 +936,18 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
 			sock.ipv4sock = socket;
+
+			/* set boardcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
 
 	if(bindaddr.type&NETTYPE_IPV6)
@@ -934,19 +958,22 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
 			sock.ipv6sock = socket;
+
+			/* set boardcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
+
+	/* set non-blocking */
+	net_set_non_blocking(sock);
 
 	/* return */
 	return sock;
@@ -1068,7 +1095,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
@@ -1084,7 +1111,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
@@ -1878,6 +1905,27 @@ int str_toint(const char *str) { return atoi(str); }
 float str_tofloat(const char *str) { return atof(str); }
 
 
+const char *str_utf8_skip_whitespaces(const char *str)
+{
+	const char *str_old;
+	int code;
+
+	while(*str)
+	{
+		str_old = str;
+		code = str_utf8_decode(&str);
+
+		// check if unicode is not empty
+		if(code > 0x20 && code != 0xA0 && code != 0x034F && (code < 0x2000 || code > 0x200F) && (code < 0x2028 || code > 0x202F) &&
+			(code < 0x205F || code > 0x2064) && (code < 0x206A || code > 0x206F) && (code < 0xFE00 || code > 0xFE0F) &&
+			code != 0xFEFF && (code < 0xFFF9 || code > 0xFFFC))
+		{
+			return str_old;
+		}
+	}
+
+	return str;
+}
 
 static int str_utf8_isstart(char c)
 {
@@ -1975,24 +2023,24 @@ int str_utf8_decode(const char **ptr)
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
 		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x3F) << 6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x80 || ch > 0x7FF) ch = -1;
 		}
 		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
 		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x1F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x800 || ch > 0xFFFF) ch = -1;
 		}
 		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
 		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x0F) << 18; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x10000 || ch > 0x10FFFF) ch = -1;
 		}
 		else
 		{

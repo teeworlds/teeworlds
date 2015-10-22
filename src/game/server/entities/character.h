@@ -97,6 +97,7 @@ private:
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;
+	int m_LastNoAmmoSound;
 
 	// these are non-heldback inputs
 	CNetObj_PlayerInput m_LatestPrevInput;

@@ -13,6 +13,7 @@ void CNetConnection::Reset()
 {
 	m_Sequence = 0;
 	m_Ack = 0;
+	m_PeerAck = 0;
 	m_RemoteClosed = 0;
 
 	m_State = NET_CONNSTATE_OFFLINE;
@@ -37,12 +38,13 @@ void CNetConnection::SetError(const char *pString)
 	str_copy(m_ErrorString, pString, sizeof(m_ErrorString));
 }
 
-void CNetConnection::Init(NETSOCKET Socket)
+void CNetConnection::Init(NETSOCKET Socket, bool BlockCloseMsg)
 {
 	Reset();
 	ResetStats();
 
 	m_Socket = Socket;
+	m_BlockCloseMsg = BlockCloseMsg;
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 }
 
@@ -185,9 +187,13 @@ void CNetConnection::Disconnect(const char *pReason)
 		else
 			SendControl(NET_CTRLMSG_CLOSE, 0, 0);
 
-		m_ErrorString[0] = 0;
-		if(pReason)
-			str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+		if(pReason != m_ErrorString)
+		{
+			if(pReason)
+				str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+			else
+				m_ErrorString[0] = 0;
+		}
 	}
 
 	Reset();
@@ -195,6 +201,19 @@ void CNetConnection::Disconnect(const char *pReason)
 
 int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 {
+	// check if actual ack value is valid(own sequence..latest peer ack)
+	if(m_Sequence >= m_PeerAck)
+	{
+		if(pPacket->m_Ack < m_PeerAck || pPacket->m_Ack > m_Sequence)
+			return 0;
+	}
+	else
+	{
+		if(pPacket->m_Ack < m_PeerAck && pPacket->m_Ack > m_Sequence)
+			return 0;
+	}
+	m_PeerAck = pPacket->m_Ack;
+
 	int64 Now = time_get();
 
 	// check if resend is requested
@@ -213,24 +232,25 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				m_State = NET_CONNSTATE_ERROR;
 				m_RemoteClosed = 1;
 
-				if(pPacket->m_DataSize)
+				char Str[128] = {0};
+				if(pPacket->m_DataSize > 1)
 				{
 					// make sure to sanitize the error string form the other party
-					char Str[128];
 					if(pPacket->m_DataSize < 128)
-						str_copy(Str, (char *)pPacket->m_aChunkData, pPacket->m_DataSize);
+						str_copy(Str, (char *)&pPacket->m_aChunkData[1], pPacket->m_DataSize);
 					else
-						str_copy(Str, (char *)pPacket->m_aChunkData, sizeof(Str));
+						str_copy(Str, (char *)&pPacket->m_aChunkData[1], sizeof(Str));
 					str_sanitize_strong(Str);
+				}
 
+				if(!m_BlockCloseMsg)
+				{
 					// set the error string
 					SetError(Str);
 				}
-				else
-					SetError("No reason given");
 
 				if(g_Config.m_Debug)
-					dbg_msg("conn", "closed reason='%s'", ErrorString());
+					dbg_msg("conn", "closed reason='%s'", Str);
 			}
 			return 0;
 		}
@@ -244,6 +264,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					Reset();
 					m_State = NET_CONNSTATE_PENDING;
 					m_PeerAddr = *pAddr;
+					mem_zero(m_ErrorString, sizeof(m_ErrorString));
 					m_LastSendTime = Now;
 					m_LastRecvTime = Now;
 					m_LastUpdateTime = Now;

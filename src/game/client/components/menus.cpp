@@ -262,7 +262,8 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		for(int i = 0; i < m_NumInputEvents; i++)
 		{
 			Len = str_length(pStr);
-			ReturnValue |= CLineInput::Manipulate(m_aInputEvents[i], pStr, StrSize, &Len, &s_AtIndex);
+			int NumChars = Len;
+			ReturnValue |= CLineInput::Manipulate(m_aInputEvents[i], pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
 		}
 	}
 
@@ -1129,7 +1130,7 @@ int CMenus::Render()
 					}
 
 					// update download speed
-					float Diff = Client()->MapDownloadAmount()-m_DownloadLastCheckSize;
+					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/((int)((Now-m_DownloadLastCheckTime)/time_freq()));
 					float StartDiff = m_DownloadLastCheckSize-0.0f;
 					if(StartDiff+Diff > 0.0f)
 						m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
@@ -1395,6 +1396,9 @@ int CMenus::Render()
 			if(DoButton_Menu(&s_Button, pButtonText, 0, &Part) || m_EscapePressed || m_EnterPressed)
 				m_Popup = POPUP_NONE;
 		}
+
+		if(m_Popup == POPUP_NONE)
+			UI()->SetActiveItem(0);
 	}
 
 	return 0;

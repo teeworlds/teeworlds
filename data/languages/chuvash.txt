@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d байт
+
+%d of %d servers, %d players
+== %d серв. %d тупнă, %d çын
+
+%d%% loaded
+== %d%% тиенĕ
+
+%ds left
+== %d сек.
+
+%i minute left
+== %i мин.
+
+%i minutes left
+== %i мин.
+
+%i second left
+== %i сек.
+
+%i seconds left
+==  %i сек.
+
+%s wins!
+== %s çĕнтерчĕ!
+
+-Page %d-
+== -Страница %d-
+
+Abort
+== Каялла
+
+Add
+== Хуш
+
+Add Friend
+== Юлташа хуш
+
+Address
+== Адрес
+
+All
+== Пурте
+
+Alpha
+== Тăрă
+
+Always show name plates
+== Вылякансен ятсене кăтартма
+
+Are you sure that you want to delete the demo?
+== Эсир демо парахасшăн-и?
+
+Are you sure that you want to quit?
+== Эсир тухасшăн-и?
+
+Are you sure that you want to remove the player from your friends list?
+== Юшташу списокра тĕплесшĕн-и?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Пĕрремĕш вăйă умĕнче, хăвăн ята аяларах çыр. Ĕнерленӳсене тереслер, улăштар.
+
+Automatically record demos
+== Демосене автоматикăла çыр
+
+Automatically take game over screenshot
+== Вăйăн пайта çут-ӳкерчĕк ту
+
+Blue team
+== Кăвак ушкăн
+
+Blue team wins!
+== Кăвак ушкăн çĕнтерчĕ!
+
+Body
+== Ӳт
+
+Call vote
+== Сасăла
+
+Change settings
+== Йĕркелӳсене урăхлатма
+
+Chat
+== Калаçу
+
+Clan
+== Кланĕ
+
+Client
+== Клиент
+
+Close
+== Хупма
+
+Compatible version
+== Пĕрле ĕçлекен верси
+
+Connect
+== Çых
+
+Connecting to
+== Çыхăну
+
+Connection Problems...
+== Çыхăну проблемасем
+
+Console
+== Консоль
+
+Controls
+== Пăхăнтару
+
+Count players only
+== Çынсене анчах шутлама
+
+Country
+== Çĕрĕн ялавĕ
+
+Crc:
+== Crc:
+
+Created:
+== Хайланă:
+
+Current
+== Хальхи
+
+Current version: %s
+== Хальхи версие: %s
+
+Custom colors
+== Усă кураканăн тĕсĕсем
+
+Delete
+== Шăлса тасатма
+
+Delete demo
+== Демо шăлса тасатма
+
+Demo details
+== Демо тĕплĕсем
+
+Demofile: %s
+== Демо: %s
+
+Demos
+== Демосем
+
+Disconnect
+== Çыхăну чарма
+
+Disconnected
+== Çыхăну чарăнчĕ
+
+Display Modes
+== Экран режимсем
+
+Downloading map
+== Карта илӳ
+
+Draw!
+== Никам та çĕнтермерĕ!
+
+Dynamic Camera
+== Куçакан камера
+
+Emoticon
+== Кăмăл-туйăмсем
+
+Enter
+== Кĕрӳ
+
+Error
+== Йăнăш
+
+Error loading demo
+== Демо илĕвĕн йăнăш
+
+FSAA samples
+== FSAA якату
+
+Favorite
+== Суйланни
+
+Favorites
+== Суйланнисем
+
+Feet
+== Урасем
+
+Filter
+== Фильтр
+
+Fire
+== Пĕрӳ
+
+Folder
+== Папка
+
+Force vote
+== Вăйлăт
+
+Free-View
+== Ирĕклĕ обзор
+
+Friends
+== Юлташсем
+
+Fullscreen
+== Тулли экран
+
+Game
+== Вăйă
+
+Game info
+== Вăйă пĕлтерӳ
+
+Game over
+== Вăйа вĕçленчĕ
+
+Game type
+== Вăйăн тĕс
+
+Game types:
+== Вăйăн тĕсĕсем
+
+General
+== Тĕп
+
+Graphics
+== Ӳкерӳ
+
+Grenade
+== Гранатомёт
+
+Hammer
+== Мăлатук
+
+Has people playing
+== Вылякан пур
+
+High Detail
+== Лайăх ӳкерӳ
+
+Hook
+== Çекĕл
+
+Host address
+== Сервер адресĕ
+
+Hue
+== Тĕс сĕмĕ
+
+Info
+== Пĕлтерӳ
+
+Internet
+== Интернет
+
+Invalid Demo
+== Тĕрĕс мар демо
+
+Join blue
+== Кăваксемпе!
+
+Join game
+== Выляма
+
+Join red
+== Хĕрлĕсемпе!
+
+Jump
+== Сик
+
+Kick player
+== Вылякана бан
+
+LAN
+== LAN
+
+Language
+== Чĕлхе
+
+Length:
+== Вăрăмăш
+
+Lht.
+== Çутăллăх
+
+Loading
+== Кĕт, тархасшăн
+
+MOTD
+== MOTD
+
+Map
+== Карта
+
+Map:
+== Карта:
+
+Max Screenshots
+== Ӳкерчĕксен чи пысăк хисепĕ
+
+Max demos
+== Чи пысăк демо хисепĕ
+
+Maximum ping:
+== Чи пысăк пинг:
+
+Miscellaneous
+== Хушнисем
+
+Mouse sens.
+== Шăшин туйăмлăх
+
+Move left
+== Сулахаялла
+
+Move player to spectators
+== Пăхакансем çине куçарма
+
+Move right
+== Сылтăмалла
+
+Movement
+== Куçăм
+
+Mute when not active
+== Тивмен чух сасăна шăплантар
+
+Name
+== Ят
+
+Name plates size
+== Пысăкăш
+
+Netversion:
+== Версия:
+
+New name:
+== Çĕн ят
+
+News
+== Хыпарсем
+
+Next weapon
+== Тепĕр хĕç-пăшал
+
+Nickname
+== Ят
+
+No
+== Çук
+
+No password
+== Вăрттăн сăмахсăр
+
+No servers found
+== Серверсем çук
+
+No servers match your filter criteria
+== Фильтр майлă серверсем çук
+
+Ok
+== Çапла
+
+Open
+== Уçма
+
+Parent Folder
+== Аслă каталог
+
+Password
+== Вăрттăн сăмах
+
+Password incorrect
+== Тĕрĕс мар вăрттăн сăмах
+
+Ping
+== Пинг
+
+Pistol
+== Пистолет
+
+Play
+== Пăхма
+
+Play background music
+== Кĕвви
+
+Player
+== Вылякан
+
+Player country:
+== Çĕршыв:
+
+Player options
+== Опцисем
+
+Players
+== Çынсем
+
+Please balance teams!
+== Вылякан ушкăнĕсене шайлаштар!
+
+Prev. weapon
+== Малтанхи хĕç-пăшал
+
+Quality Textures
+== Лайăх текстурасем
+
+Quick search:
+== Хăвăрт шырав:
+
+Quit
+== Туху
+
+Quit anyway?
+== Туху?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Сăлтав:
+
+Record demo
+== Демо çыр
+
+Red team
+== Хĕрлĕ ушкăн
+
+Red team wins!
+== Хĕрлĕ ушкăн çĕнтерчĕ!
+
+Refresh
+== Каллех вула
+
+Refreshing master servers
+== Мастер-серверсен каллех вулу
+
+Remote console
+== Сервер консолĕ
+
+Remove
+== Тасат
+
+Remove friend
+== Юлташа тасат
+
+Rename
+== Çĕнĕ ят
+
+Rename demo
+== Демо çĕнĕ ят
+
+Reset filter
+== Фильтрсене тасат
+
+Reset to defaults
+== Йĕркелӳ тасат
+
+Rifle
+== Бластер
+
+Round
+== Раунд
+
+Sample rate
+== Тăтăшлăх
+
+Sat.
+== Контраст
+
+Score
+== Паллă
+
+Score board
+== Паллăсен хăмми
+
+Score limit
+== Паллă лимичĕ
+
+Scoreboard
+== Паллăсен хăмми
+
+Screenshot
+== Экран ӳкерӳ
+
+Server address:
+== Сервер адресĕ
+
+Server details
+== Сервер тĕплĕсем
+
+Server filter
+== Серверсен фильтр
+
+Server info
+== Пĕлтерӳ
+
+Server not full
+== Сервер тулли мар
+
+Settings
+== Йĕркелӳсем
+
+Shotgun
+== Йĕтре пăшал
+
+Show chat
+== Калаçӳ кăтартма
+
+Show friends only
+== Юлташсемпе анчах
+
+Show ingame HUD
+== Вăйă çинчи HUD кăтартма
+
+Show name plates
+== Вылякансен ят кăтартма
+
+Show only supported
+== Ĕçлекен экран режимĕсем анчах
+
+Size:
+== Пыçăкăш:
+
+Skins
+== Сăнсем
+
+Sound
+== Сасă
+
+Sound error
+== Сасă йăнăш
+
+Sound volume
+== Сасă янравлăш
+
+Spectate
+== Пăхма
+
+Spectate next
+== Тепĕрне пăхма
+
+Spectate previous
+== Малтанхине пăхма
+
+Spectator mode
+== Пăхакан
+
+Spectators
+== Пăхакансем
+
+Standard gametype
+== Стандартлă вăйă тĕсĕ
+
+Standard map
+== Стандартлă карта
+
+Stop record
+== Чарма
+
+Strict gametype filter
+== Хытă вăйă тĕс фильтрĕ
+
+Sudden Death
+== Хăвăрт вилӳ
+
+Switch weapon on pickup
+== Хĕç-пăшал илнĕ чух улăштарма
+
+Team
+== Ушкăн
+
+Team chat
+== Ушкăнри калаçу
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Тухрĕ Teeworlds %s! Кунта: www.teeworlds.com!
+
+Texture Compression
+== Текстур хĕсӳ
+
+The audio device couldn't be initialised.
+== Аудио ярма пултараймасть
+
+The server is running a non-standard tuning on a pure game type.
+== Серверта стардартлă мар опцисемпе таса вăйă тĕсĕрĕ
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Редакторта упраман карта пур. Туху умĕн ăна упрама пултарать
+
+Time limit
+== Вăхăт лимичĕ
+
+Time limit: %d min
+== Вăхăт лимичĕ: %d мин
+
+Try again
+== Тепĕр хут
+
+Type
+== Тĕс
+
+Type:
+== Тĕс:
+
+UI Color
+== Интерфейс тĕсĕ
+
+Unable to delete the demo
+== Демо тĕплеме пултараймасть
+
+Unable to rename the demo
+== Демо ячĕ улăштарма пулмасть
+
+Use sounds
+== Сасă уса курма
+
+Use team colors for name plates
+== Ушкăн тĕсĕсем ятсем валли
+
+V-Sync
+== Вертикаллĕ синхронизаци
+
+Version
+== Версие
+
+Version:
+== Версие:
+
+Vote command:
+== Суйлав хушу:
+
+Vote description:
+== Суйлав пирки:
+
+Vote no
+== Хирĕç
+
+Vote yes
+== Çинчен
+
+Voting
+== Суйлав
+
+Warmup
+== Карăну
+
+Weapon
+== Хĕç-пăшал
+
+Welcome to Teeworlds
+== Ырă сунса кĕтетпĕр Teeworlds-ра!
+
+Yes
+== Çапла
+
+You must restart the game for all settings to take effect.
+== Режим улăштарма валли вăйă сӳнтер тата каллер яр
+
+Your skin
+== Санăн сăн
+
+no limit
+== Лимитсăр
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+

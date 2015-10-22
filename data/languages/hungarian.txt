@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bit
+
+%d of %d servers, %d players
+== %d Szerver, %d Játékos
+
+%d%% loaded
+== %d%% betöltve
+
+%ds left
+==  %ds vissza
+
+%i minute left
+== %i perc vissza
+
+%i minutes left
+== %i perc vissza
+
+%i second left
+== %i másodperc vissza
+
+%i seconds left
+== %i másodperc vissza
+
+%s wins!
+== %s nyert!
+
+-Page %d-
+== -oldal %d-
+
+Abort
+== Mégse
+
+Add
+== Hozzáad
+
+Add Friend
+== Hozzáad barátot
+
+Address
+== Cím
+
+All
+== Mindenki
+
+Alpha
+== Alpha
+
+Always show name plates
+== Mindig mutassa a névtáblát
+
+Are you sure that you want to delete the demo?
+== Biztos hogy le akarod törölni a demót?
+
+Are you sure that you want to quit?
+== Biztos hogy ki akarsz lépni?
+
+Are you sure that you want to remove the player from your friends list?
+== Biztos vagy benne hogy ki akarod törölni a játékost a barátok listájáról?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Mivel ez az első alkalom hogy elindítottad ezt a játékot, kérlekk add meg a neved!
+
+Automatically record demos
+== Magától rögzítse a demókat
+
+Automatically take game over screenshot
+== Magától készítsen a játék végén képet
+
+Blue team
+== Kék csapat
+
+Blue team wins!
+== A kék csapat nyert!
+
+Body
+== Test
+
+Call vote
+== Szavazás
+
+Change settings
+== Beállítások átállítása
+
+Chat
+== Chat
+
+Clan
+== Klán
+
+Client
+== Kliens
+
+Close
+== Bezárás
+
+Compatible version
+== Kompatibilis Verzió
+
+Connect
+== Csatlakozás
+
+Connecting to
+== Csatlakozás a
+
+Connection Problems...
+== Csatlakozási problémák...
+
+Console
+== Konzol
+
+Controls
+== Irányítás
+
+Count players only
+== Csak számontartott játékosok
+
+Country
+== Ország
+
+Crc:
+== Crc:
+
+Created:
+== Készítette:
+
+Current
+== Aktuális
+
+Current version: %s
+== Aktuális verzió: %s
+
+Custom colors
+== Egyéni színek
+
+Delete
+== Törlés
+
+Delete demo
+== Demó törlése
+
+Demo details
+== Információk a demóról
+
+Demos
+== Demók
+
+Disconnect
+== Szerver elhagyása
+
+Disconnected
+== Kilépett
+
+Display Modes
+== Kijelző módok
+
+Downloading map
+== Pálya letöltése
+
+Draw!
+== Rajzolj!
+
+Dynamic Camera
+== Dinamikus kamera
+
+Emoticon
+== Hangulatjel
+
+Enter
+== Belépés
+
+Error
+== Hiba
+
+Error loading demo
+== Hiba a demó betöltésében
+
+FSAA samples
+== FSAA mintáku
+
+Favorite
+== Kedvenc
+
+Favorites
+== Kedvencek
+
+Feet
+== Láb
+
+Filter
+== Szűrő
+
+Fire
+== Tűz
+
+Folder
+== Mappa
+
+Force vote
+== Különleges szavazás
+
+Free-View
+== Szabad-nézet
+
+Friends
+== Barátok
+
+Fullscreen
+== Teljesképernyő
+
+Game
+== Játék
+
+Game info
+== Játék infó
+
+Game over
+== Játék vége
+
+Game type
+== Játék fajtája
+
+Game types:
+== Játék fajtái:
+
+General
+== Általános
+
+Graphics
+== Grafika
+
+Grenade
+== Gránát
+
+Hammer
+== Kalapács
+
+Has people playing
+== Játékos játszik
+
+High Detail
+== Jó részletek
+
+Hook
+== Horog
+
+Host address
+== Szerver címe
+
+Hue
+== Színárnyalat
+
+Info
+== Infó
+
+Internet
+== Internet
+
+Invalid Demo
+== Érvénytelen demó
+
+Join blue
+== Kékhez lépés
+
+Join game
+== Csatlakozás a játékhoz
+
+Join red
+== Piroshoz lépés
+
+Jump
+== Ugrás
+
+Kick player
+== Játékos kirúgása
+
+LAN
+== Helyi
+
+Language
+== Nyelv
+
+Length:
+== Hossza:
+
+Lht.
+== Lht.
+
+Loading
+== Betöltés
+
+MOTD
+== Napi üzenet
+
+Map
+== Pálya
+
+Map:
+== Pálya:
+
+Max Screenshots
+== Maximum Fotó
+
+Max demos
+== Maximum Demó
+
+Maximum ping:
+== Maximum Ping:
+
+Miscellaneous
+== Vegyes
+
+Mouse sens.
+== Egér érzékenysége
+
+Move left
+== Balra lépés
+
+Move player to spectators
+== Megfigyelő lett
+
+Move right
+== Jobbra lépés
+
+Movement
+== Mozgás
+
+Mute when not active
+== Letiltás ha nem aktív
+
+Name
+== Név
+
+Name plates size
+== Névtáblák mérete
+
+Netversion:
+== Netes verzió:
+
+New name:
+== Új Név:
+
+News
+== Hírek
+
+Next weapon
+== Következő fegyver
+
+Nickname
+== Becenév
+
+No
+== Nem
+
+No password
+== Jelszó nélküli
+
+No servers found
+== Nem talált szervereket
+
+No servers match your filter criteria
+== Nincs szerver a szűrőfeltételeidhez
+
+Ok
+== Oké
+
+Open
+== Megnyit
+
+Parent Folder
+== Szülői mappa
+
+Password
+== Jelszó
+
+Password incorrect
+== Helytelen jelszó
+
+Ping
+== Ping
+
+Pistol
+== Pisztoly
+
+Play
+== Játék
+
+Player
+== Játékos
+
+Player options
+== Játékos beállításai
+
+Players
+== Játékosok
+
+Please balance teams!
+== Kérlek egyenlítsd ki a csapatokat!
+
+Prev. weapon
+== Előző fegyver
+
+Quality Textures
+== Minőségi kidolgozás
+
+Quick search:
+== Gyors keresés:
+
+Quit
+== Kilépés
+
+Quit anyway?
+== Mindenképpen kilép?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Indok:
+
+Record demo
+== Demó felvétele
+
+Red team
+== Piros csapat
+
+Red team wins!
+== A piros csapat nyert!
+
+Refresh
+== Újratöltés
+
+Refreshing master servers
+== A master szerverek frissítése
+
+Remote console
+== Távoli konzol
+
+Remove
+== Eltávolítás
+
+Remove friend
+== Barát eltávolítása
+
+Rename
+== Átnevezés
+
+Rename demo
+== Demó átnevezése
+
+Reset filter
+== Szűrő visszaállítása
+
+Reset to defaults
+== Visszaállítás az alapértelmezettre
+
+Rifle
+== Lézer
+
+Round
+== Menet
+
+Sample rate
+== Mintavételi frekvencia
+
+Sat.
+== Sat.
+
+Score
+== Pontszám
+
+Score board
+== Pontszám tábla
+
+Score limit
+== Ponthatár
+
+Scoreboard
+== Pontszámtábla
+
+Screenshot
+== Pillanatkép
+
+Server address:
+== Szerver címe:
+
+Server details
+== Szerver részletei
+
+Server filter
+== Szerver szűrő
+
+Server info
+== Szerver infó
+
+Server not full
+== Szerver nincs tele
+
+Settings
+== Beállítások
+
+Shotgun
+== Sörétes puska
+
+Show chat
+== Chat mutatása
+
+Show friends only
+== Barátok mutatása
+
+Show ingame HUD
+== Játék közbeni HUD mutatása
+
+Show name plates
+== Név táblák mutatása
+
+Show only supported
+== Csak támogatott mutatása
+
+Size:
+== Méret:
+
+Skins
+== Skinek
+
+Sound
+== Hang
+
+Sound error
+== Hang hiba
+
+Sound volume
+== Hangerő
+
+Spectate
+== Megfigyelés
+
+Spectator mode
+== Néző mód
+
+Spectators
+== Megfigyelők
+
+Standard gametype
+== Általános játékfajta
+
+Standard map
+== Általános pálya
+
+Stop record
+== Felvétel megállítása
+
+Sudden Death
+== Gyors halál
+
+Switch weapon on pickup
+== Fegyverváltás felvételnél
+
+Team
+== Csapat
+
+Team chat
+== Csapat chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s kint van! Töltsd le www.teeworlds.com oldalon!
+
+Texture Compression
+== Textúra tömörítés
+
+The audio device couldn't be initialised.
+== A hangeszköz nem kezdeményezhető.
+
+The server is running a non-standard tuning on a pure game type.
+== A szerver egy nem szabványos hangolást futtat a tiszta játék típuson.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Van egy mentett térkép a szerkesztőben, talán akarod menteni, mielőtt kilépsz a játékból.
+
+Time limit
+== Időhatár
+
+Time limit: %d min
+== Időhatár: %d perc
+
+Try again
+== Próbáld újra
+
+Type
+== Típus
+
+Type:
+== Típus:
+
+UI Color
+== UI Szín
+
+Unable to delete the demo
+== Nem sikerült törölni a demó
+
+Unable to rename the demo
+== Nem sikerült átnevezni a demó
+
+Use sounds
+== Hangok használata
+
+Use team colors for name plates
+== Csapat szín használata név tábláknál
+
+V-Sync
+== V-Sync
+
+Version
+== Verzió
+
+Version:
+== Verzió:
+
+Vote command:
+== Szavazás parancsa:
+
+Vote description:
+== Szavazás leírása:
+
+Vote no
+== Nem
+
+Vote yes
+== Igen
+
+Voting
+== Szavazás
+
+Warmup
+== Kezdés
+
+Weapon
+== Fegyver
+
+Welcome to Teeworlds
+== Üdvözöljük a Teeworlds-ben
+
+Yes
+== Igen
+
+You must restart the game for all settings to take effect.
+== Újra kell indítani a játékot, a beállítások érvénybe lépéséhez.
+
+Your skin
+== Te skined
+
+no limit
+== Nincs korlát
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Demofile: %s
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Play background music
+== 
+
+Player country:
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Spectate next
+== 
+
+Spectate previous
+== 
+
+Strict gametype filter
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+

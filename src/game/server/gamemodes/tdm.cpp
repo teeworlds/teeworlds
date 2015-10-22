@@ -17,7 +17,7 @@ int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 	IGameController::OnCharacterDeath(pVictim, pKiller, Weapon);
 
 
-	if(Weapon != WEAPON_GAME)
+	if(pKiller && Weapon != WEAPON_GAME)
 	{
 		// do team scoring
 		if(pKiller == pVictim->GetPlayer() || pKiller->GetTeam() == pVictim->GetPlayer()->GetTeam())

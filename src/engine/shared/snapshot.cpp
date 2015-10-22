@@ -195,13 +195,14 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 
 	// fetch previous indices
 	// we do this as a separate pass because it helps the cache
-	for(i = 0; i < pTo->NumItems(); i++)
+	const int NumItems = pTo->NumItems();
+	for(i = 0; i < NumItems; i++)
 	{
 		pCurItem = pTo->GetItem(i); // O(1) .. O(n)
 		aPastIndecies[i] = GetItemIndexHashed(pCurItem->Key(), Hashlist); // O(n) .. O(n^n)
 	}
 
-	for(i = 0; i < pTo->NumItems(); i++)
+	for(i = 0; i < NumItems; i++)
 	{
 		// do delta
 		ItemSize = pTo->GetItemSize(i); // O(1) .. O(n)
@@ -329,6 +330,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 			return -1;
 
 		Type = *pData++;
+		if(Type < 0)
+			return -1;
 		ID = *pData++;
 		if(m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
@@ -354,7 +357,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 		FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
-			// we got an update so we need pTo apply the diff
+			// we got an update so we need to apply the diff
 			UndiffItem((int *)pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
 			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
 		}
@@ -474,7 +477,7 @@ int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapsh
 			if(ppData)
 				*ppData = pHolder->m_pSnap;
 			if(ppAltData)
-				*ppData = pHolder->m_pAltSnap;
+				*ppAltData = pHolder->m_pAltSnap;
 			return pHolder->m_SnapSize;
 		}
 
@@ -508,10 +511,10 @@ int *CSnapshotBuilder::GetItemData(int Key)
 	return 0;
 }
 
-int CSnapshotBuilder::Finish(void *SpnapData)
+int CSnapshotBuilder::Finish(void *pSpnapData)
 {
 	// flattern and make the snapshot
-	CSnapshot *pSnap = (CSnapshot *)SpnapData;
+	CSnapshot *pSnap = (CSnapshot *)pSpnapData;
 	int OffsetSize = sizeof(int)*m_NumItems;
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;

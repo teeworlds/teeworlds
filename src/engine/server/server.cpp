@@ -36,45 +36,23 @@
 	#include <windows.h>
 #endif
 
-static const char *StrUTF8Ltrim(const char *pStr)
+static const char *StrLtrim(const char *pStr)
 {
-	while(*pStr)
-	{
-		const char *pStrOld = pStr;
-		int Code = str_utf8_decode(&pStr);
-
-		// check if unicode is not empty
-		if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
-			(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
-			Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
-		{
-			return pStrOld;
-		}
-	}
+	while(*pStr && *pStr >= 0 && *pStr <= 32)
+		pStr++;
 	return pStr;
 }
 
-static void StrUTF8Rtrim(char *pStr)
+static void StrRtrim(char *pStr)
 {
-	const char *p = pStr;
-	const char *pEnd = 0;
-	while(*p)
+	int i = str_length(pStr);
+	while(i >= 0)
 	{
-		const char *pStrOld = p;
-		int Code = str_utf8_decode(&p);
-
-		// check if unicode is not empty
-		if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
-			(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
-			Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
-		{
-			pEnd = 0;
-		}
-		else if(pEnd == 0)
-			pEnd = pStrOld;
+		if(pStr[i] < 0 || pStr[i] > 32)
+			break;
+		pStr[i] = 0;
+		i--;
 	}
-	if(pEnd != 0)
-		*(const_cast<char *>(pEnd)) = 0;
 }
 
 
@@ -167,7 +145,7 @@ void CSnapIDPool::FreeID(int ID)
 }
 
 
-void CServerBan::Init(IConsole *pConsole, IStorage *pStorage, CServer* pServer)
+void CServerBan::InitServerBan(IConsole *pConsole, IStorage *pStorage, CServer* pServer)
 {
 	CNetBan::Init(pConsole, pStorage);
 
@@ -316,8 +294,12 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	char aTrimmedName[64];
 
 	// trim the name
-	str_copy(aTrimmedName, StrUTF8Ltrim(pName), sizeof(aTrimmedName));
-	StrUTF8Rtrim(aTrimmedName);
+	str_copy(aTrimmedName, StrLtrim(pName), sizeof(aTrimmedName));
+	StrRtrim(aTrimmedName);
+
+	// check for empty names
+	if(!aTrimmedName[0])
+		return -1;
 
 	// check if new and old name are the same
 	if(m_aClients[ClientID].m_aName[0] && str_comp(m_aClients[ClientID].m_aName, aTrimmedName) == 0)
@@ -327,11 +309,6 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	str_format(aBuf, sizeof(aBuf), "'%s' -> '%s'", pName, aTrimmedName);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 	pName = aTrimmedName;
-
-
-	// check for empty names
-	if(!pName[0])
-		return -1;
 
 	// make sure that two clients doesn't have the same name
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -356,14 +333,23 @@ void CServer::SetClientName(int ClientID, const char *pName)
 	if(!pName)
 		return;
 
-	char aNameTry[MAX_NAME_LENGTH];
-	str_copy(aNameTry, pName, MAX_NAME_LENGTH);
-	if(TrySetClientName(ClientID, aNameTry))
+	char aCleanName[MAX_NAME_LENGTH];
+	str_copy(aCleanName, pName, sizeof(aCleanName));
+
+	// clear name
+	for(char *p = aCleanName; *p; ++p)
+	{
+		if(*p < 32)
+			*p = ' ';
+	}
+
+	if(TrySetClientName(ClientID, aCleanName))
 	{
 		// auto rename
 		for(int i = 1;; i++)
 		{
-			str_format(aNameTry, MAX_NAME_LENGTH, "(%d)%s", i, pName);
+			char aNameTry[MAX_NAME_LENGTH];
+			str_format(aNameTry, sizeof(aCleanName), "(%d)%s", i, aCleanName);
 			if(TrySetClientName(ClientID, aNameTry) == 0)
 				break;
 		}
@@ -829,7 +815,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		// system message
 		if(Msg == NETMSG_INFO)
 		{
-			if(m_aClients[ClientID].m_State == CClient::STATE_AUTH)
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(str_comp(pVersion, GameServer()->NetVersion()) != 0)
@@ -855,9 +841,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
 		{
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State < CClient::STATE_CONNECTING)
+				return;
+
 			int Chunk = Unpacker.GetInt();
-			int ChunkSize = 1024-128;
-			int Offset = Chunk * ChunkSize;
+			unsigned int ChunkSize = 1024-128;
+			unsigned int Offset = Chunk * ChunkSize;
 			int Last = 0;
 
 			// drop faulty map data requests
@@ -889,7 +878,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_READY)
 		{
-			if(m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
 				net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
@@ -904,7 +893,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_ENTERGAME)
 		{
-			if(m_aClients[ClientID].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientID))
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientID))
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
 				net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
@@ -972,7 +961,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			const char *pCmd = Unpacker.GetString();
 
-			if(Unpacker.Error() == 0 && m_aClients[ClientID].m_Authed)
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Unpacker.Error() == 0 && m_aClients[ClientID].m_Authed)
 			{
 				char aBuf[256];
 				str_format(aBuf, sizeof(aBuf), "ClientID=%d rcon='%s'", ClientID, pCmd);
@@ -992,7 +981,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			Unpacker.GetString(); // login name, not used
 			pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 
-			if(Unpacker.Error() == 0)
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Unpacker.Error() == 0)
 			{
 				if(g_Config.m_SvRconPassword[0] == 0 && g_Config.m_SvRconModPassword[0] == 0)
 				{
@@ -1080,7 +1069,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	else
 	{
 		// game message
-		if(m_aClients[ClientID].m_State >= CClient::STATE_READY)
+		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State >= CClient::STATE_READY)
 			GameServer()->OnMessage(Msg, &Unpacker, ClientID);
 	}
 }
@@ -1255,10 +1244,6 @@ void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterS
 
 int CServer::Run()
 {
-	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
-	m_pMap = Kernel()->RequestInterface<IEngineMap>();
-	m_pStorage = Kernel()->RequestInterface<IStorage>();
-
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
@@ -1274,6 +1259,7 @@ int CServer::Run()
 	if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// sweet!
+		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_SvPort;
 	}
 	else
@@ -1291,7 +1277,6 @@ int CServer::Run()
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 
-	m_ServerBan.Init(Console(), Storage(), this);
 	m_Econ.Init(Console(), &m_ServerBan);
 
 	char aBuf[256];
@@ -1467,8 +1452,12 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 		{
 			net_addr_str(pThis->m_NetServer.ClientAddr(i), aAddrStr, sizeof(aAddrStr), true);
 			if(pThis->m_aClients[i].m_State == CClient::STATE_INGAME)
-				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s name='%s' score=%d", i, aAddrStr,
-					pThis->m_aClients[i].m_aName, pThis->m_aClients[i].m_Score);
+			{
+				const char *pAuthStr = pThis->m_aClients[i].m_Authed == CServer::AUTHED_ADMIN ? "(Admin)" :
+										pThis->m_aClients[i].m_Authed == CServer::AUTHED_MOD ? "(Mod)" : "";
+				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s name='%s' score=%d %s", i, aAddrStr,
+					pThis->m_aClients[i].m_aName, pThis->m_aClients[i].m_Score, pAuthStr);
+			}
 			else
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%s connecting", i, aAddrStr);
 			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
@@ -1544,6 +1533,7 @@ void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 		pServer->SendMsgEx(&Msg, MSGFLAG_VITAL, pServer->m_RconClientID, true);
 
 		pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
+		pServer->m_aClients[pServer->m_RconClientID].m_AuthTries = 0;
 		pServer->m_aClients[pServer->m_RconClientID].m_pRconCmdToSend = 0;
 		pServer->SendRconLine(pServer->m_RconClientID, "Logout successful.");
 		char aBuf[32];
@@ -1608,7 +1598,11 @@ void CServer::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void 
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
+	m_pMap = Kernel()->RequestInterface<IEngineMap>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
+	// register console commands
 	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
@@ -1625,6 +1619,10 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
+
+	// register console commands in sub parts
+	m_ServerBan.InitServerBan(Console(), Storage(), this);
+	m_pGameServer->OnConsoleInit();
 }
 
 
@@ -1705,7 +1703,6 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// register all console commands
 	pServer->RegisterCommands();
-	pGameServer->OnConsoleInit();
 
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");

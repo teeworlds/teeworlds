@@ -1,0 +1,105 @@
+##### language indices #####
+
+belarusian
+== Беларуская
+== 112
+
+bosnian
+== Bosanski
+== 70
+
+brazilian_portuguese
+== Português brasileiro
+== 76
+
+bulgarian
+== Български
+== 100
+
+chuvash
+== Чăвашла
+== 643
+
+czech
+== Česky
+== 203
+
+danish
+== Dansk
+== 208
+
+dutch
+== Nederlands
+== 528
+
+finnish
+== Suomi
+== 246
+
+french
+== Français
+== 250
+
+german
+== Deutsch
+== 276
+
+hungarian
+== Magyar
+== 348
+
+italian
+== Italiano
+== 380
+
+kyrgyz
+== Кыргызча
+== 417
+
+norwegian
+== Norsk
+== 578
+
+polish
+== Polski
+== 616
+
+portuguese
+== Português
+== 620
+
+romanian
+== Română
+== 642
+
+russian
+== Русский
+== 643
+
+sakha
+== Саха тыла
+== 643
+
+serbian
+== Srpski
+== 688
+
+slovak
+== Slovensky
+== 703
+
+spanish
+== Español
+== 724
+
+swedish
+== Svenska
+== 752
+
+turkish
+== Türkçe
+== 792
+
+ukrainian
+== Українська
+== 804

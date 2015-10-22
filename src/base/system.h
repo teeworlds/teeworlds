@@ -33,6 +33,13 @@ void dbg_assert(int test, const char *msg);
 #define dbg_assert(test,msg) dbg_assert_imp(__FILE__, __LINE__, test, msg)
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg);
 
+
+#ifdef __clang_analyzer__
+#include <assert.h>
+#undef dbg_assert
+#define dbg_assert(test,msg) assert(test)
+#endif
+
 /*
 	Function: dbg_break
 		Breaks into the debugger.
@@ -403,19 +410,21 @@ void lock_release(LOCK lock);
 
 /* Group: Semaphores */
 
-#if defined(CONF_FAMILY_UNIX)
-	#include <semaphore.h>
-	typedef sem_t SEMAPHORE;
-#elif defined(CONF_FAMILY_WINDOWS)
-	typedef void* SEMAPHORE;
-#else
-	#error missing sempahore implementation
-#endif
+#if !defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_FAMILY_UNIX)
+		#include <semaphore.h>
+		typedef sem_t SEMAPHORE;
+	#elif defined(CONF_FAMILY_WINDOWS)
+		typedef void* SEMAPHORE;
+	#else
+		#error missing sempahore implementation
+	#endif
 
-void semaphore_init(SEMAPHORE *sem);
-void semaphore_wait(SEMAPHORE *sem);
-void semaphore_signal(SEMAPHORE *sem);
-void semaphore_destroy(SEMAPHORE *sem);
+	void semaphore_init(SEMAPHORE *sem);
+	void semaphore_wait(SEMAPHORE *sem);
+	void semaphore_signal(SEMAPHORE *sem);
+	void semaphore_destroy(SEMAPHORE *sem);
+#endif
 
 /* Group: Timer */
 #ifdef __GNUC__
@@ -557,12 +566,13 @@ int net_addr_from_str(NETADDR *addr, const char *string);
 
 	Parameters:
 		bindaddr - Address to bind the socket to.
+		use_random_port - use a random port
 
 	Returns:
 		On success it returns an handle to the socket. On failure it
 		returns NETSOCKET_INVALID.
 */
-NETSOCKET net_udp_create(NETADDR bindaddr);
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port);
 
 /*
 	Function: net_udp_send
@@ -1208,6 +1218,7 @@ unsigned str_quickhash(const char *str);
 */
 void gui_messagebox(const char *title, const char *message);
 
+const char *str_utf8_skip_whitespaces(const char *str);
 
 /*
 	Function: str_utf8_rewind

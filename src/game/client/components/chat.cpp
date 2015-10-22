@@ -35,6 +35,7 @@ void CChat::OnReset()
 		m_aLines[i].m_aName[0] = 0;
 	}
 
+	m_Mode = MODE_NONE;
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
@@ -114,13 +115,25 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		if(m_Input.GetString()[0])
 		{
+			bool AddEntry = false;
+
 			if(m_LastChatSend+time_freq() < time_get())
+			{
 				Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
-			else
+				AddEntry = true;
+			}
+			else if(m_PendingChatCounter < 3)
+			{
 				++m_PendingChatCounter;
-			CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
-			pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
-			mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
+				AddEntry = true;
+			}
+
+			if(AddEntry)
+			{
+				CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
+				pEntry->m_Team = m_Mode == MODE_ALL ? 0 : 1;
+				mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
+			}
 		}
 		m_pHistoryEntry = 0x0;
 		m_Mode = MODE_NONE;
@@ -304,10 +317,38 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 
 void CChat::AddLine(int ClientID, int Team, const char *pLine)
 {
-	if(ClientID != -1 && (m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
+	if(*pLine == 0 || (ClientID != -1 && (m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
-		(m_pClient->m_Snap.m_LocalClientID != ClientID && g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[ClientID].m_Friend)))
+		(m_pClient->m_Snap.m_LocalClientID != ClientID && g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[ClientID].m_Friend))))
 		return;
+
+	// trim right and set maximum length to 128 utf8-characters
+	int Length = 0;
+	const char *pStr = pLine;
+	const char *pEnd = 0;
+	while(*pStr)
+ 	{
+		const char *pStrOld = pStr;
+		int Code = str_utf8_decode(&pStr);
+
+		// check if unicode is not empty
+		if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+			(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
+			Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
+		{
+			pEnd = 0;
+		}
+		else if(pEnd == 0)
+			pEnd = pStrOld;
+
+		if(++Length >= 127)
+		{
+			*(const_cast<char *>(pStr)) = 0;
+			break;
+		}
+ 	}
+	if(pEnd != 0)
+		*(const_cast<char *>(pEnd)) = 0;
 
 	bool Highlighted = false;
 	char *p = const_cast<char*>(pLine);
@@ -494,7 +535,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, m_aLines[m_CurrentLine].m_Team?"teamchat":"chat", aBuf);
 	}
 
-	// play sound
+// play sound
 	int64 Now = time_get();
 	if(!g_Config.m_ClAntiSpam || !m_Spam)
 	{

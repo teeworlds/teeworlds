@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bytes
+
+%d of %d servers, %d players
+== %d af %d servere, %d spillere
+
+%d%% loaded
+== %d%% indlæst
+
+%ds left
+== %d sekunder tilbage
+
+%i minute left
+== %i minut tilbage
+
+%i minutes left
+== %i minutter tilbage
+
+%i second left
+== %i sekund tilbage
+
+%i seconds left
+== %i sekunder tilbage
+
+%s wins!
+== %s vinder!
+
+-Page %d-
+== -Side %d-
+
+Abort
+== Afbryd
+
+Add
+== Tilføj
+
+Add Friend
+== Tilføj ven
+
+Address
+== Adresse
+
+All
+== Alle
+
+Alpha
+== Alpha
+
+Always show name plates
+== Vis altid navneskilte
+
+Are you sure that you want to delete the demo?
+== Er du sikker på at du vil slette denne demo?
+
+Are you sure that you want to quit?
+== Er du sikker på at du vil afslutte?
+
+Are you sure that you want to remove the player from your friends list?
+== Er du sikker på at du vil fjerne denne spiller fra din venneliste?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Siden dette er første gang du starter spillet, så vær så venlig at skrive dit navn nedenunder. Det anbefales at du kigger på indstillingerne så du kan tilpasse dem inden du kobler dig på en server.
+
+Automatically record demos
+== Optag automatisk demoer
+
+Automatically take game over screenshot
+== Tag  automatisk et game over screenshot
+
+Blue team
+== Blå hold
+
+Blue team wins!
+== Blåt hold vinder!
+
+Body
+== Krop
+
+Call vote
+==  Lav afstemning
+
+Change settings
+== Ændre indstillinger
+
+Chat
+== Chat
+
+Clan
+== Klan
+
+Client
+== Klient
+
+Close
+== Luk
+
+Compatible version
+== Kompatibel version
+
+Connect
+== Tilslut
+
+Connecting to
+== Forbinder til
+
+Connection Problems...
+== Forbindelsesproblemer...
+
+Console
+== Konsol
+
+Controls
+== Taster
+
+Count players only
+== Tæl kun spillere
+
+Country
+== Land
+
+Crc:
+== Crc:
+
+Created:
+== Lavet:
+
+Current
+== Nuværende
+
+Current version: %s
+== Nuværende version: %s
+
+Custom colors
+== Brugerdefinerede farver
+
+Delete
+== Slet
+
+Delete demo
+== Slet demo
+
+Demo details
+== Demoinformation
+
+Demofile: %s
+== Demo fil: %s
+
+Demos
+== Demoer
+
+Disconnect
+== Frakoble
+
+Disconnected
+== Frakoblet
+
+Display Modes
+== Skærmopløsning
+
+Downloading map
+== Downloader bane
+
+Draw!
+== Uafgjort!
+
+Dynamic Camera
+== Dynamisk kamera
+
+Emoticon
+== Humørikoner
+
+Enter
+== Fortsæt
+
+Error
+== Fejl
+
+Error loading demo
+== Kunne ikke ikke indlæse demoen
+
+FSAA samples
+== FSAA samples
+
+Favorite
+== Favorit
+
+Favorites
+== Favoritter
+
+Feet
+== Fødder
+
+Filter
+== Filter
+
+Fire
+== Skyd
+
+Folder
+== Mappe
+
+Force vote
+== Tving afstemning
+
+Free-View
+== Free-View
+
+Friends
+== Venner
+
+Fullscreen
+== Fuldskærm
+
+Game
+== Spil
+
+Game info
+== Spil info
+
+Game over
+== Game over
+
+Game type
+== Spiltype
+
+Game types:
+== Spiltyper:
+
+General
+== Generelt
+
+Graphics
+== Grafik
+
+Grenade
+== Granatkaster
+
+Hammer
+== Hammer
+
+Has people playing
+== Har folk som spiller
+
+High Detail
+== Extra detaljer
+
+Hook
+== Krog
+
+Host address
+== Værtsadresse
+
+Hue
+== Farve
+
+Info
+== Info
+
+Internet
+== Internet
+
+Invalid Demo
+== Ugyldig demo
+
+Join blue
+== Spil for blå
+
+Join game
+== Start spil
+
+Join red
+== Spil for rød
+
+Jump
+== Hop
+
+Kick player
+== Udsmid spiller
+
+LAN
+== LAN
+
+Language
+== Sprog
+
+Length:
+== Længde
+
+Lht.
+== Lys
+
+Loading
+== Indlæser
+
+MOTD
+== MOTD
+
+Map
+== Kort
+
+Map:
+== Bane
+
+Max Screenshots
+== Max antal screenshots
+
+Max demos
+== Max antal demoer
+
+Maximum ping:
+== Højeste ping:
+
+Miscellaneous
+== Diverse
+
+Mouse sens.
+== Musfølsomhed
+
+Move left
+== Gå til venstre
+
+Move player to spectators
+== Flyt spilleren til tilskuerne
+
+Move right
+== Gå til højre
+
+Movement
+== Bevægelse
+
+Mute when not active
+== Ingen lyd når du ikke er aktiv
+
+Name
+== Navn
+
+Name plates size
+== Størrelse på navneskilte
+
+Netversion:
+== Netversion:
+
+New name:
+== Nyt navn:
+
+News
+== Nyheder
+
+Next weapon
+== Næste våben
+
+Nickname
+== Navn
+
+No
+== Nej
+
+No password
+== Ingen adgangskode
+
+No servers found
+== Ingen servere fundet
+
+No servers match your filter criteria
+== Ingen servere matcher din filterkriterier
+
+Ok
+== Ok
+
+Open
+== Åben
+
+Parent Folder
+== Overmappe
+
+Password
+== Adgangskode
+
+Password incorrect
+== Forkert adgangskode
+
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Spil
+
+Play background music
+== Spil baggrunds musik
+
+Player
+== Spiller
+
+Player country:
+== Spillernes land:
+
+Player options
+== Spillermuligheder
+
+Players
+== Spillere
+
+Please balance teams!
+== Balancer venligst holdet!
+
+Prev. weapon
+== Foregående våben
+
+Quality Textures
+== Kvalitetsteksturer
+
+Quick search:
+== Hurtig søg:
+
+Quit
+== Afslut
+
+Quit anyway?
+== Afslut alligevel?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Grund:
+
+Record demo
+== Optag demo
+
+Red team
+== Rødt hold
+
+Red team wins!
+== Rødt hold vinder!
+
+Refresh
+== Opdater
+
+Refreshing master servers
+== Opdaterer masterservere
+
+Remote console
+== Serverkonsol
+
+Remove
+== Fjern
+
+Remove friend
+== Fjern ven
+
+Rename
+== Omdøb navn
+
+Rename demo
+== Omdøb navn på demoen
+
+Reset filter
+== Nulstil filter
+
+Reset to defaults
+== Sæt til standard
+
+Rifle
+== Laser
+
+Round
+== Runde
+
+Sample rate
+== Sample frekvens
+
+Sat.
+== Mætning
+
+Score
+== Score
+
+Score board
+== Resultatliste
+
+Score limit
+== Score grænse
+
+Scoreboard
+== Resultatliste
+
+Screenshot
+== Skærmbillede
+
+Server address:
+== Serveradresse
+
+Server details
+== Serverdetaljer
+
+Server filter
+== Serverfilter
+
+Server info
+== Serverinfo
+
+Server not full
+== Ikke fuld server
+
+Settings
+== Indstillinger
+
+Shotgun
+== Haglgevær
+
+Show chat
+== Vis chat
+
+Show friends only
+== Vis venner
+
+Show ingame HUD
+== Vis HUD i spillet
+
+Show name plates
+== Vis navneskilte
+
+Show only supported
+== Vis kun understøttede
+
+Size:
+== Størrelse:
+
+Skins
+== Udseende
+
+Sound
+== Lyd
+
+Sound error
+== Lyd fejl
+
+Sound volume
+== Lydstyrke
+
+Spectate
+== Kig på
+
+Spectate next
+== Kig på næste
+
+Spectate previous
+== Kig på forrige
+
+Spectator mode
+== Tilskuer mode
+
+Spectators
+== Tilskuer
+
+Standard gametype
+== Standard spilletype
+
+Standard map
+== Standard map
+
+Stop record
+== Stop optagelse
+
+Strict gametype filter
+== Streng spiltype filter
+
+Sudden Death
+== Sudden Death
+
+Switch weapon on pickup
+== Byt våben ved anskafning
+
+Team
+== Hold
+
+Team chat
+== Holdchat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s er ude nu! Download den på www.teeworlds.com!
+
+Texture Compression
+== Teksturkompression
+
+The audio device couldn't be initialised.
+== Lydenheden kunne ikke startes
+
+The server is running a non-standard tuning on a pure game type.
+== Denne server kører på en ikke-standard tuning på en ren spilletype.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Der er en ikke-gemt bane i editoren, vil du gemme den før du afslutter?
+
+Time limit
+== Tidsbegrænsning
+
+Time limit: %d min
+== Tidsbegrænsning: %d min
+
+Try again
+== Forsøg igen
+
+Type
+== Type
+
+Type:
+== Type:
+
+UI Color
+== Brugergrænseflade farve
+
+Unable to delete the demo
+== Kunne ikke slette demoen
+
+Unable to rename the demo
+== Kunne ikke omdøbe demoen
+
+Use sounds
+== Anvend lydeffekter
+
+Use team colors for name plates
+== Anvend holdfarver til navneskilte
+
+V-Sync
+== V-Sync
+
+Version
+== Version
+
+Version:
+== Version:
+
+Vote command:
+== Afstemningsordre:
+
+Vote description:
+== Afstemningsbeskrivelse:
+
+Vote no
+== Stem nej
+
+Vote yes
+== Stem ja
+
+Voting
+== Afstemning
+
+Warmup
+== Opvarmning
+
+Weapon
+== Våben
+
+Welcome to Teeworlds
+== Velkommen til Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du skal genstarte spillet før alle indstillingerne virker.
+
+Your skin
+== Dit udseende
+
+no limit
+== Ingen grænse
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+

@@ -57,7 +57,8 @@ public:
 	{
 		// commadn groups
 		CMDGROUP_CORE = 0, // commands that everyone has to implement
-		CMDGROUP_PLATFORM = 10000, // commands specific to a platform
+		CMDGROUP_PLATFORM_OPENGL = 10000, // commands specific to a platform
+		CMDGROUP_PLATFORM_SDL = 20000,
 
 		//
 		CMD_NOP = CMDGROUP_CORE,
@@ -94,13 +95,8 @@ public:
 		TEXFORMAT_ALPHA,
 
 		TEXFLAG_NOMIPMAPS = 1,
-	};
-
-	enum
-	{
-		INITFLAG_FULLSCREEN = 1,
-		INITFLAG_VSYNC = 2,
-		INITFLAG_RESIZABLE = 4,
+		TEXFLAG_COMPRESSED = 2,
+		TEXFLAG_QUALITY = 4,
 	};
 
 	enum
@@ -217,6 +213,7 @@ public:
 
 		int m_Width;
 		int m_Height;
+		int m_PixelSize;
 		int m_Format;
 		int m_StoreFormat;
 		int m_Flags;
@@ -300,10 +297,15 @@ public:
 		INITFLAG_FULLSCREEN = 1,
 		INITFLAG_VSYNC = 2,
 		INITFLAG_RESIZABLE = 4,
+		INITFLAG_BORDERLESS = 8,
 	};
 
-	virtual int Init(const char *pName, int Width, int Height, int FsaaSamples, int Flags) = 0;
+	virtual ~IGraphicsBackend() {}
+
+	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags) = 0;
 	virtual int Shutdown() = 0;
+
+	virtual int MemoryUsage() const = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
@@ -354,24 +356,13 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	int m_InvalidTexture;
 
-	struct CTexture
-	{
-		int m_State;
-		int m_MemSize;
-		int m_Flags;
-		int m_Next;
-	};
-
-	CTexture m_aTextures[MAX_TEXTURES];
+	int m_aTextureIndices[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
 
 	void FlushVertices();
 	void AddVertices(int Count);
 	void Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints);
-
-	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
-	static unsigned char *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
 
 	void KickCommandBuffer();
 
@@ -428,7 +419,7 @@ public:
 	virtual void QuadsDraw(CQuadItem *pArray, int Num);
 	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num);
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
-	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText);
+	virtual void QuadsText(float x, float y, float Size, const char *pText);
 
 	virtual void Minimize();
 	virtual void Maximize();

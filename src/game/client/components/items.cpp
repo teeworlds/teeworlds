@@ -18,10 +18,6 @@
 #include "skins.h"
 #include "items.h"
 
-void CItems::OnReset()
-{
-	m_NumExtraProjectiles = 0;
-}
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
@@ -325,25 +321,5 @@ void CItems::OnRender()
 			}
 		}
 	}
-
-	// render extra projectiles
-	for(int i = 0; i < m_NumExtraProjectiles; i++)
-	{
-		if(m_aExtraProjectiles[i].m_StartTick < Client()->GameTick())
-		{
-			m_aExtraProjectiles[i] = m_aExtraProjectiles[m_NumExtraProjectiles-1];
-			m_NumExtraProjectiles--;
-		}
-		else
-			RenderProjectile(&m_aExtraProjectiles[i], 0);
-	}
 }
 
-void CItems::AddExtraProjectile(CNetObj_Projectile *pProj)
-{
-	if(m_NumExtraProjectiles != MAX_EXTRA_PROJECTILES)
-	{
-		m_aExtraProjectiles[m_NumExtraProjectiles] = *pProj;
-		m_NumExtraProjectiles++;
-	}
-}

@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Байта
+
+%d of %d servers, %d players
+== %d от %d сървъра, %d играчи
+
+%d%% loaded
+== %d%% заредено
+
+%ds left
+== Остава(т) %d сек
+
+%i minute left
+== Остава %i минута
+
+%i minutes left
+== Остават %i минути
+
+%i second left
+== Остава %i секунда
+
+%i seconds left
+== Остават %i секунди
+
+%s wins!
+== %s печели!
+
+-Page %d-
+== -Страница %d-
+
+Abort
+== Отмяна
+
+Add
+== Добавяне
+
+Add Friend
+== Добавяне на приятел
+
+Address
+== Адрес
+
+All
+== Всички
+
+Alpha
+== Прозрачност
+
+Always show name plates
+== Винаги да се показват лент. с им.
+
+Are you sure that you want to delete the demo?
+== Сигурни ли сте, че искате да изтриете записа?
+
+Are you sure that you want to quit?
+== Сигурни ли сте, че искате да напуснете?
+
+Are you sure that you want to remove the player from your friends list?
+== Сигурни ли сте, че искате да премахнете този играч от списъка с приятели?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Тъй като стартирате играта за първи път, моля, въведете своя псевдоним по-долу. Препоръчително е да проверите и нагласите настройките, преди да започнете игра.
+
+Automatically record demos
+== Автоматично създаване на записи
+
+Automatically take game over screenshot
+== Автоматична снимка в края на играта
+
+Blue team
+== Син отбор
+
+Blue team wins!
+== Синият отбор печели!
+
+Body
+== Тяло
+
+Borderless window
+== Прозорец без рамка
+
+Call vote
+== Гласуване
+
+Change settings
+== Промяна на настройките
+
+Chat
+== Чат
+
+Clan
+== Клан
+
+Client
+== Клиент
+
+Close
+== Затваряне
+
+Compatible version
+== Съвместима версия
+
+Connect
+== Свързване
+
+Connecting to
+== Свързване с
+
+Connection Problems...
+== Проблеми с връзката...
+
+Console
+== Конзола
+
+Controls
+== Управление
+
+Count players only
+== Броене само на играчите
+
+Country
+== Държава
+
+Crc:
+== Контролна сума:
+
+Created:
+== Създадено:
+
+Current
+== Текущ
+
+Current version: %s
+== Текуща версия: %s
+
+Custom colors
+== Потребителски цветове
+
+Delete
+== Изтриване
+
+Delete demo
+== Изтриване на записа
+
+Demo details
+== Подробности за записа
+
+Demofile: %s
+== Файл със запис: %s
+
+Demos
+== Записи
+
+Disconnect
+== Разкачане
+
+Disconnected
+== Разкачен
+
+Display Modes
+== Налични режими
+
+Downloading map
+== Изтегляне на карта
+
+Draw!
+== Равенство!
+
+Dynamic Camera
+== Динамична камера
+
+Emoticon
+== Емотиконка
+
+Enter
+== Влизане
+
+Error
+== Грешка
+
+Error loading demo
+== Грешка при зареждане на запис
+
+FSAA samples
+== FSAA проби
+
+Favorite
+== Любим
+
+Favorites
+== Любими
+
+Feet
+== Крака
+
+Filter
+== Филтър
+
+Fire
+== Стрелба
+
+Folder
+== Папка
+
+Force vote
+== Насилено гласуване
+
+Free-View
+== Свободен изглед
+
+Friends
+== Приятели
+
+Fullscreen
+== На цял екран
+
+Game
+== Игра
+
+Game info
+== Информация за играта
+
+Game over
+== Край на играта
+
+Game paused
+== Играта е на пауза
+
+Game type
+== Тип игра
+
+Game types:
+== Типове игри:
+
+General
+== Основни
+
+Graphics
+== Графика
+
+Grenade
+== Граната
+
+Hammer
+== Чук
+
+Handle rendering async from updates
+== Изчертаването да бъде асинхронно от обновяването
+
+Has people playing
+== Да има играчи
+
+High Detail
+== Голяма детайлност
+
+Hook
+== Кука
+
+Host address
+== Адрес на сървъра
+
+Hue
+== Тон
+
+Info
+== Инф.
+
+Internet
+== Интернет
+
+Invalid Demo
+== Невалиден запис
+
+Join blue
+== Присъединяване към сините
+
+Join game
+== Присъединяване
+
+Join red
+== Присъединяване към червените
+
+Jump
+== Скок
+
+Kick player
+== Изритване на играч
+
+LAN
+== Лок. мр.
+
+Language
+== Език
+
+Length:
+== Дължина:
+
+Lht.
+== Ярк.
+
+Loading
+== Зареждане
+
+MOTD
+== Съобщение на деня
+
+Map
+== Карта
+
+Map:
+== Карта:
+
+Max Screenshots
+== Макс. бр. снимки
+
+Max demos
+== Макс. бр. записи
+
+Maximum ping:
+== Макс. време за отговор:
+
+Miscellaneous
+== Разни
+
+Mouse sens.
+== Чувств. на мишката
+
+Move left
+== Наляво
+
+Move player to spectators
+== Преместване на играча към наблюдателите
+
+Move right
+== Надясно
+
+Movement
+== Движение
+
+Mute when not active
+== Заглушаване на звука когато играта е неактивна
+
+Name
+== Име
+
+Name plates size
+== Размер на лентите с имената
+
+Netversion:
+== Мрежова версия:
+
+New name:
+== Ново име:
+
+News
+== Новини
+
+Next weapon
+== Следв. оръжие
+
+Nickname
+== Псевдоним
+
+No
+== Не
+
+No password
+== Няма парола
+
+No servers found
+== Няма намерени сървъри
+
+No servers match your filter criteria
+== Няма сървъри, отговарящи на критериите
+
+Ok
+== Добре
+
+Open
+== Отваряне
+
+Parent Folder
+== Родителска папка
+
+Password
+== Парола
+
+Password incorrect
+== Грешна парола
+
+Ping
+== Вр. за отг.
+
+Pistol
+== Пистолет
+
+Play
+== Играене
+
+Play background music
+== Изпълнение на фоновата музика
+
+Player
+== Играч
+
+Player country:
+== Страна на играча:
+
+Player options
+== Настройки на играча
+
+Players
+== Играчи
+
+Please balance teams!
+== Моля уравновесете отборите!
+
+Prev. weapon
+== Предх. оръжие
+
+Quality Textures
+== Качествени текстури
+
+Quick search:
+== Бързо търсене:
+
+Quit
+== Изход
+
+Quit anyway?
+== Изход въпреки това?
+
+REC %3d:%02d
+== Записани %3d:%02d
+
+Reason:
+== Причина:
+
+Record demo
+== Започване на запис
+
+Red team
+== Червен отбор
+
+Red team wins!
+== Червеният отбор печели!
+
+Refresh
+== Опресняване
+
+Refreshing master servers
+== Обновяване на главните сървъри
+
+Remote console
+== Отдалечена конзола
+
+Remove
+== Премахване
+
+Remove friend
+== Премахване на приятеля
+
+Rename
+== Преименуване
+
+Rename demo
+== Преименуване на записа
+
+Reset filter
+== Нулиране на филтрите
+
+Reset to defaults
+== По подразбиране
+
+Respawn
+== Прераждане
+
+Rifle
+== Винтовка
+
+Round
+== Рунд
+
+Sample rate
+== Честота на дискр.
+
+Sat.
+== Нас.
+
+Score
+== Резултат
+
+Score board
+== Табло с резултати
+
+Score limit
+== Ограничение на точките
+
+Scoreboard
+== Табло с резултати
+
+Screenshot
+== Снимка
+
+Server address:
+== Адрес на сървъра:
+
+Server details
+== Подр. за сървъра
+
+Server filter
+== Филтър на сървъра
+
+Server info
+== Информация за сървъра
+
+Server not full
+== Сървърът да не е пълен
+
+Settings
+== Настройки
+
+Shotgun
+== Пушка
+
+Show chat
+== Показване на чата
+
+Show friends only
+== Показване само на приятелите
+
+Show ingame HUD
+== Показване на интерфейса в играта
+
+Show name plates
+== Показване на лентите с имената
+
+Show only chat messages from friends
+== Показване само на съобщ. от приятели
+
+Show only supported
+== Показване само на съвместимите
+
+Size:
+== Размер:
+
+Skins
+== Облици
+
+Sound
+== Звук
+
+Sound error
+== Звукова грешка
+
+Sound volume
+== Сила на звука
+
+Spectate
+== Наблюдаване
+
+Spectate next
+== Наблюдаване на следв.
+
+Spectate previous
+== Наблюдаване на пред.
+
+Spectator mode
+== Режим на наблюдаване
+
+Spectators
+== Наблюдатели
+
+Standard gametype
+== Стандартен тип игри
+
+Standard map
+== Стандартни карти
+
+Stop record
+== Спиране на записването
+
+Strict gametype filter
+== Строг филтър за тип игра
+
+Sudden Death
+== Внезапна смърт
+
+Switch weapon on pickup
+== Сменяне на оръжието при вземане
+
+Team
+== Отбор
+
+Team chat
+== Отборен чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Излезе Teeworlds %s! Изтеглете я от www.teeworlds.com!
+
+Texture Compression
+== Компресия на текстурите
+
+The audio device couldn't be initialised.
+== Звуковото устройство не може да бъде стартирано.
+
+The server is running a non-standard tuning on a pure game type.
+== Този сървър използва нестандартни настройки на стандартен тип игра.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Има незапазена карта в редактора. Ако напуснете играта, картата няма да бъде запазена.
+
+Threaded rendering
+== Многонишково изчертаване
+
+Threaded sound loading
+== Многонишково зареждане на звука
+
+Time limit
+== Ограничение на времето
+
+Time limit: %d min
+== Ограничение на времето: %d мин
+
+Try again
+== Повторен опит
+
+Type
+== Тип
+
+Type:
+== Тип:
+
+UI Color
+== Звят на потр. интерфейс
+
+Unable to delete the demo
+== Неуспешно изтриване на записа
+
+Unable to rename the demo
+== Неуспешно преименуване на записа
+
+Use sounds
+== Използване на звуци
+
+Use team colors for name plates
+== Използване на отборните цветове в лентите с имената
+
+V-Sync
+== Вертикална синхронизация
+
+Version
+== Версия
+
+Version:
+== Версия
+
+Vote command:
+== Команда за гласуване:
+
+Vote description:
+== Описание на гласуването:
+
+Vote no
+== Против
+
+Vote yes
+== За
+
+Voting
+== Гласуване
+
+Warmup
+== Разгрявка
+
+Weapon
+== Оръжие
+
+Welcome to Teeworlds
+== Добре дошли в Teeworlds
+
+Yes
+== Да
+
+You must restart the game for all settings to take effect.
+== Трябва да рестартирате играта, за да се приложат новите настройки.
+
+Your skin
+== Вашият облик
+
+no limit
+== няма ограничение
+
+##### needs translation #####
+
+##### old translations #####
+

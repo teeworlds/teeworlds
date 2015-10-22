@@ -75,7 +75,11 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 
 	NETADDR BindAddr;
 	if(g_Config.m_EcBindaddr[0] && net_host_lookup(g_Config.m_EcBindaddr, &BindAddr, NETTYPE_ALL) == 0)
+	{
+		// got bindaddr
+		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_EcPort;
+	}
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));
@@ -131,10 +135,9 @@ void CEcon::Update()
 				m_NetConsole.Send(ClientID, aMsg);
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
-					if(!g_Config.m_EcBantime)
-						m_NetConsole.Drop(ClientID, "Too many authentication tries");
-					else
+					if(g_Config.m_EcBantime)
 						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), g_Config.m_EcBantime*60, "Too many authentication tries");
+					m_NetConsole.Drop(ClientID, "Too many authentication tries");
 				}
 			}
 		}

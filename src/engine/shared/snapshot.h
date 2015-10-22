@@ -107,7 +107,7 @@ public:
 	void PurgeAll();
 	void PurgeUntil(int Tick);
 	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
-	int Get(int Tick, int64 *Tagtime, CSnapshot **pData, CSnapshot **ppAltData);
+	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 
 class CSnapshotBuilder
@@ -131,7 +131,7 @@ public:
 	CSnapshotItem *GetItem(int Index);
 	int *GetItemData(int Key);
 
-	int Finish(void *Snapdata);
+	int Finish(void *pSnapdata);
 };
 
 

@@ -1,0 +1,703 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bayt
+
+%d of %d servers, %d players
+== %d/%d sunucu, %d oyuncu
+
+%d%% loaded
+== %d%% yüklendi
+
+%ds left
+== %ds kaldı
+
+%i minute left
+== %i dakika kaldı
+
+%i minutes left
+== %i dakika kaldı
+
+%i second left
+== %i saniye kaldı
+
+%i seconds left
+== %i saniye kaldı
+
+%s wins!
+== %s kazandı!
+
+-Page %d-
+== -Sayfa %d-
+
+Abort
+== İptal
+
+Add
+== Ekle
+
+Add Friend
+== Arkadaş Ekle
+
+Address
+== Adres
+
+All
+== Hepsi
+
+Alpha
+== Şeffaflık
+
+Always show name plates
+== Oyuncu isimlerini her zaman göster
+
+Are you sure that you want to delete the demo?
+== Demo dosyasını silmek istediğinize emin misiniz?
+
+Are you sure that you want to quit?
+== Çıkmak istediğinize emin misiniz?
+
+Are you sure that you want to remove the player from your friends list?
+== Bu oyuncuyu arkadaş listenizden kaldırmak istediğinize emin misiniz?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Oyunu ilk açışınız olduğundan dolayı takma adınızı giriniz. Bir oyuna katılmadan önce ayarları incelemeniz ve isteklerinize göre özelleştirmeniz önerilir.
+
+Automatically record demos
+== Demoları otomatik olarak kaydet
+
+Automatically take game over screenshot
+== Otomatik olarak oyun bitişinde ekran görüntüsü al
+
+Blue team
+== Mavi takım
+
+Blue team wins!
+== Mavi takım kazandı!
+
+Body
+== Gövde
+
+Call vote
+== Oylama başlat
+
+Change settings
+== Ayarları değiştir
+
+Chat
+== Sohbet
+
+Clan
+== Clan
+
+Client
+== İstemci
+
+Close
+== Kapat
+
+Compatible version
+== Uyumlu versiyon
+
+Connect
+== Bağlan
+
+Connecting to
+== Bağlanılıyor
+
+Connection Problems...
+== Bağlantı Hataları...
+
+Console
+== Konsol
+
+Controls
+== Kontroller
+
+Count players only
+== Sadece oyuncuları say
+
+Country
+== Ülke
+
+Crc:
+== Crc:
+
+Created:
+== Yaratıldı:
+
+Current
+== Şimdiki
+
+Current version: %s
+== Mevcut versiyon: %s
+
+Custom colors
+== Özel renkler
+
+Delete
+== Sil
+
+Delete demo
+== Demoyu sil
+
+Demo details
+== Demo ayrıntıları
+
+Demofile: %s
+== Demo dosyası
+
+Demos
+== Demolar
+
+Disconnect
+== Bağlantıyı kes
+
+Disconnected
+== Bağlantı kesildi
+
+Display Modes
+== Çözünürlük
+
+Downloading map
+== Harita yükleniyor
+
+Draw!
+== Berabere!
+
+Dynamic Camera
+== Dinamik Kamera
+
+Emoticon
+== Yüz ifadesi
+
+Enter
+== Gir
+
+Error
+== Hata
+
+Error loading demo
+== Demo yüklenirken hata oluştu
+
+FSAA samples
+== FSAA örnekleri
+
+Favorite
+== Favori
+
+Favorites
+== Favoriler
+
+Feet
+== Ayak
+
+Filter
+== Filtre
+
+Fire
+== Ateş
+
+Folder
+== Dosya
+
+Force vote
+== Oylamayı zorla
+
+Free-View
+== Serbest Görüntü
+
+Friends
+== Arkadaşlar
+
+Fullscreen
+== Tam ekran
+
+Game
+== Oyun
+
+Game info
+== Oyun bilgisi
+
+Game over
+== Oyun sonu
+
+Game type
+== Oyun türü
+
+Game types:
+== Oyun türleri:
+
+General
+== Genel
+
+Graphics
+== Grafik
+
+Grenade
+== El bombası
+
+Hammer
+== Çekiç
+
+Has people playing
+== Insan bulunduran
+
+High Detail
+== High Detail
+
+Hook
+== Kanca
+
+Host address
+== Sunucu adresi
+
+Hue
+== Renk
+
+Info
+== Bilgi
+
+Internet
+== Internet
+
+Invalid Demo
+== Geçersiz Demo
+
+Join blue
+== Maviye katıl
+
+Join game
+== Oyuna katıl
+
+Join red
+== Kırmızıya katıl
+
+Jump
+== Zıpla
+
+Kick player
+== Oyuncuyu At
+
+LAN
+== LAN
+
+Language
+== Dil
+
+Length:
+== Uzunluk:
+
+Lht.
+== Parlaklık
+
+Loading
+== Yükleniyor
+
+MOTD
+== MOTD
+
+Map
+== Harita
+
+Map:
+== Harita:
+
+Max Screenshots
+== Maksimum Ekran Alıntısı Sayısı
+
+Max demos
+== Maksimum Demo Sayısı
+
+Maximum ping:
+== Maximum ping
+
+Miscellaneous
+== Çeşitli
+
+Mouse sens.
+== Mouse duyarlılığı
+
+Move left
+== Sola git
+
+Move player to spectators
+== Seyircilere katıl
+
+Move right
+== Sağa git
+
+Movement
+== Hareket
+
+Mute when not active
+== Aktif değilken sessizleştir
+
+Name
+== İsim
+
+Name plates size
+== Boyut
+
+Netversion:
+== Netversion :
+
+New name:
+== Yeni isim :
+
+News
+== Haberler
+
+Next weapon
+== Sonraki silah
+
+Nickname
+== Takma ad
+
+No
+== Hayır
+
+No password
+== Şifresiz
+
+No servers found
+== Sunucu bulunamadı
+
+No servers match your filter criteria
+== Filtre kriterlerinize uygun sunucu bulunamadı
+
+Ok
+== Tamam
+
+Open
+== Aç
+
+Parent Folder
+== Üst dizin
+
+Password
+== Şifre
+
+Password incorrect
+== Hatalı şifre
+
+Ping
+== Ping
+
+Pistol
+== Tabanca
+
+Play
+== Oynat
+
+Play background music
+== Arkaplan müziğini çal
+
+Player
+== Oyuncu
+
+Player options
+== Oyuncu ayarları
+
+Players
+== Oyuncular
+
+Please balance teams!
+== Takımları dengeleyin!
+
+Prev. weapon
+== Önceki silah
+
+Quality Textures
+== Kaliteli dolgular
+
+Quick search:
+== Hızlı Arama :
+
+Quit
+== Çıkış
+
+Quit anyway?
+== Çıkmak istediğinize emin misiniz?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Neden :
+
+Record demo
+== Demo kaydet
+
+Red team
+== Kırmızı takım
+
+Red team wins!
+== Kırmızı takım kazandı!
+
+Refresh
+== Yenile
+
+Refreshing master servers
+== Ana sunucu yenileniyor
+
+Remote console
+== Uzak Konsol
+
+Remove
+== Çıkar
+
+Remove friend
+== Arkadaşı sil
+
+Rename
+== Yeniden isimlendir
+
+Rename demo
+== Demonun adını değiştir
+
+Reset filter
+== Filitreleri varsayılanlara getir
+
+Reset to defaults
+== Varsayılanlara getir
+
+Rifle
+== Lazer
+
+Round
+== Raund
+
+Sample rate
+== Sample rate
+
+Sat.
+== Doygunluk
+
+Score
+== Skor
+
+Score board
+== Skor tahtası
+
+Score limit
+== Skor limiti
+
+Scoreboard
+== Skor tahtası
+
+Screenshot
+== Ekran alıntısı
+
+Server address:
+== Sunucu adresi :
+
+Server details
+== Sunucucu detayları
+
+Server filter
+== Filtreler
+
+Server info
+== Sunucu bilgisi
+
+Server not full
+== Sunucu dolu değil
+
+Settings
+== Ayarlar
+
+Shotgun
+== Tüfek
+
+Show chat
+== Sohbeti göster
+
+Show friends only
+== Sadece arkadaşları göster
+
+Show ingame HUD
+== Oyun içi HUD ı göster
+
+Show name plates
+== Oyuncu isimlerini göster
+
+Show only supported
+== Desteklenmeyen çözünürlükleri gizle
+
+Size:
+== Boyut:
+
+Skins
+== Skins
+
+Sound
+== Ses
+
+Sound error
+== Ses hatası
+
+Sound volume
+== Ses yüksekliği
+
+Spectate
+== İzle
+
+Spectate next
+== Sıradakini izle
+
+Spectate previous
+== Öncekini izle
+
+Spectator mode
+== İzleyici modu
+
+Spectators
+== İzleyiciler
+
+Standard gametype
+== Standart oyun türleri
+
+Standard map
+== Standart haritalar
+
+Stop record
+== Kaydı durdur
+
+Strict gametype filter
+== Sıkı oyun türü filtresi
+
+Sudden Death
+== Ani ölüm
+
+Switch weapon on pickup
+== Silah alındığıda yeni silaha geç
+
+Team
+== Takım
+
+Team chat
+== Takım sohbeti
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s çıktı! www.teeworlds.com dan indirin!
+
+Texture Compression
+== Dolgu sıkıştırması
+
+The audio device couldn't be initialised.
+== Ses donanımı başlatılamadı.
+
+The server is running a non-standard tuning on a pure game type.
+== Bu sunucu standart olmayan bir ayarı saf bir oyun türünde kullanıyor.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Editörde kaydedilmemiş bir harita var, kapatmadan önce kaydetmek isteyebilirsiniz.
+
+Time limit
+== Süre limiti
+
+Time limit: %d min
+== Süre limiti: %d min
+
+Try again
+== Tekrar dene
+
+Type
+== Tür
+
+Type:
+== Tür:
+
+UI Color
+== Menü rengi
+
+Unable to delete the demo
+== Demo silinemiyor
+
+Unable to rename the demo
+== Demonun ismi değiştirilemiyor
+
+Use sounds
+== Sesleri kullan
+
+Use team colors for name plates
+== İsim etiketlerinde takım renklerini kullan
+
+V-Sync
+== V-Sync
+
+Version
+== Sürüm
+
+Version:
+== Versyon :
+
+Vote command:
+== Komut:
+
+Vote description:
+== Açıklama :
+
+Vote no
+== Olumsuz oy ver
+
+Vote yes
+== Olumlu oy ver
+
+Voting
+== Oylama
+
+Warmup
+== Isınma
+
+Weapon
+== Silah
+
+Welcome to Teeworlds
+== Teeworlds'e hoşgeldiniz
+
+Yes
+== Evet
+
+You must restart the game for all settings to take effect.
+== Bütün ayarların aktif olması için oyunu yeniden başlatmalısınız.
+
+Your skin
+== Sizin görünüşünüz
+
+no limit
+== limit yok
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Player country:
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+
+﻿
+== ## translated strings #####
+

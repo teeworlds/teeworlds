@@ -646,7 +646,7 @@ public:
 					Compare.m_Y = DrawY;
 					Compare.m_Flags &= ~TEXTFLAG_RENDER;
 					Compare.m_LineWidth = -1;
-					TextEx(&Compare, pText, Wlen);
+					TextEx(&Compare, pCurrent, Wlen);
 
 					if(Compare.m_X-DrawX > pCursor->m_LineWidth)
 					{

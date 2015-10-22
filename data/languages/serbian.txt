@@ -1,0 +1,700 @@
+
+##### translated strings #####
+
+%d Bytes
+== %d Bajtova
+
+%d of %d servers, %d players
+== %d od %d server(a), %d igrač(a)
+
+%d%% loaded
+== %d%% učitano
+
+%ds left
+== Još %ds
+
+%i minute left
+== %i minut preostao
+
+%i minutes left
+== Preostalo: %i min.
+
+%i second left
+== Preostalo: %i min.
+
+%i seconds left
+== Preostalo: %i sek.
+
+%s wins!
+== %s je pobedio!
+
+-Page %d-
+== -Strana %d-
+
+Abort
+== Prekini
+
+Add
+== Dodaj
+
+Add Friend
+== Dodaj prijatelja
+
+Address
+== Adresa
+
+All
+== Svi
+
+Alpha
+== Provid.
+
+Always show name plates
+== Uvek prikaži imena igrača
+
+Are you sure that you want to delete the demo?
+== Da li sigurni da želite da obrišete demo-snimak?
+
+Are you sure that you want to quit?
+== Jeste li sigurni da želite da izađete?
+
+Are you sure that you want to remove the player from your friends list?
+== Da li ste sigurni da želite da obrišete igrača iz liste prijatelja?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da proverite podešavanja i podesite ih prema Vašem ukusu pre nego što se konektujete na server.
+
+Automatically record demos
+== Automatski snimi demo
+
+Automatically take game over screenshot
+== Automatski snimi screenshot
+
+Blue team
+== Plavi tim
+
+Blue team wins!
+== Plavi tim je pobedio!
+
+Body
+== Telo
+
+Call vote
+== Glasanje
+
+Change settings
+== Izmeni podešavanja
+
+Chat
+== Chat
+
+Clan
+== Klan
+
+Client
+== Klijent
+
+Close
+== Zatvori
+
+Compatible version
+== Kompatibilna verzija
+
+Connect
+== Konektuj
+
+Connecting to
+== Konektujem se na
+
+Connection Problems...
+== Problemi sa konekcijom...
+
+Console
+== Konzola
+
+Controls
+== Kontrole
+
+Count players only
+== Broj samo igrače
+
+Country
+== Država
+
+Crc:
+== Crc:
+
+Created:
+== Kreirano:
+
+Current
+== Trenutno
+
+Current version: %s
+== Trenutna verzija: %s
+
+Custom colors
+== Vlastite boje
+
+Delete
+== Izbriši
+
+Delete demo
+== Obriši demo-snimak
+
+Demo details
+== Detalji demo-a
+
+Demofile: %s
+== Demo-snimak: %s
+
+Demos
+== Demo-i
+
+Disconnect
+== Diskonektuj
+
+Disconnected
+== Diskonektovan
+
+Display Modes
+== Rezolucija i način prikaza
+
+Downloading map
+== Preuzimam mapu
+
+Draw!
+== Nerešeno!
+
+Dynamic Camera
+== Dinamična kamera
+
+Emoticon
+== Emoticon
+
+Enter
+== Započni
+
+Error
+== Greška
+
+Error loading demo
+== Greška prilikom učitavanja demo-snimka
+
+FSAA samples
+== FSAA samples
+
+Favorite
+== Omiljen
+
+Favorites
+== Omiljeni
+
+Feet
+== Stopala
+
+Filter
+== Filter
+
+Fire
+== Pucaj
+
+Folder
+== Folder
+
+Force vote
+== Obavezno glasanje
+
+Free-View
+== Slobodan pregled
+
+Friends
+== Prijatelji
+
+Fullscreen
+== Čitav ekran
+
+Game
+== Igra
+
+Game info
+== O igri
+
+Game over
+== Igra je završena
+
+Game type
+== Tip igre
+
+Game types:
+== Tipovi igre:
+
+General
+== Opšte
+
+Graphics
+== Grafika
+
+Grenade
+== Granate
+
+Hammer
+== Čekić
+
+Has people playing
+== Server nije prazan
+
+High Detail
+== Visoki detalji
+
+Hook
+== Kuka
+
+Host address
+== Adresa servera
+
+Hue
+== Nijansa
+
+Info
+== Info
+
+Internet
+== Internet
+
+Invalid Demo
+== Neispravan demo-snimak
+
+Join blue
+== U plavi tim
+
+Join game
+== Uključi se u igru
+
+Join red
+== U crveni tim
+
+Jump
+== Skok
+
+Kick player
+== Izbaci igrača iz igre
+
+LAN
+== LAN
+
+Language
+== Jezik
+
+Length:
+== Dužina:
+
+Lht.
+== Svetl.
+
+Loading
+== Učitavam
+
+MOTD
+== Vest dana
+
+Map
+== Mapa
+
+Map:
+== Mapa:
+
+Max Screenshots
+== Maksimalan broj screenshot-ova
+
+Max demos
+== Maksimalan broj demo-a
+
+Maximum ping:
+== Maksimalan ping:
+
+Miscellaneous
+== Razno
+
+Mouse sens.
+== Osetljivost miša
+
+Move left
+== Nalevo
+
+Move player to spectators
+== Prebaci igrača u posmatrače
+
+Move right
+== Nadesno
+
+Movement
+== Kretanje
+
+Mute when not active
+== Bez zvuka prilikom neaktivnosti
+
+Name
+== Ime
+
+Name plates size
+== Veličina pločice za ime
+
+Netversion:
+== Net verzija:
+
+New name:
+== Novo ime:
+
+News
+== Novosti
+
+Next weapon
+== Sledeće oružje
+
+Nickname
+== Nadimak
+
+No
+== Ne
+
+No password
+== Bez lozinke
+
+No servers found
+== Nije pronađen nijedan server
+
+No servers match your filter criteria
+== Nijedan server ne odgovara zadatom kriteriju
+
+Ok
+== Ok
+
+Open
+== Otvori
+
+Parent Folder
+== Prethodni folder
+
+Password
+== Lozinka
+
+Password incorrect
+== Pogrešna lozinka
+
+Ping
+== Ping
+
+Pistol
+== Pištolj
+
+Play
+== Pokreni
+
+Play background music
+== Pozadinska muzika
+
+Player
+== Igrač
+
+Player country:
+== Država
+
+Player options
+== Podešavanja igrača
+
+Players
+== Igrači
+
+Please balance teams!
+== Molim uravnotežite timove!
+
+Prev. weapon
+== Prethodno oružje
+
+Quality Textures
+== Visokokvalitetne teksture
+
+Quick search:
+== Brza pretraga:
+
+Quit
+== Izlaz
+
+Quit anyway?
+== Izlaz?
+
+REC %3d:%02d
+== REC %3d:%02d
+
+Reason:
+== Razlog:
+
+Record demo
+== Snimi demo
+
+Red team
+== Crveni tim
+
+Red team wins!
+== Crveni tim je pobedio!
+
+Refresh
+== Osveži
+
+Refreshing master servers
+== Osvežavam master servere
+
+Remote console
+== Udaljena konzola
+
+Remove
+== Ukloni
+
+Remove friend
+== Ukloni prijatelja
+
+Rename
+== Preimenuj
+
+Rename demo
+== Preimenuj demo
+
+Reset filter
+== Poništi filter
+
+Reset to defaults
+== Resetuj podešavanja
+
+Rifle
+== Puška
+
+Round
+== Runda
+
+Sample rate
+== Frekvencija
+
+Sat.
+== Zasić.
+
+Score
+== Rezultat
+
+Score board
+== Bodovi
+
+Score limit
+== Max. bodova
+
+Scoreboard
+== Bodovi
+
+Screenshot
+== Screenshot
+
+Server address:
+== Adresa servera:
+
+Server details
+== Podaci o serveru
+
+Server filter
+== Filter servera
+
+Server info
+== O Serveru
+
+Server not full
+== Server nije pun
+
+Settings
+== Podešavanja
+
+Shotgun
+== Sačmarica
+
+Show chat
+== Prikaži chat
+
+Show friends only
+== Prikaži samo prijatelje
+
+Show ingame HUD
+== Prikaži HUD
+
+Show name plates
+== Prikaži imena igrača
+
+Show only supported
+== Prikaži samo podržane
+
+Size:
+== Veličina:
+
+Skins
+== Izgled
+
+Sound
+== Zvuk
+
+Sound error
+== Problem sa zvukom
+
+Sound volume
+== Jačina zvuka
+
+Spectate
+== Posmatraj
+
+Spectate next
+== Posmatraj sledećeg
+
+Spectate previous
+== Posmatraj prošlog
+
+Spectator mode
+== Posmatrački mod
+
+Spectators
+== Posmatrači
+
+Standard gametype
+== Standardni tip igre
+
+Standard map
+== Standardna mapa
+
+Stop record
+== Prekini snimanje
+
+Strict gametype filter
+== Striktan filter tipa igre
+
+Sudden Death
+== Iznenadna smrt
+
+Switch weapon on pickup
+== Aktiviraj novo oružje prilikom uzimanja
+
+Team
+== Tim
+
+Team chat
+== Timski chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s je objavljen! Preuzmi ga na www.teeworlds.com!
+
+Texture Compression
+== Kompresija tekstura
+
+The audio device couldn't be initialised.
+== Audio uređaj nije moguće pokrenuti.
+
+The server is running a non-standard tuning on a pure game type.
+== Server sadrži nestandardna podešavanja.
+
+There's an unsaved map in the editor, you might want to save it before you quit the game.
+== Mapa u editoru nije zapamćena, možda želite da je zapamtite pre izlaska iz igre.
+
+Time limit
+== Max. vremena
+
+Time limit: %d min
+== Vremensko ograničenje: %d min.
+
+Try again
+== Pokušaj ponovo
+
+Type
+== Tip
+
+Type:
+== Tip:
+
+UI Color
+== Boja menija
+
+Unable to delete the demo
+== Demo nije moguće obrisati
+
+Unable to rename the demo
+== Demo nije moguće preimenovati
+
+Use sounds
+== Koristi zvuk
+
+Use team colors for name plates
+== Koristi timsku boju u prikazu imena
+
+V-Sync
+== V-Sync
+
+Version
+== Verzija
+
+Version:
+== Verzija:
+
+Vote command:
+== Komanda za glasanje:
+
+Vote description:
+== Opis glasanja:
+
+Vote no
+== Protiv
+
+Vote yes
+== Za
+
+Voting
+== Glasanje
+
+Warmup
+== Zagrejavanje
+
+Weapon
+== Oružje
+
+Welcome to Teeworlds
+== Dobrodošli u Teeworlds
+
+Yes
+== Da
+
+You must restart the game for all settings to take effect.
+== Morate ponovo pokrenuti igru da bi sva podešavanja bila primenjena.
+
+Your skin
+== Vaš izgled
+
+no limit
+== bez ograničenja
+
+##### needs translation #####
+
+Borderless window
+== 
+
+Game paused
+== 
+
+Handle rendering async from updates
+== 
+
+Respawn
+== 
+
+Show only chat messages from friends
+== 
+
+Threaded rendering
+== 
+
+Threaded sound loading
+== 
+
+##### old translations #####
+
