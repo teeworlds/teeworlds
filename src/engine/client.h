@@ -87,6 +87,7 @@ public:
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
+	virtual void ToggleFullscreen() = 0;
 
 	// networking
 	virtual void EnterGame() = 0;

@@ -1205,13 +1205,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
 	static int s_ButtonGfxFullscreen = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
-	{
-		if(Graphics()->Fullscreen(g_Config.m_GfxFullscreen^1))
-		{	g_Config.m_GfxFullscreen ^= 1;
-			if(g_Config.m_GfxFullscreen && g_Config.m_GfxBorderless)
-				g_Config.m_GfxBorderless = 0;
-		}
-	}
+		Client()->ToggleFullscreen();
 
 	if(!g_Config.m_GfxFullscreen)
 	{
@@ -1222,8 +1216,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
 		{
 			g_Config.m_GfxBorderless ^= 1;
-			if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
-				g_Config.m_GfxFullscreen = 0;
 			CheckSettings = true;
 		}
 	}

@@ -95,8 +95,6 @@ public:
 	int ScreenHeight() const { return m_ScreenHeight; }
 	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
 
-	virtual bool Fullscreen(bool State) = 0;
-
 	virtual void Clear(float r, float g, float b) = 0;
 
 	virtual void ClipEnable(int x, int y, int w, int h) = 0;
@@ -197,6 +195,8 @@ class IEngineGraphics : public IGraphics
 public:
 	virtual int Init() = 0;
 	virtual void Shutdown() = 0;
+
+	virtual bool Fullscreen(bool State) = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
