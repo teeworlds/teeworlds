@@ -707,14 +707,8 @@ void CGraphics_Threaded::QuadsText(float x, float y, float Size, const char *pTe
 int CGraphics_Threaded::IssueInit()
 {
 	int Flags = 0;
-	if(g_Config.m_GfxBorderless && g_Config.m_GfxFullscreen)
-	{
-		dbg_msg("gfx", "both borderless and fullscreen activated, disabling borderless");
-		g_Config.m_GfxBorderless = 0;
-	}
-
 	if(g_Config.m_GfxBorderless) Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
-	else if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
+	if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
 	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
 	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
 
@@ -853,6 +847,11 @@ void CGraphics_Threaded::Maximize()
 bool CGraphics_Threaded::Fullscreen(bool State)
 {
 	return m_pBackend->Fullscreen(State);
+}
+
+void CGraphics_Threaded::SetWindowBordered(bool State)
+{
+	m_pBackend->SetWindowBordered(State);
 }
 
 int CGraphics_Threaded::WindowActive()

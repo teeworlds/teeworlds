@@ -310,6 +310,7 @@ public:
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
 	virtual bool Fullscreen(bool State) = 0;
+	virtual void SetWindowBordered(bool State) = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 
@@ -427,6 +428,7 @@ public:
 	virtual void Minimize();
 	virtual void Maximize();
 	virtual bool Fullscreen(bool State);
+	virtual void SetWindowBordered(bool State);
 
 	virtual int WindowActive();
 	virtual int WindowOpen();

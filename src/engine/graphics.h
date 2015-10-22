@@ -197,6 +197,7 @@ public:
 	virtual void Shutdown() = 0;
 
 	virtual bool Fullscreen(bool State) = 0;
+	virtual void SetWindowBordered(bool State) = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;

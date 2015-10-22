@@ -2211,11 +2211,7 @@ void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUse
 void CClient::ToggleFullscreen()
 {
 	if(Graphics()->Fullscreen(g_Config.m_GfxFullscreen^1))
-	{
 		g_Config.m_GfxFullscreen ^= 1;
-		if(g_Config.m_GfxFullscreen && g_Config.m_GfxBorderless)
-				g_Config.m_GfxBorderless = 0;
-	}
 }
 
 void CClient::ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -2225,6 +2221,24 @@ void CClient::ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IC
 	{
 		if(g_Config.m_GfxFullscreen != pResult->GetInteger(0))
 			pSelf->ToggleFullscreen();
+	}
+	else
+		pfnCallback(pResult, pCallbackUserData);
+}
+
+void CClient::ToggleWindowBordered()
+{
+	g_Config.m_GfxBorderless ^= 1;
+	Graphics()->SetWindowBordered(!g_Config.m_GfxBorderless);
+}
+
+void CClient::ConchainWindowBordered(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	if(pSelf->Graphics() && pResult->NumArguments())
+	{
+		if(!g_Config.m_GfxFullscreen && (g_Config.m_GfxBorderless != pResult->GetInteger(0)))
+			pSelf->ToggleWindowBordered();
 	}
 	else
 		pfnCallback(pResult, pCallbackUserData);
@@ -2254,6 +2268,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 
 	m_pConsole->Chain("gfx_fullscreen", ConchainFullscreen, this);
+	m_pConsole->Chain("gfx_borderless", ConchainWindowBordered, this);
 }
 
 static CClient *CreateClient()

@@ -88,6 +88,7 @@ public:
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
 	virtual void ToggleFullscreen() = 0;
+	virtual void ToggleWindowBordered() = 0;
 
 	// networking
 	virtual void EnterGame() = 0;

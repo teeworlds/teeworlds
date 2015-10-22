@@ -640,10 +640,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 	*pDesktopWidth = DisplayMode.w;
 	*pDesktopHeight = DisplayMode.h;
 
-	dbg_assert(!(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
-		|| !(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN),
-		"only one of borderless and fullscreen may be activated at the same time");
-
 	// set flags
 	int SdlFlags = SDL_WINDOW_OPENGL;
 	if(Flags&IGraphicsBackend::INITFLAG_RESIZABLE)
@@ -755,6 +751,11 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 {
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;
+}
+
+void CGraphicsBackend_SDL_OpenGL::SetWindowBordered(bool State)
+{
+	SDL_SetWindowBordered(m_pWindow, SDL_bool(State));
 }
 
 int CGraphicsBackend_SDL_OpenGL::WindowActive()
