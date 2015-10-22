@@ -315,6 +315,8 @@ public:
 
 	virtual int MemoryUsage() const = 0;
 
+	virtual int GetNumScreens() const = 0;
+
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
 	virtual bool Fullscreen(bool State) = 0;
@@ -434,6 +436,7 @@ public:
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
 	virtual void QuadsText(float x, float y, float Size, const char *pText);
 
+	virtual int GetNumScreens() const;
 	virtual void Minimize();
 	virtual void Maximize();
 	virtual bool Fullscreen(bool State);

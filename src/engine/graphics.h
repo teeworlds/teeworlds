@@ -174,7 +174,8 @@ public:
 	virtual int GetDesktopScreenHeight() const = 0;
 
 	virtual void Swap() = 0;
-	virtual bool SetVSync(bool State) = 0;
+	virtual int GetNumScreens() const = 0;
+	
 
 	// syncronization
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
@@ -200,6 +201,7 @@ public:
 	virtual bool Fullscreen(bool State) = 0;
 	virtual void SetWindowBordered(bool State) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
+	virtual bool SetVSync(bool State) = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;

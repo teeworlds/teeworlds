@@ -1177,7 +1177,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = g_Config.m_GfxFullscreen ? 3 : 4;
+	int NumOptions = g_Config.m_GfxFullscreen ? 4 : 5;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1220,6 +1220,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_ButtonGfxVsync = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
 		Client()->ToggleWindowVSync();
+
+	Screen.HSplitTop(Spacing, 0, &Screen);
+	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+	int Index = g_Config.m_GfxScreen;
+	DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 110.0f, 0, Graphics()->GetNumScreens()-1);
+	if(Index != g_Config.m_GfxScreen)
+		Client()->SwitchWindowScreen(Index);
 
 	// FSAA button
 	{

@@ -833,6 +833,11 @@ void CGraphics_Threaded::Shutdown()
 		delete m_apCommandBuffers[i];
 }
 
+int CGraphics_Threaded::GetNumScreens() const
+{
+	return m_pBackend->GetNumScreens();
+}
+
 void CGraphics_Threaded::Minimize()
 {
 	m_pBackend->Minimize();

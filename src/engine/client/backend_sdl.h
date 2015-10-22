@@ -188,11 +188,14 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 	SDL_GLContext m_GLContext;
 	ICommandProcessor *m_pProcessor;
 	volatile int m_TextureMemoryUsage;
+	int m_NumScreens;
 public:
 	virtual int Init(const char *pName, int *Screen, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
+
+	virtual int GetNumScreens() const { return m_NumScreens; }
 
 	virtual void Minimize();
 	virtual void Maximize();
