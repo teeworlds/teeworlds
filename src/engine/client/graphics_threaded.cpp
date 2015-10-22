@@ -712,7 +712,7 @@ int CGraphics_Threaded::IssueInit()
 	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
 	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
 
-	return m_pBackend->Init("Teeworlds", g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
+	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
 }
 
 int CGraphics_Threaded::InitWindow()
@@ -941,10 +941,11 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	mem_zero(&Image, sizeof(Image));
 
 	int NumModes = 0;
-	CCommandBuffer::SCommand_VideoModes Cmd(Screen);
+	CCommandBuffer::SCommand_VideoModes Cmd;
 	Cmd.m_pModes = pModes;
 	Cmd.m_MaxModes = MaxModes;
 	Cmd.m_pNumModes = &NumModes;
+	Cmd.m_Screen = Screen;
 	m_pCommandBuffer->AddCommand(Cmd);
 
 	// kick the buffer and wait for the result and return it

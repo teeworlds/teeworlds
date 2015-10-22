@@ -625,7 +625,7 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -636,9 +636,28 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 		}
 	}
 
+	// set screen
+	SDL_Rect ScreenPos;
+	int NumScreens = SDL_GetNumVideoDisplays();
+	if(NumScreens > 0)
+	{
+		clamp(*Screen, 0, NumScreens);
+		if(SDL_GetDisplayBounds(*Screen, &ScreenPos) != 0)
+		{
+			dbg_msg("gfx", "unable to retrieve screen information: %s", SDL_GetError());
+			return -1;
+		}
+
+	}
+	else
+	{
+		dbg_msg("gfx", "unable to retrieve number of screens: %s", SDL_GetError());
+		return -1;
+	}
+
 	// store desktop resolution for settings reset button
 	SDL_DisplayMode DisplayMode;
-	if(SDL_GetDesktopDisplayMode(Screen, &DisplayMode))
+	if(SDL_GetDesktopDisplayMode(*Screen, &DisplayMode))
 	{
 		dbg_msg("gfx", "unable to get desktop resolution: %s", SDL_GetError());
 		return -1;
@@ -669,7 +688,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int Screen, int *pWidth
 	}
 
 	// create window
-	m_pWindow = SDL_CreateWindow(pName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, *pWidth, *pHeight, SdlFlags);
+	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x, ScreenPos.y, *pWidth, *pHeight, SdlFlags);
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
