@@ -1862,6 +1862,11 @@ void CClient::Run()
 			{
 				Input()->MouseModeRelative();
 				m_WindowMustRefocus = 0;
+
+				// update screen in case it got moved
+				int ActScreen = Graphics()->GetWindowScreen();
+				if(ActScreen > 0 && ActScreen != g_Config.m_GfxScreen)
+					g_Config.m_GfxScreen = ActScreen;
 			}
 		}
 

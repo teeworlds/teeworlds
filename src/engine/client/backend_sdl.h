@@ -202,6 +202,7 @@ public:
 	virtual bool Fullscreen(bool State);		// on=true/off=false
 	virtual void SetWindowBordered(bool State);	// on=true/off=false
 	virtual bool SetWindowScreen(int Index);
+	virtual int GetWindowScreen();
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };

@@ -322,6 +322,7 @@ public:
 	virtual bool Fullscreen(bool State) = 0;
 	virtual void SetWindowBordered(bool State) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
+	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 
@@ -442,6 +443,7 @@ public:
 	virtual bool Fullscreen(bool State);
 	virtual void SetWindowBordered(bool State);
 	virtual bool SetWindowScreen(int Index);
+	virtual int GetWindowScreen();
 
 	virtual int WindowActive();
 	virtual int WindowOpen();

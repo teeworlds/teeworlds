@@ -202,6 +202,7 @@ public:
 	virtual void SetWindowBordered(bool State) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
 	virtual bool SetVSync(bool State) = 0;
+	virtual int GetWindowScreen() = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;

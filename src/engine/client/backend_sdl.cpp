@@ -688,7 +688,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	}
 
 	// create window
-	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x, ScreenPos.y, *pWidth, *pHeight, SdlFlags);
+	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x, ScreenPos.y+10, *pWidth, *pHeight, SdlFlags);
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
@@ -796,6 +796,11 @@ bool CGraphicsBackend_SDL_OpenGL::SetWindowScreen(int Index)
 	}
 
 	return false;
+}
+
+int CGraphicsBackend_SDL_OpenGL::GetWindowScreen()
+{
+	return SDL_GetWindowDisplayIndex(m_pWindow);
 }
 
 int CGraphicsBackend_SDL_OpenGL::WindowActive()

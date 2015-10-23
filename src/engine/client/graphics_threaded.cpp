@@ -863,6 +863,11 @@ bool CGraphics_Threaded::SetWindowScreen(int Index)
 	return m_pBackend->SetWindowScreen(Index);
 }
 
+int CGraphics_Threaded::GetWindowScreen()
+{
+	return m_pBackend->GetWindowScreen();
+}
+
 int CGraphics_Threaded::WindowActive()
 {
 	return m_pBackend->WindowActive();
