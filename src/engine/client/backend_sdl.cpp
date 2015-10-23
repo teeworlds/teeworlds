@@ -791,7 +791,7 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 {
 #if defined(CONF_PLATFORM_MACOSX)	// Todo: remove this when fixed in SDL
-	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN_Desktop : 0) == 0;
+	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) == 0;
 #else
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;
 #endif
