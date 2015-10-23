@@ -672,7 +672,13 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
+#if defined(CONF_PLATFORM_MACOSX)	// Todo: remove this when fixed in SDL
+		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// always use "fake" fullscreen
+	*pWidth = *pDesktopWidth;
+	*pHeight = *pDesktopHeight;
+#else
 		SdlFlags |= (*pWidth == 0 || *pHeight == 0) ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;	// use desktop resolution as default
+#endif
 	
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -784,7 +790,11 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 
 bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 {
+#if defined(CONF_PLATFORM_MACOSX)	// Todo: remove this when fixed in SDL
+	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN_Desktop : 0) == 0;
+#else
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;
+#endif
 }
 
 void CGraphicsBackend_SDL_OpenGL::SetWindowBordered(bool State)
