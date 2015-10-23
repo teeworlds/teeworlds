@@ -69,12 +69,14 @@ void CInput::MouseRelative(float *x, float *y)
 void CInput::MouseModeAbsolute()
 {
 	m_InputGrabbed = 0;
+	SDL_ShowCursor(SDL_ENABLE);
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 void CInput::MouseModeRelative()
 {
 	m_InputGrabbed = 1;
+	SDL_ShowCursor(SDL_DISABLE);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
