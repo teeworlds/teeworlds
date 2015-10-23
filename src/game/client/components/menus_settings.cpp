@@ -1306,10 +1306,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		// supported modes button
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		static int s_ActScreen = g_Config.m_GfxScreen;
 		static int s_GfxDisplayAllModes = 0;
-		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button))
+		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button) || (s_ActScreen != g_Config.m_GfxScreen))
 		{
-			g_Config.m_GfxDisplayAllModes ^= 1;
+			if(s_ActScreen == g_Config.m_GfxScreen)
+				g_Config.m_GfxDisplayAllModes ^= 1;
+			s_ActScreen = g_Config.m_GfxScreen;
 			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 			UpdateVideoFormats();
 
