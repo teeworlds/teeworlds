@@ -687,8 +687,17 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 	}
 
+	// calculate centered position in windowed mode
+	int OffsetX = 0;
+	int OffsetY = 0;
+	if(!(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN) && *pDesktopWidth > *pWidth && *pDesktopHeight > *pHeight)
+	{
+		OffsetX = (*pDesktopWidth - *pWidth) / 2;
+		OffsetY = (*pDesktopHeight - *pHeight) / 2;
+	}
+
 	// create window
-	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x, ScreenPos.y+10, *pWidth, *pHeight, SdlFlags);
+	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x+OffsetX, ScreenPos.y+OffsetY, *pWidth, *pHeight, SdlFlags);
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
