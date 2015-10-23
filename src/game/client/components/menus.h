@@ -410,6 +410,7 @@ class CMenus : public CComponent
 	int m_CurrentVideoFormat;
 	void UpdateVideoFormats();
 	void UpdatedFilteredVideoModes();
+	void UpdateVideoModeSettings();
 
 	// found in menus.cpp
 	int Render();

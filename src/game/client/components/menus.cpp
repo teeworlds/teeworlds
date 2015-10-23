@@ -1478,7 +1478,7 @@ void CMenus::UpdatedFilteredVideoModes()
 	}
 }
 
-void CMenus::OnInit()
+void CMenus::UpdateVideoModeSettings()
 {
 	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 	UpdateVideoFormats();
@@ -1500,6 +1500,11 @@ void CMenus::OnInit()
 		m_CurrentVideoFormat = 0;
 
 	UpdatedFilteredVideoModes();
+}
+
+void CMenus::OnInit()
+{
+	UpdateVideoModeSettings();
 
 	// load menu images
 	m_lMenuImages.clear();

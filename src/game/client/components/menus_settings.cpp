@@ -1313,26 +1313,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			if(s_ActScreen == g_Config.m_GfxScreen)
 				g_Config.m_GfxDisplayAllModes ^= 1;
 			s_ActScreen = g_Config.m_GfxScreen;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
-			UpdateVideoFormats();
-
-			bool Found = false;
-			for(int i = 0; i < m_NumVideoFormats; i++)
-			{
-				int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-				if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
-				{
-					m_CurrentVideoFormat = i;
-					Found = true;
-					break;
-				}
-
-			}
-
-			if(!Found)
-				m_CurrentVideoFormat = 0;
-
-			UpdatedFilteredVideoModes();
+			UpdateVideoModeSettings();
 		}
 
 		// format changer
@@ -1439,26 +1420,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(g_Config.m_GfxDisplayAllModes)
 		{
 			g_Config.m_GfxDisplayAllModes = 0;
-			m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
-			UpdateVideoFormats();
-
-			bool Found = false;
-			for(int i = 0; i < m_NumVideoFormats; i++)
-			{
-				int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-				if(m_aVideoFormats[i].m_WidthValue == g_Config.m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == g_Config.m_GfxScreenHeight/G)
-				{
-					m_CurrentVideoFormat = i;
-					Found = true;
-					break;
-				}
-
-			}
-
-			if(!Found)
-				m_CurrentVideoFormat = 0;
-
-			UpdatedFilteredVideoModes();
+			UpdateVideoModeSettings();
 		}
 
 		CheckSettings = true;
