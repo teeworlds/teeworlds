@@ -221,7 +221,7 @@ void CPlayers::RenderPlayer(
 			mixspeed *= 15.0f;
 
 		// move the delta on a constant speed on a x^2 curve
-		float current = g_GameClient.m_aClients[info.ClientID].angle;
+		float current = g_GameClient.m_aClients[info.cid].angle;
 		float target = player.angle/256.0f;
 		float delta = angular_distance(current, target);
 		float sign = delta < 0 ? -1 : 1;
@@ -233,7 +233,7 @@ void CPlayers::RenderPlayer(
 		else
 			angle = angular_approach(current, target, fabs(delta-new_delta));
 
-		g_GameClient.m_aClients[info.ClientID].angle = angle;*/
+		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
 	// use preditect players if needed

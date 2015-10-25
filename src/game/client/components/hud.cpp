@@ -203,7 +203,7 @@ void CHud::RenderScoreHud()
 						const char *pName = m_pClient->m_aClients[ID].m_aName;
 						float w = TextRender()->TextWidth(0, 8.0f, pName, -1);
 						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, pName, -1);
-						
+
 						// draw tee of the flag holder
 						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
 						Info.m_Size = 18.0f;
@@ -269,12 +269,12 @@ void CHud::RenderScoreHud()
 					Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
 				RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*20, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f, 5.0f, CUI::CORNER_L);
 				Graphics()->QuadsEnd();
-				
+
 				// draw score
 				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20, 14.0f, aScore[t], -1);
-				
+
 				if(apPlayerInfo[t])
-				{
+ 				{
 					// draw name
 					int ID = apPlayerInfo[t]->m_ClientID;
 					const char *pName = m_pClient->m_aClients[ID].m_aName;
@@ -287,7 +287,7 @@ void CHud::RenderScoreHud()
  					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
  						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*20));
 				}
-				
+
 				// draw position
 				char aBuf[32];
 				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);

@@ -49,21 +49,20 @@ static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 	((int *)pUserData)[0] = pResult->GetInteger(0);
 }
 
+static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
+{
+	int *v = (int *)pUserData;
+	if(((*v)&1) != pResult->GetInteger(0))
+		(*v)++;
+	*v &= INPUT_STATE_MASK;
+}
+
 struct CInputSet
 {
 	CControls *m_pControls;
 	int *m_pVariable;
 	int m_Value;
 };
-
-static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
-{
-	CInputSet *pSelf = (CInputSet *)pUserData;	
-	int *v = (int *)pSelf->m_pVariable;
-	if(((*v)&1) != pResult->GetInteger(0))
-		(*v)++;
-	*v &= INPUT_STATE_MASK;
-}
 
 static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData)
 {
@@ -75,7 +74,7 @@ static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData)
 static void ConKeyInputNextPrevWeapon(IConsole::IResult *pResult, void *pUserData)
 {
 	CInputSet *pSet = (CInputSet *)pUserData;
-	ConKeyInputCounter(pResult, pSet);
+	ConKeyInputCounter(pResult, pSet->m_pVariable);
 	pSet->m_pControls->m_InputData.m_WantedWeapon = 0;
 }
 
@@ -86,7 +85,7 @@ void CControls::OnConsoleInit()
 	Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionRight, "Move right");
 	Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Jump, "Jump");
 	Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Hook, "Hook");
-	{ static CInputSet s_Set = {this, &m_InputData.m_Fire, 0};  Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, (void *)&s_Set, "Fire"); }
+	Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &m_InputData.m_Fire, "Fire");
 
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 1}; Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 2}; Console()->Register("+weapon2", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to gun"); }

@@ -73,7 +73,7 @@ void CParticles::Add(int Group, CParticle *pPart)
 	// set some parameters
 	m_aParticles[Id].m_Life = 0;
 }
-	
+
 void CParticles::Update(float TimePassed)
 {
 	static float FrictionFraction = 0;
@@ -88,7 +88,7 @@ void CParticles::Update(float TimePassed)
 		FrictionCount++;
 		FrictionFraction -= 0.05f;
 	}
-	
+
 	for(int g = 0; g < NUM_GROUPS; g++)
 	{
 		int i = m_aFirstPart[g];

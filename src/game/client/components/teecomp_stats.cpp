@@ -2,6 +2,7 @@
 #include <engine/textrender.h>
 #include <engine/graphics.h>
 #include <engine/serverbrowser.h>
+#include <engine/shared/jobs.h>
 #include <game/generated/client_data.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>

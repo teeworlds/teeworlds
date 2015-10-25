@@ -535,7 +535,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, m_aLines[m_CurrentLine].m_Team?"teamchat":"chat", aBuf);
 	}
 
-// play sound
+	// play sound
 	int64 Now = time_get();
 	if(!g_Config.m_ClAntiSpam || !m_Spam)
 	{

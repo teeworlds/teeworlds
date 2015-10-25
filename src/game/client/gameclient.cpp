@@ -470,7 +470,7 @@ void CGameClient::OnConnected()
 
 void CGameClient::OnReset()
 {
-	// clear out the inValid pointers
+	// clear out the invalid pointers
 	m_LastNewPredictedTick = -1;
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 
@@ -534,6 +534,7 @@ void CGameClient::UpdatePositions()
 		}
 	}
 }
+
 
 static void Evolve(CNetObj_Character *pCharacter, int Tick)
 {
@@ -615,7 +616,7 @@ void CGameClient::OnRelease()
 		m_All.m_paComponents[i]->OnRelease();
 }
 
-void CGameClient::OnMessage(int MsgID, CUnpacker *pUnpacker)
+void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 {
 	// special messages
 	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS)
@@ -637,24 +638,24 @@ void CGameClient::OnMessage(int MsgID, CUnpacker *pUnpacker)
 		return;
 	}
 
-	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
+	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
 	if(!pRawMsg)
 	{
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgID), MsgID, m_NetObjHandler.FailedMsgOn());
+		str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgId), MsgId, m_NetObjHandler.FailedMsgOn());
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 		return;
 	}
 
 	// TODO: this should be done smarter
 	for(int i = 0; i < m_All.m_Num; i++)
-		m_All.m_paComponents[i]->OnMessage(MsgID, pRawMsg);
+		m_All.m_paComponents[i]->OnMessage(MsgId, pRawMsg);
 
-	if(MsgID == NETMSGTYPE_SV_READYTOENTER)
+	if(MsgId == NETMSGTYPE_SV_READYTOENTER)
 	{
 		Client()->EnterGame();
 	}
-	else if(MsgID == NETMSGTYPE_SV_EMOTICON)
+	else if (MsgId == NETMSGTYPE_SV_EMOTICON)
 	{
 		CNetMsg_Sv_Emoticon *pMsg = (CNetMsg_Sv_Emoticon *)pRawMsg;
 
@@ -662,7 +663,7 @@ void CGameClient::OnMessage(int MsgID, CUnpacker *pUnpacker)
 		m_aClients[pMsg->m_ClientID].m_Emoticon = pMsg->m_Emoticon;
 		m_aClients[pMsg->m_ClientID].m_EmoticonStart = Client()->GameTick();
 	}
-	else if(MsgID == NETMSGTYPE_SV_SOUNDGLOBAL)
+	else if(MsgId == NETMSGTYPE_SV_SOUNDGLOBAL)
 	{
 		if(m_SuppressEvents)
 			return;
@@ -676,12 +677,12 @@ void CGameClient::OnMessage(int MsgID, CUnpacker *pUnpacker)
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
 	}
-	else if(MsgID == NETMSGTYPE_SV_PLAYERTIME)
+	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_ClientID].m_Score = (float)pMsg->m_Time/1000.0f;
 	}
-	else if(MsgID == NETMSGTYPE_SV_CHAT)
+	else if(MsgId == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))

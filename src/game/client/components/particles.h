@@ -72,7 +72,6 @@ private:
 	enum
 	{
 		MAX_PARTICLES=1024*8,
-		MAX_PROJECTILES=128,
 	};
 
 	CParticle m_aParticles[MAX_PARTICLES];
@@ -89,7 +88,7 @@ private:
 		CParticles *m_pParts;
 		virtual void OnRender() { m_pParts->RenderGroup(TGROUP); }
 	};
-	
+
 	CRenderGroup<GROUP_PROJECTILE_TRAIL> m_RenderTrail;
 	CRenderGroup<GROUP_EXPLOSIONS> m_RenderExplosions;
 	CRenderGroup<GROUP_GENERAL> m_RenderGeneral;

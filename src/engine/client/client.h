@@ -3,25 +3,6 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
-#include <engine/console.h>
-#include <engine/editor.h>
-#include <engine/graphics.h>
-#include <engine/textrender.h>
-#include <engine/client.h>
-#include <engine/config.h>
-#include <engine/serverbrowser.h>
-#include <engine/sound.h>
-#include <engine/input.h>
-#include <engine/keys.h>
-#include <engine/map.h>
-#include <engine/masterserver.h>
-#include <engine/storage.h>
-
-#include <engine/shared/protocol.h>
-#include <engine/shared/demo.h>
-#include <engine/shared/ghost.h>
-#include <engine/shared/network.h>
-
 class CGraph
 {
 public:

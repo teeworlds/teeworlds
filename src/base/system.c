@@ -895,7 +895,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		}
 
 		e = bind(sock, addr, sockaddrlen);
-		if(e == 0)
+		if(e == 0 || type == SOCK_STREAM)
 			break;
 		else
 		{

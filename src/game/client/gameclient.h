@@ -63,7 +63,7 @@ class CGameClient : public IGameClient
 	int m_ShowOthers;
 	
 	int64 m_LastSendInfo;
-	
+
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 
@@ -182,7 +182,6 @@ public:
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
-
 		char m_aSkinName[64];
 		int m_SkinID;
 		int m_SkinColor;

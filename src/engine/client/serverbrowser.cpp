@@ -404,7 +404,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	}
 
 	// check if it's a teerace
-	for(i = 0; i < m_NumTeeraceServers; i++)
+	for(int i = 0; i < m_NumTeeraceServers; i++)
 	{
 		if(net_addr_comp(&Addr, &m_aTeeraceServers[i]) == 0)
 			pEntry->m_Info.m_Teerace = 1;
