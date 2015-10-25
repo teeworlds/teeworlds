@@ -126,6 +126,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_MapdownloadChunk;
 	int m_MapdownloadCrc;
 	int m_MapdownloadAmount;
+	int m_MapdownloadChannels;
 	int m_MapdownloadTotalsize;
 
 	// time

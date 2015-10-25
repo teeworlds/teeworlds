@@ -1101,10 +1101,19 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_MapdownloadCrc = MapCrc;
 					m_MapdownloadTotalsize = MapSize;
 					m_MapdownloadAmount = 0;
+					m_MapdownloadChannels = g_Config.m_ClMapChannels;
 
-					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-					Msg.AddInt(m_MapdownloadChunk);
-					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+					// fast map download
+					// needs some testing
+					for(int i = 0; i < m_MapdownloadChannels; i++)
+					{
+						int Flags = MSGFLAG_VITAL;
+						if(i == m_MapdownloadChannels - 1)
+							Flags |= MSGFLAG_FLUSH;
+						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
+						Msg.AddInt(m_MapdownloadChunk+i);
+						SendMsgEx(&Msg, Flags);
+					}
 
 					if(g_Config.m_Debug)
 					{
@@ -1114,7 +1123,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_DATA)
+		else if(Msg == NETMSG_MAP_DATA) // ddnet fast download compatibility
 		{
 			int Last = Unpacker.GetInt();
 			int MapCRC = Unpacker.GetInt();
@@ -1154,11 +1163,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			else
 			{
 				// request new chunk
-				m_MapdownloadChunk++;
-
 				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-				Msg.AddInt(m_MapdownloadChunk);
+				Msg.AddInt(m_MapdownloadChunk + m_MapdownloadChannels);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+				
+				m_MapdownloadChunk++;
 
 				if(g_Config.m_Debug)
 				{
