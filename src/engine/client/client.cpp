@@ -2213,7 +2213,7 @@ void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUse
 
 void CClient::SwitchWindowScreen(int Index)
 {
-	// Todo: remove this if fixed by SDL
+	// Todo SDL: remove this when fixed (changing screen when in fullscreen is bugged)
 	if(g_Config.m_GfxFullscreen)
 	{
 		ToggleFullscreen();

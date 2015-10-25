@@ -196,7 +196,7 @@ int CInput::Update()
 					Action = IInput::FLAG_RELEASE;
 					break;
 
-#if defined(CONF_PLATFORM_MACOSX)	// Todo: remove this when fixed in SDL
+#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
 				case SDL_WINDOWEVENT:
 					if(Event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
 					{
