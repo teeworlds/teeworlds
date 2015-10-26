@@ -26,8 +26,9 @@ can used PrevChar and PlayerChar and it would be fluent and accurate but won't b
 so it will be affected by lags
 */
 
+// should only be in one file
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 3;
+static const unsigned char gs_ActVersion = 4;
 
 CGhost::CGhost()
 {
@@ -374,7 +375,7 @@ bool CGhost::GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader)
 	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
 		return 0;
 
-	if(Header.m_Version != gs_ActVersion)
+	if(Header.m_Version != gs_ActVersion && Header.m_Version != 3)
 		return 0;
 
 	int Crc = (Header.m_aCrc[0]<<24) | (Header.m_aCrc[1]<<16) | (Header.m_aCrc[2]<<8) | (Header.m_aCrc[3]);
@@ -396,6 +397,18 @@ bool CGhost::GetInfo(const char* pFilename, IGhostRecorder::CGhostHeader *pHeade
 	io_close(File);
 
 	return Check;
+}
+
+static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
+{
+	while(Size)
+	{
+		*pOut = *pPast+*pDiff;
+		pOut++;
+		pPast++;
+		pDiff++;
+		Size--;
+	}
 }
 
 void CGhost::Load(const char* pFilename, int ID)
@@ -471,7 +484,10 @@ void CGhost::Load(const char* pFilename, int ID)
 			if(Index >= NumShots)
 				break;
 			
-			Ghost.m_Path[Index] = *Tmp;
+			if(i > 0 && Header.m_Version != 3)
+				UndiffItem((int*)&Ghost.m_Path[Index-1], (int*)Tmp, (int*)&Ghost.m_Path[Index], sizeof(IGhostRecorder::CGhostCharacter)/4);
+			else
+				Ghost.m_Path[Index] = *Tmp;
 			Index++;
 			Tmp++;
 		}

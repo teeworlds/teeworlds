@@ -8,8 +8,9 @@
 #include "compression.h"
 #include "network.h"
 
+// should only be in one file
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 3;
+static const unsigned char gs_ActVersion = 4;
 
 CGhostRecorder::CGhostRecorder()
 {
@@ -64,20 +65,44 @@ int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pF
 	return 0;
 }
 
+static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
+{
+	int Needed = 0;
+	while(Size)
+	{
+		*pOut = *pCurrent-*pPast;
+		Needed |= *pOut;
+		pOut++;
+		pPast++;
+		pCurrent++;
+		Size--;
+	}
+
+	return Needed;
+}
+
 void CGhostRecorder::WriteData()
 {
 	if(!m_File)
 		return;
 	
 	// write data
-	CGhostCharacter *Data = &m_aInfoBuf[0];
+	CGhostCharacter aDiffBuf[500];
+	aDiffBuf[0] = m_aInfoBuf[0];
+
+	CGhostCharacter *pPrev = &m_aInfoBuf[0];
+	for(int i = 1; i < m_AddedInfo; i++)
+	{
+		DiffItem((int*)pPrev, (int*)&m_aInfoBuf[i], (int*)&aDiffBuf[i], sizeof(CGhostCharacter)/4);
+		pPrev = &m_aInfoBuf[i];
+	}
 	
 	char aBuffer[100*500];
 	char aBuffer2[100*500];
 	unsigned char aSize[4];
 	
 	int Size = sizeof(CGhostCharacter)*m_AddedInfo;
-	mem_copy(aBuffer2, Data, Size);
+	mem_copy(aBuffer2, &aDiffBuf[0], Size);
 	
 	Size = CVariableInt::Compress(aBuffer2, Size, aBuffer);
 	Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2));
