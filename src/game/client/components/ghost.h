@@ -14,8 +14,9 @@ private:
 	struct CGhostItem
 	{
 		int m_ID;
-		CNetObj_ClientInfo m_Info;
+		CTeeRenderInfo m_RenderInfo;
 		array<IGhostRecorder::CGhostCharacter> m_Path;
+		char m_aOwner[MAX_NAME_LENGTH];
 
 		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
 	};
@@ -46,9 +47,11 @@ private:
 	void StopRecord(float Time=0.0f);
 	void StartRender();
 	void StopRender();
-	void RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
+	void RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo);
 	void RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev);
-	void RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info);
+	void RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, const char *pName);
+	
+	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
 
 	bool GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader);
 

@@ -118,43 +118,14 @@ void CGhost::OnRender()
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
 		IGhostRecorder::CGhostCharacter Player = pGhost->m_Path[m_CurPos];
 		IGhostRecorder::CGhostCharacter Prev = pGhost->m_Path[PrevPos];
-		CNetObj_ClientInfo Info = pGhost->m_Info;
 
 		RenderGhostHook(Player, Prev);
-		RenderGhost(Player, Prev, Info);
-		RenderGhostNamePlate(Player, Prev, Info);
+		RenderGhost(Player, Prev, &pGhost->m_RenderInfo);
+		RenderGhostNamePlate(Player, Prev, pGhost->m_aOwner);
 	}
 }
-
-void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info)
+void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo)
 {
-	char aSkinName[64];
-	IntsToStr(&Info.m_Skin0, 6, aSkinName);
-	int SkinId = m_pClient->m_pSkins->Find(aSkinName);
-	if(SkinId < 0)
-	{
-		SkinId = m_pClient->m_pSkins->Find("default");
-		if(SkinId < 0)
-			SkinId = 0;
-	}
-
-	CTeeRenderInfo RenderInfo;
-	RenderInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(Info.m_ColorBody);
-	RenderInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(Info.m_ColorFeet);
-
-	if(Info.m_UseCustomColor)
-		RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_ColorTexture;
-	else
-	{
-		RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_OrgTexture;
-		RenderInfo.m_ColorBody = vec4(1,1,1,1);
-		RenderInfo.m_ColorFeet = vec4(1,1,1,1);
-	}
-
-	RenderInfo.m_ColorBody.a = 0.5f;
-	RenderInfo.m_ColorFeet.a = 0.5f;
-	RenderInfo.m_Size = 64;
-
 	float IntraTick = Client()->PredIntraGameTick();
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
@@ -202,7 +173,7 @@ void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder:
 	}
 
 	// Render ghost
-	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
+	RenderTools()->RenderTee(&State, pRenderInfo, 0, Direction, Position, true);
 }
 
 void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev)
@@ -243,7 +214,7 @@ void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecor
 	Graphics()->QuadsEnd();
 }
 
-void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CNetObj_ClientInfo Info)
+void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, const char *pName)
 {
 	if(!g_Config.m_ClGhostNamePlates)
 		return;
@@ -259,17 +230,42 @@ void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhost
 	if(g_Config.m_ClGhostNameplatesAlways == 0)
 		a = clamp(0.5f-powf(distance(m_pClient->m_pControls->m_TargetPos, Pos)/200.0f,16.0f), 0.0f, 0.5f);
 
-	char aName[32];
-	IntsToStr(&Info.m_Name0, 4, aName);
-	float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
-
+	float tw = TextRender()->TextWidth(0, FontSize, pName, -1);
+	
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
-	TextRender()->Text(0, Pos.x-tw/2.0f, Pos.y-FontSize-38.0f, FontSize, aName, -1);
+	TextRender()->Text(0, Pos.x-tw/2.0f, Pos.y-FontSize-38.0f, FontSize, pName, -1);
 
 	// reset color;
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+}
+
+void CGhost::InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
+{
+	int SkinId = m_pClient->m_pSkins->Find(pSkinName);
+	if(SkinId < 0)
+	{
+		SkinId = m_pClient->m_pSkins->Find("default");
+		if(SkinId < 0)
+			SkinId = 0;
+	}
+
+	pRenderInfo->m_ColorBody = m_pClient->m_pSkins->GetColorV4(ColorBody);
+	pRenderInfo->m_ColorFeet = m_pClient->m_pSkins->GetColorV4(ColorFeet);
+
+	if(UseCustomColor)
+		pRenderInfo->m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_ColorTexture;
+	else
+	{
+		pRenderInfo->m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_OrgTexture;
+		pRenderInfo->m_ColorBody = vec4(1,1,1,1);
+		pRenderInfo->m_ColorFeet = vec4(1,1,1,1);
+	}
+
+	pRenderInfo->m_ColorBody.a = 0.5f;
+	pRenderInfo->m_ColorFeet.a = 0.5f;
+	pRenderInfo->m_Size = 64;
 }
 
 IGhostRecorder::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
@@ -294,15 +290,12 @@ void CGhost::StartRecord()
 {
 	m_Recording = true;
 	m_CurGhost.m_Path.clear();
-	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, m_pClient->m_Snap.m_LocalClientID);
-	m_CurGhost.m_Info = *pInfo;
+	CGameClient::CClientData ClientData = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID];
+	str_copy(m_CurGhost.m_aOwner, g_Config.m_PlayerName, sizeof(m_CurGhost.m_aOwner));
+	InitRenderInfos(&m_CurGhost.m_RenderInfo, ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
 
 	if(g_Config.m_ClRaceSaveGhost)
-	{
-		char aSkinName[32];
-		IntsToStr(&pInfo->m_Skin0, 6, aSkinName);
-		Client()->GhostRecorder_Start(aSkinName, pInfo->m_UseCustomColor, pInfo->m_ColorBody, pInfo->m_ColorFeet);
-	}
+		Client()->GhostRecorder_Start(ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
 }
 
 void CGhost::StopRecord(float Time)
@@ -439,11 +432,8 @@ void CGhost::Load(const char* pFilename, int ID)
 	Ghost.m_Path.set_size(NumShots);
 
 	// read client info
-	StrToInts(&Ghost.m_Info.m_Name0, 4, Header.m_aOwner);
-	StrToInts(&Ghost.m_Info.m_Skin0, 6, Header.m_aSkinName);
-	Ghost.m_Info.m_UseCustomColor = Header.m_UseCustomColor;
-	Ghost.m_Info.m_ColorBody = Header.m_ColorBody;
-	Ghost.m_Info.m_ColorFeet = Header.m_ColorFeet;
+	str_copy(Ghost.m_aOwner, Header.m_aOwner, sizeof(Ghost.m_aOwner));
+	InitRenderInfos(&Ghost.m_RenderInfo, Header.m_aSkinName, Header.m_UseCustomColor, Header.m_ColorBody, Header.m_ColorFeet);
 
 	// read data
 	int Index = 0;
