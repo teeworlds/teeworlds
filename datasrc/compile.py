@@ -143,10 +143,10 @@ public:
 	int ValidateObj(int Type, const void *pData, int Size);
 	const char *GetObjName(int Type) const;
 	int GetObjSize(int Type) const;
-	const char *FailedObjOn();
-	int NumObjFailures();
+	const char *FailedObjOn() const;
+	int NumObjFailures() const;
 	
-	const char *GetMsgName(int Type);
+	const char *GetMsgName(int Type) const;
 	void *SecureUnpackMsg(int Type, CUnpacker *pUnpacker);
 	const char *FailedMsgOn() const;
 };
@@ -171,18 +171,9 @@ if gen_network_source:
 	lines += ['\tm_NumObjFailures = 0;']
 	lines += ['}']
 	lines += ['']
-<<<<<<< HEAD
-<<<<<<< HEAD
-	lines += ['int CNetObjHandler::NumObjCorrections() const { return m_NumObjCorrections; }']
-	lines += ['const char *CNetObjHandler::CorrectedObjOn() const { return m_pObjCorrectedOn; }']
+	lines += ['const char *CNetObjHandler::FailedObjOn() const { return m_pObjFailedOn; }']
+	lines += ['int CNetObjHandler::NumObjFailures() const { return m_NumObjFailures; }']
 	lines += ['const char *CNetObjHandler::FailedMsgOn() const { return m_pMsgFailedOn; }']
-=======
-=======
-	lines += ['const char *CNetObjHandler::FailedObjOn() { return m_pObjFailedOn; }']
-	lines += ['int CNetObjHandler::NumObjFailures() { return m_NumObjFailures; }']
->>>>>>> 96a2ded... separate netmsg failures from netobj failures, count latter ones
-	lines += ['const char *CNetObjHandler::FailedMsgOn() { return m_pMsgFailedOn; }']
->>>>>>> 49fddbb... fixed #1211: netobjs containing integers and flags out of range are discarded
 	lines += ['']
 	lines += ['']
 	lines += ['']
