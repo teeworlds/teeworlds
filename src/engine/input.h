@@ -5,7 +5,8 @@
 
 #include "kernel.h"
 
-extern const char g_aaKeyStrings[512][20];
+const int g_MaxKeys = 512;
+extern const char g_aaKeyStrings[g_MaxKeys][20];
 
 class IInput : public IInterface
 {
@@ -29,19 +30,6 @@ protected:
 	int m_NumEvents;
 	IInput::CEvent m_aInputEvents[INPUT_BUFFER_SIZE];
 
-	//quick access to input
-	struct
-	{
-		unsigned char m_Presses;
-		unsigned char m_Releases;
-	} m_aInputCount[2][1024];
-
-	unsigned char m_aInputState[2][1024];
-	int m_InputCurrent;
-	bool m_InputDispatched;
-
-	int KeyWasPressed(int Key) const { return m_aInputState[m_InputCurrent^1][Key]; }
-
 public:
 	enum
 	{
@@ -52,10 +40,9 @@ public:
 
 	// events
 	int NumEvents() const { return m_NumEvents; }
-	void ClearEvents() 
+	virtual void ClearEvents() 
 	{ 
 		m_NumEvents = 0;
-		m_InputDispatched = true;
 	}
 	CEvent GetEvent(int Index) const
 	{
@@ -68,17 +55,16 @@ public:
 	}
 
 	// keys
-	int KeyPressed(int Key) const { return m_aInputState[m_InputCurrent][Key]; }
-	int KeyReleases(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
-	int KeyPresses(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
-	int KeyDown(int Key) const { return KeyPressed(Key)&&!KeyWasPressed(Key); }
-	const char *KeyName(int Key) const { return (Key >= 0 && Key < 512) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
+	virtual int KeyPressed(int Key) const = 0;
+	virtual int KeyReleases(int Key) const = 0;
+	virtual int KeyPresses(int Key) const = 0;
+	virtual int KeyDown(int Key) const = 0;
+	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
-	//
+	// mouse
 	virtual void MouseModeRelative() = 0;
 	virtual void MouseModeAbsolute() = 0;
 	virtual int MouseDoubleClick() = 0;
-
 	virtual void MouseRelative(float *x, float *y) = 0;
 };
 
