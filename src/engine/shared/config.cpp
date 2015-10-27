@@ -102,7 +102,10 @@ public:
 	{
 		if(!m_pStorage)
 			return;
-		m_ConfigFile = m_pStorage->OpenFile(pFilename ? pFilename : "settings.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		
+		if(!pFilename)
+			pFilename = "settings.cfg";
+		m_ConfigFile = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 
 		if(!m_ConfigFile)
 			return;
