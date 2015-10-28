@@ -106,12 +106,12 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static int s_PlayButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
 	{
-		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
+		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f) || m_EnterPressed)
 			NewPage = g_Config.m_UiBrowserPage;
 	}
 	else
 	{
-		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EnterPressed)
 			NewPage = g_Config.m_UiBrowserPage;
 	}
 
