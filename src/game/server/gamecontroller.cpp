@@ -188,11 +188,14 @@ void IGameController::DoTeamBalance()
 		}
 
 		// move the player to the other team
-		int Temp = pPlayer->m_LastActionTick;
-		DoTeamChange(pPlayer, BiggerTeam^1);
-		pPlayer->m_LastActionTick = Temp;
-		pPlayer->Respawn();
-		GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE_VICTIM, pPlayer->GetTeam(), pPlayer->GetCID());
+		if(pPlayer)
+		{
+			int Temp = pPlayer->m_LastActionTick;
+			DoTeamChange(pPlayer, BiggerTeam^1);
+			pPlayer->m_LastActionTick = Temp;
+			pPlayer->Respawn();
+			GameServer()->SendGameMsg(GAMEMSG_TEAM_BALANCE_VICTIM, pPlayer->GetTeam(), pPlayer->GetCID());
+		}
 	}
 	while(--NumBalance);
 
