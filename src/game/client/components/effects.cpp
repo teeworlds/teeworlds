@@ -47,9 +47,9 @@ void CEffects::AirJump(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::DamageIndicator(vec2 Pos, vec2 Dir)
+void CEffects::DamageIndicator(vec2 Pos, vec2 Dir, bool SelfDamage)
 {
-	m_pClient->m_pDamageind->Create(Pos, Dir);
+	m_pClient->m_pDamageind->Create(Pos, Dir, SelfDamage);
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)

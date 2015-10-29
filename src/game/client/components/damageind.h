@@ -13,6 +13,8 @@ class CDamageInd : public CComponent
 		vec2 m_Dir;
 		float m_StartTime;
 		float m_StartAngle;
+
+		bool m_SelfDamage;
 	};
 
 	enum
@@ -29,7 +31,7 @@ class CDamageInd : public CComponent
 public:
 	CDamageInd();
 
-	void Create(vec2 Pos, vec2 Dir);
+	void Create(vec2 Pos, vec2 Dir, bool SelfDamage);
 	virtual void OnRender();
 	virtual void OnReset();
 };
