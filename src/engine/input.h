@@ -35,7 +35,8 @@ public:
 	{
 		FLAG_PRESS=1,
 		FLAG_RELEASE=2,
-		FLAG_REPEAT=4
+		FLAG_REPEAT=4,
+		FLAG_TEXT=8,
 	};
 
 	// events

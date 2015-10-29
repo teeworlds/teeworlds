@@ -175,7 +175,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	if(!Handled)
 		m_Input.ProcessInput(Event);
 
-	if(Event.m_Flags&IInput::FLAG_PRESS)
+	if(Event.m_Flags&(IInput::FLAG_PRESS|IInput::FLAG_TEXT))
 	{
 		if(Event.m_Key != KEY_TAB)
 		{
