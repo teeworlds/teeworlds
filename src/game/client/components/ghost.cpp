@@ -446,9 +446,12 @@ void CGhost::Load(const char* pFilename, int ID)
 		unsigned char aSize[4];
 		if(io_read(File, aSize, sizeof(aSize)) != sizeof(aSize))
 			break;
-		unsigned Size = (aSize[0]<<24) | (aSize[1]<<16) | (aSize[2]<<8) | aSize[3];
+		int Size = (aSize[0]<<24) | (aSize[1]<<16) | (aSize[2]<<8) | aSize[3];
+		
+		if(Size <= 0)
+			break;
 
-		if(io_read(File, aCompresseddata, Size) != Size)
+		if(io_read(File, aCompresseddata, Size) != (unsigned)Size)
 		{
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error reading chunk");
 			break;
