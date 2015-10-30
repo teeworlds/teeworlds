@@ -1863,7 +1863,7 @@ void CClient::Run()
 
 				// update screen in case it got moved
 				int ActScreen = Graphics()->GetWindowScreen();
-				if(ActScreen > 0 && ActScreen != g_Config.m_GfxScreen)
+				if(ActScreen >= 0 && ActScreen != g_Config.m_GfxScreen)
 					g_Config.m_GfxScreen = ActScreen;
 			}
 		}
