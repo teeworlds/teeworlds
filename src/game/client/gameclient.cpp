@@ -59,8 +59,6 @@
 #include "components/ghost.h"
 #include "components/teecomp_stats.h"
 
-CGameClient g_GameClient;
-
 // instanciate all systems
 static CKillMessages gs_KillMessages;
 static CTimeMessages gs_TimeMessages;
@@ -293,7 +291,7 @@ void CGameClient::OnInit()
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
 		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-		g_GameClient.m_pMenus->RenderLoading();
+		m_pMenus->RenderLoading();
 	}
 
 	for(int i = 0; i < m_All.m_Num; i++)
@@ -472,10 +470,10 @@ void CGameClient::OnReset()
 {
 	// clear out the invalid pointers
 	m_LastNewPredictedTick = -1;
-	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
+	mem_zero(&m_Snap, sizeof(m_Snap));
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].Reset(i);
+		m_aClients[i].Reset(this, i);
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
@@ -536,12 +534,12 @@ void CGameClient::UpdatePositions()
 }
 
 
-static void Evolve(CNetObj_Character *pCharacter, int Tick)
+void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, g_GameClient.Collision());
+	TempCore.Init(&TempWorld, Collision());
 	TempCore.Read(pCharacter);
 
 	while(pCharacter->m_Tick < Tick)
@@ -673,9 +671,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		if(pMsg->m_SoundID == SOUND_CTF_DROP || pMsg->m_SoundID == SOUND_CTF_RETURN ||
 			pMsg->m_SoundID == SOUND_CTF_CAPTURE || pMsg->m_SoundID == SOUND_CTF_GRAB_EN ||
 			pMsg->m_SoundID == SOUND_CTF_GRAB_PL)
-			g_GameClient.m_pSounds->Enqueue(CSounds::CHN_GLOBAL, pMsg->m_SoundID);
+			m_pSounds->Enqueue(CSounds::CHN_GLOBAL, pMsg->m_SoundID);
 		else
-			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
+			m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_SoundID, 1.0f);
 	}
 	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
 	{
@@ -782,32 +780,32 @@ void CGameClient::ProcessEvents()
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
 			CNetEvent_DamageInd *ev = (CNetEvent_DamageInd *)pData;
-			g_GameClient.m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), GetDirection(ev->m_Angle));
+			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), GetDirection(ev->m_Angle));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
 			CNetEvent_Explosion *ev = (CNetEvent_Explosion *)pData;
-			g_GameClient.m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
 			CNetEvent_HammerHit *ev = (CNetEvent_HammerHit *)pData;
-			g_GameClient.m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
 			CNetEvent_Spawn *ev = (CNetEvent_Spawn *)pData;
-			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
 			CNetEvent_Death *ev = (CNetEvent_Death *)pData;
-			g_GameClient.m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID);
+			m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
 			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
-			g_GameClient.m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
+			m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
 	}
 }
@@ -817,7 +815,7 @@ void CGameClient::OnNewSnapshot()
 	m_NewTick = true;
 
 	// clear out the inValid pointers
-	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
+	mem_zero(&m_Snap, sizeof(m_Snap));
 	m_Snap.m_LocalClientID = -1;
 
 	// mark all clients offline here
@@ -898,24 +896,24 @@ void CGameClient::OnNewSnapshot()
 				m_aClients[ClientID].m_SkinInfo.m_Size = 64;
 
 				// find new skin
-				m_aClients[ClientID].m_SkinID = g_GameClient.m_pSkins->Find(m_aClients[ClientID].m_aSkinName);
+				m_aClients[ClientID].m_SkinID = m_pSkins->Find(m_aClients[ClientID].m_aSkinName);
 				if(m_aClients[ClientID].m_SkinID < 0)
 				{
-					m_aClients[ClientID].m_SkinID = g_GameClient.m_pSkins->Find("default");
+					m_aClients[ClientID].m_SkinID = m_pSkins->Find("default");
 					if(m_aClients[ClientID].m_SkinID < 0)
 						m_aClients[ClientID].m_SkinID = 0;
 				}
 
 				if(m_aClients[ClientID].m_UseCustomColor)
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_ColorTexture;
+					m_aClients[ClientID].m_SkinInfo.m_Texture = m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_ColorTexture;
 				else
 				{
-					m_aClients[ClientID].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_OrgTexture;
+					m_aClients[ClientID].m_SkinInfo.m_Texture = m_pSkins->Get(m_aClients[ClientID].m_SkinID)->m_OrgTexture;
 					m_aClients[ClientID].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 					m_aClients[ClientID].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
 				}
 
-				m_aClients[ClientID].UpdateRenderInfo(ClientID);
+				m_aClients[ClientID].UpdateRenderInfo(this, ClientID);
 
 				// mark Player as online
 				Online[ClientID] = true;
@@ -958,9 +956,9 @@ void CGameClient::OnNewSnapshot()
 					m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
 
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
-						Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
+						EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
-						Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
+						EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
@@ -1061,7 +1059,7 @@ void CGameClient::OnNewSnapshot()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
-			m_aClients[i].Reset(i);
+			m_aClients[i].Reset(this, i);
 	}
 
 	// update friend state
@@ -1182,7 +1180,7 @@ void CGameClient::OnNewSnapshot()
 	
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].UpdateRenderInfo(i);
+		m_aClients[i].UpdateRenderInfo(this, i);
 	// add tuning to demo
 	if(DemoRecorder()->IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
 	{
@@ -1224,9 +1222,9 @@ void CGameClient::OnPredict()
 		if(!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 
-		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision());
-		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
-		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
+		m_aClients[i].m_Predicted.Init(&World, Collision());
+		World.m_apCharacters[i] = &m_aClients[i].m_Predicted;
+		m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
 
 	// predict
@@ -1276,7 +1274,7 @@ void CGameClient::OnPredict()
 			{
 				vec2 Pos = World.m_apCharacters[m_Snap.m_LocalClientID]->m_Pos;
 				int Events = World.m_apCharacters[m_Snap.m_LocalClientID]->m_TriggeredEvents;
-				if(Events&COREEVENT_GROUND_JUMP) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
+				if(Events&COREEVENT_GROUND_JUMP) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
 
 				/*if(events&COREEVENT_AIR_JUMP)
 				{
@@ -1286,8 +1284,8 @@ void CGameClient::OnPredict()
 
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(Events&COREEVENT_HOOK_ATTACH_GROUND) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
-				if(Events&COREEVENT_HOOK_HIT_NOHOOK) g_GameClient.m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
+				if(Events&COREEVENT_HOOK_ATTACH_GROUND) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
+				if(Events&COREEVENT_HOOK_HIT_NOHOOK) m_pSounds->PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
 		}
@@ -1386,34 +1384,34 @@ void CGameClient::CClientStats::Reset()
 	m_DeathsCarrying = 0;
 }
 
-void CGameClient::CClientData::UpdateRenderInfo(int ClientID)
+void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int ClientID)
 {
 	m_RenderInfo = m_SkinInfo;
 
 	// force team colors
-	if(g_GameClient.m_Snap.m_pGameInfoObj && g_GameClient.m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+	if(pGameClient->m_Snap.m_pGameInfoObj && pGameClient->m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
 	{
 		int LocalTeam;
-		if(g_GameClient.m_Snap.m_pLocalInfo)
-			LocalTeam = g_GameClient.m_Snap.m_pLocalInfo->m_Team;
+		if(pGameClient->m_Snap.m_pLocalInfo)
+			LocalTeam = pGameClient->m_Snap.m_pLocalInfo->m_Team;
 		else // local_info null when joining a server
 			LocalTeam = 0;
 		if(m_Team != TEAM_SPECTATORS)
 		{			
 			const char* pForcedSkin;
 			int Sid = m_SkinID;
-			if(ClientID != g_GameClient.m_Snap.m_LocalClientID && CTeecompUtils::GetForcedSkinName(m_Team, LocalTeam, pForcedSkin))
-				Sid = max(0, g_GameClient.m_pSkins->Find(pForcedSkin));
+			if(ClientID != pGameClient->m_Snap.m_LocalClientID && CTeecompUtils::GetForcedSkinName(m_Team, LocalTeam, pForcedSkin))
+				Sid = max(0, pGameClient->m_pSkins->Find(pForcedSkin));
 
 			if(CTeecompUtils::GetForceDmColors(m_Team, LocalTeam))
 			{
-				m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(Sid)->m_OrgTexture;
+				m_RenderInfo.m_Texture = pGameClient->m_pSkins->Get(Sid)->m_OrgTexture;
 				m_RenderInfo.m_ColorBody = vec4(1,1,1,1);
 				m_RenderInfo.m_ColorFeet = vec4(1,1,1,1);
 			}
 			else
 			{
-				m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(Sid)->m_ColorTexture;
+				m_RenderInfo.m_Texture = pGameClient->m_pSkins->Get(Sid)->m_ColorTexture;
 				vec3 Col = CTeecompUtils::GetTeamColor(m_Team, LocalTeam, g_Config.m_TcColoredTeesTeam1,
 					g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
 				m_RenderInfo.m_ColorBody = vec4(Col.r, Col.g, Col.b, 1.0f);
@@ -1422,14 +1420,14 @@ void CGameClient::CClientData::UpdateRenderInfo(int ClientID)
 		}
 		else
 		{
-			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(12895054);
-			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(12895054);
+			m_RenderInfo.m_ColorBody = pGameClient->m_pSkins->GetColorV4(12895054);
+			m_RenderInfo.m_ColorFeet = pGameClient->m_pSkins->GetColorV4(12895054);
 		}
 	}
-	else if(g_Config.m_TcForceSkinTeam1 && ClientID != g_GameClient.m_Snap.m_LocalClientID) // Force DM skin
+	else if(g_Config.m_TcForceSkinTeam1 && ClientID != pGameClient->m_Snap.m_LocalClientID) // Force DM skin
 	{
 		const CSkins::CSkin* pSkin;
-		pSkin = g_GameClient.m_pSkins->Get(max(0, g_GameClient.m_pSkins->Find(g_Config.m_TcForcedSkin1)));
+		pSkin = pGameClient->m_pSkins->Get(max(0, pGameClient->m_pSkins->Find(g_Config.m_TcForcedSkin1)));
 		if(m_UseCustomColor)
 			m_RenderInfo.m_Texture = pSkin->m_ColorTexture;
 		else
@@ -1437,7 +1435,7 @@ void CGameClient::CClientData::UpdateRenderInfo(int ClientID)
 	}
 }
 
-void CGameClient::CClientData::Reset(int ClientID)
+void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 {
 	m_aName[0] = 0;
 	m_aClan[0] = 0;
@@ -1450,10 +1448,10 @@ void CGameClient::CClientData::Reset(int ClientID)
 	m_Active = false;
 	m_ChatIgnore = false;
 	m_Score = 0.0f;
-	m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
+	m_SkinInfo.m_Texture = pGameClient->m_pSkins->Get(0)->m_ColorTexture;
 	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
-	UpdateRenderInfo(ClientID);
+	UpdateRenderInfo(pGameClient, ClientID);
 }
 
 void CGameClient::SendSwitchTeam(int Team)
@@ -1520,5 +1518,5 @@ void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pU
 
 IGameClient *CreateGameClient()
 {
-	return &g_GameClient;
+	return new CGameClient();
 }

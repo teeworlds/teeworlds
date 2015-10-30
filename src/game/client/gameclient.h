@@ -68,6 +68,8 @@ class CGameClient : public IGameClient
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	
+	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
@@ -201,8 +203,8 @@ public:
 		// race
 		float m_Score;
 		
-		void UpdateRenderInfo(int ClientID);
-		void Reset(int ClientID);
+		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID);
+		void Reset(CGameClient *pGameClient, int ClientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
