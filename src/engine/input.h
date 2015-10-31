@@ -16,8 +16,8 @@ public:
 	{
 	public:
 		int m_Flags;
-		int m_Unicode;
 		int m_Key;
+		char m_aText[32];
 	};
 
 protected:

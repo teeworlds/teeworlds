@@ -30,7 +30,7 @@ void CLineInput::Set(const char *pString)
 	}
 }
 
-bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr)
+bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr)
 {
 	int NumChars = *pNumCharsPtr;
 	int CursorPos = *pCursorPosPtr;
@@ -40,31 +40,41 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int St
 	if(CursorPos > Len)
 		CursorPos = Len;
 
-	int Code = e.m_Unicode;
-	int k = e.m_Key;
-
-	// 127 is produced on Mac OS X and corresponds to the delete key
-	if (!(Code >= 0 && Code < 32) && Code != 127)
+	if(Event.m_Flags&IInput::FLAG_TEXT)
 	{
-		char Tmp[8];
-		int CharSize = str_utf8_encode(Tmp, Code);
-
-		if (Len < StrMaxSize - CharSize && CursorPos < StrMaxSize - CharSize && NumChars < StrMaxChars)
+		// gather string stats
+		int CharCount = 0;
+		int CharSize = 0;
+		while(Event.m_aText[CharSize])
 		{
-			mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
-			for(int i = 0; i < CharSize; i++)
-				pStr[CursorPos+i] = Tmp[i];
-			CursorPos += CharSize;
-			Len += CharSize;
-			if(CharSize > 0)
-				++NumChars;
-			Changes = true;
+			int NewCharSize = str_utf8_forward(Event.m_aText, CharSize);
+			if(NewCharSize != CharSize)
+			{
+				++CharCount;
+				CharSize = NewCharSize;
+			}
+		}
+
+		// add new string
+		if(CharCount)
+		{
+			if(Len+CharSize < StrMaxSize && CursorPos+CharSize < StrMaxSize && NumChars+CharCount < StrMaxChars)
+			{
+				mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
+				for(int i = 0; i < CharSize; i++)
+					pStr[CursorPos+i] = Event.m_aText[i];
+				CursorPos += CharSize;
+				Len += CharSize;
+				NumChars += CharCount;
+				Changes = true;
+			}
 		}
 	}
 
-	if(e.m_Flags&IInput::FLAG_PRESS)
+	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
-		if (k == KEY_BACKSPACE && CursorPos > 0)
+		int Key = Event.m_Key;
+		if(Key == KEY_BACKSPACE && CursorPos > 0)
 		{
 			int NewCursorPos = str_utf8_rewind(pStr, CursorPos);
 			int CharSize = CursorPos-NewCursorPos;
@@ -75,7 +85,7 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int St
 				--NumChars;
 			Changes = true;
 		}
-		else if (k == KEY_DELETE && CursorPos < Len)
+		else if(Key == KEY_DELETE && CursorPos < Len)
 		{
 			int p = str_utf8_forward(pStr, CursorPos);
 			int CharSize = p-CursorPos;
@@ -85,13 +95,13 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int St
 				--NumChars;
 			Changes = true;
 		}
-		else if (k == KEY_LEFT && CursorPos > 0)
+		else if(Key == KEY_LEFT && CursorPos > 0)
 			CursorPos = str_utf8_rewind(pStr, CursorPos);
-		else if (k == KEY_RIGHT && CursorPos < Len)
+		else if(Key == KEY_RIGHT && CursorPos < Len)
 			CursorPos = str_utf8_forward(pStr, CursorPos);
-		else if (k == KEY_HOME)
+		else if(Key == KEY_HOME)
 			CursorPos = 0;
-		else if (k == KEY_END)
+		else if(Key == KEY_END)
 			CursorPos = Len;
 	}
 

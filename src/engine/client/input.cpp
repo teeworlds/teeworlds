@@ -17,13 +17,16 @@
 #include "keynames.h"
 #undef KEYS_INCLUDE
 
-void CInput::AddEvent(int Unicode, int Key, int Flags)
+void CInput::AddEvent(char *pText, int Key, int Flags)
 {
 	if(m_NumEvents != INPUT_BUFFER_SIZE)
 	{
-		m_aInputEvents[m_NumEvents].m_Unicode = Unicode;
 		m_aInputEvents[m_NumEvents].m_Key = Key;
 		m_aInputEvents[m_NumEvents].m_Flags = Flags;
+		if(!pText)
+			m_aInputEvents[m_NumEvents].m_aText[0] = 0;
+		else
+			str_copy(m_aInputEvents[m_NumEvents].m_aText, pText, sizeof(m_aInputEvents[m_NumEvents].m_aText));
 		m_NumEvents++;
 	}
 }
@@ -156,12 +159,8 @@ int CInput::Update()
 			switch (Event.type)
 			{
 				case SDL_TEXTINPUT:
-				{
-					int TextLength = strlen(Event.text.text);
-					for(int i = 0; i < TextLength; i++)
-						AddEvent(Event.text.text[i], 0, IInput::FLAG_TEXT);
-				}
-				break;
+					AddEvent(Event.text.text, 0, IInput::FLAG_TEXT);
+					break;
 
 				// handle keys
 				case SDL_KEYDOWN:

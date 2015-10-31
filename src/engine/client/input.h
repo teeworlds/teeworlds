@@ -12,7 +12,7 @@ class CInput : public IEngineInput
 	int64 m_LastRelease;
 	int64 m_ReleaseDelta;
 
-	void AddEvent(int Unicode, int Key, int Flags);
+	void AddEvent(char *pText, int Key, int Flags);
 	void ClearEvents()
 	{
 		IInput::ClearEvents();
