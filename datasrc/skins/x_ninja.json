@@ -11,8 +11,8 @@
 		"custom_colors": "true",
 		"hue": 0,
 		"sat": 0,
-		"lgt": 255,
-		"alp": 127
+		"lgt": 64,
+		"alp": 255
 	},
 	"hands": {
 		"filename": "standard",
