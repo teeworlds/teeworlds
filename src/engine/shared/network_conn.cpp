@@ -1,10 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
 #include "config.h"
 #include "network.h"
 
-#include <stdlib.h>	// rand
 
 void CNetConnection::ResetStats()
 {
@@ -41,7 +41,7 @@ void CNetConnection::SetToken(TOKEN Token)
 
 TOKEN CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
 {
-	return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & NET_TOKEN_MASK;
+	return random_int() & NET_TOKEN_MASK;
 }
 
 const char *CNetConnection::ErrorString()

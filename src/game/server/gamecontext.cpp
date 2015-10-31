@@ -1124,13 +1124,13 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 	//creating random permutation
 	for(int i = PlayerTeam; i > 1; i--)
 	{
-		rnd = rand() % i;
+		rnd = random_int() % i;
 		int tmp = aPlayer[rnd];
 		aPlayer[rnd] = aPlayer[i-1];
 		aPlayer[i-1] = tmp;
 	}
 	//uneven Number of Players?
-	rnd = PlayerTeam % 2 ? rand() % 2 : 0;
+	rnd = PlayerTeam % 2 ? random_int() % 2 : 0;
 
 	for(int i = 0; i < PlayerTeam; i++)
 		pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[aPlayer[i]], i < (PlayerTeam+rnd)/2 ? TEAM_RED : TEAM_BLUE, false); 

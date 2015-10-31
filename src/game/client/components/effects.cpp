@@ -170,7 +170,7 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 	{
 		CParticle p;
 		p.SetDefault();
-		p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
+		p.m_Spr = SPRITE_PART_SPLAT01 + (random_int()%3);
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
 		p.m_LifeSpan = 0.3f + frandom()*0.3f;

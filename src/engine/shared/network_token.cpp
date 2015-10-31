@@ -1,8 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include <stdlib.h> // rand
-
+#include <base/math.h>
 #include <base/system.h>
 
 #include <engine/external/md5/md5.h>
@@ -72,12 +71,10 @@ void CNetTokenManager::GenerateSeed()
 	static const NETADDR NullAddr = { 0 };
 	m_PrevSeed = m_Seed;
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < 2; i++)
 	{
-		// rand() returns a random integer between 0 and RAND_MAX
-		// RAND_MAX is at least 1<<16 according to the standard
-		m_Seed <<= 16;
-		m_Seed ^= rand();
+		m_Seed <<= 32;
+		m_Seed ^= random_int();
 	}
 
 	m_PrevGlobalToken = m_GlobalToken;

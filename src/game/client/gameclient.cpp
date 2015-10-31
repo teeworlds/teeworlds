@@ -903,13 +903,13 @@ void CGameClient::OnNewSnapshot()
 		if((Client()->GameTick()%100) == 0)
 		{
 			char aMessage[64];
-			int MsgLen = rand()%(sizeof(aMessage)-1);
+			int MsgLen = random_int()%(sizeof(aMessage)-1);
 			for(int i = 0; i < MsgLen; i++)
-				aMessage[i] = 'a'+(rand()%('z'-'a'));
+				aMessage[i] = 'a'+(random_int()%('z'-'a'));
 			aMessage[MsgLen] = 0;
 
 			CNetMsg_Cl_Say Msg;
-			Msg.m_Team = rand()&1;
+			Msg.m_Team = random_int()&1;
 			Msg.m_pMessage = aMessage;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		}

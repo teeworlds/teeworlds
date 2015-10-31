@@ -362,7 +362,7 @@ void CPlayers::RenderPlayer(
 			// HADOKEN
 			if ((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
 			{
-				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 				{
@@ -424,7 +424,7 @@ void CPlayers::RenderPlayer(
 					Alpha = mix(2.0f, 0.0f, min(1.0f,max(0.0f,t)));
 				}
 
-				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 				{
