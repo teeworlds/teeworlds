@@ -146,7 +146,7 @@ function build(settings)
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
 	else
-		settings.cc.flags:Add("-Wall")
+		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 		if family == "windows" then
 			-- disable visibility attribute support for gcc on windows
 			settings.cc.defines:Add("NO_VIZ")
@@ -201,7 +201,7 @@ function build(settings)
 	-- build the small libraries
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
-	json = Compile(settings, Collect("src/engine/external/json/*.cpp"))
+	jsonparser = Compile(settings, Collect("src/engine/external/json-parser/*.c"))
 
 	-- build game components
 	engine_settings = settings:Copy()
@@ -264,7 +264,7 @@ function build(settings)
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
-		client_link_other, client_osxlaunch, game_http, json)
+		client_link_other, client_osxlaunch, game_http, jsonparser)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, zlib, server_link_other, game_http)

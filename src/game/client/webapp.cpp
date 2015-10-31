@@ -3,7 +3,7 @@
 
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
-#include <engine/external/json/reader.h>
+#include <engine/external/json-parser/json.h>
 
 #include <game/http/response.h>
 
@@ -39,13 +39,11 @@ void CClientWebapp::OnResponse(CHttpConnection *pCon)
 {
 	int Type = pCon->Type();
 	CResponse *pResponse = pCon->Response();
-	bool Error = pCon->Error() || pResponse->StatusCode() != 200;
-
-	Json::Value JsonData;
-	Json::Reader Reader;
-	bool Json = false;
-	if(!pCon->Error() && !pResponse->IsFile())
-		Json = Reader.parse(pResponse->GetBody(), pResponse->GetBody()+pResponse->Size(), JsonData);
+	bool Error = pCon->Error() || pResponse->StatusCode() != 200 || pResponse->IsFile();
+	
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
 
 	// TODO: add event listener (server and client)
 	if(Type == WEB_API_TOKEN)
@@ -60,12 +58,23 @@ void CClientWebapp::OnResponse(CHttpConnection *pCon)
 		}
 		m_ApiTokenRequested = false;
 	}
-	else if(Type == WEB_SERVER_LIST)
+	else if(Type == WEB_SERVER_LIST && !Error)
 	{
-		if(!Error && Json)
+		json_value *pJsonData = json_parse_ex(&JsonSettings, pResponse->GetBody(), pResponse->Size(), aError);
+		if(!pJsonData)
+			m_pClient->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "json", aError);
+		else
 		{
-			for(unsigned int i = 0; i < JsonData.size(); i++)
-				CheckHost(JsonData[i].asCString());
+			if(pJsonData->type == json_array)
+			{
+				for(unsigned i = 0; i < pJsonData->u.array.length; i++)
+				{
+					json_value *pJsonSrv = pJsonData->u.array.values[i];
+					if(pJsonSrv && pJsonSrv->type == json_string)
+						CheckHost(pJsonSrv->u.string.ptr);
+				}
+			}
+			json_value_free(pJsonData);
 		}
 	}
 }
