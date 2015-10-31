@@ -192,7 +192,7 @@ void CConsole::SetPrintOutputLevel(int Index, int OutputLevel)
 		m_aPrintCB[Index].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
 }
 
-void CConsole::Print(int Level, const char *pFrom, const char *pStr)
+void CConsole::Print(int Level, const char *pFrom, const char *pStr, bool Highlighted)
 {
 	dbg_msg(pFrom ,"%s", pStr);
 	for(int i = 0; i < m_NumPrintCB; ++i)
@@ -201,7 +201,7 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 		{
 			char aBuf[1024];
 			str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
-			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata);
+			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata, Highlighted);
 		}
 	}
 }
