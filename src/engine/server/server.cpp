@@ -902,6 +902,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				str_format(aBuf, sizeof(aBuf), "player has entered the game. ClientID=%x addr=%s", ClientID, aAddrStr);
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				m_aClients[ClientID].m_State = CClient::STATE_INGAME;
+				SendServerInfo(ClientID);
 				GameServer()->OnClientEnter(ClientID);
 			}
 		}
@@ -1083,10 +1084,22 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 		}
 	}
 
-	pPacker->Reset();
+	if(Token != -1)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+			{
+				if(GameServer()->IsClientPlayer(i))
+					PlayerCount++;
 
-	pPacker->AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	pPacker->AddInt(Token);
+				ClientCount++;
+			}
+		}
+		pPacker->Reset();
+		pPacker->AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+		pPacker->AddInt(Token);
+	}
 
 	pPacker->AddString(GameServer()->Version(), 32);
 	pPacker->AddString(g_Config.m_SvName, 64);
@@ -1106,37 +1119,36 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddInt(ClientCount); // num clients
 	pPacker->AddInt(m_NetServer.MaxClients()); // max clients
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	if(Token != -1)
 	{
-		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-			pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-			pPacker->AddInt(m_aClients[i].m_Country); // client country
-			pPacker->AddInt(m_aClients[i].m_Score); // client score
-			pPacker->AddInt(GameServer()->IsClientPlayer(i)?1:0); // is player?
+			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+			{
+				pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+				pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+				pPacker->AddInt(m_aClients[i].m_Country); // client country
+				pPacker->AddInt(m_aClients[i].m_Score); // client score
+				pPacker->AddInt(GameServer()->IsClientPlayer(i)?1:0); // is player?
+			}
 		}
 	}
 }
 
-void CServer::UpdateServerInfo()
+void CServer::SendServerInfo(int ClientID)
 {
-	CPacker Packer;
-	CNetChunk Packet;
-
-	GenerateServerInfo(&Packer, -1);
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_pData = Packer.Data();
-	Packet.m_DataSize = Packer.Size();
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	CMsgPacker Msg(NETMSG_SERVERINFO, true);
+	GenerateServerInfo(&Msg, -1);
+	if(ClientID == -1)
 	{
-		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			Packet.m_ClientID = i;
-			m_NetServer.Send(&Packet);
+			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, i);
 		}
 	}
+	else if(ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
+		SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 }
 
 
@@ -1338,7 +1350,6 @@ int CServer::Run()
 					m_CurrentGameTick = 0;
 					Kernel()->ReregisterInterface(GameServer());
 					GameServer()->OnInit();
-					UpdateServerInfo();
 				}
 				else
 				{
@@ -1549,7 +1560,7 @@ void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserD
 	if(pResult->NumArguments())
 	{
 		str_clean_whitespaces(g_Config.m_SvName);
-		((CServer *)pUserData)->UpdateServerInfo();
+		((CServer *)pUserData)->SendServerInfo(-1);
 	}
 }
 

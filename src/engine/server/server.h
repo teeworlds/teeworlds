@@ -212,7 +212,7 @@ public:
 
 	void ProcessClientPacket(CNetChunk *pPacket);
 
-	void UpdateServerInfo();
+	void SendServerInfo(int ClientID);
 	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();

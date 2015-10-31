@@ -162,7 +162,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	class CServerInfo m_CurrentServerInfo;
-	int64 m_CurrentServerInfoRequestTime; // >= 0 should request, == -1 got info
 
 	// version info
 	struct CVersionInfo
@@ -231,7 +230,6 @@ public:
 
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
-	void ServerInfoRequest();
 
 	int LoadData();
 
@@ -256,6 +254,7 @@ public:
 
 	static int PlayerScoreComp(const void *a, const void *b);
 
+	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 

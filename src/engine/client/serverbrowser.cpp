@@ -439,7 +439,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	// set the info
 	pEntry->m_Addr = Addr;
 	pEntry->m_InfoState = CServerEntry::STATE_INVALID;
-	pEntry->m_CurrentToken = random_int();
+	pEntry->m_CurrentToken = random_int()&0x7FFFFFFF;
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
