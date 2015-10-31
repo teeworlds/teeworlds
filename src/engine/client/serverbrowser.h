@@ -101,8 +101,7 @@ public:
 	//
 	void Update(bool ForceResort);
 	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
-	void Request(const NETADDR &Addr) const;
-
+	
 	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
 
 private:
@@ -150,6 +149,8 @@ private:
 	void RemoveFavoriteEntry(int Index);
 	void AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck);
 	void RemoveFavoriteEx(const char *pHostname, const NETADDR *Addr);
+
+	inline int GetNewToken() const { return random_int() & 0x7FFFFFFF; };
 
 	//
 	CServerEntry *m_aServerlistIp[256]; // ip hash list

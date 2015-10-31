@@ -439,7 +439,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	// set the info
 	pEntry->m_Addr = Addr;
 	pEntry->m_InfoState = CServerEntry::STATE_INVALID;
-	pEntry->m_CurrentToken = random_int()&0x7FFFFFFF;
+	pEntry->m_CurrentToken = GetNewToken();
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;
@@ -517,7 +517,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			return;
 
 		pEntry = Find(Addr);
-		if(!pEntry && m_ServerlistType == IServerBrowser::TYPE_LAN)
+		if(!pEntry && m_ServerlistType == IServerBrowser::TYPE_LAN && m_BroadcastTime+time_freq() >= time_get())
 			pEntry = Add(Addr);
 		if(pEntry && ((pEntry->m_InfoState == CServerEntry::STATE_PENDING && Token == pEntry->m_CurrentToken) || m_ServerlistType == IServerBrowser::TYPE_LAN))
 		{
@@ -551,7 +551,7 @@ void CServerBrowser::Refresh(int Type)
 	m_NumRequests = 0;
 
 	// next token
-	m_CurrentLanToken = (m_CurrentLanToken+1)&0xff;
+	m_CurrentLanToken = GetNewToken();
 
 	//
 	m_ServerlistType = Type;
@@ -623,12 +623,6 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 		pEntry->m_InfoState = CServerEntry::STATE_PENDING;
 	}
 }
-
-void CServerBrowser::Request(const NETADDR &Addr) const
-{
-	RequestImpl(Addr, 0);
-}
-
 
 void CServerBrowser::Update(bool ForceResort)
 {
