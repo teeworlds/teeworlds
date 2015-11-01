@@ -1154,7 +1154,7 @@ void CMenus::RenderMenubar(CUIRect r)
 			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+				ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
 				NewPage = PAGE_INTERNET;
 				g_Config.m_UiBrowserPage = PAGE_INTERNET;
 			}
@@ -1165,7 +1165,7 @@ void CMenus::RenderMenubar(CUIRect r)
 			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+				ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
 			}
@@ -1598,10 +1598,8 @@ int CMenus::Render()
 	{
 		// refresh server browser before we are in browser menu to save time
 		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
-		if(g_Config.m_UiBrowserPage == PAGE_LAN)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
-		else
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
+		ServerBrowser()->SetType(g_Config.m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;

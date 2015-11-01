@@ -1596,9 +1596,9 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
 	{
 		if(m_MenuPage == PAGE_INTERNET)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET);
 		else if(m_MenuPage == PAGE_LAN)
-			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_LAN);
 	}
 
 	MainView.VSplitLeft(Spacing, 0, &MainView); // little space

@@ -20,21 +20,22 @@ public:
 		
 	CServerBrowser();
 	void Init(class CNetClient *pClient, const char *pNetVersion);
-	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
+	void Set(const NETADDR &Addr, int SetType, int Token, const CServerInfo *pInfo);
 	void Update(bool ForceResort);	
 
 	// interface functions
-	void Refresh(int Type);
+	void SetType(int Type);
+	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
 	bool IsRefreshingMasters() const { return m_pMasterServer->IsRefreshing(); }
 	int LoadingProgression() const;
 
-	int NumServers() const { return m_NumServers; }
-	int NumPlayers() const { return m_NumPlayers; }
+	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
+	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
 
 	int NumSortedServers(int Index) const { return m_ServerBrowserFilter.GetNumSortedServers(Index); }
 	int NumSortedPlayers(int Index) const { return m_ServerBrowserFilter.GetNumSortedPlayers(Index); }
-	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
+	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
 	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
 
 	bool IsFavorite(const NETADDR &Addr) { return m_ServerBrowserFavorites.FindFavoriteByAddr(Addr, 0) != 0; }
@@ -53,12 +54,23 @@ private:
 		
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
-	class CHeap m_ServerlistHeap;
 
-	//
-	CServerEntry *m_aServerlistIp[256]; // ip hash list
+	// serverlist
+	int m_ActServerlistType;
+	class CServerlist
+	{
+	public:
+		class CHeap m_ServerlistHeap;
 
-	CServerEntry **m_ppServerlist;
+		int m_NumPlayers;
+		int m_NumServers;
+		int m_NumServerCapacity;
+	
+		CServerEntry *m_aServerlistIp[256]; // ip hash list
+		CServerEntry **m_ppServerlist;
+
+		void Clear();
+	} m_aServerlist[NUM_TYPES];
 
 	CServerEntry *m_pFirstReqServer; // request list
 	CServerEntry *m_pLastReqServer;
@@ -66,23 +78,18 @@ private:
 
 	int m_NeedRefresh;
 
-	int m_NumServers;
-	int m_NumServerCapacity;
-
-	int m_NumPlayers;
-
 	// the token is to keep server refresh separated from each other
 	int m_CurrentLanToken;
 
-	int m_ServerlistType;
+	int m_RefreshFlags;
 	int64 m_BroadcastTime;
 
-	CServerEntry *Add(const NETADDR &Addr);
-	CServerEntry *Find(const NETADDR &Addr);
+	CServerEntry *Add(int ServerlistType, const NETADDR &Addr);
+	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);
 	void QueueRequest(CServerEntry *pEntry);
 	void RemoveRequest(CServerEntry *pEntry);
 	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const;
-	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info);
+	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
 };
 
 #endif

@@ -87,7 +87,11 @@ public:
 		QUICK_MAPNAME=4,
 
 		TYPE_INTERNET = 0,
-		TYPE_LAN = 1,
+		TYPE_LAN,
+		NUM_TYPES,
+
+		REFRESHFLAG_INTERNET=1,
+		REFRESHFLAG_LAN=2,
 
 		FLAG_PASSWORD	=1,
 		FLAG_PURE		=2,
@@ -107,7 +111,8 @@ public:
 		FILTER_PING=65536,
 	};
 
-	virtual void Refresh(int Type) = 0;
+	virtual void SetType(int Type) = 0;
+	virtual void Refresh(int RefreshFlags) = 0;
 	virtual bool IsRefreshing() const = 0;
 	virtual bool IsRefreshingMasters() const = 0;
 	virtual int LoadingProgression() const = 0;
