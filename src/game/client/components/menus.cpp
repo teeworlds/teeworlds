@@ -1951,16 +1951,12 @@ int CMenus::Render()
 		{
 			// selected filter
 			CBrowserFilter *pFilter = &m_lFilters[m_SelectedFilter];
-			int SortHash = 0;
-			int Ping = 0;
-			int Country = 0;
-			char aGametype[32];
-			char aServerAddress[16];
-			pFilter->GetFilter(&SortHash, &Ping, &Country, aGametype, aServerAddress);
+			CServerFilterInfo FilterInfo;
+			pFilter->GetFilter(&FilterInfo);
 
 			static int ActSelection = -2;
 			if(ActSelection == -2)
-				ActSelection = Country;
+				ActSelection = FilterInfo.m_Country;
 			static float s_ScrollValue = 0.0f;
 			int OldSelected = -1;
 			UiDoListboxStart(&s_ScrollValue, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, s_ScrollValue, &Box, false);
@@ -2008,14 +2004,15 @@ int CMenus::Render()
 			static int s_Button = 0;
 			if(DoButton_Menu(&s_Button, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
-				pFilter->SetFilter(SortHash, Ping, ActSelection, aGametype, aServerAddress);
+				FilterInfo.m_Country = ActSelection;
+				pFilter->SetFilter(&FilterInfo);
 				g_Config.m_BrFilterCountryIndex = ActSelection;
 				m_Popup = POPUP_NONE;
 			}
 
 			if(m_EscapePressed)
 			{
-				ActSelection = Country;
+				ActSelection = FilterInfo.m_Country;
 				m_Popup = POPUP_NONE;
 			}
 		}

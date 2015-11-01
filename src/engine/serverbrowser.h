@@ -53,6 +53,16 @@ public:
 	CClient m_aClients[MAX_CLIENTS];
 };
 
+class CServerFilterInfo
+{
+public:
+	int m_SortHash;
+	int m_Ping;
+	int m_Country;
+	char m_aGametype[16];
+	char m_aAddress[NETADDR_MAXSTRSIZE];
+};
+
 class IServerBrowser : public IInterface
 {
 	MACRO_INTERFACE("serverbrowser", 0)
@@ -114,9 +124,9 @@ public:
 	virtual void AddFavorite(const CServerInfo *pEntry) = 0;
 	virtual void RemoveFavorite(const CServerInfo *pEntry) = 0;
 
-	virtual int AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
-	virtual void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
-	virtual void GetFilter(int Index, int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress) = 0;
+	virtual int AddFilter(const CServerFilterInfo *pFilterInfo) = 0;
+	virtual void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) = 0;
+	virtual void GetFilter(int Index, CServerFilterInfo *pFilterInfo) = 0;
 	virtual void RemoveFilter(int Index) = 0;
 };
 

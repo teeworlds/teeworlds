@@ -37,7 +37,14 @@ CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBro
 	m_Extended = true;
 	m_Custom = Custom;
 	str_copy(m_aName, pName, sizeof(m_aName));
-	m_Filter = pServerBrowser->AddFilter(Filter, Ping, Country, pGametype, pServerAddress);
+	//Todo: fix Filter
+	CServerFilterInfo FilterInfo;
+	FilterInfo.m_SortHash = Filter;
+	FilterInfo.m_Ping = Ping;
+	FilterInfo.m_Country = Country;
+	str_copy(FilterInfo.m_aGametype, pGametype, sizeof(FilterInfo.m_aGametype));
+	str_copy(FilterInfo.m_aAddress, pServerAddress, sizeof(FilterInfo.m_aAddress));
+	m_Filter = pServerBrowser->AddFilter(&FilterInfo);
 
 	// init buttons
 	m_SwitchButton = 0;
@@ -93,14 +100,14 @@ void CMenus::CBrowserFilter::SetFilterNum(int Num)
 	m_Filter = Num;
 }
 
-void CMenus::CBrowserFilter::GetFilter(int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress)
+void CMenus::CBrowserFilter::GetFilter(CServerFilterInfo *pFilterInfo)
 {
-	m_pServerBrowser->GetFilter(m_Filter, pSortHash, pPing, pCountry, pGametype, pServerAddress);
+	m_pServerBrowser->GetFilter(m_Filter, pFilterInfo);
 }
 
-void CMenus::CBrowserFilter::SetFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress)
+void CMenus::CBrowserFilter::SetFilter(const CServerFilterInfo *pFilterInfo)
 {
-	m_pServerBrowser->SetFilter(m_Filter, SortHash, Ping, Country, pGametype, pServerAddress);
+	m_pServerBrowser->SetFilter(m_Filter, pFilterInfo);
 }
 
 void CMenus::RemoveFilter(int FilterIndex)

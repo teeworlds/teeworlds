@@ -319,8 +319,8 @@ class CMenus : public CComponent
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
 
-		void GetFilter(int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress);
-		void SetFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+		void GetFilter(class CServerFilterInfo *pFilterInfo);
+		void SetFilter(const class CServerFilterInfo *pFilterInfo);
 	};
 
 	array<CBrowserFilter> m_lFilters;
