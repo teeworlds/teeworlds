@@ -1086,16 +1086,6 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 
 	if(Token != -1)
 	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-			{
-				if(GameServer()->IsClientPlayer(i))
-					PlayerCount++;
-
-				ClientCount++;
-			}
-		}
 		pPacker->Reset();
 		pPacker->AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 		pPacker->AddInt(Token);
