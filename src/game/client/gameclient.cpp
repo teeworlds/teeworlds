@@ -294,8 +294,7 @@ void CGameClient::OnInit()
 		m_pMenus->RenderLoading();
 	}
 
-	for(int i = 0; i < m_All.m_Num; i++)
-		m_All.m_paComponents[i]->OnReset();
+	OnReset();
 
 	int64 End = time_get();
 	char aBuf[256];
@@ -303,10 +302,7 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 
 	m_ServerMode = SERVERMODE_PURE;
-	
-	m_IsRace = false;
-	m_RaceMsgSent = false;
-	m_ShowOthers = -1;
+
 	for(int i = 0; i < 2; i++)
 		m_aFlagPos[i] = vec2(-1, -1);
 	
