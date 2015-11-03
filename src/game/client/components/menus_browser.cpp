@@ -1013,10 +1013,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		CBrowserFilter *pFilter = &m_lFilters[s];
 
-		// dont do anything if the filter is empty
-		if(!pFilter->NumSortedServers())
-			continue;
-
 		// filter header
 		CUIRect Row;
 		View.HSplitTop(20.0f, &Row, &View);
