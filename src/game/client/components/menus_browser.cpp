@@ -510,10 +510,10 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
-	if(FilterIndex < m_lFilters.size()-1)
+	if(FilterIndex > 0)
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button))
-			Move(false, FilterIndex);
+			Move(true, FilterIndex);
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_UP_B, &Button);
@@ -521,10 +521,10 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
-	if(FilterIndex > 0)
+	if(FilterIndex < m_lFilters.size()-1)
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button))
-			Move(true, FilterIndex);
+			Move(false, FilterIndex);
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_B, &Button);
