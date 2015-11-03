@@ -30,7 +30,7 @@ inline int AddrHash(const NETADDR *pAddr)
 
 inline int GetNewToken()
 {
-	return random_int() & 0x7FFFFFFF;
+	return random_int();
 }
 
 //
