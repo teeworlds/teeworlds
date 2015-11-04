@@ -275,7 +275,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	int Inside = MouseInside(pRect);
 	static int ButtonUsed = 0;
 
-	if(ActiveItem() == pID)
+	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(ButtonUsed))
 		{
@@ -309,7 +309,7 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 {
 	int Inside = MouseInside(pRect);
 
-	if(ActiveItem() == pID)
+	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(0))
 			SetActiveItem(0);
@@ -322,7 +322,7 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 	else if(Inside)
 		SetHotItem(pID);
 
-	if(ActiveItem() != pID)
+	if(!CheckActiveItem(pID))
 		return 0;
 
 	if(pX)

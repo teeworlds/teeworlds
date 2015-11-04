@@ -52,7 +52,7 @@ void CMenus::DoPopupMenu()
 		bool Inside = UI()->MouseInside(&s_Popups[i].m_Rect);
 		UI()->SetHotItem(&s_Popups[i].m_pId);
 
-		if(UI()->ActiveItem() == &s_Popups[i].m_pId)
+		if(UI()->CheckActiveItem(&s_Popups[i].m_pId))
 		{
 			if(!UI()->MouseButton(0))
 			{

@@ -29,6 +29,7 @@ class CUI
 	const void *m_pActiveItem;
 	const void *m_pLastActiveItem;
 	const void *m_pBecommingHotItem;
+	bool m_ActiveItemValid;
 	float m_MouseX, m_MouseY; // in gui space
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
@@ -88,12 +89,16 @@ public:
 	int MouseButtonClicked(int Index) const { return MouseButton(Index) && !((m_LastMouseButtons>>Index)&1) ; }
 
 	void SetHotItem(const void *pID) { m_pBecommingHotItem = pID; }
-	void SetActiveItem(const void *pID) { m_pActiveItem = pID; if (pID) m_pLastActiveItem = pID; }
+	void SetActiveItem(const void *pID) { m_ActiveItemValid = true; m_pActiveItem = pID; if (pID) m_pLastActiveItem = pID; }
+	bool CheckActiveItem(const void *pID) { if(m_pActiveItem == pID) { m_ActiveItemValid = true; return true; } return false; };
 	void ClearLastActiveItem() { m_pLastActiveItem = 0; }
 	const void *HotItem() const { return m_pHotItem; }
 	const void *NextHotItem() const { return m_pBecommingHotItem; }
-	const void *ActiveItem() const { return m_pActiveItem; }
+	const void *GetActiveItem() const { return m_pActiveItem; }
 	const void *LastActiveItem() const { return m_pLastActiveItem; }
+
+	void StartCheck() { m_ActiveItemValid = false; };
+	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); };
 
 	int MouseInside(const CUIRect *pRect) const;
 	void ConvertMouseMove(float *x, float *y) const;

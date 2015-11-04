@@ -349,7 +349,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 
 	bool JustGotActive = false;
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0))
 		{
@@ -436,7 +436,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 
 vec4 CEditor::ButtonColorMul(const void *pID)
 {
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 		return vec4(1,1,1,0.5f);
 	else if(UI()->HotItem() == pID)
 		return vec4(1,1,1,1.5f);
@@ -455,7 +455,7 @@ float CEditor::UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Curre
 	float Ret = Current;
 	int Inside = UI()->MouseInside(&Handle);
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0))
 			UI()->SetActiveItem(0);
@@ -697,7 +697,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 	static float s_Value;
 	int Inside = UI()->MouseInside(pRect);
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0) || Input()->KeyDown(KEY_ESCAPE))
 		{
@@ -1164,7 +1164,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 
 	vec4 PivotColor;
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		if(m_MouseDeltaWx*m_MouseDeltaWx+m_MouseDeltaWy*m_MouseDeltaWy > 0.5f)
 		{
@@ -1363,7 +1363,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 
 	vec4 pointColor;
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		float dx = m_MouseDeltaWx;
 		float dy = m_MouseDeltaWy;
@@ -1661,7 +1661,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 
 	float dx = (CenterX - wx)/m_WorldZoom;
 	float dy = (CenterY - wy)/m_WorldZoom;
-	if(dx*dx+dy*dy < 50.0f && UI()->ActiveItem() == 0)
+	if(dx*dx+dy*dy < 50.0f && UI()->CheckActiveItem(0))
 	{
 		UI()->SetHotItem(pID);
 		s_ActQIndex = QIndex;
@@ -1673,7 +1673,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 	else
 		IgnoreGrid = false;
 
-	if(UI()->ActiveItem() == pID && s_ActQIndex == QIndex)
+	if(UI()->CheckActiveItem(pID) && s_ActQIndex == QIndex)
 	{
 		if(s_Operation == OP_MOVE)
 		{
@@ -1886,7 +1886,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		UI()->SetHotItem(s_pEditorID);
 
 		// do global operations like pan and zoom
-		if(UI()->ActiveItem() == 0 && (UI()->MouseButton(0) || UI()->MouseButton(2)))
+		if(UI()->CheckActiveItem(0) && (UI()->MouseButton(0) || UI()->MouseButton(2)))
 		{
 			s_StartWx = wx;
 			s_StartWy = wy;
@@ -1909,7 +1909,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			else
 				m_pTooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
 
-			if(UI()->ActiveItem() == s_pEditorID)
+			if(UI()->CheckActiveItem(s_pEditorID))
 			{
 				CUIRect r;
 				r.x = s_StartWx;
@@ -2127,7 +2127,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			}
 
 			// do panning
-			if(UI()->ActiveItem() == s_pEditorID)
+			if(UI()->CheckActiveItem(s_pEditorID))
 			{
 				if(s_Operation == OP_PAN_WORLD)
 				{
@@ -2149,7 +2149,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			}
 		}
 	}
-	else if(UI()->ActiveItem() == s_pEditorID)
+	else if(UI()->CheckActiveItem(s_pEditorID))
 	{
 		// release mouse
 		if(!UI()->MouseButton(0))
@@ -3681,7 +3681,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 						float ColorMod = 1.0f;
 
-						if(UI()->ActiveItem() == pID)
+						if(UI()->CheckActiveItem(pID))
 						{
 							if(!UI()->MouseButton(0))
 							{
@@ -3750,7 +3750,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.";
 						}
 
-						if(UI()->ActiveItem() == pID || UI()->HotItem() == pID)
+						if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
 						{
 							CurrentTime = pEnvelope->m_lPoints[i].m_Time;
 							CurrentValue = pEnvelope->m_lPoints[i].m_aValues[c];
@@ -3791,7 +3791,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							if(UI()->MouseInside(&Final))
 								UI()->SetHotItem(pID);
 
-							if(UI()->ActiveItem() == pID)
+							if(UI()->CheckActiveItem(pID))
 							{
 								if(!UI()->MouseButton(0))
 								{
@@ -3839,7 +3839,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
 							}
 
-							if(UI()->ActiveItem() == pID || UI()->HotItem() == pID)
+							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
 							{
 								CurrentTime = pEnvelope->m_lPoints[i].m_Time + pEnvelope->m_lPoints[i].m_aOutTangentdx[c];
 								CurrentValue = pEnvelope->m_lPoints[i].m_aValues[c] + pEnvelope->m_lPoints[i].m_aOutTangentdy[c];
@@ -3876,7 +3876,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							if(UI()->MouseInside(&Final))
 								UI()->SetHotItem(pID);
 
-							if(UI()->ActiveItem() == pID)
+							if(UI()->CheckActiveItem(pID))
 							{
 								if(!UI()->MouseButton(0))
 								{
@@ -3923,7 +3923,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
 							}
 
-							if(UI()->ActiveItem() == pID || UI()->HotItem() == pID)
+							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
 							{
 								CurrentTime = pEnvelope->m_lPoints[i].m_Time + pEnvelope->m_lPoints[i].m_aInTangentdx[c];
 								CurrentValue = pEnvelope->m_lPoints[i].m_aValues[c] + pEnvelope->m_lPoints[i].m_aInTangentdy[c];
@@ -4471,6 +4471,7 @@ void CEditor::UpdateAndRender()
 	else
 		m_AnimateTime = 0;
 	ms_pUiGotContext = 0;
+	UI()->StartCheck();
 
 	// handle mouse movement
 	float mx, my, Mwx, Mwy;
@@ -4535,6 +4536,7 @@ void CEditor::UpdateAndRender()
 		m_ShowMousePointer = true;
 	}
 
+	UI()->FinishCheck();
 	Input()->ClearEvents();
 }
 

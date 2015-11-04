@@ -123,7 +123,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// do the logic
 		int Inside = UI()->MouseInside(&SeekBar);
 
-		if(UI()->ActiveItem() == id)
+		if(UI()->CheckActiveItem(id))
 		{
 			if(!UI()->MouseButton(0))
 				UI()->SetActiveItem(0);

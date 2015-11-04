@@ -166,7 +166,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 	int ReturnValue = 0;
 	int Inside = UI()->MouseInside(pRect);
 
-	if(UI()->ActiveItem() == pID)
+	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0))
 		{
@@ -1056,7 +1056,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				else
 				{
 					// reset active item, if not visible
-					if(UI()->ActiveItem() == pItem)
+					if(UI()->CheckActiveItem(pItem))
 						UI()->SetActiveItem(0);
 
 					// don't render invisible items
