@@ -1058,7 +1058,7 @@ void CMenus::RenderMenubar(CUIRect r)
 	if(Client()->State() != IClient::STATE_OFFLINE)
 		m_ActivePage = m_GamePage;
 
-	if(m_MenuPage == PAGE_SETTINGS || m_GamePage == PAGE_SETTINGS)
+	if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage == PAGE_SETTINGS) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS))
 	{
 		float Spacing = 3.0f;
 		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
