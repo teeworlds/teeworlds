@@ -47,10 +47,10 @@ bool CBinds::OnInput(IInput::CEvent e)
 	if(e.m_Key <= 0 || e.m_Key >= KEY_LAST || m_aaKeyBindings[e.m_Key][0] == 0)
 		return false;
 
-	int Stroke = 0;
 	if(e.m_Flags&IInput::FLAG_PRESS)
-		Stroke = 1;
-	Console()->ExecuteLineStroked(Stroke, m_aaKeyBindings[e.m_Key]);
+		Console()->ExecuteLineStroked(1, m_aaKeyBindings[e.m_Key]);
+	if(e.m_Flags&IInput::FLAG_RELEASE)
+		Console()->ExecuteLineStroked(0, m_aaKeyBindings[e.m_Key]);
 	return true;
 }
 
