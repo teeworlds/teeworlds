@@ -183,6 +183,8 @@ int CInput::Update()
 					if(Event.button.button == SDL_BUTTON_LEFT) Key = KEY_MOUSE_1; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
 					if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
+					if(Event.button.button == 4) Key = KEY_MOUSE_4; // ignore_convention
+					if(Event.button.button == 5) Key = KEY_MOUSE_5; // ignore_convention
 					if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
 					if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
 					if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
