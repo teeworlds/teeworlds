@@ -1561,8 +1561,7 @@ int CMenus::Render()
 		else
 		{
 			// do tab bar
-			float TopOffset = Screen.w/2-365.0f;
-			Screen.VMargin(TopOffset, &MainView);
+			Screen.VMargin(Screen.w/2-365.0f, &MainView);
 			MainView.HSplitTop(60.0f, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
@@ -1578,11 +1577,12 @@ int CMenus::Render()
 			{
 				// quit button
 				CUIRect Button;
+				float TopOffset = 35.0f;
 				Screen.HSplitTop(TopOffset, &Button, 0);
 				Button.VSplitRight(TopOffset-3.0f, 0, &Button);
-				Button.HMargin(3.0f, &Button);
+				//Button.HMargin(3.0f, &Button);
 				static int s_QuitButton=0;
-				if(DoButton_Menu(&s_QuitButton, "x", 0, &Button, 0, CUI::CORNER_L))
+				if(DoButton_Menu(&s_QuitButton, "X", 0, &Button, 0, CUI::CORNER_BL))
 					m_Popup = POPUP_QUIT;
 				
 				if(m_GamePage == PAGE_GAME)
