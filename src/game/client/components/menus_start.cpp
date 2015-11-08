@@ -15,6 +15,14 @@
 
 void CMenus::RenderStartMenu(CUIRect MainView)
 {
+	// render logo
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1,1,1,1);
+	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
 	CUIRect TopMenu, BottomMenu;
 	MainView.VMargin(MainView.w/2-190.0f, &TopMenu);
 	TopMenu.HSplitTop(365.0f, &TopMenu, &BottomMenu);
@@ -143,11 +151,5 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 void CMenus::RenderLogo(CUIRect MainView)
 {
-	// render cursor
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+	
 }
