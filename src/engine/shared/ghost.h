@@ -3,7 +3,6 @@
 #ifndef ENGINE_SHARED_GHOST_H
 #define ENGINE_SHARED_GHOST_H
 
-#include <base/tl/array.h>
 #include <engine/shared/protocol.h>
 #include <engine/ghost.h>
 

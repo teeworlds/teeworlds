@@ -522,18 +522,6 @@ void CClient::EnterGame()
 	OnEnterGame();
 }
 
-bool CClient::CheckHost(const char* pAddressStr, NETADDR *pReturnAddr)
-{
-	if(net_host_lookup(pAddressStr, pReturnAddr, m_NetClient.NetType()) != 0)
-	{
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "could not find the address of %s", pAddressStr);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
-		return false;
-	}
-	return true;
-}
-
 void CClient::Connect(const char *pAddress)
 {
 	char aBuf[512];

@@ -96,7 +96,7 @@ void CClientWebapp::CheckHostThread(void *pUser)
 	CCheckHostData *pData = (CCheckHostData*)pUser;
 
 	NETADDR ServerAddress;
-	if(pData->m_pClient->Client()->CheckHost(pData->m_aAddr, &ServerAddress))
+	if(net_host_lookup(pData->m_aAddr, &ServerAddress, NETTYPE_IPV4) == 0)
 		pData->m_pClient->ServerBrowser()->AddTeerace(ServerAddress);
 
 	delete pData;

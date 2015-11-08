@@ -86,7 +86,6 @@ public:
 
 	// networking
 	virtual void EnterGame() = 0;
-	virtual bool CheckHost(const char* pAddressStr, NETADDR *pReturnAddr) = 0;
 
 	//
 	virtual int MapDownloadAmount() = 0;
