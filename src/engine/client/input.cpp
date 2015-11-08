@@ -107,14 +107,9 @@ void CInput::ClearKeyStates()
 	mem_zero(m_aInputCount, sizeof(m_aInputCount));
 }
 
-int CInput::KeyState(int Key) const
+bool CInput::KeyState(int Key) const
 {
 	return m_aInputState[m_InputCurrent][Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
-}
-
-int CInput::KeyStateOld(int Key) const
-{
-	return m_aInputState[m_InputCurrent^1][Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
 }
 
 int CInput::Update()
@@ -198,8 +193,7 @@ int CInput::Update()
 				case SDL_MOUSEWHEEL:
 					if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
 					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
-					AddEvent(0, Key, Action);
-					Action = IInput::FLAG_RELEASE;
+					Action |= IInput::FLAG_RELEASE;
 					break;
 
 #if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
@@ -220,9 +214,11 @@ int CInput::Update()
 			//
 			if(Key != -1)
 			{
-				m_aInputCount[m_InputCurrent][Key].m_Presses++;
-				if(Action == IInput::FLAG_PRESS)
+				if(Action&IInput::FLAG_PRESS)
+				{
 					m_aInputState[m_InputCurrent][Scancode] = 1;
+					m_aInputCount[m_InputCurrent][Key].m_Presses++;
+				}
 				AddEvent(0, Key, Action);
 			}
 

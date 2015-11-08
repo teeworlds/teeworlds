@@ -59,7 +59,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
 
 	// we can toggle the seekbar using CTRL
-	if(!m_MenuActive && (Input()->KeyDown(KEY_LCTRL) || Input()->KeyDown(KEY_RCTRL)))
+	if(!m_MenuActive && (Input()->KeyPress(KEY_LCTRL) || Input()->KeyPress(KEY_RCTRL)))
 	{
 		if (m_SeekBarActive)
 			m_SeekBarActive = false;
@@ -163,7 +163,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	bool IncreaseDemoSpeed = false, DecreaseDemoSpeed = false;
 
 	//add spacebar for toggling Play/Pause
-	if(Input()->KeyDown(KEY_SPACE))
+	if(Input()->KeyPress(KEY_SPACE))
 	{
 		if(!pInfo->m_Paused)
 			DemoPlayer()->Pause();
@@ -206,7 +206,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL) || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL))
 			DecreaseDemoSpeed = true;
 
 		// fastforward
@@ -242,7 +242,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 	}
 
-	if(IncreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) || Input()->KeyDown(KEY_PLUS) || Input()->KeyDown(KEY_KP_PLUS))
+	if(IncreaseDemoSpeed || Input()->KeyPress(KEY_MOUSE_WHEEL_UP) || Input()->KeyPress(KEY_PLUS) || Input()->KeyPress(KEY_KP_PLUS))
 	{
 		if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
 		else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
@@ -253,7 +253,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else DemoPlayer()->SetSpeed(8.0f);
 	}
-	else if(DecreaseDemoSpeed || Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyDown(KEY_MINUS) || Input()->KeyDown(KEY_KP_MINUS))
+	else if(DecreaseDemoSpeed || Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyPress(KEY_MINUS) || Input()->KeyPress(KEY_KP_MINUS))
 	{
 		if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);

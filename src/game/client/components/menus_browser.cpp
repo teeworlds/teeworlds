@@ -900,9 +900,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			s_ScrollValue = (float)(m_ScrollOffset)/ScrollNum;
 			m_ScrollOffset = 0;
 		}
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f/ScrollNum;
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
 			s_ScrollValue += 3.0f/ScrollNum;
 	}
 	else
@@ -912,86 +912,80 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	int SelectedIndex = m_SelectedServer.m_Index;
 	if(SelectedFilter > -1)
 	{
-		for(int i = 0; i < m_NumInputEvents; i++)
+		int NewIndex = -1;
+		int NewFilter = SelectedFilter;
+		if(Input()->KeyPress(KEY_DOWN))
 		{
-			int NewIndex = -1;
-			int NewFilter = SelectedFilter;
-			if(m_aInputEvents[i].m_Flags&IInput::FLAG_PRESS)
+			NewIndex = SelectedIndex + 1;
+			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
 			{
-				if(m_aInputEvents[i].m_Key == KEY_DOWN)
+				// try to move to next filter
+				for(int j = SelectedFilter+1; j < m_lFilters.size(); j++)
 				{
-					NewIndex = SelectedIndex + 1;
-					if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
+					CBrowserFilter *pFilter = &m_lFilters[j];
+					if(pFilter->Extended() && pFilter->NumSortedServers())
 					{
-						// try to move to next filter
-						for(int j = SelectedFilter+1; j < m_lFilters.size(); j++)
-						{
-							CBrowserFilter *pFilter = &m_lFilters[j];
-							if(pFilter->Extended() && pFilter->NumSortedServers())
-							{
-								NewFilter = j;
-								NewIndex = 0;
-								break;
-							}
-						}
-					}
-				}
-				else if(m_aInputEvents[i].m_Key == KEY_UP)
-				{
-					NewIndex = SelectedIndex - 1;
-					if(NewIndex < 0)
-					{
-						// try to move to prev filter
-						for(int j = SelectedFilter-1; j >= 0; j--)
-						{
-							CBrowserFilter *pFilter = &m_lFilters[j];
-							if(pFilter->Extended() && pFilter->NumSortedServers())
-							{
-								NewFilter = j;
-								NewIndex = pFilter->NumSortedServers()-1;
-								break;
-							}
-						}
+						NewFilter = j;
+						NewIndex = 0;
+						break;
 					}
 				}
 			}
-			if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
+		}
+		else if(Input()->KeyPress(KEY_UP))
+		{
+			NewIndex = SelectedIndex - 1;
+			if(NewIndex < 0)
 			{
-				// get index depending on all filters
-				int TotalIndex = 0;
-				int Filter = 0;
-				while(Filter != NewFilter)
+				// try to move to prev filter
+				for(int j = SelectedFilter-1; j >= 0; j--)
 				{
-					CBrowserFilter *pFilter = &m_lFilters[Filter];
-					if(pFilter->Extended())
-						TotalIndex += m_lFilters[Filter].NumSortedServers();
-					Filter++;
-				}
-				TotalIndex += NewIndex+1;
-
-				//scroll
-				float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aCols[0].m_Rect.h + TotalIndex*ms_aCols[0].m_Rect.h + Filter*ms_aCols[0].m_Rect.h + Filter*20.0f;
-				int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aCols[0].m_Rect.h ? 1 : 0;
-				if(Scroll)
-				{
-					if(Scroll < 0)
+					CBrowserFilter *pFilter = &m_lFilters[j];
+					if(pFilter->Extended() && pFilter->NumSortedServers())
 					{
-						int NumScrolls = (View.y-IndexY+ms_aCols[0].m_Rect.h-1.0f)/ms_aCols[0].m_Rect.h;
-						s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
-					}
-					else
-					{
-						int NumScrolls = (IndexY+ms_aCols[0].m_Rect.h-(View.y+View.h)+ms_aCols[0].m_Rect.h-1.0f)/ms_aCols[0].m_Rect.h;
-						s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
+						NewFilter = j;
+						NewIndex = pFilter->NumSortedServers()-1;
+						break;
 					}
 				}
-
-				m_SelectedServer.m_Filter = NewFilter;
-				m_SelectedServer.m_Index = NewIndex;
-
-				const CServerInfo *pItem = ServerBrowser()->SortedGet(NewFilter, NewIndex);
-				str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 			}
+		}
+		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
+		{
+			// get index depending on all filters
+			int TotalIndex = 0;
+			int Filter = 0;
+			while(Filter != NewFilter)
+			{
+				CBrowserFilter *pFilter = &m_lFilters[Filter];
+				if(pFilter->Extended())
+					TotalIndex += m_lFilters[Filter].NumSortedServers();
+				Filter++;
+			}
+			TotalIndex += NewIndex+1;
+
+			//scroll
+			float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aCols[0].m_Rect.h + TotalIndex*ms_aCols[0].m_Rect.h + Filter*ms_aCols[0].m_Rect.h + Filter*20.0f;
+			int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aCols[0].m_Rect.h ? 1 : 0;
+			if(Scroll)
+			{
+				if(Scroll < 0)
+				{
+					int NumScrolls = (View.y-IndexY+ms_aCols[0].m_Rect.h-1.0f)/ms_aCols[0].m_Rect.h;
+					s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
+				}
+				else
+				{
+					int NumScrolls = (IndexY+ms_aCols[0].m_Rect.h-(View.y+View.h)+ms_aCols[0].m_Rect.h-1.0f)/ms_aCols[0].m_Rect.h;
+					s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
+				}
+			}
+
+			m_SelectedServer.m_Filter = NewFilter;
+			m_SelectedServer.m_Index = NewIndex;
+
+			const CServerInfo *pItem = ServerBrowser()->SortedGet(NewFilter, NewIndex);
+			str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 		}
 	}
 

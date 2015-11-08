@@ -80,7 +80,7 @@ void CMenus::DoPopupMenu()
 		if(s_Popups[i].m_pfnFunc(this, r))
 			g_NumPopups--;
 
-		if(Input()->KeyDown(KEY_ESCAPE))
+		if(Input()->KeyPress(KEY_ESCAPE))
 			g_NumPopups--;
 	}
 }

@@ -326,9 +326,6 @@ void CGameClient::DispatchInput()
 			}
 		}
 	}
-
-	// clear all events for this frame
-	Input()->ClearEvents();
 }
 
 
@@ -467,6 +464,9 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
+
+	// clear all events for this frame
+	Input()->ClearEvents();
 }
 
 void CGameClient::OnRelease()

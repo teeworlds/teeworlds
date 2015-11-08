@@ -35,9 +35,6 @@ float CMenus::ms_ButtonHeight = 25.0f;
 float CMenus::ms_ListheaderHeight = 20.0f;
 float CMenus::ms_FontmodHeight = 0.8f;
 
-IInput::CEvent CMenus::m_aInputEvents[MAX_INPUTEVENTS];
-int CMenus::m_NumInputEvents;
-
 
 CMenus::CMenus()
 {
@@ -64,7 +61,6 @@ CMenus::CMenus()
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
-	m_NumInputEvents = 0;
 
 	m_LastInput = time_get();
 
@@ -360,7 +356,7 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 	Graphics()->QuadsEnd();
 
 	int ReturnValue = 0;
-	if(Inside && Input()->KeyDown(KEY_MOUSE_1))
+	if(Inside && Input()->KeyPress(KEY_MOUSE_1))
 		ReturnValue = 1;
 
 	return ReturnValue;
@@ -452,11 +448,11 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 			}
 		}
 
-		for(int i = 0; i < m_NumInputEvents; i++)
+		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
 			Len = str_length(pStr);
 			int NumChars = Len;
-			ReturnValue |= CLineInput::Manipulate(m_aInputEvents[i], pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
+			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
 		}
 	}
 
@@ -504,7 +500,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	}
 
 	// check if the text has to be moved
-	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || m_NumInputEvents))
+	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || Input()->NumEvents()))
 	{
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		if(w-*pOffset > Textbox.w)
@@ -834,9 +830,9 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 		Num = 0;
 	if(Num > 0)
 	{
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			gs_ListBoxScrollValue -= 3.0f/Num;
-		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
 			gs_ListBoxScrollValue += 3.0f/Num;
 
 		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
@@ -922,41 +918,35 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
 			}
 			else
 			{
-				for(int i = 0; i < m_NumInputEvents; i++)
+				int NewIndex = -1;
+				if(Input()->KeyPress(KEY_DOWN)) NewIndex = gs_ListBoxNewSelected + 1;
+				if(Input()->KeyPress(KEY_UP)) NewIndex = gs_ListBoxNewSelected - 1;
+				if(NewIndex > -1 && NewIndex < gs_ListBoxNumItems)
 				{
-					int NewIndex = -1;
-					if(m_aInputEvents[i].m_Flags&IInput::FLAG_PRESS)
+					// scroll
+					float Offset = (NewIndex/gs_ListBoxItemsPerRow-gs_ListBoxNewSelected/gs_ListBoxItemsPerRow)*gs_ListBoxRowHeight;
+					int Scroll = gs_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
+									gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
+					if(Scroll)
 					{
-						if(m_aInputEvents[i].m_Key == KEY_DOWN) NewIndex = gs_ListBoxNewSelected + 1;
-						if(m_aInputEvents[i].m_Key == KEY_UP) NewIndex = gs_ListBoxNewSelected - 1;
-					}
-					if(NewIndex > -1 && NewIndex < gs_ListBoxNumItems)
-					{
-						// scroll
-						float Offset = (NewIndex/gs_ListBoxItemsPerRow-gs_ListBoxNewSelected/gs_ListBoxItemsPerRow)*gs_ListBoxRowHeight;
-						int Scroll = gs_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
-										gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
-						if(Scroll)
+						int NumViewable = (int)(gs_ListBoxOriginalView.h/gs_ListBoxRowHeight) + 1;
+						int ScrollNum = (gs_ListBoxNumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+						if(Scroll < 0)
 						{
-							int NumViewable = (int)(gs_ListBoxOriginalView.h/gs_ListBoxRowHeight) + 1;
-							int ScrollNum = (gs_ListBoxNumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
-							if(Scroll < 0)
-							{
-								int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/gs_ListBoxRowHeight;
-								gs_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
-							}
-							else
-							{
-								int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)+gs_ListBoxRowHeight-1.0f)/
-									gs_ListBoxRowHeight;
-								gs_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
-							}
-							if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
-							if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+							int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/gs_ListBoxRowHeight;
+							gs_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
 						}
-
-						gs_ListBoxNewSelected = NewIndex;
+						else
+						{
+							int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)+gs_ListBoxRowHeight-1.0f)/
+								gs_ListBoxRowHeight;
+							gs_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
+						}
+						if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
+						if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
 					}
+
+					gs_ListBoxNewSelected = NewIndex;
 				}
 			}
 		}
@@ -2256,9 +2246,6 @@ bool CMenus::OnInput(IInput::CEvent e)
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
 		}
-
-		if(m_NumInputEvents < MAX_INPUTEVENTS)
-			m_aInputEvents[m_NumInputEvents++] = e;
 		return true;
 	}
 	return false;
@@ -2339,7 +2326,6 @@ void CMenus::OnRender()
 		m_EscapePressed = false;
 		m_EnterPressed = false;
 		m_DeletePressed = false;
-		m_NumInputEvents = 0;
 		return;
 	}
 
@@ -2351,9 +2337,9 @@ void CMenus::OnRender()
 	int Buttons = 0;
 	if(m_UseMouseButtons)
 	{
-		if(Input()->KeyPressed(KEY_MOUSE_1)) Buttons |= 1;
-		if(Input()->KeyPressed(KEY_MOUSE_2)) Buttons |= 2;
-		if(Input()->KeyPressed(KEY_MOUSE_3)) Buttons |= 4;
+		if(Input()->KeyIsPressed(KEY_MOUSE_1)) Buttons |= 1;
+		if(Input()->KeyIsPressed(KEY_MOUSE_2)) Buttons |= 2;
+		if(Input()->KeyIsPressed(KEY_MOUSE_3)) Buttons |= 4;
 	}
 
 	UI()->Update(mx,my,mx*3.0f,my*3.0f,Buttons);
@@ -2387,7 +2373,6 @@ void CMenus::OnRender()
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
-	m_NumInputEvents = 0;
 }
 
 void CMenus::RenderBackground()

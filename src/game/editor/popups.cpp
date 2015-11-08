@@ -80,7 +80,7 @@ void CEditor::UiDoPopupMenu()
 			UI()->SetActiveItem(0);
 		}
 
-		if(Input()->KeyDown(KEY_ESCAPE))
+		if(Input()->KeyPress(KEY_ESCAPE))
 		{
 			g_UiNumPopups--;
 			UI()->SetActiveItem(0);

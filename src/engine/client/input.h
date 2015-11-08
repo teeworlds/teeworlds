@@ -31,9 +31,7 @@ class CInput : public IEngineInput
 	bool m_InputDispatched;
 
 	void ClearKeyStates();
-	int KeyState(int Key) const;
-	int KeyStateOld(int Key) const;
-	int KeyWasPressed(int Key) const { return KeyStateOld(Key); }
+	bool KeyState(int Key) const;
 
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 
@@ -42,10 +40,9 @@ public:
 
 	virtual void Init();
 
-	int KeyPressed(int Key) const { return KeyState(Key); }
-	int KeyReleases(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
-	int KeyPresses(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
-	int KeyDown(int Key) const { return KeyPressed(Key)&&!KeyWasPressed(Key); }
+	bool KeyIsPressed(int Key) const { return KeyState(Key); }
+	bool KeyRelease(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
+	bool KeyPress(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
 
 	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();
