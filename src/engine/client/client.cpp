@@ -28,6 +28,7 @@
 #include <engine/shared/datafile.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/filecollection.h>
+#include <engine/shared/http.h>
 #include <engine/shared/mapchecker.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
@@ -347,6 +348,11 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 	if(!(Flags&MSGFLAG_NOSEND))
 		m_NetClient.Send(&Packet);
 	return 0;
+}
+
+void CClient::SendHttp(CHttpConnection *pCon)
+{
+	m_HttpClient.Send(pCon);
 }
 
 void CClient::SendInfo()
@@ -1474,6 +1480,8 @@ void CClient::PumpNetwork()
 		if(Packet.m_ClientID == -1)
 			ProcessConnlessPacket(&Packet);
 	}
+
+	m_HttpClient.Update();
 }
 
 void CClient::OnDemoPlayerSnapshot(void *pData, int Size)

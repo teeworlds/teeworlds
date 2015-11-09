@@ -1,11 +1,8 @@
 /* CClientWebapp Class by Sushi and Redix*/
-#include <base/tl/array.h>
-
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/shared/http.h>
 #include <engine/external/json-parser/json.h>
-
-#include <game/http/response.h>
 
 #include "gameclient.h"
 #include "webapp.h"
@@ -19,8 +16,7 @@ struct CCheckHostData
 };
 
 CClientWebapp::CClientWebapp(CGameClient *pGameClient)
-: IWebapp(pGameClient->Storage()),
-  m_pClient(pGameClient)
+	: m_pClient(pGameClient)
 {
 	if(gs_CheckHostLock == 0)
 		gs_CheckHostLock = lock_create();
@@ -35,47 +31,47 @@ CClientWebapp::~CClientWebapp()
 	lock_release(gs_CheckHostLock);
 }
 
-void CClientWebapp::OnResponse(CHttpConnection *pCon)
+void CClientWebapp::OnApiToken(CResponse *pResponse, bool Error, void *pUserData)
 {
-	int Type = pCon->Type();
-	CResponse *pResponse = pCon->Response();
-	bool Error = pCon->Error() || pResponse->StatusCode() != 200 || pResponse->IsFile();
-	
+	CClientWebapp *pWebapp = (CClientWebapp*) pUserData;
+	bool Success = !Error && pResponse->StatusCode() == 200;
+
+	if(!Success || pResponse->BodySize() != 24+2 || str_comp(pResponse->GetBody(), "false") == 0)
+		pWebapp->m_ApiTokenError = true;
+	else
+	{
+		pWebapp->m_ApiTokenError = false;
+		str_copy(g_Config.m_WaApiToken, pResponse->GetBody()+1, 24+1);
+	}
+	pWebapp->m_ApiTokenRequested = false;
+}
+
+void CClientWebapp::OnServerList(CResponse *pResponse, bool Error, void *pUserData)
+{
+	CClientWebapp *pWebapp = (CClientWebapp*) pUserData;
+	bool Success = !Error && pResponse->StatusCode() == 200;
+	if(!Success)
+		return;
+
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
 
-	// TODO: add event listener (server and client)
-	if(Type == WEB_API_TOKEN)
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pResponse->GetBody(), pResponse->BodySize(), aError);
+	if(!pJsonData)
+		dbg_msg("json", aError);
+	else
 	{
-		// TODO: better error messages
-		if(Error || str_comp(pResponse->GetBody(), "false") == 0 || pResponse->Size() != 24+2)
-			m_ApiTokenError = true;
-		else
+		if(pJsonData->type == json_array)
 		{
-			m_ApiTokenError = false;
-			str_copy(g_Config.m_WaApiToken, pResponse->GetBody()+1, 24+1);
-		}
-		m_ApiTokenRequested = false;
-	}
-	else if(Type == WEB_SERVER_LIST && !Error)
-	{
-		json_value *pJsonData = json_parse_ex(&JsonSettings, pResponse->GetBody(), pResponse->Size(), aError);
-		if(!pJsonData)
-			m_pClient->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "json", aError);
-		else
-		{
-			if(pJsonData->type == json_array)
+			for(unsigned i = 0; i < pJsonData->u.array.length; i++)
 			{
-				for(unsigned i = 0; i < pJsonData->u.array.length; i++)
-				{
-					json_value *pJsonSrv = pJsonData->u.array.values[i];
-					if(pJsonSrv && pJsonSrv->type == json_string)
-						CheckHost(pJsonSrv->u.string.ptr);
-				}
+				json_value *pJsonSrv = pJsonData->u.array.values[i];
+				if(pJsonSrv && pJsonSrv->type == json_string)
+					pWebapp->CheckHost(pJsonSrv->u.string.ptr);
 			}
-			json_value_free(pJsonData);
 		}
+		json_value_free(pJsonData);
 	}
 }
 

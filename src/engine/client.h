@@ -120,6 +120,8 @@ public:
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags) = 0;
+	
+	virtual void SendHttp(class CHttpConnection *pCon) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)
