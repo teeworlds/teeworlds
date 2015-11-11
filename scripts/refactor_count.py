@@ -25,7 +25,7 @@ allowed_words += [ # system.h
 	"int64",
 	"dbg_assert", "dbg_msg", "dbg_break", "dbg_logger_stdout", "dbg_logger_debugger", "dbg_logger_file",
 	"mem_alloc", "mem_zero", "mem_free", "mem_copy", "mem_move", "mem_comp", "mem_stats", "total_allocations", "allocated",
-	"thread_create", "thread_sleep", "lock_wait", "lock_create", "lock_release", "lock_destroy", "swap_endian",
+	"thread_init", "thread_sleep", "lock_wait", "lock_create", "lock_unlock", "lock_destroy", "swap_endian",
 	"io_open", "io_read", "io_read", "io_write", "io_flush", "io_close", "io_seek", "io_skip", "io_tell", "io_length",
 	"str_comp", "str_length", "str_quickhash", "str_format", "str_copy", "str_comp_nocase", "str_sanitize", "str_append",
 	"str_comp_num", "str_find_nocase", "str_sanitize_strong", "str_uppercase", "str_toint", "str_tofloat",

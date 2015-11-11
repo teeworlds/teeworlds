@@ -171,7 +171,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 
 
 	// release the lock
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 
 	{
 		// clamp accumulated values
@@ -259,7 +259,7 @@ int CSound::Update()
 	{
 		lock_wait(m_SoundLock);
 		m_SoundVolume = WantedVolume;
-		lock_release(m_SoundLock);
+		lock_unlock(m_SoundLock);
 	}
 
 	return 0;
@@ -476,7 +476,7 @@ int CSound::Play(int ChannelID, int SampleID, int Flags, float x, float y)
 		m_aVoices[VoiceID].m_Y = (int)y;
 	}
 
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 	return VoiceID;
 }
 
@@ -506,7 +506,7 @@ void CSound::Stop(int SampleID)
 			m_aVoices[i].m_pSample = 0;
 		}
 	}
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 }
 
 void CSound::StopAll()
@@ -524,7 +524,7 @@ void CSound::StopAll()
 		}
 		m_aVoices[i].m_pSample = 0;
 	}
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 }
 
 IOHANDLE CSound::ms_File = 0;
