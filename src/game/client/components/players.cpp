@@ -215,6 +215,17 @@ void CPlayers::RenderPlayer(
 	}
 	else
 	{
+		// fix wrong calculation of weapon Angle in demo player				
+		if (Player.m_Angle > 800 && Prev.m_Angle < 0)
+		{
+			Player.m_Angle -= 1600;
+			Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick) / 256.0f;
+		}
+		else if (Player.m_Angle < 0 && Prev.m_Angle > 800)
+		{
+			Player.m_Angle += 1600;
+			Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick) / 256.0f;
+		}
 		/*
 		float mixspeed = Client()->FrameTime()*2.5f;
 		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
