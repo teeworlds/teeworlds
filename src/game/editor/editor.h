@@ -183,7 +183,7 @@ public:
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc) {}
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc) {}
 
-	virtual void GetSize(float *w, float *h) { *w = 0; *h = 0;}
+	virtual void GetSize(float *w, float *h) const { *w = 0; *h = 0;}
 
 	char m_aName[12];
 	int m_Type;
@@ -227,7 +227,7 @@ public:
 	void MapScreen();
 	void Mapping(float *pPoints);
 
-	void GetSize(float *w, float *h);
+	void GetSize(float *w, float *h) const;
 
 	void DeleteLayer(int Index);
 	int SwapLayers(int Index0, int Index1);

@@ -141,7 +141,7 @@ void CLayerGroup::DeleteLayer(int Index)
 	m_pMap->m_Modified = true;
 }
 
-void CLayerGroup::GetSize(float *w, float *h)
+void CLayerGroup::GetSize(float *w, float *h) const
 {
 	*w = 0; *h = 0;
 	for(int i = 0; i < m_lLayers.size(); i++)
