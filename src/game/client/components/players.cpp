@@ -204,6 +204,10 @@ void CPlayers::RenderPlayer(
 
 	float IntraTick = Client()->IntraGameTick();
 
+	if(Prev.m_Angle < pi*-128 && Player.m_Angle > pi*128)
+		Prev.m_Angle += 2*pi*256;
+	else if(Prev.m_Angle > pi*128 && Player.m_Angle < pi*-128)
+		Player.m_Angle += 2*pi*256;
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 
 	//float angle = 0;

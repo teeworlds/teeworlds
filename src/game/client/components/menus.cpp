@@ -1580,7 +1580,6 @@ int CMenus::Render()
 				float TopOffset = 35.0f;
 				Screen.HSplitTop(TopOffset, &Button, 0);
 				Button.VSplitRight(TopOffset-3.0f, 0, &Button);
-				//Button.HMargin(3.0f, &Button);
 				static int s_QuitButton=0;
 				if(DoButton_Menu(&s_QuitButton, "X", 0, &Button, 0, CUI::CORNER_BL))
 					m_Popup = POPUP_QUIT;

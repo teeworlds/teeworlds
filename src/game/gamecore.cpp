@@ -98,18 +98,7 @@ void CCharacterCore::Tick(bool UseInput)
 	if(UseInput)
 	{
 		m_Direction = m_Input.m_Direction;
-
-		// setup angle
-		float a = 0;
-		if(m_Input.m_TargetX == 0)
-			a = atanf((float)m_Input.m_TargetY);
-		else
-			a = atanf((float)m_Input.m_TargetY/(float)m_Input.m_TargetX);
-
-		if(m_Input.m_TargetX < 0)
-			a = a+pi;
-
-		m_Angle = (int)(a*256.0f);
+		m_Angle = (int)(angle(vec2(m_Input.m_TargetX, m_Input.m_TargetY))*256.0f);
 
 		// handle jump
 		if(m_Input.m_Jump)
