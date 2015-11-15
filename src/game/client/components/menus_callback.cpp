@@ -41,6 +41,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Scoreboard", "+scoreboard", 0 },
 	{ "Respawn", "kill", 0 },
 	{ "Ready", "ready_change", 0 },
+	{ "Add demo marker", "add_demomarker", 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -48,7 +49,7 @@ static CKeyInfo gs_aKeys[] =
 	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Laser");Localize("Next weapon");Localize("Prev. weapon");
 	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
 	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");
-	Localize("Screenshot");Localize("Scoreboard");Localize("Respawn");Localize("Ready");
+	Localize("Screenshot");Localize("Scoreboard");Localize("Respawn");Localize("Ready");Localize("Add demo marker");
 */
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
@@ -250,7 +251,8 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 			}
 	}
 
-	int NumOptions = 9;
+	int NumOptions = 11;
+	int StartOption = 17;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
@@ -258,7 +260,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	pSelf->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	pSelf->UiDoGetButtons(17, 26, View, ButtonHeight, Spaceing);
+	pSelf->UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spaceing);
 
 	return BackgroundHeight;
 }
