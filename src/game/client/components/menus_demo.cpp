@@ -464,7 +464,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static int s_RefreshButton = 0;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button))
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		DemolistPopulate();
 		DemolistOnUpdate(false);
