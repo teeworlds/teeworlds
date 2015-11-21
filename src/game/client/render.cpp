@@ -30,9 +30,9 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 	gs_SpriteHScale = h/f;
 
 	float x1 = x/(float)cx;
-	float x2 = (x+w)/(float)cx;
+	float x2 = (x+w-1/32.0f)/(float)cx;
 	float y1 = y/(float)cy;
-	float y2 = (y+h)/(float)cy;
+	float y2 = (y+h-1/32.0f)/(float)cy;
 	float Temp = 0;
 
 	if(Flags&SPRITE_FLAG_FLIP_Y)
