@@ -115,14 +115,16 @@ bool CHttpConnection::Update()
 		case STATE_CONNECTING:
 		{
 			int Result = net_socket_write_wait(m_Socket, 0);
-			if(Result == 0)
-				break;
-			if(Result == -1)
+			if(Result > 0)
+			{
+				m_LastActionTime = time_get();
+				int NewState = m_pRequest ? STATE_SENDING : STATE_WAITING;
+				return SetState(NewState, "connected");
+			}
+			else if(Result == -1)
 				return SetState(STATE_ERROR, "error: could not connect");
-			m_LastActionTime = time_get();
-			int NewState = m_pRequest ? STATE_SENDING : STATE_WAITING;
-			SetState(NewState, "connected");
 		}
+		break;
 
 		case STATE_SENDING:
 		{
@@ -130,49 +132,69 @@ bool CHttpConnection::Update()
 			int Bytes = m_pRequest->GetData(aData, sizeof(aData));
 			if(Bytes < 0)
 				return SetState(STATE_ERROR, "error: could not read request data");
-			if(Bytes > 0)
+			else if(Bytes > 0)
 			{
 				int Size = net_tcp_send(m_Socket, aData, Bytes);
 				if(Size < 0)
-				{
-					if(!net_would_block())
-						return SetState(STATE_ERROR, "error: sending data");
-					break;
-				}
+					return SetState(STATE_ERROR, "error: sending data");
+
 				m_LastActionTime = time_get();
 
 				// resend if needed
 				if(Size < Bytes)
 					m_pRequest->MoveCursor(Size - Bytes);
-				break;
 			}
-			SetState(STATE_RECEIVING, "sent request");
+			else // Bytes = 0
+				return SetState(STATE_RECEIVING, "sent request"); 
 		}
+		break;
 
 		case STATE_RECEIVING:
 		{
+			bool Finished = false;
 			char aBuf[1024] = {0};
 			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
 			if(Bytes < 0)
 			{
 				if(!net_would_block())
 					return SetState(STATE_ERROR, "error: receiving data");
-				if(!m_pResponse->IsComplete())
-					break; // else finish
+				if(m_pResponse->IsComplete())
+					Finished = true;
 			}
-			if(Bytes > 0)
+			else if(Bytes > 0)
 			{
 				m_LastActionTime = time_get();
-				if(!m_pResponse->Write(aBuf, Bytes))
+				if (!m_pResponse->Write(aBuf, Bytes))
 					return SetState(STATE_ERROR, "error: could not read the response header");
-				break;
 			}
-			if(!m_pResponse->Finalize())
-				return SetState(STATE_ERROR, "error: incomplete response");
-			const char *pConnStr = m_pResponse->GetField("Connection");
-			bool Close = Bytes == 0 || (pConnStr && str_comp_nocase(pConnStr, "close") == 0);
-			return SetState(Close ? STATE_OFFLINE : STATE_WAITING, "received response");
+			else // Bytes = 0 (close)
+				Finished = true;
+
+			if(Finished)
+			{
+				if(!m_pResponse->Finalize())
+					return SetState(STATE_ERROR, "error: incomplete response");
+
+				const char *pConnStr = m_pResponse->GetField("Connection");
+				bool Close = Bytes == 0 || (pConnStr && str_comp_nocase(pConnStr, "close") == 0);
+				return SetState(Close ? STATE_OFFLINE : STATE_WAITING, "received response");
+			}
 		}
+		break;
+
+		case STATE_WAITING:
+		{
+			char aBuf[1024] = { 0 };
+			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
+			if(Bytes < 0)
+			{
+				if (!net_would_block())
+					return SetState(STATE_ERROR, "error: waiting");
+			}
+			else if(Bytes == 0)
+				return SetState(STATE_OFFLINE, "remote closed");
+		}
+		break;
 	}
 	
 	return 0;
