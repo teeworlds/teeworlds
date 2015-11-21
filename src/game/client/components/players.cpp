@@ -169,10 +169,10 @@ void CPlayers::RenderHook(
 		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
 		IGraphics::CQuadItem Array[1024];
 		int i = 0;
-		for(float f = 24; f < d && i < 1024; f += 24, i++)
+		for(float f = 16; f < d && i < 1024; f += 16, i++)
 		{
 			vec2 p = HookPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,24,16);
+			Array[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
 		}
 
 		Graphics()->QuadsDraw(Array, i);
