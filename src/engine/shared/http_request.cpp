@@ -4,20 +4,17 @@
 #include "http.h"
 
 // TODO: file upload
-CRequest::CRequest() : m_Method(HTTP_NONE), m_State(STATE_HEADER),
-	m_pBody(0), m_BodySize(0), m_pCur(0), m_pEnd(0) { }
+CRequest::CRequest(int Method, const char *pURI)
+	: m_Method(Method), m_State(STATE_HEADER), m_pBody(0), m_BodySize(0), m_pCur(0), m_pEnd(0), m_pfnCallback(0), m_pUserData(0)
+{
+	AddField("Connection", "Keep-Alive");
+	str_copy(m_aURI, pURI, sizeof(m_aURI));
+}
 
 CRequest::~CRequest()
 {
 	if(m_pBody)
 		mem_free(m_pBody);
-}
-
-void CRequest::Init(int Method, const char *pURI)
-{
-	m_Method = Method;
-	AddField("Connection", "close");
-	str_copy(m_aURI, pURI, sizeof(m_aURI));
 }
 
 int CRequest::AddToHeader(char *pCur, const char *pData, int Size)
@@ -51,9 +48,9 @@ int CRequest::GenerateHeader()
 	return pCur - m_aHeader;
 }
 
-bool CRequest::Finish()
+bool CRequest::Finalize()
 {
-	if(IsFinished() || m_Method == HTTP_NONE)
+	if(IsFinalized())
 		return false;
 	if(m_Method != HTTP_GET)
 	{
@@ -64,7 +61,7 @@ bool CRequest::Finish()
 	int HeaderSize = GenerateHeader();
 	m_pCur = m_aHeader;
 	m_pEnd = m_aHeader + HeaderSize;
-	IHttpBase::Finish();
+	IHttpBase::Finalize();
 	dbg_msg("http/request", "finished (header: %d, body: %d)", HeaderSize, m_BodySize);
 	return true;
 }
@@ -72,7 +69,7 @@ bool CRequest::Finish()
 bool CRequest::InitBody(int Size, const char *pContentType)
 {
 	dbg_msg("http/request", "init body: %d (%s)", Size, pContentType);
-	if(Size <= 0 || m_pBody || IsFinished() || m_Method == HTTP_GET || m_Method == HTTP_NONE)
+	if(Size <= 0 || m_pBody || IsFinalized() || m_Method == HTTP_GET)
 		return false;
 
 	AddField("Content-Type", pContentType);
@@ -90,6 +87,21 @@ bool CRequest::SetBody(const char *pData, int Size, const char *pContentType)
 	return true;
 }
 
+bool CRequest::SetCallback(FHttpCallback pfnCallback, void *pUserData)
+{
+	if(IsFinalized())
+		return false;
+	m_pfnCallback = pfnCallback;
+	m_pUserData = pUserData;
+	return true;
+}
+
+void CRequest::ExecuteCallback(CResponse *pResponse, bool Error)
+{
+	if(m_pfnCallback)
+		m_pfnCallback(pResponse, Error, m_pUserData);
+}
+
 const char *CRequest::GetFilename(const char *pFilename) const
 {
 	const char *pShort = pFilename;
@@ -103,7 +115,7 @@ const char *CRequest::GetFilename(const char *pFilename) const
 
 int CRequest::GetData(char *pBuf, int MaxSize)
 {
-	if(!IsFinished())
+	if(!IsFinalized())
 		return -1;
 
 	if(m_pCur >= m_pEnd)

@@ -1488,11 +1488,10 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 		char aData[128];
 		str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, g_Config.m_WaPassword);
 		
-		CHttpConnection *pCon = new CHttpConnection(ITeerace::Host(), CClientWebapp::OnApiToken);
-		pCon->SetUserData(m_pClient->Webapp());
-		CRequest *pRequest = ITeerace::CreateApiRequest(pCon, CRequest::HTTP_POST, "/anonclient/get_token/");
+		CRequest *pRequest = ITeerace::CreateApiRequest(CRequest::HTTP_POST, "/anonclient/get_token/");
+		pRequest->SetCallback(CClientWebapp::OnApiToken, m_pClient->Webapp());
 		pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
-		Client()->SendHttp(pCon);
+		Client()->SendHttp(ITeerace::Host(), pRequest);
 	}
 }
 

@@ -1,6 +1,8 @@
 #ifndef ENGINE_SHARED_HTTP_H
 #define ENGINE_SHARED_HTTP_H
 
+#include <base/tl/array.h>
+
 class IHttpBase
 {
 	enum
@@ -8,7 +10,7 @@ class IHttpBase
 		HTTP_MAX_HEADER_FIELDS=16
 	};
 
-	bool m_Finish;
+	bool m_Finalized;
 
 protected:
 	struct CHttpField
@@ -22,8 +24,8 @@ protected:
 
 	IHttpBase();
 
-	bool IsFinished() const { return m_Finish; }
-	virtual bool Finish() { m_Finish = true; return true; }
+	bool IsFinalized() const { return m_Finalized; }
+	virtual bool Finalize() { m_Finalized = true; return true; }
 
 public:
 	virtual ~IHttpBase();
@@ -32,6 +34,38 @@ public:
 	void AddField(const char *pKey, int Value);
 	const char *GetField(const char *pKey) const;
 };
+
+class CResponse : public IHttpBase
+{
+	friend class CHttpConnection;
+
+	char *m_pData;
+	int m_HeaderSize;
+	int m_BufferSize;
+	int m_Size;
+
+	int m_StatusCode;
+	int m_ContentLength;
+
+	CResponse();
+
+	int ParseHeader();
+	bool ResizeBuffer(int NeededSize);
+
+	bool Write(char *pData, int Size);
+	bool IsComplete();
+
+	bool Finalize();
+
+public:
+	virtual ~CResponse();
+
+	const char *GetBody() const { return IsFinalized() ? m_pData + m_HeaderSize : 0; }
+	int BodySize() const { return IsFinalized() ? m_Size - m_HeaderSize : -1; }
+	int StatusCode() const { return IsFinalized() ? m_StatusCode : -1; }
+};
+
+typedef void(*FHttpCallback)(CResponse *pResponse, bool Error, void *pUserData);
 
 class CRequest : public IHttpBase
 {
@@ -53,14 +87,15 @@ class CRequest : public IHttpBase
 
 	char *m_pCur;
 	char *m_pEnd;
-	
-	CRequest();
-	void Init(int Method, const char *pURI);
+
+	FHttpCallback m_pfnCallback;
+	void *m_pUserData;
 
 	int AddToHeader(char *pCur, const char *pData, int Size);
 	int GenerateHeader();
 	bool InitBody(int Size, const char *pContentType);
-	bool Finish();
+
+	bool Finalize();
 
 	int GetData(char *pBuf, int MaxSize);
 	void MoveCursor(int Bytes) { m_pCur += Bytes; }
@@ -70,108 +105,87 @@ class CRequest : public IHttpBase
 public:
 	enum
 	{
-		HTTP_NONE = 0,
-		HTTP_GET,
+		HTTP_GET = 0,
 		HTTP_POST,
 		HTTP_PUT
 	};
 
+	CRequest(int Method, const char *pURI);
 	virtual ~CRequest();
 
 	bool SetBody(const char *pData, int Size, const char *pContentType);
+	bool SetCallback(FHttpCallback pfnCallback, void *pUserData = 0);
+
+	void ExecuteCallback(CResponse *pResponse, bool Error);
 	
 	//const char *GetURI() const { return m_aURI; }
 };
 
-class CResponse : public IHttpBase
-{
-	friend class CHttpConnection;
-	
-	char *m_pData;
-	int m_HeaderSize;
-	int m_BufferSize;
-	int m_Size;
-	int m_StatusCode;
-	
-	CResponse();
-
-	int ParseHeader();
-	bool ResizeBuffer(int NeededSize);
-
-	bool Write(char *pData, int Size);
-	bool Finish();
-
-public:
-	virtual ~CResponse();
-
-	const char *GetBody() const { return IsFinished() ? m_pData + m_HeaderSize : 0; }
-	int BodySize() const { return IsFinished() ? m_Size - m_HeaderSize : -1; }
-	int StatusCode() const { return IsFinished() ? m_StatusCode : -1; }
-};
-
 class CHttpConnection
 {
-	friend class CHttpClient;
-
-public:
-	typedef void (*FHttpCallback)(CResponse *pResponse, bool Error, void *pUserData);
-	
 private:
-	enum
-	{
-		STATE_NONE = 0,
-		STATE_CONNECTING,
-		STATE_SENDING,
-		STATE_RECEIVING,
-		STATE_DONE,
-		STATE_ERROR
-	};
+	int m_ID;
 
 	NETSOCKET m_Socket;
+	NETADDR m_Addr;
 	
-	char m_aAddr[256];
-	int m_Port;
 	int m_State;
-	FHttpCallback m_pfnCallback;
 
 	int64 m_LastActionTime;
 
-	CResponse m_Response;
-	CRequest m_Request;
-	void *m_pUserData;
+	CResponse *m_pResponse;
+	CRequest *m_pRequest;
 
-	int SetState(int State, const char *pMsg = 0);
-	void Call();
+	void Reset();
+	void Close();
+
+	bool SetState(int State, const char *pMsg = 0);
 
 public:
-	CHttpConnection(const char *pAddr, FHttpCallback pfnCallback);
-	~CHttpConnection();
+	enum
+	{
+		STATE_OFFLINE = 0,
+		STATE_CONNECTING,
+		STATE_SENDING,
+		STATE_RECEIVING,
+		STATE_WAITING,
+		STATE_ERROR
+	};
 
-	int Update();
+	CHttpConnection();
+	virtual ~CHttpConnection();
 
-	CRequest *CreateRequest(int Method, const char *pURI);
+	void SetID(int ID) { m_ID = ID; }
+	bool Update();
 
-	//bool Error() { return m_State == STATE_ERROR; }
-	CResponse *Response() { return &m_Response; }
-	void *UserData() { return m_pUserData; }
+	bool Connect(NETADDR Addr);
+	bool SetRequest(CRequest *pRequest);
 
-	void SetUserData(void *pUserData) { m_pUserData = pUserData; }
+	bool CheckState(int State) { return m_State == State; }
+	bool CompareAddr(NETADDR Addr);
 };
 
 class CHttpClient
 {
 	enum
 	{
-		HTTP_MAX_CONNECTIONS = 16
+		HTTP_MAX_CONNECTIONS = 4
 	};
 
-	CHttpConnection *m_apConnections[HTTP_MAX_CONNECTIONS];
+	typedef struct
+	{
+		CRequest *m_pRequest;
+		NETADDR m_Addr;
+	} CRequestData;
+
+	CHttpConnection m_aConnections[HTTP_MAX_CONNECTIONS];
+	array<CRequestData> m_lPendingRequests;
 
 public:
 	CHttpClient();
 	virtual ~CHttpClient();
 
-	bool Send(CHttpConnection *pCon);
+	bool Send(const char *pAddr, CRequest *pRequest);
 	void Update();
 };
 

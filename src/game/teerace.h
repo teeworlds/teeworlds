@@ -7,7 +7,7 @@ class ITeerace
 {
 public:
 	static const char *Host();
-	static class CRequest *CreateApiRequest(class CHttpConnection *pCon, int Method, const char *pURI);
+	static class CRequest *CreateApiRequest(int Method, const char *pURI);
 };
 
 #endif

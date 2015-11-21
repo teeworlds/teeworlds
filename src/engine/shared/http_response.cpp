@@ -6,7 +6,7 @@
 
 // TODO: download to file
 // TODO: support for chunked transfer-encoding?
-CResponse::CResponse() : m_pData(0), m_HeaderSize(-1), m_BufferSize(0), m_Size(0), m_StatusCode(0) { }
+CResponse::CResponse() : m_pData(0), m_HeaderSize(-1), m_BufferSize(0), m_Size(0), m_StatusCode(0), m_ContentLength(-1) { }
 
 CResponse::~CResponse()
 {
@@ -44,7 +44,8 @@ int CResponse::ParseHeader()
 	const char *pLen = GetField("Content-Length");
 	if(!pLen)
 		return -1;
-	if(!ResizeBuffer(HeaderSize + str_toint(pLen)))
+	m_ContentLength = str_toint(pLen);
+	if(!ResizeBuffer(HeaderSize + m_ContentLength))
 		return -1;
 	
 	m_HeaderSize = HeaderSize;
@@ -78,7 +79,7 @@ bool CResponse::ResizeBuffer(int NeededSize)
 
 bool CResponse::Write(char *pData, int Size)
 {
-	if(Size <= 0 || IsFinished())
+	if(Size <= 0 || IsFinalized())
 		return false;
 	
 	dbg_msg("http/response", "writing data: %d (%d of %d used)", Size, m_Size, m_BufferSize);
@@ -97,11 +98,16 @@ bool CResponse::Write(char *pData, int Size)
 	return true;
 }
 
-bool CResponse::Finish()
+bool CResponse::IsComplete()
+{
+	return m_HeaderSize > 0 && m_ContentLength > 0 && m_Size == m_HeaderSize + m_ContentLength;
+}
+
+bool CResponse::Finalize()
 {
 	dbg_msg("http/response", "finishing (header: %d, size: %d, buffer: %d)", m_HeaderSize, m_Size, m_BufferSize);
-	if(IsFinished() || m_HeaderSize <= 0 || m_Size != m_BufferSize)
+	if(IsFinalized() || !IsComplete())
 		return false;
-	IHttpBase::Finish();
+	IHttpBase::Finalize();
 	return true;
 }
