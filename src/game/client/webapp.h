@@ -2,16 +2,11 @@
 #ifndef GAME_CLIENT_WEBAPP_H
 #define GAME_CLIENT_WEBAPP_H
 
-#include <game/http/request.h>
-#include <game/data.h>
-#include <game/webapp.h>
-
-class CClientWebapp : public IWebapp
+class CClientWebapp
 {
 	class CGameClient *m_pClient;
 
-	void RegisterFields(class CRequest *pRequest, bool Api) {}
-	void OnResponse(class CHttpConnection *pCon);
+	//void RegisterFields(class CRequest *pRequest, bool Api) { }
 
 	void CheckHost(const char* pAddr);
 	static void CheckHostThread(void *pUser);
@@ -19,6 +14,9 @@ class CClientWebapp : public IWebapp
 public:
 	CClientWebapp(class CGameClient *pGameClient);
 	virtual ~CClientWebapp();
+	
+	static void OnApiToken(class CResponse *pResponse, bool Error, void *pUserData);
+	static void OnServerList(class CResponse *pResponse, bool Error, void *pUserData);
 
 	// api token vars
 	bool m_ApiTokenRequested;

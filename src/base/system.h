@@ -1164,8 +1164,6 @@ int net_errno();
 */
 int net_would_block();
 
-int net_in_progress();
-
 int net_socket_read_wait(NETSOCKET sock, int time);
 
 int net_socket_write_wait(NETSOCKET sock, int time);

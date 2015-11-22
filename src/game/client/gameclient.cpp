@@ -15,12 +15,14 @@
 #include <engine/serverbrowser.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
+#include <engine/shared/http.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
 #include <game/localization.h>
 #include <game/version.h>
+#include <game/teerace.h> // helper
 #include "render.h"
 
 #include "webapp.h"
@@ -382,8 +384,9 @@ void CGameClient::OnInit()
 	m_pWebapp = new CClientWebapp(this);
 
 	// get Teerace server list
-	CRequest *pRequest = m_pWebapp->CreateRequest("anonclient/servers/", CRequest::HTTP_GET);
-	m_pWebapp->SendRequest(pRequest, WEB_SERVER_LIST);
+	CRequest *pRequest = ITeerace::CreateApiRequest(CRequest::HTTP_GET, "/anonclient/servers/");
+	pRequest->SetCallback(CClientWebapp::OnServerList, m_pWebapp);
+	Client()->SendHttp(ITeerace::Host(), pRequest);
 }
 
 void CGameClient::DispatchInput()
@@ -579,9 +582,6 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
-
-	// run webapp tick
-	m_pWebapp->Update();
 
 	// clear new tick flags
 	m_NewTick = false;

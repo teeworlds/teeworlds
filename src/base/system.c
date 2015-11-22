@@ -895,7 +895,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		}
 
 		e = bind(sock, addr, sockaddrlen);
-		if(e == 0 || type == SOCK_STREAM)
+		if(e == 0)
 			break;
 		else
 		{
@@ -1297,15 +1297,6 @@ int net_would_block()
 	return net_errno() == WSAEWOULDBLOCK;
 #else
 	return net_errno() == EWOULDBLOCK;
-#endif
-}
-
-int net_in_progress()
-{
-#if defined(CONF_FAMILY_WINDOWS)
-	return net_errno() == WSAEWOULDBLOCK;
-#else
-	return net_errno() == EINPROGRESS;
 #endif
 }
 

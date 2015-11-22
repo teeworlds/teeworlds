@@ -29,6 +29,7 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/filecollection.h>
 #include <engine/shared/ghost.h>
+#include <engine/shared/http.h>
 #include <engine/shared/mapchecker.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
@@ -348,6 +349,11 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 	if(!(Flags&MSGFLAG_NOSEND))
 		m_NetClient.Send(&Packet);
 	return 0;
+}
+
+void CClient::SendHttp(const char *pAddr, class CRequest *pRequest)
+{
+	m_HttpClient.Send(pAddr, pRequest);
 }
 
 void CClient::SendInfo()
@@ -1465,6 +1471,8 @@ void CClient::PumpNetwork()
 		if(Packet.m_ClientID == -1)
 			ProcessConnlessPacket(&Packet);
 	}
+
+	m_HttpClient.Update();
 }
 
 void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
@@ -1793,6 +1801,7 @@ void CClient::Run()
 			dbg_msg("client", "couldn't open socket(contact)");
 			return;
 		}
+		m_HttpClient.Init(m_pEngine);
 	}
 
 	// init font rendering
