@@ -1808,6 +1808,7 @@ void CClient::Run()
 			dbg_msg("client", "couldn't open socket(contact)");
 			return;
 		}
+		m_HttpClient.Init(m_pEngine);
 	}
 
 	// init font rendering

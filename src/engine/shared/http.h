@@ -3,6 +3,8 @@
 
 #include <base/tl/array.h>
 
+#include <engine/engine.h>
+
 class IHttpBase
 {
 	enum
@@ -175,17 +177,21 @@ class CHttpClient
 	typedef struct
 	{
 		CRequest *m_pRequest;
-		NETADDR m_Addr;
+		CHostLookup m_Lookup;
 	} CRequestData;
 
 	CHttpConnection m_aConnections[HTTP_MAX_CONNECTIONS];
-	array<CRequestData> m_lPendingRequests;
+	array<CRequestData*> m_lPendingRequests;
+
+	IEngine *m_pEngine;
 
 public:
 	CHttpClient();
 	virtual ~CHttpClient();
 
-	bool Send(const char *pAddr, CRequest *pRequest);
+	void Init(IEngine *pEngine) { m_pEngine = pEngine; }
+
+	void Send(const char *pAddr, CRequest *pRequest);
 	void Update();
 };
 

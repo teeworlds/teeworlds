@@ -46,36 +46,27 @@ CHttpClient::CHttpClient()
 
 CHttpClient::~CHttpClient() { }
 
-bool CHttpClient::Send(const char *pAddr, CRequest *pRequest)
+void CHttpClient::Send(const char *pAddr, CRequest *pRequest)
 {
-	pRequest->AddField("Host", pAddr);
-	CRequestData Data;
-	Data.m_pRequest = pRequest;
+	CRequestData *pData = new CRequestData();
+	pData->m_pRequest = pRequest;
+	m_pEngine->HostLookup(&pData->m_Lookup, pAddr, NETTYPE_IPV4);
 
 	char aAddr[256];
 	str_copy(aAddr, pAddr, sizeof(aAddr));
 
-	int Port = 80;
 	for(int k = 0; aAddr[k]; k++)
 	{
 		if(aAddr[k] == ':')
 		{
-			Port = str_toint(aAddr + k + 1);
 			aAddr[k] = 0;
 			break;
 		}
 	}
 
-	if(net_host_lookup(aAddr, &Data.m_Addr, NETTYPE_IPV4) != 0)
-	{
-		pRequest->ExecuteCallback(0, true);
-		return false;
-	}
+	pRequest->AddField("Host", aAddr);
 
-	Data.m_Addr.port = Port;
-
-	m_lPendingRequests.add(Data);
-	return true;
+	m_lPendingRequests.add(pData);
 }
 
 void CHttpClient::Update()
@@ -84,24 +75,43 @@ void CHttpClient::Update()
 	// TODO: add some priority handling?
 	for(int i = 0; i < m_lPendingRequests.size(); i++)
 	{
-		for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+		CRequestData *pData = m_lPendingRequests[i];
+		if(pData->m_Lookup.m_Job.Status() != CJob::STATE_DONE)
+			continue;
+
+		if(pData->m_Lookup.m_Job.Result() != 0)
 		{
-			CRequestData *pData = &m_lPendingRequests[i];
-			CHttpConnection *pConn = &m_aConnections[j];
-			if(pConn->CheckState(CHttpConnection::STATE_WAITING) && pConn->CompareAddr(pData->m_Addr))
+			pData->m_pRequest->ExecuteCallback(0, true);
+			delete pData->m_pRequest;
+			delete pData;
+			m_lPendingRequests.remove_index(i);
+			i--;
+		}
+		else
+		{
+			if(pData->m_Lookup.m_Addr.port == 0)
+				pData->m_Lookup.m_Addr.port = 80;
+
+			for (int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
 			{
-				pConn->SetRequest(pData->m_pRequest);
-				m_lPendingRequests.remove_index(i);
-				i--;
-				break;
-			}
-			else if(pConn->CheckState(CHttpConnection::STATE_OFFLINE))
-			{
-				pConn->Connect(pData->m_Addr);
-				pConn->SetRequest(pData->m_pRequest);
-				m_lPendingRequests.remove_index(i);
-				i--;
-				break;
+				CHttpConnection *pConn = &m_aConnections[j];
+				if(pConn->CheckState(CHttpConnection::STATE_WAITING) && pConn->CompareAddr(pData->m_Lookup.m_Addr))
+				{
+					pConn->SetRequest(pData->m_pRequest);
+					delete pData;
+					m_lPendingRequests.remove_index(i);
+					i--;
+					break;
+				}
+				else if(pConn->CheckState(CHttpConnection::STATE_OFFLINE))
+				{
+					pConn->Connect(pData->m_Lookup.m_Addr);
+					pConn->SetRequest(pData->m_pRequest);
+					delete pData;
+					m_lPendingRequests.remove_index(i);
+					i--;
+					break;
+				}
 			}
 		}
 	}
