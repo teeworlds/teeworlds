@@ -2,12 +2,11 @@
 
 #include <cstdio>
 
+#include <engine/ghost.h>
 #include <engine/textrender.h>
 #include <engine/storage.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
-#include <engine/shared/compression.h>
-#include <engine/shared/network.h>
 
 #include <game/generated/client_data.h>
 #include <game/client/animstate.h>
@@ -26,30 +25,24 @@ can used PrevChar and PlayerChar and it would be fluent and accurate but won't b
 so it will be affected by lags
 */
 
-// should only be in one file
-static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 4;
-
+// own ghost: ID = -1
 CGhost::CGhost()
-{
-	m_lGhosts.clear();
-	m_CurGhost.m_Path.clear();
-	m_CurGhost.m_ID = -1;
-	m_CurPos = 0;
-	m_Recording = false;
-	m_Rendering = false;
-	m_RaceState = RACE_NONE;
-	m_NewRecord = false;
-	m_BestTime = -1;
-	m_StartRenderTick = -1;
-}
+	: m_CurGhost(-1),
+	m_StartRenderTick(-1),
+	m_CurPos(0),
+	m_Rendering(false),
+	m_Recording(false),
+	m_RaceState(RACE_NONE),
+	m_BestTime(-1),
+	m_NewRecord(false)
+{ }
 
-void CGhost::AddInfos(IGhostRecorder::CGhostCharacter Player)
+void CGhost::AddInfos(CGhostCharacter Player)
 {
 	if(m_Recording)
 		m_CurGhost.m_Path.add(Player);
-	if(Client()->GhostIsRecording())
-		Client()->GhostRecorder_AddInfo(&Player);
+	if(GhostRecorder()->IsRecording())
+		GhostRecorder()->WriteData(1, (const char*)&Player, sizeof(Player));
 }
 
 void CGhost::OnRender()
@@ -80,7 +73,7 @@ void CGhost::OnRender()
 			else
 				r.front() = m_CurGhost;
 
-			bool Recording = Client()->GhostIsRecording();
+			bool Recording = GhostRecorder()->IsRecording();
 			StopRecord(m_BestTime);
 			Save(Recording);
 		}
@@ -91,7 +84,7 @@ void CGhost::OnRender()
 		OnReset();
 	}
 
-	CNetObj_Character Char = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Cur;
+	CNetObj_Character Char;
 	m_pClient->m_PredictedChar.Write(&Char);
 
 	if(m_pClient->m_NewPredictedTick)
@@ -116,26 +109,28 @@ void CGhost::OnRender()
 			continue;
 
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
-		IGhostRecorder::CGhostCharacter Player = pGhost->m_Path[m_CurPos];
-		IGhostRecorder::CGhostCharacter Prev = pGhost->m_Path[PrevPos];
+		CGhostCharacter Player = pGhost->m_Path[m_CurPos];
+		CGhostCharacter Prev = pGhost->m_Path[PrevPos];
 
 		RenderGhostHook(Player, Prev);
 		RenderGhost(Player, Prev, &pGhost->m_RenderInfo);
 		RenderGhostNamePlate(Player, Prev, pGhost->m_aOwner);
 	}
 }
-void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo)
+
+void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo)
 {
 	float IntraTick = Client()->PredIntraGameTick();
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
-	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
+	//vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
+	float VelX = mix(Prev.m_VelX / 256.0f, Player.m_VelX / 256.0f, IntraTick);
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
-	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
+	bool WantOtherDir = (Player.m_Direction == -1 && VelX > 0) || (Player.m_Direction == 1 && VelX < 0);
 
 	float WalkTime = fmod(absolute(Position.x), 100.0f)/100.0f;
 	CAnimState State;
@@ -176,7 +171,7 @@ void CGhost::RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder:
 	RenderTools()->RenderTee(&State, pRenderInfo, 0, Direction, Position, true);
 }
 
-void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev)
+void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)
 {
 	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
 		return;
@@ -214,7 +209,7 @@ void CGhost::RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecor
 	Graphics()->QuadsEnd();
 }
 
-void CGhost::RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, const char *pName)
+void CGhost::RenderGhostNamePlate(CGhostCharacter Player, CGhostCharacter Prev, const char *pName)
 {
 	if(!g_Config.m_ClGhostNamePlates)
 		return;
@@ -268,13 +263,13 @@ void CGhost::InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName,
 	pRenderInfo->m_Size = 64;
 }
 
-IGhostRecorder::CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
+CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
 {
-	IGhostRecorder::CGhostCharacter Player;
+	CGhostCharacter Player;
 	Player.m_X = Char.m_X;
 	Player.m_Y = Char.m_Y;
 	Player.m_VelX = Char.m_VelX;
-	Player.m_VelY = Char.m_VelY;
+	//Player.m_VelY = Char.m_VelY;
 	Player.m_Angle = Char.m_Angle;
 	Player.m_Direction = Char.m_Direction;
 	Player.m_Weapon = Char.m_Weapon;
@@ -295,13 +290,23 @@ void CGhost::StartRecord()
 	InitRenderInfos(&m_CurGhost.m_RenderInfo, ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
 
 	if(g_Config.m_ClRaceSaveGhost)
-		Client()->GhostRecorder_Start(ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
+	{
+		Client()->GhostRecorder_Start();
+
+		CGhostSkin Skin;
+		StrToInts(&Skin.m_Skin0, 6, ClientData.m_aSkinName);
+		Skin.m_UseCustomColor = ClientData.m_UseCustomColor;
+		Skin.m_ColorBody = ClientData.m_ColorBody;
+		Skin.m_ColorFeet = ClientData.m_ColorFeet;
+		GhostRecorder()->WriteData(0, (const char*)&Skin, sizeof(Skin));
+	}
 }
 
-void CGhost::StopRecord(float Time)
+void CGhost::StopRecord(int Time)
 {
 	m_Recording = false;
-	Client()->GhostRecorder_Stop(Time);
+	if(GhostRecorder()->IsRecording())
+		GhostRecorder()->Stop(m_CurGhost.m_Path.size(), Time);
 }
 
 void CGhost::StartRender()
@@ -330,15 +335,11 @@ void CGhost::Save(bool WasRecording)
 	char aFilename[128] = {0};
 	if(WasRecording)
 	{
-		// clear Playername from wrong chars
-		char aName[MAX_NAME_LENGTH];
-		str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
-		ClearFilename(aName, MAX_NAME_LENGTH);
+		char aOldFilename[128];
 
 		// rename ghost
-		str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_BestTime, Client()->GetCurrentMapCrc());
-		char aOldFilename[128];
-		str_format(aOldFilename, sizeof(aOldFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
+		Client()->Ghost_GetPath(aFilename, sizeof(aFilename), m_BestTime);
+		Client()->Ghost_GetPath(aOldFilename, sizeof(aOldFilename));
 		Storage()->RenameFile(aOldFilename, aFilename, IStorage::TYPE_SAVE);
 	}
 
@@ -355,146 +356,73 @@ void CGhost::Save(bool WasRecording)
 	m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
 }
 
-bool CGhost::GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader)
+bool CGhost::Load(const char* pFilename, int ID)
 {
-	if(!*pFile)
-		return 0;
-
-	IGhostRecorder::CGhostHeader Header;
-	io_read(*pFile, &Header, sizeof(Header));
-
-	*pHeader = Header;
-
-	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
-		return 0;
-
-	if(Header.m_Version != gs_ActVersion && Header.m_Version != 3)
-		return 0;
-
-	int Crc = (Header.m_aCrc[0]<<24) | (Header.m_aCrc[1]<<16) | (Header.m_aCrc[2]<<8) | (Header.m_aCrc[3]);
-	if(str_comp(Header.m_aMap, Client()->GetCurrentMap()) != 0 || Crc != Client()->GetCurrentMapCrc())
-		return 0;
-
-	return 1;
-}
-
-bool CGhost::GetInfo(const char* pFilename, IGhostRecorder::CGhostHeader *pHeader)
-{
-	char aFilename[256];
-	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pFilename);
-	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
-	if(!File)
-		return 0;
-
-	bool Check = GetHeader(&File, pHeader);
-	io_close(File);
-
-	return Check;
-}
-
-static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
-{
-	while(Size)
-	{
-		*pOut = *pPast+*pDiff;
-		pOut++;
-		pPast++;
-		pDiff++;
-		Size--;
-	}
-}
-
-void CGhost::Load(const char* pFilename, int ID)
-{
-	char aFilename[256];
-	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pFilename);
-	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
-	if(!File)
-		return;
+	if(!Client()->GhostLoader_Load(pFilename))
+		return false;
 
 	// read header
-	IGhostRecorder::CGhostHeader Header;
-	if(!GetHeader(&File, &Header))
+	CGhostHeader Header = GhostLoader()->GetHeader();
+
+	int NumTicks = GhostLoader()->GetTicks(Header);
+	int Time = GhostLoader()->GetTime(Header);
+	if(NumTicks <= 0 || Time <= 0)
 	{
-		io_close(File);
-		return;
+		GhostLoader()->Close();
+		return false;
 	}
-
-	if(ID == -1)
-		m_BestTime = Header.m_Time;
-
-	int NumShots = Header.m_NumShots;
 
 	// create ghost
 	CGhostItem Ghost;
 	Ghost.m_ID = ID;
 	Ghost.m_Path.clear();
-	Ghost.m_Path.set_size(NumShots);
+	Ghost.m_Path.set_size(NumTicks);
 
 	// read client info
 	str_copy(Ghost.m_aOwner, Header.m_aOwner, sizeof(Ghost.m_aOwner));
-	InitRenderInfos(&Ghost.m_RenderInfo, Header.m_aSkinName, Header.m_UseCustomColor, Header.m_ColorBody, Header.m_ColorFeet);
+
+	int Index = 0;
+	bool FoundSkin = false;
 
 	// read data
-	int Index = 0;
-	while(Index < NumShots)
+	int Type;
+	while(GhostLoader()->ReadNextType(&Type))
 	{
-		static char aCompresseddata[100*500];
-		static char aDecompressed[100*500];
-		static char aData[100*500];
-
-		unsigned char aSize[4];
-		if(io_read(File, aSize, sizeof(aSize)) != sizeof(aSize))
-			break;
-		int Size = (aSize[0]<<24) | (aSize[1]<<16) | (aSize[2]<<8) | aSize[3];
-		
-		if(Size <= 0)
-			break;
-
-		if(io_read(File, aCompresseddata, Size) != (unsigned)Size)
+		if(Type == 0)
 		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error reading chunk");
-			break;
+			CGhostSkin Skin;
+			if(GhostLoader()->ReadData(Type, (char*)&Skin, sizeof(Skin)) && !FoundSkin)
+			{
+				FoundSkin = true;
+				char aSkinName[64];
+				IntsToStr(&Skin.m_Skin0, 6, aSkinName);
+				InitRenderInfos(&Ghost.m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
+			}
 		}
-
-		Size = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
-		if(Size < 0)
+		else if(Type == 1)
 		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during network decompression");
-			break;
-		}
-
-		Size = CVariableInt::Decompress(aDecompressed, Size, aData);
-		if(Size < 0)
-		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during intpack decompression");
-			break;
-		}
-
-		IGhostRecorder::CGhostCharacter *Tmp = (IGhostRecorder::CGhostCharacter*)aData;
-		for(unsigned i = 0; i < Size/sizeof(IGhostRecorder::CGhostCharacter); i++)
-		{
-			if(Index >= NumShots)
-				break;
-			
-			if(i > 0 && Header.m_Version != 3)
-				UndiffItem((int*)&Ghost.m_Path[Index-1], (int*)Tmp, (int*)&Ghost.m_Path[Index], sizeof(IGhostRecorder::CGhostCharacter)/4);
-			else
-				Ghost.m_Path[Index] = *Tmp;
-			Index++;
-			Tmp++;
+			CGhostCharacter Char;
+			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
+				Ghost.m_Path[Index++] = Char;
 		}
 	}
 
-	io_close(File);
+	GhostLoader()->Close();
 
+	if(Index != NumTicks)
+		return false;
+
+	if(ID == -1)
+		m_BestTime = Time;
+	if(!FoundSkin)
+		InitRenderInfos(&Ghost.m_RenderInfo, "default", 0, 0, 0);
 	m_lGhosts.add(Ghost);
+	return true;
 }
 
 void CGhost::Unload(int ID)
 {
-	CGhostItem Item;
-	Item.m_ID = ID;
+	CGhostItem Item(ID);
 	m_lGhosts.remove_fast(Item);
 }
 
@@ -550,7 +478,7 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
 			{
 				m_RaceState = RACE_FINISHED;
-				float CurTime = Minutes*60 + Seconds;
+				int CurTime = Minutes*60*1000 + (int)(Seconds*1000);
 				if(m_Recording && (CurTime < m_BestTime || m_BestTime == -1))
 				{
 					m_NewRecord = true;
@@ -570,15 +498,8 @@ void CGhost::OnReset()
 	m_CurGhost.m_Path.clear();
 	m_StartRenderTick = -1;
 
-	if(Client()->GhostIsRecording())
-		Client()->GhostRecorder_Stop();
-
-	char aName[MAX_NAME_LENGTH];
-	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
-	ClearFilename(aName, MAX_NAME_LENGTH);
-
 	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "ghosts/%s_%s_%08x_tmp.gho", Client()->GetCurrentMap(), aName, Client()->GetCurrentMapCrc());
+	Client()->Ghost_GetPath(aFilename, sizeof(aFilename));
 	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 }
 
@@ -593,16 +514,4 @@ void CGhost::OnMapLoad()
 	m_BestTime = -1;
 	m_lGhosts.clear();
 	m_pClient->m_pMenus->GhostlistPopulate();
-}
-
-void CGhost::ClearFilename(char *pFilename, int Size)
-{
-	for(int i = 0; i < Size; i++)
-	{
-		if(!pFilename[i])
-			break;
-
-		if(pFilename[i] == '\\' || pFilename[i] == '/' || pFilename[i] == '|' || pFilename[i] == ':' || pFilename[i] == '*' || pFilename[i] == '?' || pFilename[i] == '<' || pFilename[i] == '>' || pFilename[i] == '"')
-			pFilename[i] = '%';
-	}
 }

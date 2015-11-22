@@ -3,47 +3,46 @@
 #ifndef ENGINE_GHOST_H
 #define ENGINE_GHOST_H
 
+#include <engine/shared/protocol.h>
+
 #include "kernel.h"
+
+struct CGhostHeader
+{
+	unsigned char m_aMarker[8];
+	unsigned char m_Version;
+	char m_aOwner[MAX_NAME_LENGTH];
+	char m_aMap[64];
+	unsigned char m_aCrc[4];
+	unsigned char m_aNumTicks[4];
+	unsigned char m_aTime[4];
+};
 
 class IGhostRecorder : public IInterface
 {
 	MACRO_INTERFACE("ghostrecorder", 0)
 public:
+	virtual ~IGhostRecorder() {}
+	virtual int Stop(int Ticks, int Time) = 0;
 
-	struct CGhostHeader
-	{
-		unsigned char m_aMarker[8];
-		unsigned char m_Version;
-		char m_aOwner[MAX_NAME_LENGTH];
-		char m_aSkinName[64];
-		int m_UseCustomColor;
-		int m_ColorBody;
-		int m_ColorFeet;
-		char m_aMap[64];
-		unsigned char m_aCrc[4];
-		int m_NumShots;
-		float m_Time;
-	};
-	
-	struct CGhostCharacter
-	{
-		int m_X;
-		int m_Y;
-		int m_VelX;
-		int m_VelY;
-		int m_Angle;
-		int m_Direction;
-		int m_Weapon;
-		int m_HookState;
-		int m_HookX;
-		int m_HookY;
-		int m_AttackTick;
-	};
-	
-	~IGhostRecorder() {}
+	virtual void WriteData(int Type, const char *pData, int Size) = 0;
 	virtual bool IsRecording() const = 0;
-	virtual void AddInfos(CGhostCharacter *pPlayer) = 0;
-	virtual int Stop(float Time=0.0f) = 0;
+};
+
+class IGhostLoader : public IInterface
+{
+	MACRO_INTERFACE("ghostloader", 0)
+public:
+	virtual ~IGhostLoader() {}
+	virtual void Close() = 0;
+
+	virtual CGhostHeader GetHeader() = 0;
+
+	virtual bool ReadNextType(int *pType) = 0;
+	virtual bool ReadData(int Type, char *pData, int Size) = 0;
+
+	virtual int GetTime(CGhostHeader Header) = 0;
+	virtual int GetTicks(CGhostHeader Header) = 0;
 };
 
 #endif

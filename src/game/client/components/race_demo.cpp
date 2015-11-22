@@ -3,13 +3,12 @@
 #include <stdio.h>
 
 #include <engine/shared/config.h>
-#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 
 #include "menus.h"
-#include "ghost.h"
 #include "race_demo.h"
 
+// TODO: rework the path handling
 CRaceDemo::CRaceDemo()
 {
 	m_RaceState = RACE_NONE;
@@ -40,7 +39,7 @@ void CRaceDemo::OnRender()
 		if(m_RaceState == RACE_STARTED)
 			OnReset();
 		
-		m_pMap = Client()->RaceRecordStart("tmp");
+		m_pMap = Client()->DemoRecorder_StartRace("tmp");
 		m_DemoStartTick = Client()->GameTick() + Client()->GameTickSpeed();
 		m_RaceState = RACE_STARTED;
 	}
@@ -57,8 +56,8 @@ void CRaceDemo::OnRender()
 
 void CRaceDemo::OnReset()
 {
-	if(Client()->DemoIsRecording())
-		Client()->DemoRecord_Stop();
+	if(DemoRecorder()->IsRecording())
+		DemoRecorder()->Stop();
 		
 	char aFilename[512];
 	str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
@@ -131,7 +130,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 void CRaceDemo::CheckDemo()
 {
 	// stop the demo recording
-	Client()->DemoRecord_Stop();
+	DemoRecorder()->Stop();
 	
 	char aTmpDemoName[128];
 	str_format(aTmpDemoName, sizeof(aTmpDemoName), "%s_tmp", m_pMap);
@@ -178,7 +177,7 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 	{
 		char aPlayerName[MAX_NAME_LENGTH];
 		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
-		CGhost::ClearFilename(aPlayerName, MAX_NAME_LENGTH);
+		ClearFilename(aPlayerName, MAX_NAME_LENGTH);
 		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%6.3f_%s.demo", pDemo, m_Time, aPlayerName);
 	}
 	else
@@ -187,4 +186,17 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 	str_format(aOldFilename, sizeof(aOldFilename), "demos/%s_tmp.demo", m_pMap);
 	
 	Storage()->RenameFile(aOldFilename, aNewFilename, IStorage::TYPE_SAVE);
+}
+
+// TODO: remove this
+void CRaceDemo::ClearFilename(char *pFilename, int Size)
+{
+	for (int i = 0; i < Size; i++)
+	{
+		if (!pFilename[i])
+			break;
+
+		if (pFilename[i] == '\\' || pFilename[i] == '/' || pFilename[i] == '|' || pFilename[i] == ':' || pFilename[i] == '*' || pFilename[i] == '?' || pFilename[i] == '<' || pFilename[i] == '>' || pFilename[i] == '"')
+			pFilename[i] = '%';
+	}
 }

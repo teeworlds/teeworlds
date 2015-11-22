@@ -3,22 +3,28 @@
 #ifndef GAME_CLIENT_COMPONENTS_GHOST_H
 #define GAME_CLIENT_COMPONENTS_GHOST_H
 
-#include <engine/shared/ghost.h>
+#include <base/tl/array.h>
+
 #include <game/client/component.h>
+
+#include <game/ghost.h>
 
 class CGhost : public CComponent
 {
 
 private:
-
-	struct CGhostItem
+	class CGhostItem
 	{
+	public:
 		int m_ID;
 		CTeeRenderInfo m_RenderInfo;
-		array<IGhostRecorder::CGhostCharacter> m_Path;
+		array<CGhostCharacter> m_Path;
 		char m_aOwner[MAX_NAME_LENGTH];
 
 		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
+
+		CGhostItem() : m_ID(-1) { }
+		CGhostItem(int ID) : m_ID(ID) { }
 	};
 
 	array<CGhostItem> m_lGhosts;
@@ -29,7 +35,7 @@ private:
 	bool m_Rendering;
 	bool m_Recording;
 	int m_RaceState;
-	float m_BestTime;
+	int m_BestTime;
 	bool m_NewRecord;
 
 	enum
@@ -39,21 +45,19 @@ private:
 		RACE_FINISHED,
 	};
 
-	void AddInfos(IGhostRecorder::CGhostCharacter Player);
+	void AddInfos(CGhostCharacter Player);
 
-	IGhostRecorder::CGhostCharacter GetGhostCharacter(CNetObj_Character Char);
+	CGhostCharacter GetGhostCharacter(CNetObj_Character Char);
 
 	void StartRecord();
-	void StopRecord(float Time=0.0f);
+	void StopRecord(int Time=0);
 	void StartRender();
 	void StopRender();
-	void RenderGhost(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo);
-	void RenderGhostHook(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev);
-	void RenderGhostNamePlate(IGhostRecorder::CGhostCharacter Player, IGhostRecorder::CGhostCharacter Prev, const char *pName);
+	void RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo);
+	void RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev);
+	void RenderGhostNamePlate(CGhostCharacter Player, CGhostCharacter Prev, const char *pName);
 	
 	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
-
-	bool GetHeader(IOHANDLE *pFile, IGhostRecorder::CGhostHeader *pHeader);
 
 	void Save(bool WasRecording);
 
@@ -69,12 +73,8 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
-	void Load(const char* pFilename, int ID);
+	bool Load(const char* pFilename, int ID);
 	void Unload(int ID);
-
-	bool GetInfo(const char* pFilename, IGhostRecorder::CGhostHeader *pHeader);
-
-	static void ClearFilename(char *pFilename, int Size);
 };
 
 #endif

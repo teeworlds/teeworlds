@@ -3,8 +3,6 @@
 #ifndef GAME_CLIENT_COMPONENTS_RACE_DEMO_H
 #define GAME_CLIENT_COMPONENTS_RACE_DEMO_H
 
-#include <game/client/gameclient.h>
-
 #include <game/client/component.h>
 
 class CRaceDemo : public CComponent
@@ -15,6 +13,8 @@ class CRaceDemo : public CComponent
 	const char *m_pMap;
 	
 	bool m_Active;
+
+	void ClearFilename(char *pFilename, int Size);
 	
 public:
 

@@ -7,11 +7,11 @@
 #include <engine/demo.h>
 #include <engine/friends.h>
 #include <engine/keys.h>
+#include <engine/ghost.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
-#include <engine/shared/ghost.h>
 #include <engine/shared/config.h>
 
 #include <game/generated/protocol.h>
@@ -806,18 +806,18 @@ int CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType
 		(pName[1] == '.' && pName[2] == 0))) ||
 		(!IsDir && (Length < 4 || str_comp(pName+Length-4, ".gho"))))
 		return 0;
+
+	char aFilename[256];
+	str_format(aFilename, sizeof(aFilename), "ghosts/%s", pName);
 	
-	IGhostRecorder::CGhostHeader Header;
-	if(!pSelf->m_pClient->m_pGhost->GetInfo(pName, &Header))
-		return 0;
-	
-	if(Header.m_Time <= 0)
+	CGhostHeader Header;
+	if(!pSelf->Client()->GhostLoader_GetGhostInfo(aFilename, &Header))
 		return 0;
 
 	CGhostItem Item;
-	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
-	Item.m_Time = Header.m_Time;
+	Item.m_Time = pSelf->GhostLoader()->GetTime(Header);
 	Item.m_Active = false;
 	Item.m_ID = pSelf->m_lGhosts.add(Item);
 	
@@ -839,8 +839,7 @@ void CMenus::GhostlistPopulate()
 	if(m_OwnGhost)
 	{
 		m_OwnGhost->m_ID = -1;
-		m_OwnGhost->m_Active = true;
-		m_pClient->m_pGhost->Load(m_OwnGhost->m_aFilename, -1);
+		m_OwnGhost->m_Active = m_pClient->m_pGhost->Load(m_OwnGhost->m_aFilename, -1);
 	}
 }
 
@@ -1045,7 +1044,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 				Cursor.m_LineWidth = Button.w;
 
 				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/60, fmod(pItem->m_Time, 60));
+				str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)pItem->m_Time/(60*1000), (pItem->m_Time%(60*1000))/1000.f);
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 		}
@@ -1070,9 +1069,11 @@ void CMenus::RenderGhost(CUIRect MainView)
 	if(DoButton_Menu(&s_GhostButton, Localize(pText), 0, &Button) || (NewSelected != -1 && Input()->MouseDoubleClick()))
 	{
 		if(pGhost->m_Active)
+		{
 			m_pClient->m_pGhost->Unload(pGhost->m_ID);
+			pGhost->m_Active = false;
+		}
 		else
-			m_pClient->m_pGhost->Load(pGhost->m_aFilename, pGhost->m_ID);
-		pGhost->m_Active ^= 1;
+			pGhost->m_Active = m_pClient->m_pGhost->Load(pGhost->m_aFilename, pGhost->m_ID);
 	}
 }

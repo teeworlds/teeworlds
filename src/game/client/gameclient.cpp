@@ -5,6 +5,7 @@
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
+#include <engine/ghost.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/demo.h>
@@ -113,6 +114,8 @@ void CGameClient::OnConsoleInit()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pDemoPlayer = Kernel()->RequestInterface<IDemoPlayer>();
 	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
+	m_pGhostLoader = Kernel()->RequestInterface<IGhostLoader>();
+	m_pGhostRecorder = Kernel()->RequestInterface<IGhostRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();

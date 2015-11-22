@@ -5,7 +5,6 @@
 #include "kernel.h"
 
 #include "message.h"
-#include <engine/shared/ghost.h>
 
 class IClient : public IInterface
 {
@@ -134,24 +133,18 @@ public:
 	virtual const char *ErrorString() = 0;
 	virtual const char *LatestVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
-	
-	virtual bool SoundInitFailed() = 0;
 
-	virtual bool DemoIsRecording() = 0;
-	virtual bool DemoIsPlaying() = 0;
-	virtual void DemoRecord_Stop() = 0;
+	virtual bool SoundInitFailed() = 0;
 
 	virtual int GetDebugFont() = 0;
 	
 	// Race
-	virtual const char* GetCurrentMap() = 0;
-	virtual int GetCurrentMapCrc() = 0;
-	virtual const char* RaceRecordStart(const char *pFilename) = 0;
+	virtual const char *DemoRecorder_StartRace(const char *pFilename) = 0;
 	
-	virtual void GhostRecorder_Start(const char* pSkinName, int UseCustomColor, int ColorBody, int ColorFeet) = 0;
-	virtual void GhostRecorder_Stop(float Time=0.0f) = 0;
-	virtual bool GhostIsRecording() = 0;
-	virtual void GhostRecorder_AddInfo(IGhostRecorder::CGhostCharacter *pPlayer) = 0;
+	virtual void Ghost_GetPath(char *pBuf, int Size, int Time = -1) = 0;
+	virtual void GhostRecorder_Start() = 0;
+	virtual bool GhostLoader_Load(const char *pFilename) = 0;
+	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader) = 0;
 };
 
 class IGameClient : public IInterface

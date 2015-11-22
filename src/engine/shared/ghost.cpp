@@ -1,35 +1,41 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
+
 #include <engine/console.h>
 #include <engine/storage.h>
+
 #include "ghost.h"
-#include "memheap.h"
 #include "compression.h"
 #include "network.h"
 
-// should only be in one file
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
 static const unsigned char gs_ActVersion = 4;
+
+CGhostItem::CGhostItem() : m_Type(-1)
+{
+	mem_zero(m_aData, sizeof(m_aData));
+}
+
+CGhostItem::CGhostItem(int Type) : m_Type(Type)
+{
+	mem_zero(m_aData, sizeof(m_aData));
+}
+
+bool CGhostItem::Compare(CGhostItem Other)
+{
+	return m_Type != -1 && m_Type == Other.m_Type;
+}
 
 CGhostRecorder::CGhostRecorder()
 {
 	m_File = 0;
-	m_AddedInfo = 0;
-	m_NumShots = 0;
+	ResetBuffer();
 }
 
 // Record
-int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc, const char* pName, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
+int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc, const char* pName)
 {
-	CGhostHeader Header;
-	if(m_File)
-		return -1;
-
-	// reset values
-	m_AddedInfo = 0;
-	m_NumShots = 0;
-	
 	m_pConsole = pConsole;
 
 	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
@@ -42,22 +48,19 @@ int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pF
 	}
 	
 	// write header
+	CGhostHeader Header;
 	mem_zero(&Header, sizeof(Header));
 	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
 	Header.m_Version = gs_ActVersion;
 	str_copy(Header.m_aOwner, pName, sizeof(Header.m_aOwner));
-	str_copy(Header.m_aSkinName, pSkinName, sizeof(Header.m_aSkinName));
-	Header.m_UseCustomColor = UseCustomColor;
-	Header.m_ColorBody = ColorBody;
-	Header.m_ColorFeet = ColorFeet;
 	str_copy(Header.m_aMap, pMap, sizeof(Header.m_aMap));
 	Header.m_aCrc[0] = (Crc>>24)&0xff;
 	Header.m_aCrc[1] = (Crc>>16)&0xff;
 	Header.m_aCrc[2] = (Crc>>8)&0xff;
 	Header.m_aCrc[3] = (Crc)&0xff;
-	Header.m_NumShots = 0;
-	Header.m_Time = 0.0f;
 	io_write(m_File, &Header, sizeof(Header));
+
+	ResetBuffer();
 	
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "Ghost recording to '%s'", pFilename);
@@ -65,12 +68,19 @@ int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pF
 	return 0;
 }
 
+void CGhostRecorder::ResetBuffer()
+{
+	mem_zero(m_aBuffer, sizeof(m_aBuffer));
+	m_pBufferPos = m_aBuffer;
+	m_BufferNumItems = 0;
+}
+
 static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 {
 	int Needed = 0;
 	while(Size)
 	{
-		*pOut = *pCurrent-*pPast;
+		*pOut = *pCurrent - *pPast;
 		Needed |= *pOut;
 		pOut++;
 		pPast++;
@@ -81,71 +91,294 @@ static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 	return Needed;
 }
 
-void CGhostRecorder::WriteData()
+void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 {
-	if(!m_File)
+	if(!m_File || Size > sizeof(CGhostItem::m_aData) || Size <= 0)
 		return;
-	
-	// write data
-	CGhostCharacter aDiffBuf[500];
-	aDiffBuf[0] = m_aInfoBuf[0];
 
-	CGhostCharacter *pPrev = &m_aInfoBuf[0];
-	for(int i = 1; i < m_AddedInfo; i++)
+	CGhostItem Data(Type);
+	mem_copy(Data.m_aData, pData, Size);
+
+	if(m_LastItem.Compare(Data))
 	{
-		DiffItem((int*)pPrev, (int*)&m_aInfoBuf[i], (int*)&aDiffBuf[i], sizeof(CGhostCharacter)/4);
-		pPrev = &m_aInfoBuf[i];
+		DiffItem((int*)m_LastItem.m_aData, (int*)Data.m_aData, (int*)m_pBufferPos, Size/4);
 	}
-	
-	char aBuffer[100*500];
-	char aBuffer2[100*500];
-	unsigned char aSize[4];
-	
-	int Size = sizeof(CGhostCharacter)*m_AddedInfo;
-	mem_copy(aBuffer2, &aDiffBuf[0], Size);
-	
-	Size = CVariableInt::Compress(aBuffer2, Size, aBuffer);
-	Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2));
-	
-	aSize[0] = (Size>>24)&0xff;
-	aSize[1] = (Size>>16)&0xff;
-	aSize[2] = (Size>>8)&0xff;
-	aSize[3] = (Size)&0xff;
-	
-	io_write(m_File, aSize, sizeof(aSize));
-	io_write(m_File, aBuffer2, Size);
-	
-	m_NumShots += m_AddedInfo;
+	else
+	{
+		FlushChunk(m_LastItem.m_Type);
+		mem_copy(m_pBufferPos, Data.m_aData, Size);
+	}
+
+	m_LastItem = Data;
+	m_pBufferPos += Size;
+	m_BufferNumItems++;
+	if(m_BufferNumItems >= NUM_ITEMS_PER_CHUNK)
+		FlushChunk(m_LastItem.m_Type);
 }
 
-int CGhostRecorder::Stop(float Time)
+void CGhostRecorder::FlushChunk(int Type)
+{
+	char aBuffer[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	unsigned char aChunk[4];
+
+	int Size = m_pBufferPos - m_aBuffer;
+
+	if(!m_File || Size == 0)
+		return;
+
+	//char aBuf[256];
+	//str_format(aBuf, sizeof(aBuf), "Writing %d items of type %d", m_BufferNumItems, Type);
+	//m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_recorder", aBuf);
+
+	while(Size&3)
+		m_aBuffer[Size++] = 0;
+	Size = CVariableInt::Compress(m_aBuffer, Size, aBuffer);
+	Size = CNetBase::Compress(aBuffer, Size, m_aBuffer, sizeof(m_aBuffer));
+
+	aChunk[0] = Type&0xff;
+	aChunk[1] = m_BufferNumItems&0xff;
+	aChunk[2] = (Size>>8)&0xff;
+	aChunk[3] = (Size)&0xff;
+
+	io_write(m_File, aChunk, sizeof(aChunk));
+	io_write(m_File, m_aBuffer, Size);
+
+	ResetBuffer();
+}
+
+int CGhostRecorder::Stop(int Ticks, int Time)
 {
 	if(!m_File)
 		return -1;
 		
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_recorder", "Stopped ghost recording");
-	
-	// save the rest of the ghost
-	WriteData();
+
+	FlushChunk(m_LastItem.m_Type);
+
+	unsigned char aNumTicks[4];
+	unsigned char aTime[4];
+
+	aNumTicks[0] = (Ticks>>24)&0xff;
+	aNumTicks[1] = (Ticks>>16)&0xff;
+	aNumTicks[2] = (Ticks>>8)&0xff;
+	aNumTicks[3] = (Ticks)&0xff;
+
+	aTime[0] = (Time>>24)&0xff;
+	aTime[1] = (Time>>16)&0xff;
+	aTime[2] = (Time>>8)&0xff;
+	aTime[3] = (Time)&0xff;
 	
 	// write down num shots and time
 	io_seek(m_File, sizeof(CGhostHeader)-8, IOSEEK_START);
-	io_write(m_File, &m_NumShots, sizeof(m_NumShots));
-	io_write(m_File, &Time, sizeof(Time));
+	io_write(m_File, &aNumTicks, sizeof(aNumTicks));
+	io_write(m_File, &aTime, sizeof(aTime));
 	
 	io_close(m_File);
 	m_File = 0;
 	return 0;
 }
 
-void CGhostRecorder::AddInfos(CGhostCharacter *pPlayer)
+CGhostLoader::CGhostLoader()
 {
-	if(m_AddedInfo == 500)
-	{
-		WriteData();
-		m_AddedInfo = 0;
-	}
-	
-	m_aInfoBuf[m_AddedInfo++] = *pPlayer;
+	m_File = 0;
+	ResetBuffer();
 }
 
+void CGhostLoader::ResetBuffer()
+{
+	mem_zero(m_aBuffer, sizeof(m_aBuffer));
+	m_pBufferPos = m_aBuffer;
+	m_BufferNumItems = 0;
+	m_BufferCurItem = 0;
+}
+
+int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc)
+{
+	m_pConsole = pConsole;
+	m_File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!m_File)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "could not open '%s'", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_loader", aBuf);
+		return -1;
+	}
+
+	// read the header
+	mem_zero(&m_Header, sizeof(m_Header));
+	io_read(m_File, &m_Header, sizeof(CGhostHeader));
+	if(mem_comp(m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "'%s' is not a ghost file", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_loader", aBuf);
+		io_close(m_File);
+		m_File = 0;
+		return -1;
+	}
+
+	if(m_Header.m_Version != gs_ActVersion)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "ghost version %d is not supported", m_Header.m_Version);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_loader", aBuf);
+		io_close(m_File);
+		m_File = 0;
+		return -1;
+	}
+
+	int GhostMapCrc = (m_Header.m_aCrc[0] << 24) | (m_Header.m_aCrc[1] << 16) | (m_Header.m_aCrc[2] << 8) | (m_Header.m_aCrc[3]);
+	if(str_comp(m_Header.m_aMap, pMap) != 0 || GhostMapCrc != Crc)
+	{
+		io_close(m_File);
+		m_File = 0;
+		return -1;
+	}
+
+	ResetBuffer();
+
+	// ready for playback
+	return 0;
+}
+
+int CGhostLoader::ReadChunk(int *pType)
+{
+	static char aCompresseddata[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	static char aDecompressed[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	unsigned char aChunk[4];
+
+	ResetBuffer();
+
+	if(io_read(m_File, aChunk, sizeof(aChunk)) != sizeof(aChunk))
+		return -1;
+
+	*pType = aChunk[0];
+	int Size = 0;
+	Size = (aChunk[2] << 8) | aChunk[3];
+	m_BufferNumItems = aChunk[1];
+
+	if(Size > MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK || Size <= 0)
+		return -1;
+
+	if(io_read(m_File, aCompresseddata, Size) != (unsigned)Size)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error reading chunk");
+		return -1;
+	}
+
+	Size = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
+	if(Size < 0)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during network decompression");
+		return -1;
+	}
+
+	Size = CVariableInt::Decompress(aDecompressed, Size, m_aBuffer);
+	if(Size < 0)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during intpack decompression");
+		return -1;
+	}
+
+	return 0;
+}
+
+bool CGhostLoader::ReadNextType(int *pType)
+{
+	if(!m_File)
+		return false;
+
+	if(m_BufferCurItem < m_BufferNumItems)
+	{
+		*pType = m_LastItem.m_Type;
+	}
+	else
+	{
+		if(ReadChunk(pType))
+			return false; // error or eof
+	}
+
+	return true;
+}
+
+static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
+{
+	while (Size)
+	{
+		*pOut = *pPast + *pDiff;
+		pOut++;
+		pPast++;
+		pDiff++;
+		Size--;
+	}
+}
+
+bool CGhostLoader::ReadData(int Type, char *pData, int Size)
+{
+	if(!m_File || Size > sizeof(CGhostItem::m_aData) || Size <= 0)
+		return false;
+
+	CGhostItem Data(Type);
+
+	char aData[MAX_ITEM_SIZE];
+	mem_copy(aData, m_pBufferPos, Size);
+
+	if(m_LastItem.Compare(Data))
+		UndiffItem((int*)m_LastItem.m_aData, (int*)m_pBufferPos, (int*)Data.m_aData, Size/4);
+	else
+		mem_copy(Data.m_aData, m_pBufferPos, Size);
+
+	mem_copy(pData, Data.m_aData, Size);
+
+	m_LastItem = Data;
+	m_pBufferPos += Size;
+	m_BufferCurItem++;
+	return true;
+}
+
+void CGhostLoader::Close()
+{
+	if(!m_File)
+		return;
+	io_close(m_File);
+	m_File = 0;
+}
+
+bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const
+{
+	if(!pGhostHeader)
+		return false;
+
+	mem_zero(pGhostHeader, sizeof(CGhostHeader));
+
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+
+	io_read(File, pGhostHeader, sizeof(CGhostHeader));
+	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pGhostHeader->m_Version != gs_ActVersion)
+	{
+		io_close(File);
+		return false;
+	}
+
+	unsigned GhostMapCrc = (pGhostHeader->m_aCrc[0] << 24) | (pGhostHeader->m_aCrc[1] << 16) | (pGhostHeader->m_aCrc[2] << 8) | (pGhostHeader->m_aCrc[3]);
+	if(str_comp(pGhostHeader->m_aMap, pMap) != 0 || GhostMapCrc != Crc)
+	{
+		io_close(File);
+		return false;
+	}
+
+	io_close(File);
+	return true;
+}
+
+int CGhostLoader::GetTime(CGhostHeader Header)
+{
+	return (Header.m_aTime[0] << 24) | (Header.m_aTime[1] << 16) | (Header.m_aTime[2] << 8) | (Header.m_aTime[3]);
+}
+
+int CGhostLoader::GetTicks(CGhostHeader Header)
+{
+	return (Header.m_aNumTicks[0] << 24) | (Header.m_aNumTicks[1] << 16) | (Header.m_aNumTicks[2] << 8) | (Header.m_aNumTicks[3]);
+}
