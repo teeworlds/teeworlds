@@ -288,6 +288,7 @@ void CChat::EnableMode(int Team)
 
 		m_Input.Clear();
 		Input()->ClearEvents();
+		Input()->ClearKeyStates();
 		m_CompletionChosen = -1;
 	}
 }

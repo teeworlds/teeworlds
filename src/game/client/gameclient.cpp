@@ -446,6 +446,8 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
+
+	Input()->ClearKeyStates();
 }
 
 void CGameClient::OnRelease()

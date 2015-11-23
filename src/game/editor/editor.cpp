@@ -4538,6 +4538,7 @@ void CEditor::UpdateAndRender()
 
 	UI()->FinishCheck();
 	Input()->ClearEvents();
+	Input()->ClearKeyStates();
 }
 
 IEditor *CreateEditor() { return new CEditor; }

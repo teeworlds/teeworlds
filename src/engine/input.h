@@ -59,6 +59,7 @@ public:
 	virtual bool KeyIsPressed(int Key) const = 0;
 	virtual bool KeyPress(int Key, bool CheckCounter=false) const = 0;
 	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
+	virtual void ClearKeyStates() = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;

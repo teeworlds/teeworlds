@@ -37,7 +37,6 @@ CInput::CInput()
 
 	m_InputCounter = 1;
 	m_InputGrabbed = 0;
-	m_InputDispatched = false;
 
 	m_LastRelease = 0;
 	m_ReleaseDelta = -1;
@@ -114,14 +113,6 @@ int CInput::Update()
 {
 	// keep the counter between 1..0xFFFF, 0 means not pressed
 	m_InputCounter = (m_InputCounter%0xFFFF)+1;
-
-	if(m_InputDispatched)
-	{
-		// clear and begin count on the other one
-		mem_zero(&m_aInputCount, sizeof(m_aInputCount));
-		mem_zero(&m_aInputState, sizeof(m_aInputState));
-		m_InputDispatched = false;
-	}
 
 	{
 		int i;

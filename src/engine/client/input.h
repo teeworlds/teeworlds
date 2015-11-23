@@ -16,14 +16,12 @@ class CInput : public IEngineInput
 	void ClearEvents()
 	{
 		IInput::ClearEvents();
-		m_InputDispatched = true;
 	}
 
 	//quick access to input
 	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
 	unsigned char m_aInputState[g_MaxKeys];	// SDL_SCANCODE
 	int m_InputCounter;
-	bool m_InputDispatched;
 
 	void ClearKeyStates();
 	bool KeyState(int Key) const;
