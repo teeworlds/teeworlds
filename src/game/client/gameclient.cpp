@@ -298,7 +298,7 @@ void CGameClient::OnInit()
 	m_ServerMode = SERVERMODE_PURE;
 }
 
-void CGameClient::DispatchInput()
+void CGameClient::OnUpdate()
 {
 	// handle mouse movement
 	float x = 0.0f, y = 0.0f;
@@ -320,12 +320,12 @@ void CGameClient::DispatchInput()
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
 			if(m_Input.m_paComponents[h]->OnInput(e))
-			{
-				//dbg_msg("", "%d char=%d key=%d flags=%d", h, e.ch, e.key, e.flags);
 				break;
-			}
 		}
 	}
+
+	// clear all events for this frame
+	Input()->ClearEvents();
 }
 
 
@@ -440,33 +440,12 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 
 void CGameClient::OnRender()
 {
-	/*Graphics()->Clear(1,0,0);
-
-	menus->render_background();
-	return;*/
-	/*
-	Graphics()->Clear(1,0,0);
-	Graphics()->MapScreen(0,0,100,100);
-
-	Graphics()->QuadsBegin();
-		Graphics()->SetColor(1,1,1,1);
-		Graphics()->QuadsDraw(50, 50, 30, 30);
-	Graphics()->QuadsEnd();
-
-	return;*/
-
 	// update the local character and spectate position
 	UpdatePositions();
-
-	// dispatch all input to systems
-	DispatchInput();
 
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
-
-	// clear all events for this frame
-	Input()->ClearEvents();
 }
 
 void CGameClient::OnRelease()

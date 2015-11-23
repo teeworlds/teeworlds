@@ -49,7 +49,6 @@ class CGameClient : public IGameClient
 	class CCollision m_Collision;
 	CUI m_UI;
 
-	void DispatchInput();
 	void ProcessEvents();
 	void ProcessTriggeredEvents(int Events, vec2 Pos);
 	void UpdatePositions();
@@ -224,6 +223,7 @@ public:
 	// hooks
 	virtual void OnConnected();
 	virtual void OnRender();
+	virtual void OnUpdate();
 	virtual void OnRelease();
 	virtual void OnInit();
 	virtual void OnConsoleInit();
