@@ -1837,7 +1837,7 @@ void CClient::Run()
 				Input()->MouseModeAbsolute();
 			m_WindowMustRefocus = 1;
 		}
-		else if (g_Config.m_DbgFocus && Input()->KeyPress(KEY_ESCAPE))
+		else if (g_Config.m_DbgFocus && Input()->KeyPress(KEY_ESCAPE, true))
 		{
 			Input()->MouseModeAbsolute();
 			m_WindowMustRefocus = 1;
@@ -1852,7 +1852,7 @@ void CClient::Run()
 				m_WindowMustRefocus++;
 			}
 
-			if(m_WindowMustRefocus >= 3 || Input()->KeyPress(KEY_MOUSE_1))
+			if(m_WindowMustRefocus >= 3 || Input()->KeyPress(KEY_MOUSE_1, true))
 			{
 				Input()->MouseModeRelative();
 				m_WindowMustRefocus = 0;
@@ -1865,19 +1865,19 @@ void CClient::Run()
 		}
 
 		// panic quit button
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_Q))
+		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_Q, true))
 		{
 			Quit();
 			break;
 		}
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_D))
+		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_D, true))
 			g_Config.m_Debug ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_G))
+		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_G, true))
 			g_Config.m_DbgGraphs ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_E))
+		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_E, true))
 		{
 			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
 			Input()->MouseModeRelative();

@@ -20,14 +20,9 @@ class CInput : public IEngineInput
 	}
 
 	//quick access to input
-	struct
-	{
-		unsigned char m_Presses;
-		unsigned char m_Releases;
-	} m_aInputCount[2][g_MaxKeys];	// tw-KEY
-
-	unsigned char m_aInputState[2][g_MaxKeys];	// SDL_SCANCODE
-	int m_InputCurrent;
+	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
+	unsigned char m_aInputState[g_MaxKeys];	// SDL_SCANCODE
+	int m_InputCounter;
 	bool m_InputDispatched;
 
 	void ClearKeyStates();
@@ -41,8 +36,7 @@ public:
 	virtual void Init();
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
-	bool KeyRelease(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Releases; }
-	bool KeyPress(int Key) const { return m_aInputCount[m_InputCurrent][Key].m_Presses; }
+	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
 
 	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();
