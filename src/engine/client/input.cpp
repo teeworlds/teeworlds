@@ -26,6 +26,7 @@ void CInput::AddEvent(char *pText, int Key, int Flags)
 			m_aInputEvents[m_NumEvents].m_aText[0] = 0;
 		else
 			str_copy(m_aInputEvents[m_NumEvents].m_aText, pText, sizeof(m_aInputEvents[m_NumEvents].m_aText));
+		m_aInputEvents[m_NumEvents].m_InputCount = m_InputCounter;
 		m_NumEvents++;
 	}
 }
@@ -98,10 +99,11 @@ int CInput::MouseDoubleClick()
 	return 0;
 }
 
-void CInput::ClearKeyStates()
+void CInput::Clear()
 {
 	mem_zero(m_aInputState, sizeof(m_aInputState));
 	mem_zero(m_aInputCount, sizeof(m_aInputCount));
+	m_NumEvents = 0;
 }
 
 bool CInput::KeyState(int Key) const

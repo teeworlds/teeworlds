@@ -13,10 +13,8 @@ class CInput : public IEngineInput
 	int64 m_ReleaseDelta;
 
 	void AddEvent(char *pText, int Key, int Flags);
-	void ClearEvents()
-	{
-		IInput::ClearEvents();
-	}
+	void Clear();
+	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; };
 
 	//quick access to input
 	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY

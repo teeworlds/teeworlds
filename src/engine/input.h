@@ -18,6 +18,7 @@ public:
 		int m_Flags;
 		int m_Key;
 		char m_aText[32];
+		int m_InputCount;
 	};
 
 protected:
@@ -41,10 +42,7 @@ public:
 
 	// events
 	int NumEvents() const { return m_NumEvents; }
-	virtual void ClearEvents() 
-	{ 
-		m_NumEvents = 0;
-	}
+	virtual bool IsEventValid(CEvent *pEvent) const = 0;
 	CEvent GetEvent(int Index) const
 	{
 		if(Index < 0 || Index >= m_NumEvents)
@@ -59,7 +57,7 @@ public:
 	virtual bool KeyIsPressed(int Key) const = 0;
 	virtual bool KeyPress(int Key, bool CheckCounter=false) const = 0;
 	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
-	virtual void ClearKeyStates() = 0;
+	virtual void Clear() = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;

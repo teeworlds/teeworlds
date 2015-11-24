@@ -323,9 +323,6 @@ void CGameClient::OnUpdate()
 				break;
 		}
 	}
-
-	// clear all events for this frame
-	Input()->ClearEvents();
 }
 
 
@@ -447,7 +444,8 @@ void CGameClient::OnRender()
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
 
-	Input()->ClearKeyStates();
+	// clear all events/input for this frame
+	Input()->Clear();
 }
 
 void CGameClient::OnRelease()
