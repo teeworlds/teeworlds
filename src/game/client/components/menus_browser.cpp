@@ -34,7 +34,7 @@ CMenus::CColumn CMenus::ms_aCols[] = {
 CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress)
 : m_pServerBrowser(pServerBrowser)
 {
-	m_Extended = true;
+	m_Extended = false;
 	m_Custom = Custom;
 	str_copy(m_aName, pName, sizeof(m_aName));
 	//Todo: fix Filter
@@ -442,7 +442,19 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	View.VSplitLeft(20.0f, &Button, &View);
 	Button.Margin(2.0f, &Button);
 	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button))
+	{
 		pFilter->Switch();
+		
+		// retract the other filters
+		if(pFilter->Extended())
+		{
+			for(int i = 0; i < m_lFilters.size(); ++i)
+			{
+				if(i != FilterIndex && m_lFilters[i].Extended())
+					m_lFilters[i].Switch();
+			}
+		}
+	}
 
 	// split buttons from label
 	View.VSplitLeft(Spacing, 0, &View);

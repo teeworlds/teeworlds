@@ -2256,6 +2256,8 @@ void CMenus::OnConsoleInit()
 	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, Localize("Teeworlds"), ServerBrowser(), IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP|IServerBrowser::FILTER_PING, 999, -1, "", ""));
 	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), IServerBrowser::FILTER_FAVORITE|IServerBrowser::FILTER_PING, 999, -1, "", ""));
 	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser(), IServerBrowser::FILTER_PING, 999, -1, "", ""));
+
+	m_lFilters[0].Switch();
 }
 
 void CMenus::OnStateChange(int NewState, int OldState)
