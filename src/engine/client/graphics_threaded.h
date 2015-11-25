@@ -184,6 +184,7 @@ public:
 	struct SCommand_Screenshot : public SCommand
 	{
 		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
+		int m_X, m_Y, m_W, m_H; // specify rectangle size, -1 if fullscreen (width/height)
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
 	};
 
@@ -451,6 +452,7 @@ public:
 	virtual int Init();
 	virtual void Shutdown();
 
+	virtual void ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h);
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
 	virtual bool SetVSync(bool State);
