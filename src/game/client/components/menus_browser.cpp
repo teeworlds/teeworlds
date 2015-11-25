@@ -1070,7 +1070,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 
 		if(s < m_lFilters.size()-1)
-			View.HSplitTop(ms_ListheaderHeight, &Row, &View);
+			View.HSplitTop(SpacingH, &Row, &View);
 	}
 
 	UI()->ClipDisable();
