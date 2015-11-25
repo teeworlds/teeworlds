@@ -452,6 +452,10 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	View.y += 2.0f;
 	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
+	View.VSplitRight(20.0f, &View, 0); // little space
+	char aBuf[64];
+	str_format(aBuf, sizeof(aBuf), Localize("%d servers, %d players"), pFilter->NumSortedServers(), pFilter->NumPlayers());
+	UI()->DoLabel(&View, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
 	/*if(pFilter->Custom() <= CBrowserFilter::FILTER_ALL)
 		UI()->DoLabel(&View, pFilter->Name(), 12.0f, CUI::ALIGN_LEFT);
 	else
