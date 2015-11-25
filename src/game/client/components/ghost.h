@@ -47,8 +47,6 @@ private:
 
 	void AddInfos(CGhostCharacter Player);
 
-	CGhostCharacter GetGhostCharacter(CNetObj_Character Char);
-
 	void StartRecord();
 	void StopRecord(int Time=0);
 	void StartRender();

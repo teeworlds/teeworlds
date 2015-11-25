@@ -88,7 +88,7 @@ void CGhost::OnRender()
 	m_pClient->m_PredictedChar.Write(&Char);
 
 	if(m_pClient->m_NewPredictedTick)
-		AddInfos(GetGhostCharacter(Char));
+		AddInfos(CGhostTools::GetGhostCharacter(Char));
 
 	// Play the ghost
 	if(!m_Rendering)
@@ -261,24 +261,6 @@ void CGhost::InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName,
 	pRenderInfo->m_ColorBody.a = 0.5f;
 	pRenderInfo->m_ColorFeet.a = 0.5f;
 	pRenderInfo->m_Size = 64;
-}
-
-CGhostCharacter CGhost::GetGhostCharacter(CNetObj_Character Char)
-{
-	CGhostCharacter Player;
-	Player.m_X = Char.m_X;
-	Player.m_Y = Char.m_Y;
-	Player.m_VelX = Char.m_VelX;
-	//Player.m_VelY = Char.m_VelY;
-	Player.m_Angle = Char.m_Angle;
-	Player.m_Direction = Char.m_Direction;
-	Player.m_Weapon = Char.m_Weapon;
-	Player.m_HookState = Char.m_HookState;
-	Player.m_HookX = Char.m_HookX;
-	Player.m_HookY = Char.m_HookY;
-	Player.m_AttackTick = Char.m_AttackTick;
-
-	return Player;
 }
 
 void CGhost::StartRecord()
