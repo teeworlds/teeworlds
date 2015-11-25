@@ -532,7 +532,7 @@ public:
 		m_GridActive = false;
 		m_GridFactor = 1;
 		
-		m_PickColor = false;
+		m_MouseEdMode = MOUSE_EDIT;
 
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
@@ -619,7 +619,13 @@ public:
 	bool m_GridActive;
 	int m_GridFactor;
 	
-	bool m_PickColor; // TODO: rename: pointer/mouse mode
+	enum
+	{
+		MOUSE_EDIT=0,
+		MOUSE_PIPETTE,
+	};
+	
+	int m_MouseEdMode;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];

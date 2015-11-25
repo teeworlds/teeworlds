@@ -1107,14 +1107,18 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			m_GridFactor++;
 	}
 	
-	TB_Bottom.VSplitLeft(30.0f, 0, &TB_Bottom);
+	TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
 	
 	// pipette / color picking
-	TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+	TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
 	static int s_ColorPickingButton = 0;
-	if(DoButton_Editor(&s_ColorPickingButton, "Pick", m_PickColor, &Button, 0, "Pick color from view"))
+	if(DoButton_Editor(&s_ColorPickingButton, "Pipette", m_MouseEdMode == MOUSE_PIPETTE, &Button, 0, "Pick color from view"))
 	{
-		m_PickColor = !m_PickColor;
+		// toggle mouse mode
+		if(m_MouseEdMode == MOUSE_PIPETTE)
+			m_MouseEdMode = MOUSE_EDIT;
+		else
+			m_MouseEdMode = MOUSE_PIPETTE;
 	}
 	
 }
@@ -1909,270 +1913,277 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				UI()->SetActiveItem(s_pEditorID);
 			}
 		}
-	
-		if(UI()->HotItem() == s_pEditorID)
+		
+		switch(m_MouseEdMode)
 		{
-			if(m_PickColor)
+			case MOUSE_EDIT:
 			{
-				m_pTooltip = "Use left mouse button to pick a color from screen.";
-				
-				if(UI()->CheckActiveItem(s_pEditorID))
+				if(UI()->HotItem() == s_pEditorID)
 				{
-					if(s_Operation == OP_PIPETTE)
+					// brush editing
+					if(m_Brush.IsEmpty())
+						m_pTooltip = "Use left mouse button to drag and create a brush.";
+					else
+						m_pTooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
+		
+					if(UI()->CheckActiveItem(s_pEditorID))
 					{
-						const int Width = Graphics()->ScreenWidth();
-						const int Height = Graphics()->ScreenHeight();
-						
-						const int px = clamp(0, int(mx * Width/UI()->Screen()->w), Width);
-						const int py = clamp(0, int(my * Height/UI()->Screen()->h), Height);
-						
-						unsigned char *pPixelData = 0x0;
-						Graphics()->ReadBackbuffer(&pPixelData, px, py, 1, 1); // get pixel at location (px, py)
-						
-						vec3 PickedColor = vec3(pPixelData[0] / 255.0f, pPixelData[1] / 255.0f, pPixelData[2] / 255.0f);
-						
-						Graphics()->TextureClear();
-						Graphics()->QuadsBegin();
-						Graphics()->SetColor(PickedColor.r, PickedColor.g, PickedColor.b, 1.0f);
-						IGraphics::CQuadItem QuadItem(0.0f, 0.0f, 20.0f, 20.0f);
-						Graphics()->QuadsDraw(&QuadItem, 1);
-						Graphics()->QuadsEnd();
-						
-						mem_free(pPixelData);
+						CUIRect r;
+						r.x = s_StartWx;
+						r.y = s_StartWy;
+						r.w = wx-s_StartWx;
+						r.h = wy-s_StartWy;
+						if(r.w < 0)
+						{
+							r.x += r.w;
+							r.w = -r.w;
+						}
+		
+						if(r.h < 0)
+						{
+							r.y += r.h;
+							r.h = -r.h;
+						}
+		
+						if(s_Operation == OP_BRUSH_DRAW)
+						{
+							if(!m_Brush.IsEmpty())
+							{
+								// draw with brush
+								for(int k = 0; k < NumEditLayers; k++)
+								{
+									if(pEditLayers[k]->m_Type == m_Brush.m_lLayers[0]->m_Type)
+										pEditLayers[k]->BrushDraw(m_Brush.m_lLayers[0], wx, wy);
+								}
+							}
+						}
+						else if(s_Operation == OP_BRUSH_GRAB)
+						{
+							if(!UI()->MouseButton(0))
+							{
+								// grab brush
+								char aBuf[256];
+								str_format(aBuf, sizeof(aBuf),"grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
+								Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
+		
+								// TODO: do all layers
+								int Grabs = 0;
+								for(int k = 0; k < NumEditLayers; k++)
+									Grabs += pEditLayers[k]->BrushGrab(&m_Brush, r);
+								if(Grabs == 0)
+									m_Brush.Clear();
+							}
+							else
+							{
+								for(int k = 0; k < NumEditLayers; k++)
+									pEditLayers[k]->BrushSelecting(r);
+								Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+							}
+						}
+						else if(s_Operation == OP_BRUSH_PAINT)
+						{
+							if(!UI()->MouseButton(0))
+							{
+								for(int k = 0; k < NumEditLayers; k++)
+									pEditLayers[k]->FillSelection(m_Brush.IsEmpty(), m_Brush.m_lLayers[0], r);
+							}
+							else
+							{
+								for(int k = 0; k < NumEditLayers; k++)
+									pEditLayers[k]->BrushSelecting(r);
+								Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+							}
+						}
 					}
-				}
-				else
-				{
-					if(UI()->MouseButton(0))
+					else
 					{
-						UI()->SetActiveItem(s_pEditorID);
-						s_Operation = OP_PIPETTE;
-					}
-				}
-			}
-			else
-			{
-				// brush editing
-				if(m_Brush.IsEmpty())
-					m_pTooltip = "Use left mouse button to drag and create a brush.";
-				else
-					m_pTooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
-	
-				if(UI()->CheckActiveItem(s_pEditorID))
-				{
-					CUIRect r;
-					r.x = s_StartWx;
-					r.y = s_StartWy;
-					r.w = wx-s_StartWx;
-					r.h = wy-s_StartWy;
-					if(r.w < 0)
-					{
-						r.x += r.w;
-						r.w = -r.w;
-					}
-	
-					if(r.h < 0)
-					{
-						r.y += r.h;
-						r.h = -r.h;
-					}
-	
-					if(s_Operation == OP_BRUSH_DRAW)
-					{
+						if(UI()->MouseButton(1))
+							m_Brush.Clear();
+		
+						if(UI()->MouseButton(0) && s_Operation == OP_NONE)
+						{
+							UI()->SetActiveItem(s_pEditorID);
+		
+							if(m_Brush.IsEmpty())
+								s_Operation = OP_BRUSH_GRAB;
+							else
+							{
+								s_Operation = OP_BRUSH_DRAW;
+								for(int k = 0; k < NumEditLayers; k++)
+								{
+									if(pEditLayers[k]->m_Type == m_Brush.m_lLayers[0]->m_Type)
+										pEditLayers[k]->BrushPlace(m_Brush.m_lLayers[0], wx, wy);
+								}
+		
+							}
+		
+							CLayerTiles *pLayer = (CLayerTiles*)GetSelectedLayerType(0, LAYERTYPE_TILES);
+							if((Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT)) && pLayer)
+								s_Operation = OP_BRUSH_PAINT;
+						}
+		
 						if(!m_Brush.IsEmpty())
 						{
-							// draw with brush
-							for(int k = 0; k < NumEditLayers; k++)
+							m_Brush.m_OffsetX = -(int)wx;
+							m_Brush.m_OffsetY = -(int)wy;
+							for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 							{
-								if(pEditLayers[k]->m_Type == m_Brush.m_lLayers[0]->m_Type)
-									pEditLayers[k]->BrushDraw(m_Brush.m_lLayers[0], wx, wy);
+								if(m_Brush.m_lLayers[i]->m_Type == LAYERTYPE_TILES)
+								{
+									m_Brush.m_OffsetX = -(int)(wx/32.0f)*32;
+									m_Brush.m_OffsetY = -(int)(wy/32.0f)*32;
+									break;
+								}
 							}
-						}
-					}
-					else if(s_Operation == OP_BRUSH_GRAB)
-					{
-						if(!UI()->MouseButton(0))
-						{
-							// grab brush
-							char aBuf[256];
-							str_format(aBuf, sizeof(aBuf),"grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
-							Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
-	
-							// TODO: do all layers
-							int Grabs = 0;
-							for(int k = 0; k < NumEditLayers; k++)
-								Grabs += pEditLayers[k]->BrushGrab(&m_Brush, r);
-							if(Grabs == 0)
-								m_Brush.Clear();
-						}
-						else
-						{
-							for(int k = 0; k < NumEditLayers; k++)
-								pEditLayers[k]->BrushSelecting(r);
-							Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-						}
-					}
-					else if(s_Operation == OP_BRUSH_PAINT)
-					{
-						if(!UI()->MouseButton(0))
-						{
-							for(int k = 0; k < NumEditLayers; k++)
-								pEditLayers[k]->FillSelection(m_Brush.IsEmpty(), m_Brush.m_lLayers[0], r);
-						}
-						else
-						{
-							for(int k = 0; k < NumEditLayers; k++)
-								pEditLayers[k]->BrushSelecting(r);
-							Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-						}
-					}
-				}
-				else
-				{
-					if(UI()->MouseButton(1))
-						m_Brush.Clear();
-	
-					if(UI()->MouseButton(0) && s_Operation == OP_NONE)
-					{
-						UI()->SetActiveItem(s_pEditorID);
-	
-						if(m_Brush.IsEmpty())
-							s_Operation = OP_BRUSH_GRAB;
-						else
-						{
-							s_Operation = OP_BRUSH_DRAW;
-							for(int k = 0; k < NumEditLayers; k++)
+		
+							CLayerGroup *g = GetSelectedGroup();
+							if(g)
 							{
-								if(pEditLayers[k]->m_Type == m_Brush.m_lLayers[0]->m_Type)
-									pEditLayers[k]->BrushPlace(m_Brush.m_lLayers[0], wx, wy);
-							}
-	
-						}
-	
-						CLayerTiles *pLayer = (CLayerTiles*)GetSelectedLayerType(0, LAYERTYPE_TILES);
-						if((Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT)) && pLayer)
-							s_Operation = OP_BRUSH_PAINT;
-					}
-	
-					if(!m_Brush.IsEmpty())
-					{
-						m_Brush.m_OffsetX = -(int)wx;
-						m_Brush.m_OffsetY = -(int)wy;
-						for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
-						{
-							if(m_Brush.m_lLayers[i]->m_Type == LAYERTYPE_TILES)
-							{
-								m_Brush.m_OffsetX = -(int)(wx/32.0f)*32;
-								m_Brush.m_OffsetY = -(int)(wy/32.0f)*32;
-								break;
-							}
-						}
-	
-						CLayerGroup *g = GetSelectedGroup();
-						if(g)
-						{
-							m_Brush.m_OffsetX += g->m_OffsetX;
-							m_Brush.m_OffsetY += g->m_OffsetY;
-							m_Brush.m_ParallaxX = g->m_ParallaxX;
-							m_Brush.m_ParallaxY = g->m_ParallaxY;
-							m_Brush.Render();
-							float w, h;
-							m_Brush.GetSize(&w, &h);
-	
-							IGraphics::CLineItem Array[4] = {
-								IGraphics::CLineItem(0, 0, w, 0),
-								IGraphics::CLineItem(w, 0, w, h),
-								IGraphics::CLineItem(w, h, 0, h),
-								IGraphics::CLineItem(0, h, 0, 0)};
-							Graphics()->TextureClear();
-							Graphics()->LinesBegin();
-							Graphics()->LinesDraw(Array, 4);
-							Graphics()->LinesEnd();
-						}
-					}
-				}
-			}	
-		}
-
-		// quad editing
-		{
-			if(!m_ShowTilePicker && !m_PickColor && m_Brush.IsEmpty())
-			{
-				// fetch layers
-				CLayerGroup *g = GetSelectedGroup();
-				if(g)
-					g->MapScreen();
-
-				// adjust z-index
-				{
-					CLayerQuads *pQuadLayer = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
-					if(pQuadLayer && (m_SelectedQuad >= 0 && m_SelectedQuad < pQuadLayer->m_lQuads.size()))
-					{
-						if(Input()->KeyPress(KEY_PAGEUP))
-						{
-							// move up
-							if(m_SelectedQuad < pQuadLayer->m_lQuads.size()-1)
-							{
-								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
-								m_SelectedQuad++;
-							}
-						}
-						else if(Input()->KeyPress(KEY_PAGEDOWN))
-						{
-							// move down
-							if(m_SelectedQuad > 0)
-							{
-								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
-								m_SelectedQuad--;
-							}
-						}
-						else if(Input()->KeyPress(KEY_HOME))
-						{
-							// move to front
-							int NumQuads = pQuadLayer->m_lQuads.size();
-							while(m_SelectedQuad < NumQuads-1)
-							{
-								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
-								m_SelectedQuad++;
-							}
-						}
-						else if(Input()->KeyPress(KEY_END))
-						{
-							// move to back
-							while(m_SelectedQuad > 0)
-							{
-								swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
-								m_SelectedQuad--;
+								m_Brush.m_OffsetX += g->m_OffsetX;
+								m_Brush.m_OffsetY += g->m_OffsetY;
+								m_Brush.m_ParallaxX = g->m_ParallaxX;
+								m_Brush.m_ParallaxY = g->m_ParallaxY;
+								m_Brush.Render();
+								float w, h;
+								m_Brush.GetSize(&w, &h);
+		
+								IGraphics::CLineItem Array[4] = {
+									IGraphics::CLineItem(0, 0, w, 0),
+									IGraphics::CLineItem(w, 0, w, h),
+									IGraphics::CLineItem(w, h, 0, h),
+									IGraphics::CLineItem(0, h, 0, 0)};
+								Graphics()->TextureClear();
+								Graphics()->LinesBegin();
+								Graphics()->LinesDraw(Array, 4);
+								Graphics()->LinesEnd();
 							}
 						}
 					}
 				}
 				
-
-				for(int k = 0; k < NumEditLayers; k++)
+				// quad editing
 				{
-					if(pEditLayers[k]->m_Type == LAYERTYPE_QUADS)
+					if(!m_ShowTilePicker && m_Brush.IsEmpty())
 					{
-						CLayerQuads *pLayer = (CLayerQuads *)pEditLayers[k];
-
-						if(m_ShowEnvelopePreview == SHOWENV_NONE)
-							m_ShowEnvelopePreview = SHOWENV_ALL;
-
-						Graphics()->TextureClear();
-						Graphics()->QuadsBegin();
-						for(int i = 0; i < pLayer->m_lQuads.size(); i++)
+						// fetch layers
+						CLayerGroup *g = GetSelectedGroup();
+						if(g)
+							g->MapScreen();
+		
+						// adjust z-index
 						{
-							for(int v = 0; v < 4; v++)
-								DoQuadPoint(&pLayer->m_lQuads[i], i, v);
-
-							DoQuad(&pLayer->m_lQuads[i], i);
+							CLayerQuads *pQuadLayer = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
+							if(pQuadLayer && (m_SelectedQuad >= 0 && m_SelectedQuad < pQuadLayer->m_lQuads.size()))
+							{
+								if(Input()->KeyPress(KEY_PAGEUP))
+								{
+									// move up
+									if(m_SelectedQuad < pQuadLayer->m_lQuads.size()-1)
+									{
+										swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
+										m_SelectedQuad++;
+									}
+								}
+								else if(Input()->KeyPress(KEY_PAGEDOWN))
+								{
+									// move down
+									if(m_SelectedQuad > 0)
+									{
+										swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
+										m_SelectedQuad--;
+									}
+								}
+								else if(Input()->KeyPress(KEY_HOME))
+								{
+									// move to front
+									int NumQuads = pQuadLayer->m_lQuads.size();
+									while(m_SelectedQuad < NumQuads-1)
+									{
+										swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad+1]);
+										m_SelectedQuad++;
+									}
+								}
+								else if(Input()->KeyPress(KEY_END))
+								{
+									// move to back
+									while(m_SelectedQuad > 0)
+									{
+										swap(pQuadLayer->m_lQuads[m_SelectedQuad], pQuadLayer->m_lQuads[m_SelectedQuad-1]);
+										m_SelectedQuad--;
+									}
+								}
+							}
 						}
-						Graphics()->QuadsEnd();
+						
+		
+						for(int k = 0; k < NumEditLayers; k++)
+						{
+							if(pEditLayers[k]->m_Type == LAYERTYPE_QUADS)
+							{
+								CLayerQuads *pLayer = (CLayerQuads *)pEditLayers[k];
+		
+								if(m_ShowEnvelopePreview == SHOWENV_NONE)
+									m_ShowEnvelopePreview = SHOWENV_ALL;
+		
+								Graphics()->TextureClear();
+								Graphics()->QuadsBegin();
+								for(int i = 0; i < pLayer->m_lQuads.size(); i++)
+								{
+									for(int v = 0; v < 4; v++)
+										DoQuadPoint(&pLayer->m_lQuads[i], i, v);
+		
+									DoQuad(&pLayer->m_lQuads[i], i);
+								}
+								Graphics()->QuadsEnd();
+							}
+						}
+		
+						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 					}
 				}
-
-				Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-			}
+			} break;
+		
+			case MOUSE_PIPETTE:
+			{
+				if(UI()->HotItem() == s_pEditorID)
+				{
+					m_pTooltip = "Use left mouse button to pick a color from screen.";
+				
+					if(UI()->CheckActiveItem(s_pEditorID))
+					{
+						if(s_Operation == OP_PIPETTE)
+						{
+							const int Width = Graphics()->ScreenWidth();
+							const int Height = Graphics()->ScreenHeight();
+							
+							const int px = clamp(0, int(mx * Width/UI()->Screen()->w), Width);
+							const int py = clamp(0, int(my * Height/UI()->Screen()->h), Height);
+							
+							unsigned char *pPixelData = 0x0;
+							Graphics()->ReadBackbuffer(&pPixelData, px, py, 1, 1); // get pixel at location (px, py)
+							
+							vec3 PickedColor = vec3(pPixelData[0] / 255.0f, pPixelData[1] / 255.0f, pPixelData[2] / 255.0f);
+							
+							Graphics()->TextureClear();
+							Graphics()->QuadsBegin();
+							Graphics()->SetColor(PickedColor.r, PickedColor.g, PickedColor.b, 1.0f);
+							IGraphics::CQuadItem QuadItem(0.0f, 0.0f, 20.0f, 20.0f);
+							Graphics()->QuadsDraw(&QuadItem, 1);
+							Graphics()->QuadsEnd();
+							
+							mem_free(pPixelData);
+						}
+					}
+					else
+					{
+						if(UI()->MouseButton(0))
+						{
+							UI()->SetActiveItem(s_pEditorID);
+							s_Operation = OP_PIPETTE;
+						}
+					}
+				}
+			} break;
 		}
 
 		// do panning
