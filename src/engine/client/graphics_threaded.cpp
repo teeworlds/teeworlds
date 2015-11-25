@@ -463,6 +463,8 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 
 	CCommandBuffer::SCommand_Screenshot Cmd;
 	Cmd.m_pImage = &Image;
+	Cmd.m_X = 0; Cmd.m_Y = 0;
+	Cmd.m_W = -1; Cmd.m_H = -1;
 	m_pCommandBuffer->AddCommand(Cmd);
 
 	// kick the buffer and wait for the result
@@ -877,6 +879,28 @@ int CGraphics_Threaded::WindowOpen()
 {
 	return m_pBackend->WindowOpen();
 
+}
+
+void CGraphics_Threaded::ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h)
+{
+	if(!ppPixels)
+		return;
+
+	// add swap command
+	CImageInfo Image;
+	mem_zero(&Image, sizeof(Image));
+
+	CCommandBuffer::SCommand_Screenshot Cmd;
+	Cmd.m_pImage = &Image;
+	Cmd.m_X = x; Cmd.m_Y = y;
+	Cmd.m_W = w; Cmd.m_H = h;
+	m_pCommandBuffer->AddCommand(Cmd);
+
+	// kick the buffer and wait for the result
+	KickCommandBuffer();
+	WaitForIdle();
+
+	*ppPixels = (unsigned char *)Image.m_pData; // take ownership!
 }
 
 void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
