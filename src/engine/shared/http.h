@@ -163,7 +163,7 @@ public:
 	bool Connect(NETADDR Addr);
 	bool SetRequest(CRequest *pRequest);
 
-	bool CheckState(int State) { return m_State == State; }
+	int State() { return m_State; }
 	bool CompareAddr(NETADDR Addr);
 };
 
@@ -184,6 +184,8 @@ class CHttpClient
 	array<CRequestData*> m_lPendingRequests;
 
 	IEngine *m_pEngine;
+
+	CHttpConnection *GetConnection(NETADDR Addr);
 
 public:
 	CHttpClient();

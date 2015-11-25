@@ -69,6 +69,25 @@ void CHttpClient::Send(const char *pAddr, CRequest *pRequest)
 	m_lPendingRequests.add(pData);
 }
 
+CHttpConnection *CHttpClient::GetConnection(NETADDR Addr)
+{
+	for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+	{
+		CHttpConnection *pConn = &m_aConnections[j];
+		if(pConn->State() == CHttpConnection::STATE_WAITING && pConn->CompareAddr(Addr))
+			return pConn;
+	}
+
+	for (int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+	{
+		CHttpConnection *pConn = &m_aConnections[j];
+		if(pConn->State() == CHttpConnection::STATE_OFFLINE)
+			return pConn;
+	}
+
+	return 0;
+}
+
 void CHttpClient::Update()
 {
 	// TODO: rework bandwidth limiting
@@ -92,26 +111,15 @@ void CHttpClient::Update()
 			if(pData->m_Lookup.m_Addr.port == 0)
 				pData->m_Lookup.m_Addr.port = 80;
 
-			for (int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+			CHttpConnection *pConn = GetConnection(pData->m_Lookup.m_Addr);
+			if(pConn)
 			{
-				CHttpConnection *pConn = &m_aConnections[j];
-				if(pConn->CheckState(CHttpConnection::STATE_WAITING) && pConn->CompareAddr(pData->m_Lookup.m_Addr))
-				{
-					pConn->SetRequest(pData->m_pRequest);
-					delete pData;
-					m_lPendingRequests.remove_index(i);
-					i--;
-					break;
-				}
-				else if(pConn->CheckState(CHttpConnection::STATE_OFFLINE))
-				{
+				if(pConn->State() == CHttpConnection::STATE_OFFLINE)
 					pConn->Connect(pData->m_Lookup.m_Addr);
-					pConn->SetRequest(pData->m_pRequest);
-					delete pData;
-					m_lPendingRequests.remove_index(i);
-					i--;
-					break;
-				}
+				pConn->SetRequest(pData->m_pRequest);
+				delete pData;
+				m_lPendingRequests.remove_index(i);
+				i--;
 			}
 		}
 	}
