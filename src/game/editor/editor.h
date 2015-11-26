@@ -585,6 +585,8 @@ public:
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
+		
+		m_SelectedColor = vec4(0,0,0,0);
 
 		ms_pUiGotContext = 0;
 	}
@@ -725,6 +727,8 @@ public:
 	int m_SelectedEnvelopePoint;
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
+	
+	vec4 m_SelectedColor;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_BackgroundTexture;
