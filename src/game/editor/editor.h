@@ -587,6 +587,7 @@ public:
 		m_SelectedEnvelopePoint = -1;
 		
 		m_SelectedColor = vec4(0,0,0,0);
+		m_InitialPickerColor = vec3(1,0,0);
 		m_SelectedPickerColor = vec3(1,0,0);
 
 		ms_pUiGotContext = 0;
@@ -730,6 +731,7 @@ public:
 	int m_SelectedImage;
 	
 	vec4 m_SelectedColor;
+	vec3 m_InitialPickerColor;
 	vec3 m_SelectedPickerColor;
 
 	IGraphics::CTextureHandle m_CheckerTexture;

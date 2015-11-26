@@ -2428,14 +2428,22 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 				((pProps[i].m_Value >> s_aShift[1])&0xff)/255.0f,
 				((pProps[i].m_Value >> s_aShift[2])&0xff)/255.0f,
 				1.0f);
-			
+	
 			static int s_ColorPicker, s_ColorPickerID;
 			
 			RenderTools()->DrawUIRect(&ColorBox, Color, 0, 0.0f);
 			if(DoButton_Editor_Common(&s_ColorPicker, 0x0, 0, &ColorBox, 0, 0x0))
 			{
-				// TODO: BeaR:
-				UiInvokePopupMenu(&s_ColorPickerID, 0, UI()->MouseX(), UI()->MouseY(), 180, 150, PopupColorPicker);
+				m_InitialPickerColor = RgbToHsv(vec3(Color.r, Color.g, Color.b));
+				m_SelectedPickerColor = m_InitialPickerColor;
+				UiInvokePopupMenu(&s_ColorPickerID, 0, UI()->MouseX(), UI()->MouseY(), 180, 180, PopupColorPicker);
+			}
+			
+			if(m_InitialPickerColor != m_SelectedPickerColor)
+			{
+				m_InitialPickerColor = m_SelectedPickerColor;
+				vec3 c = HsvToRgb(m_SelectedPickerColor);
+				NewColor = ((int)(c.r * 255.0f)&0xff) << 24 | ((int)(c.g * 255.0f)&0xff) << 16 | ((int)(c.b * 255.0f)&0xff) << 8 | (pProps[i].m_Value&0xff);		
 			}
 
 			if(NewColor != pProps[i].m_Value)

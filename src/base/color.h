@@ -112,4 +112,41 @@ inline vec3 HsvToRgb(vec3 hsv)
 	return rgb;
 }
 
+/*
+	Function: RgbToHsv
+		Converts Rgb to Hsv
+*/
+inline vec3 RgbToHsv(vec3 rgb)
+{
+	float h_min = min(min(rgb.r, rgb.g), rgb.b);
+	float h_max = max(max(rgb.r, rgb.g), rgb.b);
+
+	// hue
+	float hue = 0.0f;
+
+	if(h_max == h_min)
+		hue = 0.0f;
+	else if(h_max == rgb.r)
+		hue = (rgb.g-rgb.b) / (h_max-h_min);
+	else if(h_max == rgb.g)
+		hue = 2.0f + (rgb.b-rgb.r) / (h_max-h_min);
+	else
+		hue = 4.0f + (rgb.r-rgb.g) / (h_max-h_min);
+
+	hue /= 6.0f;
+
+	if(hue < 0.0f)
+		hue += 1.0f;
+
+	// saturation
+	float s = 0.0f;
+	if(h_max != 0.0f)
+		s = (h_max - h_min)/h_max;
+
+	// lightness
+	float l = h_max;
+
+	return vec3(hue, s, l);
+}
+
 #endif
