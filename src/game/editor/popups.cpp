@@ -1034,9 +1034,11 @@ bool CEditor::PopupAutoMapProceedOrder()
 
 int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 {
-	CUIRect SVPicker, HuePicker;
-	View.VSplitRight(20.0f, &SVPicker, &HuePicker);
+	CUIRect SVPicker, HuePicker, Palette;
+	View.HSplitBottom(20.0f, &SVPicker, &Palette);
+	SVPicker.VSplitRight(20.0f, &SVPicker, &HuePicker);
 	HuePicker.VSplitLeft(4.0f, 0x0, &HuePicker);
+	Palette.HSplitTop(4.0f, 0x0, &Palette);
 
 	pEditor->Graphics()->TextureClear();
 	pEditor->Graphics()->QuadsBegin();
@@ -1083,8 +1085,8 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 
 	// logic
 	float X, Y;
-	static int ms_SVPicker = 0;
-	if(pEditor->UI()->DoPickerLogic(&ms_SVPicker, &SVPicker, &X, &Y))
+	static int s_SVPicker = 0;
+	if(pEditor->UI()->DoPickerLogic(&s_SVPicker, &SVPicker, &X, &Y))
 	{
 		hsv.y = X/SVPicker.w;
 		hsv.z = 1.0f - Y/SVPicker.h;	
@@ -1125,10 +1127,19 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 
 	pEditor->Graphics()->QuadsEnd();
 
-	static int ms_HuePicker = 0;
-	if(pEditor->UI()->DoPickerLogic(&ms_HuePicker, &HuePicker, &X, &Y))
+	static int s_HuePicker = 0;
+	if(pEditor->UI()->DoPickerLogic(&s_HuePicker, &HuePicker, &X, &Y))
 	{
 		hsv.x = 1.0f - Y/HuePicker.h;	
+	}
+	
+	// palette
+	static int s_Palette = 0;
+	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);
+	if(pEditor->DoButton_Editor_Common(&s_Palette, 0x0, 0, &Palette, 0, 0x0))
+	{
+		if(pEditor->m_SelectedColor.a > 0.0f)
+			hsv = RgbToHsv(vec3(pEditor->m_SelectedColor.r, pEditor->m_SelectedColor.g, pEditor->m_SelectedColor.b));
 	}
 
 	pEditor->m_SelectedPickerColor = hsv;
