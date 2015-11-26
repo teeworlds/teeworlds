@@ -587,6 +587,7 @@ public:
 		m_SelectedEnvelopePoint = -1;
 		
 		m_SelectedColor = vec4(0,0,0,0);
+		m_SelectedPickerColor = vec3(1,0,0);
 
 		ms_pUiGotContext = 0;
 	}
@@ -729,6 +730,7 @@ public:
 	int m_SelectedImage;
 	
 	vec4 m_SelectedColor;
+	vec3 m_SelectedPickerColor;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_BackgroundTexture;
@@ -782,9 +784,9 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
-
 	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
 	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
+	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);

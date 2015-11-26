@@ -56,4 +56,60 @@ inline vec4 HexToRgba(int hex)
 	return c;
 }
 
+/*
+	Function: HsvToRgb
+		Converts Hsv to Rgb
+*/
+inline vec3 HsvToRgb(vec3 hsv)
+{
+	int h = int(hsv.x * 6.0f);
+	float f = hsv.x * 6.0f - h;
+	float p = hsv.z * (1.0f - hsv.y);
+	float q = hsv.z * (1.0f - hsv.y * f);
+	float t = hsv.z * (1.0f - hsv.y * (1.0f - f));
+
+	vec3 rgb = vec3(0.0f, 0.0f, 0.0f);
+
+	switch(h % 6)
+	{
+	case 0:
+		rgb.r = hsv.z;
+		rgb.g = t;
+		rgb.b = p;
+		break;
+
+	case 1:
+		rgb.r = q;
+		rgb.g = hsv.z;
+		rgb.b = p;
+		break;
+
+	case 2:
+		rgb.r = p;
+		rgb.g = hsv.z;
+		rgb.b = t;
+		break;
+
+	case 3:
+		rgb.r = p;
+		rgb.g = q;
+		rgb.b = hsv.z;
+		break;
+
+	case 4:
+		rgb.r = t;
+		rgb.g = p;
+		rgb.b = hsv.z;
+		break;
+
+	case 5:
+		rgb.r = hsv.z;
+		rgb.g = p;
+		rgb.b = q;
+		break;
+	}
+
+	return rgb;
+}
+
 #endif
