@@ -253,13 +253,13 @@ void CLayerTiles::BrushFlipY()
 
 void CLayerTiles::BrushRotate(float Amount)
 {
-	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0�, 1=90�, 2=180�, 3=270�
+	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
 	if(Rotation < 0)
 		Rotation +=4;
 
 	if(Rotation == 1 || Rotation == 3)
 	{
-		// 90� rotation
+		// 90° rotation
 		CTile *pTempData = new CTile[m_Width*m_Height];
 		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
 		CTile *pDst = m_pTiles;
