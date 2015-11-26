@@ -2401,6 +2401,14 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 			static const char *s_paTexts[4] = {"R", "G", "B", "A"};
 			static int s_aShift[] = {24, 16, 8, 0};
 			int NewColor = 0;
+			
+			// extra space
+			CUIRect ColorBox, ColorSlots;
+
+			pToolBox->HSplitTop(3.0f*13.0f, &Slot, pToolBox);
+			Slot.VSplitMid(&ColorBox, &ColorSlots);
+			ColorBox.HMargin(1.0f, &ColorBox);
+			ColorBox.VMargin(6.0f, &ColorBox);
 
 			for(int c = 0; c < 4; c++)
 			{
@@ -2409,10 +2417,25 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 
 				if(c != 3)
 				{
-					pToolBox->HSplitTop(13.0f, &Slot, pToolBox);
-					Slot.VSplitMid(0, &Shifter);
+					ColorSlots.HSplitTop(13.0f, &Shifter, &ColorSlots);
 					Shifter.HMargin(1.0f, &Shifter);
 				}
+			}
+			
+			// color picker
+			vec4 Color = vec4(
+				((pProps[i].m_Value >> s_aShift[0])&0xff)/255.0f,
+				((pProps[i].m_Value >> s_aShift[1])&0xff)/255.0f,
+				((pProps[i].m_Value >> s_aShift[2])&0xff)/255.0f,
+				1.0f);
+			
+			static int s_ColorPicker, s_ColorPickerID;
+			
+			RenderTools()->DrawUIRect(&ColorBox, Color, 0, 0.0f);
+			if(DoButton_Editor_Common(&s_ColorPicker, 0x0, 0, &ColorBox, 0, 0x0))
+			{
+				// TODO: BeaR:
+				UiInvokePopupMenu(&s_ColorPickerID, 0, UI()->MouseX(), UI()->MouseY(), 180, 150, PopupColorPicker);
 			}
 
 			if(NewColor != pProps[i].m_Value)
