@@ -1110,7 +1110,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
 	
 	// pipette / color picking
-	TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
 	static int s_ColorPickingButton = 0;
 	if(DoButton_Editor(&s_ColorPickingButton, "Pipette", m_MouseEdMode == MOUSE_PIPETTE, &Button, 0, "Pick color from view"))
 	{
@@ -1119,6 +1119,15 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			m_MouseEdMode = MOUSE_EDIT;
 		else
 			m_MouseEdMode = MOUSE_PIPETTE;
+	}
+	
+	// display selected color
+	if(m_SelectedColor.a > 0.0f)
+	{
+		TB_Bottom.VSplitLeft(4.0f, 0, &TB_Bottom);
+		
+		TB_Bottom.VSplitLeft(24.0f, &Button, &TB_Bottom);
+		RenderTools()->DrawUIRect(&Button, m_SelectedColor, 0, 0.0f);
 	}
 	
 }
@@ -2144,7 +2153,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			} break;
 		
 			case MOUSE_PIPETTE:
-			{
+			{	
 				if(UI()->HotItem() == s_pEditorID)
 				{
 					m_pTooltip = "Use left mouse button to pick a color from screen.";
@@ -2176,6 +2185,11 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 						}
 					}
 				}
+				
+				// leave pipette mode on right-click
+				if(UI()->MouseButton(1))
+					m_MouseEdMode = MOUSE_EDIT;
+					
 			} break;
 		}
 
