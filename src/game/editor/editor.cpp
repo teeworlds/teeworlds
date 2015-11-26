@@ -2162,15 +2162,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 							unsigned char *pPixelData = 0x0;
 							Graphics()->ReadBackbuffer(&pPixelData, px, py, 1, 1); // get pixel at location (px, py)
 							
-							vec3 PickedColor = vec3(pPixelData[0] / 255.0f, pPixelData[1] / 255.0f, pPixelData[2] / 255.0f);
-							
-							Graphics()->TextureClear();
-							Graphics()->QuadsBegin();
-							Graphics()->SetColor(PickedColor.r, PickedColor.g, PickedColor.b, 1.0f);
-							IGraphics::CQuadItem QuadItem(0.0f, 0.0f, 20.0f, 20.0f);
-							Graphics()->QuadsDraw(&QuadItem, 1);
-							Graphics()->QuadsEnd();
-							
+							m_SelectedColor = vec4(pPixelData[0] / 255.0f, pPixelData[1] / 255.0f, pPixelData[2] / 255.0f, 1.0f);
+													
 							mem_free(pPixelData);
 						}
 					}
@@ -4273,16 +4266,30 @@ void CEditor::Render()
 
 	if(m_ShowMousePointer)
 	{
-		// render butt ugly mouse cursor
 		float mx = UI()->MouseX();
 		float my = UI()->MouseY();
-		Graphics()->TextureSet(m_CursorTexture);
-		Graphics()->QuadsBegin();
-		if(ms_pUiGotContext == UI()->HotItem())
-			Graphics()->SetColor(1,0,0,1);
-		IGraphics::CQuadItem QuadItem(mx,my, 16.0f, 16.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
+			
+		{
+			// render butt ugly mouse cursor	
+			Graphics()->TextureSet(m_CursorTexture);
+			Graphics()->QuadsBegin();
+			if(ms_pUiGotContext == UI()->HotItem())
+				Graphics()->SetColor(1,0,0,1);
+			IGraphics::CQuadItem QuadItem(mx,my, 16.0f, 16.0f);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
+			
+		if(m_MouseEdMode == MOUSE_PIPETTE)
+		{
+			// display selected color (pipette)
+			Graphics()->TextureClear();
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(m_SelectedColor.r, m_SelectedColor.g, m_SelectedColor.b, m_SelectedColor.a);
+			IGraphics::CQuadItem QuadItem(mx+1.0f,my-20.0f, 16.0f, 16.0f);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);			
+			Graphics()->QuadsEnd();
+		}
 	}
 }
 
