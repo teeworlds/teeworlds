@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <base/color.h>
 #include <base/tl/array.h>
 
 #include <engine/console.h>
@@ -1029,4 +1030,119 @@ bool CEditor::PopupAutoMapProceedOrder()
 	}
 
 	return false;
+}
+
+int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
+{
+	CUIRect SVPicker, HuePicker, Palette;
+	View.HSplitBottom(20.0f, &SVPicker, &Palette);
+	SVPicker.VSplitRight(20.0f, &SVPicker, &HuePicker);
+	HuePicker.VSplitLeft(4.0f, 0x0, &HuePicker);
+	Palette.HSplitTop(4.0f, 0x0, &Palette);
+
+	pEditor->Graphics()->TextureClear();
+	pEditor->Graphics()->QuadsBegin();
+
+	// base: white - hue
+	vec3 hsv = pEditor->m_SelectedPickerColor;
+	IGraphics::CColorVertex ColorArray[4];
+
+	vec3 c = HsvToRgb(vec3(hsv.x, 0.0f, 1.0f));
+	ColorArray[0] = IGraphics::CColorVertex(0, c.r, c.g, c.b, 1.0f);
+	c = HsvToRgb(vec3(hsv.x, 1.0f, 1.0f));
+	ColorArray[1] = IGraphics::CColorVertex(1, c.r, c.g, c.b, 1.0f);
+	c = HsvToRgb(vec3(hsv.x, 1.0f, 1.0f));
+	ColorArray[2] = IGraphics::CColorVertex(2, c.r, c.g, c.b, 1.0f);
+	c = HsvToRgb(vec3(hsv.x, 0.0f, 1.0f));
+	ColorArray[3] = IGraphics::CColorVertex(3, c.r, c.g, c.b, 1.0f);
+
+	pEditor->Graphics()->SetColorVertex(ColorArray, 4);
+
+	IGraphics::CQuadItem QuadItem(SVPicker.x, SVPicker.y, SVPicker.w, SVPicker.h);
+	pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
+
+	// base: transparent - black
+	ColorArray[0] = IGraphics::CColorVertex(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	ColorArray[1] = IGraphics::CColorVertex(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	ColorArray[2] = IGraphics::CColorVertex(2, 0.0f, 0.0f, 0.0f, 1.0f);
+	ColorArray[3] = IGraphics::CColorVertex(3, 0.0f, 0.0f, 0.0f, 1.0f);
+
+	pEditor->Graphics()->SetColorVertex(ColorArray, 4);
+
+	pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
+
+	pEditor->Graphics()->QuadsEnd();
+
+	// marker
+	vec2 Marker = vec2(hsv.y*pEditor->UI()->Scale(), (1.0f - hsv.z)*pEditor->UI()->Scale()) * vec2(SVPicker.w, SVPicker.h);
+	pEditor->Graphics()->QuadsBegin();
+	pEditor->Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+	IGraphics::CQuadItem aMarker[2];
+	aMarker[0] = IGraphics::CQuadItem(SVPicker.x+Marker.x, SVPicker.y+Marker.y - 5.0f*pEditor->UI()->PixelSize(), pEditor->UI()->PixelSize(), 11.0f*pEditor->UI()->PixelSize());
+	aMarker[1] = IGraphics::CQuadItem(SVPicker.x+Marker.x - 5.0f*pEditor->UI()->PixelSize(), SVPicker.y+Marker.y, 11.0f*pEditor->UI()->PixelSize(), pEditor->UI()->PixelSize());
+	pEditor->Graphics()->QuadsDrawTL(aMarker, 2);
+	pEditor->Graphics()->QuadsEnd();
+
+	// logic
+	float X, Y;
+	static int s_SVPicker = 0;
+	if(pEditor->UI()->DoPickerLogic(&s_SVPicker, &SVPicker, &X, &Y))
+	{
+		hsv.y = X/SVPicker.w;
+		hsv.z = 1.0f - Y/SVPicker.h;	
+	}
+
+	// hue slider
+	static const float s_aColorIndices[7][3] = {
+		{1.0f, 0.0f, 0.0f}, // red
+		{1.0f, 0.0f, 1.0f},	// magenta
+		{0.0f, 0.0f, 1.0f}, // blue
+		{0.0f, 1.0f, 1.0f}, // cyan
+		{0.0f, 1.0f, 0.0f}, // green
+		{1.0f, 1.0f, 0.0f}, // yellow
+		{1.0f, 0.0f, 0.0f}  // red
+	};
+
+	pEditor->Graphics()->QuadsBegin();
+	vec4 ColorTop, ColorBottom;
+	float Offset = HuePicker.h/6.0f;
+	for(int j = 0; j < 6; j++)
+	{
+		ColorTop = vec4(s_aColorIndices[j][0], s_aColorIndices[j][1], s_aColorIndices[j][2], 1.0f);
+		ColorBottom = vec4(s_aColorIndices[j+1][0], s_aColorIndices[j+1][1], s_aColorIndices[j+1][2], 1.0f);
+
+		ColorArray[0] = IGraphics::CColorVertex(0, ColorTop.r, ColorTop.g, ColorTop.b, ColorTop.a);
+		ColorArray[1] = IGraphics::CColorVertex(1, ColorTop.r, ColorTop.g, ColorTop.b, ColorTop.a);
+		ColorArray[2] = IGraphics::CColorVertex(2, ColorBottom.r, ColorBottom.g, ColorBottom.b, ColorBottom.a);
+		ColorArray[3] = IGraphics::CColorVertex(3, ColorBottom.r, ColorBottom.g, ColorBottom.b, ColorBottom.a);
+		pEditor->Graphics()->SetColorVertex(ColorArray, 4);
+		IGraphics::CQuadItem QuadItem(HuePicker.x, HuePicker.y+Offset*j, HuePicker.w, Offset);
+		pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
+	}
+
+	// marker
+	pEditor->Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+	IGraphics::CQuadItem QuadItemMarker(HuePicker.x, HuePicker.y + (1.0f - hsv.x) * HuePicker.h * pEditor->UI()->Scale(), HuePicker.w, pEditor->UI()->PixelSize());
+	pEditor->Graphics()->QuadsDrawTL(&QuadItemMarker, 1);
+
+	pEditor->Graphics()->QuadsEnd();
+
+	static int s_HuePicker = 0;
+	if(pEditor->UI()->DoPickerLogic(&s_HuePicker, &HuePicker, &X, &Y))
+	{
+		hsv.x = 1.0f - Y/HuePicker.h;	
+	}
+	
+	// palette
+	static int s_Palette = 0;
+	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);
+	if(pEditor->DoButton_Editor_Common(&s_Palette, 0x0, 0, &Palette, 0, 0x0))
+	{
+		if(pEditor->m_SelectedColor.a > 0.0f)
+			hsv = RgbToHsv(vec3(pEditor->m_SelectedColor.r, pEditor->m_SelectedColor.g, pEditor->m_SelectedColor.b));
+	}
+
+	pEditor->m_SelectedPickerColor = hsv;
+
+	return 0;
 }

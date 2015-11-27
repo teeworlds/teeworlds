@@ -56,4 +56,97 @@ inline vec4 HexToRgba(int hex)
 	return c;
 }
 
+/*
+	Function: HsvToRgb
+		Converts Hsv to Rgb
+*/
+inline vec3 HsvToRgb(vec3 hsv)
+{
+	int h = int(hsv.x * 6.0f);
+	float f = hsv.x * 6.0f - h;
+	float p = hsv.z * (1.0f - hsv.y);
+	float q = hsv.z * (1.0f - hsv.y * f);
+	float t = hsv.z * (1.0f - hsv.y * (1.0f - f));
+
+	vec3 rgb = vec3(0.0f, 0.0f, 0.0f);
+
+	switch(h % 6)
+	{
+	case 0:
+		rgb.r = hsv.z;
+		rgb.g = t;
+		rgb.b = p;
+		break;
+
+	case 1:
+		rgb.r = q;
+		rgb.g = hsv.z;
+		rgb.b = p;
+		break;
+
+	case 2:
+		rgb.r = p;
+		rgb.g = hsv.z;
+		rgb.b = t;
+		break;
+
+	case 3:
+		rgb.r = p;
+		rgb.g = q;
+		rgb.b = hsv.z;
+		break;
+
+	case 4:
+		rgb.r = t;
+		rgb.g = p;
+		rgb.b = hsv.z;
+		break;
+
+	case 5:
+		rgb.r = hsv.z;
+		rgb.g = p;
+		rgb.b = q;
+		break;
+	}
+
+	return rgb;
+}
+
+/*
+	Function: RgbToHsv
+		Converts Rgb to Hsv
+*/
+inline vec3 RgbToHsv(vec3 rgb)
+{
+	float h_min = min(min(rgb.r, rgb.g), rgb.b);
+	float h_max = max(max(rgb.r, rgb.g), rgb.b);
+
+	// hue
+	float hue = 0.0f;
+
+	if(h_max == h_min)
+		hue = 0.0f;
+	else if(h_max == rgb.r)
+		hue = (rgb.g-rgb.b) / (h_max-h_min);
+	else if(h_max == rgb.g)
+		hue = 2.0f + (rgb.b-rgb.r) / (h_max-h_min);
+	else
+		hue = 4.0f + (rgb.r-rgb.g) / (h_max-h_min);
+
+	hue /= 6.0f;
+
+	if(hue < 0.0f)
+		hue += 1.0f;
+
+	// saturation
+	float s = 0.0f;
+	if(h_max != 0.0f)
+		s = (h_max - h_min)/h_max;
+
+	// lightness
+	float l = h_max;
+
+	return vec3(hue, s, l);
+}
+
 #endif

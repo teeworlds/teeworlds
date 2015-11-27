@@ -531,6 +531,8 @@ public:
 
 		m_GridActive = false;
 		m_GridFactor = 1;
+		
+		m_MouseEdMode = MOUSE_EDIT;
 
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
@@ -583,6 +585,10 @@ public:
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
+		
+		m_SelectedColor = vec4(0,0,0,0);
+		m_InitialPickerColor = vec3(1,0,0);
+		m_SelectedPickerColor = vec3(1,0,0);
 
 		ms_pUiGotContext = 0;
 	}
@@ -616,6 +622,14 @@ public:
 
 	bool m_GridActive;
 	int m_GridFactor;
+	
+	enum
+	{
+		MOUSE_EDIT=0,
+		MOUSE_PIPETTE,
+	};
+	
+	int m_MouseEdMode;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
@@ -705,7 +719,7 @@ public:
 		SHOWENV_ALL
 	};
 	int m_ShowEnvelopePreview;
-	bool m_ShowPicker;
+	bool m_ShowTilePicker;
 
 	int m_SelectedLayer;
 	int m_SelectedGroup;
@@ -715,6 +729,10 @@ public:
 	int m_SelectedEnvelopePoint;
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
+	
+	vec4 m_SelectedColor;
+	vec3 m_InitialPickerColor;
+	vec3 m_SelectedPickerColor;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_BackgroundTexture;
@@ -768,9 +786,9 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
-
 	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
 	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
+	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
