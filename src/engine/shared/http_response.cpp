@@ -1,12 +1,23 @@
-#include <stdio.h>
-
 #include <base/system.h>
+#include <base/math.h>
 
 #include "http.h"
 
 // TODO: download to file
-// TODO: support for chunked transfer-encoding?
-CResponse::CResponse() : m_pData(0), m_HeaderSize(-1), m_BufferSize(0), m_Size(0), m_StatusCode(0), m_ContentLength(-1) { }
+CResponse::CResponse() : m_LastWasValue(false), m_Complete(false), m_Close(false), m_pData(0), m_BufferSize(0), m_Size(0)
+{
+	mem_zero(&m_ParserSettings, sizeof(m_ParserSettings));
+	m_ParserSettings.on_header_field = OnHeaderField;
+	m_ParserSettings.on_header_value = OnHeaderValue;
+	m_ParserSettings.on_body = OnBody;
+	m_ParserSettings.on_headers_complete = OnHeadersComplete;
+	m_ParserSettings.on_message_complete = OnMessageComplete;
+
+	http_parser_init(&m_Parser, HTTP_RESPONSE);
+	m_Parser.data = this;
+
+	mem_zero(&m_CurField, sizeof(m_CurField));
+}
 
 CResponse::~CResponse()
 {
@@ -14,48 +25,60 @@ CResponse::~CResponse()
 		mem_free(m_pData);
 }
 
-// TODO: rework this
-int CResponse::ParseHeader()
+int CResponse::OnHeaderField(http_parser *pParser, const char *pData, size_t Len)
 {
-	char *pData = m_pData;
-	char *pEnd = (char*)str_find(pData, "\r\n\r\n");
-	if(!pEnd)
-		return 0;
-	*(pEnd+2) = 0;
-
-	if(sscanf(pData, "HTTP/%*d.%*d %d %*s\r\n", &this->m_StatusCode) != 1)
-		return -1;
-	pData = (char*)str_find(pData, "\r\n") + 2;
-
-	while(*pData)
+	CResponse *pSelf = (CResponse*)pParser->data;
+	if(pSelf->m_LastWasValue)
 	{
-		char *pKey = (char*)str_find(pData, ": ");
-		if(!pKey) break;
-		char *pVal = (char*)str_find(pKey+2, "\r\n");
-		if(!pVal) break;
-		
-		*pKey = 0;
-		*pVal = 0;
-		AddField(pData, pKey+2);
-		pData = pVal+2;
+		pSelf->AddField(pSelf->m_CurField);
+		mem_zero(&pSelf->m_CurField, sizeof(pSelf->m_CurField));
+		pSelf->m_LastWasValue = false;
 	}
-	
-	int HeaderSize = (pEnd-m_pData)+4;
-	const char *pLen = GetField("Content-Length");
-	if(!pLen)
-		return -1;
-	m_ContentLength = str_toint(pLen);
-	if(!ResizeBuffer(HeaderSize + m_ContentLength))
-		return -1;
-	
-	m_HeaderSize = HeaderSize;
-	dbg_msg("http/response", "header finished");
-	return 1;
+	unsigned MinLen = str_length(pSelf->m_CurField.m_aKey) + Len + 1;
+	str_append(pSelf->m_CurField.m_aKey, pData, min(sizeof(pSelf->m_CurField.m_aKey), MinLen));
+	return 0;
+}
+
+int CResponse::OnHeaderValue(http_parser *pParser, const char *pData, size_t Len)
+{
+	CResponse *pSelf = (CResponse*)pParser->data;
+	unsigned MinLen = str_length(pSelf->m_CurField.m_aValue) + Len + 1;
+	str_append(pSelf->m_CurField.m_aValue, pData, min(sizeof(pSelf->m_CurField.m_aValue), MinLen));
+	pSelf->m_LastWasValue = true;
+	return 0;
+}
+
+int CResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
+{
+	CResponse *pSelf = (CResponse*)pParser->data;
+	if(pSelf->m_Size + Len > pSelf->m_BufferSize)
+		pSelf->ResizeBuffer(pSelf->m_Size + Len);
+	mem_copy(pSelf->m_pData + pSelf->m_Size, pData, Len);
+	pSelf->m_Size += Len;
+	return 0;
+}
+
+int CResponse::OnHeadersComplete(http_parser *pParser)
+{
+	CResponse *pSelf = (CResponse*)pParser->data;
+	const char *pLen = pSelf->GetField("Content-Length");
+	if(pLen)
+		pSelf->ResizeBuffer(str_toint(pLen));
+	return 0;
+}
+
+int CResponse::OnMessageComplete(http_parser *pParser)
+{
+	CResponse *pSelf = (CResponse*)pParser->data;
+	pSelf->m_Complete = true;
+	if(http_should_keep_alive(pParser) == 0)
+		pSelf->m_Close = true;
+	return 0;
 }
 
 bool CResponse::ResizeBuffer(int NeededSize)
 {
-	dbg_msg("http/response", "resizing buffer: %d -> %d", m_BufferSize, NeededSize);
+	//dbg_msg("http/response", "resizing buffer: %d -> %d", m_BufferSize, NeededSize);
 	if(NeededSize < m_BufferSize || NeededSize <= 0)
 		return false;
 	else if(NeededSize == m_BufferSize)
@@ -64,49 +87,28 @@ bool CResponse::ResizeBuffer(int NeededSize)
 	
 	if(m_pData)
 	{
-		char *pTmp = (char *)mem_alloc(m_BufferSize+1, 1);
+		char *pTmp = (char *)mem_alloc(m_BufferSize, 1);
 		mem_copy(pTmp, m_pData, m_Size);
 		mem_free(m_pData);
 		m_pData = pTmp;
 	}
 	else
-		m_pData = (char *)mem_alloc(m_BufferSize+1, 1);
-	
-	// terminate for string functions
-	m_pData[m_BufferSize] = 0;
+		m_pData = (char *)mem_alloc(m_BufferSize, 1);
 	return true;
 }
 
 bool CResponse::Write(char *pData, int Size)
 {
-	if(Size <= 0 || IsFinalized())
+	if(Size < 0 || IsFinalized())
 		return false;
-	
-	dbg_msg("http/response", "writing data: %d (%d of %d used)", Size, m_Size, m_BufferSize);
-	
-	if(m_Size + Size > m_BufferSize)
-		ResizeBuffer(m_Size + Size);
-	
-	mem_copy(m_pData+m_Size, pData, Size);
-	m_Size += Size;
-
-	if(m_HeaderSize <= 0)
-	{
-		if(ParseHeader() == -1)
-			return false;
-	}
-	return true;
-}
-
-bool CResponse::IsComplete()
-{
-	return m_HeaderSize > 0 && m_ContentLength > 0 && m_Size == m_HeaderSize + m_ContentLength;
+	size_t Parsed = http_parser_execute(&m_Parser, &m_ParserSettings, pData, Size);
+	return Parsed == (size_t)Size;
 }
 
 bool CResponse::Finalize()
 {
-	dbg_msg("http/response", "finishing (header: %d, size: %d, buffer: %d)", m_HeaderSize, m_Size, m_BufferSize);
-	if(IsFinalized() || !IsComplete())
+	dbg_msg("http/response", "finishing (size: %d, buffer: %d)", m_Size, m_BufferSize);
+	if(IsFinalized() || !m_Complete)
 		return false;
 	IHttpBase::Finalize();
 	return true;

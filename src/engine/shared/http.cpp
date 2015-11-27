@@ -6,22 +6,30 @@ IHttpBase::IHttpBase() : m_Finalized(false), m_FieldNum(0) { }
 
 IHttpBase::~IHttpBase() { }
 
+void IHttpBase::AddField(CHttpField Field)
+{
+	if(m_Finalized || m_FieldNum >= HTTP_MAX_HEADER_FIELDS)
+		return;
+	m_aFields[m_FieldNum] = Field;
+	m_FieldNum++;
+}
+
 void IHttpBase::AddField(const char *pKey, const char *pValue)
 {
 	if(m_Finalized || m_FieldNum >= HTTP_MAX_HEADER_FIELDS)
 		return;
-	
 	str_copy(m_aFields[m_FieldNum].m_aKey, pKey, sizeof(m_aFields[m_FieldNum].m_aKey));
 	str_copy(m_aFields[m_FieldNum].m_aValue, pValue, sizeof(m_aFields[m_FieldNum].m_aValue));
-	//dbg_msg("http/base", "added field: '%s' -> '%s' (%d)", m_aFields[m_FieldNum].m_aKey, m_aFields[m_FieldNum].m_aValue, m_FieldNum);
 	m_FieldNum++;
 }
 
 void IHttpBase::AddField(const char *pKey, int Value)
 {
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%d", Value);
-	AddField(pKey, aBuf);
+	if(m_Finalized || m_FieldNum >= HTTP_MAX_HEADER_FIELDS)
+		return;
+	str_copy(m_aFields[m_FieldNum].m_aKey, pKey, sizeof(m_aFields[m_FieldNum].m_aKey));
+	str_format(m_aFields[m_FieldNum].m_aValue, sizeof(m_aFields[m_FieldNum].m_aValue), "%d", Value);
+	m_FieldNum++;
 }
 
 const char *IHttpBase::GetField(const char *pKey) const
