@@ -37,6 +37,7 @@ void CGameContext::Construct(int Resetting)
 
 	m_pController = 0;
 	m_VoteCloseTime = 0;
+	m_VoteCancelTime = 0;
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
@@ -316,6 +317,7 @@ void CGameContext::StartVote(int Type, const char *pDesc, const char *pCommand, 
 
 	// start vote
 	m_VoteCloseTime = time_get() + time_freq()*VOTE_TIME;
+	m_VoteCancelTime = time_get() + time_freq()*VOTE_CANCEL_TIME;
 	str_copy(m_aVoteDescription, pDesc, sizeof(m_aVoteDescription));
 	str_copy(m_aVoteCommand, pCommand, sizeof(m_aVoteCommand));
 	str_copy(m_aVoteReason, pReason, sizeof(m_aVoteReason));
@@ -327,6 +329,7 @@ void CGameContext::StartVote(int Type, const char *pDesc, const char *pCommand, 
 void CGameContext::EndVote(int Type, bool Force)
 {
 	m_VoteCloseTime = 0;
+	m_VoteCancelTime = 0;
 	if(Force)
 		m_VoteCreator = -1;
 	SendVoteSet(Type, -1);
@@ -873,6 +876,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->m_Vote = pMsg->m_Vote;
 				pPlayer->m_VotePos = ++m_VotePos;
 				m_VoteUpdate = true;
+			}
+			else if(m_VoteCreator == pPlayer->GetCID())
+			{
+				CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
+				if(!pMsg->m_Vote || m_VoteCancelTime<time_get() || pMsg->m_Vote == 1)
+					return;
+
+				m_VoteCloseTime = -1;
 			}
 		}
 		else if(MsgID == NETMSGTYPE_CL_SETTEAM && m_pController->IsTeamChangeAllowed())
