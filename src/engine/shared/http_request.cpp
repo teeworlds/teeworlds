@@ -19,7 +19,7 @@ CRequest::~CRequest()
 
 int CRequest::AddToHeader(char *pCur, const char *pData, int Size)
 {
-	Size = min(m_aHeader + sizeof(m_aHeader) - pCur, Size);
+	Size = min((int)(m_aHeader + sizeof(m_aHeader) - pCur), Size);
 	mem_copy(pCur, pData, Size);
 	return Size;
 }

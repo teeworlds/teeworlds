@@ -151,34 +151,31 @@ bool CHttpConnection::Update()
 
 		case STATE_RECEIVING:
 		{
-			bool Finished = false;
+			bool ForceClose = false;
 			char aBuf[1024] = {0};
 			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
 			if(Bytes < 0)
 			{
 				if(!net_would_block())
 					return SetState(STATE_ERROR, "error: receiving data");
-				if(m_pResponse->IsComplete())
-					Finished = true;
 			}
-			else if(Bytes > 0)
+			else if(Bytes >= 0)
 			{
 				m_LastActionTime = time_get();
-				if (!m_pResponse->Write(aBuf, Bytes))
-					return SetState(STATE_ERROR, "error: could not read the response header");
+				if(!m_pResponse->Write(aBuf, Bytes))
+					return SetState(STATE_ERROR, "error: parsing http");
 			}
-			else // Bytes = 0 (close)
-				Finished = true;
 
-			if(Finished)
+			if(Bytes == 0)
+				ForceClose = true;
+			if(m_pResponse->m_Complete)
 			{
 				if(!m_pResponse->Finalize())
 					return SetState(STATE_ERROR, "error: incomplete response");
-
-				const char *pConnStr = m_pResponse->GetField("Connection");
-				bool Close = Bytes == 0 || (pConnStr && str_comp_nocase(pConnStr, "close") == 0);
-				return SetState(Close ? STATE_OFFLINE : STATE_WAITING, "received response");
+				return SetState((m_pResponse->m_Close || ForceClose) ? STATE_OFFLINE : STATE_WAITING, "received response");
 			}
+			else if(ForceClose)
+				return SetState(STATE_ERROR, "error: remote closed");
 		}
 		break;
 

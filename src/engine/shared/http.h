@@ -3,6 +3,8 @@
 
 #include <base/tl/array.h>
 
+#include <engine/external/http-parser/http_parser.h>
+
 #include <engine/engine.h>
 
 class IHttpBase
@@ -32,6 +34,7 @@ protected:
 public:
 	virtual ~IHttpBase();
 
+	void AddField(CHttpField Field);
 	void AddField(const char *pKey, const char *pValue);
 	void AddField(const char *pKey, int Value);
 	const char *GetField(const char *pKey) const;
@@ -41,30 +44,37 @@ class CResponse : public IHttpBase
 {
 	friend class CHttpConnection;
 
+	http_parser_settings m_ParserSettings;
+	http_parser m_Parser;
+
+	CHttpField m_CurField;
+
+	bool m_LastWasValue;
+	bool m_Complete;
+	bool m_Close;
+
 	char *m_pData;
-	int m_HeaderSize;
 	int m_BufferSize;
 	int m_Size;
 
-	int m_StatusCode;
-	int m_ContentLength;
+	static int OnHeaderField(http_parser *pParser, const char *pData, size_t Len);
+	static int OnHeaderValue(http_parser *pParser, const char *pData, size_t Len);
+	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
+	static int OnHeadersComplete(http_parser *pParser);
+	static int OnMessageComplete(http_parser *pParser);
 
 	CResponse();
 
-	int ParseHeader();
 	bool ResizeBuffer(int NeededSize);
-
 	bool Write(char *pData, int Size);
-	bool IsComplete();
-
 	bool Finalize();
 
 public:
 	virtual ~CResponse();
 
-	const char *GetBody() const { return IsFinalized() ? m_pData + m_HeaderSize : 0; }
-	int BodySize() const { return IsFinalized() ? m_Size - m_HeaderSize : -1; }
-	int StatusCode() const { return IsFinalized() ? m_StatusCode : -1; }
+	const char *GetBody() const { return IsFinalized() ? m_pData : 0; }
+	int BodySize() const { return IsFinalized() ? m_Size : -1; }
+	unsigned StatusCode() const { return IsFinalized() ? m_Parser.status_code : -1; }
 };
 
 typedef void(*FHttpCallback)(CResponse *pResponse, bool Error, void *pUserData);
