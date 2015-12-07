@@ -35,7 +35,7 @@ int CResponse::OnHeaderField(http_parser *pParser, const char *pData, size_t Len
 		pSelf->m_LastWasValue = false;
 	}
 	unsigned MinLen = str_length(pSelf->m_CurField.m_aKey) + Len + 1;
-	str_append(pSelf->m_CurField.m_aKey, pData, min(sizeof(pSelf->m_CurField.m_aKey), MinLen));
+	str_append(pSelf->m_CurField.m_aKey, pData, min((unsigned)sizeof(pSelf->m_CurField.m_aKey), MinLen));
 	return 0;
 }
 
@@ -43,7 +43,7 @@ int CResponse::OnHeaderValue(http_parser *pParser, const char *pData, size_t Len
 {
 	CResponse *pSelf = (CResponse*)pParser->data;
 	unsigned MinLen = str_length(pSelf->m_CurField.m_aValue) + Len + 1;
-	str_append(pSelf->m_CurField.m_aValue, pData, min(sizeof(pSelf->m_CurField.m_aValue), MinLen));
+	str_append(pSelf->m_CurField.m_aValue, pData, min((unsigned)sizeof(pSelf->m_CurField.m_aValue), MinLen));
 	pSelf->m_LastWasValue = true;
 	return 0;
 }
