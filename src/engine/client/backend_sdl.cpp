@@ -456,7 +456,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Screenshot(const CCommandBuffer::SCom
 	int w = pCommand->m_W == -1 ? aViewport[2] : pCommand->m_W;
 	int h = pCommand->m_H == -1 ? aViewport[3] : pCommand->m_H;
 	int x = pCommand->m_X;
-	int y = aViewport[3] - pCommand->m_Y - h;
+	int y = aViewport[3] - pCommand->m_Y - 1 - (h - 1);
 	
 	// we allocate one more row to use when we are flipping the texture
 	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
