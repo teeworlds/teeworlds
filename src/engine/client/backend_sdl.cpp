@@ -667,6 +667,13 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	*pDesktopWidth = DisplayMode.w;
 	*pDesktopHeight = DisplayMode.h;
 
+	// use desktop resolution as default resolution
+	if (*pWidth == 0 || *pWidth == 0)
+	{
+		*pWidth = *pDesktopWidth;
+		*pHeight = *pDesktopHeight;
+	}
+
 	// set flags
 	int SdlFlags = SDL_WINDOW_OPENGL;
 	if(Flags&IGraphicsBackend::INITFLAG_RESIZABLE)
@@ -679,7 +686,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	*pWidth = *pDesktopWidth;
 	*pHeight = *pDesktopHeight;
 #else
-		SdlFlags |= (*pWidth == 0 || *pHeight == 0) ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;	// use desktop resolution as default
+		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 #endif
 	
 	// set gl attributes
