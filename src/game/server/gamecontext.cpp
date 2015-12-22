@@ -889,7 +889,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			else if(m_VoteCreator == pPlayer->GetCID())
 			{
 				CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
-				if(!pMsg->m_Vote || m_VoteCancelTime<time_get() || pMsg->m_Vote == 1)
+				if(pMsg->m_Vote != -1 || m_VoteCancelTime<time_get())
 					return;
 
 				m_VoteCloseTime = -1;
