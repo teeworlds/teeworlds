@@ -51,3 +51,12 @@ void CBroadcast::OnRender()
 	}
 }
 
+void CBroadcast::OnMessage(int MsgType, void *pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_BROADCAST)
+	{
+		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
+		DoBroadcast(pMsg->m_pMessage);
+	}
+}
+

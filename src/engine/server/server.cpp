@@ -27,6 +27,8 @@
 
 #include <mastersrv/mastersrv.h>
 
+#include <modapi/compatibility.h> //ModAPi
+
 #include "register.h"
 #include "server.h"
 
@@ -823,12 +825,26 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(str_comp(pVersion, GameServer()->NetVersion()) != 0)
 				{
-					// wrong version
-					char aReason[256];
-					str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), pVersion);
-					m_NetServer.Drop(ClientID, aReason);
-					return;
+					if(str_comp(pVersion, MODAPI_NETVERSION_TW07) == 0)
+					{
+						m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07;
+					}
+					/*
+					else if(str_comp(pVersion, MODAPI_NETVERSION_TW06) == 0)
+					{
+						m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW06;
+					}
+					*/
+					else
+					{
+						// wrong version
+						char aReason[256];
+						str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), pVersion);
+						m_NetServer.Drop(ClientID, aReason);
+						return;
+					}
 				}
+				else m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07MODAPI;
 
 				const char *pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
@@ -1753,3 +1769,9 @@ int main(int argc, const char **argv) // ignore_convention
 	return 0;
 }
 
+//ModeAPI
+
+bool CServer::GetClientProtocolCompatibility(int ClientID, int Protocol) const
+{
+	return (m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI);
+}

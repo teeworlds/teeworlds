@@ -11,6 +11,8 @@
 #include <game/gamecore.h>
 #include <game/version.h>
 
+#include <modapi/message.h> //ModAPI
+
 #include "entities/character.h"
 #include "gamemodes/ctf.h"
 #include "gamemodes/dm.h"
@@ -652,6 +654,10 @@ void CGameContext::OnClientConnected(int ClientID, bool Dummy)
 
 	// send settings
 	SendSettings(ClientID);
+	
+	//ModAPI test
+	CModAPI_Msg_Broadcast BroadcastMsg(this, MODAPIALT_BROADCAST_CHAT);
+	BroadcastMsg.Send(ClientID, "Broadcast in ModAPI");
 }
 
 void CGameContext::OnClientTeamChange(int ClientID)

@@ -384,4 +384,11 @@ Messages = [
 		NetStringStrict("m_Reason"),
 		NetBool("m_Force"),
 	]),
+	
+	### ModAPI
+	
+	NetMessage("Sv_Broadcast", [
+		NetStringStrict("m_pMessage"),
+	]),
+	
 ]

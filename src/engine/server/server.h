@@ -128,6 +128,9 @@ public:
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();
+		
+		//ModAPI
+		int m_Protocol;
 	};
 
 	CClient m_aClients[MAX_CLIENTS];
@@ -243,6 +246,9 @@ public:
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+	
+	//ModAPI
+	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const;
 };
 
 #endif

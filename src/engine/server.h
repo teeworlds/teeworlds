@@ -67,6 +67,9 @@ public:
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
+	
+	//ModAPI
+	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const = 0;
 };
 
 class IGameServer : public IInterface
