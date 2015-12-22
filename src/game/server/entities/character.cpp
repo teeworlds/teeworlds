@@ -11,8 +11,6 @@
 #include "laser.h"
 #include "projectile.h"
 
-#include <modapi/message.h> //ModAPI
-
 //input count
 struct CInputCount
 {
@@ -406,12 +404,6 @@ void CCharacter::FireWeapon()
 
 	if(!m_ReloadTimer)
 		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
-		
-		
-	
-	//ModAPI test
-	CModAPI_Msg_Broadcast BroadcastMsg(GameServer(), MODAPIALT_BROADCAST_CHAT);
-	BroadcastMsg.Send(m_pPlayer->GetCID(), "Broadcast in ModAPI");
 }
 
 void CCharacter::HandleWeapons()
