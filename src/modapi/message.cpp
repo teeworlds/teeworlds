@@ -33,7 +33,7 @@ void CModAPI_Msg_Broadcast::Send(int ClientID, const char* pMessage)
 	{
 		if(Server()->GetClientProtocolCompatibility(ClientID, MODAPI_COMPATIBILITY_BROADCAST))
 		{
-			CNetMsg_Sv_Broadcast Msg;
+			CNetMsg_ModAPI_Broadcast Msg;
 			Msg.m_pMessage = pMessage;
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 		}
