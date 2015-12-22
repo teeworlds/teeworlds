@@ -60,6 +60,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IEngineSound *m_pSound;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
+	IEngineMod *m_pMod;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	IEngineMasterServer *m_pMasterServer;
@@ -315,5 +316,22 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
+	
+	//ModAPI	
+	char m_aCurrentMod[256];
+	unsigned m_CurrentModCrc;
+
+	char m_aModdownloadFilename[256];
+	char m_aModdownloadName[256];
+	IOHANDLE m_ModdownloadFile;
+	int m_ModdownloadChunk;
+	int m_ModdownloadChunkNum;
+	int m_ModDownloadChunkSize;
+	int m_ModdownloadCrc;
+	int m_ModdownloadAmount;
+	int m_ModdownloadTotalsize;
+	
+	const char *LoadMod(const char *pName, const char *pFilename, unsigned WantedCrc);
+	const char *LoadModSearch(const char *pModName, int WantedCrc);
 };
 #endif

@@ -70,6 +70,11 @@ enum
 	NETMSG_PING,
 	NETMSG_PING_REPLY,
 	NETMSG_ERROR,
+	
+	// ModAPI
+	NETMSG_MODAPI_MOD_CHANGE, 			//Server
+	NETMSG_MODAPI_MOD_DATA, 			//Server
+	NETMSG_MODAPI_REQUEST_MOD_DATA,		//Client
 };
 
 // this should be revised

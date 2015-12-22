@@ -268,6 +268,7 @@ void CServer::CClient::Reset()
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_Score = 0;
 	m_MapChunk = 0;
+	m_ModChunk = 0;
 }
 
 CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
@@ -855,6 +856,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
+				
+				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI)
+				{
+					SendMod(ClientID);
+				}
+				
 				SendMap(ClientID);
 			}
 		}
@@ -881,6 +888,40 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 					CMsgPacker Msg(NETMSG_MAP_DATA, true);
 					Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
+					SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+
+					if(g_Config.m_Debug)
+					{
+						char aBuf[64];
+						str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
+						Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+					}
+				}
+			}
+		}
+		else if(Msg == NETMSG_MODAPI_REQUEST_MOD_DATA)
+		{
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
+			{
+				int ChunkSize = MOD_CHUNK_SIZE;
+
+				// send map chunks
+				for(int i = 0; i < m_ModChunksPerRequest && m_aClients[ClientID].m_ModChunk >= 0; ++i)
+				{
+					int Chunk = m_aClients[ClientID].m_ModChunk;
+					int Offset = Chunk * ChunkSize;
+
+					// check for last part
+					if(Offset+ChunkSize >= m_CurrentModSize)
+					{
+						ChunkSize = m_CurrentModSize-Offset;
+						m_aClients[ClientID].m_ModChunk = -1;
+					}
+					else
+						m_aClients[ClientID].m_ModChunk++;
+
+					CMsgPacker Msg(NETMSG_MODAPI_MOD_DATA, true);
+					Msg.AddRaw(&m_pCurrentModData[Offset], ChunkSize);
 					SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 
 					if(g_Config.m_Debug)
@@ -1770,6 +1811,19 @@ int main(int argc, const char **argv) // ignore_convention
 }
 
 //ModeAPI
+
+const char* CServer::m_aModName = "modapi-generic";
+
+void CServer::SendMod(int ClientID)
+{
+	CMsgPacker Msg(NETMSG_MODAPI_MOD_CHANGE, true);
+	Msg.AddString(CServer::m_aModName, 0);
+	Msg.AddInt(m_CurrentModCrc);
+	Msg.AddInt(m_CurrentModSize);
+	Msg.AddInt(m_ModChunksPerRequest);
+	Msg.AddInt(MOD_CHUNK_SIZE);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+}
 
 bool CServer::GetClientProtocolCompatibility(int ClientID, int Protocol) const
 {
