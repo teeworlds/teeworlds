@@ -291,6 +291,17 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_MapdownloadAmount = -1;
 	m_MapdownloadTotalsize = -1;
 
+	// ModAPI, mod download
+	m_aCurrentMod[0] = 0;
+	m_CurrentModCrc = 0;
+	m_aModdownloadFilename[0] = 0;
+	m_aModdownloadName[0] = 0;
+	m_ModdownloadFile = 0;
+	m_ModdownloadChunk = 0;
+	m_ModdownloadCrc = 0;
+	m_ModdownloadAmount = -1;
+	m_ModdownloadTotalsize = -1;
+
 	m_CurrentInput = 0;
 
 	m_State = IClient::STATE_OFFLINE;
@@ -1183,6 +1194,50 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			{
 				// request next chunk package of map data
 				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
+				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+				if(g_Config.m_Debug)
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested next chunk package");
+			}
+		}
+		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MODAPI_MOD_DATA)
+		{			
+			if(!m_ModdownloadFile)
+				return;
+
+			int Size = min(m_ModDownloadChunkSize, m_ModdownloadTotalsize-m_ModdownloadAmount);
+			const unsigned char *pData = Unpacker.GetRaw(Size);
+			if(Unpacker.Error())
+				return;
+ 
+			io_write(m_ModdownloadFile, pData, Size);
+			++m_ModdownloadChunk;
+			m_ModdownloadAmount += Size;
+
+			if(m_ModdownloadAmount == m_ModdownloadTotalsize)
+			{
+				// map download complete
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading mod");
+
+				if(m_ModdownloadFile)
+					io_close(m_ModdownloadFile);
+				m_ModdownloadFile = 0;
+				m_ModdownloadAmount = 0;
+				m_ModdownloadTotalsize = -1;
+
+				// load mod
+				const char *pError = LoadMod(m_aModdownloadName, m_aModdownloadFilename, m_ModdownloadCrc);
+				if(!pError)
+				{
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
+				}
+				else
+					DisconnectWithReason(pError);
+			}
+			else if(m_ModdownloadChunk%m_ModdownloadChunkNum == 0)
+			{
+				// request next chunk package of map data
+				CMsgPacker Msg(NETMSG_MODAPI_REQUEST_MOD_DATA, true);
 				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 				if(g_Config.m_Debug)
@@ -2529,6 +2584,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pEngineInput;
 	delete pEngineTextRender;
 	delete pEngineMap;
+	delete pEngineMod;
 	delete pEngineMasterServer;
 
 	return 0;

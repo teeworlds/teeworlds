@@ -259,8 +259,13 @@ public:
 	int m_CurrentModSize;
 	int m_ModChunksPerRequest;
 	
+	IEngineMod *m_pMod;
+	
 	const char *GetModName() const;
 	void SendMod(int ClientID); //ModAPI
+	
+	bool CreateMod(const char* pModName);
+	bool LoadMod(const char* pModName);
 	
 	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const;
 };

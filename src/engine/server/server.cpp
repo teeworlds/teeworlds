@@ -8,6 +8,7 @@
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/map.h>
+#include <engine/mod.h>
 #include <engine/masterserver.h>
 #include <engine/server.h>
 #include <engine/storage.h>
@@ -28,6 +29,7 @@
 #include <mastersrv/mastersrv.h>
 
 #include <modapi/compatibility.h> //ModAPi
+#include <modapi/mod.h> //ModAPi
 
 #include "register.h"
 #include "server.h"
@@ -1308,7 +1310,22 @@ int CServer::Run()
 {
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
-
+	
+	// ModAPI, generate mod
+	if(!CreateMod(m_aModName))
+	{
+		dbg_msg("server", "failed to generate mod. modname='%s'", m_aModName);
+		return -1;
+	}
+	
+	// ModAPI, load mod
+	if(!LoadMod(m_aModName))
+	{
+		dbg_msg("server", "failed to load mod. modname='%s'", m_aModName);
+		return -1;
+	}
+	m_ModChunksPerRequest = g_Config.m_SvMapDownloadSpeed;
+	
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
 	{
@@ -1662,6 +1679,7 @@ void CServer::RegisterCommands()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
+	m_pMod = Kernel()->RequestInterface<IEngineMod>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	// register console commands
@@ -1743,6 +1761,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_SERVER|CFGFLAG_ECON;
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IEngineMap *pEngineMap = CreateEngineMap();
+	IEngineMod *pEngineMod = CreateEngineMod();
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
@@ -1758,6 +1777,8 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMod*>(pEngineMod)); // register as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMod*>(pEngineMod));
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -1801,6 +1822,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pKernel;
 	delete pEngine;
 	delete pEngineMap;
+	delete pEngineMod;
 	delete pGameServer;
 	delete pConsole;
 	delete pEngineMasterServer;
@@ -1812,8 +1834,53 @@ int main(int argc, const char **argv) // ignore_convention
 
 //ModeAPI
 
-const char* CServer::m_aModName = "modapi-generic";
+const char* CServer::m_aModName = "modapi-test";
 
+bool CServer::CreateMod(const char* pModName)
+{
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+	
+	CModAPI_ModCreator ModCreator;
+	
+	ModCreator.Save(Storage(), aBuf);
+	
+	return true;
+}
+
+bool CServer::LoadMod(const char* pModName)
+{
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+
+	if(!m_pMod->Load(aBuf))
+		return 0;
+
+	// stop recording when we change mod
+	m_DemoRecorder.Stop();
+
+	// reinit snapshot ids
+	m_IDPool.TimeoutIDs();
+
+	// get the crc of the mod
+	m_CurrentModCrc = m_pMod->Crc();
+	char aBufMsg[256];
+	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentModCrc);
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
+
+	// load complete mod into memory for download
+	{
+		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+		m_CurrentModSize = (int)io_length(File);
+		if(m_pCurrentModData)
+			mem_free(m_pCurrentModData);
+		m_pCurrentModData = (unsigned char *)mem_alloc(m_CurrentModSize, 1);
+		io_read(File, m_pCurrentModData, m_CurrentModSize);
+		io_close(File);
+	}
+	return 1;
+}
+	
 void CServer::SendMod(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MODAPI_MOD_CHANGE, true);
