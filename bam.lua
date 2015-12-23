@@ -143,6 +143,7 @@ function GenerateMacOSXSettings(settings, conf, arch)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	settings.link.frameworks:Add("Cocoa")
@@ -184,6 +185,7 @@ function GenerateLinuxSettings(settings, conf, arch)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	BuildServer(settings)
@@ -243,6 +245,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	local server_settings = settings:Copy()
@@ -319,6 +322,10 @@ function BuildGameCommon(settings)
 	settings.link.extrafiles:Merge(Compile(settings, Collect("src/game/*.cpp"), SharedCommonFiles()))
 end
 
+function BuildModAPICommon(settings)
+	settings.link.extrafiles:Merge(Compile(settings, Collect("src/modapi/*.cpp")))
+end
+
 
 function BuildClient(settings, family, platform)
 	config.sdl:Apply(settings)
@@ -337,9 +344,7 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	local modapi_server = Compile(settings, Collect("src/modapi/*.cpp"))
-	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server, modapi_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
 end
 
 function BuildTools(settings)

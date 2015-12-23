@@ -312,6 +312,9 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_RecivedSnapshots = 0;
 
 	m_VersionInfo.m_State = CVersionInfo::STATE_INIT;
+	
+	//ModAPI
+	m_pModAPIGraphics = 0;
 }
 
 // ----- send functions -----
@@ -758,6 +761,9 @@ void CClient::DebugRender()
 
 void CClient::Quit()
 {
+	delete m_pModAPIGraphics;
+	m_pModAPIGraphics = 0;
+	
 	SetState(IClient::STATE_QUITING);
 }
 
@@ -1861,6 +1867,8 @@ void CClient::Run()
 			dbg_msg("client", "couldn't init graphics");
 			return;
 		}
+		
+		m_pModAPIGraphics = new CModAPI_Client_Graphics;
 	}
 
 	// init sound, allowed to fail
@@ -2608,7 +2616,7 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 	// get the crc of the map
 	if(m_pMod->Crc() != WantedCrc)
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %08x != %08x", m_pMod->Crc(), WantedCrc);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "mod differs from the server. %08x != %08x", m_pMod->Crc(), WantedCrc);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
 		m_pMod->Unload();
 		return aErrorMsg;
@@ -2624,6 +2632,11 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 
 	str_copy(m_aCurrentMod, pName, sizeof(m_aCurrentMod));
 	m_CurrentModCrc = m_pMod->Crc();
+
+	if(ModAPIGraphics())
+	{
+		ModAPIGraphics()->OnModLoaded(m_pMod);
+	}
 
 	return 0x0;
 }

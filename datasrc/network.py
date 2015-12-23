@@ -225,6 +225,16 @@ Objects = [
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
 	]),
+	
+	### ModAPI
+	
+	NetObject("ModAPI_Sprite", [
+		NetIntAny("m_SpriteId"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Size"),
+		NetIntRange("m_Angle", 0, 360),
+	]),
 ]
 
 Messages = [

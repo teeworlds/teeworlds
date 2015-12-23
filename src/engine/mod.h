@@ -3,6 +3,8 @@
 #ifndef ENGINE_MOD_H
 #define ENGINE_MOD_H
 
+#include <modapi/graphics.h>
+
 #include "kernel.h"
 
 class IMod : public IInterface

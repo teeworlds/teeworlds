@@ -317,7 +317,8 @@ public:
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
 	
-	//ModAPI	
+	//ModAPI
+	CModAPI_Client_Graphics* m_pModAPIGraphics;
 	char m_aCurrentMod[256];
 	unsigned m_CurrentModCrc;
 
@@ -333,5 +334,7 @@ public:
 	
 	const char *LoadMod(const char *pName, const char *pFilename, unsigned WantedCrc);
 	const char *LoadModSearch(const char *pModName, int WantedCrc);
+	
+	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
 };
 #endif

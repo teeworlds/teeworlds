@@ -7,6 +7,8 @@
 #include "message.h"
 #include "graphics.h"
 
+#include <modapi/graphics.h>
+
 class IClient : public IInterface
 {
 	MACRO_INTERFACE("client", 0)
@@ -151,6 +153,10 @@ public:
 	virtual bool SoundInitFailed() const = 0;
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
+
+	//ModAPI
+public:
+	virtual CModAPI_Client_Graphics *ModAPIGraphics() const = 0;
 };
 
 class IGameClient : public IInterface

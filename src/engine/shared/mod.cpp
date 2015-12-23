@@ -1,5 +1,3 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <engine/mod.h>
 #include <engine/storage.h>
@@ -8,6 +6,8 @@
 class CMod : public IEngineMod
 {
 	CDataFileReader m_DataFile;
+	array<CModAPI_Sprite> m_Sprites;
+	
 public:
 	CMod() {}
 
