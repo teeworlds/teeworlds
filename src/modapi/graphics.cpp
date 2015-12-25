@@ -7,6 +7,13 @@ CModAPI_Client_Graphics::CModAPI_Client_Graphics()
 	
 }
 
+const CModAPI_Image* CModAPI_Client_Graphics::GetImage(int Id) const
+{
+	if(Id < 0 || Id >= m_Images.size()) return 0;
+	
+	return &m_Images[Id];
+}
+
 const CModAPI_Sprite* CModAPI_Client_Graphics::GetSprite(int Id) const
 {
 	if(Id < 0 || Id >= m_Sprites.size()) return 0;

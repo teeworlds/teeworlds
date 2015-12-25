@@ -316,27 +316,40 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
 {
 	if(!ModAPIGraphics()) return;
 	
-	const CModAPI_Sprite* sprite = ModAPIGraphics()->GetSprite(pCurrent->m_SpriteId);
-	if(sprite == 0) return;
+	const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(pCurrent->m_SpriteId);
+	if(pSprite == 0) return;
 	
-	int ImageId;
-	switch(sprite->m_ImageId)
+	if(pSprite->m_External)
 	{
-		case MODAPI_INTERNALIMG_GAME:
-			ImageId = IMAGE_GAME;
-			break;
-		default:
-			return;
+		const CModAPI_Image* pImage = ModAPIGraphics()->GetImage(pSprite->m_ImageId);
+		if(pImage == 0) return;
+		
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(pImage->m_Texture);
+		Graphics()->QuadsBegin();
+	}
+	else
+	{
+		int Texture;
+		
+		switch(pSprite->m_ImageId)
+		{
+			case MODAPI_INTERNALIMG_GAME:
+				Texture = IMAGE_GAME;
+				break;
+			default:
+				return;
+		}
+		
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(g_pData->m_aImages[Texture].m_Id);
+		Graphics()->QuadsBegin();
 	}
 	
 	float Angle = 2.0*pi*static_cast<float>(pCurrent->m_Angle)/360.0f;
 	float Size = pCurrent->m_Size;
 
-	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
-	Graphics()->QuadsBegin();
-
-	RenderTools()->SelectModAPISprite(sprite);
+	RenderTools()->SelectModAPISprite(pSprite);
 	
 	Graphics()->QuadsSetRotation(Angle);
 

@@ -39,6 +39,7 @@ private:
 public:
 	CModAPI_Client_Graphics();
 	const CModAPI_Sprite* GetSprite(int Id) const;
+	const CModAPI_Image* GetImage(int Id) const;
 	
 	int OnModLoaded(IMod* pMod, IGraphics* pGraphics);
 };
