@@ -1842,7 +1842,6 @@ bool CServer::CreateMod(const char* pModName)
 	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
 	
 	CModAPI_ModCreator ModCreator;
-	//if(ModCreator.AddSprite(MODAPI_INTERNALIMG_GAME, 15, 0, 2, 2, 32, 16) != 0) return false;
 	if(ModCreator.Save(Storage(), aBuf) < 0) return false;
 	
 	return true;

@@ -2635,7 +2635,7 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->OnModLoaded(m_pMod);
+		ModAPIGraphics()->OnModLoaded(m_pMod, Graphics());
 	}
 
 	return 0x0;

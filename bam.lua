@@ -344,7 +344,7 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server)
 end
 
 function BuildTools(settings)
