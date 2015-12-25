@@ -100,6 +100,7 @@ public:
 
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
+	int64 m_VoteCancelTime;
 	bool m_VoteUpdate;
 	int m_VotePos;
 	char m_aVoteDescription[VOTE_DESC_LENGTH];
@@ -115,6 +116,7 @@ public:
 		VOTE_ENFORCE_YES,
 
 		VOTE_TIME=25,
+		VOTE_CANCEL_TIME = 10,
 	};
 	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
