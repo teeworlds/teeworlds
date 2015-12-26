@@ -22,6 +22,16 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const 
 	return *this;
 }
 
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY)
+{
+	m_LineSprite0 = SpriteId0;
+	m_LineSprite1 = SpriteId1;
+	m_LineSpriteSizeX = SpriteSizeX;
+	m_LineSpriteSizeY = SpriteSizeY;
+	
+	return *this;
+}
+
 CModAPI_ModCreator::CModAPI_ModCreator()
 {
 	

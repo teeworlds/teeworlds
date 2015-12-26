@@ -50,6 +50,7 @@ public:
 	
 	CModAPI_ModItem_LineStyle& SetOuter(int Width, const vec4& Color);
 	CModAPI_ModItem_LineStyle& SetInner(int Width, const vec4& Color);
+	CModAPI_ModItem_LineStyle& SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY);
 };
 
 class CModAPI_ModCreator
