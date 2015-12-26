@@ -36,14 +36,14 @@ int CModAPI_ModCreator::AddImage(IStorage* pStorage, const char* pFilename)
 	}
 	else
 	{
-		dbg_msg("game/png", "failed to open file. filename='%s'", pFilename);
+		dbg_msg("mod", "failed to open file. filename='%s'", pFilename);
 		return -1;
 	}
 
 	int Error = png_open_file(&Png, aCompleteFilename); // ignore_convention
 	if(Error != PNG_NO_ERROR)
 	{
-		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
+		dbg_msg("mod", "failed to open file. filename='%s'", aCompleteFilename);
 		if(Error != PNG_FILE_ERROR)
 		{
 			png_close_file(&Png); // ignore_convention
@@ -53,7 +53,7 @@ int CModAPI_ModCreator::AddImage(IStorage* pStorage, const char* pFilename)
 
 	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12)) // ignore_convention
 	{
-		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
+		dbg_msg("mod", "invalid format. filename='%s'", aCompleteFilename);
 		png_close_file(&Png); // ignore_convention
 		return -1;
 	}
@@ -96,20 +96,32 @@ int CModAPI_ModCreator::AddSprite(int ImageId, int External, int x, int y, int w
 
 int CModAPI_ModCreator::AddSpriteInternal(int ImageId, int x, int y, int w, int h, int gx, int gy)
 {
-	if(ImageId >= MODAPI_NB_INTERNALIMG || ImageId < 0) return -1;
+	if(ImageId >= MODAPI_NB_INTERNALIMG || ImageId < 0)
+	{
+		dbg_msg("mod", "can't add the internal sprite : wrong image id (%i)", ImageId);
+		return -1;
+	}
 	return AddSprite(ImageId, 0, x, y, w, h, gx, gy);
 }
 
 int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int h, int gx, int gy)
-{
-	if(ImageId >= m_Images.size() || ImageId < 0) return -1;
+{	
+	if(ImageId >= m_Images.size() || ImageId < 0)
+	{
+		dbg_msg("mod", "can't add the external sprite : wrong image id (%i)", ImageId);
+		return -1;
+	}
 	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
 int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 {
 	CDataFileWriter df;
-	if(!df.Open(pStorage, pFileName)) return 0;
+	if(!df.Open(pStorage, pFileName))
+	{
+		dbg_msg("mod", "can't create the mod file %s", pFileName);
+		return 0;
+	}
 	
 	//Save images
 	for(int i=0; i<m_Images.size(); i++)
