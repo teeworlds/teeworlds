@@ -108,6 +108,8 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			pLineStyle->m_SpriteId = pItem->m_SpriteId;
 			pLineStyle->m_SpriteX = pItem->m_SpriteX;
 			pLineStyle->m_SpriteY = pItem->m_SpriteY;
+			pLineStyle->m_AnimationType = pItem->m_AnimationType;
+			pLineStyle->m_AnimationSpeed = pItem->m_AnimationSpeed;
 		}
 	}
 	

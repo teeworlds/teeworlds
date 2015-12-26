@@ -45,6 +45,8 @@ struct CModAPI_ModItem_LineStyle
 	int m_SpriteId;
 	int m_SpriteX;
 	int m_SpriteY;
+	int m_AnimationType;
+	int m_AnimationSpeed;
 };
 
 class CModAPI_ModCreator
@@ -63,7 +65,7 @@ public:
 	int AddImage(IStorage* pStorage, const char* Filename);
 	int AddSpriteInternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
 	int AddSpriteExternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
-	int AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY);
+	int AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY, int AnimType, int AnimSpeed);
 	
 	int Save(class IStorage *pStorage, const char *pFileName);
 };

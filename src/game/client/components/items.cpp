@@ -373,6 +373,15 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	vec2 EndPos = vec2(pCurrent->m_EndX, pCurrent->m_EndY);
 	vec2 Dir = normalize(EndPos-StartPos);
 
+	float ScaleFactor = 1.0f;
+	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
+	{
+		float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
+		float Ms = (Ticks/50.0f) * 1000.0f;
+		float Speed = Ms / pLineStyle->m_AnimationSpeed;
+		float ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
+	}
+	
 	vec2 Out, Border;
 
 	Graphics()->BlendNormal();
@@ -383,7 +392,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	float OuterWidth = pLineStyle->m_OuterWidth;
 	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
 	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * OuterWidth;
+	Out = vec2(Dir.y, -Dir.x) * OuterWidth * ScaleFactor;
 
 	IGraphics::CFreeformItem Freeform(
 			StartPos.x-Out.x, StartPos.y-Out.y,
@@ -395,7 +404,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	// do inner
 	float InnerWidth = pLineStyle->m_InnerWidth;
 	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * InnerWidth;
+	Out = vec2(Dir.y, -Dir.x) * InnerWidth * ScaleFactor;
 	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
 
 	Freeform = IGraphics::CFreeformItem(

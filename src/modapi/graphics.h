@@ -30,6 +30,12 @@ struct CModAPI_Sprite
 	int m_GridY;
 };
 
+enum
+{
+	MODAPI_LINESTYLEANIM_NONE = 0,
+	MODAPI_LINESTYLEANIM_SCALEDOWN,
+};
+
 struct CModAPI_LineStyle
 {
 	int m_OuterWidth;
@@ -39,6 +45,8 @@ struct CModAPI_LineStyle
 	int m_SpriteId;
 	int m_SpriteX;
 	int m_SpriteY;
+	int m_AnimationType;
+	int m_AnimationSpeed;
 };
 
 class CModAPI_Client_Graphics

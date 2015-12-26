@@ -114,17 +114,19 @@ int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int 
 	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
-int CModAPI_ModCreator::AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY)
+int CModAPI_ModCreator::AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY, int AnimType, int AnimSpeed)
 {
 	CModAPI_ModItem_LineStyle LineStyle;
 	LineStyle.m_Id = m_LineStyles.size();
-	LineStyle.m_OuterWidth;
-	LineStyle.m_OuterColor;
-	LineStyle.m_InnerWidth;
-	LineStyle.m_InnerColor;
-	LineStyle.m_SpriteId;
-	LineStyle.m_SpriteX;
-	LineStyle.m_SpriteY;
+	LineStyle.m_OuterWidth = OuterWidth;
+	LineStyle.m_OuterColor = OuterColor;
+	LineStyle.m_InnerWidth = InnerWidth;
+	LineStyle.m_InnerColor = InnerColor;
+	LineStyle.m_SpriteId = SpriteId;
+	LineStyle.m_SpriteX = SpriteX;
+	LineStyle.m_SpriteY = SpriteY;
+	LineStyle.m_AnimationType = AnimType;
+	LineStyle.m_AnimationSpeed = AnimSpeed;
 	
 	m_LineStyles.add(LineStyle);
 	

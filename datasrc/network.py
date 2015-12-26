@@ -242,6 +242,7 @@ Objects = [
 		NetIntAny("m_StartY"),
 		NetIntAny("m_EndX"),
 		NetIntAny("m_EndY"),
+		NetIntAny("m_StartTick"),
 	]),
 ]
 
