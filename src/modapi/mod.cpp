@@ -114,6 +114,23 @@ int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int 
 	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
+int CModAPI_ModCreator::AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY)
+{
+	CModAPI_ModItem_LineStyle LineStyle;
+	LineStyle.m_Id = m_LineStyles.size();
+	LineStyle.m_OuterWidth;
+	LineStyle.m_OuterColor;
+	LineStyle.m_InnerWidth;
+	LineStyle.m_InnerColor;
+	LineStyle.m_SpriteId;
+	LineStyle.m_SpriteX;
+	LineStyle.m_SpriteY;
+	
+	m_LineStyles.add(LineStyle);
+	
+	return LineStyle.m_Id;
+}
+
 int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 {
 	CDataFileWriter df;
@@ -136,6 +153,12 @@ int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 	for(int i=0; i<m_Sprites.size(); i++)
 	{
 		df.AddItem(MODAPI_MODITEMTYPE_SPRITE, i, sizeof(CModAPI_ModItem_Sprite), &m_Sprites[i]);
+	}
+	
+	//Save line styles
+	for(int i=0; i<m_LineStyles.size(); i++)
+	{
+		df.AddItem(MODAPI_MODITEMTYPE_LINESTYLE, i, sizeof(CModAPI_ModItem_LineStyle), &m_LineStyles[i]);
 	}
 	
 	df.Finish();

@@ -10,6 +10,7 @@ enum
 {
 	MODAPI_MODITEMTYPE_IMAGE = 0,
 	MODAPI_MODITEMTYPE_SPRITE,
+	MODAPI_MODITEMTYPE_LINESTYLE,
 };
 
 struct CModAPI_ModItem_Image
@@ -34,12 +35,25 @@ struct CModAPI_ModItem_Sprite
 	int m_GridY;
 };
 
+struct CModAPI_ModItem_LineStyle
+{
+	int m_Id;
+	int m_OuterWidth;
+	int m_OuterColor;
+	int m_InnerWidth;
+	int m_InnerColor;
+	int m_SpriteId;
+	int m_SpriteX;
+	int m_SpriteY;
+};
+
 class CModAPI_ModCreator
 {
 private:
 	array<void*> m_ImagesData;
 	array<CModAPI_ModItem_Image> m_Images;
 	array<CModAPI_ModItem_Sprite> m_Sprites;
+	array<CModAPI_ModItem_LineStyle> m_LineStyles;
 	
 	int AddSprite(int ImageId, int x, int External, int y, int w, int h, int gx, int gy);
 	
@@ -49,6 +63,7 @@ public:
 	int AddImage(IStorage* pStorage, const char* Filename);
 	int AddSpriteInternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
 	int AddSpriteExternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
+	int AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY);
 	
 	int Save(class IStorage *pStorage, const char *pFileName);
 };

@@ -286,10 +286,14 @@ void CItems::OnRender()
 		{
 			RenderLaser((const CNetObj_Laser *)pData);
 		}
-		//
+		//ModAPI
 		else if(Item.m_Type == NETOBJTYPE_MODAPI_SPRITE)
 		{
 			RenderModAPISprite((const CNetObj_ModAPI_Sprite *)pData);
+		}
+		else if(Item.m_Type == NETOBJTYPE_MODAPI_LINE)
+		{
+			RenderModAPILine((const CNetObj_ModAPI_Line *)pData);
 		}
 	}
 
@@ -357,5 +361,51 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
 	
 	RenderTools()->DrawSprite(Pos.x-Size/2.0f, Pos.y-Size/2.0f, Size);
 	Graphics()->QuadsEnd();
+}
+
+
+void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
+{
+	const CModAPI_LineStyle* pLineStyle = ModAPIGraphics()->GetLineStyle(pCurrent->m_LineStyleId);
+	if(pLineStyle == 0) return;
+	
+	vec2 StartPos = vec2(pCurrent->m_StartX, pCurrent->m_StartY);
+	vec2 EndPos = vec2(pCurrent->m_EndX, pCurrent->m_EndY);
+	vec2 Dir = normalize(EndPos-StartPos);
+
+	vec2 Out, Border;
+
+	Graphics()->BlendNormal();
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+
+	// do outline
+	float OuterWidth = pLineStyle->m_OuterWidth;
+	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+	Out = vec2(Dir.y, -Dir.x) * OuterWidth;
+
+	IGraphics::CFreeformItem Freeform(
+			StartPos.x-Out.x, StartPos.y-Out.y,
+			StartPos.x+Out.x, StartPos.y+Out.y,
+			EndPos.x-Out.x, EndPos.y-Out.y,
+			EndPos.x+Out.x, EndPos.y+Out.y);
+	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+
+	// do inner
+	float InnerWidth = pLineStyle->m_InnerWidth;
+	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
+	Out = vec2(Dir.y, -Dir.x) * InnerWidth;
+	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
+
+	Freeform = IGraphics::CFreeformItem(
+			StartPos.x-Out.x, StartPos.y-Out.y,
+			StartPos.x+Out.x, StartPos.y+Out.y,
+			EndPos.x-Out.x, EndPos.y-Out.y,
+			EndPos.x+Out.x, EndPos.y+Out.y);
+	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+
+	Graphics()->QuadsEnd();
+	Graphics()->BlendNormal();
 }
 

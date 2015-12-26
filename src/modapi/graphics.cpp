@@ -21,6 +21,13 @@ const CModAPI_Sprite* CModAPI_Client_Graphics::GetSprite(int Id) const
 	return &m_Sprites[Id];
 }
 
+const CModAPI_LineStyle* CModAPI_Client_Graphics::GetLineStyle(int Id) const
+{
+	if(Id < 0 || Id >= m_LineStyles.size()) return 0;
+	
+	return &m_LineStyles[Id];
+}
+
 int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 {
 	//Load images
@@ -77,6 +84,30 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			sprite->m_ImageId = pItem->m_ImageId;
 			sprite->m_GridX = pItem->m_GridX;
 			sprite->m_GridY = pItem->m_GridY;
+		}
+	}
+	
+	//Load line styles
+	{
+		int Start, Num;
+		pMod->GetType(MODAPI_MODITEMTYPE_LINESTYLE, &Start, &Num);
+		
+		m_LineStyles.set_size(Num);
+		
+		for(int i = 0; i < Num; i++)
+		{
+			CModAPI_ModItem_LineStyle *pItem = (CModAPI_ModItem_LineStyle*) pMod->GetItem(Start+i, 0, 0);
+			
+			if(pItem->m_Id > Num) return 0;
+			
+			CModAPI_LineStyle* pLineStyle = &m_LineStyles[pItem->m_Id];
+			pLineStyle->m_OuterWidth = pItem->m_OuterWidth;
+			pLineStyle->m_OuterColor = pItem->m_OuterColor;
+			pLineStyle->m_InnerWidth = pItem->m_InnerWidth;
+			pLineStyle->m_InnerColor = pItem->m_InnerColor;
+			pLineStyle->m_SpriteId = pItem->m_SpriteId;
+			pLineStyle->m_SpriteX = pItem->m_SpriteX;
+			pLineStyle->m_SpriteY = pItem->m_SpriteY;
 		}
 	}
 	

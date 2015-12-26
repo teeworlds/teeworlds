@@ -11,6 +11,7 @@ class CItems : public CComponent
 	void RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameDataFlag *pPrevGameDataFlag, const CNetObj_GameDataFlag *pCurGameDataFlag);
 	void RenderLaser(const struct CNetObj_Laser *pCurrent);
 	void RenderModAPISprite(const struct CNetObj_ModAPI_Sprite *pCurrent);
+	void RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent);
 
 public:
 	virtual void OnRender();
