@@ -379,7 +379,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 		float Ms = (Ticks/50.0f) * 1000.0f;
 		float Speed = Ms / pLineStyle->m_AnimationSpeed;
-		float ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
+		ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
 	}
 	
 	vec2 Out, Border;
