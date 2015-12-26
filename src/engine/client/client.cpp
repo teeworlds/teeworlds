@@ -366,7 +366,7 @@ void CClient::SendEnterGame()
 }
 
 void CClient::SendReady()
-{
+{					
 	CMsgPacker Msg(NETMSG_READY, true);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
@@ -1042,6 +1042,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		// system message
 		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MODAPI_INITDATA)
 		{
+			SimulateMapChangeMsg = true;
+			
 			const char *pMod = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 			int ModCrc = Unpacker.GetInt();
 			int ModSize = Unpacker.GetInt();
@@ -1138,7 +1140,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();
+					if(!m_IsDownloadingMod)
+					{
+						SendReady();
+					}
 				}
 				else
 				{
@@ -1260,6 +1265,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					
 					if(m_MapDownloadNeeded)
 					{
+						m_MapDownloadNeeded = false;
+						
 						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
 						SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
@@ -1267,6 +1274,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 							m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", "requested first chunk package");
 						
 						m_IsDownloadingMap = true;
+					}
+					else
+					{
+						SendReady();
 					}
 				}
 				else
@@ -2660,7 +2671,7 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 	DemoRecorder_Stop();
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
+	str_format(aBuf, sizeof(aBuf), "loaded mod '%s'", pFilename);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 	m_RecivedSnapshots = 0;
 
