@@ -22,12 +22,21 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY)
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY, int Speed)
 {
 	m_LineSprite0 = SpriteId0;
 	m_LineSprite1 = SpriteId1;
 	m_LineSpriteSizeX = SpriteSizeX;
 	m_LineSpriteSizeY = SpriteSizeY;
+	m_LineSpriteSpeed = Speed;
+	
+	return *this;
+}
+
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineAnimation(int Type, int Speed)
+{
+	m_LineAnimationType = Type;
+	m_LineAnimationSpeed = Speed;
 	
 	return *this;
 }

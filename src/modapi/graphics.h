@@ -46,6 +46,9 @@ struct CModAPI_LineStyle
 	int m_LineSprite1;
 	float m_LineSpriteSizeX;
 	float m_LineSpriteSizeY;
+	int m_AnimationType;
+	float m_AnimationSpeed;
+	float m_LineSpriteSpeed;
 };
 
 class CModAPI_Client_Graphics

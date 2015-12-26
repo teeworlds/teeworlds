@@ -47,10 +47,14 @@ public:
 	int m_LineSprite1;
 	int m_LineSpriteSizeX;
 	int m_LineSpriteSizeY;
+	int m_LineAnimationType;
+	int m_LineAnimationSpeed;
+	int m_LineSpriteSpeed;
 	
 	CModAPI_ModItem_LineStyle& SetOuter(int Width, const vec4& Color);
 	CModAPI_ModItem_LineStyle& SetInner(int Width, const vec4& Color);
-	CModAPI_ModItem_LineStyle& SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY);
+	CModAPI_ModItem_LineStyle& SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY, int Speed);
+	CModAPI_ModItem_LineStyle& SetLineAnimation(int Type, int Speed);
 };
 
 class CModAPI_ModCreator

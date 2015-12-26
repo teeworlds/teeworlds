@@ -109,6 +109,9 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			pLineStyle->m_LineSprite1 = pItem->m_LineSprite1;
 			pLineStyle->m_LineSpriteSizeX = static_cast<float>(pItem->m_LineSpriteSizeX);
 			pLineStyle->m_LineSpriteSizeY = static_cast<float>(pItem->m_LineSpriteSizeY);
+			pLineStyle->m_AnimationType = pItem->m_LineAnimationType;
+			pLineStyle->m_AnimationSpeed = static_cast<float>(pItem->m_LineAnimationSpeed);
+			pLineStyle->m_LineSpriteSpeed = static_cast<float>(pItem->m_LineSpriteSpeed);
 		}
 	}
 	

@@ -359,7 +359,7 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
 
 	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 	
-	RenderTools()->DrawSprite(Pos.x-Size/2.0f, Pos.y-Size/2.0f, Size);
+	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }
 
@@ -376,14 +376,15 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	vec2 Dir = normalize(EndPos-StartPos);
 	float Length = distance(StartPos, EndPos);
 
-	//~ float ScaleFactor = 1.0f;
-	//~ if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
-	//~ {
-		//~ float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
-		//~ float Ms = (Ticks/50.0f) * 1000.0f;
-		//~ float Speed = Ms / pLineStyle->m_AnimationSpeed;
-		//~ ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
-	//~ }
+	float ScaleFactor = 1.0f;
+	
+	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
+	float Ms = (Ticks/50.0f) * 1000.0f;
+	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
+	{
+		float Speed = Ms / pLineStyle->m_AnimationSpeed;
+		ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
+	}
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();
@@ -396,7 +397,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		const vec4& Color = pLineStyle->m_OuterColor;
 		
 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
-		vec2 Out = vec2(Dir.y, -Dir.x) * Width;
+		vec2 Out = vec2(Dir.y, -Dir.x) * Width * ScaleFactor;
 		
 		IGraphics::CFreeformItem Freeform(
 				StartPos.x-Out.x, StartPos.y-Out.y,
@@ -413,7 +414,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		const vec4& Color = pLineStyle->m_InnerColor;
 		
 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
-		vec2 Out = vec2(Dir.y, -Dir.x) * Width;
+		vec2 Out = vec2(Dir.y, -Dir.x) * Width * ScaleFactor;
 		
 		IGraphics::CFreeformItem Freeform(
 				StartPos.x-Out.x, StartPos.y-Out.y,
@@ -422,23 +423,35 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 				EndPos.x+Out.x, EndPos.y+Out.y);
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
+
+	Graphics()->QuadsEnd();
 	
 	//Sprite for line
 	if(pLineStyle->m_LineSprite0 >= 0)
 	{
-		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(pLineStyle->m_LineSprite0);
+		//Choose the sprite based on animation
+		int SpriteId = pLineStyle->m_LineSprite0;
+		{
+			int NbSprite = 1 + pLineStyle->m_LineSprite1 - pLineStyle->m_LineSprite0;
+			SpriteId = static_cast<int>(Ms/pLineStyle->m_LineSpriteSpeed)%NbSprite;
+		}		
+		
+		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
 		if(pSprite == 0) return;
 		
+		Graphics()->BlendNormal();
+			
 		//Define sprite texture
 		if(pSprite->m_External)
 		{
 			const CModAPI_Image* pImage = ModAPIGraphics()->GetImage(pSprite->m_ImageId);
 			if(pImage == 0) return;
-			else Graphics()->TextureSet(pImage->m_Texture);
+			
+			Graphics()->TextureSet(pImage->m_Texture);
 		}
 		else
 		{
-			int Texture;
+			int Texture = 0;
 			switch(pSprite->m_ImageId)
 			{
 				case MODAPI_INTERNALIMG_GAME:
@@ -447,9 +460,12 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 				default:
 					return;
 			}
+			
 			Graphics()->TextureSet(g_pData->m_aImages[Texture].m_Id);
 		}
 		
+		Graphics()->QuadsBegin();		
+		Graphics()->QuadsSetRotation(angle(Dir)+pi);
 		RenderTools()->SelectModAPISprite(pSprite);
 		
 		IGraphics::CQuadItem Array[1024];
@@ -459,13 +475,12 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		for(float f = 0.0; f < Length && i < 1024; f += stepX, i++)
 		{
 			vec2 p = StartPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,stepX,stepY);
+			Array[i] = IGraphics::CQuadItem(p.x, p.y,stepX,stepY * ScaleFactor);
 		}
 
 		Graphics()->QuadsDraw(Array, i);
+		Graphics()->QuadsSetRotation(0.0f);
+		Graphics()->QuadsEnd();
 	}
-
-	Graphics()->QuadsEnd();
-	Graphics()->BlendNormal();
 }
 
