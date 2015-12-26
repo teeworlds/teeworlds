@@ -251,7 +251,7 @@ public:
 	//ModAPI
 	enum
 	{
-		MOD_CHUNK_SIZE = NET_MAX_PAYLOAD - NET_MAX_CHUNKHEADERSIZE-4, // msg type
+		MOD_CHUNK_SIZE = NET_MAX_PAYLOAD - NET_MAX_CHUNKHEADERSIZE-4,
 	};
 	static const char* m_aModName;
 	unsigned m_CurrentModCrc;
@@ -262,7 +262,7 @@ public:
 	IEngineMod *m_pMod;
 	
 	const char *GetModName() const;
-	void SendMod(int ClientID); //ModAPI
+	void SendInitialData(int ClientID);
 	
 	bool CreateMod(const char* pModName);
 	bool LoadMod(const char* pModName);

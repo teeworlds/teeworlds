@@ -861,10 +861,13 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI)
 				{
-					SendMod(ClientID);
+					SendInitialData(ClientID);
+				}
+				else
+				{
+					SendMap(ClientID);
 				}
 				
-				SendMap(ClientID);
 			}
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
@@ -1880,14 +1883,24 @@ bool CServer::LoadMod(const char* pModName)
 	return 1;
 }
 	
-void CServer::SendMod(int ClientID)
+void CServer::SendInitialData(int ClientID)
 {
-	CMsgPacker Msg(NETMSG_MODAPI_MOD_CHANGE, true);
+	CMsgPacker Msg(NETMSG_MODAPI_INITDATA, true);
+	
+	//Mod
 	Msg.AddString(CServer::m_aModName, 0);
 	Msg.AddInt(m_CurrentModCrc);
 	Msg.AddInt(m_CurrentModSize);
 	Msg.AddInt(m_ModChunksPerRequest);
 	Msg.AddInt(MOD_CHUNK_SIZE);
+	
+	//Map
+	Msg.AddString(GetMapName(), 0);
+	Msg.AddInt(m_CurrentMapCrc);
+	Msg.AddInt(m_CurrentMapSize);
+	Msg.AddInt(m_MapChunksPerRequest);
+	Msg.AddInt(MAP_CHUNK_SIZE);
+	
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 }
 

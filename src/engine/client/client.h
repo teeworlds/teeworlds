@@ -336,5 +336,9 @@ public:
 	const char *LoadModSearch(const char *pModName, int WantedCrc);
 	
 	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
+	
+	bool m_IsDownloadingMod;
+	bool m_MapDownloadNeeded;
+	bool m_IsDownloadingMap;
 };
 #endif
