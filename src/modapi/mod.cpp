@@ -6,17 +6,26 @@
 
 #include <engine/external/pnglite/pnglite.h>
 
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetOuter(int Width, const vec4& Color)
+{
+	m_OuterWidth = Width;
+	m_OuterColor = ModAPI_ColorToInt(Color);
+	
+	return *this;
+}
+
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const vec4& Color)
+{
+	m_InnerWidth = Width;
+	m_InnerColor = ModAPI_ColorToInt(Color);
+	
+	return *this;
+}
+
 CModAPI_ModCreator::CModAPI_ModCreator()
 {
 	
 }
-	
-//~ int CModAPI_ModCreator::AddImage(const char* pFileName)
-//~ {
-	//~ //Load image
-	
-	//~ return true;
-//~ }
 
 int CModAPI_ModCreator::AddImage(IStorage* pStorage, const char* pFilename)
 {
@@ -114,23 +123,24 @@ int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int 
 	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
-int CModAPI_ModCreator::AddLineStyle(int OuterWidth, int OuterColor, int InnerWidth, int InnerColor, int SpriteId, int SpriteX, int SpriteY, int AnimType, int AnimSpeed)
+CModAPI_ModItem_LineStyle& CModAPI_ModCreator::AddLineStyle()
 {
-	CModAPI_ModItem_LineStyle LineStyle;
-	LineStyle.m_Id = m_LineStyles.size();
-	LineStyle.m_OuterWidth = OuterWidth;
-	LineStyle.m_OuterColor = OuterColor;
-	LineStyle.m_InnerWidth = InnerWidth;
-	LineStyle.m_InnerColor = InnerColor;
-	LineStyle.m_SpriteId = SpriteId;
-	LineStyle.m_SpriteX = SpriteX;
-	LineStyle.m_SpriteY = SpriteY;
-	LineStyle.m_AnimationType = AnimType;
-	LineStyle.m_AnimationSpeed = AnimSpeed;
+	int Id = m_LineStyles.size();
 	
-	m_LineStyles.add(LineStyle);
+	m_LineStyles.set_size(m_LineStyles.size()+1);
 	
-	return LineStyle.m_Id;
+	CModAPI_ModItem_LineStyle& LineStyle = m_LineStyles[Id];
+	LineStyle.m_Id = Id;
+	LineStyle.m_OuterWidth = -1;
+	LineStyle.m_OuterColor = 0;
+	LineStyle.m_InnerWidth = -1;
+	LineStyle.m_InnerColor = 0;
+	LineStyle.m_LineSprite0 = -1;
+	LineStyle.m_LineSprite1 = -1;
+	LineStyle.m_LineSpriteSizeX = 0;
+	LineStyle.m_LineSpriteSizeY = 0;
+	
+	return LineStyle;
 }
 
 int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)

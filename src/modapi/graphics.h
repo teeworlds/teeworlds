@@ -38,15 +38,14 @@ enum
 
 struct CModAPI_LineStyle
 {
-	int m_OuterWidth;
-	int m_OuterColor;
-	int m_InnerWidth;
-	int m_InnerColor;
-	int m_SpriteId;
-	int m_SpriteX;
-	int m_SpriteY;
-	int m_AnimationType;
-	int m_AnimationSpeed;
+	float m_OuterWidth;
+	vec4 m_OuterColor;
+	float m_InnerWidth;
+	vec4 m_InnerColor;
+	int m_LineSprite0;
+	int m_LineSprite1;
+	float m_LineSpriteSizeX;
+	float m_LineSpriteSizeY;
 };
 
 class CModAPI_Client_Graphics
@@ -64,5 +63,8 @@ public:
 	
 	int OnModLoaded(IMod* pMod, IGraphics* pGraphics);
 };
+
+int ModAPI_ColorToInt(const vec4& Color);
+vec4 ModAPI_IntToColor(int Value);
 
 #endif

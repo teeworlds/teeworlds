@@ -366,53 +366,104 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
 
 void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 {
+	//Get line style
 	const CModAPI_LineStyle* pLineStyle = ModAPIGraphics()->GetLineStyle(pCurrent->m_LineStyleId);
 	if(pLineStyle == 0) return;
 	
+	//Geometry
 	vec2 StartPos = vec2(pCurrent->m_StartX, pCurrent->m_StartY);
 	vec2 EndPos = vec2(pCurrent->m_EndX, pCurrent->m_EndY);
 	vec2 Dir = normalize(EndPos-StartPos);
+	float Length = distance(StartPos, EndPos);
 
-	float ScaleFactor = 1.0f;
-	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
-	{
-		float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
-		float Ms = (Ticks/50.0f) * 1000.0f;
-		float Speed = Ms / pLineStyle->m_AnimationSpeed;
-		ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
-	}
-	
-	vec2 Out, Border;
+	//~ float ScaleFactor = 1.0f;
+	//~ if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
+	//~ {
+		//~ float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
+		//~ float Ms = (Ticks/50.0f) * 1000.0f;
+		//~ float Speed = Ms / pLineStyle->m_AnimationSpeed;
+		//~ ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
+	//~ }
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	// do outline
-	float OuterWidth = pLineStyle->m_OuterWidth;
-	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
-	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * OuterWidth * ScaleFactor;
+	//Outer line
+	if(pLineStyle->m_OuterWidth > 0)
+	{
+		float Width = pLineStyle->m_OuterWidth;
+		const vec4& Color = pLineStyle->m_OuterColor;
+		
+		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+		vec2 Out = vec2(Dir.y, -Dir.x) * Width;
+		
+		IGraphics::CFreeformItem Freeform(
+				StartPos.x-Out.x, StartPos.y-Out.y,
+				StartPos.x+Out.x, StartPos.y+Out.y,
+				EndPos.x-Out.x, EndPos.y-Out.y,
+				EndPos.x+Out.x, EndPos.y+Out.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
+	}
 
-	IGraphics::CFreeformItem Freeform(
-			StartPos.x-Out.x, StartPos.y-Out.y,
-			StartPos.x+Out.x, StartPos.y+Out.y,
-			EndPos.x-Out.x, EndPos.y-Out.y,
-			EndPos.x+Out.x, EndPos.y+Out.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+	//Inner line
+	if(pLineStyle->m_InnerWidth > 0)
+	{
+		float Width = pLineStyle->m_InnerWidth;
+		const vec4& Color = pLineStyle->m_InnerColor;
+		
+		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+		vec2 Out = vec2(Dir.y, -Dir.x) * Width;
+		
+		IGraphics::CFreeformItem Freeform(
+				StartPos.x-Out.x, StartPos.y-Out.y,
+				StartPos.x+Out.x, StartPos.y+Out.y,
+				EndPos.x-Out.x, EndPos.y-Out.y,
+				EndPos.x+Out.x, EndPos.y+Out.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
+	}
+	
+	//Sprite for line
+	if(pLineStyle->m_LineSprite0 >= 0)
+	{
+		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(pLineStyle->m_LineSprite0);
+		if(pSprite == 0) return;
+		
+		//Define sprite texture
+		if(pSprite->m_External)
+		{
+			const CModAPI_Image* pImage = ModAPIGraphics()->GetImage(pSprite->m_ImageId);
+			if(pImage == 0) return;
+			else Graphics()->TextureSet(pImage->m_Texture);
+		}
+		else
+		{
+			int Texture;
+			switch(pSprite->m_ImageId)
+			{
+				case MODAPI_INTERNALIMG_GAME:
+					Texture = IMAGE_GAME;
+					break;
+				default:
+					return;
+			}
+			Graphics()->TextureSet(g_pData->m_aImages[Texture].m_Id);
+		}
+		
+		RenderTools()->SelectModAPISprite(pSprite);
+		
+		IGraphics::CQuadItem Array[1024];
+		int i = 0;
+		float stepX = pLineStyle->m_LineSpriteSizeX;
+		float stepY = pLineStyle->m_LineSpriteSizeY;
+		for(float f = 0.0; f < Length && i < 1024; f += stepX, i++)
+		{
+			vec2 p = StartPos + Dir*f;
+			Array[i] = IGraphics::CQuadItem(p.x, p.y,stepX,stepY);
+		}
 
-	// do inner
-	float InnerWidth = pLineStyle->m_InnerWidth;
-	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * InnerWidth * ScaleFactor;
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-
-	Freeform = IGraphics::CFreeformItem(
-			StartPos.x-Out.x, StartPos.y-Out.y,
-			StartPos.x+Out.x, StartPos.y+Out.y,
-			EndPos.x-Out.x, EndPos.y-Out.y,
-			EndPos.x+Out.x, EndPos.y+Out.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+		Graphics()->QuadsDraw(Array, i);
+	}
 
 	Graphics()->QuadsEnd();
 	Graphics()->BlendNormal();

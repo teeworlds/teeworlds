@@ -101,17 +101,35 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			if(pItem->m_Id > Num) return 0;
 			
 			CModAPI_LineStyle* pLineStyle = &m_LineStyles[pItem->m_Id];
-			pLineStyle->m_OuterWidth = pItem->m_OuterWidth;
-			pLineStyle->m_OuterColor = pItem->m_OuterColor;
-			pLineStyle->m_InnerWidth = pItem->m_InnerWidth;
-			pLineStyle->m_InnerColor = pItem->m_InnerColor;
-			pLineStyle->m_SpriteId = pItem->m_SpriteId;
-			pLineStyle->m_SpriteX = pItem->m_SpriteX;
-			pLineStyle->m_SpriteY = pItem->m_SpriteY;
-			pLineStyle->m_AnimationType = pItem->m_AnimationType;
-			pLineStyle->m_AnimationSpeed = pItem->m_AnimationSpeed;
+			pLineStyle->m_OuterWidth = static_cast<float>(pItem->m_OuterWidth);
+			pLineStyle->m_OuterColor = ModAPI_IntToColor(pItem->m_OuterColor);
+			pLineStyle->m_InnerWidth = static_cast<float>(pItem->m_InnerWidth);
+			pLineStyle->m_InnerColor = ModAPI_IntToColor(pItem->m_InnerColor);
+			pLineStyle->m_LineSprite0 = pItem->m_LineSprite0;
+			pLineStyle->m_LineSprite1 = pItem->m_LineSprite1;
+			pLineStyle->m_LineSpriteSizeX = static_cast<float>(pItem->m_LineSpriteSizeX);
+			pLineStyle->m_LineSpriteSizeY = static_cast<float>(pItem->m_LineSpriteSizeY);
 		}
 	}
 	
 	return 1;
+}
+
+int ModAPI_ColorToInt(const vec4& Color)
+{
+	int Value = static_cast<int>(Color.r * 255.0f);
+	Value += (static_cast<int>(Color.g * 255.0f)<<8);
+	Value += (static_cast<int>(Color.b * 255.0f)<<16);
+	Value += (static_cast<int>(Color.a * 255.0f)<<24);
+	return Value;
+}
+
+vec4 ModAPI_IntToColor(int Value)
+{
+	return vec4(
+		static_cast<float>(Value & 255)/255.0f,
+		static_cast<float>((Value>>8) & 255)/255.0f,
+		static_cast<float>((Value>>16) & 255)/255.0f,
+		static_cast<float>((Value>>24) & 255)/255.0f
+	);
 }
