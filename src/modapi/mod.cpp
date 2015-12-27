@@ -22,21 +22,23 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY, int Speed)
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineRepeatedSprite(int SpriteId1, int SpriteSizeX, int SpriteSizeY)
 {
-	m_LineSprite0 = SpriteId0;
+	m_LineSpriteType = MODAPI_LINESTYLE_SPRITETYPE_REPEATED;
 	m_LineSprite1 = SpriteId1;
+	m_LineSprite2 = -1;
 	m_LineSpriteSizeX = SpriteSizeX;
 	m_LineSpriteSizeY = SpriteSizeY;
-	m_LineSpriteSpeed = Speed;
+	m_LineSpriteOverlapping = 0;
+	m_LineSpriteAnimationSpeed = -1;
 	
 	return *this;
 }
 
 CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineAnimation(int Type, int Speed)
 {
-	m_LineAnimationType = Type;
-	m_LineAnimationSpeed = Speed;
+	m_AnimationType = Type;
+	m_AnimationSpeed = Speed;
 	
 	return *this;
 }
@@ -154,10 +156,36 @@ CModAPI_ModItem_LineStyle& CModAPI_ModCreator::AddLineStyle()
 	LineStyle.m_OuterColor = 0;
 	LineStyle.m_InnerWidth = -1;
 	LineStyle.m_InnerColor = 0;
-	LineStyle.m_LineSprite0 = -1;
+
+	LineStyle.m_LineSpriteType = MODAPI_LINESTYLE_SPRITETYPE_REPEATED;
 	LineStyle.m_LineSprite1 = -1;
+	LineStyle.m_LineSprite2 = -1;
 	LineStyle.m_LineSpriteSizeX = 0;
 	LineStyle.m_LineSpriteSizeY = 0;
+	LineStyle.m_LineSpriteOverlapping = 0;
+	LineStyle.m_LineSpriteAnimationSpeed = -1;
+
+	//Start point sprite
+	LineStyle.m_StartPointSprite1 = -1;
+	LineStyle.m_StartPointSprite2 = -1;
+	LineStyle.m_StartPointSpriteX = 0;
+	LineStyle.m_StartPointSpriteY = 0;
+	LineStyle.m_StartPointSpriteSizeX = 0;
+	LineStyle.m_StartPointSpriteSizeY = 0;
+	LineStyle.m_StartPointSpriteAnimationSpeed = -1;
+	
+	//End point prite
+	LineStyle.m_EndPointSprite1 = -1;
+	LineStyle.m_EndPointSprite2 = -1;
+	LineStyle.m_EndPointSpriteX = 0;
+	LineStyle.m_EndPointSpriteY = 0;
+	LineStyle.m_EndPointSpriteSizeX = 0;
+	LineStyle.m_EndPointSpriteSizeY = 0;
+	LineStyle.m_EndPointSpriteAnimationSpeed = -1;
+	
+	//General information
+	LineStyle.m_AnimationType = MODAPI_LINESTYLE_ANIMATION_NONE;
+	LineStyle.m_AnimationSpeed = -1;
 	
 	return LineStyle;
 }

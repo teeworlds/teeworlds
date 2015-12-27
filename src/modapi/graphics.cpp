@@ -101,17 +101,38 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			if(pItem->m_Id > Num) return 0;
 			
 			CModAPI_LineStyle* pLineStyle = &m_LineStyles[pItem->m_Id];
+			
 			pLineStyle->m_OuterWidth = static_cast<float>(pItem->m_OuterWidth);
 			pLineStyle->m_OuterColor = ModAPI_IntToColor(pItem->m_OuterColor);
 			pLineStyle->m_InnerWidth = static_cast<float>(pItem->m_InnerWidth);
 			pLineStyle->m_InnerColor = ModAPI_IntToColor(pItem->m_InnerColor);
-			pLineStyle->m_LineSprite0 = pItem->m_LineSprite0;
+			
+			pLineStyle->m_LineSpriteType = pItem->m_LineSpriteType;
 			pLineStyle->m_LineSprite1 = pItem->m_LineSprite1;
-			pLineStyle->m_LineSpriteSizeX = static_cast<float>(pItem->m_LineSpriteSizeX);
-			pLineStyle->m_LineSpriteSizeY = static_cast<float>(pItem->m_LineSpriteSizeY);
-			pLineStyle->m_AnimationType = pItem->m_LineAnimationType;
-			pLineStyle->m_AnimationSpeed = static_cast<float>(pItem->m_LineAnimationSpeed);
-			pLineStyle->m_LineSpriteSpeed = static_cast<float>(pItem->m_LineSpriteSpeed);
+			pLineStyle->m_LineSprite2 = pItem->m_LineSprite2;
+			pLineStyle->m_LineSpriteSizeX = pItem->m_LineSpriteSizeX;
+			pLineStyle->m_LineSpriteSizeY = pItem->m_LineSpriteSizeY;
+			pLineStyle->m_LineSpriteOverlapping = pItem->m_LineSpriteOverlapping;
+			pLineStyle->m_LineSpriteAnimationSpeed = static_cast<float>(pItem->m_LineSpriteAnimationSpeed);
+			
+			pLineStyle->m_StartPointSprite1 = pItem->m_StartPointSprite1;
+			pLineStyle->m_StartPointSprite2 = pItem->m_StartPointSprite2;
+			pLineStyle->m_StartPointSpriteX = pItem->m_StartPointSpriteX;
+			pLineStyle->m_StartPointSpriteY = pItem->m_StartPointSpriteY;
+			pLineStyle->m_StartPointSpriteSizeX = pItem->m_StartPointSpriteSizeX;
+			pLineStyle->m_StartPointSpriteSizeY = pItem->m_StartPointSpriteSizeY;
+			pLineStyle->m_StartPointSpriteAnimationSpeed = static_cast<float>(pItem->m_StartPointSpriteAnimationSpeed);
+			
+			pLineStyle->m_EndPointSprite1 = pItem->m_EndPointSprite1;
+			pLineStyle->m_EndPointSprite2 = pItem->m_EndPointSprite2;
+			pLineStyle->m_EndPointSpriteX = pItem->m_EndPointSpriteX;
+			pLineStyle->m_EndPointSpriteY = pItem->m_EndPointSpriteY;
+			pLineStyle->m_EndPointSpriteSizeX = pItem->m_EndPointSpriteSizeX;
+			pLineStyle->m_EndPointSpriteSizeY = pItem->m_EndPointSpriteSizeY;
+			pLineStyle->m_EndPointSpriteAnimationSpeed = static_cast<float>(pItem->m_EndPointSpriteAnimationSpeed);
+			
+			pLineStyle->m_AnimationType = pItem->m_AnimationType;
+			pLineStyle->m_AnimationSpeed = static_cast<float>(pItem->m_AnimationSpeed);
 		}
 	}
 	

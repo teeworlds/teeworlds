@@ -380,7 +380,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 	float Ms = (Ticks/50.0f) * 1000.0f;
-	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLEANIM_SCALEDOWN)
+	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLE_ANIMATION_SCALEDOWN)
 	{
 		float Speed = Ms / pLineStyle->m_AnimationSpeed;
 		ScaleFactor = 1.0f - clamp(Speed, 0.0f, 1.0f);
@@ -427,14 +427,9 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	Graphics()->QuadsEnd();
 	
 	//Sprite for line
-	if(pLineStyle->m_LineSprite0 >= 0)
+	if(pLineStyle->m_LineSprite1 >= 0)
 	{
-		//Choose the sprite based on animation
-		int SpriteId = pLineStyle->m_LineSprite0;
-		{
-			int NbSprite = 1 + pLineStyle->m_LineSprite1 - pLineStyle->m_LineSprite0;
-			SpriteId = static_cast<int>(Ms/pLineStyle->m_LineSpriteSpeed)%NbSprite;
-		}		
+		int SpriteId = pLineStyle->m_LineSprite1;
 		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
 		if(pSprite == 0) return;

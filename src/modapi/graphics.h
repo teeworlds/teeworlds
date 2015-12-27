@@ -32,23 +32,53 @@ struct CModAPI_Sprite
 
 enum
 {
-	MODAPI_LINESTYLEANIM_NONE = 0,
-	MODAPI_LINESTYLEANIM_SCALEDOWN,
+	MODAPI_LINESTYLE_ANIMATION_NONE = 0,
+	MODAPI_LINESTYLE_ANIMATION_SCALEDOWN,
+};
+
+enum
+{
+	MODAPI_LINESTYLE_SPRITETYPE_REPEATED = 0,
 };
 
 struct CModAPI_LineStyle
 {
-	float m_OuterWidth;
+	//Line with quads, like laser
+	int m_OuterWidth;
 	vec4 m_OuterColor;
-	float m_InnerWidth;
+	int m_InnerWidth;
 	vec4 m_InnerColor;
-	int m_LineSprite0;
+
+	//Draw line with sprites, like hook
+	int m_LineSpriteType; //MODAPI_LINESTYLE_SPRITETYPE_XXXXX
 	int m_LineSprite1;
-	float m_LineSpriteSizeX;
-	float m_LineSpriteSizeY;
-	int m_AnimationType;
+	int m_LineSprite2;
+	int m_LineSpriteSizeX;
+	int m_LineSpriteSizeY;
+	int m_LineSpriteOverlapping;
+	float m_LineSpriteAnimationSpeed;
+
+	//Start point sprite
+	int m_StartPointSprite1;
+	int m_StartPointSprite2;
+	int m_StartPointSpriteX;
+	int m_StartPointSpriteY;
+	int m_StartPointSpriteSizeX;
+	int m_StartPointSpriteSizeY;
+	float m_StartPointSpriteAnimationSpeed;
+	
+	//End point prite
+	int m_EndPointSprite1;
+	int m_EndPointSprite2;
+	int m_EndPointSpriteX;
+	int m_EndPointSpriteY;
+	int m_EndPointSpriteSizeX;
+	int m_EndPointSpriteSizeY;
+	float m_EndPointSpriteAnimationSpeed;
+	
+	//General information
+	int m_AnimationType; //MODAPI_LINESTYLE_ANIMATION_XXXXX
 	float m_AnimationSpeed;
-	float m_LineSpriteSpeed;
 };
 
 class CModAPI_Client_Graphics

@@ -39,21 +39,45 @@ class CModAPI_ModItem_LineStyle
 {
 public:
 	int m_Id;
+	
 	int m_OuterWidth;
 	int m_OuterColor;
 	int m_InnerWidth;
 	int m_InnerColor;
-	int m_LineSprite0;
+
+	int m_LineSpriteType; //MODAPI_LINESTYLE_SPRITETYPE_XXXXX
 	int m_LineSprite1;
+	int m_LineSprite2;
 	int m_LineSpriteSizeX;
 	int m_LineSpriteSizeY;
-	int m_LineAnimationType;
-	int m_LineAnimationSpeed;
-	int m_LineSpriteSpeed;
+	int m_LineSpriteOverlapping;
+	int m_LineSpriteAnimationSpeed;
+
+	//Start point sprite
+	int m_StartPointSprite1;
+	int m_StartPointSprite2;
+	int m_StartPointSpriteX;
+	int m_StartPointSpriteY;
+	int m_StartPointSpriteSizeX;
+	int m_StartPointSpriteSizeY;
+	int m_StartPointSpriteAnimationSpeed;
+	
+	//End point prite
+	int m_EndPointSprite1;
+	int m_EndPointSprite2;
+	int m_EndPointSpriteX;
+	int m_EndPointSpriteY;
+	int m_EndPointSpriteSizeX;
+	int m_EndPointSpriteSizeY;
+	int m_EndPointSpriteAnimationSpeed;
+	
+	//General information
+	int m_AnimationType; //MODAPI_LINESTYLE_ANIMATION_XXXXX
+	int m_AnimationSpeed;
 	
 	CModAPI_ModItem_LineStyle& SetOuter(int Width, const vec4& Color);
 	CModAPI_ModItem_LineStyle& SetInner(int Width, const vec4& Color);
-	CModAPI_ModItem_LineStyle& SetLineSprite(int SpriteId0, int SpriteId1, int SpriteSizeX, int SpriteSizeY, int Speed);
+	CModAPI_ModItem_LineStyle& SetLineRepeatedSprite(int SpriteId1, int SpriteSizeX, int SpriteSizeY);
 	CModAPI_ModItem_LineStyle& SetLineAnimation(int Type, int Speed);
 };
 
