@@ -35,6 +35,19 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineRepeatedSprite(int 
 	return *this;
 }
 
+CModAPI_ModItem_LineStyle& SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
+{
+	m_EndPointSprite1 = SpriteId1;
+	m_EndPointSprite2 = -1;
+	m_EndPointSpriteX = X;
+	m_EndPointSpriteY = Y;
+	m_EndPointSpriteSizeX = W;
+	m_EndPointSpriteSizeY = H;
+	m_EndPointSpriteAnimationSpeed = -1;
+	
+	return *this;
+}
+
 CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineAnimation(int Type, int Speed)
 {
 	m_AnimationType = Type;
