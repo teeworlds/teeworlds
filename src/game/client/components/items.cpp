@@ -514,9 +514,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		Graphics()->QuadsSetRotation(angle(Dir)+pi);
 		RenderTools()->SelectModAPISprite(pSprite);
 		
-		RenderTools()->DrawSprite(EndPos.x, EndPos.y, Size);
-		
-		IGraphics::CQuadItem QuadItem(p.x + pLineStyle->m_EndPointSpriteX, p.y + pLineStyle->m_EndPointSpriteY, pLineStyle->m_EndPointSpriteSizeX, pLineStyle->m_EndPointSpriteSizeY);
+		IGraphics::CQuadItem QuadItem(EndPos.x + pLineStyle->m_EndPointSpriteX, EndPos.y + pLineStyle->m_EndPointSpriteY, pLineStyle->m_EndPointSpriteSizeX, pLineStyle->m_EndPointSpriteSizeY);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	
 		Graphics()->QuadsEnd();

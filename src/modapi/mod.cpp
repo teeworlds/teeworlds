@@ -35,7 +35,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineRepeatedSprite(int 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
 {
 	m_EndPointSprite1 = SpriteId1;
 	m_EndPointSprite2 = -1;
