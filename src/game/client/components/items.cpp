@@ -465,12 +465,11 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		
 		IGraphics::CQuadItem Array[1024];
 		int i = 0;
-		float stepX = pLineStyle->m_LineSpriteSizeX;
-		float stepY = pLineStyle->m_LineSpriteSizeY;
-		for(float f = 0.0; f < Length && i < 1024; f += stepX, i++)
+		float step = pLineStyle->m_LineSpriteSizeX - pLineStyle->m_LineSpriteOverlapping;
+		for(float f = 0.0; f < Length && i < 1024; f += step, i++)
 		{
 			vec2 p = StartPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,stepX,stepY * ScaleFactor);
+			Array[i] = IGraphics::CQuadItem(p.x, p.y, pLineStyle->m_LineSpriteSizeX, pLineStyle->m_LineSpriteSizeY * ScaleFactor);
 		}
 
 		Graphics()->QuadsDraw(Array, i);
