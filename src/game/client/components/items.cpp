@@ -460,7 +460,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		}
 		
 		Graphics()->QuadsBegin();		
-		Graphics()->QuadsSetRotation(angle(Dir)+pi);
+		Graphics()->QuadsSetRotation(angle(Dir));
 		RenderTools()->SelectModAPISprite(pSprite);
 		
 		IGraphics::CQuadItem Array[1024];
@@ -477,16 +477,16 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		Graphics()->QuadsEnd();
 	}
 	
-	//Sprite for end point
-	if(pLineStyle->m_EndPointSprite1 >= 0)
+	//Sprite for start point
+	if(pLineStyle->m_StartPointSprite1 >= 0)
 	{
-		int SpriteId = pLineStyle->m_EndPointSprite1;
+		int SpriteId = pLineStyle->m_StartPointSprite1;
 		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
 		if(pSprite == 0) return;
 		
 		Graphics()->BlendNormal();
-			
+		
 		//Define sprite texture
 		if(pSprite->m_External)
 		{
@@ -511,12 +511,65 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		}
 		
 		Graphics()->QuadsBegin();		
-		Graphics()->QuadsSetRotation(angle(Dir)+pi);
+		Graphics()->QuadsSetRotation(angle(Dir));
 		RenderTools()->SelectModAPISprite(pSprite);
 		
-		IGraphics::CQuadItem QuadItem(EndPos.x + pLineStyle->m_EndPointSpriteX, EndPos.y + pLineStyle->m_EndPointSpriteY, pLineStyle->m_EndPointSpriteSizeX, pLineStyle->m_EndPointSpriteSizeY);
+		IGraphics::CQuadItem QuadItem(
+			StartPos.x + pLineStyle->m_StartPointSpriteX,
+			StartPos.y + pLineStyle->m_StartPointSpriteY,
+			pLineStyle->m_StartPointSpriteSizeX,
+			pLineStyle->m_StartPointSpriteSizeY);
+		
 		Graphics()->QuadsDraw(&QuadItem, 1);
+		Graphics()->QuadsSetRotation(0.0f);
+		Graphics()->QuadsEnd();
+	}
 	
+	//Sprite for end point
+	if(pLineStyle->m_EndPointSprite1 >= 0)
+	{
+		int SpriteId = pLineStyle->m_EndPointSprite1;
+		
+		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
+		if(pSprite == 0) return;
+		
+		Graphics()->BlendNormal();
+		
+		//Define sprite texture
+		if(pSprite->m_External)
+		{
+			const CModAPI_Image* pImage = ModAPIGraphics()->GetImage(pSprite->m_ImageId);
+			if(pImage == 0) return;
+			
+			Graphics()->TextureSet(pImage->m_Texture);
+		}
+		else
+		{
+			int Texture = 0;
+			switch(pSprite->m_ImageId)
+			{
+				case MODAPI_INTERNALIMG_GAME:
+					Texture = IMAGE_GAME;
+					break;
+				default:
+					return;
+			}
+			
+			Graphics()->TextureSet(g_pData->m_aImages[Texture].m_Id);
+		}
+		
+		Graphics()->QuadsBegin();		
+		Graphics()->QuadsSetRotation(angle(Dir));
+		RenderTools()->SelectModAPISprite(pSprite);
+		
+		IGraphics::CQuadItem QuadItem(
+			EndPos.x + pLineStyle->m_EndPointSpriteX,
+			EndPos.y + pLineStyle->m_EndPointSpriteY,
+			pLineStyle->m_EndPointSpriteSizeX,
+			pLineStyle->m_EndPointSpriteSizeY);
+		
+		Graphics()->QuadsDraw(&QuadItem, 1);
+		Graphics()->QuadsSetRotation(0.0f);
 		Graphics()->QuadsEnd();
 	}
 }
