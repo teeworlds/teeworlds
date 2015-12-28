@@ -374,6 +374,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	vec2 StartPos = vec2(pCurrent->m_StartX, pCurrent->m_StartY);
 	vec2 EndPos = vec2(pCurrent->m_EndX, pCurrent->m_EndY);
 	vec2 Dir = normalize(EndPos-StartPos);
+	vec2 DirOrtho = vec2(-Dir.y, Dir.x);
 	float Length = distance(StartPos, EndPos);
 
 	float ScaleFactor = 1.0f;
@@ -397,7 +398,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		const vec4& Color = pLineStyle->m_OuterColor;
 		
 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
-		vec2 Out = vec2(Dir.y, -Dir.x) * Width * ScaleFactor;
+		vec2 Out = DirOrtho * Width * ScaleFactor;
 		
 		IGraphics::CFreeformItem Freeform(
 				StartPos.x-Out.x, StartPos.y-Out.y,
@@ -414,7 +415,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		const vec4& Color = pLineStyle->m_InnerColor;
 		
 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
-		vec2 Out = vec2(Dir.y, -Dir.x) * Width * ScaleFactor;
+		vec2 Out = DirOrtho * Width * ScaleFactor;
 		
 		IGraphics::CFreeformItem Freeform(
 				StartPos.x-Out.x, StartPos.y-Out.y,
@@ -466,7 +467,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		IGraphics::CQuadItem Array[1024];
 		int i = 0;
 		float step = pLineStyle->m_LineSpriteSizeX - pLineStyle->m_LineSpriteOverlapping;
-		for(float f = 0.0; f < Length && i < 1024; f += step, i++)
+		for(float f = pLineStyle->m_LineSpriteSizeX/2.0f; f < Length && i < 1024; f += step, i++)
 		{
 			vec2 p = StartPos + Dir*f;
 			Array[i] = IGraphics::CQuadItem(p.x, p.y, pLineStyle->m_LineSpriteSizeX, pLineStyle->m_LineSpriteSizeY * ScaleFactor);
@@ -514,9 +515,11 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		Graphics()->QuadsSetRotation(angle(Dir));
 		RenderTools()->SelectModAPISprite(pSprite);
 		
+		vec2 NewPos = StartPos + (Dir * pLineStyle->m_StartPointSpriteX) + (DirOrtho * pLineStyle->m_StartPointSpriteY);
+		
 		IGraphics::CQuadItem QuadItem(
-			StartPos.x + pLineStyle->m_StartPointSpriteX,
-			StartPos.y + pLineStyle->m_StartPointSpriteY,
+			NewPos.x,
+			NewPos.y,
 			pLineStyle->m_StartPointSpriteSizeX,
 			pLineStyle->m_StartPointSpriteSizeY);
 		
@@ -562,9 +565,11 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		Graphics()->QuadsSetRotation(angle(Dir));
 		RenderTools()->SelectModAPISprite(pSprite);
 		
+		vec2 NewPos = EndPos + (Dir * pLineStyle->m_EndPointSpriteX) + (DirOrtho * pLineStyle->m_EndPointSpriteY);
+		
 		IGraphics::CQuadItem QuadItem(
-			EndPos.x + pLineStyle->m_EndPointSpriteX,
-			EndPos.y + pLineStyle->m_EndPointSpriteY,
+			NewPos.x,
+			NewPos.y,
 			pLineStyle->m_EndPointSpriteSizeX,
 			pLineStyle->m_EndPointSpriteSizeY);
 		
