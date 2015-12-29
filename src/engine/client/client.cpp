@@ -564,6 +564,12 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_NetClient.Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
+	
+	//ModAPI unload mod graphics
+	if(ModAPIGraphics())
+	{
+		ModAPIGraphics()->UnloadMod(Graphics());
+	}
 
 	// disable all downloads
 	m_MapdownloadChunk = 0;
