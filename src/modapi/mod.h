@@ -79,7 +79,9 @@ public:
 	CModAPI_ModItem_LineStyle& SetInner(int Width, const vec4& Color);
 	CModAPI_ModItem_LineStyle& SetLineRepeatedSprite(int SpriteId1, int SpriteSizeX, int SpriteSizeY);
 	CModAPI_ModItem_LineStyle& SetStartPointSprite(int SpriteId1, int X, int Y, int W, int H);
+	CModAPI_ModItem_LineStyle& SetStartPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed);
 	CModAPI_ModItem_LineStyle& SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H);
+	CModAPI_ModItem_LineStyle& SetEndPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed);
 	CModAPI_ModItem_LineStyle& SetLineAnimation(int Type, int Speed);
 };
 

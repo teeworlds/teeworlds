@@ -48,6 +48,19 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointSprite(int Sp
 	return *this;
 }
 
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
+{
+	m_StartPointSprite1 = SpriteId1;
+	m_StartPointSprite2 = SpriteId2;
+	m_StartPointSpriteX = X;
+	m_StartPointSpriteY = Y;
+	m_StartPointSpriteSizeX = W;
+	m_StartPointSpriteSizeY = H;
+	m_StartPointSpriteAnimationSpeed = Speed;
+	
+	return *this;
+}
+
 CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
 {
 	m_EndPointSprite1 = SpriteId1;
@@ -57,6 +70,19 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointSprite(int Spri
 	m_EndPointSpriteSizeX = W;
 	m_EndPointSpriteSizeY = H;
 	m_EndPointSpriteAnimationSpeed = -1;
+	
+	return *this;
+}
+
+CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
+{
+	m_EndPointSprite1 = SpriteId1;
+	m_EndPointSprite2 = SpriteId2;
+	m_EndPointSpriteX = X;
+	m_EndPointSpriteY = Y;
+	m_EndPointSpriteSizeX = W;
+	m_EndPointSpriteSizeY = H;
+	m_EndPointSpriteAnimationSpeed = Speed;
 	
 	return *this;
 }

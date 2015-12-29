@@ -56,7 +56,7 @@ struct CModAPI_LineStyle
 	int m_LineSpriteSizeX;
 	int m_LineSpriteSizeY;
 	int m_LineSpriteOverlapping;
-	float m_LineSpriteAnimationSpeed;
+	int m_LineSpriteAnimationSpeed;
 
 	//Start point sprite
 	int m_StartPointSprite1;
@@ -65,7 +65,7 @@ struct CModAPI_LineStyle
 	int m_StartPointSpriteY;
 	int m_StartPointSpriteSizeX;
 	int m_StartPointSpriteSizeY;
-	float m_StartPointSpriteAnimationSpeed;
+	int m_StartPointSpriteAnimationSpeed;
 	
 	//End point prite
 	int m_EndPointSprite1;
@@ -74,11 +74,11 @@ struct CModAPI_LineStyle
 	int m_EndPointSpriteY;
 	int m_EndPointSpriteSizeX;
 	int m_EndPointSpriteSizeY;
-	float m_EndPointSpriteAnimationSpeed;
+	int m_EndPointSpriteAnimationSpeed;
 	
 	//General information
 	int m_AnimationType; //MODAPI_LINESTYLE_ANIMATION_XXXXX
-	float m_AnimationSpeed;
+	int m_AnimationSpeed;
 };
 
 class CModAPI_Client_Graphics

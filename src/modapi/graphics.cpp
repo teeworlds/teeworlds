@@ -113,7 +113,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			pLineStyle->m_LineSpriteSizeX = pItem->m_LineSpriteSizeX;
 			pLineStyle->m_LineSpriteSizeY = pItem->m_LineSpriteSizeY;
 			pLineStyle->m_LineSpriteOverlapping = pItem->m_LineSpriteOverlapping;
-			pLineStyle->m_LineSpriteAnimationSpeed = static_cast<float>(pItem->m_LineSpriteAnimationSpeed);
+			pLineStyle->m_LineSpriteAnimationSpeed = pItem->m_LineSpriteAnimationSpeed;
 			
 			pLineStyle->m_StartPointSprite1 = pItem->m_StartPointSprite1;
 			pLineStyle->m_StartPointSprite2 = pItem->m_StartPointSprite2;
@@ -121,7 +121,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			pLineStyle->m_StartPointSpriteY = pItem->m_StartPointSpriteY;
 			pLineStyle->m_StartPointSpriteSizeX = pItem->m_StartPointSpriteSizeX;
 			pLineStyle->m_StartPointSpriteSizeY = pItem->m_StartPointSpriteSizeY;
-			pLineStyle->m_StartPointSpriteAnimationSpeed = static_cast<float>(pItem->m_StartPointSpriteAnimationSpeed);
+			pLineStyle->m_StartPointSpriteAnimationSpeed = pItem->m_StartPointSpriteAnimationSpeed;
 			
 			pLineStyle->m_EndPointSprite1 = pItem->m_EndPointSprite1;
 			pLineStyle->m_EndPointSprite2 = pItem->m_EndPointSprite2;
@@ -129,7 +129,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 			pLineStyle->m_EndPointSpriteY = pItem->m_EndPointSpriteY;
 			pLineStyle->m_EndPointSpriteSizeX = pItem->m_EndPointSpriteSizeX;
 			pLineStyle->m_EndPointSpriteSizeY = pItem->m_EndPointSpriteSizeY;
-			pLineStyle->m_EndPointSpriteAnimationSpeed = static_cast<float>(pItem->m_EndPointSpriteAnimationSpeed);
+			pLineStyle->m_EndPointSpriteAnimationSpeed = pItem->m_EndPointSpriteAnimationSpeed;
 			
 			pLineStyle->m_AnimationType = pItem->m_AnimationType;
 			pLineStyle->m_AnimationSpeed = static_cast<float>(pItem->m_AnimationSpeed);

@@ -380,7 +380,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	float ScaleFactor = 1.0f;
 	
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
-	float Ms = (Ticks/50.0f) * 1000.0f;
+	float Ms = (Ticks/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	if(pLineStyle->m_AnimationType == MODAPI_LINESTYLE_ANIMATION_SCALEDOWN)
 	{
 		float Speed = Ms / pLineStyle->m_AnimationSpeed;
@@ -483,6 +483,12 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	{
 		int SpriteId = pLineStyle->m_StartPointSprite1;
 		
+		if(pLineStyle->m_StartPointSprite2 > SpriteId) //Animation
+		{
+			int NbFrame = 1 + pLineStyle->m_StartPointSprite2 - pLineStyle->m_StartPointSprite1;
+			SpriteId = (static_cast<int>(Ms)/pLineStyle->m_StartPointSpriteAnimationSpeed)%NbFrame;
+		}
+		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
 		if(pSprite == 0) return;
 		
@@ -532,6 +538,12 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	if(pLineStyle->m_EndPointSprite1 >= 0)
 	{
 		int SpriteId = pLineStyle->m_EndPointSprite1;
+		
+		if(pLineStyle->m_EndPointSprite2 > SpriteId) //Animation
+		{
+			int NbFrame = 1 + pLineStyle->m_EndPointSprite2 - pLineStyle->m_EndPointSprite1;
+			SpriteId = (static_cast<int>(Ms)/pLineStyle->m_EndPointSpriteAnimationSpeed)%NbFrame;
+		}
 		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
 		if(pSprite == 0) return;
