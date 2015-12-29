@@ -486,7 +486,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		if(pLineStyle->m_StartPointSprite2 > SpriteId) //Animation
 		{
 			int NbFrame = 1 + pLineStyle->m_StartPointSprite2 - pLineStyle->m_StartPointSprite1;
-			SpriteId = (static_cast<int>(Ms)/pLineStyle->m_StartPointSpriteAnimationSpeed)%NbFrame;
+			SpriteId = pLineStyle->m_StartPointSprite1 + (static_cast<int>(Ms)/pLineStyle->m_StartPointSpriteAnimationSpeed)%NbFrame;
 		}
 		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
@@ -542,7 +542,7 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 		if(pLineStyle->m_EndPointSprite2 > SpriteId) //Animation
 		{
 			int NbFrame = 1 + pLineStyle->m_EndPointSprite2 - pLineStyle->m_EndPointSprite1;
-			SpriteId = (static_cast<int>(Ms)/pLineStyle->m_EndPointSpriteAnimationSpeed)%NbFrame;
+			SpriteId = pLineStyle->m_EndPointSprite1 + (static_cast<int>(Ms)/pLineStyle->m_EndPointSpriteAnimationSpeed)%NbFrame;
 		}
 		
 		const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(SpriteId);
