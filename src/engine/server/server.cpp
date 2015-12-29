@@ -1511,6 +1511,9 @@ int CServer::Run()
 
 	if(m_pCurrentMapData)
 		mem_free(m_pCurrentMapData);
+	//ModAPI
+	if(m_pCurrentModData)
+		mem_free(m_pCurrentModData);
 	return 0;
 }
 
