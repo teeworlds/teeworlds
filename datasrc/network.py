@@ -406,7 +406,7 @@ Messages = [
 	
 	### ModAPI
 	
-	NetMessage("ModAPI_Broadcast", [
+	NetMessage("ModAPI_Sv_Broadcast", [
 		NetStringStrict("m_pMessage"),
 	]),
 	
