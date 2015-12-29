@@ -908,13 +908,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			}
 		}
+		//ModAPI
 		else if(Msg == NETMSG_MODAPI_REQUEST_MOD_DATA)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
 			{
 				int ChunkSize = MOD_CHUNK_SIZE;
 
-				// send map chunks
+				// send mod chunks
 				for(int i = 0; i < m_ModChunksPerRequest && m_aClients[ClientID].m_ModChunk >= 0; ++i)
 				{
 					int Chunk = m_aClients[ClientID].m_ModChunk;
