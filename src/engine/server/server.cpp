@@ -284,6 +284,10 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
+	
+	// ModAPI
+	m_pCurrentModData = 0;
+	m_CurrentModSize = 0;
 
 	m_MapReload = 0;
 
@@ -1507,6 +1511,9 @@ int CServer::Run()
 
 	if(m_pCurrentMapData)
 		mem_free(m_pCurrentMapData);
+	//ModAPI
+	if(m_pCurrentModData)
+		mem_free(m_pCurrentModData);
 	return 0;
 }
 
