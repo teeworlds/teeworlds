@@ -17,7 +17,6 @@
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/map.h>
-#include <engine/mod.h>
 #include <engine/masterserver.h>
 #include <engine/serverbrowser.h>
 #include <engine/sound.h>
@@ -40,6 +39,9 @@
 
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
+
+//ModAPI
+#include <modapi/shared/mod.h>
 
 #include "friends.h"
 #include "serverbrowser.h"

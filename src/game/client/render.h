@@ -8,7 +8,7 @@
 #include <game/mapitems.h>
 #include "ui.h"
 
-#include <modapi/graphics.h>
+#include <modapi/client/graphics.h>
 
 class CTeeRenderInfo
 {

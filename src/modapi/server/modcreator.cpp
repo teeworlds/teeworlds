@@ -1,4 +1,5 @@
-#include <modapi/mod.h>
+#include <modapi/server/modcreator.h>
+#include <modapi/graphics.h>
 
 #include <engine/storage.h>
 #include <engine/shared/datafile.h>
@@ -6,7 +7,7 @@
 
 #include <engine/external/pnglite/pnglite.h>
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetOuter(int Width, const vec4& Color)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetOuter(int Width, const vec4& Color)
 {
 	m_OuterWidth = Width;
 	m_OuterColor = ModAPI_ColorToInt(Color);
@@ -14,7 +15,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetOuter(int Width, const 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const vec4& Color)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetInner(int Width, const vec4& Color)
 {
 	m_InnerWidth = Width;
 	m_InnerColor = ModAPI_ColorToInt(Color);
@@ -22,7 +23,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetInner(int Width, const 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineRepeatedSprite(int SpriteId1, int SpriteSizeX, int SpriteSizeY)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetLineRepeatedSprite(int SpriteId1, int SpriteSizeX, int SpriteSizeY)
 {
 	m_LineSpriteType = MODAPI_LINESTYLE_SPRITETYPE_REPEATED;
 	m_LineSprite1 = SpriteId1;
@@ -35,7 +36,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineRepeatedSprite(int 
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointSprite(int SpriteId1, int X, int Y, int W, int H)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetStartPointSprite(int SpriteId1, int X, int Y, int W, int H)
 {
 	m_StartPointSprite1 = SpriteId1;
 	m_StartPointSprite2 = -1;
@@ -48,7 +49,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointSprite(int Sp
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetStartPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
 {
 	m_StartPointSprite1 = SpriteId1;
 	m_StartPointSprite2 = SpriteId2;
@@ -61,7 +62,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetStartPointAnimatedSprit
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetEndPointSprite(int SpriteId1, int X, int Y, int W, int H)
 {
 	m_EndPointSprite1 = SpriteId1;
 	m_EndPointSprite2 = -1;
@@ -74,7 +75,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointSprite(int Spri
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetEndPointAnimatedSprite(int SpriteId1, int SpriteId2, int X, int Y, int W, int H, int Speed)
 {
 	m_EndPointSprite1 = SpriteId1;
 	m_EndPointSprite2 = SpriteId2;
@@ -87,7 +88,7 @@ CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetEndPointAnimatedSprite(
 	return *this;
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModItem_LineStyle::SetLineAnimation(int Type, int Speed)
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineStyleCreator::SetLineAnimation(int Type, int Speed)
 {
 	m_AnimationType = Type;
 	m_AnimationSpeed = Speed;
@@ -196,13 +197,13 @@ int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int 
 	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
-CModAPI_ModItem_LineStyle& CModAPI_ModCreator::AddLineStyle()
+CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::AddLineStyle()
 {
 	int Id = m_LineStyles.size();
 	
 	m_LineStyles.set_size(m_LineStyles.size()+1);
 	
-	CModAPI_ModItem_LineStyle& LineStyle = m_LineStyles[Id];
+	CModAPI_ModCreator::CModAPI_LineStyleCreator& LineStyle = m_LineStyles[Id];
 	LineStyle.m_Id = Id;
 	LineStyle.m_OuterWidth = -1;
 	LineStyle.m_OuterColor = 0;

@@ -1,5 +1,5 @@
 #include <modapi/compatibility.h>
-#include <modapi/message.h>
+#include <modapi/server/message.h>
 
 #include <engine/server.h>
 

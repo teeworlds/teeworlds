@@ -1,5 +1,5 @@
-#ifndef MODAPI_H
-#define MODAPI_H
+#ifndef MODAPI_MESSAGE_H
+#define MODAPI_MESSAGE_H
 
 class IServer;
 class CGameContext;

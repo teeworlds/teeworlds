@@ -7,7 +7,7 @@
 #include "message.h"
 #include "graphics.h"
 
-#include <modapi/graphics.h>
+#include <modapi/client/graphics.h>
 
 class IClient : public IInterface
 {

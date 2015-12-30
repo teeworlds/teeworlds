@@ -1,12 +1,11 @@
 #include <base/system.h>
-#include <engine/mod.h>
+#include <modapi/shared/mod.h>
 #include <engine/storage.h>
-#include "datafile.h"
+#include <engine/shared/datafile.h>
 
 class CMod : public IEngineMod
 {
 	CDataFileReader m_DataFile;
-	array<CModAPI_Sprite> m_Sprites;
 	
 public:
 	CMod() {}

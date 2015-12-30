@@ -8,7 +8,6 @@
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/mod.h>
 #include <engine/masterserver.h>
 #include <engine/server.h>
 #include <engine/storage.h>
@@ -28,8 +27,10 @@
 
 #include <mastersrv/mastersrv.h>
 
-#include <modapi/compatibility.h> //ModAPi
-#include <modapi/mod.h> //ModAPi
+//ModAPI
+#include <modapi/shared/mod.h>
+#include <modapi/compatibility.h> 
+#include <modapi/server/modcreator.h>
 
 #include "register.h"
 #include "server.h"

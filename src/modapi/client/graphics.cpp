@@ -1,6 +1,6 @@
-#include <modapi/graphics.h>
-#include <engine/mod.h>
-#include <modapi/mod.h>
+#include <modapi/client/graphics.h>
+#include <modapi/moditem.h>
+#include <modapi/shared/mod.h>
 
 CModAPI_Client_Graphics::CModAPI_Client_Graphics()
 {
@@ -161,23 +161,4 @@ int CModAPI_Client_Graphics::UnloadMod(IGraphics* pGraphics)
 	m_LineStyles.clear();
 	
 	return 1;
-}
-
-int ModAPI_ColorToInt(const vec4& Color)
-{
-	int Value = static_cast<int>(Color.r * 255.0f);
-	Value += (static_cast<int>(Color.g * 255.0f)<<8);
-	Value += (static_cast<int>(Color.b * 255.0f)<<16);
-	Value += (static_cast<int>(Color.a * 255.0f)<<24);
-	return Value;
-}
-
-vec4 ModAPI_IntToColor(int Value)
-{
-	return vec4(
-		static_cast<float>(Value & 255)/255.0f,
-		static_cast<float>((Value>>8) & 255)/255.0f,
-		static_cast<float>((Value>>16) & 255)/255.0f,
-		static_cast<float>((Value>>24) & 255)/255.0f
-	);
 }

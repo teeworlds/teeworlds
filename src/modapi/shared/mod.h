@@ -5,7 +5,7 @@
 
 #include <modapi/graphics.h>
 
-#include "kernel.h"
+#include <engine/kernel.h>
 
 class IMod : public IInterface
 {
