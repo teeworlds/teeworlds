@@ -95,6 +95,7 @@ public:
 	const CModAPI_LineStyle* GetLineStyle(int Id) const;
 	
 	int OnModLoaded(IMod* pMod, IGraphics* pGraphics);
+	int UnloadMod(IGraphics* pGraphics);
 };
 
 int ModAPI_ColorToInt(const vec4& Color);

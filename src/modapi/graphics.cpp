@@ -139,6 +139,30 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 	return 1;
 }
 
+int CModAPI_Client_Graphics::UnloadMod(IGraphics* pGraphics)
+{
+	//Unload images
+	for(int i = 0; i < m_Images.size(); i++)
+	{
+		pGraphics->UnloadTexture(m_Images[i].m_Texture);
+		if(m_Images[i].m_pData)
+		{
+			mem_free(m_Images[i].m_pData);
+			m_Images[i].m_pData = 0;
+		}
+	}
+	
+	m_Images.clear();
+	
+	//Unload sprites
+	m_Sprites.clear();
+	
+	//Unload line styles
+	m_LineStyles.clear();
+	
+	return 1;
+}
+
 int ModAPI_ColorToInt(const vec4& Color)
 {
 	int Value = static_cast<int>(Color.r * 255.0f);
