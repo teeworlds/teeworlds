@@ -1638,17 +1638,10 @@ int CMenus::Render()
 			pTitle = Localize("Connecting to");
 			pButtonText = Localize("Abort");
 			
-			//ModAPI first download the mod
-			if(Client()->ModDownloadTotalsize() > 0)
+			//ModAPI parallel download
+			if(Client()->ModDownloadTotalsize() > 0 || Client()->MapDownloadTotalsize() > 0)
 			{
-				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading mod"), Client()->ModDownloadName());
-				pTitle = aBuf;
-				pExtraText = "";
-				NumOptions = 5;
-			}
-			else if(Client()->MapDownloadTotalsize() > 0)
-			{
-				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
+				str_format(aBuf, sizeof(aBuf), "%s", Localize("Downloading ressources"));
 				pTitle = aBuf;
 				pExtraText = "";
 				NumOptions = 5;
@@ -1827,38 +1820,39 @@ int CMenus::Render()
 				m_Popup = POPUP_NONE;
 			}
 			
-			//ModAPI first mod then map
+			//ModAPI parallel download
+			//TODO: make a nice gui here
 			if(Client()->ModDownloadTotalsize() > 0)
 			{
 				char aBuf[128];
 				int64 Now = time_get();
-				if(Now-m_DownloadLastCheckTime >= time_freq())
+				if(Now-m_ModDownloadLastCheckTime >= time_freq())
 				{
-					if(m_DownloadLastCheckSize > Client()->ModDownloadAmount())
+					if(m_ModDownloadLastCheckSize > Client()->ModDownloadAmount())
 					{
 						// mod downloaded restarted
-						m_DownloadLastCheckSize = 0;
+						m_ModDownloadLastCheckSize = 0;
 					}
 
 					// update download speed
-					float Diff = (Client()->ModDownloadAmount()-m_DownloadLastCheckSize)/((int)((Now-m_DownloadLastCheckTime)/time_freq()));
-					float StartDiff = m_DownloadLastCheckSize-0.0f;
+					float Diff = (Client()->ModDownloadAmount()-m_ModDownloadLastCheckSize)/((int)((Now-m_ModDownloadLastCheckTime)/time_freq()));
+					float StartDiff = m_ModDownloadLastCheckSize-0.0f;
 					if(StartDiff+Diff > 0.0f)
-						m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
+						m_ModDownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_ModDownloadSpeed;
 					else
-						m_DownloadSpeed = 0.0f;
-					m_DownloadLastCheckTime = Now;
-					m_DownloadLastCheckSize = Client()->ModDownloadAmount();
+						m_ModDownloadSpeed = 0.0f;
+					m_ModDownloadLastCheckTime = Now;
+					m_ModDownloadLastCheckSize = Client()->ModDownloadAmount();
 				}
 
 				Box.HSplitTop(15.f, 0, &Box);
 				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->ModDownloadAmount()/1024, Client()->ModDownloadTotalsize()/1024,	m_DownloadSpeed/1024.0f);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->ModDownloadAmount()/1024, Client()->ModDownloadTotalsize()/1024,	m_ModDownloadSpeed/1024.0f);
 				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->ModDownloadTotalsize()-Client()->ModDownloadAmount())/m_DownloadSpeed) : 1);
+				int TimeLeft = max(1, m_ModDownloadSpeed > 0.0f ? static_cast<int>((Client()->ModDownloadTotalsize()-Client()->ModDownloadAmount())/m_ModDownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -1883,33 +1877,33 @@ int CMenus::Render()
 			{
 				char aBuf[128];
 				int64 Now = time_get();
-				if(Now-m_DownloadLastCheckTime >= time_freq())
+				if(Now-m_MapDownloadLastCheckTime >= time_freq())
 				{
-					if(m_DownloadLastCheckSize > Client()->MapDownloadAmount())
+					if(m_MapDownloadLastCheckSize > Client()->MapDownloadAmount())
 					{
 						// map downloaded restarted
-						m_DownloadLastCheckSize = 0;
+						m_MapDownloadLastCheckSize = 0;
 					}
 
 					// update download speed
-					float Diff = (Client()->MapDownloadAmount()-m_DownloadLastCheckSize)/((int)((Now-m_DownloadLastCheckTime)/time_freq()));
-					float StartDiff = m_DownloadLastCheckSize-0.0f;
+					float Diff = (Client()->MapDownloadAmount()-m_MapDownloadLastCheckSize)/((int)((Now-m_MapDownloadLastCheckTime)/time_freq()));
+					float StartDiff = m_MapDownloadLastCheckSize-0.0f;
 					if(StartDiff+Diff > 0.0f)
-						m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
+						m_MapDownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_MapDownloadSpeed;
 					else
-						m_DownloadSpeed = 0.0f;
-					m_DownloadLastCheckTime = Now;
-					m_DownloadLastCheckSize = Client()->MapDownloadAmount();
+						m_MapDownloadSpeed = 0.0f;
+					m_MapDownloadLastCheckTime = Now;
+					m_MapDownloadLastCheckSize = Client()->MapDownloadAmount();
 				}
 
 				Box.HSplitTop(15.f, 0, &Box);
 				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_DownloadSpeed/1024.0f);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_MapDownloadSpeed/1024.0f);
 				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
+				int TimeLeft = max(1, m_MapDownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_MapDownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
@@ -2343,12 +2337,15 @@ void CMenus::OnStateChange(int NewState, int OldState)
 				m_Popup = POPUP_DISCONNECTED;
 		}
 	}
-	else if(NewState == IClient::STATE_LOADING_MOD || NewState == IClient::STATE_LOADING_MAP)
+	else if(NewState == IClient::STATE_LOADING)
 	{
 		m_Popup = POPUP_CONNECTING;
-		m_DownloadLastCheckTime = time_get();
-		m_DownloadLastCheckSize = 0;
-		m_DownloadSpeed = 0.0f;
+		m_ModDownloadLastCheckTime = time_get();
+		m_ModDownloadLastCheckSize = 0;
+		m_ModDownloadSpeed = 0.0f;
+		m_MapDownloadLastCheckTime = time_get();
+		m_MapDownloadLastCheckSize = 0;
+		m_MapDownloadSpeed = 0.0f;
 		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
