@@ -1641,7 +1641,7 @@ int CMenus::Render()
 			//ModAPI parallel download
 			if(Client()->ModDownloadTotalsize() > 0 || Client()->MapDownloadTotalsize() > 0)
 			{
-				str_format(aBuf, sizeof(aBuf), "%s", Localize("Downloading ressources"));
+				str_format(aBuf, sizeof(aBuf), "%s", Localize("Downloading"));
 				pTitle = aBuf;
 				pExtraText = "";
 				NumOptions = 5;
@@ -1820,60 +1820,8 @@ int CMenus::Render()
 				m_Popup = POPUP_NONE;
 			}
 			
-			//ModAPI parallel download
-			//TODO: make a nice gui here
-			if(Client()->ModDownloadTotalsize() > 0)
-			{
-				char aBuf[128];
-				int64 Now = time_get();
-				if(Now-m_ModDownloadLastCheckTime >= time_freq())
-				{
-					if(m_ModDownloadLastCheckSize > Client()->ModDownloadAmount())
-					{
-						// mod downloaded restarted
-						m_ModDownloadLastCheckSize = 0;
-					}
-
-					// update download speed
-					float Diff = (Client()->ModDownloadAmount()-m_ModDownloadLastCheckSize)/((int)((Now-m_ModDownloadLastCheckTime)/time_freq()));
-					float StartDiff = m_ModDownloadLastCheckSize-0.0f;
-					if(StartDiff+Diff > 0.0f)
-						m_ModDownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_ModDownloadSpeed;
-					else
-						m_ModDownloadSpeed = 0.0f;
-					m_ModDownloadLastCheckTime = Now;
-					m_ModDownloadLastCheckSize = Client()->ModDownloadAmount();
-				}
-
-				Box.HSplitTop(15.f, 0, &Box);
-				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->ModDownloadAmount()/1024, Client()->ModDownloadTotalsize()/1024,	m_ModDownloadSpeed/1024.0f);
-				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-				// time left
-				const char *pTimeLeftString;
-				int TimeLeft = max(1, m_ModDownloadSpeed > 0.0f ? static_cast<int>((Client()->ModDownloadTotalsize()-Client()->ModDownloadAmount())/m_ModDownloadSpeed) : 1);
-				if(TimeLeft >= 60)
-				{
-					TimeLeft /= 60;
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left");
-				}
-				else
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
-				Box.HSplitTop(SpacingH, 0, &Box);
-				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
-				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-				// progress bar
-				Box.HSplitTop(SpacingH, 0, &Box);
-				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				Part.VMargin(40.0f, &Part);
-				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-				Part.w = max(10.0f, (Part.w*Client()->ModDownloadAmount())/Client()->ModDownloadTotalsize());
-				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
-			}
-			else if(Client()->MapDownloadTotalsize() > 0)
+			// map download bar first
+			if(Client()->MapDownloadTotalsize() > 0)
 			{
 				char aBuf[128];
 				int64 Now = time_get();
@@ -1895,36 +1843,76 @@ int CMenus::Render()
 					m_MapDownloadLastCheckTime = Now;
 					m_MapDownloadLastCheckSize = Client()->MapDownloadAmount();
 				}
-
-				Box.HSplitTop(15.f, 0, &Box);
-				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024,	m_MapDownloadSpeed/1024.0f);
-				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-				// time left
-				const char *pTimeLeftString;
+				// prepare the label
+				char pString[1024];
 				int TimeLeft = max(1, m_MapDownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_MapDownloadSpeed) : 1);
+				bool MinutesLeft=false;
 				if(TimeLeft >= 60)
-				{
-					TimeLeft /= 60;
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left");
-				}
-				else
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
+					MinutesLeft = true;
+				str_format(pString, sizeof(pString), "Map: %s, %d/%d KiB (%.1f KiB/s), %i %s%sleft", Client()->MapDownloadName(), Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024, m_MapDownloadSpeed/1024.0f,
+						MinutesLeft ? TimeLeft / 60 : TimeLeft, MinutesLeft ? "minute" : "second", TimeLeft > 1 ? "s " : "  ");
 				Box.HSplitTop(SpacingH, 0, &Box);
 				Box.HSplitTop(ButtonHeight, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
-				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 				// progress bar
-				Box.HSplitTop(SpacingH, 0, &Box);
-				Box.HSplitTop(ButtonHeight, &Part, &Box);
 				Part.VMargin(40.0f, &Part);
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+				TextRender()->TextColor(0,0,0,1);
+				UI()->DoLabel(&Part, pString, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+				TextRender()->TextColor(1,1,1,1);
+
 				Part.w = max(10.0f, (Part.w*Client()->MapDownloadAmount())/Client()->MapDownloadTotalsize());
 				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
 			}
-			else
+			if(Client()->ModDownloadTotalsize() > 0) // render mod progress bar after map progress bar
+			{
+				char aBuf[128];
+				int64 Now = time_get();
+				if(Now-m_ModDownloadLastCheckTime >= time_freq())
+				{
+					if(m_ModDownloadLastCheckSize > Client()->ModDownloadAmount())
+					{
+						// map downloaded restarted
+						m_ModDownloadLastCheckSize = 0;
+					}
+
+					// update download speed
+					float Diff = (Client()->ModDownloadAmount()-m_ModDownloadLastCheckSize)/((int)((Now-m_ModDownloadLastCheckTime)/time_freq()));
+					float StartDiff = m_ModDownloadLastCheckSize-0.0f;
+					if(StartDiff+Diff > 0.0f)
+						m_ModDownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_ModDownloadSpeed;
+					else
+						m_ModDownloadSpeed = 0.0f;
+					m_ModDownloadLastCheckTime = Now;
+					m_ModDownloadLastCheckSize = Client()->ModDownloadAmount();
+				}
+
+				Box.HSplitTop(15.f, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
+
+				// prepare label
+				char pString[1024];
+				int TimeLeft = max(1, m_ModDownloadSpeed > 0.0f ? static_cast<int>((Client()->ModDownloadTotalsize()-Client()->ModDownloadAmount())/m_ModDownloadSpeed) : 1);
+				bool MinutesLeft=false;
+				if(TimeLeft >= 60)
+					MinutesLeft = true;
+				str_format(pString, sizeof(pString), "Mod: %s, %d/%d KiB (%.1f KiB/s), %i %s%sleft", Client()->ModDownloadName(), Client()->ModDownloadAmount()/1024, Client()->ModDownloadTotalsize()/1024, m_ModDownloadSpeed/1024.0f,
+						MinutesLeft ? TimeLeft / 60 : TimeLeft, MinutesLeft ? "minute" : "second", TimeLeft > 1 ? "s " : "  ");
+				Box.HSplitTop(SpacingH, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
+
+				// progress bar
+				Part.VMargin(40.0f, &Part);
+				CUIRect LabelRect = Part;
+				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+				Part.w = max(10.0f, (Part.w*Client()->ModDownloadAmount())/Client()->ModDownloadTotalsize());
+				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
+
+				TextRender()->TextColor(0,0,0,1);
+				UI()->DoLabel(&LabelRect, pString, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+				TextRender()->TextColor(1,1,1,1);
+			}
+			if(Client()->ModDownloadTotalsize() <= 0 && Client()->ModDownloadTotalsize() <= 0)
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
 				UI()->DoLabel(&Box, g_Config.m_UiServerAddress, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
