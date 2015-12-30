@@ -570,7 +570,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	//ModAPI unload mod graphics
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->UnloadMod(Graphics());
+		ModAPIGraphics()->OnModUnloaded(Graphics());
 	}
 
 	// disable all downloads
@@ -808,8 +808,11 @@ void CClient::Render()
 const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc)
 {
 	static char aErrorMsg[128];
-
-	SetState(IClient::STATE_LOADING);
+	
+	if(!m_IsDownloadingMod)
+	{
+		SetState(IClient::STATE_LOADING_MAP);
+	}
 
 	if(!m_pMap->Load(pFilename))
 	{
@@ -848,7 +851,11 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "loading map, map=%s wanted crc=%08x", pMapName, WantedCrc);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-	SetState(IClient::STATE_LOADING);
+	
+	if(!m_IsDownloadingMod)
+	{
+		SetState(IClient::STATE_LOADING_MAP);
+	}
 
 	// try the normal maps folder
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
@@ -1193,6 +1200,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					}
 					else
 					{
+						SetState(IClient::STATE_LOADING_MAP);
 						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
 						SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
@@ -1287,6 +1295,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					
 					if(m_MapDownloadNeeded)
 					{
+						
+						SetState(IClient::STATE_LOADING_MAP);
 						m_MapDownloadNeeded = false;
 						
 						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA, true);
@@ -1407,7 +1417,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const char *pData = 0;
 
 			// we are not allowed to process snapshot yet
-			if(State() < IClient::STATE_LOADING)
+			if(State() <= IClient::STATE_CONNECTING)
 				return;
 
 			if(Msg == NETMSG_SNAP)
@@ -1622,7 +1632,7 @@ void CClient::PumpNetwork()
 		{
 			// we switched to online
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "connected, sending info");
-			SetState(IClient::STATE_LOADING);
+			SetState(IClient::STATE_LOADING_MOD);
 			SendInfo();
 		}
 	}
@@ -2672,7 +2682,7 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 {
 	static char aErrorMsg[128];
 
-	SetState(IClient::STATE_LOADING);
+	SetState(IClient::STATE_LOADING_MOD);
 
 	if(!m_pMod->Load(pFilename))
 	{
@@ -2714,7 +2724,7 @@ const char *CClient::LoadModSearch(const char *pModName, int WantedCrc)
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "loading mod, mod=%s wanted crc=%08x", pModName, WantedCrc);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-	SetState(IClient::STATE_LOADING);
+	SetState(IClient::STATE_LOADING_MOD);
 
 	// try the normal maps folder
 	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);

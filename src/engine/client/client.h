@@ -263,6 +263,11 @@ public:
 	virtual const char *MapDownloadName() const { return m_aMapdownloadName; }
 	virtual int MapDownloadAmount() const { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() const { return m_MapdownloadTotalsize; }
+	
+	//ModAPI
+	virtual const char *ModDownloadName() const { return m_aModdownloadName; }
+	virtual int ModDownloadAmount() const { return m_ModdownloadAmount; }
+	virtual int ModDownloadTotalsize() const { return m_ModdownloadTotalsize; }
 
 	void PumpNetwork();
 

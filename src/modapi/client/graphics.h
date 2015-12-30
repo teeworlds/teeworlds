@@ -80,7 +80,7 @@ public:
 	const CModAPI_LineStyle* GetLineStyle(int Id) const;
 	
 	int OnModLoaded(IMod* pMod, IGraphics* pGraphics);
-	int UnloadMod(IGraphics* pGraphics);
+	int OnModUnloaded(IGraphics* pGraphics);
 };
 
 #endif
