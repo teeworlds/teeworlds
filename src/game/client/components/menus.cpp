@@ -1637,7 +1637,16 @@ int CMenus::Render()
 		{
 			pTitle = Localize("Connecting to");
 			pButtonText = Localize("Abort");
-			if(Client()->MapDownloadTotalsize() > 0)
+			
+			//ModAPI first download the mod
+			if(Client()->ModDownloadTotalsize() > 0)
+			{
+				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading mod"), Client()->ModDownloadName());
+				pTitle = aBuf;
+				pExtraText = "";
+				NumOptions = 5;
+			}
+			else if(Client()->MapDownloadTotalsize() > 0)
 			{
 				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
 				pTitle = aBuf;
@@ -1817,8 +1826,60 @@ int CMenus::Render()
 				Client()->Disconnect();
 				m_Popup = POPUP_NONE;
 			}
+			
+			//ModAPI first mod then map
+			if(Client()->ModDownloadTotalsize() > 0)
+			{
+				char aBuf[128];
+				int64 Now = time_get();
+				if(Now-m_DownloadLastCheckTime >= time_freq())
+				{
+					if(m_DownloadLastCheckSize > Client()->ModDownloadAmount())
+					{
+						// mod downloaded restarted
+						m_DownloadLastCheckSize = 0;
+					}
 
-			if(Client()->MapDownloadTotalsize() > 0)
+					// update download speed
+					float Diff = (Client()->ModDownloadAmount()-m_DownloadLastCheckSize)/((int)((Now-m_DownloadLastCheckTime)/time_freq()));
+					float StartDiff = m_DownloadLastCheckSize-0.0f;
+					if(StartDiff+Diff > 0.0f)
+						m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
+					else
+						m_DownloadSpeed = 0.0f;
+					m_DownloadLastCheckTime = Now;
+					m_DownloadLastCheckSize = Client()->ModDownloadAmount();
+				}
+
+				Box.HSplitTop(15.f, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->ModDownloadAmount()/1024, Client()->ModDownloadTotalsize()/1024,	m_DownloadSpeed/1024.0f);
+				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
+				// time left
+				const char *pTimeLeftString;
+				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->ModDownloadTotalsize()-Client()->ModDownloadAmount())/m_DownloadSpeed) : 1);
+				if(TimeLeft >= 60)
+				{
+					TimeLeft /= 60;
+					pTimeLeftString = TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left");
+				}
+				else
+					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
+				Box.HSplitTop(SpacingH, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
+				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
+				UI()->DoLabel(&Part, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
+				// progress bar
+				Box.HSplitTop(SpacingH, 0, &Box);
+				Box.HSplitTop(ButtonHeight, &Part, &Box);
+				Part.VMargin(40.0f, &Part);
+				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+				Part.w = max(10.0f, (Part.w*Client()->ModDownloadAmount())/Client()->ModDownloadTotalsize());
+				RenderTools()->DrawUIRect(&Part, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
+			}
+			else if(Client()->MapDownloadTotalsize() > 0)
 			{
 				char aBuf[128];
 				int64 Now = time_get();
@@ -2282,7 +2343,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 				m_Popup = POPUP_DISCONNECTED;
 		}
 	}
-	else if(NewState == IClient::STATE_LOADING)
+	else if(NewState == IClient::STATE_LOADING_MOD || NewState == IClient::STATE_LOADING_MAP)
 	{
 		m_Popup = POPUP_CONNECTING;
 		m_DownloadLastCheckTime = time_get();

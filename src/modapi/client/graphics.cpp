@@ -139,7 +139,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod, IGraphics* pGraphics)
 	return 1;
 }
 
-int CModAPI_Client_Graphics::UnloadMod(IGraphics* pGraphics)
+int CModAPI_Client_Graphics::OnModUnloaded(IGraphics* pGraphics)
 {
 	//Unload images
 	for(int i = 0; i < m_Images.size(); i++)

@@ -45,17 +45,20 @@ public:
 	/* Constants: Client States
 		STATE_OFFLINE - The client is offline.
 		STATE_CONNECTING - The client is trying to connect to a server.
-		STATE_LOADING - The client has connected to a server and is loading resources.
+		STATE_LOADING_MOD - The client has connected to a server and is loading mod resources.
+		STATE_LOADING_MAP - The client has connected to a server and is loading map resources.
 		STATE_ONLINE - The client is connected to a server and running the game.
 		STATE_DEMOPLAYBACK - The client is playing a demo
 		STATE_QUITING - The client is quiting.
 	*/
 
+	//ModAPI
 	enum
 	{
 		STATE_OFFLINE=0,
 		STATE_CONNECTING,
-		STATE_LOADING,
+		STATE_LOADING_MOD,
+		STATE_LOADING_MAP,
 		STATE_ONLINE,
 		STATE_DEMOPLAYBACK,
 		STATE_QUITING,
@@ -103,6 +106,11 @@ public:
 	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;
+	
+	//ModAPI
+	virtual const char *ModDownloadName() const = 0;
+	virtual int ModDownloadAmount() const = 0;
+	virtual int ModDownloadTotalsize() const = 0;
 
 	// input
 	virtual const int *GetInput(int Tick) const = 0;
