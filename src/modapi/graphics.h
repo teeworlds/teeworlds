@@ -1,10 +1,7 @@
 #ifndef MODAPI_GRAPHICS_H
 #define MODAPI_GRAPHICS_H
 
-#include <base/tl/array.h>
-#include <engine/graphics.h>
-
-class IMod;
+#include <base/vmath.h>
 
 enum
 {
