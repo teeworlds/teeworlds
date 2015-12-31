@@ -289,7 +289,9 @@ void CItems::OnRender()
 		//ModAPI
 		else if(Item.m_Type == NETOBJTYPE_MODAPI_SPRITE)
 		{
-			RenderModAPISprite((const CNetObj_ModAPI_Sprite *)pData);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if(pPrev)
+				RenderModAPISprite((const CNetObj_ModAPI_Sprite *)pPrev, (const CNetObj_ModAPI_Sprite *)pData);
 		}
 		else if(Item.m_Type == NETOBJTYPE_MODAPI_LINE)
 		{
@@ -316,7 +318,7 @@ void CItems::OnRender()
 	}
 }
 
-void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
+void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pPrev, const CNetObj_ModAPI_Sprite *pCurrent)
 {
 	if(!ModAPIGraphics()) return;
 	
@@ -357,7 +359,7 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pCurrent)
 	
 	Graphics()->QuadsSetRotation(Angle);
 
-	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();

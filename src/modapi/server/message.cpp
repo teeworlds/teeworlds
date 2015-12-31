@@ -45,5 +45,11 @@ void CModAPI_Msg_Broadcast::Send(int ClientID, const char* pMessage)
 			Msg.m_pMessage = pMessage;
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 		}
+		else if(m_Alternative == MODAPIALT_BROADCAST_MOTD)
+		{
+			CNetMsg_Sv_Motd Msg;
+			Msg.m_pMessage = pMessage;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+		}
 	}
 }
