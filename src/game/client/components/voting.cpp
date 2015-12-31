@@ -143,7 +143,7 @@ void CVoting::ClearOptions()
 
 void CVoting::OnReset()
 {
-	if(Client()->State() == IClient::STATE_LOADING_MOD || Client()->State() == IClient::STATE_LOADING_MAP)	// do not reset active vote while connecting
+	if(Client()->State() == IClient::STATE_LOADING)	// do not reset active vote while connecting
 		return;
 
 	m_Closetime = 0;

@@ -342,8 +342,8 @@ public:
 	
 	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
 	
-	bool m_IsDownloadingMod;
-	bool m_MapDownloadNeeded;
-	bool m_IsDownloadingMap;
+	//ModAPI download both parallel
+	bool m_ModDownloadFinished;
+	bool m_MapDownloadFinished;
 };
 #endif
