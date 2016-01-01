@@ -293,6 +293,12 @@ void CItems::OnRender()
 			if(pPrev)
 				RenderModAPISprite((const CNetObj_ModAPI_Sprite *)pPrev, (const CNetObj_ModAPI_Sprite *)pData);
 		}
+		else if(Item.m_Type == NETOBJTYPE_MODAPI_SPRITECHARACTER)
+		{
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if(pPrev)
+				RenderModAPISpriteCharacter((const CNetObj_ModAPI_SpriteCharacter *)pPrev, (const CNetObj_ModAPI_SpriteCharacter *)pData);
+		}
 		else if(Item.m_Type == NETOBJTYPE_MODAPI_LINE)
 		{
 			RenderModAPILine((const CNetObj_ModAPI_Line *)pData);
@@ -365,6 +371,63 @@ void CItems::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pPrev, const CNetOb
 	Graphics()->QuadsEnd();
 }
 
+void CItems::RenderModAPISpriteCharacter(const CNetObj_ModAPI_SpriteCharacter *pPrev, const CNetObj_ModAPI_SpriteCharacter *pCurrent)
+{
+	if(!ModAPIGraphics()||!m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Active) return;
+	
+	const CModAPI_Sprite* pSprite = ModAPIGraphics()->GetSprite(pCurrent->m_SpriteId);
+	if(pSprite == 0) return;
+	
+	if(pSprite->m_External)
+	{
+		const CModAPI_Image* pImage = ModAPIGraphics()->GetImage(pSprite->m_ImageId);
+		if(pImage == 0) return;
+		
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(pImage->m_Texture);
+		Graphics()->QuadsBegin();
+	}
+	else
+	{
+		int Texture;
+		
+		switch(pSprite->m_ImageId)
+		{
+			case MODAPI_INTERNALIMG_GAME:
+				Texture = IMAGE_GAME;
+				break;
+			default:
+				return;
+		}
+		
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(g_pData->m_aImages[Texture].m_Id);
+		Graphics()->QuadsBegin();
+	}
+	
+	float Angle = 2.0*pi*static_cast<float>(pCurrent->m_Angle)/360.0f;
+	float Size = pCurrent->m_Size;
+
+	RenderTools()->SelectModAPISprite(pSprite);
+	
+	Graphics()->QuadsSetRotation(Angle);
+	
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_LocalClientID == pCurrent->m_ClientId)
+	{
+		Pos = m_pClient->m_LocalCharacterPos + Pos;
+	}
+	else
+	{
+		CNetObj_Character PrevChar = m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Prev;
+		CNetObj_Character CurChar = m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Cur;
+		Pos = mix(vec2(PrevChar.m_X, PrevChar.m_Y), vec2(CurChar.m_X, CurChar.m_Y), Client()->IntraGameTick()) + Pos;
+	}
+	
+	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
+	Graphics()->QuadsEnd();
+}
 
 void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 {
