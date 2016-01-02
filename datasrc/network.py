@@ -235,6 +235,15 @@ Objects = [
 		NetIntAny("m_Size"),
 		NetIntRange("m_Angle", 0, 360),
 	]),
+	
+	NetObject("ModAPI_SpriteCharacter", [
+		NetIntAny("m_SpriteId"),
+		NetIntAny("m_ClientId"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Size"),
+		NetIntRange("m_Angle", 0, 360),
+	]),
 
 	NetObject("ModAPI_Line", [
 		NetIntAny("m_LineStyleId"),
