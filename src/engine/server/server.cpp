@@ -1165,7 +1165,16 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddString(GetMapName(), 32);
 
 	// gametype
-	pPacker->AddString(GameServer()->GameType(), 16);
+	char aBuf[16];
+	if(str_comp_nocase(GameServer()->GameType(), "DM") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "TDM") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "CTF") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "SUR") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "LMS") == 0)
+		str_format(aBuf, sizeof(aBuf), "%s (ModAPI)", GameServer()->GameType());
+	else
+		str_copy(aBuf, GameServer()->GameType(), sizeof(aBuf));
+	pPacker->AddString(aBuf, 16);
 
 	// flags
 	int Flag = g_Config.m_Password[0] ? SERVERINFO_FLAG_PASSWORD : 0;	// password set
