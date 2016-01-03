@@ -730,6 +730,9 @@ int CEditor::PopupMapInfo(CEditor *pEditor, CUIRect View)
 	static float s_LicenseBox = 0;
 	pEditor->DoEditBox(&s_LicenseBox, &Button, pEditor->m_Map.m_MapInfoTmp.m_aLicense, sizeof(pEditor->m_Map.m_MapInfoTmp.m_aLicense), 10.0f, &s_LicenseBox);
 
+	View.HSplitTop(40.0f, &Label, &View);
+	pEditor->UI()->DoLabel(&Label, "Choose a license as you like. It is highly recommended to use a Creative Commons license. For further information visit: https://creativecommons.org/licenses/", 10.0f, CUI::ALIGN_LEFT, Label.w);
+
 	// button bar
 	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
 	ButtonBar.VSplitLeft(110.0f, &Label, &ButtonBar);
@@ -1089,7 +1092,7 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	if(pEditor->UI()->DoPickerLogic(&s_SVPicker, &SVPicker, &X, &Y))
 	{
 		hsv.y = X/SVPicker.w;
-		hsv.z = 1.0f - Y/SVPicker.h;	
+		hsv.z = 1.0f - Y/SVPicker.h;
 	}
 
 	// hue slider
@@ -1130,9 +1133,9 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	static int s_HuePicker = 0;
 	if(pEditor->UI()->DoPickerLogic(&s_HuePicker, &HuePicker, &X, &Y))
 	{
-		hsv.x = 1.0f - Y/HuePicker.h;	
+		hsv.x = 1.0f - Y/HuePicker.h;
 	}
-	
+
 	// palette
 	static int s_Palette = 0;
 	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);

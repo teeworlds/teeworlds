@@ -531,12 +531,13 @@ public:
 
 		m_GridActive = false;
 		m_GridFactor = 1;
-		
+
 		m_MouseEdMode = MOUSE_EDIT;
 
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
 		m_ValidSaveFilename = false;
+		m_LicenseSet = false;
 
 		m_PopupEventActivated = false;
 		m_PopupEventWasActivated = false;
@@ -585,7 +586,7 @@ public:
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
-		
+
 		m_SelectedColor = vec4(0,0,0,0);
 		m_InitialPickerColor = vec3(1,0,0);
 		m_SelectedPickerColor = vec3(1,0,0);
@@ -601,6 +602,8 @@ public:
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
 		void (*pfnFunc)(const char *pFilename, int StorageType, void *pUser), void *pUser);
+
+	void InvokeMapDetailsMenu();
 
 	void Reset(bool CreateDefault=true);
 	int Save(const char *pFilename);
@@ -622,18 +625,19 @@ public:
 
 	bool m_GridActive;
 	int m_GridFactor;
-	
+
 	enum
 	{
 		MOUSE_EDIT=0,
 		MOUSE_PIPETTE,
 	};
-	
+
 	int m_MouseEdMode;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
 	bool m_ValidSaveFilename;
+	bool m_LicenseSet;
 
 	enum
 	{
@@ -727,9 +731,9 @@ public:
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
 	int m_SelectedEnvelopePoint;
-    int m_SelectedQuadEnvelope;
+	int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
-	
+
 	vec4 m_SelectedColor;
 	vec3 m_InitialPickerColor;
 	vec3 m_SelectedPickerColor;
