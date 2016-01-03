@@ -7,6 +7,7 @@
 #include <modapi/graphics.h>
 
 class IMod;
+class CRenderTools;
 
 class CModAPI_Image : public CImageInfo
 {
@@ -72,15 +73,19 @@ private:
 	array<CModAPI_Image> m_Images;
 	array<CModAPI_Sprite> m_Sprites;
 	array<CModAPI_LineStyle> m_LineStyles;
+	IGraphics* m_pGraphics;
 	
 public:
-	CModAPI_Client_Graphics();
+	CModAPI_Client_Graphics(IGraphics* pGraphics);
 	const CModAPI_Image* GetImage(int Id) const;
 	const CModAPI_Sprite* GetSprite(int Id) const;
 	const CModAPI_LineStyle* GetLineStyle(int Id) const;
 	
-	int OnModLoaded(IMod* pMod, IGraphics* pGraphics);
-	int OnModUnloaded(IGraphics* pGraphics);
+	int OnModLoaded(IMod* pMod);
+	int OnModUnloaded();
+	
+	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle);
+	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
 };
 
 #endif

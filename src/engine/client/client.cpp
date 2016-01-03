@@ -42,6 +42,7 @@
 
 //ModAPI
 #include <modapi/shared/mod.h>
+#include <modapi/compatibility.h>
 
 #include "friends.h"
 #include "serverbrowser.h"
@@ -355,8 +356,9 @@ int CClient::SendMsg(CMsgPacker *pMsg, int Flags)
 void CClient::SendInfo()
 {
 	CMsgPacker Msg(NETMSG_INFO, true);
-	Msg.AddString(GameClient()->NetVersion(), 128);
+	Msg.AddString(MODAPI_NETVERSION_TW07, 128);
 	Msg.AddString(g_Config.m_Password, 128);
+	Msg.AddString(GameClient()->NetVersion(), 128);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
@@ -573,7 +575,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	//ModAPI unload mod graphics
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->OnModUnloaded(Graphics());
+		ModAPIGraphics()->OnModUnloaded();
 	}
 
 	// disable all downloads
@@ -1924,7 +1926,7 @@ void CClient::Run()
 			return;
 		}
 		
-		m_pModAPIGraphics = new CModAPI_Client_Graphics;
+		m_pModAPIGraphics = new CModAPI_Client_Graphics(Graphics());
 	}
 
 	// init sound, allowed to fail
@@ -2691,7 +2693,7 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->OnModLoaded(m_pMod, Graphics());
+		ModAPIGraphics()->OnModLoaded(m_pMod);
 	}
 
 	return 0x0;
