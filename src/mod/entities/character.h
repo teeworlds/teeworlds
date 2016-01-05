@@ -8,6 +8,8 @@
 #include <game/gamecore.h>
 #include <modapi/server/entity.h>
 
+#include <modapi/weapon.h>
+
 
 class CCharacter : public CModAPI_EntitySnapshot07
 {
@@ -34,7 +36,6 @@ public:
 	void DoWeaponSwitch();
 
 	void HandleWeapons();
-	void HandleNinja();
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
@@ -50,13 +51,17 @@ public:
 	bool IncreaseHealth(int Amount);
 	bool IncreaseArmor(int Amount);
 
-	bool GiveWeapon(int Weapon, int Ammo);
 	void GiveNinja();
 
 	void SetEmote(int Emote, int Tick);
 
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
+	
+	void SetPos(vec2 Pos);
+	
+	vec2 GetVelocity();
+	void SetVelocity(vec2 Vel);
 
 private:
 	// player controlling this character
@@ -64,25 +69,22 @@ private:
 
 	bool m_Alive;
 
-	// weapon info
-	CEntity *m_apHitObjects[10];
-	int m_NumObjectsHit;
-
-	struct WeaponStat
-	{
-		int m_AmmoRegenStart;
-		int m_Ammo;
-		bool m_Got;
-
-	} m_aWeapons[NUM_WEAPONS];
-
 	int m_ActiveWeapon;
 	int m_LastWeapon;
 	int m_QueuedWeapon;
 
-	int m_ReloadTimer;
 	int m_AttackTick;
+	
+	// ModAPI
+private:
+	class CModAPI_Weapon* m_aWeapons[MODAPI_NUM_WEAPONS];
 
+public:
+	bool HasWeapon(int WID);
+	void GiveWeapon(CModAPI_Weapon* pWeapon);
+	bool GiveAmmo(int WIP, int Ammo);
+
+private:
 	int m_DamageTaken;
 
 	int m_EmoteType;
@@ -90,7 +92,6 @@ private:
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;
-	int m_LastNoAmmoSound;
 
 	// these are non-heldback inputs
 	CNetObj_PlayerInput m_LatestPrevInput;
@@ -107,15 +108,6 @@ private:
 	int m_Armor;
 
 	int m_TriggeredEvents;
-
-	// ninja
-	struct
-	{
-		vec2 m_ActivationDir;
-		int m_ActivationTick;
-		int m_CurrentMoveTime;
-		int m_OldVelAmount;
-	} m_Ninja;
 
 	// the player core for the physics
 	CCharacterCore m_Core;

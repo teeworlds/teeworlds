@@ -7,6 +7,8 @@
 #include "character.h"
 #include "pickup.h"
 
+#include <modapi/server/weapon.h>
+
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
 : CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, 1, PickupPhysSize)
 {
@@ -66,38 +68,73 @@ void CPickup::Tick()
 				break;
 
 			case PICKUP_GRENADE:
-				if(pChr->GiveWeapon(WEAPON_GRENADE, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo))
+				if(pChr->HasWeapon(WEAPON_GRENADE))
 				{
+					Picked = pChr->GiveAmmo(WEAPON_GRENADE, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo);
+				}
+				else
+				{
+					pChr->GiveWeapon(new CModAPI_Weapon_Grenade(pChr, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo));
 					Picked = true;
+				}
+				
+				if(Picked)
+				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
 					if(pChr->GetPlayer())
+					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
+					}
 				}
 				break;
 			case PICKUP_SHOTGUN:
-				if(pChr->GiveWeapon(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo))
+				if(pChr->HasWeapon(WEAPON_SHOTGUN))
 				{
+					Picked = pChr->GiveAmmo(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo);
+				}
+				else
+				{
+					pChr->GiveWeapon(new CModAPI_Weapon_Shotgun(pChr, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo));
 					Picked = true;
+				}
+				
+				if(Picked)
+				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
 					if(pChr->GetPlayer())
+					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
+					}
 				}
 				break;
 			case PICKUP_LASER:
-				if(pChr->GiveWeapon(WEAPON_LASER, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo))
+				if(pChr->HasWeapon(WEAPON_LASER))
 				{
+					Picked = pChr->GiveAmmo(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo);
+				}
+				else
+				{
+					pChr->GiveWeapon(new CModAPI_Weapon_Laser(pChr, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo));
 					Picked = true;
+				}
+				
+				if(Picked)
+				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
 					if(pChr->GetPlayer())
+					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
+					}
 				}
 				break;
 
 			case PICKUP_NINJA:
 				{
+					pChr->GiveWeapon(new CModAPI_Weapon_Ninja(pChr));
+					pChr->SetWeapon(WEAPON_NINJA);
 					Picked = true;
-					// activate ninja on target player
-					pChr->GiveNinja();
+
+					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 
 					// loop through all players, setting their emotes
 					CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(MOD_ENTTYPE_CHARACTER));
@@ -108,10 +145,7 @@ void CPickup::Tick()
 					}
 
 					pChr->SetEmote(EMOTE_ANGRY, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
-					break;
 				}
-
-			default:
 				break;
 		};
 
