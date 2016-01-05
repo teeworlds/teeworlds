@@ -488,6 +488,31 @@ public:
 	array<CQuad> m_lQuads;
 };
 
+class CLayerEntities : public CLayer
+{
+public:
+	CLayerEntities();
+	~CLayerEntities();
+
+	virtual void Render();
+
+	virtual void BrushSelecting(CUIRect Rect);
+	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
+	virtual void BrushPlace(CLayer *pBrush, float wx, float wy);
+	virtual void BrushFlipX();
+	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+
+	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc);
+	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
+
+	void GetSize(float *w, float *h) const;
+
+	int m_Image;
+};
+
 class CLayerGame : public CLayerTiles
 {
 public:
