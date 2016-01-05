@@ -404,6 +404,7 @@ enum
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
 	PROPTYPE_SHIFT,
+	PROPTYPE_ENTITY,
 };
 
 typedef struct
@@ -495,6 +496,7 @@ public:
 	~CLayerEntities();
 
 	virtual void Render();
+	CEntityPoint *NewPoint();
 
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
@@ -509,8 +511,8 @@ public:
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
 
 	void GetSize(float *w, float *h) const;
-
-	int m_Image;
+	
+	array<CEntityPoint> m_lEntityPoints;
 };
 
 class CLayerGame : public CLayerTiles
@@ -633,6 +635,7 @@ public:
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
+	CEntityPoint *GetSelectedEntityPoint();
 	CQuad *GetSelectedQuad();
 	CLayer *GetSelectedLayerType(int Index, int Type);
 	CLayer *GetSelectedLayer(int Index);
@@ -755,6 +758,8 @@ public:
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 	
+	int m_SelectedEntityPoint;
+	
 	vec4 m_SelectedColor;
 	vec3 m_InitialPickerColor;
 	vec3 m_SelectedPickerColor;
@@ -802,6 +807,7 @@ public:
 	static int PopupGroup(CEditor *pEditor, CUIRect View);
 	static int PopupLayer(CEditor *pEditor, CUIRect View);
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
+	static int PopupEntityPoint(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
 	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
 	static int PopupMapInfo(CEditor *pEditor, CUIRect View);
@@ -821,6 +827,10 @@ public:
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
 	int PopupSelectImageResult();
+	static int PopupSelectEntity(CEditor *pEditor, CUIRect View);
+	
+	void PopupSelectEntityInvoke(int Current, float x, float y);
+	int PopupSelectEntityResult();
 
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
@@ -837,6 +847,7 @@ public:
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
+	void DoEntityPoint(CEntityPoint *pPoint, int Index);
 	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	vec4 GetButtonColor(const void *pID, int Checked);
 

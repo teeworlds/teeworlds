@@ -16,7 +16,6 @@ CLayerEntities::CLayerEntities()
 {
 	m_Type = LAYERTYPE_ENTITIES;
 	str_copy(m_aName, "Entities", sizeof(m_aName));
-	m_Image = -1;
 }
 
 CLayerEntities::~CLayerEntities()
@@ -25,7 +24,33 @@ CLayerEntities::~CLayerEntities()
 
 void CLayerEntities::Render()
 {
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f,0.0f,0.0f,1.0f);
 	
+	for(int i=0; i<m_lEntityPoints.size(); i++)
+	{
+		CEntityPoint *pt = &m_lEntityPoints[i];
+		
+		float x = pt->x - m_pEditor->m_WorldOffsetX;
+		float y = pt->y - m_pEditor->m_WorldOffsetY;
+				
+		IGraphics::CQuadItem QuadItem(x, y, 64.0f, 64.0f);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+	}
+	Graphics()->QuadsEnd();
+}
+
+CEntityPoint *CLayerEntities::NewPoint()
+{
+	m_pEditor->m_Map.m_Modified = true;
+
+	CEntityPoint *pt = &m_lEntityPoints[m_lEntityPoints.add(CEntityPoint())];
+
+	pt->x = 0;
+	pt->y = 0;
+	pt->m_Type = -1;
+
+	return pt;
 }
 
 void CLayerEntities::BrushSelecting(CUIRect Rect)
@@ -74,35 +99,33 @@ void CLayerEntities::GetSize(float *w, float *h) const
 	*w = 0; *h = 0;
 }
 
-extern int gs_SelectedPoints;
-
 int CLayerEntities::RenderProperties(CUIRect *pToolBox)
 {
 	// layer props
-	enum
-	{
-		PROP_IMAGE=0,
-		NUM_PROPS,
-	};
+	//~ enum
+	//~ {
+		//~ PROP_TYPE=0,
+		//~ NUM_PROPS,
+	//~ };
 
-	CProperty aProps[] = {
-		{"Image", m_Image, PROPTYPE_IMAGE, -1, 0},
-		{0},
-	};
+	//~ CProperty aProps[] = {
+		//~ {"Type", -1, PROPTYPE_ENTITY, -1, 0},
+		//~ {0},
+	//~ };
 
-	static int s_aIds[NUM_PROPS] = {0};
-	int NewVal = 0;
-	int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
-	if(Prop != -1)
-		m_pEditor->m_Map.m_Modified = true;
+	//~ static int s_aIds[NUM_PROPS] = {0};
+	//~ int NewVal = 0;
+	//~ int Prop = m_pEditor->DoProperties(pToolBox, aProps, s_aIds, &NewVal);
+	//~ if(Prop != -1)
+		//~ m_pEditor->m_Map.m_Modified = true;
 
-	if(Prop == PROP_IMAGE)
-	{
-		if(NewVal >= 0)
-			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
-		else
-			m_Image = -1;
-	}
+	//~ if(Prop == PROP_TYPE)
+	//~ {
+		//~ if(NewVal >= 0)
+			//~ m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+		//~ else
+			//~ m_Image = -1;
+	//~ }
 
 	return 0;
 }
@@ -110,7 +133,7 @@ int CLayerEntities::RenderProperties(CUIRect *pToolBox)
 
 void CLayerEntities::ModifyImageIndex(INDEX_MODIFY_FUNC Func)
 {
-	Func(&m_Image);
+	
 }
 
 void CLayerEntities::ModifyEnvelopeIndex(INDEX_MODIFY_FUNC Func)

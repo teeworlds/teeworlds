@@ -774,6 +774,16 @@ CLayer *CEditor::GetSelectedLayerType(int Index, int Type)
 	return 0x0;
 }
 
+CEntityPoint* CEditor::GetSelectedEntityPoint()
+{
+	CLayerEntities *el = (CLayerEntities *)GetSelectedLayerType(0, LAYERTYPE_ENTITIES);
+	if(!el)
+		return 0;
+	if(m_SelectedEntityPoint >= 0 && m_SelectedEntityPoint < el->m_lEntityPoints.size())
+		return &el->m_lEntityPoints[m_SelectedEntityPoint];
+	return 0;
+}
+
 CQuad *CEditor::GetSelectedQuad()
 {
 	CLayerQuads *ql = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
@@ -1044,6 +1054,45 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 					q->m_aPoints[i].x += AddX;
 					q->m_aPoints[i].y += AddY;
 				}
+			}
+		}
+	}
+
+	// point manipulation
+	{
+		// do add button
+		TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
+		TB_Top.VSplitLeft(60.0f, &Button, &TB_Top);
+		static int s_NewButton = 0;
+
+		CLayerEntities *pELayer = (CLayerEntities*) GetSelectedLayerType(0, LAYERTYPE_ENTITIES);
+		if(DoButton_Editor(&s_NewButton, "Add Point", pELayer?0:-1, &Button, 0, "Adds a new point"))
+		{
+			if(pELayer)
+			{
+				CEntityPoint *pt = pELayer->NewPoint();
+				
+				m_SelectedEntityPoint = pELayer->m_lEntityPoints.size()-1;
+				
+				float Mapping[4];
+				CLayerGroup *g = GetSelectedGroup();
+				g->Mapping(Mapping);
+				pt->x += f2fx(Mapping[0] + (Mapping[2]-Mapping[0])/2);
+				pt->y += f2fx(Mapping[1] + (Mapping[3]-Mapping[1])/2);
+			}
+		
+			PopupSelectEntityInvoke(-1, UI()->MouseX(), UI()->MouseY());
+		}
+
+		//This part will catch the result for any entity popup.
+		//The result must be applied to the selected entity point.
+		int r = PopupSelectEntityResult();
+		if(r >= -1)
+		{
+			CEntityPoint* pEntityPoint = GetSelectedEntityPoint();
+			if(pEntityPoint)
+			{
+				pEntityPoint->m_Type = r;
 			}
 		}
 	}
@@ -1340,6 +1389,136 @@ void CEditor::DoQuad(CQuad *q, int Index)
 
 	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+}
+
+void CEditor::DoEntityPoint(CEntityPoint *pt, int Index)
+{
+	enum
+	{
+		OP_NONE=0,
+		OP_MOVE,
+		OP_CONTEXT_MENU,
+	};
+
+	// some basic values
+	void *pID = pt;
+	static float s_LastWx;
+	static float s_LastWy;
+	static int s_Operation = OP_NONE;
+	
+	float wx = UI()->MouseWorldX();
+	float wy = UI()->MouseWorldY();
+
+	float dx = (pt->x - m_WorldOffsetX - wx)/m_WorldZoom;
+	float dy = (pt->y - m_WorldOffsetY - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 50)
+		UI()->SetHotItem(pID);
+
+	bool IgnoreGrid;
+	if(Input()->KeyIsPressed(KEY_LALT) || Input()->KeyIsPressed(KEY_RALT))
+		IgnoreGrid = true;
+	else
+		IgnoreGrid = false;
+
+	// draw selection background
+	if(m_SelectedQuad == Index)
+	{
+		Graphics()->SetColor(0,0,0,1);
+		IGraphics::CQuadItem QuadItem(pt->x - m_WorldOffsetX, pt->y - m_WorldOffsetY, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+	}
+
+	vec4 PivotColor;
+
+	if(UI()->CheckActiveItem(pID))
+	{
+		if(m_MouseDeltaWx*m_MouseDeltaWx+m_MouseDeltaWy*m_MouseDeltaWy > 0.5f)
+		{
+			// check if we only should move pivot
+			if(s_Operation == OP_MOVE)
+			{
+				// move all points including pivot
+				if(m_GridActive && !IgnoreGrid)
+				{
+					int LineDistance = GetLineDistance();
+
+					float x = 0.0f;
+					float y = 0.0f;
+					if(wx >= 0)
+						x = (int)((wx+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					else
+						x = (int)((wx-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					if(wy >= 0)
+						y = (int)((wy+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					else
+						y = (int)((wy-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+
+					pt->x = x;
+					pt->y = y;
+				}
+				else
+				{
+					pt->x += wx-s_LastWx;
+					pt->y += wy-s_LastWy;
+				}
+			}
+		}
+		
+		s_LastWx = wx;
+		s_LastWy = wy;
+
+		if(s_Operation == OP_CONTEXT_MENU)
+		{
+			if(!UI()->MouseButton(1))
+			{
+				static int s_PointEntityPopupID = 0;
+				UiInvokePopupMenu(&s_PointEntityPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 180, PopupEntityPoint);
+				m_LockMouse = false;
+				s_Operation = OP_NONE;
+				UI()->SetActiveItem(0);
+			}
+		}
+		else
+		{
+			if(!UI()->MouseButton(0))
+			{
+				m_LockMouse = false;
+				s_Operation = OP_NONE;
+				UI()->SetActiveItem(0);
+			}
+		}
+
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
+	}
+	else if(UI()->HotItem() == pID)
+	{
+		ms_pUiGotContext = pID;
+
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
+		m_pTooltip = "Left mouse button to move. Hold alt to ignore grid.";
+
+		if(UI()->MouseButton(0))
+		{
+			m_SelectedEntityPoint = Index;
+			s_Operation = OP_MOVE;
+			UI()->SetActiveItem(pID);
+			s_LastWx = wx;
+			s_LastWy = wy;
+		}
+
+		if(UI()->MouseButton(1))
+		{
+			m_SelectedEntityPoint = Index;
+			s_Operation = OP_CONTEXT_MENU;
+			UI()->SetActiveItem(pID);
+		}
+	}
+	else
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
+
+	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
+	IGraphics::CQuadItem QuadItem(pt->x - m_WorldOffsetX, pt->y - m_WorldOffsetY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -2150,6 +2329,35 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 					}
 				}
+				
+				// entities editing
+				{
+					if(!m_ShowTilePicker && m_Brush.IsEmpty())
+					{
+						// fetch layers
+						CLayerGroup *g = GetSelectedGroup();
+						if(g)
+							g->MapScreen();						
+		
+						for(int k = 0; k < NumEditLayers; k++)
+						{
+							if(pEditLayers[k]->m_Type == LAYERTYPE_ENTITIES)
+							{
+								CLayerEntities *pLayer = (CLayerEntities *)pEditLayers[k];
+		
+								Graphics()->TextureClear();
+								Graphics()->QuadsBegin();
+								for(int i = 0; i < pLayer->m_lEntityPoints.size(); i++)
+								{
+									DoEntityPoint(&pLayer->m_lEntityPoints[i], i);
+								}
+								Graphics()->QuadsEnd();
+							}
+						}
+		
+						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+					}
+				}
 			} break;
 		
 			case MOUSE_PIPETTE:
@@ -2483,6 +2691,24 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 				*pNewVal = r;
 				Change = i;
 			}
+		}
+		else if(pProps[i].m_Type == PROPTYPE_ENTITY)
+		{
+			char aBuf[64];
+			switch(pProps[i].m_Value)
+			{
+				case 0:
+					str_copy(aBuf, "Red spawn", sizeof(aBuf));
+					break;
+				case 1:
+					str_copy(aBuf, "Blue spawn", sizeof(aBuf));
+					break;
+				default:
+					str_copy(aBuf, "None", sizeof(aBuf));
+			}
+
+			if(DoButton_Editor(&pIDs[i], aBuf, 0, &Shifter, 0, 0))
+				PopupSelectEntityInvoke(pProps[i].m_Value, UI()->MouseX(), UI()->MouseY());
 		}
 		else if(pProps[i].m_Type == PROPTYPE_SHIFT)
 		{
@@ -4365,6 +4591,8 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaY = 0;
 	m_MouseDeltaWx = 0;
 	m_MouseDeltaWy = 0;
+	
+	m_SelectedEntityPoint = -1;
 
 	m_Map.m_Modified = false;
 

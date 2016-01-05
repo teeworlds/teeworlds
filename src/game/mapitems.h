@@ -83,6 +83,13 @@ struct CQuad
 	int m_ColorEnvOffset;
 };
 
+struct CEntityPoint
+{
+	int x;
+	int y;
+	int m_Type;
+};
+
 class CTile
 {
 public:
