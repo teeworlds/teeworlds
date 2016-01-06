@@ -140,6 +140,26 @@ public:
 	}
 };
 
+class CEntityType
+{
+public:
+	char m_pName[64];
+	bool m_Loaded;
+	
+	CEntityType();
+};
+
+class CEntityTypeSheet
+{
+public:
+	char m_pBasename;
+	IGraphics::CTextureHandle m_Texture;
+	CEntityType m_aTypes[256];
+	
+	CEntityTypeSheet();
+	
+	bool Load(class IStorage* pStorage, class IGraphics* pGraphics, const char* pBasename);
+};
 
 class CLayer;
 class CLayerGroup;
@@ -513,6 +533,7 @@ public:
 	void GetSize(float *w, float *h) const;
 	
 	array<CEntityPoint> m_lEntityPoints;
+	int m_Sheet;
 };
 
 class CLayerGame : public CLayerTiles
@@ -883,6 +904,8 @@ public:
 
 	int GetLineDistance() const;
 	void ZoomMouseTarget(float ZoomFactor);
+	
+	array<CEntityTypeSheet> m_lEntityTypeSheetList;
 };
 
 // make sure to inline this function

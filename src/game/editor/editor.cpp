@@ -1,11 +1,14 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <stdio.h>	// sscanf
+
 #include <base/color.h>
 #include <base/system.h>
 
 #include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
+#include <engine/shared/linereader.h>
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
@@ -117,7 +120,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer)
+		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer && m_lLayers[i]->m_Type != LAYERTYPE_ENTITIES)
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -1073,12 +1076,13 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				CEntityPoint *pt = pELayer->NewPoint();
 				
 				m_SelectedEntityPoint = pELayer->m_lEntityPoints.size()-1;
-				
+								
 				float Mapping[4];
 				CLayerGroup *g = GetSelectedGroup();
 				g->Mapping(Mapping);
-				pt->x += f2fx(Mapping[0] + (Mapping[2]-Mapping[0])/2);
-				pt->y += f2fx(Mapping[1] + (Mapping[3]-Mapping[1])/2);
+				
+				pt->x = Mapping[0] + (Mapping[2]-Mapping[0])/2;
+				pt->y = Mapping[1] + (Mapping[3]-Mapping[1])/2;
 			}
 		
 			PopupSelectEntityInvoke(-1, UI()->MouseX(), UI()->MouseY());
@@ -1410,9 +1414,9 @@ void CEditor::DoEntityPoint(CEntityPoint *pt, int Index)
 	float wx = UI()->MouseWorldX();
 	float wy = UI()->MouseWorldY();
 
-	float dx = (pt->x - m_WorldOffsetX - wx)/m_WorldZoom;
-	float dy = (pt->y - m_WorldOffsetY - wy)/m_WorldZoom;
-	if(dx*dx+dy*dy < 50)
+	float dx = (pt->x - wx)/m_WorldZoom;
+	float dy = (pt->y - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 16*16)
 		UI()->SetHotItem(pID);
 
 	bool IgnoreGrid;
@@ -1425,7 +1429,7 @@ void CEditor::DoEntityPoint(CEntityPoint *pt, int Index)
 	if(m_SelectedQuad == Index)
 	{
 		Graphics()->SetColor(0,0,0,1);
-		IGraphics::CQuadItem QuadItem(pt->x - m_WorldOffsetX, pt->y - m_WorldOffsetY, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
+		IGraphics::CQuadItem QuadItem(pt->x, pt->y, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
 
@@ -1518,7 +1522,7 @@ void CEditor::DoEntityPoint(CEntityPoint *pt, int Index)
 		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
 
 	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
-	IGraphics::CQuadItem QuadItem(pt->x - m_WorldOffsetX, pt->y - m_WorldOffsetY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
+	IGraphics::CQuadItem QuadItem(pt->x, pt->y, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -1969,11 +1973,29 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game above everything else
+		// render the game above
 		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
 		{
 			m_Map.m_pGameGroup->MapScreen();
 			m_Map.m_pGameLayer->Render();
+		}
+		
+		// render entities above everything else
+		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
+		{
+			if(!m_Map.m_lGroups[g]->m_Visible)
+				continue;
+			
+			m_Map.m_lGroups[g]->MapScreen();
+				
+			for(int l=0; l<m_Map.m_lGroups[g]->m_lLayers.size(); l++)
+			{
+				
+				if(m_Map.m_lGroups[g]->m_lLayers[l]->m_Type != LAYERTYPE_ENTITIES)
+					continue;
+					
+				m_Map.m_lGroups[g]->m_lLayers[l]->Render();
+			}
 		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
@@ -2695,16 +2717,13 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		else if(pProps[i].m_Type == PROPTYPE_ENTITY)
 		{
 			char aBuf[64];
-			switch(pProps[i].m_Value)
+			if(pProps[i].m_Value >= 0 && pProps[i].m_Value < 256)
 			{
-				case 0:
-					str_copy(aBuf, "Red spawn", sizeof(aBuf));
-					break;
-				case 1:
-					str_copy(aBuf, "Blue spawn", sizeof(aBuf));
-					break;
-				default:
-					str_copy(aBuf, "None", sizeof(aBuf));
+				str_copy(aBuf, m_lEntityTypeSheetList[0].m_aTypes[pProps[i].m_Value].m_pName, sizeof(aBuf));
+			}
+			else
+			{
+				str_copy(aBuf, "Unknown", sizeof(aBuf));
 			}
 
 			if(DoButton_Editor(&pIDs[i], aBuf, 0, &Shifter, 0, 0))
@@ -4732,6 +4751,11 @@ void CEditorMap::CreateDefault()
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
+	
+	// add entities layer
+	CLayerEntities *pEntitiesLayer = new CLayerEntities;
+	pEntitiesLayer->m_pEditor = m_pEditor;
+	m_pGameGroup->AddLayer(pEntitiesLayer);
 }
 
 void CEditor::Init()
@@ -4760,6 +4784,9 @@ void CEditor::Init()
 
 	Reset();
 	m_Map.m_Modified = false;
+	
+	CEntityTypeSheet *etl = &m_lEntityTypeSheetList[m_lEntityTypeSheetList.add(CEntityTypeSheet())];
+	etl->Load(Storage(), Graphics(), "tw07");
 }
 
 void CEditor::DoMapBorder()
@@ -4856,6 +4883,61 @@ void CEditor::UpdateAndRender()
 
 	UI()->FinishCheck();
 	Input()->Clear();
+}
+
+CEntityType::CEntityType()
+{
+	str_copy(m_pName, "Unknown", sizeof(m_pName));
+	m_Loaded = false;
+}
+
+CEntityTypeSheet::CEntityTypeSheet()
+{
+	
+}
+
+bool CEntityTypeSheet::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pBasename)
+{
+	char aFilename[256];
+	
+	//Load texture
+	str_format(aFilename, sizeof(aFilename), "modapi/editor/%s.png", pBasename);
+	m_Texture = pGraphics->LoadTexture(aFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	
+	//Load mod description
+	str_format(aFilename, sizeof(aFilename), "modapi/editor/%s.entitylist", pBasename);
+	char aCompleteFilename[512];
+	IOHANDLE File = pStorage->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_ALL, aCompleteFilename, sizeof(aCompleteFilename));
+	if(File)
+	{
+		int TypeId;
+		char pTypeName[64];
+		char *pLine;
+		CLineReader lr;
+		lr.Init(File);
+
+		while((pLine = lr.Get()))
+		{
+			if(sscanf(pLine, "%d %s", &TypeId, pTypeName) == 2)
+			{
+				if(TypeId >= 0 && TypeId < 256)
+				{
+					CEntityType* pEntityType = m_aTypes + TypeId;
+					pEntityType->m_Loaded = true;
+					str_copy(pEntityType->m_pName, pTypeName, sizeof(pEntityType->m_pName));
+				}
+			}
+		}
+
+		io_close(File);
+	}
+	else
+	{
+		dbg_msg("editor", "failed to open file. filename='%s'", aFilename);
+		return 0;
+	}
+	
+	
 }
 
 IEditor *CreateEditor() { return new CEditor; }

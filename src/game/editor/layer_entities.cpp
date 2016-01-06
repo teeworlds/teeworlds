@@ -16,6 +16,8 @@ CLayerEntities::CLayerEntities()
 {
 	m_Type = LAYERTYPE_ENTITIES;
 	str_copy(m_aName, "Entities", sizeof(m_aName));
+	
+	m_Sheet = 0;
 }
 
 CLayerEntities::~CLayerEntities()
@@ -24,17 +26,32 @@ CLayerEntities::~CLayerEntities()
 
 void CLayerEntities::Render()
 {
+	if(m_Sheet < 0 || m_Sheet >= m_pEditor->m_lEntityTypeSheetList.size())
+		return;
+	
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(m_pEditor->m_lEntityTypeSheetList[m_Sheet].m_Texture);
+	
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f,0.0f,0.0f,1.0f);
+	Graphics()->SetColor(1.0f,1.0f,1.0f,1.0f);
 	
 	for(int i=0; i<m_lEntityPoints.size(); i++)
 	{
 		CEntityPoint *pt = &m_lEntityPoints[i];
-		
-		float x = pt->x - m_pEditor->m_WorldOffsetX;
-		float y = pt->y - m_pEditor->m_WorldOffsetY;
+	
+		int SpriteX = pt->m_Type%16;
+		int SpriteY = pt->m_Type/16;
+	
+		Graphics()->QuadsSetSubset(
+			static_cast<float>(SpriteX)/16.0f,
+			static_cast<float>(SpriteY)/16.0f,
+			static_cast<float>(SpriteX+1)/16.0f,
+			static_cast<float>(SpriteY+1)/16.0f);
+	
+		float x = pt->x;
+		float y = pt->y;
 				
-		IGraphics::CQuadItem QuadItem(x, y, 64.0f, 64.0f);
+		IGraphics::CQuadItem QuadItem(x, y, m_pEditor->m_WorldZoom * 32.0f, m_pEditor->m_WorldZoom * 32.0f);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
 	Graphics()->QuadsEnd();

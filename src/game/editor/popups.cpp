@@ -1174,55 +1174,24 @@ int CEditor::PopupSelectEntity(CEditor *pEditor, CUIRect View)
 
 	int ShowEntity = g_SelectEntityCurrent;
 
+	for(int i=0; i<256; i++)
 	{
+		if(!pEditor->m_lEntityTypeSheetList[0].m_aTypes[i].m_Loaded)
+			continue;
+		
 		CUIRect Button;
 		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
 		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
 
 		if(pEditor->UI()->MouseInside(&Button))
-			ShowEntity = 0;
+			ShowEntity = i;
 
-		if(pEditor->DoButton_MenuItem(pEditor+1024, "Red spawn", 0==g_SelectEntityCurrent, &Button))
+		if(pEditor->DoButton_MenuItem(&pEditor->m_lEntityTypeSheetList[0].m_aTypes[i], pEditor->m_lEntityTypeSheetList[0].m_aTypes[i].m_pName, i==g_SelectEntityCurrent, &Button))
 		{
-			g_SelectEntitySelected = 0;
+			g_SelectEntitySelected = i;
 			return 1;
 		}
 	}
-	{
-		CUIRect Button;
-		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
-		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
-
-		if(pEditor->UI()->MouseInside(&Button))
-			ShowEntity = 1;
-
-		if(pEditor->DoButton_MenuItem(pEditor+1025, "Blue spawn", 1==g_SelectEntityCurrent, &Button))
-		{
-			g_SelectEntitySelected = 1;
-			return 1;
-		}
-	}
-
-	//~ for(int i = -1; i < pEditor->m_Map.m_lImages.size(); i++)
-	//~ {
-		//~ CUIRect Button;
-		//~ ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
-		//~ ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
-
-		//~ if(pEditor->UI()->MouseInside(&Button))
-			//~ ShowImage = i;
-
-		//~ if(i == -1)
-		//~ {
-			//~ if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], "None", i==g_SelectImageCurrent, &Button))
-				//~ g_SelectImageSelected = -1;
-		//~ }
-		//~ else
-		//~ {
-			//~ if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], pEditor->m_Map.m_lImages[i]->m_aName, i==g_SelectImageCurrent, &Button))
-				//~ g_SelectImageSelected = i;
-		//~ }
-	//~ }
 
 	//~ if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
 	//~ {
