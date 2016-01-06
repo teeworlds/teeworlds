@@ -25,6 +25,8 @@
 
 #include "auto_map.h"
 
+#include <modapi/mapitem.h>
+
 typedef void (*INDEX_MODIFY_FUNC)(int *pIndex);
 
 //CRenderTools m_RenderTools;
@@ -516,7 +518,7 @@ public:
 	~CLayerEntities();
 
 	virtual void Render();
-	CEntityPoint *NewPoint();
+	CModAPI_MapEntity_Point *NewPoint();
 
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
@@ -532,7 +534,7 @@ public:
 
 	void GetSize(float *w, float *h) const;
 	
-	array<CEntityPoint> m_lEntityPoints;
+	array<CModAPI_MapEntity_Point> m_lEntityPoints;
 	int m_Sheet;
 };
 
@@ -656,7 +658,7 @@ public:
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
-	CEntityPoint *GetSelectedEntityPoint();
+	CModAPI_MapEntity_Point *GetSelectedEntityPoint();
 	CQuad *GetSelectedQuad();
 	CLayer *GetSelectedLayerType(int Index, int Type);
 	CLayer *GetSelectedLayer(int Index);
@@ -868,7 +870,7 @@ public:
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
-	void DoEntityPoint(CEntityPoint *pPoint, int Index);
+	void DoEntityPoint(CModAPI_MapEntity_Point *pPoint, int Index);
 	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	vec4 GetButtonColor(const void *pID, int Checked);
 

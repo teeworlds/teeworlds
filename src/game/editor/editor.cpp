@@ -120,7 +120,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer && m_lLayers[i]->m_Type != LAYERTYPE_ENTITIES)
+		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer && m_lLayers[i]->m_Type != MODAPI_MAPLAYERTYPE_ENTITIES)
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -777,9 +777,9 @@ CLayer *CEditor::GetSelectedLayerType(int Index, int Type)
 	return 0x0;
 }
 
-CEntityPoint* CEditor::GetSelectedEntityPoint()
+CModAPI_MapEntity_Point* CEditor::GetSelectedEntityPoint()
 {
-	CLayerEntities *el = (CLayerEntities *)GetSelectedLayerType(0, LAYERTYPE_ENTITIES);
+	CLayerEntities *el = (CLayerEntities *)GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
 	if(!el)
 		return 0;
 	if(m_SelectedEntityPoint >= 0 && m_SelectedEntityPoint < el->m_lEntityPoints.size())
@@ -1068,12 +1068,12 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		TB_Top.VSplitLeft(60.0f, &Button, &TB_Top);
 		static int s_NewButton = 0;
 
-		CLayerEntities *pELayer = (CLayerEntities*) GetSelectedLayerType(0, LAYERTYPE_ENTITIES);
+		CLayerEntities *pELayer = (CLayerEntities*) GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
 		if(DoButton_Editor(&s_NewButton, "Add Point", pELayer?0:-1, &Button, 0, "Adds a new point"))
 		{
 			if(pELayer)
 			{
-				CEntityPoint *pt = pELayer->NewPoint();
+				CModAPI_MapEntity_Point *pt = pELayer->NewPoint();
 				
 				m_SelectedEntityPoint = pELayer->m_lEntityPoints.size()-1;
 								
@@ -1093,7 +1093,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		int r = PopupSelectEntityResult();
 		if(r >= -1)
 		{
-			CEntityPoint* pEntityPoint = GetSelectedEntityPoint();
+			CModAPI_MapEntity_Point* pEntityPoint = GetSelectedEntityPoint();
 			if(pEntityPoint)
 			{
 				pEntityPoint->m_Type = r;
@@ -1396,7 +1396,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoEntityPoint(CEntityPoint *pt, int Index)
+void CEditor::DoEntityPoint(CModAPI_MapEntity_Point *pt, int Index)
 {
 	enum
 	{
@@ -1991,7 +1991,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			for(int l=0; l<m_Map.m_lGroups[g]->m_lLayers.size(); l++)
 			{
 				
-				if(m_Map.m_lGroups[g]->m_lLayers[l]->m_Type != LAYERTYPE_ENTITIES)
+				if(m_Map.m_lGroups[g]->m_lLayers[l]->m_Type != MODAPI_MAPLAYERTYPE_ENTITIES)
 					continue;
 					
 				m_Map.m_lGroups[g]->m_lLayers[l]->Render();
@@ -2363,7 +2363,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		
 						for(int k = 0; k < NumEditLayers; k++)
 						{
-							if(pEditLayers[k]->m_Type == LAYERTYPE_ENTITIES)
+							if(pEditLayers[k]->m_Type == MODAPI_MAPLAYERTYPE_ENTITIES)
 							{
 								CLayerEntities *pLayer = (CLayerEntities *)pEditLayers[k];
 		

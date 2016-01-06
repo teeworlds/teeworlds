@@ -1235,7 +1235,7 @@ int CEditor::PopupSelectEntityResult()
 
 int CEditor::PopupEntityPoint(CEditor *pEditor, CUIRect View)
 {
-	CEntityPoint *pEntityPoint = pEditor->GetSelectedEntityPoint();
+	CModAPI_MapEntity_Point *pEntityPoint = pEditor->GetSelectedEntityPoint();
 
 	CUIRect Button;
 
@@ -1244,7 +1244,7 @@ int CEditor::PopupEntityPoint(CEditor *pEditor, CUIRect View)
 	static int s_DeleteButton = 0;
 	if(pEditor->DoButton_Editor(&s_DeleteButton, "Delete", 0, &Button, 0, "Deletes the current entity"))
 	{
-		CLayerEntities *pLayer = (CLayerEntities *)pEditor->GetSelectedLayerType(0, LAYERTYPE_ENTITIES);
+		CLayerEntities *pLayer = (CLayerEntities *)pEditor->GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
 		if(pLayer)
 		{
 			pEditor->m_Map.m_Modified = true;

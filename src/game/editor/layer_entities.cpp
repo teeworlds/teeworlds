@@ -14,7 +14,7 @@
 
 CLayerEntities::CLayerEntities()
 {
-	m_Type = LAYERTYPE_ENTITIES;
+	m_Type = MODAPI_MAPLAYERTYPE_ENTITIES;
 	str_copy(m_aName, "Entities", sizeof(m_aName));
 	
 	m_Sheet = 0;
@@ -37,7 +37,7 @@ void CLayerEntities::Render()
 	
 	for(int i=0; i<m_lEntityPoints.size(); i++)
 	{
-		CEntityPoint *pt = &m_lEntityPoints[i];
+		CModAPI_MapEntity_Point *pt = &m_lEntityPoints[i];
 	
 		int SpriteX = pt->m_Type%16;
 		int SpriteY = pt->m_Type/16;
@@ -57,11 +57,11 @@ void CLayerEntities::Render()
 	Graphics()->QuadsEnd();
 }
 
-CEntityPoint *CLayerEntities::NewPoint()
+CModAPI_MapEntity_Point *CLayerEntities::NewPoint()
 {
 	m_pEditor->m_Map.m_Modified = true;
 
-	CEntityPoint *pt = &m_lEntityPoints[m_lEntityPoints.add(CEntityPoint())];
+	CModAPI_MapEntity_Point *pt = &m_lEntityPoints[m_lEntityPoints.add(CModAPI_MapEntity_Point())];
 
 	pt->x = 0;
 	pt->y = 0;
