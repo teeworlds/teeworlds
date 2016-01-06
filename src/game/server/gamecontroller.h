@@ -3,6 +3,7 @@
 #ifndef GAME_SERVER_GAMECONTROLLER_H
 #define GAME_SERVER_GAMECONTROLLER_H
 
+#include <base/tl/array.h>
 #include <base/vmath.h>
 
 #include <generated/protocol.h>
@@ -81,8 +82,6 @@ class IGameController
 		int m_FriendlyTeam;
 		float m_Score;
 	};
-	vec2 m_aaSpawnPoints[3][64];
-	int m_aNumSpawnPoints[3];
 	
 	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const;
 	void EvaluateSpawnType(CSpawnEval *pEval, int Type) const;
@@ -91,8 +90,12 @@ class IGameController
 	int ClampTeam(int Team) const;
 
 protected:
+	
 	CGameContext *GameServer() const { return m_pGameServer; }
 	IServer *Server() const { return m_pServer; }
+
+	// map
+	array<vec2> m_aaSpawnPoints[3];
 
 	// game
 	int m_GameStartTick;
@@ -156,7 +159,7 @@ public:
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntityPoint(int Index, vec2 Pos);
 
 	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer);

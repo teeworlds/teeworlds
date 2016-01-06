@@ -3,6 +3,7 @@
 #include <engine/shared/config.h>
 
 #include <game/mapitems.h>
+#include <modapi/mapitem.h>
 
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
@@ -69,14 +70,14 @@ void CGameControllerCTF::OnFlagReturn(CFlag *pFlag)
 	GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 }
 
-bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
+bool CGameControllerCTF::OnEntityPoint(int EntityType, vec2 Pos)
 {
-	if(IGameController::OnEntity(Index, Pos))
+	if(IGameController::OnEntityPoint(EntityType, Pos))
 		return true;
 
 	int Team = -1;
-	if(Index == ENTITY_FLAGSTAND_RED) Team = TEAM_RED;
-	if(Index == ENTITY_FLAGSTAND_BLUE) Team = TEAM_BLUE;
+	if(EntityType == MODAPI_ENTITYPOINTTYPE_FLAGSTAND_RED) Team = TEAM_RED;
+	if(EntityType == MODAPI_ENTITYPOINTTYPE_FLAGSTAND_BLUE) Team = TEAM_BLUE;
 	if(Team == -1 || m_apFlags[Team])
 		return false;
 
