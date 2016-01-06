@@ -225,6 +225,34 @@ Objects = [
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
 	]),
+	
+	### ModAPI
+	
+	NetObject("ModAPI_Sprite", [
+		NetIntAny("m_SpriteId"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Size"),
+		NetIntRange("m_Angle", 0, 360),
+	]),
+	
+	NetObject("ModAPI_SpriteCharacter", [
+		NetIntAny("m_SpriteId"),
+		NetIntAny("m_ClientId"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Size"),
+		NetIntRange("m_Angle", 0, 360),
+	]),
+
+	NetObject("ModAPI_Line", [
+		NetIntAny("m_LineStyleId"),
+		NetIntAny("m_StartX"),
+		NetIntAny("m_StartY"),
+		NetIntAny("m_EndX"),
+		NetIntAny("m_EndY"),
+		NetIntAny("m_StartTick"),
+	]),
 ]
 
 Messages = [
@@ -384,4 +412,11 @@ Messages = [
 		NetStringStrict("m_Reason"),
 		NetBool("m_Force"),
 	]),
+	
+	### ModAPI
+	
+	NetMessage("ModAPI_Sv_Broadcast", [
+		NetStringStrict("m_pMessage"),
+	]),
+	
 ]

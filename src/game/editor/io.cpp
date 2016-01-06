@@ -175,6 +175,30 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					LayerCount++;
 				}
 			}
+			else if(pGroup->m_lLayers[l]->m_Type == MODAPI_MAPLAYERTYPE_ENTITIES)
+			{
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving entities layer");
+				CLayerEntities *pLayer = (CLayerEntities *)pGroup->m_lLayers[l];
+				if(pLayer->m_lEntityPoints.size())
+				{
+					CModAPI_MapItem_LayerEntities Item;
+					Item.m_Version = CModAPI_MapItem_LayerEntities::CURRENT_VERSION;
+					Item.m_Layer.m_Flags = pLayer->m_Flags;
+					Item.m_Layer.m_Type = pLayer->m_Type;
+
+					// add the data
+					Item.m_NumPoints = pLayer->m_lEntityPoints.size();
+					Item.m_PointsData = df.AddDataSwapped(pLayer->m_lEntityPoints.size()*sizeof(CModAPI_MapEntity_Point), pLayer->m_lEntityPoints.base_ptr());
+
+					// save layer name
+					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), pLayer->m_aName);
+
+					df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
+
+					GItem.m_NumLayers++;
+					LayerCount++;
+				}
+			}
 		}
 
 		df.AddItem(MAPITEMTYPE_GROUP, GroupCount++, sizeof(GItem), &GItem);
@@ -427,6 +451,22 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pQuads->m_lQuads.set_size(pQuadsItem->m_NumQuads);
 						mem_copy(pQuads->m_lQuads.base_ptr(), pData, sizeof(CQuad)*pQuadsItem->m_NumQuads);
 						DataFile.UnloadData(pQuadsItem->m_Data);
+					}
+					else if(pLayerItem->m_Type == MODAPI_MAPLAYERTYPE_ENTITIES)
+					{
+						CModAPI_MapItem_LayerEntities *pEntitiesItem = (CModAPI_MapItem_LayerEntities *)pLayerItem;
+						CLayerEntities *pEntities = new CLayerEntities;
+						pEntities->m_pEditor = m_pEditor;
+						pLayer = pEntities;
+
+						// load layer name
+						IntsToStr(pEntitiesItem->m_aName, sizeof(pEntities->m_aName)/sizeof(int), pEntities->m_aName);
+
+						void *pPointsData = DataFile.GetDataSwapped(pEntitiesItem->m_PointsData);
+						pGroup->AddLayer(pEntities);
+						pEntities->m_lEntityPoints.set_size(pEntitiesItem->m_NumPoints);
+						mem_copy(pEntities->m_lEntityPoints.base_ptr(), pPointsData, sizeof(CModAPI_MapEntity_Point)*pEntitiesItem->m_NumPoints);
+						DataFile.UnloadData(pEntitiesItem->m_PointsData);
 					}
 
 					if(pLayer)

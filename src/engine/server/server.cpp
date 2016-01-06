@@ -27,6 +27,11 @@
 
 #include <mastersrv/mastersrv.h>
 
+//ModAPI
+#include <modapi/shared/mod.h>
+#include <modapi/compatibility.h> 
+#include <modapi/server/modcreator.h>
+
 #include "register.h"
 #include "server.h"
 
@@ -266,6 +271,7 @@ void CServer::CClient::Reset()
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_Score = 0;
 	m_MapChunk = 0;
+	m_ModChunk = 0;
 }
 
 CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
@@ -279,6 +285,10 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
+	
+	// ModAPI
+	m_pCurrentModData = 0;
+	m_CurrentModSize = 0;
 
 	m_MapReload = 0;
 
@@ -821,11 +831,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				if(str_comp(pVersion, GameServer()->NetVersion()) != 0)
+				if(str_comp(pVersion, MODAPI_NETVERSION_TW07) == 0)
+					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07;
+				else if(str_comp(pVersion, MODAPI_NETVERSION_TW06) == 0)
+					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW06;
+				else
 				{
 					// wrong version
 					char aReason[256];
-					str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), pVersion);
+					str_format(aReason, sizeof(aReason), "Unsupported version. Client is running '%s', which is neither 0.6, 0.7 nor ModAPI.", pVersion);
 					m_NetServer.Drop(ClientID, aReason);
 					return;
 				}
@@ -838,8 +852,16 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					return;
 				}
 
+				const char *pModAPI = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+				if(!Unpacker.Error() && str_comp(pModAPI, GameServer()->NetVersion()) == 0)
+					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07MODAPI;
+				
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
-				SendMap(ClientID);
+				
+				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI)
+					SendInitialData(ClientID);
+				else
+					SendMap(ClientID);
 			}
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
@@ -865,6 +887,41 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 					CMsgPacker Msg(NETMSG_MAP_DATA, true);
 					Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
+					SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+
+					if(g_Config.m_Debug)
+					{
+						char aBuf[64];
+						str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
+						Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+					}
+				}
+			}
+		}
+		//ModAPI
+		else if(Msg == NETMSG_MODAPI_REQUEST_MOD_DATA)
+		{
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
+			{
+				int ChunkSize = MOD_CHUNK_SIZE;
+
+				// send mod chunks
+				for(int i = 0; i < m_ModChunksPerRequest && m_aClients[ClientID].m_ModChunk >= 0; ++i)
+				{
+					int Chunk = m_aClients[ClientID].m_ModChunk;
+					int Offset = Chunk * ChunkSize;
+
+					// check for last part
+					if(Offset+ChunkSize >= m_CurrentModSize)
+					{
+						ChunkSize = m_CurrentModSize-Offset;
+						m_aClients[ClientID].m_ModChunk = -1;
+					}
+					else
+						m_aClients[ClientID].m_ModChunk++;
+
+					CMsgPacker Msg(NETMSG_MODAPI_MOD_DATA, true);
+					Msg.AddRaw(&m_pCurrentModData[Offset], ChunkSize);
 					SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 
 					if(g_Config.m_Debug)
@@ -1097,7 +1154,16 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddString(GetMapName(), 32);
 
 	// gametype
-	pPacker->AddString(GameServer()->GameType(), 16);
+	char aBuf[16];
+	if(str_comp_nocase(GameServer()->GameType(), "DM") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "TDM") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "CTF") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "SUR") == 0 ||
+			str_comp_nocase(GameServer()->GameType(), "LMS") == 0)
+		str_format(aBuf, sizeof(aBuf), "%s (ModAPI)", GameServer()->GameType());
+	else
+		str_copy(aBuf, GameServer()->GameType(), sizeof(aBuf));
+	pPacker->AddString(aBuf, 16);
 
 	// flags
 	int Flag = g_Config.m_Password[0] ? SERVERINFO_FLAG_PASSWORD : 0;	// password set
@@ -1251,7 +1317,22 @@ int CServer::Run()
 {
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
-
+	
+	// ModAPI, generate mod
+	if(!CreateMod(m_aModName))
+	{
+		dbg_msg("server", "failed to generate mod. modname='%s'", m_aModName);
+		return -1;
+	}
+	
+	// ModAPI, load mod
+	if(!LoadMod(m_aModName))
+	{
+		dbg_msg("server", "failed to load mod. modname='%s'", m_aModName);
+		return -1;
+	}
+	m_ModChunksPerRequest = g_Config.m_SvMapDownloadSpeed;
+	
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
 	{
@@ -1430,6 +1511,9 @@ int CServer::Run()
 
 	if(m_pCurrentMapData)
 		mem_free(m_pCurrentMapData);
+	//ModAPI
+	if(m_pCurrentModData)
+		mem_free(m_pCurrentModData);
 	return 0;
 }
 
@@ -1605,6 +1689,7 @@ void CServer::RegisterCommands()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
+	m_pMod = Kernel()->RequestInterface<IEngineMod>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	// register console commands
@@ -1686,6 +1771,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_SERVER|CFGFLAG_ECON;
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IEngineMap *pEngineMap = CreateEngineMap();
+	IEngineMod *pEngineMod = CreateEngineMod();
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
@@ -1701,6 +1787,8 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMod*>(pEngineMod)); // register as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMod*>(pEngineMod));
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -1744,6 +1832,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pKernel;
 	delete pEngine;
 	delete pEngineMap;
+	delete pEngineMod;
 	delete pGameServer;
 	delete pConsole;
 	delete pEngineMasterServer;
@@ -1753,3 +1842,76 @@ int main(int argc, const char **argv) // ignore_convention
 	return 0;
 }
 
+//ModeAPI
+
+const char* CServer::m_aModName = "modapi-test";
+
+bool CServer::CreateMod(const char* pModName)
+{
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+	
+	CModAPI_ModCreator ModCreator;
+	if(ModCreator.Save(Storage(), aBuf) < 0) return false;
+	
+	return true;
+}
+
+bool CServer::LoadMod(const char* pModName)
+{
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+
+	if(!m_pMod->Load(aBuf))
+		return 0;
+
+	// stop recording when we change mod
+	m_DemoRecorder.Stop();
+
+	// reinit snapshot ids
+	m_IDPool.TimeoutIDs();
+
+	// get the crc of the mod
+	m_CurrentModCrc = m_pMod->Crc();
+	char aBufMsg[256];
+	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentModCrc);
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
+
+	// load complete mod into memory for download
+	{
+		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+		m_CurrentModSize = (int)io_length(File);
+		if(m_pCurrentModData)
+			mem_free(m_pCurrentModData);
+		m_pCurrentModData = (unsigned char *)mem_alloc(m_CurrentModSize, 1);
+		io_read(File, m_pCurrentModData, m_CurrentModSize);
+		io_close(File);
+	}
+	return 1;
+}
+	
+void CServer::SendInitialData(int ClientID)
+{
+	CMsgPacker Msg(NETMSG_MODAPI_INITDATA, true);
+	
+	//Mod
+	Msg.AddString(CServer::m_aModName, 0);
+	Msg.AddInt(m_CurrentModCrc);
+	Msg.AddInt(m_CurrentModSize);
+	Msg.AddInt(m_ModChunksPerRequest);
+	Msg.AddInt(MOD_CHUNK_SIZE);
+	
+	//Map
+	Msg.AddString(GetMapName(), 0);
+	Msg.AddInt(m_CurrentMapCrc);
+	Msg.AddInt(m_CurrentMapSize);
+	Msg.AddInt(m_MapChunksPerRequest);
+	Msg.AddInt(MAP_CHUNK_SIZE);
+	
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+}
+
+bool CServer::GetClientProtocolCompatibility(int ClientID, int Protocol) const
+{
+	return (m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI);
+}

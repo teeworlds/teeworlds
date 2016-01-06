@@ -7,6 +7,8 @@
 #include "message.h"
 #include "graphics.h"
 
+#include <modapi/client/graphics.h>
+
 class IClient : public IInterface
 {
 	MACRO_INTERFACE("client", 0)
@@ -49,6 +51,7 @@ public:
 		STATE_QUITING - The client is quiting.
 	*/
 
+	//ModAPI
 	enum
 	{
 		STATE_OFFLINE=0,
@@ -101,6 +104,11 @@ public:
 	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;
+	
+	//ModAPI
+	virtual const char *ModDownloadName() const = 0;
+	virtual int ModDownloadAmount() const = 0;
+	virtual int ModDownloadTotalsize() const = 0;
 
 	// input
 	virtual const int *GetInput(int Tick) const = 0;
@@ -151,6 +159,10 @@ public:
 	virtual bool SoundInitFailed() const = 0;
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
+
+	//ModAPI
+public:
+	virtual CModAPI_Client_Graphics *ModAPIGraphics() const = 0;
 };
 
 class IGameClient : public IInterface

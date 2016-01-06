@@ -18,6 +18,7 @@ class CPacker
 	int m_Error;
 public:
 	void Reset();
+	void AddFloat(float i);
 	void AddInt(int i);
 	void AddString(const char *pStr, int Limit);
 	void AddRaw(const void *pData, int Size);
@@ -42,6 +43,7 @@ public:
 	};
 
 	void Reset(const void *pData, int Size);
+	float GetFloat();
 	int GetInt();
 	const char *GetString(int SanitizeType = SANITIZE);
 	const unsigned char *GetRaw(int Size);

@@ -29,6 +29,10 @@ protected:
 	class IServerBrowser *ServerBrowser() const { return m_pClient->ServerBrowser(); }
 	class CLayers *Layers() const { return m_pClient->Layers(); }
 	class CCollision *Collision() const { return m_pClient->Collision(); }
+	
+	//ModAPI
+	class CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pClient->ModAPIGraphics(); }
+	
 public:
 	virtual ~CComponent() {}
 

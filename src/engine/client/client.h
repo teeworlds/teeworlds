@@ -60,6 +60,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IEngineSound *m_pSound;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
+	IEngineMod *m_pMod;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	IEngineMasterServer *m_pMasterServer;
@@ -262,6 +263,11 @@ public:
 	virtual const char *MapDownloadName() const { return m_aMapdownloadName; }
 	virtual int MapDownloadAmount() const { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() const { return m_MapdownloadTotalsize; }
+	
+	//ModAPI
+	virtual const char *ModDownloadName() const { return m_aModdownloadName; }
+	virtual int ModDownloadAmount() const { return m_ModdownloadAmount; }
+	virtual int ModDownloadTotalsize() const { return m_ModdownloadTotalsize; }
 
 	void PumpNetwork();
 
@@ -315,5 +321,29 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
+	
+	//ModAPI
+	CModAPI_Client_Graphics* m_pModAPIGraphics;
+	char m_aCurrentMod[256];
+	unsigned m_CurrentModCrc;
+
+	char m_aModdownloadFilename[256];
+	char m_aModdownloadName[256];
+	IOHANDLE m_ModdownloadFile;
+	int m_ModdownloadChunk;
+	int m_ModdownloadChunkNum;
+	int m_ModDownloadChunkSize;
+	int m_ModdownloadCrc;
+	int m_ModdownloadAmount;
+	int m_ModdownloadTotalsize;
+	
+	const char *LoadMod(const char *pName, const char *pFilename, unsigned WantedCrc);
+	const char *LoadModSearch(const char *pModName, int WantedCrc);
+	
+	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
+	
+	//ModAPI download both parallel
+	bool m_ModDownloadFinished;
+	bool m_MapDownloadFinished;
 };
 #endif

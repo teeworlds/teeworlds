@@ -82,6 +82,9 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+	
+	//ModAPI
+	class CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pClient->ModAPIGraphics(); }
 
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };

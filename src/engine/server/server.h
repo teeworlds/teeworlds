@@ -128,6 +128,10 @@ public:
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();
+		
+		//ModAPI
+		int m_ModChunk;
+		int m_Protocol;
 	};
 
 	CClient m_aClients[MAX_CLIENTS];
@@ -243,6 +247,27 @@ public:
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+	
+	//ModAPI
+	enum
+	{
+		MOD_CHUNK_SIZE = NET_MAX_PAYLOAD - NET_MAX_CHUNKHEADERSIZE-4,
+	};
+	static const char* m_aModName;
+	unsigned m_CurrentModCrc;
+	unsigned char *m_pCurrentModData;
+	int m_CurrentModSize;
+	int m_ModChunksPerRequest;
+	
+	IEngineMod *m_pMod;
+	
+	const char *GetModName() const;
+	void SendInitialData(int ClientID);
+	
+	bool CreateMod(const char* pModName);
+	bool LoadMod(const char* pModName);
+	
+	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const;
 };
 
 #endif

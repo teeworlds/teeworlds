@@ -143,6 +143,7 @@ function GenerateMacOSXSettings(settings, conf, arch)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	settings.link.frameworks:Add("Cocoa")
@@ -184,6 +185,7 @@ function GenerateLinuxSettings(settings, conf, arch)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	BuildServer(settings)
@@ -243,6 +245,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
+	BuildModAPICommon(settings)
 
 	-- Server
 	local server_settings = settings:Copy()
@@ -319,6 +322,10 @@ function BuildGameCommon(settings)
 	settings.link.extrafiles:Merge(Compile(settings, Collect("src/game/*.cpp"), SharedCommonFiles()))
 end
 
+function BuildModAPICommon(settings)
+	settings.link.extrafiles:Merge(Compile(settings, Collect("src/modapi/shared/*.cpp")))
+end
+
 
 function BuildClient(settings, family, platform)
 	config.sdl:Apply(settings)
@@ -329,7 +336,9 @@ function BuildClient(settings, family, platform)
 	local game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), SharedClientFiles())
 	local game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 	
-	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor)
+	local client_modapi = Compile(settings, Collect("src/modapi/client/*.cpp"))
+	
+	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor, client_modapi)
 end
 
 function BuildServer(settings, family, platform)
@@ -337,7 +346,9 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
+	local server_modapi = Compile(settings, Collect("src/modapi/server/*.cpp"))
+	
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server, server_modapi)
 end
 
 function BuildTools(settings)
@@ -359,7 +370,7 @@ end
 
 function BuildContent(settings)
 	local content = {}
-	table.insert(content, CopyToDir(settings.link.Output(settings, "data"), CollectRecursive(content_src_dir .. "*.png", content_src_dir .. "*.wv", content_src_dir .. "*.ttf", content_src_dir .. "*.txt", content_src_dir .. "*.map", content_src_dir .. "*.rules", content_src_dir .. "*.json")))
+	table.insert(content, CopyToDir(settings.link.Output(settings, "data"), CollectRecursive(content_src_dir .. "*.png", content_src_dir .. "*.wv", content_src_dir .. "*.ttf", content_src_dir .. "*.txt", content_src_dir .. "*.map", content_src_dir .. "*.rules", content_src_dir .. "*.json", content_src_dir .. "*.entitylist")))
 	PseudoTarget(settings.link.Output(settings, "content") .. settings.link.extension, content)
 end
 
