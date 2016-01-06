@@ -1990,7 +1990,9 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				
 			for(int l=0; l<m_Map.m_lGroups[g]->m_lLayers.size(); l++)
 			{
-				
+				if(!m_Map.m_lGroups[g]->m_lLayers[l]->m_Visible)
+					continue;
+					
 				if(m_Map.m_lGroups[g]->m_lLayers[l]->m_Type != MODAPI_MAPLAYERTYPE_ENTITIES)
 					continue;
 					
