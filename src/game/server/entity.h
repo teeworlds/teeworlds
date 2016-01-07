@@ -26,7 +26,6 @@ private:
 	CEntity *m_pPrevTypeEntity;
 	CEntity *m_pNextTypeEntity;
 
-	int m_ID;
 	int m_ObjType;
 
 	/*
@@ -46,9 +45,6 @@ protected:
 			Contains the current posititon of the entity.
 	*/
 	vec2 m_Pos;
-
-	/* Getters */
-	int GetID() const					{ return m_ID; }
 
 public:
 	/* Constructor */
@@ -117,7 +113,8 @@ public:
 				snapshot of everything in the game for demo
 				recording.
 	*/
-	virtual void Snap(int SnappingClient) {}
+	virtual void Snap07(int SnappingClient) {}
+	virtual void Snap07ModAPI(int SnappingClient) {}
 
 	virtual void PostSnap() {}
 

@@ -3,9 +3,9 @@
 #ifndef GAME_SERVER_ENTITIES_FLAG_H
 #define GAME_SERVER_ENTITIES_FLAG_H
 
-#include <game/server/entity.h>
+#include <modapi/server/entity.h>
 
-class CFlag : public CEntity
+class CFlag : public CModAPI_EntitySnapshot07
 {
 private:
 	/* Identity */
@@ -36,7 +36,7 @@ public:
 	/* CEntity functions */
 	virtual void Reset();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int FirstID);
 	virtual void Tick();
 
 	/* Functions */

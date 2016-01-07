@@ -49,8 +49,10 @@ public:
 	virtual void SetClientCountry(int ClientID, int Country) = 0;
 	virtual void SetClientScore(int ClientID, int Score) = 0;
 
-	virtual int SnapNewID() = 0;
-	virtual void SnapFreeID(int ID) = 0;
+	virtual int SnapNewID07() = 0;
+	virtual void SnapFreeID07(int ID) = 0;
+	virtual int SnapNewID07ModAPI() = 0;
+	virtual void SnapFreeID07ModAPI(int ID) = 0;
 	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
@@ -83,7 +85,8 @@ public:
 
 	virtual void OnTick() = 0;
 	virtual void OnPreSnap() = 0;
-	virtual void OnSnap(int ClientID) = 0;
+	virtual void OnSnap07(int ClientID) = 0;
+	virtual void OnSnap07ModAPI(int ClientID) = 0;
 	virtual void OnPostSnap() = 0;
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;

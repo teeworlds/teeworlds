@@ -3,11 +3,11 @@
 #ifndef GAME_SERVER_ENTITIES_PICKUP_H
 #define GAME_SERVER_ENTITIES_PICKUP_H
 
-#include <game/server/entity.h>
+#include <modapi/server/entity.h>
 
 const int PickupPhysSize = 14;
 
-class CPickup : public CEntity
+class CPickup : public CModAPI_EntitySnapshot07
 {
 public:
 	CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos);
@@ -15,7 +15,7 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int FirstID);
 
 private:
 	int m_Type;

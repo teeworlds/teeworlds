@@ -165,7 +165,8 @@ public:
 
 	virtual void OnTick();
 	virtual void OnPreSnap();
-	virtual void OnSnap(int ClientID);
+	virtual void OnSnap07(int ClientID);
+	virtual void OnSnap07ModAPI(int ClientID);
 	virtual void OnPostSnap();
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);

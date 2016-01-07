@@ -12,7 +12,6 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRad
 	m_pPrevTypeEntity = 0;
 	m_pNextTypeEntity = 0;
 
-	m_ID = Server()->SnapNewID();
 	m_ObjType = ObjType;
 
 	m_ProximityRadius = ProximityRadius;
@@ -24,7 +23,6 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRad
 CEntity::~CEntity()
 {
 	GameWorld()->RemoveEntity(this);
-	Server()->SnapFreeID(m_ID);
 }
 
 int CEntity::NetworkClipped(int SnappingClient)

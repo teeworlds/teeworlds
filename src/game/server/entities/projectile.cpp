@@ -7,7 +7,7 @@
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, Pos)
+: CModAPI_EntitySnapshot07(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, Pos, 1)
 {
 	m_Type = Type;
 	m_Direction = Dir;
@@ -97,14 +97,14 @@ void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 	pProj->m_Type = m_Type;
 }
 
-void CProjectile::Snap(int SnappingClient)
+void CProjectile::Snap(int SnappingClient, int FirstID)
 {
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
-	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, GetID(), sizeof(CNetObj_Projectile)));
+	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, GetID(FirstID), sizeof(CNetObj_Projectile)));
 	if(pProj)
 		FillInfo(pProj);
 }
