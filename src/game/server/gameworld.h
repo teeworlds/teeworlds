@@ -134,7 +134,8 @@ public:
 			snapping_client - ID of the client which snapshot
 			is being created.
 	*/
-	void Snap(int SnappingClient);
+	void Snap07(int SnappingClient);
+	void Snap07ModAPI(int SnappingClient);
 	
 	void PostSnap();
 

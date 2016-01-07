@@ -3,9 +3,9 @@
 #ifndef GAME_SERVER_ENTITIES_LASER_H
 #define GAME_SERVER_ENTITIES_LASER_H
 
-#include <game/server/entity.h>
+#include <modapi/server/entity.h>
 
-class CLaser : public CEntity
+class CLaser : public CModAPI_EntitySnapshot07
 {
 public:
 	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner);
@@ -13,7 +13,7 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int FirstID);
 
 protected:
 	bool HitCharacter(vec2 From, vec2 To);

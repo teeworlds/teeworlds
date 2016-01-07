@@ -6,10 +6,10 @@
 #include <generated/protocol.h>
 
 #include <game/gamecore.h>
-#include <game/server/entity.h>
+#include <modapi/server/entity.h>
 
 
-class CCharacter : public CEntity
+class CCharacter : public CModAPI_EntitySnapshot07
 {
 	MACRO_ALLOC_POOL_ID()
 
@@ -24,7 +24,7 @@ public:
 	virtual void Tick();
 	virtual void TickDefered();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int FirstID);
 	virtual void PostSnap();
 
 	bool IsGrounded();

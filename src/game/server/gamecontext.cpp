@@ -1439,7 +1439,7 @@ void CGameContext::OnShutdown()
 	Clear();
 }
 
-void CGameContext::OnSnap(int ClientID)
+void CGameContext::OnSnap07(int ClientID)
 {
 	// add tuning to demo
 	CTuningParams StandardTuning;
@@ -1452,7 +1452,7 @@ void CGameContext::OnSnap(int ClientID)
 		mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
 	}
 
-	m_World.Snap(ClientID);
+	m_World.Snap07(ClientID);
 	m_pController->Snap(ClientID);
 	m_Events.Snap(ClientID);
 
@@ -1462,6 +1462,31 @@ void CGameContext::OnSnap(int ClientID)
 			m_apPlayers[i]->Snap(ClientID);
 	}
 }
+
+void CGameContext::OnSnap07ModAPI(int ClientID)
+{
+	// add tuning to demo
+	CTuningParams StandardTuning;
+	if(ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
+	{
+		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+		if(!pTuneParams)
+			return;
+
+		mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
+	}
+
+	m_World.Snap07(ClientID);
+	m_pController->Snap(ClientID);
+	m_Events.Snap(ClientID);
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i])
+			m_apPlayers[i]->Snap(ClientID);
+	}
+}
+
 void CGameContext::OnPreSnap() {}
 void CGameContext::OnPostSnap()
 {

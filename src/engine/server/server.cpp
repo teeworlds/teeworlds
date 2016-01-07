@@ -569,7 +569,7 @@ void CServer::DoSnapshot()
 
 		// build snap and possibly add some messages
 		m_SnapshotBuilder.Init();
-		GameServer()->OnSnap(-1);
+		GameServer()->OnSnap07ModAPI(-1);
 		SnapshotSize = m_SnapshotBuilder.Finish(aData);
 
 		// write snapshot
@@ -606,7 +606,14 @@ void CServer::DoSnapshot()
 
 			m_SnapshotBuilder.Init();
 
-			GameServer()->OnSnap(i);
+			if(GetClientProtocolCompatibility(i, MODAPI_COMPATIBILITY_SNAPSHOT07MODAPI))
+			{
+				GameServer()->OnSnap07ModAPI(i);
+			}
+			else
+			{
+				GameServer()->OnSnap07(i);
+			}
 
 			// finish snapshot
 			SnapshotSize = m_SnapshotBuilder.Finish(pData);
@@ -831,9 +838,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				if(str_comp(pVersion, GameServer()->NetVersion()) == 0)
-					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07MODAPI;
-				else if(str_comp(pVersion, MODAPI_NETVERSION_TW07) == 0)
+				if(str_comp(pVersion, MODAPI_NETVERSION_TW07) == 0)
 					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07;
 				else if(str_comp(pVersion, MODAPI_NETVERSION_TW06) == 0)
 					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW06;
@@ -841,7 +846,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				{
 					// wrong version
 					char aReason[256];
-					str_format(aReason, sizeof(aReason), "Unsupported version. Client is running '%s', which is neither 0.6, 0.7 nor ModAPI.", GameServer()->NetVersion(), pVersion);
+					str_format(aReason, sizeof(aReason), "Unsupported version. Client is running '%s', which is neither 0.6, 0.7 nor ModAPI.", pVersion);
 					m_NetServer.Drop(ClientID, aReason);
 					return;
 				}
@@ -854,6 +859,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					return;
 				}
 
+				const char *pModAPI = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+				if(!Unpacker.Error() && str_comp(pModAPI, GameServer()->NetVersion()) == 0)
+					m_aClients[ClientID].m_Protocol = MODAPI_CLIENTPROTOCOL_TW07MODAPI;
+				
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 				
 				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI)
@@ -1283,7 +1292,8 @@ int CServer::LoadMap(const char *pMapName)
 	m_DemoRecorder.Stop();
 
 	// reinit snapshot ids
-	m_IDPool.TimeoutIDs();
+	m_IDPool07.TimeoutIDs();
+	m_IDPool07ModAPI.TimeoutIDs();
 
 	// get the crc of the map
 	m_CurrentMapCrc = m_pMap->Crc();
@@ -1714,14 +1724,24 @@ void CServer::RegisterCommands()
 }
 
 
-int CServer::SnapNewID()
+int CServer::SnapNewID07()
 {
-	return m_IDPool.NewID();
+	return m_IDPool07.NewID();
 }
 
-void CServer::SnapFreeID(int ID)
+void CServer::SnapFreeID07(int ID)
 {
-	m_IDPool.FreeID(ID);
+	m_IDPool07.FreeID(ID);
+}
+
+int CServer::SnapNewID07ModAPI()
+{
+	return m_IDPool07ModAPI.NewID();
+}
+
+void CServer::SnapFreeID07ModAPI(int ID)
+{
+	m_IDPool07ModAPI.FreeID(ID);
 }
 
 
@@ -1865,9 +1885,6 @@ bool CServer::LoadMod(const char* pModName)
 
 	// stop recording when we change mod
 	m_DemoRecorder.Stop();
-
-	// reinit snapshot ids
-	m_IDPool.TimeoutIDs();
 
 	// get the crc of the mod
 	m_CurrentModCrc = m_pMod->Crc();

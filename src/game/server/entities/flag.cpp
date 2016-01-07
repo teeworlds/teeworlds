@@ -7,7 +7,7 @@
 #include "flag.h"
 
 CFlag::CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, StandPos, ms_PhysSize)
+: CModAPI_EntitySnapshot07(pGameWorld, CGameWorld::ENTTYPE_FLAG, StandPos, ms_PhysSize, 1)
 {
 	m_Team = Team;
 	m_StandPos = StandPos;
@@ -81,7 +81,7 @@ void CFlag::TickPaused()
 		m_GrabTick++;
 }
 
-void CFlag::Snap(int SnappingClient)
+void CFlag::Snap(int SnappingClient, int FirstID)
 {
 	if(NetworkClipped(SnappingClient))
 		return;

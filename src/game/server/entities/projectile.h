@@ -3,7 +3,9 @@
 #ifndef GAME_SERVER_ENTITIES_PROJECTILE_H
 #define GAME_SERVER_ENTITIES_PROJECTILE_H
 
-class CProjectile : public CEntity
+#include <modapi/server/entity.h>
+
+class CProjectile : public CModAPI_EntitySnapshot07
 {
 public:
 	CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
@@ -15,7 +17,7 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int FirstID);
 
 private:
 	vec2 m_Direction;

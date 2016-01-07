@@ -42,7 +42,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 // Character, "physical" player's part
 CCharacter::CCharacter(CGameWorld *pWorld)
-: CEntity(pWorld, CGameWorld::ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize)
+: CModAPI_EntitySnapshot07(pWorld, CGameWorld::ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize, 0)
 {
 	m_Health = 0;
 	m_Armor = 0;
@@ -774,7 +774,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	return true;
 }
 
-void CCharacter::Snap(int SnappingClient)
+void CCharacter::Snap(int SnappingClient, int FirstID)
 {
 	if(NetworkClipped(SnappingClient))
 		return;

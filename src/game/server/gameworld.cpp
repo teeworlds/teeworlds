@@ -105,13 +105,25 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 }
 
 //
-void CGameWorld::Snap(int SnappingClient)
+void CGameWorld::Snap07(int SnappingClient)
 {
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 		{
 			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Snap(SnappingClient);
+			pEnt->Snap07(SnappingClient);
+			pEnt = m_pNextTraverseEntity;
+		}
+}
+
+//
+void CGameWorld::Snap07ModAPI(int SnappingClient)
+{
+	for(int i = 0; i < NUM_ENTTYPES; i++)
+		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
+		{
+			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
+			pEnt->Snap07ModAPI(SnappingClient);
 			pEnt = m_pNextTraverseEntity;
 		}
 }
