@@ -7,7 +7,7 @@
 #include "laser.h"
 
 CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
-: CModAPI_EntitySnapshot07(pGameWorld, CGameWorld::ENTTYPE_LASER, Pos, 1)
+: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_LASER, Pos, 1)
 {
 	m_Owner = Owner;
 	m_Energy = StartEnergy;

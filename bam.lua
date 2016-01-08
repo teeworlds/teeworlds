@@ -348,7 +348,9 @@ function BuildServer(settings, family, platform)
 	
 	local server_modapi = Compile(settings, Collect("src/modapi/server/*.cpp"))
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server, server_modapi)
+	local server_mod = Compile(settings, CollectRecursive("src/mod/*.cpp"))
+	
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server, server_modapi, server_mod)
 end
 
 function BuildTools(settings)

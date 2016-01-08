@@ -7,7 +7,7 @@
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
-: CModAPI_EntitySnapshot07(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, Pos, 1)
+: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PROJECTILE, Pos, 1)
 {
 	m_Type = Type;
 	m_Direction = Dir;

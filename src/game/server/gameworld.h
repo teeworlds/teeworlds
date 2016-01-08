@@ -5,6 +5,8 @@
 
 #include <game/gamecore.h>
 
+#include <mod/defines.h>
+
 class CEntity;
 class CCharacter;
 
@@ -15,23 +17,12 @@ class CCharacter;
 */
 class CGameWorld
 {
-public:
-	enum
-	{
-		ENTTYPE_PROJECTILE = 0,
-		ENTTYPE_LASER,
-		ENTTYPE_PICKUP,
-		ENTTYPE_FLAG,
-		ENTTYPE_CHARACTER,
-		NUM_ENTTYPES
-	};
-
 private:
 	void Reset();
 	void RemoveEntities();
 
 	CEntity *m_pNextTraverseEntity;
-	CEntity *m_apFirstEntityTypes[NUM_ENTTYPES];
+	CEntity *m_apFirstEntityTypes[MOD_NUM_ENTTYPES];
 
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;

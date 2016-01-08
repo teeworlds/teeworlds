@@ -4,12 +4,12 @@
 
 #include <game/mapitems.h>
 
-#include "entities/character.h"
-#include "entities/pickup.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
 
+#include <mod/entities/character.h>
+#include <mod/entities/pickup.h>
 
 IGameController::IGameController(CGameContext *pGameServer)
 {
@@ -973,7 +973,7 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
 {
 	float Score = 0.0f;
-	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
+	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(MOD_ENTTYPE_CHARACTER));
 	for(; pC; pC = (CCharacter *)pC->TypeNext())
 	{
 		// team mates are not as dangerous as enemies
@@ -995,7 +995,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World.FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 		vec2 Positions[5] = { vec2(0.0f, 0.0f), vec2(-32.0f, 0.0f), vec2(0.0f, -32.0f), vec2(32.0f, 0.0f), vec2(0.0f, 32.0f) };	// start, left, up, right, down
 		int Result = -1;
 		for(int Index = 0; Index < 5 && Result == -1; ++Index)

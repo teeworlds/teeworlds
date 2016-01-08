@@ -42,7 +42,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 // Character, "physical" player's part
 CCharacter::CCharacter(CGameWorld *pWorld)
-: CModAPI_EntitySnapshot07(pWorld, CGameWorld::ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize, 0)
+: CModAPI_EntitySnapshot07(pWorld, MOD_ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize, 0)
 {
 	m_Health = 0;
 	m_Armor = 0;
@@ -160,7 +160,7 @@ void CCharacter::HandleNinja()
 			vec2 Dir = m_Pos - OldPos;
 			float Radius = GetProximityRadius() * 2.0f;
 			vec2 Center = OldPos + Dir * 0.5f;
-			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
@@ -299,7 +299,7 @@ void CCharacter::FireWeapon()
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
 			int Num = GameServer()->m_World.FindEntities(ProjStartPos, GetProximityRadius()*0.5f, (CEntity**)apEnts,
-														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+														MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{

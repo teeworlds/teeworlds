@@ -252,6 +252,7 @@ public:
 	void SnapSetStaticsize(int ItemType, int Size);
 	
 	//ModAPI
+	CModAPI_Server* m_pModAPIServer;
 	enum
 	{
 		MOD_CHUNK_SIZE = NET_MAX_PAYLOAD - NET_MAX_CHUNKHEADERSIZE-4,
@@ -267,8 +268,9 @@ public:
 	const char *GetModName() const;
 	void SendInitialData(int ClientID);
 	
-	bool CreateMod(const char* pModName);
 	bool LoadMod(const char* pModName);
+	
+	void SetModAPIServer(class CModAPI_Server* pModAPIServer);
 	
 	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const;
 };

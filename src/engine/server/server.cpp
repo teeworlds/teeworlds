@@ -30,7 +30,10 @@
 //ModAPI
 #include <modapi/shared/mod.h>
 #include <modapi/compatibility.h> 
-#include <modapi/server/modcreator.h>
+#include <modapi/server/server.h>
+
+//Mod
+#include <mod/server.h>
 
 #include "register.h"
 #include "server.h"
@@ -297,7 +300,6 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	Init();
 }
-
 
 int CServer::TrySetClientName(int ClientID, const char *pName)
 {
@@ -1323,20 +1325,26 @@ void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterS
 
 int CServer::Run()
 {
-	//
+	if(!m_pModAPIServer)
+		return -1;
+		
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 	
 	// ModAPI, generate mod
-	if(!CreateMod(m_aModName))
 	{
-		dbg_msg("server", "failed to generate mod. modname='%s'", m_aModName);
-		return -1;
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "mods/%s.mod", m_pModAPIServer->GetName());
+		if(!m_pModAPIServer->CreateModFile(Storage(), aBuf))
+		{
+			dbg_msg("server", "failed to generate mod. modname='%s'", m_pModAPIServer->GetName());
+			return -1;
+		}
 	}
 	
 	// ModAPI, load mod
-	if(!LoadMod(m_aModName))
+	if(!LoadMod(m_pModAPIServer->GetName()))
 	{
-		dbg_msg("server", "failed to load mod. modname='%s'", m_aModName);
+		dbg_msg("server", "failed to load mod. modname='%s'", m_pModAPIServer->GetName());
 		return -1;
 	}
 	m_ModChunksPerRequest = g_Config.m_SvMapDownloadSpeed;
@@ -1843,7 +1851,12 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// run the server
 	dbg_msg("server", "starting...");
+
+	CModAPI_Server* pModAPIServer = new CMod_Server();
+	pServer->SetModAPIServer(pModAPIServer);
 	pServer->Run();
+	
+	delete pModAPIServer;
 
 	// free
 	delete pServer;
@@ -1862,17 +1875,9 @@ int main(int argc, const char **argv) // ignore_convention
 
 //ModeAPI
 
-const char* CServer::m_aModName = "modapi-test";
-
-bool CServer::CreateMod(const char* pModName)
+void CServer::SetModAPIServer(class CModAPI_Server* pModAPIServer)
 {
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
-	
-	CModAPI_ModCreator ModCreator;
-	if(ModCreator.Save(Storage(), aBuf) < 0) return false;
-	
-	return true;
+	m_pModAPIServer = pModAPIServer;
 }
 
 bool CServer::LoadMod(const char* pModName)
@@ -1910,7 +1915,7 @@ void CServer::SendInitialData(int ClientID)
 	CMsgPacker Msg(NETMSG_MODAPI_INITDATA, true);
 	
 	//Mod
-	Msg.AddString(CServer::m_aModName, 0);
+	Msg.AddString(m_pModAPIServer->GetName(), 0);
 	Msg.AddInt(m_CurrentModCrc);
 	Msg.AddInt(m_CurrentModSize);
 	Msg.AddInt(m_ModChunksPerRequest);
