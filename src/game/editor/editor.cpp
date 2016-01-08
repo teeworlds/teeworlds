@@ -1,11 +1,14 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <stdio.h>	// sscanf
+
 #include <base/color.h>
 #include <base/system.h>
 
 #include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
+#include <engine/shared/linereader.h>
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
@@ -117,7 +120,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer)
+		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer && m_lLayers[i]->m_Type != MODAPI_MAPLAYERTYPE_ENTITIES)
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -774,6 +777,16 @@ CLayer *CEditor::GetSelectedLayerType(int Index, int Type)
 	return 0x0;
 }
 
+CModAPI_MapEntity_Point* CEditor::GetSelectedEntityPoint()
+{
+	CLayerEntities *el = (CLayerEntities *)GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
+	if(!el)
+		return 0;
+	if(m_SelectedEntityPoint >= 0 && m_SelectedEntityPoint < el->m_lEntityPoints.size())
+		return &el->m_lEntityPoints[m_SelectedEntityPoint];
+	return 0;
+}
+
 CQuad *CEditor::GetSelectedQuad()
 {
 	CLayerQuads *ql = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
@@ -1044,6 +1057,46 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 					q->m_aPoints[i].x += AddX;
 					q->m_aPoints[i].y += AddY;
 				}
+			}
+		}
+	}
+
+	// point manipulation
+	{
+		// do add button
+		TB_Top.VSplitLeft(10.0f, &Button, &TB_Top);
+		TB_Top.VSplitLeft(60.0f, &Button, &TB_Top);
+		static int s_NewButton = 0;
+
+		CLayerEntities *pELayer = (CLayerEntities*) GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
+		if(DoButton_Editor(&s_NewButton, "Add Point", pELayer?0:-1, &Button, 0, "Adds a new point"))
+		{
+			if(pELayer)
+			{
+				CModAPI_MapEntity_Point *pt = pELayer->NewPoint();
+				
+				m_SelectedEntityPoint = pELayer->m_lEntityPoints.size()-1;
+								
+				float Mapping[4];
+				CLayerGroup *g = GetSelectedGroup();
+				g->Mapping(Mapping);
+				
+				pt->x = Mapping[0] + (Mapping[2]-Mapping[0])/2;
+				pt->y = Mapping[1] + (Mapping[3]-Mapping[1])/2;
+			}
+		
+			PopupSelectEntityInvoke(-1, UI()->MouseX(), UI()->MouseY());
+		}
+
+		//This part will catch the result for any entity popup.
+		//The result must be applied to the selected entity point.
+		int r = PopupSelectEntityResult();
+		if(r >= -1)
+		{
+			CModAPI_MapEntity_Point* pEntityPoint = GetSelectedEntityPoint();
+			if(pEntityPoint)
+			{
+				pEntityPoint->m_Type = r;
 			}
 		}
 	}
@@ -1340,6 +1393,136 @@ void CEditor::DoQuad(CQuad *q, int Index)
 
 	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+}
+
+void CEditor::DoEntityPoint(CModAPI_MapEntity_Point *pt, int Index)
+{
+	enum
+	{
+		OP_NONE=0,
+		OP_MOVE,
+		OP_CONTEXT_MENU,
+	};
+
+	// some basic values
+	void *pID = pt;
+	static float s_LastWx;
+	static float s_LastWy;
+	static int s_Operation = OP_NONE;
+	
+	float wx = UI()->MouseWorldX();
+	float wy = UI()->MouseWorldY();
+
+	float dx = (pt->x - wx)/m_WorldZoom;
+	float dy = (pt->y - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 16*16)
+		UI()->SetHotItem(pID);
+
+	bool IgnoreGrid;
+	if(Input()->KeyIsPressed(KEY_LALT) || Input()->KeyIsPressed(KEY_RALT))
+		IgnoreGrid = true;
+	else
+		IgnoreGrid = false;
+
+	// draw selection background
+	if(m_SelectedQuad == Index)
+	{
+		Graphics()->SetColor(0,0,0,1);
+		IGraphics::CQuadItem QuadItem(pt->x, pt->y, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+	}
+
+	vec4 PivotColor;
+
+	if(UI()->CheckActiveItem(pID))
+	{
+		if(m_MouseDeltaWx*m_MouseDeltaWx+m_MouseDeltaWy*m_MouseDeltaWy > 0.5f)
+		{
+			// check if we only should move pivot
+			if(s_Operation == OP_MOVE)
+			{
+				// move all points including pivot
+				if(m_GridActive && !IgnoreGrid)
+				{
+					int LineDistance = GetLineDistance();
+
+					float x = 0.0f;
+					float y = 0.0f;
+					if(wx >= 0)
+						x = (int)((wx+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					else
+						x = (int)((wx-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					if(wy >= 0)
+						y = (int)((wy+(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+					else
+						y = (int)((wy-(LineDistance/2)*m_GridFactor)/(LineDistance*m_GridFactor)) * (LineDistance*m_GridFactor);
+
+					pt->x = x;
+					pt->y = y;
+				}
+				else
+				{
+					pt->x += wx-s_LastWx;
+					pt->y += wy-s_LastWy;
+				}
+			}
+		}
+		
+		s_LastWx = wx;
+		s_LastWy = wy;
+
+		if(s_Operation == OP_CONTEXT_MENU)
+		{
+			if(!UI()->MouseButton(1))
+			{
+				static int s_PointEntityPopupID = 0;
+				UiInvokePopupMenu(&s_PointEntityPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 180, PopupEntityPoint);
+				m_LockMouse = false;
+				s_Operation = OP_NONE;
+				UI()->SetActiveItem(0);
+			}
+		}
+		else
+		{
+			if(!UI()->MouseButton(0))
+			{
+				m_LockMouse = false;
+				s_Operation = OP_NONE;
+				UI()->SetActiveItem(0);
+			}
+		}
+
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
+	}
+	else if(UI()->HotItem() == pID)
+	{
+		ms_pUiGotContext = pID;
+
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
+		m_pTooltip = "Left mouse button to move. Hold alt to ignore grid.";
+
+		if(UI()->MouseButton(0))
+		{
+			m_SelectedEntityPoint = Index;
+			s_Operation = OP_MOVE;
+			UI()->SetActiveItem(pID);
+			s_LastWx = wx;
+			s_LastWy = wy;
+		}
+
+		if(UI()->MouseButton(1))
+		{
+			m_SelectedEntityPoint = Index;
+			s_Operation = OP_CONTEXT_MENU;
+			UI()->SetActiveItem(pID);
+		}
+	}
+	else
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
+
+	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
+	IGraphics::CQuadItem QuadItem(pt->x, pt->y, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -1790,11 +1973,31 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game above everything else
+		// render the game above
 		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
 		{
 			m_Map.m_pGameGroup->MapScreen();
 			m_Map.m_pGameLayer->Render();
+		}
+		
+		// render entities above everything else
+		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
+		{
+			if(!m_Map.m_lGroups[g]->m_Visible)
+				continue;
+			
+			m_Map.m_lGroups[g]->MapScreen();
+				
+			for(int l=0; l<m_Map.m_lGroups[g]->m_lLayers.size(); l++)
+			{
+				if(!m_Map.m_lGroups[g]->m_lLayers[l]->m_Visible)
+					continue;
+					
+				if(m_Map.m_lGroups[g]->m_lLayers[l]->m_Type != MODAPI_MAPLAYERTYPE_ENTITIES)
+					continue;
+					
+				m_Map.m_lGroups[g]->m_lLayers[l]->Render();
+			}
 		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
@@ -2150,6 +2353,35 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 					}
 				}
+				
+				// entities editing
+				{
+					if(!m_ShowTilePicker && m_Brush.IsEmpty())
+					{
+						// fetch layers
+						CLayerGroup *g = GetSelectedGroup();
+						if(g)
+							g->MapScreen();						
+		
+						for(int k = 0; k < NumEditLayers; k++)
+						{
+							if(pEditLayers[k]->m_Type == MODAPI_MAPLAYERTYPE_ENTITIES)
+							{
+								CLayerEntities *pLayer = (CLayerEntities *)pEditLayers[k];
+		
+								Graphics()->TextureClear();
+								Graphics()->QuadsBegin();
+								for(int i = 0; i < pLayer->m_lEntityPoints.size(); i++)
+								{
+									DoEntityPoint(&pLayer->m_lEntityPoints[i], i);
+								}
+								Graphics()->QuadsEnd();
+							}
+						}
+		
+						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+					}
+				}
 			} break;
 		
 			case MOUSE_PIPETTE:
@@ -2483,6 +2715,21 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 				*pNewVal = r;
 				Change = i;
 			}
+		}
+		else if(pProps[i].m_Type == PROPTYPE_ENTITY)
+		{
+			char aBuf[64];
+			if(pProps[i].m_Value >= 0 && pProps[i].m_Value < 256)
+			{
+				str_copy(aBuf, m_lEditorResources[0].m_aTypes[pProps[i].m_Value].m_pName, sizeof(aBuf));
+			}
+			else
+			{
+				str_copy(aBuf, "Unknown", sizeof(aBuf));
+			}
+
+			if(DoButton_Editor(&pIDs[i], aBuf, 0, &Shifter, 0, 0))
+				PopupSelectEntityInvoke(pProps[i].m_Value, UI()->MouseX(), UI()->MouseY());
 		}
 		else if(pProps[i].m_Type == PROPTYPE_SHIFT)
 		{
@@ -4365,6 +4612,8 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaY = 0;
 	m_MouseDeltaWx = 0;
 	m_MouseDeltaWy = 0;
+	
+	m_SelectedEntityPoint = -1;
 
 	m_Map.m_Modified = false;
 
@@ -4504,6 +4753,11 @@ void CEditorMap::CreateDefault()
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
+	
+	// add entities layer
+	CLayerEntities *pEntitiesLayer = new CLayerEntities;
+	pEntitiesLayer->m_pEditor = m_pEditor;
+	m_pGameGroup->AddLayer(pEntitiesLayer);
 }
 
 void CEditor::Init()
@@ -4532,6 +4786,11 @@ void CEditor::Init()
 
 	Reset();
 	m_Map.m_Modified = false;
+	
+	//Remove this
+	CEditorResource *pEditorResource = &m_lEditorResources[m_lEditorResources.add(CEditorResource())];
+	pEditorResource->Load(Storage(), Graphics(), "editorresources/tw07.editor");
+	
 }
 
 void CEditor::DoMapBorder()
@@ -4628,6 +4887,104 @@ void CEditor::UpdateAndRender()
 
 	UI()->FinishCheck();
 	Input()->Clear();
+}
+
+CEntityType::CEntityType()
+{
+	str_copy(m_pName, "Unknown", sizeof(m_pName));
+	m_Loaded = false;
+}
+
+CEditorResource::CEditorResource()
+{
+	m_pImageData = 0;
+}
+
+CEditorResource::~CEditorResource()
+{
+}
+
+bool CEditorResource::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFileName)
+{
+	CDataFileReader DataFile;
+	if(!DataFile.Open(pStorage, pFileName, IStorage::TYPE_ALL))
+		return false;
+	
+	//Load information
+	{
+		int Start, Num;
+		DataFile.GetType(MODAPI_EDITORITEMTYPE_INFO, &Start, &Num);
+		
+		if(Num > 0)
+		{
+			CModAPI_EditorItem_Info *pItem = (CModAPI_EditorItem_Info*) DataFile.GetItem(Start, 0, 0);
+			
+			void* pData = DataFile.GetData(pItem->m_Name);
+			str_copy(m_pName, (char*) pData, sizeof(m_pName));
+			
+			DataFile.UnloadData(pItem->m_Name);
+		}
+		else return false;
+	}
+	
+	//Load image
+	{
+		int Start, Num;
+		DataFile.GetType(MODAPI_EDITORITEMTYPE_IMAGE, &Start, &Num);
+		
+		if(Num > 0)
+		{
+			CModAPI_EditorItem_Image *pItem = (CModAPI_EditorItem_Image*) DataFile.GetItem(Start, 0, 0);
+			
+			// copy base info
+			m_ImageWidth = pItem->m_Width;
+			m_ImageHeight = pItem->m_Height;
+			m_ImageFormat = pItem->m_Format;
+			int PixelSize = m_ImageFormat == CImageInfo::FORMAT_RGB ? 3 : 4;
+
+			// copy image data
+			void *pData = DataFile.GetData(pItem->m_ImageData);
+			m_pImageData = (char*) mem_alloc(m_ImageWidth*m_ImageHeight*PixelSize, 1);
+			mem_copy(m_pImageData, pData, m_ImageWidth*m_ImageHeight*PixelSize);
+			m_Texture = pGraphics->LoadTextureRaw(m_ImageWidth, m_ImageHeight, m_ImageFormat, m_pImageData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+
+			// unload image
+			DataFile.UnloadData(pItem->m_ImageData);
+		}
+	}
+	
+	//Load entity point types
+	{
+		int Start, Num;
+		DataFile.GetType(MODAPI_EDITORITEMTYPE_ENTITYPOINTTYPE, &Start, &Num);
+		
+		for(int i=0; i<Num; i++)
+		{
+			CModAPI_EditorItem_EntityPointType *pItem = (CModAPI_EditorItem_EntityPointType*) DataFile.GetItem(Start+i, 0, 0);
+			
+			if(pItem->m_Id >= 0 && pItem->m_Id < 256)
+			{
+				CEntityType* pType = &m_aTypes[pItem->m_Id];
+				void* pData = DataFile.GetData(pItem->m_Name);
+				str_copy(pType->m_pName, (char*) pData, sizeof(pType->m_pName));
+				pType->m_Loaded = true;
+			}
+
+			DataFile.UnloadData(pItem->m_Name);
+		}
+	}
+	
+	return true;
+}
+
+bool CEditorResource::Unload(IGraphics* pGraphics)
+{
+	pGraphics->UnloadTexture(m_Texture);
+	if(m_pImageData)
+	{
+		delete m_pImageData;
+		m_pImageData = 0;
+	}
 }
 
 IEditor *CreateEditor() { return new CEditor; }

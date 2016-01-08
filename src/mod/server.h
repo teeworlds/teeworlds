@@ -9,6 +9,7 @@ public:
 	CMod_Server();
 	
 	virtual int CreateModFile(class IStorage* pStorage, const char* pFilename);
+	virtual int CreateEditorFile(class IStorage* pStorage, const char* pFilename);
 };
 
 #endif

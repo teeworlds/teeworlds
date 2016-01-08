@@ -148,11 +148,25 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		}
 	}
 
-	// new tile layer
+	// new entities layer
+	View.HSplitBottom(10.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_NewEntitiesLayerButton = 0;
+	if(pEditor->DoButton_Editor(&s_NewEntitiesLayerButton, "Add entities layer", 0, &Button, 0, "Creates a new entities layer"))
+	{
+		CLayer *l = new CLayerEntities;
+		l->m_pEditor = pEditor;
+		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+		return 1;
+	}
+
+	// new quads layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
-	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, "Add quads layer", 0, &Button, 0, "Creates a new quad layer"))
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, "Add quads layer", 0, &Button, 0, "Creates a new quads layer"))
 	{
 		CLayer *l = new CLayerQuads;
 		l->m_pEditor = pEditor;
@@ -162,7 +176,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	// new quad layer
+	// new tile layer
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
@@ -1144,5 +1158,120 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 
 	pEditor->m_SelectedPickerColor = hsv;
 
+	return 0;
+}
+
+
+//Entities
+static int g_SelectEntitySelected = -100;
+static int g_SelectEntityCurrent = -100;
+
+int CEditor::PopupSelectEntity(CEditor *pEditor, CUIRect View)
+{
+	CUIRect ButtonBar, ImageView;
+	View.VSplitLeft(80.0f, &ButtonBar, &View);
+	View.Margin(10.0f, &ImageView);
+
+	int ShowEntity = g_SelectEntityCurrent;
+
+	for(int i=0; i<256; i++)
+	{
+		if(!pEditor->m_lEditorResources[0].m_aTypes[i].m_Loaded)
+			continue;
+		
+		CUIRect Button;
+		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
+		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
+
+		if(pEditor->UI()->MouseInside(&Button))
+			ShowEntity = i;
+
+		if(pEditor->DoButton_MenuItem(&pEditor->m_lEditorResources[0].m_aTypes[i], pEditor->m_lEditorResources[0].m_aTypes[i].m_pName, i==g_SelectEntityCurrent, &Button))
+		{
+			g_SelectEntitySelected = i;
+			return 1;
+		}
+	}
+
+	//~ if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
+	//~ {
+		//~ if(ImageView.h < ImageView.w)
+			//~ ImageView.w = ImageView.h;
+		//~ else
+			//~ ImageView.h = ImageView.w;
+		//~ float Max = (float)(max(pEditor->m_Map.m_lImages[ShowImage]->m_Width, pEditor->m_Map.m_lImages[ShowImage]->m_Height));
+		//~ ImageView.w *= pEditor->m_Map.m_lImages[ShowImage]->m_Width/Max;
+		//~ ImageView.h *= pEditor->m_Map.m_lImages[ShowImage]->m_Height/Max;
+		//~ pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_Texture);
+		//~ pEditor->Graphics()->BlendNormal();
+		//~ pEditor->Graphics()->WrapClamp();
+		//~ pEditor->Graphics()->QuadsBegin();
+		//~ IGraphics::CQuadItem QuadItem(ImageView.x, ImageView.y, ImageView.w, ImageView.h);
+		//~ pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
+		//~ pEditor->Graphics()->QuadsEnd();
+		//~ pEditor->Graphics()->WrapNormal();
+	//~ }
+
+	return 0;
+}
+
+void CEditor::PopupSelectEntityInvoke(int Current, float x, float y)
+{
+	static int s_SelectEntityPopupId = 0;
+	g_SelectEntitySelected = -100;
+	g_SelectEntityCurrent = Current;
+	UiInvokePopupMenu(&s_SelectEntityPopupId, 0, x, y, 400, 300, PopupSelectEntity);
+}
+
+int CEditor::PopupSelectEntityResult()
+{
+	if(g_SelectEntitySelected == -100)
+		return -100;
+
+	g_SelectEntityCurrent = g_SelectEntitySelected;
+	g_SelectEntitySelected = -100;
+	return g_SelectEntityCurrent;
+}
+
+int CEditor::PopupEntityPoint(CEditor *pEditor, CUIRect View)
+{
+	CModAPI_MapEntity_Point *pEntityPoint = pEditor->GetSelectedEntityPoint();
+
+	CUIRect Button;
+
+	// delete button
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_DeleteButton = 0;
+	if(pEditor->DoButton_Editor(&s_DeleteButton, "Delete", 0, &Button, 0, "Deletes the current entity"))
+	{
+		CLayerEntities *pLayer = (CLayerEntities *)pEditor->GetSelectedLayerType(0, MODAPI_MAPLAYERTYPE_ENTITIES);
+		if(pLayer)
+		{
+			pEditor->m_Map.m_Modified = true;
+			pLayer->m_lEntityPoints.remove_index(pEditor->m_SelectedEntityPoint);
+			pEditor->m_SelectedEntityPoint--;
+		}
+		return 1;
+	}
+
+	enum
+	{
+		PROP_TYPE=0,
+		NUM_PROPS,
+	};
+
+	CProperty aProps[] = {
+		{"Type", pEntityPoint->m_Type, PROPTYPE_ENTITY, -1, 0},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop != -1)
+		pEditor->m_Map.m_Modified = true;
+
+	if(Prop == PROP_TYPE) pEntityPoint->m_Type = NewVal;
+	
 	return 0;
 }
