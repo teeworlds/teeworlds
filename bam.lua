@@ -267,7 +267,7 @@ function build(settings)
 		client_link_other, client_osxlaunch, jsonparser, httpparser)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
-		game_shared, game_server, zlib, server_link_other)
+		game_shared, game_server, zlib, server_link_other, httpparser)
 
 	serverlaunch = {}
 	if platform == "macosx" then
