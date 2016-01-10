@@ -1,5 +1,6 @@
 #include <base/system.h>
 
+#include "config.h"
 #include "http.h"
 
 CHttpConnection::CHttpConnection()
@@ -36,7 +37,7 @@ void CHttpConnection::Close()
 
 bool CHttpConnection::SetState(int State, const char *pMsg)
 {
-	if(pMsg)
+	if(pMsg && g_Config.m_Debug)
 		dbg_msg("http/conn", "%d: %s", m_ID, pMsg);
 	bool Error = State == STATE_ERROR;
 	if(Error)
@@ -50,7 +51,8 @@ bool CHttpConnection::SetState(int State, const char *pMsg)
 	}
 	if(State == STATE_OFFLINE)
 	{
-		dbg_msg("http/conn", "%d: disconnecting", m_ID);
+		if(g_Config.m_Debug)
+			dbg_msg("http/conn", "%d: disconnecting", m_ID);
 		Close();
 	}
 	m_State = State;
@@ -81,11 +83,12 @@ bool CHttpConnection::Connect(NETADDR Addr)
 	net_tcp_connect(m_Socket, &m_Addr);
 	m_LastActionTime = time_get();
 
+	char aBuf[256];
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(&m_Addr, aAddrStr, sizeof(aAddrStr), true);
-	dbg_msg("http/conn", "%d: addr: %s", m_ID, aAddrStr);
+	str_format(aBuf, sizeof(aBuf), "connecting to %s", aAddrStr);
 
-	SetState(STATE_CONNECTING, "connecting");
+	SetState(STATE_CONNECTING, aBuf);
 	return true;
 }
 

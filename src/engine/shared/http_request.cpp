@@ -62,13 +62,12 @@ bool CRequest::Finalize()
 	m_pCur = m_aHeader;
 	m_pEnd = m_aHeader + HeaderSize;
 	IHttpBase::Finalize();
-	dbg_msg("http/request", "finished (header: %d, body: %d)", HeaderSize, m_BodySize);
+	//dbg_msg("http/request", "finished (header: %d, body: %d)", HeaderSize, m_BodySize);
 	return true;
 }
 
 bool CRequest::InitBody(int Size, const char *pContentType)
 {
-	dbg_msg("http/request", "init body: %d (%s)", Size, pContentType);
 	if(Size <= 0 || m_pBody || IsFinalized() || m_Method == HTTP_GET)
 		return false;
 
@@ -122,17 +121,16 @@ int CRequest::GetData(char *pBuf, int MaxSize)
 	{
 		if(m_State == STATE_HEADER)
 		{
-			dbg_msg("http/request", "sent header");
+			//dbg_msg("http/request", "sent header");
 			if(!m_pBody)
 				return 0;
-			dbg_msg("http/request", "sending body");
 			m_pCur = m_pBody;
 			m_pEnd = m_pBody + m_BodySize;
 			m_State = STATE_BODY;
 		}
 		else if(m_State == STATE_BODY)
 		{
-			dbg_msg("http/request", "sent body");
+			//dbg_msg("http/request", "sent body");
 			return 0;
 		}
 	}
@@ -140,6 +138,5 @@ int CRequest::GetData(char *pBuf, int MaxSize)
 	int Size = min((int)(m_pEnd-m_pCur), MaxSize);
 	mem_copy(pBuf, m_pCur, Size);
 	m_pCur += Size;
-	dbg_msg("http/request", "sending %d bytes", Size);
 	return Size;
 }
