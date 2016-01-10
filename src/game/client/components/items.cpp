@@ -12,6 +12,8 @@
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
 
+#include <engine/textrender.h>
+
 #include "items.h"
 
 
@@ -303,6 +305,18 @@ void CItems::OnRender()
 		{
 			RenderModAPILine((const CNetObj_ModAPI_Line *)pData);
 		}
+		else if(Item.m_Type == NETOBJTYPE_MODAPI_TEXT)
+		{
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if(pPrev)
+				RenderModAPIText((const CNetObj_ModAPI_Text *)pPrev, (const CNetObj_ModAPI_Text *)pData);
+		}
+		else if(Item.m_Type == NETOBJTYPE_MODAPI_TEXTCHARACTER)
+		{
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if(pPrev)
+				RenderModAPITextCharacter((const CNetObj_ModAPI_TextCharacter *)pPrev, (const CNetObj_ModAPI_TextCharacter *)pData);
+		}
 	}
 
 	// render flag
@@ -341,7 +355,7 @@ void CItems::RenderModAPISpriteCharacter(const CNetObj_ModAPI_SpriteCharacter *p
 	
 	float Angle = 2.0*pi*static_cast<float>(pCurrent->m_Angle)/360.0f;
 	float Size = pCurrent->m_Size;
-
+	
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
 	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_LocalClientID == pCurrent->m_ClientId)
@@ -371,5 +385,34 @@ void CItems::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
 	Ticks = (Ticks/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	
 	ModAPIGraphics()->DrawLine(RenderTools(),pCurrent->m_LineStyleId, StartPos, EndPos, Ticks);
+}
+
+void CItems::RenderModAPIText(const CNetObj_ModAPI_Text *pPrev, const CNetObj_ModAPI_Text *pCurrent)
+{
+	if(!TextRender()) return;
+
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	
+	ModAPIGraphics()->DrawText(TextRender(), pCurrent->m_aText, Pos, pCurrent->m_Color, pCurrent->m_Size, pCurrent->m_Alignment);
+	
+}
+
+void CItems::RenderModAPITextCharacter(const CNetObj_ModAPI_TextCharacter *pPrev, const CNetObj_ModAPI_TextCharacter *pCurrent)
+{
+	if(!TextRender()||!m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Active) return;
+	
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_LocalClientID == pCurrent->m_ClientId)
+	{
+		Pos = m_pClient->m_LocalCharacterPos + Pos;
+	}
+	else
+	{
+		CNetObj_Character PrevChar = m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Prev;
+		CNetObj_Character CurChar = m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Cur;
+		Pos = mix(vec2(PrevChar.m_X, PrevChar.m_Y), vec2(CurChar.m_X, CurChar.m_Y), Client()->IntraGameTick()) + Pos;
+	}
+	ModAPIGraphics()->DrawText(TextRender(), pCurrent->m_aText, Pos, pCurrent->m_Color, pCurrent->m_Size, pCurrent->m_Alignment);
 }
 
