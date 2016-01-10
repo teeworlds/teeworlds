@@ -1,6 +1,12 @@
 #ifndef GAME_GHOST_H
 #define GAME_GHOST_H
 
+enum
+{
+	GHOSTDATA_TYPE_SKIN = 0,
+	GHOSTDATA_TYPE_CHARACTER
+};
+
 struct CGhostSkin
 {
 	int m_Skin0;

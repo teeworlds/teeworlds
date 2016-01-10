@@ -42,7 +42,7 @@ void CGhost::AddInfos(CGhostCharacter Player)
 	if(m_Recording)
 		m_CurGhost.m_Path.add(Player);
 	if(GhostRecorder()->IsRecording())
-		GhostRecorder()->WriteData(1, (const char*)&Player, sizeof(Player));
+		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&Player, sizeof(Player));
 }
 
 void CGhost::OnRender()
@@ -280,7 +280,7 @@ void CGhost::StartRecord()
 		Skin.m_UseCustomColor = ClientData.m_UseCustomColor;
 		Skin.m_ColorBody = ClientData.m_ColorBody;
 		Skin.m_ColorFeet = ClientData.m_ColorFeet;
-		GhostRecorder()->WriteData(0, (const char*)&Skin, sizeof(Skin));
+		GhostRecorder()->WriteData(GHOSTDATA_TYPE_SKIN, (const char*)&Skin, sizeof(Skin));
 	}
 }
 
@@ -370,7 +370,7 @@ bool CGhost::Load(const char* pFilename, int ID)
 	int Type;
 	while(GhostLoader()->ReadNextType(&Type))
 	{
-		if(Type == 0)
+		if(Type == GHOSTDATA_TYPE_SKIN)
 		{
 			CGhostSkin Skin;
 			if(GhostLoader()->ReadData(Type, (char*)&Skin, sizeof(Skin)) && !FoundSkin)
@@ -381,7 +381,7 @@ bool CGhost::Load(const char* pFilename, int ID)
 				InitRenderInfos(&Ghost.m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
 			}
 		}
-		else if(Type == 1)
+		else if(Type == GHOSTDATA_TYPE_CHARACTER)
 		{
 			CGhostCharacter Char;
 			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
