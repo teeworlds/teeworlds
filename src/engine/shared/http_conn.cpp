@@ -106,7 +106,7 @@ bool CHttpConnection::SetRequest(CRequest *pRequest)
 
 bool CHttpConnection::Update()
 {
-	int Timeout = m_State == STATE_WAITING ? 90 : 5;
+	int Timeout = m_State == STATE_WAITING ? 90 : 10;
 	if(m_State != STATE_OFFLINE && time_get() - m_LastActionTime > time_freq() * Timeout)
 		return SetState(STATE_ERROR, "error: timeout");
 
