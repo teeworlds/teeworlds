@@ -34,14 +34,10 @@ void IHttpBase::AddField(const char *pKey, int Value)
 
 const char *IHttpBase::GetField(const char *pKey) const
 {
-	//dbg_msg("http/base", "searching key: '%s'", pKey);
 	for(int i = 0; i < m_FieldNum; i++)
 	{
 		if(str_comp_nocase(m_aFields[i].m_aKey, pKey) == 0)
-		{
-			//dbg_msg("http/base", "found key: '%s' -> '%s' (%d)", m_aFields[i].m_aKey, m_aFields[i].m_aValue, m_FieldNum);
 			return m_aFields[i].m_aValue;
-		}
 	}
 	return 0;
 }

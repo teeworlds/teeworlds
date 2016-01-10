@@ -78,7 +78,6 @@ int CResponse::OnMessageComplete(http_parser *pParser)
 
 bool CResponse::ResizeBuffer(int NeededSize)
 {
-	//dbg_msg("http/response", "resizing buffer: %d -> %d", m_BufferSize, NeededSize);
 	if(NeededSize < m_BufferSize || NeededSize <= 0)
 		return false;
 	else if(NeededSize == m_BufferSize)
@@ -107,7 +106,7 @@ bool CResponse::Write(char *pData, int Size)
 
 bool CResponse::Finalize()
 {
-	dbg_msg("http/response", "finishing (size: %d, buffer: %d)", m_Size, m_BufferSize);
+	//dbg_msg("http/response", "finishing (size: %d, buffer: %d)", m_Size, m_BufferSize);
 	if(IsFinalized() || !m_Complete)
 		return false;
 	IHttpBase::Finalize();
