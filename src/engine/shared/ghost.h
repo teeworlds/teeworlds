@@ -73,9 +73,48 @@ public:
 	bool ReadNextType(int *pType);
 	bool ReadData(int Type, char *pData, int Size);
 
-	bool GetGhostInfo(class IStorage *pStorage, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const;
+	bool GetGhostInfo(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const;
 	int GetTime(CGhostHeader Header);
 	int GetTicks(CGhostHeader Header);
+};
+
+class CGhostUpdater
+{
+	struct CGhostHeaderV3
+	{
+		unsigned char m_aMarker[8];
+		unsigned char m_Version;
+		char m_aOwner[MAX_NAME_LENGTH];
+		char m_aSkinName[64];
+		int m_UseCustomColor;
+		int m_ColorBody;
+		int m_ColorFeet;
+		char m_aMap[64];
+		unsigned char m_aCrc[4];
+		int m_NumShots;
+		float m_Time;
+	};
+
+	struct CGhostSkin
+	{
+		int m_Skin0;
+		int m_Skin1;
+		int m_Skin2;
+		int m_Skin3;
+		int m_Skin4;
+		int m_Skin5;
+		int m_UseCustomColor;
+		int m_ColorBody;
+		int m_ColorFeet;
+	};
+
+	static const int ms_ChostCharacterSize = 11 * sizeof(int);
+
+	static CGhostRecorder ms_Recorder;
+
+public:
+
+	static bool Update(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename);
 };
 
 #endif

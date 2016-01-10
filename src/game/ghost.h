@@ -25,7 +25,7 @@ struct CGhostCharacter
 	int m_X;
 	int m_Y;
 	int m_VelX;
-	//int m_VelY;
+	int m_VelY;
 	int m_Angle;
 	int m_Direction;
 	int m_Weapon;

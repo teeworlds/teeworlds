@@ -344,7 +344,7 @@ void CGhostLoader::Close()
 	m_File = 0;
 }
 
-bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const
+bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const
 {
 	if(!pGhostHeader)
 		return false;
@@ -356,6 +356,22 @@ bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, const char *pFilename,
 		return false;
 
 	io_read(File, pGhostHeader, sizeof(CGhostHeader));
+
+	// TODO: update from version 2
+	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) == 0 && pGhostHeader->m_Version == 3)
+	{
+		io_close(File);
+		// old version... try to update
+		if(CGhostUpdater::Update(pStorage, pConsole, pFilename))
+		{
+			// try again
+			File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+			io_read(File, pGhostHeader, sizeof(CGhostHeader));
+		}
+		else
+			return false;
+	}
+
 	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pGhostHeader->m_Version != gs_ActVersion)
 	{
 		io_close(File);
@@ -381,4 +397,106 @@ int CGhostLoader::GetTime(CGhostHeader Header)
 int CGhostLoader::GetTicks(CGhostHeader Header)
 {
 	return (Header.m_aNumTicks[0] << 24) | (Header.m_aNumTicks[1] << 16) | (Header.m_aNumTicks[2] << 8) | (Header.m_aNumTicks[3]);
+}
+
+static void StrToInts(int *pInts, int Num, const char *pStr)
+{
+	int Index = 0;
+	while (Num)
+	{
+		char aBuf[4] = { 0,0,0,0 };
+		for (int c = 0; c < 4 && pStr[Index]; c++, Index++)
+			aBuf[c] = pStr[Index];
+		*pInts = ((aBuf[0] + 128) << 24) | ((aBuf[1] + 128) << 16) | ((aBuf[2] + 128) << 8) | (aBuf[3] + 128);
+		pInts++;
+		Num--;
+	}
+
+	// null terminate
+	pInts[-1] &= 0xffffff00;
+}
+
+CGhostRecorder CGhostUpdater::ms_Recorder;
+
+bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename)
+{
+	char aBackupFilename[512];
+	str_format(aBackupFilename, sizeof(aBackupFilename), "%s.old", pFilename);
+	if(!pStorage->RenameFile(pFilename, aBackupFilename, IStorage::TYPE_SAVE))
+		return false;
+
+	IOHANDLE File = pStorage->OpenFile(aBackupFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+
+	// read header
+	CGhostHeaderV3 Header;
+	io_read(File, &Header, sizeof(Header));
+
+	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0 || Header.m_Version != 3)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error: no valid ghost file");
+		io_close(File);
+		return false;
+	}
+
+	int Crc = (Header.m_aCrc[0] << 24) | (Header.m_aCrc[1] << 16) | (Header.m_aCrc[2] << 8) | (Header.m_aCrc[3]);
+	ms_Recorder.Start(pStorage, pConsole, pFilename, Header.m_aMap, Crc, Header.m_aOwner);
+
+	CGhostSkin Skin;
+	StrToInts(&Skin.m_Skin0, 6, Header.m_aSkinName);
+	Skin.m_UseCustomColor = Header.m_UseCustomColor;
+	Skin.m_ColorBody = Header.m_ColorBody;
+	Skin.m_ColorFeet = Header.m_ColorFeet;
+	ms_Recorder.WriteData(0 /* GHOSTDATA_TYPE_SKIN */, (const char*)&Skin, sizeof(Skin));
+
+	// read data
+	int Index = 0;
+	while(Index < Header.m_NumShots)
+	{
+		static char aCompresseddata[100 * 500];
+		static char aDecompressed[100 * 500];
+		static char aData[100 * 500];
+
+		unsigned char aSize[4];
+		if(io_read(File, aSize, sizeof(aSize)) != sizeof(aSize))
+			break;
+		unsigned Size = (aSize[0] << 24) | (aSize[1] << 16) | (aSize[2] << 8) | aSize[3];
+
+		if(io_read(File, aCompresseddata, Size) != (unsigned)Size)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error reading chunk");
+			break;
+		}
+
+		Size = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
+		if(Size < 0)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during network decompression");
+			break;
+		}
+
+		Size = CVariableInt::Decompress(aDecompressed, Size, aData);
+		if(Size < 0)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during intpack decompression");
+			break;
+		}
+
+		char *pTmp = aData;
+		for(unsigned i = 0; i < Size / ms_ChostCharacterSize; i++)
+		{
+			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_ChostCharacterSize);
+			pTmp += ms_ChostCharacterSize;
+			Index++;
+		}
+	}
+
+	io_close(File);
+
+	bool Error = Header.m_NumShots != Index;
+
+	int Time = Error ? 0 : (int)(Header.m_Time * 1000);
+	ms_Recorder.Stop(Index, Time);
+	return !Error;
 }

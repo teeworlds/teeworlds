@@ -2190,7 +2190,7 @@ bool CClient::GhostLoader_Load(const char *pFilename)
 
 bool CClient::GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader)
 {
-	return m_GhostLoader.GetGhostInfo(Storage(), pFilename, pGhostHeader, m_aCurrentMap, m_CurrentMapCrc);
+	return m_GhostLoader.GetGhostInfo(Storage(), m_pConsole, pFilename, pGhostHeader, m_aCurrentMap, m_CurrentMapCrc);
 }
 
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
