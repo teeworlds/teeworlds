@@ -1330,6 +1330,17 @@ int CServer::Run()
 		
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 	
+	// ModAPI, generate editor ressources
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "editorresources/%s.editor", m_pModAPIServer->GetName());
+		if(!m_pModAPIServer->CreateEditorFile(Storage(), aBuf))
+		{
+			dbg_msg("server", "failed to generate editor resources. modname='%s'", m_pModAPIServer->GetName());
+			return -1;
+		}
+	}
+	
 	// ModAPI, generate mod
 	{
 		char aBuf[512];

@@ -4,6 +4,8 @@
 
 #include <game/mapitems.h>
 
+#include <modapi/mapitem.h>
+
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
@@ -45,11 +47,6 @@ IGameController::IGameController(CGameContext *pGameServer)
 
 	// map
 	m_aMapWish[0] = 0;
-
-	// spawn
-	m_aNumSpawnPoints[0] = 0;
-	m_aNumSpawnPoints[1] = 0;
-	m_aNumSpawnPoints[2] = 0;
 }
 
 //activity
@@ -265,51 +262,51 @@ void IGameController::OnFlagReturn(CFlag *pFlag)
 {
 }
 
-bool IGameController::OnEntity(int Index, vec2 Pos)
+bool IGameController::OnEntityPoint(int EditorResource, int EntityType, vec2 Pos)
 {
 	// don't add pickups in survival
 	if(m_GameFlags&GAMEFLAG_SURVIVAL)
 	{
-		if(Index < ENTITY_SPAWN || Index > ENTITY_SPAWN_BLUE)
+		if(EntityType < MODAPI_ENTITYPOINTTYPE_SPAWN || EntityType > MODAPI_ENTITYPOINTTYPE_SPAWN_BLUE)
 			return false;
 	}
 
-	int Type = -1;
+	int PickupType = -1;
 
-	switch(Index)
+	switch(EntityType)
 	{
-	case ENTITY_SPAWN:
-		m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
-		break;
-	case ENTITY_SPAWN_RED:
-		m_aaSpawnPoints[1][m_aNumSpawnPoints[1]++] = Pos;
-		break;
-	case ENTITY_SPAWN_BLUE:
-		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
-		break;
-	case ENTITY_ARMOR_1:
-		Type = PICKUP_ARMOR;
-		break;
-	case ENTITY_HEALTH_1:
-		Type = PICKUP_HEALTH;
-		break;
-	case ENTITY_WEAPON_SHOTGUN:
-		Type = PICKUP_SHOTGUN;
-		break;
-	case ENTITY_WEAPON_GRENADE:
-		Type = PICKUP_GRENADE;
-		break;
-	case ENTITY_WEAPON_LASER:
-		Type = PICKUP_LASER;
-		break;
-	case ENTITY_POWERUP_NINJA:
-		if(g_Config.m_SvPowerups)
-			Type = PICKUP_NINJA;
+		case MODAPI_ENTITYPOINTTYPE_SPAWN:
+			m_aaSpawnPoints[0].add(Pos);
+			break;
+		case MODAPI_ENTITYPOINTTYPE_SPAWN_RED:
+			m_aaSpawnPoints[1].add(Pos);
+			break;
+		case MODAPI_ENTITYPOINTTYPE_SPAWN_BLUE:
+			m_aaSpawnPoints[2].add(Pos);
+			break;
+		case MODAPI_ENTITYPOINTTYPE_ARMOR:
+			PickupType = PICKUP_ARMOR;
+			break;
+		case MODAPI_ENTITYPOINTTYPE_HEALTH:
+			PickupType = PICKUP_HEALTH;
+			break;
+		case MODAPI_ENTITYPOINTTYPE_WEAPON_SHOTGUN:
+			PickupType = PICKUP_SHOTGUN;
+			break;
+		case MODAPI_ENTITYPOINTTYPE_WEAPON_GRENADE:
+			PickupType = PICKUP_GRENADE;
+			break;
+		case MODAPI_ENTITYPOINTTYPE_WEAPON_LASER:
+			PickupType = PICKUP_LASER;
+			break;
+		case MODAPI_ENTITYPOINTTYPE_WEAPON_NINJA:
+			if(g_Config.m_SvPowerups)
+				PickupType = PICKUP_NINJA;
 	}
 
-	if(Type != -1)
+	if(PickupType != -1)
 	{
-		new CPickup(&GameServer()->m_World, Type, Pos);
+		new CPickup(&GameServer()->m_World, PickupType, Pos);
 		return true;
 	}
 
@@ -991,7 +988,7 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
 void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 {
 	// get spawn point
-	for(int i = 0; i < m_aNumSpawnPoints[Type]; i++)
+	for(int i = 0; i < m_aaSpawnPoints[Type].size(); i++)
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
@@ -1139,4 +1136,13 @@ int IGameController::GetStartTeam()
 		return Team;
 	}
 	return TEAM_SPECTATORS;
+}
+
+void IGameController::RegisterEntityPointLayer(int ID, const char* m_pModName)
+{
+	m_lEditorResources.set_size(m_lEditorResources.size()+1);
+	CRegisteredEditorResource& EditorResource = m_lEditorResources[m_lEditorResources.size()-1];
+	
+	EditorResource.m_ID = ID;
+	str_copy(EditorResource.m_aModName, m_pModName, sizeof(EditorResource.m_aModName));
 }

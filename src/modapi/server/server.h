@@ -12,6 +12,7 @@ public:
 	const char* GetName() const;
 	
 	virtual int CreateModFile(class IStorage* pStorage, const char* pFilename) = 0;
+	virtual int CreateEditorFile(class IStorage* pStorage, const char* pFilename) = 0;
 };
 
 #endif

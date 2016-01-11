@@ -11,4 +11,9 @@ enum
 	MOD_NUM_ENTTYPES
 };
 
+enum
+{
+	MOD_EDITORRESOURCE_TW07 = 0,
+};
+
 #endif

@@ -25,6 +25,9 @@
 
 #include "auto_map.h"
 
+#include <modapi/mapitem.h>
+#include <modapi/editoritem.h>
+
 typedef void (*INDEX_MODIFY_FUNC)(int *pIndex);
 
 //CRenderTools m_RenderTools;
@@ -140,6 +143,33 @@ public:
 	}
 };
 
+class CEntityType
+{
+public:
+	char m_pName[128];
+	bool m_Loaded;
+	
+	CEntityType();
+};
+
+class CEditorResource
+{
+public:
+	char m_pName[128];
+	
+	char* m_pImageData;
+	int m_ImageWidth;
+	int m_ImageHeight;
+	int m_ImageFormat;
+	IGraphics::CTextureHandle m_Texture;
+	CEntityType m_aTypes[256];
+	
+	CEditorResource();
+	~CEditorResource();
+	
+	bool Load(class IStorage* pStorage, class IGraphics* pGraphics, const char* pFileName);
+	bool Unload(class IGraphics* pGraphics);
+};
 
 class CLayer;
 class CLayerGroup;
@@ -404,6 +434,7 @@ enum
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
 	PROPTYPE_SHIFT,
+	PROPTYPE_ENTITY,
 };
 
 typedef struct
@@ -486,6 +517,33 @@ public:
 
 	int m_Image;
 	array<CQuad> m_lQuads;
+};
+
+class CLayerEntities : public CLayer
+{
+public:
+	CLayerEntities();
+	~CLayerEntities();
+
+	virtual void Render();
+	CModAPI_MapEntity_Point *NewPoint();
+
+	virtual void BrushSelecting(CUIRect Rect);
+	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
+	virtual void BrushPlace(CLayer *pBrush, float wx, float wy);
+	virtual void BrushFlipX();
+	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+
+	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc);
+	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
+
+	void GetSize(float *w, float *h) const;
+	
+	array<CModAPI_MapEntity_Point> m_lEntityPoints;
+	int m_Resource;
 };
 
 class CLayerGame : public CLayerTiles
@@ -608,6 +666,7 @@ public:
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
+	CModAPI_MapEntity_Point *GetSelectedEntityPoint();
 	CQuad *GetSelectedQuad();
 	CLayer *GetSelectedLayerType(int Index, int Type);
 	CLayer *GetSelectedLayer(int Index);
@@ -730,6 +789,8 @@ public:
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 	
+	int m_SelectedEntityPoint;
+	
 	vec4 m_SelectedColor;
 	vec3 m_InitialPickerColor;
 	vec3 m_SelectedPickerColor;
@@ -777,6 +838,7 @@ public:
 	static int PopupGroup(CEditor *pEditor, CUIRect View);
 	static int PopupLayer(CEditor *pEditor, CUIRect View);
 	static int PopupQuad(CEditor *pEditor, CUIRect View);
+	static int PopupEntityPoint(CEditor *pEditor, CUIRect View);
 	static int PopupPoint(CEditor *pEditor, CUIRect View);
 	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
 	static int PopupMapInfo(CEditor *pEditor, CUIRect View);
@@ -796,6 +858,10 @@ public:
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
 	int PopupSelectImageResult();
+	static int PopupSelectEntity(CEditor *pEditor, CUIRect View);
+	
+	void PopupSelectEntityInvoke(int Current, float x, float y);
+	int PopupSelectEntityResult();
 
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
@@ -812,6 +878,7 @@ public:
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
+	void DoEntityPoint(CModAPI_MapEntity_Point *pPoint, int Index);
 	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	vec4 GetButtonColor(const void *pID, int Checked);
 
@@ -847,6 +914,8 @@ public:
 
 	int GetLineDistance() const;
 	void ZoomMouseTarget(float ZoomFactor);
+	
+	array<CEditorResource> m_lEditorResources;
 };
 
 // make sure to inline this function

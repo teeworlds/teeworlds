@@ -3,6 +3,8 @@
 
 #include <game/server/gamecontroller.h>
 
+#include <mod/defines.h>
+
 class CGameControllerMOD : public IGameController
 {
 public:

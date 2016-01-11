@@ -11,6 +11,8 @@
 #include <game/gamecore.h>
 #include <game/version.h>
 
+#include <modapi/mapitem.h>
+
 #include "gamecontext.h"
 #include "player.h"
 
@@ -1402,8 +1404,91 @@ void CGameContext::OnInit()
 
 			if(Index >= ENTITY_OFFSET)
 			{
-				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
+				int EntityType = -1;			
+				
+				// switch from the vanilla enum to the ModAPI enum
+				switch(Index-ENTITY_OFFSET)
+				{
+					case ENTITY_SPAWN:
+						EntityType = MODAPI_ENTITYPOINTTYPE_SPAWN;
+						break;
+					case ENTITY_SPAWN_RED:
+						EntityType = MODAPI_ENTITYPOINTTYPE_SPAWN_RED;
+						break;
+					case ENTITY_SPAWN_BLUE:
+						EntityType = MODAPI_ENTITYPOINTTYPE_SPAWN_BLUE;
+						break;
+					case ENTITY_FLAGSTAND_RED:
+						EntityType = MODAPI_ENTITYPOINTTYPE_FLAGSTAND_RED;
+						break;
+					case ENTITY_FLAGSTAND_BLUE:
+						EntityType = MODAPI_ENTITYPOINTTYPE_FLAGSTAND_BLUE;
+						break;
+					case ENTITY_ARMOR_1:
+						EntityType = MODAPI_ENTITYPOINTTYPE_ARMOR;
+						break;
+					case ENTITY_HEALTH_1:
+						EntityType = MODAPI_ENTITYPOINTTYPE_HEALTH;
+						break;
+					case ENTITY_WEAPON_SHOTGUN:
+						EntityType = MODAPI_ENTITYPOINTTYPE_WEAPON_SHOTGUN;
+						break;
+					case ENTITY_WEAPON_GRENADE:
+						EntityType = MODAPI_ENTITYPOINTTYPE_WEAPON_GRENADE;
+						break;
+					case ENTITY_POWERUP_NINJA:
+						EntityType = MODAPI_ENTITYPOINTTYPE_WEAPON_NINJA;
+						break;
+					case ENTITY_WEAPON_LASER:
+						EntityType = MODAPI_ENTITYPOINTTYPE_WEAPON_LASER;
+						break;
+				}
+				
+				if(EntityType >= 0)
+				{
+					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
+					m_pController->OnEntityPoint(MOD_EDITORRESOURCE_TW07, EntityType, Pos);
+				}
+			}
+		}
+	}
+	
+	// create all entities from entities layers
+	for(int l=0; l<m_Layers.NumLayers(); l++)
+	{
+		CMapItemLayer* pLayerItem = m_Layers.GetLayer(l);
+		
+		if(pLayerItem->m_Type == MODAPI_MAPLAYERTYPE_ENTITIES)
+		{			
+			CModAPI_MapItem_LayerEntities* pEntitiesLayerItem = reinterpret_cast<CModAPI_MapItem_LayerEntities*>(pLayerItem);
+			
+			//Get mod name
+			const char* pModName = reinterpret_cast<const char*>(Kernel()->RequestInterface<IMap>()->GetData(pEntitiesLayerItem->m_ModName));
+			
+			int EditorResourceId = -1;
+			for(int i=0; i<m_pController->m_lEditorResources.size(); i++)
+			{
+				if(str_comp(pModName, m_pController->m_lEditorResources[i].m_aModName) == 0)
+				{
+					EditorResourceId = m_pController->m_lEditorResources[i].m_ID;
+					break;
+				}
+			}
+			
+			if(EditorResourceId >= 0)
+			{
+				int NbEntities = pEntitiesLayerItem->m_NumPoints;
+				CModAPI_MapEntity_Point* pPointsData = reinterpret_cast<CModAPI_MapEntity_Point*>(Kernel()->RequestInterface<IMap>()->GetDataSwapped(pEntitiesLayerItem->m_PointsData));
+				for(int i=0; i<NbEntities; i++)
+				{
+					vec2 Pos = vec2(pPointsData[i].x, pPointsData[i].y);
+					int EntityType = pPointsData[i].m_Type;
+					
+					if(EntityType >= 0 && EntityType < 256)
+					{
+						m_pController->OnEntityPoint(EditorResourceId, EntityType, Pos);
+					}
+				}
 			}
 		}
 	}
