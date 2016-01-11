@@ -357,8 +357,7 @@ bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, class IConsole *pConso
 
 	io_read(File, pGhostHeader, sizeof(CGhostHeader));
 
-	// TODO: update from version 2
-	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) == 0 && pGhostHeader->m_Version == 3)
+	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) == 0 && (pGhostHeader->m_Version == 2 || pGhostHeader->m_Version == 3))
 	{
 		io_close(File);
 		// old version... try to update
@@ -399,7 +398,7 @@ int CGhostLoader::GetTicks(CGhostHeader Header)
 	return (Header.m_aNumTicks[0] << 24) | (Header.m_aNumTicks[1] << 16) | (Header.m_aNumTicks[2] << 8) | (Header.m_aNumTicks[3]);
 }
 
-static void StrToInts(int *pInts, int Num, const char *pStr)
+inline void StrToInts(int *pInts, int Num, const char *pStr)
 {
 	int Index = 0;
 	while (Num)
@@ -430,29 +429,59 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 		return false;
 
 	// read header
-	CGhostHeaderV3 Header;
+	CGhostHeaderMain Header;
 	io_read(File, &Header, sizeof(Header));
-
-	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0 || Header.m_Version != 3)
+	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0 || (Header.m_Version != 2 && Header.m_Version != 3))
 	{
 		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error: no valid ghost file");
 		io_close(File);
 		return false;
 	}
 
-	int Crc = (Header.m_aCrc[0] << 24) | (Header.m_aCrc[1] << 16) | (Header.m_aCrc[2] << 8) | (Header.m_aCrc[3]);
-	ms_Recorder.Start(pStorage, pConsole, pFilename, Header.m_aMap, Crc, Header.m_aOwner);
+	io_seek(File, 0, IOSEEK_START);
 
-	CGhostSkin Skin;
-	StrToInts(&Skin.m_Skin0, 6, Header.m_aSkinName);
-	Skin.m_UseCustomColor = Header.m_UseCustomColor;
-	Skin.m_ColorBody = Header.m_ColorBody;
-	Skin.m_ColorFeet = Header.m_ColorFeet;
-	ms_Recorder.WriteData(0 /* GHOSTDATA_TYPE_SKIN */, (const char*)&Skin, sizeof(Skin));
+	int Ticks, Time;
+	if(Header.m_Version == 2)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "updating v2 ghost file");
+		CGhostHeaderV2 ExtHeader;
+		char aSkinData[ms_SkinSizeV2];
+		io_read(File, &ExtHeader, sizeof(ExtHeader));
+		io_read(File, aSkinData, sizeof(aSkinData));
+
+		Ticks = ExtHeader.m_NumShots;
+		Time = ExtHeader.m_Time * 1000;
+
+		int Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
+		ms_Recorder.Start(pStorage, pConsole, pFilename, ExtHeader.m_aMap, Crc, ExtHeader.m_aOwner);
+
+		CGhostSkin Skin;
+		mem_copy(&Skin, aSkinData + ms_SkinOffsetV2, sizeof(Skin));
+		ms_Recorder.WriteData(0 /* GHOSTDATA_TYPE_SKIN */, (const char*)&Skin, sizeof(Skin));
+	}
+	else
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "updating v3 ghost file");
+		CGhostHeaderV3 ExtHeader;
+		io_read(File, &ExtHeader, sizeof(ExtHeader));
+
+		Ticks = ExtHeader.m_NumShots;
+		Time = ExtHeader.m_Time * 1000;
+
+		int Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
+		ms_Recorder.Start(pStorage, pConsole, pFilename, ExtHeader.m_aMap, Crc, ExtHeader.m_aOwner);
+
+		CGhostSkin Skin;
+		StrToInts(&Skin.m_Skin0, 6, ExtHeader.m_aSkinName);
+		Skin.m_UseCustomColor = ExtHeader.m_UseCustomColor;
+		Skin.m_ColorBody = ExtHeader.m_ColorBody;
+		Skin.m_ColorFeet = ExtHeader.m_ColorFeet;
+		ms_Recorder.WriteData(0 /* GHOSTDATA_TYPE_SKIN */, (const char*)&Skin, sizeof(Skin));
+	}
 
 	// read data
 	int Index = 0;
-	while(Index < Header.m_NumShots)
+	while(Index < Ticks)
 	{
 		static char aCompresseddata[100 * 500];
 		static char aDecompressed[100 * 500];
@@ -494,9 +523,7 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 
 	io_close(File);
 
-	bool Error = Header.m_NumShots != Index;
-
-	int Time = Error ? 0 : (int)(Header.m_Time * 1000);
-	ms_Recorder.Stop(Index, Time);
+	bool Error = Ticks != Index;
+	ms_Recorder.Stop(Index, Error ? 0 : Time);
 	return !Error;
 }

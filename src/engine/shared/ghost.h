@@ -80,6 +80,29 @@ public:
 
 class CGhostUpdater
 {
+	// all
+	struct CGhostHeaderMain
+	{
+		unsigned char m_aMarker[8];
+		unsigned char m_Version;
+	};
+
+	// version 2
+	struct CGhostHeaderV2
+	{
+		unsigned char m_aMarker[8];
+		unsigned char m_Version;
+		char m_aOwner[MAX_NAME_LENGTH];
+		char m_aMap[64];
+		unsigned char m_aCrc[4];
+		int m_NumShots;
+		float m_Time;
+	};
+
+	static const int ms_SkinSizeV2 = 17 * sizeof(int);
+	static const int ms_SkinOffsetV2 = 8 * sizeof(int);
+
+	// version 3
 	struct CGhostHeaderV3
 	{
 		unsigned char m_aMarker[8];
@@ -95,6 +118,7 @@ class CGhostUpdater
 		float m_Time;
 	};
 
+	// actual version
 	struct CGhostSkin
 	{
 		int m_Skin0;
@@ -113,7 +137,6 @@ class CGhostUpdater
 	static CGhostRecorder ms_Recorder;
 
 public:
-
 	static bool Update(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename);
 };
 
