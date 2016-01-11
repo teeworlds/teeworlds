@@ -42,12 +42,14 @@ const char *IHttpBase::GetField(const char *pKey) const
 	return 0;
 }
 
-CRequestInfo::CRequestInfo(const char *pAddr) : m_pRequest(0), m_pResponse(new CBufferResponse()), m_pfnCallback(0), m_pUserData(0)
+CRequestInfo::CRequestInfo(const char *pAddr)
+	: m_pRequest(0), m_pResponse(new CBufferResponse()), m_Priority(HTTP_PRIORITY_HIGH), m_pfnCallback(0), m_pUserData(0)
 {
 	str_copy(m_aAddr, pAddr, sizeof(m_aAddr));
 }
 
-CRequestInfo::CRequestInfo(const char *pAddr, IOHANDLE File) : m_pRequest(0), m_pResponse(new CFileResponse(File)), m_pfnCallback(0), m_pUserData(0)
+CRequestInfo::CRequestInfo(const char *pAddr, IOHANDLE File, const char *pFilename)
+	: m_pRequest(0), m_pResponse(new CFileResponse(File, pFilename)), m_Priority(HTTP_PRIORITY_HIGH), m_pfnCallback(0), m_pUserData(0)
 {
 	str_copy(m_aAddr, pAddr, sizeof(m_aAddr));
 }
@@ -80,7 +82,7 @@ CHttpClient::CHttpClient()
 
 CHttpClient::~CHttpClient() { }
 
-void CHttpClient::Send(CRequestInfo *pInfo, CRequest *pRequest)
+void CHttpClient::Send(CRequestInfo *pInfo, IRequest *pRequest)
 {
 	pInfo->m_pRequest = pRequest;
 	m_pEngine->HostLookup(&pInfo->m_Lookup, pInfo->m_aAddr, NETTYPE_IPV4);
@@ -107,7 +109,7 @@ CHttpConnection *CHttpClient::GetConnection(NETADDR Addr)
 			return pConn;
 	}
 
-	for (int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+	for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
 	{
 		CHttpConnection *pConn = &m_aConnections[j];
 		if(pConn->State() == CHttpConnection::STATE_OFFLINE)
@@ -117,14 +119,25 @@ CHttpConnection *CHttpClient::GetConnection(NETADDR Addr)
 	return 0;
 }
 
-void CHttpClient::Update()
+void CHttpClient::FetchRequest(int Priority, int Max)
 {
-	// TODO: rework bandwidth limiting
-	// TODO: add some priority handling?
+	if(Max > 0)
+	{
+		int Num = 0;
+		for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
+		{
+			CHttpConnection *pConn = &m_aConnections[j];
+			if(pConn->GetInfo() && pConn->GetInfo()->m_Priority == Priority)
+				Num++;
+		}
+		if(Num >= Max)
+			return;
+	}
+
 	for(int i = 0; i < m_lPendingRequests.size(); i++)
 	{
 		CRequestInfo *pInfo = m_lPendingRequests[i];
-		if(pInfo->m_Lookup.m_Job.Status() != CJob::STATE_DONE)
+		if(pInfo->m_Priority != Priority || pInfo->m_Lookup.m_Job.Status() != CJob::STATE_DONE)
 			continue;
 
 		if(pInfo->m_Lookup.m_Job.Result() != 0)
@@ -150,6 +163,13 @@ void CHttpClient::Update()
 			}
 		}
 	}
+}
+
+void CHttpClient::Update()
+{
+	// TODO: rework bandwidth limiting
+	FetchRequest(HTTP_PRIORITY_HIGH, 0);
+	FetchRequest(HTTP_PRIORITY_LOW, HTTP_MAX_LOW_PRIORITY_CONNECTIONS);
 
 	for(int i = 0; i < HTTP_MAX_CONNECTIONS; i++)
 		m_aConnections[i].Update();

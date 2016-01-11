@@ -7,6 +7,12 @@
 
 #include <engine/engine.h>
 
+enum
+{
+	HTTP_PRIORITY_HIGH,
+	HTTP_PRIORITY_LOW
+};
+
 class IHttpBase
 {
 	enum
@@ -98,49 +104,43 @@ public:
 class CFileResponse : public IResponse
 {
 	IOHANDLE m_File;
+	char m_aFilename[512];
 
 	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
 
 public:
-	CFileResponse(IOHANDLE File);
+	CFileResponse(IOHANDLE File, const char *pFilename);
 	virtual ~CFileResponse();
+
+	const char *GetPath() const { return m_aFilename; }
 
 	bool IsFile() const { return true; }
 };
 
 typedef void(*FHttpCallback)(IResponse *pResponse, bool Error, void *pUserData);
 
-class CRequest : public IHttpBase
+class IRequest : public IHttpBase
 {
+protected:
 	friend class CHttpConnection;
-
-	enum
-	{
-		STATE_HEADER=0,
-		STATE_BODY
-	};
 
 	char m_aURI[256];
 	int m_Method;
 	int m_State;
 
 	char m_aHeader[1024*8];
-	char *m_pBody;
-	int m_BodySize;
 
 	char *m_pCur;
 	char *m_pEnd;
 
+	IRequest(int Method, const char *pURI, int State);
+
 	int AddToHeader(char *pCur, const char *pData, int Size);
 	int GenerateHeader();
-	bool InitBody(int Size, const char *pContentType);
 
-	bool Finalize();
+	virtual bool Finalize() = 0;
 
-	int GetData(char *pBuf, int MaxSize);
-	void MoveCursor(int Bytes) { m_pCur += Bytes; }
-
-	const char *GetFilename(const char *pFilename) const;
+	virtual int GetData(char *pBuf, int MaxSize) = 0;
 
 public:
 	enum
@@ -150,12 +150,57 @@ public:
 		HTTP_PUT
 	};
 
-	CRequest(int Method, const char *pURI);
-	virtual ~CRequest();
-
-	bool SetBody(const char *pData, int Size, const char *pContentType);
+	virtual ~IRequest();
 	
 	//const char *GetURI() const { return m_aURI; }
+};
+
+class CBufferRequest : public IRequest
+{
+	enum
+	{
+		STATE_HEADER = 0,
+		STATE_BODY
+	};
+
+	char *m_pBody;
+	int m_BodySize;
+
+	int GetData(char *pBuf, int MaxSize);
+	bool Finalize();
+
+public:
+	CBufferRequest(int Method, const char *pURI);
+	virtual ~CBufferRequest();
+
+	bool SetBody(const char *pData, int Size, const char *pContentType);
+};
+
+class CFileRequest : public IRequest
+{
+	enum
+	{
+		STATE_HEADER = 0,
+		STATE_FILE_HEADER,
+		STATE_FILE_BODY,
+		STATE_FILE_FOOTER
+	};
+
+	IOHANDLE m_File;
+
+	char m_aUploadHeader[256];
+	char m_aUploadFooter[256];
+
+	const char *GetFilename(const char *pFilename) const;
+
+	int GetData(char *pBuf, int MaxSize);
+	bool Finalize();
+
+public:
+	CFileRequest(const char *pURI);
+	virtual ~CFileRequest();
+
+	bool SetFile(IOHANDLE File, const char *pFilename, const char *pUploadName);
 };
 
 class CRequestInfo
@@ -166,18 +211,21 @@ class CRequestInfo
 	char m_aAddr[256];
 
 	CHostLookup m_Lookup;
-	CRequest *m_pRequest;
+	IRequest *m_pRequest;
 	IResponse *m_pResponse;
+
+	int m_Priority;
 
 	FHttpCallback m_pfnCallback;
 	void *m_pUserData;
 
 public:
 	CRequestInfo(const char *pAddr);
-	CRequestInfo(const char *pAddr, IOHANDLE File);
+	CRequestInfo(const char *pAddr, IOHANDLE File, const char *pFilename);
 
 	virtual ~CRequestInfo();
 
+	void SetPriority(int Priority) { m_Priority = Priority; }
 	void SetCallback(FHttpCallback pfnCallback, void *pUserData = 0);
 	void ExecuteCallback(IResponse *pResponse, bool Error);
 };
@@ -222,13 +270,16 @@ public:
 
 	int State() { return m_State; }
 	bool CompareAddr(NETADDR Addr);
+
+	const CRequestInfo* GetInfo() const { return m_pInfo; }
 };
 
 class CHttpClient
 {
 	enum
 	{
-		HTTP_MAX_CONNECTIONS = 4
+		HTTP_MAX_CONNECTIONS = 4,
+		HTTP_MAX_LOW_PRIORITY_CONNECTIONS=2
 	};
 
 	CHttpConnection m_aConnections[HTTP_MAX_CONNECTIONS];
@@ -244,7 +295,8 @@ public:
 
 	void Init(IEngine *pEngine) { m_pEngine = pEngine; }
 
-	void Send(CRequestInfo *pInfo, CRequest *pRequest);
+	void Send(CRequestInfo *pInfo, IRequest *pRequest);
+	void FetchRequest(int Priority, int Max);
 	void Update();
 };
 

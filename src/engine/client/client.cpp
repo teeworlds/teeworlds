@@ -351,7 +351,7 @@ int CClient::SendMsgEx(CMsgPacker *pMsg, int Flags, bool System)
 	return 0;
 }
 
-void CClient::SendHttp(class CRequestInfo *pInfo, class CRequest *pRequest)
+void CClient::SendHttp(class CRequestInfo *pInfo, class IRequest *pRequest)
 {
 	m_HttpClient.Send(pInfo, pRequest);
 }

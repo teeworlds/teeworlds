@@ -3,7 +3,6 @@
 
 #include "http.h"
 
-// TODO: download to file
 IResponse::IResponse() : m_LastWasValue(false), m_Complete(false), m_Close(false), m_Size(0)
 {
 	mem_zero(&m_ParserSettings, sizeof(m_ParserSettings));
@@ -119,8 +118,9 @@ bool CBufferResponse::ResizeBuffer(int NeededSize)
 	return true;
 }
 
-CFileResponse::CFileResponse(IOHANDLE File) : IResponse(), m_File(File)
+CFileResponse::CFileResponse(IOHANDLE File, const char *pFilename) : IResponse(), m_File(File)
 {
+	str_copy(m_aFilename, pFilename, sizeof(m_aFilename));
 	m_ParserSettings.on_body = OnBody;
 }
 

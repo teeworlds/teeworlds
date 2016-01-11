@@ -135,12 +135,10 @@ bool CHttpConnection::Update()
 				int Size = net_tcp_send(m_Socket, aData, Bytes);
 				if(Size < 0)
 					return SetState(STATE_ERROR, "error: sending data");
+				if(Size < Bytes)
+					return SetState(STATE_ERROR, "error: sending data");
 
 				m_LastActionTime = time_get();
-
-				// resend if needed
-				if(Size < Bytes)
-					m_pInfo->m_pRequest->MoveCursor(Size - Bytes);
 			}
 			else // Bytes = 0
 				return SetState(STATE_RECEIVING, "sent request"); 

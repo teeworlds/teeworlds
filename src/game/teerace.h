@@ -7,7 +7,8 @@ class ITeerace
 {
 public:
 	static const char *Host();
-	static class CRequest *CreateApiRequest(int Method, const char *pURI);
+	static class CBufferRequest *CreateApiRequest(int Method, const char *pURI);
+	static class CFileRequest *CreateApiUpload(const char *pURI);
 };
 
 #endif

@@ -12,9 +12,16 @@ const char *ITeerace::Host()
 	return g_Config.m_WaWebappIp;
 }
 
-CRequest *ITeerace::CreateApiRequest(int Method, const char *pURI)
+CBufferRequest *ITeerace::CreateApiRequest(int Method, const char *pURI)
 {
 	char aURI[256];
 	str_format(aURI, sizeof(aURI), "%s%s%s", g_Config.m_WaApiPath, pURI[0] == '/' ? "" : "/", pURI);
-	return new CRequest(Method, aURI);
+	return new CBufferRequest(Method, aURI);
+}
+
+CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
+{
+	char aURI[256];
+	str_format(aURI, sizeof(aURI), "%s%s%s", g_Config.m_WaApiPath, pURI[0] == '/' ? "" : "/", pURI);
+	return new CFileRequest(aURI);
 }

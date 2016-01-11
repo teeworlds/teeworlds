@@ -15,8 +15,7 @@ struct CCheckHostData
 	char m_aAddr[128];
 };
 
-CClientWebapp::CClientWebapp(CGameClient *pGameClient)
-	: m_pClient(pGameClient)
+CClientWebapp::CClientWebapp()
 {
 	if(gs_CheckHostLock == 0)
 		gs_CheckHostLock = lock_create();
@@ -50,7 +49,7 @@ void CClientWebapp::OnApiToken(IResponse *pResponse, bool Error, void *pUserData
 void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserData)
 {
 	CBufferResponse *pRes = (CBufferResponse*)pResponse;
-	CClientWebapp *pWebapp = (CClientWebapp*) pUserData;
+	CGameClient *pClient = (CGameClient*) pUserData;
 	bool Success = !Error && pRes->StatusCode() == 200;
 	if(!Success)
 		return;
@@ -69,22 +68,19 @@ void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserDa
 			for(unsigned i = 0; i < pJsonData->u.array.length; i++)
 			{
 				json_value *pJsonSrv = pJsonData->u.array.values[i];
-				if(pJsonSrv && pJsonSrv->type == json_string)
-					pWebapp->CheckHost(pJsonSrv->u.string.ptr);
+				if (pJsonSrv && pJsonSrv->type == json_string)
+				{
+					CCheckHostData *pTmp = new CCheckHostData();
+					pTmp->m_pClient = pClient;
+					str_copy(pTmp->m_aAddr, pJsonSrv->u.string.ptr, sizeof(pTmp->m_aAddr));
+
+					void *LoadThread = thread_create(CheckHostThread, pTmp);
+					thread_detach(LoadThread);
+				}
 			}
 		}
 		json_value_free(pJsonData);
 	}
-}
-
-void CClientWebapp::CheckHost(const char* pAddr)
-{
-	CCheckHostData *pTmp = new CCheckHostData();
-	pTmp->m_pClient = m_pClient;
-	str_copy(pTmp->m_aAddr, pAddr, sizeof(pTmp->m_aAddr));
-
-	void *LoadThread = thread_create(CheckHostThread, pTmp);
-	thread_detach(LoadThread);
 }
 
 void CClientWebapp::CheckHostThread(void *pUser)
