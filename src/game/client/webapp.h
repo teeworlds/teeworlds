@@ -15,8 +15,8 @@ public:
 	CClientWebapp(class CGameClient *pGameClient);
 	virtual ~CClientWebapp();
 	
-	static void OnApiToken(class CResponse *pResponse, bool Error, void *pUserData);
-	static void OnServerList(class CResponse *pResponse, bool Error, void *pUserData);
+	static void OnApiToken(class IResponse *pResponse, bool Error, void *pUserData);
+	static void OnServerList(class IResponse *pResponse, bool Error, void *pUserData);
 
 	// api token vars
 	bool m_ApiTokenRequested;

@@ -385,8 +385,9 @@ void CGameClient::OnInit()
 
 	// get Teerace server list
 	CRequest *pRequest = ITeerace::CreateApiRequest(CRequest::HTTP_GET, "/anonclient/servers/");
-	pRequest->SetCallback(CClientWebapp::OnServerList, m_pWebapp);
-	Client()->SendHttp(ITeerace::Host(), pRequest);
+	CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
+	pInfo->SetCallback(CClientWebapp::OnServerList, m_pWebapp);
+	Client()->SendHttp(pInfo, pRequest);
 }
 
 void CGameClient::DispatchInput()

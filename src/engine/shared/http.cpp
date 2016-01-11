@@ -42,6 +42,36 @@ const char *IHttpBase::GetField(const char *pKey) const
 	return 0;
 }
 
+CRequestInfo::CRequestInfo(const char *pAddr) : m_pRequest(0), m_pResponse(new CBufferResponse()), m_pfnCallback(0), m_pUserData(0)
+{
+	str_copy(m_aAddr, pAddr, sizeof(m_aAddr));
+}
+
+CRequestInfo::CRequestInfo(const char *pAddr, IOHANDLE File) : m_pRequest(0), m_pResponse(new CFileResponse(File)), m_pfnCallback(0), m_pUserData(0)
+{
+	str_copy(m_aAddr, pAddr, sizeof(m_aAddr));
+}
+
+CRequestInfo::~CRequestInfo()
+{
+	if(m_pRequest)
+		delete m_pRequest;
+	if(m_pResponse)
+		delete m_pResponse;
+}
+
+void CRequestInfo::SetCallback(FHttpCallback pfnCallback, void *pUserData)
+{
+	m_pfnCallback = pfnCallback;
+	m_pUserData = pUserData;
+}
+
+void CRequestInfo::ExecuteCallback(IResponse *pResponse, bool Error)
+{
+	if(m_pfnCallback)
+		m_pfnCallback(pResponse, Error, m_pUserData);
+}
+
 CHttpClient::CHttpClient()
 {
 	for (int i = 0; i < HTTP_MAX_CONNECTIONS; i++)
@@ -50,27 +80,22 @@ CHttpClient::CHttpClient()
 
 CHttpClient::~CHttpClient() { }
 
-void CHttpClient::Send(const char *pAddr, CRequest *pRequest)
+void CHttpClient::Send(CRequestInfo *pInfo, CRequest *pRequest)
 {
-	CRequestData *pData = new CRequestData();
-	pData->m_pRequest = pRequest;
-	m_pEngine->HostLookup(&pData->m_Lookup, pAddr, NETTYPE_IPV4);
+	pInfo->m_pRequest = pRequest;
+	m_pEngine->HostLookup(&pInfo->m_Lookup, pInfo->m_aAddr, NETTYPE_IPV4);
 
-	char aAddr[256];
-	str_copy(aAddr, pAddr, sizeof(aAddr));
-
-	for(int k = 0; aAddr[k]; k++)
+	for(int k = 0; pInfo->m_aAddr[k]; k++)
 	{
-		if(aAddr[k] == ':')
+		if(pInfo->m_aAddr[k] == ':')
 		{
-			aAddr[k] = 0;
+			pInfo->m_aAddr[k] = 0;
 			break;
 		}
 	}
 
-	pRequest->AddField("Host", aAddr);
-
-	m_lPendingRequests.add(pData);
+	pRequest->AddField("Host", pInfo->m_aAddr);
+	m_lPendingRequests.add(pInfo);
 }
 
 CHttpConnection *CHttpClient::GetConnection(NETADDR Addr)
@@ -98,30 +123,28 @@ void CHttpClient::Update()
 	// TODO: add some priority handling?
 	for(int i = 0; i < m_lPendingRequests.size(); i++)
 	{
-		CRequestData *pData = m_lPendingRequests[i];
-		if(pData->m_Lookup.m_Job.Status() != CJob::STATE_DONE)
+		CRequestInfo *pInfo = m_lPendingRequests[i];
+		if(pInfo->m_Lookup.m_Job.Status() != CJob::STATE_DONE)
 			continue;
 
-		if(pData->m_Lookup.m_Job.Result() != 0)
+		if(pInfo->m_Lookup.m_Job.Result() != 0)
 		{
-			pData->m_pRequest->ExecuteCallback(0, true);
-			delete pData->m_pRequest;
-			delete pData;
+			pInfo->ExecuteCallback(0, true);
+			delete pInfo;
 			m_lPendingRequests.remove_index(i);
 			i--;
 		}
 		else
 		{
-			if(pData->m_Lookup.m_Addr.port == 0)
-				pData->m_Lookup.m_Addr.port = 80;
+			if(pInfo->m_Lookup.m_Addr.port == 0)
+				pInfo->m_Lookup.m_Addr.port = 80;
 
-			CHttpConnection *pConn = GetConnection(pData->m_Lookup.m_Addr);
+			CHttpConnection *pConn = GetConnection(pInfo->m_Lookup.m_Addr);
 			if(pConn)
 			{
 				if(pConn->State() == CHttpConnection::STATE_OFFLINE)
-					pConn->Connect(pData->m_Lookup.m_Addr);
-				pConn->SetRequest(pData->m_pRequest);
-				delete pData;
+					pConn->Connect(pInfo->m_Lookup.m_Addr);
+				pConn->SetRequest(pInfo);
 				m_lPendingRequests.remove_index(i);
 				i--;
 			}

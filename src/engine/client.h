@@ -120,7 +120,7 @@ public:
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags) = 0;
 	
-	virtual void SendHttp(const char *pAddr, class CRequest *pRequest) = 0;
+	virtual void SendHttp(class CRequestInfo *pInfo, class CRequest *pRequest) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)

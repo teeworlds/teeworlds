@@ -40,11 +40,10 @@ public:
 	const char *GetField(const char *pKey) const;
 };
 
-class CResponse : public IHttpBase
+class IResponse : public IHttpBase
 {
 	friend class CHttpConnection;
 
-	http_parser_settings m_ParserSettings;
 	http_parser m_Parser;
 
 	CHttpField m_CurField;
@@ -53,31 +52,63 @@ class CResponse : public IHttpBase
 	bool m_Complete;
 	bool m_Close;
 
-	char *m_pData;
-	int m_BufferSize;
-	int m_Size;
-
 	static int OnHeaderField(http_parser *pParser, const char *pData, size_t Len);
 	static int OnHeaderValue(http_parser *pParser, const char *pData, size_t Len);
-	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
-	static int OnHeadersComplete(http_parser *pParser);
 	static int OnMessageComplete(http_parser *pParser);
 
-	CResponse();
-
-	bool ResizeBuffer(int NeededSize);
 	bool Write(char *pData, int Size);
 	bool Finalize();
 
-public:
-	virtual ~CResponse();
+protected:
+	http_parser_settings m_ParserSettings;
 
-	const char *GetBody() const { return IsFinalized() ? m_pData : 0; }
-	int BodySize() const { return IsFinalized() ? m_Size : -1; }
+	int m_Size;
+
+	IResponse();
+
+public:
+	virtual ~IResponse();
+
+	int Size() const { return IsFinalized() ? m_Size : -1; }
 	unsigned StatusCode() const { return IsFinalized() ? m_Parser.status_code : -1; }
+
+	virtual bool IsFile() const = 0;
 };
 
-typedef void(*FHttpCallback)(CResponse *pResponse, bool Error, void *pUserData);
+class CBufferResponse : public IResponse
+{
+	char *m_pData;
+	int m_BufferSize;
+
+	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
+	static int OnHeadersComplete(http_parser *pParser);
+
+	bool ResizeBuffer(int NeededSize);
+
+public:
+	CBufferResponse();
+	virtual ~CBufferResponse();
+
+	const char *GetBody() const { return IsFinalized() ? m_pData : 0; }
+
+	bool IsFile() const { return false; }
+};
+
+
+class CFileResponse : public IResponse
+{
+	IOHANDLE m_File;
+
+	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
+
+public:
+	CFileResponse(IOHANDLE File);
+	virtual ~CFileResponse();
+
+	bool IsFile() const { return true; }
+};
+
+typedef void(*FHttpCallback)(IResponse *pResponse, bool Error, void *pUserData);
 
 class CRequest : public IHttpBase
 {
@@ -99,9 +130,6 @@ class CRequest : public IHttpBase
 
 	char *m_pCur;
 	char *m_pEnd;
-
-	FHttpCallback m_pfnCallback;
-	void *m_pUserData;
 
 	int AddToHeader(char *pCur, const char *pData, int Size);
 	int GenerateHeader();
@@ -126,11 +154,32 @@ public:
 	virtual ~CRequest();
 
 	bool SetBody(const char *pData, int Size, const char *pContentType);
-	bool SetCallback(FHttpCallback pfnCallback, void *pUserData = 0);
-
-	void ExecuteCallback(CResponse *pResponse, bool Error);
 	
 	//const char *GetURI() const { return m_aURI; }
+};
+
+class CRequestInfo
+{
+	friend class CHttpClient;
+	friend class CHttpConnection;
+
+	char m_aAddr[256];
+
+	CHostLookup m_Lookup;
+	CRequest *m_pRequest;
+	IResponse *m_pResponse;
+
+	FHttpCallback m_pfnCallback;
+	void *m_pUserData;
+
+public:
+	CRequestInfo(const char *pAddr);
+	CRequestInfo(const char *pAddr, IOHANDLE File);
+
+	virtual ~CRequestInfo();
+
+	void SetCallback(FHttpCallback pfnCallback, void *pUserData = 0);
+	void ExecuteCallback(IResponse *pResponse, bool Error);
 };
 
 class CHttpConnection
@@ -142,11 +191,9 @@ private:
 	NETADDR m_Addr;
 	
 	int m_State;
-
 	int64 m_LastActionTime;
 
-	CResponse *m_pResponse;
-	CRequest *m_pRequest;
+	CRequestInfo *m_pInfo;
 
 	void Reset();
 	void Close();
@@ -171,7 +218,7 @@ public:
 	bool Update();
 
 	bool Connect(NETADDR Addr);
-	bool SetRequest(CRequest *pRequest);
+	bool SetRequest(CRequestInfo *pInfo);
 
 	int State() { return m_State; }
 	bool CompareAddr(NETADDR Addr);
@@ -184,14 +231,8 @@ class CHttpClient
 		HTTP_MAX_CONNECTIONS = 4
 	};
 
-	typedef struct
-	{
-		CRequest *m_pRequest;
-		CHostLookup m_Lookup;
-	} CRequestData;
-
 	CHttpConnection m_aConnections[HTTP_MAX_CONNECTIONS];
-	array<CRequestData*> m_lPendingRequests;
+	array<CRequestInfo*> m_lPendingRequests;
 
 	IEngine *m_pEngine;
 
@@ -203,7 +244,7 @@ public:
 
 	void Init(IEngine *pEngine) { m_pEngine = pEngine; }
 
-	void Send(const char *pAddr, CRequest *pRequest);
+	void Send(CRequestInfo *pInfo, CRequest *pRequest);
 	void Update();
 };
 

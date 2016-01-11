@@ -31,25 +31,27 @@ CClientWebapp::~CClientWebapp()
 	lock_release(gs_CheckHostLock);
 }
 
-void CClientWebapp::OnApiToken(CResponse *pResponse, bool Error, void *pUserData)
+void CClientWebapp::OnApiToken(IResponse *pResponse, bool Error, void *pUserData)
 {
+	CBufferResponse *pRes = (CBufferResponse*)pResponse;
 	CClientWebapp *pWebapp = (CClientWebapp*) pUserData;
-	bool Success = !Error && pResponse->StatusCode() == 200;
+	bool Success = !Error && pRes->StatusCode() == 200;
 
-	if(!Success || pResponse->BodySize() != 24+2 || str_comp(pResponse->GetBody(), "false") == 0)
+	if(!Success || pRes->Size() != 24+2 || str_comp(pRes->GetBody(), "false") == 0)
 		pWebapp->m_ApiTokenError = true;
 	else
 	{
 		pWebapp->m_ApiTokenError = false;
-		str_copy(g_Config.m_WaApiToken, pResponse->GetBody()+1, 24+1);
+		str_copy(g_Config.m_WaApiToken, pRes->GetBody()+1, 24+1);
 	}
 	pWebapp->m_ApiTokenRequested = false;
 }
 
-void CClientWebapp::OnServerList(CResponse *pResponse, bool Error, void *pUserData)
+void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserData)
 {
+	CBufferResponse *pRes = (CBufferResponse*)pResponse;
 	CClientWebapp *pWebapp = (CClientWebapp*) pUserData;
-	bool Success = !Error && pResponse->StatusCode() == 200;
+	bool Success = !Error && pRes->StatusCode() == 200;
 	if(!Success)
 		return;
 
@@ -57,7 +59,7 @@ void CClientWebapp::OnServerList(CResponse *pResponse, bool Error, void *pUserDa
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
 
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pResponse->GetBody(), pResponse->BodySize(), aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pRes->GetBody(), pRes->Size(), aError);
 	if(!pJsonData)
 		dbg_msg("json", aError);
 	else

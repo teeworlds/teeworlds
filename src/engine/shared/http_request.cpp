@@ -5,7 +5,7 @@
 
 // TODO: file upload
 CRequest::CRequest(int Method, const char *pURI)
-	: m_Method(Method), m_State(STATE_HEADER), m_pBody(0), m_BodySize(0), m_pCur(0), m_pEnd(0), m_pfnCallback(0), m_pUserData(0)
+	: m_Method(Method), m_State(STATE_HEADER), m_pBody(0), m_BodySize(0), m_pCur(0), m_pEnd(0)
 {
 	AddField("Connection", "Keep-Alive");
 	str_copy(m_aURI, pURI, sizeof(m_aURI));
@@ -84,21 +84,6 @@ bool CRequest::SetBody(const char *pData, int Size, const char *pContentType)
 	
 	mem_copy(m_pBody, pData, m_BodySize);
 	return true;
-}
-
-bool CRequest::SetCallback(FHttpCallback pfnCallback, void *pUserData)
-{
-	if(IsFinalized())
-		return false;
-	m_pfnCallback = pfnCallback;
-	m_pUserData = pUserData;
-	return true;
-}
-
-void CRequest::ExecuteCallback(CResponse *pResponse, bool Error)
-{
-	if(m_pfnCallback)
-		m_pfnCallback(pResponse, Error, m_pUserData);
 }
 
 const char *CRequest::GetFilename(const char *pFilename) const

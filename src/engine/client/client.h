@@ -199,7 +199,7 @@ public:
 	// ----- send functions -----
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags);
 	
-	virtual void SendHttp(const char *pAddr, class CRequest *pRequest);
+	virtual void SendHttp(class CRequestInfo *pInfo, class CRequest *pRequest);
 
 	int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System=true);
 	void SendInfo();

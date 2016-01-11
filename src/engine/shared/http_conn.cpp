@@ -4,7 +4,7 @@
 #include "http.h"
 
 CHttpConnection::CHttpConnection()
-	: m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pResponse(0), m_pRequest(0)
+	: m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0)
 {
 	mem_zero(&m_Addr, sizeof(m_Addr));
 }
@@ -17,13 +17,9 @@ CHttpConnection::~CHttpConnection()
 
 void CHttpConnection::Reset()
 {
-	if(m_pResponse)
-		delete m_pResponse;
-	if(m_pRequest)
-		delete m_pRequest;
-
-	m_pResponse = 0;
-	m_pRequest = 0;
+	if(m_pInfo)
+		delete m_pInfo;
+	m_pInfo = 0;
 }
 
 void CHttpConnection::Close()
@@ -45,8 +41,8 @@ bool CHttpConnection::SetState(int State, const char *pMsg)
 
 	if(State == STATE_WAITING || State == STATE_OFFLINE)
 	{
-		if(m_pRequest)
-			m_pRequest->ExecuteCallback(m_pResponse, Error);
+		if(m_pInfo)
+			m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, Error);
 		Reset();
 	}
 	if(State == STATE_OFFLINE)
@@ -92,13 +88,12 @@ bool CHttpConnection::Connect(NETADDR Addr)
 	return true;
 }
 
-bool CHttpConnection::SetRequest(CRequest *pRequest)
+bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 {
 	if(m_State != STATE_WAITING && m_State != STATE_CONNECTING)
 		return false;
-	m_pRequest = pRequest;
-	m_pResponse = new CResponse();
-	if(pRequest->Finalize())
+	m_pInfo = pInfo;
+	if(pInfo->m_pRequest->Finalize())
 	{
 		m_LastActionTime = time_get();
 		int NewState = m_State == STATE_CONNECTING ? STATE_CONNECTING : STATE_SENDING;
@@ -121,7 +116,7 @@ bool CHttpConnection::Update()
 			if(Result > 0)
 			{
 				m_LastActionTime = time_get();
-				int NewState = m_pRequest ? STATE_SENDING : STATE_WAITING;
+				int NewState = m_pInfo ? STATE_SENDING : STATE_WAITING;
 				return SetState(NewState, "connected");
 			}
 			else if(Result == -1)
@@ -132,7 +127,7 @@ bool CHttpConnection::Update()
 		case STATE_SENDING:
 		{
 			char aData[1024] = {0};
-			int Bytes = m_pRequest->GetData(aData, sizeof(aData));
+			int Bytes = m_pInfo->m_pRequest->GetData(aData, sizeof(aData));
 			if(Bytes < 0)
 				return SetState(STATE_ERROR, "error: could not read request data");
 			else if(Bytes > 0)
@@ -145,7 +140,7 @@ bool CHttpConnection::Update()
 
 				// resend if needed
 				if(Size < Bytes)
-					m_pRequest->MoveCursor(Size - Bytes);
+					m_pInfo->m_pRequest->MoveCursor(Size - Bytes);
 			}
 			else // Bytes = 0
 				return SetState(STATE_RECEIVING, "sent request"); 
@@ -165,17 +160,17 @@ bool CHttpConnection::Update()
 			else if(Bytes >= 0)
 			{
 				m_LastActionTime = time_get();
-				if(!m_pResponse->Write(aBuf, Bytes))
+				if(!m_pInfo->m_pResponse->Write(aBuf, Bytes))
 					return SetState(STATE_ERROR, "error: parsing http");
 			}
 
 			if(Bytes == 0)
 				ForceClose = true;
-			if(m_pResponse->m_Complete)
+			if(m_pInfo->m_pResponse->m_Complete)
 			{
-				if(!m_pResponse->Finalize())
+				if(!m_pInfo->m_pResponse->Finalize())
 					return SetState(STATE_ERROR, "error: incomplete response");
-				return SetState((m_pResponse->m_Close || ForceClose) ? STATE_OFFLINE : STATE_WAITING, "received response");
+				return SetState((m_pInfo->m_pResponse->m_Close || ForceClose) ? STATE_OFFLINE : STATE_WAITING, "received response");
 			}
 			else if(ForceClose)
 				return SetState(STATE_ERROR, "error: remote closed");
