@@ -126,7 +126,19 @@ CFileResponse::CFileResponse(IOHANDLE File, const char *pFilename) : IResponse()
 
 CFileResponse::~CFileResponse()
 {
-	io_close(m_File);
+	if(m_File)
+		io_close(m_File);
+}
+
+const char *CFileResponse::GetFilename() const
+{
+	const char *pShort = m_aFilename;
+	for (const char *pCur = pShort; *pCur; pCur++)
+	{
+		if (*pCur == '/' || *pCur == '\\')
+			pShort = pCur + 1;
+	}
+	return pShort;
 }
 
 int CFileResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
@@ -135,4 +147,12 @@ int CFileResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
 	io_write(pSelf->m_File, pData, Len);
 	pSelf->m_Size += Len;
 	return 0;
+}
+
+bool CFileResponse::Finalize()
+{
+	if(!IResponse::Finalize())
+		return false;
+	io_close(m_File);
+	m_File = 0;
 }

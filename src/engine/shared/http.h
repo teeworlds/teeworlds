@@ -63,7 +63,6 @@ class IResponse : public IHttpBase
 	static int OnMessageComplete(http_parser *pParser);
 
 	bool Write(char *pData, int Size);
-	bool Finalize();
 
 protected:
 	http_parser_settings m_ParserSettings;
@@ -71,6 +70,7 @@ protected:
 	int m_Size;
 
 	IResponse();
+	virtual bool Finalize();
 
 public:
 	virtual ~IResponse();
@@ -108,11 +108,14 @@ class CFileResponse : public IResponse
 
 	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
 
+	bool Finalize();
+
 public:
 	CFileResponse(IOHANDLE File, const char *pFilename);
 	virtual ~CFileResponse();
 
 	const char *GetPath() const { return m_aFilename; }
+	const char *GetFilename() const;
 
 	bool IsFile() const { return true; }
 };
