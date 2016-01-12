@@ -121,18 +121,15 @@ CHttpConnection *CHttpClient::GetConnection(NETADDR Addr)
 
 void CHttpClient::FetchRequest(int Priority, int Max)
 {
-	if(Max > 0)
+	int Num = 0;
+	for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
 	{
-		int Num = 0;
-		for(int j = 0; j < HTTP_MAX_CONNECTIONS; j++)
-		{
-			CHttpConnection *pConn = &m_aConnections[j];
-			if(pConn->GetInfo() && pConn->GetInfo()->m_Priority == Priority)
-				Num++;
-		}
-		if(Num >= Max)
-			return;
+		CHttpConnection *pConn = &m_aConnections[j];
+		if(pConn->GetInfo() && pConn->GetInfo()->m_Priority == Priority)
+			Num++;
 	}
+	if(Max > 0 && Num >= Max)
+		return;
 
 	for(int i = 0; i < m_lPendingRequests.size(); i++)
 	{
@@ -160,6 +157,9 @@ void CHttpClient::FetchRequest(int Priority, int Max)
 				pConn->SetRequest(pInfo);
 				m_lPendingRequests.remove_index(i);
 				i--;
+				Num++;
+				if(Max > 0 && Num >= Max)
+					return;
 			}
 		}
 	}
