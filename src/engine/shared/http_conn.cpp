@@ -56,7 +56,7 @@ bool CHttpConnection::SetState(int State, const char *pMsg)
 			dbg_msg("http/conn", "%d: disconnecting", m_ID);
 		Close();
 	}
-	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
+	if(State == STATE_SENDING || State == STATE_RECEIVING)
 	{
 		m_LastDataTime = time_get() - Interval();
 	}
@@ -117,10 +117,13 @@ bool CHttpConnection::Update()
 	if(m_State != STATE_OFFLINE && time_get() - m_LastActionTime > time_freq() * Timeout)
 		return SetState(STATE_ERROR, "error: timeout");
 
-	if((m_State == STATE_SENDING || m_State == STATE_RECEIVING) && time_get() - m_LastDataTime < Interval())
-		return 0;
-	else
-		m_LastDataTime += Interval();
+	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
+	{
+		if(time_get() - m_LastDataTime < Interval())
+			return 0;
+		else
+			m_LastDataTime += Interval();
+	}
 
 	switch(m_State)
 	{
