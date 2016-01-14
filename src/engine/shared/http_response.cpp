@@ -159,4 +159,5 @@ bool CFileResponse::Finalize()
 		return false;
 	io_close(m_File);
 	m_File = 0;
+	return true;
 }
