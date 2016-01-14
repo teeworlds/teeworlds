@@ -11,7 +11,7 @@ enum
 	NUM_ITEMS_PER_CHUNK = 50,
 };
 
-struct CGhostItem
+class CGhostItem
 {
 public:
 	char m_aData[MAX_ITEM_SIZE];

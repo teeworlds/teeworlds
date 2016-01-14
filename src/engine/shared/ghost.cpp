@@ -93,7 +93,7 @@ static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 
 void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 {
-	if(!m_File || Size > sizeof(CGhostItem::m_aData) || Size <= 0)
+	if(!m_File || Size > MAX_ITEM_SIZE || Size <= 0)
 		return;
 
 	CGhostItem Data(Type);
@@ -315,7 +315,7 @@ static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
 
 bool CGhostLoader::ReadData(int Type, char *pData, int Size)
 {
-	if(!m_File || Size > sizeof(CGhostItem::m_aData) || Size <= 0)
+	if(!m_File || Size > MAX_ITEM_SIZE || Size <= 0)
 		return false;
 
 	CGhostItem Data(Type);
