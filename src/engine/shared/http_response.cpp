@@ -82,7 +82,7 @@ CBufferResponse::~CBufferResponse()
 int CBufferResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
 {
 	CBufferResponse *pSelf = (CBufferResponse*)pParser->data;
-	if (pSelf->m_Size + Len > pSelf->m_BufferSize)
+	if (pSelf->m_Size + Len > (unsigned)pSelf->m_BufferSize)
 		pSelf->ResizeBuffer(pSelf->m_Size + Len);
 	mem_copy(pSelf->m_pData + pSelf->m_Size, pData, Len);
 	pSelf->m_Size += Len;

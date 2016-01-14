@@ -214,7 +214,7 @@ void CHud::RenderScoreHud()
 				StartY += 8.0f;
 			}
 		}
-		else if(!GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderDmScore)
+		else if(!(GameFlags&GAMEFLAG_TEAMS) && g_Config.m_ClRenderDmScore)
 		{
 			int Local = -1;
 			int aPos[2] = { 1, 2 };
@@ -546,7 +546,7 @@ void CHud::RenderSpeedmeter()
 	Speed /= SMOOTH_TABLE_SIZE;
 
 	int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
-	int t = (((GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderTeamScore) || (!GameFlags&GAMEFLAG_TEAMS  && g_Config.m_ClRenderDmScore)) && !m_pClient->m_IsRace) ? -1 : 1;
+	int t = (((GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderTeamScore) || (!(GameFlags&GAMEFLAG_TEAMS) && g_Config.m_ClRenderDmScore)) && !m_pClient->m_IsRace) ? -1 : 1;
 	int LastIndex = SmoothIndex - 1;
 	if(LastIndex < 0)
 		LastIndex = SMOOTH_TABLE_SIZE - 1;
@@ -577,7 +577,7 @@ void CHud::RenderSpeedmeter()
 	{
 		float ScoreWidthMax = 10.0f;
 
-		if(!GameFlags&GAMEFLAG_TEAMS && g_Config.m_ClRenderDmScore && !m_pClient->m_IsRace)
+		if(!(GameFlags&GAMEFLAG_TEAMS) && g_Config.m_ClRenderDmScore && !m_pClient->m_IsRace)
 		{
 			const CNetObj_PlayerInfo *apPlayerInfo[2] = { 0, 0 };
 			int i = 0;

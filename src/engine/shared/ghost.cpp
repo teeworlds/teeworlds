@@ -93,7 +93,7 @@ static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 
 void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 {
-	if(!m_File || Size > MAX_ITEM_SIZE || Size <= 0)
+	if(!m_File || (unsigned)Size > MAX_ITEM_SIZE || Size <= 0)
 		return;
 
 	CGhostItem Data(Type);
@@ -227,7 +227,7 @@ int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const
 		return -1;
 	}
 
-	int GhostMapCrc = (m_Header.m_aCrc[0] << 24) | (m_Header.m_aCrc[1] << 16) | (m_Header.m_aCrc[2] << 8) | (m_Header.m_aCrc[3]);
+	unsigned GhostMapCrc = (m_Header.m_aCrc[0] << 24) | (m_Header.m_aCrc[1] << 16) | (m_Header.m_aCrc[2] << 8) | (m_Header.m_aCrc[3]);
 	if(str_comp(m_Header.m_aMap, pMap) != 0 || GhostMapCrc != Crc)
 	{
 		io_close(m_File);
