@@ -235,7 +235,14 @@ public:
 
 class CHttpConnection
 {
-private:
+	enum
+	{
+		HTTP_CHUNK_SIZE=1024*4,
+		HTTP_MAX_SPEED=1024*100
+	};
+
+	int64 m_LastDataTime;
+
 	int m_ID;
 
 	NETSOCKET m_Socket;
@@ -245,6 +252,8 @@ private:
 	int64 m_LastActionTime;
 
 	CRequestInfo *m_pInfo;
+
+	int64 Interval() const;
 
 	void Reset();
 	void Close();

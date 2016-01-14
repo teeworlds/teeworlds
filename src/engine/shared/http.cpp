@@ -167,7 +167,6 @@ void CHttpClient::FetchRequest(int Priority, int Max)
 
 void CHttpClient::Update()
 {
-	// TODO: rework bandwidth limiting
 	FetchRequest(HTTP_PRIORITY_HIGH, 0);
 	FetchRequest(HTTP_PRIORITY_LOW, HTTP_MAX_LOW_PRIORITY_CONNECTIONS);
 

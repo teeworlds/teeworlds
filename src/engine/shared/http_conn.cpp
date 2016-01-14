@@ -4,7 +4,7 @@
 #include "http.h"
 
 CHttpConnection::CHttpConnection()
-	: m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0)
+	: m_LastDataTime(-1), m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0)
 {
 	mem_zero(&m_Addr, sizeof(m_Addr));
 }
@@ -31,6 +31,11 @@ void CHttpConnection::Close()
 	m_State = STATE_OFFLINE;
 }
 
+int64 CHttpConnection::Interval() const
+{
+	return time_freq() / (HTTP_MAX_SPEED / HTTP_CHUNK_SIZE);
+}
+
 bool CHttpConnection::SetState(int State, const char *pMsg)
 {
 	if(pMsg && g_Config.m_Debug)
@@ -50,6 +55,10 @@ bool CHttpConnection::SetState(int State, const char *pMsg)
 		if(g_Config.m_Debug)
 			dbg_msg("http/conn", "%d: disconnecting", m_ID);
 		Close();
+	}
+	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
+	{
+		m_LastDataTime = time_get() - Interval();
 	}
 	m_State = State;
 	return !Error;
@@ -108,6 +117,11 @@ bool CHttpConnection::Update()
 	if(m_State != STATE_OFFLINE && time_get() - m_LastActionTime > time_freq() * Timeout)
 		return SetState(STATE_ERROR, "error: timeout");
 
+	if((m_State == STATE_SENDING || m_State == STATE_RECEIVING) && time_get() - m_LastDataTime < Interval())
+		return 0;
+	else
+		m_LastDataTime += Interval();
+
 	switch(m_State)
 	{
 		case STATE_CONNECTING:
@@ -126,7 +140,7 @@ bool CHttpConnection::Update()
 
 		case STATE_SENDING:
 		{
-			char aData[1024] = {0};
+			char aData[HTTP_CHUNK_SIZE] = {0};
 			int Bytes = m_pInfo->m_pRequest->GetData(aData, sizeof(aData));
 			if(Bytes < 0)
 				return SetState(STATE_ERROR, "error: could not read request data");
@@ -148,7 +162,7 @@ bool CHttpConnection::Update()
 		case STATE_RECEIVING:
 		{
 			bool ForceClose = false;
-			char aBuf[1024] = {0};
+			char aBuf[HTTP_CHUNK_SIZE] = {0};
 			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
 			if(Bytes < 0)
 			{
