@@ -18,6 +18,13 @@ const CModAPI_Image* CModAPI_Client_Graphics::GetImage(int Id) const
 	return &m_Images[Id];
 }
 
+const CModAPI_Animation* CModAPI_Client_Graphics::GetAnimation(int Id) const
+{
+	if(Id < 0 || Id >= m_Animations.size()) return 0;
+	
+	return &m_Animations[Id];
+}
+
 const CModAPI_Sprite* CModAPI_Client_Graphics::GetSprite(int Id) const
 {
 	if(Id < 0 || Id >= m_Sprites.size()) return 0;
@@ -45,7 +52,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		{
 			CModAPI_ModItem_Image *pItem = (CModAPI_ModItem_Image*) pMod->GetItem(Start+i, 0, 0);
 			
-			if(pItem->m_Id > Num) return 0;
+			if(pItem->m_Id >= Num) return 0;
 			
 			CModAPI_Image* pImage = &m_Images[pItem->m_Id];
 			
@@ -66,6 +73,29 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		}
 	}
 	
+	//Load animations
+	{
+		int Start, Num;
+		pMod->GetType(MODAPI_MODITEMTYPE_ANIMATION, &Start, &Num);
+		
+		m_Animations.set_size(Num);
+		
+		for(int i = 0; i < Num; i++)
+		{
+			CModAPI_ModItem_Animation *pItem = (CModAPI_ModItem_Animation *) pMod->GetItem(Start+i, 0, 0);
+			
+			if(pItem->m_Id >= Num) return 0;
+			
+			const CModAPI_AnimationFrame* pFrames = static_cast<CModAPI_AnimationFrame*>(pMod->GetData(pItem->m_KeyFrameData));
+			
+			CModAPI_Animation* Animation = &m_Animations[pItem->m_Id];
+			for(int f=0; f<pItem->m_NumKeyFrame; f++)
+			{
+				Animation->AddKeyFrame(pFrames[f].m_Time, pFrames[f].m_Pos, pFrames[f].m_Angle, pFrames[f].m_Opacity);
+			}
+		}
+	}
+	
 	//Load sprites
 	{
 		int Start, Num;
@@ -77,7 +107,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		{
 			CModAPI_ModItem_Sprite *pItem = (CModAPI_ModItem_Sprite *) pMod->GetItem(Start+i, 0, 0);
 			
-			if(pItem->m_Id > Num) return 0;
+			if(pItem->m_Id >= Num) return 0;
 			
 			CModAPI_Sprite* sprite = &m_Sprites[pItem->m_Id];
 			sprite->m_X = pItem->m_X;
@@ -206,6 +236,23 @@ void CModAPI_Client_Graphics::DrawSprite(CRenderTools* pRenderTools,int SpriteID
 	
 	pRenderTools->DrawSprite(Pos.x, Pos.y, Size);
 	m_pGraphics->QuadsEnd();
+}
+
+void CModAPI_Client_Graphics::DrawAnimatedSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int AnimationID, float Time, vec2 Offset)
+{
+	const CModAPI_Animation* pAnimation = GetAnimation(AnimationID);
+	if(pAnimation == 0) return;
+	
+	CModAPI_AnimationFrame Frame;
+	pAnimation->GetFrame(Time, &Frame);
+	
+	float animX = Frame.m_Pos.x + Offset.x - Offset.x * cos(Frame.m_Angle) + Offset.y * sin(Frame.m_Angle);
+	float animY = Frame.m_Pos.y + Offset.y - Offset.x * sin(Frame.m_Angle) + Offset.y * cos(Frame.m_Angle);
+	
+	float X = Pos.x + (animX * cos(Angle) + animY * sin(Angle));
+	float Y = Pos.y + (animX * sin(Angle) + animY * cos(Angle));
+	
+	DrawSprite(pRenderTools, SpriteID, vec2(X, Y), Size, Angle + Frame.m_Angle);
 }
 
 void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms)
@@ -428,7 +475,7 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 	return;
 }
 
-void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, int RGBA, float Size, int Alignment)
+void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment)
 {	
 	char aText[64];
 	IntsToStr(pText, 16, &aText[0]);
@@ -470,10 +517,29 @@ void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pTex
 			break;
 	}
 	
-	vec4 Color = ModAPI_IntToColor(RGBA);
 	pTextRender->TextColor(Color.r,Color.g,Color.b,Color.a);
 	pTextRender->Text(0, Pos.x, Pos.y, Size, aText, -1);
 	
 	//reset color
 	pTextRender->TextColor(255,255,255,1);
+}
+
+void CModAPI_Client_Graphics::DrawAnimatedText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset)
+{
+	const CModAPI_Animation* pAnimation = GetAnimation(AnimationID);
+	if(pAnimation == 0) return;
+	
+	CModAPI_AnimationFrame Frame;
+	pAnimation->GetFrame(Time, &Frame);
+	
+	float animX = Frame.m_Pos.x + Offset.x - Offset.x * cos(Frame.m_Angle) + Offset.y * sin(Frame.m_Angle);
+	float animY = Frame.m_Pos.y + Offset.y - Offset.x * sin(Frame.m_Angle) + Offset.y * cos(Frame.m_Angle);
+	
+	float X = Pos.x + animX;
+	float Y = Pos.y + animY;
+	
+	vec4 NewColor = Color;
+	NewColor.a *= Frame.m_Opacity;
+	
+	DrawText(pTextRender, pText, vec2(X, Y), NewColor, Size, Alignment);
 }

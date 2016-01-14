@@ -280,6 +280,7 @@ public:
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
 	class CItems *m_pItems;
+	class CModAPI_Component_Items *m_pModAPI_Items[MODAPI_NUM_ITEMLAYER];
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };

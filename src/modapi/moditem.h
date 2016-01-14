@@ -6,6 +6,7 @@ class IStorage;
 enum
 {
 	MODAPI_MODITEMTYPE_IMAGE = 0,
+	MODAPI_MODITEMTYPE_ANIMATION,
 	MODAPI_MODITEMTYPE_SPRITE,
 	MODAPI_MODITEMTYPE_LINESTYLE,
 };
@@ -17,6 +18,13 @@ struct CModAPI_ModItem_Image
 	int m_Height;
 	int m_Format;
 	int m_ImageData;
+};
+
+struct CModAPI_ModItem_Animation
+{
+	int m_Id;
+	int m_NumKeyFrame;
+	int m_KeyFrameData;
 };
 
 struct CModAPI_ModItem_Sprite

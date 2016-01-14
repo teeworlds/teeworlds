@@ -96,6 +96,24 @@ CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineSt
 	return *this;
 }
 
+CModAPI_ModCreator::CModAPI_AnimationCreator& CModAPI_ModCreator::CModAPI_AnimationCreator::AddKeyFrame(float Time, vec2 Pos, float Angle, float Opacity)
+{
+	m_lKeyFrames.set_size(m_lKeyFrames.size()+1);
+	CModAPI_AnimationFrame& Frame = m_lKeyFrames[m_lKeyFrames.size()-1];
+	
+	Frame.m_Time = Time;
+	Frame.m_Pos = Pos;
+	Frame.m_Angle = Angle;
+	Frame.m_Opacity = Opacity;
+	
+	m_NumKeyFrame++;
+}
+
+CModAPI_AnimationFrame* CModAPI_ModCreator::CModAPI_AnimationCreator::GetData()
+{
+	return &m_lKeyFrames[0];
+}
+
 CModAPI_ModCreator::CModAPI_ModCreator()
 {
 	
@@ -243,6 +261,19 @@ CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::AddLineStyle()
 	return LineStyle;
 }
 
+CModAPI_ModCreator::CModAPI_AnimationCreator& CModAPI_ModCreator::AddAnimation()
+{
+	int Id = m_Animations.size();
+	
+	m_Animations.set_size(m_Animations.size()+1);
+	
+	CModAPI_ModCreator::CModAPI_AnimationCreator& Animation = m_Animations[Id];
+	Animation.m_Id = Id;
+	Animation.m_NumKeyFrame = 0;
+	
+	return Animation;
+}
+
 int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 {
 	CDataFileWriter df;
@@ -259,6 +290,13 @@ int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 		int PixelSize = pImage->m_Format == CImageInfo::FORMAT_RGB ? 3 : 4;
 		pImage->m_ImageData = df.AddData(pImage->m_Width*pImage->m_Height*PixelSize, m_ImagesData[i]);
 		df.AddItem(MODAPI_MODITEMTYPE_IMAGE, i, sizeof(CModAPI_ModItem_Image), pImage);
+	}
+	
+	//Save animation
+	for(int i=0; i<m_Animations.size(); i++)
+	{
+		m_Animations[i].m_KeyFrameData = df.AddData(m_Animations[i].m_NumKeyFrame * sizeof(CModAPI_AnimationFrame), m_Animations[i].GetData());
+		df.AddItem(MODAPI_MODITEMTYPE_ANIMATION, i, sizeof(CModAPI_ModItem_Animation), &m_Animations[i]);
 	}
 	
 	//Save sprites

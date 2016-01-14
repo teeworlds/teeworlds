@@ -50,6 +50,8 @@
 #include "components/spectator.h"
 #include "components/voting.h"
 
+#include <modapi/client/components/items.h>
+
 // instanciate all systems
 static CKillMessages gs_KillMessages;
 static CCamera gs_Camera;
@@ -77,6 +79,7 @@ static CSpectator gs_Spectator;
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
 static CItems gs_Items;
+static CModAPI_Component_Items gs_ModAPI_Items[MODAPI_NUM_ITEMLAYER];
 static CMapImages gs_MapImages;
 
 static CMapLayers gs_MapLayersBackGround(CMapLayers::TYPE_BACKGROUND);
@@ -173,6 +176,11 @@ void CGameClient::OnConsoleInit()
 	m_pVoting = &::gs_Voting;
 	m_pScoreboard = &::gs_Scoreboard;
 	m_pItems = &::gs_Items;
+	for(int i=0; i<MODAPI_NUM_ITEMLAYER; i++)
+	{
+		m_pModAPI_Items[i] = &::gs_ModAPI_Items[i];
+		m_pModAPI_Items[i]->SetLayer(i);
+	}
 	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
 	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
 
@@ -190,12 +198,19 @@ void CGameClient::OnConsoleInit()
 
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_ITEM]);
 	m_All.Add(m_pItems);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_ITEM]);
 	m_All.Add(&gs_Players);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_PLAYER]);
 	m_All.Add(&gs_MapLayersForeGround);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_PARTICULES]);
 	m_All.Add(&m_pParticles->m_RenderExplosions);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_NAMEPLATES]);
 	m_All.Add(&gs_NamePlates);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_NAMEPLATES]);
 	m_All.Add(&m_pParticles->m_RenderGeneral);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_PARTICULES]);
 	m_All.Add(m_pDamageind);
 	m_All.Add(&gs_Hud);
 	m_All.Add(&gs_Spectator);

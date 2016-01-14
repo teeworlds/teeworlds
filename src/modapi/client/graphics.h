@@ -3,9 +3,10 @@
 
 #include <base/tl/array.h>
 #include <engine/graphics.h>
+#include <engine/textrender.h>
 
 #include <modapi/graphics.h>
-#include <engine/textrender.h>
+#include <modapi/shared/animation.h>
 
 class IMod;
 class CRenderTools;
@@ -72,6 +73,7 @@ class CModAPI_Client_Graphics
 {
 private:
 	array<CModAPI_Image> m_Images;
+	array<CModAPI_Animation> m_Animations;
 	array<CModAPI_Sprite> m_Sprites;
 	array<CModAPI_LineStyle> m_LineStyles;
 	IGraphics* m_pGraphics;
@@ -79,6 +81,7 @@ private:
 public:
 	CModAPI_Client_Graphics(IGraphics* pGraphics);
 	const CModAPI_Image* GetImage(int Id) const;
+	const CModAPI_Animation* GetAnimation(int Id) const;
 	const CModAPI_Sprite* GetSprite(int Id) const;
 	const CModAPI_LineStyle* GetLineStyle(int Id) const;
 	
@@ -86,8 +89,10 @@ public:
 	int OnModUnloaded();
 	
 	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle);
+	void DrawAnimatedSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int AnimationID, float Time, vec2 Offset);
 	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
-	void DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, int RGBA, float Size, int Alignment);
+	void DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
+	void DrawAnimatedText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset);
 };
 
 #endif

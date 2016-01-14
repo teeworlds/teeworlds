@@ -336,7 +336,7 @@ function BuildClient(settings, family, platform)
 	local game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), SharedClientFiles())
 	local game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 	
-	local client_modapi = Compile(settings, Collect("src/modapi/client/*.cpp"))
+	local client_modapi = Compile(settings, CollectRecursive("src/modapi/client/*.cpp"))
 	
 	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor, client_modapi)
 end
