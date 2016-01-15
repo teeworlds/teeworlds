@@ -104,6 +104,7 @@ public:
 class CFileResponse : public IResponse
 {
 	IOHANDLE m_File;
+	unsigned m_Crc;
 	char m_aFilename[512];
 
 	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
@@ -114,6 +115,7 @@ public:
 	CFileResponse(IOHANDLE File, const char *pFilename);
 	virtual ~CFileResponse();
 
+	unsigned GetCrc() const { return m_Crc; }
 	const char *GetPath() const { return m_aFilename; }
 	const char *GetFilename() const;
 

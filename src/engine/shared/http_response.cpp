@@ -1,3 +1,4 @@
+#include <zlib.h>
 #include <base/system.h>
 #include <base/math.h>
 
@@ -118,7 +119,7 @@ bool CBufferResponse::ResizeBuffer(int NeededSize)
 	return true;
 }
 
-CFileResponse::CFileResponse(IOHANDLE File, const char *pFilename) : IResponse(), m_File(File)
+CFileResponse::CFileResponse(IOHANDLE File, const char *pFilename) : IResponse(), m_File(File), m_Crc(0)
 {
 	str_copy(m_aFilename, pFilename, sizeof(m_aFilename));
 	m_ParserSettings.on_body = OnBody;
@@ -145,6 +146,7 @@ int CFileResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
 {
 	CFileResponse *pSelf = (CFileResponse*)pParser->data;
 	io_write(pSelf->m_File, pData, Len);
+	pSelf->m_Crc = crc32(pSelf->m_Crc, (const Bytef*)pData, Len);
 	pSelf->m_Size += Len;
 	return 0;
 }
