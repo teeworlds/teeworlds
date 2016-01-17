@@ -4,6 +4,8 @@
 #include <generated/client_data.h>
 #include <game/client/render.h>
 
+#include <game/gamecore.h>
+
 CModAPI_Client_Graphics::CModAPI_Client_Graphics(IGraphics* pGraphics)
 {
 	m_pGraphics = pGraphics;
@@ -424,4 +426,54 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 		m_pGraphics->QuadsEnd();
 	}
 	return;
+}
+
+void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, int RGBA, float Size, int Alignment)
+{	
+	char aText[64];
+	IntsToStr(pText, 16, &aText[0]);
+	
+	float width = pTextRender-> TextWidth(0, Size, aText, -1);
+	float height = pTextRender->TextHeight(Size);
+	
+	switch(Alignment)
+	{
+		case MODAPI_TEXTALIGN_CENTER:
+			Pos.x -= width/2;
+			Pos.y -= height/2;
+			break;
+		case MODAPI_TEXTALIGN_RIGHT_BOTTOM:
+			break;
+		case MODAPI_TEXTALIGN_RIGHT_CENTER:
+			Pos.y -= height/2;
+			break;
+		case MODAPI_TEXTALIGN_RIGHT_TOP:
+			Pos.y -= height;
+			break;
+		case MODAPI_TEXTALIGN_CENTER_TOP:
+			Pos.x -= width/2;
+			Pos.y -= height;
+			break;
+		case MODAPI_TEXTALIGN_LEFT_TOP:
+			Pos.x -= width;
+			Pos.y -= height;
+			break;
+		case MODAPI_TEXTALIGN_LEFT_CENTER:
+			Pos.x -= width;
+			Pos.y -= height/2;
+			break;
+		case MODAPI_TEXTALIGN_LEFT_BOTTOM:
+			Pos.x -= width;
+			break;
+		case MODAPI_TEXTALIGN_CENTER_BOTTOM:
+			Pos.y -= height/2;
+			break;
+	}
+	
+	vec4 Color = ModAPI_IntToColor(RGBA);
+	pTextRender->TextColor(Color.r,Color.g,Color.b,Color.a);
+	pTextRender->Text(0, Pos.x, Pos.y, Size, aText, -1);
+	
+	//reset color
+	pTextRender->TextColor(255,255,255,1);
 }

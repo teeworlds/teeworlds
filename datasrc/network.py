@@ -253,6 +253,25 @@ Objects = [
 		NetIntAny("m_EndY"),
 		NetIntAny("m_StartTick"),
 	]),
+	
+	NetObject("ModAPI_Text", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Alignment"),
+		NetIntAny("m_Color"),
+		NetIntAny("m_Size"),
+		NetArray(NetIntAny("m_aText"), 16),
+	]),
+	
+	NetObject("ModAPI_TextCharacter", [
+		NetIntAny("m_ClientId"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Alignment"),
+		NetIntAny("m_Color"),
+		NetIntAny("m_Size"),
+		NetArray(NetIntAny("m_aText"), 16),
+	]),
 ]
 
 Messages = [

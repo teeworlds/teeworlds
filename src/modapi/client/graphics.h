@@ -5,6 +5,7 @@
 #include <engine/graphics.h>
 
 #include <modapi/graphics.h>
+#include <engine/textrender.h>
 
 class IMod;
 class CRenderTools;
@@ -86,6 +87,7 @@ public:
 	
 	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle);
 	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
+	void DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, int RGBA, float Size, int Alignment);
 };
 
 #endif

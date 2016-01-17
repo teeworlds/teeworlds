@@ -522,6 +522,20 @@ public:
 		TextEx(&Cursor, pText, Length);
 		return Cursor.m_X;
 	}
+	
+	virtual float TextHeight(float Size)
+	{
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		float FakeToScreenY;
+		int ActualSize;
+		
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		
+		FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
+		ActualSize = (int)(Size * FakeToScreenY);
+		Size = ActualSize / FakeToScreenY;
+		return Size;
+	}
 
 	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth)
 	{
