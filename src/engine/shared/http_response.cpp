@@ -145,6 +145,8 @@ const char *CFileResponse::GetFilename() const
 int CFileResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
 {
 	CFileResponse *pSelf = (CFileResponse*)pParser->data;
+	if(!pSelf->m_File)
+		return -1;
 	io_write(pSelf->m_File, pData, Len);
 	pSelf->m_Crc = crc32(pSelf->m_Crc, (const Bytef*)pData, Len);
 	pSelf->m_Size += Len;
