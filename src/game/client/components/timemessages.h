@@ -10,10 +10,9 @@ public:
 	// time messages
 	struct CTimeMsg
 	{
-		int m_Minutes;
-		float m_Seconds;
-		float m_LocalDiff;
-		float m_ServerDiff;
+		int m_Time;
+		int m_LocalDiff;
+		int m_ServerDiff;
 		int m_PlayerID;
 		char m_aPlayerName[MAX_NAME_LENGTH];
 		CTeeRenderInfo m_PlayerRenderInfo;

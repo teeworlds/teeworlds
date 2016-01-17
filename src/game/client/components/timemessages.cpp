@@ -48,8 +48,10 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			str_copy(Time.m_aPlayerName, pMsg->m_pMessage, Num+1);
 			
 			// prepare values and state for saving
-			if(sscanf(pMessage, " finished in: %d minute(s) %f", &Time.m_Minutes, &Time.m_Seconds) == 2)
+			int Minutes, Seconds, MSec;
+			if(sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
 			{
+				Time.m_Time = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 				Time.m_PlayerID = -1;
 				for(int i = 0; i < MAX_CLIENTS; i++)
 					if(!str_comp(Time.m_aPlayerName, m_pClient->m_aClients[i].m_aName))
@@ -62,9 +64,8 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 				if(Time.m_PlayerID < 0)
 					return;
 				
-				float FinishTime = (float)(Time.m_Minutes*60) + Time.m_Seconds;
 				if(m_pClient->m_aClients[Time.m_PlayerID].m_Score > 0)
-					Time.m_LocalDiff = FinishTime - m_pClient->m_aClients[Time.m_PlayerID].m_Score;
+					Time.m_LocalDiff = Time.m_Time - m_pClient->m_aClients[Time.m_PlayerID].m_Score;
 				Time.m_PlayerRenderInfo = m_pClient->m_aClients[Time.m_PlayerID].m_RenderInfo;
 				Time.m_Tick = time_get();
 				
@@ -75,9 +76,9 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_ClientID == -1 && !str_comp_num(pMsg->m_pMessage, "New record: ", 12))
 		{
 			const char* pMessage = pMsg->m_pMessage;
-			
-			if(sscanf(pMessage, "New record: %f", &m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff) != 1)
-				m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = 0;
+			int Seconds, MSec;
+			if(sscanf(pMessage, "New record: -%d.%03d", &Seconds, &MSec) != 2)
+				m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = -(Seconds * 1000 + MSec);
 		}
 	}
 }
@@ -110,7 +111,8 @@ void CTimeMessages::OnRender()
 		
 		// time
 		char aTime[32];
-		str_format(aTime, sizeof(aTime), "%02d:%06.3f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
+		str_format(aTime, sizeof(aTime), "%02d:%02d.%03d",
+			m_aTimemsgs[r].m_Time / (60 * 1000), (m_aTimemsgs[r].m_Time / 1000) % 60, m_aTimemsgs[r].m_Time % 1000);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1);
 		
 		float x = StartX;
@@ -121,7 +123,8 @@ void CTimeMessages::OnRender()
 		if(m_aTimemsgs[r].m_LocalDiff && !m_aTimemsgs[r].m_ServerDiff)
 		{
 			char aDiff[32];
-			str_format(aDiff, sizeof(aDiff), "(%+5.3f)", m_aTimemsgs[r].m_LocalDiff);
+			int Diff = abs(m_aTimemsgs[r].m_LocalDiff);
+			str_format(aDiff, sizeof(aDiff), "(%s%d.%03d)", m_aTimemsgs[r].m_LocalDiff > 0 ? "+" : "-", Diff / 1000, Diff % 1000);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;
@@ -140,7 +143,8 @@ void CTimeMessages::OnRender()
 		if(m_aTimemsgs[r].m_ServerDiff)
 		{
 			char aDiff[32];
-			str_format(aDiff, sizeof(aDiff), "(%+5.3f)", m_aTimemsgs[r].m_ServerDiff);
+			int Diff = abs(m_aTimemsgs[r].m_ServerDiff);
+			str_format(aDiff, sizeof(aDiff), "(%s%d.%03d)", m_aTimemsgs[r].m_ServerDiff > 0 ? "+" : "-", Diff / 1000, Diff % 1000);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;

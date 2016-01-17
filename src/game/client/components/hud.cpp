@@ -619,7 +619,8 @@ void CHud::RenderTime()
 	char aBuf[64];
 	if(m_FinishTime && m_RaceState == RACE_FINISHED)
 	{
-		str_format(aBuf, sizeof(aBuf), "%s: %02d:%06.3f", Localize("Finish time"), (int)m_FinishTime/60, fmod(m_FinishTime, 60));
+		str_format(aBuf, sizeof(aBuf), "%s: %02d:%02d.%03d", Localize("Finish time"),
+			m_FinishTime / (60 * 1000), (m_FinishTime / 1000) % 60, m_FinishTime % 1000);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
 	}
 		
@@ -675,7 +676,8 @@ void CHud::RenderRecord()
 	if(m_Record && g_Config.m_ClShowServerRecord)
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s: %02d:%06.3f", Localize("Server best"), (int)m_Record/60, fmod(m_Record, 60));
+		str_format(aBuf, sizeof(aBuf), "%s: %02d:%02d.%03d", Localize("Server best"),
+			m_Record / (60 * 1000), (m_Record / 1000) % 60, m_Record  % 1000);
 		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
 	}
 }
@@ -752,7 +754,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_RECORD)
 	{
 		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
-		m_Record = (float)pMsg->m_Time/1000.f;
+		m_Record = pMsg->m_Time;
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
@@ -776,12 +778,11 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 
 			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName))
 			{
-				int Minutes = 0;
-				float Seconds = 0.0f;
-				if(sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+				int Minutes, Seconds, MSec;
+				if(sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
 				{
 					m_RaceState = RACE_FINISHED;
-					m_FinishTime = (float)(Minutes*60) + Seconds;
+					m_FinishTime = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 				}
 			}
 		}

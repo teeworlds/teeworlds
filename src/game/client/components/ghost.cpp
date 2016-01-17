@@ -455,12 +455,12 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 			str_copy(aName, pMsg->m_pMessage, Num+1);
 			
 			// prepare values and state for saving
-			int Minutes;
-			float Seconds;
-			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			int Minutes, Seconds, MSec;
+			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) &&
+				sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
 			{
 				m_RaceState = RACE_FINISHED;
-				int CurTime = Minutes*60*1000 + (int)(Seconds*1000);
+				int CurTime = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 				if(m_Recording && (CurTime < m_BestTime || m_BestTime == -1))
 				{
 					m_NewRecord = true;

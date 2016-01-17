@@ -678,7 +678,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
-		m_aClients[pMsg->m_ClientID].m_Score = (float)pMsg->m_Time/1000.0f;
+		m_aClients[pMsg->m_ClientID].m_Score = pMsg->m_Time;
 	}
 	else if(MsgId == NETMSGTYPE_SV_CHAT)
 	{
@@ -696,15 +696,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 					return;
 			}
 			
-			int Minutes = 0;
-			float Seconds = 0.0f;
-			
 			// store the name
 			char Playername[MAX_NAME_LENGTH];
 			str_copy(Playername, pMsg->m_pMessage, Num+1);
 			
 			// get time
-			if(sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			int Minutes, Seconds, MSec;
+			if (sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
 			{
 				int PlayerID = -1;
 				for(int i = 0; i < MAX_CLIENTS; i++)
@@ -718,8 +716,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				if(PlayerID < 0)
 					return;
 				
-				float Time = (float)(Minutes*60) + Seconds;
-				
+				int Time = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 				if(m_aClients[PlayerID].m_Score == 0 || Time < m_aClients[PlayerID].m_Score)
 					m_aClients[PlayerID].m_Score = Time;
 			}
@@ -1174,7 +1171,7 @@ void CGameClient::OnNewSnapshot()
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(!Online[i])
-				m_aClients[i].m_Score = 0.0f;
+				m_aClients[i].m_Score = 0;
 		}
 	}
 	
@@ -1447,7 +1444,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 	m_EmoticonStart = -1;
 	m_Active = false;
 	m_ChatIgnore = false;
-	m_Score = 0.0f;
+	m_Score = 0;
 	m_SkinInfo.m_Texture = pGameClient->m_pSkins->Get(0)->m_ColorTexture;
 	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);

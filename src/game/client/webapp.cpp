@@ -67,12 +67,12 @@ void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserDa
 		{
 			for(unsigned i = 0; i < pJsonData->u.array.length; i++)
 			{
-				json_value *pJsonSrv = pJsonData->u.array.values[i];
-				if (pJsonSrv && pJsonSrv->type == json_string)
+				const json_value &JsonSrv = (*pJsonData)[i];
+				if(JsonSrv.type == json_string)
 				{
 					CCheckHostData *pTmp = new CCheckHostData();
 					pTmp->m_pClient = pClient;
-					str_copy(pTmp->m_aAddr, pJsonSrv->u.string.ptr, sizeof(pTmp->m_aAddr));
+					str_copy(pTmp->m_aAddr, JsonSrv, sizeof(pTmp->m_aAddr));
 
 					void *LoadThread = thread_create(CheckHostThread, pTmp);
 					thread_detach(LoadThread);

@@ -15,8 +15,8 @@ class CHud : public CComponent
 	int m_LastReceivedTimeTick;
 	int m_CheckpointTick;
 	int m_RaceTick;
-	float m_Record;
-	float m_FinishTime;
+	int m_Record;
+	int m_FinishTime;
 	int m_RaceState;
 
 	enum

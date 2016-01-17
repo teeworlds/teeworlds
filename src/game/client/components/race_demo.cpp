@@ -115,13 +115,13 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 			str_copy(aName, pMsg->m_pMessage, Num+1);
 			
 			// prepare values and state for saving
-			int Minutes;
-			float Seconds;
-			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			int Minutes, Seconds, MSec;
+			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) &&
+				sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
 			{
 				m_RaceState = RACE_FINISHED;
 				m_RecordStopTime = Client()->GameTick() + Client()->GameTickSpeed();
-				m_Time = Minutes*60 + Seconds;
+				m_Time = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 			}
 		}
 	}
@@ -141,11 +141,23 @@ void CRaceDemo::CheckDemo()
 	{
 		if(!str_comp_num(m_pClient->m_pMenus->m_lDemos[i].m_aName, m_pMap, str_length(m_pMap)) && str_comp_num(m_pClient->m_pMenus->m_lDemos[i].m_aName, aTmpDemoName, str_length(aTmpDemoName)))
  		{
-			const char *pDemo = m_pClient->m_pMenus->m_lDemos[i].m_aName;
+			char aDemo[128];
+			str_copy(aDemo, m_pClient->m_pMenus->m_lDemos[i].m_aName, sizeof(aDemo));
 			
-			// set cursor
-			pDemo += str_length(m_pMap)+1;
-			float DemoTime = str_tofloat(pDemo);
+			char *pDemo = aDemo + str_length(m_pMap)+1;
+			const char *pTimeEnd = str_find(pDemo, "_");
+			if(pTimeEnd)
+			{
+				int TimeLen = pTimeEnd - pDemo;
+				pDemo[TimeLen] = 0;
+			}
+			
+			int DemoTime;
+			if(str_find(pDemo, ".")) // detect old demos
+				DemoTime = str_tofloat(pDemo) * 1000;
+			else
+				DemoTime = str_toint(pDemo);
+
 			if(m_Time < DemoTime)
 			{
 				// save new record
@@ -178,10 +190,10 @@ void CRaceDemo::SaveDemo(const char* pDemo)
 		char aPlayerName[MAX_NAME_LENGTH];
 		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
 		ClearFilename(aPlayerName, MAX_NAME_LENGTH);
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%6.3f_%s.demo", pDemo, m_Time, aPlayerName);
+		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%d_%s.demo", pDemo, m_Time, aPlayerName);
 	}
 	else
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%6.3f.demo", pDemo, m_Time);
+		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%d.demo", pDemo, m_Time);
 
 	str_format(aOldFilename, sizeof(aOldFilename), "demos/%s_tmp.demo", m_pMap);
 	
