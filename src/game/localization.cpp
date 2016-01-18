@@ -54,46 +54,59 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		return true;
 	}
 
-	IOHANDLE IoHandle = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!IoHandle)
-		return false;
-
+	bool Found = false;
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
-	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-	m_Strings.clear();
 
-	char aOrigin[512];
-	CLineReader LineReader;
-	LineReader.Init(IoHandle);
-	char *pLine;
-	while((pLine = LineReader.Get()))
+	for(int i = 0; i < pStorage->GetPathNum(); i++)
 	{
-		if(!str_length(pLine))
+		IOHANDLE IoHandle = pStorage->OpenFile(pFilename, IOFLAG_READ, i);
+		if(!IoHandle)
 			continue;
 
-		if(pLine[0] == '#') // skip comments
-			continue;
+		str_format(aBuf, sizeof(aBuf), "loaded '%s' (%d)", pFilename, i);
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 
-		str_copy(aOrigin, pLine, sizeof(aOrigin));
-		char *pReplacement = LineReader.Get();
-		if(!pReplacement)
+		if(!Found)
 		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of file");
-			break;
+			m_Strings.clear();
+			Found = true;
 		}
 
-		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+		char aOrigin[512];
+		CLineReader LineReader;
+		LineReader.Init(IoHandle);
+		char *pLine;
+		while((pLine = LineReader.Get()))
 		{
-			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			continue;
-		}
+			if(!str_length(pLine))
+				continue;
 
-		pReplacement += 3;
-		AddString(aOrigin, pReplacement);
+			if(pLine[0] == '#') // skip comments
+				continue;
+
+			str_copy(aOrigin, pLine, sizeof(aOrigin));
+			char *pReplacement = LineReader.Get();
+			if(!pReplacement)
+			{
+				pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of file");
+				break;
+			}
+
+			if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+			{
+				str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", aOrigin);
+				pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+				continue;
+			}
+
+			pReplacement += 3;
+			AddString(aOrigin, pReplacement);
+		}
+		io_close(IoHandle);
 	}
-	io_close(IoHandle);
+
+	if(!Found)
+		return false;
 
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;

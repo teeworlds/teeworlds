@@ -394,6 +394,11 @@ public:
 		GetPath(Type, pDir, pBuffer, BufferSize);
 	}
 
+	virtual int GetPathNum() const
+	{
+		return m_NumPaths;
+	}
+
 	static IStorage *Create(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
