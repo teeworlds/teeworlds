@@ -1065,7 +1065,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 	Status.VSplitRight(120.0f, &Status, &Button);
 	
 	static int s_GhostButton = 0;
-	const char *pText = pGhost->m_Active ? "Deactivate" : "Activate";
+	const char *pText = pGhost->m_Active ? Localize("Deactivate") : Localize("Activate");
 	
 	if(DoButton_Menu(&s_GhostButton, Localize(pText), 0, &Button) || (NewSelected != -1 && Input()->MouseDoubleClick()))
 	{
