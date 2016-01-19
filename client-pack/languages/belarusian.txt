@@ -1,0 +1,421 @@
+
+##### translated strings #####
+
+##### needs translation #####
+
+%s team
+== 
+
+%s team wins!
+== 
+
+%s: -
+== 
+
+About
+== 
+
+Activate
+== 
+
+Activate chat message sound
+== 
+
+Activate server message sound
+== 
+
+Activate spree sounds
+== 
+
+Additional highlighting
+== 
+
+Always show ghost name plates
+== 
+
+Ammunition
+== 
+
+Api token
+== 
+
+Author
+== 
+
+Auto record
+== 
+
+Automatically take game over stat screenshot
+== 
+
+Best spree
+== 
+
+Block spam
+== 
+
+Broadcast
+== 
+
+By Alban 'spl0k' FERON
+== 
+
+Captures
+== 
+
+Carriers killed
+== 
+
+Checking...
+== 
+
+Clear all
+== 
+
+Column titles
+== 
+
+Compiled
+== 
+
+Credits
+== 
+
+Crosshair
+== 
+
+Current spree
+== 
+
+DM score
+== 
+
+Deactivate
+== 
+
+Deaths
+== 
+
+Deaths with flag
+== 
+
+Display speed meter
+== 
+
+Emoticons
+== 
+
+Enable Ghost
+== 
+
+Enemies
+== 
+
+Enemy based colors
+== 
+
+Enemy based skins
+== 
+
+Enter the names you want to look for.
+== 
+
+Error requesting api token
+== 
+
+FPM
+== 
+
+FPS
+== 
+
+Finish time
+== 
+
+Flag captures
+== 
+
+Flag grabs
+== 
+
+Fonts
+== 
+
+For Teeworlds
+== 
+
+Force %s skins
+== 
+
+Force team %s/FFA skins
+== 
+
+Forced skin
+== 
+
+Frags
+== 
+
+Frags per minute
+== 
+
+General settings
+== 
+
+Ghost
+== 
+
+Global statboard
+== 
+
+Grabs
+== 
+
+HUD/Flag
+== 
+
+Health
+== 
+
+Hide border
+== 
+
+Hide flag while carrying it
+== 
+
+Hide seperator
+== 
+
+Hud
+== 
+
+Key bindings
+== 
+
+Kill messages
+== 
+
+Kills holding flag
+== 
+
+Laser color
+== 
+
+Layers
+== 
+
+License
+== 
+
+Make HUD match tees colors
+== 
+
+Make flags match tees colors
+== 
+
+Map info
+== 
+
+Misc
+== 
+
+Name plates
+== 
+
+Net
+== 
+
+Net score
+== 
+
+Next player
+== 
+
+No color headers
+== 
+
+None
+== 
+
+Others
+== 
+
+Particle flow (experimental)
+== 
+
+Player board
+== 
+
+Port
+== 
+
+Race
+== 
+
+Race specific settings
+== 
+
+Ratio
+== 
+
+Request api token
+== 
+
+Save Ghost
+== 
+
+Save player name
+== 
+
+Scores
+== 
+
+Seperate them with a simple space.
+== 
+
+Server best
+== 
+
+Server browser
+== 
+
+Server messages
+== 
+
+Server time
+== 
+
+Show Client ID in name plates
+== 
+
+Show Client ID in scoreboard
+== 
+
+Show best time on server
+== 
+
+Show chat history on chat input
+== 
+
+Show checkpoint difference
+== 
+
+Show ghost
+== 
+
+Show ghost name plates
+== 
+
+Show hud
+== 
+
+Show in Scoreboard
+== 
+
+Show in global statboard
+== 
+
+Show other players
+== 
+
+Show score in name plate
+== 
+
+Sound settings
+== 
+
+Special settings
+== 
+
+Special thanks to:
+== 
+
+Speed meter show acceleration
+== 
+
+Spree
+== 
+
+Stats
+== 
+
+Suicides
+== 
+
+Synchronize annimation with server time
+== 
+
+Team 1
+== 
+
+Team 2
+== 
+
+Team balance warning
+== 
+
+Team mates
+== 
+
+Team score
+== 
+
+Teerace servers only
+== 
+
+Teeworlds %s with TeeComp %s by spl0k
+== 
+
+Time
+== 
+
+Time played
+== 
+
+Use DM colors for %s
+== 
+
+Use DM colors for team %s
+== 
+
+Username
+== 
+
+Viewmode
+== 
+
+Votes
+== 
+
+Weapons stats
+== 
+
+Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs
+== 
+
+Zoom in
+== 
+
+Zoom out
+== 
+
+and the Teeworlds.com community
+== 
+
+enemies
+== 
+
+mates
+== 
+
+so you can set while u set while u set options
+== 
+
+some other MonkeyStyle members
+== 
+
+team 2
+== 
+
+##### old translations #####
+
