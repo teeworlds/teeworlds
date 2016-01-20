@@ -24,4 +24,22 @@ protected:
 	int GetID(int ID);
 };
 
+class CModAPI_EntityMultiSnapshot : public CEntity
+{
+private:
+	array<int> m_IDList07;
+	array<int> m_IDList07ModAPI;
+	
+public:
+	CModAPI_EntityMultiSnapshot(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0, int NbId07=1, int NbId07ModAPI=1);
+	~CModAPI_EntityMultiSnapshot();
+		
+	virtual void Snap07(int SnappingClient);
+	virtual void Snap07ModAPI(int SnappingClient);
+	
+protected:
+	int GetID07(int ID);
+	int GetID07ModAPI(int ID);
+};
+
 #endif
