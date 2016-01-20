@@ -1515,7 +1515,7 @@ void CGameContext::OnSnap07(int ClientID)
 	CTuningParams StandardTuning;
 	if(ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
 	{
-		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(MODAPI_SNAPSHOT_TW07, NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
 		if(!pTuneParams)
 			return;
 
@@ -1523,13 +1523,13 @@ void CGameContext::OnSnap07(int ClientID)
 	}
 
 	m_World.Snap07(ClientID);
-	m_pController->Snap(ClientID);
-	m_Events.Snap(ClientID);
+	m_pController->Snap(MODAPI_SNAPSHOT_TW07, ClientID);
+	m_Events.Snap(MODAPI_SNAPSHOT_TW07, ClientID);
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i])
-			m_apPlayers[i]->Snap(ClientID);
+			m_apPlayers[i]->Snap(MODAPI_SNAPSHOT_TW07, ClientID);
 	}
 }
 
@@ -1539,21 +1539,21 @@ void CGameContext::OnSnap07ModAPI(int ClientID)
 	CTuningParams StandardTuning;
 	if(ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
 	{
-		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+		CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Server()->SnapNewItem(MODAPI_SNAPSHOT_TW07MODAPI, NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
 		if(!pTuneParams)
 			return;
 
 		mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
 	}
 
-	m_World.Snap07(ClientID);
-	m_pController->Snap(ClientID);
-	m_Events.Snap(ClientID);
+	m_World.Snap07ModAPI(ClientID);
+	m_pController->Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
+	m_Events.Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i])
-			m_apPlayers[i]->Snap(ClientID);
+			m_apPlayers[i]->Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
 	}
 }
 

@@ -24,7 +24,7 @@ public:
 	virtual void Tick();
 	virtual void TickDefered();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient, int FirstID);
+	virtual void Snap(int Snapshot, int SnappingClient);
 	virtual void PostSnap();
 
 	bool IsGrounded();

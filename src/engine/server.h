@@ -49,11 +49,9 @@ public:
 	virtual void SetClientCountry(int ClientID, int Country) = 0;
 	virtual void SetClientScore(int ClientID, int Score) = 0;
 
-	virtual int SnapNewID07() = 0;
-	virtual void SnapFreeID07(int ID) = 0;
-	virtual int SnapNewID07ModAPI() = 0;
-	virtual void SnapFreeID07ModAPI(int ID) = 0;
-	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
+	virtual int SnapNewID(int Snapshot) = 0;
+	virtual void SnapFreeID(int Snapshot, int ID) = 0;
+	virtual void *SnapNewItem(int Snapshot, int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 

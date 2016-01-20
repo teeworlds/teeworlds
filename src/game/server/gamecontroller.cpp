@@ -634,9 +634,9 @@ void IGameController::StartRound()
 }
 
 // general
-void IGameController::Snap(int SnappingClient)
+void IGameController::Snap(int Snapshot, int SnappingClient)
 {
-	CNetObj_GameData *pGameData = static_cast<CNetObj_GameData *>(Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData)));
+	CNetObj_GameData *pGameData = static_cast<CNetObj_GameData *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData)));
 	if(!pGameData)
 		return;
 
@@ -678,7 +678,7 @@ void IGameController::Snap(int SnappingClient)
 
 	if(IsTeamplay())
 	{
-		CNetObj_GameDataTeam *pGameDataTeam = static_cast<CNetObj_GameDataTeam *>(Server()->SnapNewItem(NETOBJTYPE_GAMEDATATEAM, 0, sizeof(CNetObj_GameDataTeam)));
+		CNetObj_GameDataTeam *pGameDataTeam = static_cast<CNetObj_GameDataTeam *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_GAMEDATATEAM, 0, sizeof(CNetObj_GameDataTeam)));
 		if(!pGameDataTeam)
 			return;
 
@@ -689,7 +689,7 @@ void IGameController::Snap(int SnappingClient)
 	// demo recording
 	if(SnappingClient == -1)
 	{
-		CNetObj_De_GameInfo *pGameInfo = static_cast<CNetObj_De_GameInfo *>(Server()->SnapNewItem(NETOBJTYPE_DE_GAMEINFO, 0, sizeof(CNetObj_De_GameInfo)));
+		CNetObj_De_GameInfo *pGameInfo = static_cast<CNetObj_De_GameInfo *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_DE_GAMEINFO, 0, sizeof(CNetObj_De_GameInfo)));
 		if(!pGameInfo)
 			return;
 

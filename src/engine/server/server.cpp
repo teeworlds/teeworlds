@@ -277,7 +277,7 @@ void CServer::CClient::Reset()
 	m_ModChunk = 0;
 }
 
-CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
+CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta[MODAPI_SNAPSHOT_TW07MODAPI])
 {
 	m_TickSpeed = SERVER_TICK_SPEED;
 
@@ -570,9 +570,9 @@ void CServer::DoSnapshot()
 		int SnapshotSize;
 
 		// build snap and possibly add some messages
-		m_SnapshotBuilder.Init();
+		m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07MODAPI].Init();
 		GameServer()->OnSnap07ModAPI(-1);
-		SnapshotSize = m_SnapshotBuilder.Finish(aData);
+		SnapshotSize = m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07MODAPI].Finish(aData);
 
 		// write snapshot
 		m_DemoRecorder.RecordSnapshot(Tick(), aData, SnapshotSize);
@@ -606,19 +606,20 @@ void CServer::DoSnapshot()
 			int DeltaTick = -1;
 			int DeltaSize;
 
-			m_SnapshotBuilder.Init();
-
 			if(GetClientProtocolCompatibility(i, MODAPI_COMPATIBILITY_SNAPSHOT07MODAPI))
 			{
+				m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07MODAPI].Init();
 				GameServer()->OnSnap07ModAPI(i);
+				SnapshotSize = m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07MODAPI].Finish(pData);
 			}
 			else
 			{
+				m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07].Init();
 				GameServer()->OnSnap07(i);
+				SnapshotSize = m_SnapshotBuilder[MODAPI_SNAPSHOT_TW07].Finish(pData);
 			}
 
 			// finish snapshot
-			SnapshotSize = m_SnapshotBuilder.Finish(pData);
 			Crc = pData->Crc();
 
 			// remove old snapshos
@@ -644,7 +645,14 @@ void CServer::DoSnapshot()
 			}
 
 			// create delta
-			DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, pData, aDeltaData);
+			if(GetClientProtocolCompatibility(i, MODAPI_COMPATIBILITY_SNAPSHOT07MODAPI))
+			{
+				DeltaSize = m_SnapshotDelta[MODAPI_SNAPSHOT_TW07MODAPI].CreateDelta(pDeltashot, pData, aDeltaData);
+			}
+			else
+			{
+				DeltaSize = m_SnapshotDelta[MODAPI_SNAPSHOT_TW07].CreateDelta(pDeltashot, pData, aDeltaData);
+			}
 
 			if(DeltaSize)
 			{
@@ -1294,8 +1302,8 @@ int CServer::LoadMap(const char *pMapName)
 	m_DemoRecorder.Stop();
 
 	// reinit snapshot ids
-	m_IDPool07.TimeoutIDs();
-	m_IDPool07ModAPI.TimeoutIDs();
+	m_IDPool[MODAPI_SNAPSHOT_TW07].TimeoutIDs();
+	m_IDPool[MODAPI_SNAPSHOT_TW07MODAPI].TimeoutIDs();
 
 	// get the crc of the map
 	m_CurrentMapCrc = m_pMap->Crc();
@@ -1743,37 +1751,27 @@ void CServer::RegisterCommands()
 }
 
 
-int CServer::SnapNewID07()
+int CServer::SnapNewID(int Snapshot)
 {
-	return m_IDPool07.NewID();
+	return m_IDPool[Snapshot].NewID();
 }
 
-void CServer::SnapFreeID07(int ID)
+void CServer::SnapFreeID(int Snapshot, int ID)
 {
-	m_IDPool07.FreeID(ID);
+	m_IDPool[Snapshot].FreeID(ID);
 }
 
-int CServer::SnapNewID07ModAPI()
-{
-	return m_IDPool07ModAPI.NewID();
-}
-
-void CServer::SnapFreeID07ModAPI(int ID)
-{
-	m_IDPool07ModAPI.FreeID(ID);
-}
-
-
-void *CServer::SnapNewItem(int Type, int ID, int Size)
+void *CServer::SnapNewItem(int Snapshot, int Type, int ID, int Size)
 {
 	dbg_assert(Type >= 0 && Type <=0xffff, "incorrect type");
 	dbg_assert(ID >= 0 && ID <=0xffff, "incorrect id");
-	return ID < 0 ? 0 : m_SnapshotBuilder.NewItem(Type, ID, Size);
+	return ID < 0 ? 0 : m_SnapshotBuilder[Snapshot].NewItem(Type, ID, Size);
 }
 
 void CServer::SnapSetStaticsize(int ItemType, int Size)
 {
-	m_SnapshotDelta.SetStaticsize(ItemType, Size);
+	m_SnapshotDelta[MODAPI_SNAPSHOT_TW07].SetStaticsize(ItemType, Size);
+	m_SnapshotDelta[MODAPI_SNAPSHOT_TW07MODAPI].SetStaticsize(ItemType, Size);
 }
 
 static CServer *CreateServer() { return new CServer(); }

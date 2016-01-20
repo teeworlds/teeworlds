@@ -8,7 +8,7 @@
 #include "pickup.h"
 
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
-: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, PickupPhysSize, 1)
+: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, 1, PickupPhysSize)
 {
 	m_Type = Type;
 
@@ -134,12 +134,12 @@ void CPickup::TickPaused()
 		++m_SpawnTick;
 }
 
-void CPickup::Snap(int SnappingClient, int FirstID)
+void CPickup::Snap(int Snapshot, int SnappingClient)
 {
 	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))
 		return;
 
-	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, GetID(FirstID), sizeof(CNetObj_Pickup)));
+	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_PICKUP, GetID(Snapshot, 0), sizeof(CNetObj_Pickup)));
 	if(!pP)
 		return;
 

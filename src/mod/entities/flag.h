@@ -36,7 +36,7 @@ public:
 	/* CEntity functions */
 	virtual void Reset();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient, int FirstID);
+	virtual void Snap(int Snapshot, int SnappingClient);
 	virtual void Tick();
 
 	/* Functions */

@@ -2,6 +2,7 @@
 #define MODAPI_ENTITY_H
 
 #include <game/server/entity.h>
+#include <modapi/compatibility.h>
 
 #include <base/tl/array.h>
 
@@ -19,9 +20,9 @@ public:
 	virtual void Snap07ModAPI(int SnappingClient);
 
 protected:
-	virtual void Snap(int SnappingClient, int FirstID);
+	virtual void Snap(int Snapshot, int SnappingClient);
 	
-	int GetID(int ID);
+	int GetID(int Snapshot, int ID);
 };
 
 class CModAPI_EntityMultiSnapshot : public CEntity
@@ -38,8 +39,7 @@ public:
 	virtual void Snap07ModAPI(int SnappingClient);
 	
 protected:
-	int GetID07(int ID);
-	int GetID07ModAPI(int ID);
+	int GetID(int Snapshot, int ID);
 };
 
 #endif

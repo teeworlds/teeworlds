@@ -97,14 +97,14 @@ void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 	pProj->m_Type = m_Type;
 }
 
-void CProjectile::Snap(int SnappingClient, int FirstID)
+void CProjectile::Snap(int Snapshot, int SnappingClient)
 {
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
-	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, GetID(FirstID), sizeof(CNetObj_Projectile)));
+	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_PROJECTILE, GetID(Snapshot, 0), sizeof(CNetObj_Projectile)));
 	if(pProj)
 		FillInfo(pProj);
 }

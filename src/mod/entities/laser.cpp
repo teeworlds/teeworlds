@@ -97,12 +97,12 @@ void CLaser::TickPaused()
 	++m_EvalTick;
 }
 
-void CLaser::Snap(int SnappingClient, int FirstID)
+void CLaser::Snap(int Snapshot, int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient) && NetworkClipped(SnappingClient, m_From))
 		return;
 
-	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(FirstID), sizeof(CNetObj_Laser)));
+	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_LASER, GetID(Snapshot, 0), sizeof(CNetObj_Laser)));
 	if(!pObj)
 		return;
 

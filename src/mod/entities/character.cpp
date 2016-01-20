@@ -42,7 +42,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 // Character, "physical" player's part
 CCharacter::CCharacter(CGameWorld *pWorld)
-: CModAPI_EntitySnapshot07(pWorld, MOD_ENTTYPE_CHARACTER, vec2(0, 0), ms_PhysSize, 0)
+: CModAPI_EntitySnapshot07(pWorld, MOD_ENTTYPE_CHARACTER, vec2(0, 0), 0, ms_PhysSize)
 {
 	m_Health = 0;
 	m_Armor = 0;
@@ -774,12 +774,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	return true;
 }
 
-void CCharacter::Snap(int SnappingClient, int FirstID)
+void CCharacter::Snap(int Snapshot, int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
 
-	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 	if(!pCharacter)
 		return;
 

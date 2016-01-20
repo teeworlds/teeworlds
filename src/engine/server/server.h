@@ -136,10 +136,9 @@ public:
 
 	CClient m_aClients[MAX_CLIENTS];
 
-	CSnapshotDelta m_SnapshotDelta;
-	CSnapshotBuilder m_SnapshotBuilder;
-	CSnapIDPool m_IDPool07;
-	CSnapIDPool m_IDPool07ModAPI;
+	CSnapshotDelta m_SnapshotDelta[MODAPI_NUM_SNAPSHOT];
+	CSnapshotBuilder m_SnapshotBuilder[MODAPI_NUM_SNAPSHOT];
+	CSnapIDPool m_IDPool[MODAPI_NUM_SNAPSHOT];
 	CNetServer m_NetServer;
 	CEcon m_Econ;
 	CServerBan m_ServerBan;
@@ -244,11 +243,9 @@ public:
 	void RegisterCommands();
 
 
-	virtual int SnapNewID07();
-	virtual void SnapFreeID07(int ID);
-	virtual int SnapNewID07ModAPI();
-	virtual void SnapFreeID07ModAPI(int ID);
-	virtual void *SnapNewItem(int Type, int ID, int Size);
+	virtual int SnapNewID(int Snapshot);
+	virtual void SnapFreeID(int Snapshot, int ID);
+	virtual void *SnapNewItem(int Snapshot, int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
 	
 	//ModAPI

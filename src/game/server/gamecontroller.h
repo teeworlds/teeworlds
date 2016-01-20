@@ -185,7 +185,7 @@ public:
 	}
 
 	// general
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int Snapshot, int SnappingClient);
 	virtual void Tick();
 
 	// info
