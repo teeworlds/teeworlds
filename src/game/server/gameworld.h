@@ -34,6 +34,8 @@ public:
 	bool m_ResetRequested;
 	bool m_Paused;
 	CWorldCore m_Core;
+	
+	int m_WorldID;
 
 	CGameWorld();
 	~CGameWorld();

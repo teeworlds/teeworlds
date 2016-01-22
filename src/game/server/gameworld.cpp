@@ -244,14 +244,13 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	return pClosest;
 }
 
-
 CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
 {
 	// Find other players
 	float ClosestRange = Radius*2;
 	CCharacter *pClosest = 0;
 
-	CCharacter *p = (CCharacter *)GameServer()->m_World.FindFirst(MOD_ENTTYPE_CHARACTER);
+	CCharacter *p = (CCharacter *)FindFirst(MOD_ENTTYPE_CHARACTER);
 	for(; p; p = (CCharacter *)p->TypeNext())
  	{
 		if(p == pNotThis)

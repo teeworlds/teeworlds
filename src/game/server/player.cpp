@@ -5,7 +5,10 @@
 #include "gamecontroller.h"
 #include "player.h"
 
+#include <modapi/server/event.h>
+
 #include <mod/entities/character.h>
+#include <mod/defines.h>
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
@@ -29,6 +32,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 	m_DeadSpecMode = false;
 	m_Spawning = 0;
+	
+	m_WorldID = MOD_WORLD_DEFAULT;
 }
 
 CPlayer::~CPlayer()
@@ -203,7 +208,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World[m_WorldID].m_Paused)
 	{
 		m_PlayerFlags = NewInput->m_PlayerFlags;
 		return;
@@ -362,11 +367,26 @@ void CPlayer::TryRespawn()
 {
 	vec2 SpawnPos;
 
-	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
+	if(!GameServer()->m_pController->CanSpawn(m_ClientID, &SpawnPos))
 		return;
 
 	m_Spawning = false;
-	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
+	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World[m_WorldID]);
 	m_pCharacter->Spawn(this, SpawnPos);
-	GameServer()->CreatePlayerSpawn(SpawnPos);
+	
+	CModAPI_WorldEvent_SpawnEffect(GameServer(), m_WorldID)
+		.Send(SpawnPos);
+}
+
+int CPlayer::GetWorldID() const
+{
+	return m_WorldID;
+}
+
+void CPlayer::SetWorldID(int WorldID)
+{
+	if(WorldID >= 0 && WorldID < MOD_NUM_WORLDS)
+	{
+		m_WorldID = WorldID;
+	}
 }

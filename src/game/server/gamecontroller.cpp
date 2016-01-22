@@ -308,7 +308,10 @@ bool IGameController::OnEntityPoint(int EditorResource, int EntityType, vec2 Pos
 
 	if(PickupType != -1)
 	{
-		new CPickup(&GameServer()->m_World, PickupType, Pos);
+		for(int i=0; i<MOD_NUM_WORLDS; i++)
+		{
+			new CPickup(&GameServer()->m_World[i], PickupType, Pos);
+		}
 		return true;
 	}
 
@@ -454,7 +457,10 @@ void IGameController::DoWincheckMatch()
 void IGameController::ResetGame()
 {
 	// reset the game
-	GameServer()->m_World.m_ResetRequested = true;
+	for(int i=0; i<MOD_NUM_WORLDS; i++)
+	{
+		GameServer()->m_World[i].m_ResetRequested = true;
+	}
 	
 	SetGameState(IGS_GAME_RUNNING);
 	m_GameStartTick = Server()->Tick();
@@ -548,7 +554,10 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		{
 			m_GameState = GameState;
 			m_GameStateTimer = 3*Server()->TickSpeed();
-			GameServer()->m_World.m_Paused = true;
+			for(int i=0; i<MOD_NUM_WORLDS; i++)
+			{
+				GameServer()->m_World[i].m_Paused = true;
+			}
 		}
 		break;
 	case IGS_GAME_RUNNING:
@@ -557,7 +566,10 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = TIMER_INFINITE;
 			SetPlayersReadyState(true);
-			GameServer()->m_World.m_Paused = false;
+			for(int i=0; i<MOD_NUM_WORLDS; i++)
+			{
+				GameServer()->m_World[i].m_Paused = false;
+			}
 		}
 		break;
 	case IGS_GAME_PAUSED:
@@ -580,7 +592,10 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 
 				m_GameState = GameState;
-				GameServer()->m_World.m_Paused = true;
+				for(int i=0; i<MOD_NUM_WORLDS; i++)
+				{
+					GameServer()->m_World[i].m_Paused = true;
+				}
 			}
 			else
 			{
@@ -597,7 +612,10 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = Timer*Server()->TickSpeed();
 			m_SuddenDeath = 0;
-			GameServer()->m_World.m_Paused = true;
+			for(int i=0; i<MOD_NUM_WORLDS; i++)
+			{
+				GameServer()->m_World[i].m_Paused = true;
+			}
 		}
 	}
 }
@@ -791,7 +809,7 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World.m_ResetRequested)
+	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World[MOD_WORLD_DEFAULT].m_ResetRequested)
 	{
 		if(m_GameFlags&GAMEFLAG_SURVIVAL)
 			DoWincheckRound();
@@ -825,7 +843,7 @@ bool IGameController::IsPlayerReadyMode() const
 
 bool IGameController::IsTeamChangeAllowed() const
 {
-	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
+	return !GameServer()->m_World[MOD_WORLD_DEFAULT].m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
 }
 
 void IGameController::UpdateGameInfo(int ClientID)
@@ -937,10 +955,16 @@ void IGameController::CycleMap()
 }
 
 // spawn
-bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
+bool IGameController::CanSpawn(int ClientID, vec2 *pOutPos) const
 {
+	if(!GameServer()->m_apPlayers[ClientID])
+		return false;
+	
+	int Team = GameServer()->m_apPlayers[ClientID]->GetTeam();
+	int WorldID = GameServer()->m_apPlayers[ClientID]->GetWorldID();
+	
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_World.m_Paused || GameServer()->m_World.m_ResetRequested)
+	if(Team == TEAM_SPECTATORS || GameServer()->m_World[WorldID].m_Paused || GameServer()->m_World[WorldID].m_ResetRequested)
 		return false;
 
 	CSpawnEval Eval;
@@ -950,29 +974,29 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 		Eval.m_FriendlyTeam = Team;
 
 		// first try own team spawn, then normal spawn and then enemy
-		EvaluateSpawnType(&Eval, 1+(Team&1));
+		EvaluateSpawnType(WorldID, &Eval, 1+(Team&1));
 		if(!Eval.m_Got)
 		{
-			EvaluateSpawnType(&Eval, 0);
+			EvaluateSpawnType(WorldID, &Eval, 0);
 			if(!Eval.m_Got)
-				EvaluateSpawnType(&Eval, 1+((Team+1)&1));
+				EvaluateSpawnType(WorldID, &Eval, 1+((Team+1)&1));
 		}
 	}
 	else
 	{
-		EvaluateSpawnType(&Eval, 0);
-		EvaluateSpawnType(&Eval, 1);
-		EvaluateSpawnType(&Eval, 2);
+		EvaluateSpawnType(WorldID, &Eval, 0);
+		EvaluateSpawnType(WorldID, &Eval, 1);
+		EvaluateSpawnType(WorldID, &Eval, 2);
 	}
 
 	*pOutPos = Eval.m_Pos;
 	return Eval.m_Got;
 }
 
-float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
+float IGameController::EvaluateSpawnPos(int WorldID, CSpawnEval *pEval, vec2 Pos) const
 {
 	float Score = 0.0f;
-	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(MOD_ENTTYPE_CHARACTER));
+	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World[WorldID].FindFirst(MOD_ENTTYPE_CHARACTER));
 	for(; pC; pC = (CCharacter *)pC->TypeNext())
 	{
 		// team mates are not as dangerous as enemies
@@ -987,14 +1011,14 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
 	return Score;
 }
 
-void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
+void IGameController::EvaluateSpawnType(int WorldID, CSpawnEval *pEval, int Type) const
 {
 	// get spawn point
 	for(int i = 0; i < m_aaSpawnPoints[Type].size(); i++)
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World[WorldID].FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 		vec2 Positions[5] = { vec2(0.0f, 0.0f), vec2(-32.0f, 0.0f), vec2(0.0f, -32.0f), vec2(32.0f, 0.0f), vec2(0.0f, 32.0f) };	// start, left, up, right, down
 		int Result = -1;
 		for(int Index = 0; Index < 5 && Result == -1; ++Index)
@@ -1012,7 +1036,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 			continue;	// try next spawn point
 
 		vec2 P = m_aaSpawnPoints[Type][i]+Positions[Result];
-		float S = EvaluateSpawnPos(pEval, P);
+		float S = EvaluateSpawnPos(WorldID, pEval, P);
 		if(!pEval->m_Got || pEval->m_Score > S)
 		{
 			pEval->m_Got = true;

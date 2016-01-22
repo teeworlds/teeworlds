@@ -127,6 +127,14 @@ private:
 
 	// used for spectator mode
 	int m_SpectatorID;
+
+	// ModAPI
+private:
+	int m_WorldID;
+
+public:
+	int GetWorldID() const;
+	void SetWorldID(int WorldID);
 };
 
 #endif

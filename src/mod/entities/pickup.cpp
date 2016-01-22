@@ -8,6 +8,7 @@
 #include "pickup.h"
 
 #include <modapi/server/weapon.h>
+#include <modapi/server/event.h>
 
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
 : CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, 1, PickupPhysSize)
@@ -38,13 +39,16 @@ void CPickup::Tick()
 			m_SpawnTick = -1;
 
 			if(m_Type == PICKUP_GRENADE || m_Type == PICKUP_SHOTGUN || m_Type == PICKUP_LASER)
-				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN);
+			{
+				CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					.Send(m_Pos, SOUND_WEAPON_SPAWN);
+			}
 		}
 		else
 			return;
 	}
 	// Check if a player intersected us
-	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
+	CCharacter *pChr = GameWorld()->ClosestCharacter(m_Pos, 20.0f, 0);
 	if(pChr && pChr->IsAlive())
 	{
 		// player picked us up, is someone was hooking us, let them go
@@ -55,7 +59,8 @@ void CPickup::Tick()
 				if(pChr->IncreaseHealth(1))
 				{
 					Picked = true;
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_HEALTH);
 				}
 				break;
 
@@ -63,7 +68,8 @@ void CPickup::Tick()
 				if(pChr->IncreaseArmor(1))
 				{
 					Picked = true;
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_ARMOR);
 				}
 				break;
 
@@ -80,7 +86,9 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_GRENADE);
+						
 					if(pChr->GetPlayer())
 					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
@@ -100,7 +108,9 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_SHOTGUN);
+						
 					if(pChr->GetPlayer())
 					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
@@ -120,7 +130,9 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_SHOTGUN);
+						
 					if(pChr->GetPlayer())
 					{
 						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
@@ -134,10 +146,11 @@ void CPickup::Tick()
 					pChr->SetWeapon(WEAPON_NINJA);
 					Picked = true;
 
-					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
+					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+						.Send(m_Pos, SOUND_PICKUP_NINJA);
 
 					// loop through all players, setting their emotes
-					CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(MOD_ENTTYPE_CHARACTER));
+					CCharacter *pC = static_cast<CCharacter *>(GameWorld()->FindFirst(MOD_ENTTYPE_CHARACTER));
 					for(; pC; pC = (CCharacter *)pC->TypeNext())
 					{
 						if (pC != pChr)

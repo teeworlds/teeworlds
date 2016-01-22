@@ -3,6 +3,8 @@
 #include <game/server/player.h>
 #include <generated/server_data.h>
 
+#include <modapi/server/event.h>
+
 #include <mod/entities/character.h>
 #include <mod/entities/projectile.h>
 #include <mod/entities/laser.h>
@@ -45,6 +47,11 @@ const IServer* CModAPI_Weapon::Server() const
 {
 	return m_pCharacter->Server();
 }
+
+int CModAPI_Weapon::WorldID()
+{
+	return Player()->GetWorldID();
+}
 	
 
 /* HAMMER *********************************************************** */
@@ -75,11 +82,12 @@ bool CModAPI_Weapon_Hammer::OnFire(vec2 Direction)
 	
 	vec2 ProjStartPos = Character()->GetPos() + Direction * Character()->GetProximityRadius()*0.75f;
 	
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_HAMMER_FIRE);
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_HAMMER_FIRE);
 
 	CCharacter *apEnts[MAX_CLIENTS];
 	int Hits = 0;
-	int Num = GameServer()->m_World.FindEntities(ProjStartPos, Character()->GetProximityRadius()*0.5f, (CEntity**)apEnts,
+	int Num = GameServer()->m_World[WorldID()].FindEntities(ProjStartPos, Character()->GetProximityRadius()*0.5f, (CEntity**)apEnts,
 												MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 
 	for (int i = 0; i < Num; ++i)
@@ -90,10 +98,15 @@ bool CModAPI_Weapon_Hammer::OnFire(vec2 Direction)
 			continue;
 
 		// set his velocity to fast upward (for now)
+		vec2 HammerHitPos;
+		
 		if(length(pTarget->GetPos()-ProjStartPos) > 0.0f)
-			GameServer()->CreateHammerHit(pTarget->GetPos()-normalize(pTarget->GetPos()-ProjStartPos)*Character()->GetProximityRadius()*0.5f);
+			HammerHitPos = pTarget->GetPos()-normalize(pTarget->GetPos()-ProjStartPos)*Character()->GetProximityRadius()*0.5f;
 		else
-			GameServer()->CreateHammerHit(ProjStartPos);
+			HammerHitPos = ProjStartPos;
+			
+		CModAPI_WorldEvent_HammerHitEffect(GameServer(), WorldID())
+			.Send(HammerHitPos);
 
 		vec2 Dir;
 		if (length(pTarget->GetPos() - Character()->GetPos()) > 0.0f)
@@ -199,7 +212,9 @@ bool CModAPI_Weapon_GenericGun07::OnFire(vec2 Direction)
 		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
 		if(m_LastNoAmmoSound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			GameServer()->CreateSound(Character()->GetPos(), SOUND_WEAPON_NOAMMO);
+			CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+				.Send(Character()->GetPos(), SOUND_WEAPON_NOAMMO);
+		
 			m_LastNoAmmoSound = Server()->Tick();
 		}
 		return false;
@@ -256,7 +271,8 @@ void CModAPI_Weapon_Gun::CreateProjectile(vec2 Pos, vec2 Direction)
 		(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_GunLifetime),
 		g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, MODAPI_WEAPON_GUN07);
 
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_GUN_FIRE);
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_GUN_FIRE);
 }
 
 
@@ -287,7 +303,8 @@ void CModAPI_Weapon_Shotgun::CreateProjectile(vec2 Pos, vec2 Direction)
 			g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, 0, -1, MODAPI_WEAPON_SHOTGUN07);
 	}
 
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_SHOTGUN_FIRE);
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_SHOTGUN_FIRE);
 }
 
 
@@ -308,7 +325,8 @@ void CModAPI_Weapon_Grenade::CreateProjectile(vec2 Pos, vec2 Direction)
 		(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
 		g_pData->m_Weapons.m_Grenade.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_GRENADE_FIRE);
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_GRENADE_FIRE);
 }
 
 
@@ -323,7 +341,9 @@ CModAPI_Weapon_Laser::CModAPI_Weapon_Laser(CCharacter* pCharacter, int Ammo) :
 void CModAPI_Weapon_Laser::CreateProjectile(vec2 Pos, vec2 Direction)
 {
 	new CLaser(GameWorld(), Pos, Direction, GameServer()->Tuning()->m_LaserReach, Player()->GetCID());
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_LASER_FIRE);
+	
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_LASER_FIRE);
 }
 
 
@@ -359,7 +379,8 @@ bool CModAPI_Weapon_Ninja::OnFire(vec2 Direction)
 	m_ReloadTimer = g_pData->m_Weapons.m_aId[GetID()].m_Firedelay * Server()->TickSpeed() / 1000;
 	m_OldVelAmount = length(Character()->GetVelocity());
 
-	GameServer()->CreateSound(Character()->GetPos(), SOUND_NINJA_FIRE);
+	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+		.Send(Character()->GetPos(), SOUND_NINJA_FIRE);
 	
 	return true;
 }
@@ -409,7 +430,7 @@ bool CModAPI_Weapon_Ninja::TickPreFire(bool IsActiveWeapon)
 		vec2 Dir = Character()->GetPos() - OldPos;
 		float Radius = ProximityRadius * 2.0f;
 		vec2 Center = OldPos + Dir * 0.5f;
-		int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World[WorldID()].FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
 
 		for (int i = 0; i < Num; ++i)
 		{
@@ -431,7 +452,9 @@ bool CModAPI_Weapon_Ninja::TickPreFire(bool IsActiveWeapon)
 				continue;
 
 			// hit a player, give him damage and stuffs...
-			GameServer()->CreateSound(aEnts[i]->GetPos(), SOUND_NINJA_HIT);
+			CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+				.Send(aEnts[i]->GetPos(), SOUND_NINJA_HIT);
+				
 			// set his velocity to fast upward (for now)
 			if(m_NumObjectsHit < 10)
 				m_apHitObjects[m_NumObjectsHit++] = aEnts[i];

@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <generated/server_data.h>
 #include <game/server/gamecontext.h>
+#include <modapi/server/event.h>
 
 #include "character.h"
 #include "laser.h"
@@ -23,7 +24,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
+	CCharacter *pHit = GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
 	if(!pHit)
 		return false;
 
@@ -40,7 +41,7 @@ void CLaser::DoBounce()
 
 	if(m_Energy < 0)
 	{
-		GameServer()->m_World.DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 		return;
 	}
 
@@ -67,7 +68,8 @@ void CLaser::DoBounce()
 			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
 				m_Energy = -1;
 
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE);
+			CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+				.Send(m_Pos, SOUND_LASER_BOUNCE);
 		}
 	}
 	else
@@ -83,7 +85,7 @@ void CLaser::DoBounce()
 
 void CLaser::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	GameWorld()->DestroyEntity(this);
 }
 
 void CLaser::Tick()

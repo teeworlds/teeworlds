@@ -83,8 +83,8 @@ class IGameController
 		float m_Score;
 	};
 	
-	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const;
-	void EvaluateSpawnType(CSpawnEval *pEval, int Type) const;
+	float EvaluateSpawnPos(int WorldID, CSpawnEval *pEval, vec2 Pos) const;
+	void EvaluateSpawnType(int WorldID, CSpawnEval *pEval, int Type) const;
 
 	// team
 	int ClampTeam(int Team) const;
@@ -202,7 +202,7 @@ public:
 	void ChangeMap(const char *pToMap);
 
 	//spawn
-	bool CanSpawn(int Team, vec2 *pPos) const;
+	bool CanSpawn(int ClientID, vec2 *pPos) const;
 	bool GetStartRespawnState() const;
 
 	// team

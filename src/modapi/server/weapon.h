@@ -20,6 +20,7 @@ public:
 	class CGameWorld* GameWorld();
 	class CGameContext* GameServer();
 	class IServer* Server();
+	int WorldID();
 	const class IServer* Server() const;
 	
 	virtual int GetAmmoType() const = 0;
