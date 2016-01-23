@@ -398,8 +398,31 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_PING)
 			{
-				str_format(aTemp, sizeof(aTemp), "%i", pItem->m_Latency);
+				int Ping = pItem->m_Latency;
+
+				vec4 StartColor;
+				vec4 EndColor;
+				float MixVal;
+				if(Ping <= 125)
+				{
+					StartColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+					EndColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+					MixVal = (Ping - 50.0f) / 75.0f;
+				}
+				else
+				{
+					StartColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+					EndColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+					MixVal = (Ping - 125.0f) / 75.0f;
+				}
+				vec4 Color = mix(StartColor, EndColor, MixVal);
+
+				str_format(aTemp, sizeof(aTemp), "%d", pItem->m_Latency);
+				TextRender()->TextColor(Color.r, Color.g, Color.b, Color.a);
 				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 			else if(ID == COL_VERSION)
 			{
