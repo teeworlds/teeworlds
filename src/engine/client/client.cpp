@@ -1086,19 +1086,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_MapdownloadCrc = MapCrc;
 					m_MapdownloadTotalsize = MapSize;
 					m_MapdownloadAmount = 0;
-					m_MapdownloadChannels = g_Config.m_ClMapChannels;
+					m_MapdownloadChannels = 1;
 
-					// fast map download
-					// needs some testing
-					for(int i = 0; i < m_MapdownloadChannels; i++)
-					{
-						int Flags = MSGFLAG_VITAL;
-						if(i == m_MapdownloadChannels - 1)
-							Flags |= MSGFLAG_FLUSH;
-						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-						Msg.AddInt(m_MapdownloadChunk+i);
-						SendMsgEx(&Msg, Flags);
-					}
+					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
+					Msg.AddInt(m_MapdownloadChunk);
+					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 					if(g_Config.m_Debug)
 					{
@@ -1147,19 +1139,38 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			}
 			else
 			{
+				if(Chunk == 0 && (pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0) // no server fast download
+				{
+					// start new channels
+					m_MapdownloadChannels = g_Config.m_ClMapChannels;
+					for(int i = 1; i < m_MapdownloadChannels; i++)
+					{
+						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
+						Msg.AddInt(m_MapdownloadChunk + i);
+						SendMsgEx(&Msg, MSGFLAG_VITAL);
+						
+						if(g_Config.m_Debug)
+						{
+							char aBuf[256];
+							str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk + i);
+							m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+						}
+					}
+				}
+				
 				// request new chunk
 				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
 				Msg.AddInt(m_MapdownloadChunk + m_MapdownloadChannels);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-				
-				m_MapdownloadChunk++;
 
 				if(g_Config.m_Debug)
 				{
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk + m_MapdownloadChannels);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 				}
+				
+				m_MapdownloadChunk++;
 			}
 		}
 		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_CON_READY)
