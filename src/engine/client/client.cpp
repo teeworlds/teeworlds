@@ -2091,6 +2091,39 @@ void CClient::Update()
 	}
 	else if(State() == IClient::STATE_ONLINE && m_RecivedSnapshots[g_Config.m_ClDummy] >= 3)
 	{
+		if(m_RecivedSnapshots[!g_Config.m_ClDummy] >= 3)
+		{
+			// switch dummy snapshot
+			int Repredict = 0;
+			int64 Freq = time_freq();
+			int64 Now = m_GameTime[!g_Config.m_ClDummy].Get(time_get());
+			int64 PredNow = m_PredictedTime.Get(time_get());
+
+			while(1)
+			{
+				CSnapshotStorage::CHolder *pCur = m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT];
+				int64 TickStart = (pCur->m_Tick)*time_freq()/50;
+
+				if(TickStart < Now)
+				{
+					CSnapshotStorage::CHolder *pNext = m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT]->m_pNext;
+					if(pNext)
+					{
+						m_aSnapshots[!g_Config.m_ClDummy][SNAP_PREV] = m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT];
+						m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT] = pNext;
+
+						// set ticks
+						m_CurGameTick[!g_Config.m_ClDummy] = m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT]->m_Tick;
+						m_PrevGameTick[!g_Config.m_ClDummy] = m_aSnapshots[!g_Config.m_ClDummy][SNAP_PREV]->m_Tick;
+					}
+					else
+						break;
+				}
+				else
+					break;
+			}
+		}
+
 		// switch snapshot
 		int Repredict = 0;
 		int64 Freq = time_freq();
