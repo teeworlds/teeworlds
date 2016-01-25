@@ -345,5 +345,6 @@ public:
 	//ModAPI download both parallel
 	bool m_ModDownloadFinished;
 	bool m_MapDownloadFinished;
+	bool m_ModAPIServer;
 };
 #endif

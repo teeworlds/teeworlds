@@ -288,6 +288,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	
 	m_ModDownloadFinished = false;
 	m_MapDownloadFinished = false;
+	m_ModAPIServer = false;
 
 	// map download
 	m_aMapdownloadFilename[0] = 0;
@@ -569,6 +570,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	
 	m_ModDownloadFinished = false;
 	m_MapDownloadFinished = false;
+	m_ModAPIServer = false;
 	
 	m_pMap->Unload();
 	
@@ -1095,6 +1097,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				DisconnectWithReason(pError);
 			else
 			{
+				m_ModAPIServer = true;
+				
 				pError = LoadModSearch(pMod, ModCrc);
 
 				if(!pError)
@@ -1169,7 +1173,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
 					m_MapDownloadFinished = true;
-					if(m_ModDownloadFinished)
+					if(m_ModDownloadFinished || !m_ModAPIServer)
 					{
 						SendReady();
 					}
@@ -1237,7 +1241,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					if(m_ModDownloadFinished)
+					if(m_ModDownloadFinished || !m_ModAPIServer)
 					{
 						SendReady();
 					}
