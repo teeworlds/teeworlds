@@ -46,6 +46,7 @@ int CNetClient::Update()
 	if(m_Connection.State() == NET_CONNSTATE_ERROR)
 		Disconnect(m_Connection.ErrorString());
 	m_TokenManager.Update();
+	m_TokenCache.Update();
 	return 0;
 }
 
