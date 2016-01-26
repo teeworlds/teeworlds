@@ -47,6 +47,11 @@ void CModAPI_Animation::GetFrame(float Time, CModAPI_AnimationFrame* pFrame) con
 	}
 }
 
+float CModAPI_Animation::GetDuration() const
+{
+	return m_lKeyFrames[m_lKeyFrames.size()-1].m_Time;
+}
+
 CModAPI_AnimationState::CModAPI_AnimationState()
 {
 	m_pAnimation = 0;

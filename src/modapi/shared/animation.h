@@ -21,6 +21,7 @@ private:
 public:
 	void AddKeyFrame(float Time, vec2 Pos, float Angle, float Opacity);
 	void GetFrame(float Time, CModAPI_AnimationFrame* pFrame) const;
+	float GetDuration() const;
 };
 
 class CModAPI_AnimationState

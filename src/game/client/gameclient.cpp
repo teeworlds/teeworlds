@@ -843,6 +843,14 @@ void CGameClient::ProcessEvents()
 			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
 			m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
+		else
+		{
+			for(int i=0; i<MODAPI_NUM_ITEMLAYER; i++)
+			{
+				if(m_pModAPI_Items[i]->ProcessEvent(Item.m_Type, (CNetEvent_Common*) pData))
+					break;
+			}
+		}
 	}
 }
 

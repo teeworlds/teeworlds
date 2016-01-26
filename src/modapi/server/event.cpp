@@ -1,5 +1,6 @@
 #include <modapi/compatibility.h>
 #include <modapi/server/event.h>
+#include <modapi/graphics.h>
 
 #include <engine/server.h>
 #include <generated/server_data.h>
@@ -49,6 +50,33 @@ int CModAPI_WorldEvent::GenerateMask()
 	}
 	
 	return Mask;
+}
+
+/* ANIMATED TEXT EVENT ************************************************/
+
+CModAPI_WorldEvent_AnimatedText::CModAPI_WorldEvent_AnimatedText(CGameContext* pGameServer, int WorldID) :
+	CModAPI_WorldEvent(pGameServer, WorldID)
+{
+	
+}
+
+void CModAPI_WorldEvent_AnimatedText::Send(vec2 Pos, int ItemLayer, const char* pText, int Size, vec4 Color, int Alignment, int AnimationID, int Duration, vec2 Offset)
+{
+	CNetEvent_ModAPI_AnimatedText *pEvent = (CNetEvent_ModAPI_AnimatedText *)GameServer()->m_Events.Create(NETEVENTTYPE_MODAPI_ANIMATEDTEXT, sizeof(CNetEvent_ModAPI_AnimatedText), GenerateMask());
+	if(pEvent)
+	{
+		pEvent->m_X = (int)Pos.x;
+		pEvent->m_Y = (int)Pos.y;
+		pEvent->m_ItemLayer = ItemLayer;
+		pEvent->m_Alignment = Alignment;
+		pEvent->m_Color = ModAPI_ColorToInt(Color);
+		pEvent->m_Size = Size;
+		StrToInts(pEvent->m_aText, 16, pText);
+		pEvent->m_AnimationId = AnimationID;
+		pEvent->m_Duration = Duration;
+		pEvent->m_OffsetX = (int)Offset.x;
+		pEvent->m_OffsetY = (int)Offset.y;
+	}
 }
 
 /* SOUND **************************************************************/

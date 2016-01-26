@@ -91,8 +91,8 @@ public:
 	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle);
 	void DrawAnimatedSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int AnimationID, float Time, vec2 Offset);
 	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
-	void DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
-	void DrawAnimatedText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset);
+	void DrawText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
+	void DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset);
 };
 
 #endif

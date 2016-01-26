@@ -29,4 +29,3 @@ int CMod_Server::CreateEditorFile(IStorage* pStorage, const char* pFilename)
 	if(Creator.Save(pStorage, pFilename) < 0) return false;
 	else return true;
 }
-

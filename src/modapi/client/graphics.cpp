@@ -475,12 +475,9 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 	return;
 }
 
-void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment)
+void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment)
 {	
-	char aText[64];
-	IntsToStr(pText, 16, &aText[0]);
-	
-	float width = pTextRender-> TextWidth(0, Size, aText, -1);
+	float width = pTextRender->TextWidth(0, Size, pText, -1);
 	float height = pTextRender->TextHeight(Size);
 	
 	switch(Alignment)
@@ -518,13 +515,13 @@ void CModAPI_Client_Graphics::DrawText(ITextRender* pTextRender, const int *pTex
 	}
 	
 	pTextRender->TextColor(Color.r,Color.g,Color.b,Color.a);
-	pTextRender->Text(0, Pos.x, Pos.y, Size, aText, -1);
+	pTextRender->Text(0, Pos.x, Pos.y, Size, pText, -1);
 	
 	//reset color
 	pTextRender->TextColor(255,255,255,1);
 }
 
-void CModAPI_Client_Graphics::DrawAnimatedText(ITextRender* pTextRender, const int *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset)
+void CModAPI_Client_Graphics::DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset)
 {
 	const CModAPI_Animation* pAnimation = GetAnimation(AnimationID);
 	if(pAnimation == 0) return;

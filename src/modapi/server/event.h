@@ -25,6 +25,15 @@ public:
 	int WorldID() const;
 };
 
+/* ANIMATED TEXT EVENT ************************************************/
+
+class CModAPI_WorldEvent_AnimatedText : public CModAPI_WorldEvent
+{
+public:
+	CModAPI_WorldEvent_AnimatedText(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	void Send(vec2 Pos, int ItemLayer, const char* pText, int Size, vec4 Color, int Alignment, int AnimationID, int Duration, vec2 Offset);
+};
+
 /* SOUND **************************************************************/
 
 class CModAPI_WorldEvent_Sound : public CModAPI_WorldEvent

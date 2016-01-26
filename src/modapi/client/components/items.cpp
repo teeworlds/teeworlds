@@ -14,6 +14,11 @@
 
 #include "items.h"
 
+CModAPI_Component_Items::CModAPI_Component_Items()
+{
+	m_LastTime = time_get();
+}
+
 void CModAPI_Component_Items::SetLayer(int Layer)
 {
 	m_Layer = Layer;
@@ -126,7 +131,10 @@ void CModAPI_Component_Items::RenderModAPIText(const CNetObj_ModAPI_Text *pPrev,
 
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
-	ModAPIGraphics()->DrawText(TextRender(), pCurrent->m_aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment);
+	char aText[64];
+	IntsToStr(pCurrent->m_aText, 16, &aText[0]);
+	
+	ModAPIGraphics()->DrawText(TextRender(), aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment);
 }
 
 void CModAPI_Component_Items::RenderModAPIAnimatedText(const CNetObj_ModAPI_AnimatedText *pPrev, const CNetObj_ModAPI_AnimatedText *pCurrent)
@@ -141,7 +149,10 @@ void CModAPI_Component_Items::RenderModAPIAnimatedText(const CNetObj_ModAPI_Anim
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	Time = Time / (static_cast<float>(pCurrent->m_Duration)/1000.f);
 	
-	ModAPIGraphics()->DrawAnimatedText(TextRender(), pCurrent->m_aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment, pCurrent->m_AnimationId, Time, Offset);
+	char aText[64];
+	IntsToStr(pCurrent->m_aText, 16, &aText[0]);
+	
+	ModAPIGraphics()->DrawAnimatedText(TextRender(), aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment, pCurrent->m_AnimationId, Time, Offset);
 }
 
 void CModAPI_Component_Items::RenderModAPITextCharacter(const CNetObj_ModAPI_TextCharacter *pPrev, const CNetObj_ModAPI_TextCharacter *pCurrent)
@@ -161,7 +172,11 @@ void CModAPI_Component_Items::RenderModAPITextCharacter(const CNetObj_ModAPI_Tex
 		CNetObj_Character CurChar = m_pClient->m_Snap.m_aCharacters[pCurrent->m_ClientId].m_Cur;
 		Pos = mix(vec2(PrevChar.m_X, PrevChar.m_Y), vec2(CurChar.m_X, CurChar.m_Y), Client()->IntraGameTick()) + Pos;
 	}
-	ModAPIGraphics()->DrawText(TextRender(), pCurrent->m_aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment);
+	
+	char aText[64];
+	IntsToStr(pCurrent->m_aText, 16, &aText[0]);
+	
+	ModAPIGraphics()->DrawText(TextRender(), aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment);
 }
 
 void CModAPI_Component_Items::RenderModAPIAnimatedTextCharacter(const CNetObj_ModAPI_AnimatedTextCharacter *pPrev, const CNetObj_ModAPI_AnimatedTextCharacter *pCurrent)
@@ -187,7 +202,10 @@ void CModAPI_Component_Items::RenderModAPIAnimatedTextCharacter(const CNetObj_Mo
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	Time = Time / (static_cast<float>(pCurrent->m_Duration)/1000.f);
 	
-	ModAPIGraphics()->DrawAnimatedText(TextRender(), pCurrent->m_aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment, pCurrent->m_AnimationId, Time, Offset);
+	char aText[64];
+	IntsToStr(pCurrent->m_aText, 16, &aText[0]);
+	
+	ModAPIGraphics()->DrawAnimatedText(TextRender(), aText, Pos, ModAPI_IntToColor(pCurrent->m_Color), pCurrent->m_Size, pCurrent->m_Alignment, pCurrent->m_AnimationId, Time, Offset);
 }
 
 void CModAPI_Component_Items::OnRender()
@@ -273,5 +291,84 @@ void CModAPI_Component_Items::OnRender()
 			}
 			break;
 		}
+	}
+
+	int64 CurrentTime = time_get();
+	int64 DeltaTime = CurrentTime - m_LastTime;
+	m_LastTime = CurrentTime;
+
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+		if(!pInfo->m_Paused)
+			UpdateEvents((float)((DeltaTime)/(double)time_freq())*pInfo->m_Speed);
+	}
+	else
+	{
+		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			UpdateEvents((float)((DeltaTime)/(double)time_freq()));
+	}
+}
+
+void CModAPI_Component_Items::UpdateEvents(float DeltaTime)
+{
+	{
+		std::list<CTextEventState>::iterator Iter = m_TextEvent.begin();
+		while(Iter != m_TextEvent.end())
+		{			
+			Iter->m_Time += DeltaTime;
+			float Time = Iter->m_Time / Iter->m_Duration;
+			
+			ModAPIGraphics()->DrawAnimatedText(
+				TextRender(),
+				Iter->m_aText,
+				Iter->m_Pos,
+				Iter->m_Color,
+				Iter->m_Size,
+				Iter->m_Alignment,
+				Iter->m_AnimationId,
+				Time,
+				Iter->m_Offset);
+			
+			const CModAPI_Animation* pAnimation = ModAPIGraphics()->GetAnimation(Iter->m_AnimationId);
+			if(!pAnimation || Time > pAnimation->GetDuration())
+			{
+				Iter = m_TextEvent.erase(Iter);
+			}
+			else
+			{
+				Iter++;
+			}
+		}
+	}
+}
+	
+bool CModAPI_Component_Items::ProcessEvent(int Type, CNetEvent_Common* pEvent)
+{
+	switch(Type)
+	{
+		case NETEVENTTYPE_MODAPI_ANIMATEDTEXT:
+		{			
+			CNetEvent_ModAPI_AnimatedText* pTextEvent = (CNetEvent_ModAPI_AnimatedText*) pEvent;
+			if(pTextEvent->m_ItemLayer != GetLayer())
+				return false;
+			
+			CTextEventState EventState;
+			EventState.m_Pos.x = static_cast<float>(pTextEvent->m_X);
+			EventState.m_Pos.y = static_cast<float>(pTextEvent->m_Y);
+			EventState.m_Size = static_cast<float>(pTextEvent->m_Size);
+			EventState.m_Color = ModAPI_IntToColor(pTextEvent->m_Color);
+			EventState.m_Alignment = pTextEvent->m_Alignment;
+			IntsToStr(pTextEvent->m_aText, 16, &EventState.m_aText[0]);
+			
+			EventState.m_AnimationId = pTextEvent->m_AnimationId;
+			EventState.m_Offset.x = static_cast<float>(pTextEvent->m_OffsetX);
+			EventState.m_Offset.y = static_cast<float>(pTextEvent->m_OffsetY);
+			EventState.m_Duration = static_cast<float>(pTextEvent->m_Duration)/1000.f;
+			EventState.m_Time = 0.f;
+			
+			m_TextEvent.push_back(EventState);
+		}
+		return true;
 	}
 }

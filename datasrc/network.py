@@ -296,6 +296,20 @@ Objects = [
 		NetIntAny("m_EndY"),
 		NetIntAny("m_StartTick"),
 	]),
+
+	## ModAPI Events
+
+	NetEvent("ModAPI_AnimatedText:Common", [
+		NetIntAny("m_ItemLayer"),
+		NetIntAny("m_Alignment"),
+		NetIntAny("m_Color"),
+		NetIntAny("m_Size"),
+		NetArray(NetIntAny("m_aText"), 16),
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
 ]
 
 Messages = [
