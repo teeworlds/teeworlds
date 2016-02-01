@@ -27,11 +27,11 @@ public:
 	class CModAPI_AnimationCreator : public CModAPI_ModItem_Animation
 	{
 	private:
-		array<CModAPI_AnimationFrame> m_lKeyFrames;
+		array<CModAPI_AnimationKeyFrame> m_lKeyFrames;
 	
 	public:
 		CModAPI_AnimationCreator& AddKeyFrame(float Time, vec2 Pos, float Angle, float Opacity = 1.0f);
-		CModAPI_AnimationFrame* GetData();
+		CModAPI_AnimationKeyFrame* GetData();
 	};
 
 private:
@@ -41,14 +41,11 @@ private:
 	array<CModAPI_ModItem_Sprite> m_Sprites;
 	array<CModAPI_LineStyleCreator> m_LineStyles;
 	
-	int AddSprite(int ImageId, int x, int External, int y, int w, int h, int gx, int gy);
-	
 public:
 	CModAPI_ModCreator();
 	
 	int AddImage(IStorage* pStorage, const char* Filename);
-	int AddSpriteInternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
-	int AddSpriteExternal(int ImageId, int x, int y, int w, int h, int gx, int gy);
+	int AddSprite(int ImageId, int x, int y, int w, int h, int gx, int gy);
 	CModAPI_LineStyleCreator& AddLineStyle();
 	CModAPI_AnimationCreator& AddAnimation();
 	

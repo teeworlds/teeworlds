@@ -191,6 +191,8 @@ void CPlayers::RenderPlayer(
 	int ClientID
 	)
 {
+	if(!ModAPIGraphics()) return;
+	
 	CNetObj_Character Prev;
 	CNetObj_Character Player;
 	Prev = *pPrevChar;
@@ -275,15 +277,16 @@ void CPlayers::RenderPlayer(
 			? fmod(Position.x, WalkTimeMagic)
 			: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 		/ WalkTimeMagic;
-	CAnimState State;
-	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+	
+	CModAPI_TeeAnimationState TeeAnimState;
+	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState);
 
 	if(InAir)
-		State.Add(&g_pData->m_aAnimations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_INAIR), 0.0f);
 	else if(Stationary)
-		State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0, 1.0f); // TODO: some sort of time here
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_IDLE), 0.0f);
 	else if(!WantOtherDir)
-		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_WALK), WalkTime);
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
@@ -291,12 +294,12 @@ void CPlayers::RenderPlayer(
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
+		//~ State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
 	}
 	if (Player.m_Weapon == WEAPON_NINJA)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
+		//~ State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
 	}
 
 	// do skidding
@@ -314,7 +317,11 @@ void CPlayers::RenderPlayer(
 			vec2(-Player.m_Direction*100*length(Vel),-50)
 		);
 	}
+	
+	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, Direction, Player.m_Emote, WalkTime);
+	return;
 
+	/*
 	// draw gun
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -524,6 +531,7 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
+	*/
 }
 
 void CPlayers::OnRender()

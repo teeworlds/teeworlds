@@ -99,7 +99,7 @@ CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::CModAPI_LineSt
 CModAPI_ModCreator::CModAPI_AnimationCreator& CModAPI_ModCreator::CModAPI_AnimationCreator::AddKeyFrame(float Time, vec2 Pos, float Angle, float Opacity)
 {
 	m_lKeyFrames.set_size(m_lKeyFrames.size()+1);
-	CModAPI_AnimationFrame& Frame = m_lKeyFrames[m_lKeyFrames.size()-1];
+	CModAPI_AnimationKeyFrame& Frame = m_lKeyFrames[m_lKeyFrames.size()-1];
 	
 	Frame.m_Time = Time;
 	Frame.m_Pos = Pos;
@@ -109,7 +109,7 @@ CModAPI_ModCreator::CModAPI_AnimationCreator& CModAPI_ModCreator::CModAPI_Animat
 	m_NumKeyFrame++;
 }
 
-CModAPI_AnimationFrame* CModAPI_ModCreator::CModAPI_AnimationCreator::GetData()
+CModAPI_AnimationKeyFrame* CModAPI_ModCreator::CModAPI_AnimationCreator::GetData()
 {
 	return &m_lKeyFrames[0];
 }
@@ -177,15 +177,33 @@ int CModAPI_ModCreator::AddImage(IStorage* pStorage, const char* pFilename)
 	return Image.m_Id;
 }
 
-int CModAPI_ModCreator::AddSprite(int ImageId, int External, int x, int y, int w, int h, int gx, int gy)
-{	
+int CModAPI_ModCreator::AddSprite(int ImageId, int x, int y, int w, int h, int gx, int gy)
+{
+	if(MODAPI_IS_INTERNAL_ID(ImageId))
+	{
+		int TrueId = MODAPI_GET_INTERNAL_ID(ImageId);
+		if(TrueId >= MODAPI_NUM_IMAGES || TrueId < 0)
+		{
+			dbg_msg("mod", "can't add the sprite : wrong internal image id (%i)", TrueId);
+			return -1;
+		}
+	}
+	else
+	{
+		int TrueId = MODAPI_GET_EXTERNAL_ID(ImageId);
+		if(TrueId >= m_Images.size() || TrueId < 0)
+		{
+			dbg_msg("mod", "can't add the sprite : wrong external image id (%i)", TrueId);
+			return -1;
+		}
+	}
+	
 	CModAPI_ModItem_Sprite sprite;
 	sprite.m_Id = m_Sprites.size();
 	sprite.m_X = x;
 	sprite.m_Y = y;
 	sprite.m_W = w;
 	sprite.m_H = h;
-	sprite.m_External = External;
 	sprite.m_ImageId = ImageId;
 	sprite.m_GridX = gx;
 	sprite.m_GridY = gy;
@@ -193,26 +211,6 @@ int CModAPI_ModCreator::AddSprite(int ImageId, int External, int x, int y, int w
 	m_Sprites.add(sprite);
 	
 	return sprite.m_Id;
-}
-
-int CModAPI_ModCreator::AddSpriteInternal(int ImageId, int x, int y, int w, int h, int gx, int gy)
-{
-	if(ImageId >= MODAPI_NB_INTERNALIMG || ImageId < 0)
-	{
-		dbg_msg("mod", "can't add the internal sprite : wrong image id (%i)", ImageId);
-		return -1;
-	}
-	return AddSprite(ImageId, 0, x, y, w, h, gx, gy);
-}
-
-int CModAPI_ModCreator::AddSpriteExternal(int ImageId, int x, int y, int w, int h, int gx, int gy)
-{	
-	if(ImageId >= m_Images.size() || ImageId < 0)
-	{
-		dbg_msg("mod", "can't add the external sprite : wrong image id (%i)", ImageId);
-		return -1;
-	}
-	return AddSprite(ImageId, 1, x, y, w, h, gx, gy);
 }
 
 CModAPI_ModCreator::CModAPI_LineStyleCreator& CModAPI_ModCreator::AddLineStyle()
@@ -295,7 +293,7 @@ int CModAPI_ModCreator::Save(class IStorage *pStorage, const char *pFileName)
 	//Save animation
 	for(int i=0; i<m_Animations.size(); i++)
 	{
-		m_Animations[i].m_KeyFrameData = df.AddData(m_Animations[i].m_NumKeyFrame * sizeof(CModAPI_AnimationFrame), m_Animations[i].GetData());
+		m_Animations[i].m_KeyFrameData = df.AddData(m_Animations[i].m_NumKeyFrame * sizeof(CModAPI_AnimationKeyFrame), m_Animations[i].GetData());
 		df.AddItem(MODAPI_MODITEMTYPE_ANIMATION, i, sizeof(CModAPI_ModItem_Animation), &m_Animations[i]);
 	}
 	

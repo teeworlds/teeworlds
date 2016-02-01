@@ -3,12 +3,7 @@
 
 #include <base/vmath.h>
 
-enum
-{
-	MODAPI_INTERNALIMG_GAME = 0,
-	MODAPI_NB_INTERNALIMG,
-};
-
+//Item position
 enum
 {
 	MODAPI_ITEMLAYER_UNDER_ITEM=0,
@@ -23,6 +18,7 @@ enum
 	MODAPI_ITEMLAYER_PREPLAYER = MODAPI_ITEMLAYER_UNDER_ITEM,
 };
 
+//Options
 enum
 {
 	MODAPI_LINESTYLE_ANIMATION_NONE = 0,
@@ -53,6 +49,44 @@ enum
 	MODAPI_ANIMCYCLETYPE_LOOP,
 };
 
+//Internal resources
+enum
+{
+	MODAPI_IMAGE_GAME = 0,
+	MODAPI_NUM_IMAGES,
+};
+
+enum
+{
+	MODAPI_NUM_SPRITES = 0,
+};
+
+enum
+{
+	MODAPI_NUM_LINESTYLES = 0,
+};
+
+enum
+{
+	MODAPI_ANIMATION_IDLE_BACKFOOT = 0,
+	MODAPI_ANIMATION_IDLE_FRONTFOOT,
+	MODAPI_ANIMATION_INAIR_BACKFOOT,
+	MODAPI_ANIMATION_INAIR_FRONTFOOT,
+	MODAPI_ANIMATION_WALK_BODY,
+	MODAPI_ANIMATION_WALK_BACKFOOT,
+	MODAPI_ANIMATION_WALK_FRONTFOOT,
+	MODAPI_NUM_ANIMATIONS,
+};
+
+enum
+{
+	MODAPI_TEEANIMATION_IDLE = 0,
+	MODAPI_TEEANIMATION_INAIR,
+	MODAPI_TEEANIMATION_WALK,
+	MODAPI_NUM_TEEANIMATIONS,
+};
+
+//Functions
 inline int ModAPI_ColorToInt(const vec4& Color)
 {
 	int Value = static_cast<int>(Color.r * 255.0f);
@@ -71,5 +105,11 @@ inline vec4 ModAPI_IntToColor(int Value)
 		static_cast<float>((Value>>24) & 255)/255.0f
 	);
 }
+
+#define MODAPI_INTERNAL_ID(id) ((id << 0x1) | 0x1)
+#define MODAPI_EXTERNAL_ID(id) (id << 0x1)
+#define MODAPI_IS_INTERNAL_ID(id) (id & 0x1)
+#define MODAPI_GET_INTERNAL_ID(id) (id >> 0x1)
+#define MODAPI_GET_EXTERNAL_ID(id) (id >> 0x1)
 
 #endif

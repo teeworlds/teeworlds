@@ -23,7 +23,6 @@ struct CModAPI_Sprite
 	int m_Y;
 	int m_W;
 	int m_H;
-	int m_External;
 	int m_ImageId;
 	int m_GridX;
 	int m_GridY;
@@ -69,30 +68,60 @@ struct CModAPI_LineStyle
 	int m_AnimationSpeed;
 };
 
+struct CModAPI_TeeAnimation
+{
+	int m_BodyAnimation;
+	int m_BackFootAnimation;
+	int m_FrontFootAnimation;
+};
+
+struct CModAPI_TeeAnimationState
+{
+	CModAPI_AnimationFrame m_Body;
+	CModAPI_AnimationFrame m_BackFoot;
+	CModAPI_AnimationFrame m_FrontFoot;
+};
+
 class CModAPI_Client_Graphics
 {
 private:
-	array<CModAPI_Image> m_Images;
-	array<CModAPI_Animation> m_Animations;
-	array<CModAPI_Sprite> m_Sprites;
-	array<CModAPI_LineStyle> m_LineStyles;
+	CModAPI_Image m_InternalImages[MODAPI_NUM_IMAGES];
+	CModAPI_Animation m_InternalAnimations[MODAPI_NUM_ANIMATIONS];
+	CModAPI_TeeAnimation m_InternalTeeAnimations[MODAPI_NUM_TEEANIMATIONS];
+	CModAPI_Sprite m_InternalSprites[MODAPI_NUM_SPRITES];
+	CModAPI_LineStyle m_InternalLineStyles[MODAPI_NUM_LINESTYLES];
+	
+	array<CModAPI_Image> m_ExternalImages;
+	array<CModAPI_Animation> m_ExternalAnimations;
+	array<CModAPI_TeeAnimation> m_ExternalTeeAnimations;
+	array<CModAPI_Sprite> m_ExternalSprites;
+	array<CModAPI_LineStyle> m_ExternalLineStyles;
+	
 	IGraphics* m_pGraphics;
 	
 public:
 	CModAPI_Client_Graphics(IGraphics* pGraphics);
 	const CModAPI_Image* GetImage(int Id) const;
 	const CModAPI_Animation* GetAnimation(int Id) const;
+	const CModAPI_TeeAnimation* GetTeeAnimation(int Id) const;
 	const CModAPI_Sprite* GetSprite(int Id) const;
 	const CModAPI_LineStyle* GetLineStyle(int Id) const;
 	
 	int OnModLoaded(IMod* pMod);
 	int OnModUnloaded();
 	
+	bool TextureSet(int ImageID);
+	
 	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle);
 	void DrawAnimatedSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int AnimationID, float Time, vec2 Offset);
 	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
 	void DrawText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
 	void DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset);
+	void DrawTee(CRenderTools* pRenderTools, class CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pState, vec2 Pos, vec2 Dir, int Emote, float Time);
+	
+	//Tee Animation
+	void InitTeeAnimationState(CModAPI_TeeAnimationState* pState);
+	void AddTeeAnimationState(CModAPI_TeeAnimationState* pState, int TeeAnimationID, float Time);
 };
 
 #endif

@@ -3,40 +3,173 @@
 #include <modapi/shared/mod.h>
 #include <generated/client_data.h>
 #include <game/client/render.h>
+#include <engine/shared/config.h>
 
 #include <game/gamecore.h>
 
 CModAPI_Client_Graphics::CModAPI_Client_Graphics(IGraphics* pGraphics)
 {
 	m_pGraphics = pGraphics;
+	
+	//Images
+	m_InternalImages[MODAPI_IMAGE_GAME].m_Texture = g_pData->m_aImages[IMAGE_GAME].m_Id;
+	
+	//Animations
+	vec2 BodyPos = vec2(0.0f, -4.0f);
+	vec2 FootPos = vec2(0.0f, 10.0f);
+	
+		//Idle
+	m_InternalAnimations[MODAPI_ANIMATION_IDLE_BACKFOOT].AddKeyFrame(0.0f, FootPos + vec2(-7.0f,  0.0f),  0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_IDLE_FRONTFOOT].AddKeyFrame(0.0f, FootPos + vec2(7.0f,  0.0f),  0.0f, 1.f);
+	
+		//InAir
+	m_InternalAnimations[MODAPI_ANIMATION_INAIR_BACKFOOT].AddKeyFrame(0.0f, FootPos + vec2(-3.0f,  0.0f),  -0.1f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_INAIR_FRONTFOOT].AddKeyFrame(0.0f, FootPos + vec2(3.0f,  0.0f),  -0.1f*pi*2.0f, 1.f);
+	
+		//Walk
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(0.0f, BodyPos + vec2(0.0f,  0.0f), 0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(0.2f, BodyPos + vec2(0.0f, -1.0f), 0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(0.4f, BodyPos + vec2(0.0f,  0.0f), 0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(0.6f, BodyPos + vec2(0.0f,  0.0f), 0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(0.8f, BodyPos + vec2(0.0f, -1.0f), 0.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BODY].AddKeyFrame(1.0f, BodyPos + vec2(0.0f,  0.0f), 0.0f, 1.f);
+	
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(0.0f, FootPos + vec2(  8.0f,  0.0f),  0.0f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(0.2f, FootPos + vec2( -8.0f,  0.0f),  0.0f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(0.4f, FootPos + vec2(-10.0f, -4.0f),  0.2f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(0.6f, FootPos + vec2( -8.0f, -8.0f),  0.3f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(0.8f, FootPos + vec2(  4.0f, -4.0f), -0.2f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_BACKFOOT].AddKeyFrame(1.0f, FootPos + vec2(  8.0f,  0.0f),  0.0f*pi*2.0f, 1.f);
+	
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(0.0f, FootPos + vec2(-10.0f, -4.0f),  0.0f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(0.2f, FootPos + vec2( -8.0f, -8.0f),  0.0f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(0.4f, FootPos + vec2(  4.0f, -4.0f),  0.2f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(0.6f, FootPos + vec2(  8.0f,  0.0f),  0.3f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(0.8f, FootPos + vec2(  8.0f,  0.0f), -0.2f*pi*2.0f, 1.f);
+	m_InternalAnimations[MODAPI_ANIMATION_WALK_FRONTFOOT].AddKeyFrame(1.0f, FootPos + vec2(-10.0f, -4.0f),  0.0f*pi*2.0f, 1.f);
+	
+	//TeeAnimations
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_IDLE].m_BodyAnimation = -1;
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_IDLE].m_BackFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_IDLE_BACKFOOT);
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_IDLE].m_FrontFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_IDLE_FRONTFOOT);
+	
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_INAIR].m_BodyAnimation = -1;
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_INAIR].m_BackFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_INAIR_BACKFOOT);
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_INAIR].m_FrontFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_INAIR_FRONTFOOT);
+	
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_WALK].m_BodyAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_WALK_BODY);
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_WALK].m_BackFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_WALK_BACKFOOT);
+	m_InternalTeeAnimations[MODAPI_TEEANIMATION_WALK].m_FrontFootAnimation = MODAPI_INTERNAL_ID(MODAPI_ANIMATION_WALK_FRONTFOOT);
 }
 
 const CModAPI_Image* CModAPI_Client_Graphics::GetImage(int Id) const
 {
-	if(Id < 0 || Id >= m_Images.size()) return 0;
-	
-	return &m_Images[Id];
+	if(MODAPI_IS_INTERNAL_ID(Id))
+	{
+		Id = MODAPI_GET_INTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= MODAPI_NUM_IMAGES)
+			return 0;
+		else
+			return &m_InternalImages[Id];
+	}
+	else
+	{
+		Id = MODAPI_GET_EXTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= m_ExternalImages.size())
+			return 0;
+		else
+			return &m_ExternalImages[Id];
+	}
 }
 
 const CModAPI_Animation* CModAPI_Client_Graphics::GetAnimation(int Id) const
 {
-	if(Id < 0 || Id >= m_Animations.size()) return 0;
-	
-	return &m_Animations[Id];
+	if(MODAPI_IS_INTERNAL_ID(Id))
+	{
+		Id = MODAPI_GET_INTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= MODAPI_NUM_ANIMATIONS)
+			return 0;
+		else
+			return &m_InternalAnimations[Id];
+	}
+	else
+	{
+		Id = MODAPI_GET_EXTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= m_ExternalAnimations.size())
+			return 0;
+		else
+			return &m_ExternalAnimations[Id];
+	}
+}
+
+const CModAPI_TeeAnimation* CModAPI_Client_Graphics::GetTeeAnimation(int Id) const
+{
+	if(MODAPI_IS_INTERNAL_ID(Id))
+	{
+		Id = MODAPI_GET_INTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= MODAPI_NUM_TEEANIMATIONS)
+			return 0;
+		else
+			return &m_InternalTeeAnimations[Id];
+	}
+	else
+	{
+		Id = MODAPI_GET_EXTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= m_ExternalTeeAnimations.size())
+			return 0;
+		else
+			return &m_ExternalTeeAnimations[Id];
+	}
 }
 
 const CModAPI_Sprite* CModAPI_Client_Graphics::GetSprite(int Id) const
 {
-	if(Id < 0 || Id >= m_Sprites.size()) return 0;
-	
-	return &m_Sprites[Id];
+	if(MODAPI_IS_INTERNAL_ID(Id))
+	{
+		Id = MODAPI_GET_INTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= MODAPI_NUM_SPRITES)
+			return 0;
+		else
+			return &m_InternalSprites[Id];
+	}
+	else
+	{
+		Id = MODAPI_GET_EXTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= m_ExternalSprites.size())
+			return 0;
+		else
+			return &m_ExternalSprites[Id];
+	}
 }
 
 const CModAPI_LineStyle* CModAPI_Client_Graphics::GetLineStyle(int Id) const
 {
-	if(Id < 0 || Id >= m_LineStyles.size()) return 0;
-	
-	return &m_LineStyles[Id];
+	if(MODAPI_IS_INTERNAL_ID(Id))
+	{
+		Id = MODAPI_GET_INTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= MODAPI_NUM_LINESTYLES)
+			return 0;
+		else
+			return &m_InternalLineStyles[Id];
+	}
+	else
+	{
+		Id = MODAPI_GET_EXTERNAL_ID(Id);
+		
+		if(Id < 0 || Id >= m_ExternalLineStyles.size())
+			return 0;
+		else
+			return &m_ExternalLineStyles[Id];
+	}
 }
 
 int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
@@ -46,15 +179,15 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		int Start, Num;
 		pMod->GetType(MODAPI_MODITEMTYPE_IMAGE, &Start, &Num);
 		
-		m_Images.set_size(Num);
+		m_ExternalImages.set_size(Num);
 		
 		for(int i = 0; i < Num; i++)
 		{
 			CModAPI_ModItem_Image *pItem = (CModAPI_ModItem_Image*) pMod->GetItem(Start+i, 0, 0);
+			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
+			if(Id >= Num) return 0;
 			
-			if(pItem->m_Id >= Num) return 0;
-			
-			CModAPI_Image* pImage = &m_Images[pItem->m_Id];
+			CModAPI_Image* pImage = &m_ExternalImages[Id];
 			
 			// copy base info
 			pImage->m_Width = pItem->m_Width;
@@ -78,17 +211,18 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		int Start, Num;
 		pMod->GetType(MODAPI_MODITEMTYPE_ANIMATION, &Start, &Num);
 		
-		m_Animations.set_size(Num);
+		m_ExternalAnimations.set_size(Num);
 		
 		for(int i = 0; i < Num; i++)
 		{
 			CModAPI_ModItem_Animation *pItem = (CModAPI_ModItem_Animation *) pMod->GetItem(Start+i, 0, 0);
 			
-			if(pItem->m_Id >= Num) return 0;
+			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
+			if(Id >= Num) return 0;
 			
-			const CModAPI_AnimationFrame* pFrames = static_cast<CModAPI_AnimationFrame*>(pMod->GetData(pItem->m_KeyFrameData));
+			const CModAPI_AnimationKeyFrame* pFrames = static_cast<CModAPI_AnimationKeyFrame*>(pMod->GetData(pItem->m_KeyFrameData));
 			
-			CModAPI_Animation* Animation = &m_Animations[pItem->m_Id];
+			CModAPI_Animation* Animation = &m_ExternalAnimations[Id];
 			for(int f=0; f<pItem->m_NumKeyFrame; f++)
 			{
 				Animation->AddKeyFrame(pFrames[f].m_Time, pFrames[f].m_Pos, pFrames[f].m_Angle, pFrames[f].m_Opacity);
@@ -101,20 +235,20 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		int Start, Num;
 		pMod->GetType(MODAPI_MODITEMTYPE_SPRITE, &Start, &Num);
 		
-		m_Sprites.set_size(Num);
+		m_ExternalSprites.set_size(Num);
 		
 		for(int i = 0; i < Num; i++)
 		{
 			CModAPI_ModItem_Sprite *pItem = (CModAPI_ModItem_Sprite *) pMod->GetItem(Start+i, 0, 0);
 			
-			if(pItem->m_Id >= Num) return 0;
+			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
+			if(Id >= Num) return 0;
 			
-			CModAPI_Sprite* sprite = &m_Sprites[pItem->m_Id];
+			CModAPI_Sprite* sprite = &m_ExternalSprites[Id];
 			sprite->m_X = pItem->m_X;
 			sprite->m_Y = pItem->m_Y;
 			sprite->m_W = pItem->m_W;
 			sprite->m_H = pItem->m_H;
-			sprite->m_External = pItem->m_External;
 			sprite->m_ImageId = pItem->m_ImageId;
 			sprite->m_GridX = pItem->m_GridX;
 			sprite->m_GridY = pItem->m_GridY;
@@ -126,15 +260,16 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 		int Start, Num;
 		pMod->GetType(MODAPI_MODITEMTYPE_LINESTYLE, &Start, &Num);
 		
-		m_LineStyles.set_size(Num);
+		m_ExternalLineStyles.set_size(Num);
 		
 		for(int i = 0; i < Num; i++)
 		{
 			CModAPI_ModItem_LineStyle *pItem = (CModAPI_ModItem_LineStyle*) pMod->GetItem(Start+i, 0, 0);
 			
-			if(pItem->m_Id > Num) return 0;
+			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
+			if(Id > Num) return 0;
 			
-			CModAPI_LineStyle* pLineStyle = &m_LineStyles[pItem->m_Id];
+			CModAPI_LineStyle* pLineStyle = &m_ExternalLineStyles[Id];
 			
 			pLineStyle->m_OuterWidth = static_cast<float>(pItem->m_OuterWidth);
 			pLineStyle->m_OuterColor = ModAPI_IntToColor(pItem->m_OuterColor);
@@ -176,25 +311,38 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 int CModAPI_Client_Graphics::OnModUnloaded()
 {
 	//Unload images
-	for(int i = 0; i < m_Images.size(); i++)
+	for(int i = 0; i < m_ExternalImages.size(); i++)
 	{
-		m_pGraphics->UnloadTexture(m_Images[i].m_Texture);
-		if(m_Images[i].m_pData)
+		m_pGraphics->UnloadTexture(m_ExternalImages[i].m_Texture);
+		if(m_ExternalImages[i].m_pData)
 		{
-			mem_free(m_Images[i].m_pData);
-			m_Images[i].m_pData = 0;
+			mem_free(m_ExternalImages[i].m_pData);
+			m_ExternalImages[i].m_pData = 0;
 		}
 	}
 	
-	m_Images.clear();
+	m_ExternalImages.clear();
 	
 	//Unload sprites
-	m_Sprites.clear();
+	m_ExternalSprites.clear();
 	
 	//Unload line styles
-	m_LineStyles.clear();
+	m_ExternalLineStyles.clear();
 	
 	return 1;
+}
+
+bool CModAPI_Client_Graphics::TextureSet(int ImageID)
+{
+	const CModAPI_Image* pImage = GetImage(ImageID);
+	if(pImage == 0)
+		return false;
+	
+	m_pGraphics->BlendNormal();
+	m_pGraphics->TextureSet(pImage->m_Texture);
+	m_pGraphics->QuadsBegin();
+	
+	return true;
 }
 
 void CModAPI_Client_Graphics::DrawSprite(CRenderTools* pRenderTools,int SpriteID, vec2 Pos, float Size, float Angle)
@@ -202,38 +350,13 @@ void CModAPI_Client_Graphics::DrawSprite(CRenderTools* pRenderTools,int SpriteID
 	const CModAPI_Sprite* pSprite = GetSprite(SpriteID);
 	if(pSprite == 0) return;
 	
-	if(pSprite->m_External)
-	{
-		const CModAPI_Image* pImage = GetImage(pSprite->m_ImageId);
-		if(pImage == 0) return;
-		
-		m_pGraphics->BlendNormal();
-		m_pGraphics->TextureSet(pImage->m_Texture);
-		m_pGraphics->QuadsBegin();
-	}
-	else
-	{
-		int Texture;
-		
-		switch(pSprite->m_ImageId)
-		{
-			case MODAPI_INTERNALIMG_GAME:
-				Texture = IMAGE_GAME;
-				break;
-			default:
-				return;
-		}
-		
-		m_pGraphics->BlendNormal();
-		m_pGraphics->TextureSet(g_pData->m_aImages[Texture].m_Id);
-		m_pGraphics->QuadsBegin();
-	}
+	if(!TextureSet(pSprite->m_ImageId))
+		return;
 
 	pRenderTools->SelectModAPISprite(pSprite);
 	
 	m_pGraphics->QuadsSetRotation(Angle);
 
-	
 	pRenderTools->DrawSprite(Pos.x, Pos.y, Size);
 	m_pGraphics->QuadsEnd();
 }
@@ -321,27 +444,8 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 		m_pGraphics->BlendNormal();
 			
 		//Define sprite texture
-		if(pSprite->m_External)
-		{
-			const CModAPI_Image* pImage = GetImage(pSprite->m_ImageId);
-			if(pImage == 0) return;
-			
-			m_pGraphics->TextureSet(pImage->m_Texture);
-		}
-		else
-		{
-			int Texture = 0;
-			switch(pSprite->m_ImageId)
-			{
-				case MODAPI_INTERNALIMG_GAME:
-					Texture = IMAGE_GAME;
-					break;
-				default:
-					return;
-			}
-			
-			m_pGraphics->TextureSet(g_pData->m_aImages[Texture].m_Id);
-		}
+		if(!TextureSet(pSprite->m_ImageId))
+			return;
 		
 		m_pGraphics->QuadsBegin();		
 		m_pGraphics->QuadsSetRotation(angle(Dir));
@@ -378,27 +482,8 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 		m_pGraphics->BlendNormal();
 		
 		//Define sprite texture
-		if(pSprite->m_External)
-		{
-			const CModAPI_Image* pImage = GetImage(pSprite->m_ImageId);
-			if(pImage == 0) return;
-			
-			m_pGraphics->TextureSet(pImage->m_Texture);
-		}
-		else
-		{
-			int Texture = 0;
-			switch(pSprite->m_ImageId)
-			{
-				case MODAPI_INTERNALIMG_GAME:
-					Texture = IMAGE_GAME;
-					break;
-				default:
-					return;
-			}
-			
-			m_pGraphics->TextureSet(g_pData->m_aImages[Texture].m_Id);
-		}
+		if(!TextureSet(pSprite->m_ImageId))
+			return;
 		
 		m_pGraphics->QuadsBegin();		
 		m_pGraphics->QuadsSetRotation(angle(Dir));
@@ -434,27 +519,8 @@ void CModAPI_Client_Graphics::DrawLine(CRenderTools* pRenderTools,int LineStyleI
 		m_pGraphics->BlendNormal();
 		
 		//Define sprite texture
-		if(pSprite->m_External)
-		{
-			const CModAPI_Image* pImage = GetImage(pSprite->m_ImageId);
-			if(pImage == 0) return;
-			
-			m_pGraphics->TextureSet(pImage->m_Texture);
-		}
-		else
-		{
-			int Texture = 0;
-			switch(pSprite->m_ImageId)
-			{
-				case MODAPI_INTERNALIMG_GAME:
-					Texture = IMAGE_GAME;
-					break;
-				default:
-					return;
-			}
-			
-			m_pGraphics->TextureSet(g_pData->m_aImages[Texture].m_Id);
-		}
+		if(!TextureSet(pSprite->m_ImageId))
+			return;
 		
 		m_pGraphics->QuadsBegin();		
 		m_pGraphics->QuadsSetRotation(angle(Dir));
@@ -539,4 +605,251 @@ void CModAPI_Client_Graphics::DrawAnimatedText(ITextRender* pTextRender, const c
 	NewColor.a *= Frame.m_Opacity;
 	
 	DrawText(pTextRender, pText, vec2(X, Y), NewColor, Size, Alignment);
+}
+
+void CModAPI_Client_Graphics::DrawTee(CRenderTools* pRenderTools, CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pTeeState, vec2 Pos, vec2 Dir, int Emote, float Time)
+{
+	float Size = pInfo->m_Size;
+	bool IndicateAirJump = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
+	
+	IGraphics::CQuadItem BodyItem(Pos.x + pTeeState->m_Body.m_Pos.x, Pos.y + pTeeState->m_Body.m_Pos.y, Size, Size);
+	IGraphics::CQuadItem Item;
+
+	// draw back feet, outline
+	if(pInfo->m_aTextures[4].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[4]);
+		m_pGraphics->QuadsBegin();
+
+		float w = Size/2.1f;
+		float h = w;
+
+		m_pGraphics->QuadsSetRotation(pTeeState->m_BackFoot.m_Angle);
+		m_pGraphics->SetColor(1.0f, 1.0f, 1.0f, pTeeState->m_BackFoot.m_Opacity);
+		pRenderTools->SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+		IGraphics::CQuadItem QuadItem(Pos.x + pTeeState->m_BackFoot.m_Pos.x, Pos.y + pTeeState->m_BackFoot.m_Pos.y, w, h);
+		m_pGraphics->QuadsDraw(&QuadItem, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw decoration, outline
+	if(pInfo->m_aTextures[2].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[2]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
+		pRenderTools->SelectSprite(SPRITE_TEE_DECORATION_OUTLINE, 0, 0, 0);
+		
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw body, outline
+	if(pInfo->m_aTextures[0].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[0]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		pRenderTools->SelectSprite(SPRITE_TEE_BODY_OUTLINE, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+
+	// draw front feet, outline
+	if(pInfo->m_aTextures[4].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[4]);
+		m_pGraphics->QuadsBegin();
+
+		float w = Size/2.1f;
+		float h = w;
+
+		m_pGraphics->QuadsSetRotation(pTeeState->m_FrontFoot.m_Angle);
+		m_pGraphics->SetColor(1.0f, 1.0f, 1.0f, pTeeState->m_FrontFoot.m_Opacity);
+		pRenderTools->SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+		IGraphics::CQuadItem QuadItem(Pos.x + pTeeState->m_FrontFoot.m_Pos.x, Pos.y + pTeeState->m_FrontFoot.m_Pos.y, w, h);
+		m_pGraphics->QuadsDraw(&QuadItem, 1);
+		m_pGraphics->QuadsEnd();
+	}
+
+	// draw back feet
+	if(pInfo->m_aTextures[4].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[4]);
+		m_pGraphics->QuadsBegin();
+
+		float w = Size/2.1f;
+		float h = w;
+		float cs = (IndicateAirJump ? 0.5f : 1.0f);
+
+		m_pGraphics->QuadsSetRotation(pTeeState->m_BackFoot.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a * pTeeState->m_BackFoot.m_Opacity);
+		pRenderTools->SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
+		IGraphics::CQuadItem QuadItem(Pos.x + pTeeState->m_BackFoot.m_Pos.x, Pos.y + pTeeState->m_BackFoot.m_Pos.y, w, h);
+		m_pGraphics->QuadsDraw(&QuadItem, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw decoration
+	if(pInfo->m_aTextures[2].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[2]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
+		pRenderTools->SelectSprite(SPRITE_TEE_DECORATION, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+
+	// draw body
+	if(pInfo->m_aTextures[0].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[0]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
+		pRenderTools->SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw marking
+	if(pInfo->m_aTextures[1].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[1]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
+		pRenderTools->SelectSprite(SPRITE_TEE_MARKING, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw body shadow and upper outline
+	if(pInfo->m_aTextures[0].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[0]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(pTeeState->m_Body.m_Angle);
+		m_pGraphics->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		pRenderTools->SelectSprite(SPRITE_TEE_BODY_SHADOW, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		pRenderTools->SelectSprite(SPRITE_TEE_BODY_UPPER_OUTLINE, 0, 0, 0);
+		Item = BodyItem;
+		m_pGraphics->QuadsDraw(&Item, 1);
+		m_pGraphics->QuadsEnd();
+	}
+	
+	// draw eyes
+	if(pInfo->m_aTextures[5].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[5]);
+		m_pGraphics->QuadsBegin();
+		m_pGraphics->QuadsSetRotation(0.0f);
+		m_pGraphics->SetColor(pInfo->m_aColors[5].r, pInfo->m_aColors[5].g, pInfo->m_aColors[5].b, pInfo->m_aColors[5].a);
+		switch (Emote)
+		{
+			case EMOTE_PAIN:
+				pRenderTools->SelectSprite(SPRITE_TEE_EYES_PAIN, 0, 0, 0);
+				break;
+			case EMOTE_HAPPY:
+				pRenderTools->SelectSprite(SPRITE_TEE_EYES_HAPPY, 0, 0, 0);
+				break;
+			case EMOTE_SURPRISE:
+				pRenderTools->SelectSprite(SPRITE_TEE_EYES_SURPRISE, 0, 0, 0);
+				break;
+			case EMOTE_ANGRY:
+				pRenderTools->SelectSprite(SPRITE_TEE_EYES_ANGRY, 0, 0, 0);
+				break;
+			default:
+				pRenderTools->SelectSprite(SPRITE_TEE_EYES_NORMAL, 0, 0, 0);
+				break;
+		}
+
+		float EyeScale = Size*0.60f;
+		float h = (Emote == EMOTE_BLINK) ? Size*0.15f/2.0f : EyeScale/2.0f;
+		vec2 Offset = vec2(Dir.x*0.125f, -0.05f+Dir.y*0.10f)*Size;
+		IGraphics::CQuadItem QuadItem(Pos.x+Offset.x, Pos.y+Offset.y, EyeScale, h);
+		m_pGraphics->QuadsDraw(&QuadItem, 1);
+		m_pGraphics->QuadsEnd();
+	}
+
+	// draw front feet
+	if(pInfo->m_aTextures[4].IsValid())
+	{
+		m_pGraphics->TextureSet(pInfo->m_aTextures[4]);
+		m_pGraphics->QuadsBegin();
+
+		float w = Size/2.1f;
+		float h = w;
+		float cs = (IndicateAirJump ? 0.5f : 1.0f);
+
+		m_pGraphics->QuadsSetRotation(pTeeState->m_FrontFoot.m_Angle);
+		m_pGraphics->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a * pTeeState->m_FrontFoot.m_Opacity);
+		pRenderTools->SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
+		IGraphics::CQuadItem QuadItem(Pos.x + pTeeState->m_FrontFoot.m_Pos.x, Pos.y + pTeeState->m_FrontFoot.m_Pos.y, w, h);
+		m_pGraphics->QuadsDraw(&QuadItem, 1);
+		m_pGraphics->QuadsEnd();
+	}
+}
+
+void CModAPI_Client_Graphics::InitTeeAnimationState(CModAPI_TeeAnimationState* pState)
+{
+	pState->m_Body.m_Pos.x = 0.0f;
+	pState->m_Body.m_Pos.y = -4.0f;
+	pState->m_Body.m_Angle = 0.0f;
+	pState->m_Body.m_Opacity = 1.0f;
+	
+	pState->m_BackFoot.m_Pos.x = 0.0f;
+	pState->m_BackFoot.m_Pos.y = 10.0f;
+	pState->m_BackFoot.m_Angle = 0.0f;
+	pState->m_BackFoot.m_Opacity = 1.0f;
+	
+	pState->m_FrontFoot.m_Pos.x = 0.0f;
+	pState->m_FrontFoot.m_Pos.y = 10.0f;
+	pState->m_FrontFoot.m_Angle = 0.0f;
+	pState->m_FrontFoot.m_Opacity = 1.0f;
+}
+
+void CModAPI_Client_Graphics::AddTeeAnimationState(CModAPI_TeeAnimationState* pState, int TeeAnimationID, float Time)
+{
+	const CModAPI_TeeAnimation* pTeeAnim = GetTeeAnimation(TeeAnimationID);
+	if(pTeeAnim == 0) return;
+	
+	if(pTeeAnim->m_BodyAnimation >= 0)
+	{
+		const CModAPI_Animation* pBodyAnim = GetAnimation(pTeeAnim->m_BodyAnimation);
+		if(pBodyAnim)
+		{
+			pBodyAnim->GetFrame(Time, &pState->m_Body);
+		}
+	}
+	
+	if(pTeeAnim->m_BackFootAnimation >= 0)
+	{
+		const CModAPI_Animation* pBackFootAnim = GetAnimation(pTeeAnim->m_BackFootAnimation);
+		if(pBackFootAnim)
+		{
+			pBackFootAnim->GetFrame(Time, &pState->m_BackFoot);
+		}
+	}
+	
+	
+	if(pTeeAnim->m_FrontFootAnimation >= 0)
+	{
+		const CModAPI_Animation* pFrontFootAnim = GetAnimation(pTeeAnim->m_FrontFootAnimation);
+		if(pFrontFootAnim)
+		{
+			pFrontFootAnim->GetFrame(Time, &pState->m_FrontFoot);
+		}
+	}
 }
