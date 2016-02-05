@@ -7,7 +7,10 @@
 #include "character.h"
 #include "pickup.h"
 
-#include <modapi/server/weapon.h>
+#include <mod/weapons/shotgun.h>
+#include <mod/weapons/grenade.h>
+#include <mod/weapons/laser.h>
+#include <mod/weapons/ninja.h>
 #include <modapi/server/event.h>
 
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
@@ -76,11 +79,11 @@ void CPickup::Tick()
 			case PICKUP_GRENADE:
 				if(pChr->HasWeapon(WEAPON_GRENADE))
 				{
-					Picked = pChr->GiveAmmo(WEAPON_GRENADE, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo);
+					Picked = pChr->GiveAmmo(MOD_WEAPON_GRENADE, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo);
 				}
 				else
 				{
-					pChr->GiveWeapon(new CModAPI_Weapon_Grenade(pChr, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo));
+					pChr->GiveWeapon(new CMod_Weapon_Grenade(pChr, g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_Maxammo));
 					Picked = true;
 				}
 				
@@ -98,11 +101,11 @@ void CPickup::Tick()
 			case PICKUP_SHOTGUN:
 				if(pChr->HasWeapon(WEAPON_SHOTGUN))
 				{
-					Picked = pChr->GiveAmmo(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo);
+					Picked = pChr->GiveAmmo(MOD_WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo);
 				}
 				else
 				{
-					pChr->GiveWeapon(new CModAPI_Weapon_Shotgun(pChr, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo));
+					pChr->GiveWeapon(new CMod_Weapon_Shotgun(pChr, g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_Maxammo));
 					Picked = true;
 				}
 				
@@ -120,11 +123,11 @@ void CPickup::Tick()
 			case PICKUP_LASER:
 				if(pChr->HasWeapon(WEAPON_LASER))
 				{
-					Picked = pChr->GiveAmmo(WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo);
+					Picked = pChr->GiveAmmo(MOD_WEAPON_SHOTGUN, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo);
 				}
 				else
 				{
-					pChr->GiveWeapon(new CModAPI_Weapon_Laser(pChr, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo));
+					pChr->GiveWeapon(new CMod_Weapon_Laser(pChr, g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Maxammo));
 					Picked = true;
 				}
 				
@@ -142,8 +145,8 @@ void CPickup::Tick()
 
 			case PICKUP_NINJA:
 				{
-					pChr->GiveWeapon(new CModAPI_Weapon_Ninja(pChr));
-					pChr->SetWeapon(WEAPON_NINJA);
+					pChr->GiveWeapon(new CMod_Weapon_Ninja(pChr));
+					pChr->SetWeapon(MOD_WEAPON_NINJA);
 					Picked = true;
 
 					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)

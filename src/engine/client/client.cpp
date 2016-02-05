@@ -1981,6 +1981,8 @@ void CClient::Run()
 		return;
 
 	GameClient()->OnInit();
+	
+	m_pModAPIGraphics->Init();
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());

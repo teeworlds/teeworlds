@@ -8,7 +8,7 @@
 #include <game/gamecore.h>
 #include <modapi/server/entity.h>
 
-#include <modapi/weapon.h>
+#include <mod/defines.h>
 
 
 class CCharacter : public CModAPI_EntitySnapshot07
@@ -77,7 +77,7 @@ private:
 	
 	// ModAPI
 private:
-	class CModAPI_Weapon* m_aWeapons[MODAPI_NUM_WEAPONS];
+	class CModAPI_Weapon* m_aWeapons[MOD_NUM_WEAPONS];
 
 public:
 	bool HasWeapon(int WID);

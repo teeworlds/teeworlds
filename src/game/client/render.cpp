@@ -35,14 +35,14 @@ void CRenderTools::SelectModAPISprite(const struct CModAPI_Sprite *pSpr, int Fla
 	float y2 = (y+h-1/32.0f)/(float)cy;
 	float Temp = 0;
 
-	if(Flags&SPRITE_FLAG_FLIP_Y)
+	if(Flags&MODAPI_SPRITEFLAG_FLIP_Y)
 	{
 		Temp = y1;
 		y1 = y2;
 		y2 = Temp;
 	}
 
-	if(Flags&SPRITE_FLAG_FLIP_X)
+	if(Flags&MODAPI_SPRITEFLAG_FLIP_X)
 	{
 		Temp = x1;
 		x1 = x2;

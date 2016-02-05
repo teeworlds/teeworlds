@@ -219,28 +219,6 @@ void CPlayers::RenderPlayer(
 		// just use the direct input if it's local player we are rendering
 		Angle = angle(m_pClient->m_pControls->m_MousePos);
 	}
-	else
-	{
-		/*
-		float mixspeed = Client()->FrameTime()*2.5f;
-		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
-			mixspeed *= 15.0f;
-
-		// move the delta on a constant speed on a x^2 curve
-		float current = g_GameClient.m_aClients[info.cid].angle;
-		float target = player.angle/256.0f;
-		float delta = angular_distance(current, target);
-		float sign = delta < 0 ? -1 : 1;
-		float new_delta = delta - 2*mixspeed*sqrt(delta*sign)*sign + mixspeed*mixspeed;
-
-		// make sure that it doesn't vibrate when it's still
-		if(fabs(delta) < 2/256.0f)
-			angle = target;
-		else
-			angle = angular_approach(current, target, fabs(delta-new_delta));
-
-		g_GameClient.m_aClients[info.cid].angle = angle;*/
-	}
 
 	// use preditect players if needed
 	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
@@ -258,7 +236,8 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	vec2 Direction = direction(Angle);
+	vec2 MotionDir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
+	vec2 AimDir = direction(Angle);
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
 
@@ -269,37 +248,24 @@ void CPlayers::RenderPlayer(
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
-
-	// evaluate animation
-	const float WalkTimeMagic = 100.0f;
-	float WalkTime =
-		((Position.x >= 0)
-			? fmod(Position.x, WalkTimeMagic)
-			: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
-		/ WalkTimeMagic;
 	
 	CModAPI_TeeAnimationState TeeAnimState;
-	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState);
+	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, MotionDir, AimDir);
 
 	if(InAir)
 		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_INAIR), 0.0f);
 	else if(Stationary)
 		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_IDLE), 0.0f);
 	else if(!WantOtherDir)
+	{
+		const float WalkTimeMagic = 100.0f;
+		float WalkTime =
+			((Position.x >= 0)
+				? fmod(Position.x, WalkTimeMagic)
+				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
+			/ WalkTimeMagic;
+		
 		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_WALK), WalkTime);
-
-	static float s_LastGameTickTime = Client()->GameTickTime();
-	if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
-		s_LastGameTickTime = Client()->GameTickTime();
-	if (Player.m_Weapon == WEAPON_HAMMER)
-	{
-		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-		//~ State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
-	}
-	if (Player.m_Weapon == WEAPON_NINJA)
-	{
-		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-		//~ State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
 	}
 
 	// do skidding
@@ -318,177 +284,29 @@ void CPlayers::RenderPlayer(
 		);
 	}
 	
-	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, Direction, Player.m_Emote, WalkTime);
-	return;
-
-	/*
-	// draw gun
+	const CModAPI_Weapon* pWeapon = ModAPIGraphics()->GetWeapon(MODAPI_INTERNAL_ID(Player.m_Weapon));
+	if(pWeapon)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
-
-		// normal weapons
-		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-
-		vec2 Dir = Direction;
-		float Recoil = 0.0f;
-		vec2 p;
-		if (Player.m_Weapon == WEAPON_HAMMER)
+		static float s_LastGameTickTime = Client()->GameTickTime();
+		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			s_LastGameTickTime = Client()->GameTickTime();
+		
+		float WeaponTime = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	
+		if(pWeapon->m_TeeAnimation >= 0)
 		{
-			// Static position for hammer
-			p = Position + vec2(State.GetAttach()->m_X, State.GetAttach()->m_Y);
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-			// if attack is under way, bash stuffs
-			if(Direction.x < 0)
-			{
-				Graphics()->QuadsSetRotation(-pi/2-State.GetAttach()->m_Angle*pi*2);
-				p.x -= g_pData->m_Weapons.m_aId[iw].m_Offsetx;
-			}
-			else
-			{
-				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
-			}
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+			ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pWeapon->m_TeeAnimation, WeaponTime);
 		}
-		else if (Player.m_Weapon == WEAPON_NINJA)
-		{
-			p = Position;
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-
-			if(Direction.x < 0)
-			{
-				Graphics()->QuadsSetRotation(-pi/2-State.GetAttach()->m_Angle*pi*2);
-				p.x -= g_pData->m_Weapons.m_aId[iw].m_Offsetx;
-				m_pClient->m_pEffects->PowerupShine(p+vec2(32,0), vec2(32,12));
-			}
-			else
-			{
-				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
-				m_pClient->m_pEffects->PowerupShine(p-vec2(32,0), vec2(32,12));
-			}
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
-
-			// HADOKEN
-			if ((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
-			{
-				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
-				static int s_LastIteX = IteX;
-				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-				{
-					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-					if(pInfo->m_Paused)
-						IteX = s_LastIteX;
-					else
-						s_LastIteX = IteX;
-				}
-				else
-				{
-					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
-						IteX = s_LastIteX;
-					else
-						s_LastIteX = IteX;
-				}
-				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
-				{
-					vec2 Dir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
-					Dir = normalize(Dir);
-					float HadokenAngle = angle(Dir);
-					Graphics()->QuadsSetRotation(HadokenAngle );
-					//float offsety = -data->weapons[iw].muzzleoffsety;
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX], 0);
-					vec2 DirY(-Dir.y,Dir.x);
-					p = Position;
-					float OffsetX = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
-					p -= Dir * OffsetX;
-					RenderTools()->DrawSprite(p.x, p.y, 160.0f);
-				}
-			}
-		}
-		else
-		{
-			// TODO: should be an animation
-			Recoil = 0;
-			static float s_LastIntraTick = IntraTick;
-			if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
-				s_LastIntraTick = IntraTick;
-
-			float a = (Client()->GameTick()-Player.m_AttackTick+s_LastIntraTick)/5.0f;
-			if(a < 1)
-				Recoil = sinf(a*pi);
-			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
-		}
-
-		if (Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
-		{
-			// check if we're firing stuff
-			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)//prev.attackticks)
-			{
-				float Alpha = 0.0f;
-				int Phase1Tick = (Client()->GameTick() - Player.m_AttackTick);
-				if (Phase1Tick < (g_pData->m_Weapons.m_aId[iw].m_Muzzleduration + 3))
-				{
-					float t = ((((float)Phase1Tick) + IntraTick)/(float)g_pData->m_Weapons.m_aId[iw].m_Muzzleduration);
-					Alpha = mix(2.0f, 0.0f, min(1.0f,max(0.0f,t)));
-				}
-
-				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
-				static int s_LastIteX = IteX;
-				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-				{
-					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-					if(pInfo->m_Paused)
-						IteX = s_LastIteX;
-					else
-						s_LastIteX = IteX;
-				}
-				else
-				{
-					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
-						IteX = s_LastIteX;
-					else
-						s_LastIteX = IteX;
-				}
-				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
-				{
-					float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX], Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-					if(Direction.x < 0)
-						OffsetY = -OffsetY;
-
-					vec2 DirY(-Dir.y,Dir.x);
-					vec2 MuzzlePos = p + Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + DirY * OffsetY;
-
-					RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
-				}
-			}
-		}
-		Graphics()->QuadsEnd();
-
-		switch (Player.m_Weapon)
-		{
-			case WEAPON_GUN: RenderHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_GRENADE: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-4, 7)); break;
-		}
-
+		
+		CModAPI_WeaponAnimationState WeaponAnimState;
+		ModAPIGraphics()->InitWeaponAnimationState(&WeaponAnimState, MotionDir, AimDir, MODAPI_INTERNAL_ID(Player.m_Weapon), WeaponTime);
+		
+		ModAPIGraphics()->DrawWeaponMuzzle(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
+		ModAPIGraphics()->DrawWeapon(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
 	}
-
-	// render the "shadow" tee
-	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_Debug)
-	{
-		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
-		CTeeRenderInfo Ghost = RenderInfo;
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-			Ghost.m_aColors[p].a *= 0.5f;
-		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
-	}
-
-	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
-
+	
+	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, AimDir, Player.m_Emote);
+	
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
@@ -498,7 +316,6 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
-
 	if (m_pClient->m_aClients[ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
@@ -531,7 +348,6 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
-	*/
 }
 
 void CPlayers::OnRender()

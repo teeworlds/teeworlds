@@ -14,6 +14,12 @@
 
 #include <mod/entities/character.h>
 #include <mod/entities/pickup.h>
+#include <mod/weapons/hammer.h>
+#include <mod/weapons/gun.h>
+#include <mod/weapons/shotgun.h>
+#include <mod/weapons/grenade.h>
+#include <mod/weapons/laser.h>
+#include <mod/weapons/ninja.h>
 
 IGameController::IGameController(CGameContext *pGameServer)
 {
@@ -240,11 +246,11 @@ void IGameController::OnCharacterSpawn(CCharacter *pChr)
 		pChr->IncreaseHealth(10);
 		pChr->IncreaseArmor(5);
 
-		pChr->GiveWeapon(new CModAPI_Weapon_Hammer(pChr));
-		pChr->GiveWeapon(new CModAPI_Weapon_Gun(pChr, 10));
-		pChr->GiveWeapon(new CModAPI_Weapon_Shotgun(pChr, 10));
-		pChr->GiveWeapon(new CModAPI_Weapon_Grenade(pChr, 10));
-		pChr->GiveWeapon(new CModAPI_Weapon_Laser(pChr, 5));
+		pChr->GiveWeapon(new CMod_Weapon_Hammer(pChr));
+		pChr->GiveWeapon(new CMod_Weapon_Gun(pChr, 10));
+		pChr->GiveWeapon(new CMod_Weapon_Shotgun(pChr, 10));
+		pChr->GiveWeapon(new CMod_Weapon_Grenade(pChr, 10));
+		pChr->GiveWeapon(new CMod_Weapon_Laser(pChr, 5));
 
 		// prevent respawn
 		pChr->GetPlayer()->m_RespawnDisabled = GetStartRespawnState();
@@ -255,8 +261,8 @@ void IGameController::OnCharacterSpawn(CCharacter *pChr)
 		pChr->IncreaseHealth(10);
 
 		// give default weapons
-		pChr->GiveWeapon(new CModAPI_Weapon_Hammer(pChr));
-		pChr->GiveWeapon(new CModAPI_Weapon_Gun(pChr, 10));
+		pChr->GiveWeapon(new CMod_Weapon_Hammer(pChr));
+		pChr->GiveWeapon(new CMod_Weapon_Gun(pChr, 10));
 	}
 }
 

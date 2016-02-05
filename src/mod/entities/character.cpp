@@ -202,7 +202,7 @@ void CCharacter::FireWeapon()
 void CCharacter::HandleWeapons()
 {
 	// regen time is done before fire. TODO: Must be fixed using a TickPostFire() method.
-	for(int i=0; i < MODAPI_NUM_WEAPONS; i++)
+	for(int i=0; i < MOD_NUM_WEAPONS; i++)
 	{
 		if(m_aWeapons[i])
 		{
