@@ -426,7 +426,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
 			if(Id >= Num) return 0;
 			
-			CModAPI_Image* pImage = &m_ExternalImages[Id];
+			CModAPI_Image* pImage = &m_ExternalImages[pItem->m_Id];
 			
 			// copy base info
 			pImage->m_Width = pItem->m_Width;
@@ -461,7 +461,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 			
 			const CModAPI_AnimationKeyFrame* pFrames = static_cast<CModAPI_AnimationKeyFrame*>(pMod->GetData(pItem->m_KeyFrameData));
 			
-			CModAPI_Animation* Animation = &m_ExternalAnimations[Id];
+			CModAPI_Animation* Animation = &m_ExternalAnimations[pItem->m_Id];
 			for(int f=0; f<pItem->m_NumKeyFrame; f++)
 			{
 				Animation->AddKeyFrame(pFrames[f].m_Time, pFrames[f].m_Pos, pFrames[f].m_Angle, pFrames[f].m_Opacity);
@@ -483,7 +483,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
 			if(Id >= Num) return 0;
 			
-			CModAPI_Sprite* sprite = &m_ExternalSprites[Id];
+			CModAPI_Sprite* sprite = &m_ExternalSprites[pItem->m_Id];
 			sprite->m_X = pItem->m_X;
 			sprite->m_Y = pItem->m_Y;
 			sprite->m_W = pItem->m_W;
@@ -508,7 +508,7 @@ int CModAPI_Client_Graphics::OnModLoaded(IMod* pMod)
 			int Id = MODAPI_GET_EXTERNAL_ID(pItem->m_Id);
 			if(Id > Num) return 0;
 			
-			CModAPI_LineStyle* pLineStyle = &m_ExternalLineStyles[Id];
+			CModAPI_LineStyle* pLineStyle = &m_ExternalLineStyles[pItem->m_Id];
 			
 			pLineStyle->m_OuterWidth = static_cast<float>(pItem->m_OuterWidth);
 			pLineStyle->m_OuterColor = ModAPI_IntToColor(pItem->m_OuterColor);
