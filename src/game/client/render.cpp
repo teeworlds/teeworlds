@@ -16,42 +16,6 @@
 static float gs_SpriteWScale;
 static float gs_SpriteHScale;
 
-void CRenderTools::SelectModAPISprite(const struct CModAPI_Sprite *pSpr, int Flags, int sx, int sy)
-{
-	int x = pSpr->m_X+sx;
-	int y = pSpr->m_Y+sy;
-	int w = pSpr->m_W;
-	int h = pSpr->m_H;
-	int cx = pSpr->m_GridX;
-	int cy = pSpr->m_GridY;
-
-	float f = sqrtf(h*h + w*w);
-	gs_SpriteWScale = w/f;
-	gs_SpriteHScale = h/f;
-
-	float x1 = x/(float)cx;
-	float x2 = (x+w-1/32.0f)/(float)cx;
-	float y1 = y/(float)cy;
-	float y2 = (y+h-1/32.0f)/(float)cy;
-	float Temp = 0;
-
-	if(Flags&MODAPI_SPRITEFLAG_FLIP_Y)
-	{
-		Temp = y1;
-		y1 = y2;
-		y2 = Temp;
-	}
-
-	if(Flags&MODAPI_SPRITEFLAG_FLIP_X)
-	{
-		Temp = x1;
-		x1 = x2;
-		x2 = Temp;
-	}
-
-	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
-}
-
 void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;

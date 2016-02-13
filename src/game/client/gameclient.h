@@ -283,6 +283,8 @@ public:
 	class CModAPI_Component_Items *m_pModAPI_Items[MODAPI_NUM_ITEMLAYER];
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
+	
+	virtual void DrawBackground();
 };
 
 extern const char *Localize(const char *Str, const char *pContext="");

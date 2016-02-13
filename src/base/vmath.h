@@ -49,7 +49,6 @@ public:
 template<typename T>
 inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
 {
-	angle = angle * pi / 180.0f;
 	float s = sinf(angle);
 	float c = cosf(angle);
 	return vector2_base<T>((T)(c*a.x - s*a.y), (T)(s*a.x + c*a.y));
@@ -91,6 +90,17 @@ inline float length(const vector2_base<float> &a)
 inline float angle(const vector2_base<float> &a)
 {
 	return atan2f(a.y, a.x);
+}
+
+inline float angle(const vector2_base<float> &a, const vector2_base<float> &b)
+{
+	float w = (a.x * b.y - b.x * a.y)/(length(a) * length(b));
+	float d = dot(a, b);
+	
+	if(d >= 0.0f)
+		return asinf(w);
+	else
+		return pi - asinf(w);
 }
 
 inline vector2_base<float> normalize(const vector2_base<float> &v)

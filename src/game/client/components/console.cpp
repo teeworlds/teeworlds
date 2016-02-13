@@ -26,6 +26,8 @@
 #include <game/client/components/controls.h>
 #include <game/client/components/menus.h>
 
+#include <modapi/client/clientmode.h>
+
 #include "console.h"
 
 enum
@@ -326,7 +328,7 @@ void CGameConsole::OnRender()
 		Progress = 1.0f;
 	}
 
-	if (m_ConsoleState == CONSOLE_OPEN && g_Config.m_ClEditor)
+	if (m_ConsoleState == CONSOLE_OPEN && g_Config.m_ClMode != MODAPI_CLIENTMODE_GAME)
 		Toggle(CONSOLETYPE_LOCAL);
 
 	if (m_ConsoleState == CONSOLE_CLOSED)

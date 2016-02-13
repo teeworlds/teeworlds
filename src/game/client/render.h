@@ -53,7 +53,6 @@ public:
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
 
-	void SelectModAPISprite(const struct CModAPI_Sprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
 

@@ -41,8 +41,10 @@
 #include <versionsrv/versionsrv.h>
 
 //ModAPI
-#include <modapi/shared/mod.h>
+#include <modapi/shared/assetsfile.h>
 #include <modapi/compatibility.h>
+#include <modapi/client/assetseditor/assetseditor.h>
+#include <modapi/client/clientmode.h>
 
 #include "friends.h"
 #include "serverbrowser.h"
@@ -247,12 +249,13 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
 {
 	m_pEditor = 0;
+	m_pAssetsEditor = 0;
 	m_pInput = 0;
 	m_pGraphics = 0;
 	m_pSound = 0;
 	m_pGameClient = 0;
 	m_pMap = 0;
-	m_pMod = 0;
+	m_pAssetsFile = 0;
 	m_pConsole = 0;
 
 	m_RenderFrameTime = 0.0001f;
@@ -266,7 +269,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_WindowMustRefocus = 0;
 	m_SnapCrcErrors = 0;
 	m_AutoScreenshotRecycle = false;
-	m_EditorActive = false;
+	m_ClientMode = MODAPI_CLIENTMODE_GAME;
 
 	m_AckGameTick = -1;
 	m_CurrentRecvTick = 0;
@@ -577,7 +580,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	//ModAPI unload mod graphics
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->OnModUnloaded();
+		ModAPIGraphics()->OnAssetsFileUnloaded();
 	}
 
 	// disable all downloads
@@ -590,7 +593,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_MapdownloadAmount = 0;
 	
 	//ModAPI unload the mod and disable all downloads
-	m_pMod->Unload();
+	m_pAssetsFile->Unload();
 
 	m_ModdownloadChunk = 0;
 	if(m_ModdownloadFile)
@@ -1838,7 +1841,7 @@ void CClient::Update()
 	m_ResortServerBrowser = false;
 
 	// update gameclient
-	if(!m_EditorActive)
+	if(m_ClientMode == MODAPI_CLIENTMODE_GAME)
 		GameClient()->OnUpdate();
 }
 
@@ -1884,12 +1887,13 @@ void CClient::InitInterfaces()
 	// fetch interfaces
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
+	m_pAssetsEditor = Kernel()->RequestInterface<IModAPI_AssetsEditor>();
 	//m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
 	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
-	m_pMod = Kernel()->RequestInterface<IEngineMod>();
+	m_pAssetsFile = Kernel()->RequestInterface<IModAPI_AssetsFileEngine>();
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
@@ -1983,6 +1987,7 @@ void CClient::Run()
 	GameClient()->OnInit();
 	
 	m_pModAPIGraphics->Init();
+	m_pAssetsEditor->Init(m_pModAPIGraphics);
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -1999,7 +2004,7 @@ void CClient::Run()
 	m_FpsGraph.Init(0.0f, 120.0f);
 
 	// never start with the editor
-	g_Config.m_ClEditor = 0;
+	g_Config.m_ClMode = MODAPI_CLIENTMODE_GAME;
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
@@ -2073,22 +2078,24 @@ void CClient::Run()
 
 		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_E, true))
 		{
-			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
+			if(g_Config.m_ClMode == MODAPI_CLIENTMODE_MAPEDITOR)
+				g_Config.m_ClMode = MODAPI_CLIENTMODE_GAME;
+			else
+				g_Config.m_ClMode = MODAPI_CLIENTMODE_MAPEDITOR;
 			Input()->MouseModeRelative();
 		}
 
 		// render
 		{
-			if(g_Config.m_ClEditor)
+			if(g_Config.m_ClMode != m_ClientMode)
 			{
-				if(!m_EditorActive)
+				if(m_ClientMode == MODAPI_CLIENTMODE_GAME)
 				{
 					GameClient()->OnActivateEditor();
-					m_EditorActive = true;
 				}
+				
+				m_ClientMode = g_Config.m_ClMode;
 			}
-			else if(m_EditorActive)
-				m_EditorActive = false;
 
 			Update();
 			
@@ -2110,13 +2117,21 @@ void CClient::Run()
 				// when we are stress testing only render every 10th frame
 				if(!g_Config.m_DbgStress || (m_RenderFrames%10) == 0 )
 				{
-					if(!m_EditorActive)
-						Render();
-					else
+					switch(m_ClientMode)
 					{
-						m_pEditor->UpdateAndRender();
-						DebugRender();
+						case MODAPI_CLIENTMODE_MAPEDITOR:
+							m_pEditor->UpdateAndRender();
+							DebugRender();
+							break;
+						case MODAPI_CLIENTMODE_ASSETSEDITOR:
+							GameClient()->DrawBackground();
+							m_pAssetsEditor->UpdateAndRender();
+							break;
+						case MODAPI_CLIENTMODE_GAME:
+						default:
+							Render();
 					}
+					
 					m_pGraphics->Swap();
 				}
 			}
@@ -2571,7 +2586,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineInput *pEngineInput = CreateEngineInput();
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
 	IEngineMap *pEngineMap = CreateEngineMap();
-	IEngineMod *pEngineMod = CreateEngineMod();
+	IModAPI_AssetsFileEngine *pEngineAssetsFile = CreateAssetsFileEngine();
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 
 	{
@@ -2593,13 +2608,14 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
 
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMod*>(pEngineMod)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMod*>(pEngineMod));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IModAPI_AssetsFileEngine*>(pEngineAssetsFile)); // register as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IModAPI_AssetsFile*>(pEngineAssetsFile));
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateAssetsEditor());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
 
@@ -2656,7 +2672,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pEngineInput;
 	delete pEngineTextRender;
 	delete pEngineMap;
-	delete pEngineMod;
+	delete pEngineAssetsFile;
 	delete pEngineMasterServer;
 
 	return 0;
@@ -2664,6 +2680,18 @@ int main(int argc, const char **argv) // ignore_convention
 
 //ModAPI
 
+void CClient::LoadAssetsFile(const char* pFileName)
+{
+	if(m_pAssetsFile->Load(pFileName))
+	{
+		DemoRecorder_Stop();
+		
+		if(ModAPIGraphics())
+		{
+			ModAPIGraphics()->OnAssetsFileLoaded(m_pAssetsFile);
+		}
+	}
+}
 
 const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned WantedCrc)
 {
@@ -2671,18 +2699,18 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 
 	SetState(IClient::STATE_LOADING);
 
-	if(!m_pMod->Load(pFilename))
+	if(!m_pAssetsFile->Load(pFilename))
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "mod '%s' not found", pFilename);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "assets '%s' not found", pFilename);
 		return aErrorMsg;
 	}
 
 	// get the crc of the mod
-	if(m_pMod->Crc() != WantedCrc)
+	if(m_pAssetsFile->Crc() != WantedCrc)
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "mod differs from the server. %08x != %08x", m_pMod->Crc(), WantedCrc);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "assets differs from the server. %08x != %08x", m_pAssetsFile->Crc(), WantedCrc);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
-		m_pMod->Unload();
+		m_pAssetsFile->Unload();
 		return aErrorMsg;
 	}
 
@@ -2690,16 +2718,16 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 	DemoRecorder_Stop();
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "loaded mod '%s'", pFilename);
+	str_format(aBuf, sizeof(aBuf), "loaded assets '%s'", pFilename);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 	m_RecivedSnapshots = 0;
 
 	str_copy(m_aCurrentMod, pName, sizeof(m_aCurrentMod));
-	m_CurrentModCrc = m_pMod->Crc();
+	m_CurrentModCrc = m_pAssetsFile->Crc();
 
 	if(ModAPIGraphics())
 	{
-		ModAPIGraphics()->OnModLoaded(m_pMod);
+		ModAPIGraphics()->OnAssetsFileLoaded(m_pAssetsFile);
 	}
 
 	return 0x0;
@@ -2709,26 +2737,26 @@ const char *CClient::LoadModSearch(const char *pModName, int WantedCrc)
 {
 	const char *pError = 0;
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "loading mod, mod=%s wanted crc=%08x", pModName, WantedCrc);
+	str_format(aBuf, sizeof(aBuf), "loading assets, assets=%s wanted crc=%08x", pModName, WantedCrc);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 	SetState(IClient::STATE_LOADING);
 
 	// try the normal maps folder
-	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+	str_format(aBuf, sizeof(aBuf), "assets/%s.assets", pModName);
 	pError = LoadMod(pModName, aBuf, WantedCrc);
 	if(!pError)
 		return pError;
 
 	// try the downloaded maps
-	str_format(aBuf, sizeof(aBuf), "downloadedmods/%s_%08x.mod", pModName, WantedCrc);
+	str_format(aBuf, sizeof(aBuf), "downloadedassets/%s_%08x.assets", pModName, WantedCrc);
 	pError = LoadMod(pModName, aBuf, WantedCrc);
 	if(!pError)
 		return pError;
 
 	// search for the map within subfolders
 	char aFilename[128];
-	str_format(aFilename, sizeof(aFilename), "%s.mod", pModName);
-	if(Storage()->FindFile(aFilename, "mods", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
+	str_format(aFilename, sizeof(aFilename), "%s.assets", pModName);
+	if(Storage()->FindFile(aFilename, "assets", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
 		pError = LoadMod(pModName, aBuf, WantedCrc);
 
 	return pError;

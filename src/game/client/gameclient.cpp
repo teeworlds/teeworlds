@@ -16,6 +16,8 @@
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
+#include <modapi/client/clientmode.h>
+
 #include <game/version.h>
 #include "localization.h"
 #include "render.h"
@@ -786,7 +788,7 @@ void CGameClient::OnEnterGame() {}
 
 void CGameClient::OnGameOver()
 {
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClEditor == 0)
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClMode == MODAPI_CLIENTMODE_GAME)
 		Client()->AutoScreenshot_Start();
 }
 
@@ -1451,6 +1453,12 @@ void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserDa
 		if(pClient->m_aClients[i].m_Active)
 			pClient->m_aClients[i].m_Friend = pClient->Friends()->IsFriend(pClient->m_aClients[i].m_aName, pClient->m_aClients[i].m_aClan, true);
 	}
+}
+
+void CGameClient::DrawBackground()
+{
+	m_pCamera->OnRender();
+	m_pMapLayersBackGround->OnRender();
 }
 
 IGameClient *CreateGameClient()

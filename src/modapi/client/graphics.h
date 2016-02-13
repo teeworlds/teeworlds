@@ -6,30 +6,16 @@
 #include <engine/textrender.h>
 
 #include <modapi/graphics.h>
-#include <modapi/shared/animation.h>
+#include <modapi/client/assets.h>
+#include <modapi/client/assetscatalog.h>
+#include <modapi/client/assets/image.h>
+#include <modapi/client/assets/sprite.h>
+#include <modapi/client/assets/animation.h>
+#include <modapi/client/assets/teeanimation.h>
+#include <modapi/client/assets/attach.h>
 
-class IMod;
+class IModAPI_AssetsFile;
 class CRenderTools;
-
-class CModAPI_Image : public CImageInfo
-{
-public:
-	IGraphics::CTextureHandle m_Texture;
-};
-
-struct CModAPI_Sprite
-{
-	int m_X;
-	int m_Y;
-	int m_W;
-	int m_H;
-	int m_ImageId;
-	int m_GridX;
-	int m_GridY;
-	
-	CModAPI_Sprite();
-	CModAPI_Sprite(int ImageId, int X, int Y, int W, int H, int GridX, int GridY);
-};
 
 struct CModAPI_LineStyle
 {
@@ -71,127 +57,89 @@ struct CModAPI_LineStyle
 	int m_AnimationSpeed;
 };
 
-struct CModAPI_TeeAnimation
-{
-	int m_BodyAnimation;
-	int m_BackFootAnimation;
-	int m_FrontFootAnimation;
-	
-	int m_BackHandAlignment;
-	int m_BackHandAnimation;
-	int m_BackHandOffsetX;
-	int m_BackHandOffsetY;
-	
-	int m_FrontHandAlignment;
-	int m_FrontHandAnimation;
-	int m_FrontHandOffsetX;
-	int m_FrontHandOffsetY;
-	
-	CModAPI_TeeAnimation();
-};
-
 struct CModAPI_TeeAnimationState
 {
 	vec2 m_MotionDir;
 	vec2 m_AimDir;
 	
-	CModAPI_AnimationFrame m_Body;
-	CModAPI_AnimationFrame m_BackFoot;
-	CModAPI_AnimationFrame m_FrontFoot;
+	CModAPI_Asset_Animation::CFrame m_Body;
+	CModAPI_Asset_Animation::CFrame m_BackFoot;
+	CModAPI_Asset_Animation::CFrame m_FrontFoot;
 	
 	bool m_BackHandEnabled;
-	CModAPI_AnimationFrame m_BackHand;
+	CModAPI_Asset_Animation::CFrame m_BackHand;
 	int m_BackHandFlags;
 	
 	bool m_FrontHandEnabled;
-	CModAPI_AnimationFrame m_FrontHand;
+	CModAPI_Asset_Animation::CFrame m_FrontHand;
 	int m_FrontHandFlags;
 };
 
-struct CModAPI_WeaponAnimationState
+struct CModAPI_AttachAnimationState
 {
-	CModAPI_AnimationFrame m_Weapon;
-	int m_WeaponFlags;
-	
-	bool m_MuzzleEnabled;
-	CModAPI_AnimationFrame m_Muzzle;
-	int m_MuzzleFlags;
-};
-
-struct CModAPI_Weapon
-{
-	int m_WeaponSprite;
-	int m_WeaponSize;
-	int m_WeaponAlignment;
-	int m_WeaponOffsetX;
-	int m_WeaponOffsetY;
-	int m_WeaponAnimation;
-	
-	int m_NumMuzzles;
-	int m_MuzzleSprite;
-	int m_MuzzleSize;
-	int m_MuzzleAlignment;
-	int m_MuzzleOffsetX;
-	int m_MuzzleOffsetY;
-	int m_MuzzleAnimation;
-	
-	int m_TeeAnimation;
-	
-	CModAPI_Weapon();
+	array<CModAPI_Asset_Animation::CFrame> m_Frames;
+	array<int> m_Flags;
 };
 
 class CModAPI_Client_Graphics
 {
 private:
-	CModAPI_Image m_InternalImages[MODAPI_NUM_IMAGES];
-	CModAPI_Animation m_InternalAnimations[MODAPI_NUM_ANIMATIONS];
-	CModAPI_TeeAnimation m_InternalTeeAnimations[MODAPI_NUM_TEEANIMATIONS];
-	CModAPI_Sprite m_InternalSprites[MODAPI_NUM_SPRITES];
-	CModAPI_LineStyle m_InternalLineStyles[MODAPI_NUM_LINESTYLES];
-	CModAPI_Weapon m_InternalWeapons[MODAPI_NUM_WEAPONS];
-	
-	array<CModAPI_Image> m_ExternalImages;
-	array<CModAPI_Animation> m_ExternalAnimations;
-	array<CModAPI_TeeAnimation> m_ExternalTeeAnimations;
-	array<CModAPI_Sprite> m_ExternalSprites;
-	array<CModAPI_LineStyle> m_ExternalLineStyles;
-	array<CModAPI_Weapon> m_ExternalWeapons;
-	
 	IGraphics* m_pGraphics;
 	
-	void ApplyTeeAlign(CModAPI_AnimationFrame& pFrame, int& Flags, int Align, vec2 Dir, vec2 Aim, vec2 Offset);
+	void ApplyTeeAlign(CModAPI_Asset_Animation::CFrame& pFrame, int& Flags, int Align, vec2 Dir, vec2 Aim, vec2 Offset);
 	
+public:
+	CModAPI_LineStyle m_InternalLineStyles[MODAPI_NUM_LINESTYLES];
+	
+	array<CModAPI_LineStyle> m_ExternalLineStyles;
+	
+	CModAPI_AssetCatalog<CModAPI_Asset_Image> m_ImagesCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_Sprite> m_SpritesCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_Animation> m_AnimationsCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_TeeAnimation> m_TeeAnimationsCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_Attach> m_AttachesCatalog;
+	CModAPI_AssetCatalog<CModAPI_LineStyle> m_LineStylesCatalog;
+
 public:
 	CModAPI_Client_Graphics(IGraphics* pGraphics);
 	void Init();
-	const CModAPI_Image* GetImage(int Id) const;
-	const CModAPI_Animation* GetAnimation(int Id) const;
-	const CModAPI_TeeAnimation* GetTeeAnimation(int Id) const;
-	const CModAPI_Sprite* GetSprite(int Id) const;
-	const CModAPI_LineStyle* GetLineStyle(int Id) const;
-	const CModAPI_Weapon* GetWeapon(int Id) const;
 	
-	int OnModLoaded(IMod* pMod);
-	int OnModUnloaded();
+	IGraphics *Graphics() { return m_pGraphics; };
 	
-	bool TextureSet(int ImageID);
+	CModAPI_LineStyle* GetLineStyle(int Id);
 	
-	void DrawSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int FlipFlag, float Opacity = 1.0f);
-	void DrawAnimatedSprite(CRenderTools* pRenderTools, int SpriteID, vec2 Pos, float Size, float Angle, int FlipFlag, int AnimationID, float Time, vec2 Offset);
+	CModAPI_AssetPath AddImage(class IStorage* pStorage, int StorageType, const char* pFilename);
+	void DeleteAsset(int Type, CModAPI_AssetPath Path);
+	
+	int SaveInAssetsFile(class IStorage *pStorage, const char *pFileName);
+	int OnAssetsFileLoaded(IModAPI_AssetsFile* pAssetsFile);
+	int OnAssetsFileUnloaded();
+	
+	bool TextureSet(CModAPI_AssetPath AssetPath);
+	
+	void DrawSprite(CModAPI_AssetPath AssetPath, vec2 Pos, float Size, float Angle, int FlipFlag, float Opacity = 1.0f);
+	void DrawAnimatedSprite(CModAPI_AssetPath SpritePath, vec2 Pos, float Size, float Angle, int FlipFlag, CModAPI_AssetPath AnimationPath, float Time, vec2 Offset);
 	void DrawLine(CRenderTools* pRenderTools, int LineStyleID, vec2 StartPoint, vec2 EndPoint, float Ms);
 	void DrawText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
-	void DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, int AnimationID, float Time, vec2 Offset);
+	void DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, CModAPI_AssetPath AnimationPath, float Time, vec2 Offset);
 	
-	void DrawWeaponMuzzle(CRenderTools* pRenderTools, const CModAPI_WeaponAnimationState* pState, int WeaponID, vec2 Pos);
-	void DrawWeapon(CRenderTools* pRenderTools, const CModAPI_WeaponAnimationState* pState, int WeaponID, vec2 Pos);
+	void DrawAttach(CRenderTools* pRenderTools, const CModAPI_AttachAnimationState* pState, CModAPI_AssetPath AttachPath, vec2 Pos, float Scaling);
 	void DrawTee(CRenderTools* pRenderTools, class CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pState, vec2 Pos, vec2 Dir, int Emote);
+	
+	void GetTeeAlignAxis(int Align, vec2 Dir, vec2 Aim, vec2& PartDirX, vec2& PartDirY);
 	
 	//Tee Animation
 	void InitTeeAnimationState(CModAPI_TeeAnimationState* pState, vec2 MotionDir, vec2 AimDir);
-	void AddTeeAnimationState(CModAPI_TeeAnimationState* pState, int TeeAnimationID, float Time);
+	void AddTeeAnimationState(CModAPI_TeeAnimationState* pState, CModAPI_AssetPath TeeAnimationPath, float Time);
 	
-	//Weapon Animation
-	void InitWeaponAnimationState(CModAPI_WeaponAnimationState* pState, vec2 MotionDir, vec2 AimDir, int WeaponID, float Time);
+	//Attach Animation
+	void InitAttachAnimationState(CModAPI_AttachAnimationState* pState, vec2 MotionDir, vec2 AimDir, CModAPI_AssetPath AttachPath, float Time);
+	
+	template<class ASSETTYPE>
+	ASSETTYPE* GetAsset(CModAPI_AssetPath AssetPath)
+	{
+		return 0;
+	}
 };
 
 #endif

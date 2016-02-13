@@ -253,9 +253,9 @@ void CPlayers::RenderPlayer(
 	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, MotionDir, AimDir);
 
 	if(InAir)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_INAIR), 0.0f);
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_INAIR), 0.0f);
 	else if(Stationary)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_IDLE), 0.0f);
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_IDLE), 0.0f);
 	else if(!WantOtherDir)
 	{
 		const float WalkTimeMagic = 100.0f;
@@ -265,7 +265,7 @@ void CPlayers::RenderPlayer(
 				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 			/ WalkTimeMagic;
 		
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_WALK), WalkTime);
+		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_WALK), WalkTime);
 	}
 
 	// do skidding
@@ -284,8 +284,8 @@ void CPlayers::RenderPlayer(
 		);
 	}
 	
-	const CModAPI_Weapon* pWeapon = ModAPIGraphics()->GetWeapon(MODAPI_INTERNAL_ID(Player.m_Weapon));
-	if(pWeapon)
+	const CModAPI_Asset_Attach* pAttach = ModAPIGraphics()->m_AttachesCatalog.GetAsset(CModAPI_AssetPath::Internal(Player.m_Weapon));
+	if(pAttach)
 	{
 		static float s_LastGameTickTime = Client()->GameTickTime();
 		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
@@ -293,16 +293,14 @@ void CPlayers::RenderPlayer(
 		
 		float WeaponTime = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	
-		if(pWeapon->m_TeeAnimation >= 0)
+		if(!pAttach->m_TeeAnimationPath.IsNull())
 		{
-			ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pWeapon->m_TeeAnimation, WeaponTime);
+			ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pAttach->m_TeeAnimationPath, WeaponTime);
 		}
 		
-		CModAPI_WeaponAnimationState WeaponAnimState;
-		ModAPIGraphics()->InitWeaponAnimationState(&WeaponAnimState, MotionDir, AimDir, MODAPI_INTERNAL_ID(Player.m_Weapon), WeaponTime);
-		
-		ModAPIGraphics()->DrawWeaponMuzzle(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
-		ModAPIGraphics()->DrawWeapon(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
+		CModAPI_AttachAnimationState AttachAnimState;
+		ModAPIGraphics()->InitAttachAnimationState(&AttachAnimState, MotionDir, AimDir, CModAPI_AssetPath::Internal(Player.m_Weapon), WeaponTime);
+		ModAPIGraphics()->DrawAttach(RenderTools(), &AttachAnimState, CModAPI_AssetPath::Internal(Player.m_Weapon), Position, 1.0f);	
 	}
 	
 	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, AimDir, Player.m_Emote);

@@ -11,6 +11,8 @@
 
 #include <generated/client_data.h>
 
+#include <modapi/client/clientmode.h>
+
 #include "menus.h"
 
 void CMenus::RenderStartMenu(CUIRect MainView)
@@ -67,10 +69,19 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_MapEditorButton = 0;
-	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
+	static int s_ModEditorButton = 0;
+	if(DoButton_Menu(&s_ModEditorButton, Localize("Assets Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 	{
-		g_Config.m_ClEditor = 1;
+		g_Config.m_ClMode = MODAPI_CLIENTMODE_ASSETSEDITOR;
+		Input()->MouseModeRelative();
+	}
+
+	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static int s_MapEditorButton = 0;
+	if(DoButton_Menu(&s_MapEditorButton, Localize("Map Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
+	{
+		g_Config.m_ClMode = MODAPI_CLIENTMODE_MAPEDITOR;
 		Input()->MouseModeRelative();
 	}
 
