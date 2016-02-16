@@ -68,15 +68,15 @@ void CGraphics_OpenGL::Flush()
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glVertexPointer(3, GL_FLOAT,
+	glVertexPointer(2, GL_FLOAT,
 			sizeof(CVertex),
 			(char*)m_aVertices);
 	glTexCoordPointer(2, GL_FLOAT,
 			sizeof(CVertex),
-			(char*)m_aVertices + sizeof(float)*3);
+			(char*)m_aVertices + sizeof(float)*2);
 	glColorPointer(4, GL_FLOAT,
 			sizeof(CVertex),
-			(char*)m_aVertices + sizeof(float)*5);
+			(char*)m_aVertices + sizeof(float)*4);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -235,6 +235,9 @@ void CGraphics_OpenGL::MapScreen(float TopLeftX, float TopLeftY, float BottomRig
 	m_ScreenY0 = TopLeftY;
 	m_ScreenX1 = BottomRightX;
 	m_ScreenY1 = BottomRightY;
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0,0,-5.0f);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(TopLeftX, BottomRightX, BottomRightY, TopLeftY, 1.0f, 10.f);
@@ -632,7 +635,6 @@ void CGraphics_OpenGL::QuadsDraw(CQuadItem *pArray, int Num)
 void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
 	CPoint Center;
-	Center.z = 0;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
@@ -668,6 +670,28 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 	}
 
 	AddVertices(4*Num);
+}
+
+void CGraphics_OpenGL::RenderQuads(CVertex *pVertices, int NumVertices)
+{
+	if(NumVertices == 0)
+		return;
+
+	glVertexPointer(2, GL_FLOAT,
+			sizeof(CVertex),
+			(char*)pVertices);
+	glTexCoordPointer(2, GL_FLOAT,
+			sizeof(CVertex),
+			(char*)pVertices + sizeof(float)*2);
+	glColorPointer(4, GL_FLOAT,
+			sizeof(CVertex),
+			(char*)pVertices + sizeof(float)*4);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	if(m_RenderEnable)
+		glDrawArrays(GL_QUADS, 0, NumVertices);
 }
 
 void CGraphics_OpenGL::QuadsDrawFreeform(const CFreeformItem *pArray, int Num)
@@ -733,10 +757,6 @@ int CGraphics_OpenGL::Init()
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-
-	// Set all z to -5.0f
-	for(int i = 0; i < MAX_VERTICES; i++)
-		m_aVertices[i].m_Pos.z = -5.0f;
 
 	// init textures
 	m_FirstFreeTexture = 0;

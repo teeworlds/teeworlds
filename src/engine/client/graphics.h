@@ -9,18 +9,6 @@ protected:
 	class IStorage *m_pStorage;
 	class IConsole *m_pConsole;
 
-	//
-	typedef struct { float x, y, z; } CPoint;
-	typedef struct { float u, v; } CTexCoord;
-	typedef struct { float r, g, b, a; } CColor;
-
-	typedef struct
-	{
-		CPoint m_Pos;
-		CTexCoord m_Tex;
-		CColor m_Color;
-	} CVertex;
-
 	enum
 	{
 		MAX_VERTICES = 32*1024,
@@ -103,6 +91,8 @@ public:
 	virtual void TextureSet(int TextureID);
 
 	virtual void Clear(float r, float g, float b);
+	
+	virtual void RenderQuads(CVertex *pVertices, int NumVertices);
 
 	virtual void QuadsBegin();
 	virtual void QuadsEnd();
