@@ -1744,6 +1744,7 @@ void CClient::InitInterfaces()
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
+	m_pEngineTextRender = Kernel()->RequestInterface<IEngineTextRender>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
@@ -1816,7 +1817,7 @@ void CClient::Run()
 	}
 
 	// init font rendering
-	Kernel()->RequestInterface<IEngineTextRender>()->Init();
+	m_pEngineTextRender->Init();
 
 	// init the input
 	Input()->Init();
@@ -1956,6 +1957,8 @@ void CClient::Run()
 				if(m_RenderFrameTime > m_RenderFrameTimeHigh)
 					m_RenderFrameTimeHigh = m_RenderFrameTime;
 				m_FpsGraph.Add(1.0f/m_RenderFrameTime, 1,1,1);
+				
+				m_pEngineTextRender->UpdateTime(Now);
 
 				m_LastRenderTime = Now;
 

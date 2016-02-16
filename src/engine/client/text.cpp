@@ -97,6 +97,8 @@ class CTextRender : public IEngineTextRender
 	float m_TextOutlineG;
 	float m_TextOutlineB;
 	float m_TextOutlineA;
+	
+	int64 m_CurTime;
 
 	//int m_FontTextureFormat;
 
@@ -414,9 +416,8 @@ class CTextRender : public IEngineTextRender
 		}
 
 		// touch the character
-		// TODO: don't call time_get here
 		if(pFontchr)
-			pFontchr->m_TouchTime = time_get();
+			pFontchr->m_TouchTime = m_CurTime;
 
 		return pFontchr;
 	}
@@ -463,6 +464,10 @@ public:
 		FT_Init_FreeType(&m_FTLibrary);
 	}
 
+	virtual void UpdateTime(int64 Now)
+	{
+		m_CurTime = Now;
+	}
 
 	virtual CFont *LoadFont(const char *pFilename)
 	{
