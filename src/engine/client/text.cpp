@@ -559,11 +559,37 @@ public:
 		m_TextOutlineB = b;
 		m_TextOutlineA = a;
 	}
+	
+	void FlushText(CFontSizeData *pSizeData, IGraphics::CVertex *pVertices, int NumVertices)
+	{
+		for(int i = 0; i < 2; i++)
+		{
+			// TODO: Make this better
+			if (i == 0)
+				Graphics()->TextureSet(pSizeData->m_aTextures[1]);
+			else
+				Graphics()->TextureSet(pSizeData->m_aTextures[0]);
+
+			//Graphics()->QuadsBegin();
+			IGraphics::CColor Color = { m_TextR, m_TextG, m_TextB, m_TextA };
+			if (i == 0)
+				Color = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
+			
+			for(int t = 0; t < NumVertices; t++)
+				pVertices[t].m_Color = Color;
+			
+			Graphics()->RenderQuads(pVertices, NumVertices);
+		}
+	}
 
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
 		CFont *pFont = pCursor->m_pFont;
 		CFontSizeData *pSizeData = NULL;
+		
+		const int MAX_VERTICES = 1024*8;
+		IGraphics::CVertex aVertices[MAX_VERTICES];
+		int NumVertices = 0;
 
 		//dbg_msg("textrender", "rendering text '%s'", text);
 
@@ -612,129 +638,140 @@ public:
 			Length = str_length(pText);
 
 		// if we don't want to render, we can just skip the first outline pass
-		i = 1;
-		if(pCursor->m_Flags&TEXTFLAG_RENDER)
-			i = 0;
+		const char *pCurrent = (char *)pText;
+		const char *pEnd = pCurrent+Length;
+		DrawX = CursorX;
+		DrawY = CursorY;
+		LineCount = pCursor->m_LineCount;
 
-		for(;i < 2; i++)
+		while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
 		{
-			const char *pCurrent = (char *)pText;
-			const char *pEnd = pCurrent+Length;
-			DrawX = CursorX;
-			DrawY = CursorY;
-			LineCount = pCursor->m_LineCount;
-
-			if(pCursor->m_Flags&TEXTFLAG_RENDER)
+			int NewLine = 0;
+			const char *pBatchEnd = pEnd;
+			if(pCursor->m_LineWidth > 0 && !(pCursor->m_Flags&TEXTFLAG_STOP_AT_END))
 			{
-				// TODO: Make this better
-				if (i == 0)
-					Graphics()->TextureSet(pSizeData->m_aTextures[1]);
-				else
-					Graphics()->TextureSet(pSizeData->m_aTextures[0]);
+				int Wlen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
+				CTextCursor Compare = *pCursor;
+				Compare.m_X = DrawX;
+				Compare.m_Y = DrawY;
+				Compare.m_Flags &= ~TEXTFLAG_RENDER;
+				Compare.m_LineWidth = -1;
+				TextEx(&Compare, pCurrent, Wlen);
 
-				Graphics()->QuadsBegin();
-				if (i == 0)
-					Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
-				else
-					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
+				if(Compare.m_X-DrawX > pCursor->m_LineWidth)
+				{
+					// word can't be fitted in one line, cut it
+					CTextCursor Cutter = *pCursor;
+					Cutter.m_CharCount = 0;
+					Cutter.m_X = DrawX;
+					Cutter.m_Y = DrawY;
+					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
+					Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
+
+					TextEx(&Cutter, (const char *)pCurrent, Wlen);
+					Wlen = Cutter.m_CharCount;
+					NewLine = 1;
+
+					if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
+						Wlen = 0;
+				}
+				else if(Compare.m_X-pCursor->m_StartX > pCursor->m_LineWidth)
+				{
+					NewLine = 1;
+					Wlen = 0;
+				}
+
+				pBatchEnd = pCurrent + Wlen;
 			}
 
-			while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
+			const char *pTmp = pCurrent;
+			int NextCharacter = str_utf8_decode(&pTmp);
+			while(pCurrent < pBatchEnd)
 			{
-				int NewLine = 0;
-				const char *pBatchEnd = pEnd;
-				if(pCursor->m_LineWidth > 0 && !(pCursor->m_Flags&TEXTFLAG_STOP_AT_END))
-				{
-					int Wlen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
-					CTextCursor Compare = *pCursor;
-					Compare.m_X = DrawX;
-					Compare.m_Y = DrawY;
-					Compare.m_Flags &= ~TEXTFLAG_RENDER;
-					Compare.m_LineWidth = -1;
-					TextEx(&Compare, pCurrent, Wlen);
+				int Character = NextCharacter;
+				pCurrent = pTmp;
+				NextCharacter = str_utf8_decode(&pTmp);
 
-					if(Compare.m_X-DrawX > pCursor->m_LineWidth)
-					{
-						// word can't be fitted in one line, cut it
-						CTextCursor Cutter = *pCursor;
-						Cutter.m_CharCount = 0;
-						Cutter.m_X = DrawX;
-						Cutter.m_Y = DrawY;
-						Cutter.m_Flags &= ~TEXTFLAG_RENDER;
-						Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
-
-						TextEx(&Cutter, (const char *)pCurrent, Wlen);
-						Wlen = Cutter.m_CharCount;
-						NewLine = 1;
-
-						if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
-							Wlen = 0;
-					}
-					else if(Compare.m_X-pCursor->m_StartX > pCursor->m_LineWidth)
-					{
-						NewLine = 1;
-						Wlen = 0;
-					}
-
-					pBatchEnd = pCurrent + Wlen;
-				}
-
-				const char *pTmp = pCurrent;
-				int NextCharacter = str_utf8_decode(&pTmp);
-				while(pCurrent < pBatchEnd)
-				{
-					int Character = NextCharacter;
-					pCurrent = pTmp;
-					NextCharacter = str_utf8_decode(&pTmp);
-
-					if(Character == '\n')
-					{
-						DrawX = pCursor->m_StartX;
-						DrawY += Size;
-						DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
-						DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;
-						++LineCount;
-						if(pCursor->m_MaxLines > 0 && LineCount > pCursor->m_MaxLines)
-							break;
-						continue;
-					}
-
-					CFontChar *pChr = GetChar(pFont, pSizeData, Character);
-					if(pChr)
-					{
-						float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
-						if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
-						{
-							// we hit the end of the line, no more to render or count
-							pCurrent = pEnd;
-							break;
-						}
-
-						if(pCursor->m_Flags&TEXTFLAG_RENDER)
-						{
-							Graphics()->QuadsSetSubset(pChr->m_aUvs[0], pChr->m_aUvs[1], pChr->m_aUvs[2], pChr->m_aUvs[3]);
-							IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
-							Graphics()->QuadsDrawTL(&QuadItem, 1);
-						}
-
-						DrawX += Advance*Size;
-						pCursor->m_CharCount++;
-					}
-				}
-
-				if(NewLine)
+				if(Character == '\n')
 				{
 					DrawX = pCursor->m_StartX;
 					DrawY += Size;
-					GotNewLine = 1;
 					DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
 					DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;
 					++LineCount;
+					if(pCursor->m_MaxLines > 0 && LineCount > pCursor->m_MaxLines)
+						break;
+					continue;
+				}
+
+				CFontChar *pChr = GetChar(pFont, pSizeData, Character);
+				if(pChr)
+				{
+					float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
+					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
+					{
+						// we hit the end of the line, no more to render or count
+						pCurrent = pEnd;
+						break;
+					}
+
+					if(pCursor->m_Flags&TEXTFLAG_RENDER)
+					{
+						//Graphics()->QuadsSetSubset(pChr->m_aUvs[0], pChr->m_aUvs[1], pChr->m_aUvs[2], pChr->m_aUvs[3]);
+						//IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
+						//Graphics()->QuadsDrawTL(&QuadItem, 1);
+						float x = DrawX+pChr->m_OffsetX*Size;
+						float y = DrawY+pChr->m_OffsetY*Size;
+						
+						aVertices[NumVertices+0].m_Pos.x = x;
+						aVertices[NumVertices+0].m_Pos.y = y;
+						aVertices[NumVertices+0].m_Tex.u = pChr->m_aUvs[0];
+						aVertices[NumVertices+0].m_Tex.v = pChr->m_aUvs[1];
+						
+						aVertices[NumVertices+1].m_Pos.x = x + pChr->m_Width*Size;
+						aVertices[NumVertices+1].m_Pos.y = y;
+						aVertices[NumVertices+1].m_Tex.u = pChr->m_aUvs[2];
+						aVertices[NumVertices+1].m_Tex.v = pChr->m_aUvs[1];
+						
+						aVertices[NumVertices+2].m_Pos.x = x + pChr->m_Width*Size;
+						aVertices[NumVertices+2].m_Pos.y = y + pChr->m_Height*Size;
+						aVertices[NumVertices+2].m_Tex.u = pChr->m_aUvs[2];
+						aVertices[NumVertices+2].m_Tex.v = pChr->m_aUvs[3];
+						
+						aVertices[NumVertices+3].m_Pos.x = x;
+						aVertices[NumVertices+3].m_Pos.y = y + pChr->m_Height*Size;
+						aVertices[NumVertices+3].m_Tex.u = pChr->m_aUvs[0];
+						aVertices[NumVertices+3].m_Tex.v = pChr->m_aUvs[3];
+
+						NumVertices += 4;
+					
+						if(NumVertices == MAX_VERTICES)
+						{
+							FlushText(pSizeData, aVertices, NumVertices);
+							NumVertices = 0;
+						}
+					}
+
+					DrawX += Advance*Size;
+					pCursor->m_CharCount++;
 				}
 			}
 
-			if(pCursor->m_Flags&TEXTFLAG_RENDER)
-				Graphics()->QuadsEnd();
+			if(NewLine)
+			{
+				DrawX = pCursor->m_StartX;
+				DrawY += Size;
+				GotNewLine = 1;
+				DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
+				DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;
+				++LineCount;
+			}
+		}
+		
+		if(NumVertices > 0)
+		{
+			FlushText(pSizeData, aVertices, NumVertices);
+			NumVertices = 0;
 		}
 
 		pCursor->m_X = DrawX;
