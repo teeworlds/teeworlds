@@ -201,6 +201,8 @@ void CTeecompStats::OnRender()
 		}
 	}
 	
+	TextRender()->BatchBegin();
+	
 	switch(m_Mode)
 	{
 		case 1:
@@ -210,6 +212,8 @@ void CTeecompStats::OnRender()
 			RenderIndividualStats();
 			break;
 	}
+	
+	TextRender()->BatchEnd();
 }
 
 void CTeecompStats::RenderGlobalStats()

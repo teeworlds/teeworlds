@@ -96,6 +96,8 @@ void CTimeMessages::OnRender()
 	float y = 20.0f;
 	if(g_Config.m_ClShowfps)
 		y = 60.0f;
+	
+	TextRender()->BatchBegin();
 
 	int64 Now = time_get();
 	for(int i = 1; i <= MAX_TIMEMSGS; i++)
@@ -191,4 +193,6 @@ void CTimeMessages::OnRender()
 		// new line
 		y += 46;
 	}
+	
+	TextRender()->BatchEnd();
 }
