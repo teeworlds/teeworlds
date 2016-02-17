@@ -73,6 +73,8 @@ void CNamePlates::OnRender()
 {
 	if (!g_Config.m_ClNameplates || g_Config.m_ClClearAll)
 		return;
+	
+	TextRender()->BatchBegin();
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -90,4 +92,6 @@ void CNamePlates::OnRender()
 				(const CNetObj_PlayerInfo *)pInfo);
 		}
 	}
+	
+	TextRender()->BatchEnd();
 }

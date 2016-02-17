@@ -693,6 +693,8 @@ void CHud::OnRender()
 
 	if(g_Config.m_ClShowhud)
 	{
+		TextRender()->BatchBegin();
+		
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
@@ -718,6 +720,8 @@ void CHud::OnRender()
 		RenderVoting();
 		RenderRecord();
 		RenderCursor();
+
+		TextRender()->BatchEnd();
 	}
 }
 

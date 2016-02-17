@@ -396,6 +396,8 @@ void CGameConsole::OnRender()
 		float RowHeight = FontSize*1.25f;
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
+		
+		TextRender()->BatchBegin();
 
 		CRenderInfo Info;
 		Info.m_pSelf = this;
@@ -537,6 +539,8 @@ void CGameConsole::OnRender()
 		str_format(aBuf, sizeof(aBuf), "v%s", GAME_VERSION);
 		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1);
+		
+		TextRender()->BatchEnd();
 	}
 }
 

@@ -40,6 +40,9 @@ public:
 	virtual void DestroyFont(CFont *pFont) = 0;
 
 	virtual void SetFont(CFont *pFont) = 0;
+	
+	virtual void BatchBegin() = 0;
+	virtual void BatchEnd() = 0;
 
 	//
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;

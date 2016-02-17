@@ -690,6 +690,7 @@ void CScoreboard::OnRender()
 	float Height = 400*3.0f;
 
 	Graphics()->MapScreen(0, 0, Width, Height);
+	TextRender()->BatchBegin();
 
 	if(m_pClient->m_Snap.m_pGameInfoObj)
 	{
@@ -850,6 +851,8 @@ void CScoreboard::SetActiveColumns()
 
 	ms_Spectatorboard[COLUMN_SPEC_CLAN].m_Active = g_Config.m_TcScoreboardInfos&TC_SCORE_CLAN;
 	ms_Spectatorboard[COLUMN_SPEC_COUNTRY].m_Active = g_Config.m_TcScoreboardInfos&TC_SCORE_COUNTRY;
+	
+	TextRender()->BatchEnd();
 }
 
 bool CScoreboard::Active()

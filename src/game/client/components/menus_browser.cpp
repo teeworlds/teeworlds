@@ -207,6 +207,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(s_ScrollValue > 1) s_ScrollValue = 1;
 
 	// set clipping
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipEnable(&View);
 
 	CUIRect OriginalView = View;
@@ -440,6 +442,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipDisable();
 
 	if(NewSelected != -1)

@@ -313,6 +313,8 @@ void CMenus::UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHe
 	// the list
 	gs_ListBoxView = gs_ListBoxOriginalView;
 	gs_ListBoxView.VMargin(5.0f, &gs_ListBoxView);
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipEnable(&gs_ListBoxView);
 	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
 }
@@ -437,6 +439,8 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
 
 int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 {
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipDisable();
 	if(pScrollValue)
 		*pScrollValue = gs_ListBoxScrollValue;

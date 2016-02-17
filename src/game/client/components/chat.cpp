@@ -582,6 +582,8 @@ void CChat::OnRender()
 		}
 		--m_PendingChatCounter;
 	}
+	
+	TextRender()->BatchBegin();
 
 	float Width = 300.0f*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
@@ -753,6 +755,8 @@ void CChat::OnRender()
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	TextRender()->BatchEnd();
 }
 
 void CChat::Say(int Team, const char *pLine)

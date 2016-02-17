@@ -334,6 +334,8 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 			while(w-*Offset < 0.0f);
 		}
 	}
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipEnable(pRect);
 	Textbox.x -= *Offset;
 
@@ -353,6 +355,8 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		if((2*time_get()/time_freq()) % 2)	// make it blink
 			UI()->DoLabel(&Textbox, "|", FontSize, -1);
 	}
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipDisable();
 
 	return ReturnValue;
@@ -836,6 +840,7 @@ int CMenus::Render()
 {
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+	TextRender()->BatchBegin();
 
 	// reset cursor
 	if(m_CursorActive)
@@ -1400,6 +1405,8 @@ int CMenus::Render()
 		if(m_Popup == POPUP_NONE)
 			UI()->SetActiveItem(0);
 	}
+	
+	TextRender()->BatchEnd();
 
 	return 0;
 }

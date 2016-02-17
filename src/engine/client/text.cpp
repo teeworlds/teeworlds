@@ -87,6 +87,14 @@ class CTextRender : public IEngineTextRender
 			s++;
 		}
 	}
+	
+	static const int MAX_VERTICES = 1024*16;
+	IGraphics::CVertex m_aVertices[MAX_VERTICES];
+	IGraphics::CColor m_aColor[MAX_VERTICES/4];
+	int m_NumVertices;
+	
+	bool m_Batch;
+	CFontSizeData *m_pBatchSizeData;
 
 	float m_TextR;
 	float m_TextG;
@@ -451,6 +459,10 @@ public:
 		m_TextOutlineA = 0.3f;
 
 		m_pFont = 0;
+		
+		m_NumVertices = 0;
+		m_Batch = false;
+		m_pBatchSizeData = 0;
 
 		// GL_LUMINANCE can be good for debugging
 		//m_FontTextureFormat = GL_ALPHA;
@@ -560,36 +572,37 @@ public:
 		m_TextOutlineA = a;
 	}
 	
-	void FlushText(CFontSizeData *pSizeData, IGraphics::CVertex *pVertices, int NumVertices)
+	void FlushText(CFontSizeData *pSizeData)
 	{
-		for(int i = 0; i < 2; i++)
-		{
-			// TODO: Make this better
-			if (i == 0)
-				Graphics()->TextureSet(pSizeData->m_aTextures[1]);
-			else
-				Graphics()->TextureSet(pSizeData->m_aTextures[0]);
+		Graphics()->TextureSet(pSizeData->m_aTextures[1]);
+		Graphics()->RenderQuads(m_aVertices, m_NumVertices);
 
-			//Graphics()->QuadsBegin();
-			IGraphics::CColor Color = { m_TextR, m_TextG, m_TextB, m_TextA };
-			if (i == 0)
-				Color = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
-			
-			for(int t = 0; t < NumVertices; t++)
-				pVertices[t].m_Color = Color;
-			
-			Graphics()->RenderQuads(pVertices, NumVertices);
+		for(int i = 0; i < m_NumVertices; i++)
+			m_aVertices[i].m_Color = m_aColor[i/4];
+		Graphics()->TextureSet(pSizeData->m_aTextures[0]);
+		Graphics()->RenderQuads(m_aVertices, m_NumVertices);
+	}
+	
+	virtual void BatchBegin()
+	{
+		m_Batch = true;
+	}
+	
+	virtual void BatchEnd()
+	{
+		if(m_pBatchSizeData && m_NumVertices > 0)
+		{
+			FlushText(m_pBatchSizeData);
+			m_NumVertices = 0;
 		}
+		m_Batch = false;
+		m_pBatchSizeData = 0;
 	}
 
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
 		CFont *pFont = pCursor->m_pFont;
 		CFontSizeData *pSizeData = NULL;
-		
-		const int MAX_VERTICES = 1024*8;
-		IGraphics::CVertex aVertices[MAX_VERTICES];
-		int NumVertices = 0;
 
 		//dbg_msg("textrender", "rendering text '%s'", text);
 
@@ -630,6 +643,21 @@ public:
 
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
+		
+		if(m_Batch)
+		{
+			if(!m_pBatchSizeData)
+				m_pBatchSizeData = pSizeData;
+			else if(m_pBatchSizeData != pSizeData)
+			{
+				if(m_NumVertices > 0)
+				{
+					FlushText(m_pBatchSizeData);
+					m_NumVertices = 0;
+				}
+				m_pBatchSizeData = pSizeData;
+			}
+		}
 
 		float Scale = 1/pSizeData->m_FontSize;
 
@@ -717,38 +745,42 @@ public:
 
 					if(pCursor->m_Flags&TEXTFLAG_RENDER)
 					{
-						//Graphics()->QuadsSetSubset(pChr->m_aUvs[0], pChr->m_aUvs[1], pChr->m_aUvs[2], pChr->m_aUvs[3]);
-						//IGraphics::CQuadItem QuadItem(DrawX+pChr->m_OffsetX*Size, DrawY+pChr->m_OffsetY*Size, pChr->m_Width*Size, pChr->m_Height*Size);
-						//Graphics()->QuadsDrawTL(&QuadItem, 1);
 						float x = DrawX+pChr->m_OffsetX*Size;
 						float y = DrawY+pChr->m_OffsetY*Size;
+						IGraphics::CColor Color = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
 						
-						aVertices[NumVertices+0].m_Pos.x = x;
-						aVertices[NumVertices+0].m_Pos.y = y;
-						aVertices[NumVertices+0].m_Tex.u = pChr->m_aUvs[0];
-						aVertices[NumVertices+0].m_Tex.v = pChr->m_aUvs[1];
+						m_aColor[m_NumVertices/4] = { m_TextR, m_TextG, m_TextB, m_TextA };
 						
-						aVertices[NumVertices+1].m_Pos.x = x + pChr->m_Width*Size;
-						aVertices[NumVertices+1].m_Pos.y = y;
-						aVertices[NumVertices+1].m_Tex.u = pChr->m_aUvs[2];
-						aVertices[NumVertices+1].m_Tex.v = pChr->m_aUvs[1];
+						m_aVertices[m_NumVertices+0].m_Pos.x = x;
+						m_aVertices[m_NumVertices+0].m_Pos.y = y;
+						m_aVertices[m_NumVertices+0].m_Tex.u = pChr->m_aUvs[0];
+						m_aVertices[m_NumVertices+0].m_Tex.v = pChr->m_aUvs[1];
+						m_aVertices[m_NumVertices+0].m_Color = Color;
 						
-						aVertices[NumVertices+2].m_Pos.x = x + pChr->m_Width*Size;
-						aVertices[NumVertices+2].m_Pos.y = y + pChr->m_Height*Size;
-						aVertices[NumVertices+2].m_Tex.u = pChr->m_aUvs[2];
-						aVertices[NumVertices+2].m_Tex.v = pChr->m_aUvs[3];
+						m_aVertices[m_NumVertices+1].m_Pos.x = x + pChr->m_Width*Size;
+						m_aVertices[m_NumVertices+1].m_Pos.y = y;
+						m_aVertices[m_NumVertices+1].m_Tex.u = pChr->m_aUvs[2];
+						m_aVertices[m_NumVertices+1].m_Tex.v = pChr->m_aUvs[1];
+						m_aVertices[m_NumVertices+1].m_Color = Color;
 						
-						aVertices[NumVertices+3].m_Pos.x = x;
-						aVertices[NumVertices+3].m_Pos.y = y + pChr->m_Height*Size;
-						aVertices[NumVertices+3].m_Tex.u = pChr->m_aUvs[0];
-						aVertices[NumVertices+3].m_Tex.v = pChr->m_aUvs[3];
+						m_aVertices[m_NumVertices+2].m_Pos.x = x + pChr->m_Width*Size;
+						m_aVertices[m_NumVertices+2].m_Pos.y = y + pChr->m_Height*Size;
+						m_aVertices[m_NumVertices+2].m_Tex.u = pChr->m_aUvs[2];
+						m_aVertices[m_NumVertices+2].m_Tex.v = pChr->m_aUvs[3];
+						m_aVertices[m_NumVertices+2].m_Color = Color;
+						
+						m_aVertices[m_NumVertices+3].m_Pos.x = x;
+						m_aVertices[m_NumVertices+3].m_Pos.y = y + pChr->m_Height*Size;
+						m_aVertices[m_NumVertices+3].m_Tex.u = pChr->m_aUvs[0];
+						m_aVertices[m_NumVertices+3].m_Tex.v = pChr->m_aUvs[3];
+						m_aVertices[m_NumVertices+3].m_Color = Color;
 
-						NumVertices += 4;
+						m_NumVertices += 4;
 					
-						if(NumVertices == MAX_VERTICES)
+						if(m_NumVertices == MAX_VERTICES)
 						{
-							FlushText(pSizeData, aVertices, NumVertices);
-							NumVertices = 0;
+							FlushText(pSizeData);
+							m_NumVertices = 0;
 						}
 					}
 
@@ -768,10 +800,10 @@ public:
 			}
 		}
 		
-		if(NumVertices > 0)
+		if(m_NumVertices > 0 && !m_Batch)
 		{
-			FlushText(pSizeData, aVertices, NumVertices);
-			NumVertices = 0;
+			FlushText(pSizeData);
+			m_NumVertices = 0;
 		}
 
 		pCursor->m_X = DrawX;

@@ -63,6 +63,8 @@ void CKillMessages::OnRender()
 	if(g_Config.m_ClShowfps)
 		y = 62.0f;
 
+	TextRender()->BatchBegin();
+
 	for(int i = 1; i <= MAX_KILLMSGS; i++)
 	{
 		int r = (m_KillmsgCurrent+i)%MAX_KILLMSGS;
@@ -173,4 +175,6 @@ void CKillMessages::OnRender()
 
 		y += 46.0f;
 	}
+	
+	TextRender()->BatchEnd();
 }

@@ -24,6 +24,7 @@ void CDebugHud::RenderNetCorrections()
 
 	float Width = 300*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, Width, 300);
+	TextRender()->BatchBegin();
 
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
@@ -68,6 +69,8 @@ void CDebugHud::RenderNetCorrections()
 	y += LineHeight;
 	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetobjCorrectedOn(), -1);
 	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetobjCorrectedOn(), -1);
+	
+	TextRender()->BatchEnd();
 }
 
 void CDebugHud::RenderTuning()
@@ -79,6 +82,7 @@ void CDebugHud::RenderTuning()
 	CTuningParams StandardTuning;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
+	TextRender()->BatchBegin();
 
 	float y = 50.0f;
 	int Count = 0;
@@ -133,6 +137,8 @@ void CDebugHud::RenderTuning()
 	Graphics()->LinesDraw(Array, 100);
 	Graphics()->LinesEnd();
 	TextRender()->TextColor(1,1,1,1);
+	
+	TextRender()->BatchEnd();
 }
 
 void CDebugHud::OnRender()
