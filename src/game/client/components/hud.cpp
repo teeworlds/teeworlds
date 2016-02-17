@@ -719,9 +719,8 @@ void CHud::OnRender()
 		RenderTeambalanceWarning();
 		RenderVoting();
 		RenderRecord();
-		RenderCursor();
-
 		TextRender()->BatchEnd();
+		RenderCursor();
 	}
 }
 
