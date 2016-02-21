@@ -24,6 +24,12 @@ enum
 static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 #define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
 
+struct CKerning
+{
+	int m_ID;
+	float m_Kerning;
+};
+
 struct CFontChar
 {
 	int m_ID;
@@ -38,6 +44,9 @@ struct CFontChar
 
 	float m_aUvs[4];
 	int64 m_TouchTime;
+
+	unsigned short m_KerningCounter;
+	CKerning m_Kerning[MAX_CHARACTERS];
 };
 
 struct CFontSizeData
@@ -394,6 +403,8 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_aUvs[1] = (SlotID/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
 			pFontchr->m_aUvs[2] = pFontchr->m_aUvs[0] + Width*Uscale;
 			pFontchr->m_aUvs[3] = pFontchr->m_aUvs[1] + Height*Vscale;
+
+			pFontchr->m_KerningCounter = 0;
 		}
 
 		return SlotID;
@@ -443,6 +454,21 @@ class CTextRender : public IEngineTextRender
 		return (Kerning.x>>6);
 	}
 
+	float GetKerning(CFont *pFont, CFontChar *pLeft, int Right)
+	{
+		for (int i = 0; i < min(MAX_CHARACTERS, pLeft->m_KerningCounter); i++)
+		{
+			if (pLeft->m_Kerning[i].m_ID == Right)
+				return pLeft->m_Kerning[i].m_Kerning;
+		}
+
+		float Tmp = Kerning(pFont, pLeft->m_ID, Right);
+		pLeft->m_Kerning[pLeft->m_KerningCounter % MAX_CHARACTERS] = { Right, Tmp };
+		pLeft->m_KerningCounter++;
+		if(pLeft->m_KerningCounter == 2*MAX_CHARACTERS)
+			pLeft->m_KerningCounter = MAX_CHARACTERS;
+		return Tmp;
+	}
 
 public:
 	CTextRender()
@@ -735,7 +761,7 @@ public:
 				CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 				if(pChr)
 				{
-					float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
+					float Advance = pChr->m_AdvanceX + GetKerning(pFont, pChr, NextCharacter)*Scale;
 					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 					{
 						// we hit the end of the line, no more to render or count
