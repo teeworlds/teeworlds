@@ -34,17 +34,11 @@ CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_Asset
 	m_ToolbarHeight(30),
 	m_TimelineTop(0),
 	m_TimelineBottom(0),
-	m_pPlayPauseButton(0),
 	m_pToolbar(0),
 	m_EditMode(TIMELINE_EDITMODE_ANGLE)
 {
-	m_pPlayPauseButton = new CPlayPauseButton(m_pAssetsEditor);
-	m_pEditModeButton = new CEditModeButton(this);
-	m_pNewFrameButton = new CNewFrameButton(this);
 	m_pTimeSlider = new CTimeSlider(this);
 	m_pValueSlider = new CValueSlider(this);
-	
-	m_pTimeScaleSlider = new CTimeScaleSlider(this);
 	
 	CModAPI_ClientGui_Label* pTimeScaleLabel = new CModAPI_ClientGui_Label(m_pConfig, "Time scale:");
 	pTimeScaleLabel->SetRect(CModAPI_ClientGui_Rect(
@@ -53,12 +47,18 @@ CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_Asset
 		pTimeScaleLabel->m_Rect.h
 	));
 	
+	m_pEditModeButton = new CEditModeButton(this);
+	
 	m_pToolbar = new CModAPI_ClientGui_HListLayout(m_pConfig);
-	m_pToolbar->Add(m_pPlayPauseButton);
+	m_pToolbar->Add(new CFirstFrameButton(m_pAssetsEditor));
+	m_pToolbar->Add(new CPrevFrameButton(m_pAssetsEditor));
+	m_pToolbar->Add(new CPlayPauseButton(m_pAssetsEditor));
+	m_pToolbar->Add(new CNextFrameButton(m_pAssetsEditor));
+	m_pToolbar->Add(new CLastFrameButton(m_pAssetsEditor));
 	m_pToolbar->Add(m_pEditModeButton);
-	m_pToolbar->Add(m_pNewFrameButton);
+	m_pToolbar->Add(new CNewFrameButton(this));
 	m_pToolbar->Add(pTimeScaleLabel);
-	m_pToolbar->Add(m_pTimeScaleSlider);
+	m_pToolbar->Add(new CTimeScaleSlider(this));
 	
 	m_pToolbar->Update();
 }
@@ -248,7 +248,7 @@ void CModAPI_AssetsEditorGui_Timeline::Render()
 		
 		Graphics()->TextureSet(m_pAssetsEditor->m_ModEditorTexture);
 		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+1)/16.0f, (SubY+1)/16.0f);
+		Graphics()->QuadsSetSubset((SubX+1)/16.0f, (SubY+1)/16.0f, SubX/16.0f, SubY/16.0f);
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		IGraphics::CQuadItem QuadItem(TimePos - m_VertexSize/2, m_TimelineTop - m_VertexSize, m_VertexSize, m_VertexSize);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);

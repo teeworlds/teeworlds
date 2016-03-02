@@ -176,7 +176,19 @@ void CModAPI_AssetsEditorGui_Editor::AddAnimationEditor()
 			pLayout->Add(new CDuplicateFrameButton(m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, i));
 		}
 		
-		AddLabeledIntegerField("Index", MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_INDEX, i);
+		//Time
+		{
+			CModAPI_ClientGui_HListLayout* pLayout = new CModAPI_ClientGui_HListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_ALL);
+			pLayout->SetHeight(m_pConfig->m_ButtonHeight);
+			Add(pLayout);
+			
+			CModAPI_ClientGui_Label* pLabel = new CModAPI_ClientGui_Label(m_pAssetsEditor->m_pGuiConfig, "Time");
+			pLayout->Add(pLabel);
+			
+			CModAPI_AssetsEditorGui_Editor::CFloatAssetMemberLabel* pValue = new CModAPI_AssetsEditorGui_Editor::CFloatAssetMemberLabel(
+				m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetType, m_pAssetsEditor->m_EditedAssetPath, MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_TIME, i);
+			pLayout->Add(pValue);
+		}
 	
 		//Angle
 		{
@@ -191,6 +203,8 @@ void CModAPI_AssetsEditorGui_Editor::AddAnimationEditor()
 				m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetType, m_pAssetsEditor->m_EditedAssetPath, MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_ANGLE, i);
 			pLayout->Add(pValue);
 		}
+		
+		AddLabeledIntegerField("Index", MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_INDEX, i);
 	}
 }
 
@@ -228,7 +242,7 @@ void CModAPI_AssetsEditorGui_Editor::AddAttachEditor()
 	if(!pAttach)
 		return;
 	
-	AddLabeledAssetField("Animation", MODAPI_ASSETSEDITOR_MEMBER_ATTACH_TEEANIMATIONPATH, MODAPI_ASSETTYPE_TEEANIMATION);
+	AddLabeledAssetField("Tee Animation", MODAPI_ASSETSEDITOR_MEMBER_ATTACH_TEEANIMATIONPATH, MODAPI_ASSETTYPE_TEEANIMATION);
 	AddLabeledAssetField("Cursor", MODAPI_ASSETSEDITOR_MEMBER_ATTACH_CURSORPATH, MODAPI_ASSETTYPE_SPRITE);
 	
 	for(int i=0; i<pAttach->m_BackElements.size(); i++)

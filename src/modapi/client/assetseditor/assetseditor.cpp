@@ -969,6 +969,164 @@ void CModAPI_AssetsEditor::ShowCursor()
 	//~ m_ShowCursor = true;
 }
 
+void CModAPI_AssetsEditor::TimeWrap()
+{
+	const float TimeShift = 0.5f;
+	switch(m_ViewedAssetType)
+	{
+		case MODAPI_ASSETTYPE_ANIMATION:
+		{
+			CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_ViewedAssetPath);
+			if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+			{
+				float MaxTime = pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time;
+				
+				if(pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP)
+					m_Time = fmod(m_Time, MaxTime);
+				else
+					m_Time = fmod(m_Time, MaxTime + TimeShift);
+			}
+			break;
+		}
+		case MODAPI_ASSETTYPE_TEEANIMATION:
+		{
+			CModAPI_Asset_TeeAnimation* pTeeAnimation = ModAPIGraphics()->m_TeeAnimationsCatalog.GetAsset(m_ViewedAssetPath);
+			if(pTeeAnimation)
+			{
+				float MaxTime = 0.0f;
+				bool Loop = true;
+				
+				//Body
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BodyAnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				//BackFoot
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackFootAnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				//FrontFoot
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontFootAnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				//BackHand
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackHandAnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				//FrontHand
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontHandAnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				
+				if(Loop)
+					m_Time = fmod(m_Time, MaxTime);
+				else
+					m_Time = fmod(m_Time, MaxTime + TimeShift);
+			}
+			break;
+		}
+		case MODAPI_ASSETTYPE_ATTACH:
+		{
+			CModAPI_Asset_Attach* pAttach = ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_ViewedAssetPath);
+			if(pAttach)
+			{
+				float MaxTime = 0.0f;
+				bool Loop = true;
+				
+				CModAPI_Asset_TeeAnimation* pTeeAnimation = ModAPIGraphics()->m_TeeAnimationsCatalog.GetAsset(pAttach->m_TeeAnimationPath);
+				if(pTeeAnimation)
+				{
+					//Body
+					{
+						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BodyAnimationPath);
+						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+						{
+							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+							Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+						}
+					}
+					//BackFoot
+					{
+						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackFootAnimationPath);
+						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+						{
+							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+							Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+						}
+					}
+					//FrontFoot
+					{
+						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontFootAnimationPath);
+						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+						{
+							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+							Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+						}
+					}
+					//BackHand
+					{
+						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackHandAnimationPath);
+						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+						{
+							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+							Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+						}
+					}
+					//FrontHand
+					{
+						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontHandAnimationPath);
+						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+						{
+							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+							Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+						}
+					}
+				}
+				
+				for(int i=0; i<pAttach->m_BackElements.size(); i++)
+				{
+					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pAttach->m_BackElements[i].m_AnimationPath);
+					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+					{
+						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
+						Loop = Loop && (pAnimation->m_CycleType == MODAPI_ANIMCYCLETYPE_LOOP);
+					}
+				}
+				
+				if(Loop)
+					m_Time = fmod(m_Time, MaxTime);
+				else
+					m_Time = fmod(m_Time, MaxTime + TimeShift);
+			}
+			break;
+		}
+	}
+}
+
 void CModAPI_AssetsEditor::UpdateAndRender()
 {
 	//Update time
@@ -978,6 +1136,8 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 		else m_Time += (Client()->LocalTime() - m_LastTime);
 	}
 	m_LastTime = Client()->LocalTime();
+	TimeWrap();
+	
 	
 	//Update popup state
 	if(m_ClosePopup && m_pGuiPopup)
@@ -1140,6 +1300,94 @@ void CModAPI_AssetsEditor::EditAssetFrame(int FrameId)
 	}
 	else
 		m_Time = 0.0f;
+		
+	m_Paused = true;
+}
+
+void CModAPI_AssetsEditor::EditAssetFirstFrame()
+{
+	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	{
+		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		if(pAnimation)
+		{
+			m_EditedAssetFrame = 0;
+			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetFrame].m_Time;
+		}
+		else
+			m_Time = 0.0f;
+	}
+	else
+		m_Time = 0.0f;
+	
+	m_Paused = true;
+}
+
+void CModAPI_AssetsEditor::EditAssetPrevFrame()
+{
+	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	{
+		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		if(pAnimation)
+		{
+			for(int i=pAnimation->m_lKeyFrames.size()-1; i>=0; i--)
+			{
+				if(pAnimation->m_lKeyFrames[i].m_Time < m_Time)
+				{
+					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
+					m_EditedAssetFrame = i;
+					break;
+				}
+			}
+		}
+		else
+			m_Time = 0.0f;
+	}
+	else
+		m_Time = 0.0f;
+	
+	m_Paused = true;
+}
+
+void CModAPI_AssetsEditor::EditAssetNextFrame()
+{
+	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	{
+		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		if(pAnimation)
+		{
+			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
+			{
+				if(pAnimation->m_lKeyFrames[i].m_Time > m_Time)
+				{
+					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
+					m_EditedAssetFrame = i;
+					break;
+				}
+			}
+		}
+		else
+			m_Time = 0.0f;
+	}
+	else
+		m_Time = 0.0f;
+	
+	m_Paused = true;
+}
+
+void CModAPI_AssetsEditor::EditAssetLastFrame()
+{
+	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	{
+		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+		{
+			m_EditedAssetFrame = pAnimation->m_lKeyFrames.size()-1;
+			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetFrame].m_Time;
+		}
+	}
+		
+	m_Paused = true;
 }
 
 void CModAPI_AssetsEditor::DisplayAsset(int AssetType, CModAPI_AssetPath AssetPath)

@@ -46,10 +46,11 @@ enum
 	MODAPI_ASSETSEDITOR_MEMBER_SPRITE_WIDTH,
 	MODAPI_ASSETSEDITOR_MEMBER_SPRITE_HEIGHT,
 	MODAPI_ASSETSEDITOR_MEMBER_ANIMATION_CYCLETYPE,
-	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_INDEX,
+	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_TIME,
 	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_ANGLE,
 	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_POSX,
 	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_POSY,
+	MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_INDEX,
 	MODAPI_ASSETSEDITOR_MEMBER_TEEANIMATION_BODYANIMPATH,
 	MODAPI_ASSETSEDITOR_MEMBER_TEEANIMATION_BACKFOOTANIMPATH,
 	MODAPI_ASSETSEDITOR_MEMBER_TEEANIMATION_FRONTFOOTANIMPATH,
@@ -132,6 +133,7 @@ public:
 	
 private:
 	void Render();
+	void TimeWrap();
 
 public:
 	CModAPI_AssetsEditor();
@@ -168,6 +170,10 @@ public:
 	void DisplayPopup(CModAPI_ClientGui_Popup* pWidget);
 	void EditAsset(int AssetType, CModAPI_AssetPath AssetPath);
 	void EditAssetFrame(int FrameId);
+	void EditAssetFirstFrame();
+	void EditAssetLastFrame();
+	void EditAssetPrevFrame();
+	void EditAssetNextFrame();
 	void DisplayAsset(int AssetType, CModAPI_AssetPath AssetPath);
 	void DeleteAsset(int AssetType, CModAPI_AssetPath AssetPath);
 	void NewAsset(int AssetType, CModAPI_AssetPath AssetPath);
@@ -318,6 +324,8 @@ T* GetAssetMemberPointer(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CMo
 		case MODAPI_ASSETSEDITOR_MEMBER_ANIMATION_CYCLETYPE:
 			return (T*)&((CModAPI_Asset_Animation*) pAsset)->m_CycleType;
 			
+		case MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_TIME:
+			return (T*)&((CModAPI_Asset_Animation*) pAsset)->m_lKeyFrames[SubId].m_Time;
 		case MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_INDEX:
 			return (T*)&((CModAPI_Asset_Animation*) pAsset)->m_lKeyFrames[SubId].m_ListId;
 		case MODAPI_ASSETSEDITOR_MEMBER_ANIMATIONFRAME_ANGLE:

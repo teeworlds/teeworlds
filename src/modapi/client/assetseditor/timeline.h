@@ -39,6 +39,82 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		}
 	};
 	
+	class CFirstFrameButton : public CModAPI_ClientGui_IconButton
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->EditAssetFirstFrame();
+		}
+		
+	public:
+		CFirstFrameButton(CModAPI_AssetsEditor* pAssetsEditor) :
+			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_FIRST_FRAME),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			
+		}
+	};
+	
+	class CLastFrameButton : public CModAPI_ClientGui_IconButton
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->EditAssetLastFrame();
+		}
+		
+	public:
+		CLastFrameButton(CModAPI_AssetsEditor* pAssetsEditor) :
+			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_LAST_FRAME),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			
+		}
+	};
+	
+	class CPrevFrameButton : public CModAPI_ClientGui_IconButton
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->EditAssetPrevFrame();
+		}
+		
+	public:
+		CPrevFrameButton(CModAPI_AssetsEditor* pAssetsEditor) :
+			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_PREV_FRAME),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			
+		}
+	};
+	
+	class CNextFrameButton : public CModAPI_ClientGui_IconButton
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->EditAssetNextFrame();
+		}
+		
+	public:
+		CNextFrameButton(CModAPI_AssetsEditor* pAssetsEditor) :
+			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_NEXT_FRAME),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			
+		}
+	};
+	
 	class CPlayPauseButton : public CModAPI_ClientGui_IconButton
 	{
 	protected:
@@ -191,10 +267,7 @@ protected:
 	float m_TimeMax;
 	
 	CModAPI_ClientGui_Rect m_TimelineRect;
-	CPlayPauseButton* m_pPlayPauseButton;
 	CEditModeButton* m_pEditModeButton;
-	CNewFrameButton* m_pNewFrameButton;
-	CTimeScaleSlider* m_pTimeScaleSlider;
 	CTimeSlider* m_pTimeSlider;
 	CValueSlider* m_pValueSlider;
 	CModAPI_ClientGui_HListLayout* m_pToolbar;

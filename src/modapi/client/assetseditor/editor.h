@@ -35,6 +35,43 @@ protected:
 		}
 	};
 
+	class CFloatAssetMemberLabel : public CModAPI_ClientGui_Label
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		int m_AssetType;
+		CModAPI_AssetPath m_AssetPath;
+		int m_Member;
+		int m_SubId;
+		
+		virtual float GetValue()
+		{
+			float* ptr = GetAssetMemberPointer<float>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
+			if(ptr)
+				return *ptr;
+			else
+				return 0;
+		}
+		
+	public:
+		CFloatAssetMemberLabel(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
+			CModAPI_ClientGui_Label(pAssetsEditor->m_pGuiConfig, "0.00"),
+			m_pAssetsEditor(pAssetsEditor),
+			m_AssetType(AssetType),
+			m_AssetPath(AssetPath),
+			m_Member(Member),
+			m_SubId(SubId)
+		{
+			
+		}
+		
+		virtual void Render()
+		{
+			str_format(m_aText, sizeof(m_aText), "%.02f", GetValue());
+			CModAPI_ClientGui_Label::Render();
+		}
+	};
+
 	class CAngleAssetMemberLabel : public CModAPI_ClientGui_Label
 	{
 	protected:
@@ -55,7 +92,7 @@ protected:
 		
 	public:
 		CAngleAssetMemberLabel(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
-			CModAPI_ClientGui_Label(pAssetsEditor->m_pGuiConfig, "0.0 deg"),
+			CModAPI_ClientGui_Label(pAssetsEditor->m_pGuiConfig, "0.00 deg"),
 			m_pAssetsEditor(pAssetsEditor),
 			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
