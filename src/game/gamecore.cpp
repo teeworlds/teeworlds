@@ -72,6 +72,7 @@ void CCharacterCore::Reset()
 	m_HookedPlayer = -1;
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
+	m_Teleported = false;
 }
 
 void CCharacterCore::Tick(bool UseInput)
@@ -93,6 +94,10 @@ void CCharacterCore::Tick(bool UseInput)
 	float MaxSpeed = Grounded ? m_pWorld->m_Tuning.m_GroundControlSpeed : m_pWorld->m_Tuning.m_AirControlSpeed;
 	float Accel = Grounded ? m_pWorld->m_Tuning.m_GroundControlAccel : m_pWorld->m_Tuning.m_AirControlAccel;
 	float Friction = Grounded ? m_pWorld->m_Tuning.m_GroundFriction : m_pWorld->m_Tuning.m_AirFriction;
+
+	m_Teleported = false;
+
+	int Jumped = m_Jumped;
 
 	// handle input
 	if(UseInput)
@@ -354,6 +359,20 @@ void CCharacterCore::Tick(bool UseInput)
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
 		m_Vel = normalize(m_Vel) * 6000;
+
+	int Tele = m_pCollision->CheckTeleport(m_Pos);
+	if(Tele)
+	{
+		// check double jump
+		if(Jumped & 3 && m_Jumped != Jumped)
+			m_Jumped = Jumped;
+
+		m_HookedPlayer = -1;
+		m_HookState = HOOK_RETRACTED;
+		m_Pos = m_pCollision->GetTeleportDestination(Tele);
+		m_HookPos = m_Pos;
+		m_Teleported = true;
+	}
 }
 
 void CCharacterCore::Move()

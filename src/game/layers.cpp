@@ -10,11 +10,15 @@ CLayers::CLayers()
 	m_LayersStart = 0;
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
+	m_pTeleLayer = 0;
 	m_pMap = 0;
 }
 
 void CLayers::Init(class IKernel *pKernel)
 {
+	// reset pointers to race specific layers
+	m_pTeleLayer = 0;
+	
 	m_pMap = pKernel->RequestInterface<IMap>();
 	m_pMap->GetType(MAPITEMTYPE_GROUP, &m_GroupsStart, &m_GroupsNum);
 	m_pMap->GetType(MAPITEMTYPE_LAYER, &m_LayersStart, &m_LayersNum);
@@ -50,6 +54,15 @@ void CLayers::Init(class IKernel *pKernel)
 					}
 
 					break;
+				}
+				else if(pTilemap->m_Flags&2)
+				{
+					if(pTilemap->m_Version < 3) // get the right values for tele layer
+					{
+						int *pTele = (int*)(pTilemap)+15;
+						pTilemap->m_Tele = *pTele;
+					}
+					m_pTeleLayer = pTilemap;
 				}
 			}
 		}

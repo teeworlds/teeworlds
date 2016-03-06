@@ -194,6 +194,8 @@ public:
 
 	int m_TriggeredEvents;
 
+	bool m_Teleported;
+
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);

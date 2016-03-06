@@ -8,9 +8,15 @@
 class CCollision
 {
 	class CTile *m_pTiles;
+	class CTeleTile *m_pTele;
+	class CSpeedupTile *m_pSpeedup;
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
+
+	vec2 *m_pTeleporter;
+
+	void InitTeleporter();
 
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
@@ -24,6 +30,7 @@ public:
 	};
 
 	CCollision();
+	virtual ~CCollision();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round_to_int(x), round_to_int(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
@@ -38,6 +45,8 @@ public:
 	// race
 	int GetIndex(vec2 PrevPos, vec2 Pos);
 	int GetCollisionRace(int Index);
+	int CheckTeleport(vec2 Pos);
+	vec2 GetTeleportDestination(int Number);
 };
 
 #endif

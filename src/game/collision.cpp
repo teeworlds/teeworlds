@@ -18,6 +18,13 @@ CCollision::CCollision()
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
+	m_pTeleporter = 0;
+}
+
+CCollision::~CCollision()
+{
+	if(m_pTeleporter)
+		delete[] m_pTeleporter;
 }
 
 void CCollision::Init(class CLayers *pLayers)
@@ -26,6 +33,10 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	if(m_pLayers->TeleLayer())
+		m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
+
+	InitTeleporter();
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -55,6 +66,36 @@ void CCollision::Init(class CLayers *pLayers)
 	}
 }
 
+void CCollision::InitTeleporter()
+{
+	int ArraySize = 0;
+	if(m_pLayers->TeleLayer())
+	{
+		for(int i = 0; i < m_pLayers->TeleLayer()->m_Width * m_pLayers->TeleLayer()->m_Height; i++)
+		{
+			// get the array size
+			if(m_pTele[i].m_Number > ArraySize)
+				ArraySize = m_pTele[i].m_Number;
+		}
+	}
+
+	if(!ArraySize)
+	{
+		m_pTeleporter = 0x0;
+		return;
+	}
+
+	m_pTeleporter = new vec2[ArraySize];
+	mem_zero(m_pTeleporter, ArraySize*sizeof(vec2));
+
+	// assign the values
+	for(int i = 0; i < m_pLayers->TeleLayer()->m_Width * m_pLayers->TeleLayer()->m_Height; i++)
+	{
+		if(m_pTele[i].m_Type == TILE_TELEOUT && m_pTele[i].m_Number > 0)
+			m_pTeleporter[m_pTele[i].m_Number - 1] = vec2(i % m_pLayers->TeleLayer()->m_Width * 32 + 16, i / m_pLayers->TeleLayer()->m_Width * 32 + 16);
+	}
+}
+
 int CCollision::GetTile(int x, int y)
 {
 	int Nx = clamp(x/32, 0, m_Width-1);
@@ -71,6 +112,22 @@ bool CCollision::IsTileSolid(int x, int y)
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
+int CCollision::CheckTeleport(vec2 Pos)
+{
+	int Nx = clamp(round_to_int(Pos.x) / 32, 0, m_Width - 1);
+	int Ny = clamp(round_to_int(Pos.y) / 32, 0, m_Height - 1);
+
+	if(!m_pTele || m_pTele[Ny*m_Width + Nx].m_Type != TILE_TELEIN)
+		return 0;
+	return m_pTele[Ny*m_Width + Nx].m_Number;
+}
+
+vec2 CCollision::GetTeleportDestination(int Number)
+{
+	if(m_pTeleporter && Number > 0)
+		return m_pTeleporter[Number - 1];
+	return vec2(0,0);
+}
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
