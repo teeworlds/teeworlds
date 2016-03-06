@@ -112,14 +112,64 @@ bool CCollision::IsTileSolid(int x, int y)
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
-int CCollision::CheckTeleport(vec2 Pos)
+// race
+int CCollision::GetTilePos(vec2 Pos)
 {
-	int Nx = clamp(round_to_int(Pos.x) / 32, 0, m_Width - 1);
-	int Ny = clamp(round_to_int(Pos.y) / 32, 0, m_Height - 1);
+	int Nx = clamp((int)Pos.x/32, 0, m_Width-1);
+	int Ny = clamp((int)Pos.y/32, 0, m_Height-1);
+	
+	return Ny*m_Width+Nx;
+}
 
-	if(!m_pTele || m_pTele[Ny*m_Width + Nx].m_Type != TILE_TELEIN)
+vec2 CCollision::GetPos(int TilePos)
+{
+	int x = TilePos%m_Width;
+	int y = TilePos/m_Width;
+	
+	return vec2(x*32+16, y*32+16);
+}
+
+int CCollision::GetIndex(vec2 Pos)
+{
+	return m_pTiles[GetTilePos(Pos)].m_Index;
+}
+
+int CCollision::GetIndex(int TilePos)
+{
+	if(TilePos < 0)
+		return -1;
+	return m_pTiles[TilePos].m_Index;
+}
+
+int CCollision::CheckRaceTile(vec2 PrevPos, vec2 Pos)
+{
+	float Distance = distance(PrevPos, Pos);
+	int End = Distance+1;
+
+	for(int i = 0; i < End; i++)
+	{
+		float a = i/Distance;
+		vec2 Tmp = mix(PrevPos, Pos, a);
+		int TilePos = GetTilePos(Tmp);
+		if((m_pTiles[TilePos].m_Index >= TILE_STOPL && m_pTiles[TilePos].m_Index <= 59) ||
+			(m_pTele && m_pTele[TilePos].m_Type == TILE_TELEIN) ||
+			(m_pSpeedup && m_pSpeedup[TilePos].m_Force > 0))
+		{
+			return TilePos;
+		}
+	}
+
+	return -1;
+}
+
+int CCollision::CheckTeleport(vec2 PrevPos, vec2 Pos)
+{
+	if(!m_pTele)
 		return 0;
-	return m_pTele[Ny*m_Width + Nx].m_Number;
+	int TilePos = CheckRaceTile(PrevPos, Pos);
+	if(TilePos < 0 || m_pTele[TilePos].m_Type != TILE_TELEIN)
+		return 0;
+	return m_pTele[TilePos].m_Number;
 }
 
 vec2 CCollision::GetTeleportDestination(int Number)
@@ -128,6 +178,7 @@ vec2 CCollision::GetTeleportDestination(int Number)
 		return m_pTeleporter[Number - 1];
 	return vec2(0,0);
 }
+
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
@@ -265,48 +316,4 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
-}
-
-// race
-int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
-{
-	float d = distance(PrevPos, Pos);
-	
-	if(!d)
-	{
-		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
-		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
-
-		if(m_pTiles[ny*m_Width+nx].m_Index >= TILE_STOPL && m_pTiles[ny*m_Width+nx].m_Index <= 59)
-		{
-			return ny*m_Width+nx;
-		}
-	}
-
-	float a = 0.0f;
-	vec2 Tmp = vec2(0, 0);
-	int nx = 0;
-	int ny = 0;
-
-	for(float f = 0; f < d; f++)
-	{
-		a = f/d;
-		Tmp = mix(PrevPos, Pos, a);
-		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
-		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
-		if(m_pTiles[ny*m_Width+nx].m_Index >= TILE_STOPL && m_pTiles[ny*m_Width+nx].m_Index <= 59)
-		{
-			return ny*m_Width+nx;
-		}
-	}
-
-	return -1;
-}
-
-int CCollision::GetCollisionRace(int Index)
-{
-	if(Index < 0)
-		return 0;
-	
-	return m_pTiles[Index].m_Index;
 }

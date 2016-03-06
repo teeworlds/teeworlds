@@ -53,7 +53,7 @@ void CGhost::OnRender()
 
 	// Check if the race line is crossed then start the render of the ghost if one
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
-	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
+	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
 		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
 	{
 		m_RaceState = RACE_STARTED;

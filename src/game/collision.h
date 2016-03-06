@@ -43,9 +43,12 @@ public:
 	bool TestBox(vec2 Pos, vec2 Size);
 	
 	// race
-	int GetIndex(vec2 PrevPos, vec2 Pos);
-	int GetCollisionRace(int Index);
-	int CheckTeleport(vec2 Pos);
+	int GetTilePos(vec2 Pos);
+	vec2 GetPos(int TilePos);
+	int GetIndex(vec2 Pos);
+	int GetIndex(int TilePos);
+	int CheckRaceTile(vec2 PrevPos, vec2 Pos);
+	int CheckTeleport(vec2 PrevPos, vec2 Pos);
 	vec2 GetTeleportDestination(int Number);
 };
 
