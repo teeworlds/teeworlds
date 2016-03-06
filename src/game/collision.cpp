@@ -18,6 +18,7 @@ CCollision::CCollision()
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
+	m_pTele = 0;
 	m_pTeleporter = 0;
 }
 
@@ -29,6 +30,9 @@ CCollision::~CCollision()
 
 void CCollision::Init(class CLayers *pLayers)
 {
+	// reset race specific pointers
+	m_pTele = 0;
+	
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
@@ -68,6 +72,9 @@ void CCollision::Init(class CLayers *pLayers)
 
 void CCollision::InitTeleporter()
 {
+	if(m_pTeleporter)
+		delete[] m_pTeleporter;
+	
 	int ArraySize = 0;
 	if(m_pLayers->TeleLayer())
 	{
