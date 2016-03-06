@@ -53,7 +53,7 @@ void CLayers::Init(class IKernel *pKernel)
 						m_pGameGroup->m_ClipH = 0;
 					}
 
-					break;
+					//break;
 				}
 				else if(pTilemap->m_Flags&2)
 				{
