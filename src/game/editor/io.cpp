@@ -349,12 +349,16 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				if(pLayer->m_Tele)
-					Item.m_Flags = 2;
+				
+				if(pLayer->m_Game)
+					Item.m_Flags = TILESLAYERFLAG_GAME;
+				else if(pLayer->m_Tele)
+					Item.m_Flags = TILESLAYERFLAG_TELE;
 				else if(pLayer->m_Speedup)
-					Item.m_Flags = 4;
+					Item.m_Flags = TILESLAYERFLAG_SPEEDUP;
 				else
-					Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+					Item.m_Flags = 0;
+				
 				Item.m_Image = pLayer->m_Image;
 				if(pLayer->m_Tele)
 				{
@@ -640,24 +644,18 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
 						}
-						else if(pTilemapItem->m_Flags&2)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_TELE)
 						{
 							if(pTilemapItem->m_Version < 3) // get the right values for tele layer
-							{
-								int *pTele = (int*)(pTilemapItem)+15;
-								pTilemapItem->m_Tele = *pTele;
-							}
+								pTilemapItem->m_Tele = *((int*)(pTilemapItem) + 15);
 
 							pTiles = new CLayerTele(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeTeleLayer(pTiles);
 						}
-						else if(pTilemapItem->m_Flags&4)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_SPEEDUP)
 						{
 							if(pTilemapItem->m_Version < 3) // get the right values for speedup layer
-							{
-								int *pSpeedup = (int*)(pTilemapItem)+16;
-								pTilemapItem->m_Speedup = *pSpeedup;
-							}
+								pTilemapItem->m_Speedup = *((int*)(pTilemapItem)+16);
 
 							pTiles = new CLayerSpeedup(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeSpeedupLayer(pTiles);
