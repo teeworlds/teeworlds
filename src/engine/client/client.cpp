@@ -45,6 +45,7 @@
 #include <modapi/compatibility.h>
 #include <modapi/client/assetseditor/assetseditor.h>
 #include <modapi/client/clientmode.h>
+#include <modapi/client/assetsmanager.h>
 
 #include "friends.h"
 #include "serverbrowser.h"
@@ -578,9 +579,9 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_pMap->Unload();
 	
 	//ModAPI unload mod graphics
-	if(ModAPIGraphics())
+	if(AssetManager())
 	{
-		ModAPIGraphics()->OnAssetsFileUnloaded();
+		AssetManager()->OnAssetsFileUnloaded();
 	}
 
 	// disable all downloads
@@ -1934,7 +1935,8 @@ void CClient::Run()
 			return;
 		}
 		
-		m_pModAPIGraphics = new CModAPI_Client_Graphics(Graphics());
+		m_pAssetManager = new CModAPI_AssetManager(Graphics(), Storage());
+		m_pModAPIGraphics = new CModAPI_Client_Graphics(Graphics(), AssetManager());
 	}
 
 	// init sound, allowed to fail
@@ -1986,8 +1988,8 @@ void CClient::Run()
 
 	GameClient()->OnInit();
 	
-	m_pModAPIGraphics->Init();
-	m_pAssetsEditor->Init(m_pModAPIGraphics);
+	m_pAssetManager->Init(Storage());
+	m_pAssetsEditor->Init(m_pAssetManager, m_pModAPIGraphics);
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -2686,9 +2688,9 @@ void CClient::LoadAssetsFile(const char* pFileName)
 	{
 		DemoRecorder_Stop();
 		
-		if(ModAPIGraphics())
+		if(AssetManager())
 		{
-			ModAPIGraphics()->OnAssetsFileLoaded(m_pAssetsFile);
+			AssetManager()->OnAssetsFileLoaded(m_pAssetsFile);
 		}
 	}
 }
@@ -2725,9 +2727,9 @@ const char *CClient::LoadMod(const char *pName, const char *pFilename, unsigned 
 	str_copy(m_aCurrentMod, pName, sizeof(m_aCurrentMod));
 	m_CurrentModCrc = m_pAssetsFile->Crc();
 
-	if(ModAPIGraphics())
+	if(AssetManager())
 	{
-		ModAPIGraphics()->OnAssetsFileLoaded(m_pAssetsFile);
+		AssetManager()->OnAssetsFileLoaded(m_pAssetsFile);
 	}
 
 	return 0x0;

@@ -23,6 +23,14 @@ enum
 class CModAPI_ClientGui_HListLayout : public CModAPI_ClientGui_Widget
 {
 protected:
+	class CSeparator : public CModAPI_ClientGui_Widget
+	{
+	public:
+		CSeparator(CModAPI_ClientGui_Config* pConfig);
+		virtual void Render();
+	};
+	
+protected:
 	int m_Style;
 	int m_Model;
 	
@@ -40,13 +48,13 @@ public:
 	
 	virtual void Clear();
 	virtual void Add(CModAPI_ClientGui_Widget* pWidget);
+	virtual void AddSeparator();
 	
 	virtual void Update();
 	virtual void Render();
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseMotion(int RelX, int RelY, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
 	virtual void OnInputEvent();
 };
 
@@ -76,12 +84,13 @@ protected:
 	CModAPI_ClientGui_VSlider* m_pSlider;
 	array<CModAPI_ClientGui_Widget*> m_Childs;
 	int m_ChildrenHeight;
+	int m_Style;
 	
 	bool m_ShowScrollBar;
 	int m_ScrollValue;
 	
 public:
-	CModAPI_ClientGui_VListLayout(class CModAPI_ClientGui_Config *pConfig);
+	CModAPI_ClientGui_VListLayout(class CModAPI_ClientGui_Config *pConfig, int Style = MODAPI_CLIENTGUI_LAYOUTSTYLE_FRAME);
 	virtual ~CModAPI_ClientGui_VListLayout();
 	
 	virtual void Clear();
@@ -90,13 +99,14 @@ public:
 	
 	virtual void Update();
 	virtual void Render();
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseMotion(int RelX, int RelY, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
 	virtual void OnInputEvent();
 	
-	virtual void SetScroll(float Pos);
+	virtual void OnNewScrollPos(float Pos);
+	virtual void SetScrollPos(float Pos);
+	virtual float GetScrollPos();
 };
 
 #endif

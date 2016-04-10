@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#include <engine/keys.h>
+
 enum
 {
 	MODAPI_INPUT_CTRL=0x1,
@@ -56,10 +58,9 @@ public:
 	virtual void Update();
 	virtual void Render() = 0;
 	
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseMotion(int X, int Y, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
 	virtual void OnInputEvent();
 	
 	void SetRect(const CModAPI_ClientGui_Rect& Rect);

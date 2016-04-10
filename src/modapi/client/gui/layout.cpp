@@ -6,6 +6,25 @@
 
 /* H LAYOUT *************************************************************/
 		
+CModAPI_ClientGui_HListLayout::CSeparator::CSeparator(CModAPI_ClientGui_Config* pConfig) :
+	CModAPI_ClientGui_Widget(pConfig)
+{
+	SetWidth(10);
+}
+
+void CModAPI_ClientGui_HListLayout::CSeparator::Render()
+{
+	Graphics()->TextureClear();
+	Graphics()->LinesBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 0.5f, 1.0f);
+	
+	float x = m_Rect.x + m_Rect.w/2;
+	IGraphics::CLineItem Line(x, m_Rect.y, x, m_Rect.y + m_Rect.h);
+	Graphics()->LinesDraw(&Line, 1);
+	
+	Graphics()->LinesEnd();
+}
+
 CModAPI_ClientGui_HListLayout::CModAPI_ClientGui_HListLayout(CModAPI_ClientGui_Config *pConfig, int Style, int Model) :
 	CModAPI_ClientGui_Widget(pConfig),
 	m_Style(Style),
@@ -213,35 +232,32 @@ void CModAPI_ClientGui_HListLayout::Add(CModAPI_ClientGui_Widget* pWidget)
 	m_Childs.add(pWidget);
 }
 
-void CModAPI_ClientGui_HListLayout::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_HListLayout::AddSeparator()
+{
+	Add(new CModAPI_ClientGui_HListLayout::CSeparator(m_pConfig));
+}
+
+void CModAPI_ClientGui_HListLayout::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseOver(X, Y, KeyState);
+		m_Childs[i]->OnMouseOver(X, Y, RelX, RelY, KeyState);
 	}
 }
 
-void CModAPI_ClientGui_HListLayout::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_HListLayout::OnButtonClick(int X, int Y, int Button)
 {
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseButtonClick(X, Y);
+		m_Childs[i]->OnButtonClick(X, Y, Button);
 	}
 }
 
-void CModAPI_ClientGui_HListLayout::OnMouseMotion(int RelX, int RelY, int KeyState)
+void CModAPI_ClientGui_HListLayout::OnButtonRelease(int Button)
 {
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseMotion(RelX, RelY, KeyState);
-	}
-}
-
-void CModAPI_ClientGui_HListLayout::OnMouseButtonRelease()
-{
-	for(int i=0; i<m_Childs.size(); i++)
-	{
-		m_Childs[i]->OnMouseButtonRelease();
+		m_Childs[i]->OnButtonRelease(Button);
 	}
 }
 
@@ -283,11 +299,12 @@ CModAPI_ClientGui_VListLayout::CSlider::CSlider(CModAPI_ClientGui_VListLayout* p
 
 void CModAPI_ClientGui_VListLayout::CSlider::OnNewPosition(float Pos)
 {
-	m_pLayout->SetScroll(Pos);
+	m_pLayout->OnNewScrollPos(Pos);
 }
 
-CModAPI_ClientGui_VListLayout::CModAPI_ClientGui_VListLayout(CModAPI_ClientGui_Config *pConfig) :
-	CModAPI_ClientGui_Widget(pConfig)
+CModAPI_ClientGui_VListLayout::CModAPI_ClientGui_VListLayout(CModAPI_ClientGui_Config *pConfig, int Style) :
+	CModAPI_ClientGui_Widget(pConfig),
+	m_Style(Style)
 {
 	m_pSlider = new CModAPI_ClientGui_VListLayout::CSlider(this);
 	m_ShowScrollBar = false;
@@ -370,12 +387,15 @@ void CModAPI_ClientGui_VListLayout::Update()
 void CModAPI_ClientGui_VListLayout::Render()
 {
 	//Background
-	CUIRect rect;
-	rect.x = m_Rect.x;
-	rect.y = m_Rect.y;
-	rect.w = m_Rect.w;
-	rect.h = m_Rect.h;
-	RenderTools()->DrawRoundRect(&rect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), s_LayoutCornerRadius);
+	if(m_Style == MODAPI_CLIENTGUI_LAYOUTSTYLE_FRAME)
+	{
+		CUIRect rect;
+		rect.x = m_Rect.x;
+		rect.y = m_Rect.y;
+		rect.w = m_Rect.w;
+		rect.h = m_Rect.h;
+		RenderTools()->DrawRoundRect(&rect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), s_LayoutCornerRadius);
+	}
 	
 	//Childs
 	Graphics()->ClipEnable(m_Rect.x, m_Rect.y, m_Rect.w, m_Rect.h);
@@ -402,57 +422,42 @@ void CModAPI_ClientGui_VListLayout::AddSeparator()
 	Add(new CModAPI_ClientGui_VListLayout::CSeparator(m_pConfig));
 }
 
-void CModAPI_ClientGui_VListLayout::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_VListLayout::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	if(m_ShowScrollBar)
 	{
-		m_pSlider->OnMouseOver(X, Y, KeyState);
+		m_pSlider->OnMouseOver(X, Y, RelX, RelY, KeyState);
 	}
 	
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseOver(X, Y, KeyState);
+		m_Childs[i]->OnMouseOver(X, Y, RelX, RelY, KeyState);
 	}
 }
 
-void CModAPI_ClientGui_VListLayout::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_VListLayout::OnButtonClick(int X, int Y, int Button)
 {
 	if(m_ShowScrollBar)
 	{
-		m_pSlider->OnMouseButtonClick(X, Y);
+		m_pSlider->OnButtonClick(X, Y, Button);
 	}
 	
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseButtonClick(X, Y);
+		m_Childs[i]->OnButtonClick(X, Y, Button);
 	}
 }
 
-void CModAPI_ClientGui_VListLayout::OnMouseMotion(int RelX, int RelY, int KeyState)
+void CModAPI_ClientGui_VListLayout::OnButtonRelease(int Button)
 {
 	if(m_ShowScrollBar)
 	{
-		m_pSlider->OnMouseMotion(RelX, RelY, KeyState);
-	}
-	else
-	{
-		for(int i=0; i<m_Childs.size(); i++)
-		{
-			m_Childs[i]->OnMouseMotion(RelX, RelY, KeyState);
-		}
-	}
-}
-
-void CModAPI_ClientGui_VListLayout::OnMouseButtonRelease()
-{
-	if(m_ShowScrollBar)
-	{
-		m_pSlider->OnMouseButtonRelease();
+		m_pSlider->OnButtonRelease(Button);
 	}
 	
 	for(int i=0; i<m_Childs.size(); i++)
 	{
-		m_Childs[i]->OnMouseButtonRelease();
+		m_Childs[i]->OnButtonRelease(Button);
 	}
 }
 
@@ -469,7 +474,7 @@ void CModAPI_ClientGui_VListLayout::OnInputEvent()
 	}
 }
 
-void CModAPI_ClientGui_VListLayout::SetScroll(float Pos)
+void CModAPI_ClientGui_VListLayout::OnNewScrollPos(float Pos)
 {
 	int ScrollHeight = m_ChildrenHeight - m_Rect.h;
 	int LastScrollValue = m_ScrollValue;
@@ -481,4 +486,14 @@ void CModAPI_ClientGui_VListLayout::SetScroll(float Pos)
 		m_Childs[i]->SetY(m_Childs[i]->m_Rect.y + ScrollDelta);
 		m_Childs[i]->Update();
 	}
+}
+
+void CModAPI_ClientGui_VListLayout::SetScrollPos(float Pos)
+{
+	m_pSlider->SetSliderPos(Pos);
+}
+
+float CModAPI_ClientGui_VListLayout::GetScrollPos()
+{
+	return m_pSlider->GetSliderPos();
 }

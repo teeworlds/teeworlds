@@ -4,17 +4,39 @@
 
 #include "popup.h"
 
-CModAPI_ClientGui_Popup::CModAPI_ClientGui_Popup(CModAPI_ClientGui_Config *pConfig) :
+CModAPI_ClientGui_Popup::CModAPI_ClientGui_Popup(CModAPI_ClientGui_Config *pConfig, const CModAPI_ClientGui_Rect& CreatorRect, int Width, int Height, int Alignment) :
 	CModAPI_ClientGui_Widget(pConfig),
-	m_Child(0)
+	m_Child(0),
+	m_IsClosed(false)
 {
-	m_Toolbar = new CModAPI_ClientGui_HListLayout(pConfig);
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	
+	switch(Alignment)
+	{
+		case ALIGNMENT_LEFT:
+			SetRect(CModAPI_ClientGui_Rect(
+				CreatorRect.x - Width - m_pConfig->m_LayoutSpacing,
+				min(CreatorRect.y, ScreenHeight - Height - m_pConfig->m_LayoutSpacing),
+				Width,
+				Height
+			));
+			break;
+		case ALIGNMENT_RIGHT:
+		default:
+			SetRect(CModAPI_ClientGui_Rect(
+				CreatorRect.x + CreatorRect.w + m_pConfig->m_LayoutSpacing,
+				min(CreatorRect.y, ScreenHeight - Height - m_pConfig->m_LayoutSpacing),
+				Width,
+				Height
+			));
+	}
 }
 
 CModAPI_ClientGui_Popup::~CModAPI_ClientGui_Popup()
 {
-	if(m_Child) delete m_Child;
-	delete m_Toolbar;
+	if(m_Child)
+		delete m_Child;
 }
 
 void CModAPI_ClientGui_Popup::Clear()
@@ -32,17 +54,13 @@ void CModAPI_ClientGui_Popup::Update()
 {
 	if(m_Child)
 	{
-		m_Child->m_Rect.CenterIn(m_Rect);
+		m_Child->SetRect(CModAPI_ClientGui_Rect(
+			m_Rect.x + m_pConfig->m_LayoutMargin,
+			m_Rect.y + m_pConfig->m_LayoutMargin,
+			m_Rect.w - m_pConfig->m_LayoutMargin*2,
+			m_Rect.h - m_pConfig->m_LayoutMargin*2)
+		);
 		m_Child->Update();
-	
-		m_Toolbar->SetRect(CModAPI_ClientGui_Rect(
-			m_Child->m_Rect.x,
-			m_Child->m_Rect.y + m_Child->m_Rect.h + 4,
-			m_Child->m_Rect.w,
-			m_pConfig->m_ButtonHeight + m_pConfig->m_LayoutMargin*2
-			));
-			
-		m_Toolbar->Update();
 	}
 }
 	
@@ -52,15 +70,16 @@ void CModAPI_ClientGui_Popup::Render()
 		return;
 		
 	//Background	
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.9f);
-	IGraphics::CQuadItem QuadItem(m_Rect.x, m_Rect.y, m_Rect.w, m_Rect.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+	{
+		CUIRect rect;
+		rect.x = m_Rect.x;
+		rect.y = m_Rect.y;
+		rect.w = m_Rect.w;
+		rect.h = m_Rect.h;
+		RenderTools()->DrawRoundRect(&rect, vec4(0.5f, 0.5f, 0.5f, 0.8f), s_LayoutCornerRadius);
+	}
 	
 	m_Child->Render();
-	m_Toolbar->Render();
 }
 
 void CModAPI_ClientGui_Popup::Add(CModAPI_ClientGui_Widget* pWidget)
@@ -69,39 +88,34 @@ void CModAPI_ClientGui_Popup::Add(CModAPI_ClientGui_Widget* pWidget)
 	m_Child = pWidget;
 }
 
-void CModAPI_ClientGui_Popup::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_Popup::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	if(m_Child)
 	{
-		m_Child->OnMouseOver(X, Y, KeyState);
-		m_Toolbar->OnMouseOver(X, Y, KeyState);
+		m_Child->OnMouseOver(X, Y, RelX, RelY, KeyState);
 	}
 }
 
-void CModAPI_ClientGui_Popup::OnMouseMotion(int RelX, int RelY, int KeyState)
+void CModAPI_ClientGui_Popup::OnButtonClick(int X, int Y, int Button)
 {
-	if(m_Child)
+	if(m_Rect.IsInside(X, Y))
 	{
-		m_Child->OnMouseMotion(RelX, RelY, KeyState);
-		m_Toolbar->OnMouseMotion(RelX, RelY, KeyState);
+		if(m_Child)
+		{
+			m_Child->OnButtonClick(X, Y, Button);
+		}
+	}
+	else if(Button == KEY_MOUSE_1)
+	{
+		Close();
 	}
 }
 
-void CModAPI_ClientGui_Popup::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_Popup::OnButtonRelease(int Button)
 {
 	if(m_Child)
 	{
-		m_Child->OnMouseButtonClick(X, Y);
-		m_Toolbar->OnMouseButtonClick(X, Y);
-	}
-}
-
-void CModAPI_ClientGui_Popup::OnMouseButtonRelease()
-{
-	if(m_Child)
-	{
-		m_Child->OnMouseButtonRelease();
-		m_Toolbar->OnMouseButtonRelease();
+		m_Child->OnButtonRelease(Button);
 	}
 }
 
@@ -110,6 +124,15 @@ void CModAPI_ClientGui_Popup::OnInputEvent()
 	if(m_Child)
 	{
 		m_Child->OnInputEvent();
-		m_Toolbar->OnInputEvent();
 	}
+}
+
+void CModAPI_ClientGui_Popup::Close()
+{
+	m_IsClosed = true;
+}
+
+bool CModAPI_ClientGui_Popup::IsClosed()
+{
+	return m_IsClosed;
 }

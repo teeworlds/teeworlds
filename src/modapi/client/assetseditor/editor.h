@@ -6,110 +6,118 @@
 #include <game/client/render.h>
 #include <modapi/client/gui/button.h>
 #include <modapi/client/gui/layout.h>
+#include <modapi/client/gui/integer-edit.h>
+#include <modapi/client/gui/float-edit.h>
 
+#include "popup.h"
 #include "assetseditor.h"
 
-class CModAPI_AssetsEditorGui_Editor : public CModAPI_ClientGui_VListLayout
-{
-protected:
+class CModAPI_AssetsEditorGui_Editor : public CModAPI_ClientGui_Tabs
+{	
+public:
 	class CAssetNameEdit : public CModAPI_ClientGui_AbstractTextEdit
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		
 		virtual char* GetTextPtr()
 		{
-			return GetAssetMemberPointer<char>(m_pAssetsEditor, m_AssetType, m_AssetPath, MODAPI_ASSETSEDITOR_MEMBER_NAME, -1);
+			return m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
 		}
 		
 	public:
-		CAssetNameEdit(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath) :
-			CModAPI_ClientGui_AbstractTextEdit(pAssetsEditor->m_pGuiConfig, sizeof(CModAPI_Asset::m_aName), MODAPI_CLIENTGUI_TEXTSTYLE_HEADER),
+		CAssetNameEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath) :
+			CModAPI_ClientGui_AbstractTextEdit(pAssetsEditor->m_pGuiConfig, sizeof(CModAPI_Asset::m_aName), MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath)
 		{
 			
 		}
 	};
-
-	class CFloatAssetMemberLabel : public CModAPI_ClientGui_Label
+			
+	class CTextAssetMemberEdit : public CModAPI_ClientGui_AbstractTextEdit
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_Member;
 		int m_SubId;
 		
-		virtual float GetValue()
+		virtual char* GetTextPtr()
 		{
-			float* ptr = GetAssetMemberPointer<float>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				return *ptr;
-			else
-				return 0;
+			return m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, m_Member, m_SubId, 0);
 		}
 		
 	public:
-		CFloatAssetMemberLabel(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
-			CModAPI_ClientGui_Label(pAssetsEditor->m_pGuiConfig, "0.00"),
+		CTextAssetMemberEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Member, int SubId, int TextSize) :
+			CModAPI_ClientGui_AbstractTextEdit(pAssetsEditor->m_pGuiConfig, TextSize, MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_Member(Member),
 			m_SubId(SubId)
 		{
 			
-		}
-		
-		virtual void Render()
-		{
-			str_format(m_aText, sizeof(m_aText), "%.02f", GetValue());
-			CModAPI_ClientGui_Label::Render();
 		}
 	};
-
-	class CAngleAssetMemberLabel : public CModAPI_ClientGui_Label
+			
+	class CFloatAssetMemberEdit : public CModAPI_ClientGui_AbstractFloatEdit
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_Member;
 		int m_SubId;
 		
+		virtual void SetValue(float v)
+		{
+			m_pAssetsEditor->AssetManager()->SetAssetValue<float>(m_AssetPath, m_Member, m_SubId, v);
+		}
+		
 		virtual float GetValue()
 		{
-			float* ptr = GetAssetMemberPointer<float>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				return *ptr;
-			else
-				return 0;
+			return m_pAssetsEditor->AssetManager()->GetAssetValue<float>(m_AssetPath, m_Member, m_SubId, -2);
 		}
 		
 	public:
-		CAngleAssetMemberLabel(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
-			CModAPI_ClientGui_Label(pAssetsEditor->m_pGuiConfig, "0.00 deg"),
+		CFloatAssetMemberEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
+			CModAPI_ClientGui_AbstractFloatEdit(pAssetsEditor->m_pGuiConfig),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_Member(Member),
 			m_SubId(SubId)
 		{
 			
 		}
-		
-		virtual void Render()
-		{
-			float value = 180.0f * GetValue() / pi;
-			if(value < 0.0f) value += 360.0f;
-			if(value > 360.0f) value -= 360.0f;
+	};
 			
-			str_format(m_aText, sizeof(m_aText), "%.02f deg", value);
-			CModAPI_ClientGui_Label::Render();
+	class CAnglerEdit : public CModAPI_ClientGui_AbstractFloatEdit
+	{
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_AssetPath;
+		int m_Member;
+		int m_SubId;
+		
+		virtual void SetValue(float v)
+		{
+			m_pAssetsEditor->AssetManager()->SetAssetValue<float>(m_AssetPath, m_Member, m_SubId, pi*v/180.0f);
+		}
+		
+		virtual float GetValue()
+		{
+			return 180.0f*m_pAssetsEditor->AssetManager()->GetAssetValue<float>(m_AssetPath, m_Member, m_SubId, -2)/pi;
+		}
+		
+	public:
+		CAnglerEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
+			CModAPI_ClientGui_AbstractFloatEdit(pAssetsEditor->m_pGuiConfig),
+			m_pAssetsEditor(pAssetsEditor),
+			m_AssetPath(AssetPath),
+			m_Member(Member),
+			m_SubId(SubId)
+		{
+			
 		}
 	};
 
@@ -117,32 +125,24 @@ protected:
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_Member;
 		int m_SubId;
 		
 		virtual void SetValue(int v)
 		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				*ptr = v;
+			m_pAssetsEditor->AssetManager()->SetAssetValue<int>(m_AssetPath, m_Member, m_SubId, v);
 		}
 		
 		virtual int GetValue()
 		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				return *ptr;
-			else
-				return 0;
+			return m_pAssetsEditor->AssetManager()->GetAssetValue<int>(m_AssetPath, m_Member, m_SubId, -2);
 		}
 		
 	public:
-		CIntegerAssetMemberEdit(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
+		CIntegerAssetMemberEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
 			CModAPI_ClientGui_AbstractIntegerEdit(pAssetsEditor->m_pGuiConfig),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_Member(Member),
 			m_SubId(SubId)
@@ -153,9 +153,11 @@ protected:
 
 	class CAssetEdit : public CModAPI_ClientGui_ExternalTextButton
 	{
+	public:
+		static const char* m_aNoneText;
+		
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_ParentAssetType;
 		CModAPI_AssetPath m_ParentAssetPath;
 		int m_ParentAssetMember;
 		int m_ParentAssetSubId;
@@ -165,167 +167,427 @@ protected:
 	protected:
 		virtual void MouseClickAction()
 		{
-			m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_AssetEditList(m_pAssetsEditor, m_ParentAssetType, m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, m_FieldAssetType));
+			m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_AssetEdit(
+				m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+				m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, m_FieldAssetType
+			));
 		}
 		
 	public:
 		CAssetEdit(
 			CModAPI_AssetsEditor* pAssetsEditor,
-			int ParentAssetType,
 			CModAPI_AssetPath ParentAssetPath,
 			int ParentAssetMember,
 			int ParentAssetSubId,
 			int FieldAssetType
 		) :
 			CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, 0),
-			m_ParentAssetType(ParentAssetType),
 			m_ParentAssetPath(ParentAssetPath),
 			m_ParentAssetMember(ParentAssetMember),
 			m_ParentAssetSubId(ParentAssetSubId),
 			m_FieldAssetType(FieldAssetType),
 			m_pAssetsEditor(pAssetsEditor)
 		{
-			CModAPI_AssetPath* ptr = GetAssetMemberPointer<CModAPI_AssetPath>(m_pAssetsEditor, m_ParentAssetType, m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId);
-			if(ptr)
-			{
-				m_pText = GetAssetMemberPointer<char>(m_pAssetsEditor, m_FieldAssetType, *ptr, MODAPI_ASSETSEDITOR_MEMBER_NAME, -1);
-			}
+			m_Centered = false;
+			
+			Update();
 		}
 		
 		virtual void Update()
 		{
-			CModAPI_AssetPath* ptr = GetAssetMemberPointer<CModAPI_AssetPath>(m_pAssetsEditor, m_ParentAssetType, m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId);
-			if(ptr)
+			CModAPI_AssetPath Path = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_AssetPath>(m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, CModAPI_AssetPath::Null());
+			if(Path.IsNull())
 			{
-				m_pText = GetAssetMemberPointer<char>(m_pAssetsEditor, m_FieldAssetType, *ptr, MODAPI_ASSETSEDITOR_MEMBER_NAME, -1);
+				m_pText = m_aNoneText;
+			}
+			else
+			{
+				m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(Path, CModAPI_Asset::NAME, -1, 0);
+			}
+			
+			int IconId = -1;
+			switch(Path.GetType())
+			{
+				case CModAPI_AssetPath::TYPE_IMAGE:
+					IconId = MODAPI_ASSETSEDITOR_ICON_IMAGE;
+					break;
+				case CModAPI_AssetPath::TYPE_SPRITE:
+					IconId = MODAPI_ASSETSEDITOR_ICON_SPRITE;
+					break;
+				case CModAPI_AssetPath::TYPE_SKELETON:
+					IconId = MODAPI_ASSETSEDITOR_ICON_SKELETON;
+					break;
+				case CModAPI_AssetPath::TYPE_SKELETONSKIN:
+					IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONSKIN;
+					break;
+				case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
+					IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION;
+					break;
+			}
+			SetIcon(IconId);
+			
+			CModAPI_ClientGui_ExternalTextButton::Update();
+		}
+	};
+
+	class CBoneEdit : public CModAPI_ClientGui_ExternalTextButton
+	{
+	public:
+		static const char* m_aNoneText;
+		
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_ParentAssetPath;
+		int m_ParentAssetMember;
+		int m_ParentAssetSubId;
+		CModAPI_AssetPath m_SkeletonPath;
+		
+	protected:
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_BoneEdit(
+				m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+				m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, m_SkeletonPath
+			));
+		}
+		
+	public:
+		CBoneEdit(
+			CModAPI_AssetsEditor* pAssetsEditor,
+			CModAPI_AssetPath ParentAssetPath,
+			int ParentAssetMember,
+			int ParentAssetSubId,
+			CModAPI_AssetPath SkeletonPath
+		) :
+			CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, 0),
+			m_ParentAssetPath(ParentAssetPath),
+			m_ParentAssetMember(ParentAssetMember),
+			m_ParentAssetSubId(ParentAssetSubId),
+			m_SkeletonPath(SkeletonPath),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			m_Centered = false;
+			
+			Update();
+		}
+		
+		virtual void Update()
+		{
+			CModAPI_Asset_Skeleton::CBonePath BonePath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_Asset_Skeleton::CBonePath>(m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, CModAPI_Asset_Skeleton::CBonePath::Null());
+			if(BonePath.IsNull())
+			{
+				m_pText = m_aNoneText;
+			}
+			else if(BonePath.GetSource() == CModAPI_Asset_Skeleton::CBonePath::SRC_PARENT)
+			{
+				CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(m_SkeletonPath);
+				if(pSkeleton)
+				{
+					m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+						pSkeleton->m_ParentPath,
+						CModAPI_Asset_Skeleton::BONE_NAME,
+						CModAPI_Asset_Skeleton::CSubPath::Bone(BonePath.GetId()).ConvertToInteger(),
+						0);
+					SetIcon(MODAPI_ASSETSEDITOR_ICON_BONE);
+				}
+			}
+			else
+			{
+				m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+					m_SkeletonPath,
+					CModAPI_Asset_Skeleton::BONE_NAME,
+					CModAPI_Asset_Skeleton::CSubPath::Bone(BonePath.GetId()).ConvertToInteger(),
+					0);
+				SetIcon(MODAPI_ASSETSEDITOR_ICON_BONE);
 			}
 			
 			CModAPI_ClientGui_ExternalTextButton::Update();
 		}
 	};
 
-	class CTeeAlignEdit : public CModAPI_ClientGui_TextButton
+	class CLayerEdit : public CModAPI_ClientGui_ExternalTextButton
 	{
+	public:
+		static const char* m_aNoneText;
+		
 	protected:
-		int m_AssetType;
-		CModAPI_AssetPath m_AssetPath;
-		int m_Member;
-		int m_SubId;
 		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_ParentAssetPath;
+		int m_ParentAssetMember;
+		int m_ParentAssetSubId;
+		CModAPI_AssetPath m_SkeletonPath;
 		
 	protected:
 		virtual void MouseClickAction()
 		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				*ptr = (*ptr + 1)%MODAPI_NUM_TEEALIGN;
+			m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_LayerEdit(
+				m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+				m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, m_SkeletonPath
+			));
+		}
+		
+	public:
+		CLayerEdit(
+			CModAPI_AssetsEditor* pAssetsEditor,
+			CModAPI_AssetPath ParentAssetPath,
+			int ParentAssetMember,
+			int ParentAssetSubId,
+			CModAPI_AssetPath SkeletonPath
+		) :
+			CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, 0),
+			m_ParentAssetPath(ParentAssetPath),
+			m_ParentAssetMember(ParentAssetMember),
+			m_ParentAssetSubId(ParentAssetSubId),
+			m_SkeletonPath(SkeletonPath),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			m_Centered = false;
 			
-			UpdateButtonLabel(*ptr);
+			Update();
+		}
+		
+		virtual void Update()
+		{
+			CModAPI_Asset_Skeleton::CBonePath LayerPath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_Asset_Skeleton::CBonePath>(m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, CModAPI_Asset_Skeleton::CBonePath::Null());
+			if(LayerPath.IsNull())
+			{
+				m_pText = m_aNoneText;
+			}
+			else if(LayerPath.GetSource() == CModAPI_Asset_Skeleton::CBonePath::SRC_PARENT)
+			{
+				CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(m_SkeletonPath);
+				if(pSkeleton)
+				{
+					m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+						pSkeleton->m_ParentPath,
+						CModAPI_Asset_Skeleton::LAYER_NAME,
+						CModAPI_Asset_Skeleton::CSubPath::Layer(LayerPath.GetId()).ConvertToInteger(),
+						0);
+					SetIcon(MODAPI_ASSETSEDITOR_ICON_LAYERS);
+				}
+			}
+			else
+			{
+				m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+					m_SkeletonPath,
+					CModAPI_Asset_Skeleton::LAYER_NAME,
+					CModAPI_Asset_Skeleton::CSubPath::Layer(LayerPath.GetId()).ConvertToInteger(),
+					0);
+				SetIcon(MODAPI_ASSETSEDITOR_ICON_LAYERS);
+			}
+			
+			CModAPI_ClientGui_ExternalTextButton::Update();
+		}
+	};
+
+	class CColorEdit : public CModAPI_ClientGui_Widget
+	{		
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_AssetPath;
+		int m_AssetMember;
+		int m_AssetSubId;
+		
+		bool m_Clicked;
+		bool m_UnderMouse;
+		
+	public:
+		CColorEdit(
+			CModAPI_AssetsEditor* pAssetsEditor,
+			CModAPI_AssetPath AssetPath,
+			int AssetMember,
+			int AssetSubId
+		) :
+			CModAPI_ClientGui_Widget(pAssetsEditor->m_pGuiConfig),
+			m_pAssetsEditor(pAssetsEditor),
+			m_AssetPath(AssetPath),
+			m_AssetMember(AssetMember),
+			m_AssetSubId(AssetSubId),
+			m_Clicked(false),
+			m_UnderMouse(false)
+		{
+			m_Rect.w = m_pConfig->m_ButtonHeight;
+			m_Rect.h = m_pConfig->m_ButtonHeight;
+		}
+		
+		virtual void Render()
+		{
+			{
+				CUIRect rect;
+				rect.x = m_Rect.x;
+				rect.y = m_Rect.y;
+				rect.w = m_Rect.w;
+				rect.h = m_Rect.h;
+				
+				RenderTools()->DrawRoundRect(&rect, m_pConfig->m_ButtonColor[MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL], s_ButtonCornerRadius);
+			}
+			{
+				vec4 Color = m_pAssetsEditor->AssetManager()->GetAssetValue<vec4>(
+					m_AssetPath,
+					m_AssetMember,
+					m_AssetSubId,
+					vec4(1.0f, 1.0f, 1.0f, 1.0f));
+					
+				CUIRect rect;
+				rect.x = m_Rect.x+1;
+				rect.y = m_Rect.y+1;
+				rect.w = (m_Rect.w-2)/2;
+				rect.h = m_Rect.h-2;
+				
+				vec4 SquareColor = Color;
+				SquareColor.a = 1.0f;
+				RenderTools()->DrawRoundRect(&rect, SquareColor, s_ButtonCornerRadius-1);
+			}
+			{
+				vec4 Color = m_pAssetsEditor->AssetManager()->GetAssetValue<vec4>(
+					m_AssetPath,
+					m_AssetMember,
+					m_AssetSubId,
+					vec4(1.0f, 1.0f, 1.0f, 1.0f));
+				
+				int alphaSquareX = m_Rect.x+2+(m_Rect.w-2)/2;
+				int alphaSquareW = (m_Rect.x + m_Rect.w - 1) - alphaSquareX;
+				float SquareHeight = (m_Rect.h-2)/3.0f;
+				int nbColumns = alphaSquareW / SquareHeight;
+				float SquareWidth = alphaSquareW/nbColumns;
+				
+				Graphics()->TextureClear();
+				Graphics()->QuadsBegin();
+				for(int j=0; j<3; j++)
+				{
+					for(int i=0; i<nbColumns; i++)
+					{
+						if(i%2==j%2)
+							Graphics()->SetColor(0.4f, 0.4f, 0.4f, 1.0f);
+						else
+							Graphics()->SetColor(0.6f, 0.6f, 0.6f, 1.0f);
+						IGraphics::CQuadItem QuadItem(alphaSquareX + i*SquareWidth, m_Rect.y+1 + j*SquareHeight, SquareWidth, SquareHeight);
+						Graphics()->QuadsDrawTL(&QuadItem, 1);
+					}
+				}
+				Graphics()->QuadsEnd();
+				
+				CUIRect rect;
+				rect.x = alphaSquareX;
+				rect.y = m_Rect.y+1;
+				rect.w = alphaSquareW;
+				rect.h = m_Rect.h-2;
+				
+				vec4 SquareColor = vec4(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+				RenderTools()->DrawRoundRect(&rect, SquareColor, s_ButtonCornerRadius-1);
+			}
+		}
+
+		void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+			{
+				m_UnderMouse = true;
+			}
+			else
+			{
+				m_UnderMouse = false;
+			}
+		}
+
+		void OnButtonClick(int X, int Y, int Button)
+		{
+			if(Button != KEY_MOUSE_1)
+				return;
+			
+			if(m_Rect.IsInside(X, Y))
+			{
+				m_Clicked = true;
+			}
+		}
+
+		void OnButtonRelease(int Button)
+		{
+			if(Button != KEY_MOUSE_1)
+				return;
+			
+			if(m_UnderMouse && m_Clicked)
+			{
+				m_Clicked = false;
+				m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_ColorEdit(
+					m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+					m_AssetPath, m_AssetMember, m_AssetSubId
+				));
+			}
+		}
+	};
+
+	class CEnumEdit : public CModAPI_ClientGui_TextButton
+	{
+	protected:
+		CModAPI_AssetPath m_AssetPath;
+		int m_Member;
+		int m_SubId;
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		int m_NbElements;
+		const char** m_aTexts;
+		
+	protected:
+		virtual void MouseClickAction()
+		{
+			int OldValue = m_pAssetsEditor->AssetManager()->GetAssetValue<int>(m_AssetPath, m_Member, m_SubId, 0);
+			int NewValue = (OldValue + 1)%m_NbElements;
+			m_pAssetsEditor->AssetManager()->SetAssetValue<int>(m_AssetPath, m_Member, m_SubId, NewValue);
+			UpdateButtonLabel(NewValue);
 		}
 		
 		void UpdateButtonLabel(int Value)
 		{
-			switch(Value)
-			{
-				case MODAPI_TEEALIGN_AIM:
-					SetText("Aim");
-					break;
-				case MODAPI_TEEALIGN_HORIZONTAL:
-					SetText("Horizontal");
-					break;
-				case MODAPI_TEEALIGN_DIRECTION:
-					SetText("Motion");
-					break;
-				case MODAPI_TEEALIGN_NONE:
-				default:
-					SetText("None");
-			}
+			SetText(m_aTexts[Value%m_NbElements]);
 		}
 		
 	public:
-		CTeeAlignEdit(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
+		CEnumEdit(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Member, int SubId, const char** aTexts, int NbElements) :
 			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, "", -1),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_Member(Member),
-			m_SubId(SubId)
+			m_SubId(SubId),
+			m_aTexts(aTexts),
+			m_NbElements(NbElements)
 		{
 			
 		}
 		
 		virtual void Update()
 		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-			{
-				UpdateButtonLabel(*ptr);
-			}
+			int Value = m_pAssetsEditor->AssetManager()->GetAssetValue<int>(m_AssetPath, m_Member, m_SubId, 0);
+			UpdateButtonLabel(Value);
 			
 			CModAPI_ClientGui_TextButton::Update();
 		}
 	};
 
-	class CCycleTypeEdit : public CModAPI_ClientGui_TextButton
+	class CDeleteAsset : public CModAPI_ClientGui_TextButton
 	{
 	protected:
-		int m_AssetType;
-		CModAPI_AssetPath m_AssetPath;
-		int m_Member;
-		int m_SubId;
 		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_AssetPath;
 		
 	protected:
 		virtual void MouseClickAction()
 		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-				*ptr = (*ptr + 1)%MODAPI_NUM_ANIMCYCLETYPE;
-			
-			UpdateButtonLabel(*ptr);
+			m_pAssetsEditor->DeleteAsset(m_AssetPath);
 		}
-		
-		void UpdateButtonLabel(int Value)
-		{
-			switch(Value)
-			{
-				case MODAPI_ANIMCYCLETYPE_CLAMP:
-					SetText("Clamp");
-					break;
-				case MODAPI_ANIMCYCLETYPE_LOOP:
-					SetText("Loop");
-					break;
-			}
-		}
-		
+
 	public:
-		CCycleTypeEdit(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int Member, int SubId = -1) :
-			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, "", -1),
+		CDeleteAsset(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath) :
+			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, "Delete", MODAPI_ASSETSEDITOR_ICON_DELETE),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
-			m_AssetPath(AssetPath),
-			m_Member(Member),
-			m_SubId(SubId)
+			m_AssetPath(AssetPath)
 		{
 			
-		}
-		
-		virtual void Update()
-		{
-			int* ptr = GetAssetMemberPointer<int>(m_pAssetsEditor, m_AssetType, m_AssetPath, m_Member, m_SubId);
-			if(ptr)
-			{
-				UpdateButtonLabel(*ptr);
-			}
-			
-			CModAPI_ClientGui_TextButton::Update();
 		}
 	};
 
 	class CDeleteSubItem : public CModAPI_ClientGui_IconButton
 	{
 	protected:
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_SubId;
 		CModAPI_AssetsEditor* m_pAssetsEditor;
@@ -333,20 +595,20 @@ protected:
 	protected:
 		virtual void MouseClickAction()
 		{
-			switch(m_AssetType)
+			switch(m_AssetPath.GetType())
 			{
-				case MODAPI_ASSETTYPE_ANIMATION:
+				case CModAPI_AssetPath::TYPE_ANIMATION:
 				{
-					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_AssetPath);
 					if(!pAnimation)
 						return;
 					pAnimation->DeleteKeyFrame(m_SubId);
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
-				case MODAPI_ASSETTYPE_ATTACH:
+				case CModAPI_AssetPath::TYPE_ATTACH:
 				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
 					if(!pAttach)
 						return;
 					pAttach->DeleteBackElement(m_SubId);
@@ -357,9 +619,8 @@ protected:
 		}
 
 	public:
-		CDeleteSubItem(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int SubId) :
+		CDeleteSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubId) :
 			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_DELETE),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_SubId(SubId),
 			m_pAssetsEditor(pAssetsEditor)
@@ -371,7 +632,6 @@ protected:
 	class CMoveDownSubItem : public CModAPI_ClientGui_IconButton
 	{
 	protected:
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_SubId;
 		CModAPI_AssetsEditor* m_pAssetsEditor;
@@ -379,20 +639,20 @@ protected:
 	protected:
 		virtual void MouseClickAction()
 		{
-			switch(m_AssetType)
+			switch(m_AssetPath.GetType())
 			{
-				case MODAPI_ASSETTYPE_ANIMATION:
+				case CModAPI_AssetPath::TYPE_ANIMATION:
 				{
-					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_AssetPath);
 					if(!pAnimation)
 						return;
 					pAnimation->MoveDownKeyFrame(m_SubId);
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
-				case MODAPI_ASSETTYPE_ATTACH:
+				case CModAPI_AssetPath::TYPE_ATTACH:
 				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
 					if(!pAttach)
 						return;
 					pAttach->MoveDownBackElement(m_SubId);
@@ -403,9 +663,8 @@ protected:
 		}
 
 	public:
-		CMoveDownSubItem(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int SubId) :
+		CMoveDownSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubId) :
 			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_UP),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_SubId(SubId),
 			m_pAssetsEditor(pAssetsEditor)
@@ -417,7 +676,6 @@ protected:
 	class CMoveUpSubItem : public CModAPI_ClientGui_IconButton
 	{
 	protected:
-		int m_AssetType;
 		CModAPI_AssetPath m_AssetPath;
 		int m_SubId;
 		CModAPI_AssetsEditor* m_pAssetsEditor;
@@ -425,20 +683,20 @@ protected:
 	protected:
 		virtual void MouseClickAction()
 		{
-			switch(m_AssetType)
+			switch(m_AssetPath.GetType())
 			{
-				case MODAPI_ASSETTYPE_ANIMATION:
+				case CModAPI_AssetPath::TYPE_ANIMATION:
 				{
-					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_AssetPath);
 					if(!pAnimation)
 						return;
 					pAnimation->MoveUpKeyFrame(m_SubId);
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
-				case MODAPI_ASSETTYPE_ATTACH:
+				case CModAPI_AssetPath::TYPE_ATTACH:
 				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_AssetPath);
+					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
 					if(!pAttach)
 						return;
 					pAttach->MoveUpBackElement(m_SubId);
@@ -449,9 +707,8 @@ protected:
 		}
 
 	public:
-		CMoveUpSubItem(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, int SubId) :
+		CMoveUpSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubId) :
 			CModAPI_ClientGui_IconButton(pAssetsEditor->m_pGuiConfig, MODAPI_ASSETSEDITOR_ICON_DOWN),
-			m_AssetType(AssetType),
 			m_AssetPath(AssetPath),
 			m_SubId(SubId),
 			m_pAssetsEditor(pAssetsEditor)
@@ -460,69 +717,72 @@ protected:
 		}
 	};
 
-	class CAddAttachElement : public CModAPI_ClientGui_TextButton
+	class CSubItemListItem : public CModAPI_ClientGui_ExternalTextButton
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
-		int m_AssetType;
+		
 		CModAPI_AssetPath m_AssetPath;
+		int m_AssetSubPath;
+		char m_aText[128];
 		
 	protected:
 		virtual void MouseClickAction()
 		{
-			if(m_AssetType != MODAPI_ASSETTYPE_ATTACH)
-				return;
-			
-			CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_AssetPath);
-			if(!pAttach)
-				return;
-			
-			pAttach->AddBackElement(CModAPI_Asset_Attach::CElement());
-			
-			m_pAssetsEditor->RefreshAssetEditor();
+			m_pAssetsEditor->EditAssetSubItem(m_AssetSubPath);
 		}
-
+	
 	public:
-		CAddAttachElement(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath) :
-			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, "Add element", MODAPI_ASSETSEDITOR_ICON_INCREASE),
+		CSubItemListItem(CModAPI_AssetsEditor* pAssetsEditor, int Icon) :
+			CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, 0, Icon),
 			m_pAssetsEditor(pAssetsEditor),
-			m_AssetType(AssetType),
-			m_AssetPath(AssetPath)
+			m_AssetPath(CModAPI_AssetPath::Null()),
+			m_AssetSubPath(-1)
 		{
-			
+			m_Centered = false;
+		}
+		
+		void SetTarget(CModAPI_AssetPath AssetPath, int AssetSubPath)
+		{
+			m_AssetPath = AssetPath;
+			m_AssetSubPath = AssetSubPath;
+		}
+		
+		void SetText(CModAPI_AssetPath AssetPath, int AssetSubType, int AssetSubPath)
+		{
+			m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(AssetPath, AssetSubType, AssetSubPath, 0);
+		}
+		
+		void SetText(const char* pText)
+		{
+			str_copy(m_aText, pText, sizeof(m_aText));
+			m_pText = m_aText;
 		}
 	};
-	
-	class CSelectFrameButton : public CModAPI_ClientGui_TextButton
+
+	class CAddSubItem : public CModAPI_ClientGui_TextButton
 	{
 	protected:
 		CModAPI_AssetsEditor* m_pAssetsEditor;
+		
 		CModAPI_AssetPath m_AssetPath;
-		int m_FrameId;
+		int m_SubItemType;
 		
 	protected:
 		virtual void MouseClickAction()
 		{
-			CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_AssetPath);
-			if(!pAnimation)
-				return;
-			
-			if(m_FrameId < 0 || m_FrameId >= pAnimation->m_lKeyFrames.size())
-				return;
-			
-			float Time = pAnimation->m_lKeyFrames[m_FrameId].m_Time;
-			
-			m_pAssetsEditor->EditAssetFrame(m_FrameId);
+			m_pAssetsEditor->AssetManager()->AddSubItem(m_AssetPath, m_SubItemType);
+			m_pAssetsEditor->RefreshAssetEditor();
 		}
-		
+	
 	public:
-		CSelectFrameButton(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int FrameId) :
-			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, "Select", MODAPI_ASSETSEDITOR_ICON_NEXT_FRAME),
+		CAddSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubType, const char* pText, int IconId) :
+			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, pText, IconId),
 			m_pAssetsEditor(pAssetsEditor),
 			m_AssetPath(AssetPath),
-			m_FrameId(FrameId)
+			m_SubItemType(SubType)
 		{
-			
+			m_Centered = false;
 		}
 	};
 	
@@ -536,7 +796,7 @@ protected:
 	protected:
 		virtual void MouseClickAction()
 		{
-			CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_AssetPath);
+			CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_AssetPath);
 			if(!pAnimation)
 				return;
 			
@@ -556,20 +816,71 @@ protected:
 	};
 	
 protected:
+	enum
+	{
+		TAB_ASSET=0,
+		
+		TAB_SKELETON_BONES=1,
+		TAB_SKELETON_LAYERS,
+		
+		TAB_SKELETONSKIN_SPRITES=1,
+		
+		TAB_SKELETONANIMATION_ANIMATIONS=1,
+		TAB_SKELETONANIMATION_KEYFRAMES,
+		
+		NUM_TABS=3
+	};
+	enum
+	{
+		LIST_SKELETON_BONES=0,
+		LIST_SKELETON_LAYERS,
+		
+		LIST_SKELETONSKIN_SPRITES=0,
+		
+		LIST_SKELETONANIMATION_ANIMATIONS=0,
+		LIST_SKELETONANIMATION_KEYFRAMES,
+		
+		NUM_LISTS=2
+	};
+	
+protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
+	
+	int m_LastEditedAssetType;
+	CModAPI_ClientGui_VListLayout* m_pTabs[NUM_TABS];
+	CModAPI_ClientGui_VListLayout* m_pLists[NUM_LISTS];
 
 protected:
-	void AddTitle();
-	void AddLabeledIntegerField(const char* pLabelText, int Member, int SubId = -1);
-	void AddLabeledAssetField(const char* pLabelText, int Member, int AssetType, int SubId = -1);
-	void AddLabeledTeeAlignField(const char* pLabelText, int Member, int SubId = -1);
-	void AddAssetField(int Member, int AssetType, int SubId = -1);
-	void AddSubTitle(const char* pText);
-	void AddImageEditor();
-	void AddSpriteEditor();
-	void AddAnimationEditor();
-	void AddTeeAnimationEditor();
-	void AddAttachEditor();
+	void AddAssetTabCommons(CModAPI_ClientGui_VListLayout* pList);
+	void AddSubTitle(CModAPI_ClientGui_VListLayout* pList, const char* pText);
+	
+	void AddField(CModAPI_ClientGui_VListLayout* pList, CModAPI_ClientGui_Widget* pWidget, const char* pLabelText);
+	
+	void AddTextField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, int TextSize, const char* pLabelText = 0);
+	void AddFloatField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddFloat2Field(CModAPI_ClientGui_VListLayout* pList, int Member1, int Member2, int SubId, const char* pLabelText = 0);
+	void AddAngleField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddIntegerField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddAssetField(CModAPI_ClientGui_VListLayout* pList, int Member, int AssetType, int SubId, const char* pLabelText = 0);
+	void AddBoneField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath SkeletonPath, const char* pLabelText = 0);
+	void AddLayerField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath SkeletonPath, const char* pLabelText = 0);
+	void AddCycleField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddSpriteAlignField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddLayerStateField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddBoneAlignField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	void AddColorField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
+	
+	//Search Tag: TAG_NEW_ASSET
+	void RefreshTab_Image_Asset(bool KeepStatus);
+	void RefreshTab_Sprite_Asset(bool KeepStatus);
+	void RefreshTab_Skeleton_Asset(bool KeepStatus);
+	void RefreshTab_Skeleton_Bones(bool KeepStatus);
+	void RefreshTab_Skeleton_Layers(bool KeepStatus);
+	void RefreshTab_SkeletonSkin_Asset(bool KeepStatus);
+	void RefreshTab_SkeletonSkin_Sprites(bool KeepStatus);
+	void RefreshTab_SkeletonAnimation_Asset(bool KeepStatus);
+	void RefreshTab_SkeletonAnimation_Animations(bool KeepStatus);
+	void RefreshTab_SkeletonAnimation_KeyFrames(bool KeepStatus);
 	
 public:
 	CModAPI_AssetsEditorGui_Editor(CModAPI_AssetsEditor* pAssetsEditor);

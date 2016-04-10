@@ -55,6 +55,12 @@ inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
 }
 
 template<typename T>
+inline vector2_base<T> rotate(const vector2_base<T> &a, float angle, const vector2_base<T>& center)
+{
+	return center + rotate(a - center, angle);
+}
+
+template<typename T>
 inline T distance(const vector2_base<T> &a, const vector2_base<T> &b)
 {
 	return length(a-b);
@@ -242,5 +248,65 @@ public:
 typedef vector4_base<float> vec4;
 typedef vector4_base<bool> bvec4;
 typedef vector4_base<int> ivec4;
+
+// ------------------------------------
+
+template<typename T>
+class matrix2x2_base
+{
+public:
+	float v[4];
+
+	matrix2x2_base()
+	{
+		v[0] = 1;
+		v[1] = 0;
+		v[2] = 0;
+		v[3] = 1;
+	}
+	
+	matrix2x2_base(T a, T b, T c, T d)
+	{
+		v[0] = a;
+		v[1] = b;
+		v[2] = c;
+		v[3] = d;
+	}
+
+	matrix2x2_base<T> operator*(const matrix2x2_base<T> &m) const
+	{
+		return matrix2x2_base(
+			v[0]*m.v[0] + v[1]*m.v[2],
+			v[0]*m.v[1] + v[1]*m.v[3],
+			v[2]*m.v[0] + v[3]*m.v[2],
+			v[2]*m.v[1] + v[3]*m.v[3]
+		);
+	}
+
+	vector2_base<T> operator*(const vector2_base<T> &a) const
+	{
+		return vector2_base<T>(
+			v[0]*a.x + v[1]*a.y,
+			v[2]*a.x + v[3]*a.y
+		);
+	}
+	
+	static matrix2x2_base<T> rotation(T angle)
+	{
+		return matrix2x2_base<T>(
+			cosf(angle), -sinf(angle),
+			sinf(angle), cosf(angle)
+		);
+	}
+	
+	static matrix2x2_base<T> scaling(vector2_base<T> scale)
+	{
+		return matrix2x2_base<T>(
+			scale.x, 0, 0, scale.y
+		);
+	}
+};
+
+typedef matrix2x2_base<float> matrix2x2;
 
 #endif

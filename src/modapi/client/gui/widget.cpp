@@ -94,22 +94,17 @@ void CModAPI_ClientGui_Widget::SetHeight(int h)
 	));
 }
 
-void CModAPI_ClientGui_Widget::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_Widget::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	
 }
 
-void CModAPI_ClientGui_Widget::OnMouseMotion(int X, int Y, int KeyState)
+void CModAPI_ClientGui_Widget::OnButtonClick(int X, int Y, int Button)
 {
 	
 }
 
-void CModAPI_ClientGui_Widget::OnMouseButtonClick(int X, int Y)
-{
-	
-}
-
-void CModAPI_ClientGui_Widget::OnMouseButtonRelease()
+void CModAPI_ClientGui_Widget::OnButtonRelease(int Button)
 {
 	
 }

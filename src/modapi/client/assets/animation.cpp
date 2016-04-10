@@ -17,7 +17,7 @@ int CModAPI_Asset_Animation::GetKeyFrameId(float Time) const
 	return i;
 }
 
-void CModAPI_Asset_Animation::AddKeyFrame(CModAPI_Asset_Animation::CKeyFrame& Frame)
+void CModAPI_Asset_Animation::AddKeyFrame(const CModAPI_Asset_Animation::CKeyFrame& Frame)
 {
 	int i = GetKeyFrameId(Frame.m_Time);
 		
@@ -27,16 +27,18 @@ void CModAPI_Asset_Animation::AddKeyFrame(CModAPI_Asset_Animation::CKeyFrame& Fr
 		m_lKeyFrames.insertat(Frame, i);
 }
 
-void CModAPI_Asset_Animation::AddKeyFrame(float Time, vec2 Pos, float Angle, float Opacity, int ListId)
+CModAPI_Asset_Animation::CKeyFrame& CModAPI_Asset_Animation::AddKeyFrame(float Time)
 {
-	CModAPI_Asset_Animation::CKeyFrame Frame;
-	Frame.m_Time = Time;
-	Frame.m_Pos = Pos;
-	Frame.m_Angle = Angle;
-	Frame.m_Opacity = Opacity;
-	Frame.m_ListId = ListId;
+	int i = GetKeyFrameId(Time);
 		
-	AddKeyFrame(Frame);
+	if(i == m_lKeyFrames.size())
+		m_lKeyFrames.add(CModAPI_Asset_Animation::CKeyFrame());
+	else
+		m_lKeyFrames.insertat(CModAPI_Asset_Animation::CKeyFrame(), i);
+	
+	m_lKeyFrames[i].m_Time = Time;
+	
+	return m_lKeyFrames[i];
 }
 
 void CModAPI_Asset_Animation::GetFrame(float Time, CModAPI_Asset_Animation::CFrame* pFrame) const
@@ -53,32 +55,27 @@ void CModAPI_Asset_Animation::GetFrame(float Time, CModAPI_Asset_Animation::CFra
 	{
 		if(i == 0)
 		{
-			pFrame->m_Pos = vec2(0.0f, 0.0f);
-			pFrame->m_Angle = 0.0f;
-			pFrame->m_Opacity = 1.0f;
-			pFrame->m_ListId = 0;
+			*pFrame = CModAPI_Asset_Animation::CFrame();
 		}
 		else
 		{
-			pFrame->m_Pos = m_lKeyFrames[m_lKeyFrames.size()-1].m_Pos;
-			pFrame->m_Angle = m_lKeyFrames[m_lKeyFrames.size()-1].m_Angle;
-			pFrame->m_Opacity = m_lKeyFrames[m_lKeyFrames.size()-1].m_Opacity;
-			pFrame->m_ListId = m_lKeyFrames[m_lKeyFrames.size()-1].m_ListId;
+			*pFrame = m_lKeyFrames[m_lKeyFrames.size()-1];
 		}
 	}
 	else if(i == 0)
 	{
-		pFrame->m_Pos = m_lKeyFrames[0].m_Pos;
-		pFrame->m_Angle = m_lKeyFrames[0].m_Angle;
-		pFrame->m_Opacity = m_lKeyFrames[0].m_Opacity;
-		pFrame->m_ListId = m_lKeyFrames[0].m_ListId;
+		*pFrame = m_lKeyFrames[0];
 	}
 	else
 	{
 		float alpha = (CycleTime - m_lKeyFrames[i-1].m_Time) / (m_lKeyFrames[i].m_Time - m_lKeyFrames[i-1].m_Time);
 		pFrame->m_Pos = mix(m_lKeyFrames[i-1].m_Pos, m_lKeyFrames[i].m_Pos, alpha);
+		pFrame->m_Size = mix(m_lKeyFrames[i-1].m_Size, m_lKeyFrames[i].m_Size, alpha);
 		pFrame->m_Angle = mix(m_lKeyFrames[i-1].m_Angle, m_lKeyFrames[i].m_Angle, alpha); //Need better interpolation
-		pFrame->m_Opacity = clamp(mix(m_lKeyFrames[i-1].m_Opacity, m_lKeyFrames[i].m_Opacity, alpha), 0.0f, 1.0f);
+		pFrame->m_Color.r = clamp(mix(m_lKeyFrames[i-1].m_Color.r, m_lKeyFrames[i].m_Color.r, alpha), 0.0f, 1.0f);
+		pFrame->m_Color.g = clamp(mix(m_lKeyFrames[i-1].m_Color.g, m_lKeyFrames[i].m_Color.g, alpha), 0.0f, 1.0f);
+		pFrame->m_Color.b = clamp(mix(m_lKeyFrames[i-1].m_Color.b, m_lKeyFrames[i].m_Color.b, alpha), 0.0f, 1.0f);
+		pFrame->m_Color.a = clamp(mix(m_lKeyFrames[i-1].m_Color.a, m_lKeyFrames[i].m_Color.a, alpha), 0.0f, 1.0f);
 		pFrame->m_ListId = m_lKeyFrames[i-1].m_ListId;
 	}
 }
@@ -138,7 +135,7 @@ void CModAPI_Asset_Animation::DeleteKeyFrame(int Id)
 	}
 }
 
-void CModAPI_Asset_Animation::InitFromAssetsFile(CModAPI_Client_Graphics* pModAPIGraphics, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_Animation::CStorageType* pItem)
+void CModAPI_Asset_Animation::InitFromAssetsFile(CModAPI_AssetManager* pAssetManager, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_Animation::CStorageType* pItem)
 {
 	// copy name
 	SetName((char *)pAssetsFile->GetData(pItem->m_Name));
@@ -149,7 +146,7 @@ void CModAPI_Asset_Animation::InitFromAssetsFile(CModAPI_Client_Graphics* pModAP
 	const CModAPI_Asset_Animation::CKeyFrame* pFrames = static_cast<CModAPI_Asset_Animation::CKeyFrame*>(pAssetsFile->GetData(pItem->m_KeyFrameData));
 	for(int f=0; f<pItem->m_NumKeyFrame; f++)
 	{
-		AddKeyFrame(pFrames[f].m_Time, pFrames[f].m_Pos, pFrames[f].m_Angle, pFrames[f].m_Opacity);
+		AddKeyFrame(pFrames[f]);
 	}
 }
 
@@ -163,7 +160,7 @@ void CModAPI_Asset_Animation::SaveInAssetsFile(CDataFileWriter* pFileWriter, int
 	pFileWriter->AddItem(CModAPI_Asset_Animation::TypeId, Position, sizeof(CModAPI_Asset_Animation::CStorageType), &Item);
 }
 
-void CModAPI_Asset_Animation::Unload(class CModAPI_Client_Graphics* pModAPIGraphics)
+void CModAPI_Asset_Animation::Unload(class CModAPI_AssetManager* pAssetManager)
 {
 	
 }

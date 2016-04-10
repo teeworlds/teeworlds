@@ -19,7 +19,6 @@ CModAPI_ClientGui_AbstractTextEdit::CModAPI_ClientGui_AbstractTextEdit(CModAPI_C
 	
 void CModAPI_ClientGui_AbstractTextEdit::Render()
 {
-	
 	CUIRect rect;
 	rect.x = m_Rect.x;
 	rect.y = m_Rect.y;
@@ -75,7 +74,7 @@ void CModAPI_ClientGui_AbstractTextEdit::Render()
 	}
 }
 
-void CModAPI_ClientGui_AbstractTextEdit::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_AbstractTextEdit::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	if(m_Rect.IsInside(X, Y))
 	{
@@ -87,8 +86,11 @@ void CModAPI_ClientGui_AbstractTextEdit::OnMouseOver(int X, int Y, int KeyState)
 	}
 }
 
-void CModAPI_ClientGui_AbstractTextEdit::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_AbstractTextEdit::OnButtonClick(int X, int Y, int Button)
 {
+	if(Button != KEY_MOUSE_1)
+		return;
+	
 	char* pText = GetTextPtr();
 	
 	if(!pText)
@@ -147,4 +149,16 @@ void CModAPI_ClientGui_AbstractTextEdit::OnInputEvent()
 			int ReturnValue = CLineInput::Manipulate(Input()->GetEvent(i), pText, m_TextMaxSize, m_TextMaxSize, &Len, &m_CursorCharPos, &NumChars);
 		}
 	}
+}
+
+CModAPI_ClientGui_ExternalTextEdit::CModAPI_ClientGui_ExternalTextEdit(CModAPI_ClientGui_Config *pConfig, char* pText, int TextMaxChar, int Style) :
+	CModAPI_ClientGui_AbstractTextEdit(pConfig, TextMaxChar, Style),
+	m_pText(pText)
+{
+	
+}
+
+char* CModAPI_ClientGui_ExternalTextEdit::GetTextPtr()
+{
+	return m_pText;
 }

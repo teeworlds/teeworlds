@@ -6,8 +6,7 @@
 class CModAPI_Asset_Attach : public CModAPI_Asset
 {
 public:
-	static const int TypeId = MODAPI_ASSETTYPE_ATTACH;
-	static const int ListId = MODAPI_ASSETTYPE_ATTACH_LIST;
+	static const int TypeId = CModAPI_AssetPath::TYPE_ATTACH;
 
 	struct CStorageType : public CModAPI_Asset::CStorageType
 	{
@@ -17,9 +16,9 @@ public:
 		int m_BackElementsData;
 	};
 	
-	void InitFromAssetsFile(class CModAPI_Client_Graphics* pModAPIGraphics, class IModAPI_AssetsFile* pAssetsFile, const CStorageType* pItem);
+	void InitFromAssetsFile(class CModAPI_AssetManager* pAssetManager, class IModAPI_AssetsFile* pAssetsFile, const CStorageType* pItem);
 	void SaveInAssetsFile(class CDataFileWriter* pFileWriter, int Position);
-	void Unload(class CModAPI_Client_Graphics* pModAPIGraphics);
+	void Unload(class CModAPI_AssetManager* pAssetManager);
 	
 public:
 	class CElement
@@ -52,6 +51,21 @@ public:
 	void MoveUpBackElement(int Id);
 	void MoveDownBackElement(int Id);
 	void DeleteBackElement(int Id);
+	
+	inline void OnAssetDeleted(const CModAPI_AssetPath& Path)
+	{
+		m_TeeAnimationPath.OnIdDeleted(Path);
+		m_CursorPath.OnIdDeleted(Path);
+		for(int i=0; i<m_BackElements.size(); i++)
+		{
+			m_BackElements[i].m_SpritePath.OnIdDeleted(Path);
+			m_BackElements[i].m_AnimationPath.OnIdDeleted(Path);
+		}
+	}
+	
+	inline int AddSubItem(int SubItemType) { }
+	inline bool DeleteSubItem(int SubItemPath) { return false; }
+	inline void OnSubItemDeleted(const CModAPI_AssetPath& Path, int SubItemPath) { }
 };
 
 #endif

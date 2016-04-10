@@ -18,6 +18,8 @@
 #include <game/client/components/sounds.h>
 #include <game/client/components/controls.h>
 
+#include <modapi/client/skeletonrenderer.h>
+
 #include "players.h"
 
 void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset)
@@ -102,7 +104,6 @@ void CPlayers::RenderHook(
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
-
 	// use preditect players if needed
 	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
@@ -124,10 +125,6 @@ void CPlayers::RenderHook(
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-		Graphics()->QuadsBegin();
-		//Graphics()->QuadsBegin();
-
 		vec2 Pos = Position;
 		vec2 HookPos;
 
@@ -155,29 +152,7 @@ void CPlayers::RenderHook(
 		else
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 
-		float d = distance(Pos, HookPos);
-		vec2 Dir = normalize(Pos-HookPos);
-
-		Graphics()->QuadsSetRotation(angle(Dir)+pi);
-
-		// render head
-		RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
-		IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24,16);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-
-		// render chain
-		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
-		IGraphics::CQuadItem Array[1024];
-		int i = 0;
-		for(float f = 16; f < d && i < 1024; f += 16, i++)
-		{
-			vec2 p = HookPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
-		}
-
-		Graphics()->QuadsDraw(Array, i);
-		Graphics()->QuadsSetRotation(0);
-		Graphics()->QuadsEnd();
+		ModAPIGraphics()->DrawLine(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_LINESTYLE, MODAPI_LINESTYLE_HOOK), Position, HookPos, 1.0f, 0.0f);
 
 		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
 	}
@@ -249,13 +224,21 @@ void CPlayers::RenderPlayer(
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 	
+	CModAPI_SkeletonRenderer SkeletonRenderer(Graphics(), AssetManager());
+	SkeletonRenderer.AddSkeleton(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETON, MODAPI_SKELETON_TEE));
+	
 	CModAPI_TeeAnimationState TeeAnimState;
 	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, MotionDir, AimDir);
 
 	if(InAir)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_INAIR), 0.0f);
+	{
+		if(!RenderInfo.m_GotAirJump && g_Config.m_ClAirjumpindicator)
+			SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR2), 0.0f);
+		else
+			SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR), 0.0f);
+	}
 	else if(Stationary)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_IDLE), 0.0f);
+		SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEIDLE), 0.0f);
 	else if(!WantOtherDir)
 	{
 		const float WalkTimeMagic = 100.0f;
@@ -265,7 +248,7 @@ void CPlayers::RenderPlayer(
 				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 			/ WalkTimeMagic;
 		
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, CModAPI_AssetPath::Internal(MODAPI_TEEANIMATION_WALK), WalkTime);
+		SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEWALK), WalkTime);
 	}
 
 	// do skidding
@@ -284,7 +267,7 @@ void CPlayers::RenderPlayer(
 		);
 	}
 	
-	const CModAPI_Asset_Attach* pAttach = ModAPIGraphics()->m_AttachesCatalog.GetAsset(CModAPI_AssetPath::Internal(Player.m_Weapon));
+	const CModAPI_Asset_Attach* pAttach = AssetManager()->GetAsset<CModAPI_Asset_Attach>(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon));
 	if(pAttach)
 	{
 		static float s_LastGameTickTime = Client()->GameTickTime();
@@ -299,12 +282,14 @@ void CPlayers::RenderPlayer(
 		}
 		
 		CModAPI_AttachAnimationState AttachAnimState;
-		ModAPIGraphics()->InitAttachAnimationState(&AttachAnimState, MotionDir, AimDir, CModAPI_AssetPath::Internal(Player.m_Weapon), WeaponTime);
-		ModAPIGraphics()->DrawAttach(RenderTools(), &AttachAnimState, CModAPI_AssetPath::Internal(Player.m_Weapon), Position, 1.0f);	
+		ModAPIGraphics()->InitAttachAnimationState(&AttachAnimState, MotionDir, AimDir, CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon), WeaponTime);
+		ModAPIGraphics()->DrawAttach(RenderTools(), &AttachAnimState, CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon), Position, 1.0f);	
 	}
 	
-	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, AimDir, Player.m_Emote);
-	
+	SkeletonRenderer.Finalize();
+	SkeletonRenderer.AddSkin(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONSKIN, MODAPI_SKELETONSKIN_DUMMY));
+	SkeletonRenderer.RenderSkins(Position, 1.0);
+		
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);

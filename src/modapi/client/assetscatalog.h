@@ -9,239 +9,108 @@ template<class T>
 class CModAPI_AssetCatalog
 {
 public:
-	array<T> m_InternalAssets;
-	array<T> m_ExternalAssets;
-	
-	array<CModAPI_Asset_List> m_InternalLists;
-	array<CModAPI_Asset_List> m_ExternalLists;
+	array<T> m_Assets[CModAPI_AssetPath::NUM_SOURCES];
 
-public:
-	CModAPI_AssetPath GetFinalAssetPath(const CModAPI_AssetPath& path, int ListId)
+public:	
+	T* GetAsset(const CModAPI_AssetPath& path)
 	{
+		if(path.GetType() != T::TypeId)
+			return 0;
+		
 		int Id = path.GetId();
-		if(Id < 0 || ListId < 0) return CModAPI_AssetPath::Null();
+		if(Id < 0)
+			return 0;
 			
-		if(path.IsList())
-		{
-			if(path.IsExternal())
-			{
-				if(Id >= m_ExternalLists.size())
-					return CModAPI_AssetPath::Null();
-				
-				CModAPI_Asset_List& List = m_ExternalLists[Id];
-					
-				int ListIdMod = ListId % List.m_Elements.size();
-				
-				if(!List.m_Elements[ListIdMod].IsList())
-					return List.m_Elements[ListIdMod];
-				else
-					return CModAPI_AssetPath::Null();
-			}
-			else
-			{
-				if(Id >= m_InternalLists.size())
-					return CModAPI_AssetPath::Null();
-				
-				CModAPI_Asset_List& List = m_InternalLists[Id];
-					
-				int ListIdMod = ListId % List.m_Elements.size();
-				
-				if(!List.m_Elements[ListIdMod].IsList())
-					return List.m_Elements[ListIdMod];
-				else
-					return CModAPI_AssetPath::Null();
-			}
-		}
-		else return path;
-	}
-	
-	T* GetAsset(const CModAPI_AssetPath& path, int ListId = 0)
-	{
-		int Id = path.GetId();
-		if(Id < 0 || ListId < 0) return 0;
-			
-		if(path.IsList())
-		{
-			if(path.IsExternal())
-			{
-				if(Id >= m_ExternalLists.size())
-					return 0;
-				
-				CModAPI_Asset_List& List = m_ExternalLists[Id];
-					
-				int ListIdMod = ListId % List.m_Elements.size();
-				
-				if(!List.m_Elements[ListIdMod].IsList())
-					return GetAsset(List.m_Elements[ListIdMod]);
-				else
-					return 0;
-			}
-			else
-			{
-				if(Id >= m_InternalLists.size())
-					return 0;
-				
-				CModAPI_Asset_List& List = m_InternalLists[Id];
-					
-				int ListIdMod = ListId % List.m_Elements.size();
-				
-				if(!List.m_Elements[ListIdMod].IsList())
-					return GetAsset(List.m_Elements[ListIdMod]);
-				else
-					return 0;
-			}
-		}
+		if(Id < m_Assets[path.GetSource()].size())
+			return &m_Assets[path.GetSource()][Id];
 		else
-		{
-			if(path.IsExternal())
-			{
-				if(Id < m_ExternalAssets.size())
-					return &m_ExternalAssets[Id];
-				else
-					return 0;
-			}
-			else
-			{
-				if(Id < m_InternalAssets.size())
-					return &m_InternalAssets[Id];
-				else
-					return 0;
-			}
-		}
+			return 0;
 	}
 	
-	CModAPI_Asset_List* GetList(const CModAPI_AssetPath& path)
+	T* NewAsset(CModAPI_AssetPath* path, int Source)
 	{
-		int Id = path.GetId();
-		if(Id < 0 || !path.IsList()) return 0;
-			
-		if(path.IsExternal())
-		{
-			if(Id < m_ExternalLists.size())
-				return &m_ExternalLists[Id];
-			else
-				return 0;
-		}
-		else
-		{
-			if(Id < m_InternalLists.size())
-				return &m_InternalLists[Id];
-			else
-				return 0;
-		}
-	}
-	
-	T* NewInternalAsset(CModAPI_AssetPath* path)
-	{
-		int Id = m_InternalAssets.add(T());
-		*path = CModAPI_AssetPath::Internal(Id);
-		return &m_InternalAssets[Id];
-	}
-	
-	T* NewExternalAsset(CModAPI_AssetPath* path)
-	{
-		int Id = m_ExternalAssets.add(T());
-		*path = CModAPI_AssetPath::External(Id);
-		return &m_ExternalAssets[Id];
+		int Id = m_Assets[Source].add(T());
+		*path = CModAPI_AssetPath::Asset(T::TypeId, Source, Id);
+		return &m_Assets[Source][Id];
 	}
 	
 	T* NewAsset(const CModAPI_AssetPath& path)
 	{
-		int Id = path.GetId();
-		if(Id < 0 || path.IsList()) return 0;
+		if(path.GetType() != T::TypeId)
+			return 0;
 		
-		if(path.IsExternal())
+		int Id = path.GetId();
+		if(Id < 0)
+			return 0;
+		
+		int Size = max(m_Assets[path.GetSource()].size(), Id+1);
+		m_Assets[path.GetSource()].set_size(Size);
+		
+		return &m_Assets[path.GetSource()][Id];
+	}
+	
+	void LoadFromAssetsFile(class CModAPI_AssetManager* pAssetManager, IModAPI_AssetsFile* pAssetsFile, int Source)
+	{
+		dbg_msg("assetmanager", "load assets of type %d", T::TypeId);
+		int Start, Num;
+		pAssetsFile->GetType(CModAPI_AssetPath::TypeToStoredType(T::TypeId), &Start, &Num);
+		
+		m_Assets[Source].clear();
+		m_Assets[Source].set_size(Num);
+		
+		for(int i = 0; i < Num; i++)
 		{
-			int Size = max(m_ExternalAssets.size(), Id+1);
-			m_ExternalAssets.set_size(Size);
-			
-			return &m_ExternalAssets[Id];
-		}
-		else
-		{
-			int Size = max(m_InternalAssets.size(), Id+1);
-			m_InternalAssets.set_size(Size);
-			
-			return &m_InternalAssets[Id];
+			class T::CStorageType* pItem = (class T::CStorageType*) pAssetsFile->GetItem(Start+i, 0, 0);
+			T* pAsset = &m_Assets[Source][i];
+			pAsset->InitFromAssetsFile(pAssetManager, pAssetsFile, pItem);
 		}
 	}
 	
-	CModAPI_Asset_List* NewList(const CModAPI_AssetPath& path)
+	void SaveInAssetsFile(class CDataFileWriter* pFileWriter, int Source)
 	{
-		int Id = path.GetId();
-		if(Id < 0 || ! path.IsList()) return 0;
-		
-		if(path.IsExternal())
+		for(int i=0; i<m_Assets[Source].size(); i++)
 		{
-			int Size = max(m_ExternalLists.size(), Id+1);
-			m_ExternalLists.set_size(Size);
-			
-			return &m_ExternalLists[Id];
-		}
-		else
-		{
-			int Size = max(m_InternalLists.size(), Id+1);
-			m_InternalLists.set_size(Size);
-			
-			return &m_InternalLists[Id];
+			m_Assets[Source][i].SaveInAssetsFile(pFileWriter, i);
 		}
 	}
 	
-	void LoadFromAssetsFile(class CModAPI_Client_Graphics* pModAPIGraphics, IModAPI_AssetsFile* pAssetsFile)
+	void Unload(class CModAPI_AssetManager* pAssetManager)
 	{
+		for(int i=0; i<m_Assets[CModAPI_AssetPath::SRC_EXTERNAL].size(); i++)
 		{
-			int Start, Num;
-			pAssetsFile->GetType(T::TypeId, &Start, &Num);
-			
-			m_ExternalAssets.set_size(Num);
-			
-			for(int i = 0; i < Num; i++)
-			{
-				class T::CStorageType* pItem = (class T::CStorageType*) pAssetsFile->GetItem(Start+i, 0, 0);
-				T* pAsset = &m_ExternalAssets[i];
-				pAsset->InitFromAssetsFile(pModAPIGraphics, pAssetsFile, pItem);
-			}
+			m_Assets[CModAPI_AssetPath::SRC_EXTERNAL][i].Unload(pAssetManager);
 		}
+		m_Assets[CModAPI_AssetPath::SRC_EXTERNAL].clear();
+	}
+	
+	void DeleteAsset(const CModAPI_AssetPath& Path)
+	{
+		if(!Path.IsNull() && Path.GetType() == T::TypeId)
 		{
-			int Start, Num;
-			pAssetsFile->GetType(T::ListId, &Start, &Num);
-			
-			m_ExternalLists.set_size(Num);
-			
-			for(int i = 0; i < Num; i++)
+			m_Assets[Path.GetSource()].remove_index(Path.GetId());
+		}
+	}
+	
+	void OnAssetDeleted(const CModAPI_AssetPath& Path)
+	{
+		for(int s=0; s<CModAPI_AssetPath::NUM_SOURCES; s++)
+		{
+			for(int i=0; i<m_Assets[s].size(); i++)
 			{
-				class CModAPI_Asset_List::CStorageType* pItem = (class CModAPI_Asset_List::CStorageType*) pAssetsFile->GetItem(Start+i, 0, 0);
-				CModAPI_Asset_List* pList = &m_ExternalLists[i];
-				pList->InitFromAssetsFile(pModAPIGraphics, pAssetsFile, pItem);
+				m_Assets[s][i].OnAssetDeleted(Path);
 			}
 		}
 	}
 	
-	void SaveInAssetsFile(class CDataFileWriter* pFileWriter)
+	void OnSubItemDeleted(const CModAPI_AssetPath& Path, int SubItemPath)
 	{
-		for(int i=0; i<m_ExternalAssets.size(); i++)
+		for(int s=0; s<CModAPI_AssetPath::NUM_SOURCES; s++)
 		{
-			m_ExternalAssets[i].SaveInAssetsFile(pFileWriter, i);
+			for(int i=0; i<m_Assets[s].size(); i++)
+			{
+				m_Assets[s][i].OnSubItemDeleted(Path, SubItemPath);
+			}
 		}
-		for(int i=0; i<m_ExternalLists.size(); i++)
-		{
-			m_ExternalLists[i].SaveInAssetsFile(pFileWriter, i, T::ListId);
-		}
-	}
-	
-	void Unload(class CModAPI_Client_Graphics* pModAPIGraphics)
-	{
-		for(int i=0; i<m_ExternalAssets.size(); i++)
-		{
-			m_ExternalAssets[i].Unload(pModAPIGraphics);
-		}
-		m_ExternalAssets.clear();
-		
-		for(int i=0; i<m_ExternalLists.size(); i++)
-		{
-			m_ExternalLists[i].Unload(pModAPIGraphics);
-		}
-		m_ExternalLists.clear();
 	}
 };
 

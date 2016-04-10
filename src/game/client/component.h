@@ -32,6 +32,7 @@ protected:
 	
 	//ModAPI
 	class CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pClient->ModAPIGraphics(); }
+	class CModAPI_AssetManager *AssetManager() const { return m_pClient->AssetManager(); }
 	
 public:
 	virtual ~CComponent() {}

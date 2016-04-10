@@ -325,6 +325,7 @@ public:
 	
 	//ModAPI
 	CModAPI_Client_Graphics* m_pModAPIGraphics;
+	CModAPI_AssetManager* m_pAssetManager;
 	char m_aCurrentMod[256];
 	unsigned m_CurrentModCrc;
 
@@ -342,6 +343,7 @@ public:
 	const char *LoadModSearch(const char *pModName, int WantedCrc);
 	
 	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
+	virtual CModAPI_AssetManager *AssetManager() const { return m_pAssetManager; }
 
 	int m_ClientMode;
 	

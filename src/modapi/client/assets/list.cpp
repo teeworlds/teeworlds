@@ -3,7 +3,7 @@
 #include <engine/shared/datafile.h>
 #include <modapi/client/graphics.h>
 
-void CModAPI_Asset_List::InitFromAssetsFile(CModAPI_Client_Graphics* pModAPIGraphics, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_List::CStorageType* pItem)
+void CModAPI_Asset_List::InitFromAssetsFile(CModAPI_AssetManager* pAssetManager, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_List::CStorageType* pItem)
 {
 	// copy name
 	SetName((char *)pAssetsFile->GetData(pItem->m_Name));
@@ -26,7 +26,7 @@ void CModAPI_Asset_List::SaveInAssetsFile(CDataFileWriter* pFileWriter, int Posi
 	pFileWriter->AddItem(ElementType, Position, sizeof(CModAPI_Asset_List::CStorageType), &Item);
 }
 
-void CModAPI_Asset_List::Unload(class CModAPI_Client_Graphics* pModAPIGraphics)
+void CModAPI_Asset_List::Unload(class CModAPI_AssetManager* pAssetManager)
 {
 	
 }

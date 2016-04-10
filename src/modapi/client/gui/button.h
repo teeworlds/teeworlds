@@ -5,7 +5,7 @@
 
 class CModAPI_ClientGui_AbstractButton : public CModAPI_ClientGui_Widget
 {
-protected:	
+protected:
 	bool m_UnderMouse;
 	bool m_Clicked;
 	int m_ButtonStyle;
@@ -18,9 +18,9 @@ protected:
 public:
 	virtual void Render();
 	
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
 	
 	void SetButtonStyle(int Style);
 };
@@ -61,16 +61,19 @@ public:
 class CModAPI_ClientGui_ExternalTextButton : public CModAPI_ClientGui_AbstractButton
 {
 protected:
-	char* m_pText;
+	const char* m_pText;
+	int m_IconId;
 	bool m_Centered;
 	
 protected:
-	CModAPI_ClientGui_ExternalTextButton(class CModAPI_ClientGui_Config *pConfig, char* pText);
+	CModAPI_ClientGui_ExternalTextButton(class CModAPI_ClientGui_Config *pConfig, const char* pText, int IconId = -1);
 	
 	virtual void MouseClickAction() = 0;
 	
 public:
 	virtual void Render();
+	
+	void SetIcon(int IconId);
 };
 
 #endif

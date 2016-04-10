@@ -86,4 +86,39 @@ template <typename T> inline T min(T a, T b) { return a<b?a:b; }
 template <typename T> inline T max(T a, T b) { return a>b?a:b; }
 template <typename T> inline T absolute(T a) { return a<T(0)?-a:a; }
 
+//Compute the nearest power of two during the compilation
+//Use NearestPowerOfTwo<N>::result
+template<int N, int SHIFT>
+struct NearestPowerOfTwo_Core
+{
+	enum { result = NearestPowerOfTwo_Core<(N | (N >> SHIFT)), SHIFT*2>::result };
+};
+
+template<int N>
+struct NearestPowerOfTwo_Core<N, 32>
+{
+	enum { result = N };
+};
+
+template<int N>
+struct NearestPowerOfTwo
+{
+	enum { result = NearestPowerOfTwo_Core<N-1, 1>::result + 1 };
+};
+
+//Compute the log2 of power of two during the compilation
+//Use Log2<N>::result
+
+template<int N>
+struct Log2
+{
+	enum { result = 1+Log2<(N>>1)>::result };
+};
+
+template<>
+struct Log2<0>
+{
+	enum { result = 0 };
+};
+
 #endif // BASE_MATH_H

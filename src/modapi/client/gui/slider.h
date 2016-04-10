@@ -22,10 +22,12 @@ public:
 	
 	virtual void Render();
 	
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonRelease(int Button);
 	
 	virtual void SetSliderSize(int Size) = 0;
+	virtual float GetSliderPos();
+	virtual void SetSliderPos(float Pos);
 };
 
 class CModAPI_ClientGui_HSlider : public CModAPI_ClientGui_AbstractSlider
@@ -34,8 +36,8 @@ public:
 	CModAPI_ClientGui_HSlider(class CModAPI_ClientGui_Config *pConfig);
 	
 	virtual void Update();
-	virtual void OnMouseMotion(int RelX, int RelY, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
 	
 	virtual void SetSliderSize(int Size);
 };
@@ -46,8 +48,8 @@ public:
 	CModAPI_ClientGui_VSlider(class CModAPI_ClientGui_Config *pConfig);
 	
 	virtual void Update();
-	virtual void OnMouseMotion(int RelX, int RelY, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
 	
 	virtual void SetSliderSize(int Size);
 };

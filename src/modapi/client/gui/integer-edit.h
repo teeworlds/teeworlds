@@ -31,8 +31,17 @@ class CModAPI_ClientGui_AbstractIntegerEdit : public CModAPI_ClientGui_Widget
 protected:	
 	CModAPI_ClientGui_Rect m_IntegerRect;
 	
+	int m_LastValue;
+	char m_aIntegerText[64];
+	int m_CursorCharPos;
+	bool m_UnderMouse;
+	bool m_Clicked;
+	
 	CIncreaseButton* m_pIncreaseButton;
 	CDecreaseButton* m_pDecreaseButton;
+	
+protected:
+	void ApplyTextEntry();
 	
 	virtual void SetValue(int v) = 0;
 	virtual int GetValue() = 0;
@@ -42,9 +51,10 @@ public:
 	virtual ~CModAPI_ClientGui_AbstractIntegerEdit();
 	virtual void Update();
 	virtual void Render();
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
+	virtual void OnInputEvent();
 };
 
 class CModAPI_ClientGui_IntegerEdit : public CModAPI_ClientGui_AbstractIntegerEdit

@@ -37,7 +37,7 @@ void CModAPI_ClientGui_AbstractSlider::Render()
 	}
 }
 
-void CModAPI_ClientGui_AbstractSlider::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_ClientGui_AbstractSlider::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
 	if(m_SliderRect.IsInside(X, Y))
 	{
@@ -49,9 +49,23 @@ void CModAPI_ClientGui_AbstractSlider::OnMouseOver(int X, int Y, int KeyState)
 	}
 }
 
-void CModAPI_ClientGui_AbstractSlider::OnMouseButtonRelease()
+void CModAPI_ClientGui_AbstractSlider::OnButtonRelease(int Button)
 {
+	if(Button != KEY_MOUSE_1)
+		return;
+	
 	m_ButtonDown = false;
+}
+
+float CModAPI_ClientGui_AbstractSlider::GetSliderPos()
+{
+	return m_Pos;
+}
+
+void CModAPI_ClientGui_AbstractSlider::SetSliderPos(float Pos)
+{
+	m_Pos = Pos;
+	OnNewPosition(Pos);
 }
 
 CModAPI_ClientGui_HSlider::CModAPI_ClientGui_HSlider(CModAPI_ClientGui_Config *pConfig) :
@@ -74,8 +88,11 @@ void CModAPI_ClientGui_HSlider::Update()
 	m_SliderRect.y = m_Rect.y + m_Rect.h/2 -m_SliderRect.h/2;
 }
 
-void CModAPI_ClientGui_HSlider::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_HSlider::OnButtonClick(int X, int Y, int Button)
 {
+	if(Button != KEY_MOUSE_1)
+		return;
+	
 	if(m_Rect.IsInside(X, Y))
 	{
 		m_SliderRect.x = clamp(X - m_SliderRect.w/2, m_Rect.x, m_Rect.x + m_Rect.w - m_SliderRect.w);
@@ -87,8 +104,10 @@ void CModAPI_ClientGui_HSlider::OnMouseButtonClick(int X, int Y)
 	}
 }
 
-void CModAPI_ClientGui_HSlider::OnMouseMotion(int RelX, int RelY, int KeyState)
+void CModAPI_ClientGui_HSlider::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
+	CModAPI_ClientGui_AbstractSlider::OnMouseOver(X, Y, RelX, RelY, KeyState);
+	
 	if(m_ButtonDown && RelX != 0)
 	{
 		m_SliderRect.x = clamp(m_SliderRect.x + RelX, m_Rect.x, m_Rect.x + m_Rect.w - m_SliderRect.w);
@@ -123,8 +142,11 @@ void CModAPI_ClientGui_VSlider::Update()
 	m_SliderRect.y = m_Rect.y + (int)(m_Pos*static_cast<float>(m_Rect.h - m_SliderRect.h));
 }
 
-void CModAPI_ClientGui_VSlider::OnMouseButtonClick(int X, int Y)
+void CModAPI_ClientGui_VSlider::OnButtonClick(int X, int Y, int Button)
 {
+	if(Button != KEY_MOUSE_1)
+		return;
+	
 	if(m_Rect.IsInside(X, Y))
 	{
 		m_SliderRect.y = clamp(Y - m_SliderRect.h/2, m_Rect.y, m_Rect.y + m_Rect.h - m_SliderRect.h);
@@ -136,8 +158,10 @@ void CModAPI_ClientGui_VSlider::OnMouseButtonClick(int X, int Y)
 	}
 }
 
-void CModAPI_ClientGui_VSlider::OnMouseMotion(int RelX, int RelY, int KeyState)
+void CModAPI_ClientGui_VSlider::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
+	CModAPI_ClientGui_AbstractSlider::OnMouseOver(X, Y, RelX, RelY, KeyState);
+	
 	if(m_ButtonDown && RelY != 0)
 	{
 		m_SliderRect.y = clamp(m_SliderRect.y + RelY, m_Rect.y, m_Rect.y + m_Rect.h - m_SliderRect.h);

@@ -22,9 +22,21 @@ public:
 	
 	virtual void Render();
 	
-	virtual void OnMouseOver(int X, int Y, int KeyState);
-	virtual void OnMouseButtonClick(int X, int Y);
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
 	virtual void OnInputEvent();
+};
+
+class CModAPI_ClientGui_ExternalTextEdit : public CModAPI_ClientGui_AbstractTextEdit
+{
+protected:
+	char* m_pText;
+	
+protected:
+	virtual char* GetTextPtr();
+
+public:
+	CModAPI_ClientGui_ExternalTextEdit(class CModAPI_ClientGui_Config *pConfig, char* pText, int TextMaxChar, int Style = MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL);
 };
 
 #endif

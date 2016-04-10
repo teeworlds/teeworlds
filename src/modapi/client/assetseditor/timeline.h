@@ -11,31 +11,25 @@
 
 class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 {
-	enum
-	{
-		TIMELINE_EDITMODE_ANGLE = 0,
-		TIMELINE_EDITMODE_OPACITY,
-		TIMELINE_EDITMODE_POSX,
-		TIMELINE_EDITMODE_POSY,
-		TIMELINE_NUM_EDITMODES,
-	};
-	
-	class CNewFrameButton : public CModAPI_ClientGui_TextButton
+	class CCursorToolButton : public CModAPI_ClientGui_IconButton
 	{
 	protected:
 		CModAPI_AssetsEditorGui_Timeline* m_pTimeline;
+		int m_CursorTool;
 		
+	protected:
 		virtual void MouseClickAction()
 		{
-			m_pTimeline->NewFrame();
+			m_pTimeline->SetCursorTool(m_CursorTool);
 		}
 		
 	public:
-		CNewFrameButton(CModAPI_AssetsEditorGui_Timeline* pTimeline) :
-			CModAPI_ClientGui_TextButton(pTimeline->m_pConfig, "Create frame", MODAPI_ASSETSEDITOR_ICON_INCREASE),
-			m_pTimeline(pTimeline)
+		CCursorToolButton(CModAPI_AssetsEditorGui_Timeline* pTimeline, int Icon, int CursorTool) :
+			CModAPI_ClientGui_IconButton(pTimeline->m_pConfig, Icon),
+			m_pTimeline(pTimeline),
+			m_CursorTool(CursorTool)
 		{
-			SetWidth(150);
+			
 		}
 	};
 	
@@ -144,51 +138,6 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		}
 	};
 	
-	class CEditModeButton : public CModAPI_ClientGui_TextButton
-	{
-	protected:
-		CModAPI_AssetsEditorGui_Timeline* m_pTimeline;
-		
-		virtual void MouseClickAction()
-		{
-			m_pTimeline->SetEditMode((m_pTimeline->GetEditMode() + 1) % TIMELINE_NUM_EDITMODES);
-		}
-		
-	public:
-		CEditModeButton(CModAPI_AssetsEditorGui_Timeline* pTimeline) :
-			CModAPI_ClientGui_TextButton(pTimeline->m_pConfig, "", MODAPI_ASSETSEDITOR_ICON_ROTATION),
-			m_pTimeline(pTimeline)
-		{
-			OnEditModeChange(m_pTimeline->GetEditMode());
-			SetWidth(150);
-		}
-		
-		void OnEditModeChange(int EditMode)
-		{
-			switch(m_pTimeline->GetEditMode())
-			{
-				case TIMELINE_EDITMODE_ANGLE:
-					SetIcon(MODAPI_ASSETSEDITOR_ICON_ROTATION);
-					SetText("Rotation");
-					break;
-				case TIMELINE_EDITMODE_OPACITY:
-					SetIcon(MODAPI_ASSETSEDITOR_ICON_OPACITY);
-					SetText("Opacity");
-					break;
-				case TIMELINE_EDITMODE_POSX:
-					SetIcon(MODAPI_ASSETSEDITOR_ICON_TRANSLATE_X);
-					SetText("Translation (X)");
-					break;
-				case TIMELINE_EDITMODE_POSY:
-					SetIcon(MODAPI_ASSETSEDITOR_ICON_TRANSLATE_Y);
-					SetText("Translation (Y)");
-					break;
-			}
-			
-			Update();
-		}
-	};
-	
 	class CTimeScaleSlider : public CModAPI_ClientGui_HSlider
 	{
 	protected:
@@ -251,23 +200,41 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 	};
 	
 protected:
+	enum
+	{
+		CURSORTOOL_FRAME_MOVE=0,
+		CURSORTOOL_FRAME_ADD,
+		CURSORTOOL_FRAME_DELETE,
+		CURSORTOOL_FRAME_COLOR,
+		NUM_CURSORTOOLS
+	};
+	
+protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
 	int m_Margin;
-	int m_SelectedFrame;
-	bool m_SelectedFrameMoved;
-	int m_VertexSize;
 	int m_ToolbarHeight;
 	int m_TimelineTop;
 	int m_TimelineBottom;
-	int m_EditMode;
+	int m_ValueHeight;
 	
 	float m_ValueScroll;
 	float m_TimeScroll;
 	float m_TimeScale;
 	float m_TimeMax;
 	
+	
+	float m_FrameMargin;
+	float m_FrameHeight;
+	
+	int m_CursorTool;
+	int m_CursorX;
+	int m_CursorY;
+	int m_Drag;
+	CModAPI_Asset_SkeletonAnimation::CSubPath m_DragedElement;
+	CCursorToolButton* m_CursorToolButtons[NUM_CURSORTOOLS];
+	
 	CModAPI_ClientGui_Rect m_TimelineRect;
-	CEditModeButton* m_pEditModeButton;
+	CModAPI_ClientGui_Rect m_ListRect;
 	CTimeSlider* m_pTimeSlider;
 	CValueSlider* m_pValueSlider;
 	CModAPI_ClientGui_HListLayout* m_pToolbar;
@@ -278,17 +245,9 @@ protected:
 	void TimeScaleCallback(float Pos);
 	void ValueScrollCallback(float Pos);
 	void TimeScrollCallback(float Pos);
-	void SetEditMode(int Mode);
-	int GetEditMode();
 	
 	int TimeToTimeline(float Time);
-	int AngleToTimeline(float Angle);
-	float TimelineToAngle(int Value);
-	float RelTimelineToAngle(int Rel);
-	int OpacityToTimeline(float Opacity);
-	float RelTimelineToOpacity(int Rel);
-	int PositionToTimeline(float Position);
-	float RelTimelineToPosition(int Rel);
+	float TimelineToTime(int Time);
 	
 public:
 	CModAPI_AssetsEditorGui_Timeline(CModAPI_AssetsEditor* pAssetsEditor);
@@ -297,13 +256,19 @@ public:
 	void OnEditedAssetChange();
 	void OnEditedAssetFrameChange();
 	
+	int GetCursorTool() { return m_CursorTool; }
+	void SetCursorTool(int CursorTool) { m_CursorTool = CursorTool; }
+	
+	CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePicking(int X, int Y);
+	CModAPI_Asset_Skeleton::CBonePath BonePicking(int X, int Y);
+	CModAPI_Asset_Skeleton::CBonePath LayerPicking(int X, int Y);
+	
 	virtual void Update();
 	virtual void Render();
 	
-	virtual void OnMouseButtonClick(int X, int Y);
-	virtual void OnMouseButtonRelease();	
-	virtual void OnMouseMotion(int RelX, int RelY, int KeyState);
-	virtual void OnMouseOver(int X, int Y, int KeyState);
+	virtual void OnButtonClick(int X, int Y, int Button);
+	virtual void OnButtonRelease(int Button);
+	virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState);
 };
 
 

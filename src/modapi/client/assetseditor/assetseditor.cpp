@@ -8,7 +8,6 @@
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/storage.h>
-#include <engine/keys.h>
 
 #include <modapi/client/clientmode.h>
 #include <modapi/client/gui/button.h>
@@ -20,129 +19,10 @@
 #include <cstddef>
 
 #include "assetseditor.h"
+#include "popup.h"
 #include "editor.h"
 #include "view.h"
 #include "timeline.h"
-
-/* FUNCTIONS **********************************************************/
-
-void GetAssetName(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath, char* pText, int TextSize)
-{
-	if(AssetType < 0)
-	{
-		str_format(pText, TextSize, "Unknown Asset");
-	}
-	else if(AssetPath.IsNull())
-	{
-		str_format(pText, TextSize, "None");
-	}
-	else
-	{
-		switch(AssetType)
-		{
-			case MODAPI_ASSETTYPE_IMAGE:
-			{
-				if(!AssetPath.IsList())
-				{
-					CModAPI_Asset_Image* pImage = pAssetsEditor->ModAPIGraphics()->m_ImagesCatalog.GetAsset(AssetPath);
-					if(pImage)
-						str_format(pText, TextSize, pImage->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown Image");
-				}
-				else
-				{
-					CModAPI_Asset_List* pList = pAssetsEditor->ModAPIGraphics()->m_ImagesCatalog.GetList(AssetPath);
-					if(pList)
-						str_format(pText, TextSize, pList->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown List");
-				}
-				return;
-			}
-			case MODAPI_ASSETTYPE_SPRITE:
-			{
-				if(!AssetPath.IsList())
-				{
-					CModAPI_Asset_Sprite* pSprite = pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.GetAsset(AssetPath);
-					if(pSprite)
-						str_format(pText, TextSize, pSprite->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown Sprite");
-				}
-				else
-				{
-					CModAPI_Asset_List* pList = pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.GetList(AssetPath);
-					if(pList)
-						str_format(pText, TextSize, pList->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown List");
-				}
-				return;
-			}
-			case MODAPI_ASSETTYPE_ANIMATION:
-			{
-				if(!AssetPath.IsList())
-				{
-					CModAPI_Asset_Animation* pAnim = pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(AssetPath);
-					if(pAnim)
-						str_format(pText, TextSize, pAnim->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown Animation");
-				}
-				else
-				{
-					CModAPI_Asset_List* pList = pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetList(AssetPath);
-					if(pList)
-						str_format(pText, TextSize, pList->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown List");
-				}
-				return;
-			}
-			case MODAPI_ASSETTYPE_TEEANIMATION:
-			{
-				if(!AssetPath.IsList())
-				{
-					CModAPI_Asset_TeeAnimation* pAnim = pAssetsEditor->ModAPIGraphics()->m_TeeAnimationsCatalog.GetAsset(AssetPath);
-					if(pAnim)
-						str_format(pText, TextSize, pAnim->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown Tee Animation");
-				}
-				else
-				{
-					CModAPI_Asset_List* pList = pAssetsEditor->ModAPIGraphics()->m_TeeAnimationsCatalog.GetList(AssetPath);
-					if(pList)
-						str_format(pText, TextSize, pList->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown List");
-				}
-				return;
-			}
-			case MODAPI_ASSETTYPE_ATTACH:
-			{
-				if(!AssetPath.IsList())
-				{
-					CModAPI_Asset_Attach* pAttach = pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetAsset(AssetPath);
-					if(pAttach)
-						str_format(pText, TextSize, pAttach->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown Attach");
-				}
-				else
-				{
-					CModAPI_Asset_List* pList = pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.GetList(AssetPath);
-					if(pList)
-						str_format(pText, TextSize, pList->m_aName);
-					else
-						str_format(pText, TextSize, "Unknown List");
-				}
-				return;
-			}
-		}
-	}
-}
 
 /* BUTTONS ************************************************************/
 
@@ -175,7 +55,7 @@ public:
 };
 
 class CModAPI_AssetsEditorGui_Button_ToolbarExit : public CModAPI_AssetsEditorGui_TextButton
-{	
+{
 protected:
 	virtual void MouseClickAction()
 	{
@@ -195,7 +75,9 @@ class CModAPI_AssetsEditorGui_Button_ToolbarLoad : public CModAPI_AssetsEditorGu
 protected:
 	virtual void MouseClickAction()
 	{
-		m_pAssetsEditor->LoadAssetsFile();
+		m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_LoadAssets(
+			m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_RIGHT
+		));
 	}
 
 public:
@@ -211,7 +93,9 @@ class CModAPI_AssetsEditorGui_Button_ToolbarSave : public CModAPI_AssetsEditorGu
 protected:
 	virtual void MouseClickAction()
 	{
-		m_pAssetsEditor->SaveAssetsFile();
+		m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_SaveAssets(
+			m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_RIGHT
+		));
 	}
 
 public:
@@ -221,275 +105,6 @@ public:
 		SetWidth(100);
 	}
 };
-
-class CModAPI_AssetsEditorGui_Button_DeleteAsset : public CModAPI_AssetsEditorGui_IconButton
-{
-protected:
-	int m_AssetType;
-	CModAPI_AssetPath m_AssetPath;
-	
-protected:
-	virtual void MouseClickAction()
-	{
-		m_pAssetsEditor->DeleteAsset(m_AssetType, m_AssetPath);
-	}
-
-public:
-	CModAPI_AssetsEditorGui_Button_DeleteAsset(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath) :
-		CModAPI_AssetsEditorGui_IconButton(pAssetsEditor, MODAPI_ASSETSEDITOR_ICON_DELETE),
-		m_AssetType(AssetType),
-		m_AssetPath(AssetPath)
-	{
-		
-	}
-};
-
-class CModAPI_AssetsEditorGui_Button_FileListElement : public CModAPI_AssetsEditorGui_TextButton
-{
-protected:
-	char m_aFilename[128];
-	int m_StorageType;
-	int m_IsDirectory;
-	
-protected:
-	virtual void MouseClickAction()
-	{
-		if(!m_IsDirectory)
-		{
-			CModAPI_AssetPath Path = m_pAssetsEditor->ModAPIGraphics()->AddImage(m_pAssetsEditor->Storage(), m_StorageType, m_aFilename);
-			if(!Path.IsNull())
-			{
-				m_pAssetsEditor->NewAsset(MODAPI_ASSETTYPE_IMAGE, Path);
-			}
-			m_pAssetsEditor->ClosePopup();
-		}
-	}
-	
-public:
-	CModAPI_AssetsEditorGui_Button_FileListElement(CModAPI_AssetsEditor* pAssetsEditor, const char* pFilename, int StorageType, int IsDir) :
-		CModAPI_AssetsEditorGui_TextButton(pAssetsEditor, pFilename)
-	{
-		str_copy(m_aFilename, pFilename, sizeof(m_aFilename));
-		m_StorageType = StorageType;
-		m_IsDirectory = IsDir;
-	}
-};
-
-class CModAPI_AssetsEditorGui_AssetEditListButton : public CModAPI_AssetsEditorGui_TextButton
-{
-protected:
-	int m_ParentAssetType;
-	CModAPI_AssetPath m_ParentAssetPath;
-	int m_ParentAssetMember;
-	int m_ParentAssetSubId;
-	int m_FieldAssetType;
-	CModAPI_AssetPath m_FieldAssetPath;
-	
-protected:
-	virtual void MouseClickAction()
-	{
-		m_pAssetsEditor->ClosePopup();
-		
-		CModAPI_AssetPath* ptr = GetAssetMemberPointer<CModAPI_AssetPath>(m_pAssetsEditor, m_ParentAssetType, m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId);
-		if(ptr)
-		{
-			*ptr = m_FieldAssetPath;
-		}
-		
-		m_pAssetsEditor->RefreshAssetEditor();
-	}
-	
-public:
-	CModAPI_AssetsEditorGui_AssetEditListButton(CModAPI_AssetsEditor* pAssetsEditor, int ParentAssetType, CModAPI_AssetPath ParentAssetPath, int ParentAssetMember, int ParentAssetSubId, int FieldAssetType, CModAPI_AssetPath FieldAssetPath) :
-		CModAPI_AssetsEditorGui_TextButton(pAssetsEditor, 0),
-		m_ParentAssetType(ParentAssetType),
-		m_ParentAssetPath(ParentAssetPath),
-		m_ParentAssetMember(ParentAssetMember),
-		m_ParentAssetSubId(ParentAssetSubId),
-		m_FieldAssetType(FieldAssetType),
-		m_FieldAssetPath(FieldAssetPath)
-	{
-		char aText[256];
-		GetAssetName(m_pAssetsEditor, m_FieldAssetType, m_FieldAssetPath, aText, sizeof(aText));
-		SetText(aText);
-	}
-};
-
-/* POPUP **************************************************************/
-
-CModAPI_AssetsEditorGui_Popup::CModAPI_AssetsEditorGui_Popup(CModAPI_AssetsEditor* pAssetsEditor) :
-	CModAPI_ClientGui_Popup(pAssetsEditor->m_pGuiConfig),
-	m_pAssetsEditor(pAssetsEditor)
-{
-	m_Layout = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig);
-	m_Layout->SetRect(CModAPI_ClientGui_Rect(0, 0, 500, 500));
-	m_Layout->Update();
-	Add(m_Layout);
-}
-
-CModAPI_AssetsEditorGui_Popup_AddImage::CCancel::CCancel(CModAPI_AssetsEditorGui_Popup_AddImage* pPopup) :
-	CModAPI_ClientGui_TextButton(pPopup->m_pConfig, "Cancel", MODAPI_ASSETSEDITOR_ICON_DELETE),
-	m_pPopup(pPopup)
-{
-	SetWidth(120);
-}
-
-void CModAPI_AssetsEditorGui_Popup_AddImage::CCancel::MouseClickAction()
-{
-	m_pPopup->Cancel();
-}
-
-CModAPI_AssetsEditorGui_Popup_AddImage::CModAPI_AssetsEditorGui_Popup_AddImage(CModAPI_AssetsEditor* pAssetsEditor) :
-	CModAPI_AssetsEditorGui_Popup(pAssetsEditor)
-{
-	m_Toolbar->Add(new CModAPI_AssetsEditorGui_Popup_AddImage::CCancel(this));
-	m_Toolbar->Update();
-}
-
-int CModAPI_AssetsEditorGui_Popup_AddImage::FileListFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
-{
-	CModAPI_AssetsEditorGui_Popup_AddImage* pAddImageView = static_cast<CModAPI_AssetsEditorGui_Popup_AddImage*>(pUser);
-	
-	int Length = str_length(pName);
-	if(pName[0] == '.' && (pName[1] == 0))
-		return 0;
-	
-	if(Length < 4 || str_comp(pName+Length-4, ".png"))
-		return 0;
-
-	CModAPI_AssetsEditorGui_Button_FileListElement* pItem = new CModAPI_AssetsEditorGui_Button_FileListElement(pAddImageView->m_pAssetsEditor, pName, StorageType, IsDir);
-	pAddImageView->m_Layout->Add(pItem);
-
-	return 0;
-}
-
-void CModAPI_AssetsEditorGui_Popup_AddImage::Update()
-{
-	m_pAssetsEditor->Storage()->ListDirectory(IStorage::TYPE_ALL, ".", FileListFetchCallback, this);
-	
-	CModAPI_AssetsEditorGui_Popup::Update();
-}
-
-void CModAPI_AssetsEditorGui_Popup_AddImage::Cancel()
-{
-	m_pAssetsEditor->ClosePopup();
-}
-
-CModAPI_AssetsEditorGui_Popup_AssetEditList::CCancel::CCancel(CModAPI_AssetsEditorGui_Popup_AssetEditList* pPopup) :
-	CModAPI_ClientGui_TextButton(pPopup->m_pConfig, "Cancel", MODAPI_ASSETSEDITOR_ICON_DELETE),
-	m_pPopup(pPopup)
-{
-	SetWidth(120);
-}
-
-void CModAPI_AssetsEditorGui_Popup_AssetEditList::CCancel::MouseClickAction()
-{
-	m_pPopup->Cancel();
-}
-
-CModAPI_AssetsEditorGui_Popup_AssetEditList::CModAPI_AssetsEditorGui_Popup_AssetEditList(
-	CModAPI_AssetsEditor* pAssetsEditor,
-	int ParentAssetType,
-	CModAPI_AssetPath ParentAssetPath,
-	int ParentAssetMember,
-	int ParentAssetSubId,
-	int FieldAssetType
-) :
-	CModAPI_AssetsEditorGui_Popup(pAssetsEditor),
-	m_ParentAssetType(ParentAssetType),
-	m_ParentAssetPath(ParentAssetPath),
-	m_ParentAssetMember(ParentAssetMember),
-	m_ParentAssetSubId(ParentAssetSubId),
-	m_FieldAssetType(FieldAssetType)
-{
-	m_Toolbar->Add(new CModAPI_AssetsEditorGui_Popup_AssetEditList::CCancel(this));
-	m_Toolbar->Update();
-}
-
-void CModAPI_AssetsEditorGui_Popup_AssetEditList::AddListElement(CModAPI_AssetPath Path)
-{
-	char aText[256];
-	GetAssetName(m_pAssetsEditor, m_FieldAssetType, Path, aText, sizeof(aText));
-	
-	CModAPI_AssetsEditorGui_AssetEditListButton* pItem = new CModAPI_AssetsEditorGui_AssetEditListButton(
-		m_pAssetsEditor,
-		m_ParentAssetType,
-		m_ParentAssetPath,
-		m_ParentAssetMember,
-		m_ParentAssetSubId,
-		m_FieldAssetType,
-		Path
-	);
-	m_Layout->Add(pItem);
-}
-
-void CModAPI_AssetsEditorGui_Popup_AssetEditList::Update()
-{
-	AddListElement(CModAPI_AssetPath::Null());
-	switch(m_FieldAssetType)
-	{
-		case MODAPI_ASSETTYPE_IMAGE:
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Images", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_ImagesCatalog.m_InternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::Internal(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Images", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_ImagesCatalog.m_ExternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::External(i));
-			break;
-		case MODAPI_ASSETTYPE_SPRITE:
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Sprites", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.m_InternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::Internal(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Sprite Lists", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.m_InternalLists.size(); i++)
-				AddListElement(CModAPI_AssetPath::InternalList(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Sprites", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.m_ExternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::External(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Sprite Lists", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.m_ExternalLists.size(); i++)
-				AddListElement(CModAPI_AssetPath::ExternalList(i));
-			break;
-		case MODAPI_ASSETTYPE_ANIMATION:
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.m_InternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::Internal(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.m_ExternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::External(i));
-			break;
-		case MODAPI_ASSETTYPE_TEEANIMATION:
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Tee Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_TeeAnimationsCatalog.m_InternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::Internal(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Tee Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_TeeAnimationsCatalog.m_ExternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::External(i));
-			break;
-		case MODAPI_ASSETTYPE_ATTACH:
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "Internal Attaches", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.m_InternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::Internal(i));
-			m_Layout->AddSeparator();
-			m_Layout->Add(new CModAPI_ClientGui_Label(m_pConfig, "External Attaches", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-			for(int i=0; i<m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.m_ExternalAssets.size(); i++)
-				AddListElement(CModAPI_AssetPath::External(i));
-			break;
-	}
-	
-	CModAPI_AssetsEditorGui_Popup::Update();
-}
-
-void CModAPI_AssetsEditorGui_Popup_AssetEditList::Cancel()
-{
-	m_pAssetsEditor->ClosePopup();
-}
 
 /* ITEM LIST **********************************************************/
 
@@ -519,35 +134,30 @@ protected:
 protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
 	int m_AssetType;
+	int m_Source;
 
 public:
-	CModAPI_AssetsEditorGui_AssetListHeader(CModAPI_AssetsEditor* pAssetsEditor, int AssetType) :
+	CModAPI_AssetsEditorGui_AssetListHeader(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, int Source) :
 		CModAPI_ClientGui_HListLayout(pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_FIRST),
 		m_pAssetsEditor(pAssetsEditor),
-		m_AssetType(AssetType)
+		m_AssetType(AssetType),
+		m_Source(Source)
 	{		
 		SetHeight(m_pConfig->m_ButtonHeight);
 		
+		#define ADD_ASSETTYPE_HEADER(TypeCode, TypeHeader) case TypeCode:\
+			Add(new CModAPI_ClientGui_Label(m_pConfig, TypeHeader, MODAPI_CLIENTGUI_TEXTSTYLE_HEADER2));\
+			break;
+		
 		switch(m_AssetType)
 		{
-			case MODAPI_ASSETTYPE_IMAGE:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Images", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
-			case MODAPI_ASSETTYPE_SPRITE:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Sprites", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
-			case MODAPI_ASSETTYPE_SPRITE_LIST:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Sprite Lists", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
-			case MODAPI_ASSETTYPE_ANIMATION:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
-			case MODAPI_ASSETTYPE_TEEANIMATION:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Tee Animations", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
-			case MODAPI_ASSETTYPE_ATTACH:
-				Add(new CModAPI_ClientGui_Label(m_pConfig, "Attaches", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
-				break;
+			//Search Tag: TAG_NEW_ASSET
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_IMAGE, "Images")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SPRITE, "Sprites")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETON, "Skeletons")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETONSKIN, "Skeleton Skins")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETONANIMATION, "Skeleton Animations")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_LIST, "Lists")
 		}
 		Add(new CAddButton(this));
 		
@@ -556,61 +166,37 @@ public:
 	
 	void AddAsset()
 	{
+		#define ON_NEW_ASSET(TypeName, AssetName) case TypeName::TypeId:\
+		{\
+			TypeName* pAsset = m_pAssetsEditor->AssetManager()->GetAssetCatalog<TypeName>()->NewAsset(&NewAssetPath, m_Source);\
+			char aBuf[128];\
+			str_format(aBuf, sizeof(aBuf), AssetName, NewAssetPath.GetId());\
+			pAsset->SetName(aBuf);\
+			m_pAssetsEditor->NewAsset(NewAssetPath);\
+			break;\
+		}
+			
 		CModAPI_AssetPath NewAssetPath;
 		
 		switch(m_AssetType)
 		{
-			case MODAPI_ASSETTYPE_IMAGE:
-				m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_AddImage(m_pAssetsEditor));
-				break;
-			case MODAPI_ASSETTYPE_SPRITE:
+			case CModAPI_AssetPath::TYPE_IMAGE:
 			{
-				CModAPI_Asset_Sprite* pAsset = m_pAssetsEditor->ModAPIGraphics()->m_SpritesCatalog.NewExternalAsset(&NewAssetPath);
-				
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "sprite%d", NewAssetPath.GetId());
-				pAsset->SetName(aBuf);
-				
-				m_pAssetsEditor->NewAsset(MODAPI_ASSETTYPE_SPRITE, NewAssetPath);
+				m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_AddImage(
+					m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_RIGHT
+				));
 				break;
 			}
-			case MODAPI_ASSETTYPE_SPRITE_LIST:
-			{
-				
-			}
-			case MODAPI_ASSETTYPE_ANIMATION:
-			{
-				CModAPI_Asset_Animation* pAsset = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.NewExternalAsset(&NewAssetPath);
-				
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "animation%d", NewAssetPath.GetId());
-				pAsset->SetName(aBuf);
-				
-				m_pAssetsEditor->NewAsset(MODAPI_ASSETTYPE_ANIMATION, NewAssetPath);
-				break;
-			}
-			case MODAPI_ASSETTYPE_TEEANIMATION:
-			{
-				CModAPI_Asset_TeeAnimation* pAsset = m_pAssetsEditor->ModAPIGraphics()->m_TeeAnimationsCatalog.NewExternalAsset(&NewAssetPath);
-				
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "teeAnimation%d", NewAssetPath.GetId());
-				pAsset->SetName(aBuf);
-				
-				m_pAssetsEditor->NewAsset(MODAPI_ASSETTYPE_TEEANIMATION, NewAssetPath);
-				break;
-			}
-			case MODAPI_ASSETTYPE_ATTACH:
-			{
-				CModAPI_Asset_Attach* pAsset = m_pAssetsEditor->ModAPIGraphics()->m_AttachesCatalog.NewExternalAsset(&NewAssetPath);
-				
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "attach%d", NewAssetPath.GetId());
-				pAsset->SetName(aBuf);
-				
-				m_pAssetsEditor->NewAsset(MODAPI_ASSETTYPE_ATTACH, NewAssetPath);
-				break;
-			}
+			//Search Tag: TAG_NEW_ASSET
+			ON_NEW_ASSET(CModAPI_Asset_Sprite, "sprite%d")
+			ON_NEW_ASSET(CModAPI_Asset_Animation, "animation%d")
+			ON_NEW_ASSET(CModAPI_Asset_TeeAnimation, "teeAnimation%d")
+			ON_NEW_ASSET(CModAPI_Asset_Attach, "attach%d")
+			ON_NEW_ASSET(CModAPI_Asset_LineStyle, "linestyle%d")
+			ON_NEW_ASSET(CModAPI_Asset_Skeleton, "skeleton%d")
+			ON_NEW_ASSET(CModAPI_Asset_SkeletonSkin, "skin%d")
+			ON_NEW_ASSET(CModAPI_Asset_SkeletonAnimation, "animation%d")
+			ON_NEW_ASSET(CModAPI_Asset_List, "list%d")
 		}
 	}
 };
@@ -671,8 +257,8 @@ protected:
 		}
 		
 	public:
-		CItemListButton(CModAPI_AssetsEditorGui_AssetListItem* pAssetListItem, char* pText) :
-			CModAPI_ClientGui_ExternalTextButton(pAssetListItem->m_pConfig, pText),
+		CItemListButton(CModAPI_AssetsEditorGui_AssetListItem* pAssetListItem, char* pText, int IconId) :
+			CModAPI_ClientGui_ExternalTextButton(pAssetListItem->m_pConfig, pText, IconId),
 			m_pAssetListItem(pAssetListItem)
 		{
 			m_Centered = false;
@@ -681,22 +267,41 @@ protected:
 	
 protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
-	int m_AssetType;
 	CModAPI_AssetPath m_AssetPath;
 	
 	CEditButton* m_pEditButton;
 	CDisplayButton* m_pDisplayButton;
 
 public:
-	CModAPI_AssetsEditorGui_AssetListItem(CModAPI_AssetsEditor* pAssetsEditor, int AssetType, CModAPI_AssetPath AssetPath) :
+	CModAPI_AssetsEditorGui_AssetListItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath) :
 		CModAPI_ClientGui_HListLayout(pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_FIRST),
 		m_pAssetsEditor(pAssetsEditor),
-		m_AssetType(AssetType),
 		m_AssetPath(AssetPath)
 	{		
 		SetHeight(m_pConfig->m_ButtonHeight);
 		
-		Add(new CItemListButton(this, GetAssetMemberPointer<char>(m_pAssetsEditor, m_AssetType, m_AssetPath, MODAPI_ASSETSEDITOR_MEMBER_NAME, -1)));
+		int IconId = -1;
+		switch(AssetPath.GetType())
+		{
+			case CModAPI_AssetPath::TYPE_IMAGE:
+				IconId = MODAPI_ASSETSEDITOR_ICON_IMAGE;
+				break;
+			case CModAPI_AssetPath::TYPE_SPRITE:
+				IconId = MODAPI_ASSETSEDITOR_ICON_SPRITE;
+				break;
+			case CModAPI_AssetPath::TYPE_SKELETON:
+				IconId = MODAPI_ASSETSEDITOR_ICON_SKELETON;
+				break;
+			case CModAPI_AssetPath::TYPE_SKELETONSKIN:
+				IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONSKIN;
+				break;
+			case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
+				IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION;
+				break;
+		}
+		
+		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
+		Add(new CItemListButton(this, pName, IconId));
 		
 		m_pDisplayButton = new CDisplayButton(this);
 		Add(m_pDisplayButton);
@@ -709,17 +314,17 @@ public:
 	
 	void EditAsset()
 	{
-		m_pAssetsEditor->EditAsset(m_AssetType, m_AssetPath);
+		m_pAssetsEditor->EditAsset(m_AssetPath);
 	}
 	
 	void DisplayAsset()
 	{
-		m_pAssetsEditor->DisplayAsset(m_AssetType, m_AssetPath);
+		m_pAssetsEditor->DisplayAsset(m_AssetPath);
 	}
 	
 	virtual void Render()
 	{
-		if(m_pAssetsEditor->IsEditedAsset(m_AssetType, m_AssetPath))
+		if(m_pAssetsEditor->IsEditedAsset(m_AssetPath))
 		{
 			m_pEditButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
 		}
@@ -728,7 +333,7 @@ public:
 			m_pEditButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
 		}
 		
-		if(m_pAssetsEditor->IsDisplayedAsset(m_AssetType, m_AssetPath))
+		if(m_pAssetsEditor->IsDisplayedAsset(m_AssetPath))
 		{
 			m_pDisplayButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
 		}
@@ -752,15 +357,19 @@ CModAPI_AssetsEditor::CModAPI_AssetsEditor()
 
 CModAPI_AssetsEditor::~CModAPI_AssetsEditor()
 {
-	delete m_pGuiAssetList;
+	delete m_pGuiAssetListTabs;
 	delete m_pGuiAssetEditor;
 	delete m_pGuiView;
 	delete m_pGuiToolbar;
-	if(m_pGuiPopup) delete m_pGuiPopup;
+	for(int i=0; i<m_GuiPopups.size(); i++)
+	{
+		if(m_GuiPopups[i]) delete m_GuiPopups[i];
+	}
+	
 	if(m_pGuiConfig) delete m_pGuiConfig;
 }
 	
-void CModAPI_AssetsEditor::Init(CModAPI_Client_Graphics* pModAPIGraphics)
+void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Client_Graphics* pModAPIGraphics)
 {
 	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pInput = Kernel()->RequestInterface<IInput>();
@@ -769,6 +378,7 @@ void CModAPI_AssetsEditor::Init(CModAPI_Client_Graphics* pModAPIGraphics)
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pAssetsFile = Kernel()->RequestInterface<IModAPI_AssetsFile>();
 	m_pModAPIGraphics = pModAPIGraphics;
+	m_pAssetManager = pAssetManager;
 	
 	m_RenderTools.m_pGraphics = m_pGraphics;
 		
@@ -802,8 +412,22 @@ void CModAPI_AssetsEditor::Init(CModAPI_Client_Graphics* pModAPIGraphics)
 	m_pGuiToolbar->Add(new CModAPI_AssetsEditorGui_Button_ToolbarExit(this));
 	m_pGuiToolbar->Update();
 	
-	m_pGuiAssetList = new CModAPI_ClientGui_VListLayout(m_pGuiConfig);
-	m_pGuiAssetList->SetRect(AssetListRect);
+	m_pGuiAssetListTabs = new CModAPI_ClientGui_Tabs(m_pGuiConfig);
+	m_pGuiAssetListTabs->SetRect(AssetListRect);
+	
+	m_pGuiAssetList[CModAPI_AssetPath::SRC_EXTERNAL] = new CModAPI_ClientGui_VListLayout(m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
+	m_pGuiAssetListTabs->AddTab(m_pGuiAssetList[CModAPI_AssetPath::SRC_EXTERNAL], MODAPI_ASSETSEDITOR_ICON_EXTERNAL_ASSET, "External assets");
+	
+	m_pGuiAssetList[CModAPI_AssetPath::SRC_INTERNAL] = new CModAPI_ClientGui_VListLayout(m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
+	m_pGuiAssetListTabs->AddTab(m_pGuiAssetList[CModAPI_AssetPath::SRC_INTERNAL], MODAPI_ASSETSEDITOR_ICON_INTERNAL_ASSET, "Internal assets");
+	
+	m_pGuiAssetList[CModAPI_AssetPath::SRC_MAP] = new CModAPI_ClientGui_VListLayout(m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
+	m_pGuiAssetListTabs->AddTab(m_pGuiAssetList[CModAPI_AssetPath::SRC_MAP], MODAPI_ASSETSEDITOR_ICON_MAP_ASSET, "Map assets");
+	
+	m_pGuiAssetList[CModAPI_AssetPath::SRC_SKIN] = new CModAPI_ClientGui_VListLayout(m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
+	m_pGuiAssetListTabs->AddTab(m_pGuiAssetList[CModAPI_AssetPath::SRC_SKIN], MODAPI_ASSETSEDITOR_ICON_SKIN_ASSET, "Skin assets");
+	
+	m_pGuiAssetListTabs->Update();
 	RefreshAssetList();
 	
 	m_pGuiView = new CModAPI_AssetsEditorGui_View(this);
@@ -819,8 +443,6 @@ void CModAPI_AssetsEditor::Init(CModAPI_Client_Graphics* pModAPIGraphics)
 	m_pGuiAssetEditor->Update();
 	
 	m_RefreshAssetEditor = false;
-	m_ClosePopup = false;
-	m_pGuiPopup = 0;
 	
 	m_ShowCursor = true;
 	
@@ -828,105 +450,54 @@ void CModAPI_AssetsEditor::Init(CModAPI_Client_Graphics* pModAPIGraphics)
 	m_Time = 0.0f;
 	m_Paused = true;
 	
-	m_EditedAssetFrame = -1;
+	m_EditedAssetSubPath = -1;
+	m_AssetsListSource = CModAPI_AssetPath::SRC_EXTERNAL;
+}
+
+void CModAPI_AssetsEditor::RefreshAssetList(int Source)
+{
+	m_pGuiAssetList[Source]->Clear();
+	
+	switch(Source)
+	{
+		case CModAPI_AssetPath::SRC_INTERNAL:
+			m_pGuiAssetList[Source]->Add(new CModAPI_ClientGui_Label(m_pGuiConfig, "Internal assets", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
+			break;
+		case CModAPI_AssetPath::SRC_EXTERNAL:
+			m_pGuiAssetList[Source]->Add(new CModAPI_ClientGui_Label(m_pGuiConfig, "External assets", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
+			break;
+		case CModAPI_AssetPath::SRC_MAP:
+			m_pGuiAssetList[Source]->Add(new CModAPI_ClientGui_Label(m_pGuiConfig, "Map assets", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
+			break;
+		case CModAPI_AssetPath::SRC_SKIN:
+			m_pGuiAssetList[Source]->Add(new CModAPI_ClientGui_Label(m_pGuiConfig, "Skin assets", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER));
+			break;
+	}
+	
+	#define REFRESH_ASSET_LIST(TypeName) \
+	m_pGuiAssetList[Source]->AddSeparator();\
+	m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, TypeName::TypeId, Source));\
+	for(int i=0; i<AssetManager()->GetNumAssets<TypeName>(Source); i++)\
+	{\
+		m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, CModAPI_AssetPath::Asset(TypeName::TypeId, Source, i)));\
+	}
+		
+	REFRESH_ASSET_LIST(CModAPI_Asset_Image)
+	REFRESH_ASSET_LIST(CModAPI_Asset_Sprite)
+	REFRESH_ASSET_LIST(CModAPI_Asset_Skeleton)
+	REFRESH_ASSET_LIST(CModAPI_Asset_SkeletonSkin)
+	REFRESH_ASSET_LIST(CModAPI_Asset_SkeletonAnimation)
+	REFRESH_ASSET_LIST(CModAPI_Asset_List)
+	
+	m_pGuiAssetList[Source]->Update();
 }
 
 void CModAPI_AssetsEditor::RefreshAssetList()
 {
-	m_pGuiAssetList->Clear();
-	
-	bool ShowInternal = false;
-	
-	//Images
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_IMAGE));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_ImagesCatalog.m_InternalAssets.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_IMAGE, CModAPI_AssetPath::Internal(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_ImagesCatalog.m_ExternalAssets.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_IMAGE, CModAPI_AssetPath::External(i)));
-	}
-	
-	//Sprites
-	m_pGuiAssetList->AddSeparator();
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_SPRITE));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_SpritesCatalog.m_InternalAssets.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_SPRITE, CModAPI_AssetPath::Internal(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_SpritesCatalog.m_ExternalAssets.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_SPRITE, CModAPI_AssetPath::External(i)));
-	}
-	
-	//Sprite lists
-	m_pGuiAssetList->AddSeparator();
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_SPRITE_LIST));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_SpritesCatalog.m_InternalLists.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_SPRITE_LIST, CModAPI_AssetPath::InternalList(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_SpritesCatalog.m_ExternalLists.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_SPRITE_LIST, CModAPI_AssetPath::ExternalList(i)));
-	}
-	
-	//Animations
-	m_pGuiAssetList->AddSeparator();
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_ANIMATION));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_AnimationsCatalog.m_InternalAssets.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_ANIMATION, CModAPI_AssetPath::Internal(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_AnimationsCatalog.m_ExternalAssets.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_ANIMATION, CModAPI_AssetPath::External(i)));
-	}
-	
-	//TeeAnimations
-	m_pGuiAssetList->AddSeparator();
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_TEEANIMATION));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_TeeAnimationsCatalog.m_InternalAssets.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_TEEANIMATION, CModAPI_AssetPath::Internal(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_TeeAnimationsCatalog.m_ExternalAssets.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_TEEANIMATION, CModAPI_AssetPath::External(i)));
-	}
-	
-	//Attaches
-	m_pGuiAssetList->AddSeparator();
-	m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, MODAPI_ASSETTYPE_ATTACH));
-	if(ShowInternal)
-	{
-		for(int i=0; i<ModAPIGraphics()->m_AttachesCatalog.m_InternalAssets.size(); i++)
-		{
-			m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_ATTACH, CModAPI_AssetPath::Internal(i)));
-		}
-	}
-	for(int i=0; i<ModAPIGraphics()->m_AttachesCatalog.m_ExternalAssets.size(); i++)
-	{
-		m_pGuiAssetList->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, MODAPI_ASSETTYPE_ATTACH, CModAPI_AssetPath::External(i)));
-	}
-	
-	m_pGuiAssetList->Update();
+	RefreshAssetList(CModAPI_AssetPath::SRC_INTERNAL);
+	RefreshAssetList(CModAPI_AssetPath::SRC_EXTERNAL);
+	RefreshAssetList(CModAPI_AssetPath::SRC_MAP);
+	RefreshAssetList(CModAPI_AssetPath::SRC_SKIN);
 }
 
 void CModAPI_AssetsEditor::RefreshAssetEditor()
@@ -938,14 +509,15 @@ void CModAPI_AssetsEditor::Render()
 {
 	Graphics()->MapScreen(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
 	m_pGuiToolbar->Render();
-	m_pGuiAssetList->Render();
+	m_pGuiAssetListTabs->Render();
 	m_pGuiAssetEditor->Render();
 	m_pGuiView->Render();
 	m_pGuiTimeline->Render();
 	
-	if(m_pGuiPopup)
+	for(int i=0; i<m_GuiPopups.size(); i++)
 	{
-		m_pGuiPopup->Render();
+		if(m_GuiPopups[i])
+			m_GuiPopups[i]->Render();
 	}
 	
 	//Cursor
@@ -972,11 +544,11 @@ void CModAPI_AssetsEditor::ShowCursor()
 void CModAPI_AssetsEditor::TimeWrap()
 {
 	const float TimeShift = 0.5f;
-	switch(m_ViewedAssetType)
+	switch(m_ViewedAssetPath.GetType())
 	{
-		case MODAPI_ASSETTYPE_ANIMATION:
+		case CModAPI_AssetPath::TYPE_ANIMATION:
 		{
-			CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_ViewedAssetPath);
+			CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_ViewedAssetPath);
 			if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 			{
 				float MaxTime = pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time;
@@ -988,9 +560,9 @@ void CModAPI_AssetsEditor::TimeWrap()
 			}
 			break;
 		}
-		case MODAPI_ASSETTYPE_TEEANIMATION:
+		case CModAPI_AssetPath::TYPE_TEEANIMATION:
 		{
-			CModAPI_Asset_TeeAnimation* pTeeAnimation = ModAPIGraphics()->m_TeeAnimationsCatalog.GetAsset(m_ViewedAssetPath);
+			CModAPI_Asset_TeeAnimation* pTeeAnimation = AssetManager()->GetAsset<CModAPI_Asset_TeeAnimation>(m_ViewedAssetPath);
 			if(pTeeAnimation)
 			{
 				float MaxTime = 0.0f;
@@ -998,7 +570,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				
 				//Body
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BodyAnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BodyAnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1007,7 +579,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				}
 				//BackFoot
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackFootAnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BackFootAnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1016,7 +588,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				}
 				//FrontFoot
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontFootAnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_FrontFootAnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1025,7 +597,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				}
 				//BackHand
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackHandAnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BackHandAnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1034,7 +606,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				}
 				//FrontHand
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontHandAnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_FrontHandAnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1049,20 +621,20 @@ void CModAPI_AssetsEditor::TimeWrap()
 			}
 			break;
 		}
-		case MODAPI_ASSETTYPE_ATTACH:
+		case CModAPI_AssetPath::TYPE_ATTACH:
 		{
-			CModAPI_Asset_Attach* pAttach = ModAPIGraphics()->m_AttachesCatalog.GetAsset(m_ViewedAssetPath);
+			CModAPI_Asset_Attach* pAttach = AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_ViewedAssetPath);
 			if(pAttach)
 			{
 				float MaxTime = 0.0f;
 				bool Loop = true;
 				
-				CModAPI_Asset_TeeAnimation* pTeeAnimation = ModAPIGraphics()->m_TeeAnimationsCatalog.GetAsset(pAttach->m_TeeAnimationPath);
+				CModAPI_Asset_TeeAnimation* pTeeAnimation = AssetManager()->GetAsset<CModAPI_Asset_TeeAnimation>(pAttach->m_TeeAnimationPath);
 				if(pTeeAnimation)
 				{
 					//Body
 					{
-						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BodyAnimationPath);
+						CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BodyAnimationPath);
 						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 						{
 							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1071,7 +643,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 					}
 					//BackFoot
 					{
-						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackFootAnimationPath);
+						CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BackFootAnimationPath);
 						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 						{
 							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1080,7 +652,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 					}
 					//FrontFoot
 					{
-						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontFootAnimationPath);
+						CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_FrontFootAnimationPath);
 						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 						{
 							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1089,7 +661,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 					}
 					//BackHand
 					{
-						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_BackHandAnimationPath);
+						CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_BackHandAnimationPath);
 						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 						{
 							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1098,7 +670,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 					}
 					//FrontHand
 					{
-						CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pTeeAnimation->m_FrontHandAnimationPath);
+						CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pTeeAnimation->m_FrontHandAnimationPath);
 						if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 						{
 							MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1109,7 +681,7 @@ void CModAPI_AssetsEditor::TimeWrap()
 				
 				for(int i=0; i<pAttach->m_BackElements.size(); i++)
 				{
-					CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(pAttach->m_BackElements[i].m_AnimationPath);
+					CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(pAttach->m_BackElements[i].m_AnimationPath);
 					if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 					{
 						MaxTime = max(MaxTime, pAnimation->m_lKeyFrames[pAnimation->m_lKeyFrames.size()-1].m_Time);
@@ -1138,13 +710,14 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 	m_LastTime = Client()->LocalTime();
 	TimeWrap();
 	
-	
 	//Update popup state
-	if(m_ClosePopup && m_pGuiPopup)
+	for(int i=0; i<m_GuiPopups.size(); i++)
 	{
-		delete m_pGuiPopup;
-		m_pGuiPopup = 0;
-		m_ClosePopup = false;
+		if(m_GuiPopups[i]->IsClosed())
+		{
+			delete m_GuiPopups[i];
+			m_GuiPopups.remove_index(i);
+		}
 	}
 	
 	if(m_RefreshAssetEditor)
@@ -1171,70 +744,78 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 	m_MousePos.x = clamp(m_MousePos.x, 0.0f, static_cast<float>(Graphics()->ScreenWidth()));
 	m_MousePos.y = clamp(m_MousePos.y, 0.0f, static_cast<float>(Graphics()->ScreenHeight()));
 	
-	if(m_pGuiPopup)
+	if(m_GuiPopups.size() > 0)
 	{
-		m_pGuiPopup->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		m_pGuiPopup->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
-		m_pGuiPopup->OnInputEvent();
+		for(int i=0; i<m_GuiPopups.size(); i++)
+		{
+			m_GuiPopups[i]->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
+			m_GuiPopups[i]->OnInputEvent();
+		}
 	}
 	else
 	{
-		m_pGuiToolbar->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		m_pGuiAssetList->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		m_pGuiAssetEditor->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		m_pGuiView->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		m_pGuiTimeline->OnMouseOver(m_MousePos.x, m_MousePos.y, Keys);
-		
-		m_pGuiToolbar->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
-		m_pGuiAssetList->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
-		m_pGuiAssetEditor->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
-		m_pGuiView->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
-		m_pGuiTimeline->OnMouseMotion(m_MouseDelta.x, m_MouseDelta.y, Keys);
+		m_pGuiToolbar->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
+		m_pGuiAssetListTabs->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
+		m_pGuiAssetEditor->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
+		m_pGuiView->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
+		m_pGuiTimeline->OnMouseOver(m_MousePos.x, m_MousePos.y, m_MouseDelta.x, m_MouseDelta.y, Keys);
 		
 		m_pGuiToolbar->OnInputEvent();
-		m_pGuiAssetList->OnInputEvent();
+		m_pGuiAssetListTabs->OnInputEvent();
 		m_pGuiAssetEditor->OnInputEvent();
 		m_pGuiView->OnInputEvent();
 		m_pGuiTimeline->OnInputEvent();
 	}
 	
-	if(Input()->KeyIsPressed(KEY_MOUSE_1))
+	for(int i=0; i<3; i++)
 	{
-		if(m_MouseButton1 == 0)
+		int Button = KEY_MOUSE_1+i;
+		int ModAPIButton;
+		
+		if(Input()->KeyIsPressed(Button))
 		{
-			m_MouseButton1 = 1;
-			
-			if(m_pGuiPopup)
+			if(m_MouseButton[i] == 0)
 			{
-				m_pGuiPopup->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
-			}
-			else
-			{
-				m_pGuiToolbar->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
-				m_pGuiAssetList->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
-				m_pGuiAssetEditor->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
-				m_pGuiView->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
-				m_pGuiTimeline->OnMouseButtonClick(m_MousePos.x, m_MousePos.y);
+				m_MouseButton[i] = 1;
+				
+				if(m_GuiPopups.size() > 0)
+				{
+					for(int i=0; i<m_GuiPopups.size(); i++)
+					{
+						m_GuiPopups[i]->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+					}
+				}
+				else
+				{
+					m_pGuiToolbar->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+					m_pGuiAssetListTabs->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+					m_pGuiAssetEditor->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+					m_pGuiView->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+					m_pGuiTimeline->OnButtonClick(m_MousePos.x, m_MousePos.y, Button);
+				}
 			}
 		}
-	}
-	else
-	{
-		if(m_MouseButton1 == 1)
+		else
 		{
-			m_MouseButton1 = 0;
-			
-			if(m_pGuiPopup)
+			if(m_MouseButton[i] == 1)
 			{
-				m_pGuiPopup->OnMouseButtonRelease();
-			}
-			else
-			{
-				m_pGuiToolbar->OnMouseButtonRelease();
-				m_pGuiAssetList->OnMouseButtonRelease();
-				m_pGuiAssetEditor->OnMouseButtonRelease();
-				m_pGuiView->OnMouseButtonRelease();
-				m_pGuiTimeline->OnMouseButtonRelease();
+				m_MouseButton[i] = 0;
+				
+				if(m_GuiPopups.size() > 0)
+				{
+					for(int i=0; i<m_GuiPopups.size(); i++)
+					{
+						m_GuiPopups[i]->OnButtonRelease(Button);
+					}
+				}
+				else
+				{
+					m_pGuiToolbar->OnButtonRelease(Button);
+					m_pGuiAssetListTabs->OnButtonRelease(Button);
+					m_pGuiAssetEditor->OnButtonRelease(Button);
+					m_pGuiView->OnButtonRelease(Button);
+					m_pGuiTimeline->OnButtonRelease(Button);
+				}
 			}
 		}
 	}
@@ -1252,67 +833,42 @@ bool CModAPI_AssetsEditor::HasUnsavedData() const
 
 void CModAPI_AssetsEditor::DisplayPopup(CModAPI_ClientGui_Popup* pWidget)
 {
-	if(m_pGuiPopup) delete m_pGuiPopup;
-	
-	m_pGuiPopup = pWidget;	
-	m_pGuiPopup->SetRect(CModAPI_ClientGui_Rect(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight()));
-	m_pGuiPopup->Update();
+	m_GuiPopups.add(pWidget);
 }
 
-void CModAPI_AssetsEditor::ClosePopup()
+bool CModAPI_AssetsEditor::IsEditedAsset(CModAPI_AssetPath AssetPath)
 {
-	m_ClosePopup = true;
+	return (m_EditedAssetPath == AssetPath);
 }
 
-bool CModAPI_AssetsEditor::IsEditedAsset(int AssetType, CModAPI_AssetPath AssetPath)
+bool CModAPI_AssetsEditor::IsDisplayedAsset(CModAPI_AssetPath AssetPath)
 {
-	return (m_EditedAssetType == AssetType && m_EditedAssetPath == AssetPath);
+	return (m_ViewedAssetPath == AssetPath);
 }
 
-bool CModAPI_AssetsEditor::IsDisplayedAsset(int AssetType, CModAPI_AssetPath AssetPath)
+void CModAPI_AssetsEditor::EditAsset(CModAPI_AssetPath AssetPath)
 {
-	return (m_ViewedAssetType == AssetType && m_ViewedAssetPath == AssetPath);
-}
-
-void CModAPI_AssetsEditor::EditAsset(int AssetType, CModAPI_AssetPath AssetPath)
-{
-	m_EditedAssetType = AssetType;
 	m_EditedAssetPath = AssetPath;
-	
-	m_Time = 0.0f;
-	
-	m_pGuiAssetEditor->OnEditedAssetChange();
+	m_EditedAssetSubPath = -1;
+	RefreshAssetEditor();
 }
 
-void CModAPI_AssetsEditor::EditAssetFrame(int FrameId)
+void CModAPI_AssetsEditor::EditAssetSubItem(int SubPath)
 {
-	m_EditedAssetFrame = FrameId;
-	
-	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
-	{
-		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
-		if(pAnimation && m_EditedAssetFrame >= 0 && m_EditedAssetFrame < pAnimation->m_lKeyFrames.size())
-		{
-			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetFrame].m_Time;
-		}
-		else
-			m_Time = 0.0f;
-	}
-	else
-		m_Time = 0.0f;
-		
+	m_EditedAssetSubPath = SubPath;
 	m_Paused = true;
+	RefreshAssetEditor();
 }
 
 void CModAPI_AssetsEditor::EditAssetFirstFrame()
 {
-	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
 		if(pAnimation)
 		{
-			m_EditedAssetFrame = 0;
-			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetFrame].m_Time;
+			m_EditedAssetSubPath = 0;
+			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetSubPath].m_Time;
 		}
 		else
 			m_Time = 0.0f;
@@ -1325,9 +881,9 @@ void CModAPI_AssetsEditor::EditAssetFirstFrame()
 
 void CModAPI_AssetsEditor::EditAssetPrevFrame()
 {
-	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
 		if(pAnimation)
 		{
 			for(int i=pAnimation->m_lKeyFrames.size()-1; i>=0; i--)
@@ -1335,7 +891,7 @@ void CModAPI_AssetsEditor::EditAssetPrevFrame()
 				if(pAnimation->m_lKeyFrames[i].m_Time < m_Time)
 				{
 					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
-					m_EditedAssetFrame = i;
+					m_EditedAssetSubPath = i;
 					break;
 				}
 			}
@@ -1351,9 +907,9 @@ void CModAPI_AssetsEditor::EditAssetPrevFrame()
 
 void CModAPI_AssetsEditor::EditAssetNextFrame()
 {
-	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
 		if(pAnimation)
 		{
 			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
@@ -1361,7 +917,7 @@ void CModAPI_AssetsEditor::EditAssetNextFrame()
 				if(pAnimation->m_lKeyFrames[i].m_Time > m_Time)
 				{
 					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
-					m_EditedAssetFrame = i;
+					m_EditedAssetSubPath = i;
 					break;
 				}
 			}
@@ -1377,35 +933,34 @@ void CModAPI_AssetsEditor::EditAssetNextFrame()
 
 void CModAPI_AssetsEditor::EditAssetLastFrame()
 {
-	if(m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_EditedAssetPath);
+		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
 		if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
 		{
-			m_EditedAssetFrame = pAnimation->m_lKeyFrames.size()-1;
-			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetFrame].m_Time;
+			m_EditedAssetSubPath = pAnimation->m_lKeyFrames.size()-1;
+			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetSubPath].m_Time;
 		}
 	}
 		
 	m_Paused = true;
 }
 
-void CModAPI_AssetsEditor::DisplayAsset(int AssetType, CModAPI_AssetPath AssetPath)
+void CModAPI_AssetsEditor::DisplayAsset(CModAPI_AssetPath AssetPath)
 {
-	m_ViewedAssetType = AssetType;
 	m_ViewedAssetPath = AssetPath;
 }
 
-void CModAPI_AssetsEditor::NewAsset(int AssetType, CModAPI_AssetPath AssetPath)
+void CModAPI_AssetsEditor::NewAsset(CModAPI_AssetPath AssetPath)
 {
 	RefreshAssetList();
-	DisplayAsset(AssetType, AssetPath);
-	EditAsset(AssetType, AssetPath);
+	DisplayAsset(AssetPath);
+	EditAsset(AssetPath);
 }
 
-void CModAPI_AssetsEditor::DeleteAsset(int AssetType, CModAPI_AssetPath AssetPath)
+void CModAPI_AssetsEditor::DeleteAsset(CModAPI_AssetPath AssetPath)
 {
-	ModAPIGraphics()->DeleteAsset(AssetType, AssetPath);
+	AssetManager()->DeleteAsset(AssetPath);
 	
 	RefreshAssetList();
 	
@@ -1426,7 +981,7 @@ bool CModAPI_AssetsEditor::IsPaused()
 void CModAPI_AssetsEditor::SetTime(float Time)
 {
 	m_Time = Time;
-	m_EditedAssetFrame = -1;
+	m_EditedAssetSubPath = -1;
 }
 
 float CModAPI_AssetsEditor::GetTime()
@@ -1439,13 +994,8 @@ void CModAPI_AssetsEditor::CloseEditor()
 	g_Config.m_ClMode = MODAPI_CLIENTMODE_GAME;
 }
 
-void CModAPI_AssetsEditor::LoadAssetsFile()
+void CModAPI_AssetsEditor::LoadAssetsFile(const char* pFilename)
 {
-	Client()->LoadAssetsFile("assets/test.assets");
+	Client()->LoadAssetsFile(pFilename);
 	RefreshAssetList();
-}
-
-void CModAPI_AssetsEditor::SaveAssetsFile()
-{
-	ModAPIGraphics()->SaveInAssetsFile(Storage(), "assets/test.assets");
 }

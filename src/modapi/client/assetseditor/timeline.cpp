@@ -20,6 +20,7 @@
 #include <cstddef>
 
 #include "timeline.h"
+#include "popup.h"
 
 CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_AssetsEditor* pAssetsEditor) :
 	CModAPI_ClientGui_Widget(pAssetsEditor->m_pGuiConfig),
@@ -28,14 +29,14 @@ CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_Asset
 	m_ValueScroll(0.0f),
 	m_TimeScale(1.0f),
 	m_TimeMax(5.0f),
-	m_SelectedFrame(-1),
-	m_SelectedFrameMoved(false),
-	m_VertexSize(16),
 	m_ToolbarHeight(30),
 	m_TimelineTop(0),
 	m_TimelineBottom(0),
 	m_pToolbar(0),
-	m_EditMode(TIMELINE_EDITMODE_ANGLE)
+	m_ValueHeight(100),
+	m_CursorTool(CURSORTOOL_FRAME_MOVE),
+	m_Drag(0),
+	m_DragedElement(CModAPI_Asset_SkeletonAnimation::CSubPath::Null())
 {
 	m_pTimeSlider = new CTimeSlider(this);
 	m_pValueSlider = new CValueSlider(this);
@@ -47,7 +48,10 @@ CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_Asset
 		pTimeScaleLabel->m_Rect.h
 	));
 	
-	m_pEditModeButton = new CEditModeButton(this);
+	m_CursorToolButtons[CURSORTOOL_FRAME_MOVE] = new CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_FRAME_MOVE, CURSORTOOL_FRAME_MOVE);
+	m_CursorToolButtons[CURSORTOOL_FRAME_ADD] = new CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_FRAME_ADD, CURSORTOOL_FRAME_ADD);
+	m_CursorToolButtons[CURSORTOOL_FRAME_DELETE] = new CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_FRAME_DELETE, CURSORTOOL_FRAME_DELETE);
+	m_CursorToolButtons[CURSORTOOL_FRAME_COLOR] = new CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_FRAME_COLOR, CURSORTOOL_FRAME_COLOR);
 	
 	m_pToolbar = new CModAPI_ClientGui_HListLayout(m_pConfig);
 	m_pToolbar->Add(new CFirstFrameButton(m_pAssetsEditor));
@@ -55,12 +59,19 @@ CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_Asset
 	m_pToolbar->Add(new CPlayPauseButton(m_pAssetsEditor));
 	m_pToolbar->Add(new CNextFrameButton(m_pAssetsEditor));
 	m_pToolbar->Add(new CLastFrameButton(m_pAssetsEditor));
-	m_pToolbar->Add(m_pEditModeButton);
-	m_pToolbar->Add(new CNewFrameButton(this));
+	m_pToolbar->AddSeparator();
 	m_pToolbar->Add(pTimeScaleLabel);
 	m_pToolbar->Add(new CTimeScaleSlider(this));
+	m_pToolbar->AddSeparator();
+	m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_FRAME_MOVE]);
+	m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_FRAME_ADD]);
+	m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_FRAME_DELETE]);
+	m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_FRAME_COLOR]);
 	
 	m_pToolbar->Update();
+	
+	m_FrameMargin = 1.5f;
+	m_FrameHeight = 30.0f - 2.0f*m_FrameMargin;
 }
 	
 CModAPI_AssetsEditorGui_Timeline::~CModAPI_AssetsEditorGui_Timeline()
@@ -72,10 +83,10 @@ CModAPI_AssetsEditorGui_Timeline::~CModAPI_AssetsEditorGui_Timeline()
 
 void CModAPI_AssetsEditorGui_Timeline::NewFrame()
 {
-	if(m_pAssetsEditor->m_EditedAssetType != MODAPI_ASSETTYPE_ANIMATION)
+	if(m_pAssetsEditor->m_EditedAssetPath.GetType() != CModAPI_AssetPath::TYPE_ANIMATION)
 		return;
 	
-	CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_pAssetsEditor->m_EditedAssetPath);
+	CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_pAssetsEditor->m_EditedAssetPath);
 	if(!pAnimation)
 		return;
 	
@@ -95,9 +106,8 @@ void CModAPI_AssetsEditorGui_Timeline::TimeScaleCallback(float Pos)
 
 void CModAPI_AssetsEditorGui_Timeline::ValueScrollCallback(float Pos)
 {
-	Pos = Pos*2.0f - 1.0f;
 	float VisibleValue = static_cast<float>(m_TimelineRect.h);
-	float NeededScroll = max(400 - VisibleValue, 0.0f)/2;
+	float NeededScroll = max(m_ValueHeight - VisibleValue, 0.0f);
 	m_ValueScroll = NeededScroll * Pos;
 }
 
@@ -108,28 +118,30 @@ void CModAPI_AssetsEditorGui_Timeline::TimeScrollCallback(float Pos)
 	m_TimeScroll = NeededScroll * Pos;
 }
 
-void CModAPI_AssetsEditorGui_Timeline::SetEditMode(int Mode)
-{
-	m_EditMode = Mode;
-	
-	m_pEditModeButton->OnEditModeChange(m_EditMode);
-	m_pToolbar->Update();
+int CModAPI_AssetsEditorGui_Timeline::TimeToTimeline(float Time)
+{		
+	return m_TimelineRect.x + m_TimeScale * (Time - m_TimeScroll);
 }
 
-int CModAPI_AssetsEditorGui_Timeline::GetEditMode()
+float CModAPI_AssetsEditorGui_Timeline::TimelineToTime(int X)
 {
-	return m_EditMode;
+	return m_TimeScroll + (X - m_TimelineRect.x)/m_TimeScale;
 }
 
 void CModAPI_AssetsEditorGui_Timeline::Update()
 {
-	m_TimelineRect.x = m_Rect.x + 2*m_pConfig->m_LayoutMargin + m_pValueSlider->m_Rect.w;
-	m_TimelineRect.y = m_Rect.y + m_pConfig->m_LayoutMargin;
-	m_TimelineRect.w = m_Rect.w - 3*m_pConfig->m_LayoutMargin - m_pValueSlider->m_Rect.w;
-	m_TimelineRect.h = m_Rect.h - 4*m_pConfig->m_LayoutMargin - m_ToolbarHeight - m_pTimeSlider->m_Rect.h;
+	m_ListRect.x = m_Rect.x + 2*m_pConfig->m_LayoutMargin + m_pValueSlider->m_Rect.w;
+	m_ListRect.y = m_Rect.y + m_pConfig->m_LayoutMargin;
+	m_ListRect.w = 150;
+	m_ListRect.h = m_Rect.h - 4*m_pConfig->m_LayoutMargin - m_ToolbarHeight - m_pTimeSlider->m_Rect.h;
 	
-	m_TimelineTop = m_TimelineRect.y + 16;
-	m_TimelineBottom = m_TimelineTop + m_TimelineRect.h - 16;
+	m_TimelineRect.x = m_ListRect.x + m_ListRect.w + m_pConfig->m_LayoutMargin;
+	m_TimelineRect.y = m_ListRect.y;
+	m_TimelineRect.w = m_Rect.w - m_TimelineRect.x + m_Rect.x - m_pConfig->m_LayoutMargin;
+	m_TimelineRect.h = m_ListRect.h;
+	
+	m_TimelineTop = m_TimelineRect.y;
+	m_TimelineBottom = m_TimelineTop + m_TimelineRect.h;
 	
 	m_TimeScale = static_cast<float>(m_Rect.w) / (m_TimeMax/2.0f);
 	
@@ -149,10 +161,10 @@ void CModAPI_AssetsEditorGui_Timeline::Update()
 	m_pTimeSlider->Update();
 	
 	m_pValueSlider->SetRect(CModAPI_ClientGui_Rect(
-		m_TimelineRect.x - m_pValueSlider->m_Rect.w - m_pConfig->m_LayoutMargin,
-		m_TimelineRect.y,
+		m_ListRect.x - m_pValueSlider->m_Rect.w - m_pConfig->m_LayoutMargin,
+		m_ListRect.y,
 		m_pValueSlider->m_Rect.w,
-		m_TimelineRect.h
+		m_ListRect.h
 	));
 	m_pValueSlider->Update();
 	
@@ -161,54 +173,36 @@ void CModAPI_AssetsEditorGui_Timeline::Update()
 	CModAPI_ClientGui_Widget::Update();
 }
 
-int CModAPI_AssetsEditorGui_Timeline::TimeToTimeline(float Time)
-{		
-	return m_TimelineRect.x + m_TimeScale * (Time - m_TimeScroll);
-}
-
-int CModAPI_AssetsEditorGui_Timeline::AngleToTimeline(float Angle)
-{
-	return m_TimelineBottom + ((Angle+2.0f*pi)/(4.0f*pi)) * (m_TimelineTop - m_TimelineBottom);
-}
-
-float CModAPI_AssetsEditorGui_Timeline::TimelineToAngle(int Value)
-{
-	return 4.0f*pi*static_cast<float>(Value - m_TimelineBottom) / static_cast<float>(m_TimelineTop - m_TimelineBottom) - 2.0*pi;
-}
-
-float CModAPI_AssetsEditorGui_Timeline::RelTimelineToAngle(int Rel)
-{
-	return 4.0f*pi*static_cast<float>(Rel) / static_cast<float>(m_TimelineTop - m_TimelineBottom);
-}
-
-int CModAPI_AssetsEditorGui_Timeline::OpacityToTimeline(float Opacity)
-{
-	return m_TimelineBottom + Opacity * (m_TimelineTop - m_TimelineBottom);
-}
-
-float CModAPI_AssetsEditorGui_Timeline::RelTimelineToOpacity(int Rel)
-{
-	return static_cast<float>(Rel) / static_cast<float>(m_TimelineTop - m_TimelineBottom);
-}
-
-int CModAPI_AssetsEditorGui_Timeline::PositionToTimeline(float Position)
-{
-	return m_TimelineBottom + (Position+16.0f)/(32.0f) * (m_TimelineTop - m_TimelineBottom);
-}
-
-float CModAPI_AssetsEditorGui_Timeline::RelTimelineToPosition(int Rel)
-{
-	return 32.0f*static_cast<float>(Rel) / static_cast<float>(m_TimelineTop - m_TimelineBottom);
-}
-
 void CModAPI_AssetsEditorGui_Timeline::Render()
 {
-	CUIRect rect;
-	rect.x = m_Rect.x;
-	rect.y = m_Rect.y;
-	rect.w = m_Rect.w;
-	rect.h = m_Rect.h - m_ToolbarHeight - 5;
-	RenderTools()->DrawRoundRect(&rect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), s_LayoutCornerRadius);
+	m_pTimeSlider->Render();
+	m_pValueSlider->Render();
+	m_pToolbar->Render();
+	
+	for(int i=0; i<NUM_CURSORTOOLS; i++)
+	{
+		if(m_CursorTool == i)
+			m_CursorToolButtons[i]->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
+		else
+			m_CursorToolButtons[i]->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
+	}
+	
+	{
+		CUIRect rect;
+		rect.x = m_TimelineRect.x;
+		rect.y = m_TimelineRect.y;
+		rect.w = m_TimelineRect.w;
+		rect.h = m_TimelineRect.h;
+		RenderTools()->DrawRoundRect(&rect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), s_LayoutCornerRadius);
+	}
+	{
+		CUIRect rect;
+		rect.x = m_ListRect.x;
+		rect.y = m_ListRect.y;
+		rect.w = m_ListRect.w;
+		rect.h = m_ListRect.h;
+		RenderTools()->DrawRoundRect(&rect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), s_LayoutCornerRadius);
+	}
 	
 	Graphics()->ClipEnable(m_TimelineRect.x, m_TimelineRect.y, m_TimelineRect.w, m_TimelineRect.h);
 	{
@@ -222,356 +216,788 @@ void CModAPI_AssetsEditorGui_Timeline::Render()
 				CUIRect timerect;
 				timerect.x = TimeToTimeline(TimeIter);
 				timerect.y = m_TimelineRect.y;
-				timerect.w = TimeToTimeline(TimeIter + 0.1f) - timerect.x;
+				timerect.w = TimeToTimeline(TimeIter + 1.0f/MODAPI_SKELETONANIMATION_TIMESTEP) - timerect.x;
 				timerect.h = m_TimelineRect.h;
 			
 				RenderTools()->DrawUIRect(&timerect, vec4(0.0f, 0.0f, 0.0f, s_LayoutOpacity), 0, s_LayoutCornerRadius);
 			}
 			RectIter++;
-			TimeIter += 0.1f;
+			TimeIter += 1.0f/MODAPI_SKELETONANIMATION_TIMESTEP;
 		}
 	}
 	
 	{
 		int TimePos = TimeToTimeline(m_pAssetsEditor->GetTime());		
 			
-		IGraphics::CLineItem Line(TimePos, m_TimelineTop-6, TimePos, m_TimelineBottom);
+		IGraphics::CLineItem Line(TimePos, m_TimelineTop, TimePos, m_TimelineBottom);
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		Graphics()->LinesDraw(&Line, 1);
 		Graphics()->LinesEnd();
-		
-		int IconId = MODAPI_ASSETSEDITOR_ICON_MAGNET_TRIANGLE;
-		int SubX = IconId%16;
-		int SubY = IconId/16;
-		
-		Graphics()->TextureSet(m_pAssetsEditor->m_ModEditorTexture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset((SubX+1)/16.0f, (SubY+1)/16.0f, SubX/16.0f, SubY/16.0f);
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		IGraphics::CQuadItem QuadItem(TimePos - m_VertexSize/2, m_TimelineTop - m_VertexSize, m_VertexSize, m_VertexSize);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	
-	if(m_pAssetsEditor->m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
-	{
-		CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_pAssetsEditor->m_EditedAssetPath);
-		if(pAnimation)
-		{
-			vec4 ValueColor;
-			switch(m_EditMode)
-			{
-				case TIMELINE_EDITMODE_ANGLE:
-					ValueColor = vec4(1.0f, 1.0f, 0.5f, 1.0f);
-					break;
-				case TIMELINE_EDITMODE_OPACITY:
-					ValueColor = vec4(1.0f, 0.5f, 1.0f, 1.0f);
-					break;
-				case TIMELINE_EDITMODE_POSX:
-				case TIMELINE_EDITMODE_POSY:
-					ValueColor = vec4(0.5f, 1.0f, 0.5f, 1.0f);
-					break;
-			}
-				
-			int LastTimePos = 0.0f;
-			int LastValuePos = 0.0f;
-	
-			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
-			{
-				int TimePos = TimeToTimeline(pAnimation->m_lKeyFrames[i].m_Time);	
-				int ValuePos = 0;
-				
-				switch(m_EditMode)
-				{
-					case TIMELINE_EDITMODE_ANGLE:
-						ValuePos = AngleToTimeline(pAnimation->m_lKeyFrames[i].m_Angle);
-						break;
-					case TIMELINE_EDITMODE_OPACITY:
-						ValuePos = OpacityToTimeline(pAnimation->m_lKeyFrames[i].m_Opacity);
-						break;
-					case TIMELINE_EDITMODE_POSX:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.x) - m_ValueScroll;
-						break;
-					case TIMELINE_EDITMODE_POSY:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.y) - m_ValueScroll;
-						break;
-				}
-				
-				if(i>0)
-				{
-					IGraphics::CLineItem Line(LastTimePos, LastValuePos, TimePos, ValuePos);
-					
-					Graphics()->TextureClear();
-					Graphics()->LinesBegin();
-					Graphics()->SetColor(ValueColor.x, ValueColor.y, ValueColor.z, ValueColor.w);
-					Graphics()->LinesDraw(&Line, 1);
-					Graphics()->LinesEnd();
-				}
-				
-				IGraphics::CLineItem Line(TimePos, m_TimelineTop-6, TimePos, m_TimelineBottom);
-				Graphics()->TextureClear();
-				Graphics()->LinesBegin();
-				Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-				Graphics()->LinesDraw(&Line, 1);
-				Graphics()->LinesEnd();
-				
-				LastTimePos = TimePos;
-				LastValuePos = ValuePos;
-			}
-				
-			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
-			{
-				int TimePos = TimeToTimeline(pAnimation->m_lKeyFrames[i].m_Time);
-				int ValuePos = 0;
-				
-				int ValueIconId = MODAPI_ASSETSEDITOR_ICON_MAGNET_CIRCLE;
-				float ValueIconAngle = 0.0f;
-					
-				switch(m_EditMode)
-				{
-					case TIMELINE_EDITMODE_ANGLE:
-						ValueIconAngle = pAnimation->m_lKeyFrames[i].m_Angle;
-						ValuePos = AngleToTimeline(pAnimation->m_lKeyFrames[i].m_Angle);
-						ValueIconId = MODAPI_ASSETSEDITOR_ICON_MAGNET_ROTATION;
-						break;
-					case TIMELINE_EDITMODE_OPACITY:
-						ValuePos = OpacityToTimeline(pAnimation->m_lKeyFrames[i].m_Opacity);
-						break;
-					case TIMELINE_EDITMODE_POSX:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.x) - m_ValueScroll;
-						break;
-					case TIMELINE_EDITMODE_POSY:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.y) - m_ValueScroll;
-						break;
-				}
-				
-				{
-					int SubX = ValueIconId%16;
-					int SubY = ValueIconId/16;
-					
-					Graphics()->TextureSet(m_pAssetsEditor->m_ModEditorTexture);
-					Graphics()->QuadsBegin();
-					Graphics()->QuadsSetRotation(ValueIconAngle);
-					Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+1)/16.0f, (SubY+1)/16.0f);
-					Graphics()->SetColor(ValueColor.x, ValueColor.y, ValueColor.z, ValueColor.w);
-					IGraphics::CQuadItem QuadItem(TimePos - m_VertexSize/2, ValuePos - m_VertexSize/2, m_VertexSize, m_VertexSize);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
-				}
-				
-				{
-					int IconId = MODAPI_ASSETSEDITOR_ICON_MAGNET_TRIANGLE;
-					int SubX = IconId%16;
-					int SubY = IconId/16;
-					
-					Graphics()->TextureSet(m_pAssetsEditor->m_ModEditorTexture);
-					Graphics()->QuadsBegin();
-					Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+1)/16.0f, (SubY+1)/16.0f);
-					Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-					IGraphics::CQuadItem QuadItem(TimePos - m_VertexSize/2, m_TimelineTop - m_VertexSize, m_VertexSize, m_VertexSize);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
-				}
-			}
-		}
 	}
 	Graphics()->ClipDisable();
-		
-	m_pTimeSlider->Render();
-	m_pValueSlider->Render();
-	m_pToolbar->Render();
-}
+	
+	if(m_pAssetsEditor->m_EditedAssetPath.GetType() != CModAPI_AssetPath::TYPE_SKELETONANIMATION)
+		return;
+	
+	CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pSkeletonAnimation)
+		return;
+	
+	CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeletonAnimation->m_SkeletonPath);
+	if(!pSkeleton)
+		return;
 
-void CModAPI_AssetsEditorGui_Timeline::OnMouseButtonClick(int X, int Y)
-{
-	m_SelectedFrame = -1;
-		
-	if(m_Rect.IsInside(X, Y) && m_pAssetsEditor->m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	m_ValueHeight = m_FrameMargin;
+	float FrameY = m_TimelineTop-m_ValueScroll+m_FrameMargin;
+	
+	//Bones
+	for(int s=0; s<2; s++)
 	{
-		CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_pAssetsEditor->m_EditedAssetPath);
-		if(pAnimation)
+		CModAPI_Asset_Skeleton* pCurrentSkeleton;
+		CModAPI_AssetPath CurrentSkeletonPath;
+		
+		if(s==0)
 		{
-			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
+			pCurrentSkeleton = pSkeleton;
+			CurrentSkeletonPath = pSkeletonAnimation->m_SkeletonPath;
+		}
+		else
+		{
+			CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+			if(!pParentSkeleton)
+				continue;
+			pCurrentSkeleton = pParentSkeleton;
+			CurrentSkeletonPath = pSkeleton->m_ParentPath;
+		}
+		
+		for(int i=0; i<pCurrentSkeleton->m_Bones.size(); i++)
+		{
+			Graphics()->ClipEnable(m_ListRect.x, m_ListRect.y, m_ListRect.w, m_ListRect.h);
+			
+			char* pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+				CurrentSkeletonPath,
+				CModAPI_Asset_Skeleton::BONE_NAME,
+				CModAPI_Asset_Skeleton::CSubPath::Bone(i).ConvertToInteger(),
+				0);
+			
+			if(pText)
 			{
-				int TimePos = TimeToTimeline(pAnimation->m_lKeyFrames[i].m_Time);
-				int ValuePos = 0;
+				int TextWidth = TextRender()->TextWidth(0, m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL], pText, -1);
 				
-				switch(m_EditMode)
+				int PosX = m_ListRect.x + 2*m_pConfig->m_LabelMargin + m_pConfig->m_IconSize;					
+				int CenterY = FrameY + m_FrameHeight/2;
+				int PosY = CenterY - m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL]*0.7;
+				
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, PosX, PosY, m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL], TEXTFLAG_RENDER);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextEx(&Cursor, pText, -1);
+				
+				PosX -= m_pConfig->m_IconSize + m_pConfig->m_LabelMargin; //Icon size and space
+				
+				int SubX = MODAPI_ASSETSEDITOR_ICON_BONE%16;
+				int SubY = MODAPI_ASSETSEDITOR_ICON_BONE/16;
+				
+				Graphics()->TextureSet(m_pConfig->m_Texture);
+				Graphics()->QuadsBegin();
+				Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+1)/16.0f, (SubY+1)/16.0f);
+				IGraphics::CQuadItem QuadItem(PosX, CenterY - m_pConfig->m_IconSize/2, m_pConfig->m_IconSize, m_pConfig->m_IconSize);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+			}
+			
+			Graphics()->ClipDisable();
+			
+			Graphics()->ClipEnable(m_TimelineRect.x, m_TimelineRect.y, m_TimelineRect.w, m_TimelineRect.h);
+			Graphics()->TextureClear();
+			Graphics()->QuadsBegin();
+	
+			CModAPI_Asset_Skeleton::CBonePath BonePath;
+			if(s == 0) BonePath = CModAPI_Asset_Skeleton::CBonePath::Local(i);
+			else BonePath = CModAPI_Asset_Skeleton::CBonePath::Parent(i);
+			
+			CModAPI_Asset_SkeletonAnimation::CBoneAnimation* pAnimation = 0;
+			
+			int AnimId = -1;
+			for(int j=0; j<pSkeletonAnimation->m_BoneAnimations.size(); j++)
+			{
+				if(pSkeletonAnimation->m_BoneAnimations[j].m_BonePath == BonePath)
 				{
-					case TIMELINE_EDITMODE_ANGLE:
-						ValuePos = AngleToTimeline(pAnimation->m_lKeyFrames[i].m_Angle);
-						break;
-					case TIMELINE_EDITMODE_OPACITY:
-						ValuePos = OpacityToTimeline(pAnimation->m_lKeyFrames[i].m_Opacity);
-						break;
-					case TIMELINE_EDITMODE_POSX:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.x) - m_ValueScroll;
-						break;
-					case TIMELINE_EDITMODE_POSY:
-						ValuePos = PositionToTimeline(pAnimation->m_lKeyFrames[i].m_Pos.y) - m_ValueScroll;
-						break;
+					AnimId = j;
+					pAnimation = &pSkeletonAnimation->m_BoneAnimations[j];
+					break;
 				}
-				
-				CModAPI_ClientGui_Rect rectValue(TimePos - m_VertexSize/2, ValuePos - m_VertexSize/2, m_VertexSize, m_VertexSize);
-				CModAPI_ClientGui_Rect rectTime(TimePos - m_VertexSize/2, m_TimelineTop - m_VertexSize, m_VertexSize, m_VertexSize);
-				
-				if(rectValue.IsInside(X, Y))
+			}
+			
+			if(pAnimation)
+			{
+				for(int j=0; j<pAnimation->m_KeyFrames.size(); j++)
 				{
-					m_SelectedFrame = i;
-					m_SelectedFrameMoved = false;
-					m_pAssetsEditor->HideCursor();
-				}
-				else if(rectTime.IsInside(X, Y))
-				{
-					m_SelectedFrame = i;
-					m_SelectedFrameMoved = true;
-					m_pAssetsEditor->HideCursor();
+					CModAPI_Asset_SkeletonAnimation::CSubPath SubPath = CModAPI_Asset_SkeletonAnimation::CSubPath::BoneKeyFrame(AnimId, j);
 					
-					m_pAssetsEditor->EditAssetFrame(i);
+					if(SubPath == m_DragedElement)
+						Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+					else
+						Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					
+					float Time = pAnimation->m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					float TimePos = TimeToTimeline(Time);
+
+					IGraphics::CFreeformItem Freeform1(
+						TimePos, FrameY,
+						TimePos, FrameY+m_FrameHeight,
+						TimePos+4.0f, FrameY+4.0f,
+						TimePos+4.0f, FrameY+m_FrameHeight-4.0f);
+					IGraphics::CFreeformItem Freeform2(
+						TimePos, FrameY,
+						TimePos, FrameY+m_FrameHeight,
+						TimePos-4.0f, FrameY+4.0f,
+						TimePos-4.0f, FrameY+m_FrameHeight-4.0f);
+					Graphics()->QuadsDrawFreeform(&Freeform1, 1);
+					Graphics()->QuadsDrawFreeform(&Freeform2, 1);
 				}
+			}
+			
+			Graphics()->QuadsEnd();
+			
+			Graphics()->LinesBegin();
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+			IGraphics::CLineItem Separator(m_TimelineRect.x, FrameY-1, m_TimelineRect.x+m_TimelineRect.w, FrameY-1);
+			Graphics()->LinesDraw(&Separator, 1);
+			Graphics()->LinesEnd();
+			
+			Graphics()->ClipDisable();
+				
+			FrameY += m_FrameHeight + 2.0f*m_FrameMargin;
+			m_ValueHeight += m_FrameHeight + 2.0f*m_FrameMargin;
+		}
+	}
+
+	//Layers
+	for(int s=0; s<2; s++)
+	{
+		CModAPI_Asset_Skeleton* pCurrentSkeleton;
+		CModAPI_AssetPath CurrentSkeletonPath;
+		
+		if(s==0)
+		{
+			pCurrentSkeleton = pSkeleton;
+			CurrentSkeletonPath = pSkeletonAnimation->m_SkeletonPath;
+		}
+		else
+		{
+			CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+			if(!pParentSkeleton)
+				continue;
+			pCurrentSkeleton = pParentSkeleton;
+			CurrentSkeletonPath = pSkeleton->m_ParentPath;
+		}
+		
+		for(int i=0; i<pCurrentSkeleton->m_Layers.size(); i++)
+		{
+			Graphics()->ClipEnable(m_ListRect.x, m_ListRect.y, m_ListRect.w, m_ListRect.h);
+			
+			char* pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+				CurrentSkeletonPath,
+				CModAPI_Asset_Skeleton::LAYER_NAME,
+				CModAPI_Asset_Skeleton::CSubPath::Layer(i).ConvertToInteger(),
+				0);
+			
+			if(pText)
+			{
+				int TextWidth = TextRender()->TextWidth(0, m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL], pText, -1);
+				
+				int PosX = m_ListRect.x + 2*m_pConfig->m_LabelMargin + m_pConfig->m_IconSize;					
+				int CenterY = FrameY + m_FrameHeight/2;
+				int PosY = CenterY - m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL]*0.7;
+				
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, PosX, PosY, m_pConfig->m_TextSize[MODAPI_CLIENTGUI_TEXTSTYLE_NORMAL], TEXTFLAG_RENDER);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextEx(&Cursor, pText, -1);
+				
+				PosX -= m_pConfig->m_IconSize + m_pConfig->m_LabelMargin; //Icon size and space
+				
+				int SubX = MODAPI_ASSETSEDITOR_ICON_LAYERS%16;
+				int SubY = MODAPI_ASSETSEDITOR_ICON_LAYERS/16;
+				
+				Graphics()->TextureSet(m_pConfig->m_Texture);
+				Graphics()->QuadsBegin();
+				Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+1)/16.0f, (SubY+1)/16.0f);
+				IGraphics::CQuadItem QuadItem(PosX, CenterY - m_pConfig->m_IconSize/2, m_pConfig->m_IconSize, m_pConfig->m_IconSize);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+			}
+			
+			Graphics()->ClipDisable();
+			
+			Graphics()->ClipEnable(m_TimelineRect.x, m_TimelineRect.y, m_TimelineRect.w, m_TimelineRect.h);
+			Graphics()->TextureClear();
+
+			CModAPI_Asset_Skeleton::CBonePath LayerPath;
+			if(s == 0) LayerPath = CModAPI_Asset_Skeleton::CBonePath::Local(i);
+			else LayerPath = CModAPI_Asset_Skeleton::CBonePath::Parent(i);
+			
+			CModAPI_Asset_SkeletonAnimation::CLayerAnimation* pAnimation = 0;
+			
+			int AnimId = -1;
+			for(int j=0; j<pSkeletonAnimation->m_LayerAnimations.size(); j++)
+			{
+				if(pSkeletonAnimation->m_LayerAnimations[j].m_LayerPath == LayerPath)
+				{
+					AnimId = j;
+					pAnimation = &pSkeletonAnimation->m_LayerAnimations[j];
+					break;
+				}
+			}
+			
+			if(pAnimation)
+			{
+				for(int j=0; j<pAnimation->m_KeyFrames.size(); j++)
+				{
+					CModAPI_Asset_SkeletonAnimation::CSubPath SubPath = CModAPI_Asset_SkeletonAnimation::CSubPath::LayerKeyFrame(AnimId, j);
+					
+					float Time = pAnimation->m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					float TimePos = TimeToTimeline(Time);
+					
+					if(pAnimation->m_KeyFrames[j].m_State == CModAPI_Asset_SkeletonAnimation::LAYERSTATE_VISIBLE)
+					{
+						Graphics()->QuadsBegin();
+						
+						if(SubPath == m_DragedElement)
+							Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+						else
+						{
+							vec4 LayerColor = pAnimation->m_KeyFrames[j].m_Color;
+							Graphics()->SetColor(LayerColor.r, LayerColor.g, LayerColor.b, 1.0f);
+						}
+
+						IGraphics::CFreeformItem Freeform1(
+							TimePos, FrameY,
+							TimePos, FrameY+m_FrameHeight,
+							TimePos+4.0f, FrameY+4.0f,
+							TimePos+4.0f, FrameY+m_FrameHeight-4.0f);
+						Graphics()->QuadsDrawFreeform(&Freeform1, 1);
+						
+						if(SubPath == m_DragedElement)
+							Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+						else
+						{
+							vec4 LayerColor = pAnimation->m_KeyFrames[j].m_Color;
+							Graphics()->SetColor(LayerColor.r*LayerColor.a, LayerColor.g*LayerColor.a, LayerColor.b*LayerColor.a, LayerColor.a);
+						}
+						
+						IGraphics::CFreeformItem Freeform2(
+							TimePos, FrameY,
+							TimePos, FrameY+m_FrameHeight,
+							TimePos-4.0f, FrameY+4.0f,
+							TimePos-4.0f, FrameY+m_FrameHeight-4.0f);
+						Graphics()->QuadsDrawFreeform(&Freeform2, 1);
+						
+						Graphics()->QuadsEnd();
+					}
+					else
+					{
+						Graphics()->LinesBegin();
+						if(SubPath == m_DragedElement)
+							Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+						else
+						{
+							vec4 LayerColor = pAnimation->m_KeyFrames[j].m_Color;
+							Graphics()->SetColor(LayerColor.r, LayerColor.g, LayerColor.b, 1.0f);
+						}
+						
+						IGraphics::CLineItem FrameBorder[6] = {
+							IGraphics::CLineItem(TimePos, FrameY, TimePos-4.0f, FrameY+4.0f),
+							IGraphics::CLineItem(TimePos-4.0f, FrameY+4.0f, TimePos-4.0f, FrameY+m_FrameHeight-4.0f),
+							IGraphics::CLineItem(TimePos-4.0f, FrameY+m_FrameHeight-4.0f, TimePos, FrameY+m_FrameHeight),
+							IGraphics::CLineItem(TimePos, FrameY+m_FrameHeight, TimePos+4.0f, FrameY+m_FrameHeight-4.0f),
+							IGraphics::CLineItem(TimePos+4.0f, FrameY+m_FrameHeight-4.0f, TimePos+4.0f, FrameY+4.0f),
+							IGraphics::CLineItem(TimePos+4.0f, FrameY+4.0f, TimePos, FrameY),
+						};
+						Graphics()->LinesDraw(FrameBorder, 6);
+						
+						Graphics()->LinesEnd();
+					}
+				}
+			}
+			
+			Graphics()->ClipEnable(m_TimelineRect.x, m_TimelineRect.y, m_TimelineRect.w, m_TimelineRect.h);
+			
+			Graphics()->LinesBegin();
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+			IGraphics::CLineItem Separator(m_TimelineRect.x, FrameY-1, m_TimelineRect.x+m_TimelineRect.w, FrameY-1);
+			Graphics()->LinesDraw(&Separator, 1);
+			Graphics()->LinesEnd();
+		
+			Graphics()->ClipDisable();
+				
+			FrameY += m_FrameHeight + 2.0f*m_FrameMargin;
+			m_ValueHeight += m_FrameHeight + 2.0f*m_FrameMargin;
+		}
+	}
+	
+	if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_ADD)
+	{
+		CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(m_CursorX, m_CursorY);
+		if(KeyFramePath.IsNull())
+		{
+			float Time = TimelineToTime(m_CursorX);
+			int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+				
+			bool DrawOutline = false;
+			CModAPI_Asset_Skeleton::CBonePath BonePath = BonePicking(m_CursorX, m_CursorY);
+			if(!BonePath.IsNull())
+			{
+				DrawOutline = true;
+			}
+			else
+			{
+				CModAPI_Asset_Skeleton::CBonePath LayerPath = LayerPicking(m_CursorX, m_CursorY);
+				if(!LayerPath.IsNull())
+				{
+					DrawOutline = true;
+				}
+			}
+			
+			if(DrawOutline)
+			{
+				int ListId = (m_CursorY - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+				float TimePos = TimeToTimeline(Frame/static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP));
+				float FrameY = m_TimelineTop-m_ValueScroll+m_FrameMargin;
+				FrameY += (m_FrameHeight + 2.0f*m_FrameMargin)*ListId;
+				Graphics()->LinesBegin();
+				Graphics()->SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+				
+				IGraphics::CLineItem FrameBorder[6] = {
+					IGraphics::CLineItem(TimePos, FrameY, TimePos-4.0f, FrameY+4.0f),
+					IGraphics::CLineItem(TimePos-4.0f, FrameY+4.0f, TimePos-4.0f, FrameY+m_FrameHeight-4.0f),
+					IGraphics::CLineItem(TimePos-4.0f, FrameY+m_FrameHeight-4.0f, TimePos, FrameY+m_FrameHeight),
+					IGraphics::CLineItem(TimePos, FrameY+m_FrameHeight, TimePos+4.0f, FrameY+m_FrameHeight-4.0f),
+					IGraphics::CLineItem(TimePos+4.0f, FrameY+m_FrameHeight-4.0f, TimePos+4.0f, FrameY+4.0f),
+					IGraphics::CLineItem(TimePos+4.0f, FrameY+4.0f, TimePos, FrameY),
+				};
+				Graphics()->LinesDraw(FrameBorder, 6);
+				
+				Graphics()->LinesEnd();
+				Graphics()->ClipDisable();
 			}
 		}
 	}
-		
-	if(m_SelectedFrame == -1 && m_TimelineRect.IsInside(X, Y))
+	else if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_DELETE)
 	{
-		m_pAssetsEditor->SetTime((static_cast<float>(X - m_TimelineRect.x)/m_TimeScale) + m_TimeScroll);
-		m_SelectedFrameMoved = true;
-		m_pAssetsEditor->HideCursor();
-	}
-	
-	m_pTimeSlider->OnMouseButtonClick(X, Y);
-	m_pValueSlider->OnMouseButtonClick(X, Y);
-	m_pToolbar->OnMouseButtonClick(X, Y);
-}
-
-void CModAPI_AssetsEditorGui_Timeline::OnMouseButtonRelease()
-{
-	m_SelectedFrame = -1;
-	m_SelectedFrameMoved = false;
-	
-	m_pTimeSlider->OnMouseButtonRelease();
-	m_pValueSlider->OnMouseButtonRelease();
-	m_pToolbar->OnMouseButtonRelease();
-	
-	m_pAssetsEditor->ShowCursor();
-}
-
-void CModAPI_AssetsEditorGui_Timeline::OnMouseMotion(int RelX, int RelY, int KeyState)
-{
-	m_pTimeSlider->OnMouseMotion(RelX, RelY, KeyState);
-	m_pValueSlider->OnMouseMotion(RelX, RelY, KeyState);
-	m_pToolbar->OnMouseMotion(RelX, RelY, KeyState);
-
-	if(KeyState & MODAPI_INPUT_SHIFT)
-		return;
-		
-	float MotionFactor = 1.0f;
-	if(KeyState & MODAPI_INPUT_CTRL)
-		MotionFactor = 0.1f;
-	
-	if(m_SelectedFrame < 0)
-	{
-		if(m_SelectedFrameMoved)
+		CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(m_CursorX, m_CursorY);
+		if(!KeyFramePath.IsNull())
 		{
-			float Motion = static_cast<float>(RelX) * MotionFactor;
-			float DeltaTime = Motion / m_TimeScale;
-			m_pAssetsEditor->SetTime(clamp(m_pAssetsEditor->GetTime() + DeltaTime, 0.0f, m_TimeMax));
+			float Time = TimelineToTime(m_CursorX);
+			int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+			
+			int ListId = (m_CursorY - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+			float TimePos = TimeToTimeline(Frame/static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP));
+			float FrameY = m_TimelineTop-m_ValueScroll+m_FrameMargin;
+			FrameY += (m_FrameHeight + 2.0f*m_FrameMargin)*ListId;
+			Graphics()->LinesBegin();
+			Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+			
+			IGraphics::CLineItem FrameBorder[6] = {
+				IGraphics::CLineItem(TimePos, FrameY, TimePos-4.0f, FrameY+4.0f),
+				IGraphics::CLineItem(TimePos-4.0f, FrameY+4.0f, TimePos-4.0f, FrameY+m_FrameHeight-4.0f),
+				IGraphics::CLineItem(TimePos-4.0f, FrameY+m_FrameHeight-4.0f, TimePos, FrameY+m_FrameHeight),
+				IGraphics::CLineItem(TimePos, FrameY+m_FrameHeight, TimePos+4.0f, FrameY+m_FrameHeight-4.0f),
+				IGraphics::CLineItem(TimePos+4.0f, FrameY+m_FrameHeight-4.0f, TimePos+4.0f, FrameY+4.0f),
+				IGraphics::CLineItem(TimePos+4.0f, FrameY+4.0f, TimePos, FrameY),
+			};
+			Graphics()->LinesDraw(FrameBorder, 6);
+			
+			Graphics()->LinesEnd();
+			Graphics()->ClipDisable();
 		}
 	}
-	else if(m_pAssetsEditor->m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	else if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_MOVE || m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_COLOR)
 	{
-		CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_pAssetsEditor->m_EditedAssetPath);
-		if(pAnimation && m_SelectedFrame < pAnimation->m_lKeyFrames.size())
+		CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(m_CursorX, m_CursorY);
+		if(!KeyFramePath.IsNull())
 		{
-			if(m_SelectedFrameMoved)
+			if(
+				m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_MOVE ||
+				(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_COLOR && KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_LAYERKEYFRAME)
+			)
 			{
-				float Motion = static_cast<float>(RelX) * MotionFactor;
+				float Time = TimelineToTime(m_CursorX);
+				int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
 				
-				float MinTime = 0.0f;
-				if(m_SelectedFrame > 0)
-					MinTime = pAnimation->m_lKeyFrames[m_SelectedFrame-1].m_Time;
-					
-				if(KeyState & MODAPI_INPUT_ALT)
+				int ListId = (m_CursorY - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+				float TimePos = TimeToTimeline(Frame/static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP));
+				float FrameY = m_TimelineTop-m_ValueScroll+m_FrameMargin;
+				FrameY += (m_FrameHeight + 2.0f*m_FrameMargin)*ListId;
+				Graphics()->LinesBegin();
+				Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+				
+				IGraphics::CLineItem FrameBorder[6] = {
+					IGraphics::CLineItem(TimePos, FrameY, TimePos-4.0f, FrameY+4.0f),
+					IGraphics::CLineItem(TimePos-4.0f, FrameY+4.0f, TimePos-4.0f, FrameY+m_FrameHeight-4.0f),
+					IGraphics::CLineItem(TimePos-4.0f, FrameY+m_FrameHeight-4.0f, TimePos, FrameY+m_FrameHeight),
+					IGraphics::CLineItem(TimePos, FrameY+m_FrameHeight, TimePos+4.0f, FrameY+m_FrameHeight-4.0f),
+					IGraphics::CLineItem(TimePos+4.0f, FrameY+m_FrameHeight-4.0f, TimePos+4.0f, FrameY+4.0f),
+					IGraphics::CLineItem(TimePos+4.0f, FrameY+4.0f, TimePos, FrameY),
+				};
+				Graphics()->LinesDraw(FrameBorder, 6);
+				
+				Graphics()->LinesEnd();
+				Graphics()->ClipDisable();
+			}
+		}
+	}
+}
+
+CModAPI_Asset_SkeletonAnimation::CSubPath CModAPI_AssetsEditorGui_Timeline::KeyFramePicking(int X, int Y)
+{
+	if(!m_TimelineRect.IsInside(X, Y))
+		return CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+		
+	float Time = TimelineToTime(X);
+	int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+	
+	int ListId = (Y - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+	if(ListId < 0)
+		return CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+	
+	CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pSkeletonAnimation)
+		return CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+	
+	CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeletonAnimation->m_SkeletonPath);
+	if(!pSkeleton)
+		return CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+	
+	//Bones
+	if(ListId < pSkeleton->m_Bones.size())
+		return pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Local(ListId), Frame);
+	else
+		ListId -= pSkeleton->m_Bones.size();
+	
+	//Parent bones
+	CModAPI_Asset_Skeleton* pSkeletonParent = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+	if(pSkeletonParent)
+	{
+		if(ListId < pSkeletonParent->m_Bones.size())
+			return pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Parent(ListId), Frame);
+		else
+			ListId -= pSkeletonParent->m_Bones.size();
+	}
+	
+	//Layers
+	if(ListId < pSkeleton->m_Layers.size())
+		return pSkeletonAnimation->GetLayerKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Local(ListId), Frame);
+	else
+		ListId -= pSkeleton->m_Layers.size();
+	
+	//Parent layers
+	if(pSkeletonParent)
+	{
+		if(ListId < pSkeletonParent->m_Layers.size())
+			return pSkeletonAnimation->GetLayerKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Parent(ListId), Frame);
+		else
+			ListId -= pSkeletonParent->m_Layers.size();
+	}
+	
+	return CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+}
+
+CModAPI_Asset_Skeleton::CBonePath CModAPI_AssetsEditorGui_Timeline::BonePicking(int X, int Y)
+{
+	if(!m_TimelineRect.IsInside(X, Y))
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	int ListId = (Y - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+	if(ListId < 0)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pSkeletonAnimation)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeletonAnimation->m_SkeletonPath);
+	if(!pSkeleton)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	//Bones
+	if(ListId < pSkeleton->m_Bones.size())
+		return CModAPI_Asset_Skeleton::CBonePath::Local(ListId);
+	else
+		ListId -= pSkeleton->m_Bones.size();
+	
+	//Parent bones
+	CModAPI_Asset_Skeleton* pSkeletonParent = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+	if(pSkeletonParent)
+	{
+		if(ListId < pSkeletonParent->m_Bones.size())
+			return CModAPI_Asset_Skeleton::CBonePath::Parent(ListId);
+	}
+	
+	return CModAPI_Asset_Skeleton::CBonePath::Null();
+}
+
+CModAPI_Asset_Skeleton::CBonePath CModAPI_AssetsEditorGui_Timeline::LayerPicking(int X, int Y)
+{
+	if(!m_TimelineRect.IsInside(X, Y))
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+		
+	float Time = TimelineToTime(X);
+	int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+	
+	int ListId = (Y - m_TimelineTop + m_ValueScroll)/(m_FrameHeight + 2*m_FrameMargin);
+	if(ListId < 0)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pSkeletonAnimation)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeletonAnimation->m_SkeletonPath);
+	if(!pSkeleton)
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	
+	//Bones
+	if(ListId < pSkeleton->m_Bones.size())
+		return CModAPI_Asset_Skeleton::CBonePath::Null();
+	else
+		ListId -= pSkeleton->m_Bones.size();
+	
+	//Parent bones
+	CModAPI_Asset_Skeleton* pSkeletonParent = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+	if(pSkeletonParent)
+	{
+		if(ListId < pSkeletonParent->m_Bones.size())
+			return CModAPI_Asset_Skeleton::CBonePath::Null();
+		else
+			ListId -= pSkeletonParent->m_Bones.size();
+	}
+	
+	//Layers
+	if(ListId < pSkeleton->m_Layers.size())
+		return CModAPI_Asset_Skeleton::CBonePath::Local(ListId);
+	else
+		ListId -= pSkeleton->m_Layers.size();
+	
+	//Parent bones
+	if(pSkeletonParent)
+	{
+		if(ListId < pSkeletonParent->m_Layers.size())
+			return CModAPI_Asset_Skeleton::CBonePath::Parent(ListId);
+		else
+			ListId -= pSkeletonParent->m_Layers.size();
+	}
+	
+	return CModAPI_Asset_Skeleton::CBonePath::Null();
+}
+	
+void CModAPI_AssetsEditorGui_Timeline::OnButtonClick(int X, int Y, int Button)
+{
+	if(Button == KEY_MOUSE_1 && m_TimelineRect.IsInside(X, Y))
+	{
+		if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_ADD)
+		{
+			CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(X, Y);
+			if(!KeyFramePath.IsNull())
+				return;
+				
+			CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+			if(!pSkeletonAnimation)
+				return;
+			
+			CModAPI_Asset_Skeleton::CBonePath BonePath = BonePicking(X, Y);
+			if(!BonePath.IsNull())
+			{
+				float Time = TimelineToTime(X);
+				int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+				
+				pSkeletonAnimation->AddBoneKeyFrame(BonePath, Frame);
+				m_pAssetsEditor->RefreshAssetEditor();
+			}
+			else
+			{
+				CModAPI_Asset_Skeleton::CBonePath LayerPath = LayerPicking(X, Y);
+				if(!LayerPath.IsNull())
 				{
-					float DeltaTime = Motion / m_TimeScale;
+					float Time = TimelineToTime(X);
+					int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
 					
-					for(int i=m_SelectedFrame; i<pAnimation->m_lKeyFrames.size(); i++)
-					{
-						float Time = max(pAnimation->m_lKeyFrames[i].m_Time + DeltaTime, MinTime);
-						pAnimation->m_lKeyFrames[i].m_Time = Time;
-					}
+					pSkeletonAnimation->AddLayerKeyFrame(LayerPath, Frame);
+					m_pAssetsEditor->RefreshAssetEditor();
 				}
-				else
+			}
+		}
+		else if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_DELETE)
+		{
+			CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(X, Y);
+			if(!KeyFramePath.IsNull())
+			{
+				m_pAssetsEditor->AssetManager()->DeleteSubItem(m_pAssetsEditor->m_EditedAssetPath, KeyFramePath.ConvertToInteger());
+				m_pAssetsEditor->RefreshAssetEditor();
+			}
+		}
+		else if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_COLOR)
+		{
+			CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(X, Y);
+			if(!KeyFramePath.IsNull() && KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_LAYERKEYFRAME)
+			{
+				m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
+				m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_ColorEdit(
+					m_pAssetsEditor, CModAPI_ClientGui_Rect(X-15, Y-15, 30, 30), CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+					m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_SkeletonAnimation::LAYERKEYFRAME_COLOR, KeyFramePath.ConvertToInteger()
+				));
+			}
+			else
+			{
+				float Time = TimelineToTime(X);
+				m_pAssetsEditor->SetTime(Time);
+				m_Drag = 1;
+				m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+			}
+		}
+		else if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_MOVE)
+		{
+			CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(X, Y);
+			if(!KeyFramePath.IsNull())
+			{
+				if(KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_BONEKEYFRAME)
 				{
-					float MaxTime = m_TimeMax;
-					if(m_SelectedFrame+1 < pAnimation->m_lKeyFrames.size())
-						MaxTime = pAnimation->m_lKeyFrames[m_SelectedFrame+1].m_Time;
-						
-					float DeltaTime = Motion / m_TimeScale;
-					float Time = clamp(pAnimation->m_lKeyFrames[m_SelectedFrame].m_Time + DeltaTime, MinTime, MaxTime);
-					pAnimation->m_lKeyFrames[m_SelectedFrame].m_Time = Time;
+					m_Drag = 2;
+					m_DragedElement = KeyFramePath;
+					m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
+				}
+				else if(KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_LAYERKEYFRAME)
+				{
+					m_Drag = 3;
+					m_DragedElement = KeyFramePath;
+					m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
 				}
 			}
 			else
 			{
-				float Motion = static_cast<float>(RelY) * MotionFactor;
-				
-				switch(m_EditMode)
-				{
-					case TIMELINE_EDITMODE_ANGLE:
-					{
-						float Angle = clamp(pAnimation->m_lKeyFrames[m_SelectedFrame].m_Angle + RelTimelineToAngle(Motion), -2.0f*pi, 2.0f*pi);
-						pAnimation->m_lKeyFrames[m_SelectedFrame].m_Angle = Angle;
-						break;
-					}
-					case TIMELINE_EDITMODE_OPACITY:
-						pAnimation->m_lKeyFrames[m_SelectedFrame].m_Opacity = clamp(pAnimation->m_lKeyFrames[m_SelectedFrame].m_Opacity + RelTimelineToOpacity(Motion), 0.0f, 1.0f);
-						break;
-					case TIMELINE_EDITMODE_POSX:
-						pAnimation->m_lKeyFrames[m_SelectedFrame].m_Pos.x = pAnimation->m_lKeyFrames[m_SelectedFrame].m_Pos.x + RelTimelineToPosition(Motion);
-						break;
-					case TIMELINE_EDITMODE_POSY:
-						pAnimation->m_lKeyFrames[m_SelectedFrame].m_Pos.y = pAnimation->m_lKeyFrames[m_SelectedFrame].m_Pos.y + RelTimelineToPosition(Motion);
-						break;
-				}
+				float Time = TimelineToTime(X);
+				m_pAssetsEditor->SetTime(Time);
+				m_Drag = 1;
+				m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
 			}
 		}
+		else
+		{
+			float Time = TimelineToTime(X);
+			m_pAssetsEditor->SetTime(Time);
+			m_Drag = 1;
+			m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+		}
+	}
+	else
+	{
+		m_pTimeSlider->OnButtonClick(X, Y, Button);
+		m_pValueSlider->OnButtonClick(X, Y, Button);
+		m_pToolbar->OnButtonClick(X, Y, Button);
 	}
 }
 
-void CModAPI_AssetsEditorGui_Timeline::OnMouseOver(int X, int Y, int KeyState)
+void CModAPI_AssetsEditorGui_Timeline::OnButtonRelease(int Button)
 {
-	m_pTimeSlider->OnMouseOver(X, Y, KeyState);
-	m_pValueSlider->OnMouseOver(X, Y, KeyState);
-	m_pToolbar->OnMouseOver(X, Y, KeyState);
-
-	if(!(KeyState & MODAPI_INPUT_SHIFT))
-		return;
-	
-	if(m_SelectedFrame >= 0 && m_pAssetsEditor->m_EditedAssetType == MODAPI_ASSETTYPE_ANIMATION)
+	if(Button == KEY_MOUSE_1 && m_Drag > 0)
 	{
-		CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->ModAPIGraphics()->m_AnimationsCatalog.GetAsset(m_pAssetsEditor->m_EditedAssetPath);
-		if(pAnimation && m_SelectedFrame < pAnimation->m_lKeyFrames.size())
+		if(m_DragedElement.IsNull())
 		{
-			if(!m_SelectedFrameMoved)
+			float Time = m_pAssetsEditor->GetTime();
+			int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+			m_pAssetsEditor->SetTime(Frame / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP));
+		}
+		
+		m_Drag = 0;
+		m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+	}
+	
+	m_pTimeSlider->OnButtonRelease(Button);
+	m_pValueSlider->OnButtonRelease(Button);
+	m_pToolbar->OnButtonRelease(Button);
+}
+
+void CModAPI_AssetsEditorGui_Timeline::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+{
+	m_CursorX = X;
+	m_CursorY = Y;
+	
+	switch(m_Drag)
+	{
+		case 1:
+		{
+			float Time = TimelineToTime(X);
+			m_pAssetsEditor->SetTime(Time);
+			break;
+		}
+		case 2:
+			if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_MOVE)
 			{
-				float Value = static_cast<float>(Y);
+				float Time = TimelineToTime(X);
+				int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
 				
-				switch(m_EditMode)
+				if(m_pAssetsEditor->AssetManager()->SetAssetValue<int>(
+					m_pAssetsEditor->m_EditedAssetPath,
+					CModAPI_Asset_SkeletonAnimation::BONEKEYFRAME_TIME,
+					m_DragedElement.ConvertToInteger(),
+					Frame
+				))
 				{
-					case TIMELINE_EDITMODE_ANGLE:
+					//Get the new Id of the frame
+					CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+					if(pSkeletonAnimation)
 					{
-						float AngleStep = pi/4.0f;
-						float Angle = clamp(TimelineToAngle(Value), -2.0f*pi, 2.0f*pi);
-						Angle = AngleStep*static_cast<int>(Angle/AngleStep);
-						pAnimation->m_lKeyFrames[m_SelectedFrame].m_Angle = Angle;
-						break;
+						m_DragedElement = pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_SkeletonAnimation::CSubPath::BoneAnimation(m_DragedElement.GetId()), Frame);
+						if(m_DragedElement.IsNull())
+							m_Drag = 0;
+						else
+							m_pAssetsEditor->RefreshAssetEditor();
+					}
+					else
+					{
+						m_Drag = 0;
+						m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
 					}
 				}
 			}
-		}
+			break;	
+		case 3:
+			if(m_CursorTool == CModAPI_AssetsEditorGui_Timeline::CURSORTOOL_FRAME_MOVE)
+			{
+				float Time = TimelineToTime(X);
+				int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
+				
+				if(m_pAssetsEditor->AssetManager()->SetAssetValue<int>(
+					m_pAssetsEditor->m_EditedAssetPath,
+					CModAPI_Asset_SkeletonAnimation::LAYERKEYFRAME_TIME,
+					m_DragedElement.ConvertToInteger(),
+					Frame
+				))
+				{
+					//Get the new Id of the frame
+					CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_pAssetsEditor->m_EditedAssetPath);
+					if(pSkeletonAnimation)
+					{
+						m_DragedElement = pSkeletonAnimation->GetLayerKeyFramePath(CModAPI_Asset_SkeletonAnimation::CSubPath::LayerAnimation(m_DragedElement.GetId()), Frame);
+						if(m_DragedElement.IsNull())
+							m_Drag = 0;
+						else
+							m_pAssetsEditor->RefreshAssetEditor();
+					}
+					else
+					{
+						m_Drag = 0;
+						m_DragedElement = CModAPI_Asset_SkeletonAnimation::CSubPath::Null();
+					}
+				}
+			}
+			break;			
 	}
+	
+	m_pTimeSlider->OnMouseOver(X, Y, RelX, RelY, KeyState);
+	m_pValueSlider->OnMouseOver(X, Y, RelX, RelY, KeyState);
+	m_pToolbar->OnMouseOver(X, Y, RelX, RelY, KeyState);
 }

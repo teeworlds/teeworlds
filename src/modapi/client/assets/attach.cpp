@@ -49,14 +49,14 @@ void CModAPI_Asset_Attach::DeleteBackElement(int Id)
 	}
 }
 
-void CModAPI_Asset_Attach::InitFromAssetsFile(CModAPI_Client_Graphics* pModAPIGraphics, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_Attach::CStorageType* pItem)
+void CModAPI_Asset_Attach::InitFromAssetsFile(CModAPI_AssetManager* pAssetManager, IModAPI_AssetsFile* pAssetsFile, const CModAPI_Asset_Attach::CStorageType* pItem)
 {
 	// copy name
 	SetName((char *)pAssetsFile->GetData(pItem->m_Name));
 				
 	// copy info
-	m_TeeAnimationPath = CModAPI_AssetPath::FromAssetsFile(pItem->m_TeeAnimationPath);
-	m_CursorPath = CModAPI_AssetPath::FromAssetsFile(pItem->m_CursorPath);
+	m_TeeAnimationPath = CModAPI_AssetPath(pItem->m_TeeAnimationPath);
+	m_CursorPath = CModAPI_AssetPath(pItem->m_CursorPath);
 	
 	const CModAPI_Asset_Attach::CElement* pBackElements = static_cast<CModAPI_Asset_Attach::CElement*>(pAssetsFile->GetData(pItem->m_BackElementsData));
 	for(int i=0; i<pItem->m_NumBackElements; i++)
@@ -70,8 +70,8 @@ void CModAPI_Asset_Attach::SaveInAssetsFile(CDataFileWriter* pFileWriter, int Po
 	CModAPI_Asset_Attach::CStorageType Item;
 	Item.m_Name = pFileWriter->AddData(str_length(m_aName)+1, m_aName);
 	
-	Item.m_TeeAnimationPath = m_TeeAnimationPath.ToAssetsFile();
-	Item.m_CursorPath = m_CursorPath.ToAssetsFile();
+	Item.m_TeeAnimationPath = m_TeeAnimationPath.ConvertToInteger();
+	Item.m_CursorPath = m_CursorPath.ConvertToInteger();
 	
 	Item.m_NumBackElements = m_BackElements.size();
 	Item.m_BackElementsData = pFileWriter->AddData(Item.m_NumBackElements * sizeof(CModAPI_Asset_Attach::CElement), m_BackElements.base_ptr());
@@ -79,7 +79,7 @@ void CModAPI_Asset_Attach::SaveInAssetsFile(CDataFileWriter* pFileWriter, int Po
 	pFileWriter->AddItem(CModAPI_Asset_Attach::TypeId, Position, sizeof(CModAPI_Asset_Attach::CStorageType), &Item);
 }
 
-void CModAPI_Asset_Attach::Unload(class CModAPI_Client_Graphics* pModAPIGraphics)
+void CModAPI_Asset_Attach::Unload(class CModAPI_AssetManager* pAssetManager)
 {
 	
 }

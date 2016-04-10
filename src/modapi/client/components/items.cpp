@@ -121,7 +121,7 @@ void CModAPI_Component_Items::RenderModAPILine(const struct CNetObj_ModAPI_Line 
 	float Time = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	
-	ModAPIGraphics()->DrawLine(RenderTools(),pCurrent->m_LineStyleId, StartPos, EndPos, Time);
+	ModAPIGraphics()->DrawLine(pCurrent->m_LineStyleId, StartPos, EndPos, 1.0f, Time);
 }
 
 void CModAPI_Component_Items::RenderModAPIText(const CNetObj_ModAPI_Text *pPrev, const CNetObj_ModAPI_Text *pCurrent)
@@ -330,7 +330,7 @@ void CModAPI_Component_Items::UpdateEvents(float DeltaTime)
 				Time,
 				Iter->m_Offset);
 			
-			const CModAPI_Asset_Animation* pAnimation = ModAPIGraphics()->m_AnimationsCatalog.GetAsset(Iter->m_AnimationId);
+			const CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(Iter->m_AnimationId);
 			if(!pAnimation || Time > pAnimation->GetDuration())
 			{
 				Iter = m_TextEvent.erase(Iter);
