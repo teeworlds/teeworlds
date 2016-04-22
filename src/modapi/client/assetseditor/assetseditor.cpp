@@ -643,6 +643,11 @@ void CModAPI_AssetsEditor::TimeWrap()
 
 void CModAPI_AssetsEditor::UpdateAndRender()
 {
+	if(Input()->KeyIsPressed(KEY_ESCAPE))
+	{
+		CloseEditor();
+	}
+		
 	//Update time
 	if(!m_Paused)
 	{
