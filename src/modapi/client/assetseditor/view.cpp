@@ -21,6 +21,20 @@
 #include <cstddef>
 
 #include "view.h"
+		
+const char* CModAPI_AssetsEditorGui_View::s_CursorToolHints[] = {
+	"View: move the view (not implemented)",
+	"Translation: move an object",
+	"Horizontal Translation: move an object along his local X axis",
+	"Vertical Translation: move an object along his local Y axis",
+	"Rotation: rotate an object",
+	"Scale: scale an object",
+	"Horizontal Scale: scale an object along his local X axis",
+	"Vertical Scale: scale an object along his local Y axis",
+	"Bone Length: edit the length of a bone",
+	"Bone Creator: create a new bone from an existing one",
+	"Bone Eraser: delete a bone",
+};
 
 CModAPI_AssetsEditorGui_View::CModAPI_AssetsEditorGui_View(CModAPI_AssetsEditor* pAssetsEditor) :
 	CModAPI_ClientGui_Widget(pAssetsEditor->m_pGuiConfig),

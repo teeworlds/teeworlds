@@ -293,6 +293,7 @@ IModAPI_AssetsEditor *CreateAssetsEditor() { return new CModAPI_AssetsEditor; }
 CModAPI_AssetsEditor::CModAPI_AssetsEditor()
 {
 	m_pGuiConfig = 0;
+	m_pHintLabel = 0;
 }
 
 CModAPI_AssetsEditor::~CModAPI_AssetsEditor()
@@ -345,11 +346,14 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 	CModAPI_ClientGui_Rect AssetEditorRect(ViewRect.x + ViewRect.w + Margin, AssetListRect.y, PanelWidth, AssetListRect.h);
 	CModAPI_ClientGui_Rect TimelineRect(AssetListRect.x + AssetListRect.w + Margin, ViewRect.y + ViewRect.h + Margin, ViewRect.w, PanelHeight);
 	
-	m_pGuiToolbar = new CModAPI_ClientGui_HListLayout(m_pGuiConfig);
+	m_pHintLabel = new CModAPI_ClientGui_Label(m_pGuiConfig, "");
+	
+	m_pGuiToolbar = new CModAPI_ClientGui_HListLayout(m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_FRAME, MODAPI_CLIENTGUI_LAYOUTFILLING_LAST);
 	m_pGuiToolbar->SetRect(ToolbarRect);
 	m_pGuiToolbar->Add(new CModAPI_AssetsEditorGui_Button_ToolbarLoad(this));
 	m_pGuiToolbar->Add(new CModAPI_AssetsEditorGui_Button_ToolbarSave(this));
 	m_pGuiToolbar->Add(new CModAPI_AssetsEditorGui_Button_ToolbarExit(this));
+	m_pGuiToolbar->Add(m_pHintLabel);
 	m_pGuiToolbar->Update();
 	
 	m_pGuiAssetListTabs = new CModAPI_ClientGui_Tabs(m_pGuiConfig);
@@ -393,6 +397,15 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 	
 	m_EditedAssetSubPath = -1;
 	m_AssetsListSource = CModAPI_AssetPath::SRC_EXTERNAL;
+}
+
+void CModAPI_AssetsEditor::ShowHint(const char* pText)
+{
+	if(m_pHintLabel)
+	{
+		m_pHintLabel->SetText(pText);
+		m_Hint = true;
+	}
 }
 
 void CModAPI_AssetsEditor::RefreshAssetList(int Source)
@@ -647,7 +660,9 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 	{
 		CloseEditor();
 	}
-		
+	
+	m_Hint = false;
+	
 	//Update time
 	if(!m_Paused)
 	{
@@ -769,6 +784,11 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 	
 	//Rendering
 	Render();
+	
+	if(!m_Hint)
+	{
+		m_pHintLabel->SetText("");
+	}
 
 	Input()->Clear();
 }

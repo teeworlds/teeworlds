@@ -122,6 +122,8 @@ public:
 	IGraphics::CTextureHandle m_ModEditorTexture;
 	IGraphics::CTextureHandle m_SkinTexture[6];
 	
+	bool m_Hint;
+	class CModAPI_ClientGui_Label* m_pHintLabel;
 	class CModAPI_ClientGui_HListLayout* m_pGuiToolbar;
 	class CModAPI_ClientGui_VListLayout* m_pGuiAssetList[CModAPI_AssetPath::NUM_SOURCES];
 	class CModAPI_ClientGui_Tabs* m_pGuiAssetListTabs;
@@ -186,6 +188,8 @@ public:
 	
 	bool IsEditedAsset(CModAPI_AssetPath AssetPath);
 	bool IsDisplayedAsset(CModAPI_AssetPath AssetPath);
+	
+	void ShowHint(const char* pText);
 };
 
 #endif

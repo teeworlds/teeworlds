@@ -53,6 +53,16 @@ public:
 		{
 			
 		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+			{
+				m_pView->m_pAssetsEditor->ShowHint(CModAPI_AssetsEditorGui_View::s_CursorToolHints[m_CursorTool]);
+			}
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
+		}
 	};
 	
 	class CViewSwitch : public CModAPI_ClientGui_IconButton
@@ -152,6 +162,9 @@ protected:
 	CModAPI_ClientGui_Rect m_ViewRect;
 	
 	int m_LastEditedAssetType;
+	
+public:
+	static const char* s_CursorToolHints[];
 	
 protected:
 	vec2 GetTeePosition();

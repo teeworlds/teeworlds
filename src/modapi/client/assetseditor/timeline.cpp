@@ -23,6 +23,13 @@
 #include "editor.h"
 #include "popup.h"
 
+const char* CModAPI_AssetsEditorGui_Timeline::s_CursorToolHints[] = {
+	"Key Frame Editor: move a key frame in the timeline along the time axis",
+	"Key Frame Creator: add a new key frame in the timeline",
+	"Key Frame Eraser: delete a key frame in the timeline along the time axis",
+	"Key Frame Painter: edit color of a key frame (only for layers)",
+};
+
 CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_AssetsEditor* pAssetsEditor) :
 	CModAPI_ClientGui_Widget(pAssetsEditor->m_pGuiConfig),
 	m_pAssetsEditor(pAssetsEditor),
