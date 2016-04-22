@@ -31,7 +31,8 @@ CModAPI_AssetsEditorGui_View::CModAPI_AssetsEditorGui_View(CModAPI_AssetsEditor*
 	m_ToolbarHeight(30),
 	m_pToolbar(0),
 	m_LastEditedAssetType(-1),
-	m_CursorTool(CURSORTOOL_MOVE)
+	m_CursorTool(CURSORTOOL_MOVE),
+	m_ShowSkeleton(true)
 {	
 	for(int p = 0; p < 6; p++)
 	{
@@ -77,7 +78,20 @@ void CModAPI_AssetsEditorGui_View::RefreshToolBar()
 	
 	m_pToolbar->Add(pZoomLabel);
 	m_pToolbar->Add(new CModAPI_AssetsEditorGui_View::CZoomSlider(this));
+	
+	switch(m_pAssetsEditor->m_ViewedAssetPath.GetType())
+	{
+		case CModAPI_AssetPath::TYPE_SKELETON:
+		case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
+		case CModAPI_AssetPath::TYPE_SKELETONSKIN:
+			m_pToolbar->AddSeparator();
+			m_pToolbar->Add(new CModAPI_ClientGui_Label(m_pConfig, "Show:"));
+			m_pToolbar->Add(new CViewSwitch(this, MODAPI_ASSETSEDITOR_ICON_SKELETON, &m_ShowSkeleton));
+			break;
+	}
+	
 	m_pToolbar->AddSeparator();
+	m_pToolbar->Add(new CModAPI_ClientGui_Label(m_pConfig, "Tools:"));
 	
 	m_CursorToolButtons[CURSORTOOL_MOVE] = new CModAPI_AssetsEditorGui_View::CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_MOVE, CURSORTOOL_MOVE);
 	m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_MOVE]);
@@ -100,6 +114,7 @@ void CModAPI_AssetsEditorGui_View::RefreshToolBar()
 			m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_SCALE]);
 			m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_SCALE_X]);
 			m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_SCALE_Y]);
+			
 			
 			if(m_pAssetsEditor->m_ViewedAssetPath.GetType() == CModAPI_AssetPath::TYPE_SKELETON)
 			{
@@ -454,21 +469,24 @@ void CModAPI_AssetsEditorGui_View::RenderSkeleton()
 	SkeletonRenderer.Finalize();
 	SkeletonRenderer.RenderSkins(GetTeePosition(), m_Zoom);
 	
-	CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
-	if(pParentSkeleton)
+	if(m_ShowSkeleton)
 	{
-		for(int i=0; i<pParentSkeleton->m_Bones.size(); i++)
+		CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+		if(pParentSkeleton)
 		{
-			if(m_CursorTool == CURSORTOOL_BONE_ADD)
-				SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
-			else
-				SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+			for(int i=0; i<pParentSkeleton->m_Bones.size(); i++)
+			{
+				if(m_CursorTool == CURSORTOOL_BONE_ADD)
+					SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+				else
+					SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+			}
 		}
-	}
-	
-	for(int i=0; i<pSkeleton->m_Bones.size(); i++)
-	{
-		SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, m_pAssetsEditor->m_ViewedAssetPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+		
+		for(int i=0; i<pSkeleton->m_Bones.size(); i++)
+		{
+			SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, m_pAssetsEditor->m_ViewedAssetPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+		}
 	}
 }
 
@@ -483,7 +501,10 @@ void CModAPI_AssetsEditorGui_View::RenderSkeletonSkin()
 	SkeletonRenderer.Finalize();
 	SkeletonRenderer.AddSkin(m_pAssetsEditor->m_ViewedAssetPath);
 	SkeletonRenderer.RenderSkins(GetTeePosition(), m_Zoom);
-	SkeletonRenderer.RenderBones(GetTeePosition(), m_Zoom);
+	if(m_ShowSkeleton)
+	{
+		SkeletonRenderer.RenderBones(GetTeePosition(), m_Zoom);
+	}
 }
 
 void CModAPI_AssetsEditorGui_View::RenderSkeletonAnimation()
@@ -516,24 +537,27 @@ void CModAPI_AssetsEditorGui_View::RenderSkeletonAnimation()
 	float Time = m_pAssetsEditor->GetTime();
 	int Frame = static_cast<int>(round(Time*static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP)));
 	
-	CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
-	if(pParentSkeleton)
+	if(m_ShowSkeleton)
 	{
-		for(int i=0; i<pParentSkeleton->m_Bones.size(); i++)
+		CModAPI_Asset_Skeleton* pParentSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(pSkeleton->m_ParentPath);
+		if(pParentSkeleton)
 		{
-			if(!pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Parent(i), Frame).IsNull())
-				SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
-			else
-				SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+			for(int i=0; i<pParentSkeleton->m_Bones.size(); i++)
+			{
+				if(!pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Parent(i), Frame).IsNull())
+					SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+				else
+					SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeleton->m_ParentPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+			}
 		}
-	}
-	
-	for(int i=0; i<pSkeleton->m_Bones.size(); i++)
-	{
-		if(!pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Local(i), Frame).IsNull())
-			SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeletonAnimation->m_SkeletonPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
-		else
-			SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeletonAnimation->m_SkeletonPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+		
+		for(int i=0; i<pSkeleton->m_Bones.size(); i++)
+		{
+			if(!pSkeletonAnimation->GetBoneKeyFramePath(CModAPI_Asset_Skeleton::CBonePath::Local(i), Frame).IsNull())
+				SkeletonRenderer.RenderBone(GetTeePosition(), m_Zoom, pSkeletonAnimation->m_SkeletonPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+			else
+				SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeletonAnimation->m_SkeletonPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
+		}
 	}
 }
 

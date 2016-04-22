@@ -215,8 +215,12 @@ public:
 		switch(SubItemType)
 		{
 			case CSubPath::TYPE_SPRITE:
+			{
 				m_Sprites.add(CSprite());
+				CSprite& Sprite = m_Sprites[m_Sprites.size()-1];
+				Sprite.m_SpritePath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SPRITE, MODAPI_SPRITE_WHITESQUARE);
 				return CSubPath::Sprite(m_Sprites.size()-1).ConvertToInteger();
+			}
 		}
 	}
 	

@@ -55,6 +55,38 @@ public:
 		}
 	};
 	
+	class CViewSwitch : public CModAPI_ClientGui_IconButton
+	{
+	protected:
+		CModAPI_AssetsEditorGui_View* m_pView;
+		bool* m_pBoolean;
+		
+	protected:
+		virtual void MouseClickAction()
+		{
+			*m_pBoolean = !(*m_pBoolean);
+		}
+		
+	public:
+		CViewSwitch(CModAPI_AssetsEditorGui_View* pView, int Icon, bool* pBoolean) :
+			CModAPI_ClientGui_IconButton(pView->m_pConfig, Icon),
+			m_pView(pView),
+			m_pBoolean(pBoolean)
+		{
+			
+		}
+		
+		virtual void Render()
+		{
+			if(*m_pBoolean)
+				SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
+			else
+				SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
+			
+			CModAPI_ClientGui_IconButton::Render();
+		}
+	};
+	
 protected:
 	enum
 	{
@@ -95,6 +127,7 @@ protected:
 	vec2 m_StartPointPos;
 	vec2 m_EndPointPos;
 	float m_Zoom;
+	bool m_ShowSkeleton;
 	
 	vec2 m_TiltView;
 	
