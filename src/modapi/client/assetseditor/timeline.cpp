@@ -20,6 +20,7 @@
 #include <cstddef>
 
 #include "timeline.h"
+#include "editor.h"
 #include "popup.h"
 
 CModAPI_AssetsEditorGui_Timeline::CModAPI_AssetsEditorGui_Timeline(CModAPI_AssetsEditor* pAssetsEditor) :
@@ -79,21 +80,6 @@ CModAPI_AssetsEditorGui_Timeline::~CModAPI_AssetsEditorGui_Timeline()
 	if(m_pToolbar) delete m_pToolbar;
 	if(m_pTimeSlider) delete m_pTimeSlider;
 	if(m_pValueSlider) delete m_pValueSlider;
-}
-
-void CModAPI_AssetsEditorGui_Timeline::NewFrame()
-{
-	if(m_pAssetsEditor->m_EditedAssetPath.GetType() != CModAPI_AssetPath::TYPE_ANIMATION)
-		return;
-	
-	CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_pAssetsEditor->m_EditedAssetPath);
-	if(!pAnimation)
-		return;
-	
-	CModAPI_Asset_Animation::CKeyFrame Frame;
-	pAnimation->GetFrame(m_pAssetsEditor->GetTime(), &Frame);
-	Frame.m_Time = m_pAssetsEditor->GetTime();
-	pAnimation->AddKeyFrame(Frame);
 }
 
 void CModAPI_AssetsEditorGui_Timeline::TimeScaleCallback(float Pos)
@@ -844,7 +830,7 @@ void CModAPI_AssetsEditorGui_Timeline::OnButtonClick(int X, int Y, int Button)
 			CModAPI_Asset_SkeletonAnimation::CSubPath KeyFramePath = KeyFramePicking(X, Y);
 			if(!KeyFramePath.IsNull() && KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_LAYERKEYFRAME)
 			{
-				m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
+				m_pAssetsEditor->EditAssetSubItem(m_pAssetsEditor->m_EditedAssetPath, m_DragedElement.ConvertToInteger(), CModAPI_AssetsEditorGui_Editor::TAB_SKELETONANIMATION_KEYFRAMES);
 				m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_ColorEdit(
 					m_pAssetsEditor, CModAPI_ClientGui_Rect(X-15, Y-15, 30, 30), CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
 					m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_SkeletonAnimation::LAYERKEYFRAME_COLOR, KeyFramePath.ConvertToInteger()
@@ -867,13 +853,13 @@ void CModAPI_AssetsEditorGui_Timeline::OnButtonClick(int X, int Y, int Button)
 				{
 					m_Drag = 2;
 					m_DragedElement = KeyFramePath;
-					m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
+					m_pAssetsEditor->EditAssetSubItem(m_pAssetsEditor->m_EditedAssetPath, m_DragedElement.ConvertToInteger(), CModAPI_AssetsEditorGui_Editor::TAB_SKELETONANIMATION_KEYFRAMES);
 				}
 				else if(KeyFramePath.GetType() == CModAPI_Asset_SkeletonAnimation::CSubPath::TYPE_LAYERKEYFRAME)
 				{
 					m_Drag = 3;
 					m_DragedElement = KeyFramePath;
-					m_pAssetsEditor->EditAssetSubItem(m_DragedElement.ConvertToInteger());
+					m_pAssetsEditor->EditAssetSubItem(m_pAssetsEditor->m_EditedAssetPath, m_DragedElement.ConvertToInteger(), CModAPI_AssetsEditorGui_Editor::TAB_SKELETONANIMATION_KEYFRAMES);
 				}
 			}
 			else

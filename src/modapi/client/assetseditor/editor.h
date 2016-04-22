@@ -729,7 +729,7 @@ public:
 	protected:
 		virtual void MouseClickAction()
 		{
-			m_pAssetsEditor->EditAssetSubItem(m_AssetSubPath);
+			m_pAssetsEditor->EditAssetSubItem(m_AssetPath, m_AssetSubPath);
 		}
 	
 	public:
@@ -767,20 +767,22 @@ public:
 		
 		CModAPI_AssetPath m_AssetPath;
 		int m_SubItemType;
+		int m_TabId;
 		
 	protected:
 		virtual void MouseClickAction()
 		{
-			m_pAssetsEditor->AssetManager()->AddSubItem(m_AssetPath, m_SubItemType);
-			m_pAssetsEditor->RefreshAssetEditor();
+			int SubPath = m_pAssetsEditor->AssetManager()->AddSubItem(m_AssetPath, m_SubItemType);
+			m_pAssetsEditor->EditAssetSubItem(m_AssetPath, SubPath, m_TabId);
 		}
 	
 	public:
-		CAddSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubType, const char* pText, int IconId) :
+		CAddSubItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int SubType, const char* pText, int IconId, int Tab=-1) :
 			CModAPI_ClientGui_TextButton(pAssetsEditor->m_pGuiConfig, pText, IconId),
 			m_pAssetsEditor(pAssetsEditor),
 			m_AssetPath(AssetPath),
-			m_SubItemType(SubType)
+			m_SubItemType(SubType),
+			m_TabId(Tab)
 		{
 			m_Centered = false;
 		}
@@ -815,7 +817,7 @@ public:
 		}
 	};
 	
-protected:
+public:
 	enum
 	{
 		TAB_ASSET=0,
@@ -885,7 +887,7 @@ protected:
 public:
 	CModAPI_AssetsEditorGui_Editor(CModAPI_AssetsEditor* pAssetsEditor);
 	void OnEditedAssetChange();
-	void Refresh();
+	void Refresh(int Tab=-1);
 };
 
 #endif

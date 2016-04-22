@@ -401,7 +401,14 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_Skeleton_Bones(bool KeepStatus)
 		m_pLists[LIST_SKELETON_BONES]->SetScrollPos(Scroll);
 	}
 	
-	m_pTabs[TAB_SKELETON_BONES]->Add(new CAddSubItem(m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_Skeleton::CSubPath::TYPE_BONE, "Add bone", MODAPI_ASSETSEDITOR_ICON_INCREASE));
+	m_pTabs[TAB_SKELETON_BONES]->Add(new CAddSubItem(
+		m_pAssetsEditor,
+		m_pAssetsEditor->m_EditedAssetPath,
+		CModAPI_Asset_Skeleton::CSubPath::TYPE_BONE,
+		"Add bone",
+		MODAPI_ASSETSEDITOR_ICON_INCREASE,
+		TAB_SKELETON_BONES
+	));
 
 	m_pTabs[TAB_SKELETON_BONES]->AddSeparator();	
 		
@@ -448,8 +455,15 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_Skeleton_Layers(bool KeepStatus)
 		m_pLists[LIST_SKELETON_LAYERS]->SetScrollPos(Scroll);
 	}
 
-	m_pTabs[TAB_SKELETON_LAYERS]->Add(new CAddSubItem(m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_Skeleton::CSubPath::TYPE_LAYER, "Add layer", MODAPI_ASSETSEDITOR_ICON_INCREASE));
-
+	m_pTabs[TAB_SKELETON_LAYERS]->Add(new CAddSubItem(
+		m_pAssetsEditor,
+		m_pAssetsEditor->m_EditedAssetPath,
+		CModAPI_Asset_Skeleton::CSubPath::TYPE_LAYER,
+		"Add layer",
+		MODAPI_ASSETSEDITOR_ICON_INCREASE,
+		TAB_SKELETON_LAYERS
+	));
+	
 	m_pTabs[TAB_SKELETON_LAYERS]->AddSeparator();
 		
 	if(m_pAssetsEditor->m_EditedAssetSubPath >= 0 && CModAPI_Asset_Skeleton::CSubPath(m_pAssetsEditor->m_EditedAssetSubPath).GetType() == CModAPI_Asset_Skeleton::CSubPath::TYPE_LAYER)
@@ -492,9 +506,16 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_SkeletonSkin_Sprites(bool KeepSt
 	{
 		m_pLists[LIST_SKELETONSKIN_SPRITES]->SetScrollPos(Scroll);
 	}
-	
-	m_pTabs[TAB_SKELETONSKIN_SPRITES]->Add(new CAddSubItem(m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_SkeletonSkin::CSubPath::TYPE_SPRITE, "Add sprite", MODAPI_ASSETSEDITOR_ICON_INCREASE));
 
+	m_pTabs[TAB_SKELETONSKIN_SPRITES]->Add(new CAddSubItem(
+		m_pAssetsEditor,
+		m_pAssetsEditor->m_EditedAssetPath,
+		CModAPI_Asset_SkeletonSkin::CSubPath::TYPE_SPRITE,
+		"Add sprite",
+		MODAPI_ASSETSEDITOR_ICON_INCREASE,
+		TAB_SKELETONSKIN_SPRITES
+	));
+	
 	m_pTabs[TAB_SKELETONSKIN_SPRITES]->AddSeparator();	
 		
 	if(m_pAssetsEditor->m_EditedAssetSubPath >= 0)
@@ -672,7 +693,7 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_SkeletonAnimation_KeyFrames(bool
 	}
 }
 
-void CModAPI_AssetsEditorGui_Editor::Refresh()
+void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 {
 	bool KeepStatus = false;
 	if(m_pAssetsEditor->m_EditedAssetPath.GetType() != m_LastEditedAssetType)
@@ -720,6 +741,11 @@ void CModAPI_AssetsEditorGui_Editor::Refresh()
 		KeepStatus = true;
 	}
 	AddAssetTabCommons(m_pTabs[TAB_ASSET]);
+	
+	if(Tab >= 0)
+	{
+		m_SelectedTab = Tab;
+	}
 	
 	//Search Tag: TAG_NEW_ASSET
 	switch(m_pAssetsEditor->m_EditedAssetPath.GetType())

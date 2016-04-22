@@ -133,6 +133,7 @@ public:
 	int m_AssetsListSource;
 	CModAPI_AssetPath m_EditedAssetPath;
 	int m_EditedAssetSubPath;
+	int m_EditorTab;
 	
 	CModAPI_AssetPath m_ViewedAssetPath;
 	
@@ -168,13 +169,13 @@ public:
 	
 	void RefreshAssetList(int Source);
 	void RefreshAssetList();
-	void RefreshAssetEditor();
+	void RefreshAssetEditor(int Tab=-1);
 	void DisplayPopup();
 	void ShowCursor();
 	void HideCursor();
 	void DisplayPopup(CModAPI_ClientGui_Popup* pWidget);
 	void EditAsset(CModAPI_AssetPath AssetPath);
-	void EditAssetSubItem(int ItemPath);
+	void EditAssetSubItem(CModAPI_AssetPath AssetPath, int ItemPath, int Tab=-1);
 	void EditAssetFirstFrame();
 	void EditAssetLastFrame();
 	void EditAssetPrevFrame();

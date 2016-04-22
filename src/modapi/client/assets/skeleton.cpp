@@ -109,7 +109,7 @@ CModAPI_Asset_Skeleton::CLayer& CModAPI_Asset_Skeleton::AddLayer()
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "layer%d", m_Layers.size());
 	m_Layers.add(CModAPI_Asset_Skeleton::CLayer());
-	return m_Layers[m_Layers.size()-1];
+	return m_Layers[m_Layers.size()-1].Name(aBuf);
 }
 
 /* VALUE FLOAT ********************************************************/

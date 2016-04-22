@@ -241,7 +241,6 @@ protected:
 	
 protected:
 	void SetPause(bool Paused);
-	void NewFrame();
 	void TimeScaleCallback(float Pos);
 	void ValueScrollCallback(float Pos);
 	void TimeScrollCallback(float Pos);

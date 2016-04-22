@@ -383,6 +383,7 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 	m_pGuiAssetEditor->Update();
 	
 	m_RefreshAssetEditor = false;
+	m_EditorTab = -1;
 	
 	m_ShowCursor = true;
 	
@@ -440,8 +441,9 @@ void CModAPI_AssetsEditor::RefreshAssetList()
 	RefreshAssetList(CModAPI_AssetPath::SRC_SKIN);
 }
 
-void CModAPI_AssetsEditor::RefreshAssetEditor()
+void CModAPI_AssetsEditor::RefreshAssetEditor(int Tab)
 {
+	m_EditorTab = Tab;
 	m_RefreshAssetEditor = true;
 }
 
@@ -662,7 +664,7 @@ void CModAPI_AssetsEditor::UpdateAndRender()
 	
 	if(m_RefreshAssetEditor)
 	{
-		m_pGuiAssetEditor->Refresh();
+		m_pGuiAssetEditor->Refresh(m_EditorTab);
 		m_RefreshAssetEditor = false;
 	}
 	
@@ -790,14 +792,14 @@ void CModAPI_AssetsEditor::EditAsset(CModAPI_AssetPath AssetPath)
 {
 	m_EditedAssetPath = AssetPath;
 	m_EditedAssetSubPath = -1;
-	RefreshAssetEditor();
+	RefreshAssetEditor(-1);
 }
 
-void CModAPI_AssetsEditor::EditAssetSubItem(int SubPath)
+void CModAPI_AssetsEditor::EditAssetSubItem(CModAPI_AssetPath AssetPath, int SubPath, int Tab)
 {
 	m_EditedAssetSubPath = SubPath;
 	m_Paused = true;
-	RefreshAssetEditor();
+	RefreshAssetEditor(Tab);
 }
 
 void CModAPI_AssetsEditor::EditAssetFirstFrame()
