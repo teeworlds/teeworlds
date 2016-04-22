@@ -94,6 +94,7 @@ public:
 			m_Scale(vec2(64.0f, 64.0f)),
 			m_Angle(0.0f),
 			m_Color(1.0f, 1.0f, 1.0f, 1.0f),
+			m_Anchor(1.0f),
 			m_Alignment(ALIGNEMENT_BONE)
 		{
 			

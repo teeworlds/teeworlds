@@ -204,46 +204,6 @@ public:
 class CModAPI_AssetsEditorGui_AssetListItem : public CModAPI_ClientGui_HListLayout
 {
 protected:
-	class CEditButton : public CModAPI_ClientGui_IconButton
-	{
-	protected:
-		CModAPI_AssetsEditorGui_AssetListItem* m_pAssetListItem;
-	
-	protected:
-		virtual void MouseClickAction()
-		{
-			m_pAssetListItem->EditAsset();
-		}
-		
-	public:
-		CEditButton(CModAPI_AssetsEditorGui_AssetListItem* pAssetListItem) :
-			CModAPI_ClientGui_IconButton(pAssetListItem->m_pConfig, MODAPI_ASSETSEDITOR_ICON_EDIT),
-			m_pAssetListItem(pAssetListItem)
-		{
-			
-		}
-	};
-	
-	class CDisplayButton : public CModAPI_ClientGui_IconButton
-	{
-	protected:
-		CModAPI_AssetsEditorGui_AssetListItem* m_pAssetListItem;
-	
-	protected:
-		virtual void MouseClickAction()
-		{
-			m_pAssetListItem->DisplayAsset();
-		}
-		
-	public:
-		CDisplayButton(CModAPI_AssetsEditorGui_AssetListItem* pAssetListItem) :
-			CModAPI_ClientGui_IconButton(pAssetListItem->m_pConfig, MODAPI_ASSETSEDITOR_ICON_VIEW),
-			m_pAssetListItem(pAssetListItem)
-		{
-			
-		}
-	};
-	
 	class CItemListButton : public CModAPI_ClientGui_ExternalTextButton
 	{
 	protected:
@@ -268,9 +228,7 @@ protected:
 protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
 	CModAPI_AssetPath m_AssetPath;
-	
-	CEditButton* m_pEditButton;
-	CDisplayButton* m_pDisplayButton;
+	CItemListButton* m_Button;
 
 public:
 	CModAPI_AssetsEditorGui_AssetListItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath) :
@@ -301,13 +259,8 @@ public:
 		}
 		
 		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
-		Add(new CItemListButton(this, pName, IconId));
-		
-		m_pDisplayButton = new CDisplayButton(this);
-		Add(m_pDisplayButton);
-		
-		m_pEditButton = new CEditButton(this);
-		Add(m_pEditButton);
+		m_Button = new CItemListButton(this, pName, IconId);
+		Add(m_Button);
 		
 		Update();
 	}
@@ -325,22 +278,9 @@ public:
 	virtual void Render()
 	{
 		if(m_pAssetsEditor->IsEditedAsset(m_AssetPath))
-		{
-			m_pEditButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
-		}
+			m_Button->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
 		else
-		{
-			m_pEditButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
-		}
-		
-		if(m_pAssetsEditor->IsDisplayedAsset(m_AssetPath))
-		{
-			m_pDisplayButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_HIGHLIGHT);
-		}
-		else
-		{
-			m_pDisplayButton->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
-		}
+			m_Button->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
 		
 		CModAPI_ClientGui_HListLayout::Render();
 	}

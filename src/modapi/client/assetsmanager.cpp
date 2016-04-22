@@ -829,14 +829,31 @@ void CModAPI_AssetManager::LoadInteralAssets()
 		pSkeletonAnimation->SetName("gunAttack");
 		pSkeletonAnimation->m_SkeletonPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETON, MODAPI_SKELETON_GUN);
 		
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0).Translation(vec2(-4.0f, 0.0f));
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 2).Translation(vec2(-14.0f, 0.0f));
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 4).Translation(vec2(-4.0f, 0.0f));
-		
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 0).Angle(-3*pi/4);
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 2)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 4)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+			
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 0)
+			.Angle(-3*pi/4)
+			.Translation(vec2(0.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 2)
+			.Angle(-3*pi/4)
+			.Translation(vec2(-10.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 4)
+			.Angle(-3*pi/4)
+			.Translation(vec2(0.0f, 0.0f));
+			
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 0)
+			.Translation(vec2(0.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 2)
+			.Translation(vec2(-10.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 4)
+			.Translation(vec2(0.0f, 0.0f));
 		
 		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_EYES), 0).Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0).Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
 		
 		pSkeletonAnimation->AddLayerKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEELAYER_FRONTHANDSHADOW), 0).State(CModAPI_Asset_SkeletonAnimation::LAYERSTATE_VISIBLE);
 		pSkeletonAnimation->AddLayerKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEELAYER_FRONTHAND), 0).State(CModAPI_Asset_SkeletonAnimation::LAYERSTATE_VISIBLE);
@@ -846,14 +863,31 @@ void CModAPI_AssetManager::LoadInteralAssets()
 		pSkeletonAnimation->SetName("shotgunAttack");
 		pSkeletonAnimation->m_SkeletonPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETON, MODAPI_SKELETON_SHOTGUN);
 		
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0).Translation(vec2(-4.0f, 0.0f));
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 2).Translation(vec2(-14.0f, 0.0f));
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 4).Translation(vec2(-4.0f, 0.0f));
-		
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 0).Angle(-pi/2).Translation(vec2(0.0f, -6.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 2)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 4)
+			.Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
+			
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 0)
+			.Angle(-pi/2)
+			.Translation(vec2(0.0f, 6.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 2)
+			.Angle(-pi/2)
+			.Translation(vec2(-10.0f, 6.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTHAND), 4)
+			.Angle(-pi/2)
+			.Translation(vec2(0.0f, 6.0f));
+			
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 0)
+			.Translation(vec2(0.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 2)
+			.Translation(vec2(-10.0f, 0.0f));
+		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Local(0), 4)
+			.Translation(vec2(0.0f, 0.0f));
 		
 		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_EYES), 0).Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
-		pSkeletonAnimation->AddBoneKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEEBONE_FRONTARM), 0).Alignment(CModAPI_Asset_SkeletonAnimation::BONEALIGN_AIM);
 		
 		pSkeletonAnimation->AddLayerKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEELAYER_FRONTHANDSHADOW), 0).State(CModAPI_Asset_SkeletonAnimation::LAYERSTATE_VISIBLE);
 		pSkeletonAnimation->AddLayerKeyFrame(CModAPI_Asset_Skeleton::CBonePath::Parent(MODAPI_TEELAYER_FRONTHAND), 0).State(CModAPI_Asset_SkeletonAnimation::LAYERSTATE_VISIBLE);
