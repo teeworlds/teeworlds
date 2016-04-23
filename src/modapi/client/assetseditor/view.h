@@ -57,9 +57,7 @@ public:
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-			{
 				m_pView->m_pAssetsEditor->ShowHint(CModAPI_AssetsEditorGui_View::s_CursorToolHints[m_CursorTool]);
-			}
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -70,6 +68,7 @@ public:
 	protected:
 		CModAPI_AssetsEditorGui_View* m_pView;
 		bool* m_pBoolean;
+		const char* m_pHint;
 		
 	protected:
 		virtual void MouseClickAction()
@@ -78,10 +77,11 @@ public:
 		}
 		
 	public:
-		CViewSwitch(CModAPI_AssetsEditorGui_View* pView, int Icon, bool* pBoolean) :
+		CViewSwitch(CModAPI_AssetsEditorGui_View* pView, int Icon, bool* pBoolean, const char* pHint) :
 			CModAPI_ClientGui_IconButton(pView->m_pConfig, Icon),
 			m_pView(pView),
-			m_pBoolean(pBoolean)
+			m_pBoolean(pBoolean),
+			m_pHint(pHint)
 		{
 			
 		}
@@ -94,6 +94,14 @@ public:
 				SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
 			
 			CModAPI_ClientGui_IconButton::Render();
+		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pView->m_pAssetsEditor->ShowHint(m_pHint);
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
 	};
 	
@@ -111,6 +119,7 @@ protected:
 		CURSORTOOL_BONE_LENGTH,
 		CURSORTOOL_BONE_ADD,
 		CURSORTOOL_BONE_DELETE,
+		CURSORTOOL_SPRITE_CREATOR,
 		NUM_CURSORTOOLS
 	};
 	
@@ -128,6 +137,11 @@ protected:
 		GIZMO_MOTION,
 		GIZMO_HOOK,
 		NUM_GIZMOS,
+	};
+	
+	enum
+	{
+		HINT_SHOW_SKELETON=0,
 	};
 	
 protected:
@@ -165,6 +179,8 @@ protected:
 	
 public:
 	static const char* s_CursorToolHints[];
+	static const char* s_GizmoHints[];
+	static const char* s_HintText[];
 	
 protected:
 	vec2 GetTeePosition();

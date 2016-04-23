@@ -34,6 +34,17 @@ const char* CModAPI_AssetsEditorGui_View::s_CursorToolHints[] = {
 	"Bone Length: edit the length of a bone",
 	"Bone Creator: create a new bone from an existing one",
 	"Bone Eraser: delete a bone",
+	"Sprite Creator: create sprite from an image",
+};
+
+const char* CModAPI_AssetsEditorGui_View::s_GizmoHints[] = {
+	"Aim Direction: set the aim direction",
+	"Motion Direction: set the motion direction",
+	"Hook Direction: set the hook direction",
+};
+
+const char* CModAPI_AssetsEditorGui_View::s_HintText[] = {
+	"Show/Hide skeleton bones",
 };
 
 CModAPI_AssetsEditorGui_View::CModAPI_AssetsEditorGui_View(CModAPI_AssetsEditor* pAssetsEditor) :
@@ -100,7 +111,7 @@ void CModAPI_AssetsEditorGui_View::RefreshToolBar()
 		case CModAPI_AssetPath::TYPE_SKELETONSKIN:
 			m_pToolbar->AddSeparator();
 			m_pToolbar->Add(new CModAPI_ClientGui_Label(m_pConfig, "Show:"));
-			m_pToolbar->Add(new CViewSwitch(this, MODAPI_ASSETSEDITOR_ICON_SKELETON, &m_ShowSkeleton));
+			m_pToolbar->Add(new CViewSwitch(this, MODAPI_ASSETSEDITOR_ICON_SKELETON, &m_ShowSkeleton, s_HintText[HINT_SHOW_SKELETON]));
 			break;
 	}
 	
@@ -112,6 +123,10 @@ void CModAPI_AssetsEditorGui_View::RefreshToolBar()
 	
 	switch(m_pAssetsEditor->m_ViewedAssetPath.GetType())
 	{
+		case CModAPI_AssetPath::TYPE_IMAGE:
+			//~ m_CursorToolButtons[CURSORTOOL_SPRITE_CREATOR] = new CModAPI_AssetsEditorGui_View::CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_SPRITE, CURSORTOOL_SPRITE_CREATOR);
+			//~ m_pToolbar->Add(m_CursorToolButtons[CURSORTOOL_SPRITE_CREATOR]);
+			break;
 		case CModAPI_AssetPath::TYPE_SKELETON:
 		case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
 			m_CursorToolButtons[CURSORTOOL_TRANSLATE] = new CModAPI_AssetsEditorGui_View::CCursorToolButton(this, MODAPI_ASSETSEDITOR_ICON_CURSORTOOL_TRANSLATE, CURSORTOOL_TRANSLATE);
@@ -723,6 +738,11 @@ void CModAPI_AssetsEditorGui_View::OnButtonClick(int X, int Y, int Button)
 		{
 			switch(m_pAssetsEditor->m_ViewedAssetPath.GetType())
 			{
+				case CModAPI_AssetPath::TYPE_IMAGE:
+				{
+					
+					break;
+				}
 				case CModAPI_AssetPath::TYPE_SKELETON:
 				{
 					CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(m_pAssetsEditor->m_ViewedAssetPath);
@@ -1155,6 +1175,20 @@ void CModAPI_AssetsEditorGui_View::OnMouseOver(int X, int Y, int RelX, int RelY,
 	}
 	else
 	{
+		int GizmoFound = -1;
+		for(int i=NUM_GIZMOS-1; i>=0; i--)
+		{
+			if(IsOnGizmo(i, X, Y))
+			{
+				GizmoFound = i;
+				break;
+			}
+		}
+		if(GizmoFound >= 0)
+		{
+			m_pAssetsEditor->ShowHint(s_GizmoHints[GizmoFound]);
+		}
+		
 		m_pToolbar->OnMouseOver(X, Y, RelX, RelY, KeyState);
 	}
 }

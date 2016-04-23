@@ -829,88 +829,135 @@ void CModAPI_AssetsEditor::EditAssetSubItem(CModAPI_AssetPath AssetPath, int Sub
 
 void CModAPI_AssetsEditor::EditAssetFirstFrame()
 {
-	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
-	{
-		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
-		if(pAnimation)
-		{
-			m_EditedAssetSubPath = 0;
-			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetSubPath].m_Time;
-		}
-		else
-			m_Time = 0.0f;
-	}
-	else
-		m_Time = 0.0f;
-	
-	m_Paused = true;
+	m_Time = 0.0f;
 }
 
 void CModAPI_AssetsEditor::EditAssetPrevFrame()
 {
-	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_SKELETONANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
-		if(pAnimation)
+		CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_EditedAssetPath);
+		if(pSkeletonAnimation)
 		{
-			for(int i=pAnimation->m_lKeyFrames.size()-1; i>=0; i--)
+			float MaxTime = m_Time;
+			m_Time = 0.0f;
+			
+			//Bones
+			for(int i=0; i<pSkeletonAnimation->m_BoneAnimations.size(); i++)
 			{
-				if(pAnimation->m_lKeyFrames[i].m_Time < m_Time)
+				for(int j=0; j<pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames.size(); j++)
 				{
-					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
-					m_EditedAssetSubPath = i;
-					break;
+					float Time = pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					
+					if(Time >= MaxTime)
+						break;
+						
+					if(Time > m_Time)
+						m_Time = Time;
+				}
+			}
+			
+			//Layers
+			for(int i=0; i<pSkeletonAnimation->m_LayerAnimations.size(); i++)
+			{
+				for(int j=0; j<pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames.size(); j++)
+				{
+					float Time = pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					
+					if(Time >= MaxTime)
+						break;
+						
+					if(Time > m_Time)
+						m_Time = Time;
 				}
 			}
 		}
-		else
-			m_Time = 0.0f;
 	}
-	else
-		m_Time = 0.0f;
-	
-	m_Paused = true;
 }
 
 void CModAPI_AssetsEditor::EditAssetNextFrame()
 {
-	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_SKELETONANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
-		if(pAnimation)
+		CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_EditedAssetPath);
+		if(pSkeletonAnimation)
 		{
-			for(int i=0; i<pAnimation->m_lKeyFrames.size(); i++)
+			float MinTime = m_Time;
+			bool Initialized = false;
+			
+			//Bones
+			for(int i=0; i<pSkeletonAnimation->m_BoneAnimations.size(); i++)
 			{
-				if(pAnimation->m_lKeyFrames[i].m_Time > m_Time)
+				for(int j=pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames.size()-1; j>=0; j--)
 				{
-					m_Time = pAnimation->m_lKeyFrames[i].m_Time;
-					m_EditedAssetSubPath = i;
-					break;
+					float Time = pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					
+					if(Time <= MinTime)
+						break;
+						
+					if(Time < m_Time || !Initialized)
+					{
+						Initialized = true;
+						m_Time = Time;
+					}
+				}
+			}
+			
+			//Layers
+			for(int i=0; i<pSkeletonAnimation->m_LayerAnimations.size(); i++)
+			{
+				for(int j=pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames.size()-1; j>=0; j--)
+				{
+					float Time = pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames[j].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					
+					if(Time <= MinTime)
+						break;
+						
+					if(Time < m_Time || !Initialized)
+					{
+						Initialized = true;
+						m_Time = Time;
+					}
 				}
 			}
 		}
-		else
-			m_Time = 0.0f;
 	}
-	else
-		m_Time = 0.0f;
-	
-	m_Paused = true;
 }
 
 void CModAPI_AssetsEditor::EditAssetLastFrame()
 {
-	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_ANIMATION)
+	if(m_EditedAssetPath.GetType() == CModAPI_AssetPath::TYPE_SKELETONANIMATION)
 	{
-		CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_EditedAssetPath);
-		if(pAnimation && pAnimation->m_lKeyFrames.size() > 0)
+		CModAPI_Asset_SkeletonAnimation* pSkeletonAnimation = AssetManager()->GetAsset<CModAPI_Asset_SkeletonAnimation>(m_EditedAssetPath);
+		if(pSkeletonAnimation)
 		{
-			m_EditedAssetSubPath = pAnimation->m_lKeyFrames.size()-1;
-			m_Time = pAnimation->m_lKeyFrames[m_EditedAssetSubPath].m_Time;
+			m_Time = 0.0f;
+			
+			//Bones
+			for(int i=0; i<pSkeletonAnimation->m_BoneAnimations.size(); i++)
+			{
+				if(pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames.size() > 0)
+				{
+					int KeyId = pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames.size()-1;
+					float Time = pSkeletonAnimation->m_BoneAnimations[i].m_KeyFrames[KeyId].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					if(Time > m_Time)
+						m_Time = Time;
+				}
+			}
+			
+			//Layers
+			for(int i=0; i<pSkeletonAnimation->m_LayerAnimations.size(); i++)
+			{
+				if(pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames.size() > 0)
+				{
+					int KeyId = pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames.size()-1;
+					float Time = pSkeletonAnimation->m_LayerAnimations[i].m_KeyFrames[KeyId].m_Time / static_cast<float>(MODAPI_SKELETONANIMATION_TIMESTEP);
+					if(Time > m_Time)
+						m_Time = Time;
+				}
+			}
 		}
 	}
-		
-	m_Paused = true;
 }
 
 void CModAPI_AssetsEditor::DisplayAsset(CModAPI_AssetPath AssetPath)
@@ -948,7 +995,6 @@ bool CModAPI_AssetsEditor::IsPaused()
 void CModAPI_AssetsEditor::SetTime(float Time)
 {
 	m_Time = Time;
-	m_EditedAssetSubPath = -1;
 }
 
 float CModAPI_AssetsEditor::GetTime()

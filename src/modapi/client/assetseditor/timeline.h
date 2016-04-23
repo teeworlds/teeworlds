@@ -60,6 +60,14 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		{
 			
 		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pAssetsEditor->ShowHint("Move time to zero");
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
+		}
 	};
 	
 	class CLastFrameButton : public CModAPI_ClientGui_IconButton
@@ -78,6 +86,14 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 			m_pAssetsEditor(pAssetsEditor)
 		{
 			
+		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pAssetsEditor->ShowHint("Move time to the last keyframe");
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
 	};
 	
@@ -98,6 +114,14 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		{
 			
 		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pAssetsEditor->ShowHint("Move time to the previous keyframe");
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
+		}
 	};
 	
 	class CNextFrameButton : public CModAPI_ClientGui_IconButton
@@ -116,6 +140,14 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 			m_pAssetsEditor(pAssetsEditor)
 		{
 			
+		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pAssetsEditor->ShowHint("Move time to the next keyframe");
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
 	};
 	
@@ -145,6 +177,14 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 				SetIcon(MODAPI_ASSETSEDITOR_ICON_PAUSE);
 			
 			CModAPI_ClientGui_IconButton::Render();
+		}
+		
+		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
+		{
+			if(m_Rect.IsInside(X, Y))
+				m_pAssetsEditor->ShowHint("Play/Pause");
+			
+			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
 	};
 	
