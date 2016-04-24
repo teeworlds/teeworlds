@@ -333,7 +333,8 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 	m_SkinTexture[5] = Graphics()->LoadTexture("skins/eyes/standard.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	
 	m_pGuiConfig = new CModAPI_ClientGui_Config(Graphics(), RenderTools(), TextRender(), Input(), m_ModEditorTexture);
-	
+	m_pGuiConfig->m_fShowHint = CModAPI_AssetsEditor::ShowHint;
+	m_pGuiConfig->m_pShowHintData = (void*) this;
 	
 	int Margin = 5;
 	
@@ -399,12 +400,13 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 	m_AssetsListSource = CModAPI_AssetPath::SRC_EXTERNAL;
 }
 
-void CModAPI_AssetsEditor::ShowHint(const char* pText)
+void CModAPI_AssetsEditor::ShowHint(const char* pText, void* pData)
 {
-	if(m_pHintLabel)
+	CModAPI_AssetsEditor* pThis = (CModAPI_AssetsEditor*) pData;
+	if(pThis->m_pHintLabel)
 	{
-		m_pHintLabel->SetText(pText);
-		m_Hint = true;
+		pThis->m_pHintLabel->SetText(pText);
+		pThis->m_Hint = true;
 	}
 }
 

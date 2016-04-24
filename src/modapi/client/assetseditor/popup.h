@@ -1329,7 +1329,7 @@ public:
 		Update();
 		
 		m_TabRGB = new CModAPI_ClientGui_VListLayout(pAssetsEditor->m_pGuiConfig);
-		m_Tabs->AddTab(m_TabRGB, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_RGB, "RGB");
+		m_Tabs->AddTab(m_TabRGB, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_RGB, "RGB Color Chooser");
 		
 		{
 			CModAPI_ClientGui_HListLayout* pLayout = new CModAPI_ClientGui_HListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_ALL);
@@ -1381,7 +1381,7 @@ public:
 		}
 		
 		m_TabHSV = new CModAPI_ClientGui_VListLayout(pAssetsEditor->m_pGuiConfig);
-		m_Tabs->AddTab(m_TabHSV, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_HSV, "HSV");
+		m_Tabs->AddTab(m_TabHSV, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_HSV, "HSV Color Chooser");
 		{
 			CModAPI_ClientGui_HListLayout* pLayout = new CModAPI_ClientGui_HListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_ALL);
 			pLayout->SetHeight(m_pConfig->m_ButtonHeight);
@@ -1432,7 +1432,7 @@ public:
 		}
 		
 		m_TabSquare = new CModAPI_ClientGui_VListLayout(pAssetsEditor->m_pGuiConfig);
-		m_Tabs->AddTab(m_TabSquare, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_SQUARE, "Square");
+		m_Tabs->AddTab(m_TabSquare, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_SQUARE, "HSV Square Color Chooser");
 		{
 			CModAPI_ClientGui_HListLayout* pLayout = new CModAPI_ClientGui_HListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_LAST);
 			pLayout->SetHeight(250);
@@ -1455,7 +1455,7 @@ public:
 		}
 		
 		m_TabWheel = new CModAPI_ClientGui_VListLayout(pAssetsEditor->m_pGuiConfig);
-		m_Tabs->AddTab(m_TabWheel, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_WHEEL, "Wheel");
+		m_Tabs->AddTab(m_TabWheel, MODAPI_ASSETSEDITOR_ICON_COLORPICKER_WHEEL, "HSV Wheel Color Chooser");
 		{
 			m_TabWheel->Add(new CWheelPicker(this));
 		}

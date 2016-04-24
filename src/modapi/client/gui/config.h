@@ -20,6 +20,8 @@ enum
 	MODAPI_CLIENTGUI_NUM_BUTTONSTYLES,
 };
 
+typedef void (*CModAPI_ClientGui_ShowHintFunc)(const char*, void*);
+
 class CModAPI_ClientGui_Config
 {
 public:
@@ -42,8 +44,12 @@ public:
 	int m_LayoutSpacing;
 	int m_LayoutMargin;
 	
+	CModAPI_ClientGui_ShowHintFunc m_fShowHint;
+	void* m_pShowHintData;
+	
 public:
 	CModAPI_ClientGui_Config(class IGraphics *pGraphics, class CRenderTools *pRenderTools, class ITextRender *pTextRender, class IInput *pInput, IGraphics::CTextureHandle Texture);
+	void ShowHind(const char* pText);
 };
 
 #endif

@@ -11,7 +11,7 @@ public:
 	struct CTab
 	{
 		int m_IconId;
-		char m_aName[128];
+		char m_aHint[128];
 		CModAPI_ClientGui_Widget* m_pWidget;
 		CModAPI_ClientGui_Rect m_Rect;
 	};
@@ -33,7 +33,7 @@ public:
 	virtual void OnButtonRelease(int Button);
 	virtual void OnInputEvent();
 	
-	void AddTab(CModAPI_ClientGui_Widget* pWidget, int IconId, const char* pName);
+	void AddTab(CModAPI_ClientGui_Widget* pWidget, int IconId, const char* pHint);
 	void Clear();
 };
 

@@ -69,6 +69,11 @@ public:
 	void SetWidth(int w);
 	void SetHeight(int w);
 
+	inline void ShowHint(const char* pText)
+	{
+		if(m_pConfig->m_fShowHint)
+			m_pConfig->m_fShowHint(pText, m_pConfig->m_pShowHintData);
+	}
 };
 
 #endif

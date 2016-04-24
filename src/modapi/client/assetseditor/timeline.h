@@ -36,7 +36,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		{
 			if(m_Rect.IsInside(X, Y))
 			{
-				m_pTimeline->m_pAssetsEditor->ShowHint(CModAPI_AssetsEditorGui_Timeline::s_CursorToolHints[m_CursorTool]);
+				ShowHint(CModAPI_AssetsEditorGui_Timeline::s_CursorToolHints[m_CursorTool]);
 			}
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
@@ -64,7 +64,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pAssetsEditor->ShowHint("Move time to zero");
+				ShowHint("Move time to zero");
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -91,7 +91,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pAssetsEditor->ShowHint("Move time to the last keyframe");
+				ShowHint("Move time to the last keyframe");
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -118,7 +118,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pAssetsEditor->ShowHint("Move time to the previous keyframe");
+				ShowHint("Move time to the previous keyframe");
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -145,7 +145,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pAssetsEditor->ShowHint("Move time to the next keyframe");
+				ShowHint("Move time to the next keyframe");
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -182,7 +182,7 @@ class CModAPI_AssetsEditorGui_Timeline : public CModAPI_ClientGui_Widget
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pAssetsEditor->ShowHint("Play/Pause");
+				ShowHint("Play/Pause");
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}

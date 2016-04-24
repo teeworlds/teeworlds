@@ -76,7 +76,7 @@ void CModAPI_ClientGui_Tabs::Render()
 	}
 }
 
-void CModAPI_ClientGui_Tabs::AddTab(CModAPI_ClientGui_Widget* pWidget, int IconId, const char* pName)
+void CModAPI_ClientGui_Tabs::AddTab(CModAPI_ClientGui_Widget* pWidget, int IconId, const char* pHint)
 {
 	float TabButtonSize = m_pConfig->m_IconSize + m_pConfig->m_LabelMargin*2.0f;
 	
@@ -86,7 +86,7 @@ void CModAPI_ClientGui_Tabs::AddTab(CModAPI_ClientGui_Widget* pWidget, int IconI
 	
 	Tab.m_pWidget = pWidget;
 	Tab.m_IconId = IconId;
-	str_copy(Tab.m_aName, pName, sizeof(Tab.m_aName));
+	str_copy(Tab.m_aHint, pHint, sizeof(Tab.m_aHint));
 	Tab.m_Rect.x = m_Rect.x + s_LayoutCornerRadius + TabButtonSize*TabId + TabId;
 	Tab.m_Rect.y = m_Rect.y;
 	Tab.m_Rect.w = m_pConfig->m_IconSize + m_pConfig->m_LabelMargin*2.0f;
@@ -118,6 +118,15 @@ void CModAPI_ClientGui_Tabs::Clear()
 
 void CModAPI_ClientGui_Tabs::OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 {
+	for(int i=0; i<m_Tabs.size(); i++)
+	{
+		if(m_Tabs[i].m_Rect.IsInside(X, Y))
+		{
+			ShowHint(m_Tabs[i].m_aHint);
+			break;
+		}
+	}
+		
 	if(m_SelectedTab >= 0)
 	{
 		m_Tabs[m_SelectedTab].m_pWidget->OnMouseOver(X, Y, RelX, RelY, KeyState);

@@ -711,26 +711,26 @@ void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 		
 		//Add main tab
 		m_pTabs[TAB_ASSET] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-		AddTab(m_pTabs[TAB_ASSET], MODAPI_ASSETSEDITOR_ICON_ASSET, "Asset");
+		AddTab(m_pTabs[TAB_ASSET], MODAPI_ASSETSEDITOR_ICON_ASSET, "Asset properties");
 		
 		//Add asset-specific tabs
 		switch(m_pAssetsEditor->m_EditedAssetPath.GetType())
 		{
 			case CModAPI_AssetPath::TYPE_SKELETON:
 				m_pTabs[TAB_SKELETON_BONES] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-				AddTab(m_pTabs[TAB_SKELETON_BONES], MODAPI_ASSETSEDITOR_ICON_BONE, "Bones");
+				AddTab(m_pTabs[TAB_SKELETON_BONES], MODAPI_ASSETSEDITOR_ICON_BONE, "Bones: create, edit and remove bones from the skeleton");
 				m_pTabs[TAB_SKELETON_LAYERS] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-				AddTab(m_pTabs[TAB_SKELETON_LAYERS], MODAPI_ASSETSEDITOR_ICON_LAYERS, "Layers");
+				AddTab(m_pTabs[TAB_SKELETON_LAYERS], MODAPI_ASSETSEDITOR_ICON_LAYERS, "Layers: create, edit and remove layers from the skeleton");
 				break;
 			case CModAPI_AssetPath::TYPE_SKELETONSKIN:
 				m_pTabs[TAB_SKELETONSKIN_SPRITES] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-				AddTab(m_pTabs[TAB_SKELETONSKIN_SPRITES], MODAPI_ASSETSEDITOR_ICON_SPRITE, "Sprites");
+				AddTab(m_pTabs[TAB_SKELETONSKIN_SPRITES], MODAPI_ASSETSEDITOR_ICON_SPRITE, "Sprites: create, edit and remove sprites from the skin");
 				break;
 			case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
 				m_pTabs[TAB_SKELETONANIMATION_ANIMATIONS] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-				AddTab(m_pTabs[TAB_SKELETONANIMATION_ANIMATIONS], MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION, "Animations");
+				AddTab(m_pTabs[TAB_SKELETONANIMATION_ANIMATIONS], MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION, "Animations: set propeties for bone and layer animations");
 				m_pTabs[TAB_SKELETONANIMATION_KEYFRAMES] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
-				AddTab(m_pTabs[TAB_SKELETONANIMATION_KEYFRAMES], MODAPI_ASSETSEDITOR_ICON_FRAMES, "Key Frames");
+				AddTab(m_pTabs[TAB_SKELETONANIMATION_KEYFRAMES], MODAPI_ASSETSEDITOR_ICON_FRAMES, "Key Frames: edit properties of key frames");
 				break;
 		}
 		

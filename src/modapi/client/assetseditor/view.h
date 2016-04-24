@@ -57,7 +57,7 @@ public:
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pView->m_pAssetsEditor->ShowHint(CModAPI_AssetsEditorGui_View::s_CursorToolHints[m_CursorTool]);
+				ShowHint(CModAPI_AssetsEditorGui_View::s_CursorToolHints[m_CursorTool]);
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}
@@ -99,7 +99,7 @@ public:
 		virtual void OnMouseOver(int X, int Y, int RelX, int RelY, int KeyState)
 		{
 			if(m_Rect.IsInside(X, Y))
-				m_pView->m_pAssetsEditor->ShowHint(m_pHint);
+				ShowHint(m_pHint);
 			
 			CModAPI_ClientGui_IconButton::OnMouseOver(X, Y, RelX, RelY, KeyState);
 		}

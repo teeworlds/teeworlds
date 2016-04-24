@@ -1186,7 +1186,7 @@ void CModAPI_AssetsEditorGui_View::OnMouseOver(int X, int Y, int RelX, int RelY,
 		}
 		if(GizmoFound >= 0)
 		{
-			m_pAssetsEditor->ShowHint(s_GizmoHints[GizmoFound]);
+			ShowHint(s_GizmoHints[GizmoFound]);
 		}
 		
 		m_pToolbar->OnMouseOver(X, Y, RelX, RelY, KeyState);

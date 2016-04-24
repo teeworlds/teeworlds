@@ -189,7 +189,7 @@ public:
 	bool IsEditedAsset(CModAPI_AssetPath AssetPath);
 	bool IsDisplayedAsset(CModAPI_AssetPath AssetPath);
 	
-	void ShowHint(const char* pText);
+	static void ShowHint(const char* pText, void* pData);
 };
 
 #endif
