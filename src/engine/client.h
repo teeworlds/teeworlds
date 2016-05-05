@@ -169,6 +169,7 @@ public:
 
 	// ZillyWoods
 
+	virtual int GetPredictionTime() = 0;
 	virtual void SetLocalClientID(int Index, int Value) = 0;
 	virtual int GetLocalClientID(int Index) = 0;
 };

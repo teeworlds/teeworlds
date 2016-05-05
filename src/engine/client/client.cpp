@@ -789,7 +789,6 @@ void CClient::DebugRender()
 	static NETSTATS Prev, Current;
 	static int64 LastSnap = 0;
 	static float FrameTimeAvg = 0;
-	int64 Now = time_get();
 	char aBuffer[512];
 
 	if(!g_Config.m_Debug)
@@ -853,8 +852,7 @@ void CClient::DebugRender()
 		}
 	}
 
-	str_format(aBuffer, sizeof(aBuffer), "pred: %d ms",
-		(int)((m_PredictedTime.Get(Now)-m_GameTime[g_Config.m_ClDummy].Get(Now))*1000/(float)time_freq()));
+	str_format(aBuffer, sizeof(aBuffer), "pred: %d ms", GetPredictionTime());
 	Graphics()->QuadsText(2, 70, 16, aBuffer);
 	Graphics()->QuadsEnd();
 
@@ -3173,4 +3171,10 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pEngineMasterServer;
 
 	return 0;
+}
+
+int CClient::GetPredictionTime()
+{
+	int64 Now = time_get();
+	return (int)((m_PredictedTime.Get(Now)-m_GameTime[g_Config.m_ClDummy].Get(Now))*1000/(float)time_freq());
 }

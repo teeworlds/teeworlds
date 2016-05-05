@@ -144,7 +144,7 @@ void CInfoMessages::OnRender()
 
 	Graphics()->MapScreen(0, 0, Width*1.5f, Height*1.5f);
 	float StartX = Width*1.5f-10.0f;
-	float y = 20.0f;
+	float y = 30.0f + 100.0f * (g_Config.m_ClShowfps + g_Config.m_ClShowpred);
 
 	for(int i = 1; i <= MAX_INFOMSGS; i++)
 	{

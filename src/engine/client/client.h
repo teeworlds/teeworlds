@@ -349,6 +349,7 @@ public:
 
 	// ZillyWoods
 
+	int GetPredictionTime();
 	void SetLocalClientID(int Index, int Value) { m_aLocalClientID[Index] = Value; }
 	int GetLocalClientID(int Index) { return m_aLocalClientID[Index]; }
 };
