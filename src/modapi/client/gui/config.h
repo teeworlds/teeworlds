@@ -43,6 +43,8 @@ public:
 	int m_SliderHeight;
 	int m_LayoutSpacing;
 	int m_LayoutMargin;
+	int m_ExpandShift;
+	int m_ExpandSpacing;
 	
 	CModAPI_ClientGui_ShowHintFunc m_fShowHint;
 	void* m_pShowHintData;

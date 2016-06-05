@@ -46,13 +46,20 @@ protected:
 		array<CBoneState> m_Bones;
 		array<CLayerState> m_Layers;
 	};
+	
+	class CSkinState
+	{
+	public:
+		CModAPI_AssetPath m_Path;
+		vec4 m_Color;
+	};
 
 protected:
 	class IGraphics* m_pGraphics;
 	CModAPI_AssetManager* m_pAssetManager;
 	
 	array<CSkeletonState> m_Skeletons;
-	array<CModAPI_AssetPath> m_Skins;
+	array<CSkinState> m_Skins;
 	int m_NumLayers;
 	
 	vec2 m_Aim;
@@ -77,7 +84,8 @@ public:
 	void AddSkeleton(CModAPI_AssetPath SkeletonPath);
 	void AddSkeletonWithParents(CModAPI_AssetPath SkeletonPath, int AddDefaultSkins = ADDDEFAULTSKIN_NO);
 	void ApplyAnimation(CModAPI_AssetPath SkeletonAnimationPath, float Time);
-	void AddSkin(CModAPI_AssetPath SkeletonSkinPath);
+	void AddSkin(CModAPI_AssetPath SkeletonSkinPath, vec4 Color);
+	void AddSkinWithSkeleton(CModAPI_AssetPath SkeletonSkinPath, vec4 Color);
 	void FinalizeBone(int s, int b);
 	void Finalize();
 	void RenderBone(vec2 Position, float Size, CModAPI_AssetPath SkeletonPath, CModAPI_Asset_Skeleton::CSubPath BonePath);

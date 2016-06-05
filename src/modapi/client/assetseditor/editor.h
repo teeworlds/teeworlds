@@ -380,6 +380,74 @@ public:
 		}
 	};
 
+	class CCharacterPartEdit : public CModAPI_ClientGui_ExternalTextButton
+	{
+	public:
+		static const char* m_aNoneText;
+		
+	protected:
+		CModAPI_AssetsEditor* m_pAssetsEditor;
+		CModAPI_AssetPath m_ParentAssetPath;
+		int m_ParentAssetMember;
+		int m_ParentAssetSubId;
+		CModAPI_AssetPath m_CharacterPath;
+		
+	protected:
+		virtual void MouseClickAction()
+		{
+			m_pAssetsEditor->DisplayPopup(new CModAPI_AssetsEditorGui_Popup_CharacterPartEdit(
+				m_pAssetsEditor, m_Rect, CModAPI_ClientGui_Popup::ALIGNMENT_LEFT,
+				m_ParentAssetPath, m_ParentAssetMember, m_ParentAssetSubId, m_CharacterPath
+			));
+		}
+		
+	public:
+		CCharacterPartEdit(
+			CModAPI_AssetsEditor* pAssetsEditor,
+			CModAPI_AssetPath ParentAssetPath,
+			int ParentAssetMember,
+			int ParentAssetSubId,
+			CModAPI_AssetPath CharacterPath
+		) :
+			CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, 0),
+			m_ParentAssetPath(ParentAssetPath),
+			m_ParentAssetMember(ParentAssetMember),
+			m_ParentAssetSubId(ParentAssetSubId),
+			m_CharacterPath(CharacterPath),
+			m_pAssetsEditor(pAssetsEditor)
+		{
+			m_Centered = false;
+			
+			Update();
+		}
+		
+		virtual void Update()
+		{
+			CModAPI_Asset_Character::CSubPath SubPath = m_pAssetsEditor->AssetManager()->GetAssetValue<int>(
+				m_ParentAssetPath,
+				m_ParentAssetMember,
+				m_ParentAssetSubId,
+				CModAPI_Asset_Character::CSubPath::Null().ConvertToInteger()
+			);
+			
+			if(SubPath.IsNull())
+			{
+				m_pText = m_aNoneText;
+			}
+			else
+			{
+				m_pText = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+					m_CharacterPath,
+					CModAPI_Asset_Character::PART_NAME,
+					CModAPI_Asset_Character::CSubPath::Part(SubPath.GetId()).ConvertToInteger(),
+					0);
+				SetIcon(MODAPI_ASSETSEDITOR_ICON_CHARACTERPART);
+			}
+			
+			CModAPI_ClientGui_ExternalTextButton::Update();
+		}
+	};
+
 	class CColorEdit : public CModAPI_ClientGui_Widget
 	{		
 	protected:
@@ -830,6 +898,8 @@ public:
 		TAB_SKELETONANIMATION_ANIMATIONS=1,
 		TAB_SKELETONANIMATION_KEYFRAMES,
 		
+		TAB_CHARACTER_PARTS=1,
+		
 		NUM_TABS=3
 	};
 	enum
@@ -841,6 +911,8 @@ public:
 		
 		LIST_SKELETONANIMATION_ANIMATIONS=0,
 		LIST_SKELETONANIMATION_KEYFRAMES,
+		
+		LIST_CHARACTER_PARTS=0,
 		
 		NUM_LISTS=2
 	};
@@ -866,6 +938,7 @@ protected:
 	void AddAssetField(CModAPI_ClientGui_VListLayout* pList, int Member, int AssetType, int SubId, const char* pLabelText = 0);
 	void AddBoneField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath SkeletonPath, const char* pLabelText = 0);
 	void AddLayerField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath SkeletonPath, const char* pLabelText = 0);
+	void AddCharacterPartField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath CharacterPath, const char* pLabelText = 0);
 	void AddCycleField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
 	void AddSpriteAlignField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
 	void AddLayerStateField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, const char* pLabelText = 0);
@@ -883,6 +956,9 @@ protected:
 	void RefreshTab_SkeletonAnimation_Asset(bool KeepStatus);
 	void RefreshTab_SkeletonAnimation_Animations(bool KeepStatus);
 	void RefreshTab_SkeletonAnimation_KeyFrames(bool KeepStatus);
+	void RefreshTab_Character_Asset(bool KeepStatus);
+	void RefreshTab_Character_Parts(bool KeepStatus);
+	void RefreshTab_CharacterPart_Asset(bool KeepStatus);
 	
 public:
 	CModAPI_AssetsEditorGui_Editor(CModAPI_AssetsEditor* pAssetsEditor);

@@ -63,7 +63,7 @@ public:
 	}
 };
 
-class CModAPI_AssetPath : public CModAPI_GenericPath<11, 4, 0>
+class CModAPI_AssetPath : public CModAPI_GenericPath<12, 4, 0>
 {
 public:
 	enum
@@ -86,6 +86,8 @@ public:
 		TYPE_SKELETON,
 		TYPE_SKELETONANIMATION,
 		TYPE_SKELETONSKIN,
+		TYPE_CHARACTER,
+		TYPE_CHARACTERPART,
 		TYPE_LIST,
 		NUM_ASSETTYPES,
 	};

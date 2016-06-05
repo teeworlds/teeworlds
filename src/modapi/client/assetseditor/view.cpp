@@ -59,17 +59,6 @@ CModAPI_AssetsEditorGui_View::CModAPI_AssetsEditorGui_View(CModAPI_AssetsEditor*
 	m_CursorTool(CURSORTOOL_MOVE),
 	m_ShowSkeleton(true)
 {	
-	for(int p = 0; p < 6; p++)
-	{
-		m_TeeRenderInfo.m_aTextures[p] = m_pAssetsEditor->m_SkinTexture[p];
-		m_TeeRenderInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	}
-	m_TeeRenderInfo.m_aColors[0] = vec4(206.0f/255.0f, 140.0f/255.0f, 90.0f/255.0f, 1.0f);
-	m_TeeRenderInfo.m_aColors[1] = vec4(217.0f/255.0f, 183.0f/255.0f, 160.0f/255.0f, 1.0f);
-	m_TeeRenderInfo.m_aColors[2] = m_TeeRenderInfo.m_aColors[0];
-	m_TeeRenderInfo.m_aColors[3] = m_TeeRenderInfo.m_aColors[0];
-	m_TeeRenderInfo.m_aColors[4] = m_TeeRenderInfo.m_aColors[0];
-	
 	m_pToolbar = new CModAPI_ClientGui_HListLayout(m_pConfig);
 	RefreshToolBar();
 	
@@ -156,6 +145,48 @@ void CModAPI_AssetsEditorGui_View::RefreshToolBar()
 			}
 			break;
 	}
+	
+	m_pToolbar->Update();
+}
+
+vec2 CModAPI_AssetsEditorGui_View::GetTeePosition()
+{
+	vec2 TeePos;
+	TeePos.x = m_ViewRect.x + m_ViewRect.w/2;
+	TeePos.y = m_ViewRect.y + m_ViewRect.h/2;
+	
+	return TeePos;
+}
+
+vec2 CModAPI_AssetsEditorGui_View::GetAimPosition()
+{
+	float AimDist = min(m_ViewRect.w/2.0f - 20.0f, m_ViewRect.h/2.0f - 20.0f) - 48.0f;
+	vec2 AimPos = GetTeePosition() + m_AimDir * AimDist - vec2(16.0f, 16.0f);
+	
+	return AimPos;
+}
+
+vec2 CModAPI_AssetsEditorGui_View::GetMotionPosition()
+{
+	float MotionDist = min(m_ViewRect.w/2.0f - 20.0f, m_ViewRect.h/2.0f - 20.0f);
+	vec2 MotionPos = GetTeePosition() + m_MotionDir * MotionDist - vec2(16.0f, 16.0f);
+	
+	return MotionPos;
+}
+
+void CModAPI_AssetsEditorGui_View::Update()
+{
+	m_pToolbar->SetRect(CModAPI_ClientGui_Rect(
+		m_Rect.x,
+		m_Rect.y,
+		m_Rect.w,
+		m_ToolbarHeight
+	));
+	
+	m_ViewRect.x = m_Rect.x;
+	m_ViewRect.y = m_pToolbar->m_Rect.y + m_pToolbar->m_Rect.h + m_pConfig->m_LayoutMargin;
+	m_ViewRect.w = m_Rect.w;
+	m_ViewRect.h = m_Rect.h - m_pToolbar->m_Rect.h - m_pConfig->m_LayoutMargin;
 	
 	m_pToolbar->Update();
 }
@@ -272,221 +303,6 @@ void CModAPI_AssetsEditorGui_View::RenderSprite()
 	m_pAssetsEditor->ModAPIGraphics()->DrawSprite(m_pAssetsEditor->m_ViewedAssetPath, Pos, SpriteScaling, 0.0f, 0x0);
 }
 
-void CModAPI_AssetsEditorGui_View::RenderAnimation()
-{
-	CModAPI_Asset_Animation* pAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Animation>(m_pAssetsEditor->m_ViewedAssetPath);
-	if(!pAnimation)
-		return;
-	
-	CModAPI_Asset_Animation::CFrame Frame;
-	pAnimation->GetFrame(m_pAssetsEditor->GetTime(), &Frame);
-	
-	float AnimScale = 1.5f;
-	
-	vec2 Pos = GetTeePosition() + Frame.m_Pos * AnimScale;
-	
-	{
-		int SubX = 4;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		Graphics()->QuadsSetRotation(Frame.m_Angle);
-		IGraphics::CQuadItem QuadItem(Pos.x - 32.0f, Pos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-}
-
-vec2 CModAPI_AssetsEditorGui_View::GetTeePosition()
-{
-	vec2 TeePos;
-	TeePos.x = m_ViewRect.x + m_ViewRect.w/2;
-	TeePos.y = m_ViewRect.y + m_ViewRect.h/2;
-	
-	return TeePos;
-}
-
-vec2 CModAPI_AssetsEditorGui_View::GetAimPosition()
-{
-	float AimDist = min(m_ViewRect.w/2.0f - 20.0f, m_ViewRect.h/2.0f - 20.0f) - 48.0f;
-	vec2 AimPos = GetTeePosition() + m_AimDir * AimDist - vec2(16.0f, 16.0f);
-	
-	return AimPos;
-}
-
-vec2 CModAPI_AssetsEditorGui_View::GetMotionPosition()
-{
-	float MotionDist = min(m_ViewRect.w/2.0f - 20.0f, m_ViewRect.h/2.0f - 20.0f);
-	vec2 MotionPos = GetTeePosition() + m_MotionDir * MotionDist - vec2(16.0f, 16.0f);
-	
-	return MotionPos;
-}
-
-void CModAPI_AssetsEditorGui_View::Update()
-{
-	m_pToolbar->SetRect(CModAPI_ClientGui_Rect(
-		m_Rect.x,
-		m_Rect.y,
-		m_Rect.w,
-		m_ToolbarHeight
-	));
-	
-	m_ViewRect.x = m_Rect.x;
-	m_ViewRect.y = m_pToolbar->m_Rect.y + m_pToolbar->m_Rect.h + m_pConfig->m_LayoutMargin;
-	m_ViewRect.w = m_Rect.w;
-	m_ViewRect.h = m_Rect.h - m_pToolbar->m_Rect.h - m_pConfig->m_LayoutMargin;
-	
-	m_pToolbar->Update();
-}
-
-void CModAPI_AssetsEditorGui_View::RenderTeeAnimation()
-{
-	CModAPI_Asset_TeeAnimation* pTeeAnimation = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_TeeAnimation>(m_pAssetsEditor->m_ViewedAssetPath);
-	if(!pTeeAnimation)
-		return;
-		
-	vec2 TeePos = GetTeePosition();
-	
-	{
-		vec2 AimPos = GetAimPosition();
-		
-		int SubX = 0;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		IGraphics::CQuadItem QuadItem(AimPos.x - 32.0f, AimPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	
-	{
-		vec2 MotionPos = GetMotionPosition();
-		
-		int SubX = 4;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		Graphics()->QuadsSetRotation(angle(m_MotionDir));
-		IGraphics::CQuadItem QuadItem(MotionPos.x - 32.0f, MotionPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	
-	m_TeeRenderInfo.m_Size = 64.0f * m_Zoom;
-	
-	CModAPI_TeeAnimationState TeeAnimState;
-	m_pAssetsEditor->ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, m_MotionDir, m_AimDir);
-	m_pAssetsEditor->ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, m_pAssetsEditor->m_ViewedAssetPath, m_pAssetsEditor->GetTime());
-	m_pAssetsEditor->ModAPIGraphics()->DrawTee(RenderTools(), &m_TeeRenderInfo, &TeeAnimState, TeePos, m_AimDir, 0x0);
-}
-
-void CModAPI_AssetsEditorGui_View::RenderAttach()
-{			
-	CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_pAssetsEditor->m_ViewedAssetPath);
-	if(!pAttach)
-		return;
-			
-	vec2 TeePos = GetTeePosition();
-	vec2 AimPos = GetAimPosition();	
-	
-	if(pAttach->m_CursorPath.IsNull())
-	{
-		int SubX = 0;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		IGraphics::CQuadItem QuadItem(AimPos.x - 32.0f, AimPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	else
-	{
-		CModAPI_Asset_Sprite* pSprite = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Sprite>(pAttach->m_CursorPath);
-		if(!pSprite)
-			return;
-		
-		CModAPI_Asset_Image* pImage = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Image>(pSprite->m_ImagePath);
-		if(!pImage)
-			return;
-		
-		float SpriteWidthPix = (pImage->m_Width / max(1, pImage->m_GridWidth)) * pSprite->m_Width;
-		float SpriteHeightPix = (pImage->m_Height / max(1, pImage->m_GridHeight)) * pSprite->m_Height;
-		float SpriteScaling = sqrtf(SpriteWidthPix*SpriteWidthPix + SpriteHeightPix*SpriteHeightPix);
-		
-		m_pAssetsEditor->ModAPIGraphics()->DrawSprite(pAttach->m_CursorPath, AimPos, 64.0f, 0.0f, 0x0);
-	}
-	
-	{
-		vec2 MotionPos = GetMotionPosition();
-		
-		int SubX = 4;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		Graphics()->QuadsSetRotation(angle(m_MotionDir));
-		IGraphics::CQuadItem QuadItem(MotionPos.x - 32.0f, MotionPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	
-	m_TeeRenderInfo.m_Size = 64.0f * m_Zoom;
-	
-	vec2 MoveDir = vec2(1.0f, 0.0f);
-	
-	CModAPI_TeeAnimationState TeeAnimState;
-	m_pAssetsEditor->ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, m_MotionDir, m_AimDir);
-	m_pAssetsEditor->ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pAttach->m_TeeAnimationPath, m_pAssetsEditor->GetTime());
-			
-	CModAPI_AttachAnimationState AttachAnimState;
-	m_pAssetsEditor->ModAPIGraphics()->InitAttachAnimationState(&AttachAnimState, m_MotionDir, m_AimDir, m_pAssetsEditor->m_ViewedAssetPath, m_pAssetsEditor->GetTime());
-	m_pAssetsEditor->ModAPIGraphics()->DrawAttach(RenderTools(), &AttachAnimState, m_pAssetsEditor->m_ViewedAssetPath, TeePos, m_Zoom);	
-	
-	m_pAssetsEditor->ModAPIGraphics()->DrawTee(RenderTools(), &m_TeeRenderInfo, &TeeAnimState, TeePos, m_AimDir, 0x0);
-}
-
-void CModAPI_AssetsEditorGui_View::RenderLineStyle()
-{
-	float LineAngle = angle(m_EndPointPos - m_StartPointPos);
-	vec2 StartPointPos = GetTeePosition() + m_StartPointPos;
-	vec2 EndPointPos = GetTeePosition() + m_EndPointPos;
-	
-	IGraphics::CLineItem Line(StartPointPos.x, StartPointPos.y, EndPointPos.x, EndPointPos.y);
-	Graphics()->TextureClear();
-	Graphics()->LinesBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	Graphics()->LinesDraw(&Line, 1);
-	Graphics()->LinesEnd();
-	
-	{
-		int SubX = 8;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		IGraphics::CQuadItem QuadItem(StartPointPos.x - 32.0f, StartPointPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	{
-		int SubX = 8;
-		int SubY = 12;
-		Graphics()->TextureSet(m_pConfig->m_Texture);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(SubX/16.0f, SubY/16.0f, (SubX+4)/16.0f, (SubY+4)/16.0f);
-		Graphics()->QuadsSetRotation(LineAngle);
-		IGraphics::CQuadItem QuadItem(EndPointPos.x - 32.0f, EndPointPos.y - 32.0f, 64.0f, 64.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-	
-	m_pAssetsEditor->ModAPIGraphics()->DrawLine(m_pAssetsEditor->m_ViewedAssetPath, StartPointPos, EndPointPos, m_Zoom, m_pAssetsEditor->GetTime());
-}
-
 void CModAPI_AssetsEditorGui_View::RenderSkeleton()
 {
 	CModAPI_Asset_Skeleton* pSkeleton = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(m_pAssetsEditor->m_ViewedAssetPath);
@@ -528,7 +344,7 @@ void CModAPI_AssetsEditorGui_View::RenderSkeletonSkin()
 	CModAPI_SkeletonRenderer SkeletonRenderer(Graphics(), m_pAssetsEditor->AssetManager());
 	SkeletonRenderer.AddSkeletonWithParents(pSkeletonSkin->m_SkeletonPath, CModAPI_SkeletonRenderer::ADDDEFAULTSKIN_ONLYPARENT);
 	SkeletonRenderer.Finalize();
-	SkeletonRenderer.AddSkin(m_pAssetsEditor->m_ViewedAssetPath);
+	SkeletonRenderer.AddSkin(m_pAssetsEditor->m_ViewedAssetPath, vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	SkeletonRenderer.RenderSkins(GetTeePosition(), m_Zoom);
 	if(m_ShowSkeleton)
 	{
@@ -588,6 +404,16 @@ void CModAPI_AssetsEditorGui_View::RenderSkeletonAnimation()
 				SkeletonRenderer.RenderBoneOutline(GetTeePosition(), m_Zoom, pSkeletonAnimation->m_SkeletonPath, CModAPI_Asset_Skeleton::CSubPath::Bone(i));
 		}
 	}
+}
+
+void CModAPI_AssetsEditorGui_View::RenderCharacter()
+{
+	
+}
+
+void CModAPI_AssetsEditorGui_View::RenderCharacterPart()
+{
+	
 }
 
 void CModAPI_AssetsEditorGui_View::RenderGizmos()
@@ -673,18 +499,6 @@ void CModAPI_AssetsEditorGui_View::Render()
 		case CModAPI_AssetPath::TYPE_SPRITE:
 			RenderSprite();
 			break;
-		case CModAPI_AssetPath::TYPE_ANIMATION:
-			RenderAnimation();
-			break;
-		case CModAPI_AssetPath::TYPE_TEEANIMATION:
-			RenderTeeAnimation();
-			break;
-		case CModAPI_AssetPath::TYPE_ATTACH:
-			RenderAttach();
-			break;
-		case CModAPI_AssetPath::TYPE_LINESTYLE:
-			RenderLineStyle();
-			break;
 		case CModAPI_AssetPath::TYPE_SKELETON:
 			RenderSkeleton();
 			break;
@@ -693,6 +507,14 @@ void CModAPI_AssetsEditorGui_View::Render()
 			break;
 		case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
 			RenderSkeletonAnimation();
+			RenderGizmos();
+			break;
+		case CModAPI_AssetPath::TYPE_CHARACTER:
+			RenderCharacter();
+			RenderGizmos();
+			break;
+		case CModAPI_AssetPath::TYPE_CHARACTERPART:
+			RenderCharacterPart();
 			RenderGizmos();
 			break;
 	}

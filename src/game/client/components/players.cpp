@@ -24,6 +24,7 @@
 
 void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset)
 {
+	/*
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
 
@@ -65,6 +66,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
+	*/
 }
 
 inline float NormalizeAngular(float f)
@@ -152,9 +154,7 @@ void CPlayers::RenderHook(
 		else
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 
-		ModAPIGraphics()->DrawLine(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_LINESTYLE, MODAPI_LINESTYLE_HOOK), Position, HookPos, 1.0f, 0.0f);
-
-		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+		//~ ModAPIGraphics()->DrawLine(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_LINESTYLE, MODAPI_LINESTYLE_HOOK), Position, HookPos, 1.0f, 0.0f);
 	}
 }
 
@@ -215,7 +215,7 @@ void CPlayers::RenderPlayer(
 	vec2 AimDir = direction(Angle);
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
-
+	
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
@@ -225,20 +225,52 @@ void CPlayers::RenderPlayer(
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 	
 	CModAPI_SkeletonRenderer SkeletonRenderer(Graphics(), AssetManager());
-	SkeletonRenderer.AddSkeleton(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETON, MODAPI_SKELETON_TEE));
+	SkeletonRenderer.SetAim(AimDir);
+	SkeletonRenderer.SetMotion(MotionDir);
 	
-	CModAPI_TeeAnimationState TeeAnimState;
-	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, MotionDir, AimDir);
+	CModAPI_Asset_CharacterPart* pCharacterPath[6];
+	for(int i=0; i<6; i++)
+	{
+		pCharacterPath[i] = AssetManager()->GetAsset<CModAPI_Asset_CharacterPart>(RenderInfo.m_aCharacterParts[i]);
+		if(pCharacterPath[i])
+		{
+			SkeletonRenderer.AddSkinWithSkeleton(pCharacterPath[i]->m_SkeletonSkinPath, RenderInfo.m_aColors[i]);
+		}
+	}
 
 	if(InAir)
 	{
 		if(!RenderInfo.m_GotAirJump && g_Config.m_ClAirjumpindicator)
-			SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR2), 0.0f);
+		{
+			for(int i=0; i<6; i++)
+			{
+				if(pCharacterPath[i])
+				{
+					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_UncontrolledJumpPath, 0.0f);
+				}
+			}	
+		}
 		else
-			SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR), 0.0f);
+		{
+			for(int i=0; i<6; i++)
+			{
+				if(pCharacterPath[i])
+				{
+					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_ControlledJumpPath, 0.0f);
+				}
+			}
+		}
 	}
 	else if(Stationary)
-		SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEIDLE), 0.0f);
+	{
+		for(int i=0; i<6; i++)
+		{
+			if(pCharacterPath[i])
+			{
+				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_IdlePath, 0.0f);
+			}
+		}
+	}
 	else if(!WantOtherDir)
 	{
 		const float WalkTimeMagic = 100.0f;
@@ -248,7 +280,13 @@ void CPlayers::RenderPlayer(
 				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 			/ WalkTimeMagic;
 		
-		SkeletonRenderer.ApplyAnimation(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEWALK), WalkTime);
+		for(int i=0; i<6; i++)
+		{
+			if(pCharacterPath[i])
+			{
+				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_WalkPath, WalkTime);
+			}
+		}
 	}
 
 	// do skidding
@@ -267,27 +305,7 @@ void CPlayers::RenderPlayer(
 		);
 	}
 	
-	const CModAPI_Asset_Attach* pAttach = AssetManager()->GetAsset<CModAPI_Asset_Attach>(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon));
-	if(pAttach)
-	{
-		static float s_LastGameTickTime = Client()->GameTickTime();
-		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
-			s_LastGameTickTime = Client()->GameTickTime();
-		
-		float WeaponTime = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-	
-		if(!pAttach->m_TeeAnimationPath.IsNull())
-		{
-			ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pAttach->m_TeeAnimationPath, WeaponTime);
-		}
-		
-		CModAPI_AttachAnimationState AttachAnimState;
-		ModAPIGraphics()->InitAttachAnimationState(&AttachAnimState, MotionDir, AimDir, CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon), WeaponTime);
-		ModAPIGraphics()->DrawAttach(RenderTools(), &AttachAnimState, CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, Player.m_Weapon), Position, 1.0f);	
-	}
-	
 	SkeletonRenderer.Finalize();
-	SkeletonRenderer.AddSkin(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONSKIN, MODAPI_SKELETONSKIN_DUMMY));
 	SkeletonRenderer.RenderSkins(Position, 1.0);
 		
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
@@ -340,34 +358,6 @@ void CPlayers::OnRender()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
-		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
-		{
-			// change the skin for the player to the ninja
-			int Skin = m_pClient->m_pSkins->Find("x_ninja", true);
-			if(Skin != -1)
-			{
-				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
-				for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-				{
-					if(IsTeamplay)
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
-					}
-					else if(pNinja->m_aUseCustomColors[p])
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(pNinja->m_aPartColors[p], p==CSkins::SKINPART_MARKING);
-					}
-					else
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_OrgTexture;
-						m_aRenderInfo[i].m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-					}
-				}
-			}
-		}
 	}
 
 	// render other players in two passes, first pass we render the other, second pass we render our self

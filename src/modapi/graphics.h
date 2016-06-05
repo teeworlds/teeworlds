@@ -246,6 +246,11 @@ enum
 	MODAPI_NUM_SKINPARTS
 };
 
+enum
+{
+	MODAPI_CHARACTER_TEE=0,
+};
+
 //Functions
 inline int ModAPI_ColorToInt(const vec4& Color)
 {

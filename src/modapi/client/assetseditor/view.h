@@ -169,8 +169,6 @@ protected:
 	int m_SelectedGizmo;
 	CCursorToolButton* m_CursorToolButtons[NUM_CURSORTOOLS];
 	
-	CTeeRenderInfo m_TeeRenderInfo;
-	
 	int m_ToolbarHeight;
 	CModAPI_ClientGui_HListLayout* m_pToolbar;
 	CModAPI_ClientGui_Rect m_ViewRect;
@@ -194,13 +192,11 @@ protected:
 	//Search Tag: TAG_NEW_ASSET
 	void RenderImage();
 	void RenderSprite();
-	void RenderAnimation();
-	void RenderTeeAnimation();
-	void RenderAttach();
-	void RenderLineStyle();
 	void RenderSkeleton();
 	void RenderSkeletonSkin();
 	void RenderSkeletonAnimation();
+	void RenderCharacter();
+	void RenderCharacterPart();
 	void RenderGizmos();
 	
 public:

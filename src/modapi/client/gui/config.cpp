@@ -33,6 +33,8 @@ CModAPI_ClientGui_Config::CModAPI_ClientGui_Config(IGraphics *pGraphics, CRender
 	m_SliderHeight = 100;
 	m_LayoutSpacing = 4;
 	m_LayoutMargin = 4;
+	m_ExpandShift = 16;
+	m_ExpandSpacing = 4;
 	
 	m_fShowHint = 0;
 	m_pShowHintData = 0;

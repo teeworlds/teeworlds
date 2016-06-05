@@ -15,6 +15,7 @@
 #include <modapi/client/gui/layout.h>
 #include <modapi/client/gui/integer-edit.h>
 #include <modapi/client/gui/text-edit.h>
+#include <modapi/client/gui/expand.h>
 
 #include <cstddef>
 
@@ -157,6 +158,8 @@ public:
 			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETON, "Skeletons")
 			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETONSKIN, "Skeleton Skins")
 			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_SKELETONANIMATION, "Skeleton Animations")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_CHARACTER, "Characters")
+			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_CHARACTERPART, "Character Parts")
 			ADD_ASSETTYPE_HEADER(CModAPI_AssetPath::TYPE_LIST, "Lists")
 		}
 		Add(new CAddButton(this));
@@ -196,45 +199,64 @@ public:
 			ON_NEW_ASSET(CModAPI_Asset_Skeleton, "skeleton%d")
 			ON_NEW_ASSET(CModAPI_Asset_SkeletonSkin, "skin%d")
 			ON_NEW_ASSET(CModAPI_Asset_SkeletonAnimation, "animation%d")
+			ON_NEW_ASSET(CModAPI_Asset_Character, "character%d")
+			ON_NEW_ASSET(CModAPI_Asset_CharacterPart, "characterpart%d")
 			ON_NEW_ASSET(CModAPI_Asset_List, "list%d")
 		}
+	}
+};
+
+class CModAPI_AssetsEditorGui_AssetListTitle : public CModAPI_ClientGui_ExternalTextButton
+{
+protected:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	int m_AssetSubPath;
+	int m_Tab;
+
+protected:
+	virtual void MouseClickAction()
+	{
+		if(m_AssetSubPath >= 0)
+			m_pAssetsEditor->EditAssetSubItem(m_AssetPath, m_AssetSubPath, m_Tab);
+		else
+			m_pAssetsEditor->EditAsset(m_AssetPath);
+		
+		m_pAssetsEditor->DisplayAsset(m_AssetPath);
+	}
+	
+public:
+	CModAPI_AssetsEditorGui_AssetListTitle(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, char* pText, int IconId) :
+		CModAPI_ClientGui_ExternalTextButton(pAssetsEditor->m_pGuiConfig, pText, IconId),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_AssetSubPath(-1),
+		m_Tab(0)
+	{
+		m_Centered = false;
+	}
+	
+	void SetSubPath(int SubPath, int Tab)
+	{
+		m_AssetSubPath = SubPath;
+		m_Tab = Tab;
 	}
 };
 
 class CModAPI_AssetsEditorGui_AssetListItem : public CModAPI_ClientGui_HListLayout
 {
 protected:
-	class CItemListButton : public CModAPI_ClientGui_ExternalTextButton
-	{
-	protected:
-		CModAPI_AssetsEditorGui_AssetListItem* m_pAssetListItem;
-	
-	protected:
-		virtual void MouseClickAction()
-		{
-			m_pAssetListItem->EditAsset();
-			m_pAssetListItem->DisplayAsset();
-		}
-		
-	public:
-		CItemListButton(CModAPI_AssetsEditorGui_AssetListItem* pAssetListItem, char* pText, int IconId) :
-			CModAPI_ClientGui_ExternalTextButton(pAssetListItem->m_pConfig, pText, IconId),
-			m_pAssetListItem(pAssetListItem)
-		{
-			m_Centered = false;
-		}
-	};
-	
-protected:
 	CModAPI_AssetsEditor* m_pAssetsEditor;
 	CModAPI_AssetPath m_AssetPath;
-	CItemListButton* m_Button;
+	CModAPI_AssetsEditorGui_AssetListTitle* m_Button;
+	int m_Source;
 
 public:
-	CModAPI_AssetsEditorGui_AssetListItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath) :
+	CModAPI_AssetsEditorGui_AssetListItem(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Source = -1) :
 		CModAPI_ClientGui_HListLayout(pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE, MODAPI_CLIENTGUI_LAYOUTFILLING_FIRST),
 		m_pAssetsEditor(pAssetsEditor),
-		m_AssetPath(AssetPath)
+		m_AssetPath(AssetPath),
+		m_Source(Source)
 	{		
 		SetHeight(m_pConfig->m_ButtonHeight);
 		
@@ -256,23 +278,19 @@ public:
 			case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
 				IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION;
 				break;
+			case CModAPI_AssetPath::TYPE_CHARACTER:
+				IconId = MODAPI_ASSETSEDITOR_ICON_CHARACTER;
+				break;
+			case CModAPI_AssetPath::TYPE_CHARACTERPART:
+				IconId = MODAPI_ASSETSEDITOR_ICON_CHARACTERPART;
+				break;
 		}
 		
 		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
-		m_Button = new CItemListButton(this, pName, IconId);
+		m_Button = new CModAPI_AssetsEditorGui_AssetListTitle(m_pAssetsEditor, m_AssetPath, pName, IconId);
 		Add(m_Button);
 		
 		Update();
-	}
-	
-	void EditAsset()
-	{
-		m_pAssetsEditor->EditAsset(m_AssetPath);
-	}
-	
-	void DisplayAsset()
-	{
-		m_pAssetsEditor->DisplayAsset(m_AssetPath);
 	}
 	
 	virtual void Render()
@@ -283,6 +301,199 @@ public:
 			m_Button->SetButtonStyle(MODAPI_CLIENTGUI_BUTTONSTYLE_NORMAL);
 		
 		CModAPI_ClientGui_HListLayout::Render();
+	}
+};
+
+class CModAPI_AssetsEditorGui_AssetListImage : public CModAPI_ClientGui_Expand
+{
+protected:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	CModAPI_AssetsEditorGui_AssetListTitle* m_Button;
+	int m_Source;
+	bool m_SourceFound;
+
+public:
+	CModAPI_AssetsEditorGui_AssetListImage(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Source) :
+		CModAPI_ClientGui_Expand(pAssetsEditor->m_pGuiConfig),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_Source(Source),
+		m_SourceFound(false)
+	{		
+		SetHeight(m_pConfig->m_ButtonHeight);
+		
+		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
+		m_Button = new CModAPI_AssetsEditorGui_AssetListTitle(m_pAssetsEditor, m_AssetPath, pName, MODAPI_ASSETSEDITOR_ICON_IMAGE);
+		SetTitle(m_Button);
+		
+		for(int i=0; i<m_pAssetsEditor->AssetManager()->GetNumAssets<CModAPI_Asset_Sprite>(m_Source); i++)
+		{
+			CModAPI_AssetPath SpritePath = CModAPI_AssetPath::Asset(CModAPI_Asset_Sprite::TypeId, m_Source, i);
+			CModAPI_AssetPath ImagePath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_AssetPath>(SpritePath, CModAPI_Asset_Sprite::IMAGEPATH, -1, 0);
+			if(ImagePath == m_AssetPath)
+			{
+				CModAPI_AssetsEditorGui_AssetListItem* pItem = new CModAPI_AssetsEditorGui_AssetListItem(m_pAssetsEditor, SpritePath, m_Source);
+				Add(pItem);
+				m_SourceFound = true;
+			}
+		}
+		
+		Update();
+	}
+	
+	bool SourceFound()
+	{
+		return m_SourceFound;
+	}
+};
+
+class CModAPI_AssetsEditorGui_AssetListSkeleton : public CModAPI_ClientGui_Expand
+{
+protected:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	CModAPI_AssetsEditorGui_AssetListTitle* m_Button;
+	int m_Source;
+	bool m_SourceFound;
+
+public:
+	CModAPI_AssetsEditorGui_AssetListSkeleton(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Source) :
+		CModAPI_ClientGui_Expand(pAssetsEditor->m_pGuiConfig),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_Source(Source),
+		m_SourceFound(false)
+	{		
+		SetHeight(m_pConfig->m_ButtonHeight);
+		
+		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
+		m_Button = new CModAPI_AssetsEditorGui_AssetListTitle(m_pAssetsEditor, m_AssetPath, pName, MODAPI_ASSETSEDITOR_ICON_SKELETON);
+		SetTitle(m_Button);
+		
+		for(int i=0; i<m_pAssetsEditor->AssetManager()->GetNumAssets<CModAPI_Asset_SkeletonSkin>(m_Source); i++)
+		{
+			CModAPI_AssetPath SkeletonSkinPath = CModAPI_AssetPath::Asset(CModAPI_Asset_SkeletonSkin::TypeId, m_Source, i);
+			CModAPI_AssetPath SkeletonPath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_AssetPath>(SkeletonSkinPath, CModAPI_Asset_SkeletonSkin::SKELETONPATH, -1, 0);
+			if(SkeletonPath == m_AssetPath)
+			{
+				Add(new CModAPI_AssetsEditorGui_AssetListItem(m_pAssetsEditor, SkeletonSkinPath));
+				m_SourceFound = true;
+			}
+		}
+		
+		for(int i=0; i<m_pAssetsEditor->AssetManager()->GetNumAssets<CModAPI_Asset_SkeletonAnimation>(m_Source); i++)
+		{
+			CModAPI_AssetPath SkeletonAnimationPath = CModAPI_AssetPath::Asset(CModAPI_Asset_SkeletonAnimation::TypeId, m_Source, i);
+			CModAPI_AssetPath SkeletonPath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_AssetPath>(SkeletonAnimationPath, CModAPI_Asset_SkeletonAnimation::SKELETONPATH, -1, 0);
+			if(SkeletonPath == m_AssetPath)
+			{
+				Add(new CModAPI_AssetsEditorGui_AssetListItem(m_pAssetsEditor, SkeletonAnimationPath));
+				m_SourceFound = true;
+			}
+		}
+		
+		Update();
+	}
+	
+	bool SourceFound()
+	{
+		return m_SourceFound;
+	}
+};
+
+class CModAPI_AssetsEditorGui_AssetListCharacterPartType : public CModAPI_ClientGui_Expand
+{
+protected:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	CModAPI_Asset_Character::CSubPath m_SubPath;
+	CModAPI_AssetsEditorGui_AssetListTitle* m_Button;
+	int m_Source;
+	bool m_SourceFound;
+
+public:
+	CModAPI_AssetsEditorGui_AssetListCharacterPartType(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, CModAPI_Asset_Character::CSubPath SubPath, int Source) :
+		CModAPI_ClientGui_Expand(pAssetsEditor->m_pGuiConfig),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_SubPath(SubPath),
+		m_Source(Source),
+		m_SourceFound(false)
+	{
+		SetHeight(m_pConfig->m_ButtonHeight);
+		
+		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset_Character::PART_NAME, SubPath.ConvertToInteger(), 0);
+		m_Button = new CModAPI_AssetsEditorGui_AssetListTitle(m_pAssetsEditor, m_AssetPath, pName, -1);
+		m_Button->SetSubPath(m_SubPath.ConvertToInteger(), CModAPI_AssetsEditorGui_Editor::TAB_CHARACTER_PARTS);
+		SetTitle(m_Button);
+		
+		for(int i=0; i<m_pAssetsEditor->AssetManager()->GetNumAssets<CModAPI_Asset_CharacterPart>(m_Source); i++)
+		{
+			CModAPI_AssetPath CharacterPartPath = CModAPI_AssetPath::Asset(CModAPI_Asset_CharacterPart::TypeId, m_Source, i);
+			CModAPI_AssetPath CharacterPath = m_pAssetsEditor->AssetManager()->GetAssetValue<CModAPI_AssetPath>(CharacterPartPath, CModAPI_Asset_CharacterPart::CHARACTERPATH, -1, CModAPI_AssetPath::Null());
+			int CharacterPart = m_pAssetsEditor->AssetManager()->GetAssetValue<int>(CharacterPartPath, CModAPI_Asset_CharacterPart::CHARACTERPART, -1, 0);
+			if(CharacterPath == m_AssetPath && CharacterPart == m_SubPath.ConvertToInteger())
+			{
+				Add(new CModAPI_AssetsEditorGui_AssetListItem(m_pAssetsEditor, CharacterPartPath));
+				m_SourceFound = true;
+			}
+		}
+		
+		Update();
+	}
+	
+	bool SourceFound()
+	{
+		return m_SourceFound;
+	}
+};
+
+class CModAPI_AssetsEditorGui_AssetListCharacter : public CModAPI_ClientGui_Expand
+{
+protected:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	CModAPI_AssetsEditorGui_AssetListTitle* m_Button;
+	int m_Source;
+	bool m_SourceFound;
+
+public:
+	CModAPI_AssetsEditorGui_AssetListCharacter(CModAPI_AssetsEditor* pAssetsEditor, CModAPI_AssetPath AssetPath, int Source) :
+		CModAPI_ClientGui_Expand(pAssetsEditor->m_pGuiConfig),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_Source(Source),
+		m_SourceFound(false)
+	{		
+		SetHeight(m_pConfig->m_ButtonHeight);
+		
+		char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_AssetPath, CModAPI_Asset::NAME, -1, 0);
+		m_Button = new CModAPI_AssetsEditorGui_AssetListTitle(m_pAssetsEditor, m_AssetPath, pName, MODAPI_ASSETSEDITOR_ICON_CHARACTER);
+		SetTitle(m_Button);
+		
+		CModAPI_Asset_Character* pCharacter = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Character>(m_AssetPath);
+		if(pCharacter)
+		{
+			for(int i=0; i<pCharacter->m_Parts.size(); i++)
+			{
+				CModAPI_AssetsEditorGui_AssetListCharacterPartType* pItem = new CModAPI_AssetsEditorGui_AssetListCharacterPartType(m_pAssetsEditor, m_AssetPath, CModAPI_Asset_Character::CSubPath::Part(i), m_Source);
+				
+				if(pItem->SourceFound())
+				{
+					Add(pItem);
+					m_SourceFound = true;
+				}
+				else
+					delete pItem;
+			}
+		}
+		Update();
+	}
+	
+	bool SourceFound()
+	{
+		return m_SourceFound;
 	}
 };
 
@@ -325,12 +536,6 @@ void CModAPI_AssetsEditor::Init(CModAPI_AssetManager* pAssetManager, CModAPI_Cli
 		
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_ModEditorTexture = Graphics()->LoadTexture("modapi/modeditor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[0] = Graphics()->LoadTexture("skins/body/bear.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[1] = Graphics()->LoadTexture("skins/marking/bear.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[2] = Graphics()->LoadTexture("skins/decoration/hair.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[3] = Graphics()->LoadTexture("skins/hands/standard.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[4] = Graphics()->LoadTexture("skins/feet/standard.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_SkinTexture[5] = Graphics()->LoadTexture("skins/eyes/standard.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	
 	m_pGuiConfig = new CModAPI_ClientGui_Config(Graphics(), RenderTools(), TextRender(), Input(), m_ModEditorTexture);
 	m_pGuiConfig->m_fShowHint = CModAPI_AssetsEditor::ShowHint;
@@ -430,19 +635,152 @@ void CModAPI_AssetsEditor::RefreshAssetList(int Source)
 			break;
 	}
 	
-	#define REFRESH_ASSET_LIST(TypeName) \
-	m_pGuiAssetList[Source]->AddSeparator();\
-	m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, TypeName::TypeId, Source));\
-	for(int i=0; i<AssetManager()->GetNumAssets<TypeName>(Source); i++)\
-	{\
-		m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, CModAPI_AssetPath::Asset(TypeName::TypeId, Source, i)));\
+	//Images
+	m_pGuiAssetList[Source]->AddSeparator();
+	m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_Image::TypeId, Source));
+	for(int s=0; s<CModAPI_AssetPath::NUM_SOURCES; s++)
+	{
+		for(int i=0; i<AssetManager()->GetNumAssets<CModAPI_Asset_Image>(s); i++)
+		{
+			CModAPI_AssetsEditorGui_AssetListImage* pItem = new CModAPI_AssetsEditorGui_AssetListImage(this, CModAPI_AssetPath::Asset(CModAPI_Asset_Image::TypeId, s, i), Source);
+			if(pItem->SourceFound())
+				m_pGuiAssetList[Source]->Add(pItem);
+			else
+				delete pItem;
+		}
 	}
-		
-	REFRESH_ASSET_LIST(CModAPI_Asset_Image)
-	REFRESH_ASSET_LIST(CModAPI_Asset_Sprite)
-	REFRESH_ASSET_LIST(CModAPI_Asset_Skeleton)
-	REFRESH_ASSET_LIST(CModAPI_Asset_SkeletonSkin)
-	REFRESH_ASSET_LIST(CModAPI_Asset_SkeletonAnimation)
+	
+	//Sprites
+	{
+		int nbAssets = AssetManager()->GetNumAssets<CModAPI_Asset_Sprite>(Source);
+		if(nbAssets > 0)
+		{
+			m_pGuiAssetList[Source]->AddSeparator();
+			m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_Sprite::TypeId, Source));
+			for(int i=0; i<nbAssets; i++)
+			{
+				CModAPI_AssetPath SpritePath = CModAPI_AssetPath::Asset(CModAPI_Asset_Sprite::TypeId, Source, i);
+				CModAPI_AssetPath ImagePath = AssetManager()->GetAssetValue<CModAPI_AssetPath>(SpritePath, CModAPI_Asset_Sprite::IMAGEPATH, -1, 0);
+				if(!AssetManager()->GetAsset<CModAPI_Asset_Image>(ImagePath))
+				{
+					m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, SpritePath));
+				}
+			}
+		}
+	}
+	
+	//Skeletons
+	m_pGuiAssetList[Source]->AddSeparator();
+	m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_Skeleton::TypeId, Source));
+	for(int s=0; s<CModAPI_AssetPath::NUM_SOURCES; s++)
+	{
+		for(int i=0; i<AssetManager()->GetNumAssets<CModAPI_Asset_Skeleton>(s); i++)
+		{
+			CModAPI_AssetsEditorGui_AssetListSkeleton* pItem = new CModAPI_AssetsEditorGui_AssetListSkeleton(this, CModAPI_AssetPath::Asset(CModAPI_Asset_Skeleton::TypeId, s, i), Source);
+			if(pItem->SourceFound())
+				m_pGuiAssetList[Source]->Add(pItem);
+			else
+				delete pItem;
+		}
+	}
+	
+	//SkeletonSkins
+	{
+		int nbAssets = AssetManager()->GetNumAssets<CModAPI_Asset_SkeletonSkin>(Source);
+		if(nbAssets > 0)
+		{
+			m_pGuiAssetList[Source]->AddSeparator();
+			m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_SkeletonSkin::TypeId, Source));
+			for(int i=0; i<nbAssets; i++)
+			{
+				CModAPI_AssetPath SkeletonSkinPath = CModAPI_AssetPath::Asset(CModAPI_Asset_SkeletonSkin::TypeId, Source, i);
+				CModAPI_AssetPath SkeletonPath = AssetManager()->GetAssetValue<CModAPI_AssetPath>(SkeletonSkinPath, CModAPI_Asset_SkeletonSkin::SKELETONPATH, -1, 0);
+				if(!AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(SkeletonPath))
+				{
+					m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, SkeletonSkinPath));
+				}
+			}
+		}
+	}
+	
+	//SkeletonAnimations
+	{
+		int nbAssets = AssetManager()->GetNumAssets<CModAPI_Asset_SkeletonAnimation>(Source);
+		if(nbAssets > 0)
+		{
+			m_pGuiAssetList[Source]->AddSeparator();
+			m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_SkeletonAnimation::TypeId, Source));
+			for(int i=0; i<nbAssets; i++)
+			{
+				CModAPI_AssetPath SkeletonAnimationPath = CModAPI_AssetPath::Asset(CModAPI_Asset_SkeletonAnimation::TypeId, Source, i);
+				CModAPI_AssetPath SkeletonPath = AssetManager()->GetAssetValue<CModAPI_AssetPath>(SkeletonAnimationPath, CModAPI_Asset_SkeletonAnimation::SKELETONPATH, -1, 0);
+				if(!AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(SkeletonPath))
+				{
+					m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, SkeletonAnimationPath));
+				}
+			}
+		}
+	}
+	
+	//Search Tag: TAG_NEW_ASSET
+	
+	//Character
+	m_pGuiAssetList[Source]->AddSeparator();
+	m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_Character::TypeId, Source));
+	for(int s=0; s<CModAPI_AssetPath::NUM_SOURCES; s++)
+	{
+		for(int i=0; i<AssetManager()->GetNumAssets<CModAPI_Asset_Character>(s); i++)
+		{
+			CModAPI_AssetsEditorGui_AssetListCharacter* pItem = new CModAPI_AssetsEditorGui_AssetListCharacter(this, CModAPI_AssetPath::Asset(CModAPI_Asset_Character::TypeId, s, i), Source);
+			if(pItem->SourceFound())
+				m_pGuiAssetList[Source]->Add(pItem);
+			else
+				delete pItem;
+		}
+	}
+	
+	//CharacterPart
+	{
+		int nbAssets = AssetManager()->GetNumAssets<CModAPI_Asset_CharacterPart>(Source);
+		if(nbAssets > 0)
+		{
+			m_pGuiAssetList[Source]->AddSeparator();
+			m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, CModAPI_Asset_CharacterPart::TypeId, Source));
+			for(int i=0; i<nbAssets; i++)
+			{
+				CModAPI_AssetPath CharacterPartPath = CModAPI_AssetPath::Asset(CModAPI_Asset_CharacterPart::TypeId, Source, i);
+				CModAPI_AssetPath CharacterPath = AssetManager()->GetAssetValue<CModAPI_AssetPath>(CharacterPartPath, CModAPI_Asset_CharacterPart::CHARACTERPATH, -1, 0);
+				CModAPI_Asset_Character* pCharacter = AssetManager()->GetAsset<CModAPI_Asset_Character>(CharacterPath);
+				if(!pCharacter)
+				{
+					m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, CharacterPartPath));
+				}
+				else
+				{
+					int CharacterPart = AssetManager()->GetAssetValue<int>(CharacterPartPath, CModAPI_Asset_CharacterPart::CHARACTERPART, -1, 0);
+					if(CharacterPart >= pCharacter->m_Parts.size() || CharacterPart < 0)
+					{
+						m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, CharacterPartPath));
+					}
+				}
+			}
+		}
+	}
+	
+	#define REFRESH_ASSET_LIST(TypeName) \
+	{\
+		int nbAssets = AssetManager()->GetNumAssets<TypeName>(Source);\
+		if(nbAssets > 0)\
+		{\
+			m_pGuiAssetList[Source]->AddSeparator();\
+			m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListHeader(this, TypeName::TypeId, Source));\
+			for(int i=0; i<nbAssets; i++)\
+			{\
+				m_pGuiAssetList[Source]->Add(new CModAPI_AssetsEditorGui_AssetListItem(this, CModAPI_AssetPath::Asset(TypeName::TypeId, Source, i)));\
+			}\
+		}\
+	}
+	
 	REFRESH_ASSET_LIST(CModAPI_Asset_List)
 	
 	m_pGuiAssetList[Source]->Update();
@@ -819,11 +1157,13 @@ void CModAPI_AssetsEditor::EditAsset(CModAPI_AssetPath AssetPath)
 {
 	m_EditedAssetPath = AssetPath;
 	m_EditedAssetSubPath = -1;
+	m_Paused = true;
 	RefreshAssetEditor(-1);
 }
 
 void CModAPI_AssetsEditor::EditAssetSubItem(CModAPI_AssetPath AssetPath, int SubPath, int Tab)
 {
+	m_EditedAssetPath = AssetPath;
 	m_EditedAssetSubPath = SubPath;
 	m_Paused = true;
 	RefreshAssetEditor(Tab);

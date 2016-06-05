@@ -21,8 +21,8 @@ public:
 		m_GotAirJump = 1;
 	};
 
-	IGraphics::CTextureHandle m_aTextures[6];
 	vec4 m_aColors[6];
+	CModAPI_AssetPath m_aCharacterParts[6];
 	float m_Size;
 	int m_GotAirJump;
 };

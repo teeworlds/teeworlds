@@ -1,6 +1,7 @@
 #ifndef MODAPI_CLIENT_ASSETSMANAGER_H
 #define MODAPI_CLIENT_ASSETSMANAGER_H
 
+	//Search Tag: TAG_NEW_ASSET
 #include <modapi/client/assets.h>
 #include <modapi/client/assetscatalog.h>
 #include <modapi/client/assets/image.h>
@@ -12,6 +13,8 @@
 #include <modapi/client/assets/skeleton.h>
 #include <modapi/client/assets/skeletonskin.h>
 #include <modapi/client/assets/skeletonanimation.h>
+#include <modapi/client/assets/character.h>
+#include <modapi/client/assets/characterpart.h>
 
 class IModAPI_AssetsFile;
 
@@ -28,6 +31,7 @@ private:
 	IGraphics* m_pGraphics;
 	class IStorage* m_pStorage;
 	
+	//Search Tag: TAG_NEW_ASSET
 	CModAPI_AssetCatalog<CModAPI_Asset_Image> m_ImagesCatalog;
 	CModAPI_AssetCatalog<CModAPI_Asset_Sprite> m_SpritesCatalog;
 	CModAPI_AssetCatalog<CModAPI_Asset_Animation> m_AnimationsCatalog;
@@ -37,6 +41,8 @@ private:
 	CModAPI_AssetCatalog<CModAPI_Asset_Skeleton> m_SkeletonsCatalog;
 	CModAPI_AssetCatalog<CModAPI_Asset_SkeletonSkin> m_SkeletonSkinsCatalog;
 	CModAPI_AssetCatalog<CModAPI_Asset_SkeletonAnimation> m_SkeletonAnimationsCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_Character> m_CharactersCatalog;
+	CModAPI_AssetCatalog<CModAPI_Asset_CharacterPart> m_CharacterPartsCatalog;
 	CModAPI_AssetCatalog<CModAPI_Asset_List> m_ListsCatalog;
 
 public:
@@ -48,6 +54,11 @@ public:
 	static int LoadSkinAssets_BodyScan(const char *pName, int IsDir, int DirType, void *pUser);
 	static int LoadSkinAssets_FootScan(const char *pName, int IsDir, int DirType, void *pUser);
 	static int LoadSkinAssets_EyeScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int LoadSkinAssets_HandsScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int LoadSkinAssets_MarkingScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int LoadSkinAssets_DecorationScan(const char *pName, int IsDir, int DirType, void *pUser);
+	
+	CModAPI_AssetPath FindSkinPart(int p, const char* pName);
 	
 	class IGraphics *Graphics() { return m_pGraphics; };
 	class IStorage *Storage() { return m_pStorage; };
@@ -106,6 +117,8 @@ public:
 			GET_ASSET_VALUE(CModAPI_Asset_Skeleton);
 			GET_ASSET_VALUE(CModAPI_Asset_SkeletonSkin);
 			GET_ASSET_VALUE(CModAPI_Asset_SkeletonAnimation);
+			GET_ASSET_VALUE(CModAPI_Asset_Character);
+			GET_ASSET_VALUE(CModAPI_Asset_CharacterPart);
 			GET_ASSET_VALUE(CModAPI_Asset_List);
 		}
 		
@@ -131,6 +144,8 @@ public:
 			SET_ASSET_VALUE(CModAPI_Asset_Skeleton);
 			SET_ASSET_VALUE(CModAPI_Asset_SkeletonSkin);
 			SET_ASSET_VALUE(CModAPI_Asset_SkeletonAnimation);
+			SET_ASSET_VALUE(CModAPI_Asset_Character);
+			SET_ASSET_VALUE(CModAPI_Asset_CharacterPart);
 			SET_ASSET_VALUE(CModAPI_Asset_List);
 		}
 		

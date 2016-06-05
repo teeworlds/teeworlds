@@ -153,6 +153,12 @@ protected:
 					case CModAPI_AssetPath::TYPE_SKELETONANIMATION:
 						IconId = MODAPI_ASSETSEDITOR_ICON_SKELETONANIMATION;
 						break;
+					case CModAPI_AssetPath::TYPE_CHARACTER:
+						IconId = MODAPI_ASSETSEDITOR_ICON_CHARACTER;
+						break;
+					case CModAPI_AssetPath::TYPE_CHARACTERPART:
+						IconId = MODAPI_ASSETSEDITOR_ICON_CHARACTERPART;
+						break;
 				}
 				
 				char* pName = m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(m_FieldAssetPath, CModAPI_Asset::NAME, -1, 0);
@@ -233,6 +239,8 @@ public:
 			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_Skeleton, "Skeletons")
 			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_SkeletonSkin, "Skeleton Skins")
 			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_SkeletonAnimation, "Skeleton Animations")
+			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_Character, "Characters")
+			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_CharacterPart, "Character Parts")
 			POPUP_ASSET_EDIT_LIST(CModAPI_Asset_List, "Lists")
 		}
 		
@@ -493,6 +501,104 @@ public:
 						m_Layout->Add(pItem);
 					}
 				}
+			}
+		}
+		
+		CModAPI_ClientGui_Popup::Update();
+	}
+};
+
+/* POPUP SUBPATH EDIT *************************************************/
+
+class CModAPI_AssetsEditorGui_Popup_CharacterPartEdit : public CModAPI_ClientGui_Popup
+{
+public:
+	CModAPI_AssetsEditor* m_pAssetsEditor;
+	CModAPI_AssetPath m_AssetPath;
+	int m_AssetMember;
+	int m_AssetSubPath;
+	CModAPI_AssetPath m_CharacterPath;
+	
+protected:
+	class CItem : public CModAPI_ClientGui_TextButton
+	{
+	protected:
+		CModAPI_AssetsEditorGui_Popup_CharacterPartEdit* m_pPopup;
+		CModAPI_Asset_Character::CSubPath m_SubPath;
+		
+	protected:
+		virtual void MouseClickAction()
+		{
+			m_pPopup->m_pAssetsEditor->AssetManager()->SetAssetValue<int>(
+				m_pPopup->m_AssetPath,
+				m_pPopup->m_AssetMember,
+				m_pPopup->m_AssetSubPath,
+				m_SubPath.ConvertToInteger());
+			m_pPopup->m_pAssetsEditor->RefreshAssetEditor();
+		}
+		
+	public:
+		CItem(CModAPI_AssetsEditorGui_Popup_CharacterPartEdit* pPopup, CModAPI_Asset_Character::CSubPath SubPath) :
+			CModAPI_ClientGui_TextButton(pPopup->m_pAssetsEditor->m_pGuiConfig, ""),
+			m_pPopup(pPopup),
+			m_SubPath(SubPath)
+		{
+			m_Centered = false;
+			
+			if(m_SubPath.IsNull())
+			{
+				SetText("None");
+			}
+			else
+			{
+				char* pName = pPopup->m_pAssetsEditor->AssetManager()->GetAssetValue<char*>(
+					pPopup->m_CharacterPath,
+					CModAPI_Asset_Character::PART_NAME,
+					m_SubPath.ConvertToInteger(),
+					0);
+				SetText(pName);
+				SetIcon(MODAPI_ASSETSEDITOR_ICON_CHARACTERPART);
+			}
+		}
+	};
+
+protected:
+	CModAPI_ClientGui_VListLayout* m_Layout;
+	
+public:
+	CModAPI_AssetsEditorGui_Popup_CharacterPartEdit(
+		CModAPI_AssetsEditor* pAssetsEditor,
+		const CModAPI_ClientGui_Rect& CreatorRect,
+		int Alignment,
+		CModAPI_AssetPath AssetPath,
+		int AssetMember,
+		int AssetSubPath,
+		CModAPI_AssetPath CharacterPath
+	) :
+		CModAPI_ClientGui_Popup(pAssetsEditor->m_pGuiConfig, CreatorRect, 250, 500, Alignment),
+		m_pAssetsEditor(pAssetsEditor),
+		m_AssetPath(AssetPath),
+		m_AssetMember(AssetMember),
+		m_AssetSubPath(AssetSubPath),
+		m_CharacterPath(CharacterPath)
+	{		
+		m_Layout = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig);
+		Add(m_Layout);
+		
+		Update();
+	}
+	
+	virtual void Update()
+	{
+		m_Layout->Clear();
+		
+		CModAPI_Asset_Character* pCharacter = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Character>(m_CharacterPath);
+		if(pCharacter)
+		{
+			for(int i=0; i<pCharacter->m_Parts.size(); i++)
+			{
+				CItem* pItem = new CItem(this, CModAPI_Asset_Character::CSubPath::Part(i));
+				m_Layout->Add(pItem);
 			}
 		}
 		

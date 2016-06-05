@@ -4,6 +4,12 @@
 
 void CModAPI_SkeletonRenderer::AddSkeleton(CModAPI_AssetPath SkeletonPath)
 {
+	for(int i=0; i<m_Skeletons.size(); i++)
+	{
+		if(m_Skeletons[i].m_Path == SkeletonPath)
+			return;
+	}
+	
 	CModAPI_Asset_Skeleton* pSkeleton = AssetManager()->GetAsset<CModAPI_Asset_Skeleton>(SkeletonPath);
 	if(!pSkeleton)
 		return;
@@ -79,7 +85,7 @@ void CModAPI_SkeletonRenderer::AddSkeletonWithParents(CModAPI_AssetPath Skeleton
 	AddSkeleton(SkeletonPath);
 	if(AddDefaultSkin == ADDDEFAULTSKIN_YES)
 	{
-		AddSkin(pSkeleton->m_DefaultSkinPath);
+		AddSkin(pSkeleton->m_DefaultSkinPath, vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 }
 
@@ -150,9 +156,21 @@ void CModAPI_SkeletonRenderer::ApplyAnimation(CModAPI_AssetPath SkeletonAnimatio
 	}
 }
 
-void CModAPI_SkeletonRenderer::AddSkin(CModAPI_AssetPath Path)
+void CModAPI_SkeletonRenderer::AddSkin(CModAPI_AssetPath Path, vec4 Color)
 {
-	m_Skins.add(Path);
+	m_Skins.add(CSkinState());
+	m_Skins[m_Skins.size()-1].m_Path = Path;
+	m_Skins[m_Skins.size()-1].m_Color = Color;
+}
+
+void CModAPI_SkeletonRenderer::AddSkinWithSkeleton(CModAPI_AssetPath Path, vec4 Color)
+{
+	CModAPI_Asset_SkeletonSkin* pSkeletonSkin = AssetManager()->GetAsset<CModAPI_Asset_SkeletonSkin>(Path);
+	if(!pSkeletonSkin)
+		return;
+	
+	AddSkeleton(pSkeletonSkin->m_SkeletonPath);
+	AddSkin(Path, Color);
 }
 
 void CModAPI_SkeletonRenderer::FinalizeBone(int s, int b)
@@ -233,7 +251,7 @@ void CModAPI_SkeletonRenderer::RenderSkinsLayer(vec2 Position, float Size, int L
 	
 	for(int s=0; s<m_Skins.size(); s++)
 	{
-		CModAPI_Asset_SkeletonSkin* pSkeletonSkin = AssetManager()->GetAsset<CModAPI_Asset_SkeletonSkin>(m_Skins[s]);
+		CModAPI_Asset_SkeletonSkin* pSkeletonSkin = AssetManager()->GetAsset<CModAPI_Asset_SkeletonSkin>(m_Skins[s].m_Path);
 		if(!pSkeletonSkin)
 			continue;
 		
@@ -324,8 +342,10 @@ void CModAPI_SkeletonRenderer::RenderSkinsLayer(vec2 Position, float Size, int L
 			else
 				Graphics()->TextureClear();
 			
+			vec4 Color = m_Skins[s].m_Color * LayerState.m_Color;
+			
 			Graphics()->QuadsBegin();
-			Graphics()->SetColor(LayerState.m_Color.r*LayerState.m_Color.a, LayerState.m_Color.g*LayerState.m_Color.a, LayerState.m_Color.b*LayerState.m_Color.a, LayerState.m_Color.a);
+			Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
 			
 			//Set Texture Coords
 			if(pImage)

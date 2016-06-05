@@ -533,6 +533,7 @@ void CModAPI_Client_Graphics::DrawAttach(CRenderTools* pRenderTools, const CModA
 	}
 }
 
+/*
 void CModAPI_Client_Graphics::DrawTee(CRenderTools* pRenderTools, CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pTeeState, vec2 Pos, vec2 Dir, int Emote)
 {
 	float Scaling = pInfo->m_Size/64.0f;
@@ -809,6 +810,7 @@ void CModAPI_Client_Graphics::DrawTee(CRenderTools* pRenderTools, CTeeRenderInfo
 		m_pGraphics->QuadsEnd();
 	}
 }
+*/
 
 void CModAPI_Client_Graphics::InitTeeAnimationState(CModAPI_TeeAnimationState* pState, vec2 MotionDir, vec2 AimDir)
 {

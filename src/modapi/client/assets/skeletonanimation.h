@@ -143,16 +143,19 @@ public:
 			CKeyFrame& Angle(float v)
 			{
 				m_Angle = v;
+				return *this;
 			}
 			
 			CKeyFrame& Translation(vec2 v)
 			{
 				m_Translation = v;
+				return *this;
 			}
 			
 			CKeyFrame& Alignment(int v)
 			{
 				m_Alignment = v;
+				return *this;
 			}
 		};
 		
@@ -254,11 +257,13 @@ public:
 			CKeyFrame& State(int v)
 			{
 				m_State = v;
+				return *this;
 			}
 			
 			CKeyFrame& Color(vec4 v)
 			{
 				m_Color = v;
+				return *this;
 			}
 		};
 		
@@ -377,7 +382,6 @@ public:
 		{
 			m_BoneAnimations[BoneAnimationId].m_KeyFrames.insertat(KeyFrame, KeyFrameId);
 		}
-		
 		return m_BoneAnimations[BoneAnimationId].m_KeyFrames[KeyFrameId];
 	}
 	

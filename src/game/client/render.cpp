@@ -329,6 +329,7 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 
 void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
 {
+/*
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
 
@@ -478,6 +479,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			Graphics()->QuadsEnd();
 		}
 	}
+	*/
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)

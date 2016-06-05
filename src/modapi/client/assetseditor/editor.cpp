@@ -24,6 +24,7 @@
 const char* CModAPI_AssetsEditorGui_Editor::CAssetEdit::m_aNoneText = "None";
 const char* CModAPI_AssetsEditorGui_Editor::CBoneEdit::m_aNoneText = "None";
 const char* CModAPI_AssetsEditorGui_Editor::CLayerEdit::m_aNoneText = "None";
+const char* CModAPI_AssetsEditorGui_Editor::CCharacterPartEdit::m_aNoneText = "None";
 
 const char* g_aCycleTypeText[] = {
     "Clamp",
@@ -323,6 +324,14 @@ void CModAPI_AssetsEditorGui_Editor::AddLayerField(CModAPI_ClientGui_VListLayout
 {
 	CModAPI_AssetsEditorGui_Editor::CLayerEdit* pWidget = new CModAPI_AssetsEditorGui_Editor::CLayerEdit(
 		m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, Member, SubId, SkeletonPath);
+	
+	AddField(pList, pWidget, pLabelText);
+}
+
+void CModAPI_AssetsEditorGui_Editor::AddCharacterPartField(CModAPI_ClientGui_VListLayout* pList, int Member, int SubId, CModAPI_AssetPath CharacterPath, const char* pLabelText)
+{
+	CModAPI_AssetsEditorGui_Editor::CCharacterPartEdit* pWidget = new CModAPI_AssetsEditorGui_Editor::CCharacterPartEdit(
+		m_pAssetsEditor, m_pAssetsEditor->m_EditedAssetPath, Member, SubId, CharacterPath);
 	
 	AddField(pList, pWidget, pLabelText);
 }
@@ -693,6 +702,75 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_SkeletonAnimation_KeyFrames(bool
 	}
 }
 
+void CModAPI_AssetsEditorGui_Editor::RefreshTab_Character_Asset(bool KeepStatus)
+{
+	
+}
+
+void CModAPI_AssetsEditorGui_Editor::RefreshTab_Character_Parts(bool KeepStatus)
+{
+	float Scroll = 0;
+	if(KeepStatus && m_pLists[LIST_CHARACTER_PARTS])
+	{
+		Scroll = m_pLists[LIST_CHARACTER_PARTS]->GetScrollPos();
+	}
+	m_pTabs[TAB_CHARACTER_PARTS]->Clear();
+			
+	CModAPI_Asset_Character* pCharacter = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Character>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pCharacter)
+		return;
+		
+	m_pLists[LIST_CHARACTER_PARTS] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig);
+	m_pLists[LIST_CHARACTER_PARTS]->SetHeight(m_Rect.h/2);
+	m_pTabs[TAB_CHARACTER_PARTS]->Add(m_pLists[LIST_CHARACTER_PARTS]);
+	
+	m_pLists[LIST_CHARACTER_PARTS]->Add(new CModAPI_ClientGui_Label(m_pAssetsEditor->m_pGuiConfig, "Parts", MODAPI_CLIENTGUI_TEXTSTYLE_HEADER2));
+	for(int i=0; i<pCharacter->m_Parts.size(); i++)
+	{
+		CModAPI_AssetsEditorGui_Editor::CSubItemListItem* pItem = new CModAPI_AssetsEditorGui_Editor::CSubItemListItem(m_pAssetsEditor, MODAPI_ASSETSEDITOR_ICON_CHARACTERPART);
+		pItem->SetTarget(m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_Character::CSubPath::Part(i).ConvertToInteger());
+		pItem->SetText(m_pAssetsEditor->m_EditedAssetPath, CModAPI_Asset_Character::PART_NAME, CModAPI_Asset_Character::CSubPath::Part(i).ConvertToInteger());
+		
+		m_pLists[LIST_CHARACTER_PARTS]->Add(pItem);
+	}
+	if(KeepStatus)
+	{
+		m_pLists[LIST_CHARACTER_PARTS]->SetScrollPos(Scroll);
+	}
+
+	m_pTabs[TAB_CHARACTER_PARTS]->Add(new CAddSubItem(
+		m_pAssetsEditor,
+		m_pAssetsEditor->m_EditedAssetPath,
+		CModAPI_Asset_Character::CSubPath::TYPE_PART,
+		"Add part",
+		MODAPI_ASSETSEDITOR_ICON_INCREASE,
+		TAB_CHARACTER_PARTS
+	));
+
+	m_pTabs[TAB_CHARACTER_PARTS]->AddSeparator();	
+	
+	CModAPI_Asset_Character::CSubPath EditedSubPath(m_pAssetsEditor->m_EditedAssetSubPath);
+	if(!EditedSubPath.IsNull() && EditedSubPath.GetType() == CModAPI_Asset_Character::CSubPath::TYPE_PART)
+	{
+		AddTextField(m_pTabs[TAB_CHARACTER_PARTS], CModAPI_Asset_Character::PART_NAME, m_pAssetsEditor->m_EditedAssetSubPath, sizeof(CModAPI_Asset_Character::CPart::m_aName), "Name:");
+	}
+}
+
+void CModAPI_AssetsEditorGui_Editor::RefreshTab_CharacterPart_Asset(bool KeepStatus)
+{
+	CModAPI_Asset_CharacterPart* pCharacterPart = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_CharacterPart>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pCharacterPart)
+		return;
+	
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CHARACTERPATH, CModAPI_AssetPath::TYPE_CHARACTER, -1, "Character:");
+	AddCharacterPartField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CHARACTERPART, -1, pCharacterPart->m_CharacterPath, "Part:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::SKELETONSKINPATH, CModAPI_AssetPath::TYPE_SKELETONSKIN, -1, "Skin:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::IDLEPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Idle Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::WALKPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Walk Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::UNCONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump2 Animation:");
+}
+
 void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 {
 	bool KeepStatus = false;
@@ -732,6 +810,10 @@ void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 				m_pTabs[TAB_SKELETONANIMATION_KEYFRAMES] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
 				AddTab(m_pTabs[TAB_SKELETONANIMATION_KEYFRAMES], MODAPI_ASSETSEDITOR_ICON_FRAMES, "Key Frames: edit properties of key frames");
 				break;
+			case CModAPI_AssetPath::TYPE_CHARACTER:
+				m_pTabs[TAB_CHARACTER_PARTS] = new CModAPI_ClientGui_VListLayout(m_pAssetsEditor->m_pGuiConfig, MODAPI_CLIENTGUI_LAYOUTSTYLE_NONE);
+				AddTab(m_pTabs[TAB_CHARACTER_PARTS], MODAPI_ASSETSEDITOR_ICON_CHARACTERPART, "Parts, create, edit and remove parts of a character");
+				break;
 		}
 		
 		m_LastEditedAssetType = m_pAssetsEditor->m_EditedAssetPath.GetType();
@@ -769,6 +851,13 @@ void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 			RefreshTab_SkeletonAnimation_Asset(KeepStatus);
 			RefreshTab_SkeletonAnimation_Animations(KeepStatus);
 			RefreshTab_SkeletonAnimation_KeyFrames(KeepStatus);
+			break;
+		case CModAPI_AssetPath::TYPE_CHARACTER:
+			RefreshTab_Character_Asset(KeepStatus);
+			RefreshTab_Character_Parts(KeepStatus);
+			break;
+		case CModAPI_AssetPath::TYPE_CHARACTERPART:
+			RefreshTab_CharacterPart_Asset(KeepStatus);
 			break;
 	}
 	

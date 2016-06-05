@@ -38,7 +38,7 @@ protected:
 	static float s_ButtonOpacity;
 	static float s_ButtonCornerRadius;
 
-protected:
+public:
 	class CModAPI_ClientGui_Config *m_pConfig;
 
 public:
