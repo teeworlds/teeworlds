@@ -390,7 +390,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->TextureSet(pInfo->m_aTextures[1]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
+					Graphics()->SetColor(pInfo->m_aColors[1].r*pInfo->m_aColors[1].a, pInfo->m_aColors[1].g*pInfo->m_aColors[1].a, pInfo->m_aColors[1].b*pInfo->m_aColors[1].a, pInfo->m_aColors[1].a);
 					SelectSprite(SPRITE_TEE_MARKING, 0, 0, 0);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
