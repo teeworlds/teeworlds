@@ -1481,6 +1481,9 @@ void CMenus::OnInit()
 {
 	UpdateVideoModeSettings();
 
+	m_MousePos.x = Graphics()->ScreenWidth()/2;
+	m_MousePos.y = Graphics()->ScreenHeight()/2;
+
 	// load menu images
 	m_lMenuImages.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageScan, this);
