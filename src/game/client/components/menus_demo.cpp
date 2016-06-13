@@ -349,7 +349,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow()
 	if(Item.m_Rect.y+Item.m_Rect.h > gs_ListBoxOriginalView.y)
 	{
 
-		if(Item.m_HitRect.y < Item.m_HitRect.y) // clip the selection
+		if(Item.m_HitRect.y < gs_ListBoxOriginalView.y) // clip the selection
 		{
 			Item.m_HitRect.h -= gs_ListBoxOriginalView.y-Item.m_HitRect.y;
 			Item.m_HitRect.y = gs_ListBoxOriginalView.y;
