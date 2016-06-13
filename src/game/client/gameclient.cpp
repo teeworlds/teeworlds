@@ -928,7 +928,7 @@ void CGameClient::OnNewSnapshot()
 					IntsToStr(pInfo->m_aClan, 3, pClient->m_aClan);
 					pClient->m_Country = pInfo->m_Country;
 
-					for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+					for(int p = 0; p < NUM_SKINPARTS; p++)
 					{
 						IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
 						pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
@@ -1284,12 +1284,12 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 	{
 		m_SkinInfo.m_Size = 64;
 
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			int ID = pGameClient->m_pSkins->FindSkinPart(p, m_aaSkinPartNames[p], false);
 			if(ID < 0)
 			{
-				if(p == CSkins::SKINPART_MARKING || p == CSkins::SKINPART_DECORATION)
+				if(p == SKINPART_MARKING || p == SKINPART_DECORATION)
 					ID = pGameClient->m_pSkins->FindSkinPart(p, "", false);
 				else
 					ID = pGameClient->m_pSkins->FindSkinPart(p, "standard", false);
@@ -1306,7 +1306,7 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 			if(m_aUseCustomColors[p])
 			{
 				m_SkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				m_SkinInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(m_aSkinPartColors[p], p==CSkins::SKINPART_MARKING);
+				m_SkinInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(m_aSkinPartColors[p], p==SKINPART_MARKING);
 			}
 			else
 			{
@@ -1321,11 +1321,11 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 	// force team colors
 	if(pGameClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 	{
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			m_RenderInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
 			int ColorVal = pGameClient->m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
-			m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
+			m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
 		}
 	}
 }
@@ -1342,7 +1342,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 	m_Active = false;
 	m_ChatIgnore = false;
 	m_Friend = false;
-	for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		m_SkinPartIDs[p] = 0;
 		m_SkinInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
@@ -1388,7 +1388,7 @@ void CGameClient::SendStartInfo()
 	Msg.m_pName = g_Config.m_PlayerName;
 	Msg.m_pClan = g_Config.m_PlayerClan;
 	Msg.m_Country = g_Config.m_PlayerCountry;
-	for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
 		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];

@@ -45,7 +45,7 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
-	m_TeePartSelected = CSkins::SKINPART_BODY;
+	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;

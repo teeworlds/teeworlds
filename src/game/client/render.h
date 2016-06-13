@@ -8,33 +8,42 @@
 #include <game/mapitems.h>
 #include "ui.h"
 
+
+// sprite renderings
+enum
+{
+	SKINPART_BODY = 0,
+	SKINPART_MARKING,
+	SKINPART_DECORATION,
+	SKINPART_HANDS,
+	SKINPART_FEET,
+	SKINPART_EYES,
+	NUM_SKINPARTS,
+
+	SPRITE_FLAG_FLIP_Y = 1,
+	SPRITE_FLAG_FLIP_X = 2,
+
+	LAYERRENDERFLAG_OPAQUE = 1,
+	LAYERRENDERFLAG_TRANSPARENT = 2,
+
+	TILERENDERFLAG_EXTEND = 4,
+};
+
 class CTeeRenderInfo
 {
 public:
 	CTeeRenderInfo()
 	{
-		for(int i = 0; i < 6; i++)
+		for(int i = 0; i < NUM_SKINPARTS; i++)
 			m_aColors[i] = vec4(1,1,1,1);
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
-	IGraphics::CTextureHandle m_aTextures[6];
-	vec4 m_aColors[6];
+	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
+	vec4 m_aColors[NUM_SKINPARTS];
 	float m_Size;
 	int m_GotAirJump;
-};
-
-// sprite renderings
-enum
-{
-	SPRITE_FLAG_FLIP_Y=1,
-	SPRITE_FLAG_FLIP_X=2,
-
-	LAYERRENDERFLAG_OPAQUE=1,
-	LAYERRENDERFLAG_TRANSPARENT=2,
-
-	TILERENDERFLAG_EXTEND=4,
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
