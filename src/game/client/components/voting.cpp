@@ -94,12 +94,7 @@ void CVoting::Vote(int v)
 CVoting::CVoting()
 {
 	ClearOptions();
-	
-	m_Closetime = 0;
-	m_aDescription[0] = 0;
-	m_aReason[0] = 0;
-	m_Yes = m_No = m_Pass = m_Total = 0;
-	m_Voted = 0;
+	Clear();
 }
 
 void CVoting::AddOption(const char *pDescription)
@@ -129,6 +124,16 @@ void CVoting::AddOption(const char *pDescription)
 	++m_NumVoteOptions;
 }
 
+void CVoting::Clear()
+{
+	m_Closetime = 0;
+	m_aDescription[0] = 0;
+	m_aReason[0] = 0;
+	m_Yes = m_No = m_Pass = m_Total = 0;
+	m_Voted = 0;
+	m_CallvoteBlockTick = 0;
+}
+
 void CVoting::ClearOptions()
 {
 	m_Heap.Reset();
@@ -146,12 +151,13 @@ void CVoting::OnReset()
 	if(Client()->State() == IClient::STATE_LOADING)	// do not reset active vote while connecting
 		return;
 
-	m_Closetime = 0;
-	m_aDescription[0] = 0;
-	m_aReason[0] = 0;
-	m_Yes = m_No = m_Pass = m_Total = 0;
-	m_Voted = 0;
-	m_CallvoteBlockTick = 0;
+	Clear();
+}
+
+void CVoting::OnStateChange(int NewState, int OldState)
+{
+	if (OldState == IClient::STATE_ONLINE || OldState == IClient::STATE_OFFLINE)
+		Clear();
 }
 
 void CVoting::OnConsoleInit()

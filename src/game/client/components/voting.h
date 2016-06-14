@@ -23,6 +23,7 @@ class CVoting : public CComponent
 	int m_CallvoteBlockTick;
 
 	void ClearOptions();
+	void Clear();
 	void Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
 
 public:
@@ -35,6 +36,7 @@ public:
 
 	CVoting();
 	virtual void OnReset();
+	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnConsoleInit();
 	virtual void OnMessage(int Msgtype, void *pRawMsg);
 	virtual void OnRender();
