@@ -40,6 +40,7 @@ void CChat::OnReset()
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
 	m_CompletionChosen = -1;
+	m_CompletionFav = -1;
 	m_aCompletionBuffer[0] = 0;
 	m_PlaceholderOffset = 0;
 	m_PlaceholderLength = 0;
@@ -156,10 +157,15 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-		if(m_ReverseCompletion)
-			m_CompletionChosen = (m_CompletionChosen-1 + 2*MAX_CLIENTS)%(2*MAX_CLIENTS);
+		if(m_CompletionChosen < 0 && m_CompletionFav >= 0)
+			m_CompletionChosen = m_CompletionFav;
 		else
-			m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+		{
+			if (m_ReverseCompletion)
+				m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
+			else
+				m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
+		}
 
 		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
@@ -194,6 +200,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			{
 				pCompletionString = m_pClient->m_aClients[Index].m_aName;
 				m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
+				m_CompletionFav = m_CompletionChosen;
 				break;
 			}
 		}
@@ -367,6 +374,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 			int Length = str_length(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
 			if((pLine == pHL || pHL[-1] == ' ') && (pHL[Length] == 0 || pHL[Length] == ' ' || (pHL[Length] == ':' && pHL[Length+1] == ' ')))
 				Highlighted = true;
+			m_CompletionFav = ClientID;
 		}
 		m_aLines[m_CurrentLine].m_Highlighted =  Highlighted;
 
