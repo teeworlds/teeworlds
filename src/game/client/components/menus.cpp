@@ -176,7 +176,9 @@ int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	}
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	int ret = UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	if(ret) *const_cast<float*>(reinterpret_cast<const float*>(pID)) = 0;
+	return ret;
 }
 
 void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
