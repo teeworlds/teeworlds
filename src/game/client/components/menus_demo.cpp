@@ -19,14 +19,14 @@
 #include "maplayers.h"
 #include "menus.h"
 
-int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, const CUIRect *pRect)
+int CMenus::DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const CUIRect *pRect)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
+	float Fade = ButtonFade(pBC, Seconds);
 
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(Fade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, 14.0f, CUI::ALIGN_CENTER);
-	return UI()->DoButtonLogic(pID, pText, false, pRect);
+	return UI()->DoButtonLogic(pBC->GetID(), pText, false, pRect);
 }
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
@@ -178,7 +178,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		// combined play and pause button
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_PlayPauseButton = 0;
+		static CButtonContainer s_PlayPauseButton;
 		if(!pInfo->m_Paused)
 		{
 			if(DoButton_SpriteID(&s_PlayPauseButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_PAUSE, &Button, CUI::CORNER_ALL))
@@ -194,7 +194,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_ResetButton = 0;
+		static CButtonContainer s_ResetButton;
 		if(DoButton_SpriteID(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, &Button, CUI::CORNER_ALL))
 		{
 			m_pClient->OnReset();
@@ -205,14 +205,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// slowdown
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_SlowDownButton = 0;
+		static CButtonContainer s_SlowDownButton;
 		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, &Button, CUI::CORNER_ALL))
 			DecreaseDemoSpeed = true;
 
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_FastForwardButton = 0;
+		static CButtonContainer s_FastForwardButton;
 		if(DoButton_SpriteID(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, &Button, CUI::CORNER_ALL))
 			IncreaseDemoSpeed = true;
 
@@ -227,7 +227,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
-		static int s_ExitButton = 0;
+		static CButtonContainer s_ExitButton;
 		if(DoButton_DemoPlayer(&s_ExitButton, Localize("Close"), &Button))
 			Client()->Disconnect();
 
@@ -463,7 +463,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-	static int s_RefreshButton = 0;
+	static CButtonContainer s_RefreshButton;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		DemolistPopulate();
@@ -474,7 +474,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{
 		BottomView.VSplitLeft(Spacing, 0, &BottomView);
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-		static int s_DeleteButton = 0;
+		static CButtonContainer s_DeleteButton;
 		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
 		{
 			if(m_DemolistSelectedIndex >= 0)
@@ -487,7 +487,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 		BottomView.VSplitLeft(Spacing, 0, &BottomView);
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-		static int s_RenameButton = 0;
+		static CButtonContainer s_RenameButton;
 		if(DoButton_Menu(&s_RenameButton, Localize("Rename"), 0, &Button))
 		{
 			if(m_DemolistSelectedIndex >= 0)
@@ -502,7 +502,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-	static int s_PlayButton = 0;
+	static CButtonContainer s_PlayButton;
 	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || Activated)
 	{
 		if(m_DemolistSelectedIndex >= 0)

@@ -35,7 +35,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	int NewPage = -1;
 
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_SettingsButton = 0;
+	static CButtonContainer s_SettingsButton;
 	if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "settings" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 		NewPage = PAGE_SETTINGS;
 	
@@ -57,7 +57,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_DemoButton = 0;
+	static CButtonContainer s_DemoButton;
 	if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "demos" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 	{
 		NewPage = PAGE_DEMOS;
@@ -67,7 +67,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_MapEditorButton = 0;
+	static CButtonContainer s_MapEditorButton;
 	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 	{
 		g_Config.m_ClEditor = 1;
@@ -76,7 +76,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_PlayButton = 0;
+	static CButtonContainer s_PlayButton;
 	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "play_game" : 0, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EnterPressed)
 		NewPage = g_Config.m_UiBrowserPage;
 	
@@ -84,7 +84,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	RenderTools()->DrawUIRect4(&BottomMenu, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 10.0f);
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_QuitButton = 0;
+	static CButtonContainer s_QuitButton;
 	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 0, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EscapePressed)
 		m_Popup = POPUP_QUIT;
 

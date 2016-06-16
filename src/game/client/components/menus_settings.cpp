@@ -48,12 +48,12 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 	return false;
 }
 
-int CMenus::DoButton_Customize(const void *pID, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio)
+int CMenus::DoButton_Customize(CButtonContainer *pBC, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float *pFade = ButtonFade(pID, Seconds);
+	float Fade = ButtonFade(pBC, Seconds);
 
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f+(*pFade/Seconds)*0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f+(Fade/Seconds)*0.25f), CUI::CORNER_ALL, 10.0f);
 	Graphics()->TextureSet(Texture);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SpriteID);
@@ -62,7 +62,7 @@ int CMenus::DoButton_Customize(const void *pID, IGraphics::CTextureHandle Textur
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pID, "", 0, pRect);
+	return UI()->DoButtonLogic(pBC->GetID(), "", 0, pRect);
 }
 
 void CMenus::SaveSkinfile()
@@ -252,7 +252,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		int NumBars = UseAlpha ? 4 : 3;
 		const char *const apNames[4] = {Localize("Hue:"), Localize("Sat:"), Localize("Lgt:"), Localize("Alp:")};
 		int *const apVars[4] = {&Hue, &Sat, &Lgt, &Alp};
-		static int s_aButtons[12];
+		static CButtonContainer s_aButtons[12];
 		float SliderHeight = 16.0f;
 		static const float s_aColorIndices[7][3] = {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
 													{0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}};
@@ -809,7 +809,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
-	static int s_ResetButton=0;
+	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
 		g_Config.m_ClMouseFollowfactor = 60;
@@ -942,7 +942,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
-	static int s_aPatternButtons[6] = {0};
+	static CButtonContainer s_aPatternButtons[6];
 	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
@@ -1088,7 +1088,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(s_CustomSkinMenu)
 	{
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-		static int s_CustomSkinSaveButton=0;
+		static CButtonContainer s_CustomSkinSaveButton;
 		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Save"), 0, &Button))
 			m_Popup = POPUP_SAVE_SKIN;
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
@@ -1096,14 +1096,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	else if(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0)
 	{
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-		static int s_CustomSkinSaveButton=0;
+		static CButtonContainer s_CustomSkinSaveButton;
 		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Delete"), 0, &Button))
 			m_Popup = POPUP_DELETE_SKIN;
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
 	}
 
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-	static int s_CustomSwitchButton=0;
+	static CButtonContainer s_CustomSwitchButton;
 	if(DoButton_Menu(&s_CustomSwitchButton, s_CustomSkinMenu ? Localize("Basic") : Localize("Custom"), 0, &Button))
 	{
 		if(s_CustomSkinMenu)
@@ -1154,7 +1154,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
-	static int s_ResetButton=0;
+	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 		m_pClient->m_pBinds->SetDefaults();
 }
@@ -1249,7 +1249,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		Button.VSplitLeft(70.0f, &Button, 0);
 		str_format(aBuf, sizeof(aBuf), "%dx", g_Config.m_GfxFsaaSamples);
-		static int s_ButtonGfxFsaaSamples = 0;
+		static CButtonContainer s_ButtonGfxFsaaSamples;
 		if(DoButton_Menu(&s_ButtonGfxFsaaSamples, aBuf, 0, &Button))
 		{
 			if(!g_Config.m_GfxFsaaSamples)
@@ -1342,7 +1342,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				UI()->DoLabel(&Unit, Localize("Letterbox"), Unit.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 			str_format(aBuf, sizeof(aBuf), "%d:%d", m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue, m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue);
-			static int s_VideoFormatButton = 0;
+			static CButtonContainer s_VideoFormatButton;
 			if(DoButton_Menu(&s_VideoFormatButton, aBuf, 0, &Value))
 			{
 				m_CurrentVideoFormat++;
@@ -1409,7 +1409,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
-	static int s_ResetButton=0;
+	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
 		g_Config.m_GfxScreenWidth = Graphics()->GetDesktopScreenWidth();
@@ -1547,7 +1547,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 				str_copy(aBuf, "48.0", sizeof(aBuf));
 			else
 				str_copy(aBuf, "44.1", sizeof(aBuf));
-			static int s_SampleRateButton = 0;
+			static CButtonContainer s_SampleRateButton;
 			if(DoButton_Menu(&s_SampleRateButton, aBuf, 0, &Value))
 			{
 				if(g_Config.m_SndRate == 48000)
@@ -1574,7 +1574,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
-	static int s_ResetButton=0;
+	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
 		g_Config.m_SndEnable = 1;

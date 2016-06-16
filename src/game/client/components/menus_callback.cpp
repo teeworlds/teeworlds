@@ -10,6 +10,7 @@ typedef struct
 	CLocConstString m_Name;
 	const char *m_pCommand;
 	int m_KeyId;
+	CMenus::CButtonContainer m_BC;
 } CKeyInfo;
 
 static CKeyInfo gs_aKeys[] =
@@ -73,7 +74,7 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeigh
 		Label.y += 2.0f;
 		UI()->DoLabelScaled(&Label, aBuf, 13.0f, CUI::ALIGN_CENTER);
 		int OldId = Key.m_KeyId;
-		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
+		int NewId = DoKeyReader(&gs_aKeys[i].m_BC, &Button, OldId);
 		if(NewId != OldId)
 		{
 			if(OldId != 0 || NewId == 0)
