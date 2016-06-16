@@ -208,7 +208,7 @@ void CHud::RenderScoreHud()
 					{
 						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
-						const char *pName = m_pClient->m_aClients[ID].m_aName;
+						const char *pName = (g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "some tee");
 						float w = TextRender()->TextWidth(0, 8.0f, pName, -1);
 						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, pName, -1);
 

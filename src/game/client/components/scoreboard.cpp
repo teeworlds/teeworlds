@@ -275,14 +275,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+			TextRender()->TextEx(&Cursor, (g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aName : "some tee"), -1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 			// clan
 			tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 			TextRender()->SetCursor(&Cursor, ClanOffset+ClanLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = ClanLength;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
+			TextRender()->TextEx(&Cursor, (g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aClan : "some clan"), -1);
 
 			// country flag
 			vec4 Color(1.0f, 1.0f, 1.0f, 0.5f*ColorAlpha);

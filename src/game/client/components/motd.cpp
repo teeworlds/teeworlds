@@ -29,6 +29,8 @@ void CMotd::OnStateChange(int NewState, int OldState)
 
 void CMotd::OnRender()
 {
+	if(!g_Config.m_ClShowsocial)
+		return;
 	if(!IsActive())
 		return;
 
