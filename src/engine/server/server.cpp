@@ -1645,7 +1645,6 @@ void CServer::ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserDat
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments() >= 1)
 	{
-		dbg_msg("dbg", "huh?");
 		static_cast<CServer *>(pUserData)->m_RconPasswordSet = 1;
 	}
 }
@@ -1730,10 +1729,11 @@ int main(int argc, const char **argv) // ignore_convention
 		}
 	}
 
+	bool SkipPWGen = false;
 	if(secure_random_init() != 0)
 	{
 		dbg_msg("secure", "could not initialize secure RNG");
-		return -1;
+		SkipPWGen = true;	// skip automatic password generation
 	}
 
 	CServer *pServer = CreateServer();
@@ -1792,7 +1792,8 @@ int main(int argc, const char **argv) // ignore_convention
 
 	pEngine->InitLogfile();
 
-	pServer->InitRconPasswordIfUnset();
+	if(!SkipPWGen)
+		pServer->InitRconPasswordIfUnset();
 
 	// run the server
 	dbg_msg("server", "starting...");
