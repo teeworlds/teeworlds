@@ -1,4 +1,4 @@
-CheckVersion("0.4")
+CheckVersion("0.5")
 
 Import("configure.lua")
 Import("other/sdl/sdl.lua")
