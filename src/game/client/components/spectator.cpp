@@ -244,7 +244,9 @@ void CSpectator::OnRender()
 			Selected = true;
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
-		TextRender()->Text(0, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, m_pClient->m_aClients[i].m_aName, 220.0f);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%2d: %s", i, m_pClient->m_aClients[i].m_aName);
+		TextRender()->Text(0, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, aBuf, 220.0f);
 
 		// flag
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS &&

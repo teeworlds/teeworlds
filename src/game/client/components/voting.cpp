@@ -175,7 +175,6 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Timeout)
 		{
 			OnReset();
-			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 			if(pMsg->m_ClientID != -1)
@@ -183,18 +182,21 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				switch(pMsg->m_Type)
 				{
 				case VOTE_START_OP:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called vote to change server option '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called vote to change server option '%s' (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
 								pMsg->m_pDescription, pMsg->m_pReason);
+					str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 					break;
 				case VOTE_START_KICK:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to kick '%s' (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
 								pMsg->m_pDescription, pMsg->m_pReason);
+					str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", pMsg->m_pDescription);
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 					break;
 				case VOTE_START_SPEC:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
+					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to move '%s' to spectators (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
 								pMsg->m_pDescription, pMsg->m_pReason);
+					str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", pMsg->m_pDescription);
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 				}
 				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)

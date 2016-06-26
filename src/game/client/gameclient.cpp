@@ -546,10 +546,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				break;
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
+				int ClientID = clamp(aParaI[1], 0, MAX_CLIENTS - 1);
 				if(aParaI[2] <= 60*Client()->GameTickSpeed())
-					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%s' (%.2f seconds)"), aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
+					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%2d: %s' (%.2f seconds)"), aParaI[0] ? Localize("blue") : Localize("red"), ClientID, m_aClients[ClientID].m_aName, aParaI[2]/(float)Client()->GameTickSpeed());
 				else
-					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%s'"), aParaI[0] ? Localize("blue") : Localize("red"), m_aClients[clamp(aParaI[1], 0, MAX_CLIENTS-1)].m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("The %s flag was captured by '%2d: %s'"), aParaI[0] ? Localize("blue") : Localize("red"), ClientID, m_aClients[ClientID].m_aName);
 				m_pChat->AddLine(-1, 0, aBuf);
 			}
 			return;
@@ -620,12 +621,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 			if(m_LocalClientID != -1)
 			{
-				DoEnterMessage(pMsg->m_pName, pMsg->m_Team);
+				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
 				
 				if(m_pDemoRecorder->IsRecording())
 				{
 					CNetMsg_De_ClientEnter Msg;
 					Msg.m_pName = pMsg->m_pName;
+					Msg.m_ClientID = pMsg->m_ClientID;
 					Msg.m_Team = pMsg->m_Team;
 					Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
 				}
@@ -666,10 +668,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			return;
 		}
 
-		DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_pReason);
+		DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
 
 		CNetMsg_De_ClientLeave Msg;
 		Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
+		Msg.m_ClientID = pMsg->m_ClientID;
 		Msg.m_pReason = pMsg->m_pReason;
 		Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
 
@@ -728,7 +731,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		if(pMsg->m_Silent == 0)
 		{
-			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_Team);
+			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team);
 		}		
 	}
 	else if(MsgId == NETMSGTYPE_SV_READYTOENTER)
@@ -746,12 +749,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	else if(MsgId == NETMSGTYPE_DE_CLIENTENTER && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientEnter *pMsg = (CNetMsg_De_ClientEnter *)pRawMsg;
-		DoEnterMessage(pMsg->m_pName, pMsg->m_Team);
+		DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
 	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTLEAVE && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientLeave *pMsg = (CNetMsg_De_ClientLeave *)pRawMsg;
-		DoLeaveMessage(pMsg->m_pName, pMsg->m_pReason);
+		DoLeaveMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_pReason);
 	}
 }
 
@@ -1351,27 +1354,27 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 	UpdateRenderInfo(pGameClient, false);
 }
 
-void CGameClient::DoEnterMessage(const char *pName, int Team)
+void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team)
 {
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the %s"), pName, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+	str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' entered and joined the %s"), ClientID, pName, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
-void CGameClient::DoLeaveMessage(const char *pName, const char *pReason)
+void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pReason)
 {
 	char aBuf[128];
 	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game (%s)"), pName, pReason);
+		str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' has left the game (%s)"), ClientID, pName, pReason);
 	else
-		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game"), pName);
+		str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' has left the game"), ClientID, pName);
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
-void CGameClient::DoTeamChangeMessage(const char *pName, int Team)
+void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
 {
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the %s"), pName, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+	str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' joined the %s"), ClientID, pName, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 

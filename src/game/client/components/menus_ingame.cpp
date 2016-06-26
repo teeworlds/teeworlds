@@ -248,7 +248,9 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			CTextCursor Cursor;
 			TextRender()->SetCursor(&Cursor, Player.x, Player.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Player.w;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[i].m_aName, -1);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", i, m_pClient->m_aClients[i].m_aName);
+			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			TextRender()->SetCursor(&Cursor, Button.x,Button.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Button.w;
@@ -448,7 +450,9 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
-			UI()->DoLabelScaled(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, CUI::ALIGN_LEFT);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", aPlayerIDs[i], m_pClient->m_aClients[aPlayerIDs[i]].m_aName);
+			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, CUI::ALIGN_LEFT);
 		}
 	}
 

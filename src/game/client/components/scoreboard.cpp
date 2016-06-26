@@ -104,7 +104,9 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 			TextRender()->TextEx(&Cursor, ", ", -1);
 		if(pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 			TextRender()->TextColor(1.0f, 1.0f, 0.0f, 1.0f);
-		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[i].m_aName, -1);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%2d: %s", i, m_pClient->m_aClients[i].m_aName);
+		TextRender()->TextEx(&Cursor, aBuf, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		Multiple = true;
 	}
@@ -275,7 +277,9 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", pInfo->m_ClientID, m_pClient->m_aClients[pInfo->m_ClientID].m_aName);
+			TextRender()->TextEx(&Cursor, aBuf, -1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 			// clan

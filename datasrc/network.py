@@ -335,11 +335,13 @@ Messages = [
 	## Demo messages
 	NetMessage("De_ClientEnter", [
 		NetStringStrict("m_pName"),
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 	]),
 
 	NetMessage("De_ClientLeave", [
 		NetStringStrict("m_pName"),
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pReason"),
 	]),
 
