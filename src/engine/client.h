@@ -8,6 +8,7 @@
 #include "graphics.h"
 
 #include <modapi/client/graphics.h>
+#include <modapi/client/assetsmanager.h>
 
 class IClient : public IInterface
 {
@@ -163,6 +164,8 @@ public:
 	//ModAPI
 public:
 	virtual CModAPI_Client_Graphics *ModAPIGraphics() const = 0;
+	virtual CModAPI_AssetManager *AssetManager() const = 0;
+	virtual void LoadAssetsFile(const char* pFileName) = 0;
 };
 
 class IGameClient : public IInterface
@@ -191,6 +194,8 @@ public:
 	virtual const char *GetItemName(int Type) const = 0;
 	virtual const char *Version() const = 0;
 	virtual const char *NetVersion() const = 0;
+	
+	virtual void DrawBackground() = 0;
 
 };
 

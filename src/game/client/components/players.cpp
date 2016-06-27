@@ -18,10 +18,13 @@
 #include <game/client/components/sounds.h>
 #include <game/client/components/controls.h>
 
+#include <modapi/client/skeletonrenderer.h>
+
 #include "players.h"
 
 void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset)
 {
+	/*
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
 
@@ -63,6 +66,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
+	*/
 }
 
 inline float NormalizeAngular(float f)
@@ -102,7 +106,6 @@ void CPlayers::RenderHook(
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
-
 	// use preditect players if needed
 	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
@@ -124,10 +127,6 @@ void CPlayers::RenderHook(
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-		Graphics()->QuadsBegin();
-		//Graphics()->QuadsBegin();
-
 		vec2 Pos = Position;
 		vec2 HookPos;
 
@@ -155,31 +154,7 @@ void CPlayers::RenderHook(
 		else
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 
-		float d = distance(Pos, HookPos);
-		vec2 Dir = normalize(Pos-HookPos);
-
-		Graphics()->QuadsSetRotation(angle(Dir)+pi);
-
-		// render head
-		RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
-		IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24,16);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-
-		// render chain
-		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
-		IGraphics::CQuadItem Array[1024];
-		int i = 0;
-		for(float f = 16; f < d && i < 1024; f += 16, i++)
-		{
-			vec2 p = HookPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
-		}
-
-		Graphics()->QuadsDraw(Array, i);
-		Graphics()->QuadsSetRotation(0);
-		Graphics()->QuadsEnd();
-
-		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+		//~ ModAPIGraphics()->DrawLine(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_LINESTYLE, MODAPI_LINESTYLE_HOOK), Position, HookPos, 1.0f, 0.0f);
 	}
 }
 
@@ -240,7 +215,7 @@ void CPlayers::RenderPlayer(
 	vec2 AimDir = direction(Angle);
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
-
+	
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
@@ -249,13 +224,53 @@ void CPlayers::RenderPlayer(
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 	
-	CModAPI_TeeAnimationState TeeAnimState;
-	ModAPIGraphics()->InitTeeAnimationState(&TeeAnimState, MotionDir, AimDir);
+	CModAPI_SkeletonRenderer SkeletonRenderer(Graphics(), AssetManager());
+	SkeletonRenderer.SetAim(AimDir);
+	SkeletonRenderer.SetMotion(MotionDir);
+	
+	CModAPI_Asset_CharacterPart* pCharacterPath[6];
+	for(int i=0; i<6; i++)
+	{
+		pCharacterPath[i] = AssetManager()->GetAsset<CModAPI_Asset_CharacterPart>(RenderInfo.m_aCharacterParts[i]);
+		if(pCharacterPath[i])
+		{
+			SkeletonRenderer.AddSkinWithSkeleton(pCharacterPath[i]->m_SkeletonSkinPath, RenderInfo.m_aColors[i]);
+		}
+	}
 
 	if(InAir)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_INAIR), 0.0f);
+	{
+		if(!RenderInfo.m_GotAirJump && g_Config.m_ClAirjumpindicator)
+		{
+			for(int i=0; i<6; i++)
+			{
+				if(pCharacterPath[i])
+				{
+					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_UncontrolledJumpPath, 0.0f);
+				}
+			}	
+		}
+		else
+		{
+			for(int i=0; i<6; i++)
+			{
+				if(pCharacterPath[i])
+				{
+					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_ControlledJumpPath, 0.0f);
+				}
+			}
+		}
+	}
 	else if(Stationary)
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_IDLE), 0.0f);
+	{
+		for(int i=0; i<6; i++)
+		{
+			if(pCharacterPath[i])
+			{
+				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_IdlePath, 0.0f);
+			}
+		}
+	}
 	else if(!WantOtherDir)
 	{
 		const float WalkTimeMagic = 100.0f;
@@ -265,7 +280,13 @@ void CPlayers::RenderPlayer(
 				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 			/ WalkTimeMagic;
 		
-		ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, MODAPI_INTERNAL_ID(MODAPI_TEEANIMATION_WALK), WalkTime);
+		for(int i=0; i<6; i++)
+		{
+			if(pCharacterPath[i])
+			{
+				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_WalkPath, WalkTime);
+			}
+		}
 	}
 
 	// do skidding
@@ -284,29 +305,9 @@ void CPlayers::RenderPlayer(
 		);
 	}
 	
-	const CModAPI_Weapon* pWeapon = ModAPIGraphics()->GetWeapon(MODAPI_INTERNAL_ID(Player.m_Weapon));
-	if(pWeapon)
-	{
-		static float s_LastGameTickTime = Client()->GameTickTime();
-		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
-			s_LastGameTickTime = Client()->GameTickTime();
+	SkeletonRenderer.Finalize();
+	SkeletonRenderer.RenderSkins(Position, 1.0);
 		
-		float WeaponTime = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-	
-		if(pWeapon->m_TeeAnimation >= 0)
-		{
-			ModAPIGraphics()->AddTeeAnimationState(&TeeAnimState, pWeapon->m_TeeAnimation, WeaponTime);
-		}
-		
-		CModAPI_WeaponAnimationState WeaponAnimState;
-		ModAPIGraphics()->InitWeaponAnimationState(&WeaponAnimState, MotionDir, AimDir, MODAPI_INTERNAL_ID(Player.m_Weapon), WeaponTime);
-		
-		ModAPIGraphics()->DrawWeaponMuzzle(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
-		ModAPIGraphics()->DrawWeapon(RenderTools(), &WeaponAnimState, MODAPI_INTERNAL_ID(Player.m_Weapon), Position);	
-	}
-	
-	ModAPIGraphics()->DrawTee(RenderTools(), &RenderInfo, &TeeAnimState, Position, AimDir, Player.m_Emote);
-	
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
@@ -357,34 +358,6 @@ void CPlayers::OnRender()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
-		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
-		{
-			// change the skin for the player to the ninja
-			int Skin = m_pClient->m_pSkins->Find("x_ninja", true);
-			if(Skin != -1)
-			{
-				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
-				for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-				{
-					if(IsTeamplay)
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
-					}
-					else if(pNinja->m_aUseCustomColors[p])
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(pNinja->m_aPartColors[p], p==CSkins::SKINPART_MARKING);
-					}
-					else
-					{
-						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_OrgTexture;
-						m_aRenderInfo[i].m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-					}
-				}
-			}
-		}
 	}
 
 	// render other players in two passes, first pass we render the other, second pass we render our self

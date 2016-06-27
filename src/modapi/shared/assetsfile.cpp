@@ -1,14 +1,14 @@
 #include <base/system.h>
-#include <modapi/shared/mod.h>
+#include <modapi/shared/assetsfile.h>
 #include <engine/storage.h>
 #include <engine/shared/datafile.h>
 
-class CMod : public IEngineMod
+class CModAPI_AssetsFile : public IModAPI_AssetsFileEngine
 {
 	CDataFileReader m_DataFile;
 	
 public:
-	CMod() {}
+	CModAPI_AssetsFile() {}
 
 	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
 	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
@@ -46,4 +46,4 @@ public:
 	}
 };
 
-extern IEngineMod *CreateEngineMod() { return new CMod; }
+extern IModAPI_AssetsFileEngine *CreateAssetsFileEngine() { return new CModAPI_AssetsFile; }

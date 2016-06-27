@@ -264,7 +264,7 @@ public:
 	int m_CurrentModSize;
 	int m_ModChunksPerRequest;
 	
-	IEngineMod *m_pMod;
+	IModAPI_AssetsFileEngine *m_pAssetsFile;
 	
 	const char *GetModName() const;
 	void SendInitialData(int ClientID);

@@ -28,7 +28,7 @@
 #include <mastersrv/mastersrv.h>
 
 //ModAPI
-#include <modapi/shared/mod.h>
+#include <modapi/shared/assetsfile.h>
 #include <modapi/compatibility.h> 
 #include <modapi/server/server.h>
 #include <modapi/server/netserver_tw06.h>
@@ -1766,17 +1766,6 @@ int CServer::Run()
 		}
 	}
 	
-	// ModAPI, generate mod
-	{
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "mods/%s.mod", m_pModAPIServer->GetName());
-		if(!m_pModAPIServer->CreateModFile(Storage(), aBuf))
-		{
-			dbg_msg("server", "failed to generate mod. modname='%s'", m_pModAPIServer->GetName());
-			return -1;
-		}
-	}
-	
 	// ModAPI, load mod
 	if(!LoadMod(m_pModAPIServer->GetName()))
 	{
@@ -2173,7 +2162,7 @@ void CServer::RegisterCommands()
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
-	m_pMod = Kernel()->RequestInterface<IEngineMod>();
+	m_pAssetsFile = Kernel()->RequestInterface<IModAPI_AssetsFileEngine>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	// register console commands
@@ -2256,7 +2245,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_SERVER|CFGFLAG_ECON;
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IEngineMap *pEngineMap = CreateEngineMap();
-	IEngineMod *pEngineMod = CreateEngineMod();
+	IModAPI_AssetsFileEngine *pEngineAssetsFile = CreateAssetsFileEngine();
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
@@ -2270,8 +2259,8 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMod*>(pEngineMod)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMod*>(pEngineMod));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IModAPI_AssetsFileEngine*>(pEngineAssetsFile)); // register as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IModAPI_AssetsFile*>(pEngineAssetsFile));
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -2319,7 +2308,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pKernel;
 	delete pEngine;
 	delete pEngineMap;
-	delete pEngineMod;
+	delete pEngineAssetsFile;
 	delete pGameServer;
 	delete pConsole;
 	delete pEngineMasterServer;
@@ -2339,16 +2328,16 @@ void CServer::SetModAPIServer(class CModAPI_Server* pModAPIServer)
 bool CServer::LoadMod(const char* pModName)
 {
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "mods/%s.mod", pModName);
+	str_format(aBuf, sizeof(aBuf), "assets/%s.assets", pModName);
 
-	if(!m_pMod->Load(aBuf))
+	if(!m_pAssetsFile->Load(aBuf))
 		return 0;
 
 	// stop recording when we change mod
 	m_DemoRecorder.Stop();
 
 	// get the crc of the mod
-	m_CurrentModCrc = m_pMod->Crc();
+	m_CurrentModCrc = m_pAssetsFile->Crc();
 	char aBufMsg[256];
 	str_format(aBufMsg, sizeof(aBufMsg), "%s crc is %08x", aBuf, m_CurrentModCrc);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);

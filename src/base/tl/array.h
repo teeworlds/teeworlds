@@ -178,6 +178,31 @@ public:
 
 		Arguments:
 			item - Item to insert.
+			index - Index where to insert the item
+
+		Remarks:
+			- Invalidates ranges
+			- See remarks about <array> how the array grows.
+	*/
+	int insertat(const T& item, int index)
+	{
+		incsize();
+		set_size(size()+1);
+
+		for(int i = num_elements-1; i > index; i--)
+			list[i] = list[i-1];
+
+		list[index] = item;
+
+		return num_elements-1;
+	}
+
+	/*
+		Function: insert
+			Inserts an item into the array at a specified location.
+
+		Arguments:
+			item - Item to insert.
 			r - Range where to insert the item
 
 		Remarks:
@@ -189,16 +214,7 @@ public:
 		if(r.empty())
 			return add(item);
 
-		int index = (int)(&r.front()-list);
-		incsize();
-		set_size(size()+1);
-
-		for(int i = num_elements-1; i > index; i--)
-			list[i] = list[i-1];
-
-		list[index] = item;
-
-		return num_elements-1;
+		return insertat(item, (int)(&r.front()-list));
 	}
 
 	/*

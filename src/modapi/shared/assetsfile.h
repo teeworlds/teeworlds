@@ -1,15 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef ENGINE_MOD_H
-#define ENGINE_MOD_H
+#ifndef MODAPI_ENGINE_ASSETSFILE_H
+#define MODAPI_ENGINE_ASSETSFILE_H
 
 #include <modapi/graphics.h>
 
 #include <engine/kernel.h>
 
-class IMod : public IInterface
+class IModAPI_AssetsFile : public IInterface
 {
-	MACRO_INTERFACE("mod", 0)
+	MACRO_INTERFACE("assetsfile", 0)
 public:
 	virtual void *GetData(int Index) = 0;
 	virtual void *GetDataSwapped(int Index) = 0;
@@ -21,16 +21,16 @@ public:
 };
 
 
-class IEngineMod : public IMod
+class IModAPI_AssetsFileEngine : public IModAPI_AssetsFile
 {
-	MACRO_INTERFACE("enginemod", 0)
+	MACRO_INTERFACE("assetsfileengine", 0)
 public:
-	virtual bool Load(const char *pModName, class IStorage *pStorage=0) = 0;
+	virtual bool Load(const char *pAssetsFileName, class IStorage *pStorage=0) = 0;
 	virtual bool IsLoaded() = 0;
 	virtual void Unload() = 0;
 	virtual unsigned Crc() = 0;
 };
 
-extern IEngineMod *CreateEngineMod();
+extern IModAPI_AssetsFileEngine *CreateAssetsFileEngine();
 
 #endif

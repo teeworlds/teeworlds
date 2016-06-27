@@ -38,7 +38,7 @@ void CModAPI_Component_Items::RenderModAPISprite(const CNetObj_ModAPI_Sprite *pP
 	float Size = mix(pPrev->m_Size, pCurrent->m_Size, Client()->IntraGameTick());
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
-	ModAPIGraphics()->DrawSprite(RenderTools(), pCurrent->m_SpriteId, Pos, Size, Angle, 0);
+	ModAPIGraphics()->DrawSprite(pCurrent->m_SpriteId, Pos, Size, Angle, 0);
 }
 
 void CModAPI_Component_Items::RenderModAPIAnimatedSprite(const CNetObj_ModAPI_AnimatedSprite *pPrev, const CNetObj_ModAPI_AnimatedSprite *pCurrent)
@@ -55,7 +55,7 @@ void CModAPI_Component_Items::RenderModAPIAnimatedSprite(const CNetObj_ModAPI_An
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	Time = Time / (static_cast<float>(pCurrent->m_Duration)/1000.f);
 	
-	ModAPIGraphics()->DrawAnimatedSprite(RenderTools(), pCurrent->m_SpriteId, Pos, Size, Angle, 0, pCurrent->m_AnimationId, Time, Offset);
+	ModAPIGraphics()->DrawAnimatedSprite(pCurrent->m_SpriteId, Pos, Size, Angle, 0, pCurrent->m_AnimationId, Time, Offset);
 }
 
 void CModAPI_Component_Items::RenderModAPISpriteCharacter(const CNetObj_ModAPI_SpriteCharacter *pPrev, const CNetObj_ModAPI_SpriteCharacter *pCurrent)
@@ -78,7 +78,7 @@ void CModAPI_Component_Items::RenderModAPISpriteCharacter(const CNetObj_ModAPI_S
 		Pos = mix(vec2(PrevChar.m_X, PrevChar.m_Y), vec2(CurChar.m_X, CurChar.m_Y), Client()->IntraGameTick()) + Pos;
 	}
 	
-	ModAPIGraphics()->DrawSprite(RenderTools(),pCurrent->m_SpriteId, Pos, Size, Angle, 0);
+	ModAPIGraphics()->DrawSprite(pCurrent->m_SpriteId, Pos, Size, Angle, 0);
 }
 
 void CModAPI_Component_Items::RenderModAPIAnimatedSpriteCharacter(const CNetObj_ModAPI_AnimatedSpriteCharacter *pPrev, const CNetObj_ModAPI_AnimatedSpriteCharacter *pCurrent)
@@ -106,7 +106,7 @@ void CModAPI_Component_Items::RenderModAPIAnimatedSpriteCharacter(const CNetObj_
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	Time = Time / (static_cast<float>(pCurrent->m_Duration)/1000.f);
 	
-	ModAPIGraphics()->DrawAnimatedSprite(RenderTools(), pCurrent->m_SpriteId, Pos, Size, Angle, 0, pCurrent->m_AnimationId, Time, Offset);
+	ModAPIGraphics()->DrawAnimatedSprite(pCurrent->m_SpriteId, Pos, Size, Angle, 0, pCurrent->m_AnimationId, Time, Offset);
 }
 
 void CModAPI_Component_Items::RenderModAPILine(const struct CNetObj_ModAPI_Line *pCurrent)
@@ -121,7 +121,7 @@ void CModAPI_Component_Items::RenderModAPILine(const struct CNetObj_ModAPI_Line 
 	float Time = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 	Time = (Time/static_cast<float>(SERVER_TICK_SPEED)) * 1000.0f;
 	
-	ModAPIGraphics()->DrawLine(RenderTools(),pCurrent->m_LineStyleId, StartPos, EndPos, Time);
+	ModAPIGraphics()->DrawLine(pCurrent->m_LineStyleId, StartPos, EndPos, 1.0f, Time);
 }
 
 void CModAPI_Component_Items::RenderModAPIText(const CNetObj_ModAPI_Text *pPrev, const CNetObj_ModAPI_Text *pCurrent)
@@ -330,7 +330,7 @@ void CModAPI_Component_Items::UpdateEvents(float DeltaTime)
 				Time,
 				Iter->m_Offset);
 			
-			const CModAPI_Animation* pAnimation = ModAPIGraphics()->GetAnimation(Iter->m_AnimationId);
+			const CModAPI_Asset_Animation* pAnimation = AssetManager()->GetAsset<CModAPI_Asset_Animation>(Iter->m_AnimationId);
 			if(!pAnimation || Time > pAnimation->GetDuration())
 			{
 				Iter = m_TextEvent.erase(Iter);

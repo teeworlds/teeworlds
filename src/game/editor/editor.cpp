@@ -24,6 +24,8 @@
 #include <game/client/ui.h>
 #include <generated/client_data.h>
 
+#include <modapi/client/clientmode.h>
+
 #include "auto_map.h"
 #include "editor.h"
 
@@ -4369,7 +4371,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 			pEditor->m_PopupEventActivated = true;
 		}
 		else
-			g_Config.m_ClEditor = 0;
+			g_Config.m_ClMode = MODAPI_CLIENTMODE_GAME;
 		return 1;
 	}
 

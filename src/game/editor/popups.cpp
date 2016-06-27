@@ -10,6 +10,8 @@
 #include <engine/keys.h>
 #include <engine/storage.h>
 
+#include <modapi/client/clientmode.h>
+
 #include "editor.h"
 
 
@@ -805,7 +807,7 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 	if(pEditor->DoButton_Editor(&s_OkButton, "Ok", 0, &Label, 0, 0))
 	{
 		if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-			g_Config.m_ClEditor = 0;
+			g_Config.m_ClMode = MODAPI_CLIENTMODE_GAME;
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		else if(pEditor->m_PopupEventType == POPEVENT_NEW)

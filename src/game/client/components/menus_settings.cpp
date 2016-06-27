@@ -430,24 +430,24 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_paSkinList[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			CTeeRenderInfo Info;
-			for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-			{
-				if(s->m_aUseCustomColors[p])
-				{
-					Info.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
-					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==CSkins::SKINPART_MARKING);
-				}
-				else
-				{
-					Info.m_aTextures[p] = s->m_apParts[p]->m_OrgTexture;
-					Info.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-				}
-			}
+			//~ CTeeRenderInfo Info;
+			//~ for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+			//~ {
+				//~ if(s->m_aUseCustomColors[p])
+				//~ {
+					//~ Info.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
+					//~ Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==CSkins::SKINPART_MARKING);
+				//~ }
+				//~ else
+				//~ {
+					//~ Info.m_aTextures[p] = s->m_apParts[p]->m_OrgTexture;
+					//~ Info.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				//~ }
+			//~ }
 
-			Info.m_Size = 50.0f;
-			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
+			//~ Info.m_Size = 50.0f;
+			//~ Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
+			//~ RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
 		}
 	}
 
@@ -505,31 +505,31 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			CTeeRenderInfo Info;
-			for(int j = 0; j < CSkins::NUM_SKINPARTS; j++)
-			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, CSkins::ms_apSkinVariables[j], false);
-				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
-				if(*CSkins::ms_apUCCVariables[j])
-				{
-					if(m_TeePartSelected == j)
-						Info.m_aTextures[j] = s->m_ColorTexture;
-					else
-						Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
-					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[j], j==CSkins::SKINPART_MARKING);
-				}
-				else
-				{
-					if(m_TeePartSelected == j)
-						Info.m_aTextures[j] = s->m_OrgTexture;
-					else
-						Info.m_aTextures[j] = pSkinPart->m_OrgTexture;
-					Info.m_aColors[j] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-				}
-			}
-			Info.m_Size = 50.0f;
-			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
+			//~ CTeeRenderInfo Info;
+			//~ for(int j = 0; j < CSkins::NUM_SKINPARTS; j++)
+			//~ {
+				//~ int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, CSkins::ms_apSkinVariables[j], false);
+				//~ const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
+				//~ if(*CSkins::ms_apUCCVariables[j])
+				//~ {
+					//~ if(m_TeePartSelected == j)
+						//~ Info.m_aTextures[j] = s->m_ColorTexture;
+					//~ else
+						//~ Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
+					//~ Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[j], j==CSkins::SKINPART_MARKING);
+				//~ }
+				//~ else
+				//~ {
+					//~ if(m_TeePartSelected == j)
+						//~ Info.m_aTextures[j] = s->m_OrgTexture;
+					//~ else
+						//~ Info.m_aTextures[j] = pSkinPart->m_OrgTexture;
+					//~ Info.m_aColors[j] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				//~ }
+			//~ }
+			//~ Info.m_Size = 50.0f;
+			//~ Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
+			//~ RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
 		}
 	}
 
@@ -1012,24 +1012,24 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		CTeeRenderInfo OwnSkinInfo;
-		OwnSkinInfo.m_Size = 50.0f;
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, CSkins::ms_apSkinVariables[p], false);
-			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
-			if(*CSkins::ms_apUCCVariables[p])
-			{
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==CSkins::SKINPART_MARKING);
-			}
-			else
-			{
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
-				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-			}
-		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
+		//~ CTeeRenderInfo OwnSkinInfo;
+		//~ OwnSkinInfo.m_Size = 50.0f;
+		//~ for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		//~ {
+			//~ int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, CSkins::ms_apSkinVariables[p], false);
+			//~ const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+			//~ if(*CSkins::ms_apUCCVariables[p])
+			//~ {
+				//~ OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+				//~ OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==CSkins::SKINPART_MARKING);
+			//~ }
+			//~ else
+			//~ {
+				//~ OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+				//~ OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			//~ }
+		//~ }
+		//~ RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		// handle right (team skins)
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1044,21 +1044,21 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_RED, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_MARKING);
-		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
+		//~ for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		//~ {
+			//~ int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_RED, p);
+			//~ OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_MARKING);
+		//~ }
+		//~ RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
-		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_BLUE, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_MARKING);
-		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Right.x+Right.w/2.0f, Right.y+Right.h/2.0f+2.0f));
+		//~ for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		//~ {
+			//~ int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_BLUE, p);
+			//~ OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==CSkins::SKINPART_MARKING);
+		//~ }
+		//~ RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Right.x+Right.w/2.0f, Right.y+Right.h/2.0f+2.0f));
 	}
 
 	if(!s_CustomSkinMenu)

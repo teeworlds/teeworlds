@@ -55,12 +55,13 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	// needed interfaces
 	IEngine *m_pEngine;
 	IEditor *m_pEditor;
+	IModAPI_AssetsEditor *m_pAssetsEditor;
 	IEngineInput *m_pInput;
 	IEngineGraphics *m_pGraphics;
 	IEngineSound *m_pSound;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
-	IEngineMod *m_pMod;
+	IModAPI_AssetsFileEngine *m_pAssetsFile;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	IEngineMasterServer *m_pMasterServer;
@@ -95,7 +96,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
-	bool m_EditorActive;
 	bool m_SoundInitFailed;
 	bool m_ResortServerBrowser;
 	bool m_RecordGameMessage;
@@ -268,6 +268,7 @@ public:
 	virtual const char *ModDownloadName() const { return m_aModdownloadName; }
 	virtual int ModDownloadAmount() const { return m_ModdownloadAmount; }
 	virtual int ModDownloadTotalsize() const { return m_ModdownloadTotalsize; }
+	virtual void LoadAssetsFile(const char* pFileName);
 
 	void PumpNetwork();
 
@@ -324,6 +325,7 @@ public:
 	
 	//ModAPI
 	CModAPI_Client_Graphics* m_pModAPIGraphics;
+	CModAPI_AssetManager* m_pAssetManager;
 	char m_aCurrentMod[256];
 	unsigned m_CurrentModCrc;
 
@@ -341,6 +343,9 @@ public:
 	const char *LoadModSearch(const char *pModName, int WantedCrc);
 	
 	virtual CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pModAPIGraphics; }
+	virtual CModAPI_AssetManager *AssetManager() const { return m_pAssetManager; }
+
+	int m_ClientMode;
 	
 	//ModAPI download both parallel
 	bool m_ModDownloadFinished;
