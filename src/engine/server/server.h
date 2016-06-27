@@ -4,6 +4,7 @@
 #define ENGINE_SERVER_SERVER_H
 
 #include <engine/server.h>
+#include <modapi/server/metanetserver.h>
 
 
 class CSnapIDPool
@@ -63,6 +64,7 @@ class CServer : public IServer
 {
 	class IGameServer *m_pGameServer;
 	class IConsole *m_pConsole;
+	class IMasterServer *m_pMasterServer;
 	class IStorage *m_pStorage;
 public:
 	class IGameServer *GameServer() { return m_pGameServer; }
@@ -139,7 +141,7 @@ public:
 	CSnapshotDelta m_SnapshotDelta[MODAPI_NUM_SNAPSHOT];
 	CSnapshotBuilder m_SnapshotBuilder[MODAPI_NUM_SNAPSHOT];
 	CSnapIDPool m_IDPool[MODAPI_NUM_SNAPSHOT];
-	CNetServer m_NetServer;
+	CModAPI_MetaNetServer m_NetServer;
 	CEcon m_Econ;
 	CServerBan m_ServerBan;
 
@@ -166,7 +168,6 @@ public:
 	int m_MapChunksPerRequest;
 
 	CDemoRecorder m_DemoRecorder;
-	CRegister m_Register;
 	CMapChecker m_MapChecker;
 
 	CServer();
@@ -198,12 +199,16 @@ public:
 	bool ClientIngame(int ClientID) const;
 	int MaxClients() const;
 
-	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
+	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID, bool tw06 = false);
 
 	void DoSnapshot();
 
 	static int NewClientCallback(int ClientID, void *pUser);
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
+	static void ProcessClientPacketCallback_TW06(CNetChunk *pPacket, void *pUser);
+	static void ProcessClientPacketCallback_TW07(CNetChunk *pPacket, void *pUser);
+	static void GenerateServerInfoCallback_TW06(CPacker *pPacker, int Token, void *pUser, int NetServer);
+	static void GenerateServerInfoCallback_TW07(CPacker *pPacker, int Token, void *pUser, int NetServer);
 
 	void SendMap(int ClientID);
 	void SendConnectionReady(int ClientID);
@@ -214,17 +219,16 @@ public:
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void UpdateClientRconCommands();
 
-	void ProcessClientPacket(CNetChunk *pPacket);
+	void ProcessClientPacket_TW06(CNetChunk *pPacket);
+	void ProcessClientPacket_TW07(CNetChunk *pPacket);
 
 	void SendServerInfo(int ClientID);
-	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();
 
 	const char *GetMapName() const;
 	int LoadMap(const char *pMapName);
 
-	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
@@ -269,7 +273,7 @@ public:
 	
 	void SetModAPIServer(class CModAPI_Server* pModAPIServer);
 	
-	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const;
+	virtual bool GetClientProtocol(int ClientID) const;
 };
 
 #endif

@@ -6,10 +6,11 @@
 #include "projectile.h"
 
 #include <modapi/server/event.h>
+#include <tw06/protocol.h>
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
-: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PROJECTILE, Pos, 1)
+: CModAPI_Entity(pGameWorld, MOD_ENTTYPE_PROJECTILE, Pos, 1)
 {
 	m_Type = Type;
 	m_Direction = Dir;
@@ -73,14 +74,13 @@ void CProjectile::Tick()
 	{
 		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
 		{
-			CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+			CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 				.Send(CurPos, m_SoundImpact);
 		}
 
 		if(m_Explosive)
 		{
-			CModAPI_WorldEvent_Explosion(GameServer(), GameWorld()->m_WorldID)
-				.Send(CurPos, m_Owner, m_Weapon, m_Damage);
+			GameServer()->CreateExplosion(GameWorld()->m_WorldID, CurPos, m_Owner, m_Weapon, m_Damage);
 		}
 
 		else if(TargetChr)
@@ -105,7 +105,26 @@ void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 	pProj->m_Type = m_Type;
 }
 
-void CProjectile::Snap(int Snapshot, int SnappingClient)
+void CProjectile::Snap06(int Snapshot, int SnappingClient)
+{
+	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
+
+	if(NetworkClipped(SnappingClient, GetPos(Ct)))
+		return;
+
+	CTW06_NetObj_Projectile *pProj = static_cast<CTW06_NetObj_Projectile *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_PROJECTILE, GetID(Snapshot, 0), sizeof(CTW06_NetObj_Projectile)));
+	if(!pProj)
+		return;
+	
+	pProj->m_X = (int)m_Pos.x;
+	pProj->m_Y = (int)m_Pos.y;
+	pProj->m_VelX = (int)(m_Direction.x*100.0f);
+	pProj->m_VelY = (int)(m_Direction.y*100.0f);
+	pProj->m_StartTick = m_StartTick;
+	pProj->m_Type = m_Type;
+}
+
+void CProjectile::Snap07(int Snapshot, int SnappingClient)
 {
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 
@@ -113,6 +132,13 @@ void CProjectile::Snap(int Snapshot, int SnappingClient)
 		return;
 
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_PROJECTILE, GetID(Snapshot, 0), sizeof(CNetObj_Projectile)));
-	if(pProj)
-		FillInfo(pProj);
+	if(!pProj)
+		return;
+	
+	pProj->m_X = (int)m_Pos.x;
+	pProj->m_Y = (int)m_Pos.y;
+	pProj->m_VelX = (int)(m_Direction.x*100.0f);
+	pProj->m_VelY = (int)(m_Direction.y*100.0f);
+	pProj->m_StartTick = m_StartTick;
+	pProj->m_Type = m_Type;
 }

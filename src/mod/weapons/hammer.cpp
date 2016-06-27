@@ -35,7 +35,7 @@ bool CMod_Weapon_Hammer::OnFire(vec2 Direction)
 	
 	vec2 ProjStartPos = Character()->GetPos() + Direction * Character()->GetProximityRadius()*0.75f;
 	
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_HAMMER_FIRE);
 
 	CCharacter *apEnts[MAX_CLIENTS];
@@ -58,7 +58,7 @@ bool CMod_Weapon_Hammer::OnFire(vec2 Direction)
 		else
 			HammerHitPos = ProjStartPos;
 			
-		CModAPI_WorldEvent_HammerHitEffect(GameServer(), WorldID())
+		CModAPI_Event_HammerHitEffect(GameServer()).World(WorldID())
 			.Send(HammerHitPos);
 
 		vec2 Dir;
@@ -82,4 +82,22 @@ bool CMod_Weapon_Hammer::OnFire(vec2 Direction)
 		m_ReloadTimer = Server()->TickSpeed()/3;
 	
 	return true;
+}
+	
+void CMod_Weapon_Hammer::Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = WEAPON_HAMMER;
+	pCharNetObj->m_AmmoCount = -1;
+}
+	
+void CMod_Weapon_Hammer::Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = WEAPON_HAMMER;
+	pCharNetObj->m_AmmoCount = -1;
+}
+	
+void CMod_Weapon_Hammer::Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = WEAPON_HAMMER;
+	pCharNetObj->m_AmmoCount = -1;
 }

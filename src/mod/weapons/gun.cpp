@@ -25,6 +25,6 @@ void CMod_Weapon_Gun::CreateProjectile(vec2 Pos, vec2 Direction)
 		(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_GunLifetime),
 		g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, GetID());
 
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_GUN_FIRE);
 }

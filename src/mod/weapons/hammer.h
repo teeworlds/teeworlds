@@ -21,6 +21,10 @@ public:
 	
 	virtual bool TickPreFire(bool IsActive);
 	virtual bool OnFire(vec2 Direction);
+
+	virtual void Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pChar);
+	virtual void Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pChar);
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pChar);
 };
 
 #endif

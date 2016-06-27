@@ -17,6 +17,18 @@ public:
 	CGameContext* GameServer();
 };
 
+/* CHAT **********************************************************/
+
+class CModAPI_Msg_Chat : public CModAPI_Msg
+{
+protected:
+	int m_Alternative;
+	
+public:
+	CModAPI_Msg_Chat(CGameContext* pGameServer, int Alternative);
+	void Send(int ClientID, const char* pMessage);
+};
+
 /* BROADCAST **********************************************************/
 
 enum

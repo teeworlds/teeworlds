@@ -135,7 +135,7 @@ bool CModAPI_Weapon_GenericGun07::OnFire(vec2 Direction)
 		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
 		if(m_LastNoAmmoSound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+			CModAPI_Event_Sound(GameServer()).World(WorldID())
 				.Send(Character()->GetPos(), SOUND_WEAPON_NOAMMO);
 		
 			m_LastNoAmmoSound = Server()->Tick();
@@ -170,8 +170,20 @@ bool CModAPI_Weapon_GenericGun07::TickPaused(bool IsActive)
 	return false;
 }
 	
-void CModAPI_Weapon_GenericGun07::Snap(int SnappingClient, class CNetObj_Character* pCharNetObj)
+void CModAPI_Weapon_GenericGun07::Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pCharNetObj)
 {
-	if(m_Ammo > 0)
-		pCharNetObj->m_AmmoCount = m_Ammo;
+	pCharNetObj->m_Weapon = m_TW07ID;
+	pCharNetObj->m_AmmoCount = (m_Ammo > 0 ? m_Ammo : 0);
+}
+	
+void CModAPI_Weapon_GenericGun07::Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = m_TW07ID;
+	pCharNetObj->m_AmmoCount = (m_Ammo > 0 ? m_Ammo : 0);
+}
+	
+void CModAPI_Weapon_GenericGun07::Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = m_TW07ID;
+	pCharNetObj->m_AmmoCount = (m_Ammo > 0 ? m_Ammo : 0);
 }

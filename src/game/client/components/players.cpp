@@ -113,8 +113,8 @@ void CPlayers::RenderHook(
 		else
 		{
 			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
+			m_pClient->m_PredictedChar.Write07(&Player);
+			m_pClient->m_PredictedPrevChar.Write07(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
 		}
 	}
@@ -230,8 +230,8 @@ void CPlayers::RenderPlayer(
 		else
 		{
 			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
+			m_pClient->m_PredictedChar.Write07(&Player);
+			m_pClient->m_PredictedPrevChar.Write07(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
 		}
 	}

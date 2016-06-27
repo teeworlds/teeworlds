@@ -12,12 +12,15 @@
 #include <game/version.h>
 
 #include <modapi/mapitem.h>
+#include <modapi/server/event.h>
 
 #include "gamecontext.h"
 #include "player.h"
 
 #include <mod/gamemodes/mod.h>
 #include <mod/entities/character.h>
+
+#include <tw06/protocol.h>
 
 enum
 {
@@ -96,48 +99,45 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 	return m_apPlayers[ClientID]->GetCharacter();
 }
 
-void CGameContext::SendChatTarget(int To, const char *pText)
+void CGameContext::CreateExplosion(int WorldID, vec2 Pos, int Owner, int Weapon, int MaxDamage)
 {
-	CNetMsg_Sv_Chat Msg;
-	Msg.m_Team = 0;
-	Msg.m_ClientID = -1;
-	Msg.m_pMessage = pText;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
-}
-
-
-void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
-{
-	char aBuf[256];
-	if(ChatterClientID >= 0 && ChatterClientID < MAX_CLIENTS)
-		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientID, Team, Server()->ClientName(ChatterClientID), pText);
-	else
-		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
-	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, Team!=CHAT_ALL?"teamchat":"chat", aBuf);
-
-	if(Team == CHAT_ALL)
+	CModAPI_Event_ExplosionEffect(this).World(WorldID).Send(Pos);
+	
+	// deal damage
+	CCharacter *apEnts[MAX_CLIENTS];
+	float Radius = g_pData->m_Explosion.m_Radius;
+	float InnerRadius = 48.0f;
+	float MaxForce = g_pData->m_Explosion.m_MaxForce;
+	
+	if(WorldID == MOD_WORLD_ALL)
 	{
-		CNetMsg_Sv_Chat Msg;
-		Msg.m_Team = 0;
-		Msg.m_ClientID = ChatterClientID;
-		Msg.m_pMessage = pText;
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		for(int w=0; w<MOD_NUM_WORLDS; w++)
+		{
+			int Num = m_World[w].FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
+			for(int i = 0; i < Num; i++)
+			{
+				vec2 Diff = apEnts[i]->GetPos() - Pos;
+				vec2 Force(0, MaxForce);
+				float l = length(Diff);
+				if(l)
+					Force = normalize(Diff) * MaxForce;
+				float Factor = 1 - clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
+				apEnts[i]->TakeDamage(Force * Factor, (int)(Factor * MaxDamage), Owner, Weapon);
+			}
+		}
 	}
 	else
 	{
-		CNetMsg_Sv_Chat Msg;
-		Msg.m_Team = 1;
-		Msg.m_ClientID = ChatterClientID;
-		Msg.m_pMessage = pText;
-
-		// pack one for the recording only
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);
-
-		// send to the clients
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		int Num = m_World[WorldID].FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, MOD_ENTTYPE_CHARACTER);
+		for(int i = 0; i < Num; i++)
 		{
-			if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == Team)
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			vec2 Diff = apEnts[i]->GetPos() - Pos;
+			vec2 Force(0, MaxForce);
+			float l = length(Diff);
+			if(l)
+				Force = normalize(Diff) * MaxForce;
+			float Factor = 1 - clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
+			apEnts[i]->TakeDamage(Force * Factor, (int)(Factor * MaxDamage), Owner, Weapon);
 		}
 	}
 }
@@ -150,20 +150,6 @@ void CGameContext::SendEmoticon(int ClientID, int Emoticon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 }
 
-void CGameContext::SendWeaponPickup(int ClientID, int Weapon)
-{
-	CNetMsg_Sv_WeaponPickup Msg;
-	Msg.m_Weapon = Weapon;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
-}
-
-void CGameContext::SendMotd(int ClientID)
-{
-	CNetMsg_Sv_Motd Msg;
-	Msg.m_pMessage = g_Config.m_SvMotd;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
-}
-
 void CGameContext::SendSettings(int ClientID)
 {
 	CNetMsg_Sv_ServerSettings Msg;
@@ -173,9 +159,22 @@ void CGameContext::SendSettings(int ClientID)
 	Msg.m_TeamLock = m_LockTeams != 0;
 	Msg.m_TeamBalance = g_Config.m_SvTeambalanceTime != 0;
 	Msg.m_PlayerSlots = Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+		
+	if(ClientID < 0)
+	{
+		for(int i=0; i<MAX_CLIENTS; i++)
+		{
+			if(m_apPlayers[i] && Server()->GetClientProtocol(i) != MODAPI_CLIENTPROTOCOL_TW06)
+			{
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+			}
+		}
+	}
+	else if(Server()->GetClientProtocol(ClientID) != MODAPI_CLIENTPROTOCOL_TW06)
+	{
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+	}
 }
-
 
 void CGameContext::SendGameMsg(int GameMsgID, int ClientID)
 {
@@ -453,13 +452,13 @@ void CGameContext::OnTick()
 // Server hooks
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
-	int NumFailures = m_NetObjHandler.NumObjFailures();
-	if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
+	int NumFailures = m_NetObjHandler07.NumObjFailures();
+	if(m_NetObjHandler07.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
 	{
-		if(g_Config.m_Debug && NumFailures != m_NetObjHandler.NumObjFailures())
+		if(g_Config.m_Debug && NumFailures != m_NetObjHandler07.NumObjFailures())
 		{
 			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT failed on '%s'", m_NetObjHandler.FailedObjOn());
+			str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT failed on '%s'", m_NetObjHandler07.FailedObjOn());
 			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 		}
 	}
@@ -472,13 +471,13 @@ void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 	int WorldID = m_apPlayers[ClientID]->GetWorldID();
 	if(!m_World[WorldID].m_Paused)
 	{
-		int NumFailures = m_NetObjHandler.NumObjFailures();
-		if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
+		int NumFailures = m_NetObjHandler07.NumObjFailures();
+		if(m_NetObjHandler07.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == -1)
 		{
-			if(g_Config.m_Debug && NumFailures != m_NetObjHandler.NumObjFailures())
+			if(g_Config.m_Debug && NumFailures != m_NetObjHandler07.NumObjFailures())
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT corrected on '%s'", m_NetObjHandler.FailedObjOn());
+				str_format(aBuf, sizeof(aBuf), "NETOBJTYPE_PLAYERINPUT corrected on '%s'", m_NetObjHandler07.FailedObjOn());
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 			}
 		}
@@ -508,10 +507,12 @@ void CGameContext::OnClientEnter(int ClientID)
 		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
 	
-
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(i == ClientID || !m_apPlayers[i] || (!Server()->ClientIngame(i) && !m_apPlayers[i]->IsDummy()))
+			continue;
+
+		if(Server()->GetClientProtocol(i) == MODAPI_CLIENTPROTOCOL_TW06)
 			continue;
 
 		// new info for others
@@ -536,9 +537,12 @@ void CGameContext::OnClientEnter(int ClientID)
 	}
 
 	// local info
-	NewClientInfoMsg.m_Local = 1;
-	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);	
-
+	if(Server()->GetClientProtocol(ClientID) != MODAPI_CLIENTPROTOCOL_TW06)
+	{
+		NewClientInfoMsg.m_Local = 1;
+		Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);	
+	}
+	
 	if(Server()->DemoRecorder_IsRecording())
 	{
 		CNetMsg_De_ClientEnter Msg;
@@ -560,10 +564,13 @@ void CGameContext::OnClientConnected(int ClientID, bool Dummy)
 		SendVoteSet(VOTE_UNKNOWN, ClientID);
 
 	// send motd
-	SendMotd(ClientID);
+	CModAPI_Event_MOTD(this).Client(ClientID).Send(g_Config.m_SvMotd);
 
 	// send settings
-	SendSettings(ClientID);
+	if(Server()->GetClientProtocol(ClientID) != MODAPI_CLIENTPROTOCOL_TW06)
+	{
+		SendSettings(ClientID);
+	}
 }
 
 void CGameContext::OnClientTeamChange(int ClientID)
@@ -599,9 +606,9 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 	m_VoteUpdate = true;
 }
 
-void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
+void CGameContext::OnMessage_TW06(int MsgID, CUnpacker *pUnpacker, int ClientID)
 {
-	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
+	void *pRawMsg = m_NetObjHandler06.SecureUnpackMsg(MsgID, pUnpacker);
 	CPlayer *pPlayer = m_apPlayers[ClientID];
 
 	if(!pRawMsg)
@@ -609,7 +616,156 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		if(g_Config.m_Debug)
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgID), MsgID, m_NetObjHandler.FailedMsgOn());
+			str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler07.GetMsgName(MsgID), MsgID, m_NetObjHandler06.FailedMsgOn());
+			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+		}
+		return;
+	}
+
+	if(Server()->ClientIngame(ClientID))
+	{
+		if(MsgID == TW06_NETMSGTYPE_CL_SAY)
+		{
+			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
+				return;
+
+			CTW06_NetMsg_Cl_Say *pMsg = (CTW06_NetMsg_Cl_Say *)pRawMsg;
+			int Team = pMsg->m_Team ? pPlayer->GetTeam() : CGameContext::CHAT_ALL;
+			
+			// trim right and set maximum length to 128 utf8-characters
+			int Length = 0;
+			const char *p = pMsg->m_pMessage;
+			const char *pEnd = 0;
+			while(*p)
+ 			{
+				const char *pStrOld = p;
+				int Code = str_utf8_decode(&p);
+
+				// check if unicode is not empty
+				if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+					(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
+					Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
+				{
+					pEnd = 0;
+				}
+				else if(pEnd == 0)
+					pEnd = pStrOld;
+
+				if(++Length >= 127)
+				{
+					*(const_cast<char *>(p)) = 0;
+					break;
+				}
+ 			}
+			if(pEnd != 0)
+				*(const_cast<char *>(pEnd)) = 0;
+
+			// drop empty and autocreated spam messages (more than 16 characters per second)
+			if(Length == 0 || (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed()*((15+Length)/16) > Server()->Tick()))
+				return;
+
+			pPlayer->m_LastChat = Server()->Tick();
+
+			// don't allow spectators to disturb players during a running game in tournament mode
+			if((g_Config.m_SvTournamentMode == 2) &&
+				pPlayer->GetTeam() == TEAM_SPECTATORS &&
+				m_pController->IsGameRunning() &&
+				!Server()->IsAuthed(ClientID))
+				Team = TEAM_SPECTATORS;
+
+			CModAPI_Event_Chat(this).Send(ClientID, pMsg->m_Team, pMsg->m_pMessage);
+		}
+		else if(MsgID == TW06_NETMSGTYPE_CL_CALLVOTE)
+		{
+		}
+		else if(MsgID == TW06_NETMSGTYPE_CL_VOTE)
+		{
+		}
+		//~ else if (MsgID == TW06_NETMSGTYPE_CL_SETTEAM && !m_World.m_Paused)
+		//~ {
+		//~ }
+		//~ else if (MsgID == TW06_NETMSGTYPE_CL_SETSPECTATORMODE && !m_World.m_Paused)
+		//~ {
+		//~ }
+		else if (MsgID == TW06_NETMSGTYPE_CL_CHANGEINFO)
+		{
+		}
+		//~ else if (MsgID == TW06_NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
+		//~ {
+		//~ }
+		//~ else if (MsgID == TW06_NETMSGTYPE_CL_KILL && !m_World.m_Paused)
+		//~ {
+		//~ }
+	}
+	else
+	{
+		if(MsgID == TW06_NETMSGTYPE_CL_STARTINFO)
+		{
+			if(pPlayer->m_IsReadyToEnter)
+				return;
+
+			CTW06_NetMsg_Cl_StartInfo *pMsg = (CTW06_NetMsg_Cl_StartInfo *)pRawMsg;
+			pPlayer->m_LastChangeInfo = Server()->Tick();
+
+			// set start infos
+			Server()->SetClientName(ClientID, pMsg->m_pName);
+			Server()->SetClientClan(ClientID, pMsg->m_pClan);
+			Server()->SetClientCountry(ClientID, pMsg->m_Country);
+
+			for(int p = 0; p < 6; p++)
+			{
+				str_copy(pPlayer->m_TeeInfos.m_aaSkinPartNames[p], "default", 24);
+				pPlayer->m_TeeInfos.m_aUseCustomColors[p] = 0;
+				pPlayer->m_TeeInfos.m_aSkinPartColors[p] = 0;
+			}
+
+			m_pController->OnPlayerInfoChange(pPlayer);
+
+			// send vote options
+			CTW06_NetMsg_Sv_VoteClearOptions ClearMsg;
+			Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
+
+			CVoteOptionServer *pCurrent = m_pVoteOptionFirst;
+			while(pCurrent)
+			{
+				// count options for actual packet
+				int NumOptions = 0;
+				for(CVoteOptionServer *p = pCurrent; p && NumOptions < MAX_VOTE_OPTION_ADD; p = p->m_pNext, ++NumOptions);
+
+				// pack and send vote list packet
+				CMsgPacker Msg(NETMSGTYPE_SV_VOTEOPTIONLISTADD);
+				Msg.AddInt(NumOptions);
+				while(pCurrent && NumOptions--)
+				{
+					Msg.AddString(pCurrent->m_aDescription, VOTE_DESC_LENGTH);
+					pCurrent = pCurrent->m_pNext;
+				}
+				Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+			}
+
+			// send tuning parameters to client
+			SendTuningParams(ClientID);
+
+			// client is ready to enter
+			pPlayer->m_IsReadyToEnter = true;
+			pPlayer->m_IsReadyToPlay = true;
+			CTW06_NetMsg_Sv_ReadyToEnter m;
+			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+		}
+	}
+}
+
+void CGameContext::OnMessage_TW07(int MsgID, CUnpacker *pUnpacker, int ClientID)
+{
+	void *pRawMsg = m_NetObjHandler07.SecureUnpackMsg(MsgID, pUnpacker);
+	CPlayer *pPlayer = m_apPlayers[ClientID];
+
+	if(!pRawMsg)
+	{
+		if(g_Config.m_Debug)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler07.GetMsgName(MsgID), MsgID, m_NetObjHandler07.FailedMsgOn());
 			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 		}
 		return;
@@ -666,7 +822,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				!Server()->IsAuthed(ClientID))
 				Team = TEAM_SPECTATORS;
 
-			SendChat(ClientID, Team, pMsg->m_pMessage);
+			CModAPI_Event_Chat(this).Send(ClientID, pMsg->m_Team, pMsg->m_pMessage);
 		}
 		else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 		{
@@ -987,7 +1143,7 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, pResult->GetString(0));
+	CModAPI_Event_Chat(pSelf).Send(-1, 0, pResult->GetString(0));
 }
 
 void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
@@ -1239,7 +1395,7 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 	if(pResult->NumArguments())
 	{
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		pSelf->SendMotd(-1);
+		CModAPI_Event_MOTD(pSelf).Send(g_Config.m_SvMotd);
 	}
 }
 
@@ -1296,10 +1452,12 @@ void CGameContext::OnInit()
 	{
 		m_World[i].SetGameServer(this);
 	}
-	m_Events.SetGameServer(this);
+	m_Events06.SetGameServer(this);
+	m_Events07.SetGameServer(this);
+	m_Events07ModAPI.SetGameServer(this);
 
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
-		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+		Server()->SnapSetStaticsize(i, m_NetObjHandler07.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
 	m_Collision.Init(&m_Layers);
@@ -1423,6 +1581,31 @@ void CGameContext::OnShutdown()
 	Clear();
 }
 
+void CGameContext::OnSnap06(int ClientID)
+{		
+	// add tuning to demo
+	CTuningParams StandardTuning;
+	
+	int WorldID = MOD_WORLD_DEMO;
+	if(ClientID >= 0)
+	{
+		if(!m_apPlayers[ClientID])
+			return;
+		
+		WorldID = m_apPlayers[ClientID]->GetWorldID();
+	}
+
+	m_World[WorldID].Snap06(MODAPI_SNAPSHOT_TW06, ClientID);
+	m_pController->Snap06(MODAPI_SNAPSHOT_TW06, ClientID);
+	m_Events06.Snap06(MODAPI_SNAPSHOT_TW06, ClientID);
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i] && (m_apPlayers[i]->GetWorldID() == WorldID))
+			m_apPlayers[i]->Snap06(MODAPI_SNAPSHOT_TW06, ClientID);
+	}
+}
+
 void CGameContext::OnSnap07(int ClientID)
 {		
 	// add tuning to demo
@@ -1445,14 +1628,14 @@ void CGameContext::OnSnap07(int ClientID)
 		WorldID = m_apPlayers[ClientID]->GetWorldID();
 	}
 
-	m_World[WorldID].Snap07(ClientID);
-	m_pController->Snap(MODAPI_SNAPSHOT_TW07, ClientID);
-	m_Events.Snap(MODAPI_SNAPSHOT_TW07, ClientID);
+	m_World[WorldID].Snap07(MODAPI_SNAPSHOT_TW07, ClientID);
+	m_pController->Snap07(MODAPI_SNAPSHOT_TW07, ClientID);
+	m_Events07.Snap07(MODAPI_SNAPSHOT_TW07, ClientID);
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i] && (m_apPlayers[i]->GetWorldID() == WorldID))
-			m_apPlayers[i]->Snap(MODAPI_SNAPSHOT_TW07, ClientID);
+			m_apPlayers[i]->Snap07(MODAPI_SNAPSHOT_TW07, ClientID);
 	}
 }
 
@@ -1478,14 +1661,14 @@ void CGameContext::OnSnap07ModAPI(int ClientID)
 		WorldID = m_apPlayers[ClientID]->GetWorldID();
 	}
 
-	m_World[WorldID].Snap07ModAPI(ClientID);
-	m_pController->Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
-	m_Events.Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
+	m_World[WorldID].Snap07ModAPI(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
+	m_pController->Snap07(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
+	m_Events07ModAPI.Snap07(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i] && (m_apPlayers[i]->GetWorldID() == WorldID))
-			m_apPlayers[i]->Snap(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
+			m_apPlayers[i]->Snap07(MODAPI_SNAPSHOT_TW07MODAPI, ClientID);
 	}
 }
 
@@ -1496,7 +1679,9 @@ void CGameContext::OnPostSnap()
 	{
 		m_World[i].PostSnap();
 	}
-	m_Events.Clear();
+	m_Events06.Clear();
+	m_Events07.Clear();
+	m_Events07ModAPI.Clear();
 }
 
 bool CGameContext::IsClientReady(int ClientID) const

@@ -1733,7 +1733,7 @@ void CClient::Update()
 		int64 Freq = time_freq();
 		int64 Now = m_GameTime.Get(time_get());
 		int64 PredNow = m_PredictedTime.Get(time_get());
-
+			
 		while(1)
 		{
 			CSnapshotStorage::CHolder *pCur = m_aSnapshots[SNAP_CURRENT];
@@ -1777,7 +1777,7 @@ void CClient::Update()
 			CurtickStart = NewPredTick*time_freq()/50;
 			PrevtickStart = PrevPredTick*time_freq()/50;
 			m_PredIntraTick = (PredNow - PrevtickStart) / (float)(CurtickStart-PrevtickStart);
-
+	
 			if(NewPredTick < m_aSnapshots[SNAP_PREV]->m_Tick-SERVER_TICK_SPEED || NewPredTick > m_aSnapshots[SNAP_PREV]->m_Tick+SERVER_TICK_SPEED)
 			{
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "prediction time reset!");

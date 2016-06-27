@@ -21,6 +21,8 @@
 #include <mod/weapons/laser.h>
 #include <mod/weapons/ninja.h>
 
+#include <tw06/protocol.h>
+
 IGameController::IGameController(CGameContext *pGameServer)
 {
 	m_pGameServer = pGameServer;
@@ -660,7 +662,34 @@ void IGameController::StartRound()
 }
 
 // general
-void IGameController::Snap(int Snapshot, int SnappingClient)
+void IGameController::Snap06(int Snapshot, int SnappingClient)
+{
+	CTW06_NetObj_GameInfo *pGameInfoObj = (CTW06_NetObj_GameInfo *)Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_GAMEINFO, 0, sizeof(CTW06_NetObj_GameInfo));
+	if(!pGameInfoObj)
+		return;
+
+	//Get Client World
+	int WorldID = GameServer()->m_apPlayers[SnappingClient]->GetWorldID();
+
+	pGameInfoObj->m_GameFlags = m_GameFlags;
+	pGameInfoObj->m_GameStateFlags = 0;
+	if(m_GameState == IGS_END_MATCH)
+		pGameInfoObj->m_GameStateFlags |= TW06_GAMESTATEFLAG_GAMEOVER;
+	if(m_SuddenDeath)
+		pGameInfoObj->m_GameStateFlags |= TW06_GAMESTATEFLAG_SUDDENDEATH;
+	if(GameServer()->m_World[WorldID].m_Paused)
+		pGameInfoObj->m_GameStateFlags |= TW06_GAMESTATEFLAG_PAUSED;
+	pGameInfoObj->m_RoundStartTick = m_GameStartTick;
+	pGameInfoObj->m_WarmupTimer = 0;
+
+	pGameInfoObj->m_ScoreLimit = g_Config.m_SvScorelimit;
+	pGameInfoObj->m_TimeLimit = g_Config.m_SvTimelimit;
+
+	pGameInfoObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvMatchesPerMap) ? g_Config.m_SvMatchesPerMap : 0;
+	pGameInfoObj->m_RoundCurrent = m_RoundCount+1;
+}
+
+void IGameController::Snap07(int Snapshot, int SnappingClient)
 {
 	CNetObj_GameData *pGameData = static_cast<CNetObj_GameData *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData)));
 	if(!pGameData)
@@ -854,25 +883,24 @@ bool IGameController::IsTeamChangeAllowed() const
 
 void IGameController::UpdateGameInfo(int ClientID)
 {
-	CNetMsg_Sv_GameInfo GameInfoMsg;
-	GameInfoMsg.m_GameFlags = m_GameFlags;
-	GameInfoMsg.m_ScoreLimit = m_GameInfo.m_ScoreLimit;
-	GameInfoMsg.m_TimeLimit = m_GameInfo.m_TimeLimit;
-	GameInfoMsg.m_MatchNum = m_GameInfo.m_MatchNum;
-	GameInfoMsg.m_MatchCurrent = m_GameInfo.m_MatchCurrent;
-
-	if(ClientID == -1)
+	int Start = (ClientID < 0 ? 0 : ClientID);
+	int End = (ClientID < 0 ? MAX_CLIENTS : ClientID+1);
+	
+	for(int i = Start; i < End; i++)
 	{
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(!GameServer()->m_apPlayers[i] || !Server()->ClientIngame(i))
+			continue;
+		
+		if(Server()->GetClientProtocol(i) != MODAPI_CLIENTPROTOCOL_TW06)
 		{
-			if(!GameServer()->m_apPlayers[i] || !Server()->ClientIngame(i))
-				continue;
-
-			Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			CNetMsg_Sv_GameInfo GameInfoMsg;
+			GameInfoMsg.m_GameFlags = m_GameFlags;
+			GameInfoMsg.m_ScoreLimit = m_GameInfo.m_ScoreLimit;
+			GameInfoMsg.m_TimeLimit = m_GameInfo.m_TimeLimit;
+			GameInfoMsg.m_MatchNum = m_GameInfo.m_MatchNum;
+			GameInfoMsg.m_MatchCurrent = m_GameInfo.m_MatchCurrent;
 		}
 	}
-	else
-		Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 }
 
 // map

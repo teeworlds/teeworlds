@@ -346,11 +346,13 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
+	local tw06_server = Compile(settings, CollectRecursive("src/tw06/*.cpp"))
+	
 	local server_modapi = Compile(settings, Collect("src/modapi/server/*.cpp"))
 	
 	local server_mod = Compile(settings, CollectRecursive("src/mod/*.cpp"))
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server, server_modapi, server_mod)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["png"], server, game_server, server_modapi, server_mod, tw06_server)
 end
 
 function BuildTools(settings)

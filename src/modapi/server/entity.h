@@ -6,37 +6,38 @@
 
 #include <base/tl/array.h>
 
-class CModAPI_EntitySnapshot07 : public CEntity
+class CModAPI_Entity : public CEntity
 {
 private:
 	int m_NbIdPerSnapshot;
 	array<int> m_IDList;
 	
 public:
-	CModAPI_EntitySnapshot07(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0, int NbIdPerSnapshot=1);
-	~CModAPI_EntitySnapshot07();
+	CModAPI_Entity(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0, int NbIdPerSnapshot=1);
+	~CModAPI_Entity();
 		
-	virtual void Snap07(int SnappingClient);
-	virtual void Snap07ModAPI(int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient);
 
 protected:
-	virtual void Snap(int Snapshot, int SnappingClient);
-	
 	int GetID(int Snapshot, int ID);
 };
 
-class CModAPI_EntityMultiSnapshot : public CEntity
+class CModAPI_Entity_SnapshotModAPI : public CEntity
 {
 private:
+	array<int> m_IDList06;
 	array<int> m_IDList07;
 	array<int> m_IDList07ModAPI;
 	
 public:
-	CModAPI_EntityMultiSnapshot(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0, int NbId07=1, int NbId07ModAPI=1);
-	~CModAPI_EntityMultiSnapshot();
+	CModAPI_Entity_SnapshotModAPI(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0, int NbId06=1, int NbId07=1, int NbId07ModAPI=1);
+	~CModAPI_Entity_SnapshotModAPI();
 		
-	virtual void Snap07(int SnappingClient);
-	virtual void Snap07ModAPI(int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient) = 0;
 	
 protected:
 	int GetID(int Snapshot, int ID);

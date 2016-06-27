@@ -106,25 +106,37 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 }
 
 //
-void CGameWorld::Snap07(int SnappingClient)
+void CGameWorld::Snap06(int Snapshot, int SnappingClient)
 {
 	for(int i = 0; i < MOD_NUM_ENTTYPES; i++)
 		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 		{
 			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Snap07(SnappingClient);
+			pEnt->Snap06(Snapshot, SnappingClient);
 			pEnt = m_pNextTraverseEntity;
 		}
 }
 
 //
-void CGameWorld::Snap07ModAPI(int SnappingClient)
+void CGameWorld::Snap07(int Snapshot, int SnappingClient)
 {
 	for(int i = 0; i < MOD_NUM_ENTTYPES; i++)
 		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 		{
 			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Snap07ModAPI(SnappingClient);
+			pEnt->Snap07(Snapshot, SnappingClient);
+			pEnt = m_pNextTraverseEntity;
+		}
+}
+
+//
+void CGameWorld::Snap07ModAPI(int Snapshot, int SnappingClient)
+{
+	for(int i = 0; i < MOD_NUM_ENTTYPES; i++)
+		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
+		{
+			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
+			pEnt->Snap07ModAPI(Snapshot, SnappingClient);
 			pEnt = m_pNextTraverseEntity;
 		}
 }

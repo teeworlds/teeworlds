@@ -7,95 +7,158 @@
 class IServer;
 class CGameContext;
 
-class CModAPI_WorldEvent
+#define MODAPI_EVENT_HEADER(TypeName) public:\
+	TypeName& Client(int WorldID); \
+	TypeName& Mask(int Mask); \
+	TypeName& World(int WorldID);
+
+class CModAPI_Event
 {
-private:
+protected:
 	IServer* m_pServer;
 	CGameContext* m_pGameServer;
-	int m_WorldID;
 
 protected:
-	int GenerateMask();
+	int m_Mask;
+	
+	int GetMask06();
+	int GetMask07();
+	int GetMask07ModAPI();
 
 public:
-	CModAPI_WorldEvent(CGameContext* pGameServer, int WorldID);
+	CModAPI_Event(CGameContext* pGameServer);
 	
 	IServer* Server();
-	CGameContext* GameServer();
-	int WorldID() const;
+	CGameContext* GameServer() { return m_pGameServer; }
+};
+
+/* WEAPONPICKUP *******************************************************/
+
+class CModAPI_Event_WeaponPickup : public CModAPI_Event
+{
+MODAPI_EVENT_HEADER(CModAPI_Event_WeaponPickup)
+
+public:
+	CModAPI_Event_WeaponPickup(CGameContext* pGameServer);
+	void Send(int WeaponID);
+};
+
+/* BROADCAST **********************************************************/
+
+class CModAPI_Event_Broadcast : public CModAPI_Event
+{
+MODAPI_EVENT_HEADER(CModAPI_Event_Broadcast)
+
+public:
+	enum
+	{
+		ALT_NONE = 0,
+		ALT_CHAT,
+		ALT_MOTD
+	};
+
+public:
+	CModAPI_Event_Broadcast(CGameContext* pGameServer);
+	void Send(const char* pText, int Alternative);
+};
+
+/* CHAT **********************************************************/
+
+class CModAPI_Event_Chat : public CModAPI_Event
+{
+MODAPI_EVENT_HEADER(CModAPI_Event_Chat)
+
+public:
+	CModAPI_Event_Chat(CGameContext* pGameServer);
+	void Send(int From, int Team, const char* pText);
+};
+
+/* MOTD ***************************************************************/
+
+class CModAPI_Event_MOTD : public CModAPI_Event
+{
+MODAPI_EVENT_HEADER(CModAPI_Event_MOTD)
+
+public:
+	CModAPI_Event_MOTD(CGameContext* pGameServer);
+	void Send(const char* pText);
 };
 
 /* ANIMATED TEXT EVENT ************************************************/
 
-class CModAPI_WorldEvent_AnimatedText : public CModAPI_WorldEvent
+class CModAPI_Event_AnimatedText : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_AnimatedText)
+
 public:
-	CModAPI_WorldEvent_AnimatedText(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_AnimatedText(CGameContext* pGameServer);
 	void Send(vec2 Pos, int ItemLayer, const char* pText, int Size, vec4 Color, int Alignment, int AnimationID, int Duration, vec2 Offset);
 };
 
 /* SOUND **************************************************************/
 
-class CModAPI_WorldEvent_Sound : public CModAPI_WorldEvent
+class CModAPI_Event_Sound : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_Sound)
+
 public:
-	CModAPI_WorldEvent_Sound(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_Sound(CGameContext* pGameServer);
 	void Send(vec2 Pos, int Sound);
-	void Send(vec2 Pos, int Sound, int Mask);
 };
 
 /* SPAWN EFFECT *******************************************************/
 
-class CModAPI_WorldEvent_SpawnEffect : public CModAPI_WorldEvent
+class CModAPI_Event_SpawnEffect : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_SpawnEffect)
+
 public:
-	CModAPI_WorldEvent_SpawnEffect(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_SpawnEffect(CGameContext* pGameServer);
 	void Send(vec2 Pos);
 };
 
 /* HAMMERHIT EFFECT ***************************************************/
 
-class CModAPI_WorldEvent_HammerHitEffect : public CModAPI_WorldEvent
+class CModAPI_Event_HammerHitEffect : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_HammerHitEffect)
+
 public:
-	CModAPI_WorldEvent_HammerHitEffect(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_HammerHitEffect(CGameContext* pGameServer);
 	void Send(vec2 Pos);
 };
 
 /* DAMAGE INDICATOR ***************************************************/
 
-class CModAPI_WorldEvent_DamageIndicator : public CModAPI_WorldEvent
+class CModAPI_Event_DamageIndicator : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_DamageIndicator)
+
 public:
-	CModAPI_WorldEvent_DamageIndicator(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_DamageIndicator(CGameContext* pGameServer);
 	void Send(vec2 Pos, float Angle, int Amount);
 };
 
 /* DEATH EFFECT *******************************************************/
 
-class CModAPI_WorldEvent_DeathEffect : public CModAPI_WorldEvent
+class CModAPI_Event_DeathEffect : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_DeathEffect)
+
 public:
-	CModAPI_WorldEvent_DeathEffect(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_DeathEffect(CGameContext* pGameServer);
 	void Send(vec2 Pos, int ClientID);
 };
 
 /* EXPLOSION EFFECT ***************************************************/
 
-class CModAPI_WorldEvent_ExplosionEffect : public CModAPI_WorldEvent
+class CModAPI_Event_ExplosionEffect : public CModAPI_Event
 {
+MODAPI_EVENT_HEADER(CModAPI_Event_ExplosionEffect)
+
 public:
-	CModAPI_WorldEvent_ExplosionEffect(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
+	CModAPI_Event_ExplosionEffect(CGameContext* pGameServer);
 	void Send(vec2 Pos);
-};
-
-/* EXPLOSION **********************************************************/
-
-class CModAPI_WorldEvent_Explosion : public CModAPI_WorldEvent_ExplosionEffect
-{
-public:
-	CModAPI_WorldEvent_Explosion(CGameContext* pGameServer, int WorldID = MOD_WORLD_DEFAULT);
-	void Send(vec2 Pos, int Owner, int Weapon, int MaxDamage);
 };
 
 #endif

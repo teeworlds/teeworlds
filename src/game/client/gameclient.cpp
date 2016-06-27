@@ -448,7 +448,7 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 		TempCore.Quantize();
 	}
 
-	TempCore.Write(pCharacter);
+	TempCore.Write07(pCharacter);
 }
 
 
@@ -1274,10 +1274,10 @@ void CGameClient::OnPredict()
 	if(g_Config.m_Debug && g_Config.m_ClPredict && m_PredictedTick == Client()->PredGameTick())
 	{
 		CNetObj_CharacterCore Before = {0}, Now = {0}, BeforePrev = {0}, NowPrev = {0};
-		BeforeChar.Write(&Before);
-		BeforePrevChar.Write(&BeforePrev);
-		m_PredictedChar.Write(&Now);
-		m_PredictedPrevChar.Write(&NowPrev);
+		BeforeChar.Write07(&Before);
+		BeforePrevChar.Write07(&BeforePrev);
+		m_PredictedChar.Write07(&Now);
+		m_PredictedPrevChar.Write07(&NowPrev);
 
 		if(mem_comp(&Before, &Now, sizeof(CNetObj_CharacterCore)) != 0)
 		{

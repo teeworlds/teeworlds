@@ -3,12 +3,13 @@
 #include <generated/server_data.h>
 #include <game/server/gamecontext.h>
 #include <modapi/server/event.h>
+#include <tw06/protocol.h>
 
 #include "character.h"
 #include "laser.h"
 
 CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
-: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_LASER, Pos, 1)
+: CModAPI_Entity(pGameWorld, MOD_ENTTYPE_LASER, Pos, 1)
 {
 	m_Owner = Owner;
 	m_Energy = StartEnergy;
@@ -68,7 +69,7 @@ void CLaser::DoBounce()
 			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
 				m_Energy = -1;
 
-			CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+			CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 				.Send(m_Pos, SOUND_LASER_BOUNCE);
 		}
 	}
@@ -99,7 +100,23 @@ void CLaser::TickPaused()
 	++m_EvalTick;
 }
 
-void CLaser::Snap(int Snapshot, int SnappingClient)
+void CLaser::Snap06(int Snapshot, int SnappingClient)
+{
+	if(NetworkClipped(SnappingClient) && NetworkClipped(SnappingClient, m_From))
+		return;
+
+	CTW06_NetObj_Laser *pObj = static_cast<CTW06_NetObj_Laser *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_LASER, GetID(Snapshot, 0), sizeof(CTW06_NetObj_Laser)));
+	if(!pObj)
+		return;
+
+	pObj->m_X = (int)m_Pos.x;
+	pObj->m_Y = (int)m_Pos.y;
+	pObj->m_FromX = (int)m_From.x;
+	pObj->m_FromY = (int)m_From.y;
+	pObj->m_StartTick = m_EvalTick;
+}
+
+void CLaser::Snap07(int Snapshot, int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient) && NetworkClipped(SnappingClient, m_From))
 		return;

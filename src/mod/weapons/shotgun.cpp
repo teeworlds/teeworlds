@@ -35,6 +35,6 @@ void CMod_Weapon_Shotgun::CreateProjectile(vec2 Pos, vec2 Direction)
 			g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, 0, -1, GetID());
 	}
 
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_SHOTGUN_FIRE);
 }

@@ -35,7 +35,9 @@ public:
 	virtual bool OnFire(vec2 Direction) = 0;
 	virtual void OnActivation() {}
 	
-	virtual void Snap(int SnappingClient, class CNetObj_Character* pChar) {}
+	virtual void Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pChar) = 0;
+	virtual void Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pChar) = 0;
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pChar) = 0;
 };
 
 class CModAPI_Weapon_GenericGun07 : public CModAPI_Weapon
@@ -61,7 +63,9 @@ public:
 	virtual bool OnFire(vec2 Direction);
 	virtual void OnActivation();
 
-	virtual void Snap(int SnappingClient, class CNetObj_Character* pChar);
+	virtual void Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pChar);
+	virtual void Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pChar);
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pChar);
 	
 	virtual void CreateProjectile(vec2 Pos, vec2 Direction) = 0;
 };

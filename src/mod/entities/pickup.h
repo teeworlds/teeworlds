@@ -7,7 +7,7 @@
 
 const int PickupPhysSize = 14;
 
-class CPickup : public CModAPI_EntitySnapshot07
+class CPickup : public CModAPI_Entity
 {
 public:
 	CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos);
@@ -15,7 +15,8 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int Snapshot, int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient);
+	virtual void Snap07(int Snapshot, int SnappingClient);
 
 private:
 	int m_Type;

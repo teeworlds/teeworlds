@@ -12,9 +12,10 @@
 #include <mod/weapons/laser.h>
 #include <mod/weapons/ninja.h>
 #include <modapi/server/event.h>
+#include <tw06/protocol.h>
 
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
-: CModAPI_EntitySnapshot07(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, 1, PickupPhysSize)
+: CModAPI_Entity(pGameWorld, MOD_ENTTYPE_PICKUP, Pos, 1, PickupPhysSize)
 {
 	m_Type = Type;
 
@@ -43,7 +44,7 @@ void CPickup::Tick()
 
 			if(m_Type == PICKUP_GRENADE || m_Type == PICKUP_SHOTGUN || m_Type == PICKUP_LASER)
 			{
-				CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+				CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 					.Send(m_Pos, SOUND_WEAPON_SPAWN);
 			}
 		}
@@ -62,7 +63,7 @@ void CPickup::Tick()
 				if(pChr->IncreaseHealth(1))
 				{
 					Picked = true;
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_HEALTH);
 				}
 				break;
@@ -71,7 +72,7 @@ void CPickup::Tick()
 				if(pChr->IncreaseArmor(1))
 				{
 					Picked = true;
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_ARMOR);
 				}
 				break;
@@ -89,13 +90,11 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_GRENADE);
 						
 					if(pChr->GetPlayer())
-					{
-						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
-					}
+						CModAPI_Event_WeaponPickup(GameServer()).Client(pChr->GetPlayer()->GetCID()).Send(WEAPON_GRENADE);
 				}
 				break;
 			case PICKUP_SHOTGUN:
@@ -111,13 +110,11 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_SHOTGUN);
 						
 					if(pChr->GetPlayer())
-					{
-						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
-					}
+						CModAPI_Event_WeaponPickup(GameServer()).Client(pChr->GetPlayer()->GetCID()).Send(WEAPON_SHOTGUN);
 				}
 				break;
 			case PICKUP_LASER:
@@ -133,13 +130,11 @@ void CPickup::Tick()
 				
 				if(Picked)
 				{
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_SHOTGUN);
-						
+												
 					if(pChr->GetPlayer())
-					{
-						GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
-					}
+						CModAPI_Event_WeaponPickup(GameServer()).Client(pChr->GetPlayer()->GetCID()).Send(WEAPON_LASER);
 				}
 				break;
 
@@ -149,7 +144,7 @@ void CPickup::Tick()
 					pChr->SetWeapon(MOD_WEAPON_NINJA);
 					Picked = true;
 
-					CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+					CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 						.Send(m_Pos, SOUND_PICKUP_NINJA);
 
 					// loop through all players, setting their emotes
@@ -184,7 +179,48 @@ void CPickup::TickPaused()
 		++m_SpawnTick;
 }
 
-void CPickup::Snap(int Snapshot, int SnappingClient)
+void CPickup::Snap06(int Snapshot, int SnappingClient)
+{
+	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))
+		return;
+
+	CTW06_NetObj_Pickup *pP = static_cast<CTW06_NetObj_Pickup *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_PICKUP, GetID(Snapshot, 0), sizeof(CTW06_NetObj_Pickup)));
+	if(!pP)
+		return;
+
+	pP->m_X = (int)m_Pos.x;
+	pP->m_Y = (int)m_Pos.y;
+	
+	switch(m_Type)
+	{
+		case PICKUP_HEALTH:
+			pP->m_Type = TW06_POWERUP_HEALTH;
+			pP->m_Subtype = 0;
+			break;
+		case PICKUP_ARMOR:
+			pP->m_Type = TW06_POWERUP_ARMOR;
+			pP->m_Subtype = 0;
+			break;
+		case PICKUP_GRENADE:
+			pP->m_Type = TW06_POWERUP_WEAPON;
+			pP->m_Subtype = TW06_WEAPON_GRENADE;
+			break;
+		case PICKUP_SHOTGUN:
+			pP->m_Type = TW06_POWERUP_WEAPON;
+			pP->m_Subtype = TW06_WEAPON_SHOTGUN;
+			break;
+		case PICKUP_LASER:
+			pP->m_Type = TW06_POWERUP_WEAPON;
+			pP->m_Subtype = TW06_WEAPON_RIFLE;
+			break;
+		case PICKUP_NINJA:
+			pP->m_Type = TW06_POWERUP_NINJA;
+			pP->m_Subtype = 0;
+			break;
+	}
+}
+
+void CPickup::Snap07(int Snapshot, int SnappingClient)
 {
 	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))
 		return;

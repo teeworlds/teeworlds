@@ -113,9 +113,10 @@ public:
 				snapshot of everything in the game for demo
 				recording.
 	*/
-	virtual void Snap07(int SnappingClient) {}
-	virtual void Snap07ModAPI(int SnappingClient) {}
-
+	virtual void Snap06(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07(int Snapshot, int SnappingClient) = 0;
+	virtual void Snap07ModAPI(int Snapshot, int SnappingClient) = 0;
+	
 	virtual void PostSnap() {}
 
 	/*

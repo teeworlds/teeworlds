@@ -13,6 +13,7 @@
 
 #include <modapi/server/weapon.h>
 #include <modapi/server/event.h>
+#include <tw06/protocol.h>
 
 //input count
 struct CInputCount
@@ -45,7 +46,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 // Character, "physical" player's part
 CCharacter::CCharacter(CGameWorld *pWorld)
-: CModAPI_EntitySnapshot07(pWorld, MOD_ENTTYPE_CHARACTER, vec2(0, 0), 0, ms_PhysSize)
+: CModAPI_Entity(pWorld, MOD_ENTTYPE_CHARACTER, vec2(0, 0), 0, ms_PhysSize)
 {
 	m_Health = 0;
 	m_Armor = 0;
@@ -104,7 +105,7 @@ void CCharacter::SetWeapon(int W)
 	m_QueuedWeapon = -1;
 	m_ActiveWeapon = W;
 	
-	CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+	CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 		.Send(m_Pos, SOUND_WEAPON_SWITCH);
 				
 	pWeapon->OnActivation();
@@ -280,7 +281,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 {
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 	mem_copy(&m_LatestInput, pNewInput, sizeof(m_LatestInput));
-
+	
 	// it is not allowed to aim in the center
 	if(m_LatestInput.m_TargetX == 0 && m_LatestInput.m_TargetY == 0)
 		m_LatestInput.m_TargetY = -1;
@@ -387,8 +388,8 @@ void CCharacter::TickDefered()
 		CNetObj_Character Current;
 		mem_zero(&Predicted, sizeof(Predicted));
 		mem_zero(&Current, sizeof(Current));
-		m_ReckoningCore.Write(&Predicted);
-		m_Core.Write(&Current);
+		m_ReckoningCore.Write07(&Predicted);
+		m_Core.Write07(&Current);
 
 		// only allow dead reackoning for a top of 3 seconds
 		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0)
@@ -449,7 +450,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	// a nice sound
-	CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
+	CModAPI_Event_Sound(GameServer()).World(GameWorld()->m_WorldID)
 		.Send(m_Pos, SOUND_PLAYER_DIE);
 
 	// this is for auto respawn after 3 secs
@@ -458,7 +459,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameWorld()->RemoveEntity(this);
 	GameWorld()->m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	
-	CModAPI_WorldEvent_DeathEffect(GameServer(), GameWorld()->m_WorldID)
+	CModAPI_Event_DeathEffect(GameServer()).World(GameWorld()->m_WorldID)
 		.Send(m_Pos, m_pPlayer->GetCID());
 }
 
@@ -476,7 +477,8 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_DamageTaken++;
 
 	// create healthmod indicator
-	CModAPI_WorldEvent_DamageIndicator DmgIndicator(GameServer(), GameWorld()->m_WorldID);
+	CModAPI_Event_DamageIndicator DmgIndicator(GameServer());
+	DmgIndicator.World(GameWorld()->m_WorldID);
 	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
 		// make sure that the damage indicators doesn't group together
@@ -526,8 +528,8 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 				Mask |= CmaskOne(i);
 		}
 		
-		CModAPI_WorldEvent_Sound(GameServer(), GameWorld()->m_WorldID)
-			.Send(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, Mask);
+		CModAPI_Event_Sound(GameServer()).Mask(Mask)
+			.Send(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT);
 	}
 
 	// check for death
@@ -549,7 +551,8 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		return false;
 	}
 	
-	CModAPI_WorldEvent_Sound SoundEvent(GameServer(), GameWorld()->m_WorldID);
+	CModAPI_Event_Sound SoundEvent(GameServer());
+	SoundEvent.World(GameWorld()->m_WorldID);
 	if (Dmg > 2)
 		SoundEvent.Send(m_Pos, SOUND_PLAYER_PAIN_LONG);
 	else
@@ -561,12 +564,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	return true;
 }
 
-void CCharacter::Snap(int Snapshot, int SnappingClient)
+void CCharacter::Snap06(int Snapshot, int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
 
-	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	CTW06_NetObj_Character *pCharacter = static_cast<CTW06_NetObj_Character *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CTW06_NetObj_Character)));
 	if(!pCharacter)
 		return;
 
@@ -576,12 +579,12 @@ void CCharacter::Snap(int Snapshot, int SnappingClient)
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning
 		pCharacter->m_Tick = 0;
-		m_Core.Write(pCharacter);
+		m_Core.Write06(pCharacter);
 	}
 	else
 	{
 		pCharacter->m_Tick = m_ReckoningTick;
-		m_SendCore.Write(pCharacter);
+		m_SendCore.Write06(pCharacter);
 	}
 
 	// set emote
@@ -596,9 +599,7 @@ void CCharacter::Snap(int Snapshot, int SnappingClient)
 	pCharacter->m_AmmoCount = 0;
 	pCharacter->m_Health = 0;
 	pCharacter->m_Armor = 0;
-	pCharacter->m_TriggeredEvents = m_TriggeredEvents;
 
-	pCharacter->m_Weapon = m_ActiveWeapon;
 	pCharacter->m_AttackTick = m_AttackTick;
 
 	pCharacter->m_Direction = m_Input.m_Direction;
@@ -619,7 +620,68 @@ void CCharacter::Snap(int Snapshot, int SnappingClient)
 	CModAPI_Weapon* pWeapon = m_aWeapons[m_ActiveWeapon];
 	if(pWeapon)
 	{
-		pWeapon->Snap(SnappingClient, pCharacter);
+		pWeapon->Snap06(Snapshot, SnappingClient, pCharacter);
+	}
+}
+
+void CCharacter::Snap07(int Snapshot, int SnappingClient)
+{
+	if(NetworkClipped(SnappingClient))
+		return;
+
+	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	if(!pCharacter)
+		return;
+
+	// write down the m_Core
+	if(!m_ReckoningTick || GameWorld()->m_Paused)
+	{
+		// no dead reckoning when paused because the client doesn't know
+		// how far to perform the reckoning
+		pCharacter->m_Tick = 0;
+		m_Core.Write07(pCharacter);
+	}
+	else
+	{
+		pCharacter->m_Tick = m_ReckoningTick;
+		m_SendCore.Write07(pCharacter);
+	}
+
+	// set emote
+	if (m_EmoteStop < Server()->Tick())
+	{
+		m_EmoteType = EMOTE_NORMAL;
+		m_EmoteStop = -1;
+	}
+
+	pCharacter->m_Emote = m_EmoteType;
+
+	pCharacter->m_AmmoCount = 0;
+	pCharacter->m_Health = 0;
+	pCharacter->m_Armor = 0;
+	pCharacter->m_TriggeredEvents = m_TriggeredEvents;
+
+	pCharacter->m_AttackTick = m_AttackTick;
+
+	pCharacter->m_Direction = m_Input.m_Direction;
+
+	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
+		(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->GetSpectatorID()))
+	{
+		pCharacter->m_Health = m_Health;
+		pCharacter->m_Armor = m_Armor;
+	}
+
+	if(pCharacter->m_Emote == EMOTE_NORMAL)
+	{
+		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
+			pCharacter->m_Emote = EMOTE_BLINK;
+	}
+	
+	CModAPI_Weapon* pWeapon = m_aWeapons[m_ActiveWeapon];
+	if(pWeapon)
+	{
+		pWeapon->Snap07(Snapshot, SnappingClient, pCharacter);
 	}
 }
 

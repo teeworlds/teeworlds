@@ -11,7 +11,7 @@
 #include <mod/defines.h>
 
 
-class CCharacter : public CModAPI_EntitySnapshot07
+class CCharacter : public CModAPI_Entity
 {
 	MACRO_ALLOC_POOL_ID()
 
@@ -26,7 +26,8 @@ public:
 	virtual void Tick();
 	virtual void TickDefered();
 	virtual void TickPaused();
-	virtual void Snap(int Snapshot, int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient);
+	virtual void Snap07(int Snapshot, int SnappingClient);
 	virtual void PostSnap();
 
 	bool IsGrounded();

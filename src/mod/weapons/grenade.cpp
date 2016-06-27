@@ -25,6 +25,6 @@ void CMod_Weapon_Grenade::CreateProjectile(vec2 Pos, vec2 Direction)
 		(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
 		g_pData->m_Weapons.m_Grenade.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, MOD_WEAPON_GRENADE);
 
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_GRENADE_FIRE);
 }

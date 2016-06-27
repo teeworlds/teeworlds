@@ -20,6 +20,6 @@ void CMod_Weapon_Laser::CreateProjectile(vec2 Pos, vec2 Direction)
 {
 	new CLaser(GameWorld(), Pos, Direction, GameServer()->Tuning()->m_LaserReach, Player()->GetCID());
 	
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_LASER_FIRE);
 }

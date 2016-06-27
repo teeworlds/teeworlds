@@ -39,7 +39,7 @@ bool CMod_Weapon_Ninja::OnFire(vec2 Direction)
 	m_ReloadTimer = g_pData->m_Weapons.m_aId[WEAPON_NINJA].m_Firedelay * Server()->TickSpeed() / 1000;
 	m_OldVelAmount = length(Character()->GetVelocity());
 
-	CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+	CModAPI_Event_Sound(GameServer()).World(WorldID())
 		.Send(Character()->GetPos(), SOUND_NINJA_FIRE);
 	
 	return true;
@@ -112,7 +112,7 @@ bool CMod_Weapon_Ninja::TickPreFire(bool IsActiveWeapon)
 				continue;
 
 			// hit a player, give him damage and stuffs...
-			CModAPI_WorldEvent_Sound(GameServer(), WorldID())
+			CModAPI_Event_Sound(GameServer()).World(WorldID())
 				.Send(aEnts[i]->GetPos(), SOUND_NINJA_HIT);
 				
 			// set his velocity to fast upward (for now)
@@ -132,7 +132,20 @@ bool CMod_Weapon_Ninja::TickPaused(bool IsActive)
 	return false;
 }
 	
-void CMod_Weapon_Ninja::Snap(int SnappingClient, class CNetObj_Character* pCharNetObj)
+void CMod_Weapon_Ninja::Snap06(int Snapshot, int SnappingClient, class CTW06_NetObj_Character* pCharNetObj)
 {
+	pCharNetObj->m_Weapon = WEAPON_NINJA;
+	pCharNetObj->m_AmmoCount = -1;
+}
+	
+void CMod_Weapon_Ninja::Snap07(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = WEAPON_NINJA;
+	pCharNetObj->m_AmmoCount = m_ActivationTick + g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000;
+}
+	
+void CMod_Weapon_Ninja::Snap07ModAPI(int Snapshot, int SnappingClient, class CNetObj_Character* pCharNetObj)
+{
+	pCharNetObj->m_Weapon = WEAPON_NINJA;
 	pCharNetObj->m_AmmoCount = m_ActivationTick + g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000;
 }

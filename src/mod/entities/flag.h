@@ -5,7 +5,7 @@
 
 #include <modapi/server/entity.h>
 
-class CFlag : public CModAPI_EntitySnapshot07
+class CFlag : public CModAPI_Entity
 {
 private:
 	/* Identity */
@@ -36,7 +36,8 @@ public:
 	/* CEntity functions */
 	virtual void Reset();
 	virtual void TickPaused();
-	virtual void Snap(int Snapshot, int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient);
+	virtual void Snap07(int Snapshot, int SnappingClient);
 	virtual void Tick();
 
 	/* Functions */

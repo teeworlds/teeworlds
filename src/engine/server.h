@@ -33,7 +33,7 @@ public:
 	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) const = 0;
 	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) const = 0;
 
-	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
+	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID, bool tw06 = false) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags, int ClientID)
@@ -69,7 +69,7 @@ public:
 	virtual bool DemoRecorder_IsRecording() = 0;
 	
 	//ModAPI
-	virtual bool GetClientProtocolCompatibility(int ClientID, int Protocol) const = 0;
+	virtual bool GetClientProtocol(int ClientID) const = 0;
 };
 
 class IGameServer : public IInterface
@@ -83,11 +83,13 @@ public:
 
 	virtual void OnTick() = 0;
 	virtual void OnPreSnap() = 0;
+	virtual void OnSnap06(int ClientID) = 0;
 	virtual void OnSnap07(int ClientID) = 0;
 	virtual void OnSnap07ModAPI(int ClientID) = 0;
 	virtual void OnPostSnap() = 0;
 
-	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
+	virtual void OnMessage_TW06(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
+	virtual void OnMessage_TW07(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
 
 	virtual void OnClientConnected(int ClientID) = 0;
 	virtual void OnClientEnter(int ClientID) = 0;

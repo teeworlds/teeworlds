@@ -323,7 +323,9 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 						m_ExecutionQueue.m_pLast->m_Result = Result;
 					}
 					else
+					{						
 						pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+					}
 				}
 			}
 			else if(Stroke)
@@ -542,7 +544,7 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 {
 	CStrVariableData *pData = (CStrVariableData *)pUserData;
-
+	
 	if(pResult->NumArguments())
 	{
 		const char *pString = pResult->GetString(0);

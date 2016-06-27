@@ -5,7 +5,7 @@
 
 #include <modapi/server/entity.h>
 
-class CLaser : public CModAPI_EntitySnapshot07
+class CLaser : public CModAPI_Entity
 {
 public:
 	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner);
@@ -13,7 +13,8 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int Snapshot, int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient);
+	virtual void Snap07(int Snapshot, int SnappingClient);
 
 protected:
 	bool HitCharacter(vec2 From, vec2 To);
