@@ -209,7 +209,7 @@ void CHud::RenderScoreHud()
 						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
 						char aName[64];
-						str_format(aName, sizeof(aName), "%2d: %s", ID, m_pClient->m_aClients[ID].m_aName);
+						str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 						float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
 						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
 
@@ -283,7 +283,7 @@ void CHud::RenderScoreHud()
 					// draw name
 					int ID = aPlayerInfo[t].m_ClientID;
 					char aName[64];
-					str_format(aName, sizeof(aName), "%2d: %s", ID, m_pClient->m_aClients[ID].m_aName);
+					str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 					float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
 					TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
 
@@ -539,7 +539,7 @@ void CHud::RenderSpectatorHud()
 
 	// draw the text
 	char aName[64];
-	str_format(aName, sizeof(aName), "%2d: %s", m_pClient->m_Snap.m_SpecInfo.m_SpectatorID, m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName);
+	str_format(aName, sizeof(aName), "%2d: %s", m_pClient->m_Snap.m_SpecInfo.m_SpectatorID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
 		aName : Localize("Free-View"));

@@ -249,7 +249,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			TextRender()->SetCursor(&Cursor, Player.x, Player.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Player.w;
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%2d: %s", i, m_pClient->m_aClients[i].m_aName);
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", i, g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			TextRender()->SetCursor(&Cursor, Button.x,Button.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -451,7 +451,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%2d: %s", aPlayerIDs[i], m_pClient->m_aClients[aPlayerIDs[i]].m_aName);
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", aPlayerIDs[i], g_Config.m_ClShowsocial ? m_pClient->m_aClients[aPlayerIDs[i]].m_aName : "");
 			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, CUI::ALIGN_LEFT);
 		}
 	}

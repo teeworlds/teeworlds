@@ -32,7 +32,7 @@ void CNamePlates::RenderNameplate(
 
 
 		char aName[64];
-		str_format(aName, sizeof(aName), "%2d: %s", ClientID, m_pClient->m_aClients[ClientID].m_aName);
+		str_format(aName, sizeof(aName), "%2d: %s", ClientID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
 		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);

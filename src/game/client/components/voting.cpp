@@ -182,22 +182,32 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				switch(pMsg->m_Type)
 				{
 				case VOTE_START_OP:
-					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called vote to change server option '%s' (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
-								pMsg->m_pDescription, pMsg->m_pReason);
+					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called vote to change server option '%s' (%s)"), pMsg->m_ClientID,
+								g_Config.m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "", pMsg->m_pDescription, pMsg->m_pReason);
 					str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 					break;
 				case VOTE_START_KICK:
-					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to kick '%s' (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
-								pMsg->m_pDescription, pMsg->m_pReason);
-					str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", pMsg->m_pDescription);
-					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
-					break;
+					{
+						char aName[4];
+						if(!g_Config.m_ClShowsocial)
+							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
+						str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to kick '%s' (%s)"), pMsg->m_ClientID,
+							g_Config.m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+						break;
+					}
 				case VOTE_START_SPEC:
-					str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to move '%s' to spectators (%s)"), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName,
-								pMsg->m_pDescription, pMsg->m_pReason);
-					str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", pMsg->m_pDescription);
-					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					{
+						char aName[4];
+						if(!g_Config.m_ClShowsocial)
+							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
+						str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' called for vote to move '%s' to spectators (%s)"), pMsg->m_ClientID,
+							g_Config.m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					}
 				}
 				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)
 					m_CallvoteBlockTick = Client()->GameTick()+Client()->GameTickSpeed()*VOTE_COOLDOWN;
