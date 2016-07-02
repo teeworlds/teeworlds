@@ -21,10 +21,7 @@ void CMapImages::LoadMapImages(IMap *pMap, class CLayers *pLayers, int MapType)
 
 	// unload all textures
 	for(int i = 0; i < m_Info[MapType].m_Count; i++)
-	{
-		Graphics()->UnloadTexture(m_Info[MapType].m_aTextures[i]);
-		m_Info[MapType].m_aTextures[i] = IGraphics::CTextureHandle();
-	}
+		Graphics()->UnloadTexture(&(m_Info[MapType].m_aTextures[i]));
 	m_Info[MapType].m_Count = 0;
 
 	int Start;
