@@ -84,7 +84,7 @@ class lock
 	LOCK var;
 
 	void take() { lock_wait(var); }
-	void release() { lock_release(var); }
+	void release() { lock_unlock(var); }
 
 public:
 	lock()
