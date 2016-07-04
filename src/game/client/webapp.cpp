@@ -27,7 +27,7 @@ CClientWebapp::CClientWebapp()
 CClientWebapp::~CClientWebapp()
 {
 	lock_wait(gs_CheckHostLock);
-	lock_release(gs_CheckHostLock);
+	lock_unlock(gs_CheckHostLock);
 }
 
 void CClientWebapp::OnApiToken(IResponse *pResponse, bool Error, void *pUserData)
@@ -74,7 +74,7 @@ void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserDa
 					pTmp->m_pClient = pClient;
 					str_copy(pTmp->m_aAddr, JsonSrv, sizeof(pTmp->m_aAddr));
 
-					void *LoadThread = thread_create(CheckHostThread, pTmp);
+					void *LoadThread = thread_init(CheckHostThread, pTmp);
 					thread_detach(LoadThread);
 				}
 			}
@@ -95,5 +95,5 @@ void CClientWebapp::CheckHostThread(void *pUser)
 
 	delete pData;
 
-	lock_release(gs_CheckHostLock);
+	lock_unlock(gs_CheckHostLock);
 }
