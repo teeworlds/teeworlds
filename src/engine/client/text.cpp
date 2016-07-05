@@ -459,7 +459,7 @@ public:
 	}
 
 
-	virtual CFont *LoadFont(const char *pFilename)
+	virtual int LoadFont(const char *pFilename)
 	{
 		CFont *pFont = (CFont *)mem_alloc(sizeof(CFont), 1);
 
@@ -469,25 +469,16 @@ public:
 		if(FT_New_Face(m_FTLibrary, pFont->m_aFilename, 0, &pFont->m_FtFace))
 		{
 			mem_free(pFont);
-			return NULL;
+			return -1;
 		}
 
 		for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 			pFont->m_aSizes[i].m_FontSize = -1;
 
 		dbg_msg("textrender", "loaded pFont from '%s'", pFilename);
-		return pFont;
-	};
-
-	virtual void DestroyFont(CFont *pFont)
-	{
-		mem_free(pFont);
-	}
-
-	virtual void SetDefaultFont(CFont *pFont)
-	{
-		dbg_msg("textrender", "default pFont set %p", pFont);
 		m_pDefaultFont = pFont;
+
+		return 0;
 	}
 
 
