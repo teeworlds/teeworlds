@@ -14,7 +14,12 @@
 
 
 #if defined(CONF_FAMILY_WINDOWS)
-	PFNGLTEXIMAGE3DPROC glTexImage3D;
+	PFNGLTEXIMAGE3DPROC glTexImage3DInternal;
+
+	GLAPI void GLAPIENTRY glTexImage3D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+	{
+		glTexImage3DInternal(target, level, internalFormat, width, height, depth, border, format, type, pixels);
+	}
 #endif
 
 // ------------ CGraphicsBackend_Threaded
@@ -730,8 +735,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	}
 
 	#if defined(CONF_FAMILY_WINDOWS)
-		glTexImage3D = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
-		if(glTexImage3D == 0)
+		glTexImage3DInternal = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
+		if(glTexImage3DInternal == 0)
 		{
 			dbg_msg("gfx", "glTexImage3D not supported");
 			return -1;

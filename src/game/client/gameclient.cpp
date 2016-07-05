@@ -259,7 +259,6 @@ void CGameClient::OnInit()
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	// load default font
-	static CFont *pDefaultFont = 0;
 	char aFontName[256];
 	str_format(aFontName, sizeof(aFontName), "fonts/%s", g_Config.m_ClFontfile);
 	char aFilename[512];
