@@ -516,6 +516,7 @@ void CModAPI_Client_Graphics::ApplyTeeAlign(CModAPI_Asset_Animation::CFrame& Fra
 	Frame.m_Pos = Offset + PartDirX * Frame.m_Pos.x + PartDirY * Frame.m_Pos.y;	
 }
 
+/*
 void CModAPI_Client_Graphics::DrawAttach(CRenderTools* pRenderTools, const CModAPI_AttachAnimationState* pState, CModAPI_AssetPath AttachPath, vec2 Pos, float Scaling)
 {
 	const CModAPI_Asset_Attach* pAttach = AssetManager()->GetAsset<CModAPI_Asset_Attach>(AttachPath);
@@ -533,7 +534,6 @@ void CModAPI_Client_Graphics::DrawAttach(CRenderTools* pRenderTools, const CModA
 	}
 }
 
-/*
 void CModAPI_Client_Graphics::DrawTee(CRenderTools* pRenderTools, CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pTeeState, vec2 Pos, vec2 Dir, int Emote)
 {
 	float Scaling = pInfo->m_Size/64.0f;
@@ -878,6 +878,7 @@ void CModAPI_Client_Graphics::AddTeeAnimationState(CModAPI_TeeAnimationState* pS
 	}
 }
 
+/*
 void CModAPI_Client_Graphics::InitAttachAnimationState(CModAPI_AttachAnimationState* pState, vec2 MotionDir, vec2 AimDir, CModAPI_AssetPath AttachPath, float Time)
 {
 	
@@ -912,3 +913,4 @@ void CModAPI_Client_Graphics::InitAttachAnimationState(CModAPI_AttachAnimationSt
 		}
 	}
 }
+*/

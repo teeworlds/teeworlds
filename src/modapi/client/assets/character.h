@@ -17,6 +17,11 @@ public:
 		
 		int m_NumParts;
 		int m_PartsData;
+		
+		int m_IdlePath;
+		int m_WalkPath;
+		int m_ControlledJumpPath;
+		int m_UncontrolledJumpPath;
 	};
 	
 	void InitFromAssetsFile(class CModAPI_AssetManager* pAssetManager, class IModAPI_AssetsFile* pAssetsFile, const CStorageType* pItem);
@@ -56,6 +61,11 @@ public:
 	};
 	
 	array<CPart> m_Parts;
+	
+	CModAPI_AssetPath m_IdlePath;
+	CModAPI_AssetPath m_WalkPath;
+	CModAPI_AssetPath m_ControlledJumpPath;
+	CModAPI_AssetPath m_UncontrolledJumpPath;
 
 public:
 	CModAPI_Asset_Character()
@@ -70,6 +80,10 @@ public:
 	enum
 	{
 		PART_NAME = CModAPI_Asset::NUM_MEMBERS, //Int
+		IDLEPATH, //Path
+		WALKPATH, //Path
+		CONTROLLEDJUMPPATH, //Path
+		UNCONTROLLEDJUMPPATH, //Path
 	};
 	
 	template<typename T>

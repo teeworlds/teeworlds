@@ -2,6 +2,7 @@
 
 #include <engine/shared/datafile.h>
 #include <modapi/client/graphics.h>
+#include <modapi/client/assets/character.h>
 
 /* IO *****************************************************************/
 
@@ -11,6 +12,7 @@ void CModAPI_Asset_CharacterPart::InitFromAssetsFile(CModAPI_AssetManager* pAsse
 	SetName((char *)pAssetsFile->GetData(pItem->m_Name));
 	
 	m_CharacterPath = CModAPI_AssetPath(pItem->m_CharacterPath);
+	m_CharacterPart = CModAPI_Asset_Character::CSubPath(pItem->m_CharacterPart);
 	m_SkeletonSkinPath = CModAPI_AssetPath(pItem->m_SkeletonSkinPath);
 }
 
@@ -22,11 +24,6 @@ void CModAPI_Asset_CharacterPart::SaveInAssetsFile(CDataFileWriter* pFileWriter,
 	Item.m_CharacterPath = m_CharacterPath.ConvertToInteger();
 	Item.m_CharacterPart = m_CharacterPart.ConvertToInteger();
 	Item.m_SkeletonSkinPath = m_SkeletonSkinPath.ConvertToInteger();
-	
-	Item.m_IdlePath = m_IdlePath.ConvertToInteger();
-	Item.m_WalkPath = m_WalkPath.ConvertToInteger();
-	Item.m_ControlledJumpPath = m_ControlledJumpPath.ConvertToInteger();
-	Item.m_UncontrolledJumpPath = m_UncontrolledJumpPath.ConvertToInteger();
 	
 	pFileWriter->AddItem(CModAPI_AssetPath::TypeToStoredType(TypeId), Position, sizeof(CStorageType), &Item);
 }
@@ -74,14 +71,6 @@ CModAPI_AssetPath CModAPI_Asset_CharacterPart::GetValue(int ValueType, int Path,
 			return m_CharacterPath;
 		case SKELETONSKINPATH:
 			return m_SkeletonSkinPath;
-		case IDLEPATH:
-			return m_IdlePath;
-		case WALKPATH:
-			return m_WalkPath;
-		case CONTROLLEDJUMPPATH:
-			return m_ControlledJumpPath;
-		case UNCONTROLLEDJUMPPATH:
-			return m_UncontrolledJumpPath;
 		default:
 			return CModAPI_Asset::GetValue<CModAPI_AssetPath>(ValueType, Path, DefaultValue);
 	}
@@ -97,18 +86,6 @@ bool CModAPI_Asset_CharacterPart::SetValue<CModAPI_AssetPath>(int ValueType, int
 			return true;
 		case SKELETONSKINPATH:
 			m_SkeletonSkinPath = Value;
-			return true;
-		case IDLEPATH:
-			m_IdlePath = Value;
-			return true;
-		case WALKPATH:
-			m_WalkPath = Value;
-			return true;
-		case CONTROLLEDJUMPPATH:
-			m_ControlledJumpPath = Value;
-			return true;
-		case UNCONTROLLEDJUMPPATH:
-			m_UncontrolledJumpPath = Value;
 			return true;
 	}
 	

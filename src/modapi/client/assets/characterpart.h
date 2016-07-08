@@ -14,10 +14,6 @@ public:
 		int m_CharacterPath;
 		int m_CharacterPart;
 		int m_SkeletonSkinPath;
-		int m_IdlePath;
-		int m_WalkPath;
-		int m_ControlledJumpPath;
-		int m_UncontrolledJumpPath;
 	};
 	
 	void InitFromAssetsFile(class CModAPI_AssetManager* pAssetManager, class IModAPI_AssetsFile* pAssetsFile, const CStorageType* pItem);
@@ -27,13 +23,7 @@ public:
 public:
 	CModAPI_AssetPath m_CharacterPath;
 	CModAPI_Asset_Character::CSubPath m_CharacterPart;
-	
 	CModAPI_AssetPath m_SkeletonSkinPath;
-	
-	CModAPI_AssetPath m_IdlePath;
-	CModAPI_AssetPath m_WalkPath;
-	CModAPI_AssetPath m_ControlledJumpPath;
-	CModAPI_AssetPath m_UncontrolledJumpPath;
 
 public:
 	CModAPI_Asset_CharacterPart()
@@ -48,10 +38,6 @@ public:
 		CHARACTERPATH = CModAPI_Asset::NUM_MEMBERS, //Path
 		CHARACTERPART, //Int
 		SKELETONSKINPATH, //Path
-		IDLEPATH, //Path
-		WALKPATH, //Path
-		CONTROLLEDJUMPPATH, //Path
-		UNCONTROLLEDJUMPPATH, //Path
 	};
 	
 	template<typename T>

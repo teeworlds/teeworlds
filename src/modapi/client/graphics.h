@@ -72,8 +72,8 @@ public:
 	void DrawText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment);
 	void DrawAnimatedText(ITextRender* pTextRender, const char *pText, vec2 Pos, vec4 Color, float Size, int Alignment, CModAPI_AssetPath AnimationPath, float Time, vec2 Offset);
 	
-	void DrawAttach(CRenderTools* pRenderTools, const CModAPI_AttachAnimationState* pState, CModAPI_AssetPath AttachPath, vec2 Pos, float Scaling);
-	void DrawTee(CRenderTools* pRenderTools, class CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pState, vec2 Pos, vec2 Dir, int Emote);
+	//~ void DrawAttach(CRenderTools* pRenderTools, const CModAPI_AttachAnimationState* pState, CModAPI_AssetPath AttachPath, vec2 Pos, float Scaling);
+	//~ void DrawTee(CRenderTools* pRenderTools, class CTeeRenderInfo* pInfo, const CModAPI_TeeAnimationState* pState, vec2 Pos, vec2 Dir, int Emote);
 	
 	void GetTeeAlignAxis(int Align, vec2 Dir, vec2 Aim, vec2& PartDirX, vec2& PartDirY);
 	
@@ -82,7 +82,7 @@ public:
 	void AddTeeAnimationState(CModAPI_TeeAnimationState* pState, CModAPI_AssetPath TeeAnimationPath, float Time);
 	
 	//Attach Animation
-	void InitAttachAnimationState(CModAPI_AttachAnimationState* pState, vec2 MotionDir, vec2 AimDir, CModAPI_AssetPath AttachPath, float Time);
+	//~ void InitAttachAnimationState(CModAPI_AttachAnimationState* pState, vec2 MotionDir, vec2 AimDir, CModAPI_AssetPath AttachPath, float Time);
 };
 
 #endif

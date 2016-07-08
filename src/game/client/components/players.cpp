@@ -218,7 +218,7 @@ void CPlayers::RenderPlayer(
 	
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
 
-	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
+	bool GotAirJump = Player.m_Jumped&2?0:1;
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
@@ -228,64 +228,47 @@ void CPlayers::RenderPlayer(
 	SkeletonRenderer.SetAim(AimDir);
 	SkeletonRenderer.SetMotion(MotionDir);
 	
-	CModAPI_Asset_CharacterPart* pCharacterPath[6];
+	CModAPI_Asset_CharacterPart* pCharacterPart[6];
+	CModAPI_AssetPath CharacterPath;
 	for(int i=0; i<6; i++)
 	{
-		pCharacterPath[i] = AssetManager()->GetAsset<CModAPI_Asset_CharacterPart>(RenderInfo.m_aCharacterParts[i]);
-		if(pCharacterPath[i])
+		pCharacterPart[i] = AssetManager()->GetAsset<CModAPI_Asset_CharacterPart>(RenderInfo.m_aCharacterParts[i]);
+		if(pCharacterPart[i])
 		{
-			SkeletonRenderer.AddSkinWithSkeleton(pCharacterPath[i]->m_SkeletonSkinPath, RenderInfo.m_aColors[i]);
+			SkeletonRenderer.AddSkinWithSkeleton(pCharacterPart[i]->m_SkeletonSkinPath, RenderInfo.m_aColors[i]);
+			if(CharacterPath.IsNull())
+				CharacterPath = pCharacterPart[i]->m_CharacterPath;
 		}
 	}
-
-	if(InAir)
+	
+	CModAPI_Asset_Character* pCharacter = AssetManager()->GetAsset<CModAPI_Asset_Character>(CharacterPath);
+	if(pCharacter)
 	{
-		if(!RenderInfo.m_GotAirJump && g_Config.m_ClAirjumpindicator)
+		if(InAir)
 		{
-			for(int i=0; i<6; i++)
+			if(!GotAirJump && g_Config.m_ClAirjumpindicator)
 			{
-				if(pCharacterPath[i])
-				{
-					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_UncontrolledJumpPath, 0.0f);
-				}
-			}	
-		}
-		else
-		{
-			for(int i=0; i<6; i++)
+				SkeletonRenderer.ApplyAnimation(pCharacter->m_UncontrolledJumpPath, 0.0f);
+			}
+			else
 			{
-				if(pCharacterPath[i])
-				{
-					SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_ControlledJumpPath, 0.0f);
-				}
+				SkeletonRenderer.ApplyAnimation(pCharacter->m_ControlledJumpPath, 0.0f);
 			}
 		}
-	}
-	else if(Stationary)
-	{
-		for(int i=0; i<6; i++)
+		else if(Stationary)
 		{
-			if(pCharacterPath[i])
-			{
-				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_IdlePath, 0.0f);
-			}
+			SkeletonRenderer.ApplyAnimation(pCharacter->m_IdlePath, 0.0f);
 		}
-	}
-	else if(!WantOtherDir)
-	{
-		const float WalkTimeMagic = 100.0f;
-		float WalkTime =
-			((Position.x >= 0)
-				? fmod(Position.x, WalkTimeMagic)
-				: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
-			/ WalkTimeMagic;
-		
-		for(int i=0; i<6; i++)
+		else if(!WantOtherDir)
 		{
-			if(pCharacterPath[i])
-			{
-				SkeletonRenderer.ApplyAnimation(pCharacterPath[i]->m_WalkPath, WalkTime);
-			}
+			const float WalkTimeMagic = 100.0f;
+			float WalkTime =
+				((Position.x >= 0)
+					? fmod(Position.x, WalkTimeMagic)
+					: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
+				/ WalkTimeMagic;
+			
+			SkeletonRenderer.ApplyAnimation(pCharacter->m_WalkPath, WalkTime);
 		}
 	}
 

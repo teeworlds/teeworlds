@@ -569,7 +569,7 @@ void CCharacter::Snap06(int Snapshot, int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 
-	CTW06_NetObj_Character *pCharacter = static_cast<CTW06_NetObj_Character *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CTW06_NetObj_Character)));
+	CTW06_NetObj_Character *pCharacter = static_cast<CTW06_NetObj_Character*>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CTW06_NetObj_Character)));
 	if(!pCharacter)
 		return;
 

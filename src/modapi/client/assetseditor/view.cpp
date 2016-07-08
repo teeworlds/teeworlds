@@ -517,6 +517,10 @@ void CModAPI_AssetsEditorGui_View::Render()
 			RenderCharacterPart();
 			RenderGizmos();
 			break;
+		case CModAPI_AssetPath::TYPE_ATTACH:
+			RenderCharacterPart();
+			RenderGizmos();
+			break;
 	}
 	
 	Graphics()->ClipDisable();

@@ -455,6 +455,7 @@ class CMenus : public CComponent
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
 	void RenderHSLPicker(CUIRect Picker);
+	void RenderTee(CUIRect Rect, CTeeRenderInfo& Info);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);

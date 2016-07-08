@@ -18,6 +18,11 @@ void CModAPI_Asset_Character::InitFromAssetsFile(CModAPI_AssetManager* pAssetMan
 		CPart& Part = m_Parts[m_Parts.size()-1];
 		str_copy(Part.m_aName, pParts[i].m_aName, sizeof(Part.m_aName));
 	}
+	
+	m_IdlePath = CModAPI_AssetPath(pItem->m_IdlePath);
+	m_WalkPath = CModAPI_AssetPath(pItem->m_WalkPath);
+	m_ControlledJumpPath = CModAPI_AssetPath(pItem->m_ControlledJumpPath);
+	m_UncontrolledJumpPath = CModAPI_AssetPath(pItem->m_UncontrolledJumpPath);
 }
 
 void CModAPI_Asset_Character::SaveInAssetsFile(CDataFileWriter* pFileWriter, int Position)
@@ -35,6 +40,11 @@ void CModAPI_Asset_Character::SaveInAssetsFile(CDataFileWriter* pFileWriter, int
 		Item.m_PartsData = pFileWriter->AddData(Item.m_NumParts * sizeof(CStorageType::CPart), pParts);
 		delete[] pParts;
 	}
+	
+	Item.m_IdlePath = m_IdlePath.ConvertToInteger();
+	Item.m_WalkPath = m_WalkPath.ConvertToInteger();
+	Item.m_ControlledJumpPath = m_ControlledJumpPath.ConvertToInteger();
+	Item.m_UncontrolledJumpPath = m_UncontrolledJumpPath.ConvertToInteger();
 	
 	pFileWriter->AddItem(CModAPI_AssetPath::TypeToStoredType(TypeId), Position, sizeof(CStorageType), &Item);
 }
@@ -88,4 +98,46 @@ bool CModAPI_Asset_Character::SetValue<const char*>(int ValueType, int PathInt, 
 	}
 	
 	return CModAPI_Asset::SetValue<const char*>(ValueType, PathInt, pText);
+}
+
+/* VALUE ASSETPATH ****************************************************/
+
+template<>
+CModAPI_AssetPath CModAPI_Asset_Character::GetValue(int ValueType, int Path, CModAPI_AssetPath DefaultValue)
+{
+	switch(ValueType)
+	{
+		case IDLEPATH:
+			return m_IdlePath;
+		case WALKPATH:
+			return m_WalkPath;
+		case CONTROLLEDJUMPPATH:
+			return m_ControlledJumpPath;
+		case UNCONTROLLEDJUMPPATH:
+			return m_UncontrolledJumpPath;
+		default:
+			return CModAPI_Asset::GetValue<CModAPI_AssetPath>(ValueType, Path, DefaultValue);
+	}
+}
+	
+template<>
+bool CModAPI_Asset_Character::SetValue<CModAPI_AssetPath>(int ValueType, int Path, CModAPI_AssetPath Value)
+{
+	switch(ValueType)
+	{
+		case IDLEPATH:
+			m_IdlePath = Value;
+			return true;
+		case WALKPATH:
+			m_WalkPath = Value;
+			return true;
+		case CONTROLLEDJUMPPATH:
+			m_ControlledJumpPath = Value;
+			return true;
+		case UNCONTROLLEDJUMPPATH:
+			m_UncontrolledJumpPath = Value;
+			return true;
+	}
+	
+	return CModAPI_Asset::SetValue<CModAPI_AssetPath>(ValueType, Path, Value);
 }

@@ -1311,8 +1311,11 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 
 		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
 		{
-			CModAPI_AssetPath CharacterPartPath = pGameClient->AssetManager()->FindSkinPart(p, m_aaSkinPartNames[p]);
-				
+			CModAPI_AssetPath CharacterPartPath = pGameClient->AssetManager()->FindSkinPart(
+				CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE),
+				CModAPI_Asset_Character::CSubPath::Part(p),
+				m_aaSkinPartNames[p]
+			);
 			m_SkinInfo.m_aCharacterParts[p] = CharacterPartPath;
 			
 			if(m_aUseCustomColors[p])

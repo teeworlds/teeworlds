@@ -30,6 +30,7 @@ GET_ASSET_CATALOG(CModAPI_Asset_SkeletonSkin, m_SkeletonSkinsCatalog)
 GET_ASSET_CATALOG(CModAPI_Asset_SkeletonAnimation, m_SkeletonAnimationsCatalog)
 GET_ASSET_CATALOG(CModAPI_Asset_Character, m_CharactersCatalog)
 GET_ASSET_CATALOG(CModAPI_Asset_CharacterPart, m_CharacterPartsCatalog)
+GET_ASSET_CATALOG(CModAPI_Asset_Attach, m_AttachesCatalog)
 GET_ASSET_CATALOG(CModAPI_Asset_List, m_ListsCatalog)
 
 void CModAPI_AssetManager::Init(IStorage* pStorage)
@@ -408,7 +409,45 @@ void CModAPI_AssetManager::LoadInteralAssets()
 	}
 	dbg_msg("assetsmanager", "Tee Animations initialised");
 	
-	//Weapons
+	//Attaches
+		//Hammer
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_HAMMER));
+		pAttach->SetName("hammer");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+		//Gun
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_GUN));
+		pAttach->SetName("gun");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+		//Shotgun
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_SHOTGUN));
+		pAttach->SetName("shotgun");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+		//Grenade
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_GRENADE));
+		pAttach->SetName("grenade");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+		//LaserRifle
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_LASER));
+		pAttach->SetName("laser");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+		//Ninja
+	{
+		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_NINJA));
+		pAttach->SetName("ninja");
+		pAttach->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
+	}
+	dbg_msg("assetsmanager", "Attaches initialised");
+	/*
 		//Hammer
 	{
 		CModAPI_Asset_Attach* pAttach = m_AttachesCatalog.NewAsset(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_ATTACH, MODAPI_ATTACH_HAMMER));
@@ -520,7 +559,7 @@ void CModAPI_AssetManager::LoadInteralAssets()
 			0
 		);
 	}
-	dbg_msg("assetsmanager", "Attaches initialised");
+	* */
 	
 	//Line styles
 		//Hook
@@ -579,7 +618,11 @@ void CModAPI_AssetManager::LoadInteralAssets()
 		pSkeleton->AddLayer().Name("backHand");
 		pSkeleton->AddLayer().Name("frontHand");
 		pSkeleton->AddLayer().Name("backFoot");
+		pSkeleton->AddLayer().Name("decoration");
 		pSkeleton->AddLayer().Name("body");
+		pSkeleton->AddLayer().Name("marking");
+		pSkeleton->AddLayer().Name("outline");
+		pSkeleton->AddLayer().Name("eyes");
 		pSkeleton->AddLayer().Name("frontFoot");
 	}
 	{
@@ -903,6 +946,11 @@ void CModAPI_AssetManager::LoadInteralAssets()
 		pCharacter->AddPart().Name("hands");
 		pCharacter->AddPart().Name("feet");
 		pCharacter->AddPart().Name("eyes");
+		
+		pCharacter->m_IdlePath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEIDLE);
+		pCharacter->m_WalkPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEWALK);
+		pCharacter->m_ControlledJumpPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR);
+		pCharacter->m_UncontrolledJumpPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_SKELETONANIMATION, MODAPI_SKELETONANIMATION_TEEAIR2);
 	}
 	dbg_msg("assetsmanager", "Characters initialised");
 }
@@ -978,12 +1026,12 @@ int CModAPI_AssetManager::LoadSkinAssets_BodyScan(const char *pFilename, int IsD
 			pSkeletonSkin->AddSprite(
 				ShadingPath,
 				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_BODY),
-				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_BODY))
+				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_OUTLINE))
 				.Anchor(0.0f);
 			pSkeletonSkin->AddSprite(
 				OutinePath,
 				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_BODY),
-				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_BODY))
+				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_OUTLINE))
 				.Anchor(0.0f);
 		}
 		{
@@ -1203,7 +1251,7 @@ int CModAPI_AssetManager::LoadSkinAssets_MarkingScan(const char *pFilename, int 
 			pSkeletonSkin->AddSprite(
 				ColorPath,
 				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_BODY),
-				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_BODY))
+				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_MARKING))
 				.Anchor(0.0f)
 				.Scale(vec2(64.0f, 64.0f));
 		}
@@ -1273,7 +1321,7 @@ int CModAPI_AssetManager::LoadSkinAssets_DecorationScan(const char *pFilename, i
 			pSkeletonSkin->AddSprite(
 				ColorPath,
 				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_BODY),
-				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_BODY))
+				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_DECORATION))
 				.Anchor(0.0f)
 				.Scale(vec2(64.0f, 64.0f));
 		}
@@ -1358,15 +1406,14 @@ int CModAPI_AssetManager::LoadSkinAssets_EyeScan(const char *pFilename, int IsDi
 			pSkeletonSkin->AddSprite(
 				NormalPath,
 				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEEBONE_EYES),
-				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_BODY))
+				CModAPI_Asset_Skeleton::CBonePath::Local(MODAPI_TEELAYER_EYES))
 				.Scale(vec2(38.4, 38.4))
 				.Alignment(CModAPI_Asset_SkeletonSkin::ALIGNEMENT_WORLD);
 		}
 		{
 			CModAPI_AssetPath CharacterPartPath;
 			CModAPI_Asset_CharacterPart* pCharacterPart = pSelf->m_CharacterPartsCatalog.NewAsset(&CharacterPartPath, CModAPI_AssetPath::SRC_SKIN);
-			str_format(aBuf, sizeof(aBuf), "eyes/%s", aName);
-			pCharacterPart->SetName(aBuf);
+			pCharacterPart->SetName(aName);
 			pCharacterPart->m_CharacterPath = CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE);
 			pCharacterPart->m_CharacterPart = CModAPI_Asset_Character::CSubPath::Part(MODAPI_SKINPART_EYES);
 			pCharacterPart->m_SkeletonSkinPath = SkeletonSkinPath;
@@ -1386,22 +1433,29 @@ void CModAPI_AssetManager::LoadSkinAssets(IStorage* pStorage)
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins/eyes", CModAPI_AssetManager::LoadSkinAssets_EyeScan, this);
 	dbg_msg("assetsmanager", "eyes assets loaded");
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins/hands", CModAPI_AssetManager::LoadSkinAssets_HandsScan, this);
-	dbg_msg("assetsmanager", "eyes assets loaded");
+	dbg_msg("assetsmanager", "hands assets loaded");
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins/marking", CModAPI_AssetManager::LoadSkinAssets_MarkingScan, this);
-	dbg_msg("assetsmanager", "eyes assets loaded");
+	dbg_msg("assetsmanager", "marking assets loaded");
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins/decoration", CModAPI_AssetManager::LoadSkinAssets_DecorationScan, this);
-	dbg_msg("assetsmanager", "eyes assets loaded");
+	dbg_msg("assetsmanager", "decoration assets loaded");
 }
 
-CModAPI_AssetPath CModAPI_AssetManager::FindSkinPart(int p, const char* pName)
+CModAPI_AssetPath CModAPI_AssetManager::FindSkinPart(CModAPI_AssetPath CharacterPath, CModAPI_Asset_Character::CSubPath CharacterPart, const char* pName)
 {
 	char aAssetName[256];
 	str_format(aAssetName, sizeof(aAssetName), "%s", pName);
 	
-	for(int i=0; i<m_SkeletonSkinsCatalog.m_Assets[CModAPI_AssetPath::SRC_SKIN].size(); i++)
+	for(int i=0; i<m_CharacterPartsCatalog.m_Assets[CModAPI_AssetPath::SRC_SKIN].size(); i++)
 	{
-		if(str_comp(m_SkeletonSkinsCatalog.m_Assets[CModAPI_AssetPath::SRC_SKIN][i].m_aName, aAssetName) == 0)
+		const CModAPI_Asset_CharacterPart* pCharacterPart = &m_CharacterPartsCatalog.m_Assets[CModAPI_AssetPath::SRC_SKIN][i];
+		if(
+			str_comp(pCharacterPart->m_aName, aAssetName) == 0 &&
+			pCharacterPart->m_CharacterPath == CharacterPath &&
+			pCharacterPart->m_CharacterPart == CharacterPart
+		)
+		{
 			return CModAPI_AssetPath::Skin(CModAPI_AssetPath::TYPE_CHARACTERPART, i);
+		}
 	}
 	
 	return CModAPI_AssetPath::Null();
@@ -1492,6 +1546,7 @@ int CModAPI_AssetManager::SaveInAssetsFile(const char *pFileName, int Source)
 	m_SkeletonAnimationsCatalog.SaveInAssetsFile(&df, Source);
 	m_CharactersCatalog.SaveInAssetsFile(&df, Source);
 	m_CharacterPartsCatalog.SaveInAssetsFile(&df, Source);
+	m_AttachesCatalog.SaveInAssetsFile(&df, Source);
 	
 	df.Finish();
 	
@@ -1517,7 +1572,7 @@ int CModAPI_AssetManager::OnAssetsFileLoaded(IModAPI_AssetsFile* pAssetsFile)
 	m_SkeletonSkinsCatalog.LoadFromAssetsFile(this, pAssetsFile, Source);
 	m_SkeletonAnimationsCatalog.LoadFromAssetsFile(this, pAssetsFile, Source);
 	m_CharactersCatalog.LoadFromAssetsFile(this, pAssetsFile, Source);
-	m_CharacterPartsCatalog.LoadFromAssetsFile(this, pAssetsFile, Source);
+	m_AttachesCatalog.LoadFromAssetsFile(this, pAssetsFile, Source);
 	
 	return 1;
 }
@@ -1525,6 +1580,7 @@ int CModAPI_AssetManager::OnAssetsFileLoaded(IModAPI_AssetsFile* pAssetsFile)
 int CModAPI_AssetManager::OnAssetsFileUnloaded()
 {
 	//Search Tag: TAG_NEW_ASSET
+	m_AttachesCatalog.Unload(this);
 	m_CharacterPartsCatalog.Unload(this);
 	m_CharactersCatalog.Unload(this);
 	m_SkeletonAnimationsCatalog.Unload(this);
@@ -1544,6 +1600,7 @@ void CModAPI_AssetManager::DeleteAsset(const CModAPI_AssetPath& Path)
 	m_SkeletonAnimationsCatalog.DeleteAsset(Path);
 	m_CharactersCatalog.DeleteAsset(Path);
 	m_CharacterPartsCatalog.DeleteAsset(Path);
+	m_AttachesCatalog.DeleteAsset(Path);
 	
 	//Search Tag: TAG_NEW_ASSET
 	m_ImagesCatalog.OnAssetDeleted(Path);
@@ -1553,6 +1610,7 @@ void CModAPI_AssetManager::DeleteAsset(const CModAPI_AssetPath& Path)
 	m_SkeletonAnimationsCatalog.OnAssetDeleted(Path);
 	m_CharactersCatalog.OnAssetDeleted(Path);
 	m_CharacterPartsCatalog.OnAssetDeleted(Path);
+	m_AttachesCatalog.OnAssetDeleted(Path);
 }
 	
 int CModAPI_AssetManager::AddSubItem(CModAPI_AssetPath AssetPath, int SubItemType)
@@ -1576,6 +1634,7 @@ int CModAPI_AssetManager::AddSubItem(CModAPI_AssetPath AssetPath, int SubItemTyp
 		ADD_SUB_ITEM(CModAPI_Asset_SkeletonAnimation);
 		ADD_SUB_ITEM(CModAPI_Asset_Character);
 		ADD_SUB_ITEM(CModAPI_Asset_CharacterPart);
+		ADD_SUB_ITEM(CModAPI_Asset_Attach);
 		ADD_SUB_ITEM(CModAPI_Asset_List);
 	}
 	
@@ -1602,6 +1661,7 @@ void CModAPI_AssetManager::DeleteSubItem(CModAPI_AssetPath AssetPath, int SubPat
 		DELETE_SUB_ITEM(CModAPI_Asset_SkeletonAnimation);
 		DELETE_SUB_ITEM(CModAPI_Asset_Character);
 		DELETE_SUB_ITEM(CModAPI_Asset_CharacterPart);
+		DELETE_SUB_ITEM(CModAPI_Asset_Attach);
 		DELETE_SUB_ITEM(CModAPI_Asset_List);
 	}
 	
@@ -1612,5 +1672,7 @@ void CModAPI_AssetManager::DeleteSubItem(CModAPI_AssetPath AssetPath, int SubPat
 	m_SkeletonSkinsCatalog.OnSubItemDeleted(AssetPath, SubPath);
 	m_SkeletonAnimationsCatalog.OnSubItemDeleted(AssetPath, SubPath);
 	m_CharactersCatalog.OnSubItemDeleted(AssetPath, SubPath);
+	m_CharacterPartsCatalog.OnSubItemDeleted(AssetPath, SubPath);
+	m_AttachesCatalog.OnSubItemDeleted(AssetPath, SubPath);
 	m_ListsCatalog.OnSubItemDeleted(AssetPath, SubPath);
 }

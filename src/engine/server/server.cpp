@@ -1230,7 +1230,7 @@ void CServer::ProcessClientPacket_TW07(CNetChunk *pPacket)
 				
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 	
-				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI)
+				if(m_aClients[ClientID].m_Protocol == MODAPI_CLIENTPROTOCOL_TW07MODAPI && g_Config.m_SvModAPIAssetFile[0])
 					SendInitialData(ClientID);
 				else
 					SendMap(ClientID);
@@ -1755,24 +1755,16 @@ int CServer::Run()
 		
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 	
-	// ModAPI, generate editor ressources
+	// ModAPI, load mod
+	if(g_Config.m_SvModAPIAssetFile[0])
 	{
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "editorresources/%s.editor", m_pModAPIServer->GetName());
-		if(!m_pModAPIServer->CreateEditorFile(Storage(), aBuf))
+		if(!LoadMod(g_Config.m_SvModAPIAssetFile))
 		{
-			dbg_msg("server", "failed to generate editor resources. modname='%s'", m_pModAPIServer->GetName());
+			dbg_msg("server", "failed to load mod. modname='%s'", g_Config.m_SvModAPIAssetFile);
 			return -1;
 		}
+		m_ModChunksPerRequest = g_Config.m_SvMapDownloadSpeed;
 	}
-	
-	// ModAPI, load mod
-	if(!LoadMod(m_pModAPIServer->GetName()))
-	{
-		dbg_msg("server", "failed to load mod. modname='%s'", m_pModAPIServer->GetName());
-		return -1;
-	}
-	m_ModChunksPerRequest = g_Config.m_SvMapDownloadSpeed;
 	
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
@@ -1809,20 +1801,20 @@ int CServer::Run()
 			return -1;
 		}
 	}
-	if(g_Config.m_SvPortTW06)
+	if(g_Config.m_SvModAPIPortTW06)
 	{
 		NETADDR BindAddr;
 		if(g_Config.m_Bindaddr[0] && net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
 		{
 			// sweet!
 			BindAddr.type = NETTYPE_ALL;
-			BindAddr.port = g_Config.m_SvPortTW06;
+			BindAddr.port = g_Config.m_SvModAPIPortTW06;
 		}
 		else
 		{
 			mem_zero(&BindAddr, sizeof(BindAddr));
 			BindAddr.type = NETTYPE_ALL;
-			BindAddr.port = g_Config.m_SvPortTW06;
+			BindAddr.port = g_Config.m_SvModAPIPortTW06;
 		}
 		
 		CModAPI_NetServer_TW06* pNetServerTW06 = new CModAPI_NetServer_TW06(&m_NetServer, ProcessClientPacketCallback_TW06, GenerateServerInfoCallback_TW06);
@@ -2360,7 +2352,7 @@ void CServer::SendInitialData(int ClientID)
 	CMsgPacker Msg(NETMSG_MODAPI_INITDATA, true);
 	
 	//Mod
-	Msg.AddString(m_pModAPIServer->GetName(), 0);
+	Msg.AddString(g_Config.m_SvModAPIAssetFile, 0);
 	Msg.AddInt(m_CurrentModCrc);
 	Msg.AddInt(m_CurrentModSize);
 	Msg.AddInt(m_ModChunksPerRequest);

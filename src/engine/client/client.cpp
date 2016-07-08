@@ -425,7 +425,7 @@ void CClient::SendInput()
 
 	// fetch input
 	int Size = GameClient()->OnSnapInput(m_aInputs[m_CurrentInput].m_aData);
-
+	
 	if(!Size)
 		return;
 

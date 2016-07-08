@@ -704,7 +704,14 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_SkeletonAnimation_KeyFrames(bool
 
 void CModAPI_AssetsEditorGui_Editor::RefreshTab_Character_Asset(bool KeepStatus)
 {
+	CModAPI_Asset_Character* pCharacter = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Character>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pCharacter)
+		return;
 	
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_Character::IDLEPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Idle Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_Character::WALKPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Walk Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_Character::CONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump Animation:");
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_Character::UNCONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump2 Animation:");
 }
 
 void CModAPI_AssetsEditorGui_Editor::RefreshTab_Character_Parts(bool KeepStatus)
@@ -765,10 +772,15 @@ void CModAPI_AssetsEditorGui_Editor::RefreshTab_CharacterPart_Asset(bool KeepSta
 	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CHARACTERPATH, CModAPI_AssetPath::TYPE_CHARACTER, -1, "Character:");
 	AddCharacterPartField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CHARACTERPART, -1, pCharacterPart->m_CharacterPath, "Part:");
 	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::SKELETONSKINPATH, CModAPI_AssetPath::TYPE_SKELETONSKIN, -1, "Skin:");
-	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::IDLEPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Idle Animation:");
-	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::WALKPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Walk Animation:");
-	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::CONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump Animation:");
-	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_CharacterPart::UNCONTROLLEDJUMPPATH, CModAPI_AssetPath::TYPE_SKELETONANIMATION, -1, "Jump2 Animation:");
+}
+
+void CModAPI_AssetsEditorGui_Editor::RefreshTab_Attach_Asset(bool KeepStatus)
+{
+	CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_pAssetsEditor->m_EditedAssetPath);
+	if(!pAttach)
+		return;
+	
+	AddAssetField(m_pTabs[TAB_ASSET], CModAPI_Asset_Attach::CHARACTERPATH, CModAPI_AssetPath::TYPE_CHARACTER, -1, "Character:");
 }
 
 void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
@@ -858,6 +870,9 @@ void CModAPI_AssetsEditorGui_Editor::Refresh(int Tab)
 			break;
 		case CModAPI_AssetPath::TYPE_CHARACTERPART:
 			RefreshTab_CharacterPart_Asset(KeepStatus);
+			break;
+		case CModAPI_AssetPath::TYPE_ATTACH:
+			RefreshTab_Attach_Asset(KeepStatus);
 			break;
 	}
 	

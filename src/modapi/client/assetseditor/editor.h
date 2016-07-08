@@ -674,15 +674,6 @@ public:
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
-				case CModAPI_AssetPath::TYPE_ATTACH:
-				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
-					if(!pAttach)
-						return;
-					pAttach->DeleteBackElement(m_SubId);
-					m_pAssetsEditor->RefreshAssetEditor();
-					break;
-				}
 			}
 		}
 
@@ -718,15 +709,6 @@ public:
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
-				case CModAPI_AssetPath::TYPE_ATTACH:
-				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
-					if(!pAttach)
-						return;
-					pAttach->MoveDownBackElement(m_SubId);
-					m_pAssetsEditor->RefreshAssetEditor();
-					break;
-				}
 			}
 		}
 
@@ -759,15 +741,6 @@ public:
 					if(!pAnimation)
 						return;
 					pAnimation->MoveUpKeyFrame(m_SubId);
-					m_pAssetsEditor->RefreshAssetEditor();
-					break;
-				}
-				case CModAPI_AssetPath::TYPE_ATTACH:
-				{
-					CModAPI_Asset_Attach* pAttach = m_pAssetsEditor->AssetManager()->GetAsset<CModAPI_Asset_Attach>(m_AssetPath);
-					if(!pAttach)
-						return;
-					pAttach->MoveUpBackElement(m_SubId);
 					m_pAssetsEditor->RefreshAssetEditor();
 					break;
 				}
@@ -886,6 +859,7 @@ public:
 	};
 	
 public:
+	//Search Tag: TAG_NEW_ASSET
 	enum
 	{
 		TAB_ASSET=0,
@@ -959,6 +933,7 @@ protected:
 	void RefreshTab_Character_Asset(bool KeepStatus);
 	void RefreshTab_Character_Parts(bool KeepStatus);
 	void RefreshTab_CharacterPart_Asset(bool KeepStatus);
+	void RefreshTab_Attach_Asset(bool KeepStatus);
 	
 public:
 	CModAPI_AssetsEditorGui_Editor(CModAPI_AssetsEditor* pAssetsEditor);

@@ -197,6 +197,7 @@ protected:
 	void RenderSkeletonAnimation();
 	void RenderCharacter();
 	void RenderCharacterPart();
+	void RenderAttach();
 	void RenderGizmos();
 	
 public:

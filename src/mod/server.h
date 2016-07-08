@@ -7,8 +7,6 @@ class CMod_Server : public CModAPI_Server
 {
 public:
 	CMod_Server();
-	
-	virtual int CreateEditorFile(class IStorage* pStorage, const char* pFilename);
 };
 
 #endif

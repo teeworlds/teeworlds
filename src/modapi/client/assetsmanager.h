@@ -58,7 +58,7 @@ public:
 	static int LoadSkinAssets_MarkingScan(const char *pName, int IsDir, int DirType, void *pUser);
 	static int LoadSkinAssets_DecorationScan(const char *pName, int IsDir, int DirType, void *pUser);
 	
-	CModAPI_AssetPath FindSkinPart(int p, const char* pName);
+	CModAPI_AssetPath FindSkinPart(CModAPI_AssetPath CharacterPath, CModAPI_Asset_Character::CSubPath CharacterPart, const char* pName);
 	
 	class IGraphics *Graphics() { return m_pGraphics; };
 	class IStorage *Storage() { return m_pStorage; };
@@ -119,6 +119,7 @@ public:
 			GET_ASSET_VALUE(CModAPI_Asset_SkeletonAnimation);
 			GET_ASSET_VALUE(CModAPI_Asset_Character);
 			GET_ASSET_VALUE(CModAPI_Asset_CharacterPart);
+			GET_ASSET_VALUE(CModAPI_Asset_Attach);
 			GET_ASSET_VALUE(CModAPI_Asset_List);
 		}
 		
@@ -146,6 +147,7 @@ public:
 			SET_ASSET_VALUE(CModAPI_Asset_SkeletonAnimation);
 			SET_ASSET_VALUE(CModAPI_Asset_Character);
 			SET_ASSET_VALUE(CModAPI_Asset_CharacterPart);
+			SET_ASSET_VALUE(CModAPI_Asset_Attach);
 			SET_ASSET_VALUE(CModAPI_Asset_List);
 		}
 		
