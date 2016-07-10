@@ -1112,7 +1112,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	// clear button
 	{
-		static int s_ClearButton = 0;
+		static CButtonContainer s_ClearButton;
 		if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, &Button, CUI::CORNER_ALL, 5.0f, false))
 		{
 			g_Config.m_BrFilterString[0] = 0;
@@ -1259,7 +1259,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 
 	ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
 	ServerFilter.HSplitBottom(ms_ButtonHeight-2.0f, &ServerFilter, &Button);
-	static int s_ClearButton = 0;
+	static CButtonContainer s_ClearButton;
 	if(DoButton_Menu(&s_ClearButton, Localize("Reset filter"), 0, &Button))
 	{
 		g_Config.m_BrFilterString[0] = 0;
@@ -1546,7 +1546,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
 	if(m_FriendlistSelectedIndex != -1)
 	{
-		static int s_RemoveButton = 0;
+		static CButtonContainer s_RemoveButton;
 		if(DoButton_Menu(&s_RemoveButton, Localize("Remove"), 0, &Button))
 			m_Popup = POPUP_REMOVE_FRIEND;
 	}
@@ -1575,7 +1575,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 		ServerFriends.HSplitTop(3.0f, 0, &ServerFriends);
 		ServerFriends.HSplitTop(20.0f, &Button, &ServerFriends);
-		static int s_AddButton = 0;
+		static CButtonContainer s_AddButton;
 		if(DoButton_Menu(&s_AddButton, Localize("Add Friend"), 0, &Button))
 		{
 			m_pClient->Friends()->AddFriend(s_aName, s_aClan);
@@ -1598,7 +1598,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	CUIRect Button;
 	MainView.HSplitTop(25.0f, &MainView, 0);
 	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
-	static int s_RefreshButton=0;
+	static CButtonContainer s_RefreshButton;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		if(m_MenuPage == PAGE_INTERNET)
@@ -1609,7 +1609,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 
 	MainView.VSplitLeft(Spacing, 0, &MainView); // little space
 	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
-	static int s_JoinButton = 0;
+	static CButtonContainer s_JoinButton;
 	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
 	{
 		Client()->Connect(g_Config.m_UiServerAddress);

@@ -10,12 +10,32 @@
 
 #include <modapi/client/graphics.h>
 
+// sprite renderings
+enum
+{
+	SKINPART_BODY = 0,
+	SKINPART_MARKING,
+	SKINPART_DECORATION,
+	SKINPART_HANDS,
+	SKINPART_FEET,
+	SKINPART_EYES,
+	NUM_SKINPARTS,
+
+	SPRITE_FLAG_FLIP_Y = 1,
+	SPRITE_FLAG_FLIP_X = 2,
+
+	LAYERRENDERFLAG_OPAQUE = 1,
+	LAYERRENDERFLAG_TRANSPARENT = 2,
+
+	TILERENDERFLAG_EXTEND = 4,
+};
+
 class CTeeRenderInfo
 {
 public:
 	CTeeRenderInfo()
 	{
-		for(int i = 0; i < 6; i++)
+		for(int i = 0; i < NUM_SKINPARTS; i++)
 			m_aColors[i] = vec4(1,1,1,1);
 		m_Size = 1.0f;
 	};
@@ -23,18 +43,6 @@ public:
 	vec4 m_aColors[6];
 	CModAPI_AssetPath m_aCharacterParts[6];
 	float m_Size;
-};
-
-// sprite renderings
-enum
-{
-	SPRITE_FLAG_FLIP_Y=1,
-	SPRITE_FLAG_FLIP_X=2,
-
-	LAYERRENDERFLAG_OPAQUE=1,
-	LAYERRENDERFLAG_TRANSPARENT=2,
-
-	TILERENDERFLAG_EXTEND=4,
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);

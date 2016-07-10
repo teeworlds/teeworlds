@@ -28,10 +28,10 @@ void CFlag::Reset()
 
 void CFlag::Grab(CCharacter *pChar)
 {
-	m_AtStand = false;
 	m_pCarrier = pChar;
 	if(m_AtStand)
 		m_GrabTick = Server()->Tick();
+	m_AtStand = false;
 }
 
 void CFlag::Drop()

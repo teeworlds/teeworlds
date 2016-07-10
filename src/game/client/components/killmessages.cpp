@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
@@ -26,11 +27,11 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		CKillMsg Kill;
 		Kill.m_VictimID = pMsg->m_Victim;
 		Kill.m_VictimTeam = m_pClient->m_aClients[Kill.m_VictimID].m_Team;
-		str_copy(Kill.m_aVictimName, m_pClient->m_aClients[Kill.m_VictimID].m_aName, sizeof(Kill.m_aVictimName));
+		str_format(Kill.m_aVictimName, sizeof(Kill.m_aVictimName), "%2d: %s", pMsg->m_Victim, g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_VictimID].m_aName : "");
 		Kill.m_VictimRenderInfo = m_pClient->m_aClients[Kill.m_VictimID].m_RenderInfo;
 		Kill.m_KillerID = pMsg->m_Killer;
 		Kill.m_KillerTeam = m_pClient->m_aClients[Kill.m_KillerID].m_Team;
-		str_copy(Kill.m_aKillerName, m_pClient->m_aClients[Kill.m_KillerID].m_aName, sizeof(Kill.m_aKillerName));
+		str_format(Kill.m_aKillerName, sizeof(Kill.m_aKillerName), "%2d: %s", pMsg->m_Killer, g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_KillerID].m_aName : "");
 		Kill.m_KillerRenderInfo = m_pClient->m_aClients[Kill.m_KillerID].m_RenderInfo;
 		Kill.m_Weapon = pMsg->m_Weapon;
 		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;

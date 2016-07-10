@@ -72,13 +72,13 @@ function NewConfig(on_configured_callback)
 	end
 
 	config.Load = function(self, filename)
-		local options_func = loadfile(filename)
 		local options_table = {}
+		local options_func = loadfile(filename, nil, options_table)
 
 		if not options_func then
 			print("auto configuration")
 			self:Config(filename)
-			options_func = loadfile(filename)
+			options_func = loadfile(filename, nil, options_table)
 		end
 
 		if options_func then
@@ -86,7 +86,6 @@ function NewConfig(on_configured_callback)
 			for k,v in pairs(self.options) do
 				options_table[v.name] = {}
 			end
-			setfenv(options_func, options_table)
 
 			-- this is to make sure that we get nice error messages when
 			-- someone sets an option that isn't valid.

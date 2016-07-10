@@ -152,9 +152,8 @@ class CTextRender : public IEngineTextRender
 		{
 			if(pSizeData->m_aTextures[i].IsValid())
 			{
-				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
+				Graphics()->UnloadTexture(&(pSizeData->m_aTextures[i]));
 				FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;
-				pSizeData->m_aTextures[i] = IGraphics::CTextureHandle();
 			}
 
 			pSizeData->m_aTextures[i] = Graphics()->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, IGraphics::TEXLOAD_NOMIPMAPS);

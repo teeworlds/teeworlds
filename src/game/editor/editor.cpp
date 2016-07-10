@@ -38,7 +38,7 @@ enum
 
 CEditorImage::~CEditorImage()
 {
-	m_pEditor->Graphics()->UnloadTexture(m_Texture);
+	m_pEditor->Graphics()->UnloadTexture(&m_Texture);
 	if(m_pData)
 	{
 		mem_free(m_pData);
@@ -2949,8 +2949,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 
 	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
 	int External = pImg->m_External;
-	pEditor->Graphics()->UnloadTexture(pImg->m_Texture);
-	pImg->m_Texture = IGraphics::CTextureHandle();
+	pEditor->Graphics()->UnloadTexture(&(pImg->m_Texture));
 	if(pImg->m_pData)
 	{
 		mem_free(pImg->m_pData);
@@ -4981,7 +4980,7 @@ bool CEditorResource::Load(IStorage* pStorage, IGraphics* pGraphics, const char*
 
 bool CEditorResource::Unload(IGraphics* pGraphics)
 {
-	pGraphics->UnloadTexture(m_Texture);
+	pGraphics->UnloadTexture(&m_Texture);
 	if(m_pImageData)
 	{
 		delete m_pImageData;

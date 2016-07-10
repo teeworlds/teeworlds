@@ -208,9 +208,10 @@ void CHud::RenderScoreHud()
 					{
 						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
-						const char *pName = m_pClient->m_aClients[ID].m_aName;
-						float w = TextRender()->TextWidth(0, 8.0f, pName, -1);
-						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, pName, -1);
+						char aName[64];
+						str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+						float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
+						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
 
 						// draw tee of the flag holder
 						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -281,9 +282,10 @@ void CHud::RenderScoreHud()
  				{
 					// draw name
 					int ID = aPlayerInfo[t].m_ClientID;
-					const char *pName = m_pClient->m_aClients[ID].m_aName;
-					float w = TextRender()->TextWidth(0, 8.0f, pName, -1);
-					TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize), StartY+(t+1)*20.0f-3.0f, 8.0f, pName, -1);
+					char aName[64];
+					str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+					float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
+					TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
 
 					// draw tee
 					CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -536,9 +538,11 @@ void CHud::RenderSpectatorHud()
 	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_TL, 5.0f);
 
 	// draw the text
+	char aName[64];
+	str_format(aName, sizeof(aName), "%2d: %s", m_pClient->m_Snap.m_SpecInfo.m_SpectatorID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
-		m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : Localize("Free-View"));
+		aName : Localize("Free-View"));
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 

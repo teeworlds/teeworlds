@@ -100,7 +100,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		Left.VSplitLeft(Spacing, 0, &Left);
-		static int s_SpectateButton = 0;
+		static CButtonContainer s_SpectateButton;
 		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && AllowSpec && !pNotification)
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
@@ -122,7 +122,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			Left.VSplitLeft(Spacing, 0, &Left);
-			static int s_RedButton = 0;
+			static CButtonContainer s_RedButton;
 			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
@@ -140,7 +140,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				str_copy(aBuf, Localize(Team != TEAM_BLUE ? "Join blue" : "Joined blue"), sizeof(aBuf)); // Localize("Join blue");Localize("Joined blue");
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
-			static int s_BlueButton = 0;
+			static CButtonContainer s_BlueButton;
 			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
@@ -160,7 +160,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				str_copy(aBuf, Localize(Team != TEAM_RED ? "Join" : "Joined"), sizeof(aBuf)); //Localize("Join");Localize("Joined");
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
-			static int s_JoinButton = 0;
+			static CButtonContainer s_JoinButton;
 			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !pNotification)
 			{
 				m_pClient->SendSwitchTeam(0);
@@ -170,7 +170,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	}
 
 	// Record button
-	static int s_DemoButton = 0;
+	static CButtonContainer s_DemoButton;
 	bool Recording = DemoRecorder()->IsRecording();
 	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Middle))	// Localize("Stop record");Localize("Record");
 	{
@@ -181,7 +181,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	}
 
 	// disconnect button
-	static int s_DisconnectButton = 0;
+	static CButtonContainer s_DisconnectButton;
 	if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Right))
 		Client()->Disconnect();
 }
@@ -248,7 +248,9 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			CTextCursor Cursor;
 			TextRender()->SetCursor(&Cursor, Player.x, Player.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Player.w;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[i].m_aName, -1);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", i, g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			TextRender()->SetCursor(&Cursor, Button.x,Button.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Button.w;
@@ -448,7 +450,9 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
-			UI()->DoLabelScaled(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, CUI::ALIGN_LEFT);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", aPlayerIDs[i], g_Config.m_ClShowsocial ? m_pClient->m_aClients[aPlayerIDs[i]].m_aName : "");
+			UI()->DoLabelScaled(&Item.m_Rect, aBuf, 16.0f, CUI::ALIGN_LEFT);
 		}
 	}
 
@@ -591,18 +595,18 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		
 		// clear button
 		{
-			static int s_ClearButton = 0;
-			float *pClearButtonFade = ButtonFade(&s_ClearButton, 0.6f);
-			RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+(*pClearButtonFade/0.6f)*0.165f), CUI::CORNER_R, 3.0f);
+			static CButtonContainer s_ClearButton;
+			float Fade = ButtonFade(&s_ClearButton, 0.6f);
+			RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+(Fade/0.6f)*0.165f), CUI::CORNER_R, 3.0f);
 			UI()->DoLabel(&ClearButton, "x", ClearButton.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-			if(UI()->DoButtonLogic(&s_ClearButton, "x", 0, &ClearButton))
+			if(UI()->DoButtonLogic(s_ClearButton.GetID(), "x", 0, &ClearButton))
 				m_aCallvoteReason[0] = 0;
 		}
 
 		if(pNotification == 0)
 		{
 			// call vote
-			static int s_CallVoteButton = 0;
+			static CButtonContainer s_CallVoteButton;
 			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
 				HandleCallvote(s_ControlPage, false);
 		}
@@ -623,7 +627,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			// force vote
 			Bottom.VSplitLeft(5.0f, 0, &Bottom);
 			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
-			static int s_ForceVoteButton = 0;
+			static CButtonContainer s_ForceVoteButton;
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 				HandleCallvote(s_ControlPage, true);
 
@@ -632,7 +636,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				// remove vote
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
 				Bottom.VSplitRight(120.0f, 0, &Button);
-				static int s_RemoveVoteButton = 0;
+				static CButtonContainer s_RemoveVoteButton;
 				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
 					m_pClient->m_pVoting->RemovevoteOption(m_CallvoteSelectedOption);
 
@@ -651,7 +655,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Extended.HSplitTop(20.0f, &Bottom, &Extended);
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
 				Bottom.VSplitRight(120.0f, &Bottom, &Button);
-				static int s_AddVoteButton = 0;
+				static CButtonContainer s_AddVoteButton;
 				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
 					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
 						m_pClient->m_pVoting->AddvoteOption(s_aVoteDescription, s_aVoteCommand);

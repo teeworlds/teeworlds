@@ -315,6 +315,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						// send response and init connection
 						TOKEN Token = m_Token;
 						Reset();
+						mem_zero(m_ErrorString, sizeof(m_ErrorString));
 						m_State = NET_CONNSTATE_PENDING;
 						m_PeerAddr = *pAddr;
 						m_PeerToken = pPacket->m_ResponseToken;

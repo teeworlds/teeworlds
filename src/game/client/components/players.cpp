@@ -48,9 +48,9 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	HandPos += DirY * PostRotOffset.y;
 
 	//Graphics()->TextureSet(data->m_aImages[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_aTextures[CSkins::SKINPART_HANDS]);
+	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
 	Graphics()->QuadsBegin();
-	vec4 Color = pInfo->m_aColors[CSkins::SKINPART_HANDS];
+	vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 
 	// two passes
@@ -290,7 +290,7 @@ void CPlayers::RenderPlayer(
 	
 	SkeletonRenderer.Finalize();
 	SkeletonRenderer.RenderSkins(Position, 1.0);
-		
+	
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);

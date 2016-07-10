@@ -49,6 +49,7 @@ class CChat : public CComponent
 	int m_ChatStringOffset;
 	int m_OldChatStringLength;
 	int m_CompletionChosen;
+	int m_CompletionFav;
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;

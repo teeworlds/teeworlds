@@ -167,12 +167,13 @@ public:
 	int m_CurrentMapSize;
 	int m_MapChunksPerRequest;
 
+	int m_RconPasswordSet;
+	int m_GeneratedRconPassword;
+
 	CDemoRecorder m_DemoRecorder;
 	CMapChecker m_MapChecker;
 
 	CServer();
-
-	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
 	virtual void SetClientClan(int ClientID, char const *pClan);
@@ -187,6 +188,8 @@ public:
 	int64 TickStartTime(int Tick);
 
 	int Init();
+
+	void InitRconPasswordIfUnset();
 
 	void SetRconCID(int ClientID);
 	bool IsAuthed(int ClientID) const;
@@ -243,6 +246,7 @@ public:
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 

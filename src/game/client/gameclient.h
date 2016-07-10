@@ -250,9 +250,9 @@ public:
 	const char *GetTeamName(int Team, bool Teamplay) const;
 
 	//
-	void DoEnterMessage(const char *pName, int Team);
-	void DoLeaveMessage(const char *pName, const char *pReason);
-	void DoTeamChangeMessage(const char *pName, int Team);
+	void DoEnterMessage(const char *pName, int ClientID, int Team);
+	void DoLeaveMessage(const char *pName, int ClientID, const char *pReason);
+	void DoTeamChangeMessage(const char *pName, int ClientID, int Team);
 
 	// actions
 	// TODO: move these

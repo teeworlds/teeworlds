@@ -47,7 +47,7 @@ void CModAPI_Asset_Image::SaveInAssetsFile(CDataFileWriter* pFileWriter, int Pos
 
 void CModAPI_Asset_Image::Unload(class CModAPI_AssetManager* pAssetManager)
 {
-	pAssetManager->Graphics()->UnloadTexture(m_Texture);
+	pAssetManager->Graphics()->UnloadTexture(&m_Texture);
 	if(m_pData)
 	{
 		mem_free(m_pData);

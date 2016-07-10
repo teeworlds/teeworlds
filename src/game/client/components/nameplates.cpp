@@ -30,8 +30,10 @@ void CNamePlates::RenderNameplate(
 		if(g_Config.m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 
-		const char *pName = m_pClient->m_aClients[ClientID].m_aName;
-		float tw = TextRender()->TextWidth(0, FontSize, pName, -1);
+
+		char aName[64];
+		str_format(aName, sizeof(aName), "%2d: %s", ClientID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
+		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
@@ -43,14 +45,7 @@ void CNamePlates::RenderNameplate(
 				TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
 		}
 
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, pName, -1);
-
-		if(g_Config.m_Debug) // render client id when in debug aswell
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf),"%d", ClientID);
-			TextRender()->Text(0, Position.x, Position.y-90, 28.0f, aBuf, -1);
-		}
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, aName, -1);
 
 		TextRender()->TextColor(1,1,1,1);
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
