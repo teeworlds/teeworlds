@@ -393,7 +393,26 @@ void CCharacterCore::Move()
 	m_Pos = NewPos;
 }
 
-void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
+void CCharacterCore::Write06(CTW06_NetObj_CharacterCore *pObjCore)
+{
+	pObjCore->m_X = round(m_Pos.x);
+	pObjCore->m_Y = round(m_Pos.y);
+
+	pObjCore->m_VelX = round(m_Vel.x*256.0f);
+	pObjCore->m_VelY = round(m_Vel.y*256.0f);
+	pObjCore->m_HookState = m_HookState;
+	pObjCore->m_HookTick = m_HookTick;
+	pObjCore->m_HookX = round_to_int(m_HookPos.x);
+	pObjCore->m_HookY = round_to_int(m_HookPos.y);
+	pObjCore->m_HookDx = round(m_HookDir.x*256.0f);
+	pObjCore->m_HookDy = round(m_HookDir.y*256.0f);
+	pObjCore->m_HookedPlayer = m_HookedPlayer;
+	pObjCore->m_Jumped = m_Jumped;
+	pObjCore->m_Direction = m_Direction;
+	pObjCore->m_Angle = m_Angle;
+}
+
+void CCharacterCore::Write07(CNetObj_CharacterCore *pObjCore)
 {
 	pObjCore->m_X = round_to_int(m_Pos.x);
 	pObjCore->m_Y = round_to_int(m_Pos.y);
@@ -430,7 +449,7 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 void CCharacterCore::Quantize()
 {
 	CNetObj_CharacterCore Core;
-	Write(&Core);
+	Write07(&Core);
 	Read(&Core);
 }
 

@@ -3,6 +3,7 @@
 #ifndef GAME_SERVER_GAMECONTROLLER_H
 #define GAME_SERVER_GAMECONTROLLER_H
 
+#include <base/tl/array.h>
 #include <base/vmath.h>
 
 #include <generated/protocol.h>
@@ -81,18 +82,20 @@ class IGameController
 		int m_FriendlyTeam;
 		float m_Score;
 	};
-	vec2 m_aaSpawnPoints[3][64];
-	int m_aNumSpawnPoints[3];
 	
-	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const;
-	void EvaluateSpawnType(CSpawnEval *pEval, int Type) const;
+	float EvaluateSpawnPos(int WorldID, CSpawnEval *pEval, vec2 Pos) const;
+	void EvaluateSpawnType(int WorldID, CSpawnEval *pEval, int Type) const;
 
 	// team
 	int ClampTeam(int Team) const;
 
 protected:
+	
 	CGameContext *GameServer() const { return m_pGameServer; }
 	IServer *Server() const { return m_pServer; }
+
+	// map
+	array<vec2> m_aaSpawnPoints[3];
 
 	// game
 	int m_GameStartTick;
@@ -156,7 +159,7 @@ public:
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntityPoint(int EditorResource, int Index, vec2 Pos);
 
 	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer);
@@ -182,7 +185,8 @@ public:
 	}
 
 	// general
-	virtual void Snap(int SnappingClient);
+	virtual void Snap06(int Snapshot, int SnappingClient);
+	virtual void Snap07(int Snapshot, int SnappingClient);
 	virtual void Tick();
 
 	// info
@@ -199,7 +203,7 @@ public:
 	void ChangeMap(const char *pToMap);
 
 	//spawn
-	bool CanSpawn(int Team, vec2 *pPos) const;
+	bool CanSpawn(int ClientID, vec2 *pPos) const;
 	bool GetStartRespawnState() const;
 
 	// team
@@ -211,6 +215,18 @@ public:
 	
 	int GetRealPlayerNum() const { return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE]; }
 	int GetStartTeam();
+	
+public:
+	struct CRegisteredEditorResource
+	{
+		int m_ID;
+		char m_aModName[128];
+	};
+	
+	array<CRegisteredEditorResource> m_lEditorResources;
+
+protected:
+	void RegisterEntityPointLayer(int ID, const char* pModName);
 };
 
 #endif

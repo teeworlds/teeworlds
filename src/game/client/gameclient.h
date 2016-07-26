@@ -82,6 +82,10 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+	
+	//ModAPI
+	class CModAPI_Client_Graphics *ModAPIGraphics() const { return m_pClient->ModAPIGraphics(); }
+	class CModAPI_AssetManager *AssetManager() const { return m_pClient->AssetManager(); }
 
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
@@ -277,8 +281,11 @@ public:
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
 	class CItems *m_pItems;
+	class CModAPI_Component_Items *m_pModAPI_Items[MODAPI_NUM_ITEMLAYER];
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
+	
+	virtual void DrawBackground();
 };
 
 extern const char *Localize(const char *Str, const char *pContext="");

@@ -17,6 +17,7 @@ public:
 
 	virtual void OnReset();
 	virtual void OnRender();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
 };
 
 #endif

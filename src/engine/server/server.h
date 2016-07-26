@@ -4,6 +4,7 @@
 #define ENGINE_SERVER_SERVER_H
 
 #include <engine/server.h>
+#include <modapi/server/metanetserver.h>
 
 
 class CSnapIDPool
@@ -63,6 +64,7 @@ class CServer : public IServer
 {
 	class IGameServer *m_pGameServer;
 	class IConsole *m_pConsole;
+	class IMasterServer *m_pMasterServer;
 	class IStorage *m_pStorage;
 public:
 	class IGameServer *GameServer() { return m_pGameServer; }
@@ -128,14 +130,18 @@ public:
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
 		void Reset();
+		
+		//ModAPI
+		int m_ModChunk;
+		int m_Protocol;
 	};
 
 	CClient m_aClients[MAX_CLIENTS];
 
-	CSnapshotDelta m_SnapshotDelta;
-	CSnapshotBuilder m_SnapshotBuilder;
-	CSnapIDPool m_IDPool;
-	CNetServer m_NetServer;
+	CSnapshotDelta m_SnapshotDelta[MODAPI_NUM_SNAPSHOT];
+	CSnapshotBuilder m_SnapshotBuilder[MODAPI_NUM_SNAPSHOT];
+	CSnapIDPool m_IDPool[MODAPI_NUM_SNAPSHOT];
+	CModAPI_MetaNetServer m_NetServer;
 	CEcon m_Econ;
 	CServerBan m_ServerBan;
 
@@ -165,7 +171,6 @@ public:
 	int m_GeneratedRconPassword;
 
 	CDemoRecorder m_DemoRecorder;
-	CRegister m_Register;
 	CMapChecker m_MapChecker;
 
 	CServer();
@@ -197,12 +202,16 @@ public:
 	bool ClientIngame(int ClientID) const;
 	int MaxClients() const;
 
-	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
+	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID, bool tw06 = false);
 
 	void DoSnapshot();
 
 	static int NewClientCallback(int ClientID, void *pUser);
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
+	static void ProcessClientPacketCallback_TW06(CNetChunk *pPacket, void *pUser);
+	static void ProcessClientPacketCallback_TW07(CNetChunk *pPacket, void *pUser);
+	static void GenerateServerInfoCallback_TW06(CPacker *pPacker, int Token, void *pUser, int NetServer);
+	static void GenerateServerInfoCallback_TW07(CPacker *pPacker, int Token, void *pUser, int NetServer);
 
 	void SendMap(int ClientID);
 	void SendConnectionReady(int ClientID);
@@ -213,17 +222,16 @@ public:
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void UpdateClientRconCommands();
 
-	void ProcessClientPacket(CNetChunk *pPacket);
+	void ProcessClientPacket_TW06(CNetChunk *pPacket);
+	void ProcessClientPacket_TW07(CNetChunk *pPacket);
 
 	void SendServerInfo(int ClientID);
-	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();
 
 	const char *GetMapName() const;
 	int LoadMap(const char *pMapName);
 
-	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
@@ -243,10 +251,33 @@ public:
 	void RegisterCommands();
 
 
-	virtual int SnapNewID();
-	virtual void SnapFreeID(int ID);
-	virtual void *SnapNewItem(int Type, int ID, int Size);
+	virtual int SnapNewID(int Snapshot);
+	virtual void SnapFreeID(int Snapshot, int ID);
+	virtual void *SnapNewItem(int Snapshot, int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
+	
+	//ModAPI
+	CModAPI_Server* m_pModAPIServer;
+	enum
+	{
+		MOD_CHUNK_SIZE = NET_MAX_PAYLOAD - NET_MAX_CHUNKHEADERSIZE-4,
+	};
+	static const char* m_aModName;
+	unsigned m_CurrentModCrc;
+	unsigned char *m_pCurrentModData;
+	int m_CurrentModSize;
+	int m_ModChunksPerRequest;
+	
+	IModAPI_AssetsFileEngine *m_pAssetsFile;
+	
+	const char *GetModName() const;
+	void SendInitialData(int ClientID);
+	
+	bool LoadMod(const char* pModName);
+	
+	void SetModAPIServer(class CModAPI_Server* pModAPIServer);
+	
+	virtual bool GetClientProtocol(int ClientID) const;
 };
 
 #endif

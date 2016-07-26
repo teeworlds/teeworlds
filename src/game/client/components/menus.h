@@ -217,10 +217,14 @@ private:
 	bool m_EnterPressed;
 	bool m_DeletePressed;
 
-	// for map download popup
-	int64 m_DownloadLastCheckTime;
-	int m_DownloadLastCheckSize;
-	float m_DownloadSpeed;
+	//ModAPI for parallel download of mod and map
+	int64 m_MapDownloadLastCheckTime;
+	int m_MapDownloadLastCheckSize;
+	float m_MapDownloadSpeed;
+	
+	int64 m_ModDownloadLastCheckTime;
+	int m_ModDownloadLastCheckSize;
+	float m_ModDownloadSpeed;
 
 	// for call vote
 	int m_CallvoteSelectedOption;
@@ -461,6 +465,7 @@ private:
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
 	void RenderHSLPicker(CUIRect Picker);
+	void RenderTee(CUIRect Rect, CTeeRenderInfo& Info);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);

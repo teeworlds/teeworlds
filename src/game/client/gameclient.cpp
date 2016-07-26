@@ -16,6 +16,8 @@
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
+#include <modapi/client/clientmode.h>
+
 #include <game/version.h>
 #include "localization.h"
 #include "render.h"
@@ -50,6 +52,8 @@
 #include "components/spectator.h"
 #include "components/voting.h"
 
+#include <modapi/client/components/items.h>
+
 // instanciate all systems
 static CKillMessages gs_KillMessages;
 static CCamera gs_Camera;
@@ -77,6 +81,7 @@ static CSpectator gs_Spectator;
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
 static CItems gs_Items;
+static CModAPI_Component_Items gs_ModAPI_Items[MODAPI_NUM_ITEMLAYER];
 static CMapImages gs_MapImages;
 
 static CMapLayers gs_MapLayersBackGround(CMapLayers::TYPE_BACKGROUND);
@@ -173,6 +178,11 @@ void CGameClient::OnConsoleInit()
 	m_pVoting = &::gs_Voting;
 	m_pScoreboard = &::gs_Scoreboard;
 	m_pItems = &::gs_Items;
+	for(int i=0; i<MODAPI_NUM_ITEMLAYER; i++)
+	{
+		m_pModAPI_Items[i] = &::gs_ModAPI_Items[i];
+		m_pModAPI_Items[i]->SetLayer(i);
+	}
 	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
 	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
 
@@ -190,12 +200,19 @@ void CGameClient::OnConsoleInit()
 
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_ITEM]);
 	m_All.Add(m_pItems);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_ITEM]);
 	m_All.Add(&gs_Players);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_PLAYER]);
 	m_All.Add(&gs_MapLayersForeGround);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_PARTICULES]);
 	m_All.Add(&m_pParticles->m_RenderExplosions);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_UNDER_NAMEPLATES]);
 	m_All.Add(&gs_NamePlates);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_NAMEPLATES]);
 	m_All.Add(&m_pParticles->m_RenderGeneral);
+	m_All.Add(m_pModAPI_Items[MODAPI_ITEMLAYER_OVER_PARTICULES]);
 	m_All.Add(m_pDamageind);
 	m_All.Add(&gs_Hud);
 	m_All.Add(&gs_Spectator);
@@ -430,7 +447,7 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 		TempCore.Quantize();
 	}
 
-	TempCore.Write(pCharacter);
+	TempCore.Write07(pCharacter);
 }
 
 
@@ -773,7 +790,7 @@ void CGameClient::OnEnterGame() {}
 
 void CGameClient::OnGameOver()
 {
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClEditor == 0)
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClMode == MODAPI_CLIENTMODE_GAME)
 		Client()->AutoScreenshot_Start();
 }
 
@@ -829,6 +846,14 @@ void CGameClient::ProcessEvents()
 		{
 			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
 			m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
+		}
+		else
+		{
+			for(int i=0; i<MODAPI_NUM_ITEMLAYER; i++)
+			{
+				if(m_pModAPI_Items[i]->ProcessEvent(Item.m_Type, (CNetEvent_Common*) pData))
+					break;
+			}
 		}
 	}
 }
@@ -1253,10 +1278,10 @@ void CGameClient::OnPredict()
 	if(g_Config.m_Debug && g_Config.m_ClPredict && m_PredictedTick == Client()->PredGameTick())
 	{
 		CNetObj_CharacterCore Before = {0}, Now = {0}, BeforePrev = {0}, NowPrev = {0};
-		BeforeChar.Write(&Before);
-		BeforePrevChar.Write(&BeforePrev);
-		m_PredictedChar.Write(&Now);
-		m_PredictedPrevChar.Write(&NowPrev);
+		BeforeChar.Write07(&Before);
+		BeforePrevChar.Write07(&BeforePrev);
+		m_PredictedChar.Write07(&Now);
+		m_PredictedPrevChar.Write07(&NowPrev);
 
 		if(mem_comp(&Before, &Now, sizeof(CNetObj_CharacterCore)) != 0)
 		{
@@ -1288,48 +1313,32 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, bool U
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int ID = pGameClient->m_pSkins->FindSkinPart(p, m_aaSkinPartNames[p], false);
-			if(ID < 0)
-			{
-				if(p == SKINPART_MARKING || p == SKINPART_DECORATION)
-					ID = pGameClient->m_pSkins->FindSkinPart(p, "", false);
-				else
-					ID = pGameClient->m_pSkins->FindSkinPart(p, "standard", false);
-
-				if(ID < 0)
-					m_SkinPartIDs[p] = 0;
-				else
-					m_SkinPartIDs[p] = ID;
-			}
-			else
-				m_SkinPartIDs[p] = ID;
-
-			const CSkins::CSkinPart *pSkinPart = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p]);
+			CModAPI_AssetPath CharacterPartPath = pGameClient->AssetManager()->FindSkinPart(
+				CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_CHARACTER, MODAPI_CHARACTER_TEE),
+				CModAPI_Asset_Character::CSubPath::Part(p),
+				m_aaSkinPartNames[p]
+			);
+			m_SkinInfo.m_aCharacterParts[p] = CharacterPartPath;
+			
 			if(m_aUseCustomColors[p])
-			{
-				m_SkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
 				m_SkinInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(m_aSkinPartColors[p], p==SKINPART_MARKING);
-			}
 			else
-			{
-				m_SkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
 				m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-			}
 		}
 	}
 
 	m_RenderInfo = m_SkinInfo;
 
 	// force team colors
-	if(pGameClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-	{
-		for(int p = 0; p < NUM_SKINPARTS; p++)
-		{
-			m_RenderInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
-			int ColorVal = pGameClient->m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
-			m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
-		}
-	}
+	//~ if(pGameClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+	//~ {
+		//~ for(int p = 0; p < NUM_SKINPARTS; p++)
+		//~ {
+			//~ m_RenderInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, m_SkinPartIDs[p])->m_ColorTexture;
+			//~ int ColorVal = pGameClient->m_pSkins->GetTeamColor(m_aUseCustomColors[p], m_aSkinPartColors[p], m_Team, p);
+			//~ m_RenderInfo.m_aColors[p] = pGameClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
+		//~ }
+	//~ }
 }
 
 void CGameClient::CClientData::Reset(CGameClient *pGameClient)
@@ -1347,7 +1356,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		m_SkinPartIDs[p] = 0;
-		m_SkinInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
+		//~ m_SkinInfo.m_aTextures[p] = pGameClient->m_pSkins->GetSkinPart(p, 0)->m_ColorTexture;
 		m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f , 1.0f);
 	}
 	UpdateRenderInfo(pGameClient, false);
@@ -1430,6 +1439,12 @@ void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserDa
 		if(pClient->m_aClients[i].m_Active)
 			pClient->m_aClients[i].m_Friend = pClient->Friends()->IsFriend(pClient->m_aClients[i].m_aName, pClient->m_aClients[i].m_aClan, true);
 	}
+}
+
+void CGameClient::DrawBackground()
+{
+	m_pCamera->OnRender();
+	m_pMapLayersBackGround->OnRender();
 }
 
 IGameClient *CreateGameClient()

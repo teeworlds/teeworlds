@@ -39,7 +39,8 @@ class CGameContext : public IGameServer
 	class IConsole *m_pConsole;
 	CLayers m_Layers;
 	CCollision m_Collision;
-	CNetObjHandler m_NetObjHandler;
+	CTW06_NetObjHandler m_NetObjHandler06;
+	CNetObjHandler m_NetObjHandler07;
 	CTuningParams m_Tuning;
 
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
@@ -78,11 +79,13 @@ public:
 
 	void Clear();
 
-	CEventHandler m_Events;
+	CEventHandler m_Events06;
+	CEventHandler m_Events07;
+	CEventHandler m_Events07ModAPI;
 	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
 	class IGameController *m_pController;
-	CGameWorld m_World;
+	CGameWorld m_World[MOD_NUM_WORLDS];
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
@@ -122,15 +125,6 @@ public:
 	CVoteOptionServer *m_pVoteOptionFirst;
 	CVoteOptionServer *m_pVoteOptionLast;
 
-	// helper functions
-	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage);
-	void CreateHammerHit(vec2 Pos);
-	void CreatePlayerSpawn(vec2 Pos);
-	void CreateDeath(vec2 Pos, int Who);
-	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
-
-
 	enum
 	{
 		CHAT_ALL=-2,
@@ -140,16 +134,14 @@ public:
 	};
 
 	// network
-	void SendChatTarget(int To, const char *pText);
-	void SendChat(int ClientID, int Team, const char *pText);
 	void SendEmoticon(int ClientID, int Emoticon);
-	void SendWeaponPickup(int ClientID, int Weapon);
-	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
+
+	void CreateExplosion(int WorldID, vec2 Pos, int Owner, int Weapon, int MaxDamage);
 
 	//
 	void CheckPureTuning();
@@ -165,10 +157,13 @@ public:
 
 	virtual void OnTick();
 	virtual void OnPreSnap();
-	virtual void OnSnap(int ClientID);
+	virtual void OnSnap06(int ClientID);
+	virtual void OnSnap07(int ClientID);
+	virtual void OnSnap07ModAPI(int ClientID);
 	virtual void OnPostSnap();
 
-	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
+	virtual void OnMessage_TW06(int MsgID, CUnpacker *pUnpacker, int ClientID);
+	virtual void OnMessage_TW07(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
 	virtual void OnClientConnected(int ClientID) { OnClientConnected(ClientID, false); }
 	void OnClientConnected(int ClientID, bool Dummy);

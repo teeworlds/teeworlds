@@ -225,6 +225,91 @@ Objects = [
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
 	]),
+	
+	### ModAPI
+	
+	NetObject("ModAPI_Sprite", [
+		NetIntAny("m_SpriteId"),
+		NetIntAny("m_ItemLayer"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Size"),
+		NetIntRange("m_Angle", 0, 360),
+	]),
+	
+	NetObject("ModAPI_SpriteCharacter:ModAPI_Sprite", [
+		NetIntAny("m_ClientId"),
+	]),
+	
+	NetObject("ModAPI_AnimatedSprite:ModAPI_Sprite", [
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_StartTick"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
+	
+	NetObject("ModAPI_AnimatedSpriteCharacter:ModAPI_SpriteCharacter", [
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_StartTick"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
+	
+	NetObject("ModAPI_Text", [
+		NetIntAny("m_ItemLayer"),
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Alignment"),
+		NetIntAny("m_Color"),
+		NetIntAny("m_Size"),
+		NetArray(NetIntAny("m_aText"), 16),
+	]),
+	
+	NetObject("ModAPI_TextCharacter:ModAPI_Text", [
+		NetIntAny("m_ClientId"),
+	]),
+	
+	NetObject("ModAPI_AnimatedText:ModAPI_Text", [
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_StartTick"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
+	
+	NetObject("ModAPI_AnimatedTextCharacter:ModAPI_TextCharacter", [
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_StartTick"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
+
+	NetObject("ModAPI_Line", [
+		NetIntAny("m_LineStyleId"),
+		NetIntAny("m_ItemLayer"),
+		NetIntAny("m_StartX"),
+		NetIntAny("m_StartY"),
+		NetIntAny("m_EndX"),
+		NetIntAny("m_EndY"),
+		NetIntAny("m_StartTick"),
+	]),
+
+	## ModAPI Events
+
+	NetEvent("ModAPI_AnimatedText:Common", [
+		NetIntAny("m_ItemLayer"),
+		NetIntAny("m_Alignment"),
+		NetIntAny("m_Color"),
+		NetIntAny("m_Size"),
+		NetArray(NetIntAny("m_aText"), 16),
+		NetIntAny("m_AnimationId"),
+		NetIntAny("m_Duration"), #Number of milliseconds for one seconds
+		NetIntAny("m_OffsetX"),
+		NetIntAny("m_OffsetY"),
+	]),
 ]
 
 Messages = [
@@ -386,4 +471,11 @@ Messages = [
 		NetStringStrict("m_Reason"),
 		NetBool("m_Force"),
 	]),
+	
+	### ModAPI
+	
+	NetMessage("ModAPI_Sv_Broadcast", [
+		NetStringStrict("m_pMessage"),
+	]),
+	
 ]

@@ -8,6 +8,7 @@
 #include <game/mapitems.h>
 #include "ui.h"
 
+#include <modapi/client/graphics.h>
 
 // sprite renderings
 enum
@@ -37,13 +38,11 @@ public:
 		for(int i = 0; i < NUM_SKINPARTS; i++)
 			m_aColors[i] = vec4(1,1,1,1);
 		m_Size = 1.0f;
-		m_GotAirJump = 1;
 	};
 
-	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
-	vec4 m_aColors[NUM_SKINPARTS];
+	vec4 m_aColors[6];
+	CModAPI_AssetPath m_aCharacterParts[6];
 	float m_Size;
-	int m_GotAirJump;
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);

@@ -41,7 +41,24 @@ void CEventHandler::Clear()
 	m_CurrentOffset = 0;
 }
 
-void CEventHandler::Snap(int SnappingClient)
+void CEventHandler::Snap06(int Snapshot, int SnappingClient)
+{
+	for(int i = 0; i < m_NumEvents; i++)
+	{
+		if(SnappingClient == -1 || CmaskIsSet(m_aClientMasks[i], SnappingClient))
+		{
+			CTW06_NetEvent_Common *ev = (CTW06_NetEvent_Common *)&m_aData[m_aOffsets[i]];
+			if(SnappingClient == -1 || distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, vec2(ev->m_X, ev->m_Y)) < 1500.0f)
+			{
+				void *d = GameServer()->Server()->SnapNewItem(Snapshot, m_aTypes[i], i, m_aSizes[i]);
+				if(d)
+					mem_copy(d, &m_aData[m_aOffsets[i]], m_aSizes[i]);
+			}
+		}
+	}
+}
+
+void CEventHandler::Snap07(int Snapshot, int SnappingClient)
 {
 	for(int i = 0; i < m_NumEvents; i++)
 	{
@@ -50,7 +67,7 @@ void CEventHandler::Snap(int SnappingClient)
 			CNetEvent_Common *ev = (CNetEvent_Common *)&m_aData[m_aOffsets[i]];
 			if(SnappingClient == -1 || distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, vec2(ev->m_X, ev->m_Y)) < 1500.0f)
 			{
-				void *d = GameServer()->Server()->SnapNewItem(m_aTypes[i], i, m_aSizes[i]);
+				void *d = GameServer()->Server()->SnapNewItem(Snapshot, m_aTypes[i], i, m_aSizes[i]);
 				if(d)
 					mem_copy(d, &m_aData[m_aOffsets[i]], m_aSizes[i]);
 			}

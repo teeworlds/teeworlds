@@ -12,6 +12,8 @@
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
 
+#include <engine/textrender.h>
+
 #include "items.h"
 
 
@@ -197,68 +199,11 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
 	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
-	vec2 Dir = normalize(Pos-From);
-
-	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
-	float Ms = (Ticks/50.0f) * 1000.0f;
-	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
-	a = clamp(a, 0.0f, 1.0f);
-	float Ia = 1-a;
-
-	vec2 Out, Border;
-
-	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-
-	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
-	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
-
-	// do outline
-	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
-	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (7.0f*Ia);
-
-	IGraphics::CFreeformItem Freeform(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
-
-	// do inner
-	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-
-	Freeform = IGraphics::CFreeformItem(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
-
-	Graphics()->QuadsEnd();
-
-	// render head
-	{
-		Graphics()->BlendNormal();
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
-		Graphics()->QuadsBegin();
-
-		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
-		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
-		Graphics()->QuadsSetRotation(Client()->GameTick());
-		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
-		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-
-	Graphics()->BlendNormal();
+	
+	float Time = (float)(Client()->GameTick() - pCurrent->m_StartTick) + Client()->IntraGameTick();
+	Time = (Time/static_cast<float>(SERVER_TICK_SPEED));
+	
+	ModAPIGraphics()->DrawLine(CModAPI_AssetPath::Internal(CModAPI_AssetPath::TYPE_LINESTYLE, MODAPI_LINESTYLE_LASER), From, Pos, 1.0f, Time);
 }
 
 void CItems::OnRender()
@@ -306,4 +251,3 @@ void CItems::OnRender()
 		}
 	}
 }
-

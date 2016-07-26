@@ -10,6 +10,7 @@
 #include "collision.h"
 #include <engine/shared/protocol.h>
 #include <generated/protocol.h>
+#include <tw06/protocol.h>
 
 
 class CTuneParam
@@ -170,7 +171,8 @@ public:
 	void Move();
 
 	void Read(const CNetObj_CharacterCore *pObjCore);
-	void Write(CNetObj_CharacterCore *pObjCore);
+	void Write06(CTW06_NetObj_CharacterCore *pObjCore);
+	void Write07(CNetObj_CharacterCore *pObjCore);
 	void Quantize();
 };
 

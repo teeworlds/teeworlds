@@ -1,11 +1,16 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "entities/character.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
 
+#include <modapi/server/event.h>
+
+#include <mod/entities/character.h>
+#include <mod/defines.h>
+
+#include <tw06/protocol.h>
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
@@ -29,6 +34,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_RespawnDisabled = GameServer()->m_pController->GetStartRespawnState();
 	m_DeadSpecMode = false;
 	m_Spawning = 0;
+	
+	m_WorldID = MOD_WORLD_DEFAULT;
 }
 
 CPlayer::~CPlayer()
@@ -117,12 +124,54 @@ void CPlayer::PostTick()
 		m_ViewPos = GameServer()->m_apPlayers[m_SpectatorID]->m_ViewPos;
 }
 
-void CPlayer::Snap(int SnappingClient)
+void CPlayer::Snap06(int Snapshot, int SnappingClient)
 {
 	if(!IsDummy() && !Server()->ClientIngame(m_ClientID))
 		return;
 
-	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CNetObj_PlayerInfo)));
+	CTW06_NetObj_ClientInfo *pClientInfo = static_cast<CTW06_NetObj_ClientInfo *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CTW06_NetObj_ClientInfo)));
+	if(!pClientInfo)
+		return;
+
+	StrToInts(&pClientInfo->m_Name0, 4, Server()->ClientName(m_ClientID));
+	StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
+	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
+	StrToInts(&pClientInfo->m_Skin0, 6, "default");
+	pClientInfo->m_UseCustomColor = 0;
+	pClientInfo->m_ColorBody = 0;
+	pClientInfo->m_ColorFeet = 0;
+
+	CTW06_NetObj_PlayerInfo *pPlayerInfo = static_cast<CTW06_NetObj_PlayerInfo *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CTW06_NetObj_PlayerInfo)));
+	if(!pPlayerInfo)
+		return;
+
+	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
+	pPlayerInfo->m_Local = 0;
+	pPlayerInfo->m_ClientID = m_ClientID;
+	pPlayerInfo->m_Score = m_Score;
+	pPlayerInfo->m_Team = m_Team;
+
+	if(m_ClientID == SnappingClient)
+		pPlayerInfo->m_Local = 1;
+
+	if(m_ClientID == SnappingClient && m_Team == TEAM_SPECTATORS)
+	{
+		CTW06_NetObj_SpectatorInfo *pSpectatorInfo = static_cast<CTW06_NetObj_SpectatorInfo *>(Server()->SnapNewItem(Snapshot, TW06_NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CTW06_NetObj_SpectatorInfo)));
+		if(!pSpectatorInfo)
+			return;
+
+		pSpectatorInfo->m_SpectatorID = m_SpectatorID;
+		pSpectatorInfo->m_X = m_ViewPos.x;
+		pSpectatorInfo->m_Y = m_ViewPos.y;
+	}
+}
+
+void CPlayer::Snap07(int Snapshot, int SnappingClient)
+{
+	if(!IsDummy() && !Server()->ClientIngame(m_ClientID))
+		return;
+
+	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CNetObj_PlayerInfo)));
 	if(!pPlayerInfo)
 		return;
 
@@ -140,7 +189,7 @@ void CPlayer::Snap(int SnappingClient)
 
 	if(m_ClientID == SnappingClient && (m_Team == TEAM_SPECTATORS || m_DeadSpecMode))
 	{
-		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
+		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
 		if(!pSpectatorInfo)
 			return;
 
@@ -152,7 +201,7 @@ void CPlayer::Snap(int SnappingClient)
 	// demo recording
 	if(SnappingClient == -1)
 	{
-		CNetObj_De_ClientInfo *pClientInfo = static_cast<CNetObj_De_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_DE_CLIENTINFO, m_ClientID, sizeof(CNetObj_De_ClientInfo)));
+		CNetObj_De_ClientInfo *pClientInfo = static_cast<CNetObj_De_ClientInfo *>(Server()->SnapNewItem(Snapshot, NETOBJTYPE_DE_CLIENTINFO, m_ClientID, sizeof(CNetObj_De_ClientInfo)));
 		if(!pClientInfo)
 			return;
 
@@ -203,7 +252,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World[m_WorldID].m_Paused)
 	{
 		m_PlayerFlags = NewInput->m_PlayerFlags;
 		return;
@@ -362,11 +411,25 @@ void CPlayer::TryRespawn()
 {
 	vec2 SpawnPos;
 
-	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
+	if(!GameServer()->m_pController->CanSpawn(m_ClientID, &SpawnPos))
 		return;
 
 	m_Spawning = false;
-	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
+	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World[m_WorldID]);
 	m_pCharacter->Spawn(this, SpawnPos);
-	GameServer()->CreatePlayerSpawn(SpawnPos);
+	
+	CModAPI_Event_SpawnEffect(GameServer()).World(m_WorldID).Send(SpawnPos);
+}
+
+int CPlayer::GetWorldID() const
+{
+	return m_WorldID;
+}
+
+void CPlayer::SetWorldID(int WorldID)
+{
+	if(WorldID >= 0 && WorldID < MOD_NUM_WORLDS)
+	{
+		m_WorldID = WorldID;
+	}
 }
