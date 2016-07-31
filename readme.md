@@ -1,4 +1,4 @@
-Teeworlds
+Teeworlds [![CircleCI](https://circleci.com/gh/teeworlds/teeworlds.svg?style=svg)](https://circleci.com/gh/teeworlds/teeworlds)
 =========
 
 A retro multiplayer shooter
