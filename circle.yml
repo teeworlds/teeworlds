@@ -1,0 +1,18 @@
+dependencies:
+  pre:
+    - |
+        sudo apt-get install libsdl2-dev libfreetype6-dev
+
+        if [ ! -d ~/bam ]; then
+          git clone https://github.com/matricks/bam.git ~/bam
+          cd ~/bam/
+          git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
+          ./make_unix.sh
+        fi
+
+  cache_directories:
+    - "~/bam/"
+
+test:
+  override:
+    - ~/bam/bam conf=release all
