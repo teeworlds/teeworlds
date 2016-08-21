@@ -590,6 +590,7 @@ void CGameClient::OnRender()
 void CGameClient::OnDummyDisconnect()
 {
 	m_LastNewPredictedTick[1] = -1;
+	g_Config.m_ClDummyCopyMoves = 0;
 }
 
 void CGameClient::OnRelease()
