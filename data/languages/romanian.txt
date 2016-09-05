@@ -26,7 +26,7 @@
 == %i secunde rămase
 
 %s wins!
-== %s câștigă!
+== %s a câștigat!
 
 -Page %d-
 == -Pagina %d-
@@ -50,10 +50,10 @@ Alpha
 == Alfa
 
 Always show name plates
-== Afișează întotdeauna pseudonimele
+== Afișează întotdeauna etichetele
 
 Are you sure that you want to delete the demo?
-== Sigur vrei să ștergi demo-ul?
+== Sigur vrei să ștergi demonstrația?
 
 Are you sure that you want to quit?
 == Sigur vrei să ieși?
@@ -65,7 +65,7 @@ As this is the first time you launch the game, please enter your nick name below
 == Aceasta fiind prima lansare a jocului, te rog introdu-ți pseudonimul mai jos. E recomandat să verifici setările și să le ajustezi cum vrei înainte să intri pe un server.
 
 Automatically record demos
-== Înregistrează automat demo-uri
+== Înregistrează automat demonstrații
 
 Automatically take game over screenshot
 == Fă automat o captură de ecran la final
@@ -92,10 +92,10 @@ Chat
 == Chat
 
 Clan
-== Clanul
+== Clan
 
 Client
-== Clientul
+== Client
 
 Close
 == Închide
@@ -182,7 +182,7 @@ Error
 == Eroare
 
 Error loading demo
-== Eroare la încărcarea demo-ului
+== Eroare la încărcarea demonstrației
 
 FSAA samples
 == Eșantioane FSAA
@@ -215,7 +215,7 @@ Friends
 == Prieteni
 
 Fullscreen
-== Ecrat complet
+== Afișare pe tot ecranul
 
 Game
 == Joc
@@ -242,7 +242,7 @@ Graphics
 == Grafică
 
 Grenade
-== Grenade
+== Grenadă
 
 Hammer
 == Ciocan
@@ -263,7 +263,7 @@ Host address
 == Adresa gazdei
 
 Hue
-== Tentă
+== Nuanță
 
 Info
 == Informații
@@ -317,7 +317,7 @@ Max Screenshots
 == Număr maxim de capturi de ecran
 
 Max demos
-== Număr maxim de demo-uri
+== Număr maxim de demonstrații
 
 Maximum ping:
 == Ping maxim:
@@ -326,16 +326,16 @@ Miscellaneous
 == Diverse
 
 Mouse sens.
-== Sensib. maus
+== Viteză maus
 
 Move left
-== Mută la stânga
+== Stânga
 
 Move player to spectators
 == Mută jucătorul la spectatori
 
 Move right
-== Mută la dreapta
+== Dreapta
 
 Movement
 == Mișcare
@@ -347,7 +347,7 @@ Name
 == Nume
 
 Name plates size
-== Dimensiune nume placă
+== Dimensiunea etichetei
 
 Netversion:
 == Cod rețea:
@@ -371,10 +371,10 @@ No password
 == Fără parolă
 
 No servers found
-== Nici un server găsit
+== Niciun server găsit
 
 No servers match your filter criteria
-== Nici un server nu corespunde criteriilor
+== Niciun server nu corespunde criteriilor
 
 Ok
 == Bine
@@ -467,7 +467,7 @@ Rename
 == Redenumește
 
 Rename demo
-== Redenumește demo-ul
+== Redenumește demonstrația
 
 Reset filter
 == Filtru implicit
@@ -536,10 +536,10 @@ Show ingame HUD
 == Arată scorul în joc
 
 Show name plates
-== Arată pseudonimele
+== Arată etichetele cu pseudonime
 
 Show only chat messages from friends
-== Arată doar mesajele prietenilor tăi
+== Arată doar mesajele prietenilor
 
 Show only supported
 == Arată doar modurile suportate
@@ -608,16 +608,16 @@ The audio device couldn't be initialised.
 == Dispozitivul audio nu a putut fi inițializat.
 
 The server is running a non-standard tuning on a pure game type.
-== Serverul folosește parametri ne-standard într-un joc standard.
+== Serverul nu folosește parametri standard într-un joc standard.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
 == Există o hartă nesalvată în editor. Probabil vrei să o salvezi înainte să ieși din joc.
 
 Threaded rendering
-== Randare în paralel
+== Randare grafică în paralel
 
 Threaded sound loading
-== Încărcare sunet îm paralel
+== Încărcare sunete în paralel
 
 Time limit
 == Timp limită
@@ -638,16 +638,16 @@ UI Color
 == Culoare meniu
 
 Unable to delete the demo
-== Nu pot șterge demo-ul
+== Nu pot șterge demonstrația
 
 Unable to rename the demo
-== Nu pot redenumi demo-ul
+== Nu pot redenumi demonstrația
 
 Use sounds
-== Folosește sunetul
+== Folosește sunete
 
 Use team colors for name plates
-== Folosește culorile echipelor pe etichetele de nume
+== Folosește culorile echipelor pe etichete
 
 V-Sync
 == Sincronizare verticală (V-Sync)
