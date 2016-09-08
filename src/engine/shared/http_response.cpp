@@ -149,7 +149,7 @@ bool CBufferResponse::Finalize()
 		bool Done = false;
 		while (!Done)
 		{
-			if (stream.total_out >= UncompressedSize)
+			if (stream.total_out >= (unsigned)UncompressedSize)
 			{
 				int NewSize = UncompressedSize + UncompressedSize / 2;
 				char* pTmp = (char*)mem_alloc(NewSize, 1);
