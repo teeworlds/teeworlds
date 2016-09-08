@@ -60,6 +60,7 @@ class IResponse : public IHttpBase
 
 	static int OnHeaderField(http_parser *pParser, const char *pData, size_t Len);
 	static int OnHeaderValue(http_parser *pParser, const char *pData, size_t Len);
+	static int OnHeadersComplete(http_parser *pParser);
 	static int OnMessageComplete(http_parser *pParser);
 
 	bool Write(char *pData, int Size);
@@ -87,9 +88,10 @@ class CBufferResponse : public IResponse
 	int m_BufferSize;
 
 	static int OnBody(http_parser *pParser, const char *pData, size_t Len);
-	static int OnHeadersComplete(http_parser *pParser);
+	static int OnMessageBegin(http_parser *pParser);
 
 	bool ResizeBuffer(int NeededSize);
+	bool Finalize();
 
 public:
 	CBufferResponse();

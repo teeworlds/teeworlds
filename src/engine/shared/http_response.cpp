@@ -9,6 +9,7 @@ IResponse::IResponse() : m_LastWasValue(false), m_Complete(false), m_Close(false
 	mem_zero(&m_ParserSettings, sizeof(m_ParserSettings));
 	m_ParserSettings.on_header_field = OnHeaderField;
 	m_ParserSettings.on_header_value = OnHeaderValue;
+	m_ParserSettings.on_headers_complete = OnHeadersComplete;
 	m_ParserSettings.on_message_complete = OnMessageComplete;
 
 	http_parser_init(&m_Parser, HTTP_RESPONSE);
@@ -42,6 +43,14 @@ int IResponse::OnHeaderValue(http_parser *pParser, const char *pData, size_t Len
 	return 0;
 }
 
+int IResponse::OnHeadersComplete(http_parser *pParser)
+{
+	CBufferResponse *pSelf = (CBufferResponse*)pParser->data;
+	if(pSelf->m_LastWasValue)
+		pSelf->AddField(pSelf->m_CurField);
+	return 0;
+}
+
 int IResponse::OnMessageComplete(http_parser *pParser)
 {
 	IResponse *pSelf = (IResponse*)pParser->data;
@@ -71,7 +80,7 @@ bool IResponse::Finalize()
 CBufferResponse::CBufferResponse() : IResponse(), m_pData(0), m_BufferSize(0)
 {
 	m_ParserSettings.on_body = OnBody;
-	m_ParserSettings.on_headers_complete = OnHeadersComplete;
+	m_ParserSettings.on_message_begin = OnMessageBegin;
 }
 
 CBufferResponse::~CBufferResponse()
@@ -90,7 +99,7 @@ int CBufferResponse::OnBody(http_parser *pParser, const char *pData, size_t Len)
 	return 0;
 }
 
-int CBufferResponse::OnHeadersComplete(http_parser *pParser)
+int CBufferResponse::OnMessageBegin(http_parser *pParser)
 {
 	CBufferResponse *pSelf = (CBufferResponse*)pParser->data;
 	const char *pLen = pSelf->GetField("Content-Length");
@@ -116,6 +125,60 @@ bool CBufferResponse::ResizeBuffer(int NeededSize)
 	}
 	else
 		m_pData = (char *)mem_alloc(m_BufferSize, 1);
+	return true;
+}
+
+bool CBufferResponse::Finalize()
+{
+	if (!IResponse::Finalize())
+		return false;
+	const char *pEncoding = GetField("Content-Encoding");
+	if (pEncoding && str_comp_nocase(pEncoding, "gzip") == 0)
+	{
+		z_stream stream;
+		mem_zero(&stream, sizeof(stream));
+		stream.next_in = (Bytef *)m_pData;
+		stream.avail_in = m_Size;
+
+		if (inflateInit2(&stream, (16 + MAX_WBITS)) != Z_OK)
+			return false;
+
+		int UncompressedSize = m_Size;
+		char* pBuf = (char *)mem_alloc(UncompressedSize, 1);
+
+		bool Done = false;
+		while (!Done)
+		{
+			if (stream.total_out >= UncompressedSize)
+			{
+				int NewSize = UncompressedSize + UncompressedSize / 2;
+				char* pTmp = (char*)mem_alloc(NewSize, 1);
+				mem_copy(pTmp, pBuf, UncompressedSize);
+				mem_free(pBuf);
+				UncompressedSize = NewSize;
+				pBuf = pTmp;
+			}
+
+			stream.next_out = (Bytef *)(pBuf + stream.total_out);
+			stream.avail_out = UncompressedSize - stream.total_out;
+
+			int err = inflate(&stream, Z_SYNC_FLUSH);
+			if (err == Z_STREAM_END) Done = true;
+			else if (err != Z_OK)
+				break;
+		}
+
+		if (inflateEnd(&stream) != Z_OK)
+		{
+			mem_free(pBuf);
+			return false;
+		}
+
+		mem_free(m_pData);
+		m_BufferSize = UncompressedSize;
+		m_Size = stream.total_out;
+		m_pData = pBuf;
+	}
 	return true;
 }
 
