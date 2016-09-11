@@ -234,7 +234,7 @@ void CServerBrowser::Update(bool ForceResort)
 // interface functions
 void CServerBrowser::SetType(int Type)
 {
-	if(Type < 0 || Type >= NUM_TYPES && Type != m_ActServerlistType)
+	if(Type < 0 || Type >= NUM_TYPES || Type == m_ActServerlistType)
 		return;
 
 	m_ActServerlistType = Type;

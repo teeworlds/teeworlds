@@ -2113,7 +2113,7 @@ int secure_random_init()
 #endif
 }
 
-void secure_random_fill(void *bytes, size_t length)
+void secure_random_fill(void *bytes, unsigned length)
 {
 	if(!secure_random_data.initialized)
 	{

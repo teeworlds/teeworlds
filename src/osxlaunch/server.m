@@ -1,6 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
-@interface ServerView : NSTextView
+@interface ServerView : NSTextView <NSWindowDelegate>
 {
 	NSTask *task;
 	NSFileHandle *file;

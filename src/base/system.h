@@ -1340,7 +1340,7 @@ int secure_random_init();
 		bytes - Pointer to the start of the buffer.
 		length - Length of the buffer.
 */
-void secure_random_fill(void *bytes, size_t length);
+void secure_random_fill(void *bytes, unsigned length);
 
 #ifdef __cplusplus
 }
