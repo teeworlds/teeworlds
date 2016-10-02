@@ -315,5 +315,8 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
+
+	// Teeworlds connect link
+	void HandleTeeworldsConnectLink(const char *clink);
 };
 #endif
