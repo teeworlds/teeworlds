@@ -709,6 +709,9 @@ void CClient::DummyConnect(int NetClient)
 	m_aLocalClientID[1] = -1;
 	m_RconAuthed[1] = 0;
 
+	g_Config.m_ClDummyCopyMoves = 0;
+	g_Config.m_ClDummyHammer = 0;
+
 	//connecting to the server
 	m_NetClient[NetClient].Connect(&m_ServerAddress);
 
