@@ -628,7 +628,7 @@ void CGameContext::OnClientEnter(int ClientID)
 
 	// local info
 	NewClientInfoMsg.m_Local = 1;
-	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);	
+	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 
 	if(Server()->DemoRecorder_IsRecording())
 	{
@@ -923,7 +923,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			pPlayer->m_LastSetSpectatorMode = Server()->Tick();
-			if(!pPlayer->SetSpectatorID(pMsg->m_SpectatorID))
+			if(!pPlayer->SetSpectatorID(pMsg->m_SpecMode, pMsg->m_SpectatorID))
 				SendGameMsg(GAMEMSG_SPEC_INVALIDID, ClientID);
 		}
 		else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
