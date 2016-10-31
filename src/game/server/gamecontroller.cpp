@@ -1113,6 +1113,8 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	}
 	OnPlayerInfoChange(pPlayer);
 	GameServer()->OnClientTeamChange(ClientID);
+
+	pPlayer->m_InactivityTickCounter = 0;
 }
 
 int IGameController::GetStartTeam()
