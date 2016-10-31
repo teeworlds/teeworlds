@@ -100,6 +100,7 @@ public:
 	};
 	int m_ServerMode;
 
+	int m_DemoSpecMode;
 	int m_DemoSpecID;
 
 	vec2 m_LocalCharacterPos;
@@ -138,6 +139,7 @@ public:
 		struct CSpectateInfo
 		{
 			bool m_Active;
+			int m_SpecMode;
 			int m_SpectatorID;
 			bool m_UsePosition;
 			vec2 m_Position;

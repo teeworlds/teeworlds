@@ -541,8 +541,25 @@ void CHud::RenderSpectatorHud()
 	char aName[64];
 	str_format(aName, sizeof(aName), "%2d: %s", m_pClient->m_Snap.m_SpecInfo.m_SpectatorID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW ?
-		aName : Localize("Free-View"));
+	switch(m_pClient->m_Snap.m_SpecInfo.m_SpecMode)
+	{
+	case SPEC_FREEVIEW:
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), Localize("Free-View"));
+		break;
+	case SPEC_PLAYER:
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), aName);
+		break;
+	case SPEC_FLAGRED:
+	case SPEC_FLAGBLUE:
+		char aFlag[64];
+		str_format(aFlag, sizeof(aFlag), "%s flag", Localize(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED ? "red" : "blue"));
+
+		if (m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+			str_format(aBuf, sizeof(aBuf), "%s: %s (%s)", Localize("Spectate"), aFlag, aName);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), aFlag);
+		break;
+	}
 	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
 }
 
@@ -565,7 +582,7 @@ void CHud::OnRender()
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
 		else if(m_pClient->m_Snap.m_SpecInfo.m_Active)
 		{
-			if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
+			if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
 				RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
 			RenderSpectatorHud();
 		}

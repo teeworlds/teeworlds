@@ -364,7 +364,8 @@ void CGameClient::OnReset()
 	m_LocalClientID = -1;
 	m_TeamCooldownTick = 0;
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
-	m_DemoSpecID = SPEC_FREEVIEW;
+	m_DemoSpecMode = SPEC_FREEVIEW;
+	m_DemoSpecID = -1;
 	m_Tuning = CTuningParams();
 }
 
@@ -393,7 +394,7 @@ void CGameClient::UpdatePositions()
 	if(m_Snap.m_SpecInfo.m_Active)
 	{
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
-			m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
+			m_Snap.m_SpecInfo.m_SpectatorID != -1)
 		{
 			m_Snap.m_SpecInfo.m_Position = mix(
 				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
@@ -401,7 +402,7 @@ void CGameClient::UpdatePositions()
 				Client()->IntraGameTick());
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
-		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW))
+		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW))
 		{
 			if(m_Snap.m_pPrevSpectatorInfo)
 				m_Snap.m_SpecInfo.m_Position = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
@@ -535,8 +536,10 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			case GAMEMSG_CTF_GRAB:
 				if(m_SuppressEvents)
 					return;
-				if(m_LocalClientID != -1 && (m_aClients[m_LocalClientID].m_Team != aParaI[0] ||
-					(m_Snap.m_SpecInfo.m_Active && m_Snap.m_SpecInfo.m_SpectatorID != -1 && m_aClients[m_Snap.m_SpecInfo.m_SpectatorID].m_Team != aParaI[0])))
+				if(m_LocalClientID != -1 && (m_aClients[m_LocalClientID].m_Team != aParaI[0] || (m_Snap.m_SpecInfo.m_Active &&
+								(m_Snap.m_SpecInfo.m_SpectatorID != -1 && m_aClients[m_Snap.m_SpecInfo.m_SpectatorID].m_Team != aParaI[0]) ||
+								(m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED && aParaI[0] != TEAM_RED) ||
+								(m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGBLUE && aParaI[0] != TEAM_BLUE))))
 					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_PL);
 				else
 					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_EN);
@@ -979,7 +982,8 @@ void CGameClient::OnNewSnapshot()
 						if(m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
 						{
 							m_Snap.m_SpecInfo.m_Active = true;
-							m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+							m_Snap.m_SpecInfo.m_SpecMode = SPEC_FREEVIEW;
+							m_Snap.m_SpecInfo.m_SpectatorID = -1;
 						}
 					}
 				}
@@ -1012,6 +1016,7 @@ void CGameClient::OnNewSnapshot()
 				m_Snap.m_pSpectatorInfo = (const CNetObj_SpectatorInfo *)pData;
 				m_Snap.m_pPrevSpectatorInfo = (const CNetObj_SpectatorInfo *)Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_SPECTATORINFO, Item.m_ID);
 				m_Snap.m_SpecInfo.m_Active = true;
+				m_Snap.m_SpecInfo.m_SpecMode = m_Snap.m_pSpectatorInfo->m_SpecMode;
 				m_Snap.m_SpecInfo.m_SpectatorID = m_Snap.m_pSpectatorInfo->m_SpectatorID;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATA)
@@ -1059,10 +1064,24 @@ void CGameClient::OnNewSnapshot()
 	{
 		m_Snap.m_SpecInfo.m_Active = true;
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
-			m_DemoSpecID != SPEC_FREEVIEW && m_Snap.m_aCharacters[m_DemoSpecID].m_Active)
+			m_DemoSpecID != -1 && m_Snap.m_aCharacters[m_DemoSpecID].m_Active)
+		{
+			m_Snap.m_SpecInfo.m_SpecMode = SPEC_PLAYER;
 			m_Snap.m_SpecInfo.m_SpectatorID = m_DemoSpecID;
+		}
 		else
-			m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
+		{
+			if (m_DemoSpecMode == SPEC_PLAYER)
+			{
+				m_Snap.m_SpecInfo.m_SpecMode = SPEC_FREEVIEW;
+				m_Snap.m_SpecInfo.m_SpectatorID = -1;
+			}
+			else
+			{
+				m_Snap.m_SpecInfo.m_SpecMode = m_DemoSpecMode;
+				m_Snap.m_SpecInfo.m_SpectatorID = m_DemoSpecID;
+			}
+		}
 	}
 
 	// sort player infos by score
