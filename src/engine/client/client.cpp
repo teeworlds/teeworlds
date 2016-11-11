@@ -1945,12 +1945,14 @@ void CClient::Run()
 
 			Update();
 
-			if(!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle())
+			int64 Now = time_get();
+
+			if((!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle())
+				&& (!g_Config.m_GfxRefreshRate || Now >= m_LastRenderTime + time_freq() / g_Config.m_GfxRefreshRate))
 			{
 				m_RenderFrames++;
 
 				// update frametime
-				int64 Now = time_get();
 				m_RenderFrameTime = (Now - m_LastRenderTime) / (float)time_freq();
 				if(m_RenderFrameTime < m_RenderFrameTimeLow)
 					m_RenderFrameTimeLow = m_RenderFrameTime;
