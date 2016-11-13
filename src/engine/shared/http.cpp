@@ -97,6 +97,8 @@ void CHttpClient::Send(CRequestInfo *pInfo, IRequest *pRequest)
 	}
 
 	pRequest->AddField("Host", pInfo->m_aAddr);
+	if(!pInfo->m_pResponse->IsFile())
+		pInfo->m_pRequest->AddField("Accept-Encoding", "gzip");
 	m_lPendingRequests.add(pInfo);
 }
 

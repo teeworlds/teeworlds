@@ -355,6 +355,8 @@ void CRenderTools::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, ve
 	int EndY = (int)(ScreenY1/Scale)+1;
 	int EndX = (int)(ScreenX1/Scale)+1;
 
+	UI()->TextRender()->BatchBegin();
+
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
 		{
@@ -394,6 +396,8 @@ void CRenderTools::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, ve
 				UI()->TextRender()->Text(0, mx*Scale-2, my*Scale-4, Scale-5, aBuf, -1);
 			}
 		}
+
+	UI()->TextRender()->BatchEnd();
 		
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
@@ -407,6 +411,8 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 	int StartX = (int)(ScreenX0/Scale)-1;
 	int EndY = (int)(ScreenY1/Scale)+1;
 	int EndX = (int)(ScreenX1/Scale)+1;
+
+	UI()->TextRender()->BatchBegin();
 
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
@@ -458,6 +464,8 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
 			}
 		}
+
+	UI()->TextRender()->BatchEnd();
 		
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }

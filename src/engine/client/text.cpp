@@ -96,12 +96,12 @@ class CTextRender : public IEngineTextRender
 			s++;
 		}
 	}
-	
+
 	static const int MAX_VERTICES = 1024*16;
 	IGraphics::CVertex m_aVertices[MAX_VERTICES];
 	IGraphics::CColor m_aColor[MAX_VERTICES/4];
 	int m_NumVertices;
-	
+
 	bool m_Batch;
 	CFontSizeData *m_pBatchSizeData;
 
@@ -114,13 +114,13 @@ class CTextRender : public IEngineTextRender
 	float m_TextOutlineG;
 	float m_TextOutlineB;
 	float m_TextOutlineA;
-	
+
 	int64 m_CurTime;
 
 	//int m_FontTextureFormat;
 
 	int m_FontMemoryUsage;
-	
+
 	CFont *m_pFont;
 
 	FT_Library m_FTLibrary;
@@ -456,7 +456,7 @@ class CTextRender : public IEngineTextRender
 
 	float GetKerning(CFont *pFont, CFontChar *pLeft, int Right)
 	{
-		for (int i = 0; i < min(MAX_CHARACTERS, pLeft->m_KerningCounter); i++)
+		for (int i = 0; i < min((int)MAX_CHARACTERS, (int)pLeft->m_KerningCounter); i++)
 		{
 			if (pLeft->m_Kerning[i].m_ID == Right)
 				return pLeft->m_Kerning[i].m_Kerning;
@@ -485,14 +485,14 @@ public:
 		m_TextOutlineA = 0.3f;
 
 		m_pFont = 0;
-		
+
 		m_NumVertices = 0;
 		m_Batch = false;
 		m_pBatchSizeData = 0;
 
 		// GL_LUMINANCE can be good for debugging
 		//m_FontTextureFormat = GL_ALPHA;
-		
+
 		m_FontMemoryUsage = 0;
 	}
 
@@ -597,7 +597,7 @@ public:
 		m_TextOutlineB = b;
 		m_TextOutlineA = a;
 	}
-	
+
 	void FlushText(CFontSizeData *pSizeData)
 	{
 		Graphics()->TextureSet(pSizeData->m_aTextures[1]);
@@ -608,12 +608,12 @@ public:
 		Graphics()->TextureSet(pSizeData->m_aTextures[0]);
 		Graphics()->RenderQuads(m_aVertices, m_NumVertices);
 	}
-	
+
 	virtual void BatchBegin()
 	{
 		m_Batch = true;
 	}
-	
+
 	virtual void BatchEnd()
 	{
 		if(m_pBatchSizeData && m_NumVertices > 0)
@@ -637,7 +637,6 @@ public:
 		int ActualX, ActualY;
 
 		int ActualSize;
-		int i;
 		int GotNewLine = 0;
 		float DrawX = 0.0f, DrawY = 0.0f;
 		int LineCount = 0;
@@ -669,7 +668,7 @@ public:
 
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
-		
+
 		if(m_Batch)
 		{
 			if(!m_pBatchSizeData)
@@ -774,27 +773,27 @@ public:
 						float x = DrawX+pChr->m_OffsetX*Size;
 						float y = DrawY+pChr->m_OffsetY*Size;
 						IGraphics::CColor Color = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
-						
+
 						m_aColor[m_NumVertices/4] = { m_TextR, m_TextG, m_TextB, m_TextA };
-						
+
 						m_aVertices[m_NumVertices+0].m_Pos.x = x;
 						m_aVertices[m_NumVertices+0].m_Pos.y = y;
 						m_aVertices[m_NumVertices+0].m_Tex.u = pChr->m_aUvs[0];
 						m_aVertices[m_NumVertices+0].m_Tex.v = pChr->m_aUvs[1];
 						m_aVertices[m_NumVertices+0].m_Color = Color;
-						
+
 						m_aVertices[m_NumVertices+1].m_Pos.x = x + pChr->m_Width*Size;
 						m_aVertices[m_NumVertices+1].m_Pos.y = y;
 						m_aVertices[m_NumVertices+1].m_Tex.u = pChr->m_aUvs[2];
 						m_aVertices[m_NumVertices+1].m_Tex.v = pChr->m_aUvs[1];
 						m_aVertices[m_NumVertices+1].m_Color = Color;
-						
+
 						m_aVertices[m_NumVertices+2].m_Pos.x = x + pChr->m_Width*Size;
 						m_aVertices[m_NumVertices+2].m_Pos.y = y + pChr->m_Height*Size;
 						m_aVertices[m_NumVertices+2].m_Tex.u = pChr->m_aUvs[2];
 						m_aVertices[m_NumVertices+2].m_Tex.v = pChr->m_aUvs[3];
 						m_aVertices[m_NumVertices+2].m_Color = Color;
-						
+
 						m_aVertices[m_NumVertices+3].m_Pos.x = x;
 						m_aVertices[m_NumVertices+3].m_Pos.y = y + pChr->m_Height*Size;
 						m_aVertices[m_NumVertices+3].m_Tex.u = pChr->m_aUvs[0];
@@ -802,7 +801,7 @@ public:
 						m_aVertices[m_NumVertices+3].m_Color = Color;
 
 						m_NumVertices += 4;
-					
+
 						if(m_NumVertices == MAX_VERTICES)
 						{
 							FlushText(pSizeData);
@@ -825,7 +824,7 @@ public:
 				++LineCount;
 			}
 		}
-		
+
 		if(m_NumVertices > 0 && !m_Batch)
 		{
 			FlushText(pSizeData);

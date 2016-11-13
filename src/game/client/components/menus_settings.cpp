@@ -720,7 +720,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
-	CUIRect Button;
+	CUIRect Button, Label;
 	char aBuf[128];
 	bool CheckSettings = false;
 
@@ -880,7 +880,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			m_NeedRestartGraphics = true;
 	}
 
-	//
+	MainView.HSplitTop(20.0f, &Label, &MainView);
+	Label.VSplitLeft(130.0f, &Label, &Button);
+	str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Refresh Rate"), g_Config.m_GfxRefreshRate);
+	UI()->DoLabelScaled(&Label, aBuf, 14.0f, -1);
+	Button.HMargin(2.0f, &Button);
+	g_Config.m_GfxRefreshRate = static_cast<int>(DoScrollbarH(&g_Config.m_GfxRefreshRate, &Button, g_Config.m_GfxRefreshRate / 1000.0f)*1000.0f + 0.1f);
+
 
 	CUIRect Text;
 	MainView.HSplitTop(20.0f, 0, &MainView);
