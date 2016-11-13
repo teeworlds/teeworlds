@@ -26,7 +26,7 @@ MACRO_CONFIG_INT(ClAutoScreenshotMax, cl_auto_screenshot_max, 10, 0, 1000, CFGFL
 
 MACRO_CONFIG_INT(ClEventthread, cl_eventthread, 0, 0, 1, CFGFLAG_CLIENT, "Enables the usage of a thread to pump the events")
 
-MACRO_CONFIG_INT(ClMapChannels, cl_map_channels, 1, 1, 16, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Number of map download channels")
+MACRO_CONFIG_INT(ClMapChannels, cl_map_channels, 16, 1, 16, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Number of map download channels")
 
 MACRO_CONFIG_INT(InpGrab, inp_grab, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Use forceful input grabbing method")
 
