@@ -1,7 +1,5 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <stdio.h>
-
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/demo.h>
@@ -11,6 +9,7 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 #include <game/layers.h>
+#include <game/teerace.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
 #include <game/client/render.h>
@@ -762,31 +761,14 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		if(pMsg->m_ClientID)
 		{
-			const char* pMessage = pMsg->m_pMessage;
-
-			int Num = 0;
-			while(str_comp_num(pMessage, " finished in: ", 14))
+			char aPlayerName[MAX_NAME_LENGTH];
+			int Time = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aPlayerName, sizeof(aPlayerName));
+			if(Time && str_comp(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
 			{
-				pMessage++;
-				Num++;
-				if(!pMessage[0] || Num >= MAX_NAME_LENGTH)
-					return;
-			}
-
-			// store the name
-			char PlayerName[MAX_NAME_LENGTH];
-			str_copy(PlayerName, pMsg->m_pMessage, Num+1);
-
-			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName))
-			{
-				int Minutes, Seconds, MSec;
-				if(sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
-				{
-					m_RaceState = RACE_FINISHED;
-					m_FinishTime = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
-				}
+				m_RaceState = RACE_FINISHED;
+				m_FinishTime = Time;
 			}
 		}
 	}

@@ -8,6 +8,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
+#include <game/teerace.h>
 #include <game/generated/client_data.h>
 #include <game/client/animstate.h>
 
@@ -439,28 +440,11 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		if(pMsg->m_ClientID == -1 && m_RaceState == RACE_STARTED)
 		{
-			const char* pMessage = pMsg->m_pMessage;
-			
-			int Num = 0;
-			while(str_comp_num(pMessage, " finished in: ", 14))
-			{
-				pMessage++;
-				Num++;
-				if(!pMessage[0])
-					return;
-			}
-			
-			// store the name
-			char aName[64];
-			str_copy(aName, pMsg->m_pMessage, Num+1);
-			
-			// prepare values and state for saving
-			int Minutes, Seconds, MSec;
-			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) &&
-				sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
+			char aName[32];
+			int CurTime = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aName, sizeof(aName));
+			if(CurTime && str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
 			{
 				m_RaceState = RACE_FINISHED;
-				int CurTime = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
 				if(m_Recording && (CurTime < m_BestTime || m_BestTime == -1))
 				{
 					m_NewRecord = true;

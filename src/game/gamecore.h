@@ -166,10 +166,13 @@ public:
 	CWorldCore()
 	{
 		mem_zero(m_apCharacters, sizeof(m_apCharacters));
+		m_Teleport = true;
 	}
 
 	CTuningParams m_Tuning;
 	class CCharacterCore *m_apCharacters[MAX_CLIENTS];
+
+	bool m_Teleport;
 };
 
 class CCharacterCore
