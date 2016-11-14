@@ -73,11 +73,6 @@ void IRace::FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes)
 		str_format(pBuf, Size, "%02d:%02d.%03d", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);
 }
 
-void IRace::FormatTimeSeconds(char *pBuf, int Size, int Time)
-{
-	str_format(pBuf, Size, "%d.%03d", Time / 1000, Time % 1000);
-}
-
 void IRace::FormatTimeDiff(char *pBuf, int Size, int Time)
 {
 	int PosDiff = absolute(Time);
