@@ -402,7 +402,7 @@ void CCharacterCore::Move()
 	
 	m_Teleported = false;
 	int Tele = m_pCollision->CheckTeleport(PrevPos, m_Pos);
-	if(Tele)
+	if(Tele && m_pWorld->m_Teleport)
 	{
 		// TODO
 		// check double jump

@@ -1195,6 +1195,7 @@ void CGameClient::OnPredict()
 	// repredict character
 	CWorldCore World;
 	World.m_Tuning = m_Tuning;
+	World.m_Teleport = g_Config.m_ClPredictTeleport;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
