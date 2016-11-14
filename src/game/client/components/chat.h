@@ -66,7 +66,6 @@ class CChat : public CComponent
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
 	bool m_ContainsName;
-	bool m_IgnorePlayer;
 	bool m_Spam;
 	
 	char m_aaLastMsg[MAX_CLIENTS+1][265];

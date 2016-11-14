@@ -492,28 +492,28 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 			break;
 		unsigned Size = (aSize[0] << 24) | (aSize[1] << 16) | (aSize[2] << 8) | aSize[3];
 
-		if(io_read(File, aCompresseddata, Size) != (unsigned)Size)
+		if(io_read(File, aCompresseddata, Size) != Size)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error reading chunk");
 			break;
 		}
 
-		Size = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
-		if(Size < 0)
+		int DataSize = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
+		if(DataSize < 0)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during network decompression");
 			break;
 		}
 
-		Size = CVariableInt::Decompress(aDecompressed, Size, aData);
-		if(Size < 0)
+		DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData);
+		if(DataSize < 0)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during intpack decompression");
 			break;
 		}
 
 		char *pTmp = aData;
-		for(unsigned i = 0; i < Size / ms_ChostCharacterSize; i++)
+		for(int i = 0; i < DataSize / ms_ChostCharacterSize; i++)
 		{
 			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_ChostCharacterSize);
 			pTmp += ms_ChostCharacterSize;
