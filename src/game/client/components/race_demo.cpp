@@ -8,7 +8,6 @@
 #include "menus.h"
 #include "race_demo.h"
 
-// TODO: rework the path handling
 CRaceDemo::CRaceDemo()
 {
 	m_RaceState = RACE_NONE;
@@ -39,7 +38,7 @@ void CRaceDemo::OnRender()
 		if(m_RaceState == RACE_STARTED)
 			OnReset();
 		
-		m_pMap = Client()->DemoRecorder_StartRace("tmp");
+		Client()->DemoRecorder_StartRace();
 		m_DemoStartTick = Client()->GameTick() + Client()->GameTickSpeed();
 		m_RaceState = RACE_STARTED;
 	}
@@ -58,9 +57,12 @@ void CRaceDemo::OnReset()
 {
 	if(DemoRecorder()->IsRecording())
 		DemoRecorder()->Stop();
-		
+
+	char aDemoName[128];
 	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
+	Client()->RaceDemo_GetName(aDemoName, sizeof(aDemoName));
+	Client()->RaceDemo_GetPath(aFilename, sizeof(aFilename), aDemoName);
+
 	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 	
 	m_Time = 0;
@@ -116,83 +118,51 @@ void CRaceDemo::CheckDemo()
 	// stop the demo recording
 	DemoRecorder()->Stop();
 	
-	char aTmpDemoName[128];
-	str_format(aTmpDemoName, sizeof(aTmpDemoName), "%s_tmp", m_pMap);
-	
-	// loop through demo files
-	m_pClient->m_pMenus->DemolistPopulate();
-	for(int i = 0; i < m_pClient->m_pMenus->m_lDemos.size(); i++)
+	if(str_comp(m_pClient->m_pMenus->m_aCurrentDemoFolder, "demos") == 0)
 	{
-		if(!str_comp_num(m_pClient->m_pMenus->m_lDemos[i].m_aName, m_pMap, str_length(m_pMap)) && str_comp_num(m_pClient->m_pMenus->m_lDemos[i].m_aName, aTmpDemoName, str_length(aTmpDemoName)))
- 		{
-			char aDemo[128];
-			str_copy(aDemo, m_pClient->m_pMenus->m_lDemos[i].m_aName, sizeof(aDemo));
-			
-			char *pDemo = aDemo + str_length(m_pMap)+1;
-			const char *pTimeEnd = str_find(pDemo, "_");
-			if(pTimeEnd)
-			{
-				int TimeLen = pTimeEnd - pDemo;
-				pDemo[TimeLen] = 0;
-			}
-			
-			int DemoTime;
-			if(str_find(pDemo, ".")) // detect old demos
-				DemoTime = str_tofloat(pDemo) * 1000;
-			else
-				DemoTime = str_toint(pDemo);
+		char aTmpDemoName[128];
+		Client()->RaceDemo_GetName(aTmpDemoName, sizeof(aTmpDemoName));
 
-			if(m_Time < DemoTime)
+		// loop through demo files
+		m_pClient->m_pMenus->DemolistPopulate();
+		for (int i = 0; i < m_pClient->m_pMenus->m_lDemos.size(); i++)
+		{
+			const char *pDemoName = m_pClient->m_pMenus->m_lDemos[i].m_aName;
+			if(str_comp(pDemoName, aTmpDemoName) == 0)
+				continue;
+
+			int DemoTime = Client()->RaceDemo_ParseName(pDemoName);
+			if(DemoTime)
 			{
-				// save new record
-				SaveDemo(m_pMap);
-				
+				if (m_Time >= DemoTime)
+				{
+					// found a better one
+					m_Time = 0;
+					return;
+				}
+
 				// delete old demo
 				char aFilename[512];
-				str_format(aFilename, sizeof(aFilename), "demos/%s.demo", m_pClient->m_pMenus->m_lDemos[i].m_aName);
+				Client()->RaceDemo_GetPath(aFilename, sizeof(aFilename), pDemoName);
 				Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 			}
-	
-			m_Time = 0;
-			
-			return;
 		}
 	}
 	
 	// save demo if there is none
-	SaveDemo(m_pMap);
-	
+	SaveDemo();
 	m_Time = 0;
 }
 
-void CRaceDemo::SaveDemo(const char* pDemo)
+void CRaceDemo::SaveDemo()
 {
+	char aDemoName[128];
 	char aNewFilename[512];
 	char aOldFilename[512];
-	if(g_Config.m_ClDemoName)
-	{
-		char aPlayerName[MAX_NAME_LENGTH];
-		str_copy(aPlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName, sizeof(aPlayerName));
-		ClearFilename(aPlayerName, MAX_NAME_LENGTH);
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%d_%s.demo", pDemo, m_Time, aPlayerName);
-	}
-	else
-		str_format(aNewFilename, sizeof(aNewFilename), "demos/%s_%d.demo", pDemo, m_Time);
-
-	str_format(aOldFilename, sizeof(aOldFilename), "demos/%s_tmp.demo", m_pMap);
+	Client()->RaceDemo_GetName(aDemoName, sizeof(aDemoName), m_Time);
+	Client()->RaceDemo_GetPath(aNewFilename, sizeof(aNewFilename), aDemoName);
+	Client()->RaceDemo_GetName(aDemoName, sizeof(aDemoName));
+	Client()->RaceDemo_GetPath(aOldFilename, sizeof(aOldFilename), aDemoName);
 	
 	Storage()->RenameFile(aOldFilename, aNewFilename, IStorage::TYPE_SAVE);
-}
-
-// TODO: remove this
-void CRaceDemo::ClearFilename(char *pFilename, int Size)
-{
-	for (int i = 0; i < Size; i++)
-	{
-		if (!pFilename[i])
-			break;
-
-		if (pFilename[i] == '\\' || pFilename[i] == '/' || pFilename[i] == '|' || pFilename[i] == ':' || pFilename[i] == '*' || pFilename[i] == '?' || pFilename[i] == '<' || pFilename[i] == '>' || pFilename[i] == '"')
-			pFilename[i] = '%';
-	}
 }

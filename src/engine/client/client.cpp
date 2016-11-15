@@ -2159,37 +2159,83 @@ void CClient::Con_RemoveFavorite(IConsole::IResult *pResult, void *pUserData)
 }
 
 // Race
-const char *CClient::DemoRecorder_StartRace(const char *pFilename)
+void ClearFilename(char *pStr)
 {
-	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", m_aCurrentMap, pFilename);
+	while(*pStr)
+	{
+		if (*pStr == '\\' || *pStr == '/' || *pStr == '|' || *pStr == ':' || *pStr == '*' || *pStr == '?' || *pStr == '<' || *pStr == '>' || *pStr == '"')
+			*pStr = '%';
+		pStr++;
+	}
+}
 
-	if(State() != STATE_ONLINE)
-		dbg_msg("demorec/record", "client is not online");
+int CClient::RaceDemo_ParseName(const char *pName)
+{
+	char aPlayerName[MAX_NAME_LENGTH];
+	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
+	ClearFilename(aPlayerName);
+
+	int MapLen = str_length(m_aCurrentMap);
+	if(str_comp_num(pName, m_aCurrentMap, MapLen) == 0 && str_length(pName) > MapLen && pName[MapLen] == '_' && str_find(pName, aPlayerName))
+	{
+		const char *pTime = pName + MapLen + 1;
+		const char *pDot = pTime;
+		while (isdigit(*pDot)) pDot++;
+
+		if(*pDot == '.')
+			return str_tofloat(pTime) * 1000;
+		else
+			return str_toint(pTime);
+	}
+
+	return 0;
+}
+
+void CClient::RaceDemo_GetName(char *pBuf, int Size, int Time)
+{
+	// check the player name
+	char aPlayerName[MAX_NAME_LENGTH];
+	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
+	ClearFilename(aPlayerName);
+
+	if (Time < 0)
+		str_format(pBuf, Size, "%s_%s_tmp", m_aCurrentMap, aPlayerName);
 	else
-		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+		str_format(pBuf, Size, "%s_%d_%s", m_aCurrentMap, Time, aPlayerName);
+}
 
-	return m_aCurrentMap;
+void CClient::RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName)
+{
+	str_format(pBuf, Size, "demos/%s.demo", pDemoName);
+}
+
+void CClient::DemoRecorder_StartRace()
+{
+	if (State() != IClient::STATE_ONLINE)
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
+	else
+	{
+		char aDemoName[128];
+		char aFilename[128];
+
+		RaceDemo_GetName(aDemoName, sizeof(aDemoName));
+		RaceDemo_GetPath(aFilename, sizeof(aFilename), aDemoName);
+
+		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+	}
 }
 
 void CClient::Ghost_GetPath(char *pBuf, int Size, int Time)
 {
 	// check the player name
-	char aName[MAX_NAME_LENGTH];
-	str_copy(aName, g_Config.m_PlayerName, sizeof(aName));
-	for (int i = 0; i < MAX_NAME_LENGTH; i++)
-	{
-		if (!aName[i])
-			break;
-
-		if (aName[i] == '\\' || aName[i] == '/' || aName[i] == '|' || aName[i] == ':' || aName[i] == '*' || aName[i] == '?' || aName[i] == '<' || aName[i] == '>' || aName[i] == '"')
-			aName[i] = '%';
-	}
+	char aPlayerName[MAX_NAME_LENGTH];
+	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
+	ClearFilename(aPlayerName);
 
 	if(Time < 0)
-		str_format(pBuf, Size, "ghosts/%s_%08x_%s_tmp.gho", m_aCurrentMap, m_CurrentMapCrc, aName);
+		str_format(pBuf, Size, "ghosts/%s_%08x_%s_tmp.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName);
 	else
-		str_format(pBuf, Size, "ghosts/%s_%08x_%s_%d.gho", m_aCurrentMap, m_CurrentMapCrc, aName, Time);
+		str_format(pBuf, Size, "ghosts/%s_%08x_%s_%d.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName, Time);
 }
 
 void CClient::GhostRecorder_Start()

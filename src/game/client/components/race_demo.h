@@ -10,11 +10,8 @@ class CRaceDemo : public CComponent
 	int m_RecordStopTime;
 	int m_DemoStartTick;
 	int m_Time;
-	const char *m_pMap;
 	
 	bool m_Active;
-
-	void ClearFilename(char *pFilename, int Size);
 	
 public:
 
@@ -35,6 +32,6 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	
 	void CheckDemo();
-	void SaveDemo(const char* pDemo);
+	void SaveDemo();
 };
 #endif
