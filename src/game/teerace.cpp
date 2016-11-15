@@ -48,11 +48,10 @@ int IRace::TimeFromFinishMessage(const char *pStr, char *pNameBuf, int NameBufSi
 	static const char *pFinishedStr = " finished in: ";
 	const char *pFinished = str_find(pStr, pFinishedStr);
 	int FinishedPos = pFinished - pStr;
-	if (!pFinished || FinishedPos == 0)
+	if (!pFinished || FinishedPos == 0 || FinishedPos >= NameBufSize)
 		return 0;
 
-	int NameLen = min(FinishedPos + 1, NameBufSize);
-	str_copy(pNameBuf, pStr, NameLen);
+	str_copy(pNameBuf, pStr, FinishedPos + 1);
 
 	return TimeFromStr(pFinished + str_length(pFinishedStr));
 }

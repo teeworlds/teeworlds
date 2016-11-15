@@ -99,7 +99,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		if(pMsg->m_ClientID == -1 && m_RaceState == RACE_STARTED)
 		{
-			char aName[32];
+			char aName[MAX_NAME_LENGTH];
 			int Time = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aName, sizeof(aName));
 			if(Time && str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
 			{
