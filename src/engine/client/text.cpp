@@ -320,7 +320,7 @@ class CTextRender : public IEngineTextRender
 		int SlotSize = SlotW*SlotH;
 		int x = 1;
 		int y = 1;
-		int px, py;
+		unsigned px, py;
 
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 
@@ -361,8 +361,8 @@ class CTextRender : public IEngineTextRender
 				}
 		}
 
-		if(0) for(py = 0; py < SlotW; py++)
-			for(px = 0; px < SlotH; px++)
+		if(0) for(py = 0; (int)py < SlotW; py++)
+			for(px = 0; (int)px < SlotH; px++)
 				ms_aGlyphData[py*SlotW+px] = 255;
 
 		// upload the glyph
@@ -462,12 +462,12 @@ class CTextRender : public IEngineTextRender
 				return pLeft->m_Kerning[i].m_Kerning;
 		}
 
-		float Tmp = Kerning(pFont, pLeft->m_ID, Right);
-		pLeft->m_Kerning[pLeft->m_KerningCounter % MAX_CHARACTERS] = { Right, Tmp };
+		CKerning Tmp = { Right, Kerning(pFont, pLeft->m_ID, Right) };
+		pLeft->m_Kerning[pLeft->m_KerningCounter % MAX_CHARACTERS] = Tmp;
 		pLeft->m_KerningCounter++;
 		if(pLeft->m_KerningCounter == 2*MAX_CHARACTERS)
 			pLeft->m_KerningCounter = MAX_CHARACTERS;
-		return Tmp;
+		return Tmp.m_Kerning;
 	}
 
 public:
@@ -772,33 +772,34 @@ public:
 					{
 						float x = DrawX+pChr->m_OffsetX*Size;
 						float y = DrawY+pChr->m_OffsetY*Size;
-						IGraphics::CColor Color = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
+						IGraphics::CColor Color = { m_TextR, m_TextG, m_TextB, m_TextA };
+						IGraphics::CColor OutlineColor = { m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA };
 
-						m_aColor[m_NumVertices/4] = { m_TextR, m_TextG, m_TextB, m_TextA };
+						m_aColor[m_NumVertices/4] = Color;
 
 						m_aVertices[m_NumVertices+0].m_Pos.x = x;
 						m_aVertices[m_NumVertices+0].m_Pos.y = y;
 						m_aVertices[m_NumVertices+0].m_Tex.u = pChr->m_aUvs[0];
 						m_aVertices[m_NumVertices+0].m_Tex.v = pChr->m_aUvs[1];
-						m_aVertices[m_NumVertices+0].m_Color = Color;
+						m_aVertices[m_NumVertices+0].m_Color = OutlineColor;
 
 						m_aVertices[m_NumVertices+1].m_Pos.x = x + pChr->m_Width*Size;
 						m_aVertices[m_NumVertices+1].m_Pos.y = y;
 						m_aVertices[m_NumVertices+1].m_Tex.u = pChr->m_aUvs[2];
 						m_aVertices[m_NumVertices+1].m_Tex.v = pChr->m_aUvs[1];
-						m_aVertices[m_NumVertices+1].m_Color = Color;
+						m_aVertices[m_NumVertices+1].m_Color = OutlineColor;
 
 						m_aVertices[m_NumVertices+2].m_Pos.x = x + pChr->m_Width*Size;
 						m_aVertices[m_NumVertices+2].m_Pos.y = y + pChr->m_Height*Size;
 						m_aVertices[m_NumVertices+2].m_Tex.u = pChr->m_aUvs[2];
 						m_aVertices[m_NumVertices+2].m_Tex.v = pChr->m_aUvs[3];
-						m_aVertices[m_NumVertices+2].m_Color = Color;
+						m_aVertices[m_NumVertices+2].m_Color = OutlineColor;
 
 						m_aVertices[m_NumVertices+3].m_Pos.x = x;
 						m_aVertices[m_NumVertices+3].m_Pos.y = y + pChr->m_Height*Size;
 						m_aVertices[m_NumVertices+3].m_Tex.u = pChr->m_aUvs[0];
 						m_aVertices[m_NumVertices+3].m_Tex.v = pChr->m_aUvs[3];
-						m_aVertices[m_NumVertices+3].m_Color = Color;
+						m_aVertices[m_NumVertices+3].m_Color = OutlineColor;
 
 						m_NumVertices += 4;
 

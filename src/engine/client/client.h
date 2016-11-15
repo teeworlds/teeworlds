@@ -305,7 +305,7 @@ public:
 	void Ghost_GetPath(char *pBuf, int Size, int Time = -1);
 	void GhostRecorder_Start();
 	bool GhostLoader_Load(const char *pFilename);
-	bool GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader);
+	bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader);
 
 	void RegisterCommands();
 
