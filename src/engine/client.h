@@ -149,7 +149,7 @@ public:
 	virtual void Ghost_GetPath(char *pBuf, int Size, int Time = -1) = 0;
 	virtual void GhostRecorder_Start() = 0;
 	virtual bool GhostLoader_Load(const char *pFilename) = 0;
-	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader) = 0;
+	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader) = 0;
 };
 
 class IGameClient : public IInterface

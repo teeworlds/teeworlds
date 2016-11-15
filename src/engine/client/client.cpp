@@ -1269,7 +1269,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 			pData = (const char *)Unpacker.GetRaw(PartSize);
 
-			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 | Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
+			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
 				return;
 
 			if(GameTick >= m_CurrentRecvTick)
@@ -2250,7 +2250,7 @@ bool CClient::GhostLoader_Load(const char *pFilename)
 	return m_GhostLoader.Load(Storage(), m_pConsole, pFilename, m_aCurrentMap, m_CurrentMapCrc) == 0;
 }
 
-bool CClient::GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader)
+bool CClient::GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader)
 {
 	return m_GhostLoader.GetGhostInfo(Storage(), m_pConsole, pFilename, pGhostHeader, m_aCurrentMap, m_CurrentMapCrc);
 }
