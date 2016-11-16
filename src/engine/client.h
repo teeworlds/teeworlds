@@ -141,12 +141,15 @@ public:
 	virtual int GetDebugFont() = 0;
 	
 	// Race
-	virtual const char *DemoRecorder_StartRace(const char *pFilename) = 0;
+	virtual int RaceDemo_ParseName(const char *pName) = 0;
+	virtual void RaceDemo_GetName(char *pBuf, int Size, int Time = -1) = 0;
+	virtual void RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName) = 0;
+	virtual void DemoRecorder_StartRace() = 0;
 	
 	virtual void Ghost_GetPath(char *pBuf, int Size, int Time = -1) = 0;
 	virtual void GhostRecorder_Start() = 0;
 	virtual bool GhostLoader_Load(const char *pFilename) = 0;
-	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader) = 0;
+	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader) = 0;
 };
 
 class IGameClient : public IInterface

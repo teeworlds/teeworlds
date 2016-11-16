@@ -1,13 +1,12 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <stdio.h>
-
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
+#include <game/teerace.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
 #include "timemessages.h"
@@ -27,34 +26,19 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		if(pMsg->m_ClientID == -1)
 		{
-			const char* pMessage = pMsg->m_pMessage;
-			
-			int Num = 0;
-			while(str_comp_num(pMessage, " finished in: ", 14))
-			{
-				pMessage++;
-				Num++;
-				if(!pMessage[0] || Num > MAX_NAME_LENGTH)
-					return;
-			}
-			
 			CTimeMsg Time;
 			Time.m_ServerDiff = 0;
 			Time.m_LocalDiff = 0;
-			
-			// store the name
-			str_copy(Time.m_aPlayerName, pMsg->m_pMessage, Num+1);
-			
-			// prepare values and state for saving
-			int Minutes, Seconds, MSec;
-			if(sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
+
+			int MsgTime = IRace::TimeFromFinishMessage(pMsg->m_pMessage, Time.m_aPlayerName, sizeof(Time.m_aPlayerName));
+			if(MsgTime)
 			{
-				Time.m_Time = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
+				Time.m_Time = MsgTime;
 				Time.m_PlayerID = -1;
 				for(int i = 0; i < MAX_CLIENTS; i++)
-					if(!str_comp(Time.m_aPlayerName, m_pClient->m_aClients[i].m_aName))
+					if(str_comp(Time.m_aPlayerName, m_pClient->m_aClients[i].m_aName) == 0)
 					{
 						Time.m_PlayerID = i;
 						break;
@@ -72,13 +56,20 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 				m_TimemsgCurrent = (m_TimemsgCurrent+1)%MAX_TIMEMSGS;
 				m_aTimemsgs[m_TimemsgCurrent] = Time;
 			}
-		}
-		if(pMsg->m_ClientID == -1 && !str_comp_num(pMsg->m_pMessage, "New record: ", 12))
-		{
-			const char* pMessage = pMsg->m_pMessage;
-			int Seconds, MSec;
-			if(sscanf(pMessage, "New record: -%d.%03d", &Seconds, &MSec) != 2)
-				m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = -(Seconds * 1000 + MSec);
+			else
+			{
+				static const char *pRecordStr = "New record: ";
+				const char *pRecord = str_find(pMsg->m_pMessage, pRecordStr);
+				if (pRecord)
+				{
+					pRecord += str_length(pRecordStr);
+					if (*pRecord == '-')
+						pRecord++;
+					int MsgTime = IRace::TimeFromStr(pRecord);
+					if (MsgTime)
+						m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = -MsgTime;
+				}
+			}
 		}
 	}
 }
@@ -113,8 +104,7 @@ void CTimeMessages::OnRender()
 		
 		// time
 		char aTime[32];
-		str_format(aTime, sizeof(aTime), "%02d:%02d.%03d",
-			m_aTimemsgs[r].m_Time / (60 * 1000), (m_aTimemsgs[r].m_Time / 1000) % 60, m_aTimemsgs[r].m_Time % 1000);
+		IRace::FormatTimeShort(aTime, sizeof(aTime), m_aTimemsgs[r].m_Time, true);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1);
 		
 		float x = StartX;
@@ -124,10 +114,11 @@ void CTimeMessages::OnRender()
 		// render local diff
 		if(m_aTimemsgs[r].m_LocalDiff && !m_aTimemsgs[r].m_ServerDiff)
 		{
+			char aBuf[32];
 			char aDiff[32];
-			int Diff = abs(m_aTimemsgs[r].m_LocalDiff);
-			str_format(aDiff, sizeof(aDiff), "(%s%d.%03d)", m_aTimemsgs[r].m_LocalDiff > 0 ? "+" : "-", Diff / 1000, Diff % 1000);
-			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
+			IRace::FormatTimeDiff(aDiff, sizeof(aDiff), m_aTimemsgs[r].m_LocalDiff);
+			str_format(aBuf, sizeof(aBuf), "(%s)", aDiff);
+			float DiffW = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			
 			x -= DiffW;
 			if(m_aTimemsgs[r].m_LocalDiff < 0)
@@ -144,10 +135,11 @@ void CTimeMessages::OnRender()
 		// render server diff
 		if(m_aTimemsgs[r].m_ServerDiff)
 		{
+			char aBuf[32];
 			char aDiff[32];
-			int Diff = abs(m_aTimemsgs[r].m_ServerDiff);
-			str_format(aDiff, sizeof(aDiff), "(%s%d.%03d)", m_aTimemsgs[r].m_ServerDiff > 0 ? "+" : "-", Diff / 1000, Diff % 1000);
-			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
+			IRace::FormatTimeDiff(aDiff, sizeof(aDiff), m_aTimemsgs[r].m_ServerDiff);
+			str_format(aBuf, sizeof(aBuf), "(%s)", aDiff);
+			float DiffW = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			
 			x -= DiffW;
 			TextRender()->TextColor(0.0f, 0.5f, 1.0f, Blend);

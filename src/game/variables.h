@@ -97,7 +97,6 @@ MACRO_CONFIG_INT(GfxNoclip, gfx_noclip, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "D
 
 /* race - client */
 MACRO_CONFIG_INT(ClAutoRaceRecord, cl_auto_race_record, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the best demo of each race")
-MACRO_CONFIG_INT(ClDemoName, cl_demo_name, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the playername within the demo")
 MACRO_CONFIG_INT(ClShowOthers, cl_show_others, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turn other players off in race")
 MACRO_CONFIG_INT(ClShowCheckpointDiff, cl_show_checkpoint_diff, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show checkpoint diff")
 MACRO_CONFIG_INT(ClShowServerRecord, cl_show_server_record, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show server record")
@@ -105,6 +104,7 @@ MACRO_CONFIG_INT(ClRaceGhost, cl_race_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAV
 MACRO_CONFIG_INT(ClRaceSaveGhost, cl_race_save_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save ghost")
 MACRO_CONFIG_INT(ClGhostNamePlates, cl_ghost_nameplates, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ghost nameplates")
 MACRO_CONFIG_INT(ClGhostNameplatesAlways, cl_ghost_nameplates_always, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Always show ghost nameplats disregarding of distance")
+MACRO_CONFIG_INT(ClPredictTeleport, cl_predict_teleport, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict teleport")
 
 MACRO_CONFIG_STR(WaUsername, wa_username, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace username")
 MACRO_CONFIG_STR(WaPassword, wa_password, 32, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Teerace password")

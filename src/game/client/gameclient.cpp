@@ -1,7 +1,5 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <stdio.h>
-
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
@@ -683,30 +681,16 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	else if(MsgId == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_ClientID == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		if(pMsg->m_ClientID == -1)
 		{
-			const char* pMessage = pMsg->m_pMessage;
-			
-			int Num = 0;
-			while(str_comp_num(pMessage, " finished in: ", 14))
-			{
-				pMessage++;
-				Num++;
-				if(!pMessage[0])
-					return;
-			}
-			
 			// store the name
-			char Playername[MAX_NAME_LENGTH];
-			str_copy(Playername, pMsg->m_pMessage, Num+1);
-			
-			// get time
-			int Minutes, Seconds, MSec;
-			if (sscanf(pMessage, " finished in: %d minute(s) %d.%03d", &Minutes, &Seconds, &MSec) == 3)
+			char aPlayername[MAX_NAME_LENGTH];
+			int MsgTime = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aPlayername, sizeof(aPlayername));
+			if (MsgTime)
 			{
 				int PlayerID = -1;
 				for(int i = 0; i < MAX_CLIENTS; i++)
-					if(!str_comp(Playername, m_aClients[i].m_aName))
+					if(str_comp(aPlayername, m_aClients[i].m_aName) == 0)
 					{
 						PlayerID = i;
 						break;
@@ -716,9 +700,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				if(PlayerID < 0)
 					return;
 				
-				int Time = Minutes * 60 * 1000 + Seconds * 1000 + MSec;
-				if(m_aClients[PlayerID].m_Score == 0 || Time < m_aClients[PlayerID].m_Score)
-					m_aClients[PlayerID].m_Score = Time;
+				if(m_aClients[PlayerID].m_Score == 0 || MsgTime < m_aClients[PlayerID].m_Score)
+					m_aClients[PlayerID].m_Score = MsgTime;
 			}
 		}
 	}
@@ -1212,6 +1195,7 @@ void CGameClient::OnPredict()
 	// repredict character
 	CWorldCore World;
 	World.m_Tuning = m_Tuning;
+	World.m_Teleport = g_Config.m_ClPredictTeleport;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)

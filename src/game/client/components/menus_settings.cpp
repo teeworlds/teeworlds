@@ -1410,14 +1410,6 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	if(DoButton_CheckBox(&g_Config.m_ClAutoRaceRecord, Localize("Auto record"), g_Config.m_ClAutoRaceRecord, &Button))
 		g_Config.m_ClAutoRaceRecord ^= 1;
-	
-	if(g_Config.m_ClAutoRaceRecord)
-	{
-		LeftView.HSplitTop(20.0f, &Button, &LeftView);
-		Button.VSplitLeft(15.0f, 0, &Button);
-		if(DoButton_CheckBox(&g_Config.m_ClDemoName, Localize("Save player name"), g_Config.m_ClDemoName, &Button))
-			g_Config.m_ClDemoName ^= 1;
-	}
 		
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	if(DoButton_CheckBox(&g_Config.m_ClShowOthers, Localize("Show other players"), g_Config.m_ClShowOthers, &Button))

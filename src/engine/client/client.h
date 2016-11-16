@@ -300,12 +300,15 @@ public:
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	// Race
-	const char *DemoRecorder_StartRace(const char *pFilename);
+	int RaceDemo_ParseName(const char *pName);
+	void RaceDemo_GetName(char *pBuf, int Size, int Time = -1);
+	void RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName);
+	void DemoRecorder_StartRace();
 
 	void Ghost_GetPath(char *pBuf, int Size, int Time = -1);
 	void GhostRecorder_Start();
 	bool GhostLoader_Load(const char *pFilename);
-	bool GhostLoader_GetGhostInfo(const char *pFilename, class CGhostHeader *pGhostHeader);
+	bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader);
 
 	void RegisterCommands();
 
