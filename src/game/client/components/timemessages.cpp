@@ -55,6 +55,13 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 				
 				m_TimemsgCurrent = (m_TimemsgCurrent+1)%MAX_TIMEMSGS;
 				m_aTimemsgs[m_TimemsgCurrent] = Time;
+
+				char aTime[32];
+				IRace::FormatTimeShort(aTime, sizeof(aTime), Time.m_Time);
+
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "%s finished in: %s", Time.m_aPlayerName, aTime);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "race", aBuf);
 			}
 			else
 			{
