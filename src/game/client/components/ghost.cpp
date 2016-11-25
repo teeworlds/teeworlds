@@ -178,7 +178,6 @@ void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)
 		return;
 
 	float IntraTick = Client()->PredIntraGameTick();
-
 	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 
 	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);

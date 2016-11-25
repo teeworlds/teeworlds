@@ -8,20 +8,20 @@
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
-#include <engine/textrender.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
+#include <engine/textrender.h>
 
-#include <game/client/ui.h>
 #include <game/gamecore.h>
+#include <game/localization.h>
+#include <game/client/lineinput.h>
 #include <game/client/render.h>
+#include <game/client/ui.h>
 #include <game/generated/client_data.h>
 
+#include "auto_map.h"
 #include "editor.h"
-#include <game/client/lineinput.h>
-
-#include <game/localization.h>
 
 int CEditor::ms_CheckerTexture;
 int CEditor::ms_BackgroundTexture;
@@ -1701,15 +1701,15 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 
 		// render the game and tele above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
- 		{
- 			m_Map.m_pGameGroup->MapScreen();
+		{
+			m_Map.m_pGameGroup->MapScreen();
 			if(m_Map.m_pGameLayer->m_Visible)
 				m_Map.m_pGameLayer->Render();
 			if(m_Map.m_pTeleLayer && m_Map.m_pTeleLayer->m_Visible)
 				m_Map.m_pTeleLayer->Render();
 			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
 				m_Map.m_pSpeedupLayer->Render();
- 		}
+		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
 		if(m_ShowTileInfo && pT && pT->m_Visible && m_ZoomLevel <= 300)
@@ -2503,6 +2503,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	*pImg = ImgInfo;
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
+	pImg->m_AutoMapper.Load(pImg->m_aName);
 	pImg->m_TexID = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	ImgInfo.m_pData = 0;
 	pEditor->SortImages();
@@ -2536,9 +2537,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	ImgInfo.m_pData = 0;
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
-
 	pImg->m_AutoMapper.Load(pImg->m_aName);
-
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
 	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())
@@ -3194,7 +3193,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 	{
 		CUIRect Button;
 		CEnvelope *pNewEnv = 0;
-		
+
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
 		if(DoButton_Editor(&s_New4dButton, "Color+", 0, &Button, 0, "Creates a new color envelope"))
