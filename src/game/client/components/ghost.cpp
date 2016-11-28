@@ -33,35 +33,38 @@ void CGhost::AddInfos(CGhostCharacter Player)
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&Player, sizeof(Player));
 }
 
+bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
+{
+	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team ^ 1;
+	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos);
+	if(!m_pClient->m_IsFastCap && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
+		return true;
+	if(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)
+		return true;
+	return false;
+}
+
 void CGhost::OnRender()
 {
 	// only for race
 	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter)
 		return;
 
-	// TODO: rework the starting conditions
-	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
-
+	// TODO: handle restart
 	if(m_pClient->m_NewPredictedTick)
 	{
 		vec2 PrevPos = m_pClient->m_PredictedPrevChar.m_Pos;
 		vec2 Pos = m_pClient->m_PredictedChar.m_Pos;
-		if (!m_Rendering && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(PrevPos, Pos)) == TILE_BEGIN) ||
-			(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
-		{
+		if(!m_Rendering && IsStart(PrevPos, Pos))
 			StartRender();
-		}
 	}
 
 	if(m_pClient->m_NewTick)
 	{
 		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
 		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
-		if(!m_Recording && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(PrevPos, Pos)) == TILE_BEGIN) ||
-			(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
-		{
+		if(!m_Recording && IsStart(PrevPos, Pos))
 			StartRecord();
-		}
 
 		if(m_Recording)
 		{

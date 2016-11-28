@@ -40,6 +40,8 @@ private:
 
 	void AddInfos(CGhostCharacter Player);
 
+	bool IsStart(vec2 PrevPos, vec2 Pos);
+
 	void StartRecord();
 	void StopRecord(int Time=0);
 	void StartRender();
