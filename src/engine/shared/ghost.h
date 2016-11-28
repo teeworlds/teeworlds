@@ -19,7 +19,6 @@ public:
 
 	CGhostItem();
 	CGhostItem(int Type);
-	bool Compare(CGhostItem Other);
 };
 
 class CGhostRecorder : public IGhostRecorder
@@ -34,7 +33,7 @@ class CGhostRecorder : public IGhostRecorder
 	int m_BufferNumItems;
 
 	void ResetBuffer();
-	void FlushChunk(int Type);
+	void FlushChunk();
 	
 public:	
 	CGhostRecorder();

@@ -22,11 +22,6 @@ CGhostItem::CGhostItem(int Type) : m_Type(Type)
 	mem_zero(m_aData, sizeof(m_aData));
 }
 
-bool CGhostItem::Compare(CGhostItem Other)
-{
-	return m_Type != -1 && m_Type == Other.m_Type;
-}
-
 CGhostRecorder::CGhostRecorder()
 {
 	m_File = 0;
@@ -93,19 +88,17 @@ static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 
 void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 {
-	if(!m_File || (unsigned)Size > MAX_ITEM_SIZE || Size <= 0)
+	if(!m_File || (unsigned)Size > MAX_ITEM_SIZE || Size <= 0 || Type == -1)
 		return;
 
 	CGhostItem Data(Type);
 	mem_copy(Data.m_aData, pData, Size);
 
-	if(m_LastItem.Compare(Data))
-	{
+	if(m_LastItem.m_Type == Data.m_Type)
 		DiffItem((int*)m_LastItem.m_aData, (int*)Data.m_aData, (int*)m_pBufferPos, Size/4);
-	}
 	else
 	{
-		FlushChunk(m_LastItem.m_Type);
+		FlushChunk();
 		mem_copy(m_pBufferPos, Data.m_aData, Size);
 	}
 
@@ -113,15 +106,16 @@ void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 	m_pBufferPos += Size;
 	m_BufferNumItems++;
 	if(m_BufferNumItems >= NUM_ITEMS_PER_CHUNK)
-		FlushChunk(m_LastItem.m_Type);
+		FlushChunk();
 }
 
-void CGhostRecorder::FlushChunk(int Type)
+void CGhostRecorder::FlushChunk()
 {
 	char aBuffer[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
 	unsigned char aChunk[4];
 
 	int Size = m_pBufferPos - m_aBuffer;
+	int Type = m_LastItem.m_Type;
 
 	if(!m_File || Size == 0)
 		return;
@@ -153,7 +147,7 @@ int CGhostRecorder::Stop(int Ticks, int Time)
 		
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_recorder", "Stopped ghost recording");
 
-	FlushChunk(m_LastItem.m_Type);
+	FlushChunk();
 
 	unsigned char aNumTicks[4];
 	unsigned char aTime[4];
@@ -315,15 +309,12 @@ static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
 
 bool CGhostLoader::ReadData(int Type, char *pData, int Size)
 {
-	if(!m_File || Size > MAX_ITEM_SIZE || Size <= 0)
+	if(!m_File || Size > MAX_ITEM_SIZE || Size <= 0 || Type == -1)
 		return false;
 
 	CGhostItem Data(Type);
 
-	char aData[MAX_ITEM_SIZE];
-	mem_copy(aData, m_pBufferPos, Size);
-
-	if(m_LastItem.Compare(Data))
+	if(m_LastItem.m_Type == Data.m_Type)
 		UndiffItem((int*)m_LastItem.m_aData, (int*)m_pBufferPos, (int*)Data.m_aData, Size/4);
 	else
 		mem_copy(Data.m_aData, m_pBufferPos, Size);

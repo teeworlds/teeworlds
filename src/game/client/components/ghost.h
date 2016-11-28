@@ -31,19 +31,12 @@ private:
 	CGhostItem m_CurGhost;
 
 	int m_StartRenderTick;
+	int m_LastRecordTick;
+	CGhostCharacter m_LastRecordChar;
 	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
-	int m_RaceState;
 	int m_BestTime;
-	bool m_NewRecord;
-
-	enum
-	{
-		RACE_NONE = 0,
-		RACE_STARTED,
-		RACE_FINISHED,
-	};
 
 	void AddInfos(CGhostCharacter Player);
 
@@ -56,8 +49,6 @@ private:
 	void RenderGhostNamePlate(CGhostCharacter Player, CGhostCharacter Prev, const char *pName);
 	
 	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
-
-	void Save(bool WasRecording);
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
 

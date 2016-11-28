@@ -1,7 +1,5 @@
 /* (c) Rajh, Redix and Sushi. */
 
-#include <cstdio>
-
 #include <engine/ghost.h>
 #include <engine/textrender.h>
 #include <engine/storage.h>
@@ -17,31 +15,20 @@
 #include "controls.h"
 #include "ghost.h"
 
-/*
-Note:
-Freezing fucks up the ghost
-the ghost isnt really sync
-don't really get the client tick system for prediction
-can used PrevChar and PlayerChar and it would be fluent and accurate but won't be predicted
-so it will be affected by lags
-*/
-
 // own ghost: ID = -1
 CGhost::CGhost()
 	: m_CurGhost(-1),
 	m_StartRenderTick(-1),
+	m_LastRecordTick(-1),
 	m_CurPos(0),
 	m_Rendering(false),
 	m_Recording(false),
-	m_RaceState(RACE_NONE),
-	m_BestTime(-1),
-	m_NewRecord(false)
+	m_BestTime(-1)
 { }
 
 void CGhost::AddInfos(CGhostCharacter Player)
 {
-	if(m_Recording)
-		m_CurGhost.m_Path.add(Player);
+	m_CurGhost.m_Path.add(Player);
 	if(GhostRecorder()->IsRecording())
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&Player, sizeof(Player));
 }
@@ -49,47 +36,61 @@ void CGhost::AddInfos(CGhostCharacter Player)
 void CGhost::OnRender()
 {
 	// only for race
-	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost)
+	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter)
 		return;
 
-	// Check if the race line is crossed then start the render of the ghost if one
+	// TODO: rework the starting conditions
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
-	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
-		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
-	{
-		m_RaceState = RACE_STARTED;
-		StartRender();
-		StartRecord();
-	}
-
-	if(m_RaceState == RACE_FINISHED)
-	{
-		if(m_NewRecord)
-		{
-			// search for own ghost
-			array<CGhostItem>::range r = find_linear(m_lGhosts.all(), m_CurGhost);
-			m_NewRecord = false;
-			if(r.empty())
-				m_lGhosts.add(m_CurGhost);
-			else
-				r.front() = m_CurGhost;
-
-			bool Recording = GhostRecorder()->IsRecording();
-			StopRecord(m_BestTime);
-			Save(Recording);
-		}
-		else
-			StopRecord();
-
-		StopRender();
-		OnReset();
-	}
-
-	CNetObj_Character Char;
-	m_pClient->m_PredictedChar.Write(&Char);
 
 	if(m_pClient->m_NewPredictedTick)
-		AddInfos(CGhostTools::GetGhostCharacter(Char));
+	{
+		vec2 PrevPos = m_pClient->m_PredictedPrevChar.m_Pos;
+		vec2 Pos = m_pClient->m_PredictedChar.m_Pos;
+		if (!m_Rendering && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(PrevPos, Pos)) == TILE_BEGIN) ||
+			(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
+		{
+			StartRender();
+		}
+	}
+
+	if(m_pClient->m_NewTick)
+	{
+		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
+		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
+		if(!m_Recording && ((m_pClient->Collision()->GetIndex(m_pClient->Collision()->CheckRaceTile(PrevPos, Pos)) == TILE_BEGIN) ||
+			(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)))
+		{
+			StartRecord();
+		}
+
+		if(m_Recording)
+		{
+			// writing the tick into the file would be better than this
+			// but it would require changes to the ghost file format
+			int NewTicks = (m_LastRecordTick == -1) ? 1 : (Client()->GameTick() - m_LastRecordTick);
+			// make sure that we have one item per tick
+			CGhostCharacter NewChar = CGhostTools::GetGhostCharacter(*m_pClient->m_Snap.m_pLocalCharacter);
+			for(int i = 1; i < NewTicks; i++)
+			{
+				float Intra = i / (float)NewTicks;
+				CGhostCharacter TmpChar = m_LastRecordChar;
+				vec2 Position = mix(vec2(TmpChar.m_X, TmpChar.m_Y), vec2(NewChar.m_X, NewChar.m_Y), Intra);
+				vec2 HookPos = mix(vec2(TmpChar.m_HookX, TmpChar.m_HookY), vec2(NewChar.m_HookX, NewChar.m_HookY), Intra);
+				TmpChar.m_X = round_to_int(Position.x);
+				TmpChar.m_Y = round_to_int(Position.y);
+				TmpChar.m_VelX = round_to_int(mix((float)TmpChar.m_VelX, (float)NewChar.m_VelX, Intra));
+				TmpChar.m_VelY = round_to_int(mix((float)TmpChar.m_VelY, (float)NewChar.m_VelY, Intra));
+				TmpChar.m_Angle = round_to_int(mix((float)TmpChar.m_Angle, (float)NewChar.m_Angle, Intra));
+				TmpChar.m_HookX = round_to_int(HookPos.x);
+				TmpChar.m_HookY = round_to_int(HookPos.y);
+				AddInfos(TmpChar);
+			}
+
+			m_LastRecordTick = Client()->GameTick();
+			m_LastRecordChar = NewChar;
+			AddInfos(m_LastRecordChar);
+		}
+	}
 
 	// Play the ghost
 	if(!m_Rendering)
@@ -266,6 +267,7 @@ void CGhost::InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName,
 void CGhost::StartRecord()
 {
 	m_Recording = true;
+	m_LastRecordTick = -1;
 	m_CurGhost.m_Path.clear();
 	CGameClient::CClientData ClientData = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID];
 	str_copy(m_CurGhost.m_aOwner, g_Config.m_PlayerName, sizeof(m_CurGhost.m_aOwner));
@@ -287,8 +289,62 @@ void CGhost::StartRecord()
 void CGhost::StopRecord(int Time)
 {
 	m_Recording = false;
-	if(GhostRecorder()->IsRecording())
+	bool RecordingToFile = GhostRecorder()->IsRecording();
+
+	if(RecordingToFile)
 		GhostRecorder()->Stop(m_CurGhost.m_Path.size(), Time);
+
+	char aTmpFilename[128];
+	Client()->Ghost_GetPath(aTmpFilename, sizeof(aTmpFilename));
+
+	if(Time && (Time < m_BestTime || m_BestTime == -1))
+	{
+		// save the new record
+		m_BestTime = Time;
+
+		// add to active ghosts
+		array<CGhostItem>::range r = find_linear(m_lGhosts.all(), m_CurGhost);
+		if(r.empty())
+			m_lGhosts.add(m_CurGhost);
+		else
+			r.front() = m_CurGhost;
+
+		// remove old ghost (TODO: remove other ghosts?)
+		if(m_pClient->m_pMenus->m_OwnGhost)
+			Storage()->RemoveFile(m_pClient->m_pMenus->m_OwnGhost->m_aFilename, IStorage::TYPE_SAVE);
+
+		char aFilename[128] = { 0 };
+		if(RecordingToFile)
+		{
+			// remove old ghost
+			if(m_pClient->m_pMenus->m_OwnGhost)
+				Storage()->RemoveFile(m_pClient->m_pMenus->m_OwnGhost->m_aFilename, IStorage::TYPE_SAVE);
+
+			// save new ghost
+			Client()->Ghost_GetPath(aFilename, sizeof(aFilename), m_BestTime);
+			Storage()->RenameFile(aTmpFilename, aFilename, IStorage::TYPE_SAVE);
+		}
+
+		// create ghost item
+		CMenus::CGhostItem Item;
+		str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
+		str_copy(Item.m_aPlayer, g_Config.m_PlayerName, sizeof(Item.m_aPlayer));
+		Item.m_Time = m_BestTime;
+		Item.m_Active = true;
+		Item.m_ID = -1;
+
+		// add item to menu list
+		if(m_pClient->m_pMenus->m_OwnGhost)
+			*m_pClient->m_pMenus->m_OwnGhost = Item;
+		else
+			m_pClient->m_pMenus->m_lGhosts.add(Item);
+		m_pClient->m_pMenus->m_lGhosts.sort_range();
+		m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
+	}
+	else // no new record
+		Storage()->RemoveFile(aTmpFilename, IStorage::TYPE_SAVE);
+
+	m_CurGhost.m_Path.clear();
 }
 
 void CGhost::StartRender()
@@ -301,41 +357,6 @@ void CGhost::StartRender()
 void CGhost::StopRender()
 {
 	m_Rendering = false;
-}
-
-void CGhost::Save(bool WasRecording)
-{
-	// remove old ghost from list (TODO: remove other ghosts?)
-	if(m_pClient->m_pMenus->m_OwnGhost)
-	{
-		if(WasRecording)
-			Storage()->RemoveFile(m_pClient->m_pMenus->m_OwnGhost->m_aFilename, IStorage::TYPE_SAVE);
-
-		m_pClient->m_pMenus->m_lGhosts.remove(*m_pClient->m_pMenus->m_OwnGhost);
-	}
-
-	char aFilename[128] = {0};
-	if(WasRecording)
-	{
-		char aOldFilename[128];
-
-		// rename ghost
-		Client()->Ghost_GetPath(aFilename, sizeof(aFilename), m_BestTime);
-		Client()->Ghost_GetPath(aOldFilename, sizeof(aOldFilename));
-		Storage()->RenameFile(aOldFilename, aFilename, IStorage::TYPE_SAVE);
-	}
-
-	// create ghost item
-	CMenus::CGhostItem Item;
-	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
-	str_copy(Item.m_aPlayer, g_Config.m_PlayerName, sizeof(Item.m_aPlayer));
-	Item.m_Time = m_BestTime;
-	Item.m_Active = true;
-	Item.m_ID = -1;
-
-	// add item to list
-	m_pClient->m_pMenus->m_lGhosts.add(Item);
-	m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
 }
 
 bool CGhost::Load(const char* pFilename, int ID)
@@ -394,7 +415,7 @@ bool CGhost::Load(const char* pFilename, int ID)
 	if(Index != NumTicks)
 		return false;
 
-	if(ID == -1)
+	if(ID == -1 && (Time < m_BestTime || m_BestTime == -1))
 		m_BestTime = Time;
 	if(!FoundSkin)
 		InitRenderInfos(&Ghost.m_RenderInfo, "default", 0, 0, 0);
@@ -421,7 +442,7 @@ void CGhost::OnConsoleInit()
 void CGhost::OnMessage(int MsgType, void *pRawMsg)
 {
 	// only for race
-	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || m_pClient->m_Snap.m_SpecInfo.m_Active)
+	if(!m_pClient->m_IsRace || m_pClient->m_Snap.m_SpecInfo.m_Active)
 		return;
 
 	// check for messages from server
@@ -430,25 +451,22 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalClientID)
 		{
-			if(m_RaceState != RACE_FINISHED)
-				OnReset();
+			if(m_Recording)
+				StopRecord();
+			StopRender();
 		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		if(pMsg->m_ClientID == -1 && m_RaceState == RACE_STARTED)
+		if(pMsg->m_ClientID == -1 && m_Recording)
 		{
 			char aName[MAX_NAME_LENGTH];
 			int CurTime = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aName, sizeof(aName));
 			if(CurTime && str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
 			{
-				m_RaceState = RACE_FINISHED;
-				if(m_Recording && (CurTime < m_BestTime || m_BestTime == -1))
-				{
-					m_NewRecord = true;
-					m_BestTime = CurTime;
-				}
+				StopRecord(CurTime);
+				StopRender();
 			}
 		}
 	}
@@ -458,14 +476,6 @@ void CGhost::OnReset()
 {
 	StopRecord();
 	StopRender();
-	m_RaceState = RACE_NONE;
-	m_NewRecord = false;
-	m_CurGhost.m_Path.clear();
-	m_StartRenderTick = -1;
-
-	char aFilename[512];
-	Client()->Ghost_GetPath(aFilename, sizeof(aFilename));
-	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 }
 
 void CGhost::OnShutdown()
