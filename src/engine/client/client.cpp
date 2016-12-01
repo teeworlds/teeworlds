@@ -1139,10 +1139,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			}
 			else
 			{
-				if(Chunk == 0 && (pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0) // no server fast download
+				// do not use client-side fastdl if server uses non-vital fastdl
+				// if a chunk >= 1 arrives before our request was acked we have vital fastdl on server
+				// in this case determine how many channels the server uses and start additional channels if our limit is higher
+				// checking sequences here is not very nice but we might get problems with the resend buffer if we start too many channels
+				if(Chunk >= 1 && m_MapdownloadChannels == 1 && (pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 &&
+					m_NetClient.NetConnection()->CheckAck(m_MapdownloadStartSequence)) // no server fast download
 				{
-					// start new channels
-					m_MapdownloadChannels = g_Config.m_ClMapChannels;
+					int ServerSpeed = Chunk-1;
+					m_MapdownloadChannels = max(g_Config.m_ClMapChannels - ServerSpeed, 1);
 					for(int i = 1; i < m_MapdownloadChannels; i++)
 					{
 						CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
@@ -1162,6 +1167,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
 				Msg.AddInt(m_MapdownloadChunk + m_MapdownloadChannels);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+				if(Chunk == 0)
+					m_MapdownloadStartSequence = m_NetClient.NetConnection()->GetSequence();
 
 				if(g_Config.m_Debug)
 				{
