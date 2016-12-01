@@ -15,22 +15,27 @@
 #include "controls.h"
 #include "ghost.h"
 
-// own ghost: ID = -1
 CGhost::CGhost()
-	: m_CurGhost(-1),
-	m_StartRenderTick(-1),
+	: m_StartRenderTick(-1),
 	m_LastRecordTick(-1),
 	m_CurPos(0),
 	m_Rendering(false),
-	m_Recording(false),
-	m_BestTime(-1)
+	m_Recording(false)
 { }
 
 void CGhost::AddInfos(CGhostCharacter Player)
 {
-	m_CurGhost.m_Path.add(Player);
+	m_CurGhost.m_lPath.add(Player);
 	if(GhostRecorder()->IsRecording())
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&Player, sizeof(Player));
+}
+
+int CGhost::GetSlot()
+{
+	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
+		if(!m_aActiveGhosts[i].m_lPath.size())
+			return i;
+	return -1;
 }
 
 bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
@@ -100,22 +105,21 @@ void CGhost::OnRender()
 		return;
 
 	m_CurPos = Client()->PredGameTick()-m_StartRenderTick;
-
-	if(m_lGhosts.size() == 0 || m_CurPos < 0)
+	if(m_CurPos < 0)
 	{
 		StopRender();
 		return;
 	}
 
-	for(int i = 0; i < m_lGhosts.size(); i++)
+	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 	{
-		CGhostItem *pGhost = &m_lGhosts[i];
-		if(m_CurPos >= pGhost->m_Path.size())
+		CGhostItem *pGhost = &m_aActiveGhosts[i];
+		if(m_CurPos >= pGhost->m_lPath.size())
 			continue;
 
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
-		CGhostCharacter Player = pGhost->m_Path[m_CurPos];
-		CGhostCharacter Prev = pGhost->m_Path[PrevPos];
+		CGhostCharacter Player = pGhost->m_lPath[m_CurPos];
+		CGhostCharacter Prev = pGhost->m_lPath[PrevPos];
 
 		RenderGhostHook(Player, Prev);
 		RenderGhost(Player, Prev, &pGhost->m_RenderInfo);
@@ -271,7 +275,7 @@ void CGhost::StartRecord()
 {
 	m_Recording = true;
 	m_LastRecordTick = -1;
-	m_CurGhost.m_Path.clear();
+	m_CurGhost.m_lPath.clear();
 	CGameClient::CClientData ClientData = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID];
 	str_copy(m_CurGhost.m_aOwner, g_Config.m_PlayerName, sizeof(m_CurGhost.m_aOwner));
 	InitRenderInfos(&m_CurGhost.m_RenderInfo, ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
@@ -295,36 +299,33 @@ void CGhost::StopRecord(int Time)
 	bool RecordingToFile = GhostRecorder()->IsRecording();
 
 	if(RecordingToFile)
-		GhostRecorder()->Stop(m_CurGhost.m_Path.size(), Time);
+		GhostRecorder()->Stop(m_CurGhost.m_lPath.size(), Time);
 
 	char aTmpFilename[128];
 	Client()->Ghost_GetPath(aTmpFilename, sizeof(aTmpFilename));
 
-	if(Time && (Time < m_BestTime || m_BestTime == -1))
+	CMenus::CGhostItem *pOwnGhost = m_pClient->m_pMenus->GetOwnGhost();
+	if(Time && (!pOwnGhost || Time < pOwnGhost->m_Time))
 	{
-		// save the new record
-		m_BestTime = Time;
-
 		// add to active ghosts
-		array<CGhostItem>::range r = find_linear(m_lGhosts.all(), m_CurGhost);
-		if(r.empty())
-			m_lGhosts.add(m_CurGhost);
+		int Slot;
+		if(pOwnGhost)
+			Slot = pOwnGhost->m_Slot;
 		else
-			r.front() = m_CurGhost;
+			Slot = GetSlot();
 
-		// remove old ghost (TODO: remove other ghosts?)
-		if(m_pClient->m_pMenus->m_OwnGhost)
-			Storage()->RemoveFile(m_pClient->m_pMenus->m_OwnGhost->m_aFilename, IStorage::TYPE_SAVE);
+		if(Slot != -1)
+			m_aActiveGhosts[Slot] = m_CurGhost;
 
 		char aFilename[128] = { 0 };
 		if(RecordingToFile)
 		{
 			// remove old ghost
-			if(m_pClient->m_pMenus->m_OwnGhost)
-				Storage()->RemoveFile(m_pClient->m_pMenus->m_OwnGhost->m_aFilename, IStorage::TYPE_SAVE);
+			if(pOwnGhost && pOwnGhost->HasFile())
+				Storage()->RemoveFile(pOwnGhost->m_aFilename, IStorage::TYPE_SAVE);
 
 			// save new ghost
-			Client()->Ghost_GetPath(aFilename, sizeof(aFilename), m_BestTime);
+			Client()->Ghost_GetPath(aFilename, sizeof(aFilename), Time);
 			Storage()->RenameFile(aTmpFilename, aFilename, IStorage::TYPE_SAVE);
 		}
 
@@ -332,22 +333,21 @@ void CGhost::StopRecord(int Time)
 		CMenus::CGhostItem Item;
 		str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 		str_copy(Item.m_aPlayer, g_Config.m_PlayerName, sizeof(Item.m_aPlayer));
-		Item.m_Time = m_BestTime;
-		Item.m_Active = true;
-		Item.m_ID = -1;
+		Item.m_Time = Time;
+		Item.m_Slot = Slot;
+		Item.m_Own = true;
 
 		// add item to menu list
-		if(m_pClient->m_pMenus->m_OwnGhost)
-			*m_pClient->m_pMenus->m_OwnGhost = Item;
+		if(pOwnGhost)
+			*pOwnGhost = Item;
 		else
 			m_pClient->m_pMenus->m_lGhosts.add(Item);
 		m_pClient->m_pMenus->m_lGhosts.sort_range();
-		m_pClient->m_pMenus->m_OwnGhost = &find_linear(m_pClient->m_pMenus->m_lGhosts.all(), Item).front();
 	}
 	else // no new record
 		Storage()->RemoveFile(aTmpFilename, IStorage::TYPE_SAVE);
 
-	m_CurGhost.m_Path.clear();
+	m_CurGhost.m_lPath.clear();
 }
 
 void CGhost::StartRender()
@@ -362,7 +362,7 @@ void CGhost::StopRender()
 	m_Rendering = false;
 }
 
-bool CGhost::Load(const char* pFilename, int ID)
+int CGhost::Load(const char* pFilename)
 {
 	if(!Client()->GhostLoader_Load(pFilename))
 		return false;
@@ -380,9 +380,7 @@ bool CGhost::Load(const char* pFilename, int ID)
 
 	// create ghost
 	CGhostItem Ghost;
-	Ghost.m_ID = ID;
-	Ghost.m_Path.clear();
-	Ghost.m_Path.set_size(NumTicks);
+	Ghost.m_lPath.set_size(NumTicks);
 
 	// read client info
 	str_copy(Ghost.m_aOwner, Header.m_aOwner, sizeof(Ghost.m_aOwner));
@@ -409,7 +407,7 @@ bool CGhost::Load(const char* pFilename, int ID)
 		{
 			CGhostCharacter Char;
 			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
-				Ghost.m_Path[Index++] = Char;
+				Ghost.m_lPath[Index++] = Char;
 		}
 	}
 
@@ -418,18 +416,17 @@ bool CGhost::Load(const char* pFilename, int ID)
 	if(Index != NumTicks)
 		return false;
 
-	if(ID == -1 && (Time < m_BestTime || m_BestTime == -1))
-		m_BestTime = Time;
 	if(!FoundSkin)
 		InitRenderInfos(&Ghost.m_RenderInfo, "default", 0, 0, 0);
-	m_lGhosts.add(Ghost);
-	return true;
+	int Slot = GetSlot();
+	if(Slot != -1)
+		m_aActiveGhosts[Slot] = Ghost;
+	return Slot;
 }
 
-void CGhost::Unload(int ID)
+void CGhost::Unload(int Slot)
 {
-	CGhostItem Item(ID);
-	m_lGhosts.remove_fast(Item);
+	m_aActiveGhosts[Slot].m_lPath.clear();
 }
 
 void CGhost::ConGPlay(IConsole::IResult *pResult, void *pUserData)
@@ -489,7 +486,7 @@ void CGhost::OnShutdown()
 void CGhost::OnMapLoad()
 {
 	OnReset();
-	m_BestTime = -1;
-	m_lGhosts.clear();
+	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
+		Unload(i);
 	m_pClient->m_pMenus->GhostlistPopulate();
 }

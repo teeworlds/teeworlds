@@ -382,16 +382,19 @@ public:
 		char m_aPlayer[MAX_NAME_LENGTH];
 		
 		int m_Time;
-		
-		bool m_Active;
-		int m_ID;
+		int m_Slot;
+		bool m_Own;
 		
 		bool operator<(const CGhostItem &Other) { return m_Time < Other.m_Time; }
-		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
+
+		bool Active() const { return m_Slot != -1; }
+		bool HasFile() const { return m_aFilename[0]; }
+
+	public:
+		CGhostItem() : m_Slot(-1), m_Own(false) { }
 	};
 	
 	sorted_array<CGhostItem> m_lGhosts;
-	CGhostItem *m_OwnGhost;
 
 	// groups layers
 	enum
@@ -405,5 +408,6 @@ public:
 	const char *GetGroupLayerName(int Type, int Index);
 
 	void GhostlistPopulate();
+	CGhostItem *GetOwnGhost();
 };
 #endif

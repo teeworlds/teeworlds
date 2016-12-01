@@ -11,23 +11,21 @@
 
 class CGhost : public CComponent
 {
-
 private:
+	enum
+	{
+		MAX_ACTIVE_GHOSTS = 8,
+	};
+
 	class CGhostItem
 	{
 	public:
-		int m_ID;
 		CTeeRenderInfo m_RenderInfo;
-		array<CGhostCharacter> m_Path;
+		array<CGhostCharacter> m_lPath;
 		char m_aOwner[MAX_NAME_LENGTH];
-
-		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
-
-		CGhostItem() : m_ID(-1) { }
-		CGhostItem(int ID) : m_ID(ID) { }
 	};
 
-	array<CGhostItem> m_lGhosts;
+	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
 	int m_StartRenderTick;
@@ -36,9 +34,9 @@ private:
 	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
-	int m_BestTime;
 
 	void AddInfos(CGhostCharacter Player);
+	int GetSlot();
 
 	bool IsStart(vec2 PrevPos, vec2 Pos);
 
@@ -64,8 +62,8 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
-	bool Load(const char* pFilename, int ID);
-	void Unload(int ID);
+	int Load(const char* pFilename);
+	void Unload(int Slot);
 };
 
 #endif
