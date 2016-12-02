@@ -18,6 +18,48 @@
 
 #include "menus.h"
 
+// TODO: find a better place for this
+bool IsVanilla(const CServerInfo *pInfo)
+{
+	return !str_comp(pInfo->m_aGameType, "DM")
+		|| !str_comp(pInfo->m_aGameType, "TDM")
+		|| !str_comp(pInfo->m_aGameType, "CTF");
+}
+
+bool IsCatch(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "catch");
+}
+
+bool IsInsta(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "idm")
+		|| str_find_nocase(pInfo->m_aGameType, "itdm")
+		|| str_find_nocase(pInfo->m_aGameType, "ictf");
+}
+
+bool IsFNG(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "fng");
+}
+
+bool IsRace(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "race")
+		|| str_find_nocase(pInfo->m_aGameType, "fastcap");
+}
+
+bool IsDDRace(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "ddrace")
+		|| str_find_nocase(pInfo->m_aGameType, "mkrace");
+}
+
+bool IsDDNet(const CServerInfo *pInfo)
+{
+	return str_find_nocase(pInfo->m_aGameType, "ddracenet")
+		|| str_find_nocase(pInfo->m_aGameType, "ddnet");
+}
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
@@ -436,7 +478,33 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f*UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
-				TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
+
+				if(g_Config.m_UiColorizeGametype)
+				{
+					vec3 hsl = vec3(1.0f, 1.0f, 1.0f);
+
+					if (IsVanilla(pItem))
+						hsl = vec3(0.33f, 1.0f, 0.75f);
+					else if (IsCatch(pItem))
+						hsl = vec3(0.17f, 1.0f, 0.75f);
+					else if (IsInsta(pItem))
+						hsl = vec3(0.00f, 1.0f, 0.75f);
+					else if (IsFNG(pItem))
+						hsl = vec3(0.83f, 1.0f, 0.75f);
+					else if (IsDDNet(pItem))
+						hsl = vec3(0.58f, 1.0f, 0.75f);
+					else if (IsDDRace(pItem))
+						hsl = vec3(0.75f, 1.0f, 0.75f);
+					else if (IsRace(pItem))
+						hsl = vec3(0.46f, 1.0f, 0.75f);
+
+					vec3 rgb = HslToRgb(hsl);
+					TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1.0f);
+					TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
+					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				}
+				else
+					TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
 			}
 
 		}

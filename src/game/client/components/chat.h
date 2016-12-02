@@ -13,6 +13,7 @@ class CChat : public CComponent
 	enum
 	{
 		MAX_LINES = 25,
+		MAX_SPLIT = 256
 	};
 
 	struct CLine
@@ -96,7 +97,7 @@ public:
 	
 	struct CSplit
 	{
-		char *m_aPointers[256];
+		char *m_aPointers[MAX_SPLIT];
 		int m_Count;
 	};
 

@@ -28,12 +28,10 @@ void CRaceDemo::OnRender()
 	if(!m_pClient->m_IsRace)
 		return;
 	
-	vec2 PlayerPos = m_pClient->m_LocalCharacterPos;
-	
 	// start the demo
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
 	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
-		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(PlayerPos, m_pClient->m_aFlagPos[EnemyTeam]) < 200)) && m_DemoStartTick < Client()->GameTick())
+		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
 			OnReset();
@@ -64,7 +62,7 @@ void CRaceDemo::OnReset()
 	Client()->RaceDemo_GetPath(aFilename, sizeof(aFilename), aDemoName);
 
 	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
-	
+
 	m_Time = 0;
 	m_RaceState = RACE_NONE;
 	m_RecordStopTime = 0;
@@ -118,7 +116,7 @@ void CRaceDemo::CheckDemo()
 	// stop the demo recording
 	DemoRecorder()->Stop();
 	
-	if(str_comp(m_pClient->m_pMenus->m_aCurrentDemoFolder, "demos") == 0)
+	if(str_comp(m_pClient->m_pMenus->GetCurrentDemoFolder(), "demos") == 0)
 	{
 		char aTmpDemoName[128];
 		Client()->RaceDemo_GetName(aTmpDemoName, sizeof(aTmpDemoName));

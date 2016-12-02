@@ -11,41 +11,34 @@
 
 class CGhost : public CComponent
 {
-
 private:
+	enum
+	{
+		MAX_ACTIVE_GHOSTS = 8,
+	};
+
 	class CGhostItem
 	{
 	public:
-		int m_ID;
 		CTeeRenderInfo m_RenderInfo;
-		array<CGhostCharacter> m_Path;
+		array<CGhostCharacter> m_lPath;
 		char m_aOwner[MAX_NAME_LENGTH];
-
-		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
-
-		CGhostItem() : m_ID(-1) { }
-		CGhostItem(int ID) : m_ID(ID) { }
 	};
 
-	array<CGhostItem> m_lGhosts;
+	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
 	int m_StartRenderTick;
+	int m_LastRecordTick;
+	CGhostCharacter m_LastRecordChar;
 	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
-	int m_RaceState;
-	int m_BestTime;
-	bool m_NewRecord;
-
-	enum
-	{
-		RACE_NONE = 0,
-		RACE_STARTED,
-		RACE_FINISHED,
-	};
 
 	void AddInfos(CGhostCharacter Player);
+	int GetSlot();
+
+	bool IsStart(vec2 PrevPos, vec2 Pos);
 
 	void StartRecord();
 	void StopRecord(int Time=0);
@@ -56,8 +49,6 @@ private:
 	void RenderGhostNamePlate(CGhostCharacter Player, CGhostCharacter Prev, const char *pName);
 	
 	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
-
-	void Save(bool WasRecording);
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
 
@@ -71,8 +62,8 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
-	bool Load(const char* pFilename, int ID);
-	void Unload(int ID);
+	int Load(const char* pFilename);
+	void Unload(int Slot);
 };
 
 #endif

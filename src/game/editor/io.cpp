@@ -252,19 +252,12 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 			char *pBuf = new char[Size];
 			mem_zero(pBuf, Size);
-			int Index = 0;
+			char *pCur = pBuf;
 			for(int i = 0; i < m_lSettings.size(); i++)
 			{
-				int j = 0;
-				while(Index < Size)
-				{
-					pBuf[Index] = m_lSettings[i].m_aCommand[j];
-					if(!m_lSettings[i].m_aCommand[j]) // check for null termination
-						break;
-					Index++;
-					j++;
-				}
-				Index++;
+				int StrSize = str_length(m_lSettings[i].m_aCommand);
+				mem_copy(pCur, m_lSettings[i].m_aCommand, StrSize);
+				pCur += StrSize + 1;
 			}
 			Item.m_Settings = df.AddData(Size, pBuf);
 			delete[] pBuf;
@@ -514,24 +507,18 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					str_copy(m_MapInfo.m_aLicense, (char *)DataFile.GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
 
 				// load settings
-				if(pItem->m_Settings > -1)
+				if(pItem->m_Settings > -1 && DataFile.NumData() > pItem->m_Settings) // not very secure but the best for now. In next race version do a new version of this item
 				{
 					int Size = DataFile.GetUncompressedDataSize(pItem->m_Settings);
-					char *pBuf = new char[Size];
-					mem_zero(pBuf, Size);
-					mem_copy(pBuf, DataFile.GetData(pItem->m_Settings), Size);
-					char *pTmp = pBuf;
-					int Index = 0;
-					while(Index < Size)
+					const char *pTmp = (char*)DataFile.GetData(pItem->m_Settings);
+					const char *pEnd = pTmp + Size;
+					while(pTmp < pEnd)
 					{
-						int StrSize = str_length(pTmp);
 						CSetting Setting;
 						str_copy(Setting.m_aCommand, pTmp, sizeof(Setting.m_aCommand));
-						pTmp += StrSize+1;
+						pTmp += str_length(pTmp) + 1;
 						m_lSettings.add(Setting);
-						Index += StrSize+1;
 					}
-					delete[] pBuf;
 				}
 			}
 		}

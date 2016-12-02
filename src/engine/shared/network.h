@@ -205,6 +205,9 @@ public:
 	int64 ConnectTime() const { return m_LastUpdateTime; }
 
 	int AckSequence() const { return m_Ack; }
+
+	bool CheckAck(int Ack);
+	int GetSequence() const { return m_Sequence; }
 };
 
 class CConsoleNetConnection
@@ -373,6 +376,8 @@ public:
 	int State();
 	int GotProblems();
 	const char *ErrorString();
+
+	class CNetConnection *NetConnection() { return &m_Connection; }
 };
 
 

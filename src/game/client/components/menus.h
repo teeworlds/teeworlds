@@ -192,7 +192,7 @@ class CMenus : public CComponent
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 
 	// demo
-	/*struct CDemoItem
+	struct CDemoItem
 	{
 		char m_aFilename[128];
 		char m_aName[128];
@@ -208,11 +208,8 @@ class CMenus : public CComponent
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
 
-	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
 	char m_aCurrentDemoFile[64];
-	
-	void DemolistPopulate();*/
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
@@ -360,28 +357,6 @@ public:
 
 	CMenus();
 
-	struct CDemoItem
-	{
-		char m_aFilename[128];
-		char m_aName[128];
-		bool m_IsDir;
-		int m_StorageType;
-		
-		bool m_InfosLoaded;
-		bool m_Valid;
-		CDemoHeader m_Info;
-		
-		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
-														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
-														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
-	};
-	
-	sorted_array<CDemoItem> m_lDemos;
-	char m_aCurrentDemoFolder[256];
-	char m_aCurrentDemoFile[64];
-	
-	void DemolistPopulate();
-	
 	void RenderLoading();
 
 	bool IsActive() const { return m_MenuActive; }
@@ -395,6 +370,11 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
 	
+	sorted_array<CDemoItem> m_lDemos;
+	void DemolistPopulate();
+
+	const char *GetCurrentDemoFolder() const { return m_aCurrentDemoFolder; }
+	
 	// ghost
 	struct CGhostItem
 	{
@@ -402,16 +382,19 @@ public:
 		char m_aPlayer[MAX_NAME_LENGTH];
 		
 		int m_Time;
-		
-		bool m_Active;
-		int m_ID;
+		int m_Slot;
+		bool m_Own;
 		
 		bool operator<(const CGhostItem &Other) { return m_Time < Other.m_Time; }
-		bool operator==(const CGhostItem &Other) { return m_ID == Other.m_ID; }
+
+		bool Active() const { return m_Slot != -1; }
+		bool HasFile() const { return m_aFilename[0]; }
+
+	public:
+		CGhostItem() : m_Slot(-1), m_Own(false) { }
 	};
 	
 	sorted_array<CGhostItem> m_lGhosts;
-	CGhostItem *m_OwnGhost;
 
 	// groups layers
 	enum
@@ -425,5 +408,6 @@ public:
 	const char *GetGroupLayerName(int Type, int Index);
 
 	void GhostlistPopulate();
+	CGhostItem *GetOwnGhost();
 };
 #endif

@@ -3,23 +3,24 @@
 #ifndef GAME_EDITOR_EDITOR_H
 #define GAME_EDITOR_EDITOR_H
 
-#include <base/system.h>
+#include <math.h>
+
 #include <base/math.h>
-#include <base/tl/array.h>
+#include <base/system.h>
+
 #include <base/tl/algorithm.h>
+#include <base/tl/array.h>
 #include <base/tl/sorted_array.h>
 #include <base/tl/string.h>
 
-#include <math.h>
+#include <game/client/ui.h>
 #include <game/mapitems.h>
 #include <game/client/render.h>
 
-#include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
+#include <engine/shared/datafile.h>
 #include <engine/editor.h>
 #include <engine/graphics.h>
-
-#include <game/client/ui.h>
 
 #include "auto_map.h"
 
@@ -123,7 +124,6 @@ public:
 	class CEditor *m_pEditor;
 	class IGraphics *Graphics();
 	class ITextRender *TextRender();
-	class IStorage *Storage();
 
 	CLayer()
 	{
@@ -139,6 +139,8 @@ public:
 	virtual ~CLayer()
 	{
 	}
+
+
 	virtual void BrushSelecting(CUIRect Rect) {}
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect) { return 0; }
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect) {}
@@ -463,7 +465,7 @@ public:
 
 	virtual void Render();
 	CQuad *NewQuad();
-	
+
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
 	virtual void BrushPlace(CLayer *pBrush, float wx, float wy);
@@ -765,6 +767,7 @@ public:
 	CEditorMap m_Map;
 
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
+
 	float m_CommandBox;
 	char m_aSettingsCommand[64];
 

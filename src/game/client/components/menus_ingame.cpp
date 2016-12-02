@@ -816,29 +816,35 @@ int CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
 	Item.m_Time = pSelf->GhostLoader()->GetTime(Header);
-	Item.m_Active = false;
-	Item.m_ID = pSelf->m_lGhosts.add(Item);
-	
+	pSelf->m_lGhosts.add(Item);
 	return 0;
 }
 
 void CMenus::GhostlistPopulate()
 {
-	m_OwnGhost = 0;
+	CGhostItem *pOwnGhost = 0;
 	m_lGhosts.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "ghosts", GhostlistFetchCallback, this);
 	
 	for(int i = 0; i < m_lGhosts.size(); i++)
 	{
-		if(str_comp(m_lGhosts[i].m_aPlayer, g_Config.m_PlayerName) == 0 && (!m_OwnGhost || m_lGhosts[i] < *m_OwnGhost))
-			m_OwnGhost = &m_lGhosts[i];
+		if(str_comp(m_lGhosts[i].m_aPlayer, g_Config.m_PlayerName) == 0 && (!pOwnGhost || m_lGhosts[i] < *pOwnGhost))
+			pOwnGhost = &m_lGhosts[i];
 	}
 	
-	if(m_OwnGhost)
+	if(pOwnGhost)
 	{
-		m_OwnGhost->m_ID = -1;
-		m_OwnGhost->m_Active = m_pClient->m_pGhost->Load(m_OwnGhost->m_aFilename, -1);
+		pOwnGhost->m_Own = true;
+		pOwnGhost->m_Slot = m_pClient->m_pGhost->Load(pOwnGhost->m_aFilename);
 	}
+}
+
+CMenus::CGhostItem *CMenus::GetOwnGhost()
+{
+	for(int i = 0; i < m_lGhosts.size(); i++)
+		if(m_lGhosts[i].m_Own)
+			return &m_lGhosts[i];
+	return 0;
 }
 
 void CMenus::RenderGhost(CUIRect MainView)
@@ -1013,7 +1019,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 
 			if(Id == COL_ACTIVE)
 			{
-				if(pItem->m_Active)
+				if(pItem->Active())
 				{
 					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 					Graphics()->QuadsBegin();
@@ -1031,8 +1037,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 				Cursor.m_LineWidth = Button.w;
 
 				char aBuf[128];
-				bool Own = m_OwnGhost && pItem == m_OwnGhost;
-				str_format(aBuf, sizeof(aBuf), "%s%s", pItem->m_aPlayer, Own?" (own)":"");
+				str_format(aBuf, sizeof(aBuf), "%s%s", pItem->m_aPlayer, pItem->m_Own ? " (own)" : "");
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 			else if(Id == COL_TIME)
@@ -1063,16 +1068,19 @@ void CMenus::RenderGhost(CUIRect MainView)
 	Status.VSplitRight(120.0f, &Status, &Button);
 	
 	static int s_GhostButton = 0;
-	const char *pText = pGhost->m_Active ? Localize("Deactivate") : Localize("Activate");
+	bool Delete = !pGhost->HasFile();
+	const char *pText = pGhost->Active() ? (Delete ? Localize("Delete") : Localize("Deactivate")) : Localize("Activate");
 	
 	if(DoButton_Menu(&s_GhostButton, Localize(pText), 0, &Button) || (NewSelected != -1 && Input()->MouseDoubleClick()))
 	{
-		if(pGhost->m_Active)
+		if(pGhost->Active())
 		{
-			m_pClient->m_pGhost->Unload(pGhost->m_ID);
-			pGhost->m_Active = false;
+			m_pClient->m_pGhost->Unload(pGhost->m_Slot);
+			pGhost->m_Slot = -1;
+			if(Delete)
+				m_lGhosts.remove_index(s_SelectedIndex);
 		}
 		else
-			pGhost->m_Active = m_pClient->m_pGhost->Load(pGhost->m_aFilename, pGhost->m_ID);
+			pGhost->m_Slot = m_pClient->m_pGhost->Load(pGhost->m_aFilename);
 	}
 }

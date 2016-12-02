@@ -69,6 +69,16 @@ void CNetConnection::AckChunks(int Ack)
 	}
 }
 
+bool CNetConnection::CheckAck(int Ack)
+{
+	CNetChunkResend *pResend = m_Buffer.First();
+	if(!pResend)
+		return true;
+	if(CNetBase::IsSeqInBackroom(pResend->m_Sequence, Ack))
+		return false;
+	return true;
+}
+
 void CNetConnection::SignalResend()
 {
 	m_Construct.m_Flags |= NET_PACKETFLAG_RESEND;

@@ -46,7 +46,6 @@ class CRenderTools
 public:
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
-	class CGameClient *m_pClient;
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
@@ -74,9 +73,9 @@ public:
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
 	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, ENVELOPE_EVAL pfnEval, void *pUser, float Zoom=1.0f);
 	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
-	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
-	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
-	
+	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale);
+	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale);
+
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
 		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);

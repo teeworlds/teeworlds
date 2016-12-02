@@ -76,9 +76,9 @@ void CLayerTiles::Render()
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
 												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
 	if(m_Tele)
-		m_pEditor->RenderTools()->RenderTelemap(((CLayerTele*)this)->m_pTeleTile, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+		m_pEditor->RenderTools()->RenderTelemap(((CLayerTele*)this)->m_pTeleTile, m_Width, m_Height, 32.0f);
 	if(m_Speedup)
-		m_pEditor->RenderTools()->RenderSpeedupmap(((CLayerSpeedup*)this)->m_pSpeedupTile, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+		m_pEditor->RenderTools()->RenderSpeedupmap(((CLayerSpeedup*)this)->m_pSpeedupTile, m_Width, m_Height, 32.0f);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -281,9 +281,9 @@ void CLayerTiles::BrushFlipX()
 		}
 
 	if(!m_Game && !m_Tele && !m_Speedup)
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; x++)
+				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
 }
 
 void CLayerTiles::BrushFlipY()
@@ -297,9 +297,9 @@ void CLayerTiles::BrushFlipY()
 		}
 
 	if(!m_Game && !m_Tele && !m_Speedup)
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; x++)
+				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
 }
 
 void CLayerTiles::BrushRotate(float Amount)
@@ -439,7 +439,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer != this && m_pEditor->m_Map.m_pTeleLayer != this && m_pEditor->m_Map.m_pSpeedupLayer != this)
 	{
-		if(m_Image >= 0 && m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.IsLoaded())
+		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.IsLoaded())
 		{
 			static int s_AutoMapperButton = 0;
 			pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
@@ -447,9 +447,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 				m_pEditor->PopupSelectConfigAutoMapInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
 
 			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
-				
 			if(Result > -1)
+			{
 				m_pEditor->m_Map.m_lImages[m_Image]->m_AutoMapper.Proceed(this, Result);
+				return 1;
+			}
 		}
 	}
 	else
@@ -457,10 +459,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 
 	if(InGameGroup)
 	{
-		static int s_ColclButton = 0;
-
 		pToolBox->HSplitBottom(2.0f, pToolBox, 0);
 		pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
+		static int s_ColclButton = 0;
 		if(m_pEditor->DoButton_Editor(&s_ColclButton, "Game tiles", 0, &Button, 0, "Constructs game tiles from this layer"))
 			m_pEditor->PopupSelectGametileOpInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
 

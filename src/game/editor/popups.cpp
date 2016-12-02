@@ -1,13 +1,16 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+
+#include <base/tl/array.h>
+
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
+
 #include "editor.h"
 
-#include <base/tl/array.h>
 
 // popup menu handling
 static struct
@@ -159,8 +162,8 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 			pEditor->m_Brush.Clear();
 			return 1;
 		}
- 	}
-	
+	}
+
 	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSpeedupLayer)
 	{
 		// new speedup layer
@@ -333,8 +336,8 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
- 		aProps[2].m_Type = PROPTYPE_NULL;
- 	}
+		aProps[2].m_Type = PROPTYPE_NULL;
+	}
 
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;

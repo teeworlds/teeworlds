@@ -1484,9 +1484,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_Layers.Init(Kernel());
 	m_Collision.Init(&m_Layers);
 
-	if(g_Config.m_SvLoadMapDefaults)
-		LoadMapSettings();
-
 	// reset everything here
 	//world = new GAMEWORLD;
 	//players = new CPlayer[MAX_CLIENTS];
@@ -1550,33 +1547,6 @@ void CGameContext::OnShutdown()
 	delete m_pController;
 	m_pController = 0;
 	Clear();
-}
-
-void CGameContext::LoadMapSettings()
-{
-	IMap *pMap = Kernel()->RequestInterface<IMap>();
-	CMapItemInfo *pItem = (CMapItemInfo *)pMap->FindItem(MAPITEMTYPE_INFO, 0);
-	if(pItem && pItem->m_Settings > -1)
-	{
-		// load settings
-		if(pItem->m_Settings > -1)
-		{
-			int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
-			char *pBuf = new char[Size];
-			mem_zero(pBuf, Size);
-			mem_copy(pBuf, pMap->GetData(pItem->m_Settings), Size);
-			char *pTmp = pBuf;
-			int Index = 0;
-			while(Index < Size)
-			{
-				int StrSize = str_length(pTmp);
-				Console()->ExecuteLine(pTmp);
-				pTmp += StrSize+1;
-				Index += StrSize+1;
-			}
-			delete[] pBuf;
-		}
-	}
 }
 
 void CGameContext::OnSnap(int ClientID)

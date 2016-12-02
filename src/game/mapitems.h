@@ -101,16 +101,6 @@ public:
 	unsigned char m_Reserved;
 };
 
-struct CMapItemInfo
-{
-	int m_Version;
-	int m_Author;
-	int m_MapVersion;
-	int m_Credits;
-	int m_License;
-	int m_Settings;
-} ;
-
 class CTeleTile
 {
 public:
@@ -124,6 +114,16 @@ public:
 	unsigned char m_Force;
 	short m_Angle;
 };
+
+struct CMapItemInfo
+{
+	int m_Version;
+	int m_Author;
+	int m_MapVersion;
+	int m_Credits;
+	int m_License;
+	int m_Settings;
+} ;
 
 struct CMapItemImage_v1
 {
