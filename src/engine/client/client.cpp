@@ -1481,6 +1481,8 @@ void CClient::PumpNetwork()
 	{
 		if(Packet.m_ClientID != -1)
 			ProcessServerPacket(&Packet);
+		else // needed for serverinfo on map change
+			ProcessConnlessPacket(&Packet);
 	}
 
 	// process connless packets data

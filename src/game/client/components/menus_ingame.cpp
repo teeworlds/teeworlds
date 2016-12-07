@@ -417,11 +417,6 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, ServerInfo.x+x, ServerInfo.y+y, 32, Localize("Server info"), 250);
 	y += 32.0f+5.0f;
 
-	char aIP[64];
-	for(int i = 0; g_Config.m_UiServerAddress[i]; i++)
-		if(g_Config.m_UiServerAddress[i] == ':')
-			str_copy(aIP, g_Config.m_UiServerAddress, i+1);
-
 	mem_zero(aBuf, sizeof(aBuf));
 	str_format(
 		aBuf,
@@ -429,12 +424,10 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		"%s\n\n"
 		"%s: %s\n"
 		"%s: %d\n"
-		"%s: %d\n"
 		"%s: %s\n"
 		"%s: %s\n",
 		CurrentServerInfo.m_aName,
-		Localize("Address"), aIP,
-		Localize("Port"), CurrentServerInfo.m_NetAddr.port,
+		Localize("Address"), CurrentServerInfo.m_aAddress,
 		Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency,
 		Localize("Version"), CurrentServerInfo.m_aVersion,
 		Localize("Password"), CurrentServerInfo.m_Flags &1 ? Localize("Yes") : Localize("No")
