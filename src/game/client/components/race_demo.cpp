@@ -1,6 +1,7 @@
 /* (c) Redix and Sushi */
 
 #include <engine/shared/config.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 
 #include <game/teerace.h>
@@ -25,13 +26,17 @@ void CRaceDemo::OnRender()
 	}
 
 	// only for race
-	if(!m_pClient->m_IsRace)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if(!IsRace(&ServerInfo))
 		return;
+
+	bool FastCap = IsFastCap(&ServerInfo);
 	
 	// start the demo
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
-	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
-		(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)) && m_DemoStartTick < Client()->GameTick())
+	if(((!m_Active && !FastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
+		(FastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
 			OnReset();
@@ -80,7 +85,9 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 		return;
 	
 	// only for race
-	if(!m_pClient->m_IsRace)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if(!IsRace(&ServerInfo))
 		return;
 		
 	// check for messages from server

@@ -1,6 +1,7 @@
 /* (c) Rajh, Redix and Sushi. */
 
 #include <engine/ghost.h>
+#include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/storage.h>
 #include <engine/graphics.h>
@@ -40,11 +41,14 @@ int CGhost::GetSlot()
 
 bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
 {
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team ^ 1;
 	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos);
-	if(!m_pClient->m_IsFastCap && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
+	if(!IsFastCap(&ServerInfo) && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
 		return true;
-	if(m_pClient->m_IsFastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)
+	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)
 		return true;
 	return false;
 }
@@ -52,7 +56,9 @@ bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
 void CGhost::OnRender()
 {
 	// only for race
-	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if(!IsRace(&ServerInfo) || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter)
 		return;
 
 	// TODO: handle restart
@@ -442,7 +448,10 @@ void CGhost::OnConsoleInit()
 void CGhost::OnMessage(int MsgType, void *pRawMsg)
 {
 	// only for race
-	if(!m_pClient->m_IsRace || m_pClient->m_Snap.m_SpecInfo.m_Active)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
+	if(!IsRace(&ServerInfo) || m_pClient->m_Snap.m_SpecInfo.m_Active)
 		return;
 
 	// check for messages from server

@@ -620,6 +620,10 @@ int CMenus::RenderMenubar(CUIRect r)
 		CUIRect BoxTop, BoxBottom;
 		Box.HSplitMid(&BoxTop, &BoxBottom);
 
+		CServerInfo ServerInfo;
+		Client()->GetServerInfo(&ServerInfo);
+		bool Race = IsRace(&ServerInfo);
+
 		// online menus
 		if(Graphics()->ScreenAspect() < 1.6f)
 			BoxTop.VSplitLeft(90.0f, &Button, &BoxTop);
@@ -634,10 +638,10 @@ int CMenus::RenderMenubar(CUIRect r)
 		else
 			BoxBottom.VSplitLeft(90.0f, &Button, &BoxBottom);
 		static int s_PlayersButton=0;
-		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, (m_pClient->m_IsRace || Graphics()->ScreenAspect() >= 1.6f) ? 0 : CUI::CORNER_TR) || CheckHotKey(KEY_p))
+		if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, (Race || Graphics()->ScreenAspect() >= 1.6f) ? 0 : CUI::CORNER_TR) || CheckHotKey(KEY_p))
 			NewPage = PAGE_PLAYERS;
 
-		if(m_pClient->m_IsRace)
+		if(Race)
 		{
 			if(Graphics()->ScreenAspect() < 1.6f)
 				BoxTop.VSplitLeft(80.0f, &Button, &BoxTop);

@@ -3,6 +3,7 @@
 
 #include <engine/engine.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/keys.h>
 #include <engine/shared/config.h>
@@ -270,11 +271,14 @@ void CChat::EnableMode(int Team)
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		// dont show "finished in" message when race
-		if(m_pClient->m_IsRace && pMsg->m_ClientID < 0 && (str_find(pMsg->m_pMessage, " finished in: ") || str_find(pMsg->m_pMessage, "New record: ")))
+		if(IsRace(&ServerInfo) && pMsg->m_ClientID < 0 && (str_find(pMsg->m_pMessage, " finished in: ") || str_find(pMsg->m_pMessage, "New record: ")))
 			return;
 
 		const char *pMessage = pMsg->m_pMessage;

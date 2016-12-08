@@ -19,7 +19,7 @@ public:
 
 	static void FormatTimeLong(char *pBuf, int Size, int Time, bool ForceMinutes = false);
 	static void FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes = false);
-	static void FormatTimeDiff(char *pBuf, int Size, int Time);
+	static void FormatTimeDiff(char *pBuf, int Size, int Time, bool Milli = true);
 };
 
 #endif

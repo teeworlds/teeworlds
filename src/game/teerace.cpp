@@ -72,8 +72,12 @@ void IRace::FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes)
 		str_format(pBuf, Size, "%02d:%02d.%03d", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);
 }
 
-void IRace::FormatTimeDiff(char *pBuf, int Size, int Time)
+void IRace::FormatTimeDiff(char *pBuf, int Size, int Time, bool Milli)
 {
 	int PosDiff = absolute(Time);
-	str_format(pBuf, Size, "%s%d.%03d", Time > 0 ? "+" : "-", PosDiff / 1000, PosDiff % 1000);
+	const char *pSign = Time < 0 ? "-" : "+";
+	if(Milli)
+		str_format(pBuf, Size, "%s%d.%03d", pSign, PosDiff / 1000, PosDiff % 1000);
+	else
+		str_format(pBuf, Size, "%s%d.%02d", pSign, PosDiff / 1000, (PosDiff % 1000) / 10);
 }

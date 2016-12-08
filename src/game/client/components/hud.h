@@ -10,21 +10,11 @@ class CHud : public CComponent
 	float m_AverageFPS;
 
 	// Race
-	float m_CheckpointDiff;
+	int m_CheckpointDiff;
 	int m_RaceTime;
-	int m_LastReceivedTimeTick;
 	int m_CheckpointTick;
-	int m_RaceTick;
-	int m_Record;
-	int m_FinishTime;
-	int m_RaceState;
-
-	enum
-	{
-		RACE_NONE = 0,
-		RACE_STARTED,
-		RACE_FINISHED,
-	};
+	int m_ServerRecord;
+	bool m_OldTimer;
 	
 	void RenderCursor();
 
@@ -40,7 +30,7 @@ class CHud : public CComponent
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
 
-	void RenderTime();
+	void RenderCheckpoint();
 	void RenderRecord();
 	void RenderSpeedmeter();
 
