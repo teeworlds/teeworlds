@@ -271,13 +271,12 @@ void CChat::EnableMode(int Team)
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
-	CServerInfo ServerInfo;
-	Client()->GetServerInfo(&ServerInfo);
-
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		// dont show "finished in" message when race
+		CServerInfo ServerInfo;
+		Client()->GetServerInfo(&ServerInfo);
 		if(IsRace(&ServerInfo) && pMsg->m_ClientID < 0 && (str_find(pMsg->m_pMessage, " finished in: ") || str_find(pMsg->m_pMessage, "New record: ")))
 			return;
 
@@ -290,24 +289,6 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			m_Spam = true;
 		
 		str_copy(m_aaLastMsg[pMsg->m_ClientID+1], pMessage, sizeof(m_aaLastMsg[pMsg->m_ClientID+1]));
-		
-		// check if message should be marked
-		char aBuf[256];
-		str_copy(aBuf, g_Config.m_ClSearchName, sizeof(aBuf));
-
-		if(aBuf[0])
-		{
-			CSplit Sp2 = Split(aBuf, ' '); 
-			
-			m_ContainsName = false;
-			
-			for(int i = 0; i < Sp2.m_Count; i++)
-				if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
-				{
-					m_ContainsName = true;
-					break;
-				}
-		}
 		
 		AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);
 	}
@@ -380,15 +361,36 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 			if((pLine == pHL || pHL[-1] == ' ') && (pHL[Length] == 0 || pHL[Length] == ' ' || (pHL[Length] == ':' && pHL[Length+1] == ' ')))
 				Highlighted = true;
 		}
+
+		const char *pNames = g_Config.m_ClSearchName - 1;
+		const char *pNameStart = g_Config.m_ClSearchName;
+		do
+		{
+			pNames++;
+
+			if(!*pNames || *pNames == ' ')
+			{
+				int Len = pNames - pNameStart;
+				if(Len > 0)
+				{
+					char aBuf[16];
+					str_copy(aBuf, pNameStart, min((int)sizeof(aBuf), Len+1));
+					if(str_find_nocase(pLine, aBuf))
+					{
+						Highlighted = true;
+						break;
+					}
+				}
+				pNameStart = pNames + 1;
+			}
+		} while(*pNames);
+
 		m_aLines[m_CurrentLine].m_Highlighted =  Highlighted;
-		m_aLines[m_CurrentLine].m_Highlighted = m_ContainsName || (str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) != 0);
 			
 		if(g_Config.m_ClAntiSpam && m_Spam)
 			m_aLines[m_CurrentLine].m_Spam = 1;
 		else
 			m_aLines[m_CurrentLine].m_Spam = 0;
-		if(m_aLines[m_CurrentLine].m_Highlighted)
-			Highlighted = true;
 
 		if(ClientID == -1) // server message
 		{
@@ -655,7 +657,7 @@ void CChat::OnRender()
 			break;
 
 		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show && (m_Mode == MODE_NONE || !g_Config.m_ClChatHistoryOnInput) ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
-		
+
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
@@ -737,21 +739,4 @@ void CChat::Say(int Team, const char *pLine)
 	Msg.m_Team = Team;
 	Msg.m_pMessage = pLine;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-}
-
-CChat::CSplit CChat::Split(char *pIn, char Delim)
-{
-	CSplit Sp;
-	Sp.m_Count = 1;
-	Sp.m_aPointers[0] = pIn;
-
-	while (*++pIn && Sp.m_Count < MAX_SPLIT)
-	{
-		if (*pIn == Delim)
-		{
-			*pIn = 0;
-			Sp.m_aPointers[Sp.m_Count++] = pIn+1;
-		}
-	}
-	return Sp;
 }
