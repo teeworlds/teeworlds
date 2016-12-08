@@ -177,7 +177,7 @@ void CGhost::RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CTeeRende
 	}
 
 	// Render ghost
-	RenderTools()->RenderTee(&State, pRenderInfo, 0, Direction, Position, true);
+	RenderTools()->RenderTee(&State, pRenderInfo, 0, Direction, Position);
 }
 
 void CGhost::RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev)

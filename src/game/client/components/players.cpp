@@ -482,7 +482,7 @@ void CPlayers::RenderPlayer(
 		CTeeRenderInfo Ghost = RenderInfo;
 		Ghost.m_ColorBody.a = 0.5f;
 		Ghost.m_ColorFeet.a = 0.5f;
-		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition, true); // render ghost
+		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
 
 	RenderInfo.m_Size = 64.0f; // force some settings
