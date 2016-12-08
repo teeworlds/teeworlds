@@ -1,6 +1,8 @@
 #ifndef GAME_GHOST_H
 #define GAME_GHOST_H
 
+#include <game/generated/protocol.h>
+
 enum
 {
 	GHOSTDATA_TYPE_SKIN = 0,
@@ -44,7 +46,7 @@ public:
 		Player.m_X = Char.m_X;
 		Player.m_Y = Char.m_Y;
 		Player.m_VelX = Char.m_VelX;
-		//Player.m_VelY = Char.m_VelY;
+		Player.m_VelY = 0;
 		Player.m_Angle = Char.m_Angle;
 		Player.m_Direction = Char.m_Direction;
 		Player.m_Weapon = Char.m_Weapon;
@@ -52,6 +54,27 @@ public:
 		Player.m_HookX = Char.m_HookX;
 		Player.m_HookY = Char.m_HookY;
 		Player.m_AttackTick = Char.m_AttackTick;
+
+		return Player;
+	}
+
+	static CNetObj_Character GetNetObjCharacter(CGhostCharacter Char)
+	{
+		CNetObj_Character Player;
+		mem_zero(&Player, sizeof(Player));
+		Player.m_X = Char.m_X;
+		Player.m_Y = Char.m_Y;
+		Player.m_VelX = Char.m_VelX;
+		Player.m_VelY = 0;
+		Player.m_Angle = Char.m_Angle;
+		Player.m_Direction = Char.m_Direction;
+		Player.m_Weapon = Char.m_Weapon == WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_GUN;
+		Player.m_HookState = Char.m_HookState;
+		Player.m_HookX = Char.m_HookX;
+		Player.m_HookY = Char.m_HookY;
+		Player.m_AttackTick = Char.m_AttackTick;
+
+		Player.m_HookedPlayer = -1;
 
 		return Player;
 	}

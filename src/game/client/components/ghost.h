@@ -7,8 +7,6 @@
 
 #include <game/client/component.h>
 
-#include <game/ghost.h>
-
 class CGhost : public CComponent
 {
 private:
@@ -21,7 +19,7 @@ private:
 	{
 	public:
 		CTeeRenderInfo m_RenderInfo;
-		array<CGhostCharacter> m_lPath;
+		array<CNetObj_Character> m_lPath;
 		char m_aOwner[MAX_NAME_LENGTH];
 	};
 
@@ -30,12 +28,11 @@ private:
 
 	int m_StartRenderTick;
 	int m_LastRecordTick;
-	CGhostCharacter m_LastRecordChar;
 	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
 
-	void AddInfos(CGhostCharacter Player);
+	void AddInfos(CNetObj_Character Char);
 	int GetSlot();
 
 	bool IsStart(vec2 PrevPos, vec2 Pos);
@@ -44,9 +41,7 @@ private:
 	void StopRecord(int Time=0);
 	void StartRender();
 	void StopRender();
-	void RenderGhost(CGhostCharacter Player, CGhostCharacter Prev, CTeeRenderInfo *pRenderInfo);
-	void RenderGhostHook(CGhostCharacter Player, CGhostCharacter Prev);
-	void RenderGhostNamePlate(CGhostCharacter Player, CGhostCharacter Prev, const char *pName);
+	void RenderGhostNamePlate(CNetObj_Character Prev, CNetObj_Character Player, const char *pName);
 	
 	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
 

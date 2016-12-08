@@ -310,6 +310,7 @@ public:
 	class CHud *m_pHud;
 	class CScoreboard *m_pScoreboard;
 	//TODO: This is ugly
+	class CPlayers *m_pPlayers;
 	class CGhost *m_pGhost;
 	class CItems *m_pItems;
 	class CMapLayers *m_pMapLayersBackGround;
