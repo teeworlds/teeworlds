@@ -26,8 +26,8 @@ CGhost::CGhost()
 
 void CGhost::AddInfos(CNetObj_Character Char)
 {
-	m_CurGhost.m_lPath.add(Char);
 	CGhostCharacter GhostChar = CGhostTools::GetGhostCharacter(Char);
+	m_CurGhost.m_lPath.add(CGhostTools::GetNetObjCharacter(GhostChar));
 	if(GhostRecorder()->IsRecording())
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&GhostChar, sizeof(GhostChar));
 }
@@ -131,6 +131,10 @@ void CGhost::OnRender()
 		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
 		CNetObj_Character Player = pGhost->m_lPath[m_CurPos];
 		CNetObj_Character Prev = pGhost->m_lPath[PrevPos];
+
+		if(!m_TickDiff[i] && Player.m_AttackTick != Prev.m_AttackTick)
+			m_TickDiff[i] = Client()->GameTick() - Player.m_AttackTick;
+		Player.m_AttackTick += m_TickDiff[i];
 
 		m_pClient->m_pPlayers->RenderHook(&Prev, &Player, &pGhost->m_RenderInfo, -2);
 		m_pClient->m_pPlayers->RenderPlayer(&Prev, &Player, &pGhost->m_RenderInfo, -2);
@@ -276,6 +280,8 @@ void CGhost::StartRender()
 	m_CurPos = 0;
 	m_Rendering = true;
 	m_StartRenderTick = Client()->PredGameTick();
+	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
+		m_TickDiff[i] = 0;
 }
 
 void CGhost::StopRender()

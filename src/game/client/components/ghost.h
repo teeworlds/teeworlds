@@ -26,6 +26,8 @@ private:
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
+	int m_TickDiff[MAX_ACTIVE_GHOSTS];
+
 	int m_StartRenderTick;
 	int m_LastRecordTick;
 	int m_CurPos;
