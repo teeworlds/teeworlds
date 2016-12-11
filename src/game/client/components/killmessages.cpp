@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 #include <game/generated/protocol.h>
@@ -24,7 +25,9 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
 		// no killmessages for race
-		if(m_pClient->m_IsRace)
+		CServerInfo ServerInfo;
+		Client()->GetServerInfo(&ServerInfo);
+		if(IsRace(&ServerInfo))
 			return;
 		
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;

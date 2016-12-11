@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 
 #include <game/collision.h>
@@ -40,7 +41,9 @@ void CControls::OnRelease()
 
 void CControls::OnPlayerDeath()
 {
-	if(!m_pClient->m_IsRace)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if(!IsRace(&ServerInfo))
 		m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
 }
 

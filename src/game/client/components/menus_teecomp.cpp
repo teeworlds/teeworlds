@@ -57,8 +57,6 @@ void CMenus::RenderSettingsTeecomp(CUIRect MainView)
 			CTeecompUtils::ResetConfig();
 
 		MainView.HSplitBottom(10.0f, &MainView, &Button);
-		UI()->DoLabel(&Button, "http://spl0k.unreal-design.com/teeworlds/", 10.0f, 1);
-		MainView.HSplitBottom(10.0f, &MainView, &Button);
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf),  Localize("Teeworlds %s with TeeComp %s by spl0k"), GAME_VERSION, TEECOMP_VERSION);
 		UI()->DoLabel(&Button, aBuf, 10.0f, 1);
@@ -480,16 +478,10 @@ void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
 	Button.VSplitRight(Button.w/3, 0, &Button);
 	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("For Teeworlds"), GAME_VERSION);
 	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	Button.VSplitRight(Button.w/3, 0, &Button);
-	str_format(aBuf, sizeof(aBuf), "%s %s %s", Localize("Compiled"), __DATE__, __TIME__);
-	UI()->DoLabel(&Button, aBuf, 14.0f, -1);
 
 	MainView.HSplitTop(40.0f, 0, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, Localize("By Alban 'spl0k' FERON"), 14.0f, 0);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	UI()->DoLabel(&Button, "http://spl0k.unreal-design.com/", 14.0f, 0);
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(22.0f, &Button, &MainView);
@@ -504,9 +496,4 @@ void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
 	UI()->DoLabel(&Button, Localize("some other MonkeyStyle members"), 14.0f, 0);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	UI()->DoLabel(&Button, Localize("and the Teeworlds.com community"), 14.0f, 0);
-
-	MainView.HSplitBottom(10.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, Localize("so you can set while u set while u set options"), 10.0f, -1);
-	MainView.HSplitBottom(10.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, Localize("Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs"), 10.0f, -1);
 }

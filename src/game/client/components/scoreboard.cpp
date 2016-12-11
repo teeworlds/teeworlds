@@ -384,6 +384,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	if(Team == TEAM_SPECTATORS)
 		return;
 
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	bool Race = IsRace(&ServerInfo);
+
 	float HeadlineFontsize = 22.0f;
 	float HeadlineHeight = 30.0f;
 	float TitleFontsize = 30.0f;
@@ -454,7 +458,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	float w = 0.0f;
 	for(int i = 0; i < 6; i++)
 	{
-		if(m_pClient->m_IsRace && i == COLUMN_SCORE_SCORE)
+		if(Race && i == COLUMN_SCORE_SCORE)
 		{
 			ms_Scoreboard[i].m_Width = 125.0f;
 			ms_Scoreboard[i].m_RenderAlign = CColumn::ALIGN_MIDDLE;
@@ -479,7 +483,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	float tw = 0.0f;
 	if(TeamPlay)
 	{
-		if(m_pClient->m_Snap.m_pGameDataObj && !m_pClient->m_IsRace)
+		if(m_pClient->m_Snap.m_pGameDataObj && !Race)
 		{
 			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
@@ -491,7 +495,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 	else
 	{
 		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW &&
-			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID] && !m_pClient->m_IsRace)
+			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID] && !Race)
 		{
 			int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
@@ -499,7 +503,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 			tw = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1);
 			TextRender()->Text(0, x+Width-tw-20.0f, y, TitleFontsize, aBuf, -1);
 		}
-		else if(m_pClient->m_Snap.m_pLocalInfo && !m_pClient->m_IsRace)
+		else if(m_pClient->m_Snap.m_pLocalInfo && !Race)
 		{
 			int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
@@ -572,7 +576,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 
 			if(j == COLUMN_SCORE_SCORE)
 			{
-				if(m_pClient->m_IsRace)
+				if(Race)
 				{
 					// reset time
 					if(pInfo->m_Score == -9999)
@@ -728,11 +732,15 @@ void CScoreboard::OnRender()
 				SpectatorHeight += HeadlineHeight;
 		}
 
+		CServerInfo ServerInfo;
+		Client()->GetServerInfo(&ServerInfo);
+		bool Race = IsRace(&ServerInfo);
+
 		// get scoreboard width
 		float ScoreboardWidth = 30.0f;
 		for(int i = 0; i < 6; i++)
 		{
-			if(m_pClient->m_IsRace && i == COLUMN_SCORE_SCORE)
+			if(Race && i == COLUMN_SCORE_SCORE)
 			{
 				ms_Scoreboard[i].m_Width = 125.0f;
 				ms_Scoreboard[i].m_RenderAlign = CColumn::ALIGN_MIDDLE;

@@ -10,6 +10,16 @@
 #include <game/gamecore.h>
 #include "render.h"
 
+// TODO: find a better place for this
+bool IsVanilla(const CServerInfo *pInfo);
+bool IsCatch(const CServerInfo *pInfo);
+bool IsInsta(const CServerInfo *pInfo);
+bool IsFNG(const CServerInfo *pInfo);
+bool IsRace(const CServerInfo *pInfo);
+bool IsFastCap(const CServerInfo *pInfo);
+bool IsDDRace(const CServerInfo *pInfo);
+bool IsDDNet(const CServerInfo *pInfo);
+
 class CGameClient : public IGameClient
 {
 	class CStack
@@ -106,8 +116,6 @@ public:
 	int m_FlagDropTick[2];
 
 	// Race
-	bool m_IsRace;
-	bool m_IsFastCap;
 	vec2 m_aFlagPos[2];
 
 	
@@ -266,7 +274,6 @@ public:
 
 	// TeeComp hooks
 	int m_LastGameOver;
-	int m_LastRoundStartTick;
 	int m_aLastFlagCarrier[2];
 	void OnFlagGrab(int Id);
 	
@@ -303,6 +310,7 @@ public:
 	class CHud *m_pHud;
 	class CScoreboard *m_pScoreboard;
 	//TODO: This is ugly
+	class CPlayers *m_pPlayers;
 	class CGhost *m_pGhost;
 	class CItems *m_pItems;
 	class CMapLayers *m_pMapLayersBackGround;

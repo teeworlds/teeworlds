@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 #include <game/generated/protocol.h>
@@ -20,7 +21,9 @@ void CTimeMessages::OnReset()
 
 void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(!m_pClient->m_IsRace)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if (!IsRace(&ServerInfo))
 		return;
 	
 	if(MsgType == NETMSGTYPE_SV_CHAT)
@@ -83,7 +86,9 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CTimeMessages::OnRender()
 {
-	if(!m_pClient->m_IsRace)
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	if(!IsRace(&ServerInfo))
 		return;
 	
 	float Width = 330*3.0f*Graphics()->ScreenAspect();
@@ -185,9 +190,9 @@ void CTimeMessages::OnRender()
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorBody.a = Blend;
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorFeet.a = Blend;
 		if(m_aTimemsgs[r].m_LocalDiff < 0)
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), true);
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28));
 		else
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_NORMAL, vec2(-1,0), vec2(x, y+28), true);
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_NORMAL, vec2(-1,0), vec2(x, y+28));
 		
 		// new line
 		y += 46;

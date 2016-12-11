@@ -66,7 +66,6 @@ class CChat : public CComponent
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
-	bool m_ContainsName;
 	bool m_Spam;
 	
 	char m_aaLastMsg[MAX_CLIENTS+1][265];
@@ -94,13 +93,5 @@ public:
 	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnInput(IInput::CEvent Event);
-	
-	struct CSplit
-	{
-		char *m_aPointers[MAX_SPLIT];
-		int m_Count;
-	};
-
-	static CSplit Split(char *pIn, char Delim);
 };
 #endif
