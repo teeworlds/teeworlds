@@ -1113,6 +1113,10 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	}
 	OnPlayerInfoChange(pPlayer);
 	GameServer()->OnClientTeamChange(ClientID);
+
+	// reset inactivity counter when joining the game
+	if(OldTeam == TEAM_SPECTATORS)
+		pPlayer->m_InactivityTickCounter = 0;
 }
 
 int IGameController::GetStartTeam()
