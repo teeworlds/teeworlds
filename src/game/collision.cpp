@@ -71,7 +71,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	int End(Distance+1);
 	vec2 Last = Pos0;
 
-	for(int i = 0; i < End; i++)
+	for(int i = 0; i <= End; i++)
 	{
 		float a = i/float(End);
 		vec2 Pos = mix(Pos0, Pos1, a);
