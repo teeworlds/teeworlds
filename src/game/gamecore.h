@@ -52,7 +52,7 @@ inline void StrToInts(int *pInts, int Num, const char *pStr)
 	int Index = 0;
 	while(Num)
 	{
-		char aBuf[4] = {0,0,0,0};
+		signed char aBuf[4] = {0,0,0,0};
 		for(int c = 0; c < 4 && pStr[Index]; c++, Index++)
 			aBuf[c] = pStr[Index];
 		*pInts = ((aBuf[0]+128)<<24)|((aBuf[1]+128)<<16)|((aBuf[2]+128)<<8)|(aBuf[3]+128);
