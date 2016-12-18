@@ -8,6 +8,8 @@
 #ifndef BASE_SYSTEM_H
 #define BASE_SYSTEM_H
 
+#include <stddef.h>
+
 #include "detect.h"
 
 #ifdef __cplusplus
