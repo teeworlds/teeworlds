@@ -419,7 +419,7 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	return settings
 end
 
--- String formatting wth named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
+-- String formatting with named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
 function interp(s, tab)
 	return (s:gsub('%%%((%a%w*)%)([-0-9%.]*[cdeEfgGiouxXsq])',
 			function(k, fmt)
@@ -484,9 +484,21 @@ for a, cur_arch in ipairs(archs) do
 		local settings = GenerateSettings(cur_conf, cur_arch, cur_builddir, compiler)
 		for t, cur_target in pairs(targets) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))
+			if family == "windows" then
+				dl = Python("scripts/download.py")
+				dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
+				AddJob(cur_target .. "SDL2.dll", "Downloading SDL2.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll")
+				AddJob(cur_target .. "freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
+			end
 		end
 	end
 end
+
+if family == "windows" then
+	AddJob("other/sdl/include/SDL.h", "Downloading sdl and freetype", dl .. " sdl freetype") -- TODO: remove freetype from sdl-download
+	AddJob("other/freetype/include/freetype.h", "Downloading freetype", dl .. " freetype")   -- TODO: MAKE ME WORKING (why don't I...!?)
+end
+
 for cur_name, cur_target in pairs(targets) do
 	-- Supertarget for all configurations and architectures of that target
 	PseudoTarget(cur_name, subtargets[cur_target])
