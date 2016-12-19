@@ -368,14 +368,22 @@ void CGameContext::SendVoteSet(int Type, int ToClientID)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ToClientID);
 }
 
-void CGameContext::SendVoteStatus(int ClientID, int Total, int Yes, int No)
+void CGameContext::SendVoteStatus(int ClientID, int Total, int Yes, int No, bool hide)
 {
 	CNetMsg_Sv_VoteStatus Msg = {0};
 	Msg.m_Total = Total;
-	Msg.m_Yes = Yes;
-	Msg.m_No = No;
-	Msg.m_Pass = Total - (Yes+No);
-
+	if(hide)
+	{
+		Msg.m_Yes = 0;
+		Msg.m_No = 0;
+		Msg.m_Pass = 0;
+	}
+	else
+	{
+		Msg.m_Yes = Yes;
+		Msg.m_No = No;
+		Msg.m_Pass = Total - (Yes+No);
+	}
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 
 }
@@ -470,6 +478,7 @@ void CGameContext::OnTick()
 		else
 		{
 			int Total = 0, Yes = 0, No = 0;
+			bool aVoteChecked[MAX_CLIENTS] = {0};
 			if(m_VoteUpdate)
 			{
 				// count votes
@@ -477,7 +486,6 @@ void CGameContext::OnTick()
 				for(int i = 0; i < MAX_CLIENTS; i++)
 					if(m_apPlayers[i])
 						Server()->GetClientAddr(i, aaBuf[i], NETADDR_MAXSTRSIZE);
-				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
 					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || aVoteChecked[i])	// don't count in votes by spectators
@@ -523,7 +531,12 @@ void CGameContext::OnTick()
 			else if(m_VoteUpdate)
 			{
 				m_VoteUpdate = false;
-				SendVoteStatus(-1, Total, Yes, No);
+
+				for(int i=0;i<MAX_CLIENTS; i++)
+				{
+					if(m_apPlayers[i])
+						SendVoteStatus(i, Total, Yes, No, (!m_apPlayers[i]->m_Vote)&&g_Config.m_SvVoteHideUntilVoted);
+				}
 			}
 		}
 	}

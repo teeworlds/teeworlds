@@ -304,7 +304,14 @@ void CVoting::OnRender()
 
 void CVoting::RenderBars(CUIRect Bars, bool Text)
 {
-	RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, Bars.h/3);
+	if(m_Pass==0)
+	{
+		RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.2f,1.0f), CUI::CORNER_ALL, Bars.h/3);
+	}
+	else
+	{
+		RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, Bars.h/3);
+	}
 
 	CUIRect Splitter = Bars;
 	Splitter.x = Splitter.x+Splitter.w/2;

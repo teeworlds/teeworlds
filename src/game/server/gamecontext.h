@@ -94,7 +94,7 @@ public:
 	void EndVote(int Type, bool Force);
 	void ForceVote(int Type, const char *pDescription, const char *pReason);
 	void SendVoteSet(int Type, int ToClientID);
-	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
+	void SendVoteStatus(int ClientID, int Total, int Yes, int No, bool hide);
 	void AbortVoteOnDisconnect(int ClientID);
 	void AbortVoteOnTeamChange(int ClientID);
 
