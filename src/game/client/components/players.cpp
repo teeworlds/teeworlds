@@ -128,6 +128,9 @@ void CPlayers::RenderHook(
 		Graphics()->QuadsBegin();
 		//Graphics()->QuadsBegin();
 
+		if(ClientID < 0)
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
+
 		vec2 Pos = Position;
 		vec2 HookPos;
 
@@ -327,6 +330,9 @@ void CPlayers::RenderPlayer(
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
+
+		if(ClientID < 0)
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 		// normal weapons
 		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
