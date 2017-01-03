@@ -88,6 +88,10 @@ void CGhost::OnRender()
 			{
 				int NewTicks = Client()->GameTick() - m_LastRecordTick;
 				CNetObj_Character LastRecordChar = m_CurGhost.m_lPath.all().back();
+				if(LastRecordChar.m_Angle < 0 && NewChar.m_Angle > pi*256)
+					LastRecordChar.m_Angle += 2*pi*256;
+				else if(LastRecordChar.m_Angle > pi*256 && NewChar.m_Angle < 0)
+					NewChar.m_Angle += 2*pi*256;
 				// make sure that we have one item per tick
 				for(int i = 1; i < NewTicks; i++)
 				{
