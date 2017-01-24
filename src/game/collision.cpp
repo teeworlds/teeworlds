@@ -153,9 +153,9 @@ int CCollision::CheckRaceTile(vec2 PrevPos, vec2 Pos)
 	float Distance = distance(PrevPos, Pos);
 	int End = Distance+1;
 
-	for(int i = 0; i < End; i++)
+	for(int i = 0; i <= End; i++)
 	{
-		float a = i/Distance;
+		float a = i/float(End);
 		vec2 Tmp = mix(PrevPos, Pos, a);
 		int TilePos = GetTilePos(Tmp);
 		if((m_pTiles[TilePos].m_Index >= TILE_STOPL && m_pTiles[TilePos].m_Index <= 59) ||
