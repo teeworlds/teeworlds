@@ -23,6 +23,7 @@ public:
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	bool m_Logging;
+	bool m_LoggingFile;
 
 	static void Con_DbgDumpmem(IConsole::IResult *pResult, void *pUserData)
 	{
@@ -80,6 +81,12 @@ public:
 
 		m_Logging = false;
 	}
+	
+	~CEngine()
+	{
+		if(m_LoggingFile)
+			dbg_logger_file_shutdown();
+	}
 
 	void Init()
 	{
@@ -97,7 +104,12 @@ public:
 	{
 		// open logfile if needed
 		if(g_Config.m_Logfile[0])
+		{
 			dbg_logger_file(g_Config.m_Logfile);
+			m_LoggingFile = true;
+		}
+		else
+			m_LoggingFile = false;
 	}
 
 	void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype)
