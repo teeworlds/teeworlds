@@ -273,7 +273,6 @@ public:
 	virtual void OnStartGame();
 
 	// TeeComp hooks
-	int m_LastGameOver;
 	int m_aLastFlagCarrier[2];
 	void OnFlagGrab(int Id);
 	

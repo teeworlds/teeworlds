@@ -498,7 +498,6 @@ void CGameClient::OnConnected()
 	// send the inital info
 	SendInfo(true);
 
-	m_LastGameOver = 0;
 	m_aLastFlagCarrier[0] = -1;
 	m_aLastFlagCarrier[1] = -1;
 	
@@ -1014,12 +1013,22 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEINFO)
 			{
+				static bool s_GameOver = 0;
+				static bool s_GamePaused = 0;
+				static int s_LastRoundStartTick = -1;
 				m_Snap.m_pGameInfoObj = (const CNetObj_GameInfo *)pData;
-				if(!m_LastGameOver && m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+				bool CurrentTickGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+				if(!s_GameOver && CurrentTickGameOver)
 					OnGameOver();
-				else if(m_LastGameOver && !(m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+				else if(s_GameOver && !CurrentTickGameOver)
 					OnStartGame();
-				m_LastGameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+				// Reset statboard when new round is started (RoundStartTick changed)
+				if(m_Snap.m_pGameInfoObj->m_RoundStartTick != s_LastRoundStartTick
+					&& !(CurrentTickGameOver || m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED || s_GamePaused))
+					m_pTeecompStats->OnReset();
+				s_LastRoundStartTick = m_Snap.m_pGameInfoObj->m_RoundStartTick;
+				s_GameOver = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+				s_GamePaused = m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATA)
 			{

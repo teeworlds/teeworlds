@@ -826,7 +826,7 @@ void CScoreboard::OnRender()
 				else
 					str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
 			}
-			RenderScoreboard(x+20.0f, y+20.0f, w/2.0f-20.0f-2.5f, ScoreboardHeight, TEAM_RED, pRedClanName ? pRedClanName : Localize(aText), true);
+			RenderScoreboard(x+20.0f, y+20.0f, w/2.0f-20.0f-2.5f, ScoreboardHeight, TEAM_RED, pRedClanName ? pRedClanName : aText, true);
 			if(CTeecompUtils::GetForceDmColors(TEAM_BLUE, m_pClient->m_Snap.m_pLocalInfo ? m_pClient->m_Snap.m_pLocalInfo->m_Team : TEAM_RED))
 				str_copy(aText, Localize("Blue team"), sizeof(aText));
 			else
@@ -836,7 +836,7 @@ void CScoreboard::OnRender()
 				else
 					str_format(aText, sizeof(aText), Localize("%s team"), CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
 			}
-			RenderScoreboard(x+20.0f+(w/2.0f-20.0f-2.5f)+5.0f, y+20.0f, w/2.0f-20.0f-2.5f, ScoreboardHeight, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize(aText), true);
+			RenderScoreboard(x+20.0f+(w/2.0f-20.0f-2.5f)+5.0f, y+20.0f, w/2.0f-20.0f-2.5f, ScoreboardHeight, TEAM_BLUE, pBlueClanName ? pBlueClanName : aText, true);
 		}
 
 		
