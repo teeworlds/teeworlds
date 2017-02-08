@@ -30,6 +30,7 @@ private:
 
 	int m_StartRenderTick;
 	int m_LastRecordTick;
+	int m_LastDeathTick;
 	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
