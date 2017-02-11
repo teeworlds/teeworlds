@@ -19,6 +19,7 @@
 CGhost::CGhost()
 	: m_StartRenderTick(-1),
 	m_LastRecordTick(-1),
+	m_LastDeathTick(-1),
 	m_CurPos(0),
 	m_Rendering(false),
 	m_Recording(false)
@@ -59,7 +60,7 @@ void CGhost::OnRender()
 	// only for race
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	if(!IsRace(&ServerInfo) || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter)
+	if(!IsRace(&ServerInfo) || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
 	// TODO: handle restart
@@ -73,10 +74,13 @@ void CGhost::OnRender()
 
 	if(m_pClient->m_NewTick)
 	{
+		int PrevTick = m_pClient->m_Snap.m_pLocalPrevCharacter->m_Tick;
 		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
 		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
-		if(!m_Recording && IsStart(PrevPos, Pos))
-			StartRecord();
+
+		// detecting death, needed because teerace allows immediate respawning
+		if(!m_Recording && IsStart(PrevPos, Pos) && (m_LastDeathTick == -1 || m_LastDeathTick < PrevTick))
+				StartRecord();
 
 		if(m_Recording)
 		{
@@ -388,6 +392,7 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 			if(m_Recording)
 				StopRecord();
 			StopRender();
+			m_LastDeathTick = Client()->GameTick();
 		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_CHAT)
@@ -410,6 +415,7 @@ void CGhost::OnReset()
 {
 	StopRecord();
 	StopRender();
+	m_LastDeathTick = -1;
 }
 
 void CGhost::OnShutdown()
