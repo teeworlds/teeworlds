@@ -955,8 +955,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 		}
 	}
 	
-    if(s_ScrollValue < 0) s_ScrollValue = 0;
-    if(s_ScrollValue > 1) s_ScrollValue = 1;
+	if(s_ScrollValue < 0) s_ScrollValue = 0;
+	if(s_ScrollValue > 1) s_ScrollValue = 1;
 
 	// set clipping
 	UI()->ClipEnable(&View);
@@ -970,7 +970,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 	{
 		const CGhostItem *pItem = &m_lGhosts[i];
 		CUIRect Row;
-        CUIRect SelectHitBox;
+		CUIRect SelectHitBox;
 		
 		View.HSplitTop(17.0f, &Row, &View);
 		SelectHitBox = Row;
