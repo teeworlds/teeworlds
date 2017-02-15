@@ -13,6 +13,7 @@ public:
 
 	virtual void Init() = 0;
 	virtual void Reset() = 0;
+	virtual void Reset(int FilterFlags) = 0;
 	virtual void RestoreStrings() = 0;
 	virtual void Save() = 0;
 
