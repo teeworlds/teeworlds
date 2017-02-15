@@ -908,10 +908,6 @@ void CGameClient::OnNewSnapshot()
 	{
 		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
 
-		// TeeComp
-		for(int i = 0; i < MAX_CLIENTS; i++)
-			m_aStats[i].m_Active = false;
-
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
 		{
@@ -987,8 +983,11 @@ void CGameClient::OnNewSnapshot()
 				if(pInfo->m_Team != TEAM_SPECTATORS)
 				{
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
-					m_aStats[pInfo->m_ClientID].m_Active = true;
+					if(!m_aStats[pInfo->m_ClientID].IsActive())
+						m_aStats[pInfo->m_ClientID].JoinGame(Client()->GameTick());
 				}
+				else if(m_aStats[pInfo->m_ClientID].IsActive())
+					m_aStats[pInfo->m_ClientID].JoinSpec(Client()->GameTick());
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
@@ -1065,18 +1064,6 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
 		}
-		
-		// TeeComp
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aStats[i].m_Active && !m_aStats[i].m_WasActive)
-			{
-				m_aStats[i].Reset(); // Client connected, reset stats.
-				m_aStats[i].m_Active = true;
-				m_aStats[i].m_JoinDate = Client()->GameTick();
-			}
-			m_aStats[i].m_WasActive = m_aStats[i].m_Active;
-		}
 	}
 
 	// setup local pointers
@@ -1109,7 +1096,10 @@ void CGameClient::OnNewSnapshot()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
+		{
 			m_aClients[i].Reset(this, i);
+			m_aStats[i].Reset();
+		}
 	}
 
 	// update friend state
@@ -1370,21 +1360,11 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
-/*void CGameClient::OnGameRestart()
-{	
-	m_pTeecompStats->OnReset();
-}*/
 
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
 }
-
-/*void CGameClient::OnRoundStart()
-{
-	for(int i=0; i<MAX_CLIENTS; i++)
-		m_aStats[i].Reset();
-}*/
 
 void CGameClient::OnFlagGrab(int ID)
 {
@@ -1396,29 +1376,14 @@ void CGameClient::OnFlagGrab(int ID)
 
 CGameClient::CClientStats::CClientStats()
 {
-	m_JoinDate  = 0;
-	m_Active    = false;
-	m_WasActive = false;
-	m_Frags     = 0;
-	m_Deaths    = 0;
-	m_Suicides  = 0;
-	for(int j = 0; j < NUM_WEAPONS; j++)
-	{
-		m_aFragsWith[j]  = 0;
-		m_aDeathsFrom[j] = 0;
-	}
-	m_FlagGrabs      = 0;
-	m_FlagCaptures   = 0;
-	m_CarriersKilled = 0;
-	m_KillsCarrying  = 0;
-	m_DeathsCarrying = 0;
+	Reset();
 }
 
 void CGameClient::CClientStats::Reset()
 {
-	m_JoinDate  = 0;
+	m_JoinTick  = 0;
+	m_IngameTicks = 0;
 	m_Active    = false;
-	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
 	m_Suicides  = 0;
