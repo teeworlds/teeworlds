@@ -523,19 +523,30 @@ void CGameClient::OnConnected()
 void CGameClient::LoadMapSettings()
 {
 	IMap *pMap = Kernel()->RequestInterface<IMap>();
-	CMapItemInfo *pItem = (CMapItemInfo *)pMap->FindItem(MAPITEMTYPE_INFO, 0);
-	if(pItem && pItem->m_Settings > -1)
+	int Start, Num;
+	pMap->GetType(MAPITEMTYPE_INFO, &Start, &Num);
+	for(int e = 0; e < Num; e++)
 	{
-		// load settings
-		int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
-		const char *pTmp = (char*)pMap->GetData(pItem->m_Settings);
-		const char *pEnd = pTmp + Size;
-		while(pTmp < pEnd)
+		int ItemID;
+		CMapItemInfo *pItem = (CMapItemInfo *)pMap->GetItem(Start + e, 0, &ItemID);
+		int ItemSize = pMap->GetItemSize(Start + e) - sizeof(int) * 2;
+		if(!pItem || ItemID != 0)
+			continue;
+
+		if(pItem->m_Version == 1 && pItem->m_Settings > -1 && ItemSize >= (int)sizeof(CMapItemInfo))
 		{
-			Console()->ExecuteLineFlag(pTmp, CFGFLAG_MAPSETTINGS);
-			pTmp += str_length(pTmp) + 1;
+			// load settings
+			int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
+			const char *pTmp = (char*)pMap->GetData(pItem->m_Settings);
+			const char *pEnd = pTmp + Size;
+			while(pTmp < pEnd)
+			{
+				Console()->ExecuteLineFlag(pTmp, CFGFLAG_MAPSETTINGS);
+				pTmp += str_length(pTmp) + 1;
+			}
+			pMap->UnloadData(pItem->m_Settings);
 		}
-		pMap->UnloadData(pItem->m_Settings);
+		break;
 	}
 }
 
