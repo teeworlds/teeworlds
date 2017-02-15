@@ -530,8 +530,10 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 
 void CCharacterCore::Quantize()
 {
+	vec2 Prev = m_PrevPos;
 	CNetObj_CharacterCore Core;
 	Write(&Core);
 	Read(&Core);
+	m_PrevPos = Prev;
 }
 
