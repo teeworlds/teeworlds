@@ -15,13 +15,15 @@ class CCollision
 	class CLayers *m_pLayers;
 
 	vec2 *m_pTeleporter;
+	bool m_MainTiles;
+	bool m_StopTiles;
 
 	void InitTeleporter();
 
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
 
-	bool IsRaceTile(int TilePos);
+	bool IsRaceTile(int TilePos, int Mask);
 
 public:
 	enum
@@ -29,6 +31,11 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+
+		RACECHECK_TILES_MAIN=1,
+		RACECHECK_TILES_STOP=2,
+		RACECHECK_TELE=4,
+		RACECHECK_SPEEDUP=8,
 	};
 
 	CCollision();
@@ -50,11 +57,11 @@ public:
 	int GetIndex(vec2 Pos);
 	int GetIndex(int TilePos);
 
-	int CheckRaceTile(vec2 PrevPos, vec2 Pos);
+	int CheckRaceTile(vec2 PrevPos, vec2 Pos, int Mask);
 
 	int CheckSpeedup(int TilePos);
 	void GetSpeedup(int SpeedupPos, vec2 *Dir, int *Force);
-	int CheckTeleport(vec2 PrevPos, vec2 Pos);
+	int CheckTeleport(int TilePos);
 	vec2 GetTeleportDestination(int Number);
 };
 

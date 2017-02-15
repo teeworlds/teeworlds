@@ -3,6 +3,7 @@
 #include <engine/shared/config.h>
 
 #include "gamecore.h"
+#include "mapitems.h"
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -66,6 +67,7 @@ void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
 void CCharacterCore::Reset()
 {
 	m_Pos = vec2(0,0);
+	m_PrevPos = vec2(0,0);
 	m_Vel = vec2(0,0);
 	m_HookPos = vec2(0,0);
 	m_HookDir = vec2(0,0);
@@ -75,12 +77,16 @@ void CCharacterCore::Reset()
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
 	m_Teleported = false;
+	m_SpeedupTouch = false;
+	m_LastSpeedup = -1;
 }
 
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;
 	m_TriggeredEvents = 0;
+
+	int Jumped = m_Jumped;
 
 	// get ground state
 	bool Grounded = false;
@@ -357,6 +363,87 @@ void CCharacterCore::Tick(bool UseInput)
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
 		m_Vel = normalize(m_Vel) * 6000;
+
+	int Mask = 0;
+	if(m_pWorld->m_StopTiles) Mask |= CCollision::RACECHECK_TILES_STOP;
+	if(m_pWorld->m_Speedup) Mask |= CCollision::RACECHECK_SPEEDUP;
+	if(m_pWorld->m_Teleport) Mask |= CCollision::RACECHECK_TELE;
+	int TilePos = m_pCollision->CheckRaceTile(m_PrevPos, m_Pos, Mask);
+
+	if(m_pWorld->m_StopTiles)
+	{
+		if(m_pCollision->GetIndex(TilePos) == TILE_STOPL)
+		{
+			if(m_Vel.x > 0)
+			{
+				if((int)m_pCollision->GetPos(TilePos).x < (int)m_Pos.x)
+					m_Pos.x = m_PrevPos.x;
+				m_Vel.x = 0;
+			}
+		}
+		else if(m_pCollision->GetIndex(TilePos) == TILE_STOPR)
+		{
+			if(m_Vel.x < 0)
+			{
+				if((int)m_pCollision->GetPos(TilePos).x > (int)m_Pos.x)
+					m_Pos.x = m_PrevPos.x;
+				m_Vel.x = 0;
+			}
+		}
+		else if(m_pCollision->GetIndex(TilePos) == TILE_STOPB)
+		{
+			if(m_Vel.y < 0)
+			{
+				if((int)m_pCollision->GetPos(TilePos).y > (int)m_Pos.y)
+					m_Pos.y = m_PrevPos.y;
+				m_Vel.y = 0;
+			}
+		}
+		else if(m_pCollision->GetIndex(TilePos) == TILE_STOPT)
+		{
+			if(m_Vel.y > 0)
+			{
+				if((int)m_pCollision->GetPos(TilePos).y < (int)m_Pos.y)
+					m_Pos.y = m_PrevPos.y;
+				if(Jumped&3 && m_Jumped != Jumped) // check double jump
+					m_Jumped = Jumped;
+				m_Vel.y = 0;
+			}
+		}
+	}
+
+	m_SpeedupTouch = false;
+	int SpeedupPos = m_pCollision->CheckSpeedup(TilePos);
+	if(m_pWorld->m_Speedup && m_LastSpeedup != SpeedupPos && SpeedupPos > -1)
+	{
+		vec2 Direction;
+		int Force;
+		m_pCollision->GetSpeedup(SpeedupPos, &Direction, &Force);
+		m_Vel += Direction*Force;
+		m_SpeedupTouch = true;
+	}
+
+	m_LastSpeedup = SpeedupPos;
+	
+	m_Teleported = false;
+	int Tele = m_pCollision->CheckTeleport(TilePos);
+	if(m_pWorld->m_Teleport && Tele)
+	{
+		// check double jump
+		if(Jumped&3 && m_Jumped != Jumped)
+			m_Jumped = Jumped;
+
+		m_HookedPlayer = -1;
+		m_HookState = HOOK_RETRACTED;
+		m_Pos = m_pCollision->GetTeleportDestination(Tele);
+		m_HookPos = m_Pos;
+		m_Teleported = true;
+
+		if(g_Config.m_SvTeleportVelReset)
+			m_Vel = vec2(0,0);
+	}
+
+	m_PrevPos = m_Pos;
 }
 
 void CCharacterCore::Move()
@@ -366,7 +453,6 @@ void CCharacterCore::Move()
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	vec2 PrevPos = m_Pos;
 	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
@@ -401,25 +487,6 @@ void CCharacterCore::Move()
 	}
 
 	m_Pos = NewPos;
-	
-	m_Teleported = false;
-	int Tele = m_pCollision->CheckTeleport(PrevPos, m_Pos);
-	if(Tele && m_pWorld->m_Teleport)
-	{
-		// TODO
-		// check double jump
-		//if(Jumped & 3 && m_Jumped != Jumped)
-		//	m_Jumped = Jumped;
-
-		m_HookedPlayer = -1;
-		m_HookState = HOOK_RETRACTED;
-		m_Pos = m_pCollision->GetTeleportDestination(Tele);
-		m_HookPos = m_Pos;
-		m_Teleported = true;
-
-		if(g_Config.m_SvTeleportVelReset)
-			m_Vel = vec2(0,0);
-	}
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
@@ -457,6 +524,8 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_Jumped = pObjCore->m_Jumped;
 	m_Direction = pObjCore->m_Direction;
 	m_Angle = pObjCore->m_Angle;
+
+	m_PrevPos = m_Pos;
 }
 
 void CCharacterCore::Quantize()

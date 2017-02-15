@@ -47,7 +47,7 @@ bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
 	Client()->GetServerInfo(&ServerInfo);
 
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team ^ 1;
-	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos);
+	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos, CCollision::RACECHECK_TILES_MAIN);
 	if(!IsFastCap(&ServerInfo) && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
 		return true;
 	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)

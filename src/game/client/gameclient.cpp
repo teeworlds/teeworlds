@@ -630,6 +630,9 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	Client()->GetServerInfo(&ServerInfo);
 	bool Race = IsRaceStrict(&ServerInfo);
 	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && Race;
+	TempWorld.m_Speedup = g_Config.m_ClPredictSpeedup && Race;
+	TempWorld.m_StopTiles = g_Config.m_ClPredictStopTiles && Race;
+
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());
@@ -1301,6 +1304,8 @@ void CGameClient::OnPredict()
 	Client()->GetServerInfo(&ServerInfo);
 	bool Race = IsRaceStrict(&ServerInfo);
 	World.m_Teleport = g_Config.m_ClPredictTeleport && Race;
+	World.m_Speedup = g_Config.m_ClPredictSpeedup && Race;
+	World.m_StopTiles = g_Config.m_ClPredictStopTiles && Race;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
