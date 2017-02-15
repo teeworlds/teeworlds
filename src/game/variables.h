@@ -106,6 +106,7 @@ MACRO_CONFIG_INT(ClRaceGhost, cl_race_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAV
 MACRO_CONFIG_INT(ClRaceSaveGhost, cl_race_save_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save ghost")
 MACRO_CONFIG_INT(ClGhostNamePlates, cl_ghost_nameplates, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ghost nameplates")
 MACRO_CONFIG_INT(ClGhostNameplatesAlways, cl_ghost_nameplates_always, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Always show ghost nameplats disregarding of distance")
+MACRO_CONFIG_INT(ClPredictRace, cl_predict_race, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict race")
 MACRO_CONFIG_INT(ClPredictTeleport, cl_predict_teleport, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict teleport")
 MACRO_CONFIG_INT(ClPredictSpeedup, cl_predict_speedup, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict speedup")
 MACRO_CONFIG_INT(ClPredictStopTiles, cl_predict_stop_tiles, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict stop tiles")

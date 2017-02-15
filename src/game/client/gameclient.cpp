@@ -628,10 +628,10 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	CWorldCore TempWorld;
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	bool Race = IsRaceStrict(&ServerInfo);
-	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && Race;
-	TempWorld.m_Speedup = g_Config.m_ClPredictSpeedup && Race;
-	TempWorld.m_StopTiles = g_Config.m_ClPredictStopTiles && Race;
+	bool PredictRace = IsRaceStrict(&ServerInfo) && g_Config.m_ClPredictRace;
+	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && PredictRace;
+	TempWorld.m_Speedup = g_Config.m_ClPredictSpeedup && PredictRace;
+	TempWorld.m_StopTiles = g_Config.m_ClPredictStopTiles && PredictRace;
 
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
@@ -1302,10 +1302,10 @@ void CGameClient::OnPredict()
 
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	bool Race = IsRaceStrict(&ServerInfo);
-	World.m_Teleport = g_Config.m_ClPredictTeleport && Race;
-	World.m_Speedup = g_Config.m_ClPredictSpeedup && Race;
-	World.m_StopTiles = g_Config.m_ClPredictStopTiles && Race;
+	bool PredictRace = IsRaceStrict(&ServerInfo) && g_Config.m_ClPredictRace;
+	World.m_Teleport = g_Config.m_ClPredictTeleport && PredictRace;
+	World.m_Speedup = g_Config.m_ClPredictSpeedup && PredictRace;
+	World.m_StopTiles = g_Config.m_ClPredictStopTiles && PredictRace;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
