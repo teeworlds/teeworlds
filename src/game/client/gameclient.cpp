@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/config.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
@@ -483,6 +484,11 @@ void CGameClient::OnConnected()
 
 	RenderTools()->RenderTilemapGenerateSkip(Layers());
 
+	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
+	if(pConfig)
+		pConfig->Reset(CFGFLAG_MAPSETTINGS);
+	LoadMapSettings();
+
 	for(int i = 0; i < m_All.m_Num; i++)
 	{
 		m_All.m_paComponents[i]->OnMapLoad();
@@ -511,6 +517,25 @@ void CGameClient::OnConnected()
 			m_aFlagPos[TEAM_RED] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
 		else if(m_Collision.GetIndex(i)-ENTITY_OFFSET == ENTITY_FLAGSTAND_BLUE)
 			m_aFlagPos[TEAM_BLUE] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
+	}
+}
+
+void CGameClient::LoadMapSettings()
+{
+	IMap *pMap = Kernel()->RequestInterface<IMap>();
+	CMapItemInfo *pItem = (CMapItemInfo *)pMap->FindItem(MAPITEMTYPE_INFO, 0);
+	if(pItem && pItem->m_Settings > -1)
+	{
+		// load settings
+		int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
+		const char *pTmp = (char*)pMap->GetData(pItem->m_Settings);
+		const char *pEnd = pTmp + Size;
+		while(pTmp < pEnd)
+		{
+			Console()->ExecuteLineFlag(pTmp, CFGFLAG_MAPSETTINGS);
+			pTmp += str_length(pTmp) + 1;
+		}
+		pMap->UnloadData(pItem->m_Settings);
 	}
 }
 

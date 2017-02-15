@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/shared/config.h>
+
 #include "gamecore.h"
 
 const char *CTuningParams::m_apNames[] =
@@ -414,6 +416,9 @@ void CCharacterCore::Move()
 		m_Pos = m_pCollision->GetTeleportDestination(Tele);
 		m_HookPos = m_Pos;
 		m_Teleported = true;
+
+		if(g_Config.m_SvTeleportVelReset)
+			m_Vel = vec2(0,0);
 	}
 }
 
