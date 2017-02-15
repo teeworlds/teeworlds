@@ -46,14 +46,14 @@ void CCollision::Init(class CLayers *pLayers)
 
 	if(m_pLayers->TeleLayer())
 	{
-		int Size = m_pLayers->Map()->GetUncompressedDataSize(m_pLayers->TeleLayer()->m_Tele);
+		unsigned Size = m_pLayers->Map()->GetUncompressedDataSize(m_pLayers->TeleLayer()->m_Tele);
 		if(Size == m_Width*m_Height * sizeof(CTeleTile))
 			m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
 	}
 
 	if(m_pLayers->SpeedupLayer())
 	{
-		int Size = m_pLayers->Map()->GetUncompressedDataSize(m_pLayers->SpeedupLayer()->m_Speedup);
+		unsigned Size = m_pLayers->Map()->GetUncompressedDataSize(m_pLayers->SpeedupLayer()->m_Speedup);
 		if(Size == m_Width*m_Height * sizeof(CSpeedupTile))
 			m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
 	}
