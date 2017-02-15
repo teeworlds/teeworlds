@@ -16,6 +16,7 @@ bool IsCatch(const CServerInfo *pInfo);
 bool IsInsta(const CServerInfo *pInfo);
 bool IsFNG(const CServerInfo *pInfo);
 bool IsRace(const CServerInfo *pInfo);
+bool IsRaceStrict(const CServerInfo *pInfo);
 bool IsFastCap(const CServerInfo *pInfo);
 bool IsDDRace(const CServerInfo *pInfo);
 bool IsDDNet(const CServerInfo *pInfo);

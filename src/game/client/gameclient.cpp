@@ -135,6 +135,12 @@ bool IsRace(const CServerInfo *pInfo)
 		|| str_find_nocase(pInfo->m_aGameType, "fastcap");
 }
 
+bool IsRaceStrict(const CServerInfo *pInfo)
+{
+	return str_comp_nocase(pInfo->m_aGameType, "race") == 0
+		|| str_comp_nocase(pInfo->m_aGameType, "fastcap") == 0;
+}
+
 bool IsFastCap(const CServerInfo *pInfo)
 {
 	return str_find_nocase(pInfo->m_aGameType, "fastcap");
@@ -622,7 +628,8 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	CWorldCore TempWorld;
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && IsRace(&ServerInfo) && !IsDDNet(&ServerInfo);
+	bool Race = IsRaceStrict(&ServerInfo);
+	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && Race;
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());
@@ -1292,7 +1299,8 @@ void CGameClient::OnPredict()
 
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	World.m_Teleport = g_Config.m_ClPredictTeleport && IsRace(&ServerInfo) && !IsDDNet(&ServerInfo);
+	bool Race = IsRaceStrict(&ServerInfo);
+	World.m_Teleport = g_Config.m_ClPredictTeleport && Race;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)

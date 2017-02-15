@@ -277,7 +277,7 @@ void CGhost::StopRecord(int Time)
 			m_pClient->m_pMenus->m_lGhosts.add(Item);
 		m_pClient->m_pMenus->m_lGhosts.sort_range();
 	}
-	else // no new record
+	else if(RecordingToFile) // no new record
 		Storage()->RemoveFile(aTmpFilename, IStorage::TYPE_SAVE);
 
 	m_CurGhost.m_lPath.clear();
@@ -428,5 +428,10 @@ void CGhost::OnMapLoad()
 	OnReset();
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 		Unload(i);
-	m_pClient->m_pMenus->GhostlistPopulate();
+
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
+	if(IsRace(&ServerInfo))
+		m_pClient->m_pMenus->GhostlistPopulate();
 }
