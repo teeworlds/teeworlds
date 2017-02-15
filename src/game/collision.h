@@ -21,6 +21,8 @@ class CCollision
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
 
+	bool IsRaceTile(int TilePos);
+
 public:
 	enum
 	{
@@ -47,7 +49,9 @@ public:
 	vec2 GetPos(int TilePos);
 	int GetIndex(vec2 Pos);
 	int GetIndex(int TilePos);
+
 	int CheckRaceTile(vec2 PrevPos, vec2 Pos);
+
 	int CheckSpeedup(int TilePos);
 	void GetSpeedup(int SpeedupPos, vec2 *Dir, int *Force);
 	int CheckTeleport(vec2 PrevPos, vec2 Pos);

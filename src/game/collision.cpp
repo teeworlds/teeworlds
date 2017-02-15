@@ -152,6 +152,17 @@ int CCollision::GetIndex(int TilePos)
 	return m_pTiles[TilePos].m_Index;
 }
 
+bool CCollision::IsRaceTile(int TilePos)
+{
+	if(m_pTiles[TilePos].m_Index >= 29 && m_pTiles[TilePos].m_Index <= 59)
+		return true;
+	if(m_pTele && m_pTele[TilePos].m_Type == TILE_TELEIN)
+		return true;
+	if(m_pSpeedup && m_pSpeedup[TilePos].m_Force > 0)
+		return true;
+	return false;
+}
+
 int CCollision::CheckRaceTile(vec2 PrevPos, vec2 Pos)
 {
 	float Distance = distance(PrevPos, Pos);
@@ -162,12 +173,8 @@ int CCollision::CheckRaceTile(vec2 PrevPos, vec2 Pos)
 		float a = i/float(End);
 		vec2 Tmp = mix(PrevPos, Pos, a);
 		int TilePos = GetTilePos(Tmp);
-		if((m_pTiles[TilePos].m_Index >= TILE_STOPL && m_pTiles[TilePos].m_Index <= 59) ||
-			(m_pTele && m_pTele[TilePos].m_Type == TILE_TELEIN) ||
-			(m_pSpeedup && m_pSpeedup[TilePos].m_Force > 0))
-		{
+		if(IsRaceTile(TilePos))
 			return TilePos;
-		}
 	}
 
 	return -1;
