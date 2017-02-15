@@ -19,6 +19,7 @@ CCollision::CCollision()
 	m_Height = 0;
 	m_pLayers = 0;
 	m_pTele = 0;
+	m_pSpeedup = 0;
 	m_pTeleporter = 0;
 }
 
@@ -32,13 +33,16 @@ void CCollision::Init(class CLayers *pLayers)
 {
 	// reset race specific pointers
 	m_pTele = 0;
-	
+	m_pSpeedup = 0;
+
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
 	if(m_pLayers->TeleLayer())
 		m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
+	if(m_pLayers->SpeedupLayer())
+		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
 
 	InitTeleporter();
 
@@ -65,7 +69,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 		
 		// race tiles
-		if(Index >= 28 && Index <= 59)
+		if(Index >= 29 && Index <= 59)
 			m_pTiles[i].m_Index = Index;
 	}
 }
@@ -184,6 +188,22 @@ vec2 CCollision::GetTeleportDestination(int Number)
 	if(m_pTeleporter && Number > 0)
 		return m_pTeleporter[Number - 1];
 	return vec2(0,0);
+}
+
+int CCollision::CheckSpeedup(int TilePos)
+{
+	if(!m_pSpeedup || TilePos < 0)
+		return -1;
+	if(m_pSpeedup[TilePos].m_Force > 0)
+		return TilePos;
+	return -1;
+}
+
+void CCollision::GetSpeedup(int SpeedupPos, vec2 *Dir, int *Force)
+{
+	float Angle = m_pSpeedup[SpeedupPos].m_Angle * (pi/180.0f);
+	*Force = m_pSpeedup[SpeedupPos].m_Force;
+	*Dir = vec2(cos(Angle), sin(Angle));
 }
 
 // TODO: rewrite this smarter!
