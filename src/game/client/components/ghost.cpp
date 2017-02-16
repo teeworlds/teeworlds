@@ -429,9 +429,10 @@ void CGhost::OnMapLoad()
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 		Unload(i);
 
-	CServerInfo ServerInfo;
+	// TODO: fix this
+	/*CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
 
-	if(IsRace(&ServerInfo))
-		m_pClient->m_pMenus->GhostlistPopulate();
+	if(IsRace(&ServerInfo))*/
+	m_pClient->m_pMenus->GhostlistPopulate();
 }
