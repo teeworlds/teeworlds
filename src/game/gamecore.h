@@ -167,12 +167,16 @@ public:
 	{
 		mem_zero(m_apCharacters, sizeof(m_apCharacters));
 		m_Teleport = true;
+		m_Speedup = true;
+		m_StopTiles = true;
 	}
 
 	CTuningParams m_Tuning;
 	class CCharacterCore *m_apCharacters[MAX_CLIENTS];
 
 	bool m_Teleport;
+	bool m_Speedup;
+	bool m_StopTiles;
 };
 
 class CCharacterCore
@@ -181,6 +185,7 @@ class CCharacterCore
 	CCollision *m_pCollision;
 public:
 	vec2 m_Pos;
+	vec2 m_PrevPos;
 	vec2 m_Vel;
 
 	vec2 m_HookPos;
@@ -198,6 +203,9 @@ public:
 	int m_TriggeredEvents;
 
 	bool m_Teleported;
+	bool m_SpeedupTouch;
+
+	int m_LastSpeedup;
 
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();

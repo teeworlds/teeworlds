@@ -61,6 +61,17 @@ public:
 		#undef MACRO_CONFIG_STR
 	}
 
+	virtual void Reset(int FilterFlags)
+	{
+		#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc) if((flags)&FilterFlags) g_Config.m_##Name = def;
+		#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) if((flags)&FilterFlags) str_copy(g_Config.m_##Name, def, len);
+
+		#include "config_variables.h"
+
+		#undef MACRO_CONFIG_INT
+		#undef MACRO_CONFIG_STR
+	}
+
 	virtual void RestoreStrings()
 	{
 		#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc)	// nop

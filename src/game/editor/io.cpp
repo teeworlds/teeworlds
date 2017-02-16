@@ -494,9 +494,19 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 		// load map info
 		{
-			CMapItemInfo *pItem = (CMapItemInfo *)DataFile.FindItem(MAPITEMTYPE_INFO, 0);
-			if(pItem && pItem->m_Version == 1)
+			int Start, Num;
+			DataFile.GetType(MAPITEMTYPE_INFO, &Start, &Num);
+			for(int e = 0; e < Num; e++)
 			{
+				int ItemID;
+				CMapItemInfo *pItem = (CMapItemInfo *)DataFile.GetItem(Start + e, 0, &ItemID);
+				int ItemSize = DataFile.GetItemSize(Start + e) - sizeof(int) * 2;
+				if(!pItem || ItemID != 0)
+					continue;
+
+				if(pItem->m_Version != 1)
+					break;
+
 				if(pItem->m_Author > -1)
 					str_copy(m_MapInfo.m_aAuthor, (char *)DataFile.GetData(pItem->m_Author), sizeof(m_MapInfo.m_aAuthor));
 				if(pItem->m_MapVersion > -1)
@@ -507,7 +517,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					str_copy(m_MapInfo.m_aLicense, (char *)DataFile.GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
 
 				// load settings
-				if(pItem->m_Settings > -1 && DataFile.NumData() > pItem->m_Settings) // not very secure but the best for now. In next race version do a new version of this item
+				if(pItem->m_Settings > -1 && ItemSize >= (int)sizeof(CMapItemInfo))
 				{
 					int Size = DataFile.GetUncompressedDataSize(pItem->m_Settings);
 					const char *pTmp = (char*)DataFile.GetData(pItem->m_Settings);
@@ -520,6 +530,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						m_lSettings.add(Setting);
 					}
 				}
+				break;
 			}
 		}
 

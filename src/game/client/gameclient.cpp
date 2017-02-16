@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <engine/config.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
@@ -132,6 +133,12 @@ bool IsRace(const CServerInfo *pInfo)
 {
 	return str_find_nocase(pInfo->m_aGameType, "race")
 		|| str_find_nocase(pInfo->m_aGameType, "fastcap");
+}
+
+bool IsRaceStrict(const CServerInfo *pInfo)
+{
+	return str_comp_nocase(pInfo->m_aGameType, "race") == 0
+		|| str_comp_nocase(pInfo->m_aGameType, "fastcap") == 0;
 }
 
 bool IsFastCap(const CServerInfo *pInfo)
@@ -483,6 +490,11 @@ void CGameClient::OnConnected()
 
 	RenderTools()->RenderTilemapGenerateSkip(Layers());
 
+	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
+	if(pConfig)
+		pConfig->Reset(CFGFLAG_MAPSETTINGS);
+	LoadMapSettings();
+
 	for(int i = 0; i < m_All.m_Num; i++)
 	{
 		m_All.m_paComponents[i]->OnMapLoad();
@@ -511,6 +523,36 @@ void CGameClient::OnConnected()
 			m_aFlagPos[TEAM_RED] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
 		else if(m_Collision.GetIndex(i)-ENTITY_OFFSET == ENTITY_FLAGSTAND_BLUE)
 			m_aFlagPos[TEAM_BLUE] = vec2((i%m_Collision.GetWidth())*32+16, (i/m_Collision.GetWidth())*32+16);
+	}
+}
+
+void CGameClient::LoadMapSettings()
+{
+	IMap *pMap = Kernel()->RequestInterface<IMap>();
+	int Start, Num;
+	pMap->GetType(MAPITEMTYPE_INFO, &Start, &Num);
+	for(int e = 0; e < Num; e++)
+	{
+		int ItemID;
+		CMapItemInfo *pItem = (CMapItemInfo *)pMap->GetItem(Start + e, 0, &ItemID);
+		int ItemSize = pMap->GetItemSize(Start + e) - sizeof(int) * 2;
+		if(!pItem || ItemID != 0)
+			continue;
+
+		if(pItem->m_Version == 1 && pItem->m_Settings > -1 && ItemSize >= (int)sizeof(CMapItemInfo))
+		{
+			// load settings
+			int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
+			const char *pTmp = (char*)pMap->GetData(pItem->m_Settings);
+			const char *pEnd = pTmp + Size;
+			while(pTmp < pEnd)
+			{
+				Console()->ExecuteLineFlag(pTmp, CFGFLAG_MAPSETTINGS);
+				pTmp += str_length(pTmp) + 1;
+			}
+			pMap->UnloadData(pItem->m_Settings);
+		}
+		break;
 	}
 }
 
@@ -586,7 +628,11 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	CWorldCore TempWorld;
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && IsRace(&ServerInfo) && !IsDDNet(&ServerInfo);
+	bool PredictRace = IsRaceStrict(&ServerInfo) && g_Config.m_ClPredictRace;
+	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && PredictRace;
+	TempWorld.m_Speedup = g_Config.m_ClPredictSpeedup && PredictRace;
+	TempWorld.m_StopTiles = g_Config.m_ClPredictStopTiles && PredictRace;
+
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());
@@ -908,10 +954,6 @@ void CGameClient::OnNewSnapshot()
 	{
 		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
 
-		// TeeComp
-		for(int i = 0; i < MAX_CLIENTS; i++)
-			m_aStats[i].m_Active = false;
-
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
 		{
@@ -987,8 +1029,11 @@ void CGameClient::OnNewSnapshot()
 				if(pInfo->m_Team != TEAM_SPECTATORS)
 				{
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
-					m_aStats[pInfo->m_ClientID].m_Active = true;
+					if(!m_aStats[pInfo->m_ClientID].IsActive())
+						m_aStats[pInfo->m_ClientID].JoinGame(Client()->GameTick());
 				}
+				else if(m_aStats[pInfo->m_ClientID].IsActive())
+					m_aStats[pInfo->m_ClientID].JoinSpec(Client()->GameTick());
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
@@ -1065,18 +1110,6 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
 		}
-		
-		// TeeComp
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aStats[i].m_Active && !m_aStats[i].m_WasActive)
-			{
-				m_aStats[i].Reset(); // Client connected, reset stats.
-				m_aStats[i].m_Active = true;
-				m_aStats[i].m_JoinDate = Client()->GameTick();
-			}
-			m_aStats[i].m_WasActive = m_aStats[i].m_Active;
-		}
 	}
 
 	// setup local pointers
@@ -1109,7 +1142,10 @@ void CGameClient::OnNewSnapshot()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(!m_Snap.m_paPlayerInfos[i] && m_aClients[i].m_Active)
+		{
 			m_aClients[i].Reset(this, i);
+			m_aStats[i].Reset();
+		}
 	}
 
 	// update friend state
@@ -1266,7 +1302,10 @@ void CGameClient::OnPredict()
 
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	World.m_Teleport = g_Config.m_ClPredictTeleport && IsRace(&ServerInfo) && !IsDDNet(&ServerInfo);
+	bool PredictRace = IsRaceStrict(&ServerInfo) && g_Config.m_ClPredictRace;
+	World.m_Teleport = g_Config.m_ClPredictTeleport && PredictRace;
+	World.m_Speedup = g_Config.m_ClPredictSpeedup && PredictRace;
+	World.m_StopTiles = g_Config.m_ClPredictStopTiles && PredictRace;
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1370,21 +1409,11 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
-/*void CGameClient::OnGameRestart()
-{	
-	m_pTeecompStats->OnReset();
-}*/
 
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
 }
-
-/*void CGameClient::OnRoundStart()
-{
-	for(int i=0; i<MAX_CLIENTS; i++)
-		m_aStats[i].Reset();
-}*/
 
 void CGameClient::OnFlagGrab(int ID)
 {
@@ -1396,29 +1425,14 @@ void CGameClient::OnFlagGrab(int ID)
 
 CGameClient::CClientStats::CClientStats()
 {
-	m_JoinDate  = 0;
-	m_Active    = false;
-	m_WasActive = false;
-	m_Frags     = 0;
-	m_Deaths    = 0;
-	m_Suicides  = 0;
-	for(int j = 0; j < NUM_WEAPONS; j++)
-	{
-		m_aFragsWith[j]  = 0;
-		m_aDeathsFrom[j] = 0;
-	}
-	m_FlagGrabs      = 0;
-	m_FlagCaptures   = 0;
-	m_CarriersKilled = 0;
-	m_KillsCarrying  = 0;
-	m_DeathsCarrying = 0;
+	Reset();
 }
 
 void CGameClient::CClientStats::Reset()
 {
-	m_JoinDate  = 0;
+	m_JoinTick  = 0;
+	m_IngameTicks = 0;
 	m_Active    = false;
-	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
 	m_Suicides  = 0;

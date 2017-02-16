@@ -776,7 +776,7 @@ void CLayerTele::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 			
 			if(Empty)
 			{
-                m_pTiles[fy*m_Width+fx].m_Index = 0;
+				m_pTiles[fy*m_Width+fx].m_Index = 0;
 				m_pTeleTile[fy*m_Width+fx].m_Number = 0;
 				m_pTeleTile[fy*m_Width+fx].m_Type = 0;
 			}
@@ -1012,7 +1012,7 @@ void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 			
 			if(Empty)
 			{
-                m_pTiles[fy*m_Width+fx].m_Index = 0;
+				m_pTiles[fy*m_Width+fx].m_Index = 0;
 				m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
 				m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
 			}

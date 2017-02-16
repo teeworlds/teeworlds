@@ -47,7 +47,7 @@ bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
 	Client()->GetServerInfo(&ServerInfo);
 
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team ^ 1;
-	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos);
+	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos, CCollision::RACECHECK_TILES_MAIN);
 	if(!IsFastCap(&ServerInfo) && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
 		return true;
 	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)
@@ -277,7 +277,7 @@ void CGhost::StopRecord(int Time)
 			m_pClient->m_pMenus->m_lGhosts.add(Item);
 		m_pClient->m_pMenus->m_lGhosts.sort_range();
 	}
-	else // no new record
+	else if(RecordingToFile) // no new record
 		Storage()->RemoveFile(aTmpFilename, IStorage::TYPE_SAVE);
 
 	m_CurGhost.m_lPath.clear();
@@ -428,5 +428,11 @@ void CGhost::OnMapLoad()
 	OnReset();
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 		Unload(i);
+
+	// TODO: fix this
+	/*CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
+	if(IsRace(&ServerInfo))*/
 	m_pClient->m_pMenus->GhostlistPopulate();
 }

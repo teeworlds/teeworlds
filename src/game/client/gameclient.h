@@ -16,6 +16,7 @@ bool IsCatch(const CServerInfo *pInfo);
 bool IsInsta(const CServerInfo *pInfo);
 bool IsFNG(const CServerInfo *pInfo);
 bool IsRace(const CServerInfo *pInfo);
+bool IsRaceStrict(const CServerInfo *pInfo);
 bool IsFastCap(const CServerInfo *pInfo);
 bool IsDDRace(const CServerInfo *pInfo);
 bool IsDDNet(const CServerInfo *pInfo);
@@ -82,6 +83,8 @@ class CGameClient : public IGameClient
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
+
+	void LoadMapSettings();
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
@@ -224,12 +227,12 @@ public:
 	// TeeComp vars
 	class CClientStats
 	{
+		int m_IngameTicks;
+		int m_JoinTick;
+		bool m_Active;
+
 	public:
 		CClientStats();
-		
-		int m_JoinDate;
-		bool m_Active;
-		bool m_WasActive;
 
 		int m_aFragsWith[NUM_WEAPONS];
 		int m_aDeathsFrom[NUM_WEAPONS];
@@ -246,6 +249,12 @@ public:
 		int m_DeathsCarrying;
 
 		void Reset();
+
+		bool IsActive() const { return m_Active; }
+		void JoinGame(int Tick) { m_Active = true; m_JoinTick = Tick; };
+		void JoinSpec(int Tick) { m_Active = false; m_IngameTicks += Tick - m_JoinTick; };
+		int GetIngameTicks(int Tick) const { return m_IngameTicks + Tick - m_JoinTick; };
+		float GetFPM(int Tick, int TickSpeed) const { return (float)(m_Frags * TickSpeed * 60) / GetIngameTicks(Tick); };
 	};
 	
 	CClientStats m_aStats[MAX_CLIENTS];
