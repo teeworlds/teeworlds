@@ -27,6 +27,23 @@ CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
 	return new CFileRequest(aURI);
 }
 
+int IRace::TimeFromSecondsStr(const char *pStr)
+{
+	int Time = str_toint(pStr) * 1000;
+	pStr = str_find(pStr, ".");
+	if(pStr)
+	{
+		pStr++;
+		int mult = 100;
+		for(int i = 0; pStr[i] >= '0' && pStr[i] <= '9' && i < 3; i++)
+		{
+			Time += (pStr[i] - '0') * mult;
+			mult /= 10;
+		}
+	}
+	return Time;
+}
+
 int IRace::TimeFromStr(const char *pStr)
 {
 	static const char *pMinutesStr = " minute(s) ";
@@ -38,9 +55,9 @@ int IRace::TimeFromStr(const char *pStr)
 
 	const char *pMinutes = str_find(pStr, pMinutesStr);
 	if (pMinutes)
-		return str_toint(pStr) * 60 * 1000 + (int)(str_tofloat(pMinutes + str_length(pMinutesStr)) * 1000);
+		return str_toint(pStr) * 60 * 1000 + (int)TimeFromSecondsStr(pMinutes + str_length(pMinutesStr));
 	else
-		return str_tofloat(pStr) * 1000;
+		return TimeFromSecondsStr(pStr);
 }
 
 int IRace::TimeFromFinishMessage(const char *pStr, char *pNameBuf, int NameBufSize)
