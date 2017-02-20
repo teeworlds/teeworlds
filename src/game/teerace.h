@@ -14,6 +14,7 @@ public:
 class IRace
 {
 public:
+	static int TimeFromSecondsStr(const char *pStr);
 	static int TimeFromStr(const char *pStr);
 	static int TimeFromFinishMessage(const char *pStr, char *pNameBuf, int NameBufSize);
 
