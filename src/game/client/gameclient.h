@@ -254,14 +254,14 @@ public:
 	virtual void OnDemoRecSnap();
 	virtual void OnPredict();
 	virtual void OnActivateEditor();
-	virtual int OnSnapInput(int *pData);
+	virtual void OnDummySwap();
+	virtual int OnSnapInput(int *pData, bool Dummy, bool Force);
 	virtual void OnShutdown();
 	virtual void OnEnterGame();
 	virtual void OnRconLine(const char *pLine);
 	virtual void OnGameOver();
 	virtual void OnStartGame();
 
-	virtual void ResetDummyInput();
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
@@ -317,6 +317,11 @@ public:
 	void ZillyWoodsTick();
 
 	// DDRace
+
+	int m_LocalIDs[2];
+	CNetObj_PlayerInput m_DummyInput;
+	CNetObj_PlayerInput m_HammerInput;
+	int m_DummyFire;
 
 	int IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos);
 	void SendTimeoutCode();

@@ -206,11 +206,6 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_GAME_PAUSED*/ DO_SPECIAL, PARA_I, ""},	// special - add player name
 };
 
-void CGameClient::ResetDummyInput()
-{
-	m_pControls->ResetInput(!g_Config.m_ClDummy);
-}
-
 void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
@@ -445,9 +440,61 @@ void CGameClient::OnUpdate()
 	}
 }
 
-int CGameClient::OnSnapInput(int *pData)
+void CGameClient::OnDummySwap()
 {
-	return m_pControls->SnapInput(pData);
+	if (g_Config.m_ClDummyResetOnSwitch)
+	{
+		m_pControls->ResetInput(!g_Config.m_ClDummy);
+	}
+	m_DummyInput = m_pControls->m_InputData[!g_Config.m_ClDummy];
+}
+
+int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
+{
+	m_LocalIDs[g_Config.m_ClDummy] = Client()->GetLocalClientID(g_Config.m_ClDummy);
+
+	if (!Dummy)
+	{
+		return m_pControls->SnapInput(pData);
+	}
+
+	if(!g_Config.m_ClDummyHammer)
+	{
+		if(m_DummyFire != 0)
+		{
+			m_DummyInput.m_Fire = m_HammerInput.m_Fire;
+			m_DummyFire = 0;
+		}
+
+		if(!Force && (!m_DummyInput.m_Direction && !m_DummyInput.m_Jump && !m_DummyInput.m_Hook))
+		{
+			return 0;
+		}
+
+		mem_copy(pData, &m_DummyInput, sizeof(m_DummyInput));
+		return sizeof(m_DummyInput);
+	}
+	else
+	{
+		if((m_DummyFire / 12.5) - (int)(m_DummyFire / 12.5) > 0.01)
+		{
+			m_DummyFire++;
+			return 0;
+		}
+		m_DummyFire++;
+
+		m_HammerInput.m_Fire += 2;
+		m_HammerInput.m_WantedWeapon = 1;
+
+		vec2 Main = m_LocalCharacterPos;
+		vec2 Dummy = m_aClients[m_LocalIDs[!g_Config.m_ClDummy]].m_Predicted.m_Pos;
+		vec2 Dir = Main - Dummy;
+		m_HammerInput.m_TargetX = Dir.x;
+		m_HammerInput.m_TargetY = Dir.y;
+
+		mem_copy(pData, &m_HammerInput, sizeof(m_HammerInput));
+		return sizeof(m_HammerInput);
+	}
 }
 
 void CGameClient::OnConnected()
@@ -789,16 +836,16 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 	if(IsDummy)
 	{
 		if(MsgId == NETMSGTYPE_SV_CHAT
-			&& Client()->m_LocalIDs[0] >= 0
-			&& Client()->m_LocalIDs[1] >= 0)
+			&& m_LocalIDs[0] >= 0
+			&& m_LocalIDs[1] >= 0)
 		{
 			CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-			if(pMsg->m_TargetID == Client()->m_LocalIDs[0] || pMsg->m_TargetID == Client()->m_LocalIDs[1])
+			if(pMsg->m_TargetID == m_LocalIDs[0] || pMsg->m_TargetID == m_LocalIDs[1])
 				pMsg->m_TargetID = m_LocalClientID; // TODO: remove this and properly show which client got the message
 
 			if((pMsg->m_Mode == CHAT_TEAM
-					&& (m_aClients[Client()->m_LocalIDs[0]].m_Team != m_aClients[Client()->m_LocalIDs[1]].m_Team
-						|| m_aClients[Client()->m_LocalIDs[0]].m_Team != m_aClients[Client()->m_LocalIDs[1]].m_Team))
+					&& (m_aClients[m_LocalIDs[0]].m_Team != m_aClients[m_LocalIDs[1]].m_Team
+						|| m_aClients[m_LocalIDs[0]].m_Team != m_aClients[m_LocalIDs[1]].m_Team))
 				|| (pMsg->m_Mode == CHAT_WHISPER && pMsg->m_TargetID == m_LocalClientID))
 			{
 				m_pChat->OnMessage(MsgId, pRawMsg);

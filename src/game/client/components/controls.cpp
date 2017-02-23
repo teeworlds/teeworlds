@@ -26,19 +26,19 @@ void CControls::OnReset()
 	ResetInput(1);
 }
 
-void CControls::ResetInput(int dummy)
+void CControls::ResetInput(int Dummy)
 {
-	m_LastData[dummy].m_Direction = 0;
+	m_LastData[Dummy].m_Direction = 0;
 	//m_LastData.m_Hook = 0;
 	// simulate releasing the fire button
-	if((m_LastData[dummy].m_Fire&1) != 0)
-		m_LastData[dummy].m_Fire++;
-	m_LastData[dummy].m_Fire &= INPUT_STATE_MASK;
-	m_LastData[dummy].m_Jump = 0;
-	m_InputData[dummy] = m_LastData[dummy];
+	if((m_LastData[Dummy].m_Fire&1) != 0)
+		m_LastData[Dummy].m_Fire++;
+	m_LastData[Dummy].m_Fire &= INPUT_STATE_MASK;
+	m_LastData[Dummy].m_Jump = 0;
+	m_InputData[Dummy] = m_LastData[Dummy];
 
-	m_InputDirectionLeft[dummy] = 0;
-	m_InputDirectionRight[dummy] = 0;
+	m_InputDirectionLeft[Dummy] = 0;
+	m_InputDirectionRight[Dummy] = 0;
 }
 
 void CControls::OnRelease()
@@ -190,22 +190,20 @@ int CControls::SnapInput(int *pData)
 		// dummy copy moves
 		if(g_Config.m_ClDummyCopyMoves)
 		{
-			CNetObj_PlayerInput *DummyInput = &Client()->DummyInput;
-			DummyInput->m_Direction = m_InputData[g_Config.m_ClDummy].m_Direction;
-			DummyInput->m_Hook = m_InputData[g_Config.m_ClDummy].m_Hook;
-			DummyInput->m_Jump = m_InputData[g_Config.m_ClDummy].m_Jump;
-			DummyInput->m_PlayerFlags = m_InputData[g_Config.m_ClDummy].m_PlayerFlags;
-			DummyInput->m_TargetX = m_InputData[g_Config.m_ClDummy].m_TargetX;
-			DummyInput->m_TargetY = m_InputData[g_Config.m_ClDummy].m_TargetY;
-			DummyInput->m_WantedWeapon = m_InputData[g_Config.m_ClDummy].m_WantedWeapon;
+			CNetObj_PlayerInput *pDummyInput = &m_pClient->m_DummyInput;
+			pDummyInput->m_Direction = m_InputData[g_Config.m_ClDummy].m_Direction;
+			pDummyInput->m_Hook = m_InputData[g_Config.m_ClDummy].m_Hook;
+			pDummyInput->m_Jump = m_InputData[g_Config.m_ClDummy].m_Jump;
+			pDummyInput->m_PlayerFlags = m_InputData[g_Config.m_ClDummy].m_PlayerFlags;
+			pDummyInput->m_TargetX = m_InputData[g_Config.m_ClDummy].m_TargetX;
+			pDummyInput->m_TargetY = m_InputData[g_Config.m_ClDummy].m_TargetY;
+			pDummyInput->m_WantedWeapon = m_InputData[g_Config.m_ClDummy].m_WantedWeapon;
 
+			pDummyInput->m_Fire += m_InputData[g_Config.m_ClDummy].m_Fire - m_LastData[g_Config.m_ClDummy].m_Fire;
+			pDummyInput->m_NextWeapon += m_InputData[g_Config.m_ClDummy].m_NextWeapon - m_LastData[g_Config.m_ClDummy].m_NextWeapon;
+			pDummyInput->m_PrevWeapon += m_InputData[g_Config.m_ClDummy].m_PrevWeapon - m_LastData[g_Config.m_ClDummy].m_PrevWeapon;
 
-
-			DummyInput->m_Fire += m_InputData[g_Config.m_ClDummy].m_Fire - m_LastData[g_Config.m_ClDummy].m_Fire;
-			DummyInput->m_NextWeapon += m_InputData[g_Config.m_ClDummy].m_NextWeapon - m_LastData[g_Config.m_ClDummy].m_NextWeapon;
-			DummyInput->m_PrevWeapon += m_InputData[g_Config.m_ClDummy].m_PrevWeapon - m_LastData[g_Config.m_ClDummy].m_PrevWeapon;
-
-			m_InputData[!g_Config.m_ClDummy] = *DummyInput;
+			m_InputData[!g_Config.m_ClDummy] = *pDummyInput;
 		}
 
 		// stress testing

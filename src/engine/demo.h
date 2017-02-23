@@ -10,6 +10,8 @@ enum
 	MAX_TIMELINE_MARKERS=64
 };
 
+typedef bool (*DEMOFUNC_FILTER)(const void *pData, int DataSize, void *pUser);
+
 struct CDemoHeader
 {
 	unsigned char m_aMarker[7];

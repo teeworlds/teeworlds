@@ -7,7 +7,8 @@
 #include "message.h"
 #include "graphics.h"
 #include <engine/shared/config.h>
-#include <generated/protocol.h>
+
+typedef bool (*CLIENTFUNC_FILTER)(const void *pData, int DataSize, void *pUser);
 
 class IClient : public IInterface
 {
@@ -33,9 +34,6 @@ protected:
 
 	int m_GameTickSpeed;
 public:
-	int m_LocalIDs[2];
-
-	CNetObj_PlayerInput DummyInput;
 
 	class CSnapItem
 	{
@@ -196,9 +194,9 @@ public:
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
 
-	virtual int OnSnapInput(int *pData) = 0;
+	virtual int OnSnapInput(int *pData, bool Dummy, bool Force) = 0;
+	virtual void OnDummySwap() = 0;
 
-	virtual void ResetDummyInput() = 0;
 	virtual const char *GetItemName(int Type) const = 0;
 	virtual const char *Version() const = 0;
 	virtual const char *NetVersion() const = 0;

@@ -30,6 +30,24 @@ int CMenus::DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const 
 	return UI()->DoButtonLogic(pBC->GetID(), pText, false, pRect);
 }
 
+bool CMenus::DemoFilterChat(const void *pData, int Size, void *pUser)
+{
+	bool DoFilterChat = *(bool *)pUser;
+	if(!DoFilterChat)
+	{
+		return false;
+	}
+
+	CUnpacker Unpacker;
+	Unpacker.Reset(pData, Size);
+
+	int Msg = Unpacker.GetInt();
+	int Sys = Msg&1;
+	Msg >>= 1;
+
+	return !Unpacker.Error() && !Sys && Msg == NETMSGTYPE_SV_CHAT;
+}
+
 void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
 	const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();

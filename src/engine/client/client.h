@@ -156,7 +156,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_CurrentInput[2];
 	bool m_LastDummy;
 	bool m_LastDummy2;
-	CNetObj_PlayerInput HammerInput;
+	bool m_DummySendConnInfo;
 
 	// graphs
 	CGraph m_InputtimeMarginGraph;
@@ -250,7 +250,6 @@ public:
 	virtual bool DummyConnecting();
 	int m_DummyConnected;
 	int m_LastDummyConnectTime;
-	int m_Fire;
 	int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1);
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
