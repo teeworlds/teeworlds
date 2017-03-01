@@ -61,11 +61,10 @@ void CHud::RenderGameTimer()
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick)/Client()->GameTickSpeed();
 
 		int RaceTime = (Client()->GameTick()+m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer)*10/Client()->GameTickSpeed();
-		if(g_Config.m_ClRaceReplaceGametime && m_RaceTime)
-			Time = m_RaceTime;
-
 		if(g_Config.m_ClRaceReplaceGametime && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_RACETIME)
-			str_format(Buf, sizeof(Buf), "%d:%02d.%d", RaceTime/(60*10), (RaceTime/10)%60, RaceTime%10);
+			str_format(Buf, sizeof(Buf), "%02d:%02d.%d", RaceTime/(60*10), (RaceTime/10)%60, RaceTime%10);
+		else if(g_Config.m_ClRaceReplaceGametime && m_RaceTime)
+			str_format(Buf, sizeof(Buf), "%02d:%02d", m_RaceTime/60, m_RaceTime%60);
 		else
 			str_format(Buf, sizeof(Buf), "%d:%02d", Time/60, Time%60);
 		float FontSize = 10.0f;
@@ -613,17 +612,15 @@ void CHud::RenderRaceTime()
 	bool RaceFlag = m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_RACETIME;
 
 	if(RaceFlag)
-		str_format(aBuf, sizeof(aBuf), "%d:%02d.%d", RaceTime/(60*10), (RaceTime/10)%60, RaceTime%10);
+		str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", RaceTime/(60*10), (RaceTime/10)%60, RaceTime%10);
 	else if(m_RaceTime)
-		str_format(aBuf, sizeof(aBuf), "%d:%02d", m_RaceTime/60, m_RaceTime%60);
+		str_format(aBuf, sizeof(aBuf), "%02d:%02d", m_RaceTime/60, m_RaceTime%60);
 	else
 		return;
 
-	float Half = 300.0f*Graphics()->ScreenAspect() / 2.0f;
-	float RealW = TextRender()->TextWidth(0, 12, aBuf, -1);
-	float w = TextRender()->TextWidth(0, 12, RaceFlag ? "00:00.0" : "00:00", -1);
-	float Diff = w - RealW;
-	TextRender()->Text(0, Half-w/2+Diff, 20, 12, aBuf, -1);
+	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+	float w = TextRender()->TextWidth(0, 12, aBuf, -1);
+	TextRender()->Text(0, Half-w/2, 20, 12, aBuf, -1);
 }
 
 void CHud::RenderCheckpoint()
@@ -648,8 +645,11 @@ void CHud::RenderCheckpoint()
 			TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
 		else if(!m_CheckpointDiff)
 			TextRender()->TextColor(1,1,1,a); // white
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 10, aBuf, -1)/2, 33, 10, aBuf, -1);
-			
+
+		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+		float w = TextRender()->TextWidth(0, 10, aBuf, -1);
+		TextRender()->Text(0, Half-w/2, 33, 10, aBuf, -1);
+
 		TextRender()->TextColor(1,1,1,1);
 	}
 }
