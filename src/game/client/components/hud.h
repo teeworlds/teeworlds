@@ -14,7 +14,6 @@ class CHud : public CComponent
 	int m_RaceTime;
 	int m_CheckpointTick;
 	int m_ServerRecord;
-	bool m_OldTimer;
 	
 	void RenderCursor();
 
@@ -30,6 +29,7 @@ class CHud : public CComponent
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
 
+	void RenderRaceTime();
 	void RenderCheckpoint();
 	void RenderRecord();
 	void RenderSpeedmeter();

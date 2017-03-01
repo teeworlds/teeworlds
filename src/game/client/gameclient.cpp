@@ -1225,8 +1225,8 @@ void CGameClient::OnNewSnapshot()
 				}
 
 				CMsgPacker Msg(NETMSGTYPE_CL_ISRACE);
-				Msg.AddInt(1); // we have basic DDNet functionality
-				Msg.AddInt(2); // race client version
+				Msg.AddInt(1); // we have basic DDRace functionality
+				Msg.AddInt(3); // race client version
 				Client()->SendMsg(&Msg, MSGFLAG_VITAL);
 
 				m_RaceMsgSent = true;

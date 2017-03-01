@@ -176,6 +176,7 @@ if gen_network_source:
 	lines += ['']
 
 	lines += ['static const int max_int = 0x7fffffff;']
+	lines += ['static const int min_int = 0x80000000;']
 
 	lines += ['int CNetObjHandler::ClampInt(const char *pErrorMsg, int Value, int Min, int Max)']
 	lines += ['{']
