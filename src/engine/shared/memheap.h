@@ -15,7 +15,7 @@ class CHeap
 	enum
 	{
 		// how large each chunk should be
-		CHUNK_SIZE = 1025*64,
+		CHUNK_SIZE = 1024*64,
 	};
 
 	CChunk *m_pCurrent;

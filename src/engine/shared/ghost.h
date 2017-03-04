@@ -58,6 +58,7 @@ class CGhostLoader : public IGhostLoader
 	char *m_pBufferPos;
 	int m_BufferNumItems;
 	int m_BufferCurItem;
+	int m_BufferPrevItem;
 
 	void ResetBuffer();
 	int ReadChunk(int *pType);

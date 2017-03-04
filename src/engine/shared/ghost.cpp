@@ -184,6 +184,7 @@ void CGhostLoader::ResetBuffer()
 	m_pBufferPos = m_aBuffer;
 	m_BufferNumItems = 0;
 	m_BufferCurItem = 0;
+	m_BufferPrevItem = -1;
 }
 
 int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc)
@@ -282,7 +283,7 @@ bool CGhostLoader::ReadNextType(int *pType)
 	if(!m_File)
 		return false;
 
-	if(m_BufferCurItem < m_BufferNumItems)
+	if(m_BufferCurItem != m_BufferPrevItem && m_BufferCurItem < m_BufferNumItems)
 	{
 		*pType = m_LastItem.m_Type;
 	}
@@ -291,6 +292,8 @@ bool CGhostLoader::ReadNextType(int *pType)
 		if(ReadChunk(pType))
 			return false; // error or eof
 	}
+
+	m_BufferPrevItem = m_BufferCurItem;
 
 	return true;
 }

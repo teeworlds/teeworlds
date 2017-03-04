@@ -10,7 +10,6 @@ class CJob
 {
 	friend class CJobPool;
 
-	CJobPool *m_pPool;
 	CJob *m_pPrev;
 	CJob *m_pNext;
 

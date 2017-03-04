@@ -856,8 +856,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(Offset+ChunkSize >= m_CurrentMapSize)
 			{
 				ChunkSize = m_CurrentMapSize-Offset;
-				if(ChunkSize < 0)
-					ChunkSize = 0;
 				Last = 1;
 			}
 

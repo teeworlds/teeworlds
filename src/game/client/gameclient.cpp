@@ -539,7 +539,7 @@ void CGameClient::LoadMapSettings()
 		if(!pItem || ItemID != 0)
 			continue;
 
-		if(pItem->m_Version == 1 && pItem->m_Settings > -1 && ItemSize >= (int)sizeof(CMapItemInfo))
+		if(pItem->m_Version == 1 && ItemSize >= (int)sizeof(CMapItemInfo) && pItem->m_Settings > -1)
 		{
 			// load settings
 			int Size = pMap->GetUncompressedDataSize(pItem->m_Settings);
