@@ -517,7 +517,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					str_copy(m_MapInfo.m_aLicense, (char *)DataFile.GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
 
 				// load settings
-				if(pItem->m_Settings > -1 && ItemSize >= (int)sizeof(CMapItemInfo))
+				if(ItemSize >= (int)sizeof(CMapItemInfo) && pItem->m_Settings > -1)
 				{
 					int Size = DataFile.GetUncompressedDataSize(pItem->m_Settings);
 					const char *pTmp = (char*)DataFile.GetData(pItem->m_Settings);
@@ -670,57 +670,74 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pLayer = pTiles;
 
 						pGroup->AddLayer(pTiles);
-						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)
 							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
-
-						mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-
-						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
-						{
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
-							{
-								if(pTiles->m_pTiles[i].m_Index)
-									pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
-							}
-						}
-
-						DataFile.UnloadData(pTilemapItem->m_Data);
 						
 						if(pTiles->m_Tele)
 						{
-							void *pTeleData = DataFile.GetData(pTilemapItem->m_Tele);
-							mem_copy(((CLayerTele*)pTiles)->m_pTeleTile, pTeleData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
-							
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							unsigned Size = DataFile.GetUncompressedDataSize(pTilemapItem->m_Tele);
+							if(Size == pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile))
 							{
-								if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEIN)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEIN;
-								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEOUT)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEOUT;
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+								CTeleTile *pTeleTiles = ((CLayerTele*)pTiles)->m_pTeleTile;
+								void *pTeleData = DataFile.GetData(pTilemapItem->m_Tele);
+								mem_copy(pTeleTiles, pTeleData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+							
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									if(pTeleTiles[i].m_Type == TILE_TELEIN)
+										pTiles->m_pTiles[i].m_Index = TILE_TELEIN;
+									else if(pTeleTiles[i].m_Type == TILE_TELEOUT)
+										pTiles->m_pTiles[i].m_Index = TILE_TELEOUT;
+									else
+										pTiles->m_pTiles[i].m_Index = 0;
+								}
+
+								DataFile.UnloadData(pTilemapItem->m_Tele);
 							}
-							DataFile.UnloadData(pTilemapItem->m_Tele);
 						}
 						else if(pTiles->m_Speedup)
 						{
-							void *pSpeedupData = DataFile.GetData(pTilemapItem->m_Speedup);
-							mem_copy(((CLayerSpeedup*)pTiles)->m_pSpeedupTile, pSpeedupData, pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile));
-							
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							unsigned Size = DataFile.GetUncompressedDataSize(pTilemapItem->m_Speedup);
+							if(Size == pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile))
 							{
-								if(((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Force > 0)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_BOOST;
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
-							}
+								CSpeedupTile *pSpeedupTiles = ((CLayerSpeedup*)pTiles)->m_pSpeedupTile;
+								void *pSpeedupData = DataFile.GetData(pTilemapItem->m_Speedup);
+								mem_copy(pSpeedupTiles, pSpeedupData, pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile));
 							
-							DataFile.UnloadData(pTilemapItem->m_Speedup);
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									if(pSpeedupTiles[i].m_Force > 0)
+										pTiles->m_pTiles[i].m_Index = TILE_BOOST;
+									else
+										pTiles->m_pTiles[i].m_Index = 0;
+								}
+							
+								DataFile.UnloadData(pTilemapItem->m_Speedup);
+							}
+						}
+						else
+						{
+							unsigned Size = DataFile.GetUncompressedDataSize(pTilemapItem->m_Data);
+							if(Size == pTiles->m_Width*pTiles->m_Height*sizeof(CTile))
+							{
+								void *pData = DataFile.GetData(pTilemapItem->m_Data);
+								mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+
+								if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
+								{
+									for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+									{
+										if(pTiles->m_pTiles[i].m_Index)
+											pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
+									}
+								}
+
+								DataFile.UnloadData(pTilemapItem->m_Data);
+							}
 						}
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
