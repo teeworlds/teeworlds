@@ -16,6 +16,7 @@
 #include <game/generated/client_data.h>
 
 #include <game/localization.h>
+#include <game/teerace.h>
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
@@ -1039,10 +1040,9 @@ void CMenus::RenderGhost(CUIRect MainView)
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 
-				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "%02d:%02d.%03d",
-					pItem->m_Time / (60 * 1000), (pItem->m_Time / 1000) % 60, pItem->m_Time % 1000);
-				TextRender()->TextEx(&Cursor, aBuf, -1);
+				char aTime[32];
+				IRace::FormatTimeShort(aTime, sizeof(aTime), pItem->m_Time, true);
+				TextRender()->TextEx(&Cursor, aTime, -1);
 			}
 		}
 	}

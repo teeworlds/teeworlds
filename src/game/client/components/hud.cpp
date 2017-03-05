@@ -660,8 +660,9 @@ void CHud::RenderRecord()
 	if(m_ServerRecord && g_Config.m_ClShowServerRecord)
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s: %02d:%02d.%03d", Localize("Server best"),
-			m_ServerRecord / (60 * 1000), (m_ServerRecord / 1000) % 60, m_ServerRecord  % 1000);
+		char aTime[32];
+		IRace::FormatTimeShort(aTime, sizeof(aTime), m_ServerRecord, true);
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Server best"), aTime);
 		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
 	}
 }
