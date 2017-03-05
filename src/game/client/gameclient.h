@@ -216,7 +216,7 @@ public:
 		bool m_Friend;
 
 		// race
-		int m_Score;
+		int m_RaceTime;
 		
 		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID);
 		void Reset(CGameClient *pGameClient, int ClientID);

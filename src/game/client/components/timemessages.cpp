@@ -51,8 +51,8 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 				if(Time.m_PlayerID < 0)
 					return;
 				
-				if(m_pClient->m_aClients[Time.m_PlayerID].m_Score > 0)
-					Time.m_LocalDiff = Time.m_Time - m_pClient->m_aClients[Time.m_PlayerID].m_Score;
+				if(m_pClient->m_aClients[Time.m_PlayerID].m_RaceTime > 0)
+					Time.m_LocalDiff = Time.m_Time - m_pClient->m_aClients[Time.m_PlayerID].m_RaceTime;
 				Time.m_PlayerRenderInfo = m_pClient->m_aClients[Time.m_PlayerID].m_RenderInfo;
 				Time.m_Tick = time_get();
 				

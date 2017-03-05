@@ -580,9 +580,9 @@ void CScoreboard::RenderScoreboard(float x, float y, float Width, float Height, 
 				{
 					// reset time
 					if(pInfo->m_Score == -9999)
-						m_pClient->m_aClients[pInfo->m_ClientID].m_Score = 0;
+						m_pClient->m_aClients[pInfo->m_ClientID].m_RaceTime = 0;
 					
-					int Time = m_pClient->m_aClients[pInfo->m_ClientID].m_Score;
+					int Time = m_pClient->m_aClients[pInfo->m_ClientID].m_RaceTime;
 					if(Time > 0)
 					{
 						str_format(aBuf, sizeof(aBuf), "%02d:%02d.%03d", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);

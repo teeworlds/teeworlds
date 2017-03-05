@@ -786,7 +786,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		if(DDNet) pMsg->m_Time *= 10;
-		m_aClients[pMsg->m_ClientID].m_Score = pMsg->m_Time;
+		m_aClients[pMsg->m_ClientID].m_RaceTime = pMsg->m_Time;
 	}
 	else if(MsgId == NETMSGTYPE_SV_CHAT)
 	{
@@ -810,8 +810,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				if(PlayerID < 0)
 					return;
 				
-				if(m_aClients[PlayerID].m_Score == 0 || MsgTime < m_aClients[PlayerID].m_Score)
-					m_aClients[PlayerID].m_Score = MsgTime;
+				if(m_aClients[PlayerID].m_RaceTime == 0 || MsgTime < m_aClients[PlayerID].m_RaceTime)
+					m_aClients[PlayerID].m_RaceTime = MsgTime;
 			}
 		}
 	}
@@ -908,9 +908,6 @@ void CGameClient::OnNewSnapshot()
 	mem_zero(&m_Snap, sizeof(m_Snap));
 	m_Snap.m_LocalClientID = -1;
 
-	// mark all clients offline here
-	bool Online[MAX_CLIENTS] = { 0 };
-	
 	// secure snapshot
 	{
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
@@ -1001,8 +998,6 @@ void CGameClient::OnNewSnapshot()
 
 				m_aClients[ClientID].UpdateRenderInfo(this, ClientID);
 
-				// mark Player as online
-				Online[ClientID] = true;
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 			{
@@ -1137,7 +1132,7 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
 	}
-	
+
 	// clear out unneeded client data
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
@@ -1168,7 +1163,7 @@ void CGameClient::OnNewSnapshot()
 		{
 			if(IsRace(&CurrentServerInfo))
 			{
-				if(m_Snap.m_paInfoByScore[i+1] && (!m_Snap.m_paInfoByScore[i] || m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientID].m_Score == 0 || (m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientID].m_Score > m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientID].m_Score && m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientID].m_Score != 0)))
+				if(m_Snap.m_paInfoByScore[i+1] && (!m_Snap.m_paInfoByScore[i] || m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientID].m_RaceTime == 0 || (m_aClients[m_Snap.m_paInfoByScore[i]->m_ClientID].m_RaceTime > m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientID].m_RaceTime && m_aClients[m_Snap.m_paInfoByScore[i+1]->m_ClientID].m_RaceTime != 0)))
 				{
 					const CNetObj_PlayerInfo *pTmp = m_Snap.m_paInfoByScore[i];
 					m_Snap.m_paInfoByScore[i] = m_Snap.m_paInfoByScore[i+1];
@@ -1210,54 +1205,45 @@ void CGameClient::OnNewSnapshot()
 	}
 	
 	// send race msg
-	if(m_Snap.m_pLocalInfo)
+	if(m_Snap.m_pLocalInfo && IsRace(&CurrentServerInfo))
 	{
-		if(IsRace(&CurrentServerInfo))
+		if(!m_RaceMsgSent)
 		{
-			if(!m_RaceMsgSent)
+			// send login
+			if(ServerBrowser()->IsTeerace(CurrentServerInfo.m_NetAddr) && g_Config.m_WaApiToken[0])
 			{
-				// send login
-				if(ServerBrowser()->IsTeerace(CurrentServerInfo.m_NetAddr) && g_Config.m_WaApiToken[0])
-				{
-					char aLogin[64];
-					str_format(aLogin, sizeof(aLogin), "teerace:%s", g_Config.m_WaApiToken);
-					Client()->RconAuth("", aLogin);
-				}
-
-				CMsgPacker Msg(NETMSGTYPE_CL_ISRACE);
-				Msg.AddInt(1); // we have basic DDRace functionality
-				Msg.AddInt(3); // race client version
-				Client()->SendMsg(&Msg, MSGFLAG_VITAL);
-
-				m_RaceMsgSent = true;
+				char aLogin[64];
+				str_format(aLogin, sizeof(aLogin), "teerace:%s", g_Config.m_WaApiToken);
+				Client()->RconAuth("", aLogin);
 			}
+
+			CMsgPacker Msg(NETMSGTYPE_CL_ISRACE);
+			Msg.AddInt(1); // we have basic DDRace functionality
+			Msg.AddInt(3); // race client version
+			Client()->SendMsg(&Msg, MSGFLAG_VITAL);
+
+			m_RaceMsgSent = true;
+		}
 			
-			if(m_ShowOthers == -1 || (m_ShowOthers > -1 && m_ShowOthers != g_Config.m_ClShowOthers))
+		if(m_ShowOthers == -1 || (m_ShowOthers > -1 && m_ShowOthers != g_Config.m_ClShowOthers))
+		{
+			if(m_ShowOthers == -1 && g_Config.m_ClShowOthers)
+				m_ShowOthers = 1;
+			else
 			{
-				if(m_ShowOthers == -1 && g_Config.m_ClShowOthers)
-					m_ShowOthers = 1;
+				m_ShowOthers = g_Config.m_ClShowOthers;
+				if(IsDDNet(&CurrentServerInfo))
+				{
+					CMsgPacker Msg(31 /* NETMSGTYPE_CL_SHOWOTHERS */);
+					Msg.AddInt(m_ShowOthers);
+					Client()->SendMsg(&Msg, MSGFLAG_VITAL);
+				}
 				else
 				{
-					m_ShowOthers = g_Config.m_ClShowOthers;
-					if(IsDDNet(&CurrentServerInfo))
-					{
-						CMsgPacker Msg(31 /* NETMSGTYPE_CL_SHOWOTHERS */);
-						Msg.AddInt(m_ShowOthers);
-						Client()->SendMsg(&Msg, MSGFLAG_VITAL);
-					}
-					else
-					{
-						CNetMsg_Cl_RaceShowOthers Msg;
-						Msg.m_Active = m_ShowOthers;
-						Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-					}
+					CNetMsg_Cl_RaceShowOthers Msg;
+					Msg.m_Active = m_ShowOthers;
+					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 				}
-			}
-
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if (!Online[i])
-					m_aClients[i].m_Score = 0;
 			}
 		}
 	}
@@ -1513,7 +1499,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 	m_EmoticonStart = -1;
 	m_Active = false;
 	m_ChatIgnore = false;
-	m_Score = 0;
+	m_RaceTime = 0;
 	m_SkinInfo.m_Texture = pGameClient->m_pSkins->Get(0)->m_ColorTexture;
 	m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 	m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
