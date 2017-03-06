@@ -1025,8 +1025,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 	// unpack msgid and system flag
 	int Msg = Unpacker.GetInt();
-	if(Msg < 0)
-		Msg = 63 + abs(Msg);
 	int Sys = Msg&1;
 	Msg >>= 1;
 
