@@ -29,7 +29,7 @@ void CControls::OnReset()
 void CControls::ResetInput(int Dummy)
 {
 	m_LastData[Dummy].m_Direction = 0;
-	//m_LastData.m_Hook = 0;
+	//m_LastData[Dummy].m_Hook = 0;
 	// simulate releasing the fire button
 	if((m_LastData[Dummy].m_Fire&1) != 0)
 		m_LastData[Dummy].m_Fire++;
