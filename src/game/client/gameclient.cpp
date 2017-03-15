@@ -266,7 +266,7 @@ void CGameClient::OnInit()
 	if(File)
 	{
 		io_close(File);
-		if(!TextRender()->LoadFont(aFilename))
+		if(TextRender()->LoadFont(aFilename))
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
