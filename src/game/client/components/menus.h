@@ -197,6 +197,11 @@ private:
 
 	void PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next=POPUP_NONE);
 
+	// TODO: this is a bit ugly but.. well.. yeah
+	enum { MAX_INPUTEVENTS = 32 };
+	static IInput::CEvent m_aInputEvents[MAX_INPUTEVENTS];
+	static int m_NumInputEvents;
+
 	// some settings
 	static float ms_ButtonHeight;
 	static float ms_ListheaderHeight;
