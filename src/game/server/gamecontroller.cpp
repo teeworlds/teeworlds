@@ -456,7 +456,7 @@ void IGameController::ResetGame()
 {
 	// reset the game
 	GameServer()->m_World.m_ResetRequested = true;
-	
+
 	SetGameState(IGS_GAME_RUNNING);
 	m_GameStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
@@ -491,7 +491,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				// run warmup till there're enough players
 				m_GameState = GameState;
  				m_GameStateTimer = TIMER_INFINITE;
-		
+
 				// enable respawning in survival when activating warmup
 				if(m_GameFlags&GAMEFLAG_SURVIVAL)
 				{
@@ -527,7 +527,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 					m_GameState = GameState;
 					m_GameStateTimer = Timer*Server()->TickSpeed();
 				}
-		
+
 				// enable respawning in survival when activating warmup
 				if(m_GameFlags&GAMEFLAG_SURVIVAL)
 				{
@@ -1131,7 +1131,14 @@ int IGameController::GetStartTeam()
 	// determine new team
 	int Team = TEAM_RED;
 	if(IsTeamplay())
-		Team = m_aTeamSize[TEAM_RED] > m_aTeamSize[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
+	{
+		if (m_aTeamSize[TEAM_RED] < m_aTeamSize[TEAM_BLUE])
+			Team = TEAM_RED;
+		else if (m_aTeamSize[TEAM_RED] > m_aTeamSize[TEAM_BLUE])
+			Team = TEAM_BLUE;
+		else
+			Team = rand() % 2;
+	}
 
 	// check if there're enough player slots left
 	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots)
