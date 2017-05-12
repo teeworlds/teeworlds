@@ -1,0 +1,11 @@
+[Unit]
+Description=Teeworlds server with %i.cfg config file
+After=syslog.target network.target
+
+[Service]
+User=teeworlds
+WorkingDirectory=/etc/teeworlds/
+ExecStart=/usr/bin/teeworlds-srv -f %i.cfg
+
+[Install]
+WantedBy=multi-user.target
