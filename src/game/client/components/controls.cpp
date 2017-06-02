@@ -155,6 +155,7 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_Direction = 1;
 
 		// stress testing
+#ifdef CONF_DEBUG
 		if(Config()->m_DbgStress)
 		{
 			float t = Client()->LocalTime();
@@ -168,6 +169,7 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_TargetX = (int)(sinf(t*3)*100.0f);
 			m_InputData.m_TargetY = (int)(cosf(t*3)*100.0f);
 		}
+#endif
 
 		// check if we need to send input
 		if(m_InputData.m_Direction != m_LastData.m_Direction) Send = true;
