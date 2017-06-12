@@ -90,7 +90,11 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 	{
 		int Key = Event.m_Key;
 		bool Ctrl = false;
+#ifdef CONF_PLATFORM_MACOSX
+		if(pInput && (pInput->KeyIsPressed(KEY_LALT) || pInput->KeyIsPressed(KEY_RALT)))
+#else
 		if(pInput && (pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)))
+#endif
 			Ctrl = true;
 		if(Key == KEY_BACKSPACE && CursorPos > 0)
 		{
