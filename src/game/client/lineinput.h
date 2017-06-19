@@ -19,7 +19,7 @@ class CLineInput
 	int m_NumChars;
 	IInput *m_pInput;
 public:
-	static bool CtrlStop(char c);
+	static bool MoveWordStop(char c);
 	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput);
 
 	class CCallback
