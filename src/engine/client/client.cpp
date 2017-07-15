@@ -444,7 +444,11 @@ void CClient::SendInput()
 			m_CurrentInput[i] %= 200;
 
 			SendMsgExY(&Msg, MSGFLAG_FLUSH, i);
-			Force = true;
+			// ugly workaround for dummy. we need to send input with dummy to prevent
+			// prediction time resets. but if we do it too often, then it's
+			// impossible to use grenade with frozen dummy that gets hammered...
+			if(g_Config.m_ClDummyCopyMoves || m_CurrentInput[i] % 2)
+				Force = true;
 		}
 	}
 }
