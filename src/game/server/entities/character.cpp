@@ -288,6 +288,18 @@ void CCharacter::FireWeapon()
 
 	vec2 ProjStartPos = m_Pos+Direction*GetProximityRadius()*0.75f;
 
+	char aBuf[256];
+	str_format(
+		aBuf,
+		sizeof(aBuf),
+		"shot player='%d:%s' team=%d weapon=%d",
+		m_pPlayer->GetCID(),
+		Server()->ClientName(m_pPlayer->GetCID()),
+		m_pPlayer->GetTeam(),
+		m_ActiveWeapon
+	);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
