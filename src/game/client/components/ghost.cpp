@@ -60,62 +60,65 @@ void CGhost::OnRender()
 	// only for race
 	CServerInfo ServerInfo;
 	Client()->GetServerInfo(&ServerInfo);
-	if(!IsRace(&ServerInfo) || !g_Config.m_ClRaceGhost || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
+	if(!IsRace(&ServerInfo) || !g_Config.m_ClRaceGhost)
 		return;
 
-	// TODO: handle restart
-	if(m_pClient->m_NewPredictedTick)
+	if(m_pClient->m_Snap.m_pLocalCharacter && m_pClient->m_Snap.m_pLocalPrevCharacter)
 	{
-		vec2 PrevPos = m_pClient->m_PredictedPrevChar.m_Pos;
-		vec2 Pos = m_pClient->m_PredictedChar.m_Pos;
-		if(!m_Rendering && IsStart(PrevPos, Pos))
-			StartRender();
-	}
-
-	if(m_pClient->m_NewTick)
-	{
-		int PrevTick = m_pClient->m_Snap.m_pLocalPrevCharacter->m_Tick;
-		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
-		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
-
-		// detecting death, needed because teerace allows immediate respawning
-		if(!m_Recording && IsStart(PrevPos, Pos) && (m_LastDeathTick == -1 || m_LastDeathTick < PrevTick))
-				StartRecord();
-
-		if(m_Recording)
+		// TODO: handle restart
+		if(m_pClient->m_NewPredictedTick)
 		{
-			// writing the tick into the file would be better than this
-			// but it would require changes to the ghost file format
-			CNetObj_Character NewChar = *m_pClient->m_Snap.m_pLocalCharacter;
+			vec2 PrevPos = m_pClient->m_PredictedPrevChar.m_Pos;
+			vec2 Pos = m_pClient->m_PredictedChar.m_Pos;
+			if(!m_Rendering && IsStart(PrevPos, Pos))
+				StartRender();
+		}
 
-			if(m_LastRecordTick != -1)
+		if(m_pClient->m_NewTick)
+		{
+			int PrevTick = m_pClient->m_Snap.m_pLocalPrevCharacter->m_Tick;
+			vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
+			vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
+
+			// detecting death, needed because teerace allows immediate respawning
+			if(!m_Recording && IsStart(PrevPos, Pos) && (m_LastDeathTick == -1 || m_LastDeathTick < PrevTick))
+					StartRecord();
+
+			if(m_Recording)
 			{
-				int NewTicks = Client()->GameTick() - m_LastRecordTick;
-				CNetObj_Character LastRecordChar = m_CurGhost.m_lPath.all().back();
-				if(LastRecordChar.m_Angle < 0 && NewChar.m_Angle > pi*256)
-					LastRecordChar.m_Angle += 2*pi*256;
-				else if(LastRecordChar.m_Angle > pi*256 && NewChar.m_Angle < 0)
-					NewChar.m_Angle += 2*pi*256;
-				// make sure that we have one item per tick
-				for(int i = 1; i < NewTicks; i++)
-				{
-					float Intra = i / (float)NewTicks;
-					CNetObj_Character TmpChar = LastRecordChar;
-					vec2 Position = mix(vec2(TmpChar.m_X, TmpChar.m_Y), vec2(NewChar.m_X, NewChar.m_Y), Intra);
-					vec2 HookPos = mix(vec2(TmpChar.m_HookX, TmpChar.m_HookY), vec2(NewChar.m_HookX, NewChar.m_HookY), Intra);
-					TmpChar.m_X = round_to_int(Position.x);
-					TmpChar.m_Y = round_to_int(Position.y);
-					TmpChar.m_VelX = round_to_int(mix((float)TmpChar.m_VelX, (float)NewChar.m_VelX, Intra));
-					TmpChar.m_VelY = round_to_int(mix((float)TmpChar.m_VelY, (float)NewChar.m_VelY, Intra));
-					TmpChar.m_Angle = round_to_int(mix((float)TmpChar.m_Angle, (float)NewChar.m_Angle, Intra));
-					TmpChar.m_HookX = round_to_int(HookPos.x);
-					TmpChar.m_HookY = round_to_int(HookPos.y);
-					AddInfos(TmpChar);
-				}
-			}
+				// writing the tick into the file would be better than this
+				// but it would require changes to the ghost file format
+				CNetObj_Character NewChar = *m_pClient->m_Snap.m_pLocalCharacter;
 
-			m_LastRecordTick = Client()->GameTick();
-			AddInfos(NewChar);
+				if(m_LastRecordTick != -1)
+				{
+					int NewTicks = Client()->GameTick() - m_LastRecordTick;
+					CNetObj_Character LastRecordChar = m_CurGhost.m_lPath.all().back();
+					if(LastRecordChar.m_Angle < 0 && NewChar.m_Angle > pi*256)
+						LastRecordChar.m_Angle += 2*pi*256;
+					else if(LastRecordChar.m_Angle > pi*256 && NewChar.m_Angle < 0)
+						NewChar.m_Angle += 2*pi*256;
+					// make sure that we have one item per tick
+					for(int i = 1; i < NewTicks; i++)
+					{
+						float Intra = i / (float)NewTicks;
+						CNetObj_Character TmpChar = LastRecordChar;
+						vec2 Position = mix(vec2(TmpChar.m_X, TmpChar.m_Y), vec2(NewChar.m_X, NewChar.m_Y), Intra);
+						vec2 HookPos = mix(vec2(TmpChar.m_HookX, TmpChar.m_HookY), vec2(NewChar.m_HookX, NewChar.m_HookY), Intra);
+						TmpChar.m_X = round_to_int(Position.x);
+						TmpChar.m_Y = round_to_int(Position.y);
+						TmpChar.m_VelX = round_to_int(mix((float)TmpChar.m_VelX, (float)NewChar.m_VelX, Intra));
+						TmpChar.m_VelY = round_to_int(mix((float)TmpChar.m_VelY, (float)NewChar.m_VelY, Intra));
+						TmpChar.m_Angle = round_to_int(mix((float)TmpChar.m_Angle, (float)NewChar.m_Angle, Intra));
+						TmpChar.m_HookX = round_to_int(HookPos.x);
+						TmpChar.m_HookY = round_to_int(HookPos.y);
+						AddInfos(TmpChar);
+					}
+				}
+
+				m_LastRecordTick = Client()->GameTick();
+				AddInfos(NewChar);
+			}
 		}
 	}
 
