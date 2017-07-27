@@ -7,7 +7,7 @@ if len(sys.argv) != 3:
 	print(sys.argv[0], "VERSION PLATFORM")
 	sys.exit(-1)
 
-name = "teeworlds"
+name = "teeworlds-pack"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
@@ -65,7 +65,9 @@ shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
+	os.mkdir(os.path.join(package_dir, "client-pack"))
 	copydir("data", package_dir)
+	copydir("client-pack", package_dir)
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 		shutil.copy("SDL.dll", package_dir)
@@ -73,7 +75,7 @@ if include_data and not use_bundle:
 
 if include_exe and not use_bundle:
 	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	#shutil.copy(name+"_srv"+exe_ext, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
