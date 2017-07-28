@@ -299,7 +299,7 @@ public:
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	// Race
-	int RaceDemo_ParseName(const char *pName);
+	const char *RaceDemo_ParseName(const char *pName);
 	void RaceDemo_GetName(char *pBuf, int Size, int Time = -1);
 	void RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName);
 	void DemoRecorder_StartRace();

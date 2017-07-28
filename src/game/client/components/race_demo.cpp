@@ -130,16 +130,28 @@ void CRaceDemo::CheckDemo()
 
 		// loop through demo files
 		m_pClient->m_pMenus->DemolistPopulate();
-		for (int i = 0; i < m_pClient->m_pMenus->m_lDemos.size(); i++)
+		for(int i = 0; i < m_pClient->m_pMenus->m_lDemos.size(); i++)
 		{
 			const char *pDemoName = m_pClient->m_pMenus->m_lDemos[i].m_aName;
 			if(str_comp(pDemoName, aTmpDemoName) == 0)
 				continue;
 
-			int DemoTime = Client()->RaceDemo_ParseName(pDemoName);
+			const char *pTime = Client()->RaceDemo_ParseName(pDemoName);
+			int DemoTime = 0;
+			if(pTime)
+			{
+				const char *pTmp = pTime;
+				while(*pTmp >= '0' && *pTmp <= '9') pTmp++;
+
+				if(*pTmp == '.' || *pTmp == ',')
+					DemoTime = IRace::TimeFromSecondsStr(pTime);
+				else
+					DemoTime = str_toint(pTime);
+			}
+
 			if(DemoTime)
 			{
-				if (m_Time >= DemoTime)
+				if(m_Time >= DemoTime)
 				{
 					// found a better one
 					m_Time = 0;

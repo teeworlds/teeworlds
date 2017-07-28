@@ -30,16 +30,13 @@ CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
 int IRace::TimeFromSecondsStr(const char *pStr)
 {
 	int Time = str_toint(pStr) * 1000;
-	pStr = str_find(pStr, ".");
-	if(pStr)
+	while(*pStr >= '0' && *pStr <= '9') pStr++;
+	if(*pStr == '.' || *pStr == ',')
 	{
 		pStr++;
-		int mult = 100;
+		const int Mult[3] = { 100, 10, 1 };
 		for(int i = 0; pStr[i] >= '0' && pStr[i] <= '9' && i < 3; i++)
-		{
-			Time += (pStr[i] - '0') * mult;
-			mult /= 10;
-		}
+			Time += (pStr[i] - '0') * Mult[i];
 	}
 	return Time;
 }

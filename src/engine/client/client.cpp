@@ -2177,24 +2177,16 @@ void ClearFilename(char *pStr)
 	}
 }
 
-int CClient::RaceDemo_ParseName(const char *pName)
+const char *CClient::RaceDemo_ParseName(const char *pName)
 {
 	char aPlayerName[MAX_NAME_LENGTH];
 	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
 	ClearFilename(aPlayerName);
 
 	int MapLen = str_length(m_aCurrentMap);
-	if(str_comp_num(pName, m_aCurrentMap, MapLen) == 0 && str_length(pName) > MapLen && pName[MapLen] == '_' && str_find(pName, aPlayerName))
-	{
-		const char *pTime = pName + MapLen + 1;
-		const char *pDot = pTime;
-		while (isdigit(*pDot)) pDot++;
-
-		if(*pDot == '.')
-			return str_tofloat(pTime) * 1000;
-		else
-			return str_toint(pTime);
-	}
+	const char *pTime = pName + MapLen + 1;
+	if(str_comp_num(pName, m_aCurrentMap, MapLen) == 0 && str_length(pName) > MapLen && pName[MapLen] == '_' && str_find(pTime, aPlayerName))
+		return pTime;
 
 	return 0;
 }
