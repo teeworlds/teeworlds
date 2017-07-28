@@ -1223,7 +1223,7 @@ void CMenus::RenderSettingsChat(CUIRect MainView)
 
 void CMenus::RenderSettingsHudMod(CUIRect MainView)
 {
-	CUIRect Button;
+	CUIRect Button, Label;
 	CUIRect LeftView, RightView;
 
 	MainView.VSplitMid(&LeftView, &RightView);
@@ -1393,6 +1393,41 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 		g_Config.m_ClServermsgsound = 1;
 		g_Config.m_ClChatsound = 1;
 		g_Config.m_ClWarningTeambalance = 1;
+	}
+
+	RightView.HSplitTop(20.0f, 0, &RightView);
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, Localize("Map settings"), 14.0f, -1);
+
+	RightView.HSplitTop(10.0f, &Button, &RightView);
+
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowQuads, Localize("Show quads"), g_Config.m_ClShowQuads, &Button))
+		g_Config.m_ClShowQuads ^= 1;
+
+	int *paColorSlider[3] = { &g_Config.m_ClBackgroundRed, &g_Config.m_ClBackgroundGreen, &g_Config.m_ClBackgroundBlue };
+	const char *paLabels[] = {
+		Localize("Red"),
+		Localize("Green"),
+		Localize("Blue") };
+
+	RightView.HSplitTop(10.0f, &Button, &RightView);
+
+	RightView.HSplitTop(20.0f, &Label, &RightView);
+	UI()->DoLabelScaled(&Label, Localize("Background color"), 14.0f, -1);
+	RightView.VSplitLeft(20.0f, 0, &RightView);
+	RightView.HSplitTop(2.5f, 0, &RightView);
+
+	for(int i = 0; i < 3; i++)
+	{
+		RightView.HSplitTop(20.0f, &Label, &RightView);
+		Label.VSplitLeft(100.0f, &Label, &Button);
+		Button.HMargin(2.0f, &Button);
+
+		float k = (*paColorSlider[i]) / 255.0f;
+		k = DoScrollbarH(paColorSlider[i], &Button, k);
+		*paColorSlider[i] = (int)(k*255.0f);
+		UI()->DoLabelScaled(&Label, paLabels[i], 15.0f, -1);
 	}
 }
 

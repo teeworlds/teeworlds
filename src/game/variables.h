@@ -69,6 +69,11 @@ MACRO_CONFIG_INT(ClServermsgsound, cl_servermsgsound, 1, 0, 1, CFGFLAG_CLIENT|CF
 MACRO_CONFIG_INT(ClChatsound, cl_chatsound, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes chat sound on or off")
 MACRO_CONFIG_INT(ClSpreesounds, cl_spreesounds, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turnes spreesounds on or off")
 
+MACRO_CONFIG_INT(ClShowQuads, cl_show_quads, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show quads")
+MACRO_CONFIG_INT(ClBackgroundRed, cl_background_red, 255, 0, 255, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Background color red")
+MACRO_CONFIG_INT(ClBackgroundGreen, cl_background_green, 255, 0, 255, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Background color green")
+MACRO_CONFIG_INT(ClBackgroundBlue, cl_background_blue, 0, 0, 255, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Background color blue")
+
 /* Beep-Mod */
 MACRO_CONFIG_STR(ClSearchName, cl_search_name, 64, "", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Names to search for in chat messages")
 MACRO_CONFIG_INT(ClAntiSpam, cl_anti_spam, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disables multiple messages")

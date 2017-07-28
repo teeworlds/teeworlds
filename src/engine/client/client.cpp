@@ -778,8 +778,7 @@ const char *CClient::ErrorString()
 
 void CClient::Render()
 {
-	if(g_Config.m_GfxClear)
-		Graphics()->Clear(1,1,0);
+	Graphics()->Clear(g_Config.m_ClBackgroundRed/255.0f, g_Config.m_ClBackgroundGreen/255.0f, g_Config.m_ClBackgroundBlue/255.0f);
 
 	GameClient()->OnRender();
 	DebugRender();

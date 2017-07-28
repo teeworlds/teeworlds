@@ -3,6 +3,7 @@
 #include <math.h>
 #include <base/math.h>
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <engine/textrender.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -83,6 +84,9 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 
 void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, float Zoom)
 {
+	if(!g_Config.m_ClShowQuads)
+		return;
+
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
 	for(int i = 0; i < NumQuads; i++)
