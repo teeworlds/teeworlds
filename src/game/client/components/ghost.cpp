@@ -22,7 +22,8 @@ CGhost::CGhost()
 	m_LastDeathTick(-1),
 	m_CurPos(0),
 	m_Rendering(false),
-	m_Recording(false)
+	m_Recording(false),
+	m_SymmetricMap(false)
 { }
 
 void CGhost::AddInfos(CNetObj_Character Char)
@@ -50,9 +51,19 @@ bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
 	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos, CCollision::RACECHECK_TILES_MAIN);
 	if(!IsFastCap(&ServerInfo) && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
 		return true;
-	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(Pos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)
+	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagIndex[EnemyTeam] != -1 && distance(Pos, m_pClient->Collision()->GetPos(m_pClient->m_aFlagIndex[EnemyTeam])) < 32)
 		return true;
 	return false;
+}
+
+void CGhost::MirrorChar(CNetObj_Character *pChar, int Middle)
+{
+	pChar->m_HookDx = -pChar->m_HookDx;
+	pChar->m_VelX = -pChar->m_VelX;
+	pChar->m_HookX = 2 * Middle - pChar->m_HookX;
+	pChar->m_X = 2 * Middle - pChar->m_X;
+	pChar->m_Angle = -pChar->m_Angle - pi*256.f;
+	pChar->m_Direction = -pChar->m_Direction;
 }
 
 void CGhost::OnRender()
@@ -143,6 +154,15 @@ void CGhost::OnRender()
 		CNetObj_Character Player = pGhost->m_lPath[m_CurPos];
 		CNetObj_Character Prev = pGhost->m_lPath[PrevPos];
 
+		if(pGhost->m_Mirror && IsFastCap(&ServerInfo))
+		{
+			vec2 FlagPosRed = m_pClient->Collision()->GetPos(m_pClient->m_aFlagIndex[TEAM_RED]);
+			vec2 FlagPosBlue = m_pClient->Collision()->GetPos(m_pClient->m_aFlagIndex[TEAM_BLUE]);
+			int Middle = (FlagPosRed.x + FlagPosBlue.x) / 2;
+			MirrorChar(&Player, Middle);
+			MirrorChar(&Prev, Middle);
+		}
+
 		if(!m_TickDiff[i] && Player.m_AttackTick != Prev.m_AttackTick)
 			m_TickDiff[i] = Client()->GameTick() - Player.m_AttackTick;
 		Player.m_AttackTick += m_TickDiff[i];
@@ -211,7 +231,8 @@ void CGhost::StartRecord()
 {
 	m_Recording = true;
 	m_LastRecordTick = -1;
-	m_CurGhost.m_lPath.clear();
+	m_CurGhost.Reset();
+
 	CGameClient::CClientData ClientData = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID];
 	str_copy(m_CurGhost.m_aOwner, g_Config.m_PlayerName, sizeof(m_CurGhost.m_aOwner));
 	InitRenderInfos(&m_CurGhost.m_RenderInfo, ClientData.m_aSkinName, ClientData.m_UseCustomColor, ClientData.m_ColorBody, ClientData.m_ColorFeet);
@@ -283,7 +304,7 @@ void CGhost::StopRecord(int Time)
 	else if(RecordingToFile) // no new record
 		Storage()->RemoveFile(aTmpFilename, IStorage::TYPE_SAVE);
 
-	m_CurGhost.m_lPath.clear();
+	m_CurGhost.Reset();
 }
 
 void CGhost::StartRender()
@@ -339,6 +360,11 @@ int CGhost::Load(const char* pFilename)
 				char aSkinName[64];
 				IntsToStr(&Skin.m_Skin0, 6, aSkinName);
 				InitRenderInfos(&Ghost.m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
+
+				const int aTeamColors[2] = { 65387, 10223467 };
+				for(int i = 0; i < 2; i++)
+					if(Skin.m_UseCustomColor && Skin.m_ColorBody == aTeamColors[i] && Skin.m_ColorFeet == aTeamColors[i])
+						Ghost.m_Team = i;
 			}
 		}
 		else if(Type == GHOSTDATA_TYPE_CHARACTER)
@@ -364,7 +390,7 @@ int CGhost::Load(const char* pFilename)
 
 void CGhost::Unload(int Slot)
 {
-	m_aActiveGhosts[Slot].m_lPath.clear();
+	m_aActiveGhosts[Slot].Reset();
 }
 
 void CGhost::ConGPlay(IConsole::IResult *pResult, void *pUserData)
@@ -438,4 +464,45 @@ void CGhost::OnMapLoad()
 
 	if(IsRace(&ServerInfo))*/
 	m_pClient->m_pMenus->GhostlistPopulate();
+
+	// symmetry check
+	int Width = m_pClient->Collision()->GetWidth();
+	int Height = m_pClient->Collision()->GetHeight();
+
+	int RedIndex = m_pClient->m_aFlagIndex[TEAM_RED];
+	int BlueIndex = m_pClient->m_aFlagIndex[TEAM_BLUE];
+	ivec2 RedPos = ivec2(RedIndex % Width, RedIndex / Width);
+	ivec2 BluePos = ivec2(BlueIndex % Width, BlueIndex / Width);
+	int MiddleLeft = (RedPos.x + BluePos.x) / 2;
+	int MiddleRight = (RedPos.x + BluePos.x + 1) / 2;
+	int Half = min(MiddleLeft, Width - MiddleRight - 1);
+
+	m_SymmetricMap = false;
+
+	if(RedPos.y != BluePos.y)
+		return;
+
+	for(int y = 0; y < Height; y++)
+	{
+		int LeftOffset = y * Width + MiddleLeft;
+		int RightOffset = y * Width + MiddleRight;
+		for(int x = 0; x <= Half; x++)
+		{
+			int LeftIndex = m_pClient->Collision()->GetIndex(LeftOffset - x);
+			int RightIndex = m_pClient->Collision()->GetIndex(RightOffset + x);
+			if(LeftIndex != RightIndex && LeftIndex <= 128 && RightIndex <= 128)
+				return;
+		}
+	}
+
+	m_SymmetricMap = true;
+}
+
+void CGhost::OnGameJoin(int Team)
+{
+	if(!g_Config.m_ClGhostAutoMirror || Team < 0 || Team > 1 || (!m_SymmetricMap && !g_Config.m_ClGhostForceMirror))
+		return;
+
+	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
+		m_aActiveGhosts[i].m_Mirror = m_aActiveGhosts[i].m_Team != Team;
 }

@@ -1442,6 +1442,19 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 			if(DoButton_CheckBox(&g_Config.m_ClGhostNameplatesAlways, Localize("Always show ghost name plates"), g_Config.m_ClGhostNameplatesAlways, &Button))
 				g_Config.m_ClGhostNameplatesAlways ^= 1;
 		}
+
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClGhostAutoMirror, Localize("Auto mirror ghost on FastCap"), g_Config.m_ClGhostAutoMirror, &Button))
+			g_Config.m_ClGhostAutoMirror ^= 1;
+
+		if(g_Config.m_ClGhostAutoMirror)
+		{
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			Button.VSplitLeft(30.0f, 0, &Button);
+			if(DoButton_CheckBox(&g_Config.m_ClGhostForceMirror, Localize("Force mirroring on asymmetric maps"), g_Config.m_ClGhostForceMirror, &Button))
+				g_Config.m_ClGhostForceMirror ^= 1;
+		}
 	}
 		
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);

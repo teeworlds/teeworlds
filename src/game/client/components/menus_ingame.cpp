@@ -1019,6 +1019,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 					Graphics()->QuadsBegin();
 					RenderTools()->SelectSprite(SPRITE_OOP + 7);
 					IGraphics::CQuadItem QuadItem(Button.x+Button.w/2, Button.y+Button.h/2, 20.0f, 20.0f);
+					if(m_pClient->m_pGhost->IsMirrored(pItem->m_Slot))
+						QuadItem.m_Width = -QuadItem.m_Width;
 					Graphics()->QuadsDraw(&QuadItem, 1);
 
 					Graphics()->QuadsEnd();
@@ -1075,5 +1077,26 @@ void CMenus::RenderGhost(CUIRect MainView)
 		}
 		else
 			pGhost->m_Slot = m_pClient->m_pGhost->Load(pGhost->m_aFilename);
+	}
+
+	if(pGhost->Active())
+	{
+		CServerInfo ServerInfo;
+		Client()->GetServerInfo(&ServerInfo);
+		if(IsFastCap(&ServerInfo))
+		{
+			Status.VSplitRight(5.0f, &Status, 0);
+			Status.VSplitRight(120.0f, &Status, &Button);
+
+			static int s_MirrorButton = 0;
+			if(DoButton_Menu(&s_MirrorButton, Localize("Mirror"), 0, &Button))
+				m_pClient->m_pGhost->ToggleMirror(pGhost->m_Slot);
+
+			if(!m_pClient->m_pGhost->IsMapSymmetric())
+			{
+				Status.VSplitLeft(250.0f, &Button, &Status);
+				UI()->DoLabelScaled(&Button, Localize("Warning: asymmetric map"), 14.0f, -1);
+			}
+		}
 	}
 }

@@ -36,7 +36,7 @@ void CRaceDemo::OnRender()
 	// start the demo
 	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team^1;
 	if(((!m_Active && !FastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalClientID].m_Active) ||
-		(FastCap && m_pClient->m_aFlagPos[EnemyTeam] != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_aFlagPos[EnemyTeam]) < 32)) && m_DemoStartTick < Client()->GameTick())
+		(FastCap && m_pClient->m_aFlagIndex[EnemyTeam] != -1 && distance(m_pClient->m_LocalCharacterPos, m_pClient->Collision()->GetPos(m_pClient->m_aFlagIndex[EnemyTeam])) < 32)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
 			OnReset();

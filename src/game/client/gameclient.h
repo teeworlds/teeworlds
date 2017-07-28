@@ -119,7 +119,7 @@ public:
 	int m_FlagDropTick[2];
 
 	// Race
-	vec2 m_aFlagPos[2];
+	int m_aFlagIndex[2];
 
 	
 	// TODO: move this

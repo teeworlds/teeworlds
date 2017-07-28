@@ -21,6 +21,16 @@ private:
 		CTeeRenderInfo m_RenderInfo;
 		array<CNetObj_Character> m_lPath;
 		char m_aOwner[MAX_NAME_LENGTH];
+		bool m_Mirror;
+		int m_Team;
+
+		CGhostItem() { Reset(); }
+		void Reset()
+		{
+			m_lPath.clear();
+			m_Mirror = false;
+			m_Team = -1;
+		}
 	};
 
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
@@ -35,10 +45,14 @@ private:
 	bool m_Rendering;
 	bool m_Recording;
 
+	bool m_SymmetricMap;
+
 	void AddInfos(CNetObj_Character Char);
 	int GetSlot();
 
 	bool IsStart(vec2 PrevPos, vec2 Pos);
+
+	void MirrorChar(CNetObj_Character *pChar, int Middle);
 
 	void StartRecord();
 	void StopRecord(int Time=0);
@@ -60,8 +74,15 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
+	void OnGameJoin(int Team);
+
 	int Load(const char* pFilename);
 	void Unload(int Slot);
+
+	void ToggleMirror(int Slot) { m_aActiveGhosts[Slot].m_Mirror = !m_aActiveGhosts[Slot].m_Mirror; };
+	bool IsMirrored(int Slot) const { return m_aActiveGhosts[Slot].m_Mirror; };
+
+	bool IsMapSymmetric() const { return m_SymmetricMap; }
 };
 
 #endif

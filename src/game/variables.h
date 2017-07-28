@@ -106,6 +106,8 @@ MACRO_CONFIG_INT(ClRaceGhost, cl_race_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAV
 MACRO_CONFIG_INT(ClRaceSaveGhost, cl_race_save_ghost, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save ghost")
 MACRO_CONFIG_INT(ClGhostNamePlates, cl_ghost_nameplates, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ghost nameplates")
 MACRO_CONFIG_INT(ClGhostNameplatesAlways, cl_ghost_nameplates_always, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Always show ghost nameplats disregarding of distance")
+MACRO_CONFIG_INT(ClGhostAutoMirror, cl_ghost_auto_mirror, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Automatically mirror ghosts on fastcap")
+MACRO_CONFIG_INT(ClGhostForceMirror, cl_ghost_force_mirror, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Force ghost mirroring")
 MACRO_CONFIG_INT(ClRaceReplaceGametime, cl_race_replace_gametime, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use the gametimer to show the race time")
 MACRO_CONFIG_INT(ClPredictRace, cl_predict_race, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict race")
 MACRO_CONFIG_INT(ClPredictTeleport, cl_predict_teleport, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict teleport")
