@@ -257,6 +257,10 @@ class CHttpConnection
 
 	CRequestInfo *m_pInfo;
 
+	char m_aBuffer[HTTP_CHUNK_SIZE];
+	int m_BufferBytes;
+	int m_BufferOffset;
+
 	int64 Interval() const;
 
 	void Reset();

@@ -4,7 +4,7 @@
 #include "http.h"
 
 CHttpConnection::CHttpConnection()
-	: m_LastDataTime(-1), m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0)
+	: m_LastDataTime(-1), m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0), m_BufferBytes(0), m_BufferOffset(0)
 {
 	mem_zero(&m_Addr, sizeof(m_Addr));
 }
@@ -143,17 +143,20 @@ bool CHttpConnection::Update()
 
 		case STATE_SENDING:
 		{
-			char aData[HTTP_CHUNK_SIZE] = {0};
-			int Bytes = m_pInfo->m_pRequest->GetData(aData, sizeof(aData));
-			if(Bytes < 0)
-				return SetState(STATE_ERROR, "error: could not read request data");
-			else if(Bytes > 0)
+			if(m_BufferBytes == 0)
 			{
-				int Size = net_tcp_send(m_Socket, aData, Bytes);
+				m_BufferBytes = m_pInfo->m_pRequest->GetData(m_aBuffer, sizeof(m_aBuffer));
+				m_BufferOffset = 0;
+			}
+			if(m_BufferBytes < 0)
+				return SetState(STATE_ERROR, "error: could not read request data");
+			else if(m_BufferBytes > 0)
+			{
+				int Size = net_tcp_send(m_Socket, m_aBuffer + m_BufferOffset, m_BufferBytes);
 				if(Size < 0)
 					return SetState(STATE_ERROR, "error: sending data");
-				if(Size < Bytes)
-					return SetState(STATE_ERROR, "error: sending data");
+				m_BufferBytes -= Size;
+				m_BufferOffset += Size;
 
 				m_LastActionTime = time_get();
 			}
@@ -165,26 +168,26 @@ bool CHttpConnection::Update()
 		case STATE_RECEIVING:
 		{
 			bool ForceClose = false;
-			char aBuf[HTTP_CHUNK_SIZE] = {0};
-			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
-			if(Bytes < 0)
+			m_BufferBytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
+			if(m_BufferBytes < 0)
 			{
 				if(!net_would_block())
 					return SetState(STATE_ERROR, "error: receiving data");
 			}
-			else if(Bytes >= 0)
+			else if(m_BufferBytes >= 0)
 			{
 				m_LastActionTime = time_get();
-				if(!m_pInfo->m_pResponse->Write(aBuf, Bytes))
+				if(!m_pInfo->m_pResponse->Write(m_aBuffer, m_BufferBytes))
 					return SetState(STATE_ERROR, "error: parsing http");
 			}
 
-			if(Bytes == 0)
+			if(m_BufferBytes == 0)
 				ForceClose = true;
 			if(m_pInfo->m_pResponse->m_Complete)
 			{
 				if(!m_pInfo->m_pResponse->Finalize())
 					return SetState(STATE_ERROR, "error: incomplete response");
+				m_BufferBytes = 0;
 				return SetState((m_pInfo->m_pResponse->m_Close || ForceClose) ? STATE_OFFLINE : STATE_WAITING, "received response");
 			}
 			else if(ForceClose)
@@ -194,8 +197,7 @@ bool CHttpConnection::Update()
 
 		case STATE_WAITING:
 		{
-			char aBuf[1024] = { 0 };
-			int Bytes = net_tcp_recv(m_Socket, aBuf, sizeof(aBuf));
+			int Bytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
 			if(Bytes < 0)
 			{
 				if (!net_would_block())
