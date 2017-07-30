@@ -109,6 +109,7 @@ bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 
 bool CHttpConnection::Update()
 {
+	char aBuf[128];
 	int64 IdleTime = time_get() - m_LastActionTime;
 	if(m_State == STATE_WAITING && IdleTime > time_freq() * HTTP_KEEPALIVE_TIME)
 		return SetState(STATE_OFFLINE, "closing idle connection");
@@ -129,8 +130,12 @@ bool CHttpConnection::Update()
 		{
 			if(net_socket_write_wait(m_Socket, 0) == 0)
 				break;
-			if(net_socket_error(m_Socket))
-				return SetState(STATE_ERROR, "error: could not connect");
+			int Error = net_socket_error(m_Socket);
+			if(Error)
+			{
+				str_format(aBuf, sizeof(aBuf), "error: could not connect (%d)", Error);
+				return SetState(STATE_ERROR, aBuf);
+			}
 
 			m_LastActionTime = time_get();
 			int NewState = m_pInfo ? STATE_SENDING : STATE_WAITING;
@@ -151,7 +156,10 @@ bool CHttpConnection::Update()
 			{
 				int Size = net_tcp_send(m_Socket, m_aBuffer + m_BufferOffset, m_BufferBytes);
 				if(Size < 0)
-					return SetState(STATE_ERROR, "error: sending data");
+				{
+					str_format(aBuf, sizeof(aBuf), "error: sending data (%d)", net_errno());
+					return SetState(STATE_ERROR, aBuf);
+				}
 				m_BufferBytes -= Size;
 				m_BufferOffset += Size;
 
@@ -172,7 +180,10 @@ bool CHttpConnection::Update()
 			if(m_BufferBytes < 0)
 			{
 				if(!net_would_block())
-					return SetState(STATE_ERROR, "error: receiving data");
+				{
+					str_format(aBuf, sizeof(aBuf), "error: receiving data (%d)", net_errno());
+					return SetState(STATE_ERROR, aBuf);
+				}
 			}
 			else if(m_BufferBytes >= 0)
 			{
