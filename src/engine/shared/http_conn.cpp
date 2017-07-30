@@ -115,7 +115,12 @@ bool CHttpConnection::Update()
 {
 	int Timeout = m_State == STATE_WAITING ? 30 : 10;
 	if(m_State != STATE_OFFLINE && time_get() - m_LastActionTime > time_freq() * Timeout)
-		return SetState(STATE_ERROR, "error: timeout");
+	{
+		if(m_State == STATE_WAITING)
+			return SetState(STATE_OFFLINE, "closing idle connection");
+		else
+			return SetState(STATE_ERROR, "error: timeout");
+	}
 
 	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
 	{
@@ -129,15 +134,14 @@ bool CHttpConnection::Update()
 	{
 		case STATE_CONNECTING:
 		{
-			int Result = net_socket_write_wait(m_Socket, 0);
-			if(Result > 0)
-			{
-				m_LastActionTime = time_get();
-				int NewState = m_pInfo ? STATE_SENDING : STATE_WAITING;
-				return SetState(NewState, "connected");
-			}
-			else if(Result == -1)
+			if(net_socket_write_wait(m_Socket, 0) == 0)
+				break;
+			if(net_socket_error(m_Socket))
 				return SetState(STATE_ERROR, "error: could not connect");
+
+			m_LastActionTime = time_get();
+			int NewState = m_pInfo ? STATE_SENDING : STATE_WAITING;
+			return SetState(NewState, "connected");
 		}
 		break;
 
@@ -200,7 +204,7 @@ bool CHttpConnection::Update()
 			int Bytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
 			if(Bytes < 0)
 			{
-				if (!net_would_block())
+				if(!net_would_block())
 					return SetState(STATE_ERROR, "error: waiting");
 			}
 			else if(Bytes == 0)

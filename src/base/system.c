@@ -1600,6 +1600,19 @@ int net_socket_write_wait(NETSOCKET sock, int time)
 	return 0;
 }
 
+int net_socket_error(NETSOCKET sock)
+{
+	int result = 0;
+	socklen_t result_len = sizeof(result);
+
+	if(sock.ipv4sock >= 0)
+		getsockopt(sock.ipv4sock, SOL_SOCKET, SO_ERROR, (char*)&result, &result_len);
+	if(sock.ipv6sock >= 0)
+		getsockopt(sock.ipv6sock, SOL_SOCKET, SO_ERROR, (char*)&result, &result_len);
+
+	return result;
+}
+
 int time_timestamp()
 {
 	return time(0);
