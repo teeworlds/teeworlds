@@ -68,7 +68,7 @@ void CRequestInfo::SetCallback(FHttpCallback pfnCallback, void *pUserData)
 	m_pUserData = pUserData;
 }
 
-void CRequestInfo::ExecuteCallback(IResponse *pResponse, bool Error)
+void CRequestInfo::ExecuteCallback(IResponse *pResponse, bool Error) const
 {
 	if(m_pfnCallback)
 		m_pfnCallback(pResponse, Error, m_pUserData);
@@ -174,4 +174,16 @@ void CHttpClient::Update()
 
 	for(int i = 0; i < HTTP_MAX_CONNECTIONS; i++)
 		m_aConnections[i].Update();
+}
+
+bool CHttpClient::HasActiveConnection() const
+{
+	if(m_lPendingRequests.size() > 0)
+		return true;
+
+	for(int i = 0; i < HTTP_MAX_CONNECTIONS; i++)
+		if(m_aConnections[i].IsActive())
+			return true;
+
+	return false;
 }

@@ -234,7 +234,7 @@ public:
 
 	void SetPriority(int Priority) { m_Priority = Priority; }
 	void SetCallback(FHttpCallback pfnCallback, void *pUserData = 0);
-	void ExecuteCallback(IResponse *pResponse, bool Error);
+	void ExecuteCallback(IResponse *pResponse, bool Error) const;
 };
 
 class CHttpConnection
@@ -271,6 +271,9 @@ class CHttpConnection
 public:
 	enum
 	{
+		HTTP_TIMEOUT=10,
+		HTTP_KEEPALIVE_TIME=30,
+
 		STATE_OFFLINE = 0,
 		STATE_CONNECTING,
 		STATE_SENDING,
@@ -288,8 +291,9 @@ public:
 	bool Connect(NETADDR Addr);
 	bool SetRequest(CRequestInfo *pInfo);
 
-	int State() { return m_State; }
-	bool CompareAddr(NETADDR Addr);
+	int State() const { return m_State; }
+	bool CompareAddr(NETADDR Addr) const;
+	bool IsActive() const { return m_State == STATE_CONNECTING || m_State == STATE_SENDING || m_State == STATE_RECEIVING;  }
 
 	const CRequestInfo* GetInfo() const { return m_pInfo; }
 };
@@ -318,6 +322,8 @@ public:
 	void Send(CRequestInfo *pInfo, IRequest *pRequest);
 	void FetchRequest(int Priority, int Max);
 	void Update();
+
+	bool HasActiveConnection() const;
 };
 
 #endif

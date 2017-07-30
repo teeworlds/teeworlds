@@ -17,8 +17,7 @@ CHttpConnection::~CHttpConnection()
 
 void CHttpConnection::Reset()
 {
-	if(m_pInfo)
-		delete m_pInfo;
+	delete m_pInfo;
 	m_pInfo = 0;
 }
 
@@ -42,29 +41,24 @@ bool CHttpConnection::SetState(int State, const char *pMsg)
 		dbg_msg("http/conn", "%d: %s", m_ID, pMsg);
 	bool Error = State == STATE_ERROR;
 	if(Error)
-		State = STATE_OFFLINE;
-
-	if(State == STATE_WAITING || State == STATE_OFFLINE)
 	{
+		State = STATE_OFFLINE;
 		if(m_pInfo)
-			m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, Error);
+			m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, true);
 		Reset();
 	}
+
 	if(State == STATE_OFFLINE)
 	{
 		if(g_Config.m_Debug)
 			dbg_msg("http/conn", "%d: disconnecting", m_ID);
 		Close();
 	}
-	if(State == STATE_SENDING || State == STATE_RECEIVING)
-	{
-		m_LastDataTime = time_get() - Interval();
-	}
 	m_State = State;
 	return !Error;
 }
 
-bool CHttpConnection::CompareAddr(NETADDR Addr)
+bool CHttpConnection::CompareAddr(NETADDR Addr) const
 {
 	if(m_State == STATE_OFFLINE)
 		return false;
@@ -106,6 +100,8 @@ bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 	{
 		m_LastActionTime = time_get();
 		int NewState = m_State == STATE_CONNECTING ? STATE_CONNECTING : STATE_SENDING;
+		if(NewState == STATE_SENDING)
+			m_LastDataTime = time_get() - Interval();
 		return SetState(NewState, "new request");
 	}
 	return SetState(STATE_ERROR, "error: incomplete request");
@@ -113,14 +109,11 @@ bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 
 bool CHttpConnection::Update()
 {
-	int Timeout = m_State == STATE_WAITING ? 30 : 10;
-	if(m_State != STATE_OFFLINE && time_get() - m_LastActionTime > time_freq() * Timeout)
-	{
-		if(m_State == STATE_WAITING)
-			return SetState(STATE_OFFLINE, "closing idle connection");
-		else
-			return SetState(STATE_ERROR, "error: timeout");
-	}
+	int64 IdleTime = time_get() - m_LastActionTime;
+	if(m_State == STATE_WAITING && IdleTime > time_freq() * HTTP_KEEPALIVE_TIME)
+		return SetState(STATE_OFFLINE, "closing idle connection");
+	else if(IsActive() && IdleTime > time_freq() * HTTP_TIMEOUT)
+		return SetState(STATE_ERROR, "error: timeout");
 
 	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
 	{
@@ -165,7 +158,10 @@ bool CHttpConnection::Update()
 				m_LastActionTime = time_get();
 			}
 			else // Bytes = 0
-				return SetState(STATE_RECEIVING, "sent request"); 
+			{
+				m_LastDataTime = time_get() - Interval();
+				return SetState(STATE_RECEIVING, "sent request");
+			}
 		}
 		break;
 
@@ -192,7 +188,11 @@ bool CHttpConnection::Update()
 				if(!m_pInfo->m_pResponse->Finalize())
 					return SetState(STATE_ERROR, "error: incomplete response");
 				m_BufferBytes = 0;
-				return SetState((m_pInfo->m_pResponse->m_Close || ForceClose) ? STATE_OFFLINE : STATE_WAITING, "received response");
+
+				bool Disconnect = m_pInfo->m_pResponse->m_Close || ForceClose;
+				m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, false);
+				Reset();
+				return SetState(Disconnect ? STATE_OFFLINE : STATE_WAITING, "received response");
 			}
 			else if(ForceClose)
 				return SetState(STATE_ERROR, "error: remote closed");
