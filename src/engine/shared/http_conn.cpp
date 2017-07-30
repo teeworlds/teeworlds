@@ -157,6 +157,8 @@ bool CHttpConnection::Update()
 				int Size = net_tcp_send(m_Socket, m_aBuffer + m_BufferOffset, m_BufferBytes);
 				if(Size < 0)
 				{
+					if(net_would_block())
+						break;
 					str_format(aBuf, sizeof(aBuf), "error: sending data (%d)", net_errno());
 					return SetState(STATE_ERROR, aBuf);
 				}
