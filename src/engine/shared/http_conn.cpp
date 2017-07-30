@@ -74,16 +74,12 @@ bool CHttpConnection::Connect(NETADDR Addr)
 
 	net_set_non_blocking(m_Socket);
 
-	char aBuf[256];
 	m_Addr = Addr;
-	if(net_tcp_connect(m_Socket, &m_Addr) != 0 && !net_would_block())
-	{
-		str_format(aBuf, sizeof(aBuf), "error: could not connect (%d)", net_errno());
-		return SetState(STATE_ERROR, aBuf);
-	}
+	net_tcp_connect(m_Socket, &m_Addr);
 
 	m_LastActionTime = time_get();
 
+	char aBuf[256];
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(&m_Addr, aAddrStr, sizeof(aAddrStr), true);
 	str_format(aBuf, sizeof(aBuf), "connecting to %s", aAddrStr);
