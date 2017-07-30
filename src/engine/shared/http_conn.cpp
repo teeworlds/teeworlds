@@ -4,7 +4,8 @@
 #include "http.h"
 
 CHttpConnection::CHttpConnection()
-	: m_LastDataTime(-1), m_State(STATE_OFFLINE), m_LastActionTime(-1), m_pInfo(0), m_BufferBytes(0), m_BufferOffset(0)
+	: m_State(STATE_OFFLINE), m_LastActionTime(-1), m_LastDataTime(-1), m_pInfo(0), m_BufferBytes(0), m_BufferOffset(0),
+	m_DataInterval(time_freq() / (HTTP_MAX_SPEED / HTTP_CHUNK_SIZE))
 {
 	mem_zero(&m_Addr, sizeof(m_Addr));
 }
@@ -28,11 +29,6 @@ void CHttpConnection::Close()
 
 	mem_zero(&m_Addr, sizeof(m_Addr));
 	m_State = STATE_OFFLINE;
-}
-
-int64 CHttpConnection::Interval() const
-{
-	return time_freq() / (HTTP_MAX_SPEED / HTTP_CHUNK_SIZE);
 }
 
 bool CHttpConnection::SetState(int State, const char *pMsg)
@@ -67,7 +63,7 @@ bool CHttpConnection::CompareAddr(NETADDR Addr) const
 
 bool CHttpConnection::Connect(NETADDR Addr)
 {
-	if(m_State != STATE_OFFLINE)
+	if(m_State != STATE_OFFLINE || !m_pInfo)
 		return false;
 
 	NETADDR BindAddr = { 0 };
@@ -78,31 +74,37 @@ bool CHttpConnection::Connect(NETADDR Addr)
 
 	net_set_non_blocking(m_Socket);
 
+	char aBuf[256];
 	m_Addr = Addr;
-	net_tcp_connect(m_Socket, &m_Addr);
+	if(net_tcp_connect(m_Socket, &m_Addr) != 0 && !net_would_block())
+	{
+		str_format(aBuf, sizeof(aBuf), "error: could not connect (%d)", net_errno());
+		return SetState(STATE_ERROR, aBuf);
+	}
+
 	m_LastActionTime = time_get();
 
-	char aBuf[256];
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(&m_Addr, aAddrStr, sizeof(aAddrStr), true);
 	str_format(aBuf, sizeof(aBuf), "connecting to %s", aAddrStr);
 
-	SetState(STATE_CONNECTING, aBuf);
-	return true;
+	return SetState(STATE_CONNECTING, aBuf);
 }
 
 bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 {
-	if(m_State != STATE_WAITING && m_State != STATE_CONNECTING)
+	if(IsActive())
 		return false;
 	m_pInfo = pInfo;
 	if(pInfo->m_pRequest->Finalize())
 	{
 		m_LastActionTime = time_get();
-		int NewState = m_State == STATE_CONNECTING ? STATE_CONNECTING : STATE_SENDING;
-		if(NewState == STATE_SENDING)
-			m_LastDataTime = time_get() - Interval();
-		return SetState(NewState, "new request");
+		if(g_Config.m_Debug)
+			dbg_msg("http/conn", "%d: %s", m_ID, "new request");
+		if(m_State == STATE_OFFLINE)
+			return true;
+		m_LastDataTime = time_get() - m_DataInterval;
+		return SetState(STATE_SENDING);
 	}
 	return SetState(STATE_ERROR, "error: incomplete request");
 }
@@ -111,19 +113,10 @@ bool CHttpConnection::Update()
 {
 	char aBuf[128];
 	int64 IdleTime = time_get() - m_LastActionTime;
-	if(m_State == STATE_WAITING && IdleTime > time_freq() * HTTP_KEEPALIVE_TIME)
-		return SetState(STATE_OFFLINE, "closing idle connection");
-	else if(IsActive() && IdleTime > time_freq() * HTTP_TIMEOUT)
+	if(IsActive() && IdleTime > time_freq() * HTTP_TIMEOUT)
 		return SetState(STATE_ERROR, "error: timeout");
 
-	if(m_State == STATE_SENDING || m_State == STATE_RECEIVING)
-	{
-		if(time_get() - m_LastDataTime < Interval())
-			return 0;
-		else
-			m_LastDataTime += Interval();
-	}
-
+	// TODO: improve bandwidth limiting
 	switch(m_State)
 	{
 		case STATE_CONNECTING:
@@ -138,18 +131,22 @@ bool CHttpConnection::Update()
 			}
 
 			m_LastActionTime = time_get();
-			int NewState = m_pInfo ? STATE_SENDING : STATE_WAITING;
-			return SetState(NewState, "connected");
+			m_LastDataTime = time_get() - m_DataInterval;
+			return SetState(STATE_SENDING, "connected");
 		}
 		break;
 
 		case STATE_SENDING:
 		{
+			if(time_get() - m_LastDataTime < m_DataInterval)
+				return 0;
+
 			if(m_BufferBytes == 0)
 			{
 				m_BufferBytes = m_pInfo->m_pRequest->GetData(m_aBuffer, sizeof(m_aBuffer));
 				m_BufferOffset = 0;
 			}
+
 			if(m_BufferBytes < 0)
 				return SetState(STATE_ERROR, "error: could not read request data");
 			else if(m_BufferBytes > 0)
@@ -166,36 +163,33 @@ bool CHttpConnection::Update()
 				m_BufferOffset += Size;
 
 				m_LastActionTime = time_get();
+				m_LastDataTime += m_DataInterval;
 			}
 			else // Bytes = 0
-			{
-				m_LastDataTime = time_get() - Interval();
 				return SetState(STATE_RECEIVING, "sent request");
-			}
 		}
 		break;
 
 		case STATE_RECEIVING:
 		{
-			bool ForceClose = false;
+			if(time_get() - m_LastDataTime < m_DataInterval)
+				return 0;
+
 			m_BufferBytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
 			if(m_BufferBytes < 0)
 			{
-				if(!net_would_block())
-				{
-					str_format(aBuf, sizeof(aBuf), "error: receiving data (%d)", net_errno());
-					return SetState(STATE_ERROR, aBuf);
-				}
-			}
-			else if(m_BufferBytes >= 0)
-			{
-				m_LastActionTime = time_get();
-				if(!m_pInfo->m_pResponse->Write(m_aBuffer, m_BufferBytes))
-					return SetState(STATE_ERROR, "error: parsing http");
+				if(net_would_block())
+					break;
+				str_format(aBuf, sizeof(aBuf), "error: receiving data (%d)", net_errno());
+				return SetState(STATE_ERROR, aBuf);
 			}
 
-			if(m_BufferBytes == 0)
-				ForceClose = true;
+			m_LastActionTime = time_get();
+			m_LastDataTime += m_DataInterval;
+			if(!m_pInfo->m_pResponse->Write(m_aBuffer, m_BufferBytes))
+				return SetState(STATE_ERROR, "error: parsing http");
+
+			bool ForceClose = !m_BufferBytes;
 			if(m_pInfo->m_pResponse->m_Complete)
 			{
 				if(!m_pInfo->m_pResponse->Finalize())
@@ -214,11 +208,14 @@ bool CHttpConnection::Update()
 
 		case STATE_WAITING:
 		{
+			if(IdleTime > time_freq() * HTTP_KEEPALIVE_TIME)
+				return SetState(STATE_OFFLINE, "closing idle connection");
+
 			int Bytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
-			if(Bytes < 0)
+			if(Bytes < 0 && !net_would_block())
 			{
-				if(!net_would_block())
-					return SetState(STATE_ERROR, "error: waiting");
+				str_format(aBuf, sizeof(aBuf), "error: waiting (%d)", net_errno());
+				return SetState(STATE_ERROR, aBuf);
 			}
 			else if(Bytes == 0)
 				return SetState(STATE_OFFLINE, "remote closed");

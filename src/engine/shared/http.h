@@ -245,8 +245,6 @@ class CHttpConnection
 		HTTP_MAX_SPEED=1024*100
 	};
 
-	int64 m_LastDataTime;
-
 	int m_ID;
 
 	NETSOCKET m_Socket;
@@ -254,6 +252,7 @@ class CHttpConnection
 	
 	int m_State;
 	int64 m_LastActionTime;
+	int64 m_LastDataTime;
 
 	CRequestInfo *m_pInfo;
 
@@ -261,7 +260,7 @@ class CHttpConnection
 	int m_BufferBytes;
 	int m_BufferOffset;
 
-	int64 Interval() const;
+	const int64 m_DataInterval;
 
 	void Reset();
 	void Close();

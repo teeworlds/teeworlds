@@ -154,11 +154,13 @@ void CHttpClient::FetchRequest(int Priority, int Max)
 			CHttpConnection *pConn = GetConnection(pInfo->m_Lookup.m_Addr);
 			if(pConn)
 			{
-				if(pConn->State() == CHttpConnection::STATE_OFFLINE)
-					pConn->Connect(pInfo->m_Lookup.m_Addr);
-				pConn->SetRequest(pInfo);
 				m_lPendingRequests.remove_index(i);
 				i--;
+				if(!pConn->SetRequest(pInfo))
+					continue;
+				if(pConn->State() == CHttpConnection::STATE_OFFLINE)
+					if(!pConn->Connect(pInfo->m_Lookup.m_Addr))
+						continue;
 				Num++;
 				if(Max > 0 && Num >= Max)
 					return;
