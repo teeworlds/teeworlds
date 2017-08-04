@@ -94,7 +94,11 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	char *msg;
 	int i, len;
 
-	str_format(str, sizeof(str), "[%08x][%s]: ", (int)time(0), sys);
+	char timestr[80];
+	str_timestamp_format(timestr, sizeof(timestr), FORMAT_SPACE);
+
+	str_format(str, sizeof(str), "[%s][%s]: ", timestr, sys);
+
 	len = strlen(str);
 	msg = (char *)str + len;
 
@@ -2150,16 +2154,33 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	}
 }
 
-void str_timestamp(char *buffer, int buffer_size)
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+void str_timestamp_ex(time_t time_data, char *buffer, int buffer_size, const char *format)
 {
-	time_t time_data;
 	struct tm *time_info;
-
-	time(&time_data);
 	time_info = localtime(&time_data);
-	strftime(buffer, buffer_size, "%Y-%m-%d_%H-%M-%S", time_info);
+	strftime(buffer, buffer_size, format, time_info);
 	buffer[buffer_size-1] = 0;	/* assure null termination */
 }
+
+void str_timestamp_format(char *buffer, int buffer_size, const char *format)
+{
+	time_t time_data;
+	time(&time_data);
+	str_timestamp_ex(time_data, buffer, buffer_size, format);
+}
+
+void str_timestamp(char *buffer, int buffer_size)
+{
+	str_timestamp_format(buffer, buffer_size, FORMAT_NOSPACE);
+}
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 
 int mem_comp(const void *a, const void *b, int size)
 {

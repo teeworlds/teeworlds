@@ -199,8 +199,11 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr, bool Highli
 	{
 		if(Level <= m_aPrintCB[i].m_OutputLevel && m_aPrintCB[i].m_pfnPrintCallback)
 		{
+			char aTimeBuf[80];
+			str_timestamp_format(aTimeBuf, sizeof(aTimeBuf), FORMAT_TIME);
+
 			char aBuf[1024];
-			str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
+			str_format(aBuf, sizeof(aBuf), "[%s][%s]: %s", aTimeBuf, pFrom, pStr);
 			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata, Highlighted);
 		}
 	}
