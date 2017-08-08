@@ -341,10 +341,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 
 	// flush
 	if(NumVertices > 0)
-	{
 		Graphics()->RenderQuads(aVertices, NumVertices);
-		NumVertices = 0;
-	}
 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }

@@ -49,7 +49,7 @@ void CAutoMapper::Load(const char* pTileName)
 			}
 			else
 			{
-				if(!str_comp_num(pLine, "Index", 5))
+				if(!str_comp_num(pLine, "Index", 5) && pCurrentConf)
 				{
 					// new index
 					int ID = 0;

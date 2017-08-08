@@ -371,7 +371,6 @@ void CTeecompStats::RenderGlobalStats()
 		}
 
 		CTextCursor Cursor;
-		tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
 		TextRender()->SetCursor(&Cursor, x+64, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = 220;
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
@@ -462,7 +461,6 @@ void CTeecompStats::RenderGlobalStats()
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_FlagCaptures);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1);
-			px += 100;
 		}
 		y += LineHeight;
 	}
@@ -629,7 +627,6 @@ void CTeecompStats::RenderIndividualStats()
 		y += LineHeight;
 		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Carriers killed"), pStats->m_CarriersKilled);
 		TextRender()->Text(0, x+xo, y, FontSize, aBuf, -1);
-		y += LineHeight;
 	}
 }
 
