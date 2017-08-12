@@ -10,6 +10,7 @@
 #include <engine/shared/network.h>
 #include <engine/shared/protocol.h>
 
+#include <engine/engine.h>
 #include <engine/config.h>
 #include <engine/console.h>
 #include <engine/friends.h>
@@ -74,6 +75,7 @@ void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVers
 	str_copy(m_aNetVersion, pNetVersion, sizeof(m_aNetVersion));
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
 	if(pConfig)
@@ -652,6 +654,16 @@ void CServerBrowser::Update(bool ForceResort)
 	// check if we need to resort
 	if(m_Sorthash != SortHash() || ForceResort)
 		Sort();
+
+	// check teerace host lookups
+	for(int i = 0; i < m_lHostLookups.size(); i++)
+		if(m_lHostLookups[i]->m_Job.Status() == CJob::STATE_DONE)
+		{
+			if(m_lHostLookups[i]->m_Job.Result() == 0)
+				AddTeerace(m_lHostLookups[i]->m_Addr);
+			delete m_lHostLookups[i];
+			m_lHostLookups.remove_index_fast(i--);
+		}
 }
 
 
@@ -758,6 +770,13 @@ void CServerBrowser::AddTeerace(const NETADDR &Addr)
 		str_format(aBuf, sizeof(aBuf), "added teerace, %s", aAddrStr);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
+}
+
+void CServerBrowser::AddTeeraceHostLookup(const char *pHost)
+{
+	CHostLookup *pLookup = new CHostLookup();
+	m_lHostLookups.add(pLookup);
+	m_pEngine->HostLookup(pLookup, pHost, NETTYPE_IPV4);
 }
 
 bool CServerBrowser::IsRefreshing() const

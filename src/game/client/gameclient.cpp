@@ -15,6 +15,7 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 #include <engine/shared/http.h>
+#include <engine/external/json-parser/json.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -23,8 +24,6 @@
 #include <game/version.h>
 #include <game/teerace.h> // helper
 #include "render.h"
-
-#include "webapp.h"
 
 #include "teecomp.h"
 #include "gameclient.h"
@@ -437,7 +436,7 @@ void CGameClient::OnInit()
 	// get Teerace server list
 	CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_GET, "/anonclient/servers/");
 	CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
-	pInfo->SetCallback(CClientWebapp::OnServerList, this);
+	pInfo->SetCallback(OnTeeraceServerList, this);
 	Client()->SendHttp(pInfo, pRequest);
 }
 
@@ -1571,6 +1570,36 @@ void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pU
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 		((CGameClient*)pUserData)->SendInfo(false);
+}
+
+void CGameClient::OnTeeraceServerList(IResponse *pResponse, bool Error, void *pUserData)
+{
+	CBufferResponse *pRes = (CBufferResponse*)pResponse;
+	CGameClient *pClient = (CGameClient*) pUserData;
+	bool Success = !Error && pRes->StatusCode() == 200;
+	if(!Success)
+		return;
+
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pRes->GetBody(), pRes->Size(), aError);
+	if(!pJsonData)
+		dbg_msg("json", "error: %s", aError);
+	else
+	{
+		if(pJsonData->type == json_array)
+		{
+			for(unsigned i = 0; i < pJsonData->u.array.length; i++)
+			{
+				const json_value &JsonSrv = (*pJsonData)[i];
+				if(JsonSrv.type == json_string)
+					pClient->ServerBrowser()->AddTeeraceHostLookup(JsonSrv);
+			}
+		}
+		json_value_free(pJsonData);
+	}
 }
 
 IGameClient *CreateGameClient()

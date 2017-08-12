@@ -10,7 +10,6 @@
 #include <game/localization.h>
 #include <game/gamecore.h>
 #include "render.h"
-#include "webapp.h"
 
 // TODO: find a better place for this
 bool IsVanilla(const CServerInfo *pInfo);
@@ -60,8 +59,6 @@ class CGameClient : public IGameClient
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
 
-	class CClientWebapp m_Webapp;
-
 	CLayers m_Layers;
 	class CCollision m_Collision;
 	CUI m_UI;
@@ -84,6 +81,8 @@ class CGameClient : public IGameClient
 
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
+	static void OnTeeraceServerList(class IResponse *pResponse, bool Error, void *pUserData);
+
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
 	void LoadMapSettings();
@@ -109,8 +108,6 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
-
-	class CClientWebapp *Webapp() { return &m_Webapp; }
 
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }

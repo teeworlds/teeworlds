@@ -3,6 +3,8 @@
 #ifndef ENGINE_CLIENT_SERVERBROWSER_H
 #define ENGINE_CLIENT_SERVERBROWSER_H
 
+#include <base/tl/array.h>
+
 #include <engine/serverbrowser.h>
 
 class CServerBrowser : public IServerBrowser
@@ -57,6 +59,8 @@ public:
 
 	bool IsTeerace(const NETADDR &Addr) const;
 	void AddTeerace(const NETADDR &Addr);
+	virtual void AddTeeraceHostLookup(const char *pHost);
+	
 
 	//
 	void Update(bool ForceResort);
@@ -69,6 +73,7 @@ private:
 	CNetClient *m_pNetClient;
 	IMasterServer *m_pMasterServer;
 	class IConsole *m_pConsole;
+	class IEngine *m_pEngine;
 	class IFriends *m_pFriends;
 	char m_aNetVersion[128];
 
@@ -81,6 +86,9 @@ private:
 
 	NETADDR m_aTeeraceServers[MAX_TEERACE];
 	int m_NumTeeraceServers;
+
+	// TODO: use list instead
+	array<class CHostLookup*> m_lHostLookups;
 
 	CServerEntry *m_aServerlistIp[256]; // ip hash list
 

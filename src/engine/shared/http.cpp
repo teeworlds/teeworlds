@@ -143,8 +143,7 @@ void CHttpClient::FetchRequest(int Priority, int Max)
 		{
 			pInfo->ExecuteCallback(0, true);
 			delete pInfo;
-			m_lPendingRequests.remove_index(i);
-			i--;
+			m_lPendingRequests.remove_index(i--);
 		}
 		else
 		{
@@ -154,8 +153,7 @@ void CHttpClient::FetchRequest(int Priority, int Max)
 			CHttpConnection *pConn = GetConnection(pInfo->m_Lookup.m_Addr);
 			if(pConn)
 			{
-				m_lPendingRequests.remove_index(i);
-				i--;
+				m_lPendingRequests.remove_index(i--);
 				if(!pConn->SetRequest(pInfo))
 					continue;
 				if(pConn->State() == CHttpConnection::STATE_OFFLINE)

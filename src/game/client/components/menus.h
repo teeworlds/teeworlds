@@ -135,6 +135,14 @@ class CMenus : public CComponent
 		PAGE_SYSTEM,
 	};
 
+	enum
+	{
+		TOKEN_NONE=0,
+		TOKEN_REQUESTED,
+		TOKEN_FAILED,
+		TOKEN_ERROR
+	};
+
 	int m_GamePage;
 	int m_Popup;
 	int m_ActivePage;
@@ -175,6 +183,8 @@ class CMenus : public CComponent
 	int m_SettingPlayerPage;
 	int m_IngamebrowserControlPage;
 	bool m_SearchedIngame;
+
+	int m_TeeraceTokenState;
 
 	//
 	bool m_EscapePressed;
@@ -333,6 +343,8 @@ class CMenus : public CComponent
 	void RenderSettingsChat(CUIRect MainView);
 	void RenderSettingsRace(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+
+	static void OnApiToken(class IResponse *pResponse, bool Error, void *pUserData);
 
 	// TeeComp related
 	void RenderRgbSliders(CUIRect* pMainView, CUIRect* pButton, int &r, int &g, int &b, bool Enabled);

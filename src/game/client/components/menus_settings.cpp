@@ -19,7 +19,6 @@
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
-#include <game/client/webapp.h>
 #include <game/localization.h>
 #include <game/teerace.h> // helper
 
@@ -1431,6 +1430,22 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 	}
 }
 
+void CMenus::OnApiToken(IResponse *pResponse, bool Error, void *pUserData)
+{
+	CBufferResponse *pRes = (CBufferResponse*)pResponse;
+	CMenus *pMenus = (CMenus*) pUserData;
+
+	if(Error || pRes->StatusCode() != 200)
+		pMenus->m_TeeraceTokenState = TOKEN_ERROR;
+	else if(pRes->Size() != 24+2 || str_comp(pRes->GetBody(), "false") == 0)
+		pMenus->m_TeeraceTokenState = TOKEN_FAILED;
+	else
+	{
+		str_copy(g_Config.m_WaApiToken, pRes->GetBody()+1, 24+1);
+		pMenus->m_TeeraceTokenState = TOKEN_NONE;
+	}
+}
+
 void CMenus::RenderSettingsRace(CUIRect MainView)
 {
 	CUIRect Button, ApiButton;
@@ -1495,50 +1510,72 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
 	if(DoButton_CheckBox(&g_Config.m_ClShowServerRecord, Localize("Show best time on server"), g_Config.m_ClShowServerRecord, &Button))
 		g_Config.m_ClShowServerRecord ^= 1;
-	
-	// username
+
+	LeftView.HSplitTop(10.0f, &Button, &LeftView);
+
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Username"));
-	UI()->DoLabel(&Button, aBuf, 14.0, -1);
-	Button.VSplitLeft(80.0f, 0, &Button);
-	Button.VSplitLeft(180.0f, &Button, 0);
-	static float UserOffset = 0.0f;
-	DoEditBox(g_Config.m_WaUsername, &Button, g_Config.m_WaUsername, sizeof(g_Config.m_WaUsername), 14.0f, &UserOffset);
+	UI()->DoLabel(&Button, Localize("Teerace settings"), 14.0f, -1);
 
-	LeftView.HSplitTop(5.0f, &Button, &LeftView);
-
-	// password
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
-	UI()->DoLabel(&Button, aBuf, 14.0, -1);
-	Button.VSplitLeft(80.0f, 0, &Button);
-	Button.VSplitLeft(180.0f, &Button, 0);
-	static float PassOffset = 0.0f;
-	DoEditBox(g_Config.m_WaPassword, &Button, g_Config.m_WaPassword, sizeof(g_Config.m_WaPassword), 14.0f, &PassOffset, true);
-
-	// api token box
-	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Api token"));
-	UI()->DoLabel(&Button, aBuf, 14.0, -1);
-	Button.VSplitLeft(80.0f, 0, &Button);
-	UI()->DoLabel(&Button, m_pClient->Webapp()->m_ApiTokenError ? Localize("Error requesting api token") : (g_Config.m_WaApiToken[0] == 0) ? Localize("None") : g_Config.m_WaApiToken, 14.0, -1);
-
-	LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
-	ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
-	static int s_ApiTokenButton = 0;
-	if(DoButton_Menu((void*)&s_ApiTokenButton, m_pClient->Webapp()->m_ApiTokenRequested ? Localize("Checking...") : Localize("Request api token"), m_pClient->Webapp()->m_ApiTokenRequested ? -1 : 0, &ApiButton))
+	if(!g_Config.m_WaApiToken[0])
 	{
-		m_pClient->Webapp()->m_ApiTokenRequested = true;
+		// username
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		UI()->DoLabel(&Button, Localize("Username:"), 14.0, -1);
+		Button.VSplitLeft(80.0f, 0, &Button);
+		Button.VSplitLeft(180.0f, &Button, 0);
+		static float UserOffset = 0.0f;
+		DoEditBox(g_Config.m_WaUsername, &Button, g_Config.m_WaUsername, sizeof(g_Config.m_WaUsername), 14.0f, &UserOffset);
 
-		char aData[128];
-		str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, g_Config.m_WaPassword);
-		
-		CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_POST, "/anonclient/get_token/");
-		pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
-		CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
-		pInfo->SetCallback(CClientWebapp::OnApiToken, m_pClient->Webapp());
-		Client()->SendHttp(pInfo, pRequest);
+		LeftView.HSplitTop(5.0f, &Button, &LeftView);
+
+		// password
+		static char s_aPassword[32] = {0};
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		UI()->DoLabel(&Button, Localize("Password:"), 14.0, -1);
+		Button.VSplitLeft(80.0f, 0, &Button);
+		Button.VSplitLeft(180.0f, &Button, 0);
+		static float PassOffset = 0.0f;
+		DoEditBox(&s_aPassword, &Button, s_aPassword, sizeof(s_aPassword), 14.0f, &PassOffset, true);
+		LeftView.HSplitTop(5.0f, &Button, &LeftView);
+
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if(m_TeeraceTokenState == TOKEN_ERROR)
+			UI()->DoLabel(&Button, Localize("Cannot connect to Teerace"), 14.0, -1);
+		else if(m_TeeraceTokenState == TOKEN_FAILED)
+			UI()->DoLabel(&Button, Localize("Wrong username or password"), 14.0, -1);
+
+		LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
+		ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
+		bool TokenRequested = m_TeeraceTokenState == TOKEN_REQUESTED;
+		static int s_LoginButton = 0;
+		if(DoButton_Menu(&s_LoginButton, TokenRequested ? Localize("Checking...") : Localize("Login"), TokenRequested ? -1 : 0, &ApiButton)
+			&& g_Config.m_WaUsername[0] && s_aPassword[0])
+		{
+			m_TeeraceTokenState = TOKEN_REQUESTED;
+
+			char aData[128];
+			str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, s_aPassword);
+			mem_zero(s_aPassword, sizeof(s_aPassword));
+			
+			CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_POST, "/anonclient/get_token/");
+			pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
+			CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
+			pInfo->SetCallback(CMenus::OnApiToken, this);
+			Client()->SendHttp(pInfo, pRequest);
+		}
+	}
+	else
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), Localize("Logged in as: %s"), g_Config.m_WaUsername);
+		UI()->DoLabel(&Button, aBuf, 14.0, -1);
+
+		LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
+		ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
+		static int s_LogoutButton = 0;
+		if(DoButton_Menu(&s_LogoutButton, Localize("Logout"), 0, &ApiButton))
+			mem_zero(g_Config.m_WaApiToken, sizeof(g_Config.m_WaApiToken));
 	}
 }
 

@@ -84,6 +84,8 @@ CMenus::CMenus()
 	m_SearchedIngame = false;
 
 	m_CallvoteSelectedOption = -1;
+
+	m_TeeraceTokenState = TOKEN_NONE;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)

@@ -100,6 +100,7 @@ public:
 
 	virtual bool IsTeerace(const NETADDR &Addr) const = 0;
 	virtual void AddTeerace(const NETADDR &Addr) = 0;
+	virtual void AddTeeraceHostLookup(const char *pHost) = 0;
 };
 
 #endif
