@@ -185,8 +185,8 @@ public:
 	{}
 
 	plain_range_sorted(const plain_range_sorted &r)
+	: parent(r)
 	{
-		*this = r;
 	}
 
 	plain_range_sorted(T *b, T *e)

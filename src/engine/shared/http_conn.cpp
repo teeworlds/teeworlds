@@ -12,6 +12,8 @@ CHttpConnection::CHttpConnection()
 
 CHttpConnection::~CHttpConnection()
 {
+	if(m_pInfo)
+		m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, true);
 	Close();
 	Reset();
 }

@@ -54,6 +54,7 @@ CScoreboard::CColumn::CColumn(const char* pTitle, float Width, float Offset, int
 
 CScoreboard::CScoreboard()
 {
+	m_ScoreboardPosition = vec4(0, 0, 0, 0);	
 	OnReset();
 }
 

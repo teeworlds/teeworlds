@@ -434,9 +434,6 @@ void CGameClient::OnInit()
 	g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
 
-	// init webapp
-	m_pWebapp = new CClientWebapp();
-
 	// get Teerace server list
 	CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_GET, "/anonclient/servers/");
 	CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());

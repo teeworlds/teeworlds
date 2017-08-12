@@ -43,7 +43,7 @@ public:
 	int ConfigNamesNum() { return m_lConfigs.size(); }
 	const char* GetConfigName(int Index);
 
-	const bool IsLoaded() { return m_FileLoaded; }
+	bool IsLoaded() { return m_FileLoaded; }
 private:
 	array<CConfiguration> m_lConfigs;
 	class CEditor *m_pEditor;

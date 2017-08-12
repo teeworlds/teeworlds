@@ -16,6 +16,11 @@
 
 CControls::CControls()
 {
+	m_MousePos = vec2(0,0);
+	m_TargetPos = vec2(0,0);
+	m_InputDirectionLeft = 0;
+	m_InputDirectionRight = 0;
+	mem_zero(&m_InputData, sizeof(m_InputData));
 	mem_zero(&m_LastData, sizeof(m_LastData));
 }
 
@@ -32,6 +37,8 @@ void CControls::OnReset()
 
 	m_InputDirectionLeft = 0;
 	m_InputDirectionRight = 0;
+
+	m_MousePos = vec2(0,0);
 }
 
 void CControls::OnRelease()

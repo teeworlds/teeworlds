@@ -76,6 +76,8 @@ void CCharacterCore::Reset()
 	m_HookedPlayer = -1;
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
+	m_Direction = 0;
+	mem_zero(&m_Input, sizeof(m_Input));
 	m_Teleported = false;
 	m_SpeedupTouch = false;
 	m_LastSpeedup = -1;

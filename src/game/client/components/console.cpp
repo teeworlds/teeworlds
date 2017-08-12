@@ -44,6 +44,7 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_CompletionRenderOffset = 0.0f;
 
 	m_IsCommand = false;
+	m_BacklogActPage = 0;
 }
 
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)

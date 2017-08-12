@@ -604,7 +604,7 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 	}
 	else
 	{
-		mem_zero(dst, sizeof(struct sockaddr));
+		mem_zero(dst, sizeof(NETADDR));
 		dbg_msg("system", "couldn't convert sockaddr of family %d", src->sa_family);
 	}
 }
@@ -680,6 +680,8 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types)
 	int e;
 	char host[256];
 	int port = 0;
+
+	mem_zero(addr, sizeof(NETADDR));
 
 	if(priv_net_extract(hostname, host, sizeof(host), &port))
 		return -1;

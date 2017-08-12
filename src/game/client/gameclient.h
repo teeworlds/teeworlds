@@ -7,8 +7,10 @@
 #include <engine/client.h>
 #include <engine/console.h>
 #include <game/layers.h>
+#include <game/localization.h>
 #include <game/gamecore.h>
 #include "render.h"
+#include "webapp.h"
 
 // TODO: find a better place for this
 bool IsVanilla(const CServerInfo *pInfo);
@@ -58,7 +60,7 @@ class CGameClient : public IGameClient
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
 
-	class CClientWebapp *m_pWebapp;
+	class CClientWebapp m_Webapp;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -108,7 +110,7 @@ public:
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 
-	class CClientWebapp *Webapp() { return m_pWebapp; }
+	class CClientWebapp *Webapp() { return &m_Webapp; }
 
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
@@ -348,8 +350,5 @@ inline vec3 HslToRgb(vec3 HSL)
 		return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
 	}
 }
-
-
-extern const char *Localize(const char *Str);
 
 #endif
