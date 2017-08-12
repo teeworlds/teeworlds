@@ -56,5 +56,6 @@ public:
 };
 
 
-extern const char *Localize(const char *pStr);
+extern const char *Localize(const char *pStr)
+GNUC_ATTRIBUTE((format_arg(1)));
 #endif

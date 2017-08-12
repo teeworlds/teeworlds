@@ -636,7 +636,7 @@ void CGraphics_Threaded::RenderQuads(CVertex *pVertices, int NumVertices)
 		Cmd.m_pVertices = (IGraphics::CVertex *)m_pCommandBuffer->AllocData(sizeof(IGraphics::CVertex)*NumVertices);
 		if(Cmd.m_pVertices == 0x0)
 		{
-			dbg_msg("graphics", "failed to allocate data for vertices (%d)", sizeof(IGraphics::CVertex)*NumVertices);
+			dbg_msg("graphics", "failed to allocate data for vertices (%d)", (int)sizeof(IGraphics::CVertex)*NumVertices);
 			return;
 		}
 	}

@@ -67,6 +67,11 @@ CMenus::CMenus()
 
 	m_LastInput = time_get();
 
+	m_MousePos.x = 0;
+	m_MousePos.y = 0;
+	m_SelectedIndex = 0;
+	m_ScrollOffset = 0;
+
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
 
@@ -77,6 +82,8 @@ CMenus::CMenus()
 
 	m_IngamebrowserControlPage = IServerBrowser::TYPE_INTERNET;
 	m_SearchedIngame = false;
+
+	m_CallvoteSelectedOption = -1;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -1155,18 +1162,16 @@ int CMenus::Render()
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 
 				// time left
-				const char *pTimeLeftString;
 				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left");
+					str_format(aBuf, sizeof(aBuf), TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left"), TimeLeft);
 				}
 				else
-					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
+					str_format(aBuf, sizeof(aBuf), TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left"), TimeLeft);
 				Box.HSplitTop(20.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 
 				// progress bar
