@@ -496,6 +496,13 @@ public:
 		m_FontMemoryUsage = 0;
 	}
 
+	~CTextRender()
+	{
+		if(m_pFont)
+			DestroyFont(m_pFont);
+		FT_Done_FreeType(m_FTLibrary);
+	}
+
 	virtual void Init()
 	{
 		m_pGraphics = Kernel()->RequestInterface<IGraphics>();
@@ -511,7 +518,7 @@ public:
 	{
 		CFont *pFont = (CFont *)mem_alloc(sizeof(CFont), 1);
 
-		mem_zero(pFont, sizeof(*pFont));
+		mem_zero(pFont, sizeof(CFont));
 		str_copy(pFont->m_aFilename, pFilename, sizeof(pFont->m_aFilename));
 
 		if(FT_New_Face(m_FTLibrary, pFont->m_aFilename, 0, &pFont->m_FtFace))
@@ -529,7 +536,9 @@ public:
 
 	virtual void DestroyFont(CFont *pFont)
 	{
-		m_FontMemoryUsage = 0;
+		for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
+			m_FontMemoryUsage -= 2 * pFont->m_aSizes[i].m_TextureWidth * pFont->m_aSizes[i].m_TextureHeight;
+		FT_Done_Face(pFont->m_FtFace);
 		mem_free(pFont);
 	}
 

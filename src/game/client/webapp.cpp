@@ -28,6 +28,7 @@ CClientWebapp::~CClientWebapp()
 {
 	lock_wait(gs_CheckHostLock);
 	lock_unlock(gs_CheckHostLock);
+	lock_destroy(gs_CheckHostLock);
 }
 
 void CClientWebapp::OnApiToken(IResponse *pResponse, bool Error, void *pUserData)
@@ -60,7 +61,7 @@ void CClientWebapp::OnServerList(IResponse *pResponse, bool Error, void *pUserDa
 
 	json_value *pJsonData = json_parse_ex(&JsonSettings, pRes->GetBody(), pRes->Size(), aError);
 	if(!pJsonData)
-		dbg_msg("json", aError);
+		dbg_msg("json", "error: %s", aError);
 	else
 	{
 		if(pJsonData->type == json_array)

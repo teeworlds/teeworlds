@@ -689,6 +689,21 @@ CConsole::CConsole(int FlagMask)
 	#undef MACRO_CONFIG_STR
 }
 
+CConsole::~CConsole()
+{
+	DeregisterTempAll();
+
+	CCommand *pCommand = m_pFirstCommand;
+	while(pCommand)
+	{
+		CCommand *pTmp = pCommand;
+		pCommand = pCommand->m_pNext;
+		if(pTmp->m_pfnCallback == Con_Chain)
+			mem_free(pTmp->m_pUserData);
+		delete pTmp;
+	}
+}
+
 void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 {
 	for(int i = 0; i < NumArgs; i++)
@@ -744,7 +759,7 @@ void CConsole::Register(const char *pName, const char *pParams,
 	bool DoAdd = false;
 	if(pCommand == 0)
 	{
-		pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+		pCommand = new CCommand();
 		DoAdd = true;
 	}
 	pCommand->m_pfnCallback = pfnFunc;

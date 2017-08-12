@@ -28,6 +28,22 @@ protected:
 	int m_GameTickSpeed;
 public:
 
+	IClient()
+	{
+		m_PrevGameTick = 0;
+		m_CurGameTick = 0;
+		m_GameIntraTick = 0;
+		m_GameTickTime = 0;
+
+		m_PredTick = 0;
+		m_PredIntraTick = 0;
+
+		m_LocalTime = 0;
+		m_RenderFrameTime = 0;
+
+		m_GameTickSpeed = 0;
+	}
+
 	class CSnapItem
 	{
 	public:

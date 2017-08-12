@@ -632,6 +632,7 @@ public:
 	}
 
 	virtual void Init();
+	virtual void Shutdown() { m_Map.Clean(); }
 	virtual void UpdateAndRender();
 	virtual bool HasUnsavedData() { return m_Map.m_Modified; }
 

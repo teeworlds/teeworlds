@@ -266,6 +266,7 @@ void CServer::CClient::Reset()
 	m_LastInputTick = -1;
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_Score = 0;
+	m_Latency = 0;
 }
 
 CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
@@ -1679,19 +1680,22 @@ int main(int argc, const char **argv) // ignore_convention
 	{
 		bool RegisterFail = false;
 
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pServer); // register as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap), false);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer), false);
 
 		if(RegisterFail)
+		{
+			delete pKernel;
 			return -1;
+		}
 	}
 
 	pEngine->Init();
@@ -1719,14 +1723,8 @@ int main(int argc, const char **argv) // ignore_convention
 	pServer->Run();
 
 	// free
-	delete pServer;
 	delete pKernel;
-	delete pEngineMap;
-	delete pGameServer;
-	delete pConsole;
-	delete pEngineMasterServer;
-	delete pStorage;
-	delete pConfig;
+
 	return 0;
 }
 

@@ -38,6 +38,7 @@ public:
 	};
 
 	CServerBrowser();
+	~CServerBrowser();
 
 	// interface functions
 	void Refresh(int Type);

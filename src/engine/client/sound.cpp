@@ -267,14 +267,14 @@ int CSound::Update()
 
 int CSound::Shutdown()
 {
+	for(unsigned SampleID = 0; SampleID < NUM_SAMPLES; SampleID++)
+		UnloadSample(SampleID);
+
 	SDL_CloseAudio();
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	lock_destroy(m_SoundLock);
-	if(m_pMixBuffer)
-	{
-		mem_free(m_pMixBuffer);
-		m_pMixBuffer = 0;
-	}
+	mem_free(m_pMixBuffer);
+	m_pMixBuffer = 0;
 	return 0;
 }
 
@@ -435,6 +435,17 @@ int CSound::LoadWV(const char *pFilename)
 
 	RateConvert(SampleID);
 	return SampleID;
+}
+
+void CSound::UnloadSample(int SampleID)
+{
+	if(SampleID == -1 || SampleID >= NUM_SAMPLES)
+		return;
+
+	Stop(SampleID);
+	mem_free(m_aSamples[SampleID].m_pData);
+
+	m_aSamples[SampleID].m_pData = 0x0;
 }
 
 void CSound::SetListenerPos(float x, float y)

@@ -159,6 +159,7 @@ void CSmoothTime::Init(int64 Target)
 	m_aAdjustSpeed[0] = 0.3f;
 	m_aAdjustSpeed[1] = 0.3f;
 	m_Graph.Init(0.0f, 0.5f);
+	m_SpikeCounter = 0;
 }
 
 void CSmoothTime::SetAdjustSpeed(int Direction, float Value)
@@ -306,6 +307,9 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_RecivedSnapshots = 0;
 
 	m_VersionInfo.m_State = CVersionInfo::STATE_INIT;
+
+	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
+	mem_zero(&m_ServerAddress, sizeof(m_ServerAddress));
 }
 
 // ----- send functions -----
@@ -1732,12 +1736,12 @@ void CClient::VersionUpdate()
 
 void CClient::RegisterInterfaces()
 {
-	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
-	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
-	Kernel()->RegisterInterface(static_cast<IGhostRecorder*>(&m_GhostRecorder));
-	Kernel()->RegisterInterface(static_cast<IGhostLoader*>(&m_GhostLoader));
-	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
-	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
+	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder), false);
+	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer), false);
+	Kernel()->RegisterInterface(static_cast<IGhostRecorder*>(&m_GhostRecorder), false);
+	Kernel()->RegisterInterface(static_cast<IGhostLoader*>(&m_GhostLoader), false);
+	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser), false);
+	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends), false);
 }
 
 void CClient::InitInterfaces()
@@ -1784,7 +1788,7 @@ void CClient::Run()
 
 		bool RegisterFail = false;
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IEngineGraphics*>(m_pGraphics)); // register graphics as both
-		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics));
+		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics), false);
 
 		if(RegisterFail || m_pGraphics->Init() != 0)
 		{
@@ -2041,6 +2045,8 @@ void CClient::Run()
 
 	GameClient()->OnShutdown();
 	Disconnect();
+
+	m_pEditor->Shutdown();
 
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
@@ -2427,9 +2433,7 @@ void CClient::RegisterCommands()
 
 static CClient *CreateClient()
 {
-	CClient *pClient = static_cast<CClient *>(mem_alloc(sizeof(CClient), 1));
-	mem_zero(pClient, sizeof(CClient));
-	return new(pClient) CClient;
+	return new CClient();
 }
 
 /*
@@ -2487,26 +2491,29 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineSound*>(pEngineSound)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ISound*>(pEngineSound));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ISound*>(pEngineSound), false);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineInput*>(pEngineInput)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IInput*>(pEngineInput));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IInput*>(pEngineInput), false);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineTextRender*>(pEngineTextRender)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ITextRender*>(pEngineTextRender));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ITextRender*>(pEngineTextRender), false);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap), false);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer), false);
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
 
 		if(RegisterFail)
+		{
+			delete pKernel;
 			return -1;
+		}
 	}
 
 	pEngine->Init();
@@ -2543,6 +2550,8 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// write down the config and quit
 	pConfig->Save();
+
+	delete pKernel;
 
 	return 0;
 }

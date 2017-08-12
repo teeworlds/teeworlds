@@ -62,6 +62,12 @@ CServerBrowser::CServerBrowser()
 	m_BroadcastTime = 0;
 }
 
+CServerBrowser::~CServerBrowser()
+{
+	mem_free(m_ppServerlist);
+	mem_free(m_pSortedServerlist);
+}
+
 void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVersion)
 {
 	m_pNetClient = pClient;
