@@ -37,8 +37,6 @@ void CControls::OnReset()
 
 	m_InputDirectionLeft = 0;
 	m_InputDirectionRight = 0;
-
-	m_MousePos = vec2(0,0);
 }
 
 void CControls::OnRelease()
