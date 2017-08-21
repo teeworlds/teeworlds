@@ -76,7 +76,7 @@ function ContentCompile(action, output)
 end
 
 
-function GenerateCommonSettings(settings)
+function GenerateCommonSettings(settings, conf, arch, compiler)
 	if compiler == "gcc" or compiler == "clang" then
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 	end
@@ -102,7 +102,7 @@ function GenerateCommonSettings(settings)
 	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json}
 end
 
-function GenerateMacOSXSettings(settings, conf, arch)
+function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
 		settings.cc.flags:Add("-arch i386")
 		settings.link.flags:Add("-arch i386")
@@ -130,7 +130,7 @@ function GenerateMacOSXSettings(settings, conf, arch)
 	settings.link.frameworks:Add("Carbon")
 	settings.link.frameworks:Add("AppKit")
 
-	GenerateCommonSettings(settings, conf, arch)
+	GenerateCommonSettings(settings, conf, arch, compiler)
 
 	-- Build server launcher before adding game stuff
 	local serverlaunch = Link(settings, "serverlaunch", Compile(settings, "src/osxlaunch/server.m"))
@@ -160,7 +160,7 @@ function GenerateMacOSXSettings(settings, conf, arch)
 	BuildContent(settings)
 end
 
-function GenerateLinuxSettings(settings, conf, arch)
+function GenerateLinuxSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
 		settings.cc.flags:Add("-m32")
 		settings.link.flags:Add("-m32")
@@ -173,7 +173,7 @@ function GenerateLinuxSettings(settings, conf, arch)
 	end
 	settings.link.libs:Add("pthread")
 
-	GenerateCommonSettings(settings, conf, arch)
+	GenerateCommonSettings(settings, conf, arch, compiler)
 
 	-- Master server, version server and tools
 	BuildEngineCommon(settings)
@@ -197,11 +197,11 @@ function GenerateLinuxSettings(settings, conf, arch)
 	BuildContent(settings)
 end
 
-function GenerateSolarisSettings(settings, conf, arch)
+function GenerateSolarisSettings(settings, conf, arch, compiler)
 	settings.link.libs:Add("socket")
 	settings.link.libs:Add("nsl")
 
-	GenerateLinuxSettings(settings, conf, arch)
+	GenerateLinuxSettings(settings, conf, arch, compiler)
 end
 
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
@@ -233,7 +233,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.libs:Add("shell32")
 	settings.link.libs:Add("advapi32")
 
-	GenerateCommonSettings(settings, conf, target_arch)
+	GenerateCommonSettings(settings, conf, target_arch, compiler)
 
 	-- Master server, version server and tools
 	BuildEngineCommon(settings)
@@ -408,11 +408,11 @@ function GenerateSettings(conf, arch, builddir, compiler)
 		GenerateWindowsSettings(settings, conf, arch, compiler)
 	elseif family == "unix" then
 		if platform == "macosx" then
-			GenerateMacOSXSettings(settings, conf, arch)
+			GenerateMacOSXSettings(settings, conf, arch, compiler)
 		elseif platform == "solaris" then
-			GenerateSolarisSettings(settings, conf, arch)
+			GenerateSolarisSettings(settings, conf, arch, compiler)
 		else -- Linux, BSD
-			GenerateLinuxSettings(settings, conf, arch)
+			GenerateLinuxSettings(settings, conf, arch, compiler)
 		end
 	end
 
