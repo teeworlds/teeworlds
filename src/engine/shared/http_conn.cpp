@@ -96,6 +96,7 @@ bool CHttpConnection::SetRequest(CRequestInfo *pInfo)
 	m_pInfo = pInfo;
 	if(pInfo->m_pRequest->Finalize())
 	{
+		m_BufferBytes = 0;
 		m_LastActionTime = time_get();
 		if(g_Config.m_Debug)
 			dbg_msg("http/conn", "%d: %s", m_ID, "new request");
@@ -173,8 +174,8 @@ bool CHttpConnection::Update()
 			if(time_get() - m_LastDataTime < m_DataInterval)
 				return 0;
 
-			m_BufferBytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
-			if(m_BufferBytes < 0)
+			int Bytes = net_tcp_recv(m_Socket, m_aBuffer, sizeof(m_aBuffer));
+			if(Bytes < 0)
 			{
 				if(net_would_block())
 					break;
@@ -184,15 +185,14 @@ bool CHttpConnection::Update()
 
 			m_LastActionTime = time_get();
 			m_LastDataTime += m_DataInterval;
-			if(!m_pInfo->m_pResponse->Write(m_aBuffer, m_BufferBytes))
+			if(!m_pInfo->m_pResponse->Write(m_aBuffer, Bytes))
 				return SetState(STATE_ERROR, "error: parsing http");
 
-			bool ForceClose = !m_BufferBytes;
+			bool ForceClose = !Bytes;
 			if(m_pInfo->m_pResponse->m_Complete)
 			{
 				if(!m_pInfo->m_pResponse->Finalize())
 					return SetState(STATE_ERROR, "error: incomplete response");
-				m_BufferBytes = 0;
 
 				bool Disconnect = m_pInfo->m_pResponse->m_Close || ForceClose;
 				m_pInfo->ExecuteCallback(m_pInfo->m_pResponse, false);
