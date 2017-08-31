@@ -338,12 +338,12 @@ int CGhost::Load(const char *pFilename)
 		return false;
 	}
 
-	// create ghost
-	CGhostItem Ghost;
-	Ghost.m_lPath.set_size(NumTicks);
+	// select ghost
+	CGhostItem *pGhost = &m_aActiveGhosts[Slot];
+	pGhost->m_lPath.set_size(NumTicks);
 
 	// read player info
-	str_copy(Ghost.m_aOwner, pHeader->m_aOwner, sizeof(pHeader->m_aOwner));
+	str_copy(pGhost->m_aOwner, pHeader->m_aOwner, sizeof(pHeader->m_aOwner));
 
 	int Index = 0;
 	bool FoundSkin = false;
@@ -360,31 +360,33 @@ int CGhost::Load(const char *pFilename)
 				FoundSkin = true;
 				char aSkinName[64];
 				IntsToStr(&Skin.m_Skin0, 6, aSkinName);
-				InitRenderInfos(&Ghost.m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
+				InitRenderInfos(&pGhost->m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
 
 				static const int s_aTeamColors[2] = { 65387, 10223467 };
 				for(int i = 0; i < 2; i++)
 					if(Skin.m_UseCustomColor && Skin.m_ColorBody == s_aTeamColors[i] && Skin.m_ColorFeet == s_aTeamColors[i])
-						Ghost.m_Team = i;
+						pGhost->m_Team = i;
 			}
 		}
 		else if(Type == GHOSTDATA_TYPE_CHARACTER)
 		{
 			CGhostCharacter Char;
 			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
-				Ghost.m_lPath[Index++] = CGhostTools::GetNetObjCharacter(Char);
+				pGhost->m_lPath[Index++] = CGhostTools::GetNetObjCharacter(Char);
 		}
 	}
 
 	GhostLoader()->Close();
 
 	if(Index != NumTicks)
-		return false;
+	{
+		pGhost->Reset();
+		return -1;
+	}
 
 	if(!FoundSkin)
-		InitRenderInfos(&Ghost.m_RenderInfo, "default", 0, 0, 0);
+		InitRenderInfos(&pGhost->m_RenderInfo, "default", 0, 0, 0);
 
-	m_aActiveGhosts[Slot] = Ghost;
 	return Slot;
 }
 
