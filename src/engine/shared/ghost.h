@@ -17,8 +17,8 @@ public:
 	char m_aData[MAX_ITEM_SIZE];
 	int m_Type;
 
-	CGhostItem();
-	CGhostItem(int Type);
+	CGhostItem() : m_Type(-1) {}
+	CGhostItem(int Type) : m_Type(Type) {}
 };
 
 class CGhostRecorder : public IGhostRecorder
@@ -68,14 +68,14 @@ public:
 
 	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pMap, unsigned Crc);
 	void Close();
-	CGhostHeader GetHeader() { return m_Header; }
+	const CGhostHeader *GetHeader() const { return &m_Header; }
 
 	bool ReadNextType(int *pType);
 	bool ReadData(int Type, char *pData, int Size);
 
 	bool GetGhostInfo(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, CGhostHeader *pGhostHeader, const char *pMap, unsigned Crc) const;
-	int GetTime(CGhostHeader Header);
-	int GetTicks(CGhostHeader Header);
+	int GetTime(const CGhostHeader *pHeader) const;
+	int GetTicks(const CGhostHeader *pHeader) const;
 };
 
 class CGhostUpdater
@@ -132,7 +132,7 @@ class CGhostUpdater
 		int m_ColorFeet;
 	};
 
-	static const int ms_ChostCharacterSize = 11 * sizeof(int);
+	static const int ms_GhostCharacterSize = 11 * sizeof(int);
 
 	static CGhostRecorder ms_Recorder;
 

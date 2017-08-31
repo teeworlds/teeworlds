@@ -807,7 +807,7 @@ int CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType
 	CGhostItem Item;
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
-	Item.m_Time = pSelf->GhostLoader()->GetTime(Header);
+	Item.m_Time = pSelf->GhostLoader()->GetTime(&Header);
 	pSelf->m_lGhosts.add(Item);
 	return 0;
 }

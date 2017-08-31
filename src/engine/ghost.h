@@ -36,13 +36,13 @@ public:
 	virtual ~IGhostLoader() {}
 	virtual void Close() = 0;
 
-	virtual CGhostHeader GetHeader() = 0;
+	virtual const CGhostHeader *GetHeader() const = 0;
 
 	virtual bool ReadNextType(int *pType) = 0;
 	virtual bool ReadData(int Type, char *pData, int Size) = 0;
 
-	virtual int GetTime(CGhostHeader Header) = 0;
-	virtual int GetTicks(CGhostHeader Header) = 0;
+	virtual int GetTime(const CGhostHeader *pHeader) const = 0;
+	virtual int GetTicks(const CGhostHeader *pHeader) const = 0;
 };
 
 #endif

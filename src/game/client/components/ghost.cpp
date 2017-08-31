@@ -93,7 +93,7 @@ void CGhost::OnRender()
 
 			// detecting death, needed because teerace allows immediate respawning
 			if(!m_Recording && IsStart(PrevPos, Pos) && (m_LastDeathTick == -1 || m_LastDeathTick < PrevTick))
-					StartRecord();
+				StartRecord();
 
 			if(m_Recording)
 			{
@@ -169,19 +169,16 @@ void CGhost::OnRender()
 
 		m_pClient->m_pPlayers->RenderHook(&Prev, &Player, &pGhost->m_RenderInfo, -2);
 		m_pClient->m_pPlayers->RenderPlayer(&Prev, &Player, &pGhost->m_RenderInfo, -2);
-		RenderGhostNamePlate(Prev, Player, pGhost->m_aOwner);
+		if(g_Config.m_ClGhostNamePlates)
+			RenderGhostNamePlate(Prev, Player, pGhost->m_aOwner);
 	}
 }
 
 void CGhost::RenderGhostNamePlate(CNetObj_Character Prev, CNetObj_Character Player, const char *pName)
 {
-	if(!g_Config.m_ClGhostNamePlates)
-		return;
-
 	float IntraTick = Client()->PredIntraGameTick();
 
 	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
-
 	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 
 	// render name plate
@@ -321,16 +318,20 @@ void CGhost::StopRender()
 	m_Rendering = false;
 }
 
-int CGhost::Load(const char* pFilename)
+int CGhost::Load(const char *pFilename)
 {
+	int Slot = GetSlot();
+	if(Slot == -1)
+		return -1;
+
 	if(!Client()->GhostLoader_Load(pFilename))
 		return false;
 
 	// read header
-	CGhostHeader Header = GhostLoader()->GetHeader();
+	const CGhostHeader *pHeader = GhostLoader()->GetHeader();
 
-	int NumTicks = GhostLoader()->GetTicks(Header);
-	int Time = GhostLoader()->GetTime(Header);
+	int NumTicks = GhostLoader()->GetTicks(pHeader);
+	int Time = GhostLoader()->GetTime(pHeader);
 	if(NumTicks <= 0 || Time <= 0)
 	{
 		GhostLoader()->Close();
@@ -341,8 +342,8 @@ int CGhost::Load(const char* pFilename)
 	CGhostItem Ghost;
 	Ghost.m_lPath.set_size(NumTicks);
 
-	// read client info
-	str_copy(Ghost.m_aOwner, Header.m_aOwner, sizeof(Ghost.m_aOwner));
+	// read player info
+	str_copy(Ghost.m_aOwner, pHeader->m_aOwner, sizeof(pHeader->m_aOwner));
 
 	int Index = 0;
 	bool FoundSkin = false;
@@ -361,9 +362,9 @@ int CGhost::Load(const char* pFilename)
 				IntsToStr(&Skin.m_Skin0, 6, aSkinName);
 				InitRenderInfos(&Ghost.m_RenderInfo, aSkinName, Skin.m_UseCustomColor, Skin.m_ColorBody, Skin.m_ColorFeet);
 
-				const int aTeamColors[2] = { 65387, 10223467 };
+				static const int s_aTeamColors[2] = { 65387, 10223467 };
 				for(int i = 0; i < 2; i++)
-					if(Skin.m_UseCustomColor && Skin.m_ColorBody == aTeamColors[i] && Skin.m_ColorFeet == aTeamColors[i])
+					if(Skin.m_UseCustomColor && Skin.m_ColorBody == s_aTeamColors[i] && Skin.m_ColorFeet == s_aTeamColors[i])
 						Ghost.m_Team = i;
 			}
 		}
@@ -382,9 +383,8 @@ int CGhost::Load(const char* pFilename)
 
 	if(!FoundSkin)
 		InitRenderInfos(&Ghost.m_RenderInfo, "default", 0, 0, 0);
-	int Slot = GetSlot();
-	if(Slot != -1)
-		m_aActiveGhosts[Slot] = Ghost;
+
+	m_aActiveGhosts[Slot] = Ghost;
 	return Slot;
 }
 
@@ -400,7 +400,7 @@ void CGhost::ConGPlay(IConsole::IResult *pResult, void *pUserData)
 
 void CGhost::OnConsoleInit()
 {
-	Console()->Register("gplay","", CFGFLAG_CLIENT, ConGPlay, this, "");
+	Console()->Register("gplay", "", CFGFLAG_CLIENT, ConGPlay, this, "");
 }
 
 void CGhost::OnMessage(int MsgType, void *pRawMsg)

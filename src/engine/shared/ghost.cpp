@@ -12,16 +12,6 @@
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
 static const unsigned char gs_ActVersion = 4;
 
-CGhostItem::CGhostItem() : m_Type(-1)
-{
-	mem_zero(m_aData, sizeof(m_aData));
-}
-
-CGhostItem::CGhostItem(int Type) : m_Type(Type)
-{
-	mem_zero(m_aData, sizeof(m_aData));
-}
-
 CGhostRecorder::CGhostRecorder()
 {
 	m_File = 0;
@@ -65,25 +55,20 @@ int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pF
 
 void CGhostRecorder::ResetBuffer()
 {
-	mem_zero(m_aBuffer, sizeof(m_aBuffer));
 	m_pBufferPos = m_aBuffer;
 	m_BufferNumItems = 0;
 }
 
-static int DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
+static void DiffItem(int *pPast, int *pCurrent, int *pOut, int Size)
 {
-	int Needed = 0;
 	while(Size)
 	{
 		*pOut = *pCurrent - *pPast;
-		Needed |= *pOut;
 		pOut++;
 		pPast++;
 		pCurrent++;
 		Size--;
 	}
-
-	return Needed;
 }
 
 void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
@@ -119,10 +104,6 @@ void CGhostRecorder::FlushChunk()
 
 	if(!m_File || Size == 0)
 		return;
-
-	//char aBuf[256];
-	//str_format(aBuf, sizeof(aBuf), "Writing %d items of type %d", m_BufferNumItems, Type);
-	//m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost_recorder", aBuf);
 
 	while(Size&3)
 		m_aBuffer[Size++] = 0;
@@ -180,7 +161,6 @@ CGhostLoader::CGhostLoader()
 
 void CGhostLoader::ResetBuffer()
 {
-	mem_zero(m_aBuffer, sizeof(m_aBuffer));
 	m_pBufferPos = m_aBuffer;
 	m_BufferNumItems = 0;
 	m_BufferCurItem = 0;
@@ -232,7 +212,6 @@ int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const
 
 	ResetBuffer();
 
-	// ready for playback
 	return 0;
 }
 
@@ -248,8 +227,7 @@ int CGhostLoader::ReadChunk(int *pType)
 		return -1;
 
 	*pType = aChunk[0];
-	int Size = 0;
-	Size = (aChunk[2] << 8) | aChunk[3];
+	int Size = (aChunk[2] << 8) | aChunk[3];
 	m_BufferNumItems = aChunk[1];
 
 	if(Size > MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK || Size <= 0)
@@ -300,7 +278,7 @@ bool CGhostLoader::ReadNextType(int *pType)
 
 static void UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
 {
-	while (Size)
+	while(Size)
 	{
 		*pOut = *pPast + *pDiff;
 		pOut++;
@@ -382,14 +360,14 @@ bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, class IConsole *pConso
 	return true;
 }
 
-int CGhostLoader::GetTime(CGhostHeader Header)
+int CGhostLoader::GetTime(const CGhostHeader *pHeader) const
 {
-	return (Header.m_aTime[0] << 24) | (Header.m_aTime[1] << 16) | (Header.m_aTime[2] << 8) | (Header.m_aTime[3]);
+	return (pHeader->m_aTime[0] << 24) | (pHeader->m_aTime[1] << 16) | (pHeader->m_aTime[2] << 8) | (pHeader->m_aTime[3]);
 }
 
-int CGhostLoader::GetTicks(CGhostHeader Header)
+int CGhostLoader::GetTicks(const CGhostHeader *pHeader) const
 {
-	return (Header.m_aNumTicks[0] << 24) | (Header.m_aNumTicks[1] << 16) | (Header.m_aNumTicks[2] << 8) | (Header.m_aNumTicks[3]);
+	return (pHeader->m_aNumTicks[0] << 24) | (pHeader->m_aNumTicks[1] << 16) | (pHeader->m_aNumTicks[2] << 8) | (pHeader->m_aNumTicks[3]);
 }
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)
@@ -507,10 +485,10 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 		}
 
 		char *pTmp = aData;
-		for(int i = 0; i < DataSize / ms_ChostCharacterSize; i++)
+		for(int i = 0; i < DataSize / ms_GhostCharacterSize; i++)
 		{
-			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_ChostCharacterSize);
-			pTmp += ms_ChostCharacterSize;
+			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_GhostCharacterSize);
+			pTmp += ms_GhostCharacterSize;
 			Index++;
 		}
 	}
