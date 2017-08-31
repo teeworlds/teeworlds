@@ -30,49 +30,53 @@ CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
 int IRace::TimeFromSecondsStr(const char *pStr)
 {
 	int Time = str_toint(pStr) * 1000;
-	while(*pStr >= '0' && *pStr <= '9') pStr++;
+	while(*pStr >= '0' && *pStr <= '9')
+		pStr++;
 	if(*pStr == '.' || *pStr == ',')
 	{
 		pStr++;
-		const int Mult[3] = { 100, 10, 1 };
+		static const int s_aMult[3] = { 100, 10, 1 };
 		for(int i = 0; pStr[i] >= '0' && pStr[i] <= '9' && i < 3; i++)
-			Time += (pStr[i] - '0') * Mult[i];
+			Time += (pStr[i] - '0') * s_aMult[i];
 	}
 	return Time;
 }
 
 int IRace::TimeFromStr(const char *pStr)
 {
-	static const char *pMinutesStr = " minute(s) ";
-	static const char *pSecondsStr = " second(s)";
+	static const char *s_pMinutesStr = " minute(s) ";
+	static const char *s_pSecondsStr = " second(s)";
 
-	const char *pSeconds = str_find(pStr, pSecondsStr);
-	if (!pSeconds)
+	const char *pSeconds = str_find(pStr, s_pSecondsStr);
+	if(!pSeconds)
 		return 0;
 
-	const char *pMinutes = str_find(pStr, pMinutesStr);
-	if (pMinutes)
-		return str_toint(pStr) * 60 * 1000 + (int)TimeFromSecondsStr(pMinutes + str_length(pMinutesStr));
+	const char *pMinutes = str_find(pStr, s_pMinutesStr);
+	if(pMinutes)
+		return str_toint(pStr) * 60 * 1000 + TimeFromSecondsStr(pMinutes + str_length(s_pMinutesStr));
 	else
 		return TimeFromSecondsStr(pStr);
 }
 
 int IRace::TimeFromFinishMessage(const char *pStr, char *pNameBuf, int NameBufSize)
 {
-	static const char *pFinishedStr = " finished in: ";
-	const char *pFinished = str_find(pStr, pFinishedStr);
+	static const char *s_pFinishedStr = " finished in: ";
+	const char *pFinished = str_find(pStr, s_pFinishedStr);
+	if(!pFinished)
+		return 0;
+
 	int FinishedPos = pFinished - pStr;
-	if (!pFinished || FinishedPos == 0 || FinishedPos >= NameBufSize)
+	if(FinishedPos == 0 || FinishedPos >= NameBufSize)
 		return 0;
 
 	str_copy(pNameBuf, pStr, FinishedPos + 1);
 
-	return TimeFromStr(pFinished + str_length(pFinishedStr));
+	return TimeFromStr(pFinished + str_length(s_pFinishedStr));
 }
 
 void IRace::FormatTimeLong(char *pBuf, int Size, int Time, bool ForceMinutes)
 {
-	if (!ForceMinutes && Time < 60 * 1000)
+	if(!ForceMinutes && Time < 60 * 1000)
 		str_format(pBuf, Size, "%d.%03d second(s)", Time / 1000, Time % 1000);
 	else
 		str_format(pBuf, Size, "%d minute(s) %d.%03d second(s)", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);
@@ -80,7 +84,7 @@ void IRace::FormatTimeLong(char *pBuf, int Size, int Time, bool ForceMinutes)
 
 void IRace::FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes)
 {
-	if (!ForceMinutes && Time < 60 * 1000)
+	if(!ForceMinutes && Time < 60 * 1000)
 		str_format(pBuf, Size, "%d.%03d", Time / 1000, Time % 1000);
 	else
 		str_format(pBuf, Size, "%02d:%02d.%03d", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);
@@ -89,9 +93,9 @@ void IRace::FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes)
 void IRace::FormatTimeDiff(char *pBuf, int Size, int Time, bool Milli)
 {
 	int PosDiff = absolute(Time);
-	const char *pSign = Time < 0 ? "-" : "+";
+	char Sign = Time < 0 ? '-' : '+';
 	if(Milli)
-		str_format(pBuf, Size, "%s%d.%03d", pSign, PosDiff / 1000, PosDiff % 1000);
+		str_format(pBuf, Size, "%c%d.%03d", Sign, PosDiff / 1000, PosDiff % 1000);
 	else
-		str_format(pBuf, Size, "%s%d.%02d", pSign, PosDiff / 1000, (PosDiff % 1000) / 10);
+		str_format(pBuf, Size, "%c%d.%02d", Sign, PosDiff / 1000, (PosDiff % 1000) / 10);
 }
