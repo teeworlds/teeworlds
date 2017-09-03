@@ -30,6 +30,8 @@ CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
 int IRace::TimeFromSecondsStr(const char *pStr)
 {
 	int Time = str_toint(pStr) * 1000;
+	while(*pStr == ' ') // skip leading spaces
+		pStr++;
 	while(*pStr >= '0' && *pStr <= '9')
 		pStr++;
 	if(*pStr == '.' || *pStr == ',')
