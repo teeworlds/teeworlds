@@ -2203,10 +2203,10 @@ void CClient::RaceDemo_GetName(char *pBuf, int Size, int Time)
 	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
 	ClearFilename(aPlayerName);
 
-	if (Time < 0)
+	if(Time < 0)
 		str_format(pBuf, Size, "%s_%s_tmp", m_aCurrentMap, aPlayerName);
 	else
-		str_format(pBuf, Size, "%s_%d_%s", m_aCurrentMap, Time, aPlayerName);
+		str_format(pBuf, Size, "%s_%d.%03d_%s", m_aCurrentMap, Time / 1000, Time % 1000, aPlayerName);
 }
 
 void CClient::RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName)
@@ -2240,7 +2240,7 @@ void CClient::Ghost_GetPath(char *pBuf, int Size, int Time)
 	if(Time < 0)
 		str_format(pBuf, Size, "ghosts/%s_%08x_%s_tmp.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName);
 	else
-		str_format(pBuf, Size, "ghosts/%s_%08x_%s_%d.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName, Time);
+		str_format(pBuf, Size, "ghosts/%s_%08x_%s_%d.%03d.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName, Time / 1000, Time % 1000);
 }
 
 void CClient::GhostRecorder_Start()
