@@ -20,8 +20,8 @@ class CFlow : public CComponent
 	void DbgRender();
 public:
 	CFlow();
-
-	virtual void OnShutdown();
+	~CFlow();
+	
 	virtual void OnMapLoad();
 
 	void GetWindow(int *StartY, int *StartX, int *EndY, int *EndX);

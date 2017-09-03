@@ -25,6 +25,9 @@ private:
 		int m_Team;
 
 		CGhostItem() { Reset(); }
+
+		bool Empty() { return m_lPath.size() == 0; }
+
 		void Reset()
 		{
 			m_lPath.clear();
@@ -32,6 +35,9 @@ private:
 			m_Team = -1;
 		}
 	};
+
+	class IGhostLoader *m_pGhostLoader;
+	class IGhostRecorder *m_pGhostRecorder;
 
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
@@ -41,7 +47,6 @@ private:
 	int m_StartRenderTick;
 	int m_LastRecordTick;
 	int m_LastDeathTick;
-	int m_CurPos;
 	bool m_Rendering;
 	bool m_Recording;
 
@@ -50,12 +55,10 @@ private:
 	void AddInfos(CNetObj_Character Char);
 	int GetSlot();
 
-	bool IsStart(vec2 PrevPos, vec2 Pos);
-
 	void MirrorChar(CNetObj_Character *pChar, int Middle);
 
 	void StartRecord();
-	void StopRecord(int Time=0);
+	void StopRecord(int Time = 0);
 	void StartRender();
 	void StopRender();
 	void RenderGhostNamePlate(CNetObj_Character Prev, CNetObj_Character Player, const char *pName);
@@ -70,7 +73,6 @@ public:
 	virtual void OnRender();
 	virtual void OnConsoleInit();
 	virtual void OnReset();
-	virtual void OnShutdown();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
@@ -83,6 +85,9 @@ public:
 	bool IsMirrored(int Slot) const { return m_aActiveGhosts[Slot].m_Mirror; };
 
 	bool IsMapSymmetric() const { return m_SymmetricMap; }
+
+	class IGhostLoader *GhostLoader() const { return m_pGhostLoader; }
+	class IGhostRecorder *GhostRecorder() const { return m_pGhostRecorder; }
 };
 
 #endif

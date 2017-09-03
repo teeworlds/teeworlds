@@ -168,8 +168,6 @@ void CGameClient::OnConsoleInit()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pDemoPlayer = Kernel()->RequestInterface<IDemoPlayer>();
 	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
-	m_pGhostLoader = Kernel()->RequestInterface<IGhostLoader>();
-	m_pGhostRecorder = Kernel()->RequestInterface<IGhostRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
@@ -826,9 +824,8 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 
 void CGameClient::OnShutdown()
 {
-	m_pFlow->OnShutdown();
-	m_pRaceDemo->OnShutdown();
-	m_pGhost->OnShutdown();
+	m_pRaceDemo->OnReset();
+	m_pGhost->OnReset();
 }
 
 void CGameClient::OnEnterGame() {}
@@ -1600,6 +1597,20 @@ void CGameClient::OnTeeraceServerList(IResponse *pResponse, bool Error, void *pU
 		}
 		json_value_free(pJsonData);
 	}
+}
+
+bool CGameClient::IsRaceStart(vec2 PrevPos, vec2 Pos)
+{
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
+	int EnemyTeam = m_aClients[m_Snap.m_LocalClientID].m_Team ^ 1;
+	int TilePos = Collision()->CheckRaceTile(PrevPos, Pos, CCollision::RACECHECK_TILES_MAIN);
+	if(!IsFastCap(&ServerInfo) && Collision()->GetIndex(TilePos) == TILE_BEGIN)
+		return true;
+	if(IsFastCap(&ServerInfo) && m_aFlagIndex[EnemyTeam] != -1 && distance(Pos, Collision()->GetPos(m_aFlagIndex[EnemyTeam])) < 32)
+		return true;
+	return false;
 }
 
 IGameClient *CreateGameClient()

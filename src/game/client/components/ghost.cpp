@@ -20,7 +20,6 @@ CGhost::CGhost()
 	: m_StartRenderTick(-1),
 	m_LastRecordTick(-1),
 	m_LastDeathTick(-1),
-	m_CurPos(0),
 	m_Rendering(false),
 	m_Recording(false),
 	m_SymmetricMap(false)
@@ -37,23 +36,9 @@ void CGhost::AddInfos(CNetObj_Character Char)
 int CGhost::GetSlot()
 {
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
-		if(!m_aActiveGhosts[i].m_lPath.size())
+		if(m_aActiveGhosts[i].Empty())
 			return i;
 	return -1;
-}
-
-bool CGhost::IsStart(vec2 PrevPos, vec2 Pos)
-{
-	CServerInfo ServerInfo;
-	Client()->GetServerInfo(&ServerInfo);
-
-	int EnemyTeam = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team ^ 1;
-	int TilePos = m_pClient->Collision()->CheckRaceTile(PrevPos, Pos, CCollision::RACECHECK_TILES_MAIN);
-	if(!IsFastCap(&ServerInfo) && m_pClient->Collision()->GetIndex(TilePos) == TILE_BEGIN)
-		return true;
-	if(IsFastCap(&ServerInfo) && m_pClient->m_aFlagIndex[EnemyTeam] != -1 && distance(Pos, m_pClient->Collision()->GetPos(m_pClient->m_aFlagIndex[EnemyTeam])) < 32)
-		return true;
-	return false;
 }
 
 void CGhost::MirrorChar(CNetObj_Character *pChar, int Middle)
@@ -81,7 +66,7 @@ void CGhost::OnRender()
 		{
 			vec2 PrevPos = m_pClient->m_PredictedPrevChar.m_Pos;
 			vec2 Pos = m_pClient->m_PredictedChar.m_Pos;
-			if(!m_Rendering && IsStart(PrevPos, Pos))
+			if(!m_Rendering && m_pClient->IsRaceStart(PrevPos, Pos))
 				StartRender();
 		}
 
@@ -91,8 +76,8 @@ void CGhost::OnRender()
 			vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
 			vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
 
-			// detecting death, needed because teerace allows immediate respawning
-			if(!m_Recording && IsStart(PrevPos, Pos) && (m_LastDeathTick == -1 || m_LastDeathTick < PrevTick))
+			// detecting death, needed because race allows immediate respawning
+			if(!m_Recording && m_pClient->IsRaceStart(PrevPos, Pos) && m_LastDeathTick < PrevTick)
 				StartRecord();
 
 			if(m_Recording)
@@ -137,8 +122,8 @@ void CGhost::OnRender()
 	if(!m_Rendering)
 		return;
 
-	m_CurPos = Client()->PredGameTick()-m_StartRenderTick;
-	if(m_CurPos < 0)
+	int CurPos = Client()->PredGameTick() - m_StartRenderTick;
+	if(CurPos < 0)
 	{
 		StopRender();
 		return;
@@ -147,11 +132,11 @@ void CGhost::OnRender()
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 	{
 		CGhostItem *pGhost = &m_aActiveGhosts[i];
-		if(m_CurPos >= pGhost->m_lPath.size())
+		if(CurPos >= pGhost->m_lPath.size())
 			continue;
 
-		int PrevPos = (m_CurPos > 0) ? m_CurPos-1 : m_CurPos;
-		CNetObj_Character Player = pGhost->m_lPath[m_CurPos];
+		int PrevPos = max(0, CurPos - 1);
+		CNetObj_Character Player = pGhost->m_lPath[CurPos];
 		CNetObj_Character Prev = pGhost->m_lPath[PrevPos];
 
 		if(pGhost->m_Mirror && IsFastCap(&ServerInfo))
@@ -262,12 +247,7 @@ void CGhost::StopRecord(int Time)
 	if(Time && (!pOwnGhost || Time < pOwnGhost->m_Time))
 	{
 		// add to active ghosts
-		int Slot;
-		if(pOwnGhost)
-			Slot = pOwnGhost->m_Slot;
-		else
-			Slot = GetSlot();
-
+		int Slot = pOwnGhost ? pOwnGhost->m_Slot : GetSlot();
 		if(Slot != -1)
 			m_aActiveGhosts[Slot] = m_CurGhost;
 
@@ -306,7 +286,6 @@ void CGhost::StopRecord(int Time)
 
 void CGhost::StartRender()
 {
-	m_CurPos = 0;
 	m_Rendering = true;
 	m_StartRenderTick = Client()->PredGameTick();
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
@@ -402,6 +381,9 @@ void CGhost::ConGPlay(IConsole::IResult *pResult, void *pUserData)
 
 void CGhost::OnConsoleInit()
 {
+	m_pGhostLoader = Kernel()->RequestInterface<IGhostLoader>();
+	m_pGhostRecorder = Kernel()->RequestInterface<IGhostRecorder>();
+
 	Console()->Register("gplay", "", CFGFLAG_CLIENT, ConGPlay, this, "");
 }
 
@@ -447,11 +429,6 @@ void CGhost::OnReset()
 	StopRecord();
 	StopRender();
 	m_LastDeathTick = -1;
-}
-
-void CGhost::OnShutdown()
-{
-	OnReset();
 }
 
 void CGhost::OnMapLoad()

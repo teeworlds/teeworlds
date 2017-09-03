@@ -16,6 +16,12 @@ CFlow::CFlow()
 	m_Spacing = 16;
 }
 
+CFlow::~CFlow()
+{
+	if(m_pCells)
+		mem_free(m_pCells);
+}
+
 void CFlow::DbgRender()
 {
 	if(!m_pCells)
@@ -61,18 +67,6 @@ void CFlow::OnMapLoad()
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 			m_pCells[y*m_Width+x].m_Vel = vec2(0,0);
-}
-
-void CFlow::OnShutdown()
-{
-	if(m_pCells)
-	{
-		mem_free(m_pCells);
-		m_pCells = 0;
-	}
-
-	m_Height = 0;
-	m_Width = 0;
 }
 
 void CFlow::Update()

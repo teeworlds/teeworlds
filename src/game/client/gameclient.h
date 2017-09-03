@@ -53,8 +53,6 @@ class CGameClient : public IGameClient
 	class IStorage *m_pStorage;
 	class IDemoPlayer *m_pDemoPlayer;
 	class IDemoRecorder *m_pDemoRecorder;
-	class IGhostLoader *m_pGhostLoader;
-	class IGhostRecorder *m_pGhostRecorder;
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
@@ -100,8 +98,6 @@ public:
 	class ITextRender *TextRender() const { return m_pTextRender; }
 	class IDemoPlayer *DemoPlayer() const { return m_pDemoPlayer; }
 	class IDemoRecorder *DemoRecorder() const { return m_pDemoRecorder; }
-	class IGhostLoader *GhostLoader() const { return m_pGhostLoader; }
-	class IGhostRecorder *GhostRecorder() const { return m_pGhostRecorder; }
 	class IServerBrowser *ServerBrowser() const { return m_pServerBrowser; }
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
 	class CLayers *Layers() { return &m_Layers; };
@@ -287,6 +283,8 @@ public:
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();
 	virtual const char *NetVersion();
+
+	bool IsRaceStart(vec2 PrevPos, vec2 Pos);
 
 
 	// actions

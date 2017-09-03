@@ -26,8 +26,6 @@ protected:
 	class IConsole *Console() const { return m_pClient->Console(); }
 	class IDemoPlayer *DemoPlayer() const { return m_pClient->DemoPlayer(); }
 	class IDemoRecorder *DemoRecorder() const { return m_pClient->DemoRecorder(); }
-	class IGhostLoader *GhostLoader() const { return m_pClient->GhostLoader(); }
-	class IGhostRecorder *GhostRecorder() const { return m_pClient->GhostRecorder(); }
 	class IServerBrowser *ServerBrowser() const { return m_pClient->ServerBrowser(); }
 	class CLayers *Layers() const { return m_pClient->Layers(); }
 	class CCollision *Collision() const { return m_pClient->Collision(); }
