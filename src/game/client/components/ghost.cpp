@@ -331,6 +331,12 @@ int CGhost::Load(const char *pFilename)
 	int Type;
 	while(GhostLoader()->ReadNextType(&Type))
 	{
+		if(Index == NumTicks && Type == GHOSTDATA_TYPE_CHARACTER)
+		{
+			Index = -1;
+			break;
+		}
+
 		if(Type == GHOSTDATA_TYPE_SKIN)
 		{
 			CGhostSkin Skin;
