@@ -45,6 +45,7 @@ int CGhostRecorder::Start(IStorage *pStorage, IConsole *pConsole, const char *pF
 	Header.m_aCrc[3] = (Crc)&0xff;
 	io_write(m_File, &Header, sizeof(Header));
 
+	m_LastItem.Reset();
 	ResetBuffer();
 	
 	char aBuf[256];
@@ -210,6 +211,7 @@ int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const
 		return -1;
 	}
 
+	m_LastItem.Reset();
 	ResetBuffer();
 
 	return 0;

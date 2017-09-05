@@ -19,6 +19,7 @@ public:
 
 	CGhostItem() : m_Type(-1) {}
 	CGhostItem(int Type) : m_Type(Type) {}
+	void Reset() { m_Type = -1; }
 };
 
 class CGhostRecorder : public IGhostRecorder
