@@ -986,128 +986,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 }
 
-class CLanguage
-{
-public:
-	CLanguage() {}
-	CLanguage(const char *n, const char *f, int Code) : m_Name(n), m_FileName(f), m_CountryCode(Code) {}
-
-	string m_Name;
-	string m_FileName;
-	int m_CountryCode;
-
-	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
-};
-
-void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
-{
-	IOHANDLE File = pStorage->OpenFile("languages/index.txt", IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
-		return;
-	}
-
-	char aOrigin[128];
-	char aReplacement[128];
-	CLineReader LineReader;
-	LineReader.Init(File);
-	char *pLine;
-	while((pLine = LineReader.Get()))
-	{
-		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
-			continue;
-
-		str_copy(aOrigin, pLine, sizeof(aOrigin));
-
-		pLine = LineReader.Get();
-		if(!pLine)
-		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
-			break;
-		}
-
-		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			(void)LineReader.Get();
-			continue;
-		}
-		str_copy(aReplacement, pLine+3, sizeof(aReplacement));
-
-		pLine = LineReader.Get();
-		if(!pLine)
-		{
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
-			break;
-		}
-
-		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
-			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
-			continue;
-		}
-
-		char aFileName[128];
-		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
-		pLanguages->add(CLanguage(aReplacement, aFileName, str_toint(pLine+3)));
-	}
-	io_close(File);
-}
-
-void CMenus::RenderLanguageSelection(CUIRect MainView)
-{
-	static int s_LanguageList = 0;
-	static int s_SelectedLanguage = 0;
-	static sorted_array<CLanguage> s_Languages;
-	static float s_ScrollValue = 0;
-
-	if(s_Languages.size() == 0)
-	{
-		s_Languages.add(CLanguage("English", "", 826));
-		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
-		for(int i = 0; i < s_Languages.size(); i++)
-			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
-			{
-				s_SelectedLanguage = i;
-				break;
-			}
-	}
-
-	int OldSelected = s_SelectedLanguage;
-
-	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
-
-	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
-	{
-		CListboxItem Item = UiDoListboxNextItem(&r.front());
-
-		if(Item.m_Visible)
-		{
-			CUIRect Rect;
-			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
-			Rect.VMargin(6.0f, &Rect);
-			Rect.HMargin(3.0f, &Rect);
-			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
-			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
-			Item.m_Rect.HSplitTop(2.0f, 0, &Item.m_Rect);
- 			UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
-		}
-	}
-
-	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
-
-	if(OldSelected != s_SelectedLanguage)
-	{
-		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
-		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
-	}
-}
-
 class CFontFile
 {
 public:
@@ -1576,6 +1454,128 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 		static int s_LogoutButton = 0;
 		if(DoButton_Menu(&s_LogoutButton, Localize("Logout"), 0, &ApiButton))
 			mem_zero(g_Config.m_WaApiToken, sizeof(g_Config.m_WaApiToken));
+	}
+}
+
+class CLanguage
+{
+public:
+	CLanguage() {}
+	CLanguage(const char *n, const char *f, int Code) : m_Name(n), m_FileName(f), m_CountryCode(Code) {}
+
+	string m_Name;
+	string m_FileName;
+	int m_CountryCode;
+
+	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
+};
+
+void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
+{
+	IOHANDLE File = pStorage->OpenFile("languages/index.txt", IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
+		return;
+	}
+
+	char aOrigin[128];
+	char aReplacement[128];
+	CLineReader LineReader;
+	LineReader.Init(File);
+	char *pLine;
+	while((pLine = LineReader.Get()))
+	{
+		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
+			continue;
+
+		str_copy(aOrigin, pLine, sizeof(aOrigin));
+
+		pLine = LineReader.Get();
+		if(!pLine)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
+			break;
+		}
+
+		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+			(void)LineReader.Get();
+			continue;
+		}
+		str_copy(aReplacement, pLine+3, sizeof(aReplacement));
+
+		pLine = LineReader.Get();
+		if(!pLine)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
+			break;
+		}
+
+		if(pLine[0] != '=' || pLine[1] != '=' || pLine[2] != ' ')
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", aOrigin);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+			continue;
+		}
+
+		char aFileName[128];
+		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", aOrigin);
+		pLanguages->add(CLanguage(aReplacement, aFileName, str_toint(pLine+3)));
+	}
+	io_close(File);
+}
+
+void CMenus::RenderLanguageSelection(CUIRect MainView)
+{
+	static int s_LanguageList = 0;
+	static int s_SelectedLanguage = 0;
+	static sorted_array<CLanguage> s_Languages;
+	static float s_ScrollValue = 0;
+
+	if(s_Languages.size() == 0)
+	{
+		s_Languages.add(CLanguage("English", "", 826));
+		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
+		for(int i = 0; i < s_Languages.size(); i++)
+			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
+			{
+				s_SelectedLanguage = i;
+				break;
+			}
+	}
+
+	int OldSelected = s_SelectedLanguage;
+
+	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+
+	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+		{
+			CUIRect Rect;
+			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
+			Rect.VMargin(6.0f, &Rect);
+			Rect.HMargin(3.0f, &Rect);
+			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
+			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
+			Item.m_Rect.HSplitTop(2.0f, 0, &Item.m_Rect);
+ 			UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+		}
+	}
+
+	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	if(OldSelected != s_SelectedLanguage)
+	{
+		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
+		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
 }
 
