@@ -108,7 +108,7 @@ void CGhostRecorder::FlushChunk()
 
 	while(Size&3)
 		m_aBuffer[Size++] = 0;
-	Size = CVariableInt::Compress(m_aBuffer, Size, aBuffer);
+	Size = CVariableInt::Compress(m_aBuffer, Size, aBuffer, sizeof(aBuffer));
 	Size = CNetBase::Compress(aBuffer, Size, m_aBuffer, sizeof(m_aBuffer));
 
 	aChunk[0] = Type&0xff;
@@ -248,7 +248,7 @@ int CGhostLoader::ReadChunk(int *pType)
 		return -1;
 	}
 
-	Size = CVariableInt::Decompress(aDecompressed, Size, m_aBuffer);
+	Size = CVariableInt::Decompress(aDecompressed, Size, m_aBuffer, sizeof(m_aBuffer));
 	if(Size < 0)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during intpack decompression");
@@ -479,7 +479,7 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 			break;
 		}
 
-		DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData);
+		DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData, sizeof(aData));
 		if(DataSize < 0)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during intpack decompression");
