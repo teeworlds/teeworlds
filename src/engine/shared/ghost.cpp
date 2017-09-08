@@ -498,7 +498,7 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 		char *pTmp = s_aData;
 		for(int i = 0; i < DataSize / ms_GhostCharacterSize; i++)
 		{
-			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_GhostCharacterSize);
+			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER_NO_TICK */, pTmp, ms_GhostCharacterSize);
 			pTmp += ms_GhostCharacterSize;
 			Index++;
 		}

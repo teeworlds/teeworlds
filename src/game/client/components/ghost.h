@@ -21,6 +21,7 @@ private:
 		CTeeRenderInfo m_RenderInfo;
 		array<CNetObj_Character> m_lPath;
 		char m_aOwner[MAX_NAME_LENGTH];
+		int m_PlaybackPos;
 		bool m_Mirror;
 		int m_Team;
 
@@ -31,6 +32,7 @@ private:
 		void Reset()
 		{
 			m_lPath.clear();
+			m_PlaybackPos = 0;
 			m_Mirror = false;
 			m_Team = -1;
 		}
@@ -42,17 +44,14 @@ private:
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
-	int m_TickDiff[MAX_ACTIVE_GHOSTS];
-
 	int m_StartRenderTick;
-	int m_LastRecordTick;
 	int m_LastDeathTick;
 	bool m_Rendering;
 	bool m_Recording;
 
 	bool m_SymmetricMap;
 
-	void AddInfos(CNetObj_Character Char);
+	void AddInfos(const CNetObj_Character *pChar);
 	int GetSlot();
 
 	void MirrorChar(CNetObj_Character *pChar, int Middle);
@@ -61,7 +60,7 @@ private:
 	void StopRecord(int Time = 0);
 	void StartRender();
 	void StopRender();
-	void RenderGhostNamePlate(CNetObj_Character Prev, CNetObj_Character Player, const char *pName);
+	void RenderGhostNamePlate(const CNetObj_Character *pPrev, const CNetObj_Character *pPlayer, float IntraTick, const char *pName);
 	
 	void InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet);
 

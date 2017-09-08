@@ -16,19 +16,17 @@
 #include "players.h"
 #include "ghost.h"
 
-CGhost::CGhost()
-	: m_StartRenderTick(-1),
-	m_LastRecordTick(-1),
-	m_LastDeathTick(-1),
-	m_Rendering(false),
-	m_Recording(false),
-	m_SymmetricMap(false)
-{ }
+CGhost::CGhost() : m_StartRenderTick(-1), m_LastDeathTick(-1), m_Rendering(false), m_Recording(false), m_SymmetricMap(false) {}
 
-void CGhost::AddInfos(CNetObj_Character Char)
+void CGhost::AddInfos(const CNetObj_Character *pChar)
 {
-	CGhostCharacter GhostChar = CGhostTools::GetGhostCharacter(Char);
-	m_CurGhost.m_lPath.add(CGhostTools::GetNetObjCharacter(GhostChar));
+	CGhostCharacter GhostChar;
+	CGhostTools::GetGhostCharacter(&GhostChar, pChar);
+	GhostChar.m_Tick = pChar->m_Tick;
+	CNetObj_Character Data;
+	CGhostTools::GetNetObjCharacter(&Data, &GhostChar);
+	Data.m_Tick = GhostChar.m_Tick;
+	m_CurGhost.m_lPath.add(Data);
 	if(GhostRecorder()->IsRecording())
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, (const char*)&GhostChar, sizeof(GhostChar));
 }
@@ -81,40 +79,7 @@ void CGhost::OnRender()
 				StartRecord();
 
 			if(m_Recording)
-			{
-				// writing the tick into the file would be better than this
-				// but it would require changes to the ghost file format
-				CNetObj_Character NewChar = *m_pClient->m_Snap.m_pLocalCharacter;
-
-				if(m_LastRecordTick != -1)
-				{
-					int NewTicks = Client()->GameTick() - m_LastRecordTick;
-					CNetObj_Character LastRecordChar = m_CurGhost.m_lPath.all().back();
-					if(LastRecordChar.m_Angle < 0 && NewChar.m_Angle > pi*256)
-						LastRecordChar.m_Angle += 2*pi*256;
-					else if(LastRecordChar.m_Angle > pi*256 && NewChar.m_Angle < 0)
-						NewChar.m_Angle += 2*pi*256;
-					// make sure that we have one item per tick
-					for(int i = 1; i < NewTicks; i++)
-					{
-						float Intra = i / (float)NewTicks;
-						CNetObj_Character TmpChar = LastRecordChar;
-						vec2 Position = mix(vec2(TmpChar.m_X, TmpChar.m_Y), vec2(NewChar.m_X, NewChar.m_Y), Intra);
-						vec2 HookPos = mix(vec2(TmpChar.m_HookX, TmpChar.m_HookY), vec2(NewChar.m_HookX, NewChar.m_HookY), Intra);
-						TmpChar.m_X = round_to_int(Position.x);
-						TmpChar.m_Y = round_to_int(Position.y);
-						TmpChar.m_VelX = round_to_int(mix((float)TmpChar.m_VelX, (float)NewChar.m_VelX, Intra));
-						TmpChar.m_VelY = round_to_int(mix((float)TmpChar.m_VelY, (float)NewChar.m_VelY, Intra));
-						TmpChar.m_Angle = round_to_int(mix((float)TmpChar.m_Angle, (float)NewChar.m_Angle, Intra));
-						TmpChar.m_HookX = round_to_int(HookPos.x);
-						TmpChar.m_HookY = round_to_int(HookPos.y);
-						AddInfos(TmpChar);
-					}
-				}
-
-				m_LastRecordTick = Client()->GameTick();
-				AddInfos(NewChar);
-			}
+				AddInfos(m_pClient->m_Snap.m_pLocalCharacter);
 		}
 	}
 
@@ -122,19 +87,31 @@ void CGhost::OnRender()
 	if(!m_Rendering)
 		return;
 
-	int CurPos = Client()->PredGameTick() - m_StartRenderTick;
-	if(CurPos < 0)
-	{
-		StopRender();
-		return;
-	}
+	int ActiveGhosts = 0;
+	int PlaybackTick = Client()->PredGameTick() - m_StartRenderTick;
 
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
 	{
 		CGhostItem *pGhost = &m_aActiveGhosts[i];
-		if(CurPos >= pGhost->m_lPath.size())
+		if(pGhost->Empty())
 			continue;
 
+		bool End = false;
+		int GhostTick = pGhost->m_lPath[0].m_Tick + PlaybackTick;
+		while(pGhost->m_lPath[pGhost->m_PlaybackPos].m_Tick < GhostTick && !End)
+		{
+			if(pGhost->m_PlaybackPos < pGhost->m_lPath.size() - 1)
+				pGhost->m_PlaybackPos++;
+			else
+				End = true;
+		}
+
+		if(End)
+			continue;
+
+		ActiveGhosts++;
+
+		int CurPos = pGhost->m_PlaybackPos;
 		int PrevPos = max(0, CurPos - 1);
 		CNetObj_Character Player = pGhost->m_lPath[CurPos];
 		CNetObj_Character Prev = pGhost->m_lPath[PrevPos];
@@ -148,22 +125,26 @@ void CGhost::OnRender()
 			MirrorChar(&Prev, Middle);
 		}
 
-		if(!m_TickDiff[i] && Player.m_AttackTick != Prev.m_AttackTick)
-			m_TickDiff[i] = Client()->GameTick() - Player.m_AttackTick;
-		Player.m_AttackTick += m_TickDiff[i];
+		int TickDiff = Player.m_Tick - Prev.m_Tick;
+		float IntraTick = 0.f;
+		if(TickDiff > 0)
+			IntraTick = (GhostTick - Prev.m_Tick - 1 + Client()->PredIntraGameTick()) / TickDiff;
 
-		m_pClient->m_pPlayers->RenderHook(&Prev, &Player, &pGhost->m_RenderInfo, -2);
-		m_pClient->m_pPlayers->RenderPlayer(&Prev, &Player, &pGhost->m_RenderInfo, -2);
+		Player.m_AttackTick += Client()->GameTick() - GhostTick;
+
+		m_pClient->m_pPlayers->RenderHook(&Prev, &Player, &pGhost->m_RenderInfo, -2, IntraTick);
+		m_pClient->m_pPlayers->RenderPlayer(&Prev, &Player, &pGhost->m_RenderInfo, -2, IntraTick);
 		if(g_Config.m_ClGhostNamePlates)
-			RenderGhostNamePlate(Prev, Player, pGhost->m_aOwner);
+			RenderGhostNamePlate(&Prev, &Player, IntraTick, pGhost->m_aOwner);
 	}
+
+	if(!ActiveGhosts)
+		StopRender();
 }
 
-void CGhost::RenderGhostNamePlate(CNetObj_Character Prev, CNetObj_Character Player, const char *pName)
+void CGhost::RenderGhostNamePlate(const CNetObj_Character *pPrev, const CNetObj_Character *pPlayer, float IntraTick, const char *pName)
 {
-	float IntraTick = Client()->PredIntraGameTick();
-
-	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pPlayer->m_X, pPlayer->m_Y), IntraTick);
 	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 
 	// render name plate
@@ -212,7 +193,6 @@ void CGhost::InitRenderInfos(CTeeRenderInfo *pRenderInfo, const char *pSkinName,
 void CGhost::StartRecord()
 {
 	m_Recording = true;
-	m_LastRecordTick = -1;
 	m_CurGhost.Reset();
 
 	CGameClient::CClientData ClientData = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID];
@@ -289,7 +269,7 @@ void CGhost::StartRender()
 	m_Rendering = true;
 	m_StartRenderTick = Client()->PredGameTick();
 	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
-		m_TickDiff[i] = 0;
+		m_aActiveGhosts[i].m_PlaybackPos = 0;
 }
 
 void CGhost::StopRender()
@@ -326,12 +306,13 @@ int CGhost::Load(const char *pFilename)
 
 	int Index = 0;
 	bool FoundSkin = false;
+	bool NoTick = false;
 
 	// read data
 	int Type;
 	while(GhostLoader()->ReadNextType(&Type))
 	{
-		if(Index == NumTicks && Type == GHOSTDATA_TYPE_CHARACTER)
+		if(Index == NumTicks && (Type == GHOSTDATA_TYPE_CHARACTER || Type == GHOSTDATA_TYPE_CHARACTER_NO_TICK))
 		{
 			Index = -1;
 			break;
@@ -353,11 +334,21 @@ int CGhost::Load(const char *pFilename)
 						pGhost->m_Team = i;
 			}
 		}
+		else if(Type == GHOSTDATA_TYPE_CHARACTER_NO_TICK)
+		{
+			NoTick = true;
+			CGhostCharacter_NoTick Char;
+			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
+				CGhostTools::GetNetObjCharacter(&pGhost->m_lPath[Index++], &Char);
+		}
 		else if(Type == GHOSTDATA_TYPE_CHARACTER)
 		{
 			CGhostCharacter Char;
 			if(GhostLoader()->ReadData(Type, (char*)&Char, sizeof(Char)))
-				pGhost->m_lPath[Index++] = CGhostTools::GetNetObjCharacter(Char);
+			{
+				CGhostTools::GetNetObjCharacter(&pGhost->m_lPath[Index], &Char);
+				pGhost->m_lPath[Index++].m_Tick = Char.m_Tick;
+			}
 		}
 	}
 
@@ -367,6 +358,16 @@ int CGhost::Load(const char *pFilename)
 	{
 		pGhost->Reset();
 		return -1;
+	}
+
+	if(NoTick)
+	{
+		int StartTick = 0;
+		for(int i = 1; i < NumTicks; i++) // estimate start tick
+			if(pGhost->m_lPath[i].m_AttackTick != pGhost->m_lPath[i-1].m_AttackTick)
+				StartTick = pGhost->m_lPath[i].m_AttackTick - i;
+		for(int i = 0; i < NumTicks; i++)
+			pGhost->m_lPath[i].m_Tick = StartTick + i;
 	}
 
 	if(!FoundSkin)

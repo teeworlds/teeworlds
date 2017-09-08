@@ -86,7 +86,8 @@ void CPlayers::RenderHook(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
 	const CTeeRenderInfo *pRenderInfo,
-	int ClientID
+	int ClientID,
+	float Intra
 	)
 {
 	CNetObj_Character Prev;
@@ -98,7 +99,7 @@ void CPlayers::RenderHook(
 
 	float IntraTick = Client()->IntraGameTick();
 	if(ClientID < 0)
-		IntraTick = Client()->PredIntraGameTick();
+		IntraTick = Intra;
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -190,7 +191,8 @@ void CPlayers::RenderPlayer(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
 	const CTeeRenderInfo *pRenderInfo,
-	int ClientID
+	int ClientID,
+	float Intra
 	)
 {
 	CNetObj_Character Prev;
@@ -207,7 +209,7 @@ void CPlayers::RenderPlayer(
 
 	float IntraTick = Client()->IntraGameTick();
 	if(ClientID < 0)
-		IntraTick = Client()->PredIntraGameTick();
+		IntraTick = Intra;
 
 	if(Prev.m_Angle < 0 && Player.m_Angle > pi*256)
 		Prev.m_Angle += 2*pi*256;

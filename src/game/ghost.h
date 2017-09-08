@@ -6,6 +6,7 @@
 enum
 {
 	GHOSTDATA_TYPE_SKIN = 0,
+	GHOSTDATA_TYPE_CHARACTER_NO_TICK,
 	GHOSTDATA_TYPE_CHARACTER
 };
 
@@ -22,7 +23,7 @@ struct CGhostSkin
 	int m_ColorFeet;
 };
 
-struct CGhostCharacter
+struct CGhostCharacter_NoTick
 {
 	int m_X;
 	int m_Y;
@@ -37,46 +38,45 @@ struct CGhostCharacter
 	int m_AttackTick;
 };
 
+struct CGhostCharacter : public CGhostCharacter_NoTick
+{
+	int m_Tick;
+};
+
 class CGhostTools
 {
 public:
-	static CGhostCharacter GetGhostCharacter(CNetObj_Character Char)
+	static void GetGhostCharacter(CGhostCharacter_NoTick *pGhostChar, const CNetObj_Character *pChar)
 	{
-		CGhostCharacter Player;
-		Player.m_X = Char.m_X;
-		Player.m_Y = Char.m_Y;
-		Player.m_VelX = Char.m_VelX;
-		Player.m_VelY = 0;
-		Player.m_Angle = Char.m_Angle;
-		Player.m_Direction = Char.m_Direction;
-		Player.m_Weapon = Char.m_Weapon;
-		Player.m_HookState = Char.m_HookState;
-		Player.m_HookX = Char.m_HookX;
-		Player.m_HookY = Char.m_HookY;
-		Player.m_AttackTick = Char.m_AttackTick;
-
-		return Player;
+		pGhostChar->m_X = pChar->m_X;
+		pGhostChar->m_Y = pChar->m_Y;
+		pGhostChar->m_VelX = pChar->m_VelX;
+		pGhostChar->m_VelY = 0;
+		pGhostChar->m_Angle = pChar->m_Angle;
+		pGhostChar->m_Direction = pChar->m_Direction;
+		pGhostChar->m_Weapon = pChar->m_Weapon;
+		pGhostChar->m_HookState = pChar->m_HookState;
+		pGhostChar->m_HookX = pChar->m_HookX;
+		pGhostChar->m_HookY = pChar->m_HookY;
+		pGhostChar->m_AttackTick = pChar->m_AttackTick;
 	}
 
-	static CNetObj_Character GetNetObjCharacter(CGhostCharacter Char)
+	static void GetNetObjCharacter(CNetObj_Character *pChar, const CGhostCharacter_NoTick *pGhostChar)
 	{
-		CNetObj_Character Player;
-		mem_zero(&Player, sizeof(Player));
-		Player.m_X = Char.m_X;
-		Player.m_Y = Char.m_Y;
-		Player.m_VelX = Char.m_VelX;
-		Player.m_VelY = 0;
-		Player.m_Angle = Char.m_Angle;
-		Player.m_Direction = Char.m_Direction;
-		Player.m_Weapon = Char.m_Weapon == WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_GUN;
-		Player.m_HookState = Char.m_HookState;
-		Player.m_HookX = Char.m_HookX;
-		Player.m_HookY = Char.m_HookY;
-		Player.m_AttackTick = Char.m_AttackTick;
+		mem_zero(pChar, sizeof(CNetObj_Character));
+		pChar->m_X = pGhostChar->m_X;
+		pChar->m_Y = pGhostChar->m_Y;
+		pChar->m_VelX = pGhostChar->m_VelX;
+		pChar->m_VelY = 0;
+		pChar->m_Angle = pGhostChar->m_Angle;
+		pChar->m_Direction = pGhostChar->m_Direction;
+		pChar->m_Weapon = pGhostChar->m_Weapon == WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_GUN;
+		pChar->m_HookState = pGhostChar->m_HookState;
+		pChar->m_HookX = pGhostChar->m_HookX;
+		pChar->m_HookY = pGhostChar->m_HookY;
+		pChar->m_AttackTick = pGhostChar->m_AttackTick;
 
-		Player.m_HookedPlayer = -1;
-
-		return Player;
+		pChar->m_HookedPlayer = -1;
 	}
 };
 
