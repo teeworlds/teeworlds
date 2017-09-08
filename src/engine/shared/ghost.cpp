@@ -395,8 +395,15 @@ CGhostRecorder CGhostUpdater::ms_Recorder;
 
 bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename)
 {
+	pStorage->CreateFolder("ghosts/backup", IStorage::TYPE_SAVE);
+
+	const char *pExtractedName = pFilename;
+	for(const char *pSrc = pFilename; *pSrc; pSrc++)
+		if(*pSrc == '/' || *pSrc == '\\')
+			pExtractedName = pSrc + 1;
+
 	char aBackupFilename[512];
-	str_format(aBackupFilename, sizeof(aBackupFilename), "%s.old", pFilename);
+	str_format(aBackupFilename, sizeof(aBackupFilename), "ghosts/backup/%s", pExtractedName);
 	if(!pStorage->RenameFile(pFilename, aBackupFilename, IStorage::TYPE_SAVE))
 		return false;
 
