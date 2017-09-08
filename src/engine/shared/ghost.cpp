@@ -11,6 +11,7 @@
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
 static const unsigned char gs_ActVersion = 4;
+static const int gs_NumTicksOffset = 93;
 
 CGhostRecorder::CGhostRecorder()
 {
@@ -97,7 +98,8 @@ void CGhostRecorder::WriteData(int Type, const char *pData, int Size)
 
 void CGhostRecorder::FlushChunk()
 {
-	char aBuffer[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	static char s_aBuffer[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	static char s_aBuffer2[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
 	unsigned char aChunk[4];
 
 	int Size = m_pBufferPos - m_aBuffer;
@@ -108,8 +110,8 @@ void CGhostRecorder::FlushChunk()
 
 	while(Size&3)
 		m_aBuffer[Size++] = 0;
-	Size = CVariableInt::Compress(m_aBuffer, Size, aBuffer, sizeof(aBuffer));
-	Size = CNetBase::Compress(aBuffer, Size, m_aBuffer, sizeof(m_aBuffer));
+	Size = CVariableInt::Compress(m_aBuffer, Size, s_aBuffer, sizeof(s_aBuffer));
+	Size = CNetBase::Compress(s_aBuffer, Size, s_aBuffer2, sizeof(s_aBuffer2));
 
 	aChunk[0] = Type&0xff;
 	aChunk[1] = m_BufferNumItems&0xff;
@@ -117,7 +119,7 @@ void CGhostRecorder::FlushChunk()
 	aChunk[3] = (Size)&0xff;
 
 	io_write(m_File, aChunk, sizeof(aChunk));
-	io_write(m_File, m_aBuffer, Size);
+	io_write(m_File, s_aBuffer2, Size);
 
 	ResetBuffer();
 }
@@ -145,7 +147,7 @@ int CGhostRecorder::Stop(int Ticks, int Time)
 	aTime[3] = (Time)&0xff;
 	
 	// write down num shots and time
-	io_seek(m_File, sizeof(CGhostHeader)-8, IOSEEK_START);
+	io_seek(m_File, gs_NumTicksOffset, IOSEEK_START);
 	io_write(m_File, &aNumTicks, sizeof(aNumTicks));
 	io_write(m_File, &aTime, sizeof(aTime));
 	
@@ -219,8 +221,8 @@ int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const
 
 int CGhostLoader::ReadChunk(int *pType)
 {
-	static char aCompresseddata[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
-	static char aDecompressed[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	static char s_aCompresseddata[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
+	static char s_aDecompressed[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
 	unsigned char aChunk[4];
 
 	ResetBuffer();
@@ -235,20 +237,20 @@ int CGhostLoader::ReadChunk(int *pType)
 	if(Size > MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK || Size <= 0)
 		return -1;
 
-	if(io_read(m_File, aCompresseddata, Size) != (unsigned)Size)
+	if(io_read(m_File, s_aCompresseddata, Size) != (unsigned)Size)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error reading chunk");
 		return -1;
 	}
 
-	Size = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
+	Size = CNetBase::Decompress(s_aCompresseddata, Size, s_aDecompressed, sizeof(s_aDecompressed));
 	if(Size < 0)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during network decompression");
 		return -1;
 	}
 
-	Size = CVariableInt::Decompress(aDecompressed, Size, m_aBuffer, sizeof(m_aBuffer));
+	Size = CVariableInt::Decompress(s_aDecompressed, Size, m_aBuffer, sizeof(m_aBuffer));
 	if(Size < 0)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost", "error during intpack decompression");
@@ -426,7 +428,7 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 		Ticks = ExtHeader.m_NumShots;
 		Time = ExtHeader.m_Time * 1000;
 
-		int Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
+		unsigned Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
 		ms_Recorder.Start(pStorage, pConsole, pFilename, ExtHeader.m_aMap, Crc, ExtHeader.m_aOwner);
 
 		CGhostSkin Skin;
@@ -442,7 +444,7 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 		Ticks = ExtHeader.m_NumShots;
 		Time = ExtHeader.m_Time * 1000;
 
-		int Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
+		unsigned Crc = (ExtHeader.m_aCrc[0] << 24) | (ExtHeader.m_aCrc[1] << 16) | (ExtHeader.m_aCrc[2] << 8) | (ExtHeader.m_aCrc[3]);
 		ms_Recorder.Start(pStorage, pConsole, pFilename, ExtHeader.m_aMap, Crc, ExtHeader.m_aOwner);
 
 		CGhostSkin Skin;
@@ -457,36 +459,36 @@ bool CGhostUpdater::Update(class IStorage *pStorage, class IConsole *pConsole, c
 	int Index = 0;
 	while(Index < Ticks)
 	{
-		static char aCompresseddata[100 * 500];
-		static char aDecompressed[100 * 500];
-		static char aData[100 * 500];
+		static char s_aCompresseddata[100 * 500];
+		static char s_aDecompressed[100 * 500];
+		static char s_aData[100 * 500];
 
 		unsigned char aSize[4];
 		if(io_read(File, aSize, sizeof(aSize)) != sizeof(aSize))
 			break;
 		unsigned Size = (aSize[0] << 24) | (aSize[1] << 16) | (aSize[2] << 8) | aSize[3];
 
-		if(io_read(File, aCompresseddata, Size) != Size)
+		if(io_read(File, s_aCompresseddata, Size) != Size)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error reading chunk");
 			break;
 		}
 
-		int DataSize = CNetBase::Decompress(aCompresseddata, Size, aDecompressed, sizeof(aDecompressed));
+		int DataSize = CNetBase::Decompress(s_aCompresseddata, Size, s_aDecompressed, sizeof(s_aDecompressed));
 		if(DataSize < 0)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during network decompression");
 			break;
 		}
 
-		DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData, sizeof(aData));
+		DataSize = CVariableInt::Decompress(s_aDecompressed, DataSize, s_aData, sizeof(s_aData));
 		if(DataSize < 0)
 		{
 			pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "ghost/updater", "error during intpack decompression");
 			break;
 		}
 
-		char *pTmp = aData;
+		char *pTmp = s_aData;
 		for(int i = 0; i < DataSize / ms_GhostCharacterSize; i++)
 		{
 			ms_Recorder.WriteData(1 /* GHOSTDATA_TYPE_CHARACTER */, pTmp, ms_GhostCharacterSize);
