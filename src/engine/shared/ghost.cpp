@@ -10,7 +10,7 @@
 #include "network.h"
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'G', 'H', 'O', 'S', 'T', 0};
-static const unsigned char gs_ActVersion = 4;
+static const unsigned char gs_ActVersion = 5;
 static const int gs_NumTicksOffset = 93;
 
 CGhostRecorder::CGhostRecorder()
@@ -121,6 +121,7 @@ void CGhostRecorder::FlushChunk()
 	io_write(m_File, aChunk, sizeof(aChunk));
 	io_write(m_File, s_aBuffer2, Size);
 
+	m_LastItem.Reset();
 	ResetBuffer();
 }
 
@@ -195,7 +196,7 @@ int CGhostLoader::Load(class IStorage *pStorage, class IConsole *pConsole, const
 		return -1;
 	}
 
-	if(m_Header.m_Version != gs_ActVersion)
+	if(m_Header.m_Version != gs_ActVersion && m_Header.m_Version != 4)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "ghost version %d is not supported", m_Header.m_Version);
@@ -225,6 +226,8 @@ int CGhostLoader::ReadChunk(int *pType)
 	static char s_aDecompressed[MAX_ITEM_SIZE * NUM_ITEMS_PER_CHUNK];
 	unsigned char aChunk[4];
 
+	if(m_Header.m_Version != 4)
+		m_LastItem.Reset();
 	ResetBuffer();
 
 	if(io_read(m_File, aChunk, sizeof(aChunk)) != sizeof(aChunk))
@@ -347,7 +350,7 @@ bool CGhostLoader::GetGhostInfo(class IStorage *pStorage, class IConsole *pConso
 			return false;
 	}
 
-	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pGhostHeader->m_Version != gs_ActVersion)
+	if(mem_comp(pGhostHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || (pGhostHeader->m_Version != gs_ActVersion && pGhostHeader->m_Version != 4))
 	{
 		io_close(File);
 		return false;
