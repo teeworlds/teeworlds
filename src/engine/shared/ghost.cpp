@@ -110,8 +110,14 @@ void CGhostRecorder::FlushChunk()
 
 	while(Size&3)
 		m_aBuffer[Size++] = 0;
+
 	Size = CVariableInt::Compress(m_aBuffer, Size, s_aBuffer, sizeof(s_aBuffer));
+	if(Size < 0)
+		return;
+
 	Size = CNetBase::Compress(s_aBuffer, Size, s_aBuffer2, sizeof(s_aBuffer2));
+	if(Size < 0)
+		return;
 
 	aChunk[0] = Type&0xff;
 	aChunk[1] = m_BufferNumItems&0xff;
