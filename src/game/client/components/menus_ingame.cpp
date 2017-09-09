@@ -959,6 +959,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 	if(s_ScrollValue > 1) s_ScrollValue = 1;
 
 	// set clipping
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipEnable(&View);
 	
 	CUIRect OriginalView = View;
@@ -1053,6 +1055,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 	
 	CGhostItem *pGhost = &m_lGhosts[s_SelectedIndex];
 
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
 	UI()->ClipDisable();
 	
 	RenderTools()->DrawUIRect(&Status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
