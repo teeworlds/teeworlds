@@ -284,7 +284,7 @@ int CGhost::Load(const char *pFilename)
 		return -1;
 
 	if(!Client()->GhostLoader_Load(pFilename))
-		return false;
+		return -1;
 
 	// read header
 	const CGhostHeader *pHeader = GhostLoader()->GetHeader();
@@ -294,7 +294,7 @@ int CGhost::Load(const char *pFilename)
 	if(NumTicks <= 0 || Time <= 0)
 	{
 		GhostLoader()->Close();
-		return false;
+		return -1;
 	}
 
 	// select ghost
