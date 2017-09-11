@@ -167,6 +167,8 @@ function GenerateLinuxSettings(settings, conf, arch, compiler)
 	elseif arch == "x86_64" then
 		settings.cc.flags:Add("-m64")
 		settings.link.flags:Add("-m64")
+	elseif arch == "armv7l" then
+		-- arm 32 bit
 	else
 		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
 		os.exit(1)
