@@ -673,6 +673,11 @@ void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, 
 	}
 }
 
+bool CGameConsole::IsConsoleActive()
+{
+	return m_ConsoleState != CONSOLE_CLOSED;
+}
+
 void CGameConsole::PrintLine(int Type, const char *pLine)
 {
 	if(Type == CONSOLETYPE_LOCAL)

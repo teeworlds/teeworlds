@@ -21,6 +21,7 @@
 
 #include <generated/client_data.h>
 #include <game/client/components/camera.h>
+#include <game/client/components/console.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
@@ -447,11 +448,14 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 			}
 		}
 
-		for(int i = 0; i < Input()->NumEvents(); i++)
+		if(!m_pClient->m_pGameConsole->IsConsoleActive())
 		{
-			Len = str_length(pStr);
-			int NumChars = Len;
-			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
+			for(int i = 0; i < Input()->NumEvents(); i++)
+			{
+				Len = str_length(pStr);
+				int NumChars = Len;
+				ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
+			}
 		}
 	}
 
