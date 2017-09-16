@@ -19,32 +19,38 @@ public:
 
 	char m_aaStoragePaths[MAX_PATHS][MAX_PATH_LENGTH];
 	int m_NumPaths;
-	char m_aDatadir[MAX_PATH_LENGTH];
-	char m_aUserdir[MAX_PATH_LENGTH];
-	char m_aCurrentdir[MAX_PATH_LENGTH];
-
+	char m_aDataDir[MAX_PATH_LENGTH];
+	char m_aUserDir[MAX_PATH_LENGTH];
+	char m_aCurrentDir[MAX_PATH_LENGTH];
+	char m_aAppDir[MAX_PATH_LENGTH];
+	
 	CStorage()
 	{
 		mem_zero(m_aaStoragePaths, sizeof(m_aaStoragePaths));
 		m_NumPaths = 0;
-		m_aDatadir[0] = 0;
-		m_aUserdir[0] = 0;
+		m_aDataDir[0] = 0;
+		m_aUserDir[0] = 0;
+		m_aCurrentDir[0] = 0;
+		m_aAppDir[0] = 0;
 	}
 
 	int Init(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)
 	{
 		// get userdir
-		fs_storage_path(pApplicationName, m_aUserdir, sizeof(m_aUserdir));
+		fs_storage_path(pApplicationName, m_aUserDir, sizeof(m_aUserDir));
+		
+		// get appdir
+		FindAppDir(ppArguments[0]);
 
 		// get datadir
-		FindDatadir(ppArguments[0]);
+		FindDataDir();
 
 		// get currentdir
-		if(!fs_getcwd(m_aCurrentdir, sizeof(m_aCurrentdir)))
-			m_aCurrentdir[0] = 0;
+		if(!fs_getcwd(m_aCurrentDir, sizeof(m_aCurrentDir)))
+			m_aCurrentDir[0] = 0;
 
 		// load paths from storage.cfg
-		LoadPaths(ppArguments[0]);
+		LoadPaths();
 
 		if(!m_NumPaths)
 		{
@@ -81,26 +87,18 @@ public:
 		return m_NumPaths ? 0 : 1;
 	}
 
-	void LoadPaths(const char *pArgv0)
+	void LoadPaths()
 	{
 		// check current directory
 		IOHANDLE File = io_open("storage.cfg", IOFLAG_READ);
 		if(!File)
 		{
 			// check usable path in argv[0]
-			unsigned int Pos = ~0U;
-			for(unsigned i = 0; pArgv0[i]; i++)
-				if(pArgv0[i] == '/' || pArgv0[i] == '\\')
-					Pos = i;
-			if(Pos < MAX_PATH_LENGTH)
-			{
-				char aBuffer[MAX_PATH_LENGTH];
-				str_copy(aBuffer, pArgv0, Pos+1);
-				str_append(aBuffer, "/storage.cfg", sizeof(aBuffer));
-				File = io_open(aBuffer, IOFLAG_READ);
-			}
-
-			if(Pos >= MAX_PATH_LENGTH || !File)
+			char aBuffer[MAX_PATH_LENGTH];
+			str_copy(aBuffer, m_aAppDir, sizeof(aBuffer));
+			str_append(aBuffer, "/storage.cfg", sizeof(aBuffer));
+			File = io_open(aBuffer, IOFLAG_READ);
+			if(!File)
 			{
 				dbg_msg("storage", "couldn't open storage.cfg");
 				return;
@@ -128,6 +126,7 @@ public:
 		AddPath("$USERDIR");
 		AddPath("$DATADIR");
 		AddPath("$CURRENTDIR");
+		AddPath("$APPDIR");
 	}
 
 	void AddPath(const char *pPath)
@@ -137,24 +136,35 @@ public:
 
 		if(!str_comp(pPath, "$USERDIR"))
 		{
-			if(m_aUserdir[0])
+			if(m_aUserDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserdir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserdir);
+				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
 			}
 		}
 		else if(!str_comp(pPath, "$DATADIR"))
 		{
-			if(m_aDatadir[0])
+			if(m_aDataDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDatadir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDatadir);
+				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
 			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
-			m_aaStoragePaths[m_NumPaths++][0] = 0;
-			dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentdir);
+			if(m_aCurrentDir[0])
+			{
+				str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+			}
+		}
+		else if(!str_comp(pPath, "$APPDIR"))
+		{
+			if(m_aAppDir[0])
+			{
+				str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+			}
 		}
 		else
 		{
@@ -165,42 +175,50 @@ public:
 			}
 		}
 	}
+	
+	void FindAppDir(const char *pArgv0)
+	{
+		// check for usable path in argv[0]
+		unsigned int Pos = ~0U;
+		for(unsigned i = 0; pArgv0[i]; ++i)
+			if(pArgv0[i] == '/' || pArgv0[i] == '\\')
+				Pos = i;
+		
+		if(Pos < MAX_PATH_LENGTH)
+		{
+			str_copy(m_aAppDir, pArgv0, Pos+1);
+			if(!fs_is_dir(m_aAppDir))
+				m_aAppDir[0] = 0;
+		}
+	}
 
-	void FindDatadir(const char *pArgv0)
+	void FindDataDir()
 	{
 		// 1) use data-dir in PWD if present
 		if(fs_is_dir("data/mapres"))
 		{
-			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
+			str_copy(m_aDataDir, "data", sizeof(m_aDataDir));
 			return;
 		}
 
 		// 2) use compiled-in data-dir if present
 		if(fs_is_dir(DATA_DIR "/mapres"))
 		{
-			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
+			str_copy(m_aDataDir, DATA_DIR, sizeof(m_aDataDir));
 			return;
 		}
 
 		// 3) check for usable path in argv[0]
 		{
-			unsigned int Pos = ~0U;
-			for(unsigned i = 0; pArgv0[i]; i++)
-				if(pArgv0[i] == '/' || pArgv0[i] == '\\')
-					Pos = i;
+			char aBaseDir[MAX_PATH_LENGTH];
+			str_copy(aBaseDir, m_aAppDir, sizeof(aBaseDir));
+			str_format(m_aDataDir, sizeof(m_aDataDir), "%s/data", aBaseDir);
+			str_append(aBaseDir, "/data/mapres", sizeof(aBaseDir));
 
-			if(Pos < MAX_PATH_LENGTH)
-			{
-				char aBaseDir[MAX_PATH_LENGTH];
-				str_copy(aBaseDir, pArgv0, Pos+1);
-				str_format(m_aDatadir, sizeof(m_aDatadir), "%s/data", aBaseDir);
-				str_append(aBaseDir, "/data/mapres", sizeof(aBaseDir));
-
-				if(fs_is_dir(aBaseDir))
-					return;
-				else
-					m_aDatadir[0] = 0;
-			}
+			if(fs_is_dir(aBaseDir))
+				return;
+			else
+				m_aDataDir[0] = 0;
 		}
 
 	#if defined(CONF_FAMILY_UNIX)
@@ -224,7 +242,7 @@ public:
 				str_format(aBuf, sizeof(aBuf), "%s/mapres", aDirs[i]);
 				if(fs_is_dir(aBuf))
 				{
-					str_copy(m_aDatadir, aDirs[i], sizeof(m_aDatadir));
+					str_copy(m_aDataDir, aDirs[i], sizeof(m_aDataDir));
 					return;
 				}
 			}
