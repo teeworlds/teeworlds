@@ -7,7 +7,8 @@ enum
 {
 	GHOSTDATA_TYPE_SKIN = 0,
 	GHOSTDATA_TYPE_CHARACTER_NO_TICK,
-	GHOSTDATA_TYPE_CHARACTER
+	GHOSTDATA_TYPE_CHARACTER,
+	GHOSTDATA_TYPE_START_TICK
 };
 
 struct CGhostSkin
@@ -46,7 +47,15 @@ struct CGhostCharacter : public CGhostCharacter_NoTick
 class CGhostTools
 {
 public:
-	static void GetGhostCharacter(CGhostCharacter_NoTick *pGhostChar, const CNetObj_Character *pChar)
+	static void GetGhostSkin(CGhostSkin *pSkin, const char *pSkinName, int UseCustomColor, int ColorBody, int ColorFeet)
+	{
+		StrToInts(&pSkin->m_Skin0, 6, pSkinName);
+		pSkin->m_UseCustomColor = UseCustomColor;
+		pSkin->m_ColorBody = ColorBody;
+		pSkin->m_ColorFeet = ColorFeet;
+	}
+
+	static void GetGhostCharacter(CGhostCharacter *pGhostChar, const CNetObj_Character *pChar)
 	{
 		pGhostChar->m_X = pChar->m_X;
 		pGhostChar->m_Y = pChar->m_Y;
@@ -59,9 +68,10 @@ public:
 		pGhostChar->m_HookX = pChar->m_HookX;
 		pGhostChar->m_HookY = pChar->m_HookY;
 		pGhostChar->m_AttackTick = pChar->m_AttackTick;
+		pGhostChar->m_Tick = pChar->m_Tick;
 	}
 
-	static void GetNetObjCharacter(CNetObj_Character *pChar, const CGhostCharacter_NoTick *pGhostChar)
+	static void GetNetObjCharacter(CNetObj_Character *pChar, const CGhostCharacter *pGhostChar)
 	{
 		mem_zero(pChar, sizeof(CNetObj_Character));
 		pChar->m_X = pGhostChar->m_X;
@@ -75,8 +85,8 @@ public:
 		pChar->m_HookX = pGhostChar->m_HookX;
 		pChar->m_HookY = pGhostChar->m_HookY;
 		pChar->m_AttackTick = pGhostChar->m_AttackTick;
-
 		pChar->m_HookedPlayer = -1;
+		pChar->m_Tick = pGhostChar->m_Tick;
 	}
 };
 

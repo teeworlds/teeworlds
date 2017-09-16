@@ -2230,11 +2230,11 @@ void CClient::DemoRecorder_StartRace()
 	}
 }
 
-void CClient::Ghost_GetPath(char *pBuf, int Size, int Time)
+void CClient::Ghost_GetPath(char *pBuf, int Size, const char *pPlayerName, int Time)
 {
 	// check the player name
 	char aPlayerName[MAX_NAME_LENGTH];
-	str_copy(aPlayerName, g_Config.m_PlayerName, sizeof(aPlayerName));
+	str_copy(aPlayerName, pPlayerName, sizeof(aPlayerName));
 	ClearFilename(aPlayerName);
 
 	if(Time < 0)
@@ -2243,11 +2243,11 @@ void CClient::Ghost_GetPath(char *pBuf, int Size, int Time)
 		str_format(pBuf, Size, "ghosts/%s_%08x_%s_%d.%03d.gho", m_aCurrentMap, m_CurrentMapCrc, aPlayerName, Time / 1000, Time % 1000);
 }
 
-void CClient::GhostRecorder_Start()
+void CClient::GhostRecorder_Start(const char *pPlayerName, int Time)
 {
 	char aFilename[128];
-	Ghost_GetPath(aFilename, sizeof(aFilename));
-	m_GhostRecorder.Start(Storage(), m_pConsole, aFilename, m_aCurrentMap, m_CurrentMapCrc, g_Config.m_PlayerName);
+	Ghost_GetPath(aFilename, sizeof(aFilename), pPlayerName, Time);
+	m_GhostRecorder.Start(Storage(), m_pConsole, aFilename, m_aCurrentMap, m_CurrentMapCrc, pPlayerName);
 }
 
 bool CClient::GhostLoader_Load(const char *pFilename)

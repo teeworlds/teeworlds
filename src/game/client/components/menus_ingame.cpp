@@ -840,6 +840,32 @@ CMenus::CGhostItem *CMenus::GetOwnGhost()
 	return 0;
 }
 
+void CMenus::UpdateOwnGhost(CGhostItem Item)
+{
+	int Own = -1;
+	for(int i = 0; i < m_lGhosts.size(); i++)
+		if(m_lGhosts[i].m_Own)
+			Own = i;
+
+	if(Own != -1)
+	{
+		m_lGhosts[Own].m_Slot = -1;
+		m_lGhosts[Own].m_Own = false;
+		if(Item.HasFile() || !m_lGhosts[Own].HasFile())
+			DeleteGhostItem(Own);
+	}
+
+	Item.m_Own = true;
+	m_lGhosts.add(Item);
+}
+
+void CMenus::DeleteGhostItem(int Index)
+{
+	if(m_lGhosts[Index].HasFile())
+		Storage()->RemoveFile(m_lGhosts[Index].m_aFilename, IStorage::TYPE_SAVE);
+	m_lGhosts.remove_index(Index);
+}
+
 void CMenus::RenderGhost(CUIRect MainView)
 {
 	// render background
@@ -1002,6 +1028,12 @@ void CMenus::RenderGhost(CUIRect MainView)
 			}
 		}
 
+		vec3 rgb = vec3(1.0f, 1.0f, 1.0f);
+		if(pItem->m_Own)
+			rgb = HslToRgb(vec3(0.33f, 1.0f, 0.75f));
+
+		TextRender()->TextColor(rgb.r, rgb.g, rgb.b, pItem->HasFile() ? 1.0f : 0.5f);
+
 		for(int c = 0; c < NumCols; c++)
 		{
 			CUIRect Button;
@@ -1048,39 +1080,79 @@ void CMenus::RenderGhost(CUIRect MainView)
 				TextRender()->TextEx(&Cursor, aTime, -1);
 			}
 		}
+		
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 	
+	TextRender()->BatchEnd();
+	TextRender()->BatchBegin();
+	UI()->ClipDisable();
+
 	if(NewSelected != -1)
 		s_SelectedIndex = NewSelected;
 	
 	CGhostItem *pGhost = &m_lGhosts[s_SelectedIndex];
-
-	TextRender()->BatchEnd();
-	TextRender()->BatchBegin();
-	UI()->ClipDisable();
 	
 	RenderTools()->DrawUIRect(&Status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
 	Status.Margin(5.0f, &Status);
 	
 	CUIRect Button;
-	Status.VSplitRight(120.0f, &Status, &Button);
-	
+
 	static int s_GhostButton = 0;
-	bool Delete = !pGhost->HasFile();
-	const char *pText = pGhost->Active() ? (Delete ? Localize("Delete") : Localize("Deactivate")) : Localize("Activate");
-	
-	if(DoButton_Menu(&s_GhostButton, pText, 0, &Button) || (NewSelected != -1 && Input()->MouseDoubleClick()))
+	static int s_DeleteButton = 0;
+	static int s_SaveButton = 0;
+	static int s_ReloadButton = 0;
+	static int s_MirrorButton = 0;
+
+	CGhostItem *pOwnGhost = GetOwnGhost();
+	int ReservedSlots = !pGhost->m_Own && !(pOwnGhost && pOwnGhost->Active());
+	if(pGhost->HasFile() && (pGhost->Active() || m_pClient->m_pGhost->FreeSlot() > ReservedSlots))
+	{
+		Status.VSplitRight(120.0f, &Status, &Button);
+
+		const char *pText = pGhost->Active() ? Localize("Deactivate") : Localize("Activate");
+		if(DoButton_Menu(&s_GhostButton, pText, 0, &Button) || (NewSelected != -1 && Input()->MouseDoubleClick()))
+		{
+			if(pGhost->Active())
+			{
+				m_pClient->m_pGhost->Unload(pGhost->m_Slot);
+				pGhost->m_Slot = -1;
+			}
+			else
+				pGhost->m_Slot = m_pClient->m_pGhost->Load(pGhost->m_aFilename);
+		}
+
+		Status.VSplitRight(5.0f, &Status, 0);
+	}
+
+	Status.VSplitRight(120.0f, &Status, &Button);
+
+	if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button))
 	{
 		if(pGhost->Active())
-		{
 			m_pClient->m_pGhost->Unload(pGhost->m_Slot);
-			pGhost->m_Slot = -1;
-			if(Delete)
-				m_lGhosts.remove_index(s_SelectedIndex);
-		}
-		else
-			pGhost->m_Slot = m_pClient->m_pGhost->Load(pGhost->m_aFilename);
+		DeleteGhostItem(s_SelectedIndex);
 	}
+
+	Status.VSplitRight(5.0f, &Status, 0);
+
+	bool Recording = m_pClient->m_pGhost->GhostRecorder()->IsRecording();
+	if(!pGhost->HasFile() && !Recording && pGhost->Active())
+	{
+		Status.VSplitRight(120.0f, &Status, &Button);
+		if(DoButton_Menu(&s_SaveButton, Localize("Save"), 0, &Button))
+			m_pClient->m_pGhost->SaveGhost(pGhost);
+	}
+
+	Status.VSplitLeft(120.0f, &Button, &Status);
+
+	if(DoButton_Menu(&s_ReloadButton, Localize("Reload"), 0, &Button))
+	{
+		m_pClient->m_pGhost->UnloadAll();
+		GhostlistPopulate();
+	}
+
+	Status.VSplitLeft(5.0f, 0, &Status);
 
 	if(pGhost->Active())
 	{
@@ -1088,10 +1160,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 		Client()->GetServerInfo(&ServerInfo);
 		if(IsFastCap(&ServerInfo))
 		{
-			Status.VSplitRight(5.0f, &Status, 0);
 			Status.VSplitRight(120.0f, &Status, &Button);
 
-			static int s_MirrorButton = 0;
 			if(DoButton_Menu(&s_MirrorButton, Localize("Mirror"), 0, &Button))
 				m_pClient->m_pGhost->ToggleMirror(pGhost->m_Slot);
 

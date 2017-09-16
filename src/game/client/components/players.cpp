@@ -96,6 +96,7 @@ void CPlayers::RenderHook(
 	Player = *pPlayerChar;
 
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
+	bool Local = m_pClient->m_Snap.m_LocalClientID == ClientID;
 
 	float IntraTick = Client()->IntraGameTick();
 	if(ClientID < 0)
@@ -106,7 +107,7 @@ void CPlayers::RenderHook(
 
 
 	// use preditect players if needed
-	if(m_pClient->m_Snap.m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
@@ -145,7 +146,7 @@ void CPlayers::RenderHook(
 					HookPos = mix(vec2(m_pClient->m_PredictedPrevChar.m_Pos.x, m_pClient->m_PredictedPrevChar.m_Pos.y),
 						vec2(m_pClient->m_PredictedChar.m_Pos.x, m_pClient->m_PredictedChar.m_Pos.y), Client()->PredIntraGameTick());
 			}
-			else if(m_pClient->m_Snap.m_LocalClientID == ClientID)
+			else if(Local)
 			{
 				HookPos = mix(vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
 					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
@@ -201,6 +202,7 @@ void CPlayers::RenderPlayer(
 	Player = *pPlayerChar;
 
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
+	bool Local = m_pClient->m_Snap.m_LocalClientID == ClientID;
 
 	bool NewTick = m_pClient->m_NewTick;
 
@@ -219,7 +221,7 @@ void CPlayers::RenderPlayer(
 
 	//float angle = 0;
 
-	if(m_pClient->m_Snap.m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(Local && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
 		Angle = GetAngle(m_pClient->m_pControls->m_MousePos);
@@ -248,7 +250,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// use preditect players if needed
-	if(m_pClient->m_Snap.m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(Local && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter || (m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 		{
@@ -490,7 +492,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee
-	if(m_pClient->m_Snap.m_LocalClientID == ClientID && (g_Config.m_ClShowGhost || g_Config.m_Debug))
+	if(Local && (g_Config.m_ClShowGhost || g_Config.m_Debug))
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;

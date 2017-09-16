@@ -9,11 +9,11 @@
 #include "menus.h"
 #include "race_demo.h"
 
-CRaceDemo::CRaceDemo() : m_RaceState(RACE_NONE), m_RecordStopTick(-1), m_PrepareStartTick(-1), m_Time(0) {}
+CRaceDemo::CRaceDemo() : m_RaceState(RACE_NONE), m_RaceStartTick(-1), m_RecordStopTick(-1), m_Time(0) {}
 
 void CRaceDemo::OnRender()
 {
-	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pLocalCharacter)
+	if(!g_Config.m_ClAutoRaceRecord || !m_pClient->m_Snap.m_pGameInfoObj || !m_pClient->m_Snap.m_pLocalCharacter)
 		return;
 
 	// only for race
@@ -22,15 +22,27 @@ void CRaceDemo::OnRender()
 	if(!IsRace(&ServerInfo) || !m_pClient->m_NewTick)
 		return;
 
-	if(m_RaceState == RACE_IDLE || m_RaceState == RACE_PREPARE)
+	static int s_LastRaceTick = -1;
+
+	bool RaceFlag = m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_RACETIME;
+	bool ServerControl = RaceFlag && g_Config.m_ClRaceRecordServerControl;
+	int RaceTick = -m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer;
+
+	// start the demo
+	bool ForceStart = ServerControl && s_LastRaceTick != RaceTick;
+	bool AllowRestart = ForceStart && m_RaceStartTick + 10 * Client()->GameTickSpeed() < Client()->GameTick();
+	if(m_RaceState == RACE_IDLE || m_RaceState == RACE_PREPARE || (m_RaceState == RACE_STARTED && AllowRestart))
 	{
 		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
 		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
 
-		if(m_pClient->IsRaceStart(PrevPos, Pos))
+		if(ForceStart || (!ServerControl && m_pClient->IsRaceStart(PrevPos, Pos)))
 		{
-			if(m_RaceState == RACE_IDLE) // start recording again
+			if(m_RaceState == RACE_STARTED)
+				Client()->DemoRecorder_Stop();
+			if(m_RaceState != RACE_PREPARE) // start recording again
 				Client()->DemoRecorder_StartRace();
+			m_RaceStartTick = Client()->GameTick();
 			m_RaceState = RACE_STARTED;
 		}
 	}
@@ -39,12 +51,12 @@ void CRaceDemo::OnRender()
 	if(m_RaceState == RACE_NONE)
 	{
 		Client()->DemoRecorder_StartRace();
-		m_PrepareStartTick = Client()->GameTick();
+		m_RaceStartTick = Client()->GameTick();
 		m_RaceState = RACE_PREPARE;
 	}
 
 	// stop recording if the player did not pass the start line after 20 seconds
-	if(m_RaceState == RACE_PREPARE && Client()->GameTick() - m_PrepareStartTick >= Client()->GameTickSpeed() * 20)
+	if(m_RaceState == RACE_PREPARE && Client()->GameTick() - m_RaceStartTick >= Client()->GameTickSpeed() * 20)
 	{
 		OnReset();
 		m_RaceState = RACE_IDLE;
@@ -53,6 +65,8 @@ void CRaceDemo::OnRender()
 	// stop the demo
 	if(m_RaceState == RACE_FINISHED && m_RecordStopTick <= Client()->GameTick())
 		StopRecord(m_Time);
+
+	s_LastRaceTick = RaceFlag ? RaceTick : -1;
 }
 
 void CRaceDemo::OnReset()
@@ -85,7 +99,7 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 		{
 			char aName[MAX_NAME_LENGTH];
 			int Time = IRace::TimeFromFinishMessage(pMsg->m_pMessage, aName, sizeof(aName));
-			if(Time && str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
+			if(Time > 0 && str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName) == 0)
 			{
 				m_RaceState = RACE_FINISHED;
 				m_RecordStopTick = Client()->GameTick() + Client()->GameTickSpeed();
@@ -97,14 +111,15 @@ void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 
 void CRaceDemo::StopRecord(int Time)
 {
-	Client()->DemoRecorder_Stop();
+	if(DemoRecorder()->IsRecording())
+		Client()->DemoRecorder_Stop();
 
 	char aDemoName[128];
 	char aTmpFilename[512];
 	Client()->RaceDemo_GetName(aDemoName, sizeof(aDemoName));
 	Client()->RaceDemo_GetPath(aTmpFilename, sizeof(aTmpFilename), aDemoName);
 
-	if(Time && CheckDemo(Time))
+	if(Time > 0 && CheckDemo(Time))
 	{
 		// save file
 		char aNewFilename[512];
@@ -118,8 +133,8 @@ void CRaceDemo::StopRecord(int Time)
 
 	m_Time = 0;
 	m_RaceState = RACE_NONE;
+	m_RaceStartTick = -1;
 	m_RecordStopTick = -1;
-	m_PrepareStartTick = -1;
 }
 
 bool CRaceDemo::CheckDemo(int Time) const
@@ -153,7 +168,7 @@ bool CRaceDemo::CheckDemo(int Time) const
 				DemoTime = str_toint(pTime);
 		}
 
-		if(DemoTime)
+		if(DemoTime > 0)
 		{
 			if(Time >= DemoTime) // found a better demo
 				return false;

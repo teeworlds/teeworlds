@@ -36,7 +36,7 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			Time.m_LocalDiff = 0;
 
 			int MsgTime = IRace::TimeFromFinishMessage(pMsg->m_pMessage, Time.m_aPlayerName, sizeof(Time.m_aPlayerName));
-			if(MsgTime)
+			if(MsgTime > 0)
 			{
 				Time.m_Time = MsgTime;
 				Time.m_PlayerID = -1;
@@ -76,7 +76,7 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 					if (*pRecord == '-')
 						pRecord++;
 					int MsgTime = IRace::TimeFromStr(pRecord);
-					if (MsgTime)
+					if (MsgTime > 0)
 						m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = -MsgTime;
 				}
 			}

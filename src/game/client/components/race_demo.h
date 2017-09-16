@@ -7,13 +7,6 @@
 
 class CRaceDemo : public CComponent
 {
-	int m_RaceState;
-	int m_RecordStopTick;
-	int m_PrepareStartTick;
-	int m_Time;
-	
-public:
-	
 	enum
 	{
 		RACE_NONE = 0,
@@ -22,14 +15,20 @@ public:
 		RACE_STARTED,
 		RACE_FINISHED,
 	};
+
+	int m_RaceState;
+	int m_RaceStartTick;
+	int m_RecordStopTick;
+	int m_Time;
+
+	void StopRecord(int Time = -1);
+	bool CheckDemo(int Time) const;
 	
+public:
 	CRaceDemo();
 	
 	virtual void OnReset();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
-
-	void StopRecord(int Time = 0);
-	bool CheckDemo(int Time) const;
 };
 #endif

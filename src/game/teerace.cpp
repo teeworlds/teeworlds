@@ -1,5 +1,7 @@
 /* Teerace class by Sushi and Redix */
 
+#include <ctype.h>
+
 #include <base/math.h>
 #include <base/system.h>
 
@@ -29,16 +31,18 @@ CFileRequest *ITeerace::CreateApiUpload(const char *pURI)
 
 int IRace::TimeFromSecondsStr(const char *pStr)
 {
-	int Time = str_toint(pStr) * 1000;
 	while(*pStr == ' ') // skip leading spaces
 		pStr++;
-	while(*pStr >= '0' && *pStr <= '9')
+	if(!isdigit(*pStr))
+		return -1;
+	int Time = str_toint(pStr) * 1000;
+	while(isdigit(*pStr))
 		pStr++;
 	if(*pStr == '.' || *pStr == ',')
 	{
 		pStr++;
 		static const int s_aMult[3] = { 100, 10, 1 };
-		for(int i = 0; pStr[i] >= '0' && pStr[i] <= '9' && i < 3; i++)
+		for(int i = 0; isdigit(pStr[i]) && i < 3; i++)
 			Time += (pStr[i] - '0') * s_aMult[i];
 	}
 	return Time;
@@ -51,11 +55,18 @@ int IRace::TimeFromStr(const char *pStr)
 
 	const char *pSeconds = str_find(pStr, s_pSecondsStr);
 	if(!pSeconds)
-		return 0;
+		return -1;
 
 	const char *pMinutes = str_find(pStr, s_pMinutesStr);
 	if(pMinutes)
-		return str_toint(pStr) * 60 * 1000 + TimeFromSecondsStr(pMinutes + str_length(s_pMinutesStr));
+	{
+		while(*pStr == ' ') // skip leading spaces
+			pStr++;
+		int SecondsTime = TimeFromSecondsStr(pMinutes + str_length(s_pMinutesStr));
+		if(SecondsTime == -1 || !isdigit(*pStr))
+			return -1;
+		return str_toint(pStr) * 60 * 1000 + SecondsTime;
+	}
 	else
 		return TimeFromSecondsStr(pStr);
 }
@@ -65,11 +76,11 @@ int IRace::TimeFromFinishMessage(const char *pStr, char *pNameBuf, int NameBufSi
 	static const char *s_pFinishedStr = " finished in: ";
 	const char *pFinished = str_find(pStr, s_pFinishedStr);
 	if(!pFinished)
-		return 0;
+		return -1;
 
 	int FinishedPos = pFinished - pStr;
 	if(FinishedPos == 0 || FinishedPos >= NameBufSize)
-		return 0;
+		return -1;
 
 	str_copy(pNameBuf, pStr, FinishedPos + 1);
 
