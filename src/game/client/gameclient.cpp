@@ -940,7 +940,7 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
-	int TeamJoined = TEAM_SPECTATORS;
+	int TeamJoined = -2;
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
@@ -1105,7 +1105,7 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
-	if(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+	if(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS && TeamJoined >= TEAM_SPECTATORS)
 		m_pGhost->OnTeamJoin(TeamJoined);
 
 	// setup local pointers
