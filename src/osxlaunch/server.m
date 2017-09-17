@@ -58,10 +58,10 @@ void runServer()
 	NSOpenPanel* openDlg = [NSOpenPanel openPanel];
 	[openDlg setCanChooseFiles:YES];
 
-	if([openDlg runModalForDirectory:nil file:nil] != NSOKButton)
+	if([openDlg runModal] != NSOKButton)
 		return;
 
-	NSArray* filenames = [openDlg filenames];
+	NSArray* filenames = [openDlg URLs];
 	if([filenames count] != 1)
 		return;
 
