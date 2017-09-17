@@ -640,10 +640,10 @@ void CServer::DoSnapshot()
 				const int MaxSize = MAX_SNAPSHOT_PACKSIZE;
 				int NumPackets;
 
-				SnapshotSize = CVariableInt::Compress(aDeltaData, DeltaSize, aCompData);
+				SnapshotSize = CVariableInt::Compress(aDeltaData, DeltaSize, aCompData, sizeof(aCompData));
 				NumPackets = (SnapshotSize+MaxSize-1)/MaxSize;
 
-				for(int n = 0, Left = SnapshotSize; Left; n++)
+				for(int n = 0, Left = SnapshotSize; Left > 0; n++)
 				{
 					int Chunk = Left < MaxSize ? Left : MaxSize;
 					Left -= Chunk;

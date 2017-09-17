@@ -60,28 +60,34 @@ const unsigned char *CVariableInt::Unpack(const unsigned char *pSrc, int *pInOut
 }
 
 
-long CVariableInt::Decompress(const void *pSrc_, int Size, void *pDst_)
+long CVariableInt::Decompress(const void *pSrc_, int SrcSize, void *pDst_, int DstSize)
 {
 	const unsigned char *pSrc = (unsigned char *)pSrc_;
-	const unsigned char *pEnd = pSrc + Size;
+	const unsigned char *pEnd = pSrc + SrcSize;
 	int *pDst = (int *)pDst_;
+	int *pDstEnd = pDst + DstSize/4;
 	while(pSrc < pEnd)
 	{
+		if(pDst >= pDstEnd)
+			return -1;
 		pSrc = CVariableInt::Unpack(pSrc, pDst);
 		pDst++;
 	}
 	return (long)((unsigned char *)pDst-(unsigned char *)pDst_);
 }
 
-long CVariableInt::Compress(const void *pSrc_, int Size, void *pDst_)
+long CVariableInt::Compress(const void *pSrc_, int SrcSize, void *pDst_, int DstSize)
 {
 	int *pSrc = (int *)pSrc_;
 	unsigned char *pDst = (unsigned char *)pDst_;
-	Size /= 4;
-	while(Size)
+	unsigned char *pDstEnd = pDst + DstSize;
+	SrcSize /= 4;
+	while(SrcSize)
 	{
+		if(pDstEnd - pDst < 6)
+			return -1;
 		pDst = CVariableInt::Pack(pDst, *pSrc);
-		Size--;
+		SrcSize--;
 		pSrc++;
 	}
 	return (long)(pDst-(unsigned char *)pDst_);
