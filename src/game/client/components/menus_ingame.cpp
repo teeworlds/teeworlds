@@ -1065,9 +1065,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "%s%s", pItem->m_aPlayer, pItem->m_Own ? " (own)" : "");
-				TextRender()->TextEx(&Cursor, aBuf, -1);
+				TextRender()->TextEx(&Cursor, pItem->m_aPlayer, -1);
 			}
 			else if(Id == COL_TIME)
 			{
