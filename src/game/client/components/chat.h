@@ -23,7 +23,7 @@ class CChat : public CComponent
 		int m_ClientID;
 		int m_Team;
 		int m_NameColor;
-		int m_Spam;
+		bool m_Spam;
 		char m_aName[64];
 		char m_aText[512];
 		bool m_Highlighted;
@@ -65,10 +65,14 @@ class CChat : public CComponent
 	int m_PendingChatCounter;
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
-
-	bool m_Spam;
 	
-	char m_aaLastMsg[MAX_CLIENTS+1][265];
+	struct CLineSlim
+	{
+		int64 m_Time;
+		char m_aText[512];
+	};
+
+	CLineSlim m_aLastMsg[MAX_CLIENTS + 1];
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
