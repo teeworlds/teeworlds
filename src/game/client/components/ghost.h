@@ -55,10 +55,12 @@ private:
 
 		CGhostItem() { Reset(); }
 
+		void AutoMirror(int Team) { m_Mirror = Team != TEAM_SPECTATORS && m_Team == Team ^ 1; }
 		bool Empty() const { return m_Path.Size() == 0; }
 		void Reset()
 		{
 			m_Path.Reset();
+			m_StartTick = -1;
 			m_PlaybackPos = 0;
 			m_Mirror = false;
 			m_Team = -1;
@@ -91,6 +93,7 @@ private:
 
 	void RenderGhostNamePlate(const CNetObj_Character *pPrev, const CNetObj_Character *pPlayer, float IntraTick, const char *pName);
 	void InitRenderInfos(CGhostItem *pGhost);
+	bool AutoMirroring() const;
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
 
@@ -103,7 +106,7 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
-	void OnGameJoin(int Team);
+	void OnTeamJoin(int Team);
 
 	int FreeSlot() const;
 	int Load(const char* pFilename);

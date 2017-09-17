@@ -1105,8 +1105,8 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
-	if(TeamJoined != TEAM_SPECTATORS && m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
-		m_pGhost->OnGameJoin(TeamJoined);
+	if(m_Snap.m_pGameInfoObj->m_GameFlags&GAMEFLAG_TEAMS)
+		m_pGhost->OnTeamJoin(TeamJoined);
 
 	// setup local pointers
 	if(m_Snap.m_LocalClientID >= 0)

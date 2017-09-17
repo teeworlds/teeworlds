@@ -408,6 +408,7 @@ int CGhost::Load(const char *pFilename)
 
 	// select ghost
 	CGhostItem *pGhost = &m_aActiveGhosts[Slot];
+	pGhost->Reset();
 	pGhost->m_Path.SetSize(NumTicks);
 
 	str_copy(pGhost->m_aPlayer, pHeader->m_aOwner, sizeof(pGhost->m_aPlayer));
@@ -416,7 +417,6 @@ int CGhost::Load(const char *pFilename)
 	bool FoundSkin = false;
 	bool NoTick = false;
 	bool Error = false;
-	pGhost->m_StartTick = -1;
 
 	int Type;
 	while(!Error && GhostLoader()->ReadNextType(&Type))
@@ -480,6 +480,9 @@ int CGhost::Load(const char *pFilename)
 	for(int i = 0; i < 2; i++)
 		if(pGhost->m_Skin.m_UseCustomColor && pGhost->m_Skin.m_ColorBody == s_aTeamColors[i] && pGhost->m_Skin.m_ColorFeet == s_aTeamColors[i])
 			pGhost->m_Team = i;
+
+	if(AutoMirroring())
+		pGhost->AutoMirror(m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Team);
 
 	return Slot;
 }
@@ -620,11 +623,14 @@ void CGhost::OnMapLoad()
 	m_SymmetricMap = true;
 }
 
-void CGhost::OnGameJoin(int Team)
+bool CGhost::AutoMirroring() const
 {
-	if(!g_Config.m_ClGhostAutoMirror || Team < 0 || Team > 1 || (!m_SymmetricMap && !g_Config.m_ClGhostForceMirror))
-		return;
+	return g_Config.m_ClGhostAutoMirror && (m_SymmetricMap || g_Config.m_ClGhostForceMirror);
+}
 
-	for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
-		m_aActiveGhosts[i].m_Mirror = m_aActiveGhosts[i].m_Team != Team;
+void CGhost::OnTeamJoin(int Team)
+{
+	if(AutoMirroring())
+		for(int i = 0; i < MAX_ACTIVE_GHOSTS; i++)
+			m_aActiveGhosts[i].AutoMirror(Team);
 }
