@@ -53,21 +53,32 @@ int IRace::TimeFromStr(const char *pStr)
 	static const char *s_pMinutesStr = " minute(s) ";
 	static const char *s_pSecondsStr = " second(s)";
 
+	while(*pStr == ' ') // skip leading spaces
+		pStr++;
+
 	const char *pSeconds = str_find(pStr, s_pSecondsStr);
-	if(!pSeconds)
-		return -1;
+	if(!pSeconds) // xx:xx.xxx
+	{
+		if(!isdigit(*pStr))
+			return -1;
+		int Time = str_toint(pStr) * 60 * 1000;
+		while(isdigit(*pStr))
+			pStr++;
+		if(pStr[0] != ':' || !isdigit(pStr[1]))
+			return -1;
+		int SecondsTime = TimeFromSecondsStr(pStr + 1);
+		return SecondsTime == -1 ? -1 : Time + SecondsTime;
+	}
 
 	const char *pMinutes = str_find(pStr, s_pMinutesStr);
-	if(pMinutes)
+	if(pMinutes) // x minute(s) x.xxx second(s)
 	{
-		while(*pStr == ' ') // skip leading spaces
-			pStr++;
 		int SecondsTime = TimeFromSecondsStr(pMinutes + str_length(s_pMinutesStr));
 		if(SecondsTime == -1 || !isdigit(*pStr))
 			return -1;
 		return str_toint(pStr) * 60 * 1000 + SecondsTime;
 	}
-	else
+	else // x.xxx second(s)
 		return TimeFromSecondsStr(pStr);
 }
 
