@@ -1577,26 +1577,20 @@ void CGameClient::OnTeeraceServerList(IResponse *pResponse, bool Error, void *pU
 	if(!Success)
 		return;
 
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pRes->GetBody(), pRes->Size(), aError);
+	json_value *pJsonData = json_parse(pRes->GetBody(), pRes->Size());
 	if(!pJsonData)
-		dbg_msg("json", "error: %s", aError);
-	else
+		return;
+
+	if(pJsonData->type == json_array)
 	{
-		if(pJsonData->type == json_array)
+		for(unsigned i = 0; i < pJsonData->u.array.length; i++)
 		{
-			for(unsigned i = 0; i < pJsonData->u.array.length; i++)
-			{
-				const json_value &JsonSrv = (*pJsonData)[i];
-				if(JsonSrv.type == json_string)
-					pClient->ServerBrowser()->AddTeeraceHostLookup(JsonSrv);
-			}
+			const json_value &JsonSrv = (*pJsonData)[i];
+			if(JsonSrv.type == json_string)
+				pClient->ServerBrowser()->AddTeeraceHostLookup(JsonSrv);
 		}
-		json_value_free(pJsonData);
 	}
+	json_value_free(pJsonData);
 }
 
 bool CGameClient::IsRaceStart(vec2 PrevPos, vec2 Pos)

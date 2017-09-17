@@ -10,6 +10,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/linereader.h>
 #include <engine/shared/http.h>
+#include <engine/external/json-parser/json.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -1313,15 +1314,49 @@ void CMenus::OnApiToken(IResponse *pResponse, bool Error, void *pUserData)
 	CBufferResponse *pRes = (CBufferResponse*)pResponse;
 	CMenus *pMenus = (CMenus*) pUserData;
 
-	if(Error || pRes->StatusCode() != 200)
-		pMenus->m_TeeraceTokenState = TOKEN_ERROR;
-	else if(pRes->Size() != 24+2 || str_comp(pRes->GetBody(), "false") == 0)
-		pMenus->m_TeeraceTokenState = TOKEN_FAILED;
+	pMenus->m_TeeraceTokenState = TOKEN_ERROR;
+
+	if(Error || (pRes->StatusCode() != 200 && pRes->StatusCode() != 503))
+	{
+		str_copy(pMenus->m_aTokenError, Localize("Cannot connect to Teerace"), sizeof(pMenus->m_aTokenError));
+		return;
+	}
+
+	// assume unknow error; will be overwritten otherwise
+	str_copy(pMenus->m_aTokenError, Localize("Unknown error"), sizeof(pMenus->m_aTokenError));
+
+	json_value *pJsonData = json_parse(pRes->GetBody(), pRes->Size());
+	if(!pJsonData)
+		return;
+
+	if(pRes->StatusCode() == 503)
+	{
+		if(pJsonData->type == json_array && pJsonData->u.array.length == 1 && (*pJsonData)[0].type == json_string)
+		{
+			const json_value &JsonMsg = (*pJsonData)[0];
+			int Len = JsonMsg.u.string.length;
+			const char *pMsg = JsonMsg;
+			// some error messages are stored in json format inside this string... ignore them
+			if(Len > 0 && pMsg[0] != '{' && pMsg[Len - 1] != '}')
+			{
+				str_copy(pMenus->m_aTokenError, Localize("Error: "), sizeof(pMenus->m_aTokenError));
+				str_append(pMenus->m_aTokenError, pMsg, sizeof(pMenus->m_aTokenError));
+			}
+		}
+	}
 	else
 	{
-		str_copy(g_Config.m_WaApiToken, pRes->GetBody()+1, 24+1);
-		pMenus->m_TeeraceTokenState = TOKEN_NONE;
+		if(pJsonData->type == json_string && pJsonData->u.string.length == 24)
+		{
+			str_copy(g_Config.m_WaApiToken, *pJsonData, sizeof(g_Config.m_WaApiToken));
+			pMenus->m_TeeraceTokenState = TOKEN_NONE;
+		}
+		else if(pJsonData->type == json_boolean && !pJsonData->u.boolean)
+		{
+			str_copy(pMenus->m_aTokenError, Localize("Wrong username or password"), sizeof(pMenus->m_aTokenError));
+		}
 	}
+	json_value_free(pJsonData);
 }
 
 void CMenus::RenderSettingsRace(CUIRect MainView)
@@ -1418,28 +1453,35 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(m_TeeraceTokenState == TOKEN_ERROR)
-			UI()->DoLabel(&Button, Localize("Cannot connect to Teerace"), 14.0, -1);
-		else if(m_TeeraceTokenState == TOKEN_FAILED)
-			UI()->DoLabel(&Button, Localize("Wrong username or password"), 14.0, -1);
+			UI()->DoLabel(&Button, m_aTokenError, 14.0, -1);
 
 		LeftView.HSplitTop(20.0f, &ApiButton, &LeftView);
 		ApiButton.VSplitLeft(200.0f, &ApiButton, 0);
+
 		bool TokenRequested = m_TeeraceTokenState == TOKEN_REQUESTED;
 		static int s_LoginButton = 0;
-		if(DoButton_Menu(&s_LoginButton, TokenRequested ? Localize("Checking...") : Localize("Login"), TokenRequested ? -1 : 0, &ApiButton)
-			&& g_Config.m_WaUsername[0] && s_aPassword[0])
+		const char *pLoginText = TokenRequested ? Localize("Checking...") : Localize("Login");
+		if(DoButton_Menu(&s_LoginButton, pLoginText, TokenRequested ? -1 : 0, &ApiButton))
 		{
-			m_TeeraceTokenState = TOKEN_REQUESTED;
+			if(!g_Config.m_WaUsername[0] || !s_aPassword[0])
+			{
+				str_copy(m_aTokenError, Localize("Username and password are required"), sizeof(m_aTokenError));
+				m_TeeraceTokenState = TOKEN_ERROR;
+			}
+			else
+			{
+				m_TeeraceTokenState = TOKEN_REQUESTED;
 
-			char aData[128];
-			str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, s_aPassword);
-			mem_zero(s_aPassword, sizeof(s_aPassword));
+				char aData[128];
+				str_format(aData, sizeof(aData), "username=%s&password=%s", g_Config.m_WaUsername, s_aPassword);
+				mem_zero(s_aPassword, sizeof(s_aPassword));
 			
-			CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_POST, "/anonclient/get_token/");
-			pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
-			CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
-			pInfo->SetCallback(CMenus::OnApiToken, this);
-			Client()->SendHttp(pInfo, pRequest);
+				CBufferRequest *pRequest = ITeerace::CreateApiRequest(IRequest::HTTP_POST, "/anonclient/get_token/");
+				pRequest->SetBody(aData, str_length(aData), "application/x-www-form-urlencoded");
+				CRequestInfo *pInfo = new CRequestInfo(ITeerace::Host());
+				pInfo->SetCallback(CMenus::OnApiToken, this);
+				Client()->SendHttp(pInfo, pRequest);
+			}
 		}
 	}
 	else
