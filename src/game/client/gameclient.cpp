@@ -620,13 +620,6 @@ void CGameClient::UpdatePositions()
 void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
-	CServerInfo ServerInfo;
-	Client()->GetServerInfo(&ServerInfo);
-	bool PredictRace = IsRaceStrict(&ServerInfo) && g_Config.m_ClPredictRace;
-	TempWorld.m_Teleport = g_Config.m_ClPredictTeleport && PredictRace;
-	TempWorld.m_Speedup = g_Config.m_ClPredictSpeedup && PredictRace;
-	TempWorld.m_StopTiles = g_Config.m_ClPredictStopTiles && PredictRace;
-
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());

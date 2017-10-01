@@ -62,6 +62,11 @@ void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
 {
 	m_pWorld = pWorld;
 	m_pCollision = pCollision;
+
+	mem_zero(&m_Input, sizeof(m_Input));
+	m_Teleported = false;
+	m_SpeedupTouch = false;
+	m_LastSpeedup = -1;
 }
 
 void CCharacterCore::Reset()
@@ -77,10 +82,6 @@ void CCharacterCore::Reset()
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
 	m_Direction = 0;
-	mem_zero(&m_Input, sizeof(m_Input));
-	m_Teleported = false;
-	m_SpeedupTouch = false;
-	m_LastSpeedup = -1;
 }
 
 void CCharacterCore::Tick(bool UseInput)

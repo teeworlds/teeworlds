@@ -163,12 +163,12 @@ enum
 class CWorldCore
 {
 public:
-	CWorldCore()
+	CWorldCore(bool Race = false)
 	{
 		mem_zero(m_apCharacters, sizeof(m_apCharacters));
-		m_Teleport = true;
-		m_Speedup = true;
-		m_StopTiles = true;
+		m_Teleport = Race;
+		m_Speedup = Race;
+		m_StopTiles = Race;
 	}
 
 	CTuningParams m_Tuning;
