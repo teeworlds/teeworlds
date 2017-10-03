@@ -377,6 +377,8 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	elseif compiler == "cl" then
 		SetDriversCL(settings)
 	else
+		-- apply compiler settings
+		config.compiler:Apply(settings)
 		compiler = config.compiler.driver
 	end
 	
