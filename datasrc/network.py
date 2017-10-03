@@ -37,7 +37,11 @@ enum
 	FLAG_ATSTAND,
 	FLAG_TAKEN,
 
-	SPEC_FREEVIEW=-1,
+	SPEC_PLAYER=0,
+	SPEC_FREEVIEW,
+	SPEC_FLAGRED,
+	SPEC_FLAGBLUE,
+	NUM_SPECMODES,
 };
 '''
 
@@ -166,7 +170,8 @@ Objects = [
 	]),
 
 	NetObject("SpectatorInfo", [
-		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
+		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES-1'),
+		NetIntRange("m_SpectatorID", -1, 'MAX_CLIENTS-1'),
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 	]),
@@ -356,7 +361,8 @@ Messages = [
 	]),
 
 	NetMessage("Cl_SetSpectatorMode", [
-		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
+		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES'),
+		NetIntRange("m_SpectatorID", -1, 'MAX_CLIENTS-1'),
 	]),
 
 	NetMessage("Cl_StartInfo", [

@@ -54,7 +54,7 @@ public:
 
 	// used for spectator mode
 	int GetSpectatorID() const { return m_SpectatorID; }
-	bool SetSpectatorID(int SpectatorID);
+	bool SetSpectatorID(int SpecMode, int SpectatorID);
 	bool m_DeadSpecMode;
 	bool DeadCanFollow(CPlayer *pPlayer) const;
 	void UpdateDeadSpecMode();
@@ -126,7 +126,10 @@ private:
 	bool m_Dummy;
 
 	// used for spectator mode
+	int m_SpecMode;
 	int m_SpectatorID;
+	class CFlag *m_pSpecFlag;
+	bool m_ActiveSpecSwitch;
 };
 
 #endif
