@@ -405,7 +405,7 @@ bool CPlayer::DeadCanFollow(CPlayer *pPlayer) const
 void CPlayer::UpdateDeadSpecMode()
 {
 	// check if actual spectator id is valid
-	if(m_SpecMode == SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID] && DeadCanFollow(GameServer()->m_apPlayers[m_SpectatorID]))
+	if(m_SpectatorID != -1 && GameServer()->m_apPlayers[m_SpectatorID] && DeadCanFollow(GameServer()->m_apPlayers[m_SpectatorID]))
 		return;
 
 	// find player to follow

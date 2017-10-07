@@ -552,9 +552,9 @@ void CHud::RenderSpectatorHud()
 	case SPEC_FLAGRED:
 	case SPEC_FLAGBLUE:
 		char aFlag[64];
-		str_format(aFlag, sizeof(aFlag), "%s flag", Localize(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED ? "red" : "blue"));
+		str_format(aFlag, sizeof(aFlag), m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED ? Localize("red flag") : Localize("blue flag"));
 
-		if (m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
 			str_format(aBuf, sizeof(aBuf), "%s: %s (%s)", Localize("Spectate"), aFlag, aName);
 		else
 			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), aFlag);

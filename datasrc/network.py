@@ -37,8 +37,8 @@ enum
 	FLAG_ATSTAND,
 	FLAG_TAKEN,
 
-	SPEC_PLAYER=0,
-	SPEC_FREEVIEW,
+	SPEC_FREEVIEW=0,
+	SPEC_PLAYER,
 	SPEC_FLAGRED,
 	SPEC_FLAGBLUE,
 	NUM_SPECMODES,
@@ -361,7 +361,7 @@ Messages = [
 	]),
 
 	NetMessage("Cl_SetSpectatorMode", [
-		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES'),
+		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES-1'),
 		NetIntRange("m_SpectatorID", -1, 'MAX_CLIENTS-1'),
 	]),
 

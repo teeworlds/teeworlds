@@ -79,7 +79,7 @@ public:
 			notthis - Entity to ignore
 
 		Returns:
-			Returns a pointer to the closest CCharacter or NULL if no CCharacter is close enough.
+			Returns a pointer to the closest CEntity or NULL if no CEntity is close enough.
 	*/
 	CEntity *ClosestEntity(vec2 Pos, float Radius, int Type, CEntity *pNotThis);
 
