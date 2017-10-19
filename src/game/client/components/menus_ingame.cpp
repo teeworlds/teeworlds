@@ -806,6 +806,7 @@ int CMenus::GhostlistFetchCallback(const char *pName, int IsDir, int StorageType
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
 	Item.m_Time = pSelf->m_pClient->m_pGhost->GhostLoader()->GetTime(&Header);
+	Item.m_AutoDelete = g_Config.m_ClDeleteOldGhosts;
 	if(Item.m_Time > 0)
 		pSelf->m_lGhosts.add(Item);
 	return 0;
@@ -849,7 +850,7 @@ void CMenus::UpdateOwnGhost(CGhostItem Item)
 	{
 		m_lGhosts[Own].m_Slot = -1;
 		m_lGhosts[Own].m_Own = false;
-		if(Item.HasFile() || !m_lGhosts[Own].HasFile())
+		if(m_lGhosts[Own].m_AutoDelete && (Item.HasFile() || !m_lGhosts[Own].HasFile()))
 			DeleteGhostItem(Own);
 	}
 
