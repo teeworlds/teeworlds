@@ -35,10 +35,10 @@ class CGhostRecorder : public IGhostRecorder
 
 	void ResetBuffer();
 	void FlushChunk();
-	
-public:	
+
+public:
 	CGhostRecorder();
-	
+
 	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pMap, unsigned MapCrc, const char *pName);
 	int Stop(int Ticks, int Time);
 

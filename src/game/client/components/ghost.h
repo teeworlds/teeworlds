@@ -61,11 +61,13 @@ private:
 		{
 			m_Path.Reset();
 			m_StartTick = -1;
-			m_PlaybackPos = 0;
+			m_PlaybackPos = -1;
 			m_Mirror = false;
 			m_Team = -1;
 		}
 	};
+
+	static const char *ms_pGhostDir;
 
 	class IGhostLoader *m_pGhostLoader;
 	class IGhostRecorder *m_pGhostRecorder;
@@ -73,6 +75,9 @@ private:
 	CGhostItem m_aActiveGhosts[MAX_ACTIVE_GHOSTS];
 	CGhostItem m_CurGhost;
 
+	char m_aTmpFilename[128];
+
+	int m_NewRenderTick;
 	int m_StartRenderTick;
 	int m_LastDeathTick;
 	bool m_Recording;
@@ -80,6 +85,8 @@ private:
 
 	bool m_SymmetricMap;
 	bool m_AllowRestart;
+
+	void GetPath(char *pBuf, int Size, const char *pPlayerName, int Time = -1) const;
 
 	void AddInfos(const CNetObj_Character *pChar);
 	int GetSlot() const;
@@ -106,14 +113,17 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnMapLoad();
 
+	void OnNewSnapshot(bool Predicted = false);
 	void OnTeamJoin(int Team);
 
 	int FreeSlot() const;
-	int Load(const char* pFilename);
+	int Load(const char *pFilename);
 	void Unload(int Slot);
-
 	void UnloadAll();
-	void SaveGhost(class CMenus::CGhostItem *pItem);
+
+	void SaveGhost(CMenus::CGhostItem *pItem);
+
+	const char *GetGhostDir() const { return ms_pGhostDir; }
 
 	void ToggleMirror(int Slot) { m_aActiveGhosts[Slot].m_Mirror = !m_aActiveGhosts[Slot].m_Mirror; };
 	bool IsMirrored(int Slot) const { return m_aActiveGhosts[Slot].m_Mirror; };

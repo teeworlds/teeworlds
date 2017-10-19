@@ -16,19 +16,28 @@ class CRaceDemo : public CComponent
 		RACE_FINISHED,
 	};
 
+	static const char *ms_pRaceDemoDir;
+
+	char m_aTmpFilename[128];
+
 	int m_RaceState;
 	int m_RaceStartTick;
 	int m_RecordStopTick;
 	int m_Time;
 
+	static int RaceDemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+
+	void GetPath(char *pBuf, int Size, int Time = -1) const;
+
 	void StopRecord(int Time = -1);
 	bool CheckDemo(int Time) const;
-	
+
 public:
 	CRaceDemo();
-	
+
 	virtual void OnReset();
-	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
+
+	void OnNewSnapshot();
 };
 #endif

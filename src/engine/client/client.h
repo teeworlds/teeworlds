@@ -299,13 +299,12 @@ public:
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	// Race
-	const char *RaceDemo_ParseName(const char *pName);
-	void RaceDemo_GetName(char *pBuf, int Size, int Time = -1);
-	void RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName);
-	void DemoRecorder_StartRace();
+	const char *GetCurrentMap() const { return m_aCurrentMap; }
+	unsigned GetMapCrc() const { return m_CurrentMapCrc; }
 
-	void Ghost_GetPath(char *pBuf, int Size, const char *pPlayerName, int Time = -1);
-	void GhostRecorder_Start(const char *pPlayerName, int Time = -1);
+	void DemoRecorder_StartRace(const char *pFilename);
+
+	void GhostRecorder_Start(const char *pFilename, const char *pPlayerName);
 	bool GhostLoader_Load(const char *pFilename);
 	bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader);
 

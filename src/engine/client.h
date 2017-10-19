@@ -157,13 +157,12 @@ public:
 	virtual int GetDebugFont() = 0;
 	
 	// Race
-	virtual const char *RaceDemo_ParseName(const char *pName) = 0;
-	virtual void RaceDemo_GetName(char *pBuf, int Size, int Time = -1) = 0;
-	virtual void RaceDemo_GetPath(char *pBuf, int Size, const char *pDemoName) = 0;
-	virtual void DemoRecorder_StartRace() = 0;
+	virtual const char *GetCurrentMap() const = 0;
+	virtual unsigned GetMapCrc() const = 0;
+
+	virtual void DemoRecorder_StartRace(const char *pFilename) = 0;
 	
-	virtual void Ghost_GetPath(char *pBuf, int Size, const char *pPlayerName, int Time = -1) = 0;
-	virtual void GhostRecorder_Start(const char *pPlayerName, int Time = -1) = 0;
+	virtual void GhostRecorder_Start(const char *pFilename, const char *pPlayerName) = 0;
 	virtual bool GhostLoader_Load(const char *pFilename) = 0;
 	virtual bool GhostLoader_GetGhostInfo(const char *pFilename, struct CGhostHeader *pGhostHeader) = 0;
 };
