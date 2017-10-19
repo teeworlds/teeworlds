@@ -248,7 +248,6 @@ void CGhost::OnRender()
 		if(pGhost->Empty())
 			continue;
 
-		bool End = false;
 		int GhostTick = pGhost->m_StartTick + PlaybackTick;
 		while(pGhost->m_PlaybackPos >= 0 && pGhost->m_Path.Get(pGhost->m_PlaybackPos)->m_Tick < GhostTick)
 		{

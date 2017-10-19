@@ -55,7 +55,7 @@ private:
 
 		CGhostItem() { Reset(); }
 
-		void AutoMirror(int Team) { m_Mirror = Team != TEAM_SPECTATORS && m_Team == Team ^ 1; }
+		void AutoMirror(int Team) { m_Mirror = Team != TEAM_SPECTATORS && m_Team == (Team ^ 1); }
 		bool Empty() const { return m_Path.Size() == 0; }
 		void Reset()
 		{
