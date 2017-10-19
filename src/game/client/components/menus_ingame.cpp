@@ -993,6 +993,9 @@ void CMenus::RenderGhost(CUIRect MainView)
 
 	int NewSelected = -1;
 
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+
 	for (int i = 0; i < NumGhosts; i++)
 	{
 		const CGhostItem *pItem = &m_lGhosts[i];
@@ -1051,7 +1054,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 					Graphics()->QuadsBegin();
 					RenderTools()->SelectSprite(SPRITE_OOP + 7);
 					IGraphics::CQuadItem QuadItem(Button.x+Button.w/2, Button.y+Button.h/2, 20.0f, 20.0f);
-					if(m_pClient->m_pGhost->IsMirrored(pItem->m_Slot))
+					if(m_pClient->m_pGhost->IsMirrored(pItem->m_Slot) && IsFastCap(&ServerInfo))
 						QuadItem.m_Width = -QuadItem.m_Width;
 					Graphics()->QuadsDraw(&QuadItem, 1);
 
