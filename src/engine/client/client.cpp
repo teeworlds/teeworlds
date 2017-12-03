@@ -2325,6 +2325,24 @@ static CClient *CreateClient()
 	return new(pClient) CClient;
 }
 
+static bool IsTeeworldsConnectLink(const char *str)
+{
+	const char *starter = "teeworlds:";
+
+	while(*str && *starter && *str == *starter)
+	{
+		str++;
+		starter++;
+	}
+
+	return *starter == '\0';
+}
+
+void CClient::HandleTeeworldsConnectLink(const char *clink)
+{
+	str_copy(m_aCmdConnect, clink + sizeof("teeworlds:") - 1, sizeof(m_aCmdConnect));
+}
+
 /*
 	Server Time
 	Client Mirror Time
@@ -2429,7 +2447,9 @@ int main(int argc, const char **argv) // ignore_convention
 		pConsole->ExecuteFile("autoexec.cfg");
 
 		// parse the command line arguments
-		if(argc > 1) // ignore_convention
+		if(argc == 2 && IsTeeworldsConnectLink(argv[1]))
+			pClient->HandleTeeworldsConnectLink(argv[1]);
+		else if(argc > 1) // ignore_convention
 			pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 	}
 
