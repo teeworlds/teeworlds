@@ -37,6 +37,8 @@ enum
 
 	DIALOG_NONE=0,
 	DIALOG_FILE,
+
+	MAX_SKIP=(1<<8)-1
 };
 
 struct CEntity
@@ -456,6 +458,8 @@ public:
 	CColor m_Color;
 	int m_ColorEnv;
 	int m_ColorEnvOffset;
+	CTile *m_pSaveTiles;
+	int m_SaveTilesSize;
 	CTile *m_pTiles;
 	int m_SelectedRuleSet;
 	int m_SelectedAmount;

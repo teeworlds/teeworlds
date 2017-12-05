@@ -140,7 +140,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				Item.m_Height = pLayer->m_Height;
 				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
 				Item.m_Image = pLayer->m_Image;
-				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
+				Item.m_Data = df.AddData(pLayer->m_SaveTilesSize, pLayer->m_pSaveTiles);
 
 				// save layer name
 				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), pLayer->m_aName);
