@@ -106,6 +106,86 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 		loggers[i](str);
 }
 
+#if defined(CONF_FAMILY_WINDOWS)
+static void logger_win_console(const char *line)
+{
+	#define _MAX_LENGTH 1024
+	#define _MAX_LENGTH_ERROR (_MAX_LENGTH+32)
+
+	static const int UNICODE_REPLACEMENT_CHAR = 0xfffd;
+
+	static const char *STR_TOO_LONG = "(str too long)";
+	static const char *INVALID_UTF8 = "(invalid utf8)";
+
+	wchar_t wline[_MAX_LENGTH_ERROR];
+	size_t len = 0;
+
+	const char *read = line;
+	const char *error = STR_TOO_LONG;
+	while(len < _MAX_LENGTH)
+	{
+		// Read a character. This also advances the read pointer
+		int glyph = str_utf8_decode(&read);
+		if(glyph < 0)
+		{
+			// If there was an error decoding the UTF-8 sequence,
+			// emit a replacement character. Since the
+			// str_utf8_decode function will not work after such
+			// an error, end the string here.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+			error = INVALID_UTF8;
+		}
+		else if(glyph == 0)
+		{
+			// A character code of 0 signals the end of the string.
+			error = 0;
+			break;
+		}
+		else if(glyph > 0xffff)
+		{
+			// Since the windows console does not really support
+			// UTF-16, don't mind doing actual UTF-16 encoding,
+			// but rather emit a replacement character.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+		}
+
+		// Again, since the windows console does not really support
+		// UTF-16, but rather something along the lines of UCS-2,
+		// simply put the character into the output.
+		wline[len++] = glyph;
+	}
+
+	if(error)
+	{
+		read = error;
+		while(1)
+		{
+			// Errors are simple ascii, no need for UTF-8
+			// decoding
+			char character = *read;
+			if(character == 0)
+				break;
+
+			dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for error");
+			wline[len++] = character;
+			read++;
+		}
+	}
+
+	// Terminate the line
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\r");
+	wline[len++] = '\r';
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\n");
+	wline[len++] = '\n';
+
+	// Ignore any error that might occur
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wline, len, 0, 0);
+
+	#undef _MAX_LENGTH
+	#undef _MAX_LENGTH_ERROR
+}
+#endif
+
 static void logger_stdout(const char *line)
 {
 	printf("%s\n", line);
@@ -129,7 +209,18 @@ static void logger_file(const char *line)
 	io_flush(logfile);
 }
 
-void dbg_logger_stdout() { dbg_logger(logger_stdout); }
+void dbg_logger_stdout()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	if(GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
+	{
+		dbg_logger(logger_win_console);
+		return;
+	}
+#endif
+	dbg_logger(logger_stdout);
+}
+
 void dbg_logger_debugger() { dbg_logger(logger_debugger); }
 void dbg_logger_file(const char *filename)
 {
