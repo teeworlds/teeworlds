@@ -134,6 +134,8 @@ static void logger_win_console(const char *line)
 			// an error, end the string here.
 			glyph = UNICODE_REPLACEMENT_CHAR;
 			error = INVALID_UTF8;
+			wline[len] = glyph;
+			break;
 		}
 		else if(glyph == 0)
 		{
@@ -147,6 +149,12 @@ static void logger_win_console(const char *line)
 			// UTF-16, don't mind doing actual UTF-16 encoding,
 			// but rather emit a replacement character.
 			glyph = UNICODE_REPLACEMENT_CHAR;
+		}
+		else if(glyph == 0x2022)
+		{
+			// The 'bullet' character might get converted to a 'beep',
+			// so it will be replaced by the 'bullet operator'.
+			glyph = 0x2219;
 		}
 
 		// Again, since the windows console does not really support
