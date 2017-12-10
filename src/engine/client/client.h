@@ -317,6 +317,7 @@ public:
 	void ToggleWindowVSync();
 
 	// Teeworlds connect link
-	void HandleTeeworldsConnectLink(const char *clink);
+	const char * const m_pConLinkIdentifier;
+	void HandleTeeworldsConnectLink(const char *pConLink);
 };
 #endif

@@ -239,8 +239,7 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		UpdateInt(Target);
 }
 
-
-CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
+CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta), m_pConLinkIdentifier("teeworlds:")
 {
 	m_pEditor = 0;
 	m_pInput = 0;
@@ -2325,22 +2324,9 @@ static CClient *CreateClient()
 	return new(pClient) CClient;
 }
 
-static bool IsTeeworldsConnectLink(const char *str)
+void CClient::HandleTeeworldsConnectLink(const char *pConLink)
 {
-	const char *starter = "teeworlds:";
-
-	while(*str && *starter && *str == *starter)
-	{
-		str++;
-		starter++;
-	}
-
-	return *starter == '\0';
-}
-
-void CClient::HandleTeeworldsConnectLink(const char *clink)
-{
-	str_copy(m_aCmdConnect, clink + sizeof("teeworlds:") - 1, sizeof(m_aCmdConnect));
+	str_copy(m_aCmdConnect, pConLink, sizeof(m_aCmdConnect));
 }
 
 /*
@@ -2447,10 +2433,25 @@ int main(int argc, const char **argv) // ignore_convention
 		pConsole->ExecuteFile("autoexec.cfg");
 
 		// parse the command line arguments
-		if(argc == 2 && IsTeeworldsConnectLink(argv[1]))
-			pClient->HandleTeeworldsConnectLink(argv[1]);
-		else if(argc > 1) // ignore_convention
-			pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+		if(argc > 1) // ignore_convention
+		{
+			switch(argc) // ignore_convention
+			{
+			case 2:
+			{
+				// handle Teeworlds connect link
+				const int Length = str_length(pClient->m_pConLinkIdentifier);
+				if(str_comp_num(pClient->m_pConLinkIdentifier, argv[1], Length) == 0) // ignore_convention
+				{
+					pClient->HandleTeeworldsConnectLink(argv[1] + Length); // ignore_convention
+					break;
+				}
+			}
+			default:
+				pConsole->ParseArguments(argc - 1, &argv[1]); // ignore_convention
+			}
+
+		}
 	}
 
 	// restore empty config strings to their defaults
