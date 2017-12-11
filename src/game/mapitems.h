@@ -152,7 +152,7 @@ struct CMapItemLayer
 
 struct CMapItemLayerTilemap
 {
-	enum { CURRENT_VERSION=3 };
+	enum { CURRENT_VERSION=4 };
 
 	CMapItemLayer m_Layer;
 	int m_Version;

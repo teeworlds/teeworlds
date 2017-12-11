@@ -129,6 +129,21 @@ void CLayerTiles::PrepareForSave()
 	}
 }
 
+void CLayerTiles::ExtractTiles(CTile *pSavedTiles)
+{
+	int i = 0;
+	while(i < m_Width * m_Height)
+	{
+		for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < m_Width * m_Height; Counter++)
+		{
+			m_pTiles[i] = *pSavedTiles;
+			m_pTiles[i++].m_Skip = 0;
+		}
+
+		pSavedTiles++;
+	}
+}
+
 void CLayerTiles::MakePalette()
 {
 	for(int y = 0; y < m_Height; y++)

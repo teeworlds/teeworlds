@@ -37,6 +37,46 @@ public:
 		CMapItemVersion *pItem = (CMapItemVersion *)m_DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
 		if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
 			return false;
+
+		// replace compressed tile layers with uncompressed ones
+		int GroupsStart, GroupsNum, LayersStart, LayersNum;
+		m_DataFile.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
+		m_DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+		for(int g = 0; g < GroupsNum; g++)
+		{
+			CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(m_DataFile.GetItem(GroupsStart + g, 0, 0));
+			for(int l = 0; l < pGroup->m_NumLayers; l++)
+			{
+				CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(m_DataFile.GetItem(LayersStart + pGroup->m_StartLayer + l, 0, 0));
+
+				if(pLayer->m_Type == LAYERTYPE_TILES)
+				{
+					CMapItemLayerTilemap *pTilemap = reinterpret_cast<CMapItemLayerTilemap *>(pLayer);
+					
+					if(pTilemap->m_Version > 3)
+					{
+						CTile *pTiles = static_cast<CTile *>(mem_alloc(pTilemap->m_Width * pTilemap->m_Height * sizeof(CTile), 1));
+
+						// extract original tile data
+						int i = 0;
+						CTile *pSavedTiles = static_cast<CTile *>(m_DataFile.GetData(pTilemap->m_Data));
+						while(i < pTilemap->m_Width * pTilemap->m_Height)
+						{
+							for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < pTilemap->m_Width * pTilemap->m_Height; Counter++)
+							{
+								pTiles[i] = *pSavedTiles;
+								pTiles[i++].m_Skip = 0;
+							}
+
+							pSavedTiles++;
+						}
+
+						m_DataFile.ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles));
+					}
+				}
+			}
+			
+		}
 		
 		return true;
 	}
