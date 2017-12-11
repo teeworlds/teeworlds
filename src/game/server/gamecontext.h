@@ -130,18 +130,8 @@ public:
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 
-
-	enum
-	{
-		CHAT_ALL=-2,
-		CHAT_SPEC=-1,
-		CHAT_RED=0,
-		CHAT_BLUE=1
-	};
-
 	// network
-	void SendChatTarget(int To, const char *pText);
-	void SendChat(int ClientID, int Team, const char *pText);
+	void SendChat(int ChatterClientID, int Mode, int To, const char *pText);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendMotd(int ClientID);

@@ -895,7 +895,8 @@ void CGameClient::OnNewSnapshot()
 			aMessage[MsgLen] = 0;
 
 			CNetMsg_Cl_Say Msg;
-			Msg.m_Team = random_int()&1;
+			Msg.m_Mode = random_int()&1;
+			Msg.m_Target = -1;
 			Msg.m_pMessage = aMessage;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		}
