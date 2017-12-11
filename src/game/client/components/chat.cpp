@@ -170,96 +170,114 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		// fill the completion buffer
-		if(m_CompletionChosen < 0)
+		if (m_Mode = CHAT_WHISPER)
 		{
-			const char *pCursor = m_Input.GetString()+m_Input.GetCursorOffset();
-			for(int Count = 0; Count < m_Input.GetCursorOffset() && *(pCursor-1) != ' '; --pCursor, ++Count);
-			m_PlaceholderOffset = pCursor-m_Input.GetString();
-
-			for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; ++pCursor)
-				++m_PlaceholderLength;
-
-			str_copy(m_aCompletionBuffer, m_Input.GetString()+m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
+			// pick next player as target
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				int ClientID = (m_WhisperTarget + i) % MAX_CLIENTS;
+				if (m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
+				{
+					dbg_msg("test", "old=%i, new=%i", m_WhisperTarget, ClientID);
+					m_WhisperTarget = ClientID;
+					
+					break;
+				}
+			}
 		}
-
-		// find next possible name
-		const char *pCompletionString = 0;
-		if(m_CompletionChosen < 0 && m_CompletionFav >= 0)
-			m_CompletionChosen = m_CompletionFav;
 		else
 		{
-			if (m_ReverseCompletion)
-				m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
-			else
-				m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
-		}
-
-		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
-		{
-			int SearchType;
-			int Index;
-
-			if(m_ReverseCompletion)
+			// fill the completion buffer
+			if(m_CompletionChosen < 0)
 			{
-				SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-				Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
-			}
-			else
-			{
-				SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-				Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+				const char *pCursor = m_Input.GetString()+m_Input.GetCursorOffset();
+				for(int Count = 0; Count < m_Input.GetCursorOffset() && *(pCursor-1) != ' '; --pCursor, ++Count);
+				m_PlaceholderOffset = pCursor-m_Input.GetString();
+
+				for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; ++pCursor)
+					++m_PlaceholderLength;
+
+				str_copy(m_aCompletionBuffer, m_Input.GetString()+m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
 			}
 
-			if(!m_pClient->m_aClients[Index].m_Active)
-				continue;
-
-			bool Found = false;
-			if(SearchType == 1)
+			// find next possible name
+			const char *pCompletionString = 0;
+			if(m_CompletionChosen < 0 && m_CompletionFav >= 0)
+				m_CompletionChosen = m_CompletionFav;
+			else
 			{
-				if(str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)) &&
-					str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+				if (m_ReverseCompletion)
+					m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
+				else
+					m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
+			}
+
+			for(int i = 0; i < 2*MAX_CLIENTS; ++i)
+			{
+				int SearchType;
+				int Index;
+
+				if(m_ReverseCompletion)
+				{
+					SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+					Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
+				}
+				else
+				{
+					SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+					Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+				}
+
+				if(!m_pClient->m_aClients[Index].m_Active)
+					continue;
+
+				bool Found = false;
+				if(SearchType == 1)
+				{
+					if(str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)) &&
+						str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+						Found = true;
+				}
+				else if(!str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)))
 					Found = true;
-			}
-			else if(!str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)))
-				Found = true;
 
-			if(Found)
+				if(Found)
+				{
+					pCompletionString = m_pClient->m_aClients[Index].m_aName;
+					m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
+					m_CompletionFav = m_CompletionChosen;
+					break;
+				}
+			}
+
+			// insert the name
+			if(pCompletionString)
 			{
-				pCompletionString = m_pClient->m_aClients[Index].m_aName;
-				m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
-				m_CompletionFav = m_CompletionChosen;
-				break;
+				char aBuf[256];
+				// add part before the name
+				str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
+
+				// add the name
+				str_append(aBuf, pCompletionString, sizeof(aBuf));
+
+				// add seperator
+				const char *pSeparator = "";
+				if(*(m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength) != ' ')
+					pSeparator = m_PlaceholderOffset == 0 ? ": " : " ";
+				else if(m_PlaceholderOffset == 0)
+					pSeparator = ":";
+				if(*pSeparator)
+					str_append(aBuf, pSeparator, sizeof(aBuf));
+
+				// add part after the name
+				str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
+
+				m_PlaceholderLength = str_length(pSeparator)+str_length(pCompletionString);
+				m_OldChatStringLength = m_Input.GetLength();
+				m_Input.Set(aBuf);
+				m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
+				m_InputUpdate = true;
 			}
-		}
-
-		// insert the name
-		if(pCompletionString)
-		{
-			char aBuf[256];
-			// add part before the name
-			str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
-
-			// add the name
-			str_append(aBuf, pCompletionString, sizeof(aBuf));
-
-			// add seperator
-			const char *pSeparator = "";
-			if(*(m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength) != ' ')
-				pSeparator = m_PlaceholderOffset == 0 ? ": " : " ";
-			else if(m_PlaceholderOffset == 0)
-				pSeparator = ":";
-			if(*pSeparator)
-				str_append(aBuf, pSeparator, sizeof(aBuf));
-
-			// add part after the name
-			str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
-
-			m_PlaceholderLength = str_length(pSeparator)+str_length(pCompletionString);
-			m_OldChatStringLength = m_Input.GetLength();
-			m_Input.Set(aBuf);
-			m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
-			m_InputUpdate = true;
 		}
 	}
 	else
@@ -504,7 +522,7 @@ void CChat::OnRender()
 		else if(m_Mode == CHAT_TEAM)
 			str_copy(aBuf, Localize("Team"), sizeof(aBuf));
 		else if(m_Mode == CHAT_WHISPER)
-			str_format(aBuf, sizeof(aBuf), "%s %s", Localize("To"), m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("To"), m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 		else
 			str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
 			
