@@ -114,6 +114,7 @@ void CBinds::SetDefaults()
 
 	Bind('t', "chat all");
 	Bind('y', "chat team");
+	Bind('x', "chat whisper");
 
 	Bind(KEY_F3, "vote yes");
 	Bind(KEY_F4, "vote no");
@@ -219,7 +220,6 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 
 	char aBuffer[256];
 	char *pEnd = aBuffer+sizeof(aBuffer)-8;
-	pConfig->WriteLine("unbindall");
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		if(pSelf->m_aaKeyBindings[i][0] == 0)

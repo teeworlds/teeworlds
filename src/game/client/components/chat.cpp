@@ -103,7 +103,22 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 		pChat->EnableMode(CHAT_TEAM);
 	else if(str_comp(pMode, "whisper") == 0)
 	{
-		int Target = pResult->GetInteger(1);
+		int Target = -1;
+		if(pResult->NumArguments() == 2)
+			Target = pResult->GetInteger(1);
+		else
+		{
+			// pick next player as target
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				int ClientID = (pChat->m_pClient->m_LocalClientID + i) % MAX_CLIENTS;
+				if(pChat->m_pClient->m_aClients[ClientID].m_Active && pChat->m_pClient->m_LocalClientID != ClientID)
+				{
+					Target = ClientID;
+					break;
+				}
+			}
+		}
 		if(Target < 0 || Target >= MAX_CLIENTS || !pChat->m_pClient->m_aClients[Target].m_Active || pChat->m_pClient->m_LocalClientID == Target)
 			pChat->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "please enter a valid ClientID");
 		else
@@ -178,9 +193,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				int ClientID = (m_WhisperTarget + i) % MAX_CLIENTS;
 				if (m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
 				{
-					dbg_msg("test", "old=%i, new=%i", m_WhisperTarget, ClientID);
 					m_WhisperTarget = ClientID;
-					
 					break;
 				}
 			}
