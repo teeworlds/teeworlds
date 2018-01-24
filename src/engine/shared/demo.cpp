@@ -683,8 +683,8 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 	// get timeline markers
 	int Num = ((m_Info.m_Header.m_aNumTimelineMarkers[0]<<24)&0xFF000000) | ((m_Info.m_Header.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
 				((m_Info.m_Header.m_aNumTimelineMarkers[2]<<8)&0xFF00) | (m_Info.m_Header.m_aNumTimelineMarkers[3]&0xFF);
-	m_Info.m_Info.m_NumTimelineMarkers = Num;
-	for(int i = 0; i < Num && i < MAX_TIMELINE_MARKERS; i++)
+	m_Info.m_Info.m_NumTimelineMarkers = min(Num, int(MAX_TIMELINE_MARKERS));
+	for(int i = 0; i < m_Info.m_Info.m_NumTimelineMarkers; i++)
 	{
 		char *pTimelineMarker = m_Info.m_Header.m_aTimelineMarkers[i];
 		m_Info.m_Info.m_aTimelineMarkers[i] = ((pTimelineMarker[0]<<24)&0xFF000000) | ((pTimelineMarker[1]<<16)&0xFF0000) |
