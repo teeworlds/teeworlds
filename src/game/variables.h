@@ -162,4 +162,10 @@ MACRO_CONFIG_INT(ClDummyHammer, cl_dummy_hammer, 0, 0, 1, CFGFLAG_CLIENT, "Wheth
 MACRO_CONFIG_INT(ClDummyResetOnSwitch, cl_dummy_resetonswitch, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Whether dummy should stop pressing keys when you switch")
 MACRO_CONFIG_INT(ClDummyCopyMoves, cl_dummy_copy_moves, 0, 0, 1, CFGFLAG_CLIENT, "Wether dummy should copy your moves")
 
+// more controlable dummy command
+MACRO_CONFIG_INT(ClControlDummy, cl_control_dummy, 0, 0, 1, CFGFLAG_CLIENT, "Whether can you control dummy at the same time")
+MACRO_CONFIG_INT(ClDummyJump, cl_dummy_jump, 0, 0, 1, CFGFLAG_CLIENT, "Whether dummy is jumping")
+MACRO_CONFIG_INT(ClDummyFire, cl_dummy_fire, 0, 0, 1, CFGFLAG_CLIENT, "Whether dummy is fire")
+MACRO_CONFIG_INT(ClDummyHook, cl_dummy_fire, 0, 0, 1, CFGFLAG_CLIENT, "Whether dummy is hook")
+
 #endif
