@@ -206,7 +206,7 @@ int CControls::SnapInput(int *pData)
 			m_InputData[!g_Config.m_ClDummy] = *pDummyInput;
 		}
 		
-		if(g_Config.m_ClControlDummy){
+		if(g_Config.m_ClDummyControl){
 			CNetObj_PlayerInput *pDummyInput = &m_pClient->m_DummyInput;
 			pDummyInput->m_Jump = g_Config.m_ClDummyJump;
 			pDummyInput->m_Fire = g_Config.m_ClDummyFire;
