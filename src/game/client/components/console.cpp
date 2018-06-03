@@ -711,6 +711,20 @@ void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData,
 	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, Highlighted);
 }
 
+void CGameConsole::ConConsolePageUp(IConsole::IResult *pResult, void *pUserData)
+{
+	CInstance *pConsole = ((CGameConsole *)pUserData)->CurrentConsole();
+	pConsole->m_BacklogActPage++;
+}
+
+void CGameConsole::ConConsolePageDown(IConsole::IResult *pResult, void *pUserData)
+{
+	CInstance *pConsole = ((CGameConsole *)pUserData)->CurrentConsole();
+	--pConsole->m_BacklogActPage;
+	if(pConsole->m_BacklogActPage < 0)
+		pConsole->m_BacklogActPage = 0;
+}
+
 void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -751,6 +765,9 @@ void CGameConsole::OnConsoleInit()
 	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
 	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console");
 	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
+
+	Console()->Register("console_page_up", "", CFGFLAG_CLIENT, ConConsolePageUp, this, "Previous page in console");
+	Console()->Register("console_page_down", "", CFGFLAG_CLIENT, ConConsolePageDown, this, "Next page in console");
 
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 }

@@ -84,6 +84,8 @@ class CGameConsole : public CComponent
 	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConConsolePageUp(IConsole::IResult *pResult, void *pUserData);
+	static void ConConsolePageDown(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 public:
