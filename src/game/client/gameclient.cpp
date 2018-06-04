@@ -447,7 +447,9 @@ void CGameClient::OnDummySwap()
 		m_pControls->ResetInput(!g_Config.m_ClDummy);
 		m_pControls->m_InputData[!g_Config.m_ClDummy].m_Hook = 0;
 	}
+	int tmp = m_DummyInput.m_Fire;
 	m_DummyInput = m_pControls->m_InputData[!g_Config.m_ClDummy];
+	m_pControls->m_InputData[g_Config.m_ClDummy].m_Fire = tmp;
 }
 
 int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
