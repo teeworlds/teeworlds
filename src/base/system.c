@@ -1476,19 +1476,46 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
-#if !defined(CONF_PLATFORM_MACOSX)
-	int i;
-#endif
 	if(!home)
 		return -1;
-
+	
 #if defined(CONF_PLATFORM_MACOSX)
 	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
-#else
+	return 0;
+#endif
+
+	int i;
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
+	/* old folder location */
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
-#endif
+
+	if(!xdgdatahome)
+	{
+		/* use default location */
+		snprintf(xdgpath, max, "%s/.local/share/%s", home, appname);
+		for(i = strlen(home)+14; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	else
+	{
+		snprintf(xdgpath, max, "%s/%s", xdgdatahome, appname);
+		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	
+	/* check for old location / backward compatibility */
+	if(fs_is_dir(path))
+	{
+		/* use old folder path */
+		/* for backward compatibility */
+		return 0;
+	}
+	
+	snprintf(path, max, "%s", xdgpath);
 
 	return 0;
 #endif
