@@ -169,7 +169,7 @@ static void sha_done(sha256_state* md, void* out)
         md->curlen = 0;
     }
 
-    // Pad upto 56 bytes of zeroes
+    // Pad up to 56 bytes of zeroes
     while(md->curlen < 56)
         md->buf[md->curlen++] = 0;
 

@@ -113,7 +113,7 @@ void CSounds::OnRender()
 			return;
 	}
 
-	// set listner pos
+	// set listener pos
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
 	Sound()->SetListenerPos(Pos.x, Pos.y);
 

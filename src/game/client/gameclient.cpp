@@ -88,7 +88,7 @@ void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSig
 	AppendDecimals(pBuf, Size, Time, Precision);
 }
 
-// instanciate all systems
+// instantiate all systems
 static CInfoMessages gs_InfoMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;

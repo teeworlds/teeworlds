@@ -1,6 +1,6 @@
 import sys, os
 
-# genereate keys.h file
+# generate keys.h file
 f = file("src/engine/keys.h", "w")
 
 keynames = []

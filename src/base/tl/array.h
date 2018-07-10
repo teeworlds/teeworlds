@@ -268,7 +268,7 @@ public:
 
 	/*
 		Function: optimize
-			Removes unnessasary data, returns how many bytes was earned.
+			Removes unnecessary data, returns how many bytes was earned.
 
 		Remarks:
 			- Invalidates ranges
