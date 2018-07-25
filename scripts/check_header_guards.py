@@ -2,7 +2,7 @@
 import os
 import sys
 
-os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
+os.chdir(os.path.dirname(__file__) + "/..")
 
 PATH = "src/"
 EXCEPTIONS = [
