@@ -1951,6 +1951,30 @@ int str_comp_filenames(const char *a, const char *b)
 	return tolower(*a) - tolower(*b);
 }
 
+const char *str_startswith(const char *str, const char *prefix)
+{
+	int prefixl = str_length(prefix);
+	if(str_comp_num(str, prefix, prefixl) == 0)
+	{
+		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int str_endswith(const char *str, const char *suffix)
+{
+	int strl = str_length(str);
+	int suffixl = str_length(suffix);
+	if(strl < suffixl)
+	{
+		return 0;
+	}
+	return str_comp(str + strl - suffixl, suffix) == 0;
+}
+
 const char *str_find_nocase(const char *haystack, const char *needle)
 {
 	while(*haystack) /* native implementation */
