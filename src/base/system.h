@@ -1039,13 +1039,13 @@ const char *str_startswith(const char *str, const char *prefix);
 		suffix - Suffix to look for.
 
 	Returns:
-		0 - String suffix is not a suffix of string str
-		1 - String suffix is a suffix of string str
+		A pointer to the beginning of the suffix in the string str, or
+		0 if the string suffix isn't a suffix of the string str.
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-int str_endswith(const char *str, const char *suffix);
+const char *str_endswith(const char *str, const char *suffix);
 
 /*
 	Function: str_find_nocase

@@ -1964,15 +1964,24 @@ const char *str_startswith(const char *str, const char *prefix)
 	}
 }
 
-int str_endswith(const char *str, const char *suffix)
+const char *str_endswith(const char *str, const char *suffix)
 {
 	int strl = str_length(str);
 	int suffixl = str_length(suffix);
+	const char *strsuffix;
 	if(strl < suffixl)
 	{
 		return 0;
 	}
-	return str_comp(str + strl - suffixl, suffix) == 0;
+	strsuffix = str + strl - suffixl;
+	if(str_comp(strsuffix, suffix) == 0)
+	{
+		return strsuffix;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 const char *str_find_nocase(const char *haystack, const char *needle)
