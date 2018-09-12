@@ -5,12 +5,16 @@ FreeType = {
 		local check = function(option, settings)
 			option.value = false
 			option.use_ftconfig = false
+			option.use_pkgconfig = false
 			option.use_winlib = 0
 			option.lib_path = nil
 			
 			if ExecuteSilent("freetype-config") > 0 and ExecuteSilent("freetype-config --cflags") == 0 then
 				option.value = true
 				option.use_ftconfig = true
+			elseif ExecuteSilent("pkg-config") > 0 and ExecuteSilent("pkg-config freetype2") == 0 then
+				option.value = true
+				option.use_pkgconfig = true
 			end
 				
 			if platform == "win32" then
@@ -29,6 +33,9 @@ FreeType = {
 			if option.use_ftconfig == true then
 				settings.cc.flags:Add("`freetype-config --cflags`")
 				settings.link.flags:Add("`freetype-config --libs`")
+			elseif option.use_pkgconfig == true then
+				settings.cc.flags:Add("`pkg-config freetype2 --cflags`")
+				settings.link.flags:Add("`pkg-config freetype2 --libs`")
 				
 			elseif option.use_winlib > 0 then
 				if option.use_winlib == 32 then
@@ -43,12 +50,14 @@ FreeType = {
 		local save = function(option, output)
 			output:option(option, "value")
 			output:option(option, "use_ftconfig")
+			output:option(option, "use_pkgconfig")
 			output:option(option, "use_winlib")
 		end
 		
 		local display = function(option)
 			if option.value == true then
 				if option.use_ftconfig == true then return "using freetype-config" end
+				if option.use_pkgconfig == true then return "using pkg-config" end
 				if option.use_winlib == 32 then return "using supplied win32 libraries" end
 				if option.use_winlib == 64 then return "using supplied win64 libraries" end
 				return "using unknown method"
