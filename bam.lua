@@ -1,3 +1,8 @@
+if _VERSION == "Lua 5.1" then
+	CheckVersion("0.4")
+else
+	CheckVersion("0.5")
+end
 
 Import("configure.lua")
 Import("other/sdl/sdl.lua")
