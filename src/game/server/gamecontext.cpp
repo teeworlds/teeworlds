@@ -590,6 +590,14 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		if(m_apPlayers[i] && m_apPlayers[i]->m_SpectatorID == ClientID)
 			m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
 	}
+
+	// check if all players left and game is paused => unpause
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+			return;
+	}
+	m_pController->TogglePause();
 }
 
 void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
