@@ -109,6 +109,7 @@ public:
 		int m_CRCounter;
 		int m_CRCheckVal;
 		int m_CRSuccess;
+		int64 m_ConStartTime;
 		int m_Latency;
 		int m_SnapRate;
 
