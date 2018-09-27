@@ -1076,7 +1076,7 @@ void CGameClient::SendInfo(bool Start)
 		Msg.m_UseCustomColor = g_Config.m_PlayerUseCustomColor;
 		Msg.m_ColorBody = g_Config.m_PlayerColorBody;
 		Msg.m_ColorFeet = g_Config.m_PlayerColorFeet;
-		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 	}
 	else
 	{
