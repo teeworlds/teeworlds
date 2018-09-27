@@ -9,14 +9,15 @@
 /*
 
 CURRENT:
-	packet header: 3 bytes
-		unsigned char flags_ack; // 4bit flags, 4bit ack
+	packet header: 7 bytes
+		unsigned char flags_ack; // 6bit flags, 2bit ack
 		unsigned char ack; // 8 bit ack
 		unsigned char num_chunks; // 8 bit chunks
+		(unsigned char token[4];) // 32 bit token if flags contains NET_PACKETFLAG_TOKEN
 
-		(unsigned char padding[3])	// 24 bit extra incase it's a connection less packet
-									// this is to make sure that it's compatible with the
-									// old protocol
+		(unsigned char padding[3];) // 24 bit extra in case it's a connection less packet
+		                            // this is to make sure that it's compatible with the
+		                            // old protocol
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -47,9 +48,10 @@ enum
 	NET_VERSION = 2,
 
 	NET_MAX_PACKETSIZE = 1400,
-	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-6,
+	NET_MAX_PAYLOAD = NET_MAX_PACKETSIZE-10,
 	NET_MAX_CHUNKHEADERSIZE = 5,
-	NET_PACKETHEADERSIZE = 3,
+	NET_PACKETHEADERSIZE = 7,
+	NET_PACKETHEADERSIZE_WITHOUT_TOKEN = 3,
 	NET_MAX_CLIENTS = 16,
 	NET_MAX_CONSOLE_CLIENTS = 4,
 	NET_MAX_SEQUENCE = 1<<10,
@@ -57,14 +59,15 @@ enum
 
 	NET_CONNSTATE_OFFLINE=0,
 	NET_CONNSTATE_CONNECT=1,
-	NET_CONNSTATE_PENDING=2,
 	NET_CONNSTATE_ONLINE=3,
 	NET_CONNSTATE_ERROR=4,
 
-	NET_PACKETFLAG_CONTROL=1,
-	NET_PACKETFLAG_CONNLESS=2,
-	NET_PACKETFLAG_RESEND=4,
-	NET_PACKETFLAG_COMPRESSION=8,
+	NET_PACKETFLAG_UNUSED=1<<0,
+	NET_PACKETFLAG_TOKEN=1<<1,
+	NET_PACKETFLAG_CONTROL=1<<2,
+	NET_PACKETFLAG_CONNLESS=1<<3,
+	NET_PACKETFLAG_RESEND=1<<4,
+	NET_PACKETFLAG_COMPRESSION=1<<5,
 
 	NET_CHUNKFLAG_VITAL=1,
 	NET_CHUNKFLAG_RESEND=2,
@@ -72,7 +75,6 @@ enum
 	NET_CTRLMSG_KEEPALIVE=0,
 	NET_CTRLMSG_CONNECT=1,
 	NET_CTRLMSG_CONNECTACCEPT=2,
-	NET_CTRLMSG_ACCEPT=3,
 	NET_CTRLMSG_CLOSE=4,
 
 	NET_CONN_BUFFERSIZE=1024*32,
@@ -125,6 +127,7 @@ public:
 	int m_Ack;
 	int m_NumChunks;
 	int m_DataSize;
+	unsigned m_Token;
 	unsigned char m_aChunkData[NET_MAX_PAYLOAD];
 };
 
@@ -141,7 +144,8 @@ private:
 	unsigned short m_PeerAck;
 	unsigned m_State;
 
-	int m_Token;
+	bool m_UseToken;
+	unsigned m_Token;
 	int m_RemoteClosed;
 	bool m_BlockCloseMsg;
 
@@ -169,10 +173,12 @@ private:
 	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
+	void SendConnect();
 
 public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(NETADDR *pAddr);
+	int Accept(NETADDR *pAddr, unsigned Token);
 	void Disconnect(const char *pReason);
 
 	int Update();
@@ -263,7 +269,15 @@ class CNetServer
 	NETFUNC_DELCLIENT m_pfnDelClient;
 	void *m_UserPtr;
 
+	int m_CurrentSalt;
+	unsigned char m_aaSalts[2][16];
+	int64 m_LastSaltUpdate;
+
 	CNetRecvUnpacker m_RecvUnpacker;
+
+	unsigned GetToken(const NETADDR &Addr) const;
+	unsigned GetToken(const NETADDR &Addr, int SaltIndex) const;
+	bool IsCorrectToken(const NETADDR &Addr, unsigned Token) const;
 
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
@@ -379,7 +393,7 @@ public:
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
-	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, bool UseToken, unsigned Token, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);

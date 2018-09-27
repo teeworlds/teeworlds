@@ -3,6 +3,8 @@
 #include <base/system.h>
 
 #include <engine/console.h>
+#include <engine/external/md5/md5.h>
+#include <engine/shared/config.h>
 
 #include "netban.h"
 #include "network.h"
@@ -29,8 +31,11 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 
 	m_MaxClientsPerIP = MaxClientsPerIP;
 
+	secure_random_fill(m_aaSalts, sizeof(m_aaSalts));
+	m_LastSaltUpdate = time_get();
+
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
-		m_aSlots[i].m_Connection.Init(m_Socket, true);
+		m_aSlots[i].m_Connection.Init(m_Socket, !g_Config.m_Debug);
 
 	return true;
 }
@@ -70,12 +75,19 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 int CNetServer::Update()
 {
 	int64 Now = time_get();
+	int64 Freq = time_freq();
+	if(Now >= m_LastSaltUpdate + 10 * Freq)
+	{
+		m_CurrentSalt = (m_CurrentSalt + 1) % (sizeof(m_aaSalts) / sizeof(m_aaSalts[0]));
+		secure_random_fill(m_aaSalts[m_CurrentSalt], sizeof(m_aaSalts[m_CurrentSalt]));
+		m_LastSaltUpdate = Now;
+	}
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		m_aSlots[i].m_Connection.Update();
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 		{
-			if(Now - m_aSlots[i].m_Connection.ConnectTime() < time_freq() && NetBan())
+			if(Now - m_aSlots[i].m_Connection.ConnectTime() < Freq && NetBan())
 			{
 				if(NetBan()->BanAddr(ClientAddr(i), 60, "Stressing network") == -1)
 					Drop(i, m_aSlots[i].m_Connection.ErrorString());
@@ -86,6 +98,34 @@ int CNetServer::Update()
 	}
 
 	return 0;
+}
+
+unsigned CNetServer::GetToken(const NETADDR &Addr) const
+{
+	return GetToken(Addr, m_CurrentSalt);
+}
+
+unsigned CNetServer::GetToken(const NETADDR &Addr, int SaltIndex) const
+{
+	unsigned char aDigest[16];
+	md5_state_t Md5;
+	md5_init(&Md5);
+	md5_append(&Md5, (unsigned char *)&Addr, sizeof(Addr));
+	md5_append(&Md5, m_aaSalts[SaltIndex], sizeof(m_aaSalts[SaltIndex]));
+	md5_finish(&Md5, aDigest);
+	return uint32_from_be(aDigest);
+}
+
+bool CNetServer::IsCorrectToken(const NETADDR &Addr, unsigned Token) const
+{
+	for(unsigned i = 0; i < sizeof(m_aaSalts) / sizeof(m_aaSalts[0]); i++)
+	{
+		if(GetToken(Addr, i) == Token)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 /*
@@ -110,12 +150,24 @@ int CNetServer::Recv(CNetChunk *pChunk)
 
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
+			bool UseToken = false;
+			unsigned Token = 0;
+			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_TOKEN)
+			{
+				UseToken = true;
+				Token = m_RecvUnpacker.m_Data.m_Token;
+			}
+			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT && m_RecvUnpacker.m_Data.m_DataSize >= 1+512)
+			{
+				UseToken = true;
+				Token = uint32_from_be(&m_RecvUnpacker.m_Data.m_aChunkData[5]);
+			}
 			// check if we just should drop the packet
 			char aBuf[128];
 			if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
 			{
 				// banned, reply with a message
-				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
+				CNetBase::SendControlMsg(m_Socket, &Addr, 0, UseToken, Token, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
 				continue;
 			}
 
@@ -130,25 +182,52 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			}
 			else
 			{
-				// TODO: check size here
+				int ClientID = -1;
+
+				// check if we already got this client
+				for(int i = 0; i < MaxClients(); i++)
+				{
+					if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
+						net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
+					{
+						ClientID = i;
+						break;
+					}
+				}
+
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
-					bool Found = false;
-
-					// check if we already got this client
-					for(int i = 0; i < MaxClients(); i++)
+					if(ClientID != -1)
 					{
-						if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
-							net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
+						continue; // silent ignore.. we got this client already
+					}
+					if(m_RecvUnpacker.m_Data.m_DataSize < 1+512)
+					{
+						if(g_Config.m_Debug)
 						{
-							Found = true; // silent ignore.. we got this client already
-							break;
+							dbg_msg("netserver", "dropping short connect packet, size=%d", m_RecvUnpacker.m_Data.m_DataSize);
 						}
+						continue;
 					}
 
+					unsigned MyToken = GetToken(Addr);
+					unsigned char aConnectAccept[4];
+					uint32_to_be(&aConnectAccept[0], MyToken);
+					CNetBase::SendControlMsg(m_Socket, &Addr, 0, true, Token, NET_CTRLMSG_CONNECTACCEPT, aConnectAccept, sizeof(aConnectAccept));
+				}
+				else
+				{
 					// client that wants to connect
-					if(!Found)
+					if(ClientID == -1)
 					{
+						if(!UseToken || !IsCorrectToken(Addr, Token))
+						{
+							if(g_Config.m_Debug)
+							{
+									dbg_msg("netserver", "dropping packet with missing/invalid token, present=%d token=%08x", (int)UseToken, Token);
+							}
+							continue;
+						}
 						// only allow a specific number of players with the same ip
 						NETADDR ThisAddr = Addr, OtherAddr;
 						int FoundAddr = 1;
@@ -166,44 +245,40 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								{
 									char aBuf[128];
 									str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
-									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1);
+									CNetBase::SendControlMsg(m_Socket, &Addr, 0, UseToken, Token, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1);
 									return 0;
 								}
 							}
 						}
 
+						int EmptySlot = -1;
 						for(int i = 0; i < MaxClients(); i++)
 						{
 							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
 							{
-								Found = true;
-								m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-								if(m_pfnNewClient)
-									m_pfnNewClient(i, m_UserPtr);
+								EmptySlot = i;
 								break;
 							}
 						}
 
-						if(!Found)
+						if(EmptySlot == -1)
 						{
-							const char FullMsg[] = "This server is full";
-							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+							const char aFullMsg[] = "This server is full";
+							CNetBase::SendControlMsg(m_Socket, &Addr, 0, UseToken, Token, NET_CTRLMSG_CLOSE, aFullMsg, sizeof(aFullMsg));
+						}
+						else
+						{
+							m_aSlots[EmptySlot].m_Connection.Accept(&Addr, Token);
+							m_aSlots[EmptySlot].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+							if(m_pfnNewClient)
+								m_pfnNewClient(EmptySlot, m_UserPtr);
 						}
 					}
-				}
-				else
-				{
-					// normal packet, find matching slot
-					for(int i = 0; i < MaxClients(); i++)
+					else
 					{
-						if(net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
-						{
-							if(m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
-							{
-								if(m_RecvUnpacker.m_Data.m_DataSize)
-									m_RecvUnpacker.Start(&Addr, &m_aSlots[i].m_Connection, i);
-							}
-						}
+						// normal packet
+						if(m_RecvUnpacker.m_Data.m_DataSize)
+							m_RecvUnpacker.Start(&Addr, &m_aSlots[ClientID].m_Connection, ClientID);
 					}
 				}
 			}

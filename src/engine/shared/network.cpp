@@ -117,8 +117,18 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		io_flush(ms_DataLogSent);
 	}
 
-	// compress
-	CompressedSize = ms_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[3], NET_MAX_PACKETSIZE-4);
+	int HeaderSize = NET_PACKETHEADERSIZE_WITHOUT_TOKEN;
+	if(pPacket->m_Flags&NET_PACKETFLAG_TOKEN)
+	{
+		HeaderSize = NET_PACKETHEADERSIZE;
+		uint32_to_be(&aBuffer[3], pPacket->m_Token);
+	}
+
+	if(!(pPacket->m_Flags&NET_PACKETFLAG_CONTROL))
+	{
+		// compress
+		CompressedSize = ms_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[HeaderSize], NET_MAX_PACKETSIZE-HeaderSize);
+	}
 
 	// check if the compression was enabled, successful and good enough
 	if(CompressedSize > 0 && CompressedSize < pPacket->m_DataSize)
@@ -130,15 +140,15 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 	{
 		// use uncompressed data
 		FinalSize = pPacket->m_DataSize;
-		mem_copy(&aBuffer[3], pPacket->m_aChunkData, pPacket->m_DataSize);
+		mem_copy(&aBuffer[HeaderSize], pPacket->m_aChunkData, pPacket->m_DataSize);
 		pPacket->m_Flags &= ~NET_PACKETFLAG_COMPRESSION;
 	}
 
 	// set header and send the packet if all things are good
 	if(FinalSize >= 0)
 	{
-		FinalSize += NET_PACKETHEADERSIZE;
-		aBuffer[0] = ((pPacket->m_Flags<<4)&0xf0)|((pPacket->m_Ack>>8)&0xf);
+		FinalSize += HeaderSize;
+		aBuffer[0] = ((pPacket->m_Flags<<2)&0xfc)|((pPacket->m_Ack>>8)&0x3);
 		aBuffer[1] = pPacket->m_Ack&0xff;
 		aBuffer[2] = pPacket->m_NumChunks;
 		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
@@ -159,9 +169,12 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket)
 {
 	// check the size
-	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
+	if(Size < NET_PACKETHEADERSIZE_WITHOUT_TOKEN || Size > NET_MAX_PACKETSIZE)
 	{
-		dbg_msg("", "packet too small, %d", Size);
+		if(g_Config.m_Debug)
+		{
+			dbg_msg("net", "packet too small, %d", Size);
+		}
 		return -1;
 	}
 
@@ -176,16 +189,20 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 
 	// read the packet
-	pPacket->m_Flags = pBuffer[0]>>4;
-	pPacket->m_Ack = ((pBuffer[0]&0xf)<<8) | pBuffer[1];
+	pPacket->m_Flags = pBuffer[0]>>2;
+	pPacket->m_Ack = ((pBuffer[0]&0x3)<<8) | pBuffer[1];
 	pPacket->m_NumChunks = pBuffer[2];
-	pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
+	pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE_WITHOUT_TOKEN;
+	pPacket->m_Token = 0;
 
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
 	{
 		if(Size < 6)
 		{
-			dbg_msg("", "connection less packet too small, %d", Size);
+			if(g_Config.m_Debug)
+			{
+				dbg_msg("net", "connection less packet too small, %d", Size);
+			}
 			return -1;
 		}
 
@@ -197,10 +214,25 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 	else
 	{
+		unsigned char *pDataStart = &pBuffer[NET_PACKETHEADERSIZE_WITHOUT_TOKEN];
+		if(pPacket->m_Flags&NET_PACKETFLAG_TOKEN)
+		{
+			if(Size < NET_PACKETHEADERSIZE)
+			{
+				if(g_Config.m_Debug)
+				{
+					dbg_msg("net", "packet with token too small, %d", Size);
+				}
+				return -1;
+			}
+			pPacket->m_DataSize -= 4;
+			pDataStart = &pBuffer[NET_PACKETHEADERSIZE];
+			pPacket->m_Token = uint32_from_be(&pBuffer[3]);
+		}
 		if(pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION)
-			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[3], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
+			pPacket->m_DataSize = ms_Huffman.Decompress(pDataStart, pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
 		else
-			mem_copy(pPacket->m_aChunkData, &pBuffer[3], pPacket->m_DataSize);
+			mem_copy(pPacket->m_aChunkData, pDataStart, pPacket->m_DataSize);
 	}
 
 	// check for errors
@@ -226,12 +258,13 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 }
 
 
-void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize)
+void CNetBase::SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, bool UseToken, unsigned Token, int ControlMsg, const void *pExtra, int ExtraSize)
 {
 	CNetPacketConstruct Construct;
-	Construct.m_Flags = NET_PACKETFLAG_CONTROL;
+	Construct.m_Flags = NET_PACKETFLAG_CONTROL|(UseToken?NET_PACKETFLAG_TOKEN:0);
 	Construct.m_Ack = Ack;
 	Construct.m_NumChunks = 0;
+	Construct.m_Token = Token;
 	Construct.m_DataSize = 1+ExtraSize;
 	Construct.m_aChunkData[0] = ControlMsg;
 	mem_copy(&Construct.m_aChunkData[1], pExtra, ExtraSize);

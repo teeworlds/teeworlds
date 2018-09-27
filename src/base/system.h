@@ -1295,6 +1295,40 @@ int str_utf8_encode(char *ptr, int chr);
 int str_utf8_check(const char *str);
 
 /*
+	Function: uint32_from_be
+		Reads a 32-bit big-endian coded integer from 4 bytes of data.
+
+	Parameters:
+		bytes - Pointer to the bytes to interpret.
+
+	Returns:
+		The read integer.
+*/
+inline unsigned uint32_from_be(const void *bytes)
+{
+	const unsigned char *b = (const unsigned char *)bytes;
+	return (b[0]<<24)|(b[1]<<16)|(b[2]<<8)|b[3];
+}
+
+/*
+	Function: uint32_to_be
+		Writes a 32-bit integer into 4 bytes of data, coded as
+		big-endian.
+
+	Parameters:
+		bytes - The place to write the integer to.
+		integer - The integer to write.
+*/
+inline void uint32_to_be(void *bytes, unsigned integer)
+{
+	unsigned char *b = (unsigned char *)bytes;
+	b[0] = (integer&0xff000000)>>24;
+	b[1] = (integer&0x00ff0000)>>16;
+	b[2] = (integer&0x0000ff00)>>8;
+	b[3] = (integer&0x000000ff)>>0;
+}
+
+/*
 	Function: secure_random_init
 		Initializes the secure random module.
 		You *MUST* check the return value of this function.
