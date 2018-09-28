@@ -157,11 +157,11 @@ function build(settings)
 		elseif platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.5")
 			settings.link.flags:Add("-mmacosx-version-min=10.5")
-			if config.minmacosxsdk.value == 1 then
+			if config.minmacosxsdk.value then
 				settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 				settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 			end
-		elseif config.stackprotector.value == 1 then
+		elseif config.stackprotector.value then
 			settings.cc.flags:Add("-fstack-protector", "-fstack-protector-all")
 			settings.link.flags:Add("-fstack-protector", "-fstack-protector-all")
 		end
@@ -192,7 +192,7 @@ function build(settings)
 	end
 
 	-- compile zlib if needed
-	if config.zlib.value == 1 then
+	if config.zlib.value then
 		settings.link.libs:Add("z")
 		if config.zlib.include_path then
 			settings.cc.includes:Add(config.zlib.include_path)
@@ -370,7 +370,7 @@ if platform == "macosx" then
 
 	DefaultTarget("game_debug_x86")
 	
-	if config.macosxppc.value == 1 then
+	if config.macosxppc.value then
 		if arch == "ia32" then
 			PseudoTarget("release", ppc_r, x86_r)
 			PseudoTarget("debug", ppc_d, x86_d)
