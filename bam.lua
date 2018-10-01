@@ -169,6 +169,7 @@ function build(settings)
 
 	-- set some platform specific settings
 	settings.cc.includes:Add("src")
+	settings.cc.includes:Add("src/engine/external/wavpack")
 
 	if family == "unix" then
 		if platform == "macosx" then
@@ -252,10 +253,8 @@ function build(settings)
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 
-	client_osxlaunch = {}
 	server_osxlaunch = {}
 	if platform == "macosx" then
-		client_osxlaunch = Compile(client_settings, "src/osxlaunch/client.m")
 		server_osxlaunch = Compile(launcher_settings, "src/osxlaunch/server.m")
 	end
 
@@ -268,7 +267,7 @@ function build(settings)
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, md5, zlib, pnglite, wavpack,
-		client_link_other, client_osxlaunch)
+		client_link_other)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, md5, zlib, server_link_other)

@@ -303,6 +303,11 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
+{
+	return ungetc(byte, (FILE*)io) == EOF;
+}
+
 unsigned io_skip(IOHANDLE io, int size)
 {
 	fseek((FILE*)io, size, SEEK_CUR);
