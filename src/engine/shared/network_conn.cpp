@@ -12,6 +12,7 @@ void CNetConnection::ResetStats()
 void CNetConnection::Reset()
 {
 	m_Sequence = 0;
+	m_UnknownAck = false;
 	m_Ack = 0;
 	m_PeerAck = 0;
 	m_RemoteClosed = 0;
@@ -200,10 +201,35 @@ int CNetConnection::Accept(NETADDR *pAddr, unsigned Token)
 	m_PeerAddr = *pAddr;
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 	m_State = NET_CONNSTATE_ONLINE;
+	m_LastRecvTime = time_get();
 	m_Token = Token;
 	if(g_Config.m_Debug)
 	{
 		dbg_msg("connection", "connecting online");
+	}
+	return 0;
+}
+
+int CNetConnection::AcceptLegacy(NETADDR *pAddr)
+{
+	if(State() != NET_CONNSTATE_OFFLINE)
+		return -1;
+
+	// init connection
+	Reset();
+	m_PeerAddr = *pAddr;
+	mem_zero(m_ErrorString, sizeof(m_ErrorString));
+	m_State = NET_CONNSTATE_ONLINE;
+	m_LastRecvTime = time_get();
+
+	m_Token = 0;
+	m_UseToken = false;
+	m_UnknownAck = true;
+	m_Sequence = NET_COMPATIBILITY_SEQ;
+
+	if(g_Config.m_Debug)
+	{
+		dbg_msg("connection", "legacy connecting online");
 	}
 	return 0;
 }

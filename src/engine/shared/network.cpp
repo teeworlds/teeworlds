@@ -58,10 +58,16 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		// handle sequence stuff
 		if(m_pConnection && (Header.m_Flags&NET_CHUNKFLAG_VITAL))
 		{
-			if(Header.m_Sequence == (m_pConnection->m_Ack+1)%NET_MAX_SEQUENCE)
+			if(m_pConnection->m_UnknownAck || Header.m_Sequence == (m_pConnection->m_Ack+1)%NET_MAX_SEQUENCE)
 			{
+				// in case we're in the backward compatibility
+				// path, we don't know the client's sequence
+				// number, so we can't decide whether this one
+				// is correct. but now we know.
+				m_pConnection->m_UnknownAck = false;
+
 				// in sequence
-				m_pConnection->m_Ack = (m_pConnection->m_Ack+1)%NET_MAX_SEQUENCE;
+				m_pConnection->m_Ack = Header.m_Sequence;
 			}
 			else
 			{

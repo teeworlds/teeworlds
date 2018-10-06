@@ -128,6 +128,30 @@ bool CNetServer::IsCorrectToken(const NETADDR &Addr, unsigned Token) const
 	return false;
 }
 
+unsigned CNetServer::GetLegacyToken(const NETADDR &Addr) const
+{
+	return GetLegacyToken(Addr, m_CurrentSalt);
+}
+
+unsigned CNetServer::GetLegacyToken(const NETADDR &Addr, int SaltIndex) const
+{
+	return DeriveLegacyToken(GetToken(Addr, SaltIndex));
+}
+
+bool CNetServer::IsCorrectLegacyToken(const NETADDR &Addr, unsigned LegacyToken) const
+{
+	for(unsigned i = 0; i < sizeof(m_aaSalts) / sizeof(m_aaSalts[0]); i++)
+	{
+		if(GetLegacyToken(Addr, i) == LegacyToken)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
 /*
 	TODO: chopp up this function into smaller working parts
 */
@@ -201,19 +225,44 @@ int CNetServer::Recv(CNetChunk *pChunk)
 					{
 						continue; // silent ignore.. we got this client already
 					}
-					if(m_RecvUnpacker.m_Data.m_DataSize < 1+512)
+					if(m_RecvUnpacker.m_Data.m_DataSize >= 1+512)
+					{
+						unsigned MyToken = GetToken(Addr);
+						unsigned char aConnectAccept[4];
+						uint32_to_be(&aConnectAccept[0], MyToken);
+						CNetBase::SendControlMsg(m_Socket, &Addr, 0, true, Token, NET_CTRLMSG_CONNECTACCEPT, aConnectAccept, sizeof(aConnectAccept));
+						if(g_Config.m_Debug)
+						{
+							dbg_msg("netserver", "got connect, sending connect+accept challenge");
+						}
+					}
+					// the legacy handshake doesn't support
+					// passwords, allowing the legacy
+					// handshake to function while a
+					// password is set would let these
+					// clients bypass the password check.
+					else if(g_Config.m_SvAllowOldClients && !g_Config.m_Password[0])
+					{
+						CNetPacketConstruct aPackets[2];
+
+						unsigned LegacyToken = GetLegacyToken(Addr);
+						ConstructLegacyHandshake(&aPackets[0], &aPackets[1], LegacyToken);
+						for(int i = 0; i < 2; i++)
+						{
+							CNetBase::SendPacket(m_Socket, &Addr, &aPackets[i]);
+						}
+						if(g_Config.m_Debug)
+						{
+							dbg_msg("netserver", "got legacy connect, sending legacy challenge");
+						}
+					}
+					else
 					{
 						if(g_Config.m_Debug)
 						{
 							dbg_msg("netserver", "dropping short connect packet, size=%d", m_RecvUnpacker.m_Data.m_DataSize);
 						}
-						continue;
 					}
-
-					unsigned MyToken = GetToken(Addr);
-					unsigned char aConnectAccept[4];
-					uint32_to_be(&aConnectAccept[0], MyToken);
-					CNetBase::SendControlMsg(m_Socket, &Addr, 0, true, Token, NET_CTRLMSG_CONNECTACCEPT, aConnectAccept, sizeof(aConnectAccept));
 				}
 				else
 				{
@@ -222,11 +271,46 @@ int CNetServer::Recv(CNetChunk *pChunk)
 					{
 						if(!UseToken || !IsCorrectToken(Addr, Token))
 						{
-							if(g_Config.m_Debug)
+							if(!UseToken && g_Config.m_SvAllowOldClients)
 							{
-									dbg_msg("netserver", "dropping packet with missing/invalid token, present=%d token=%08x", (int)UseToken, Token);
+								m_RecvUnpacker.Start(&Addr, 0, -1);
+								CNetChunk Chunk;
+								unsigned LegacyToken;
+								bool Correct = false;
+								while(m_RecvUnpacker.FetchChunk(&Chunk))
+								{
+									if(DecodeLegacyHandshake(Chunk.m_pData, Chunk.m_DataSize, &LegacyToken))
+									{
+										if(IsCorrectLegacyToken(Addr, LegacyToken))
+										{
+											Correct = true;
+											break;
+										}
+									}
+								}
+								m_RecvUnpacker.Clear();
+								if(!Correct)
+								{
+									continue;
+								}
+								// if we find a correct token, fall through to
+								// the other connection handling below.
 							}
-							continue;
+							else
+							{
+								if(g_Config.m_Debug)
+								{
+									if(!UseToken)
+									{
+										dbg_msg("netserver", "dropping packet with missing token");
+									}
+									else
+									{
+										dbg_msg("netserver", "dropping packet with invalid token, token=%08x", (int)UseToken, Token);
+									}
+								}
+								continue;
+							}
 						}
 						// only allow a specific number of players with the same ip
 						NETADDR ThisAddr = Addr, OtherAddr;
@@ -265,16 +349,29 @@ int CNetServer::Recv(CNetChunk *pChunk)
 						{
 							const char aFullMsg[] = "This server is full";
 							CNetBase::SendControlMsg(m_Socket, &Addr, 0, UseToken, Token, NET_CTRLMSG_CLOSE, aFullMsg, sizeof(aFullMsg));
+							continue;
+						}
+						ClientID = EmptySlot;
+						if(UseToken)
+						{
+							m_aSlots[ClientID].m_Connection.Accept(&Addr, Token);
 						}
 						else
 						{
-							m_aSlots[EmptySlot].m_Connection.Accept(&Addr, Token);
-							m_aSlots[EmptySlot].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-							if(m_pfnNewClient)
-								m_pfnNewClient(EmptySlot, m_UserPtr);
+							m_aSlots[ClientID].m_Connection.AcceptLegacy(&Addr);
 						}
+						if(m_pfnNewClient)
+						{
+							m_pfnNewClient(ClientID, !UseToken, m_UserPtr);
+						}
+						if(!UseToken)
+						{
+							// Do not process the packet furtherly if it comes from a legacy handshake.
+							continue;
+						}
+						m_aSlots[ClientID].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
 					}
-					else
+					if(m_aSlots[ClientID].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 					{
 						// normal packet
 						if(m_RecvUnpacker.m_Data.m_DataSize)

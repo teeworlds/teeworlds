@@ -507,6 +507,7 @@ set_glob(ENGINE_SHARED GLOB src/engine/shared
   network_console.cpp
   network_console_conn.cpp
   network_server.cpp
+  network_server_hack.cpp
   packer.cpp
   packer.h
   protocol.h

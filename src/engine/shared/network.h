@@ -3,6 +3,8 @@
 #ifndef ENGINE_SHARED_NETWORK_H
 #define ENGINE_SHARED_NETWORK_H
 
+#include <base/system.h>
+
 #include "ringbuffer.h"
 #include "huffman.h"
 
@@ -79,12 +81,15 @@ enum
 
 	NET_CONN_BUFFERSIZE=1024*32,
 
+	NET_COMPATIBILITY_SEQ=2,
+
 	NET_ENUM_TERMINATOR
 };
 
 
 typedef int (*NETFUNC_DELCLIENT)(int ClientID, const char* pReason, void *pUser);
-typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUser);
+typedef int (*NETFUNC_NEWCLIENT)(int ClientID, bool Legacy, void *pUser);
+typedef int (*NETFUNC_NEWCLIENT_CON)(int ClientID, void *pUser);
 
 struct CNetChunk
 {
@@ -140,6 +145,7 @@ class CNetConnection
 	friend class CNetRecvUnpacker;
 private:
 	unsigned short m_Sequence;
+	bool m_UnknownAck; // ack not known due to the backward compatibility hack
 	unsigned short m_Ack;
 	unsigned short m_PeerAck;
 	unsigned m_State;
@@ -179,6 +185,7 @@ public:
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(NETADDR *pAddr);
 	int Accept(NETADDR *pAddr, unsigned Token);
+	int AcceptLegacy(NETADDR *pAddr);
 	void Disconnect(const char *pReason);
 
 	int Update();
@@ -279,6 +286,10 @@ class CNetServer
 	unsigned GetToken(const NETADDR &Addr, int SaltIndex) const;
 	bool IsCorrectToken(const NETADDR &Addr, unsigned Token) const;
 
+	unsigned GetLegacyToken(const NETADDR &Addr) const;
+	unsigned GetLegacyToken(const NETADDR &Addr, int SaltIndex) const;
+	bool IsCorrectLegacyToken(const NETADDR &Addr, unsigned LegacyToken) const;
+
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
@@ -316,14 +327,14 @@ class CNetConsole
 	class CNetBan *m_pNetBan;
 	CSlot m_aSlots[NET_MAX_CONSOLE_CLIENTS];
 
-	NETFUNC_NEWCLIENT m_pfnNewClient;
+	NETFUNC_NEWCLIENT_CON m_pfnNewClient;
 	NETFUNC_DELCLIENT m_pfnDelClient;
 	void *m_UserPtr;
 
 	CNetRecvUnpacker m_RecvUnpacker;
 
 public:
-	void SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
+	void SetCallbacks(NETFUNC_NEWCLIENT_CON pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
 	bool Open(NETADDR BindAddr, class CNetBan *pNetBan, int Flags);
@@ -377,6 +388,11 @@ public:
 	int GotProblems();
 	const char *ErrorString();
 };
+
+// backward compatibility hack
+unsigned DeriveLegacyToken(unsigned Token);
+void ConstructLegacyHandshake(CNetPacketConstruct *pPacket1, CNetPacketConstruct *pPacket2, unsigned LegacyToken);
+bool DecodeLegacyHandshake(const void *pData, int DataSize, unsigned *pLegacyToken);
 
 
 
