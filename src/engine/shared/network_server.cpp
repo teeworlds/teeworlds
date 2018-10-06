@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
 
 #include <engine/console.h>
@@ -9,6 +10,7 @@
 #include "netban.h"
 #include "network.h"
 
+#include <stdlib.h>
 
 bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags)
 {
@@ -33,6 +35,9 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 
 	secure_random_fill(m_aaSalts, sizeof(m_aaSalts));
 	m_LastSaltUpdate = time_get();
+
+	m_LegacyRatelimitStart = -1;
+	m_LegacyRatelimitNum = 0;
 
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, !g_Config.m_Debug);
@@ -150,6 +155,34 @@ bool CNetServer::IsCorrectLegacyToken(const NETADDR &Addr, unsigned LegacyToken)
 	return false;
 }
 
+bool CNetServer::LegacyRatelimit()
+{
+	bool Accept = false;
+
+	int Max = g_Config.m_SvOldClientsPerInterval;
+	int Interval = g_Config.m_SvOldClientsInterval;
+	bool UseRatelimit = Max > 0 && Interval > 0;
+	if(UseRatelimit)
+	{
+		int64 Now = time_get();
+		int64 Freq = time_freq();
+		if(m_LegacyRatelimitStart < 0 || m_LegacyRatelimitStart + Interval * Freq <= Now)
+		{
+			m_LegacyRatelimitStart = Now;
+			m_LegacyRatelimitNum = clamp(m_LegacyRatelimitNum - Max, 0, Max);
+		}
+		Accept = m_LegacyRatelimitNum < Max;
+	}
+	if(g_Config.m_SvOldClientsSkip > 0 && (!Accept || !UseRatelimit))
+	{
+		Accept = rand() <= RAND_MAX / g_Config.m_SvOldClientsSkip;
+	}
+	if(Accept && UseRatelimit)
+	{
+		m_LegacyRatelimitNum++;
+	}
+	return !Accept;
+}
 
 
 /*
@@ -243,6 +276,14 @@ int CNetServer::Recv(CNetChunk *pChunk)
 					// clients bypass the password check.
 					else if(g_Config.m_SvAllowOldClients && !g_Config.m_Password[0])
 					{
+						if(LegacyRatelimit())
+						{
+							if(g_Config.m_Debug)
+							{
+								dbg_msg("netserver", "dropping legacy connect due to ratelimit");
+							}
+							continue;
+						}
 						CNetPacketConstruct aPackets[2];
 
 						unsigned LegacyToken = GetLegacyToken(Addr);

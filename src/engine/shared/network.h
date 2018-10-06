@@ -280,6 +280,9 @@ class CNetServer
 	unsigned char m_aaSalts[2][16];
 	int64 m_LastSaltUpdate;
 
+	int64 m_LegacyRatelimitStart;
+	int m_LegacyRatelimitNum;
+
 	CNetRecvUnpacker m_RecvUnpacker;
 
 	unsigned GetToken(const NETADDR &Addr) const;
@@ -289,6 +292,8 @@ class CNetServer
 	unsigned GetLegacyToken(const NETADDR &Addr) const;
 	unsigned GetLegacyToken(const NETADDR &Addr, int SaltIndex) const;
 	bool IsCorrectLegacyToken(const NETADDR &Addr, unsigned LegacyToken) const;
+
+	bool LegacyRatelimit();
 
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
