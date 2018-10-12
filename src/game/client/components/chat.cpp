@@ -185,7 +185,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		if (m_Mode = CHAT_WHISPER)
+		if (m_Mode == CHAT_WHISPER)
 		{
 			// pick next player as target
 			for(int i = 0; i < MAX_CLIENTS; i++)
