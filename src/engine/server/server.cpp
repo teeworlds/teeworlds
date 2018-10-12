@@ -703,7 +703,6 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_CRCounter = 0;
 	pThis->m_aClients[ClientID].m_CRCheckVal = rand()%CClient::CR_MAXVAL;
 	pThis->m_aClients[ClientID].m_CRSuccess = false;
-	pThis->m_aClients[ClientID].m_ConStartTime = time_get();
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
 	pThis->m_aClients[ClientID].m_aClan[0] = 0;
 	pThis->m_aClients[ClientID].m_Country = -1;
@@ -1214,22 +1213,6 @@ void CServer::PumpNetwork()
 		}
 		else
 			ProcessClientPacket(&Packet);
-	}
-
-	// check for blocked connecting clients
-	if(g_Config.m_SvCRResponseTime > 0)
-	{
-		int64 Time = time_get();
-		for(int i = 0; i < MAX_CLIENTS; ++i)
-		{
-			if(!m_aClients[i].m_CRSuccess && (m_aClients[i].m_State == CClient::STATE_AUTH || m_aClients[i].m_State == CClient::STATE_CONNECTING) && (Time - m_aClients[i].m_ConStartTime >= time_freq() * g_Config.m_SvCRResponseTime))
-			{
-				if(g_Config.m_SvCRFailBantime == 0)
-					m_NetServer.Drop(i, "Failed challenge response (no response in time)");
-				else if(g_Config.m_SvCRFailBantime > 0)
-					m_ServerBan.BanAddr(m_NetServer.ClientAddr(i), g_Config.m_SvCRFailBantime * 60, "Failed challenge response (no response in time)");
-			}
-		}
 	}
 
 	m_ServerBan.Update();

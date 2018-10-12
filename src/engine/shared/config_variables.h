@@ -91,8 +91,7 @@ MACRO_CONFIG_STR(SvRconPassword, sv_rcon_password, 32, "", CFGFLAG_SERVER, "Remo
 MACRO_CONFIG_STR(SvRconModPassword, sv_rcon_mod_password, 32, "", CFGFLAG_SERVER, "Remote console password for moderators (limited access)")
 MACRO_CONFIG_INT(SvRconMaxTries, sv_rcon_max_tries, 3, 0, 100, CFGFLAG_SERVER, "Maximum number of tries for remote console authentication")
 MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick")
-MACRO_CONFIG_INT(SvCRFailBantime, sv_crfail_bantime, 3, -1, 1440, CFGFLAG_SERVER, "The time a client gets banned if challenge response authentication fails. 0 makes it just use kick. -1 disables it")
-MACRO_CONFIG_INT(SvCRResponseTime, sv_crresponse_time, 2, 0, 360, CFGFLAG_SERVER, "The time in seconds a client has to complete the challenge response authentication. 0 disables it")
+MACRO_CONFIG_INT(SvCRFailBantime, sv_crfail_bantime, 3, -1, 1440, CFGFLAG_SERVER, "The time a client gets banned if challenge response authentification fails. 0 makes it just use kick. -1 disables it")
 MACRO_CONFIG_INT(SvAutoDemoRecord, sv_auto_demo_record, 0, 0, 1, CFGFLAG_SERVER, "Automatically record demos")
 MACRO_CONFIG_INT(SvAutoDemoMax, sv_auto_demo_max, 10, 0, 1000, CFGFLAG_SERVER, "Maximum number of automatically recorded demos (0 = no limit)")
 
