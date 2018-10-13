@@ -265,7 +265,7 @@ void CServerBrowser::Refresh(int RefreshFlags)
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_Address.type = m_pNetClient->NetType()|NETTYPE_LINK_BROADCAST;
 		Packet.m_ClientID = -1;
-		Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
+		Packet.m_Flags = NETSENDFLAG_CONNLESS;
 		Packet.m_DataSize = Packer.Size();
 		Packet.m_pData = Packer.Data();
 		m_BroadcastTime = time_get();
@@ -464,7 +464,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	CNetChunk Packet;
 	Packet.m_ClientID = -1;
 	Packet.m_Address = Addr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS|NETSENDFLAG_STATELESS;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	Packet.m_DataSize = Packer.Size();
 	Packet.m_pData = Packer.Data();
 

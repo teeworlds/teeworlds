@@ -44,7 +44,7 @@ int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConst
 		&& pPacket->m_aChunkData[0] == NET_CTRLMSG_TOKEN;
 
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
-		return (Verified) ? 1 : -1; // connless packets without token are allowed
+		return (Verified) ? 1 : 0; // connless packets without token are not allowed
 
 	if(!TokenMessage)
 	{
@@ -229,7 +229,10 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
 	while(pInfo)
 	{
-		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
+		static NETADDR NullAddr = { 0 };
+		NullAddr.type = 7;	// cover broadcasts
+		NullAddr.port = pAddr->port;
+		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0 || net_addr_comp(&pInfo->m_Addr, &NullAddr) == 0)
 		{
 			CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
 				m_pTokenManager->GenerateToken(pAddr),
