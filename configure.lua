@@ -3,7 +3,9 @@ function loadfile_(filename, env)
 	local file
 	if _VERSION == "Lua 5.1" then
 		file = loadfile(filename)
-		setfenv(file, env)
+		if file then
+			setfenv(file, env)
+		end
 	else
 		file = loadfile(filename, nil, env)
 	end
