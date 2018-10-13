@@ -153,6 +153,8 @@ Objects = [
 
 		NetIntAny("m_HookX"),
 		NetIntAny("m_HookY"),
+		NetIntAny("m_HookDx"),
+		NetIntAny("m_HookDy"),
 	]),
 
 	NetObject("Character:CharacterCore", [
