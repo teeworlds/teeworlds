@@ -186,6 +186,7 @@ public:
 	virtual void Tick();
 
 	// info
+	void CheckGameInfo();
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
 	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
