@@ -597,7 +597,10 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 			return;
 	}
-	m_pController->TogglePause();
+	if(m_World.m_Paused)
+	{
+		m_pController->TogglePause();
+	}
 }
 
 void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
