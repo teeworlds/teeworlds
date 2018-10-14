@@ -169,6 +169,7 @@ private:
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
 	bool m_InfoMode;
+	bool m_PopupActive;
 
 	// images
 	struct CMenuImage
@@ -261,32 +262,82 @@ private:
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 
 	// friends
-	struct CFriendItem
+	class CFriendItem
 	{
-		const CFriendInfo *m_pFriendInfo;
-		int m_NumFound;
-
-		bool operator<(const CFriendItem &Other)
+	public:
+		class CClanFriendItem
 		{
-			if(m_NumFound && !Other.m_NumFound)
-				return true;
-			else if(!m_NumFound && Other.m_NumFound)
-				return false;
-			else
+		public:
+			CClanFriendItem()
 			{
-				int Result = str_comp_nocase(m_pFriendInfo->m_aName, Other.m_pFriendInfo->m_aName);
-				if(Result)
-					return Result < 0;
-				else
-					return str_comp_nocase(m_pFriendInfo->m_aClan, Other.m_pFriendInfo->m_aClan) < 0;
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
 			}
+
+			~CClanFriendItem()
+			{
+				m_lFriendInfos.clear();
+				m_lServerInfos.clear();
+			}
+
+			array<CFriendInfo> m_lFriendInfos;
+			array<const CServerInfo*> m_lServerInfos;
+		};
+
+		int m_NumFound;
+		const CFriendInfo *m_pFriendInfo;
+		const CServerInfo *m_pServerInfo;
+
+		CClanFriendItem m_ClanFriend;
+
+		CFriendItem()
+		{
+			m_pFriendInfo = 0;
+			m_pServerInfo = 0;
+		}
+
+		bool IsClanFriend()
+		{
+			return m_pFriendInfo->m_aClan[0] && !m_pFriendInfo->m_aName[0];
+		}
+
+		void Reset()
+		{
+			m_NumFound = 0;
+			m_ClanFriend.m_lFriendInfos.clear();
+			m_ClanFriend.m_lServerInfos.clear();
 		}
 	};
 
-	sorted_array<CFriendItem> m_lFriends;
+	struct CSelectedFriend
+	{
+		bool m_ClanFriend;
+		bool m_FakeFriend;
+		int m_NameHash;
+		int m_ClanHash;
+	};
+
+	enum
+	{
+		FRIENDS_SORT_TYPE = 0,
+		FRIENDS_SORT_SERVER,
+		FRIENDS_SORT_NAME,
+		FRIENDS_SORT_CLAN,
+	};
+
+	int *m_pFriendIndexes;
+	array<CFriendItem> m_lFriends;
 	int m_FriendlistSelectedIndex;
+	const CFriendInfo *m_pDeleteFriendInfo;
+	CSelectedFriend m_SelectedFriend;
+
+	bool SortCompareName(int Index1, int Index2) const;
+	bool SortCompareClan(int Index1, int Index2) const;
+	bool SortCompareServer(int Index1, int Index2) const;
+	bool SortCompareType(int Index1, int Index2) const;
 
 	void FriendlistOnUpdate();
+	void SortFriends();
 
 	class CBrowserFilter
 	{
@@ -368,16 +419,22 @@ private:
 		FIXED=1,
 		SPACER=2,
 
-		COL_FLAG=0,
-		COL_NAME,
-		COL_GAMETYPE,
-		COL_MAP,
-		COL_PLAYERS,
-		COL_PING,
-		//COL_FAVORITE,
-		//COL_INFO,
+		COL_BROWSER_FLAG=0,
+		COL_BROWSER_NAME,
+		COL_BROWSER_GAMETYPE,
+		COL_BROWSER_MAP,
+		COL_BROWSER_PLAYERS,
+		COL_BROWSER_PING,
+		COL_BROWSER_FAVORITE,
+		COL_BROWSER_INFO,
+		NUM_BROWSER_COLS,
 
-		NUM_COLS,
+		COL_FRIEND_TYPE = 0,
+		COL_FRIEND_SERVER,
+		COL_FRIEND_NAME,
+		COL_FRIEND_CLAN,
+		COL_FRIEND_DELETE,
+		NUM_FRIEND_COLS,
 	};
 
 	struct CColumn
@@ -392,7 +449,8 @@ private:
 		CUIRect m_Spacer;
 	};
 
-	static CColumn ms_aCols[NUM_COLS];
+	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
+	static CColumn ms_aFriendCols[NUM_FRIEND_COLS];
 
 	enum
 	{
@@ -447,7 +505,7 @@ private:
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserFilters(CUIRect View);
-	void RenderServerbrowserFriends(CUIRect View);
+	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
@@ -456,7 +514,10 @@ private:
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CFriendInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
+	void UpdateFriendCounter(const CServerInfo *pEntry);
+	void UpdateFriends();
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);

@@ -24,64 +24,64 @@ static struct
 	int (*m_pfnFunc)(CMenus *pMenu, CUIRect Rect);
 	int m_IsMenu;
 	void *m_pExtra;
-} s_Popups[8];
-
-static int g_NumPopups = 0;
+} s_Popups;
 
 void CMenus::InvokePopupMenu(void *pID, int Flags, float x, float y, float Width, float Height, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra)
 {
+	if(m_PopupActive)
+		return;
 	if(x + Width > UI()->Screen()->w)
-		x -= Width;
+		x = UI()->Screen()->w - Width;
 	if(y + Height > UI()->Screen()->h)
-		y -= Height;
-	s_Popups[g_NumPopups].m_pId = pID;
-	s_Popups[g_NumPopups].m_IsMenu = Flags;
-	s_Popups[g_NumPopups].m_Rect.x = x;
-	s_Popups[g_NumPopups].m_Rect.y = y;
-	s_Popups[g_NumPopups].m_Rect.w = Width;
-	s_Popups[g_NumPopups].m_Rect.h = Height;
-	s_Popups[g_NumPopups].m_pfnFunc = pfnFunc;
-	s_Popups[g_NumPopups].m_pExtra = pExtra;
-	g_NumPopups++;
+		y = UI()->Screen()->h - Height;
+	s_Popups.m_pId = pID;
+	s_Popups.m_IsMenu = Flags;
+	s_Popups.m_Rect.x = x;
+	s_Popups.m_Rect.y = y;
+	s_Popups.m_Rect.w = Width;
+	s_Popups.m_Rect.h = Height;
+	s_Popups.m_pfnFunc = pfnFunc;
+	s_Popups.m_pExtra = pExtra;
+	m_PopupActive = true;
 }
 
 void CMenus::DoPopupMenu()
 {
-	for(int i = 0; i < g_NumPopups; i++)
+	if(m_PopupActive)
 	{
-		bool Inside = UI()->MouseInside(&s_Popups[i].m_Rect);
-		UI()->SetHotItem(&s_Popups[i].m_pId);
+		bool Inside = UI()->MouseInside(&s_Popups.m_Rect);
+		UI()->SetHotItem(&s_Popups.m_pId);
 
-		if(UI()->CheckActiveItem(&s_Popups[i].m_pId))
+		if(UI()->CheckActiveItem(&s_Popups.m_pId))
 		{
 			if(!UI()->MouseButton(0))
 			{
 				if(!Inside)
-					g_NumPopups--;
+				m_PopupActive = false;
 				UI()->SetActiveItem(0);
 			}
 		}
-		else if(UI()->HotItem() == &s_Popups[i].m_pId)
+		else if(UI()->HotItem() == &s_Popups.m_pId)
 		{
 			if(UI()->MouseButton(0))
-				UI()->SetActiveItem(&s_Popups[i].m_pId);
+				UI()->SetActiveItem(&s_Popups.m_pId);
 		}
 
 		int Corners = CUI::CORNER_ALL;
-		if(s_Popups[i].m_IsMenu)
+		if(s_Popups.m_IsMenu)
 			Corners = CUI::CORNER_R|CUI::CORNER_B;
 
-		CUIRect r = s_Popups[i].m_Rect;
+		CUIRect r = s_Popups.m_Rect;
 		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), Corners, 3.0f);
 		r.Margin(1.0f, &r);
 		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), Corners, 3.0f);
 		r.Margin(4.0f, &r);
 
-		if(s_Popups[i].m_pfnFunc(this, r))
-			g_NumPopups--;
+		if(s_Popups.m_pfnFunc(this, r))
+			m_PopupActive = false;
 
 		if(Input()->KeyPress(KEY_ESCAPE))
-			g_NumPopups--;
+			m_PopupActive = false;
 	}
 }
 
