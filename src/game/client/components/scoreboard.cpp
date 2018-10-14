@@ -14,6 +14,7 @@
 #include <game/client/render.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/motd.h>
+#include <game/client/components/skins.h>
 
 #include "scoreboard.h"
 
@@ -258,7 +259,12 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				Graphics()->BlendNormal();
 				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEADTEE].m_Id);
 				Graphics()->QuadsBegin();
-				IGraphics::CQuadItem QuadItem(TeeOffset, y, 64*TeeSizeMod, 64*TeeSizeMod);
+				if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+				{
+					vec4 Color = m_pClient->m_pSkins->GetColorV4(m_pClient->m_pSkins->GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
+					Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+				}
+				IGraphics::CQuadItem QuadItem(TeeOffset, y-5.0f-Spacing/2.0f, 64*TeeSizeMod, 64*TeeSizeMod);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
