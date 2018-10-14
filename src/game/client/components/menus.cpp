@@ -1498,6 +1498,8 @@ void CMenus::OnInit()
 	if(g_Config.m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
 	g_Config.m_ClShowWelcome = 0;
+	if(g_Config.m_ClSkipStartMenu)
+		SetMenuPage(g_Config.m_UiBrowserPage);
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
