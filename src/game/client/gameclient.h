@@ -245,6 +245,7 @@ public:
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	virtual int ClientVersion() const;
 	const char *GetTeamName(int Team, bool Teamplay) const;
 
 	//
