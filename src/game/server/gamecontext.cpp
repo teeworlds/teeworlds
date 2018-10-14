@@ -1357,7 +1357,8 @@ void CGameContext::ConchainGameinfoUpdate(IConsole::IResult *pResult, void *pUse
 	if(pResult->NumArguments())
 	{
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		pSelf->m_pController->CheckGameInfo();
+		if(pSelf->m_pController)
+			pSelf->m_pController->CheckGameInfo();
 	}
 }
 
