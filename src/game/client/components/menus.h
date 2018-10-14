@@ -313,8 +313,8 @@ private:
 	{
 		bool m_ClanFriend;
 		bool m_FakeFriend;
-		int m_NameHash;
-		int m_ClanHash;
+		unsigned m_NameHash;
+		unsigned m_ClanHash;
 	};
 
 	enum

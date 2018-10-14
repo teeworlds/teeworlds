@@ -35,7 +35,7 @@
 	#include <windows.h>
 #endif
 
-static const char *StrLtrim(const char *pStr)
+/*static const char *StrLtrim(const char *pStr)
 {
 	while(*pStr && *pStr >= 0 && *pStr <= 32)
 		pStr++;
@@ -52,7 +52,7 @@ static void StrRtrim(char *pStr)
 		pStr[i] = 0;
 		i--;
 	}
-}
+}*/
 
 
 CSnapIDPool::CSnapIDPool()
