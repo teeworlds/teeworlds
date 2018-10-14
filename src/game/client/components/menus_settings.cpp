@@ -673,7 +673,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render game menu backgrounds
-	int NumOptions = g_Config.m_ClNameplates ? 8 : 5;
+	int NumOptions = g_Config.m_ClNameplates ? 9 : 6;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1184,7 +1184,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// render screen menu background
 	int NumOptions = g_Config.m_GfxFullscreen ? 3 : 4;
-	if(Graphics()->GetNumScreens() == 1)
+	if(Graphics()->GetNumScreens() > 1)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
