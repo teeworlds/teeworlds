@@ -1126,17 +1126,16 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 
 int IGameController::GetStartTeam()
 {
-	// this will force the auto balancer to work overtime aswell
-	if(g_Config.m_DbgStress)
-		return TEAM_RED;
-
 	if(g_Config.m_SvTournamentMode)
 		return TEAM_SPECTATORS;
 
 	// determine new team
 	int Team = TEAM_RED;
 	if(IsTeamplay())
-		Team = m_aTeamSize[TEAM_RED] > m_aTeamSize[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
+	{
+		if(!g_Config.m_DbgStress)	// this will force the auto balancer to work overtime aswell
+			Team = m_aTeamSize[TEAM_RED] > m_aTeamSize[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
+	}
 
 	// check if there're enough player slots left
 	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots)
