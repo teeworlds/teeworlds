@@ -8,7 +8,7 @@
 
 #include <engine/shared/config.h>
 
-#include "SDL.h"
+#include <SDL2/sdl.h>
 
 #include "sound.h"
 
