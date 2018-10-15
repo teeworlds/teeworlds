@@ -76,7 +76,7 @@ public:
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 	*/
 	enum{
-		SORT_NAME = 0,
+		SORT_NAME=0,
 		SORT_PING,
 		SORT_MAP,
 		SORT_GAMETYPE,
@@ -86,16 +86,16 @@ public:
 		QUICK_PLAYER=2,
 		QUICK_MAPNAME=4,
 
-		TYPE_INTERNET = 0,
+		TYPE_INTERNET=0,
 		TYPE_LAN,
 		NUM_TYPES,
 
 		REFRESHFLAG_INTERNET=1,
 		REFRESHFLAG_LAN=2,
 
-		FLAG_PASSWORD	=1,
-		FLAG_PURE		=2,
-		FLAG_PUREMAP	=4,
+		FLAG_PASSWORD=1,
+		FLAG_PURE=2,
+		FLAG_PUREMAP=4,
 
 		FILTER_EMPTY=32,
 		FILTER_FULL=64,
