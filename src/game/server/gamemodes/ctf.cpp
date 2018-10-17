@@ -214,10 +214,10 @@ void CGameControllerCTF::Tick()
 				else
 				{
 					// take the flag
-					F->Grab(apCloseCCharacters[i]);
-
 					if(F->IsAtStand())
 						m_aTeamscore[fi^1]++;
+
+					F->Grab(apCloseCCharacters[i]);
 
 					F->GetCarrier()->GetPlayer()->m_Score += 1;
 
