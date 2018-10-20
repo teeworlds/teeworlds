@@ -153,6 +153,7 @@ CNetTokenCache::~CNetTokenCache()
 		CConnlessPacketInfo *pTemp = m_pConnlessPacketList->m_pNext;
 		delete m_pConnlessPacketList;
 		m_pConnlessPacketList = pTemp;
+		m_pConnlessPacketList = 0;
 	}
 }
 
@@ -187,6 +188,7 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 		(*ppInfo)->m_Addr = *pAddr;
 		(*ppInfo)->m_DataSize = DataSize;
 		(*ppInfo)->m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
+		(*ppInfo)->m_pNext = 0;
 	}
 }
 
@@ -224,8 +226,7 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 
 	// search the list of packets to be sent
 	// for this address
-	CConnlessPacketInfo **ppPrevNext = &m_pConnlessPacketList;
-		// pointer to the next element pointer of the previous element
+	CConnlessPacketInfo *pPrevInfo = 0;
 	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
 	while(pInfo)
 	{
@@ -237,12 +238,22 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 			CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
 				m_pTokenManager->GenerateToken(pAddr),
 				pInfo->m_aData, pInfo->m_DataSize);
-			*ppPrevNext = pInfo->m_pNext;
+			CConnlessPacketInfo *pNext = pInfo->m_pNext;
+			if(pPrevInfo)
+				pPrevInfo->m_pNext = pNext;
+			if(pInfo == m_pConnlessPacketList)
+				m_pConnlessPacketList = pNext;
 			delete pInfo;
-			pInfo = *ppPrevNext;
+			pInfo = pNext;
 		}
 		else
+		{
+			if(pPrevInfo)
+				pPrevInfo = pPrevInfo->m_pNext;
+			else
+				pPrevInfo = pInfo;
 			pInfo = pInfo->m_pNext;
+		}
 	}
 }
 
