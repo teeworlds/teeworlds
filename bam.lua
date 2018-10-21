@@ -215,7 +215,7 @@ end
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	if compiler == "cl" then
 		if (target_arch == "x86" and arch ~= "ia32") or
-		   (target_arch == "x86_64" and arch ~= "x64" and arch ~= "x86_64") then
+		   (target_arch == "x86_64" and arch ~= "ia64" and arch ~= "amd64") then
 			print("Cross compiling is unsupported on Windows.")
 			os.exit(1)
 		end
@@ -457,7 +457,7 @@ if ScriptArgs['arch'] then
 else
 	if arch == "ia32" then
 		archs = {"x86"}
-	elseif arch == "x64" or arch == "amd64" then
+	elseif arch == "ia64" or arch == "amd64" then
 		archs = {"x86_64"}
 	else
 		archs = {arch}
