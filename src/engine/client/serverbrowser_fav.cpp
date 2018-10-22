@@ -78,7 +78,7 @@ bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR
 	if(g_Config.m_Debug)
 	{
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "added fav '%s' (%s)", pHostname);
+		str_format(aBuf, sizeof(aBuf), "added fav '%s'", pHostname);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 
