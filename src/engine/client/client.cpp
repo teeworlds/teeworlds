@@ -1091,7 +1091,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const unsigned char *pData = Unpacker.GetRaw(Size);
 			if(Unpacker.Error())
 				return;
- 
+
 			io_write(m_MapdownloadFile, pData, Size);
 			++m_MapdownloadChunk;
 			m_MapdownloadAmount += Size;
@@ -1901,14 +1901,33 @@ void CClient::Run()
 				m_EditorActive = false;
 
 			Update();
-			
+
 			if(!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle())
 			{
 				m_RenderFrames++;
 
-				// update frametime
+				const double Freq = (double)time_freq();
+				const int64 LastT = m_LastRenderTime;
 				int64 Now = time_get();
-				m_RenderFrameTime = (Now - m_LastRenderTime) / (float)time_freq();
+				double ft = (Now - LastT) / (float)time_freq();
+
+				// spin-wait to get desired frametime
+				if(g_Config.m_GfxMaxFps > 0)
+				{
+					const double DesiredFt = 1.0/double(g_Config.m_GfxMaxFps);
+					double d = DesiredFt - ft;
+					while(d > 0.00001)
+					{
+						Now = time_get();
+						ft = (Now - LastT) / Freq;
+						d = DesiredFt - ft;
+						_mm_pause();
+					}
+				}
+
+				// update frametime
+				m_RenderFrameTime = ft;
+
 				if(m_RenderFrameTime < m_RenderFrameTimeLow)
 					m_RenderFrameTimeLow = m_RenderFrameTime;
 				if(m_RenderFrameTime > m_RenderFrameTimeHigh)
@@ -2073,7 +2092,7 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;
-	
+
 	Disconnect();
 	m_NetClient.ResetErrorString();
 
