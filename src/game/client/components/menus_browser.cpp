@@ -192,6 +192,8 @@ void CMenus::LoadFilters()
 
 		// add filter
 		m_lFilters.add(CBrowserFilter(Type, pName, ServerBrowser(), 0, 999, -1, "", ""));
+		if(Type == CBrowserFilter::FILTER_STANDARD)		//	make sure the pure filter is enabled in the Teeworlds-filter
+			FilterInfo.m_SortHash |= IServerBrowser::FILTER_PURE;
 		m_lFilters[i].SetFilter(&FilterInfo);
 	}
 

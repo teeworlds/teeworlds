@@ -139,7 +139,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	static int s_BrFilterPure = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE, &Button))
+	if(pMenus->DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE, &Button) && pFilter->Custom() != CBrowserFilter::FILTER_STANDARD)
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_PURE;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
