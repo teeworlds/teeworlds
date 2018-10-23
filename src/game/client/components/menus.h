@@ -374,7 +374,7 @@ private:
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
 
-		void GetFilter(class CServerFilterInfo *pFilterInfo);
+		void GetFilter(class CServerFilterInfo *pFilterInfo) const;
 		void SetFilter(const class CServerFilterInfo *pFilterInfo);
 	};
 
@@ -506,12 +506,11 @@ private:
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
-	void RenderServerbrowserFilters(CUIRect View);
 	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
-	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, bool Selected);
+	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

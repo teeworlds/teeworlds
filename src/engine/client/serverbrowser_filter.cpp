@@ -156,7 +156,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 			if(!(m_SortHash&IServerBrowser::FILTER_FRIENDS) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState != IFriends::FRIEND_NO)
 			{
 				m_pSortedServerlist[m_NumSortedServers++] = i;
-				m_NumSortedPlayers += m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers;
+				m_NumSortedPlayers += (m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers : m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients;
 			}
 		}
 	}
@@ -200,7 +200,7 @@ void CServerBrowserFilter::CServerFilter::Sort()
 		break;
 	case IServerBrowser::SORT_NUMPLAYERS:
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this,
-					g_Config.m_BrFilterSpectators ? &CServerBrowserFilter::CServerFilter::SortCompareNumPlayers : &CServerBrowserFilter::CServerFilter::SortCompareNumClients));
+					(m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? &CServerBrowserFilter::CServerFilter::SortCompareNumPlayers : &CServerBrowserFilter::CServerFilter::SortCompareNumClients));
 		break;
 	case IServerBrowser::SORT_GAMETYPE:
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowserFilter::CServerFilter::SortCompareGametype));

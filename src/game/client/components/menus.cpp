@@ -1950,7 +1950,6 @@ int CMenus::Render()
 			{
 				FilterInfo.m_Country = ActSelection;
 				pFilter->SetFilter(&FilterInfo);
-				g_Config.m_BrFilterCountryIndex = ActSelection;
 				m_Popup = POPUP_NONE;
 			}
 
