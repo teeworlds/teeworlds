@@ -116,14 +116,14 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 			x+(1-Ca1)*r, y-r+Sa1*r,
 			x+(1-Ca3)*r, y-r+Sa3*r,
 			x+(1-Ca2)*r, y-r+Sa2*r);
-	
+
 		if(Corners&32) // ITR
 		ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x+w, y,
 			x+w-r+Ca1*r, y-r+Sa1*r,
 			x+w-r+Ca3*r, y-r+Sa3*r,
 			x+w-r+Ca2*r, y-r+Sa2*r);
-	
+
 		if(Corners&64) // IBL
 		ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x, y+h,
@@ -225,7 +225,7 @@ void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 Co
 									x+(1-Ca2)*r, y-r+Sa2*r);
 			Graphics()->QuadsDrawFreeform(&ItemF, 1);
 		}
-	
+
 		if(Corners&32) // ITR
 		{
 			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
@@ -236,7 +236,7 @@ void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 Co
 									x+w-r+Ca2*r, y-r+Sa2*r);
 			Graphics()->QuadsDrawFreeform(&ItemF, 1);
 		}
-	
+
 		if(Corners&64) // IBL
 		{
 			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
@@ -474,6 +474,46 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			Graphics()->QuadsEnd();
 		}
 	}
+}
+
+void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+								 vec2 PostRotOffset)
+{
+	// in-game hand size is 15 when tee size is 64
+	float BaseSize = 15.0f * (pInfo->m_Size / 64.0f);
+
+	vec2 HandPos = CenterPos + Dir;
+	float Angle = angle(Dir);
+	if(Dir.x < 0)
+		Angle -= AngleOffset;
+	else
+		Angle += AngleOffset;
+
+	vec2 DirX = Dir;
+	vec2 DirY(-Dir.y,Dir.x);
+
+	if(Dir.x < 0)
+		DirY = -DirY;
+
+	HandPos += DirX * PostRotOffset.x;
+	HandPos += DirY * PostRotOffset.y;
+
+	const vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
+	IGraphics::CQuadItem QuadOutline(HandPos.x, HandPos.y, 2*BaseSize, 2*BaseSize);
+	IGraphics::CQuadItem QuadHand = QuadOutline;
+
+	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+	Graphics()->QuadsSetRotation(Angle);
+
+	SelectSprite(SPRITE_TEE_HAND_OUTLINE, 0, 0, 0);
+	Graphics()->QuadsDraw(&QuadOutline, 1);
+	SelectSprite(SPRITE_TEE_HAND, 0, 0, 0);
+	Graphics()->QuadsDraw(&QuadHand, 1);
+
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
