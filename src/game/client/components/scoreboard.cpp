@@ -412,6 +412,10 @@ bool CScoreboard::Active()
 	if(m_Active)
 		return true;
 
+	// skip if motd is present
+	if(m_pClient->m_pMotd->IsActive())
+		return false;
+
 	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
 	{
 		// we are not a spectator, check if we are dead, don't follow a player and the game isn't paused
