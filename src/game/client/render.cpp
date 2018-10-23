@@ -476,6 +476,45 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	}
 }
 
+void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+                                 vec2 PostRotOffset)
+{
+    float BaseSize = 15.0f;
+
+    vec2 HandPos = CenterPos + Dir;
+    float Angle = angle(Dir);
+    if(Dir.x < 0)
+        Angle -= AngleOffset;
+    else
+        Angle += AngleOffset;
+
+    vec2 DirX = Dir;
+    vec2 DirY(-Dir.y,Dir.x);
+
+    if(Dir.x < 0)
+        DirY = -DirY;
+
+    HandPos += DirX * PostRotOffset.x;
+    HandPos += DirY * PostRotOffset.y;
+
+    const vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
+    IGraphics::CQuadItem QuadOutline(HandPos.x, HandPos.y, 2*BaseSize, 2*BaseSize);
+    IGraphics::CQuadItem QuadHand = QuadOutline;
+
+    Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+    Graphics()->QuadsSetRotation(Angle);
+
+    SelectSprite(SPRITE_TEE_HAND_OUTLINE, 0, 0, 0);
+    Graphics()->QuadsDraw(&QuadOutline, 1);
+    SelectSprite(SPRITE_TEE_HAND, 0, 0, 0);
+    Graphics()->QuadsDraw(&QuadHand, 1);
+
+    Graphics()->QuadsSetRotation(0);
+    Graphics()->QuadsEnd();
+}
+
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
 {
 	float f = sqrtf(Amount) / sqrtf(Aspect);

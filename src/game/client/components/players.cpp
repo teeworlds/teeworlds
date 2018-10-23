@@ -20,51 +20,6 @@
 
 #include "players.h"
 
-void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset)
-{
-	// for drawing hand
-	//const skin *s = skin_get(skin_id);
-
-	float BaseSize = 15.0f;
-	//dir = normalize(hook_pos-pos);
-
-	vec2 HandPos = CenterPos + Dir;
-	float Angle = angle(Dir);
-	if (Dir.x < 0)
-		Angle -= AngleOffset;
-	else
-		Angle += AngleOffset;
-
-	vec2 DirX = Dir;
-	vec2 DirY(-Dir.y,Dir.x);
-
-	if (Dir.x < 0)
-		DirY = -DirY;
-
-	HandPos += DirX * PostRotOffset.x;
-	HandPos += DirY * PostRotOffset.y;
-
-	//Graphics()->TextureSet(data->m_aImages[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
-	Graphics()->QuadsBegin();
-	vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
-	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
-
-	// two passes
-	for (int i = 0; i < 2; i++)
-	{
-		bool OutLine = i == 0;
-
-		RenderTools()->SelectSprite(OutLine?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
-		Graphics()->QuadsSetRotation(Angle);
-		IGraphics::CQuadItem QuadItem(HandPos.x, HandPos.y, 2*BaseSize, 2*BaseSize);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-	}
-
-	Graphics()->QuadsSetRotation(0);
-	Graphics()->QuadsEnd();
-}
-
 inline float NormalizeAngular(float f)
 {
 	return fmod(f+pi*2, pi*2);
@@ -179,7 +134,7 @@ void CPlayers::RenderHook(
 		Graphics()->QuadsSetRotation(0);
 		Graphics()->QuadsEnd();
 
-		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+        RenderTools()->RenderTeeHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
 	}
 }
 
@@ -463,10 +418,10 @@ void CPlayers::RenderPlayer(
 
 		switch (Player.m_Weapon)
 		{
-			case WEAPON_GUN: RenderHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_GRENADE: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-4, 7)); break;
-		}
+            case WEAPON_GUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
+            case WEAPON_SHOTGUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
+            case WEAPON_GRENADE: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -pi/2, vec2(-4, 7)); break;
+        }
 
 	}
 
