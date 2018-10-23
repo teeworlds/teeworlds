@@ -2260,12 +2260,45 @@ bool CMenus::OnInput(IInput::CEvent e)
 
 void CMenus::OnConsoleInit()
 {
-	// add filters
-	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, Localize("Teeworlds"), ServerBrowser(), IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP|IServerBrowser::FILTER_PING, 999, -1, "", ""));
-	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), IServerBrowser::FILTER_FAVORITE|IServerBrowser::FILTER_PING, 999, -1, "", ""));
-	m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser(), IServerBrowser::FILTER_PING, 999, -1, "", ""));
+	// load filters
+	LoadFilters();
 
-	m_lFilters[0].Switch();
+	// add standard filters in case they are missing
+	bool FilterStandard = false;
+	bool FilterFav = false;
+	bool FilterAll = false;
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		switch(m_lFilters[i].Custom())
+		{
+		case CBrowserFilter::FILTER_STANDARD:
+			FilterStandard = true;
+			break;
+		case CBrowserFilter::FILTER_FAVORITES:
+			FilterFav = true;
+			break;
+		case CBrowserFilter::FILTER_ALL:
+			FilterAll = true;
+		}
+	}
+	if(!FilterStandard)
+	{
+		// put it on top
+		int Pos = m_lFilters.size();
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser(), IServerBrowser::FILTER_COMPAT_VERSION | IServerBrowser::FILTER_PURE | IServerBrowser::FILTER_PURE_MAP | IServerBrowser::FILTER_PING, 999, -1, "", ""));
+		for(; Pos > 0; --Pos)
+			Move(true, Pos);
+	}
+	if(!FilterFav)
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), IServerBrowser::FILTER_FAVORITE | IServerBrowser::FILTER_PING, 999, -1, "", ""));
+	if(!FilterAll)
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser(), IServerBrowser::FILTER_PING, 999, -1, "", ""));
+}
+
+void CMenus::OnShutdown()
+{
+	// save filters
+	SaveFilters();
 }
 
 void CMenus::OnStateChange(int NewState, int OldState)

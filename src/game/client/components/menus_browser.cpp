@@ -2,11 +2,14 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <algorithm> // sort  TODO: remove this
 
+#include <engine/external/json-parser/json.h>
+
 #include <engine/config.h>
 #include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
+#include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
@@ -127,6 +130,134 @@ void CMenus::CBrowserFilter::GetFilter(CServerFilterInfo *pFilterInfo)
 void CMenus::CBrowserFilter::SetFilter(const CServerFilterInfo *pFilterInfo)
 {
 	m_pServerBrowser->SetFilter(m_Filter, pFilterInfo);
+}
+
+void CMenus::LoadFilters()
+{
+	// read file data into buffer
+	char *pFilename = "ui_settings.json";
+	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
+		return;
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize + 1, 1);
+	io_read(File, pFileData, FileSize);
+	pFileData[FileSize] = 0;
+	io_close(File);
+
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	if(pJsonData == 0)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		mem_free(pFileData);
+		return;
+	}
+
+	// extract data
+	int Extended = 0;
+	const json_value &rFilterEntry = (*pJsonData)["filter"];
+	for(unsigned i = 0; i < rFilterEntry.u.array.length; ++i)
+	{
+		char *pName = rFilterEntry[i].u.object.values[0].name;
+		const json_value &rStart = *(rFilterEntry[i].u.object.values[0].value);
+		if(rStart.type != json_object)
+			continue;
+
+		int Type = 0;
+		if(rStart["type"].type == json_integer)
+			Type = rStart["type"].u.integer;
+		if(rStart["extended"].type == json_integer && rStart["extended"].u.integer)
+			Extended = i;
+
+		// filter setting
+		CServerFilterInfo FilterInfo;
+		const json_value &rSubStart = rStart["settings"];
+		if(rSubStart.type == json_object)
+		{
+			if(rSubStart["filter_hash"].type == json_integer)
+				FilterInfo.m_SortHash = rSubStart["filter_hash"].u.integer;
+			if(rSubStart["filter_gametype"].type == json_string)
+				str_copy(FilterInfo.m_aGametype, rSubStart["filter_gametype"], sizeof(FilterInfo.m_aGametype));
+			if(rSubStart["filter_ping"].type == json_integer)
+				FilterInfo.m_Ping = rSubStart["filter_ping"].u.integer;
+			if(rSubStart["filter_address"].type == json_string)
+				str_copy(FilterInfo.m_aAddress, rSubStart["filter_address"], sizeof(FilterInfo.m_aAddress));
+			if(rSubStart["filter_country"].type == json_integer)
+				FilterInfo.m_Country = rSubStart["filter_country"].u.integer;
+		}
+
+		// add filter
+		m_lFilters.add(CBrowserFilter(Type, pName, ServerBrowser(), 0, 999, -1, "", ""));
+		m_lFilters[i].SetFilter(&FilterInfo);
+	}
+
+	// clean up
+	json_value_free(pJsonData);
+	mem_free(pFileData);
+
+	m_lFilters[Extended].Switch();
+}
+
+void CMenus::SaveFilters()
+{
+	IOHANDLE File = Storage()->OpenFile("ui_settings.json", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return;
+
+	char aBuf[512];
+	
+	// file start
+	const char *p = "{\"filter\": [";
+	io_write(File, p, str_length(p));
+
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		// part start
+		if(i == 0)
+			p = "\n";
+		else
+			p = ",\n"; 
+		io_write(File, p, str_length(p));
+
+		str_format(aBuf, sizeof(aBuf), "\t{\"%s\": {\n", m_lFilters[i].Name());
+		io_write(File, aBuf, str_length(aBuf));
+
+		str_format(aBuf, sizeof(aBuf), "\t\t\"type\": %d,\n", m_lFilters[i].Custom());
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\"extended\": %d,\n", m_lFilters[i].Extended()?1:0);
+		io_write(File, aBuf, str_length(aBuf));
+
+		// filter setting
+		CServerFilterInfo FilterInfo;
+		m_lFilters[i].GetFilter(&FilterInfo);
+
+		str_format(aBuf, sizeof(aBuf), "\t\t\"settings\": {\n");
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_hash\": %d,\n", FilterInfo.m_SortHash);
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_gametype\": \"%s\",\n", FilterInfo.m_aGametype);
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_ping\": %d,\n", FilterInfo.m_Ping);
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_address\": \"%s\",\n", FilterInfo.m_aAddress);
+		io_write(File, aBuf, str_length(aBuf));
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_country\": %d,\n\t\t\t}", FilterInfo.m_Country);
+		io_write(File, aBuf, str_length(aBuf));
+
+		// part end
+		p = "\n\t\t}\n\t}";
+		io_write(File, p, str_length(p));
+	}
+
+	// file end
+	p = "]\n}";
+	io_write(File, p, str_length(p));
+
+	io_close(File);
 }
 
 void CMenus::RemoveFilter(int FilterIndex)

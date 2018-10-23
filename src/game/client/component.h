@@ -35,6 +35,7 @@ public:
 	virtual void OnStateChange(int NewState, int OldState) {};
 	virtual void OnConsoleInit() {};
 	virtual void OnInit() {};
+	virtual void OnShutdown() {};
 	virtual void OnReset() {};
 	virtual void OnRender() {};
 	virtual void OnRelease() {};

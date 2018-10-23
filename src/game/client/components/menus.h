@@ -382,6 +382,8 @@ private:
 
 	int m_SelectedFilter;
 
+	void LoadFilters();
+	void SaveFilters();
 	void RemoveFilter(int FilterIndex);
 	void Move(bool Up, int Filter);
 
@@ -569,6 +571,7 @@ public:
 	virtual void OnInit();
 
 	virtual void OnConsoleInit();
+	virtual void OnShutdown();
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnReset();
 	virtual void OnRender();
