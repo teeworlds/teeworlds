@@ -1912,7 +1912,7 @@ void CClient::Run()
 				double ft = (Now - LastT) / (float)time_freq();
 
 				// spin-wait to get desired frametime
-				if(g_Config.m_GfxMaxFps > 0)
+				if(g_Config.m_GfxLimitFps)
 				{
 					const double DesiredFt = 1.0/double(g_Config.m_GfxMaxFps);
 					double d = DesiredFt - ft;

@@ -1331,13 +1331,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
 	static int s_ButtonGfxCapFps = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), (g_Config.m_GfxMaxFps > 0), &Button))
+	if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), g_Config.m_GfxLimitFps, &Button))
 	{
-		if(g_Config.m_GfxMaxFps > 0) g_Config.m_GfxMaxFps = 0;
-		else g_Config.m_GfxMaxFps = 144;
+		g_Config.m_GfxLimitFps ^= 1;
 	}
 
-	if(g_Config.m_GfxMaxFps > 0)
+	if(g_Config.m_GfxLimitFps > 0)
 	{
 		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
