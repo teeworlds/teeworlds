@@ -1245,14 +1245,14 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
 	static int s_GfxTextureCompression = g_Config.m_GfxTextureCompression;
 
-	CUIRect Label, Button, Screen, Texture, BottomView;
+	CUIRect Label, Button, ScreenLeft, ScreenRight, Texture, BottomView;
 
 	// cut view
 	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = g_Config.m_GfxFullscreen ? 3 : 4;
+	int NumOptions = 4;
 	if(Graphics()->GetNumScreens() > 1)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
@@ -1260,8 +1260,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	MainView.HSplitTop(BackgroundHeight, &Screen, &MainView);
-	RenderTools()->DrawUIRect(&Screen, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.HSplitTop(BackgroundHeight, &ScreenLeft, &MainView);
+	RenderTools()->DrawUIRect(&ScreenLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render textures menu background
 	NumOptions = 3;
@@ -1272,46 +1272,37 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Texture, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render screen menu
-	Screen.HSplitTop(ButtonHeight, &Label, &Screen);
+	ScreenLeft.HSplitTop(ButtonHeight, &Label, &ScreenLeft);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	ScreenLeft.VSplitMid(&ScreenLeft, &ScreenRight);
 
-	Screen.HSplitTop(Spacing, 0, &Screen);
-	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxFullscreen = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 		Client()->ToggleFullscreen();
 
 	if(!g_Config.m_GfxFullscreen)
 	{
-		Screen.HSplitTop(Spacing, 0, &Screen);
-		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonGfxBorderless = 0;
 		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
 			Client()->ToggleWindowBordered();
 	}
 
-	Screen.HSplitTop(Spacing, 0, &Screen);
-	Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxVsync = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
 		Client()->ToggleWindowVSync();
 
-	if(Graphics()->GetNumScreens() > 1)
-	{
-		Screen.HSplitTop(Spacing, 0, &Screen);
-		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
-		int Index = g_Config.m_GfxScreen;
-		DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 110.0f, 0, Graphics()->GetNumScreens()-1);
-		if(Index != g_Config.m_GfxScreen)
-			Client()->SwitchWindowScreen(Index);
-	}
-
 	// FSAA button
 	{
-		Screen.HSplitTop(Spacing, 0, &Screen);
-		Screen.HSplitTop(ButtonHeight, &Button, &Screen);
+		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
@@ -1335,6 +1326,33 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				g_Config.m_GfxFsaaSamples *= 2;
 			CheckSettings = true;
 		}
+	}
+
+	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
+	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
+	static int s_ButtonGfxCapFps = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), (g_Config.m_GfxMaxFps > 0), &Button))
+	{
+		if(g_Config.m_GfxMaxFps > 0) g_Config.m_GfxMaxFps = 0;
+		else g_Config.m_GfxMaxFps = 144;
+	}
+
+	if(g_Config.m_GfxMaxFps > 0)
+	{
+		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
+		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
+		DoScrollbarOption(&g_Config.m_GfxMaxFps, &g_Config.m_GfxMaxFps,
+						  &Button, Localize("Max fps"), 144.0f, 30, 300);
+	}
+
+	if(Graphics()->GetNumScreens() > 1)
+	{
+		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
+		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
+		int Index = g_Config.m_GfxScreen;
+		DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 110.0f, 0, Graphics()->GetNumScreens()-1);
+		if(Index != g_Config.m_GfxScreen)
+			Client()->SwitchWindowScreen(Index);
 	}
 
 	// render texture menu
