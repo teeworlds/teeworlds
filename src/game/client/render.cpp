@@ -479,7 +479,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
                                  vec2 PostRotOffset)
 {
-    float BaseSize = 15.0f;
+    // in-game hand size is 15 when tee size is 64
+    float BaseSize = 15.0f * (pInfo->m_Size / 64.0f);
 
     vec2 HandPos = CenterPos + Dir;
     float Angle = angle(Dir);
