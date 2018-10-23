@@ -7,7 +7,7 @@
 class CPlayers : public CComponent
 {
 	CTeeRenderInfo m_aRenderInfo[MAX_CLIENTS];
-    void RenderPlayer(
+	void RenderPlayer(
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,
 		const CNetObj_PlayerInfo *pPrevInfo,

@@ -82,7 +82,7 @@ void CMenus::SaveSkinfile()
 	{
 		if(!CSkins::ms_apSkinVariables[PartIndex][0])
 			continue;
-		
+
 		// part start
 		if(Count == 0)
 		{
@@ -91,7 +91,7 @@ void CMenus::SaveSkinfile()
 		}
 		else
 		{
-			p = ",\n"; 
+			p = ",\n";
 			io_write(File, p, str_length(p));
 		}
 		str_format(aBuf, sizeof(aBuf), "\t\"%s\": {\n", CSkins::ms_apSkinPartNames[PartIndex]);
@@ -529,13 +529,13 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			}
 			Info.m_Size = 50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
-            const vec2 TeePos(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2);
+			const vec2 TeePos(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2);
 
-            if(m_TeePartSelected == SKINPART_HANDS)
-            {
-                RenderTools()->RenderTeeHand(&Info, TeePos, vec2(1.0f, 0.0f), -pi*0.5f, vec2(18, 0));
-            }
-            RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), TeePos);
+			if(m_TeePartSelected == SKINPART_HANDS)
+			{
+				RenderTools()->RenderTeeHand(&Info, TeePos, vec2(1.0f, 0.0f), -pi*0.5f, vec2(18, 0));
+			}
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), TeePos);
 		}
 	}
 
@@ -657,7 +657,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 			}
 			else
- 				UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				UI()->DoLabelScaled(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 		}
 	}
 
