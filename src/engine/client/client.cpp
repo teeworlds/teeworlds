@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 
+#include <immintrin.h> //_mm_pause
 #include <stdlib.h> // qsort
 #include <stdarg.h>
 

@@ -1252,7 +1252,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = 4;
+	int NumOptions = 3 + (!g_Config.m_GfxFullscreen);
 	if(Graphics()->GetNumScreens() > 1)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
@@ -1275,7 +1275,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenLeft.HSplitTop(ButtonHeight, &Label, &ScreenLeft);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
 	ScreenLeft.VSplitMid(&ScreenLeft, &ScreenRight);
+	ScreenLeft.VSplitRight(Spacing * 0.5f, &ScreenLeft, 0);
+	ScreenRight.VSplitLeft(Spacing * 0.5f, 0, &ScreenRight);
 
 	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
