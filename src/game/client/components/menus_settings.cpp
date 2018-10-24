@@ -1177,31 +1177,34 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		m_pClient->m_pBinds->SetDefaults();
 }
 
-void CMenus::DoResolutionList(CUIRect* pRect, int* pSelected, CListBoxState* pListBoxState)
+bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
+							  const sorted_array<CVideoMode>& lModes)
 {
-	static int s_DisplayModeList = 0;
-	int OldSelected = *pSelected;
-	int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	int OldSelected = -1;
 	char aBuf[32];
 
-	/*str_format(aBuf, sizeof(aBuf), "%s: %dx%d (%d:%d)", Localize("Current"),
-			   s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/G, s_GfxScreenHeight/G);*/
-	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, nullptr, m_lFilteredVideoModes.size(), 1,
-					 *pSelected, pRect);
+	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, nullptr, lModes.size(), 1,
+					 OldSelected, pRect);
 
-	for(int i = 0; i < m_lFilteredVideoModes.size(); ++i)
+	for(int i = 0; i < lModes.size(); ++i)
 	{
-		if(g_Config.m_GfxScreenWidth == m_lFilteredVideoModes[i].m_Width &&
-			g_Config.m_GfxScreenHeight == m_lFilteredVideoModes[i].m_Height)
+		if(g_Config.m_GfxScreenWidth == lModes[i].m_Width &&
+			g_Config.m_GfxScreenHeight == lModes[i].m_Height)
 		{
 			OldSelected = i;
 		}
 
-		CListboxItem Item = UiDoListboxNextItem(pListBoxState, &m_lFilteredVideoModes[i], OldSelected == i);
+		CListboxItem Item = UiDoListboxNextItem(pListBoxState, &lModes[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
-			str_format(aBuf, sizeof(aBuf), " %dx%d", m_lFilteredVideoModes[i].m_Width,
-					   m_lFilteredVideoModes[i].m_Height);
+			int G = gcd(lModes[i].m_Width, lModes[i].m_Height);
+
+			str_format(aBuf, sizeof(aBuf), "%dx%d (%d:%d)",
+					   lModes[i].m_Width,
+					   lModes[i].m_Height,
+					   lModes[i].m_Width/G,
+					   lModes[i].m_Height/G);
+
 			if(i == OldSelected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1224,10 +1227,11 @@ void CMenus::DoResolutionList(CUIRect* pRect, int* pSelected, CListBoxState* pLi
 	const int NewSelected = UiDoListboxEnd(pListBoxState, 0);
 	if(OldSelected != NewSelected)
 	{
-		*pSelected = NewSelected;
-		g_Config.m_GfxScreenWidth = m_lFilteredVideoModes[NewSelected].m_Width;
-		g_Config.m_GfxScreenHeight = m_lFilteredVideoModes[NewSelected].m_Height;
+		g_Config.m_GfxScreenWidth = lModes[NewSelected].m_Width;
+		g_Config.m_GfxScreenHeight = lModes[NewSelected].m_Height;
+		return true;
 	}
+	return false;
 }
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
@@ -1415,28 +1419,32 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 		CUIRect HeaderLeft, HeaderRight;
 		Button.VSplitMid(&HeaderLeft, &HeaderRight);
+		HeaderLeft.VSplitRight(1.5f, &HeaderLeft, 0);
+		HeaderRight.VSplitLeft(1.5f, 0, &HeaderRight);
 
-		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_L, 5.0f);
-		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_R, 5.0f);
+		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_T, 5.0f);
+		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_T, 5.0f);
 
 		char aBuf[32];
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Recommended"));
+		HeaderLeft.y += 2;
 		UI()->DoLabel(&HeaderLeft, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Other"));
-		UI()->DoLabel(&HeaderRight, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		HeaderRight.y += 2;
+		UI()->DoLabel(&HeaderRight, aBuf, HeaderRight.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		CUIRect ListRec, ListOth;
 		MainView.VSplitMid(&ListRec, &ListOth);
+		ListRec.VSplitRight(1.5f, &ListRec, 0);
+		ListOth.VSplitLeft(1.5f, 0, &ListOth);
 
-		static int s_RecSelected = -1;
-		static int s_OthSelected = -1;
 		static CListBoxState s_RecListBoxState;
 		static CListBoxState s_OthListBoxState;
-		DoResolutionList(&ListRec, &s_RecSelected, &s_RecListBoxState);
-		DoResolutionList(&ListOth, &s_OthSelected, &s_OthListBoxState);
+		CheckSettings |= DoResolutionList(&ListRec, &s_RecListBoxState, m_lRecommendedVideoModes);
+		CheckSettings |= DoResolutionList(&ListOth, &s_OthListBoxState, m_lOtherVideoModes);
 	}
 
 	// reset button

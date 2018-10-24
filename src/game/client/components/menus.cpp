@@ -1435,17 +1435,26 @@ void CMenus::UpdateVideoFormats()
 
 void CMenus::UpdatedFilteredVideoModes()
 {
-	m_lFilteredVideoModes.clear();
-	/*for(int i = 0; i < m_NumModes; i++)
-	{
-		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
-		if(m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue == m_aModes[i].m_Width/G && m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue == m_aModes[i].m_Height/G)
-			m_lFilteredVideoModes.add(m_aModes[i]);
-	}*/
+	// same format as desktop goes to recommended list
+	m_lRecommendedVideoModes.clear();
+	m_lOtherVideoModes.clear();
+
+	const int DeskTopG = gcd(Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
+	const int DeskTopWidthG = Graphics()->DesktopWidth() / DeskTopG;
+	const int DeskTopHeightG = Graphics()->DesktopHeight() / DeskTopG;
 
 	for(int i = 0; i < m_NumModes; i++)
 	{
-		m_lFilteredVideoModes.add(m_aModes[i]);
+		const int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
+		if(m_aModes[i].m_Width/G == DeskTopWidthG &&
+		   m_aModes[i].m_Height/G == DeskTopHeightG)
+		{
+			m_lRecommendedVideoModes.add(m_aModes[i]);
+		}
+		else
+		{
+			m_lOtherVideoModes.add(m_aModes[i]);
+		}
 	}
 }
 

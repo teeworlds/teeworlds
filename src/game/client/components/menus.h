@@ -489,7 +489,8 @@ private:
 	};
 
 	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
-	sorted_array<CVideoMode> m_lFilteredVideoModes;
+	sorted_array<CVideoMode> m_lRecommendedVideoModes;
+	sorted_array<CVideoMode> m_lOtherVideoModes;
 	int m_NumVideoFormats;
 	int m_CurrentVideoFormat;
 	void UpdateVideoFormats();
@@ -555,7 +556,8 @@ private:
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
-	void DoResolutionList(CUIRect* pRect, int* pSelected, CListBoxState* pListBoxState);
+	bool DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
+						  const sorted_array<CVideoMode>& lModes);
 
 	// found in menu_callback.cpp
 	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
