@@ -72,7 +72,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	if(m_SeekBarActivatedTime < time_get() - 5*time_freq())
 		m_SeekBarActive = false;
-	
+
 	if(m_MenuActive)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
@@ -170,7 +170,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else
 			DemoPlayer()->Unpause();
 	}
-	
+
 	if(m_MenuActive)
 	{
 		// do buttons
@@ -358,12 +358,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	MainView.HSplitTop(230.0f, &ListBox, &MainView);
 
 	static int s_DemoListId = 0;
-	static float s_ScrollValue = 0;
-	UiDoListboxHeader(&ListBox, Localize("Recorded"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_DemoListId, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
+	static CListBoxState s_ListBoxState;
+	UiDoListboxHeader(&s_ListBoxState, &ListBox, Localize("Recorded"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState, &s_DemoListId, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, (void*)(&r.front()));
 		if(Item.m_Visible)
 		{
 			Item.m_Rect.VSplitLeft(Item.m_Rect.h, &FileIcon, &Item.m_Rect);
@@ -388,7 +388,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 	bool Activated = false;
-	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);
+	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ListBoxState, &Activated);
 	DemolistOnUpdate(false);
 
 	// render demo info

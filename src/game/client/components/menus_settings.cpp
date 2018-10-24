@@ -397,7 +397,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 void CMenus::RenderSkinSelection(CUIRect MainView)
 {
 	static sorted_array<const CSkins::CSkin *> s_paSkinList;
-	static float s_ScrollValue = 0.0f;
+	static CListBoxState s_ListBoxState;
 	if(m_RefreshSkinSelector)
 	{
 		s_paSkinList.clear();
@@ -413,8 +413,8 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 
 	m_pSelectedSkin = 0;
 	int OldSelected = -1;
-	UiDoListboxHeader(&MainView, Localize("Skins"), 20.0f, 2.0f);
-	UiDoListboxStart(&m_RefreshSkinSelector, 50.0f, 0, s_paSkinList.size(), 10, OldSelected, s_ScrollValue);
+	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Skins"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState, &m_RefreshSkinSelector, 50.0f, 0, s_paSkinList.size(), 10, OldSelected);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -427,7 +427,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			OldSelected = i;
 		}
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paSkinList[i], OldSelected == i);
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &s_paSkinList[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -451,7 +451,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 	if(NewSelected != -1)
 	{
 		if(NewSelected != OldSelected)
@@ -473,7 +473,6 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
 	static sorted_array<const CSkins::CSkinPart *> s_paList[6];
-	static float s_ScrollValue = 0.0f;
 	if(s_InitSkinPartList)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -491,8 +490,9 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	}
 
 	static int OldSelected = -1;
-	UiDoListboxHeader(&MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]), 20.0f, 2.0f);
-	UiDoListboxStart(&s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected, s_ScrollValue);
+	static CListBoxState s_ListBoxState;
+	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState, &s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
 	{
@@ -502,7 +502,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		if(!str_comp(s->m_aName, CSkins::ms_apSkinVariables[m_TeePartSelected]))
 			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_paList[m_TeePartSelected][i], OldSelected == i);
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &s_paList[m_TeePartSelected][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -539,7 +539,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 	if(NewSelected != -1)
 	{
 		if(NewSelected != OldSelected)
@@ -615,7 +615,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	static int s_LanguageList = 0;
 	static int s_SelectedLanguage = 0;
 	static sorted_array<CLanguage> s_Languages;
-	static float s_ScrollValue = 0;
+	static CListBoxState s_ListBoxState;
 
 	if(s_Languages.size() == 0)
 	{
@@ -632,12 +632,12 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
-		UiDoListboxHeader(&MainView, Localize("Language"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue, Header?0:&MainView, Header?true:false);
+		UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Language"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState, &s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header?true:false);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&r.front());
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front());
 
 		if(Item.m_Visible)
 		{
@@ -661,7 +661,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 		}
 	}
 
-	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
+	s_SelectedLanguage = UiDoListboxEnd(&s_ListBoxState, 0);
 
 	if(OldSelected != s_SelectedLanguage)
 	{
@@ -884,10 +884,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	// country flag selector
 	MainView.HSplitTop(10.0f, 0, &MainView);
-	static float s_ScrollValue = 0.0f;
+	static CListBoxState s_ListBoxState;
 	int OldSelected = -1;
-	UiDoListboxHeader(&MainView, Localize("Country"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ScrollValue, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 18, OldSelected, s_ScrollValue);
+	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Country"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 18, OldSelected);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
@@ -895,7 +895,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &pEntry->m_CountryCode, OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CUIRect Label;
@@ -923,7 +923,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 	if(OldSelected != NewSelected)
 	{
 		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
@@ -1177,6 +1177,59 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		m_pClient->m_pBinds->SetDefaults();
 }
 
+void CMenus::DoResolutionList(CUIRect* pRect, int* pSelected, CListBoxState* pListBoxState)
+{
+	static int s_DisplayModeList = 0;
+	int OldSelected = *pSelected;
+	int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	char aBuf[32];
+
+	/*str_format(aBuf, sizeof(aBuf), "%s: %dx%d (%d:%d)", Localize("Current"),
+			   s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/G, s_GfxScreenHeight/G);*/
+	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, nullptr, m_lFilteredVideoModes.size(), 1,
+					 *pSelected, pRect);
+
+	for(int i = 0; i < m_lFilteredVideoModes.size(); ++i)
+	{
+		if(g_Config.m_GfxScreenWidth == m_lFilteredVideoModes[i].m_Width &&
+			g_Config.m_GfxScreenHeight == m_lFilteredVideoModes[i].m_Height)
+		{
+			OldSelected = i;
+		}
+
+		CListboxItem Item = UiDoListboxNextItem(pListBoxState, &m_lFilteredVideoModes[i], OldSelected == i);
+		if(Item.m_Visible)
+		{
+			str_format(aBuf, sizeof(aBuf), " %dx%d", m_lFilteredVideoModes[i].m_Width,
+					   m_lFilteredVideoModes[i].m_Height);
+			if(i == OldSelected)
+			{
+				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				Item.m_Rect.y += 2.0f;
+				UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f,
+									CUI::ALIGN_CENTER);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			}
+			else
+			{
+				Item.m_Rect.y += 2.0f;
+				UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f,
+									CUI::ALIGN_CENTER);
+			}
+		}
+	}
+
+	const int NewSelected = UiDoListboxEnd(pListBoxState, 0);
+	if(OldSelected != NewSelected)
+	{
+		*pSelected = NewSelected;
+		g_Config.m_GfxScreenWidth = m_lFilteredVideoModes[NewSelected].m_Width;
+		g_Config.m_GfxScreenHeight = m_lFilteredVideoModes[NewSelected].m_Height;
+	}
+}
+
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	char aBuf[128];
@@ -1315,7 +1368,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// display mode list
 	{
 		// custom list header
-		NumOptions = 2;
+		NumOptions = 1;
 
 		CUIRect Header, Button;
 		MainView.HSplitTop(ButtonHeight*(float)(NumOptions+1)+Spacing*(float)(NumOptions+1), &Header, 0);
@@ -1324,23 +1377,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		// draw header
 		MainView.HSplitTop(ButtonHeight, &Header, &MainView);
 		Header.y += 2.0f;
-		UI()->DoLabel(&Header, Localize("Resolutions"), Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-		// supported modes button
-		MainView.HSplitTop(Spacing, 0, &MainView);
-		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
-		static int s_ActScreen = g_Config.m_GfxScreen;
-		static int s_GfxDisplayAllModes = 0;
-		if(DoButton_CheckBox(&s_GfxDisplayAllModes, Localize("Show only supported"), g_Config.m_GfxDisplayAllModes^1, &Button) || (s_ActScreen != g_Config.m_GfxScreen))
-		{
-			if(s_ActScreen == g_Config.m_GfxScreen)
-				g_Config.m_GfxDisplayAllModes ^= 1;
-			s_ActScreen = g_Config.m_GfxScreen;
-			UpdateVideoModeSettings();
-		}
+		UI()->DoLabel(&Header, Localize("Resolution"), Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 		// format changer
-		{
+		/*{
 			MainView.HSplitTop(Spacing, 0, &MainView);
 			MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 			RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1369,53 +1409,34 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 				UpdatedFilteredVideoModes();
 			}
-		}
+		}*/
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
+		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
+		CUIRect HeaderLeft, HeaderRight;
+		Button.VSplitMid(&HeaderLeft, &HeaderRight);
 
-		static float s_ScrollValue = 0;
-		static int s_DisplayModeList = 0;
-		int OldSelected = -1;
-		int G = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
-		str_format(aBuf, sizeof(aBuf), "%s: %dx%d (%d:%d)", Localize("Current"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/G, s_GfxScreenHeight/G);
-		UiDoListboxStart(&s_DisplayModeList, 20.0f, aBuf, m_lFilteredVideoModes.size(), 1, OldSelected, s_ScrollValue, &MainView);
+		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_L, 5.0f);
+		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_R, 5.0f);
 
-		for(int i = 0; i < m_lFilteredVideoModes.size(); ++i)
-		{
-			if(g_Config.m_GfxScreenWidth == m_lFilteredVideoModes[i].m_Width &&
-				g_Config.m_GfxScreenHeight == m_lFilteredVideoModes[i].m_Height)
-			{
-				OldSelected = i;
-			}
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%s", Localize("Recommended"));
+		UI()->DoLabel(&HeaderLeft, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-			CListboxItem Item = UiDoListboxNextItem(&m_lFilteredVideoModes[i], OldSelected == i);
-			if(Item.m_Visible)
-			{
-				str_format(aBuf, sizeof(aBuf), " %dx%d", m_lFilteredVideoModes[i].m_Width, m_lFilteredVideoModes[i].m_Height);
-				if(i == OldSelected)
-				{
-					TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-					TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-					Item.m_Rect.y += 2.0f;
-					UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-					TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-				}
-				else
-				{
-					Item.m_Rect.y += 2.0f;
-					UI()->DoLabelScaled(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-				}
-			}
-		}
+		str_format(aBuf, sizeof(aBuf), "%s", Localize("Other"));
+		UI()->DoLabel(&HeaderRight, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-		const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
-		if(OldSelected != NewSelected)
-		{
-			g_Config.m_GfxScreenWidth = m_lFilteredVideoModes[NewSelected].m_Width;
-			g_Config.m_GfxScreenHeight = m_lFilteredVideoModes[NewSelected].m_Height;
-			CheckSettings = true;
-		}
+
+		MainView.HSplitTop(Spacing, 0, &MainView);
+		CUIRect ListRec, ListOth;
+		MainView.VSplitMid(&ListRec, &ListOth);
+
+		static int s_RecSelected = -1;
+		static int s_OthSelected = -1;
+		static CListBoxState s_RecListBoxState;
+		static CListBoxState s_OthListBoxState;
+		DoResolutionList(&ListRec, &s_RecSelected, &s_RecListBoxState);
+		DoResolutionList(&ListOth, &s_OthSelected, &s_OthListBoxState);
 	}
 
 	// reset button
