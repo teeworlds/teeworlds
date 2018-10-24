@@ -130,7 +130,7 @@ int CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, int Checked,
 	float Fade = ButtonFade(pBC, Seconds, Checked);
 	float FadeVal = Fade/Seconds;
 	CUIRect Text = *pRect;
-	
+
 	vec4 Color = mix(vec4(0.0f, 0.0f, 0.0f, 0.25f), ColorHot, FadeVal);
 	RenderTools()->DrawUIRect(pRect, Color, Corners, r);
 
@@ -143,7 +143,7 @@ int CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, int Checked,
 		const CMenuImage *pImage = FindMenuImage(pImageName);
 		if(pImage)
 		{
-		
+
 			Graphics()->TextureSet(pImage->m_GreyTexture);
 			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
@@ -749,19 +749,8 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
-static CUIRect gs_ListBoxOriginalView;
-static CUIRect gs_ListBoxView;
-static float gs_ListBoxRowHeight;
-static int gs_ListBoxItemIndex;
-static int gs_ListBoxSelectedIndex;
-static int gs_ListBoxNewSelected;
-static int gs_ListBoxDoneEvents;
-static int gs_ListBoxNumItems;
-static int gs_ListBoxItemsPerRow;
-static float gs_ListBoxScrollValue;
-static bool gs_ListBoxItemActivated;
-
-void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing)
+void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle,
+							   float HeaderHeight, float Spacing)
 {
 	CUIRect Header;
 	CUIRect View = *pRect;
@@ -778,17 +767,18 @@ void CMenus::UiDoListboxHeader(const CUIRect *pRect, const char *pTitle, float H
 	View.HSplitTop(Spacing, &Header, &View);
 
 	// setup the variables
-	gs_ListBoxOriginalView = View;
+	pState->m_ListBoxOriginalView = View;
 }
 
-void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-								int ItemsPerRow, int SelectedIndex, float ScrollValue, const CUIRect *pRect, bool Background)
+void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
+							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
+							  const CUIRect *pRect, bool Background)
 {
 	CUIRect View, Scroll, Row;
 	if(pRect)
 		View = *pRect;
 	else
-		View = gs_ListBoxOriginalView;
+		View = pState->m_ListBoxOriginalView;
 	CUIRect Footer;
 
 	// background
@@ -814,52 +804,51 @@ void CMenus::UiDoListboxStart(const void *pID, float RowHeight, const char *pBot
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// setup the variables
-	gs_ListBoxOriginalView = View;
-	gs_ListBoxSelectedIndex = SelectedIndex;
-	gs_ListBoxNewSelected = SelectedIndex;
-	gs_ListBoxItemIndex = 0;
-	gs_ListBoxRowHeight = RowHeight;
-	gs_ListBoxNumItems = NumItems;
-	gs_ListBoxItemsPerRow = ItemsPerRow;
-	gs_ListBoxDoneEvents = 0;
-	gs_ListBoxScrollValue = ScrollValue;
-	gs_ListBoxItemActivated = false;
+	pState->m_ListBoxOriginalView = View;
+	pState->m_ListBoxSelectedIndex = SelectedIndex;
+	pState->m_ListBoxNewSelected = SelectedIndex;
+	pState->m_ListBoxItemIndex = 0;
+	pState->m_ListBoxRowHeight = RowHeight;
+	pState->m_ListBoxNumItems = NumItems;
+	pState->m_ListBoxItemsPerRow = ItemsPerRow;
+	pState->m_ListBoxDoneEvents = 0;
+	pState->m_ListBoxItemActivated = false;
 
 	// do the scrollbar
-	View.HSplitTop(gs_ListBoxRowHeight, &Row, 0);
+	View.HSplitTop(pState->m_ListBoxRowHeight, &Row, 0);
 
-	int NumViewable = (int)(gs_ListBoxOriginalView.h/Row.h) + 1;
-	int Num = (NumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+	int NumViewable = (int)(pState->m_ListBoxOriginalView.h/Row.h) + 1;
+	int Num = (NumItems+pState->m_ListBoxItemsPerRow-1)/pState->m_ListBoxItemsPerRow-NumViewable+1;
 	if(Num < 0)
 		Num = 0;
 	if(Num > 0)
 	{
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			gs_ListBoxScrollValue -= 3.0f/Num;
+			pState->m_ListBoxScrollValue -= 3.0f/Num;
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			gs_ListBoxScrollValue += 3.0f/Num;
+			pState->m_ListBoxScrollValue += 3.0f/Num;
 
-		if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
-		if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+		if(pState->m_ListBoxScrollValue < 0.0f) pState->m_ListBoxScrollValue = 0.0f;
+		if(pState->m_ListBoxScrollValue > 1.0f) pState->m_ListBoxScrollValue = 1.0f;
 	}
 
 	Scroll.HMargin(5.0f, &Scroll);
-	gs_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, gs_ListBoxScrollValue);
+	pState->m_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, pState->m_ListBoxScrollValue);
 
 	// the list
-	gs_ListBoxView = gs_ListBoxOriginalView;
-	UI()->ClipEnable(&gs_ListBoxView);
-	gs_ListBoxView.y -= gs_ListBoxScrollValue*Num*Row.h;
+	pState->m_ListBoxView = pState->m_ListBoxOriginalView;
+	UI()->ClipEnable(&pState->m_ListBoxView);
+	pState->m_ListBoxView.y -= pState->m_ListBoxScrollValue*Num*Row.h;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextRow()
+CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 {
 	static CUIRect s_RowView;
 	CListboxItem Item = {0};
-	if(gs_ListBoxItemIndex%gs_ListBoxItemsPerRow == 0)
-		gs_ListBoxView.HSplitTop(gs_ListBoxRowHeight /*-2.0f*/, &s_RowView, &gs_ListBoxView);
+	if(pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow == 0)
+		pState->m_ListBoxView.HSplitTop(pState->m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &pState->m_ListBoxView);
 
-	s_RowView.VSplitLeft(s_RowView.w/(gs_ListBoxItemsPerRow-gs_ListBoxItemIndex%gs_ListBoxItemsPerRow)/(UI()->Scale()), &Item.m_Rect, &s_RowView);
+	s_RowView.VSplitLeft(s_RowView.w/(pState->m_ListBoxItemsPerRow-pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow)/(UI()->Scale()), &Item.m_Rect, &s_RowView);
 
 	Item.m_Visible = 1;
 	//item.rect = row;
@@ -868,17 +857,17 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow()
 
 	//CUIRect select_hit_box = item.rect;
 
-	if(gs_ListBoxSelectedIndex == gs_ListBoxItemIndex)
+	if(pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex)
 		Item.m_Selected = 1;
 
 	// make sure that only those in view can be selected
-	if(Item.m_Rect.y+Item.m_Rect.h > gs_ListBoxOriginalView.y)
+	if(Item.m_Rect.y+Item.m_Rect.h > pState->m_ListBoxOriginalView.y)
 	{
 
-		if(Item.m_HitRect.y < gs_ListBoxOriginalView.y) // clip the selection
+		if(Item.m_HitRect.y < pState->m_ListBoxOriginalView.y) // clip the selection
 		{
-			Item.m_HitRect.h -= gs_ListBoxOriginalView.y-Item.m_HitRect.y;
-			Item.m_HitRect.y = gs_ListBoxOriginalView.y;
+			Item.m_HitRect.h -= pState->m_ListBoxOriginalView.y-Item.m_HitRect.y;
+			Item.m_HitRect.y = pState->m_ListBoxOriginalView.y;
 		}
 
 	}
@@ -886,71 +875,71 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow()
 		Item.m_Visible = 0;
 
 	// check if we need to do more
-	if(Item.m_Rect.y > gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)
+	if(Item.m_Rect.y > pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h)
 		Item.m_Visible = 0;
 
-	gs_ListBoxItemIndex++;
+	pState->m_ListBoxItemIndex++;
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected)
 {
-	int ThisItemIndex = gs_ListBoxItemIndex;
+	int ThisItemIndex = pState->m_ListBoxItemIndex;
 	if(Selected)
 	{
-		if(gs_ListBoxSelectedIndex == gs_ListBoxNewSelected)
-			gs_ListBoxNewSelected = ThisItemIndex;
-		gs_ListBoxSelectedIndex = ThisItemIndex;
+		if(pState->m_ListBoxSelectedIndex == pState->m_ListBoxNewSelected)
+			pState->m_ListBoxNewSelected = ThisItemIndex;
+		pState->m_ListBoxSelectedIndex = ThisItemIndex;
 	}
 
-	CListboxItem Item = UiDoListboxNextRow();
+	CListboxItem Item = UiDoListboxNextRow(pState);
 
-	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", gs_ListBoxSelectedIndex == gs_ListBoxItemIndex, &Item.m_HitRect))
-		gs_ListBoxNewSelected = ThisItemIndex;
+	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_HitRect))
+		pState->m_ListBoxNewSelected = ThisItemIndex;
 
 	// process input, regard selected index
-	if(gs_ListBoxSelectedIndex == ThisItemIndex)
+	if(pState->m_ListBoxSelectedIndex == ThisItemIndex)
 	{
-		if(!gs_ListBoxDoneEvents)
+		if(!pState->m_ListBoxDoneEvents)
 		{
-			gs_ListBoxDoneEvents = 1;
+			pState->m_ListBoxDoneEvents = 1;
 
 			if(m_EnterPressed || (UI()->CheckActiveItem(pId) && Input()->MouseDoubleClick()))
 			{
-				gs_ListBoxItemActivated = true;
+				pState->m_ListBoxItemActivated = true;
 				UI()->SetActiveItem(0);
 			}
 			else
 			{
 				int NewIndex = -1;
-				if(Input()->KeyPress(KEY_DOWN)) NewIndex = gs_ListBoxNewSelected + 1;
-				if(Input()->KeyPress(KEY_UP)) NewIndex = gs_ListBoxNewSelected - 1;
-				if(NewIndex > -1 && NewIndex < gs_ListBoxNumItems)
+				if(Input()->KeyPress(KEY_DOWN)) NewIndex = pState->m_ListBoxNewSelected + 1;
+				if(Input()->KeyPress(KEY_UP)) NewIndex = pState->m_ListBoxNewSelected - 1;
+				if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
 				{
 					// scroll
-					float Offset = (NewIndex/gs_ListBoxItemsPerRow-gs_ListBoxNewSelected/gs_ListBoxItemsPerRow)*gs_ListBoxRowHeight;
-					int Scroll = gs_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
-									gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
+					float Offset = (NewIndex/pState->m_ListBoxItemsPerRow-pState->m_ListBoxNewSelected/pState->m_ListBoxItemsPerRow)*pState->m_ListBoxRowHeight;
+					int Scroll = pState->m_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
+									pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
 					if(Scroll)
 					{
-						int NumViewable = (int)(gs_ListBoxOriginalView.h/gs_ListBoxRowHeight) + 1;
-						int ScrollNum = (gs_ListBoxNumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
+						int NumViewable = (int)(pState->m_ListBoxOriginalView.h/pState->m_ListBoxRowHeight) + 1;
+						int ScrollNum = (pState->m_ListBoxNumItems+pState->m_ListBoxItemsPerRow-1)/pState->m_ListBoxItemsPerRow-NumViewable+1;
 						if(Scroll < 0)
 						{
-							int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/gs_ListBoxRowHeight;
-							gs_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
+							int Num = (pState->m_ListBoxOriginalView.y-Item.m_Rect.y-Offset+pState->m_ListBoxRowHeight-1.0f)/pState->m_ListBoxRowHeight;
+							pState->m_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
 						}
 						else
 						{
-							int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)+gs_ListBoxRowHeight-1.0f)/
-								gs_ListBoxRowHeight;
-							gs_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
+							int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h)+pState->m_ListBoxRowHeight-1.0f)/
+								pState->m_ListBoxRowHeight;
+							pState->m_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
 						}
-						if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
-						if(gs_ListBoxScrollValue > 1.0f) gs_ListBoxScrollValue = 1.0f;
+						if(pState->m_ListBoxScrollValue < 0.0f) pState->m_ListBoxScrollValue = 0.0f;
+						if(pState->m_ListBoxScrollValue > 1.0f) pState->m_ListBoxScrollValue = 1.0f;
 					}
 
-					gs_ListBoxNewSelected = NewIndex;
+					pState->m_ListBoxNewSelected = NewIndex;
 				}
 			}
 		}
@@ -963,14 +952,12 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected)
 	return Item;
 }
 
-int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
+int CMenus::UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated)
 {
 	UI()->ClipDisable();
-	if(pScrollValue)
-		*pScrollValue = gs_ListBoxScrollValue;
 	if(pItemActivated)
-		*pItemActivated = gs_ListBoxItemActivated;
-	return gs_ListBoxNewSelected;
+		*pItemActivated = pState->m_ListBoxItemActivated;
+	return pState->m_ListBoxNewSelected;
 }
 
 int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
@@ -1422,7 +1409,7 @@ void CMenus::UpdateVideoFormats()
 				break;
 			}
 		}
-		
+
 		if(!Found)
 		{
 			m_aVideoFormats[m_NumVideoFormats].m_WidthValue = Width;
@@ -1448,12 +1435,26 @@ void CMenus::UpdateVideoFormats()
 
 void CMenus::UpdatedFilteredVideoModes()
 {
-	m_lFilteredVideoModes.clear();
+	// same format as desktop goes to recommended list
+	m_lRecommendedVideoModes.clear();
+	m_lOtherVideoModes.clear();
+
+	const int DeskTopG = gcd(Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
+	const int DeskTopWidthG = Graphics()->DesktopWidth() / DeskTopG;
+	const int DeskTopHeightG = Graphics()->DesktopHeight() / DeskTopG;
+
 	for(int i = 0; i < m_NumModes; i++)
 	{
-		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
-		if(m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue == m_aModes[i].m_Width/G && m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue == m_aModes[i].m_Height/G)
-			m_lFilteredVideoModes.add(m_aModes[i]);
+		const int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
+		if(m_aModes[i].m_Width/G == DeskTopWidthG &&
+		   m_aModes[i].m_Height/G == DeskTopHeightG)
+		{
+			m_lRecommendedVideoModes.add(m_aModes[i]);
+		}
+		else
+		{
+			m_lOtherVideoModes.add(m_aModes[i]);
+		}
 	}
 }
 
@@ -1901,9 +1902,9 @@ int CMenus::Render()
 			static int ActSelection = -2;
 			if(ActSelection == -2)
 				ActSelection = FilterInfo.m_Country;
-			static float s_ScrollValue = 0.0f;
+			static CListBoxState s_ListBoxState;
 			int OldSelected = -1;
-			UiDoListboxStart(&s_ScrollValue, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, s_ScrollValue, &Box, false);
+			UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
 
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
@@ -1911,7 +1912,7 @@ int CMenus::Render()
 				if(pEntry->m_CountryCode == ActSelection)
 					OldSelected = i;
 
-				CListboxItem Item = UiDoListboxNextItem(&pEntry->m_CountryCode, OldSelected == i);
+				CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &pEntry->m_CountryCode, OldSelected == i);
 				if(Item.m_Visible)
 				{
 					CUIRect Label;
@@ -1939,7 +1940,7 @@ int CMenus::Render()
 				}
 			}
 
-			const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+			const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 			if(OldSelected != NewSelected)
 				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
 
@@ -2495,7 +2496,7 @@ void CMenus::SetMenuPage(int NewPage) {
 		return;
 
 	m_MenuPage = NewPage;
-	
+
 	// update camera position
 	{
 		int CameraPos = -1;
