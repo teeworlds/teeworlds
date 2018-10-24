@@ -1383,38 +1383,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Header.y += 2.0f;
 		UI()->DoLabel(&Header, Localize("Resolution"), Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-		// format changer
-		/*{
-			MainView.HSplitTop(Spacing, 0, &MainView);
-			MainView.HSplitTop(ButtonHeight, &Button, &MainView);
-			RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-			CUIRect Text, Value, Unit;
-			Button.VSplitLeft(Button.w/3.0f, &Text, &Button);
-			Button.VSplitMid(&Value, &Unit);
-
-			char aBuf[32];
-			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Format"));
-			Text.y += 2.0f;
-			UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-			Unit.y += 2.0f;
-			if((float)m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue/(float)m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue >= 1.55f)
-				UI()->DoLabel(&Unit, Localize("Wide"), Unit.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-			else
-				UI()->DoLabel(&Unit, Localize("Letterbox"), Unit.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-			str_format(aBuf, sizeof(aBuf), "%d:%d", m_aVideoFormats[m_CurrentVideoFormat].m_WidthValue, m_aVideoFormats[m_CurrentVideoFormat].m_HeightValue);
-			static CButtonContainer s_VideoFormatButton;
-			if(DoButton_Menu(&s_VideoFormatButton, aBuf, 0, &Value))
-			{
-				m_CurrentVideoFormat++;
-				if(m_CurrentVideoFormat == m_NumVideoFormats)
-					m_CurrentVideoFormat = 0;
-
-				UpdatedFilteredVideoModes();
-			}
-		}*/
-
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 		CUIRect HeaderLeft, HeaderRight;
