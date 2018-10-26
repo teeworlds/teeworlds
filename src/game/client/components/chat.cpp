@@ -427,8 +427,11 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 		if(pHL)
 		{
 			int Length = str_length(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
-			if((pLine == pHL || pHL[-1] == ' ') && (pHL[Length] == 0 || pHL[Length] == ' ' || (pHL[Length] == ':' && pHL[Length+1] == ' ')))
+			if((pLine == pHL || pHL[-1] == ' ') // space or nothing before
+				&& ((pHL[Length] == 0 || pHL[Length] == ' ') || pHL[Length] == ':' && (pHL[Length+1] == 0) || pHL[Length+1] == ' ')) // space or nothing after, allowing a colon
+			{
 				Highlighted = true;
+			}
 			m_CompletionFav = ClientID;
 		}
 
