@@ -496,6 +496,10 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		int GameMsgID = pUnpacker->GetInt();
 
+		// check for valid gamemsgid
+		if(GameMsgID < 0 || GameMsgID >= NUM_GAMEMSGS)
+			return;
+
 		int aParaI[3];
 		int NumParaI = 0;
 
