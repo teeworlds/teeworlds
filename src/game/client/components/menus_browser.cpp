@@ -135,7 +135,7 @@ void CMenus::CBrowserFilter::SetFilter(const CServerFilterInfo *pFilterInfo)
 void CMenus::LoadFilters()
 {
 	// read file data into buffer
-	char *pFilename = "ui_settings.json";
+	const char *pFilename = "ui_settings.json";
 	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return;
