@@ -77,7 +77,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	Middle.HSplitTop(25.0f, &Middle, 0);
 	Right.HSplitTop(25.0f, &Right, 0);
 
-	if(Info.m_aNotification != 0)
+	if(Info.m_aNotification[0] != 0)
 	{
 		// print notice
 		CUIRect Bar;
@@ -91,7 +91,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	{
 		// specator button
 		int Team = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team;
-		if(Info.m_aNotification && Team != TEAM_SPECTATORS)
+		if(Info.m_aNotification[0] && Team != TEAM_SPECTATORS)
 		{
 			if(Info.m_TimeLeft)
 				str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -104,7 +104,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		Left.VSplitLeft(Spacing, 0, &Left);
 		static CButtonContainer s_SpectateButton;
-		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec && !(Info.m_aNotification))
+		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec && !(Info.m_aNotification[0]))
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 			SetActive(false);
@@ -113,7 +113,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		// team button
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			if(Info.m_aNotification && Team != TEAM_RED)
+			if(Info.m_aNotification[0] && Team != TEAM_RED)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -126,13 +126,13 @@ void CMenus::RenderGame(CUIRect MainView)
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			Left.VSplitLeft(Spacing, 0, &Left);
 			static CButtonContainer s_RedButton;
-			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification))
+			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]))
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
 			}
 
-			if(Info.m_aNotification && Team != TEAM_BLUE)
+			if(Info.m_aNotification[0] && Team != TEAM_BLUE)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -144,7 +144,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static CButtonContainer s_BlueButton;
-			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification))
+			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]))
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
 				SetActive(false);
@@ -152,7 +152,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 		else
 		{
-			if(Info.m_aNotification && Team != TEAM_RED)
+			if(Info.m_aNotification[0] && Team != TEAM_RED)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -164,7 +164,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static CButtonContainer s_JoinButton;
-			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !(Info.m_aNotification))
+			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !(Info.m_aNotification[0]))
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
