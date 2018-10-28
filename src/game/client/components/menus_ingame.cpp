@@ -261,7 +261,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			ButtonBar.VSplitLeft(Width, &Button, &ButtonBar);
 			Button.VSplitLeft((Width-Button.h)/4.0f, 0, &Button);
 			Button.VSplitLeft(Button.h, &Button, 0);
-			if(g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[i].m_Friend)
+			if(g_Config.m_ClFilterchat == 2 || (g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[i].m_Friend))
 				DoButton_Toggle(&s_aPlayerIDs[i][0], 1, &Button, false);
 			else
 				if(DoButton_Toggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Button, true))

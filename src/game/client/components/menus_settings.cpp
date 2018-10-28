@@ -734,11 +734,31 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
 		g_Config.m_ClShowhud ^= 1;
 
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
-	static int s_Friendchat = 0;
-	if(DoButton_CheckBox(&s_Friendchat, Localize("Show only chat messages from friends"), g_Config.m_ClShowChatFriends, &Button))
-		g_Config.m_ClShowChatFriends ^= 1;
+	// show chat messages button
+	{
+		Game.HSplitTop(Spacing, 0, &Game);
+		Game.HSplitTop(ButtonHeight, &Button, &Game);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		CUIRect Text;
+		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
+		Button.VSplitLeft(200.0f, &Text, &Button);
+
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), Localize("Show chat messages from:"));
+		Text.y += 2.0f;
+		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+
+		Button.VSplitLeft(100.0f, &Button, 0);
+		if(g_Config.m_ClFilterchat == 0)
+			str_format(aBuf, sizeof(aBuf), "everyone");
+		else if(g_Config.m_ClFilterchat == 1)
+			str_format(aBuf, sizeof(aBuf), "friends only");
+		else if(g_Config.m_ClFilterchat == 2)
+			str_format(aBuf, sizeof(aBuf), "no one");
+		static CButtonContainer s_ButtonFilterchat;
+		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
+			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;
+	}
 
 	Game.HSplitTop(Spacing, 0, &Game);
 	Game.HSplitTop(ButtonHeight, &Button, &Game);
@@ -835,7 +855,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		g_Config.m_ClMouseDeadzone = 300;
 		g_Config.m_ClAutoswitchWeapons = 1;
 		g_Config.m_ClShowhud = 1;
-		g_Config.m_ClShowChatFriends = 0;
+		g_Config.m_ClFilterchat = 0;
 		g_Config.m_ClNameplates = 1;
 		g_Config.m_ClNameplatesAlways = 1;
 		g_Config.m_ClNameplatesSize = 50;
