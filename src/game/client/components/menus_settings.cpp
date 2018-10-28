@@ -1203,7 +1203,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
 	int OldSelected = -1;
 	char aBuf[32];
 
-	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, nullptr, lModes.size(), 1,
+	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, 0, lModes.size(), 1,
 					 OldSelected, pRect);
 
 	for(int i = 0; i < lModes.size(); ++i)
