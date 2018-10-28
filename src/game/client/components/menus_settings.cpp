@@ -1333,18 +1333,23 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
-	static int s_ButtonGfxCapFps = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), g_Config.m_GfxLimitFps, &Button))
-	{
-		g_Config.m_GfxLimitFps ^= 1;
-	}
 
-	if(g_Config.m_GfxLimitFps > 0)
+	// TODO: greyed out checkbox (not clickable)
+	if(!g_Config.m_GfxVsync)
 	{
-		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
-		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
-		DoScrollbarOption(&g_Config.m_GfxMaxFps, &g_Config.m_GfxMaxFps,
-						  &Button, Localize("Max fps"), 144.0f, 30, 300);
+		static int s_ButtonGfxCapFps = 0;
+		if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), g_Config.m_GfxLimitFps, &Button))
+		{
+			g_Config.m_GfxLimitFps ^= 1;
+		}
+
+		if(g_Config.m_GfxLimitFps > 0)
+		{
+			ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
+			ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
+			DoScrollbarOption(&g_Config.m_GfxMaxFps, &g_Config.m_GfxMaxFps,
+							  &Button, Localize("Max fps"), 144.0f, 30, 300);
+		}
 	}
 
 	if(Graphics()->GetNumScreens() > 1)
