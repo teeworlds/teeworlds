@@ -860,7 +860,7 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 
 	// don't add invalid info to the server browser list
 	if(pInfo->m_NumClients < 0 || pInfo->m_NumClients > MAX_CLIENTS || pInfo->m_MaxClients < 0 || pInfo->m_MaxClients > MAX_CLIENTS ||
-		pInfo->m_NumPlayers < 0 || pInfo->m_NumPlayers > pInfo->m_NumClients || pInfo->m_MaxPlayers < 0 || pInfo->m_MaxPlayers > pInfo->m_MaxClients)
+		pInfo->m_NumPlayers < 0 || pInfo->m_NumPlayers > pInfo->m_NumClients || pInfo->m_MaxPlayers < 0 || pInfo->m_MaxPlayers > pInfo->m_MaxClients || pInfo->m_MaxPlayers > MAX_PLAYERS)
 		return -1;
 
 	// use short version
