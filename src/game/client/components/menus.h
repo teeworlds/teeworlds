@@ -579,6 +579,13 @@ private:
 
 	void SetMenuPage(int NewPage);
 public:
+	struct CSwitchTeamInfo
+	{
+		char m_aNotification[128];
+		bool m_AllowSpec;
+		int m_TimeLeft;
+	};
+	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
 	void RenderBackground();
 
 	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }

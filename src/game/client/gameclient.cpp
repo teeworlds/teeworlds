@@ -223,6 +223,7 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pBinds);
 
 	// add the some console commands
+	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
@@ -1438,6 +1439,23 @@ void CGameClient::SendReadyChange()
 {
 	CNetMsg_Cl_ReadyChange Msg;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
+void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->m_LocalClientID == -1)
+		return;
+	CMenus::CSwitchTeamInfo Info;
+	pClient->m_pMenus->GetSwitchTeamInfo(&Info);
+	int Team = pResult->GetInteger(0);
+	if(pClient->m_aClients[pClient->m_LocalClientID].m_Team == Team || (Team == TEAM_SPECTATORS && !(Info.m_AllowSpec)) || Info.m_aNotification[0])
+	{
+		if(Info.m_aNotification[0])
+			pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", Info.m_aNotification);
+		return;
+	}
+	((CGameClient*)pUserData)->SendSwitchTeam(Team);
 }
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
