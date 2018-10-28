@@ -1236,7 +1236,6 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
-	char aBuf[128];
 	bool CheckSettings = false;
 
 	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;

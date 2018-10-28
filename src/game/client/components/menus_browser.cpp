@@ -135,7 +135,7 @@ void CMenus::CBrowserFilter::SetFilter(const CServerFilterInfo *pFilterInfo)
 void CMenus::LoadFilters()
 {
 	// read file data into buffer
-	char *pFilename = "ui_settings.json";
+	const char *pFilename = "ui_settings.json";
 	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return;
@@ -2100,8 +2100,7 @@ void CMenus::DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void 
 		{
 			// delete button
 			Button.Margin(1.0f, &Button);
-			static int s_DeleteButton = 0;
-			if(DoButton_SpriteCleanID(&s_DeleteButton, IMAGE_FRIENDICONS, pFriend->IsClanFriend() ? SPRITE_FRIEND_X_A : SPRITE_FRIEND_X_B, &Button, false))
+			if(DoButton_SpriteClean(IMAGE_FRIENDICONS, pFriend->IsClanFriend() ? SPRITE_FRIEND_X_A : SPRITE_FRIEND_X_B, &Button))
 			{
 				m_pDeleteFriendInfo = pFriend->m_pFriendInfo;
 			}

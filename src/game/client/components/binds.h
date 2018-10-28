@@ -39,5 +39,9 @@ public:
 
 	virtual void OnConsoleInit();
 	virtual bool OnInput(IInput::CEvent Event);
+
+private:      
+	static const int s_aDefaultBindKeys[];
+	static const char s_aaDefaultBindValues[][32];
 };
 #endif
