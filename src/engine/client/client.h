@@ -84,8 +84,10 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int64 m_LocalStartTime;
 
 	IGraphics::CTextureHandle m_DebugFont;
-	
+
 	int64 m_LastRenderTime;
+	int64 m_LastCpuTime;
+	float m_LastAvgCpuFrameTime;
 	float m_RenderFrameTimeLow;
 	float m_RenderFrameTimeHigh;
 	int m_RenderFrames;
@@ -273,6 +275,7 @@ public:
 	void RegisterInterfaces();
 	void InitInterfaces();
 
+	bool LimitFps();
 	void Run();
 
 
