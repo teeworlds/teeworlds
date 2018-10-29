@@ -217,7 +217,7 @@ public:
 
 };
 
-extern IEngineGraphics *CreateEngineGraphics();
+extern IEngineGraphics *CreateEngineGraphics(); // NOTE: not used
 extern IEngineGraphics *CreateEngineGraphicsThreaded();
 
 #endif
