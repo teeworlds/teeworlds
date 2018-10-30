@@ -201,6 +201,13 @@ private:
 	int64 m_NextSeedTime;
 };
 
+typedef void(*FSendCallback)(int TrackID, void *pUser);
+struct CSendCBData
+{
+	FSendCallback m_pfnCallback;
+	void *m_pCallbackUser;
+	int m_TrackID;
+};
 
 class CNetTokenCache
 {
@@ -208,20 +215,28 @@ public:
 	CNetTokenCache();
 	~CNetTokenCache();
 	void Init(NETSOCKET Socket, const CNetTokenManager *pTokenManager);
-	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize);
+	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData = 0);
 	void FetchToken(const NETADDR *pAddr);
 	void AddToken(const NETADDR *pAddr, TOKEN PeerToken);
 	TOKEN GetToken(const NETADDR *pAddr);
 	void Update();
 
 private:
-	struct CConnlessPacketInfo
+	class CConnlessPacketInfo
 	{
+	private:
+		static int m_UniqueID;
+
+	public:
+		CConnlessPacketInfo() : m_TrackID(CConnlessPacketInfo::m_UniqueID++) {}
+
 		NETADDR m_Addr;
 		int m_DataSize;
 		char m_aData[NET_MAX_PAYLOAD];
 		int64 m_Expiry;
-
+		const int m_TrackID;
+		FSendCallback m_pfnCallback;
+		void *m_pCallbackUser;
 		CConnlessPacketInfo *m_pNext;
 	};
 
@@ -483,7 +498,7 @@ public:
 
 	// communication
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
-	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
+	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, CSendCBData *pCallbackData = 0);
 
 	// pumping
 	int Update();

@@ -445,7 +445,29 @@ void CServerBrowser::RemoveRequest(CServerEntry *pEntry)
 	}
 }
 
-void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const
+void CServerBrowser::CBFTrackPacket(int TrackID, void *pCallbackUser)
+{
+	if(!pCallbackUser)
+		return;
+
+	CServerBrowser *pSelf = (CServerBrowser *)pCallbackUser;
+	CServerEntry *pEntry = pSelf->m_pFirstReqServer;
+	while(1)
+	{
+		if(!pEntry)	// no more entries
+			break;
+
+		if(pEntry->m_TrackID == TrackID)	// got it -> update
+		{
+			pEntry->m_RequestTime = time_get();
+			break;
+		}
+
+		pEntry = pEntry->m_pNextReq;
+	}
+}
+
+void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry)
 {
 	if(g_Config.m_Debug)
 	{
@@ -467,8 +489,11 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	Packet.m_DataSize = Packer.Size();
 	Packet.m_pData = Packer.Data();
-
-	m_pNetClient->Send(&Packet);
+	CSendCBData Data;
+	Data.m_pfnCallback = CBFTrackPacket;
+	Data.m_pCallbackUser = this;
+	m_pNetClient->Send(&Packet, NET_TOKEN_NONE, &Data);
+	pEntry->m_TrackID = Data.m_TrackID;
 
 	if(pEntry)
 	{

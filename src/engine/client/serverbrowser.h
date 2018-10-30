@@ -47,6 +47,8 @@ public:
 	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); };
 	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
+	static void CBFTrackPacket(int TrackID, void *pUser);
+
 private:
 	class CNetClient *m_pNetClient;
 	class IConsole *m_pConsole;
@@ -88,7 +90,7 @@ private:
 	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);
 	void QueueRequest(CServerEntry *pEntry);
 	void RemoveRequest(CServerEntry *pEntry);
-	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const;
+	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry);
 	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
 };
 

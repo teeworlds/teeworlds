@@ -20,6 +20,8 @@ static unsigned int Hash(char *pData, int Size)
 	return (aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3]);
 }
 
+int CNetTokenCache::CConnlessPacketInfo::m_UniqueID = 0;
+
 void CNetTokenManager::Init(NETSOCKET Socket, int SeedTime)
 {
 	m_Socket = Socket;
@@ -167,7 +169,7 @@ void CNetTokenCache::Init(NETSOCKET Socket, const CNetTokenManager *pTokenManage
 	m_pTokenManager = pTokenManager;
 }
 
-void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize)
+void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData)
 {
 	TOKEN Token = GetToken(pAddr);
 	if(Token != NET_TOKEN_NONE)
@@ -189,6 +191,17 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 		(*ppInfo)->m_DataSize = DataSize;
 		(*ppInfo)->m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
 		(*ppInfo)->m_pNext = 0;
+		if(pCallbackData)
+		{
+			(*ppInfo)->m_pfnCallback = pCallbackData->m_pfnCallback;
+			(*ppInfo)->m_pCallbackUser = pCallbackData->m_pCallbackUser;
+			pCallbackData->m_TrackID = (*ppInfo)->m_TrackID;
+		}
+		else
+		{
+			(*ppInfo)->m_pfnCallback = 0;
+			(*ppInfo)->m_pCallbackUser = 0;
+		}
 	}
 }
 
@@ -235,6 +248,10 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 		NullAddr.port = pAddr->port;
 		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0 || net_addr_comp(&pInfo->m_Addr, &NullAddr) == 0)
 		{
+			// notify the user that the packet gets delivered
+			if(pInfo->m_pfnCallback)
+				pInfo->m_pfnCallback(pInfo->m_TrackID, pInfo->m_pCallbackUser);
+
 			CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
 				m_pTokenManager->GenerateToken(pAddr),
 				pInfo->m_aData, pInfo->m_DataSize);
