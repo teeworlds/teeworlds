@@ -651,7 +651,7 @@ void CChat::OnRender()
 
 
 		const vec2 ShadowOffset(0.8f, 1.5f);
-		const vec4 ShadowColor(0, 0, 0, Blend * 0.75f);
+		const vec4 ShadowColor(0, 0, 0, Blend * 0.9f);
 
 		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, Blend);
 		const vec4 ColorWhisper(1.0f, 0.5f, 0.9f, Blend);
