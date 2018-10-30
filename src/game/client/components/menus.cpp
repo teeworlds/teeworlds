@@ -20,6 +20,7 @@
 #include <generated/protocol.h>
 
 #include <generated/client_data.h>
+#include <game/client/components/binds.h>
 #include <game/client/components/camera.h>
 #include <game/client/components/console.h>
 #include <game/client/components/sounds.h>
@@ -960,7 +961,7 @@ int CMenus::UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated)
 	return pState->m_ListBoxNewSelected;
 }
 
-int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
+int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
 {
 	// process
 	static const void *pGrabbedID = 0;
@@ -968,6 +969,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
 	static int ButtonUsed = 0;
 	int Inside = UI()->MouseInside(pRect);
 	int NewKey = Key;
+	*NewModifier = Modifier;
 
 	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pBC->GetID())
 		MouseReleased = true;
@@ -978,7 +980,10 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
 		{
 			// abort with escape key
 			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
+			{
 				NewKey = m_Binder.m_Key.m_Key;
+				*NewModifier = 0;
+			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
 			MouseReleased = false;
@@ -1023,7 +1028,11 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
 		if(Key == 0)
 			DoButton_KeySelect(pBC, "", 0, pRect);
 		else
-			DoButton_KeySelect(pBC, Input()->KeyName(Key), 0, pRect);
+		{
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*NewModifier), Input()->KeyName(Key));
+			DoButton_KeySelect(pBC, aBuf, 0, pRect);
+		}
 	}
 	return NewKey;
 }

@@ -8,7 +8,6 @@
 class CBinds : public CComponent
 {
 	int DecodeBindString(const char *pKeyName, int* pModifier);
-	static const char *GetModifierName(int m);
 
 	static void ConBind(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnbind(IConsole::IResult *pResult, void *pUserData);
@@ -44,6 +43,7 @@ public:
 	void UnbindAll();
 	const char *Get(int KeyID, int Modifier);
 	void GetKey(const char *pBindStr, char aBuf[64]);
+	static const char *GetModifierName(int m);
 
 	virtual void OnConsoleInit();
 	virtual bool OnInput(IInput::CEvent Event);
