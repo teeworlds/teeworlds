@@ -59,8 +59,8 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 		Mask = 1; // if no modifier, flag with MODIFIER_NONE
 	bool rtn = false;
 
-	// don't handle invalid events and keys that aren't set to anything
-	if(!((Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) || (Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24)))
+	// don't handle anything but FX and composed binds
+	if(Mask == 1 && !(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) && !(Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24))
 		return false;
 
 	for(int m = 0; m < MODIFIER_COUNT; m++)
@@ -78,7 +78,7 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 	return rtn;
 }
 
-bool CBinds::OnInput(IInput::CEvent e)
+bool CBinds::OnInput(IInput::CEvent Event)
 {
 	int Mask = 0;
 	// since we only handle one modifier, when doing ctrl+q and shift+q, execute both
@@ -91,20 +91,20 @@ bool CBinds::OnInput(IInput::CEvent e)
 		Mask = 1; // if no modifier, flag with MODIFIER_NONE
 
 	// don't handle invalid events and keys that aren't set to anything
-	if(e.m_Key <= 0 || e.m_Key >= KEY_LAST)
+	if(Event.m_Key <= 0 || Event.m_Key >= KEY_LAST)
 		return false;
 
 	bool rtn = false;
 	for(int m = 0; m < MODIFIER_COUNT; m++)
 	{
-		if((Mask&(1 << m)) && m_aaaKeyBindings[e.m_Key][m][0] == 0)
-			continue;
-
-		if(e.m_Flags&IInput::FLAG_PRESS)
-			Console()->ExecuteLineStroked(1, m_aaaKeyBindings[e.m_Key][m]);
-		if(e.m_Flags&IInput::FLAG_RELEASE)
-			Console()->ExecuteLineStroked(0, m_aaaKeyBindings[e.m_Key][m]);
-		rtn = true;
+		if((Mask&(1 << m)) && m_aaaKeyBindings[Event.m_Key][m][0] != 0)
+		{
+			if(Event.m_Flags&IInput::FLAG_PRESS)
+				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
+			if(Event.m_Flags&IInput::FLAG_RELEASE)
+				Console()->ExecuteLineStroked(0, m_aaaKeyBindings[Event.m_Key][m]);
+			rtn = true;
+		}
 	}
 	return rtn;
 }
