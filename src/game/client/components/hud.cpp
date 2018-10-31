@@ -437,8 +437,8 @@ void CHud::RenderVoting()
 	m_pClient->m_pVoting->RenderBars(Base, false);
 
 	char aBufYes[64], aBufNo[64];
-	m_pClient->m_pBinds->GetKey("vote yes", aBufYes);
-	m_pClient->m_pBinds->GetKey("vote no", aBufNo);
+	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
+	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
 	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);

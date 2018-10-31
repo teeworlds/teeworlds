@@ -137,7 +137,7 @@ const char *CBinds::Get(int KeyID, int Modifier)
 	return "";
 }
 
-void CBinds::GetKey(const char *pBindStr, char aBuf[64])
+void CBinds::GetKey(const char *pBindStr, char aBuf[64], unsigned BufSize)
 {
 	aBuf[0] = 0;
 	for(int KeyID = 0; KeyID < KEY_LAST; KeyID++)
@@ -149,7 +149,7 @@ void CBinds::GetKey(const char *pBindStr, char aBuf[64])
 				continue;
 
 			if(str_comp(pBind, pBindStr) == 0)
-				str_format(aBuf, 64, "key %s%s not found", Input()->KeyName(KeyID), GetModifierName(m));
+				str_format(aBuf, BufSize, "key %s%s not found", Input()->KeyName(KeyID), GetModifierName(m));
 		}
 	}
 }
