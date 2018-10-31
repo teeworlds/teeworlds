@@ -2434,9 +2434,9 @@ int main(int argc, const char **argv) // ignore_convention
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
 #ifdef CONF_RELEASE
-		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
-#else
 		if(!(str_comp("-c", argv[i]) == 0 || str_comp("--console", argv[i]) == 0)) // ignore_convention
+#else
+		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
 #endif
 		{
 			FreeConsole();
