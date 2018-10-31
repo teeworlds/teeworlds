@@ -24,6 +24,7 @@ class CMenusKeyBinder : public CComponent
 public:
 	bool m_TakeKey;
 	bool m_GotKey;
+	int m_Modifier;
 	IInput::CEvent m_Key;
 	CMenusKeyBinder();
 	virtual bool OnInput(IInput::CEvent Event);

@@ -982,7 +982,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
 			{
 				NewKey = m_Binder.m_Key.m_Key;
-				*NewModifier = 0;
+				*NewModifier = m_Binder.m_Modifier;
 			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);

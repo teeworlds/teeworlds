@@ -46,17 +46,39 @@ void CBinds::Bind(int KeyID, int Modifier, const char *pStr)
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 }
 
-bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
+int CBinds::getMask(IInput *i)
 {
 	int Mask = 0;
 	// since we only handle one modifier, when doing ctrl+q and shift+q, execute both
-	Mask |= Input()->KeyIsPressed(KEY_LSHIFT) << MODIFIER_SHIFT;
-	Mask |= Input()->KeyIsPressed(KEY_RSHIFT) << MODIFIER_SHIFT;
-	Mask |= Input()->KeyIsPressed(KEY_LCTRL) << MODIFIER_CTRL;
-	Mask |= Input()->KeyIsPressed(KEY_RCTRL) << MODIFIER_CTRL;
-	Mask |= Input()->KeyIsPressed(KEY_LALT) << MODIFIER_ALT;
+	Mask |= i->KeyIsPressed(KEY_LSHIFT) << CBinds::MODIFIER_SHIFT;
+	Mask |= i->KeyIsPressed(KEY_RSHIFT) << CBinds::MODIFIER_SHIFT;
+	Mask |= i->KeyIsPressed(KEY_LCTRL) << CBinds::MODIFIER_CTRL;
+	Mask |= i->KeyIsPressed(KEY_RCTRL) << CBinds::MODIFIER_CTRL;
+	Mask |= i->KeyIsPressed(KEY_LALT) << CBinds::MODIFIER_ALT;
 	if(Mask == 0) 
-		Mask = 1; // if no modifier, flag with MODIFIER_NONE
+		return 1; // if no modifier, flag with MODIFIER_NONE
+	return Mask;
+}
+
+bool CBinds::ModifierMatchesKey(int Modifier, int Key)
+{
+	switch(Modifier)
+	{
+		case MODIFIER_SHIFT:
+			return Key == KEY_LSHIFT || Key == KEY_RSHIFT;
+		case MODIFIER_CTRL:
+			return Key == KEY_LCTRL || Key == KEY_RCTRL;
+		case MODIFIER_ALT:
+			return Key == KEY_LALT;
+		case MODIFIER_NONE:
+		default:
+			return false;
+	}
+}
+
+bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
+{
+	int Mask = getMask(Input());
 	bool rtn = false;
 
 	// don't handle anything but FX and composed binds
@@ -80,15 +102,7 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 
 bool CBinds::OnInput(IInput::CEvent Event)
 {
-	int Mask = 0;
-	// since we only handle one modifier, when doing ctrl+q and shift+q, execute both
-	Mask |= Input()->KeyIsPressed(KEY_LSHIFT) << MODIFIER_SHIFT;
-	Mask |= Input()->KeyIsPressed(KEY_RSHIFT) << MODIFIER_SHIFT;
-	Mask |= Input()->KeyIsPressed(KEY_LCTRL) << MODIFIER_CTRL;
-	Mask |= Input()->KeyIsPressed(KEY_RCTRL) << MODIFIER_CTRL;
-	Mask |= Input()->KeyIsPressed(KEY_LALT) << MODIFIER_ALT;
-	if(Mask == 0) 
-		Mask = 1; // if no modifier, flag with MODIFIER_NONE
+	int Mask = getMask(Input());
 
 	// don't handle invalid events and keys that aren't set to anything
 	if(Event.m_Key <= 0 || Event.m_Key >= KEY_LAST)

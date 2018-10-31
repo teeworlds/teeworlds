@@ -44,6 +44,8 @@ public:
 	const char *Get(int KeyID, int Modifier);
 	void GetKey(const char *pBindStr, char aBuf[64]);
 	static const char *GetModifierName(int m);
+	static int getMask(IInput *i);
+	static bool ModifierMatchesKey(int Modifier, int Key);
 
 	virtual void OnConsoleInit();
 	virtual bool OnInput(IInput::CEvent Event);
