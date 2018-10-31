@@ -205,6 +205,35 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 	}
 }
 
+void CNetTokenCache::PurgeStoredPacket(int TrackID)
+{
+	CConnlessPacketInfo *pPrevInfo = 0;
+	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
+	while(pInfo)
+	{
+		if(pInfo->m_TrackID == TrackID)
+		{
+			// purge desired packet
+			CConnlessPacketInfo *pNext = pInfo->m_pNext;
+			if(pPrevInfo)
+				pPrevInfo->m_pNext = pNext;
+			if(pInfo == m_pConnlessPacketList)
+				m_pConnlessPacketList = pNext;
+			delete pInfo;
+			
+			break;
+		}
+		else
+		{
+			if(pPrevInfo)
+				pPrevInfo = pPrevInfo->m_pNext;
+			else
+				pPrevInfo = pInfo;
+			pInfo = pInfo->m_pNext;
+		}
+	}
+}
+
 TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
 {
 	// traverse the list in the reverse direction

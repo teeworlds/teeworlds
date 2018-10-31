@@ -216,6 +216,7 @@ public:
 	~CNetTokenCache();
 	void Init(NETSOCKET Socket, const CNetTokenManager *pTokenManager);
 	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData = 0);
+	void PurgeStoredPacket(int TrackID);
 	void FetchToken(const NETADDR *pAddr);
 	void AddToken(const NETADDR *pAddr, TOKEN PeerToken);
 	TOKEN GetToken(const NETADDR *pAddr);
@@ -499,6 +500,7 @@ public:
 	// communication
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE, CSendCBData *pCallbackData = 0);
+	void PurgeStoredPacket(int TrackID);
 
 	// pumping
 	int Update();

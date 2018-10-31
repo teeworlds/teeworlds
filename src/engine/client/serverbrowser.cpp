@@ -283,6 +283,10 @@ void CServerBrowser::Refresh(int RefreshFlags)
 	if(RefreshFlags&IServerBrowser::REFRESHFLAG_INTERNET)
 	{
 		// clear out everything
+		for(CServerEntry *pEntry = m_pFirstReqServer; pEntry; pEntry = pEntry->m_pNextReq)
+		{
+			m_pNetClient->PurgeStoredPacket(pEntry->m_TrackID);
+		}
 		m_aServerlist[IServerBrowser::TYPE_INTERNET].Clear();
 		if(m_ActServerlistType == IServerBrowser::TYPE_INTERNET)
 			m_ServerBrowserFilter.Clear();

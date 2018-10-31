@@ -173,6 +173,11 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, CSendCBData *pCallbackData)
 	return 0;
 }
 
+void CNetClient::PurgeStoredPacket(int TrackID)
+{
+	m_TokenCache.PurgeStoredPacket(TrackID);
+}
+
 int CNetClient::State() const
 {
 	if(m_Connection.State() == NET_CONNSTATE_ONLINE)
