@@ -280,8 +280,8 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token)
 			// notify the user that the packet gets delivered
 			if(pInfo->m_pfnCallback)
 				pInfo->m_pfnCallback(pInfo->m_TrackID, pInfo->m_pCallbackUser);
-
-			CNetBase::SendPacketConnless(m_Socket, pAddr, Token,
+			// todo: make sure if we got the result of a broadcast or not
+			CNetBase::SendPacketConnless(m_Socket, &(pInfo->m_Addr), Token,
 				m_pTokenManager->GenerateToken(pAddr),
 				pInfo->m_aData, pInfo->m_DataSize);
 			CConnlessPacketInfo *pNext = pInfo->m_pNext;
