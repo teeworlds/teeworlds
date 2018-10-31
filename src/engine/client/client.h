@@ -174,6 +174,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 			STATE_INIT=0,
 			STATE_START,
 			STATE_READY,
+			STATE_ERROR,
 		};
 
 		int m_State;

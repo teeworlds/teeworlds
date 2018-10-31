@@ -1671,20 +1671,25 @@ void CClient::VersionUpdate()
 	{
 		if(m_VersionInfo.m_VersionServeraddr.m_Job.Status() == CJob::STATE_DONE)
 		{
-			CNetChunk Packet;
+			if(m_VersionInfo.m_VersionServeraddr.m_Job.Result() == 0)
+			{
+				CNetChunk Packet;
 
-			mem_zero(&Packet, sizeof(Packet));
+				mem_zero(&Packet, sizeof(Packet));
 
-			m_VersionInfo.m_VersionServeraddr.m_Addr.port = VERSIONSRV_PORT;
+				m_VersionInfo.m_VersionServeraddr.m_Addr.port = VERSIONSRV_PORT;
 
-			Packet.m_ClientID = -1;
-			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
-			Packet.m_pData = VERSIONSRV_GETVERSION;
-			Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
-			Packet.m_Flags = NETSENDFLAG_CONNLESS;
+				Packet.m_ClientID = -1;
+				Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
+				Packet.m_pData = VERSIONSRV_GETVERSION;
+				Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
+				Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
-			m_ContactClient.Send(&Packet);
-			m_VersionInfo.m_State = CVersionInfo::STATE_READY;
+				m_ContactClient.Send(&Packet);
+				m_VersionInfo.m_State = CVersionInfo::STATE_READY;
+			}
+			else
+				m_VersionInfo.m_State = CVersionInfo::STATE_ERROR;
 		}
 	}
 }
