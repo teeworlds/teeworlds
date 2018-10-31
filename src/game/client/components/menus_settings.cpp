@@ -43,7 +43,7 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 			m_GotKey = true;
 			m_TakeKey = false;
 
-			int Mask = CBinds::getMask(Input()); // always > 0
+			int Mask = CBinds::GetModifierMask(Input()); // always > 0
 			m_Modifier = 0;
 			while(!(Mask&1)) // this computes a log2, we take the first modifier flag in mask.
 			{

@@ -46,7 +46,7 @@ void CBinds::Bind(int KeyID, int Modifier, const char *pStr)
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 }
 
-int CBinds::getMask(IInput *i)
+int CBinds::GetModifierMask(IInput *i)
 {
 	int Mask = 0;
 	// since we only handle one modifier, when doing ctrl+q and shift+q, execute both
@@ -78,7 +78,7 @@ bool CBinds::ModifierMatchesKey(int Modifier, int Key)
 
 bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 {
-	int Mask = getMask(Input());
+	int Mask = GetModifierMask(Input());
 	bool rtn = false;
 
 	// don't handle anything but FX and composed binds
@@ -102,7 +102,7 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 
 bool CBinds::OnInput(IInput::CEvent Event)
 {
-	int Mask = getMask(Input());
+	int Mask = GetModifierMask(Input());
 
 	// don't handle invalid events and keys that aren't set to anything
 	if(Event.m_Key <= 0 || Event.m_Key >= KEY_LAST)
@@ -184,8 +184,8 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
-	int modifier;
-	int id = pBinds->DecodeBindString(pKeyName, &modifier);
+	int Modifier;
+	int id = pBinds->DecodeBindString(pKeyName, &Modifier);
 
 	if(!id)
 	{
@@ -195,7 +195,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	pBinds->Bind(id, modifier, pResult->GetString(1));
+	pBinds->Bind(id, Modifier, pResult->GetString(1));
 }
 
 
@@ -203,8 +203,8 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
-	int modifier;
-	int id = pBinds->DecodeBindString(pKeyName, &modifier);
+	int Modifier;
+	int id = pBinds->DecodeBindString(pKeyName, &Modifier);
 
 	if(!id)
 	{
@@ -214,7 +214,7 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	pBinds->Bind(id, modifier, "");
+	pBinds->Bind(id, Modifier, "");
 }
 
 
