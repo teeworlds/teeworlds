@@ -750,11 +750,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 		Button.VSplitLeft(100.0f, &Button, 0);
 		if(g_Config.m_ClFilterchat == 0)
-			str_format(aBuf, sizeof(aBuf), "everyone");
+			str_format(aBuf, sizeof(aBuf), Localize("everyone"));
 		else if(g_Config.m_ClFilterchat == 1)
-			str_format(aBuf, sizeof(aBuf), "friends only");
+			str_format(aBuf, sizeof(aBuf), Localize("friends only"));
 		else if(g_Config.m_ClFilterchat == 2)
-			str_format(aBuf, sizeof(aBuf), "no one");
+			str_format(aBuf, sizeof(aBuf), Localize("no one"));
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
 			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;
