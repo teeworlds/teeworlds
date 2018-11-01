@@ -1051,11 +1051,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+1;
 	if(ScrollNum > 0)
 	{
-		if(m_ScrollOffset)
+		/*if(m_ScrollOffset)
 		{
 			s_ScrollValue = (float)(m_ScrollOffset)/ScrollNum;
 			m_ScrollOffset = 0;
-		}
+		}*/
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f/ScrollNum;
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
@@ -1772,11 +1772,11 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 	int ScrollNum = (int)((ListHeight - View.h) / ms_aBrowserCols[0].m_Rect.h) + 1;
 	if(ScrollNum > 0)
 	{
-		if(m_ScrollOffset)
+		/*if(m_ScrollOffset)
 		{
 			s_ScrollValue = (float)(m_ScrollOffset) / ScrollNum;
 			m_ScrollOffset = 0;
-		}
+		}*/
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f / ScrollNum;
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
