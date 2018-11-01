@@ -1038,17 +1038,17 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			NumServers += m_lFilters[i].NumSortedServers();
 
 	int NumFilters = m_lFilters.size();
-	float ListHeight = (NumServers+(NumFilters-1)) * ms_aBrowserCols[0].m_Rect.h + NumFilters * 20.0f;
+	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
+	ListHeight += NumFilters * 20.0f; // add filters 
+	ListHeight += (NumFilters-1) * 3.0f;// add filters spacing
 
-	//int Num = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h))+1;
-	//int Num = (int)(View.h/ms_aBrowserCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+1;
+	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+1; // (int)+1 is to keep the first item right on top
 	if(ScrollNum > 0)
 	{
 		if(m_ScrollOffset)
@@ -1073,7 +1073,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(Input()->KeyPress(KEY_DOWN))
 		{
 			NewIndex = SelectedIndex + 1;
-			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
+			if(NewIndex >= NumServers)
+				NewIndex = NumServers;
+			/*if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
 			{
 				// try to move to next filter
 				for(int j = SelectedFilter+1; j < m_lFilters.size(); j++)
@@ -1086,12 +1088,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						break;
 					}
 				}
-			}
+			}*/
 		}
 		else if(Input()->KeyPress(KEY_UP))
 		{
 			NewIndex = SelectedIndex - 1;
 			if(NewIndex < 0)
+				NewIndex = 0;
+			/*if(NewIndex < 0)
 			{
 				// try to move to prev filter
 				for(int j = SelectedFilter-1; j >= 0; j--)
@@ -1104,7 +1108,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						break;
 					}
 				}
-			}
+			}*/
 		}
 		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
 		{
@@ -1118,10 +1122,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					TotalIndex += m_lFilters[Filter].NumSortedServers();
 				Filter++;
 			}
-			TotalIndex += NewIndex+1;
+			TotalIndex += 1;
 
 			//scroll
-			float IndexY = View.y - s_ScrollValue*ScrollNum*ms_aBrowserCols[0].m_Rect.h + TotalIndex*ms_aBrowserCols[0].m_Rect.h + Filter*ms_aBrowserCols[0].m_Rect.h + Filter*20.0f;
+			float IndexY = View.y 
+			    + (TotalIndex - s_ScrollValue*ScrollNum)*ms_aBrowserCols[0].m_Rect.h
+			    + NewIndex*ms_aBrowserCols[0].m_Rect.h
+			    + Filter*ms_aBrowserCols[0].m_Rect.h;
 			int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aBrowserCols[0].m_Rect.h ? 1 : 0;
 			if(Scroll)
 			{
@@ -1759,10 +1766,8 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 		}
 	}
 
-	float ListHeight = ms_aBrowserCols[0].m_Rect.h + NumEntries * 20.0f + ClanEntries * 20.0f;
+	float ListHeight = (NumEntries+ClanEntries) * ms_ListheaderHeight;
 
-	//int Num = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h))+1;
-	//int Num = (int)(View.h/ms_aBrowserCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
