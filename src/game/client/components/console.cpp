@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include <base/system.h>
 
@@ -175,7 +175,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	if(!Handled)
 		m_Input.ProcessInput(Event);
 
-	if(Event.m_Flags&IInput::FLAG_PRESS)
+	if(Event.m_Flags&(IInput::FLAG_PRESS|IInput::FLAG_TEXT))
 	{
 		if(Event.m_Key != KEY_TAB)
 		{
@@ -207,15 +207,16 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	}
 }
 
-void CGameConsole::CInstance::PrintLine(const char *pLine)
+void CGameConsole::CInstance::PrintLine(const char *pLine, bool Highlighted)
 {
 	int Len = str_length(pLine);
 
-	if (Len > 255)
+	if(Len > 255)
 		Len = 255;
 
 	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry)+Len);
 	pEntry->m_YOffset = -1.0f;
+	pEntry->m_Highlighted = Highlighted;
 	mem_copy(pEntry->m_aText, pLine, Len);
 	pEntry->m_aText[Len] = 0;
 }
@@ -271,11 +272,8 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1);
-		pInfo->m_pSelf->Graphics()->TextureClear();
-		pInfo->m_pSelf->Graphics()->QuadsBegin();
-			pInfo->m_pSelf->Graphics()->SetColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
-			pInfo->m_pSelf->RenderTools()->DrawRoundRect(pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4, pInfo->m_Cursor.m_FontSize/3);
-		pInfo->m_pSelf->Graphics()->QuadsEnd();
+		CUIRect Rect = {pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4};
+		pInfo->m_pSelf->RenderTools()->DrawRoundRect(&Rect, vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_Cursor.m_FontSize/3);
 
 		// scroll when out of sight
 		if(pInfo->m_Cursor.m_X < 3.0f)
@@ -514,7 +512,10 @@ void CGameConsole::OnRender()
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER);
 					Cursor.m_LineWidth = Screen.w-10.0f;
+					if(pEntry->m_Highlighted)
+						TextRender()->TextColor(1,0.75,0.75,1);
 					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+					TextRender()->TextColor(1,1,1,1);
 				}
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
 			}
@@ -556,7 +557,7 @@ bool CGameConsole::OnInput(IInput::CEvent Event)
 {
 	if(m_ConsoleState == CONSOLE_CLOSED)
 		return false;
-	if(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F15)
+	if((Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) || (Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24))
 		return false;
 
 	if(Event.m_Key == KEY_ESCAPE && (Event.m_Flags&IInput::FLAG_PRESS))
@@ -657,9 +658,9 @@ void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserD
 	((CGameConsole *)pUserData)->Dump(CONSOLETYPE_REMOTE);
 }
 
-void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
+void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData, bool Highlighted)
 {
-	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr);
+	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, Highlighted);
 }
 
 void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -672,12 +673,17 @@ void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, 
 	}
 }
 
+bool CGameConsole::IsConsoleActive()
+{
+	return m_ConsoleState != CONSOLE_CLOSED;
+}
+
 void CGameConsole::PrintLine(int Type, const char *pLine)
 {
 	if(Type == CONSOLETYPE_LOCAL)
-		m_LocalConsole.PrintLine(pLine);
+		m_LocalConsole.PrintLine(pLine, false);
 	else if(Type == CONSOLETYPE_REMOTE)
-		m_RemoteConsole.PrintLine(pLine);
+		m_RemoteConsole.PrintLine(pLine, false);
 }
 
 void CGameConsole::OnConsoleInit()

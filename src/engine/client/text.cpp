@@ -152,9 +152,8 @@ class CTextRender : public IEngineTextRender
 		{
 			if(pSizeData->m_aTextures[i].IsValid())
 			{
-				Graphics()->UnloadTexture(pSizeData->m_aTextures[i]);
+				Graphics()->UnloadTexture(&(pSizeData->m_aTextures[i]));
 				FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight;
-				pSizeData->m_aTextures[i] = IGraphics::CTextureHandle();
 			}
 
 			pSizeData->m_aTextures[i] = Graphics()->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, IGraphics::TEXLOAD_NOMIPMAPS);
@@ -299,7 +298,7 @@ class CTextRender : public IEngineTextRender
 		int SlotSize = SlotW*SlotH;
 		int x = 1;
 		int y = 1;
-		int px, py;
+		unsigned int px, py;
 
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 
@@ -340,9 +339,9 @@ class CTextRender : public IEngineTextRender
 				}
 		}
 
-		if(0) for(py = 0; py < SlotW; py++)
+		/*for(py = 0; py < SlotW; py++)
 			for(px = 0; px < SlotH; px++)
-				ms_aGlyphData[py*SlotW+px] = 255;
+				ms_aGlyphData[py*SlotW+px] = 255;*/
 
 		// upload the glyph
 		UploadGlyph(pSizeData, 0, SlotID, Chr, ms_aGlyphData);
@@ -460,7 +459,7 @@ public:
 	}
 
 
-	virtual CFont *LoadFont(const char *pFilename)
+	virtual int LoadFont(const char *pFilename)
 	{
 		CFont *pFont = (CFont *)mem_alloc(sizeof(CFont), 1);
 
@@ -470,25 +469,16 @@ public:
 		if(FT_New_Face(m_FTLibrary, pFont->m_aFilename, 0, &pFont->m_FtFace))
 		{
 			mem_free(pFont);
-			return NULL;
+			return -1;
 		}
 
 		for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 			pFont->m_aSizes[i].m_FontSize = -1;
 
 		dbg_msg("textrender", "loaded pFont from '%s'", pFilename);
-		return pFont;
-	};
-
-	virtual void DestroyFont(CFont *pFont)
-	{
-		mem_free(pFont);
-	}
-
-	virtual void SetDefaultFont(CFont *pFont)
-	{
-		dbg_msg("textrender", "default pFont set %p", pFont);
 		m_pDefaultFont = pFont;
+
+		return 0;
 	}
 
 
@@ -593,7 +583,7 @@ public:
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
 
-		float Scale = 1/pSizeData->m_FontSize;
+		float Scale = 1.0f/pSizeData->m_FontSize;
 
 		// set length
 		if(Length < 0)

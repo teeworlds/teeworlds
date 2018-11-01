@@ -16,6 +16,7 @@ extern "C" {
 
 /* Group: Debug */
 /*
+
 	Function: dbg_assert
 		Breaks into the debugger based on a test.
 
@@ -352,7 +353,7 @@ IOHANDLE io_stderr();
 void thread_sleep(int milliseconds);
 
 /*
-	Function: thread_create
+	Function: thread_init
 		Creates a new thread.
 
 	Parameters:
@@ -360,7 +361,7 @@ void thread_sleep(int milliseconds);
 		user - Pointer to pass to the thread.
 
 */
-void *thread_create(void (*threadfunc)(void *), void *user);
+void *thread_init(void (*threadfunc)(void *), void *user);
 
 /*
 	Function: thread_wait
@@ -403,9 +404,9 @@ typedef void* LOCK;
 LOCK lock_create();
 void lock_destroy(LOCK lock);
 
-int lock_try(LOCK lock);
+int lock_trylock(LOCK lock);
 void lock_wait(LOCK lock);
-void lock_release(LOCK lock);
+void lock_unlock(LOCK lock);
 
 
 /* Group: Semaphores */
@@ -464,6 +465,15 @@ int64 time_freq();
 		The time as a UNIX timestamp
 */
 int time_timestamp();
+
+/*
+	Function: time_houroftheday
+		Retrives the hours since midnight (0..23)
+
+	Returns:
+		The current hour of the day
+*/
+int time_houroftheday();
 
 /* Group: Network General */
 typedef struct
@@ -566,12 +576,13 @@ int net_addr_from_str(NETADDR *addr, const char *string);
 
 	Parameters:
 		bindaddr - Address to bind the socket to.
+		use_random_port - use a random port
 
 	Returns:
 		On success it returns an handle to the socket. On failure it
 		returns NETSOCKET_INVALID.
 */
-NETSOCKET net_udp_create(NETADDR bindaddr);
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port);
 
 /*
 	Function: net_udp_send
@@ -727,7 +738,7 @@ int net_tcp_close(NETSOCKET sock);
 		dst_size - Size of the buffer of the dst string.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 		- Garantees that dst string will contain zero-termination.
 */
 void str_append(char *dst, const char *src, int dst_size);
@@ -742,7 +753,7 @@ void str_append(char *dst, const char *src, int dst_size);
 		dst_size - Size of the buffer dst.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 		- Garantees that dst string will contain zero-termination.
 */
 void str_copy(char *dst, const char *src, int dst_size);
@@ -771,7 +782,7 @@ int str_length(const char *str);
 
 	Remarks:
 		- See the C manual for syntax for the printf formating string.
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 		- Garantees that dst string will contain zero-termination.
 */
 void str_format(char *buffer, int buffer_size, const char *format, ...);
@@ -784,7 +795,7 @@ void str_format(char *buffer, int buffer_size, const char *format, ...);
 		str - String to sanitize.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 void str_sanitize_strong(char *str);
 
@@ -796,7 +807,7 @@ void str_sanitize_strong(char *str);
 		str - String to sanitize.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 void str_sanitize_cc(char *str);
 
@@ -809,9 +820,36 @@ void str_sanitize_cc(char *str);
 		str - String to sanitize.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 void str_sanitize(char *str);
+
+/*
+	Function: str_check_pathname
+		Check if the string contains '..' (parent directory) paths.
+
+	Parameters:
+		str - String to check.
+
+	Returns:
+		Returns 0 if the path is valid, -1 otherwise.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_check_pathname(const char* str);
+
+/*
+	Function: str_clean_whitespaces
+		Removes leading and trailing spaces and limits the use of multiple spaces.
+
+	Parameters:
+		str - String to clean up
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+void str_clean_whitespaces(char *str);
 
 /*
 	Function: str_skip_to_whitespace
@@ -825,7 +863,7 @@ void str_sanitize(char *str);
 		within the string.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 char *str_skip_to_whitespace(char *str);
 
@@ -841,7 +879,7 @@ char *str_skip_to_whitespace(char *str);
 		within the string.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 char *str_skip_whitespaces(char *str);
 
@@ -860,7 +898,7 @@ char *str_skip_whitespaces(char *str);
 
 	Remarks:
 		- Only garanted to work with a-z/A-Z.
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 int str_comp_nocase(const char *a, const char *b);
 
@@ -880,7 +918,7 @@ int str_comp_nocase(const char *a, const char *b);
 
 	Remarks:
 		- Only garanted to work with a-z/A-Z.
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 int str_comp_nocase_num(const char *a, const char *b, const int num);
 
@@ -898,7 +936,7 @@ int str_comp_nocase_num(const char *a, const char *b, const int num);
 		>0 - String a is greater then string b
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 int str_comp(const char *a, const char *b);
 
@@ -917,7 +955,7 @@ int str_comp(const char *a, const char *b);
 		>0 - String a is greater then string b
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 int str_comp_num(const char *a, const char *b, const int num);
 
@@ -935,7 +973,7 @@ int str_comp_num(const char *a, const char *b, const int num);
 		>0 - String a is greater then string b
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 int str_comp_filenames(const char *a, const char *b);
 
@@ -953,7 +991,7 @@ int str_comp_filenames(const char *a, const char *b);
 
 	Remarks:
 		- Only garanted to work with a-z/A-Z.
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 const char *str_find_nocase(const char *haystack, const char *needle);
 
@@ -970,7 +1008,7 @@ const char *str_find_nocase(const char *haystack, const char *needle);
 		Returns NULL of needle could not be found.
 
 	Remarks:
-		- The strings are treated as zero-termineted strings.
+		- The strings are treated as zero-terminated strings.
 */
 const char *str_find(const char *haystack, const char *needle);
 
@@ -1088,7 +1126,7 @@ char *fs_getcwd(char *buffer, int buffer_size);
 		Returns 0 on success, 1 on failure.
 
 	Remarks:
-		- The string is treated as zero-termineted string.
+		- The string is treated as zero-terminated string.
 */
 int fs_parent_dir(char *path);
 
@@ -1203,16 +1241,7 @@ int str_isspace(char c);
 char str_uppercase(char c);
 unsigned str_quickhash(const char *str);
 
-/*
-	Function: gui_messagebox
-		Display plain OS-dependent message box
-
-	Parameters:
-		title - title of the message box
-		message - text to display
-*/
-void gui_messagebox(const char *title, const char *message);
-
+char *str_utf8_skip_whitespaces(char *str);
 
 /*
 	Function: str_utf8_rewind
@@ -1291,6 +1320,27 @@ int str_utf8_encode(char *ptr, int chr);
 		- The string is treated as zero-terminated utf8 string.
 */
 int str_utf8_check(const char *str);
+
+/*
+	Function: secure_random_init
+		Initializes the secure random module.
+		You *MUST* check the return value of this function.
+
+	Returns:
+		0 - Initialization succeeded.
+		1 - Initialization failed.
+*/
+int secure_random_init();
+
+/*
+	Function: secure_random_fill
+		Fills the buffer with the specified amount of random bytes.
+
+	Parameters:
+		bytes - Pointer to the start of the buffer.
+		length - Length of the buffer.
+*/
+void secure_random_fill(void *bytes, unsigned length);
 
 #ifdef __cplusplus
 }

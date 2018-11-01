@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_MAPLAYERS_H
 #define GAME_CLIENT_COMPONENTS_MAPLAYERS_H
+#include <base/tl/array.h>
 #include <game/client/component.h>
 
 class CMapLayers : public CComponent
@@ -14,8 +15,14 @@ class CMapLayers : public CComponent
 	int m_LastLocalTick;
 	bool m_EnvelopeUpdate;
 
-	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup);
+	array<CEnvPoint> m_lEnvPoints;
+	array<CEnvPoint> m_lEnvPointsMenu;
+
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
+
+	void LoadBackgroundMap();
+	void LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints);
+
 public:
 	enum
 	{
@@ -26,6 +33,7 @@ public:
 	CMapLayers(int Type);
 	virtual void OnInit();
 	virtual void OnRender();
+	virtual void OnMapLoad();
 
 	void EnvelopeUpdate();
 

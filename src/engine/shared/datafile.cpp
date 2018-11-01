@@ -79,7 +79,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 
 
 	// take the CRC of the file and store it
-	unsigned Crc = 0;
+	unsigned Crc = crc32(0L, 0x0, 0);
 	{
 		enum
 		{
@@ -224,40 +224,14 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	return true;
 }
 
-bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
-{
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
-	if(!File)
-		return false;
-
-	// get crc and size
-	unsigned Crc = 0;
-	unsigned Size = 0;
-	unsigned char aBuffer[64*1024];
-	while(1)
-	{
-		unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
-		if(Bytes <= 0)
-			break;
-		Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
-		Size += Bytes;
-	}
-
-	io_close(File);
-
-	*pCrc = Crc;
-	*pSize = Size;
-	return true;
-}
-
-int CDataFileReader::NumData()
+int CDataFileReader::NumData() const
 {
 	if(!m_pDataFile) { return 0; }
 	return m_pDataFile->m_Header.m_NumRawData;
 }
 
 // always returns the size in the file
-int CDataFileReader::GetDataSize(int Index)
+int CDataFileReader::GetDataSize(int Index) const
 {
 	if(!m_pDataFile) { return 0; }
 
@@ -331,6 +305,15 @@ void *CDataFileReader::GetDataSwapped(int Index)
 	return GetDataImpl(Index, 1);
 }
 
+void CDataFileReader::ReplaceData(int Index, char *pData)
+{
+	// make sure the data has been loaded
+	GetDataImpl(Index, 0);
+
+	UnloadData(Index);
+	m_pDataFile->m_ppDataPtrs[Index] = pData;
+}
+
 void CDataFileReader::UnloadData(int Index)
 {
 	if(Index < 0)
@@ -341,7 +324,7 @@ void CDataFileReader::UnloadData(int Index)
 	m_pDataFile->m_ppDataPtrs[Index] = 0x0;
 }
 
-int CDataFileReader::GetItemSize(int Index)
+int CDataFileReader::GetItemSize(int Index) const
 {
 	if(!m_pDataFile) { return 0; }
 	if(Index == m_pDataFile->m_Header.m_NumItems-1)
@@ -396,7 +379,7 @@ void *CDataFileReader::FindItem(int Type, int ID)
 	return 0;
 }
 
-int CDataFileReader::NumItems()
+int CDataFileReader::NumItems() const
 {
 	if(!m_pDataFile) return 0;
 	return m_pDataFile->m_Header.m_NumItems;
@@ -418,7 +401,7 @@ bool CDataFileReader::Close()
 	return true;
 }
 
-unsigned CDataFileReader::Crc()
+unsigned CDataFileReader::Crc() const
 {
 	if(!m_pDataFile) return 0xFFFFFFFF;
 	return m_pDataFile->m_Crc;

@@ -5,7 +5,7 @@
 
 #include <engine/shared/config.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include <game/client/components/particles.h>
 #include <game/client/components/skins.h>
@@ -156,13 +156,22 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 
 	if(ClientID >= 0)
 	{
-		if(m_pClient->m_aClients[ClientID].m_aUseCustomColors[CSkins::SKINPART_BODY])
-			BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_aSkinPartColors[CSkins::SKINPART_BODY]);
+		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+		{
+			int ColorVal = m_pClient->m_pSkins->GetTeamColor(m_pClient->m_aClients[ClientID].m_aUseCustomColors[SKINPART_BODY], m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY],
+																m_pClient->m_aClients[ClientID].m_Team, SKINPART_BODY);
+			BloodColor = m_pClient->m_pSkins->GetColorV3(ColorVal);
+		}
 		else
 		{
-			const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(CSkins::SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[CSkins::SKINPART_BODY]);
-			if(s)
-				BloodColor = s->m_BloodColor;
+			if(m_pClient->m_aClients[ClientID].m_aUseCustomColors[SKINPART_BODY])
+				BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY]);
+			else
+			{
+				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[SKINPART_BODY]);
+				if(s)
+					BloodColor = s->m_BloodColor;
+			}
 		}
 	}
 
@@ -170,7 +179,7 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 	{
 		CParticle p;
 		p.SetDefault();
-		p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
+		p.m_Spr = SPRITE_PART_SPLAT01 + (random_int()%3);
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
 		p.m_LifeSpan = 0.3f + frandom()*0.3f;

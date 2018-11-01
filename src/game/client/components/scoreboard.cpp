@@ -5,8 +5,8 @@
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
-#include <game/generated/client_data.h>
-#include <game/generated/protocol.h>
+#include <generated/client_data.h>
+#include <generated/protocol.h>
 
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
@@ -14,6 +14,7 @@
 #include <game/client/render.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/motd.h>
+#include <game/client/components/skins.h>
 
 #include "scoreboard.h"
 
@@ -46,13 +47,10 @@ void CScoreboard::OnConsoleInit()
 void CScoreboard::RenderGoals(float x, float y, float w)
 {
 	float h = 50.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 10.0f);
 
 	// render goals
 	y += 10.0f;
@@ -80,14 +78,11 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 void CScoreboard::RenderSpectators(float x, float y, float w)
 {
 	float h = 140.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 10.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 10.0f);
 
 	// Headline
 	y += 10.0f;
@@ -110,7 +105,9 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 			TextRender()->TextEx(&Cursor, ", ", -1);
 		if(pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 			TextRender()->TextColor(1.0f, 1.0f, 0.0f, 1.0f);
-		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[i].m_aName, -1);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%2d: %s", i, g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+		TextRender()->TextEx(&Cursor, aBuf, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		Multiple = true;
 	}
@@ -122,14 +119,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		return;
 
 	float h = 760.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	// background
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 17.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 17.0f);
 
 	// render title
 	float TitleFontsize = 40.0f;
@@ -152,7 +146,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 	else
 	{
-		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW &&
+		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID >= 0 && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID < MAX_CLIENTS &&
 			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID])
 		{
 			int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
@@ -228,11 +222,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			// background so it's easy to find the local player or the followed one in spectator mode
 			if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
 			{
-				Graphics()->TextureClear();
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha);
-				RenderTools()->DrawRoundRect(x, y, w-20.0f, LineHeight, 15.0f);
-				Graphics()->QuadsEnd();
+				Rect.x = x;
+				Rect.y = y;
+				Rect.w = w-20.0f;
+				Rect.h = LineHeight;
+				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f*ColorAlpha), 15.0f);
 			}
 
 			// score
@@ -265,7 +259,12 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				Graphics()->BlendNormal();
 				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEADTEE].m_Id);
 				Graphics()->QuadsBegin();
-				IGraphics::CQuadItem QuadItem(TeeOffset, y, 64*TeeSizeMod, 64*TeeSizeMod);
+				if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+				{
+					vec4 Color = m_pClient->m_pSkins->GetColorV4(m_pClient->m_pSkins->GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
+					Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+				}
+				IGraphics::CQuadItem QuadItem(TeeOffset, y-5.0f-Spacing/2.0f, 64*TeeSizeMod, 64*TeeSizeMod);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
@@ -284,14 +283,16 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), "%2d: %s", pInfo->m_ClientID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aName : "");
+			TextRender()->TextEx(&Cursor, aBuf, -1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 			// clan
 			tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 			TextRender()->SetCursor(&Cursor, ClanOffset+ClanLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = ClanLength;
-			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
+			TextRender()->TextEx(&Cursor, (g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aClan : ""), -1);
 
 			// country flag
 			vec4 Color(1.0f, 1.0f, 1.0f, 0.5f*ColorAlpha);
@@ -318,18 +319,16 @@ void CScoreboard::RenderRecordingNotification(float x)
 		return;
 
 	//draw the box
+	CUIRect Rect = {x, 0.0f, 180.0f, 50.0f};
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawRoundRectExt(x, 0.0f, 180.0f, 50.0f, 15.0f, CUI::CORNER_B);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_B, 15.0f);
 
 	//draw the red dot
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-	RenderTools()->DrawRoundRect(x+20, 15.0f, 20.0f, 20.0f, 10.0f);
-	Graphics()->QuadsEnd();
+	Rect.x = x+20;
+	Rect.y = 15.0f;
+	Rect.w = 20.0f;
+	Rect.h = 20.0f;
+	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 0.0f, 0.0f, 1.0f), 10.0f);
 
 	//draw the text
 	char aBuf[64];
@@ -412,6 +411,10 @@ bool CScoreboard::Active()
 	// if we activly wanna look on the scoreboard
 	if(m_Active)
 		return true;
+
+	// skip if motd is present
+	if(m_pClient->m_pMotd->IsActive())
+		return false;
 
 	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
 	{

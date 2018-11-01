@@ -1,8 +1,6 @@
 #ifndef GAME_EDITOR_AUTO_MAP_H
 #define GAME_EDITOR_AUTO_MAP_H
 
-#include <stdlib.h> // rand
-
 #include <base/tl/array.h>
 #include <base/vmath.h>
 
@@ -32,14 +30,14 @@ public:
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes
 
 	virtual int RuleSetNum() = 0;
-	virtual const char* GetRuleSetName(int Index) = 0;
+	virtual const char* GetRuleSetName(int Index) const = 0;
 
 	//
-	int GetType() { return m_Type; }
+	int GetType() const { return m_Type; }
 
 	static bool Random(int Value)
 	{
-		return ((int)((float)rand() / ((float)RAND_MAX + 1) * Value) == 1);
+		return (((random_int() + Value) % 2) == 1);
 	}
 
 	static const char *GetTypeName(int Type)
@@ -96,7 +94,7 @@ public:
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID);
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
-	virtual const char* GetRuleSetName(int Index);
+	virtual const char* GetRuleSetName(int Index) const;
 };
 
 class CDoodadsMapper: public IAutoMapper
@@ -136,7 +134,7 @@ public:
 	void AnalyzeGameLayer();
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
-	virtual const char* GetRuleSetName(int Index);
+	virtual const char* GetRuleSetName(int Index) const;
 
 private:
 	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int> > *pPositions, int Amount, int LeftWall = 0);

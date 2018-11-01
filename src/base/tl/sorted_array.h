@@ -38,7 +38,7 @@ public:
 		Function: all
 			Returns a sorted range that contains the whole array.
 	*/
-	range all() { return range(parent::list, parent::list+parent::num_elements); }
+	range all() const { return range(parent::list, parent::list+parent::num_elements); }
 };
 
 #endif // TL_FILE_SORTED_ARRAY_HPP

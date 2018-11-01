@@ -102,7 +102,7 @@ void CTilesetMapper::Load(const json_value &rElement)
 	}
 }
 
-const char* CTilesetMapper::GetRuleSetName(int Index)
+const char* CTilesetMapper::GetRuleSetName(int Index) const
 {
 	if(Index < 0 || Index >= m_aRuleSets.size())
 		return "";
@@ -133,16 +133,13 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 
 			pTile->m_Index = BaseTile;
 
-			if(y == 0 || y == pLayer->m_Height-1 || x == 0 || x == pLayer->m_Width-1)
-				continue;
-
 			for(int i = 0; i < pConf->m_aRules.size(); ++i)
 			{
 				bool RespectRules = true;
 				for(int j = 0; j < pConf->m_aRules[i].m_aConditions.size() && RespectRules; ++j)
 				{
 					CRuleCondition *pCondition = &pConf->m_aRules[i].m_aConditions[j];
-					int CheckIndex = (y+pCondition->m_Y)*pLayer->m_Width+(x+pCondition->m_X);
+					int CheckIndex = clamp((y+pCondition->m_Y), 0, pLayer->m_Height-1)*pLayer->m_Width+clamp((x+pCondition->m_X), 0, pLayer->m_Width-1);
 
 					if(CheckIndex < 0 || CheckIndex >= MaxIndex)
 						RespectRules = false;
@@ -164,9 +161,10 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 					}
 				}
 
-				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)((float)rand() / ((float)RAND_MAX + 1) * pConf->m_aRules[i].m_Random) == 1))
+				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)(frandom() * pConf->m_aRules[i].m_Random) == 1))
 				{
 					pTile->m_Index = pConf->m_aRules[i].m_Index;
+					pTile->m_Flags = 0;
 
 					// rotate
 					if(pConf->m_aRules[i].m_Rotation == 90)
@@ -312,7 +310,7 @@ void CDoodadsMapper::Load(const json_value &rElement)
 		qsort(m_aRuleSets[i].m_aRules.base_ptr(), m_aRuleSets[i].m_aRules.size(), sizeof(m_aRuleSets[i].m_aRules[0]), CompareRules);
 }
 
-const char* CDoodadsMapper::GetRuleSetName(int Index)
+const char* CDoodadsMapper::GetRuleSetName(int Index) const
 {
 	if(Index < 0 || Index >= m_aRuleSets.size())
 		return "";

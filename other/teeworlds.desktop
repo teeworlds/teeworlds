@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Teeworlds
+GenericName=Online multi-player 2D platform shooter
+Type=Application
+Terminal=false
+Exec=teeworlds
+Icon=teeworlds
+Comment=Teeworlds: Jumping the Gun
+Categories=Game;ArcadeGame;

@@ -10,6 +10,7 @@ typedef struct
 	CLocConstString m_Name;
 	const char *m_pCommand;
 	int m_KeyId;
+	CMenus::CButtonContainer m_BC;
 } CKeyInfo;
 
 static CKeyInfo gs_aKeys[] =
@@ -30,6 +31,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Vote no", "vote no", 0 },
 	{ "Chat", "chat all", 0 },
 	{ "Team chat", "chat team", 0 },
+	{ "Whisper", "chat whisper", 0 },
 	{ "Show chat", "+show_chat", 0 },
 	{ "Emoticon", "+emote", 0 },
 	{ "Spectator mode", "+spectate", 0 },
@@ -41,14 +43,15 @@ static CKeyInfo gs_aKeys[] =
 	{ "Scoreboard", "+scoreboard", 0 },
 	{ "Respawn", "kill", 0 },
 	{ "Ready", "ready_change", 0 },
+	{ "Add demo marker", "add_demomarker", 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
 	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
 	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Laser");Localize("Next weapon");Localize("Prev. weapon");
-	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
+	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Whisper");Localize("Show chat");Localize("Emoticon");
 	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");
-	Localize("Screenshot");Localize("Scoreboard");Localize("Respawn");Localize("Ready");
+	Localize("Screenshot");Localize("Scoreboard");Localize("Respawn");Localize("Ready");Localize("Add demo marker");
 */
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
@@ -70,9 +73,9 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeigh
 		str_format(aBuf, sizeof(aBuf), "%s:", (const char *)Key.m_Name);
 
 		Label.y += 2.0f;
-		UI()->DoLabelScaled(&Label, aBuf, 13.0f, 0);
+		UI()->DoLabelScaled(&Label, aBuf, 13.0f, CUI::ALIGN_CENTER);
 		int OldId = Key.m_KeyId;
-		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
+		int NewId = DoKeyReader(&gs_aKeys[i].m_BC, &Button, OldId);
 		if(NewId != OldId)
 		{
 			if(OldId != 0 || NewId == 0)
@@ -215,7 +218,7 @@ float CMenus::RenderSettingsControlsChat(CUIRect View, void *pUser)
 			}
 	}
 
-	int NumOptions = 3;
+	int NumOptions = 4;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
@@ -223,7 +226,7 @@ float CMenus::RenderSettingsControlsChat(CUIRect View, void *pUser)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	pSelf->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	pSelf->UiDoGetButtons(14, 17, View, ButtonHeight, Spaceing);
+	pSelf->UiDoGetButtons(14, 18, View, ButtonHeight, Spaceing);
 
 	return BackgroundHeight;
 }
@@ -250,7 +253,8 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 			}
 	}
 
-	int NumOptions = 9;
+	int NumOptions = 11;
+	int StartOption = 18;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
@@ -258,7 +262,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	pSelf->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	pSelf->UiDoGetButtons(17, 26, View, ButtonHeight, Spaceing);
+	pSelf->UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spaceing);
 
 	return BackgroundHeight;
 }

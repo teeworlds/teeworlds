@@ -192,7 +192,7 @@ void CConsole::SetPrintOutputLevel(int Index, int OutputLevel)
 		m_aPrintCB[Index].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
 }
 
-void CConsole::Print(int Level, const char *pFrom, const char *pStr)
+void CConsole::Print(int Level, const char *pFrom, const char *pStr, bool Highlighted)
 {
 	dbg_msg(pFrom ,"%s", pStr);
 	for(int i = 0; i < m_NumPrintCB; ++i)
@@ -201,7 +201,7 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 		{
 			char aBuf[1024];
 			str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
-			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata);
+			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata, Highlighted);
 		}
 	}
 }
@@ -689,6 +689,21 @@ CConsole::CConsole(int FlagMask)
 	#undef MACRO_CONFIG_STR
 }
 
+CConsole::~CConsole()
+{
+	CCommand *pCommand = m_pFirstCommand;
+	while(pCommand)
+	{
+		CCommand *pNext = pCommand->m_pNext;
+
+		if(pCommand->m_pfnCallback == Con_Chain)
+			mem_free(static_cast<CChain *>(pCommand->m_pUserData));
+		mem_free(pCommand);
+
+		pCommand = pNext;
+	}
+}
+
 void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 {
 	for(int i = 0; i < NumArgs; i++)
@@ -700,9 +715,10 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 				ExecuteFile(ppArguments[i+1]);
 			i++;
 		}
-		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
+		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]) ||
+				!str_comp("-d", ppArguments[i]) || !str_comp("--default", ppArguments[i]))
 		{
-			// skip silent param
+			// skip silent, default param
 			continue;
 		}
 		else

@@ -51,7 +51,7 @@ void CCollision::Init(class CLayers *pLayers)
 	}
 }
 
-int CCollision::GetTile(int x, int y)
+int CCollision::GetTile(int x, int y) const
 {
 	int Nx = clamp(x/32, 0, m_Width-1);
 	int Ny = clamp(y/32, 0, m_Height-1);
@@ -59,21 +59,21 @@ int CCollision::GetTile(int x, int y)
 	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
 }
 
-bool CCollision::IsTileSolid(int x, int y)
+bool CCollision::IsTileSolid(int x, int y) const
 {
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
 // TODO: rewrite this smarter!
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision) const
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance+1);
 	vec2 Last = Pos0;
 
-	for(int i = 0; i < End; i++)
+	for(int i = 0; i <= End; i++)
 	{
-		float a = i/Distance;
+		float a = i/float(End);
 		vec2 Pos = mix(Pos0, Pos1, a);
 		if(CheckPoint(Pos.x, Pos.y))
 		{
@@ -93,7 +93,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 }
 
 // TODO: OPT: rewrite this smarter!
-void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces)
+void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces) const
 {
 	if(pBounces)
 		*pBounces = 0;
@@ -131,7 +131,7 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 	}
 }
 
-bool CCollision::TestBox(vec2 Pos, vec2 Size)
+bool CCollision::TestBox(vec2 Pos, vec2 Size) const
 {
 	Size *= 0.5f;
 	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
@@ -145,7 +145,7 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity)
+void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity) const
 {
 	// do the move
 	vec2 Pos = *pInoutPos;

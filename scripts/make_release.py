@@ -40,7 +40,7 @@ if platform == "src":
 	include_exe = False
 	include_src = True
 	use_zip = 1
-elif platform == 'win32':
+elif platform == 'win32' or platform == 'win64':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
@@ -113,7 +113,7 @@ if not maps_dir:
 	sys.exit(-1)
 
 print("adding files")
-shutil.copy("readme.txt", package_dir)
+shutil.copy("readme.md", package_dir)
 shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 

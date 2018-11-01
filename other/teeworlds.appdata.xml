@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+  <id type="desktop">teeworlds.desktop</id>
+  <license>Zlib and CC-BY-SA-3.0</license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <summary>Online multiplayer shooter game</summary>
+  <description>
+    <p>
+      Teeworlds is a free online multiplayer game. Battle with up to 16 players
+      in a variety of game modes, including Team Deathmatch and Capture The Flag.
+      You can even design your own maps! 
+    </p>
+  </description>
+  <url type="homepage">https://www.teeworlds.com/</url>
+  <screenshots>
+    <screenshot>https://www.teeworlds.com/images/screens/screenshot_desert.png</screenshot>
+    <screenshot>https://www.teeworlds.com/images/screens/screenshot_grass.png</screenshot>
+    <screenshot>https://www.teeworlds.com/images/screens/screenshot_winter.png</screenshot>
+    <screenshot>https://www.teeworlds.com/images/screens/screenshot_jungle.png</screenshot>
+  </screenshots>
+</application>

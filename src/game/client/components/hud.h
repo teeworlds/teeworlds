@@ -8,6 +8,7 @@ class CHud : public CComponent
 {
 	float m_Width, m_Height;
 	float m_AverageFPS;
+	int64 m_WarmupHideTick;
 
 	void RenderCursor();
 
@@ -24,8 +25,6 @@ class CHud : public CComponent
 	void RenderScoreHud();
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
-
-	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);
 public:
 	CHud();
 

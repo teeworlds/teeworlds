@@ -9,12 +9,20 @@
 #include <game/client/render.h>
 #include <game/client/ui.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include "menus.h"
 
 void CMenus::RenderStartMenu(CUIRect MainView)
 {
+	// render logo
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1,1,1,1);
+	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
 	CUIRect TopMenu, BottomMenu;
 	MainView.VMargin(MainView.w/2-190.0f, &TopMenu);
 	TopMenu.HSplitTop(365.0f, &TopMenu, &BottomMenu);
@@ -24,24 +32,13 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	TopMenu.HSplitTop(145.0f, 0, &TopMenu);
 
 	CUIRect Button;
+	int NewPage = -1;
 
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_SettingsButton = 0;
-	if(g_Config.m_ClShowStartMenuImages)
-	{
-		if(DoButton_MenuImage(&s_SettingsButton, Localize("Settings"), 0, &Button, "settings", 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_SETTINGS;
-		}
-	}
-	else
-	{
-		if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_SETTINGS;
-		}
-	}
-
+	static CButtonContainer s_SettingsButton;
+	if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "settings" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
+		NewPage = PAGE_SETTINGS;
+	
 	/*TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Bottom);
 	static int s_LocalServerButton = 0;
@@ -60,66 +57,35 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_DemoButton = 0;
-	if(g_Config.m_ClShowStartMenuImages)
+	static CButtonContainer s_DemoButton;
+	if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "demos" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 	{
-		if(DoButton_MenuImage(&s_DemoButton, Localize("Demos"), 0, &Button, "demos", 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_DEMOS;
-			DemolistPopulate();
-			DemolistOnUpdate(false);
-		}
-	}
-	else
-	{
-		if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
-		{
-			m_MenuPage = PAGE_DEMOS;
-			DemolistPopulate();
-			DemolistOnUpdate(false);
-		}
+		NewPage = PAGE_DEMOS;
+		DemolistPopulate();
+		DemolistOnUpdate(false);
 	}
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_MapEditorButton = 0;
-	if(g_Config.m_ClShowStartMenuImages)
+	static CButtonContainer s_MapEditorButton;
+	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 	{
-		if(DoButton_MenuImage(&s_MapEditorButton, Localize("Editor"), 0, &Button, "editor", 10.0f, 0.5f))
-		{
-			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
-		}
-	}
-	else
-	{
-		if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
-		{
-			g_Config.m_ClEditor = 1;
-			Input()->MouseModeRelative();
-		}
+		g_Config.m_ClEditor = 1;
+		Input()->MouseModeRelative();
 	}
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
-	static int s_PlayButton = 0;
-	if(g_Config.m_ClShowStartMenuImages)
-	{
-		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
-	}
-	else
-	{
-		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
-	}
-
+	static CButtonContainer s_PlayButton;
+	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "play_game" : 0, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EnterPressed)
+		NewPage = g_Config.m_UiBrowserPage;
+	
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
 	RenderTools()->DrawUIRect4(&BottomMenu, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 10.0f);
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
-	static int s_QuitButton = 0;
-	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+	static CButtonContainer s_QuitButton;
+	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 0, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EscapePressed)
 		m_Popup = POPUP_QUIT;
 
 	// render version
@@ -131,19 +97,16 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	{
 		str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
 		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-		UI()->DoLabelScaled(&Version, aBuf, 14.0f, 0);
+		UI()->DoLabelScaled(&Version, aBuf, 14.0f, CUI::ALIGN_CENTER);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, 1);	
+	UI()->DoLabelScaled(&Version, GAME_VERSION, 14.0f, CUI::ALIGN_RIGHT);
+
+	if(NewPage != -1)
+		SetMenuPage(NewPage);
 }
 
 void CMenus::RenderLogo(CUIRect MainView)
 {
-	// render cursor
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+	
 }

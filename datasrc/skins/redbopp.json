@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 246,
+		"sat": 216,
+		"lgt": 108
+	},
+	"marking": {
+		"filename": "donny",
+		"custom_colors": "true",
+		"hue": 2,
+		"sat": 217,
+		"lgt": 202,
+		"alp": 255
+	},
+	"decoration": {
+		"filename": "unibop",
+		"custom_colors": "true",
+		"hue": 246,
+		"sat": 216,
+		"lgt": 108
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 246,
+		"sat": 216,
+		"lgt": 108
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 116,
+		"sat": 85,
+		"lgt": 233
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

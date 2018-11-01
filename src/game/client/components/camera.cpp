@@ -17,10 +17,8 @@ CCamera::CCamera()
 	m_MenuCenter = vec2(0.0f, 0.0f);
 
 	m_Positions[POS_START] = vec2(500.0f, 500.0f);
-	m_Positions[POS_INTERNET] = vec2(500.0f, 500.0f);
-	m_Positions[POS_LAN] = vec2(1000.0f, 1000.0f);
-	m_Positions[POS_FAVORITES] = vec2(2000.0f, 500.0f);
-	m_Positions[POS_DEMOS] = vec2(1500.0f, 1000.0f);
+	m_Positions[POS_INTERNET] = vec2(1000.0f, 1000.0f);
+	m_Positions[POS_DEMOS] = vec2(500.0f, 1000.0f);
 	m_Positions[POS_SETTINGS] = vec2(1000.0f, 500.0f);
 
 	m_CurrentPosition = -1;
@@ -106,7 +104,7 @@ int CCamera::GetCurrentPosition()
 void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
-	int PositionNumber = clamp(pResult->GetInteger(0), 0, 4);
+	int PositionNumber = clamp(pResult->GetInteger(0), 0, NUM_POS-1);
 	vec2 Position = vec2(pResult->GetInteger(1)*32.0f+16.0f, pResult->GetInteger(2)*32.0f+16.0f);
 	pSelf->m_Positions[PositionNumber] = Position;
 

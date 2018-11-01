@@ -37,9 +37,8 @@ struct CSample
 
 struct CChannel
 {
-	int m_Vol;
-	int m_Pan;
-} ;
+	int m_Vol; // 0 - 255
+};
 
 struct CVoice
 {
@@ -49,16 +48,18 @@ struct CVoice
 	int m_Vol; // 0 - 255
 	int m_Flags;
 	int m_X, m_Y;
-} ;
+};
 
 static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
-static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
+static CChannel m_aChannels[NUM_CHANNELS] = { {255} };
 
 static LOCK m_SoundLock = 0;
 
 static int m_CenterX = 0;
 static int m_CenterY = 0;
+
+static float m_MaxDistance = 1500.0f;
 
 static int m_MixingRate = 48000;
 static volatile int m_SoundVolume = 100;
@@ -74,13 +75,6 @@ static short Int2Short(int i)
 		return 0x7fff;
 	else if(i < -0x7fff)
 		return -0x7fff;
-	return i;
-}
-
-static int IntAbs(int i)
-{
-	if(i<0)
-		return -i;
 	return i;
 }
 
@@ -121,25 +115,28 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				pInR = pInL;
 
 			// volume calculation
-			if(v->m_Flags&ISound::FLAG_POS && v->m_pChannel->m_Pan)
+			if(v->m_Flags&ISound::FLAG_POS)
 			{
-				// TODO: we should respect the channel panning value
-				const int Range = 1500; // magic value, remove
 				int dx = v->m_X - m_CenterX;
 				int dy = v->m_Y - m_CenterY;
-				int Dist = (int)sqrtf((float)dx*dx+dy*dy); // float here. nasty
-				int p = IntAbs(dx);
-				if(Dist >= 0 && Dist < Range)
+				float Dist = sqrtf((float)dx*dx+dy*dy);
+				if(Dist >= 0.0f && Dist < m_MaxDistance)
 				{
-					// panning
-					if(dx > 0)
-						Lvol = ((Range-p)*Lvol)/Range;
+					// constant panning (-3dB center)
+					float a = 0.5f;
+					if(dx < 0)
+						a -= (Dist/m_MaxDistance)/2.0f;
 					else
-						Rvol = ((Range-p)*Rvol)/Range;
+						a += (Dist/m_MaxDistance)/2.0f;
+					
+					float Lgain = sinf((1-a)*pi/2.0f);
+					float Rgain = sinf(a*pi/2.0f);
 
-					// falloff
-					Lvol = (Lvol*(Range-Dist))/Range;
-					Rvol = (Rvol*(Range-Dist))/Range;
+					// linear falloff
+					float Falloff = 1.0f - Dist/m_MaxDistance;
+
+					Lvol = Lvol*Lgain*Falloff;
+					Rvol = Rvol*Rgain*Falloff;
 				}
 				else
 				{
@@ -171,7 +168,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 
 
 	// release the lock
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 
 	{
 		// clamp accumulated values
@@ -259,7 +256,7 @@ int CSound::Update()
 	{
 		lock_wait(m_SoundLock);
 		m_SoundVolume = WantedVolume;
-		lock_release(m_SoundLock);
+		lock_unlock(m_SoundLock);
 	}
 
 	return 0;
@@ -351,10 +348,12 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	if(!m_pStorage)
 		return CSampleHandle();
 
+	lock_wait(m_SoundLock);
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
+		lock_unlock(m_SoundLock);
 		return CSampleHandle();
 	}
 
@@ -363,6 +362,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	{
 		io_close(ms_File);
 		ms_File = 0;
+		lock_unlock(m_SoundLock);
 		return CSampleHandle();
 	}
 	pSample = &m_aSamples[SampleID];
@@ -387,6 +387,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
 			io_close(ms_File);
 			ms_File = 0;
+			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
 
@@ -402,6 +403,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
 			io_close(ms_File);
 			ms_File = 0;
+			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
 
@@ -434,6 +436,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
 	RateConvert(SampleID);
+	lock_unlock(m_SoundLock);
 	return CreateSampleHandle(SampleID);
 }
 
@@ -443,11 +446,14 @@ void CSound::SetListenerPos(float x, float y)
 	m_CenterY = (int)y;
 }
 
+void CSound::SetMaxDistance(float Distance)
+{
+	m_MaxDistance = Distance;
+}
 
-void CSound::SetChannel(int ChannelID, float Vol, float Pan)
+void CSound::SetChannelVolume(int ChannelID, float Vol)
 {
 	m_aChannels[ChannelID].m_Vol = (int)(Vol*255.0f);
-	m_aChannels[ChannelID].m_Pan = (int)(Pan*255.0f); // TODO: this is only on and off right now
 }
 
 int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, float y)
@@ -487,7 +493,7 @@ int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags, float x, floa
 		m_aVoices[VoiceID].m_Y = (int)y;
 	}
 
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 	return VoiceID;
 }
 
@@ -517,7 +523,7 @@ void CSound::Stop(CSampleHandle SampleID)
 			m_aVoices[i].m_pSample = 0;
 		}
 	}
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
 }
 
 void CSound::StopAll()
@@ -535,7 +541,23 @@ void CSound::StopAll()
 		}
 		m_aVoices[i].m_pSample = 0;
 	}
-	lock_release(m_SoundLock);
+	lock_unlock(m_SoundLock);
+}
+
+bool CSound::IsPlaying(CSampleHandle SampleID)
+{
+	bool Ret = false;
+	lock_wait(m_SoundLock);
+	CSample *pSample = &m_aSamples[SampleID.Id()];
+	for(int i = 0; i < NUM_VOICES; i++)
+	{
+		if(m_aVoices[i].m_pSample == pSample)
+		{
+			Ret = true;
+		}
+	}
+	lock_unlock(m_SoundLock);
+	return Ret;
 }
 
 IOHANDLE CSound::ms_File = 0;

@@ -44,6 +44,7 @@ public:
 	void Play(int Channel, int SetId, float Vol);
 	void PlayAt(int Channel, int SetId, float Vol, vec2 Pos);
 	void Stop(int SetId);
+	bool IsPlaying(int SetId);
 };
 
 

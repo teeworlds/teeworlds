@@ -8,39 +8,51 @@
 #include <game/mapitems.h>
 #include "ui.h"
 
+
+// sprite renderings
+enum
+{
+	SKINPART_BODY = 0,
+	SKINPART_MARKING,
+	SKINPART_DECORATION,
+	SKINPART_HANDS,
+	SKINPART_FEET,
+	SKINPART_EYES,
+	NUM_SKINPARTS,
+
+	SPRITE_FLAG_FLIP_Y = 1,
+	SPRITE_FLAG_FLIP_X = 2,
+
+	LAYERRENDERFLAG_OPAQUE = 1,
+	LAYERRENDERFLAG_TRANSPARENT = 2,
+
+	TILERENDERFLAG_EXTEND = 4,
+};
+
 class CTeeRenderInfo
 {
 public:
 	CTeeRenderInfo()
 	{
-		for(int i = 0; i < 6; i++)
+		for(int i = 0; i < NUM_SKINPARTS; i++)
 			m_aColors[i] = vec4(1,1,1,1);
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
-	IGraphics::CTextureHandle m_aTextures[6];
-	vec4 m_aColors[6];
+	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
+	vec4 m_aColors[NUM_SKINPARTS];
 	float m_Size;
 	int m_GotAirJump;
-};
-
-// sprite renderings
-enum
-{
-	SPRITE_FLAG_FLIP_Y=1,
-	SPRITE_FLAG_FLIP_X=2,
-
-	LAYERRENDERFLAG_OPAQUE=1,
-	LAYERRENDERFLAG_TRANSPARENT=2,
-
-	TILERENDERFLAG_EXTEND=4,
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
 
 class CRenderTools
 {
+	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
+	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
+
 public:
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
@@ -48,17 +60,13 @@ public:
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
 
-	//typedef struct SPRITE;
-
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
 
 	void DrawSprite(float x, float y, float size);
 
 	// rects
-	void DrawRoundRect(float x, float y, float w, float h, float r);
-	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
-	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
+	void DrawRoundRect(const CUIRect *r, vec4 Color, float Rounding);
 
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
 	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);
@@ -68,6 +76,8 @@ public:
 
 	// object render methods (gc_render_obj.cpp)
 	void RenderTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
+	void RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+					   vec2 PostRotOffset);
 
 	// map render methods (gc_render_map.cpp)
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
@@ -75,8 +85,9 @@ public:
 	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
 
 	// helpers
-	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
-		float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints);
+	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
+		float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4]);
+	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom);
 
 };
 

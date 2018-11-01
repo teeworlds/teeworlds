@@ -6,22 +6,14 @@
 #include <base/tl/sorted_array.h>
 #include <game/client/component.h>
 
-
+// todo: fix duplicate skins (different paths)
 class CSkins : public CComponent
 {
 public:
 	enum
 	{
-		SKINTYPE_STANDARD=0,
-		SKINTYPE_SPECIAL,
-
-		SKINPART_BODY=0,
-		SKINPART_TATTOO,
-		SKINPART_DECORATION,
-		SKINPART_HANDS,
-		SKINPART_FEET,
-		SKINPART_EYES,
-		NUM_SKINPARTS,
+		SKINFLAG_SPECIAL=1<<0,
+		SKINFLAG_STANDARD=1<<1,
 
 		DARKEST_COLOR_LGT=61,
 		
@@ -30,25 +22,25 @@ public:
 
 	struct CSkinPart
 	{
-		int m_Type;
+		int m_Flags;
 		char m_aName[24];
 		IGraphics::CTextureHandle m_OrgTexture;
 		IGraphics::CTextureHandle m_ColorTexture;
 		vec3 m_BloodColor;
-
 
 		bool operator<(const CSkinPart &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
 	};
 
 	struct CSkin
 	{
-		int m_Type;
+		int m_Flags;
 		char m_aName[24];
 		const CSkinPart *m_apParts[NUM_SKINPARTS];
 		int m_aPartColors[NUM_SKINPARTS];
 		int m_aUseCustomColors[NUM_SKINPARTS];
 
 		bool operator<(const CSkin &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
+		bool operator==(const CSkin &Other) { return mem_comp(this, &Other, sizeof(CSkin)) == 0; }
 	};
 
 	static const char * const ms_apSkinPartNames[NUM_SKINPARTS];
@@ -60,6 +52,9 @@ public:
 
 	//
 	void OnInit();
+
+	void AddSkin(const char *pSkinName);
+	void RemoveSkin(const CSkin *pSkin);
 
 	int Num();
 	int NumSkinPart(int Part);

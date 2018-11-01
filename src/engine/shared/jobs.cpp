@@ -21,6 +21,7 @@ CJobPool::~CJobPool()
 		thread_wait(m_apThreads[i]);
 		thread_destroy(m_apThreads[i]);
 	}
+	lock_destroy(m_Lock);
 }
 
 void CJobPool::WorkerThread(void *pUser)
@@ -42,7 +43,7 @@ void CJobPool::WorkerThread(void *pUser)
 			else
 				pPool->m_pLastJob = 0;
 		}
-		lock_release(pPool->m_Lock);
+		lock_unlock(pPool->m_Lock);
 
 		// do the job if we have one
 		if(pJob)
@@ -62,7 +63,7 @@ int CJobPool::Init(int NumThreads)
 	// start threads
 	m_NumThreads = NumThreads > MAX_THREADS ? MAX_THREADS : NumThreads;
 	for(int i = 0; i < m_NumThreads; i++)
-		m_apThreads[i] = thread_create(WorkerThread, this);
+		m_apThreads[i] = thread_init(WorkerThread, this);
 	return 0;
 }
 
@@ -82,7 +83,7 @@ int CJobPool::Add(CJob *pJob, JOBFUNC pfnFunc, void *pData)
 	if(!m_pFirstJob)
 		m_pFirstJob = pJob;
 
-	lock_release(m_Lock);
+	lock_unlock(m_Lock);
 	return 0;
 }
 

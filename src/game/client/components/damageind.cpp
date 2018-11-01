@@ -2,10 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/demo.h>
 #include <engine/graphics.h>
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include "damageind.h"
@@ -40,7 +39,7 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 		i->m_Pos = Pos;
 		i->m_StartTime = Client()->LocalTime();
 		i->m_Dir = Dir*-1;
-		i->m_StartAngle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
+		i->m_StartAngle = (frandom() - 1.0f) * 2.0f * pi;
 	}
 }
 

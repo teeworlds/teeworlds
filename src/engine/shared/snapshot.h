@@ -31,7 +31,8 @@ class CSnapshot
 public:
 	enum
 	{
-		MAX_SIZE=64*1024
+		MAX_PARTS	= 64,
+		MAX_SIZE	= MAX_PARTS*1024
 	};
 
 	void Clear() { m_DataSize = 0; m_NumItems = 0; }
@@ -107,7 +108,7 @@ public:
 	void PurgeAll();
 	void PurgeUntil(int Tick);
 	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
-	int Get(int Tick, int64 *Tagtime, CSnapshot **pData, CSnapshot **ppAltData);
+	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 
 class CSnapshotBuilder
@@ -132,7 +133,7 @@ public:
 	CSnapshotItem *GetItem(int Index);
 	int *GetItemData(int Key);
 
-	int Finish(void *Snapdata);
+	int Finish(void *pSnapdata);
 };
 
 

@@ -117,12 +117,14 @@ public:
 
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Version;
 		int m_Country;
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
 
 		int m_MapChunk;
+		bool m_NoRconNote;
 		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
@@ -141,7 +143,6 @@ public:
 	IEngineMap *m_pMap;
 
 	int64 m_GameStartTime;
-	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
 	int m_RconClientID;
@@ -149,7 +150,6 @@ public:
 	int m_PrintCBIndex;
 
 	int64 m_Lastheartbeat;
-	//static NETADDR4 master_server;
 
 	// map
 	enum
@@ -162,13 +162,14 @@ public:
 	int m_CurrentMapSize;
 	int m_MapChunksPerRequest;
 
+	int m_RconPasswordSet;
+	int m_GeneratedRconPassword;
+
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
 	CMapChecker m_MapChecker;
 
 	CServer();
-
-	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
 	virtual void SetClientClan(int ClientID, char const *pClan);
@@ -180,21 +181,21 @@ public:
 	void DemoRecorder_HandleAutoStart();
 	bool DemoRecorder_IsRecording();
 
-	//int Tick()
 	int64 TickStartTime(int Tick);
-	//int TickSpeed()
 
 	int Init();
 
+	void InitRconPasswordIfUnset();
+
 	void SetRconCID(int ClientID);
-	bool IsAuthed(int ClientID);
-	bool IsBanned(int ClientID);
-	int GetClientInfo(int ClientID, CClientInfo *pInfo);
-	void GetClientAddr(int ClientID, char *pAddrStr, int Size);
-	const char *ClientName(int ClientID);
-	const char *ClientClan(int ClientID);
-	int ClientCountry(int ClientID);
-	bool ClientIngame(int ClientID);
+	bool IsAuthed(int ClientID) const;
+	bool IsBanned(int ClientID) const;
+	int GetClientInfo(int ClientID, CClientInfo *pInfo) const;
+	void GetClientAddr(int ClientID, char *pAddrStr, int Size) const;
+	const char *ClientName(int ClientID) const;
+	const char *ClientClan(int ClientID) const;
+	int ClientCountry(int ClientID) const;
+	bool ClientIngame(int ClientID) const;
 	int MaxClients() const;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
@@ -207,7 +208,7 @@ public:
 	void SendMap(int ClientID);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
-	static void SendRconLineAuthed(const char *pLine, void *pUser);
+	static void SendRconLineAuthed(const char *pLine, void *pUser, bool Highlighted);
 
 	void SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
@@ -215,12 +216,12 @@ public:
 
 	void ProcessClientPacket(CNetChunk *pPacket);
 
-	void SendServerInfo(const NETADDR *pAddr, int Token);
-	void UpdateServerInfo();
+	void SendServerInfo(int ClientID);
+	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();
 
-	char *GetMapName();
+	const char *GetMapName() const;
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
@@ -232,11 +233,13 @@ public:
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
+	static void ConSaveConfig(IConsole::IResult *pResult, void *pUser);
 	static void ConLogout(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 

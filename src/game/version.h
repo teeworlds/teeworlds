@@ -2,8 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_VERSION_H
 #define GAME_VERSION_H
-#include "generated/nethash.cpp"
-#define GAME_VERSION "0.7 trunk"
+#include <generated/nethash.cpp>
+#define GAME_VERSION "0.7.0"
 #define GAME_NETVERSION "0.7 " GAME_NETVERSION_HASH
-static const char GAME_RELEASE_VERSION[8] = {'0', '.', '6', '1', 0};
+#define CLIENT_VERSION 0x0700
+static const char GAME_RELEASE_VERSION[8] = {'0', '.', '7', '.', '0', 0};
 #endif

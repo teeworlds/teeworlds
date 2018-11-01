@@ -8,6 +8,8 @@
 #include <engine/masterserver.h>
 #include <engine/storage.h>
 
+#include <mastersrv/mastersrv.h>
+
 #include "linereader.h"
 
 class CMasterServer : public IEngineMasterServer
@@ -45,7 +47,7 @@ public:
 
 	virtual int RefreshAddresses(int Nettype)
 	{
-		if(m_State != STATE_INIT)
+		if(m_State != STATE_INIT && m_State != STATE_READY)
 			return -1;
 
 		dbg_msg("engine/mastersrv", "refreshing master server addresses");
@@ -77,7 +79,7 @@ public:
 				if(m_aMasterServers[i].m_Lookup.m_Job.Result() == 0)
 				{
 					m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
-					m_aMasterServers[i].m_Addr.port = 8300;
+					m_aMasterServers[i].m_Addr.port = MASTERSERVER_PORT;
 					m_aMasterServers[i].m_Valid = true;
 				}
 				else
@@ -92,22 +94,22 @@ public:
 		}
 	}
 
-	virtual int IsRefreshing()
+	virtual bool IsRefreshing() const
 	{
 		return m_State != STATE_READY;
 	}
 
-	virtual NETADDR GetAddr(int Index)
+	virtual NETADDR GetAddr(int Index) const
 	{
 		return m_aMasterServers[Index].m_Addr;
 	}
 
-	virtual const char *GetName(int Index)
+	virtual const char *GetName(int Index) const
 	{
 		return m_aMasterServers[Index].m_aHostname;
 	}
 
-	virtual bool IsValid(int Index)
+	virtual bool IsValid(int Index) const
 	{
 		return m_aMasterServers[Index].m_Valid;
 	}
@@ -148,7 +150,7 @@ public:
 			char aAddrStr[NETADDR_MAXSTRSIZE];
 			if(sscanf(pLine, "%127s %47s", Info.m_aHostname, aAddrStr) == 2 && net_addr_from_str(&Info.m_Addr, aAddrStr) == 0)
 			{
-				Info.m_Addr.port = 8300;
+				Info.m_Addr.port = MASTERSERVER_PORT;
 				bool Added = false;
 				for(int i = 0; i < MAX_MASTERSERVERS; ++i)
 					if(str_comp(m_aMasterServers[i].m_aHostname, Info.m_aHostname) == 0)

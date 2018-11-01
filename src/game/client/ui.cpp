@@ -46,14 +46,14 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 	return 0;
 }
 
-int CUI::MouseInside(const CUIRect *r)
+int CUI::MouseInside(const CUIRect *r) const
 {
 	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
 		return 1;
 	return 0;
 }
 
-void CUI::ConvertMouseMove(float *x, float *y)
+void CUI::ConvertMouseMove(float *x, float *y) const
 {
 	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
 	*x = *x*Fac;
@@ -79,7 +79,7 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-float CUI::Scale()
+float CUI::Scale() const
 {
 	return 1.0f;
 }
@@ -275,7 +275,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	int Inside = MouseInside(pRect);
 	static int ButtonUsed = 0;
 
-	if(ActiveItem() == pID)
+	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(ButtonUsed))
 		{
@@ -309,7 +309,7 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 {
 	int Inside = MouseInside(pRect);
 
-	if(ActiveItem() == pID)
+	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(0))
 			SetActiveItem(0);
@@ -319,16 +319,17 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		if(MouseButton(0))
 			SetActiveItem(pID);
 	}
-	else if(Inside)
+	
+	if(Inside)
 		SetHotItem(pID);
 
-	if(ActiveItem() != pID || !Inside)
+	if(!CheckActiveItem(pID))
 		return 0;
 
 	if(pX)
-		*pX = (m_MouseX - pRect->x) / Scale();
+		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w) / Scale();
 	if(pY)
-		*pY = (m_MouseY - pRect->y) / Scale();
+		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h) / Scale();
 
 	return 1;
 }
@@ -381,25 +382,33 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
 	return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, int Align, int MaxWidth)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
-	if(Align == 0)
+	switch(Align)
+	{
+	case ALIGN_CENTER:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
 		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth);
+		break;
 	}
-	else if(Align < 0)
+	case ALIGN_LEFT:
+	{
 		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth);
-	else if(Align > 0)
+		break;
+	}
+	case ALIGN_RIGHT:
 	{
 		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
 		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth);
+		break;
+	}
 	}
 }
 
-void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, int Align, int MaxWidth)
+void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
 {
 	DoLabel(r, pText, Size*Scale(), Align, MaxWidth);
 }

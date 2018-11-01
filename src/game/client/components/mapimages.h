@@ -6,10 +6,22 @@
 
 class CMapImages : public CComponent
 {
-	IGraphics::CTextureHandle m_aTextures[64];
-	IGraphics::CTextureHandle m_aMenuTextures[64];
-	int m_Count;
-	int m_MenuCount;
+	enum
+	{
+		MAX_TEXTURES=64,
+
+		MAP_TYPE_GAME=0,
+		MAP_TYPE_MENU,
+		NUM_MAP_TYPES
+	};
+	struct
+	{
+		IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
+		int m_Count;
+	} m_Info[NUM_MAP_TYPES];
+
+	void LoadMapImages(class IMap *pMap, class CLayers *pLayers, int MapType);
+
 public:
 	CMapImages();
 

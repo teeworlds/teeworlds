@@ -2,10 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/demo.h>
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
@@ -15,10 +14,6 @@
 
 #include "items.h"
 
-void CItems::OnReset()
-{
-	m_NumExtraProjectiles = 0;
-}
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
@@ -89,7 +84,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		m_pClient->m_pEffects->BulletTrail(Pos);
 
 		if(length(Vel) > 0.00001f)
-			Graphics()->QuadsSetRotation(GetAngle(Vel));
+			Graphics()->QuadsSetRotation(angle(Vel));
 		else
 			Graphics()->QuadsSetRotation(0);
 
@@ -310,25 +305,5 @@ void CItems::OnRender()
 			}
 		}
 	}
-
-	// render extra projectiles
-	for(int i = 0; i < m_NumExtraProjectiles; i++)
-	{
-		if(m_aExtraProjectiles[i].m_StartTick < Client()->GameTick())
-		{
-			m_aExtraProjectiles[i] = m_aExtraProjectiles[m_NumExtraProjectiles-1];
-			m_NumExtraProjectiles--;
-		}
-		else
-			RenderProjectile(&m_aExtraProjectiles[i], 0);
-	}
 }
 
-void CItems::AddExtraProjectile(CNetObj_Projectile *pProj)
-{
-	if(m_NumExtraProjectiles != MAX_EXTRA_PROJECTILES)
-	{
-		m_aExtraProjectiles[m_NumExtraProjectiles] = *pProj;
-		m_NumExtraProjectiles++;
-	}
-}

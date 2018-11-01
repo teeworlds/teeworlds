@@ -2,9 +2,128 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 #include <base/math.h>
+#include <base/tl/base.h>
 #include <engine/graphics.h>
 
 #include "render.h"
+
+void ValidateFCurve(const vec2& p0, vec2& p1, vec2& p2, const vec2& p3)
+{
+	// validate the bezier curve
+	p1.x = clamp(p1.x, p0.x, p3.x);
+	p2.x = clamp(p2.x, p0.x, p3.x);
+}
+
+double CubicRoot(double x)
+{
+	if(x == 0.0)
+		return 0.0;
+	else if(x < 0.0)
+		return -exp(log(-x)/3.0);
+	else
+		return exp(log(x)/3.0);
+}
+
+float SolveBezier(float x, float p0, float p1, float p2, float p3)
+{
+	// check for valid f-curve
+	// we only take care of monotonic bezier curves, so there has to be exactly 1 real solution
+	tl_assert(p0 <= x && x <= p3);
+	tl_assert((p0 <= p1 && p1 <= p3) && (p0 <= p2 && p2 <= p3));
+
+	double a, b, c, t;
+	double x3 = -p0 + 3*p1 - 3*p2 + p3;
+	double x2 = 3*p0 - 6*p1 + 3*p2;
+	double x1 = -3*p0 + 3*p1;
+	double x0 = p0 - x;
+
+	if(x3 == 0.0 && x2 == 0.0)
+	{
+		// linear
+		// a*t + b = 0
+		a = x1;
+		b = x0;
+
+		if(a == 0.0)
+			return 0.0f;
+		else
+			return -b/a;
+	}
+	else if(x3 == 0.0)
+	{
+		// quadratic
+		// t*t + b*t +c = 0
+		b = x1/x2;
+		c = x0/x2;
+
+		if(c == 0.0)
+			return 0.0f;
+
+		double D = b*b - 4*c;
+
+		t = (-b + sqrt(D))/2;
+
+		if(0.0 <= t && t <= 1.0001f)
+			return t;
+		else
+			return (-b - sqrt(D))/2;
+	}
+	else
+	{
+		// cubic
+		// t*t*t + a*t*t + b*t*t + c = 0
+		a = x2 / x3;
+		b = x1 / x3;
+		c = x0 / x3;
+
+		// substitute t = y - a/3
+		double sub = a/3.0;
+
+		// depressed form x^3 + px + q = 0
+		// cardano's method
+		double p = b/3 - a*a/9;
+		double q = (2*a*a*a/27 - a*b/3 + c)/2;
+		
+		double D = q*q + p*p*p;
+
+		if(D > 0.0)
+		{
+			// only one 'real' solution
+			double s = sqrt(D);
+			return CubicRoot(s-q) - CubicRoot(s+q) - sub;
+		}
+		else if(D == 0.0)
+		{
+			// one single, one double solution or triple solution
+			double s = CubicRoot(-q);
+			t = 2*s - sub;
+			
+			if(0.0 <= t && t <= 1.0001f)
+				return t;
+			else
+				return (-s - sub);
+
+		}
+		else
+		{
+			// Casus irreductibilis ... ,_,
+			double phi = acos(-q / sqrt(-(p*p*p))) / 3;
+			double s = 2*sqrt(-p);
+
+			t = s*cos(phi) - sub;
+
+			if(0.0 <= t && t <= 1.0001f)
+				return t;
+
+			t = -s*cos(phi+pi/3) - sub;
+
+			if(0.0 <= t && t <= 1.0001f)
+				return t;
+			else
+				return -s*cos(phi-pi/3) - sub;
+		}
+	}
+}
 
 void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
 {
@@ -27,6 +146,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	}
 
 	Time = fmod(Time, pPoints[NumPoints-1].m_Time/1000.0f)*1000.0f;
+
 	for(int i = 0; i < NumPoints-1; i++)
 	{
 		if(Time >= pPoints[i].m_Time && Time <= pPoints[i+1].m_Time)
@@ -34,28 +154,55 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 			float Delta = pPoints[i+1].m_Time-pPoints[i].m_Time;
 			float a = (Time-pPoints[i].m_Time)/Delta;
 
-
-			if(pPoints[i].m_Curvetype == CURVETYPE_SMOOTH)
-				a = -2*a*a*a + 3*a*a; // second hermite basis
-			else if(pPoints[i].m_Curvetype == CURVETYPE_SLOW)
-				a = a*a*a;
-			else if(pPoints[i].m_Curvetype == CURVETYPE_FAST)
+			switch(pPoints[i].m_Curvetype)
 			{
+			case CURVETYPE_STEP:
+				a = 0;
+				break;
+			case CURVETYPE_SMOOTH:
+				a = -2*a*a*a + 3*a*a; // second hermite basis
+				break;
+			case CURVETYPE_SLOW:
+				a = a*a*a;
+				break;
+			case CURVETYPE_FAST:
 				a = 1-a;
 				a = 1-a*a*a;
-			}
-			else if (pPoints[i].m_Curvetype == CURVETYPE_STEP)
-				a = 0;
-			else
-			{
-				// linear
-			}
+				break;
+			case CURVETYPE_BEZIER:
+				for(int c = 0; c < Channels; c++)
+				{
+					// monotonic 2d cubic bezier curve
+					vec2 p0, p1, p2, p3;
+					vec2 inTang, outTang;
 
+					p0 = vec2(pPoints[i].m_Time/1000.0f, fx2f(pPoints[i].m_aValues[c]));
+					p3 = vec2(pPoints[i+1].m_Time/1000.0f, fx2f(pPoints[i+1].m_aValues[c]));
+
+					outTang = vec2(pPoints[i].m_aOutTangentdx[c]/1000.0f, fx2f(pPoints[i].m_aOutTangentdy[c]));
+					inTang = -vec2(pPoints[i+1].m_aInTangentdx[c]/1000.0f, fx2f(pPoints[i+1].m_aInTangentdy[c]));					
+					p1 = p0 + outTang;
+					p2 = p3 - inTang;
+
+					// validate bezier curve
+					ValidateFCurve(p0, p1, p2, p3);
+
+					// solve x(a) = time for a
+					a = clamp(SolveBezier(Time/1000.0f, p0.x, p1.x, p2.x, p3.x), 0.0f, 1.0f);
+
+					// value = y(t)
+					pResult[c] =  bezier(p0.y, p1.y, p2.y, p3.y, a);
+				}
+				return;
+			case CURVETYPE_LINEAR:
+				break;
+			}
+			
 			for(int c = 0; c < Channels; c++)
 			{
 				float v0 = fx2f(pPoints[i].m_aValues[c]);
 				float v1 = fx2f(pPoints[i+1].m_aValues[c]);
-				pResult[c] = v0 + (v1-v0) * a;
+				pResult[c] = mix(v0, v1, a);
 			}
 
 			return;
@@ -68,7 +215,6 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	pResult[3] = fx2f(pPoints[NumPoints-1].m_aValues[3]);
 	return;
 }
-
 
 static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 {
@@ -98,22 +244,42 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 			a = aChannels[3];
 		}
 
-		bool Opaque = false;
-		/* TODO: Analyze quadtexture
+		/*bool Opaque = false;
+		 TODO: Analyze quadtexture
 		if(a < 0.01f || (q->m_aColors[0].a < 0.01f && q->m_aColors[1].a < 0.01f && q->m_aColors[2].a < 0.01f && q->m_aColors[3].a < 0.01f))
 			Opaque = true;
-		*/
+		
 		if(Opaque && !(RenderFlags&LAYERRENDERFLAG_OPAQUE))
 			continue;
 		if(!Opaque && !(RenderFlags&LAYERRENDERFLAG_TRANSPARENT))
 			continue;
+		*/
+		vec2 aTexCoords[4];
+		for(int k = 0; k < 4; k++)
+		{
+			aTexCoords[k].x = fx2f(q->m_aTexcoords[k].x);
+			aTexCoords[k].y = fx2f(q->m_aTexcoords[k].y);
+		}
+
+		// Check if we want to repeat the texture
+		// Otherwise clamp to the edge to prevent texture bleeding
+		bool RepeatU = false, RepeatV = false;
+		for(int k = 0; k < 4; k++)
+		{
+			if(aTexCoords[k].x < 0.0f || aTexCoords[k].x > 1.0f)
+				RepeatU = true;
+			if(aTexCoords[k].y < 0.0f || aTexCoords[k].y > 1.0f)
+				RepeatV = true;
+		}
+		Graphics()->WrapMode(
+			RepeatU ? IGraphics::WRAP_REPEAT : IGraphics::WRAP_CLAMP,
+			RepeatV ? IGraphics::WRAP_REPEAT : IGraphics::WRAP_CLAMP);
 
 		Graphics()->QuadsSetSubsetFree(
-			fx2f(q->m_aTexcoords[0].x), fx2f(q->m_aTexcoords[0].y),
-			fx2f(q->m_aTexcoords[1].x), fx2f(q->m_aTexcoords[1].y),
-			fx2f(q->m_aTexcoords[2].x), fx2f(q->m_aTexcoords[2].y),
-			fx2f(q->m_aTexcoords[3].x), fx2f(q->m_aTexcoords[3].y)
-		);
+			aTexCoords[0].x, aTexCoords[0].y,
+			aTexCoords[1].x, aTexCoords[1].y,
+			aTexCoords[2].x, aTexCoords[2].y,
+			aTexCoords[3].x, aTexCoords[3].y);
 
 		float OffsetX = 0;
 		float OffsetY = 0;
@@ -130,10 +296,10 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		}
 
 		IGraphics::CColorVertex Array[4] = {
-			IGraphics::CColorVertex(0, q->m_aColors[0].r*Conv*r, q->m_aColors[0].g*Conv*g, q->m_aColors[0].b*Conv*b, q->m_aColors[0].a*Conv*a),
-			IGraphics::CColorVertex(1, q->m_aColors[1].r*Conv*r, q->m_aColors[1].g*Conv*g, q->m_aColors[1].b*Conv*b, q->m_aColors[1].a*Conv*a),
-			IGraphics::CColorVertex(2, q->m_aColors[2].r*Conv*r, q->m_aColors[2].g*Conv*g, q->m_aColors[2].b*Conv*b, q->m_aColors[2].a*Conv*a),
-			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r, q->m_aColors[3].g*Conv*g, q->m_aColors[3].b*Conv*b, q->m_aColors[3].a*Conv*a)};
+			IGraphics::CColorVertex(0, q->m_aColors[0].r*Conv*r*q->m_aColors[0].a*Conv*a, q->m_aColors[0].g*Conv*g*q->m_aColors[0].a*Conv*a, q->m_aColors[0].b*Conv*b*q->m_aColors[0].a*Conv*a, q->m_aColors[0].a*Conv*a),
+			IGraphics::CColorVertex(1, q->m_aColors[1].r*Conv*r*q->m_aColors[1].a*Conv*a, q->m_aColors[1].g*Conv*g*q->m_aColors[1].a*Conv*a, q->m_aColors[1].b*Conv*b*q->m_aColors[1].a*Conv*a, q->m_aColors[1].a*Conv*a),
+			IGraphics::CColorVertex(2, q->m_aColors[2].r*Conv*r*q->m_aColors[2].a*Conv*a, q->m_aColors[2].g*Conv*g*q->m_aColors[2].a*Conv*a, q->m_aColors[2].b*Conv*b*q->m_aColors[2].a*Conv*a, q->m_aColors[2].a*Conv*a),
+			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r*q->m_aColors[3].a*Conv*a, q->m_aColors[3].g*Conv*g*q->m_aColors[3].a*Conv*a, q->m_aColors[3].b*Conv*b*q->m_aColors[3].a*Conv*a, q->m_aColors[3].a*Conv*a)};
 		Graphics()->SetColorVertex(Array, 4);
 
 		CPoint *pPoints = q->m_aPoints;
@@ -161,20 +327,14 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
 									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset)
 {
-	//Graphics()->TextureSet(img_get(tmap->image));
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-	//Graphics()->MapScreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
-
-	// calculate the final pixelsize for the tiles
-	float TilePixelSize = 1024/32.0f;
-	float FinalTileSize = Scale/(ScreenX1-ScreenX0) * Graphics()->ScreenWidth();
-	float FinalTilesetScale = FinalTileSize/TilePixelSize;
 
 	float r=1, g=1, b=1, a=1;
 	if(ColorEnv >= 0)
@@ -194,11 +354,6 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	int StartX = (int)(ScreenX0/Scale)-1;
 	int EndY = (int)(ScreenY1/Scale)+1;
 	int EndX = (int)(ScreenX1/Scale)+1;
-
-	// adjust the texture shift according to mipmap level
-	float TexSize = 1024.0f;
-	float Frac = (1.25f/TexSize) * (1/FinalTilesetScale);
-	float Nudge = (0.5f/TexSize) * (1/FinalTilesetScale);
 
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
@@ -250,22 +405,14 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 
 				if(Render)
 				{
-
-					int tx = Index%16;
-					int ty = Index/16;
-					int Px0 = tx*(1024/16);
-					int Py0 = ty*(1024/16);
-					int Px1 = Px0+(1024/16)-1;
-					int Py1 = Py0+(1024/16)-1;
-
-					float x0 = Nudge + Px0/TexSize+Frac;
-					float y0 = Nudge + Py0/TexSize+Frac;
-					float x1 = Nudge + Px1/TexSize-Frac;
-					float y1 = Nudge + Py0/TexSize+Frac;
-					float x2 = Nudge + Px1/TexSize-Frac;
-					float y2 = Nudge + Py1/TexSize-Frac;
-					float x3 = Nudge + Px0/TexSize+Frac;
-					float y3 = Nudge + Py1/TexSize-Frac;
+					float x0 = 0;
+					float y0 = 0;
+					float x1 = 1;
+					float y1 = 0;
+					float x2 = 1;
+					float y2 = 1;
+					float x3 = 0;
+					float y3 = 1;
 
 					if(Flags&TILEFLAG_VFLIP)
 					{
@@ -297,7 +444,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 						y1 = Tmp;
  					}
 
-					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3);
+					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
 					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 				}
