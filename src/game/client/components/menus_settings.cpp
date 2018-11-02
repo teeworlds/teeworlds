@@ -706,18 +706,22 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Game.HSplitTop(Spacing, 0, &Game);
 	Game.HSplitTop(ButtonHeight, &Button, &Game);
 	static int s_DynamicCameraButton = 0;
-	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClMouseDeadzone != 0, &Button))
+	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClDynamicCamera, &Button))
 	{
-		if(g_Config.m_ClMouseDeadzone)
+		if(g_Config.m_ClDynamicCamera)
 		{
-			g_Config.m_ClMouseFollowfactor = 0;
-			g_Config.m_ClMouseMaxDistance = 400;
-			g_Config.m_ClMouseDeadzone = 0;
+			g_Config.m_ClDynamicCamera = 0;
+			// force to defaults when using the GUI
+			g_Config.m_ClMouseMaxDistanceStatic = 400;
+			// g_Config.m_ClMouseFollowfactor = 0;
+			// g_Config.m_ClMouseDeadzone = 0;
 		}
 		else
 		{
+			g_Config.m_ClDynamicCamera = 1;
+			// force to defaults when using the GUI
+			g_Config.m_ClMouseMaxDistanceDynamic = 1000;
 			g_Config.m_ClMouseFollowfactor = 60;
-			g_Config.m_ClMouseMaxDistance = 1000;
 			g_Config.m_ClMouseDeadzone = 300;
 		}
 	}
@@ -850,8 +854,9 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
+		g_Config.m_ClDynamicCamera = 1;
+		g_Config.m_ClMouseMaxDistanceDynamic = 1000;
 		g_Config.m_ClMouseFollowfactor = 60;
-		g_Config.m_ClMouseMaxDistance = 1000;
 		g_Config.m_ClMouseDeadzone = 300;
 		g_Config.m_ClAutoswitchWeapons = 1;
 		g_Config.m_ClShowhud = 1;
