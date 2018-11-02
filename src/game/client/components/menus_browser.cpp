@@ -1073,10 +1073,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(Input()->KeyPress(KEY_DOWN))
 		{
 			NewIndex = SelectedIndex + 1;
-			if(NewIndex >= NumServers)
-				NewIndex = NumServers;
-			/*if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
+			// if(NewIndex >= NumServers)
+			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
 			{
+			 	NewIndex = NumServers;
 				// try to move to next filter
 				for(int j = SelectedFilter+1; j < m_lFilters.size(); j++)
 				{
@@ -1088,15 +1088,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						break;
 					}
 				}
-			}*/
+			}
 		}
 		else if(Input()->KeyPress(KEY_UP))
 		{
 			NewIndex = SelectedIndex - 1;
 			if(NewIndex < 0)
-				NewIndex = 0;
-			/*if(NewIndex < 0)
 			{
+				NewIndex = 0;
 				// try to move to prev filter
 				for(int j = SelectedFilter-1; j >= 0; j--)
 				{
@@ -1108,7 +1107,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						break;
 					}
 				}
-			}*/
+			}
 		}
 		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
 		{
