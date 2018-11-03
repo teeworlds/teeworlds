@@ -161,7 +161,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			bool AddEntry = false;
 
-			if(m_LastChatSend+time_freq() < time_get())
+			if(m_PendingChatCounter == 0 && m_LastChatSend+time_freq() < time_get())
 			{
 				Say(m_Mode, m_Input.GetString());
 				AddEntry = true;
