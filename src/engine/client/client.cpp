@@ -2436,24 +2436,26 @@ void CClient::HandleTeeworldsConnectLink(const char *pConLink)
 int main(int argc, const char **argv) // ignore_convention
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	bool UseDefaultConsoleSettings = true;
+	#ifdef CONF_RELEASE
+	bool HideConsole = true;
+	#else
+	bool HideConsole = false;
+	#endif
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
-#ifdef CONF_RELEASE
 		if(str_comp("-c", argv[i]) == 0 || str_comp("--console", argv[i]) == 0) // ignore_convention
-#else
-		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
-#endif
 		{
-			UseDefaultConsoleSettings = false;
+			HideConsole = false;
+			break;
+		}
+		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
+		{
+			HideConsole = true;
 			break;
 		}
 	}
-#ifdef CONF_RELEASE
-	if(!UseDefaultConsoleSettings)
-#else
-	if(UseDefaultConsoleSettings)
-#endif
+
+	if(HideConsole)
 		FreeConsole();
 #endif
 
