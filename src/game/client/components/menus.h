@@ -47,7 +47,7 @@ private:
 
 
 	int DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
-	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
+	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
 	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
 	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
@@ -185,6 +185,8 @@ private:
 	int m_MenuPage;
 	int m_BorwserPage;
 	bool m_MenuActive;
+	int m_SidebarTab;
+	bool m_SidebarActive;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
@@ -447,8 +449,6 @@ private:
 		COL_BROWSER_MAP,
 		COL_BROWSER_PLAYERS,
 		COL_BROWSER_PING,
-		COL_BROWSER_FAVORITE,
-		COL_BROWSER_INFO,
 		NUM_BROWSER_COLS,
 
 		COL_FRIEND_TYPE = 0,
@@ -525,6 +525,10 @@ private:
 	// found in menus_browser.cpp
 	int m_ScrollOffset;
 	void RenderServerbrowserServerList(CUIRect View);
+	void RenderServerbrowserSidebar(CUIRect View);
+	void RenderServerbrowserFriendTab(CUIRect View);
+	void RenderServerbrowserFilterTab(CUIRect View);
+	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	//void RenderServerbrowserFriends(CUIRect View);

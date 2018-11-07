@@ -43,6 +43,8 @@ CMenus::CMenus()
 	m_NextPopup = POPUP_NONE;
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
+	m_SidebarTab = 0;
+	m_SidebarActive = true;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
@@ -303,7 +305,7 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	t.y += 2.0f; // lame fix
+	t.y += 1.0f; // lame fix
 	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, CUI::ALIGN_CENTER);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 	return UI()->DoButtonLogic(pID, pText, 0, pRect);
@@ -321,18 +323,19 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
-int CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, const CUIRect *pRect, int Corners, float r, bool Fade)
+int CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners, float r, bool Fade)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float FadeVal = ButtonFade(pBC, Seconds)/Seconds;
+	float FadeVal = Fade ? ButtonFade(pBC, Seconds, Checked) / Seconds : 0.0f;
+
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f + FadeVal, 0.0f + FadeVal, 0.0f + FadeVal, 0.25f + FadeVal * 0.5f), Corners, r);
 
 	CUIRect Icon = *pRect;
+	if(Icon.w > Icon.h)
+		Icon.VMargin((Icon.w - Icon.h) / 2, &Icon);
+	else if(Icon.w < Icon.h)
+		Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
 	Icon.Margin(2.0f, &Icon);
-
-	if(Fade)
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
-	else
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, r);
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
