@@ -347,7 +347,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 									}
 									else
 									{
-										dbg_msg("netserver", "dropping packet with invalid token, token=%08x", (int)UseToken, Token);
+										dbg_msg("netserver", "dropping packet with invalid token, token=%08x", Token);
 									}
 								}
 								continue;
