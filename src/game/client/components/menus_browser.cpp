@@ -159,7 +159,14 @@ void CMenus::LoadFilters()
 		return;
 	}
 
-	// extract data
+	// extract settings data
+	const json_value &rSettingsEntry = (*pJsonData)["settings"];
+	if(rSettingsEntry["sidebar_active"].type == json_integer)
+		m_SidebarActive = rSettingsEntry["sidebar_active"].u.integer;
+	if(rSettingsEntry["sidebar_tab"].type == json_integer)
+		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), 0, 2);
+
+	// extract filter data
 	int Extended = 0;
 	const json_value &rFilterEntry = (*pJsonData)["filter"];
 	for(unsigned i = 0; i < rFilterEntry.u.array.length; ++i)
@@ -224,9 +231,22 @@ void CMenus::SaveFilters()
 		return;
 
 	char aBuf[512];
+
+	// settings
+	const char *p = "{\"settings\": {\n";
+	io_write(File, p, str_length(p));
+
+	str_format(aBuf, sizeof(aBuf), "\t\"sidebar_active\": %d,\n", m_SidebarActive);
+	io_write(File, aBuf, str_length(aBuf));
+	str_format(aBuf, sizeof(aBuf), "\t\"sidebar_tab\": %d,\n", m_SidebarTab);
+	io_write(File, aBuf, str_length(aBuf));
+
+	// settings end
+	p = "\t},\n";
+	io_write(File, p, str_length(p));
 	
-	// file start
-	const char *p = "{\"filter\": [";
+	// filter
+	p = " \"filter\": [";
 	io_write(File, p, str_length(p));
 
 	for(int i = 0; i < m_lFilters.size(); i++)
@@ -277,7 +297,7 @@ void CMenus::SaveFilters()
 		io_write(File, p, str_length(p));
 	}
 
-	// file end
+	// filter end
 	p = "]\n}";
 	io_write(File, p, str_length(p));
 
