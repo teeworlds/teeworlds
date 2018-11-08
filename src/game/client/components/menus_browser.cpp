@@ -40,6 +40,10 @@ CMenus::CColumn CMenus::ms_aFriendCols[] = {
 	{COL_FRIEND_DELETE,		-1,							"",			1, 20.0f, 0, {0}, {0}},
 };
 
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {0}, 0};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterFavorites = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_FAVORITE, 999, -1, 0, {0}, 0};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterAll = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {0}, 0};
+
 class SortWrap
 {
 	typedef bool (CMenus::*SortFunc)(int, int) const;
@@ -51,25 +55,41 @@ public:
 };
 
 // filters
-CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress)
-	: m_pServerBrowser(pServerBrowser)
+CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser)
 {
 	m_Extended = false;
 	m_Custom = Custom;
 	str_copy(m_aName, pName, sizeof(m_aName));
-	//Todo: fix Filter
-	CServerFilterInfo FilterInfo;
-	FilterInfo.m_SortHash = Filter;
-	FilterInfo.m_Ping = Ping;
-	FilterInfo.m_Country = Country;
-	for(int i = 1; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-		FilterInfo.m_aGametype[i][0] = 0;
-	str_copy(FilterInfo.m_aGametype[0], pGametype, sizeof(FilterInfo.m_aGametype[0]));
-	str_copy(FilterInfo.m_aAddress, pServerAddress, sizeof(FilterInfo.m_aAddress));
-	m_Filter = pServerBrowser->AddFilter(&FilterInfo);
+	m_pServerBrowser = pServerBrowser;
+	switch(m_Custom)
+	{
+	case CBrowserFilter::FILTER_STANDARD:
+		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterStandard);
+		break;
+	case CBrowserFilter::FILTER_FAVORITES:
+		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterFavorites);
+		break;
+	default:
+		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterAll);
+	}
 
 	// init buttons
 	m_SwitchButton = 0;
+}
+
+void CMenus::CBrowserFilter::Reset()
+{
+	switch(m_Custom)
+	{
+	case CBrowserFilter::FILTER_STANDARD:
+		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterStandard);
+		break;
+	case CBrowserFilter::FILTER_FAVORITES:
+		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterFavorites);
+		break;
+	default:
+		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterAll);
+	}
 }
 
 void CMenus::CBrowserFilter::Switch()
@@ -211,7 +231,7 @@ void CMenus::LoadFilters()
 		}
 
 		// add filter
-		m_lFilters.add(CBrowserFilter(Type, pName, ServerBrowser(), 0, 999, -1, "", ""));
+		m_lFilters.add(CBrowserFilter(Type, pName, ServerBrowser()));
 		if(Type == CBrowserFilter::FILTER_STANDARD)		//	make sure the pure filter is enabled in the Teeworlds-filter
 			FilterInfo.m_SortHash |= IServerBrowser::FILTER_PURE;
 		m_lFilters[i].SetFilter(&FilterInfo);

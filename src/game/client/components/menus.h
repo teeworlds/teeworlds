@@ -370,6 +370,10 @@ private:
 		int m_Filter;
 		class IServerBrowser *m_pServerBrowser;
 
+		static class CServerFilterInfo ms_FilterStandard;
+		static class CServerFilterInfo ms_FilterFavorites;
+		static class CServerFilterInfo ms_FilterAll;
+
 	public:
 
 		enum
@@ -383,7 +387,7 @@ private:
 		int m_SwitchButton;
 
 		CBrowserFilter() {}
-		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser);
 		void Switch();
 		bool Extended() const;
 		int Custom() const;
@@ -397,6 +401,7 @@ private:
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
 
+		void Reset();
 		void GetFilter(class CServerFilterInfo *pFilterInfo) const;
 		void SetFilter(const class CServerFilterInfo *pFilterInfo);
 	};

@@ -337,6 +337,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		pFilter->SetFilter(&FilterInfo);
 	}
 
+	// new filter
 	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
 	Button.VSplitLeft(60.0f, &Button, &Icon);
 	static char s_aFilterName[32] = {0};
@@ -351,8 +352,18 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	if(s_aFilterName[0] && pMenus->DoButton_SpriteCleanID(&s_AddFilter, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
 	{
 		CServerFilterInfo NewFilterInfo;
-		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser(), 0, 999, -1, "", ""));
+		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser()));
 		s_aFilterName[0] = 0;
+	}
+
+	// reset filter
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, 0);
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
+	Button.VMargin((Button.w-80.0f)/2, &Button);
+	static CButtonContainer s_ResetButton;
+	if(pMenus->DoButton_Menu(&s_ResetButton, Localize("Reset filter"), 0, &Button))
+	{
+		pFilter->Reset();
 	}
 
 	return 0;
