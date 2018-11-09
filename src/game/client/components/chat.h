@@ -12,7 +12,7 @@ class CChat : public CComponent
 
 	enum
 	{
-		MAX_LINES = 25,
+		MAX_LINES = 50,
 	};
 
 	struct CLine
