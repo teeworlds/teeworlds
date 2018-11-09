@@ -1,149 +1,135 @@
+#!/bin/env python3
 # coding: utf-8
 from socket import *
-import struct
 import sys
 import threading
 import time
 
-
+import random
 
 NUM_MASTERSERVERS = 4
-MASTERSERVER_PORT = 8300
+MASTERSERVER_PORT = 8283
 
 TIMEOUT = 2
 
 SERVERTYPE_NORMAL = 0
-SERVERTYPE_LEGACY = 1
 
-PACKET_GETLIST = "\x20\x00\x00\x00\x00\x00\xff\xff\xff\xffreqt"
-PACKET_GETLIST2 = "\x20\x00\x00\x00\x00\x00\xff\xff\xff\xffreq2"
-PACKET_GETINFO = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xffgief"
-PACKET_GETINFO2 = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xffgie2" + "\x00"
-PACKET_GETINFO3 = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xffgie3" + "\x00"
+PACKET_GETLIST = b"\xff\xff\xff\xffreq2"
+PACKET_LIST = b"\xff\xff\xff\xfflis2"
 
+PACKET_GETINFO = b"\xff\xff\xff\xffgie3"
+PACKET_INFO = b"\xff\xff\xff\xffinf3"
 
+def pack_control_msg_with_token(token_srv,token_cl):
+	b = [0,0,1,0,0,5,0,0,0]
+	b[0] = (token_srv >> 12) & 0xff
+	b[1] = (token_srv >>  4) & 0xff
+	b[2] |= (token_srv <<  4) & 0xff
+	b[6] |= (token_cl >> 16) & 0x0f
+	b[7] |= (token_cl >> 8) & 0xff
+	b[8] |= token_cl & 0xff
+	return bytes(b)
+
+def unpack_control_msg_with_token(msg):
+	b = list(msg)
+	token_cl = (b[0] << 12) + (b[1] << 4) + (b[2] >> 4)
+	token_srv = (b[6] << 16) + (b[7] << 8) + b[8]
+	return token_cl,token_srv
+
+def header_connless(token_srv, token_cl):
+	b = [0,0,8,16,0,0]
+	b[0] = (token_srv >> 12) & 0xff
+	b[1] = (token_srv >>  4) & 0xff
+	b[2] |= (token_srv <<  4) & 0xff
+	b[3] |= (token_cl >> 16) & 0x0f
+	b[4] |= (token_cl >> 8) & 0xff
+	b[5] |= token_cl & 0xff
+	return bytes(b)
 
 class Server_Info(threading.Thread):
 
-	def __init__(self, address, type):
+	def __init__(self, address):
 		self.address = address
-		self.type = type
 		self.finished = False
 		threading.Thread.__init__(self, target = self.run)
 
 	def run(self):
 		self.info = None
-		if self.type == SERVERTYPE_NORMAL:
-			self.info = get_server_info3(self.address)
-		elif self.type == SERVERTYPE_LEGACY:
-			self.info = get_server_info(self.address)
-			if self.info:
-				self.info = get_server_info2(self.address)
+		self.info = get_server_info(self.address)
 		self.finished = True
 
+def unpack_int(b):
+	l = list(b[:5])
+	i = 0
+	Sign = (l[i]>>6)&1;
+	res = l[i] & 0x3F;
+
+	for _ in (0,):
+		if not (l[i]&0x80):
+			break
+		i+=1
+		res |= (l[i]&(0x7F))<<(6);
+
+		if not (l[i]&0x80):
+			break
+		i+=1
+		res |= (l[i]&(0x7F))<<(6+7);
+
+		if not (l[i]&0x80):
+			break
+		i+=1
+		res |= (l[i]&(0x7F))<<(6+7+7);
+
+		if not (l[i]&0x80):
+			break
+		i+=1
+		res |= (l[i]&(0x7F))<<(6+7+7+7);
+
+	i += 1;
+	res ^= -Sign
+	return res, b[i:]
 
 def get_server_info(address):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
-		sock.settimeout(TIMEOUT);
-		sock.sendto(PACKET_GETINFO, address)
+		sock.settimeout(TIMEOUT)
+		token = random.randrange(0x100000)
+		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
-		sock.close()
-
-		data = data[14:] # skip header
-		slots = data.split("\x00")
-
-		server_info = {}
-		server_info["version"] = slots[0]
-		server_info["name"] = slots[1]
-		server_info["map"] = slots[2]
-		server_info["gametype"] = slots[3]
-		server_info["flags"] = int(slots[4])
-		server_info["progression"] = int(slots[5])
-		server_info["num_players"] = int(slots[6])
-		server_info["max_players"] = int(slots[7])
-		server_info["players"] = []
-
-		for i in xrange(0, server_info["num_players"]):
-			player = {}
-			player["name"] = slots[8+i*2]
-			player["score"] = int(slots[8+i*2+1])
-			server_info["players"].append(player)
-
-		return server_info
-
-	except:
-		sock.close()
-		return None
-
-
-def get_server_info2(address):
-	try:
-		sock = socket(AF_INET, SOCK_DGRAM)
-		sock.settimeout(TIMEOUT);
-		sock.sendto(PACKET_GETINFO2, address)
+		token_cl, token_srv = unpack_control_msg_with_token(data)
+		assert(token_cl == token)
+		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
 		data, addr = sock.recvfrom(1024)
+		head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
+		assert(data[:len(head)] == head)
 		sock.close()
 
-		data = data[14:] # skip header
-		slots = data.split("\x00")
+		data = data[len(head):] # skip header
+
+		slots = data.split(b"\x00", maxsplit=5)
 
 		server_info = {}
-		server_info["token"] = slots[0]
-		server_info["version"] = slots[1]
-		server_info["name"] = slots[2]
-		server_info["map"] = slots[3]
-		server_info["gametype"] = slots[4]
-		server_info["flags"] = int(slots[5])
-		server_info["progression"] = int(slots[6])
-		server_info["num_players"] = int(slots[7])
-		server_info["max_players"] = int(slots[8])
+		server_info["version"] = slots[0].decode()
+		server_info["name"] = slots[1].decode()
+		server_info["hostname"] = slots[2].decode()
+		server_info["map"] = slots[3].decode()
+		server_info["gametype"] = slots[4].decode()
+		data = slots[5]
+		# these integers should fit in one byte each
+		server_info["flags"], server_info["skill"], server_info["num_players"], server_info["max_players"], server_info["num_clients"], server_info["max_clients"] = tuple(data[:6])
+		data = data[6:]
 		server_info["players"] = []
 
-		for i in xrange(0, server_info["num_players"]):
+		for i in range(server_info["num_clients"]):
 			player = {}
-			player["name"] = slots[9+i*2]
-			player["score"] = int(slots[9+i*2+1])
-			server_info["players"].append(player)
-
-		return server_info
-
-	except:
-		sock.close()
-		return None
-
-
-def get_server_info3(address):
-	try:
-		sock = socket(AF_INET, SOCK_DGRAM)
-		sock.settimeout(TIMEOUT);
-		sock.sendto(PACKET_GETINFO3, address)
-		data, addr = sock.recvfrom(1400)
-		sock.close()
-
-		data = data[14:] # skip header
-		slots = data.split("\x00")
-
-		server_info = {}
-		server_info["token"] = slots[0]
-		server_info["version"] = slots[1]
-		server_info["name"] = slots[2]
-		server_info["map"] = slots[3]
-		server_info["gametype"] = slots[4]
-		server_info["flags"] = int(slots[5])
-		server_info["num_players"] = int(slots[6])
-		server_info["max_players"] = int(slots[7])
-		server_info["num_clients"] = int(slots[8])
-		server_info["max_clients"] = int(slots[9])
-		server_info["players"] = []
-
-		for i in xrange(0, server_info["num_clients"]):
-			player = {}
-			player["name"] = slots[10+i*5]
-			player["clan"] = slots[10+i*5+1]
-			player["country"] = int(slots[10+i*5+2])
-			player["score"] = int(slots[10+i*5+3])
-			if int(slots[10+i*5+4]):
+			slots = data.split(b"\x00", maxsplit=2)
+			player["name"] = slots[0].decode()
+			player["clan"] = slots[1].decode()
+			data = slots[2]
+			player["country"], data = unpack_int(data)
+			player["score"], data = unpack_int(data)
+			is_player, data = unpack_int(data)
+			if is_player:
 				player["player"] = True
 			else:
 				player["player"] = False
@@ -152,9 +138,10 @@ def get_server_info3(address):
 		return server_info
 
 	except:
+		# import traceback
+		# traceback.print_exc()
 		sock.close()
 		return None
-
 
 
 class Master_Server_Info(threading.Thread):
@@ -165,7 +152,7 @@ class Master_Server_Info(threading.Thread):
 		threading.Thread.__init__(self, target = self.run)
 
 	def run(self):
-		self.servers = get_list(self.address) + get_list2(self.address)
+		self.servers = get_list(self.address)
 		self.finished = True
 
 
@@ -175,48 +162,33 @@ def get_list(address):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
 		sock.settimeout(TIMEOUT)
-		sock.sendto(PACKET_GETLIST, address)
+
+		token = random.randrange(0x100000)
+		sock.sendto(pack_control_msg_with_token(-1,token),address)
+		data, addr = sock.recvfrom(1024)
+		token_cl, token_srv = unpack_control_msg_with_token(data)
+		assert(token_cl == token)
+		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETLIST, addr)
+		head = 	header_connless(token_cl, token_srv) + PACKET_LIST
 
 		while 1:
 			data, addr = sock.recvfrom(1024)
+			assert(data[:len(head)] == head)
 
-			data = data[14:]
-			num_servers = len(data) / 6
+			data = data[len(head):]
+			num_servers = len(data) // 18
 
 			for n in range(0, num_servers):
-				ip = ".".join(map(str, map(ord, data[n*6:n*6+4])))
-				port = ord(data[n*6+5]) * 256 + ord(data[n*6+4])
-				servers += [[(ip, port), SERVERTYPE_LEGACY]]
-
-	except:
-		sock.close()
-
-	return servers
-
-
-def get_list2(address):
-	servers = []
-
-	try:
-		sock = socket(AF_INET, SOCK_DGRAM)
-		sock.settimeout(TIMEOUT)
-		sock.sendto(PACKET_GETLIST2, address)
-
-		while 1:
-			data, addr = sock.recvfrom(1400)
-			
-			data = data[14:]
-			num_servers = len(data) / 18
-
-			for n in range(0, num_servers): 
-				if data[n*18:n*18+12] == "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff":
-					ip = ".".join(map(str, map(ord, data[n*18+12:n*18+16])))
+				if data[n*18:n*18+12] == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff":
+					ip = ".".join(map(str, data[n*18+12:n*18+16]))
 				else:
-					ip = ":".join(map(str, map(ord, data[n*18:n*18+16])))
-				port = (ord(data[n*18+16])<<8) + ord(data[n*18+17])
-				servers += [[(ip, port), SERVERTYPE_NORMAL]]
+					ip = ":".join(map(str, data[n*18:n*18+16]))
+				port = ((data[n*18+16])<<8) + data[n*18+17]
+				servers += [(ip, port)]
 
 	except:
+		# import traceback
+		# traceback.print_exc()
 		sock.close()
 
 	return servers
@@ -242,10 +214,10 @@ while len(master_servers) != 0:
 
 servers_info = []
 
-print str(len(servers)) + " servers"
+print(str(len(servers)) + " servers")
 
 for server in servers:
-	s = Server_Info(server[0], server[1])
+	s = Server_Info(server)
 	servers_info.append(s)
 	s.start()
 	time.sleep(0.001) # avoid issues
@@ -253,18 +225,16 @@ for server in servers:
 num_players = 0
 num_clients = 0
 
+player_names = []
 while len(servers_info) != 0:
 	if servers_info[0].finished == True:
 
 		if servers_info[0].info:
 			num_players += servers_info[0].info["num_players"]
-			if servers_info[0].type == SERVERTYPE_NORMAL:
-				num_clients += servers_info[0].info["num_clients"]
-			else:
-				num_clients += servers_info[0].info["num_players"]
+			num_clients += servers_info[0].info["num_clients"]
 
 		del servers_info[0]
 
 	time.sleep(0.001) # be nice
 
-print str(num_players) + " players and " + str(num_clients-num_players) + " spectators"
+print(str(num_players) + " players and " + str(num_clients-num_players) + " spectators")
