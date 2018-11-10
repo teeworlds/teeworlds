@@ -410,8 +410,10 @@ void CScoreboard::OnRender()
 bool CScoreboard::Active()
 {
 	// disable scoreboard if the menu is active
-	if(m_pClient->m_pMenus->IsActive())
+	if(m_pClient->m_pMenus->IsActive()) {
 		m_Active = false;
+		return false;
+	}
 
 	// if we activly wanna look on the scoreboard
 	if(m_Active)
