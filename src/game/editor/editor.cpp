@@ -4316,12 +4316,14 @@ void CEditor::Render()
 		{
 			// render butt ugly mouse cursor	
 			Graphics()->TextureSet(m_CursorTexture);
+			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
 			if(ms_pUiGotContext == UI()->HotItem())
 				Graphics()->SetColor(1,0,0,1);
 			IGraphics::CQuadItem QuadItem(mx,my, 16.0f, 16.0f);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
 		}
 			
 		if(m_MouseEdMode == MOUSE_PIPETTE)
