@@ -754,7 +754,7 @@ void CChat::OnRender()
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 }
 
 void CChat::Say(int Mode, const char *pLine)
