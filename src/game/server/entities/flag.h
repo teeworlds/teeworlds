@@ -37,7 +37,7 @@ public:
 	virtual void Reset();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
-	virtual void Tick();
+	virtual void TickDefered();
 
 	/* Functions */
 	void Grab(class CCharacter *pChar);
