@@ -387,6 +387,12 @@ void CClient::DirectInput(int *pInput, int Size)
 	for(int i = 0; i < Size/4; i++)
 		Msg.AddInt(pInput[i]);
 
+	int PingCorrection = 0;
+	int64 TagTime;
+	if(m_SnapshotStorage.Get(m_AckGameTick, &TagTime, 0, 0) >= 0)
+		PingCorrection = (int)(((time_get()-TagTime)*1000)/time_freq());
+	Msg.AddInt(PingCorrection);
+
 	SendMsg(&Msg, 0);
 }
 
@@ -417,6 +423,12 @@ void CClient::SendInput()
 	// pack it
 	for(int i = 0; i < Size/4; i++)
 		Msg.AddInt(m_aInputs[m_CurrentInput].m_aData[i]);
+
+	int PingCorrection = 0;
+	int64 TagTime;
+	if(m_SnapshotStorage.Get(m_AckGameTick, &TagTime, 0, 0) >= 0)
+		PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
+	Msg.AddInt(PingCorrection);
 
 	m_CurrentInput++;
 	m_CurrentInput%=200;
