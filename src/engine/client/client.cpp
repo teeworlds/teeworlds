@@ -377,26 +377,6 @@ bool CClient::ConnectionProblems() const
 	return m_NetClient.GotProblems() != 0;
 }
 
-void CClient::DirectInput(int *pInput, int Size)
-{
-	CMsgPacker Msg(NETMSG_INPUT, true);
-	Msg.AddInt(m_AckGameTick);
-	Msg.AddInt(m_PredTick);
-	Msg.AddInt(Size);
-
-	for(int i = 0; i < Size/4; i++)
-		Msg.AddInt(pInput[i]);
-
-	int PingCorrection = 0;
-	int64 TagTime;
-	if(m_SnapshotStorage.Get(m_AckGameTick, &TagTime, 0, 0) >= 0)
-		PingCorrection = (int)(((time_get()-TagTime)*1000)/time_freq());
-	Msg.AddInt(PingCorrection);
-
-	SendMsg(&Msg, 0);
-}
-
-
 void CClient::SendInput()
 {
 	int64 Now = time_get();
