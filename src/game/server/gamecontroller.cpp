@@ -581,6 +581,9 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_END_ROUND:
+		DoWincheckMatch();
+		if(m_GameState == IGS_END_MATCH)
+			break;
 	case IGS_END_MATCH:
 		// only possible when game is running or over
 		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_END_MATCH || m_GameState == IGS_END_ROUND || m_GameState == IGS_GAME_PAUSED)
@@ -720,10 +723,7 @@ void IGameController::Tick()
 				SetGameState(IGS_GAME_PAUSED, 0);
 				break;
 			case IGS_END_ROUND:
-				// check if the match is over otherwise start next round
-				DoWincheckMatch();
-				if(m_GameState != IGS_END_MATCH)
-					StartRound();
+				StartRound();
 				break;
 			case IGS_END_MATCH:
 				// start next match
