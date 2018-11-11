@@ -597,7 +597,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			// gametype icon
 			CUIRect Icon;
 			Button.VSplitLeft(Button.h, &Icon, &Button);
-			Icon.Margin(2.0f, &Icon);
+			Icon.y -= 0.5f;
 			if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
 			{
 				DoIcon(IMAGE_BROWSEICONS, Selected ? SPRITE_BROWSE_UNPURE_B : SPRITE_BROWSE_UNPURE_A, &Icon);
@@ -609,10 +609,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			// gametype text
 			CTextCursor Cursor;
-			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aGameType, -1);
-			if(tw < Button.w)
-				TextRender()->SetCursor(&Cursor, Button.x+Button.w/2.0f-tw/2.0f, Button.y, 12.0f, TEXTFLAG_RENDER);
-			else
 			{
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
@@ -1428,7 +1424,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
 		CUIRect Icon;
 		Row.VSplitLeft(Row.h, &Icon, &Row);
-		Icon.Margin(2.0f, &Icon);
+		Icon.y -= 2.0f;
 		if(!(pInfo->m_Flags&IServerBrowser::FLAG_PURE))
 		{
 			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
