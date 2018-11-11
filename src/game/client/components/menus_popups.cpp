@@ -312,9 +312,10 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	// level
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
 
-	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize+2, &Button, &ServerFilter);
 	pMenus->UI()->DoLabelScaled(&Button, Localize("Difficulty"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
+	Button.y -= 2.0f;
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton1;
 	if(pMenus->DoButton_SpriteID(&s_LevelButton1, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 1) ? SPRITE_LEVEL_A_OFF : SPRITE_LEVEL_A_ON, false, &Icon, CUI::CORNER_L, 5.0f, true))

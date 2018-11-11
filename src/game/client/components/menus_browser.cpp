@@ -1446,7 +1446,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		// difficulty
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
 		Row.VSplitLeft(Row.h, &Icon, &Row);
-		Icon.Margin(2.0f, &Icon);
+		Icon.y -= 2.0f;
 		switch(pInfo->m_ServerLevel)
 		{
 		case 0:
