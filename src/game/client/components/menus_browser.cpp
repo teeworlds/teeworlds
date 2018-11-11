@@ -374,11 +374,11 @@ void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 	}
 }
 
-int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected)
+int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected)
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = UI()->MouseInside(pRect);
+	int Inside = UI()->MouseInside(&View);
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -394,7 +394,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 		if(UI()->MouseButton(0))
 			UI()->SetActiveItem(pID);
 
-		CUIRect r = *pRect;
+		CUIRect r = View;
 		RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
 	}
 
@@ -434,11 +434,11 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 	float TextAplpha = (pEntry->m_NumPlayers == pEntry->m_MaxPlayers || pEntry->m_NumClients == pEntry->m_MaxClients) ? 0.5f : 1.0f;
 	for(int c = 0; c < NUM_BROWSER_COLS; c++)
 	{
-		CUIRect Button;
+		CUIRect Button = ms_aBrowserCols[c].m_Rect;
 		char aTemp[64];
 		Button.x = ms_aBrowserCols[c].m_Rect.x;
-		Button.y = pRect->y;
-		Button.h = pRect->h;
+		Button.y = View.y;
+		Button.h = ms_aBrowserCols[c].m_Rect.h;
 		Button.w = ms_aBrowserCols[c].m_Rect.w;
 
 		int ID = ms_aBrowserCols[c].m_ID;
@@ -631,6 +631,18 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
 			TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
 		}
+	}
+
+	// show server info
+	if(!m_SidebarActive && Selected)
+	{
+		CUIRect Info;
+		View.HSplitTop(ms_aBrowserCols[0].m_Rect.h, 0, &View);
+		View.VSplitLeft(160.0f, &Info, &View);
+		//Info.Margin(2.0f, &Info);
+		RenderDetailInfo(Info, pEntry);
+
+		RenderDetailScoreboard(View, pEntry, 4);
 	}
 
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
@@ -1100,7 +1112,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+1;
+	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+(m_SidebarActive?1:4);
 	if(ScrollNum > 0)
 	{
 		/*if(m_ScrollOffset)
@@ -1228,13 +1240,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{
 			for (int i = 0; i < pFilter->NumSortedServers(); i++)
 			{
-				int ItemIndex = i;
-				const CServerInfo *pItem = pFilter->SortedGet(ItemIndex);
-				
-				CUIRect SelectHitBox;
-
-				View.HSplitTop(ms_ListheaderHeight, &Row, &View);
-				SelectHitBox = Row;
+				const CServerInfo *pItem = pFilter->SortedGet(i);
 
 				// select server
 				if(m_SelectedServer.m_Filter == -1 || m_SelectedServer.m_Filter == s)
@@ -1242,9 +1248,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 					{
 						m_SelectedServer.m_Filter = s;
-						m_SelectedServer.m_Index = ItemIndex;
+						m_SelectedServer.m_Index = i;
 					}
 				}
+
+				if(!m_SidebarActive && m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
+					View.HSplitTop(ms_ListheaderHeight*6, &Row, &View);
+				else
+					View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 
 				// make sure that only those in view can be selected
 				if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
@@ -1265,7 +1276,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					continue;
 				}
 
-				if(DoBrowserEntry(pFilter->ID(ItemIndex), &Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
+				if(DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
 				{
 					m_SelectedServer.m_Filter = s;
 					m_SelectedServer.m_Index = i;
@@ -1394,27 +1405,18 @@ void CMenus::RenderServerbrowserInfoTab(CUIRect View)
 	}
 }
 
-void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo)
+void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 {
-	CUIRect ServerDetails = View;
-	CUIRect ServerScoreBoard, ServerHeader;
-
-	// split off a piece to use for scoreboard
-	ServerDetails.HSplitTop(85.0f, &ServerDetails, &ServerScoreBoard);
-	ServerDetails.HSplitBottom(2.5f, &ServerDetails, 0x0);
-
-	// server details
+	CUIRect ServerHeader;
 	const float FontSize = 10.0f;
-	ServerDetails.HSplitTop(ms_ListheaderHeight, &ServerHeader, &ServerDetails);
-	RenderTools()->DrawUIRect(&ServerHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
-	RenderTools()->DrawUIRect(&ServerDetails, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
+	View.HSplitTop(ms_ListheaderHeight, &ServerHeader, &View);
+	RenderTools()->DrawUIRect(&ServerHeader, vec4(1, 1, 1, 0.25f), CUI::CORNER_T, 4.0f);
+	RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
-	UI()->DoLabelScaled(&ServerHeader, Localize("Server details"), FontSize+2.0f, CUI::ALIGN_CENTER);
+	UI()->DoLabelScaled(&ServerHeader, Localize("Server details"), FontSize + 2.0f, CUI::ALIGN_CENTER);
 
 	if(pInfo)
 	{
-		//ServerDetails.Margin(3.0f, &ServerDetails);
-
 		CUIRect Row;
 		static CLocConstString s_aLabels[] = {
 			"Map",			// Localize - these strings are localized within CLocConstString
@@ -1428,9 +1430,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 			"Competitive" };
 
 		CUIRect LeftColumn, RightColumn;
-
-		//ServerDetails.VSplitLeft(5.0f, 0x0, &ServerDetails);
-		ServerDetails.VSplitLeft(70.0f, &LeftColumn, &RightColumn);
+		View.VMargin(2.0f, &View);
+		View.VSplitLeft(70.0f, &LeftColumn, &RightColumn);
 
 		for(unsigned int i = 0; i < sizeof(s_aLabels) / sizeof(s_aLabels[0]); i++)
 		{
@@ -1441,7 +1442,6 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 
 		// map
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		//RenderTools()->DrawUIRect(&Row, vec4(0.5f, 0.5f, 0.5f, 0.25f), CUI::CORNER_ALL, 3.0f);
 		UI()->DoLabelScaled(&Row, pInfo->m_aMap, FontSize, CUI::ALIGN_LEFT);
 
 		// game type
@@ -1480,21 +1480,30 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 		}
 		UI()->DoLabelScaled(&Row, s_aDifficulty[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT);
 	}
+}
 
+void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column)
+{
 	// server scoreboard
+	CUIRect ServerHeader;
 	CTextCursor Cursor;
-	ServerScoreBoard.HSplitTop(ms_ListheaderHeight, &ServerHeader, &ServerScoreBoard);
-	RenderTools()->DrawUIRect(&ServerHeader, vec4(1, 1, 1, 0.25f), CUI::CORNER_T, 4.0f);
-	RenderTools()->DrawUIRect(&ServerScoreBoard, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
-	ServerHeader.HMargin(2.0f, &ServerHeader);
-	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
-
+	const float FontSize = 10.0f;
+	int ActColumn = 0;
+	RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
+	View.Margin(2.0f, &View);
+	
 	if(pInfo)
 	{
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
-			CUIRect Name, Clan, Score, Flag;
-			ServerScoreBoard.HSplitTop(25.0f, &Name, &ServerScoreBoard);
+			CUIRect Name, Clan, Score, Flag, Row;
+			if(i % (16 / Column) == 0)
+			{
+				View.VSplitLeft(View.w / (Column - ActColumn), &Row, &View);
+				ActColumn++;
+			}
+	
+			Row.HSplitTop(20.0f, &Name, &Row);
 			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
 			{
 				if(pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
@@ -1511,8 +1520,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 			Name.VSplitLeft(5.0f, 0, &Name);
 			Name.VSplitLeft(30.0f, &Score, &Name);
 			Name.VSplitRight(34.0f, &Name, &Flag);
-			Flag.HMargin(4.0f, &Flag);
-			Name.HSplitTop(11.0f, &Name, &Clan);
+			Flag.HMargin(2.0f, &Flag);
+			Name.HSplitTop(10.0f, &Name, &Clan);
 
 			// score
 			if(pInfo->m_aClients[i].m_Player)
@@ -1569,10 +1578,32 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 				TextRender()->TextEx(&Cursor, pClan, -1);
 
 			// flag
+			Flag.w = Flag.h*2;
 			vec4 Color(1.0f, 1.0f, 1.0f, 0.5f);
 			m_pClient->m_pCountryFlags->Render(pInfo->m_aClients[i].m_Country, &Color, Flag.x, Flag.y, Flag.w, Flag.h);
 		}
 	}
+}
+
+void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo)
+{
+	CUIRect ServerHeader, ServerDetails, ServerScoreboard;
+	const float FontSize = 10.0f;
+
+	// split off a piece to use for scoreboard
+	//View.HMargin(2.0f, &View);
+	View.HSplitTop(80.0f, &ServerDetails, &ServerScoreboard);
+
+	// server details
+	RenderDetailInfo(ServerDetails, pInfo);
+
+	// server scoreboard
+	ServerScoreboard.HSplitTop(ms_ListheaderHeight, &ServerHeader, &ServerScoreboard);
+	RenderTools()->DrawUIRect(&ServerHeader, vec4(1, 1, 1, 0.25f), CUI::CORNER_T, 4.0f);
+	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
+	ServerHeader.HMargin(2.0f, &ServerHeader);
+	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
+	RenderDetailScoreboard(ServerScoreboard, pInfo, 1);
 }
 
 void CMenus::FriendlistOnUpdate()
