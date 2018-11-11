@@ -24,20 +24,20 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		return;
 	}
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// parse json data
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
 	if(pJsonData == 0)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		mem_free(pFileData);
 		return;
 	}
 
@@ -60,7 +60,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					char aBuf[64];
 
 					// validate country code
-					int CountryCode = (long)rStart[i]["code"];
+					int CountryCode = (json_int_t)rStart[i]["code"];
 					if(CountryCode < CODE_LB || CountryCode > CODE_UB)
 					{
 						str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
@@ -103,7 +103,6 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item
