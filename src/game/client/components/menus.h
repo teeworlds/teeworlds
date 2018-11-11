@@ -191,7 +191,6 @@ private:
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
-	bool m_InfoMode;
 	bool m_PopupActive;
 
 	// images

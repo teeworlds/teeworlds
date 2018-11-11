@@ -543,16 +543,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		}
 		else if(ID == COL_BROWSER_PLAYERS)
 		{
-			// handle mouse over
-			if(m_InfoMode && UI()->MouseInside(&Button))
-			{
-				// overlay
-				SetOverlay(CInfoOverlay::OVERLAY_PLAYERSINFO, UI()->MouseX(), UI()->MouseY(), pEntry);
-
-				// rect
-				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 0.75f), CUI::CORNER_ALL, 5.0f);
-			}
-
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
 			CServerFilterInfo FilterInfo;
 			pFilter->GetFilter(&FilterInfo);
@@ -1035,16 +1025,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					g_Config.m_BrSortOrder = 0;
 				g_Config.m_BrSort = ms_aBrowserCols[i].m_Sort;
 			}
-		}
-	}
-
-	// do info icon at the end of the list header
-	{
-		InfoButton.Margin(2.0f, &InfoButton);
-		static int s_InfoButton = 0;
-		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, ((m_InfoMode && !UI()->MouseInside(&InfoButton)) || (!m_InfoMode && UI()->MouseInside(&InfoButton))) ? SPRITE_INFO_B : SPRITE_INFO_A, &InfoButton, false))
-		{
-			m_InfoMode ^= 1;
 		}
 	}
 
@@ -1897,16 +1877,6 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 					}
 				}
 			}
-		}
-	}
-
-	// do info icon at the end of the list header
-	{
-		InfoButton.Margin(2.0f, &InfoButton);
-		static int s_InfoButton = 0;
-		if(DoButton_SpriteCleanID(&s_InfoButton, IMAGE_INFOICONS, ((m_InfoMode && !UI()->MouseInside(&InfoButton)) || (!m_InfoMode && UI()->MouseInside(&InfoButton))) ? SPRITE_INFO_B : SPRITE_INFO_A, &InfoButton, false))
-		{
-			m_InfoMode ^= 1;
 		}
 	}
 

@@ -59,7 +59,6 @@ CMenus::CMenus()
 
 	SetMenuPage(PAGE_START);
 
-	m_InfoMode = false;
 	m_PopupActive = false;
 
 	m_EscapePressed = false;
