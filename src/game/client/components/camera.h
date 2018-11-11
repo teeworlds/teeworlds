@@ -10,12 +10,17 @@ class CCamera : public CComponent
 public:
 	enum
 	{
-		POS_START=0,
+		POS_START = 0,
 		POS_INTERNET,
 		POS_LAN,
 		POS_FAVORITES,
 		POS_DEMOS,
-		POS_SETTINGS,
+		POS_SETTINGS_GENERAL, // order here should be the same like enum for settings pages in menu
+		POS_SETTINGS_PLAYER,
+		POS_SETTINGS_TEE,
+		POS_SETTINGS_CONTROLS,
+		POS_SETTINGS_GRAPHICS,
+		POS_SETTINGS_SOUND,
 
 		NUM_POS,
 	};

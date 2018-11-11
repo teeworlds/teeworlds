@@ -17,9 +17,16 @@ CCamera::CCamera()
 	m_MenuCenter = vec2(0.0f, 0.0f);
 
 	m_Positions[POS_START] = vec2(500.0f, 500.0f);
-	m_Positions[POS_INTERNET] = vec2(1000.0f, 1000.0f);
-	m_Positions[POS_DEMOS] = vec2(500.0f, 1000.0f);
-	m_Positions[POS_SETTINGS] = vec2(1000.0f, 500.0f);
+	m_Positions[POS_INTERNET] = vec2(500.0f, 500.0f);
+	m_Positions[POS_LAN] = vec2(1000.0f, 1000.0f);
+	m_Positions[POS_FAVORITES] = vec2(2000.0f, 500.0f);
+	m_Positions[POS_DEMOS] = vec2(1500.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_GENERAL] = vec2(1000.0f, 500.0f);
+	m_Positions[POS_SETTINGS_PLAYER] = vec2(400.0f, 200.0f);
+	m_Positions[POS_SETTINGS_TEE] = vec2(1100.0f, 300.0f);
+	m_Positions[POS_SETTINGS_CONTROLS] = vec2(600.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_GRAPHICS] = vec2(500.0f, 750.0f);
+	m_Positions[POS_SETTINGS_SOUND] = vec2(1300.0f, 850.0f);
 
 	m_CurrentPosition = -1;
 }
@@ -82,7 +89,7 @@ void CCamera::OnRender()
 		else
 		{
 			Dir = normalize(m_RotationCenter-m_Center);
-			m_Center += Dir*(500.0f*Client()->RenderFrameTime());
+			m_Center += Dir*(g_Config.m_ClCameraSpeed*50.0f*Client()->RenderFrameTime());
 			Dir = normalize(m_Center-m_RotationCenter);
 		}
 	}
