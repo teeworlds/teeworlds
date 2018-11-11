@@ -155,6 +155,7 @@ void CEmoticon::OnRender()
 	Graphics()->QuadsEnd();
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->WrapClamp();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);
