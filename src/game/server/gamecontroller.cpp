@@ -656,7 +656,7 @@ void IGameController::Snap(int SnappingClient)
 		break;
 	case IGS_END_ROUND:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_ROUNDOVER;
-		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END*Server()->TickSpeed()+m_GameStateTimer;
+		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END/2*Server()->TickSpeed()+m_GameStateTimer;
 		break;
 	case IGS_END_MATCH:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
