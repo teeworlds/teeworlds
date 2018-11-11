@@ -504,12 +504,15 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			if(Timer != 0)
 			{
 				// start warmup
-				if(Timer < 0 && g_Config.m_SvPlayerReadyMode)
+				if(Timer < 0)
 				{
-					// run warmup till all players are ready
 					m_GameState = GameState;
- 					m_GameStateTimer = TIMER_INFINITE;
- 					SetPlayersReadyState(false);
+					m_GameStateTimer = TIMER_INFINITE;
+					if(g_Config.m_SvPlayerReadyMode)
+					{
+						// run warmup till all players are ready
+						SetPlayersReadyState(false);
+					}
 				}
 				else if(Timer > 0)
 				{
