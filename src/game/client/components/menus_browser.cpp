@@ -1662,6 +1662,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
 		RenderServerbrowserFriendList(ServerList);
 
+	// sidebar
+	if(m_SidebarActive)
+		RenderServerbrowserSidebar(Sidebar);
+
 	// sidebar button
 	SidebarButton.HMargin(150.0f, &SidebarButton);
 	static CButtonContainer s_SidebarButton;
@@ -1669,10 +1673,6 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	{
 		m_SidebarActive ^= 1;
 	}
-
-	// sidebar
-	if(m_SidebarActive)
-		RenderServerbrowserSidebar(Sidebar);
 
 	float Spacing = 3.0f;
 	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
