@@ -4566,7 +4566,7 @@ void CEditor::UpdateAndRender()
 
 	// handle mouse movement
 	float mx, my, Mwx, Mwy;
-	float rx, ry;
+	float rx = 0.0f, ry = 0.0f;
 	{
 		Input()->MouseRelative(&rx, &ry);
 		UI()->ConvertMouseMove(&rx, &ry);
@@ -4579,12 +4579,12 @@ void CEditor::UpdateAndRender()
 			s_MouseY += ry;
 		}
 
-		s_MouseX = clamp(s_MouseX, 0.0f, UI()->Screen()->w);
-		s_MouseY = clamp(s_MouseY, 0.0f, UI()->Screen()->h);
+		s_MouseX = clamp(s_MouseX, 0.0f, (float)Graphics()->ScreenWidth());
+		s_MouseY = clamp(s_MouseY, 0.0f, (float)Graphics()->ScreenHeight());
 
 		// update the ui
-		mx = s_MouseX;
-		my = s_MouseY;
+		mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
+		my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
 		Mwx = 0;
 		Mwy = 0;
 
