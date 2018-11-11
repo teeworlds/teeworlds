@@ -497,8 +497,16 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
-		for(i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
-			Array[i] = IGraphics::CQuadItem(x+i*12,y+24,12,12);
+		if(pCharacter->m_Weapon == WEAPON_GRENADE)
+		{
+			for(i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
+				Array[i] = IGraphics::CQuadItem(x+1+i*12, y+24, 10, 10);
+		}
+		else
+		{
+			for(i = 0; i < min(pCharacter->m_AmmoCount, 10); i++)
+				Array[i] = IGraphics::CQuadItem(x+i*12, y+24, 12, 12);
+		}
 		Graphics()->QuadsDrawTL(Array, i);
 	}
 
