@@ -473,7 +473,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 			str_copy(aBufMode, "teamchat", sizeof(aBufMode));
 		else
 			str_copy(aBufMode, "chat", sizeof(aBufMode));
-		str_format(aBuf, sizeof(aBuf), "%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+		str_format(aBuf, sizeof(aBuf), "%s: %s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aBufMode, aBuf, Highlighted);
 	}
 
