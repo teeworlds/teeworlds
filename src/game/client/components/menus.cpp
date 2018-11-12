@@ -64,6 +64,8 @@ CMenus::CMenus()
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
+	m_UpArrowPressed = false;
+	m_DownArrowPressed = false;
 
 	m_LastInput = time_get();
 
@@ -958,8 +960,8 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 			else
 			{
 				int NewIndex = -1;
-				if(Input()->KeyPress(KEY_DOWN)) NewIndex = pState->m_ListBoxNewSelected + 1;
-				if(Input()->KeyPress(KEY_UP)) NewIndex = pState->m_ListBoxNewSelected - 1;
+				if(m_DownArrowPressed) NewIndex = pState->m_ListBoxNewSelected + 1;
+				if(m_UpArrowPressed) NewIndex = pState->m_ListBoxNewSelected - 1;
 				if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
 				{
 					// scroll
@@ -2308,6 +2310,10 @@ bool CMenus::OnInput(IInput::CEvent e)
 				m_EnterPressed = true;
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
+			else if(e.m_Key == KEY_UP)
+				m_UpArrowPressed = true;
+			else if(e.m_Key == KEY_DOWN)
+				m_DownArrowPressed = true;
 		}
 		return true;
 	}
@@ -2424,6 +2430,8 @@ void CMenus::OnRender()
 		m_EscapePressed = false;
 		m_EnterPressed = false;
 		m_DeletePressed = false;
+		m_UpArrowPressed = false;
+		m_DownArrowPressed = false;
 		return;
 	}
 
@@ -2473,6 +2481,8 @@ void CMenus::OnRender()
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
+	m_UpArrowPressed = false;
+	m_DownArrowPressed = false;
 }
 
 void CMenus::RenderBackground()

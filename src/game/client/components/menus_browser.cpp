@@ -1110,7 +1110,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		int NewIndex = -1;
 		int NewFilter = SelectedFilter;
-		if(Input()->KeyPress(KEY_DOWN))
+		if(m_DownArrowPressed)
 		{
 			NewIndex = SelectedIndex + 1;
 			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
@@ -1128,7 +1128,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				}
 			}
 		}
-		else if(Input()->KeyPress(KEY_UP))
+		else if(m_UpArrowPressed)
 		{
 			NewIndex = SelectedIndex - 1;
 			if(NewIndex < 0)
@@ -1940,13 +1940,13 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 	if(SelectedIndex > -1)
 	{
 		int NewIndex = -1;
-		if(Input()->KeyPress(KEY_DOWN))
+		if(m_DownArrowPressed)
 		{
 			NewIndex = SelectedIndex + 1;
 			if(NewIndex >= NumEntries)
 				NewIndex = NumEntries;
 		}
-		else if(Input()->KeyPress(KEY_UP))
+		else if(m_UpArrowPressed)
 		{
 			NewIndex = SelectedIndex - 1;
 			if(NewIndex < 0)
