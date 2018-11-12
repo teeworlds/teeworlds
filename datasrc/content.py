@@ -396,6 +396,11 @@ container.sprites.Add(Sprite("pickup_ninja", set_game, 2,10,8,2))
 container.sprites.Add(Sprite("flag_blue", set_game, 12,8,4,8))
 container.sprites.Add(Sprite("flag_red", set_game, 16,8,4,8))
 
+container.sprites.Add(Sprite("ninja_bar_full_left", set_game, 21,4,1,2))
+container.sprites.Add(Sprite("ninja_bar_full", set_game, 22,4,1,2))
+container.sprites.Add(Sprite("ninja_bar_empty", set_game, 23,4,1,2))
+container.sprites.Add(Sprite("ninja_bar_empty_right", set_game, 24,4,1,2))
+
 container.sprites.Add(Sprite("tee_body_outline", set_tee_body, 0,0,1,1))
 container.sprites.Add(Sprite("tee_body", set_tee_body, 1,0,1,1))
 container.sprites.Add(Sprite("tee_body_shadow", set_tee_body, 0,1,1,1))
