@@ -17,7 +17,7 @@
 		<key>CFBundleVersion</key>
 		<string>${PROJECT_VERSION}</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.DDNetClient.app</string>
+		<string>com.TeeworldsClient.app</string>
 		<key>NSHighResolutionCapable</key>
 		<true/>
 	</dict>
