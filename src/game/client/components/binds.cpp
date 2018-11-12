@@ -4,7 +4,7 @@
 #include <engine/shared/config.h>
 #include "binds.h"
 
-const int CBinds::s_aDefaultBindKeys[] = {
+const int CBinds::s_aDefaultBindKeys[] = { // only simple binds
 	KEY_F1, KEY_F2, KEY_TAB, 'u', KEY_F10,
 	'a', 'd',
 	KEY_SPACE, KEY_MOUSE_1, KEY_MOUSE_2, KEY_LSHIFT, KEY_RSHIFT, KEY_RIGHT, KEY_LEFT,
@@ -24,7 +24,6 @@ const char CBinds::s_aaDefaultBindValues[][32] = {
 	"vote yes", "vote no",
 	"ready_change",
 };
-
 
 CBinds::CBinds()
 {
@@ -79,21 +78,20 @@ bool CBinds::ModifierMatchesKey(int Modifier, int Key)
 bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 {
 	int Mask = GetModifierMask(Input());
-	bool rtn = false;
 
-	// don't handle anything but FX and composed binds
-	if(Mask == 1 && !(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) && !(Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24))
+	// don't handle anything but FX and composed FX binds
+	if(/*Mask == 1 && */!(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) && !(Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24))
 		return false;
 
+	bool rtn = false;
 	for(int m = 0; m < MODIFIER_COUNT; m++)
 	{
 		if((Mask&(1 << m)) && m_pBinds->m_aaaKeyBindings[Event.m_Key][m][0] != 0)
 		{
-			int Stroke = 0;
 			if(Event.m_Flags&IInput::FLAG_PRESS)
-				Stroke = 1;
-
-			m_pBinds->GetConsole()->ExecuteLineStroked(Stroke, m_pBinds->m_aaaKeyBindings[Event.m_Key][m]);
+				m_pBinds->GetConsole()->ExecuteLineStroked(1, m_pBinds->m_aaaKeyBindings[Event.m_Key][m]);
+			if(Event.m_Flags&IInput::FLAG_RELEASE)
+				m_pBinds->GetConsole()->ExecuteLineStroked(0, m_pBinds->m_aaaKeyBindings[Event.m_Key][m]);
 			rtn = true;
 		}
 	}
