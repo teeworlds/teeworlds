@@ -1713,7 +1713,7 @@ void CClient::InitInterfaces()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
-	m_ServerBrowser.SetBaseInfo(&m_ContactClient, m_pGameClient->NetVersion());
+	m_ServerBrowser.SetBaseInfo(&m_ContactClient, m_pGameClient->NetVersion(), m_pGameClient->Version());
 	m_Friends.Init();
 }
 

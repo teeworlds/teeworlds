@@ -510,6 +510,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterCompatversion ^= 1;
 
 	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterUptodate, Localize("Up-to-date only"), g_Config.m_BrFilterUptodate, &Button))
+		g_Config.m_BrFilterUptodate ^= 1;
+
+	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
 	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterPure, Localize("Standard gametype"), g_Config.m_BrFilterPure, &Button))
 		g_Config.m_BrFilterPure ^= 1;
 
@@ -594,6 +598,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterPure = 1;
 		g_Config.m_BrFilterPureMap = 1;
 		g_Config.m_BrFilterCompatversion = 1;
+		g_Config.m_BrFilterUptodate = 1;
 		Client()->ServerBrowserUpdate();
 	}
 }
