@@ -1577,7 +1577,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Detail, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	static int s_SndEnable = g_Config.m_SndEnable;
+	static int s_SndInit = g_Config.m_SndInit;
 	static int s_SndRate = g_Config.m_SndRate;
 
 	// render sound menu
@@ -1599,7 +1599,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		}
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
-		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
 	}
 
 	if(g_Config.m_SndEnable)
@@ -1665,7 +1664,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 					g_Config.m_SndRate = 48000;
 			}
 
-			m_NeedRestartSound = !s_SndEnable || s_SndRate != g_Config.m_SndRate;
+			m_NeedRestartSound = s_SndRate != g_Config.m_SndRate;
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
@@ -1678,7 +1677,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonInitSounds = 0;
 		if(DoButton_CheckBox(&s_ButtonInitSounds, Localize("Load the sound system"), g_Config.m_SndInit, &Button))
+		{
 			g_Config.m_SndInit ^= 1;
+			m_NeedRestartSound = g_Config.m_SndInit && (!s_SndInit || s_SndRate != g_Config.m_SndRate);
+		}
 	}
 
 	// reset button
