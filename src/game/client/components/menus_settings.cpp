@@ -1558,7 +1558,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	CUIRect Label, Button, Sound, Detail, BottomView;
 
 	// render sound menu background
-	int NumOptions = g_Config.m_SndEnable ? 3 : 1;
+	int NumOptions = g_Config.m_SndEnable ? 3 : 2;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1593,6 +1593,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		g_Config.m_SndEnable ^= 1;
 		if(g_Config.m_SndEnable)
 		{
+			g_Config.m_SndInit = 1;
 			if(g_Config.m_SndMusic)
 				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
@@ -1670,6 +1671,15 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
 		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 110.0f, 0, 100);
 	}
+	else
+	{
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonInitSounds = 0;
+		if(DoButton_CheckBox(&s_ButtonInitSounds, Localize("Load the sound system"), g_Config.m_SndInit, &Button))
+			g_Config.m_SndInit ^= 1;
+	}
 
 	// reset button
 	MainView.HSplitBottom(60.0f, 0, &BottomView);
@@ -1686,6 +1696,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
 		g_Config.m_SndEnable = 1;
+		g_Config.m_SndInit = 1;
 		if(!g_Config.m_SndMusic)
 		{
 			g_Config.m_SndMusic = 1;
