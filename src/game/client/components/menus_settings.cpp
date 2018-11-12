@@ -1664,7 +1664,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 					g_Config.m_SndRate = 48000;
 			}
 
-			m_NeedRestartSound = s_SndRate != g_Config.m_SndRate;
+			m_NeedRestartSound = g_Config.m_SndInit && (!s_SndInit || s_SndRate != g_Config.m_SndRate);
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
