@@ -597,6 +597,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,12,12);
 	Graphics()->QuadsDrawTL(Array, i);
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CHud::RenderSpectatorHud()
