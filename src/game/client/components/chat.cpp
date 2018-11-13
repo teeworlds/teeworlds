@@ -588,6 +588,9 @@ void CChat::OnRender()
 
 	y -= 8.0f;
 
+	// show all chat when typing
+	m_Show |= m_Mode != CHAT_NONE;
+
 	int64 Now = time_get();
 	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
 	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
@@ -629,6 +632,16 @@ void CChat::OnRender()
 		}
 	}
 
+	if(m_Show)
+	{
+		CUIRect Rect;
+		Rect.x = x - 2.0f;
+		Rect.y = HeightLimit - 2.0f;
+		Rect.w = LineWidth + 5.0f;
+		Rect.h = 300 - HeightLimit - 22.f;
+		RenderTools()->DrawRoundRect(&Rect, vec4(0, 0, 0, 0.5), 2.0f);
+	}
+
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
@@ -647,13 +660,13 @@ void CChat::OnRender()
 
 		float Blend = Now > Line.m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-Line.m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 
-		const double HlTimeFull = 3.0;
-		const double HlTimeFade = 1.0;
+		const float HlTimeFull = 3.0f;
+		const float HlTimeFade = 1.0f;
 
 		float HighlightBlend = 1.0f;
 		if(!m_Show)
 		{
-			double Delta = (Now - Line.m_Time) / (double)time_freq();
+			double Delta = (Now - Line.m_Time) / (float)time_freq();
 			HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0, HlTimeFade) / HlTimeFade;
 		}
 
@@ -679,7 +692,7 @@ void CChat::OnRender()
 		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
 		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
 		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
-		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.6f * HighlightBlend + 0.4f * Blend);
+		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.45f * HighlightBlend + 0.4f * Blend);
 
 		vec4 TextColor = ColorAllText;
 
@@ -689,9 +702,9 @@ void CChat::OnRender()
 			CUIRect BgRect;
 			BgRect.x = Cursor.m_X;
 			BgRect.y = Cursor.m_Y + 2.0f;
-			BgRect.w = Line.m_Size[OffsetType].x;
+			BgRect.w = Line.m_Size[OffsetType].x - 2.0f;
 			BgRect.h = Line.m_Size[OffsetType].y;
-			RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 2.0f);
+			RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 1.25f);
 		}
 
 		char aBuf[48];
