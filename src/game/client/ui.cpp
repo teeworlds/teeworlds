@@ -107,7 +107,6 @@ void CUI::ClipEnable(const CUIRect *r)
 void CUI::ClipDisable()
 {
 	Graphics()->ClipDisable();
-	m_ClipRect = {};
 	m_Clipped = false;
 }
 
