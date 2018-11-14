@@ -327,6 +327,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	str_format(
 		aBuf,
 		sizeof(aBuf),
+		"\n\n"
 		"%s\n\n"
 		"%s: %s\n"
 		"%s: %d\n"
