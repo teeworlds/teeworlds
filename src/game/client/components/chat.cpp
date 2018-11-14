@@ -529,10 +529,63 @@ void CChat::OnRender()
 
 	float Width = 300.0f*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
-	float x = 5.0f;
+	float x = 12.0f;
 	float y = 300.0f-20.0f;
 	if(m_Mode != CHAT_NONE)
 	{
+		// draw chat icon
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+
+		Graphics()->QuadsBegin();
+
+		RenderTools()->SelectSprite(SPRITE_DOTDOT);
+		IGraphics::CQuadItem Quad(1.0f, y, 10.f, 10.f);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+
+		Graphics()->QuadsEnd();
+
+		// calculate category text size
+		float CategoryWidth;
+		float CategoryHeight;
+		{
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, x, y, 8.0f, 0);
+
+			char aBuf[32];
+			if(m_Mode == CHAT_ALL)
+				str_copy(aBuf, Localize("All"), sizeof(aBuf));
+			else if(m_Mode == CHAT_TEAM)
+				str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+			else if(m_Mode == CHAT_WHISPER)
+				str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("To"),
+						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			else
+				str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
+
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+			TextRender()->TextEx(&Cursor, ": ", -1);
+			CategoryWidth = Cursor.m_X - 1.0f;
+			CategoryHeight = Cursor.m_FontSize;
+		}
+
+		// draw a background box
+		const vec4 CRCWhite(1, 1, 1, 0.25);
+		const vec4 CRCTeam(0.4, 1, 0.4, 0.4);
+		const vec4 CRCWhisper(0, 0.5, 1, 0.5);
+
+		vec4 CatRectColor = CRCWhite;
+		if(m_Mode == CHAT_TEAM)
+			CatRectColor = CRCTeam;
+		else if(m_Mode == CHAT_WHISPER)
+			CatRectColor = CRCWhisper;
+
+		CUIRect CatRect;
+		CatRect.x = 0;
+		CatRect.y = y;
+		CatRect.w = CategoryWidth;
+		CatRect.h = CategoryHeight + 4.0f;
+		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
+
 		// render chat input
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
@@ -551,6 +604,7 @@ void CChat::OnRender()
 
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 		TextRender()->TextEx(&Cursor, ": ", -1);
+		Cursor.m_StartX = Cursor.m_X;
 
 		// check if the visible text has to be moved
 		if(m_InputUpdate)
@@ -660,14 +714,14 @@ void CChat::OnRender()
 
 		float Blend = Now > Line.m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-Line.m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 
-		const float HlTimeFull = 3.0f;
+		const float HlTimeFull = 1.0f;
 		const float HlTimeFade = 1.0f;
 
 		float HighlightBlend = 1.0f;
 		if(!m_Show)
 		{
-			double Delta = (Now - Line.m_Time) / (float)time_freq();
-			HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0, HlTimeFade) / HlTimeFade;
+			float Delta = (Now - Line.m_Time) / (float)time_freq();
+			HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
 		}
 
 		// reset the cursor
@@ -692,7 +746,7 @@ void CChat::OnRender()
 		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
 		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
 		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
-		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.45f * HighlightBlend + 0.4f * Blend);
+		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend + 0.35f * Blend);
 
 		vec4 TextColor = ColorAllText;
 
