@@ -678,7 +678,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render game menu backgrounds
-	int NumOptions = g_Config.m_ClNameplates ? 9 : 6;
+	int NumOptions = g_Config.m_ClNameplates ? 6 : 3;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -697,13 +697,19 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	MainView.HSplitTop(BackgroundHeight, &Client, &MainView);
 	RenderTools()->DrawUIRect(&Client, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	CUIRect GameLeft, GameRight;
 	// render game menu
 	Game.HSplitTop(ButtonHeight, &Label, &Game);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
+	Game.VSplitMid(&GameLeft, &GameRight);
+	GameLeft.VSplitRight(Spacing * 0.5f, &GameLeft, 0);
+	GameRight.VSplitLeft(Spacing * 0.5f, 0, &GameRight);
+
+	// left side
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 	static int s_DynamicCameraButton = 0;
 	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClDynamicCamera, &Button))
 	{
@@ -725,22 +731,59 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		}
 	}
 
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 	static int s_AutoswitchWeapons = 0;
 	if(DoButton_CheckBox(&s_AutoswitchWeapons, Localize("Switch weapon on pickup"), g_Config.m_ClAutoswitchWeapons, &Button))
 		g_Config.m_ClAutoswitchWeapons ^= 1;
 
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+	static int s_Nameplates = 0;
+	if(DoButton_CheckBox(&s_Nameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
+		g_Config.m_ClNameplates ^= 1;
+
+	if(g_Config.m_ClNameplates)
+	{
+		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_NameplatesAlways = 0;
+		if(DoButton_CheckBox(&s_NameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
+			g_Config.m_ClNameplatesAlways ^= 1;
+
+		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		DoScrollbarOption(&g_Config.m_ClNameplatesSize, &g_Config.m_ClNameplatesSize, &Button, Localize("Size"), 100.0f, 0, 100);
+
+		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_NameplatesTeamcolors = 0;
+		if(DoButton_CheckBox(&s_NameplatesTeamcolors, Localize("Use team colors for name plates"), g_Config.m_ClNameplatesTeamcolors, &Button))
+			g_Config.m_ClNameplatesTeamcolors ^= 1;
+	}
+
+	// right side
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_Showhud = 0;
 	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
 		g_Config.m_ClShowhud ^= 1;
 
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_Showsocial = 0;
+	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), g_Config.m_ClShowsocial, &Button))
+		g_Config.m_ClShowsocial ^= 1;
+
 	// show chat messages button
+	if(g_Config.m_ClShowsocial)
 	{
-		Game.HSplitTop(Spacing, 0, &Game);
-		Game.HSplitTop(ButtonHeight, &Button, &Game);
+		GameRight.HSplitTop(Spacing, 0, &GameRight);
+		GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
@@ -751,7 +794,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Text.y += 2.0f;
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
-		Button.VSplitLeft(100.0f, &Button, 0);
+		Button.VSplitLeft(119.0f, &Button, 0);
 		if(g_Config.m_ClFilterchat == 0)
 			str_format(aBuf, sizeof(aBuf), Localize("everyone"));
 		else if(g_Config.m_ClFilterchat == 1)
@@ -761,40 +804,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
 			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;
-	}
-
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
-	static int s_Showsocial = 0;
-	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), g_Config.m_ClShowsocial, &Button))
-		g_Config.m_ClShowsocial ^= 1;
-
-	Game.HSplitTop(Spacing, 0, &Game);
-	Game.HSplitTop(ButtonHeight, &Button, &Game);
-	static int s_Nameplates = 0;
-	if(DoButton_CheckBox(&s_Nameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
-		g_Config.m_ClNameplates ^= 1;
-
-	if(g_Config.m_ClNameplates)
-	{
-		Game.HSplitTop(Spacing, 0, &Game);
-		Game.HSplitTop(ButtonHeight, &Button, &Game);
-		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		static int s_NameplatesAlways = 0;
-		if(DoButton_CheckBox(&s_NameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
-			g_Config.m_ClNameplatesAlways ^= 1;
-
-		Game.HSplitTop(Spacing, 0, &Game);
-		Game.HSplitTop(ButtonHeight, &Button, &Game);
-		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClNameplatesSize, &g_Config.m_ClNameplatesSize, &Button, Localize("Size"), 100.0f, 0, 100);
-
-		Game.HSplitTop(Spacing, 0, &Game);
-		Game.HSplitTop(ButtonHeight, &Button, &Game);
-		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		static int s_NameplatesTeamcolors = 0;
-		if(DoButton_CheckBox(&s_NameplatesTeamcolors, Localize("Use team colors for name plates"), g_Config.m_ClNameplatesTeamcolors, &Button))
-			g_Config.m_ClNameplatesTeamcolors ^= 1;
 	}
 
 	// render client menu
@@ -1319,7 +1328,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = 3 + (!g_Config.m_GfxFullscreen);
+	int NumOptions = 3;// + (!g_Config.m_GfxFullscreen);
 	if(Graphics()->GetNumScreens() > 1)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
@@ -1363,12 +1372,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			Client()->ToggleWindowBordered();
 	}
 
-	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
-	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
-	static int s_ButtonGfxVsync = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
-		Client()->ToggleWindowVSync();
-
 	// FSAA button
 	{
 		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
@@ -1397,6 +1400,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			CheckSettings = true;
 		}
 	}
+
+	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
+	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
+	static int s_ButtonGfxVsync = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
+		Client()->ToggleWindowVSync();
 
 	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
