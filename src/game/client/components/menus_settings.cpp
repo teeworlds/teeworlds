@@ -14,6 +14,7 @@
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
+#include <game/client/components/maplayers.h>
 #include <game/client/components/sounds.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
@@ -688,7 +689,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Game, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render client menu background
-	NumOptions = 3;
+	NumOptions = 4;
 	if(g_Config.m_ClAutoDemoRecord) NumOptions += 1;
 	if(g_Config.m_ClAutoScreenshot) NumOptions += 1;
 	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -816,6 +817,15 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static int s_SkipMainMenu = 0;
 	if(DoButton_CheckBox(&s_SkipMainMenu, Localize("Skip the main menu"), g_Config.m_ClSkipStartMenu, &Button))
 		g_Config.m_ClSkipStartMenu ^= 1;
+
+	Client.HSplitTop(Spacing, 0, &Client);
+	Client.HSplitTop(ButtonHeight, &Button, &Client);
+	static int s_DisplayAnimatedBackgrounds = 0;
+	if(DoButton_CheckBox(&s_DisplayAnimatedBackgrounds, Localize("Display animated backgrounds"), g_Config.m_ClShowMenuMap, &Button))
+	{
+		g_Config.m_ClShowMenuMap ^= 1;
+		m_pClient->m_pMapLayersBackGround->BackgroundMapUpdate();
+	}
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
