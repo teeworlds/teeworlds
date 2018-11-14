@@ -488,7 +488,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 			m_aLastSoundPlayed[CHAT_SERVER] = Now;
 		}
 	}
-	else if(Highlighted)
+	else if(Highlighted || Mode == CHAT_WHISPER)
 	{
 		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
 		{
@@ -717,7 +717,7 @@ void CChat::OnRender()
 		const float HlTimeFull = 1.0f;
 		const float HlTimeFade = 1.0f;
 
-		float HighlightBlend = 1.0f;
+		float HighlightBlend = 0.4f;
 		if(!m_Show)
 		{
 			float Delta = (Now - Line.m_Time) / (float)time_freq();
@@ -746,13 +746,13 @@ void CChat::OnRender()
 		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
 		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
 		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
-		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend + 0.35f * Blend);
+		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.8f * HighlightBlend);
+		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f, Blend);
 
 		vec4 TextColor = ColorAllText;
 
 		if(Line.m_Highlighted)
 		{
-			ShadowColor.a -= 0.5f * HighlightBlend;
 			CUIRect BgRect;
 			BgRect.x = Cursor.m_X;
 			BgRect.y = Cursor.m_Y + 2.0f;
@@ -822,7 +822,22 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllText;
 
-		TextRender()->TextShadowed(&Cursor, Line.m_aText, -1, ShadowOffset, ShadowColor, TextColor);
+		if(Line.m_Highlighted)
+		{
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+			float Alpha = 0.5;
+			if(Line.m_Mode == CHAT_TEAM)
+				Alpha = 0.6;
+
+			TextRender()->TextOutlineColor(ColorHighlightOutline.r,
+										   ColorHighlightOutline.g,
+										   ColorHighlightOutline.b,
+										   Alpha * Blend);
+
+			TextRender()->TextEx(&Cursor, Line.m_aText, -1);
+		}
+		else
+			TextRender()->TextShadowed(&Cursor, Line.m_aText, -1, ShadowOffset, ShadowColor, TextColor);
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
