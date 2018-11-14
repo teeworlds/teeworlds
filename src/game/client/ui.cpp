@@ -17,6 +17,7 @@ CUI::CUI()
 	m_pActiveItem = 0;
 	m_pLastActiveItem = 0;
 	m_pBecommingHotItem = 0;
+	m_Clipped = false;
 
 	m_MouseX = 0;
 	m_MouseY = 0;
@@ -51,6 +52,11 @@ int CUI::MouseInside(const CUIRect *r) const
 	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
 		return 1;
 	return 0;
+}
+
+bool CUI::MouseInsideClip() const
+{
+	return !m_Clipped || MouseInside(&m_ClipRect) == 1;
 }
 
 void CUI::ConvertMouseMove(float *x, float *y) const
@@ -91,6 +97,8 @@ float CUIRect::Scale() const
 
 void CUI::ClipEnable(const CUIRect *r)
 {
+	m_ClipRect = *r;
+	m_Clipped = true;
 	float XScale = Graphics()->ScreenWidth()/Screen()->w;
 	float YScale = Graphics()->ScreenHeight()/Screen()->h;
 	Graphics()->ClipEnable((int)(r->x*XScale), (int)(r->y*YScale), (int)(r->w*XScale), (int)(r->h*YScale));
@@ -99,6 +107,7 @@ void CUI::ClipEnable(const CUIRect *r)
 void CUI::ClipDisable()
 {
 	Graphics()->ClipDisable();
+	m_Clipped = false;
 }
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
@@ -273,6 +282,8 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	// logic
 	int ReturnValue = 0;
 	int Inside = MouseInside(pRect);
+	if(m_Clipped)
+		Inside &= MouseInside(&m_ClipRect);
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
@@ -319,7 +330,7 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		if(MouseButton(0))
 			SetActiveItem(pID);
 	}
-	
+
 	if(Inside)
 		SetHotItem(pID);
 
