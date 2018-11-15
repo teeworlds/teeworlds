@@ -33,7 +33,7 @@
 #include "skins.h"
 
 float CMenus::ms_ButtonHeight = 25.0f;
-float CMenus::ms_ListheaderHeight = 20.0f;
+float CMenus::ms_ListheaderHeight = 17.0f;
 float CMenus::ms_FontmodHeight = 0.8f;
 
 
@@ -43,6 +43,8 @@ CMenus::CMenus()
 	m_NextPopup = POPUP_NONE;
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
+	m_SidebarTab = 0;
+	m_SidebarActive = true;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
@@ -57,12 +59,13 @@ CMenus::CMenus()
 
 	SetMenuPage(PAGE_START);
 
-	m_InfoMode = false;
 	m_PopupActive = false;
 
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
+	m_UpArrowPressed = false;
+	m_DownArrowPressed = false;
 
 	m_LastInput = time_get();
 
@@ -303,7 +306,7 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	t.y += 2.0f; // lame fix
+	t.y += 1.0f; // lame fix
 	UI()->DoLabel(&c, pBoxText, pRect->h*ms_FontmodHeight*0.6f, CUI::ALIGN_CENTER);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 	return UI()->DoButtonLogic(pID, pText, 0, pRect);
@@ -321,18 +324,19 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
-int CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, const CUIRect *pRect, int Corners, float r, bool Fade)
+int CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners, float r, bool Fade)
 {
 	float Seconds = 0.6f; //  0.6 seconds for fade
-	float FadeVal = ButtonFade(pBC, Seconds)/Seconds;
+	float FadeVal = Fade ? ButtonFade(pBC, Seconds, Checked) / Seconds : 0.0f;
+
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f + FadeVal, 0.0f + FadeVal, 0.0f + FadeVal, 0.25f + FadeVal * 0.5f), Corners, r);
 
 	CUIRect Icon = *pRect;
+	if(Icon.w > Icon.h)
+		Icon.VMargin((Icon.w - Icon.h) / 2, &Icon);
+	else if(Icon.w < Icon.h)
+		Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
 	Icon.Margin(2.0f, &Icon);
-
-	if(Fade)
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f+FadeVal*0.5f), Corners, r);
-	else
-		RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, r);
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -633,6 +637,50 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 	return HeaderHeight;
 }
 
+float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool* pActive)
+{
+	CUIRect View = *pRect;
+	CUIRect Header, Label;
+
+	bool Active = *pActive;
+	int Corners = Active ? CUI::CORNER_T : CUI::CORNER_ALL;
+
+	View.HSplitTop(HeaderHeight, &Header, &View);
+
+	// background
+	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 5.0f);
+
+	// render icon
+	CUIRect Button;
+	Header.VSplitLeft(Header.h, &Button, 0);
+	Button.Margin(2.0f, &Button);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
+	if(Active)
+		RenderTools()->SelectSprite(SPRITE_MENU_EXPANDED);
+	else
+		RenderTools()->SelectSprite(SPRITE_MENU_COLLAPSED);
+	IGraphics::CQuadItem QuadItem(Button.x, Button.y, Button.w, Button.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	Graphics()->QuadsEnd();
+
+	// label
+	Label = Header;
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, pStr, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
+	if(UI()->DoButtonLogic(pID, 0, 0, &Header))
+		*pActive ^= 1;
+
+	// render content of expanded menu
+	if(Active)
+		return HeaderHeight + pfnCallback(View, this);
+
+	return HeaderHeight;
+}
+
 void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pValue)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -912,8 +960,8 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 			else
 			{
 				int NewIndex = -1;
-				if(Input()->KeyPress(KEY_DOWN)) NewIndex = pState->m_ListBoxNewSelected + 1;
-				if(Input()->KeyPress(KEY_UP)) NewIndex = pState->m_ListBoxNewSelected - 1;
+				if(m_DownArrowPressed) NewIndex = pState->m_ListBoxNewSelected + 1;
+				if(m_UpArrowPressed) NewIndex = pState->m_ListBoxNewSelected - 1;
 				if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
 				{
 					// scroll
@@ -966,7 +1014,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key)
 	static const void *pGrabbedID = 0;
 	static bool MouseReleased = true;
 	static int ButtonUsed = 0;
-	int Inside = UI()->MouseInside(pRect);
+	int Inside = UI()->MouseInside(pRect) && UI()->MouseInsideClip();
 	int NewKey = Key;
 
 	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pBC->GetID())
@@ -1057,6 +1105,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_GeneralButton;
 		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), g_Config.m_UiSettingsPage==SETTINGS_GENERAL, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL);
 			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
 		}
 
@@ -1065,6 +1114,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_PlayerButton;
 		if(Client()->State() != IClient::STATE_ONLINE && DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage == SETTINGS_PLAYER, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_PLAYER);
 			g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
 		}
 
@@ -1073,6 +1123,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_TeeButton;
 		if(Client()->State() != IClient::STATE_ONLINE && DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage == SETTINGS_TEE, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
 			g_Config.m_UiSettingsPage = SETTINGS_TEE;
 		}
 
@@ -1081,6 +1132,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_ControlsButton;
 		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), g_Config.m_UiSettingsPage==SETTINGS_CONTROLS, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_CONTROLS);
 			g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
 		}
 
@@ -1089,6 +1141,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_GraphicsButton;
 		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), g_Config.m_UiSettingsPage==SETTINGS_GRAPHICS, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GRAPHICS);
 			g_Config.m_UiSettingsPage = SETTINGS_GRAPHICS;
 		}
 
@@ -1097,6 +1150,7 @@ void CMenus::RenderMenubar(CUIRect r)
 		static CButtonContainer s_SoundButton;
 		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), g_Config.m_UiSettingsPage==SETTINGS_SOUND, &Button))
 		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_SOUND);
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 		}
 	}
@@ -2256,6 +2310,10 @@ bool CMenus::OnInput(IInput::CEvent e)
 				m_EnterPressed = true;
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
+			else if(e.m_Key == KEY_UP)
+				m_UpArrowPressed = true;
+			else if(e.m_Key == KEY_DOWN)
+				m_DownArrowPressed = true;
 		}
 		return true;
 	}
@@ -2289,14 +2347,14 @@ void CMenus::OnConsoleInit()
 	{
 		// put it on top
 		int Pos = m_lFilters.size();
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser(), IServerBrowser::FILTER_COMPAT_VERSION | IServerBrowser::FILTER_PURE | IServerBrowser::FILTER_PURE_MAP | IServerBrowser::FILTER_PING, 999, -1, "", ""));
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser()));
 		for(; Pos > 0; --Pos)
 			Move(true, Pos);
 	}
 	if(!FilterFav)
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser(), IServerBrowser::FILTER_FAVORITE | IServerBrowser::FILTER_PING, 999, -1, "", ""));
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
 	if(!FilterAll)
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser(), IServerBrowser::FILTER_PING, 999, -1, "", ""));
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
 }
 
 void CMenus::OnShutdown()
@@ -2372,6 +2430,8 @@ void CMenus::OnRender()
 		m_EscapePressed = false;
 		m_EnterPressed = false;
 		m_DeletePressed = false;
+		m_UpArrowPressed = false;
+		m_DownArrowPressed = false;
 		return;
 	}
 
@@ -2396,11 +2456,13 @@ void CMenus::OnRender()
 
 	// render cursor
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->WrapClamp();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(mx, my, 24, 24);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 
 	// render debug information
 	if(g_Config.m_Debug)
@@ -2419,6 +2481,8 @@ void CMenus::OnRender()
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
+	m_UpArrowPressed = false;
+	m_DownArrowPressed = false;
 }
 
 void CMenus::RenderBackground()
@@ -2509,9 +2573,9 @@ void CMenus::SetMenuPage(int NewPage) {
 		{
 		case PAGE_START: CameraPos = CCamera::POS_START; break;
 		case PAGE_DEMOS: CameraPos = CCamera::POS_DEMOS; break;
-		case PAGE_SETTINGS: CameraPos = CCamera::POS_SETTINGS; break;
-		case PAGE_INTERNET:
-		case PAGE_LAN: CameraPos = CCamera::POS_INTERNET;
+		case PAGE_SETTINGS: CameraPos = g_Config.m_UiSettingsPage; break;
+		case PAGE_INTERNET: CameraPos = CCamera::POS_INTERNET; break;
+		case PAGE_LAN: CameraPos = CCamera::POS_LAN;
 		}
 
 		if(CameraPos != -1 && m_pClient && m_pClient->m_pCamera)

@@ -212,7 +212,6 @@ public:
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const { return m_DebugFont; }
 
-	void DirectInput(int *pInput, int Size);
 	void SendInput();
 
 	// TODO: OPT: do this alot smarter!

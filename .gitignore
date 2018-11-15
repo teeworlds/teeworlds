@@ -2,6 +2,8 @@
 /.bam
 /config.lua
 /build
+/other/*/lib
+/other/*/include
 __pycache__/
 *.pyc
 *.pyo
@@ -9,3 +11,4 @@ scripts/work/
 /SDL.dll
 /freetype.dll
 /autoexec.cfg
+_test.exe

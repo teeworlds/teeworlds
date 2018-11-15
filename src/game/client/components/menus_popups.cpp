@@ -11,6 +11,10 @@
 #include <engine/keys.h>
 #include <engine/storage.h>
 #include <engine/serverbrowser.h>
+#include <engine/textrender.h>
+
+#include <generated/client_data.h>
+#include <generated/protocol.h>
 
 #include "countryflags.h"
 #include "menus.h"
@@ -88,10 +92,23 @@ void CMenus::DoPopupMenu()
 int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 {
 	CUIRect ServerFilter = View, FilterHeader;
-	const float FontSize = 12.0f;
+	const float FontSize = 10.0f;
+	const float LineSize = 16.0f;
 
 	// slected filter
-	CBrowserFilter *pFilter = &pMenus->m_lFilters[pMenus->m_SelectedFilter];
+	CBrowserFilter *pFilter = 0;
+	for(int i = 0; i < pMenus->m_lFilters.size(); ++i)
+	{
+		if(pMenus->m_lFilters[i].Extended())
+		{
+			pFilter = &pMenus->m_lFilters[i];
+			pMenus->m_SelectedFilter = i;
+			break;
+		}
+	}
+	if(!pFilter)
+		return 0;
+
 	CServerFilterInfo FilterInfo;
 	pFilter->GetFilter(&FilterInfo);
 
@@ -99,59 +116,55 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	ServerFilter.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFilter);
 	pMenus->RenderTools()->DrawUIRect(&FilterHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	pMenus->RenderTools()->DrawUIRect(&ServerFilter, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
-	pMenus->UI()->DoLabelScaled(&FilterHeader, Localize("Server filter"), FontSize+2.0f, CUI::ALIGN_CENTER);
-	CUIRect Button;
+	FilterHeader.HMargin(2.0f, &FilterHeader);
+	pMenus->UI()->DoLabel(&FilterHeader, Localize("Server filter"), FontSize+2.0f, CUI::ALIGN_CENTER);
+	CUIRect Button, Icon;
 
-	ServerFilter.VSplitLeft(5.0f, 0, &ServerFilter);
-	ServerFilter.Margin(3.0f, &ServerFilter);
-	ServerFilter.VMargin(5.0f, &ServerFilter);
+	//ServerFilter.VSplitLeft(5.0f, 0, &ServerFilter);
+	//ServerFilter.Margin(3.0f, &ServerFilter);
+	//ServerFilter.VMargin(5.0f, &ServerFilter);
 
 	int NewSortHash = FilterInfo.m_SortHash;
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterEmpty = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterEmpty, Localize("Has people playing"), FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_EMPTY;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterSpectators = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterSpectators, Localize("Count players only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_SPECTATORS;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterFull = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterFull, Localize("Server not full"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_FULL;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterFriends = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterFriends, Localize("Show friends only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_FRIENDS;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPw = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterPw, Localize("No password"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PW, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_PW;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterCompatversion = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterCompatversion, Localize("Compatible version"), FilterInfo.m_SortHash&IServerBrowser::FILTER_COMPAT_VERSION, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_COMPAT_VERSION;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPure = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE, &Button) && pFilter->Custom() != CBrowserFilter::FILTER_STANDARD)
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_PURE;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPureMap = 0;
 	if(pMenus->DoButton_CheckBox(&s_BrFilterPureMap, Localize("Standard map"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE_MAP, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_PURE_MAP;
 
-	ServerFilter.HSplitTop(20.0f, &Button, &ServerFilter);
-	static int s_BrFilterGametypeStrict = 0;
-	if(pMenus->DoButton_CheckBox(&s_BrFilterGametypeStrict, Localize("Strict gametype filter"), FilterInfo.m_SortHash&IServerBrowser::FILTER_GAMETYPE_STRICT, &Button))
-		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_GAMETYPE_STRICT;
-	
 	if(FilterInfo.m_SortHash != NewSortHash)
 	{
 		FilterInfo.m_SortHash = NewSortHash;
@@ -160,17 +173,91 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
 
-	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	pMenus->UI()->DoLabelScaled(&Button, Localize("Game types:"), FontSize, CUI::ALIGN_LEFT);
-	Button.VSplitRight(60.0f, 0, &Button);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+	pMenus->RenderTools()->DrawUIRect(&Button, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 2.0f);
+	Button.HMargin(2.0f, &Button);
+	pMenus->UI()->ClipEnable(&Button);
+
+	float Length = 0.0f;
+	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
+		if(FilterInfo.m_aGametype[i][0])
+		{
+			Length += pMenus->TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1) + 14.0f;
+		}
+	}
+	static float s_ScrollValue = 0.0f;
+	Button.x += min(0.0f, Button.w - Length) * s_ScrollValue;
+	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
+		if(FilterInfo.m_aGametype[i][0])
+		{
+			float CurLength = pMenus->TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1) + 12.0f;
+			Button.VSplitLeft(CurLength, &Icon, &Button);
+			pMenus->RenderTools()->DrawUIRect(&Icon, vec4(0.75, 0.75, 0.75, 0.25f), CUI::CORNER_ALL, 3.0f);
+			pMenus->UI()->DoLabelScaled(&Icon, FilterInfo.m_aGametype[i], FontSize, CUI::ALIGN_LEFT);
+			Icon.VSplitRight(10.0f, 0, &Icon);
+			if(pMenus->DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
+			{
+				// remove gametype entry
+				if((i == CServerFilterInfo::MAX_GAMETYPES-1) || !FilterInfo.m_aGametype[i+1][0])
+					FilterInfo.m_aGametype[i][0] = 0;
+				else
+				{
+					int j = i;
+					for(; j < CServerFilterInfo::MAX_GAMETYPES-1 && FilterInfo.m_aGametype[j+1][0]; ++j)
+						str_copy(FilterInfo.m_aGametype[j], FilterInfo.m_aGametype[j+1], sizeof(FilterInfo.m_aGametype[j]));
+					FilterInfo.m_aGametype[j][0] = 0;
+				}
+				pFilter->SetFilter(&FilterInfo);
+			}
+			Button.VSplitLeft(2.0f, 0, &Button);
+		}
+	}
+
+	pMenus->UI()->ClipDisable();
+
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+	s_ScrollValue = pMenus->DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
+
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+	Button.VSplitLeft(60.0f, &Button, &Icon);
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
-	static float Offset = 0.0f;
-	static int s_BrFilterGametype = 0;
-	if(pMenus->DoEditBox(&s_BrFilterGametype, &Button, FilterInfo.m_aGametype, sizeof(FilterInfo.m_aGametype), FontSize, &Offset))
+	static char s_aGametype[16] = {0};
+	static float s_Offset = 0.0f;
+	static int s_EditGametype = 0;
+	pMenus->DoEditBox(&s_EditGametype, &Button, s_aGametype, sizeof(s_aGametype), FontSize, &s_Offset);
+	Icon.VSplitLeft(20.0f, &Button, &Icon);
+	pMenus->RenderTools()->DrawUIRect(&Button, vec4(1, 1, 1, 0.25f), CUI::CORNER_R, 5.0f);
+	static CButtonContainer s_AddGametype;
+	if(pMenus->DoButton_SpriteCleanID(&s_AddGametype, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
+	{
+		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+		{
+			if(!FilterInfo.m_aGametype[i][0])
+			{
+				str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+				pFilter->SetFilter(&FilterInfo);
+				s_aGametype[0] = 0;
+				break;
+			}
+		}
+	}
+	Icon.VSplitLeft(40.0f, &Button, 0);
+	static CButtonContainer s_ClearGametypes;
+	if(pMenus->DoButton_MenuTabTop(&s_ClearGametypes, Localize("Clear"), false, &Button))
+	{
+		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+		{
+			FilterInfo.m_aGametype[i][0] = 0;
+		}
 		pFilter->SetFilter(&FilterInfo);
+	}
 
 	{
-		ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 		CUIRect EditBox;
 		Button.VSplitRight(60.0f, &Button, &EditBox);
 
@@ -191,7 +278,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 
 	// server address
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
-	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	pMenus->UI()->DoLabelScaled(&Button, Localize("Server address:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
 	static float OffsetAddr = 0.0f;
@@ -203,25 +290,81 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	{
 		CUIRect Rect;
 		ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
-		ServerFilter.HSplitTop(26.0f, &Button, &ServerFilter);
-		Button.VSplitRight(60.0f, &Button, &Rect);
-		Button.HMargin(3.0f, &Button);
+		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+		pMenus->UI()->DoLabelScaled(&Button, Localize("Country:"), FontSize, CUI::ALIGN_LEFT);
+		Button.VSplitRight(60.0f, 0, &Rect);
+		Rect.VSplitLeft(16.0f, &Button, &Rect);
 		static int s_BrFilterCountry = 0;
-		if(pMenus->DoButton_CheckBox(&s_BrFilterCountry, Localize("Player country:"), FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY, &Button))
+		if(pMenus->DoButton_CheckBox(&s_BrFilterCountry, "", FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY, &Button))
 		{
-			FilterInfo.m_SortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_COUNTRY;
+			FilterInfo.m_SortHash ^= IServerBrowser::FILTER_COUNTRY;
 			pFilter->SetFilter(&FilterInfo);
 		}
-
-		float OldWidth = Rect.w;
 		Rect.w = Rect.h*2;
-		Rect.x += (OldWidth-Rect.w)/2.0f;
-		vec4 Color(1.0f, 1.0f, 1.0f, FilterInfo.m_SortHash^IServerBrowser::FILTER_COUNTRY?1.0f: 0.5f);
+		vec4 Color(1.0f, 1.0f, 1.0f, FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY?1.0f: 0.5f);
 		pMenus->m_pClient->m_pCountryFlags->Render(FilterInfo.m_Country, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
 
 		static int s_BrFilterCountryIndex = 0;
-		if(FilterInfo.m_SortHash^IServerBrowser::FILTER_COUNTRY && pMenus->UI()->DoButtonLogic(&s_BrFilterCountryIndex, "", 0, &Rect))
+		if((FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY) && pMenus->UI()->DoButtonLogic(&s_BrFilterCountryIndex, "", 0, &Rect))
 			pMenus->m_Popup = POPUP_COUNTRY;
+	}
+
+	// level
+	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
+
+	ServerFilter.HSplitTop(LineSize+2, &Button, &ServerFilter);
+	pMenus->UI()->DoLabelScaled(&Button, Localize("Difficulty"), FontSize, CUI::ALIGN_LEFT);
+	Button.VSplitRight(60.0f, 0, &Button);
+	Button.y -= 2.0f;
+	Button.VSplitLeft(Button.h, &Icon, &Button);
+	static CButtonContainer s_LevelButton1;
+	if(pMenus->DoButton_SpriteID(&s_LevelButton1, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 1) ? SPRITE_LEVEL_A_OFF : SPRITE_LEVEL_A_ON, false, &Icon, CUI::CORNER_L, 5.0f, true))
+	{
+		FilterInfo.m_ServerLevel ^= 1;
+		pFilter->SetFilter(&FilterInfo);
+	}
+	Button.VSplitLeft(Button.h, &Icon, &Button);
+	static CButtonContainer s_LevelButton2;
+	if(pMenus->DoButton_SpriteID(&s_LevelButton2, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 2) ? SPRITE_LEVEL_B_OFF : SPRITE_LEVEL_B_ON, false, &Icon, 0, 5.0f, true))
+	{
+		FilterInfo.m_ServerLevel ^= 2;
+		pFilter->SetFilter(&FilterInfo);
+	}
+	Button.VSplitLeft(Button.h, &Icon, &Button);
+	static CButtonContainer s_LevelButton3;
+	if(pMenus->DoButton_SpriteID(&s_LevelButton3, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 4) ? SPRITE_LEVEL_C_OFF : SPRITE_LEVEL_C_ON, false, &Icon, CUI::CORNER_R, 5.0f, true))
+	{
+		FilterInfo.m_ServerLevel ^= 4;
+		pFilter->SetFilter(&FilterInfo);
+	}
+
+	// new filter
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
+	Button.VSplitLeft(60.0f, &Button, &Icon);
+	static char s_aFilterName[32] = {0};
+	static float s_FilterOffset = 0.0f;
+	static int s_EditFilter = 0;
+	pMenus->DoEditBox(&s_EditFilter, &Button, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset);
+	pMenus->RenderTools()->DrawUIRect(&Icon, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Icon.VSplitLeft(20.0f, &Button, &Icon);
+	Icon.HMargin(2.0f, &Icon);
+	pMenus->UI()->DoLabelScaled(&Icon, Localize("New filter"), FontSize, CUI::ALIGN_LEFT);
+	static CButtonContainer s_AddFilter;
+	if(s_aFilterName[0] && pMenus->DoButton_SpriteCleanID(&s_AddFilter, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
+	{
+		CServerFilterInfo NewFilterInfo;
+		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser()));
+		s_aFilterName[0] = 0;
+	}
+
+	// reset filter
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, 0);
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
+	Button.VMargin((Button.w-80.0f)/2, &Button);
+	static CButtonContainer s_ResetButton;
+	if(pMenus->DoButton_Menu(&s_ResetButton, Localize("Reset filter"), 0, &Button))
+	{
+		pFilter->Reset();
 	}
 
 	return 0;

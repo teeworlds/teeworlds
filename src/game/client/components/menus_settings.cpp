@@ -576,20 +576,20 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		return;
 	}
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// parse json data
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
 	if(pJsonData == 0)
 	{
 		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		mem_free(pFileData);
 		return;
 	}
 
@@ -601,13 +601,12 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		{
 			char aFileName[128];
 			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)rStart[i]["file"]);
-			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (long)rStart[i]["code"]));
+			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (json_int_t)rStart[i]["code"]));
 		}
 	}
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 }
 
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
@@ -706,18 +705,22 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Game.HSplitTop(Spacing, 0, &Game);
 	Game.HSplitTop(ButtonHeight, &Button, &Game);
 	static int s_DynamicCameraButton = 0;
-	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClMouseDeadzone != 0, &Button))
+	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), g_Config.m_ClDynamicCamera, &Button))
 	{
-		if(g_Config.m_ClMouseDeadzone)
+		if(g_Config.m_ClDynamicCamera)
 		{
-			g_Config.m_ClMouseFollowfactor = 0;
-			g_Config.m_ClMouseMaxDistance = 400;
-			g_Config.m_ClMouseDeadzone = 0;
+			g_Config.m_ClDynamicCamera = 0;
+			// force to defaults when using the GUI
+			g_Config.m_ClMouseMaxDistanceStatic = 400;
+			// g_Config.m_ClMouseFollowfactor = 0;
+			// g_Config.m_ClMouseDeadzone = 0;
 		}
 		else
 		{
+			g_Config.m_ClDynamicCamera = 1;
+			// force to defaults when using the GUI
+			g_Config.m_ClMouseMaxDistanceDynamic = 1000;
 			g_Config.m_ClMouseFollowfactor = 60;
-			g_Config.m_ClMouseMaxDistance = 1000;
 			g_Config.m_ClMouseDeadzone = 300;
 		}
 	}
@@ -850,8 +853,9 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
+		g_Config.m_ClDynamicCamera = 1;
+		g_Config.m_ClMouseMaxDistanceDynamic = 1000;
 		g_Config.m_ClMouseFollowfactor = 60;
-		g_Config.m_ClMouseMaxDistance = 1000;
 		g_Config.m_ClMouseDeadzone = 300;
 		g_Config.m_ClAutoswitchWeapons = 1;
 		g_Config.m_ClShowhud = 1;
@@ -1162,26 +1166,70 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
-	float HeaderHeight = 20.0f;
+	// split scrollbar from main view
+	CUIRect Scroll;
+	MainView.VSplitRight(20.0f, &MainView, &Scroll);
+	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	const float HeaderHeight = 20.0f;
+	const float ItemHeight = 20.0f+2.0f;
+	const float MainViewH = MainView.h;
+
+	// make scrollbar
+	static int s_ScrollBar = 0;
+	static int s_ScrollNum = 0;
+	static float s_ScrollValue = 0.f;
+	static float TotalHeight = 0.f;
+	Scroll.HMargin(5.0f, &Scroll);
+	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+	UI()->ClipEnable(&MainView);
+	if(TotalHeight - MainView.h > 0)
+		MainView.y -= s_ScrollValue*(TotalHeight - MainView.h);
+
+	TotalHeight = 0.f;
 	static int s_MovementDropdown = 0;
-	float Split = DoDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement);
+	static bool s_MovementActive = true;
+	float Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
 
+	TotalHeight += Split+10.0f;
 	MainView.HSplitTop(Split+10.0f, 0, &MainView);
 	static int s_WeaponDropdown = 0;
-	Split = DoDropdownMenu(&s_WeaponDropdown, &MainView, Localize("Weapon"), HeaderHeight, RenderSettingsControlsWeapon);
+	static bool s_WeaponActive = true;
+	Split = DoIndependentDropdownMenu(&s_WeaponDropdown, &MainView, Localize("Weapon"), HeaderHeight, RenderSettingsControlsWeapon, &s_WeaponActive);
 
+	TotalHeight += Split+10.0f;
 	MainView.HSplitTop(Split+10.0f, 0, &MainView);
 	static int s_VotingDropdown = 0;
-	Split = DoDropdownMenu(&s_VotingDropdown, &MainView, Localize("Voting"), HeaderHeight, RenderSettingsControlsVoting);
+	static bool s_VotingActive = true;
+	Split = DoIndependentDropdownMenu(&s_VotingDropdown, &MainView, Localize("Voting"), HeaderHeight, RenderSettingsControlsVoting, &s_VotingActive);
 
+	TotalHeight += Split+10.0f;
 	MainView.HSplitTop(Split+10.0f, 0, &MainView);
 	static int s_ChatDropdown = 0;
-	Split = DoDropdownMenu(&s_ChatDropdown, &MainView, Localize("Chat"), HeaderHeight, RenderSettingsControlsChat);
+	static bool s_ChatActive = true;
+	Split = DoIndependentDropdownMenu(&s_ChatDropdown, &MainView, Localize("Chat"), HeaderHeight, RenderSettingsControlsChat, &s_ChatActive);
 
+	TotalHeight += Split+10.0f;
 	MainView.HSplitTop(Split+10.0f, 0, &MainView);
 	static int s_MiscDropdown = 0;
-	Split = DoDropdownMenu(&s_MiscDropdown, &MainView, Localize("Misc"), HeaderHeight, RenderSettingsControlsMisc);
+	static bool s_MiscActive = true;
+	Split = DoIndependentDropdownMenu(&s_MiscDropdown, &MainView, Localize("Misc"), HeaderHeight, RenderSettingsControlsMisc, &s_MiscActive);
+	TotalHeight += Split;
+	UI()->ClipDisable();
+
+	// handle scrolling
+	float ProperHeight = (TotalHeight-5*HeaderHeight-40.0f);
+	s_ScrollNum = /*ceil*/((ProperHeight-MainViewH)/ItemHeight);
+	if(s_ScrollNum <= 0)
+		s_ScrollNum = 1;
+	// We could && UI()->MouseInside(&MainView)), but that does not work well because the controls settings menu got holes
+	if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+		s_ScrollValue -= 3.0f/s_ScrollNum; // will be set to 0 by clamp if scrollnum is too small
+	if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+		s_ScrollValue += 3.0f/s_ScrollNum; // will be set to 1 by clamp if scrollnum is too small
+	s_ScrollValue = clamp(s_ScrollValue, 0.f, 1.f);
 
 	// reset button
 	float Spacing = 3.0f;
@@ -1509,7 +1557,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	CUIRect Label, Button, Sound, Detail, BottomView;
 
 	// render sound menu background
-	int NumOptions = g_Config.m_SndEnable ? 3 : 1;
+	int NumOptions = g_Config.m_SndEnable ? 3 : 2;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1528,7 +1576,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Detail, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	static int s_SndEnable = g_Config.m_SndEnable;
+	static int s_SndInit = g_Config.m_SndInit;
 	static int s_SndRate = g_Config.m_SndRate;
 
 	// render sound menu
@@ -1544,12 +1592,12 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		g_Config.m_SndEnable ^= 1;
 		if(g_Config.m_SndEnable)
 		{
+			g_Config.m_SndInit = 1;
 			if(g_Config.m_SndMusic)
 				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
-		m_NeedRestartSound = g_Config.m_SndEnable && (!s_SndEnable || s_SndRate != g_Config.m_SndRate);
 	}
 
 	if(g_Config.m_SndEnable)
@@ -1615,11 +1663,23 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 					g_Config.m_SndRate = 48000;
 			}
 
-			m_NeedRestartSound = !s_SndEnable || s_SndRate != g_Config.m_SndRate;
+			m_NeedRestartSound = g_Config.m_SndInit && (!s_SndInit || s_SndRate != g_Config.m_SndRate);
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
 		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 110.0f, 0, 100);
+	}
+	else
+	{
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonInitSounds = 0;
+		if(DoButton_CheckBox(&s_ButtonInitSounds, Localize("Load the sound system"), g_Config.m_SndInit, &Button))
+		{
+			g_Config.m_SndInit ^= 1;
+			m_NeedRestartSound = g_Config.m_SndInit && (!s_SndInit || s_SndRate != g_Config.m_SndRate);
+		}
 	}
 
 	// reset button
@@ -1637,6 +1697,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
 		g_Config.m_SndEnable = 1;
+		g_Config.m_SndInit = 1;
 		if(!g_Config.m_SndMusic)
 		{
 			g_Config.m_SndMusic = 1;

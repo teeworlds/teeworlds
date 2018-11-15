@@ -504,12 +504,15 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			if(Timer != 0)
 			{
 				// start warmup
-				if(Timer < 0 && g_Config.m_SvPlayerReadyMode)
+				if(Timer < 0)
 				{
-					// run warmup till all players are ready
 					m_GameState = GameState;
- 					m_GameStateTimer = TIMER_INFINITE;
- 					SetPlayersReadyState(false);
+					m_GameStateTimer = TIMER_INFINITE;
+					if(g_Config.m_SvPlayerReadyMode)
+					{
+						// run warmup till all players are ready
+						SetPlayersReadyState(false);
+					}
 				}
 				else if(Timer > 0)
 				{
@@ -581,6 +584,9 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_END_ROUND:
+		DoWincheckMatch();
+		if(m_GameState == IGS_END_MATCH)
+			break;
 	case IGS_END_MATCH:
 		// only possible when game is running or over
 		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_END_MATCH || m_GameState == IGS_END_ROUND || m_GameState == IGS_GAME_PAUSED)
@@ -656,7 +662,7 @@ void IGameController::Snap(int SnappingClient)
 		break;
 	case IGS_END_ROUND:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_ROUNDOVER;
-		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END*Server()->TickSpeed()+m_GameStateTimer;
+		pGameData->m_GameStateEndTick = Server()->Tick()-m_GameStartTick-TIMER_END/2*Server()->TickSpeed()+m_GameStateTimer;
 		break;
 	case IGS_END_MATCH:
 		pGameData->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
@@ -720,10 +726,7 @@ void IGameController::Tick()
 				SetGameState(IGS_GAME_PAUSED, 0);
 				break;
 			case IGS_END_ROUND:
-				// check if the match is over otherwise start next round
-				DoWincheckMatch();
-				if(m_GameState != IGS_END_MATCH)
-					StartRound();
+				StartRound();
 				break;
 			case IGS_END_MATCH:
 				// start next match

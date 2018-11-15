@@ -934,27 +934,30 @@ void CGameClient::OnNewSnapshot()
 				{
 					const CNetObj_De_ClientInfo *pInfo = (const CNetObj_De_ClientInfo *)pData;
 					int ClientID = Item.m_ID;
-					CClientData *pClient = &m_aClients[ClientID];
-
-					if(pInfo->m_Local)
-						m_LocalClientID = ClientID;
-					pClient->m_Active = true;
-					pClient->m_Team  = pInfo->m_Team;
-					IntsToStr(pInfo->m_aName, 4, pClient->m_aName);
-					IntsToStr(pInfo->m_aClan, 3, pClient->m_aClan);
-					pClient->m_Country = pInfo->m_Country;
-
-					for(int p = 0; p < NUM_SKINPARTS; p++)
+					if(ClientID < MAX_CLIENTS)
 					{
-						IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
-						pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
-						pClient->m_aSkinPartColors[p] = pInfo->m_aSkinPartColors[p];
-					}
+						CClientData *pClient = &m_aClients[ClientID];
 
-					m_GameInfo.m_NumPlayers++;
-					// calculate team-balance
-					if(pClient->m_Team != TEAM_SPECTATORS)
-						m_GameInfo.m_aTeamSize[pClient->m_Team]++;
+						if(pInfo->m_Local)
+							m_LocalClientID = ClientID;
+						pClient->m_Active = true;
+						pClient->m_Team  = pInfo->m_Team;
+						IntsToStr(pInfo->m_aName, 4, pClient->m_aName);
+						IntsToStr(pInfo->m_aClan, 3, pClient->m_aClan);
+						pClient->m_Country = pInfo->m_Country;
+
+						for(int p = 0; p < NUM_SKINPARTS; p++)
+						{
+							IntsToStr(pInfo->m_aaSkinPartNames[p], 6, pClient->m_aaSkinPartNames[p]);
+							pClient->m_aUseCustomColors[p] = pInfo->m_aUseCustomColors[p];
+							pClient->m_aSkinPartColors[p] = pInfo->m_aSkinPartColors[p];
+						}
+
+						m_GameInfo.m_NumPlayers++;
+						// calculate team-balance
+						if(pClient->m_Team != TEAM_SPECTATORS)
+							m_GameInfo.m_aTeamSize[pClient->m_Team]++;
+					}
 				}
 				else if(Item.m_Type == NETOBJTYPE_DE_GAMEINFO)
 				{
@@ -980,7 +983,7 @@ void CGameClient::OnNewSnapshot()
 			{
 				const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
 				int ClientID = Item.m_ID;
-				if(m_aClients[ClientID].m_Active)
+				if(ClientID < MAX_CLIENTS && m_aClients[ClientID].m_Active)
 				{
 					m_Snap.m_paPlayerInfos[ClientID] = pInfo;
 					m_Snap.m_aInfoByScore[ClientID].m_pPlayerInfo = pInfo;
@@ -1001,26 +1004,29 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
-				const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
-				m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
-
-				// clamp ammo count for non ninja weapon
-				if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
-					m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount = clamp(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount, 0, 10);
-				
-				if(pOld)
+				if(Item.m_ID < MAX_CLIENTS)
 				{
-					m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
-					m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
+					const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
+					m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
 
-					if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
-						EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
-					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
-						EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
+					// clamp ammo count for non ninja weapon
+					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
+						m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount = clamp(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount, 0, 10);
+					
+					if(pOld)
+					{
+						m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
+						m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
+
+						if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
+							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
+						if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
+							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
+					}
+
+					if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+						ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
 				}
-
-				if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-					ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
 			{
@@ -1117,7 +1123,7 @@ void CGameClient::OnNewSnapshot()
 			continue;
 
 		// count not ready players
-		if((m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) &&
+		if(m_Snap.m_pGameData && (m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) &&
 			m_Snap.m_pGameData->m_GameStateEndTick == 0 && m_aClients[i].m_Team != TEAM_SPECTATORS && !(m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_READY))
 			m_Snap.m_NotReadyCount++;
 

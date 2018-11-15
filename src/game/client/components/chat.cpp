@@ -81,7 +81,7 @@ void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData)
 void CChat::ConWhisper(IConsole::IResult *pResult, void *pUserData)
 {
 	CChat *pChat = (CChat *)pUserData;
-	
+
 	int Target = pResult->GetInteger(0);
 	if(Target < 0 || Target >= MAX_CLIENTS || !pChat->m_pClient->m_aClients[Target].m_Active || pChat->m_pClient->m_LocalClientID == Target)
 		pChat->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "please enter a valid ClientID");
@@ -161,7 +161,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			bool AddEntry = false;
 
-			if(m_LastChatSend+time_freq() < time_get())
+			if(m_PendingChatCounter == 0 && m_LastChatSend+time_freq() < time_get())
 			{
 				Say(m_Mode, m_Input.GetString());
 				AddEntry = true;
@@ -299,7 +299,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		if(m_Input.ProcessInput(Event))
 		{
 			m_InputUpdate = true;
-			
+
 			// reset name completion process
 			m_CompletionChosen = -1;
 		}
@@ -376,7 +376,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 	const char *pStr = pLine;
 	const char *pEnd = 0;
 	while(*pStr)
- 	{
+	{
 		const char *pStrOld = pStr;
 		int Code = str_utf8_decode(&pStr);
 
@@ -395,7 +395,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 			*(const_cast<char *>(pStr)) = 0;
 			break;
 		}
- 	}
+	}
 	if(pEnd != 0)
 		*(const_cast<char *>(pEnd)) = 0;
 
@@ -445,8 +445,8 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 
 		if(ClientID == -1) // server message
 		{
-			str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
-			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
+			m_aLines[m_CurrentLine].m_aName[0] = 0;
+			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "*** %s", pLine);
 		}
 		else
 		{
@@ -462,7 +462,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 			}
 
 			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", ClientID, m_pClient->m_aClients[ClientID].m_aName);
-			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), ": %s", pLine);
+			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 
 		char aBuf[1024];
@@ -473,7 +473,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 			str_copy(aBufMode, "teamchat", sizeof(aBufMode));
 		else
 			str_copy(aBufMode, "chat", sizeof(aBufMode));
-		str_format(aBuf, sizeof(aBuf), "%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+		str_format(aBuf, sizeof(aBuf), "%s: %s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aBufMode, aBuf, Highlighted);
 	}
 
@@ -547,7 +547,7 @@ void CChat::OnRender()
 			str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("To"), m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 		else
 			str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
-			
+
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 		TextRender()->TextEx(&Cursor, ": ", -1);
 
@@ -594,63 +594,167 @@ void CChat::OnRender()
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
 	int OffsetType = m_pClient->m_pScoreboard->Active() ? 1 : 0;
+
+	// get the y offset (calculate it if we haven't done that yet)
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
-			break;
+		CLine& Line = m_aLines[r];
 
-		// get the y offset (calculate it if we haven't done that yet)
-		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)
+		if(m_aLines[r].m_aText[0] == 0) break;
+
+		if(Line.m_YOffset[OffsetType] < 0.0f)
 		{
 			TextRender()->SetCursor(&Cursor, Begin, 0.0f, FontSize, 0);
 			Cursor.m_LineWidth = LineWidth;
-			TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
-			TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
-			m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
+
+			char aBuf[48];
+			if(Line.m_Mode == CHAT_TEAM)
+			{
+				str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Team"));
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
+			else if(Line.m_Mode == CHAT_WHISPER)
+			{
+				str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Whisper"));
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
+
+			TextRender()->TextEx(&Cursor, Line.m_aName, -1);
+
+			if(Line.m_ClientID != -1)
+				TextRender()->TextEx(&Cursor, ": ", 2);
+			TextRender()->TextEx(&Cursor, Line.m_aText, -1);
+			Line.m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
 		}
-		y -= m_aLines[r].m_YOffset[OffsetType];
+	}
+
+	for(int i = 0; i < MAX_LINES; i++)
+	{
+		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
+		CLine& Line = m_aLines[r];
+
+		if(m_aLines[r].m_aText[0] == 0) break;
+
+		if(Now > Line.m_Time+16*time_freq() && !m_Show)
+			break;
+
+		y -= Line.m_YOffset[OffsetType];
 
 		// cut off if msgs waste too much space
 		if(y < HeightLimit)
 			break;
 
-		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+		float Blend = Now > Line.m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-Line.m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
 
-		// render name
-		if(m_aLines[r].m_ClientID == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
-		else if(m_aLines[r].m_Mode == CHAT_TEAM)
-			TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
-		else if(m_aLines[r].m_NameColor == TEAM_RED)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // red
-		else if(m_aLines[r].m_NameColor == TEAM_BLUE)
-			TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
-		else if(m_aLines[r].m_NameColor == TEAM_SPECTATORS)
-			TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
-		else
-			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
 
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+		const vec2 ShadowOffset(0.8f, 1.5f);
+		const vec4 ShadowWhisper(0.09f, 0.f, 0.26f, Blend * 0.9f);
+		const vec4 ShadowBlack(0, 0, 0, Blend * 0.9f);
+		vec4 ShadowColor = ShadowBlack;
+
+		if(Line.m_Mode == CHAT_WHISPER)
+			ShadowColor = ShadowWhisper;
+
+
+		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, Blend);
+		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, Blend);
+		const vec4 ColorRed(1.0f, 0.5f, 0.5f, Blend);
+		const vec4 ColorBlue(0.7f, 0.7f, 1.0f, Blend);
+		const vec4 ColorSpec(0.75f, 0.5f, 0.75f, Blend);
+		const vec4 ColorAllPre(0.8f, 0.8f, 0.8f, Blend);
+		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
+		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
+		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
+		const vec4 ColorHighlightOutline(0.0f, 0.4, 1.0f, Blend);
+
+		vec4 TextColor = ColorAllText;
+
+		char aBuf[48];
+		if(Line.m_Mode == CHAT_TEAM)
+		{
+			TextColor = ColorTeamPre;
+			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Team"));
+			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
+		}
+		else if(Line.m_Mode == CHAT_WHISPER)
+		{
+			TextColor = ColorWhisper;
+			ShadowColor = ShadowWhisper;
+			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Whisper"));
+			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
+		}
+
+
+		// we have to break protocol to make that work
+		// CNetMsg_Sv_Chat needs a TargetID, like Cl_Chat
+#if 0
+		if(line.m_Mode == CHAT_WHISPER)
+		{
+			TextColor = vec4(1.0f, 0.5f, 0.9f, Blend);
+			if(line.m_ClientID == m_pClient->m_LocalClientID)
+				TextRender()->TextEx(&Cursor, "To ", -1);
+			else
+				TextRender()->TextEx(&Cursor, "From ", -1);
+		}
+#endif
+
+		// render name
+		if(Line.m_ClientID == -1)
+			TextColor = ColorSystem;
+		else if(Line.m_Mode == CHAT_WHISPER)
+			TextColor = ColorWhisper;
+		else if(Line.m_Mode == CHAT_TEAM)
+			TextColor = ColorTeamPre;
+		else if(Line.m_NameColor == TEAM_RED)
+			TextColor = ColorRed;
+		else if(Line.m_NameColor == TEAM_BLUE)
+			TextColor = ColorBlue;
+		else if(Line.m_NameColor == TEAM_SPECTATORS)
+			TextColor = ColorSpec;
+		else
+			TextColor = ColorAllPre;
+
+		if(Line.m_ClientID != -1)
+		{
+			TextRender()->TextShadowed(&Cursor, Line.m_aName, -1, ShadowOffset, ShadowColor, TextColor);
+			TextRender()->TextShadowed(&Cursor, ": ", 2, ShadowOffset, ShadowColor, TextColor);
+		}
 
 		// render line
-		if(m_aLines[r].m_ClientID == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
-		else if(m_aLines[r].m_Highlighted)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted
-		else if(m_aLines[r].m_Mode == CHAT_TEAM)
-			TextRender()->TextColor(0.65f, 1.0f, 0.65f, Blend); // team message
+		if(Line.m_ClientID == -1)
+			TextColor = ColorSystem;
+		else if(Line.m_Mode == CHAT_WHISPER)
+			TextColor = ColorWhisper;
+		else if(Line.m_Mode == CHAT_TEAM)
+			TextColor = ColorTeamText;
 		else
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
+			TextColor = ColorAllText;
 
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+		if(Line.m_Highlighted && Line.m_Mode != CHAT_WHISPER && Line.m_ClientID != -1)
+		{
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+			float Alpha = 0.3;
+			if(Line.m_Mode == CHAT_TEAM)
+				Alpha = 0.4;
+
+			TextRender()->TextOutlineColor(ColorHighlightOutline.r,
+										   ColorHighlightOutline.g,
+										   ColorHighlightOutline.b,
+										   Alpha * Blend);
+
+			TextRender()->TextEx(&Cursor, Line.m_aText, -1);
+		}
+		else
+			TextRender()->TextShadowed(&Cursor, Line.m_aText, -1, ShadowOffset, ShadowColor, TextColor);
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 }
 
 void CChat::Say(int Mode, const char *pLine)

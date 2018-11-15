@@ -886,6 +886,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			CClient::CInput *pInput;
 			int64 TagTime;
+			int64 Now = time_get();
 
 			m_aClients[ClientID].m_LastAckedSnapshot = Unpacker.GetInt();
 			int IntendedTick = Unpacker.GetInt();
@@ -898,14 +899,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_LastAckedSnapshot > 0)
 				m_aClients[ClientID].m_SnapRate = CClient::SNAPRATE_FULL;
 
-			if(m_aClients[ClientID].m_Snapshots.Get(m_aClients[ClientID].m_LastAckedSnapshot, &TagTime, 0, 0) >= 0)
-				m_aClients[ClientID].m_Latency = (int)(((time_get()-TagTime)*1000)/time_freq());
-
 			// add message to report the input timing
 			// skip packets that are old
 			if(IntendedTick > m_aClients[ClientID].m_LastInputTick)
 			{
-				int TimeLeft = ((TickStartTime(IntendedTick)-time_get())*1000) / time_freq();
+				int TimeLeft = ((TickStartTime(IntendedTick)-Now)*1000) / time_freq();
 
 				CMsgPacker Msg(NETMSG_INPUTTIMING, true);
 				Msg.AddInt(IntendedTick);
@@ -924,6 +922,13 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 			for(int i = 0; i < Size/4; i++)
 				pInput->m_aData[i] = Unpacker.GetInt();
+
+			int PingCorrection = clamp(Unpacker.GetInt(), 0, 50);
+			if(m_aClients[ClientID].m_Snapshots.Get(m_aClients[ClientID].m_LastAckedSnapshot, &TagTime, 0, 0) >= 0)
+			{
+				m_aClients[ClientID].m_Latency = (int)(((Now-TagTime)*1000)/time_freq());
+				m_aClients[ClientID].m_Latency = max(0, m_aClients[ClientID].m_Latency - PingCorrection);
+			}
 
 			mem_copy(m_aClients[ClientID].m_LatestInput.m_aData, pInput->m_aData, MAX_INPUT_SIZE*sizeof(int));
 

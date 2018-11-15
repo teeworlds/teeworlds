@@ -377,20 +377,6 @@ bool CClient::ConnectionProblems() const
 	return m_NetClient.GotProblems() != 0;
 }
 
-void CClient::DirectInput(int *pInput, int Size)
-{
-	CMsgPacker Msg(NETMSG_INPUT, true);
-	Msg.AddInt(m_AckGameTick);
-	Msg.AddInt(m_PredTick);
-	Msg.AddInt(Size);
-
-	for(int i = 0; i < Size/4; i++)
-		Msg.AddInt(pInput[i]);
-
-	SendMsg(&Msg, 0);
-}
-
-
 void CClient::SendInput()
 {
 	int64 Now = time_get();
@@ -417,6 +403,12 @@ void CClient::SendInput()
 	// pack it
 	for(int i = 0; i < Size/4; i++)
 		Msg.AddInt(m_aInputs[m_CurrentInput].m_aData[i]);
+
+	int PingCorrection = 0;
+	int64 TagTime;
+	if(m_SnapshotStorage.Get(m_AckGameTick, &TagTime, 0, 0) >= 0)
+		PingCorrection = (int)(((Now-TagTime)*1000)/time_freq());
+	Msg.AddInt(PingCorrection);
 
 	m_CurrentInput++;
 	m_CurrentInput%=200;
@@ -2400,8 +2392,6 @@ void CClient::RegisterCommands()
 
 	// used for server browser update
 	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);
-	m_pConsole->Chain("br_filter_gametype", ConchainServerBrowserUpdate, this);
-	m_pConsole->Chain("br_filter_serveraddress", ConchainServerBrowserUpdate, this);
 
 	m_pConsole->Chain("gfx_screen", ConchainWindowScreen, this);
 	m_pConsole->Chain("gfx_fullscreen", ConchainFullscreen, this);
@@ -2436,14 +2426,27 @@ void CClient::HandleTeeworldsConnectLink(const char *pConLink)
 int main(int argc, const char **argv) // ignore_convention
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	#ifdef CONF_RELEASE
+	bool HideConsole = true;
+	#else
+	bool HideConsole = false;
+	#endif
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
+		if(str_comp("-c", argv[i]) == 0 || str_comp("--console", argv[i]) == 0) // ignore_convention
+		{
+			HideConsole = false;
+			break;
+		}
 		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
 		{
-			FreeConsole();
+			HideConsole = true;
 			break;
 		}
 	}
+
+	if(HideConsole)
+		FreeConsole();
 #endif
 
 	bool UseDefaultConfig = false;

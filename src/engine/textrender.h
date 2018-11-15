@@ -3,6 +3,8 @@
 #ifndef ENGINE_TEXTRENDER_H
 #define ENGINE_TEXTRENDER_H
 #include "kernel.h"
+#include <base/vmath.h>
+#include <engine/graphics.h>
 
 enum
 {
@@ -40,6 +42,11 @@ public:
 
 	//
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;
+	virtual void TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, int Length,
+		struct CQuadChar* aQuadChar, int QuadCharMaxCount, int* out_pQuadCharCount,
+		IGraphics::CTextureHandle* pFontTexture) = 0;
+	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset,
+		vec4 ShadowColor, vec4 TextColor_) = 0;
 
 	// old foolish interface
 	virtual void TextColor(float r, float g, float b, float a) = 0;

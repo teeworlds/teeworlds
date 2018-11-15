@@ -47,7 +47,7 @@ private:
 
 
 	int DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
-	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
+	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
 	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
 	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
@@ -83,6 +83,7 @@ private:
 	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden=false);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite=false);
 	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
+	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool* pActive);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
 	//static int ui_do_edit_box(void *id, const CUIRect *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
 
@@ -185,10 +186,11 @@ private:
 	int m_MenuPage;
 	int m_BorwserPage;
 	bool m_MenuActive;
+	int m_SidebarTab;
+	bool m_SidebarActive;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
-	bool m_InfoMode;
 	bool m_PopupActive;
 
 	// images
@@ -237,6 +239,8 @@ private:
 	bool m_EscapePressed;
 	bool m_EnterPressed;
 	bool m_DeletePressed;
+	bool m_UpArrowPressed;
+	bool m_DownArrowPressed;
 
 	// for map download popup
 	int64 m_DownloadLastCheckTime;
@@ -367,6 +371,10 @@ private:
 		int m_Filter;
 		class IServerBrowser *m_pServerBrowser;
 
+		static class CServerFilterInfo ms_FilterStandard;
+		static class CServerFilterInfo ms_FilterFavorites;
+		static class CServerFilterInfo ms_FilterAll;
+
 	public:
 
 		enum
@@ -380,7 +388,7 @@ private:
 		int m_SwitchButton;
 
 		CBrowserFilter() {}
-		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser, int Filter, int Ping, int Country, const char* pGametype, const char* pServerAddress);
+		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser);
 		void Switch();
 		bool Extended() const;
 		int Custom() const;
@@ -394,6 +402,7 @@ private:
 		const CServerInfo *SortedGet(int Index) const;
 		const void *ID(int Index) const;
 
+		void Reset();
 		void GetFilter(class CServerFilterInfo *pFilterInfo) const;
 		void SetFilter(const class CServerFilterInfo *pFilterInfo);
 	};
@@ -447,8 +456,6 @@ private:
 		COL_BROWSER_MAP,
 		COL_BROWSER_PLAYERS,
 		COL_BROWSER_PING,
-		COL_BROWSER_FAVORITE,
-		COL_BROWSER_INFO,
 		NUM_BROWSER_COLS,
 
 		COL_FRIEND_TYPE = 0,
@@ -523,15 +530,21 @@ private:
 	void RenderServerControlServer(CUIRect MainView);
 
 	// found in menus_browser.cpp
-	int m_ScrollOffset;
+	// int m_ScrollOffset;
 	void RenderServerbrowserServerList(CUIRect View);
+	void RenderServerbrowserSidebar(CUIRect View);
+	void RenderServerbrowserFriendTab(CUIRect View);
+	void RenderServerbrowserFilterTab(CUIRect View);
+	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
+	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo);
+	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	bool RenderFilterHeader(CUIRect View, int FilterIndex);
-	int DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
+	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

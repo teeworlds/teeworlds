@@ -216,20 +216,20 @@ void CEditorImage::LoadAutoMapper()
 	if(!File)
 		return;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// parse json data
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
 	if(pJsonData == 0)
 	{
 		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
-		mem_free(pFileData);
 		return;
 	}
 
@@ -252,7 +252,6 @@ void CEditorImage::LoadAutoMapper()
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 	if(m_pAutoMapper && g_Config.m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
@@ -4316,12 +4315,14 @@ void CEditor::Render()
 		{
 			// render butt ugly mouse cursor	
 			Graphics()->TextureSet(m_CursorTexture);
+			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
 			if(ms_pUiGotContext == UI()->HotItem())
 				Graphics()->SetColor(1,0,0,1);
 			IGraphics::CQuadItem QuadItem(mx,my, 16.0f, 16.0f);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
 		}
 			
 		if(m_MouseEdMode == MOUSE_PIPETTE)
@@ -4564,7 +4565,7 @@ void CEditor::UpdateAndRender()
 
 	// handle mouse movement
 	float mx, my, Mwx, Mwy;
-	float rx, ry;
+	float rx = 0.0f, ry = 0.0f;
 	{
 		Input()->MouseRelative(&rx, &ry);
 		UI()->ConvertMouseMove(&rx, &ry);
@@ -4577,12 +4578,12 @@ void CEditor::UpdateAndRender()
 			s_MouseY += ry;
 		}
 
-		s_MouseX = clamp(s_MouseX, 0.0f, UI()->Screen()->w);
-		s_MouseY = clamp(s_MouseY, 0.0f, UI()->Screen()->h);
+		s_MouseX = clamp(s_MouseX, 0.0f, (float)Graphics()->ScreenWidth());
+		s_MouseY = clamp(s_MouseY, 0.0f, (float)Graphics()->ScreenHeight());
 
 		// update the ui
-		mx = s_MouseX;
-		my = s_MouseY;
+		mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
+		my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
 		Mwx = 0;
 		Mwy = 0;
 

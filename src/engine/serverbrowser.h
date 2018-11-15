@@ -56,10 +56,15 @@ public:
 class CServerFilterInfo
 {
 public:
+	enum
+	{
+		MAX_GAMETYPES=8,
+	};
 	int m_SortHash;
 	int m_Ping;
 	int m_Country;
-	char m_aGametype[16];
+	int m_ServerLevel;
+	char m_aGametype[MAX_GAMETYPES][16];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 };
 
@@ -106,9 +111,8 @@ public:
 		FILTER_COMPAT_VERSION=2048,
 		FILTER_PURE=4096,
 		FILTER_PURE_MAP=8192,
-		FILTER_GAMETYPE_STRICT=16384,
-		FILTER_COUNTRY=32768,
-		FILTER_PING=65536,
+		FILTER_COUNTRY= 16384,
+		FILTER_PING= 32768,
 	};
 
 	virtual void SetType(int Type) = 0;
