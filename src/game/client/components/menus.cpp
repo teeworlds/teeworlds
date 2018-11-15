@@ -1639,14 +1639,23 @@ int CMenus::Render()
 				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
 				m_MenuPage = PAGE_INTERNET;
 			}*/
+
 			// quit button
-			CUIRect Button;
-			float TopOffset = 35.0f;
-			Screen.HSplitTop(TopOffset, &Button, 0);
-			Button.VSplitRight(TopOffset - 3.0f, 0, &Button);
-			static CButtonContainer s_QuitButton;
-			if(DoButton_Menu(&s_QuitButton, "X", 0, &Button, 0, CUI::CORNER_BL))
-				m_Popup = POPUP_QUIT;
+			{
+				CUIRect Button;
+				float TopOffset = 35.0f;
+				Screen.HSplitTop(TopOffset, &Button, 0);
+				Button.VSplitRight(TopOffset - 3.0f, 0, &Button);
+				static CButtonContainer s_QuitButton;
+
+				// draw red-blending button
+				vec4 Color = mix(vec4(1.f, 1.f, 1.f, 0.25f), vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.75f), ButtonFade(&s_QuitButton, 0.6f, 0)/0.6f);
+				RenderTools()->DrawUIRect(&Button, Color, CUI::CORNER_BL|CUI::CORNER_BR|CUI::CORNER_TL, 5.0f);
+
+				// draw non-blending X
+				if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, &Button, false))
+					m_Popup = POPUP_QUIT;
+			}
 
 			// render current page
 			if(Client()->State() != IClient::STATE_OFFLINE)
