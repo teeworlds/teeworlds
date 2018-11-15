@@ -1056,8 +1056,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.05f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	// display important messages in the middle of the screen so no
-	// users misses it
+	// display important messages in the middle of the screen so no user misses it
 	{
 		CUIRect MsgBox = View;
 		MsgBox.y += View.h/3;
@@ -1078,23 +1077,22 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	int NumFilters = m_lFilters.size();
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
-	ListHeight += NumFilters * 20.0f; // add filters 
-	ListHeight += (NumFilters-1) * 3.0f;// add filters spacing
+	ListHeight += NumFilters * SpacingH; // add filters 
+	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
 
+	// float LineH = ms_aBrowserCols[0].m_Rect.h;
+	float LineH = ms_ListheaderHeight;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = (int)((ListHeight-View.h)/ms_aBrowserCols[0].m_Rect.h)+(m_SidebarActive?1:4);
+	// (int)+1 is to keep the first item right on top
+	// but it doesn't work because of filters, we should detect & remove the filters that are displayed beforehand
+	int ScrollNum = ceil((ListHeight-View.h)/LineH);
 	if(ScrollNum > 0)
 	{
-		/*if(m_ScrollOffset)
-		{
-			s_ScrollValue = (float)(m_ScrollOffset)/ScrollNum;
-			m_ScrollOffset = 0;
-		}*/
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f/ScrollNum;
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
@@ -1114,72 +1112,29 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			NewIndex = SelectedIndex + 1;
 			// if(NewIndex >= NumServers)
 			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
-			{
-			 	NewIndex = NumServers;
-				// try to move to next filter
-				for(int j = SelectedFilter+1; j < m_lFilters.size(); j++)
-				{
-					CBrowserFilter *pFilter = &m_lFilters[j];
-					if(pFilter->Extended() && pFilter->NumSortedServers())
-					{
-						NewFilter = j;
-						NewIndex = 0;
-						break;
-					}
-				}
-			}
+			 	NewIndex = m_lFilters[SelectedFilter].NumSortedServers() - 1;
 		}
 		else if(m_UpArrowPressed)
 		{
 			NewIndex = SelectedIndex - 1;
 			if(NewIndex < 0)
-			{
 				NewIndex = 0;
-				// try to move to prev filter
-				for(int j = SelectedFilter-1; j >= 0; j--)
-				{
-					CBrowserFilter *pFilter = &m_lFilters[j];
-					if(pFilter->Extended() && pFilter->NumSortedServers())
-					{
-						NewFilter = j;
-						NewIndex = pFilter->NumSortedServers()-1;
-						break;
-					}
-				}
-			}
 		}
 		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
 		{
-			// get index depending on all filters
-			int TotalIndex = 0;
-			int Filter = 0;
-			while(Filter != NewFilter)
-			{
-				CBrowserFilter *pFilter = &m_lFilters[Filter];
-				if(pFilter->Extended())
-					TotalIndex += m_lFilters[Filter].NumSortedServers();
-				Filter++;
-			}
-			TotalIndex += 1;
+			float CurViewY = (s_ScrollValue*ScrollNum*LineH);
+			float IndexY = NewIndex*LineH + (NewFilter+1)*(SpacingH+ButtonHeight); // this represents the Y position of the selected line
 
-			//scroll
-			float IndexY = View.y 
-			    + (TotalIndex - s_ScrollValue*ScrollNum)*ms_aBrowserCols[0].m_Rect.h
-			    + NewIndex*ms_aBrowserCols[0].m_Rect.h
-			    + Filter*ms_aBrowserCols[0].m_Rect.h;
-			int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+ms_aBrowserCols[0].m_Rect.h ? 1 : 0;
-			if(Scroll)
+			// Selected line = [IndexY,IndexY+LineH] must be in screen = [CurViewY,CurViewY+View.h].
+			if(IndexY < CurViewY) // scroll up
 			{
-				if(Scroll < 0)
-				{
-					int NumScrolls = (View.y-IndexY+ms_aBrowserCols[0].m_Rect.h-1.0f)/ms_aBrowserCols[0].m_Rect.h;
-					s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
-				}
-				else
-				{
-					int NumScrolls = (IndexY+ms_aBrowserCols[0].m_Rect.h-(View.y+View.h)+ms_aBrowserCols[0].m_Rect.h-1.0f)/ms_aBrowserCols[0].m_Rect.h;
-					s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
-				}
+				int NumScrolls = ceil((CurViewY-IndexY)/LineH);
+				s_ScrollValue -= NumScrolls/((float)ScrollNum);
+			}
+			if(IndexY+LineH > CurViewY+View.h) // scroll down
+			{
+				int NumScrolls = ceil( ((IndexY+LineH)-(CurViewY+View.h)) / LineH);
+				s_ScrollValue += NumScrolls/((float)ScrollNum);
 			}
 
 			m_SelectedServer.m_Filter = NewFilter;
@@ -1197,7 +1152,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	UI()->ClipEnable(&View);
 
 	CUIRect OriginalView = View;
-	View.y -= s_ScrollValue*ScrollNum*ms_aBrowserCols[0].m_Rect.h;
+	View.y -= s_ScrollValue*ScrollNum*LineH;
 
 	int NumPlayers = ServerBrowser()->NumPlayers();
 
@@ -1466,7 +1421,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column)
 {
 	// server scoreboard
-	CUIRect ServerHeader;
+	// CUIRect ServerHeader;
 	CTextCursor Cursor;
 	const float FontSize = 10.0f;
 	int ActColumn = 0;
@@ -1917,20 +1872,16 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 
 	float ListHeight = (NumEntries+ClanEntries) * ms_ListheaderHeight;
 
+	float LineH = ms_aFriendCols[0].m_Rect.h;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = (int)((ListHeight - View.h) / ms_aBrowserCols[0].m_Rect.h) + 1;
+	int ScrollNum = (int)((ListHeight - View.h) / LineH) + 1;
 	if(ScrollNum > 0)
 	{
-		/*if(m_ScrollOffset)
-		{
-			s_ScrollValue = (float)(m_ScrollOffset) / ScrollNum;
-			m_ScrollOffset = 0;
-		}*/
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
 			s_ScrollValue -= 3.0f / ScrollNum;
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
@@ -1958,20 +1909,16 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 		if(NewIndex > -1 && NewIndex < NumEntries)
 		{
 			//scroll
-			float IndexY = View.y - s_ScrollValue * ScrollNum*ms_aFriendCols[0].m_Rect.h + NewIndex * ms_aFriendCols[0].m_Rect.h;
-			int Scroll = View.y > IndexY ? -1 : View.y + View.h < IndexY + ms_aFriendCols[0].m_Rect.h ? 1 : 0;
-			if(Scroll)
+			float IndexY = View.y - s_ScrollValue*ScrollNum*LineH + NewIndex*LineH;
+			if(View.y > IndexY) // scroll up
 			{
-				if(Scroll < 0)
-				{
-					int NumScrolls = (View.y - IndexY + ms_aFriendCols[0].m_Rect.h - 1.0f) / ms_aFriendCols[0].m_Rect.h;
-					s_ScrollValue -= (1.0f / ScrollNum)*NumScrolls;
-				}
-				else
-				{
-					int NumScrolls = (IndexY + ms_aFriendCols[0].m_Rect.h - (View.y + View.h) + ms_aFriendCols[0].m_Rect.h - 1.0f) / ms_aFriendCols[0].m_Rect.h;
-					s_ScrollValue += (1.0f / ScrollNum)*NumScrolls;
-				}
+				int NumScrolls = ceil((View.y - IndexY) / LineH);
+				s_ScrollValue -= NumScrolls/((float)ScrollNum);
+			}
+			if(View.y + View.h < IndexY + LineH) // scroll down
+			{
+				int NumScrolls = ceil((IndexY + LineH - (View.y + View.h)) / LineH);
+				s_ScrollValue += NumScrolls/((float)ScrollNum);
 			}
 
 			m_FriendlistSelectedIndex = NewIndex;
@@ -2002,7 +1949,7 @@ void CMenus::RenderServerbrowserFriendList(CUIRect View)
 	UI()->ClipEnable(&View);
 
 	CUIRect OriginalView = View;
-	View.y -= s_ScrollValue * ScrollNum*ms_aFriendCols[0].m_Rect.h;
+	View.y -= s_ScrollValue * ScrollNum*LineH;
 
 	int Items = 0;
 	for(int i = 0; i < NumFriends; i++)
