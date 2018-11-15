@@ -1101,25 +1101,56 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	else
 		ScrollNum = 0;
 
-	int SelectedFilter = m_SelectedServer.m_Filter;
 	int SelectedIndex = m_SelectedServer.m_Index;
+	int SelectedFilter;
+	for(SelectedFilter = 0; SelectedFilter < m_lFilters.size(); SelectedFilter++)
+		if(m_lFilters[SelectedFilter].Extended())
+			break;
+	if(SelectedFilter == m_lFilters.size()) // no selected filter found
+		SelectedFilter = 0;
+
 	if(SelectedFilter > -1)
 	{
 		int NewIndex = -1;
 		int NewFilter = SelectedFilter;
+		bool CtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
 		if(m_DownArrowPressed)
 		{
-			NewIndex = SelectedIndex + 1;
-			// if(NewIndex >= NumServers)
-			if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
-			 	NewIndex = m_lFilters[SelectedFilter].NumSortedServers() - 1;
+			if(!CtrlPressed)
+			{
+				NewIndex = SelectedIndex + 1;
+				// if(NewIndex >= NumServers)
+				if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
+					NewIndex = m_lFilters[SelectedFilter].NumSortedServers() - 1;
+			}
+			else if(SelectedFilter + 1 < m_lFilters.size())
+			{
+				// move to next filter
+				NewFilter = SelectedFilter + 1;
+				NewIndex = 0;
+			}
 		}
 		else if(m_UpArrowPressed)
 		{
-			NewIndex = SelectedIndex - 1;
-			if(NewIndex < 0)
+			if(!CtrlPressed)
+			{
+				NewIndex = SelectedIndex - 1;
+				if(NewIndex < 0)
+					NewIndex = 0;
+			}
+			else if(SelectedFilter - 1 >= 0)
+			{
+				// move to previous filter
+				NewFilter = SelectedFilter - 1;
 				NewIndex = 0;
+			}
 		}
+		if(NewFilter != SelectedFilter)
+		{
+			m_lFilters[NewFilter].Switch();
+			m_lFilters[SelectedFilter].Switch();
+		}
+
 		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
 		{
 			float CurViewY = (s_ScrollValue*ScrollNum*LineH);
