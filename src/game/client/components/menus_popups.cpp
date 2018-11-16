@@ -226,9 +226,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		s_ScrollValue = pMenus->DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
 	}
 	else
-	{
-		ServerFilter.HSplitTop(5.f, &Button, &ServerFilter);
-	}
+		ServerFilter.HSplitTop(4.f, &Button, &ServerFilter); // Leave some space in between edit boxes
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 
 	Button.VSplitLeft(60.0f, &Button, &Icon);
@@ -253,6 +251,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 			}
 		}
 	}
+	Icon.VSplitLeft(10.0f, 0, &Icon);
 	Icon.VSplitLeft(40.0f, &Button, 0);
 	static CButtonContainer s_ClearGametypes;
 	if(pMenus->DoButton_MenuTabTop(&s_ClearGametypes, Localize("Clear"), false, &Button))
@@ -265,7 +264,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	}
 
 	if(!NeedScrollbar)
-		ServerFilter.HSplitTop(LineSize-5.f, &Button, &ServerFilter);
+		ServerFilter.HSplitTop(LineSize-4.f, &Button, &ServerFilter);
 
 	{
 		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
