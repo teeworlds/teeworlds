@@ -189,6 +189,7 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		}
 	}
 	static float s_ScrollValue = 0.0f;
+	bool NeedScrollbar = (Button.w - Length) < 0.0f;
 	Button.x += min(0.0f, Button.w - Length) * s_ScrollValue;
 	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 	{
@@ -219,10 +220,17 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 
 	pMenus->UI()->ClipDisable();
 
+	if(NeedScrollbar)
+	{
+		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+		s_ScrollValue = pMenus->DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
+	}
+	else
+	{
+		ServerFilter.HSplitTop(5.f, &Button, &ServerFilter);
+	}
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-	s_ScrollValue = pMenus->DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
 
-	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	Button.VSplitLeft(60.0f, &Button, &Icon);
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	static char s_aGametype[16] = {0};
@@ -255,6 +263,9 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 		}
 		pFilter->SetFilter(&FilterInfo);
 	}
+
+	if(!NeedScrollbar)
+		ServerFilter.HSplitTop(LineSize-5.f, &Button, &ServerFilter);
 
 	{
 		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
