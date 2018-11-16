@@ -642,25 +642,17 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	float ButtonHeight = 20.0f;
 	float Spacing = 3.0f;
+	bool Switch = false;
 
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, EditButtons;
 	View.VSplitLeft(20.0f, &Button, &View);
 	Button.Margin(2.0f, &Button);
-	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button))
+	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button)
+		|| (UI()->MouseInside(&View) && Input()->KeyPress(KEY_MOUSE_1)))
 	{
-		pFilter->Switch();
-		
-		// retract the other filters
-		if(pFilter->Extended())
-		{
-			for(int i = 0; i < m_lFilters.size(); ++i)
-			{
-				if(i != FilterIndex && m_lFilters[i].Extended())
-					m_lFilters[i].Switch();
-			}
-		}
+		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
 
 	// split buttons from label
@@ -714,6 +706,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 		static int s_EditPopupID = 0;
 		m_SelectedFilter = FilterIndex;
 		InvokePopupMenu(&s_EditPopupID, 0, UI()->MouseX(), UI()->MouseY(), 200.0f, 310.0f, PopupFilter);
+		Switch = false;
 	}
 
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
@@ -722,7 +715,10 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex > 0 && (pFilter->Custom() > CBrowserFilter::FILTER_ALL || m_lFilters[FilterIndex-1].Custom() != CBrowserFilter::FILTER_STANDARD))
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button))
+		{
 			Move(true, FilterIndex);
+			Switch = false;
+		}
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_UP_B, &Button);
@@ -733,10 +729,27 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex >= 0 && FilterIndex < m_lFilters.size()-1 && (pFilter->Custom() != CBrowserFilter::FILTER_STANDARD || m_lFilters[FilterIndex+1].Custom() > CBrowserFilter::FILTER_ALL))
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button))
+		{
 			Move(false, FilterIndex);
+			Switch = false;
+		}
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_B, &Button);
+
+	if(Switch)
+	{
+		pFilter->Switch();
+		// retract the other filters
+		if(pFilter->Extended())
+		{
+			for(int i = 0; i < m_lFilters.size(); ++i)
+			{
+				if(i != FilterIndex && m_lFilters[i].Extended())
+					m_lFilters[i].Switch();
+			}
+		}
+	}
 
 	return false;
 }
