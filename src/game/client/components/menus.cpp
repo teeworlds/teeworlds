@@ -84,11 +84,11 @@ float CMenus::ButtonFade(CButtonContainer *pBC, float Seconds, int Checked)
 {
 	if(UI()->HotItem() == pBC->GetID() || Checked)
 	{
-		pBC->m_FadeStartTime = time_get();
+		pBC->m_FadeStartTime = Client()->LocalTime();
 		return Seconds;
 	}
 
-	return max(0.0f, (pBC->m_FadeStartTime - time_get()) / (float)time_freq() + Seconds);
+	return max(0.0f, pBC->m_FadeStartTime -  Client()->LocalTime() + Seconds);
 }
 
 int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)

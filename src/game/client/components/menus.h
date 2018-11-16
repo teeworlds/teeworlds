@@ -35,7 +35,7 @@ public:
 	class CButtonContainer
 	{
 	public:
-		int64 m_FadeStartTime;
+		float m_FadeStartTime;
 
 		const void *GetID() const { return &m_FadeStartTime; }
 	};
