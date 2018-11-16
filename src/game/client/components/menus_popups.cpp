@@ -91,23 +91,25 @@ void CMenus::DoPopupMenu()
 
 int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 {
-	CUIRect ServerFilter = View, FilterHeader, Button, Icon;;
+	CUIRect ServerFilter = View, FilterHeader, Button, Icon, Label;
 	const float FontSize = 10.0f;
 	const float LineSize = 16.0f;
 
 	// new filter
 	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
-	Button.VSplitLeft(60.0f, &Button, &Icon);
+	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
 	static float s_FilterOffset = 0.0f;
 	static int s_EditFilter = 0;
-	pMenus->DoEditBox(&s_EditFilter, &Button, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset);
-	pMenus->RenderTools()->DrawUIRect(&Icon, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 5.0f);
-	Icon.VSplitLeft(20.0f, &Button, &Icon);
-	Icon.HMargin(2.0f, &Icon);
-	pMenus->UI()->DoLabelScaled(&Icon, Localize("New filter"), FontSize, CUI::ALIGN_LEFT);
+	pMenus->DoEditBox(&s_EditFilter, &Icon, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset, false, CUI::CORNER_L);
+	pMenus->RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
+	Button.VSplitLeft(Button.h, &Icon, &Label);
+	Label.HMargin(2.0f, &Label);
+	pMenus->UI()->DoLabelScaled(&Label, Localize("New filter"), FontSize, CUI::ALIGN_LEFT);
+	if(s_aFilterName[0])
+		pMenus->DoIcon(IMAGE_FRIENDICONS, pMenus->UI()->MouseInside(&Button)?SPRITE_FRIEND_PLUS_A:SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFilter;
-	if(s_aFilterName[0] && pMenus->DoButton_SpriteCleanID(&s_AddFilter, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
+	if(s_aFilterName[0] && pMenus->UI()->DoButtonLogic(&s_AddFilter, "", 0, &Button))
 	{
 		CServerFilterInfo NewFilterInfo;
 		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser()));
@@ -252,11 +254,12 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	static char s_aGametype[16] = {0};
 	static float s_Offset = 0.0f;
 	static int s_EditGametype = 0;
-	pMenus->DoEditBox(&s_EditGametype, &Button, s_aGametype, sizeof(s_aGametype), FontSize, &s_Offset);
-	Icon.VSplitLeft(20.0f, &Button, &Icon);
-	pMenus->RenderTools()->DrawUIRect(&Button, vec4(1, 1, 1, 0.25f), CUI::CORNER_R, 5.0f);
+	Button.VSplitRight(Button.h, &Label, &Button);
+	pMenus->DoEditBox(&s_EditGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_Offset);
+	pMenus->RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
+	pMenus->DoIcon(IMAGE_FRIENDICONS, pMenus->UI()->MouseInside(&Button)?SPRITE_FRIEND_PLUS_A:SPRITE_FRIEND_PLUS_B, &Button);
 	static CButtonContainer s_AddGametype;
-	if(pMenus->DoButton_SpriteCleanID(&s_AddGametype, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
+	if(s_aGametype[0] && pMenus->UI()->DoButtonLogic(&s_AddGametype, "", 0, &Button))
 	{
 		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 		{
