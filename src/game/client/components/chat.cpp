@@ -531,6 +531,9 @@ void CChat::OnRender()
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 12.0f;
 	float y = 300.0f-20.0f;
+	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[m_pClient->m_LocalClientID];
+	int LocalTteam = LocalClient.m_Team;
+
 	if(m_Mode != CHAT_NONE)
 	{
 		// draw chat icon
@@ -545,6 +548,7 @@ void CChat::OnRender()
 		Graphics()->QuadsEnd();
 
 		// calculate category text size
+		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryWidth;
 		float CategoryHeight;
 		{
@@ -555,9 +559,14 @@ void CChat::OnRender()
 			if(m_Mode == CHAT_ALL)
 				str_copy(aBuf, Localize("All"), sizeof(aBuf));
 			else if(m_Mode == CHAT_TEAM)
-				str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+			{
+				if(LocalTteam == TEAM_SPECTATORS)
+					str_copy(aBuf, Localize("Spectators"), sizeof(aBuf));
+				else
+					str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+			}
 			else if(m_Mode == CHAT_WHISPER)
-				str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("To"),
+				str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("Whisper"),
 						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 			else
 				str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
@@ -596,9 +605,15 @@ void CChat::OnRender()
 		if(m_Mode == CHAT_ALL)
 			str_copy(aBuf, Localize("All"), sizeof(aBuf));
 		else if(m_Mode == CHAT_TEAM)
-			str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+		{
+			if(LocalTteam == TEAM_SPECTATORS)
+				str_copy(aBuf, Localize("Spectators"), sizeof(aBuf));
+			else
+				str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+		}
 		else if(m_Mode == CHAT_WHISPER)
-			str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("To"), m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("Whisper"), m_WhisperTarget,
+					   m_pClient->m_aClients[m_WhisperTarget].m_aName);
 		else
 			str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
 
@@ -647,7 +662,7 @@ void CChat::OnRender()
 
 	int64 Now = time_get();
 	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
+	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 90.0f : 200.0f;
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
@@ -689,11 +704,19 @@ void CChat::OnRender()
 	if(m_Show)
 	{
 		CUIRect Rect;
-		Rect.x = x - 2.0f;
+		Rect.x = 0;
 		Rect.y = HeightLimit - 2.0f;
-		Rect.w = LineWidth + 5.0f;
+		Rect.w = LineWidth + 7.0f + x;
 		Rect.h = 300 - HeightLimit - 22.f;
-		RenderTools()->DrawRoundRect(&Rect, vec4(0, 0, 0, 0.5), 2.0f);
+
+		const float LeftAlpha = 0.85f;
+		const float RightAlpha = 0.05f;
+		RenderTools()->DrawUIRect4(&Rect,
+								   vec4(0, 0, 0, LeftAlpha),
+								   vec4(0, 0, 0, RightAlpha),
+								   vec4(0, 0, 0, LeftAlpha),
+								   vec4(0, 0, 0, RightAlpha),
+								   CUI::CORNER_R, 3.0f);
 	}
 
 	for(int i = 0; i < MAX_LINES; i++)
