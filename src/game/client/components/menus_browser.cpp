@@ -1339,6 +1339,18 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	// handle Tab key
+	if(m_TabPressed)
+	{
+		if(Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT))
+		{
+			m_SidebarTab--;
+			if(m_SidebarTab < 0) m_SidebarTab = 2;
+		}
+		else
+			m_SidebarTab = (m_SidebarTab+1)%3;
+	}
+
 	// header
 	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
 	float Width = Header.w;

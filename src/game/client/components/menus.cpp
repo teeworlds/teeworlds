@@ -63,6 +63,7 @@ CMenus::CMenus()
 
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_TabPressed = false;
 	m_DeletePressed = false;
 	m_UpArrowPressed = false;
 	m_DownArrowPressed = false;
@@ -2308,6 +2309,8 @@ bool CMenus::OnInput(IInput::CEvent e)
 			// special for popups
 			if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 				m_EnterPressed = true;
+			else if(e.m_Key == KEY_TAB)
+				m_TabPressed = true;
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
 			else if(e.m_Key == KEY_UP)
@@ -2429,6 +2432,7 @@ void CMenus::OnRender()
 	{
 		m_EscapePressed = false;
 		m_EnterPressed = false;
+		m_TabPressed = false;
 		m_DeletePressed = false;
 		m_UpArrowPressed = false;
 		m_DownArrowPressed = false;
@@ -2480,6 +2484,7 @@ void CMenus::OnRender()
 	UI()->FinishCheck();
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_TabPressed = false;
 	m_DeletePressed = false;
 	m_UpArrowPressed = false;
 	m_DownArrowPressed = false;
