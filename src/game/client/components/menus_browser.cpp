@@ -1225,13 +1225,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				const CServerInfo *pItem = pFilter->SortedGet(i);
 
 				// select server
-				if(m_SelectedServer.m_Filter == -1 || m_SelectedServer.m_Filter == s)
+				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 				{
-					if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
-					{
-						m_SelectedServer.m_Filter = s;
-						m_SelectedServer.m_Index = i;
-					}
+					m_SelectedServer.m_Filter = s;
+					m_SelectedServer.m_Index = i;
 				}
 
 				if(!m_SidebarActive && m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
