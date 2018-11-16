@@ -1004,7 +1004,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		if(i == COL_BROWSER_FLAG)
 		{
-			CUIRect Rect = ms_aBrowserCols[i].m_Rect;
+			/*CUIRect Rect = ms_aBrowserCols[i].m_Rect;
 			CUIRect Icon;
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
@@ -1021,7 +1021,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);
+			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);*/
 		}
 		else if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
 		{
