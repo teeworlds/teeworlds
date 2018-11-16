@@ -647,14 +647,14 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, EditButtons;
-	View.VSplitLeft(20.0f, &Button, &View);
-	Button.Margin(2.0f, &Button);
-	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button)
-		|| (UI()->MouseInside(&View) && Input()->KeyPress(KEY_MOUSE_1)))
+	if(UI()->DoButtonLogic(&m_lFilters[FilterIndex], "", 0, &View))
 	{
 		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
-
+	Button.Margin(2.0f, &Button);
+	View.VSplitLeft(20.0f, &Button, &View);
+	DoIcon(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button);
+	
 	// split buttons from label
 	View.VSplitLeft(Spacing, 0, &View);
 	View.VSplitRight((ButtonHeight+Spacing)*4.0f, &View, &EditButtons);
@@ -1088,11 +1088,19 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(m_lFilters[i].Extended())
 			NumServers += m_lFilters[i].NumSortedServers();
 
+	int SelectedIndex = m_SelectedServer.m_Index;
+	int SelectedFilter;
+	for(SelectedFilter = 0; SelectedFilter < m_lFilters.size(); SelectedFilter++)
+		if(m_lFilters[SelectedFilter].Extended())
+			break;
+	if(SelectedFilter == m_lFilters.size()) // no selected filter found
+		SelectedFilter = -1;
+
 	int NumFilters = m_lFilters.size();
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
 	ListHeight += NumFilters * SpacingH; // add filters 
 	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
-	if(!m_SidebarActive && m_SelectedServer.m_Index != -1)
+	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1)
 		ListHeight += ms_ListheaderHeight*5;
 
 	// float LineH = ms_aBrowserCols[0].m_Rect.h;
@@ -1115,14 +1123,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 	else
 		ScrollNum = 0;
-
-	int SelectedIndex = m_SelectedServer.m_Index;
-	int SelectedFilter;
-	for(SelectedFilter = 0; SelectedFilter < m_lFilters.size(); SelectedFilter++)
-		if(m_lFilters[SelectedFilter].Extended())
-			break;
-	if(SelectedFilter == m_lFilters.size()) // no selected filter found
-		SelectedFilter = 0;
 
 	if(SelectedFilter > -1)
 	{

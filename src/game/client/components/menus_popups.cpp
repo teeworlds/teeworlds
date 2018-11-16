@@ -91,9 +91,28 @@ void CMenus::DoPopupMenu()
 
 int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 {
-	CUIRect ServerFilter = View, FilterHeader;
+	CUIRect ServerFilter = View, FilterHeader, Button, Icon;;
 	const float FontSize = 10.0f;
 	const float LineSize = 16.0f;
+
+	// new filter
+	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
+	Button.VSplitLeft(60.0f, &Button, &Icon);
+	static char s_aFilterName[32] = { 0 };
+	static float s_FilterOffset = 0.0f;
+	static int s_EditFilter = 0;
+	pMenus->DoEditBox(&s_EditFilter, &Button, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset);
+	pMenus->RenderTools()->DrawUIRect(&Icon, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Icon.VSplitLeft(20.0f, &Button, &Icon);
+	Icon.HMargin(2.0f, &Icon);
+	pMenus->UI()->DoLabelScaled(&Icon, Localize("New filter"), FontSize, CUI::ALIGN_LEFT);
+	static CButtonContainer s_AddFilter;
+	if(s_aFilterName[0] && pMenus->DoButton_SpriteCleanID(&s_AddFilter, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
+	{
+		CServerFilterInfo NewFilterInfo;
+		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser()));
+		s_aFilterName[0] = 0;
+	}
 
 	// slected filter
 	CBrowserFilter *pFilter = 0;
@@ -118,7 +137,6 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	pMenus->RenderTools()->DrawUIRect(&ServerFilter, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
 	FilterHeader.HMargin(2.0f, &FilterHeader);
 	pMenus->UI()->DoLabel(&FilterHeader, Localize("Server filter"), FontSize+2.0f, CUI::ALIGN_CENTER);
-	CUIRect Button, Icon;
 
 	//ServerFilter.VSplitLeft(5.0f, 0, &ServerFilter);
 	//ServerFilter.Margin(3.0f, &ServerFilter);
@@ -346,25 +364,6 @@ int CMenus::PopupFilter(CMenus *pMenus, CUIRect View)
 	{
 		FilterInfo.m_ServerLevel ^= 4;
 		pFilter->SetFilter(&FilterInfo);
-	}
-
-	// new filter
-	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
-	Button.VSplitLeft(60.0f, &Button, &Icon);
-	static char s_aFilterName[32] = {0};
-	static float s_FilterOffset = 0.0f;
-	static int s_EditFilter = 0;
-	pMenus->DoEditBox(&s_EditFilter, &Button, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset);
-	pMenus->RenderTools()->DrawUIRect(&Icon, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 5.0f);
-	Icon.VSplitLeft(20.0f, &Button, &Icon);
-	Icon.HMargin(2.0f, &Icon);
-	pMenus->UI()->DoLabelScaled(&Icon, Localize("New filter"), FontSize, CUI::ALIGN_LEFT);
-	static CButtonContainer s_AddFilter;
-	if(s_aFilterName[0] && pMenus->DoButton_SpriteCleanID(&s_AddFilter, IMAGE_FRIENDICONS, SPRITE_FRIEND_PLUS_A, &Button, true))
-	{
-		CServerFilterInfo NewFilterInfo;
-		pMenus->m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, pMenus->ServerBrowser()));
-		s_aFilterName[0] = 0;
 	}
 
 	// reset filter
