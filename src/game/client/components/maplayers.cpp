@@ -32,6 +32,9 @@ CMapLayers::CMapLayers(int t)
 
 void CMapLayers::LoadBackgroundMap()
 {
+	if(!g_Config.m_ClShowMenuMap)
+		return;
+
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
@@ -366,6 +369,7 @@ void CMapLayers::ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserDa
 void CMapLayers::OnConsoleInit()
 {
 	Console()->Chain("cl_menu_map", ConchainBackgroundMap, this);
+	Console()->Chain("cl_show_menu_map", ConchainBackgroundMap, this);
 }
 
 void CMapLayers::BackgroundMapUpdate()
