@@ -642,25 +642,17 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	float ButtonHeight = 20.0f;
 	float Spacing = 3.0f;
+	bool Switch = false;
 
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, EditButtons;
 	View.VSplitLeft(20.0f, &Button, &View);
 	Button.Margin(2.0f, &Button);
-	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button))
+	if(DoButton_SpriteClean(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button)
+		|| (UI()->MouseInside(&View) && Input()->KeyPress(KEY_MOUSE_1)))
 	{
-		pFilter->Switch();
-		
-		// retract the other filters
-		if(pFilter->Extended())
-		{
-			for(int i = 0; i < m_lFilters.size(); ++i)
-			{
-				if(i != FilterIndex && m_lFilters[i].Extended())
-					m_lFilters[i].Switch();
-			}
-		}
+		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
 
 	// split buttons from label
@@ -714,6 +706,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 		static int s_EditPopupID = 0;
 		m_SelectedFilter = FilterIndex;
 		InvokePopupMenu(&s_EditPopupID, 0, UI()->MouseX(), UI()->MouseY(), 200.0f, 310.0f, PopupFilter);
+		Switch = false;
 	}
 
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
@@ -722,7 +715,10 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex > 0 && (pFilter->Custom() > CBrowserFilter::FILTER_ALL || m_lFilters[FilterIndex-1].Custom() != CBrowserFilter::FILTER_STANDARD))
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button))
+		{
 			Move(true, FilterIndex);
+			Switch = false;
+		}
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_UP_B, &Button);
@@ -733,10 +729,27 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex >= 0 && FilterIndex < m_lFilters.size()-1 && (pFilter->Custom() != CBrowserFilter::FILTER_STANDARD || m_lFilters[FilterIndex+1].Custom() > CBrowserFilter::FILTER_ALL))
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button))
+		{
 			Move(false, FilterIndex);
+			Switch = false;
+		}
 	}
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_B, &Button);
+
+	if(Switch)
+	{
+		pFilter->Switch();
+		// retract the other filters
+		if(pFilter->Extended())
+		{
+			for(int i = 0; i < m_lFilters.size(); ++i)
+			{
+				if(i != FilterIndex && m_lFilters[i].Extended())
+					m_lFilters[i].Switch();
+			}
+		}
+	}
 
 	return false;
 }
@@ -991,7 +1004,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		if(i == COL_BROWSER_FLAG)
 		{
-			CUIRect Rect = ms_aBrowserCols[i].m_Rect;
+			/*CUIRect Rect = ms_aBrowserCols[i].m_Rect;
 			CUIRect Icon;
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
@@ -1008,7 +1021,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);
+			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);*/
 		}
 		else if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
 		{
@@ -1326,22 +1339,35 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	// handle Tab key
+	if(m_TabPressed)
+	{
+		if(Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT))
+		{
+			m_SidebarTab--;
+			if(m_SidebarTab < 0) m_SidebarTab = 2;
+		}
+		else
+			m_SidebarTab = (m_SidebarTab+1)%3;
+	}
+
 	// header
 	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
-	Header.VSplitLeft(Header.w/2, &Button, &Header);
-	static CButtonContainer s_TabFriends;
-	if(DoButton_SpriteID(&s_TabFriends, IMAGE_SIDEBARICONS, m_SidebarTab!=0?SPRITE_SIDEBAR_FRIEND_A:SPRITE_SIDEBAR_FRIEND_B, m_SidebarTab==0 , &Button, CUI::CORNER_TL, 5.0f, true))
+	float Width = Header.w;
+	Header.VSplitLeft(Width*0.30f, &Button, &Header);
+	static CButtonContainer s_TabInfo;
+	if(DoButton_SpriteID(&s_TabInfo, IMAGE_SIDEBARICONS, m_SidebarTab!=0?SPRITE_SIDEBAR_INFO_A: SPRITE_SIDEBAR_INFO_B, m_SidebarTab==0 , &Button, CUI::CORNER_TL, 5.0f, true))
 	{
 		m_SidebarTab = 0;
 	}
-	Header.VSplitLeft(Header.w/2, &Button, &Header);
+	Header.VSplitLeft(Width*0.30f, &Button, &Header);
 	static CButtonContainer s_TabFilter;
 	if(DoButton_SpriteID(&s_TabFilter, IMAGE_SIDEBARICONS, m_SidebarTab!=1?SPRITE_SIDEBAR_FILTER_A: SPRITE_SIDEBAR_FILTER_B, m_SidebarTab==1, &Button, 0, 0.0f, true))
 	{
 		m_SidebarTab = 1;
 	}
-	static CButtonContainer s_TabInfo;
-	if(DoButton_SpriteID(&s_TabInfo, IMAGE_SIDEBARICONS, m_SidebarTab!=2?SPRITE_SIDEBAR_INFO_A: SPRITE_SIDEBAR_INFO_B, m_SidebarTab == 2, &Header, CUI::CORNER_TR, 5.0f, true))
+	static CButtonContainer s_TabFriends;
+	if(DoButton_SpriteID(&s_TabFriends, IMAGE_SIDEBARICONS, m_SidebarTab!=2?SPRITE_SIDEBAR_FRIEND_A:SPRITE_SIDEBAR_FRIEND_B, m_SidebarTab == 2, &Header, CUI::CORNER_TR, 5.0f, true))
 	{
 		m_SidebarTab = 2;
 	}
@@ -1350,13 +1376,13 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	switch(m_SidebarTab)
 	{
 	case 0:
-		RenderServerbrowserFriendTab(View);
+		RenderServerbrowserInfoTab(View);
 		break;
 	case 1:
 		RenderServerbrowserFilterTab(View);
 		break;
 	case 2:
-		RenderServerbrowserInfoTab(View);
+		RenderServerbrowserFriendTab(View);
 	}
 }
 
