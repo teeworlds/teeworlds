@@ -1092,7 +1092,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
 	ListHeight += NumFilters * SpacingH; // add filters 
 	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
-	if(!m_SidebarActive)
+	if(!m_SidebarActive && m_SelectedServer.m_Index != -1)
 		ListHeight += ms_ListheaderHeight*5;
 
 	// float LineH = ms_aBrowserCols[0].m_Rect.h;
