@@ -1341,20 +1341,21 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 
 	// header
 	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
-	Header.VSplitLeft(Header.w/2, &Button, &Header);
-	static CButtonContainer s_TabFriends;
-	if(DoButton_SpriteID(&s_TabFriends, IMAGE_SIDEBARICONS, m_SidebarTab!=0?SPRITE_SIDEBAR_FRIEND_A:SPRITE_SIDEBAR_FRIEND_B, m_SidebarTab==0 , &Button, CUI::CORNER_TL, 5.0f, true))
+	float Width = Header.w;
+	Header.VSplitLeft(Width*0.30f, &Button, &Header);
+	static CButtonContainer s_TabInfo;
+	if(DoButton_SpriteID(&s_TabInfo, IMAGE_SIDEBARICONS, m_SidebarTab!=0?SPRITE_SIDEBAR_INFO_A: SPRITE_SIDEBAR_INFO_B, m_SidebarTab==0 , &Button, CUI::CORNER_TL, 5.0f, true))
 	{
 		m_SidebarTab = 0;
 	}
-	Header.VSplitLeft(Header.w/2, &Button, &Header);
+	Header.VSplitLeft(Width*0.30f, &Button, &Header);
 	static CButtonContainer s_TabFilter;
 	if(DoButton_SpriteID(&s_TabFilter, IMAGE_SIDEBARICONS, m_SidebarTab!=1?SPRITE_SIDEBAR_FILTER_A: SPRITE_SIDEBAR_FILTER_B, m_SidebarTab==1, &Button, 0, 0.0f, true))
 	{
 		m_SidebarTab = 1;
 	}
-	static CButtonContainer s_TabInfo;
-	if(DoButton_SpriteID(&s_TabInfo, IMAGE_SIDEBARICONS, m_SidebarTab!=2?SPRITE_SIDEBAR_INFO_A: SPRITE_SIDEBAR_INFO_B, m_SidebarTab == 2, &Header, CUI::CORNER_TR, 5.0f, true))
+	static CButtonContainer s_TabFriends;
+	if(DoButton_SpriteID(&s_TabFriends, IMAGE_SIDEBARICONS, m_SidebarTab!=2?SPRITE_SIDEBAR_FRIEND_A:SPRITE_SIDEBAR_FRIEND_B, m_SidebarTab == 2, &Header, CUI::CORNER_TR, 5.0f, true))
 	{
 		m_SidebarTab = 2;
 	}
@@ -1363,13 +1364,13 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	switch(m_SidebarTab)
 	{
 	case 0:
-		RenderServerbrowserFriendTab(View);
+		RenderServerbrowserInfoTab(View);
 		break;
 	case 1:
 		RenderServerbrowserFilterTab(View);
 		break;
 	case 2:
-		RenderServerbrowserInfoTab(View);
+		RenderServerbrowserFriendTab(View);
 	}
 }
 
