@@ -698,7 +698,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	else
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Button);
 
-	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
+	/*EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
 	DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_EDIT_A, &Button);
@@ -708,7 +708,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 		m_SelectedFilter = FilterIndex;
 		InvokePopupMenu(&s_EditPopupID, 0, UI()->MouseX(), UI()->MouseY(), 200.0f, 310.0f, PopupFilter);
 		Switch = false;
-	}
+	}*/
 
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
