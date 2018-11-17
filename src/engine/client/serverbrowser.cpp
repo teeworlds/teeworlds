@@ -275,8 +275,8 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterPureMap<<12;
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
 	i |= g_Config.m_BrFilterCountry<<14;
-	i |= g_Config.m_BrFilterPing<<15;
-	i |= g_Config.m_BrFilterUptodate<<16;
+	i |= g_Config.m_BrFilterUptodate<<15;
+	i |= g_Config.m_BrFilterPing<<16;
 	return i;
 }
 
