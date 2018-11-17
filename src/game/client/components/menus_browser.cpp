@@ -1887,7 +1887,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	// sidebar button
 	SidebarButton.HMargin(150.0f, &SidebarButton);
 	static CButtonContainer s_SidebarButton;
-	if(DoButton_SpriteID(&s_SidebarButton, IMAGE_INFOICONS, m_SidebarActive?SPRITE_INFO_B:SPRITE_INFO_A, false, &SidebarButton, CUI::CORNER_R, 5.0f, true))
+	if(DoButton_SpriteID(&s_SidebarButton, IMAGE_ARROWICONS, m_SidebarActive?SPRITE_ARROW_RIGHT_A:SPRITE_ARROW_LEFT_A, false, &SidebarButton, CUI::CORNER_R, 5.0f, true))
 	{
 		m_SidebarActive ^= 1;
 	}
