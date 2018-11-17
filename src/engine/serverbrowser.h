@@ -123,6 +123,7 @@ public:
 
 	virtual int NumServers() const = 0;
 	virtual int NumPlayers() const = 0;
+	virtual const CServerInfo *Get(int Index) const = 0;
 
 	virtual int NumSortedServers(int Index) const = 0;
 	virtual int NumSortedPlayers(int Index) const = 0;

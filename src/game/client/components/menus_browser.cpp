@@ -1379,7 +1379,210 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 
 void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 {
+	CUIRect Button, Icon, Label, Rect;
+	CUIRect BottomArea, ButtonBackground;
+	const float FontSize = 10.0f;
+	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
+	static const char *s_HeaderCaption[NUM_FRIEND_TYPES] = { Localize("Online players (%d)"), Localize("Online clanmates (%d)"), Localize("Offline (%d)") };
 
+	View.HSplitBottom(3*ms_ListheaderHeight, &View, &BottomArea);
+
+	// calculate friends
+	// todo: optimize this
+	m_pDeleteFriend = 0;
+	m_lFriendList[0].clear();
+	m_lFriendList[1].clear();
+	m_lFriendList[2].clear();
+	for(int f = 0; f < m_pClient->Friends()->NumFriends(); ++f)
+	{
+		const CFriendInfo *pFriendInfo = m_pClient->Friends()->GetFriend(f);
+		CFriendItem FriendItem;
+		FriendItem.m_pServerInfo = 0;
+		str_copy(FriendItem.m_aName, pFriendInfo->m_aName, sizeof(FriendItem.m_aName));
+		str_copy(FriendItem.m_aClan, pFriendInfo->m_aClan, sizeof(FriendItem.m_aClan));
+		FriendItem.m_IsPlayer = false;
+		m_lFriendList[2].add(FriendItem);
+	}
+
+	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
+	{
+		const CServerInfo *pEntry = ServerBrowser()->Get(ServerIndex);
+		if(pEntry->m_FriendState == IFriends::FRIEND_NO)
+			continue;
+				
+		for(int j = 0; j < pEntry->m_NumClients; ++j)
+		{
+			if(pEntry->m_aClients[j].m_FriendState == IFriends::FRIEND_NO)
+				continue;
+			
+			CFriendItem FriendItem;
+			FriendItem.m_pServerInfo = pEntry;
+			str_copy(FriendItem.m_aName, pEntry->m_aClients[j].m_aName, sizeof(FriendItem.m_aName));
+			str_copy(FriendItem.m_aClan, pEntry->m_aClients[j].m_aClan, sizeof(FriendItem.m_aClan));
+			FriendItem.m_IsPlayer = pEntry->m_aClients[j].m_Player;
+
+			if(pEntry->m_aClients[j].m_FriendState == IFriends::FRIEND_PLAYER)
+				m_lFriendList[0].add(FriendItem);
+			else
+				m_lFriendList[1].add(FriendItem);
+
+			for(int f = 0; f < m_lFriendList[2].size(); ++f)
+			{
+				if((!m_lFriendList[2][f].m_aName[0] || !str_comp(m_lFriendList[2][f].m_aName, pEntry->m_aClients[j].m_aName)) && !str_comp(m_lFriendList[2][f].m_aClan, pEntry->m_aClients[j].m_aClan))
+					m_lFriendList[2].remove_index(f--);
+			}
+		}
+	}
+
+	// scrollbar
+	UI()->ClipEnable(&View);
+	float Length = 0.0f;
+	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
+	{
+		Length += ms_ListheaderHeight + 2.0f;
+		if(s_ListExtended[i])
+			Length += (20.0f+ms_ListheaderHeight+2.0f)*m_lFriendList[i].size();
+	}
+	static float s_ScrollValue = 0.0f;
+	int ScrollNum = (int)((Length - View.h)/ms_ListheaderHeight)+1;
+	if(ScrollNum > 0)
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
+	}
+	if(Length > View.h)
+	{
+		View.VSplitRight(8.0f, &View, &Button);
+		Button.HMargin(5.0f, &Button);
+		s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Button, s_ScrollValue);
+		View.y += (View.h - Length) * s_ScrollValue;
+	}
+
+	// show lists
+	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
+	{
+		CUIRect Header;
+		char aBuf[64] = { 0 };
+		View.HSplitTop(ms_ListheaderHeight, &Header, &View);
+		if(s_ListExtended[i])
+		{
+			// entries
+			for(int f = 0; f < m_lFriendList[i].size(); ++f)
+			{
+				View.HSplitTop(20.0f + ms_ListheaderHeight, &Rect, &View);
+				RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 0.5f, 0.5f, 0.5f), CUI::CORNER_ALL, 5.0f);
+				Rect.VMargin(2.0f, &Rect);
+				Rect.VSplitRight(45.0f, &Rect, &Icon);
+				Rect.HSplitTop(20.0f, &Button, 0);
+				// name
+				Rect.HSplitTop(10.0f, &Button, &Rect);
+				vec4 Colour = (i == FRIEND_PLAYER_ON) ? vec4(0.5f, 1.0f, 0.5f, 0.15f) :
+					(i == FRIEND_CLAN_ON || !m_lFriendList[i][f].m_aName[0]) ? vec4(0.0f, 0.0f, 0.0f, 0.15f) : vec4(1.0f, 0.5f, 0.5f, 0.15f);
+				RenderTools()->DrawUIRect(&Button, Colour, CUI::CORNER_T, 4.0f);
+				Button.VSplitLeft(2.0f, 0, &Button);
+				UI()->DoLabelScaled(&Button, m_lFriendList[i][f].m_aName, FontSize - 2, CUI::ALIGN_LEFT);
+				// clan
+				Rect.HSplitTop(10.0f, &Button, &Rect);
+				Colour = (i != FRIEND_OFF) ? vec4(0.5f, 1.0f, 0.5f, 0.15f) : vec4(1.0f, 0.5f, 0.5f, 0.15f);
+				RenderTools()->DrawUIRect(&Button, Colour, CUI::CORNER_B, 4.0f);
+				Button.VSplitLeft(2.0f, 0, &Button);
+				UI()->DoLabelScaled(&Button, m_lFriendList[i][f].m_aClan, FontSize - 2, CUI::ALIGN_LEFT);
+				// info
+				if(m_lFriendList[i][f].m_pServerInfo)
+				{
+					Rect.HSplitTop(ms_ListheaderHeight, &Button, &Rect);
+					Button.VSplitLeft(2.0f, 0, &Button);
+					if(m_lFriendList[i][f].m_IsPlayer)
+						str_format(aBuf, sizeof(aBuf), Localize("Playing '%s' on '%s'"), m_lFriendList[i][f].m_pServerInfo->m_aGameType, m_lFriendList[i][f].m_pServerInfo->m_aMap);
+					else
+						str_format(aBuf, sizeof(aBuf), Localize("Watching '%s' on '%s'"), m_lFriendList[i][f].m_pServerInfo->m_aGameType, m_lFriendList[i][f].m_pServerInfo->m_aMap);
+					Button.HMargin(2.0f, &Button);
+					UI()->DoLabelScaled(&Button, aBuf, FontSize - 2, CUI::ALIGN_LEFT);
+				}
+				// delete button
+				Icon.HSplitTop(20.0f, &Rect, 0);
+				Rect.VSplitRight(10.0f, &Button, &Icon);
+				Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
+				if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
+				{
+					m_pDeleteFriend = &m_lFriendList[i][f];
+				}
+				// join button
+				if(m_lFriendList[i][f].m_pServerInfo)
+				{
+					Button.Margin((Button.h - ms_ListheaderHeight + 2.0f) / 2, &Button);
+					RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.15f), CUI::CORNER_ALL, 4.0f);
+					Label.HMargin(2.0f, &Label);
+					UI()->DoLabelScaled(&Button, Localize("Join"), FontSize, CUI::ALIGN_CENTER);
+					if(UI()->MouseInside(&Button) && Input()->KeyPress(KEY_MOUSE_1))		// todo: fix me
+					{
+						str_copy(g_Config.m_UiServerAddress, m_lFriendList[i][f].m_pServerInfo->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+						Client()->Connect(g_Config.m_UiServerAddress);
+					}
+				}
+				if(f < m_lFriendList[i].size()-1)
+					View.HSplitTop(2.0f, 0, &View);
+			}
+		}
+		View.HSplitTop(2.0f, 0, &View);
+		
+		// header
+		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Header.VSplitLeft(Header.h, &Icon, &Label);
+		DoIcon(IMAGE_MENUICONS, s_ListExtended[i] ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Icon);
+		str_format(aBuf, sizeof(aBuf), s_HeaderCaption[i], m_lFriendList[i].size());
+		Label.HMargin(2.0f, &Label);
+		UI()->DoLabelScaled(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+		static int s_HeaderButton[NUM_FRIEND_TYPES] = { 0 };
+		if(UI()->DoButtonLogic(&s_HeaderButton[i], "", 0, &Header))
+		{
+			s_ListExtended[i] ^= 1;
+		}
+	}
+	UI()->ClipDisable();
+
+	// add friend
+	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
+	Button.VSplitLeft(50.0f, &Label, &Button);
+	UI()->DoLabelScaled(&Label, Localize("Name"), FontSize, CUI::ALIGN_LEFT);
+	static char s_aName[MAX_NAME_LENGTH] = { 0 };
+	static float s_OffsetName = 0.0f;
+	DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), Button.h*ms_FontmodHeight*0.8f, &s_OffsetName);
+
+	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
+	Button.VSplitLeft(50.0f, &Label, &Button);
+	UI()->DoLabelScaled(&Label, Localize("Clan"), FontSize, CUI::ALIGN_LEFT);
+	static char s_aClan[MAX_CLAN_LENGTH] = { 0 };
+	static float s_OffsetClan = 0.0f;
+	DoEditBox(&s_aClan, &Button, s_aClan, sizeof(s_aClan), Button.h*ms_FontmodHeight*0.8f, &s_OffsetClan);
+
+	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
+	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Button.VSplitLeft(Button.h, &Icon, &Label);
+	Label.HMargin(2.0f, &Label);
+	UI()->DoLabelScaled(&Label, Localize("Add friend"), FontSize, CUI::ALIGN_CENTER);
+	if(s_aName[0] || s_aClan[0])
+		DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button)?SPRITE_FRIEND_PLUS_A:SPRITE_FRIEND_PLUS_B, &Icon);
+	static CButtonContainer s_AddFriend;
+	if((s_aName[0] || s_aClan[0]) && UI()->DoButtonLogic(&s_AddFriend, "", 0, &Button))
+	{
+		m_pClient->Friends()->AddFriend(s_aName, s_aClan);
+		FriendlistOnUpdate();
+		Client()->ServerBrowserUpdate();
+		s_aName[0] = 0;
+		s_aClan[0] = 0;
+	}
+
+	// delete friend
+	if(m_pDeleteFriend)
+	{
+		m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_aName, m_pDeleteFriend->m_aClan);
+		FriendlistOnUpdate();
+		Client()->ServerBrowserUpdate();
+		m_pDeleteFriend = 0;
+	}
 }
 
 void CMenus::RenderServerbrowserFilterTab(CUIRect View)

@@ -312,6 +312,9 @@ private:
 		int m_NumFound;
 		const CFriendInfo *m_pFriendInfo;
 		const CServerInfo *m_pServerInfo;
+		char m_aName[MAX_NAME_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH];
+		bool m_IsPlayer;
 
 		CClanFriendItem m_ClanFriend;
 
@@ -355,6 +358,15 @@ private:
 	int m_FriendlistSelectedIndex;
 	const CFriendInfo *m_pDeleteFriendInfo;
 	CSelectedFriend m_SelectedFriend;
+	enum
+	{
+		FRIEND_PLAYER_ON = 0,
+		FRIEND_CLAN_ON,
+		FRIEND_OFF,
+		NUM_FRIEND_TYPES
+	};
+	array<CFriendItem> m_lFriendList[NUM_FRIEND_TYPES];
+	const CFriendItem *m_pDeleteFriend;
 
 	bool SortCompareName(int Index1, int Index2) const;
 	bool SortCompareClan(int Index1, int Index2) const;
