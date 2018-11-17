@@ -13,6 +13,7 @@ class CMapLayers : public CComponent
 	int m_Type;
 	int m_CurrentLocalTick;
 	int m_LastLocalTick;
+	float m_OnlineStartTime;
 	bool m_EnvelopeUpdate;
 
 	array<CEnvPoint> m_lEnvPoints;
@@ -31,6 +32,7 @@ public:
 	};
 
 	CMapLayers(int Type);
+	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnInit();
 	virtual void OnRender();
 	virtual void OnMapLoad();
