@@ -769,8 +769,9 @@ void CChat::OnRender()
 		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
 		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
 		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
-		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.8f * HighlightBlend);
-		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f, Blend);
+		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend);
+		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f,
+			mix(Line.m_Mode == CHAT_TEAM ? 0.6f : 0.5f, 1.0f, HighlightBlend));
 
 		vec4 TextColor = ColorAllText;
 
@@ -781,7 +782,21 @@ void CChat::OnRender()
 			BgRect.y = Cursor.m_Y + 2.0f;
 			BgRect.w = Line.m_Size[OffsetType].x - 2.0f;
 			BgRect.h = Line.m_Size[OffsetType].y;
-			RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 1.25f);
+
+			vec4 LeftColor = ColorHighlightBg * ColorHighlightBg.a;
+			LeftColor.a = ColorHighlightBg.a;
+
+			vec4 RightColor = ColorHighlightBg;
+			RightColor *= 0.1f;
+
+			RenderTools()->DrawUIRect4(&BgRect,
+									   LeftColor,
+									   RightColor,
+									   LeftColor,
+									   RightColor,
+									   CUI::CORNER_R, 2.0f);
+
+			//RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 1.25f);
 		}
 
 		char aBuf[48];
@@ -848,14 +863,11 @@ void CChat::OnRender()
 		if(Line.m_Highlighted)
 		{
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-			float Alpha = 0.5;
-			if(Line.m_Mode == CHAT_TEAM)
-				Alpha = 0.6;
 
 			TextRender()->TextOutlineColor(ColorHighlightOutline.r,
 										   ColorHighlightOutline.g,
 										   ColorHighlightOutline.b,
-										   Alpha * Blend);
+										   ColorHighlightOutline.a);
 
 			TextRender()->TextEx(&Cursor, Line.m_aText, -1);
 		}
