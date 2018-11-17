@@ -399,6 +399,7 @@ private:
 		};
 		// buttons var
 		int m_SwitchButton;
+		int m_aButtonID[3];
 
 		CBrowserFilter() {}
 		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser);

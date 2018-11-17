@@ -701,7 +701,8 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
-	if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_EDIT_A, &Button))
+	DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_EDIT_A, &Button);
+	if(UI()->DoButtonLogic(&pFilter->m_aButtonID[2], "", 0, &Button))
 	{
 		static int s_EditPopupID = 0;
 		m_SelectedFilter = FilterIndex;
@@ -714,7 +715,8 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	Button.Margin(2.0f, &Button);
 	if(FilterIndex > 0 && (pFilter->Custom() > CBrowserFilter::FILTER_ALL || m_lFilters[FilterIndex-1].Custom() != CBrowserFilter::FILTER_STANDARD))
 	{
-		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button))
+		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button);
+		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[0], "", 0, &Button))
 		{
 			Move(true, FilterIndex);
 			Switch = false;
@@ -728,7 +730,8 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	Button.Margin(2.0f, &Button);
 	if(FilterIndex >= 0 && FilterIndex < m_lFilters.size()-1 && (pFilter->Custom() != CBrowserFilter::FILTER_STANDARD || m_lFilters[FilterIndex+1].Custom() > CBrowserFilter::FILTER_ALL))
 	{
-		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button))
+		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button);
+		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[1], "", 0, &Button))
 		{
 			Move(false, FilterIndex);
 			Switch = false;
