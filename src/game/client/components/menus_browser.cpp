@@ -619,7 +619,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	}
 
 	// show server info
-	if(!m_SidebarActive && Selected)
+	if(!m_SidebarActive && m_ShowServerDetails && Selected)
 	{
 		CUIRect Info;
 		View.HSplitTop(ms_aBrowserCols[0].m_Rect.h, 0, &View);
@@ -1103,7 +1103,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
 	ListHeight += NumFilters * SpacingH; // add filters 
 	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
-	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1)
+	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1 && m_ShowServerDetails)
 		ListHeight += ms_ListheaderHeight*5;
 
 	// float LineH = ms_aBrowserCols[0].m_Rect.h;
@@ -1187,7 +1187,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 
 			m_SelectedServer.m_Filter = NewFilter;
-			m_SelectedServer.m_Index = NewIndex;
+			if(m_SelectedServer.m_Index != NewIndex)
+			{
+				m_SelectedServer.m_Index = NewIndex;
+				m_ShowServerDetails = true;
+			}
 
 			const CServerInfo *pItem = ServerBrowser()->SortedGet(NewFilter, NewIndex);
 			str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
@@ -1230,11 +1234,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				// select server
 				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 				{
+					if(m_SelectedServer.m_Index != i) // new server selected
+						m_ShowServerDetails = true;
 					m_SelectedServer.m_Filter = s;
 					m_SelectedServer.m_Index = i;
 				}
 
-				if(!m_SidebarActive && m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
+				if(!m_SidebarActive && m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i && m_ShowServerDetails)
 					View.HSplitTop(ms_ListheaderHeight*6, &Row, &View);
 				else
 					View.HSplitTop(ms_ListheaderHeight, &Row, &View);
@@ -1260,6 +1266,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				if(DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
 				{
+					m_ShowServerDetails = !m_ShowServerDetails || (m_SelectedServer.m_Index != i); // click twice => fold server details
 					m_SelectedServer.m_Filter = s;
 					m_SelectedServer.m_Index = i;
 					str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
