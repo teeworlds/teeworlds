@@ -14,21 +14,24 @@ CCamera::CCamera()
 {
 	m_CamType = CAMTYPE_UNDEFINED;
 	m_RotationCenter = vec2(0.0f, 0.0f);
+	m_AnimationStartPos = vec2(0.0f, 0.0f);
+	m_Center = vec2(0.0f, 0.0f);
+	m_PrevCenter = vec2(0.0f, 0.0f);
 	m_MenuCenter = vec2(0.0f, 0.0f);
 
 	m_Positions[POS_START] = vec2(500.0f, 500.0f);
 	m_Positions[POS_INTERNET] = vec2(1000.0f, 1000.0f);
-	m_Positions[POS_LAN] = vec2(1000.0f, 1000.0f);
-	m_Positions[POS_FAVORITES] = vec2(2000.0f, 500.0f);
-	m_Positions[POS_DEMOS] = vec2(1500.0f, 1000.0f);
-	m_Positions[POS_SETTINGS_GENERAL] = vec2(1000.0f, 500.0f);
-	m_Positions[POS_SETTINGS_PLAYER] = vec2(400.0f, 200.0f);
-	m_Positions[POS_SETTINGS_TEE] = vec2(1100.0f, 300.0f);
-	m_Positions[POS_SETTINGS_CONTROLS] = vec2(600.0f, 1000.0f);
-	m_Positions[POS_SETTINGS_GRAPHICS] = vec2(500.0f, 750.0f);
-	m_Positions[POS_SETTINGS_SOUND] = vec2(1300.0f, 850.0f);
+	m_Positions[POS_LAN] = vec2(1100.0f, 1000.0f);
+	m_Positions[POS_DEMOS] = vec2(1500.0f, 500.0f);
+	m_Positions[POS_SETTINGS_GENERAL] = vec2(500.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_PLAYER] = vec2(600.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_TEE] = vec2(700.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_CONTROLS] = vec2(800.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_GRAPHICS] = vec2(900.0f, 1000.0f);
+	m_Positions[POS_SETTINGS_SOUND] = vec2(1000.0f, 1000.0f);
 
 	m_CurrentPosition = -1;
+	m_MoveTime = 0.0f;
 }
 
 void CCamera::OnRender()
@@ -88,9 +91,17 @@ void CCamera::OnRender()
 		}
 		else
 		{
-			Dir = normalize(m_RotationCenter-m_Center);
-			m_Center += Dir*(g_Config.m_ClCameraSpeed*50.0f*Client()->RenderFrameTime());
-			Dir = normalize(m_Center-m_RotationCenter);
+			// positions for the animation
+			Dir = normalize(m_AnimationStartPos - m_RotationCenter);
+			vec2 TargetPos = m_RotationCenter + Dir * (float)g_Config.m_ClRotationRadius;
+			float Distance = distance(m_AnimationStartPos, TargetPos);
+
+			// move time
+			m_MoveTime += Client()->RenderFrameTime()*g_Config.m_ClCameraSpeed / 10.0f;
+			float XVal = 1 - m_MoveTime;
+			XVal = pow(XVal, 7.0);
+
+			m_Center = TargetPos + Dir * (XVal*Distance);
 		}
 	}
 
@@ -99,8 +110,12 @@ void CCamera::OnRender()
 
 void CCamera::ChangePosition(int PositionNumber)
 {
+	if(PositionNumber < 0 || PositionNumber > NUM_POS-1)
+		return;
+	m_AnimationStartPos = m_Center;
 	m_RotationCenter = m_Positions[PositionNumber];
 	m_CurrentPosition = PositionNumber;
+	m_MoveTime = 0.0f;
 }
 
 int CCamera::GetCurrentPosition()
