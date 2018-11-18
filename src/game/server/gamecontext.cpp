@@ -1105,7 +1105,7 @@ void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)
 			aBuf[j] = '\n';
 			i++;
 		}
-		else if (i != j)
+		else if(i != j)
 		{
 			aBuf[j] = aBuf[i];
 		}
