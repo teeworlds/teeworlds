@@ -1900,7 +1900,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	{
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
-			CUIRect Name, Clan, Score, Flag, Row;
+			CUIRect Name, Clan, Score, Flag, Row, Icon;
 			if(i % (16 / Column) == 0)
 			{
 				View.VSplitLeft(View.w / (Column - ActColumn), &Row, &View);
@@ -1908,6 +1908,9 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			}
 	
 			Row.HSplitTop(20.0f, &Name, &Row);
+			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (i % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
+
+			// friend
 			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
 			{
 				if(pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
@@ -1917,14 +1920,15 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				FriendlistOnUpdate();
 				Client()->ServerBrowserUpdate();
 			}
+			Name.VSplitLeft(Name.h-8.0f, &Icon, &Name);
+			Icon.HMargin(4.0f, &Icon);
+			if(pInfo->m_aClients[i].m_FriendState != IFriends::FRIEND_NO)
+				DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);
 
-			vec4 Colour = pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_NO ? vec4(1.0f, 1.0f, 1.0f, (i % 2 + 1)*0.05f) :
-				vec4(0.5f, 1.0f, 0.5f, 0.15f + (i % 2 + 1)*0.05f);
-			RenderTools()->DrawUIRect(&Name, Colour, CUI::CORNER_ALL, 4.0f);
-			Name.VSplitLeft(5.0f, 0, &Name);
-			Name.VSplitLeft(30.0f, &Score, &Name);
-			Name.VSplitRight(34.0f, &Name, &Flag);
-			Flag.HMargin(2.0f, &Flag);
+			Name.VSplitLeft(2.0f, 0, &Name);
+			Name.VSplitLeft(20.0f, &Score, &Name);
+			Name.VSplitRight(2*(Name.h-8.0f), &Name, &Flag);
+			Flag.HMargin(4.0f, &Flag);
 			Name.HSplitTop(10.0f, &Name, &Clan);
 
 			// score
@@ -1932,7 +1936,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			{
 				char aTemp[16];
 				str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
-				TextRender()->SetCursor(&Cursor, Score.x, Score.y + (Score.h - FontSize) / 4.0f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, Score.x, Score.y + (Score.h - FontSize-2) / 4.0f, FontSize-2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Score.w;
 				TextRender()->TextEx(&Cursor, aTemp, -1);
 			}

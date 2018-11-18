@@ -2295,7 +2295,7 @@ bool CMenus::OnInput(IInput::CEvent e)
 			// special for popups
 			if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 				m_EnterPressed = true;
-			else if(e.m_Key == KEY_TAB)
+			else if(e.m_Key == KEY_TAB && !Input()->KeyPress(KEY_LALT) && !Input()->KeyPress(KEY_RALT))
 				m_TabPressed = true;
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
