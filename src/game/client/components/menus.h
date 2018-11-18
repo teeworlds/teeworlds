@@ -162,15 +162,10 @@ private:
 		PAGE_CALLVOTE,
 		PAGE_INTERNET,
 		PAGE_LAN,
-		PAGE_FRIENDS,
 		PAGE_DEMOS,
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
 		PAGE_START,
-
-		PAGE_BROWSER_BROWSER=0,
-		PAGE_BROWSER_FRIENDS,
-		NUM_PAGE_BROWSER,
 
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
@@ -184,7 +179,6 @@ private:
 	int m_Popup;
 	int m_ActivePage;
 	int m_MenuPage;
-	int m_BorwserPage;
 	bool m_MenuActive;
 	int m_SidebarTab;
 	bool m_SidebarActive;
@@ -290,50 +284,16 @@ private:
 	class CFriendItem
 	{
 	public:
-		class CClanFriendItem
-		{
-		public:
-			CClanFriendItem()
-			{
-				m_lFriendInfos.clear();
-				m_lServerInfos.clear();
-			}
-
-			~CClanFriendItem()
-			{
-				m_lFriendInfos.clear();
-				m_lServerInfos.clear();
-			}
-
-			array<CFriendInfo> m_lFriendInfos;
-			array<const CServerInfo*> m_lServerInfos;
-		};
-
-		int m_NumFound;
 		const CFriendInfo *m_pFriendInfo;
 		const CServerInfo *m_pServerInfo;
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		bool m_IsPlayer;
 
-		CClanFriendItem m_ClanFriend;
-
 		CFriendItem()
 		{
 			m_pFriendInfo = 0;
 			m_pServerInfo = 0;
-		}
-
-		bool IsClanFriend()
-		{
-			return m_pFriendInfo->m_aClan[0] && !m_pFriendInfo->m_aName[0];
-		}
-
-		void Reset()
-		{
-			m_NumFound = 0;
-			m_ClanFriend.m_lFriendInfos.clear();
-			m_ClanFriend.m_lServerInfos.clear();
 		}
 
 		bool operator<(const CFriendItem &Other)
@@ -350,27 +310,6 @@ private:
 		}
 	};
 
-	struct CSelectedFriend
-	{
-		bool m_ClanFriend;
-		bool m_FakeFriend;
-		unsigned m_NameHash;
-		unsigned m_ClanHash;
-	};
-
-	enum
-	{
-		FRIENDS_SORT_TYPE = 0,
-		FRIENDS_SORT_SERVER,
-		FRIENDS_SORT_NAME,
-		FRIENDS_SORT_CLAN,
-	};
-
-	int *m_pFriendIndexes;
-	array<CFriendItem> m_lFriends;
-	int m_FriendlistSelectedIndex;
-	const CFriendInfo *m_pDeleteFriendInfo;
-	CSelectedFriend m_SelectedFriend;
 	enum
 	{
 		FRIEND_PLAYER_ON = 0,
@@ -381,13 +320,7 @@ private:
 	sorted_array<CFriendItem> m_lFriendList[NUM_FRIEND_TYPES];
 	const CFriendItem *m_pDeleteFriend;
 
-	bool SortCompareName(int Index1, int Index2) const;
-	bool SortCompareClan(int Index1, int Index2) const;
-	bool SortCompareServer(int Index1, int Index2) const;
-	bool SortCompareType(int Index1, int Index2) const;
-
 	void FriendlistOnUpdate();
-	void SortFriends();
 
 	class CBrowserFilter
 	{
@@ -484,13 +417,6 @@ private:
 		COL_BROWSER_PLAYERS,
 		COL_BROWSER_PING,
 		NUM_BROWSER_COLS,
-
-		COL_FRIEND_TYPE = 0,
-		COL_FRIEND_SERVER,
-		COL_FRIEND_NAME,
-		COL_FRIEND_CLAN,
-		COL_FRIEND_DELETE,
-		NUM_FRIEND_COLS,
 	};
 
 	struct CColumn
@@ -506,7 +432,6 @@ private:
 	};
 
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
-	static CColumn ms_aFriendCols[NUM_FRIEND_COLS];
 
 	enum
 	{

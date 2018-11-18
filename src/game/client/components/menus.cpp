@@ -73,8 +73,6 @@ CMenus::CMenus()
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
 
-	m_FriendlistSelectedIndex = -1;
-
 	m_SelectedFilter = 0;
 
 	m_SelectedServer.m_Filter = -1;
@@ -1155,21 +1153,18 @@ void CMenus::RenderMenubar(CUIRect r)
 	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// render menu tabs
-		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FRIENDS)
+		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_LAN)
 		{
 			float Spacing = 3.0f;
 			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
 
-			CUIRect Left, Right;
+			CUIRect Left;
 			Box.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
-			Box.VSplitRight(ButtonWidth, 0, &Right);
 
 			// render header backgrounds
 			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-			RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-
+			
 			Left.HSplitBottom(25.0f, 0, &Left);
-			Right.HSplitBottom(25.0f, 0, &Right);
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static CButtonContainer s_InternetButton;
@@ -1190,19 +1185,6 @@ void CMenus::RenderMenubar(CUIRect r)
 				ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
 				NewPage = PAGE_LAN;
 				g_Config.m_UiBrowserPage = PAGE_LAN;
-			}
-
-			char aBuf[32];
-			if(m_BorwserPage == PAGE_BROWSER_BROWSER)
-				str_copy(aBuf, Localize("Friends"), sizeof(aBuf));
-			else if(m_BorwserPage == PAGE_BROWSER_FRIENDS)
-				str_copy(aBuf, Localize("Browser"), sizeof(aBuf));
-			static CButtonContainer s_FilterButton;
-			if(DoButton_Menu(&s_FilterButton, aBuf, 0, &Right))
-			{
-				m_BorwserPage++;
-				if(m_BorwserPage >= NUM_PAGE_BROWSER)
-					m_BorwserPage = 0;
 			}
 		}
 		else if(m_MenuPage == PAGE_DEMOS)
@@ -1679,8 +1661,6 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_DEMOS)
 					RenderDemoList(MainView);
-				else if(m_MenuPage == PAGE_FRIENDS)
-					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
 			}
@@ -2129,12 +2109,12 @@ int CMenus::Render()
 			{
 				m_Popup = POPUP_NONE;
 				// remove friend
-				if(m_FriendlistSelectedIndex >= 0)
+				if(m_pDeleteFriend)
 				{
-					m_pClient->Friends()->RemoveFriend(m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aName,
-						m_lFriends[m_FriendlistSelectedIndex].m_pFriendInfo->m_aClan);
+					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_aName, m_pDeleteFriend->m_aClan);
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
+					m_pDeleteFriend = 0;
 				}
 			}
 		}
