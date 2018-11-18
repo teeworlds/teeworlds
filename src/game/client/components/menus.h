@@ -335,6 +335,19 @@ private:
 			m_ClanFriend.m_lFriendInfos.clear();
 			m_ClanFriend.m_lServerInfos.clear();
 		}
+
+		bool operator<(const CFriendItem &Other)
+		{
+			if(m_aName[0] && !Other.m_aName[0])
+				return true;
+			if(!m_aName[0] && Other.m_aName[0])
+				return false;
+			int Result = str_comp_nocase(m_aName, Other.m_aName);
+			if(Result < 0 || (Result == 0 && str_comp_nocase(m_aClan, Other.m_aClan) < 0))
+				return true;
+			
+			return false;
+		}
 	};
 
 	struct CSelectedFriend
@@ -365,7 +378,7 @@ private:
 		FRIEND_OFF,
 		NUM_FRIEND_TYPES
 	};
-	array<CFriendItem> m_lFriendList[NUM_FRIEND_TYPES];
+	sorted_array<CFriendItem> m_lFriendList[NUM_FRIEND_TYPES];
 	const CFriendItem *m_pDeleteFriend;
 
 	bool SortCompareName(int Index1, int Index2) const;
