@@ -624,7 +624,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		CUIRect Info;
 		View.HSplitTop(ms_aBrowserCols[0].m_Rect.h, 0, &View);
 		View.VSplitLeft(160.0f, &Info, &View);
-		//Info.Margin(2.0f, &Info);
 		RenderDetailInfo(Info, pEntry);
 
 		RenderDetailScoreboard(View, pEntry, 4);
@@ -667,24 +666,7 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), Localize("%d servers, %d players"), pFilter->NumSortedServers(), pFilter->NumPlayers());
 	UI()->DoLabel(&View, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
-	/*if(pFilter->Custom() <= CBrowserFilter::FILTER_ALL)
-		UI()->DoLabel(&View, pFilter->Name(), 12.0f, CUI::ALIGN_LEFT);
-	else
-	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BROWSEICONS].m_Id);
-		Graphics()->QuadsBegin();
-		if(pFilter->Custom() == CBrowserFilter::FILTER_STANDARD)
-			RenderTools()->SelectSprite(SPRITE_BROWSE_STAR_B);
-		else if(pFilter->Custom() == CBrowserFilter::FILTER_FAVORITES)
-			RenderTools()->SelectSprite(SPRITE_BROWSE_STAR_A);
-		IGraphics::CQuadItem QuadItem(Label.x, View.y, 18.0f, 18.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-
-		Label.VSplitLeft(25.0f, 0, &Label);
-		UI()->DoLabel(&Label, pFilter->Name(), 12.0f, CUI::ALIGN_LEFT);
-	}*/
-
+	
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
 	if(pFilter->Custom() == CBrowserFilter::FILTER_CUSTOM)
