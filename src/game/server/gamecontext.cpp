@@ -1100,7 +1100,7 @@ void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)
 	int i, j;
 	for(i = 0, j = 0; aBuf[i]; i++, j++)
 	{
-		if (aBuf[i] == '\\' && aBuf[i + 1] == 'n')
+		if(aBuf[i] == '\\' && aBuf[i + 1] == 'n')
 		{
 			aBuf[j] = '\n';
 			i++;
