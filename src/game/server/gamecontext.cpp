@@ -1098,7 +1098,7 @@ void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)
 	str_copy(aBuf, pResult->GetString(0), sizeof(aBuf));
 
 	int i, j;
-	for (i = 0, j = 0; aBuf[i]; i++, j++)
+	for(i = 0, j = 0; aBuf[i]; i++, j++)
 	{
 		if (aBuf[i] == '\\' && aBuf[i + 1] == 'n')
 		{
