@@ -551,29 +551,32 @@ void CChat::OnRender()
 		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryWidth;
 		float CategoryHeight;
+		const float CategoryFontSize = 8.0f;
+		const float InputFontSize = 8.0f;
+		char aCatText[48];
+
 		{
 			CTextCursor Cursor;
-			TextRender()->SetCursor(&Cursor, x, y, 8.0f, 0);
+			TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, 0);
 
-			char aBuf[32];
 			if(m_Mode == CHAT_ALL)
-				str_copy(aBuf, Localize("All"), sizeof(aBuf));
+				str_copy(aCatText, Localize("All"), sizeof(aCatText));
 			else if(m_Mode == CHAT_TEAM)
 			{
 				if(LocalTteam == TEAM_SPECTATORS)
-					str_copy(aBuf, Localize("Spectators"), sizeof(aBuf));
+					str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
 				else
-					str_copy(aBuf, Localize("Team"), sizeof(aBuf));
+					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 			}
 			else if(m_Mode == CHAT_WHISPER)
-				str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("Whisper"),
+				str_format(aCatText, sizeof(aCatText), "%s %2d: %s", Localize("Whisper"),
 						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 			else
-				str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
+				str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
 
-			TextRender()->TextEx(&Cursor, aBuf, -1);
-			TextRender()->TextEx(&Cursor, ": ", -1);
-			CategoryWidth = Cursor.m_X - 1.0f;
+			TextRender()->TextEx(&Cursor, aCatText, -1);
+
+			CategoryWidth = Cursor.m_X;
 			CategoryHeight = Cursor.m_FontSize;
 		}
 
@@ -591,35 +594,22 @@ void CChat::OnRender()
 		CUIRect CatRect;
 		CatRect.x = 0;
 		CatRect.y = y;
-		CatRect.w = CategoryWidth;
+		CatRect.w = CategoryWidth + 2.0f;
 		CatRect.h = CategoryHeight + 4.0f;
 		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
 
 		// render chat input
 		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
-		char aBuf[32];
-		if(m_Mode == CHAT_ALL)
-			str_copy(aBuf, Localize("All"), sizeof(aBuf));
-		else if(m_Mode == CHAT_TEAM)
-		{
-			if(LocalTteam == TEAM_SPECTATORS)
-				str_copy(aBuf, Localize("Spectators"), sizeof(aBuf));
-			else
-				str_copy(aBuf, Localize("Team"), sizeof(aBuf));
-		}
-		else if(m_Mode == CHAT_WHISPER)
-			str_format(aBuf, sizeof(aBuf), "%s %2d: %s", Localize("Whisper"), m_WhisperTarget,
-					   m_pClient->m_aClients[m_WhisperTarget].m_aName);
-		else
-			str_copy(aBuf, Localize("Chat"), sizeof(aBuf));
+		TextRender()->TextEx(&Cursor, aCatText, -1);
 
-		TextRender()->TextEx(&Cursor, aBuf, -1);
-		TextRender()->TextEx(&Cursor, ": ", -1);
+		Cursor.m_X += 4.0f;
+		Cursor.m_Y -= (InputFontSize-CategoryFontSize) * 0.5f;
 		Cursor.m_StartX = Cursor.m_X;
+		Cursor.m_FontSize = InputFontSize;
 
 		// check if the visible text has to be moved
 		if(m_InputUpdate)
@@ -740,7 +730,7 @@ void CChat::OnRender()
 		const float HlTimeFull = 1.0f;
 		const float HlTimeFade = 1.0f;
 
-		float HighlightBlend = 0.4f;
+		float HighlightBlend = 0.0f;
 		if(!m_Show)
 		{
 			float Delta = (Now - Line.m_Time) / (float)time_freq();
