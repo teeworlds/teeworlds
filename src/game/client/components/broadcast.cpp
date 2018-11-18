@@ -19,6 +19,16 @@ CBroadcast::CBroadcast()
 	OnReset();
 }
 
+void CBroadcast::OnMessage(int MsgType, void *pRawMsg)
+{
+	if (MsgType == NETMSGTYPE_SV_BROADCAST)
+	{
+		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
+		str_copy(m_aBroadcastText, pMsg->m_pMessage, sizeof(m_aBroadcastText));
+		DoBroadcast(m_aBroadcastText);
+	}
+}
+
 void CBroadcast::DoBroadcast(const char *pText)
 {
 	str_copy(m_aBroadcastText, pText, sizeof(m_aBroadcastText));
@@ -28,6 +38,27 @@ void CBroadcast::DoBroadcast(const char *pText)
 	TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
 	m_BroadcastRenderOffset = 150*Graphics()->ScreenAspect()-Cursor.m_X/2;
 	m_BroadcastTime = time_get()+time_freq()*10;
+
+	char aBuf[1024];
+	int i, ii;
+	for (i = 0, ii = 0; i < str_length(m_aBroadcastText); i++)
+	{
+		if (m_aBroadcastText[i] == '\n')
+		{
+			aBuf[ii] = '\0';
+			ii = 0;
+			if (aBuf[0])
+				m_pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "broadcast", aBuf, true);
+		}
+		else
+		{
+			aBuf[ii] = m_aBroadcastText[i];
+			ii++;
+		}
+	}
+	aBuf[ii] = '\0';
+	if (aBuf[0])
+		m_pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "broadcast", aBuf, true);
 }
 
 void CBroadcast::OnReset()

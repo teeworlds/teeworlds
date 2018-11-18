@@ -13,6 +13,8 @@ class CBroadcast : public CComponent
 public:
 	CBroadcast();
 
+	virtual void OnMessage(int MsgType, void *pRawMsg);
+
 	void DoBroadcast(const char *pText);
 
 	virtual void OnReset();

@@ -243,6 +243,10 @@ Messages = [
 		NetString("m_pMessage"),
 	]),
 
+	NetMessage("Sv_Broadcast", [
+		NetString("m_pMessage"),
+	]),
+
 	NetMessage("Sv_Chat", [
 		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
