@@ -43,7 +43,7 @@ void CBroadcast::DoBroadcast(const char *pText)
 	int i, ii;
 	for(i = 0, ii = 0; i < str_length(m_aBroadcastText); i++)
 	{
-		if (m_aBroadcastText[i] == '\n')
+		if(m_aBroadcastText[i] == '\n')
 		{
 			aBuf[ii] = '\0';
 			ii = 0;
