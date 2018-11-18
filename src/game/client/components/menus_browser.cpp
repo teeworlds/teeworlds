@@ -390,7 +390,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 	}
 
-	float TextAplpha = (pEntry->m_NumPlayers == pEntry->m_MaxPlayers || pEntry->m_NumClients == pEntry->m_MaxClients) ? 0.5f : 1.0f;
+	float TextAlpha = (pEntry->m_NumClients == pEntry->m_MaxClients) ? 0.5f : 1.0f;
 	for(int c = 0; c < NUM_BROWSER_COLS; c++)
 	{
 		CUIRect Button = ms_aBrowserCols[c].m_Rect;
@@ -448,7 +448,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				Cursor.m_LineWidth = Button.w;
 			}
 			
-			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
 			{
@@ -457,9 +457,9 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aName, (int)(pStr-pEntry->m_aName));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAplpha);
+					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
-					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
 				}
 				else
@@ -480,7 +480,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				Cursor.m_LineWidth = Button.w;
 			}
 
-			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME))
 			{
@@ -489,9 +489,9 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aMap, (int)(pStr-pEntry->m_aMap));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAplpha);
+					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
-					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
 				}
 				else
@@ -502,7 +502,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		}
 		else if(ID == COL_BROWSER_PLAYERS)
 		{
-			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 			CServerFilterInfo FilterInfo;
 			pFilter->GetFilter(&FilterInfo);
 
@@ -511,7 +511,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			else
 				str_format(aTemp, sizeof(aTemp), "%d/%d", pEntry->m_NumClients, pEntry->m_MaxClients);
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
-				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAplpha);
+				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 			Button.y += 2.0f;
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_CENTER);
 		}
@@ -522,7 +522,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			vec4 Color;
 			if(Selected || Inside)
 			{
-				Color = vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+				Color = vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 			}
 			else
 			{
@@ -531,15 +531,15 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				float MixVal;
 				if(Ping <= 125)
 				{
-					StartColor = vec4(0.0f, 1.0f, 0.0f, TextAplpha);
-					EndColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
+					StartColor = vec4(0.0f, 1.0f, 0.0f, TextAlpha);
+					EndColor = vec4(1.0f, 1.0f, 0.0f, TextAlpha);
 					
 					MixVal = (Ping-50.0f)/75.0f;
 				}
 				else
 				{
-					StartColor = vec4(1.0f, 1.0f, 0.0f, TextAplpha);
-					EndColor = vec4(1.0f, 0.0f, 0.0f, TextAplpha);
+					StartColor = vec4(1.0f, 1.0f, 0.0f, TextAlpha);
+					EndColor = vec4(1.0f, 0.0f, 0.0f, TextAlpha);
 					
 					MixVal = (Ping-125.0f)/75.0f;
 				}
@@ -573,7 +573,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				Cursor.m_LineWidth = Button.w;
 			}
 
-			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
+			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 			TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
 		}
 	}
