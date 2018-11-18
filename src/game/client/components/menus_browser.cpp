@@ -1189,6 +1189,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				{
 					m_SelectedServer.m_Filter = s;
 					m_SelectedServer.m_Index = i;
+					if(g_Config.m_UiAutoswitchInfotab)
+						m_SidebarTab = 0;
 					str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 					if(Input()->MouseDoubleClick())
 						Client()->Connect(g_Config.m_UiServerAddress);
