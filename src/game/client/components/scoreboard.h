@@ -26,7 +26,7 @@ class CScoreboard : public CComponent
  		CPlayerStats();
 		void Reset();
 	};
-	CPlayerStats m_aPlayerStats[16];
+	CPlayerStats m_aPlayerStats[MAX_CLIENTS];
 
 public:
 	CScoreboard();
