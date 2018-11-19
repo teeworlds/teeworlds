@@ -16,6 +16,7 @@
 #include <game/client/components/motd.h>
 #include <game/client/components/skins.h>
 
+#include "menus.h"
 #include "scoreboard.h"
 
 
@@ -408,6 +409,10 @@ void CScoreboard::OnRender()
 
 bool CScoreboard::Active()
 {
+	// disable scoreboard if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
+		return false;
+
 	// if we activly wanna look on the scoreboard
 	if(m_Active)
 		return true;
