@@ -2067,6 +2067,8 @@ void CClient::Run()
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
 
+	m_ServerBrowser.SaveServerlist();
+
 	// shutdown SDL
 	{
 		SDL_Quit();

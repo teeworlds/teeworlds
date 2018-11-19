@@ -3,6 +3,8 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/external/json-parser/json.h>
+
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
 #include <engine/shared/network.h>
@@ -13,11 +15,14 @@
 #include <engine/engine.h>
 #include <engine/friends.h>
 #include <engine/masterserver.h>
+#include <engine/storage.h>
 
 #include <mastersrv/mastersrv.h>
 
 #include "serverbrowser.h"
 
+
+static char *s_pFilename = "serverlist.json";
 
 inline int AddrHash(const NETADDR *pAddr)
 {
@@ -66,11 +71,13 @@ CServerBrowser::CServerBrowser()
 
 	m_ActServerlistType = 0;
 	m_BroadcastTime = 0;
+	m_MasterRefreshTime = 0;
 }
 
 void CServerBrowser::Init(class CNetClient *pNetClient, const char *pNetVersion)
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pNetClient = pNetClient;
 
@@ -87,6 +94,8 @@ void CServerBrowser::Set(const NETADDR &Addr, int SetType, int Token, const CSer
 		{
 			if(!(m_RefreshFlags&IServerBrowser::REFRESHFLAG_INTERNET))
 				return;
+
+			m_MasterRefreshTime = 0;
 
 			if(!Find(IServerBrowser::TYPE_INTERNET, Addr))
 			{
@@ -173,8 +182,20 @@ void CServerBrowser::Update(bool ForceResort)
 			m_pNetClient->Send(&Packet);
 		}
 
+		m_MasterRefreshTime = Now;
+
 		if(g_Config.m_Debug)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "requesting server list");
+	}
+
+	// load server list backup from file in case the masters don't response
+	if(m_MasterRefreshTime && m_MasterRefreshTime+2*Timeout < Now)
+	{
+		LoadServerlist();
+		m_MasterRefreshTime = 0;
+
+		if(g_Config.m_Debug)
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "using backup server list");
 	}
 
 	// do timeouts
@@ -526,4 +547,70 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 	m_aServerlist[ServerlistType].m_NumPlayers += pEntry->m_Info.m_NumPlayers;
 
 	pEntry->m_InfoState = CServerEntry::STATE_READY;
+}
+
+void CServerBrowser::LoadServerlist()
+{
+	// read file data into buffer
+	IOHANDLE File = Storage()->OpenFile(s_pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
+		return;
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	io_read(File, pFileData, FileSize);
+	io_close(File);
+
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
+	if(pJsonData == 0)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, s_pFilename, aError);
+		return;
+	}
+
+	// extract server list
+	const json_value &rEntry = (*pJsonData)["serverlist"];
+	for(unsigned i = 0; i < rEntry.u.array.length; ++i)
+	{
+		if(rEntry[i].type == json_string)
+		{
+			NETADDR Addr = { 0 };
+			if(!net_addr_from_str(&Addr, rEntry[i]))
+				Set(Addr, SET_MASTER_ADD, -1, 0);
+		}
+	}
+
+	// clean up
+	json_value_free(pJsonData);
+}
+
+void CServerBrowser::SaveServerlist()
+{
+	IOHANDLE File = Storage()->OpenFile(s_pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return;
+
+	char aBuf[512];
+
+	// server list
+	const char *p = "{\"serverlist\": [\n";
+	io_write(File, p, str_length(p));
+
+	for(int i = 0; i < m_aServerlist[IServerBrowser::TYPE_INTERNET].m_NumServers; ++i)
+	{
+		// entry
+		str_format(aBuf, sizeof(aBuf), "\t\"%s\",\n", m_aServerlist[IServerBrowser::TYPE_INTERNET].m_ppServerlist[i]->m_Info.m_aAddress);
+		io_write(File, aBuf, str_length(aBuf));
+	}
+
+	// server list end
+	p = "\t]\n}\n";
+	io_write(File, p, str_length(p));
+
+	io_close(File);
 }
