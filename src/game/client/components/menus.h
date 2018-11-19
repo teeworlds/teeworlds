@@ -182,6 +182,7 @@ private:
 	bool m_MenuActive;
 	int m_SidebarTab;
 	bool m_SidebarActive;
+	bool m_ShowServerDetails;
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;

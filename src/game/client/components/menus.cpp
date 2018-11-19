@@ -45,6 +45,7 @@ CMenus::CMenus()
 	m_GamePage = PAGE_GAME;
 	m_SidebarTab = 0;
 	m_SidebarActive = true;
+	m_ShowServerDetails = true;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
