@@ -373,6 +373,7 @@ void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 	}
 }
 
+// 1 = browser entry click, 2 = server info click
 int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected)
 {
 	// logic
@@ -628,6 +629,9 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		RenderDetailInfo(Info, pEntry);
 
 		RenderDetailScoreboard(View, pEntry, 4);
+
+		if(ReturnValue && UI()->MouseInside(&View))
+			ReturnValue++;
 	}
 
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
@@ -1264,9 +1268,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					continue;
 				}
 
-				if(DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
+				if(int ReturnValue = DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
 				{
-					m_ShowServerDetails = !m_ShowServerDetails || (m_SelectedServer.m_Index != i); // click twice => fold server details
+					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || m_SelectedServer.m_Index != i; // click twice on line => fold server details
 					m_SelectedServer.m_Filter = s;
 					m_SelectedServer.m_Index = i;
 					str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
