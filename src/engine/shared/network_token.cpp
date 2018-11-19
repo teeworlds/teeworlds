@@ -189,7 +189,9 @@ void CNetTokenCache::SendPacketConnless(const NETADDR *pAddr, const void *pData,
 		mem_copy((*ppInfo)->m_aData, pData, DataSize);
 		(*ppInfo)->m_Addr = *pAddr;
 		(*ppInfo)->m_DataSize = DataSize;
-		(*ppInfo)->m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
+		int64 Now = time_get();
+		(*ppInfo)->m_Expiry = Now + time_freq() * NET_TOKENCACHE_PACKETEXPIRY;
+		(*ppInfo)->m_LastTokenRequest = Now;
 		(*ppInfo)->m_pNext = 0;
 		if(pCallbackData)
 		{
@@ -312,6 +314,17 @@ void CNetTokenCache::Update()
 	while((pAddrInfo = m_TokenCache.First()) && (pAddrInfo->m_Expiry <= Now))
 		m_TokenCache.PopFirst();
 
+	// try to fetch the token again for stored packets
+	CConnlessPacketInfo * pEntry = m_pConnlessPacketList;
+	while(pEntry)
+	{
+		if(pEntry->m_LastTokenRequest + 2*time_freq() <= Now)
+		{
+			FetchToken(&pEntry->m_Addr);
+			pEntry->m_LastTokenRequest = Now;
+		}
+		pEntry = pEntry->m_pNext;
+	}
 
 	// drop expired packets
 	while(m_pConnlessPacketList && m_pConnlessPacketList->m_Expiry <= Now)

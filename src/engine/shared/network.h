@@ -235,6 +235,7 @@ private:
 		int m_DataSize;
 		char m_aData[NET_MAX_PAYLOAD];
 		int64 m_Expiry;
+		int64 m_LastTokenRequest;
 		const int m_TrackID;
 		FSendCallback m_pfnCallback;
 		void *m_pCallbackUser;
