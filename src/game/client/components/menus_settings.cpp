@@ -1504,7 +1504,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_T, 5.0f);
 		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_T, 5.0f);
 
-		char aBuf[32];
+		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Recommended"));
 		HeaderLeft.y += 2;
 		UI()->DoLabel(&HeaderLeft, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
@@ -1517,6 +1517,15 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		CUIRect ListRec, ListOth;
 		MainView.VSplitMid(&ListRec, &ListOth);
+
+		ListRec.HSplitBottom(ButtonHeight, &ListRec, &Button);
+		ListRec.HSplitBottom(Spacing, &ListRec, 0);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_B, 5.0f);
+		int g = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
+		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/g, s_GfxScreenHeight/g);
+		Button.y += 2;
+		UI()->DoLabel(&Button, aBuf, Button.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
 		ListRec.VSplitRight(1.5f, &ListRec, 0);
 		ListOth.VSplitLeft(1.5f, 0, &ListOth);
 
