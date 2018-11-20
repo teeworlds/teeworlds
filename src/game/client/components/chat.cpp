@@ -795,17 +795,38 @@ void CChat::OnRender()
 		char aBuf[48];
 		if(Line.m_Mode == CHAT_WHISPER)
 		{
-			TextColor = ColorWhisper;
-			ShadowColor = ShadowWhisper;
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->WrapClamp();
+
+			Graphics()->QuadsBegin();
+
+			// image orientation
 			const int LocalCID = m_pClient->m_LocalClientID;
 			if(Line.m_ClientID == LocalCID && Line.m_TargetID >= 0)
-				str_format(aBuf, sizeof(aBuf), "%s ", Localize("To"));
+				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
 			else if(Line.m_TargetID == LocalCID)
-				str_format(aBuf, sizeof(aBuf), "%s ", Localize("From"));
+				Graphics()->QuadsSetSubset(0, 0, 1, 1); // From
 			else
 				dbg_break();
 
-			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
+			const float qx = Cursor.m_X + 2.0f;
+			const float qy = Cursor.m_Y + 2.2f;
+
+			// shadow pass
+			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a, ShadowWhisper.g*ShadowWhisper.a,
+								 ShadowWhisper.b*ShadowWhisper.a, ShadowWhisper.a);
+			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f,
+									  10.0f, 5.0f);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			// color pass
+			Graphics()->SetColor(ColorWhisper.r, ColorWhisper.g, ColorWhisper.b, 1.0f);
+			Quad = IGraphics::CQuadItem(qx, qy, 10.0f, 5.0f);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
+			Cursor.m_X += 12.0f;
 		}
 
 		// render name
@@ -826,8 +847,8 @@ void CChat::OnRender()
 
 		if(Line.m_ClientID != -1)
 		{
-			TextRender()->TextShadowed(&Cursor, Line.m_aName, -1, ShadowOffset, ShadowColor, TextColor);
-			TextRender()->TextShadowed(&Cursor, ": ", 2, ShadowOffset, ShadowColor, TextColor);
+			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
+			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
 
 		// render line
