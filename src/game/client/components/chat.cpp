@@ -463,7 +463,11 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 
-			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", ClientID, m_pClient->m_aClients[ClientID].m_aName);
+			int NameCID = ClientID;
+			if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
+				NameCID = TargetID;
+
+			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", NameCID, m_pClient->m_aClients[NameCID].m_aName);
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 
@@ -786,8 +790,6 @@ void CChat::OnRender()
 									   LeftColor,
 									   RightColor,
 									   CUI::CORNER_R, 2.0f);
-
-			//RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 1.25f);
 		}
 
 		char aBuf[48];
@@ -797,15 +799,9 @@ void CChat::OnRender()
 			ShadowColor = ShadowWhisper;
 			const int LocalCID = m_pClient->m_LocalClientID;
 			if(Line.m_ClientID == LocalCID && Line.m_TargetID >= 0)
-			{
-				str_format(aBuf, sizeof(aBuf), "%s [%s] ", Localize("To"),
-						   m_pClient->m_aClients[Line.m_TargetID].m_aName);
-			}
+				str_format(aBuf, sizeof(aBuf), "%s ", Localize("To"));
 			else if(Line.m_TargetID == LocalCID)
-			{
-				str_format(aBuf, sizeof(aBuf), "%s [%s] ", Localize("From"),
-						   m_pClient->m_aClients[Line.m_ClientID].m_aName);
-			}
+				str_format(aBuf, sizeof(aBuf), "%s ", Localize("From"));
 			else
 				dbg_break();
 
