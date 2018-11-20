@@ -184,7 +184,7 @@ public:
 
 	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
 
-	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify);
+	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify, bool *BroadcastResponse);
 	TOKEN GenerateToken(const NETADDR *pAddr) const;
 	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
 
@@ -218,7 +218,7 @@ public:
 	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData = 0);
 	void PurgeStoredPacket(int TrackID);
 	void FetchToken(const NETADDR *pAddr);
-	void AddToken(const NETADDR *pAddr, TOKEN PeerToken);
+	void AddToken(const NETADDR *pAddr, TOKEN PeerToken, bool AllowBroadcasts);
 	TOKEN GetToken(const NETADDR *pAddr);
 	void Update();
 

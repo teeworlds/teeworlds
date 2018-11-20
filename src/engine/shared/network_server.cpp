@@ -160,11 +160,11 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				continue;
 
 			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+			if(Accept <= 0)
+				continue;
 
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 			{
-				if(!Accept)
-					continue;
 				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
 					bool Found = false;
@@ -213,12 +213,10 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken);
+					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, false);
 			}
 			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
-				if(Accept <= 0)
-					continue;
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				pChunk->m_ClientID = -1;
 				pChunk->m_Address = Addr;
