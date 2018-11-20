@@ -359,11 +359,11 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage);
+		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage, pMsg->m_TargetID);
 	}
 }
 
-void CChat::AddLine(int ClientID, int Mode, const char *pLine)
+void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 {
 	if(*pLine == 0 || (ClientID != -1 && (!g_Config.m_ClShowsocial || m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
@@ -419,6 +419,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 		m_aLines[m_CurrentLine].m_Size[0].y = -1.0f;
 		m_aLines[m_CurrentLine].m_Size[1].y = -1.0f;
 		m_aLines[m_CurrentLine].m_ClientID = ClientID;
+		m_aLines[m_CurrentLine].m_TargetID = TargetID;
 		m_aLines[m_CurrentLine].m_Mode = Mode;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
 
@@ -790,33 +791,26 @@ void CChat::OnRender()
 		}
 
 		char aBuf[48];
-		if(Line.m_Mode == CHAT_TEAM)
-		{
-			TextColor = ColorTeamPre;
-			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Team"));
-			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
-		}
-		else if(Line.m_Mode == CHAT_WHISPER)
+		if(Line.m_Mode == CHAT_WHISPER)
 		{
 			TextColor = ColorWhisper;
 			ShadowColor = ShadowWhisper;
-			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Whisper"));
+			const int LocalCID = m_pClient->m_LocalClientID;
+			if(Line.m_ClientID == LocalCID && Line.m_TargetID >= 0)
+			{
+				str_format(aBuf, sizeof(aBuf), "%s [%s] ", Localize("To"),
+						   m_pClient->m_aClients[Line.m_TargetID].m_aName);
+			}
+			else if(Line.m_TargetID == LocalCID)
+			{
+				str_format(aBuf, sizeof(aBuf), "%s [%s] ", Localize("From"),
+						   m_pClient->m_aClients[Line.m_ClientID].m_aName);
+			}
+			else
+				dbg_break();
+
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
-
-
-		// we have to break protocol to make that work
-		// CNetMsg_Sv_Chat needs a TargetID, like Cl_Chat
-#if 0
-		if(line.m_Mode == CHAT_WHISPER)
-		{
-			TextColor = vec4(1.0f, 0.5f, 0.9f, Blend);
-			if(line.m_ClientID == m_pClient->m_LocalClientID)
-				TextRender()->TextEx(&Cursor, "To ", -1);
-			else
-				TextRender()->TextEx(&Cursor, "From ", -1);
-		}
-#endif
 
 		// render name
 		if(Line.m_ClientID == -1)
