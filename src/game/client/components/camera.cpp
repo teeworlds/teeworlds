@@ -41,7 +41,7 @@ void CCamera::OnRender()
 		m_Zoom = 1.0f;
 
 		// update camera center
-		if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
+		if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition && m_pClient->m_Snap.m_pLocalInfo && !(m_pClient->m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD))
 		{
 			if(m_CamType != CAMTYPE_SPEC)
 			{
