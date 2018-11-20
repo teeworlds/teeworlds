@@ -159,7 +159,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			if(Found)
 				continue;
 
-			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data);
 			if(Accept <= 0)
 				continue;
 
@@ -199,7 +199,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 							Found = true;
 							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token);
 							m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
-							m_aSlots[i].m_Connection.SetToken(m_RecvUnpacker.m_Data.m_Token); // HACK!
 							if(m_pfnNewClient)
 								m_pfnNewClient(i, m_UserPtr);
 							break;
@@ -212,8 +211,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 						CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 					}
 				}
-				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, false);
 			}
 			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{

@@ -182,9 +182,9 @@ public:
 
 	void GenerateSeed();
 
-	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
+	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket);
 
-	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify, bool *BroadcastResponse);
+	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool *BroadcastResponse);
 	TOKEN GenerateToken(const NETADDR *pAddr) const;
 	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
 

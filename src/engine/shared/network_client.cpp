@@ -90,7 +90,7 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			}
 			else
 			{
-				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data);
 				if(!Accept)
 					continue;
 

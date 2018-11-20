@@ -35,11 +35,11 @@ void CNetTokenManager::Update()
 		GenerateSeed();
 }
 
-int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify)
+int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket)
 {
 	bool BroadcastResponse = false;
 	if(pPacket->m_Token != NET_TOKEN_NONE
-		&& !CheckToken(pAddr, pPacket->m_Token, pPacket->m_ResponseToken, Notify, &BroadcastResponse))
+		&& !CheckToken(pAddr, pPacket->m_Token, pPacket->m_ResponseToken, &BroadcastResponse))
 		return 0; // wrong token, silent ignore
 
 	bool Verified = pPacket->m_Token != NET_TOKEN_NONE;
@@ -113,7 +113,7 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	return Result;
 }
 
-bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify, bool *BroadcastResponse)
+bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool *BroadcastResponse)
 {
 	TOKEN CurrentToken = GenerateToken(pAddr, m_Seed);
 	if(CurrentToken == Token)
@@ -121,10 +121,7 @@ bool CNetTokenManager::CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN Respo
 
 	if(GenerateToken(pAddr, m_PrevSeed) == Token)
 	{
-		if(Notify)
-			CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
-				ResponseToken, 0, NET_CTRLMSG_TOKEN, CurrentToken);
-				// notify the peer about the new token
+		// no need to notify the peer, just a one time thing
 		return true;
 	}
 	else if(Token == m_GlobalToken)
