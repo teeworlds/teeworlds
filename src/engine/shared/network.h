@@ -9,32 +9,36 @@
 /*
 
 CURRENT:
-	packet header: 5 bytes (6 bytes for connless)
-		unsigned char token[2]; // 16bit token
-		unsigned char token_flags; // 4bit token, 4bit flags
-		unsigned char ack; // 8bit ack
-		unsigned char ack_numchunks; // 2bit ack, 6bit chunks
+	packet header: 7 bytes (9 bytes for connless)
+		unsigned char token[4];		// 32bit token
+		unsigned char flags;		// 6bit flags, 2bit ack
+		unsigned char ack;			// 8bit ack
+		unsigned char numchunks;	// 8bit chunks
 		// TTTTTTTT
 		// TTTTTTTT
-		// TTTTffff
+		// TTTTTTTT
+		// TTTTTTTT
+		// ffffffaa
 		// aaaaaaaa
-		// aaNNNNNN
+		// NNNNNNNN
 
 	packet header (CONNLESS):
-		unsigned char token[2]; // 16bit token
-		unsigned char token_flag; // 4bit token, 4bit flags
-		unsigned char version_responsetoken; // 4bit version, 4bit response token
-		unsigned char responsetoken[2]; // 16bit response token
+		unsigned char token[4];					// 32bit token
+		unsigned char flag_version;				// 6bit flags, 2bits version
+		unsigned char responsetoken[4];			// 32bit response token
 
 		// TTTTTTTT
 		// TTTTTTTT
-		// TTTTffff
-		// vvvvRRRR
+		// TTTTTTTT
+		// TTTTTTTT
+		// ffffffvv
+		// RRRRRRRR
+		// RRRRRRRR
 		// RRRRRRRR
 		// RRRRRRRR
 
 	if the token isn't explicitely set by any means, it must be set to
-	0xfffff
+	0xffffffff
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -62,13 +66,11 @@ enum
 
 enum
 {
-	NET_VERSION = 2,
-
 	NET_MAX_CHUNKHEADERSIZE = 3,
 	
 	// packets
-	NET_PACKETHEADERSIZE = 5,
-	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 1,
+	NET_PACKETHEADERSIZE = 7,
+	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 2,
 	NET_MAX_PACKETHEADERSIZE = NET_PACKETHEADERSIZE_CONNLESS,
 
 	NET_MAX_PACKETSIZE = 1400,
@@ -88,12 +90,14 @@ enum
 	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME,
 	NET_TOKENCACHE_PACKETEXPIRY = 5,
 
-	NET_TOKEN_MAX = 0xfffff,
+	NET_TOKEN_MAX = 0xffffffff,
 	NET_TOKEN_NONE = NET_TOKEN_MAX,
 	NET_TOKEN_MASK = NET_TOKEN_MAX,
 
 	NET_TOKENFLAG_ALLOWBROADCAST = 1,
 	NET_TOKENFLAG_RESPONSEONLY = 2,
+
+	NET_TOKENREQUEST_DATASIZE = 512,
 
 	//
 	NET_MAX_CLIENTS = 16,
@@ -536,7 +540,7 @@ public:
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
 	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
+	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken, bool Extended);
 	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);

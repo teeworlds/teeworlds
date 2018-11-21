@@ -174,7 +174,7 @@ void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
 void CNetConnection::SendControlWithToken(int ControlMsg)
 {
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token);
+	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token, true);
 }
 
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)

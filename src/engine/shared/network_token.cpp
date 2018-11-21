@@ -63,9 +63,12 @@ int CNetTokenManager::ProcessMessage(const NETADDR *pAddr, const CNetPacketConst
 		return BroadcastResponse ? -1 : 1; // everything is fine, token exchange complete
 
 	// client requesting token
-	CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
-		pPacket->m_ResponseToken, 0, NET_CTRLMSG_TOKEN,
-		GenerateToken(pAddr));
+	if(pPacket->m_DataSize >= NET_TOKENREQUEST_DATASIZE)
+	{
+		CNetBase::SendControlMsgWithToken(m_Socket, (NETADDR *)pAddr,
+			pPacket->m_ResponseToken, 0, NET_CTRLMSG_TOKEN,
+			GenerateToken(pAddr), false);
+	}
 	return 0; // no need to process NET_CTRLMSG_TOKEN further
 }
 
@@ -96,7 +99,7 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	static const NETADDR NullAddr = { 0 };
 	NETADDR Addr;
 	char aBuf[sizeof(NETADDR) + sizeof(int64)];
-	int Result;
+	unsigned int Result;
 
 	if(pAddr->type & NETTYPE_LINK_BROADCAST)
 		return GenerateToken(&NullAddr, Seed);
@@ -252,7 +255,7 @@ TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
 void CNetTokenCache::FetchToken(const NETADDR *pAddr)
 {
 	CNetBase::SendControlMsgWithToken(m_Socket, pAddr, NET_TOKEN_NONE, 0, 
-		NET_CTRLMSG_TOKEN, m_pTokenManager->GenerateToken(pAddr));
+		NET_CTRLMSG_TOKEN, m_pTokenManager->GenerateToken(pAddr), true);
 }
 
 void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, int TokenFLag)
