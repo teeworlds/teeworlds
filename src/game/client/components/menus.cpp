@@ -1624,17 +1624,21 @@ int CMenus::Render()
 			// quit button
 			{
 				CUIRect Button;
-				float TopOffset = 35.0f;
+				float TopOffset = 27.0f;
 				Screen.HSplitTop(TopOffset, &Button, 0);
-				Button.VSplitRight(TopOffset - 3.0f, 0, &Button);
+				Button.VSplitRight(TopOffset/* - 3.0f*/, 0, &Button);
 				static CButtonContainer s_QuitButton;
 
 				// draw red-blending button
-				vec4 Color = mix(vec4(1.f, 1.f, 1.f, 0.25f), vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.75f), ButtonFade(&s_QuitButton, 0.6f, 0)/0.6f);
-				RenderTools()->DrawUIRect(&Button, Color, CUI::CORNER_BL|CUI::CORNER_BR|CUI::CORNER_TL, 5.0f);
+				vec4 Color = mix(vec4(0.f, 0.f, 0.f, 0.25f), vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.75f), ButtonFade(&s_QuitButton, 0.6f, 0)/0.6f);
+				RenderTools()->DrawUIRect(&Button, Color, CUI::CORNER_BL, 5.0f);
 
 				// draw non-blending X
-				if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, &Button, false))
+				CUIRect XText = Button;
+				// XText.HMargin(Button.h>=20.0f?2.0f:1.0f, &XText);
+				UI()->DoLabel(&XText, "\u2715", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
+				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\u2715", 0, &Button))
+				// if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_FRIENDICONS, SPRITE_FRIEND_X_A, &Button, false))
 					m_Popup = POPUP_QUIT;
 			}
 
