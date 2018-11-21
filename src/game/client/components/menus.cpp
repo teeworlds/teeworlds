@@ -1636,8 +1636,9 @@ int CMenus::Render()
 				// draw non-blending X
 				CUIRect XText = Button;
 				// XText.HMargin(Button.h>=20.0f?2.0f:1.0f, &XText);
-				UI()->DoLabel(&XText, "\u2715", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\u2715", 0, &Button))
+				
+				UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
+				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\xE2\x9C\x95", 0, &Button))
 				// if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_FRIENDICONS, SPRITE_FRIEND_X_A, &Button, false))
 					m_Popup = POPUP_QUIT;
 			}
