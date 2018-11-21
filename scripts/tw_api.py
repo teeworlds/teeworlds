@@ -97,11 +97,11 @@ def get_server_info(address):
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
-		assert(token_cl == token)
+		assert token_cl == token, "Server %s send wrong token: %d (%d expected)" % (address, token_cl, token)
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
 		data, addr = sock.recvfrom(1024)
 		head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
-		assert(data[:len(head)] == head)
+		assert data[:len(head)] == head, "Server %s info header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
 		sock.close()
 
 		data = data[len(head):] # skip header
@@ -136,10 +136,15 @@ def get_server_info(address):
 			server_info["players"].append(player)
 
 		return server_info
-
+	except AssertionError as e:
+		print(*e.args)
+	except OSError as e:
+		print('> Server %s did not answer' % (address,))
 	except:
 		# import traceback
 		# traceback.print_exc()
+		pass
+	finally:
 		sock.close()
 		return None
 
@@ -167,13 +172,13 @@ def get_list(address):
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
-		assert(token_cl == token)
+		assert token_cl == token, "Master %s send wrong token: %d (%d expected)" % (address, token_cl, token)
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETLIST, addr)
 		head = 	header_connless(token_cl, token_srv) + PACKET_LIST
 
 		while 1:
 			data, addr = sock.recvfrom(1024)
-			assert(data[:len(head)] == head)
+			assert data[:len(head)] == head, "Master %s list header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
 
 			data = data[len(head):]
 			num_servers = len(data) // 18
@@ -186,6 +191,11 @@ def get_list(address):
 				port = ((data[n*18+16])<<8) + data[n*18+17]
 				servers += [(ip, port)]
 
+	except AssertionError as e:
+		print(*e.args)
+	except OSError as e:
+		if not servers:
+			print('> Master %s did not answer' % (address,))
 	except:
 		# import traceback
 		# traceback.print_exc()
