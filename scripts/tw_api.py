@@ -21,29 +21,43 @@ PACKET_GETINFO = b"\xff\xff\xff\xffgie3"
 PACKET_INFO = b"\xff\xff\xff\xffinf3"
 
 def pack_control_msg_with_token(token_srv,token_cl):
-	b = [0,0,1,0,0,5,0,0,0]
-	b[0] = (token_srv >> 12) & 0xff
-	b[1] = (token_srv >>  4) & 0xff
-	b[2] |= (token_srv <<  4) & 0xff
-	b[6] |= (token_cl >> 16) & 0x0f
-	b[7] |= (token_cl >> 8) & 0xff
-	b[8] |= token_cl & 0xff
+	NET_PACKETFLAG_CONTROL = 1
+	NET_CTRLMSG_TOKEN = 5
+	NET_TOKENREQUEST_DATASIZE = 512
+	b = [0]*(4 + 3 + NET_TOKENREQUEST_DATASIZE)
+	# Header
+	b[0] = (token_srv >> 24) & 0xff
+	b[1] = (token_srv >> 16) & 0xff
+	b[2] = (token_srv >> 8) & 0xff
+	b[3] = (token_srv) & 0xff
+	b[4] = (NET_PACKETFLAG_CONTROL<<2)&0xfc
+	# Data
+	b[7] = NET_CTRLMSG_TOKEN
+	b[8] = (token_cl >> 24) & 0xff
+	b[9] = (token_cl >> 16) & 0xff
+	b[10] = (token_cl >> 8) & 0xff
+	b[11] = (token_cl) & 0xff
 	return bytes(b)
 
 def unpack_control_msg_with_token(msg):
 	b = list(msg)
-	token_cl = (b[0] << 12) + (b[1] << 4) + (b[2] >> 4)
-	token_srv = (b[6] << 16) + (b[7] << 8) + b[8]
+	token_cl = (b[0] << 24) + (b[1] << 16) + (b[2] << 8) + (b[3])
+	token_srv = (b[8] << 24) + (b[9] << 16) + (b[10] << 8) + (b[11])
 	return token_cl,token_srv
 
 def header_connless(token_srv, token_cl):
-	b = [0,0,8,16,0,0]
-	b[0] = (token_srv >> 12) & 0xff
-	b[1] = (token_srv >>  4) & 0xff
-	b[2] |= (token_srv <<  4) & 0xff
-	b[3] |= (token_cl >> 16) & 0x0f
-	b[4] |= (token_cl >> 8) & 0xff
-	b[5] |= token_cl & 0xff
+	NET_PACKETFLAG_CONNLESS = 8
+	NET_PACKETVERSION = 1
+	b = [0]*9
+	b[0] = (token_srv >> 24) & 0xff
+	b[1] = (token_srv >> 16) & 0xff
+	b[2] = (token_srv >> 8) & 0xff
+	b[3] = (token_srv) & 0xff
+	b[4] = ((NET_PACKETFLAG_CONNLESS<<2)&0xfc) | (NET_PACKETVERSION&0x03)
+	b[5] = (token_cl >> 24) & 0xff
+	b[6] = (token_cl >> 16) & 0xff
+	b[7] = (token_cl >> 8) & 0xff
+	b[8] = (token_cl) & 0xff
 	return bytes(b)
 
 class Server_Info(threading.Thread):
@@ -93,7 +107,7 @@ def get_server_info(address):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
 		sock.settimeout(TIMEOUT)
-		token = random.randrange(0x100000)
+		token = random.randrange(0x100000000)
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
@@ -168,7 +182,7 @@ def get_list(address):
 		sock = socket(AF_INET, SOCK_DGRAM)
 		sock.settimeout(TIMEOUT)
 
-		token = random.randrange(0x100000)
+		token = random.randrange(0x100000000)
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
