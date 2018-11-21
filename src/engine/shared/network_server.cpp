@@ -212,7 +212,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, false);
+					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_RESPONSEONLY);
 			}
 			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{

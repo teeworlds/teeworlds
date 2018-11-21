@@ -97,7 +97,7 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 				{
 					if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-						m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, true);
+						m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_ALLOWBROADCAST|NET_TOKENFLAG_RESPONSEONLY);
 				}
 				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS && Accept != -1)
 				{

@@ -255,28 +255,22 @@ void CNetTokenCache::FetchToken(const NETADDR *pAddr)
 		NET_CTRLMSG_TOKEN, m_pTokenManager->GenerateToken(pAddr));
 }
 
-void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, bool AllowBroadcasts)
+void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, int TokenFLag)
 {
 	if(Token == NET_TOKEN_NONE)
 		return;
-
-	CAddressInfo Info;
-	Info.m_Addr = *pAddr;
-	Info.m_Token = Token;
-	Info.m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_ADDRESSEXPIRY;
-
-	(*m_TokenCache.Allocate(sizeof(Info))) = Info;
 
 	// search the list of packets to be sent
 	// for this address
 	CConnlessPacketInfo *pPrevInfo = 0;
 	CConnlessPacketInfo *pInfo = m_pConnlessPacketList;
+	bool Found = false;
 	while(pInfo)
 	{
 		static NETADDR NullAddr = { 0 };
 		NullAddr.type = 7;	// cover broadcasts
 		NullAddr.port = pAddr->port;
-		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0 || (AllowBroadcasts && net_addr_comp(&pInfo->m_Addr, &NullAddr) == 0))
+		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0 || ((TokenFLag&NET_TOKENFLAG_ALLOWBROADCAST) && net_addr_comp(&pInfo->m_Addr, &NullAddr) == 0))
 		{
 			// notify the user that the packet gets delivered
 			if(pInfo->m_pfnCallback)
@@ -300,6 +294,16 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, bool AllowBroad
 				pPrevInfo = pInfo;
 			pInfo = pInfo->m_pNext;
 		}
+	}
+
+	// add the token
+	if(Found || !(TokenFLag&NET_TOKENFLAG_RESPONSEONLY))
+	{
+		CAddressInfo Info;
+		Info.m_Addr = *pAddr;
+		Info.m_Token = Token;
+		Info.m_Expiry = time_get() + time_freq() * NET_TOKENCACHE_ADDRESSEXPIRY;
+		(*m_TokenCache.Allocate(sizeof(Info))) = Info;
 	}
 }
 

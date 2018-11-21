@@ -82,15 +82,18 @@ enum
 	NET_PACKETFLAG_CONNLESS=8,
 
 	// token
-	NET_SEEDTIME = 10,
+	NET_SEEDTIME = 16,
 
 	NET_TOKENCACHE_SIZE = 64,
-	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME/2,
-	NET_TOKENCACHE_PACKETEXPIRY = NET_TOKENCACHE_ADDRESSEXPIRY,
+	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME,
+	NET_TOKENCACHE_PACKETEXPIRY = 5,
 
 	NET_TOKEN_MAX = 0xfffff,
 	NET_TOKEN_NONE = NET_TOKEN_MAX,
 	NET_TOKEN_MASK = NET_TOKEN_MAX,
+
+	NET_TOKENFLAG_ALLOWBROADCAST = 1,
+	NET_TOKENFLAG_RESPONSEONLY = 2,
 
 	//
 	NET_MAX_CLIENTS = 16,
@@ -218,7 +221,7 @@ public:
 	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData = 0);
 	void PurgeStoredPacket(int TrackID);
 	void FetchToken(const NETADDR *pAddr);
-	void AddToken(const NETADDR *pAddr, TOKEN PeerToken, bool AllowBroadcasts);
+	void AddToken(const NETADDR *pAddr, TOKEN PeerToken, int TokenFlag);
 	TOKEN GetToken(const NETADDR *pAddr);
 	void Update();
 
@@ -423,6 +426,7 @@ public:
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();
+	void AddToken(const NETADDR *pAddr, TOKEN Token) { m_TokenCache.AddToken(pAddr, Token, 0); };
 
 	//
 	int Drop(int ClientID, const char *pReason);
