@@ -2080,8 +2080,8 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	CUIRect ServerList, Sidebar, BottomBox, SidebarButton;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.VSplitRight(20.0f, &MainView, &SidebarButton);
 	MainView.HSplitBottom(80.0f, &ServerList, &MainView);
-	ServerList.VSplitRight(20.0f, &ServerList, &SidebarButton);
 	if(m_SidebarActive)
 		ServerList.VSplitRight(150.0f, &ServerList, &Sidebar);
 
@@ -2103,14 +2103,11 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	float Spacing = 3.0f;
 	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
 
-	MainView.VSplitRight(ButtonWidth+Spacing, &MainView, 0);
 	MainView.HSplitBottom(60.0f, 0, &BottomBox);
 	BottomBox.VSplitRight(ButtonWidth*2.0f+Spacing, 0, &BottomBox);
 
 	// connect box
-	{
-		RenderServerbrowserBottomBox(BottomBox);
-	}
+	RenderServerbrowserBottomBox(BottomBox);
 
 	// back button
 	RenderBackButton(MainView);
