@@ -97,11 +97,11 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN 
 	dbg_assert((ResponseToken&~NET_TOKEN_MASK) == 0, "resp token out of range");
 
 	int i = 0;
+	aBuffer[i++] = ((NET_PACKETFLAG_CONNLESS<<2)&0xfc) | (NET_PACKETVERSION&0x03); // connless flag and version
 	aBuffer[i++] = (Token>>24)&0xff; // token
 	aBuffer[i++] = (Token>>16)&0xff;
 	aBuffer[i++] = (Token>>8)&0xff;
 	aBuffer[i++] = (Token)&0xff;
-	aBuffer[i++] = ((NET_PACKETFLAG_CONNLESS<<2)&0xfc) | (NET_PACKETVERSION&0x03); // connless flag and version
 	aBuffer[i++] = (ResponseToken>>24)&0xff; // response token
 	aBuffer[i++] = (ResponseToken>>16)&0xff;
 	aBuffer[i++] = (ResponseToken>>8)&0xff;
@@ -155,13 +155,13 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 		FinalSize += NET_PACKETHEADERSIZE;
 
 		int i = 0;
+		aBuffer[i++] = ((pPacket->m_Flags<<2)&0xfc) | ((pPacket->m_Ack>>8)&0x03); // flags and ack
+		aBuffer[i++] = (pPacket->m_Ack)&0xff; // ack
+		aBuffer[i++] = (pPacket->m_NumChunks)&0xff; // num chunks
 		aBuffer[i++] = (pPacket->m_Token>>24)&0xff; // token
 		aBuffer[i++] = (pPacket->m_Token>>16)&0xff;
 		aBuffer[i++] = (pPacket->m_Token>>8)&0xff;
 		aBuffer[i++] = (pPacket->m_Token)&0xff;
-		aBuffer[i++] = ((pPacket->m_Flags<<2)&0xfc) | ((pPacket->m_Ack>>8)&0x03); // flags and ack
-		aBuffer[i++] = (pPacket->m_Ack)&0xff; // ack
-		aBuffer[i++] = (pPacket->m_NumChunks)&0xff; // num chunks
 
 		dbg_assert(i == NET_PACKETHEADERSIZE, "inconsistency");
 
@@ -201,9 +201,8 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 
 	// read the packet
-	pPacket->m_Token = (pBuffer[0]<<24) | (pBuffer[1]<<16) | (pBuffer[2]<<8) | pBuffer[3];
-		// TTTTTTTT TTTTTTTT TTTTTTTT TTTTTTTT
-	pPacket->m_Flags = (pBuffer[4]&0xfc)>>2;
+
+	pPacket->m_Flags = (pBuffer[0]&0xfc)>>2;
 		// FFFFFFxx
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
 	{
@@ -217,13 +216,15 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		pPacket->m_Flags = NET_PACKETFLAG_CONNLESS;
 		pPacket->m_Ack = 0;
 		pPacket->m_NumChunks = 0;
-		int Version = pBuffer[4]&0x3;
+		int Version = pBuffer[0]&0x3;
 			// xxxxxxVV
 
 		if(Version != NET_PACKETVERSION)
 			return -1;
 
 		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE_CONNLESS;
+		pPacket->m_Token = (pBuffer[1] << 24) | (pBuffer[2] << 16) | (pBuffer[3] << 8) | pBuffer[4];
+			// TTTTTTTT TTTTTTTT TTTTTTTT TTTTTTTT
 		pPacket->m_ResponseToken = (pBuffer[5]<<24) | (pBuffer[6]<<16) | (pBuffer[7]<<8) | pBuffer[8];
 			// RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR
 		mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE_CONNLESS], pPacket->m_DataSize);
@@ -237,12 +238,14 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			return -1;
 		}
 
-		pPacket->m_Ack = ((pBuffer[4]&0x3)<<2) | pBuffer[5];
+		pPacket->m_Ack = ((pBuffer[0]&0x3)<<2) | pBuffer[1];
 			// xxxxxxAA AAAAAAAA
-		pPacket->m_NumChunks = pBuffer[6];
+		pPacket->m_NumChunks = pBuffer[2];
 			// NNNNNNNN
 
 		pPacket->m_DataSize = Size - NET_PACKETHEADERSIZE;
+		pPacket->m_Token = (pBuffer[3] << 24) | (pBuffer[4] << 16) | (pBuffer[5] << 8) | pBuffer[6];
+			// TTTTTTTT TTTTTTTT TTTTTTTT TTTTTTTT
 		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 		
 		if(pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION)

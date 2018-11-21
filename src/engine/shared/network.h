@@ -10,28 +10,28 @@
 
 CURRENT:
 	packet header: 7 bytes (9 bytes for connless)
-		unsigned char token[4];		// 32bit token
-		unsigned char flags;		// 6bit flags, 2bit ack
+		unsigned char flags_ack;	// 6bit flags, 2bit ack
 		unsigned char ack;			// 8bit ack
 		unsigned char numchunks;	// 8bit chunks
-		// TTTTTTTT
-		// TTTTTTTT
-		// TTTTTTTT
-		// TTTTTTTT
+		unsigned char token[4];		// 32bit token
 		// ffffffaa
 		// aaaaaaaa
 		// NNNNNNNN
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
 
 	packet header (CONNLESS):
-		unsigned char token[4];					// 32bit token
 		unsigned char flag_version;				// 6bit flags, 2bits version
+		unsigned char token[4];					// 32bit token
 		unsigned char responsetoken[4];			// 32bit response token
 
-		// TTTTTTTT
-		// TTTTTTTT
-		// TTTTTTTT
-		// TTTTTTTT
 		// ffffffvv
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
 		// RRRRRRRR
 		// RRRRRRRR
 		// RRRRRRRR
