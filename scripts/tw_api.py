@@ -12,14 +12,14 @@ MASTERSERVER_PORT = 8283
 
 TIMEOUT = 2
 
-SERVERTYPE_NORMAL = 0
-
+# src/mastersrv/mastersrv.h
 PACKET_GETLIST = b"\xff\xff\xff\xffreq2"
 PACKET_LIST = b"\xff\xff\xff\xfflis2"
 
 PACKET_GETINFO = b"\xff\xff\xff\xffgie3"
 PACKET_INFO = b"\xff\xff\xff\xffinf3"
 
+# see CNetBase::SendControlMsgWithToken
 def pack_control_msg_with_token(token_srv,token_cl):
 	NET_PACKETFLAG_CONTROL = 1
 	NET_CTRLMSG_TOKEN = 5
@@ -45,6 +45,7 @@ def unpack_control_msg_with_token(msg):
 	token_srv = (b[8] << 24) + (b[9] << 16) + (b[10] << 8) + (b[11])
 	return token_cl,token_srv
 
+# CNetBase::SendPacketConnless
 def header_connless(token_srv, token_cl):
 	NET_PACKETFLAG_CONNLESS = 8
 	NET_PACKETVERSION = 1
@@ -60,18 +61,7 @@ def header_connless(token_srv, token_cl):
 	b[8] = (token_cl) & 0xff
 	return bytes(b)
 
-class Server_Info(threading.Thread):
-
-	def __init__(self, address):
-		self.address = address
-		self.finished = False
-		threading.Thread.__init__(self, target = self.run)
-
-	def run(self):
-		self.info = None
-		self.info = get_server_info(self.address)
-		self.finished = True
-
+# CVariableInt::Unpack from src/engine/shared/compression.cpp
 def unpack_int(b):
 	l = list(b[:5])
 	i = 0
@@ -103,15 +93,31 @@ def unpack_int(b):
 	res ^= -Sign
 	return res, b[i:]
 
+class Server_Info(threading.Thread):
+
+	def __init__(self, address):
+		self.address = address
+		self.finished = False
+		threading.Thread.__init__(self, target = self.run)
+
+	def run(self):
+		self.info = None
+		self.info = get_server_info(self.address)
+		self.finished = True
+
 def get_server_info(address):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
 		sock.settimeout(TIMEOUT)
 		token = random.randrange(0x100000000)
+
+		# Token request
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
 		assert token_cl == token, "Server %s send wrong token: %d (%d expected)" % (address, token_cl, token)
+
+		# Get info request
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
 		data, addr = sock.recvfrom(1024)
 		head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
@@ -152,7 +158,7 @@ def get_server_info(address):
 		return server_info
 	except AssertionError as e:
 		print(*e.args)
-	except OSError as e:
+	except OSError as e: # Timeout
 		print('> Server %s did not answer' % (address,))
 	except:
 		# import traceback
@@ -160,7 +166,7 @@ def get_server_info(address):
 		pass
 	finally:
 		sock.close()
-		return None
+	return None
 
 
 class Master_Server_Info(threading.Thread):
@@ -183,23 +189,30 @@ def get_list(address):
 		sock.settimeout(TIMEOUT)
 
 		token = random.randrange(0x100000000)
+
+		# Token request
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
 		assert token_cl == token, "Master %s send wrong token: %d (%d expected)" % (address, token_cl, token)
+
+		# Get list request
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETLIST, addr)
 		head = 	header_connless(token_cl, token_srv) + PACKET_LIST
 
 		while 1:
 			data, addr = sock.recvfrom(1024)
+			# Header should keep consistent
 			assert data[:len(head)] == head, "Master %s list header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
 
 			data = data[len(head):]
 			num_servers = len(data) // 18
 
 			for n in range(0, num_servers):
+				# IPv4
 				if data[n*18:n*18+12] == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff":
 					ip = ".".join(map(str, data[n*18+12:n*18+16]))
+				# IPv6
 				else:
 					ip = ":".join(map(str, data[n*18:n*18+16]))
 				port = ((data[n*18+16])<<8) + data[n*18+17]
@@ -207,7 +220,7 @@ def get_list(address):
 
 	except AssertionError as e:
 		print(*e.args)
-	except OSError as e:
+	except OSError as e: # Timeout
 		if not servers:
 			print('> Master %s did not answer' % (address,))
 	except:
@@ -217,48 +230,45 @@ def get_list(address):
 
 	return servers
 
+if __name__ == '__main__':
+	master_servers = []
 
+	for i in range(1, NUM_MASTERSERVERS+1):
+		m = Master_Server_Info(("master%d.teeworlds.com"%i, MASTERSERVER_PORT))
+		master_servers.append(m)
+		m.start()
+		time.sleep(0.001) # avoid issues
 
-master_servers = []
+	servers = []
 
-for i in range(1, NUM_MASTERSERVERS+1):
-	m = Master_Server_Info(("master%d.teeworlds.com"%i, MASTERSERVER_PORT))
-	master_servers.append(m)
-	m.start()
-	time.sleep(0.001) # avoid issues
+	while len(master_servers) != 0:
+		if master_servers[0].finished == True:
+			if master_servers[0].servers:
+				servers += master_servers[0].servers
+			del master_servers[0]
+		time.sleep(0.001) # be nice
 
-servers = []
+	servers_info = []
 
-while len(master_servers) != 0:
-	if master_servers[0].finished == True:
-		if master_servers[0].servers:
-			servers += master_servers[0].servers
-		del master_servers[0]
-	time.sleep(0.001) # be nice
+	print(str(len(servers)) + " servers")
 
-servers_info = []
+	for server in servers:
+		s = Server_Info(server)
+		servers_info.append(s)
+		s.start()
+		time.sleep(0.001) # avoid issues
 
-print(str(len(servers)) + " servers")
+	num_players = 0
+	num_clients = 0
 
-for server in servers:
-	s = Server_Info(server)
-	servers_info.append(s)
-	s.start()
-	time.sleep(0.001) # avoid issues
+	while len(servers_info) != 0:
+		if servers_info[0].finished == True:
+			if servers_info[0].info:
+				num_players += servers_info[0].info["num_players"]
+				num_clients += servers_info[0].info["num_clients"]
 
-num_players = 0
-num_clients = 0
+			del servers_info[0]
 
-player_names = []
-while len(servers_info) != 0:
-	if servers_info[0].finished == True:
+		time.sleep(0.001) # be nice
 
-		if servers_info[0].info:
-			num_players += servers_info[0].info["num_players"]
-			num_clients += servers_info[0].info["num_clients"]
-
-		del servers_info[0]
-
-	time.sleep(0.001) # be nice
-
-print(str(num_players) + " players and " + str(num_clients-num_players) + " spectators")
+	print(str(num_players) + " players and " + str(num_clients-num_players) + " spectators")
