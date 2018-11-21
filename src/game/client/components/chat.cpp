@@ -536,22 +536,12 @@ void CChat::OnRender()
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 12.0f;
 	float y = 300.0f-20.0f;
-	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[m_pClient->m_LocalClientID];
-	int LocalTteam = LocalClient.m_Team;
+	const int LocalCID = m_pClient->m_LocalClientID;
+	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
+	const int LocalTteam = LocalClient.m_Team;
 
 	if(m_Mode != CHAT_NONE)
 	{
-		// draw chat icon
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
-
-		Graphics()->QuadsBegin();
-
-		RenderTools()->SelectSprite(SPRITE_DOTDOT);
-		IGraphics::CQuadItem Quad(1.0f, y, 10.f, 10.f);
-		Graphics()->QuadsDrawTL(&Quad, 1);
-
-		Graphics()->QuadsEnd();
-
 		// calculate category text size
 		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryWidth;
@@ -574,14 +564,14 @@ void CChat::OnRender()
 					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 			}
 			else if(m_Mode == CHAT_WHISPER)
-				str_format(aCatText, sizeof(aCatText), "%s %2d: %s", Localize("Whisper"),
+				str_format(aCatText, sizeof(aCatText), "%2d: %s",
 						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 			else
 				str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
 
 			TextRender()->TextEx(&Cursor, aCatText, -1);
 
-			CategoryWidth = Cursor.m_X;
+			CategoryWidth = Cursor.m_X - Cursor.m_StartX;
 			CategoryHeight = Cursor.m_FontSize;
 		}
 
@@ -596,16 +586,42 @@ void CChat::OnRender()
 		else if(m_Mode == CHAT_WHISPER)
 			CatRectColor = CRCWhisper;
 
+		const float IconOffsetX = m_Mode == CHAT_WHISPER ? 4.0f : 0.0f;
+
 		CUIRect CatRect;
 		CatRect.x = 0;
 		CatRect.y = y;
-		CatRect.w = CategoryWidth + 2.0f;
+		CatRect.w = CategoryWidth + x + 2.0f + IconOffsetX;
 		CatRect.h = CategoryHeight + 4.0f;
 		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
 
+		// draw chat icon
+		Graphics()->WrapClamp();
+		IGraphics::CQuadItem QuadIcon;
+
+		if(m_Mode == CHAT_WHISPER)
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetSubset(1, 0, 0, 1);
+			QuadIcon = IGraphics::CQuadItem(1.5f, y + 2.0f, 16.f, 8.0f);
+		}
+		else
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+			Graphics()->QuadsBegin();
+			RenderTools()->SelectSprite(SPRITE_DOTDOT);
+			QuadIcon = IGraphics::CQuadItem(1.0f, y, 10.f, 10.0f);
+		}
+
+		Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->QuadsDrawTL(&QuadIcon, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
 		// render chat input
 		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, x + IconOffsetX, y, CategoryFontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
@@ -656,6 +672,7 @@ void CChat::OnRender()
 	m_Show |= m_Mode != CHAT_NONE;
 
 	int64 Now = time_get();
+	const int64 TimeFreq = time_freq();
 	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
 	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 90.0f : 200.0f;
 	float Begin = x;
@@ -692,7 +709,7 @@ void CChat::OnRender()
 
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 			Line.m_Size[OffsetType].y = Cursor.m_Y + Cursor.m_FontSize;
-			Line.m_Size[OffsetType].x = Cursor.m_Y == 0.0f ? Cursor.m_X : LineWidth;
+			Line.m_Size[OffsetType].x = Cursor.m_Y == 0.0f ? Cursor.m_X - Cursor.m_StartX : LineWidth;
 		}
 	}
 
@@ -701,7 +718,7 @@ void CChat::OnRender()
 		CUIRect Rect;
 		Rect.x = 0;
 		Rect.y = HeightLimit - 2.0f;
-		Rect.w = LineWidth + 7.0f + x;
+		Rect.w = LineWidth + x;
 		Rect.h = 300 - HeightLimit - 22.f;
 
 		const float LeftAlpha = 0.85f;
@@ -721,7 +738,7 @@ void CChat::OnRender()
 
 		if(m_aLines[r].m_aText[0] == 0) break;
 
-		if(Now > Line.m_Time+16*time_freq() && !m_Show)
+		if(Now > Line.m_Time+16*TimeFreq && !m_Show)
 			break;
 
 		y -= Line.m_Size[OffsetType].y;
@@ -730,17 +747,13 @@ void CChat::OnRender()
 		if(y < HeightLimit)
 			break;
 
-		float Blend = Now > Line.m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-Line.m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+		float Blend = Now > Line.m_Time+14*TimeFreq && !m_Show ? 1.0f-(Now-Line.m_Time-14*TimeFreq)/(2.0f*TimeFreq) : 1.0f;
 
 		const float HlTimeFull = 1.0f;
 		const float HlTimeFade = 1.0f;
 
-		float HighlightBlend = 0.0f;
-		if(!m_Show)
-		{
-			float Delta = (Now - Line.m_Time) / (float)time_freq();
-			HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
-		}
+		float Delta = (Now - Line.m_Time) / (float)TimeFreq;
+		const float HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
 
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
@@ -770,7 +783,7 @@ void CChat::OnRender()
 
 		vec4 TextColor = ColorAllText;
 
-		if(Line.m_Highlighted)
+		if(Line.m_Highlighted && ColorHighlightBg.a > 0.001f)
 		{
 			CUIRect BgRect;
 			BgRect.x = Cursor.m_X;
