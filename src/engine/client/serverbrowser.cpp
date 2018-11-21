@@ -22,7 +22,7 @@
 #include "serverbrowser.h"
 
 
-static char *s_pFilename = "serverlist.json";
+static const char *s_pFilename = "serverlist.json";
 
 inline int AddrHash(const NETADDR *pAddr)
 {

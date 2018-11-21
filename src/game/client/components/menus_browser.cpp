@@ -1323,7 +1323,7 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 {
 	CUIRect Button, Icon, Label, Rect;
-	CUIRect BottomArea, ButtonBackground;
+	CUIRect BottomArea;
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
 	static const char *s_HeaderCaption[NUM_FRIEND_TYPES] = { Localize("Online players (%d)"), Localize("Online clanmates (%d)"), Localize("Offline (%d)") };
@@ -1547,7 +1547,6 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	static CButtonContainer s_AddFilter;
 	if(s_aFilterName[0] && UI()->DoButtonLogic(&s_AddFilter, "", 0, &Button))
 	{
-		CServerFilterInfo NewFilterInfo;
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 		s_aFilterName[0] = 0;
 	}

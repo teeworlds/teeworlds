@@ -555,7 +555,7 @@ public:
 		FakeToScreenX = (Graphics()->ScreenWidth()/(ScreenX1-ScreenX0));
 		FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
 		ShadowOffset.x /= FakeToScreenX;
-		ShadowOffset.y /= FakeToScreenX;
+		ShadowOffset.y /= FakeToScreenY;
 
 		CQuadChar aTextQuads[1024];
 		int TextQuadCount = 0;
