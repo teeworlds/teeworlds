@@ -359,11 +359,11 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage);
+		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage, pMsg->m_TargetID);
 	}
 }
 
-void CChat::AddLine(int ClientID, int Mode, const char *pLine)
+void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 {
 	if(*pLine == 0 || (ClientID != -1 && (!g_Config.m_ClShowsocial || m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
@@ -419,6 +419,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 		m_aLines[m_CurrentLine].m_Size[0].y = -1.0f;
 		m_aLines[m_CurrentLine].m_Size[1].y = -1.0f;
 		m_aLines[m_CurrentLine].m_ClientID = ClientID;
+		m_aLines[m_CurrentLine].m_TargetID = TargetID;
 		m_aLines[m_CurrentLine].m_Mode = Mode;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
 
@@ -462,7 +463,11 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 
-			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", ClientID, m_pClient->m_aClients[ClientID].m_aName);
+			int NameCID = ClientID;
+			if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
+				NameCID = TargetID;
+
+			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", NameCID, m_pClient->m_aClients[NameCID].m_aName);
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 
@@ -531,22 +536,12 @@ void CChat::OnRender()
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 12.0f;
 	float y = 300.0f-20.0f;
-	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[m_pClient->m_LocalClientID];
-	int LocalTteam = LocalClient.m_Team;
+	const int LocalCID = m_pClient->m_LocalClientID;
+	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
+	const int LocalTteam = LocalClient.m_Team;
 
 	if(m_Mode != CHAT_NONE)
 	{
-		// draw chat icon
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
-
-		Graphics()->QuadsBegin();
-
-		RenderTools()->SelectSprite(SPRITE_DOTDOT);
-		IGraphics::CQuadItem Quad(1.0f, y, 10.f, 10.f);
-		Graphics()->QuadsDrawTL(&Quad, 1);
-
-		Graphics()->QuadsEnd();
-
 		// calculate category text size
 		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryWidth;
@@ -569,14 +564,14 @@ void CChat::OnRender()
 					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 			}
 			else if(m_Mode == CHAT_WHISPER)
-				str_format(aCatText, sizeof(aCatText), "%s %2d: %s", Localize("Whisper"),
+				str_format(aCatText, sizeof(aCatText), "%2d: %s",
 						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
 			else
 				str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
 
 			TextRender()->TextEx(&Cursor, aCatText, -1);
 
-			CategoryWidth = Cursor.m_X;
+			CategoryWidth = Cursor.m_X - Cursor.m_StartX;
 			CategoryHeight = Cursor.m_FontSize;
 		}
 
@@ -591,16 +586,42 @@ void CChat::OnRender()
 		else if(m_Mode == CHAT_WHISPER)
 			CatRectColor = CRCWhisper;
 
+		const float IconOffsetX = m_Mode == CHAT_WHISPER ? 6.0f : 0.0f;
+
 		CUIRect CatRect;
 		CatRect.x = 0;
 		CatRect.y = y;
-		CatRect.w = CategoryWidth + 2.0f;
+		CatRect.w = CategoryWidth + x + 2.0f + IconOffsetX;
 		CatRect.h = CategoryHeight + 4.0f;
 		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
 
+		// draw chat icon
+		Graphics()->WrapClamp();
+		IGraphics::CQuadItem QuadIcon;
+
+		if(m_Mode == CHAT_WHISPER)
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetSubset(1, 0, 0, 1);
+			QuadIcon = IGraphics::CQuadItem(1.5f, y + (CatRect.h - 8.0f) * 0.5f, 16.f, 8.0f);
+		}
+		else
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+			Graphics()->QuadsBegin();
+			RenderTools()->SelectSprite(SPRITE_DOTDOT);
+			QuadIcon = IGraphics::CQuadItem(1.0f, y, 10.f, 10.0f);
+		}
+
+		Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->QuadsDrawTL(&QuadIcon, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
 		// render chat input
 		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, x + IconOffsetX, y, CategoryFontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
@@ -651,6 +672,7 @@ void CChat::OnRender()
 	m_Show |= m_Mode != CHAT_NONE;
 
 	int64 Now = time_get();
+	const int64 TimeFreq = time_freq();
 	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
 	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 90.0f : 200.0f;
 	float Begin = x;
@@ -686,8 +708,9 @@ void CChat::OnRender()
 			str_append(aBuf, Line.m_aText, sizeof(aBuf));
 
 			TextRender()->TextEx(&Cursor, aBuf, -1);
-			Line.m_Size[OffsetType].y = Cursor.m_Y + Cursor.m_FontSize;
-			Line.m_Size[OffsetType].x = Cursor.m_Y == 0.0f ? Cursor.m_X : LineWidth;
+			// FIXME: sometimes an empty line will pop here when the cursor reaches the end of line
+			Line.m_Size[OffsetType].y = Cursor.m_LineCount * Cursor.m_FontSize;
+			Line.m_Size[OffsetType].x = Cursor.m_LineCount == 1 ? Cursor.m_X - Cursor.m_StartX : LineWidth;
 		}
 	}
 
@@ -696,7 +719,7 @@ void CChat::OnRender()
 		CUIRect Rect;
 		Rect.x = 0;
 		Rect.y = HeightLimit - 2.0f;
-		Rect.w = LineWidth + 7.0f + x;
+		Rect.w = LineWidth + x;
 		Rect.h = 300 - HeightLimit - 22.f;
 
 		const float LeftAlpha = 0.85f;
@@ -716,7 +739,7 @@ void CChat::OnRender()
 
 		if(m_aLines[r].m_aText[0] == 0) break;
 
-		if(Now > Line.m_Time+16*time_freq() && !m_Show)
+		if(Now > Line.m_Time+16*TimeFreq && !m_Show)
 			break;
 
 		y -= Line.m_Size[OffsetType].y;
@@ -725,17 +748,13 @@ void CChat::OnRender()
 		if(y < HeightLimit)
 			break;
 
-		float Blend = Now > Line.m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-Line.m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+		float Blend = Now > Line.m_Time+14*TimeFreq && !m_Show ? 1.0f-(Now-Line.m_Time-14*TimeFreq)/(2.0f*TimeFreq) : 1.0f;
 
 		const float HlTimeFull = 1.0f;
 		const float HlTimeFade = 1.0f;
 
-		float HighlightBlend = 0.0f;
-		if(!m_Show)
-		{
-			float Delta = (Now - Line.m_Time) / (float)time_freq();
-			HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
-		}
+		float Delta = (Now - Line.m_Time) / (float)TimeFreq;
+		const float HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
 
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
@@ -765,7 +784,7 @@ void CChat::OnRender()
 
 		vec4 TextColor = ColorAllText;
 
-		if(Line.m_Highlighted)
+		if(Line.m_Highlighted && ColorHighlightBg.a > 0.001f)
 		{
 			CUIRect BgRect;
 			BgRect.x = Cursor.m_X;
@@ -785,38 +804,48 @@ void CChat::OnRender()
 									   LeftColor,
 									   RightColor,
 									   CUI::CORNER_R, 2.0f);
-
-			//RenderTools()->DrawRoundRect(&BgRect, ColorHighlightBg, 1.25f);
 		}
 
 		char aBuf[48];
-		if(Line.m_Mode == CHAT_TEAM)
+		if(Line.m_Mode == CHAT_WHISPER)
 		{
-			TextColor = ColorTeamPre;
-			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Team"));
-			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
-		}
-		else if(Line.m_Mode == CHAT_WHISPER)
-		{
-			TextColor = ColorWhisper;
-			ShadowColor = ShadowWhisper;
-			str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Whisper"));
-			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
-		}
+			const float LineBaseY = TextRender()->TextGetLineBaseY(&Cursor);
 
+			const float qw = 10.0f;
+			const float qh = 5.0f;
+			const float qx = Cursor.m_X + 2.0f;
+			const float qy = LineBaseY - qh - 0.5f;
 
-		// we have to break protocol to make that work
-		// CNetMsg_Sv_Chat needs a TargetID, like Cl_Chat
-#if 0
-		if(line.m_Mode == CHAT_WHISPER)
-		{
-			TextColor = vec4(1.0f, 0.5f, 0.9f, Blend);
-			if(line.m_ClientID == m_pClient->m_LocalClientID)
-				TextRender()->TextEx(&Cursor, "To ", -1);
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->WrapClamp();
+
+			Graphics()->QuadsBegin();
+
+			// image orientation
+			const int LocalCID = m_pClient->m_LocalClientID;
+			if(Line.m_ClientID == LocalCID && Line.m_TargetID >= 0)
+				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
+			else if(Line.m_TargetID == LocalCID)
+				Graphics()->QuadsSetSubset(0, 0, 1, 1); // From
 			else
-				TextRender()->TextEx(&Cursor, "From ", -1);
+				dbg_break();
+
+
+			// shadow pass
+			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a, ShadowWhisper.g*ShadowWhisper.a,
+								 ShadowWhisper.b*ShadowWhisper.a, ShadowWhisper.a);
+			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f, qw, qh);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			// color pass
+			Graphics()->SetColor(ColorWhisper.r, ColorWhisper.g, ColorWhisper.b, 1.0f);
+			Quad = IGraphics::CQuadItem(qx, qy, qw, qh);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
+			Cursor.m_X += 12.5f;
 		}
-#endif
 
 		// render name
 		if(Line.m_ClientID == -1)
@@ -836,8 +865,8 @@ void CChat::OnRender()
 
 		if(Line.m_ClientID != -1)
 		{
-			TextRender()->TextShadowed(&Cursor, Line.m_aName, -1, ShadowOffset, ShadowColor, TextColor);
-			TextRender()->TextShadowed(&Cursor, ": ", 2, ShadowOffset, ShadowColor, TextColor);
+			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
+			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
 
 		// render line

@@ -948,6 +948,38 @@ public:
 			pCursor->m_Y = DrawY;
 	}
 
+	float TextGetLineBaseY(const CTextCursor *pCursor)
+	{
+		CFont *pFont = pCursor->m_pFont;
+		CFontSizeData *pSizeData = NULL;
+
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		float Size = pCursor->m_FontSize;
+
+		// to correct coords, convert to screen coords, round, and convert back
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+		float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
+		int ActualY = (int)(pCursor->m_Y * FakeToScreenY);
+		float CursorY = ActualY / FakeToScreenY;
+
+		// same with size
+		int ActualSize = (int)(Size * FakeToScreenY);
+		Size = ActualSize / FakeToScreenY;
+
+		// fetch pFont data
+		if(!pFont)
+			pFont = m_pDefaultFont;
+
+		if(!pFont)
+			return 0;
+
+		pSizeData = GetSize(pFont, ActualSize);
+		RenderSetup(pFont, ActualSize);
+		CFontChar *pChr = GetChar(pFont, pSizeData, ' ');
+		return CursorY + pChr->m_OffsetY*Size + pChr->m_Height*Size;
+	}
+
 };
 
 IEngineTextRender *CreateEngineTextRender() { return new CTextRender; }
