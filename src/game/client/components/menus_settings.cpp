@@ -572,7 +572,7 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 	CMenus *pSelf = (CMenus *)pUser;
 	int l = str_length(pName);
 
-	if(l < 4 || IsDir || str_comp(pName+l-4, ".map") != 0)
+	if(l < 5 || IsDir || str_comp(pName+l-4, ".map") != 0)
 		return 0;
 	char aFullName[128];
 	char aThemeName[128];
@@ -583,26 +583,26 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 	bool isNight = false;
 	if(l > 4 && str_comp(aFullName+l-4, "_day") == 0)
 	{
-		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-3));		
+		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-3));
 		isDay = true;
 	}
 	else if(l > 6 && str_comp(aFullName+l-6, "_night") == 0)
 	{
-		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-5));		
+		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-5));
 		isNight = true;
 	}
 	else
-		return 0;
+		str_copy(aThemeName, aFullName, sizeof(aThemeName));
 	
 	// try to edit an existing theme
-	for(sorted_array<CTheme>::range r = pSelf->m_lThemes.all(); !r.empty(); r.pop_front()) // bit slow but whatever
+	for(int i = 0; i < pSelf->m_lThemes.size(); i++)
 	{
-		if(str_comp(r.front().m_Name, aThemeName) == 0)
+		if(str_comp(pSelf->m_lThemes[i].m_Name, aThemeName) == 0)
 		{
 			if(isDay)
-				r.front().m_HasDay = true;
+				pSelf->m_lThemes[i].m_HasDay = true;
 			if(isNight)
-				r.front().m_HasNight = true;
+				pSelf->m_lThemes[i].m_HasNight = true;
 			return 0;
 		}
 	}
@@ -805,7 +805,16 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			Item.m_Rect.y += 2.0f;
 			char aName[128];
 			if(r.front().m_Name[0])
-				str_format(aName, sizeof(aName), "%s%s", r.front().m_Name.cstr(), (r.front().m_HasDay ? (r.front().m_HasNight ? "" : " (day only)") : " (night only)"));
+			{
+				if(r.front().m_HasDay && r.front().m_HasNight)
+					str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
+				else if(r.front().m_HasDay && !r.front().m_HasNight)
+					str_format(aName, sizeof(aName), "%s (day)", r.front().m_Name.cstr());
+				else if(!r.front().m_HasDay && r.front().m_HasNight)
+					str_format(aName, sizeof(aName), "%s (night)", r.front().m_Name.cstr());
+				else // generic
+					str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
+			}
 			else
 				str_copy(aName, "(none)", sizeof(aName));
 
