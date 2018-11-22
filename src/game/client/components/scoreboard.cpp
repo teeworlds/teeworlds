@@ -180,10 +180,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	bool NoTitle = pTitle? false : true;
 
 	// count players
-	int NumPlayers = 0;
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		if(m_pClient->m_aClients[i].m_Active && m_pClient->m_aClients[i].m_Team == Team)
-			NumPlayers++;
+	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
 	m_PlayerLines = max(m_PlayerLines, NumPlayers);
 
 	char aBuf[128] = {0};
@@ -252,7 +249,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	}
 	else
 	{
-		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW &&
+		if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID >= 0 &&
 			m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID])
 		{
 			int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
@@ -487,6 +484,9 @@ void CScoreboard::OnRender()
 	float w = 364.0f;
 	float FontSize = 86.0f;
 
+	const char *pRedClanName = GetClanName(TEAM_RED);
+	const char *pBlueClanName = GetClanName(TEAM_BLUE);
+
 	if(m_pClient->m_Snap.m_pGameData)
 	{
 		if(!(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS))
@@ -504,9 +504,6 @@ void CScoreboard::OnRender()
 		}
 		else if(m_pClient->m_Snap.m_pGameDataTeam)
 		{
-			const char *pRedClanName = GetClanName(TEAM_RED);
-			const char *pBlueClanName = GetClanName(TEAM_BLUE);
-
 			float ScoreboardHeight = RenderScoreboard(Width/2-w-1.5f, y, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"), -1);
 			RenderScoreboard(Width/2+1.5f, y, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"), 1);
 
@@ -525,9 +522,6 @@ void CScoreboard::OnRender()
 	Graphics()->MapScreen(0, 0, Width, 400*3.0f);
 	if(m_pClient->m_Snap.m_pGameData && (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) && m_pClient->m_Snap.m_pGameDataTeam)
 	{
-		const char *pRedClanName = GetClanName(TEAM_RED);
-		const char *pBlueClanName = GetClanName(TEAM_BLUE);
-
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 		{
 			char aText[256];
@@ -574,16 +568,12 @@ void CScoreboard::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Victim != pMsg->m_Killer)
 			m_aPlayerStats[pMsg->m_Killer].m_Kills++;
 	}
-	else if(MsgType == NETMSGTYPE_SV_CLIENTDROP && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	else if(MsgType == NETMSGTYPE_SV_CLIENTINFO && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		CNetMsg_Sv_ClientDrop *pMsg = (CNetMsg_Sv_ClientDrop *)pRawMsg;
+		CNetMsg_Sv_ClientInfo *pMsg = (CNetMsg_Sv_ClientInfo *)pRawMsg;
 
-		if(m_pClient->m_LocalClientID == pMsg->m_ClientID || !m_pClient->m_aClients[pMsg->m_ClientID].m_Active)
-		{
-			if(g_Config.m_Debug)
-				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid clientdrop");
+		if(!m_pClient->m_aClients[pMsg->m_ClientID].m_Active)
 			return;
-		}
 
 		ResetPlayerStats(pMsg->m_ClientID);
 	}
