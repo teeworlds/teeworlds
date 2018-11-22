@@ -53,6 +53,11 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
+			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+				continue;
+
 			NewSpectatorID = i;
 			GotNewSpectatorID = true;
 			break;
@@ -70,7 +75,27 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 		}
 		NewSpecMode = SPEC_FREEVIEW;
 	case SPEC_FREEVIEW:
-		GotNewSpectatorID = true;
+		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+			GotNewSpectatorID = true;
+		else
+		{
+			// start again on the beginning in survival
+			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
+			{
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+					continue;
+
+				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+					continue;
+
+				NewSpecMode = SPEC_PLAYER;
+				NewSpectatorID = i;
+				GotNewSpectatorID = true;
+				break;
+			}
+		}
 	}
 
 	if(GotNewSpectatorID)
@@ -110,6 +135,11 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
+			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+				continue;
+
 			NewSpectatorID = i;
 			GotNewSpectatorID = true;
 			break;
@@ -119,7 +149,27 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 		NewSpecMode = SPEC_FREEVIEW;
 	case SPEC_FREEVIEW:
 		NewSpectatorID = -1;
-		GotNewSpectatorID = true;
+		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+			GotNewSpectatorID = true;
+		else
+		{
+			// start again on the beginning in survival
+			for(int i = MAX_CLIENTS-1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
+			{
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+					continue;
+
+				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+					continue;
+
+				NewSpecMode = SPEC_PLAYER;
+				NewSpectatorID = i;
+				GotNewSpectatorID = true;
+				break;
+			}
+		}
 	}
 
 	if(GotNewSpectatorID)
