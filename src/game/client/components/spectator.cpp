@@ -24,12 +24,18 @@ void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 
 void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 {
-	((CSpectator *)pUserData)->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
+	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active &&
+		(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK || pSelf->DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER))
+		pSelf->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
 }
 
 void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
+		return;
+
 	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
 	int NewSpectatorID = -1;
 	bool GotNewSpectatorID = false;
@@ -74,6 +80,9 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
+		return;
+
 	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
 	int NewSpectatorID = MAX_CLIENTS;
 	bool GotNewSpectatorID = false;
