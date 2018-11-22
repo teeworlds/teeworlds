@@ -168,19 +168,20 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float LineHeight = 20.0f;
 	float TeeSizeMod = 1.0f;
 	float Spacing = 2.0f;
-	float ScoreOffset = x+4.0f, ScoreLength = 35.0f;
-	float NameOffset = x+4.0f+ScoreLength, NameLength = 136.0f;
-	float TeeOffset = x+4.0f+ScoreLength, TeeLength = 25*TeeSizeMod;
+	float NameOffset = x+4.0f, NameLength = 136.0f;
+	float TeeOffset = x+4.0f, TeeLength = 25*TeeSizeMod;
 	float ClanOffset = NameOffset+NameLength, ClanLength = 90.0f;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 30.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 30.0f;
-	float PingOffset = DeathOffset+DeathLength, PingLength = 35.0f;
+	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = 35.0f;
+	float PingOffset = ScoreOffset+ScoreLength, PingLength = 35.0f;
 	float tw = 0.0f;
 
 	bool NoTitle = pTitle? false : true;
 
 	// count players
-	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
+	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE, "Unknown team id");
+	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
 	m_PlayerLines = max(m_PlayerLines, NumPlayers);
 
 	char aBuf[128] = {0};
@@ -282,13 +283,9 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		CUIRect Rect = {x, y+LineHeight, w, LineHeight*(m_PlayerLines)};
 		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
 	}
-	
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
-	TextRender()->Text(0, ScoreOffset, y+Spacing, HeadlineFontsize, Localize("Score"), -1);
-
-	TextRender()->Text(0, NameOffset+TeeLength, y+Spacing, HeadlineFontsize, Localize("Name"), -1);
+	TextRender()->Text(0, NameOffset, y+Spacing, HeadlineFontsize, Localize("Name"), -1);
 
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Clan"), -1);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Clan"), -1);
@@ -301,6 +298,9 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("D"), -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
+	TextRender()->Text(0, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Score"), -1);
+
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
 	TextRender()->Text(0, PingOffset+PingLength-tw, y+Spacing, HeadlineFontsize, Localize("Ping"), -1);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -379,14 +379,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2+Spacing));
 			}
 
-			// score
-			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
-			Cursor.m_LineWidth = ScoreLength;
-			TextRender()->TextEx(&Cursor, aBuf, -1);
-
 			// name
 			// todo: improve visual player ready state
 			if(!(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_READY))
@@ -417,6 +409,14 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->SetCursor(&Cursor, DeathOffset+DeathLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = DeathLength;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+
+			// score
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
+			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
+			Cursor.m_LineWidth = ScoreLength;
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			// country flag
