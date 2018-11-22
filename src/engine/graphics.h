@@ -69,6 +69,7 @@ public:
 		TEXLOAD_NOMIPMAPS = 2,
 		TEXLOAD_ARRAY_256 = 4,
 		TEXLOAD_MULTI_DIMENSION = 8,
+		TEXLOAD_LINEARMIPMAPS = 16,
 	};
 
 	/* Constants: Wrap Modes */
