@@ -114,7 +114,8 @@ void CSounds::OnRender()
 	}
 
 	// set listner pos
-	Sound()->SetListenerPos(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y);
+	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
+	Sound()->SetListenerPos(Pos.x, Pos.y);
 
 	// play sound from queue
 	if(m_QueuePos > 0)

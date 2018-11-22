@@ -28,6 +28,13 @@ CMapLayers::CMapLayers(int t)
 	m_EnvelopeUpdate = false;
 	m_pMenuMap = 0;
 	m_pMenuLayers = 0;
+	m_OnlineStartTime = 0;
+}
+
+void CMapLayers::OnStateChange(int NewState, int OldState)
+{
+	if(NewState == IClient::STATE_ONLINE)
+		m_OnlineStartTime = Client()->LocalTime(); // reset time for non-scynchronized envelopes
 }
 
 void CMapLayers::LoadBackgroundMap()
@@ -103,7 +110,7 @@ void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoi
 	pLayers->Map()->GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
 	if(!Num)
 		return;
-	
+
 
 	for(int env = 0; env < Num; env++)
 	{
@@ -181,14 +188,13 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(Env >= Num)
 		return;
 
-	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);	
+	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
 
-	static float s_Time = 0.0f;
-	static float s_LastLocalTime = pThis->Client()->LocalTime();
+	float Time = 0.0f;
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-		
+
 		if(!pInfo->m_Paused || pThis->m_EnvelopeUpdate)
 		{
 			if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
@@ -197,12 +203,12 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
 			}
 
-			s_Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
+			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->Client()->IntraGameTick());
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
@@ -210,20 +216,20 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
-				s_Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
+				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							pThis->Client()->IntraGameTick());
 			}
 			else
-				s_Time += pThis->Client()->LocalTime()-s_LastLocalTime;
+				Time = pThis->Client()->LocalTime()-pThis->m_OnlineStartTime;
 		}
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
-		s_LastLocalTime = pThis->Client()->LocalTime();
+
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 	else
 	{
-		s_Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		Time = pThis->Client()->LocalTime();
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 }
 
@@ -244,7 +250,7 @@ void CMapLayers::OnRender()
 	CUIRect Screen;
 	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
 
-	vec2 Center = m_pClient->m_pCamera->m_Center;
+	vec2 Center = *m_pClient->m_pCamera->GetCenter();
 
 	bool PassedGameLayer = false;
 
@@ -256,13 +262,13 @@ void CMapLayers::OnRender()
 		{
 			// set clipping
 			float Points[4];
-			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_pCamera->m_Zoom);
+			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_pCamera->GetZoom());
 			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
 			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2]-Points[0]);
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
 			float x1 = ((pGroup->m_ClipX+pGroup->m_ClipW) - Points[0]) / (Points[2]-Points[0]);
 			float y1 = ((pGroup->m_ClipY+pGroup->m_ClipH) - Points[1]) / (Points[3]-Points[1]);
-			
+
 			if(x1 < 0.0f || x0 > 1.0f || y1 < 0.0f || y0 > 1.0f)
 				continue;
 
@@ -270,7 +276,7 @@ void CMapLayers::OnRender()
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
 		}
 
-		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->m_Zoom);
+		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->GetZoom());
 
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{

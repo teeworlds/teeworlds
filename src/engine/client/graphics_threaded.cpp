@@ -360,6 +360,8 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	}
 	if(Flags&IGraphics::TEXLOAD_MULTI_DIMENSION)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
+	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
+		Cmd.m_Flags |= CCommandBuffer::TEXTFLAG_LINEARMIPMAPS;
 
 	
 	// copy texture data

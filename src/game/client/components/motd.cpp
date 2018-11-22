@@ -9,6 +9,7 @@
 #include <generated/client_data.h>
 #include <game/client/gameclient.h>
 
+#include "menus.h"
 #include "motd.h"
 
 void CMotd::Clear()
@@ -18,6 +19,9 @@ void CMotd::Clear()
 
 bool CMotd::IsActive()
 {
+	// dont render modt if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
+		return false;
 	return time_get() < m_ServerMotdTime;
 }
 

@@ -451,7 +451,8 @@ void CHud::RenderCursor()
 	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	RenderTools()->MapScreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup(), m_pClient->m_pCamera->m_Zoom);
+	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
+	RenderTools()->MapScreenToGroup(Pos.x, Pos.y, Layers()->GameGroup(), m_pClient->m_pCamera->GetZoom());
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 

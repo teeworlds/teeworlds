@@ -246,6 +246,7 @@ Messages = [
 	NetMessage("Sv_Chat", [
 		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
+		NetIntRange("m_TargetID", -1, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pMessage"),
 	]),
 
@@ -322,6 +323,7 @@ Messages = [
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+		NetBool("m_Silent"),
 	]),
 
 	NetMessage("Sv_GameInfo", [
@@ -337,6 +339,7 @@ Messages = [
 	NetMessage("Sv_ClientDrop", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pReason"),
+		NetBool("m_Silent"),
 	]),
 
 	NetMessage("Sv_GameMsg", []),

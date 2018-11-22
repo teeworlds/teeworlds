@@ -67,7 +67,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
 						continue;
 					}
-					
+
 					// add entry
 					const char *pCountryName = rStart[i]["id"];
 					CCountryFlag CountryFlag;
@@ -89,7 +89,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 						mem_free(Info.m_pData);
 					}
 					m_aCountryFlags.add_unsorted(CountryFlag);
-		
+
 					// print message
 					if(g_Config.m_Debug)
 					{
@@ -113,7 +113,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 			DefaultIndex = Index;
 			break;
 		}
-	
+
 	// init LUT
 	if(DefaultIndex != 0)
 		for(int i = 0; i < CODE_RANGE; ++i)
@@ -161,7 +161,7 @@ void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y
 	{
 		Graphics()->TextureSet(pFlag->m_Texture);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(pColor->r, pColor->g, pColor->b, pColor->a);
+		Graphics()->SetColor(pColor->r*pColor->a, pColor->g*pColor->a, pColor->b*pColor->a, pColor->a);
 		IGraphics::CQuadItem QuadItem(x, y, w, h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();

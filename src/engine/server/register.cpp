@@ -266,6 +266,7 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 		if(m_RegisterFirst && m_RegisterState != REGISTERSTATE_REGISTERED)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "no firewall/nat problems detected");
 		RegisterNewState(REGISTERSTATE_REGISTERED);
+		m_pNetServer->AddToken(&pPacket->m_Address, Token);
 		return 1;
 	}
 	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWERROR) &&

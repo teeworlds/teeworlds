@@ -1373,7 +1373,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 						m_GameTime.Init((GameTick-1)*time_freq()/50);
 						m_aSnapshots[SNAP_PREV] = m_SnapshotStorage.m_pFirst;
 						m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
-						m_LocalStartTime = time_get();
 						SetState(IClient::STATE_ONLINE);
 						DemoRecorder_HandleAutoStart();
 					}
@@ -2067,6 +2066,8 @@ void CClient::Run()
 
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
+
+	m_ServerBrowser.SaveServerlist();
 
 	// shutdown SDL
 	{

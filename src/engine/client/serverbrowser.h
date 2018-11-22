@@ -32,6 +32,7 @@ public:
 
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
 	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
+	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
 
 	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
 	int NumSortedPlayers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedPlayers(FilterIndex); }
@@ -48,14 +49,21 @@ public:
 	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
 	static void CBFTrackPacket(int TrackID, void *pUser);
+	
+	void LoadServerlist();
+	void SaveServerlist();
 
 private:
 	class CNetClient *m_pNetClient;
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
 		
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
+
+	class IConsole *Console() const { return m_pConsole; }
+	class IStorage *Storage() const { return m_pStorage; }
 
 	// serverlist
 	int m_ActServerlistType;
@@ -85,6 +93,7 @@ private:
 
 	int m_RefreshFlags;
 	int64 m_BroadcastTime;
+	int64 m_MasterRefreshTime;
 
 	CServerEntry *Add(int ServerlistType, const NETADDR &Addr);
 	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);

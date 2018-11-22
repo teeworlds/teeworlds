@@ -283,7 +283,7 @@ void CGameClient::OnInit()
 	// setup load amount// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
-		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, g_pData->m_aImages[i].m_Flag ? IGraphics::TEXLOAD_NOMIPMAPS : 0);
 		m_pMenus->RenderLoading();
 	}
 
@@ -402,15 +402,18 @@ void CGameClient::UpdatePositions()
 				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
 				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y),
 				Client()->IntraGameTick());
+			m_LocalCharacterPos = m_Snap.m_SpecInfo.m_Position;
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
-		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW))
+		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || (m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW &&
+				m_Snap.m_pLocalInfo && (m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD))))
 		{
 			if(m_Snap.m_pPrevSpectatorInfo)
 				m_Snap.m_SpecInfo.m_Position = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
 													vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick());
 			else
 				m_Snap.m_SpecInfo.m_Position = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
+			m_LocalCharacterPos = m_Snap.m_SpecInfo.m_Position;
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
 	}
@@ -627,7 +630,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				return;
 			}
 
-			if(m_LocalClientID != -1)
+			if(m_LocalClientID != -1 && !pMsg->m_Silent)
 			{
 				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
 				
@@ -676,13 +679,16 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			return;
 		}
 
-		DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
+		if(!pMsg->m_Silent)
+		{
+			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
 
-		CNetMsg_De_ClientLeave Msg;
-		Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
-		Msg.m_ClientID = pMsg->m_ClientID;
-		Msg.m_pReason = pMsg->m_pReason;
-		Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
+			CNetMsg_De_ClientLeave Msg;
+			Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
+			Msg.m_ClientID = pMsg->m_ClientID;
+			Msg.m_pReason = pMsg->m_pReason;
+			Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND | MSGFLAG_RECORD);
+		}
 
 		m_GameInfo.m_NumPlayers--;
 		// calculate team-balance
@@ -1144,7 +1150,7 @@ void CGameClient::OnNewSnapshot()
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
 	if(str_comp(CurrentServerInfo.m_aGameType, "DM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "TDM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "CTF") != 0 &&
-		str_comp(CurrentServerInfo.m_aGameType, "LMS") != 0 && str_comp(CurrentServerInfo.m_aGameType, "SUR") != 0)
+		str_comp(CurrentServerInfo.m_aGameType, "LMS") != 0 && str_comp(CurrentServerInfo.m_aGameType, "LTS") != 0)
 		m_ServerMode = SERVERMODE_MOD;
 	else if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) == 0)
 		m_ServerMode = SERVERMODE_PURE;

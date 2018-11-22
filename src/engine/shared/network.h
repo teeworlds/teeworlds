@@ -9,32 +9,36 @@
 /*
 
 CURRENT:
-	packet header: 5 bytes (6 bytes for connless)
-		unsigned char token[2]; // 16bit token
-		unsigned char token_flags; // 4bit token, 4bit flags
-		unsigned char ack; // 8bit ack
-		unsigned char ack_numchunks; // 2bit ack, 6bit chunks
-		// TTTTTTTT
-		// TTTTTTTT
-		// TTTTffff
+	packet header: 7 bytes (9 bytes for connless)
+		unsigned char flags_ack;	// 6bit flags, 2bit ack
+		unsigned char ack;			// 8bit ack
+		unsigned char numchunks;	// 8bit chunks
+		unsigned char token[4];		// 32bit token
+		// ffffffaa
 		// aaaaaaaa
-		// aaNNNNNN
+		// NNNNNNNN
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
+		// TTTTTTTT
 
 	packet header (CONNLESS):
-		unsigned char token[2]; // 16bit token
-		unsigned char token_flag; // 4bit token, 4bit flags
-		unsigned char version_responsetoken; // 4bit version, 4bit response token
-		unsigned char responsetoken[2]; // 16bit response token
+		unsigned char flag_version;				// 6bit flags, 2bits version
+		unsigned char token[4];					// 32bit token
+		unsigned char responsetoken[4];			// 32bit response token
 
+		// ffffffvv
 		// TTTTTTTT
 		// TTTTTTTT
-		// TTTTffff
-		// vvvvRRRR
+		// TTTTTTTT
+		// TTTTTTTT
+		// RRRRRRRR
+		// RRRRRRRR
 		// RRRRRRRR
 		// RRRRRRRR
 
 	if the token isn't explicitely set by any means, it must be set to
-	0xfffff
+	0xffffffff
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -62,13 +66,11 @@ enum
 
 enum
 {
-	NET_VERSION = 2,
-
 	NET_MAX_CHUNKHEADERSIZE = 3,
 	
 	// packets
-	NET_PACKETHEADERSIZE = 5,
-	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 1,
+	NET_PACKETHEADERSIZE = 7,
+	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 2,
 	NET_MAX_PACKETHEADERSIZE = NET_PACKETHEADERSIZE_CONNLESS,
 
 	NET_MAX_PACKETSIZE = 1400,
@@ -81,16 +83,27 @@ enum
 	NET_PACKETFLAG_COMPRESSION=4,
 	NET_PACKETFLAG_CONNLESS=8,
 
+	NET_MAX_PACKET_CHUNKS=256,
+
 	// token
-	NET_SEEDTIME = 10,
+	NET_SEEDTIME = 16,
 
-	NET_TOKENCACHE_SIZE = 16,
-	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME/2,
-	NET_TOKENCACHE_PACKETEXPIRY = NET_TOKENCACHE_ADDRESSEXPIRY,
-
-	NET_TOKEN_MAX = 0xfffff,
+	NET_TOKENCACHE_SIZE = 64,
+	NET_TOKENCACHE_ADDRESSEXPIRY = NET_SEEDTIME,
+	NET_TOKENCACHE_PACKETEXPIRY = 5,
+};
+enum
+{
+	NET_TOKEN_MAX = 0xffffffff,
 	NET_TOKEN_NONE = NET_TOKEN_MAX,
 	NET_TOKEN_MASK = NET_TOKEN_MAX,
+};
+enum
+{
+	NET_TOKENFLAG_ALLOWBROADCAST = 1,
+	NET_TOKENFLAG_RESPONSEONLY = 2,
+
+	NET_TOKENREQUEST_DATASIZE = 512,
 
 	//
 	NET_MAX_CLIENTS = 16,
@@ -182,9 +195,9 @@ public:
 
 	void GenerateSeed();
 
-	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket, bool Notify);
+	int ProcessMessage(const NETADDR *pAddr, const CNetPacketConstruct *pPacket);
 
-	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool Notify);
+	bool CheckToken(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, bool *BroadcastResponse);
 	TOKEN GenerateToken(const NETADDR *pAddr) const;
 	static TOKEN GenerateToken(const NETADDR *pAddr, int64 Seed);
 
@@ -218,7 +231,7 @@ public:
 	void SendPacketConnless(const NETADDR *pAddr, const void *pData, int DataSize, CSendCBData *pCallbackData = 0);
 	void PurgeStoredPacket(int TrackID);
 	void FetchToken(const NETADDR *pAddr);
-	void AddToken(const NETADDR *pAddr, TOKEN PeerToken);
+	void AddToken(const NETADDR *pAddr, TOKEN PeerToken, int TokenFlag);
 	TOKEN GetToken(const NETADDR *pAddr);
 	void Update();
 
@@ -235,6 +248,7 @@ private:
 		int m_DataSize;
 		char m_aData[NET_MAX_PAYLOAD];
 		int64 m_Expiry;
+		int64 m_LastTokenRequest;
 		const int m_TrackID;
 		FSendCallback m_pfnCallback;
 		void *m_pCallbackUser;
@@ -422,6 +436,7 @@ public:
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();
+	void AddToken(const NETADDR *pAddr, TOKEN Token) { m_TokenCache.AddToken(pAddr, Token, 0); };
 
 	//
 	int Drop(int ClientID, const char *pReason);
@@ -531,7 +546,7 @@ public:
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 
 	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
-	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken);
+	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken, bool Extended);
 	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	static void SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);

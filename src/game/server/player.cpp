@@ -328,11 +328,12 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
-	if(m_RespawnDisabled)
+	if(m_RespawnDisabled && m_Team != TEAM_SPECTATORS)
 	{
 		// enable spectate mode for dead players
 		m_DeadSpecMode = true;
 		m_IsReadyToPlay = true;
+		m_SpecMode = SPEC_PLAYER;
 		UpdateDeadSpecMode();
 		return;
 	}
@@ -345,9 +346,11 @@ void CPlayer::Respawn()
 
 bool CPlayer::SetSpectatorID(int SpecMode, int SpectatorID)
 {
-	if((SpecMode == SPEC_PLAYER && (SpectatorID == -1 || m_SpectatorID == SpectatorID || m_ClientID == SpectatorID)) ||
-			(SpecMode != SPEC_PLAYER && SpecMode == m_SpecMode))
+	if((SpecMode == m_SpecMode && SpecMode != SPEC_PLAYER) ||
+		(m_SpecMode == SPEC_PLAYER && SpecMode == SPEC_PLAYER && (SpectatorID == -1 || m_SpectatorID == SpectatorID || m_ClientID == SpectatorID)))
+	{
 		return false;
+	}
 
 	if(m_Team == TEAM_SPECTATORS)
 	{
