@@ -566,6 +566,90 @@ public:
 	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
 };
 
+
+int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	CMenus *pSelf = (CMenus *)pUser;
+	int l = str_length(pName);
+
+	if(l < 4 || IsDir || str_comp(pName+l-4, ".map") != 0)
+		return 0;
+	char aFullName[128];
+	char aThemeName[128];
+	str_copy(aFullName, pName, min((int)sizeof(aFullName),l-3));
+
+	l = str_length(aFullName);
+	bool isDay = false;
+	bool isNight = false;
+	if(l > 4 && str_comp(aFullName+l-4, "_day") == 0)
+	{
+		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-3));		
+		isDay = true;
+	}
+	else if(l > 6 && str_comp(aFullName+l-6, "_night") == 0)
+	{
+		str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-5));		
+		isNight = true;
+	}
+	else
+		return 0;
+	
+	// try to edit an existing theme
+	for(sorted_array<CTheme>::range r = pSelf->m_lThemes.all(); !r.empty(); r.pop_front()) // bit slow but whatever
+	{
+		if(str_comp(r.front().m_Name, aThemeName) == 0)
+		{
+			if(isDay)
+				r.front().m_HasDay = true;
+			if(isNight)
+				r.front().m_HasNight = true;
+			return 0;
+		}
+	}
+
+	// make new theme
+	CTheme Theme(aThemeName, isDay, isNight);
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "added theme %s from ui/themes/%s", aThemeName, pName);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+	pSelf->m_lThemes.add(Theme);
+	return 0;
+}
+
+int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	CMenus *pSelf = (CMenus *)pUser;
+	int l = str_length(pName);
+
+	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
+		return 0;
+	char aThemeName[128];
+	str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-3));
+	
+	// save icon for an existing theme
+	for(sorted_array<CTheme>::range r = pSelf->m_lThemes.all(); !r.empty(); r.pop_front()) // bit slow but whatever
+	{
+		if(str_comp(r.front().m_Name, aThemeName) == 0)
+		{
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "ui/themes/%s", pName);
+			CImageInfo Info;
+			if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
+			{
+				str_format(aBuf, sizeof(aBuf), "failed to load theme icon from %s", pName);
+				pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+				return 0;
+			}
+			str_format(aBuf, sizeof(aBuf), "loaded theme icon %s", pName);
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+
+			r.front().m_IconTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+			return 0;
+		}
+	}
+	return 0; // no existing theme
+}
+
 void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
 {
 	// read file data into buffer
@@ -667,6 +751,87 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	{
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
+	}
+}
+
+void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
+{
+	static int s_ThemeList = 0;
+	static int s_SelectedTheme = 0;
+	static CListBoxState s_ListBoxState_Theme;
+
+	if(m_lThemes.size() == 0) // not loaded yet
+	{
+		m_lThemes.add(CTheme("", false, false)); // no theme
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeScan, (CMenus*)this);
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeIconScan, (CMenus*)this);
+		for(int i = 0; i < m_lThemes.size(); i++)
+			if(str_comp(m_lThemes[i].m_Name, g_Config.m_ClMenuMap) == 0)
+			{
+				s_SelectedTheme = i;
+				break;
+			}
+	}
+
+	int OldSelected = s_SelectedTheme;
+
+	if(Header)
+		UiDoListboxHeader(&s_ListBoxState_Theme, &MainView, Localize("Theme"), 20.0f, 2.0f);
+	UiDoListboxStart(&s_ListBoxState_Theme, &s_ThemeList, 20.0f, 0, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header?true:false);
+
+	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front());
+
+		if(Item.m_Visible)
+		{
+			CUIRect Rect;
+			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
+			Rect.VMargin(6.0f, &Rect);
+			Rect.HMargin(3.0f, &Rect);
+			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+			// draw icon if it exists
+			if(r.front().m_IconTexture.IsValid())
+			{
+				Graphics()->TextureSet(r.front().m_IconTexture);
+				Graphics()->QuadsBegin();
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+				IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+			}
+			
+			Item.m_Rect.y += 2.0f;
+			char aName[128];
+			if(r.front().m_Name[0])
+				str_format(aName, sizeof(aName), "%s%s", r.front().m_Name.cstr(), (r.front().m_HasDay ? (r.front().m_HasNight ? "" : " (day only)") : " (night only)"));
+			else
+				str_copy(aName, "(none)", sizeof(aName));
+
+			if(!str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name))
+			{
+				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				UI()->DoLabelScaled(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			}
+			else
+				UI()->DoLabelScaled(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+		}
+	}
+
+	s_SelectedTheme = UiDoListboxEnd(&s_ListBoxState_Theme, 0);
+
+	if(OldSelected != s_SelectedTheme)
+	{
+		str_copy(g_Config.m_ClMenuMap, m_lThemes[s_SelectedTheme].m_Name, sizeof(g_Config.m_ClMenuMap));
+		if(m_lThemes[s_SelectedTheme].m_Name[0])
+			g_Config.m_ClShowMenuMap = 1;
+		else
+			g_Config.m_ClShowMenuMap = 0;
+		m_pClient->m_pMapLayersBackGround->BackgroundMapUpdate();
 	}
 }
 
@@ -857,8 +1022,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 
-	// render language selection
-	RenderLanguageSelection(MainView);
+	// render language and theme selection
+	CUIRect LanguageView, ThemeView;
+	MainView.VSplitMid(&LanguageView, &ThemeView);
+	LanguageView.VSplitRight(1, &LanguageView, 0);
+	ThemeView.VSplitLeft(1, 0, &ThemeView);
+	RenderLanguageSelection(LanguageView);
+	RenderThemeSelection(ThemeView);
 
 	// reset button
 	Spacing = 3.0f;

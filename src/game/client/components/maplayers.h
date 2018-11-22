@@ -20,8 +20,8 @@ class CMapLayers : public CComponent
 
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
 
-	void LoadBackgroundMap();
 	void LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints);
+	void LoadBackgroundMap(bool TryBoth);
 
 public:
 	enum

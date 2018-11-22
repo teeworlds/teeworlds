@@ -30,19 +30,24 @@ CMapLayers::CMapLayers(int t)
 	m_pMenuLayers = 0;
 }
 
-void CMapLayers::LoadBackgroundMap()
+void CMapLayers::LoadBackgroundMap(bool TryBoth)
 {
 	if(!g_Config.m_ClShowMenuMap)
 		return;
 
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
+	str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 	if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 	{
-		str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-		return;
+		if(TryBoth) // try to fall back on other version
+			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "night" : "day");
+		if(!TryBoth || !m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+		{
+			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+			return;
+		}
 	}
 
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
@@ -61,7 +66,7 @@ void CMapLayers::OnInit()
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
 
-		LoadBackgroundMap();
+		LoadBackgroundMap(true);
 	}
 }
 
@@ -379,6 +384,6 @@ void CMapLayers::BackgroundMapUpdate()
 		// unload map
 		m_pMenuMap->Unload();
 
-		LoadBackgroundMap();
+		LoadBackgroundMap(true);
 	}
 }

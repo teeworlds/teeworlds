@@ -206,6 +206,24 @@ private:
 
 	const CMenuImage *FindMenuImage(const char* pName);
 
+	// themes
+	class CTheme
+	{
+	public:
+		CTheme() {}
+		CTheme(const char *n, bool HasDay, bool HasNight) : m_Name(n), m_HasDay(HasDay), m_HasNight(HasNight) {}
+
+		string m_Name;
+		bool m_HasDay;
+		bool m_HasNight;
+		IGraphics::CTextureHandle m_IconTexture;
+		bool operator<(const CTheme &Other) { return m_Name < Other.m_Name; }
+	};
+	sorted_array<CTheme> m_lThemes;
+
+	static int ThemeScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser);
+
 	int64 m_LastInput;
 
 	// loading
@@ -556,6 +574,7 @@ private:
 
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
+	void RenderThemeSelection(CUIRect MainView, bool Header=true);
 	void RenderHSLPicker(CUIRect Picker);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);
