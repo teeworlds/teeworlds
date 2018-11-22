@@ -328,7 +328,7 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
-	if(m_RespawnDisabled)
+	if(m_RespawnDisabled && m_Team != TEAM_SPECTATORS)
 	{
 		// enable spectate mode for dead players
 		m_DeadSpecMode = true;
