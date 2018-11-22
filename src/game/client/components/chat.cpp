@@ -586,7 +586,7 @@ void CChat::OnRender()
 		else if(m_Mode == CHAT_WHISPER)
 			CatRectColor = CRCWhisper;
 
-		const float IconOffsetX = m_Mode == CHAT_WHISPER ? 4.0f : 0.0f;
+		const float IconOffsetX = m_Mode == CHAT_WHISPER ? 6.0f : 0.0f;
 
 		CUIRect CatRect;
 		CatRect.x = 0;
@@ -604,7 +604,7 @@ void CChat::OnRender()
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
 			Graphics()->QuadsBegin();
 			Graphics()->QuadsSetSubset(1, 0, 0, 1);
-			QuadIcon = IGraphics::CQuadItem(1.5f, y + 2.0f, 16.f, 8.0f);
+			QuadIcon = IGraphics::CQuadItem(1.5f, y + (CatRect.h - 8.0f) * 0.5f, 16.f, 8.0f);
 		}
 		else
 		{
@@ -708,8 +708,9 @@ void CChat::OnRender()
 			str_append(aBuf, Line.m_aText, sizeof(aBuf));
 
 			TextRender()->TextEx(&Cursor, aBuf, -1);
-			Line.m_Size[OffsetType].y = Cursor.m_Y + Cursor.m_FontSize;
-			Line.m_Size[OffsetType].x = Cursor.m_Y == 0.0f ? Cursor.m_X - Cursor.m_StartX : LineWidth;
+			// FIXME: sometimes an empty line will pop here when the cursor reaches the end of line
+			Line.m_Size[OffsetType].y = Cursor.m_LineCount * Cursor.m_FontSize;
+			Line.m_Size[OffsetType].x = Cursor.m_LineCount == 1 ? Cursor.m_X - Cursor.m_StartX : LineWidth;
 		}
 	}
 
@@ -808,6 +809,13 @@ void CChat::OnRender()
 		char aBuf[48];
 		if(Line.m_Mode == CHAT_WHISPER)
 		{
+			const float LineBaseY = TextRender()->TextGetLineBaseY(&Cursor);
+
+			const float qw = 10.0f;
+			const float qh = 5.0f;
+			const float qx = Cursor.m_X + 2.0f;
+			const float qy = LineBaseY - qh - 0.5f;
+
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
 			Graphics()->WrapClamp();
 
@@ -822,24 +830,21 @@ void CChat::OnRender()
 			else
 				dbg_break();
 
-			const float qx = Cursor.m_X + 2.0f;
-			const float qy = Cursor.m_Y + 2.2f;
 
 			// shadow pass
 			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a, ShadowWhisper.g*ShadowWhisper.a,
 								 ShadowWhisper.b*ShadowWhisper.a, ShadowWhisper.a);
-			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f,
-									  10.0f, 5.0f);
+			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
 			// color pass
 			Graphics()->SetColor(ColorWhisper.r, ColorWhisper.g, ColorWhisper.b, 1.0f);
-			Quad = IGraphics::CQuadItem(qx, qy, 10.0f, 5.0f);
+			Quad = IGraphics::CQuadItem(qx, qy, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
 			Graphics()->QuadsEnd();
 			Graphics()->WrapNormal();
-			Cursor.m_X += 12.0f;
+			Cursor.m_X += 12.5f;
 		}
 
 		// render name
