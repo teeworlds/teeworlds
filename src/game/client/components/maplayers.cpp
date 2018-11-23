@@ -44,12 +44,23 @@ void CMapLayers::LoadBackgroundMap()
 
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
+	// check for the appropriate day/night map
+	str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 	if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 	{
-		str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-		return;
+		// fall back on generic map
+		str_format(aBuf, sizeof(aBuf), "ui/themes/%s.map", g_Config.m_ClMenuMap);
+		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+		{
+			// fall back on day/night alternative map
+			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "night" : "day");
+			if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+			{
+				str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
+				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+				return;
+			}
+		}
 	}
 
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
