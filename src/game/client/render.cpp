@@ -624,3 +624,8 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 
 	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
 }
+
+float CRenderTools::GetClientIdRectSize(float FontSize)
+{
+	return 1.4f * FontSize + 0.2f * FontSize;
+}

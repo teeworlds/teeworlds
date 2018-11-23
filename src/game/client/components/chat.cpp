@@ -715,6 +715,7 @@ void CChat::OnRender()
 			// FIXME: sometimes an empty line will pop here when the cursor reaches the end of line
 			Line.m_Size[OffsetType].y = Cursor.m_LineCount * Cursor.m_FontSize;
 			Line.m_Size[OffsetType].x = Cursor.m_LineCount == 1 ? Cursor.m_X - Cursor.m_StartX : LineWidth;
+			Line.m_Size[OffsetType].x += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 		}
 	}
 
