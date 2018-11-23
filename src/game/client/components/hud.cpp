@@ -209,9 +209,16 @@ void CHud::RenderScoreHud()
 						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
 						char aName[64];
-						str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+						str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 						float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
-						TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
+
+						CTextCursor Cursor;
+						float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split);
+						float y = StartY+(t+1)*20.0f-3.0f;
+						TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+
+						RenderTools()->DrawClientID(TextRender(), &Cursor, ID);
+						TextRender()->TextEx(&Cursor, aName, -1);
 
 						// draw tee of the flag holder
 						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -283,9 +290,16 @@ void CHud::RenderScoreHud()
 					// draw name
 					int ID = aPlayerInfo[t].m_ClientID;
 					char aName[64];
-					str_format(aName, sizeof(aName), "%2d: %s", ID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+					str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 					float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
-					TextRender()->Text(0, min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize), StartY+(t+1)*20.0f-3.0f, 8.0f, aName, -1);
+
+					CTextCursor Cursor;
+					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
+					float y = StartY+(t+1)*20.0f-3.0f;
+					TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+
+					RenderTools()->DrawClientID(TextRender(), &Cursor, ID);
+					TextRender()->TextEx(&Cursor, aName, -1);
 
 					// draw tee
 					CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -609,28 +623,41 @@ void CHud::RenderSpectatorHud()
 
 	// draw the text
 	char aName[64];
-	str_format(aName, sizeof(aName), "%2d: %s", m_pClient->m_Snap.m_SpecInfo.m_SpectatorID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
+	const int SpecID = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
+	const int SpecMode = m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
+	str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
-	switch(m_pClient->m_Snap.m_SpecInfo.m_SpecMode)
+
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, m_Width-174.0f, m_Height-13.0f, 8.0f, TEXTFLAG_RENDER);
+
+	str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Spectate"));
+	TextRender()->TextEx(&Cursor, aBuf, -1);
+
+	switch(SpecMode)
 	{
 	case SPEC_FREEVIEW:
-		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), Localize("Free-View"));
+		str_format(aBuf, sizeof(aBuf), "%s", Localize("Free-View"));
 		break;
 	case SPEC_PLAYER:
-		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), aName);
+		str_format(aBuf, sizeof(aBuf), "%s", aName);
 		break;
 	case SPEC_FLAGRED:
 	case SPEC_FLAGBLUE:
 		char aFlag[64];
-		str_format(aFlag, sizeof(aFlag), m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED ? Localize("red flag") : Localize("blue flag"));
+		str_format(aFlag, sizeof(aFlag), SpecMode == SPEC_FLAGRED ? Localize("red flag") : Localize("blue flag"));
 
-		if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
-			str_format(aBuf, sizeof(aBuf), "%s: %s (%s)", Localize("Spectate"), aFlag, aName);
+		if(SpecID != -1)
+			str_format(aBuf, sizeof(aBuf), "%s (%s)", aFlag, aName);
 		else
-			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Spectate"), aFlag);
+			str_format(aBuf, sizeof(aBuf), "%s", aFlag);
 		break;
 	}
-	TextRender()->Text(0, m_Width-174.0f, m_Height-13.0f, 8.0f, aBuf, -1);
+
+	if(SpecMode == SPEC_PLAYER || SpecID != -1)
+		RenderTools()->DrawClientID(TextRender(), &Cursor, SpecID);
+
+	TextRender()->TextEx(&Cursor, aBuf, -1);
 }
 
 void CHud::OnRender()

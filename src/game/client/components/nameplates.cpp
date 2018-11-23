@@ -32,8 +32,11 @@ void CNamePlates::RenderNameplate(
 
 
 		char aName[64];
-		str_format(aName, sizeof(aName), "%2d: %s", ClientID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
+		str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
 		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
+
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, TEXTFLAG_RENDER);
 
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
@@ -45,7 +48,8 @@ void CNamePlates::RenderNameplate(
 				TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
 		}
 
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, aName, -1);
+		RenderTools()->DrawClientID(TextRender(), &Cursor, ClientID);
+		TextRender()->TextEx(&Cursor, aName, -1);
 
 		TextRender()->TextColor(1,1,1,1);
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);

@@ -7,6 +7,7 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
+#include <engine/textrender.h>
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 #include <game/layers.h>
@@ -592,4 +593,27 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 			}
 		}
 	}
+}
+
+void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID)
+{
+	char aBuff[4];
+	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
+
+	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
+
+	CUIRect Rect;
+	Rect.x = pCursor->m_X;
+	Rect.y = LinebaseY - pCursor->m_FontSize + 0.2f;
+	Rect.w = 1.4f * pCursor->m_FontSize;
+	Rect.h = pCursor->m_FontSize;
+	DrawRoundRect(&Rect, vec4(1, 1, 1, 0.5f), 0.25f * pCursor->m_FontSize);
+
+	const float PrevX = pCursor->m_X;
+
+	pTextRender->TextColor(1, 1, 1, 1);
+	pTextRender->TextOutlineColor(0, 0, 0, 0.3f);
+	pTextRender->TextEx(pCursor, aBuff, -1);
+
+	pCursor->m_X = PrevX + Rect.w + 1.0f;
 }
