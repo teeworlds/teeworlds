@@ -1092,7 +1092,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 	CUIRect Box;
 	CUIRect Button;
 	Rect.HSplitTop(60.0f, &Box, &Rect);
-	const float InactiveAlpha = 0.15f;
+	const float InactiveAlpha = 0.25f;
 
 	m_ActivePage = m_MenuPage;
 	int NewPage = -1;
