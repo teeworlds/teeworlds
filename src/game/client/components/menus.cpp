@@ -35,6 +35,7 @@
 float CMenus::ms_ButtonHeight = 25.0f;
 float CMenus::ms_ListheaderHeight = 17.0f;
 float CMenus::ms_FontmodHeight = 0.8f;
+float CMenus::ms_BackgroundAlpha = 0.25f;
 
 
 CMenus::CMenus()

@@ -685,6 +685,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 	MainView.HSplitTop(BackgroundHeight, &Game, &MainView);
 	RenderTools()->DrawUIRect(&Game, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -901,6 +902,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitBottom(80.0f, &MainView, 0); // now we have the total rect for the settings
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	MainView.HSplitTop(BackgroundHeight, &TopView, &MainView);
 	RenderTools()->DrawUIRect(&TopView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -989,7 +991,6 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	float BoxSize = 297.0f;
 	float BackgroundHeight = (ButtonHeight+SpacingH)*3.0f+BoxSize;
 
-	MainView.HSplitTop(BackgroundHeight, &MainView, 0);
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
@@ -1046,6 +1047,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		BackgroundHeight = (ButtonHeight+SpacingH)*2.0f+SkinHeight;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 	MainView.HSplitTop(BackgroundHeight, &Preview, &MainView);
 	RenderTools()->DrawUIRect(&Preview, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -1184,6 +1186,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	CUIRect BottomView, Button;
 	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 
 	// split scrollbar from main view
 	CUIRect Scroll;
@@ -1346,6 +1349,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 	MainView.HSplitTop(BackgroundHeight, &ScreenLeft, &MainView);
 	RenderTools()->DrawUIRect(&ScreenLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -1589,8 +1593,13 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
+	float TotalHeight = BackgroundHeight;
+	if(g_Config.m_SndEnable)
+		TotalHeight += 10.0f+2.0f*ButtonHeight+Spacing;
 
 	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(TotalHeight, &MainView, &BottomView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 	MainView.HSplitTop(BackgroundHeight, &Sound, &MainView);
 	RenderTools()->DrawUIRect(&Sound, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -1713,7 +1722,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 
 	// reset button
-	MainView.HSplitBottom(60.0f, 0, &BottomView);
+	BottomView.HSplitBottom(60.0f, 0, &BottomView);
 
 	Spacing = 3.0f;
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;

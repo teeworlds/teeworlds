@@ -320,6 +320,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	// cut view
 	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	static int s_Inited = 0;

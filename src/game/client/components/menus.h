@@ -220,6 +220,7 @@ private:
 	static float ms_ButtonHeight;
 	static float ms_ListheaderHeight;
 	static float ms_FontmodHeight;
+	static float ms_BackgroundAlpha;
 
 	// for settings
 	bool m_NeedRestartGraphics;
