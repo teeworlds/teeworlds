@@ -953,6 +953,12 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), g_Config.m_ClShowsocial, &Button))
 		g_Config.m_ClShowsocial ^= 1;
 
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_ShowUserId = 0;
+	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), g_Config.m_ClShowUserId, &Button))
+		g_Config.m_ClShowUserId ^= 1;
+
 	// show chat messages button
 	if(g_Config.m_ClShowsocial)
 	{

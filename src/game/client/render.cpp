@@ -598,6 +598,8 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
 								const vec4& BgColor, const vec4& TextColor)
 {
+	if(!g_Config.m_ClShowUserId) return;
+
 	char aBuff[4];
 	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
 
@@ -627,5 +629,6 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 
 float CRenderTools::GetClientIdRectSize(float FontSize)
 {
+	if(!g_Config.m_ClShowUserId) return 0;
 	return 1.4f * FontSize + 0.2f * FontSize;
 }
