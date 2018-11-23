@@ -484,8 +484,10 @@ void CScoreboard::OnRender()
 	float w = 364.0f;
 	float FontSize = 86.0f;
 
-	const char *pRedClanName = GetClanName(TEAM_RED);
-	const char *pBlueClanName = GetClanName(TEAM_BLUE);
+	const char* pCustomRedClanName = GetClanName(TEAM_RED);
+	const char* pCustomBlueClanName = GetClanName(TEAM_BLUE);
+	const char* pRedClanName = pCustomRedClanName ? pCustomRedClanName : Localize("Red team");
+	const char* pBlueClanName = pCustomBlueClanName ? pCustomBlueClanName : Localize("Blue team");
 
 	if(m_pClient->m_Snap.m_pGameData)
 	{
@@ -504,8 +506,8 @@ void CScoreboard::OnRender()
 		}
 		else if(m_pClient->m_Snap.m_pGameDataTeam)
 		{
-			float ScoreboardHeight = RenderScoreboard(Width/2-w-1.5f, y, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"), -1);
-			RenderScoreboard(Width/2+1.5f, y, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"), 1);
+			float ScoreboardHeight = RenderScoreboard(Width/2-w-1.5f, y, w, TEAM_RED, pRedClanName, -1);
+			RenderScoreboard(Width/2+1.5f, y, w, TEAM_BLUE, pBlueClanName, 1);
 
 			float SpectatorHeight = RenderSpectators(Width/2-w-1.5f, y+3.0f+ScoreboardHeight, w*2.0f+3.0f);
 			RenderGoals(Width/2-w-1.5f, y+3.0f+ScoreboardHeight, w*2.0f+3.0f);
@@ -525,22 +527,13 @@ void CScoreboard::OnRender()
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 		{
 			char aText[256];
-			str_copy(aText, Localize("Draw!"), sizeof(aText));
 
 			if(m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed > m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreBlue)
-			{
-				if(pRedClanName)
-					str_format(aText, sizeof(aText), Localize("%s wins!"), pRedClanName);
-				else
-					str_copy(aText, Localize("Red team wins!"), sizeof(aText));
-			}
+				str_format(aText, sizeof(aText), Localize("%s wins!"), pRedClanName);
 			else if(m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreBlue > m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed)
-			{
-				if(pBlueClanName)
-					str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
-				else
-					str_copy(aText, Localize("Blue team wins!"), sizeof(aText));
-			}
+				str_format(aText, sizeof(aText), Localize("%s wins!"), pBlueClanName);
+			else
+				str_copy(aText, Localize("Draw!"), sizeof(aText));
 
 			float tw = TextRender()->TextWidth(0, FontSize, aText, -1);
 			TextRender()->Text(0, Width/2-tw/2, 39, FontSize, aText, -1);
