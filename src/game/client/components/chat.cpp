@@ -869,7 +869,9 @@ void CChat::OnRender()
 
 		if(Line.m_ClientID != -1)
 		{
-			RenderTools()->DrawClientID(TextRender(), &Cursor, Line.m_ClientID);
+			vec4 BgIdColor = TextColor;
+			BgIdColor.a = 0.5f;
+			RenderTools()->DrawClientID(TextRender(), &Cursor, Line.m_ClientID, BgIdColor);
 			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}

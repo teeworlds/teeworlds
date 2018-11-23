@@ -48,8 +48,16 @@ void CNamePlates::RenderNameplate(
 				TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
 		}
 
-		RenderTools()->DrawClientID(TextRender(), &Cursor, ClientID);
-		TextRender()->TextEx(&Cursor, aName, -1);
+		const vec4 IdTextColor(0.1f, 0.1f, 0.1f, a);
+		vec4 BgIdColor(1.0f, 0.5f, 0.5f, a * 0.5f);
+		if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
+			BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
+
+		if(a > 0.001f)
+		{
+			RenderTools()->DrawClientID(TextRender(), &Cursor, ClientID, BgIdColor, IdTextColor);
+			TextRender()->TextEx(&Cursor, aName, -1);
+		}
 
 		TextRender()->TextColor(1,1,1,1);
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);

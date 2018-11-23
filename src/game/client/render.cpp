@@ -595,25 +595,32 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 	}
 }
 
-void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID)
+void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
+								const vec4& BgColor, const vec4& TextColor)
 {
 	char aBuff[4];
 	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
 
 	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
 
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
+	float FontSize = (int)(pCursor->m_FontSize * FakeToScreenY)/FakeToScreenY;
+
 	CUIRect Rect;
 	Rect.x = pCursor->m_X;
-	Rect.y = LinebaseY - pCursor->m_FontSize + 0.2f;
-	Rect.w = 1.4f * pCursor->m_FontSize;
-	Rect.h = pCursor->m_FontSize;
-	DrawRoundRect(&Rect, vec4(1, 1, 1, 0.5f), 0.25f * pCursor->m_FontSize);
+	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.w = 1.4f * FontSize;
+	Rect.h = FontSize;
+	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
 
 	const float PrevX = pCursor->m_X;
+	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
 
-	pTextRender->TextColor(1, 1, 1, 1);
-	pTextRender->TextOutlineColor(0, 0, 0, 0.3f);
-	pTextRender->TextEx(pCursor, aBuff, -1);
+	// TODO: make a simple text one (no shadow)
+	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0),
+							  vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
-	pCursor->m_X = PrevX + Rect.w + 1.0f;
+	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
 }
