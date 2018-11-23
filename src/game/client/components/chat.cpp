@@ -445,6 +445,10 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 		m_aLines[m_CurrentLine].m_Highlighted =  Highlighted;
 
+		int NameCID = ClientID;
+		if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
+			NameCID = TargetID;
+
 		if(ClientID == -1) // server message
 		{
 			m_aLines[m_CurrentLine].m_aName[0] = 0;
@@ -463,10 +467,6 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 
-			int NameCID = ClientID;
-			if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
-				NameCID = TargetID;
-
 			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%s", m_pClient->m_aClients[NameCID].m_aName);
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
@@ -479,7 +479,8 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 			str_copy(aBufMode, "teamchat", sizeof(aBufMode));
 		else
 			str_copy(aBufMode, "chat", sizeof(aBufMode));
-		str_format(aBuf, sizeof(aBuf), "%s: %s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+
+		str_format(aBuf, sizeof(aBuf), "%2d: %s: %s", NameCID, m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aBufMode, aBuf, Highlighted || Mode == CHAT_WHISPER);
 	}
 
@@ -565,7 +566,7 @@ void CChat::OnRender()
 			}
 			else if(m_Mode == CHAT_WHISPER)
 			{
-				CategoryWidth += Cursor.m_FontSize;
+				CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
 				str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
 			}
 			else
@@ -705,6 +706,7 @@ void CChat::OnRender()
 
 			if(Line.m_ClientID != -1)
 			{
+				Cursor.m_X += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 				str_append(aBuf, Line.m_aName, sizeof(aBuf));
 				str_append(aBuf, ": ", sizeof(aBuf));
 			}
@@ -715,7 +717,6 @@ void CChat::OnRender()
 			// FIXME: sometimes an empty line will pop here when the cursor reaches the end of line
 			Line.m_Size[OffsetType].y = Cursor.m_LineCount * Cursor.m_FontSize;
 			Line.m_Size[OffsetType].x = Cursor.m_LineCount == 1 ? Cursor.m_X - Cursor.m_StartX : LineWidth;
-			Line.m_Size[OffsetType].x += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 		}
 	}
 
