@@ -1613,20 +1613,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 	Sound.HSplitTop(Spacing, 0, &Sound);
-	Sound.HSplitTop(ButtonHeight, &Button, &Sound);
-	static int s_ButtonSndEnable = 0;
-	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
-	{
-		g_Config.m_SndEnable ^= 1;
-		if(g_Config.m_SndEnable)
-		{
-			g_Config.m_SndInit = 1;
-			if(g_Config.m_SndMusic)
-				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		}
-		else
-			m_pClient->m_pSounds->Stop(SOUND_MENU);
-	}
+	CUIRect UseSoundButton;
+	Sound.HSplitTop(ButtonHeight, &UseSoundButton, &Sound);
 
 	if(g_Config.m_SndEnable)
 	{
@@ -1708,6 +1696,20 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			g_Config.m_SndInit ^= 1;
 			m_NeedRestartSound = g_Config.m_SndInit && (!s_SndInit || s_SndRate != g_Config.m_SndRate);
 		}
+	}
+
+	static int s_ButtonSndEnable = 0;
+	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &UseSoundButton))
+	{
+		g_Config.m_SndEnable ^= 1;
+		if(g_Config.m_SndEnable)
+		{
+			g_Config.m_SndInit = 1;
+			if(g_Config.m_SndMusic)
+				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+		}
+		else
+			m_pClient->m_pSounds->Stop(SOUND_MENU);
 	}
 
 	// reset button
