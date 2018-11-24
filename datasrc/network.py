@@ -233,6 +233,14 @@ Objects = [
 
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
+		NetBool("m_Armored"),
+	]),
+
+	NetEvent("Damage:Common", [ # Unused yet
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetIntAny("m_Angle"),
+		NetIntRange("m_Amount", 1, 9),
+		NetBool("m_Armored"),
 	]),
 ]
 

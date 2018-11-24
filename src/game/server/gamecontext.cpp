@@ -93,21 +93,51 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 	return m_apPlayers[ClientID]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
+void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int HealthAmount, int ArmorAmount)
 {
+	int TotalAmount = HealthAmount+ArmorAmount;
 	float a = 3*pi/2 + Angle;
 	//float a = get_angle(dir);
 	float s = a-pi/3;
 	float e = a+pi/3;
-	for(int i = 0; i < Amount; i++)
+	for(int i = 0; i < TotalAmount; i++)
 	{
-		float f = mix(s, e, float(i+1)/float(Amount+2));
+		float f = mix(s, e, float(i+1)/float(TotalAmount+2));
 		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd));
 		if(pEvent)
 		{
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
 			pEvent->m_Angle = (int)(f*256.0f);
+			if(ArmorAmount)
+			{
+				pEvent->m_Armored = true;
+				ArmorAmount--;
+			}
+			else
+				pEvent->m_Armored = false;
+
+		}
+	}
+}
+
+void CGameContext::CreateDamage(vec2 Pos, int Id, vec2 Source, int HealthAmount, int ArmorAmount)
+{
+	for(int ArmorType = 0; ArmorType < 2; ArmorType++)
+	{
+		if((ArmorType && ArmorAmount) || (!ArmorType && HealthAmount))
+		{
+			float f = angle(Source);
+			CNetEvent_Damage *pEvent = (CNetEvent_Damage *)m_Events.Create(NETEVENTTYPE_DAMAGE, sizeof(CNetEvent_Damage));
+			if(pEvent)
+			{
+				pEvent->m_X = (int)Pos.x;
+				pEvent->m_Y = (int)Pos.y;
+				pEvent->m_ClientID = Id;
+				pEvent->m_Angle = (int)(f*256.0f);
+				pEvent->m_Amount = ArmorType ? ArmorAmount : HealthAmount;
+				pEvent->m_Armored = ArmorType;
+			}
 		}
 	}
 }
@@ -149,7 +179,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamag
 			Force = normalize(Diff) * MaxForce;
 		float Factor = 1 - clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 		if((int)(Factor * MaxDamage))
-			apEnts[i]->TakeDamage(Force * Factor, (int)(Factor * MaxDamage), Owner, Weapon);
+			apEnts[i]->TakeDamage(Force * Factor, Diff*-1, (int)(Factor * MaxDamage), Owner, Weapon);
 	}
 }
 
