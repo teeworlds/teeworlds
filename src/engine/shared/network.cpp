@@ -238,7 +238,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			return -1;
 		}
 
-		pPacket->m_Ack = ((pBuffer[0]&0x3)<<2) | pBuffer[1];
+		pPacket->m_Ack = ((pBuffer[0]&0x3)<<8) | pBuffer[1];
 			// xxxxxxAA AAAAAAAA
 		pPacket->m_NumChunks = pBuffer[2];
 			// NNNNNNNN
