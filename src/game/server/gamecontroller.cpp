@@ -1104,6 +1104,8 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	Msg.m_ClientID = ClientID;
 	Msg.m_Team = Team;
 	Msg.m_Silent = DoChatMsg ? 0 : 1;
+	if(g_Config.m_SvSilentSpectatorMode && Team == TEAM_SPECTATORS)
+		Msg.m_Silent = 1;
 	Msg.m_CooldownTick = pPlayer->m_TeamChangeTick;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
