@@ -37,6 +37,11 @@ void CHud::OnReset()
 	m_WarmupHideTick = 0;
 }
 
+inline bool IsCharANum(char c)
+{
+	return c >= '0' && c <= '9';
+}
+
 void CHud::OnMessage(int MsgType, void* pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_CHAT)
@@ -44,11 +49,45 @@ void CHud::OnMessage(int MsgType, void* pRawMsg)
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 
 		// new broadcast message
-		int MsgLen = min((int)MAX_BROADCAST_MSG_LENGTH-1, str_length(pMsg->m_pMessage));
-		mem_copy(m_aBroadcastMsg, pMsg->m_pMessage, MsgLen);
-		m_aBroadcastMsg[MsgLen] = 0;
-		m_BroadcastColorCount = 0;
+		int MsgLen = str_length(pMsg->m_pMessage);
+		mem_zero(m_aBroadcastMsg, sizeof(m_aBroadcastMsg));
+		m_aBroadcastMsgLen = 0;
 		m_BroadcastReceivedTime = Client()->LocalTime();
+
+		const BcColor White = { 255, 255, 255, 0 };
+		m_aBroadcastColorList[0] = White;
+		m_BroadcastColorCount = 1;
+
+		for(int i = 0; i < MsgLen; i++)
+		{
+			const char* c = pMsg->m_pMessage + i;
+			const char* pTmp = c;
+			int CharUtf8 = str_utf8_decode(&pTmp);
+
+			if(*c == CharUtf8 && *c == '^')
+			{
+				if(i+3 < MsgLen && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
+				{
+					u8 r = (c[1] - '0') * 24 + 39;
+					u8 g = (c[2] - '0') * 24 + 39;
+					u8 b = (c[3] - '0') * 24 + 39;
+					BcColor Color = { r, g, b, m_aBroadcastMsgLen };
+					if(m_BroadcastColorCount < MAX_BROADCAST_COLORS)
+						m_aBroadcastColorList[m_BroadcastColorCount++] = Color;
+					i += 3;
+					continue;
+				}
+			}
+
+			if(m_aBroadcastMsgLen < MAX_BROADCAST_MSG_LENGTH)
+				m_aBroadcastMsg[m_aBroadcastMsgLen++] = *c;
+		}
+
+		/*for(int i = 0; i < m_BroadcastColorCount; i++)
+		{
+			BcColor c = m_aBroadcastColorList[i];
+			dbg_msg("colors", "%d %d %d - %d", c.m_R, c.m_G, c.m_B, c.m_CharPos);
+		}*/
 	}
 }
 
@@ -727,12 +766,17 @@ inline int WordLengthBack(const char *pText, int MaxChars)
 	int s = 0;
 	while(MaxChars--)
 	{
-		if(*pText == '\n' || *pText == '\t' || *pText == ' ')
+		if((*pText == '\n' || *pText == '\t' || *pText == ' '))
 			return s;
 		pText--;
 		s++;
 	}
-	return s;
+	return 0;
+}
+
+inline bool IsCharWhitespace(char c)
+{
+	return c == '\n' || c == '\t' || c == ' ';
 }
 
 void CHud::RenderBroadcast()
@@ -783,39 +827,39 @@ void CHud::RenderBroadcast()
 	BcView.HSplitBottom(2.0f, &BcView, 0);
 
 	//const char* BroadcastTestMsg = "This is a broadcast message from a server HELLO is anyone here? This is a reaaaaaaallllyyyyy long message wow, perhaps TOO loooooong";
-	const char* BroadcastTestMsg = m_aBroadcastMsg;
-	const int MsgLen = str_length(BroadcastTestMsg);
+	const char* BroadcastMsg = m_aBroadcastMsg;
+	const int MsgLen = str_length(m_aBroadcastMsg);//m_aBroadcastMsgLen;
 
 	// broadcast message
 	// one line == big font
 	// > one line == small font
 
-	TextRender()->TextColor(1, 1, 1, 1 * Fade);
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
+	TextRender()->SetCursor(&Cursor, BcView.x, BcView.y, FontSize, 0);
 	Cursor.m_LineWidth = BcView.w;
-	TextRender()->TextEx(&Cursor, BroadcastTestMsg, MsgLen);
+	TextRender()->TextEx(&Cursor, BroadcastMsg, -1);
 
 	if(Cursor.m_LineCount > 1)
 	{
 		FontSize = 6.5f; // smaller font
 		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
 		Cursor.m_LineWidth = BcView.w;
-		TextRender()->TextEx(&Cursor, BroadcastTestMsg, MsgLen);
+		TextRender()->TextEx(&Cursor, BroadcastMsg, -1);
 	}
 
 	const int LineCount = Cursor.m_LineCount;
 	float y = BcView.y + BcView.h - LineCount * FontSize;
 	int CurCharCount = 0;
+
 	//int i = 0;
 	while(CurCharCount < MsgLen/* && i++ < 1000*/)
 	{
-		const char* RemainingMsg = BroadcastTestMsg + CurCharCount;
+		const char* RemainingMsg = BroadcastMsg + CurCharCount;
 
 		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = BcView.w;
 
-		TextRender()->TextEx(&Cursor, RemainingMsg, MsgLen-CurCharCount);
+		TextRender()->TextEx(&Cursor, RemainingMsg, -1);
 		int StrLen = Cursor.m_CharCount;
 
 		if(CurCharCount + StrLen < MsgLen)
@@ -831,18 +875,57 @@ void CHud::RenderBroadcast()
 		}
 
 		const float TextWidth = Cursor.m_X-Cursor.m_StartX;
-		CurCharCount += StrLen;
 
 		TextRender()->SetCursor(&Cursor, BcView.x + (BcView.w - TextWidth) * 0.5f, y,
 								FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = BcView.w;
 
-		TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
+		int DrawnStrLen = 0;
+		while(DrawnStrLen < StrLen)
+		{
+			int StartColorID = -1;
+			int ColorStrLen = -1;
+
+			for(int j = 0; j < m_BroadcastColorCount; j++)
+			{
+				if((CurCharCount+DrawnStrLen) >= m_aBroadcastColorList[j].m_CharPos)
+				{
+					StartColorID = j;
+				}
+				else if(StartColorID >= 0)
+				{
+					ColorStrLen = m_aBroadcastColorList[j].m_CharPos - m_aBroadcastColorList[StartColorID].m_CharPos;
+					break;
+				}
+			}
+
+			dbg_assert(StartColorID >= 0, "This should not be -1, color not found");
+
+			if(ColorStrLen == -1)
+				ColorStrLen = StrLen-DrawnStrLen;
+
+			//dbg_msg("color", "StartColorID=%d ColorStrLen=%d", StartColorID, ColorStrLen);
+			const BcColor& TextColor = m_aBroadcastColorList[StartColorID];
+			int AvgLum = (TextColor.m_R+TextColor.m_G+TextColor.m_B)/3;
+
+			if(AvgLum < 100)
+				TextRender()->TextOutlineColor(1, 1, 1, 0.8f);
+			else
+				TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+
+			TextRender()->TextColor(TextColor.m_R/255.f, TextColor.m_G/255.f, TextColor.m_B/255.f, Fade);
+
+			TextRender()->TextEx(&Cursor, RemainingMsg+DrawnStrLen, ColorStrLen);
+			DrawnStrLen += ColorStrLen;
+		}
+
 		y += FontSize;
+		CurCharCount += StrLen;
 
 		/*dbg_msg("broadcast", "CurCharCount=%d StrLen=%d '%.*s'", CurCharCount, StrLen,
 				min(MsgLen-CurCharCount, 10), RemainingMsg);*/
 	}
 
 	TextRender()->TextColor(1, 1, 1, 1);
+	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
 }

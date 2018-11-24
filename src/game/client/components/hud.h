@@ -15,16 +15,18 @@ class CHud : public CComponent
 	typedef unsigned char u8;
 	struct BcColor
 	{
-		u8 r,g,b;
+		u8 m_R,m_G,m_B;
+		int m_CharPos;
 	};
 
 	enum {
-		MAX_BROADCAST_COLORS = 256,
-		MAX_BROADCAST_MSG_LENGTH = 256
+		MAX_BROADCAST_COLORS = 128,
+		MAX_BROADCAST_MSG_LENGTH = 127
 	};
 
 	BcColor m_aBroadcastColorList[MAX_BROADCAST_COLORS];
-	char m_aBroadcastMsg[MAX_BROADCAST_MSG_LENGTH];
+	char m_aBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
+	int m_aBroadcastMsgLen;
 	int m_BroadcastColorCount;
 	float m_BroadcastReceivedTime;
 
