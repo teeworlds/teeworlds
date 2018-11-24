@@ -1410,7 +1410,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Chain("sv_vote_kick_min", ConchainSettingUpdate, this);
 	Console()->Chain("sv_vote_spectate", ConchainSettingUpdate, this);
 	Console()->Chain("sv_teambalance_time", ConchainSettingUpdate, this);
-	Console()->Chain("sv_spectator_slots", ConchainSettingUpdate, this);
+	Console()->Chain("sv_player_slots", ConchainSettingUpdate, this);
 
 	Console()->Chain("sv_scorelimit", ConchainGameinfoUpdate, this);
 	Console()->Chain("sv_timelimit", ConchainGameinfoUpdate, this);
