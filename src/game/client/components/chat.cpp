@@ -445,6 +445,10 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 		m_aLines[m_CurrentLine].m_Highlighted =  Highlighted;
 
+		int NameCID = ClientID;
+		if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
+			NameCID = TargetID;
+
 		if(ClientID == -1) // server message
 		{
 			m_aLines[m_CurrentLine].m_aName[0] = 0;
@@ -463,11 +467,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 
-			int NameCID = ClientID;
-			if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
-				NameCID = TargetID;
-
-			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%2d: %s", NameCID, m_pClient->m_aClients[NameCID].m_aName);
+			str_format(m_aLines[m_CurrentLine].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName), "%s", m_pClient->m_aClients[NameCID].m_aName);
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 
@@ -479,7 +479,8 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 			str_copy(aBufMode, "teamchat", sizeof(aBufMode));
 		else
 			str_copy(aBufMode, "chat", sizeof(aBufMode));
-		str_format(aBuf, sizeof(aBuf), "%s: %s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+
+		str_format(aBuf, sizeof(aBuf), "%2d: %s: %s", NameCID, m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aBufMode, aBuf, Highlighted || Mode == CHAT_WHISPER);
 	}
 
@@ -544,7 +545,7 @@ void CChat::OnRender()
 	{
 		// calculate category text size
 		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
-		float CategoryWidth;
+		float CategoryWidth = 0;
 		float CategoryHeight;
 		const float CategoryFontSize = 8.0f;
 		const float InputFontSize = 8.0f;
@@ -564,14 +565,16 @@ void CChat::OnRender()
 					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 			}
 			else if(m_Mode == CHAT_WHISPER)
-				str_format(aCatText, sizeof(aCatText), "%2d: %s",
-						   m_WhisperTarget, m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			{
+				CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
+				str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			}
 			else
 				str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
 
 			TextRender()->TextEx(&Cursor, aCatText, -1);
 
-			CategoryWidth = Cursor.m_X - Cursor.m_StartX;
+			CategoryWidth += Cursor.m_X - Cursor.m_StartX;
 			CategoryHeight = Cursor.m_FontSize;
 		}
 
@@ -625,6 +628,8 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
+		if(m_Mode == CHAT_WHISPER)
+			RenderTools()->DrawClientID(TextRender(), &Cursor, m_WhisperTarget);
 		TextRender()->TextEx(&Cursor, aCatText, -1);
 
 		Cursor.m_X += 4.0f;
@@ -701,6 +706,7 @@ void CChat::OnRender()
 
 			if(Line.m_ClientID != -1)
 			{
+				Cursor.m_X += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 				str_append(aBuf, Line.m_aName, sizeof(aBuf));
 				str_append(aBuf, ": ", sizeof(aBuf));
 			}
@@ -865,6 +871,13 @@ void CChat::OnRender()
 
 		if(Line.m_ClientID != -1)
 		{
+			int NameCID = Line.m_ClientID;
+			if(Line.m_Mode == CHAT_WHISPER && Line.m_ClientID == m_pClient->m_LocalClientID && Line.m_TargetID >= 0)
+				NameCID = Line.m_TargetID;
+
+			vec4 BgIdColor = TextColor;
+			BgIdColor.a = 0.5f;
+			RenderTools()->DrawClientID(TextRender(), &Cursor, NameCID, BgIdColor);
 			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}

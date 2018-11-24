@@ -7,6 +7,7 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
+#include <engine/textrender.h>
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 #include <game/layers.h>
@@ -592,4 +593,42 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 			}
 		}
 	}
+}
+
+void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
+								const vec4& BgColor, const vec4& TextColor)
+{
+	if(!g_Config.m_ClShowUserId) return;
+
+	char aBuff[4];
+	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
+
+	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
+	float FontSize = (int)(pCursor->m_FontSize * FakeToScreenY)/FakeToScreenY;
+
+	CUIRect Rect;
+	Rect.x = pCursor->m_X;
+	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.w = 1.4f * FontSize;
+	Rect.h = FontSize;
+	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
+
+	const float PrevX = pCursor->m_X;
+	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
+
+	// TODO: make a simple text one (no shadow)
+	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0),
+							  vec4(0.1f, 0.1f, 0.1f, 1.0f));
+
+	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
+}
+
+float CRenderTools::GetClientIdRectSize(float FontSize)
+{
+	if(!g_Config.m_ClShowUserId) return 0;
+	return 1.4f * FontSize + 0.2f * FontSize;
 }
