@@ -17,6 +17,9 @@
 #include "hud.h"
 #include "voting.h"
 #include "binds.h"
+#include "chat.h"
+#include "scoreboard.h"
+#include "motd.h"
 
 CHud::CHud()
 {
@@ -24,11 +27,29 @@ CHud::CHud()
 	m_AverageFPS = 1.0f;
 
 	m_WarmupHideTick = 0;
+	m_BroadcastColorCount = 0;
+	m_aBroadcastMsg[0] = 0;
+	m_BroadcastReceivedTime = 0;
 }
 
 void CHud::OnReset()
 {
 	m_WarmupHideTick = 0;
+}
+
+void CHud::OnMessage(int MsgType, void* pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_CHAT)
+	{
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+
+		// new broadcast message
+		int MsgLen = min((int)MAX_BROADCAST_MSG_LENGTH-1, str_length(pMsg->m_pMessage));
+		mem_copy(m_aBroadcastMsg, pMsg->m_pMessage, MsgLen);
+		m_aBroadcastMsg[MsgLen] = 0;
+		m_BroadcastColorCount = 0;
+		m_BroadcastReceivedTime = Client()->LocalTime();
+	}
 }
 
 void CHud::RenderGameTimer()
@@ -691,6 +712,7 @@ void CHud::OnRender()
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();
+		RenderBroadcast();
 		RenderFps();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();
@@ -698,4 +720,129 @@ void CHud::OnRender()
 		RenderVoting();
 	}
 	RenderCursor();
+}
+
+inline int WordLengthBack(const char *pText, int MaxChars)
+{
+	int s = 0;
+	while(MaxChars--)
+	{
+		if(*pText == '\n' || *pText == '\t' || *pText == ' ')
+			return s;
+		pText--;
+		s++;
+	}
+	return s;
+}
+
+void CHud::RenderBroadcast()
+{
+	const float DisplayDuration = 10.0f;
+	const float DisplayStartFade = 9.0f;
+	const float DeltaTime = Client()->LocalTime() - m_BroadcastReceivedTime;
+
+	if(m_aBroadcastMsg[0] == 0 || DeltaTime > DisplayDuration)
+		return;
+
+	if(m_pClient->m_pScoreboard->Active() || m_pClient->m_pMotd->IsActive() ||
+	   m_pClient->m_pChat->IsActive())
+			return;
+
+	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
+
+	CUIRect ScreenRect = {0, 0, m_Width, m_Height};
+	const bool IsSpecMode = m_pClient->m_Snap.m_SpecInfo.m_Active;
+	if(IsSpecMode)
+		ScreenRect.y -= 20.0f;
+
+	CUIRect BcView = ScreenRect;
+	BcView.x += m_Width * 0.25f;
+	BcView.y += m_Height * 0.8f;
+	BcView.w *= 0.5f;
+	BcView.h *= 0.2f;
+
+	float FontSize = 11.0f;
+
+	vec4 ColorTop(0, 0, 0, 0);
+	vec4 ColorBot(0, 0, 0, (IsSpecMode ? 0.2f : 0.4f) * Fade);
+	CUIRect BgRect;
+	BcView.HSplitBottom(10.0f, 0, &BgRect);
+
+	RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop,
+							   ColorBot, ColorBot, IsSpecMode ? CUI::CORNER_B:0,
+							   IsSpecMode ? 2.0f:0);
+
+	// server broadcast line
+	CUIRect TitleRect;
+	BcView.HSplitBottom(10.0f, &BcView, &TitleRect);
+	TitleRect.y += 1.5f;
+	TextRender()->TextColor(1, 1, 1, 0.6f * Fade);
+	UI()->DoLabel(&TitleRect, Localize("Server broadcast"), 5.5f, CUI::ALIGN_CENTER);
+
+	BcView.VMargin(5.0f, &BcView);
+	BcView.HSplitBottom(2.0f, &BcView, 0);
+
+	//const char* BroadcastTestMsg = "This is a broadcast message from a server HELLO is anyone here? This is a reaaaaaaallllyyyyy long message wow, perhaps TOO loooooong";
+	const char* BroadcastTestMsg = m_aBroadcastMsg;
+	const int MsgLen = str_length(BroadcastTestMsg);
+
+	// broadcast message
+	// one line == big font
+	// > one line == small font
+
+	TextRender()->TextColor(1, 1, 1, 1 * Fade);
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
+	Cursor.m_LineWidth = BcView.w;
+	TextRender()->TextEx(&Cursor, BroadcastTestMsg, MsgLen);
+
+	if(Cursor.m_LineCount > 1)
+	{
+		FontSize = 6.5f; // smaller font
+		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
+		Cursor.m_LineWidth = BcView.w;
+		TextRender()->TextEx(&Cursor, BroadcastTestMsg, MsgLen);
+	}
+
+	const int LineCount = Cursor.m_LineCount;
+	float y = BcView.y + BcView.h - LineCount * FontSize;
+	int CurCharCount = 0;
+	//int i = 0;
+	while(CurCharCount < MsgLen/* && i++ < 1000*/)
+	{
+		const char* RemainingMsg = BroadcastTestMsg + CurCharCount;
+
+		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = BcView.w;
+
+		TextRender()->TextEx(&Cursor, RemainingMsg, MsgLen-CurCharCount);
+		int StrLen = Cursor.m_CharCount;
+
+		if(CurCharCount + StrLen < MsgLen)
+		{
+			const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
+			if(WorldLen > 0 && WorldLen < StrLen)
+			{
+				StrLen -= WorldLen;
+				TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = BcView.w;
+				TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
+			}
+		}
+
+		const float TextWidth = Cursor.m_X-Cursor.m_StartX;
+		CurCharCount += StrLen;
+
+		TextRender()->SetCursor(&Cursor, BcView.x + (BcView.w - TextWidth) * 0.5f, y,
+								FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = BcView.w;
+
+		TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
+		y += FontSize;
+
+		/*dbg_msg("broadcast", "CurCharCount=%d StrLen=%d '%.*s'", CurCharCount, StrLen,
+				min(MsgLen-CurCharCount, 10), RemainingMsg);*/
+	}
+
+	TextRender()->TextColor(1, 1, 1, 1);
 }

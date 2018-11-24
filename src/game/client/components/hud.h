@@ -3,12 +3,30 @@
 #ifndef GAME_CLIENT_COMPONENTS_HUD_H
 #define GAME_CLIENT_COMPONENTS_HUD_H
 #include <game/client/component.h>
+#include <base/tl/array.h>
 
 class CHud : public CComponent
 {
 	float m_Width, m_Height;
 	float m_AverageFPS;
 	int64 m_WarmupHideTick;
+
+	// broadcast
+	typedef unsigned char u8;
+	struct BcColor
+	{
+		u8 r,g,b;
+	};
+
+	enum {
+		MAX_BROADCAST_COLORS = 256,
+		MAX_BROADCAST_MSG_LENGTH = 256
+	};
+
+	BcColor m_aBroadcastColorList[MAX_BROADCAST_COLORS];
+	char m_aBroadcastMsg[MAX_BROADCAST_MSG_LENGTH];
+	int m_BroadcastColorCount;
+	float m_BroadcastReceivedTime;
 
 	void RenderCursor();
 
@@ -26,10 +44,12 @@ class CHud : public CComponent
 	void RenderScoreHud();
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
+	void RenderBroadcast();
 public:
 	CHud();
 
 	virtual void OnReset();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnRender();
 };
 
