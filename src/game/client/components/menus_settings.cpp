@@ -593,6 +593,9 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 	}
 	else
 		str_copy(aThemeName, aFullName, sizeof(aThemeName));
+
+	if(str_comp(aThemeName, "none") == 0) // "none" is reserved, disallowed for maps
+		return 0;
 	
 	// try to edit an existing theme
 	for(int i = 0; i < pSelf->m_lThemes.size(); i++)
@@ -629,7 +632,7 @@ int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser
 	// save icon for an existing theme
 	for(sorted_array<CTheme>::range r = pSelf->m_lThemes.all(); !r.empty(); r.pop_front()) // bit slow but whatever
 	{
-		if(str_comp(r.front().m_Name, aThemeName) == 0)
+		if(str_comp(r.front().m_Name, aThemeName) == 0 || (!r.front().m_Name[0] && str_comp(aThemeName, "none") == 0))
 		{
 			char aBuf[512];
 			str_format(aBuf, sizeof(aBuf), "ui/themes/%s", pName);
