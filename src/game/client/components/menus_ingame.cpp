@@ -81,8 +81,9 @@ void CMenus::RenderGame(CUIRect MainView)
 	{
 		// print notice
 		CUIRect Bar;
+		MainView.HSplitTop(20.0f, 0, &MainView);
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
-		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		Bar.HMargin(15.0f, &Bar);
 		UI()->DoLabelScaled(&Bar, Info.m_aNotification, 14.0f, CUI::ALIGN_CENTER);
 	}
@@ -192,11 +193,13 @@ void CMenus::RenderGame(CUIRect MainView)
 void CMenus::RenderPlayers(CUIRect MainView)
 {
 	CUIRect Button, ButtonBar, Options, Player;
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+	MainView.HSplitBottom(80.0f, &MainView, 0);
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// player options
 	MainView.Margin(10.0f, &Options);
-	RenderTools()->DrawUIRect(&Options, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&Options, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	Options.Margin(10.0f, &Options);
 	Options.HSplitTop(50.0f, &Button, &Options);
 	UI()->DoLabelScaled(&Button, Localize("Player options"), 34.0f, CUI::ALIGN_LEFT);
@@ -298,7 +301,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Client()->GetServerInfo(&CurrentServerInfo);
 
 	// render background
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+	MainView.HSplitBottom(80.0f, &MainView, 0);
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect View, ServerInfo, GameInfo, Motd;
 
@@ -311,9 +316,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	MainView.Margin(10.0f, &View);
 
 	// serverinfo
-	View.HSplitTop(View.h/2/UI()->Scale()-5.0f, &ServerInfo, &Motd);
+	View.HSplitBottom(180.0f, &ServerInfo, &Motd);
 	ServerInfo.VSplitLeft(View.w/2/UI()->Scale()-5.0f, &ServerInfo, &GameInfo);
-	RenderTools()->DrawUIRect(&ServerInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&ServerInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	ServerInfo.Margin(5.0f, &ServerInfo);
 
@@ -327,7 +332,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	str_format(
 		aBuf,
 		sizeof(aBuf),
-		"\n\n"
+		"\n"
 		"%s\n\n"
 		"%s: %s\n"
 		"%s: %d\n"
@@ -358,7 +363,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	// gameinfo
 	GameInfo.VSplitLeft(10.0f, 0x0, &GameInfo);
-	RenderTools()->DrawUIRect(&GameInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&GameInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	GameInfo.Margin(5.0f, &GameInfo);
 
@@ -389,7 +394,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	// motd
 	Motd.HSplitTop(10.0f, 0, &Motd);
-	RenderTools()->DrawUIRect(&Motd, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&Motd, vec4(0.0,0.0,0.0,0.25f), CUI::CORNER_ALL, 5.0f);
 	Motd.Margin(5.0f, &Motd);
 	y = 0.0f;
 	x = 5.0f;
@@ -508,12 +513,14 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	}
 
 	bool Authed = Client()->RconAuthed();
+	MainView.HSplitBottom(80.0f, &MainView, 0);
+	MainView.HSplitTop(20.0f, 0, &MainView);
 	if(pNotification && !Authed)
 	{
 		// only print notice
 		CUIRect Bar;
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
-		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 10.0f);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		Bar.HMargin(15.0f, &Bar);
 		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
@@ -522,7 +529,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	// tab bar
 	CUIRect Bottom, Extended, TabBar, Button;
 	MainView.HSplitTop(20.0f, &Bottom, &MainView);
-	RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
+	RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
 	{
 		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
@@ -558,14 +565,14 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		// only print notice
 		CUIRect Bar;
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
-		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 		Bar.HMargin(15.0f, &Bar);
 		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
 	}
 
 	// render background
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 	MainView.Margin(10.0f, &MainView);
 	MainView.HSplitBottom(90.0f, &MainView, &Extended);
 
