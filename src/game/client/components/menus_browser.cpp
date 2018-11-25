@@ -604,7 +604,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		View.VSplitLeft(160.0f, &Info, &View);
 		RenderDetailInfo(Info, pEntry);
 
-		RenderDetailScoreboard(View, pEntry, 4, false);
+		RenderDetailScoreboard(View, pEntry, 4);
 
 		if(ReturnValue && UI()->MouseInside(&View))
 			ReturnValue++;
@@ -1920,7 +1920,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	}
 }
 
-void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column, bool RenderAll)
+void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount)
 {
 	// slected filter
 	CBrowserFilter *pFilter = 0;
@@ -1951,45 +1951,54 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		int Count = 0;
 
 		CUIRect Scroll;
+
 		UI()->ClipEnable(&View);
-		float Length = 20.0f * pInfo->m_NumClients;
-		static float s_ScrollValue = 0.0f;
-		int ScrollNum = (int)((Length - View.h)/ms_ListheaderHeight)+1;
-		if(ScrollNum > 0)
+
+		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
+
+		if(RowCount == 0)
 		{
-			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-				s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-			if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-				s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
+			float Length = 20.0f * pInfo->m_NumClients;
+			static float s_ScrollValue = 0.0f;
+			int ScrollNum = (int)((Length - View.h)/20.0f)+1;
+			if(ScrollNum > 0)
+			{
+				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
+					s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
+				if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
+					s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
+			}
+			if(Length > View.h)
+			{
+				View.VSplitRight(8.0f, &View, &Scroll);
+				Scroll.HMargin(5.0f, &Scroll);
+				s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+				View.y += (View.h - Length) * s_ScrollValue;
+			}
 		}
-		if(RenderAll && Column == 1 && Length > View.h)
+		else
 		{
-			View.VSplitRight(8.0f, &View, &Scroll);
-			Scroll.HMargin(5.0f, &Scroll);
-			s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
-			View.y += (View.h - Length) * s_ScrollValue;
-		}
-		
-		int NumRenderClients = pInfo->m_NumClients;
-		bool CropScoreboard = false;
-		if(FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS)
-			NumRenderClients -= pInfo->m_NumBotSpectators + pInfo->m_NumBotPlayers;
-		if(NumRenderClients > 16 && !RenderAll)
-		{
-			NumRenderClients = 15;
-			CropScoreboard = true;
+			float Width = RowWidth * ceil(pInfo->m_NumClients / RowCount);
+			static float s_ScrollValue = 0.0f;
+			if(Width > View.w)
+			{
+				View.HSplitBottom(8.0f, &View, &Scroll);
+				Scroll.VMargin(5.0f, &Scroll);
+				s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
+				View.x += (View.w - Width) * s_ScrollValue;
+			}
 		}
 
-		for(int i = 0; i < pInfo->m_NumClients && (RenderAll || Count < NumRenderClients) ; i++)
+		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
 			if((FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) && (pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT))
 				continue;
 
 			CUIRect Name, Clan, Score, Flag, Icon;
 
-			if(!RenderAll && Count % (16 / Column) == 0)
+			if(RowCount > 0 && Count % RowCount == 0)
 			{
-				View.VSplitLeft(View.w / (Column - ActColumn), &Row, &View);
+				View.VSplitLeft(RowWidth, &Row, &View);
 				ActColumn++;
 			}
 	
@@ -2078,27 +2087,6 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 			++Count;
 		}
-		if(CropScoreboard)
-		{
-			CUIRect Name, Dots;
-			Row.HSplitTop(20.0f, &Name, &Row);
-			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, 0.1f), CUI::CORNER_ALL, 4.0f);
-			Name.VSplitLeft(Name.h-8.0f, 0, &Name);
-			Name.VSplitLeft(2.0f, 0, &Name);
-			Name.VSplitLeft(20.0f, &Dots, &Name);
-			Name.VSplitRight(2*(Name.h-8.0f), &Name, 0);
-			// Name.HSplitTop(10.0f, &Name, 0);
-
-			TextRender()->SetCursor(&Cursor, Dots.x, Dots.y + (Dots.h - FontSize-2) / 4.0f, FontSize - 2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = Dots.w;
-			TextRender()->TextEx(&Cursor, "...", -1);
-
-			char aTemp[32];
-			str_format(aTemp, sizeof(aTemp), "%d %s", pInfo->m_NumClients - NumRenderClients, Localize("other clients"));
-			TextRender()->SetCursor(&Cursor, Name.x, Name.y + (Name.h - FontSize-2) / 4.0f, FontSize - 2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = Name.w;
-			TextRender()->TextEx(&Cursor, aTemp, -1);
-		}
 
 		UI()->ClipDisable();
 	}
@@ -2122,7 +2110,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
-	RenderDetailScoreboard(ServerScoreboard, pInfo, 1);
+	RenderDetailScoreboard(ServerScoreboard, pInfo, 0);
 }
 
 void CMenus::FriendlistOnUpdate()
