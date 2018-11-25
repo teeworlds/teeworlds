@@ -196,7 +196,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	const float Spacing = 2.0f;
 	const float NameWidth = 250.0f;
 	const float ClanWidth = 250.0f;
-	CUIRect Button, ButtonBar, Options, Player, Label, Row;
+	CUIRect Label, Row;
 	MainView.HSplitBottom(80.0f, &MainView, 0);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f+ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
@@ -312,9 +312,6 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect ServerInfo, GameInfo, Motd, Label;
-
-	float x = 0.0f;
-	float y = 0.0f;
 
 	char aBuf[128] = {0};
 	const float ButtonHeight = 20.0f;
@@ -569,7 +566,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 	// tab bar
 	const float NotActiveAlpha = 0.5f;
-	CUIRect Bottom, Extended, TabBar, Button, Row, Note;
+	CUIRect Bottom, Extended, Button, Row, Note;
 	MainView.HSplitTop(3.0f, 0, &MainView);
 	MainView.HSplitTop(25.0f, &Row, &MainView);
 	Row.VSplitLeft(Row.w/3-1.5f, &Button, &Row);
