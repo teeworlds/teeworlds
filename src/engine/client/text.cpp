@@ -700,6 +700,7 @@ public:
 			int NextCharacter = str_utf8_decode(&pTmp);
 			while(pCurrent < pBatchEnd)
 			{
+				pCursor->m_CharCount += pTmp-pCurrent;
 				int Character = NextCharacter;
 				pCurrent = pTmp;
 				NextCharacter = str_utf8_decode(&pTmp);
@@ -744,7 +745,6 @@ public:
 
 					DrawX += Advance*Size;
 					pCursor->m_GlyphCount++;
-					pCursor->m_CharCount += pTmp-pCurrent;
 				}
 			}
 
@@ -889,6 +889,7 @@ public:
 				int NextCharacter = str_utf8_decode(&pTmp);
 				while(pCurrent < pBatchEnd)
 				{
+					pCursor->m_CharCount += pTmp-pCurrent;
 					int Character = NextCharacter;
 					pCurrent = pTmp;
 					NextCharacter = str_utf8_decode(&pTmp);
@@ -925,7 +926,6 @@ public:
 
 						DrawX += Advance*Size;
 						pCursor->m_GlyphCount++;
-						pCursor->m_CharCount += pTmp-pCurrent;
 					}
 				}
 

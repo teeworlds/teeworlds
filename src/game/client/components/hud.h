@@ -13,7 +13,7 @@ class CHud : public CComponent
 
 	// broadcast
 	typedef unsigned char u8;
-	struct BcColor
+	struct CBcColor
 	{
 		u8 m_R,m_G,m_B;
 		int m_CharPos;
@@ -24,7 +24,7 @@ class CHud : public CComponent
 		MAX_BROADCAST_MSG_LENGTH = 127
 	};
 
-	BcColor m_aBroadcastColorList[MAX_BROADCAST_COLORS];
+	CBcColor m_aBroadcastColorList[MAX_BROADCAST_COLORS];
 	char m_aBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
 	int m_aBroadcastMsgLen;
 	int m_BroadcastColorCount;
