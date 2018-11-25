@@ -7,8 +7,29 @@
 class CBroadcast : public CComponent
 {
 	char m_aBroadcastText[128];
-	int64 m_BroadcastTime;
+	float m_BroadcastTime;
 	float m_BroadcastRenderOffset;
+
+	// server broadcast
+	typedef unsigned char u8;
+	struct CBcColor
+	{
+		u8 m_R, m_G, m_B;
+		int m_CharPos;
+	};
+
+	enum {
+		MAX_BROADCAST_COLORS = 128,
+		MAX_BROADCAST_MSG_LENGTH = 127
+	};
+
+	CBcColor m_aSrvBroadcastColorList[MAX_BROADCAST_COLORS];
+	char m_aSrvBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
+	int m_aSrvBroadcastMsgLen;
+	int m_SrvBroadcastColorCount;
+	float m_SrvBroadcastReceivedTime;
+
+	void RenderServerBroadcast();
 
 public:
 	CBroadcast();
@@ -16,6 +37,7 @@ public:
 	void DoBroadcast(const char *pText);
 
 	virtual void OnReset();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnRender();
 };
 

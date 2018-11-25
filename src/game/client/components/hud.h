@@ -11,25 +11,6 @@ class CHud : public CComponent
 	float m_AverageFPS;
 	int64 m_WarmupHideTick;
 
-	// server broadcast
-	typedef unsigned char u8;
-	struct CBcColor
-	{
-		u8 m_R, m_G, m_B;
-		int m_CharPos;
-	};
-
-	enum {
-		MAX_BROADCAST_COLORS = 128,
-		MAX_BROADCAST_MSG_LENGTH = 127
-	};
-
-	CBcColor m_aBroadcastColorList[MAX_BROADCAST_COLORS];
-	char m_aBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
-	int m_aBroadcastMsgLen;
-	int m_BroadcastColorCount;
-	float m_BroadcastReceivedTime;
-
 	void RenderCursor();
 
 	void RenderFps();
@@ -46,12 +27,11 @@ class CHud : public CComponent
 	void RenderScoreHud();
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
-	void RenderBroadcast();
+
 public:
 	CHud();
 
 	virtual void OnReset();
-	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnRender();
 };
 
