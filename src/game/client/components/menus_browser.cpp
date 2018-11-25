@@ -507,10 +507,26 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CServerFilterInfo FilterInfo;
 			pFilter->GetFilter(&FilterInfo);
 
+			int Num = (FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? pEntry->m_NumPlayers : pEntry->m_NumClients;
+			int Max = (FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? pEntry->m_MaxPlayers : pEntry->m_MaxClients;
 			if(FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS)
-				str_format(aTemp, sizeof(aTemp), "%d/%d", pEntry->m_NumPlayers, pEntry->m_MaxPlayers);
-			else
-				str_format(aTemp, sizeof(aTemp), "%d/%d", pEntry->m_NumClients, pEntry->m_MaxClients);
+			{
+				int SpecNum = pEntry->m_NumClients - pEntry->m_NumPlayers;
+				if(pEntry->m_MaxClients - pEntry->m_MaxPlayers < SpecNum)
+					Max -= SpecNum;
+			}
+			if(FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS)
+			{
+				Num -= pEntry->m_NumBotPlayers;
+				Max -= pEntry->m_NumBotPlayers;
+				if(!(FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS))
+				{
+					Num -= pEntry->m_NumBotSpectators;
+					Max -= pEntry->m_NumBotSpectators;
+				}
+
+			}
+			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 			Button.y += 2.0f;
@@ -797,7 +813,7 @@ void CMenus::RenderServerbrowserOverlay()
 				Name.VSplitRight(40.0f, &Name, &Clan);
 
 				// score
-				if(pInfo->m_aClients[i].m_Player)
+				if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 				{
 					char aTemp[16];
 					str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
@@ -1141,7 +1157,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	CUIRect OriginalView = View;
 	View.y -= s_ScrollValue*ScrollNum*LineH;
 
-	int NumPlayers = ServerBrowser()->NumPlayers();
+	int NumPlayers = ServerBrowser()->NumClients();
 
 	for(int s = 0; s < m_lFilters.size(); s++)
 	{
@@ -1362,7 +1378,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			FriendItem.m_pServerInfo = pEntry;
 			str_copy(FriendItem.m_aName, pEntry->m_aClients[j].m_aName, sizeof(FriendItem.m_aName));
 			str_copy(FriendItem.m_aClan, pEntry->m_aClients[j].m_aClan, sizeof(FriendItem.m_aClan));
-			FriendItem.m_IsPlayer = pEntry->m_aClients[j].m_Player;
+			FriendItem.m_IsPlayer = !(pEntry->m_aClients[j].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC);
 
 			if(pEntry->m_aClients[j].m_FriendState == IFriends::FRIEND_PLAYER)
 				m_lFriendList[0].add(FriendItem);
@@ -1595,6 +1611,11 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	static int s_BrFilterFriends = 0;
 	if(DoButton_CheckBox(&s_BrFilterFriends, Localize("Show friends only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_FRIENDS;
+
+	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+	static int s_BrFilterBots = 0;
+	if(DoButton_CheckBox(&s_BrFilterBots, Localize("Hide Bots"), FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS, &Button))
+		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_BOTS;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPw = 0;
@@ -1900,8 +1921,23 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 
 void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column)
 {
+	// slected filter
+	CBrowserFilter *pFilter = 0;
+	for(int i = 0; i < m_lFilters.size(); ++i)
+	{
+		if(m_lFilters[i].Extended())
+		{
+			pFilter = &m_lFilters[i];
+			m_SelectedFilter = i;
+			break;
+		}
+	}
+	if(!pFilter)
+		return;
+	CServerFilterInfo FilterInfo;
+	pFilter->GetFilter(&FilterInfo);
+
 	// server scoreboard
-	// CUIRect ServerHeader;
 	CTextCursor Cursor;
 	const float FontSize = 10.0f;
 	int ActColumn = 0;
@@ -1911,17 +1947,21 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	if(pInfo)
 	{
 		CUIRect Row = View;
+		int Count = 0;
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
+			if((FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) && (pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT))
+				continue;
+
 			CUIRect Name, Clan, Score, Flag, Icon;
-			if(i % (16 / Column) == 0)
+			if(Count % (16 / Column) == 0)
 			{
 				View.VSplitLeft(View.w / (Column - ActColumn), &Row, &View);
 				ActColumn++;
 			}
 	
 			Row.HSplitTop(20.0f, &Name, &Row);
-			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (i % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
+			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
 			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
@@ -1945,7 +1985,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			Name.HSplitTop(10.0f, &Name, &Clan);
 
 			// score
-			if(pInfo->m_aClients[i].m_Player)
+			if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 			{
 				char aTemp[16];
 				str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
@@ -2002,6 +2042,8 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			Flag.w = Flag.h*2;
 			vec4 Color(1.0f, 1.0f, 1.0f, 0.5f);
 			m_pClient->m_pCountryFlags->Render(pInfo->m_aClients[i].m_Country, &Color, Flag.x, Flag.y, Flag.w, Flag.h);
+
+			++Count;
 		}
 	}
 }

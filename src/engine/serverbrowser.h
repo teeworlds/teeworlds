@@ -23,9 +23,16 @@ public:
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
 		int m_Score;
-		bool m_Player;
+		int m_PlayerType;
 
 		int m_FriendState;
+
+		enum
+		{
+			PLAYERFLAG_SPEC=1,
+			PLAYERFLAG_BOT=2,
+			PLAYERFLAG_MASK=3,
+		};
 	};
 
 	//int m_SortedIndex;
@@ -40,6 +47,8 @@ public:
 	int m_NumClients;
 	int m_MaxPlayers;
 	int m_NumPlayers;
+	int m_NumBotPlayers;
+	int m_NumBotSpectators;
 	int m_Flags;
 	int m_ServerLevel;
 	int m_Favorite;
@@ -102,6 +111,7 @@ public:
 		FLAG_PURE=2,
 		FLAG_PUREMAP=4,
 
+		FILTER_BOTS=16,
 		FILTER_EMPTY=32,
 		FILTER_FULL=64,
 		FILTER_SPECTATORS=128,
@@ -123,6 +133,7 @@ public:
 
 	virtual int NumServers() const = 0;
 	virtual int NumPlayers() const = 0;
+	virtual int NumClients() const = 0;
 	virtual const CServerInfo *Get(int Index) const = 0;
 
 	virtual int NumSortedServers(int Index) const = 0;

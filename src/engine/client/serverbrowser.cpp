@@ -44,6 +44,7 @@ void CServerBrowser::CServerlist::Clear()
 	m_ServerlistHeap.Reset();
 	m_NumServers = 0;
 	m_NumPlayers = 0;
+	m_NumClients = 0;
 	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 }
 
@@ -545,6 +546,7 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
 
 	m_aServerlist[ServerlistType].m_NumPlayers += pEntry->m_Info.m_NumPlayers;
+	m_aServerlist[ServerlistType].m_NumClients += pEntry->m_Info.m_NumClients;
 
 	pEntry->m_InfoState = CServerEntry::STATE_READY;
 }

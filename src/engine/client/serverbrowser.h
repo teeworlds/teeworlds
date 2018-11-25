@@ -32,6 +32,7 @@ public:
 
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
 	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
+	int NumClients() const { return m_aServerlist[m_ActServerlistType].m_NumClients; }
 	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
 
 	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
@@ -72,6 +73,7 @@ private:
 	public:
 		class CHeap m_ServerlistHeap;
 
+		int m_NumClients;
 		int m_NumPlayers;
 		int m_NumServers;
 		int m_NumServerCapacity;
