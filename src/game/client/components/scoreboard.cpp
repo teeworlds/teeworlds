@@ -336,6 +336,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				NumRenderScoreIDs++;
 			}
 		}
+		NumRenderScoreIDs = 16;
 		RenderScoreIDs[15] = -1;
 		HoleSizes[0] = m_pClient->m_GameInfo.m_aTeamSize[Team] - 15;
 
@@ -421,7 +422,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		if(RenderScoreIDs[i] >= 0)
 		{
 			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[RenderScoreIDs[i]];
-			bool RenderDead = !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD);
+			bool RenderDead = pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD;
 			float ColorAlpha = RenderDead ? 0.5f : 1.0f;
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
