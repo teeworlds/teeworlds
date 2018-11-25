@@ -103,15 +103,15 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 		pChat->EnableMode(CHAT_TEAM);
 	else if(str_comp(pMode, "whisper") == 0)
 	{
-		int Target = -1;
+		int Target = pChat->m_WhisperTarget; // default to ID of last target
 		if(pResult->NumArguments() == 2)
 			Target = pResult->GetInteger(1);
 		else
 		{
-			// pick next player as target
+			// pick next valid player as target
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				int ClientID = (pChat->m_pClient->m_LocalClientID + i) % MAX_CLIENTS;
+				int ClientID = (Target + i) % MAX_CLIENTS;
 				if(pChat->m_pClient->m_aClients[ClientID].m_Active && pChat->m_pClient->m_LocalClientID != ClientID)
 				{
 					Target = ClientID;
@@ -187,10 +187,14 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		if (m_Mode == CHAT_WHISPER)
 		{
-			// pick next player as target
+			// change target
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				int ClientID = (m_WhisperTarget + i) % MAX_CLIENTS;
+				int ClientID;
+				if(Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))
+					ClientID = (m_WhisperTarget + MAX_CLIENTS - i) % MAX_CLIENTS; // pick previous player as target
+				else
+					ClientID = (m_WhisperTarget + i) % MAX_CLIENTS; // pick next player as target
 				if (m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
 				{
 					m_WhisperTarget = ClientID;
@@ -838,13 +842,13 @@ void CChat::OnRender()
 
 
 			// shadow pass
-			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a, ShadowWhisper.g*ShadowWhisper.a,
-								 ShadowWhisper.b*ShadowWhisper.a, ShadowWhisper.a);
+			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a*Blend, ShadowWhisper.g*ShadowWhisper.a*Blend,
+								 ShadowWhisper.b*ShadowWhisper.a*Blend, ShadowWhisper.a*Blend);
 			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
 			// color pass
-			Graphics()->SetColor(ColorWhisper.r, ColorWhisper.g, ColorWhisper.b, 1.0f);
+			Graphics()->SetColor(ColorWhisper.r*Blend, ColorWhisper.g*Blend, ColorWhisper.b*Blend, Blend);
 			Quad = IGraphics::CQuadItem(qx, qy, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
