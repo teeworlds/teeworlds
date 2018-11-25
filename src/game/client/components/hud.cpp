@@ -44,9 +44,11 @@ inline bool IsCharANum(char c)
 
 void CHud::OnMessage(int MsgType, void* pRawMsg)
 {
-	if(MsgType == NETMSGTYPE_SV_CHAT)
+	// process server broadcast message
+	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
+	   !m_pClient->m_MuteServerBroadcast)
 	{
-		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
 
 		// new broadcast message
 		int MsgLen = str_length(pMsg->m_pMessage);
@@ -674,7 +676,8 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	CUIRect Rect = {m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f};
+	const float Width = m_Width * 0.25f - 2.0f;
+	CUIRect Rect = {m_Width-Width, m_Height-15.0f, Width, 15.0f};
 	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_TL, 5.0f);
 
 	// draw the text
@@ -685,7 +688,7 @@ void CHud::RenderSpectatorHud()
 	char aBuf[128];
 
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, m_Width-174.0f, m_Height-13.0f, 8.0f, TEXTFLAG_RENDER);
+	TextRender()->SetCursor(&Cursor, m_Width-Width+6.0f, m_Height-13.0f, 8.0f, TEXTFLAG_RENDER);
 
 	str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Spectate"));
 	TextRender()->TextEx(&Cursor, aBuf, -1);
@@ -777,6 +780,9 @@ inline bool IsCharWhitespace(char c)
 
 void CHud::RenderBroadcast()
 {
+	if(!g_Config.m_ClShowServerBroadcast || m_pClient->m_MuteServerBroadcast)
+		return;
+
 	const float DisplayDuration = 10.0f;
 	const float DisplayStartFade = 9.0f;
 	const float DeltaTime = Client()->LocalTime() - m_BroadcastReceivedTime;
@@ -791,9 +797,6 @@ void CHud::RenderBroadcast()
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 
 	CUIRect ScreenRect = {0, 0, m_Width, m_Height};
-	const bool IsSpecMode = m_pClient->m_Snap.m_SpecInfo.m_Active;
-	if(IsSpecMode)
-		ScreenRect.y -= 20.0f;
 
 	CUIRect BcView = ScreenRect;
 	BcView.x += m_Width * 0.25f;
@@ -804,13 +807,12 @@ void CHud::RenderBroadcast()
 	float FontSize = 11.0f;
 
 	vec4 ColorTop(0, 0, 0, 0);
-	vec4 ColorBot(0, 0, 0, (IsSpecMode ? 0.2f : 0.4f) * Fade);
+	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
 	CUIRect BgRect;
 	BcView.HSplitBottom(10.0f, 0, &BgRect);
 
 	RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop,
-							   ColorBot, ColorBot, IsSpecMode ? CUI::CORNER_B:0,
-							   IsSpecMode ? 2.0f:0);
+							   ColorBot, ColorBot, 0, 0);
 
 	// server broadcast line
 	CUIRect TitleRect;

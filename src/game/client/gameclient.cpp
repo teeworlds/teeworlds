@@ -249,7 +249,7 @@ void CGameClient::OnInit()
 	m_UI.SetGraphics(Graphics(), TextRender());
 	m_RenderTools.m_pGraphics = Graphics();
 	m_RenderTools.m_pUI = UI();
-	
+
 	int64 Start = time_get();
 
 	// set the language
@@ -369,6 +369,7 @@ void CGameClient::OnReset()
 	m_DemoSpecMode = SPEC_FREEVIEW;
 	m_DemoSpecID = -1;
 	m_Tuning = CTuningParams();
+	m_MuteServerBroadcast = false;
 }
 
 
@@ -633,7 +634,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			if(m_LocalClientID != -1 && !pMsg->m_Silent)
 			{
 				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
-				
+
 				if(m_pDemoRecorder->IsRecording())
 				{
 					CNetMsg_De_ClientEnter Msg;
@@ -746,7 +747,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		if(pMsg->m_Silent == 0)
 		{
 			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team);
-		}		
+		}
 	}
 	else if(MsgId == NETMSGTYPE_SV_READYTOENTER)
 	{
@@ -983,7 +984,7 @@ void CGameClient::OnNewSnapshot()
 					m_ServerMode = SERVERMODE_PURE;
 				}
 			}
-			
+
 			// network items
 			if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 			{
@@ -1018,7 +1019,7 @@ void CGameClient::OnNewSnapshot()
 					// clamp ammo count for non ninja weapon
 					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
 						m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount = clamp(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount, 0, 10);
-					
+
 					if(pOld)
 					{
 						m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
@@ -1199,7 +1200,7 @@ void CGameClient::OnDemoRecSnap()
 	CNetObj_De_GameInfo *pGameInfo = static_cast<CNetObj_De_GameInfo *>(Client()->SnapNewItem(NETOBJTYPE_DE_GAMEINFO, 0, sizeof(CNetObj_De_GameInfo)));
 	if(!pGameInfo)
 		return;
-	
+
 	pGameInfo->m_GameFlags = m_GameInfo.m_GameFlags;
 	pGameInfo->m_ScoreLimit = m_GameInfo.m_ScoreLimit;
 	pGameInfo->m_TimeLimit = m_GameInfo.m_TimeLimit;

@@ -242,6 +242,10 @@ Messages = [
 	NetMessage("Sv_Motd", [
 		NetString("m_pMessage"),
 	]),
+    
+    NetMessage("Sv_Broadcast", [
+		NetString("m_pMessage"),
+	]),
 
 	NetMessage("Sv_Chat", [
 		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),

@@ -363,6 +363,17 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 			ServerBrowser()->AddFavorite(&CurrentServerInfo);
 	}
 
+	{
+		CUIRect Button;
+		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
+		static int s_MuteBroadcast = 0;
+		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcast"),
+							 m_pClient->m_MuteServerBroadcast, &Button))
+		{
+			m_pClient->m_MuteServerBroadcast ^= 1;
+		}
+	}
+
 	// gameinfo
 	GameInfo.VSplitLeft(1.0f, 0, &GameInfo);
 	RenderTools()->DrawUIRect(&GameInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);

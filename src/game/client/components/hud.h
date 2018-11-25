@@ -11,11 +11,11 @@ class CHud : public CComponent
 	float m_AverageFPS;
 	int64 m_WarmupHideTick;
 
-	// broadcast
+	// server broadcast
 	typedef unsigned char u8;
 	struct CBcColor
 	{
-		u8 m_R,m_G,m_B;
+		u8 m_R, m_G, m_B;
 		int m_CharPos;
 	};
 

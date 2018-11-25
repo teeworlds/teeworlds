@@ -241,6 +241,13 @@ void CGameContext::SendChat(int ChatterClientID, int Mode, int To, const char *p
 	}
 }
 
+void CGameContext::SendBroadcast(const char* pText, int ClientID)
+{
+	CNetMsg_Sv_Broadcast Msg;
+	Msg.m_pMessage = pText;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
 void CGameContext::SendEmoticon(int ClientID, int Emoticon)
 {
 	CNetMsg_Sv_Emoticon Msg;
@@ -1094,6 +1101,12 @@ void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData)
 	pSelf->SendChat(-1, CHAT_ALL, -1, pResult->GetString(0));
 }
 
+void CGameContext::ConBroadcast(IConsole::IResult* pResult, void* pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->SendBroadcast(pResult->GetString(0), -1);
+}
+
 void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1381,6 +1394,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
 	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Say in chat");
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");
 	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, ConSetTeam, this, "Set team of player to team");
 	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "Set team of all players to team");
 	Console()->Register("swap_teams", "", CFGFLAG_SERVER, ConSwapTeams, this, "Swap the current teams");
