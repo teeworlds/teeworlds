@@ -18,16 +18,26 @@ class CBroadcast : public CComponent
 		int m_CharPos;
 	};
 
+	struct CBcLineInfo
+	{
+		const char* m_pStrStart;
+		int m_StrLen;
+		float m_Width;
+	};
+
 	enum {
 		MAX_BROADCAST_COLORS = 128,
 		MAX_BROADCAST_MSG_LENGTH = 127
 	};
 
 	CBcColor m_aSrvBroadcastColorList[MAX_BROADCAST_COLORS];
+	CBcLineInfo m_aSrvBroadcastLines[10];
 	char m_aSrvBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
 	int m_aSrvBroadcastMsgLen;
 	int m_SrvBroadcastColorCount;
+	int m_SrvBroadcastLineCount;
 	float m_SrvBroadcastReceivedTime;
+	float m_SrvBroadcastFontSize;
 
 	void RenderServerBroadcast();
 

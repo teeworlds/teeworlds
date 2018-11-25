@@ -13,6 +13,9 @@
 #include "scoreboard.h"
 #include "motd.h"
 
+#define BROADCAST_FONTSIZE_BIG 11.0f
+#define BROADCAST_FONTSIZE_SMALL 6.5f
+
 inline bool IsCharANum(char c)
 {
 	return c >= '0' && c <= '9';
@@ -65,8 +68,6 @@ void CBroadcast::RenderServerBroadcast()
 	BcView.w *= 0.5f;
 	BcView.h *= 0.2f;
 
-	float FontSize = 11.0f;
-
 	vec4 ColorTop(0, 0, 0, 0);
 	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
 	CUIRect BgRect;
@@ -85,77 +86,20 @@ void CBroadcast::RenderServerBroadcast()
 	BcView.VMargin(5.0f, &BcView);
 	BcView.HSplitBottom(2.0f, &BcView, 0);
 
-	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
-	const int MsgLen = m_aSrvBroadcastMsgLen;
-
-	// broadcast message
-	// one line == big font
-	// > one line == small font
-
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, BcView.x, BcView.y, FontSize, 0);
-	Cursor.m_LineWidth = BcView.w;
-	TextRender()->TextEx(&Cursor, pBroadcastMsg, -1);
-
-	// can't fit on one line, reduce size
-	if(Cursor.m_LineCount > 1)
-	{
-		FontSize = 6.5f; // smaller font
-		TextRender()->SetCursor(&Cursor, BcView.x, BcView.y, FontSize, 0);
-		Cursor.m_LineWidth = BcView.w;
-		TextRender()->TextEx(&Cursor, pBroadcastMsg, -1);
-	}
-
-	// make lines
-	struct CLineInfo
-	{
-		const char* m_pStrStart;
-		int m_StrLen;
-		float m_Width;
-	};
-
-	CLineInfo aLines[10];
-	int CurCharCount = 0;
-	int LineCount = 0;
-
-	while(CurCharCount < MsgLen)
-	{
-		const char* RemainingMsg = pBroadcastMsg + CurCharCount;
-
-		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = BcView.w;
-
-		TextRender()->TextEx(&Cursor, RemainingMsg, -1);
-		int StrLen = Cursor.m_CharCount;
-
-		// don't cut words
-		if(CurCharCount + StrLen < MsgLen)
-		{
-			const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
-			if(WorldLen > 0 && WorldLen < StrLen)
-			{
-				StrLen -= WorldLen;
-				TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-				Cursor.m_LineWidth = BcView.w;
-				TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
-			}
-		}
-
-		const float TextWidth = Cursor.m_X-Cursor.m_StartX;
-
-		CLineInfo Line = { RemainingMsg, StrLen, TextWidth };
-		aLines[LineCount++] = Line;
-		CurCharCount += StrLen;
-	}
-
 	// draw lines
+	const float FontSize = m_SrvBroadcastFontSize;
+	const int LineCount = m_SrvBroadcastLineCount;
+	const CBcLineInfo* aLines = m_aSrvBroadcastLines;
+	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
+	CTextCursor Cursor;
+
 	TextRender()->TextColor(1, 1, 1, 1);
 	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
 	float y = BcView.y + BcView.h - LineCount * FontSize;
 
 	for(int l = 0; l < LineCount; l++)
 	{
-		const CLineInfo& Line = aLines[l];
+		const CBcLineInfo& Line = aLines[l];
 		TextRender()->SetCursor(&Cursor, BcView.x + (BcView.w - Line.m_Width) * 0.5f, y,
 								FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = BcView.w;
@@ -241,13 +185,14 @@ void CBroadcast::OnReset()
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 {
 	// process server broadcast message
-	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
+	if(MsgType == NETMSGTYPE_SV_CHAT && g_Config.m_ClShowServerBroadcast &&
 	   !m_pClient->m_MuteServerBroadcast)
 	{
-		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
+		//CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 
 		// new broadcast message
-		int MsgLen = str_length(pMsg->m_pMessage);
+		int RcvMsgLen = str_length(pMsg->m_pMessage);
 		mem_zero(m_aSrvBroadcastMsg, sizeof(m_aSrvBroadcastMsg));
 		m_aSrvBroadcastMsgLen = 0;
 		m_SrvBroadcastReceivedTime = Client()->LocalTime();
@@ -257,7 +202,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		m_SrvBroadcastColorCount = 1;
 
 		// parse colors
-		for(int i = 0; i < MsgLen; i++)
+		for(int i = 0; i < RcvMsgLen; i++)
 		{
 			const char* c = pMsg->m_pMessage + i;
 			const char* pTmp = c;
@@ -266,7 +211,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 			if(*c == CharUtf8 && *c == '^')
 			{
-				if(i+3 < MsgLen && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
+				if(i+3 < RcvMsgLen && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
 				{
 					u8 r = (c[1] - '0') * 24 + 39;
 					u8 g = (c[2] - '0') * 24 + 39;
@@ -281,6 +226,65 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 			if(m_aSrvBroadcastMsgLen+Utf8Len < MAX_BROADCAST_MSG_LENGTH)
 				m_aSrvBroadcastMsg[m_aSrvBroadcastMsgLen++] = *c;
+		}
+
+		const float Height = 300;
+		const float Width = Height*Graphics()->ScreenAspect();
+		const float LineMaxWidth = Width * 0.5f - 10.0f;
+
+		// process boradcast message
+		const char* pBroadcastMsg = m_aSrvBroadcastMsg;
+		const int MsgLen = m_aSrvBroadcastMsgLen;
+
+		// one line == big font
+		// 2+ lines == small font
+		float FontSize = BROADCAST_FONTSIZE_BIG;
+		CTextCursor Cursor;
+		Graphics()->MapScreen(0, 0, Width, Height);
+
+		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
+		Cursor.m_LineWidth = LineMaxWidth;
+		TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
+
+		// can't fit on one line, reduce size
+		if(Cursor.m_LineCount > 1)
+			FontSize = BROADCAST_FONTSIZE_SMALL; // smaller font
+
+		m_SrvBroadcastFontSize = FontSize;
+
+		// make lines
+		CBcLineInfo* aLines = m_aSrvBroadcastLines;
+		int CurCharCount = 0;
+		m_SrvBroadcastLineCount = 0;
+
+		while(CurCharCount < MsgLen)
+		{
+			const char* RemainingMsg = pBroadcastMsg + CurCharCount;
+
+			TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = LineMaxWidth;
+
+			TextRender()->TextEx(&Cursor, RemainingMsg, -1);
+			int StrLen = Cursor.m_CharCount;
+
+			// don't cut words
+			if(CurCharCount + StrLen < MsgLen)
+			{
+				const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
+				if(WorldLen > 0 && WorldLen < StrLen)
+				{
+					StrLen -= WorldLen;
+					TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+					Cursor.m_LineWidth = LineMaxWidth;
+					TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
+				}
+			}
+
+			const float TextWidth = Cursor.m_X-Cursor.m_StartX;
+
+			CBcLineInfo Line = { RemainingMsg, StrLen, TextWidth };
+			aLines[m_SrvBroadcastLineCount++] = Line;
+			CurCharCount += StrLen;
 		}
 	}
 }
