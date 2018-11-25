@@ -31,7 +31,7 @@ class CBroadcast : public CComponent
 	};
 
 	CBcColor m_aSrvBroadcastColorList[MAX_BROADCAST_COLORS];
-	CBcLineInfo m_aSrvBroadcastLines[10];
+	CBcLineInfo m_aSrvBroadcastLines[3];
 	char m_aSrvBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
 	int m_aSrvBroadcastMsgLen;
 	int m_SrvBroadcastColorCount;

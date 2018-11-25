@@ -89,7 +89,6 @@ void CBroadcast::RenderServerBroadcast()
 	// draw lines
 	const float FontSize = m_SrvBroadcastFontSize;
 	const int LineCount = m_SrvBroadcastLineCount;
-	const CBcLineInfo* aLines = m_aSrvBroadcastLines;
 	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
 	CTextCursor Cursor;
 
@@ -99,7 +98,7 @@ void CBroadcast::RenderServerBroadcast()
 
 	for(int l = 0; l < LineCount; l++)
 	{
-		const CBcLineInfo& Line = aLines[l];
+		const CBcLineInfo& Line = m_aSrvBroadcastLines[l];
 		TextRender()->SetCursor(&Cursor, BcView.x + (BcView.w - Line.m_Width) * 0.5f, y,
 								FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = BcView.w;
@@ -114,6 +113,7 @@ void CBroadcast::RenderServerBroadcast()
 				int StartColorID = -1;
 				int ColorStrLen = -1;
 
+				// find color
 				for(int j = 0; j < m_SrvBroadcastColorCount; j++)
 				{
 					if((ThisCharPos+DrawnStrLen) >= m_aSrvBroadcastColorList[j].m_CharPos)
@@ -122,15 +122,17 @@ void CBroadcast::RenderServerBroadcast()
 					}
 					else if(StartColorID >= 0)
 					{
-						ColorStrLen = m_aSrvBroadcastColorList[j].m_CharPos - m_aSrvBroadcastColorList[StartColorID].m_CharPos;
+						ColorStrLen = m_aSrvBroadcastColorList[j].m_CharPos -
+									  max(m_aSrvBroadcastColorList[StartColorID].m_CharPos, ThisCharPos);
 						break;
 					}
 				}
 
 				dbg_assert(StartColorID >= 0, "This should not be -1, color not found");
 
-				if(ColorStrLen == -1)
+				if(ColorStrLen < 0)
 					ColorStrLen = Line.m_StrLen-DrawnStrLen;
+				ColorStrLen = min(ColorStrLen, Line.m_StrLen-DrawnStrLen);
 
 				const CBcColor& TextColor = m_aSrvBroadcastColorList[StartColorID];
 				float r = TextColor.m_R/255.f;
@@ -201,6 +203,10 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		m_aSrvBroadcastColorList[0] = White;
 		m_SrvBroadcastColorCount = 1;
 
+		CBcLineInfo UserLines[3];
+		int UserLineCount = 0;
+		int LastUserLineStartPoint = 0;
+
 		// parse colors
 		for(int i = 0; i < RcvMsgLen; i++)
 		{
@@ -224,8 +230,31 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 				}
 			}
 
+			if(*c == CharUtf8 && *c == '\\')
+			{
+				if(i+1 < RcvMsgLen && c[1] == 'n' && UserLineCount < 3)
+				{
+					CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
+										 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
+					if(Line.m_StrLen > 0)
+						UserLines[UserLineCount++] = Line;
+					LastUserLineStartPoint = m_aSrvBroadcastMsgLen;
+					i++;
+					continue;
+				}
+			}
+
 			if(m_aSrvBroadcastMsgLen+Utf8Len < MAX_BROADCAST_MSG_LENGTH)
 				m_aSrvBroadcastMsg[m_aSrvBroadcastMsgLen++] = *c;
+		}
+
+		// last user defined line
+		if(LastUserLineStartPoint > 0 && UserLineCount < 3)
+		{
+			CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
+								 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
+			if(Line.m_StrLen > 0)
+				UserLines[UserLineCount++] = Line;
 		}
 
 		const float Height = 300;
@@ -236,56 +265,75 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		const char* pBroadcastMsg = m_aSrvBroadcastMsg;
 		const int MsgLen = m_aSrvBroadcastMsgLen;
 
-		// one line == big font
-		// 2+ lines == small font
-		float FontSize = BROADCAST_FONTSIZE_BIG;
 		CTextCursor Cursor;
 		Graphics()->MapScreen(0, 0, Width, Height);
 
-		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
-		Cursor.m_LineWidth = LineMaxWidth;
-		TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
+		// one line == big font
+		// 2+ lines == small font
+		m_SrvBroadcastLineCount = 0;
+		float FontSize = BROADCAST_FONTSIZE_BIG;
 
-		// can't fit on one line, reduce size
-		if(Cursor.m_LineCount > 1)
-			FontSize = BROADCAST_FONTSIZE_SMALL; // smaller font
+		if(UserLineCount <= 1) // auto mode
+		{
+			TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
+			Cursor.m_LineWidth = LineMaxWidth;
+			TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
+
+			// can't fit on one line, reduce size
+			if(Cursor.m_LineCount > 1)
+				FontSize = BROADCAST_FONTSIZE_SMALL; // smaller font
+
+			// make lines
+			int CurCharCount = 0;
+			while(CurCharCount < MsgLen && m_SrvBroadcastLineCount < 3)
+			{
+				const char* RemainingMsg = pBroadcastMsg + CurCharCount;
+
+				TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = LineMaxWidth;
+
+				TextRender()->TextEx(&Cursor, RemainingMsg, -1);
+				int StrLen = Cursor.m_CharCount;
+
+				// don't cut words
+				if(CurCharCount + StrLen < MsgLen)
+				{
+					const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
+					if(WorldLen > 0 && WorldLen < StrLen)
+					{
+						StrLen -= WorldLen;
+						TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+						Cursor.m_LineWidth = LineMaxWidth;
+						TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
+					}
+				}
+
+				const float TextWidth = Cursor.m_X-Cursor.m_StartX;
+
+				CBcLineInfo Line = { RemainingMsg, StrLen, TextWidth };
+				m_aSrvBroadcastLines[m_SrvBroadcastLineCount++] = Line;
+				CurCharCount += StrLen;
+			}
+		}
+		else // user defined lines mode
+		{
+			FontSize = BROADCAST_FONTSIZE_SMALL;
+
+			for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < 3; i++)
+			{
+				TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = LineMaxWidth;
+				TextRender()->TextEx(&Cursor, UserLines[i].m_pStrStart, UserLines[i].m_StrLen);
+
+				const float TextWidth = Cursor.m_X-Cursor.m_StartX;
+				const int StrLen = Cursor.m_CharCount;
+
+				CBcLineInfo Line = { UserLines[i].m_pStrStart, StrLen, TextWidth };
+				m_aSrvBroadcastLines[m_SrvBroadcastLineCount++] = Line;
+			}
+		}
 
 		m_SrvBroadcastFontSize = FontSize;
-
-		// make lines
-		CBcLineInfo* aLines = m_aSrvBroadcastLines;
-		int CurCharCount = 0;
-		m_SrvBroadcastLineCount = 0;
-
-		while(CurCharCount < MsgLen)
-		{
-			const char* RemainingMsg = pBroadcastMsg + CurCharCount;
-
-			TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = LineMaxWidth;
-
-			TextRender()->TextEx(&Cursor, RemainingMsg, -1);
-			int StrLen = Cursor.m_CharCount;
-
-			// don't cut words
-			if(CurCharCount + StrLen < MsgLen)
-			{
-				const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
-				if(WorldLen > 0 && WorldLen < StrLen)
-				{
-					StrLen -= WorldLen;
-					TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-					Cursor.m_LineWidth = LineMaxWidth;
-					TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
-				}
-			}
-
-			const float TextWidth = Cursor.m_X-Cursor.m_StartX;
-
-			CBcLineInfo Line = { RemainingMsg, StrLen, TextWidth };
-			aLines[m_SrvBroadcastLineCount++] = Line;
-			CurCharCount += StrLen;
-		}
 	}
 }
 
