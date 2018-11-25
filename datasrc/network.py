@@ -242,8 +242,8 @@ Messages = [
 	NetMessage("Sv_Motd", [
 		NetString("m_pMessage"),
 	]),
-    
-    NetMessage("Sv_Broadcast", [
+
+	NetMessage("Sv_Broadcast", [
 		NetString("m_pMessage"),
 	]),
 
