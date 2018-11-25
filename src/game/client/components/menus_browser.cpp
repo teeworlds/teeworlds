@@ -1910,9 +1910,10 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	
 	if(pInfo)
 	{
+		CUIRect Row = View;
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
-			CUIRect Name, Clan, Score, Flag, Row, Icon;
+			CUIRect Name, Clan, Score, Flag, Icon;
 			if(i % (16 / Column) == 0)
 			{
 				View.VSplitLeft(View.w / (Column - ActColumn), &Row, &View);
