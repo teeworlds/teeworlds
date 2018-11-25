@@ -411,7 +411,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 					(RenderDead && !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)))
 					continue;
 
-				RenderScoreIDs[NumRenderScoreIDs] = pInfo->m_ClientID;
+				RenderScoreIDs[NumRenderScoreIDs] = i;
 				NumRenderScoreIDs++;
 			}
 		}
