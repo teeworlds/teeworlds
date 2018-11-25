@@ -367,7 +367,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		CUIRect Button;
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_MuteBroadcast = 0;
-		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcast"),
+		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcasts"),
 							 m_pClient->m_MuteServerBroadcast, &Button))
 		{
 			m_pClient->m_MuteServerBroadcast ^= 1;

@@ -44,7 +44,7 @@ void CBroadcast::RenderServerBroadcast()
 	if(!g_Config.m_ClShowServerBroadcast || m_pClient->m_MuteServerBroadcast)
 		return;
 
-	const bool ColoredBroadcastEnabled = g_Config.m_ClEnableColoredBroadcast;
+	const bool ColoredBroadcastEnabled = g_Config.m_ClColoredBroadcast;
 	const float Height = 300;
 	const float Width = Height*Graphics()->ScreenAspect();
 
@@ -72,16 +72,42 @@ void CBroadcast::RenderServerBroadcast()
 	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
 	CUIRect BgRect;
 	BcView.HSplitBottom(10.0f, 0, &BgRect);
+	BcView.HSplitBottom(8.0f, &BcView, 0);
+
+	// draw bottom bar
+	const float CornerWidth = 12.0f;
+	BgRect.VMargin(CornerWidth, &BgRect);
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	IGraphics::CFreeformItem LeftCorner(
+		BgRect.x - CornerWidth, BgRect.y + BgRect.h,
+		BgRect.x, BgRect.y,
+		BgRect.x, BgRect.y + BgRect.h,
+		BgRect.x, BgRect.y + BgRect.h
+	);
+	IGraphics::CColorVertex aColorVert[4] = {
+		IGraphics::CColorVertex(0, 0,0,0, 0.0f),
+		IGraphics::CColorVertex(1, 0,0,0, 0.0f),
+		IGraphics::CColorVertex(2, 0,0,0, 0.4f * Fade),
+		IGraphics::CColorVertex(3, 0,0,0, 0.4f * Fade)};
+	Graphics()->SetColorVertex(aColorVert, 4);
+	Graphics()->QuadsDrawFreeform(&LeftCorner, 1);
+
+	IGraphics::CFreeformItem RightCorner(
+		BgRect.x+BgRect.w + CornerWidth, BgRect.y + BgRect.h,
+		BgRect.x+BgRect.w, BgRect.y,
+		BgRect.x+BgRect.w, BgRect.y + BgRect.h,
+		BgRect.x+BgRect.w, BgRect.y + BgRect.h
+	);
+	Graphics()->SetColorVertex(aColorVert, 4);
+	Graphics()->QuadsDrawFreeform(&RightCorner, 1);
+
+	Graphics()->QuadsEnd();
 
 	RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop,
 							   ColorBot, ColorBot, 0, 0);
 
-	// server broadcast line
-	CUIRect TitleRect;
-	BcView.HSplitBottom(10.0f, &BcView, &TitleRect);
-	TitleRect.y += 1.5f;
-	TextRender()->TextColor(1, 1, 1, 0.6f * Fade);
-	UI()->DoLabel(&TitleRect, Localize("Server broadcast"), 5.5f, CUI::ALIGN_CENTER);
 
 	BcView.VMargin(5.0f, &BcView);
 	BcView.HSplitBottom(2.0f, &BcView, 0);
@@ -187,11 +213,10 @@ void CBroadcast::OnReset()
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 {
 	// process server broadcast message
-	if(MsgType == NETMSGTYPE_SV_CHAT && g_Config.m_ClShowServerBroadcast &&
+	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
 	   !m_pClient->m_MuteServerBroadcast)
 	{
-		//CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
-		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
 
 		// new broadcast message
 		int RcvMsgLen = str_length(pMsg->m_pMessage);
