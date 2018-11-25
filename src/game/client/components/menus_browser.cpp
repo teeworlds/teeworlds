@@ -1947,7 +1947,6 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	
 	if(pInfo)
 	{
-		CUIRect Row = View;
 		int Count = 0;
 
 		CUIRect Scroll;
@@ -1955,6 +1954,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		UI()->ClipEnable(&View);
 
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
+		float LineHeight = 20.0f;
 
 		if(RowCount == 0)
 		{
@@ -1986,8 +1986,11 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				Scroll.VMargin(5.0f, &Scroll);
 				s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
 				View.x += (View.w - Width) * s_ScrollValue;
+				LineHeight = 0.25f*View.h;
 			}
 		}
+		
+		CUIRect Row = View;
 
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
@@ -2002,7 +2005,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				ActColumn++;
 			}
 	
-			Row.HSplitTop(20.0f, &Name, &Row);
+			Row.HSplitTop(LineHeight, &Name, &Row);
 			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
@@ -2024,7 +2027,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			Name.VSplitLeft(20.0f, &Score, &Name);
 			Name.VSplitRight(2*(Name.h-8.0f), &Name, &Flag);
 			Flag.HMargin(4.0f, &Flag);
-			Name.HSplitTop(10.0f, &Name, &Clan);
+			Name.HSplitTop(LineHeight*0.5f, &Name, &Clan);
 
 			// score
 			if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
