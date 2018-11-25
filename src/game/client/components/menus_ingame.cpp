@@ -416,7 +416,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 	static int s_VoteList = 0;
 	static CListBoxState s_ListBoxState;
 	CUIRect List = MainView;
-	UiDoListboxHeader(&s_ListBoxState, &List, "Option", 20.0f, 2.0f);
+	UiDoListboxHeader(&s_ListBoxState, &List, Localize("Option"), 20.0f, 2.0f);
 	UiDoListboxStart(&s_ListBoxState, &s_VoteList, 20.0f, 0, m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, 0, true);
 
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
@@ -460,7 +460,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	static int s_VoteList = 0;
 	static CListBoxState s_ListBoxState;
 	CUIRect List = MainView;
-	UiDoListboxHeader(&s_ListBoxState, &List, "Player", 20.0f, 2.0f);
+	UiDoListboxHeader(&s_ListBoxState, &List, Localize("Player"), 20.0f, 2.0f);
 	UiDoListboxStart(&s_ListBoxState, &s_VoteList, 20.0f, 0, NumOptions, 1, Selected, 0, true);
 
 	for(int i = 0; i < NumOptions; i++)
