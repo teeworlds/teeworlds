@@ -418,7 +418,8 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
 			int Level = pEntry->m_ServerLevel;
-			DoIcon(IMAGE_LEVELICONS, Level==0 ? SPRITE_LEVEL_A_OFF : Level==1 ? SPRITE_LEVEL_B_OFF : SPRITE_LEVEL_C_OFF, &Icon);
+
+			DoIcon(IMAGE_LEVELICONS, Level==0 ? (Selected ? SPRITE_LEVEL_A_B : SPRITE_LEVEL_A_A) : Level==1 ? (Selected ? SPRITE_LEVEL_B_B : SPRITE_LEVEL_B_A) : (Selected ? SPRITE_LEVEL_C_B : SPRITE_LEVEL_C_A), &Icon);
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
@@ -1801,21 +1802,21 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.y -= 2.0f;
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton1;
-	if(DoButton_SpriteID(&s_LevelButton1, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 1) ? SPRITE_LEVEL_A_OFF : SPRITE_LEVEL_A_ON, false, &Icon, CUI::CORNER_L, 5.0f, true))
+	if(DoButton_SpriteID(&s_LevelButton1, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 1) ? SPRITE_LEVEL_A_B : SPRITE_LEVEL_A_ON, false, &Icon, CUI::CORNER_L, 5.0f, true))
 	{
 		FilterInfo.m_ServerLevel ^= 1;
 		pFilter->SetFilter(&FilterInfo);
 	}
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton2;
-	if(DoButton_SpriteID(&s_LevelButton2, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 2) ? SPRITE_LEVEL_B_OFF : SPRITE_LEVEL_B_ON, false, &Icon, 0, 5.0f, true))
+	if(DoButton_SpriteID(&s_LevelButton2, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 2) ? SPRITE_LEVEL_B_B : SPRITE_LEVEL_B_ON, false, &Icon, 0, 5.0f, true))
 	{
 		FilterInfo.m_ServerLevel ^= 2;
 		pFilter->SetFilter(&FilterInfo);
 	}
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton3;
-	if(DoButton_SpriteID(&s_LevelButton3, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 4) ? SPRITE_LEVEL_C_OFF : SPRITE_LEVEL_C_ON, false, &Icon, CUI::CORNER_R, 5.0f, true))
+	if(DoButton_SpriteID(&s_LevelButton3, IMAGE_LEVELICONS, (FilterInfo.m_ServerLevel & 4) ? SPRITE_LEVEL_C_B : SPRITE_LEVEL_C_ON, false, &Icon, CUI::CORNER_R, 5.0f, true))
 	{
 		FilterInfo.m_ServerLevel ^= 4;
 		pFilter->SetFilter(&FilterInfo);
