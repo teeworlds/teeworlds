@@ -191,7 +191,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				int ClientID;
-				if(Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT))
+				if(Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))
 					ClientID = (m_WhisperTarget + MAX_CLIENTS - i) % MAX_CLIENTS; // pick previous player as target
 				else
 					ClientID = (m_WhisperTarget + i) % MAX_CLIENTS; // pick next player as target
