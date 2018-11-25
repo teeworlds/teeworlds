@@ -700,7 +700,8 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 {
 	static int s_LanguageList = 0;
-	static int s_SelectedLanguage = 0;
+	static int s_SelectedLanguage = -1;
+	static int s_OldSelected = -1;
 	static sorted_array<CLanguage> s_Languages;
 	static CListBoxState s_ListBoxState;
 
@@ -716,6 +717,17 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			}
 	}
 
+	if(s_SelectedLanguage != -1 && m_ActiveListBox != ACTLB_LANG)
+	{
+		s_OldSelected = s_SelectedLanguage;
+		s_SelectedLanguage = -1;
+	}
+	static int s_LangID = 0;
+	if(s_SelectedLanguage == -1 && UI()->MouseInside(&MainView))
+	{
+		s_SelectedLanguage = s_OldSelected;
+		m_ActiveListBox = ACTLB_LANG;
+	}
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
@@ -735,7 +747,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
 			Item.m_Rect.y += 2.0f;
-			if(!str_comp(s_Languages[s_SelectedLanguage].m_Name, r.front().m_Name))
+			if(s_SelectedLanguage != -1 && !str_comp(s_Languages[s_SelectedLanguage].m_Name, r.front().m_Name))
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -752,6 +764,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 	if(OldSelected != s_SelectedLanguage)
 	{
+		m_ActiveListBox = ACTLB_LANG;
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
@@ -760,7 +773,8 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 {
 	static int s_ThemeList = 0;
-	static int s_SelectedTheme = 0;
+	static int s_SelectedTheme = -1;
+	static int s_OldSelected = -1;
 	static CListBoxState s_ListBoxState_Theme;
 
 	if(m_lThemes.size() == 0) // not loaded yet
@@ -776,6 +790,16 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			}
 	}
 
+	if(s_SelectedTheme != -1 && m_ActiveListBox != ACTLB_THEME)
+	{
+		s_OldSelected = s_SelectedTheme;
+		s_SelectedTheme = -1;
+	}
+	if(s_SelectedTheme == -1 && UI()->MouseInside(&MainView))
+	{
+		s_SelectedTheme = s_OldSelected;
+		m_ActiveListBox = ACTLB_THEME;
+	}
 	int OldSelected = s_SelectedTheme;
 
 	if(Header)
@@ -821,7 +845,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			else
 				str_copy(aName, "(none)", sizeof(aName));
 
-			if(!str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name))
+			if(s_SelectedTheme != -1 && !str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name))
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -838,6 +862,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	if(OldSelected != s_SelectedTheme)
 	{
+		m_ActiveListBox = ACTLB_THEME;
 		str_copy(g_Config.m_ClMenuMap, m_lThemes[s_SelectedTheme].m_Name, sizeof(g_Config.m_ClMenuMap));
 		if(m_lThemes[s_SelectedTheme].m_Name[0])
 			g_Config.m_ClShowMenuMap = 1;

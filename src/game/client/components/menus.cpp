@@ -79,6 +79,7 @@ CMenus::CMenus()
 
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
+	m_ActiveListBox = ACTLB_THEME;
 }
 
 float CMenus::ButtonFade(CButtonContainer *pBC, float Seconds, int Checked)

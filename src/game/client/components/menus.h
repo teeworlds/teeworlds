@@ -174,6 +174,9 @@ private:
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,
 		SETTINGS_SOUND,
+
+		ACTLB_LANG=0,
+		ACTLB_THEME,
 	};
 
 	int m_GamePage;
@@ -188,6 +191,7 @@ private:
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
 	bool m_PopupActive;
+	int m_ActiveListBox;
 
 	// images
 	struct CMenuImage
