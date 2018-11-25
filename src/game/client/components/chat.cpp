@@ -836,13 +836,13 @@ void CChat::OnRender()
 
 
 			// shadow pass
-			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a, ShadowWhisper.g*ShadowWhisper.a,
-								 ShadowWhisper.b*ShadowWhisper.a, ShadowWhisper.a);
+			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a*Blend, ShadowWhisper.g*ShadowWhisper.a*Blend,
+								 ShadowWhisper.b*ShadowWhisper.a*Blend, ShadowWhisper.a*Blend);
 			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
 			// color pass
-			Graphics()->SetColor(ColorWhisper.r, ColorWhisper.g, ColorWhisper.b, 1.0f);
+			Graphics()->SetColor(ColorWhisper.r*Blend, ColorWhisper.g*Blend, ColorWhisper.b*Blend, Blend);
 			Quad = IGraphics::CQuadItem(qx, qy, qw, qh);
 			Graphics()->QuadsDrawTL(&Quad, 1);
 
