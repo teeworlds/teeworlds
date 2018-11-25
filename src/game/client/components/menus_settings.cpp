@@ -1175,8 +1175,6 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	float SpacingH = 2.0f;
 	float SpacingW = 3.0f;
 	float ButtonHeight = 20.0f;
-	float BoxSize = 297.0f;
-	float BackgroundHeight = (ButtonHeight+SpacingH)*3.0f+BoxSize;
 
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
