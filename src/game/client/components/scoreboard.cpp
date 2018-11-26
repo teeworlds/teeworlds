@@ -185,6 +185,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
 	m_PlayerLines = max(m_PlayerLines, NumPlayers);
 
+	// ready mode
+	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
+	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
+
 	char aBuf[128] = {0};
 
 	// background
@@ -324,19 +328,21 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// color for text
 			vec3 TextColor = vec3(1.0f, 1.0f, 1.0f);
+			vec4 OutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			const bool HighlightedLine = m_pClient->m_LocalClientID == pInfo->m_ClientID || (Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == Snap.m_SpecInfo.m_SpectatorID);
 
 			// background so it's easy to find the local player or the followed one in spectator mode
-			if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
+			if(HighlightedLine)
 			{
 				CUIRect Rect = {x, y, w, LineHeight};
 				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha), 5.0f);
 
 				// make color for own entry black
 				TextColor = vec3(0.0f, 0.0f, 0.0f);
-				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+				OutlineColor = vec4(1.0f, 1.0f, 1.0f, 0.25f);
 			}
 			else
-				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				OutlineColor = vec4(0.0f, 0.0f, 0.0f, 0.3f);
 
 			// country flag
 			const vec4 CFColor(1, 1, 1, 0.75f * ColorAlpha);
@@ -346,6 +352,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// set text color
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
+			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
 
 			// flag
 			if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_pGameDataFlag &&
@@ -386,16 +393,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2+Spacing));
 			}
 
-			// name
-			// todo: improve visual player ready state
-			if(!(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_READY))
-				TextRender()->TextColor(1.0f, 0.5f, 0.5f, ColorAlpha);
-			else if(RenderDead && pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
+			// ready / watching
+			if(ReadyMode && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_READY))
+			{
+				if(HighlightedLine)
+					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
+				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
+			}
+			// TODO: make an eye icon or something
+			if(RenderDead && pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
+
+			// name
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength-TeeLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, str_length(m_pClient->m_aClients[pInfo->m_ClientID].m_aName));
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
+			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
 
 			// clan
 			tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1/*, TEXTFLAG_STOP_AT_END, ClanLength*/);
@@ -437,6 +451,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			TextRender()->SetCursor(&Cursor, PingOffset+PingLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = PingLength;
 			TextRender()->TextEx(&Cursor, aBuf, -1);
+
 			y += LineHeight;
 		}
 	}
