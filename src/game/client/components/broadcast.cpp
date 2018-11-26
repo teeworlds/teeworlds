@@ -69,10 +69,10 @@ void CBroadcast::RenderServerBroadcast()
 	BcView.h *= 0.2f;
 
 	vec4 ColorTop(0, 0, 0, 0);
-	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
+	vec4 ColorBot(0, 0, 0, 0.6f * Fade);
 	CUIRect BgRect;
 	BcView.HSplitBottom(10.0f, 0, &BgRect);
-	BcView.HSplitBottom(8.0f, &BcView, 0);
+	BcView.HSplitBottom(6.0f, &BcView, 0);
 
 	// draw bottom bar
 	const float CornerWidth = 12.0f;
@@ -89,8 +89,8 @@ void CBroadcast::RenderServerBroadcast()
 	IGraphics::CColorVertex aColorVert[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.0f),
 		IGraphics::CColorVertex(1, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(2, 0,0,0, 0.4f * Fade),
-		IGraphics::CColorVertex(3, 0,0,0, 0.4f * Fade)};
+		IGraphics::CColorVertex(2, 0,0,0, 0.6f * Fade),
+		IGraphics::CColorVertex(3, 0,0,0, 0.6f * Fade)};
 	Graphics()->SetColorVertex(aColorVert, 4);
 	Graphics()->QuadsDrawFreeform(&LeftCorner, 1);
 
@@ -118,8 +118,9 @@ void CBroadcast::RenderServerBroadcast()
 	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
 	CTextCursor Cursor;
 
-	TextRender()->TextColor(1, 1, 1, 1);
-	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+	const vec2 ShadowOff(1.0f, 2.0f);
+	const vec4 ShadowColorBlack(0, 0, 0, 0.9f * Fade);
+	const vec4 TextColorWhite(1, 1, 1, Fade);
 	float y = BcView.y + BcView.h - LineCount * FontSize;
 
 	for(int l = 0; l < LineCount; l++)
@@ -167,19 +168,26 @@ void CBroadcast::RenderServerBroadcast()
 				float AvgLum = 0.2126*r + 0.7152*g + 0.0722*b;
 
 				if(AvgLum < 0.25f)
+				{
 					TextRender()->TextOutlineColor(1, 1, 1, 0.6f);
+					TextRender()->TextColor(r, g, b, Fade);
+					TextRender()->TextEx(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen);
+				}
 				else
-					TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+				{
+					vec4 TextColor(r, g, b, Fade);
+					vec4 ShadowColor(r * 0.15f, g * 0.15f, b * 0.15f, 0.9f * Fade);
+					TextRender()->TextShadowed(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen,
+											   ShadowOff, ShadowColor, TextColor);
+				}
 
-				TextRender()->TextColor(r, g, b, Fade);
-
-				TextRender()->TextEx(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen);
 				DrawnStrLen += ColorStrLen;
 			}
 		}
 		else
 		{
-			TextRender()->TextEx(&Cursor, Line.m_pStrStart, Line.m_StrLen);
+			TextRender()->TextShadowed(&Cursor, Line.m_pStrStart, Line.m_StrLen,
+									   ShadowOff, ShadowColorBlack, TextColorWhite);
 		}
 
 		y += FontSize;
@@ -213,10 +221,10 @@ void CBroadcast::OnReset()
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 {
 	// process server broadcast message
-	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
+	if(MsgType == NETMSGTYPE_SV_CHAT && g_Config.m_ClShowServerBroadcast &&
 	   !m_pClient->m_MuteServerBroadcast)
 	{
-		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 
 		// new broadcast message
 		int RcvMsgLen = str_length(pMsg->m_pMessage);
@@ -305,8 +313,9 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 			TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
 
 			// can't fit on one line, reduce size
-			if(Cursor.m_LineCount > 1)
-				FontSize = BROADCAST_FONTSIZE_SMALL; // smaller font
+			Cursor.m_LineCount = min(Cursor.m_LineCount, (int)MAX_BROADCAST_LINES);
+			FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
+						   Cursor.m_LineCount/(float)MAX_BROADCAST_LINES);
 
 			// make lines
 			int CurCharCount = 0;
@@ -342,7 +351,8 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		}
 		else // user defined lines mode
 		{
-			FontSize = BROADCAST_FONTSIZE_SMALL;
+			FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
+						   UserLineCount/(float)MAX_BROADCAST_LINES);
 
 			for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES; i++)
 			{
