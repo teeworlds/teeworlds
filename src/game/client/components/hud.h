@@ -3,7 +3,6 @@
 #ifndef GAME_CLIENT_COMPONENTS_HUD_H
 #define GAME_CLIENT_COMPONENTS_HUD_H
 #include <game/client/component.h>
-#include <base/tl/array.h>
 
 class CHud : public CComponent
 {
@@ -27,7 +26,6 @@ class CHud : public CComponent
 	void RenderScoreHud();
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();
-
 public:
 	CHud();
 

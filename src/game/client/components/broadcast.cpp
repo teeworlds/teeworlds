@@ -228,7 +228,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		m_aSrvBroadcastColorList[0] = White;
 		m_SrvBroadcastColorCount = 1;
 
-		CBcLineInfo UserLines[3];
+		CBcLineInfo UserLines[MAX_BROADCAST_LINES];
 		int UserLineCount = 0;
 		int LastUserLineStartPoint = 0;
 
@@ -257,7 +257,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 			if(*c == CharUtf8 && *c == '\\')
 			{
-				if(i+1 < RcvMsgLen && c[1] == 'n' && UserLineCount < 3)
+				if(i+1 < RcvMsgLen && c[1] == 'n' && UserLineCount < MAX_BROADCAST_LINES)
 				{
 					CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
 										 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
@@ -310,7 +310,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 			// make lines
 			int CurCharCount = 0;
-			while(CurCharCount < MsgLen && m_SrvBroadcastLineCount < 3)
+			while(CurCharCount < MsgLen && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES)
 			{
 				const char* RemainingMsg = pBroadcastMsg + CurCharCount;
 
@@ -344,7 +344,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		{
 			FontSize = BROADCAST_FONTSIZE_SMALL;
 
-			for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < 3; i++)
+			for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES; i++)
 			{
 				TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = LineMaxWidth;

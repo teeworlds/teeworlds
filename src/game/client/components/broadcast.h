@@ -27,11 +27,12 @@ class CBroadcast : public CComponent
 
 	enum {
 		MAX_BROADCAST_COLORS = 128,
-		MAX_BROADCAST_MSG_LENGTH = 127
+		MAX_BROADCAST_MSG_LENGTH = 127,
+		MAX_BROADCAST_LINES = 3,
 	};
 
 	CBcColor m_aSrvBroadcastColorList[MAX_BROADCAST_COLORS];
-	CBcLineInfo m_aSrvBroadcastLines[3];
+	CBcLineInfo m_aSrvBroadcastLines[MAX_BROADCAST_LINES];
 	char m_aSrvBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
 	int m_aSrvBroadcastMsgLen;
 	int m_SrvBroadcastColorCount;
