@@ -596,7 +596,7 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	if(str_comp(aThemeName, "none") == 0) // "none" is reserved, disallowed for maps
 		return 0;
-	
+
 	// try to edit an existing theme
 	for(int i = 0; i < pSelf->m_lThemes.size(); i++)
 	{
@@ -628,7 +628,7 @@ int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser
 		return 0;
 	char aThemeName[128];
 	str_copy(aThemeName, pName, min((int)sizeof(aThemeName),l-3));
-	
+
 	// save icon for an existing theme
 	for(sorted_array<CTheme>::range r = pSelf->m_lThemes.all(); !r.empty(); r.pop_front()) // bit slow but whatever
 	{
@@ -827,7 +827,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
-			
+
 			Item.m_Rect.y += 2.0f;
 			char aName[128];
 			if(r.front().m_Name[0])
@@ -1018,6 +1018,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
 			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;
 	}
+
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_EnableColoredBroadcasts = 0;
+	if(DoButton_CheckBox(&s_EnableColoredBroadcasts, Localize("Enable colored server broadcasts"),
+						 g_Config.m_ClColoredBroadcast, &Button))
+		g_Config.m_ClColoredBroadcast ^= 1;
 
 	// render client menu
 	Client.HSplitTop(ButtonHeight, &Label, &Client);

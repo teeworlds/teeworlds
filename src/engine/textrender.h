@@ -20,6 +20,7 @@ class CTextCursor
 public:
 	int m_Flags;
 	int m_LineCount;
+	int m_GlyphCount;
 	int m_CharCount;
 	int m_MaxLines;
 

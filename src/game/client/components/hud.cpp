@@ -618,7 +618,8 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	CUIRect Rect = {m_Width-180.0f, m_Height-15.0f, 180.0f, 15.0f};
+	const float Width = m_Width * 0.25f - 2.0f;
+	CUIRect Rect = {m_Width-Width, m_Height-15.0f, Width, 15.0f};
 	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_TL, 5.0f);
 
 	// draw the text
@@ -629,7 +630,7 @@ void CHud::RenderSpectatorHud()
 	char aBuf[128];
 
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, m_Width-174.0f, m_Height-13.0f, 8.0f, TEXTFLAG_RENDER);
+	TextRender()->SetCursor(&Cursor, m_Width-Width+6.0f, m_Height-13.0f, 8.0f, TEXTFLAG_RENDER);
 
 	str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Spectate"));
 	TextRender()->TextEx(&Cursor, aBuf, -1);

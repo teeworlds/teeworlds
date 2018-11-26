@@ -498,6 +498,7 @@ public:
 		pCursor->m_LineCount = 1;
 		pCursor->m_LineWidth = -1;
 		pCursor->m_Flags = Flags;
+		pCursor->m_GlyphCount = 0;
 		pCursor->m_CharCount = 0;
 	}
 
@@ -672,7 +673,7 @@ public:
 				{
 					// word can't be fitted in one line, cut it
 					CTextCursor Cutter = *pCursor;
-					Cutter.m_CharCount = 0;
+					Cutter.m_GlyphCount = 0;
 					Cutter.m_X = DrawX;
 					Cutter.m_Y = DrawY;
 					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
@@ -680,7 +681,7 @@ public:
 
 					TextDeferredRenderEx(&Cutter, (const char *)pCurrent, Wlen, aQuadChar, QuadCharMaxCount,
 										 pQuadCharCount, pFontTexture);
-					Wlen = Cutter.m_CharCount;
+					Wlen = Cutter.m_GlyphCount;
 					NewLine = 1;
 
 					if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
@@ -699,6 +700,7 @@ public:
 			int NextCharacter = str_utf8_decode(&pTmp);
 			while(pCurrent < pBatchEnd)
 			{
+				pCursor->m_CharCount += pTmp-pCurrent;
 				int Character = NextCharacter;
 				pCurrent = pTmp;
 				NextCharacter = str_utf8_decode(&pTmp);
@@ -742,7 +744,7 @@ public:
 					}
 
 					DrawX += Advance*Size;
-					pCursor->m_CharCount++;
+					pCursor->m_GlyphCount++;
 				}
 			}
 
@@ -861,14 +863,14 @@ public:
 					{
 						// word can't be fitted in one line, cut it
 						CTextCursor Cutter = *pCursor;
-						Cutter.m_CharCount = 0;
+						Cutter.m_GlyphCount = 0;
 						Cutter.m_X = DrawX;
 						Cutter.m_Y = DrawY;
 						Cutter.m_Flags &= ~TEXTFLAG_RENDER;
 						Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
 
 						TextEx(&Cutter, (const char *)pCurrent, Wlen);
-						Wlen = Cutter.m_CharCount;
+						Wlen = Cutter.m_GlyphCount;
 						NewLine = 1;
 
 						if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
@@ -887,6 +889,7 @@ public:
 				int NextCharacter = str_utf8_decode(&pTmp);
 				while(pCurrent < pBatchEnd)
 				{
+					pCursor->m_CharCount += pTmp-pCurrent;
 					int Character = NextCharacter;
 					pCurrent = pTmp;
 					NextCharacter = str_utf8_decode(&pTmp);
@@ -922,7 +925,7 @@ public:
 						}
 
 						DrawX += Advance*Size;
-						pCursor->m_CharCount++;
+						pCursor->m_GlyphCount++;
 					}
 				}
 

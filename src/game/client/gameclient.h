@@ -87,7 +87,7 @@ public:
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
 	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
-	
+
 	bool m_SuppressEvents;
 
 	// TODO: move this
@@ -129,7 +129,7 @@ public:
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
 		int m_GameDataFlagSnapID;
-		
+
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
@@ -194,6 +194,7 @@ public:
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
+	bool m_MuteServerBroadcast;
 
 	struct CGameInfo
 	{
