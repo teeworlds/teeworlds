@@ -24,16 +24,6 @@ public:
 	IStorage *m_pStorage;
 	bool m_Logging;
 
-	static void Con_DbgDumpmem(IConsole::IResult *pResult, void *pUserData)
-	{
-		CEngine *pEngine = static_cast<CEngine *>(pUserData);
-		char aBuf[32];
-		str_timestamp(aBuf, sizeof(aBuf));
-		char aFilename[128];
-		str_format(aFilename, sizeof(aFilename), "dumps/memory_%s.txt", aBuf);
-		mem_debug_dump(pEngine->m_pStorage->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE));
-	}
-
 	static void Con_DbgLognetwork(IConsole::IResult *pResult, void *pUserData)
 	{
 		CEngine *pEngine = static_cast<CEngine *>(pUserData);
@@ -89,7 +79,6 @@ public:
 		if(!m_pConsole || !m_pStorage)
 			return;
 
-		m_pConsole->Register("dbg_dumpmem", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_DbgDumpmem, this, "Dump the memory");
 		m_pConsole->Register("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_DbgLognetwork, this, "Log the network");
 	}
 
