@@ -45,6 +45,7 @@ public:
 	void GetKey(const char *pBindStr, char aBuf[64], unsigned BufSize);
 	static const char *GetModifierName(int m);
 	static int GetModifierMask(IInput *i);
+	static int GetModifierMaskOfKey(int Key);
 	static bool ModifierMatchesKey(int Modifier, int Key);
 
 	virtual void OnConsoleInit();

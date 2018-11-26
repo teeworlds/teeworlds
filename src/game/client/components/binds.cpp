@@ -59,6 +59,23 @@ int CBinds::GetModifierMask(IInput *i)
 	return Mask;
 }
 
+int CBinds::GetModifierMaskOfKey(int Key)
+{
+	switch(Key)
+	{
+		case KEY_LSHIFT:
+		case KEY_RSHIFT:
+			return 1 << CBinds::MODIFIER_SHIFT;
+		case KEY_LCTRL:
+		case KEY_RCTRL:
+			return 1 << CBinds::MODIFIER_CTRL;
+		case KEY_LALT:
+			return 1 << CBinds::MODIFIER_ALT;
+		default:
+			return 0;
+	}
+}
+
 bool CBinds::ModifierMatchesKey(int Modifier, int Key)
 {
 	switch(Modifier)
@@ -100,11 +117,19 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 
 bool CBinds::OnInput(IInput::CEvent Event)
 {
-	int Mask = GetModifierMask(Input());
-
 	// don't handle invalid events and keys that aren't set to anything
 	if(Event.m_Key <= 0 || Event.m_Key >= KEY_LAST)
 		return false;
+
+	int Mask = GetModifierMask(Input());
+	int KeyModifierMask = GetModifierMaskOfKey(Event.m_Key); // returns 0 if m_Key is not a modifier
+	if(KeyModifierMask)
+	{
+		// avoid to have e.g. key press "lshift" be treated as "shift+lshift"
+		Mask -= KeyModifierMask;
+		if(!Mask)
+			Mask = 1 << MODIFIER_NONE;
+	}
 
 	bool rtn = false;
 	for(int m = 0; m < MODIFIER_COUNT; m++)
