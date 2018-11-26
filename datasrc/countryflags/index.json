@@ -21,6 +21,22 @@
 			"code": 904
 		},
 		{
+			"id": "XBZ",
+			"code": 950
+		},
+		{
+			"id": "XCA",
+			"code": 951
+		},
+		{
+			"id": "XES",
+			"code": 952
+		},
+		{
+			"id": "XGA",
+			"code": 953
+		},
+		{
 			"id": "default",
 			"code": -1
 		}
