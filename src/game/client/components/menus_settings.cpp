@@ -722,7 +722,6 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 		s_OldSelected = s_SelectedLanguage;
 		s_SelectedLanguage = -1;
 	}
-	static int s_LangID = 0;
 	if(s_SelectedLanguage == -1 && UI()->MouseInside(&MainView))
 	{
 		s_SelectedLanguage = s_OldSelected;
