@@ -334,6 +334,11 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
+{
+	return ungetc(byte, (FILE*)io) == EOF;
+}
+
 unsigned io_skip(IOHANDLE io, int size)
 {
 	fseek((FILE*)io, size, SEEK_CUR);
@@ -1439,6 +1444,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
+	int i;
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
 	if(!home)
 		return -1;
 	
@@ -1447,10 +1456,6 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #endif
 
-	int i;
-	char *xdgdatahome = getenv("XDG_DATA_HOME");
-	char xdgpath[max];
-	
 	/* old folder location */
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
