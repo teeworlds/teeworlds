@@ -26,11 +26,11 @@ def pack_control_msg_with_token(token_srv,token_cl):
 	NET_TOKENREQUEST_DATASIZE = 512
 	b = [0]*(4 + 3 + NET_TOKENREQUEST_DATASIZE)
 	# Header
-	b[0] = (token_srv >> 24) & 0xff
-	b[1] = (token_srv >> 16) & 0xff
-	b[2] = (token_srv >> 8) & 0xff
-	b[3] = (token_srv) & 0xff
-	b[4] = (NET_PACKETFLAG_CONTROL<<2)&0xfc
+	b[0] = (NET_PACKETFLAG_CONTROL<<2)&0xfc
+	b[3] = (token_srv >> 24) & 0xff
+	b[4] = (token_srv >> 16) & 0xff
+	b[5] = (token_srv >> 8) & 0xff
+	b[6] = (token_srv) & 0xff
 	# Data
 	b[7] = NET_CTRLMSG_TOKEN
 	b[8] = (token_cl >> 24) & 0xff
@@ -41,7 +41,7 @@ def pack_control_msg_with_token(token_srv,token_cl):
 
 def unpack_control_msg_with_token(msg):
 	b = list(msg)
-	token_cl = (b[0] << 24) + (b[1] << 16) + (b[2] << 8) + (b[3])
+	token_cl = (b[3] << 24) + (b[4] << 16) + (b[5] << 8) + (b[6])
 	token_srv = (b[8] << 24) + (b[9] << 16) + (b[10] << 8) + (b[11])
 	return token_cl,token_srv
 
@@ -50,11 +50,13 @@ def header_connless(token_srv, token_cl):
 	NET_PACKETFLAG_CONNLESS = 8
 	NET_PACKETVERSION = 1
 	b = [0]*9
-	b[0] = (token_srv >> 24) & 0xff
-	b[1] = (token_srv >> 16) & 0xff
-	b[2] = (token_srv >> 8) & 0xff
-	b[3] = (token_srv) & 0xff
-	b[4] = ((NET_PACKETFLAG_CONNLESS<<2)&0xfc) | (NET_PACKETVERSION&0x03)
+	# Header
+	b[0] = ((NET_PACKETFLAG_CONNLESS<<2)&0xfc) | (NET_PACKETVERSION&0x03)
+	b[1] = (token_srv >> 24) & 0xff
+	b[2] = (token_srv >> 16) & 0xff
+	b[3] = (token_srv >> 8) & 0xff
+	b[4] = (token_srv) & 0xff
+	# ResponseToken
 	b[5] = (token_cl >> 24) & 0xff
 	b[6] = (token_cl >> 16) & 0xff
 	b[7] = (token_cl >> 8) & 0xff
