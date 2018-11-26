@@ -4,6 +4,7 @@
 #include <base/math.h>
 
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 

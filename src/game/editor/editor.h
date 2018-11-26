@@ -752,6 +752,8 @@ public:
 	CEditorMap m_Map;
 
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
+	static void ConMapMagic(class IConsole::IResult *pResult, void *pUserData);
+	void DoMapMagic(int ImageID, int SrcIndex);
 
 	void DoMapBorder();
 	int DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);

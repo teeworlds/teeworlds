@@ -4532,6 +4532,96 @@ void CEditor::Init()
 
 	Reset();
 	m_Map.m_Modified = false;
+
+#ifdef CONF_DEBUG
+	m_pConsole->Register("map_magic", "i", CFGFLAG_CLIENT, ConMapMagic, this, "1-grass_doodads, 2-winter_main, 3-both");
+#endif
+}
+
+static char *s_aMaps[] = {"ctf1", "ctf2", "ctf3", "ctf4", "ctf5", "ctf6", "ctf7", "ctf8", "dm1", "dm2", "dm3", "dm6", "dm7", "dm8", "dm9", "lms1"};
+static char *s_aImageName[] = { "grass_doodads", "winter_main" };
+
+static int s_GrassDoodadsIndicesOld[] = { 42, 43, 44, 58, 59, 60, 74, 75, 76, 132, 133, 148, 149, 163, 164, 165, 169, 170, 185, 186 };
+static int s_GrassDoodadsIndicesNew[] = { 217, 218, 219, 233, 234, 235, 249, 250, 251, 182, 183, 198, 199, 213, 214, 215, 184, 185, 200, 201 };
+static int s_WinterMainIndicesOld[] = { 166, 167, 168, 169, 170, 171, 182, 183, 184, 185, 186, 187, 198, 199, 200, 201, 202, 203, 174, 177, 178, 179, 180, 193, 194, 195, 196, 197, 209, 210, 211, 212, 215, 216, 231, 232, 248, 249, 250, 251, 252, 253, 254, 255, 229, 230, 224, 225, 226, 227, 228 };
+static int s_WinterMainIndicesNew[] = { 218, 219, 220, 221, 222, 223, 234, 235, 236, 237, 238, 239, 250, 251, 252, 253, 254, 255, 95, 160, 161, 162, 163, 192, 193, 194, 195, 196, 176, 177, 178, 179, 232, 233, 248, 249, 240, 241, 242, 243, 244, 245, 246, 247, 224, 225, 226, 227, 228, 229, 230 };
+
+void CEditor::ConMapMagic(IConsole::IResult *pResult, void *pUserData)
+{
+	CEditor *pSelf = static_cast<CEditor *>(pUserData);
+	int Flag = pResult->GetInteger(0);
+
+	for(int m = 0; m < sizeof(s_aMaps) / sizeof(s_aMaps[0]); ++m)
+	{
+		char aBuf[64] = { 0 };
+		str_format(aBuf, sizeof(aBuf), "maps/%s.map", s_aMaps[m]);
+		dbg_msg("map magic", "processing map '%s'", s_aMaps[m]);
+		CallbackOpenMap(aBuf, IStorage::TYPE_ALL, pSelf);
+		bool Edited = false;
+
+		// find image
+		for(int i = 0; i < pSelf->m_Map.m_lImages.size(); ++i)
+		{
+			for(int SrcIndex = 0; SrcIndex < sizeof(s_aImageName) / sizeof(s_aImageName[0]); ++SrcIndex)
+			{
+				if(((1 << SrcIndex)&Flag) && !str_comp(pSelf->m_Map.m_lImages[i]->m_aName, s_aImageName[SrcIndex]))
+				{
+					dbg_msg("map magic", "found image '%s'. doing magic", s_aImageName[SrcIndex]);
+					pSelf->DoMapMagic(i, SrcIndex);
+					Edited = true;
+				}
+			}
+		}
+
+		if(Edited)
+		{
+			str_format(aBuf, sizeof(aBuf), "maps/%s_mapmagic.map", s_aMaps[m]);
+			dbg_msg("map magic", "saving map '%s_mapmagic'", s_aMaps[m]);
+			CallbackSaveMap(aBuf, IStorage::TYPE_SAVE, pSelf);
+		}
+	}
+}
+
+void CEditor::DoMapMagic(int ImageID, int SrcIndex)
+{
+	for(int g = 0; g < m_Map.m_lGroups.size(); g++)
+	{
+		for(int i = 0; i < m_Map.m_lGroups[g]->m_lLayers.size(); i++)
+		{
+			if(m_Map.m_lGroups[g]->m_lLayers[i]->m_Type == LAYERTYPE_TILES)
+			{
+				CLayerTiles *pLayer = static_cast<CLayerTiles *>(m_Map.m_lGroups[g]->m_lLayers[i]);
+				if(pLayer->m_Image == ImageID)
+				{
+					for(int Count = 0; Count < pLayer->m_Height*pLayer->m_Width; ++Count)
+					{
+						if(SrcIndex == 0)	// grass_doodads
+						{
+							for(int TileIndex = 0; TileIndex < sizeof(s_GrassDoodadsIndicesOld) / sizeof(s_GrassDoodadsIndicesOld[0]); ++TileIndex)
+							{
+								if(pLayer->m_pTiles[Count].m_Index == s_GrassDoodadsIndicesOld[TileIndex])
+								{
+									pLayer->m_pTiles[Count].m_Index = s_GrassDoodadsIndicesNew[TileIndex];
+									break;
+								}
+							}
+						}
+						else if(SrcIndex == 1)	// winter_main
+						{
+							for(int TileIndex = 0; TileIndex < sizeof(s_WinterMainIndicesOld) / sizeof(s_WinterMainIndicesOld[0]); ++TileIndex)
+							{
+								if(pLayer->m_pTiles[Count].m_Index == s_WinterMainIndicesOld[TileIndex])
+								{
+									pLayer->m_pTiles[Count].m_Index = s_WinterMainIndicesNew[TileIndex];
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void CEditor::DoMapBorder()
