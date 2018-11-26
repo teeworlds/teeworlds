@@ -88,6 +88,11 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 						CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 						mem_free(Info.m_pData);
 					}
+					// blocked?
+					CountryFlag.m_Blocked = false;
+					const json_value Check = rStart[i]["blocked"];
+					if(Check.type == json_boolean && Check)
+						CountryFlag.m_Blocked = true;
 					m_aCountryFlags.add_unsorted(CountryFlag);
 
 					// print message
@@ -134,6 +139,7 @@ void CCountryFlags::OnInit()
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");
 		CCountryFlag DummyEntry;
 		DummyEntry.m_CountryCode = -1;
+		DummyEntry.m_Blocked = false;
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
@@ -154,9 +160,11 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
 	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
 }
 
-void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h)
+void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h, bool AllowBlocked)
 {
 	const CCountryFlag *pFlag = GetByCountryCode(CountryCode);
+	if(!AllowBlocked && pFlag->m_Blocked)
+		pFlag = GetByCountryCode(-1);
 	if(pFlag->m_Texture.IsValid())
 	{
 		Graphics()->TextureSet(pFlag->m_Texture);

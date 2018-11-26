@@ -1999,6 +1999,8 @@ int CMenus::Render()
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
 				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+				if(pEntry->m_Blocked)
+					continue;
 				if(pEntry->m_CountryCode == ActSelection)
 					OldSelected = i;
 
