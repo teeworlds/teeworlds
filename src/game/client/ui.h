@@ -30,12 +30,14 @@ class CUI
 	const void *m_pLastActiveItem;
 	const void *m_pBecommingHotItem;
 	bool m_ActiveItemValid;
+	bool m_Clipped;
 	float m_MouseX, m_MouseY; // in gui space
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
 	CUIRect m_Screen;
+	CUIRect m_ClipRect;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
@@ -101,6 +103,7 @@ public:
 	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); };
 
 	int MouseInside(const CUIRect *pRect) const;
+	bool MouseInsideClip() const;
 	void ConvertMouseMove(float *x, float *y) const;
 
 	CUIRect *Screen();

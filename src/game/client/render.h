@@ -47,6 +47,7 @@ public:
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
+class CTextCursor;
 
 class CRenderTools
 {
@@ -89,6 +90,9 @@ public:
 		float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4]);
 	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom);
 
+	void DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
+					  const vec4& BgColor = vec4(1, 1, 1, 0.5f), const vec4& TextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
+	float GetClientIdRectSize(float FontSize);
 };
 
 #endif

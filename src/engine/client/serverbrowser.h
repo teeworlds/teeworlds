@@ -32,9 +32,11 @@ public:
 
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
 	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
+	int NumClients() const { return m_aServerlist[m_ActServerlistType].m_NumClients; }
+	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
 
-	int NumSortedServers(int Index) const { return m_ServerBrowserFilter.GetNumSortedServers(Index); }
-	int NumSortedPlayers(int Index) const { return m_ServerBrowserFilter.GetNumSortedPlayers(Index); }
+	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
+	int NumSortedPlayers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedPlayers(FilterIndex); }
 	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
 	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
 
@@ -47,13 +49,22 @@ public:
 	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); };
 	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
+	static void CBFTrackPacket(int TrackID, void *pUser);
+	
+	void LoadServerlist();
+	void SaveServerlist();
+
 private:
 	class CNetClient *m_pNetClient;
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
 		
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
+
+	class IConsole *Console() const { return m_pConsole; }
+	class IStorage *Storage() const { return m_pStorage; }
 
 	// serverlist
 	int m_ActServerlistType;
@@ -62,6 +73,7 @@ private:
 	public:
 		class CHeap m_ServerlistHeap;
 
+		int m_NumClients;
 		int m_NumPlayers;
 		int m_NumServers;
 		int m_NumServerCapacity;
@@ -83,12 +95,13 @@ private:
 
 	int m_RefreshFlags;
 	int64 m_BroadcastTime;
+	int64 m_MasterRefreshTime;
 
 	CServerEntry *Add(int ServerlistType, const NETADDR &Addr);
 	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);
 	void QueueRequest(CServerEntry *pEntry);
 	void RemoveRequest(CServerEntry *pEntry);
-	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const;
+	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry);
 	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
 };
 

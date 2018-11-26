@@ -24,12 +24,18 @@ void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 
 void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 {
-	((CSpectator *)pUserData)->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
+	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active &&
+		(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK || pSelf->DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER))
+		pSelf->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
 }
 
 void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
+		return;
+
 	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
 	int NewSpectatorID = -1;
 	bool GotNewSpectatorID = false;
@@ -45,6 +51,11 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 		for(int i = NewSpectatorID + 1; i < MAX_CLIENTS; i++)
 		{
 			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+				continue;
+
+			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
 				continue;
 
 			NewSpectatorID = i;
@@ -64,7 +75,27 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 		}
 		NewSpecMode = SPEC_FREEVIEW;
 	case SPEC_FREEVIEW:
-		GotNewSpectatorID = true;
+		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+			GotNewSpectatorID = true;
+		else
+		{
+			// start again on the beginning in survival
+			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
+			{
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+					continue;
+
+				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+					continue;
+
+				NewSpecMode = SPEC_PLAYER;
+				NewSpectatorID = i;
+				GotNewSpectatorID = true;
+				break;
+			}
+		}
 	}
 
 	if(GotNewSpectatorID)
@@ -74,6 +105,9 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
+	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
+		return;
+
 	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
 	int NewSpectatorID = MAX_CLIENTS;
 	bool GotNewSpectatorID = false;
@@ -101,6 +135,11 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 				continue;
 
+			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+				continue;
+
 			NewSpectatorID = i;
 			GotNewSpectatorID = true;
 			break;
@@ -110,7 +149,27 @@ void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData
 		NewSpecMode = SPEC_FREEVIEW;
 	case SPEC_FREEVIEW:
 		NewSpectatorID = -1;
-		GotNewSpectatorID = true;
+		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+			GotNewSpectatorID = true;
+		else
+		{
+			// start again on the beginning in survival
+			for(int i = MAX_CLIENTS-1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
+			{
+				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+					continue;
+
+				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
+					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+					continue;
+
+				NewSpecMode = SPEC_PLAYER;
+				NewSpectatorID = i;
+				GotNewSpectatorID = true;
+				break;
+			}
+		}
 	}
 
 	if(GotNewSpectatorID)
@@ -284,8 +343,13 @@ void CSpectator::OnRender()
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%2d: %s", i, g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
-		TextRender()->Text(0, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, aBuf, 220.0f);
+		str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, TEXTFLAG_RENDER);
+
+		RenderTools()->DrawClientID(TextRender(), &Cursor, i);
+		TextRender()->TextEx(&Cursor, aBuf, -1);
 
 		// flag
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS &&
@@ -313,11 +377,13 @@ void CSpectator::OnRender()
 
 	// draw cursor
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->WrapClamp();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Width/2.0f, m_SelectorMouse.y+Height/2.0f, 48.0f, 48.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CSpectator::OnReset()

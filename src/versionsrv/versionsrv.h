@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef VERSIONSRV_VERSIONSRV_H
 #define VERSIONSRV_VERSIONSRV_H
-static const int VERSIONSRV_PORT = 8302;
+static const int VERSIONSRV_PORT = 8285;
 
 struct CMapVersion
 {

@@ -16,6 +16,7 @@
 #include <game/client/components/motd.h>
 #include <game/client/components/skins.h>
 
+#include "menus.h"
 #include "scoreboard.h"
 
 
@@ -106,7 +107,8 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 		if(pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 			TextRender()->TextColor(1.0f, 1.0f, 0.0f, 1.0f);
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%2d: %s", i, g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+		str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+		RenderTools()->DrawClientID(TextRender(), &Cursor, i);
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		Multiple = true;
@@ -264,7 +266,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 					vec4 Color = m_pClient->m_pSkins->GetColorV4(m_pClient->m_pSkins->GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
 					Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 				}
-				IGraphics::CQuadItem QuadItem(TeeOffset, y-5.0f-Spacing/2.0f, 64*TeeSizeMod, 64*TeeSizeMod);
+				IGraphics::CQuadItem QuadItem(TeeOffset, y-5.0f, 64*TeeSizeMod, 64*TeeSizeMod);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
@@ -284,7 +286,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%2d: %s", pInfo->m_ClientID, g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aName : "");
+			str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[pInfo->m_ClientID].m_aName : "");
+			RenderTools()->DrawClientID(TextRender(), &Cursor, pInfo->m_ClientID);
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
@@ -408,6 +411,10 @@ void CScoreboard::OnRender()
 
 bool CScoreboard::Active()
 {
+	// disable scoreboard if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
+		return false;
+
 	// if we activly wanna look on the scoreboard
 	if(m_Active)
 		return true;

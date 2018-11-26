@@ -12,14 +12,15 @@ class CChat : public CComponent
 
 	enum
 	{
-		MAX_LINES = 25,
+		MAX_LINES = 50,
 	};
 
 	struct CLine
 	{
 		int64 m_Time;
-		float m_YOffset[2];
+		vec2 m_Size[2];
 		int m_ClientID;
+		int m_TargetID;
 		int m_Mode;
 		int m_NameColor;
 		char m_aName[64];
@@ -74,7 +75,7 @@ public:
 
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
 
-	void AddLine(int ClientID, int Team, const char *pLine);
+	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
 
 	void EnableMode(int Team);
 

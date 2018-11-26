@@ -17,6 +17,7 @@ public:
 	int64 m_RequestTime;
 	int m_InfoState;
 	int m_CurrentToken;	// the token is to keep server refresh separated from each other
+	int m_TrackID;
 	class CServerInfo m_Info;
 
 	CServerEntry *m_pNextIp; // ip hashed list

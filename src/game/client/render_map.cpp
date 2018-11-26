@@ -83,7 +83,7 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 		// cardano's method
 		double p = b/3 - a*a/9;
 		double q = (2*a*a*a/27 - a*b/3 + c)/2;
-		
+
 		double D = q*q + p*p*p;
 
 		if(D > 0.0)
@@ -97,7 +97,7 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 			// one single, one double solution or triple solution
 			double s = CubicRoot(-q);
 			t = 2*s - sub;
-			
+
 			if(0.0 <= t && t <= 1.0001f)
 				return t;
 			else
@@ -180,7 +180,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 					p3 = vec2(pPoints[i+1].m_Time/1000.0f, fx2f(pPoints[i+1].m_aValues[c]));
 
 					outTang = vec2(pPoints[i].m_aOutTangentdx[c]/1000.0f, fx2f(pPoints[i].m_aOutTangentdy[c]));
-					inTang = -vec2(pPoints[i+1].m_aInTangentdx[c]/1000.0f, fx2f(pPoints[i+1].m_aInTangentdy[c]));					
+					inTang = -vec2(pPoints[i+1].m_aInTangentdx[c]/1000.0f, fx2f(pPoints[i+1].m_aInTangentdy[c]));
 					p1 = p0 + outTang;
 					p2 = p3 - inTang;
 
@@ -197,7 +197,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 			case CURVETYPE_LINEAR:
 				break;
 			}
-			
+
 			for(int c = 0; c < Channels; c++)
 			{
 				float v0 = fx2f(pPoints[i].m_aValues[c]);
@@ -248,7 +248,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		 TODO: Analyze quadtexture
 		if(a < 0.01f || (q->m_aColors[0].a < 0.01f && q->m_aColors[1].a < 0.01f && q->m_aColors[2].a < 0.01f && q->m_aColors[3].a < 0.01f))
 			Opaque = true;
-		
+
 		if(Opaque && !(RenderFlags&LAYERRENDERFLAG_OPAQUE))
 			continue;
 		if(!Opaque && !(RenderFlags&LAYERRENDERFLAG_TRANSPARENT))
@@ -348,7 +348,8 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	}
 
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(Color.r*r, Color.g*g, Color.b*b, Color.a*a);
+	const float Alpha = Color.a*a;
+	Graphics()->SetColor(Color.r*r*Alpha, Color.g*g*Alpha, Color.b*b*Alpha, Alpha);
 
 	int StartY = (int)(ScreenY0/Scale)-1;
 	int StartX = (int)(ScreenX0/Scale)-1;
@@ -442,7 +443,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 						y3 = y2;
 						y2 = y1;
 						y1 = Tmp;
- 					}
+					}
 
 					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
 					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);

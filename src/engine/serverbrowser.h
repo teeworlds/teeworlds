@@ -23,9 +23,16 @@ public:
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
 		int m_Score;
-		bool m_Player;
+		int m_PlayerType;
 
 		int m_FriendState;
+
+		enum
+		{
+			PLAYERFLAG_SPEC=1,
+			PLAYERFLAG_BOT=2,
+			PLAYERFLAG_MASK=3,
+		};
 	};
 
 	//int m_SortedIndex;
@@ -40,6 +47,8 @@ public:
 	int m_NumClients;
 	int m_MaxPlayers;
 	int m_NumPlayers;
+	int m_NumBotPlayers;
+	int m_NumBotSpectators;
 	int m_Flags;
 	int m_ServerLevel;
 	int m_Favorite;
@@ -56,10 +65,15 @@ public:
 class CServerFilterInfo
 {
 public:
+	enum
+	{
+		MAX_GAMETYPES=8,
+	};
 	int m_SortHash;
 	int m_Ping;
 	int m_Country;
-	char m_aGametype[16];
+	int m_ServerLevel;
+	char m_aGametype[MAX_GAMETYPES][16];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 };
 
@@ -97,6 +111,7 @@ public:
 		FLAG_PURE=2,
 		FLAG_PUREMAP=4,
 
+		FILTER_BOTS=16,
 		FILTER_EMPTY=32,
 		FILTER_FULL=64,
 		FILTER_SPECTATORS=128,
@@ -106,9 +121,8 @@ public:
 		FILTER_COMPAT_VERSION=2048,
 		FILTER_PURE=4096,
 		FILTER_PURE_MAP=8192,
-		FILTER_GAMETYPE_STRICT=16384,
-		FILTER_COUNTRY=32768,
-		FILTER_PING=65536,
+		FILTER_COUNTRY= 16384,
+		FILTER_PING= 32768,
 	};
 
 	virtual void SetType(int Type) = 0;
@@ -119,6 +133,8 @@ public:
 
 	virtual int NumServers() const = 0;
 	virtual int NumPlayers() const = 0;
+	virtual int NumClients() const = 0;
+	virtual const CServerInfo *Get(int Index) const = 0;
 
 	virtual int NumSortedServers(int Index) const = 0;
 	virtual int NumSortedPlayers(int Index) const = 0;

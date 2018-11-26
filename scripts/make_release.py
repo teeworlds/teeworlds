@@ -88,6 +88,12 @@ def clean():
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
 
+source_package_dir = "build/"
+if platform == 'win32' or platform == 'linux_x86':
+	source_package_dir += "x86/release/"
+else:
+	source_package_dir += "x86_64/release/"
+
 print("cleaning target")
 shutil.rmtree(package_dir, True)
 os.mkdir(package_dir)
@@ -118,18 +124,17 @@ shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
-	os.mkdir(os.path.join(package_dir, "data"))
-	copydir("data", package_dir)
+	shutil.copytree(source_package_dir+"data", package_dir+"/data")
 	copyfiles(languages_dir, package_dir+"/data/languages")
 	copyfiles(maps_dir, package_dir+"/data/maps")
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
-		shutil.copy("SDL.dll", package_dir)
-		shutil.copy("freetype.dll", package_dir)
+		shutil.copy(source_package_dir+"SDL2.dll", package_dir)
+		shutil.copy(source_package_dir+"freetype.dll", package_dir)
 
 if include_exe and not use_bundle:
-	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	shutil.copy(source_package_dir+name+exe_ext, package_dir)
+	shutil.copy(source_package_dir+name+"_srv"+exe_ext, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
