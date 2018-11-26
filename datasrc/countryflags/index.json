@@ -22,19 +22,23 @@
 		},
 		{
 			"id": "XBZ",
-			"code": 950
+			"code": 950,
+			"blocked": true
 		},
 		{
 			"id": "XCA",
-			"code": 951
+			"code": 951,
+			"blocked": true
 		},
 		{
 			"id": "XES",
-			"code": 952
+			"code": 952,
+			"blovked": true
 		},
 		{
 			"id": "XGA",
-			"code": 953
+			"code": 953,
+			"blocked": true
 		},
 		{
 			"id": "default",
