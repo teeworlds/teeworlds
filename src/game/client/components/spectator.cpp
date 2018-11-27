@@ -391,6 +391,7 @@ void CSpectator::OnRender()
 		}
 
 		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[i].m_RenderInfo;
+		TeeInfo.m_Size *= ScaleY;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(Width/2.0f+x+20.0f, Height/2.0f+y+20.0f));
 
 		y += LineHeight;
