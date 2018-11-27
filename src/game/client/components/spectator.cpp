@@ -349,9 +349,9 @@ void CSpectator::OnRender()
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_PLAYER && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == i)
 		{
 			Rect.x = Width/2.0f+x-10.0f;
-			Rect.y = Height/2.0f+y-10.0f;
+			Rect.y = Height/2.0f+y+10.0f-20.0f*ScaleY;
 			Rect.w = 270.0f;
-			Rect.h = 60.0f;
+			Rect.h = 20.0f+40.0f*ScaleY;
 			RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 		}
 
