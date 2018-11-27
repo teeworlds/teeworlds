@@ -339,11 +339,12 @@ void CSpectator::OnRender()
 			m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != m_pClient->m_aClients[i].m_Team || i == m_pClient->m_LocalClientID)))
 			continue;
 
-		if(Count++%ColumnSize == 0)
+		if(Count != 0 && Count%ColumnSize == 0)
 		{
 			x += 290.0f;
 			y = StartY;
 		}
+		Count++;
 
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_PLAYER && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == i)
 		{
