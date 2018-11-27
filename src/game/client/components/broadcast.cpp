@@ -69,7 +69,7 @@ void CBroadcast::RenderServerBroadcast()
 	BcView.h *= 0.2f;
 
 	vec4 ColorTop(0, 0, 0, 0);
-	vec4 ColorBot(0, 0, 0, 0.6f * Fade);
+	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
 	CUIRect BgRect;
 	BcView.HSplitBottom(10.0f, 0, &BgRect);
 	BcView.HSplitBottom(6.0f, &BcView, 0);
@@ -129,7 +129,7 @@ void CBroadcast::RenderServerBroadcast()
 
 	IGraphics::CColorVertex aColorVert[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(1, 0,0,0, 0.6f * Fade),
+		IGraphics::CColorVertex(1, 0,0,0, 0.4f * Fade),
 		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
 		IGraphics::CColorVertex(3, 0,0,0, 0.0f)
 	};
