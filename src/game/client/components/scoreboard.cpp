@@ -34,6 +34,7 @@ void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 void CScoreboard::OnReset()
 {
 	m_Active = false;
+	m_PlayerLines = 0;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		ResetPlayerStats(i);
