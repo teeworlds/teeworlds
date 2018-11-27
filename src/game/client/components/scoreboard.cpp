@@ -101,6 +101,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	TextRender()->SetCursor(&Cursor, x, y, 12.0f, TEXTFLAG_ALLOW_NEWLINE);
 	Cursor.m_LineWidth = w-17.0f;
 	Cursor.m_StartX -= tw+3.0f;
+	Cursor.m_MaxLines = 4;
 	bool Multiple = false;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
@@ -135,6 +136,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	TextRender()->SetCursor(&Cursor, x, y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_ALLOW_NEWLINE);
 	Cursor.m_LineWidth = w-17.0f;
 	Cursor.m_StartX -= tw+3.0f;
+	Cursor.m_MaxLines = 4;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
