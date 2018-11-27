@@ -72,36 +72,71 @@ void CBroadcast::RenderServerBroadcast()
 	vec4 ColorBot(0, 0, 0, 0.4f * Fade);
 	CUIRect BgRect;
 	BcView.HSplitBottom(10.0f, 0, &BgRect);
-	BcView.HSplitBottom(8.0f, &BcView, 0);
+	BcView.HSplitBottom(6.0f, &BcView, 0);
 
 	// draw bottom bar
-	const float CornerWidth = 12.0f;
+	const float CornerWidth = 10.0f;
+	const float CornerHeight = BgRect.h;
 	BgRect.VMargin(CornerWidth, &BgRect);
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	IGraphics::CFreeformItem LeftCorner(
-		BgRect.x - CornerWidth, BgRect.y + BgRect.h,
-		BgRect.x, BgRect.y,
-		BgRect.x, BgRect.y + BgRect.h,
-		BgRect.x, BgRect.y + BgRect.h
-	);
+
+	// make round corners
+	enum { CORNER_MAX_QUADS=4 };
+	IGraphics::CFreeformItem LeftCornerQuads[CORNER_MAX_QUADS];
+	IGraphics::CFreeformItem RightCornerQuads[CORNER_MAX_QUADS];
+	const float AngleStep = (pi * 0.5f)/(CORNER_MAX_QUADS * 2);
+
+	for(int q = 0; q < CORNER_MAX_QUADS; q++)
+	{
+		const float Angle = AngleStep * q * 2;
+		const float ca = cosf(Angle);
+		const float ca1 = cosf(Angle + AngleStep);
+		const float ca2 = cosf(Angle + AngleStep * 2);
+		const float sa = sinf(Angle);
+		const float sa1 = sinf(Angle + AngleStep);
+		const float sa2 = sinf(Angle + AngleStep * 2);
+
+		IGraphics::CFreeformItem LQuad(
+			BgRect.x + ca * -CornerWidth,
+			BgRect.y + CornerHeight + sa * -CornerHeight,
+
+			BgRect.x, BgRect.y + CornerHeight,
+
+			BgRect.x + ca1 * -CornerWidth,
+			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+
+			BgRect.x + ca2 * -CornerWidth,
+			BgRect.y + CornerHeight + sa2 *- CornerHeight
+		);
+		LeftCornerQuads[q] = LQuad;
+
+		IGraphics::CFreeformItem RQuad(
+			BgRect.x + BgRect.w + ca * CornerWidth,
+			BgRect.y + CornerHeight + sa * -CornerHeight,
+
+			BgRect.x + BgRect.w, BgRect.y + CornerHeight,
+
+			BgRect.x + BgRect.w + ca1 * CornerWidth,
+			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+
+			BgRect.x + BgRect.w + ca2 * CornerWidth,
+			BgRect.y + CornerHeight + sa2 *- CornerHeight
+		);
+		RightCornerQuads[q] = RQuad;
+	}
+
 	IGraphics::CColorVertex aColorVert[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(1, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(2, 0,0,0, 0.4f * Fade),
-		IGraphics::CColorVertex(3, 0,0,0, 0.4f * Fade)};
-	Graphics()->SetColorVertex(aColorVert, 4);
-	Graphics()->QuadsDrawFreeform(&LeftCorner, 1);
+		IGraphics::CColorVertex(1, 0,0,0, 0.4f * Fade),
+		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
+		IGraphics::CColorVertex(3, 0,0,0, 0.0f)
+	};
 
-	IGraphics::CFreeformItem RightCorner(
-		BgRect.x+BgRect.w + CornerWidth, BgRect.y + BgRect.h,
-		BgRect.x+BgRect.w, BgRect.y,
-		BgRect.x+BgRect.w, BgRect.y + BgRect.h,
-		BgRect.x+BgRect.w, BgRect.y + BgRect.h
-	);
 	Graphics()->SetColorVertex(aColorVert, 4);
-	Graphics()->QuadsDrawFreeform(&RightCorner, 1);
+	Graphics()->QuadsDrawFreeform(LeftCornerQuads, CORNER_MAX_QUADS);
+	Graphics()->QuadsDrawFreeform(RightCornerQuads, CORNER_MAX_QUADS);
 
 	Graphics()->QuadsEnd();
 
@@ -118,8 +153,9 @@ void CBroadcast::RenderServerBroadcast()
 	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
 	CTextCursor Cursor;
 
-	TextRender()->TextColor(1, 1, 1, 1);
-	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+	const vec2 ShadowOff(1.0f, 2.0f);
+	const vec4 ShadowColorBlack(0, 0, 0, 0.9f * Fade);
+	const vec4 TextColorWhite(1, 1, 1, Fade);
 	float y = BcView.y + BcView.h - LineCount * FontSize;
 
 	for(int l = 0; l < LineCount; l++)
@@ -167,19 +203,26 @@ void CBroadcast::RenderServerBroadcast()
 				float AvgLum = 0.2126*r + 0.7152*g + 0.0722*b;
 
 				if(AvgLum < 0.25f)
+				{
 					TextRender()->TextOutlineColor(1, 1, 1, 0.6f);
+					TextRender()->TextColor(r, g, b, Fade);
+					TextRender()->TextEx(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen);
+				}
 				else
-					TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+				{
+					vec4 TextColor(r, g, b, Fade);
+					vec4 ShadowColor(r * 0.15f, g * 0.15f, b * 0.15f, 0.9f * Fade);
+					TextRender()->TextShadowed(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen,
+											   ShadowOff, ShadowColor, TextColor);
+				}
 
-				TextRender()->TextColor(r, g, b, Fade);
-
-				TextRender()->TextEx(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen);
 				DrawnStrLen += ColorStrLen;
 			}
 		}
 		else
 		{
-			TextRender()->TextEx(&Cursor, Line.m_pStrStart, Line.m_StrLen);
+			TextRender()->TextShadowed(&Cursor, Line.m_pStrStart, Line.m_StrLen,
+									   ShadowOff, ShadowColorBlack, TextColorWhite);
 		}
 
 		y += FontSize;
@@ -305,8 +348,9 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 			TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
 
 			// can't fit on one line, reduce size
-			if(Cursor.m_LineCount > 1)
-				FontSize = BROADCAST_FONTSIZE_SMALL; // smaller font
+			Cursor.m_LineCount = min(Cursor.m_LineCount, (int)MAX_BROADCAST_LINES);
+			FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
+						   Cursor.m_LineCount/(float)MAX_BROADCAST_LINES);
 
 			// make lines
 			int CurCharCount = 0;
@@ -342,7 +386,8 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 		}
 		else // user defined lines mode
 		{
-			FontSize = BROADCAST_FONTSIZE_SMALL;
+			FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
+						   UserLineCount/(float)MAX_BROADCAST_LINES);
 
 			for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES; i++)
 			{
