@@ -1469,7 +1469,7 @@ void CGameContext::OnInit()
 	if(g_Config.m_DbgDummies)
 	{
 		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
-			OnClientConnected(MAX_CLIENTS-i-1, true);
+			OnClientConnected(Server()->MaxClients() -i-1, true);
 	}
 #endif
 }
