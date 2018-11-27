@@ -104,7 +104,7 @@ void CGameContext::CreateDamage(vec2 Pos, int Id, vec2 Source, int HealthAmount,
 		pEvent->m_ClientID = Id;
 		pEvent->m_Angle = (int)(f*256.0f);
 		pEvent->m_HealthAmount = HealthAmount;
-		pEvent->m_ArmorAmount = HealthAmount;
+		pEvent->m_ArmorAmount = ArmorAmount;
 		pEvent->m_Self = Self;
 	}
 }
