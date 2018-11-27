@@ -264,7 +264,7 @@ void CSpectator::OnRender()
 
 	// draw selections
 	float FontSize = 20.0f;
-	float StartY = -190.0f;
+	float StartY = -210.0f+20.0f*ScaleY;
 	float LineHeight = 60.0f*ScaleY;
 	bool Selected = false;
 
