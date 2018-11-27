@@ -188,6 +188,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
 	m_PlayerLines = max(m_PlayerLines, NumPlayers);
 
+	// clamp to 16
+	if(m_PlayerLines > 16)
+		m_PlayerLines = 16;
+
 	// ready mode
 	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
 	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
@@ -323,7 +327,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	int HoleSizes[2];
 
 	// Non vanilla scoreboard, for now, some parts of the scoreboard are omitted
-	if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 16)
+	if(NumPlayers > 16)
 	{
 		for(int RenderDead = 0; RenderDead < 2 && NumRenderScoreIDs < 15; ++RenderDead)
 		{
@@ -563,19 +567,15 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		{
 			int HoleSize = HoleSizes[-1-RenderScoreIDs[i]];
 
-			// dots
-			tw = TextRender()->TextWidth(0, FontSize, "...", -1);
-			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = ScoreLength;
-			TextRender()->TextEx(&Cursor, "...", -1);
 
-			TextRender()->SetCursor(&Cursor, NameOffset, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = NameLength;
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = NameLength-TeeLength;
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%d %s", HoleSize, Localize("other players"));
+			str_format(aBuf, sizeof(aBuf), "⋅⋅⋅ %d %s", HoleSize, Localize("other players"));
 			TextRender()->TextEx(&Cursor, aBuf, -1);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-			y += LineHeight+Spacing;
+			y += LineHeight;
 		}
 	}
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
