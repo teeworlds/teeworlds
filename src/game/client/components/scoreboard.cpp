@@ -393,13 +393,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2+Spacing));
 			}
 
-			// ready / watching
-			if(ReadyMode && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_READY))
-			{
-				if(HighlightedLine)
-					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
-				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
-			}
 			// TODO: make an eye icon or something
 			if(RenderDead && pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
@@ -408,6 +401,15 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength-TeeLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, str_length(m_pClient->m_aClients[pInfo->m_ClientID].m_aName));
+			// ready / watching
+			if(ReadyMode && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_READY))
+			{
+				if(HighlightedLine)
+					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
+				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
+				TextRender()->SetCursor(&Cursor, Cursor.m_X+1, y+Spacing, FontSize, TEXTFLAG_RENDER);
+				TextRender()->TextEx(&Cursor, "*", str_length("*"));
+			}
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
 			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
 
