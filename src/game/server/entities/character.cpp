@@ -620,7 +620,6 @@ void CCharacter::TickDefered()
 void CCharacter::TickPaused()
 {
 	++m_AttackTick;
-	++m_DamageTakenTick;
 	++m_Ninja.m_ActivationTick;
 	++m_ReckoningTick;
 	if(m_LastAction != -1)
@@ -690,8 +689,6 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	if(From == m_pPlayer->GetCID())
 		Dmg = max(1, Dmg/2);
 
-	m_DamageTaken++;
-
 	int OldHealth = m_Health, OldArmor = m_Armor;
 	if(Dmg)
 	{
@@ -719,19 +716,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	}
 
 	// create healthmod indicator
-	if(Server()->Tick() < m_DamageTakenTick+25)
-	{
-		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
-	}
-	else
-	{
-		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
-	}	
 	GameServer()->CreateDamage(m_Pos, m_pPlayer->GetCID(), Source, OldHealth-m_Health, OldArmor-m_Armor, From == m_pPlayer->GetCID());
-
-	m_DamageTakenTick = Server()->Tick();
 
 	// do damage Hit sound
 	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])

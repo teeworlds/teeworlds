@@ -5,7 +5,6 @@ Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"])
 ChatModes = Enum("CHAT", ["NONE", "ALL", "TEAM", "WHISPER"])
-DamageType = Enum("DAMAGE", ["NORMAL", "ARMOR", "SELF", "SELF_ARMOR"])
 
 PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
@@ -58,7 +57,6 @@ Enums = [
 	Emoticons,
 	Votes,
 	ChatModes,
-	DamageType,
 	GameMsgIDs,
 ]
 
@@ -233,15 +231,12 @@ Objects = [
 		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
-	NetEvent("DamageInd:Common", [
-		NetIntAny("m_Angle"),
-	]),
-
 	NetEvent("Damage:Common", [ # Unused yet
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntAny("m_Angle"),
-		NetIntRange("m_Amount", 1, 9),
-		NetEnum("m_Type", DamageType),
+		NetIntRange("m_HealthAmount", 1, 9),
+		NetIntRange("m_ArmorAmount", 1, 9),
+		NetBool("m_Self"),
 	]),
 ]
 

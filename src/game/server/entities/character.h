@@ -83,8 +83,6 @@ private:
 	int m_ReloadTimer;
 	int m_AttackTick;
 
-	int m_DamageTaken;
-
 	int m_EmoteType;
 	int m_EmoteStop;
 
@@ -100,8 +98,6 @@ private:
 	CNetObj_PlayerInput m_Input;
 	int m_NumInputs;
 	int m_Jumped;
-
-	int m_DamageTakenTick;
 
 	int m_Health;
 	int m_Armor;
