@@ -75,33 +75,68 @@ void CBroadcast::RenderServerBroadcast()
 	BcView.HSplitBottom(6.0f, &BcView, 0);
 
 	// draw bottom bar
-	const float CornerWidth = 12.0f;
+	const float CornerWidth = 10.0f;
+	const float CornerHeight = BgRect.h;
 	BgRect.VMargin(CornerWidth, &BgRect);
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	IGraphics::CFreeformItem LeftCorner(
-		BgRect.x - CornerWidth, BgRect.y + BgRect.h,
-		BgRect.x, BgRect.y,
-		BgRect.x, BgRect.y + BgRect.h,
-		BgRect.x, BgRect.y + BgRect.h
-	);
+
+	// make round corners
+	enum { CORNER_MAX_QUADS=4 };
+	IGraphics::CFreeformItem LeftCornerQuads[CORNER_MAX_QUADS];
+	IGraphics::CFreeformItem RightCornerQuads[CORNER_MAX_QUADS];
+	const float AngleStep = (pi * 0.5f)/(CORNER_MAX_QUADS * 2);
+
+	for(int q = 0; q < CORNER_MAX_QUADS; q++)
+	{
+		const float Angle = AngleStep * q * 2;
+		const float ca = cosf(Angle);
+		const float ca1 = cosf(Angle + AngleStep);
+		const float ca2 = cosf(Angle + AngleStep * 2);
+		const float sa = sinf(Angle);
+		const float sa1 = sinf(Angle + AngleStep);
+		const float sa2 = sinf(Angle + AngleStep * 2);
+
+		IGraphics::CFreeformItem LQuad(
+			BgRect.x + ca * -CornerWidth,
+			BgRect.y + CornerHeight + sa * -CornerHeight,
+
+			BgRect.x, BgRect.y + CornerHeight,
+
+			BgRect.x + ca1 * -CornerWidth,
+			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+
+			BgRect.x + ca2 * -CornerWidth,
+			BgRect.y + CornerHeight + sa2 *- CornerHeight
+		);
+		LeftCornerQuads[q] = LQuad;
+
+		IGraphics::CFreeformItem RQuad(
+			BgRect.x + BgRect.w + ca * CornerWidth,
+			BgRect.y + CornerHeight + sa * -CornerHeight,
+
+			BgRect.x + BgRect.w, BgRect.y + CornerHeight,
+
+			BgRect.x + BgRect.w + ca1 * CornerWidth,
+			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+
+			BgRect.x + BgRect.w + ca2 * CornerWidth,
+			BgRect.y + CornerHeight + sa2 *- CornerHeight
+		);
+		RightCornerQuads[q] = RQuad;
+	}
+
 	IGraphics::CColorVertex aColorVert[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(1, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(2, 0,0,0, 0.6f * Fade),
-		IGraphics::CColorVertex(3, 0,0,0, 0.6f * Fade)};
-	Graphics()->SetColorVertex(aColorVert, 4);
-	Graphics()->QuadsDrawFreeform(&LeftCorner, 1);
+		IGraphics::CColorVertex(1, 0,0,0, 0.6f * Fade),
+		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
+		IGraphics::CColorVertex(3, 0,0,0, 0.0f)
+	};
 
-	IGraphics::CFreeformItem RightCorner(
-		BgRect.x+BgRect.w + CornerWidth, BgRect.y + BgRect.h,
-		BgRect.x+BgRect.w, BgRect.y,
-		BgRect.x+BgRect.w, BgRect.y + BgRect.h,
-		BgRect.x+BgRect.w, BgRect.y + BgRect.h
-	);
 	Graphics()->SetColorVertex(aColorVert, 4);
-	Graphics()->QuadsDrawFreeform(&RightCorner, 1);
+	Graphics()->QuadsDrawFreeform(LeftCornerQuads, CORNER_MAX_QUADS);
+	Graphics()->QuadsDrawFreeform(RightCornerQuads, CORNER_MAX_QUADS);
 
 	Graphics()->QuadsEnd();
 
@@ -221,10 +256,10 @@ void CBroadcast::OnReset()
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 {
 	// process server broadcast message
-	if(MsgType == NETMSGTYPE_SV_CHAT && g_Config.m_ClShowServerBroadcast &&
+	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
 	   !m_pClient->m_MuteServerBroadcast)
 	{
-		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;
 
 		// new broadcast message
 		int RcvMsgLen = str_length(pMsg->m_pMessage);
