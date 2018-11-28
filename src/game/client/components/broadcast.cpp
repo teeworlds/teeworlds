@@ -409,12 +409,15 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 void CBroadcast::OnRender()
 {
+	// server broadcast
+	RenderServerBroadcast();
+
+	// client broadcast
 	if(m_pClient->m_pScoreboard->Active() || m_pClient->m_pMotd->IsActive())
 		return;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 
-	// client broadcast
 	if(Client()->LocalTime() < m_BroadcastTime)
 	{
 		CTextCursor Cursor;
@@ -422,8 +425,5 @@ void CBroadcast::OnRender()
 		Cursor.m_LineWidth = 300*Graphics()->ScreenAspect()-m_BroadcastRenderOffset;
 		TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
 	}
-
-	// server broadcast
-	RenderServerBroadcast();
 }
 
