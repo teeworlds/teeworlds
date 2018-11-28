@@ -244,9 +244,12 @@ void CSpectator::OnRender()
 	if(TotalCount > 16)
 	{
 		ColumnSize = 16;
-		ScaleX = 2.0f;
 		ScaleY = 0.5f;
 	}
+	if(TotalCount > 48)
+		ScaleX = 2.0f;
+	else if(TotalCount > 32)
+		ScaleX = 1.5f;
 
 	// draw background
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
