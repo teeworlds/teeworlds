@@ -71,6 +71,8 @@ class Hdiutil(Dmg):
 	def create(self, dmg, volume_name, directory, symlinks):
 		if symlinks:
 			raise NotImplementedError("symlinks are not yet implemented")
+		if os.path.exists(volume_name + '.dmg'):
+			os.remove(volume_name + '.dmg')
 		self._hdiutil('create', '-volname', volume_name, '-srcdir', directory, dmg)
 
 def main():
