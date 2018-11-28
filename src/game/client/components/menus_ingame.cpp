@@ -6,6 +6,7 @@
 #include <engine/demo.h>
 #include <engine/friends.h>
 #include <engine/graphics.h>
+#include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -232,12 +233,38 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
+	// scroll
+	CUIRect Scroll;
+	int NumClients = 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(i != m_pClient->m_LocalClientID && m_pClient->m_aClients[i].m_Active)
+			NumClients++;
+	float Length = ButtonHeight * NumClients;
+	static float s_ScrollValue = 0.0f;
+	int ScrollNum = (int)((Length - MainView.h)/20.0f)+1;
+	if(ScrollNum > 0)
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&MainView))
+			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&MainView))
+			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
+	}
+
+	UI()->ClipEnable(&MainView);
+	if(Length > MainView.h)
+	{
+		MainView.VSplitRight(8.0f, &MainView, &Scroll);
+		Scroll.HMargin(5.0f, &Scroll);
+		s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+		MainView.y += (MainView.h - Length) * s_ScrollValue;
+	}
+
 	// options
 	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
 	int Teams[3] = { TEAM_RED, TEAM_BLUE, TEAM_SPECTATORS };
-	for(int Team = 0; Team < 3; ++Team)
+	for(int Team = 0, Count = 0; Team < 3; ++Team)
 	{
-		for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
+		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
 			if(i == m_pClient->m_LocalClientID || !m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Teams[Team])
 				continue;
@@ -295,6 +322,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			}
 		}
 	}
+
+	UI()->ClipDisable();
 }
 
 void CMenus::RenderServerInfo(CUIRect MainView)
