@@ -1,3 +1,4 @@
+#if 0
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/color.h>
@@ -243,3 +244,4 @@ void CLayerQuads::ModifyEnvelopeIndex(INDEX_MODIFY_FUNC Func)
 		Func(&m_lQuads[i].m_ColorEnv);
 	}
 }
+#endif

@@ -18,6 +18,7 @@ int CEditor::Save(const char *pFilename)
 
 int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 {
+#if 0
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "saving to '%s'...", pFileName);
 	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
@@ -241,7 +242,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
 			m_pEditor->Client()->Rcon("reload");
 	}
-
+#endif
 	return 1;
 }
 
@@ -253,6 +254,7 @@ int CEditor::Load(const char *pFileName, int StorageType)
 
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
 {
+#if 0
 	CDataFileReader DataFile;
 	if(!DataFile.Open(pStorage, pFileName, StorageType))
 		return 0;
@@ -416,7 +418,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							pTiles->ExtractTiles((CTile *)pData);
 						else
 							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-						
+
 
 						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
 						{
@@ -508,9 +510,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 	}
 	else
 		return 0;
-
+#endif
 	return 1;
 }
+
+#if 0
 
 static int gs_ModifyAddAmount = 0;
 static void ModifyAdd(int *pIndex)
@@ -563,3 +567,4 @@ int CEditor::Append(const char *pFileName, int StorageType)
 	// all done \o/
 	return 0;
 }
+#endif

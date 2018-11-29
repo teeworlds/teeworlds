@@ -1949,8 +1949,8 @@ void CClient::Run()
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);
 
-	// never start with the editor
-	g_Config.m_ClEditor = 0;
+	// ALWAYS start with the editor
+	g_Config.m_ClEditor = 1;
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
