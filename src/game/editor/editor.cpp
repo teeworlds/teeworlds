@@ -4654,7 +4654,7 @@ void CEditor::UpdateAndRender()
 	UI()->StartCheck();
 
 	// handle mouse movement
-	float mx, my, Mwx, Mwy;
+	float mx, my, Mwx, Mwy, Mdx, Mdy;
 	float rx = 0.0f, ry = 0.0f;
 	{
 		Input()->MouseRelative(&rx, &ry);
@@ -4674,6 +4674,8 @@ void CEditor::UpdateAndRender()
 		// update the ui
 		mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
 		my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
+		Mdx = (m_MouseDeltaX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
+		Mdy = (m_MouseDeltaY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
 		Mwx = 0;
 		Mwy = 0;
 
@@ -4689,8 +4691,8 @@ void CEditor::UpdateAndRender()
 
 			Mwx = aPoints[0] + WorldWidth * (mx/UI()->Screen()->w);
 			Mwy = aPoints[1] + WorldHeight * (my/UI()->Screen()->h);
-			m_MouseDeltaWx = m_MouseDeltaX*(WorldWidth / UI()->Screen()->w);
-			m_MouseDeltaWy = m_MouseDeltaY*(WorldHeight / UI()->Screen()->h);
+			m_MouseDeltaWx = Mdx*(WorldWidth / UI()->Screen()->w);
+			m_MouseDeltaWy = Mdy*(WorldHeight / UI()->Screen()->h);
 		}
 
 		int Buttons = 0;
