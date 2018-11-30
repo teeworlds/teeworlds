@@ -260,7 +260,7 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 	}
 
 	CUIRect Label;
-	pRect->VSplitLeft(5.0f, 0, &Label);
+	pRect->VMargin(2.0f, &Label);
 	Label.y+=2.0f;
 	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
