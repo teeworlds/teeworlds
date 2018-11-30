@@ -865,13 +865,17 @@ inline class ITextRender *CLayer::TextRender() { return m_pEditor->TextRender();
 #endif
 #endif
 
+#include <base/system.h>
+#include <base/tl/array.h>
+
 #include <engine/editor.h>
 #include <engine/shared/map.h>
+
 #include <game/mapitems.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
-#include <base/system.h>
-#include <base/tl/array.h>
+#include <game/client/components/mapimages.h>
+
 
 class IStorage;
 class IGraphics;
@@ -883,7 +887,14 @@ class IStorage;
 
 struct CEditorMap
 {
+	enum
+	{
+		MAX_TEXTURES=64,
+	};
+
 	CMap m_File;
+	int m_MapMaxWidth = 0;
+	int m_MapMaxHeight = 0;
 
 	// TODO: use a different allocator
 	array<CTile> m_aTiles;
@@ -898,8 +909,11 @@ struct CEditorMap
 
 	array<CLayerTile> m_aLayerTile;
 
+	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
+	int m_TextureCount = 0;
+
 	bool Save(IStorage *pStorage, const char *pFileName);
-	bool Load(IStorage *pStorage, const char *pFileName);
+	bool Load(IStorage *pStorage, IGraphics* pGraphics, const char *pFileName);
 };
 
 struct CEditor: IEditor
