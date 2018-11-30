@@ -4538,8 +4538,8 @@ void CEditor::Init()
 #endif
 }
 
-static char *s_aMaps[] = {"ctf1", "ctf2", "ctf3", "ctf4", "ctf5", "ctf6", "ctf7", "ctf8", "dm1", "dm2", "dm3", "dm6", "dm7", "dm8", "dm9", "lms1"};
-static char *s_aImageName[] = { "grass_doodads", "winter_main" };
+static const char *s_aMaps[] = {"ctf1", "ctf2", "ctf3", "ctf4", "ctf5", "ctf6", "ctf7", "ctf8", "dm1", "dm2", "dm3", "dm6", "dm7", "dm8", "dm9", "lms1"};
+static const char *s_aImageName[] = { "grass_doodads", "winter_main" };
 
 static int s_GrassDoodadsIndicesOld[] = { 42, 43, 44, 58, 59, 60, 74, 75, 76, 132, 133, 148, 149, 163, 164, 165, 169, 170, 185, 186 };
 static int s_GrassDoodadsIndicesNew[] = { 217, 218, 219, 233, 234, 235, 249, 250, 251, 182, 183, 198, 199, 213, 214, 215, 184, 185, 200, 201 };
@@ -4551,7 +4551,7 @@ void CEditor::ConMapMagic(IConsole::IResult *pResult, void *pUserData)
 	CEditor *pSelf = static_cast<CEditor *>(pUserData);
 	int Flag = pResult->GetInteger(0);
 
-	for(int m = 0; m < sizeof(s_aMaps) / sizeof(s_aMaps[0]); ++m)
+	for(unsigned m = 0; m < sizeof(s_aMaps) / sizeof(s_aMaps[0]); ++m)
 	{
 		char aBuf[64] = { 0 };
 		str_format(aBuf, sizeof(aBuf), "maps/%s.map", s_aMaps[m]);
@@ -4562,7 +4562,7 @@ void CEditor::ConMapMagic(IConsole::IResult *pResult, void *pUserData)
 		// find image
 		for(int i = 0; i < pSelf->m_Map.m_lImages.size(); ++i)
 		{
-			for(int SrcIndex = 0; SrcIndex < sizeof(s_aImageName) / sizeof(s_aImageName[0]); ++SrcIndex)
+			for(unsigned SrcIndex = 0; SrcIndex < sizeof(s_aImageName) / sizeof(s_aImageName[0]); ++SrcIndex)
 			{
 				if(((1 << SrcIndex)&Flag) && !str_comp(pSelf->m_Map.m_lImages[i]->m_aName, s_aImageName[SrcIndex]))
 				{
@@ -4597,7 +4597,7 @@ void CEditor::DoMapMagic(int ImageID, int SrcIndex)
 					{
 						if(SrcIndex == 0)	// grass_doodads
 						{
-							for(int TileIndex = 0; TileIndex < sizeof(s_GrassDoodadsIndicesOld) / sizeof(s_GrassDoodadsIndicesOld[0]); ++TileIndex)
+							for(unsigned TileIndex = 0; TileIndex < sizeof(s_GrassDoodadsIndicesOld) / sizeof(s_GrassDoodadsIndicesOld[0]); ++TileIndex)
 							{
 								if(pLayer->m_pTiles[Count].m_Index == s_GrassDoodadsIndicesOld[TileIndex])
 								{
@@ -4608,7 +4608,7 @@ void CEditor::DoMapMagic(int ImageID, int SrcIndex)
 						}
 						else if(SrcIndex == 1)	// winter_main
 						{
-							for(int TileIndex = 0; TileIndex < sizeof(s_WinterMainIndicesOld) / sizeof(s_WinterMainIndicesOld[0]); ++TileIndex)
+							for(unsigned TileIndex = 0; TileIndex < sizeof(s_WinterMainIndicesOld) / sizeof(s_WinterMainIndicesOld[0]); ++TileIndex)
 							{
 								if(pLayer->m_pTiles[Count].m_Index == s_WinterMainIndicesOld[TileIndex])
 								{
@@ -4654,7 +4654,7 @@ void CEditor::UpdateAndRender()
 	UI()->StartCheck();
 
 	// handle mouse movement
-	float mx, my, Mwx, Mwy;
+	float mx, my, Mwx, Mwy, Mdx, Mdy;
 	float rx = 0.0f, ry = 0.0f;
 	{
 		Input()->MouseRelative(&rx, &ry);
@@ -4674,6 +4674,8 @@ void CEditor::UpdateAndRender()
 		// update the ui
 		mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
 		my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
+		Mdx = (m_MouseDeltaX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
+		Mdy = (m_MouseDeltaY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
 		Mwx = 0;
 		Mwy = 0;
 
@@ -4689,8 +4691,8 @@ void CEditor::UpdateAndRender()
 
 			Mwx = aPoints[0] + WorldWidth * (mx/UI()->Screen()->w);
 			Mwy = aPoints[1] + WorldHeight * (my/UI()->Screen()->h);
-			m_MouseDeltaWx = m_MouseDeltaX*(WorldWidth / UI()->Screen()->w);
-			m_MouseDeltaWy = m_MouseDeltaY*(WorldHeight / UI()->Screen()->h);
+			m_MouseDeltaWx = Mdx*(WorldWidth / UI()->Screen()->w);
+			m_MouseDeltaWy = Mdy*(WorldHeight / UI()->Screen()->h);
 		}
 
 		int Buttons = 0;

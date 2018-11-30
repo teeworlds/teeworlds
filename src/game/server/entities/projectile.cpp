@@ -76,7 +76,7 @@ void CProjectile::Tick()
 			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, m_Damage);
 
 		else if(TargetChr)
-			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
+			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Direction*-1, m_Damage, m_Owner, m_Weapon);
 
 		GameServer()->m_World.DestroyEntity(this);
 	}
