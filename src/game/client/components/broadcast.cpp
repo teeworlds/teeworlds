@@ -55,8 +55,8 @@ void CBroadcast::RenderServerBroadcast()
 	if(m_aSrvBroadcastMsg[0] == 0 || DeltaTime > DisplayDuration)
 		return;
 
-if(m_pClient->m_pChat->IsActive() || m_pClient->Client()->State() != IClient::STATE_ONLINE)
-			return;
+	if(m_pClient->m_pChat->IsActive() || m_pClient->Client()->State() != IClient::STATE_ONLINE)
+		return;
 
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 
