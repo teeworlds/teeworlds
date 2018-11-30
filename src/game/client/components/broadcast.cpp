@@ -56,7 +56,7 @@ void CBroadcast::RenderServerBroadcast()
 		return;
 
 	if(m_pClient->m_pChat->IsActive())
-			return;
+		return;
 
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 
