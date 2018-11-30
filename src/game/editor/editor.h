@@ -931,6 +931,7 @@ struct CEditor: IEditor
 	vec2 m_UiMousePos;
 	vec2 m_UiMouseDelta;
 	vec2 m_MapPosOffset;
+	float m_Zoom = 1.0f;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
