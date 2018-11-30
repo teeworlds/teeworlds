@@ -8,6 +8,9 @@ class CEffects : public CComponent
 {
 	bool m_Add50hz;
 	bool m_Add100hz;
+
+	int m_DamageTaken;
+	float m_DamageTakenTick;
 public:
 	CEffects();
 
@@ -19,7 +22,7 @@ public:
 	void Explosion(vec2 Pos);
 	void HammerHit(vec2 Pos);
 	void AirJump(vec2 Pos);
-	void DamageIndicator(vec2 Pos, vec2 Dir);
+	void DamageIndicator(vec2 Pos, int Amount);
 	void PlayerSpawn(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);
 	void PowerupShine(vec2 Pos, vec2 Size);
