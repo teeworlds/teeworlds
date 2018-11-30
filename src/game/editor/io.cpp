@@ -11,6 +11,7 @@ template<typename T>
 static int MakeVersion(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
+#if 0
 int CEditor::Save(const char *pFilename)
 {
 	return m_Map.Save(Kernel()->RequestInterface<IStorage>(), pFilename);
@@ -567,4 +568,5 @@ int CEditor::Append(const char *pFileName, int StorageType)
 	// all done \o/
 	return 0;
 }
+#endif
 #endif

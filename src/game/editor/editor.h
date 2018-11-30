@@ -871,6 +871,7 @@ inline class ITextRender *CLayer::TextRender() { return m_pEditor->TextRender();
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include <base/system.h>
+#include <base/tl/array.h>
 
 class IStorage;
 class IGraphics;
@@ -880,10 +881,25 @@ class IConsole;
 class ITextRender;
 class IStorage;
 
-struct CEditorMap: CMap
+struct CEditorMap
 {
-	int Save(IStorage *pStorage, const char *pFileName);
-	int Load(IStorage *pStorage, const char *pFileName, int StorageType);
+	CMap m_File;
+
+	// TODO: use a different allocator
+	array<CTile> m_aTiles;
+
+	struct CLayerTile
+	{
+		int m_ImageID;
+		int m_Width;
+		int m_Height;
+		int m_TileStartID;
+	};
+
+	array<CLayerTile> m_aLayerTile;
+
+	bool Save(IStorage *pStorage, const char *pFileName);
+	bool Load(IStorage *pStorage, const char *pFileName);
 };
 
 struct CEditor: IEditor
@@ -899,6 +915,8 @@ struct CEditor: IEditor
 
 	vec2 m_MousePos;
 	vec2 m_UiMousePos;
+	vec2 m_UiMouseDelta;
+	vec2 m_MapPosOffset;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
@@ -912,6 +930,9 @@ struct CEditor: IEditor
 	void Init();
 	void UpdateAndRender();
 	bool HasUnsavedData() const;
+
+	void Update();
+	void Render();
 
 	void Reset();
 

@@ -337,7 +337,7 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 
 	float r=1, g=1, b=1, a=1;
-	if(ColorEnv >= 0)
+	if(ColorEnv >= 0 && pfnEval)
 	{
 		float aChannels[4];
 		pfnEval(ColorEnvOffset/1000.0f, ColorEnv, aChannels, pUser);
