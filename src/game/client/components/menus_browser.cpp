@@ -575,13 +575,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CUIRect Icon;
 			Button.VSplitLeft(Button.h, &Icon, &Button);
 			Icon.y -= 0.5f;
-			if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
+			/*if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
 			{
 				DoIcon(IMAGE_BROWSEICONS, Selected ? SPRITE_BROWSE_UNPURE_B : SPRITE_BROWSE_UNPURE_A, &Icon);
 			}
-			else
+			else*/
 			{
-				// todo: display gametype icon
+				DoGameIcon(pEntry->m_aGameType, &Icon, Selected ? CGameIcon::GAMEICON_OFF : CGameIcon::GAMEICON_ON);
 			}
 
 			// gametype text
@@ -1887,13 +1887,13 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		CUIRect Icon;
 		Row.VSplitLeft(Row.h, &Icon, &Row);
 		Icon.y -= 2.0f;
-		if(!(pInfo->m_Flags&IServerBrowser::FLAG_PURE))
+		/*if(!(pInfo->m_Flags&IServerBrowser::FLAG_PURE))
 		{
 			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
 		}
-		else
+		else*/
 		{
-			// todo: display gametype icon
+			DoGameIcon(pInfo->m_aGameType, &Icon, CGameIcon::GAMEICON_FULL);
 		}
 		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT);
 
@@ -2106,6 +2106,70 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 		m_EnterPressed = false;
 	}
 }
+void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect, int Type)
+{
+	// get texture
+	IGraphics::CTextureHandle Tex = m_GameIconDefault;
+	for(int i = 0; i < m_lGameIcons.size(); ++i)
+	{
+		if(!str_comp_nocase(pName, m_lGameIcons[i].m_Name))
+		{
+			Tex = m_lGameIcons[i].m_IconTexture;
+			break;
+		}
+	}
+	Graphics()->TextureSet(Tex);
+	Graphics()->QuadsBegin();
+
+	// select sprite
+	switch(Type)
+	{
+	case CGameIcon::GAMEICON_FULL:
+		Graphics()->QuadsSetSubset(0.0f, 0.0f, 1.0f, 1.0f/3.0f);
+		break;
+	case CGameIcon::GAMEICON_ON:
+		Graphics()->QuadsSetSubset(0.0f, 1.0f/3.0f, 1.0f, 2.0f/3.0f);
+		break;
+	default:	// GAMEICON_OFF
+		Graphics()->QuadsSetSubset(0.0f, 2.0f/3.0f, 1.0f, 1.0f);
+	}
+
+	// draw icon
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+}
+
+int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	CMenus *pSelf = (CMenus *)pUser;
+	int l = str_length(pName);
+	if(l < 5 || IsDir || str_comp(pName + l - 4, ".png") != 0)
+		return 0;
+
+	char aGameIconName[128] = { 0 };
+	str_copy(aGameIconName, pName, min((int)sizeof(aGameIconName), l - 3));
+
+	// add new game icon
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "ui/gametypes/%s", pName);
+	CImageInfo Info;
+	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load gametype icon '%s'", aGameIconName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		return 0;
+	}
+	CGameIcon GameIcon(aGameIconName);
+	str_format(aBuf, sizeof(aBuf), "loaded gametype icon '%s'", aGameIconName);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+
+	GameIcon.m_IconTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	pSelf->m_lGameIcons.add(GameIcon);
+	if(!str_comp_nocase(aGameIconName, "mod"))
+		pSelf->m_GameIconDefault = GameIcon.m_IconTexture;
+	return 0;
+}
 
 void CMenus::RenderServerbrowser(CUIRect MainView)
 {
@@ -2119,6 +2183,12 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		| back |	   | bottom box |
 		+------+       +------------+
 	*/
+	static bool s_Init = true;
+	if(s_Init)
+	{
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/gametypes", GameIconScan, this);
+		s_Init = false;
+	}
 
 	CUIRect ServerList, Sidebar, BottomBox, SidebarButton;
 
