@@ -697,7 +697,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	*pWidth = *pDesktopWidth;
 	*pHeight = *pDesktopHeight;
 #else
-	SdlFlags |= SDL_WINDOW_FULLSCREEN;
+		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 #endif
 	}
 	else
