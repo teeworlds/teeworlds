@@ -231,6 +231,7 @@ void CEditor::Update()
 void CEditor::Render()
 {
 	const CUIRect UiScreenRect = *UI()->Screen();
+	m_UiScreenRect = UiScreenRect;
 
 	// basic start
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
@@ -246,6 +247,9 @@ void CEditor::Render()
 	const float FakeToScreenX = ScreenWidth/MapScreenWidth;
 	const float FakeToScreenY = ScreenHeight/MapScreenHeight;
 	const float TileSize = 32;
+
+	m_GfxScreenWidth = ScreenWidth;
+	m_GfxScreenHeight = ScreenHeight;
 
 	// background
 	{
@@ -376,7 +380,7 @@ void CEditor::Render()
 
 void CEditor::RenderUI()
 {
-	const CUIRect UiScreenRect = *UI()->Screen();
+	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
 	CUIRect RightPanel;
@@ -388,6 +392,7 @@ void CEditor::RenderUI()
 	RightPanel.Margin(3.0f, &NavRect);
 
 	static CUIButtonState s_UiGroupButState[MAX_GROUPS];
+	static CUIButtonState s_UiLayerButState[MAX_LAYERS];
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
@@ -405,18 +410,23 @@ void CEditor::RenderUI()
 		if(ButState.m_Clicked)
 			m_UiGroupOpen[gi] ^= 1;
 
+		const bool IsOpen = m_UiGroupOpen[gi];
+
 		vec4 ButColor(0.062, 0, 0.19, 1);
 		if(ButState.m_Hovered)
 			ButColor = vec4(0.28, 0.10, 0.64, 1);
 		if(ButState.m_Pressed)
 			ButColor = vec4(0.13, 0, 0.40, 1);
 
-		DrawRect(ButtonRect, ButColor);
+		if(IsOpen)
+			DrawRectBorder(ButtonRect, ButColor, 1, vec4(0.13, 0, 0.40, 1));
+		else
+			DrawRect(ButtonRect, ButColor);
 
 		CUIRect ExpandBut;
 		ButtonRect.VSplitLeft(ButtonRect.h, &ExpandBut, &ButtonRect);
 
-		DrawText(ExpandBut, m_UiGroupOpen[gi] ? "-" : "+", FontSize);
+		DrawText(ExpandBut, IsOpen ? "-" : "+", FontSize);
 
 		char aGroupName[64];
 		str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
@@ -428,11 +438,13 @@ void CEditor::RenderUI()
 
 			for(int li = 0; li < LayerCount; li++)
 			{
+				const int LyID = m_Map.m_aGroups[gi].m_apLayerIDs[li];
 				NavRect.HSplitTop(Spacing, 0, &NavRect);
 				NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 				ButtonRect.VSplitLeft(10.0f, 0, &ButtonRect);
 
-				CUIButtonState ButState;
+				dbg_assert(LyID >= 0 && LyID < MAX_LAYERS, "LayerID out of bounds");
+				CUIButtonState& ButState = s_UiLayerButState[LyID];
 				UiDoButtonBehavior((&m_Map.m_aGroups)+gi*1000+li, ButtonRect, &ButState);
 
 				vec4 ButColor(0.062, 0, 0.19, 1);
@@ -441,9 +453,16 @@ void CEditor::RenderUI()
 				if(ButState.m_Pressed)
 					ButColor = vec4(0.13, 0, 0.40, 1);
 
-				m_UiLayerHovered[m_Map.m_aGroups[gi].m_apLayerIDs[li]] = ButState.m_Hovered;
+				m_UiLayerHovered[LyID] = ButState.m_Hovered;
+				if(ButState.m_Clicked)
+					m_UiSelectedLayer = LyID;
 
-				DrawRect(ButtonRect, ButColor);
+				const bool IsSelected = m_UiSelectedLayer == LyID;
+
+				if(IsSelected)
+					DrawRectBorder(ButtonRect, ButColor, 1, vec4(1, 0, 0, 1));
+				else
+					DrawRect(ButtonRect, ButColor);
 
 				char aLayerName[64];
 				str_format(aLayerName, sizeof(aLayerName), "Layer #%d", li);
@@ -460,6 +479,34 @@ inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
 	IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
 	Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
 	Graphics()->QuadsDrawTL(&Quad, 1);
+	Graphics()->QuadsEnd();
+}
+
+void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+{
+	const float FakeToScreenX = m_GfxScreenWidth/m_UiScreenRect.w;
+	const float FakeToScreenY = m_GfxScreenHeight/m_UiScreenRect.h;
+	const float BorderW = Border/FakeToScreenX;
+	const float BorderH = Border/FakeToScreenY;
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+
+	// border pass
+	IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
+	Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+						 BorderColor.b*BorderColor.a, BorderColor.a);
+	Graphics()->QuadsDrawTL(&Quad, 1);
+
+	// front pass
+	Quad.m_X += BorderW;
+	Quad.m_Y += BorderH;
+	Quad.m_Width -= BorderW*2;
+	Quad.m_Height -= BorderH*2;
+	Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a,
+						 Color.b*Color.a, Color.a);
+	Graphics()->QuadsDrawTL(&Quad, 1);
+
 	Graphics()->QuadsEnd();
 }
 

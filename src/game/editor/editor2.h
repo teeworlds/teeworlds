@@ -99,14 +99,20 @@ class CEditor: public IEditor
 
 	bool m_ConfigShowGrid = true;
 
+	float m_GfxScreenWidth;
+	float m_GfxScreenHeight;
+
+	CUIRect m_UiScreenRect;
 	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
 	u8 m_UiLayerHovered[MAX_LAYERS] = {0};
+	int m_UiSelectedLayer = -1;
 
 	void Update();
 	void Render();
 	void RenderUI();
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
+	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
