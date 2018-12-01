@@ -475,7 +475,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				RenderTools()->SelectSprite(m_pClient->m_aClients[pInfo->m_ClientID].m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 
 				float Size = LineHeight;
-				IGraphics::CQuadItem QuadItem(TeeOffset+0.0f, y-2.0f-Spacing/2.0f, Size/2.0f, Size);
+				IGraphics::CQuadItem QuadItem(TeeOffset+4.0f, y-2.0f-Spacing/2.0f, Size/2.0f, Size);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
