@@ -865,6 +865,7 @@ inline class ITextRender *CLayer::TextRender() { return m_pEditor->TextRender();
 #endif
 #endif
 
+#include <stdint.h>
 #include <base/system.h>
 #include <base/tl/array.h>
 
@@ -890,16 +891,10 @@ struct CEditorMap
 	enum
 	{
 		MAX_TEXTURES=64,
+		MAX_GROUP_LAYERS=64,
 	};
 
-	CMap m_File;
-	int m_MapMaxWidth = 0;
-	int m_MapMaxHeight = 0;
-
-	// TODO: use a different allocator
-	array<CTile> m_aTiles;
-
-	struct CLayerTile
+	struct CLayer
 	{
 		int m_ImageID;
 		int m_Width;
@@ -908,7 +903,20 @@ struct CEditorMap
 		vec4 m_Color;
 	};
 
-	array<CLayerTile> m_aLayerTile;
+	struct CGroup
+	{
+		int m_apLayerIDs[MAX_GROUP_LAYERS];
+		int m_LayerCount = 0;
+	};
+
+	CMap m_File;
+	int m_MapMaxWidth = 0;
+	int m_MapMaxHeight = 0;
+
+	// TODO: use a different allocator
+	array<CTile> m_aTiles;
+	array<CLayer> m_aLayers;
+	array<CGroup> m_aGroups;
 
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	int m_TextureCount = 0;
@@ -917,8 +925,23 @@ struct CEditorMap
 	bool Load(IStorage *pStorage, IGraphics* pGraphics, const char *pFileName);
 };
 
-struct CEditor: IEditor
+typedef uint8_t u8;
+
+struct CUIButtonState
 {
+	u8 m_Hovered = false;
+	u8 m_Pressed = false;
+	u8 m_Clicked = false;
+};
+
+class CEditor: public IEditor
+{
+	enum
+	{
+		MAX_GROUPS=64,
+		MAX_LAYERS=128,
+	};
+
 	IGraphics* m_pGraphics;
 	IInput *m_pInput;
 	IClient *m_pClient;
@@ -942,15 +965,17 @@ struct CEditor: IEditor
 
 	bool m_ConfigShowGrid = true;
 
-	CEditor();
-	~CEditor();
-
-	void Init();
-	void UpdateAndRender();
-	bool HasUnsavedData() const;
+	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
+	u8 m_UiLayerHovered[MAX_LAYERS] = {0};
 
 	void Update();
 	void Render();
+	void RenderUI();
+
+	void DrawRect(const CUIRect& Rect, const vec4& Color);
+	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
+
+	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
 
 	void Reset();
 
@@ -965,4 +990,13 @@ struct CEditor: IEditor
 	inline IStorage *Storage() { return m_pStorage; };
 	inline CUI *UI() { return &m_UI; }
 	inline CRenderTools *RenderTools() { return &m_RenderTools; }
+
+public:
+
+	CEditor();
+	~CEditor();
+
+	void Init();
+	void UpdateAndRender();
+	bool HasUnsavedData() const;
 };
