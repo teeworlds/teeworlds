@@ -450,13 +450,14 @@ void CHud::RenderVoting()
 	CUIRect Base = {5, 88, 100, 4};
 	m_pClient->m_pVoting->RenderBars(Base, false);
 
-	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
-	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
+	char aBufYes[64], aBufNo[64];
+	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
+	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
+	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
 
-	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
+	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), aBufNo);
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
 }
 
