@@ -10,40 +10,41 @@ typedef struct
 	CLocConstString m_Name;
 	const char *m_pCommand;
 	int m_KeyId;
+	int m_Modifier;
 	CMenus::CButtonContainer m_BC;
 } CKeyInfo;
 
 static CKeyInfo gs_aKeys[] =
 {
-	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
-	{ "Move right", "+right", 0 },
-	{ "Jump", "+jump", 0 },
-	{ "Fire", "+fire", 0 },
-	{ "Hook", "+hook", 0 },
-	{ "Hammer", "+weapon1", 0 },
-	{ "Pistol", "+weapon2", 0 },
-	{ "Shotgun", "+weapon3", 0 },
-	{ "Grenade", "+weapon4", 0 },
-	{ "Laser", "+weapon5", 0 },
-	{ "Next weapon", "+nextweapon", 0 },
-	{ "Prev. weapon", "+prevweapon", 0 },
-	{ "Vote yes", "vote yes", 0 },
-	{ "Vote no", "vote no", 0 },
-	{ "Chat", "chat all", 0 },
-	{ "Team chat", "chat team", 0 },
-	{ "Whisper", "chat whisper", 0 },
-	{ "Show chat", "+show_chat", 0 },
-	{ "Emoticon", "+emote", 0 },
-	{ "Spectator mode", "+spectate", 0 },
-	{ "Spectate next", "spectate_next", 0 },
-	{ "Spectate previous", "spectate_previous", 0 },
-	{ "Console", "toggle_local_console", 0 },
-	{ "Remote console", "toggle_remote_console", 0 },
-	{ "Screenshot", "screenshot", 0 },
-	{ "Scoreboard", "+scoreboard", 0 },
-	{ "Respawn", "kill", 0 },
-	{ "Ready", "ready_change", 0 },
-	{ "Add demo marker", "add_demomarker", 0},
+	{ "Move left", "+left", 0, 0},		// Localize - these strings are localized within CLocConstString
+	{ "Move right", "+right", 0, 0},
+	{ "Jump", "+jump", 0, 0},
+	{ "Fire", "+fire", 0, 0},
+	{ "Hook", "+hook", 0, 0},
+	{ "Hammer", "+weapon1", 0, 0},
+	{ "Pistol", "+weapon2", 0, 0},
+	{ "Shotgun", "+weapon3", 0, 0},
+	{ "Grenade", "+weapon4", 0, 0},
+	{ "Laser", "+weapon5", 0, 0},
+	{ "Next weapon", "+nextweapon", 0, 0},
+	{ "Prev. weapon", "+prevweapon", 0, 0},
+	{ "Vote yes", "vote yes", 0, 0},
+	{ "Vote no", "vote no", 0, 0},
+	{ "Chat", "chat all", 0, 0},
+	{ "Team chat", "chat team", 0, 0},
+	{ "Whisper", "chat whisper", 0, 0},
+	{ "Show chat", "+show_chat", 0, 0},
+	{ "Emoticon", "+emote", 0, 0},
+	{ "Spectator mode", "+spectate", 0, 0},
+	{ "Spectate next", "spectate_next", 0, 0},
+	{ "Spectate previous", "spectate_previous", 0, 0},
+	{ "Console", "toggle_local_console", 0, 0},
+	{ "Remote console", "toggle_remote_console", 0, 0},
+	{ "Screenshot", "screenshot", 0, 0},
+	{ "Scoreboard", "+scoreboard", 0, 0},
+	{ "Respawn", "kill", 0, 0},
+	{ "Ready", "ready_change", 0, 0},
+	{ "Add demo marker", "add_demomarker", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -74,14 +75,14 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeigh
 
 		Label.y += 2.0f;
 		UI()->DoLabelScaled(&Label, aBuf, 13.0f, CUI::ALIGN_CENTER);
-		int OldId = Key.m_KeyId;
-		int NewId = DoKeyReader(&gs_aKeys[i].m_BC, &Button, OldId);
-		if(NewId != OldId)
+		int OldId = Key.m_KeyId, OldModifier = Key.m_Modifier, NewModifier;
+		int NewId = DoKeyReader(&gs_aKeys[i].m_BC, &Button, OldId, OldModifier, &NewModifier);
+		if(NewId != OldId || NewModifier != OldModifier)
 		{
 			if(OldId != 0 || NewId == 0)
-				m_pClient->m_pBinds->Bind(OldId, "");
+				m_pClient->m_pBinds->Bind(OldId, OldModifier, "");
 			if(NewId != 0)
-				m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
+				m_pClient->m_pBinds->Bind(NewId, NewModifier, gs_aKeys[i].m_pCommand);
 		}
 	}
 }
@@ -92,20 +93,27 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
+	{
 		gs_aKeys[i].m_KeyId = 0;
+		gs_aKeys[i].m_Modifier = 0;
+	}
 
 	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
+		{
+			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			if(!pBind[0])
+				continue;
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
+			for(int i = 0; i < g_KeyCount; i++)
+				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
+				{
+					gs_aKeys[i].m_KeyId = KeyId;
+					gs_aKeys[i].m_Modifier = m;
+					break;
+				}
+		}
 	}
 
 	int NumOptions = 6;
@@ -132,20 +140,27 @@ float CMenus::RenderSettingsControlsWeapon(CUIRect View, void *pUser)
 
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
+	{
 		gs_aKeys[i].m_KeyId = 0;
+		gs_aKeys[i].m_Modifier = 0;
+	}
 
 	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
+		{
+			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			if(!pBind[0])
+				continue;
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
+			for(int i = 0; i < g_KeyCount; i++)
+				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
+				{
+					gs_aKeys[i].m_KeyId = KeyId;
+					gs_aKeys[i].m_Modifier = m;
+					break;
+				}
+		}
 	}
 
 	int NumOptions = 7;
@@ -167,20 +182,27 @@ float CMenus::RenderSettingsControlsVoting(CUIRect View, void *pUser)
 
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
+	{
 		gs_aKeys[i].m_KeyId = 0;
+		gs_aKeys[i].m_Modifier = 0;
+	}
 
 	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
+		{
+			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			if(!pBind[0])
+				continue;
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
+			for(int i = 0; i < g_KeyCount; i++)
+				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
+				{
+					gs_aKeys[i].m_KeyId = KeyId;
+					gs_aKeys[i].m_Modifier = m;
+					break;
+				}
+		}
 	}
 
 	int NumOptions = 2;
@@ -202,20 +224,27 @@ float CMenus::RenderSettingsControlsChat(CUIRect View, void *pUser)
 
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
+	{
 		gs_aKeys[i].m_KeyId = 0;
+		gs_aKeys[i].m_Modifier = 0;
+	}
 
 	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
+		{
+			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			if(!pBind[0])
+				continue;
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
+			for(int i = 0; i < g_KeyCount; i++)
+				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
+				{
+					gs_aKeys[i].m_KeyId = KeyId;
+					gs_aKeys[i].m_Modifier = m;
+					break;
+				}
+		}
 	}
 
 	int NumOptions = 4;
@@ -237,20 +266,27 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
+	{
 		gs_aKeys[i].m_KeyId = 0;
+		gs_aKeys[i].m_Modifier = 0;
+	}
 
 	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId);
-		if(!pBind[0])
-			continue;
+		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
+		{
+			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			if(!pBind[0])
+				continue;
 
-		for(int i = 0; i < g_KeyCount; i++)
-			if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-			{
-				gs_aKeys[i].m_KeyId = KeyId;
-				break;
-			}
+			for(int i = 0; i < g_KeyCount; i++)
+				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
+				{
+					gs_aKeys[i].m_KeyId = KeyId;
+					gs_aKeys[i].m_Modifier = m;
+					break;
+				}
+		}
 	}
 
 	int NumOptions = 11;
