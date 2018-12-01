@@ -39,6 +39,8 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap::CGroup Group;
+		Group.m_Parallax = vec2(pGroup->m_ParallaxX, pGroup->m_ParallaxY);
+		Group.m_Position = vec2(pGroup->m_OffsetX, pGroup->m_OffsetY);
 		Group.m_LayerCount = 0;
 
 		for(int li = 0; li < GroupLayerCount; li++)
@@ -51,37 +53,49 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 				dbg_msg("editor", "Group#%d Layer=%d (w=%d, h=%d)", gi, li,
 						Tilemap.m_Width, Tilemap.m_Height);
 
-				if(!(Tilemap.m_Flags&TILESLAYERFLAG_GAME))
+
+				m_MapMaxWidth = max(m_MapMaxWidth, Tilemap.m_Width);
+				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
+
+				CLayer LayerTile;
+				LayerTile.m_ImageID = Tilemap.m_Image;
+				LayerTile.m_Width = Tilemap.m_Width;
+				LayerTile.m_Height = Tilemap.m_Height;
+				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
+										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
+				LayerTile.m_TileStartID = m_aTiles.size();
+				const int LayerID = m_aLayers.add(LayerTile);
+
+				// TODO: this is extremely slow
+				CTile *pTiles = (CTile *)m_File.GetData(Tilemap.m_Data);
+				int TileCount = Tilemap.m_Width*Tilemap.m_Height;
+				for(int ti = 0; ti < TileCount; ti++)
 				{
-					m_MapMaxWidth = max(m_MapMaxWidth, Tilemap.m_Width);
-					m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
+					CTile t = pTiles[ti];
+					const int Skips = t.m_Skip;
+					t.m_Skip = 0;
 
-					CLayer LayerTile;
-					LayerTile.m_ImageID = Tilemap.m_Image;
-					LayerTile.m_Width = Tilemap.m_Width;
-					LayerTile.m_Height = Tilemap.m_Height;
-					LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
-											 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
-					LayerTile.m_TileStartID = m_aTiles.size();
-					const int LayerID = m_aLayers.add(LayerTile);
+					for(int s = 0; s < Skips; s++)
+						m_aTiles.add(t);
+					m_aTiles.add(t);
+				}
 
-					// TODO: this is extremely slow
-					CTile *pTiles = (CTile *)m_File.GetData(Tilemap.m_Data);
-					int TileCount = Tilemap.m_Width*Tilemap.m_Height;
-					for(int ti = 0; ti < TileCount; ti++)
-					{
-						m_aTiles.add(pTiles[ti]);
-						TileCount -= pTiles[ti].m_Skip;
-					}
+				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
+					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
 
-					if(Group.m_LayerCount < MAX_GROUP_LAYERS)
-						Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
+				if(Tilemap.m_Flags&TILESLAYERFLAG_GAME)
+				{
+					m_GameLayerID = LayerID;
+					m_GameGroupID = m_aGroups.size();
 				}
 			}
 		}
 
 		m_aGroups.add(Group);
 	}
+
+	dbg_assert(m_GameLayerID >= 0, "Game layer not found");
+	dbg_assert(m_GameGroupID >= 0, "Game group not found");
 
 	// load textures
 	// TODO: move this out?
@@ -166,9 +180,10 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf1.map")) {
 		dbg_break();
 	}
+	m_UiSelectedLayer = m_Map.m_GameLayerID;
 }
 
 void CEditor::UpdateAndRender()
@@ -238,48 +253,93 @@ void CEditor::Render()
 
 	const float ScreenWidth = (float)Graphics()->ScreenWidth();
 	const float ScreenHeight = (float)Graphics()->ScreenHeight();
-	const float MapScreenWidth = ScreenWidth * m_Zoom;
-	const float MapScreenHeight = ScreenHeight * m_Zoom;
-	const float MapOffX = m_MapUiPosOffset.x/UiScreenRect.w * MapScreenWidth;
-	const float MapOffY = m_MapUiPosOffset.y/UiScreenRect.h * MapScreenHeight;
-	CUIRect ScreenRect = { MapOffX, MapOffY, MapScreenWidth, MapScreenHeight };
+	const float ZoomScreenWidth = ScreenWidth * m_Zoom;
+	const float ZoomScreenHeight = ScreenHeight * m_Zoom;
 
-	const float FakeToScreenX = ScreenWidth/MapScreenWidth;
-	const float FakeToScreenY = ScreenHeight/MapScreenHeight;
+	const float FakeToScreenX = ScreenWidth/ZoomScreenWidth;
+	const float FakeToScreenY = ScreenHeight/ZoomScreenHeight;
 	const float TileSize = 32;
 
 	m_GfxScreenWidth = ScreenWidth;
 	m_GfxScreenHeight = ScreenHeight;
 
+	float SelectedParallaxX = 1;
+	float SelectedParallaxY = 1;
+	float SelectedPositionX = 0;
+	float SelectedPositionY = 0;
+	const int SelectedLayerID = m_UiSelectedLayer;
+	int SelectedGroupID = -1;
+	if(SelectedLayerID >= 0)
+	{
+		// find the group the layer is in
+		const int GroupCount = m_Map.m_aGroups.size();
+		for(int gi = 0; gi < GroupCount; gi++)
+		{
+			const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+			const int LayerCount = Group.m_LayerCount;
+			for(int li = 0; li < LayerCount; li++)
+			{
+				if(Group.m_apLayerIDs[li] == SelectedLayerID)
+				{
+					SelectedGroupID = gi;
+					break;
+				}
+			}
+		}
+
+		dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
+		const CEditorMap::CGroup& Group = m_Map.m_aGroups[SelectedGroupID];
+		SelectedParallaxX = Group.m_Parallax.x / 100.f;
+		SelectedParallaxY = Group.m_Parallax.y / 100.f;
+		SelectedPositionX = Group.m_Position.x;
+		SelectedPositionY = Group.m_Position.y;
+	}
+
+	const float SelectedScreenOffX = (m_MapUiPosOffset.x*SelectedParallaxX+SelectedPositionX)/
+									 UiScreenRect.w * ZoomScreenWidth;
+	const float SelectedScreenOffY = (m_MapUiPosOffset.y*SelectedParallaxY+SelectedPositionY)/
+									 UiScreenRect.h * ZoomScreenHeight;
+
+
 	// background
 	{
-		Graphics()->MapScreen(0, 0, MapScreenWidth, MapScreenHeight);
+		Graphics()->MapScreen(0, 0, ZoomScreenWidth, ZoomScreenHeight);
 		Graphics()->TextureSet(m_CheckerTexture);
 		Graphics()->BlendNormal();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 		// align background with grid
-		float StartX = fract(MapOffX/(TileSize*2));
-		float StartY = fract(MapOffY/(TileSize*2));
+		float StartX = fract(SelectedScreenOffX/(TileSize*2));
+		float StartY = fract(SelectedScreenOffY/(TileSize*2));
 		Graphics()->QuadsSetSubset(StartX, StartY,
-								   MapScreenWidth/(TileSize*2)+StartX,
-								   MapScreenHeight/(TileSize*2)+StartY);
+								   ZoomScreenWidth/(TileSize*2)+StartX,
+								   ZoomScreenHeight/(TileSize*2)+StartY);
 
-		IGraphics::CQuadItem QuadItem(0, 0, MapScreenWidth, MapScreenHeight);
+		IGraphics::CQuadItem QuadItem(0, 0, ZoomScreenWidth, ZoomScreenHeight);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
 
 	// render map
-	Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w, ScreenRect.y+ScreenRect.h);
-
 	CTile* pTileBuffer = &m_Map.m_aTiles[0];
 	const int GroupCount = m_Map.m_aGroups.size();
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+
+		const float ParallaxX = Group.m_Parallax.x / 100.f;
+		const float ParallaxY = Group.m_Parallax.y / 100.f;
+		const float PositionX = Group.m_Position.x;
+		const float PositionY = Group.m_Position.y;
+		const float MapOffX = (m_MapUiPosOffset.x*ParallaxX+PositionX)/UiScreenRect.w * ZoomScreenWidth;
+		const float MapOffY = (m_MapUiPosOffset.y*ParallaxY+PositionY)/UiScreenRect.h * ZoomScreenHeight;
+		CUIRect ScreenRect = { MapOffX, MapOffY, ZoomScreenWidth, ZoomScreenHeight };
+
+		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
+							  ScreenRect.y+ScreenRect.h);
+
 		const int LayerCount = Group.m_LayerCount;
 
 		for(int li = 0; li < LayerCount; li++)
@@ -294,10 +354,16 @@ void CEditor::Render()
 			if(m_UiLayerHovered[LyID])
 				LyColor = vec4(1, 0, 1, 1);
 
+			/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
+				LyColor.a = 0.5f;*/
+
 			if(LayerTile.m_ImageID == -1)
 				Graphics()->TextureClear();
 			else
 				Graphics()->TextureSet(m_Map.m_aTextures[LayerTile.m_ImageID]);
+
+			if(LyID == m_Map.m_GameLayerID)
+				Graphics()->TextureSet(m_EntitiesTexture);
 
 			Graphics()->BlendNone();
 			RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
@@ -313,17 +379,27 @@ void CEditor::Render()
 	Graphics()->BlendNormal();
 
 	// origin and border
+	CUIRect ScreenRect = { SelectedScreenOffX, SelectedScreenOffY, ZoomScreenWidth, ZoomScreenHeight };
+	Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
+						  ScreenRect.y+ScreenRect.h);
+
 	IGraphics::CQuadItem RectX(0, 0, TileSize, 2/FakeToScreenY);
 	IGraphics::CQuadItem RectY(0, 0, 2/FakeToScreenX, TileSize);
-	const float MapMaxWidth = m_Map.m_MapMaxWidth * TileSize;
-	const float MapMaxHeight = m_Map.m_MapMaxHeight * TileSize;
+	float LayerWidth = m_Map.m_MapMaxWidth * TileSize;
+	float LayerHeight = m_Map.m_MapMaxHeight * TileSize;
+	if(SelectedLayerID)
+	{
+		LayerWidth = m_Map.m_aLayers[SelectedLayerID].m_Width * TileSize;
+		LayerHeight = m_Map.m_aLayers[SelectedLayerID].m_Height * TileSize;
+	}
+
 	const float bw = 1.0f / FakeToScreenX;
 	const float bh = 1.0f / FakeToScreenY;
 	IGraphics::CQuadItem aBorders[4] = {
-		IGraphics::CQuadItem(0, 0, MapMaxWidth, bh),
-		IGraphics::CQuadItem(0, MapMaxHeight, MapMaxWidth, bh),
-		IGraphics::CQuadItem(0, 0, bw, MapMaxHeight),
-		IGraphics::CQuadItem(MapMaxWidth, 0, bw, MapMaxHeight)
+		IGraphics::CQuadItem(0, 0, LayerWidth, bh),
+		IGraphics::CQuadItem(0, LayerHeight, LayerWidth, bh),
+		IGraphics::CQuadItem(0, 0, bw, LayerHeight),
+		IGraphics::CQuadItem(LayerWidth, 0, bw, LayerHeight)
 	};
 
 	Graphics()->TextureClear();
@@ -334,18 +410,18 @@ void CEditor::Render()
 	{
 		const float GridAlpha = 0.25f;
 		Graphics()->SetColor(1.0f * GridAlpha, 1.0f * GridAlpha, 1.0f * GridAlpha, GridAlpha);
-		float StartX = MapOffX - fract(MapOffX/TileSize) * TileSize;
-		float StartY = MapOffY - fract(MapOffY/TileSize) * TileSize;
-		float EndX = MapOffX+MapScreenWidth;
-		float EndY = MapOffY+MapScreenHeight;
+		float StartX = SelectedScreenOffX - fract(SelectedScreenOffX/TileSize) * TileSize;
+		float StartY = SelectedScreenOffY - fract(SelectedScreenOffY/TileSize) * TileSize;
+		float EndX = SelectedScreenOffX+ZoomScreenWidth;
+		float EndY = SelectedScreenOffY+ZoomScreenHeight;
 		for(float x = StartX; x < EndX; x+= TileSize)
 		{
-			IGraphics::CQuadItem Line(x, MapOffY, bw, MapScreenHeight);
+			IGraphics::CQuadItem Line(x, SelectedScreenOffY, bw, ZoomScreenHeight);
 			Graphics()->QuadsDrawTL(&Line, 1);
 		}
 		for(float y = StartY; y < EndY; y+= TileSize)
 		{
-			IGraphics::CQuadItem Line(MapOffX, y, MapScreenWidth, bh);
+			IGraphics::CQuadItem Line(SelectedScreenOffX, y, ZoomScreenWidth, bh);
 			Graphics()->QuadsDrawTL(&Line, 1);
 		}
 	}

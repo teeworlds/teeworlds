@@ -41,11 +41,15 @@ struct CEditorMap
 	{
 		int m_apLayerIDs[MAX_GROUP_LAYERS];
 		int m_LayerCount = 0;
+		vec2 m_Parallax;
+		vec2 m_Position;
 	};
 
 	CMap m_File;
 	int m_MapMaxWidth = 0;
 	int m_MapMaxHeight = 0;
+	int m_GameLayerID = -1;
+	int m_GameGroupID = -1;
 
 	// TODO: use a different allocator
 	array<CTile> m_aTiles;
