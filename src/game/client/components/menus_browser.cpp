@@ -1615,7 +1615,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterBots = 0;
-	if(DoButton_CheckBox(&s_BrFilterBots, Localize("Hide Bots"), FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS, &Button))
+	if(DoButton_CheckBox(&s_BrFilterBots, Localize("Hide bots"), FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_BOTS;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
