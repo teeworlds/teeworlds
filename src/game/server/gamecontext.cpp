@@ -675,6 +675,11 @@ void CGameContext::OnClientTeamChange(int ClientID)
 
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
+	AbortVoteOnDisconnect(ClientID);
+	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
+	delete m_apPlayers[ClientID];
+	m_apPlayers[ClientID] = 0;
+
 	// update clients on drop
 	if(Server()->ClientIngame(ClientID))
 	{
@@ -692,11 +697,6 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		Msg.m_Silent = false;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 	}
-
-	AbortVoteOnDisconnect(ClientID);
-	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
-	delete m_apPlayers[ClientID];
-	m_apPlayers[ClientID] = 0;
 
 	m_VoteUpdate = true;
 }
