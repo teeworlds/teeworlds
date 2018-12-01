@@ -173,7 +173,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float Spacing = 2.0f;
 	float CountryFlagOffset = x+2.0f, CountryFlagLength = 20.f;
 	float NameOffset = CountryFlagOffset+CountryFlagLength, NameLength = 128.0f;
-	float TeeOffset = CountryFlagOffset+CountryFlagLength, TeeLength = 25*TeeSizeMod;
+	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
 	float ClanOffset = NameOffset+NameLength, ClanLength = 88.0f;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
@@ -300,7 +300,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->Text(0, NameOffset, y+Spacing, HeadlineFontsize, Localize("Name"), -1);
+	TextRender()->Text(0, NameOffset+ TeeLength, y+Spacing, HeadlineFontsize, Localize("Name"), -1);
 
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Clan"), -1);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Clan"), -1);
@@ -457,8 +457,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// country flag
 			const vec4 CFColor(1, 1, 1, 0.75f * ColorAlpha);
 			m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &CFColor,
-				CountryFlagOffset, y + (LineHeight-CountryFlagLength*0.5f) * 0.5f,
-				CountryFlagLength, CountryFlagLength*0.5f);
+				CountryFlagOffset, y + 3.0f, 30.0f, LineHeight-5.0f);
 
 			// set text color
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
