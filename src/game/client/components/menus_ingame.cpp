@@ -61,7 +61,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	float NoteHeight = !Info.m_aNotification[0] ? 0.0f : 45.0f;
 	MainView.HSplitTop(20.0f+20.0f+2*Spacing+ NoteHeight, &MainView, 0);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f + ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 
 	// game options
 	MainView.HSplitTop(20.0f, &Label, &MainView);
@@ -167,9 +167,15 @@ void CMenus::RenderGame(CUIRect MainView)
 			}
 		}
 
+		// disconnect button
+		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
+		static CButtonContainer s_DisconnectButton;
+		if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
+			Client()->Disconnect();
+
 		// Record button
-		ButtonRow.VSplitLeft(50.0f, 0, &ButtonRow);
-		ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);		
+		ButtonRow.VSplitRight(50.0f, &ButtonRow, 0);
+		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
 		static CButtonContainer s_DemoButton;
 		bool Recording = DemoRecorder()->IsRecording();
 		if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Button))	// Localize("Stop record");Localize("Record");
@@ -179,12 +185,6 @@ void CMenus::RenderGame(CUIRect MainView)
 			else
 				Client()->DemoRecorder_Stop();
 		}
-
-		// disconnect button
-		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
-		static CButtonContainer s_DisconnectButton;
-		if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
-			Client()->Disconnect();
 	}
 }
 
