@@ -85,6 +85,7 @@ MACRO_CONFIG_INT(UiMousesens, ui_mousesens, 100, 5, 100000, CFGFLAG_SAVE|CFGFLAG
 MACRO_CONFIG_INT(UiAutoswitchInfotab, ui_autoswitch_infotab, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Switch to the info tab when clicking on a server")
 
 MACRO_CONFIG_INT(GfxNoclip, gfx_noclip, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disable clipping")
+MACRO_CONFIG_INT(GfxHighDpi, gfx_high_dpi, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Experimental high resolution support for macOS")
 
 MACRO_CONFIG_STR(ClMenuMap, cl_menu_map, 64, "heavens", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Background map in the menu")
 MACRO_CONFIG_INT(ClShowMenuMap, cl_show_menu_map, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display background map in the menu")
