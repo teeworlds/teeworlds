@@ -240,6 +240,12 @@ void CEditor::Update()
 	else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
 		m_Zoom *= 1.1;
 
+	if(Input()->KeyPress(KEY_HOME))
+	{
+		m_Zoom = 1;
+		m_MapUiPosOffset = vec2(0,0);
+	}
+
 	Input()->Clear();
 }
 
@@ -251,17 +257,21 @@ void CEditor::Render()
 	// basic start
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
-	const float ScreenWidth = (float)Graphics()->ScreenWidth();
-	const float ScreenHeight = (float)Graphics()->ScreenHeight();
-	const float ZoomScreenWidth = ScreenWidth * m_Zoom;
-	const float ZoomScreenHeight = ScreenHeight * m_Zoom;
+	// get world view points based on neutral paramters
+	float aWorldViewRectPoints[4];
+	RenderTools()->MapScreenToWorld(0, 0, 1, 1, 0, 0, Graphics()->ScreenAspect(), 1, aWorldViewRectPoints);
 
-	const float FakeToScreenX = ScreenWidth/ZoomScreenWidth;
-	const float FakeToScreenY = ScreenHeight/ZoomScreenHeight;
+	const float WorldViewWidth = aWorldViewRectPoints[2]-aWorldViewRectPoints[0];
+	const float WorldViewHeight = aWorldViewRectPoints[3]-aWorldViewRectPoints[1];
+	const float ZoomWorldViewWidth = WorldViewWidth * m_Zoom;
+	const float ZoomWorldViewHeight = WorldViewHeight * m_Zoom;
+
+	m_GfxScreenWidth = Graphics()->ScreenWidth();
+	m_GfxScreenHeight = Graphics()->ScreenHeight();
+	const float FakeToScreenX = m_GfxScreenWidth/ZoomWorldViewWidth;
+	const float FakeToScreenY = m_GfxScreenHeight/ZoomWorldViewHeight;
 	const float TileSize = 32;
 
-	m_GfxScreenWidth = ScreenWidth;
-	m_GfxScreenHeight = ScreenHeight;
 
 	float SelectedParallaxX = 1;
 	float SelectedParallaxY = 1;
@@ -295,28 +305,26 @@ void CEditor::Render()
 		SelectedPositionY = Group.m_Position.y;
 	}
 
-	const float SelectedScreenOffX = (m_MapUiPosOffset.x*SelectedParallaxX+SelectedPositionX)/
-									 UiScreenRect.w * ZoomScreenWidth;
-	const float SelectedScreenOffY = (m_MapUiPosOffset.y*SelectedParallaxY+SelectedPositionY)/
-									 UiScreenRect.h * ZoomScreenHeight;
+	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
+		SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
 
 
 	// background
 	{
-		Graphics()->MapScreen(0, 0, ZoomScreenWidth, ZoomScreenHeight);
+		Graphics()->MapScreen(0, 0, ZoomWorldViewWidth, ZoomWorldViewHeight);
 		Graphics()->TextureSet(m_CheckerTexture);
 		Graphics()->BlendNormal();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 		// align background with grid
-		float StartX = fract(SelectedScreenOffX/(TileSize*2));
-		float StartY = fract(SelectedScreenOffY/(TileSize*2));
+		float StartX = fract(SelectedScreenOff.x/(TileSize*2));
+		float StartY = fract(SelectedScreenOff.y/(TileSize*2));
 		Graphics()->QuadsSetSubset(StartX, StartY,
-								   ZoomScreenWidth/(TileSize*2)+StartX,
-								   ZoomScreenHeight/(TileSize*2)+StartY);
+								   ZoomWorldViewWidth/(TileSize*2)+StartX,
+								   ZoomWorldViewHeight/(TileSize*2)+StartY);
 
-		IGraphics::CQuadItem QuadItem(0, 0, ZoomScreenWidth, ZoomScreenHeight);
+		IGraphics::CQuadItem QuadItem(0, 0, ZoomWorldViewWidth, ZoomWorldViewHeight);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
@@ -333,9 +341,9 @@ void CEditor::Render()
 		const float ParallaxY = Group.m_Parallax.y / 100.f;
 		const float PositionX = Group.m_Position.x;
 		const float PositionY = Group.m_Position.y;
-		const float MapOffX = (m_MapUiPosOffset.x*ParallaxX+PositionX)/UiScreenRect.w * ZoomScreenWidth;
-		const float MapOffY = (m_MapUiPosOffset.y*ParallaxY+PositionY)/UiScreenRect.h * ZoomScreenHeight;
-		CUIRect ScreenRect = { MapOffX, MapOffY, ZoomScreenWidth, ZoomScreenHeight };
+		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
+												  PositionX, PositionX, ParallaxX, ParallaxY);
+		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
 
 		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 							  ScreenRect.y+ScreenRect.h);
@@ -351,6 +359,9 @@ void CEditor::Render()
 			vec4 LyColor = LayerTile.m_Color;
 			CTile *pTiles = pTileBuffer + LayerTile.m_TileStartID;
 
+			if(LyID == m_Map.m_GameLayerID)
+				continue;
+
 			if(m_UiLayerHovered[LyID])
 				LyColor = vec4(1, 0, 1, 1);
 
@@ -362,8 +373,7 @@ void CEditor::Render()
 			else
 				Graphics()->TextureSet(m_Map.m_aTextures[LayerTile.m_ImageID]);
 
-			if(LyID == m_Map.m_GameLayerID)
-				Graphics()->TextureSet(m_EntitiesTexture);
+
 
 			Graphics()->BlendNone();
 			RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
@@ -376,10 +386,39 @@ void CEditor::Render()
 										 0, 0, -1, 0);
 		}
 	}
+
+	// game layer
+	{
+		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
+		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
+
+		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
+							  ScreenRect.y+ScreenRect.h);
+
+		const int LyID = m_Map.m_GameLayerID;
+		const CEditorMap::CLayer& LayerTile = m_Map.m_aLayers[LyID];
+		const float LyWidth = LayerTile.m_Width;
+		const float LyHeight = LayerTile.m_Height;
+		vec4 LyColor = LayerTile.m_Color;
+		CTile *pTiles = pTileBuffer + LayerTile.m_TileStartID;
+
+		Graphics()->TextureSet(m_EntitiesTexture);
+		Graphics()->BlendNone();
+		RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
+									 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_OPAQUE,
+									 0, 0, -1, 0);
+
+		Graphics()->BlendNormal();
+		RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
+									 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_TRANSPARENT,
+									 0, 0, -1, 0);
+	}
+
+
 	Graphics()->BlendNormal();
 
 	// origin and border
-	CUIRect ScreenRect = { SelectedScreenOffX, SelectedScreenOffY, ZoomScreenWidth, ZoomScreenHeight };
+	CUIRect ScreenRect = { SelectedScreenOff.x, SelectedScreenOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
 	Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 						  ScreenRect.y+ScreenRect.h);
 
@@ -410,18 +449,18 @@ void CEditor::Render()
 	{
 		const float GridAlpha = 0.25f;
 		Graphics()->SetColor(1.0f * GridAlpha, 1.0f * GridAlpha, 1.0f * GridAlpha, GridAlpha);
-		float StartX = SelectedScreenOffX - fract(SelectedScreenOffX/TileSize) * TileSize;
-		float StartY = SelectedScreenOffY - fract(SelectedScreenOffY/TileSize) * TileSize;
-		float EndX = SelectedScreenOffX+ZoomScreenWidth;
-		float EndY = SelectedScreenOffY+ZoomScreenHeight;
+		float StartX = SelectedScreenOff.x - fract(SelectedScreenOff.x/TileSize) * TileSize;
+		float StartY = SelectedScreenOff.y - fract(SelectedScreenOff.y/TileSize) * TileSize;
+		float EndX = SelectedScreenOff.x+ZoomWorldViewWidth;
+		float EndY = SelectedScreenOff.y+ZoomWorldViewHeight;
 		for(float x = StartX; x < EndX; x+= TileSize)
 		{
-			IGraphics::CQuadItem Line(x, SelectedScreenOffY, bw, ZoomScreenHeight);
+			IGraphics::CQuadItem Line(x, SelectedScreenOff.y, bw, ZoomWorldViewHeight);
 			Graphics()->QuadsDrawTL(&Line, 1);
 		}
 		for(float y = StartY; y < EndY; y+= TileSize)
 		{
-			IGraphics::CQuadItem Line(SelectedScreenOffX, y, ZoomScreenWidth, bh);
+			IGraphics::CQuadItem Line(SelectedScreenOff.x, y, ZoomWorldViewWidth, bh);
 			Graphics()->QuadsDrawTL(&Line, 1);
 		}
 	}
@@ -454,6 +493,19 @@ void CEditor::Render()
 	}
 }
 
+inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
+										   float ParallaxX, float ParallaxY)
+{
+	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
+	// is based on the center of the screen
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const float MapOffX = (((m_MapUiPosOffset.x+UiScreenRect.w*0.5) * ParallaxX) - UiScreenRect.w*0.5)/
+						  UiScreenRect.w * WorldWidth + PosX;
+	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/
+						  UiScreenRect.h * WorldHeight + PosY;
+	return vec2(MapOffX, MapOffY);
+}
+
 void CEditor::RenderUI()
 {
 	const CUIRect UiScreenRect = m_UiScreenRect;
@@ -472,6 +524,48 @@ void CEditor::RenderUI()
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
+
+	if(m_UiSelectedLayer >= 0)
+	{
+		// TODO: remove
+		int SelectedGroupID = -1;
+		// find the group the layer is in
+		const int GroupCount = m_Map.m_aGroups.size();
+		for(int gi = 0; gi < GroupCount; gi++)
+		{
+			const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+			const int LayerCount = Group.m_LayerCount;
+			for(int li = 0; li < LayerCount; li++)
+			{
+				if(Group.m_apLayerIDs[li] == m_UiSelectedLayer)
+				{
+					SelectedGroupID = gi;
+					break;
+				}
+			}
+		}
+
+		dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
+		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[SelectedGroupID];
+		char aBuff[128];
+		CUIRect ButtonRect;
+
+		// parallax
+		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+		NavRect.HSplitTop(Spacing, 0, &NavRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Parallax = (%g, %g)",
+				   SelectedGroup.m_Parallax.x, SelectedGroup.m_Parallax.y);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// position
+		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+		NavRect.HSplitTop(Spacing, 0, &NavRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Position = (%g, %g)",
+				   SelectedGroup.m_Position.x, SelectedGroup.m_Position.y);
+		DrawText(ButtonRect, aBuff, FontSize);
+	}
 
 	const int GroupCount = m_Map.m_aGroups.size();
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -505,7 +599,10 @@ void CEditor::RenderUI()
 		DrawText(ExpandBut, IsOpen ? "-" : "+", FontSize);
 
 		char aGroupName[64];
-		str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
+		if(m_Map.m_GameGroupID == gi)
+			str_format(aGroupName, sizeof(aGroupName), "Game group");
+		else
+			str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
 		DrawText(ButtonRect, aGroupName, FontSize);
 
 		if(m_UiGroupOpen[gi])
@@ -541,7 +638,10 @@ void CEditor::RenderUI()
 					DrawRect(ButtonRect, ButColor);
 
 				char aLayerName[64];
-				str_format(aLayerName, sizeof(aLayerName), "Layer #%d", li);
+				if(m_Map.m_GameLayerID == LyID)
+					str_format(aLayerName, sizeof(aLayerName), "Game Layer");
+				else
+					str_format(aLayerName, sizeof(aLayerName), "Layer #%d", li);
 				DrawText(ButtonRect, aLayerName, FontSize);
 			}
 		}

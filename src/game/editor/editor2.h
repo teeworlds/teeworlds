@@ -113,6 +113,10 @@ class CEditor: public IEditor
 
 	void Update();
 	void Render();
+
+	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
+					  float ParallaxY);
+
 	void RenderUI();
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
