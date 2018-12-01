@@ -6,6 +6,7 @@
 #include <engine/demo.h>
 #include <engine/friends.h>
 #include <engine/graphics.h>
+#include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -199,14 +200,35 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	CUIRect Label, Row;
 	MainView.HSplitBottom(80.0f, &MainView, 0);
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f+ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
 
 	// player options
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Player options"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
-	MainView.Margin(5.0f, &MainView);
+
+	// scroll
+	CUIRect Scroll;
+	int NumClients = 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(i != m_pClient->m_LocalClientID && m_pClient->m_aClients[i].m_Active)
+			NumClients++;
+	float Length = ButtonHeight * NumClients;
+	static float s_ScrollValue = 0.0f;
+	int ScrollNum = (int)((Length - MainView.h)/20.0f)+1;
+	if(ScrollNum > 0)
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&MainView))
+			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&MainView))
+			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
+	}
+	MainView.VSplitRight(20.0f, &MainView, &Scroll);
+	Scroll.HSplitTop(ButtonHeight, 0, &Scroll);
+	RenderTools()->DrawUIRect(&Scroll, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Scroll.HMargin(5.0f, &Scroll);
+	s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
 
 	// headline
 	MainView.HSplitTop(ButtonHeight, &Row, &MainView);
@@ -232,12 +254,20 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
+	// background
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.Margin(5.0f, &MainView);
+
+	UI()->ClipEnable(&MainView);
+	if(Length > MainView.h)
+		MainView.y += (MainView.h - Length) * s_ScrollValue;
+
 	// options
 	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
 	int Teams[3] = { TEAM_RED, TEAM_BLUE, TEAM_SPECTATORS };
-	for(int Team = 0; Team < 3; ++Team)
+	for(int Team = 0, Count = 0; Team < 3; ++Team)
 	{
-		for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
+		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
 			if(i == m_pClient->m_LocalClientID || !m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Teams[Team])
 				continue;
@@ -295,6 +325,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			}
 		}
 	}
+
+	UI()->ClipDisable();
 }
 
 void CMenus::RenderServerInfo(CUIRect MainView)

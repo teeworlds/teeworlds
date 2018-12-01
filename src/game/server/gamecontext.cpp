@@ -275,7 +275,7 @@ void CGameContext::SendSettings(int ClientID)
 	Msg.m_SpecVote = g_Config.m_SvVoteSpectate;
 	Msg.m_TeamLock = m_LockTeams != 0;
 	Msg.m_TeamBalance = g_Config.m_SvTeambalanceTime != 0;
-	Msg.m_PlayerSlots = Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	Msg.m_PlayerSlots = g_Config.m_SvPlayerSlots;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -601,6 +601,10 @@ void CGameContext::OnClientEnter(int ClientID)
 	NewClientInfoMsg.m_pClan = Server()->ClientClan(ClientID);
 	NewClientInfoMsg.m_Country = Server()->ClientCountry(ClientID);
 	NewClientInfoMsg.m_Silent = false;
+
+	if(g_Config.m_SvSilentSpectatorMode && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS)
+		NewClientInfoMsg.m_Silent = true;
+
 	for(int p = 0; p < 6; p++)
 	{
 		NewClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
@@ -695,6 +699,8 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		Msg.m_ClientID = ClientID;
 		Msg.m_pReason = pReason;
 		Msg.m_Silent = false;
+		if(g_Config.m_SvSilentSpectatorMode && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS)
+			Msg.m_Silent = true;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 	}
 
@@ -1410,7 +1416,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Chain("sv_vote_kick_min", ConchainSettingUpdate, this);
 	Console()->Chain("sv_vote_spectate", ConchainSettingUpdate, this);
 	Console()->Chain("sv_teambalance_time", ConchainSettingUpdate, this);
-	Console()->Chain("sv_spectator_slots", ConchainSettingUpdate, this);
+	Console()->Chain("sv_player_slots", ConchainSettingUpdate, this);
 
 	Console()->Chain("sv_scorelimit", ConchainGameinfoUpdate, this);
 	Console()->Chain("sv_timelimit", ConchainGameinfoUpdate, this);

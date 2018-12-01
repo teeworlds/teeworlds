@@ -534,6 +534,7 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 	if(str_comp(pEntry->m_Info.m_aGameType, "DM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "TDM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "CTF") == 0 ||
 		str_comp(pEntry->m_Info.m_aGameType, "LTS") == 0 ||	str_comp(pEntry->m_Info.m_aGameType, "LMS") == 0)
 		pEntry->m_Info.m_Flags |= FLAG_PURE;
+
 	if(str_comp(pEntry->m_Info.m_aMap, "dm1") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm2") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm3") == 0 ||
 		str_comp(pEntry->m_Info.m_aMap, "dm6") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm7") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm8") == 0 ||
 		str_comp(pEntry->m_Info.m_aMap, "dm9") == 0 ||

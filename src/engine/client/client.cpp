@@ -862,6 +862,10 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	if(pInfo->m_NumClients < 0 || pInfo->m_NumClients > MAX_CLIENTS || pInfo->m_MaxClients < 0 || pInfo->m_MaxClients > MAX_CLIENTS ||
 		pInfo->m_NumPlayers < 0 || pInfo->m_NumPlayers > pInfo->m_NumClients || pInfo->m_MaxPlayers < 0 || pInfo->m_MaxPlayers > pInfo->m_MaxClients)
 		return -1;
+	// drop standard gametype with more than MAX_PLAYERS
+	if(pInfo->m_MaxPlayers > MAX_PLAYERS && (str_comp(pInfo->m_aGameType, "DM") == 0 || str_comp(pInfo->m_aGameType, "TDM") == 0 || str_comp(pInfo->m_aGameType, "CTF") == 0 ||
+		str_comp(pInfo->m_aGameType, "LTS") == 0 || str_comp(pInfo->m_aGameType, "LMS") == 0))
+		return -1;
 
 	// use short version
 	if(!pToken)

@@ -537,7 +537,7 @@ private:
 	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo);
-	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column);
+	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);

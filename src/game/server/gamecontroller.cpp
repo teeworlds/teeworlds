@@ -60,34 +60,40 @@ void IGameController::DoActivityCheck()
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(GameServer()->m_apPlayers[i] && !GameServer()->m_apPlayers[i]->IsDummy() && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS &&
+		if(GameServer()->m_apPlayers[i] && !GameServer()->m_apPlayers[i]->IsDummy() && (GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS || g_Config.m_SvInactiveKick > 0) &&
 			!Server()->IsAuthed(i) && (GameServer()->m_apPlayers[i]->m_InactivityTickCounter > g_Config.m_SvInactiveKickTime*Server()->TickSpeed()*60))
 		{
-			switch(g_Config.m_SvInactiveKick)
-			{
-			case 0:
+			if (GameServer()->m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS) {
+				Server()->Kick(i, "Kicked for inactivity");
+			}
+			else {
+				switch(g_Config.m_SvInactiveKick)
 				{
-					// move player to spectator
-					DoTeamChange(GameServer()->m_apPlayers[i], TEAM_SPECTATORS);
-				}
-				break;
-			case 1:
-				{
-					// move player to spectator if the reserved slots aren't filled yet, kick him otherwise
-					int Spectators = 0;
-					for(int j = 0; j < MAX_CLIENTS; ++j)
-						if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
-							++Spectators;
-					if(Spectators >= g_Config.m_SvSpectatorSlots)
-						Server()->Kick(i, "Kicked for inactivity");
-					else
+				case 0:
+				case 1:
+					{
+						// move player to spectator
 						DoTeamChange(GameServer()->m_apPlayers[i], TEAM_SPECTATORS);
-				}
-				break;
-			case 2:
-				{
-					// kick the player
-					Server()->Kick(i, "Kicked for inactivity");
+					}
+					break;
+				case 2:
+					{
+						// move player to spectator if the reserved slots aren't filled yet, kick him otherwise
+						int Spectators = 0;
+						for(int j = 0; j < MAX_CLIENTS; ++j)
+							if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
+								++Spectators;
+						if(Spectators >= Server()->MaxClients() - g_Config.m_SvPlayerSlots)
+							Server()->Kick(i, "Kicked for inactivity");
+						else
+							DoTeamChange(GameServer()->m_apPlayers[i], TEAM_SPECTATORS);
+					}
+					break;
+				case 3:
+					{
+						// kick the player
+						Server()->Kick(i, "Kicked for inactivity");
+					}
 				}
 			}
 		}
@@ -1070,7 +1076,7 @@ bool IGameController::CanJoinTeam(int Team, int NotThisID) const
 
 	// check if there're enough player slots left
 	int TeamMod = GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS ? -1 : 0;
-	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < g_Config.m_SvPlayerSlots;
 }
 
 int IGameController::ClampTeam(int Team) const
@@ -1143,7 +1149,7 @@ int IGameController::GetStartTeam()
 	}
 
 	// check if there're enough player slots left
-	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < Server()->MaxClients()-g_Config.m_SvSpectatorSlots)
+	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < g_Config.m_SvPlayerSlots)
 	{
 		++m_aTeamSize[Team];
 		m_UnbalancedTick = TBALANCE_CHECK;
