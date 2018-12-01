@@ -35,7 +35,7 @@ void CScoreboard::OnReset()
 {
 	m_Active = false;
 	m_PlayerLines = 0;
-
+	m_SkipPlayerStatsReset = false;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		ResetPlayerStats(i);
 }
@@ -216,7 +216,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 			pTitle = Localize("Game over");
 		else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_ROUNDOVER)
+		{
 			pTitle = Localize("Round over");
+			m_SkipPlayerStatsReset = true;
+		}
 		else
 			pTitle = Localize("Scoreboard");
 	}
@@ -608,6 +611,16 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
+	// check if we need to reset the player stats
+	if(!m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick == Client()->GameTick())
+	{
+		m_SkipPlayerStatsReset = true;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+			ResetPlayerStats(i);
+	}
+	else if(m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick != Client()->GameTick())
+		m_SkipPlayerStatsReset = false;
+
 	if(!Active())
 		return;
 
@@ -689,6 +702,7 @@ void CScoreboard::OnRender()
 
 			float tw = TextRender()->TextWidth(0, FontSize, aText, -1);
 			TextRender()->Text(0, Width/2-tw/2, 39, FontSize, aText, -1);
+			m_SkipPlayerStatsReset = true;
 		}
 	}
 
