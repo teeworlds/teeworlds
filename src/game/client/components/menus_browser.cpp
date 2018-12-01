@@ -2164,7 +2164,7 @@ int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
 	str_format(aBuf, sizeof(aBuf), "loaded gametype icon '%s'", aGameIconName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 
-	GameIcon.m_IconTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	GameIcon.m_IconTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, IGraphics::TEXLOAD_LINEARMIPMAPS);
 	pSelf->m_lGameIcons.add(GameIcon);
 	if(!str_comp_nocase(aGameIconName, "mod"))
 		pSelf->m_GameIconDefault = GameIcon.m_IconTexture;
