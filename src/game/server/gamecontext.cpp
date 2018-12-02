@@ -1370,6 +1370,8 @@ void CGameContext::ConchainSettingUpdate(IConsole::IResult *pResult, void *pUser
 	if(pResult->NumArguments())
 	{
 		CGameContext *pSelf = (CGameContext *)pUserData;
+		if(pSelf->Server()->MaxClients() < g_Config.m_SvPlayerSlots)
+			g_Config.m_SvPlayerSlots = pSelf->Server()->MaxClients();
 		pSelf->SendSettings(-1);
 	}
 }
