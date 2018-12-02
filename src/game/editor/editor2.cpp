@@ -9,6 +9,11 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+// TODO:
+// - Fix group position
+// - Fix sun rays being too bright? (might be enveloppe related)
+// - Game mode (draw pickups, flag, ...)
+
 inline float fract(float f)
 {
 	return f - (int)f;
