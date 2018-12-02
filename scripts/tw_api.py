@@ -150,11 +150,7 @@ def get_server_info(address):
 			data = slots[2]
 			player["country"], data = unpack_int(data)
 			player["score"], data = unpack_int(data)
-			is_player, data = unpack_int(data)
-			if is_player:
-				player["player"] = True
-			else:
-				player["player"] = False
+			player["player"], data = unpack_int(data)
 			server_info["players"].append(player)
 
 		return server_info
@@ -185,6 +181,7 @@ class Master_Server_Info(threading.Thread):
 
 def get_list(address):
 	servers = []
+	answer = False
 
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
@@ -197,6 +194,7 @@ def get_list(address):
 		data, addr = sock.recvfrom(1024)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
 		assert token_cl == token, "Master %s send wrong token: %d (%d expected)" % (address, token_cl, token)
+		answer = True
 
 		# Get list request
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETLIST, addr)
@@ -223,7 +221,7 @@ def get_list(address):
 	except AssertionError as e:
 		print(*e.args)
 	except OSError as e: # Timeout
-		if not servers:
+		if not answer:
 			print('> Master %s did not answer' % (address,))
 	except:
 		# import traceback
@@ -241,12 +239,12 @@ if __name__ == '__main__':
 		m.start()
 		time.sleep(0.001) # avoid issues
 
-	servers = []
+	servers = set()
 
 	while len(master_servers) != 0:
 		if master_servers[0].finished == True:
 			if master_servers[0].servers:
-				servers += master_servers[0].servers
+				servers.update(master_servers[0].servers)
 			del master_servers[0]
 		time.sleep(0.001) # be nice
 
@@ -262,15 +260,19 @@ if __name__ == '__main__':
 
 	num_players = 0
 	num_clients = 0
+	num_bots = 0
 
 	while len(servers_info) != 0:
 		if servers_info[0].finished == True:
 			if servers_info[0].info:
 				num_players += servers_info[0].info["num_players"]
 				num_clients += servers_info[0].info["num_clients"]
+				for p in servers_info[0].info["players"]:
+					if p["player"] == 2:
+						num_bots += 1
 
 			del servers_info[0]
 
 		time.sleep(0.001) # be nice
 
-	print(str(num_players) + " players and " + str(num_clients-num_players) + " spectators")
+	print('%d players (%d bots) and %d spectators' % (num_players, num_bots, num_clients - num_players))
