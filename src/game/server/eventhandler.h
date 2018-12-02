@@ -12,7 +12,7 @@ class CEventHandler
 	int m_aTypes[MAX_EVENTS]; // TODO: remove some of these arrays
 	int m_aOffsets[MAX_EVENTS];
 	int m_aSizes[MAX_EVENTS];
-	int m_aClientMasks[MAX_EVENTS];
+	int64 m_aClientMasks[MAX_EVENTS];
 	char m_aData[MAX_DATASIZE];
 
 	class CGameContext *m_pGameServer;
@@ -24,7 +24,7 @@ public:
 	void SetGameServer(CGameContext *pGameServer);
 
 	CEventHandler();
-	void *Create(int Type, int Size, int Mask = -1);
+	void *Create(int Type, int Size, int64 Mask = -1);
 	void Clear();
 	void Snap(int SnappingClient);
 };
