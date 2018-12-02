@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/client.h>
 #include <engine/console.h>
-#include <engine/graphics.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <game/gamecore.h> // StrToInts, IntsToStr
