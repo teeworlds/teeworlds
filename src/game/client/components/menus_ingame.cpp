@@ -50,7 +50,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		return;
 
 	char aBuf[128];
-	CSwitchTeamInfo Info;
+	CSwitchTeamInfo Info = { 0 };
 	GetSwitchTeamInfo(&Info);
 	CUIRect Button, ButtonRow, Label;
 
@@ -108,7 +108,19 @@ void CMenus::RenderGame(CUIRect MainView)
 		// team button
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			if(Info.m_aNotification[0] && Team != TEAM_RED)
+			int RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
+			if(Team != TEAM_RED)
+				++RedTeamSizeNew;
+			else if(Team == TEAM_RED)
+				--RedTeamSizeNew;
+			int BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
+			if(Team != TEAM_BLUE)
+				++BlueTeamSizeNew;
+			else if(Team == TEAM_BLUE)
+				--BlueTeamSizeNew;
+			bool BlockRed = m_pClient->m_ServerSettings.m_TeamBalance && (RedTeamSizeNew - BlueTeamSizeNew >= NUM_TEAMS);
+			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
+			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -121,13 +133,13 @@ void CMenus::RenderGame(CUIRect MainView)
 			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 			static CButtonContainer s_RedButton;
-			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]))
+			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]) && !BlockRed)
 			{
 				m_pClient->SendSwitchTeam(TEAM_RED);
 				SetActive(false);
 			}
 
-			if(Info.m_aNotification[0] && Team != TEAM_BLUE)
+			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue)
 			{
 				if(Info.m_TimeLeft)
 					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -140,7 +152,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 			static CButtonContainer s_BlueButton;
-			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]))
+			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]) && !BlockBlue)
 			{
 				m_pClient->SendSwitchTeam(TEAM_BLUE);
 				SetActive(false);
