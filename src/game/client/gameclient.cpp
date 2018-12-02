@@ -367,6 +367,7 @@ void CGameClient::OnReset()
 
 	m_LocalClientID = -1;
 	m_TeamCooldownTick = 0;
+	m_TeamChangeTime = 0.0f;
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecMode = SPEC_FREEVIEW;
 	m_DemoSpecID = -1;
@@ -623,6 +624,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				return;
 			}
 			m_LocalClientID = pMsg->m_ClientID;
+			m_TeamChangeTime = Client()->LocalTime();
 		}
 		else
 		{
@@ -744,6 +746,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 			if(pMsg->m_ClientID == m_LocalClientID)
 				m_TeamCooldownTick = pMsg->m_CooldownTick;
+			m_TeamChangeTime = Client()->LocalTime();
 		}
 
 		if(pMsg->m_Silent == 0)

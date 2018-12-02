@@ -662,6 +662,18 @@ void CHud::RenderSpectatorHud()
 	TextRender()->TextEx(&Cursor, aBuf, -1);
 }
 
+void CHud::RenderSpectatorNotification()
+{
+	if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS &&
+		m_pClient->m_TeamChangeTime + 5.0f >= Client()->LocalTime())
+	{
+		const char *pText = Localize("Click on a player or a flag to follow it");
+		float FontSize = 16.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, 150 * Graphics()->ScreenAspect() + -w / 2, 30, FontSize, pText, -1);
+	}
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameData)
@@ -684,6 +696,7 @@ void CHud::OnRender()
 			if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
 				RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
 			RenderSpectatorHud();
+			RenderSpectatorNotification();
 		}
 
 		RenderGameTimer();
