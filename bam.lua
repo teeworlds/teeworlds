@@ -274,7 +274,7 @@ function SharedCommonFiles()
 	if not shared_common_files then
 		local network_source = ContentCompile("network_source", "generated/protocol.cpp")
 		local network_header = ContentCompile("network_header", "generated/protocol.h")
-		AddDependency(network_source, network_header)
+		AddDependency(network_source, network_header, "src/engine/shared/protocol.h")
 
 		local nethash = CHash("generated/nethash.cpp", "src/engine/shared/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 		shared_common_files = {network_source, nethash}
