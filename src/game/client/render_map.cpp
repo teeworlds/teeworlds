@@ -234,7 +234,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 
 		float r=1, g=1, b=1, a=1;
 
-		if(q->m_ColorEnv >= 0)
+		if(q->m_ColorEnv >= 0 && pfnEval)
 		{
 			float aChannels[4];
 			pfnEval(q->m_ColorEnvOffset/1000.0f, q->m_ColorEnv, aChannels, pUser);
@@ -286,7 +286,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		float Rot = 0;
 
 		// TODO: fix this
-		if(q->m_PosEnv >= 0)
+		if(q->m_PosEnv >= 0 && pfnEval)
 		{
 			float aChannels[4];
 			pfnEval(q->m_PosEnvOffset/1000.0f, q->m_PosEnv, aChannels, pUser);

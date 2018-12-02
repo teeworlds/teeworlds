@@ -58,6 +58,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
 
 				CLayer LayerTile;
+				LayerTile.m_Type = LAYERTYPE_TILES;
 				LayerTile.m_ImageID = Tilemap.m_Image;
 				LayerTile.m_Width = Tilemap.m_Width;
 				LayerTile.m_Height = Tilemap.m_Height;
@@ -89,6 +90,28 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 					m_GameGroupID = m_aGroups.size();
 				}
 			}
+			else if(pLayer->m_Type == LAYERTYPE_QUADS)
+			{
+				const CMapItemLayerQuads& ItemQuadLayer = *(CMapItemLayerQuads*)pLayer;
+
+				CLayer LayerQuad;
+				LayerQuad.m_Type = LAYERTYPE_QUADS;
+				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
+				LayerQuad.m_QuadStartID = m_aQuads.size();
+				LayerQuad.m_QuadCount = ItemQuadLayer.m_NumQuads;
+				const int LayerID = m_aLayers.add(LayerQuad);
+
+				// TODO: this is extremely slow
+				CQuad *pQuads = (CQuad *)m_File.GetData(ItemQuadLayer.m_Data);
+				const int QuadCount = LayerQuad.m_QuadCount;
+				for(int qi = 0; qi < QuadCount; qi++)
+				{
+					m_aQuads.add(pQuads[qi]);
+				}
+
+				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
+					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
+			}
 		}
 
 		m_aGroups.add(Group);
@@ -105,20 +128,20 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	for(int i = 0; i < ImagesCount && i < MAX_TEXTURES; i++)
 	{
 		int TextureFlags = 0;
-		/*bool FoundQuadLayer = false;
+		bool FoundQuadLayer = false;
 		bool FoundTileLayer = false;
-		for(int k = 0; k < pLayers->NumLayers(); k++)
+		const int LayerCount = m_aLayers.size();
+		for(int li = 0; li < LayerCount; li++)
 		{
-			const CMapItemLayer * const pLayer = pLayers->GetLayer(k);
-			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && ((const CMapItemLayerQuads * const)pLayer)->m_Image == i)
+			const CLayer& Layer = m_aLayers[li];
+			if(!FoundQuadLayer && Layer.m_Type == LAYERTYPE_QUADS && Layer.m_ImageID == i)
 				FoundQuadLayer = true;
-			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap * const)pLayer)->m_Image == i)
+			if(!FoundTileLayer && Layer.m_Type == LAYERTYPE_TILES && Layer.m_ImageID == i)
 				FoundTileLayer = true;
 		}
 		if(FoundTileLayer)
-			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION : IGraphics::TEXLOAD_ARRAY_256;*/
-
-		TextureFlags = IGraphics::TEXLOAD_ARRAY_256;
+			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION :
+											IGraphics::TEXLOAD_ARRAY_256;
 
 		CMapItemImage *pImg = (CMapItemImage *)m_File.GetItem(ImagesStart+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB &&
@@ -180,7 +203,7 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf1.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayer = m_Map.m_GameLayerID;
@@ -278,6 +301,8 @@ void CEditor::Render()
 	float SelectedPositionX = 0;
 	float SelectedPositionY = 0;
 	const int SelectedLayerID = m_UiSelectedLayer;
+	const bool IsSelectedLayerTile = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_TILES;
+	const bool IsSelectedLayerQuad = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_QUADS;
 	int SelectedGroupID = -1;
 	if(SelectedLayerID >= 0)
 	{
@@ -331,6 +356,7 @@ void CEditor::Render()
 
 	// render map
 	CTile* pTileBuffer = &m_Map.m_aTiles[0];
+	CQuad* pQuadBuffer = &m_Map.m_aQuads[0];
 	const int GroupCount = m_Map.m_aGroups.size();
 
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -353,37 +379,53 @@ void CEditor::Render()
 		for(int li = 0; li < LayerCount; li++)
 		{
 			const int LyID = Group.m_apLayerIDs[li];
-			const CEditorMap::CLayer& LayerTile = m_Map.m_aLayers[LyID];
-			const float LyWidth = LayerTile.m_Width;
-			const float LyHeight = LayerTile.m_Height;
-			vec4 LyColor = LayerTile.m_Color;
-			CTile *pTiles = pTileBuffer + LayerTile.m_TileStartID;
+			const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LyID];
 
-			if(LyID == m_Map.m_GameLayerID)
-				continue;
+			if(Layer.m_Type == LAYERTYPE_TILES)
+			{
+				const float LyWidth = Layer.m_Width;
+				const float LyHeight = Layer.m_Height;
+				vec4 LyColor = Layer.m_Color;
+				CTile *pTiles = pTileBuffer + Layer.m_TileStartID;
 
-			if(m_UiLayerHovered[LyID])
-				LyColor = vec4(1, 0, 1, 1);
+				if(LyID == m_Map.m_GameLayerID)
+					continue;
 
-			/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
-				LyColor.a = 0.5f;*/
+				if(m_UiLayerHovered[LyID])
+					LyColor = vec4(1, 0, 1, 1);
 
-			if(LayerTile.m_ImageID == -1)
-				Graphics()->TextureClear();
-			else
-				Graphics()->TextureSet(m_Map.m_aTextures[LayerTile.m_ImageID]);
+				/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
+					LyColor.a = 0.5f;*/
 
+				if(Layer.m_ImageID == -1)
+					Graphics()->TextureClear();
+				else
+					Graphics()->TextureSet(m_Map.m_aTextures[Layer.m_ImageID]);
 
+				Graphics()->BlendNone();
+				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
+											 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_OPAQUE,
+											 0, 0, -1, 0);
 
-			Graphics()->BlendNone();
-			RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
-										 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_OPAQUE,
-										 0, 0, -1, 0);
+				Graphics()->BlendNormal();
+				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
+											 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_TRANSPARENT,
+											 0, 0, -1, 0);
+			}
+			else if(Layer.m_Type == LAYERTYPE_QUADS)
+			{
+				if(Layer.m_ImageID == -1)
+					Graphics()->TextureClear();
+				else
+					Graphics()->TextureSet(m_Map.m_aTextures[Layer.m_ImageID]);
 
-			Graphics()->BlendNormal();
-			RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
-										 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_TRANSPARENT,
-										 0, 0, -1, 0);
+				Graphics()->BlendNormal();
+				if(m_UiLayerHovered[LyID])
+					Graphics()->BlendAdditive();
+
+				RenderTools()->RenderQuads(&pQuadBuffer[Layer.m_QuadStartID], Layer.m_QuadCount,
+						LAYERRENDERFLAG_TRANSPARENT, 0, 0);
+			}
 		}
 	}
 
@@ -422,8 +464,8 @@ void CEditor::Render()
 	Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 						  ScreenRect.y+ScreenRect.h);
 
-	IGraphics::CQuadItem RectX(0, 0, TileSize, 2/FakeToScreenY);
-	IGraphics::CQuadItem RectY(0, 0, 2/FakeToScreenX, TileSize);
+	IGraphics::CQuadItem OriginLineX(0, 0, TileSize, 2/FakeToScreenY);
+	IGraphics::CQuadItem RecOriginLineYtY(0, 0, 2/FakeToScreenX, TileSize);
 	float LayerWidth = m_Map.m_MapMaxWidth * TileSize;
 	float LayerHeight = m_Map.m_MapMaxHeight * TileSize;
 	if(SelectedLayerID)
@@ -444,37 +486,42 @@ void CEditor::Render()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	// grid
-	if(m_ConfigShowGrid)
+	if(SelectedLayerID < 0 || IsSelectedLayerTile)
 	{
-		const float GridAlpha = 0.25f;
-		Graphics()->SetColor(1.0f * GridAlpha, 1.0f * GridAlpha, 1.0f * GridAlpha, GridAlpha);
-		float StartX = SelectedScreenOff.x - fract(SelectedScreenOff.x/TileSize) * TileSize;
-		float StartY = SelectedScreenOff.y - fract(SelectedScreenOff.y/TileSize) * TileSize;
-		float EndX = SelectedScreenOff.x+ZoomWorldViewWidth;
-		float EndY = SelectedScreenOff.y+ZoomWorldViewHeight;
-		for(float x = StartX; x < EndX; x+= TileSize)
+		// grid
+		if(m_ConfigShowGrid)
 		{
-			IGraphics::CQuadItem Line(x, SelectedScreenOff.y, bw, ZoomWorldViewHeight);
-			Graphics()->QuadsDrawTL(&Line, 1);
+			const float GridAlpha = 0.25f;
+			Graphics()->SetColor(1.0f * GridAlpha, 1.0f * GridAlpha, 1.0f * GridAlpha, GridAlpha);
+			float StartX = SelectedScreenOff.x - fract(SelectedScreenOff.x/TileSize) * TileSize;
+			float StartY = SelectedScreenOff.y - fract(SelectedScreenOff.y/TileSize) * TileSize;
+			float EndX = SelectedScreenOff.x+ZoomWorldViewWidth;
+			float EndY = SelectedScreenOff.y+ZoomWorldViewHeight;
+			for(float x = StartX; x < EndX; x+= TileSize)
+			{
+				IGraphics::CQuadItem Line(x, SelectedScreenOff.y, bw, ZoomWorldViewHeight);
+				Graphics()->QuadsDrawTL(&Line, 1);
+			}
+			for(float y = StartY; y < EndY; y+= TileSize)
+			{
+				IGraphics::CQuadItem Line(SelectedScreenOff.x, y, ZoomWorldViewWidth, bh);
+				Graphics()->QuadsDrawTL(&Line, 1);
+			}
 		}
-		for(float y = StartY; y < EndY; y+= TileSize)
-		{
-			IGraphics::CQuadItem Line(SelectedScreenOff.x, y, ZoomWorldViewWidth, bh);
-			Graphics()->QuadsDrawTL(&Line, 1);
-		}
+
+
+		Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->QuadsDrawTL(aBorders, 4);
 	}
 
-
-	Graphics()->SetColor(1, 1, 1, 1);
-	Graphics()->QuadsDrawTL(aBorders, 4);
 	Graphics()->SetColor(0, 0, 1, 1);
-	Graphics()->QuadsDrawTL(&RectX, 1);
+	Graphics()->QuadsDrawTL(&OriginLineX, 1);
 	Graphics()->SetColor(0, 1, 0, 1);
-	Graphics()->QuadsDrawTL(&RectY, 1);
+	Graphics()->QuadsDrawTL(&RecOriginLineYtY, 1);
 
 	Graphics()->QuadsEnd();
 
+	// user interface
 	RenderUI();
 
 	// render mouse cursor
@@ -641,7 +688,10 @@ void CEditor::RenderUI()
 				if(m_Map.m_GameLayerID == LyID)
 					str_format(aLayerName, sizeof(aLayerName), "Game Layer");
 				else
-					str_format(aLayerName, sizeof(aLayerName), "Layer #%d", li);
+					str_format(aLayerName, sizeof(aLayerName), "%s Layer #%d",
+							   m_Map.m_aLayers[LyID].m_Type == LAYERTYPE_TILES ?
+								   "Tile" : "Quad",
+							   li);
 				DrawText(ButtonRect, aLayerName, FontSize);
 			}
 		}

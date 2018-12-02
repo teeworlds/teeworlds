@@ -20,6 +20,9 @@ class IConsole;
 class ITextRender;
 class IStorage;
 
+typedef uint8_t u8;
+typedef uint16_t u16;
+
 struct CEditorMap
 {
 	enum
@@ -30,11 +33,23 @@ struct CEditorMap
 
 	struct CLayer
 	{
+		int m_Type;
 		int m_ImageID;
-		int m_Width;
-		int m_Height;
-		int m_TileStartID;
 		vec4 m_Color;
+
+		union
+		{
+			struct {
+				int m_TileStartID;
+				u16 m_Width;
+				u16 m_Height;
+			};
+
+			struct {
+				int m_QuadStartID;
+				int m_QuadCount;
+			};
+		};
 	};
 
 	struct CGroup
@@ -53,6 +68,7 @@ struct CEditorMap
 
 	// TODO: use a different allocator
 	array<CTile> m_aTiles;
+	array<CQuad> m_aQuads;
 	array<CLayer> m_aLayers;
 	array<CGroup> m_aGroups;
 
@@ -62,8 +78,6 @@ struct CEditorMap
 	bool Save(IStorage *pStorage, const char *pFileName);
 	bool Load(IStorage *pStorage, IGraphics* pGraphics, const char *pFileName);
 };
-
-typedef uint8_t u8;
 
 struct CUIButtonState
 {
