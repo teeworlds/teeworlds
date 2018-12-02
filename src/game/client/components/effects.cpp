@@ -51,6 +51,10 @@ void CEffects::AirJump(vec2 Pos)
 
 void CEffects::DamageIndicator(vec2 Pos, int Amount)
 {
+	// ignore if there is no damage
+	if(Amount == 0)
+		return;
+
 	m_DamageTaken++;
 	int Angle;
 	// create healthmod indicator

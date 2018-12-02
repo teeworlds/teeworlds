@@ -234,8 +234,8 @@ Objects = [
 	NetEvent("Damage:Common", [ # Unused yet
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntAny("m_Angle"),
-		NetIntRange("m_HealthAmount", 1, 9),
-		NetIntRange("m_ArmorAmount", 1, 9),
+		NetIntRange("m_HealthAmount", 0, 9),
+		NetIntRange("m_ArmorAmount", 0, 9),
 		NetBool("m_Self"),
 	]),
 ]
