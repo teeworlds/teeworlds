@@ -537,10 +537,11 @@ void CChat::OnRender()
 	if(m_pClient->m_pMenus->IsActive())
 		return;
 
-	float Width = 300.0f*Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
+	const float Height = 300.0f;
+	const float Width = Height*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
 	float x = 12.0f;
-	float y = 300.0f-20.0f;
+	float y = Height-20.0f;
 	const int LocalCID = m_pClient->m_LocalClientID;
 	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
 	const int LocalTteam = LocalClient.m_Team;
@@ -682,12 +683,38 @@ void CChat::OnRender()
 
 	int64 Now = time_get();
 	const int64 TimeFreq = time_freq();
-	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 90.0f : 200.0f;
+
+	// get scoreboard data
+	const bool IsScoreboardActive = m_pClient->m_pScoreboard->Active();
+	CUIRect ScoreboardRect = m_pClient->m_pScoreboard->GetScoreboardRect();
+	const CUIRect ScoreboardScreen = *UI()->Screen();
+	CUIRect ScoreboardRectFixed;
+	ScoreboardRectFixed.x = ScoreboardRect.x/ScoreboardScreen.w * Width;
+	ScoreboardRectFixed.y = ScoreboardRect.y/ScoreboardScreen.h * Height;
+	ScoreboardRectFixed.w = ScoreboardRect.w/ScoreboardScreen.w * Width;
+	ScoreboardRectFixed.h = ScoreboardRect.h/ScoreboardScreen.h * Height;
+
+	float LineWidth = 200.0f;
+	float HeightLimit = m_Show ? 90.0f : 200.0f;
+
+	if(IsScoreboardActive)
+	{
+		// calculate chat area (height gets a penalty as long lines are better to read)
+		float ReducedLineWidth = min(ScoreboardRectFixed.x - 5.0f - x, LineWidth);
+		float ReducedHeightLimit = max(ScoreboardRectFixed.y+ScoreboardRectFixed.h+5.0f, HeightLimit);
+		float Area1 = ReducedLineWidth * ((Height-HeightLimit) * 0.5f);
+		float Area2 = LineWidth * ((Height-ReducedHeightLimit) * 0.5f);
+
+		if(Area1 >= Area2)
+			LineWidth = ReducedLineWidth;
+		else
+			HeightLimit = ReducedHeightLimit;
+	}
+
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
-	int OffsetType = m_pClient->m_pScoreboard->Active() ? 1 : 0;
+	int OffsetType = IsScoreboardActive ? 1 : 0;
 
 	// get the y offset (calculate it if we haven't done that yet)
 	for(int i = 0; i < MAX_LINES; i++)
@@ -730,7 +757,7 @@ void CChat::OnRender()
 		Rect.x = 0;
 		Rect.y = HeightLimit - 2.0f;
 		Rect.w = LineWidth + x;
-		Rect.h = 300 - HeightLimit - 22.f;
+		Rect.h = Height - HeightLimit - 22.f;
 
 		const float LeftAlpha = 0.85f;
 		const float RightAlpha = 0.05f;
