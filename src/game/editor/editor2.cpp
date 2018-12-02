@@ -206,13 +206,16 @@ void CEditor::Init()
 	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
 		dbg_break();
 	}
-	m_UiSelectedLayer = m_Map.m_GameLayerID;
+	m_UiSelectedLayerID = m_Map.m_GameLayerID;
+	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 }
 
 void CEditor::UpdateAndRender()
 {
+	UI()->StartCheck();
 	Update();
 	Render();
+	UI()->FinishCheck();
 }
 
 bool CEditor::HasUnsavedData() const
@@ -300,30 +303,13 @@ void CEditor::Render()
 	float SelectedParallaxY = 1;
 	float SelectedPositionX = 0;
 	float SelectedPositionY = 0;
-	const int SelectedLayerID = m_UiSelectedLayer;
+	const int SelectedLayerID = m_UiSelectedLayerID;
 	const bool IsSelectedLayerTile = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_TILES;
 	const bool IsSelectedLayerQuad = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_QUADS;
-	int SelectedGroupID = -1;
 	if(SelectedLayerID >= 0)
 	{
-		// find the group the layer is in
-		const int GroupCount = m_Map.m_aGroups.size();
-		for(int gi = 0; gi < GroupCount; gi++)
-		{
-			const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
-			const int LayerCount = Group.m_LayerCount;
-			for(int li = 0; li < LayerCount; li++)
-			{
-				if(Group.m_apLayerIDs[li] == SelectedLayerID)
-				{
-					SelectedGroupID = gi;
-					break;
-				}
-			}
-		}
-
-		dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
-		const CEditorMap::CGroup& Group = m_Map.m_aGroups[SelectedGroupID];
+		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+		const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
 		SelectedParallaxX = Group.m_Parallax.x / 100.f;
 		SelectedParallaxY = Group.m_Parallax.y / 100.f;
 		SelectedPositionX = Group.m_Position.x;
@@ -361,6 +347,9 @@ void CEditor::Render()
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
+		if(m_UiGroupHidden[gi])
+			continue;
+
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 
 		const float ParallaxX = Group.m_Parallax.x / 100.f;
@@ -379,6 +368,9 @@ void CEditor::Render()
 		for(int li = 0; li < LayerCount; li++)
 		{
 			const int LyID = Group.m_apLayerIDs[li];
+			if(m_UiLayerHidden[LyID])
+				continue;
+
 			const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LyID];
 
 			if(Layer.m_Type == LAYERTYPE_TILES)
@@ -430,6 +422,8 @@ void CEditor::Render()
 	}
 
 	// game layer
+	const int LyID = m_Map.m_GameLayerID;
+	if(!m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
 	{
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
@@ -437,7 +431,6 @@ void CEditor::Render()
 		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 							  ScreenRect.y+ScreenRect.h);
 
-		const int LyID = m_Map.m_GameLayerID;
 		const CEditorMap::CLayer& LayerTile = m_Map.m_aLayers[LyID];
 		const float LyWidth = LayerTile.m_Width;
 		const float LyHeight = LayerTile.m_Height;
@@ -566,34 +559,19 @@ void CEditor::RenderUI()
 	CUIRect NavRect, ButtonRect;
 	RightPanel.Margin(3.0f, &NavRect);
 
-	static CUIButtonState s_UiGroupButState[MAX_GROUPS];
-	static CUIButtonState s_UiLayerButState[MAX_LAYERS];
+	static CUIButtonState s_UiGroupButState[MAX_GROUPS] = {};
+	static CUIButtonState s_UiGroupShowButState[MAX_GROUPS] = {};
+	static CUIButtonState s_UiLayerButState[MAX_LAYERS] = {};
+	static CUIButtonState s_UiLayerShowButState[MAX_LAYERS] = {};
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
+	const float ShowButtonWidth = 15.0f;
 
-	if(m_UiSelectedLayer >= 0)
+	if(m_UiSelectedLayerID >= 0)
 	{
-		// TODO: remove
-		int SelectedGroupID = -1;
-		// find the group the layer is in
-		const int GroupCount = m_Map.m_aGroups.size();
-		for(int gi = 0; gi < GroupCount; gi++)
-		{
-			const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
-			const int LayerCount = Group.m_LayerCount;
-			for(int li = 0; li < LayerCount; li++)
-			{
-				if(Group.m_apLayerIDs[li] == m_UiSelectedLayer)
-				{
-					SelectedGroupID = gi;
-					break;
-				}
-			}
-		}
-
-		dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
-		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[SelectedGroupID];
+		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 		char aBuff[128];
 		CUIRect ButtonRect;
 
@@ -621,8 +599,30 @@ void CEditor::RenderUI()
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 
+		CUIRect ExpandBut, ShowButton;
+
+		// show button
+		ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
+		CUIButtonState& ShowButState = s_UiGroupShowButState[gi];
+		UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
+
+		if(ShowButState.m_Clicked)
+			m_UiGroupHidden[gi] ^= 1;
+
+		const bool IsShown = !m_UiGroupHidden[gi];
+
+		vec4 ShowButColor(0.062, 0, 0.19, 1);
+		if(ShowButState.m_Hovered)
+			ShowButColor = vec4(0.28, 0.10, 0.64, 1);
+		if(ShowButState.m_Pressed)
+			ShowButColor = vec4(0.13, 0, 0.40, 1);
+
+		DrawRectBorder(ShowButton, ShowButColor, 1, vec4(0.13, 0, 0.40, 1));
+		DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
+
+		// group button
 		CUIButtonState& ButState = s_UiGroupButState[gi];
-		UiDoButtonBehavior((&m_Map.m_aGroups)+gi, ButtonRect, &ButState);
+		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 		if(ButState.m_Clicked)
 			m_UiGroupOpen[gi] ^= 1;
@@ -640,9 +640,8 @@ void CEditor::RenderUI()
 		else
 			DrawRect(ButtonRect, ButColor);
 
-		CUIRect ExpandBut;
-		ButtonRect.VSplitLeft(ButtonRect.h, &ExpandBut, &ButtonRect);
 
+		ButtonRect.VSplitLeft(ButtonRect.h, &ExpandBut, &ButtonRect);
 		DrawText(ExpandBut, IsOpen ? "-" : "+", FontSize);
 
 		char aGroupName[64];
@@ -664,8 +663,34 @@ void CEditor::RenderUI()
 				ButtonRect.VSplitLeft(10.0f, 0, &ButtonRect);
 
 				dbg_assert(LyID >= 0 && LyID < MAX_LAYERS, "LayerID out of bounds");
+
+				// check whole line for hover
+				CUIButtonState WholeLineState;
+				UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
+				m_UiLayerHovered[LyID] = WholeLineState.m_Hovered;
+
+				// show button
+				ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
+				CUIButtonState& ShowButState = s_UiLayerShowButState[LyID];
+				UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
+
+				if(ShowButState.m_Clicked)
+					m_UiLayerHidden[LyID] ^= 1;
+
+				const bool IsShown = !m_UiLayerHidden[LyID];
+
+				vec4 ShowButColor(0.062, 0, 0.19, 1);
+				if(ShowButState.m_Hovered)
+					ShowButColor = vec4(0.28, 0.10, 0.64, 1);
+				if(ShowButState.m_Pressed)
+					ShowButColor = vec4(0.13, 0, 0.40, 1);
+
+				DrawRectBorder(ShowButton, ShowButColor, 1, vec4(0.13, 0, 0.40, 1));
+				DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
+
+				// layer button
 				CUIButtonState& ButState = s_UiLayerButState[LyID];
-				UiDoButtonBehavior((&m_Map.m_aGroups)+gi*1000+li, ButtonRect, &ButState);
+				UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 				vec4 ButColor(0.062, 0, 0.19, 1);
 				if(ButState.m_Hovered)
@@ -673,11 +698,13 @@ void CEditor::RenderUI()
 				if(ButState.m_Pressed)
 					ButColor = vec4(0.13, 0, 0.40, 1);
 
-				m_UiLayerHovered[LyID] = ButState.m_Hovered;
 				if(ButState.m_Clicked)
-					m_UiSelectedLayer = LyID;
+				{
+					m_UiSelectedLayerID = LyID;
+					m_UiSelectedGroupID = gi;
+				}
 
-				const bool IsSelected = m_UiSelectedLayer == LyID;
+				const bool IsSelected = m_UiSelectedLayerID == LyID;
 
 				if(IsSelected)
 					DrawRectBorder(ButtonRect, ButColor, 1, vec4(1, 0, 0, 1));
@@ -746,10 +773,16 @@ inline void CEditor::DrawText(const CUIRect& Rect, const char* pText, float Font
 
 void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState)
 {
-	if(!UI()->MouseButton(0) && pButState->m_Pressed)
-		pButState->m_Clicked = true;
-	else
-		pButState->m_Clicked = false;
+	pButState->m_Clicked = false;
+
+	if(UI()->CheckActiveItem(pID))
+	{
+		if(!UI()->MouseButton(0))
+		{
+			pButState->m_Clicked = true;
+			UI()->SetActiveItem(0);
+		}
+	}
 
 	pButState->m_Hovered = false;
 	pButState->m_Pressed = false;
@@ -763,10 +796,11 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 		if(UI()->MouseButton(0))
 		{
 			pButState->m_Pressed = true;
-			if(pID)
+			if(pID && !UI()->GetActiveItem())
 				UI()->SetActiveItem(pID);
 		}
 	}
+
 }
 
 void CEditor::Reset()

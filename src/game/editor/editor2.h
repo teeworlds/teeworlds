@@ -122,8 +122,11 @@ class CEditor: public IEditor
 
 	CUIRect m_UiScreenRect;
 	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
+	u8 m_UiGroupHidden[MAX_GROUPS] = {0};
 	u8 m_UiLayerHovered[MAX_LAYERS] = {0};
-	int m_UiSelectedLayer = -1;
+	u8 m_UiLayerHidden[MAX_LAYERS] = {0};
+	int m_UiSelectedLayerID = -1;
+	int m_UiSelectedGroupID = -1;
 
 	void Update();
 	void Render();
