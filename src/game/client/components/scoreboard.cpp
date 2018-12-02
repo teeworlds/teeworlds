@@ -111,6 +111,10 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
+		if(g_Config.m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		{
+			Cursor.m_X += Cursor.m_FontSize;
+		}
 		if(m_pClient->m_aClients[i].m_aClan[0])
 		{
 			str_format(aBuf, sizeof(aBuf), "%s ", m_pClient->m_aClients[i].m_aClan);
@@ -145,6 +149,10 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
+		if(g_Config.m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		{
+			RenderTools()->DrawClientID(TextRender(), &Cursor, i);
+		}
 		if(m_pClient->m_aClients[i].m_aClan[0])
 		{
 			str_format(aBuf, sizeof(aBuf), "%s ", m_pClient->m_aClients[i].m_aClan);
@@ -172,9 +180,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float TeeSizeMod = 1.0f;
 	float Spacing = 2.0f;
 	float CountryFlagOffset = x+2.0f, CountryFlagLength = 20.f;
-	float NameOffset = CountryFlagOffset+CountryFlagLength, NameLength = 128.0f;
+	float IdSize = g_Config.m_ClShowUserId ? LineHeight : 0.0f;
+	float NameOffset = CountryFlagOffset+CountryFlagLength+IdSize, NameLength = 128.0f-IdSize/2;
 	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
-	float ClanOffset = NameOffset+NameLength, ClanLength = 88.0f;
+	float ClanOffset = NameOffset+NameLength, ClanLength = 88.0f-IdSize/2;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
 	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = 35.0f;
@@ -505,6 +514,13 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// TODO: make an eye icon or something
 			if(RenderDead && pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_WATCHING)
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
+
+			// id
+			if(g_Config.m_ClShowUserId)
+			{
+				TextRender()->SetCursor(&Cursor, NameOffset+TeeLength-IdSize+Spacing, y+Spacing, FontSize, TEXTFLAG_RENDER);
+				RenderTools()->DrawClientID(TextRender(), &Cursor, pInfo->m_ClientID);
+			}
 
 			// name
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
