@@ -40,7 +40,8 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	for(int gi = 0; gi < GroupsNum; gi++)
 	{
 		CMapItemGroup* pGroup = (CMapItemGroup*)m_File.GetItem(GroupsStart+gi, 0, 0);
-		dbg_msg("editor", "Group#%d NumLayers=%d", gi, pGroup->m_NumLayers);
+		dbg_msg("editor", "Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers,
+				pGroup->m_OffsetX, pGroup->m_OffsetY);
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap::CGroup Group;
@@ -208,7 +209,7 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/parallax_test.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
@@ -529,8 +530,8 @@ void CEditor::Render()
 		Graphics()->WrapClamp();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1,0,1,1);
-		/*if(ms_pUiGotContext == UI()->HotItem())
-			Graphics()->SetColor(1,0,0,1);*/
+		/*if(UI()->HotItem())
+			Graphics()->SetColor(1,0.5,1,1);*/
 		IGraphics::CQuadItem QuadItem(m_UiMousePos.x, m_UiMousePos.y, 16.0f, 16.0f);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
@@ -804,6 +805,10 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 			if(pID && !UI()->GetActiveItem())
 				UI()->SetActiveItem(pID);
 		}
+	}
+	else if(pID && UI()->HotItem() == pID)
+	{
+		UI()->SetHotItem(0);
 	}
 
 }
