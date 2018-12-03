@@ -58,6 +58,8 @@ void CBroadcast::RenderServerBroadcast()
 	if(m_pClient->m_pChat->IsActive() || m_pClient->Client()->State() != IClient::STATE_ONLINE)
 		return;
 
+	Graphics()->MapScreen(0, 0, Width, Height);
+
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 
 	CUIRect ScreenRect = {0, 0, Width, Height};
