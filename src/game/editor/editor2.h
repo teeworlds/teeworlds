@@ -56,8 +56,10 @@ struct CEditorMap
 	{
 		int m_apLayerIDs[MAX_GROUP_LAYERS];
 		int m_LayerCount = 0;
-		vec2 m_Parallax;
-		vec2 m_Position;
+		int m_ParallaxX;
+		int m_ParallaxY;
+		int m_OffsetX;
+		int m_OffsetY;
 	};
 
 	CMap m_File;

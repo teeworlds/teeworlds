@@ -10,7 +10,6 @@
 #include <engine/textrender.h>
 
 // TODO:
-// - Fix group position
 // - Fix sun rays being too bright? (might be enveloppe related)
 // - Game mode (draw pickups, flag, ...)
 
@@ -45,8 +44,10 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap::CGroup Group;
-		Group.m_Parallax = vec2(pGroup->m_ParallaxX, pGroup->m_ParallaxY);
-		Group.m_Position = vec2(pGroup->m_OffsetX, pGroup->m_OffsetY);
+		Group.m_ParallaxX = pGroup->m_ParallaxX;
+		Group.m_ParallaxY = pGroup->m_ParallaxY;
+		Group.m_OffsetX = pGroup->m_OffsetX;
+		Group.m_OffsetY = pGroup->m_OffsetY;
 		Group.m_LayerCount = 0;
 
 		for(int li = 0; li < GroupLayerCount; li++)
@@ -209,7 +210,7 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/parallax_test.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
@@ -316,10 +317,10 @@ void CEditor::Render()
 	{
 		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
 		const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
-		SelectedParallaxX = Group.m_Parallax.x / 100.f;
-		SelectedParallaxY = Group.m_Parallax.y / 100.f;
-		SelectedPositionX = Group.m_Position.x;
-		SelectedPositionY = Group.m_Position.y;
+		SelectedParallaxX = Group.m_ParallaxX / 100.f;
+		SelectedParallaxY = Group.m_ParallaxY / 100.f;
+		SelectedPositionX = Group.m_OffsetX;
+		SelectedPositionY = Group.m_OffsetY;
 	}
 
 	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
@@ -358,12 +359,12 @@ void CEditor::Render()
 
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 
-		const float ParallaxX = Group.m_Parallax.x / 100.f;
-		const float ParallaxY = Group.m_Parallax.y / 100.f;
-		const float PositionX = Group.m_Position.x;
-		const float PositionY = Group.m_Position.y;
+		const float ParallaxX = Group.m_ParallaxX / 100.f;
+		const float ParallaxY = Group.m_ParallaxY / 100.f;
+		const float OffsetX = Group.m_OffsetX;
+		const float OffsetY = Group.m_OffsetY;
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
-												  PositionX, PositionX, ParallaxX, ParallaxY);
+												  OffsetX, OffsetY, ParallaxX, ParallaxY);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
 
 		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
@@ -585,16 +586,16 @@ void CEditor::RenderUI()
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 		NavRect.HSplitTop(Spacing, 0, &NavRect);
 		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Parallax = (%g, %g)",
-				   SelectedGroup.m_Parallax.x, SelectedGroup.m_Parallax.y);
+		str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
+				   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
 		DrawText(ButtonRect, aBuff, FontSize);
 
 		// position
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 		NavRect.HSplitTop(Spacing, 0, &NavRect);
 		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Position = (%g, %g)",
-				   SelectedGroup.m_Position.x, SelectedGroup.m_Position.y);
+		str_format(aBuff, sizeof(aBuff), "Position = (%d, %d)",
+				   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
 		DrawText(ButtonRect, aBuff, FontSize);
 	}
 
