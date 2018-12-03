@@ -10,7 +10,6 @@
 #include <engine/textrender.h>
 
 // TODO:
-// - Fix sun rays being too bright? (might be enveloppe related)
 // - Game mode (draw pickups, flag, ...)
 
 inline float fract(float f)
@@ -139,16 +138,12 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	int EnvPointStart, EnvPointCount;
 	File.GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeCount);
 	File.GetType(MAPITEMTYPE_ENVPOINTS, &EnvPointStart, &EnvPointCount);
+	// FIXME: EnvPointCount is always 1?
 
 	dbg_msg("editor", "EnvelopeStart=%d EnvelopeCount=%d EnvPointStart=%d EnvPointCount=%d",
 			EnvelopeStart, EnvelopeCount, EnvPointStart, EnvPointCount);
 
-	// points
 	CEnvPoint* pEnvPoints = (CEnvPoint*)File.GetItem(EnvPointStart, 0, 0);
-	for(int pi = 0; pi < EnvPointCount; pi++)
-	{
-		m_aEnvPoints.add(pEnvPoints[pi]);
-	}
 
 	// envelopes
 	for(int ei = 0; ei < EnvelopeCount; ei++)
@@ -157,13 +152,22 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 		const CMapItemEnvelope Env = *pItem;
 		m_aEnvelopes.add(Env);
 
-		if(Env.m_Version < 3)
+		if(Env.m_Version >= 3)
 		{
-			// backwards compatibility, zero out new version values
-			for(int pi = 0; pi < Env.m_NumPoints; pi++)
+			for(int i = 0; i < Env.m_NumPoints; i++)
+				m_aEnvPoints.add(pEnvPoints[i + Env.m_StartPoint]);
+		}
+		else
+		{
+			// backwards compatibility
+			for(int i = 0; i < Env.m_NumPoints; i++)
 			{
-				mem_zero((u8*)(&m_aEnvPoints[Env.m_StartPoint + pi]) + sizeof(CEnvPoint_v1),
-						sizeof(CEnvPoint)-sizeof(CEnvPoint_v1));
+				// convert CEnvPoint_v1 -> CEnvPoint
+				CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[i + Env.m_StartPoint];
+				CEnvPoint Point;
+				mem_zero(&Point, sizeof(Point));
+				mem_copy(&Point, pEnvPoint_v1, sizeof(CEnvPoint_v1));
+				m_aEnvPoints.add(Point);
 			}
 		}
 	}
@@ -251,7 +255,7 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/parallax_test.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
@@ -615,7 +619,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 	const CMapItemEnvelope& Env = m_Map.m_aEnvelopes[EnvID];
 	const CEnvPoint* pPoints = &m_Map.m_aEnvPoints[0];
 
-	float Time = Client()->LocalTime() * 0.1f;
+	float Time = Client()->LocalTime();
 	RenderTools()->RenderEvalEnvelope(pPoints + Env.m_StartPoint, Env.m_NumPoints, 4,
 									  Time+TimeOffset, pChannels);
 }
