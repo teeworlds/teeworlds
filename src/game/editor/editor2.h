@@ -1,4 +1,7 @@
 // LordSk
+#ifndef GAME_EDITOR_EDITOR2_H
+#define GAME_EDITOR_EDITOR2_H
+
 #include <stdint.h>
 #include <base/system.h>
 #include <base/tl/array.h>
@@ -11,6 +14,8 @@
 #include <game/client/render.h>
 #include <generated/client_data.h>
 #include <game/client/components/mapimages.h>
+
+#include "input_console.h"
 
 
 class IStorage;
@@ -79,8 +84,11 @@ struct CEditorMap
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	int m_TextureCount = 0;
 
+	IGraphics* m_pGraphics;
+
 	bool Save(IStorage *pStorage, const char *pFileName);
 	bool Load(IStorage *pStorage, IGraphics* pGraphics, const char *pFileName);
+	void Clear();
 };
 
 struct CUIButtonState
@@ -119,6 +127,7 @@ class CEditor: public IEditor
 	IGraphics::CTextureHandle m_GameTexture;
 
 	CEditorMap m_Map;
+	CEditorInputConsole m_InputConsole;
 
 	bool m_ConfigShowGrid = true;
 	bool m_ConfigShowGameEntities = true;
@@ -158,7 +167,9 @@ class CEditor: public IEditor
 	void Reset();
 
 	int Save(const char* pFilename);
-	int Load(const char *pFileName, int StorageType);
+	bool LoadMap(const char *pFileName);
+
+	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
 	inline IInput *Input() { return m_pInput; };
@@ -178,3 +189,5 @@ public:
 	void UpdateAndRender();
 	bool HasUnsavedData() const;
 };
+
+#endif

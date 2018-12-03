@@ -2,15 +2,15 @@
 #include "editor2.h"
 
 #include <engine/client.h>
-#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 
 // TODO:
-// - Game mode (draw pickups, flag, ...)
+// - Editor console
 
 inline float fract(float f)
 {
@@ -24,6 +24,8 @@ bool CEditorMap::Save(IStorage* pStorage, const char* pFileName)
 
 bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFileName)
 {
+	m_pGraphics = pGraphics; // TODO: move this?
+
 	CDataFileReader File;
 	if(!File.Open(pStorage, pFileName, IStorage::TYPE_ALL))
 		return false;
@@ -31,6 +33,8 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	CMapItemVersion *pItem = (CMapItemVersion *)File.FindItem(MAPITEMTYPE_VERSION, 0);
 	if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
 		return false;
+
+	Clear();
 
 	int GroupsStart, GroupsNum;
 	int LayersStart, LayersNum;
@@ -219,6 +223,21 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	return true;
 }
 
+void CEditorMap::Clear()
+{
+	m_aTiles.clear();
+	m_aQuads.clear();
+	m_aEnvPoints.clear();
+	m_aLayers.clear();
+	m_aGroups.clear();
+	m_aEnvelopes.clear();
+
+	for(int i = 0; i < m_TextureCount; i++)
+	{
+		m_pGraphics->UnloadTexture(&m_aTextures[i]);
+	}
+}
+
 IEditor *CreateEditor() { return new CEditor; }
 
 CEditor::CEditor()
@@ -235,7 +254,7 @@ void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
-	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pConsole = CreateConsole(CFGFLAG_EDITOR);
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
@@ -256,12 +275,6 @@ void CEditor::Init()
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_GameTexture = Graphics()->LoadTexture("game.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
-		dbg_break();
-	}
-	m_UiSelectedLayerID = m_Map.m_GameLayerID;
-	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 
 	// grenade pickup
 	{
@@ -289,6 +302,16 @@ void CEditor::Init()
 		const int VisualSize = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
 		m_RenderLaserPickupSize = vec2(VisualSize * (SpriteW/ScaleFactor),
 									   VisualSize * (SpriteH/ScaleFactor));
+	}
+
+	m_pConsole->Register("ed_load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
+	m_InputConsole.Init(m_pConsole);
+
+	m_pConsole->ExecuteLine("ed_load maps/ctf7.map");
+
+
+	if(!LoadMap("maps/ctf2.map")) {
+		dbg_break();
 	}
 }
 
@@ -1045,4 +1068,23 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 void CEditor::Reset()
 {
 
+}
+
+bool CEditor::LoadMap(const char* pFileName)
+{
+	if(m_Map.Load(m_pStorage, m_pGraphics, pFileName))
+	{
+	   m_UiSelectedLayerID = m_Map.m_GameLayerID;
+	   m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	   return true;
+	}
+	dbg_msg("editor", "failed to load map '%s'", pFileName);
+	return false;
+}
+
+void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
+{
+	dbg_msg("editor", "ConLoad(%s)", pResult->GetString(0));
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->LoadMap(pResult->GetString(0));
 }
