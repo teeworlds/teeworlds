@@ -315,10 +315,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Clan"), -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("K"), -1);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("K", "Kills (scoreboard)"), -1);
 	TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("K"), -1);
 
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("D"), -1);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("D", "Deaths (scoreboard)"), -1);
 	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("D"), -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
