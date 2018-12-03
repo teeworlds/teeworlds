@@ -254,12 +254,42 @@ void CEditor::Init()
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_GameTexture = Graphics()->LoadTexture("game.png",
+		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
+
+	// grenade pickup
+	{
+		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_GRENADE].m_W;
+		const float SpriteH = g_pData->m_aSprites[SPRITE_PICKUP_GRENADE].m_H;
+		const float ScaleFactor = sqrt(SpriteW*SpriteW+SpriteH*SpriteH);
+		const int VisualSize = g_pData->m_Weapons.m_aId[WEAPON_GRENADE].m_VisualSize;
+		m_RenderGrenadePickupSize = vec2(VisualSize * (SpriteW/ScaleFactor),
+										 VisualSize * (SpriteH/ScaleFactor));
+	}
+	// shotgun pickup
+	{
+		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_SHOTGUN].m_W;
+		const float SpriteH = g_pData->m_aSprites[SPRITE_PICKUP_SHOTGUN].m_H;
+		const float ScaleFactor = sqrt(SpriteW*SpriteW+SpriteH*SpriteH);
+		const int VisualSize = g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_VisualSize;
+		m_RenderShotgunPickupSize =vec2(VisualSize * (SpriteW/ScaleFactor),
+										VisualSize * (SpriteH/ScaleFactor));
+	}
+	// laser pickup
+	{
+		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_LASER].m_W;
+		const float SpriteH = g_pData->m_aSprites[SPRITE_PICKUP_LASER].m_H;
+		const float ScaleFactor = sqrt(SpriteW*SpriteW+SpriteH*SpriteH);
+		const int VisualSize = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
+		m_RenderLaserPickupSize = vec2(VisualSize * (SpriteW/ScaleFactor),
+									   VisualSize * (SpriteH/ScaleFactor));
+	}
 }
 
 void CEditor::UpdateAndRender()
@@ -433,7 +463,11 @@ void CEditor::Render()
 				CTile *pTiles = pTileBuffer + Layer.m_TileStartID;
 
 				if(LyID == m_Map.m_GameLayerID)
+				{
+					if(m_ConfigShowGameEntities)
+						RenderLayerGameEntities(Layer);
 					continue;
+				}
 
 				if(m_UiLayerHovered[LyID])
 					LyColor = vec4(1, 0, 1, 1);
@@ -475,7 +509,7 @@ void CEditor::Render()
 
 	// game layer
 	const int LyID = m_Map.m_GameLayerID;
-	if(!m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
+	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
 	{
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
@@ -583,6 +617,129 @@ void CEditor::Render()
 		Graphics()->QuadsEnd();
 		Graphics()->WrapNormal();
 	}
+}
+
+void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
+{
+	const CTile* pTiles = m_Map.m_aTiles.base_ptr() + GameLayer.m_TileStartID;
+	const int LayerWidth = GameLayer.m_Width;
+	const int LayerHeight = GameLayer.m_Height;
+
+	Graphics()->TextureSet(m_GameTexture);
+	Graphics()->QuadsBegin();
+
+	// TODO: cache sprite base positions?
+	struct CEntitySprite
+	{
+		int m_SpriteID;
+		vec2 m_Pos;
+		vec2 m_Size;
+	};
+
+	CEntitySprite aEntitySprites[2048];
+	int EntitySpriteCount = 0;
+
+	const float HealthArmorSize = 64*0.7071067811865475244;
+	const vec2 NinjaSize(128*(256/263.87876003953027518857),
+						 128*(64/263.87876003953027518857));
+
+	const float TileSize = 32.f;
+	const float Time = Client()->LocalTime();
+
+	for(int ty = 0; ty < LayerHeight; ty++)
+	{
+		for(int tx = 0; tx < LayerWidth; tx++)
+		{
+			const int tid = ty*LayerWidth+tx;
+			const u8 Index = pTiles[tid].m_Index - ENTITY_OFFSET;
+			if(!Index)
+				continue;
+
+			vec2 BasePos(tx*TileSize, ty*TileSize);
+			const float Offset = tx + ty;
+			vec2 PickupPos = BasePos;
+			PickupPos.x += cosf(Time*2.0f+Offset)*2.5f;
+			PickupPos.y += sinf(Time*2.0f+Offset)*2.5f;
+
+			if(Index == ENTITY_HEALTH_1)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_HEALTH,
+					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
+					vec2(HealthArmorSize, HealthArmorSize)
+				};
+			}
+			else if(Index == ENTITY_ARMOR_1)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_ARMOR,
+					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
+					vec2(HealthArmorSize, HealthArmorSize)
+				};
+			}
+			else if(Index == ENTITY_WEAPON_GRENADE)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_GRENADE,
+					PickupPos - vec2((m_RenderGrenadePickupSize.x-TileSize)*0.5f,
+						(m_RenderGrenadePickupSize.y-TileSize)*0.5f),
+					m_RenderGrenadePickupSize
+				};
+			}
+			else if(Index == ENTITY_WEAPON_SHOTGUN)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_SHOTGUN,
+					PickupPos - vec2((m_RenderShotgunPickupSize.x-TileSize)*0.5f,
+						(m_RenderShotgunPickupSize.y-TileSize)*0.5f),
+					m_RenderShotgunPickupSize
+				};
+			}
+			else if(Index == ENTITY_WEAPON_LASER)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_LASER,
+					PickupPos - vec2((m_RenderLaserPickupSize.x-TileSize)*0.5f,
+						(m_RenderLaserPickupSize.y-TileSize)*0.5f),
+					m_RenderLaserPickupSize
+				};
+			}
+			else if(Index == ENTITY_POWERUP_NINJA)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_NINJA,
+					PickupPos - vec2((NinjaSize.x-TileSize)*0.5f, (NinjaSize.y-TileSize)*0.5f),
+					NinjaSize
+				};
+			}
+			else if(Index == ENTITY_FLAGSTAND_RED)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_FLAG_RED,
+					BasePos - vec2(0, 54),
+					vec2(42, 84)
+				};
+			}
+			else if(Index == ENTITY_FLAGSTAND_BLUE)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_FLAG_BLUE,
+					BasePos - vec2(0, 54),
+					vec2(42, 84)
+				};
+			}
+		}
+	}
+
+	for(int i = 0; i < EntitySpriteCount; i++)
+	{
+		const CEntitySprite& e = aEntitySprites[i];
+		RenderTools()->SelectSprite(e.m_SpriteID);
+		IGraphics::CQuadItem Quad(e.m_Pos.x, e.m_Pos.y, e.m_Size.x, e.m_Size.y);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+	}
+
+	Graphics()->QuadsEnd();
 }
 
 inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,

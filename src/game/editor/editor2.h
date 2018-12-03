@@ -9,6 +9,7 @@
 #include <game/mapitems.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
+#include <generated/client_data.h>
 #include <game/client/components/mapimages.h>
 
 
@@ -115,10 +116,12 @@ class CEditor: public IEditor
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_GameTexture;
 
 	CEditorMap m_Map;
 
 	bool m_ConfigShowGrid = true;
+	bool m_ConfigShowGameEntities = true;
 
 	float m_GfxScreenWidth;
 	float m_GfxScreenHeight;
@@ -131,8 +134,13 @@ class CEditor: public IEditor
 	int m_UiSelectedLayerID = -1;
 	int m_UiSelectedGroupID = -1;
 
+	vec2 m_RenderGrenadePickupSize;
+	vec2 m_RenderShotgunPickupSize;
+	vec2 m_RenderLaserPickupSize;
+
 	void Update();
 	void Render();
+	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
 					  float ParallaxY);
