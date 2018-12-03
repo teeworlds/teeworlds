@@ -1898,11 +1898,12 @@ void CClient::Run()
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	// connect to the server if wanted
-	/*
-	if(config.cl_connect[0] != 0)
-		Connect(config.cl_connect);
-	config.cl_connect[0] = 0;
-	*/
+	if(g_Config.m_ClConnect[0] != 0)
+	{
+		str_copy(g_Config.m_UiServerAddress, g_Config.m_ClConnect, sizeof(g_Config.m_UiServerAddress));
+		Connect(g_Config.m_ClConnect);
+	}
+	g_Config.m_ClConnect[0] = 0;
 
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);
