@@ -25,20 +25,25 @@ bool CEditorMap::Save(IStorage* pStorage, const char* pFileName)
 
 bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFileName)
 {
-	if(!m_File.Load(pFileName, pStorage))
+	CDataFileReader File;
+	if(!File.Open(pStorage, pFileName, IStorage::TYPE_ALL))
+		return false;
+	// check version
+	CMapItemVersion *pItem = (CMapItemVersion *)File.FindItem(MAPITEMTYPE_VERSION, 0);
+	if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
 		return false;
 
 	int GroupsStart, GroupsNum;
 	int LayersStart, LayersNum;
-	m_File.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
-	m_File.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+	File.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
+	File.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
 	dbg_msg("editor", "GroupsStart=%d GroupsNum=%d LayersStart=%d LayersNum=%d",
 			GroupsStart, GroupsNum, LayersStart, LayersNum);
 
 	for(int gi = 0; gi < GroupsNum; gi++)
 	{
-		CMapItemGroup* pGroup = (CMapItemGroup*)m_File.GetItem(GroupsStart+gi, 0, 0);
+		CMapItemGroup* pGroup = (CMapItemGroup*)File.GetItem(GroupsStart+gi, 0, 0);
 		dbg_msg("editor", "Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers,
 				pGroup->m_OffsetX, pGroup->m_OffsetY);
 		const int GroupLayerCount = pGroup->m_NumLayers;
@@ -52,7 +57,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 
 		for(int li = 0; li < GroupLayerCount; li++)
 		{
-			CMapItemLayer* pLayer = (CMapItemLayer*)m_File.GetItem(LayersStart+GroupLayerStart+li, 0, 0);
+			CMapItemLayer* pLayer = (CMapItemLayer*)File.GetItem(LayersStart+GroupLayerStart+li, 0, 0);
 
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
@@ -75,17 +80,19 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 				const int LayerID = m_aLayers.add(LayerTile);
 
 				// TODO: this is extremely slow
-				CTile *pTiles = (CTile *)m_File.GetData(Tilemap.m_Data);
+				CTile *pTiles = (CTile *)File.GetData(Tilemap.m_Data);
 				int TileCount = Tilemap.m_Width*Tilemap.m_Height;
 				for(int ti = 0; ti < TileCount; ti++)
 				{
-					CTile t = pTiles[ti];
-					const int Skips = t.m_Skip;
-					t.m_Skip = 0;
+					CTile Tile = pTiles[ti];
+					const int Skips = Tile.m_Skip;
+					Tile.m_Skip = 0;
 
 					for(int s = 0; s < Skips; s++)
-						m_aTiles.add(t);
-					m_aTiles.add(t);
+						m_aTiles.add(Tile);
+					m_aTiles.add(Tile);
+
+					TileCount -= Skips;
 				}
 
 				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
@@ -109,7 +116,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 				const int LayerID = m_aLayers.add(LayerQuad);
 
 				// TODO: this is extremely slow
-				CQuad *pQuads = (CQuad *)m_File.GetData(ItemQuadLayer.m_Data);
+				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
 				const int QuadCount = LayerQuad.m_QuadCount;
 				for(int qi = 0; qi < QuadCount; qi++)
 				{
@@ -127,10 +134,44 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	dbg_assert(m_GameLayerID >= 0, "Game layer not found");
 	dbg_assert(m_GameGroupID >= 0, "Game group not found");
 
+	// load envelopes
+	int EnvelopeStart, EnvelopeCount;
+	int EnvPointStart, EnvPointCount;
+	File.GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeCount);
+	File.GetType(MAPITEMTYPE_ENVPOINTS, &EnvPointStart, &EnvPointCount);
+
+	dbg_msg("editor", "EnvelopeStart=%d EnvelopeCount=%d EnvPointStart=%d EnvPointCount=%d",
+			EnvelopeStart, EnvelopeCount, EnvPointStart, EnvPointCount);
+
+	// points
+	CEnvPoint* pEnvPoints = (CEnvPoint*)File.GetItem(EnvPointStart, 0, 0);
+	for(int pi = 0; pi < EnvPointCount; pi++)
+	{
+		m_aEnvPoints.add(pEnvPoints[pi]);
+	}
+
+	// envelopes
+	for(int ei = 0; ei < EnvelopeCount; ei++)
+	{
+		CMapItemEnvelope *pItem = (CMapItemEnvelope *)File.GetItem(EnvelopeStart+ei, 0, 0);
+		const CMapItemEnvelope Env = *pItem;
+		m_aEnvelopes.add(Env);
+
+		if(Env.m_Version < 3)
+		{
+			// backwards compatibility, zero out new version values
+			for(int pi = 0; pi < Env.m_NumPoints; pi++)
+			{
+				mem_zero((u8*)(&m_aEnvPoints[Env.m_StartPoint + pi]) + sizeof(CEnvPoint_v1),
+						sizeof(CEnvPoint)-sizeof(CEnvPoint_v1));
+			}
+		}
+	}
+
 	// load textures
 	// TODO: move this out?
 	int ImagesStart, ImagesCount;
-	m_File.GetType(MAPITEMTYPE_IMAGE, &ImagesStart, &ImagesCount);
+	File.GetType(MAPITEMTYPE_IMAGE, &ImagesStart, &ImagesCount);
 
 	for(int i = 0; i < ImagesCount && i < MAX_TEXTURES; i++)
 	{
@@ -150,12 +191,12 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION :
 											IGraphics::TEXLOAD_ARRAY_256;
 
-		CMapItemImage *pImg = (CMapItemImage *)m_File.GetItem(ImagesStart+i, 0, 0);
+		CMapItemImage *pImg = (CMapItemImage *)File.GetItem(ImagesStart+i, 0, 0);
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB &&
 								pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
 			char Buf[256];
-			char *pName = (char *)m_File.GetData(pImg->m_ImageName);
+			char *pName = (char *)File.GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
 			m_aTextures[i] = pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 													TextureFlags);
@@ -163,7 +204,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 		}
 		else
 		{
-			void *pData = m_File.GetData(pImg->m_ImageData);
+			void *pData = File.GetData(pImg->m_ImageData);
 			m_aTextures[i] = pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 				pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 				CImageInfo::FORMAT_RGBA, TextureFlags);
@@ -210,7 +251,7 @@ void CEditor::Init()
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
-	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/ctf7.map")) {
+	if(!m_Map.Load(m_pStorage, m_pGraphics, "maps/parallax_test.map")) {
 		dbg_break();
 	}
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
@@ -423,7 +464,7 @@ void CEditor::Render()
 					Graphics()->BlendAdditive();
 
 				RenderTools()->RenderQuads(&pQuadBuffer[Layer.m_QuadStartID], Layer.m_QuadCount,
-						LAYERRENDERFLAG_TRANSPARENT, 0, 0);
+						LAYERRENDERFLAG_TRANSPARENT, StaticEnvelopeEval, this);
 			}
 		}
 	}
@@ -551,6 +592,32 @@ inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, 
 	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/
 						  UiScreenRect.h * WorldHeight + PosY;
 	return vec2(MapOffX, MapOffY);
+}
+
+void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
+{
+	CEditor *pThis = (CEditor *)pUser;
+	if(EnvID >= 0)
+		pThis->EnvelopeEval(TimeOffset, EnvID, pChannels);
+}
+
+void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
+{
+	pChannels[0] = 0;
+	pChannels[1] = 0;
+	pChannels[2] = 0;
+	pChannels[3] = 0;
+
+	dbg_assert(EnvID < m_Map.m_aEnvelopes.size(), "EnvID out of bounds");
+	if(EnvID >= m_Map.m_aEnvelopes.size())
+		return;
+
+	const CMapItemEnvelope& Env = m_Map.m_aEnvelopes[EnvID];
+	const CEnvPoint* pPoints = &m_Map.m_aEnvPoints[0];
+
+	float Time = Client()->LocalTime() * 0.1f;
+	RenderTools()->RenderEvalEnvelope(pPoints + Env.m_StartPoint, Env.m_NumPoints, 4,
+									  Time+TimeOffset, pChannels);
 }
 
 void CEditor::RenderUI()

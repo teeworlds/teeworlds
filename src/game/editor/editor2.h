@@ -4,7 +4,7 @@
 #include <base/tl/array.h>
 
 #include <engine/editor.h>
-#include <engine/shared/map.h>
+#include <engine/shared/datafile.h>
 
 #include <game/mapitems.h>
 #include <game/client/ui.h>
@@ -62,7 +62,6 @@ struct CEditorMap
 		int m_OffsetY;
 	};
 
-	CMap m_File;
 	int m_MapMaxWidth = 0;
 	int m_MapMaxHeight = 0;
 	int m_GameLayerID = -1;
@@ -71,8 +70,10 @@ struct CEditorMap
 	// TODO: use a different allocator
 	array<CTile> m_aTiles;
 	array<CQuad> m_aQuads;
+	array<CEnvPoint> m_aEnvPoints;
 	array<CLayer> m_aLayers;
 	array<CGroup> m_aGroups;
+	array<CMapItemEnvelope> m_aEnvelopes;
 
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	int m_TextureCount = 0;
@@ -135,6 +136,8 @@ class CEditor: public IEditor
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
 					  float ParallaxY);
+	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
+	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
 	void RenderUI();
 

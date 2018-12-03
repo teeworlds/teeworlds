@@ -125,7 +125,7 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 	}
 }
 
-void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
+void CRenderTools::RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
 {
 	if(NumPoints == 0)
 	{
@@ -234,7 +234,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 
 		float r=1, g=1, b=1, a=1;
 
-		if(q->m_ColorEnv >= 0 && pfnEval)
+		if(q->m_ColorEnv >= 0)
 		{
 			float aChannels[4];
 			pfnEval(q->m_ColorEnvOffset/1000.0f, q->m_ColorEnv, aChannels, pUser);
@@ -286,7 +286,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 		float Rot = 0;
 
 		// TODO: fix this
-		if(q->m_PosEnv >= 0 && pfnEval)
+		if(q->m_PosEnv >= 0)
 		{
 			float aChannels[4];
 			pfnEval(q->m_PosEnvOffset/1000.0f, q->m_PosEnv, aChannels, pUser);
