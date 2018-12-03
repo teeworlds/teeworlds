@@ -328,7 +328,6 @@ void CGameClient::OnUpdate()
 	}
 }
 
-
 int CGameClient::OnSnapInput(int *pData)
 {
 	return m_pControls->SnapInput(pData);
@@ -373,7 +372,6 @@ void CGameClient::OnReset()
 	m_Tuning = CTuningParams();
 	m_MuteServerBroadcast = false;
 }
-
 
 void CGameClient::UpdatePositions()
 {
@@ -422,7 +420,6 @@ void CGameClient::UpdatePositions()
 	}
 }
 
-
 void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
@@ -441,7 +438,6 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 
 	TempCore.Write(pCharacter);
 }
-
 
 void CGameClient::OnRender()
 {
