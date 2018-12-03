@@ -1,4 +1,5 @@
 import shutil, optparse, os, re, sys, zipfile
+from distutils.dir_util import copy_tree
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
@@ -124,9 +125,9 @@ shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
-	shutil.copytree(source_package_dir+"data", package_dir+"/data")
-	copyfiles(languages_dir, package_dir+"/data/languages")
-	copyfiles(maps_dir, package_dir+"/data/maps")
+	copy_tree(source_package_dir+"data", package_dir+"/data")
+	copy_tree(languages_dir, package_dir+"/data/languages")
+	copy_tree(maps_dir, package_dir+"/data/maps")
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 		shutil.copy(source_package_dir+"SDL2.dll", package_dir)
@@ -145,7 +146,7 @@ if include_src:
 
 if use_bundle:
 	bins = [name, name+'_srv', 'serverlaunch']
-	platforms = ('x86', 'x86_64', 'ppc')
+	platforms = ('x86_64')
 	for bin in bins:
 		to_lipo = []
 		for p in platforms:
@@ -160,19 +161,21 @@ if use_bundle:
 	clientbundle_bin_dir = os.path.join(clientbundle_content_dir, "MacOS")
 	clientbundle_resource_dir = os.path.join(clientbundle_content_dir, "Resources")
 	clientbundle_framework_dir = os.path.join(clientbundle_content_dir, "Frameworks")
+	binary_path = clientbundle_bin_dir + "/" + name+exe_ext
 	os.mkdir(os.path.join(package_dir, "Teeworlds.app"))
 	os.mkdir(clientbundle_content_dir)
 	os.mkdir(clientbundle_bin_dir)
 	os.mkdir(clientbundle_resource_dir)
 	os.mkdir(clientbundle_framework_dir)
-	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
-	copydir("data", clientbundle_resource_dir)
-	os.chdir(languages_dir)
-	copydir("data", "../"+clientbundle_resource_dir)
-	os.chdir("..")
+	copy_tree(source_package_dir+"data", clientbundle_resource_dir+"/data")
+	copy_tree(languages_dir, clientbundle_resource_dir+"/data/languages")
+	copy_tree(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
-	shutil.copy(name+exe_ext, clientbundle_bin_dir)
-	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
+	shutil.copy(source_package_dir+name+exe_ext, clientbundle_bin_dir)
+	os.system("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
+	os.system("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
+	os.system("cp /usr/local/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
+	os.system("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -192,6 +195,9 @@ if use_bundle:
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>%s</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.TeeworldsClient.app</string>
+	<key>NSHighResolutionCapable</key>
 </dict>
 </plist>
 	""" % (version))
@@ -208,10 +214,10 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
-	copydir("data/maps", serverbundle_resource_dir)
+	copy_tree(maps_dir, serverbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
-	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
-	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
+	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
+	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
 	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
