@@ -110,7 +110,10 @@ if __name__ == '__main__':
 		'Content-Transfer-Encoding': '8bit',
 	}
 	for (msg, ctxt), occurrences in l10n_src.items():
-		po.append(polib.POEntry(msgid=msg, msgstr="", occurrences=occurrences, msgctxt=ctxt))
+		commenttxt = ctxt
+		if(commenttxt):
+			commenttxt = 'Context: '+commenttxt
+		po.append(polib.POEntry(msgid=msg, msgstr="", occurrences=occurrences, msgctxt=ctxt, comment=commenttxt))
 	po.save('data/languages/base.pot')
 
 	for filename in os.listdir("data/languages"):
