@@ -1343,7 +1343,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	CUIRect BottomArea;
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
-	static const char *s_HeaderCaption[NUM_FRIEND_TYPES] = { Localize("Online players (%d)"), Localize("Online clanmates (%d)"), Localize("Offline (%d)") };
+	static const char *s_HeaderCaption[NUM_FRIEND_TYPES] =
+		{ Localize("Online players (%d)"), Localize("Online clanmates (%d)"), Localize("Offline (%d)", "friends (server browser)") };
 
 	View.HSplitBottom(3*ms_ListheaderHeight, &View, &BottomArea);
 

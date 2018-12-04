@@ -76,7 +76,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	if(m_pClient->m_GameInfo.m_MatchNum && m_pClient->m_GameInfo.m_MatchCurrent)
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Match"), m_pClient->m_GameInfo.m_MatchCurrent, m_pClient->m_GameInfo.m_MatchNum);
+		str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Match", "rounds (scoreboard)"), m_pClient->m_GameInfo.m_MatchCurrent, m_pClient->m_GameInfo.m_MatchNum);
 		float tw = TextRender()->TextWidth(0, 12.0f, aBuf, -1);
 		TextRender()->Text(0, x+w-tw-10.0f, y, 12.0f, aBuf, -1);
 	}
@@ -315,10 +315,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Clan"), -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("K"), -1);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1);
 	TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("K"), -1);
 
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("D"), -1);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, "D", -1);
 	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("D"), -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -589,9 +589,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength;
-			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "\xe2\x8b\x85\xe2\x8b\x85\xe2\x8b\x85 %d %s", HoleSize, Localize("other players"));
-			TextRender()->TextEx(&Cursor, aBuf, -1);
+			char aBuf[64], aBuf2[64];
+			str_format(aBuf, sizeof(aBuf), Localize("%d other players"), HoleSize);
+			str_format(aBuf2, sizeof(aBuf2), "\xe2\x8b\x85\xe2\x8b\x85\xe2\x8b\x85 %s", aBuf);
+			TextRender()->TextEx(&Cursor, aBuf2, -1);
 			y += LineHeight;
 		}
 	}
