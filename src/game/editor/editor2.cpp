@@ -311,7 +311,7 @@ void CEditor::Init()
 	}
 
 	m_pConsole->Register("ed_load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
-	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI);
+	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	if(!LoadMap("maps/ctf7.map")) {
 		dbg_break();
@@ -1103,7 +1103,18 @@ bool CEditor::LoadMap(const char* pFileName)
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
 {
-	dbg_msg("editor", "ConLoad(%s)", pResult->GetString(0));
 	CEditor *pSelf = (CEditor *)pUserData;
-	pSelf->LoadMap(pResult->GetString(0));
+
+	const int InputTextLen = str_length(pResult->GetString(0));
+	if(InputTextLen < 4)
+		return;
+
+	char aMapPath[256];
+	bool AddMapPath = str_comp_nocase_num(pResult->GetString(0), "maps/", 5) != 0;
+	bool AddMapExtension = str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
+	str_format(aMapPath, sizeof(aMapPath), "%s%s%s", AddMapPath ? "maps/":"", pResult->GetString(0),
+			   AddMapExtension ? ".map":"");
+
+	dbg_msg("editor", "ConLoad(%s)", aMapPath);
+	pSelf->LoadMap(aMapPath);
 }

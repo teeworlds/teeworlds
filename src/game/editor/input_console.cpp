@@ -4,13 +4,15 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
+#include <engine/textrender.h>
 #include <generated/client_data.h>
 #include <game/client/ui.h>
 
-void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI)
+void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender)
 {
 	m_pConsole = pConsole;
 	m_pGraphics = pGraphics;
+	m_pTextRender = pTextRender;
 	m_pUI = pUI;
 }
 
@@ -26,6 +28,15 @@ void CEditorInputConsole::Render()
 	const float ConsoleWidth = ScreenRect.w;
 	const float ConsoleHeight = ScreenRect.h / 3;
 
+	const float FontSize = 10.0f;
+	const float Spacing = 2.0f;
+	const float InputMargin = 5.0f;
+
+	CUIRect InputRect, ConsoleRect;
+	ScreenRect.HSplitTop(ConsoleHeight, &ConsoleRect, 0);
+	ConsoleRect.HSplitBottom(FontSize + InputMargin * 2, &ConsoleRect, &InputRect);
+
+	// background
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
 	Graphics()->QuadsBegin();
 
@@ -35,6 +46,21 @@ void CEditorInputConsole::Render()
 	Graphics()->QuadsDrawTL(&QuadBg, 1);
 
 	Graphics()->QuadsEnd();
+
+	// input line
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0, 0, 0.2, 0.5f);
+	IGraphics::CQuadItem QuadInput(InputRect.x, InputRect.y, InputRect.w, InputRect.h);
+	Graphics()->QuadsDrawTL(&QuadInput, 1);
+	Graphics()->QuadsEnd();
+
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, InputRect.x+InputMargin, InputRect.y-2+InputMargin, FontSize, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = InputRect.w - InputMargin*2;
+	// TODO: replace with a simple text function (no shadow)
+	TextRender()->TextShadowed(&Cursor, m_Input.GetString(), -1, vec2(0, 0), vec4(0, 0, 0, 0),
+							   vec4(1, 1, 1, 1));
 }
 
 void CEditorInputConsole::OnInput(IInput::CEvent Event)
@@ -43,6 +69,115 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 	{
 		m_IsOpen = false;
 		return;
+	}
+
+	if(Event.m_Flags&IInput::FLAG_PRESS)
+	{
+		if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
+		{
+			if(m_Input.GetString()[0])
+			{
+				/*if()
+				{
+					char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
+					mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+				}*/
+				//m_pHistoryEntry = 0x0;
+				m_pConsole->ExecuteLine(m_Input.GetString());
+				m_Input.Clear();
+				return;
+			}
+		}
+		/*else if (Event.m_Key == KEY_UP)
+		{
+			if (m_pHistoryEntry)
+			{
+				char *pTest = m_History.Prev(m_pHistoryEntry);
+
+				if (pTest)
+					m_pHistoryEntry = pTest;
+			}
+			else
+				m_pHistoryEntry = m_History.Last();
+
+			if (m_pHistoryEntry)
+				m_Input.Set(m_pHistoryEntry);
+			Handled = true;
+		}
+		else if (Event.m_Key == KEY_DOWN)
+		{
+			if (m_pHistoryEntry)
+				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
+
+			if (m_pHistoryEntry)
+				m_Input.Set(m_pHistoryEntry);
+			else
+				m_Input.Clear();
+			Handled = true;
+		}
+		else if(Event.m_Key == KEY_TAB)
+		{
+			if(m_Type == CGameConsole::CONSOLETYPE_LOCAL || m_pGameConsole->Client()->RconAuthed())
+			{
+				m_CompletionChosen++;
+				m_CompletionEnumerationCount = 0;
+				m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, m_Type != CGameConsole::CONSOLETYPE_LOCAL &&
+					m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands(),	PossibleCommandsCompleteCallback, this);
+
+				// handle wrapping
+				if(m_CompletionEnumerationCount && m_CompletionChosen >= m_CompletionEnumerationCount)
+				{
+					m_CompletionChosen %= m_CompletionEnumerationCount;
+					m_CompletionEnumerationCount = 0;
+					m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, m_Type != CGameConsole::CONSOLETYPE_LOCAL &&
+						m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands(),	PossibleCommandsCompleteCallback, this);
+				}
+			}
+		}
+		else if(Event.m_Key == KEY_PAGEUP)
+		{
+			++m_BacklogActPage;
+		}
+		else if(Event.m_Key == KEY_PAGEDOWN)
+		{
+			--m_BacklogActPage;
+			if(m_BacklogActPage < 0)
+				m_BacklogActPage = 0;
+		}*/
+	}
+
+	if(m_IsOpen)
+		m_Input.ProcessInput(Event);
+
+	if(Event.m_Flags&(IInput::FLAG_PRESS|IInput::FLAG_TEXT))
+	{
+		/*if(Event.m_Key != KEY_TAB)
+		{
+			m_CompletionChosen = -1;
+			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
+		}
+
+		// find the current command
+		{
+			char aBuf[64] = {0};
+			const char *pSrc = GetString();
+			int i = 0;
+			for(; i < (int)sizeof(aBuf)-1 && *pSrc && *pSrc != ' '; i++, pSrc++)
+				aBuf[i] = *pSrc;
+			aBuf[i] = 0;
+
+			const IConsole::CCommandInfo *pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask,
+				m_Type != CGameConsole::CONSOLETYPE_LOCAL && m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands());
+			if(pCommand)
+			{
+				m_IsCommand = true;
+				str_copy(m_aCommandName, pCommand->m_pName, IConsole::TEMPCMD_NAME_LENGTH);
+				str_copy(m_aCommandHelp, pCommand->m_pHelp, IConsole::TEMPCMD_HELP_LENGTH);
+				str_copy(m_aCommandParams, pCommand->m_pParams, IConsole::TEMPCMD_PARAMS_LENGTH);
+			}
+			else
+				m_IsCommand = false;
+		}*/
 	}
 }
 
