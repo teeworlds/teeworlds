@@ -691,13 +691,20 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
+	{
 #if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
-		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// always use "fake" fullscreen
-	*pWindowWidth = *pDesktopWidth;
-	*pWindowHeight = *pDesktopHeight;
+		if(Flags&IGraphicsBackend::INITFLAG_HIGHDPI)
+			SdlFlags |= SDL_WINDOW_FULLSCREEN; // go fullscreen or highdpi won't work
+		else
+		{
+			SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP; 	// use "fake" fullscreen
+			*pWindowWidth = *pDesktopWidth;
+			*pWindowHeight = *pDesktopHeight;
+		}
 #else
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 #endif
+	}
 
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
