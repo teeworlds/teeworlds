@@ -1570,6 +1570,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
 	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
 	static int s_GfxTextureCompression = g_Config.m_GfxTextureCompression;
+	static int s_GfxHighdpi = g_Config.m_GfxHighdpi;
 
 	CUIRect Label, Button, ScreenLeft, ScreenRight, Texture, BottomView, Background;
 
@@ -1624,7 +1625,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxHighdpi = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxHighdpi, Localize("High dpi mode"), g_Config.m_GfxHighdpi, &Button))
+	{
 		g_Config.m_GfxHighdpi ^= 1;
+		CheckSettings = true;
+	}
 
 	// FSAA button
 	{
@@ -1824,7 +1828,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
 			s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 			s_GfxTextureQuality == g_Config.m_GfxTextureQuality &&
-			s_GfxTextureCompression == g_Config.m_GfxTextureCompression)
+			s_GfxTextureCompression == g_Config.m_GfxTextureCompression &&
+			s_GfxHighdpi == g_Config.m_GfxHighdpi)
 			m_NeedRestartGraphics = false;
 		else
 			m_NeedRestartGraphics = true;
