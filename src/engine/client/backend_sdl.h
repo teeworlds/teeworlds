@@ -55,7 +55,7 @@ public:
 	virtual void RunBuffer(CCommandBuffer *pBuffer);
 	virtual bool IsIdle() const;
 	virtual void WaitForIdle();
-		
+
 protected:
 	void StartProcessor(ICommandProcessor *pProcessor);
 	void StopProcessor();
@@ -174,9 +174,9 @@ public:
 // command processor impelementation, uses the fragments to combine into one processor
 class CCommandProcessor_SDL_OpenGL : public CGraphicsBackend_Threaded::ICommandProcessor
 {
- 	CCommandProcessorFragment_OpenGL m_OpenGL;
- 	CCommandProcessorFragment_SDL m_SDL;
- 	CCommandProcessorFragment_General m_General;
+	CCommandProcessorFragment_OpenGL m_OpenGL;
+	CCommandProcessorFragment_SDL m_SDL;
+	CCommandProcessorFragment_General m_General;
  public:
 	virtual void RunBuffer(CCommandBuffer *pBuffer);
 };
@@ -190,7 +190,7 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 	volatile int m_TextureMemoryUsage;
 	int m_NumScreens;
 public:
-	virtual int Init(const char *pName, int *Screen, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
+	virtual int Init(const char *pName, int *Screen, int *pWindowWidth, int *pWindowHeight, int *pScreenWidth, int *pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
