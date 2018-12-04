@@ -201,6 +201,7 @@ if use_bundle:
 	<key>CFBundleIdentifier</key>
 	<string>com.TeeworldsClient.app</string>
 	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>
 	""" % (version))
