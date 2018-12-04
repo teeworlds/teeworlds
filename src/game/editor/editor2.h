@@ -147,8 +147,6 @@ class CEditor: public IEditor
 	vec2 m_RenderShotgunPickupSize;
 	vec2 m_RenderLaserPickupSize;
 
-	void Update();
-	void Render();
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
@@ -186,8 +184,10 @@ public:
 	~CEditor();
 
 	void Init();
-	void UpdateAndRender();
+	void Update();
+	void Render();
 	bool HasUnsavedData() const;
+	void OnInput(IInput::CEvent Event);
 };
 
 #endif

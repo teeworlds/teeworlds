@@ -311,22 +311,11 @@ void CEditor::Init()
 	}
 
 	m_pConsole->Register("ed_load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
-	m_InputConsole.Init(m_pConsole);
+	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI);
 
-	m_pConsole->ExecuteLine("ed_load maps/ctf7.map");
-
-
-	if(!LoadMap("maps/ctf2.map")) {
+	if(!LoadMap("maps/ctf7.map")) {
 		dbg_break();
 	}
-}
-
-void CEditor::UpdateAndRender()
-{
-	UI()->StartCheck();
-	Update();
-	Render();
-	UI()->FinishCheck();
 }
 
 bool CEditor::HasUnsavedData() const
@@ -334,8 +323,22 @@ bool CEditor::HasUnsavedData() const
 	return false;
 }
 
+void CEditor::OnInput(IInput::CEvent Event)
+{
+	m_InputConsole.OnInput(Event);
+}
+
 void CEditor::Update()
 {
+	for(int i = 0; i < Input()->NumEvents(); i++)
+	{
+		IInput::CEvent e = Input()->GetEvent(i);
+		if(!Input()->IsEventValid(&e))
+			continue;
+		OnInput(e);
+	}
+
+	UI()->StartCheck();
 	const CUIRect UiScreenRect = *UI()->Screen();
 
 	// mouse input
@@ -381,6 +384,11 @@ void CEditor::Update()
 	{
 		m_Zoom = 1;
 		m_MapUiPosOffset = vec2(0,0);
+	}
+
+	if(Input()->KeyPress(KEY_F1))
+	{
+		m_InputConsole.ToggleOpen();
 	}
 
 	Input()->Clear();
@@ -632,6 +640,9 @@ void CEditor::Render()
 	// user interface
 	RenderUI();
 
+	// console
+	m_InputConsole.Render();
+
 	// render mouse cursor
 	{
 		Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
@@ -646,6 +657,8 @@ void CEditor::Render()
 		Graphics()->QuadsEnd();
 		Graphics()->WrapNormal();
 	}
+
+	UI()->FinishCheck();
 }
 
 void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
