@@ -141,6 +141,8 @@ class CEditor: public IEditor
 
 	float m_GfxScreenWidth;
 	float m_GfxScreenHeight;
+	float m_ZoomWorldViewWidth;
+	float m_ZoomWorldViewHeight;
 
 	CUIRect m_UiScreenRect;
 	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
@@ -170,6 +172,8 @@ class CEditor: public IEditor
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
 
 	void Reset();
+	void ResetCamera();
+	void ChangeZoom(float Zoom);
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);

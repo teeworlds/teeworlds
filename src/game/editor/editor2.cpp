@@ -391,14 +391,13 @@ void CEditor::Update()
 
 	// zoom with mouse wheel
 	if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-		m_Zoom *= 0.9;
+		ChangeZoom(m_Zoom * 0.9f);
 	else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-		m_Zoom *= 1.1;
+		ChangeZoom(m_Zoom * 1.1f);
 
 	if(Input()->KeyPress(KEY_HOME))
 	{
-		m_Zoom = 1;
-		m_MapUiPosOffset = vec2(0,0);
+		ResetCamera();
 	}
 
 	if(Input()->KeyPress(KEY_F1))
@@ -425,6 +424,8 @@ void CEditor::Render()
 	const float WorldViewHeight = aWorldViewRectPoints[3]-aWorldViewRectPoints[1];
 	const float ZoomWorldViewWidth = WorldViewWidth * m_Zoom;
 	const float ZoomWorldViewHeight = WorldViewHeight * m_Zoom;
+	m_ZoomWorldViewWidth = ZoomWorldViewWidth;
+	m_ZoomWorldViewHeight = ZoomWorldViewHeight;
 
 	m_GfxScreenWidth = Graphics()->ScreenWidth();
 	m_GfxScreenHeight = Graphics()->ScreenHeight();
@@ -1104,14 +1105,39 @@ void CEditor::Reset()
 
 }
 
+void CEditor::ResetCamera()
+{
+	m_Zoom = 1;
+	m_MapUiPosOffset = vec2(0,0);
+}
+
+void CEditor::ChangeZoom(float Zoom)
+{
+	// zoom centered on mouse
+	const float WorldWidth = m_ZoomWorldViewWidth/m_Zoom;
+	const float WorldHeight = m_ZoomWorldViewHeight/m_Zoom;
+	const float MuiX = (m_UiMousePos.x+m_MapUiPosOffset.x)/m_UiScreenRect.w;
+	const float MuiY = (m_UiMousePos.y+m_MapUiPosOffset.y)/m_UiScreenRect.h;
+	const float RelMouseX = MuiX * m_ZoomWorldViewWidth;
+	const float RelMouseY = MuiY * m_ZoomWorldViewHeight;
+	const float NewZoomWorldViewWidth = WorldWidth * Zoom;
+	const float NewZoomWorldViewHeight = WorldHeight * Zoom;
+	const float NewRelMouseX = MuiX * NewZoomWorldViewWidth;
+	const float NewRelMouseY = MuiY * NewZoomWorldViewHeight;
+	m_MapUiPosOffset.x -= (NewRelMouseX-RelMouseX)/NewZoomWorldViewWidth*m_UiScreenRect.w;
+	m_MapUiPosOffset.y -= (NewRelMouseY-RelMouseY)/NewZoomWorldViewHeight*m_UiScreenRect.h;
+	m_Zoom = Zoom;
+}
+
 bool CEditor::LoadMap(const char* pFileName)
 {
 	if(m_Map.Load(pFileName))
 	{
-	   m_UiSelectedLayerID = m_Map.m_GameLayerID;
-	   m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	   ed_log("map '%s' sucessfully loaded.", pFileName);
-	   return true;
+		m_UiSelectedLayerID = m_Map.m_GameLayerID;
+		m_UiSelectedGroupID = m_Map.m_GameGroupID;
+		ResetCamera();
+		ed_log("map '%s' sucessfully loaded.", pFileName);
+		return true;
 	}
 	ed_log("failed to load map '%s'", pFileName);
 	return false;
