@@ -737,7 +737,13 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 	}
 
 	SDL_GetWindowSize(m_pWindow, pWindowWidth, pWindowHeight);
-	SDL_GL_GetDrawableSize(m_pWindow, pScreenWidth, pScreenHeight); // drawable size may differ in high dpi mode
+	if(Flags&IGraphicsBackend::INITFLAG_HIGHDPI)
+		SDL_GL_GetDrawableSize(m_pWindow, pScreenWidth, pScreenHeight); // drawable size may differ in high dpi mode
+	else
+	{
+		*pScreenWidth = *pWindowWidth;
+		*pScreenHeight = *pWindowHeight;
+	}
 
 	// create gl context
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
