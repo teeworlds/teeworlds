@@ -225,6 +225,11 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 
 void CEditorMap::Clear()
 {
+	m_GameLayerID = -1;
+	m_GameGroupID = -1;
+	m_MapMaxWidth = 0;
+	m_MapMaxHeight = 0;
+
 	m_aTiles.clear();
 	m_aQuads.clear();
 	m_aEnvPoints.clear();
@@ -236,6 +241,7 @@ void CEditorMap::Clear()
 	{
 		m_pGraphics->UnloadTexture(&m_aTextures[i]);
 	}
+	m_TextureCount = 0;
 }
 
 IEditor *CreateEditor() { return new CEditor; }
