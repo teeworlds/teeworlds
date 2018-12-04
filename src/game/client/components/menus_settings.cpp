@@ -1578,9 +1578,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = 3;// + (!g_Config.m_GfxFullscreen);
-	if(Graphics()->GetNumScreens() > 1)
-		++NumOptions;
+	int NumOptions = 3;
+	if(!g_Config.m_GfxFullscreen || (g_Config.m_GfxLimitFps && Graphics()->GetNumScreens() > 1))
+		NumOptions++;
+
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1593,14 +1594,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &ScreenLeft, &MainView);
 	RenderTools()->DrawUIRect(&ScreenLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	// render textures menu background
-	NumOptions = 3;
-	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
-
-	MainView.HSplitTop(10.0f, 0, &MainView);
-	MainView.HSplitTop(BackgroundHeight, &Texture, &MainView);
-	RenderTools()->DrawUIRect(&Texture, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render screen menu
 	ScreenLeft.HSplitTop(ButtonHeight, &Label, &ScreenLeft);
@@ -1626,6 +1619,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
 			Client()->ToggleWindowBordered();
 	}
+
+	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
+	static int s_ButtonGfxHighdpi = 0;
+	if(DoButton_CheckBox(&s_ButtonGfxHighdpi, Localize("High dpi mode"), g_Config.m_GfxHighdpi, &Button))
+		g_Config.m_GfxHighdpi ^= 1;
 
 	// FSAA button
 	{
@@ -1694,6 +1693,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	}
 
 	// render texture menu
+	NumOptions = 3;
+	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
+
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &Texture, &MainView);
+	RenderTools()->DrawUIRect(&Texture, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
 	Texture.HSplitTop(ButtonHeight, &Label, &Texture);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
