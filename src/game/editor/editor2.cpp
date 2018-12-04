@@ -12,22 +12,36 @@
 // TODO:
 // - Editor console
 
+static char s_aEdMsg[256];
+#define ed_log(...)\
+	str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg);
+
+#define ed_dbg(...)\
+	str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
+
 inline float fract(float f)
 {
 	return f - (int)f;
 }
 
-bool CEditorMap::Save(IStorage* pStorage, const char* pFileName)
+void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
+{
+	m_pGraphics = pGraphics;
+	m_pStorage = pStorage;
+	m_pConsole = pConsole;
+}
+
+bool CEditorMap::Save(const char* pFileName)
 {
 	return false;
 }
 
-bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFileName)
+bool CEditorMap::Load(const char* pFileName)
 {
-	m_pGraphics = pGraphics; // TODO: move this?
-
 	CDataFileReader File;
-	if(!File.Open(pStorage, pFileName, IStorage::TYPE_ALL))
+	if(!File.Open(m_pStorage, pFileName, IStorage::TYPE_ALL))
 		return false;
 	// check version
 	CMapItemVersion *pItem = (CMapItemVersion *)File.FindItem(MAPITEMTYPE_VERSION, 0);
@@ -41,13 +55,13 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	File.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
 	File.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
-	dbg_msg("editor", "GroupsStart=%d GroupsNum=%d LayersStart=%d LayersNum=%d",
+	ed_dbg("GroupsStart=%d GroupsNum=%d LayersStart=%d LayersNum=%d",
 			GroupsStart, GroupsNum, LayersStart, LayersNum);
 
 	for(int gi = 0; gi < GroupsNum; gi++)
 	{
 		CMapItemGroup* pGroup = (CMapItemGroup*)File.GetItem(GroupsStart+gi, 0, 0);
-		dbg_msg("editor", "Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers,
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers,
 				pGroup->m_OffsetX, pGroup->m_OffsetY);
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
@@ -65,7 +79,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
 				const CMapItemLayerTilemap& Tilemap = *(CMapItemLayerTilemap*)pLayer;
-				dbg_msg("editor", "Group#%d Layer=%d (w=%d, h=%d)", gi, li,
+				ed_dbg("Group#%d Layer=%d (w=%d, h=%d)", gi, li,
 						Tilemap.m_Width, Tilemap.m_Height);
 
 
@@ -144,7 +158,7 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 	File.GetType(MAPITEMTYPE_ENVPOINTS, &EnvPointStart, &EnvPointCount);
 	// FIXME: EnvPointCount is always 1?
 
-	dbg_msg("editor", "EnvelopeStart=%d EnvelopeCount=%d EnvPointStart=%d EnvPointCount=%d",
+	ed_dbg("EnvelopeStart=%d EnvelopeCount=%d EnvPointStart=%d EnvPointCount=%d",
 			EnvelopeStart, EnvelopeCount, EnvPointStart, EnvPointCount);
 
 	CEnvPoint* pEnvPoints = (CEnvPoint*)File.GetItem(EnvPointStart, 0, 0);
@@ -206,14 +220,14 @@ bool CEditorMap::Load(IStorage* pStorage, IGraphics* pGraphics, const char* pFil
 			char Buf[256];
 			char *pName = (char *)File.GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
-			m_aTextures[i] = pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+			m_aTextures[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 													TextureFlags);
-			dbg_msg("editor", "mapres/%s.png loaded", pName);
+			ed_dbg("mapres/%s.png loaded", pName);
 		}
 		else
 		{
 			void *pData = File.GetData(pImg->m_ImageData);
-			m_aTextures[i] = pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
+			m_aTextures[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 				pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 				CImageInfo::FORMAT_RGBA, TextureFlags);
 		}
@@ -313,6 +327,7 @@ void CEditor::Init()
 	m_pConsole->Register("ed_load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
+	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	if(!LoadMap("maps/ctf7.map")) {
 		dbg_break();
 	}
@@ -1091,13 +1106,14 @@ void CEditor::Reset()
 
 bool CEditor::LoadMap(const char* pFileName)
 {
-	if(m_Map.Load(m_pStorage, m_pGraphics, pFileName))
+	if(m_Map.Load(pFileName))
 	{
 	   m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	   m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	   ed_log("map '%s' sucessfully loaded.", pFileName);
 	   return true;
 	}
-	dbg_msg("editor", "failed to load map '%s'", pFileName);
+	ed_log("failed to load map '%s'", pFileName);
 	return false;
 }
 
@@ -1106,12 +1122,10 @@ void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
 	CEditor *pSelf = (CEditor *)pUserData;
 
 	const int InputTextLen = str_length(pResult->GetString(0));
-	if(InputTextLen < 4)
-		return;
 
 	char aMapPath[256];
 	bool AddMapPath = str_comp_nocase_num(pResult->GetString(0), "maps/", 5) != 0;
-	bool AddMapExtension = str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
+	bool AddMapExtension = InputTextLen <= 4 || str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
 	str_format(aMapPath, sizeof(aMapPath), "%s%s%s", AddMapPath ? "maps/":"", pResult->GetString(0),
 			   AddMapExtension ? ".map":"");
 

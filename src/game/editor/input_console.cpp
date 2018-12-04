@@ -8,12 +8,33 @@
 #include <generated/client_data.h>
 #include <game/client/ui.h>
 
+void CEditorInputConsole::StaticConsolePrintCallback(const char* pLine, void* pUser, bool Highlighted)
+{
+	((CEditorInputConsole*)pUser)->ConsolePrintCallback(pLine, Highlighted);
+}
+
+void CEditorInputConsole::ConsolePrintCallback(const char* pLine, bool Highlighted)
+{
+	int Len = str_length(pLine);
+
+	if(Len > 255)
+		Len = 255;
+
+	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry)+Len);
+	pEntry->m_YOffset = -1.0f;
+	pEntry->m_Highlighted = Highlighted;
+	mem_copy(pEntry->m_aText, pLine, Len);
+	pEntry->m_aText[Len] = 0;
+}
+
 void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender)
 {
 	m_pConsole = pConsole;
 	m_pGraphics = pGraphics;
 	m_pTextRender = pTextRender;
 	m_pUI = pUI;
+
+	m_pConsole->RegisterPrintCallback(IConsole::OUTPUT_LEVEL_STANDARD, StaticConsolePrintCallback, this);
 }
 
 void CEditorInputConsole::Render()
@@ -31,6 +52,7 @@ void CEditorInputConsole::Render()
 	const float FontSize = 10.0f;
 	const float Spacing = 2.0f;
 	const float InputMargin = 5.0f;
+	const float ConsoleMargin = 3.0f;
 
 	CUIRect InputRect, ConsoleRect;
 	ScreenRect.HSplitTop(ConsoleHeight, &ConsoleRect, 0);
@@ -57,10 +79,47 @@ void CEditorInputConsole::Render()
 
 	CTextCursor Cursor;
 	TextRender()->SetCursor(&Cursor, InputRect.x+InputMargin, InputRect.y-2+InputMargin, FontSize, TEXTFLAG_RENDER);
+	TextRender()->TextShadowed(&Cursor, "> ", 2, vec2(0, 0), vec4(0, 0, 0, 0),
+							   vec4(1, 1, 1, 1));
+
 	Cursor.m_LineWidth = InputRect.w - InputMargin*2;
 	// TODO: replace with a simple text function (no shadow)
 	TextRender()->TextShadowed(&Cursor, m_Input.GetString(), -1, vec2(0, 0), vec4(0, 0, 0, 0),
 							   vec4(1, 1, 1, 1));
+
+	//	render log (actual page, wrap lines)
+	CBacklogEntry *pEntry = m_Backlog.Last();
+	float OffsetY = 0.0f;
+	float LineOffset = 1.0f;
+	float y = InputRect.y - ConsoleMargin - 2;
+	while(pEntry)
+	{
+		// get y offset (calculate it if we haven't yet)
+		if(pEntry->m_YOffset < 0.0f)
+		{
+			TextRender()->SetCursor(&Cursor, 0.0f, 0.0f, FontSize, 0);
+			Cursor.m_LineWidth = ConsoleRect.w - ConsoleMargin*2;
+			TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+			pEntry->m_YOffset = Cursor.m_Y+Cursor.m_FontSize+LineOffset;
+		}
+		OffsetY += pEntry->m_YOffset;
+
+		//	next page when lines reach the top
+		if(y-OffsetY <= ConsoleRect.x-5)
+			break;
+
+		//	just render output from actual backlog page (render bottom up)
+		TextRender()->SetCursor(&Cursor, ConsoleMargin, y-OffsetY, FontSize, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = ConsoleRect.w - ConsoleMargin*2;
+
+		vec4 TextColor(1, 1, 1, 1);
+		if(pEntry->m_Highlighted)
+			TextColor = vec4(1,0.75,0.75,1);
+
+		TextRender()->TextShadowed(&Cursor, pEntry->m_aText, -1, vec2(0, 0), vec4(0, 0, 0, 0),
+								   TextColor);
+		pEntry = m_Backlog.Prev(pEntry);
+	}
 }
 
 void CEditorInputConsole::OnInput(IInput::CEvent Event)
@@ -77,18 +136,15 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 		{
 			if(m_Input.GetString()[0])
 			{
-				/*if()
-				{
-					char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
-					mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
-				}*/
-				//m_pHistoryEntry = 0x0;
+				char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
+				mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+				m_pHistoryEntry = 0x0;
 				m_pConsole->ExecuteLine(m_Input.GetString());
 				m_Input.Clear();
 				return;
 			}
 		}
-		/*else if (Event.m_Key == KEY_UP)
+		else if (Event.m_Key == KEY_UP)
 		{
 			if (m_pHistoryEntry)
 			{
@@ -102,7 +158,6 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 
 			if (m_pHistoryEntry)
 				m_Input.Set(m_pHistoryEntry);
-			Handled = true;
 		}
 		else if (Event.m_Key == KEY_DOWN)
 		{
@@ -113,9 +168,8 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 				m_Input.Set(m_pHistoryEntry);
 			else
 				m_Input.Clear();
-			Handled = true;
 		}
-		else if(Event.m_Key == KEY_TAB)
+		/*else if(Event.m_Key == KEY_TAB)
 		{
 			if(m_Type == CGameConsole::CONSOLETYPE_LOCAL || m_pGameConsole->Client()->RconAuthed())
 			{

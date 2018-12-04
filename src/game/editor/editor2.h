@@ -85,9 +85,16 @@ struct CEditorMap
 	int m_TextureCount = 0;
 
 	IGraphics* m_pGraphics;
+	IConsole *m_pConsole;
+	IStorage *m_pStorage;
 
-	bool Save(IStorage *pStorage, const char *pFileName);
-	bool Load(IStorage *pStorage, IGraphics* pGraphics, const char *pFileName);
+	inline IGraphics* Graphics() { return m_pGraphics; };
+	inline IConsole *Console() { return m_pConsole; };
+	inline IStorage *Storage() { return m_pStorage; };
+
+	void Init(IStorage *pStorage, IGraphics* pGraphics, IConsole* pConsole);
+	bool Save(const char *pFileName);
+	bool Load(const char *pFileName);
 	void Clear();
 };
 

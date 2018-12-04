@@ -26,11 +26,16 @@ class CEditorInputConsole
 		char m_aText[1];
 	};
 	TStaticRingBuffer<CBacklogEntry, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
+	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+	char *m_pHistoryEntry;
 	CLineInput m_Input;
 
 	inline IGraphics* Graphics() { return m_pGraphics; }
 	inline CUI* UI() { return m_pUI; }
 	inline ITextRender* TextRender() { return m_pTextRender; }
+
+	static void StaticConsolePrintCallback(const char *pLine, void *pUser, bool Highlighted);
+	void ConsolePrintCallback(const char *pLine, bool Highlighted);
 
 public:
 
