@@ -112,7 +112,7 @@ void CEditorInputConsole::Render()
 		TextRender()->SetCursor(&Cursor, ConsoleMargin, y-OffsetY, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = ConsoleRect.w - ConsoleMargin*2;
 
-		vec4 TextColor(1, 1, 1, 1);
+		vec4 TextColor(0.8, 0.8, 1, 1);
 		if(pEntry->m_Highlighted)
 			TextColor = vec4(1,0.75,0.75,1);
 

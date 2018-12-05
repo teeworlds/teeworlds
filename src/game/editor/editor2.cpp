@@ -10,7 +10,8 @@
 #include <engine/shared/config.h>
 
 // TODO:
-// - Editor console
+// - Data setup for easy add/remove (tiles, quads, ...)
+// - Smooth zoom
 
 static char s_aEdMsg[256];
 #define ed_log(...)\
@@ -324,7 +325,7 @@ void CEditor::Init()
 									   VisualSize * (SpriteH/ScaleFactor));
 	}
 
-	m_pConsole->Register("ed_load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
+	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
@@ -1135,6 +1136,11 @@ bool CEditor::LoadMap(const char* pFileName)
 	{
 		m_UiSelectedLayerID = m_Map.m_GameLayerID;
 		m_UiSelectedGroupID = m_Map.m_GameGroupID;
+		mem_zero(m_UiGroupHidden, sizeof(m_UiGroupHidden));
+		mem_zero(m_UiGroupOpen, sizeof(m_UiGroupOpen));
+		m_UiGroupOpen[m_Map.m_GameGroupID] = true;
+		mem_zero(m_UiLayerHidden, sizeof(m_UiLayerHidden));
+		mem_zero(m_UiLayerHovered, sizeof(m_UiLayerHovered));
 		ResetCamera();
 		ed_log("map '%s' sucessfully loaded.", pFileName);
 		return true;
