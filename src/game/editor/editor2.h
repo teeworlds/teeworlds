@@ -61,12 +61,14 @@ struct CMemBlock
 	inline T* Get() { return m_pStart; }
 };
 
-template<typename T, u32 ELT_COUNT_MAX, u32 RING_ELT_COUNT=1>
+template<typename T>
 class CChainAllocator
 {
 	int64 m_AllocatedSize;
 	u8* m_aRingUsed;
 	T* m_pElementBuffer;
+	u32 ELT_COUNT_MAX;
+	u32 RING_ELT_COUNT;
 
 public:
 	typedef CMemBlock<T> BlockT;
@@ -76,6 +78,8 @@ public:
 		m_AllocatedSize = 0;
 		m_aRingUsed = 0;
 		m_pElementBuffer = 0;
+		ELT_COUNT_MAX = 0;
+		RING_ELT_COUNT = 1;
 	}
 
 	~CChainAllocator()
@@ -83,8 +87,10 @@ public:
 		Deinit();
 	}
 
-	void Init()
+	void Init(u32 ElementCountMax, u32 RingElementCount = 1)
 	{
+		ELT_COUNT_MAX = ElementCountMax;
+		RING_ELT_COUNT = RingElementCount;
 		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
 		dbg_assert(m_pElementBuffer == 0, "Don't init this twice");
 		m_AllocatedSize = sizeof(u8)*TOTAL_RING_COUNT+sizeof(T)*ELT_COUNT_MAX;
@@ -115,7 +121,9 @@ public:
 			else if(Ring8 == (uint64_t)0xFFFFFFFFFFFFFFFF)
 			{
 				ChainRingStart = i+8;
+				ChainRingCount = 0;
 				i += 7;
+				continue;
 			}
 			else
 			{
@@ -137,6 +145,8 @@ public:
 				Block.m_pStart = m_pElementBuffer + ChainRingStart*RING_ELT_COUNT;
 				Block.m_Count = ChainRingCount*RING_ELT_COUNT;
 				mem_zero(Block.m_pStart, sizeof(T)*Block.m_Count);
+				dbg_assert(ChainRingStart*RING_ELT_COUNT + Block.m_Count <= ELT_COUNT_MAX,
+						   "Something went wrong");
 				return Block;
 			}
 		}
@@ -158,13 +168,11 @@ public:
 		if(pBlock->m_Count <= 0)
 			return;
 
-		if(pBlock->m_pStart >= m_pElementBuffer &&
-			pBlock->m_pStart+pBlock->m_Count <= m_pElementBuffer+ELT_COUNT_MAX)
-		{
-			const int Start = pBlock->m_pStart-m_pElementBuffer;
-			const int Count = pBlock->m_Count;
+		const int Start = pBlock->m_pStart-m_pElementBuffer;
+		const int Count = pBlock->m_Count;
+
+		if(Start >= 0 && Start+Count <= ELT_COUNT_MAX)
 			mem_zero(m_aRingUsed+(Start/RING_ELT_COUNT), sizeof(u8)*(Count/RING_ELT_COUNT));
-		}
 		else
 			mem_free(pBlock->m_pStart);
 
@@ -172,6 +180,73 @@ public:
 	}
 
 	inline int64 AllocatedSize() const { return m_AllocatedSize; }
+};
+
+template<typename T>
+struct CDynArray
+{
+	CChainAllocator<T>* m_pAllocator;
+	CMemBlock<T> m_MemBlock;
+	int m_EltCount;
+
+	CDynArray()
+	{
+		m_pAllocator = 0;
+	}
+
+	void Init(CChainAllocator<T>* pAllocator, int InitialCapacity=16)
+	{
+		dbg_assert(!m_pAllocator, "Init already called");
+		m_pAllocator = pAllocator;
+		m_MemBlock = m_pAllocator->Alloc(InitialCapacity);
+		m_EltCount = 0;
+	}
+
+	void Reserve(int NewCapacity)
+	{
+		dbg_assert(m_pAllocator != 0, "Forgot to call Init");
+		if(NewCapacity <= Capacity())
+			return;
+		CMemBlock<T> NewBlock = m_pAllocator->Alloc(NewCapacity);
+		mem_copy(NewBlock.m_pStart, Data(), Capacity()*sizeof(T));
+		m_pAllocator->Dealloc(&m_MemBlock);
+		m_MemBlock = NewBlock;
+	}
+
+	inline T& Add(const T& Elt) { return Add(&Elt, 1); }
+
+	T& Add(const T* aElements, int Count)
+	{
+		if(m_EltCount+Count >= Capacity())
+			Reserve(max(Capacity() * 2, m_EltCount+Count));
+		mem_copy(Data()+m_EltCount, aElements, Count*sizeof(T));
+		m_EltCount += Count;
+		return *(Data()-Count);
+	}
+
+	inline void Clear()
+	{
+		m_pAllocator->Dealloc(&m_MemBlock);
+		m_MemBlock.m_pStart = 0;
+		m_MemBlock.m_Count = 0;
+		m_EltCount = 0;
+	}
+
+	inline int Count() const { return m_EltCount; }
+	inline int Capacity() const { return m_MemBlock.m_Count; }
+	inline T* Data() { return m_MemBlock.m_pStart; }
+
+	inline T& operator[] (int Index)
+	{
+		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
+		return m_MemBlock.m_pStart[Index];
+	}
+
+	inline const T& operator[] (int Index) const
+	{
+		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
+		return m_MemBlock.m_pStart[Index];
+	}
 };
 
 struct CEditorMap
@@ -213,18 +288,34 @@ struct CEditorMap
 		int m_OffsetY;
 	};
 
+	struct CEnvelope
+	{
+		int m_Version;
+		int m_Channels;
+		CEnvPoint* m_aPoints;
+		int m_NumPoints;
+		//int m_aName[8];
+		bool m_Synchronized;
+	};
+
 	int m_MapMaxWidth = 0;
 	int m_MapMaxHeight = 0;
 	int m_GameLayerID = -1;
 	int m_GameGroupID = -1;
 
-	// TODO: use a different allocator
-	array<CTile> m_aTiles;
-	array<CQuad> m_aQuads;
-	array<CEnvPoint> m_aEnvPoints;
-	array<CLayer> m_aLayers;
-	array<CGroup> m_aGroups;
-	array<CMapItemEnvelope> m_aEnvelopes;
+	CDynArray<CTile> m_aTiles;
+	CDynArray<CQuad> m_aQuads;
+	CDynArray<CEnvPoint> m_aEnvPoints;
+	CDynArray<CLayer> m_aLayers;
+	CDynArray<CGroup> m_aGroups;
+	CDynArray<CMapItemEnvelope> m_aEnvelopes;
+
+	CChainAllocator<CTile> m_TileDispenser;
+	CChainAllocator<CQuad> m_QuadDispenser;
+	CChainAllocator<CEnvPoint> m_EnvPointDispenser;
+	CChainAllocator<CLayer> m_LayerDispenser;
+	CChainAllocator<CGroup> m_GroupDispenser;
+	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	int m_TextureCount = 0;
@@ -300,13 +391,6 @@ class CEditor: public IEditor
 	vec2 m_RenderGrenadePickupSize;
 	vec2 m_RenderShotgunPickupSize;
 	vec2 m_RenderLaserPickupSize;
-
-	CChainAllocator<CTile, 2000000, 100> m_TileDispenser;
-	CChainAllocator<CQuad, 2000, 4> m_QuadDispenser;
-	CChainAllocator<CEnvPoint, 100000, 10> m_EnvPointDispenser;
-	CChainAllocator<CEditorMap::CLayer, 1000> m_LayerDispenser;
-	CChainAllocator<CEditorMap::CGroup, 200> m_GroupDispenser;
-	CChainAllocator<CMapItemEnvelope, 1000> m_EnvelopeDispenser;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 

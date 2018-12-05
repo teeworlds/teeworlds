@@ -34,6 +34,106 @@ void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConso
 	m_pGraphics = pGraphics;
 	m_pStorage = pStorage;
 	m_pConsole = pConsole;
+
+	m_TileDispenser.Init(2000000, 100);
+	m_QuadDispenser.Init(10000, 5);
+	m_EnvPointDispenser.Init(100000, 10);
+	m_LayerDispenser.Init(1000);
+	m_GroupDispenser.Init(200);
+	m_EnvelopeDispenser.Init(1000);
+	ed_log("m_TileDispenser.AllocatedSize=%lldMb", m_TileDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_QuadDispenser.AllocatedSize=%lldMb", m_QuadDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_EnvPointDispenser.AllocatedSize=%lldMb", m_EnvPointDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_LayerDispenser.AllocatedSize=%lldMb", m_LayerDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
+
+	m_aTiles.Init(&m_TileDispenser);
+	m_aQuads.Init(&m_QuadDispenser);
+	m_aEnvPoints.Init(&m_EnvPointDispenser);
+	m_aLayers.Init(&m_LayerDispenser);
+	m_aGroups.Init(&m_GroupDispenser);
+	m_aEnvelopes.Init(&m_EnvelopeDispenser);
+
+	// speedtest
+#if 0
+	CChainAllocator<CTile> TestDispenser;
+	TestDispenser.Init(1000000, 10);
+
+	const int TestLoopCount = 1000000;
+	uint64_t StartCycles = __rdtsc();
+	uint64_t MallocCycles, ChainCycles;
+
+	int DummyVar = 0;
+	for(int i = 0; i < TestLoopCount; i++)
+	{
+		CTile* pBuff = (CTile*)malloc(sizeof(CTile) * ((i%1000)+1));
+		mem_zero(pBuff, sizeof(CTile) * ((i%1000)+1));
+		DummyVar += pBuff[0].m_Index;
+		free(pBuff);
+	}
+
+	MallocCycles = __rdtsc() - StartCycles;
+	StartCycles = __rdtsc();
+
+	for(int i = 0; i < TestLoopCount; i++)
+	{
+		CMemBlock<CTile> Block = TestDispenser.Alloc((i%1000)+1);
+		DummyVar += Block.Get()[0].m_Index;
+		TestDispenser.Dealloc(&Block);
+	}
+
+	ChainCycles = __rdtsc() - StartCycles;
+
+	ed_log("DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar, MallocCycles/TestLoopCount,
+		   ChainCycles/TestLoopCount);
+
+	const int TestLoopCount2 = 1000;
+	array<CTile> BaseTileArray;
+	CArray<CTile> OurTileArray;
+	OurTileArray.Init(&TestDispenser, 2);
+	StartCycles = __rdtsc();
+
+	for(int i = 0; i < TestLoopCount2; i++)
+	{
+		CTile t;
+		t.m_Index = i;
+		BaseTileArray.add(t);
+		DummyVar += BaseTileArray.size();
+	}
+
+	MallocCycles = __rdtsc() - StartCycles;
+	StartCycles = __rdtsc();
+
+	for(int i = 0; i < TestLoopCount2; i++)
+	{
+		CTile t;
+		t.m_Index = i;
+		OurTileArray.Add(t);
+		DummyVar += OurTileArray.Count();
+	}
+
+	ChainCycles = __rdtsc() - StartCycles;
+
+	ed_log("ARRAYS DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar,
+		   MallocCycles/TestLoopCount2,
+		   ChainCycles/TestLoopCount2);
+
+#endif
+
+	// test
+#if 0
+	CChainAllocator<CTile, 100, 8> TestDispenser;
+	TestDispenser.Init();
+	CMemBlock<CTile> Block = TestDispenser.Alloc(57);
+	TestDispenser.Dealloc(Block);
+
+	Block = TestDispenser.Alloc(57);
+	CMemBlock<CTile> Block2 = TestDispenser.Alloc(18);
+	TestDispenser.Dealloc(Block);
+	Block = TestDispenser.Alloc(57);
+	TestDispenser.Dealloc(Block2);
+#endif
 }
 
 bool CEditorMap::Save(const char* pFileName)
@@ -96,10 +196,9 @@ bool CEditorMap::Load(const char* pFileName)
 				LayerTile.m_Height = Tilemap.m_Height;
 				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
 										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
-				LayerTile.m_TileStartID = m_aTiles.size();
-				const int LayerID = m_aLayers.add(LayerTile);
+				LayerTile.m_TileStartID = m_aTiles.Count();
 
-				// TODO: this is extremely slow
+
 				CTile *pTiles = (CTile *)File.GetData(Tilemap.m_Data);
 				int TileCount = Tilemap.m_Width*Tilemap.m_Height;
 				for(int ti = 0; ti < TileCount; ti++)
@@ -109,11 +208,14 @@ bool CEditorMap::Load(const char* pFileName)
 					Tile.m_Skip = 0;
 
 					for(int s = 0; s < Skips; s++)
-						m_aTiles.add(Tile);
-					m_aTiles.add(Tile);
+						m_aTiles.Add(Tile);
+					m_aTiles.Add(Tile);
 
 					TileCount -= Skips;
 				}
+
+				const int LayerID = m_aLayers.Count();
+				m_aLayers.Add(LayerTile);
 
 				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
 					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
@@ -121,7 +223,7 @@ bool CEditorMap::Load(const char* pFileName)
 				if(Tilemap.m_Flags&TILESLAYERFLAG_GAME)
 				{
 					m_GameLayerID = LayerID;
-					m_GameGroupID = m_aGroups.size();
+					m_GameGroupID = m_aGroups.Count();
 				}
 			}
 			else if(pLayer->m_Type == LAYERTYPE_QUADS)
@@ -131,24 +233,22 @@ bool CEditorMap::Load(const char* pFileName)
 				CLayer LayerQuad;
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
-				LayerQuad.m_QuadStartID = m_aQuads.size();
+				LayerQuad.m_QuadStartID = m_aQuads.Count();
 				LayerQuad.m_QuadCount = ItemQuadLayer.m_NumQuads;
-				const int LayerID = m_aLayers.add(LayerQuad);
+				const int LayerID = m_aLayers.Count();
+				m_aLayers.Add(LayerQuad);
 
 				// TODO: this is extremely slow
 				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
 				const int QuadCount = LayerQuad.m_QuadCount;
-				for(int qi = 0; qi < QuadCount; qi++)
-				{
-					m_aQuads.add(pQuads[qi]);
-				}
+				m_aQuads.Add(pQuads, QuadCount);
 
 				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
 					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
 			}
 		}
 
-		m_aGroups.add(Group);
+		m_aGroups.Add(Group);
 	}
 
 	dbg_assert(m_GameLayerID >= 0, "Game layer not found");
@@ -171,12 +271,11 @@ bool CEditorMap::Load(const char* pFileName)
 	{
 		CMapItemEnvelope *pItem = (CMapItemEnvelope *)File.GetItem(EnvelopeStart+ei, 0, 0);
 		const CMapItemEnvelope Env = *pItem;
-		m_aEnvelopes.add(Env);
+		m_aEnvelopes.Add(Env);
 
 		if(Env.m_Version >= 3)
 		{
-			for(int i = 0; i < Env.m_NumPoints; i++)
-				m_aEnvPoints.add(pEnvPoints[i + Env.m_StartPoint]);
+			m_aEnvPoints.Add(&pEnvPoints[Env.m_StartPoint], Env.m_NumPoints);
 		}
 		else
 		{
@@ -188,7 +287,7 @@ bool CEditorMap::Load(const char* pFileName)
 				CEnvPoint Point;
 				mem_zero(&Point, sizeof(Point));
 				mem_copy(&Point, pEnvPoint_v1, sizeof(CEnvPoint_v1));
-				m_aEnvPoints.add(Point);
+				m_aEnvPoints.Add(Point);
 			}
 		}
 	}
@@ -203,7 +302,7 @@ bool CEditorMap::Load(const char* pFileName)
 		int TextureFlags = 0;
 		bool FoundQuadLayer = false;
 		bool FoundTileLayer = false;
-		const int LayerCount = m_aLayers.size();
+		const int LayerCount = m_aLayers.Count();
 		for(int li = 0; li < LayerCount; li++)
 		{
 			const CLayer& Layer = m_aLayers[li];
@@ -247,12 +346,12 @@ void CEditorMap::Clear()
 	m_MapMaxWidth = 0;
 	m_MapMaxHeight = 0;
 
-	m_aTiles.clear();
-	m_aQuads.clear();
-	m_aEnvPoints.clear();
-	m_aLayers.clear();
-	m_aGroups.clear();
-	m_aEnvelopes.clear();
+	m_aTiles.Clear();
+	m_aQuads.Clear();
+	m_aEnvPoints.Clear();
+	m_aLayers.Clear();
+	m_aGroups.Clear();
+	m_aEnvelopes.Clear();
 
 	for(int i = 0; i < m_TextureCount; i++)
 	{
@@ -301,67 +400,6 @@ void CEditor::Init()
 
 	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
-
-	m_TileDispenser.Init();
-	m_QuadDispenser.Init();
-	m_EnvPointDispenser.Init();
-	m_LayerDispenser.Init();
-	m_GroupDispenser.Init();
-	m_EnvelopeDispenser.Init();
-	ed_log("m_TileDispenser.AllocatedSize=%lldMb", m_TileDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_QuadDispenser.AllocatedSize=%lldMb", m_QuadDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_EnvPointDispenser.AllocatedSize=%lldMb", m_EnvPointDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_LayerDispenser.AllocatedSize=%lldMb", m_LayerDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
-
-	// speedtest
-#if 0
-	CChainAllocator<CTile, 10000, 10> TestDispenser;
-	TestDispenser.Init();
-
-	const int TestLoopCount = 1000000;
-	uint64_t StartCycles = __rdtsc();
-	uint64_t MallocCycles, ChainCycles;
-
-	int DummyVar = 0;
-	for(int i = 0; i < TestLoopCount; i++)
-	{
-		CTile* pBuff = (CTile*)malloc(sizeof(CTile) * ((i%1000)+1));
-		mem_zero(pBuff, sizeof(CTile) * ((i%1000)+1));
-		DummyVar += pBuff[0].m_Index;
-		free(pBuff);
-	}
-
-	MallocCycles = __rdtsc() - StartCycles;
-	StartCycles = __rdtsc();
-
-	for(int i = 0; i < TestLoopCount; i++)
-	{
-		CMemBlock<CTile> Block = TestDispenser.Alloc((i%1000)+1);
-		DummyVar += Block.Get()[0].m_Index;
-		TestDispenser.Dealloc(&Block);
-	}
-
-	ChainCycles = __rdtsc() - StartCycles;
-
-	ed_log("DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar, MallocCycles/TestLoopCount,
-		   ChainCycles/TestLoopCount);
-#endif
-
-	// test
-#if 0
-	CChainAllocator<CTile, 100, 8> TestDispenser;
-	TestDispenser.Init();
-	CMemBlock<CTile> Block = TestDispenser.Alloc(57);
-	TestDispenser.Dealloc(Block);
-
-	Block = TestDispenser.Alloc(57);
-	CMemBlock<CTile> Block2 = TestDispenser.Alloc(18);
-	TestDispenser.Dealloc(Block);
-	Block = TestDispenser.Alloc(57);
-	TestDispenser.Dealloc(Block2);
-#endif
 
 	// grenade pickup
 	{
@@ -542,7 +580,7 @@ void CEditor::Render()
 	// render map
 	CTile* pTileBuffer = &m_Map.m_aTiles[0];
 	CQuad* pQuadBuffer = &m_Map.m_aQuads[0];
-	const int GroupCount = m_Map.m_aGroups.size();
+	const int GroupCount = m_Map.m_aGroups.Count();
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
@@ -743,7 +781,7 @@ void CEditor::Render()
 
 void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
 {
-	const CTile* pTiles = m_Map.m_aTiles.base_ptr() + GameLayer.m_TileStartID;
+	const CTile* pTiles = m_Map.m_aTiles.Data() + GameLayer.m_TileStartID;
 	const int LayerWidth = GameLayer.m_Width;
 	const int LayerHeight = GameLayer.m_Height;
 
@@ -891,8 +929,8 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 	pChannels[2] = 0;
 	pChannels[3] = 0;
 
-	dbg_assert(EnvID < m_Map.m_aEnvelopes.size(), "EnvID out of bounds");
-	if(EnvID >= m_Map.m_aEnvelopes.size())
+	dbg_assert(EnvID < m_Map.m_aEnvelopes.Count(), "EnvID out of bounds");
+	if(EnvID >= m_Map.m_aEnvelopes.Count())
 		return;
 
 	const CMapItemEnvelope& Env = m_Map.m_aEnvelopes[EnvID];
@@ -949,7 +987,7 @@ void CEditor::RenderUI()
 		DrawText(ButtonRect, aBuff, FontSize);
 	}
 
-	const int GroupCount = m_Map.m_aGroups.size();
+	const int GroupCount = m_Map.m_aGroups.Count();
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		if(gi != 0)
