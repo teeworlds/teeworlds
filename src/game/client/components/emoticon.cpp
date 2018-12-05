@@ -119,6 +119,8 @@ void CEmoticon::OnRender()
 
 	if (length(m_SelectorMouse) > 110.0f)
 		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
+	else
+		m_SelectedEmote = -1;
 
 	CUIRect Screen = *UI()->Screen();
 
