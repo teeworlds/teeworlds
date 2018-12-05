@@ -3,6 +3,7 @@
 #define GAME_EDITOR_EDITOR2_H
 
 #include <stdint.h>
+#include <string.h> // memset
 #include <base/system.h>
 #include <base/tl/array.h>
 
@@ -28,6 +29,150 @@ class IStorage;
 
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint32_t u32;
+
+/* Chain Allocator
+ *
+ * - Allocate/Deallocate a continous list of T elements
+ * - Pointers are never invalidated
+ *
+ * Technicality:
+ * - Slightly faster than malloc with RING_ELT_COUNT==1, faster otherwise depending on RING_ELT_COUNT
+ * - A Ring can be X element long
+ * - Allocation will be rounded out to match RING_ELT_COUNT
+ * - A Chain is made of rings, hence the name
+ * - Returned memory is zeroed out
+ * - Falls back on malloc when out of space
+ *
+ * - Usage:
+ *	CChainAllocator<T, MaxElementCount, RingElementCount> ChainAllocator;
+ *	ChainAllocator.Init();
+ *	CMemBlock<T> Block = ChainAllocator.Alloc(ElementCount);
+ *	T* pData = Block.Get();
+ *	ChainAllocator.Dealloc(&Block);
+*/
+
+template<typename T>
+struct CMemBlock
+{
+	T* m_pStart;
+	int m_Count;
+
+	inline T* Get() { return m_pStart; }
+};
+
+template<typename T, u32 ELT_COUNT_MAX, u32 RING_ELT_COUNT=1>
+class CChainAllocator
+{
+	int64 m_AllocatedSize;
+	u8* m_aRingUsed;
+	T* m_pElementBuffer;
+
+public:
+	typedef CMemBlock<T> BlockT;
+
+	CChainAllocator()
+	{
+		m_AllocatedSize = 0;
+		m_aRingUsed = 0;
+		m_pElementBuffer = 0;
+	}
+
+	~CChainAllocator()
+	{
+		Deinit();
+	}
+
+	void Init()
+	{
+		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
+		dbg_assert(m_pElementBuffer == 0, "Don't init this twice");
+		m_AllocatedSize = sizeof(u8)*TOTAL_RING_COUNT+sizeof(T)*ELT_COUNT_MAX;
+		m_aRingUsed = (u8*)mem_alloc(m_AllocatedSize, 0); // TODO: align
+		m_pElementBuffer = (T*)(m_aRingUsed+ELT_COUNT_MAX);
+		mem_zero(m_aRingUsed, sizeof(u8)*TOTAL_RING_COUNT);
+	}
+
+	void Deinit()
+	{
+		mem_free(m_aRingUsed);
+	}
+
+	BlockT Alloc(const int Count)
+	{
+		dbg_assert(m_pElementBuffer != 0, "Forgot to call Init()");
+		int ChainRingStart = 0;
+		int ChainRingCount = 0;
+		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
+		for(int i = 0; i < TOTAL_RING_COUNT; i++)
+		{
+			uint64_t Ring8 = *(uint64_t*)(m_aRingUsed+i);
+			if(Ring8 == 0)
+			{
+				ChainRingCount += 8;
+				i += 7;
+			}
+			else if(Ring8 == (uint64_t)0xFFFFFFFFFFFFFFFF)
+			{
+				ChainRingStart = i+8;
+				i += 7;
+			}
+			else
+			{
+				if(m_aRingUsed[i])
+				{
+					ChainRingStart = i+1;
+					ChainRingCount = 0;
+					continue;
+				}
+				else
+					ChainRingCount++;
+			}
+
+			if(ChainRingCount*RING_ELT_COUNT >= Count)
+			{
+				memset(m_aRingUsed+ChainRingStart, 0xFF, sizeof(u8)*ChainRingCount);
+
+				BlockT Block;
+				Block.m_pStart = m_pElementBuffer + ChainRingStart*RING_ELT_COUNT;
+				Block.m_Count = ChainRingCount*RING_ELT_COUNT;
+				mem_zero(Block.m_pStart, sizeof(T)*Block.m_Count);
+				return Block;
+			}
+		}
+
+#ifdef CONF_DEBUG
+		dbg_break();
+#endif
+		// fallback to malloc in release mode
+		T* pFallBack = (T*)mem_alloc(sizeof(T)*Count, 0);
+		BlockT Block;
+		Block.m_pStart = pFallBack;
+		Block.m_Count = Count;
+		mem_zero(Block.m_pStart, sizeof(T)*Block.m_Count);
+		return Block;
+	}
+
+	void Dealloc(BlockT* pBlock)
+	{
+		if(pBlock->m_Count <= 0)
+			return;
+
+		if(pBlock->m_pStart >= m_pElementBuffer &&
+			pBlock->m_pStart+pBlock->m_Count <= m_pElementBuffer+ELT_COUNT_MAX)
+		{
+			const int Start = pBlock->m_pStart-m_pElementBuffer;
+			const int Count = pBlock->m_Count;
+			mem_zero(m_aRingUsed+(Start/RING_ELT_COUNT), sizeof(u8)*(Count/RING_ELT_COUNT));
+		}
+		else
+			mem_free(pBlock->m_pStart);
+
+		pBlock->m_Count = 0;
+	}
+
+	inline int64 AllocatedSize() const { return m_AllocatedSize; }
+};
 
 struct CEditorMap
 {
@@ -155,6 +300,13 @@ class CEditor: public IEditor
 	vec2 m_RenderGrenadePickupSize;
 	vec2 m_RenderShotgunPickupSize;
 	vec2 m_RenderLaserPickupSize;
+
+	CChainAllocator<CTile, 2000000, 100> m_TileDispenser;
+	CChainAllocator<CQuad, 2000, 4> m_QuadDispenser;
+	CChainAllocator<CEnvPoint, 100000, 10> m_EnvPointDispenser;
+	CChainAllocator<CEditorMap::CLayer, 1000> m_LayerDispenser;
+	CChainAllocator<CEditorMap::CGroup, 200> m_GroupDispenser;
+	CChainAllocator<CMapItemEnvelope, 1000> m_EnvelopeDispenser;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 

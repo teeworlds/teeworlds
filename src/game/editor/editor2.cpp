@@ -9,6 +9,8 @@
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
+//#include <intrin.h>
+
 // TODO:
 // - Data setup for easy add/remove (tiles, quads, ...)
 // - Smooth zoom
@@ -297,6 +299,70 @@ void CEditor::Init()
 	m_GameTexture = Graphics()->LoadTexture("game.png",
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
+	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
+	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
+
+	m_TileDispenser.Init();
+	m_QuadDispenser.Init();
+	m_EnvPointDispenser.Init();
+	m_LayerDispenser.Init();
+	m_GroupDispenser.Init();
+	m_EnvelopeDispenser.Init();
+	ed_log("m_TileDispenser.AllocatedSize=%lldMb", m_TileDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_QuadDispenser.AllocatedSize=%lldMb", m_QuadDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_EnvPointDispenser.AllocatedSize=%lldMb", m_EnvPointDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_LayerDispenser.AllocatedSize=%lldMb", m_LayerDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
+	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
+
+	// speedtest
+#if 0
+	CChainAllocator<CTile, 10000, 10> TestDispenser;
+	TestDispenser.Init();
+
+	const int TestLoopCount = 1000000;
+	uint64_t StartCycles = __rdtsc();
+	uint64_t MallocCycles, ChainCycles;
+
+	int DummyVar = 0;
+	for(int i = 0; i < TestLoopCount; i++)
+	{
+		CTile* pBuff = (CTile*)malloc(sizeof(CTile) * ((i%1000)+1));
+		mem_zero(pBuff, sizeof(CTile) * ((i%1000)+1));
+		DummyVar += pBuff[0].m_Index;
+		free(pBuff);
+	}
+
+	MallocCycles = __rdtsc() - StartCycles;
+	StartCycles = __rdtsc();
+
+	for(int i = 0; i < TestLoopCount; i++)
+	{
+		CMemBlock<CTile> Block = TestDispenser.Alloc((i%1000)+1);
+		DummyVar += Block.Get()[0].m_Index;
+		TestDispenser.Dealloc(&Block);
+	}
+
+	ChainCycles = __rdtsc() - StartCycles;
+
+	ed_log("DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar, MallocCycles/TestLoopCount,
+		   ChainCycles/TestLoopCount);
+#endif
+
+	// test
+#if 0
+	CChainAllocator<CTile, 100, 8> TestDispenser;
+	TestDispenser.Init();
+	CMemBlock<CTile> Block = TestDispenser.Alloc(57);
+	TestDispenser.Dealloc(Block);
+
+	Block = TestDispenser.Alloc(57);
+	CMemBlock<CTile> Block2 = TestDispenser.Alloc(18);
+	TestDispenser.Dealloc(Block);
+	Block = TestDispenser.Alloc(57);
+	TestDispenser.Dealloc(Block2);
+#endif
+
 	// grenade pickup
 	{
 		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_GRENADE].m_W;
@@ -324,9 +390,6 @@ void CEditor::Init()
 		m_RenderLaserPickupSize = vec2(VisualSize * (SpriteW/ScaleFactor),
 									   VisualSize * (SpriteH/ScaleFactor));
 	}
-
-	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
-	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	if(!LoadMap("maps/ctf7.map")) {
