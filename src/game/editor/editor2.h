@@ -224,6 +224,15 @@ struct CDynArray
 		return *(Data()-Count);
 	}
 
+	T& AddEmpty(int Count)
+	{
+		if(m_EltCount+Count >= Capacity())
+			Reserve(max(Capacity() * 2, m_EltCount+Count));
+		mem_zero(Data()+m_EltCount, Count*sizeof(T));
+		m_EltCount += Count;
+		return *(Data()-Count);
+	}
+
 	inline void Clear()
 	{
 		m_pAllocator->Dealloc(&m_MemBlock);
@@ -259,8 +268,8 @@ struct CEditorMap
 
 	struct CLayer
 	{
-		int m_Type;
-		int m_ImageID;
+		int m_Type = 0;
+		int m_ImageID = 0;
 		vec4 m_Color;
 
 		union
@@ -282,10 +291,10 @@ struct CEditorMap
 	{
 		int m_apLayerIDs[MAX_GROUP_LAYERS];
 		int m_LayerCount = 0;
-		int m_ParallaxX;
-		int m_ParallaxY;
-		int m_OffsetX;
-		int m_OffsetY;
+		int m_ParallaxX = 0;
+		int m_ParallaxY = 0;
+		int m_OffsetX = 0;
+		int m_OffsetY = 0;
 	};
 
 	struct CEnvelope
@@ -331,7 +340,10 @@ struct CEditorMap
 	void Init(IStorage *pStorage, IGraphics* pGraphics, IConsole* pConsole);
 	bool Save(const char *pFileName);
 	bool Load(const char *pFileName);
+	void LoadDefault();
 	void Clear();
+
+	CLayer& NewTileLayer(int Width, int Height);
 };
 
 struct CUIButtonState
@@ -413,6 +425,7 @@ class CEditor: public IEditor
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
+	void OnMapLoaded();
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 

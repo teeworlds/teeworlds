@@ -339,6 +339,64 @@ bool CEditorMap::Load(const char* pFileName)
 	return true;
 }
 
+void CEditorMap::LoadDefault()
+{
+	Clear();
+
+	CGroup BgGroup;
+	BgGroup.m_OffsetX = 0;
+	BgGroup.m_OffsetY = 0;
+	BgGroup.m_ParallaxX = 0;
+	BgGroup.m_ParallaxY = 0;
+
+	CLayer BgQuadLayer;
+	BgQuadLayer.m_Type = LAYERTYPE_QUADS;
+	BgQuadLayer.m_ImageID = -1;
+	BgQuadLayer.m_Color = vec4(1, 1, 1, 1);
+
+	CQuad SkyQuad;
+	SkyQuad.m_ColorEnv = -1;
+	SkyQuad.m_PosEnv = -1;
+	const int Width = i2fx(800);
+	const int Height = i2fx(600);
+	SkyQuad.m_aPoints[0].x = SkyQuad.m_aPoints[2].x = -Width;
+	SkyQuad.m_aPoints[1].x = SkyQuad.m_aPoints[3].x = Width;
+	SkyQuad.m_aPoints[0].y = SkyQuad.m_aPoints[1].y = -Height;
+	SkyQuad.m_aPoints[2].y = SkyQuad.m_aPoints[3].y = Height;
+	SkyQuad.m_aPoints[4].x = SkyQuad.m_aPoints[4].y = 0;
+	SkyQuad.m_aColors[0].r = SkyQuad.m_aColors[1].r = 94;
+	SkyQuad.m_aColors[0].g = SkyQuad.m_aColors[1].g = 132;
+	SkyQuad.m_aColors[0].b = SkyQuad.m_aColors[1].b = 174;
+	SkyQuad.m_aColors[2].r = SkyQuad.m_aColors[3].r = 204;
+	SkyQuad.m_aColors[2].g = SkyQuad.m_aColors[3].g = 232;
+	SkyQuad.m_aColors[2].b = SkyQuad.m_aColors[3].b = 255;
+	SkyQuad.m_aColors[0].a = SkyQuad.m_aColors[1].a = 255;
+	SkyQuad.m_aColors[2].a = SkyQuad.m_aColors[3].a = 255;
+
+	BgQuadLayer.m_QuadStartID = m_aQuads.Count();
+	BgQuadLayer.m_QuadCount = 1;
+	m_aQuads.Add(SkyQuad);
+
+	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = m_aLayers.Count();
+	m_aLayers.Add(BgQuadLayer);
+	m_aGroups.Add(BgGroup);
+
+	CGroup GameGroup;
+	GameGroup.m_OffsetX = 0;
+	GameGroup.m_OffsetY = 0;
+	GameGroup.m_ParallaxX = 100;
+	GameGroup.m_ParallaxY = 100;
+
+	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = m_aLayers.Count();
+	CLayer& Gamelayer = NewTileLayer(50, 50);
+	m_aLayers.Add(Gamelayer);
+
+	m_GameGroupID = m_aGroups.Count();
+	m_aGroups.Add(GameGroup);
+
+	m_GameLayerID = GameGroup.m_apLayerIDs[0];
+}
+
 void CEditorMap::Clear()
 {
 	m_GameLayerID = -1;
@@ -358,6 +416,18 @@ void CEditorMap::Clear()
 		m_pGraphics->UnloadTexture(&m_aTextures[i]);
 	}
 	m_TextureCount = 0;
+}
+
+CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
+{
+	CLayer TileLayer;
+	TileLayer.m_Type = LAYERTYPE_TILES;
+	TileLayer.m_ImageID = -1;
+	TileLayer.m_Width = Width;
+	TileLayer.m_Height = Height;
+	TileLayer.m_TileStartID = m_aTiles.Count();
+	m_aTiles.AddEmpty(TileLayer.m_Width*TileLayer.m_Height);
+	return m_aLayers.Add(TileLayer);
 }
 
 IEditor *CreateEditor() { return new CEditor; }
@@ -430,6 +500,11 @@ void CEditor::Init()
 	}
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
+
+	/*
+	m_Map.LoadDefault();
+	OnMapLoaded();
+	*/
 	if(!LoadMap("maps/ctf7.map")) {
 		dbg_break();
 	}
@@ -1235,19 +1310,24 @@ bool CEditor::LoadMap(const char* pFileName)
 {
 	if(m_Map.Load(pFileName))
 	{
-		m_UiSelectedLayerID = m_Map.m_GameLayerID;
-		m_UiSelectedGroupID = m_Map.m_GameGroupID;
-		mem_zero(m_UiGroupHidden, sizeof(m_UiGroupHidden));
-		mem_zero(m_UiGroupOpen, sizeof(m_UiGroupOpen));
-		m_UiGroupOpen[m_Map.m_GameGroupID] = true;
-		mem_zero(m_UiLayerHidden, sizeof(m_UiLayerHidden));
-		mem_zero(m_UiLayerHovered, sizeof(m_UiLayerHovered));
-		ResetCamera();
+		OnMapLoaded();
 		ed_log("map '%s' sucessfully loaded.", pFileName);
 		return true;
 	}
 	ed_log("failed to load map '%s'", pFileName);
 	return false;
+}
+
+void CEditor::OnMapLoaded()
+{
+	m_UiSelectedLayerID = m_Map.m_GameLayerID;
+	m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	mem_zero(m_UiGroupHidden, sizeof(m_UiGroupHidden));
+	mem_zero(m_UiGroupOpen, sizeof(m_UiGroupOpen));
+	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
+	mem_zero(m_UiLayerHidden, sizeof(m_UiLayerHidden));
+	mem_zero(m_UiLayerHovered, sizeof(m_UiLayerHovered));
+	ResetCamera();
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
