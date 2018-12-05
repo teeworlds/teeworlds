@@ -48,8 +48,6 @@ void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConso
 	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
 	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
 
-	m_aTiles.Init(&m_TileDispenser);
-	m_aQuads.Init(&m_QuadDispenser);
 	m_aEnvPoints.Init(&m_EnvPointDispenser);
 	m_aLayers.Init(&m_LayerDispenser);
 	m_aGroups.Init(&m_GroupDispenser);
@@ -196,8 +194,7 @@ bool CEditorMap::Load(const char* pFileName)
 				LayerTile.m_Height = Tilemap.m_Height;
 				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
 										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
-				LayerTile.m_TileStartID = m_aTiles.Count();
-
+				LayerTile.m_aTiles = NewTileArray();
 
 				CTile *pTiles = (CTile *)File.GetData(Tilemap.m_Data);
 				int TileCount = Tilemap.m_Width*Tilemap.m_Height;
@@ -208,8 +205,8 @@ bool CEditorMap::Load(const char* pFileName)
 					Tile.m_Skip = 0;
 
 					for(int s = 0; s < Skips; s++)
-						m_aTiles.Add(Tile);
-					m_aTiles.Add(Tile);
+						LayerTile.m_aTiles.Add(Tile);
+					LayerTile.m_aTiles.Add(Tile);
 
 					TileCount -= Skips;
 				}
@@ -233,15 +230,13 @@ bool CEditorMap::Load(const char* pFileName)
 				CLayer LayerQuad;
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
-				LayerQuad.m_QuadStartID = m_aQuads.Count();
-				LayerQuad.m_QuadCount = ItemQuadLayer.m_NumQuads;
+
+				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
+				LayerQuad.m_aQuads = NewQuadArray();
+				LayerQuad.m_aQuads.Add(pQuads, ItemQuadLayer.m_NumQuads);
+
 				const int LayerID = m_aLayers.Count();
 				m_aLayers.Add(LayerQuad);
-
-				// TODO: this is extremely slow
-				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
-				const int QuadCount = LayerQuad.m_QuadCount;
-				m_aQuads.Add(pQuads, QuadCount);
 
 				if(Group.m_LayerCount < MAX_GROUP_LAYERS)
 					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
@@ -349,10 +344,7 @@ void CEditorMap::LoadDefault()
 	BgGroup.m_ParallaxX = 0;
 	BgGroup.m_ParallaxY = 0;
 
-	CLayer BgQuadLayer;
-	BgQuadLayer.m_Type = LAYERTYPE_QUADS;
-	BgQuadLayer.m_ImageID = -1;
-	BgQuadLayer.m_Color = vec4(1, 1, 1, 1);
+	CLayer& BgQuadLayer = NewQuadLayer();
 
 	CQuad SkyQuad;
 	SkyQuad.m_ColorEnv = -1;
@@ -372,13 +364,9 @@ void CEditorMap::LoadDefault()
 	SkyQuad.m_aColors[2].b = SkyQuad.m_aColors[3].b = 255;
 	SkyQuad.m_aColors[0].a = SkyQuad.m_aColors[1].a = 255;
 	SkyQuad.m_aColors[2].a = SkyQuad.m_aColors[3].a = 255;
+	BgQuadLayer.m_aQuads.Add(SkyQuad);
 
-	BgQuadLayer.m_QuadStartID = m_aQuads.Count();
-	BgQuadLayer.m_QuadCount = 1;
-	m_aQuads.Add(SkyQuad);
-
-	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = m_aLayers.Count();
-	m_aLayers.Add(BgQuadLayer);
+	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = m_aLayers.Count()-1;
 	m_aGroups.Add(BgGroup);
 
 	CGroup GameGroup;
@@ -387,13 +375,12 @@ void CEditorMap::LoadDefault()
 	GameGroup.m_ParallaxX = 100;
 	GameGroup.m_ParallaxY = 100;
 
-	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = m_aLayers.Count();
 	CLayer& Gamelayer = NewTileLayer(50, 50);
-	m_aLayers.Add(Gamelayer);
 
-	m_GameGroupID = m_aGroups.Count();
+	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = m_aLayers.Count()-1;
 	m_aGroups.Add(GameGroup);
 
+	m_GameGroupID = m_aGroups.Count()-1;
 	m_GameLayerID = GameGroup.m_apLayerIDs[0];
 }
 
@@ -404,8 +391,16 @@ void CEditorMap::Clear()
 	m_MapMaxWidth = 0;
 	m_MapMaxHeight = 0;
 
-	m_aTiles.Clear();
-	m_aQuads.Clear();
+	// release tiles and quads
+	const int LayerCount = m_aLayers.Count();
+	for(int li = 0; li < LayerCount; li++)
+	{
+		if(m_aLayers[li].IsTileLayer())
+			m_aLayers[li].m_aTiles.Clear();
+		else
+			m_aLayers[li].m_aQuads.Clear();
+	}
+
 	m_aEnvPoints.Clear();
 	m_aLayers.Clear();
 	m_aGroups.Clear();
@@ -425,9 +420,18 @@ CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 	TileLayer.m_ImageID = -1;
 	TileLayer.m_Width = Width;
 	TileLayer.m_Height = Height;
-	TileLayer.m_TileStartID = m_aTiles.Count();
-	m_aTiles.AddEmpty(TileLayer.m_Width*TileLayer.m_Height);
+	TileLayer.m_aTiles = NewTileArray();
+	TileLayer.m_aTiles.AddEmpty(TileLayer.m_Width * TileLayer.m_Height);
 	return m_aLayers.Add(TileLayer);
+}
+
+CEditorMap::CLayer&CEditorMap::NewQuadLayer()
+{
+	CLayer QuadLayer;
+	QuadLayer.m_Type = LAYERTYPE_QUADS;
+	QuadLayer.m_ImageID = -1;
+	QuadLayer.m_aQuads = NewQuadArray();
+	return m_aLayers.Add(QuadLayer);
 }
 
 IEditor *CreateEditor() { return new CEditor; }
@@ -653,8 +657,6 @@ void CEditor::Render()
 	}
 
 	// render map
-	CTile* pTileBuffer = &m_Map.m_aTiles[0];
-	CQuad* pQuadBuffer = &m_Map.m_aQuads[0];
 	const int GroupCount = m_Map.m_aGroups.Count();
 
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -690,7 +692,7 @@ void CEditor::Render()
 				const float LyWidth = Layer.m_Width;
 				const float LyHeight = Layer.m_Height;
 				vec4 LyColor = Layer.m_Color;
-				CTile *pTiles = pTileBuffer + Layer.m_TileStartID;
+				const CTile *pTiles = Layer.m_aTiles.Data();
 
 				if(LyID == m_Map.m_GameLayerID)
 				{
@@ -731,7 +733,7 @@ void CEditor::Render()
 				if(m_UiLayerHovered[LyID])
 					Graphics()->BlendAdditive();
 
-				RenderTools()->RenderQuads(&pQuadBuffer[Layer.m_QuadStartID], Layer.m_QuadCount,
+				RenderTools()->RenderQuads(Layer.m_aQuads.Data(), Layer.m_aQuads.Count(),
 						LAYERRENDERFLAG_TRANSPARENT, StaticEnvelopeEval, this);
 			}
 		}
@@ -751,7 +753,7 @@ void CEditor::Render()
 		const float LyWidth = LayerTile.m_Width;
 		const float LyHeight = LayerTile.m_Height;
 		vec4 LyColor = LayerTile.m_Color;
-		CTile *pTiles = pTileBuffer + LayerTile.m_TileStartID;
+		const CTile *pTiles = LayerTile.m_aTiles.Data();
 
 		Graphics()->TextureSet(m_EntitiesTexture);
 		Graphics()->BlendNone();
@@ -856,7 +858,7 @@ void CEditor::Render()
 
 void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
 {
-	const CTile* pTiles = m_Map.m_aTiles.Data() + GameLayer.m_TileStartID;
+	const CTile* pTiles = GameLayer.m_aTiles.Data();
 	const int LayerWidth = GameLayer.m_Width;
 	const int LayerHeight = GameLayer.m_Height;
 

@@ -194,11 +194,12 @@ struct CDynArray
 		m_pAllocator = 0;
 	}
 
-	void Init(CChainAllocator<T>* pAllocator, int InitialCapacity=16)
+	void Init(CChainAllocator<T>* pAllocator)
 	{
 		dbg_assert(!m_pAllocator, "Init already called");
 		m_pAllocator = pAllocator;
-		m_MemBlock = m_pAllocator->Alloc(InitialCapacity);
+		m_MemBlock.m_pStart = 0;
+		m_MemBlock.m_Count = 0;
 		m_EltCount = 0;
 	}
 
@@ -244,6 +245,7 @@ struct CDynArray
 	inline int Count() const { return m_EltCount; }
 	inline int Capacity() const { return m_MemBlock.m_Count; }
 	inline T* Data() { return m_MemBlock.m_pStart; }
+	inline const T* Data() const { return m_MemBlock.m_pStart; }
 
 	inline T& operator[] (int Index)
 	{
@@ -275,16 +277,19 @@ struct CEditorMap
 		union
 		{
 			struct {
-				int m_TileStartID;
+				CDynArray<CTile> m_aTiles;
 				u16 m_Width;
 				u16 m_Height;
 			};
 
 			struct {
-				int m_QuadStartID;
-				int m_QuadCount;
+				CDynArray<CQuad> m_aQuads;
 			};
 		};
+
+		CLayer(){}
+		inline bool IsTileLayer() const { return m_Type == LAYERTYPE_TILES; }
+		inline bool IsQuadLayer() const { return m_Type == LAYERTYPE_QUADS; }
 	};
 
 	struct CGroup
@@ -312,8 +317,6 @@ struct CEditorMap
 	int m_GameLayerID = -1;
 	int m_GameGroupID = -1;
 
-	CDynArray<CTile> m_aTiles;
-	CDynArray<CQuad> m_aQuads;
 	CDynArray<CEnvPoint> m_aEnvPoints;
 	CDynArray<CLayer> m_aLayers;
 	CDynArray<CGroup> m_aGroups;
@@ -343,7 +346,22 @@ struct CEditorMap
 	void LoadDefault();
 	void Clear();
 
+	inline CDynArray<CTile> NewTileArray()
+	{
+		CDynArray<CTile> Array;
+		Array.Init(&m_TileDispenser);
+		return Array;
+	}
+
+	inline CDynArray<CQuad> NewQuadArray()
+	{
+		CDynArray<CQuad> Array;
+		Array.Init(&m_QuadDispenser);
+		return Array;
+	}
+
 	CLayer& NewTileLayer(int Width, int Height);
+	CLayer& NewQuadLayer();
 };
 
 struct CUIButtonState
