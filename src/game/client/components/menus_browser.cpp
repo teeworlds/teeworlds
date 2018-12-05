@@ -890,7 +890,7 @@ void CMenus::RenderServerbrowserOverlay()
 			RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 6.0f);
 
 			View.y += 2.0f;
-			UI()->DoLabel(&View, Localize("no players"), View.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&View, Localize("no players", "server browser message"), View.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 		}
 
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

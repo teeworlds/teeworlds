@@ -1021,11 +1021,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 		Button.VSplitLeft(119.0f, &Button, 0);
 		if(g_Config.m_ClFilterchat == 0)
-			str_format(aBuf, sizeof(aBuf), Localize("everyone"));
+			str_format(aBuf, sizeof(aBuf), Localize("everyone", "Show chat messages from:"));
 		else if(g_Config.m_ClFilterchat == 1)
-			str_format(aBuf, sizeof(aBuf), Localize("friends only"));
+			str_format(aBuf, sizeof(aBuf), Localize("friends only", "Show chat messages from:"));
 		else if(g_Config.m_ClFilterchat == 2)
-			str_format(aBuf, sizeof(aBuf), Localize("no one"));
+			str_format(aBuf, sizeof(aBuf), Localize("no one", "Show chat messages from:"));
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
 			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;

@@ -95,14 +95,14 @@ const char *CGameClient::GetTeamName(int Team, bool Teamplay) const
 	if(Teamplay)
 	{
 		if(Team == TEAM_RED)
-			return Localize("red team");
+			return Localize("red team", "'X joined the <red team>' (server message)");
 		else if(Team == TEAM_BLUE)
-			return Localize("blue team");
+			return Localize("blue team", "'X joined the <blue team>' (server message)");
 	}
 	else if(Team == 0)
-		return Localize("game");
+		return Localize("game", "'X joined the <game>' (server message)");
 
-	return Localize("spectators");
+	return Localize("spectators", "'X joined the <spectators>' (server message)");
 }
 
 enum
