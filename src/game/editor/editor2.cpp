@@ -13,6 +13,7 @@
 
 // TODO:
 // - Data setup for easy add/remove (tiles, quads, ...)
+// - Allow brush to go in eraser mode
 // - Binds
 // - Smooth zoom
 
@@ -352,9 +353,8 @@ bool CEditorMap::Load(const char* pFileName)
 			else
 			{
 				m_aTextures2D[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
-															   pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
-															   CImageInfo::FORMAT_RGBA,
-															   IGraphics::TEXLOAD_MULTI_DIMENSION);
+					pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
+					CImageInfo::FORMAT_RGBA, IGraphics::TEXLOAD_MULTI_DIMENSION);
 			}
 		}
 		dbg_assert(m_aTextures[i].IsValid(), "Invalid texture");
@@ -571,6 +571,10 @@ void CEditor::OnInput(IInput::CEvent Event)
 				}
 				Bps.m_MouseClicked = true;
 			}
+			if(Event.m_Key == KEY_MOUSE_2)
+			{
+				mem_zero(Bps.m_aTileSelected, sizeof(Bps.m_aTileSelected));
+			}
 		}
 		else if(Event.m_Flags&IInput::FLAG_RELEASE)
 		{
@@ -580,13 +584,34 @@ void CEditor::OnInput(IInput::CEvent Event)
 				{
 					Bps.m_MouseEndDragPos = m_UiMousePos;
 					Bps.m_MouseIsDraggingRect = false;
-					Bps.m_DoHandleDragSquare = true;
 
 					// we dragged outside the popup
-					if(!IsInsideRect(Bps.m_MouseStartDragPos, m_UiPopupBrushPaletteImageRect) &&
-					   !IsInsideRect(Bps.m_MouseEndDragPos, m_UiPopupBrushPaletteImageRect))
+					if(IsInsideRect(Bps.m_MouseStartDragPos, m_UiPopupBrushPaletteImageRect) ||
+					   IsInsideRect(Bps.m_MouseEndDragPos, m_UiPopupBrushPaletteImageRect))
 					{
-						Bps.m_DoHandleDragSquare = false;
+						u8* aTileSelected = Bps.m_aTileSelected;
+						const float TileSize = m_UiPopupBrushPaletteImageRect.w / 16.f;
+						const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos -
+							vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+						const vec2 RelMouseEndPos = Bps.m_MouseEndDragPos -
+							vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+						const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
+						const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
+						const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
+						const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
+
+						const int DragTLX = min(DragStartTileX, DragEndTileX);
+						const int DragTLY = min(DragStartTileY, DragEndTileY);
+						const int DragBRX = max(DragStartTileX, DragEndTileX);
+						const int DragBRY = max(DragStartTileY, DragEndTileY);
+
+						for(int ty = DragTLY; ty <= DragBRY; ty++)
+						{
+							for(int tx = DragTLX; tx <= DragBRX; tx++)
+							{
+								aTileSelected[ty * 16 + tx] = 1;
+							}
+						}
 					}
 				}
 				Bps.m_MouseClicked = false;
@@ -847,7 +872,8 @@ void CEditor::Render()
 	Graphics()->BlendNormal();
 
 	// origin and border
-	CUIRect ScreenRect = { SelectedScreenOff.x, SelectedScreenOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
+	CUIRect ScreenRect = { SelectedScreenOff.x, SelectedScreenOff.y,
+						   ZoomWorldViewWidth, ZoomWorldViewHeight };
 	Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 						  ScreenRect.y+ScreenRect.h);
 
@@ -1288,11 +1314,10 @@ void CEditor::RenderPopupBrushPalette()
 	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
 	MainRect.Margin(50.0f, &MainRect);
 	m_UiPopupBrushPaletteRect = MainRect;
-	DrawRect(MainRect, vec4(1, 0, 0, 1));
+	DrawRect(MainRect, StyleColorBg);
 
 	CUIRect TopRow;
 	MainRect.HSplitTop(40, &TopRow, &MainRect);
-	DrawRect(TopRow, vec4(0.03, 0, 0.085, 1.0));
 
 	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
@@ -1333,7 +1358,7 @@ void CEditor::RenderPopupBrushPalette()
 	const float TileSize = ImageRect.w / 16.f;
 
 	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
-	u8* aTileSelected = Bps.m_TileSelected;
+	u8* aTileSelected = Bps.m_aTileSelected;
 
 	for(int ti = 0; ti < 256; ti++)
 	{
@@ -1390,30 +1415,6 @@ void CEditor::RenderPopupBrushPalette()
 		DrawRect(DragTileRect, vec4(0.5, 0, 1, 0.75));
 	}
 
-	if(Bps.m_DoHandleDragSquare)
-	{
-		Bps.m_DoHandleDragSquare = false;
-		const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos - vec2(ImageRect.x, ImageRect.y);
-		const vec2 RelMouseEndPos = Bps.m_MouseEndDragPos - vec2(ImageRect.x, ImageRect.y);
-		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
-		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
-		const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
-		const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
-
-		const int DragTLX = min(DragStartTileX, DragEndTileX);
-		const int DragTLY = min(DragStartTileY, DragEndTileY);
-		const int DragBRX = max(DragStartTileX, DragEndTileX);
-		const int DragBRY = max(DragStartTileY, DragEndTileY);
-
-		for(int ty = DragTLY; ty <= DragBRY; ty++)
-		{
-			for(int tx = DragTLX; tx <= DragBRX; tx++)
-			{
-				aTileSelected[ty * 16 + tx] = 1;
-			}
-		}
-	}
-
 	CUIRect ButtonRect;
 	TopRow.Margin(3.0f, &TopRow);
 	TopRow.VSplitLeft(100, &ButtonRect, &TopRow);
@@ -1422,6 +1423,16 @@ void CEditor::RenderPopupBrushPalette()
 	if(UiButton(ButtonRect, Localize("Clear"), &s_ButClear))
 	{
 		mem_zero(aTileSelected, sizeof(u8)*256);
+	}
+
+	TopRow.VSplitLeft(2, 0, &TopRow);
+	TopRow.VSplitLeft(100, &ButtonRect, &TopRow);
+
+	static CUIButtonState s_ButEraser;
+	if(UiButton(ButtonRect, Localize("Eraser"), &s_ButEraser))
+	{
+		mem_zero(aTileSelected, sizeof(u8)*256);
+		aTileSelected[0] = 1; // TODO: don't show this, go into "eraser" state
 	}
 }
 
@@ -1583,7 +1594,8 @@ void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
 
 	char aMapPath[256];
 	bool AddMapPath = str_comp_nocase_num(pResult->GetString(0), "maps/", 5) != 0;
-	bool AddMapExtension = InputTextLen <= 4 || str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
+	bool AddMapExtension = InputTextLen <= 4 ||
+		str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
 	str_format(aMapPath, sizeof(aMapPath), "%s%s%s", AddMapPath ? "maps/":"", pResult->GetString(0),
 			   AddMapExtension ? ".map":"");
 

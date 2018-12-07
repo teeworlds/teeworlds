@@ -434,8 +434,7 @@ class CEditor: public IEditor
 		vec2 m_MouseEndDragPos;
 		bool m_MouseClicked = false;
 		bool m_MouseIsDraggingRect = false;
-		bool m_DoHandleDragSquare = false;
-		u8 m_TileSelected[256] = {0};
+		u8 m_aTileSelected[256] = {0};
 	};
 	CUIBrushPaletteState m_UiBrushPaletteState;
 	CUIRect m_UiPopupBrushPaletteRect = {};
