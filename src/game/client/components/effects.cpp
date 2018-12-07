@@ -56,7 +56,7 @@ void CEffects::DamageIndicator(vec2 Pos, int Amount)
 		return;
 
 	m_DamageTaken++;
-	int Angle;
+	float Angle;
 	// create healthmod indicator
 	if(Client()->LocalTime() < m_DamageTakenTick+0.5f)
 	{
