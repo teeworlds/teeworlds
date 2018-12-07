@@ -25,9 +25,21 @@ static char s_aEdMsg[256];
 	str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
 
+static vec4 StyleColorBg(0.03, 0, 0.085, 1);
+static vec4 StyleColorButton(0.062, 0, 0.19, 1);
+static vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
+static vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
+static vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
+
 inline float fract(float f)
 {
 	return f - (int)f;
+}
+
+inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
+{
+	return (Pos.x >= Rect.x && Pos.x < (Rect.x+Rect.w) &&
+			Pos.y >= Rect.y && Pos.y < (Rect.y+Rect.h));
 }
 
 void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
@@ -569,6 +581,13 @@ void CEditor::OnInput(IInput::CEvent Event)
 					Bps.m_MouseEndDragPos = m_UiMousePos;
 					Bps.m_MouseIsDraggingRect = false;
 					Bps.m_DoHandleDragSquare = true;
+
+					// we dragged outside the popup
+					if(!IsInsideRect(Bps.m_MouseStartDragPos, m_UiPopupBrushPaletteImageRect) &&
+					   !IsInsideRect(Bps.m_MouseEndDragPos, m_UiPopupBrushPaletteImageRect))
+					{
+						Bps.m_DoHandleDragSquare = false;
+					}
 				}
 				Bps.m_MouseClicked = false;
 			}
@@ -1140,13 +1159,13 @@ void CEditor::RenderUI()
 
 		const bool IsShown = !m_UiGroupHidden[gi];
 
-		vec4 ShowButColor(0.062, 0, 0.19, 1);
+		vec4 ShowButColor = StyleColorButton;
 		if(ShowButState.m_Hovered)
-			ShowButColor = vec4(0.28, 0.10, 0.64, 1);
+			ShowButColor = StyleColorButtonHover;
 		if(ShowButState.m_Pressed)
-			ShowButColor = vec4(0.13, 0, 0.40, 1);
+			ShowButColor = StyleColorButtonPressed;
 
-		DrawRectBorder(ShowButton, ShowButColor, 1, vec4(0.13, 0, 0.40, 1));
+		DrawRectBorder(ShowButton, ShowButColor, 1, StyleColorButtonBorder);
 		DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 		// group button
@@ -1158,14 +1177,14 @@ void CEditor::RenderUI()
 
 		const bool IsOpen = m_UiGroupOpen[gi];
 
-		vec4 ButColor(0.062, 0, 0.19, 1);
+		vec4 ButColor = StyleColorButton;
 		if(ButState.m_Hovered)
-			ButColor = vec4(0.28, 0.10, 0.64, 1);
+			ButColor = StyleColorButtonHover;
 		if(ButState.m_Pressed)
-			ButColor = vec4(0.13, 0, 0.40, 1);
+			ButColor = StyleColorButtonPressed;
 
 		if(IsOpen)
-			DrawRectBorder(ButtonRect, ButColor, 1, vec4(0.13, 0, 0.40, 1));
+			DrawRectBorder(ButtonRect, ButColor, 1, StyleColorButtonBorder);
 		else
 			DrawRect(ButtonRect, ButColor);
 
@@ -1208,24 +1227,24 @@ void CEditor::RenderUI()
 
 				const bool IsShown = !m_UiLayerHidden[LyID];
 
-				vec4 ShowButColor(0.062, 0, 0.19, 1);
+				vec4 ShowButColor = StyleColorButton;
 				if(ShowButState.m_Hovered)
-					ShowButColor = vec4(0.28, 0.10, 0.64, 1);
+					ShowButColor = StyleColorButtonHover;
 				if(ShowButState.m_Pressed)
-					ShowButColor = vec4(0.13, 0, 0.40, 1);
+					ShowButColor = StyleColorButtonPressed;
 
-				DrawRectBorder(ShowButton, ShowButColor, 1, vec4(0.13, 0, 0.40, 1));
+				DrawRectBorder(ShowButton, ShowButColor, 1, StyleColorButtonBorder);
 				DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 				// layer button
 				CUIButtonState& ButState = s_UiLayerButState[LyID];
 				UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
-				vec4 ButColor(0.062, 0, 0.19, 1);
+				vec4 ButColor = StyleColorButton;
 				if(ButState.m_Hovered)
-					ButColor = vec4(0.28, 0.10, 0.64, 1);
+					ButColor = StyleColorButtonHover;
 				if(ButState.m_Pressed)
-					ButColor = vec4(0.13, 0, 0.40, 1);
+					ButColor = StyleColorButtonPressed;
 
 				if(ButState.m_Clicked)
 				{
@@ -1265,15 +1284,15 @@ void CEditor::RenderPopupBrushPalette()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
-	// TODO: save a main view rect and a right panel rect?
 	CUIRect MainRect = {0, 0, m_UiMainViewRect.h, m_UiMainViewRect.h};
 	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
 	MainRect.Margin(50.0f, &MainRect);
+	m_UiPopupBrushPaletteRect = MainRect;
 	DrawRect(MainRect, vec4(1, 0, 0, 1));
 
 	CUIRect TopRow;
 	MainRect.HSplitTop(40, &TopRow, &MainRect);
-	DrawRect(TopRow, vec4(27/255.0f, 20/255.0f, 100/255.0f, 1.0));
+	DrawRect(TopRow, vec4(0.03, 0, 0.085, 1.0));
 
 	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
@@ -1287,6 +1306,7 @@ void CEditor::RenderPopupBrushPalette()
 	CUIRect ImageRect = MainRect;
 	ImageRect.w = min(ImageRect.w, ImageRect.h);
 	ImageRect.h = ImageRect.w;
+	m_UiPopupBrushPaletteImageRect = ImageRect;
 
 	// checker background
 	Graphics()->BlendNone();
@@ -1346,7 +1366,8 @@ void CEditor::RenderPopupBrushPalette()
 	}
 
 	// drag rectangle
-	if(Bps.m_MouseIsDraggingRect)
+	if(Bps.m_MouseIsDraggingRect &&
+	   (UI()->MouseInside(&ImageRect) || IsInsideRect(Bps.m_MouseStartDragPos, ImageRect)))
 	{
 		const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos - vec2(ImageRect.x, ImageRect.y);
 		const vec2 RelMouseEndPos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
@@ -1391,6 +1412,16 @@ void CEditor::RenderPopupBrushPalette()
 				aTileSelected[ty * 16 + tx] = 1;
 			}
 		}
+	}
+
+	CUIRect ButtonRect;
+	TopRow.Margin(3.0f, &TopRow);
+	TopRow.VSplitLeft(100, &ButtonRect, &TopRow);
+
+	static CUIButtonState s_ButClear;
+	if(UiButton(ButtonRect, Localize("Clear"), &s_ButClear))
+	{
+		mem_zero(aTileSelected, sizeof(u8)*256);
 	}
 }
 
@@ -1474,6 +1505,21 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 		UI()->SetHotItem(0);
 	}
 
+}
+
+bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState)
+{
+	UiDoButtonBehavior(pButState, Rect, pButState);
+
+	vec4 ShowButColor = StyleColorButton;
+	if(pButState->m_Hovered)
+		ShowButColor = StyleColorButtonHover;
+	if(pButState->m_Pressed)
+		ShowButColor = StyleColorButtonPressed;
+
+	DrawRectBorder(Rect, ShowButColor, 1, StyleColorButtonBorder);
+	DrawText(Rect, pText, 10.0f);
+	return pButState->m_Clicked;
 }
 
 void CEditor::Reset()

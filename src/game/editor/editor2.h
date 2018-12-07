@@ -438,6 +438,8 @@ class CEditor: public IEditor
 		u8 m_TileSelected[256] = {0};
 	};
 	CUIBrushPaletteState m_UiBrushPaletteState;
+	CUIRect m_UiPopupBrushPaletteRect = {};
+	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
 	vec2 m_RenderGrenadePickupSize;
 	vec2 m_RenderShotgunPickupSize;
@@ -458,6 +460,7 @@ class CEditor: public IEditor
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
+	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState);
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void Reset();
