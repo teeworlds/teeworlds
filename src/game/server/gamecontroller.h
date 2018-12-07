@@ -21,6 +21,7 @@ class IGameController
 	void DoActivityCheck();
 	bool GetPlayersReadyState();
 	void SetPlayersReadyState(bool ReadyState);
+	void CheckReadyStates();
 
 	// balancing
 	enum

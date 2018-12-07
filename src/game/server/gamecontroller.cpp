@@ -352,6 +352,8 @@ void IGameController::OnPlayerDisconnect(CPlayer *pPlayer)
 		--m_aTeamSize[pPlayer->GetTeam()];
 		m_UnbalancedTick = TBALANCE_CHECK;
 	}
+
+	CheckReadyStates();
 }
 
 void IGameController::OnPlayerInfoChange(CPlayer *pPlayer)
@@ -365,14 +367,20 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 		// change players ready state
 		pPlayer->m_IsReadyToPlay ^= 1;
 
-		// check if it effects current game state
+		if(m_GameState == IGS_GAME_RUNNING && !pPlayer->m_IsReadyToPlay)
+			SetGameState(IGS_GAME_PAUSED, TIMER_INFINITE); // one player isn't ready -> pause the game
+
+		CheckReadyStates();
+	}
+}
+
+// to be called when a player changes state, spectates or disconnects
+void IGameController::CheckReadyStates()
+{
+	if(g_Config.m_SvPlayerReadyMode)
+	{
 		switch(m_GameState)
 		{
-		case IGS_GAME_RUNNING:
-			// one player isn't ready -> pause the game
-			if(!pPlayer->m_IsReadyToPlay)
-				SetGameState(IGS_GAME_PAUSED, TIMER_INFINITE);
-			break;
 		case IGS_WARMUP_USER:
 			// all players are ready -> end warmup
 			if(GetPlayersReadyState())
@@ -383,11 +391,12 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 			if(GetPlayersReadyState())
 				SetGameState(IGS_GAME_PAUSED, 0);
 			break;
+		case IGS_GAME_RUNNING:
 		case IGS_WARMUP_GAME:
 		case IGS_START_COUNTDOWN:
 		case IGS_END_MATCH:
 		case IGS_END_ROUND:
-			// not effected
+			// not affected
 			break;
 		}
 	}
@@ -1129,6 +1138,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	}
 	OnPlayerInfoChange(pPlayer);
 	GameServer()->OnClientTeamChange(ClientID);
+	CheckReadyStates();
 
 	// reset inactivity counter when joining the game
 	if(OldTeam == TEAM_SPECTATORS)
