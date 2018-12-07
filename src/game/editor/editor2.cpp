@@ -13,6 +13,7 @@
 
 // TODO:
 // - Data setup for easy add/remove (tiles, quads, ...)
+// - Binds
 // - Smooth zoom
 
 static char s_aEdMsg[256];
@@ -319,6 +320,13 @@ bool CEditorMap::Load(const char* pFileName)
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
 			m_aTextures[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 													TextureFlags);
+			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
+				m_aTextures2D[i] = m_aTextures[i];
+			else
+			{
+				m_aTextures2D[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+															IGraphics::TEXLOAD_MULTI_DIMENSION);
+			}
 			ed_dbg("mapres/%s.png loaded", pName);
 		}
 		else
@@ -327,6 +335,15 @@ bool CEditorMap::Load(const char* pFileName)
 			m_aTextures[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 				pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 				CImageInfo::FORMAT_RGBA, TextureFlags);
+			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
+				m_aTextures2D[i] = m_aTextures[i];
+			else
+			{
+				m_aTextures2D[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
+															   pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
+															   CImageInfo::FORMAT_RGBA,
+															   IGraphics::TEXLOAD_MULTI_DIMENSION);
+			}
 		}
 		dbg_assert(m_aTextures[i].IsValid(), "Invalid texture");
 	}
@@ -408,6 +425,8 @@ void CEditorMap::Clear()
 
 	for(int i = 0; i < m_TextureCount; i++)
 	{
+		if(m_aTextures[i].Id() != m_aTextures2D[i].Id())
+			m_pGraphics->UnloadTexture(&m_aTextures2D[i]);
 		m_pGraphics->UnloadTexture(&m_aTextures[i]);
 	}
 	m_TextureCount = 0;
@@ -473,6 +492,7 @@ void CEditor::Init()
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
+	m_pConsole->Register("+show_palette", "", CFGFLAG_EDITOR, ConShowPalette, this, "Show palette");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	// grenade pickup
@@ -521,7 +541,39 @@ bool CEditor::HasUnsavedData() const
 
 void CEditor::OnInput(IInput::CEvent Event)
 {
-	m_InputConsole.OnInput(Event);
+	if(m_InputConsole.IsOpen())
+		m_InputConsole.OnInput(Event);
+
+	if(IsPopupBrushPalette())
+	{
+		CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
+
+		if(Event.m_Flags&IInput::FLAG_PRESS)
+		{
+			if(Event.m_Key == KEY_MOUSE_1)
+			{
+				if(!Bps.m_MouseClicked)
+				{
+					Bps.m_MouseStartDragPos = m_UiMousePos;
+					Bps.m_MouseIsDraggingRect = true;
+				}
+				Bps.m_MouseClicked = true;
+			}
+		}
+		else if(Event.m_Flags&IInput::FLAG_RELEASE)
+		{
+			if(Event.m_Key == KEY_MOUSE_1)
+			{
+				if(Bps.m_MouseClicked)
+				{
+					Bps.m_MouseEndDragPos = m_UiMousePos;
+					Bps.m_MouseIsDraggingRect = false;
+					Bps.m_DoHandleDragSquare = true;
+				}
+				Bps.m_MouseClicked = false;
+			}
+		}
+	}
 }
 
 void CEditor::Update()
@@ -564,17 +616,20 @@ void CEditor::Update()
 	if(Input()->KeyIsPressed(KEY_MOUSE_3)) MouseButtons |= MOUSE_MIDDLE;
 	UI()->Update(m_UiMousePos.x, m_UiMousePos.y, 0, 0, MouseButtons);
 
-	// move view
-	if(MouseButtons&MOUSE_RIGHT)
+	if(m_UiCurrentPopupID == POPUP_NONE)
 	{
-		m_MapUiPosOffset -= m_UiMouseDelta;
-	}
+		// move view
+		if(MouseButtons&MOUSE_RIGHT)
+		{
+			m_MapUiPosOffset -= m_UiMouseDelta;
+		}
 
-	// zoom with mouse wheel
-	if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-		ChangeZoom(m_Zoom * 0.9f);
-	else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-		ChangeZoom(m_Zoom * 1.1f);
+		// zoom with mouse wheel
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			ChangeZoom(m_Zoom * 0.9f);
+		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			ChangeZoom(m_Zoom * 1.1f);
+	}
 
 	if(Input()->KeyPress(KEY_HOME))
 	{
@@ -585,6 +640,8 @@ void CEditor::Update()
 	{
 		m_InputConsole.ToggleOpen();
 	}
+
+	//m_UiShowBrushPalette = Input()->KeyIsPressed(KEY_SPACE);
 
 	Input()->Clear();
 }
@@ -1024,7 +1081,7 @@ void CEditor::RenderUI()
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
 	CUIRect RightPanel;
-	UiScreenRect.VSplitRight(150, 0, &RightPanel);
+	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
 
 	DrawRect(RightPanel, vec4(0.03, 0, 0.085, 1));
 
@@ -1195,6 +1252,146 @@ void CEditor::RenderUI()
 			}
 		}
 	}
+
+	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+		RenderPopupBrushPalette();
+}
+
+void CEditor::RenderPopupBrushPalette()
+{
+	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
+			   "m_UiSelectedLayerID is out of bounds");
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// TODO: save a main view rect and a right panel rect?
+	CUIRect MainRect = {0, 0, m_UiMainViewRect.h, m_UiMainViewRect.h};
+	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
+	MainRect.Margin(50.0f, &MainRect);
+	DrawRect(MainRect, vec4(1, 0, 0, 1));
+
+	CUIRect TopRow;
+	MainRect.HSplitTop(40, &TopRow, &MainRect);
+	DrawRect(TopRow, vec4(27/255.0f, 20/255.0f, 100/255.0f, 1.0));
+
+	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
+
+	IGraphics::CTextureHandle PaletteTexture;
+	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
+		PaletteTexture = m_EntitiesTexture;
+	else
+		PaletteTexture = m_Map.m_aTextures2D[SelectedTileLayer.m_ImageID];
+
+	CUIRect ImageRect = MainRect;
+	ImageRect.w = min(ImageRect.w, ImageRect.h);
+	ImageRect.h = ImageRect.w;
+
+	// checker background
+	Graphics()->BlendNone();
+	Graphics()->TextureSet(m_CheckerTexture);
+
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1, 1, 1, 1);
+	Graphics()->QuadsSetSubset(0, 0, 64.f, 64.f);
+	IGraphics::CQuadItem BgQuad(ImageRect.x, ImageRect.y, ImageRect.w, ImageRect.h);
+	Graphics()->QuadsDrawTL(&BgQuad, 1);
+	Graphics()->QuadsEnd();
+
+	// palette image
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(PaletteTexture);
+
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1, 1, 1, 1);
+	Graphics()->QuadsSetSubset(0, 0, 1, 1);
+	IGraphics::CQuadItem Quad(ImageRect.x, ImageRect.y, ImageRect.w, ImageRect.h);
+	Graphics()->QuadsDrawTL(&Quad, 1);
+	Graphics()->QuadsEnd();
+
+	const float TileSize = ImageRect.w / 16.f;
+
+	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
+	u8* aTileSelected = Bps.m_TileSelected;
+
+	for(int ti = 0; ti < 256; ti++)
+	{
+		if(aTileSelected[ti])
+		{
+			const int tx = ti & 0xF;
+			const int ty = ti / 16;
+			CUIRect TileRect = {
+				ImageRect.x + tx*TileSize,
+				ImageRect.y + ty*TileSize,
+				TileSize, TileSize
+			};
+			DrawRect(TileRect, vec4(0.5, 0, 1, 0.5));
+		}
+	}
+
+	// hover tile
+	if(!Bps.m_MouseIsDraggingRect && UI()->MouseInside(&ImageRect))
+	{
+		const vec2 RelMousePos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
+		const int HoveredTileX = RelMousePos.x / TileSize;
+		const int HoveredTileY = RelMousePos.y / TileSize;
+
+		CUIRect HoverTileRect = {
+			ImageRect.x + HoveredTileX*TileSize,
+			ImageRect.y + HoveredTileY*TileSize,
+			TileSize, TileSize
+		};
+		DrawRect(HoverTileRect, vec4(0.5, 0, 1, 0.5));
+	}
+
+	// drag rectangle
+	if(Bps.m_MouseIsDraggingRect)
+	{
+		const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos - vec2(ImageRect.x, ImageRect.y);
+		const vec2 RelMouseEndPos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
+		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
+		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
+		const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
+		const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
+
+		const int DragTLX = min(DragStartTileX, DragEndTileX);
+		const int DragTLY = min(DragStartTileY, DragEndTileY);
+		const int DragBRX = max(DragStartTileX, DragEndTileX);
+		const int DragBRY = max(DragStartTileY, DragEndTileY);
+
+		CUIRect DragTileRect = {
+			ImageRect.x + DragTLX*TileSize,
+			ImageRect.y + DragTLY*TileSize,
+			(DragBRX-DragTLX+1)*TileSize,
+			(DragBRY-DragTLY+1)*TileSize
+		};
+		DrawRect(DragTileRect, vec4(0.5, 0, 1, 0.75));
+	}
+
+	if(Bps.m_DoHandleDragSquare)
+	{
+		Bps.m_DoHandleDragSquare = false;
+		const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos - vec2(ImageRect.x, ImageRect.y);
+		const vec2 RelMouseEndPos = Bps.m_MouseEndDragPos - vec2(ImageRect.x, ImageRect.y);
+		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
+		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
+		const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
+		const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
+
+		const int DragTLX = min(DragStartTileX, DragEndTileX);
+		const int DragTLY = min(DragStartTileY, DragEndTileY);
+		const int DragBRX = max(DragStartTileX, DragEndTileX);
+		const int DragBRY = max(DragStartTileY, DragEndTileY);
+
+		for(int ty = DragTLY; ty <= DragBRY; ty++)
+		{
+			for(int tx = DragTLX; tx <= DragBRX; tx++)
+			{
+				aTileSelected[ty * 16 + tx] = 1;
+			}
+		}
+	}
 }
 
 inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
@@ -1346,4 +1543,10 @@ void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
 
 	dbg_msg("editor", "ConLoad(%s)", aMapPath);
 	pSelf->LoadMap(aMapPath);
+}
+
+void CEditor::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	dbg_assert(0, "Implement this");
 }

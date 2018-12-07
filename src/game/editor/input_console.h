@@ -44,6 +44,7 @@ public:
 	void OnInput(IInput::CEvent Event);
 
 	void ToggleOpen();
+	inline bool IsOpen() const { return m_IsOpen; }
 };
 
 #endif

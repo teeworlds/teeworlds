@@ -330,6 +330,7 @@ struct CEditorMap
 	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
+	IGraphics::CTextureHandle m_aTextures2D[MAX_TEXTURES];
 	int m_TextureCount = 0;
 
 	IGraphics* m_pGraphics;
@@ -411,12 +412,32 @@ class CEditor: public IEditor
 	float m_ZoomWorldViewHeight;
 
 	CUIRect m_UiScreenRect;
+	CUIRect m_UiMainViewRect;
 	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
 	u8 m_UiGroupHidden[MAX_GROUPS] = {0};
 	u8 m_UiLayerHovered[MAX_LAYERS] = {0};
 	u8 m_UiLayerHidden[MAX_LAYERS] = {0};
 	int m_UiSelectedLayerID = -1;
 	int m_UiSelectedGroupID = -1;
+
+	enum
+	{
+		POPUP_NONE = -1,
+		POPUP_BRUSH_PALETTE = 0
+	};
+
+	int m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+
+	struct CUIBrushPaletteState
+	{
+		vec2 m_MouseStartDragPos;
+		vec2 m_MouseEndDragPos;
+		bool m_MouseClicked = false;
+		bool m_MouseIsDraggingRect = false;
+		bool m_DoHandleDragSquare = false;
+		u8 m_TileSelected[256] = {0};
+	};
+	CUIBrushPaletteState m_UiBrushPaletteState;
 
 	vec2 m_RenderGrenadePickupSize;
 	vec2 m_RenderShotgunPickupSize;
@@ -430,12 +451,14 @@ class CEditor: public IEditor
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
 	void RenderUI();
+	void RenderPopupBrushPalette();
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
+	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void Reset();
 	void ResetCamera();
@@ -446,6 +469,7 @@ class CEditor: public IEditor
 	void OnMapLoaded();
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
+	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
 	inline IInput *Input() { return m_pInput; };
