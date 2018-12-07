@@ -17,4 +17,8 @@ text including copyright information.
 Please visit https://www.teeworlds.com/ for up-to-date information about
 the game, including new versions, custom maps and much more.
 
+Instructions to build the game can be found at 
+https://teeworlds.com/?page=docs&wiki=compiling_everything. In
+particular, you will need SDL2 and FreeType installed.
+
 Originally written by Magnus Auvinen.
