@@ -173,6 +173,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	if(Team == TEAM_SPECTATORS)
 		return 0.0f;
 
+	// ready mode
+	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
+	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
+
 	float HeadlineHeight = 40.0f;
 	float TitleFontsize = 20.0f;
 	float HeadlineFontsize = 12.0f;
@@ -181,9 +185,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float Spacing = 2.0f;
 	float CountryFlagOffset = x+2.0f, CountryFlagLength = 20.f;
 	float IdSize = g_Config.m_ClShowUserId ? LineHeight : 0.0f;
-	float NameOffset = CountryFlagOffset+CountryFlagLength+IdSize, NameLength = 128.0f-IdSize/2;
+	float ReadyLength = ReadyMode ? 10.f : 0.f;
 	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
-	float ClanOffset = NameOffset+NameLength, ClanLength = 88.0f-IdSize/2;
+	float NameOffset = CountryFlagOffset+CountryFlagLength+IdSize, NameLength = 128.0f-IdSize/2-ReadyLength;
+	float ClanOffset = NameOffset+NameLength+ReadyLength, ClanLength = 88.0f-IdSize/2;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
 	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = 35.0f;
@@ -200,10 +205,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	// clamp to 16
 	if(m_PlayerLines > 16)
 		m_PlayerLines = 16;
-
-	// ready mode
-	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
-	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
 
 	char aBuf[128] = {0};
 
@@ -532,7 +533,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				if(HighlightedLine)
 					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
 				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
-				TextRender()->SetCursor(&Cursor, Cursor.m_X+1, y+Spacing, FontSize, TEXTFLAG_RENDER);
+				TextRender()->SetCursor(&Cursor, Cursor.m_X, y+Spacing, FontSize, TEXTFLAG_RENDER);
 				TextRender()->TextEx(&Cursor, "\xE2\x9C\x93", str_length("\xE2\x9C\x93"));
 			}
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
