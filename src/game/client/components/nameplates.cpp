@@ -53,7 +53,7 @@ void CNamePlates::RenderNameplate(
 		if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
 			BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
 
-		if(a > 0.001f)
+		if(g_Config.m_ClShowsocial && a > 0.001f)
 		{
 			RenderTools()->DrawClientID(TextRender(), &Cursor, ClientID, BgIdColor, IdTextColor);
 			TextRender()->TextEx(&Cursor, aName, -1);
