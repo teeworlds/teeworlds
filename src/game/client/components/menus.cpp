@@ -2043,7 +2043,7 @@ int CMenus::Render()
 
 			const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 			if(OldSelected != NewSelected)
-				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
+				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
 			Part.VMargin(120.0f, &Part);
 

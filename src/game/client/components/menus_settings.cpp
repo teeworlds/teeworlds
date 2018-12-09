@@ -1202,9 +1202,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 	if(OldSelected != NewSelected)
-	{
-		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected)->m_CountryCode;
-	}
+		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 }
 
 void CMenus::RenderSettingsTeeBasic(CUIRect MainView)

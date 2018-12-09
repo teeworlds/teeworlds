@@ -155,8 +155,15 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCo
 	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]);
 }
 
-const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
+const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index, bool SkipBlocked) const
 {
+	if(SkipBlocked)
+	{
+		for(int i = 0; i < m_aCountryFlags.size(); i++)
+			if(!m_aCountryFlags[i].m_Blocked)
+				if(!Index--)
+					return &m_aCountryFlags[i];
+	}
 	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
 }
 
