@@ -183,7 +183,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float LineHeight = 20.0f;
 	float TeeSizeMod = 1.0f;
 	float Spacing = 2.0f;
-	float CountryFlagOffset = x+2.0f, CountryFlagLength = 20.f;
+	float PingOffset = x+Spacing, PingLength = 35.0f;
+	float CountryFlagOffset = PingOffset+PingLength, CountryFlagLength = 20.f;
 	float IdSize = g_Config.m_ClShowUserId ? LineHeight : 0.0f;
 	float ReadyLength = ReadyMode ? 10.f : 0.f;
 	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
@@ -192,7 +193,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
 	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = 35.0f;
-	float PingOffset = ScoreOffset+ScoreLength, PingLength = 35.0f;
 	float tw = 0.0f;
 
 	bool NoTitle = pTitle? false : true;
@@ -309,6 +309,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
 	}
 
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
+	TextRender()->Text(0, PingOffset+PingLength-tw, y+Spacing, HeadlineFontsize, Localize("Ping"), -1);
+
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	TextRender()->Text(0, NameOffset+ TeeLength, y+Spacing, HeadlineFontsize, Localize("Name"), -1);
 
@@ -326,8 +330,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
 	TextRender()->Text(0, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Score"), -1);
 
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Ping"), -1);
-	TextRender()->Text(0, PingOffset+PingLength-tw, y+Spacing, HeadlineFontsize, Localize("Ping"), -1);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// render player entries
@@ -464,14 +466,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			else
 				OutlineColor = vec4(0.0f, 0.0f, 0.0f, 0.3f);
 
+			// set text color
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
+			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
+
+			// ping
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Latency, 0, 999));
+			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->SetCursor(&Cursor, PingOffset+PingLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER);
+			Cursor.m_LineWidth = PingLength;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
+
 			// country flag
 			const vec4 CFColor(1, 1, 1, 0.75f * ColorAlpha);
 			m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &CFColor,
 				CountryFlagOffset, y + 3.0f, 30.0f, LineHeight-5.0f);
-
-			// set text color
-			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
 
 			// flag
 			if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_pGameDataFlag &&
@@ -566,18 +577,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = ScoreLength;
-			TextRender()->TextEx(&Cursor, aBuf, -1);
-
-			// country flag
-			/*vec4 Color(1.0f, 1.0f, 1.0f, 0.5f*ColorAlpha);
-			m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &Color,
-												CountryOffset, y+(Spacing+TeeSizeMod*5.0f)/2.0f, CountryLength, LineHeight-Spacing-TeeSizeMod*5.0f);*/
-
-			// ping
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Latency, 0, 999));
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-			TextRender()->SetCursor(&Cursor, PingOffset+PingLength-tw, y+Spacing, FontSize, TEXTFLAG_RENDER);
-			Cursor.m_LineWidth = PingLength;
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			y += LineHeight;
