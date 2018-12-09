@@ -36,6 +36,9 @@ void CBinds::Bind(int KeyID, int Modifier, const char *pStr)
 	if(KeyID < 0 || KeyID >= KEY_LAST)
 		return;
 
+	// skip modifiers for +xxx binds
+	if(pStr[0] == '+')
+		Modifier = 0;
 	str_copy(m_aaaKeyBindings[KeyID][Modifier], pStr, sizeof(m_aaaKeyBindings[KeyID][Modifier]));
 	char aBuf[256];
 	if(!m_aaaKeyBindings[KeyID][Modifier][0])
@@ -134,7 +137,7 @@ bool CBinds::OnInput(IInput::CEvent Event)
 	bool rtn = false;
 	for(int m = 0; m < MODIFIER_COUNT; m++)
 	{
-		if((Mask&(1 << m)) && m_aaaKeyBindings[Event.m_Key][m][0] != 0)
+		if(((Mask&(1 << m)) || (m == 0 && m_aaaKeyBindings[Event.m_Key][0][0] == '+')) && m_aaaKeyBindings[Event.m_Key][m][0] != 0)	// always trigger +xxx binds despite any modifier
 		{
 			if(Event.m_Flags&IInput::FLAG_PRESS)
 				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
