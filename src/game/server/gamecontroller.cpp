@@ -100,10 +100,12 @@ void IGameController::DoActivityCheck()
 	}
 }
 
-bool IGameController::GetPlayersReadyState()
+bool IGameController::GetPlayersReadyState(int WithoutID)
 {
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
+		if(i == WithoutID)
+			continue; // skip
 		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && !GameServer()->m_apPlayers[i]->m_IsReadyToPlay)
 			return false;
 	}
@@ -353,7 +355,7 @@ void IGameController::OnPlayerDisconnect(CPlayer *pPlayer)
 		m_UnbalancedTick = TBALANCE_CHECK;
 	}
 
-	CheckReadyStates();
+	CheckReadyStates(ClientID);
 }
 
 void IGameController::OnPlayerInfoChange(CPlayer *pPlayer)
@@ -375,7 +377,7 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 }
 
 // to be called when a player changes state, spectates or disconnects
-void IGameController::CheckReadyStates()
+void IGameController::CheckReadyStates(int WithoutID)
 {
 	if(g_Config.m_SvPlayerReadyMode)
 	{
@@ -383,12 +385,12 @@ void IGameController::CheckReadyStates()
 		{
 		case IGS_WARMUP_USER:
 			// all players are ready -> end warmup
-			if(GetPlayersReadyState())
+			if(GetPlayersReadyState(WithoutID))
 				SetGameState(IGS_WARMUP_USER, 0);
 			break;
 		case IGS_GAME_PAUSED:
 			// all players are ready -> unpause the game
-			if(GetPlayersReadyState())
+			if(GetPlayersReadyState(WithoutID))
 				SetGameState(IGS_GAME_PAUSED, 0);
 			break;
 		case IGS_GAME_RUNNING:

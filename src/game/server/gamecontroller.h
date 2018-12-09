@@ -19,9 +19,9 @@ class IGameController
 
 	// activity
 	void DoActivityCheck();
-	bool GetPlayersReadyState();
+	bool GetPlayersReadyState(int WithoutID = -1);
 	void SetPlayersReadyState(bool ReadyState);
-	void CheckReadyStates();
+	void CheckReadyStates(int WithoutID = -1);
 
 	// balancing
 	enum
