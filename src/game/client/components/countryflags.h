@@ -23,7 +23,7 @@ public:
 
 	int Num() const;
 	const CCountryFlag *GetByCountryCode(int CountryCode) const;
-	const CCountryFlag *GetByIndex(int Index) const;
+	const CCountryFlag *GetByIndex(int Index, bool SkipBlocked = false) const;
 	void Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h, bool AllowBlocked=false);
 
 private:
