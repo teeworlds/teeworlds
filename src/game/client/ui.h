@@ -110,6 +110,7 @@ public:
 	float PixelSize();
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
+	const CUIRect *ClipArea() const { return &m_ClipRect; };
 
 	// TODO: Refactor: Redo UI scaling
 	float Scale() const;

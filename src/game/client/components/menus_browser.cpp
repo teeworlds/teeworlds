@@ -604,7 +604,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		View.VSplitLeft(160.0f, &Info, &View);
 		RenderDetailInfo(Info, pEntry);
 
+		CUIRect NewClipArea = *UI()->ClipArea();
+		CUIRect OldClipArea = NewClipArea;
+		NewClipArea.x = View.x;
+		NewClipArea.w = View.w;
+		UI()->ClipEnable(&NewClipArea);
 		RenderDetailScoreboard(View, pEntry, 4);
+		UI()->ClipEnable(&OldClipArea);
 
 		if(ReturnValue && UI()->MouseInside(&View))
 			ReturnValue++;
@@ -1952,8 +1958,6 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 		CUIRect Scroll;
 
-		UI()->ClipEnable(&View);
-
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
 		float LineHeight = 20.0f;
 
@@ -2091,8 +2095,6 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 			++Count;
 		}
-
-		UI()->ClipDisable();
 	}
 }
 
@@ -2114,7 +2116,9 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
+	UI()->ClipEnable(&ServerScoreboard);
 	RenderDetailScoreboard(ServerScoreboard, pInfo, 0);
+	UI()->ClipDisable();
 }
 
 void CMenus::FriendlistOnUpdate()
