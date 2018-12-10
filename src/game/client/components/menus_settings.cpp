@@ -790,6 +790,8 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	if(m_lThemes.size() == 0) // not loaded yet
 	{
+		if(!g_Config.m_ClShowMenuMap)
+			str_copy(g_Config.m_ClMenuMap, "", sizeof(g_Config.m_ClMenuMap)); // cl_menu_map otherwise resets to default on loading
 		m_lThemes.add(CTheme("", false, false)); // no theme
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeScan, (CMenus*)this);
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeIconScan, (CMenus*)this);
