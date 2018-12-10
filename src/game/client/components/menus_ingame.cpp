@@ -371,7 +371,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	
 	ServerInfo.HSplitTop(2*ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, CurrentServerInfo.m_aName, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Label, CurrentServerInfo.m_aName, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT, Label.w);
 
 	ServerInfo.HSplitTop(ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
