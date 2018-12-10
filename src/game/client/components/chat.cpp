@@ -120,7 +120,10 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 			}
 		}
 		if(Target < 0 || Target >= MAX_CLIENTS || !pChat->m_pClient->m_aClients[Target].m_Active || pChat->m_pClient->m_LocalClientID == Target)
-			pChat->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "please enter a valid ClientID");
+		{
+			if(pResult->NumArguments() == 2)
+				pChat->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "please enter a valid ClientID");
+		}
 		else
 		{
 			pChat->m_WhisperTarget = Target;
