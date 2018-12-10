@@ -1384,6 +1384,38 @@ void CEditor::RenderPopupBrushPalette()
 		aTileSelected[0] = 1; // TODO: don't show this, go into "eraser" state
 	}
 
+	TopRow.VSplitLeft(2, 0, &TopRow);
+	TopRow.VSplitLeft(40, &ButtonRect, &TopRow);
+	static CUIButtonState s_ButFlipX;
+	if(UiButton(ButtonRect, Localize("X/X"), &s_ButFlipX))
+	{
+		BrushFlipX();
+	}
+
+	TopRow.VSplitLeft(2, 0, &TopRow);
+	TopRow.VSplitLeft(40, &ButtonRect, &TopRow);
+	static CUIButtonState s_ButFlipY;
+	if(UiButton(ButtonRect, Localize("Y/Y"), &s_ButFlipY))
+	{
+		BrushFlipY();
+	}
+
+	TopRow.VSplitLeft(2, 0, &TopRow);
+	TopRow.VSplitLeft(50, &ButtonRect, &TopRow);
+	static CUIButtonState s_ButRotClockwise;
+	if(UiButton(ButtonRect, "90° ⟳", &s_ButRotClockwise))
+	{
+		BrushRotate90Clockwise();
+	}
+
+	TopRow.VSplitLeft(2, 0, &TopRow);
+	TopRow.VSplitLeft(50, &ButtonRect, &TopRow);
+	static CUIButtonState s_ButRotCounterClockwise;
+	if(UiButton(ButtonRect, "90° ⟲", &s_ButRotCounterClockwise))
+	{
+		BrushRotate90CounterClockwise();
+	}
+
 	RenderBrush(m_UiMousePos);
 }
 
@@ -1684,6 +1716,60 @@ void CEditor::ClearBrush()
 	m_Brush.m_Width = 0;
 	m_Brush.m_Height = 0;
 	m_Brush.m_aTiles.Clear();
+}
+
+void CEditor::BrushFlipX()
+{
+	if(m_Brush.m_Width <= 0)
+		return;
+
+	const int BrushWidth = m_Brush.m_Width;
+	const int BrushHeight = m_Brush.m_Height;
+	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
+	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = ty * BrushWidth + tx;
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + (BrushWidth-tx-1)];
+			aTiles[tid].m_Flags ^= TILEFLAG_VFLIP;
+		}
+	}
+}
+
+void CEditor::BrushFlipY()
+{
+	if(m_Brush.m_Width <= 0)
+		return;
+
+	const int BrushWidth = m_Brush.m_Width;
+	const int BrushHeight = m_Brush.m_Height;
+	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
+	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = ty * BrushWidth + tx;
+			aTiles[tid] = aTilesCopy[(BrushHeight-ty-1) * BrushWidth + tx];
+			aTiles[tid].m_Flags ^= TILEFLAG_HFLIP;
+		}
+	}
+}
+
+void CEditor::BrushRotate90Clockwise()
+{
+
+}
+
+void CEditor::BrushRotate90CounterClockwise()
+{
+
 }
 
 bool CEditor::LoadMap(const char* pFileName)

@@ -487,6 +487,10 @@ class CEditor: public IEditor
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
 	void ClearBrush();
+	void BrushFlipX();
+	void BrushFlipY();
+	void BrushRotate90Clockwise();
+	void BrushRotate90CounterClockwise();
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
