@@ -1735,7 +1735,7 @@ void CEditor::BrushFlipX()
 		{
 			const int tid = ty * BrushWidth + tx;
 			aTiles[tid] = aTilesCopy[ty * BrushWidth + (BrushWidth-tx-1)];
-			aTiles[tid].m_Flags ^= TILEFLAG_VFLIP;
+			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP:TILEFLAG_VFLIP;
 		}
 	}
 }
@@ -1757,19 +1757,63 @@ void CEditor::BrushFlipY()
 		{
 			const int tid = ty * BrushWidth + tx;
 			aTiles[tid] = aTilesCopy[(BrushHeight-ty-1) * BrushWidth + tx];
-			aTiles[tid].m_Flags ^= TILEFLAG_HFLIP;
+			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP:TILEFLAG_HFLIP;
 		}
 	}
 }
 
 void CEditor::BrushRotate90Clockwise()
 {
+	if(m_Brush.m_Width <= 0)
+		return;
 
+	const int BrushWidth = m_Brush.m_Width;
+	const int BrushHeight = m_Brush.m_Height;
+	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
+	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = tx * BrushHeight + (BrushHeight-1-ty);
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
+			if(aTiles[tid].m_Flags&TILEFLAG_ROTATE)
+				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
+		}
+	}
+
+	m_Brush.m_Width = BrushHeight;
+	m_Brush.m_Height = BrushWidth;
 }
 
 void CEditor::BrushRotate90CounterClockwise()
 {
+	if(m_Brush.m_Width <= 0)
+		return;
 
+	const int BrushWidth = m_Brush.m_Width;
+	const int BrushHeight = m_Brush.m_Height;
+	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
+	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = (BrushWidth-1-tx) * BrushHeight + ty;
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
+			if(!(aTiles[tid].m_Flags&TILEFLAG_ROTATE))
+				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
+		}
+	}
+
+	m_Brush.m_Width = BrushHeight;
+	m_Brush.m_Height = BrushWidth;
 }
 
 bool CEditor::LoadMap(const char* pFileName)
