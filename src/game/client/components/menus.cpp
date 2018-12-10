@@ -944,7 +944,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected)
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool ProcessInput)
 {
 	int ThisItemIndex = pState->m_ListBoxItemIndex;
 	if(Selected)
@@ -962,7 +962,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 	// process input, regard selected index
 	if(pState->m_ListBoxSelectedIndex == ThisItemIndex)
 	{
-		if(!pState->m_ListBoxDoneEvents)
+		if(ProcessInput && !pState->m_ListBoxDoneEvents)
 		{
 			pState->m_ListBoxDoneEvents = 1;
 

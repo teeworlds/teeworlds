@@ -713,7 +713,6 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 {
 	static int s_LanguageList = 0;
 	static int s_SelectedLanguage = -1;
-	static int s_OldSelected = -1;
 	static sorted_array<CLanguage> s_Languages;
 	static CListBoxState s_ListBoxState;
 
@@ -729,16 +728,8 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			}
 	}
 
-	if(s_SelectedLanguage != -1 && m_ActiveListBox != ACTLB_LANG)
-	{
-		s_OldSelected = s_SelectedLanguage;
-		s_SelectedLanguage = -1;
-	}
-	if(s_SelectedLanguage == -1 && UI()->MouseInside(&MainView))
-	{
-		s_SelectedLanguage = s_OldSelected;
+	if(m_ActiveListBox != ACTLB_LANG && UI()->MouseInside(&MainView))
 		m_ActiveListBox = ACTLB_LANG;
-	}
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
@@ -747,7 +738,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front());
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front(), false, m_ActiveListBox == ACTLB_LANG);
 
 		if(Item.m_Visible)
 		{
@@ -785,7 +776,6 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 {
 	static int s_ThemeList = 0;
 	static int s_SelectedTheme = -1;
-	static int s_OldSelected = -1;
 	static CListBoxState s_ListBoxState_Theme;
 
 	if(m_lThemes.size() == 0) // not loaded yet
@@ -801,16 +791,8 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			}
 	}
 
-	if(s_SelectedTheme != -1 && m_ActiveListBox != ACTLB_THEME)
-	{
-		s_OldSelected = s_SelectedTheme;
-		s_SelectedTheme = -1;
-	}
-	if(s_SelectedTheme == -1 && UI()->MouseInside(&MainView))
-	{
-		s_SelectedTheme = s_OldSelected;
+	if(m_ActiveListBox != ACTLB_THEME && UI()->MouseInside(&MainView))
 		m_ActiveListBox = ACTLB_THEME;
-	}
 	int OldSelected = s_SelectedTheme;
 
 	if(Header)
@@ -819,7 +801,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front());
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front(), false, m_ActiveListBox == ACTLB_THEME);
 
 		if(Item.m_Visible)
 		{
