@@ -194,6 +194,11 @@ struct CDynArray
 		m_pAllocator = 0;
 	}
 
+	~CDynArray()
+	{
+		Clear();
+	}
+
 	void Init(CChainAllocator<T>* pAllocator)
 	{
 		dbg_assert(!m_pAllocator, "Init already called");
@@ -227,6 +232,7 @@ struct CDynArray
 
 	T& AddEmpty(int Count)
 	{
+		dbg_assert(Count > 0, "Add 0 or more");
 		if(m_EltCount+Count >= Capacity())
 			Reserve(max(Capacity() * 2, m_EltCount+Count));
 		mem_zero(Data()+m_EltCount, Count*sizeof(T));
@@ -288,6 +294,7 @@ struct CEditorMap
 		};
 
 		CLayer(){}
+		~CLayer(){}
 		inline bool IsTileLayer() const { return m_Type == LAYERTYPE_TILES; }
 		inline bool IsQuadLayer() const { return m_Type == LAYERTYPE_QUADS; }
 	};
@@ -472,11 +479,14 @@ class CEditor: public IEditor
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState);
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
+	void PopupBrushPaletteProcessInput(IInput::CEvent Event);
+
 	void Reset();
 	void ResetCamera();
 	void ChangeZoom(float Zoom);
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
+	void ClearBrush();
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
