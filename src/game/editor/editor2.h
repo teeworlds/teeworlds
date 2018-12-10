@@ -440,6 +440,15 @@ class CEditor: public IEditor
 	CUIRect m_UiPopupBrushPaletteRect = {};
 	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
+	struct CBrush
+	{
+		CDynArray<CTile> m_aTiles;
+		int m_Width = 0;
+		int m_Height = 0;
+	};
+
+	CBrush m_Brush;
+
 	vec2 m_RenderGrenadePickupSize;
 	vec2 m_RenderShotgunPickupSize;
 	vec2 m_RenderLaserPickupSize;
@@ -453,6 +462,7 @@ class CEditor: public IEditor
 
 	void RenderUI();
 	void RenderPopupBrushPalette();
+	void RenderBrush(vec2 Pos);
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
@@ -465,6 +475,8 @@ class CEditor: public IEditor
 	void Reset();
 	void ResetCamera();
 	void ChangeZoom(float Zoom);
+
+	void SetNewBrush(CTile* aTiles, int Width, int Height);
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);

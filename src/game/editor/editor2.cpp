@@ -31,6 +31,9 @@ static vec4 StyleColorButton(0.062, 0, 0.19, 1);
 static vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
 static vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
 static vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
+static vec4 StyleColorTileSelection(0.0, 0.31, 1, 0.4);
+static vec4 StyleColorTileHover(1, 1, 1, 0.25);
+static vec4 StyleColorTileHoverBorder(0.0, 0.31, 1, 1);
 
 inline float fract(float f)
 {
@@ -536,6 +539,7 @@ void CEditor::Init()
 	}
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
+	m_Brush.m_aTiles = m_Map.NewTileArray();
 
 	/*
 	m_Map.LoadDefault();
@@ -1300,6 +1304,9 @@ void CEditor::RenderUI()
 
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
+
+	// TODO: if tool == brush
+	//RenderBrush();
 }
 
 void CEditor::RenderPopupBrushPalette()
@@ -1360,6 +1367,7 @@ void CEditor::RenderPopupBrushPalette()
 	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
 	u8* aTileSelected = Bps.m_aTileSelected;
 
+	// selected overlay
 	for(int ti = 0; ti < 256; ti++)
 	{
 		if(aTileSelected[ti])
@@ -1371,7 +1379,7 @@ void CEditor::RenderPopupBrushPalette()
 				ImageRect.y + ty*TileSize,
 				TileSize, TileSize
 			};
-			DrawRect(TileRect, vec4(0.5, 0, 1, 0.5));
+			DrawRect(TileRect, StyleColorTileSelection);
 		}
 	}
 
@@ -1387,7 +1395,7 @@ void CEditor::RenderPopupBrushPalette()
 			ImageRect.y + HoveredTileY*TileSize,
 			TileSize, TileSize
 		};
-		DrawRect(HoverTileRect, vec4(0.5, 0, 1, 0.5));
+		DrawRectBorder(HoverTileRect, StyleColorTileHover, 2, StyleColorTileHoverBorder);
 	}
 
 	// drag rectangle
@@ -1412,7 +1420,7 @@ void CEditor::RenderPopupBrushPalette()
 			(DragBRX-DragTLX+1)*TileSize,
 			(DragBRY-DragTLY+1)*TileSize
 		};
-		DrawRect(DragTileRect, vec4(0.5, 0, 1, 0.75));
+		DrawRectBorder(DragTileRect, StyleColorTileHover, 2, StyleColorTileHoverBorder);
 	}
 
 	CUIRect ButtonRect;
@@ -1434,6 +1442,40 @@ void CEditor::RenderPopupBrushPalette()
 		mem_zero(aTileSelected, sizeof(u8)*256);
 		aTileSelected[0] = 1; // TODO: don't show this, go into "eraser" state
 	}
+
+	RenderBrush(m_UiMousePos);
+}
+
+void CEditor::RenderBrush(vec2 Pos)
+{
+	if(m_Brush.m_Width <= 0)
+		return;
+
+	float ScreenX0, ScreenX1, ScreenY0, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	Graphics()->MapScreen(ScreenX0 + Pos.x, ScreenY0 + Pos.y,
+		ScreenX1-ScreenX0, ScreenY1-ScreenY0);
+
+	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
+
+	IGraphics::CTextureHandle LayerTexture;
+	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
+		LayerTexture = m_EntitiesTexture;
+	else
+		LayerTexture = m_Map.m_aTextures2D[SelectedTileLayer.m_ImageID];
+
+	const vec4 White(1, 1, 1, 1);
+
+	Graphics()->TextureSet(LayerTexture);
+	Graphics()->BlendNone();
+	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, 32, White,
+								 LAYERRENDERFLAG_OPAQUE, 0, 0, -1, 0);
+	Graphics()->BlendNormal();
+	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, 32, White,
+								 LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1-ScreenX0, ScreenY1-ScreenY0);
 }
 
 inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
@@ -1457,19 +1499,33 @@ void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Borde
 	Graphics()->QuadsBegin();
 
 	// border pass
-	IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
-	Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
-						 BorderColor.b*BorderColor.a, BorderColor.a);
-	Graphics()->QuadsDrawTL(&Quad, 1);
+	if(Color.a == 1)
+	{
+		IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+	}
+	else
+	{
+		// border pass
+		IGraphics::CQuadItem Quads[4] = {
+			IGraphics::CQuadItem(Rect.x, Rect.y, BorderW, Rect.h),
+			IGraphics::CQuadItem(Rect.x+Rect.w-BorderW, Rect.y, BorderW, Rect.h),
+			IGraphics::CQuadItem(Rect.x+BorderW, Rect.y, Rect.w-BorderW, BorderH),
+			IGraphics::CQuadItem(Rect.x+BorderW, Rect.y+Rect.h-BorderH, Rect.w-BorderW, BorderH)
+		};
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(Quads, 4);
+	}
 
 	// front pass
-	Quad.m_X += BorderW;
-	Quad.m_Y += BorderH;
-	Quad.m_Width -= BorderW*2;
-	Quad.m_Height -= BorderH*2;
+	IGraphics::CQuadItem QuadCenter(Rect.x + BorderW, Rect.y + BorderH,
+									Rect.w - BorderW*2, Rect.h - BorderH*2);
 	Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a,
 						 Color.b*Color.a, Color.a);
-	Graphics()->QuadsDrawTL(&Quad, 1);
+	Graphics()->QuadsDrawTL(&QuadCenter, 1);
 
 	Graphics()->QuadsEnd();
 }
@@ -1560,6 +1616,15 @@ void CEditor::ChangeZoom(float Zoom)
 	m_MapUiPosOffset.x -= (NewRelMouseX-RelMouseX)/NewZoomWorldViewWidth*m_UiScreenRect.w;
 	m_MapUiPosOffset.y -= (NewRelMouseY-RelMouseY)/NewZoomWorldViewHeight*m_UiScreenRect.h;
 	m_Zoom = Zoom;
+}
+
+void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
+{
+	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
+	m_Brush.m_Width = Width;
+	m_Brush.m_Height = Height;
+	m_Brush.m_aTiles.Clear();
+	m_Brush.m_aTiles.Add(aTiles, Width*Height);
 }
 
 bool CEditor::LoadMap(const char* pFileName)
