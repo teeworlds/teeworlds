@@ -1857,10 +1857,10 @@ void CEditor::PopupBrushPaletteProcessInput(IInput::CEvent Event)
 					EndX++;
 					EndY++;
 
-					CDynArray<CTile> BrushTiles = m_Map.NewTileArray();
+					CDynArray<CTile> aBrushTiles = m_Map.NewTileArray();
 					const int Width = EndX - StartX;
 					const int Height = EndY - StartY;
-					BrushTiles.AddEmpty(Width * Height);
+					aBrushTiles.AddEmpty(Width * Height);
 
 					const int LastTid = (EndY-1)*16+EndX;
 					for(int ti = (StartY*16+StartX); ti < LastTid; ti++)
@@ -1869,11 +1869,11 @@ void CEditor::PopupBrushPaletteProcessInput(IInput::CEvent Event)
 						{
 							int tx = (ti & 0xF) - StartX;
 							int ty = (ti / 16) - StartY;
-							BrushTiles[ty * Width + tx].m_Index = ti;
+							aBrushTiles[ty * Width + tx].m_Index = ti;
 						}
 					}
 
-					SetNewBrush(BrushTiles.Data(), Width, Height);
+					SetNewBrush(aBrushTiles.Data(), Width, Height);
 				}
 			}
 			Bps.m_MouseClicked = false;
@@ -2053,7 +2053,6 @@ void CEditor::OnMapLoaded()
 void CEditor::OnStartDragging()
 {
 	// TODO: if tool == brush
-	ed_log("Dragging start");
 	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
 		m_ZoomWorldViewHeight, m_UiMouseStartDragPos);
 	const float TileSize = 32;
@@ -2064,7 +2063,45 @@ void CEditor::OnStartDragging()
 void CEditor::OnFinishDragging()
 {
 	// TODO: if tool == brush
-	ed_log("Dragging done");
+	if(m_Brush.IsEmpty())
+	{
+		dbg_assert(m_UiSelectedLayerID, "No layer selected");
+		const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+
+		// TODO: do this better (ignoring mouse click on UI)
+		if(SelectedLayer.IsTileLayer() && IsInsideRect(m_UiMouseStartDragPos, m_UiMainViewRect))
+		{
+			vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+				m_ZoomWorldViewHeight, m_UiMouseEndDragPos);
+			const float TileSize = 32;
+			ivec2 TileEndDrag(floor(EndMouseWorldPos.x/TileSize), floor(EndMouseWorldPos.y/TileSize));
+
+			const int SelStartX = clamp(min(m_TileStartDrag.x, TileEndDrag.x), 0, SelectedLayer.m_Width-1);
+			const int SelStartY = clamp(min(m_TileStartDrag.y, TileEndDrag.y), 0, SelectedLayer.m_Height-1);
+			const int SelEndX = clamp(max(m_TileStartDrag.x, TileEndDrag.x), 0, SelectedLayer.m_Width-1) + 1;
+			const int SelEndY = clamp(max(m_TileStartDrag.y, TileEndDrag.y), 0, SelectedLayer.m_Height-1) + 1;
+			const int Width = SelEndX - SelStartX;
+			const int Height = SelEndY - SelStartY;
+
+			CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
+			aExtractTiles.AddEmpty(Width * Height);
+
+			const int LayerWidth = SelectedLayer.m_Width;
+			const CDynArray<CTile>& aLayerTiles = SelectedLayer.m_aTiles;
+			const int StartTid = SelStartY * LayerWidth + SelStartX;
+			const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
+
+			for(int ti = StartTid; ti < LastTid; ti++)
+			{
+				const int tx = (ti % LayerWidth) - SelStartX;
+				const int ty = (ti / LayerWidth) - SelStartY;
+				if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
+					aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
+			}
+
+			SetNewBrush(aExtractTiles.Data(), Width, Height);
+		}
+	}
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
