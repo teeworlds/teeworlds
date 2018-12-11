@@ -40,6 +40,11 @@ inline float fract(float f)
 	return f - (int)f;
 }
 
+inline int floor(float f)
+{
+	return f < 0 ? (int)f-1 : (int)f;
+}
+
 inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 {
 	return (Pos.x >= Rect.x && Pos.x < (Rect.x+Rect.w) &&
@@ -562,6 +567,36 @@ void CEditor::OnInput(IInput::CEvent Event)
 
 	if(IsPopupBrushPalette())
 		PopupBrushPaletteProcessInput(Event);
+	else
+	{
+		if(Event.m_Flags&IInput::FLAG_PRESS)
+		{
+			if(Event.m_Key == KEY_MOUSE_1)
+			{
+				if(!m_UiMouseLeftPressed)
+				{
+					m_UiMouseStartDragPos = m_UiMousePos;
+					m_UiMouseIsDragging = true;
+					OnStartDragging();
+				}
+				m_UiMouseLeftPressed = true;
+			}
+		}
+		else if(Event.m_Flags&IInput::FLAG_RELEASE)
+		{
+			if(Event.m_Key == KEY_MOUSE_1)
+			{
+				if(m_UiMouseLeftPressed)
+				{
+					m_UiMouseEndDragPos = m_UiMousePos;
+					m_UiMouseIsDragging = false;
+					OnFinishDragging();
+				}
+
+				m_UiMouseLeftPressed = false;
+			}
+		}
+	}
 }
 
 void CEditor::Update()
@@ -619,11 +654,11 @@ void CEditor::Update()
 			ChangeZoom(m_Zoom * 0.9f);
 		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
 			ChangeZoom(m_Zoom * 1.1f);
-	}
 
-	if(Input()->KeyPress(KEY_HOME))
-	{
-		ResetCamera();
+		if(Input()->KeyPress(KEY_HOME))
+		{
+			ResetCamera();
+		}
 	}
 
 	if(Input()->KeyPress(KEY_F1))
@@ -1096,9 +1131,8 @@ void CEditor::RenderHud()
 	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
 		m_ZoomWorldViewHeight, m_UiMousePos);
 
-	vec2 GridMousePos((int)(MouseWorldPos.x/TileSize)*TileSize, (int)(MouseWorldPos.y/TileSize)*TileSize);
-	if(MouseWorldPos.x < 0) GridMousePos.x -= TileSize;
-	if(MouseWorldPos.y < 0) GridMousePos.y -= TileSize;
+	const vec2 GridMousePos(floor(MouseWorldPos.x/TileSize)*TileSize,
+		floor(MouseWorldPos.y/TileSize)*TileSize);
 
 	if(m_UiCurrentPopupID == POPUP_NONE)
 	{
@@ -1108,10 +1142,33 @@ void CEditor::RenderHud()
 		{
 			if(m_Brush.IsEmpty())
 			{
-				const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
-				vec4 HoverColor = StyleColorTileHover;
-				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
-				DrawRectBorderOutside(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
+				if(m_UiMouseIsDragging)
+				{
+					vec2 EndWorldPos = MouseWorldPos;
+
+					const int StartTX = m_TileStartDrag.x;
+					const int StartTY = m_TileStartDrag.y;
+					const int EndTX = floor(EndWorldPos.x/TileSize);
+					const int EndTY = floor(EndWorldPos.y/TileSize);
+
+					const int DragStartTX = min(StartTX, EndTX);
+					const int DragStartTY = min(StartTY, EndTY);
+					const int DragEndTX = max(StartTX, EndTX);
+					const int DragEndTY = max(StartTY, EndTY);
+
+					const CUIRect HoverRect = {DragStartTX*TileSize, DragStartTY*TileSize,
+						(DragEndTX+1-DragStartTX)*TileSize, (DragEndTY+1-DragStartTY)*TileSize};
+					vec4 HoverColor = StyleColorTileHover;
+					HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+					DrawRectBorderMiddle(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
+				}
+				else
+				{
+					const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
+					vec4 HoverColor = StyleColorTileHover;
+					HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+					DrawRect(HoverRect, HoverColor);
+				}
 			}
 		}
 
@@ -1614,6 +1671,55 @@ void CEditor::DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, floa
 	Graphics()->QuadsEnd();
 }
 
+void CEditor::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float FakeToScreenX = m_GfxScreenWidth/(ScreenX1-ScreenX0);
+	const float FakeToScreenY = m_GfxScreenHeight/(ScreenY1-ScreenY0);
+	const float BorderW = Border/FakeToScreenX;
+	const float BorderH = Border/FakeToScreenY;
+	const float BorderWhalf = BorderW/2.f;
+	const float BorderHhalf = BorderH/2.f;
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+
+	// border pass
+	if(Color.a == 1)
+	{
+		IGraphics::CQuadItem Quad(Rect.x-BorderWhalf, Rect.y-BorderHhalf, Rect.w+BorderW, Rect.h+BorderH);
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+	}
+	else
+	{
+		// border pass
+		IGraphics::CQuadItem Quads[4] = {
+			IGraphics::CQuadItem(Rect.x-BorderWhalf, Rect.y-BorderHhalf, BorderW, Rect.h+BorderH),
+			IGraphics::CQuadItem(Rect.x+Rect.w-BorderHhalf, Rect.y-BorderHhalf, BorderW, Rect.h+BorderH),
+			IGraphics::CQuadItem(Rect.x, Rect.y-BorderHhalf, Rect.w, BorderH),
+			IGraphics::CQuadItem(Rect.x, Rect.y+Rect.h-BorderHhalf, Rect.w, BorderH)
+		};
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(Quads, 4);
+	}
+
+	// front pass
+	if(Color.a > 0.001)
+	{
+		IGraphics::CQuadItem QuadCenter(Rect.x+BorderWhalf, Rect.y+BorderHhalf,
+			Rect.w-BorderW, Rect.h-BorderH);
+		Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a,
+							 Color.b*Color.a, Color.a);
+		Graphics()->QuadsDrawTL(&QuadCenter, 1);
+	}
+
+	Graphics()->QuadsEnd();
+}
+
 inline void CEditor::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color)
 {
 	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
@@ -1942,6 +2048,23 @@ void CEditor::OnMapLoaded()
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
 	ClearBrush();
+}
+
+void CEditor::OnStartDragging()
+{
+	// TODO: if tool == brush
+	ed_log("Dragging start");
+	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+		m_ZoomWorldViewHeight, m_UiMouseStartDragPos);
+	const float TileSize = 32;
+	m_TileStartDrag.x = floor(MouseWorldPos.x/TileSize);
+	m_TileStartDrag.y = floor(MouseWorldPos.y/TileSize);
+}
+
+void CEditor::OnFinishDragging()
+{
+	// TODO: if tool == brush
+	ed_log("Dragging done");
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)

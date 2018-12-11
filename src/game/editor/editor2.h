@@ -396,6 +396,10 @@ class CEditor: public IEditor
 	CRenderTools m_RenderTools;
 	CUI m_UI;
 
+	vec2 m_RenderGrenadePickupSize;
+	vec2 m_RenderShotgunPickupSize;
+	vec2 m_RenderLaserPickupSize;
+
 	vec2 m_MousePos;
 	vec2 m_UiMousePos;
 	vec2 m_UiMouseDelta;
@@ -448,6 +452,11 @@ class CEditor: public IEditor
 	CUIRect m_UiPopupBrushPaletteRect = {};
 	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
+	vec2 m_UiMouseStartDragPos;
+	vec2 m_UiMouseEndDragPos;
+	bool m_UiMouseIsDragging = false;
+	bool m_UiMouseLeftPressed = false;
+
 	struct CBrush
 	{
 		CDynArray<CTile> m_aTiles;
@@ -459,9 +468,7 @@ class CEditor: public IEditor
 
 	CBrush m_Brush;
 
-	vec2 m_RenderGrenadePickupSize;
-	vec2 m_RenderShotgunPickupSize;
-	vec2 m_RenderLaserPickupSize;
+	ivec2 m_TileStartDrag;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
@@ -480,6 +487,7 @@ class CEditor: public IEditor
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
+	void DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
@@ -502,6 +510,9 @@ class CEditor: public IEditor
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
 	void OnMapLoaded();
+
+	void OnStartDragging();
+	void OnFinishDragging();
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
