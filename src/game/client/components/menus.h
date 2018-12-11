@@ -128,7 +128,7 @@ private:
 	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
 	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
 						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true);
-	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false);
+	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool* pActive = NULL);
 	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
 	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
 
@@ -176,7 +176,8 @@ private:
 		SETTINGS_GRAPHICS,
 		SETTINGS_SOUND,
 
-		ACTLB_LANG=0,
+		ACTLB_NONE=0,
+		ACTLB_LANG,
 		ACTLB_THEME,
 	};
 
