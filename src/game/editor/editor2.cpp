@@ -566,6 +566,8 @@ void CEditor::OnInput(IInput::CEvent Event)
 
 void CEditor::Update()
 {
+	m_LocalTime = Client()->LocalTime();
+
 	for(int i = 0; i < Input()->NumEvents(); i++)
 	{
 		IInput::CEvent e = Input()->GetEvent(i);
@@ -629,7 +631,10 @@ void CEditor::Update()
 		m_InputConsole.ToggleOpen();
 	}
 
-	//m_UiShowBrushPalette = Input()->KeyIsPressed(KEY_SPACE);
+	if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
+		m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+	else if(!Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+		m_UiCurrentPopupID = POPUP_NONE;
 
 	Input()->Clear();
 }
@@ -679,7 +684,6 @@ void CEditor::Render()
 
 	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
 		SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
-
 
 	// background
 	{
@@ -878,6 +882,9 @@ void CEditor::Render()
 
 	Graphics()->QuadsEnd();
 
+	// hud
+	RenderHud();
+
 	// user interface
 	RenderUI();
 
@@ -1038,6 +1045,23 @@ inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, 
 	return vec2(MapOffX, MapOffY);
 }
 
+inline vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
+{
+	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
+	const float OffX = G.m_OffsetX;
+	const float OffY = G.m_OffsetY;
+	const float ParaX = G.m_ParallaxX/100.f;
+	const float ParaY = G.m_ParallaxY/100.f;
+	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
+	// is based on the center of the screen
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const float MapOffX = (((m_MapUiPosOffset.x + UiScreenRect.w*0.5) * ParaX) -
+		UiScreenRect.w*0.5 + UiPos.x)/ UiScreenRect.w * WorldWidth + OffX;
+	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
+		UiScreenRect.h*0.5 + UiPos.y)/ UiScreenRect.h * WorldHeight + OffY;
+	return vec2(MapOffX, MapOffY);
+}
+
 void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
 {
 	CEditor *pThis = (CEditor *)pUser;
@@ -1062,6 +1086,39 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 	float Time = Client()->LocalTime();
 	RenderTools()->RenderEvalEnvelope(pPoints + Env.m_StartPoint, Env.m_NumPoints, 4,
 									  Time+TimeOffset, pChannels);
+}
+
+void CEditor::RenderHud()
+{
+	// NOTE: we're in selected group world space here
+
+	const float TileSize = 32;
+	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+		m_ZoomWorldViewHeight, m_UiMousePos);
+
+	vec2 GridMousePos((int)(MouseWorldPos.x/TileSize)*TileSize, (int)(MouseWorldPos.y/TileSize)*TileSize);
+	if(MouseWorldPos.x < 0) GridMousePos.x -= TileSize;
+	if(MouseWorldPos.y < 0) GridMousePos.y -= TileSize;
+
+	if(m_UiCurrentPopupID == POPUP_NONE)
+	{
+		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+
+		if(SelectedTileLayer.IsTileLayer())
+		{
+			if(m_Brush.IsEmpty())
+			{
+				const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
+				vec4 HoverColor = StyleColorTileHover;
+				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+				DrawRectBorderOutside(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
+			}
+		}
+
+		// TODO: if tool == brush
+		// draw brush
+		RenderBrush(GridMousePos);
+	}
 }
 
 void CEditor::RenderUI()
@@ -1244,9 +1301,6 @@ void CEditor::RenderUI()
 
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
-
-	// TODO: if tool == brush
-	//RenderBrush();
 }
 
 void CEditor::RenderPopupBrushPalette()
@@ -1335,7 +1389,7 @@ void CEditor::RenderPopupBrushPalette()
 			ImageRect.y + HoveredTileY*TileSize,
 			TileSize, TileSize
 		};
-		DrawRectBorder(HoverTileRect, StyleColorTileHover, 2, StyleColorTileHoverBorder);
+		DrawRectBorderOutside(HoverTileRect, StyleColorTileHover, 2, StyleColorTileHoverBorder);
 	}
 
 	// drag rectangle
@@ -1421,7 +1475,7 @@ void CEditor::RenderPopupBrushPalette()
 
 void CEditor::RenderBrush(vec2 Pos)
 {
-	if(m_Brush.m_Width <= 0)
+	if(m_Brush.IsEmpty())
 		return;
 
 	float ScreenX0, ScreenX1, ScreenY0, ScreenY1;
@@ -1469,8 +1523,10 @@ inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
 
 void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
 {
-	const float FakeToScreenX = m_GfxScreenWidth/m_UiScreenRect.w;
-	const float FakeToScreenY = m_GfxScreenHeight/m_UiScreenRect.h;
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float FakeToScreenX = m_GfxScreenWidth/(ScreenX1-ScreenX0);
+	const float FakeToScreenY = m_GfxScreenHeight/(ScreenY1-ScreenY0);
 	const float BorderW = Border/FakeToScreenX;
 	const float BorderH = Border/FakeToScreenY;
 
@@ -1504,6 +1560,52 @@ void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Borde
 	{
 		IGraphics::CQuadItem QuadCenter(Rect.x + BorderW, Rect.y + BorderH,
 										Rect.w - BorderW*2, Rect.h - BorderH*2);
+		Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a,
+							 Color.b*Color.a, Color.a);
+		Graphics()->QuadsDrawTL(&QuadCenter, 1);
+	}
+
+	Graphics()->QuadsEnd();
+}
+
+void CEditor::DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float FakeToScreenX = m_GfxScreenWidth/(ScreenX1-ScreenX0);
+	const float FakeToScreenY = m_GfxScreenHeight/(ScreenY1-ScreenY0);
+	const float BorderW = Border/FakeToScreenX;
+	const float BorderH = Border/FakeToScreenY;
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+
+	// border pass
+	if(Color.a == 1)
+	{
+		IGraphics::CQuadItem Quad(Rect.x-BorderW, Rect.y-BorderH, Rect.w+BorderW*2, Rect.h+BorderH*2);
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+	}
+	else
+	{
+		// border pass
+		IGraphics::CQuadItem Quads[4] = {
+			IGraphics::CQuadItem(Rect.x-BorderW, Rect.y-BorderH, BorderW, Rect.h+BorderH*2),
+			IGraphics::CQuadItem(Rect.x+Rect.w, Rect.y-BorderH, BorderW, Rect.h+BorderH*2),
+			IGraphics::CQuadItem(Rect.x, Rect.y-BorderH, Rect.w, BorderH),
+			IGraphics::CQuadItem(Rect.x, Rect.y+Rect.h, Rect.w, BorderH)
+		};
+		Graphics()->SetColor(BorderColor.r*BorderColor.a, BorderColor.g*BorderColor.a,
+							 BorderColor.b*BorderColor.a, BorderColor.a);
+		Graphics()->QuadsDrawTL(Quads, 4);
+	}
+
+	// front pass
+	if(Color.a > 0.001)
+	{
+		IGraphics::CQuadItem QuadCenter(Rect.x, Rect.y, Rect.w, Rect.h);
 		Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a,
 							 Color.b*Color.a, Color.a);
 		Graphics()->QuadsDrawTL(&QuadCenter, 1);
@@ -1837,7 +1939,9 @@ void CEditor::OnMapLoaded()
 	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
 	mem_zero(m_UiLayerHidden, sizeof(m_UiLayerHidden));
 	mem_zero(m_UiLayerHovered, sizeof(m_UiLayerHovered));
+	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
+	ClearBrush();
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)

@@ -417,6 +417,7 @@ class CEditor: public IEditor
 	float m_GfxScreenHeight;
 	float m_ZoomWorldViewWidth;
 	float m_ZoomWorldViewHeight;
+	float m_LocalTime;
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
@@ -452,6 +453,8 @@ class CEditor: public IEditor
 		CDynArray<CTile> m_aTiles;
 		int m_Width = 0;
 		int m_Height = 0;
+
+		inline bool IsEmpty() const { return m_Width <= 0;}
 	};
 
 	CBrush m_Brush;
@@ -463,16 +466,20 @@ class CEditor: public IEditor
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
-					  float ParallaxY);
+		float ParallaxY);
+	vec2 CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos);
+
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
+	void RenderHud();
 	void RenderUI();
 	void RenderPopupBrushPalette();
 	void RenderBrush(vec2 Pos);
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
+	void DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
