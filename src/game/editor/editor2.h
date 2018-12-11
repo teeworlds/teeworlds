@@ -415,7 +415,7 @@ class CEditor: public IEditor
 	CEditorInputConsole m_InputConsole;
 
 	bool m_ConfigShowGrid = true;
-	bool m_ConfigShowGameEntities = true;
+	bool m_ConfigShowGameEntities = false;
 
 	float m_GfxScreenWidth;
 	float m_GfxScreenHeight;
@@ -516,6 +516,8 @@ class CEditor: public IEditor
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
+	static void ConGameView(IConsole::IResult *pResult, void *pUserData);
+	static void ConShowGrid(IConsole::IResult *pResult, void *pUserData);
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
 	inline IInput *Input() { return m_pInput; };

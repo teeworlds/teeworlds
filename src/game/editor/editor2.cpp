@@ -513,6 +513,8 @@ void CEditor::Init()
 
 	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
 	m_pConsole->Register("+show_palette", "", CFGFLAG_EDITOR, ConShowPalette, this, "Show palette");
+	m_pConsole->Register("game_view", "i", CFGFLAG_EDITOR, ConGameView, this, "Toggle game view");
+	m_pConsole->Register("show_grid", "i", CFGFLAG_EDITOR, ConShowGrid, this, "Toggle grid");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	// grenade pickup
@@ -563,7 +565,10 @@ bool CEditor::HasUnsavedData() const
 void CEditor::OnInput(IInput::CEvent Event)
 {
 	if(m_InputConsole.IsOpen())
+	{
 		m_InputConsole.OnInput(Event);
+		return;
+	}
 
 	if(IsPopupBrushPalette())
 		PopupBrushPaletteProcessInput(Event);
@@ -641,35 +646,38 @@ void CEditor::Update()
 	if(Input()->KeyIsPressed(KEY_MOUSE_3)) MouseButtons |= MOUSE_MIDDLE;
 	UI()->Update(m_UiMousePos.x, m_UiMousePos.y, 0, 0, MouseButtons);
 
-	if(m_UiCurrentPopupID == POPUP_NONE)
-	{
-		// move view
-		if(MouseButtons&MOUSE_RIGHT)
-		{
-			m_MapUiPosOffset -= m_UiMouseDelta;
-		}
-
-		// zoom with mouse wheel
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			ChangeZoom(m_Zoom * 0.9f);
-		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			ChangeZoom(m_Zoom * 1.1f);
-
-		if(Input()->KeyPress(KEY_HOME))
-		{
-			ResetCamera();
-		}
-	}
-
 	if(Input()->KeyPress(KEY_F1))
 	{
 		m_InputConsole.ToggleOpen();
 	}
 
-	if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
-		m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
-	else if(!Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
-		m_UiCurrentPopupID = POPUP_NONE;
+	if(!m_InputConsole.IsOpen())
+	{
+		if(m_UiCurrentPopupID == POPUP_NONE)
+		{
+			// move view
+			if(MouseButtons&MOUSE_RIGHT)
+			{
+				m_MapUiPosOffset -= m_UiMouseDelta;
+			}
+
+			// zoom with mouse wheel
+			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+				ChangeZoom(m_Zoom * 0.9f);
+			else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+				ChangeZoom(m_Zoom * 1.1f);
+
+			if(Input()->KeyPress(KEY_HOME))
+			{
+				ResetCamera();
+			}
+		}
+
+		if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
+			m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+		else if(!Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+			m_UiCurrentPopupID = POPUP_NONE;
+	}
 
 	Input()->Clear();
 }
@@ -2125,4 +2133,16 @@ void CEditor::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor *pSelf = (CEditor *)pUserData;
 	dbg_assert(0, "Implement this");
+}
+
+void CEditor::ConGameView(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->m_ConfigShowGameEntities = (pResult->GetInteger(0) > 0);
+}
+
+void CEditor::ConShowGrid(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->m_ConfigShowGrid = (pResult->GetInteger(0) > 0);
 }
