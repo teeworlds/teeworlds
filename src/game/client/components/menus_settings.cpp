@@ -728,8 +728,6 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			}
 	}
 
-	if(m_ActiveListBox != ACTLB_LANG && UI()->MouseInside(&MainView))
-		m_ActiveListBox = ACTLB_LANG;
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
@@ -738,7 +736,10 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front(), false, m_ActiveListBox == ACTLB_LANG);
+		bool IsActive = m_ActiveListBox == ACTLB_LANG;
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front(), false, &IsActive);
+		if(IsActive)
+			m_ActiveListBox = ACTLB_LANG;
 
 		if(Item.m_Visible)
 		{
@@ -791,8 +792,6 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			}
 	}
 
-	if(m_ActiveListBox != ACTLB_THEME && UI()->MouseInside(&MainView))
-		m_ActiveListBox = ACTLB_THEME;
 	int OldSelected = s_SelectedTheme;
 
 	if(Header)
@@ -801,7 +800,10 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front(), false, m_ActiveListBox == ACTLB_THEME);
+		bool IsActive = m_ActiveListBox == ACTLB_THEME;
+		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front(), false, &IsActive);
+		if(IsActive)
+			m_ActiveListBox = ACTLB_THEME;
 
 		if(Item.m_Visible)
 		{
