@@ -209,11 +209,9 @@ int CInput::Update()
 			//
 			if(Key != -1)
 			{
+				m_aInputCount[Key] = m_InputCounter;
 				if(Action&IInput::FLAG_PRESS)
-				{
 					m_aInputState[Scancode] = 1;
-					m_aInputCount[Key] = m_InputCounter;
-				}
 				AddEvent(0, Key, Action);
 			}
 
