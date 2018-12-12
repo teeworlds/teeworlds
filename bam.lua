@@ -169,6 +169,7 @@ end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
+		settings.cc.flags:Add("-msse2") -- for the _mm_pause call
 		settings.cc.flags:Add("-m32")
 		settings.link.flags:Add("-m32")
 	elseif arch == "x86_64" then
