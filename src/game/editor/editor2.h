@@ -284,8 +284,9 @@ struct CEditorMap
 		{
 			struct {
 				CDynArray<CTile> m_aTiles;
-				u16 m_Width;
-				u16 m_Height;
+				int m_Width;
+				int m_Height;
+				int m_ColorEnvelopeID;
 			};
 
 			struct {
@@ -336,6 +337,7 @@ struct CEditorMap
 	CChainAllocator<CGroup> m_GroupDispenser;
 	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
+	char m_aImageNames[MAX_TEXTURES][64];
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	IGraphics::CTextureHandle m_aTextures2D[MAX_TEXTURES];
 	int m_TextureCount = 0;
@@ -416,6 +418,7 @@ class CEditor: public IEditor
 
 	bool m_ConfigShowGrid = true;
 	bool m_ConfigShowGameEntities = false;
+	bool m_ConfigShowExtendedTilemaps = false;
 
 	float m_GfxScreenWidth;
 	float m_GfxScreenHeight;

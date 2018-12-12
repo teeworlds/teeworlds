@@ -16,6 +16,7 @@
 // - Allow brush to go in eraser mode
 // - Binds
 // - Smooth zoom
+// - Envelope offset
 
 static char s_aEdMsg[256];
 #define ed_log(...)\
@@ -214,6 +215,7 @@ bool CEditorMap::Load(const char* pFileName)
 				LayerTile.m_ImageID = Tilemap.m_Image;
 				LayerTile.m_Width = Tilemap.m_Width;
 				LayerTile.m_Height = Tilemap.m_Height;
+				LayerTile.m_ColorEnvelopeID = Tilemap.m_ColorEnv;
 				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
 										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
 				LayerTile.m_aTiles = NewTileArray();
@@ -316,6 +318,8 @@ bool CEditorMap::Load(const char* pFileName)
 
 	for(int i = 0; i < ImagesCount && i < MAX_TEXTURES; i++)
 	{
+		mem_zero(m_aImageNames[i], sizeof(m_aImageNames[i]));
+
 		int TextureFlags = 0;
 		bool FoundQuadLayer = false;
 		bool FoundTileLayer = false;
@@ -337,7 +341,7 @@ bool CEditorMap::Load(const char* pFileName)
 								pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
 			char Buf[256];
-			char *pName = (char *)File.GetData(pImg->m_ImageName);
+			const char *pName = (char *)File.GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
 			m_aTextures[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 													TextureFlags);
@@ -348,6 +352,8 @@ bool CEditorMap::Load(const char* pFileName)
 				m_aTextures2D[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 															IGraphics::TEXLOAD_MULTI_DIMENSION);
 			}
+
+			mem_copy(m_aImageNames[i], pName, min((uint64_t)str_length(pName), sizeof(m_aImageNames[i])-1));
 			ed_dbg("mapres/%s.png loaded", pName);
 		}
 		else
@@ -750,6 +756,7 @@ void CEditor::Render()
 
 	// render map
 	const int GroupCount = m_Map.m_aGroups.Count();
+	const int BaseTilemapFlags = m_ConfigShowExtendedTilemaps ? TILERENDERFLAG_EXTEND:0;
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
@@ -806,13 +813,13 @@ void CEditor::Render()
 
 				Graphics()->BlendNone();
 				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
-											 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_OPAQUE,
-											 0, 0, -1, 0);
+											 BaseTilemapFlags|LAYERRENDERFLAG_OPAQUE,
+											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID, 0);
 
 				Graphics()->BlendNormal();
 				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
-											 /*TILERENDERFLAG_EXTEND|*/LAYERRENDERFLAG_TRANSPARENT,
-											 0, 0, -1, 0);
+											 BaseTilemapFlags|LAYERRENDERFLAG_TRANSPARENT,
+											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID, 0);
 			}
 			else if(Layer.m_Type == LAYERTYPE_QUADS)
 			{
@@ -1194,10 +1201,13 @@ void CEditor::RenderUI()
 	CUIRect RightPanel;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
 
-	DrawRect(RightPanel, vec4(0.03, 0, 0.085, 1));
+	DrawRect(RightPanel, StyleColorBg);
 
-	CUIRect NavRect, ButtonRect;
+	CUIRect NavRect, DetailRect, ButtonRect;
 	RightPanel.Margin(3.0f, &NavRect);
+	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
+
+	UI()->ClipEnable(&NavRect);
 
 	static CUIButtonState s_UiGroupButState[MAX_GROUPS] = {};
 	static CUIButtonState s_UiGroupShowButState[MAX_GROUPS] = {};
@@ -1207,30 +1217,6 @@ void CEditor::RenderUI()
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
 	const float ShowButtonWidth = 15.0f;
-
-	if(m_UiSelectedLayerID >= 0)
-	{
-		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
-		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
-		char aBuff[128];
-		CUIRect ButtonRect;
-
-		// parallax
-		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
-		NavRect.HSplitTop(Spacing, 0, &NavRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
-				   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
-		DrawText(ButtonRect, aBuff, FontSize);
-
-		// position
-		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
-		NavRect.HSplitTop(Spacing, 0, &NavRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Position = (%d, %d)",
-				   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
-		DrawText(ButtonRect, aBuff, FontSize);
-	}
 
 	const int GroupCount = m_Map.m_aGroups.Count();
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -1358,9 +1344,120 @@ void CEditor::RenderUI()
 					str_format(aLayerName, sizeof(aLayerName), "%s Layer #%d",
 							   m_Map.m_aLayers[LyID].m_Type == LAYERTYPE_TILES ?
 								   "Tile" : "Quad",
-							   li);
+							   LyID);
 				DrawText(ButtonRect, aLayerName, FontSize);
 			}
+		}
+	}
+
+	UI()->ClipDisable(); // NavRect
+
+	if(m_UiSelectedLayerID >= 0)
+	{
+		// group
+		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+		const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
+		char aBuff[128];
+		CUIRect ButtonRect;
+
+		// label
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, StyleColorButtonPressed);
+		if(IsGameGroup)
+			str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
+		else
+			str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// parallax
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
+				   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// position
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Offset = (%d, %d)",
+				   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+
+		// layer
+		const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+		const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
+
+		// label
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, StyleColorButtonPressed);
+		if(IsGameLayer)
+			str_format(aBuff, sizeof(aBuff), Localize("Game Layer"));
+		else
+			str_format(aBuff, sizeof(aBuff), "%s Layer #%d", SelectedLayer.IsTileLayer() ? "Tile":"Quad",
+				m_UiSelectedLayerID);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// tile layer
+		if(SelectedLayer.IsTileLayer())
+		{
+			// size
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
+				SelectedLayer.m_Width, SelectedLayer.m_Height);
+			DrawText(ButtonRect, aBuff, FontSize);
+
+			// game layer
+			if(IsGameLayer)
+			{
+
+			}
+			else
+			{
+				// image
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				DrawRect(ButtonRect, vec4(0,0,0,1));
+				if(SelectedLayer.m_ImageID >= 0)
+					DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID], FontSize);
+				else
+					DrawText(ButtonRect, Localize("none"), FontSize);
+
+				// color
+				CUIRect ColorRect;
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				ButtonRect.VSplitMid(&ButtonRect, &ColorRect);
+
+				DrawRect(ButtonRect, vec4(0,0,0,1));
+				DrawText(ButtonRect, "Color", FontSize);
+				DrawRect(ColorRect, SelectedLayer.m_Color);
+			}
+		}
+		else if(SelectedLayer.IsQuadLayer())
+		{
+			// image
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			if(SelectedLayer.m_ImageID >= 0)
+				DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID], FontSize);
+			else
+				DrawText(ButtonRect, Localize("none"), FontSize);
+
+			// quad count
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.Count());
+			DrawText(ButtonRect, aBuff, FontSize);
 		}
 	}
 
@@ -2139,6 +2236,7 @@ void CEditor::ConGameView(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor *pSelf = (CEditor *)pUserData;
 	pSelf->m_ConfigShowGameEntities = (pResult->GetInteger(0) > 0);
+	pSelf->m_ConfigShowExtendedTilemaps = pSelf->m_ConfigShowGameEntities;
 }
 
 void CEditor::ConShowGrid(IConsole::IResult* pResult, void* pUserData)
