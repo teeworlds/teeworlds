@@ -741,8 +741,10 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			m_aClients[pMsg->m_ClientID].UpdateRenderInfo(this, false);
 
 			if(pMsg->m_ClientID == m_LocalClientID)
+			{
 				m_TeamCooldownTick = pMsg->m_CooldownTick;
-			m_TeamChangeTime = Client()->LocalTime();
+				m_TeamChangeTime = Client()->LocalTime();
+			}
 		}
 
 		if(pMsg->m_Silent == 0)
