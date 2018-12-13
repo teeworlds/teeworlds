@@ -34,7 +34,11 @@ void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pU
 	m_pTextRender = pTextRender;
 	m_pUI = pUI;
 
+#ifdef CONF_DEBUG
+	m_pConsole->RegisterPrintCallback(IConsole::OUTPUT_LEVEL_DEBUG, StaticConsolePrintCallback, this);
+#else
 	m_pConsole->RegisterPrintCallback(IConsole::OUTPUT_LEVEL_STANDARD, StaticConsolePrintCallback, this);
+#endif
 }
 
 void CEditorInputConsole::Render()

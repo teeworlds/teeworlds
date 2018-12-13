@@ -30,6 +30,7 @@ class IStorage;
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
+typedef uint64_t u64;
 
 /* Chain Allocator
  *
@@ -320,6 +321,30 @@ struct CEditorMap
 		bool m_Synchronized;
 	};
 
+	// used for undo/redo
+	struct CSnapshot
+	{
+		struct CImage
+		{
+			char m_aName[64];
+		};
+
+		int m_GroupCount;
+		int m_LayerCount;
+		int m_EnvelopeCount;
+		int m_ImageCount;
+		int m_GameLayerID;
+		int m_GameGroupID;
+		CImage* m_aImages;
+		CMapItemGroup* m_aGroups;
+		CMapItemLayer** m_apLayers;
+		CMapItemEnvelope* m_aEnvelopes;
+		CTile* m_aTiles;
+		CQuad* m_aQuads;
+		CEnvPoint* m_aEnvPoints;
+		u8 m_Data[1];
+	};
+
 	int m_MapMaxWidth = 0;
 	int m_MapMaxHeight = 0;
 	int m_GameLayerID = -1;
@@ -355,6 +380,12 @@ struct CEditorMap
 	bool Load(const char *pFileName);
 	void LoadDefault();
 	void Clear();
+
+	CSnapshot* SaveSnapshot();
+	void RestoreSnapshot(const CSnapshot* pSnapshot);
+#ifdef CONF_DEBUG
+	void CompareSnapshot(const CSnapshot* pSnapshot);
+#endif
 
 	inline CDynArray<CTile> NewTileArray()
 	{

@@ -458,6 +458,229 @@ void CEditorMap::Clear()
 	m_TextureCount = 0;
 }
 
+CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
+{
+	// calculate snapshot size
+	u64 SnapSize = sizeof(CSnapshot)-1;
+
+	const int GroupCount = m_aGroups.Count();
+	SnapSize += sizeof(CMapItemGroup) * GroupCount;
+
+	const int LayerCount = m_aLayers.Count();
+	SnapSize += sizeof(CMapItemLayer*) * LayerCount;
+	for(int li = 0; li < LayerCount; li++)
+	{
+		const CLayer& Layer = m_aLayers[li];
+		if(Layer.IsTileLayer())
+		{
+			SnapSize += sizeof(CMapItemLayerTilemap);
+			SnapSize += sizeof(CTile) * Layer.m_aTiles.Count();
+		}
+		else
+		{
+			SnapSize += sizeof(CMapItemLayerQuads);
+			SnapSize += sizeof(CQuad) * Layer.m_aQuads.Count();
+		}
+	}
+
+	const int EnvelopeCount = m_aEnvelopes.Count();
+	SnapSize += sizeof(CMapItemEnvelope) * EnvelopeCount;
+
+	for(int ei = 0; ei < EnvelopeCount; ei++)
+	{
+		SnapSize += sizeof(CEnvPoint) * m_aEnvelopes[ei].m_NumPoints;
+	}
+
+	const int ImageCount = m_TextureCount;
+	SnapSize += sizeof(CSnapshot::CImage) * ImageCount;
+
+	ed_dbg("Map snapshot size = %lluKo", SnapSize/1024);
+
+	CSnapshot& Snap = *(CSnapshot*)mem_alloc(SnapSize, 0);
+	Snap.m_GroupCount = GroupCount;
+	Snap.m_LayerCount = LayerCount;
+	Snap.m_EnvelopeCount = EnvelopeCount;
+	Snap.m_ImageCount = ImageCount;
+	Snap.m_GameGroupID = m_GameGroupID;
+	Snap.m_GameLayerID = m_GameLayerID;
+	Snap.m_aImages = (CSnapshot::CImage*)(Snap.m_Data);
+	Snap.m_aGroups = (CMapItemGroup*)(Snap.m_aImages + Snap.m_ImageCount);
+	Snap.m_apLayers = (CMapItemLayer**)(Snap.m_aGroups + Snap.m_GroupCount);
+
+	for(int i = 0; i < ImageCount; i++)
+	{
+		mem_copy(Snap.m_aImages+i, m_aImageNames+i, sizeof(CSnapshot::CImage));
+	}
+
+	for(int gi = 0; gi < GroupCount; gi++)
+	{
+		CMapItemGroup& SnapGroup = Snap.m_aGroups[gi];
+		const CGroup& Group = m_aGroups[gi];
+		SnapGroup.m_NumLayers = Group.m_LayerCount;
+		SnapGroup.m_OffsetX = Group.m_OffsetX;
+		SnapGroup.m_OffsetY = Group.m_OffsetY;
+		SnapGroup.m_ParallaxX = Group.m_ParallaxX;
+		SnapGroup.m_ParallaxY = Group.m_ParallaxY;
+	}
+
+	CMapItemLayer* pCurrentLayerData = (CMapItemLayer*)(Snap.m_apLayers + Snap.m_LayerCount);
+	int TileStartID = 0;
+	int QuadStartID = 0;
+
+	for(int li = 0; li < LayerCount; li++)
+	{
+		const CLayer& Layer = m_aLayers[li];
+		Snap.m_apLayers[li] = pCurrentLayerData;
+
+		if(Layer.IsTileLayer())
+		{
+			CMapItemLayerTilemap& Tilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
+			Tilemap.m_Layer.m_Type = LAYERTYPE_TILES;
+			if(li == m_GameLayerID)
+				Tilemap.m_Layer.m_Type = LAYERTYPE_GAME;
+
+			Tilemap.m_Color = { (int)Layer.m_Color.r*255, (int)Layer.m_Color.g*255,
+				(int)Layer.m_Color.b*255, (int)Layer.m_Color.a*255 };
+			Tilemap.m_ColorEnv = Layer.m_ColorEnvelopeID;
+			Tilemap.m_Data = TileStartID;
+			TileStartID += Layer.m_Width*Layer.m_Height;
+			Tilemap.m_Width = Layer.m_Width;
+			Tilemap.m_Height = Layer.m_Height;
+			Tilemap.m_Image = Layer.m_ImageID;
+
+			pCurrentLayerData = (CMapItemLayer*)(&Tilemap + 1);
+		}
+		else
+		{
+			CMapItemLayerQuads& LayerQuads = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
+			LayerQuads.m_Layer.m_Type = LAYERTYPE_QUADS;
+			LayerQuads.m_Data = QuadStartID;
+			LayerQuads.m_NumQuads = Layer.m_aQuads.Count();
+			QuadStartID += LayerQuads.m_NumQuads;
+			LayerQuads.m_Image = Layer.m_ImageID;
+
+			pCurrentLayerData = (CMapItemLayer*)(&LayerQuads + 1);
+		}
+	}
+
+	Snap.m_aEnvelopes = (CMapItemEnvelope*)pCurrentLayerData;
+	for(int ei = 0; ei < EnvelopeCount; ei++)
+	{
+		Snap.m_aEnvelopes[ei] = m_aEnvelopes[ei];
+	}
+
+	Snap.m_aTiles = (CTile*)(Snap.m_aEnvelopes + EnvelopeCount);
+	CTile* pCurrentTile = Snap.m_aTiles;
+
+	for(int li = 0; li < LayerCount; li++)
+	{
+		const CLayer& Layer = m_aLayers[li];
+		if(Layer.IsTileLayer())
+		{
+			mem_copy(pCurrentTile, Layer.m_aTiles.Data(), sizeof(CTile)*Layer.m_aTiles.Count());
+			pCurrentTile += Layer.m_aTiles.Count();
+		}
+	}
+
+	Snap.m_aQuads = (CQuad*)pCurrentTile;
+	CQuad* pCurrentQuad = Snap.m_aQuads;
+
+	for(int li = 0; li < LayerCount; li++)
+	{
+		const CLayer& Layer = m_aLayers[li];
+		if(Layer.IsQuadLayer())
+		{
+			mem_copy(pCurrentQuad, Layer.m_aQuads.Data(), sizeof(CQuad)*Layer.m_aQuads.Count());
+			pCurrentQuad += Layer.m_aQuads.Count();
+		}
+	}
+
+	Snap.m_aEnvPoints = (CEnvPoint*)pCurrentQuad;
+	CEnvPoint* pCurrentEnvPoint = Snap.m_aEnvPoints;
+	mem_copy(pCurrentEnvPoint, m_aEnvPoints.Data(), sizeof(CEnvPoint) * m_aEnvPoints.Count());
+
+	return &Snap;
+}
+
+void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
+{
+
+}
+
+#ifdef CONF_DEBUG
+void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
+{
+	const CEditorMap::CSnapshot& Snap = *pSnapshot;
+	dbg_assert(Snap.m_GroupCount == m_aGroups.Count(), "");
+	dbg_assert(Snap.m_LayerCount == m_aLayers.Count(), "");
+	dbg_assert(Snap.m_EnvelopeCount == m_aEnvelopes.Count(), "");
+	dbg_assert(Snap.m_ImageCount == m_TextureCount, "");
+	dbg_assert(Snap.m_GameGroupID == m_GameGroupID, "");
+	dbg_assert(Snap.m_GameLayerID == m_GameLayerID, "");
+
+	for(int i = 0; i < Snap.m_ImageCount; i++)
+	{
+		dbg_assert(Snap.m_aImages[i].m_aName[0] == m_aImageNames[i][0], "");
+	}
+
+	for(int gi = 0; gi < Snap.m_GroupCount; gi++)
+	{
+		const CMapItemGroup& SnapGroup = Snap.m_aGroups[gi];
+		const CGroup Group = m_aGroups[gi];
+		dbg_assert(SnapGroup.m_NumLayers == Group.m_LayerCount, "");
+		dbg_assert(SnapGroup.m_OffsetX == Group.m_OffsetX, "");
+		dbg_assert(SnapGroup.m_OffsetY == Group.m_OffsetY, "");
+		dbg_assert(SnapGroup.m_ParallaxX == Group.m_ParallaxX, "");
+		dbg_assert(SnapGroup.m_ParallaxY == Group.m_ParallaxY, "");
+	}
+
+	const CTile* pSnapTiles = Snap.m_aTiles;
+	const CQuad* pSnapQuads = Snap.m_aQuads;
+
+	for(int li = 0; li < Snap.m_LayerCount; li++)
+	{
+		const CMapItemLayer& SnapLayer = *Snap.m_apLayers[li];
+		const CLayer Layer = m_aLayers[li];
+
+		if(SnapLayer.m_Type == LAYERTYPE_GAME)
+			dbg_assert(Layer.m_Type == LAYERTYPE_TILES && li == m_GameLayerID, "");
+		else
+			dbg_assert(SnapLayer.m_Type == LAYERTYPE_GAME || SnapLayer.m_Type == Layer.m_Type, "");
+
+		if(Layer.IsTileLayer())
+		{
+			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
+			dbg_assert(SnapTilemap.m_Image == Layer.m_ImageID, "");
+			dbg_assert(SnapTilemap.m_Width == Layer.m_Width, "");
+			dbg_assert(SnapTilemap.m_Height == Layer.m_Height, "");
+			dbg_assert(mem_comp(pSnapTiles, Layer.m_aTiles.Data(),
+				Layer.m_Width*Layer.m_Height*sizeof(CTile)) == 0, "Layer tiles don't match");
+			pSnapTiles += Layer.m_Width*Layer.m_Height;
+		}
+		else if(Layer.IsQuadLayer())
+		{
+			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
+			dbg_assert(SnapQuadLayer.m_Image == Layer.m_ImageID, "");
+			dbg_assert(SnapQuadLayer.m_NumQuads == Layer.m_aQuads.Count(), "");
+			dbg_assert(mem_comp(pSnapQuads, Layer.m_aQuads.Data(),
+				SnapQuadLayer.m_NumQuads*sizeof(CQuad)) == 0, "Quads don't match");
+			pSnapQuads += SnapQuadLayer.m_NumQuads;
+		}
+	}
+
+	const CEnvPoint* pSnapEnvPoint = Snap.m_aEnvPoints;
+	for(int ei = 0; ei < Snap.m_EnvelopeCount; ei++)
+	{
+		dbg_assert(mem_comp(&Snap.m_aEnvelopes[ei], &m_aEnvelopes[ei], sizeof(CMapItemEnvelope)) == 0, "");
+		dbg_assert(mem_comp(pSnapEnvPoint, &m_aEnvPoints[m_aEnvelopes[ei].m_StartPoint],
+			sizeof(CEnvPoint)*Snap.m_aEnvelopes[ei].m_NumPoints) == 0, "");
+		pSnapEnvPoint += Snap.m_aEnvelopes[ei].m_NumPoints;
+	}
+
+	ed_dbg("[x] Map snapshot matches current map data");
+}
+#endif
+
 CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 {
 	CLayer TileLayer;
@@ -1351,6 +1574,33 @@ void CEditor::RenderUI()
 	}
 
 	UI()->ClipDisable(); // NavRect
+
+	// TODO: remove this
+	// undo/redo test
+	CUIRect ButtonRectRight;
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRectRight);
+
+	static CEditorMap::CSnapshot* pSnap = nullptr;
+
+	static CUIButtonState s_ButSave;
+	if(UiButton(ButtonRect, "Save", &s_ButSave))
+	{
+		pSnap = m_Map.SaveSnapshot();
+		m_Map.CompareSnapshot(pSnap);
+		free(pSnap);
+		ed_log("Saved map state");
+	}
+
+	static CUIButtonState s_ButRestore;
+	if(UiButton(ButtonRectRight, "Restore", &s_ButRestore))
+	{
+		m_Map.RestoreSnapshot(pSnap);
+		free(pSnap);
+		ed_log("Restored map state");
+	}
+
 
 	if(m_UiSelectedLayerID >= 0)
 	{
