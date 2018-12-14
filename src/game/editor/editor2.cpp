@@ -1782,7 +1782,6 @@ void CEditor::RenderUI()
 		const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 		const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
 
-
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
@@ -1807,8 +1806,6 @@ void CEditor::RenderUI()
 			str_format(aBuff, sizeof(aBuff), "%s Layer #%d", SelectedLayer.IsTileLayer() ? "Tile":"Quad",
 				m_UiSelectedLayerID);
 		DrawText(ButtonRect, aBuff, FontSize);
-
-
 
 		// tile layer
 		if(SelectedLayer.IsTileLayer())
