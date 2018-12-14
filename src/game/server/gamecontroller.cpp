@@ -892,7 +892,17 @@ static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c =
 void IGameController::ChangeMap(const char *pToMap)
 {
 	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
+
+	m_MatchCount = m_GameInfo.m_MatchNum-1;
+	if(m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
+		SetGameState(IGS_GAME_RUNNING);
 	EndMatch();
+	
+	if(m_GameState != IGS_END_MATCH)
+	{
+		// game could not been ended, force cycle
+		CycleMap();
+	}
 }
 
 void IGameController::CycleMap()
