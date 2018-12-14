@@ -747,7 +747,14 @@ void IGameController::Tick()
 				break;
 			case IGS_END_MATCH:
 				// start next match
-				CycleMap();
+				if(m_MatchCount >= m_GameInfo.m_MatchNum-1)
+				{
+					CycleMap();
+					break;
+				}
+
+				if(g_Config.m_SvMatchSwap)
+					GameServer()->SwapTeams();
 				m_MatchCount++;
 				StartMatch();
 				break;
@@ -902,13 +909,6 @@ void IGameController::CycleMap()
 	}
 	if(!str_length(g_Config.m_SvMaprotation))
 		return;
-
-	if(m_MatchCount < m_GameInfo.m_MatchNum-1)
-	{
-		if(g_Config.m_SvMatchSwap)
-			GameServer()->SwapTeams();
-		return;
-	}
 
 	// handle maprotation
 	const char *pMapRotation = g_Config.m_SvMaprotation;
