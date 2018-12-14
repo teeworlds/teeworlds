@@ -243,10 +243,20 @@ struct CDynArray
 
 	inline void Clear()
 	{
+		for(int i = 0; i < m_EltCount; i++)
+			Data()[i].~T();
 		m_pAllocator->Dealloc(&m_MemBlock);
 		m_MemBlock.m_pStart = 0;
 		m_MemBlock.m_Count = 0;
 		m_EltCount = 0;
+	}
+
+	inline void RemoveByIndex(int Index)
+	{
+		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
+		Data()[Index].~T();
+		Data()[Index] = Data()[m_EltCount-1];
+		m_EltCount--;
 	}
 
 	inline int Count() const { return m_EltCount; }
@@ -457,6 +467,7 @@ class CEditor: public IEditor
 	CEditorInputConsole m_InputConsole;
 
 	bool m_ConfigShowGrid = true;
+	bool m_ConfigShowGridMajor = false;
 	bool m_ConfigShowGameEntities = false;
 	bool m_ConfigShowExtendedTilemaps = false;
 
@@ -535,6 +546,8 @@ class CEditor: public IEditor
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState);
+	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
+					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder);
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void PopupBrushPaletteProcessInput(IInput::CEvent Event);
@@ -556,6 +569,8 @@ class CEditor: public IEditor
 
 	void OnStartDragging();
 	void OnFinishDragging();
+
+	void EditDeleteLayer(int LyID, int ParentGroupID);
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
