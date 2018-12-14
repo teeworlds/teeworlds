@@ -327,6 +327,11 @@ struct CEditorMap
 		struct CImage
 		{
 			char m_aName[64];
+			int m_Flags;
+			int m_Format;
+			int m_Width;
+			int m_Height;
+			u8* m_Data;
 		};
 
 		int m_GroupCount;
@@ -336,7 +341,7 @@ struct CEditorMap
 		int m_GameLayerID;
 		int m_GameGroupID;
 		CImage* m_aImages;
-		CMapItemGroup* m_aGroups;
+		CGroup* m_aGroups;
 		CMapItemLayer** m_apLayers;
 		CMapItemEnvelope* m_aEnvelopes;
 		CTile* m_aTiles;
@@ -365,6 +370,10 @@ struct CEditorMap
 	char m_aImageNames[MAX_TEXTURES][64];
 	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
 	IGraphics::CTextureHandle m_aTextures2D[MAX_TEXTURES];
+	int m_aTextureFlags[MAX_TEXTURES];
+	int m_aTextureFormat[MAX_TEXTURES];
+	ivec2 m_aTextureSize[MAX_TEXTURES];
+	u8* m_aTextureData[MAX_TEXTURES];
 	int m_TextureCount = 0;
 
 	IGraphics* m_pGraphics;
