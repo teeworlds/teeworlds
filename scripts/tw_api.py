@@ -121,7 +121,7 @@ def get_server_info(address):
 
 		# Get info request
 		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
-		data, addr = sock.recvfrom(1024)
+		data, addr = sock.recvfrom(4096)
 		head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
 		assert data[:len(head)] == head, "Server %s info header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
 		sock.close()
@@ -131,15 +131,22 @@ def get_server_info(address):
 		slots = data.split(b"\x00", maxsplit=5)
 
 		server_info = {}
+		server_info["address"] = address
 		server_info["version"] = slots[0].decode()
 		server_info["name"] = slots[1].decode()
 		server_info["hostname"] = slots[2].decode()
 		server_info["map"] = slots[3].decode()
 		server_info["gametype"] = slots[4].decode()
 		data = slots[5]
+
 		# these integers should fit in one byte each
-		server_info["flags"], server_info["skill"], server_info["num_players"], server_info["max_players"], server_info["num_clients"], server_info["max_clients"] = tuple(data[:6])
-		data = data[6:]
+		server_info["flags"], server_info["skill"] = tuple(data[:2])
+		data = data[2:]
+
+		server_info["num_players"], data = unpack_int(data)
+		server_info["max_players"], data = unpack_int(data)
+		server_info["num_clients"], data = unpack_int(data)
+		server_info["max_clients"], data = unpack_int(data)
 		server_info["players"] = []
 
 		for i in range(server_info["num_clients"]):
@@ -159,6 +166,7 @@ def get_server_info(address):
 	except OSError as e: # Timeout
 		print('> Server %s did not answer' % (address,))
 	except:
+		# print('> Server %s did something wrong here' % (address,))
 		# import traceback
 		# traceback.print_exc()
 		pass
@@ -260,19 +268,41 @@ if __name__ == '__main__':
 
 	num_players = 0
 	num_clients = 0
-	num_bots = 0
+	num_botplayers = 0
+	num_botspectators = 0
 
 	while len(servers_info) != 0:
 		if servers_info[0].finished == True:
 			if servers_info[0].info:
-				num_players += servers_info[0].info["num_players"]
-				num_clients += servers_info[0].info["num_clients"]
-				for p in servers_info[0].info["players"]:
-					if p["player"] == 2:
-						num_bots += 1
+				server_info = servers_info[0].info
+				# check num/max validity
+				if   server_info["num_players"] > server_info["max_players"] \
+					or server_info["num_clients"] > server_info["max_clients"] \
+					or server_info["max_players"] > server_info["max_clients"] \
+					or server_info["num_players"] < 0 \
+					or server_info["num_clients"] < 0 \
+					or server_info["max_clients"] < 0 \
+					or server_info["max_players"] < 0 \
+					or server_info["max_clients"] > 64:
+					server_info["bad"] = 'invalid num/max'
+					print('> Server %s has %s' % (server_info["address"], server_info["bad"]))
+				# check actual purity
+				elif server_info["gametype"] in ('DM', 'TDM', 'CTF', 'LMS', 'LTS') \
+					and server_info["max_players"] > 16:
+					server_info["bad"] = 'too many players for vanilla'
+					print('> Server %s has %s' % (server_info["address"], server_info["bad"]))
+
+				else:
+					num_players += server_info["num_players"]
+					num_clients += server_info["num_clients"]
+					for p in servers_info[0].info["players"]:
+						if p["player"] == 2:
+							num_botplayers += 1
+						if p["player"] == 3:
+							num_botspectators += 1
 
 			del servers_info[0]
 
 		time.sleep(0.001) # be nice
 
-	print('%d players (%d bots) and %d spectators' % (num_players, num_bots, num_clients - num_players))
+	print('%d players (%d bots) and %d spectators (%d bots)' % (num_players, num_botplayers, num_clients - num_players, num_botspectators))
