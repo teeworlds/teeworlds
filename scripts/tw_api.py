@@ -268,7 +268,8 @@ if __name__ == '__main__':
 
 	num_players = 0
 	num_clients = 0
-	num_bots = 0
+	num_botplayers = 0
+	num_botspectators = 0
 
 	while len(servers_info) != 0:
 		if servers_info[0].finished == True:
@@ -296,10 +297,12 @@ if __name__ == '__main__':
 					num_clients += server_info["num_clients"]
 					for p in servers_info[0].info["players"]:
 						if p["player"] == 2:
-							num_bots += 1
+							num_botplayers += 1
+						if p["player"] == 3:
+							num_botspectators += 1
 
 			del servers_info[0]
 
 		time.sleep(0.001) # be nice
 
-	print('%d players (%d bots) and %d spectators' % (num_players, num_bots, num_clients - num_players))
+	print('%d players (%d bots) and %d spectators (%d bots)' % (num_players, num_botplayers, num_clients - num_players, num_botspectators))
