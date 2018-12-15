@@ -49,9 +49,14 @@ void CNamePlates::RenderNameplate(
 		}
 
 		const vec4 IdTextColor(0.1f, 0.1f, 0.1f, a);
-		vec4 BgIdColor(1.0f, 0.5f, 0.5f, a * 0.5f);
-		if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
-			BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
+		vec4 BgIdColor(1.0f, 1.0f, 1.0f, a * 0.5f);
+		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+		{
+			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
+				BgIdColor = vec4(1.0f, 0.5f, 0.5f, a * 0.5f);
+			else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
+				BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
+		}
 
 		if(a > 0.001f)
 		{
