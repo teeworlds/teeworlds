@@ -281,8 +281,9 @@ struct CEditorMap
 {
 	enum
 	{
-		MAX_TEXTURES=64,
+		MAX_TEXTURES=128,
 		MAX_GROUP_LAYERS=64,
+		MAX_IMAGE_NAME_LEN=64,
 	};
 
 	struct CLayer
@@ -331,26 +332,31 @@ struct CEditorMap
 		bool m_Synchronized;
 	};
 
+	struct CTextureInfo
+	{
+		int m_Flags;
+		int m_Format;
+		int m_Width;
+		int m_Height;
+		u8* m_Data;
+	};
+
+	struct CImageName
+	{
+		char m_Buff[MAX_IMAGE_NAME_LEN];
+	};
+
 	// used for undo/redo
 	struct CSnapshot
 	{
-		struct CImage
-		{
-			char m_aName[64];
-			int m_Flags;
-			int m_Format;
-			int m_Width;
-			int m_Height;
-			u8* m_Data;
-		};
-
 		int m_GroupCount;
 		int m_LayerCount;
 		int m_EnvelopeCount;
 		int m_ImageCount;
 		int m_GameLayerID;
 		int m_GameGroupID;
-		CImage* m_aImages;
+		CImageName* m_aImageNames;
+		CTextureInfo* m_aImageInfos;
 		CGroup* m_aGroups;
 		CMapItemLayer** m_apLayers;
 		CMapItemEnvelope* m_aEnvelopes;
@@ -377,13 +383,10 @@ struct CEditorMap
 	CChainAllocator<CGroup> m_GroupDispenser;
 	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
-	char m_aImageNames[MAX_TEXTURES][64];
-	IGraphics::CTextureHandle m_aTextures[MAX_TEXTURES];
-	IGraphics::CTextureHandle m_aTextures2D[MAX_TEXTURES];
-	int m_aTextureFlags[MAX_TEXTURES];
-	int m_aTextureFormat[MAX_TEXTURES];
-	ivec2 m_aTextureSize[MAX_TEXTURES];
-	u8* m_aTextureData[MAX_TEXTURES];
+	CImageName m_aImageNames[MAX_TEXTURES];
+	IGraphics::CTextureHandle m_aTextureHandle[MAX_TEXTURES];
+	IGraphics::CTextureHandle m_aTexture2DHandle[MAX_TEXTURES];
+	CTextureInfo m_aTextureInfos[MAX_TEXTURES];
 	int m_TextureCount = 0;
 
 	IGraphics* m_pGraphics;

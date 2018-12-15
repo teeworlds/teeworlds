@@ -321,7 +321,7 @@ bool CEditorMap::Load(const char* pFileName)
 
 	for(int i = 0; i < ImagesCount && i < MAX_TEXTURES; i++)
 	{
-		mem_zero(m_aImageNames[i], sizeof(m_aImageNames[i]));
+		mem_zero(&m_aImageNames[i], sizeof(m_aImageNames[i]));
 
 		int TextureFlags = 0;
 		bool FoundQuadLayer = false;
@@ -340,49 +340,51 @@ bool CEditorMap::Load(const char* pFileName)
 											IGraphics::TEXLOAD_ARRAY_256;
 
 		CMapItemImage *pImg = (CMapItemImage *)File.GetItem(ImagesStart+i, 0, 0);
+		m_aTextureInfos[i].m_Flags = TextureFlags;
+		m_aTextureInfos[i].m_Data = nullptr;
+		m_aTextureInfos[i].m_Width = pImg->m_Width;
+		m_aTextureInfos[i].m_Height = pImg->m_Height;
+
 		if(pImg->m_External)
 		{
 			char Buf[256];
 			const char *pName = (char *)File.GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
-			m_aTextures[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+			m_aTextureHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 				TextureFlags);
 			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
-				m_aTextures2D[i] = m_aTextures[i];
+				m_aTexture2DHandle[i] = m_aTextureHandle[i];
 			else
 			{
-				m_aTextures2D[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+				m_aTexture2DHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 															IGraphics::TEXLOAD_MULTI_DIMENSION);
 			}
 
-			mem_copy(m_aImageNames[i], pName, min((uint64_t)str_length(pName), sizeof(m_aImageNames[i])-1));
-			m_aTextureFormat[i] = CImageInfo::FORMAT_AUTO;
+			mem_copy(&m_aImageNames[i], pName, min((uint64_t)str_length(pName), sizeof(m_aImageNames[i])-1));
+			m_aTextureInfos[i].m_Format = CImageInfo::FORMAT_AUTO;
 			ed_dbg("mapres/%s.png loaded", pName);
 		}
 		else
 		{
 			void *pData = File.GetData(pImg->m_ImageData);
-			m_aTextures[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
+			m_aTextureHandle[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 				pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 				CImageInfo::FORMAT_RGBA, TextureFlags);
 
 			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
-				m_aTextures2D[i] = m_aTextures[i];
+				m_aTexture2DHandle[i] = m_aTextureHandle[i];
 			else
 			{
-				m_aTextures2D[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
+				m_aTexture2DHandle[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 					pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 					CImageInfo::FORMAT_RGBA, IGraphics::TEXLOAD_MULTI_DIMENSION);
 			}
 
-			m_aTextureData[i] = (u8*)1; // TODO: copy image data
-			m_aTextureFormat[i] = pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format;
+			m_aTextureInfos[i].m_Data = (u8*)1; // TODO: copy image data
+			m_aTextureInfos[i].m_Format = pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format;
 		}
-		dbg_assert(m_aTextures[i].IsValid(), "Invalid texture");
 
-		m_aTextureFlags[i] = TextureFlags;
-		m_aTextureData[i] = nullptr;
-		m_aTextureSize[i] = ivec2(pImg->m_Width, pImg->m_Height);
+		dbg_assert(m_aTextureHandle[i].IsValid(), "Invalid texture");
 		m_TextureCount++;
 	}
 
@@ -463,9 +465,9 @@ void CEditorMap::Clear()
 
 	for(int i = 0; i < m_TextureCount; i++)
 	{
-		if(m_aTextures[i].Id() != m_aTextures2D[i].Id())
-			m_pGraphics->UnloadTexture(&m_aTextures2D[i]);
-		m_pGraphics->UnloadTexture(&m_aTextures[i]);
+		if(m_aTextureHandle[i].Id() != m_aTexture2DHandle[i].Id())
+			m_pGraphics->UnloadTexture(&m_aTexture2DHandle[i]);
+		m_pGraphics->UnloadTexture(&m_aTextureHandle[i]);
 	}
 	m_TextureCount = 0;
 }
@@ -504,7 +506,8 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 	}
 
 	const int ImageCount = m_TextureCount;
-	SnapSize += sizeof(CSnapshot::CImage) * ImageCount;
+	SnapSize += sizeof(CImageName) * ImageCount;
+	SnapSize += sizeof(CTextureInfo) * ImageCount;
 
 	ed_dbg("Map snapshot size = %lluKo", SnapSize/1024);
 
@@ -515,19 +518,20 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 	Snap.m_ImageCount = ImageCount;
 	Snap.m_GameGroupID = m_GameGroupID;
 	Snap.m_GameLayerID = m_GameLayerID;
-	Snap.m_aImages = (CSnapshot::CImage*)(Snap.m_Data);
-	Snap.m_aGroups = (CGroup*)(Snap.m_aImages + Snap.m_ImageCount);
+	Snap.m_aImageNames = (CImageName*)(Snap.m_Data);
+	Snap.m_aImageInfos = (CTextureInfo*)(Snap.m_aImageNames + Snap.m_ImageCount);
+	Snap.m_aGroups = (CGroup*)(Snap.m_aImageInfos + Snap.m_ImageCount);
 	Snap.m_apLayers = (CMapItemLayer**)(Snap.m_aGroups + Snap.m_GroupCount);
 
 	for(int i = 0; i < ImageCount; i++)
 	{
-		mem_copy(Snap.m_aImages[i].m_aName, m_aImageNames[i], sizeof(Snap.m_aImages[i].m_aName));
-		Snap.m_aImages[i].m_Flags = m_aTextureFlags[i];
-		Snap.m_aImages[i].m_Format = m_aTextureFormat[i];
-		Snap.m_aImages[i].m_Width = m_aTextureSize[i].x;
-		Snap.m_aImages[i].m_Height = m_aTextureSize[i].y;
-		Snap.m_aImages[i].m_Data = m_aTextureData[i];
-		dbg_assert(m_aTextureData[i] == nullptr, "Implement saving embedded images");
+		Snap.m_aImageNames[i] = m_aImageNames[i];
+	}
+
+	for(int i = 0; i < ImageCount; i++)
+	{
+		Snap.m_aImageInfos[i] = m_aTextureInfos[i];
+		dbg_assert(m_aTextureInfos[i].m_Data == nullptr, "Implement saving embedded images");
 	}
 
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -621,9 +625,31 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 
 void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 {
-	Clear(); // TODO: don't clear textures
-
 	const CEditorMap::CSnapshot& Snap = *pSnapshot;
+
+	// save already loaded textures
+	// TODO: check for embedded images too
+	IGraphics::CTextureHandle aSavedTextures[MAX_TEXTURES];
+	IGraphics::CTextureHandle aSavedTextures2D[MAX_TEXTURES];
+
+	for(int si = 0; si < Snap.m_ImageCount; si++)
+	{
+		aSavedTextures[si].Invalidate();
+
+		for(int ti = 0; ti < m_TextureCount; ti++)
+		{
+			if(mem_comp(&m_aImageNames[ti], &Snap.m_aImageNames[si],
+				sizeof(Snap.m_aImageNames[si])) == 0)
+			{
+				aSavedTextures[si] = m_aTextureHandle[ti];
+				aSavedTextures2D[si] = m_aTexture2DHandle[ti];
+				m_aTextureHandle[ti].Invalidate(); // prevents them from being unloaded by Clear()
+				m_aTexture2DHandle[ti].Invalidate();
+			}
+		}
+	}
+
+	Clear();
 
 	m_GameGroupID = Snap.m_GameGroupID;
 	m_GameLayerID = Snap.m_GameLayerID;
@@ -631,32 +657,36 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
-		mem_copy(m_aImageNames[i], Snap.m_aImages[i].m_aName, sizeof(Snap.m_aImages[i].m_aName));
-		m_aTextureFlags[i] = Snap.m_aImages[i].m_Flags;
-		m_aTextureFormat[i] = Snap.m_aImages[i].m_Format;
-		m_aTextureSize[i].x = Snap.m_aImages[i].m_Width;
-		m_aTextureSize[i].y = Snap.m_aImages[i].m_Height;
-		m_aTextureData[i] = Snap.m_aImages[i].m_Data;
+		m_aImageNames[i] = Snap.m_aImageNames[i];
+		m_aTextureInfos[i] = Snap.m_aImageInfos[i];
 
-		if(m_aTextureData[i] == nullptr) // external
+		if(aSavedTextures[i].Id() == -1)
 		{
-			char Buf[256];
-			str_format(Buf, sizeof(Buf), "mapres/%s.png", m_aImageNames[i]);
-			m_aTextures[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
-				m_aTextureFlags[i]);
-			if(m_aTextureFlags[i] == IGraphics::TEXLOAD_MULTI_DIMENSION)
-				m_aTextures2D[i] = m_aTextures[i];
+			if(m_aTextureInfos[i].m_Data == nullptr) // external
+			{
+				char Buf[256];
+				str_format(Buf, sizeof(Buf), "mapres/%s.png", m_aImageNames[i]);
+				m_aTextureHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+					m_aTextureInfos[i].m_Flags);
+				if(m_aTextureInfos[i].m_Flags == IGraphics::TEXLOAD_MULTI_DIMENSION)
+					m_aTexture2DHandle[i] = m_aTextureHandle[i];
+				else
+				{
+					m_aTexture2DHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
+						IGraphics::TEXLOAD_MULTI_DIMENSION);
+				}
+
+				ed_dbg("mapres/%s.png loaded", m_aImageNames[i]);
+			}
 			else
 			{
-				m_aTextures2D[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
-					IGraphics::TEXLOAD_MULTI_DIMENSION);
+				dbg_break(); // implement me!
 			}
-
-			ed_dbg("mapres/%s.png loaded", m_aImageNames[i]);
 		}
 		else
 		{
-			dbg_break(); // implement me!
+			m_aTextureHandle[i] = aSavedTextures[i];
+			m_aTexture2DHandle[i] = aSavedTextures2D[i];
 		}
 	}
 
@@ -725,13 +755,10 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
-		int Len = str_length(Snap.m_aImages[i].m_aName);
-		dbg_assert(mem_comp(Snap.m_aImages[i].m_aName, m_aImageNames[i], Len) == 0, "");
-		dbg_assert(Snap.m_aImages[i].m_Flags == m_aTextureFlags[i], "");
-		dbg_assert(Snap.m_aImages[i].m_Format == m_aTextureFormat[i], "");
-		dbg_assert(Snap.m_aImages[i].m_Width ==  m_aTextureSize[i].x, "");
-		dbg_assert(Snap.m_aImages[i].m_Height == m_aTextureSize[i].y, "");
-		dbg_assert(Snap.m_aImages[i].m_Data == m_aTextureData[i], "");
+		dbg_assert(mem_comp(&Snap.m_aImageNames[i], &m_aImageNames[i],
+			sizeof(Snap.m_aImageNames[i])) == 0, "");
+		dbg_assert(mem_comp(&Snap.m_aImageInfos[i], &m_aTextureInfos[i],
+			sizeof(Snap.m_aImageInfos[i])) == 0, "");
 	}
 
 	for(int gi = 0; gi < Snap.m_GroupCount; gi++)
@@ -1144,7 +1171,7 @@ void CEditor::Render()
 				if(Layer.m_ImageID == -1)
 					Graphics()->TextureClear();
 				else
-					Graphics()->TextureSet(m_Map.m_aTextures[Layer.m_ImageID]);
+					Graphics()->TextureSet(m_Map.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNone();
 				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
@@ -1161,7 +1188,7 @@ void CEditor::Render()
 				if(Layer.m_ImageID == -1)
 					Graphics()->TextureClear();
 				else
-					Graphics()->TextureSet(m_Map.m_aTextures[Layer.m_ImageID]);
+					Graphics()->TextureSet(m_Map.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNormal();
 				if(m_UiLayerHovered[LyID])
@@ -1830,7 +1857,7 @@ void CEditor::RenderUI()
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 				DrawRect(ButtonRect, vec4(0,0,0,1));
 				if(SelectedLayer.m_ImageID >= 0)
-					DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID], FontSize);
+					DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
 				else
 					DrawText(ButtonRect, Localize("none"), FontSize);
 
@@ -1852,7 +1879,7 @@ void CEditor::RenderUI()
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 			DrawRect(ButtonRect, vec4(0,0,0,1));
 			if(SelectedLayer.m_ImageID >= 0)
-				DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID], FontSize);
+				DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
 			else
 				DrawText(ButtonRect, Localize("none"), FontSize);
 
@@ -1893,7 +1920,7 @@ void CEditor::RenderPopupBrushPalette()
 	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
 		PaletteTexture = m_EntitiesTexture;
 	else
-		PaletteTexture = m_Map.m_aTextures2D[SelectedTileLayer.m_ImageID];
+		PaletteTexture = m_Map.m_aTexture2DHandle[SelectedTileLayer.m_ImageID];
 
 	CUIRect ImageRect = MainRect;
 	ImageRect.w = min(ImageRect.w, ImageRect.h);
@@ -2060,7 +2087,7 @@ void CEditor::RenderBrush(vec2 Pos)
 	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
 		LayerTexture = m_EntitiesTexture;
 	else
-		LayerTexture = m_Map.m_aTextures2D[SelectedTileLayer.m_ImageID];
+		LayerTexture = m_Map.m_aTexture2DHandle[SelectedTileLayer.m_ImageID];
 
 	const vec4 White(1, 1, 1, 1);
 
