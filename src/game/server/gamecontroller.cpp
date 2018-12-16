@@ -748,10 +748,7 @@ void IGameController::Tick()
 			case IGS_END_MATCH:
 				// start next match
 				if(m_MatchCount >= m_GameInfo.m_MatchNum-1)
-				{
 					CycleMap();
-					break;
-				}
 
 				if(g_Config.m_SvMatchSwap)
 					GameServer()->SwapTeams();
