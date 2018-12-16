@@ -1529,9 +1529,13 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 
 	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-	Button.VSplitLeft(Button.h, &Icon, &Label);
+	if(s_aName[0] || s_aClan[0])
+		Button.VSplitLeft(Button.h, &Icon, &Label);
+	else
+		Label = Button;
 	Label.HMargin(2.0f, &Label);
-	UI()->DoLabelScaled(&Label, Localize("Add friend"), FontSize, CUI::ALIGN_CENTER);
+	const char *pButtonText = (!s_aName[0] && !s_aClan[0]) ? Localize("Add friend/clan") : s_aName[0] ? Localize("Add friend") : Localize("Add clan");
+	UI()->DoLabelScaled(&Label, pButtonText, FontSize, CUI::ALIGN_CENTER);
 	if(s_aName[0] || s_aClan[0])
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button)?SPRITE_FRIEND_PLUS_A:SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFriend;
