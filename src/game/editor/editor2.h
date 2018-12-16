@@ -100,9 +100,20 @@ public:
 		mem_zero(m_aRingUsed, sizeof(u8)*TOTAL_RING_COUNT);
 	}
 
+	void Clear()
+	{
+		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
+		mem_zero(m_aRingUsed, sizeof(u8)*TOTAL_RING_COUNT);
+	}
+
 	void Deinit()
 	{
 		mem_free(m_aRingUsed);
+	}
+
+	inline T* AllocOne()
+	{
+		return Alloc(1).Get();
 	}
 
 	BlockT Alloc(const int Count)
@@ -178,6 +189,14 @@ public:
 			mem_free(pBlock->m_pStart);
 
 		pBlock->m_Count = 0;
+	}
+
+	inline void DeallocOne(T* pPtr)
+	{
+		BlockT Block;
+		Block.m_pStart = pPtr;
+		Block.m_Count = 1;
+		Dealloc(&Block);
 	}
 
 	inline int64 AllocatedSize() const { return m_AllocatedSize; }
@@ -371,6 +390,8 @@ struct CEditorMap
 	int m_GameLayerID = -1;
 	int m_GameGroupID = -1;
 
+	char m_aPath[256];
+
 	CDynArray<CEnvPoint> m_aEnvPoints;
 	CDynArray<CLayer> m_aLayers;
 	CDynArray<CGroup> m_aGroups;
@@ -434,12 +455,36 @@ struct CUIButtonState
 	u8 m_Clicked = false;
 };
 
+struct CHistoryEntry
+{
+	CHistoryEntry* m_pPrev;
+	CHistoryEntry* m_pNext;
+	CEditorMap::CSnapshot* m_pSnap;
+	char m_aActionStr[64];
+	char m_aDescStr[64];
+
+	inline void SetAction(const char* pStr)
+	{
+		const int Len = min((int)(sizeof(m_aActionStr)-1), str_length(pStr));
+		memmove(m_aActionStr, pStr, Len);
+		m_aActionStr[Len] = 0;
+	}
+
+	inline void SetDescription(const char* pStr)
+	{
+		const int Len = min((int)(sizeof(m_aDescStr)-1), str_length(pStr));
+		memmove(m_aDescStr, pStr, Len);
+		m_aDescStr[Len] = 0;
+	}
+};
+
 class CEditor: public IEditor
 {
 	enum
 	{
 		MAX_GROUPS=64,
 		MAX_LAYERS=128,
+		MAX_HISTORY=128,
 	};
 
 	IGraphics* m_pGraphics;
@@ -524,8 +569,10 @@ class CEditor: public IEditor
 	};
 
 	CBrush m_Brush;
-
 	ivec2 m_TileStartDrag;
+
+	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
+	CHistoryEntry* m_pHistoryEntryCurrent = nullptr;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
@@ -538,6 +585,7 @@ class CEditor: public IEditor
 
 	void RenderHud();
 	void RenderUI();
+	void RenderUiLayerGroups(CUIRect NavRect);
 	void RenderPopupBrushPalette();
 	void RenderBrush(vec2 Pos);
 
@@ -574,6 +622,9 @@ class CEditor: public IEditor
 	void OnFinishDragging();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
+
+	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
+	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);

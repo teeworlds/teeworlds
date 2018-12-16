@@ -12,8 +12,8 @@
 //#include <intrin.h>
 
 // TODO:
-// - Don't reload textures if not needed
-// - Allow brush to go in eraser mode
+// - Change history (undo/redo stack)
+// - Allow brush to go in eraser mode, automapper mode
 // - Binds
 // - Smooth zoom
 // - Envelope offset
@@ -31,14 +31,14 @@ static char s_aEdMsg[256];
 	#define ed_dbg(...)
 #endif
 
-static vec4 StyleColorBg(0.03, 0, 0.085, 1);
-static vec4 StyleColorButton(0.062, 0, 0.19, 1);
-static vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
-static vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
-static vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
-static vec4 StyleColorTileSelection(0.0, 0.31, 1, 0.4);
-static vec4 StyleColorTileHover(1, 1, 1, 0.25);
-static vec4 StyleColorTileHoverBorder(0.0, 0.31, 1, 1);
+const vec4 StyleColorBg(0.03, 0, 0.085, 1);
+const vec4 StyleColorButton(0.062, 0, 0.19, 1);
+const vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
+const vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
+const vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
+const vec4 StyleColorTileSelection(0.0, 0.31, 1, 0.4);
+const vec4 StyleColorTileHover(1, 1, 1, 0.25);
+const vec4 StyleColorTileHoverBorder(0.0, 0.31, 1, 1);
 
 inline float fract(float f)
 {
@@ -175,6 +175,10 @@ bool CEditorMap::Load(const char* pFileName)
 	CMapItemVersion *pItem = (CMapItemVersion *)File.FindItem(MAPITEMTYPE_VERSION, 0);
 	if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
 		return false;
+
+	const int FilenameLen = str_length(pFileName);
+	mem_copy(m_aPath, pFileName, FilenameLen);
+	m_aPath[FilenameLen] = 0;
 
 	Clear();
 
@@ -737,6 +741,8 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		pSnapEnvPoint += m_aEnvelopes[ei].m_NumPoints;
 	}
 
+	ed_dbg("Map snapshot restored");
+
 #ifdef CONF_DEBUG
 	CompareSnapshot(&Snap);
 #endif
@@ -915,6 +921,9 @@ void CEditor::Init()
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	m_Brush.m_aTiles = m_Map.NewTileArray();
+
+	m_HistoryEntryDispenser.Init(MAX_HISTORY, 1);
+	m_pHistoryEntryCurrent = nullptr;
 
 	/*
 	m_Map.LoadDefault();
@@ -1589,10 +1598,97 @@ void CEditor::RenderUI()
 
 	DrawRect(RightPanel, StyleColorBg);
 
-	CUIRect NavRect, DetailRect, ButtonRect;
+	CUIRect NavRect, ButtonRect;
 	RightPanel.Margin(3.0f, &NavRect);
-	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
+	NavRect.HSplitTop(20, &ButtonRect, &NavRect);
+	NavRect.HSplitTop(2, 0, &NavRect);
 
+	// tabs
+	enum
+	{
+		TAB_GROUPS=0,
+		TAB_HISTORY,
+	};
+	static int s_CurrentTab = TAB_GROUPS;
+	CUIRect ButtonRectRight;
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRectRight);
+
+	static CUIButtonState s_ButGroups;
+	if(UiButton(ButtonRect, "Groups", &s_ButGroups))
+	{
+		s_CurrentTab = TAB_GROUPS;
+	}
+
+	static CUIButtonState s_ButHistory;
+	if(UiButton(ButtonRectRight, "History", &s_ButHistory))
+	{
+		s_CurrentTab = TAB_HISTORY;
+	}
+
+	if(s_CurrentTab == TAB_GROUPS)
+	{
+		RenderUiLayerGroups(NavRect);
+	}
+	else if(s_CurrentTab == TAB_HISTORY)
+	{
+		CHistoryEntry* pFirstEntry = m_pHistoryEntryCurrent;
+		while(pFirstEntry->m_pPrev)
+			pFirstEntry = pFirstEntry->m_pPrev;
+
+		static CUIButtonState s_ButEntry[MAX_HISTORY];
+		const float ButtonHeight = 20.0f;
+		const float Spacing = 2.0f;
+
+		CHistoryEntry* pCurrentEntry = pFirstEntry;
+		int i = 0;
+		while(pCurrentEntry)
+		{
+			NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
+			NavRect.HSplitTop(Spacing, 0, &NavRect);
+
+			CUIButtonState& ButState = s_ButEntry[i];
+			UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
+
+			// clickety click, restore to this entry
+			if(ButState.m_Clicked && pCurrentEntry != m_pHistoryEntryCurrent)
+			{
+				HistoryRestoreToEntry(pCurrentEntry);
+			}
+
+			vec4 ColorButton = StyleColorButton;
+			if(ButState.m_Pressed)
+				ColorButton = StyleColorButtonPressed;
+			else if(ButState.m_Hovered)
+				ColorButton = StyleColorButtonHover;
+
+			vec4 ColorBorder = StyleColorButtonBorder;
+			if(pCurrentEntry == m_pHistoryEntryCurrent)
+				ColorBorder = vec4(1, 0, 0, 1);
+			DrawRectBorder(ButtonRect, ColorButton, 1, ColorBorder);
+
+			CUIRect ButTopRect, ButBotRect;
+			ButtonRect.HSplitMid(&ButTopRect, &ButBotRect);
+
+			DrawText(ButTopRect, pCurrentEntry->m_aActionStr, 8.0f, vec4(1, 1, 1, 1));
+			DrawText(ButBotRect, pCurrentEntry->m_aDescStr, 8.0f, vec4(0, 0.5, 1, 1));
+
+
+
+			pCurrentEntry = pCurrentEntry->m_pNext;
+			i++;
+		}
+	}
+
+
+	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+		RenderPopupBrushPalette();
+}
+
+void CEditor::RenderUiLayerGroups(CUIRect NavRect)
+{
+	CUIRect DetailRect, ButtonRect;
+
+	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
 	UI()->ClipEnable(&NavRect);
 
 	static CUIButtonState s_UiGroupButState[MAX_GROUPS] = {};
@@ -1724,50 +1820,21 @@ void CEditor::RenderUI()
 					DrawRect(ButtonRect, ButColor);
 
 				char aLayerName[64];
+				const int ImageID = m_Map.m_aLayers[LyID].m_ImageID;
 				if(m_Map.m_GameLayerID == LyID)
 					str_format(aLayerName, sizeof(aLayerName), "Game Layer");
 				else
-					str_format(aLayerName, sizeof(aLayerName), "%s Layer #%d",
+					str_format(aLayerName, sizeof(aLayerName), "%s %d (%s)",
 							   m_Map.m_aLayers[LyID].m_Type == LAYERTYPE_TILES ?
 								   "Tile" : "Quad",
-							   LyID);
+							   LyID,
+							   ImageID >= 0 ? m_Map.m_aImageNames[ImageID].m_Buff : "none");
 				DrawText(ButtonRect, aLayerName, FontSize);
 			}
 		}
 	}
 
 	UI()->ClipDisable(); // NavRect
-
-	// TODO: remove this
-	// undo/redo test
-	CUIRect ButtonRectRight;
-	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-	ButtonRect.VSplitMid(&ButtonRect, &ButtonRectRight);
-
-	static CEditorMap::CSnapshot* pSnap = nullptr;
-
-	static CUIButtonState s_ButSave;
-	if(UiButton(ButtonRect, "Save", &s_ButSave))
-	{
-		if(pSnap)
-		{
-			free(pSnap);
-			pSnap = nullptr;
-		}
-		pSnap = m_Map.SaveSnapshot();
-		ed_log("Saved map state");
-	}
-
-	static CUIButtonState s_ButRestore;
-	if(UiButton(ButtonRectRight, "Restore", &s_ButRestore))
-	{
-		m_Map.RestoreSnapshot(pSnap);
-		free(pSnap);
-		pSnap = nullptr;
-		ed_log("Restored map state");
-	}
-
 
 	if(m_UiSelectedLayerID >= 0)
 	{
@@ -1891,9 +1958,6 @@ void CEditor::RenderUI()
 			DrawText(ButtonRect, aBuff, FontSize);
 		}
 	}
-
-	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
-		RenderPopupBrushPalette();
 }
 
 void CEditor::RenderPopupBrushPalette()
@@ -2591,6 +2655,32 @@ void CEditor::OnMapLoaded()
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
 	ClearBrush();
+
+	// clear history
+	if(m_pHistoryEntryCurrent)
+	{
+		CHistoryEntry* pCurrent = m_pHistoryEntryCurrent->m_pNext;
+		while(pCurrent)
+		{
+			free(pCurrent->m_pSnap);
+			pCurrent = pCurrent->m_pNext;
+		}
+
+		pCurrent = m_pHistoryEntryCurrent;
+		while(pCurrent)
+		{
+			free(pCurrent->m_pSnap);
+			pCurrent = pCurrent->m_pPrev;
+		}
+		m_HistoryEntryDispenser.Clear();
+		m_pHistoryEntryCurrent = nullptr;
+	}
+
+	// initialize history
+	m_pHistoryEntryCurrent = m_HistoryEntryDispenser.AllocOne();
+	m_pHistoryEntryCurrent->m_pSnap = m_Map.SaveSnapshot();
+	m_pHistoryEntryCurrent->SetAction("Map loaded");
+	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
 }
 
 void CEditor::OnStartDragging()
@@ -2734,7 +2824,28 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 
 	dbg_assert(m_UiSelectedGroupID != -1, "Parent group not found");
 
-	// TODO: save a snapshot here
+	char aBuff[64];
+	str_format(aBuff, sizeof(aBuff), "Layer %d", LyID); // TODO: use layer name here
+	HistoryNewEntry("Deleted layer", aBuff);
+}
+
+void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
+{
+	CHistoryEntry* pEntry;
+	pEntry = m_HistoryEntryDispenser.AllocOne();
+	pEntry->m_pSnap = m_Map.SaveSnapshot();
+	pEntry->SetAction(pActionStr);
+	pEntry->SetDescription(pDescStr);
+	m_pHistoryEntryCurrent->m_pNext = pEntry;
+	pEntry->m_pPrev = m_pHistoryEntryCurrent;
+	m_pHistoryEntryCurrent = pEntry;
+}
+
+void CEditor::HistoryRestoreToEntry(CHistoryEntry* pEntry)
+{
+	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
+	m_Map.RestoreSnapshot(pEntry->m_pSnap);
+	m_pHistoryEntryCurrent = pEntry;
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
