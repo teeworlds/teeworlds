@@ -747,7 +747,11 @@ void IGameController::Tick()
 				break;
 			case IGS_END_MATCH:
 				// start next match
-				CycleMap();
+				if(m_MatchCount >= m_GameInfo.m_MatchNum-1)
+					CycleMap();
+
+				if(g_Config.m_SvMatchSwap)
+					GameServer()->SwapTeams();
 				m_MatchCount++;
 				StartMatch();
 				break;
@@ -885,7 +889,17 @@ static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c =
 void IGameController::ChangeMap(const char *pToMap)
 {
 	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
+
+	m_MatchCount = m_GameInfo.m_MatchNum-1;
+	if(m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
+		SetGameState(IGS_GAME_RUNNING);
 	EndMatch();
+	
+	if(m_GameState != IGS_END_MATCH)
+	{
+		// game could not been ended, force cycle
+		CycleMap();
+	}
 }
 
 void IGameController::CycleMap()
@@ -902,13 +916,6 @@ void IGameController::CycleMap()
 	}
 	if(!str_length(g_Config.m_SvMaprotation))
 		return;
-
-	if(m_MatchCount < m_GameInfo.m_MatchNum-1)
-	{
-		if(g_Config.m_SvMatchSwap)
-			GameServer()->SwapTeams();
-		return;
-	}
 
 	// handle maprotation
 	const char *pMapRotation = g_Config.m_SvMaprotation;
