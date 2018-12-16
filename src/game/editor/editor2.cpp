@@ -822,7 +822,7 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		pSnapEnvPoint += Snap.m_aEnvelopes[ei].m_NumPoints;
 	}
 
-	ed_dbg("[x] Map snapshot matches current map data");
+	ed_dbg("[✔] Map snapshot matches current map data");
 }
 #endif
 
@@ -1048,6 +1048,13 @@ void CEditor::Update()
 			{
 				ResetCamera();
 			}
+
+			// undo / redo
+			const bool IsCtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+			if(IsCtrlPressed && Input()->KeyPress(KEY_Z))
+				HistoryUndo();
+			else if(IsCtrlPressed && Input()->KeyPress(KEY_Y))
+				HistoryRedo();
 		}
 
 		if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
@@ -1671,8 +1678,6 @@ void CEditor::RenderUI()
 
 			DrawText(ButTopRect, pCurrentEntry->m_aActionStr, 8.0f, vec4(1, 1, 1, 1));
 			DrawText(ButBotRect, pCurrentEntry->m_aDescStr, 8.0f, vec4(0, 0.5, 1, 1));
-
-
 
 			pCurrentEntry = pCurrentEntry->m_pNext;
 			i++;
@@ -2836,6 +2841,19 @@ void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	pEntry->m_pSnap = m_Map.SaveSnapshot();
 	pEntry->SetAction(pActionStr);
 	pEntry->SetDescription(pDescStr);
+
+	// delete all the next entries from current
+	CHistoryEntry* pCur = m_pHistoryEntryCurrent->m_pNext;
+	while(pCur)
+	{
+		CHistoryEntry* pToDelete = pCur;
+		pCur = pCur->m_pNext;
+
+		dbg_assert(pToDelete->m_pSnap != nullptr, "Snapshot is null");
+		free(pToDelete->m_pSnap);
+		m_HistoryEntryDispenser.DeallocOne(pToDelete);
+	}
+
 	m_pHistoryEntryCurrent->m_pNext = pEntry;
 	pEntry->m_pPrev = m_pHistoryEntryCurrent;
 	m_pHistoryEntryCurrent = pEntry;
@@ -2846,6 +2864,20 @@ void CEditor::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
 	m_Map.RestoreSnapshot(pEntry->m_pSnap);
 	m_pHistoryEntryCurrent = pEntry;
+}
+
+void CEditor::HistoryUndo()
+{
+	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
+	if(m_pHistoryEntryCurrent->m_pPrev)
+		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pPrev);
+}
+
+void CEditor::HistoryRedo()
+{
+	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
+	if(m_pHistoryEntryCurrent->m_pNext)
+		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)

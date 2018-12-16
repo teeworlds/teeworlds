@@ -625,6 +625,8 @@ class CEditor: public IEditor
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
+	void HistoryUndo();
+	void HistoryRedo();
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
