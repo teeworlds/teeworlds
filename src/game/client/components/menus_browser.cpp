@@ -575,14 +575,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CUIRect Icon;
 			Button.VSplitLeft(Button.h, &Icon, &Button);
 			Icon.y -= 0.5f;
-			/*if(!(pEntry->m_Flags&IServerBrowser::FLAG_PURE))
-			{
-				DoIcon(IMAGE_BROWSEICONS, Selected ? SPRITE_BROWSE_UNPURE_B : SPRITE_BROWSE_UNPURE_A, &Icon);
-			}
-			else*/
-			{
-				DoGameIcon(pEntry->m_aGameType, &Icon, Selected ? CGameIcon::GAMEICON_OFF : CGameIcon::GAMEICON_ON);
-			}
+			DoGameIcon(pEntry->m_aGameType, &Icon, Selected ? CGameIcon::GAMEICON_OFF : CGameIcon::GAMEICON_ON);
 
 			// gametype text
 			CTextCursor Cursor;
@@ -1900,14 +1893,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		CUIRect Icon;
 		Row.VSplitLeft(Row.h, &Icon, &Row);
 		Icon.y -= 2.0f;
-		/*if(!(pInfo->m_Flags&IServerBrowser::FLAG_PURE))
-		{
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
-		}
-		else*/
-		{
-			DoGameIcon(pInfo->m_aGameType, &Icon, CGameIcon::GAMEICON_FULL);
-		}
+		DoGameIcon(pInfo->m_aGameType, &Icon, CGameIcon::GAMEICON_FULL);
 		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT);
 
 		// version
