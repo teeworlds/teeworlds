@@ -1799,6 +1799,11 @@ int CMenus::Render()
 			pTitle = Localize("Remove friend");
 			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
 		}
+		else if(m_Popup == POPUP_REMOVE_FILTER)
+		{
+			pTitle = Localize("Remove filter");
+			pExtraText = Localize("Are you sure that you want to remove the filter from the server browser?");
+		}
 		else if(m_Popup == POPUP_SAVE_SKIN)
 		{
 			pTitle = Localize("Save skin");
@@ -2176,6 +2181,32 @@ int CMenus::Render()
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 					m_pDeleteFriend = 0;
+				}
+			}
+		}
+		else if(m_Popup == POPUP_REMOVE_FILTER)
+		{
+			CUIRect Yes, No;
+			Box.HSplitTop(27.0f, 0, &Box);
+			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+
+			// buttons
+			BottomBar.VSplitMid(&No, &Yes);
+			No.VSplitRight(SpacingW / 2.0f, &No, 0);
+			Yes.VSplitLeft(SpacingW / 2.0f, 0, &Yes);
+
+			static CButtonContainer s_ButtonNo;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static CButtonContainer s_ButtonYes;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				// remove filter
+				if(m_RemoveFilterIndex)
+				{
+					RemoveFilter(m_RemoveFilterIndex);
 				}
 			}
 		}

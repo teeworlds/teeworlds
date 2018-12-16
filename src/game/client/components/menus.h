@@ -148,6 +148,7 @@ private:
 		POPUP_DELETE_DEMO,
 		POPUP_RENAME_DEMO,
 		POPUP_REMOVE_FRIEND,
+		POPUP_REMOVE_FILTER,
 		POPUP_SAVE_SKIN,
 		POPUP_DELETE_SKIN,
 		POPUP_SOUNDERROR,
@@ -417,6 +418,7 @@ private:
 	array<CBrowserFilter> m_lFilters;
 
 	int m_SelectedFilter;
+	int m_RemoveFilterIndex;
 
 	void LoadFilters();
 	void SaveFilters();
@@ -542,7 +544,7 @@ private:
 	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
-	bool RenderFilterHeader(CUIRect View, int FilterIndex);
+	void RenderFilterHeader(CUIRect View, int FilterIndex);
 	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

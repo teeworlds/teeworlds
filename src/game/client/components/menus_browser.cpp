@@ -615,7 +615,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	return ReturnValue;
 }
 
-bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
+void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 {
 	CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
 
@@ -653,8 +653,8 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	{
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_A, &Button))
 		{
-			RemoveFilter(FilterIndex);
-			return true;
+			m_RemoveFilterIndex = FilterIndex;
+			m_Popup = POPUP_REMOVE_FILTER;
 		}
 	}
 	else
@@ -703,8 +703,6 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 			}
 		}
 	}
-
-	return false;
 }
 
 void CMenus::RenderServerbrowserOverlay()
@@ -1168,9 +1166,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		View.HSplitTop(20.0f, &Row, &View);
 
 		// render header
-		bool Deleted = RenderFilterHeader(Row, s);
-		if(Deleted && s >= m_lFilters.size())
-			break;
+		RenderFilterHeader(Row, s);
 
 		if(pFilter->Extended())
 		{
