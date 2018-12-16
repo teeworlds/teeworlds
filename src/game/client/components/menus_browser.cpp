@@ -954,27 +954,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	for(int i = 0; i < NUM_BROWSER_COLS; i++)
 	{
 		if(i == COL_BROWSER_FLAG)
-		{
-			/*CUIRect Rect = ms_aBrowserCols[i].m_Rect;
-			CUIRect Icon;
+			continue;
 
-			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK_A, &Icon);
-
-			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE_A, &Icon);
-
-			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_STAR_A, &Icon);
-
-			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);*/
-		}
-		else if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
+		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
 		{
 			if(ms_aBrowserCols[i].m_Sort != -1)
 			{
