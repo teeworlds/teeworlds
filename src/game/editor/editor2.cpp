@@ -889,6 +889,8 @@ void CEditor::Init()
 	m_pConsole->Register("+show_palette", "", CFGFLAG_EDITOR, ConShowPalette, this, "Show palette");
 	m_pConsole->Register("game_view", "i", CFGFLAG_EDITOR, ConGameView, this, "Toggle game view");
 	m_pConsole->Register("show_grid", "i", CFGFLAG_EDITOR, ConShowGrid, this, "Toggle grid");
+	m_pConsole->Register("undo", "", CFGFLAG_EDITOR, ConUndo, this, "Undo");
+	m_pConsole->Register("redo", "", CFGFLAG_EDITOR, ConRedo, this, "Redo");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	// grenade pickup
@@ -2914,4 +2916,16 @@ void CEditor::ConShowGrid(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor *pSelf = (CEditor *)pUserData;
 	pSelf->m_ConfigShowGrid = (pResult->GetInteger(0) > 0);
+}
+
+void CEditor::ConUndo(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->HistoryUndo();
+}
+
+void CEditor::ConRedo(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->HistoryRedo();
 }
