@@ -367,7 +367,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	{
 		if(!UI()->MouseButton(0))
 		{
-			if(Inside >= 0)
+			if(Inside)
 				ReturnValue = 1;
 			UI()->SetActiveItem(0);
 		}
@@ -376,13 +376,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	{
 		if(UI()->MouseButton(0))
 			UI()->SetActiveItem(pID);
-
-		CUIRect r = View;
-		RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
 	}
 
 	if(Inside)
+	{
 		UI()->SetHotItem(pID);
+		RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
+	}
 
 	vec3 TextBaseColor = vec3(1.0f, 1.0f, 1.0f);
 	if(Selected || Inside)
