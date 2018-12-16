@@ -771,7 +771,7 @@ void IGameController::Tick()
 				if(!g_Config.m_SvPlayerReadyMode && m_GameStateTimer == TIMER_INFINITE)
 					SetGameState(IGS_WARMUP_USER, 0);
 				else if(m_GameStateTimer == 3 * Server()->TickSpeed())
-					StartRound();
+					StartMatch();
 				break;
 			case IGS_START_COUNTDOWN:
 			case IGS_GAME_PAUSED:
