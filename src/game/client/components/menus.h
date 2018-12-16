@@ -332,15 +332,14 @@ private:
 	class CFriendItem
 	{
 	public:
-		const CFriendInfo *m_pFriendInfo;
 		const CServerInfo *m_pServerInfo;
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
+		int m_FriendState;
 		bool m_IsPlayer;
 
 		CFriendItem()
 		{
-			m_pFriendInfo = 0;
 			m_pServerInfo = 0;
 		}
 
