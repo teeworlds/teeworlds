@@ -105,6 +105,16 @@ const char *CGameClient::GetTeamName(int Team, bool Teamplay) const
 	return Localize("spectators", "'X joined the <spectators>' (server message)");
 }
 
+void CGameClient::GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName)
+{
+	if(!g_Config.m_ClShowsocial)
+		str_format(aBuf, BufferSize, "%2d:", ClientID);
+	else if(g_Config.m_ClShowUserId)
+		str_format(aBuf, BufferSize, "%2d: %s", ClientID, ClientName);
+	else
+		str_format(aBuf, BufferSize, "%s", ClientName);
+}
+
 enum
 {
 	DO_CHAT=0,
@@ -556,12 +566,15 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
 				int ClientID = clamp(aParaI[1], 0, MAX_CLIENTS - 1);
+				char aLabel[64];
+				GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, m_aClients[ClientID].m_aName);
+
 				if(aParaI[2] <= 60*Client()->GameTickSpeed())
-					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%2d: %s' (%.2f seconds)"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
-						ClientID, g_Config.m_ClShowsocial ? m_aClients[ClientID].m_aName : "", aParaI[2]/(float)Client()->GameTickSpeed());
+					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%s' (%.2f seconds)"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
+						aLabel, aParaI[2]/(float)Client()->GameTickSpeed());
 				else
-					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%2d: %s'"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
-						ClientID, g_Config.m_ClShowsocial ? m_aClients[ClientID].m_aName : "");
+					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%s'"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
+						aLabel);
 				m_pChat->AddLine(-1, 0, aBuf);
 			}
 			return;
@@ -1401,18 +1414,20 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient)
 
 void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team)
 {
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' entered and joined the %s"), ClientID, g_Config.m_ClShowsocial ? pName : "", GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+	char aBuf[128], aLabel[64];
+	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
+	str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the %s"), aLabel, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
 void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pReason)
 {
-	char aBuf[128];
+	char aBuf[128], aLabel[64];
+	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
 	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' has left the game (%s)"), ClientID, g_Config.m_ClShowsocial ? pName : "", pReason);
+		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game (%s)"), aLabel, pReason);
 	else
-		str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' has left the game"), ClientID, g_Config.m_ClShowsocial ? pName : "");
+		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game"), aLabel);
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
