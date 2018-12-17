@@ -594,6 +594,10 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	{
 		CUIRect Info;
 		View.HSplitTop(ms_aBrowserCols[0].m_Rect.h, 0, &View);
+
+		if(ReturnValue && UI()->MouseInside(&View))
+			ReturnValue++;
+
 		View.VSplitLeft(160.0f, &Info, &View);
 		RenderDetailInfo(Info, pEntry);
 
@@ -604,9 +608,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		UI()->ClipEnable(&NewClipArea);
 		RenderDetailScoreboard(View, pEntry, 4);
 		UI()->ClipEnable(&OldClipArea);
-
-		if(ReturnValue && UI()->MouseInside(&View))
-			ReturnValue++;
 	}
 
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
