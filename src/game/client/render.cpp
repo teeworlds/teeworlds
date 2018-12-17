@@ -621,8 +621,7 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
 
 	// TODO: make a simple text one (no shadow)
-	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0),
-							  vec4(0.1f, 0.1f, 0.1f, 1.0f));
+	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0), TextColor);
 
 	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
 }
