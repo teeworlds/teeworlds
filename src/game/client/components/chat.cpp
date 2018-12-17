@@ -909,9 +909,10 @@ void CChat::OnRender()
 			if(Line.m_Mode == CHAT_WHISPER && Line.m_ClientID == m_pClient->m_LocalClientID && Line.m_TargetID >= 0)
 				NameCID = Line.m_TargetID;
 
+			vec4 IdTextColor = vec4(0.1f*Blend, 0.1f*Blend, 0.1f*Blend, 1.0f*Blend);
 			vec4 BgIdColor = TextColor;
-			BgIdColor.a = 0.5f;
-			RenderTools()->DrawClientID(TextRender(), &Cursor, NameCID, BgIdColor);
+			BgIdColor.a = 0.5f*Blend;
+			RenderTools()->DrawClientID(TextRender(), &Cursor, NameCID, BgIdColor, IdTextColor);
 			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
