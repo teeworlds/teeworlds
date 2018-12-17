@@ -606,7 +606,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		NewClipArea.x = View.x;
 		NewClipArea.w = View.w;
 		UI()->ClipEnable(&NewClipArea);
-		RenderDetailScoreboard(View, pEntry, 4);
+		RenderDetailScoreboard(View, pEntry, 4, vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha));
 		UI()->ClipEnable(&OldClipArea);
 	}
 
@@ -1898,7 +1898,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	}
 }
 
-void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount)
+void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor)
 {
 	// slected filter
 	CBrowserFilter *pFilter = 0;
@@ -1915,6 +1915,8 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		return;
 	CServerFilterInfo FilterInfo;
 	pFilter->GetFilter(&FilterInfo);
+
+	TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 
 	// server scoreboard
 	CTextCursor Cursor;
@@ -2028,7 +2030,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 					TextRender()->TextEx(&Cursor, pName, (int)(s - pName));
 					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
 					TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(g_Config.m_BrFilterString), -1);
 				}
 				else
@@ -2050,7 +2052,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 					TextRender()->TextEx(&Cursor, pClan, (int)(s - pClan));
 					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
 					TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(g_Config.m_BrFilterString), -1);
 				}
 				else
