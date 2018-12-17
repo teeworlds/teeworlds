@@ -274,10 +274,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Destroy(const CCommandBuffer:
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX2D)
 		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX3D)
-	{
-		for(int i = 0; i < m_TextureArraySize; ++i)
-			glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D[i]);
-	}
+		glDeleteTextures(m_TextureArraySize, m_aTextures[pCommand->m_Slot].m_Tex3D);
 	*m_pTextureMemoryUsage -= m_aTextures[pCommand->m_Slot].m_MemSize;
 	m_aTextures[pCommand->m_Slot].m_State = CTexture::STATE_EMPTY;
 	m_aTextures[pCommand->m_Slot].m_MemSize = 0;
