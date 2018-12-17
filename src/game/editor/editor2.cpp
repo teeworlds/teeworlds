@@ -18,6 +18,11 @@
 // - Smooth zoom
 // - Envelope offset
 
+// - Stability is very important (crashes should be easy to catch)
+// --- fix layer id / image id handling
+// - Input should be handled well (careful of input-locks https://github.com/teeworlds/teeworlds/issues/828)
+// ! Do not use DoButton_SpriteClean (dunno why)
+
 static char s_aEdMsg[256];
 #define ed_log(...)\
 	str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
@@ -1093,7 +1098,6 @@ void CEditor::Render()
 	const float FakeToScreenY = m_GfxScreenHeight/ZoomWorldViewHeight;
 	const float TileSize = 32;
 
-
 	float SelectedParallaxX = 1;
 	float SelectedParallaxY = 1;
 	float SelectedPositionX = 0;
@@ -1101,15 +1105,13 @@ void CEditor::Render()
 	const int SelectedLayerID = m_UiSelectedLayerID;
 	const bool IsSelectedLayerTile = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_TILES;
 	const bool IsSelectedLayerQuad = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_QUADS;
-	if(SelectedLayerID >= 0)
-	{
-		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
-		const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
-		SelectedParallaxX = Group.m_ParallaxX / 100.f;
-		SelectedParallaxY = Group.m_ParallaxY / 100.f;
-		SelectedPositionX = Group.m_OffsetX;
-		SelectedPositionY = Group.m_OffsetY;
-	}
+	dbg_assert(SelectedLayerID >= 0, "No layer selected");
+	dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+	const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
+	SelectedParallaxX = Group.m_ParallaxX / 100.f;
+	SelectedParallaxY = Group.m_ParallaxY / 100.f;
+	SelectedPositionX = Group.m_OffsetX;
+	SelectedPositionY = Group.m_OffsetY;
 
 	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
 		SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
@@ -1257,13 +1259,8 @@ void CEditor::Render()
 
 	IGraphics::CQuadItem OriginLineX(0, 0, TileSize, 2/FakeToScreenY);
 	IGraphics::CQuadItem RecOriginLineYtY(0, 0, 2/FakeToScreenX, TileSize);
-	float LayerWidth = m_Map.m_MapMaxWidth * TileSize;
-	float LayerHeight = m_Map.m_MapMaxHeight * TileSize;
-	if(SelectedLayerID)
-	{
-		LayerWidth = m_Map.m_aLayers[SelectedLayerID].m_Width * TileSize;
-		LayerHeight = m_Map.m_aLayers[SelectedLayerID].m_Height * TileSize;
-	}
+	float LayerWidth = m_Map.m_aLayers[SelectedLayerID].m_Width * TileSize;
+	float LayerHeight = m_Map.m_aLayers[SelectedLayerID].m_Height * TileSize;
 
 	const float bw = 1.0f / FakeToScreenX;
 	const float bh = 1.0f / FakeToScreenY;
@@ -1277,7 +1274,7 @@ void CEditor::Render()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	if(SelectedLayerID < 0 || IsSelectedLayerTile)
+	if(IsSelectedLayerTile)
 	{
 		// grid
 		if(m_ConfigShowGrid)
@@ -1324,7 +1321,7 @@ void CEditor::Render()
 			}
 		}
 
-
+		// borders
 		Graphics()->SetColor(1, 1, 1, 1);
 		Graphics()->QuadsDrawTL(aBorders, 4);
 	}
@@ -1640,11 +1637,13 @@ void CEditor::RenderUI()
 	}
 	else if(s_CurrentTab == TAB_HISTORY)
 	{
+		// TODO: scrollable region
+
 		CHistoryEntry* pFirstEntry = m_pHistoryEntryCurrent;
 		while(pFirstEntry->m_pPrev)
 			pFirstEntry = pFirstEntry->m_pPrev;
 
-		static CUIButtonState s_ButEntry[MAX_HISTORY];
+		static CUIButtonState s_ButEntry[50];
 		const float ButtonHeight = 20.0f;
 		const float Spacing = 2.0f;
 
@@ -1655,7 +1654,8 @@ void CEditor::RenderUI()
 			NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 
-			CUIButtonState& ButState = s_ButEntry[i];
+			// somewhat hacky
+			CUIButtonState& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
 			UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
 
 			// clickety click, restore to this entry
@@ -1843,110 +1843,88 @@ void CEditor::RenderUiLayerGroups(CUIRect NavRect)
 
 	UI()->ClipDisable(); // NavRect
 
-	if(m_UiSelectedLayerID >= 0)
+	// GROUP/LAYER DETAILS
+	dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
+
+	// group
+	dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
+	char aBuff[128];
+
+	// label
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	DrawRect(ButtonRect, StyleColorButtonPressed);
+	if(IsGameGroup)
+		str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
+	else
+		str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
+	DrawText(ButtonRect, aBuff, FontSize);
+
+	// parallax
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	DrawRect(ButtonRect, vec4(0,0,0,1));
+	str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
+			   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
+	DrawText(ButtonRect, aBuff, FontSize);
+
+	// position
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	DrawRect(ButtonRect, vec4(0,0,0,1));
+	str_format(aBuff, sizeof(aBuff), "Offset = (%d, %d)",
+			   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
+	DrawText(ButtonRect, aBuff, FontSize);
+
+
+	// layer
+	const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
+
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+	// delete button
+	if(!IsGameLayer)
 	{
-		// group
-		dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
-		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
-		const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
-		char aBuff[128];
-		CUIRect ButtonRect;
-
-		// label
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, StyleColorButtonPressed);
-		if(IsGameGroup)
-			str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
-		else
-			str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
-		DrawText(ButtonRect, aBuff, FontSize);
-
-		// parallax
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
-				   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
-		DrawText(ButtonRect, aBuff, FontSize);
-
-		// position
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Offset = (%d, %d)",
-				   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
-		DrawText(ButtonRect, aBuff, FontSize);
-
-
-		// layer
-		const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
-		const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
-
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-
-		// delete button
-		if(!IsGameLayer)
+		CUIRect DelButRect;
+		ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
+		static CUIButtonState s_LayerDeleteButton;
+		if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
+			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1)))
 		{
-			CUIRect DelButRect;
-			ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
-			static CUIButtonState s_LayerDeleteButton;
-			if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-				vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1)))
-			{
-				EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
-			}
+			EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
 		}
+	}
 
-		// label
-		DrawRect(ButtonRect, StyleColorButtonPressed);
+	// label
+	DrawRect(ButtonRect, StyleColorButtonPressed);
+	if(IsGameLayer)
+		str_format(aBuff, sizeof(aBuff), Localize("Game Layer"));
+	else
+		str_format(aBuff, sizeof(aBuff), "%s Layer #%d", SelectedLayer.IsTileLayer() ? "Tile":"Quad",
+			m_UiSelectedLayerID);
+	DrawText(ButtonRect, aBuff, FontSize);
+
+	// tile layer
+	if(SelectedLayer.IsTileLayer())
+	{
+		// size
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
+			SelectedLayer.m_Width, SelectedLayer.m_Height);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// game layer
 		if(IsGameLayer)
-			str_format(aBuff, sizeof(aBuff), Localize("Game Layer"));
-		else
-			str_format(aBuff, sizeof(aBuff), "%s Layer #%d", SelectedLayer.IsTileLayer() ? "Tile":"Quad",
-				m_UiSelectedLayerID);
-		DrawText(ButtonRect, aBuff, FontSize);
-
-		// tile layer
-		if(SelectedLayer.IsTileLayer())
 		{
-			// size
-			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-			DrawRect(ButtonRect, vec4(0,0,0,1));
-			str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
-				SelectedLayer.m_Width, SelectedLayer.m_Height);
-			DrawText(ButtonRect, aBuff, FontSize);
 
-			// game layer
-			if(IsGameLayer)
-			{
-
-			}
-			else
-			{
-				// image
-				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-				DrawRect(ButtonRect, vec4(0,0,0,1));
-				if(SelectedLayer.m_ImageID >= 0)
-					DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
-				else
-					DrawText(ButtonRect, Localize("none"), FontSize);
-
-				// color
-				CUIRect ColorRect;
-				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-				ButtonRect.VSplitMid(&ButtonRect, &ColorRect);
-
-				DrawRect(ButtonRect, vec4(0,0,0,1));
-				DrawText(ButtonRect, "Color", FontSize);
-				DrawRect(ColorRect, SelectedLayer.m_Color);
-			}
 		}
-		else if(SelectedLayer.IsQuadLayer())
+		else
 		{
 			// image
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -1957,13 +1935,34 @@ void CEditor::RenderUiLayerGroups(CUIRect NavRect)
 			else
 				DrawText(ButtonRect, Localize("none"), FontSize);
 
-			// quad count
+			// color
+			CUIRect ColorRect;
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			ButtonRect.VSplitMid(&ButtonRect, &ColorRect);
+
 			DrawRect(ButtonRect, vec4(0,0,0,1));
-			str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.Count());
-			DrawText(ButtonRect, aBuff, FontSize);
+			DrawText(ButtonRect, "Color", FontSize);
+			DrawRect(ColorRect, SelectedLayer.m_Color);
 		}
+	}
+	else if(SelectedLayer.IsQuadLayer())
+	{
+		// image
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		if(SelectedLayer.m_ImageID >= 0)
+			DrawText(ButtonRect, m_Map.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
+		else
+			DrawText(ButtonRect, Localize("none"), FontSize);
+
+		// quad count
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.Count());
+		DrawText(ButtonRect, aBuff, FontSize);
 	}
 }
 
@@ -2750,59 +2749,46 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	dbg_assert(ParentGroupID >= 0 && ParentGroupID < m_Map.m_aGroups.Count(), "ParentGroupID out of bounds");
 	dbg_assert(LyID != m_Map.m_GameLayerID, "Can't delete game layer");
 
+	dbg_assert(m_Map.m_aLayers.Count() > 0, "There should be at least a game layer");
+
+	const int SwappedLyID = m_Map.m_aLayers.Count()-1; // see RemoveByIndex
 	CEditorMap::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
 	const int ParentGroupLayerCount = ParentGroup.m_LayerCount;
 	dbg_assert(ParentGroupLayerCount > 0, "Parent group layer count is zero?");
+	const int GroupCount = m_Map.m_aGroups.Count();
 
-	// select layer below if we're deleting the selected one
-	if(LyID == m_UiSelectedLayerID)
-	{
-		if(m_Map.m_aLayers.Count() > 0)
-		{
-			for(int li = 0; li < ParentGroupLayerCount; li++)
-			{
-				if(ParentGroup.m_apLayerIDs[li] == m_UiSelectedLayerID)
-				{
-					m_UiSelectedLayerID = ParentGroup.m_apLayerIDs[(li + 1) % ParentGroupLayerCount];
-					break;
-				}
-			}
-		}
-		else
-		{
-			m_UiSelectedLayerID = -1;
-			m_UiSelectedGroupID = -1;
-		}
-	}
-
+	// remove layer id from parent group
 	int GroupLayerID = -1;
-	for(int li = 0; li < ParentGroupLayerCount; li++)
+	int GroupSelectedLayerPos = -1;
+	for(int li = 0; li < ParentGroupLayerCount && GroupLayerID == -1 && GroupSelectedLayerPos == -1; li++)
 	{
 		if(ParentGroup.m_apLayerIDs[li] == LyID)
-		{
 			GroupLayerID = li;
-			break;
-		}
+		if(ParentGroup.m_apLayerIDs[li] == m_UiSelectedLayerID)
+			GroupSelectedLayerPos = li;
 	}
 	dbg_assert(GroupLayerID != -1, "Layer not found inside parent group");
+
 	memmove(&ParentGroup.m_apLayerIDs[GroupLayerID], &ParentGroup.m_apLayerIDs[GroupLayerID+1],
 			(ParentGroup.m_LayerCount-GroupLayerID) * sizeof(ParentGroup.m_apLayerIDs[0]));
 	ParentGroup.m_LayerCount--;
 
-	const int OldLastLyID = m_Map.m_aLayers.Count() - 1; // see RemoveByIndex
-	// swap game layer id with current id if needed
-	if(m_Map.m_GameLayerID == OldLastLyID)
+	// delete actual layer (swap with last)
+	m_Map.m_aLayers.RemoveByIndex(LyID);
+
+	// GamelayerID: swap id if needed
+	dbg_assert(m_Map.m_GameLayerID != LyID, "Can't delete game layer");
+	if(m_Map.m_GameLayerID == SwappedLyID)
 		m_Map.m_GameLayerID = LyID;
 
-	// swap last layer id with current id
-	const int GroupCount = m_Map.m_aGroups.Count();
+	// Groups: swap last layer id with deleted id
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 		const int LayerCount = Group.m_LayerCount;
 		for(int li = 0; li < LayerCount; li++)
 		{
-			if(Group.m_apLayerIDs[li] == OldLastLyID)
+			if(Group.m_apLayerIDs[li] == SwappedLyID)
 			{
 				Group.m_apLayerIDs[li] = LyID;
 				break;
@@ -2810,27 +2796,45 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 		}
 	}
 
-	m_Map.m_aLayers.RemoveByIndex(LyID);
-
-	// fix m_UiSelectedLayerID
-	m_UiSelectedLayerID = m_UiSelectedLayerID % m_Map.m_aLayers.Count();
-	m_UiSelectedGroupID = -1;
-
-	for(int gi = 0; gi < GroupCount; gi++)
+	// UiSelectedLayerID: try to stay at the same selected position
+	if(m_UiSelectedLayerID == LyID)
 	{
-		const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
-		for(int li = 0; li < Group.m_LayerCount; li++)
+		if(ParentGroup.m_LayerCount > 0 && GroupSelectedLayerPos != -1 &&
+		   GroupSelectedLayerPos < ParentGroup.m_LayerCount)
 		{
-			if(Group.m_apLayerIDs[li] == m_UiSelectedLayerID)
-			{
-				m_UiSelectedGroupID = gi;
-				break;
-			}
+			m_UiSelectedLayerID = ParentGroup.m_apLayerIDs[GroupSelectedLayerPos];
+		}
+		else
+		{
+			m_UiSelectedLayerID = m_Map.m_GameLayerID;
+			m_UiSelectedGroupID = m_Map.m_GameGroupID;
 		}
 	}
 
-	dbg_assert(m_UiSelectedGroupID != -1, "Parent group not found");
+	// validation checks
+#ifdef CONF_DEBUG
+	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
+		"m_UiSelectedLayerID is invalid");
+	dbg_assert(m_UiSelectedGroupID >= 0 && m_UiSelectedGroupID < m_Map.m_aGroups.Count(),
+		"m_UiSelectedGroupID is invalid");
+	dbg_assert(m_Map.m_GameLayerID >= 0 && m_Map.m_GameLayerID < m_Map.m_aLayers.Count(),
+		"m_Map.m_GameLayerID is invalid");
+	dbg_assert(m_Map.m_GameGroupID >= 0 && m_Map.m_GameGroupID < m_Map.m_aGroups.Count(),
+		"m_UiSelectedGroupID is invalid");
 
+	for(int gi = 0; gi < GroupCount; gi++)
+	{
+		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		const int LayerCount = Group.m_LayerCount;
+		for(int li = 0; li < LayerCount; li++)
+		{
+			dbg_assert(Group.m_apLayerIDs[li] >= 0 && Group.m_apLayerIDs[li] < m_Map.m_aLayers.Count(),
+				"Group.m_apLayerIDs[li] is invalid");
+		}
+	}
+#endif
+
+	// history entry
 	char aBuff[64];
 	str_format(aBuff, sizeof(aBuff), "Layer %d", LyID); // TODO: use layer name here
 	HistoryNewEntry("Deleted layer", aBuff);
@@ -2866,6 +2870,10 @@ void CEditor::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
 	m_Map.RestoreSnapshot(pEntry->m_pSnap);
 	m_pHistoryEntryCurrent = pEntry;
+
+	// TODO: on map restore
+	m_UiSelectedLayerID = m_Map.m_GameLayerID;
+	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 }
 
 void CEditor::HistoryUndo()
