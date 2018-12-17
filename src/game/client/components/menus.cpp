@@ -265,7 +265,7 @@ void CMenus::DoButton_MenuTabTop_Dummy(const char *pText, int Checked, const CUI
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 }
 
-int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, CUI::EAlignment Align, const CUIRect *pRect)
 //void CMenus::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
 	if(Checked)
@@ -278,7 +278,7 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 	CUIRect Label;
 	pRect->VMargin(2.0f, &Label);
 	Label.y+=2.0f;
-	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, Align);
 
 	if(Checked)
 	{

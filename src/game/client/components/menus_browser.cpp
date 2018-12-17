@@ -24,12 +24,12 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aBrowserCols[] = {
-	{COL_BROWSER_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
-	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 320.0f, 0, {0}, {0}},
-	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f, 0, {0}, {0}},
-	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}},
-	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 40.0f, 0, {0}, {0}},
-	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f, 0, {0}, {0}},
+	{COL_BROWSER_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}, CUI::ALIGN_LEFT}, // Localize - these strings are localized within CLocConstString
+	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 310.0f, 0, {0}, {0}, CUI::ALIGN_LEFT},
+	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f,  0, {0}, {0}, CUI::ALIGN_LEFT},
+	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}, CUI::ALIGN_LEFT},
+	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 50.0f,  0, {0}, {0}, CUI::ALIGN_LEFT},
+	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, CUI::ALIGN_RIGHT},
 };
 
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {0}, 0};
@@ -908,7 +908,7 @@ void CMenus::RenderServerbrowserOverlay()
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
-	CUIRect Headers, Status, InfoButton;
+	CUIRect Headers, Status;
 
 	float SpacingH = 2.0f;
 	float ButtonHeight = 20.0f;
@@ -923,8 +923,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
 
-	Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
-
+	// Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
+	Headers.VSplitRight(2.f, &Headers, 0); // some margin on the right
 
 	// do layout
 	for(int i = 0; i < NUM_BROWSER_COLS; i++)
@@ -962,7 +962,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(i == COL_BROWSER_FLAG)
 			continue;
 
-		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
+		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, ms_aBrowserCols[i].m_Align, &ms_aBrowserCols[i].m_Rect))
 		{
 			if(ms_aBrowserCols[i].m_Sort != -1)
 			{
