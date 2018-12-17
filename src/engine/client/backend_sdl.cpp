@@ -176,7 +176,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 		else if(State.m_Dimension == 3 && (m_aTextures[State.m_Texture].m_State&CTexture::STATE_TEX3D))
 		{
 			glEnable(GL_TEXTURE_3D);
-			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D);
+			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D[State.m_TextureArrayIndex]);
 		}
 		else
 			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
@@ -249,6 +249,13 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 void CCommandProcessorFragment_OpenGL::Cmd_Init(const SCommand_Init *pCommand)
 {
 	m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_MaxTexSize);
+	glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &m_Max3DTexSize);
+	dbg_msg("render", "opengl max texture sizes: %d, %d(3D)", m_MaxTexSize, m_Max3DTexSize);
+	if(m_Max3DTexSize < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION)
+		dbg_msg("render", "*** warning *** max 3D texture size is too low - using the fallback system");
+	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+	*pCommand->m_pTextureArraySize = m_TextureArraySize;
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
@@ -267,7 +274,10 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Destroy(const CCommandBuffer:
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX2D)
 		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX3D)
-		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
+	{
+		for(int i = 0; i < m_TextureArraySize; ++i)
+			glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D[i]);
+	}
 	*m_pTextureMemoryUsage -= m_aTextures[pCommand->m_Slot].m_MemSize;
 	m_aTextures[pCommand->m_Slot].m_State = CTexture::STATE_EMPTY;
 	m_aTextures[pCommand->m_Slot].m_MemSize = 0;
@@ -283,16 +293,13 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	// resample if needed
 	if(pCommand->m_Format == CCommandBuffer::TEXFORMAT_RGBA || pCommand->m_Format == CCommandBuffer::TEXFORMAT_RGB)
 	{
-		int MaxTexSize;
-		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MaxTexSize);
-		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+		int MaxTexSize = m_MaxTexSize;
+		if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 		{
-			int Max3DTexSize;
-			glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &Max3DTexSize);
 			if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
-				MaxTexSize = min(MaxTexSize, Max3DTexSize*16);
+				MaxTexSize = min(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
 			else
-				MaxTexSize = Max3DTexSize*16;
+				MaxTexSize = m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION;
 		}
 		if(Width > MaxTexSize || Height > MaxTexSize)
 		{
@@ -307,7 +314,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			mem_free(pTexData);
 			pTexData = pTmpData;
 		}
-		else if(Width > 16 && Height > 16 && (pCommand->m_Flags&CCommandBuffer::TEXFLAG_QUALITY) == 0)
+		else if(Width > IGraphics::NUMTILES_DIMENSION && Height > IGraphics::NUMTILES_DIMENSION && (pCommand->m_Flags&CCommandBuffer::TEXFLAG_QUALITY) == 0)
 		{
 			Width>>=1;
 			Height>>=1;
@@ -382,42 +389,45 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	}
 	
 	// 3D texture
-	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+	if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 	{
-		Width /= 16;
-		Height /= 16;
-		Depth = 256;
+		Width /= IGraphics::NUMTILES_DIMENSION;
+		Height /= IGraphics::NUMTILES_DIMENSION;
+		Depth = min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 
 		// copy and reorder texture data
-		int MemSize = Width*Height*Depth*pCommand->m_PixelSize;
+		int MemSize = Width*Height*IGraphics::NUMTILES_DIMENSION*IGraphics::NUMTILES_DIMENSION*pCommand->m_PixelSize;
 		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
 
 		const int TileSize = (Height * Width) * pCommand->m_PixelSize;
 		const int TileRowSize = Width * pCommand->m_PixelSize;
-		const int ImagePitch = Width*16 * pCommand->m_PixelSize;
+		const int ImagePitch = Width * IGraphics::NUMTILES_DIMENSION * pCommand->m_PixelSize;
 		mem_zero(pTmpData, MemSize);
-		for(int i = 0; i < 256; i++)
+		for(int i = 0; i < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION; i++)
 		{
-			const int px = (i%16) * Width;
-			const int py = (i/16) * Height;
-			const char *pTileData = (const char *)pTexData + (py * Width*16 + px) * pCommand->m_PixelSize;
+			const int px = (i%IGraphics::NUMTILES_DIMENSION) * Width;
+			const int py = (i/IGraphics::NUMTILES_DIMENSION) * Height;
+			const char *pTileData = (const char *)pTexData + (py * Width * IGraphics::NUMTILES_DIMENSION + px) * pCommand->m_PixelSize;
 			for(int y = 0; y < Height; y++)
 				mem_copy(pTmpData + i*TileSize + y*TileRowSize, pTileData + y * ImagePitch, TileRowSize);
 		}
 
 		mem_free(pTexData);
-		pTexData = pTmpData;
 		
 		//
-		glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
+		glGenTextures(m_TextureArraySize, m_aTextures[pCommand->m_Slot].m_Tex3D);
 		m_aTextures[pCommand->m_Slot].m_State |= CTexture::STATE_TEX3D;
-		glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex3D);
+		for(int i = 0; i < m_TextureArraySize; ++i)
+		{			
+			glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex3D[i]);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			pTexData = pTmpData+i*(Width*Height*Depth*pCommand->m_PixelSize);
+			glTexImage3D(GL_TEXTURE_3D, 0, StoreOglformat, Width, Height, Depth, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage3D(GL_TEXTURE_3D, 0, StoreOglformat, Width, Height, Depth, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
-
-		m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
+			m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
+		}
+		pTexData = pTmpData;
 	}	
 
 	*m_pTextureMemoryUsage += m_aTextures[pCommand->m_Slot].m_MemSize;
@@ -756,13 +766,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 
 	// issue init commands for OpenGL and SDL
 	CCommandBuffer CmdBuffer(1024, 512);
-	CCommandProcessorFragment_OpenGL::SCommand_Init CmdOpenGL;
-	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
-	CmdBuffer.AddCommand(CmdOpenGL);
 	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
 	CmdSDL.m_pWindow = m_pWindow;
 	CmdSDL.m_GLContext = m_GLContext;
 	CmdBuffer.AddCommand(CmdSDL);
+	CCommandProcessorFragment_OpenGL::SCommand_Init CmdOpenGL;
+	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
+	CmdOpenGL.m_pTextureArraySize = &m_TextureArraySize;
+	CmdBuffer.AddCommand(CmdOpenGL);
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
 
