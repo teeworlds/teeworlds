@@ -306,7 +306,7 @@ void CGameContext::SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3
 }
 
 //
-void CGameContext::StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason)
+void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char *pReason)
 {
 	// check if a vote is already running
 	if(m_VoteCloseTime)
@@ -329,7 +329,7 @@ void CGameContext::StartVote(int Type, const char *pDesc, const char *pCommand, 
 	str_copy(m_aVoteDescription, pDesc, sizeof(m_aVoteDescription));
 	str_copy(m_aVoteCommand, pCommand, sizeof(m_aVoteCommand));
 	str_copy(m_aVoteReason, pReason, sizeof(m_aVoteReason));
-	SendVoteSet(Type, -1);
+	SendVoteSet(m_VoteType, -1);
 	m_VoteUpdate = true;
 }
 
@@ -662,7 +662,7 @@ void CGameContext::OnClientConnected(int ClientID, bool Dummy)
 
 	// send active vote
 	if(m_VoteCloseTime)
-		SendVoteSet(VOTE_UNKNOWN, ClientID);
+		SendVoteSet(m_VoteType, ClientID);
 
 	// send motd
 	SendMotd(ClientID);
@@ -803,7 +803,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->m_LastVoteTry = Now;
 			}
 
-			int Type = VOTE_UNKNOWN;
+			m_VoteType = VOTE_UNKNOWN;
 			char aDesc[VOTE_DESC_LENGTH] = {0};
 			char aCmd[VOTE_CMD_LENGTH] = {0};
 			const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
@@ -825,7 +825,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 							ForceVote(VOTE_START_OP, aDesc, pReason);
 							return;
 						}
-						Type = VOTE_START_OP;
+						m_VoteType = VOTE_START_OP;
 						break;
 					}
 
@@ -860,7 +860,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					Server()->SetRconCID(IServer::RCON_CID_SERV);
 					return;
 				}
-				Type = VOTE_START_KICK;
+				m_VoteType = VOTE_START_KICK;
 				m_VoteClientID = KickID;
 			}
 			else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
@@ -882,14 +882,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					ForceVote(VOTE_START_SPEC, aDesc, pReason);
 					return;
 				}
-				Type = VOTE_START_SPEC;
+				m_VoteType = VOTE_START_SPEC;
 				m_VoteClientID = SpectateID;
 			}
 
-			if(Type != VOTE_UNKNOWN)
+			if(m_VoteType != VOTE_UNKNOWN)
 			{
 				m_VoteCreator = ClientID;
-				StartVote(Type, aDesc, aCmd, pReason);
+				StartVote(aDesc, aCmd, pReason);
 				pPlayer->m_Vote = 1;
 				pPlayer->m_VotePos = m_VotePos = 1;
 				pPlayer->m_LastVoteCall = Now;

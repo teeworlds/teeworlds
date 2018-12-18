@@ -91,7 +91,7 @@ public:
 	int m_LockTeams;
 
 	// voting
-	void StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason);
+	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote(int Type, bool Force);
 	void ForceVote(int Type, const char *pDescription, const char *pReason);
 	void SendVoteSet(int Type, int ToClientID);
@@ -100,6 +100,7 @@ public:
 	void AbortVoteOnTeamChange(int ClientID);
 
 	int m_VoteCreator;
+	int m_VoteType;
 	int64 m_VoteCloseTime;
 	int64 m_VoteCancelTime;
 	bool m_VoteUpdate;
