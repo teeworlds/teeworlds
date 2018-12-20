@@ -492,32 +492,6 @@ struct CHistoryEntry
 	}
 };
 
-/*class CEditorAssets
-{
-	enum
-	{
-		MAX_IMAGES=128,
-	};
-
-	IGraphics* m_pGraphics;
-
-	u32 m_aImagePathHash[MAX_IMAGES];
-	u32 m_aImageDataHash[MAX_IMAGES];
-	IGraphics::CTextureHandle m_aImageTextureHandle[MAX_IMAGES];
-	IGraphics::CTextureHandle m_aImage3DTextureHandle[MAX_IMAGES];
-	CImageInfo m_ImageInfo[MAX_IMAGES];
-	int m_ImageCount;
-
-	inline IGraphics* Graphics() { return m_pGraphics; };
-
-public:
-	CEditorAssets();
-	void Init(IGraphics* pGraphics);
-	void Clear();
-
-	int LoadQuadImage(const char* aPath);
-};*/
-
 class CEditor: public IEditor
 {
 	enum
@@ -573,6 +547,7 @@ class CEditor: public IEditor
 	u8 m_UiLayerHidden[MAX_LAYERS] = {0};
 	int m_UiSelectedLayerID = -1;
 	int m_UiSelectedGroupID = -1;
+	int m_UiSelectedImageID = -1;
 
 	enum
 	{
@@ -614,6 +589,15 @@ class CEditor: public IEditor
 	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
 	CHistoryEntry* m_pHistoryEntryCurrent = nullptr;
 
+	enum
+	{
+		PAGE_MAP_EDITOR=0,
+		PAGE_ASSET_MANAGER,
+		PAGE_COUNT_,
+	};
+
+	int m_Page = PAGE_ASSET_MANAGER;
+
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
@@ -623,11 +607,14 @@ class CEditor: public IEditor
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
-	void RenderHud();
-	void RenderUI();
-	void RenderUiLayerGroups(CUIRect NavRect);
+	void RenderMapEditor();
+	void RenderMapEditorHud();
+	void RenderMapEditorUI();
+	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderPopupBrushPalette();
 	void RenderBrush(vec2 Pos);
+
+	void RenderAssetManager();
 
 	void DrawRect(const CUIRect& Rect, const vec4& Color);
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
@@ -636,9 +623,9 @@ class CEditor: public IEditor
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
-	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState);
+	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize = 10);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
-					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder);
+					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void PopupBrushPaletteProcessInput(IInput::CEvent Event);

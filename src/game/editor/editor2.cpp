@@ -13,7 +13,6 @@
 //#include <intrin.h>
 
 // TODO:
-// - Move image handling / embedded file handling to a CEditorMapAssets class?
 // - Allow brush to go in eraser mode, automapper mode
 // - Binds
 // - Smooth zoom
@@ -1139,6 +1138,10 @@ void CEditor::Update()
 				HistoryUndo();
 			else if(IsCtrlPressed && Input()->KeyPress(KEY_Y))
 				HistoryRedo();
+
+			// TODO: remove
+			if(Input()->KeyPress(KEY_A))
+				m_Page = (m_Page+1) % PAGE_COUNT_;
 		}
 
 		if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
@@ -1154,10 +1157,219 @@ void CEditor::Render()
 {
 	const CUIRect UiScreenRect = *UI()->Screen();
 	m_UiScreenRect = UiScreenRect;
+	m_GfxScreenWidth = Graphics()->ScreenWidth();
+	m_GfxScreenHeight = Graphics()->ScreenHeight();
 
 	// basic start
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
+	if(m_Page == PAGE_MAP_EDITOR)
+		RenderMapEditor();
+	else if(m_Page == PAGE_ASSET_MANAGER)
+		RenderAssetManager();
+
+	// console
+	m_InputConsole.Render();
+
+	// render mouse cursor
+	{
+		Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+		Graphics()->TextureSet(m_CursorTexture);
+		Graphics()->WrapClamp();
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1,0,1,1);
+		/*if(UI()->HotItem())
+			Graphics()->SetColor(1,0.5,1,1);*/
+		IGraphics::CQuadItem QuadItem(m_UiMousePos.x, m_UiMousePos.y, 16.0f, 16.0f);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+	}
+
+	UI()->FinishCheck();
+}
+
+void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
+{
+	const CTile* pTiles = GameLayer.m_aTiles.Data();
+	const int LayerWidth = GameLayer.m_Width;
+	const int LayerHeight = GameLayer.m_Height;
+
+	Graphics()->TextureSet(m_GameTexture);
+	Graphics()->QuadsBegin();
+
+	// TODO: cache sprite base positions?
+	struct CEntitySprite
+	{
+		int m_SpriteID;
+		vec2 m_Pos;
+		vec2 m_Size;
+	};
+
+	CEntitySprite aEntitySprites[2048];
+	int EntitySpriteCount = 0;
+
+	const float HealthArmorSize = 64*0.7071067811865475244;
+	const vec2 NinjaSize(128*(256/263.87876003953027518857),
+						 128*(64/263.87876003953027518857));
+
+	const float TileSize = 32.f;
+	const float Time = Client()->LocalTime();
+
+	for(int ty = 0; ty < LayerHeight; ty++)
+	{
+		for(int tx = 0; tx < LayerWidth; tx++)
+		{
+			const int tid = ty*LayerWidth+tx;
+			const u8 Index = pTiles[tid].m_Index - ENTITY_OFFSET;
+			if(!Index)
+				continue;
+
+			vec2 BasePos(tx*TileSize, ty*TileSize);
+			const float Offset = tx + ty;
+			vec2 PickupPos = BasePos;
+			PickupPos.x += cosf(Time*2.0f+Offset)*2.5f;
+			PickupPos.y += sinf(Time*2.0f+Offset)*2.5f;
+
+			if(Index == ENTITY_HEALTH_1)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_HEALTH,
+					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
+					vec2(HealthArmorSize, HealthArmorSize)
+				};
+			}
+			else if(Index == ENTITY_ARMOR_1)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_ARMOR,
+					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
+					vec2(HealthArmorSize, HealthArmorSize)
+				};
+			}
+			else if(Index == ENTITY_WEAPON_GRENADE)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_GRENADE,
+					PickupPos - vec2((m_RenderGrenadePickupSize.x-TileSize)*0.5f,
+						(m_RenderGrenadePickupSize.y-TileSize)*0.5f),
+					m_RenderGrenadePickupSize
+				};
+			}
+			else if(Index == ENTITY_WEAPON_SHOTGUN)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_SHOTGUN,
+					PickupPos - vec2((m_RenderShotgunPickupSize.x-TileSize)*0.5f,
+						(m_RenderShotgunPickupSize.y-TileSize)*0.5f),
+					m_RenderShotgunPickupSize
+				};
+			}
+			else if(Index == ENTITY_WEAPON_LASER)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_LASER,
+					PickupPos - vec2((m_RenderLaserPickupSize.x-TileSize)*0.5f,
+						(m_RenderLaserPickupSize.y-TileSize)*0.5f),
+					m_RenderLaserPickupSize
+				};
+			}
+			else if(Index == ENTITY_POWERUP_NINJA)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_PICKUP_NINJA,
+					PickupPos - vec2((NinjaSize.x-TileSize)*0.5f, (NinjaSize.y-TileSize)*0.5f),
+					NinjaSize
+				};
+			}
+			else if(Index == ENTITY_FLAGSTAND_RED)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_FLAG_RED,
+					BasePos - vec2(0, 54),
+					vec2(42, 84)
+				};
+			}
+			else if(Index == ENTITY_FLAGSTAND_BLUE)
+			{
+				aEntitySprites[EntitySpriteCount++] = {
+					SPRITE_FLAG_BLUE,
+					BasePos - vec2(0, 54),
+					vec2(42, 84)
+				};
+			}
+		}
+	}
+
+	for(int i = 0; i < EntitySpriteCount; i++)
+	{
+		const CEntitySprite& e = aEntitySprites[i];
+		RenderTools()->SelectSprite(e.m_SpriteID);
+		IGraphics::CQuadItem Quad(e.m_Pos.x, e.m_Pos.y, e.m_Size.x, e.m_Size.y);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+	}
+
+	Graphics()->QuadsEnd();
+}
+
+inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
+										   float ParallaxX, float ParallaxY)
+{
+	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
+	// is based on the center of the screen
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const float MapOffX = (((m_MapUiPosOffset.x+UiScreenRect.w*0.5) * ParallaxX) - UiScreenRect.w*0.5)/
+						  UiScreenRect.w * WorldWidth + PosX;
+	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/
+						  UiScreenRect.h * WorldHeight + PosY;
+	return vec2(MapOffX, MapOffY);
+}
+
+inline vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
+{
+	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
+	const float OffX = G.m_OffsetX;
+	const float OffY = G.m_OffsetY;
+	const float ParaX = G.m_ParallaxX/100.f;
+	const float ParaY = G.m_ParallaxY/100.f;
+	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
+	// is based on the center of the screen
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const float MapOffX = (((m_MapUiPosOffset.x + UiScreenRect.w*0.5) * ParaX) -
+		UiScreenRect.w*0.5 + UiPos.x)/ UiScreenRect.w * WorldWidth + OffX;
+	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
+		UiScreenRect.h*0.5 + UiPos.y)/ UiScreenRect.h * WorldHeight + OffY;
+	return vec2(MapOffX, MapOffY);
+}
+
+void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
+{
+	CEditor *pThis = (CEditor *)pUser;
+	if(EnvID >= 0)
+		pThis->EnvelopeEval(TimeOffset, EnvID, pChannels);
+}
+
+void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
+{
+	pChannels[0] = 0;
+	pChannels[1] = 0;
+	pChannels[2] = 0;
+	pChannels[3] = 0;
+
+	dbg_assert(EnvID < m_Map.m_aEnvelopes.Count(), "EnvID out of bounds");
+	if(EnvID >= m_Map.m_aEnvelopes.Count())
+		return;
+
+	const CMapItemEnvelope& Env = m_Map.m_aEnvelopes[EnvID];
+	const CEnvPoint* pPoints = &m_Map.m_aEnvPoints[0];
+
+	float Time = Client()->LocalTime();
+	RenderTools()->RenderEvalEnvelope(pPoints + Env.m_StartPoint, Env.m_NumPoints, 4,
+									  Time+TimeOffset, pChannels);
+}
+
+void CEditor::RenderMapEditor()
+{
 	// get world view points based on neutral paramters
 	float aWorldViewRectPoints[4];
 	RenderTools()->MapScreenToWorld(0, 0, 1, 1, 0, 0, Graphics()->ScreenAspect(), 1, aWorldViewRectPoints);
@@ -1169,8 +1381,6 @@ void CEditor::Render()
 	m_ZoomWorldViewWidth = ZoomWorldViewWidth;
 	m_ZoomWorldViewHeight = ZoomWorldViewHeight;
 
-	m_GfxScreenWidth = Graphics()->ScreenWidth();
-	m_GfxScreenHeight = Graphics()->ScreenHeight();
 	const float FakeToScreenX = m_GfxScreenWidth/ZoomWorldViewWidth;
 	const float FakeToScreenY = m_GfxScreenHeight/ZoomWorldViewHeight;
 	const float TileSize = 32;
@@ -1411,212 +1621,13 @@ void CEditor::Render()
 	Graphics()->QuadsEnd();
 
 	// hud
-	RenderHud();
+	RenderMapEditorHud();
 
 	// user interface
-	RenderUI();
-
-	// console
-	m_InputConsole.Render();
-
-	// render mouse cursor
-	{
-		Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
-		Graphics()->TextureSet(m_CursorTexture);
-		Graphics()->WrapClamp();
-		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1,0,1,1);
-		/*if(UI()->HotItem())
-			Graphics()->SetColor(1,0.5,1,1);*/
-		IGraphics::CQuadItem QuadItem(m_UiMousePos.x, m_UiMousePos.y, 16.0f, 16.0f);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-		Graphics()->WrapNormal();
-	}
-
-	UI()->FinishCheck();
+	RenderMapEditorUI();
 }
 
-void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
-{
-	const CTile* pTiles = GameLayer.m_aTiles.Data();
-	const int LayerWidth = GameLayer.m_Width;
-	const int LayerHeight = GameLayer.m_Height;
-
-	Graphics()->TextureSet(m_GameTexture);
-	Graphics()->QuadsBegin();
-
-	// TODO: cache sprite base positions?
-	struct CEntitySprite
-	{
-		int m_SpriteID;
-		vec2 m_Pos;
-		vec2 m_Size;
-	};
-
-	CEntitySprite aEntitySprites[2048];
-	int EntitySpriteCount = 0;
-
-	const float HealthArmorSize = 64*0.7071067811865475244;
-	const vec2 NinjaSize(128*(256/263.87876003953027518857),
-						 128*(64/263.87876003953027518857));
-
-	const float TileSize = 32.f;
-	const float Time = Client()->LocalTime();
-
-	for(int ty = 0; ty < LayerHeight; ty++)
-	{
-		for(int tx = 0; tx < LayerWidth; tx++)
-		{
-			const int tid = ty*LayerWidth+tx;
-			const u8 Index = pTiles[tid].m_Index - ENTITY_OFFSET;
-			if(!Index)
-				continue;
-
-			vec2 BasePos(tx*TileSize, ty*TileSize);
-			const float Offset = tx + ty;
-			vec2 PickupPos = BasePos;
-			PickupPos.x += cosf(Time*2.0f+Offset)*2.5f;
-			PickupPos.y += sinf(Time*2.0f+Offset)*2.5f;
-
-			if(Index == ENTITY_HEALTH_1)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_HEALTH,
-					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
-					vec2(HealthArmorSize, HealthArmorSize)
-				};
-			}
-			else if(Index == ENTITY_ARMOR_1)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_ARMOR,
-					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
-					vec2(HealthArmorSize, HealthArmorSize)
-				};
-			}
-			else if(Index == ENTITY_WEAPON_GRENADE)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_GRENADE,
-					PickupPos - vec2((m_RenderGrenadePickupSize.x-TileSize)*0.5f,
-						(m_RenderGrenadePickupSize.y-TileSize)*0.5f),
-					m_RenderGrenadePickupSize
-				};
-			}
-			else if(Index == ENTITY_WEAPON_SHOTGUN)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_SHOTGUN,
-					PickupPos - vec2((m_RenderShotgunPickupSize.x-TileSize)*0.5f,
-						(m_RenderShotgunPickupSize.y-TileSize)*0.5f),
-					m_RenderShotgunPickupSize
-				};
-			}
-			else if(Index == ENTITY_WEAPON_LASER)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_LASER,
-					PickupPos - vec2((m_RenderLaserPickupSize.x-TileSize)*0.5f,
-						(m_RenderLaserPickupSize.y-TileSize)*0.5f),
-					m_RenderLaserPickupSize
-				};
-			}
-			else if(Index == ENTITY_POWERUP_NINJA)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_PICKUP_NINJA,
-					PickupPos - vec2((NinjaSize.x-TileSize)*0.5f, (NinjaSize.y-TileSize)*0.5f),
-					NinjaSize
-				};
-			}
-			else if(Index == ENTITY_FLAGSTAND_RED)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_FLAG_RED,
-					BasePos - vec2(0, 54),
-					vec2(42, 84)
-				};
-			}
-			else if(Index == ENTITY_FLAGSTAND_BLUE)
-			{
-				aEntitySprites[EntitySpriteCount++] = {
-					SPRITE_FLAG_BLUE,
-					BasePos - vec2(0, 54),
-					vec2(42, 84)
-				};
-			}
-		}
-	}
-
-	for(int i = 0; i < EntitySpriteCount; i++)
-	{
-		const CEntitySprite& e = aEntitySprites[i];
-		RenderTools()->SelectSprite(e.m_SpriteID);
-		IGraphics::CQuadItem Quad(e.m_Pos.x, e.m_Pos.y, e.m_Size.x, e.m_Size.y);
-		Graphics()->QuadsDrawTL(&Quad, 1);
-	}
-
-	Graphics()->QuadsEnd();
-}
-
-inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
-										   float ParallaxX, float ParallaxY)
-{
-	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
-	// is based on the center of the screen
-	const CUIRect UiScreenRect = m_UiScreenRect;
-	const float MapOffX = (((m_MapUiPosOffset.x+UiScreenRect.w*0.5) * ParallaxX) - UiScreenRect.w*0.5)/
-						  UiScreenRect.w * WorldWidth + PosX;
-	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/
-						  UiScreenRect.h * WorldHeight + PosY;
-	return vec2(MapOffX, MapOffY);
-}
-
-inline vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
-{
-	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
-	const float OffX = G.m_OffsetX;
-	const float OffY = G.m_OffsetY;
-	const float ParaX = G.m_ParallaxX/100.f;
-	const float ParaY = G.m_ParallaxY/100.f;
-	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
-	// is based on the center of the screen
-	const CUIRect UiScreenRect = m_UiScreenRect;
-	const float MapOffX = (((m_MapUiPosOffset.x + UiScreenRect.w*0.5) * ParaX) -
-		UiScreenRect.w*0.5 + UiPos.x)/ UiScreenRect.w * WorldWidth + OffX;
-	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
-		UiScreenRect.h*0.5 + UiPos.y)/ UiScreenRect.h * WorldHeight + OffY;
-	return vec2(MapOffX, MapOffY);
-}
-
-void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
-{
-	CEditor *pThis = (CEditor *)pUser;
-	if(EnvID >= 0)
-		pThis->EnvelopeEval(TimeOffset, EnvID, pChannels);
-}
-
-void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
-{
-	pChannels[0] = 0;
-	pChannels[1] = 0;
-	pChannels[2] = 0;
-	pChannels[3] = 0;
-
-	dbg_assert(EnvID < m_Map.m_aEnvelopes.Count(), "EnvID out of bounds");
-	if(EnvID >= m_Map.m_aEnvelopes.Count())
-		return;
-
-	const CMapItemEnvelope& Env = m_Map.m_aEnvelopes[EnvID];
-	const CEnvPoint* pPoints = &m_Map.m_aEnvPoints[0];
-
-	float Time = Client()->LocalTime();
-	RenderTools()->RenderEvalEnvelope(pPoints + Env.m_StartPoint, Env.m_NumPoints, 4,
-									  Time+TimeOffset, pChannels);
-}
-
-void CEditor::RenderHud()
+void CEditor::RenderMapEditorHud()
 {
 	// NOTE: we're in selected group world space here
 
@@ -1671,7 +1682,7 @@ void CEditor::RenderHud()
 	}
 }
 
-void CEditor::RenderUI()
+void CEditor::RenderMapEditorUI()
 {
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
@@ -1710,7 +1721,7 @@ void CEditor::RenderUI()
 
 	if(s_CurrentTab == TAB_GROUPS)
 	{
-		RenderUiLayerGroups(NavRect);
+		RenderMapEditorUiLayerGroups(NavRect);
 	}
 	else if(s_CurrentTab == TAB_HISTORY)
 	{
@@ -1768,7 +1779,7 @@ void CEditor::RenderUI()
 		RenderPopupBrushPalette();
 }
 
-void CEditor::RenderUiLayerGroups(CUIRect NavRect)
+void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 {
 	CUIRect DetailRect, ButtonRect;
 
@@ -1970,7 +1981,7 @@ void CEditor::RenderUiLayerGroups(CUIRect NavRect)
 		ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
 		static CUIButtonState s_LayerDeleteButton;
 		if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1)))
+			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
 		{
 			EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
 		}
@@ -2251,6 +2262,126 @@ void CEditor::RenderBrush(vec2 Pos)
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
+void CEditor::RenderAssetManager()
+{
+	CEditorMap::CAssets& Assets = m_Map.m_Assets;
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	CUIRect RightPanel, MainViewRect;
+	UiScreenRect.VSplitRight(150, &MainViewRect, &RightPanel);
+
+	DrawRect(RightPanel, StyleColorBg);
+
+	CUIRect NavRect, ButtonRect, DetailRect;
+	RightPanel.Margin(3.0f, &NavRect);
+
+	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
+	UI()->ClipEnable(&NavRect);
+
+	static CUIButtonState s_UiImageButState[CEditorMap::MAX_IMAGES] = {};
+	const float FontSize = 8.0f;
+	const float ButtonHeight = 20.0f;
+	const float Spacing = 2.0f;
+	const float ShowButtonWidth = 15.0f;
+
+	const int ImageCount = Assets.m_ImageCount;
+	for(int i = 0; i < ImageCount; i++)
+	{
+		if(i != 0)
+			NavRect.HSplitTop(Spacing, 0, &NavRect);
+		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+
+		const bool Selected = (m_UiSelectedImageID == i);
+		const vec4 ColBorder = Selected ? vec4(1, 0, 0, 1) : StyleColorButtonBorder;
+		if(UiButtonEx(ButtonRect, Assets.m_aImageNames[i].m_Buff, &s_UiImageButState[i],
+			StyleColorButton,StyleColorButtonHover, StyleColorButtonPressed, ColBorder, FontSize))
+		{
+			m_UiSelectedImageID = i;
+		}
+	}
+
+	UI()->ClipDisable(); // NavRect
+
+	if(m_UiSelectedImageID == -1 && Assets.m_ImageCount > 0)
+		m_UiSelectedImageID = 0;
+
+	if(m_UiSelectedImageID != -1)
+	{
+		// display image
+		CUIRect ImageRect = MainViewRect;
+		ImageRect.w = Assets.m_aTextureInfos[m_UiSelectedImageID].m_Width/m_GfxScreenWidth *
+			UiScreenRect.w * (1.0/m_Zoom);
+		ImageRect.h = Assets.m_aTextureInfos[m_UiSelectedImageID].m_Height/m_GfxScreenHeight *
+			UiScreenRect.h * (1.0/m_Zoom);
+
+		UI()->ClipEnable(&MainViewRect);
+
+		Graphics()->TextureSet(m_CheckerTexture);
+		Graphics()->QuadsBegin();
+		Graphics()->QuadsSetSubset(0, 0, ImageRect.w/16.f, ImageRect.h/16.f);
+		IGraphics::CQuadItem BgQuad(ImageRect.x, ImageRect.y, ImageRect.w, ImageRect.h);
+		Graphics()->QuadsDrawTL(&BgQuad, 1);
+		Graphics()->QuadsEnd();
+
+		Graphics()->WrapClamp();
+
+		Graphics()->TextureSet(Assets.m_aTextureHandle[m_UiSelectedImageID]);
+		Graphics()->QuadsBegin();
+		IGraphics::CQuadItem Quad(ImageRect.x, ImageRect.y, ImageRect.w, ImageRect.h);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+		Graphics()->QuadsEnd();
+
+		Graphics()->WrapNormal();
+		UI()->ClipDisable();
+
+		// details
+
+		// label
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, StyleColorButtonPressed);
+		DrawText(ButtonRect, Localize("Image"), FontSize);
+
+		// name
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		DrawText(ButtonRect, Assets.m_aImageNames[m_UiSelectedImageID].m_Buff, FontSize);
+
+		// size
+		char aBuff[128];
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "size = (%d, %d)",
+			Assets.m_aTextureInfos[m_UiSelectedImageID].m_Width,
+			Assets.m_aTextureInfos[m_UiSelectedImageID].m_Height);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		// size
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+		DrawRect(ButtonRect, vec4(0,0,0,1));
+		str_format(aBuff, sizeof(aBuff), "Embedded Crc = 0x%X",
+			Assets.m_aImageEmbeddedCrc[m_UiSelectedImageID]);
+		DrawText(ButtonRect, aBuff, FontSize);
+
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+		static CUIButtonState s_ButDelete = {};
+		if(UiButton(ButtonRect, Localize("Delete"), &s_ButDelete))
+		{
+			EditDeleteImage(m_UiSelectedImageID);
+		}
+	}
+
+	if(m_UiSelectedImageID >= Assets.m_ImageCount)
+		m_UiSelectedImageID = -1;
+}
+
 inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
 {
 	Graphics()->TextureClear();
@@ -2447,14 +2578,14 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 
 }
 
-bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState)
+bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover,
-		StyleColorButtonPressed, StyleColorButtonBorder);
+		StyleColorButtonPressed, StyleColorButtonBorder, FontSize);
 }
 
 bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, vec4 ColNormal,
-	vec4 ColHover, vec4 ColPress, vec4 ColBorder)
+	vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize)
 {
 	UiDoButtonBehavior(pButState, Rect, pButState);
 
@@ -2465,7 +2596,7 @@ bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState*
 		ShowButColor = ColPress;
 
 	DrawRectBorder(Rect, ShowButColor, 1, ColBorder);
-	DrawText(Rect, pText, 10.0f);
+	DrawText(Rect, pText, FontSize);
 	return pButState->m_Clicked;
 }
 
