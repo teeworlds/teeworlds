@@ -124,13 +124,13 @@ public:
 		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
 		for(int i = 0; i < TOTAL_RING_COUNT; i++)
 		{
-			uint64_t Ring8 = *(uint64_t*)(m_aRingUsed+i);
+			u64 Ring8 = *(u64*)(m_aRingUsed+i);
 			if(Ring8 == 0)
 			{
 				ChainRingCount += 8;
 				i += 7;
 			}
-			else if(Ring8 == (uint64_t)0xFFFFFFFFFFFFFFFF)
+			else if(Ring8 == (u64)0xFFFFFFFFFFFFFFFF)
 			{
 				ChainRingStart = i+8;
 				ChainRingCount = 0;
@@ -303,6 +303,7 @@ struct CEditorMap
 		MAX_TEXTURES=128,
 		MAX_GROUP_LAYERS=64,
 		MAX_IMAGE_NAME_LEN=64,
+		MAX_EMBEDDED_FILES=64,
 	};
 
 	struct CLayer
@@ -351,18 +352,16 @@ struct CEditorMap
 		bool m_Synchronized;
 	};
 
-	struct CTextureInfo
-	{
-		int m_Flags;
-		int m_Format;
-		int m_Width;
-		int m_Height;
-		u8* m_Data;
-	};
-
 	struct CImageName
 	{
 		char m_Buff[MAX_IMAGE_NAME_LEN];
+	};
+
+	struct CEmbeddedFile
+	{
+		u32 m_Crc;
+		int m_Type; // unused for now (only images)
+		void* m_pData;
 	};
 
 	// used for undo/redo
@@ -375,7 +374,8 @@ struct CEditorMap
 		int m_GameLayerID;
 		int m_GameGroupID;
 		CImageName* m_aImageNames;
-		CTextureInfo* m_aImageInfos;
+		u32* m_aImageEmbeddedCrc;
+		CImageInfo* m_aImageInfos;
 		CGroup* m_aGroups;
 		CMapItemLayer** m_apLayers;
 		CMapItemEnvelope* m_aEnvelopes;
@@ -405,10 +405,13 @@ struct CEditorMap
 	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
 	CImageName m_aImageNames[MAX_TEXTURES];
+	u32 m_aImageEmbeddedCrc[MAX_TEXTURES];
 	IGraphics::CTextureHandle m_aTextureHandle[MAX_TEXTURES];
-	IGraphics::CTextureHandle m_aTexture2DHandle[MAX_TEXTURES];
-	CTextureInfo m_aTextureInfos[MAX_TEXTURES];
-	int m_TextureCount = 0;
+	CImageInfo m_aTextureInfos[MAX_TEXTURES];
+	int m_ImageCount = 0;
+
+	CEmbeddedFile m_aEmbeddedFile[MAX_EMBEDDED_FILES];
+	int m_EmbeddedFileCount;
 
 	IGraphics* m_pGraphics;
 	IConsole *m_pConsole;
@@ -423,6 +426,7 @@ struct CEditorMap
 	bool Load(const char *pFileName);
 	void LoadDefault();
 	void Clear();
+	void ClearEmbeddedFiles();
 
 	CSnapshot* SaveSnapshot();
 	void RestoreSnapshot(const CSnapshot* pSnapshot);
@@ -477,6 +481,32 @@ struct CHistoryEntry
 		m_aDescStr[Len] = 0;
 	}
 };
+
+/*class CEditorAssets
+{
+	enum
+	{
+		MAX_IMAGES=128,
+	};
+
+	IGraphics* m_pGraphics;
+
+	u32 m_aImagePathHash[MAX_IMAGES];
+	u32 m_aImageDataHash[MAX_IMAGES];
+	IGraphics::CTextureHandle m_aImageTextureHandle[MAX_IMAGES];
+	IGraphics::CTextureHandle m_aImage3DTextureHandle[MAX_IMAGES];
+	CImageInfo m_ImageInfo[MAX_IMAGES];
+	int m_ImageCount;
+
+	inline IGraphics* Graphics() { return m_pGraphics; };
+
+public:
+	CEditorAssets();
+	void Init(IGraphics* pGraphics);
+	void Clear();
+
+	int LoadQuadImage(const char* aPath);
+};*/
 
 class CEditor: public IEditor
 {
@@ -622,6 +652,7 @@ class CEditor: public IEditor
 	void OnFinishDragging();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
+	void EditDeleteImage(int ImageID);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
@@ -634,6 +665,7 @@ class CEditor: public IEditor
 	static void ConShowGrid(IConsole::IResult *pResult, void *pUserData);
 	static void ConUndo(IConsole::IResult *pResult, void *pUserData);
 	static void ConRedo(IConsole::IResult *pResult, void *pUserData);
+	static void ConDeleteImage(IConsole::IResult *pResult, void *pUserData);
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
 	inline IInput *Input() { return m_pInput; };

@@ -245,7 +245,7 @@ int CDataFileReader::GetDataSize(int Index) const
 	return m_pDataFile->m_Info.m_pDataOffsets[Index+1]-m_pDataFile->m_Info.m_pDataOffsets[Index];
 }
 
-void *CDataFileReader::GetDataImpl(int Index, int Swap)
+void *CDataFileReader::GetDataImpl(int Index, int Swap, unsigned long* pDataSize)
 {
 	if(!m_pDataFile) { return 0; }
 
@@ -263,6 +263,8 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 			// v4 has compressed data
 			void *pTemp = (char *)mem_alloc(DataSize, 1);
 			unsigned long UncompressedSize = m_pDataFile->m_Info.m_pDataSizes[Index];
+			if(pDataSize)
+				*pDataSize = UncompressedSize;
 			unsigned long s;
 
 			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%lu", Index, DataSize, UncompressedSize);
@@ -284,6 +286,8 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 		}
 		else
 		{
+			if(pDataSize)
+				*pDataSize = DataSize;
 			// load the data
 			dbg_msg("datafile", "loading data index=%d size=%d", Index, DataSize);
 			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(DataSize, 1);
@@ -300,9 +304,9 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 	return m_pDataFile->m_ppDataPtrs[Index];
 }
 
-void *CDataFileReader::GetData(int Index)
+void *CDataFileReader::GetData(int Index, unsigned long* pDataSize)
 {
-	return GetDataImpl(Index, 0);
+	return GetDataImpl(Index, 0, pDataSize);
 }
 
 void *CDataFileReader::GetDataSwapped(int Index)

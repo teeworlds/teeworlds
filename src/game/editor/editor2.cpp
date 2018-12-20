@@ -1,6 +1,7 @@
 // LordSk
 #include "editor2.h"
 
+#include <zlib.h> // crc32
 #include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
@@ -12,7 +13,7 @@
 //#include <intrin.h>
 
 // TODO:
-// - Change history (undo/redo stack)
+// - Move image handling / embedded file handling to a CEditorMapAssets class?
 // - Allow brush to go in eraser mode, automapper mode
 // - Binds
 // - Smooth zoom
@@ -59,6 +60,15 @@ inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 {
 	return (Pos.x >= Rect.x && Pos.x < (Rect.x+Rect.w) &&
 			Pos.y >= Rect.y && Pos.y < (Rect.y+Rect.h));
+}
+
+// hash
+inline u32 fnv1a32(const void* data, u32 dataSize)
+{
+	u32 hash = 2166136261;
+	for(u32 i = 0; i < dataSize; ++i)
+		hash = (hash ^ ((const char*)data)[i]) * 16777619;
+	return hash;
 }
 
 void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
@@ -186,6 +196,7 @@ bool CEditorMap::Load(const char* pFileName)
 	m_aPath[FilenameLen] = 0;
 
 	Clear();
+	ClearEmbeddedFiles();
 
 	int GroupsStart, GroupsNum;
 	int LayersStart, LayersNum;
@@ -332,69 +343,54 @@ bool CEditorMap::Load(const char* pFileName)
 	{
 		mem_zero(&m_aImageNames[i], sizeof(m_aImageNames[i]));
 
-		int TextureFlags = 0;
-		bool FoundQuadLayer = false;
-		bool FoundTileLayer = false;
-		const int LayerCount = m_aLayers.Count();
-		for(int li = 0; li < LayerCount; li++)
-		{
-			const CLayer& Layer = m_aLayers[li];
-			if(!FoundQuadLayer && Layer.m_Type == LAYERTYPE_QUADS && Layer.m_ImageID == i)
-				FoundQuadLayer = true;
-			if(!FoundTileLayer && Layer.m_Type == LAYERTYPE_TILES && Layer.m_ImageID == i)
-				FoundTileLayer = true;
-		}
-		if(FoundTileLayer)
-			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION :
-											IGraphics::TEXLOAD_ARRAY_256;
+		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
 
 		CMapItemImage *pImg = (CMapItemImage *)File.GetItem(ImagesStart+i, 0, 0);
-		m_aTextureInfos[i].m_Flags = TextureFlags;
-		m_aTextureInfos[i].m_Data = nullptr;
+		const char *pImgName = (char *)File.GetData(pImg->m_ImageName);
+		mem_copy(&m_aImageNames[i], pImgName, min((u64)str_length(pImgName), sizeof(m_aImageNames[i])-1));
+		m_aTextureInfos[i].m_pData = nullptr;
 		m_aTextureInfos[i].m_Width = pImg->m_Width;
 		m_aTextureInfos[i].m_Height = pImg->m_Height;
 
 		if(pImg->m_External)
 		{
+			m_aImageEmbeddedCrc[i] = 0; // external
 			char Buf[256];
-			const char *pName = (char *)File.GetData(pImg->m_ImageName);
-			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
+			str_format(Buf, sizeof(Buf), "mapres/%s.png", pImgName);
 			m_aTextureHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
 				TextureFlags);
-			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
-				m_aTexture2DHandle[i] = m_aTextureHandle[i];
-			else
-			{
-				m_aTexture2DHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
-															IGraphics::TEXLOAD_MULTI_DIMENSION);
-			}
-
-			mem_copy(&m_aImageNames[i], pName, min((uint64_t)str_length(pName), sizeof(m_aImageNames[i])-1));
 			m_aTextureInfos[i].m_Format = CImageInfo::FORMAT_AUTO;
-			ed_dbg("mapres/%s.png loaded", pName);
+			ed_dbg("mapres/%s.png loaded", pImgName);
 		}
 		else
 		{
-			void *pData = File.GetData(pImg->m_ImageData);
+			unsigned long DataSize = 0;
+			void *pData = File.GetData(pImg->m_ImageData, &DataSize);
+			dbg_assert(DataSize > 0, "DataSize is invalid");
+
+			// save embedded data
+			void* pDataCopy = mem_alloc(DataSize, 0);
+			memmove(pDataCopy, pData, DataSize);
+
+			CEmbeddedFile EmbeddedFile;
+			u32 Crc = crc32(0L, 0x0, 0);
+			Crc = crc32(Crc, (u8*)pData, DataSize);
+			EmbeddedFile.m_Crc = Crc;
+			EmbeddedFile.m_Type = 0;
+			EmbeddedFile.m_pData = pDataCopy;
+			m_aEmbeddedFile[m_EmbeddedFileCount++] = EmbeddedFile;
+			m_aImageEmbeddedCrc[i] = Crc;
+
 			m_aTextureHandle[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
 				pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
 				CImageInfo::FORMAT_RGBA, TextureFlags);
 
-			if(TextureFlags == IGraphics::TEXLOAD_MULTI_DIMENSION)
-				m_aTexture2DHandle[i] = m_aTextureHandle[i];
-			else
-			{
-				m_aTexture2DHandle[i] = m_pGraphics->LoadTextureRaw(pImg->m_Width, pImg->m_Height,
-					pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData,
-					CImageInfo::FORMAT_RGBA, IGraphics::TEXLOAD_MULTI_DIMENSION);
-			}
-
-			m_aTextureInfos[i].m_Data = (u8*)1; // TODO: copy image data
+			m_aTextureInfos[i].m_pData = pDataCopy;
 			m_aTextureInfos[i].m_Format = pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format;
 		}
 
 		dbg_assert(m_aTextureHandle[i].IsValid(), "Invalid texture");
-		m_TextureCount++;
+		m_ImageCount++;
 	}
 
 	return true;
@@ -472,13 +468,24 @@ void CEditorMap::Clear()
 	m_aEnvelopes.Clear();
 	m_aEnvPoints.Clear();
 
-	for(int i = 0; i < m_TextureCount; i++)
+	for(int i = 0; i < m_ImageCount; i++)
 	{
-		if(m_aTextureHandle[i].Id() != m_aTexture2DHandle[i].Id())
-			m_pGraphics->UnloadTexture(&m_aTexture2DHandle[i]);
 		m_pGraphics->UnloadTexture(&m_aTextureHandle[i]);
 	}
-	m_TextureCount = 0;
+	m_ImageCount = 0;
+}
+
+void CEditorMap::ClearEmbeddedFiles()
+{
+	for(int i = 0; i < m_EmbeddedFileCount; i++)
+	{
+		if(m_aEmbeddedFile[i].m_pData)
+		{
+			free(m_aEmbeddedFile[i].m_pData);
+			m_aEmbeddedFile[i].m_pData = nullptr;
+		}
+	}
+	m_EmbeddedFileCount = 0;
 }
 
 CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
@@ -514,9 +521,10 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 		SnapSize += sizeof(CEnvPoint) * m_aEnvelopes[ei].m_NumPoints;
 	}
 
-	const int ImageCount = m_TextureCount;
-	SnapSize += sizeof(CImageName) * ImageCount;
-	SnapSize += sizeof(CTextureInfo) * ImageCount;
+	const int ImageCount = m_ImageCount;
+	SnapSize += sizeof(CSnapshot::m_aImageNames[0]) * ImageCount; // m_aImageNames
+	SnapSize += sizeof(CSnapshot::m_aImageInfos[0]) * ImageCount; // m_aImageInfos
+	SnapSize += sizeof(CSnapshot::m_aImageEmbeddedCrc[0]) * ImageCount; // m_aImageEmbeddedCrc
 
 	ed_dbg("Map snapshot size = %lluKo", SnapSize/1024);
 
@@ -528,19 +536,21 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 	Snap.m_GameGroupID = m_GameGroupID;
 	Snap.m_GameLayerID = m_GameLayerID;
 	Snap.m_aImageNames = (CImageName*)(Snap.m_Data);
-	Snap.m_aImageInfos = (CTextureInfo*)(Snap.m_aImageNames + Snap.m_ImageCount);
-	Snap.m_aGroups = (CGroup*)(Snap.m_aImageInfos + Snap.m_ImageCount);
-	Snap.m_apLayers = (CMapItemLayer**)(Snap.m_aGroups + Snap.m_GroupCount);
+	Snap.m_aImageEmbeddedCrc = (u32*)(Snap.m_aImageNames + ImageCount);
+	Snap.m_aImageInfos = (CImageInfo*)(Snap.m_aImageEmbeddedCrc + ImageCount);
+	Snap.m_aGroups = (CGroup*)(Snap.m_aImageInfos + ImageCount);
+	Snap.m_apLayers = (CMapItemLayer**)(Snap.m_aGroups + GroupCount);
 
 	for(int i = 0; i < ImageCount; i++)
 	{
 		Snap.m_aImageNames[i] = m_aImageNames[i];
 	}
 
+	memmove(Snap.m_aImageEmbeddedCrc, m_aImageEmbeddedCrc, sizeof(Snap.m_aImageEmbeddedCrc[0]) * ImageCount);
+
 	for(int i = 0; i < ImageCount; i++)
 	{
 		Snap.m_aImageInfos[i] = m_aTextureInfos[i];
-		dbg_assert(m_aTextureInfos[i].m_Data == nullptr, "Implement saving embedded images");
 	}
 
 	for(int gi = 0; gi < GroupCount; gi++)
@@ -637,23 +647,19 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 	const CEditorMap::CSnapshot& Snap = *pSnapshot;
 
 	// save already loaded textures
-	// TODO: check for embedded images too
 	IGraphics::CTextureHandle aSavedTextures[MAX_TEXTURES];
-	IGraphics::CTextureHandle aSavedTextures2D[MAX_TEXTURES];
 
 	for(int si = 0; si < Snap.m_ImageCount; si++)
 	{
 		aSavedTextures[si].Invalidate();
 
-		for(int ti = 0; ti < m_TextureCount; ti++)
+		for(int ti = 0; ti < m_ImageCount; ti++)
 		{
 			if(mem_comp(&m_aImageNames[ti], &Snap.m_aImageNames[si],
 				sizeof(Snap.m_aImageNames[si])) == 0)
 			{
 				aSavedTextures[si] = m_aTextureHandle[ti];
-				aSavedTextures2D[si] = m_aTexture2DHandle[ti];
 				m_aTextureHandle[ti].Invalidate(); // prevents them from being unloaded by Clear()
-				m_aTexture2DHandle[ti].Invalidate();
 			}
 		}
 	}
@@ -662,40 +668,51 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 
 	m_GameGroupID = Snap.m_GameGroupID;
 	m_GameLayerID = Snap.m_GameLayerID;
-	m_TextureCount = Snap.m_ImageCount;
+	m_ImageCount = Snap.m_ImageCount;
 
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
 		m_aImageNames[i] = Snap.m_aImageNames[i];
 		m_aTextureInfos[i] = Snap.m_aImageInfos[i];
+		m_aImageEmbeddedCrc[i] = Snap.m_aImageEmbeddedCrc[i];
 
 		if(aSavedTextures[i].Id() == -1)
 		{
-			if(m_aTextureInfos[i].m_Data == nullptr) // external
+			if(m_aImageEmbeddedCrc[i] == 0) // external
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "mapres/%s.png", m_aImageNames[i]);
 				m_aTextureHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
-					m_aTextureInfos[i].m_Flags);
-				if(m_aTextureInfos[i].m_Flags == IGraphics::TEXLOAD_MULTI_DIMENSION)
-					m_aTexture2DHandle[i] = m_aTextureHandle[i];
-				else
-				{
-					m_aTexture2DHandle[i] = m_pGraphics->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO,
-						IGraphics::TEXLOAD_MULTI_DIMENSION);
-				}
+					IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 				ed_dbg("mapres/%s.png loaded", m_aImageNames[i]);
 			}
 			else
 			{
-				dbg_break(); // implement me!
+				const u32 Crc = m_aImageEmbeddedCrc[i];
+				const int EmbeddedFileCount = m_EmbeddedFileCount;
+				CEmbeddedFile* pFile = nullptr;
+				for(int f = 0; f < EmbeddedFileCount; f++)
+				{
+					if(m_aEmbeddedFile[f].m_Crc == Crc)
+					{
+						pFile = &m_aEmbeddedFile[f];
+						break;
+					}
+				}
+
+				// embedded file should be found, we're restoring a snapshot
+				dbg_assert(pFile != nullptr, "Embedded file not found");
+
+				const CImageInfo& ImgInfo = m_aTextureInfos[i];
+				m_aTextureHandle[i] = m_pGraphics->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height,
+					ImgInfo.m_Format, pFile->m_pData, CImageInfo::FORMAT_RGBA,
+					IGraphics::TEXLOAD_MULTI_DIMENSION);
 			}
 		}
 		else
 		{
 			m_aTextureHandle[i] = aSavedTextures[i];
-			m_aTexture2DHandle[i] = aSavedTextures2D[i];
 		}
 	}
 
@@ -760,9 +777,12 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 	dbg_assert(Snap.m_GroupCount == m_aGroups.Count(), "");
 	dbg_assert(Snap.m_LayerCount == m_aLayers.Count(), "");
 	dbg_assert(Snap.m_EnvelopeCount == m_aEnvelopes.Count(), "");
-	dbg_assert(Snap.m_ImageCount == m_TextureCount, "");
+	dbg_assert(Snap.m_ImageCount == m_ImageCount, "");
 	dbg_assert(Snap.m_GameGroupID == m_GameGroupID, "");
 	dbg_assert(Snap.m_GameLayerID == m_GameLayerID, "");
+
+	dbg_assert(mem_comp(Snap.m_aImageEmbeddedCrc, m_aImageEmbeddedCrc,
+		sizeof(Snap.m_aImageEmbeddedCrc[0]) * Snap.m_ImageCount) == 0, "");
 
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
@@ -852,6 +872,38 @@ CEditorMap::CLayer&CEditorMap::NewQuadLayer()
 	return m_aLayers.Add(QuadLayer);
 }
 
+/*CEditorAssets::CEditorAssets()
+{
+	Clear();
+}
+
+void CEditorAssets::Init(IGraphics* pGraphics)
+{
+	m_pGraphics = pGraphics;
+}
+
+void CEditorAssets::Clear()
+{
+	m_ImageCount = 0;
+	mem_zero(m_aImagePathHash, sizeof(m_aImagePathHash));
+	mem_zero(m_aImageDataHash, sizeof(m_aImageDataHash));
+
+	for(int i = 0; i < MAX_IMAGES; i++)
+		m_aImageTextureHandle[i].Invalidate();
+}
+
+int CEditorAssets::LoadQuadImage(const char* aPath)
+{
+	const int PathLen = str_length(aPath);
+	const u32 Hash = fnv1a32(aPath, PathLen);
+
+
+
+	IGraphics::CTextureHandle TexHnd = Graphics()->LoadTexture(aPath, IStorage::TYPE_ALL,
+		CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	return -1;
+}*/
+
 IEditor *CreateEditor() { return new CEditor; }
 
 CEditor::CEditor()
@@ -896,6 +948,7 @@ void CEditor::Init()
 	m_pConsole->Register("show_grid", "i", CFGFLAG_EDITOR, ConShowGrid, this, "Toggle grid");
 	m_pConsole->Register("undo", "", CFGFLAG_EDITOR, ConUndo, this, "Undo");
 	m_pConsole->Register("redo", "", CFGFLAG_EDITOR, ConRedo, this, "Redo");
+	m_pConsole->Register("delete_image", "i", CFGFLAG_EDITOR, ConDeleteImage, this, "Delete image");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
 
 	// grenade pickup
@@ -936,7 +989,7 @@ void CEditor::Init()
 	m_Map.LoadDefault();
 	OnMapLoaded();
 	*/
-	if(!LoadMap("maps/ctf7.map")) {
+	if(!LoadMap("maps/ctf_medieval_v2.map")) {
 		dbg_break();
 	}
 }
@@ -1990,7 +2043,7 @@ void CEditor::RenderPopupBrushPalette()
 	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
 		PaletteTexture = m_EntitiesTexture;
 	else
-		PaletteTexture = m_Map.m_aTexture2DHandle[SelectedTileLayer.m_ImageID];
+		PaletteTexture = m_Map.m_aTextureHandle[SelectedTileLayer.m_ImageID];
 
 	CUIRect ImageRect = MainRect;
 	ImageRect.w = min(ImageRect.w, ImageRect.h);
@@ -2157,7 +2210,7 @@ void CEditor::RenderBrush(vec2 Pos)
 	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
 		LayerTexture = m_EntitiesTexture;
 	else
-		LayerTexture = m_Map.m_aTexture2DHandle[SelectedTileLayer.m_ImageID];
+		LayerTexture = m_Map.m_aTextureHandle[SelectedTileLayer.m_ImageID];
 
 	const vec4 White(1, 1, 1, 1);
 
@@ -2840,6 +2893,33 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	HistoryNewEntry("Deleted layer", aBuff);
 }
 
+void CEditor::EditDeleteImage(int ImgID)
+{
+	dbg_assert(ImgID >= 0 && ImgID <= m_Map.m_ImageCount, "ImgID out of bounds");
+
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s", m_Map.m_aImageNames[ImgID]);
+
+	const int SwappedID = m_Map.m_ImageCount-1;
+	swap(m_Map.m_aImageNames[ImgID], m_Map.m_aImageNames[SwappedID]);
+	swap(m_Map.m_aImageEmbeddedCrc[ImgID], m_Map.m_aImageEmbeddedCrc[SwappedID]);
+	swap(m_Map.m_aTextureHandle[ImgID], m_Map.m_aTextureHandle[SwappedID]);
+	swap(m_Map.m_aTextureInfos[ImgID], m_Map.m_aTextureInfos[SwappedID]);
+	m_Map.m_ImageCount--;
+
+	const int LayerCount = m_Map.m_aLayers.Count();
+	for(int li = 0; li < LayerCount; li++)
+	{
+		if(m_Map.m_aLayers[li].m_ImageID == ImgID)
+			m_Map.m_aLayers[li].m_ImageID = -1;
+		if(m_Map.m_aLayers[li].m_ImageID == SwappedID)
+			m_Map.m_aLayers[li].m_ImageID = ImgID;
+	}
+
+	// history entry
+	HistoryNewEntry("Deleted image", aHistoryEntryDesc);
+}
+
 void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
 	CHistoryEntry* pEntry;
@@ -2936,4 +3016,10 @@ void CEditor::ConRedo(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor *pSelf = (CEditor *)pUserData;
 	pSelf->HistoryRedo();
+}
+
+void CEditor::ConDeleteImage(IConsole::IResult* pResult, void* pUserData)
+{
+	CEditor *pSelf = (CEditor *)pUserData;
+	pSelf->EditDeleteImage(pResult->GetInteger(0));
 }
