@@ -300,7 +300,7 @@ struct CEditorMap
 {
 	enum
 	{
-		MAX_TEXTURES=128,
+		MAX_IMAGES=128,
 		MAX_GROUP_LAYERS=64,
 		MAX_IMAGE_NAME_LEN=64,
 		MAX_EMBEDDED_FILES=64,
@@ -364,6 +364,18 @@ struct CEditorMap
 		void* m_pData;
 	};
 
+	struct CAssets
+	{
+		CImageName m_aImageNames[MAX_IMAGES];
+		u32 m_aImageEmbeddedCrc[MAX_IMAGES];
+		IGraphics::CTextureHandle m_aTextureHandle[MAX_IMAGES];
+		CImageInfo m_aTextureInfos[MAX_IMAGES];
+		int m_ImageCount = 0;
+
+		CEmbeddedFile m_aEmbeddedFile[MAX_EMBEDDED_FILES];
+		int m_EmbeddedFileCount;
+	};
+
 	// used for undo/redo
 	struct CSnapshot
 	{
@@ -404,14 +416,7 @@ struct CEditorMap
 	CChainAllocator<CGroup> m_GroupDispenser;
 	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
 
-	CImageName m_aImageNames[MAX_TEXTURES];
-	u32 m_aImageEmbeddedCrc[MAX_TEXTURES];
-	IGraphics::CTextureHandle m_aTextureHandle[MAX_TEXTURES];
-	CImageInfo m_aTextureInfos[MAX_TEXTURES];
-	int m_ImageCount = 0;
-
-	CEmbeddedFile m_aEmbeddedFile[MAX_EMBEDDED_FILES];
-	int m_EmbeddedFileCount;
+	CAssets m_Assets;
 
 	IGraphics* m_pGraphics;
 	IConsole *m_pConsole;
@@ -426,7 +431,12 @@ struct CEditorMap
 	bool Load(const char *pFileName);
 	void LoadDefault();
 	void Clear();
-	void ClearEmbeddedFiles();
+
+	// loads not-loaded images, clears the rest
+	void AssetsClearAndSetImages(CImageName* aName, CImageInfo* aInfo, u32* aImageEmbeddedCrc, int ImageCount);
+	u32 AssetsAddEmbeddedData(void* pData, u64 DataSize);
+	void AssetsClearEmbeddedFiles();
+	void AssetsDeleteImage(int ImgID);
 
 	CSnapshot* SaveSnapshot();
 	void RestoreSnapshot(const CSnapshot* pSnapshot);
