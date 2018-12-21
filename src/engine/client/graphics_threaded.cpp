@@ -373,9 +373,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
-	// kick the buffer and wait for the result
-	KickCommandBuffer();
-	WaitForIdle();
 
 	return CreateTextureHandle(Tex);
 }
