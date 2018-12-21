@@ -385,7 +385,15 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			Item.m_Rect.VSplitLeft(5.0f, 0, &Item.m_Rect);
 			FileIcon.Margin(3.0f, &FileIcon);
 			FileIcon.x += 3.0f;
-			const vec4 IconColor = DemoMarkerCount > 0 ? vec4(0.5, 1, 0.5, 1) : vec4(1,1,1,1);
+
+			vec4 IconColor = vec4(1, 1, 1, 1);
+			if(!DemoItem.m_IsDir)
+			{
+				IconColor = vec4(0.6, 0.6, 0.6, 1); // not loaded
+				if(DemoItem.m_Valid && DemoItem.m_InfosLoaded)
+					IconColor = DemoMarkerCount > 0 ? vec4(0.5, 1, 0.5, 1) : vec4(1,1,1,1);
+			}
+
 			DoIconColor(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
 			if((&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex) // selected
 			{
