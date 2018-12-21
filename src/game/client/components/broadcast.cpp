@@ -315,6 +315,16 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 				}
 			}
 
+			if(*c == '\n')
+			{
+				CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
+									 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
+				if(Line.m_StrLen > 0)
+					UserLines[UserLineCount++] = Line;
+				LastUserLineStartPoint = m_aSrvBroadcastMsgLen;
+				continue;
+			}
+
 			if(m_aSrvBroadcastMsgLen+Utf8Len < MAX_BROADCAST_MSG_LENGTH)
 				m_aSrvBroadcastMsg[m_aSrvBroadcastMsgLen++] = *c;
 		}
