@@ -971,7 +971,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 		{
 			pState->m_ListBoxDoneEvents = 1;
 
-			if(m_EnterPressed || (UI()->CheckActiveItem(pId) && Input()->MouseDoubleClick()))
+			if(m_EnterPressed || (UI()->LastActiveItem() == pId && Input()->MouseDoubleClick()))
 			{
 				pState->m_ListBoxItemActivated = true;
 				UI()->SetActiveItem(0);

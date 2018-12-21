@@ -358,10 +358,9 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	CUIRect ListBox, Button, Label, FileIcon;
 	MainView.HSplitTop(230.0f, &ListBox, &MainView);
 
-	static int s_DemoListId = 0;
 	static CListBoxState s_ListBoxState;
 	UiDoListboxHeader(&s_ListBoxState, &ListBox, Localize("Recorded"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_DemoListId, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
+	UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, (void*)(&r.front()));
@@ -372,7 +371,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			FileIcon.Margin(3.0f, &FileIcon);
 			FileIcon.x += 3.0f;
 			DoIcon(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon);
-			if(!str_comp(m_lDemos[m_DemolistSelectedIndex].m_aName, r.front().m_aName))
+			if((&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex) // selected
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
