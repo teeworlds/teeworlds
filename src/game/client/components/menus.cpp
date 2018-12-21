@@ -107,6 +107,18 @@ int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)
 	return 0;
 }
 
+void CMenus::DoIconColor(int ImageId, int SpriteId, const CUIRect* pRect, const vec4& Color)
+{
+	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
+
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SpriteId);
+	Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+}
+
 int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active)
 {
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
