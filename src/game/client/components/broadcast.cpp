@@ -315,7 +315,7 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 				}
 			}
 
-			if(*c == CharUtf8 && *c == '\n')
+			if(*c == '\n')
 			{
 				CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
 									 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
