@@ -967,13 +967,18 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 	}
 
 	CListboxItem Item = UiDoListboxNextRow(pState);
+	static bool s_ItemClicked = false;
 
 	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_HitRect))
 	{
+		s_ItemClicked = true;
 		pState->m_ListBoxNewSelected = ThisItemIndex;
 		if(pActive)
 			*pActive = true;
 	}
+	else
+		s_ItemClicked = false;
+
 	const bool ProcessInput = !pActive || *pActive;
 
 	// process input, regard selected index
@@ -983,7 +988,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 		{
 			pState->m_ListBoxDoneEvents = 1;
 
-			if(m_EnterPressed || (UI()->LastActiveItem() == pId && Input()->MouseDoubleClick()))
+			if(m_EnterPressed || (s_ItemClicked && Input()->MouseDoubleClick()))
 			{
 				pState->m_ListBoxItemActivated = true;
 				UI()->SetActiveItem(0);
