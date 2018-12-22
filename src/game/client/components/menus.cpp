@@ -107,6 +107,18 @@ int CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect)
 	return 0;
 }
 
+void CMenus::DoIconColor(int ImageId, int SpriteId, const CUIRect* pRect, const vec4& Color)
+{
+	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
+
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SpriteId);
+	Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+}
+
 int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active)
 {
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GUIBUTTONS].m_Id);
@@ -955,13 +967,18 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 	}
 
 	CListboxItem Item = UiDoListboxNextRow(pState);
+	static bool s_ItemClicked = false;
 
 	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_HitRect))
 	{
+		s_ItemClicked = true;
 		pState->m_ListBoxNewSelected = ThisItemIndex;
 		if(pActive)
 			*pActive = true;
 	}
+	else
+		s_ItemClicked = false;
+
 	const bool ProcessInput = !pActive || *pActive;
 
 	// process input, regard selected index
@@ -971,7 +988,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 		{
 			pState->m_ListBoxDoneEvents = 1;
 
-			if(m_EnterPressed || (UI()->CheckActiveItem(pId) && Input()->MouseDoubleClick()))
+			if(m_EnterPressed || (s_ItemClicked && Input()->MouseDoubleClick()))
 			{
 				pState->m_ListBoxItemActivated = true;
 				UI()->SetActiveItem(0);
