@@ -2043,8 +2043,8 @@ void CClient::Run()
 
 			Update();
 
-			if(m_EditorActive)
-				m_pEditor->Update();
+			/*if(m_EditorActive)
+				m_pEditor->Update();*/
 
 			const bool SkipFrame = LimitFps();
 
@@ -2071,6 +2071,7 @@ void CClient::Run()
 						Render();
 					else
 					{
+						m_pEditor->Update();
 						m_pEditor->Render();
 						DebugRender();
 					}

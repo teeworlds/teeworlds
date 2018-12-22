@@ -2376,6 +2376,13 @@ void CEditor::RenderAssetManager()
 		{
 			EditDeleteImage(m_UiSelectedImageID);
 		}
+
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+		static CUITextInputState s_TextInputAdd = {};
+		char aAddPath[256];
+		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
 	}
 
 	if(m_UiSelectedImageID >= Assets.m_ImageCount)
@@ -2567,7 +2574,7 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 		if(UI()->MouseButton(0))
 		{
 			pButState->m_Pressed = true;
-			if(pID && !UI()->GetActiveItem())
+			if(pID && UI()->GetActiveItem() == 0)
 				UI()->SetActiveItem(pID);
 		}
 	}
@@ -2598,6 +2605,18 @@ bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState*
 	DrawRectBorder(Rect, ShowButColor, 1, ColBorder);
 	DrawText(Rect, pText, FontSize);
 	return pButState->m_Clicked;
+}
+
+void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState)
+{
+	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
+	if(pInputState->m_Button.m_Clicked)
+		pInputState->m_Selected = true;
+	else if(UI()->MouseButtonClicked(0))
+		pInputState->m_Selected = false;
+
+	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1,
+		pInputState->m_Selected ? vec4(0,0.2,1,1) : StyleColorButtonBorder);
 }
 
 void CEditor::PopupBrushPaletteProcessInput(IInput::CEvent Event)

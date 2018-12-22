@@ -469,6 +469,12 @@ struct CUIButtonState
 	u8 m_Clicked = false;
 };
 
+struct CUITextInputState
+{
+	CUIButtonState m_Button;
+	u8 m_Selected = false;
+};
+
 struct CHistoryEntry
 {
 	CHistoryEntry* m_pPrev;
@@ -626,6 +632,8 @@ class CEditor: public IEditor
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize = 10);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
 					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
+	void UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
+
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void PopupBrushPaletteProcessInput(IInput::CEvent Event);
