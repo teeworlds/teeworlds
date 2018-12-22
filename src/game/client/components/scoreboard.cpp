@@ -640,14 +640,9 @@ void CScoreboard::OnRender()
 	if(!Active())
 		return;
 
-	// don't render scoreboard if menu is open
-	if(m_pClient->m_pMenus->IsActive())
+	// don't render scoreboard if menu or motd is open
+	if(m_pClient->m_pMenus->IsActive() || m_pClient->m_pMotd->IsActive())
 		return;
-
-	// if the score board is active, then we should clear the motd message aswell
-	if(m_pClient->m_pMotd->IsActive())
-		m_pClient->m_pMotd->Clear();
-
 
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
