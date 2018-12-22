@@ -1658,6 +1658,18 @@ int time_houroftheday()
 	return time_info->tm_hour;
 }
 
+int time_isxmasday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	if(time_info->tm_mon == 12 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
+		return 1;
+	return 0;
+}
+
 void str_append(char *dst, const char *src, int dst_size)
 {
 	int s = strlen(dst);

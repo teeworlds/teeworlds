@@ -41,6 +41,8 @@ public:
 	};
 
 	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
+	IGraphics::CTextureHandle m_HatTexture;
+	int m_HatSpriteIndex;
 	vec4 m_aColors[NUM_SKINPARTS];
 	float m_Size;
 	int m_GotAirJump;

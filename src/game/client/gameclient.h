@@ -60,7 +60,7 @@ class CGameClient : public IGameClient
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-
+	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
@@ -187,8 +187,8 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
-		void Reset(CGameClient *pGameClient);
+		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo);
+		void Reset(CGameClient *pGameClient, int CLientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
@@ -196,6 +196,7 @@ public:
 	int m_TeamCooldownTick;
 	bool m_MuteServerBroadcast;
 	float m_TeamChangeTime;
+	bool m_IsXmasDay;
 
 	struct CGameInfo
 	{
@@ -251,6 +252,7 @@ public:
 	virtual int ClientVersion() const;
 	const char *GetTeamName(int Team, bool Teamplay) const;
 	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
+	bool IsXmas() const;
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);

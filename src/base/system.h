@@ -467,6 +467,16 @@ int time_timestamp();
 */
 int time_houroftheday();
 
+/*
+	Function: time_isxmasday
+		Checks if it's xmas
+
+	Returns:
+		1 - if it's a xmas day
+		0 - if not
+*/
+int time_isxmasday();
+
 /* Group: Network General */
 typedef struct
 {

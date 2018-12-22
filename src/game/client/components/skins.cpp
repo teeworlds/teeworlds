@@ -270,6 +270,23 @@ void CSkins::OnInit()
 	// add dummy skin
 	if(!m_aSkins.size())
 		m_aSkins.add(m_DummySkin);
+
+	// add xmas hat
+	const char *pFileName = "skins/xmas_hat.png";
+	CImageInfo Info;
+	if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 128 || Info.m_Height != 512)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "failed to load xmas hat '%s'", pFileName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+	}
+	else
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	}
 }
 
 void CSkins::AddSkin(const char *pSkinName)
