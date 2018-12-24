@@ -6,6 +6,7 @@
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
+	IConsole *m_pConsole;
 
 	int m_InputGrabbed;
 

@@ -4,6 +4,7 @@
 
 #include <base/system.h>
 #include <engine/shared/config.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
@@ -48,6 +49,7 @@ CInput::CInput()
 void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	// FIXME: unicode handling: use SDL_StartTextInput/SDL_StopTextInput on inputs
 
 	MouseModeRelative();
@@ -83,6 +85,10 @@ void CInput::MouseModeRelative()
 	{
 		m_InputGrabbed = 1;
 		SDL_ShowCursor(SDL_DISABLE);
+		if(SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, g_Config.m_InpGrab ? "0" : "1", SDL_HINT_OVERRIDE) == SDL_FALSE)
+		{
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "input", "unable to switch relative mouse mode");
+		}
 		SDL_SetRelativeMouseMode(SDL_TRUE);
 		SDL_GetRelativeMouseState(NULL, NULL);
 	}
