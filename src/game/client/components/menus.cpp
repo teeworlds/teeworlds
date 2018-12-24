@@ -51,6 +51,8 @@ CMenus::CMenus()
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
+	m_NeedRestartPlayer = false;
+	m_NeedRestartTee = false;
 	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_RefreshSkinSelector = true;
@@ -1184,10 +1186,6 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 	if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage == PAGE_SETTINGS) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS))
 	{
-		if(Client()->State() == IClient::STATE_ONLINE && (g_Config.m_UiSettingsPage == SETTINGS_PLAYER || g_Config.m_UiSettingsPage == SETTINGS_TEE))
-		{
-			g_Config.m_UiSettingsPage = SETTINGS_GENERAL;
-		}
 		float Spacing = 3.0f;
 		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
 		float NotActiveAlpha = Client()->State() == IClient::STATE_ONLINE ? 0.5f : 1.0f;
@@ -1210,10 +1208,10 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
-		if(Client()->State() == IClient::STATE_OFFLINE)
 		{
 			static CButtonContainer s_PlayerButton;
-			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), g_Config.m_UiSettingsPage == SETTINGS_PLAYER, &Button))
+			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiSettingsPage == SETTINGS_PLAYER, &Button,
+				g_Config.m_UiSettingsPage == SETTINGS_PLAYER ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_PLAYER);
 				g_Config.m_UiSettingsPage = SETTINGS_PLAYER;
@@ -1222,15 +1220,16 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
-		if(Client()->State() == IClient::STATE_OFFLINE)
 		{
 			static CButtonContainer s_TeeButton;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), g_Config.m_UiSettingsPage == SETTINGS_TEE, &Button))
+			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiSettingsPage == SETTINGS_TEE, &Button,
+				g_Config.m_UiSettingsPage == SETTINGS_TEE ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
 				g_Config.m_UiSettingsPage = SETTINGS_TEE;
 			}
 		}
+
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
