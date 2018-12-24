@@ -648,6 +648,7 @@ void CGameContext::OnClientEnter(int ClientID)
 	{
 		CNetMsg_De_ClientEnter Msg;
 		Msg.m_pName = NewClientInfoMsg.m_pName;
+		Msg.m_ClientID = ClientID;
 		Msg.m_Team = NewClientInfoMsg.m_Team;
 		Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
 	}
