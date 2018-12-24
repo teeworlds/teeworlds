@@ -1665,7 +1665,7 @@ int time_isxmasday()
 
 	time(&time_data);
 	time_info = localtime(&time_data);
-	if(time_info->tm_mon == 12 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
+	if(time_info->tm_mon == 11 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
 		return 1;
 	return 0;
 }
