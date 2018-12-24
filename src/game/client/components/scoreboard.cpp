@@ -637,6 +637,10 @@ void CScoreboard::OnRender()
 	else if(m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick != Client()->GameTick())
 		m_SkipPlayerStatsReset = false;
 
+	// close the motd if we actively wanna look on the scoreboard
+	if(m_Active)
+		m_pClient->m_pMotd->Clear();
+
 	if(!Active())
 		return;
 

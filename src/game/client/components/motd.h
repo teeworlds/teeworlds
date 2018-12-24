@@ -9,8 +9,8 @@ class CMotd : public CComponent
 	// motd
 	int64 m_ServerMotdTime;
 	char m_aServerMotd[1024];
-	void Clear();
 public:
+	void Clear();
 	bool IsActive();
 	const char *GetMotd() const { return m_aServerMotd; }
 
