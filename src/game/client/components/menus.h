@@ -270,6 +270,8 @@ private:
 	static float ms_BackgroundAlpha;
 
 	// for settings
+	bool m_NeedRestartPlayer;
+	bool m_NeedRestartTee;
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;

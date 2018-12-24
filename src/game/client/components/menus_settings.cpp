@@ -1105,6 +1105,14 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
 {
+	static int s_PlayerCountry = g_Config.m_PlayerCountry;
+	static char s_aPlayerName[256] = {0};
+	static char s_aPlayerClan[256] = {0};
+	if(!s_aPlayerName[0])
+		str_copy(s_aPlayerName, g_Config.m_PlayerName, sizeof(s_aPlayerName));
+	if(!s_aPlayerClan[0])
+		str_copy(s_aPlayerClan, g_Config.m_PlayerClan, sizeof(s_aPlayerClan));
+
 	CUIRect Button, Left, Right, TopView, Label, Background;
 
 	// render game menu backgrounds
@@ -1189,6 +1197,14 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
 	if(OldSelected != NewSelected)
 		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+
+
+	// check if the new settings require a server reload
+	m_NeedRestartPlayer = !(
+		s_PlayerCountry == g_Config.m_PlayerCountry &&
+		!str_comp(s_aPlayerClan, g_Config.m_PlayerClan) &&
+		!str_comp(s_aPlayerName, g_Config.m_PlayerName)
+		);
 }
 
 void CMenus::RenderSettingsTeeBasic(CUIRect MainView)
@@ -1244,6 +1260,9 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
 	static bool s_CustomSkinMenu = false;
+	static char s_aPlayerSkin[256] = {0};
+	if(!s_aPlayerSkin[0])
+		str_copy(s_aPlayerSkin, g_Config.m_PlayerSkin, sizeof(s_aPlayerSkin));
 
 	CUIRect Button, Label, BottomView, Preview, Background;
 
@@ -1377,8 +1396,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	else if(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0)
 	{
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-		static CButtonContainer s_CustomSkinSaveButton;
-		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Delete"), 0, &Button))
+		static CButtonContainer s_CustomSkinDeleteButton;
+		if(DoButton_Menu(&s_CustomSkinDeleteButton, Localize("Delete"), 0, &Button))
 			m_Popup = POPUP_DELETE_SKIN;
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
 	}
@@ -1392,6 +1411,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		else
 			s_CustomSkinMenu = true;
 	}
+	m_NeedRestartTee = str_comp(g_Config.m_PlayerSkin, s_aPlayerSkin);
 }
 
 //typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
@@ -1993,10 +2013,11 @@ void CMenus::RenderSettings(CUIRect MainView)
 	else if(g_Config.m_UiSettingsPage == SETTINGS_SOUND)
 		RenderSettingsSound(MainView);
 
-	MainView.HSplitBottom(60.0f, 0, &MainView);
+	MainView.HSplitBottom(32.0f, 0, &MainView);
 
 	// reset warning
-	if(m_NeedRestartGraphics || m_NeedRestartSound)
+	bool NeedReconnect = (m_NeedRestartPlayer || m_NeedRestartTee) && this->Client()->State() == IClient::STATE_ONLINE;
+	if(m_NeedRestartGraphics || m_NeedRestartSound || NeedReconnect)
 	{
 		// background
 		CUIRect RestartWarning;
@@ -2007,7 +2028,10 @@ void CMenus::RenderSettings(CUIRect MainView)
 		// text
 		TextRender()->TextColor(0.973f, 0.863f, 0.207, 1.0f);
 		RestartWarning.y += 2.0f;
-		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+		if(m_NeedRestartGraphics || m_NeedRestartSound)
+			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+		else if(NeedReconnect)
+			UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
