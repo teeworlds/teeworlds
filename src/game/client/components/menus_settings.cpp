@@ -2013,7 +2013,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	else if(g_Config.m_UiSettingsPage == SETTINGS_SOUND)
 		RenderSettingsSound(MainView);
 
-	MainView.HSplitBottom(60.0f, 0, &MainView);
+	MainView.HSplitBottom(32.0f, 0, &MainView);
 
 	// reset warning
 	bool NeedReconnect = (m_NeedRestartPlayer || m_NeedRestartTee) && this->Client()->State() == IClient::STATE_ONLINE;
@@ -2031,7 +2031,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		if(m_NeedRestartGraphics || m_NeedRestartSound)
 			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 		else if(NeedReconnect)
-			UI()->DoLabel(&RestartWarning, Localize("You must reconnect for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
