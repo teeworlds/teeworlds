@@ -1371,12 +1371,15 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int Cl
 				else
 					m_SkinPartIDs[p] = ID;
 			}
-			else if(m_SkinInfo.m_HatTexture.IsValid())
+			else
 			{
-				if(p == SKINPART_BODY && str_comp(m_aaSkinPartNames[p], "standard"))
-					m_SkinInfo.m_HatSpriteIndex = CSkins::HAT_OFFSET_SIDE+(ClientID%CSkins::HAT_NUM);
-				if(p == SKINPART_DECORATION && !str_comp(m_aaSkinPartNames[p], "twinbopp"))
-					m_SkinInfo.m_HatSpriteIndex = CSkins::HAT_OFFSET_SIDE+(ClientID%CSkins::HAT_NUM);
+				if(m_SkinInfo.m_HatTexture.IsValid())
+				{
+					if(p == SKINPART_BODY && str_comp(m_aaSkinPartNames[p], "standard"))
+						m_SkinInfo.m_HatSpriteIndex = CSkins::HAT_OFFSET_SIDE + (ClientID%CSkins::HAT_NUM);
+					if(p == SKINPART_DECORATION && !str_comp(m_aaSkinPartNames[p], "twinbopp"))
+						m_SkinInfo.m_HatSpriteIndex = CSkins::HAT_OFFSET_SIDE + (ClientID%CSkins::HAT_NUM);
+				}
 				m_SkinPartIDs[p] = ID;
 			}
 
