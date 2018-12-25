@@ -278,6 +278,7 @@ public:
 	bool LimitFps();
 	void Run();
 
+	void ConnectOnStart(const char *pAddress);
 
 	static void Con_Connect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Disconnect(IConsole::IResult *pResult, void *pUserData);
@@ -318,9 +319,5 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
-
-	// Teeworlds connect link
-	const char * const m_pConLinkIdentifier;
-	void HandleTeeworldsConnectLink(const char *pConLink);
 };
 #endif

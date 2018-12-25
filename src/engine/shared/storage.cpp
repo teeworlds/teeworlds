@@ -111,8 +111,11 @@ public:
 
 		while((pLine = LineReader.Get()))
 		{
-			if(str_length(pLine) > 9 && !str_comp_num(pLine, "add_path ", 9))
-				AddPath(pLine+9);
+			const char *pLineWithoutPrefix = str_startswith(pLine, "add_path ");
+			if(pLineWithoutPrefix)
+			{
+				AddPath(pLineWithoutPrefix);
+			}
 		}
 
 		io_close(File);
