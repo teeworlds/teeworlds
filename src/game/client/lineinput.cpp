@@ -1,11 +1,13 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/keys.h>
+#include <engine/input.h>
 #include "lineinput.h"
 
 CLineInput::CLineInput()
 {
 	Clear();
+	m_pInput = 0;
 }
 
 void CLineInput::Clear()
@@ -14,6 +16,11 @@ void CLineInput::Clear()
 	m_Len = 0;
 	m_CursorPos = 0;
 	m_NumChars = 0;
+}
+
+void CLineInput::Init(IInput *pInput)
+{
+	m_pInput = pInput;
 }
 
 void CLineInput::Set(const char *pString)
@@ -30,7 +37,15 @@ void CLineInput::Set(const char *pString)
 	}
 }
 
-bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr)
+bool CLineInput::CtrlStop(char c)
+{
+	// jump to spaces and special ASCII characters
+	return ((32 <= c && c <= 47) || //  !"#$%&'()*+,-./
+			(58 <= c && c <= 64) || // :;<=>?@
+			(91 <= c && c <= 96));  // [\]^_`
+}
+
+bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput)
 {
 	int NumChars = *pNumCharsPtr;
 	int CursorPos = *pCursorPosPtr;
@@ -74,31 +89,54 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		int Key = Event.m_Key;
+		bool Ctrl = false;
+#ifdef CONF_PLATFORM_MACOSX
+		if(pInput && (pInput->KeyIsPressed(KEY_LALT) || pInput->KeyIsPressed(KEY_RALT)))
+#else
+		if(pInput && (pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)))
+#endif
+			Ctrl = true;
 		if(Key == KEY_BACKSPACE && CursorPos > 0)
 		{
-			int NewCursorPos = str_utf8_rewind(pStr, CursorPos);
+			int NewCursorPos = CursorPos;
+			do
+			{
+				NewCursorPos = str_utf8_rewind(pStr, NewCursorPos);
+				NumChars -= 1;
+			} while(Ctrl && NewCursorPos > 0 && !CtrlStop(pStr[NewCursorPos - 1]));
 			int CharSize = CursorPos-NewCursorPos;
 			mem_move(pStr+NewCursorPos, pStr+CursorPos, Len - NewCursorPos - CharSize + 1); // +1 == null term
 			CursorPos = NewCursorPos;
 			Len -= CharSize;
-			if(CharSize > 0)
-				--NumChars;
 			Changes = true;
 		}
 		else if(Key == KEY_DELETE && CursorPos < Len)
 		{
-			int p = str_utf8_forward(pStr, CursorPos);
-			int CharSize = p-CursorPos;
+			int EndCursorPos = CursorPos;
+			do
+			{
+				EndCursorPos = str_utf8_forward(pStr, EndCursorPos);
+				NumChars -= 1;
+			} while(Ctrl && EndCursorPos < Len && !CtrlStop(pStr[EndCursorPos - 1]));
+			int CharSize = EndCursorPos - CursorPos;
 			mem_move(pStr + CursorPos, pStr + CursorPos + CharSize, Len - CursorPos - CharSize + 1); // +1 == null term
 			Len -= CharSize;
-			if(CharSize > 0)
-				--NumChars;
 			Changes = true;
 		}
 		else if(Key == KEY_LEFT && CursorPos > 0)
-			CursorPos = str_utf8_rewind(pStr, CursorPos);
+		{
+			do
+			{
+				CursorPos = str_utf8_rewind(pStr, CursorPos);
+			} while(Ctrl && CursorPos > 0 && !CtrlStop(pStr[CursorPos - 1]));
+		}
 		else if(Key == KEY_RIGHT && CursorPos < Len)
-			CursorPos = str_utf8_forward(pStr, CursorPos);
+		{
+			do
+			{
+				CursorPos = str_utf8_forward(pStr, CursorPos);
+			} while(Ctrl && CursorPos < Len && !CtrlStop(pStr[CursorPos - 1]));
+		}
 		else if(Key == KEY_HOME)
 			CursorPos = 0;
 		else if(Key == KEY_END)
@@ -114,5 +152,5 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 
 bool CLineInput::ProcessInput(IInput::CEvent e)
 {
-	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars);
+	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars, m_pInput);
 }
