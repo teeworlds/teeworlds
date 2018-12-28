@@ -531,7 +531,7 @@ private:
 	void HandleCallvote(int Page, bool Force);
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
-	void RenderServerControlServer(CUIRect MainView);
+	bool RenderServerControlServer(CUIRect MainView);
 
 	// found in menus_browser.cpp
 	// int m_ScrollOffset;
