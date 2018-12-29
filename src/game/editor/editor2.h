@@ -473,6 +473,8 @@ struct CUITextInputState
 {
 	CUIButtonState m_Button;
 	u8 m_Selected = false;
+	CLineInput m_LineInput;
+	int m_CursorPos;
 };
 
 struct CHistoryEntry
@@ -561,7 +563,7 @@ class CEditor: public IEditor
 		POPUP_BRUSH_PALETTE = 0
 	};
 
-	int m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+	int m_UiCurrentPopupID = POPUP_NONE;
 
 	struct CUIBrushPaletteState
 	{
@@ -579,6 +581,7 @@ class CEditor: public IEditor
 	vec2 m_UiMouseEndDragPos;
 	bool m_UiMouseIsDragging = false;
 	bool m_UiMouseLeftPressed = false;
+	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
 
 	struct CBrush
 	{
@@ -641,6 +644,7 @@ class CEditor: public IEditor
 	void Reset();
 	void ResetCamera();
 	void ChangeZoom(float Zoom);
+	void ChangePage(int Page);
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
 	void ClearBrush();

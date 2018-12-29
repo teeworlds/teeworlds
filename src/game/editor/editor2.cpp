@@ -1071,8 +1071,11 @@ void CEditor::Update()
 	for(int i = 0; i < Input()->NumEvents(); i++)
 	{
 		IInput::CEvent e = Input()->GetEvent(i);
-		if(!Input()->IsEventValid(&e))
-			continue;
+		// FIXME: this doesn't work with limitfps or asyncrender 1 (when a frame gets skipped)
+		// since we update only when we render
+		// in practice this isn't a big issue since the input stack gets cleared at the end of Render()
+		/*if(!Input()->IsEventValid(&e))
+			continue;*/
 		OnInput(e);
 	}
 
@@ -1140,8 +1143,8 @@ void CEditor::Update()
 				HistoryRedo();
 
 			// TODO: remove
-			if(Input()->KeyPress(KEY_A))
-				m_Page = (m_Page+1) % PAGE_COUNT_;
+			if(IsCtrlPressed && Input()->KeyPress(KEY_A))
+				ChangePage((m_Page+1) % PAGE_COUNT_);
 		}
 
 		if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
@@ -1149,8 +1152,6 @@ void CEditor::Update()
 		else if(!Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 			m_UiCurrentPopupID = POPUP_NONE;
 	}
-
-	Input()->Clear();
 }
 
 void CEditor::Render()
@@ -1187,6 +1188,7 @@ void CEditor::Render()
 	}
 
 	UI()->FinishCheck();
+	Input()->Clear();
 }
 
 void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
@@ -2381,7 +2383,7 @@ void CEditor::RenderAssetManager()
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
 		static CUITextInputState s_TextInputAdd = {};
-		char aAddPath[256];
+		static char aAddPath[256] = "grass_main.png";
 		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
 	}
 
@@ -2574,7 +2576,7 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 		if(UI()->MouseButton(0))
 		{
 			pButState->m_Pressed = true;
-			if(pID && UI()->GetActiveItem() == 0)
+			if(pID)
 				UI()->SetActiveItem(pID);
 		}
 	}
@@ -2611,12 +2613,31 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 {
 	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
-		pInputState->m_Selected = true;
-	else if(UI()->MouseButtonClicked(0))
-		pInputState->m_Selected = false;
+	{
+		pInputState->m_CursorPos = str_length(pText);
+		UI()->SetActiveItem(pInputState);
+	}
+	else if(UI()->MouseButtonClicked(0) && UI()->CheckActiveItem(pInputState))
+	{
+		UI()->SetActiveItem(0);
+	}
+
+	pInputState->m_Selected = UI()->CheckActiveItem(pInputState);
+
+	if(pInputState->m_Selected)
+	{
+		m_UiTextInputConsumeKeyboardEvents = true;
+		for(int i = 0; i < Input()->NumEvents(); i++)
+		{
+			int Len = str_length(pText);
+			int NumChars = Len;
+			CLineInput::Manipulate(Input()->GetEvent(i), pText, TextMaxLength, TextMaxLength, &Len, &pInputState->m_CursorPos, &NumChars, Input());
+		}
+	}
 
 	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1,
 		pInputState->m_Selected ? vec4(0,0.2,1,1) : StyleColorButtonBorder);
+	DrawText(Rect, pText, 8);
 }
 
 void CEditor::PopupBrushPaletteProcessInput(IInput::CEvent Event)
@@ -2748,6 +2769,13 @@ void CEditor::ChangeZoom(float Zoom)
 	m_MapUiPosOffset.x -= (NewRelMouseX-RelMouseX)/NewZoomWorldViewWidth*m_UiScreenRect.w;
 	m_MapUiPosOffset.y -= (NewRelMouseY-RelMouseY)/NewZoomWorldViewHeight*m_UiScreenRect.h;
 	m_Zoom = Zoom;
+}
+
+void CEditor::ChangePage(int Page)
+{
+	UI()->SetHotItem(0);
+	UI()->SetActiveItem(0);
+	m_Page = Page;
 }
 
 void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
