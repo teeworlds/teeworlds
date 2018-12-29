@@ -13,6 +13,9 @@
 //#include <intrin.h>
 
 // TODO:
+// - Easily know if we're clicking on UI or elsewhere
+//		- what event gets handled where should be VERY clear
+
 // - Allow brush to go in eraser mode, automapper mode
 // - Binds
 // - Smooth zoom
