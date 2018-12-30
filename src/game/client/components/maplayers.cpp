@@ -28,18 +28,39 @@ CMapLayers::CMapLayers(int t)
 	m_EnvelopeUpdate = false;
 	m_pMenuMap = 0;
 	m_pMenuLayers = 0;
+	m_OnlineStartTime = 0;
+}
+
+void CMapLayers::OnStateChange(int NewState, int OldState)
+{
+	if(NewState == IClient::STATE_ONLINE)
+		m_OnlineStartTime = Client()->LocalTime(); // reset time for non-scynchronized envelopes
 }
 
 void CMapLayers::LoadBackgroundMap()
 {
+	if(!g_Config.m_ClShowMenuMap)
+		return;
+
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "ui/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
+	// check for the appropriate day/night map
+	str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 	if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 	{
-		str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
-		return;
+		// fall back on generic map
+		str_format(aBuf, sizeof(aBuf), "ui/themes/%s.map", g_Config.m_ClMenuMap);
+		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+		{
+			// fall back on day/night alternative map
+			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "night" : "day");
+			if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
+			{
+				str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
+				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
+				return;
+			}
+		}
 	}
 
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
@@ -89,7 +110,7 @@ void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoi
 	pLayers->Map()->GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
 	if(!Num)
 		return;
-	
+
 
 	for(int env = 0; env < Num; env++)
 	{
@@ -167,14 +188,13 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(Env >= Num)
 		return;
 
-	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);	
+	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
 
-	static float s_Time = 0.0f;
-	static float s_LastLocalTime = pThis->Client()->LocalTime();
+	float Time = 0.0f;
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-		
+
 		if(!pInfo->m_Paused || pThis->m_EnvelopeUpdate)
 		{
 			if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
@@ -183,12 +203,12 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
 			}
 
-			s_Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
+			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
 						pThis->Client()->IntraGameTick());
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
@@ -196,20 +216,20 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
-				s_Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
+				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
 							pThis->Client()->IntraGameTick());
 			}
 			else
-				s_Time += pThis->Client()->LocalTime()-s_LastLocalTime;
+				Time = pThis->Client()->LocalTime()-pThis->m_OnlineStartTime;
 		}
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
-		s_LastLocalTime = pThis->Client()->LocalTime();
+
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 	else
 	{
-		s_Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+		Time = pThis->Client()->LocalTime();
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 }
 
@@ -230,7 +250,7 @@ void CMapLayers::OnRender()
 	CUIRect Screen;
 	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
 
-	vec2 Center = m_pClient->m_pCamera->m_Center;
+	vec2 Center = *m_pClient->m_pCamera->GetCenter();
 
 	bool PassedGameLayer = false;
 
@@ -242,18 +262,21 @@ void CMapLayers::OnRender()
 		{
 			// set clipping
 			float Points[4];
-			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_pCamera->m_Zoom);
+			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_pCamera->GetZoom());
 			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
 			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2]-Points[0]);
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
 			float x1 = ((pGroup->m_ClipX+pGroup->m_ClipW) - Points[0]) / (Points[2]-Points[0]);
 			float y1 = ((pGroup->m_ClipY+pGroup->m_ClipH) - Points[1]) / (Points[3]-Points[1]);
 
+			if(x1 < 0.0f || x0 > 1.0f || y1 < 0.0f || y0 > 1.0f)
+				continue;
+
 			Graphics()->ClipEnable((int)(x0*Graphics()->ScreenWidth()), (int)(y0*Graphics()->ScreenHeight()),
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
 		}
 
-		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->m_Zoom);
+		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->GetZoom());
 
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
@@ -285,7 +308,7 @@ void CMapLayers::OnRender()
 					Render = true;
 			}
 
-			if(Render && pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown(KEY_KP_0))
+			if(Render && pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_KP_0))
 			{
 				CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data);
@@ -363,6 +386,7 @@ void CMapLayers::ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserDa
 void CMapLayers::OnConsoleInit()
 {
 	Console()->Chain("cl_menu_map", ConchainBackgroundMap, this);
+	Console()->Chain("cl_show_menu_map", ConchainBackgroundMap, this);
 }
 
 void CMapLayers::BackgroundMapUpdate()

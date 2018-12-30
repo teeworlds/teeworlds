@@ -19,8 +19,9 @@ class IGameController
 
 	// activity
 	void DoActivityCheck();
-	bool GetPlayersReadyState();
+	bool GetPlayersReadyState(int WithoutID = -1);
 	void SetPlayersReadyState(bool ReadyState);
+	void CheckReadyStates(int WithoutID = -1);
 
 	// balancing
 	enum
@@ -102,7 +103,7 @@ protected:
 	int m_aTeamscore[NUM_TEAMS];
 
 	void EndMatch() { SetGameState(IGS_END_MATCH, TIMER_END); }
-	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END); }
+	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END/2); }
 
 	// info
 	int m_GameFlags;
@@ -141,6 +142,8 @@ public:
 			chr - The CCharacter that was spawned.
 	*/
 	virtual void OnCharacterSpawn(class CCharacter *pChr);
+
+	virtual void OnFlagReturn(class CFlag *pFlag);
 
 	/*
 		Function: on_entity
@@ -184,8 +187,10 @@ public:
 	virtual void Tick();
 
 	// info
+	void CheckGameInfo();
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
+	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
 	bool IsPlayerReadyMode() const;
 	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }

@@ -3,8 +3,10 @@
 #ifndef ENGINE_CLIENT_SERVERBROWSER_H
 #define ENGINE_CLIENT_SERVERBROWSER_H
 
-#include <base/tl/array.h>
 #include <engine/serverbrowser.h>
+#include "serverbrowser_entry.h"
+#include "serverbrowser_fav.h"
+#include "serverbrowser_filter.h"
 
 class CServerBrowser : public IServerBrowser
 {
@@ -15,138 +17,72 @@ public:
 		SET_FAV_ADD,
 		SET_TOKEN,
 	};
-
-	class CServerEntry
-	{
-	public:
-		NETADDR m_Addr;
-		int64 m_RequestTime;
-		int m_GotInfo;
-		CServerInfo m_Info;
-
-		CServerEntry *m_pNextIp; // ip hashed list
-
-		CServerEntry *m_pPrevReq; // request list
-		CServerEntry *m_pNextReq;
-	};
-
-	class CServerFilter
-	{
-	public:
-		CServerBrowser *m_pServerBrowser;
-
-		int m_SortHash;
-		char m_aGametype[32];
-		char m_aServerAddress[16];
-		int m_Ping;
-		int m_Country;
-
-		int m_NumSortedServers;
-		int m_NumSortedServersCapacity;
-
-		int m_NumPlayers;
-
-		int *m_pSortedServerlist;
-
-		~CServerFilter();
-
-		// sorting criterions
-		bool SortCompareName(int Index1, int Index2) const;
-		bool SortCompareMap(int Index1, int Index2) const;
-		bool SortComparePing(int Index1, int Index2) const;
-		bool SortCompareGametype(int Index1, int Index2) const;
-		bool SortCompareNumPlayers(int Index1, int Index2) const;
-		bool SortCompareNumClients(int Index1, int Index2) const;
-
-		void Filter();
-		void Sort();
-		int SortHash() const;
-	};
-
-	array<CServerFilter> m_lFilters;
-
-	int AddFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
-	void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress);
-	void GetFilter(int Index, int *pSortHash, int *pPing, int *pCountry, char* pGametype, char* pServerAddress);
-	void RemoveFilter(int Index);
 		
 	CServerBrowser();
+	void Init(class CNetClient *pClient, const char *pNetVersion);
+	void Set(const NETADDR &Addr, int SetType, int Token, const CServerInfo *pInfo);
+	void Update(bool ForceResort);	
 
 	// interface functions
-	void Refresh(int Type);
+	void SetType(int Type);
+	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
 	bool IsRefreshingMasters() const { return m_pMasterServer->IsRefreshing(); }
 	int LoadingProgression() const;
 
-	int NumServers() const { return m_NumServers; }
-	int NumPlayers() const { return m_NumPlayers; }
+	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
+	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
+	int NumClients() const { return m_aServerlist[m_ActServerlistType].m_NumClients; }
+	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
 
-	int NumSortedServers(int Index) const { return m_lFilters[Index].m_NumSortedServers; }
-	int NumSortedPlayers(int Index) const { return m_lFilters[Index].m_NumPlayers; }
-	const CServerInfo *SortedGet(int FilterIndex, int Index) const;
-	const void *GetID(int FilterIndex, int Index) const;
+	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
+	int NumSortedPlayers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedPlayers(FilterIndex); }
+	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
+	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
 
-	bool IsFavorite(const NETADDR &Addr) { return FindFavoriteByAddr(Addr, 0) != 0; }
-	void AddFavorite(const CServerInfo *pEntry) { AddFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr, true); }
-	void RemoveFavorite(const CServerInfo *pEntry) { RemoveFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr); }
+	bool IsFavorite(const NETADDR &Addr) { return m_ServerBrowserFavorites.FindFavoriteByAddr(Addr, 0) != 0; }
+	void AddFavorite(const CServerInfo *pEntry);
+	void RemoveFavorite(const CServerInfo *pEntry);
 
-	//
-	void Update(bool ForceResort);
-	void Set(const NETADDR &Addr, int Type, int Token, const CServerInfo *pInfo);
-	void Request(const NETADDR &Addr) const;
+	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); };
+	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); }; 
+	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); };
+	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
-	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
+	static void CBFTrackPacket(int TrackID, void *pUser);
+	
+	void LoadServerlist();
+	void SaveServerlist();
 
 private:
-	CNetClient *m_pNetClient;
-	IMasterServer *m_pMasterServer;
+	class CNetClient *m_pNetClient;
 	class IConsole *m_pConsole;
-	class IEngine *m_pEngine;
-	class IFriends *m_pFriends;
-	char m_aNetVersion[128];
+	class IStorage *m_pStorage;
+	class IMasterServer *m_pMasterServer;
+		
+	class CServerBrowserFavorites m_ServerBrowserFavorites;
+	class CServerBrowserFilter m_ServerBrowserFilter;
 
-	CHeap m_ServerlistHeap;
+	class IConsole *Console() const { return m_pConsole; }
+	class IStorage *Storage() const { return m_pStorage; }
 
-	// favourite
-	enum
+	// serverlist
+	int m_ActServerlistType;
+	class CServerlist
 	{
-		FAVSTATE_LOOKUP=0,
-		FAVSTATE_LOOKUPCHECK,
-		FAVSTATE_INVALID,
-		FAVSTATE_ADDR,
-		FAVSTATE_HOST,
+	public:
+		class CHeap m_ServerlistHeap;
 
-		MAX_FAVORITES=256,
-	};
+		int m_NumClients;
+		int m_NumPlayers;
+		int m_NumServers;
+		int m_NumServerCapacity;
+	
+		CServerEntry *m_aServerlistIp[256]; // ip hash list
+		CServerEntry **m_ppServerlist;
 
-	struct CFavoriteServer
-	{
-		char m_aHostname[128];
-		NETADDR m_Addr;
-		int m_State;
-	} m_aFavoriteServers[MAX_FAVORITES];
-
-	int m_NumFavoriteServers;
-
-	struct CFavoriteLookup
-	{
-		class CHostLookup m_HostLookup;
-		int m_FavoriteIndex;
-		int m_LookupCount;
-		bool m_Active;
-	} m_FavLookup;
-
-	void UpdateFavorites();
-	CFavoriteServer *FindFavoriteByAddr(const NETADDR &Addr, int *Index);
-	CFavoriteServer *FindFavoriteByHostname(const char *pHostname, int *Index);
-	void RemoveFavoriteEntry(int Index);
-	void AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck);
-	void RemoveFavoriteEx(const char *pHostname, const NETADDR *Addr);
-
-	//
-	CServerEntry *m_aServerlistIp[256]; // ip hash list
-
-	CServerEntry **m_ppServerlist;
+		void Clear();
+	} m_aServerlist[NUM_TYPES];
 
 	CServerEntry *m_pFirstReqServer; // request list
 	CServerEntry *m_pLastReqServer;
@@ -154,30 +90,19 @@ private:
 
 	int m_NeedRefresh;
 
-	int m_NumServers;
-	int m_NumServerCapacity;
-
-	int m_NumPlayers;
-
 	// the token is to keep server refresh separated from each other
-	int m_CurrentToken;
+	int m_CurrentLanToken;
 
-	int m_ServerlistType;
+	int m_RefreshFlags;
 	int64 m_BroadcastTime;
+	int64 m_MasterRefreshTime;
 
-	CServerEntry *Find(const NETADDR &Addr);
-	CServerEntry *Add(const NETADDR &Addr);
-
-	void RemoveRequest(CServerEntry *pEntry);
+	CServerEntry *Add(int ServerlistType, const NETADDR &Addr);
+	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);
 	void QueueRequest(CServerEntry *pEntry);
-
-	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const;
-
-	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info);
-
-	static void ConAddFavorite(IConsole::IResult *pResult, void *pUserData);
-	static void ConRemoveFavorite(IConsole::IResult *pResult, void *pUserData);
-	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+	void RemoveRequest(CServerEntry *pEntry);
+	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry);
+	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
 };
 
 #endif

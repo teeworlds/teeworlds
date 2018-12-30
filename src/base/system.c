@@ -39,6 +39,7 @@
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>
+	#include <wincrypt.h>
 #else
 	#error NOT IMPLEMENTED
 #endif
@@ -59,7 +60,6 @@ static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
 
 static NETSTATS network_stats = {0};
-static MEMSTATS memory_stats = {0};
 
 static NETSOCKET invalid_socket = {NETTYPE_INVALID, -1, -1};
 
@@ -105,6 +105,94 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 		loggers[i](str);
 }
 
+#if defined(CONF_FAMILY_WINDOWS)
+static void logger_win_console(const char *line)
+{
+	#define _MAX_LENGTH 1024
+	#define _MAX_LENGTH_ERROR (_MAX_LENGTH+32)
+
+	static const int UNICODE_REPLACEMENT_CHAR = 0xfffd;
+
+	static const char *STR_TOO_LONG = "(str too long)";
+	static const char *INVALID_UTF8 = "(invalid utf8)";
+
+	wchar_t wline[_MAX_LENGTH_ERROR];
+	size_t len = 0;
+
+	const char *read = line;
+	const char *error = STR_TOO_LONG;
+	while(len < _MAX_LENGTH)
+	{
+		// Read a character. This also advances the read pointer
+		int glyph = str_utf8_decode(&read);
+		if(glyph < 0)
+		{
+			// If there was an error decoding the UTF-8 sequence,
+			// emit a replacement character. Since the
+			// str_utf8_decode function will not work after such
+			// an error, end the string here.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+			error = INVALID_UTF8;
+			wline[len] = glyph;
+			break;
+		}
+		else if(glyph == 0)
+		{
+			// A character code of 0 signals the end of the string.
+			error = 0;
+			break;
+		}
+		else if(glyph > 0xffff)
+		{
+			// Since the windows console does not really support
+			// UTF-16, don't mind doing actual UTF-16 encoding,
+			// but rather emit a replacement character.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+		}
+		else if(glyph == 0x2022)
+		{
+			// The 'bullet' character might get converted to a 'beep',
+			// so it will be replaced by the 'bullet operator'.
+			glyph = 0x2219;
+		}
+
+		// Again, since the windows console does not really support
+		// UTF-16, but rather something along the lines of UCS-2,
+		// simply put the character into the output.
+		wline[len++] = glyph;
+	}
+
+	if(error)
+	{
+		read = error;
+		while(1)
+		{
+			// Errors are simple ascii, no need for UTF-8
+			// decoding
+			char character = *read;
+			if(character == 0)
+				break;
+
+			dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for error");
+			wline[len++] = character;
+			read++;
+		}
+	}
+
+	// Terminate the line
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\r");
+	wline[len++] = '\r';
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\n");
+	wline[len++] = '\n';
+
+	// Ignore any error that might occur
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wline, len, 0, 0);
+
+	#undef _MAX_LENGTH
+	#undef _MAX_LENGTH_ERROR
+}
+#endif
+
 static void logger_stdout(const char *line)
 {
 	printf("%s\n", line);
@@ -128,7 +216,18 @@ static void logger_file(const char *line)
 	io_flush(logfile);
 }
 
-void dbg_logger_stdout() { dbg_logger(logger_stdout); }
+void dbg_logger_stdout()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	if(GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
+	{
+		dbg_logger(logger_win_console);
+		return;
+	}
+#endif
+	dbg_logger(logger_stdout);
+}
+
 void dbg_logger_debugger() { dbg_logger(logger_debugger); }
 void dbg_logger_file(const char *filename)
 {
@@ -160,79 +259,13 @@ static const int MEM_GUARD_VAL = 0xbaadc0de;
 
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
-	/* TODO: fix alignment */
-	/* TODO: add debugging */
-	MEMTAIL *tail;
-	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
-	dbg_assert(header != 0, "mem_alloc failure");
-	if(!header)
-		return NULL;
-	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
-	header->size = size;
-	header->filename = filename;
-	header->line = line;
-
-	memory_stats.allocated += header->size;
-	memory_stats.total_allocations++;
-	memory_stats.active_allocations++;
-
-	tail->guard = MEM_GUARD_VAL;
-
-	header->prev = (MEMHEADER *)0;
-	header->next = first;
-	if(first)
-		first->prev = header;
-	first = header;
-
-	/*dbg_msg("mem", "++ %p", header+1); */
-	return header+1;
+	return malloc(size);
 }
 
 void mem_free(void *p)
 {
-	if(p)
-	{
-		MEMHEADER *header = (MEMHEADER *)p - 1;
-		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
-
-		if(tail->guard != MEM_GUARD_VAL)
-			dbg_msg("mem", "!! %p", p);
-		/* dbg_msg("mem", "-- %p", p); */
-		memory_stats.allocated -= header->size;
-		memory_stats.active_allocations--;
-
-		if(header->prev)
-			header->prev->next = header->next;
-		else
-			first = header->next;
-		if(header->next)
-			header->next->prev = header->prev;
-
-		free(header);
-	}
+	free(p);
 }
-
-void mem_debug_dump(IOHANDLE file)
-{
-	char buf[1024];
-	MEMHEADER *header = first;
-	if(!file)
-		file = io_open("memory.txt", IOFLAG_WRITE);
-
-	if(file)
-	{
-		while(header)
-		{
-			str_format(buf, sizeof(buf), "%s(%d): %d", header->filename, header->line, header->size);
-			io_write(file, buf, strlen(buf));
-			io_write_newline(file);
-			header = header->next;
-		}
-
-		io_close(file);
-	}
-}
-
 
 void mem_copy(void *dest, const void *source, unsigned size)
 {
@@ -369,14 +402,44 @@ int io_flush(IOHANDLE io)
 	return 0;
 }
 
+struct THREAD_RUN
+{
+	void (*threadfunc)(void *);
+	void *u;
+};
+
+#if defined(CONF_FAMILY_UNIX)
+static void *thread_run(void *user)
+#elif defined(CONF_FAMILY_WINDOWS)
+static unsigned long __stdcall thread_run(void *user)
+#else
+#error not implemented
+#endif
+{
+	struct THREAD_RUN *data = user;
+	void (*threadfunc)(void *) = data->threadfunc;
+	void *u = data->u;
+	free(data);
+	threadfunc(u);
+	return 0;
+}
+
 void *thread_init(void (*threadfunc)(void *), void *u)
 {
+	struct THREAD_RUN *data = malloc(sizeof(*data));
+	data->threadfunc = threadfunc;
+	data->u = u;
 #if defined(CONF_FAMILY_UNIX)
-	pthread_t id;
-	pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
-	return (void*)id;
+	{
+		pthread_t id;
+		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		{
+			return 0;
+		}
+		return (void*)id;
+	}
 #elif defined(CONF_FAMILY_WINDOWS)
-	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, u, 0, NULL);
+	return CreateThread(NULL, 0, thread_run, data, 0, NULL);
 #else
 	#error not implemented
 #endif
@@ -853,7 +916,7 @@ static int priv_net_close_all_sockets(NETSOCKET sock)
 	return 0;
 }
 
-static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen)
+static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen, int use_random_port)
 {
 	int sock, e;
 
@@ -883,27 +946,46 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 #endif
 
 	/* bind the socket */
-	e = bind(sock, addr, sockaddrlen);
-	if(e != 0)
+	while(1)
 	{
+		/* pick random port */
+		if(use_random_port)
+		{
+			int port = htons(rand()%16384+49152);	/* 49152 to 65535 */
+			if(domain == AF_INET)
+				((struct sockaddr_in *)(addr))->sin_port = port;
+			else
+				((struct sockaddr_in6 *)(addr))->sin6_port = port;
+		}
+
+		e = bind(sock, addr, sockaddrlen);
+		if(e == 0)
+			break;
+		else
+		{
 #if defined(CONF_FAMILY_WINDOWS)
-		char buf[128];
-		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
+			char buf[128];
+			int error = WSAGetLastError();
+			if(error == WSAEADDRINUSE && use_random_port)
+				continue;
+			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
+				buf[0] = 0;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
+			if(errno == EADDRINUSE && use_random_port)
+				continue;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
 #endif
-		priv_net_close_socket(sock);
-		return -1;
+			priv_net_close_socket(sock);
+			return -1;
+		}
 	}
 
 	/* return the newly created socket */
 	return sock;
 }
 
-NETSOCKET net_udp_create(NETADDR bindaddr)
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port)
 {
 	NETSOCKET sock = invalid_socket;
 	NETADDR tmpbindaddr = bindaddr;
@@ -918,7 +1000,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
@@ -940,7 +1022,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
@@ -1077,7 +1159,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
@@ -1093,7 +1175,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
@@ -1357,19 +1439,46 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
-#if !defined(CONF_PLATFORM_MACOSX)
-	int i;
-#endif
 	if(!home)
 		return -1;
-
+	
 #if defined(CONF_PLATFORM_MACOSX)
 	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
-#else
+	return 0;
+#endif
+
+	int i;
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
+	/* old folder location */
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
-#endif
+
+	if(!xdgdatahome)
+	{
+		/* use default location */
+		snprintf(xdgpath, max, "%s/.local/share/%s", home, appname);
+		for(i = strlen(home)+14; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	else
+	{
+		snprintf(xdgpath, max, "%s/%s", xdgdatahome, appname);
+		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	
+	/* check for old location / backward compatibility */
+	if(fs_is_dir(path))
+	{
+		/* use old folder path */
+		/* for backward compatibility */
+		return 0;
+	}
+	
+	snprintf(path, max, "%s", xdgpath);
 
 	return 0;
 #endif
@@ -1547,6 +1656,18 @@ int time_houroftheday()
 	time(&time_data);
 	time_info = localtime(&time_data);
 	return time_info->tm_hour;
+}
+
+int time_isxmasday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	if(time_info->tm_mon == 11 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
+		return 1;
+	return 0;
 }
 
 void str_append(char *dst, const char *src, int dst_size)
@@ -1847,56 +1968,9 @@ int mem_comp(const void *a, const void *b, int size)
 	return memcmp(a,b,size);
 }
 
-const MEMSTATS *mem_stats()
-{
-	return &memory_stats;
-}
-
 void net_stats(NETSTATS *stats_inout)
 {
 	*stats_inout = network_stats;
-}
-
-void gui_messagebox(const char *title, const char *message)
-{
-#if defined(CONF_PLATFORM_MACOSX)
-	DialogRef theItem;
-	DialogItemIndex itemIndex;
-
-	/* FIXME: really needed? can we rely on glfw? */
-	/* HACK - get events without a bundle */
-	ProcessSerialNumber psn;
-	GetCurrentProcess(&psn);
-	TransformProcessType(&psn,kProcessTransformToForegroundApplication);
-	SetFrontProcess(&psn);
-	/* END HACK */
-
-	CreateStandardAlert(kAlertStopAlert,
-			CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII),
-			CFStringCreateWithCString(NULL, message, kCFStringEncodingASCII),
-			NULL,
-			&theItem);
-
-	RunStandardAlert(theItem, NULL, &itemIndex);
-#elif defined(CONF_FAMILY_UNIX)
-	static char cmd[1024];
-	int err;
-	/* use xmessage which is available on nearly every X11 system */
-	snprintf(cmd, sizeof(cmd), "xmessage -center -title '%s' '%s'",
-		title,
-		message);
-
-	err = system(cmd);
-	dbg_msg("gui/msgbox", "result = %i", err);
-#elif defined(CONF_FAMILY_WINDOWS)
-	MessageBox(NULL,
-		message,
-		title,
-		MB_ICONEXCLAMATION | MB_OK);
-#else
-	/* this is not critical */
-	#warning not implemented
-#endif
 }
 
 int str_isspace(char c) { return c == ' ' || c == '\n' || c == '\t'; }
@@ -2030,24 +2104,24 @@ int str_utf8_decode(const char **ptr)
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
 		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x3F) << 6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x80 || ch > 0x7FF) ch = -1;
 		}
 		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
 		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x1F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x800 || ch > 0xFFFF) ch = -1;
 		}
 		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
 		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x0F) << 18; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x10000 || ch > 0x10FFFF) ch = -1;
 		}
 		else
 		{
@@ -2093,6 +2167,69 @@ unsigned str_quickhash(const char *str)
 	return hash;
 }
 
+struct SECURE_RANDOM_DATA
+{
+	int initialized;
+#if defined(CONF_FAMILY_WINDOWS)
+	HCRYPTPROV provider;
+#else
+	IOHANDLE urandom;
+#endif
+};
+
+static struct SECURE_RANDOM_DATA secure_random_data = { 0 };
+
+int secure_random_init()
+{
+	if(secure_random_data.initialized)
+	{
+		return 0;
+	}
+#if defined(CONF_FAMILY_WINDOWS)
+	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+	{
+		secure_random_data.initialized = 1;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#else
+	secure_random_data.urandom = io_open("/dev/urandom", IOFLAG_READ);
+	if(secure_random_data.urandom)
+	{
+		secure_random_data.initialized = 1;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#endif
+}
+
+void secure_random_fill(void *bytes, unsigned length)
+{
+	if(!secure_random_data.initialized)
+	{
+		dbg_msg("secure", "called secure_random_fill before secure_random_init");
+		dbg_break();
+	}
+#if defined(CONF_FAMILY_WINDOWS)
+	if(!CryptGenRandom(secure_random_data.provider, length, bytes))
+	{
+		dbg_msg("secure", "CryptGenRandom failed, last_error=%d", GetLastError());
+		dbg_break();
+	}
+#else
+	if(length != io_read(secure_random_data.urandom, bytes, length))
+	{
+		dbg_msg("secure", "io_read returned with a short read");
+		dbg_break();
+	}
+#endif
+}
 
 #if defined(__cplusplus)
 }

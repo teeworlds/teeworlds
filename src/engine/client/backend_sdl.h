@@ -91,15 +91,21 @@ class CCommandProcessorFragment_OpenGL
 			STATE_EMPTY = 0,
 			STATE_TEX2D = 1,
 			STATE_TEX3D = 2,
+
+			MIN_GL_MAX_3D_TEXTURE_SIZE = 64,																					// GL_MAX_3D_TEXTURE_SIZE must be at least 64 according to the standard
+			MAX_ARRAYSIZE_TEX3D = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / MIN_GL_MAX_3D_TEXTURE_SIZE,	// = 4
 		};
 		GLuint m_Tex2D;
-		GLuint m_Tex3D;
+		GLuint m_Tex3D[MAX_ARRAYSIZE_TEX3D];
 		int m_State;
 		int m_Format;
 		int m_MemSize;
 	};
 	CTexture m_aTextures[CCommandBuffer::MAX_TEXTURES];
 	volatile int *m_pTextureMemoryUsage;
+	int m_MaxTexSize;
+	int m_Max3DTexSize;
+	int m_TextureArraySize;
 
 public:
 	enum
@@ -111,6 +117,7 @@ public:
 	{
 		SCommand_Init() : SCommand(CMD_INIT) {}
 		volatile int *m_pTextureMemoryUsage;
+		int *m_pTextureArraySize;
 	};
 
 private:
@@ -163,6 +170,7 @@ private:
 	void Cmd_Init(const SCommand_Init *pCommand);
 	void Cmd_Shutdown(const SCommand_Shutdown *pCommand);
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand);
+	void Cmd_VSync(const CCommandBuffer::SCommand_VSync *pCommand);
 	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand);
 public:
 	CCommandProcessorFragment_SDL();
@@ -187,14 +195,23 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 	SDL_GLContext m_GLContext;
 	ICommandProcessor *m_pProcessor;
 	volatile int m_TextureMemoryUsage;
+	int m_NumScreens;
+	int m_TextureArraySize;
 public:
-	virtual int Init(const char *pName, int Screen, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
+	virtual int Init(const char *pName, int *Screen, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight);
 	virtual int Shutdown();
 
 	virtual int MemoryUsage() const;
+	virtual int GetTextureArraySize() const { return m_TextureArraySize; }
+
+	virtual int GetNumScreens() const { return m_NumScreens; }
 
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual bool Fullscreen(bool State);		// on=true/off=false
+	virtual void SetWindowBordered(bool State);	// on=true/off=false
+	virtual bool SetWindowScreen(int Index);
+	virtual int GetWindowScreen();
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };

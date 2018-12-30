@@ -39,6 +39,7 @@ enum
 	// sent by server
 	NETMSG_MAP_CHANGE,		// sent when client should switch map
 	NETMSG_MAP_DATA,		// map transfer, contains a chunk of the map file
+	NETMSG_SERVERINFO,
 	NETMSG_CON_READY,		// connection is ready, client should send start info
 	NETMSG_SNAP,			// normal snapshot, multiple parts
 	NETMSG_SNAPEMPTY,		// empty snapshot
@@ -79,7 +80,8 @@ enum
 	SERVERINFO_LEVEL_MIN=0,
 	SERVERINFO_LEVEL_MAX=2,
 
-	MAX_CLIENTS=16,
+	MAX_CLIENTS=64,
+	MAX_PLAYERS=16,
 
 	MAX_INPUT_SIZE=128,
 	MAX_SNAPSHOT_PACKSIZE=900,

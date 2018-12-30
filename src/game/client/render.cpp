@@ -7,6 +7,7 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
+#include <engine/textrender.h>
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 #include <game/layers.h>
@@ -30,9 +31,9 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 	gs_SpriteHScale = h/f;
 
 	float x1 = x/(float)cx;
-	float x2 = (x+w)/(float)cx;
+	float x2 = (x+w-1/32.0f)/(float)cx;
 	float y1 = y/(float)cy;
-	float y2 = (y+h)/(float)cy;
+	float y2 = (y+h-1/32.0f)/(float)cy;
 	float Temp = 0;
 
 	if(Flags&SPRITE_FLAG_FLIP_Y)
@@ -116,14 +117,14 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 			x+(1-Ca1)*r, y-r+Sa1*r,
 			x+(1-Ca3)*r, y-r+Sa3*r,
 			x+(1-Ca2)*r, y-r+Sa2*r);
-	
+
 		if(Corners&32) // ITR
 		ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x+w, y,
 			x+w-r+Ca1*r, y-r+Sa1*r,
 			x+w-r+Ca3*r, y-r+Sa3*r,
 			x+w-r+Ca2*r, y-r+Sa2*r);
-	
+
 		if(Corners&64) // IBL
 		ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x, y+h,
@@ -225,7 +226,7 @@ void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 Co
 									x+(1-Ca2)*r, y-r+Sa2*r);
 			Graphics()->QuadsDrawFreeform(&ItemF, 1);
 		}
-	
+
 		if(Corners&32) // ITR
 		{
 			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
@@ -236,7 +237,7 @@ void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 Co
 									x+w-r+Ca2*r, y-r+Sa2*r);
 			Graphics()->QuadsDrawFreeform(&ItemF, 1);
 		}
-	
+
 		if(Corners&64) // IBL
 		{
 			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
@@ -332,11 +333,6 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
 
-	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
-
-	// TODO: FIX ME
-	//Graphics()->QuadsDraw(pos.x, pos.y-128, 128, 128);
-
 	// first pass we draw the outline
 	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
@@ -354,12 +350,12 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				IGraphics::CQuadItem Item;
 
 				// draw decoration
-				if(pInfo->m_aTextures[2].IsValid())
+				if(pInfo->m_aTextures[SKINPART_DECORATION].IsValid())
 				{
 					Graphics()->TextureSet(pInfo->m_aTextures[2]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-					Graphics()->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
+					Graphics()->SetColor(pInfo->m_aColors[SKINPART_DECORATION].r, pInfo->m_aColors[SKINPART_DECORATION].g, pInfo->m_aColors[SKINPART_DECORATION].b, pInfo->m_aColors[SKINPART_DECORATION].a);
 					SelectSprite(OutLine?SPRITE_TEE_DECORATION_OUTLINE:SPRITE_TEE_DECORATION, 0, 0, 0);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
@@ -367,7 +363,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 
 				// draw body (behind marking)
-				Graphics()->TextureSet(pInfo->m_aTextures[0]);
+				Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_BODY]);
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 				if(OutLine)
@@ -377,7 +373,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 				else
 				{
-					Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
+					Graphics()->SetColor(pInfo->m_aColors[SKINPART_BODY].r, pInfo->m_aColors[SKINPART_BODY].g, pInfo->m_aColors[SKINPART_BODY].b, pInfo->m_aColors[SKINPART_BODY].a);
 					SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
 				}
 				Item = BodyItem;
@@ -385,12 +381,13 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsEnd();
 
 				// draw marking
-				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
+				if(pInfo->m_aTextures[SKINPART_MARKING].IsValid() && !OutLine)
 				{
-					Graphics()->TextureSet(pInfo->m_aTextures[1]);
+					Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_MARKING]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
+					Graphics()->SetColor(pInfo->m_aColors[SKINPART_MARKING].r*pInfo->m_aColors[SKINPART_MARKING].a, pInfo->m_aColors[SKINPART_MARKING].g*pInfo->m_aColors[SKINPART_MARKING].a,
+						pInfo->m_aColors[SKINPART_MARKING].b*pInfo->m_aColors[SKINPART_MARKING].a, pInfo->m_aColors[SKINPART_MARKING].a);
 					SelectSprite(SPRITE_TEE_MARKING, 0, 0, 0);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
@@ -400,7 +397,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				// draw body (in front of marking)
 				if(!OutLine)
 				{
-					Graphics()->TextureSet(pInfo->m_aTextures[0]);
+					Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_BODY]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -414,10 +411,10 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 
 				// draw eyes
-				Graphics()->TextureSet(pInfo->m_aTextures[5]);
+				Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_EYES]);
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-				Graphics()->SetColor(pInfo->m_aColors[5].r, pInfo->m_aColors[5].g, pInfo->m_aColors[5].b, pInfo->m_aColors[5].a);
+				Graphics()->SetColor(pInfo->m_aColors[SKINPART_EYES].r, pInfo->m_aColors[SKINPART_EYES].g, pInfo->m_aColors[SKINPART_EYES].b, pInfo->m_aColors[SKINPART_EYES].a);
 				if(p == 1)
 				{
 					switch (Emote)
@@ -446,10 +443,37 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->QuadsDraw(&QuadItem, 1);
 				}
 				Graphics()->QuadsEnd();
+
+				// draw xmas hat
+				if(!OutLine && pInfo->m_HatTexture.IsValid())
+				{
+					Graphics()->TextureSet(pInfo->m_HatTexture);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi * 2);
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					int Flag = Direction.x < 0.0f ? SPRITE_FLAG_FLIP_X : 0;
+					switch(pInfo->m_HatSpriteIndex)
+					{
+					case 0:
+						SelectSprite(SPRITE_TEE_HATS_TOP1, Flag, 0, 0);
+						break;
+					case 1:
+						SelectSprite(SPRITE_TEE_HATS_TOP2, Flag, 0, 0);
+						break;
+					case 2:
+						SelectSprite(SPRITE_TEE_HATS_SIDE1, Flag, 0, 0);
+						break;
+					case 3:
+						SelectSprite(SPRITE_TEE_HATS_SIDE2, Flag, 0, 0);
+					}
+					Item = BodyItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
 			}
 
 			// draw feet
-			Graphics()->TextureSet(pInfo->m_aTextures[4]);
+			Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_FEET]);
 			Graphics()->QuadsBegin();
 			CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
@@ -469,7 +493,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				float cs = 1.0f; // color scale
 				if(Indicate)
 					cs = 0.5f;
-				Graphics()->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a);
+				Graphics()->SetColor(pInfo->m_aColors[SKINPART_FEET].r*cs, pInfo->m_aColors[SKINPART_FEET].g*cs, pInfo->m_aColors[SKINPART_FEET].b*cs, pInfo->m_aColors[SKINPART_FEET].a);
 				SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
 			}
 
@@ -478,6 +502,46 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			Graphics()->QuadsEnd();
 		}
 	}
+}
+
+void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+								 vec2 PostRotOffset)
+{
+	// in-game hand size is 15 when tee size is 64
+	float BaseSize = 15.0f * (pInfo->m_Size / 64.0f);
+
+	vec2 HandPos = CenterPos + Dir;
+	float Angle = angle(Dir);
+	if(Dir.x < 0)
+		Angle -= AngleOffset;
+	else
+		Angle += AngleOffset;
+
+	vec2 DirX = Dir;
+	vec2 DirY(-Dir.y,Dir.x);
+
+	if(Dir.x < 0)
+		DirY = -DirY;
+
+	HandPos += DirX * PostRotOffset.x;
+	HandPos += DirY * PostRotOffset.y;
+
+	const vec4 Color = pInfo->m_aColors[SKINPART_HANDS];
+	IGraphics::CQuadItem QuadOutline(HandPos.x, HandPos.y, 2*BaseSize, 2*BaseSize);
+	IGraphics::CQuadItem QuadHand = QuadOutline;
+
+	Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_HANDS]);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+	Graphics()->QuadsSetRotation(Angle);
+
+	SelectSprite(SPRITE_TEE_HAND_OUTLINE, 0, 0, 0);
+	Graphics()->QuadsDraw(&QuadOutline, 1);
+	SelectSprite(SPRITE_TEE_HAND, 0, 0, 0);
+	Graphics()->QuadsDraw(&QuadHand, 1);
+
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
@@ -556,4 +620,41 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 			}
 		}
 	}
+}
+
+void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
+								const vec4& BgColor, const vec4& TextColor)
+{
+	if(!g_Config.m_ClShowUserId) return;
+
+	char aBuff[4];
+	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
+
+	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
+	float FontSize = (int)(pCursor->m_FontSize * FakeToScreenY)/FakeToScreenY;
+
+	CUIRect Rect;
+	Rect.x = pCursor->m_X;
+	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.w = 1.4f * FontSize;
+	Rect.h = FontSize;
+	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
+
+	const float PrevX = pCursor->m_X;
+	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
+
+	// TODO: make a simple text one (no shadow)
+	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0), TextColor);
+
+	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
+}
+
+float CRenderTools::GetClientIdRectSize(float FontSize)
+{
+	if(!g_Config.m_ClShowUserId) return 0;
+	return 1.4f * FontSize + 0.2f * FontSize;
 }

@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
@@ -26,11 +27,11 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		CKillMsg Kill;
 		Kill.m_VictimID = pMsg->m_Victim;
 		Kill.m_VictimTeam = m_pClient->m_aClients[Kill.m_VictimID].m_Team;
-		str_copy(Kill.m_aVictimName, m_pClient->m_aClients[Kill.m_VictimID].m_aName, sizeof(Kill.m_aVictimName));
+		str_format(Kill.m_aVictimName, sizeof(Kill.m_aVictimName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_VictimID].m_aName : "");
 		Kill.m_VictimRenderInfo = m_pClient->m_aClients[Kill.m_VictimID].m_RenderInfo;
 		Kill.m_KillerID = pMsg->m_Killer;
 		Kill.m_KillerTeam = m_pClient->m_aClients[Kill.m_KillerID].m_Team;
-		str_copy(Kill.m_aKillerName, m_pClient->m_aClients[Kill.m_KillerID].m_aName, sizeof(Kill.m_aKillerName));
+		str_format(Kill.m_aKillerName, sizeof(Kill.m_aKillerName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_KillerID].m_aName : "");
 		Kill.m_KillerRenderInfo = m_pClient->m_aClients[Kill.m_KillerID].m_RenderInfo;
 		Kill.m_Weapon = pMsg->m_Weapon;
 		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;
@@ -58,14 +59,18 @@ void CKillMessages::OnRender()
 			continue;
 
 		float FontSize = 36.0f;
-		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
-		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
+		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1) + RenderTools()->GetClientIdRectSize(FontSize);
+		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1) + RenderTools()->GetClientIdRectSize(FontSize);
 
 		float x = StartX;
 
 		// render victim name
 		x -= VictimNameW;
-		TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
+
+		RenderTools()->DrawClientID(TextRender(), &Cursor, m_aKillmsgs[r].m_VictimID);
+		TextRender()->TextEx(&Cursor, m_aKillmsgs[r].m_aVictimName, -1);
 
 		// render victim tee
 		x -= 24.0f;
@@ -134,7 +139,10 @@ void CKillMessages::OnRender()
 
 			// render killer name
 			x -= KillerNameW;
-			TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
+			TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
+
+			RenderTools()->DrawClientID(TextRender(), &Cursor, m_aKillmsgs[r].m_KillerID);
+			TextRender()->TextEx(&Cursor, m_aKillmsgs[r].m_aKillerName, -1);
 		}
 
 		y += 46.0f;

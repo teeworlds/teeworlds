@@ -37,7 +37,7 @@ int CEcon::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	return 0;
 }
 
-void CEcon::SendLineCB(const char *pLine, void *pUserData)
+void CEcon::SendLineCB(const char *pLine, void *pUserData, bool Highlighted)
 {
 	static_cast<CEcon *>(pUserData)->Send(-1, pLine);
 }
@@ -135,10 +135,9 @@ void CEcon::Update()
 				m_NetConsole.Send(ClientID, aMsg);
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
-					if(!g_Config.m_EcBantime)
-						m_NetConsole.Drop(ClientID, "Too many authentication tries");
-					else
+					if(g_Config.m_EcBantime)
 						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), g_Config.m_EcBantime*60, "Too many authentication tries");
+					m_NetConsole.Drop(ClientID, "Too many authentication tries");
 				}
 			}
 		}

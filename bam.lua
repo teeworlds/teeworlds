@@ -1,4 +1,4 @@
-CheckVersion("0.4")
+CheckVersion("0.5")
 
 Import("configure.lua")
 Import("other/sdl/sdl.lua")
@@ -8,7 +8,7 @@ Import("other/freetype/freetype.lua")
 config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
-config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk"))
+config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
@@ -76,7 +76,7 @@ function ContentCompile(action, output)
 end
 
 
-function GenerateCommonSettings(settings)
+function GenerateCommonSettings(settings, conf, arch, compiler)
 	if compiler == "gcc" or compiler == "clang" then
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 	end
@@ -93,15 +93,16 @@ function GenerateCommonSettings(settings)
 		zlib = Compile(settings, Collect("src/engine/external/zlib/*.c"))
 	end
 
+	local md5 = Compile(settings, Collect("src/engine/external/md5/*.c"))
 	local wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	local png = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 	local json = Compile(settings, Collect("src/engine/external/json-parser/*.c"))
 
 	-- globally available libs
-	libs = {zlib=zlib, wavpack=wavpack, png=png, json=json}
+	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json}
 end
 
-function GenerateMacOSXSettings(settings, conf, arch)
+function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
 		settings.cc.flags:Add("-arch i386")
 		settings.link.flags:Add("-arch i386")
@@ -119,17 +120,23 @@ function GenerateMacOSXSettings(settings, conf, arch)
 		os.exit(1)
 	end
 
-	settings.cc.flags:Add("-mmacosx-version-min=10.5")
-	settings.link.flags:Add("-mmacosx-version-min=10.5")
+	-- c++ stdlib needed 
+	settings.cc.flags:Add("--stdlib=libc++")
+	settings.link.flags:Add("--stdlib=libc++")
+	-- this also needs the macOS min SDK version to be at least 10.7
+
+	settings.cc.flags:Add("-mmacosx-version-min=10.7")
+	settings.link.flags:Add("-mmacosx-version-min=10.7")
+
 	if config.minmacosxsdk.value == 1 then
-		settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
-		settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.5.sdk")
+		settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.7.sdk")
+		settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.7.sdk")
 	end
 
 	settings.link.frameworks:Add("Carbon")
 	settings.link.frameworks:Add("AppKit")
 
-	GenerateCommonSettings(settings, conf, arch)
+	GenerateCommonSettings(settings, conf, arch, compiler)
 
 	-- Build server launcher before adding game stuff
 	local serverlaunch = Link(settings, "serverlaunch", Compile(settings, "src/osxlaunch/server.m"))
@@ -160,20 +167,23 @@ function GenerateMacOSXSettings(settings, conf, arch)
 	BuildContent(settings)
 end
 
-function GenerateLinuxSettings(settings, conf, arch)
+function GenerateLinuxSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
+		settings.cc.flags:Add("-msse2") -- for the _mm_pause call
 		settings.cc.flags:Add("-m32")
 		settings.link.flags:Add("-m32")
 	elseif arch == "x86_64" then
 		settings.cc.flags:Add("-m64")
 		settings.link.flags:Add("-m64")
+	elseif arch == "armv7l" then
+		-- arm 32 bit
 	else
 		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
 		os.exit(1)
 	end
 	settings.link.libs:Add("pthread")
 
-	GenerateCommonSettings(settings, conf, arch)
+	GenerateCommonSettings(settings, conf, arch, compiler)
 
 	-- Master server, version server and tools
 	BuildEngineCommon(settings)
@@ -197,29 +207,23 @@ function GenerateLinuxSettings(settings, conf, arch)
 	BuildContent(settings)
 end
 
-function GenerateSolarisSettings(settings, conf, arch)
+function GenerateSolarisSettings(settings, conf, arch, compiler)
 	settings.link.libs:Add("socket")
 	settings.link.libs:Add("nsl")
 
-	GenerateLinuxSettings(settings, conf, arch)
+	GenerateLinuxSettings(settings, conf, arch, compiler)
 end
 
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	if compiler == "cl" then
 		if (target_arch == "x86" and arch ~= "ia32") or
-		   (target_arch == "x86_64" and arch ~= "x64" and arch ~= "x86_64") then
+		   (target_arch == "x86_64" and arch ~= "ia64" and arch ~= "amd64") then
 			print("Cross compiling is unsupported on Windows.")
 			os.exit(1)
 		end
-		settings.cc.flags:Add("/wd4244")
+		settings.cc.flags:Add("/wd4244", "/wd4577")
 	elseif compiler == "gcc" or config.compiler.driver == "clang" then
-		if target_arch == "x86" then
-			settings.cc.flags:Add("-m32")
-			settings.link.flags:Add("-m32")
-		elseif target_arch == "x86_64" then
-			settings.cc.flags:Add("-m64")
-			settings.link.flags:Add("-m64")
-		else
+		if target_arch ~= "x86" and target_arch ~= "x86_64" then
 			print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
 			os.exit(1)
 		end
@@ -237,8 +241,9 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.libs:Add("ws2_32")
 	settings.link.libs:Add("ole32")
 	settings.link.libs:Add("shell32")
+	settings.link.libs:Add("advapi32")
 
-	GenerateCommonSettings(settings, conf, target_arch)
+	GenerateCommonSettings(settings, conf, target_arch, compiler)
 
 	-- Master server, version server and tools
 	BuildEngineCommon(settings)
@@ -271,7 +276,7 @@ function SharedCommonFiles()
 	if not shared_common_files then
 		local network_source = ContentCompile("network_source", "generated/protocol.cpp")
 		local network_header = ContentCompile("network_header", "generated/protocol.h")
-		AddDependency(network_source, network_header)
+		AddDependency(network_source, network_header, "src/engine/shared/protocol.h")
 
 		local nethash = CHash("generated/nethash.cpp", "src/engine/shared/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 		shared_common_files = {network_source, nethash}
@@ -334,7 +339,7 @@ function BuildClient(settings, family, platform)
 	local game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), SharedClientFiles())
 	local game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 	
-	Link(settings, "teeworlds", libs["zlib"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor)
+	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor)
 end
 
 function BuildServer(settings, family, platform)
@@ -342,24 +347,24 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
 end
 
 function BuildTools(settings)
 	local tools = {}
 	for i,v in ipairs(Collect("src/tools/*.cpp", "src/tools/*.c")) do
 		local toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["wavpack"], libs["png"])
+		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"])
 	end
 	PseudoTarget(settings.link.Output(settings, "pseudo_tools") .. settings.link.extension, tools)
 end
 
 function BuildMasterserver(settings)
-	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"])
+	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"])
 end
 
 function BuildVersionserver(settings)
-	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"])
+	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"])
 end
 
 function BuildContent(settings)
@@ -380,6 +385,8 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	elseif compiler == "cl" then
 		SetDriversCL(settings)
 	else
+		-- apply compiler settings
+		config.compiler:Apply(settings)
 		compiler = config.compiler.driver
 	end
 	
@@ -413,11 +420,11 @@ function GenerateSettings(conf, arch, builddir, compiler)
 		GenerateWindowsSettings(settings, conf, arch, compiler)
 	elseif family == "unix" then
 		if platform == "macosx" then
-			GenerateMacOSXSettings(settings, conf, arch)
-		elseif platform == "linux" then
-			GenerateLinuxSettings(settings, conf, arch)
+			GenerateMacOSXSettings(settings, conf, arch, compiler)
 		elseif platform == "solaris" then
-			GenerateSolarisSettings(settings, conf, arch)
+			GenerateSolarisSettings(settings, conf, arch, compiler)
+		else -- Linux, BSD
+			GenerateLinuxSettings(settings, conf, arch, compiler)
 		end
 	end
 
@@ -452,7 +459,7 @@ if ScriptArgs['arch'] then
 else
 	if arch == "ia32" then
 		archs = {"x86"}
-	elseif arch == "x64" or arch == "amd64" then
+	elseif arch == "ia64" or arch == "amd64" then
 		archs = {"x86_64"}
 	else
 		archs = {arch}

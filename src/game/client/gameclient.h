@@ -49,7 +49,6 @@ class CGameClient : public IGameClient
 	class CCollision m_Collision;
 	CUI m_UI;
 
-	void DispatchInput();
 	void ProcessEvents();
 	void ProcessTriggeredEvents(int Events, vec2 Pos);
 	void UpdatePositions();
@@ -57,10 +56,11 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
+	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-
+	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
@@ -84,8 +84,9 @@ public:
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 
-	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
-	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
+	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
+	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
+	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
 
 	bool m_SuppressEvents;
 
@@ -100,6 +101,7 @@ public:
 	};
 	int m_ServerMode;
 
+	int m_DemoSpecMode;
 	int m_DemoSpecID;
 
 	vec2 m_LocalCharacterPos;
@@ -127,7 +129,7 @@ public:
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
 		int m_GameDataFlagSnapID;
-		
+
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
@@ -138,6 +140,7 @@ public:
 		struct CSpectateInfo
 		{
 			bool m_Active;
+			int m_SpecMode;
 			int m_SpectatorID;
 			bool m_UsePosition;
 			vec2 m_Position;
@@ -184,13 +187,16 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
-		void Reset(CGameClient *pGameClient);
+		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo);
+		void Reset(CGameClient *pGameClient, int CLientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
+	bool m_MuteServerBroadcast;
+	float m_TeamChangeTime;
+	bool m_IsXmasDay;
 
 	struct CGameInfo
 	{
@@ -223,6 +229,7 @@ public:
 	// hooks
 	virtual void OnConnected();
 	virtual void OnRender();
+	virtual void OnUpdate();
 	virtual void OnRelease();
 	virtual void OnInit();
 	virtual void OnConsoleInit();
@@ -242,12 +249,15 @@ public:
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	virtual int ClientVersion() const;
 	const char *GetTeamName(int Team, bool Teamplay) const;
+	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
+	bool IsXmas() const;
 
 	//
-	void DoEnterMessage(const char *pName, int Team);
-	void DoLeaveMessage(const char *pName, const char *pReason);
-	void DoTeamChangeMessage(const char *pName, int Team);
+	void DoEnterMessage(const char *pName, int ClientID, int Team);
+	void DoLeaveMessage(const char *pName, int ClientID, const char *pReason);
+	void DoTeamChangeMessage(const char *pName, int ClientID, int Team);
 
 	// actions
 	// TODO: move these

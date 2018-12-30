@@ -82,6 +82,7 @@ public:
 		CMD_SWAP,
 
 		// misc
+		CMD_VSYNC,
 		CMD_SCREENSHOT,
 		CMD_VIDEOMODES,
 
@@ -99,6 +100,7 @@ public:
 		TEXFLAG_QUALITY = 4,
 		TEXFLAG_TEXTURE3D = 8,
 		TEXFLAG_TEXTURE2D = 16,
+		TEXTFLAG_LINEARMIPMAPS = 32,
 	};
 
 	enum
@@ -141,6 +143,7 @@ public:
 		int m_WrapModeU;
 		int m_WrapModeV;
 		int m_Texture;
+		int m_TextureArrayIndex;
 		int m_Dimension;
 		SPoint m_ScreenTL;
 		SPoint m_ScreenBR;
@@ -183,13 +186,13 @@ public:
 	struct SCommand_Screenshot : public SCommand
 	{
 		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
+		int m_X, m_Y, m_W, m_H; // specify rectangle size, -1 if fullscreen (width/height)
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
 	};
 
 	struct SCommand_VideoModes : public SCommand
 	{
-		SCommand_VideoModes(int screen) : SCommand(CMD_VIDEOMODES),
-										  m_Screen(screen) {}
+		SCommand_VideoModes() : SCommand(CMD_VIDEOMODES) {}
 
 		CVideoMode *m_pModes; // processor will fill this in
 		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
@@ -202,6 +205,14 @@ public:
 		SCommand_Swap() : SCommand(CMD_SWAP) {}
 
 		int m_Finish;
+	};
+
+	struct SCommand_VSync : public SCommand
+	{
+		SCommand_VSync() : SCommand(CMD_VSYNC) {}
+
+		int m_VSync;
+		bool *m_pRetOk;
 	};
 
 	struct SCommand_Texture_Create : public SCommand
@@ -302,13 +313,20 @@ public:
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
+	virtual int Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
+	virtual int GetTextureArraySize() const = 0;
+
+	virtual int GetNumScreens() const = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
+	virtual bool Fullscreen(bool State) = 0;
+	virtual void SetWindowBordered(bool State) = 0;
+	virtual bool SetWindowScreen(int Index) = 0;
+	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 
@@ -356,6 +374,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	CTextureHandle m_InvalidTexture;
 
+	int m_TextureArrayIndex;
 	int m_aTextureIndices[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
@@ -391,7 +410,7 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(IGraphics::CTextureHandle Index);
+	virtual int UnloadTexture(IGraphics::CTextureHandle *Index);
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
@@ -413,6 +432,7 @@ public:
 	virtual void SetColor(float r, float g, float b, float a);
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
+	void TilesetFallbackSystem(int TextureIndex);
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = -1);
 	virtual void QuadsSetSubsetFree(
 		float x0, float y0, float x1, float y1,
@@ -423,8 +443,13 @@ public:
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
 	virtual void QuadsText(float x, float y, float Size, const char *pText);
 
+	virtual int GetNumScreens() const;
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual bool Fullscreen(bool State);
+	virtual void SetWindowBordered(bool State);
+	virtual bool SetWindowScreen(int Index);
+	virtual int GetWindowScreen();
 
 	virtual int WindowActive();
 	virtual int WindowOpen();
@@ -432,8 +457,10 @@ public:
 	virtual int Init();
 	virtual void Shutdown();
 
+	virtual void ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h);
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
+	virtual bool SetVSync(bool State);
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 

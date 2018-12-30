@@ -161,7 +161,7 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 					}
 				}
 
-				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)((float)rand() / ((float)RAND_MAX + 1) * pConf->m_aRules[i].m_Random) == 1))
+				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)(frandom() * pConf->m_aRules[i].m_Random) == 1))
 				{
 					pTile->m_Index = pConf->m_aRules[i].m_Index;
 					pTile->m_Flags = 0;

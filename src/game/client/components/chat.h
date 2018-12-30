@@ -12,15 +12,16 @@ class CChat : public CComponent
 
 	enum
 	{
-		MAX_LINES = 25,
+		MAX_LINES = 50,
 	};
 
 	struct CLine
 	{
 		int64 m_Time;
-		float m_YOffset[2];
+		vec2 m_Size[2];
 		int m_ClientID;
-		int m_Team;
+		int m_TargetID;
+		int m_Mode;
 		int m_NameColor;
 		char m_aName[64];
 		char m_aText[512];
@@ -33,10 +34,6 @@ class CChat : public CComponent
 	// chat
 	enum
 	{
-		MODE_NONE=0,
-		MODE_ALL,
-		MODE_TEAM,
-
 		CHAT_SERVER=0,
 		CHAT_HIGHLIGHT,
 		CHAT_CLIENT,
@@ -44,18 +41,21 @@ class CChat : public CComponent
 	};
 
 	int m_Mode;
+	int m_WhisperTarget;
 	bool m_Show;
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
 	int m_OldChatStringLength;
 	int m_CompletionChosen;
+	int m_CompletionFav;
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
+	bool m_ReverseCompletion;
 
 	struct CHistoryEntry
 	{
-		int m_Team;
+		int m_Mode;
 		char m_aText[1];
 	};
 	CHistoryEntry *m_pHistoryEntry;
@@ -66,20 +66,22 @@ class CChat : public CComponent
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
+	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
 
 public:
 	CChat();
 
-	bool IsActive() const { return m_Mode != MODE_NONE; }
+	bool IsActive() const { return m_Mode != CHAT_NONE; }
 
-	void AddLine(int ClientID, int Team, const char *pLine);
+	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
 
 	void EnableMode(int Team);
 
 	void Say(int Team, const char *pLine);
 
+	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);

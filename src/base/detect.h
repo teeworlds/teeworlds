@@ -140,6 +140,14 @@
 	#endif
 #endif
 
+#if defined(__arm__)
+	#define CONF_ARCH_ARM 1
+	#define CONF_ARCH_STRING "arm"
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
+#endif
+
 
 #ifndef CONF_FAMILY_STRING
 #define CONF_FAMILY_STRING "unknown"

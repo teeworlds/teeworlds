@@ -10,13 +10,14 @@ class CSpectator : public CComponent
 {
 	enum
 	{
-		NO_SELECTION=-2,
+		NO_SELECTION=-1,
 	};
 
 	bool m_Active;
 	bool m_WasActive;
 
 	int m_SelectedSpectatorID;
+	int m_SelectedSpecMode;
 	vec2 m_SelectorMouse;
 
 	static void ConKeySpectator(IConsole::IResult *pResult, void *pUserData);
@@ -33,7 +34,7 @@ public:
 	virtual void OnRelease();
 	virtual void OnReset();
 
-	void Spectate(int SpectatorID);
+	void Spectate(int SpecMode, int SpectatorID);
 };
 
 #endif

@@ -330,6 +330,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 			return -1;
 
 		Type = *pData++;
+		if(Type < 0)
+			return -1;
 		ID = *pData++;
 		if(m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
@@ -355,7 +357,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 		FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
-			// we got an update so we need pTo apply the diff
+			// we got an update so we need to apply the diff
 			UndiffItem((int *)pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
 			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
 		}
@@ -527,10 +529,10 @@ int *CSnapshotBuilder::GetItemData(int Key)
 	return 0;
 }
 
-int CSnapshotBuilder::Finish(void *SpnapData)
+int CSnapshotBuilder::Finish(void *pSpnapData)
 {
 	// flattern and make the snapshot
-	CSnapshot *pSnap = (CSnapshot *)SpnapData;
+	CSnapshot *pSnap = (CSnapshot *)pSpnapData;
 	int OffsetSize = sizeof(int)*m_NumItems;
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;

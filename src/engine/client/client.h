@@ -13,6 +13,7 @@ public:
 	};
 
 	float m_Min, m_Max;
+	float m_MinRange, m_MaxRange;
 	float m_aValues[MAX_VALUES];
 	float m_aColors[MAX_VALUES][3];
 	int m_Index;
@@ -70,6 +71,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	};
 
 	class CNetClient m_NetClient;
+	class CNetClient m_ContactClient;
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;
@@ -82,8 +84,10 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int64 m_LocalStartTime;
 
 	IGraphics::CTextureHandle m_DebugFont;
-	
+
 	int64 m_LastRenderTime;
+	int64 m_LastCpuTime;
+	float m_LastAvgCpuFrameTime;
 	float m_RenderFrameTimeLow;
 	float m_RenderFrameTimeHigh;
 	int m_RenderFrames;
@@ -161,7 +165,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	class CServerInfo m_CurrentServerInfo;
-	int64 m_CurrentServerInfoRequestTime; // >= 0 should request, == -1 got info
 
 	// version info
 	struct CVersionInfo
@@ -171,6 +174,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 			STATE_INIT=0,
 			STATE_START,
 			STATE_READY,
+			STATE_ERROR,
 		};
 
 		int m_State;
@@ -208,7 +212,6 @@ public:
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const { return m_DebugFont; }
 
-	void DirectInput(int *pInput, int Size);
 	void SendInput();
 
 	// TODO: OPT: do this alot smarter!
@@ -230,7 +233,6 @@ public:
 
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
-	void ServerInfoRequest();
 
 	int LoadData();
 
@@ -255,9 +257,11 @@ public:
 
 	static int PlayerScoreComp(const void *a, const void *b);
 
+	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
+	virtual const char *MapDownloadName() const { return m_aMapdownloadName; }
 	virtual int MapDownloadAmount() const { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() const { return m_MapdownloadTotalsize; }
 
@@ -271,6 +275,7 @@ public:
 	void RegisterInterfaces();
 	void InitInterfaces();
 
+	bool LimitFps();
 	void Run();
 
 
@@ -289,6 +294,10 @@ public:
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainWindowBordered(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainWindowVSync(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 
@@ -303,5 +312,15 @@ public:
 	void AutoScreenshot_Cleanup();
 
 	void ServerBrowserUpdate();
+
+	// gfx
+	void SwitchWindowScreen(int Index);
+	void ToggleFullscreen();
+	void ToggleWindowBordered();
+	void ToggleWindowVSync();
+
+	// Teeworlds connect link
+	const char * const m_pConLinkIdentifier;
+	void HandleTeeworldsConnectLink(const char *pConLink);
 };
 #endif

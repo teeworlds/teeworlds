@@ -4,6 +4,7 @@
 #include <base/math.h>
 
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 
@@ -31,6 +32,9 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
 
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
+
 	m_SelectedRuleSet = 0;
 	m_SelectedAmount = 50;
 }
@@ -38,19 +42,106 @@ CLayerTiles::CLayerTiles(int w, int h)
 CLayerTiles::~CLayerTiles()
 {
 	delete [] m_pTiles;
+	m_pTiles = 0;
+	delete [] m_pSaveTiles;
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
 }
 
 void CLayerTiles::PrepareForSave()
 {
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
+		{
 			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+			if(m_pTiles[y*m_Width+x].m_Index == 0)
+				m_pTiles[y*m_Width+x].m_Flags = 0;
+		}
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags |= m_pEditor->m_Map.m_lImages[m_Image]->m_aTileFlags[m_pTiles[y*m_Width+x].m_Index];
+	}
+
+	int NumSaveTiles = 0; // number of unique tiles that we have to save
+	CTile Tile; // current tile to be duplicated
+	Tile.m_Skip = MAX_SKIP; // tell the code that we can't skip the first tile
+
+	int NumHitMaxSkip = -1;
+
+	for(int i = 0; i < m_Width * m_Height; i++)
+	{
+		// we can only store MAX_SKIP empty tiles in one tile
+		if(Tile.m_Skip == MAX_SKIP)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+			NumHitMaxSkip++;
+		}
+		// tile is different from last one? - can't skip it
+		else if(m_pTiles[i].m_Index != Tile.m_Index || m_pTiles[i].m_Flags != Tile.m_Flags)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+		}
+		// if the tile is the same as the previous one - no need to
+		// save it separately
+		else
+			Tile.m_Skip++;
+	}
+
+	if(m_pSaveTiles)
+		delete [] m_pSaveTiles;
+
+	m_pSaveTiles = new CTile[NumSaveTiles];
+	m_SaveTilesSize = sizeof(CTile) * NumSaveTiles;
+
+	int NumWrittenSaveTiles = 0;
+	Tile.m_Skip = MAX_SKIP;
+	for(int i = 0; i < m_Width * m_Height + 1; i++)
+	{
+		// again, if an tile is the same as the previous one
+		// and we have place to store it, skip it!
+		// if we are at the end of the layer, write one more tile
+		if(i != m_Width * m_Height && Tile.m_Skip != MAX_SKIP && m_pTiles[i].m_Index == Tile.m_Index && m_pTiles[i].m_Flags == Tile.m_Flags)
+		{
+			Tile.m_Skip++;
+		}
+		// tile is not skippable
+		else
+		{
+			// if this is not the first tile, we have to save the previous
+			// tile beforehand
+			if(i != 0)
+				m_pSaveTiles[NumWrittenSaveTiles++] = Tile;
+
+			// if this isn't the last tile, store it so we can check how
+			// many tiles to skip
+			if(i != m_Width * m_Height)
+			{
+				Tile = m_pTiles[i];
+				Tile.m_Skip = 0;
+			}
+		}
+	}
+}
+
+void CLayerTiles::ExtractTiles(CTile *pSavedTiles)
+{
+	int i = 0;
+	while(i < m_Width * m_Height)
+	{
+		for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < m_Width * m_Height; Counter++)
+		{
+			m_pTiles[i] = *pSavedTiles;
+			m_pTiles[i++].m_Skip = 0;
+		}
+
+		pSavedTiles++;
 	}
 }
 
@@ -128,14 +219,14 @@ void CLayerTiles::BrushSelecting(CUIRect Rect)
 
 	Graphics()->TextureClear();
 	m_pEditor->Graphics()->QuadsBegin();
-	m_pEditor->Graphics()->SetColor(FillColor.r, FillColor.g, FillColor.b, FillColor.a);
+	m_pEditor->Graphics()->SetColor(FillColor.r*FillColor.a, FillColor.g*FillColor.a, FillColor.b*FillColor.a, FillColor.a);
 	Snap(&Rect);
 	IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
 	m_pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
 	m_pEditor->Graphics()->QuadsEnd();
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d,%d", ConvertX(Rect.w), ConvertY(Rect.h));
-	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowPicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1);
+	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1);
 }
 
 int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
@@ -253,13 +344,13 @@ void CLayerTiles::BrushFlipY()
 
 void CLayerTiles::BrushRotate(float Amount)
 {
-	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0Â°, 1=90Â°, 2=180Â°, 3=270Â°
 	if(Rotation < 0)
 		Rotation +=4;
 
 	if(Rotation == 1 || Rotation == 3)
 	{
-		// 90° rotation
+		// 90Â° rotation
 		CTile *pTempData = new CTile[m_Width*m_Height];
 		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
 		CTile *pDst = m_pTiles;
@@ -477,7 +568,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	{
 		if (NewVal == -1)
 		{
-			m_Texture = IGraphics::CTextureHandle();
+			m_Texture.Invalidate();
 			m_Image = -1;
 		}
 		else

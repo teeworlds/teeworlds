@@ -15,17 +15,12 @@ public:
 		SKINFLAG_SPECIAL=1<<0,
 		SKINFLAG_STANDARD=1<<1,
 
-		SKINPART_BODY=0,
-		SKINPART_MARKING,
-		SKINPART_DECORATION,
-		SKINPART_HANDS,
-		SKINPART_FEET,
-		SKINPART_EYES,
-		NUM_SKINPARTS,
-
 		DARKEST_COLOR_LGT=61,
 		
-		NUM_COLOR_COMPONENTS=4
+		NUM_COLOR_COMPONENTS=4,
+
+		HAT_NUM=2,
+		HAT_OFFSET_SIDE=2,
 	};
 
 	struct CSkinPart
@@ -57,6 +52,7 @@ public:
 	static char * const ms_apSkinVariables[NUM_SKINPARTS];
 	static int * const ms_apUCCVariables[NUM_SKINPARTS]; // use custom color
 	static int * const ms_apColorVariables[NUM_SKINPARTS];
+	IGraphics::CTextureHandle m_XmasHatTexture;
 
 	//
 	void OnInit();

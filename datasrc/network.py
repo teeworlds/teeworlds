@@ -3,9 +3,10 @@ from datatypes import *
 Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"])
 Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"])
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
-Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"])
+Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"]) # todo: add RUN_OP, RUN_KICK, RUN_SPEC; rem UNKNOWN
+ChatModes = Enum("CHAT", ["NONE", "ALL", "TEAM", "WHISPER"])
 
-PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING"])
+PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING", "BOT"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
@@ -37,7 +38,11 @@ enum
 	FLAG_ATSTAND,
 	FLAG_TAKEN,
 
-	SPEC_FREEVIEW=-1,
+	SPEC_FREEVIEW=0,
+	SPEC_PLAYER,
+	SPEC_FLAGRED,
+	SPEC_FLAGBLUE,
+	NUM_SPECMODES,
 };
 '''
 
@@ -51,6 +56,7 @@ Enums = [
 	Emotes,
 	Emoticons,
 	Votes,
+	ChatModes,
 	GameMsgIDs,
 ]
 
@@ -147,6 +153,8 @@ Objects = [
 
 		NetIntAny("m_HookX"),
 		NetIntAny("m_HookY"),
+		NetIntAny("m_HookDx"),
+		NetIntAny("m_HookDy"),
 	]),
 
 	NetObject("Character:CharacterCore", [
@@ -166,7 +174,8 @@ Objects = [
 	]),
 
 	NetObject("SpectatorInfo", [
-		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
+		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES-1'),
+		NetIntRange("m_SpectatorID", -1, 'MAX_CLIENTS-1'),
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 	]),
@@ -199,7 +208,7 @@ Objects = [
 
 	NetObject("De_TuneParams", [
 		# todo: should be done differently
-		NetArray(NetIntAny("m_aTuneParams"), 33),
+		NetArray(NetIntAny("m_aTuneParams"), 32),
 	]),
 
 	## Events
@@ -222,8 +231,12 @@ Objects = [
 		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
 	]),
 
-	NetEvent("DamageInd:Common", [
+	NetEvent("Damage:Common", [ # Unused yet
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntAny("m_Angle"),
+		NetIntRange("m_HealthAmount", 0, 9),
+		NetIntRange("m_ArmorAmount", 0, 9),
+		NetBool("m_Self"),
 	]),
 ]
 
@@ -234,9 +247,14 @@ Messages = [
 		NetString("m_pMessage"),
 	]),
 
+	NetMessage("Sv_Broadcast", [
+		NetString("m_pMessage"),
+	]),
+
 	NetMessage("Sv_Chat", [
-		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
+		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
+		NetIntRange("m_TargetID", -1, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pMessage"),
 	]),
 
@@ -313,6 +331,7 @@ Messages = [
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+		NetBool("m_Silent"),
 	]),
 
 	NetMessage("Sv_GameInfo", [
@@ -328,6 +347,7 @@ Messages = [
 	NetMessage("Sv_ClientDrop", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pReason"),
+		NetBool("m_Silent"),
 	]),
 
 	NetMessage("Sv_GameMsg", []),
@@ -335,17 +355,20 @@ Messages = [
 	## Demo messages
 	NetMessage("De_ClientEnter", [
 		NetStringStrict("m_pName"),
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 	]),
 
 	NetMessage("De_ClientLeave", [
 		NetStringStrict("m_pName"),
+		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pReason"),
 	]),
 
 	### Client messages
 	NetMessage("Cl_Say", [
-		NetBool("m_Team"),
+		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),
+		NetIntRange("m_Target", -1, 'MAX_CLIENTS-1'),
 		NetStringStrict("m_pMessage"),
 	]),
 
@@ -354,7 +377,8 @@ Messages = [
 	]),
 
 	NetMessage("Cl_SetSpectatorMode", [
-		NetIntRange("m_SpectatorID", 'SPEC_FREEVIEW', 'MAX_CLIENTS-1'),
+		NetIntRange("m_SpecMode", 0, 'NUM_SPECMODES-1'),
+		NetIntRange("m_SpectatorID", -1, 'MAX_CLIENTS-1'),
 	]),
 
 	NetMessage("Cl_StartInfo", [

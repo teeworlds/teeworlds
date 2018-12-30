@@ -89,7 +89,7 @@ void CLayerQuads::BrushSelecting(CUIRect Rect)
 		IGraphics::CLineItem(Rect.x, Rect.y+Rect.h, Rect.x, Rect.y)};
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
-	Graphics()->SetColor(RectColor.r, RectColor.g, RectColor.b, RectColor.a);
+	Graphics()->SetColor(RectColor.r*RectColor.a, RectColor.g*RectColor.a, RectColor.b*RectColor.a, RectColor.a);
 	Graphics()->LinesDraw(Array, 4);
 	Graphics()->LinesEnd();
 }

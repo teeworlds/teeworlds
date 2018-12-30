@@ -224,32 +224,6 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	return true;
 }
 
-bool CDataFileReader::GetCrcSize(class IStorage *pStorage, const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
-{
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
-	if(!File)
-		return false;
-
-	// get crc and size
-	unsigned Crc = crc32(0L, 0x0, 0);
-	unsigned Size = 0;
-	unsigned char aBuffer[64*1024];
-	while(1)
-	{
-		unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
-		if(Bytes <= 0)
-			break;
-		Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
-		Size += Bytes;
-	}
-
-	io_close(File);
-
-	*pCrc = Crc;
-	*pSize = Size;
-	return true;
-}
-
 int CDataFileReader::NumData() const
 {
 	if(!m_pDataFile) { return 0; }
@@ -329,6 +303,15 @@ void *CDataFileReader::GetData(int Index)
 void *CDataFileReader::GetDataSwapped(int Index)
 {
 	return GetDataImpl(Index, 1);
+}
+
+void CDataFileReader::ReplaceData(int Index, char *pData)
+{
+	// make sure the data has been loaded
+	GetDataImpl(Index, 0);
+
+	UnloadData(Index);
+	m_pDataFile->m_ppDataPtrs[Index] = pData;
 }
 
 void CDataFileReader::UnloadData(int Index)

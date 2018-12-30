@@ -16,6 +16,7 @@ class CHud : public CComponent
 	void RenderConnectionWarning();
 	void RenderTeambalanceWarning();
 	void RenderVoting();
+	void RenderNinjaBar(float x, float y, float Progress);
 	void RenderHealthAndAmmo(const CNetObj_Character *pCharacter);
 	void RenderGameTimer();
 	void RenderPauseTimer();
@@ -24,6 +25,8 @@ class CHud : public CComponent
 	void RenderSuddenDeath();
 	void RenderScoreHud();
 	void RenderSpectatorHud();
+	void RenderSpectatorNotification();
+	void RenderReadyUpNotification();
 	void RenderWarmupTimer();
 public:
 	CHud();

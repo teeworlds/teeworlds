@@ -1,6 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <stdlib.h> //rand
+#include <base/math.h>
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/shared/network.h>
@@ -140,7 +140,7 @@ static int Run()
 		/* send heartbeats if needed */
 		if(NextHeartBeat < time_get())
 		{
-			NextHeartBeat = time_get()+time_freq()*(15+(rand()%15));
+			NextHeartBeat = time_get()+time_freq()*(15+(random_int()%15));
 			SendHeartBeats();
 		}
 

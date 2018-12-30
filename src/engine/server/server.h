@@ -117,12 +117,14 @@ public:
 
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
+		int m_Version;
 		int m_Country;
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
 
 		int m_MapChunk;
+		bool m_NoRconNote;
 		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 
@@ -160,13 +162,14 @@ public:
 	int m_CurrentMapSize;
 	int m_MapChunksPerRequest;
 
+	int m_RconPasswordSet;
+	int m_GeneratedRconPassword;
+
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
 	CMapChecker m_MapChecker;
 
 	CServer();
-
-	int TrySetClientName(int ClientID, const char *pName);
 
 	virtual void SetClientName(int ClientID, const char *pName);
 	virtual void SetClientClan(int ClientID, char const *pClan);
@@ -181,6 +184,8 @@ public:
 	int64 TickStartTime(int Tick);
 
 	int Init();
+
+	void InitRconPasswordIfUnset();
 
 	void SetRconCID(int ClientID);
 	bool IsAuthed(int ClientID) const;
@@ -203,7 +208,7 @@ public:
 	void SendMap(int ClientID);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
-	static void SendRconLineAuthed(const char *pLine, void *pUser);
+	static void SendRconLineAuthed(const char *pLine, void *pUser, bool Highlighted);
 
 	void SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID);
@@ -211,8 +216,8 @@ public:
 
 	void ProcessClientPacket(CNetChunk *pPacket);
 
-	void SendServerInfo(const NETADDR *pAddr, int Token);
-	void UpdateServerInfo();
+	void SendServerInfo(int ClientID);
+	void GenerateServerInfo(CPacker *pPacker, int Token);
 
 	void PumpNetwork();
 
@@ -234,6 +239,7 @@ public:
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 

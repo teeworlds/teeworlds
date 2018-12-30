@@ -87,11 +87,18 @@ public:
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
+	
+	// gfx
+	virtual void SwitchWindowScreen(int Index) = 0;
+	virtual void ToggleFullscreen() = 0;
+	virtual void ToggleWindowBordered() = 0;
+	virtual void ToggleWindowVSync() = 0;
 
 	// networking
 	virtual void EnterGame() = 0;
 
 	//
+	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;
 
@@ -160,6 +167,7 @@ public:
 	virtual void OnEnterGame() = 0;
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;
+	virtual void OnUpdate() = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnConnected() = 0;
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker) = 0;
@@ -171,6 +179,7 @@ public:
 	virtual const char *GetItemName(int Type) const = 0;
 	virtual const char *Version() const = 0;
 	virtual const char *NetVersion() const = 0;
+	virtual int ClientVersion() const = 0;
 
 };
 

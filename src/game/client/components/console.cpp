@@ -57,6 +57,7 @@ CGameConsole::CInstance::CInstance(int Type)
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)
 {
 	m_pGameConsole = pGameConsole;
+	m_Input.Init(m_pGameConsole->Input());
 };
 
 void CGameConsole::CInstance::ClearBacklog()
@@ -175,7 +176,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	if(!Handled)
 		m_Input.ProcessInput(Event);
 
-	if(Event.m_Flags&IInput::FLAG_PRESS)
+	if(Event.m_Flags&(IInput::FLAG_PRESS|IInput::FLAG_TEXT))
 	{
 		if(Event.m_Key != KEY_TAB)
 		{
@@ -207,15 +208,16 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	}
 }
 
-void CGameConsole::CInstance::PrintLine(const char *pLine)
+void CGameConsole::CInstance::PrintLine(const char *pLine, bool Highlighted)
 {
 	int Len = str_length(pLine);
 
-	if (Len > 255)
+	if(Len > 255)
 		Len = 255;
 
 	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry)+Len);
 	pEntry->m_YOffset = -1.0f;
+	pEntry->m_Highlighted = Highlighted;
 	mem_copy(pEntry->m_aText, pLine, Len);
 	pEntry->m_aText[Len] = 0;
 }
@@ -511,7 +513,10 @@ void CGameConsole::OnRender()
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER);
 					Cursor.m_LineWidth = Screen.w-10.0f;
+					if(pEntry->m_Highlighted)
+						TextRender()->TextColor(1,0.75,0.75,1);
 					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+					TextRender()->TextColor(1,1,1,1);
 				}
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
 			}
@@ -654,9 +659,9 @@ void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserD
 	((CGameConsole *)pUserData)->Dump(CONSOLETYPE_REMOTE);
 }
 
-void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
+void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData, bool Highlighted)
 {
-	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr);
+	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, Highlighted);
 }
 
 void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -669,12 +674,17 @@ void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, 
 	}
 }
 
+bool CGameConsole::IsConsoleActive()
+{
+	return m_ConsoleState != CONSOLE_CLOSED;
+}
+
 void CGameConsole::PrintLine(int Type, const char *pLine)
 {
 	if(Type == CONSOLETYPE_LOCAL)
-		m_LocalConsole.PrintLine(pLine);
+		m_LocalConsole.PrintLine(pLine, false);
 	else if(Type == CONSOLETYPE_REMOTE)
-		m_RemoteConsole.PrintLine(pLine);
+		m_RemoteConsole.PrintLine(pLine, false);
 }
 
 void CGameConsole::OnConsoleInit()

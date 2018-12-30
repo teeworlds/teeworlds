@@ -206,7 +206,7 @@ int CSound::Init()
 
 	m_SoundLock = lock_create();
 
-	if(!g_Config.m_SndEnable)
+	if(!g_Config.m_SndInit)
 		return 0;
 
 	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
@@ -348,10 +348,12 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	if(!m_pStorage)
 		return CSampleHandle();
 
+	lock_wait(m_SoundLock);
 	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
+		lock_unlock(m_SoundLock);
 		return CSampleHandle();
 	}
 
@@ -360,6 +362,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	{
 		io_close(ms_File);
 		ms_File = 0;
+		lock_unlock(m_SoundLock);
 		return CSampleHandle();
 	}
 	pSample = &m_aSamples[SampleID];
@@ -384,6 +387,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
 			io_close(ms_File);
 			ms_File = 0;
+			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
 
@@ -399,6 +403,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
 			io_close(ms_File);
 			ms_File = 0;
+			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
 
@@ -431,6 +436,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
 	RateConvert(SampleID);
+	lock_unlock(m_SoundLock);
 	return CreateSampleHandle(SampleID);
 }
 

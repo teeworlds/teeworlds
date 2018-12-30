@@ -29,7 +29,7 @@ bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID) const
 		for(int fi = 0; fi < 2; fi++)
 		{
 			CFlag *F = m_apFlags[fi];
-			if(F && F->m_pCarryingCharacter == Character)
+			if(F && F->GetCarrier() == Character)
 				return false;
 		}
 	}
@@ -46,14 +46,12 @@ int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 	for(int i = 0; i < 2; i++)
 	{
 		CFlag *F = m_apFlags[i];
-		if(F && pKiller && pKiller->GetCharacter() && F->m_pCarryingCharacter == pKiller->GetCharacter())
+		if(F && pKiller && pKiller->GetCharacter() && F->GetCarrier() == pKiller->GetCharacter())
 			HadFlag |= 2;
-		if(F && F->m_pCarryingCharacter == pVictim)
+		if(F && F->GetCarrier() == pVictim)
 		{
 			GameServer()->SendGameMsg(GAMEMSG_CTF_DROP, -1);
-			F->m_DropTick = Server()->Tick();
-			F->m_pCarryingCharacter = 0;
-			F->m_Vel = vec2(0,0);
+			F->Drop();
 
 			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
 				pKiller->m_Score++;
@@ -63,6 +61,12 @@ int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 	}
 
 	return HadFlag;
+}
+
+void CGameControllerCTF::OnFlagReturn(CFlag *pFlag)
+{
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
+	GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 }
 
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
@@ -76,11 +80,8 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 	if(Team == -1 || m_apFlags[Team])
 		return false;
 
-	CFlag *F = new CFlag(&GameServer()->m_World, Team);
-	F->m_StandPos = Pos;
-	F->m_Pos = Pos;
+	CFlag *F = new CFlag(&GameServer()->m_World, Team, Pos);
 	m_apFlags[Team] = F;
-	GameServer()->m_World.InsertEntity(F);
 	return true;
 }
 
@@ -118,14 +119,14 @@ void CGameControllerCTF::Snap(int SnappingClient)
 	pGameDataFlag->m_FlagDropTickRed = 0;
 	if(m_apFlags[TEAM_RED])
 	{
-		if(m_apFlags[TEAM_RED]->m_AtStand)
+		if(m_apFlags[TEAM_RED]->IsAtStand())
 			pGameDataFlag->m_FlagCarrierRed = FLAG_ATSTAND;
-		else if(m_apFlags[TEAM_RED]->m_pCarryingCharacter && m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer())
-			pGameDataFlag->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
+		else if(m_apFlags[TEAM_RED]->GetCarrier() && m_apFlags[TEAM_RED]->GetCarrier()->GetPlayer())
+			pGameDataFlag->m_FlagCarrierRed = m_apFlags[TEAM_RED]->GetCarrier()->GetPlayer()->GetCID();
 		else
 		{
 			pGameDataFlag->m_FlagCarrierRed = FLAG_TAKEN;
-			pGameDataFlag->m_FlagDropTickRed = m_apFlags[TEAM_RED]->m_DropTick;
+			pGameDataFlag->m_FlagDropTickRed = m_apFlags[TEAM_RED]->GetDropTick();
 		}
 	}
 	else
@@ -133,14 +134,14 @@ void CGameControllerCTF::Snap(int SnappingClient)
 	pGameDataFlag->m_FlagDropTickBlue = 0;
 	if(m_apFlags[TEAM_BLUE])
 	{
-		if(m_apFlags[TEAM_BLUE]->m_AtStand)
+		if(m_apFlags[TEAM_BLUE]->IsAtStand())
 			pGameDataFlag->m_FlagCarrierBlue = FLAG_ATSTAND;
-		else if(m_apFlags[TEAM_BLUE]->m_pCarryingCharacter && m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer())
-			pGameDataFlag->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
+		else if(m_apFlags[TEAM_BLUE]->GetCarrier() && m_apFlags[TEAM_BLUE]->GetCarrier()->GetPlayer())
+			pGameDataFlag->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->GetCarrier()->GetPlayer()->GetCID();
 		else
 		{
 			pGameDataFlag->m_FlagCarrierBlue = FLAG_TAKEN;
-			pGameDataFlag->m_FlagDropTickBlue = m_apFlags[TEAM_BLUE]->m_DropTick;
+			pGameDataFlag->m_FlagDropTickBlue = m_apFlags[TEAM_BLUE]->GetDropTick();
 		}
 	}
 	else
@@ -161,36 +162,24 @@ void CGameControllerCTF::Tick()
 		if(!F)
 			continue;
 
-		// flag hits death-tile or left the game layer, reset it
-		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
-		{
-			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
-			GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
-			F->Reset();
-			continue;
-		}
-
 		//
-		if(F->m_pCarryingCharacter)
+		if(F->GetCarrier())
 		{
-			// update flag position
-			F->m_Pos = F->m_pCarryingCharacter->m_Pos;
-
-			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
+			if(m_apFlags[fi^1] && m_apFlags[fi^1]->IsAtStand())
 			{
-				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
+				if(distance(F->GetPos(), m_apFlags[fi^1]->GetPos()) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
 				{
 					// CAPTURE! \o/
 					m_aTeamscore[fi^1] += 100;
-					F->m_pCarryingCharacter->GetPlayer()->m_Score += 5;
+					F->GetCarrier()->GetPlayer()->m_Score += 5;
 
 					char aBuf[64];
 					str_format(aBuf, sizeof(aBuf), "flag_capture player='%d:%s'",
-						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
-						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+						F->GetCarrier()->GetPlayer()->GetCID(),
+						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()));
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->m_pCarryingCharacter->GetPlayer()->GetCID(), Server()->Tick()-F->m_GrabTick, -1);
+					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->GetCarrier()->GetPlayer()->GetCID(), Server()->Tick()-F->GetGrabTick(), -1);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
 				}
@@ -199,16 +188,16 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(F->GetPos(), CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
-				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->GetPos(), apCloseCCharacters[i]->GetPos(), NULL, NULL))
 					continue;
 
-				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
+				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->GetTeam())
 				{
 					// return the flag
-					if(!F->m_AtStand)
+					if(!F->IsAtStand())
 					{
 						CCharacter *pChr = apCloseCCharacters[i];
 						pChr->GetPlayer()->m_Score += 1;
@@ -225,37 +214,20 @@ void CGameControllerCTF::Tick()
 				else
 				{
 					// take the flag
-					if(F->m_AtStand)
-					{
+					if(F->IsAtStand())
 						m_aTeamscore[fi^1]++;
-						F->m_GrabTick = Server()->Tick();
-					}
 
-					F->m_AtStand = 0;
-					F->m_pCarryingCharacter = apCloseCCharacters[i];
-					F->m_pCarryingCharacter->GetPlayer()->m_Score += 1;
+					F->Grab(apCloseCCharacters[i]);
+
+					F->GetCarrier()->GetPlayer()->m_Score += 1;
 
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "flag_grab player='%d:%s'",
-						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
-						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+						F->GetCarrier()->GetPlayer()->GetCID(),
+						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()));
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 					GameServer()->SendGameMsg(GAMEMSG_CTF_GRAB, fi, -1);
 					break;
-				}
-			}
-
-			if(!F->m_pCarryingCharacter && !F->m_AtStand)
-			{
-				if(Server()->Tick() > F->m_DropTick + Server()->TickSpeed()*30)
-				{
-					GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
-					F->Reset();
-				}
-				else
-				{
-					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 				}
 			}
 		}

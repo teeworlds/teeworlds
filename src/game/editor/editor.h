@@ -37,6 +37,8 @@ enum
 
 	DIALOG_NONE=0,
 	DIALOG_FILE,
+
+	MAX_SKIP=(1<<8)-1
 };
 
 struct CEntity
@@ -183,7 +185,7 @@ public:
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc) {}
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc) {}
 
-	virtual void GetSize(float *w, float *h) { *w = 0; *h = 0;}
+	virtual void GetSize(float *w, float *h) const { *w = 0; *h = 0;}
 
 	char m_aName[12];
 	int m_Type;
@@ -227,7 +229,7 @@ public:
 	void MapScreen();
 	void Mapping(float *pPoints);
 
-	void GetSize(float *w, float *h);
+	void GetSize(float *w, float *h) const;
 
 	void DeleteLayer(int Index);
 	int SwapLayers(int Index0, int Index1);
@@ -445,6 +447,7 @@ public:
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
 
 	void PrepareForSave();
+	void ExtractTiles(CTile *pSavedTiles);
 
 	void GetSize(float *w, float *h) const { *w = m_Width*32.0f; *h = m_Height*32.0f; }
 
@@ -456,6 +459,8 @@ public:
 	CColor m_Color;
 	int m_ColorEnv;
 	int m_ColorEnvOffset;
+	CTile *m_pSaveTiles;
+	int m_SaveTilesSize;
 	CTile *m_pTiles;
 	int m_SelectedRuleSet;
 	int m_SelectedAmount;
@@ -531,6 +536,8 @@ public:
 
 		m_GridActive = false;
 		m_GridFactor = 1;
+		
+		m_MouseEdMode = MOUSE_EDIT;
 
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
@@ -583,6 +590,10 @@ public:
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
+		
+		m_SelectedColor = vec4(0,0,0,0);
+		m_InitialPickerColor = vec3(1,0,0);
+		m_SelectedPickerColor = vec3(1,0,0);
 
 		ms_pUiGotContext = 0;
 	}
@@ -616,6 +627,14 @@ public:
 
 	bool m_GridActive;
 	int m_GridFactor;
+	
+	enum
+	{
+		MOUSE_EDIT=0,
+		MOUSE_PIPETTE,
+	};
+	
+	int m_MouseEdMode;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
@@ -705,7 +724,7 @@ public:
 		SHOWENV_ALL
 	};
 	int m_ShowEnvelopePreview;
-	bool m_ShowPicker;
+	bool m_ShowTilePicker;
 
 	int m_SelectedLayer;
 	int m_SelectedGroup;
@@ -715,6 +734,10 @@ public:
 	int m_SelectedEnvelopePoint;
     int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
+	
+	vec4 m_SelectedColor;
+	vec3 m_InitialPickerColor;
+	vec3 m_SelectedPickerColor;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_BackgroundTexture;
@@ -729,6 +752,8 @@ public:
 	CEditorMap m_Map;
 
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
+	static void ConMapMagic(class IConsole::IResult *pResult, void *pUserData);
+	void DoMapMagic(int ImageID, int SrcIndex);
 
 	void DoMapBorder();
 	int DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
@@ -768,9 +793,9 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
-
 	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
 	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
+	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);

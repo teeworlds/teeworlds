@@ -1,8 +1,6 @@
 #ifndef GAME_EDITOR_AUTO_MAP_H
 #define GAME_EDITOR_AUTO_MAP_H
 
-#include <stdlib.h> // rand
-
 #include <base/tl/array.h>
 #include <base/vmath.h>
 
@@ -39,7 +37,7 @@ public:
 
 	static bool Random(int Value)
 	{
-		return ((int)((float)rand() / ((float)RAND_MAX + 1) * Value) == 1);
+		return (((random_int() + Value) % 2) == 1);
 	}
 
 	static const char *GetTypeName(int Type)

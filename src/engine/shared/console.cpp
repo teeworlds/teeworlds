@@ -192,7 +192,7 @@ void CConsole::SetPrintOutputLevel(int Index, int OutputLevel)
 		m_aPrintCB[Index].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
 }
 
-void CConsole::Print(int Level, const char *pFrom, const char *pStr)
+void CConsole::Print(int Level, const char *pFrom, const char *pStr, bool Highlighted)
 {
 	dbg_msg(pFrom ,"%s", pStr);
 	for(int i = 0; i < m_NumPrintCB; ++i)
@@ -201,7 +201,7 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 		{
 			char aBuf[1024];
 			str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
-			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata);
+			m_aPrintCB[i].m_pfnPrintCallback(aBuf, m_aPrintCB[i].m_pPrintCallbackUserdata, Highlighted);
 		}
 	}
 }
@@ -426,6 +426,7 @@ void CConsole::ExecuteFile(const char *pFilename)
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to open '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "Info: only relative paths starting from the ones you specify in 'storage.cfg' are allowed");
 	}
 
 	m_pFirstExec = pPrev;
@@ -687,6 +688,21 @@ CConsole::CConsole(int FlagMask)
 
 	#undef MACRO_CONFIG_INT
 	#undef MACRO_CONFIG_STR
+}
+
+CConsole::~CConsole()
+{
+	CCommand *pCommand = m_pFirstCommand;
+	while(pCommand)
+	{
+		CCommand *pNext = pCommand->m_pNext;
+
+		if(pCommand->m_pfnCallback == Con_Chain)
+			mem_free(static_cast<CChain *>(pCommand->m_pUserData));
+		mem_free(pCommand);
+
+		pCommand = pNext;
+	}
 }
 
 void CConsole::ParseArguments(int NumArgs, const char **ppArguments)

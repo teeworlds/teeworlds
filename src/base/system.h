@@ -170,14 +170,6 @@ void mem_zero(void *block, unsigned size);
 */
 int mem_comp(const void *a, const void *b, int size);
 
-/*
-	Function: mem_check
-		Validates the heap
-		Will trigger a assert if memory has failed.
-*/
-int mem_check_imp();
-#define mem_check() dbg_assert_imp(__FILE__, __LINE__, mem_check_imp(), "Memory check failed")
-
 /* Group: File IO */
 enum {
 	IOFLAG_READ = 1,
@@ -475,6 +467,16 @@ int time_timestamp();
 */
 int time_houroftheday();
 
+/*
+	Function: time_isxmasday
+		Checks if it's xmas
+
+	Returns:
+		1 - if it's a xmas day
+		0 - if not
+*/
+int time_isxmasday();
+
 /* Group: Network General */
 typedef struct
 {
@@ -576,12 +578,13 @@ int net_addr_from_str(NETADDR *addr, const char *string);
 
 	Parameters:
 		bindaddr - Address to bind the socket to.
+		use_random_port - use a random port
 
 	Returns:
 		On success it returns an handle to the socket. On failure it
 		returns NETSOCKET_INVALID.
 */
-NETSOCKET net_udp_create(NETADDR bindaddr);
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port);
 
 /*
 	Function: net_udp_send
@@ -1202,8 +1205,6 @@ int net_would_block();
 
 int net_socket_read_wait(NETSOCKET sock, int time);
 
-void mem_debug_dump(IOHANDLE file);
-
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 
 
@@ -1213,15 +1214,6 @@ void dbg_logger(DBG_LOGGER logger);
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
-
-typedef struct
-{
-	int allocated;
-	int active_allocations;
-	int total_allocations;
-} MEMSTATS;
-
-const MEMSTATS *mem_stats();
 
 typedef struct
 {
@@ -1239,16 +1231,6 @@ float str_tofloat(const char *str);
 int str_isspace(char c);
 char str_uppercase(char c);
 unsigned str_quickhash(const char *str);
-
-/*
-	Function: gui_messagebox
-		Display plain OS-dependent message box
-
-	Parameters:
-		title - title of the message box
-		message - text to display
-*/
-void gui_messagebox(const char *title, const char *message);
 
 char *str_utf8_skip_whitespaces(char *str);
 
@@ -1329,6 +1311,27 @@ int str_utf8_encode(char *ptr, int chr);
 		- The string is treated as zero-terminated utf8 string.
 */
 int str_utf8_check(const char *str);
+
+/*
+	Function: secure_random_init
+		Initializes the secure random module.
+		You *MUST* check the return value of this function.
+
+	Returns:
+		0 - Initialization succeeded.
+		1 - Initialization failed.
+*/
+int secure_random_init();
+
+/*
+	Function: secure_random_fill
+		Fills the buffer with the specified amount of random bytes.
+
+	Parameters:
+		bytes - Pointer to the start of the buffer.
+		length - Length of the buffer.
+*/
+void secure_random_fill(void *bytes, unsigned length);
 
 #ifdef __cplusplus
 }
