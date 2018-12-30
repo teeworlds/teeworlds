@@ -1,33 +1,51 @@
-import urllib.request
-import os
-import zipfile
-import sys
-import re
+import shutil, os, re, sys, zipfile
+from distutils.dir_util import copy_tree
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
+import twlib
 
-def _downloadZip(url, filePath):
-    # create full path, if it doesn't exists
-    os.makedirs(filePath, exist_ok=True)
-    # create zip-file at the temp fileposition
-    temp_filePath = filePath + "temp.zip"
-    urllib.request.urlretrieve(url, temp_filePath)
-    # exctract full zip-file
-    with zipfile.ZipFile(temp_filePath) as myzip:
-        myzip.extractall(filePath)
-    os.remove(temp_filePath)
+def unzip(filename, where):
+	try:
+		z = zipfile.ZipFile(filename, "r")
+	except:
+		return False
+	for name in z.namelist():
+		z.extract(name, where)
+	z.close()
+	return z.namelist()[0]
 
 def downloadAll(arch, conf, targets):
-    download_url = "https://github.com/teeworlds/teeworlds-libs/archive/master.zip".format
-    builddir = "build/" + arch + "/" + conf + "/"
-    files = {
-        "SDL2.dll":     ("SDL2.dll"     + "-" + arch, builddir),
-        "freetype.dll": ("freetype.dll" + "-" + arch, builddir),
-        "sdl":          ("sdl",                       "other/sdl/"),
-        "freetype":     ("freetype",                  "other/freetype/"),
-    }
+	url = "https://github.com/teeworlds/teeworlds-libs/archive/master.zip"
+	if arch == "x86_64":
+		_arch = "x64"
+	else:
+		_arch = arch
+	builddir = "build/" + arch + "/" + conf + "/"
+	
+	# download and unzip
+	src_package_libs = twlib.fetch_file(url)
+	if not src_package_libs:
+		print("couldn't download libs")
+		sys.exit(-1)
+	libs_dir = unzip(src_package_libs, ".")
+	if not libs_dir:
+		print("couldn't unzip libs")
+		sys.exit(-1)
+	libs_dir = "teeworlds-libs-master"
 
-    for target in targets:
-        download_file, target_dir = files[target]
-        _downloadZip(download_url(download_file), target_dir)
+	if "SDL2.dll" in targets:
+		shutil.copy(libs_dir + "/sdl/windows/lib/" + _arch + "/SDL2.dll", builddir)
+	if "freetype.dll" in targets:
+		shutil.copy(libs_dir + "/freetype/windows/lib/" + _arch + "/freetype.dll", builddir)
+	if "sdl" in targets:
+		copy_tree(libs_dir + "/sdl/windows/", "other/sdl/")
+	if "freetype" in targets:
+		copy_tree(libs_dir + "/freetype/windows/", "other/freetype/")
+
+	# cleanup
+	try:
+		shutil.rmtree(libs_dir)
+		os.remove(src_package_libs)
+	except: pass
 
 def main():
     import argparse

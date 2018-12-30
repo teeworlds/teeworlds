@@ -268,6 +268,12 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Content
 	BuildContent(settings)
+
+	-- dependencies
+	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
+	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
+	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl" .. settings.cc.extension, "other/sdl/include/SDL.h")
+	AddDependency(cur_builddir .. "/objs/engine/client/text" .. settings.cc.extension, "other/freetype/include/ft2build.h")
 end
 
 function SharedCommonFiles()
@@ -504,13 +510,6 @@ for a, cur_arch in ipairs(archs) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))
 		end
 	end
-end
-
-if family == "windows" then
-	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
-	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
-	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl.obj","other/sdl/include/SDL.h")
-	AddDependency(cur_builddir .. "/objs/engine/client/text.obj","other/freetype/include/ft2build.h")
 end
 
 for cur_name, cur_target in pairs(targets) do
