@@ -431,7 +431,7 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	return settings
 end
 
--- String formatting wth named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
+-- String formatting with named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
 function interp(s, tab)
 	return (s:gsub('%%%((%a%w*)%)([-0-9%.]*[cdeEfgGiouxXsq])',
 			function(k, fmt)
@@ -493,12 +493,26 @@ end
 for a, cur_arch in ipairs(archs) do
 	for c, cur_conf in ipairs(confs) do
 		cur_builddir = interp(builddir, {platform=family, arch=cur_arch, target=cur_target, conf=cur_conf, compiler=compiler})
+		if family == "windows" then
+			dl = Python("scripts/download.py")
+			dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
+			AddJob(cur_builddir .. "/SDL2.dll", "Downloading SDL.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll") -- TODO: Make me working!
+			AddJob(cur_builddir .. "/freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
+		end
 		local settings = GenerateSettings(cur_conf, cur_arch, cur_builddir, compiler)
 		for t, cur_target in pairs(targets) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))
 		end
 	end
 end
+
+if family == "windows" then
+	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
+	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
+	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl.obj","other/sdl/include/SDL.h")
+	AddDependency(cur_builddir .. "/objs/engine/client/text.obj","other/freetype/include/ft2build.h")
+end
+
 for cur_name, cur_target in pairs(targets) do
 	-- Supertarget for all configurations and architectures of that target
 	PseudoTarget(cur_name, subtargets[cur_target])

@@ -11,4 +11,6 @@ scripts/work/
 /SDL.dll
 /freetype.dll
 /autoexec.cfg
+other/freetype
+other/sdl
 _test.exe
