@@ -16,7 +16,7 @@ def _downloadZip(url, filePath):
     os.remove(temp_filePath)
 
 def downloadAll(arch, conf, targets):
-    download_url = "https://github.com/Zwelf/tw-downloads/raw/master/{}.zip".format
+    download_url = "https://github.com/teeworlds/teeworlds-libs/archive/master.zip".format
     builddir = "build/" + arch + "/" + conf + "/"
     files = {
         "SDL2.dll":     ("SDL2.dll"     + "-" + arch, builddir),
