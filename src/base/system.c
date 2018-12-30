@@ -1793,6 +1793,22 @@ void str_sanitize(char *str_in)
 	}
 }
 
+/* removes all forbidden windows/unix characters in filenames*/
+char* str_sanitize_filename(char* aName)
+{
+	char *str = (char *)aName;
+	while(*str)
+	{
+		// replace forbidden characters with a whispace
+		if(*str == '/' || *str == '<' || *str == '>' || *str == ':' || *str == '"' 
+			|| *str == '/' || *str == '\\' || *str == '|' || *str == '?' || *str == '*')
+ 			*str = ' ';
+		str++;
+	}
+	str_clean_whitespaces(aName);
+	return aName;
+}
+
 /* removes leading and trailing spaces and limits the use of multiple spaces */
 void str_clean_whitespaces(char *str_in)
 {

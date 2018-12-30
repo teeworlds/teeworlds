@@ -2132,11 +2132,15 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 }
 void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect, int Type)
 {
+	char aNameBuf[128];
+	str_copy(aNameBuf, pName, sizeof(aNameBuf));
+	str_sanitize_filename(aNameBuf);
+
 	// get texture
 	IGraphics::CTextureHandle Tex = m_GameIconDefault;
 	for(int i = 0; i < m_lGameIcons.size(); ++i)
 	{
-		if(!str_comp_nocase(pName, m_lGameIcons[i].m_Name))
+		if(!str_comp_nocase(aNameBuf, m_lGameIcons[i].m_Name))
 		{
 			Tex = m_lGameIcons[i].m_IconTexture;
 			break;
