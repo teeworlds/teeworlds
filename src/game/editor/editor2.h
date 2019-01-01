@@ -477,6 +477,13 @@ struct CUITextInputState
 	int m_CursorPos;
 };
 
+struct CUIMouseDragState
+{
+	vec2 m_StartDragPos;
+	vec2 m_EndDragPos;
+	bool m_IsDragging = false;
+};
+
 struct CHistoryEntry
 {
 	CHistoryEntry* m_pPrev;
@@ -567,20 +574,12 @@ class CEditor: public IEditor
 
 	struct CUIBrushPaletteState
 	{
-		vec2 m_MouseStartDragPos;
-		vec2 m_MouseEndDragPos;
-		bool m_MouseClicked = false;
-		bool m_MouseIsDraggingRect = false;
 		u8 m_aTileSelected[256] = {0};
 	};
 	CUIBrushPaletteState m_UiBrushPaletteState;
 	CUIRect m_UiPopupBrushPaletteRect = {};
 	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
-	vec2 m_UiMouseStartDragPos;
-	vec2 m_UiMouseEndDragPos;
-	bool m_UiMouseIsDragging = false;
-	bool m_UiMouseLeftPressed = false;
 	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
 
 	struct CBrush
@@ -591,9 +590,7 @@ class CEditor: public IEditor
 
 		inline bool IsEmpty() const { return m_Width <= 0;}
 	};
-
 	CBrush m_Brush;
-	ivec2 m_TileStartDrag;
 
 	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
 	CHistoryEntry* m_pHistoryEntryCurrent = nullptr;
@@ -616,8 +613,8 @@ class CEditor: public IEditor
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
-	void RenderMapEditor();
-	void RenderMapEditorHud();
+	void RenderMapView();
+	void RenderMapViewHud();
 	void RenderMapEditorUI();
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderPopupBrushPalette();
@@ -632,14 +629,14 @@ class CEditor: public IEditor
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
+	bool UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDragState* pDragState);
+
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize = 10);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
 					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
 	void UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
 
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
-
-	void PopupBrushPaletteProcessInput(IInput::CEvent Event);
 
 	void Reset();
 	void ResetCamera();
@@ -656,9 +653,6 @@ class CEditor: public IEditor
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
 	void OnMapLoaded();
-
-	void OnStartDragging();
-	void OnFinishDragging();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
 	void EditDeleteImage(int ImageID);

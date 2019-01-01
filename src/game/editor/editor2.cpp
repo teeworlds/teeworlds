@@ -37,6 +37,8 @@ static char s_aEdMsg[256];
 		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
 #else
 	#define ed_dbg(...)
+	#undef dbg_assert
+	#define dbg_assert(test,msg)
 #endif
 
 const vec4 StyleColorBg(0.03, 0, 0.085, 1);
@@ -64,6 +66,7 @@ inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 			Pos.y >= Rect.y && Pos.y < (Rect.y+Rect.h));
 }
 
+#if 0
 // hash
 inline u32 fnv1a32(const void* data, u32 dataSize)
 {
@@ -72,6 +75,7 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 		hash = (hash ^ ((const char*)data)[i]) * 16777619;
 	return hash;
 }
+#endif
 
 void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
 {
@@ -1032,39 +1036,6 @@ void CEditor::OnInput(IInput::CEvent Event)
 		m_InputConsole.OnInput(Event);
 		return;
 	}
-
-	if(IsPopupBrushPalette())
-		PopupBrushPaletteProcessInput(Event);
-	else
-	{
-		if(Event.m_Flags&IInput::FLAG_PRESS)
-		{
-			if(Event.m_Key == KEY_MOUSE_1)
-			{
-				if(!m_UiMouseLeftPressed)
-				{
-					m_UiMouseStartDragPos = m_UiMousePos;
-					m_UiMouseIsDragging = true;
-					OnStartDragging();
-				}
-				m_UiMouseLeftPressed = true;
-			}
-		}
-		else if(Event.m_Flags&IInput::FLAG_RELEASE)
-		{
-			if(Event.m_Key == KEY_MOUSE_1)
-			{
-				if(m_UiMouseLeftPressed)
-				{
-					m_UiMouseEndDragPos = m_UiMousePos;
-					m_UiMouseIsDragging = false;
-					OnFinishDragging();
-				}
-
-				m_UiMouseLeftPressed = false;
-			}
-		}
-	}
 }
 
 void CEditor::Update()
@@ -1168,7 +1139,7 @@ void CEditor::Render()
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
 	if(m_Page == PAGE_MAP_EDITOR)
-		RenderMapEditor();
+		RenderMapView();
 	else if(m_Page == PAGE_ASSET_MANAGER)
 		RenderAssetManager();
 
@@ -1373,7 +1344,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 									  Time+TimeOffset, pChannels);
 }
 
-void CEditor::RenderMapEditor()
+void CEditor::RenderMapView()
 {
 	// get world view points based on neutral paramters
 	float aWorldViewRectPoints[4];
@@ -1626,15 +1597,18 @@ void CEditor::RenderMapEditor()
 	Graphics()->QuadsEnd();
 
 	// hud
-	RenderMapEditorHud();
+	RenderMapViewHud();
 
 	// user interface
 	RenderMapEditorUI();
 }
 
-void CEditor::RenderMapEditorHud()
+void CEditor::RenderMapViewHud()
 {
 	// NOTE: we're in selected group world space here
+
+	if(m_UiCurrentPopupID != POPUP_NONE)
+		return;
 
 	const float TileSize = 32;
 	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
@@ -1643,48 +1617,91 @@ void CEditor::RenderMapEditorHud()
 	const vec2 GridMousePos(floor(MouseWorldPos.x/TileSize)*TileSize,
 		floor(MouseWorldPos.y/TileSize)*TileSize);
 
-	if(m_UiCurrentPopupID == POPUP_NONE)
+	static CUIMouseDragState s_MapViewDrag;
+	bool FinishedDragging = UiDoMouseDragging(&s_MapViewDrag, m_UiMainViewRect, &s_MapViewDrag);
+
+	dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
+	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+
+	if(SelectedTileLayer.IsTileLayer())
 	{
-		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
-
-		if(SelectedTileLayer.IsTileLayer())
+		if(m_Brush.IsEmpty())
 		{
-			if(m_Brush.IsEmpty())
+			if(s_MapViewDrag.m_IsDragging)
 			{
-				if(m_UiMouseIsDragging)
+				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
+				const vec2 EndWorldPos = MouseWorldPos;
+
+				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+				const int EndTX = floor(EndWorldPos.x/TileSize);
+				const int EndTY = floor(EndWorldPos.y/TileSize);
+
+				const int DragStartTX = min(StartTX, EndTX);
+				const int DragStartTY = min(StartTY, EndTY);
+				const int DragEndTX = max(StartTX, EndTX);
+				const int DragEndTY = max(StartTY, EndTY);
+
+				const CUIRect HoverRect = {DragStartTX*TileSize, DragStartTY*TileSize,
+					(DragEndTX+1-DragStartTX)*TileSize, (DragEndTY+1-DragStartTY)*TileSize};
+				vec4 HoverColor = StyleColorTileHover;
+				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+				DrawRectBorderMiddle(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
+			}
+			else
+			{
+				const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
+				vec4 HoverColor = StyleColorTileHover;
+				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+				DrawRect(HoverRect, HoverColor);
+			}
+
+			// TODO: if tool == brush
+			// TODO: do this better (ignoring mouse click on UI)
+			if(SelectedTileLayer.IsTileLayer() && FinishedDragging)
+			{
+				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
+				const vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_EndDragPos);
+
+				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+				const int EndTX = floor(EndMouseWorldPos.x/TileSize);
+				const int EndTY = floor(EndMouseWorldPos.y/TileSize);
+
+				const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
+				const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
+				const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
+				const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
+				const int Width = SelEndX - SelStartX;
+				const int Height = SelEndY - SelStartY;
+
+				CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
+				aExtractTiles.AddEmpty(Width * Height);
+
+				const int LayerWidth = SelectedTileLayer.m_Width;
+				const CDynArray<CTile>& aLayerTiles = SelectedTileLayer.m_aTiles;
+				const int StartTid = SelStartY * LayerWidth + SelStartX;
+				const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
+
+				for(int ti = StartTid; ti < LastTid; ti++)
 				{
-					vec2 EndWorldPos = MouseWorldPos;
-
-					const int StartTX = m_TileStartDrag.x;
-					const int StartTY = m_TileStartDrag.y;
-					const int EndTX = floor(EndWorldPos.x/TileSize);
-					const int EndTY = floor(EndWorldPos.y/TileSize);
-
-					const int DragStartTX = min(StartTX, EndTX);
-					const int DragStartTY = min(StartTY, EndTY);
-					const int DragEndTX = max(StartTX, EndTX);
-					const int DragEndTY = max(StartTY, EndTY);
-
-					const CUIRect HoverRect = {DragStartTX*TileSize, DragStartTY*TileSize,
-						(DragEndTX+1-DragStartTX)*TileSize, (DragEndTY+1-DragStartTY)*TileSize};
-					vec4 HoverColor = StyleColorTileHover;
-					HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
-					DrawRectBorderMiddle(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
+					const int tx = (ti % LayerWidth) - SelStartX;
+					const int ty = (ti / LayerWidth) - SelStartY;
+					if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
+						aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
 				}
-				else
-				{
-					const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
-					vec4 HoverColor = StyleColorTileHover;
-					HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
-					DrawRect(HoverRect, HoverColor);
-				}
+
+				SetNewBrush(aExtractTiles.Data(), Width, Height);
 			}
 		}
-
-		// TODO: if tool == brush
-		// draw brush
-		RenderBrush(GridMousePos);
 	}
+
+	// TODO: if tool == brush
+	// draw brush
+	RenderBrush(GridMousePos);
 }
 
 void CEditor::RenderMapEditorUI()
@@ -2117,6 +2134,84 @@ void CEditor::RenderPopupBrushPalette()
 	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
 	u8* aTileSelected = Bps.m_aTileSelected;
 
+	// right click clears brush
+	if(UI()->MouseButtonClicked(1))
+	{
+		mem_zero(Bps.m_aTileSelected, sizeof(Bps.m_aTileSelected));
+		ClearBrush();
+	}
+
+	// do mouse dragging
+	static CUIMouseDragState s_DragState;
+	bool FinishedDragging = UiDoMouseDragging(&s_DragState, m_UiPopupBrushPaletteImageRect, &s_DragState);
+	// TODO: perhaps allow dragging from outside the popup for convenience
+
+	// finished dragging
+	if(FinishedDragging)
+	{
+		u8* aTileSelected = Bps.m_aTileSelected;
+		const float TileSize = m_UiPopupBrushPaletteImageRect.w / 16.f;
+		const vec2 RelMouseStartPos = s_DragState.m_StartDragPos -
+			vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+		const vec2 RelMouseEndPos = s_DragState.m_EndDragPos -
+			vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
+		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
+		const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
+		const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
+
+		const int DragTLX = min(DragStartTileX, DragEndTileX);
+		const int DragTLY = min(DragStartTileY, DragEndTileY);
+		const int DragBRX = max(DragStartTileX, DragEndTileX);
+		const int DragBRY = max(DragStartTileY, DragEndTileY);
+
+		for(int ty = DragTLY; ty <= DragBRY; ty++)
+		{
+			for(int tx = DragTLX; tx <= DragBRX; tx++)
+			{
+				aTileSelected[ty * 16 + tx] = 1;
+			}
+		}
+
+		int StartX = 999;
+		int StartY = 999;
+		int EndX = -1;
+		int EndY = -1;
+		for(int ti = 0; ti < 256; ti++)
+		{
+			if(aTileSelected[ti])
+			{
+				int tx = (ti & 0xF);
+				int ty = (ti / 16);
+				StartX = min(StartX, tx);
+				StartY = min(StartY, ty);
+				EndX = max(EndX, tx);
+				EndY = max(EndY, ty);
+			}
+		}
+
+		EndX++;
+		EndY++;
+
+		CDynArray<CTile> aBrushTiles = m_Map.NewTileArray();
+		const int Width = EndX - StartX;
+		const int Height = EndY - StartY;
+		aBrushTiles.AddEmpty(Width * Height);
+
+		const int LastTid = (EndY-1)*16+EndX;
+		for(int ti = (StartY*16+StartX); ti < LastTid; ti++)
+		{
+			if(aTileSelected[ti])
+			{
+				int tx = (ti & 0xF) - StartX;
+				int ty = (ti / 16) - StartY;
+				aBrushTiles[ty * Width + tx].m_Index = ti;
+			}
+		}
+
+		SetNewBrush(aBrushTiles.Data(), Width, Height);
+	}
+
 	// selected overlay
 	for(int ti = 0; ti < 256; ti++)
 	{
@@ -2134,7 +2229,7 @@ void CEditor::RenderPopupBrushPalette()
 	}
 
 	// hover tile
-	if(!Bps.m_MouseIsDraggingRect && UI()->MouseInside(&ImageRect))
+	if(!s_DragState.m_IsDragging && UI()->MouseInside(&ImageRect))
 	{
 		const vec2 RelMousePos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
 		const int HoveredTileX = RelMousePos.x / TileSize;
@@ -2149,10 +2244,10 @@ void CEditor::RenderPopupBrushPalette()
 	}
 
 	// drag rectangle
-	if(Bps.m_MouseIsDraggingRect &&
-	   (UI()->MouseInside(&ImageRect) || IsInsideRect(Bps.m_MouseStartDragPos, ImageRect)))
+	if(s_DragState.m_IsDragging/* &&
+	   (UI()->MouseInside(&ImageRect) || IsInsideRect(s_DragState.m_StartDragPos, ImageRect))*/)
 	{
-		const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos - vec2(ImageRect.x, ImageRect.y);
+		const vec2 RelMouseStartPos = s_DragState.m_StartDragPos - vec2(ImageRect.x, ImageRect.y);
 		const vec2 RelMouseEndPos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
 		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
 		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
@@ -2590,6 +2685,33 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 
 }
 
+bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDragState* pDragState)
+{
+	bool Return = false;
+	CUIButtonState ButState;
+	UiDoButtonBehavior(pID, Rect, &ButState);
+
+	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+	{
+		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0))
+		{
+			pDragState->m_StartDragPos = m_UiMousePos;
+			pDragState->m_IsDragging = true;
+		}
+	}
+	else
+	{
+		if(pDragState->m_IsDragging)
+		{
+			pDragState->m_EndDragPos = m_UiMousePos;
+			Return = true; // finished dragging
+		}
+		pDragState->m_IsDragging = false;
+	}
+
+	return Return;
+}
+
 bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover,
@@ -2641,108 +2763,6 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1,
 		pInputState->m_Selected ? vec4(0,0.2,1,1) : StyleColorButtonBorder);
 	DrawText(Rect, pText, 8);
-}
-
-void CEditor::PopupBrushPaletteProcessInput(IInput::CEvent Event)
-{
-	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
-
-	if(Event.m_Flags&IInput::FLAG_PRESS)
-	{
-		if(Event.m_Key == KEY_MOUSE_1)
-		{
-			if(!Bps.m_MouseClicked)
-			{
-				Bps.m_MouseStartDragPos = m_UiMousePos;
-				Bps.m_MouseIsDraggingRect = true;
-			}
-			Bps.m_MouseClicked = true;
-		}
-		if(Event.m_Key == KEY_MOUSE_2)
-		{
-			mem_zero(Bps.m_aTileSelected, sizeof(Bps.m_aTileSelected));
-			ClearBrush();
-		}
-	}
-	else if(Event.m_Flags&IInput::FLAG_RELEASE)
-	{
-		if(Event.m_Key == KEY_MOUSE_1)
-		{
-			if(Bps.m_MouseClicked)
-			{
-				Bps.m_MouseEndDragPos = m_UiMousePos;
-				Bps.m_MouseIsDraggingRect = false;
-
-				// check if we dragged completely outside the popup
-				if(IsInsideRect(Bps.m_MouseStartDragPos, m_UiPopupBrushPaletteImageRect) ||
-				   IsInsideRect(Bps.m_MouseEndDragPos, m_UiPopupBrushPaletteImageRect))
-				{
-					u8* aTileSelected = Bps.m_aTileSelected;
-					const float TileSize = m_UiPopupBrushPaletteImageRect.w / 16.f;
-					const vec2 RelMouseStartPos = Bps.m_MouseStartDragPos -
-						vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
-					const vec2 RelMouseEndPos = Bps.m_MouseEndDragPos -
-						vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
-					const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
-					const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
-					const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
-					const int DragEndTileY = clamp(RelMouseEndPos.y / TileSize, 0.f, 15.f);
-
-					const int DragTLX = min(DragStartTileX, DragEndTileX);
-					const int DragTLY = min(DragStartTileY, DragEndTileY);
-					const int DragBRX = max(DragStartTileX, DragEndTileX);
-					const int DragBRY = max(DragStartTileY, DragEndTileY);
-
-					for(int ty = DragTLY; ty <= DragBRY; ty++)
-					{
-						for(int tx = DragTLX; tx <= DragBRX; tx++)
-						{
-							aTileSelected[ty * 16 + tx] = 1;
-						}
-					}
-
-					int StartX = 999;
-					int StartY = 999;
-					int EndX = -1;
-					int EndY = -1;
-					for(int ti = 0; ti < 256; ti++)
-					{
-						if(aTileSelected[ti])
-						{
-							int tx = (ti & 0xF);
-							int ty = (ti / 16);
-							StartX = min(StartX, tx);
-							StartY = min(StartY, ty);
-							EndX = max(EndX, tx);
-							EndY = max(EndY, ty);
-						}
-					}
-
-					EndX++;
-					EndY++;
-
-					CDynArray<CTile> aBrushTiles = m_Map.NewTileArray();
-					const int Width = EndX - StartX;
-					const int Height = EndY - StartY;
-					aBrushTiles.AddEmpty(Width * Height);
-
-					const int LastTid = (EndY-1)*16+EndX;
-					for(int ti = (StartY*16+StartX); ti < LastTid; ti++)
-					{
-						if(aTileSelected[ti])
-						{
-							int tx = (ti & 0xF) - StartX;
-							int ty = (ti / 16) - StartY;
-							aBrushTiles[ty * Width + tx].m_Index = ti;
-						}
-					}
-
-					SetNewBrush(aBrushTiles.Data(), Width, Height);
-				}
-			}
-			Bps.m_MouseClicked = false;
-		}
-	}
 }
 
 void CEditor::Reset()
@@ -2945,60 +2965,6 @@ void CEditor::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pSnap = m_Map.SaveSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
-}
-
-void CEditor::OnStartDragging()
-{
-	// TODO: if tool == brush
-	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
-		m_ZoomWorldViewHeight, m_UiMouseStartDragPos);
-	const float TileSize = 32;
-	m_TileStartDrag.x = floor(MouseWorldPos.x/TileSize);
-	m_TileStartDrag.y = floor(MouseWorldPos.y/TileSize);
-}
-
-void CEditor::OnFinishDragging()
-{
-	// TODO: if tool == brush
-	if(m_Brush.IsEmpty())
-	{
-		dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
-		const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
-
-		// TODO: do this better (ignoring mouse click on UI)
-		if(SelectedLayer.IsTileLayer() && IsInsideRect(m_UiMouseStartDragPos, m_UiMainViewRect))
-		{
-			vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
-				m_ZoomWorldViewHeight, m_UiMouseEndDragPos);
-			const float TileSize = 32;
-			ivec2 TileEndDrag(floor(EndMouseWorldPos.x/TileSize), floor(EndMouseWorldPos.y/TileSize));
-
-			const int SelStartX = clamp(min(m_TileStartDrag.x, TileEndDrag.x), 0, SelectedLayer.m_Width-1);
-			const int SelStartY = clamp(min(m_TileStartDrag.y, TileEndDrag.y), 0, SelectedLayer.m_Height-1);
-			const int SelEndX = clamp(max(m_TileStartDrag.x, TileEndDrag.x), 0, SelectedLayer.m_Width-1) + 1;
-			const int SelEndY = clamp(max(m_TileStartDrag.y, TileEndDrag.y), 0, SelectedLayer.m_Height-1) + 1;
-			const int Width = SelEndX - SelStartX;
-			const int Height = SelEndY - SelStartY;
-
-			CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
-			aExtractTiles.AddEmpty(Width * Height);
-
-			const int LayerWidth = SelectedLayer.m_Width;
-			const CDynArray<CTile>& aLayerTiles = SelectedLayer.m_aTiles;
-			const int StartTid = SelStartY * LayerWidth + SelStartX;
-			const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
-
-			for(int ti = StartTid; ti < LastTid; ti++)
-			{
-				const int tx = (ti % LayerWidth) - SelStartX;
-				const int ty = (ti / LayerWidth) - SelStartY;
-				if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
-					aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
-			}
-
-			SetNewBrush(aExtractTiles.Data(), Width, Height);
-		}
-	}
 }
 
 void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
