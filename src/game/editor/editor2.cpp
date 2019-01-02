@@ -13,6 +13,8 @@
 //#include <intrin.h>
 
 // TODO:
+// - Add tile layer / quad layer button
+
 // - Easily know if we're clicking on UI or elsewhere
 //		- what event gets handled where should be VERY clear
 
@@ -2435,6 +2437,19 @@ void CEditor::RenderBrush(vec2 Pos)
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
+struct CImageNameItem
+{
+	int m_Index;
+	CEditorMap::CImageName m_Name;
+};
+
+int CompareImageNameItems(const void* pA, const void* pB)
+{
+	const CImageNameItem& a = *(CImageNameItem*)pA;
+	const CImageNameItem& b = *(CImageNameItem*)pB;
+	return str_comp_nocase(a.m_Name.m_Buff, b.m_Name.m_Buff);
+}
+
 void CEditor::RenderAssetManager()
 {
 	CEditorMap::CAssets& Assets = m_Map.m_Assets;
@@ -2459,19 +2474,35 @@ void CEditor::RenderAssetManager()
 	const float Spacing = 2.0f;
 	const float ShowButtonWidth = 15.0f;
 
+	static CImageNameItem s_aImageItems[CEditorMap::MAX_IMAGES];
 	const int ImageCount = Assets.m_ImageCount;
+
+	// sort images by name
+	static float s_LastSortTime = 0;
+	if(m_LocalTime - s_LastSortTime > 0.1f) // this should be very fast but still, limit it
+	{
+		s_LastSortTime = m_LocalTime;
+		for(int i = 0; i < ImageCount; i++)
+		{
+			s_aImageItems[i].m_Index = i;
+			s_aImageItems[i].m_Name = Assets.m_aImageNames[i];
+		}
+
+		qsort(s_aImageItems, ImageCount, sizeof(s_aImageItems[0]), CompareImageNameItems);
+	}
+
 	for(int i = 0; i < ImageCount; i++)
 	{
 		if(i != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 
-		const bool Selected = (m_UiSelectedImageID == i);
+		const bool Selected = (m_UiSelectedImageID == s_aImageItems[i].m_Index);
 		const vec4 ColBorder = Selected ? vec4(1, 0, 0, 1) : StyleColorButtonBorder;
-		if(UiButtonEx(ButtonRect, Assets.m_aImageNames[i].m_Buff, &s_UiImageButState[i],
+		if(UiButtonEx(ButtonRect, s_aImageItems[i].m_Name.m_Buff, &s_UiImageButState[i],
 			StyleColorButton,StyleColorButtonHover, StyleColorButtonPressed, ColBorder, FontSize))
 		{
-			m_UiSelectedImageID = i;
+			m_UiSelectedImageID = s_aImageItems[i].m_Index;
 		}
 	}
 
