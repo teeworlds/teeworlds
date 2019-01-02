@@ -91,6 +91,22 @@ void CEditorInputConsole::Render()
 	TextRender()->TextShadowed(&Cursor, m_Input.GetString(), -1, vec2(0, 0), vec4(0, 0, 0, 0),
 							   vec4(1, 1, 1, 1));
 
+	// cursor line |
+	float w = TextRender()->TextWidth(0, FontSize, m_Input.GetString(), m_Input.GetCursorOffset()) +
+		TextRender()->TextWidth(0, FontSize, "> ", 2);
+	CUIRect CursorRect = InputRect;
+	CursorRect.x += w + InputMargin;
+	CursorRect.y += 2;
+	CursorRect.w = ScreenRect.w / Graphics()->ScreenWidth(); // 1px
+	CursorRect.h -= 4;
+
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1, 1, 1, 1);
+	IGraphics::CQuadItem QuadCursor(CursorRect.x, CursorRect.y, CursorRect.w, CursorRect.h);
+	Graphics()->QuadsDrawTL(&QuadCursor, 1);
+	Graphics()->QuadsEnd();
+
 	//	render log (actual page, wrap lines)
 	CBacklogEntry *pEntry = m_Backlog.Last();
 	float OffsetY = 0.0f;

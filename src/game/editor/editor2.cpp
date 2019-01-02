@@ -2821,15 +2821,24 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
 	{
-		pInputState->m_CursorPos = str_length(pText);
 		UI()->SetActiveItem(pInputState);
 	}
-	else if(UI()->MouseButtonClicked(0) && UI()->CheckActiveItem(pInputState))
+	else if(UI()->CheckActiveItem(pInputState) && UI()->MouseButtonClicked(0))
 	{
 		UI()->SetActiveItem(0);
 	}
 
+	const bool PrevSelected = pInputState->m_Selected;
 	pInputState->m_Selected = UI()->CheckActiveItem(pInputState);
+
+	// just got selected
+	if(!PrevSelected && pInputState->m_Selected)
+	{
+		pInputState->m_CursorPos = str_length(pText);
+	}
+
+	static float s_StartBlinkTime = 0;
+	const int OldCursorPos = pInputState->m_CursorPos;
 
 	if(pInputState->m_Selected)
 	{
@@ -2838,13 +2847,32 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 		{
 			int Len = str_length(pText);
 			int NumChars = Len;
-			CLineInput::Manipulate(Input()->GetEvent(i), pText, TextMaxLength, TextMaxLength, &Len, &pInputState->m_CursorPos, &NumChars, Input());
+			CLineInput::Manipulate(Input()->GetEvent(i), pText, TextMaxLength, TextMaxLength,
+				&Len, &pInputState->m_CursorPos, &NumChars, Input());
 		}
 	}
 
+	const float FontSize = 8.0f;
+
 	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1,
 		pInputState->m_Selected ? vec4(0,0.2,1,1) : StyleColorButtonBorder);
-	DrawText(Rect, pText, 8);
+	DrawText(Rect, pText, FontSize);
+
+	// cursor
+	if(OldCursorPos != pInputState->m_CursorPos)
+		s_StartBlinkTime = m_LocalTime;
+
+	if(pInputState->m_Selected && fmod(m_LocalTime - s_StartBlinkTime, 1.0f) < 0.5f)
+	{
+		const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f; // see DrawText
+		float w = TextRender()->TextWidth(0, FontSize, pText, pInputState->m_CursorPos);
+		CUIRect CursorRect = Rect;
+		CursorRect.x += w + OffY;
+		CursorRect.y += 2;
+		CursorRect.w = m_UiScreenRect.w / m_GfxScreenWidth; // 1px
+		CursorRect.h -= 4;
+		DrawRect(CursorRect, vec4(1,1,1,1));
+	}
 }
 
 void CEditor::Reset()
