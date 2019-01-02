@@ -127,8 +127,8 @@ public:
 			u64 Ring8 = *(u64*)(m_aRingUsed+i);
 			if(Ring8 == 0)
 			{
-				ChainRingCount += 8;
-				i += 7;
+				ChainRingCount += min(Count, 8);
+				i += min(Count, 8) - 1;
 			}
 			else if(Ring8 == (u64)0xFFFFFFFFFFFFFFFF)
 			{
@@ -275,6 +275,15 @@ struct CDynArray
 		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
 		Data()[Index].~T();
 		Data()[Index] = Data()[m_EltCount-1];
+		m_EltCount--;
+	}
+
+	// keeps order, way slower
+	inline void RemoveByIndexSlide(int Index)
+	{
+		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
+		Data()[Index].~T();
+		memmove(Data()+Index, Data()+Index+1, (m_EltCount-(Index+1))*sizeof(T));
 		m_EltCount--;
 	}
 
@@ -605,7 +614,7 @@ class CEditor: public IEditor
 		PAGE_COUNT_,
 	};
 
-	int m_Page = PAGE_ASSET_MANAGER;
+	int m_Page = PAGE_MAP_EDITOR;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
@@ -658,6 +667,7 @@ class CEditor: public IEditor
 	void OnMapLoaded();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
+	void EditDeleteGroup(int GroupID);
 	void EditDeleteImage(int ImageID);
 	void EditAddImage(const char* pFilename);
 

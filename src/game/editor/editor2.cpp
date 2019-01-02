@@ -1772,11 +1772,11 @@ void CEditor::RenderMapViewHud()
 				SetNewBrush(aExtractTiles.Data(), Width, Height);
 			}
 		}
-	}
 
-	// TODO: if tool == brush
-	// draw brush
-	RenderBrush(GridMousePos);
+		// TODO: if tool == brush
+		// draw brush
+		RenderBrush(GridMousePos);
+	}
 }
 
 void CEditor::RenderMapEditorUI()
@@ -2041,6 +2041,20 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 	DrawRect(ButtonRect, StyleColorButtonPressed);
+
+	// delete button
+	if(!IsGameGroup)
+	{
+		CUIRect DelButRect;
+		ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
+		static CUIButtonState s_GroupDeleteButton;
+		if(UiButtonEx(DelButRect, "x", &s_GroupDeleteButton, vec4(0.4, 0.04, 0.04, 1),
+			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
+		{
+			EditDeleteGroup(m_UiSelectedGroupID);
+		}
+	}
+
 	if(IsGameGroup)
 		str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
 	else
@@ -3203,6 +3217,32 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	char aBuff[64];
 	str_format(aBuff, sizeof(aBuff), "Layer %d", LyID); // TODO: use layer name here
 	HistoryNewEntry("Deleted layer", aBuff);
+}
+
+void CEditor::EditDeleteGroup(int GroupID)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+	dbg_assert(GroupID != m_Map.m_GameGroupID, "Can't delete game group");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	const int LayerCount = m_Map.m_aGroups[GroupID].m_LayerCount;
+	while(Group.m_LayerCount > 0)
+	{
+		EditDeleteLayer(Group.m_apLayerIDs[0], GroupID);
+	}
+
+	if(m_Map.m_GameGroupID > GroupID)
+		m_Map.m_GameGroupID--; // see RemoveByIndexSlide
+
+	m_Map.m_aGroups.RemoveByIndexSlide(GroupID);
+
+	m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	m_UiSelectedLayerID = m_Map.m_GameLayerID;
+
+	// history entry
+	char aBuff[64];
+	str_format(aBuff, sizeof(aBuff), "Group %d", GroupID); // TODO: use layer name here
+	HistoryNewEntry("Deleted group", aBuff);
 }
 
 void CEditor::EditDeleteImage(int ImgID)
