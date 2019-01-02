@@ -44,6 +44,10 @@
 	#error NOT IMPLEMENTED
 #endif
 
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	#include <immintrin.h> //_mm_pause
+#endif
+
 #if defined(CONF_PLATFORM_SOLARIS)
 	#include <sys/filio.h>
 #endif
@@ -504,6 +508,14 @@ void thread_detach(void *thread)
 #endif
 }
 
+void cpu_relax()
+{
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	_mm_pause();
+#else
+	(void) 0;
+#endif
+}
 
 
 

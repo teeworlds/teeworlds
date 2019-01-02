@@ -405,6 +405,12 @@ void thread_yield();
 */
 void thread_detach(void *thread);
 
+/*
+	Function: cpu_relax
+		Lets the cpu relax a bit.
+*/
+void cpu_relax();
+
 /* Group: Locks */
 typedef void* LOCK;
 
