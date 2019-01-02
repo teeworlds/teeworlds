@@ -13,8 +13,6 @@
 //#include <intrin.h>
 
 // TODO:
-// - Add tile layer / quad layer button
-
 // - Easily know if we're clicking on UI or elsewhere
 //		- what event gets handled where should be VERY clear
 
@@ -2107,7 +2105,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 
 	// layer
-	const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 	const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
 
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2156,11 +2154,15 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			// image
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-			DrawRect(ButtonRect, vec4(0,0,0,1));
-			if(SelectedLayer.m_ImageID >= 0)
-				DrawText(ButtonRect, m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
-			else
-				DrawText(ButtonRect, Localize("none"), FontSize);
+			static CUIButtonState s_ImageButton;
+			const char* pText = SelectedLayer.m_ImageID >= 0 ?
+				m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
+			if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
+			{
+				SelectedLayer.m_ImageID++;
+				if(SelectedLayer.m_ImageID >= m_Map.m_Assets.m_ImageCount)
+					SelectedLayer.m_ImageID = -1;
+			}
 
 			// color
 			CUIRect ColorRect;
@@ -2178,11 +2180,15 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// image
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		if(SelectedLayer.m_ImageID >= 0)
-			DrawText(ButtonRect, m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff, FontSize);
-		else
-			DrawText(ButtonRect, Localize("none"), FontSize);
+		static CUIButtonState s_ImageButton;
+		const char* pText = SelectedLayer.m_ImageID >= 0 ?
+			m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
+		if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
+		{
+			SelectedLayer.m_ImageID++;
+			if(SelectedLayer.m_ImageID >= m_Map.m_Assets.m_ImageCount)
+				SelectedLayer.m_ImageID = -1;
+		}
 
 		// quad count
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
