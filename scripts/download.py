@@ -16,9 +16,9 @@ def unzip(filename, where):
 def downloadAll(arch, conf, targets):
 	url = "https://github.com/teeworlds/teeworlds-libs/archive/master.zip"
 	if arch == "x86_64":
-		_arch = "x64"
+		_arch = "64"
 	else:
-		_arch = arch
+		_arch = "32"
 	builddir = "build/" + arch + "/" + conf + "/"
 	
 	# download and unzip
@@ -33,13 +33,13 @@ def downloadAll(arch, conf, targets):
 	libs_dir = "teeworlds-libs-master"
 
 	if "SDL2.dll" in targets:
-		shutil.copy(libs_dir + "/sdl/windows/lib/" + _arch + "/SDL2.dll", builddir)
+		shutil.copy(libs_dir + "/sdl/windows/lib" + _arch + "/SDL2.dll", builddir)
 	if "freetype.dll" in targets:
-		shutil.copy(libs_dir + "/freetype/windows/lib/" + _arch + "/freetype.dll", builddir)
+		shutil.copy(libs_dir + "/freetype/windows/lib" + _arch + "/freetype.dll", builddir)
 	if "sdl" in targets:
-		copy_tree(libs_dir + "/sdl/windows/", "other/sdl/")
+		copy_tree(libs_dir + "/sdl/", "other/sdl/")
 	if "freetype" in targets:
-		copy_tree(libs_dir + "/freetype/windows/", "other/freetype/")
+		copy_tree(libs_dir + "/freetype/", "other/freetype/")
 
 	# cleanup
 	try:

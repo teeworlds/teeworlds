@@ -36,9 +36,9 @@ SDL = {
 			elseif option.use_winlib > 0 then
 				settings.cc.includes:Add(SDL.basepath .. "/include")
 				if option.use_winlib == 32 then
-					settings.link.libpath:Add(SDL.basepath .. "/lib/x86")
+					settings.link.libpath:Add(SDL.basepath .. "/windows/lib32")
 				else
-					settings.link.libpath:Add(SDL.basepath .. "/lib/x64")
+					settings.link.libpath:Add(SDL.basepath .. "/windows/lib64")
 				end
 				settings.link.libs:Add("SDL2")
 				settings.link.libs:Add("SDL2main")
