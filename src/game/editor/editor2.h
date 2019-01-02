@@ -367,6 +367,7 @@ struct CEditorMap
 	struct CAssets
 	{
 		CImageName m_aImageNames[MAX_IMAGES];
+		u32 m_aImageNameHash[MAX_IMAGES];
 		u32 m_aImageEmbeddedCrc[MAX_IMAGES];
 		IGraphics::CTextureHandle m_aTextureHandle[MAX_IMAGES];
 		CImageInfo m_aTextureInfos[MAX_IMAGES];
@@ -386,6 +387,7 @@ struct CEditorMap
 		int m_GameLayerID;
 		int m_GameGroupID;
 		CImageName* m_aImageNames;
+		u32* m_aImageNameHash;
 		u32* m_aImageEmbeddedCrc;
 		CImageInfo* m_aImageInfos;
 		CGroup* m_aGroups;
@@ -436,6 +438,7 @@ struct CEditorMap
 	void AssetsClearAndSetImages(CImageName* aName, CImageInfo* aInfo, u32* aImageEmbeddedCrc, int ImageCount);
 	u32 AssetsAddEmbeddedData(void* pData, u64 DataSize);
 	void AssetsClearEmbeddedFiles();
+	bool AssetsAddAndLoadImage(const char* pFilename);
 	void AssetsDeleteImage(int ImgID);
 
 	CSnapshot* SaveSnapshot();
@@ -656,6 +659,7 @@ class CEditor: public IEditor
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
 	void EditDeleteImage(int ImageID);
+	void EditAddImage(const char* pFilename);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);

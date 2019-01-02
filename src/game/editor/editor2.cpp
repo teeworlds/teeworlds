@@ -66,7 +66,6 @@ inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 			Pos.y >= Rect.y && Pos.y < (Rect.y+Rect.h));
 }
 
-#if 0
 // hash
 inline u32 fnv1a32(const void* data, u32 dataSize)
 {
@@ -75,7 +74,6 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 		hash = (hash ^ ((const char*)data)[i]) * 16777619;
 	return hash;
 }
-#endif
 
 void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
 {
@@ -525,6 +523,9 @@ void CEditorMap::AssetsClearAndSetImages(CEditorMap::CImageName* aName, CImageIn
 				aInfo[i].m_Format, pFile->m_pData, CImageInfo::FORMAT_RGBA, TextureFlags);
 		}
 
+		m_Assets.m_aImageNameHash[i] = fnv1a32(&m_Assets.m_aImageNames[i],
+			sizeof(m_Assets.m_aImageNames[i]));
+
 		dbg_assert(m_Assets.m_aTextureHandle[i].IsValid(), "Invalid texture");
 	}
 }
@@ -557,6 +558,79 @@ void CEditorMap::AssetsClearEmbeddedFiles()
 		}
 	}
 	m_Assets.m_EmbeddedFileCount = 0;
+}
+
+bool CEditorMap::AssetsAddAndLoadImage(const char* pFilename)
+{
+	// TODO: return error ID
+	if(m_Assets.m_ImageCount > MAX_IMAGES-1)
+		return false;
+
+	const int StrLen = str_length(pFilename);
+	const bool EndsWithPng = StrLen > 4 && str_comp_nocase_num(pFilename+StrLen-4, ".png", 4) == 0;
+	if(!EndsWithPng)
+	{
+		// TODO: can we load anything other than png files?
+		ed_dbg("ERROR: '%s' image file not supported", pFilename);
+		return false;
+	}
+
+
+	CImageName ImgName;
+	mem_zero(&ImgName, sizeof(ImgName));
+	const int NameLen = min(StrLen-4, (int)sizeof(ImgName.m_Buff)-1);
+	memmove(ImgName.m_Buff, pFilename, NameLen);
+	ImgName.m_Buff[NameLen] = 0;
+	const u32 NameHash = fnv1a32(&ImgName, sizeof(ImgName));
+
+	// find image by name
+	const int ImageCount = m_Assets.m_ImageCount;
+	for(int i = 0; i < ImageCount; i++)
+	{
+		if(m_Assets.m_aImageNameHash[i] == NameHash)
+		{
+			ed_log("'%s' image file already loaded", pFilename);
+			return false;
+		}
+	}
+
+	const int ImgID = m_Assets.m_ImageCount++;
+	m_Assets.m_aImageNames[ImgID] = ImgName;
+	m_Assets.m_aImageNameHash[ImgID] = NameHash;
+	m_Assets.m_aImageEmbeddedCrc[ImgID] = 0;
+
+	char aFilePath[256];
+	str_format(aFilePath, sizeof(aFilePath), "mapres/%s", pFilename);
+
+	CImageInfo ImgInfo;
+	IGraphics::CTextureHandle TexHnd;
+	if(Graphics()->LoadPNG(&ImgInfo, aFilePath, IStorage::TYPE_ALL))
+	{
+		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
+		ImgInfo.m_Format = CImageInfo::FORMAT_AUTO;
+		TexHnd = Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format,
+			ImgInfo.m_pData, ImgInfo.m_Format, TextureFlags);
+		mem_free(ImgInfo.m_pData); // TODO: keep this?
+		ImgInfo.m_pData = NULL;
+
+		if(!TexHnd.IsValid())
+		{
+			ed_dbg("LoadTextureRaw ERROR: could not load '%s' image file", aFilePath);
+			m_Assets.m_ImageCount--;
+			return false;
+		}
+	}
+	else
+	{
+		ed_dbg("LoadPNG ERROR: could not load '%s' image file", aFilePath);
+		m_Assets.m_ImageCount--;
+		return false;
+	}
+
+	m_Assets.m_aTextureHandle[ImgID] = TexHnd;
+	m_Assets.m_aTextureInfos[ImgID] = ImgInfo;
+	ed_dbg("Image '%s' loaded", aFilePath);
+	return true;
 }
 
 void CEditorMap::AssetsDeleteImage(int ImgID)
@@ -811,11 +885,10 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 	dbg_assert(Snap.m_GameGroupID == m_GameGroupID, "");
 	dbg_assert(Snap.m_GameLayerID == m_GameLayerID, "");
 
-	dbg_assert(mem_comp(Snap.m_aImageEmbeddedCrc, m_Assets.m_aImageEmbeddedCrc,
-		sizeof(Snap.m_aImageEmbeddedCrc[0]) * Snap.m_ImageCount) == 0, "");
-
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
+		dbg_assert(mem_comp(&Snap.m_aImageEmbeddedCrc[i], &m_Assets.m_aImageEmbeddedCrc[i],
+			sizeof(Snap.m_aImageEmbeddedCrc[i])) == 0, "");
 		dbg_assert(mem_comp(&Snap.m_aImageNames[i], &m_Assets.m_aImageNames[i],
 			sizeof(Snap.m_aImageNames[i])) == 0, "");
 		dbg_assert(mem_comp(&Snap.m_aImageInfos[i], &m_Assets.m_aTextureInfos[i],
@@ -1019,7 +1092,7 @@ void CEditor::Init()
 	m_Map.LoadDefault();
 	OnMapLoaded();
 	*/
-	if(!LoadMap("maps/ctf_medieval_v2.map")) {
+	if(!LoadMap("maps/ctf7.map")) {
 		dbg_break();
 	}
 }
@@ -2483,6 +2556,15 @@ void CEditor::RenderAssetManager()
 		static CUITextInputState s_TextInputAdd = {};
 		static char aAddPath[256] = "grass_main.png";
 		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
+
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+		static CUIButtonState s_ButAdd = {};
+		if(UiButton(ButtonRect, Localize("Add image"), &s_ButAdd))
+		{
+			EditAddImage(aAddPath);
+		}
 	}
 
 	if(m_UiSelectedImageID >= Assets.m_ImageCount)
@@ -3075,6 +3157,19 @@ void CEditor::EditDeleteImage(int ImgID)
 
 	// history entry
 	HistoryNewEntry("Deleted image", aHistoryEntryDesc);
+}
+
+void CEditor::EditAddImage(const char* pFilename)
+{
+	bool Success = m_Map.AssetsAddAndLoadImage(pFilename);
+
+	// history entry
+	if(Success)
+	{
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s", pFilename);
+		HistoryNewEntry("Added image", aHistoryEntryDesc);
+	}
 }
 
 void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
