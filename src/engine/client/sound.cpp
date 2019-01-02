@@ -122,21 +122,23 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				float Dist = sqrtf((float)dx*dx+dy*dy);
 				if(Dist >= 0.0f && Dist < m_MaxDistance)
 				{
-					// constant panning (-3dB center)
-					float a = 0.5f;
-					if(dx < 0)
-						a -= (Dist/m_MaxDistance)/2.0f;
-					else
-						a += (Dist/m_MaxDistance)/2.0f;
-					
-					float Lgain = sinf((1-a)*pi/2.0f);
-					float Rgain = sinf(a*pi/2.0f);
-
 					// linear falloff
 					float Falloff = 1.0f - Dist/m_MaxDistance;
 
-					Lvol = Lvol*Lgain*Falloff;
-					Rvol = Rvol*Rgain*Falloff;
+					// amplitude after falloff
+					float FalloffAmp = v->m_pChannel->m_Vol * Falloff;
+
+					// distribute volume to the channels depending on x difference
+					float Lpan = 0.5f - dx/m_MaxDistance/2.0f;
+					float Rpan = 1.0f - Lpan;
+
+					// apply square root to preserve sound power after panning
+					float LampFactor = sqrt(Lpan);
+					float RampFactor = sqrt(Rpan);
+
+					// volume of the channels
+					Lvol = FalloffAmp*LampFactor;
+					Rvol = FalloffAmp*RampFactor;
 				}
 				else
 				{
