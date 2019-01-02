@@ -524,12 +524,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// get paras
 		switch(gs_GameMsgList[GameMsgID].m_ParaType)
 		{
-		case PARA_III:
-			aParaI[NumParaI++] = pUnpacker->GetInt();
-		case PARA_II:
-			aParaI[NumParaI++] = pUnpacker->GetInt();
-		case PARA_I:
-			aParaI[NumParaI++] = pUnpacker->GetInt();
+		case PARA_I: NumParaI = 1; break;
+		case PARA_II: NumParaI = 2; break;
+		case PARA_III: NumParaI = 3; break;
+		}
+		for(int i = 0; i < NumParaI; i++)
+		{
+			aParaI[i] = pUnpacker->GetInt();
 		}
 
 		// check for unpacking errors

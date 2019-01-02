@@ -420,6 +420,8 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	end
 	
 	settings.cc.includes:Add("src")
+	settings.cc.includes:Add("src/engine/external/pnglite")
+	settings.cc.includes:Add("src/engine/external/wavpack")
 	settings.cc.includes:Add(generated_src_dir)
 	
 	if family == "windows" then

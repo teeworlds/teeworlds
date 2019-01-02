@@ -21,10 +21,6 @@ public:
 
 	static void RateConvert(int SampleID);
 
-	// TODO: Refactor: clean this mess up
-	static IOHANDLE ms_File;
-	static int ReadData(void *pBuffer, int Size);
-
 	virtual bool IsSoundEnabled() { return m_SoundEnabled != 0; }
 
 	virtual CSampleHandle LoadWV(const char *pFilename);

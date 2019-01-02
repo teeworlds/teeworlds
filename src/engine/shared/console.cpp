@@ -553,7 +553,7 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 			int Length = 0;
 			while(*pString)
 			{
-				int Size = str_utf8_encode(Temp, static_cast<const unsigned char>(*pString++));
+				int Size = str_utf8_encode(Temp, static_cast<unsigned char>(*pString++));
 				if(Length+Size < pData->m_MaxSize)
 				{
 					mem_copy(pData->m_pStr+Length, &Temp, Size);
