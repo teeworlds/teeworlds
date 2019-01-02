@@ -1911,10 +1911,9 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			break;
 		}
 	}
-	if(!pFilter)
-		return;
 	CServerFilterInfo FilterInfo;
-	pFilter->GetFilter(&FilterInfo);
+	if(pFilter)
+		pFilter->GetFilter(&FilterInfo);
 
 	TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 
@@ -1972,7 +1971,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 		for(int i = 0; i < pInfo->m_NumClients; i++)
 		{
-			if((FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) && (pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT))
+			if(pFilter && (FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) && (pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT))
 				continue;
 
 			CUIRect Name, Clan, Score, Flag, Icon;
