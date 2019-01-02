@@ -23,6 +23,8 @@
 // - Smooth zoom
 // - Envelope offset
 
+// - Replace a lot of the static count arrays with dynamic ones (with a stack base)
+
 // - Stability is very important (crashes should be easy to catch)
 // --- fix layer id / image id handling
 // - Input should be handled well (careful of input-locks https://github.com/teeworlds/teeworlds/issues/828)
@@ -2028,6 +2030,31 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	UI()->ClipDisable(); // NavRect
 
+	// Add buttons
+	CUIRect ButtonRect2;
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+
+	static CUIButtonState s_ButAddTileLayer, s_ButAddQuadLayer, s_ButAddGroup;
+	if(UiButton(ButtonRect2, Localize("New group"), &s_ButAddGroup))
+	{
+		EditCreateAndAddGroup();
+	}
+
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+
+	if(UiButton(ButtonRect, Localize("T+"), &s_ButAddTileLayer))
+	{
+		m_UiSelectedLayerID = EditCreateAndAddTileLayerUnder(m_UiSelectedLayerID, m_UiSelectedGroupID);
+	}
+
+	if(UiButton(ButtonRect2, Localize("Q+"), &s_ButAddQuadLayer))
+	{
+		//EditCreateAndAddTileLayerUnder(m_UiSelectedLayerID);
+	}
+
+
 	// GROUP/LAYER DETAILS
 	dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
 
@@ -3269,6 +3296,66 @@ void CEditor::EditAddImage(const char* pFilename)
 		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s", pFilename);
 		HistoryNewEntry("Added image", aHistoryEntryDesc);
 	}
+}
+
+void CEditor::EditCreateAndAddGroup()
+{
+	CEditorMap::CGroup Group;
+	Group.m_OffsetX = 0;
+	Group.m_OffsetY = 0;
+	Group.m_ParallaxX = 100;
+	Group.m_ParallaxY = 100;
+	Group.m_LayerCount = 0;
+	m_Map.m_aGroups.Add(Group);
+
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Group %d", m_Map.m_aGroups.Count()-1);
+	HistoryNewEntry("New group", aHistoryEntryDesc);
+}
+
+int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
+{
+	dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	// base width and height on given layer if it is a tilelayer, else base on game layer
+	const CEditorMap::CLayer& TopLayer = m_Map.m_aLayers[UnderLyID];
+	int LyWidth = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Width;
+	int LyHeight = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Height;
+	if(TopLayer.IsTileLayer())
+	{
+		LyWidth = TopLayer.m_Width;
+		LyHeight = TopLayer.m_Height;
+	}
+
+	CEditorMap::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	int UnderGrpLyID = -1;
+	const int ParentGroupLayerCount = Group.m_LayerCount;
+	for(int li = 0; li < ParentGroupLayerCount; li++)
+	{
+		if(Group.m_apLayerIDs[li] == UnderLyID)
+		{
+			UnderGrpLyID = li;
+			break;
+		}
+	}
+
+	dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
+	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
+
+	const int GrpLyID = UnderGrpLyID+1;
+	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
+		(Group.m_LayerCount-GrpLyID) * sizeof(Group.m_apLayerIDs[0]));
+	Group.m_LayerCount++;
+	const int LyID = m_Map.m_aLayers.Count()-1;
+	Group.m_apLayerIDs[GrpLyID] = LyID;
+
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Tile %d", LyID);
+	HistoryNewEntry("New layer", aHistoryEntryDesc);
+	return LyID;
 }
 
 void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
