@@ -469,8 +469,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), (int)Motd.w);
 }
 
-void CMenus::RenderServerControlServer(CUIRect MainView)
+bool CMenus::RenderServerControlServer(CUIRect MainView)
 {
+	bool doCallVote = false;
 	static int s_VoteList = 0;
 	static CListBoxState s_ListBoxState;
 	CUIRect List = MainView;
@@ -482,14 +483,15 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, pOption);
 
 		if(Item.m_Visible)
-		{
+		{			
 			Item.m_Rect.VMargin(5.0f, &Item.m_Rect);
 			Item.m_Rect.y += 2.0f;
 			UI()->DoLabel(&Item.m_Rect, pOption->m_aDescription, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 		}
 	}
 
-	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ListBoxState, 0);
+	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ListBoxState, &doCallVote);
+	return doCallVote;
 }
 
 void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
@@ -676,9 +678,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	MainView.HSplitBottom(90.0f+2*20.0f, &MainView, &Extended);
 	RenderTools()->DrawUIRect(&Extended, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	
+	bool doCallVote = false;
 	// render page
 	if(s_ControlPage == 0)
-		RenderServerControlServer(MainView);
+		doCallVote = RenderServerControlServer(MainView); // double click triggers vote
 	else if(s_ControlPage == 1)
 		RenderServerControlKick(MainView, false);
 	else if(s_ControlPage == 2)
@@ -720,7 +723,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		{
 			// call vote
 			static CButtonContainer s_CallVoteButton;
-			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
+			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button) || doCallVote)
 				HandleCallvote(s_ControlPage, false);
 		}
 		else

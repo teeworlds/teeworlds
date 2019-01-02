@@ -76,6 +76,7 @@ public:
 		AUTHED_ADMIN,
 
 		MAX_RCONCMD_SEND=16,
+		MAX_RCONCMD_RATIO=8,
 	};
 
 	class CClient

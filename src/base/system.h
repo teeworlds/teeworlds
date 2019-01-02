@@ -842,6 +842,19 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
+	Function: str_sanitize_filename
+		Replaces all forbidden Windows/Unix characters with whitespace 
+		or nothing if leading or trailing.
+
+	Parameters:
+		str - String to sanitize.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+char* str_sanitize_filename(char* aName);
+
+/*
 	Function: str_check_pathname
 		Check if the string contains '..' (parent directory) paths.
 
