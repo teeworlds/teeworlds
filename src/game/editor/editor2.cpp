@@ -24,6 +24,7 @@
 // - Envelope offset
 
 // - Replace a lot of the static count arrays with dynamic ones (with a stack base)
+// - Localize everything
 
 // - Stability is very important (crashes should be easy to catch)
 // --- fix layer id / image id handling
@@ -2051,7 +2052,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	if(UiButton(ButtonRect2, Localize("Q+"), &s_ButAddQuadLayer))
 	{
-		//EditCreateAndAddTileLayerUnder(m_UiSelectedLayerID);
+		m_UiSelectedLayerID = EditCreateAndAddQuadLayerUnder(m_UiSelectedLayerID, m_UiSelectedGroupID);
 	}
 
 
@@ -3354,7 +3355,42 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Tile %d", LyID);
-	HistoryNewEntry("New layer", aHistoryEntryDesc);
+	HistoryNewEntry(Localize("New tile layer"), aHistoryEntryDesc);
+	return LyID;
+}
+
+int CEditor::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
+{
+	dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CLayer& Layer = m_Map.NewQuadLayer();
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	int UnderGrpLyID = -1;
+	const int ParentGroupLayerCount = Group.m_LayerCount;
+	for(int li = 0; li < ParentGroupLayerCount; li++)
+	{
+		if(Group.m_apLayerIDs[li] == UnderLyID)
+		{
+			UnderGrpLyID = li;
+			break;
+		}
+	}
+
+	dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
+	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
+
+	const int GrpLyID = UnderGrpLyID+1;
+	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
+		(Group.m_LayerCount-GrpLyID) * sizeof(Group.m_apLayerIDs[0]));
+	Group.m_LayerCount++;
+	const int LyID = m_Map.m_aLayers.Count()-1;
+	Group.m_apLayerIDs[GrpLyID] = LyID;
+
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Quad %d", LyID);
+	HistoryNewEntry(Localize("New Quad layer"), aHistoryEntryDesc);
 	return LyID;
 }
 

@@ -672,6 +672,7 @@ class CEditor: public IEditor
 	void EditAddImage(const char* pFilename);
 	void EditCreateAndAddGroup();
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
+	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
