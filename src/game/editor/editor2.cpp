@@ -2117,13 +2117,23 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	if(ParallaxChanged)
 		EditGroupChangeParallax(m_UiSelectedGroupID, GroupParallaxX, GroupParallaxY);
 
-	// position
+	// offset
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+
 	DrawRect(ButtonRect, vec4(0,0,0,1));
-	str_format(aBuff, sizeof(aBuff), "Offset = (%d, %d)",
-			   SelectedGroup.m_OffsetX, SelectedGroup.m_OffsetY);
-	DrawText(ButtonRect, aBuff, FontSize);
+	DrawText(ButtonRect, Localize("Offset"), FontSize);
+
+	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
+	static CUIIntegerInputState s_IntInpOffsetX, s_IntInpOffsetY;
+	int GroupOffsetX = SelectedGroup.m_OffsetX;
+	int GroupOffsetY = SelectedGroup.m_OffsetY;
+	bool OffsetChanged = false;
+	OffsetChanged |= UiIntegerInput(ButtonRect, &GroupOffsetX, &s_IntInpOffsetX);
+	OffsetChanged |= UiIntegerInput(ButtonRect2, &GroupOffsetY, &s_IntInpOffsetY);
+	if(OffsetChanged)
+		EditGroupChangeOffset(m_UiSelectedGroupID, GroupOffsetX, GroupOffsetY);
 
 
 	// layer
@@ -2983,18 +2993,19 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
 	UiTextInput(Rect, pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), &pInputState->m_TextInput);
 
-	// string format, when empty or on select/deselect
-	if((pInputState->m_aIntBuff[0] == 0 && !OldSelected) || (OldSelected != pInputState->m_TextInput.m_Selected))
-	{
-		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
-		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
-	}
-
 	// string parse, on return key press
 	if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER))
 	{
 		if(sscanf(pInputState->m_aIntBuff, "%d", pInteger) == 0)
 			*pInteger = 0;
+	}
+
+	// string format, when value differ, empty or on select/deselect
+	if((pInputState->m_Value != *pInteger && !OldSelected) ||
+		(pInputState->m_aIntBuff[0] == 0 && !OldSelected) ||
+		(OldSelected != pInputState->m_TextInput.m_Selected))
+	{
+		pInputState->m_Value = *pInteger;
 		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
 		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
 	}
@@ -3488,6 +3499,29 @@ void CEditor::EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewPara
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
 		OldParallaxX, OldParallaxY,
 		NewParallaxX, NewParallaxY);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	if(NewOffsetX == Group.m_OffsetX && NewOffsetY == Group.m_OffsetY)
+		return;
+
+	const int OldOffsetX = Group.m_OffsetX;
+	const int OldOffsetY = Group.m_OffsetY;
+	Group.m_OffsetX = NewOffsetX;
+	Group.m_OffsetY = NewOffsetY;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed offset"),
+		GroupID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+		OldOffsetX, OldOffsetY,
+		NewOffsetX, NewOffsetY);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 

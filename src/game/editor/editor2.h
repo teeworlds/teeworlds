@@ -68,8 +68,8 @@ class CChainAllocator
 	int64 m_AllocatedSize;
 	u8* m_aRingUsed;
 	T* m_pElementBuffer;
-	u32 ELT_COUNT_MAX;
-	u32 RING_ELT_COUNT;
+	int ELT_COUNT_MAX;
+	int RING_ELT_COUNT;
 
 public:
 	typedef CMemBlock<T> BlockT;
@@ -557,10 +557,12 @@ struct CUIIntegerInputState
 {
 	CUITextInputState m_TextInput;
 	char m_aIntBuff[32];
+	int m_Value;
 
 	CUIIntegerInputState()
 	{
 		m_aIntBuff[0] = 0;
+		m_Value = 0;
 	}
 };
 
@@ -749,6 +751,7 @@ class CEditor: public IEditor
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
 	void EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY);
+	void EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
