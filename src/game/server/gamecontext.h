@@ -89,6 +89,7 @@ public:
 	class CCharacter *GetPlayerChar(int ClientID);
 
 	int m_LockTeams;
+	int m_MaxPlayers;
 
 	// voting
 	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
@@ -174,6 +175,7 @@ public:
 	virtual bool IsClientReady(int ClientID) const;
 	virtual bool IsClientPlayer(int ClientID) const;
 
+	virtual int MaxPlayers() const { return m_MaxPlayers; }
 	virtual const char *GameType() const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;

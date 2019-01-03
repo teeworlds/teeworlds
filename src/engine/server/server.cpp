@@ -1087,7 +1087,7 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 
 	pPacker->AddInt(g_Config.m_SvSkillLevel);	// server skill level
 	pPacker->AddInt(PlayerCount); // num players
-	pPacker->AddInt(g_Config.m_SvPlayerSlots); // max players
+	pPacker->AddInt(GameServer()->MaxPlayers()); // max players
 	pPacker->AddInt(ClientCount); // num clients
 	pPacker->AddInt(m_NetServer.MaxClients()); // max clients
 

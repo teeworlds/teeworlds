@@ -275,7 +275,7 @@ void CGameContext::SendSettings(int ClientID)
 	Msg.m_SpecVote = g_Config.m_SvVoteSpectate;
 	Msg.m_TeamLock = m_LockTeams != 0;
 	Msg.m_TeamBalance = g_Config.m_SvTeambalanceTime != 0;
-	Msg.m_PlayerSlots = g_Config.m_SvPlayerSlots;
+	Msg.m_PlayerSlots = m_MaxPlayers;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -1473,8 +1473,7 @@ void CGameContext::OnInit()
 	Console()->Chain("sv_matches_per_map", ConchainGameinfoUpdate, this);
 
 	// clamp sv_player_slots to 0..MaxClients
-	if(Server()->MaxClients() < g_Config.m_SvPlayerSlots)
-		g_Config.m_SvPlayerSlots = Server()->MaxClients();
+	m_MaxPlayers = min(g_Config.m_SvPlayerSlots, Server()->MaxClients());
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)

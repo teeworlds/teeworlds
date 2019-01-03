@@ -83,7 +83,7 @@ void IGameController::DoActivityCheck()
 						for(int j = 0; j < MAX_CLIENTS; ++j)
 							if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
 								++Spectators;
-						if(Spectators >= Server()->MaxClients() - g_Config.m_SvPlayerSlots)
+						if(Spectators >= Server()->MaxClients() - GameServer()->MaxPlayers())
 							Server()->Kick(i, "Kicked for inactivity");
 						else
 							DoTeamChange(GameServer()->m_apPlayers[i], TEAM_SPECTATORS);
@@ -1094,7 +1094,7 @@ bool IGameController::CanJoinTeam(int Team, int NotThisID) const
 
 	// check if there're enough player slots left
 	int TeamMod = GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS ? -1 : 0;
-	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < g_Config.m_SvPlayerSlots;
+	return TeamMod+m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < GameServer()->MaxPlayers();
 }
 
 int IGameController::ClampTeam(int Team) const
@@ -1168,7 +1168,7 @@ int IGameController::GetStartTeam()
 	}
 
 	// check if there're enough player slots left
-	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < g_Config.m_SvPlayerSlots)
+	if(m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE] < GameServer()->MaxPlayers())
 	{
 		++m_aTeamSize[Team];
 		m_UnbalancedTick = TBALANCE_CHECK;
