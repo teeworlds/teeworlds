@@ -645,6 +645,7 @@ class CEditor: public IEditor
 	CUIRect m_UiMainViewRect;
 	CDynArraySB<u8, 64> m_UiGroupOpen;
 	CDynArraySB<u8, 64> m_UiGroupHidden;
+	CDynArraySB<u8, 64> m_UiGroupHovered;
 	CDynArraySB<u8, 128> m_UiLayerHovered;
 	CDynArraySB<u8, 128> m_UiLayerHidden;
 	int m_UiSelectedLayerID = -1;

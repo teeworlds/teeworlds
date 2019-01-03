@@ -1522,7 +1522,7 @@ void CEditor::RenderMapView()
 					continue;
 				}
 
-				if(m_UiLayerHovered[LyID])
+				if(m_UiGroupHovered[gi] || m_UiLayerHovered[LyID])
 					LyColor = vec4(1, 0, 1, 1);
 
 				/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
@@ -1551,7 +1551,7 @@ void CEditor::RenderMapView()
 					Graphics()->TextureSet(m_Map.m_Assets.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNormal();
-				if(m_UiLayerHovered[LyID])
+				if(m_UiGroupHovered[gi] || m_UiLayerHovered[LyID])
 					Graphics()->BlendAdditive();
 
 				RenderTools()->RenderQuads(Layer.m_aQuads.Data(), Layer.m_aQuads.Count(),
@@ -1900,6 +1900,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	m_UiGroupOpen.set_size_zero(GroupCount);
 	m_UiGroupHidden.set_size_zero(GroupCount);
+	m_UiGroupHovered.set_size_zero(GroupCount);
 	m_UiLayerHovered.set_size_zero(TotalLayerCount);
 	m_UiLayerHidden.set_size_zero(TotalLayerCount);
 
@@ -1913,6 +1914,11 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+
+		// check whole line for hover
+		CUIButtonState WholeLineState;
+		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
+		m_UiGroupHovered[gi] = WholeLineState.m_Hovered;
 
 		CUIRect ExpandBut, ShowButton;
 
