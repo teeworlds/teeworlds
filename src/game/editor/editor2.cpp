@@ -14,7 +14,7 @@
 
 // TODO:
 // - Easily know if we're clicking on UI or elsewhere
-//		- what event gets handled where should be VERY clear
+// ---- what event gets handled where should be VERY clear
 
 // - Allow brush to go in eraser mode, automapper mode
 // - Binds
@@ -2835,7 +2835,7 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 		if(UI()->MouseButton(0))
 		{
 			pButState->m_Pressed = true;
-			if(pID)
+			if(pID && UI()->MouseButtonClicked(0))
 				UI()->SetActiveItem(pID);
 		}
 	}
@@ -2902,7 +2902,8 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	{
 		UI()->SetActiveItem(pInputState);
 	}
-	else if(UI()->CheckActiveItem(pInputState) && UI()->MouseButtonClicked(0))
+	else if(UI()->CheckActiveItem(pInputState) && !pInputState->m_Button.m_Hovered &&
+		UI()->MouseButtonClicked(0))
 	{
 		UI()->SetActiveItem(0);
 	}
