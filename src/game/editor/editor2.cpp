@@ -1892,10 +1892,15 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	static CDynArraySB<CUIButtonState, 128> s_UiLayerButState;
 	static CDynArraySB<CUIButtonState, 128> s_UiLayerShowButState;
 
-	s_UiGroupButState.set_size(GroupCount);
-	s_UiGroupShowButState.set_size(GroupCount);
-	s_UiLayerButState.set_size(TotalLayerCount);
-	s_UiLayerShowButState.set_size(TotalLayerCount);
+	s_UiGroupButState.set_size_zero(GroupCount);
+	s_UiGroupShowButState.set_size_zero(GroupCount);
+	s_UiLayerButState.set_size_zero(TotalLayerCount);
+	s_UiLayerShowButState.set_size_zero(TotalLayerCount);
+
+	m_UiGroupOpen.set_size_zero(GroupCount);
+	m_UiGroupHidden.set_size_zero(GroupCount);
+	m_UiLayerHovered.set_size_zero(TotalLayerCount);
+	m_UiLayerHidden.set_size_zero(TotalLayerCount);
 
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
@@ -3129,11 +3134,12 @@ void CEditor::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	mem_zero(m_UiGroupHidden, sizeof(m_UiGroupHidden));
-	mem_zero(m_UiGroupOpen, sizeof(m_UiGroupOpen));
+	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.capacity());
+	m_UiGroupOpen.set_size(m_Map.m_aGroups.Count());
+	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.capacity());
 	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
-	mem_zero(m_UiLayerHidden, sizeof(m_UiLayerHidden));
-	mem_zero(m_UiLayerHovered, sizeof(m_UiLayerHovered));
+	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.capacity());
+	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.capacity());
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
 	ClearBrush();

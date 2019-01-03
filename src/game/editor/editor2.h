@@ -326,12 +326,47 @@ public:
 			list = 0x0;
 	}
 
+	// never used anywhere
+	void delete_all()
+	{
+		if(list == m_BaseData)
+		{
+			for(int i = 0; i < size(); i++)
+				delete list[i];
+			clear();
+		}
+		else
+			ParentT::delete_all();
+	}
+
+	void clear()
+	{
+		if(list == m_BaseData)
+		{
+			list_size = BASE_COUNT;
+			num_elements = 0;
+		}
+		else
+			ParentT::clear();
+	}
+
 	void alloc(int new_len)
 	{
 		if(list == m_BaseData)
 			list = 0x0;
 		ParentT::alloc(new_len);
 	}
+
+	void set_size_zero(int new_size)
+	{
+		const int OldElementCount = num_elements;
+		ParentT::set_size(new_size);
+		const int Diff = num_elements - OldElementCount;
+		for(int i = 0; i < Diff; i++)
+			list[i+OldElementCount] = T();
+	}
+
+	inline int capacity() const { return list_size; }
 };
 
 struct CEditorMap
@@ -552,8 +587,6 @@ class CEditor: public IEditor
 {
 	enum
 	{
-		MAX_GROUPS=64,
-		MAX_LAYERS=128,
 		MAX_HISTORY=128,
 	};
 
@@ -597,10 +630,10 @@ class CEditor: public IEditor
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
-	u8 m_UiGroupOpen[MAX_GROUPS] = {0};
-	u8 m_UiGroupHidden[MAX_GROUPS] = {0};
-	u8 m_UiLayerHovered[MAX_LAYERS] = {0};
-	u8 m_UiLayerHidden[MAX_LAYERS] = {0};
+	CDynArraySB<u8, 64> m_UiGroupOpen;
+	CDynArraySB<u8, 64> m_UiGroupHidden;
+	CDynArraySB<u8, 128> m_UiLayerHovered;
+	CDynArraySB<u8, 128> m_UiLayerHidden;
 	int m_UiSelectedLayerID = -1;
 	int m_UiSelectedGroupID = -1;
 	int m_UiSelectedImageID = -1;
