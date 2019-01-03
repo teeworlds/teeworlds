@@ -2,6 +2,7 @@
 #include "editor2.h"
 
 #include <zlib.h> // crc32
+#include <stdio.h> // sscanf
 #include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
@@ -2070,7 +2071,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// group
 	dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
-	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+	CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
 	char aBuff[128];
 
@@ -2101,10 +2102,20 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	// parallax
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+
 	DrawRect(ButtonRect, vec4(0,0,0,1));
-	str_format(aBuff, sizeof(aBuff), "Parallax = (%d, %d)",
-			   SelectedGroup.m_ParallaxX, SelectedGroup.m_ParallaxY);
-	DrawText(ButtonRect, aBuff, FontSize);
+	DrawText(ButtonRect, Localize("Parallax"), FontSize);
+
+	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
+	static CUIIntegerInputState s_IntInpParallaxX, s_IntInpParallaxY;
+	int GroupParallaxX = SelectedGroup.m_ParallaxX;
+	int GroupParallaxY = SelectedGroup.m_ParallaxY;
+	bool ParallaxChanged = false;
+	ParallaxChanged |= UiIntegerInput(ButtonRect, &GroupParallaxX, &s_IntInpParallaxX);
+	ParallaxChanged |= UiIntegerInput(ButtonRect2, &GroupParallaxY, &s_IntInpParallaxY);
+	if(ParallaxChanged)
+		EditGroupChangeParallax(m_UiSelectedGroupID, GroupParallaxX, GroupParallaxY);
 
 	// position
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2499,7 +2510,7 @@ struct CImageNameItem
 	CEditorMap::CImageName m_Name;
 };
 
-int CompareImageNameItems(const void* pA, const void* pB)
+static int CompareImageNameItems(const void* pA, const void* pB)
 {
 	const CImageNameItem& a = *(CImageNameItem*)pA;
 	const CImageNameItem& b = *(CImageNameItem*)pB;
@@ -2903,7 +2914,7 @@ bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState*
 	return pButState->m_Clicked;
 }
 
-void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState)
+bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState)
 {
 	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
@@ -2928,6 +2939,7 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	static float s_StartBlinkTime = 0;
 	const int OldCursorPos = pInputState->m_CursorPos;
 
+	bool Changed = false;
 	if(pInputState->m_Selected)
 	{
 		m_UiTextInputConsumeKeyboardEvents = true;
@@ -2935,7 +2947,7 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 		{
 			int Len = str_length(pText);
 			int NumChars = Len;
-			CLineInput::Manipulate(Input()->GetEvent(i), pText, TextMaxLength, TextMaxLength,
+			Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pText, TextMaxLength, TextMaxLength,
 				&Len, &pInputState->m_CursorPos, &NumChars, Input());
 		}
 	}
@@ -2961,6 +2973,33 @@ void CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 		CursorRect.h -= 4;
 		DrawRect(CursorRect, vec4(1,1,1,1));
 	}
+
+	return Changed;
+}
+
+bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState)
+{
+	const int OldInteger = *pInteger;
+	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
+	UiTextInput(Rect, pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), &pInputState->m_TextInput);
+
+	// string format, when empty or on select/deselect
+	if((pInputState->m_aIntBuff[0] == 0 && !OldSelected) || (OldSelected != pInputState->m_TextInput.m_Selected))
+	{
+		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
+		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
+	}
+
+	// string parse, on return key press
+	if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER))
+	{
+		if(sscanf(pInputState->m_aIntBuff, "%d", pInteger) == 0)
+			*pInteger = 0;
+		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
+		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
+	}
+
+	return OldInteger != *pInteger;
 }
 
 void CEditor::Reset()
@@ -3426,6 +3465,29 @@ void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
 		OldImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[OldImageID].m_Buff,
 		NewImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[NewImageID].m_Buff);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	if(NewParallaxX == Group.m_ParallaxX && NewParallaxY == Group.m_ParallaxY)
+		return;
+
+	const int OldParallaxX = Group.m_ParallaxX;
+	const int OldParallaxY = Group.m_ParallaxY;
+	Group.m_ParallaxX = NewParallaxX;
+	Group.m_ParallaxY = NewParallaxY;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed parallax"),
+		GroupID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+		OldParallaxX, OldParallaxY,
+		NewParallaxX, NewParallaxY);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 

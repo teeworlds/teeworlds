@@ -553,6 +553,17 @@ struct CUITextInputState
 	int m_CursorPos;
 };
 
+struct CUIIntegerInputState
+{
+	CUITextInputState m_TextInput;
+	char m_aIntBuff[32];
+
+	CUIIntegerInputState()
+	{
+		m_aIntBuff[0] = 0;
+	}
+};
+
 struct CUIMouseDragState
 {
 	vec2 m_StartDragPos;
@@ -708,7 +719,8 @@ class CEditor: public IEditor
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize = 10);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
 					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
-	void UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
+	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
+	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState);
 
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
@@ -736,6 +748,7 @@ class CEditor: public IEditor
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
+	void EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
