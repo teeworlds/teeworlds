@@ -735,11 +735,14 @@ class CEditor: public IEditor
 	void EditCreateAndAddGroup();
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
+	void EditLayerChangeImage(int LayerID, int NewImageID);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
 	void HistoryRedo();
+
+	const char* GetLayerName(int LayerID);
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);

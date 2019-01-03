@@ -2030,10 +2030,8 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				if(m_Map.m_GameLayerID == LyID)
 					str_format(aLayerName, sizeof(aLayerName), "Game Layer");
 				else
-					str_format(aLayerName, sizeof(aLayerName), "%s %d (%s)",
-							   m_Map.m_aLayers[LyID].m_Type == LAYERTYPE_TILES ?
-								   "Tile" : "Quad",
-							   LyID,
+					str_format(aLayerName, sizeof(aLayerName), "%s (%s)",
+							   GetLayerName(LyID),
 							   ImageID >= 0 ? m_Map.m_Assets.m_aImageNames[ImageID].m_Buff : "none");
 				DrawText(ButtonRect, aLayerName, FontSize);
 			}
@@ -2139,12 +2137,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// label
 	DrawRect(ButtonRect, StyleColorButtonPressed);
-	if(IsGameLayer)
-		str_format(aBuff, sizeof(aBuff), Localize("Game Layer"));
-	else
-		str_format(aBuff, sizeof(aBuff), "%s Layer #%d", SelectedLayer.IsTileLayer() ? "Tile":"Quad",
-			m_UiSelectedLayerID);
-	DrawText(ButtonRect, aBuff, FontSize);
+	DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID), FontSize);
 
 	// tile layer
 	if(SelectedLayer.IsTileLayer())
@@ -2172,9 +2165,10 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
 			if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
 			{
-				SelectedLayer.m_ImageID++;
-				if(SelectedLayer.m_ImageID >= m_Map.m_Assets.m_ImageCount)
-					SelectedLayer.m_ImageID = -1;
+				int ImageID = SelectedLayer.m_ImageID + 1;
+				if(ImageID >= m_Map.m_Assets.m_ImageCount)
+					ImageID = -1;
+				EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
 			}
 
 			// color
@@ -2198,9 +2192,10 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
 		if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
 		{
-			SelectedLayer.m_ImageID++;
-			if(SelectedLayer.m_ImageID >= m_Map.m_Assets.m_ImageCount)
-				SelectedLayer.m_ImageID = -1;
+			int ImageID = SelectedLayer.m_ImageID + 1;
+			if(ImageID >= m_Map.m_Assets.m_ImageCount)
+				ImageID = -1;
+			EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
 		}
 
 		// quad count
@@ -3263,9 +3258,7 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 #endif
 
 	// history entry
-	char aBuff[64];
-	str_format(aBuff, sizeof(aBuff), "Layer %d", LyID); // TODO: use layer name here
-	HistoryNewEntry("Deleted layer", aBuff);
+	HistoryNewEntry("Deleted layer", GetLayerName(LyID));
 }
 
 void CEditor::EditDeleteGroup(int GroupID)
@@ -3290,7 +3283,7 @@ void CEditor::EditDeleteGroup(int GroupID)
 
 	// history entry
 	char aBuff[64];
-	str_format(aBuff, sizeof(aBuff), "Group %d", GroupID); // TODO: use layer name here
+	str_format(aBuff, sizeof(aBuff), "Group %d", GroupID);
 	HistoryNewEntry("Deleted group", aBuff);
 }
 
@@ -3415,6 +3408,27 @@ int CEditor::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
 	return LyID;
 }
 
+void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(NewImageID >= -1 && NewImageID < m_Map.m_Assets.m_ImageCount, "NewImageID out of bounds");
+
+	const int OldImageID = m_Map.m_aLayers[LayerID].m_ImageID;
+	if(OldImageID == NewImageID)
+		return;
+
+	m_Map.m_aLayers[LayerID].m_ImageID = NewImageID;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("%s: changed image"),
+		GetLayerName(LayerID));
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
+		OldImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[OldImageID].m_Buff,
+		NewImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[NewImageID].m_Buff);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
 void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
 	CHistoryEntry* pEntry;
@@ -3463,6 +3477,19 @@ void CEditor::HistoryRedo()
 	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
+}
+
+const char* CEditor::GetLayerName(int LayerID)
+{
+	static char aBuff[64];
+	const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	if(Layer.IsTileLayer())
+		str_format(aBuff, sizeof(aBuff), Localize("Tile %d"), LayerID);
+	else if(Layer.IsQuadLayer())
+		str_format(aBuff, sizeof(aBuff), Localize("Quad %d"), LayerID);
+	else
+		dbg_break();
+	return aBuff;
 }
 
 void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
