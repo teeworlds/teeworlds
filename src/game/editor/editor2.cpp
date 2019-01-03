@@ -1884,16 +1884,24 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
 	UI()->ClipEnable(&NavRect);
 
-	static CUIButtonState s_UiGroupButState[MAX_GROUPS] = {};
-	static CUIButtonState s_UiGroupShowButState[MAX_GROUPS] = {};
-	static CUIButtonState s_UiLayerButState[MAX_LAYERS] = {};
-	static CUIButtonState s_UiLayerShowButState[MAX_LAYERS] = {};
+	const int GroupCount = m_Map.m_aGroups.Count();
+	const int TotalLayerCount = m_Map.m_aLayers.Count();
+
+	static CDynArraySB<CUIButtonState, 64> s_UiGroupButState;
+	static CDynArraySB<CUIButtonState, 64> s_UiGroupShowButState;
+	static CDynArraySB<CUIButtonState, 128> s_UiLayerButState;
+	static CDynArraySB<CUIButtonState, 128> s_UiLayerShowButState;
+
+	s_UiGroupButState.set_size(GroupCount);
+	s_UiGroupShowButState.set_size(GroupCount);
+	s_UiLayerButState.set_size(TotalLayerCount);
+	s_UiLayerShowButState.set_size(TotalLayerCount);
+
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
 	const float ShowButtonWidth = 15.0f;
 
-	const int GroupCount = m_Map.m_aGroups.Count();
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		if(gi != 0)
@@ -1963,7 +1971,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 				ButtonRect.VSplitLeft(10.0f, 0, &ButtonRect);
 
-				dbg_assert(LyID >= 0 && LyID < MAX_LAYERS, "LayerID out of bounds");
+				dbg_assert(LyID >= 0 && LyID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
 				// check whole line for hover
 				CUIButtonState WholeLineState;

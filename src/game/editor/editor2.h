@@ -305,6 +305,35 @@ struct CDynArray
 	}
 };
 
+// Dynamic Array Stack-based
+template<typename T, int BASE_COUNT, class ALLOCATOR = allocator_default<T> >
+class CDynArraySB: public array<T, ALLOCATOR>
+{
+	typedef array<T, ALLOCATOR> ParentT;
+	T m_BaseData[BASE_COUNT];
+
+public:
+
+	CDynArraySB(): ParentT()
+	{
+		list = m_BaseData;
+		list_size = BASE_COUNT;
+	}
+
+	~CDynArraySB()
+	{
+		if(list == m_BaseData)
+			list = 0x0;
+	}
+
+	void alloc(int new_len)
+	{
+		if(list == m_BaseData)
+			list = 0x0;
+		ParentT::alloc(new_len);
+	}
+};
+
 struct CEditorMap
 {
 	enum
