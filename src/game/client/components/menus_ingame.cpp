@@ -30,14 +30,14 @@ void CMenus::GetSwitchTeamInfo(CSwitchTeamInfo *pInfo)
 	pInfo->m_AllowSpec = true;
 	pInfo->m_TimeLeft = 0;
 
-	if(TeamMod + m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE] >= m_pClient->m_ServerSettings.m_PlayerSlots)
-	{
-		str_format(pInfo->m_aNotification, sizeof(pInfo->m_aNotification), Localize("Only %d active players are allowed"), m_pClient->m_ServerSettings.m_PlayerSlots);
-	}
-	else if(m_pClient->m_ServerSettings.m_TeamLock)
+	if(m_pClient->m_ServerSettings.m_TeamLock)
 	{
 		str_copy(pInfo->m_aNotification, Localize("Teams are locked"), sizeof(pInfo->m_aNotification));
 		pInfo->m_AllowSpec = false;
+	}
+	else if(TeamMod + m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE] >= m_pClient->m_ServerSettings.m_PlayerSlots)
+	{
+		str_format(pInfo->m_aNotification, sizeof(pInfo->m_aNotification), Localize("Only %d active players are allowed"), m_pClient->m_ServerSettings.m_PlayerSlots);
 	}
 	else if(m_pClient->m_TeamCooldownTick + 1 >= Client()->GameTick())
 	{
