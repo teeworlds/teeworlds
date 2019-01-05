@@ -31,10 +31,10 @@ allowed_words += [ # system.h
 	"str_comp_num", "str_find_nocase", "str_sanitize_strong", "str_uppercase", "str_toint", "str_tofloat",
 	"str_utf8_encode", "str_utf8_rewind", "str_utf8_forward", "str_utf8_decode", "str_sanitize_cc", "str_skip_whitespaces",
 	"fs_makedir", "fs_listdir", "fs_storage_path", "fs_is_dir",
-	"net_init", "net_addr_comp", "net_host_lookup", "net_addr_str", "type", "port", "net_addr_from_str", 
+	"net_init", "net_addr_comp", "net_host_lookup", "net_addr_str", "type", "port", "net_addr_from_str",
 	"net_udp_create", "net_udp_send", "net_udp_recv", "net_udp_close", "net_socket_read_wait",
 	"net_stats", "sent_bytes", "recv_bytes", "recv_packets", "sent_packets",
-	"time_get", "time_freq", "time_timestamp"] 
+	"time_get", "time_freq", "time_timestamp"]
 	
 allowed_words += ["vec2", "vec3", "vec4", "round", "clamp", "length", "dot", "normalize", "frandom", "mix", "distance", "min",
         "closest_point_on_line", "max", "absolute"] # math.hpp

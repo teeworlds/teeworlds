@@ -20,7 +20,7 @@ void CGameControllerLTS::DoWincheckRound()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS &&
-			(!GameServer()->m_apPlayers[i]->m_RespawnDisabled || 
+			(!GameServer()->m_apPlayers[i]->m_RespawnDisabled ||
 			(GameServer()->m_apPlayers[i]->GetCharacter() && GameServer()->m_apPlayers[i]->GetCharacter()->IsAlive())))
 			++Count[GameServer()->m_apPlayers[i]->GetTeam()];
 	}

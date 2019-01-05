@@ -139,7 +139,7 @@ bool CServerBrowserFavorites::RemoveFavoriteEx(const char *pHostname, const NETA
 		}
 		else if(pFavEntry->m_State <= FAVSTATE_LOOKUPCHECK && m_FavLookup.m_FavoriteIndex == Index)
 		{
-			// skip result on favorite hostname lookup 
+			// skip result on favorite hostname lookup
 			m_FavLookup.m_FavoriteIndex = -1;
 		}
 		
