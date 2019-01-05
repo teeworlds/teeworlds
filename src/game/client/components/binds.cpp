@@ -57,7 +57,7 @@ int CBinds::GetModifierMask(IInput *i)
 	Mask |= i->KeyIsPressed(KEY_LCTRL) << CBinds::MODIFIER_CTRL;
 	Mask |= i->KeyIsPressed(KEY_RCTRL) << CBinds::MODIFIER_CTRL;
 	Mask |= i->KeyIsPressed(KEY_LALT) << CBinds::MODIFIER_ALT;
-	if(Mask == 0) 
+	if(Mask == 0)
 		return 1; // if no modifier, flag with MODIFIER_NONE
 	return Mask;
 }

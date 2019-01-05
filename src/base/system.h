@@ -849,7 +849,7 @@ void str_sanitize(char *str);
 
 /*
 	Function: str_sanitize_filename
-		Replaces all forbidden Windows/Unix characters with whitespace 
+		Replaces all forbidden Windows/Unix characters with whitespace
 		or nothing if leading or trailing.
 
 	Parameters:
