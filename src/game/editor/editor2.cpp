@@ -3237,8 +3237,10 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	dbg_assert(LyID >= 0 && LyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
 	dbg_assert(ParentGroupID >= 0 && ParentGroupID < m_Map.m_aGroups.Count(), "ParentGroupID out of bounds");
 	dbg_assert(LyID != m_Map.m_GameLayerID, "Can't delete game layer");
-
 	dbg_assert(m_Map.m_aLayers.Count() > 0, "There should be at least a game layer");
+
+	char aHistoryDesc[64];
+	str_format(aHistoryDesc, sizeof(aHistoryDesc), "%s", GetLayerName(LyID));
 
 	const int SwappedLyID = m_Map.m_aLayers.Count()-1; // see RemoveByIndex
 	CEditorMap::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
@@ -3324,7 +3326,7 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 #endif
 
 	// history entry
-	HistoryNewEntry("Deleted layer", GetLayerName(LyID));
+	HistoryNewEntry("Deleted layer", aHistoryDesc);
 }
 
 void CEditor::EditDeleteGroup(int GroupID)
