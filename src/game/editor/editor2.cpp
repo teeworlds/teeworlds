@@ -1442,16 +1442,16 @@ void CEditor::RenderMapView()
 	float SelectedParallaxY = 1;
 	float SelectedPositionX = 0;
 	float SelectedPositionY = 0;
-	const int SelectedLayerID = m_UiSelectedLayerID;
-	const bool IsSelectedLayerTile = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_TILES;
-	const bool IsSelectedLayerQuad = m_Map.m_aLayers[SelectedLayerID].m_Type == LAYERTYPE_QUADS;
+	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
+	const int SelectedGroupID = m_UiSelectedLayerID != -1 ? m_UiSelectedGroupID : m_Map.m_GameGroupID;
 	dbg_assert(SelectedLayerID >= 0, "No layer selected");
-	dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
-	const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
-	SelectedParallaxX = Group.m_ParallaxX / 100.f;
-	SelectedParallaxY = Group.m_ParallaxY / 100.f;
-	SelectedPositionX = Group.m_OffsetX;
-	SelectedPositionY = Group.m_OffsetY;
+	dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
+	const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[SelectedLayerID];
+	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[SelectedGroupID];
+	SelectedParallaxX = SelectedGroup.m_ParallaxX / 100.f;
+	SelectedParallaxY = SelectedGroup.m_ParallaxY / 100.f;
+	SelectedPositionX = SelectedGroup.m_OffsetX;
+	SelectedPositionY = SelectedGroup.m_OffsetY;
 
 	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
 		SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
@@ -1599,8 +1599,8 @@ void CEditor::RenderMapView()
 
 	IGraphics::CQuadItem OriginLineX(0, 0, TileSize, 2/FakeToScreenY);
 	IGraphics::CQuadItem RecOriginLineYtY(0, 0, 2/FakeToScreenX, TileSize);
-	float LayerWidth = m_Map.m_aLayers[SelectedLayerID].m_Width * TileSize;
-	float LayerHeight = m_Map.m_aLayers[SelectedLayerID].m_Height * TileSize;
+	float LayerWidth = SelectedLayer.m_Width * TileSize;
+	float LayerHeight = SelectedLayer.m_Height * TileSize;
 
 	const float bw = 1.0f / FakeToScreenX;
 	const float bh = 1.0f / FakeToScreenY;
@@ -1614,7 +1614,7 @@ void CEditor::RenderMapView()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	if(IsSelectedLayerTile)
+	if(SelectedLayer.IsTileLayer())
 	{
 		// grid
 		if(m_ConfigShowGrid)
@@ -1697,8 +1697,8 @@ void CEditor::RenderMapViewHud()
 	static CUIMouseDragState s_MapViewDrag;
 	bool FinishedDragging = UiDoMouseDragging(&s_MapViewDrag, m_UiMainViewRect, &s_MapViewDrag);
 
-	dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
-	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
+	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
 
 	if(SelectedTileLayer.IsTileLayer())
 	{
@@ -1946,8 +1946,18 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 		if(ButState.m_Clicked)
-			m_UiGroupOpen[gi] ^= 1;
+		{
+			if(m_UiSelectedGroupID == gi)
+				m_UiGroupOpen[gi] ^= 1;
 
+			m_UiSelectedGroupID = gi;
+			if(m_Map.m_aGroups[gi].m_LayerCount > 0)
+				m_UiSelectedLayerID = m_Map.m_aGroups[gi].m_apLayerIDs[0];
+			else
+				m_UiSelectedLayerID = -1;
+		}
+
+		const bool IsSelected = m_UiSelectedGroupID == gi;
 		const bool IsOpen = m_UiGroupOpen[gi];
 
 		vec4 ButColor = StyleColorButton;
@@ -1956,7 +1966,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		if(ButState.m_Pressed)
 			ButColor = StyleColorButtonPressed;
 
-		if(IsOpen)
+		if(IsSelected)
 			DrawRectBorder(ButtonRect, ButColor, 1, StyleColorButtonBorder);
 		else
 			DrawRect(ButtonRect, ButColor);
@@ -2073,10 +2083,8 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 
 	// GROUP/LAYER DETAILS
-	dbg_assert(m_UiSelectedLayerID >= 0, "No layer selected");
-
 	// group
-	dbg_assert(m_UiSelectedGroupID >= 0, "Parent group of selected layer not found");
+	dbg_assert(m_UiSelectedGroupID >= 0, "No selected group");
 	CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
 	char aBuff[128];
@@ -2141,48 +2149,76 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	if(OffsetChanged)
 		EditGroupChangeOffset(m_UiSelectedGroupID, GroupOffsetX, GroupOffsetY);
 
-
 	// layer
-	CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
-	const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
-
-	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-
-	// delete button
-	if(!IsGameLayer)
+	if(m_UiSelectedLayerID >= 0)
 	{
-		CUIRect DelButRect;
-		ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
-		static CUIButtonState s_LayerDeleteButton;
-		if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
-		{
-			EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
-		}
-	}
+		CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+		const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
 
-	// label
-	DrawRect(ButtonRect, StyleColorButtonPressed);
-	DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID), FontSize);
-
-	// tile layer
-	if(SelectedLayer.IsTileLayer())
-	{
-		// size
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
-			SelectedLayer.m_Width, SelectedLayer.m_Height);
-		DrawText(ButtonRect, aBuff, FontSize);
 
-		// game layer
-		if(IsGameLayer)
+		// delete button
+		if(!IsGameLayer)
 		{
-
+			CUIRect DelButRect;
+			ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
+			static CUIButtonState s_LayerDeleteButton;
+			if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
+				vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
+			{
+				EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
+			}
 		}
-		else
+
+		// label
+		DrawRect(ButtonRect, StyleColorButtonPressed);
+		DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID), FontSize);
+
+		// tile layer
+		if(SelectedLayer.IsTileLayer())
+		{
+			// size
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
+				SelectedLayer.m_Width, SelectedLayer.m_Height);
+			DrawText(ButtonRect, aBuff, FontSize);
+
+			// game layer
+			if(IsGameLayer)
+			{
+
+			}
+			else
+			{
+				// image
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				static CUIButtonState s_ImageButton;
+				const char* pText = SelectedLayer.m_ImageID >= 0 ?
+					m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
+				if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
+				{
+					int ImageID = SelectedLayer.m_ImageID + 1;
+					if(ImageID >= m_Map.m_Assets.m_ImageCount)
+						ImageID = -1;
+					EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
+				}
+
+				// color
+				CUIRect ColorRect;
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				ButtonRect.VSplitMid(&ButtonRect, &ColorRect);
+
+				DrawRect(ButtonRect, vec4(0,0,0,1));
+				DrawText(ButtonRect, "Color", FontSize);
+				DrawRect(ColorRect, SelectedLayer.m_Color);
+			}
+		}
+		else if(SelectedLayer.IsQuadLayer())
 		{
 			// image
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2198,39 +2234,13 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
 			}
 
-			// color
-			CUIRect ColorRect;
+			// quad count
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-			ButtonRect.VSplitMid(&ButtonRect, &ColorRect);
-
 			DrawRect(ButtonRect, vec4(0,0,0,1));
-			DrawText(ButtonRect, "Color", FontSize);
-			DrawRect(ColorRect, SelectedLayer.m_Color);
+			str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.Count());
+			DrawText(ButtonRect, aBuff, FontSize);
 		}
-	}
-	else if(SelectedLayer.IsQuadLayer())
-	{
-		// image
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		static CUIButtonState s_ImageButton;
-		const char* pText = SelectedLayer.m_ImageID >= 0 ?
-			m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
-		if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
-		{
-			int ImageID = SelectedLayer.m_ImageID + 1;
-			if(ImageID >= m_Map.m_Assets.m_ImageCount)
-				ImageID = -1;
-			EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
-		}
-
-		// quad count
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-		DrawRect(ButtonRect, vec4(0,0,0,1));
-		str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.Count());
-		DrawText(ButtonRect, aBuff, FontSize);
 	}
 }
 
