@@ -257,7 +257,7 @@ void CMenus::SaveFilters()
 		if(i == 0)
 			p = "\n";
 		else
-			p = ",\n"; 
+			p = ",\n";
 		io_write(File, p, str_length(p));
 
 		str_format(aBuf, sizeof(aBuf), "\t{\"%s\": {\n", m_lFilters[i].Name());
@@ -1032,7 +1032,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	int NumFilters = m_lFilters.size();
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
-	ListHeight += NumFilters * SpacingH; // add filters 
+	ListHeight += NumFilters * SpacingH; // add filters
 	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
 	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1 && m_ShowServerDetails)
 		ListHeight += ms_ListheaderHeight*5;
@@ -1841,7 +1841,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	if(pInfo)
 	{
 		CUIRect Row;
-		// Localize("Map"); Localize("Game type"); Localize("Version"); Localize("Casual"); Localize("Normal"); Localize("Difficulty"); Localize("Competitive"); 
+		// Localize("Map"); Localize("Game type"); Localize("Version"); Localize("Casual"); Localize("Normal"); Localize("Difficulty"); Localize("Competitive");
 		static CLocConstString s_aLabels[] = {
 			"Map",		
 			"Game type",

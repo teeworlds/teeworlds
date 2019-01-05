@@ -39,7 +39,7 @@ public:
 	
  	bool Active();
 	void ResetPlayerStats(int ClientID);
- 	class CUIRect GetScoreboardRect(); 
+ 	class CUIRect GetScoreboardRect();
 };
 
 #endif
