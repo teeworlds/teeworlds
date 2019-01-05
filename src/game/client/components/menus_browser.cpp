@@ -1860,12 +1860,12 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		{
 
 			LeftColumn.HSplitTop(15.0f, &Row, &LeftColumn);
-			UI()->DoLabelScaled(&Row, s_aLabels[i], FontSize, CUI::ALIGN_LEFT);
+			UI()->DoLabelScaled(&Row, s_aLabels[i], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 		}
 
 		// map
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pInfo->m_aMap, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aMap, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// game type
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
@@ -1873,11 +1873,11 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		Row.VSplitLeft(Row.h, &Icon, &Row);
 		Icon.y -= 2.0f;
 		DoGameIcon(pInfo->m_aGameType, &Icon, CGameIcon::GAMEICON_FULL);
-		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// version
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pInfo->m_aVersion, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aVersion, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// difficulty
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
@@ -1894,7 +1894,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		case 2:
 			DoIcon(IMAGE_LEVELICONS, SPRITE_LEVEL_C_ON, &Icon);
 		}
-		UI()->DoLabelScaled(&Row, s_aDifficulty[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, s_aDifficulty[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 	}
 }
 

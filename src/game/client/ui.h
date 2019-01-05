@@ -120,8 +120,8 @@ public:
 	int DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton);
 
 	// TODO: Refactor: Remove this?
-	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
-	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
+	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1, bool MultiLine = true);
+	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1, bool MultiLine = true);
 };
 
 
