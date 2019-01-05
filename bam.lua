@@ -164,7 +164,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
+	BuildContent(settings, arch, conf)
 end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
@@ -204,7 +204,7 @@ function GenerateLinuxSettings(settings, conf, arch, compiler)
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
+	BuildContent(settings, arch, conf)
 end
 
 function GenerateSolarisSettings(settings, conf, arch, compiler)
@@ -267,13 +267,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
-
-	-- dependencies
-	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
-	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
-	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl" .. settings.cc.extension, "other/sdl/include/SDL.h")
-	AddDependency(cur_builddir .. "/objs/engine/client/text" .. settings.cc.extension, "other/freetype/include/ft2build.h")
+	BuildContent(settings, target_arch, conf)
 end
 
 function SharedCommonFiles()
@@ -373,9 +367,25 @@ function BuildVersionserver(settings)
 	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"])
 end
 
-function BuildContent(settings)
+function BuildContent(settings, arch, conf)
 	local content = {}
 	table.insert(content, CopyToDir(settings.link.Output(settings, "data"), CollectRecursive(content_src_dir .. "*.png", content_src_dir .. "*.wv", content_src_dir .. "*.ttf", content_src_dir .. "*.txt", content_src_dir .. "*.map", content_src_dir .. "*.rules", content_src_dir .. "*.json")))
+	if family == "windows" then
+		if arch == "x86_64" then
+			_arch = "64"
+		else
+			_arch = "32"
+		end
+		-- dependencies
+		dl = Python("scripts/download.py")
+		dl = dl .. " --arch " .. arch .. " --conf " .. conf
+		AddJob("other/sdl/include/SDL.h", "Downloading SDL2", dl .. " sdl")
+		AddJob("other/freetype/include/ft2build.h", "Downloading freetype", dl .. " freetype")
+		table.insert(content, CopyFile(settings.link.Output(settings, "") .. "/SDL2.dll", "other/sdl/windows/lib" .. _arch .. "/SDL2.dll"))
+		table.insert(content, CopyFile(settings.link.Output(settings, "") .. "/freetype.dll", "other/freetype/windows/lib" .. _arch .. "/freetype.dll"))
+		AddDependency(settings.link.Output(settings, "") .. "/SDL2.dll", "other/sdl/include/SDL.h")
+		AddDependency(settings.link.Output(settings, "") .. "/freetype.dll", "other/freetype/include/ft2build.h")
+	end
 	PseudoTarget(settings.link.Output(settings, "content") .. settings.link.extension, content)
 end
 
@@ -501,12 +511,6 @@ end
 for a, cur_arch in ipairs(archs) do
 	for c, cur_conf in ipairs(confs) do
 		cur_builddir = interp(builddir, {platform=family, arch=cur_arch, target=cur_target, conf=cur_conf, compiler=compiler})
-		if family == "windows" then
-			dl = Python("scripts/download.py")
-			dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
-			AddJob(cur_builddir .. "/SDL2.dll", "Downloading SDL.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll") -- TODO: Make me working!
-			AddJob(cur_builddir .. "/freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
-		end
 		local settings = GenerateSettings(cur_conf, cur_arch, cur_builddir, compiler)
 		for t, cur_target in pairs(targets) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))

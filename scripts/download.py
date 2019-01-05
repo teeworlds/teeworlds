@@ -32,10 +32,6 @@ def downloadAll(arch, conf, targets):
 		sys.exit(-1)
 	libs_dir = "teeworlds-libs-master"
 
-	if "SDL2.dll" in targets:
-		shutil.copy(libs_dir + "/sdl/windows/lib" + _arch + "/SDL2.dll", builddir)
-	if "freetype.dll" in targets:
-		shutil.copy(libs_dir + "/freetype/windows/lib" + _arch + "/freetype.dll", builddir)
 	if "sdl" in targets:
 		copy_tree(libs_dir + "/sdl/", "other/sdl/")
 	if "freetype" in targets:
@@ -52,7 +48,7 @@ def main():
     p = argparse.ArgumentParser(description="Download freetype and SDL library and header files for Windows.")
     p.add_argument("--arch", default="x86", choices=["x86", "x86_64"], help="Architecture for the downloaded libraries (Default: x86)")
     p.add_argument("--conf", default="debug", choices=["debug", "release"], help="Build type (Default: debug)")
-    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["SDL2.dll", "freetype.dll", "sdl", "freetype"], help='Target to download. Valid choices are "SDL.dll", "freetype.dll", "sdl" and "freetype"')
+    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["sdl", "freetype"], help='Target to download. Valid choices are "sdl" and "freetype"')
     args = p.parse_args()
 
     downloadAll(args.arch, args.conf, args.targets)
