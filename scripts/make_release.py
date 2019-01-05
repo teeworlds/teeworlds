@@ -3,7 +3,7 @@ from distutils.dir_util import copy_tree
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
-arguments = optparse.OptionParser(usage="usage: %prog VERSION PLATFORM [options]\n\nVERSION  - Version number\nPLATFORM - Target platform (f.e. linux86, linux86_64, osx, src, win32)")
+arguments = optparse.OptionParser(usage="usage: %prog VERSION PLATFORM [options]\n\nVERSION  - Version number\nPLATFORM - Target platform (f.e. linux86, linux86_64, osx, src, win32, win64)")
 arguments.add_option("-l", "--url-languages", default = "http://github.com/teeworlds/teeworlds-translation/archive/master.zip", help = "URL from which the teeworlds language files will be downloaded")
 arguments.add_option("-m", "--url-maps", default = "http://github.com/teeworlds/teeworlds-maps/archive/master.zip", help = "URL from which the teeworlds maps files will be downloaded")
 arguments.add_option("-s", "--source-dir", help = "Source directory which is used for building the package")
@@ -18,7 +18,7 @@ if options.source_dir != None:
 		exit(1)
 	os.chdir(options.source_dir)
 
-#valid_platforms = ["win32", "osx", "linux86", "linux86_64", "src"]
+valid_platforms = ["win32", "win64", "osx", "linux86", "linux86_64", "src"]
 
 name = "teeworlds"
 version = sys.argv[1]
@@ -32,10 +32,10 @@ include_data = True
 include_exe = True
 include_src = False
 
-#if not options.platform in valid_platforms:
-#	print("not a valid platform")
-#	print(valid_platforms)
-#	sys.exit(-1)
+if not platform in valid_platforms:
+	print("not a valid platform")
+	print(valid_platforms)
+	sys.exit(-1)
 
 if platform == "src":
 	include_exe = False
