@@ -2449,8 +2449,13 @@ int main(int argc, const char **argv) // ignore_convention
 	#else
 	bool HideConsole = false;
 	#endif
+	bool QuickEditMode = false;
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
+		if(str_comp("--quickeditmode", argv[i]) == 0) // ignore_convention
+		{
+			QuickEditMode = true;
+		}
 		if(str_comp("-c", argv[i]) == 0 || str_comp("--console", argv[i]) == 0) // ignore_convention
 		{
 			HideConsole = false;
@@ -2465,6 +2470,8 @@ int main(int argc, const char **argv) // ignore_convention
 
 	if(HideConsole)
 		FreeConsole();
+	else if(!QuickEditMode)
+		dbg_console_init();
 #endif
 
 	bool UseDefaultConfig = false;
@@ -2579,6 +2586,10 @@ int main(int argc, const char **argv) // ignore_convention
 	// write down the config and quit
 	pConfig->Save();
 
+#if defined(CONF_FAMILY_WINDOWS)
+	if(!HideConsole && !QuickEditMode)
+		dbg_console_cleanup();
+#endif
 	// free components
 	mem_free(pClient);
 	delete pKernel;

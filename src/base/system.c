@@ -242,6 +242,24 @@ void dbg_logger_file(const char *filename)
 		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
 
 }
+
+#if defined(CONF_FAMILY_WINDOWS)
+static DWORD old_console_mode;
+
+void dbg_console_init()
+{
+	HANDLE handle;
+
+	handle = GetStdHandle(STD_INPUT_HANDLE);
+	GetConsoleMode(handle, &old_console_mode);
+	old_console_mode &= ~ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
+	SetConsoleMode(handle, old_console_mode);
+}
+void dbg_console_cleanup()
+{
+	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), old_console_mode);
+}
+#endif
 /* */
 
 typedef struct MEMHEADER
