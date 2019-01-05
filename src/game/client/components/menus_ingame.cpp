@@ -35,7 +35,10 @@ void CMenus::GetSwitchTeamInfo(CSwitchTeamInfo *pInfo)
 		str_format(pInfo->m_aNotification, sizeof(pInfo->m_aNotification), Localize("Only %d active players are allowed"), m_pClient->m_ServerSettings.m_PlayerSlots);
 	}
 	else if(m_pClient->m_ServerSettings.m_TeamLock)
+	{
 		str_copy(pInfo->m_aNotification, Localize("Teams are locked"), sizeof(pInfo->m_aNotification));
+		pInfo->m_AllowSpec = false;
+	}
 	else if(m_pClient->m_TeamCooldownTick + 1 >= Client()->GameTick())
 	{
 		pInfo->m_TimeLeft = (m_pClient->m_TeamCooldownTick - Client()->GameTick()) / Client()->GameTickSpeed() + 1;
@@ -86,7 +89,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 		// specator button
 		int Team = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team;
-		if(Info.m_aNotification[0] && Team != TEAM_SPECTATORS)
+		if(!Info.m_AllowSpec && Team != TEAM_SPECTATORS)
 		{
 			if(Info.m_TimeLeft)
 				str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -99,7 +102,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 		ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 		static CButtonContainer s_SpectateButton;
-		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec && !(Info.m_aNotification[0]))
+		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec)
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 			SetActive(false);

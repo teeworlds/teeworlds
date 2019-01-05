@@ -1501,7 +1501,7 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 	CMenus::CSwitchTeamInfo Info;
 	pClient->m_pMenus->GetSwitchTeamInfo(&Info);
 	int Team = pResult->GetInteger(0);
-	if(pClient->m_aClients[pClient->m_LocalClientID].m_Team == Team || (Team == TEAM_SPECTATORS && !(Info.m_AllowSpec)) || Info.m_aNotification[0])
+	if(pClient->m_aClients[pClient->m_LocalClientID].m_Team == Team || (Team == TEAM_SPECTATORS && !(Info.m_AllowSpec)) || (Team != TEAM_SPECTATORS && Info.m_aNotification[0]))
 	{
 		if(Info.m_aNotification[0])
 			pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", Info.m_aNotification);
