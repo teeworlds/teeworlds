@@ -249,11 +249,12 @@ static DWORD old_console_mode;
 void dbg_console_init()
 {
 	HANDLE handle;
+	DWORD console_mode;
 
 	handle = GetStdHandle(STD_INPUT_HANDLE);
 	GetConsoleMode(handle, &old_console_mode);
-	old_console_mode &= ~ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
-	SetConsoleMode(handle, old_console_mode);
+	console_mode = old_console_mode & (~ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS);
+	SetConsoleMode(handle, console_mode);
 }
 void dbg_console_cleanup()
 {
