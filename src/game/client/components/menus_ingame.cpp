@@ -114,15 +114,10 @@ void CMenus::RenderGame(CUIRect MainView)
 			int RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
 			if(Team != TEAM_RED)
 				++RedTeamSizeNew;
-			else if(Team == TEAM_RED)
-				--RedTeamSizeNew;
 			int BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
-			if(Team != TEAM_BLUE)
-				++BlueTeamSizeNew;
-			else if(Team == TEAM_BLUE)
+			if(Team == TEAM_BLUE)
 				--BlueTeamSizeNew;
 			bool BlockRed = m_pClient->m_ServerSettings.m_TeamBalance && (RedTeamSizeNew - BlueTeamSizeNew >= NUM_TEAMS);
-			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
 			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed)
 			{
 				if(Info.m_TimeLeft)
@@ -142,6 +137,13 @@ void CMenus::RenderGame(CUIRect MainView)
 				SetActive(false);
 			}
 
+			RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
+			if(Team == TEAM_RED)
+				--RedTeamSizeNew;
+			BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
+			if(Team != TEAM_BLUE)
+				++BlueTeamSizeNew;
+			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
 			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue)
 			{
 				if(Info.m_TimeLeft)
