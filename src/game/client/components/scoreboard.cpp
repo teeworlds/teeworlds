@@ -321,10 +321,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1);
-	TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("K"), -1);
+	TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, "K", -1);
 
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, "D", -1);
-	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("D"), -1);
+	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, "D", -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1);
