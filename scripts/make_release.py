@@ -18,7 +18,7 @@ if options.source_dir != None:
 		exit(1)
 	os.chdir(options.source_dir)
 
-valid_platforms = ["win32", "win64", "osx", "linux86", "linux86_64", "src"]
+valid_platforms = ["win32", "win64", "osx", "linux_x86", "linux_x86_64", "src"]
 
 name = "teeworlds"
 version = sys.argv[1]
