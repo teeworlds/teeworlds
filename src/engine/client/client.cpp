@@ -239,7 +239,7 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		UpdateInt(Target);
 }
 
-CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta), m_pConLinkIdentifier("teeworlds:")
+CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
 {
 	m_pEditor = 0;
 	m_pInput = 0;
@@ -2419,9 +2419,9 @@ static CClient *CreateClient()
 	return new(pClient) CClient;
 }
 
-void CClient::HandleTeeworldsConnectLink(const char *pConLink)
+void CClient::ConnectOnStart(const char *pAddress)
 {
-	str_copy(m_aCmdConnect, pConLink, sizeof(m_aCmdConnect));
+	str_copy(m_aCmdConnect, pAddress, sizeof(m_aCmdConnect));
 }
 
 /*
@@ -2555,22 +2555,19 @@ int main(int argc, const char **argv) // ignore_convention
 		// parse the command line arguments
 		if(argc > 1) // ignore_convention
 		{
-			switch(argc) // ignore_convention
+			const char *pAddress = 0;
+			if(argc == 2)
 			{
-			case 2:
+				pAddress = str_startswith(argv[1], "teeworlds:");
+			}
+			if(pAddress)
 			{
-				// handle Teeworlds connect link
-				const int Length = str_length(pClient->m_pConLinkIdentifier);
-				if(str_comp_num(pClient->m_pConLinkIdentifier, argv[1], Length) == 0) // ignore_convention
-				{
-					pClient->HandleTeeworldsConnectLink(argv[1] + Length); // ignore_convention
-					break;
-				}
+				pClient->ConnectOnStart(pAddress);
 			}
-			default:
-				pConsole->ParseArguments(argc - 1, &argv[1]); // ignore_convention
+			else
+			{
+				pConsole->ParseArguments(argc - 1, &argv[1]);
 			}
-
 		}
 	}
 

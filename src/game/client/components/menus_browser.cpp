@@ -2170,12 +2170,13 @@ void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect, int Type)
 int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
-	int l = str_length(pName);
-	if(l < 5 || IsDir || str_comp(pName + l - 4, ".png") != 0)
+	const char *pSuffix = str_endswith(pName, ".png");
+	if(IsDir || !pSuffix)
+	{
 		return 0;
-
-	char aGameIconName[128] = { 0 };
-	str_copy(aGameIconName, pName, min((int)sizeof(aGameIconName), l - 3));
+	}
+	char aGameIconName[128];
+	str_truncate(aGameIconName, sizeof(aGameIconName), pName, pSuffix - pName);
 
 	// add new game icon
 	char aBuf[512];
