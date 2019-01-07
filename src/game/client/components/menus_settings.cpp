@@ -593,12 +593,12 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 	bool IsNight = false;
 	if((pSuffix = str_endswith(aFullName, "_day")))
 	{
-		str_truncate(aThemeName, sizeof(aThemeName), pName, pSuffix - aThemeName);
+		str_truncate(aThemeName, sizeof(aThemeName), pName, pSuffix - aFullName);
 		IsDay = true;
 	}
 	else if((pSuffix = str_endswith(aFullName, "_night")))
 	{
-		str_truncate(aThemeName, sizeof(aThemeName), pName, pSuffix - aThemeName);
+		str_truncate(aThemeName, sizeof(aThemeName), pName, pSuffix - aFullName);
 		IsNight = true;
 	}
 	else
