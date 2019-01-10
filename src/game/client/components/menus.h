@@ -187,6 +187,7 @@ private:
 	int m_Popup;
 	int m_ActivePage;
 	int m_MenuPage;
+	int m_MenuPageOld;
 	bool m_MenuActive;
 	int m_SidebarTab;
 	bool m_SidebarActive;

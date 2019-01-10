@@ -63,6 +63,7 @@ CMenus::CMenus()
 	m_UseMouseButtons = true;
 
 	SetMenuPage(PAGE_START);
+	m_MenuPageOld = PAGE_START;
 
 	m_PopupActive = false;
 
@@ -1396,7 +1397,8 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	static CButtonContainer s_MenuButton;
 	if(DoButton_Menu(&s_MenuButton, Localize("Back"), 0, &Button) || m_EscapePressed)
 	{
-		SetMenuPage(PAGE_START);
+		SetMenuPage(m_MenuPageOld);
+		m_MenuPageOld = PAGE_START;
 	}
 }
 
@@ -1687,12 +1689,12 @@ int CMenus::Render()
 				m_MenuPage = PAGE_INTERNET;
 			}*/
 
-			// quit button
 			{
-				CUIRect Button;
+				// quit button
+				CUIRect Button, Row;
 				float TopOffset = 27.0f;
-				Screen.HSplitTop(TopOffset, &Button, 0);
-				Button.VSplitRight(TopOffset/* - 3.0f*/, 0, &Button);
+				Screen.HSplitTop(TopOffset, &Row, 0);
+				Row.VSplitRight(TopOffset/* - 3.0f*/, &Row, &Button);
 				static CButtonContainer s_QuitButton;
 
 				// draw red-blending button
@@ -1707,6 +1709,19 @@ int CMenus::Render()
 				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\xE2\x9C\x95", 0, &Button))
 				// if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_FRIENDICONS, SPRITE_FRIEND_X_A, &Button, false))
 					m_Popup = POPUP_QUIT;
+
+				// settings button
+				if(Client()->State() == IClient::STATE_OFFLINE && (m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_LAN || m_MenuPage == PAGE_DEMOS))
+				{
+					Row.VSplitRight(5.0f, &Row, 0);
+					Row.VSplitRight(TopOffset, &Row, &Button);
+					static CButtonContainer s_SettingsButton;
+					if(DoButton_MenuTabTop(&s_SettingsButton, "\xE2\x9A\x99", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
+					{
+						m_MenuPageOld = m_MenuPage;
+						m_MenuPage = PAGE_SETTINGS;
+					}
+				}
 			}
 
 			// render current page
