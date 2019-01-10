@@ -235,9 +235,8 @@ private:
 	public:
 		enum
 		{
-			GAMEICON_FULL=0,
-			GAMEICON_ON,
-			GAMEICON_OFF,
+			GAMEICON_SIZE=64,
+			GAMEICON_OLDHEIGHT=192,
 		};
 		CGameIcon() {};
 		CGameIcon(const char *pName) : m_Name(pName) {}
@@ -247,7 +246,7 @@ private:
 	};
 	array<CGameIcon> m_lGameIcons;
 	IGraphics::CTextureHandle m_GameIconDefault;
-	void DoGameIcon(const char *pName, const CUIRect *pRect, int Type);
+	void DoGameIcon(const char *pName, const CUIRect *pRect);
 	static int GameIconScan(const char *pName, int IsDir, int DirType, void *pUser);
 
 	int64 m_LastInput;
