@@ -3031,7 +3031,7 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 	}
 	if(str_comp(pName, ".") == 0
 		|| (str_comp(pName, "..") == 0 && (str_comp(pEditor->m_pFileDialogPath, "maps") == 0 || str_comp(pEditor->m_pFileDialogPath, "mapres") == 0))
-		|| (pExt && !IsDir && str_endswith(pName, pExt)))
+		|| (pExt && !IsDir && !str_endswith(pName, pExt)))
 	{
 		return 0;
 	}
