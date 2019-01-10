@@ -127,7 +127,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 	CUIRect Button;
 	View.HSplitTop(Spaceing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	pSelf->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Mouse sens."), 200.0f, 5, 500);
+	pSelf->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Mouse sens."), 5, 500);
 
 	pSelf->UiDoGetButtons(0, 5, View, ButtonHeight, Spaceing);
 

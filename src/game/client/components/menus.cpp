@@ -595,21 +595,24 @@ void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const C
 	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
-void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, float VSplitVal, int Min, int Max, bool infinite)
+void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, bool infinite)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Label, ScrollBar;
-	pRect->VSplitLeft(VSplitVal, &Label, &ScrollBar);
 
-	char aBuf[32];
+	char aBuf[128];
 	if(*pOption || !infinite)
 		str_format(aBuf, sizeof(aBuf), "%s: %i", pStr, *pOption);
 	else
 		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
+	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	float VSplitVal = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+
+	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
 	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	*pOption = round_to_int(DoScrollbarH(pOption, &ScrollBar, (float)(*pOption-Min)/(float)(Max-Min))*(float)(Max-Min)+(float)Min+0.1f);

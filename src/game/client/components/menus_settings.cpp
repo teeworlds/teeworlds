@@ -958,7 +958,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClNameplatesSize, &g_Config.m_ClNameplatesSize, &Button, Localize("Size"), 100.0f, 0, 100);
+		DoScrollbarOption(&g_Config.m_ClNameplatesSize, &g_Config.m_ClNameplatesSize, &Button, Localize("Size"), 0, 100);
 
 		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
@@ -1044,7 +1044,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClAutoDemoMax, &g_Config.m_ClAutoDemoMax, &Button, Localize("Max"), 100.0f, 0, 1000, true);
+		DoScrollbarOption(&g_Config.m_ClAutoDemoMax, &g_Config.m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, true);
 	}
 
 	Client.HSplitTop(Spacing, 0, &Client);
@@ -1058,7 +1058,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClAutoScreenshotMax, &g_Config.m_ClAutoScreenshotMax, &Button, Localize("Max"), 100.0f, 0, 1000, true);
+		DoScrollbarOption(&g_Config.m_ClAutoScreenshotMax, &g_Config.m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, true);
 	}
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -1681,7 +1681,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 			ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
 			DoScrollbarOption(&g_Config.m_GfxMaxFps, &g_Config.m_GfxMaxFps,
-							  &Button, Localize("Max fps"), 144.0f, 30, 300);
+							  &Button, Localize("Max fps"), 30, 300);
 		}
 	}
 
@@ -1690,7 +1690,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
 		int Index = g_Config.m_GfxScreen;
-		DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 110.0f, 0, Graphics()->GetNumScreens()-1);
+		DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 0, Graphics()->GetNumScreens()-1);
 		if(Index != g_Config.m_GfxScreen)
 			Client()->SwitchWindowScreen(Index);
 	}
@@ -1939,7 +1939,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
-		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 130.0f, 0, 100);
+		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 0, 100);
 	}
 	else
 	{
