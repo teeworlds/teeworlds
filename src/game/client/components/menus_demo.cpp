@@ -271,7 +271,7 @@ int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType,
 	CMenus *pSelf = (CMenus *)pUser;
 	if(str_comp(pName, ".") == 0
 		|| (str_comp(pName, "..") == 0 && str_comp(pSelf->m_aCurrentDemoFolder, "demos") == 0)
-		|| (!IsDir && str_endswith(pName, ".demo")))
+		|| (!IsDir && !str_endswith(pName, ".demo")))
 	{
 		return 0;
 	}
