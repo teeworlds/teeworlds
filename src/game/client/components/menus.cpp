@@ -1036,6 +1036,11 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 		CUIRect r = Item.m_Rect;
 		RenderTools()->DrawUIRect(&r, vec4(1,1,1,ProcessInput?0.5f:0.33f), CUI::CORNER_ALL, 5.0f);
 	}
+	/*else*/ if(UI()->HotItem() == pId)
+	{
+		CUIRect r = Item.m_Rect;
+		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.33f), CUI::CORNER_ALL, 5.0f);
+	}
 
 	return Item;
 }
