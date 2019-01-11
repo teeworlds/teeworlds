@@ -566,6 +566,8 @@ int CEditor::DoButton_File(const void *pID, const char *pText, int Checked, cons
 {
 	if(Checked)
 		RenderTools()->DrawUIRect(pRect, GetButtonColor(pID, Checked), CUI::CORNER_ALL, 3.0f);
+	else if(UI()->HotItem() == pID)
+		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.33f), CUI::CORNER_ALL, 3.0f);
 
 	CUIRect t = *pRect;
 	t.VMargin(5.0f, &t);
