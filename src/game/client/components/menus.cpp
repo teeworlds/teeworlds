@@ -326,7 +326,13 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 	c.Margin(2.0f, &c);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	if(UI()->HotItem() == pID)
+	{
+		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_HOVER);
+		IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+	}
 	if(Checked)
 		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_ACTIVE);
 	else
