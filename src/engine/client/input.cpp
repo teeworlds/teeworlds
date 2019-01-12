@@ -48,7 +48,7 @@ CInput::CInput()
 
 CInput::~CInput()
 {
-	free(m_pClipboardText);
+	SDL_free(m_pClipboardText);
 }
 
 void CInput::Init()
@@ -113,7 +113,7 @@ const char *CInput::GetClipboardText()
 {
 	if(m_pClipboardText)
 	{
-		free(m_pClipboardText);
+		SDL_free(m_pClipboardText);
 	}
 	m_pClipboardText = SDL_GetClipboardText();
 	return m_pClipboardText;
