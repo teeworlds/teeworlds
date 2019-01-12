@@ -1,3 +1,7 @@
+<a href="https://repology.org/metapackage/teeworlds/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/teeworlds.svg" alt="Packaging status" align="right">
+</a>
+
 Teeworlds [![CircleCI](https://circleci.com/gh/teeworlds/teeworlds.svg?style=svg)](https://circleci.com/gh/teeworlds/teeworlds)
 =========
 
