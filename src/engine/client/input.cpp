@@ -39,10 +39,16 @@ CInput::CInput()
 
 	m_InputCounter = 1;
 	m_InputGrabbed = 0;
+	m_pClipboardText = 0;
 
 	m_MouseDoubleClick = false;
 
 	m_NumEvents = 0;
+}
+
+CInput::~CInput()
+{
+	free(m_pClipboardText);
 }
 
 void CInput::Init()
@@ -101,6 +107,21 @@ int CInput::MouseDoubleClick()
 		return 1;
 	}
 	return 0;
+}
+
+const char *CInput::GetClipboardText()
+{
+	if(m_pClipboardText)
+	{
+		free(m_pClipboardText);
+	}
+	m_pClipboardText = SDL_GetClipboardText();
+	return m_pClipboardText;
+}
+
+void CInput::SetClipboardText(const char *pText)
+{
+	SDL_SetClipboardText(pText);
 }
 
 void CInput::Clear()
