@@ -23,15 +23,18 @@ class CGameConsole : public CComponent
 
 		CLineInput m_Input;
 		int m_Type;
-		int m_CompletionEnumerationCount;
 		int m_BacklogActPage;
 
-	public:
 		CGameConsole *m_pGameConsole;
+
+		char m_aCompletionMapBuffer[128];
+		int m_CompletionMapChosen;
+		int m_CompletionMapEnumerationCount;
 
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
 		int m_CompletionFlagmask;
+		int m_CompletionEnumerationCount;
 		float m_CompletionRenderOffset;
 
 		bool m_IsCommand;
@@ -52,6 +55,7 @@ class CGameConsole : public CComponent
 
 		const char *GetString() const { return m_Input.GetString(); }
 		static void PossibleCommandsCompleteCallback(const char *pStr, void *pUser);
+		static void PossibleMapsCompleteCallback(const char *pStr, void *pUser);
 	};
 
 	class IConsole *m_pConsole;

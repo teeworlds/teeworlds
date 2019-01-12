@@ -356,6 +356,15 @@ void CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPoss
 	}
 }
 
+void CConsole::PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser)
+{
+	for(CMapListEntryTemp *pMapEntry = m_pFirstMapEntry; pMapEntry; pMapEntry = pMapEntry->m_pNext)
+	{
+		if(str_find_nocase(pMapEntry->m_aName, pStr))
+			pfnCallback(pMapEntry->m_aName, pUser);
+	}
+}
+
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
@@ -653,6 +662,10 @@ CConsole::CConsole(int FlagMask)
 	m_StoreCommands = true;
 	m_paStrokeStr[0] = "0";
 	m_paStrokeStr[1] = "1";
+	m_pTempMapListHeap = 0;
+	m_NumMapListEntries = 0;
+	m_pFirstMapEntry = 0;
+	m_pLastMapEntry = 0;
 	m_ExecutionQueue.Reset();
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
@@ -862,6 +875,71 @@ void CConsole::DeregisterTempAll()
 
 	m_TempCommands.Reset();
 	m_pRecycleList = 0;
+}
+
+void CConsole::RegisterTempMap(const char *pName)
+{
+	if(!m_pTempMapListHeap)
+		m_pTempMapListHeap = new CHeap();
+	CMapListEntryTemp *pEntry = (CMapListEntryTemp *)m_pTempMapListHeap->Allocate(sizeof(CMapListEntryTemp));
+	pEntry->m_pNext = 0;
+	pEntry->m_pPrev = m_pLastMapEntry;
+	if(pEntry->m_pPrev)
+		pEntry->m_pPrev->m_pNext = pEntry;
+	m_pLastMapEntry = pEntry;
+	if(!m_pFirstMapEntry)
+		m_pFirstMapEntry = pEntry;
+	str_copy(pEntry->m_aName, pName, TEMPMAP_NAME_LENGTH);
+	m_NumMapListEntries++;
+}
+
+void CConsole::DeregisterTempMap(const char *pName)
+{
+	CMapListEntryTemp *pEntry = m_pFirstMapEntry;
+
+	while(pEntry)
+	{
+		if(str_comp_nocase(pName, pEntry->m_aName) == 0)
+			break;
+		pEntry = pEntry->m_pNext;
+	}
+
+	m_NumMapListEntries--;
+	CHeap *pNewTempMapListHeap = new CHeap();
+	CMapListEntryTemp *pNewFirstEntry = 0;
+	CMapListEntryTemp *pNewLastEntry = 0;
+	int NewMapEntryNum = m_NumMapListEntries;
+
+	for(CMapListEntryTemp *pSrc = m_pFirstMapEntry; pSrc; pSrc = pSrc->m_pNext)
+	{
+		if(pSrc == pEntry)
+			continue;
+
+		CMapListEntryTemp *pDst = (CMapListEntryTemp *)pNewTempMapListHeap->Allocate(sizeof(CMapListEntryTemp));
+		pDst->m_pNext = 0;
+		pDst->m_pPrev = m_pLastMapEntry;
+		if(pDst->m_pPrev)
+			pDst->m_pPrev->m_pNext = pDst;
+		m_pLastMapEntry = pDst;
+		if(!m_pFirstMapEntry)
+			m_pFirstMapEntry = pDst;
+
+		str_copy(pDst->m_aName, pSrc->m_aName, TEMPMAP_NAME_LENGTH);
+	}
+
+	delete m_pTempMapListHeap;
+	m_pTempMapListHeap = pNewTempMapListHeap;
+	m_pFirstMapEntry = pNewFirstEntry;
+	m_pLastMapEntry = pNewLastEntry;
+	m_NumMapListEntries = NewMapEntryNum;
+}
+
+void CConsole::DeregisterTempMapAll()
+{
+	m_pTempMapListHeap->Reset();
+	m_pFirstMapEntry = 0;
+	m_pLastMapEntry = 0;
+	m_NumMapListEntries = 0;
 }
 
 void CConsole::Con_Chain(IResult *pResult, void *pUserData)
