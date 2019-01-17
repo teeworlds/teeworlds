@@ -19,6 +19,7 @@
 #include <game/client/localization.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
+#include <game/client/components/menus.h>
 #include <generated/client_data.h>
 
 #include "auto_map.h"
@@ -4136,6 +4137,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 
 void CEditor::RenderMenubar(CUIRect MenuBar)
 {
+	CUIRect ExitButton;
 	static CUIRect s_File /*, view, help*/;
 
 	MenuBar.VSplitLeft(60.0f, &s_File, &MenuBar);
@@ -4143,14 +4145,31 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 		UiInvokePopupMenu(&s_File, 1, s_File.x, s_File.y+s_File.h-1.0f, 120, 150, PopupMenuFile, this);
 
 	CUIRect Info;
+	MenuBar.VSplitRight(20.f, &MenuBar, &ExitButton);
 	MenuBar.VSplitLeft(40.0f, 0, &MenuBar);
 	MenuBar.VSplitLeft(MenuBar.w*0.75f, &MenuBar, &Info);
+	
+
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFileName);
 	UI()->DoLabel(&MenuBar, aBuf, 10.0f, CUI::ALIGN_LEFT);
 
 	str_format(aBuf, sizeof(aBuf), "Z: %i, A: %.1f, G: %i", m_ZoomLevel, m_AnimateSpeed, m_GridFactor);
 	UI()->DoLabel(&Info, aBuf, 10.0f, CUI::ALIGN_RIGHT);
+
+	// Exit editor button	
+	static CMenus::CButtonContainer s_ExitButton;
+	ExitButton.VSplitRight(12.f, 0, &ExitButton);
+	// draw red box
+	RenderTools()->DrawUIRect(&ExitButton, vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.75f), CUI::CORNER_T, 5.0f);
+	// draw X
+	CUIRect XText = ExitButton;
+	UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*0.8f, CUI::ALIGN_CENTER);
+	if(UI()->DoButtonLogic(s_ExitButton.GetID(), "\xE2\x9C\x95", 0, &ExitButton))
+	{
+		g_Config.m_ClEditor ^= 1;
+		Input()->MouseModeRelative();
+	}
 }
 
 void CEditor::Render()
