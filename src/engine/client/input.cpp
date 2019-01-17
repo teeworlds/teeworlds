@@ -48,7 +48,10 @@ CInput::CInput()
 
 CInput::~CInput()
 {
-	SDL_free(m_pClipboardText);
+	if(m_pClipboardText)
+	{
+		SDL_free(m_pClipboardText);
+	}
 }
 
 void CInput::Init()
