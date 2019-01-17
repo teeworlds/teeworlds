@@ -270,7 +270,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				{
 					pCompletionString = m_pClient->m_aClients[Index].m_aName;
 					m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
-					m_CompletionFav = m_CompletionChosen;
+					m_CompletionFav = m_CompletionChosen%MAX_CLIENTS;
 					break;
 				}
 			}
