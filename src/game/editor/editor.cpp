@@ -4157,15 +4157,10 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	str_format(aBuf, sizeof(aBuf), "Z: %i, A: %.1f, G: %i", m_ZoomLevel, m_AnimateSpeed, m_GridFactor);
 	UI()->DoLabel(&Info, aBuf, 10.0f, CUI::ALIGN_RIGHT);
 
-	// Exit editor button	
-	static CMenus::CButtonContainer s_ExitButton;
-	ExitButton.VSplitRight(12.f, 0, &ExitButton);
-	// draw red box
-	RenderTools()->DrawUIRect(&ExitButton, vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.75f), CUI::CORNER_T, 5.0f);
-	// draw X
-	CUIRect XText = ExitButton;
-	UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*0.8f, CUI::ALIGN_CENTER);
-	if(UI()->DoButtonLogic(s_ExitButton.GetID(), "\xE2\x9C\x95", 0, &ExitButton))
+	// Exit editor button
+	static int s_ExitButton;
+	ExitButton.VSplitRight(13.f, 0, &ExitButton);
+	if(DoButton_Editor(&s_ExitButton, "\xE2\x9C\x95", 1, &ExitButton, 0, "[ctrl+shift+e] Exit"))
 	{
 		g_Config.m_ClEditor ^= 1;
 		Input()->MouseModeRelative();
