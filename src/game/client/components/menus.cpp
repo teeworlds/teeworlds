@@ -601,14 +601,23 @@ void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const C
 	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
-void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, bool infinite)
+void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, bool Infinite)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Label, ScrollBar;
 
+	int Value = *pOption;
+	if(Infinite)
+	{
+		Min += 1;
+		Max += 1;
+		if(Value == 0)
+			Value = Max;
+	}
+
 	char aBuf[128];
-	if(*pOption || !infinite)
+	if(!Infinite || Value != Max)
 		str_format(aBuf, sizeof(aBuf), "%s: %i", pStr, *pOption);
 	else
 		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
@@ -621,7 +630,11 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
-	*pOption = round_to_int(DoScrollbarH(pOption, &ScrollBar, (float)(*pOption-Min)/(float)(Max-Min))*(float)(Max-Min)+(float)Min+0.1f);
+	Value = round_to_int(DoScrollbarH(pOption, &ScrollBar, (float)(Value - Min) / (float)(Max - Min))*(float)(Max - Min) + (float)Min + 0.1f);
+	if(Infinite && Value == Max)
+		Value = 0;
+
+	*pOption = Value;
 }
 
 float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback)
