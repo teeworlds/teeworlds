@@ -196,6 +196,7 @@ int CNetConnection::Connect(NETADDR *pAddr)
 
 	// init connection
 	Reset();
+	m_LastRecvTime = time_get();
 	m_PeerAddr = *pAddr;
 	m_PeerToken = NET_TOKEN_NONE;
 	SetToken(GenerateToken(pAddr));
@@ -377,6 +378,11 @@ int CNetConnection::Update()
 	{
 		m_State = NET_CONNSTATE_ERROR;
 		SetError("Timeout");
+	}
+	else if(State() == NET_CONNSTATE_TOKEN && (Now - m_LastRecvTime) > time_freq() * 5)
+	{
+		m_State = NET_CONNSTATE_ERROR;
+		SetError("Unable to connect to the server");
 	}
 
 	// fix resends
