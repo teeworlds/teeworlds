@@ -23,13 +23,13 @@
 
 #include "menus.h"
 
-CMenus::CColumn CMenus::ms_aBrowserCols[] = {
-	{COL_BROWSER_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}, CUI::ALIGN_LEFT}, // Localize - these strings are localized within CLocConstString
-	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 310.0f, 0, {0}, {0}, CUI::ALIGN_LEFT},
-	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f,  0, {0}, {0}, CUI::ALIGN_LEFT},
-	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}, CUI::ALIGN_LEFT},
-	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 50.0f,  0, {0}, {0}, CUI::ALIGN_LEFT},
-	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, CUI::ALIGN_RIGHT},
+CMenus::CColumn CMenus::ms_aBrowserCols[] = {  // Localize - these strings are localized within CLocConstString
+	{COL_BROWSER_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 310.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 50.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {0}, 0};
@@ -531,7 +531,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 			Button.y += 2.0f;
-			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
+			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_CENTER);
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
@@ -919,6 +919,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// split scrollbar from view
 	CUIRect Scroll;
 	View.VSplitRight(20.0f, &View, &Scroll);
+	Scroll.HSplitTop(ms_ListheaderHeight, 0, &Scroll);
+	Scroll.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &Scroll, 0);
 
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
