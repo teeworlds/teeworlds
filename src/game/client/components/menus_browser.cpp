@@ -527,11 +527,26 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				}
 
 			}
+			static float RenderOffset = 0.0f;
+			if(RenderOffset == 0.0f)
+			{
+				char aChar[2] = "0";
+				RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1);
+			}
+
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 			Button.y += 2.0f;
-			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_CENTER);
+
+			if(Num < 100)
+				Button.x += RenderOffset;
+			if(Num < 10)
+				Button.x += RenderOffset;
+			if(!Num)
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
+			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1);
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
@@ -567,6 +582,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			str_format(aTemp, sizeof(aTemp), "%d", pEntry->m_Latency);
 			TextRender()->TextColor(Color.r, Color.g, Color.b, Color.a);
 			Button.y += 2.0f;
+			Button.w -= 4.0f;
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_RIGHT);
 		}
 		else if(ID == COL_BROWSER_GAMETYPE)
