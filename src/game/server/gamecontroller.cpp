@@ -63,13 +63,15 @@ void IGameController::DoActivityCheck()
 		if(GameServer()->m_apPlayers[i] && !GameServer()->m_apPlayers[i]->IsDummy() && (GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS || g_Config.m_SvInactiveKick > 0) &&
 			!Server()->IsAuthed(i) && (GameServer()->m_apPlayers[i]->m_InactivityTickCounter > g_Config.m_SvInactiveKickTime*Server()->TickSpeed()*60))
 		{
-			if (GameServer()->m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS) {
-				Server()->Kick(i, "Kicked for inactivity");
+			if(GameServer()->m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS)
+			{
+				if(g_Config.m_SvInactiveKickSpec)
+					Server()->Kick(i, "Kicked for inactivity");
 			}
-			else {
+			else
+			{
 				switch(g_Config.m_SvInactiveKick)
 				{
-				case 0:
 				case 1:
 					{
 						// move player to spectator
