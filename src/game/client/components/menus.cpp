@@ -607,6 +607,8 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 
 	CUIRect Label, ScrollBar;
 
+	char aBufMax[128];
+	str_format(aBufMax, sizeof(aBufMax), "%s: %i", pStr, Max);
 	int Value = *pOption;
 	if(Infinite)
 	{
@@ -622,7 +624,7 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 	else
 		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
 	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
-	float VSplitVal = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+	float VSplitVal = max(TextRender()->TextWidth(0, FontSize, aBuf, -1), TextRender()->TextWidth(0, FontSize, aBufMax, -1));
 
 	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
 	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
