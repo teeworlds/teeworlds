@@ -275,6 +275,7 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 	}
 
+
 	CUIRect Label;
 	pRect->VMargin(2.0f, &Label);
 	Label.y+=2.0f;
