@@ -97,7 +97,7 @@ void sort_bubble(R range)
 		}
 	}
 }
-
+/* Needs testing
 template<class R>
 void sort_quick(R range)
 {
@@ -293,37 +293,50 @@ void sort_merge(R range)
 		}
 	}
 }
-
+*/
 template<class R>
 void sort_shell(R range)
 {
+	// Using pseudocode from https://en.wikipedia.org/wiki/Shellsort
 	concept_forwarditeration::check(range);
 	concept_backwarditeration::check(range);
-	
-	const int incs[] = {
+
+	// Sort an array a[0...n-1].
+	/* gaps = [...] */
+	const int gaps[] = {
 		1, 3, 7, 21, 48, 112,
 		336, 861, 1968, 4592, 13776,
 		33936, 86961, 198768, 463792, 1391376,
 		3402672, 8382192, 21479367, 49095696, 114556624,
 		343669872, 52913488, 2085837936};
-	typename R::type *front = &range.front();
-	typename R::type *back = &range.back();
-	for(int l = sizeof(incs)/sizeof(incs[0]); l > 0;)
+	typename R::type *front = &range.front(); // a[0]
+	typename R::type *back = &range.back(); // a[n]
+	// Start with the largest gap and work down to a gap of 1
+	/* foreach (gap in gaps) */
+	for(int l = sizeof(gaps)/sizeof(gaps[0])-1; l >= 0; l--)
 	{
-		const int m = incs[--l];
-		for(typename R::type *i = front+m; i < back; i++)
+		const int gap = gaps[l];
+		// Do a gapped insertion sort for this gap size.
+		// The first gap elements a[front..gap-1] are already in gapped order
+		// keep adding one more element until the entire array is gap sorted
+		/* for (i = gap; i < n; i += 1) */
+		for(typename R::type *i = front+gap; i < back; i++)
 		{
-			typename R::type *j = i-m;
-			if(*i < *j)
+			// add a[i] to the elements that have been gap sorted
+			// save a[i] in temp and make a hole at position i
+			/* temp = a[i] */
+			typename R::type temp = *i;
+			// shift earlier gap-sorted elements up until the correct location for a[i] is found
+			/* for (j = i; j >= gap and a[j - gap] > temp; j -= gap) */
+			typename R::type *j = i;
+			for(; j-front >= gap && temp < *(j-gap); j -= gap)
 			{
-				typename R::type temp = *i;
-				do
-				{
-					*(j+m) = *j;
-					j -= m;
-				} while(j >= front && temp < *j);
-				*(j+m) = temp;
+				/* a[j] = a[j - gap] */
+				*j = *(j-gap);
 			}
+			// put temp (the original a[i]) in its correct location
+			/* a[j] = temp */
+			*j = temp;
 		}
 	}
 }

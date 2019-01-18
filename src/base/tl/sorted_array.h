@@ -41,29 +41,32 @@ public:
 	/*
 		Function: sort_range_quick()
 			sorts the whole array using quick sort
+		Warning: needs testing
 	*/
-	void sort_range_quick()
+	/*void sort_range_quick()
 	{
 		sort_quick(all());
-	}
+	}*/
 
 	/*
-		Function: sort_range_heap()
+		Function: sort_range_heap() 
 			sorts the whole array using heap sort
+		Warning: needs testing
 	*/
-	void sort_range_heap()
+	/*void sort_range_heap()
 	{
 		sort_heap(all());
-	}
+	}*/
 
 	/*
 		Function: sort_range_merge()
 			sorts the whole array using merge sort (stable)
+		Warning: needs testing
 	*/
-	void sort_range_merge()
+	/*void sort_range_merge()
 	{
 		sort_merge(all());
-	}
+	}*/
 
 	/*
 		Function: sort_range_shell()
