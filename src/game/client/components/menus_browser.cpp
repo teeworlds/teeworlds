@@ -23,13 +23,13 @@
 
 #include "menus.h"
 
-CMenus::CColumn CMenus::ms_aBrowserCols[] = {
-	{COL_BROWSER_FLAG,		-1,									" ",		-1, 87.0f, 0, {0}, {0}}, // Localize - these strings are localized within CLocConstString
-	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",		0, 300.0f, 0, {0}, {0}},
-	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f, 0, {0}, {0}},
-	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}},
-	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
-	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f, 0, {0}, {0}},
+CMenus::CColumn CMenus::ms_aBrowserCols[] = {  // Localize - these strings are localized within CLocConstString
+	{COL_BROWSER_FLAG,		-1,									" ",		-1, 4*16.0f+3*2.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 310.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 50.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {0}, 0};
@@ -443,7 +443,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CTextCursor Cursor;
 			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aName, -1);
 			if(tw < Button.w)
-				TextRender()->SetCursor(&Cursor, Button.x+Button.w/2.0f-tw/2.0f, Button.y, 12.0f, TEXTFLAG_RENDER);
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER);
 			else
 			{
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -475,7 +475,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CTextCursor Cursor;
 			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aMap, -1);
 			if(tw < Button.w)
-				TextRender()->SetCursor(&Cursor, Button.x+Button.w/2.0f-tw/2.0f, Button.y, 12.0f, TEXTFLAG_RENDER);
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER);
 			else
 			{
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
@@ -527,11 +527,26 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				}
 
 			}
+			static float RenderOffset = 0.0f;
+			if(RenderOffset == 0.0f)
+			{
+				char aChar[2] = "0";
+				RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1);
+			}
+
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
 			Button.y += 2.0f;
-			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_CENTER);
+
+			if(Num < 100)
+				Button.x += RenderOffset;
+			if(Num < 10)
+				Button.x += RenderOffset;
+			if(!Num)
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
+			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1);
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
@@ -567,7 +582,8 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			str_format(aTemp, sizeof(aTemp), "%d", pEntry->m_Latency);
 			TextRender()->TextColor(Color.r, Color.g, Color.b, Color.a);
 			Button.y += 2.0f;
-			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_CENTER);
+			Button.w -= 4.0f;
+			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_RIGHT);
 		}
 		else if(ID == COL_BROWSER_GAMETYPE)
 		{
@@ -908,7 +924,7 @@ void CMenus::RenderServerbrowserOverlay()
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
-	CUIRect Headers, Status, InfoButton;
+	CUIRect Headers, Status;
 
 	float SpacingH = 2.0f;
 	float ButtonHeight = 20.0f;
@@ -916,10 +932,17 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
+	// split scrollbar from view
+	CUIRect Scroll;
+	View.VSplitRight(20.0f, &View, &Scroll);
+	Scroll.HSplitTop(ms_ListheaderHeight, 0, &Scroll);
+	Scroll.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &Scroll, 0);
+
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
 
-	Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
+	// Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
+	Headers.VSplitRight(2.f, &Headers, 0); // some margin on the right
 
 	// do layout
 	for(int i = 0; i < NUM_BROWSER_COLS; i++)
@@ -957,7 +980,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(i == COL_BROWSER_FLAG)
 			continue;
 
-		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, &ms_aBrowserCols[i].m_Rect))
+		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, g_Config.m_BrSort == ms_aBrowserCols[i].m_Sort, ms_aBrowserCols[i].m_Align, &ms_aBrowserCols[i].m_Rect))
 		{
 			if(ms_aBrowserCols[i].m_Sort != -1)
 			{
@@ -970,9 +993,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
-	// split scrollbar from view
-	CUIRect Scroll;
-	View.VSplitRight(20.0f, &View, &Scroll);
 
 	// scrollbar background
 	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
