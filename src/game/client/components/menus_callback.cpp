@@ -116,7 +116,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 		}
 	}
 
-	int NumOptions = 7;
+	int NumOptions = 8;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
@@ -125,6 +125,13 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 	pSelf->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	CUIRect Button;
+	View.HSplitTop(Spaceing, 0, &View);
+	View.HSplitTop(ButtonHeight, &Button, &View);
+	static int s_ButtonInpGrab = 0;
+	if(pSelf->DoButton_CheckBox(&s_ButtonInpGrab, Localize("Use OS mouse acceleration"), !g_Config.m_InpGrab, &Button))
+	{
+		g_Config.m_InpGrab ^= 1;
+	}
 	View.HSplitTop(Spaceing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
 	pSelf->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Ingame mouse sens."), 5, 500);
