@@ -28,5 +28,15 @@ public:
 
 	int SnapInput(int *pData);
 	void ClampMousePos();
+
+	// camera blending effects
+	bool IsBlending() const;
+	float MouseFollowFactor() const;
+	float MouseDeadZone() const;
+	float MouseMaxDistance() const;
+	static void ConToggleDynCam(IConsole::IResult *pResult, void *pUserData);
+
+private:
+	float m_ToggleTime;
 };
 #endif

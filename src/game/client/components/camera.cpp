@@ -63,10 +63,10 @@ void CCamera::OnRender()
 			vec2 CameraOffset(0, 0);
 
 			float l = length(m_pClient->m_pControls->m_MousePos);
-			if(g_Config.m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
+			if(l > 0.0001f && (g_Config.m_ClDynamicCamera || m_pClient->m_pControls->IsBlending())) // make sure that this isn't 0
 			{
-				float DeadZone = g_Config.m_ClMouseDeadzone;
-				float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+				float DeadZone = m_pClient->m_pControls->MouseDeadZone();
+				float FollowFactor = m_pClient->m_pControls->MouseFollowFactor();
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
 				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;

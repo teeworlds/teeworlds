@@ -16,6 +16,7 @@
 CControls::CControls()
 {
 	mem_zero(&m_LastData, sizeof(m_LastData));
+	m_ToggleTime = 0;
 }
 
 void CControls::OnReset()
@@ -85,6 +86,7 @@ void CControls::OnConsoleInit()
 	Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Jump, "Jump");
 	Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Hook, "Hook");
 	Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &m_InputData.m_Fire, "Fire");
+	Console()->Register("toggle_dynamic_camera", "", CFGFLAG_CLIENT, ConToggleDynCam, this, "Smooth switch between camera modes");
 
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 1}; Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 2}; Console()->Register("+weapon2", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to gun"); }
@@ -228,11 +230,12 @@ void CControls::ClampMousePos()
 	else
 	{
 		float MouseMax;
-		if(g_Config.m_ClDynamicCamera)
+		if(g_Config.m_ClDynamicCamera || IsBlending())
 		{
 			float CameraMaxDistance = 200.0f;
-			float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-			MouseMax = min(CameraMaxDistance/FollowFactor + g_Config.m_ClMouseDeadzone, (float)g_Config.m_ClMouseMaxDistanceDynamic);
+			float FollowFactor = MouseFollowFactor();
+			float DeadZone = MouseDeadZone();
+			MouseMax = min(CameraMaxDistance/FollowFactor + DeadZone, MouseMaxDistance());
 		}
 		else
 			MouseMax = (float)g_Config.m_ClMouseMaxDistanceStatic;
@@ -241,3 +244,77 @@ void CControls::ClampMousePos()
 			m_MousePos = normalize(m_MousePos)*MouseMax;
 	}
 }
+
+bool CControls::IsBlending() const
+{
+	return m_ToggleTime > Client()->LocalTime();
+}
+
+float CControls::MouseFollowFactor() const
+{
+	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
+	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+	if(Blending > 0.f)
+	{
+		if(g_Config.m_ClDynamicCamera)
+		{
+			// blending static -> dynamic
+			FollowFactor *= (1.f-Blending);
+		}
+		else
+		{
+			// blending dynamic -> static
+			FollowFactor *= Blending;
+		}
+	}
+	return FollowFactor;
+}
+
+float CControls::MouseDeadZone() const
+{
+	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
+	float DeadZone = g_Config.m_ClMouseDeadzone;
+	if(Blending > 0.f)
+	{
+		if(g_Config.m_ClDynamicCamera)
+		{
+			// blending static -> dynamic
+			DeadZone *= (1.f-Blending);
+		}
+		else
+		{
+			// blending dynamic -> static
+			DeadZone *= Blending;
+		}
+	}
+	return DeadZone;
+}
+
+float CControls::MouseMaxDistance() const
+{
+	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
+	float MaxDistanceStatic = (float)g_Config.m_ClMouseMaxDistanceStatic;
+	float MaxDistanceDynamic = (float)g_Config.m_ClMouseMaxDistanceDynamic;
+	if(Blending > 0.f)
+	{
+		if(g_Config.m_ClDynamicCamera)
+		{
+			// blending static -> dynamic
+			return MaxDistanceStatic*Blending + MaxDistanceDynamic*(1.f-Blending);
+		}
+		else
+		{
+			// blending dynamic -> static
+			return MaxDistanceDynamic*Blending + MaxDistanceStatic*(1.f-Blending);
+		}
+	}
+	return g_Config.m_ClDynamicCamera ? MaxDistanceDynamic : MaxDistanceStatic;
+}
+
+void CControls::ConToggleDynCam(IConsole::IResult *pResult, void *pUserData)
+{
+	CControls *pSelf = (CControls *)pUserData;
+	g_Config.m_ClDynamicCamera ^= 1;
+	pSelf->m_ToggleTime = pSelf->Client()->LocalTime() + 0.200f; // 100ms blend
+}
+
