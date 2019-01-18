@@ -86,7 +86,7 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 }
 
 // game
-void CGameControllerCTF::DoWincheckMatch()
+bool CGameControllerCTF::DoWincheckMatch()
 {
 	// check score win condition
 	if((m_GameInfo.m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_GameInfo.m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_GameInfo.m_ScoreLimit)) ||
@@ -95,16 +95,23 @@ void CGameControllerCTF::DoWincheckMatch()
 		if(m_SuddenDeath)
 		{
 			if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
+			{
 				EndMatch();
+				return true;
+			}
 		}
 		else
 		{
 			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
+			{
 				EndMatch();
+				return true;
+			}
 			else
 				m_SuddenDeath = 1;
 		}
 	}
+	return false;
 }
 
 // general
@@ -182,6 +189,9 @@ void CGameControllerCTF::Tick()
 					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->GetCarrier()->GetPlayer()->GetCID(), Server()->Tick()-F->GetGrabTick(), -1);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
+					// do a win check(capture could trigger win condition)
+					if(DoWincheckMatch())
+						return;
 				}
 			}
 		}
@@ -232,4 +242,6 @@ void CGameControllerCTF::Tick()
 			}
 		}
 	}
+	// do a win check(grabbing flags could trigger win condition)
+	DoWincheckMatch();
 }
