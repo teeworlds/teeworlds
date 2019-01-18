@@ -15,6 +15,8 @@ public:
 	CNetObj_PlayerInput m_LastData;
 	int m_InputDirectionLeft;
 	int m_InputDirectionRight;
+	
+	static float ms_BlendDuration;
 
 	CControls();
 

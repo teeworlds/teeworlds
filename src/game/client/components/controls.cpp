@@ -13,6 +13,8 @@
 
 #include "controls.h"
 
+float CControls::ms_BlendDuration = 0.125f; // ms
+
 CControls::CControls()
 {
 	mem_zero(&m_LastData, sizeof(m_LastData));
@@ -252,27 +254,12 @@ bool CControls::IsBlending() const
 
 float CControls::MouseFollowFactor() const
 {
-	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
-	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-	if(Blending > 0.f)
-	{
-		if(g_Config.m_ClDynamicCamera)
-		{
-			// blending static -> dynamic
-			FollowFactor *= (1.f-Blending);
-		}
-		else
-		{
-			// blending dynamic -> static
-			FollowFactor *= Blending;
-		}
-	}
-	return FollowFactor;
+	return g_Config.m_ClMouseFollowfactor/100.0f;
 }
 
 float CControls::MouseDeadZone() const
 {
-	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
+	float Blending = (m_ToggleTime - Client()->LocalTime())/ms_BlendDuration; // 1=started blending 0=fully blent
 	float DeadZone = g_Config.m_ClMouseDeadzone;
 	if(Blending > 0.f)
 	{
@@ -292,7 +279,7 @@ float CControls::MouseDeadZone() const
 
 float CControls::MouseMaxDistance() const
 {
-	float Blending = (m_ToggleTime - Client()->LocalTime())/0.200f; // 1=started blending 0=fully blent
+	float Blending = (m_ToggleTime - Client()->LocalTime())/ms_BlendDuration; // 1=started blending 0=fully blent
 	float MaxDistanceStatic = (float)g_Config.m_ClMouseMaxDistanceStatic;
 	float MaxDistanceDynamic = (float)g_Config.m_ClMouseMaxDistanceDynamic;
 	if(Blending > 0.f)
@@ -315,6 +302,6 @@ void CControls::ConToggleDynCam(IConsole::IResult *pResult, void *pUserData)
 {
 	CControls *pSelf = (CControls *)pUserData;
 	g_Config.m_ClDynamicCamera ^= 1;
-	pSelf->m_ToggleTime = pSelf->Client()->LocalTime() + 0.200f; // 100ms blend
+	pSelf->m_ToggleTime = pSelf->Client()->LocalTime() + ms_BlendDuration;
 }
 
