@@ -28,11 +28,60 @@ public:
 		return parent::add(item);
 	}
 
+
+	/*
+		Function: sort_range()
+			sorts the whole array using the default sort method (shell sort)
+	*/
 	void sort_range()
 	{
 		sort(all());
 	}
 
+	/*
+		Function: sort_range_quick()
+			sorts the whole array using quick sort
+	*/
+	void sort_range_quick()
+	{
+		sort_quick(all());
+	}
+
+	/*
+		Function: sort_range_heap()
+			sorts the whole array using heap sort
+	*/
+	void sort_range_heap()
+	{
+		sort_heap(all());
+	}
+
+	/*
+		Function: sort_range_merge()
+			sorts the whole array using merge sort (stable)
+	*/
+	void sort_range_merge()
+	{
+		sort_merge(all());
+	}
+
+	/*
+		Function: sort_range_shell()
+			sorts the whole array using shell sort
+	*/
+	void sort_range_shell()
+	{
+		sort_shell(all());
+	}
+
+	/*
+		Function: sort_range_bubble()
+			sorts the whole array using bubble sort (stable)
+	*/
+	void sort_range_bubble()
+	{
+		sort_bubble(all());
+	}
 
 	/*
 		Function: all
