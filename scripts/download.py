@@ -8,6 +8,12 @@ def unzip(filename, where):
 		z = zipfile.ZipFile(filename, "r")
 	except:
 		return False
+
+	# remove extraction folder, if it exists
+	if os.path.exists(z.namelist()[0]):
+		shutil.rmtree(z.namelist()[0])
+
+	# extract files
 	for name in z.namelist():
 		z.extract(name, where)
 	z.close()
