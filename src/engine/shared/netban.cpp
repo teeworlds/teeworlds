@@ -241,7 +241,7 @@ typename CNetBan::CBan<T> *CNetBan::CBanPool<T, HashCount>::Get(int Index) const
 
 
 template<class T>
-void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, int Type) const
+void CNetBan::MakeBanInfo(CBan<T> *pBan, char *pBuf, unsigned BuffSize, int Type, int *pLastInfoQuery)
 {
 	if(pBan == 0 || pBuf == 0)
 	{
@@ -271,9 +271,10 @@ void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, in
 	}
 
 	// add info part
+	int Time = time_timestamp();
 	if(pBan->m_Info.m_Expires != CBanInfo::EXPIRES_NEVER)
 	{
-		int Mins = ((pBan->m_Info.m_Expires-time_timestamp()) + 59) / 60;
+		int Mins = ((pBan->m_Info.m_Expires-Time) + 59) / 60;
 		if(Mins <= 1)
 			str_format(pBuf, BuffSize, "%s for 1 minute (%s)", aBuf, pBan->m_Info.m_aReason);
 		else
@@ -281,6 +282,12 @@ void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, in
 	}
 	else
 		str_format(pBuf, BuffSize, "%s for life (%s)", aBuf, pBan->m_Info.m_aReason);
+
+	if(pLastInfoQuery)
+	{
+		*pLastInfoQuery = pBan->m_Info.m_LastInfoQuery;
+		pBan->m_Info.m_LastInfoQuery = Time;
+	}
 }
 
 template<class T>
@@ -293,11 +300,13 @@ int CNetBan::Ban(T *pBanPool, const typename T::CDataType *pData, int Seconds, c
 		return -1;
 	}
 
-	int Stamp = Seconds > 0 ? time_timestamp()+Seconds : CBanInfo::EXPIRES_NEVER;
+	int Time = time_timestamp();
+	int Stamp = Seconds > 0 ? Time+Seconds : CBanInfo::EXPIRES_NEVER;
 
 	// set up info
 	CBanInfo Info = {0};
 	Info.m_Expires = Stamp;
+	Info.m_LastInfoQuery = Time;
 	str_copy(Info.m_aReason, pReason, sizeof(Info.m_aReason));
 
 	// check if it already exists
@@ -449,7 +458,7 @@ void CNetBan::UnbanAll()
 	m_BanRangePool.Reset();
 }
 
-bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) const
+bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize, int *pLastInfoQuery)
 {
 	CNetHash aHash[17];
 	int Length = CNetHash::MakeHashArray(pAddr, aHash);
@@ -458,7 +467,7 @@ bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) co
 	CBanAddr *pBan = m_BanAddrPool.Find(pAddr, &aHash[Length]);
 	if(pBan)
 	{
-		MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
+		MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER, pLastInfoQuery);
 		return true;
 	}
 
@@ -469,7 +478,7 @@ bool CNetBan::IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize) co
 		{
 			if(NetMatch(&pBan->m_Data, pAddr, i, Length))
 			{
-				MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER);
+				MakeBanInfo(pBan, pBuf, BufferSize, MSGTYPE_PLAYER, pLastInfoQuery);
 				return true;
 			}
 		}
@@ -610,5 +619,5 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 }
 
 // explicitly instantiate template for src/engine/server/server.cpp
-template void CNetBan::MakeBanInfo<CNetRange>(const CBan<CNetRange> *pBan, char *pBuf, unsigned BufferSize, int Type) const;
-template void CNetBan::MakeBanInfo<NETADDR>(const CBan<NETADDR> *pBan, char *pBuf, unsigned BufferSize, int Type) const;
+template void CNetBan::MakeBanInfo<CNetRange>(CBan<CNetRange> *pBan, char *pBuf, unsigned BufferSize, int Type, int *pLastInfoQuery);
+template void CNetBan::MakeBanInfo<NETADDR>(CBan<NETADDR> *pBan, char *pBuf, unsigned BufferSize, int Type, int *pLastInfoQuery);

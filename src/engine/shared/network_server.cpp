@@ -120,10 +120,15 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 		{
 			// check for bans
 			char aBuf[128];
-			if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
+			int LastInfoQuery;
+			if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf), &LastInfoQuery))
 			{
-				// banned, reply with a message
-				CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1);
+				// banned, reply with a message (5 second cooldown)
+				int Time = time_timestamp();
+				if(LastInfoQuery + 5 < Time)
+				{
+					CNetBase::SendControlMsg(m_Socket, &Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1);
+				}
 				continue;
 			}
 

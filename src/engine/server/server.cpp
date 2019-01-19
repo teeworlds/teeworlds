@@ -389,9 +389,9 @@ bool CServer::IsAuthed(int ClientID) const
 	return m_aClients[ClientID].m_Authed;
 }
 
-bool CServer::IsBanned(int ClientID) const
+bool CServer::IsBanned(int ClientID)
 {
-	return m_ServerBan.IsBanned(m_NetServer.ClientAddr(ClientID), 0, 0);
+	return m_ServerBan.IsBanned(m_NetServer.ClientAddr(ClientID), 0, 0, 0);
 }
 
 int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo) const
