@@ -37,7 +37,7 @@ public:
 
 	static bool Random(int Value)
 	{
-		return (((random_int() + Value) % 2) == 1);
+		return (random_int() % Value) == 0;
 	}
 
 	static const char *GetTypeName(int Type)
