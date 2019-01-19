@@ -385,17 +385,25 @@ struct CEditorMap
 		int m_ImageID = 0;
 		vec4 m_Color;
 
+		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
 		union
 		{
+			CDynArray<CTile> m_aTiles;
+			CDynArray<CQuad> m_aQuads;
+		};
+
+		union
+		{
+			// tile
 			struct {
-				CDynArray<CTile> m_aTiles;
 				int m_Width;
 				int m_Height;
 				int m_ColorEnvelopeID;
 			};
 
+			// quad
 			struct {
-				CDynArray<CQuad> m_aQuads;
+
 			};
 		};
 
