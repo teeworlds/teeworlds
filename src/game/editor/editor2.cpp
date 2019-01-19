@@ -1056,7 +1056,7 @@ void CEditor::Init()
 	m_pConsole->Register("undo", "", CFGFLAG_EDITOR, ConUndo, this, "Undo");
 	m_pConsole->Register("redo", "", CFGFLAG_EDITOR, ConRedo, this, "Redo");
 	m_pConsole->Register("delete_image", "i", CFGFLAG_EDITOR, ConDeleteImage, this, "Delete image");
-	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender);
+	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender, m_pInput);
 
 	// grenade pickup
 	{

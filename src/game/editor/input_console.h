@@ -28,7 +28,7 @@ class CEditorInputConsole
 	TStaticRingBuffer<CBacklogEntry, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
 	TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 	char *m_pHistoryEntry;
-	CLineInput m_Input;
+	CLineInput m_LineInput;
 
 	inline IGraphics* Graphics() { return m_pGraphics; }
 	inline CUI* UI() { return m_pUI; }
@@ -39,7 +39,7 @@ class CEditorInputConsole
 
 public:
 
-	void Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTexRender);
+	void Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTexRender, IInput* pInput);
 	void Render();
 	void OnInput(IInput::CEvent Event);
 

@@ -27,12 +27,13 @@ void CEditorInputConsole::ConsolePrintCallback(const char* pLine, bool Highlight
 	pEntry->m_aText[Len] = 0;
 }
 
-void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender)
+void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender, IInput* pInput)
 {
 	m_pConsole = pConsole;
 	m_pGraphics = pGraphics;
 	m_pTextRender = pTextRender;
 	m_pUI = pUI;
+	m_LineInput.Init(pInput);
 
 #ifdef CONF_DEBUG
 	m_pConsole->RegisterPrintCallback(IConsole::OUTPUT_LEVEL_DEBUG, StaticConsolePrintCallback, this);
@@ -88,11 +89,11 @@ void CEditorInputConsole::Render()
 
 	Cursor.m_LineWidth = InputRect.w - InputMargin*2;
 	// TODO: replace with a simple text function (no shadow)
-	TextRender()->TextShadowed(&Cursor, m_Input.GetString(), -1, vec2(0, 0), vec4(0, 0, 0, 0),
+	TextRender()->TextShadowed(&Cursor, m_LineInput.GetString(), -1, vec2(0, 0), vec4(0, 0, 0, 0),
 							   vec4(1, 1, 1, 1));
 
 	// cursor line |
-	float w = TextRender()->TextWidth(0, FontSize, m_Input.GetString(), m_Input.GetCursorOffset()) +
+	float w = TextRender()->TextWidth(0, FontSize, m_LineInput.GetString(), m_LineInput.GetCursorOffset()) +
 		TextRender()->TextWidth(0, FontSize, "> ", 2);
 	CUIRect CursorRect = InputRect;
 	CursorRect.x += w + InputMargin;
@@ -154,13 +155,13 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 	{
 		if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
 		{
-			if(m_Input.GetString()[0])
+			if(m_LineInput.GetString()[0])
 			{
-				char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
-				mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+				char *pEntry = m_History.Allocate(m_LineInput.GetLength()+1);
+				mem_copy(pEntry, m_LineInput.GetString(), m_LineInput.GetLength()+1);
 				m_pHistoryEntry = 0x0;
-				m_pConsole->ExecuteLine(m_Input.GetString());
-				m_Input.Clear();
+				m_pConsole->ExecuteLine(m_LineInput.GetString());
+				m_LineInput.Clear();
 				return;
 			}
 		}
@@ -177,7 +178,7 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Last();
 
 			if (m_pHistoryEntry)
-				m_Input.Set(m_pHistoryEntry);
+				m_LineInput.Set(m_pHistoryEntry);
 		}
 		else if (Event.m_Key == KEY_DOWN)
 		{
@@ -185,9 +186,9 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 			if (m_pHistoryEntry)
-				m_Input.Set(m_pHistoryEntry);
+				m_LineInput.Set(m_pHistoryEntry);
 			else
-				m_Input.Clear();
+				m_LineInput.Clear();
 		}
 		/*else if(Event.m_Key == KEY_TAB)
 		{
@@ -221,7 +222,7 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 	}
 
 	if(m_IsOpen)
-		m_Input.ProcessInput(Event);
+		m_LineInput.ProcessInput(Event);
 
 	if(Event.m_Flags&(IInput::FLAG_PRESS|IInput::FLAG_TEXT))
 	{
