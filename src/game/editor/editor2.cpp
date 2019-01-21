@@ -1073,8 +1073,8 @@ void CEditor::Init()
 		const float SpriteH = g_pData->m_aSprites[SPRITE_PICKUP_SHOTGUN].m_H;
 		const float ScaleFactor = sqrt(SpriteW*SpriteW+SpriteH*SpriteH);
 		const int VisualSize = g_pData->m_Weapons.m_aId[WEAPON_SHOTGUN].m_VisualSize;
-		m_RenderShotgunPickupSize =vec2(VisualSize * (SpriteW/ScaleFactor),
-										VisualSize * (SpriteH/ScaleFactor));
+		m_RenderShotgunPickupSize = vec2(VisualSize * (SpriteW/ScaleFactor),
+										 VisualSize * (SpriteH/ScaleFactor));
 	}
 	// laser pickup
 	{
@@ -1177,7 +1177,7 @@ void CEditor::Update()
 
 			// zoom with mouse wheel
 			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-				ChangeZoom(m_Zoom * 0.9f);
+				ChangeZoom(m_Zoom / 1.1f);
 			else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
 				ChangeZoom(m_Zoom * 1.1f);
 
@@ -2565,7 +2565,6 @@ void CEditor::RenderAssetManager()
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
-	const float ShowButtonWidth = 15.0f;
 
 	static CImageNameItem s_aImageItems[CEditorMap::MAX_IMAGES];
 	const int ImageCount = Assets.m_ImageCount;
@@ -3335,7 +3334,6 @@ void CEditor::EditDeleteGroup(int GroupID)
 	dbg_assert(GroupID != m_Map.m_GameGroupID, "Can't delete game group");
 
 	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
-	const int LayerCount = m_Map.m_aGroups[GroupID].m_LayerCount;
 	while(Group.m_LayerCount > 0)
 	{
 		EditDeleteLayer(Group.m_apLayerIDs[0], GroupID);
