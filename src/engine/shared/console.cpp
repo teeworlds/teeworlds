@@ -936,7 +936,8 @@ void CConsole::DeregisterTempMap(const char *pName)
 
 void CConsole::DeregisterTempMapAll()
 {
-	m_pTempMapListHeap->Reset();
+	if(m_pTempMapListHeap)
+		m_pTempMapListHeap->Reset();
 	m_pFirstMapEntry = 0;
 	m_pLastMapEntry = 0;
 	m_NumMapListEntries = 0;
