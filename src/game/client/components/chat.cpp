@@ -380,8 +380,11 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 	if(*pLine == 0 || (ClientID != -1 && (!g_Config.m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
 		g_Config.m_ClFilterchat == 2 ||
-		(m_pClient->m_LocalClientID != ClientID && g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[ClientID].m_Friend)))
-		|| (TargetID == -1 && Mode == CHAT_WHISPER))
+		(m_pClient->m_LocalClientID != ClientID && g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[ClientID].m_Friend))))
+		return;
+	if(Mode == CHAT_WHISPER && (TargetID == -1 || !m_pClient->m_aClients[TargetID].m_Active || // unknown client
+		m_pClient->m_aClients[TargetID].m_ChatIgnore ||	g_Config.m_ClFilterchat == 2 ||
+		(m_pClient->m_LocalClientID != TargetID && g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[TargetID].m_Friend)))
 		return;
 
 	// trim right and set maximum length to 128 utf8-characters
