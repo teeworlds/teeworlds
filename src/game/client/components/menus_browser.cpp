@@ -1422,6 +1422,9 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	}
 
 	// show lists
+	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
+	static CButtonContainer s_FriendJoinButtons[20];
+	int ButtonId = 0;
 	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
 	{
 		CUIRect Header;
@@ -1430,7 +1433,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		if(s_ListExtended[i])
 		{
 			// entries
-			for(int f = 0; f < m_lFriendList[i].size(); ++f)
+			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
 				View.HSplitTop(20.0f + ms_ListheaderHeight, &Rect, &View);
 				RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 0.5f, 0.5f, 0.5f), CUI::CORNER_ALL, 5.0f);
@@ -1474,10 +1477,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				if(m_lFriendList[i][f].m_pServerInfo)
 				{
 					Button.Margin((Button.h - ms_ListheaderHeight + 2.0f) / 2, &Button);
-					RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.15f), CUI::CORNER_ALL, 4.0f);
-					Label.HMargin(2.0f, &Label);
-					UI()->DoLabelScaled(&Button, Localize("Join", "Join a server"), FontSize, CUI::ALIGN_CENTER);
-					if(UI()->MouseInside(&Button) && Input()->KeyPress(KEY_MOUSE_1))		// todo: fix me
+					if(DoButton_Menu(&(s_FriendJoinButtons[ButtonId%20]), Localize("Join", "Join a server"), 0, &Button) )
 					{
 						str_copy(g_Config.m_UiServerAddress, m_lFriendList[i][f].m_pServerInfo->m_aAddress, sizeof(g_Config.m_UiServerAddress));
 						Client()->Connect(g_Config.m_UiServerAddress);
