@@ -914,7 +914,6 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   ui/icons/browse.png
   ui/icons/chat_whisper.png
   ui/icons/friend.png
-  ui/icons/info.png
   ui/icons/level.png
   ui/icons/menu.png
   ui/icons/sidebar.png
