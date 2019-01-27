@@ -98,7 +98,15 @@ void CServerBrowserFilter::CServerFilter::Filter()
 	{
 		int Filtered = 0;
 
-		if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY && ((m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS && m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers == 0) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients == 0))
+		int RelevantClientCount = (m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers : m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients;
+		if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS)
+		{
+			RelevantClientCount -= m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumBotPlayers;
+			if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS))
+				RelevantClientCount -= m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumBotSpectators;
+		}
+
+		if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY && RelevantClientCount == 0)
 			Filtered = 1;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL && ((m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS && m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers == m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_MaxPlayers) ||
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients == m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_MaxClients))
@@ -201,15 +209,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 			if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState != IFriends::FRIEND_NO)
 			{
 				m_pSortedServerlist[m_NumSortedServers++] = i;
-
-				int Count = (m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers : m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients;
-				if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS)
-				{
-					Count -= m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumBotPlayers;
-					if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS))
-						Count -= m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumBotSpectators;
-				}
-				m_NumSortedPlayers += Count;
+				m_NumSortedPlayers += RelevantClientCount;
 			}
 		}
 	}
@@ -219,7 +219,7 @@ int CServerBrowserFilter::CServerFilter::GetSortHash() const
 {
 	int i = g_Config.m_BrSort&0x7;
 	i |= g_Config.m_BrSortOrder<<3;
-	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) i |= 1 << 4;
+	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) i |= 1<<4;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY) i |= 1<<5;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL) i |= 1<<6;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) i |= 1<<7;
