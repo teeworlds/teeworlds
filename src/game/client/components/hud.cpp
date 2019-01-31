@@ -292,7 +292,7 @@ void CHud::RenderScoreHud()
 					int ID = aPlayerInfo[t].m_ClientID;
 					char aName[64];
 					str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
-					float w = TextRender()->TextWidth(0, 8.0f, aName, -1);
+					float w = TextRender()->TextWidth(0, 8.0f, aName, -1) + RenderTools()->GetClientIdRectSize(8.0f);
 
 					CTextCursor Cursor;
 					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
