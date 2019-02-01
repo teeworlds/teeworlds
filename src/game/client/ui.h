@@ -111,6 +111,7 @@ public:
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const { return &m_ClipRect; };
+	inline bool IsClipped() const { return m_Clipped; };
 
 	// TODO: Refactor: Redo UI scaling
 	float Scale() const;
