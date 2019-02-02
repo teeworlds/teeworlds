@@ -220,10 +220,10 @@ private:
 		-- [Optionnal] Knowing if a rect is clipped --
 		ScrollRegionIsRectClipped(&s_ScrollRegion, Rect);
 
-		-- [Optionnal] Scroll to a rect --
+		-- [Optionnal] Scroll to a rect (to the last added rect)--
 		...
 		ScrollRegionAddRect(&s_ScrollRegion, Rect);
-		ScrollRegionScrollHere(&s_ScrollRegion, Rect, Option);
+		ScrollRegionScrollHere(&s_ScrollRegion, Option);
 
 		-- End --
 		EndScrollRegion(&s_ScrollRegion);
