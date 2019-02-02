@@ -20,6 +20,9 @@ class CSpectator : public CComponent
 	int m_SelectedSpecMode;
 	vec2 m_SelectorMouse;
 
+	bool SpecModePossible(int SpecMode, int SpectatorID);
+	void HandleSpectateNextPrev(int Direction);
+
 	static void ConKeySpectator(IConsole::IResult *pResult, void *pUserData);
 	static void ConSpectate(IConsole::IResult *pResult, void *pUserData);
 	static void ConSpectateNext(IConsole::IResult *pResult, void *pUserData);
