@@ -2761,6 +2761,7 @@ void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOu
 	{
 		pSr->m_RailRect = *pClipRect;
 		pSr->m_RailRect.w = 0;
+		pSr->m_ContentScrollOff.y = 0;
 	}
 
 	if(pSr->m_Params.m_ClipBgColor.a > 0)
