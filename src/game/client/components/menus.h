@@ -201,6 +201,35 @@ private:
 		}
 	};
 
+	// Scroll region
+	/*
+
+	Usage:
+		-- Initialization --
+		static CScrollRegion s_ScrollRegion;
+		vec2 ScrollOffset(0, 0);
+		BeginScrollRegion(&s_ScrollRegion, &ScrollRegionRect, &ScrollOffset);
+		Content = ScrollRegionRect;
+		Content.y += ScrollOffset.y;
+
+		-- "Register" your content rects --
+		CUIRect Rect;
+		Content.HSplitTop(SomeValue, &Rect, &Content);
+		ScrollRegionAddRect(&s_ScrollRegion, Rect);
+
+		-- [Optionnal] Knowing if a rect is clipped --
+		ScrollRegionIsRectClipped(&s_ScrollRegion, Rect);
+
+		-- [Optionnal] Scroll to a rect --
+		...
+		ScrollRegionAddRect(&s_ScrollRegion, Rect);
+		ScrollRegionScrollHere(&s_ScrollRegion, Rect, Option);
+
+		-- End --
+		EndScrollRegion(&s_ScrollRegion);
+
+	*/
+
 	void BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams = 0);
 	void EndScrollRegion(CScrollRegion* pSr);
 	void ScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect);
