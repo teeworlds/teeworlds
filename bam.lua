@@ -378,7 +378,6 @@ function BuildContent(settings, arch, conf)
 		end
 		-- dependencies
 		dl = Python("scripts/download.py")
-		dl = dl .. " --arch " .. arch .. " --conf " .. conf
 		AddJob("other/sdl/include/SDL.h", "Downloading SDL2", dl .. " sdl")
 		AddJob("other/freetype/include/ft2build.h", "Downloading freetype", dl .. " freetype")
 		table.insert(content, CopyFile(settings.link.Output(settings, "") .. "/SDL2.dll", "other/sdl/windows/lib" .. _arch .. "/SDL2.dll"))
