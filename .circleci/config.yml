@@ -28,6 +28,7 @@ jobs:
             cd release
             env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake ..
             make everything
+            ./teeworlds_srv shutdown
       - run:
           name: Build teeworlds with cmake in Debug mode
           command: |
@@ -35,3 +36,4 @@ jobs:
             cd debug
             env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -DDEV=ON ..
             make everything
+            ./teeworlds_srv shutdown
