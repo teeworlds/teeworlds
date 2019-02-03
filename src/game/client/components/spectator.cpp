@@ -30,150 +30,89 @@ void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
 }
 
-void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
+bool CSpectator::SpecModePossible(int SpecMode, int SpectatorID)
 {
-	CSpectator *pSelf = (CSpectator *)pUserData;
-	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
-		return;
-
-	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
-	int NewSpectatorID = -1;
-	bool GotNewSpectatorID = false;
-
-	if(NewSpecMode != SPEC_PLAYER)
-		NewSpecMode = (NewSpecMode + 1) % NUM_SPECMODES;
-	else
-		NewSpectatorID = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
-
-	switch(NewSpecMode)
-	{	// drop through
+	int i = SpectatorID;
+	switch(SpecMode)
+	{
 	case SPEC_PLAYER:
-		for(int i = NewSpectatorID + 1; i < MAX_CLIENTS; i++)
+		if(!m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 		{
-			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-				continue;
-
-			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
-				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
-				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
-				continue;
-
-			NewSpectatorID = i;
-			GotNewSpectatorID = true;
-			break;
+			return false;
 		}
-		if(GotNewSpectatorID)
-			break;
-		NewSpecMode = SPEC_FLAGRED;
-		NewSpectatorID = -1;
+		if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
+			(i == m_pClient->m_LocalClientID || m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != m_pClient->m_aClients[i].m_Team ||
+			(m_pClient->m_Snap.m_paPlayerInfos[i] && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+		{
+			return false;
+		}
+		return true;
 	case SPEC_FLAGRED:
 	case SPEC_FLAGBLUE:
-		if(pSelf->m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS)
-		{
-			GotNewSpectatorID = true;
-			break;
-		}
-		NewSpecMode = SPEC_FREEVIEW;
+		return m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS;
 	case SPEC_FREEVIEW:
-		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
-			GotNewSpectatorID = true;
-		else
+		return m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS;
+	default:
+		dbg_assert(false, "invalid spec mode");
+		return false;
+	}
+}
+
+static void IterateSpecMode(int Direction, int *pSpecMode, int *pSpectatorID)
+{
+	dbg_assert(Direction == -1 || Direction == 1, "invalid direction");
+	if(*pSpecMode == SPEC_PLAYER)
+	{
+		*pSpectatorID += Direction;
+		if(0 <= *pSpectatorID && *pSpectatorID < MAX_CLIENTS)
 		{
-			// start again on the beginning in survival
-			for(int i = 0; i < pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i++)
-			{
-				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-					continue;
-
-				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
-					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
-					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
-					continue;
-
-				NewSpecMode = SPEC_PLAYER;
-				NewSpectatorID = i;
-				GotNewSpectatorID = true;
-				break;
-			}
+			return;
+		}
+		*pSpectatorID = -1;
+	}
+	*pSpecMode = (*pSpecMode + Direction + NUM_SPECMODES) % NUM_SPECMODES;
+	if(*pSpecMode == SPEC_PLAYER)
+	{
+		*pSpectatorID = 0;
+		if(Direction == -1)
+		{
+			*pSpectatorID = MAX_CLIENTS - 1;
 		}
 	}
+}
 
-	if(GotNewSpectatorID)
-		pSelf->Spectate(NewSpecMode, NewSpectatorID);
+void CSpectator::HandleSpectateNextPrev(int Direction)
+{
+	if(!m_pClient->m_Snap.m_SpecInfo.m_Active || (Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
+		return;
+
+	int NewSpecMode = m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
+	int NewSpectatorID = -1;
+	if(NewSpecMode == SPEC_PLAYER)
+	{
+		NewSpectatorID = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
+	}
+
+	// Ensure the loop terminates even if no spec modes are possible.
+	for(int i = 0; i < NUM_SPECMODES + MAX_CLIENTS; i++)
+	{
+		IterateSpecMode(Direction, &NewSpecMode, &NewSpectatorID);
+		if(SpecModePossible(NewSpecMode, NewSpectatorID))
+		{
+			Spectate(NewSpecMode, NewSpectatorID);
+			return;
+		}
+	}
+}
+
+void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
+{
+	((CSpectator *)pUserData)->HandleSpectateNextPrev(1);
 }
 
 void CSpectator::ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData)
 {
-	CSpectator *pSelf = (CSpectator *)pUserData;
-	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || (pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK && pSelf->DemoPlayer()->GetDemoType() != IDemoPlayer::DEMOTYPE_SERVER))
-		return;
-
-	int NewSpecMode = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
-	int NewSpectatorID = MAX_CLIENTS;
-	bool GotNewSpectatorID = false;
-
-	if(NewSpecMode != SPEC_PLAYER)
-		NewSpecMode = (NewSpecMode - 1 + NUM_SPECMODES) % NUM_SPECMODES;
-	else
-		NewSpectatorID = pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
-
-	switch(NewSpecMode)
-	{	// drop through
-	case SPEC_FLAGBLUE:
-	case SPEC_FLAGRED:
-		if(pSelf->m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS)
-		{
-			NewSpectatorID = -1;
-			GotNewSpectatorID = true;
-			break;
-		}
-		NewSpecMode = SPEC_PLAYER;
-		NewSpectatorID = MAX_CLIENTS;
-	case SPEC_PLAYER:
-		for(int i = NewSpectatorID - 1; i >= 0; i--)
-		{
-			if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-				continue;
-
-			if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
-				(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
-				(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
-				continue;
-
-			NewSpectatorID = i;
-			GotNewSpectatorID = true;
-			break;
-		}
-		if(GotNewSpectatorID)
-			break;
-		NewSpecMode = SPEC_FREEVIEW;
-	case SPEC_FREEVIEW:
-		NewSpectatorID = -1;
-		if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
-			GotNewSpectatorID = true;
-		else
-		{
-			// start again on the beginning in survival
-			for(int i = MAX_CLIENTS-1; i > pSelf->m_pClient->m_Snap.m_SpecInfo.m_SpectatorID; i--)
-			{
-				if(!pSelf->m_pClient->m_aClients[i].m_Active || pSelf->m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-					continue;
-
-				if(pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
-					(i == pSelf->m_pClient->m_LocalClientID || pSelf->m_pClient->m_aClients[pSelf->m_pClient->m_LocalClientID].m_Team != pSelf->m_pClient->m_aClients[i].m_Team ||
-					(pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] && (pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
-					continue;
-
-				NewSpecMode = SPEC_PLAYER;
-				NewSpectatorID = i;
-				GotNewSpectatorID = true;
-				break;
-			}
-		}
-	}
-
-	if(GotNewSpectatorID)
-		pSelf->Spectate(NewSpecMode, NewSpectatorID);
+	((CSpectator *)pUserData)->HandleSpectateNextPrev(-1);
 }
 
 CSpectator::CSpectator()
