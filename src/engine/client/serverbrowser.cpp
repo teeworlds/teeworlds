@@ -517,10 +517,10 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry)
 	Data.m_pfnCallback = CBFTrackPacket;
 	Data.m_pCallbackUser = this;
 	m_pNetClient->Send(&Packet, NET_TOKEN_NONE, &Data);
-	pEntry->m_TrackID = Data.m_TrackID;
 
 	if(pEntry)
 	{
+		pEntry->m_TrackID = Data.m_TrackID;
 		pEntry->m_RequestTime = time_get();
 		pEntry->m_InfoState = CServerEntry::STATE_PENDING;
 	}

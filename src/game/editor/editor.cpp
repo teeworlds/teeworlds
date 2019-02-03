@@ -3517,7 +3517,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		static int sEnvelopeEditorID = 0;
 		static int s_ActiveChannels = 0xf;
 
-		if(pEnvelope)
 		{
 			CUIRect Button;
 
@@ -3578,23 +3577,20 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		if(UI()->HotItem() == &sEnvelopeEditorID)
 		{
 			// do stuff
-			if(pEnvelope)
+			if(UI()->MouseButtonClicked(1))
 			{
-				if(UI()->MouseButtonClicked(1))
-				{
-					// add point
-					int Time = (int)(((UI()->MouseX()-View.x)*TimeScale)*1000.0f);
-					float aChannels[4];
-					pEnvelope->Eval(Time/1000.0f, aChannels);
-					pEnvelope->AddPoint(Time,
-						f2fx(aChannels[0]), f2fx(aChannels[1]),
-						f2fx(aChannels[2]), f2fx(aChannels[3]));
-					m_Map.m_Modified = true;
-				}
-
-				m_ShowEnvelopePreview = SHOWENV_SELECTED;
-				m_pTooltip = "Press right mouse button to create a new point";
+				// add point
+				int Time = (int)(((UI()->MouseX()-View.x)*TimeScale)*1000.0f);
+				float aChannels[4];
+				pEnvelope->Eval(Time/1000.0f, aChannels);
+				pEnvelope->AddPoint(Time,
+					f2fx(aChannels[0]), f2fx(aChannels[1]),
+					f2fx(aChannels[2]), f2fx(aChannels[3]));
+				m_Map.m_Modified = true;
 			}
+
+			m_ShowEnvelopePreview = SHOWENV_SELECTED;
+			m_pTooltip = "Press right mouse button to create a new point";
 		}
 
 		vec3 aColors[] = {vec3(1,0.2f,0.2f), vec3(0.2f,1,0.2f), vec3(0.2f,0.2f,1), vec3(1,1,0.2f)};

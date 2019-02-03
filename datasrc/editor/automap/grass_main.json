@@ -159,7 +159,7 @@
 				"condition": [
 					{"x": 0, "y": -1, "value": "empty"},
 					{"x": 1, "y": 0, "value": "empty"},
-					{"x": 1, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "full"}
 				]
 			},
 			{
