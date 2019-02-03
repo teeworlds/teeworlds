@@ -9,9 +9,6 @@ class CGameControllerLMS : public IGameController
 public:
 	CGameControllerLMS(class CGameContext *pGameServer);
 
-	// event
-	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
-
 	// game
 	virtual void DoWincheckRound();
 };
