@@ -2732,3 +2732,168 @@ void CMenus::SetMenuPage(int NewPage) {
 			m_pClient->m_pCamera->ChangePosition(CameraPos);
 	}
 }
+
+
+void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
+{
+	if(pParams)
+		pSr->m_Params = *pParams;
+
+	pSr->m_WasClipped = UI()->IsClipped();
+	pSr->m_OldClipRect = *UI()->ClipArea();
+
+	// only show scrollbar if content overflows
+	const bool ShowScrollbar = pSr->m_ContentH > pClipRect->h ||
+		(pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+
+	CUIRect ScrollBarBg;
+	CUIRect* pModifyRect = ShowScrollbar ? pClipRect : 0;
+	pClipRect->VSplitRight(pSr->m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
+	ScrollBarBg.Margin(pSr->m_Params.m_ScrollbarMargin, &pSr->m_RailRect);
+
+	if(ShowScrollbar)
+	{
+		if(pSr->m_Params.m_ScrollbarBgColor.a > 0)
+			RenderTools()->DrawRoundRect(&ScrollBarBg, pSr->m_Params.m_ScrollbarBgColor, 4.0f);
+		if(pSr->m_Params.m_RailBgColor.a > 0)
+			RenderTools()->DrawRoundRect(&pSr->m_RailRect, pSr->m_Params.m_RailBgColor, pSr->m_RailRect.w/2.0f);
+	}
+	else
+		pSr->m_ContentScrollOff.y = 0;
+
+	if(pSr->m_Params.m_ClipBgColor.a > 0)
+		RenderTools()->DrawRoundRect(pClipRect, pSr->m_Params.m_ClipBgColor, 4.0f);
+
+	UI()->ClipEnable(pClipRect);
+
+	pSr->m_ClipRect = *pClipRect;
+	pSr->m_ContentH = 0;
+	*pOutOffset = pSr->m_ContentScrollOff;
+}
+
+void CMenus::EndScrollRegion(CScrollRegion* pSr)
+{
+	UI()->ClipDisable();
+	if(pSr->m_WasClipped)
+		UI()->ClipEnable(&pSr->m_OldClipRect);
+
+	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
+
+	// only show scrollbar if content overflows
+	if(pSr->m_ContentH <= pSr->m_ClipRect.h)
+		return;
+
+	// scroll wheel
+	CUIRect RegionRect = pSr->m_ClipRect;
+	RegionRect.w += pSr->m_Params.m_ScrollbarWidth;
+	if(UI()->MouseInside(&RegionRect))
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			pSr->m_ScrollY -= pSr->m_Params.m_ScrollSpeed;
+		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			pSr->m_ScrollY += pSr->m_Params.m_ScrollSpeed;
+	}
+
+	const float SliderHeight = max(pSr->m_Params.m_SliderMinHeight,
+		pSr->m_ClipRect.h/pSr->m_ContentH * pSr->m_RailRect.h);
+
+	CUIRect Slider = pSr->m_RailRect;
+	Slider.h = SliderHeight;
+	const float MaxScroll = pSr->m_RailRect.h - SliderHeight;
+
+	if(pSr->m_RequestScrollY >= 0)
+	{
+		pSr->m_ScrollY = pSr->m_RequestScrollY/(pSr->m_ContentH - pSr->m_ClipRect.h) * MaxScroll;
+		pSr->m_RequestScrollY = -1;
+	}
+
+	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
+	Slider.y += pSr->m_ScrollY;
+
+	bool Hovered = false;
+	bool Grabbed = false;
+	const void* pID = &pSr->m_ScrollY;
+	int Inside = UI()->MouseInside(&Slider);
+
+	if(Inside)
+	{
+		UI()->SetHotItem(pID);
+
+		if(!UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+		{
+			UI()->SetActiveItem(pID);
+			pSr->m_MouseGrabStart.y = UI()->MouseY();
+		}
+
+		Hovered = true;
+	}
+
+	if(UI()->CheckActiveItem(pID) && !UI()->MouseButton(0))
+		UI()->SetActiveItem(0);
+
+	// move slider
+	if(UI()->CheckActiveItem(pID))
+	{
+		float my = UI()->MouseY();
+		pSr->m_ScrollY += my - pSr->m_MouseGrabStart.y;
+		pSr->m_MouseGrabStart.y = my;
+
+		Grabbed = true;
+	}
+
+	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
+	pSr->m_ContentScrollOff.y = -pSr->m_ScrollY/MaxScroll * (pSr->m_ContentH - pSr->m_ClipRect.h);
+
+	vec4 SliderColor = pSr->m_Params.m_SliderColor;
+	if(Grabbed)
+		SliderColor = pSr->m_Params.m_SliderColorGrabbed;
+	else if(Hovered)
+		SliderColor = pSr->m_Params.m_SliderColorHover;
+
+	RenderTools()->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
+}
+
+void CMenus::ScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
+{
+	vec2 ContentPos = vec2(pSr->m_ClipRect.x, pSr->m_ClipRect.y);
+	ContentPos.x += pSr->m_ContentScrollOff.x;
+	ContentPos.y += pSr->m_ContentScrollOff.y;
+	pSr->m_LastAddedRect = Rect;
+	pSr->m_ContentH = max(Rect.y + Rect.h - ContentPos.y, pSr->m_ContentH);
+}
+
+void CMenus::ScrollRegionScrollHere(CScrollRegion* pSr, int Option)
+{
+	const float MinHeight = min(pSr->m_ClipRect.h, pSr->m_LastAddedRect.h);
+	const float TopScroll = pSr->m_LastAddedRect.y -
+		(pSr->m_ClipRect.y + pSr->m_ContentScrollOff.y);
+
+	switch(Option)
+	{
+		case CScrollRegion::SCROLLHERE_TOP:
+			pSr->m_RequestScrollY = TopScroll;
+			break;
+
+		case CScrollRegion::SCROLLHERE_BOTTOM:
+			pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
+			break;
+
+		case CScrollRegion::SCROLLHERE_KEEP_IN_VIEW:
+		default: {
+			const float dy = pSr->m_LastAddedRect.y - pSr->m_ClipRect.y;
+
+			if(dy < 0)
+				pSr->m_RequestScrollY = TopScroll;
+			else if(dy > (pSr->m_ClipRect.h-MinHeight))
+				pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
+		} break;
+	}
+}
+
+bool CMenus::ScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect)
+{
+	return (pSr->m_ClipRect.x > (Rect.x + Rect.w)
+		|| (pSr->m_ClipRect.x + pSr->m_ClipRect.w) < Rect.x
+		|| pSr->m_ClipRect.y > (Rect.y + Rect.h)
+		|| (pSr->m_ClipRect.y + pSr->m_ClipRect.h) < Rect.y);
+}
