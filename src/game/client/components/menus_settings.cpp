@@ -1428,7 +1428,6 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	const float HeaderHeight = 20.0f;
-	const float ItemHeight = 20.0f+2.0f;
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
