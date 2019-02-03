@@ -81,7 +81,7 @@ public:
 		MAX_RCONCMD_RATIO=8,
 	};
 
-	class CMapListEntry;
+	struct CMapListEntry;
 
 	class CClient
 	{

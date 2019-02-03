@@ -390,7 +390,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			vec4 IconColor = vec4(1, 1, 1, 1);
 			if(!DemoItem.m_IsDir)
 			{
-				IconColor = vec4(0.6, 0.6, 0.6, 1); // not loaded
+				IconColor = vec4(0.6f, 0.6f, 0.6f, 1.0f); // not loaded
 				if(DemoItem.m_Valid && DemoItem.m_InfosLoaded)
 					IconColor = DemoMarkerCount > 0 ? vec4(0.5, 1, 0.5, 1) : vec4(1,1,1,1);
 			}
