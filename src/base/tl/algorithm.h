@@ -93,7 +93,7 @@ void sort_bubble(R range)
 		{
 			typename R::type *cur = &section.front();
 			if(*cur < *prev)
-				swap(*cur, *prev);
+				tl_swap(*cur, *prev);
 			prev = cur;
 		}
 	}
