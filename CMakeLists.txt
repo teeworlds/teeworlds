@@ -133,7 +133,13 @@ endfunction()
 if(NOT MSVC)
   # Protect the stack pointer.
   # -fstack-protector-all doesn't work on MinGW.
-  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-all)
+  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-strong)
+
+  # Protect the stack from clashing.
+  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-clash-protection)
+
+  # Control-flow protection. Should protect against ROP.
+  add_c_compiler_flag_if_supported(OUR_FLAGS -fcf-protection)
 
   # Inaccurate floating point numbers cause problems on mingw-w64-gcc when
   # compiling for x86, might cause problems elsewhere. So don't store floats
@@ -1797,6 +1803,7 @@ foreach(target ${TARGETS})
   if(DEFINE_FORTIFY_SOURCE)
     target_compile_definitions(${target} PRIVATE $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>) # Detect some buffer overflows.
   endif()
+  target_compile_definitions(${target} PRIVATE _GLIBCXX_ASSERTIONS) # Enable run-time bounds-checking for the STL
 endforeach()
 
 foreach(target ${TARGETS_LINK})
