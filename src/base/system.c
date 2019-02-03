@@ -1537,6 +1537,31 @@ int fs_makedir(const char *path)
 #endif
 }
 
+int fs_makedir_recursive(const char *path)
+{
+	char buffer[2048];
+	int len;
+	int i;
+	str_copy(buffer, path, sizeof(buffer));
+	len = str_length(buffer);
+	// ignore a leading slash
+	for(i = 1; i < len; i++)
+	{
+		char b = buffer[i];
+		if(b == '/' || b == '\\')
+		{
+			buffer[i] = 0;
+			if(fs_makedir(buffer) < 0)
+			{
+				return -1;
+			}
+			buffer[i] = b;
+
+		}
+	}
+	return fs_makedir(path);
+}
+
 int fs_is_dir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
