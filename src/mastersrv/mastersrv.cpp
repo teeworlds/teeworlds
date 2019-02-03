@@ -81,7 +81,6 @@ void BuildPackets()
 	int ServersLeft = m_NumServers;
 	m_NumPackets = 0;
 	int PacketIndex = 0;
-	int PacketIndexLegacy = 0;
 	while(ServersLeft-- && m_NumPackets < MAX_PACKETS)
 	{
 		if(pCurrent->m_Type == SERVERTYPE_NORMAL)
