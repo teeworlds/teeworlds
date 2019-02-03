@@ -1341,8 +1341,6 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	CUIRect BottomArea;
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
-	static const char *s_HeaderCaption[NUM_FRIEND_TYPES] =
-		{ Localize("Online players (%d)"), Localize("Online clanmates (%d)"), Localize("Offline (%d)", "friends (server browser)") };
 
 	View.HSplitBottom(3*ms_ListheaderHeight, &View, &BottomArea);
 
@@ -1493,7 +1491,13 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		Header.VSplitLeft(Header.h, &Icon, &Label);
 		DoIcon(IMAGE_MENUICONS, s_ListExtended[i] ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Icon);
-		str_format(aBuf, sizeof(aBuf), s_HeaderCaption[i], m_lFriendList[i].size());
+		int ListSize = m_lFriendList[i].size();
+		switch(i)
+		{
+		case 0: str_format(aBuf, sizeof(aBuf), Localize("Online players (%d)"), ListSize); break;
+		case 1: str_format(aBuf, sizeof(aBuf), Localize("Online clanmates (%d)"), ListSize); break;
+		case 2: str_format(aBuf, sizeof(aBuf), Localize("Offline (%d)", "friends (server browser)"), ListSize); break;
+		}
 		Label.HMargin(2.0f, &Label);
 		UI()->DoLabelScaled(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 		static int s_HeaderButton[NUM_FRIEND_TYPES] = { 0 };

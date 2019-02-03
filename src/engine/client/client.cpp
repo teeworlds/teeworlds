@@ -1811,8 +1811,8 @@ bool CClient::LimitFps()
 	   (Now - DbgLastSkippedDbgMsg) / (double)time_freq() > 5.0)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "LimitFps: FramesSkippedCount=%d TimeWaited=%.3f (per sec)",
-				   DbgFramesSkippedCount/5,
+		str_format(aBuf, sizeof(aBuf), "LimitFps: FramesSkippedCount=%lu TimeWaited=%.3f (per sec)",
+				   (unsigned long)(DbgFramesSkippedCount/5),
 				   DbgTimeWaited/5.0);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 		DbgFramesSkippedCount = 0;

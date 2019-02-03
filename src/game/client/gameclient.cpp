@@ -143,8 +143,8 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
 	{/*GAMEMSG_CTF_RETURN*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf return sound
 
-	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, "All players were moved to the %s"},	// special - add team name
-	{/*GAMEMSG_TEAM_BALANCE_VICTIM*/ DO_SPECIAL, PARA_I, "You were moved to %s due to team balancing"},	// special - add team name
+	{/*GAMEMSG_TEAM_ALL*/ DO_SPECIAL, PARA_I, ""},	// special - add team name
+	{/*GAMEMSG_TEAM_BALANCE_VICTIM*/ DO_SPECIAL, PARA_I, ""},	// special - add team name
 	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
 
 	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
@@ -538,7 +538,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			return;
 
 		// handle special messages
-		static char aBuf[256];
+		char aBuf[256];
 		if(gs_GameMsgList[GameMsgID].m_Action == DO_SPECIAL)
 		{
 			switch(GameMsgID)
@@ -553,8 +553,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 					return;
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_RETURN);
 				break;
+			case GAMEMSG_TEAM_ALL:
+				str_format(aBuf, sizeof(aBuf), Localize("All players were moved to the %s"), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+				m_pBroadcast->DoBroadcast(aBuf);
+				break;
 			case GAMEMSG_TEAM_BALANCE_VICTIM:
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+				str_format(aBuf, sizeof(aBuf), Localize("You were moved to %s due to team balancing"), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
 				m_pBroadcast->DoBroadcast(aBuf);
 				break;
 			case GAMEMSG_CTF_GRAB:
@@ -588,16 +592,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// build message
 		const char *pText = "";
 		if(NumParaI == 0)
-			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
-		else
 		{
-			if(NumParaI == 1)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0]);
-			else if(NumParaI == 2)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1]);
-			else if(NumParaI == 3)
-				str_format(aBuf, sizeof(aBuf), Localize(gs_GameMsgList[GameMsgID].m_pText), aParaI[0], aParaI[1], aParaI[2]);
-			pText = aBuf;
+			pText = Localize(gs_GameMsgList[GameMsgID].m_pText);
 		}
 
 		// handle message
@@ -608,6 +604,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			break;
 		case DO_BROADCAST:
 			m_pBroadcast->DoBroadcast(pText);
+			break;
 		}
 	}
 
