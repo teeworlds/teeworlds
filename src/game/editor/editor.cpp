@@ -2824,14 +2824,6 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	return 0;
 }
 
-static int CompareImageName(const void *pObject1, const void *pObject2)
-{
-	CEditorImage *pImage1 = *(CEditorImage**)pObject1;
-	CEditorImage *pImage2 = *(CEditorImage**)pObject2;
-
-	return str_comp(pImage1->m_aName, pImage2->m_aName);
-}
-
 static int *gs_pSortedIndex = 0;
 static void ModifySortedIndex(int *pIndex)
 {
@@ -2854,7 +2846,7 @@ void CEditor::SortImages()
 		array<CEditorImage*> lTemp = array<CEditorImage*>(m_Map.m_lImages);
 		gs_pSortedIndex = new int[lTemp.size()];
 
-		qsort(m_Map.m_lImages.base_ptr(), m_Map.m_lImages.size(), sizeof(CEditorImage*), CompareImageName);
+		std::stable_sort(&m_Map.m_lImages[0], &m_Map.m_lImages[m_Map.m_lImages.size()]);
 
 		for(int OldIndex = 0; OldIndex < lTemp.size(); OldIndex++)
 			for(int NewIndex = 0; NewIndex < m_Map.m_lImages.size(); NewIndex++)

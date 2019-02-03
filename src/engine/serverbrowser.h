@@ -33,6 +33,14 @@ public:
 			PLAYERFLAG_BOT=2,
 			PLAYERFLAG_MASK=3,
 		};
+
+		bool operator<(const CClient &Other) const
+		{
+			if(!(m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && ((Other.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) ||
+				!(Other.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && m_Score > Other.m_Score))
+				return true;
+			return false;
+		}
 	};
 
 	//int m_SortedIndex;

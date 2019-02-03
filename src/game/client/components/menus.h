@@ -322,7 +322,7 @@ private:
 		bool m_HasDay;
 		bool m_HasNight;
 		IGraphics::CTextureHandle m_IconTexture;
-		bool operator<(const CTheme &Other) { return m_Name < Other.m_Name; }
+		bool operator<(const CTheme &Other) const { return m_Name < Other.m_Name; }
 	};
 	sorted_array<CTheme> m_lThemes;
 
@@ -414,7 +414,7 @@ private:
 		bool m_Valid;
 		CDemoHeader m_Info;
 
-		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
+		bool operator<(const CDemoItem &Other) const { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
@@ -447,7 +447,7 @@ private:
 			m_pServerInfo = 0;
 		}
 
-		bool operator<(const CFriendItem &Other)
+		bool operator<(const CFriendItem &Other) const
 		{
 			if(m_aName[0] && !Other.m_aName[0])
 				return true;

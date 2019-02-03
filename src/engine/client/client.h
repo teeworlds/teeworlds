@@ -255,8 +255,6 @@ public:
 	const char *LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc);
 	const char *LoadMapSearch(const char *pMapName, int WantedCrc);
 
-	static int PlayerScoreComp(const void *a, const void *b);
-
 	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);

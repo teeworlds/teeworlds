@@ -1,8 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
+#include <algorithm>
 
-#include <stdlib.h> // qsort
 #include <stdarg.h>
 
 #include <base/math.h>
@@ -822,21 +822,6 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 	return pError;
 }
 
-int CClient::PlayerScoreComp(const void *a, const void *b)
-{
-	CServerInfo::CClient *p0 = (CServerInfo::CClient *)a;
-	CServerInfo::CClient *p1 = (CServerInfo::CClient *)b;
-	if(!(p0->m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && (p1->m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
-		return -1;
-	if((p0->m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && !(p1->m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
-		return 1;
-	if(p0->m_Score == p1->m_Score)
-		return 0;
-	if(p0->m_Score < p1->m_Score)
-		return 1;
-	return -1;
-}
-
 int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken)
 {
 	if(pToken)
@@ -1009,7 +994,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		int Token;
 		if(!UnpackServerInfo(&Up, &Info, &Token) && !Up.Error())
 		{
-			qsort(Info.m_aClients, Info.m_NumClients, sizeof(*Info.m_aClients), PlayerScoreComp);
+			std::stable_sort(Info.m_aClients, Info.m_aClients + Info.m_NumClients);
 			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
 		}
 	}
@@ -1148,7 +1133,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
 			if(!UnpackServerInfo(&Unpacker, &Info, 0) && !Unpacker.Error())
 			{
-				qsort(Info.m_aClients, Info.m_NumClients, sizeof(*Info.m_aClients), PlayerScoreComp);
+				std::stable_sort(Info.m_aClients, Info.m_aClients + Info.m_NumClients);
 				mem_copy(&m_CurrentServerInfo, &Info, sizeof(m_CurrentServerInfo));
 				m_CurrentServerInfo.m_NetAddr = m_ServerAddress;
 			}

@@ -16,7 +16,7 @@ public:
 		bool m_Blocked;
 		IGraphics::CTextureHandle m_Texture;
 
-		bool operator<(const CCountryFlag &Other) { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
+		bool operator<(const CCountryFlag &Other) const { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
 
 	void OnInit();
