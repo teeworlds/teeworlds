@@ -291,8 +291,6 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	static bool s_DoScroll = false;
 	static float s_ScrollStart = 0.0f;
 
-	FontSize *= UI()->Scale();
-
 	if(UI()->LastActiveItem() == pID)
 	{
 		m_EditBoxActive = 2;

@@ -85,16 +85,6 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-float CUI::Scale() const
-{
-	return 1.0f;
-}
-
-float CUIRect::Scale() const
-{
-	return 1.0f;
-}
-
 void CUI::ClipEnable(const CUIRect *r)
 {
 	m_ClipRect = *r;
@@ -135,7 +125,6 @@ void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
 void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pTop)
 	{
@@ -157,7 +146,6 @@ void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pTop)
 	{
@@ -181,7 +169,6 @@ void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
 	float Cut = r.w/2;
-//	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -203,7 +190,6 @@ void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -225,7 +211,6 @@ void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -247,7 +232,6 @@ void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x + Cut;
 	pOtherRect->y = r.y + Cut;
@@ -258,7 +242,6 @@ void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
 void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x + Cut;
 	pOtherRect->y = r.y;
@@ -269,7 +252,6 @@ void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
 void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x;
 	pOtherRect->y = r.y + Cut;
@@ -338,9 +320,9 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		return 0;
 
 	if(pX)
-		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w) / Scale();
+		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w);
 	if(pY)
-		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h) / Scale();
+		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h);
 
 	return 1;
 }
@@ -417,9 +399,4 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Al
 		break;
 	}
 	}
-}
-
-void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth, bool MultiLine)
-{
-	DoLabel(r, pText, Size*Scale(), Align, MaxWidth, MultiLine);
 }
