@@ -290,6 +290,7 @@ public:
 	class CMapLayers *m_pMapLayersForeGround;
 };
 
-extern const char *Localize(const char *Str, const char *pContext="");
+const char *Localize(const char *pStr, const char *pContext="")
+GNUC_ATTRIBUTE((format_arg(1)));
 
 #endif
