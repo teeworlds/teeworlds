@@ -163,9 +163,9 @@ private:
 			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 			m_RailBgColor = vec4(1.0f, 1.0f, 1.0f, 0.25f);
-			m_SliderColor = vec4(0.8, 0.8, 0.8, 1.0);
-			m_SliderColorHover = vec4(1, 1, 1, 1);
-			m_SliderColorGrabbed = vec4(0.9, 0.9, 0.9, 1);
+			m_SliderColor = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+			m_SliderColorHover = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			m_SliderColorGrabbed = vec4(0.9f, 0.9f, 0.9f, 1.0f);
 			m_Flags = 0;
 		}
 	};
