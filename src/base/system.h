@@ -1159,6 +1159,19 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 int fs_makedir(const char *path);
 
 /*
+	Function: fs_makedir_recursive
+		Recursively create directories
+
+	Parameters:
+		path - Path to create
+
+	Returns:
+		Returns 0 on success. Negative value on failure.
+*/
+int fs_makedir_recursive(const char *path);
+
+
+/*
 	Function: fs_storage_path
 		Fetches per user configuration directory.
 
