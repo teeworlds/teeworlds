@@ -986,8 +986,10 @@ CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 	mem_zero(TileLayer.m_aName, sizeof(TileLayer.m_aName));
 	TileLayer.m_Type = LAYERTYPE_TILES;
 	TileLayer.m_ImageID = -1;
+	TileLayer.m_Color = vec4(1, 1, 1, 1);
 	TileLayer.m_Width = Width;
 	TileLayer.m_Height = Height;
+	TileLayer.m_ColorEnvelopeID = -1;
 	TileLayer.m_aTiles = NewTileArray();
 	TileLayer.m_aTiles.AddEmpty(TileLayer.m_Width * TileLayer.m_Height);
 	return m_aLayers.Add(TileLayer);
@@ -999,6 +1001,7 @@ CEditorMap::CLayer&CEditorMap::NewQuadLayer()
 	mem_zero(QuadLayer.m_aName, sizeof(QuadLayer.m_aName));
 	QuadLayer.m_Type = LAYERTYPE_QUADS;
 	QuadLayer.m_ImageID = -1;
+	QuadLayer.m_Color = vec4(1, 1, 1, 1);
 	QuadLayer.m_aQuads = NewQuadArray();
 	return m_aLayers.Add(QuadLayer);
 }
@@ -1922,9 +1925,13 @@ void CEditor::RenderMapEditorUI()
 
 void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 {
-	CUIRect DetailRect, ButtonRect;
+	const float FontSize = 8.0f;
+	const float ButtonHeight = 20.0f;
+	const float Spacing = 2.0f;
+	const float ShowButtonWidth = 15.0f;
 
-	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
+	CUIRect ActionLineRect, ButtonRect;
+	NavRect.HSplitBottom(ButtonHeight, &NavRect, &ActionLineRect);
 
 	const int GroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
@@ -1944,11 +1951,6 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	m_UiGroupHovered.set_size_zero(GroupCount);
 	m_UiLayerHovered.set_size_zero(TotalLayerCount);
 	m_UiLayerHidden.set_size_zero(TotalLayerCount);
-
-	const float FontSize = 8.0f;
-	const float ButtonHeight = 20.0f;
-	const float Spacing = 2.0f;
-	const float ShowButtonWidth = 15.0f;
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOff(0, 0);
@@ -2111,9 +2113,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// Add buttons
 	CUIRect ButtonRect2;
-	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+	ActionLineRect.VSplitMid(&ButtonRect, &ButtonRect2);
 
 	static CUIButtonState s_ButAddTileLayer, s_ButAddQuadLayer, s_ButAddGroup;
 	if(UiButton(ButtonRect2, Localize("New group"), &s_ButAddGroup))
@@ -2243,9 +2243,10 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
 			{
 				int SelectedLayerID = m_UiSelectedLayerID;
+				int SelectedGroupID = m_UiSelectedGroupID;
 				SelectLayerBelowCurrentOne();
 
-				EditDeleteLayer(SelectedLayerID, m_UiSelectedGroupID);
+				EditDeleteLayer(SelectedLayerID, SelectedGroupID);
 
 				// this can happen since we select the layer below before deleting
 				if(m_UiSelectedLayerID >= m_Map.m_aLayers.Count())
@@ -3764,42 +3765,50 @@ void CEditor::EditCreateAndAddGroup()
 
 int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 {
-	dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	// base width and height on given layer if it is a tilelayer, else base on game layer
-	const CEditorMap::CLayer& TopLayer = m_Map.m_aLayers[UnderLyID];
+	// base width and height on given layer if it's a tilelayer, else base on game layer
 	int LyWidth = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Width;
 	int LyHeight = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Height;
-	if(TopLayer.IsTileLayer())
-	{
-		LyWidth = TopLayer.m_Width;
-		LyHeight = TopLayer.m_Height;
-	}
+
 
 	CEditorMap::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
 	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	int UnderGrpLyID = -1;
-	const int ParentGroupLayerCount = Group.m_LayerCount;
-	for(int li = 0; li < ParentGroupLayerCount; li++)
+	if(UnderLyID != -1)
 	{
-		if(Group.m_apLayerIDs[li] == UnderLyID)
+		dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
+		const CEditorMap::CLayer& TopLayer = m_Map.m_aLayers[UnderLyID];
+
+		if(TopLayer.IsTileLayer())
 		{
-			UnderGrpLyID = li;
-			break;
+			LyWidth = TopLayer.m_Width;
+			LyHeight = TopLayer.m_Height;
 		}
+
+		const int ParentGroupLayerCount = Group.m_LayerCount;
+		for(int li = 0; li < ParentGroupLayerCount; li++)
+		{
+			if(Group.m_apLayerIDs[li] == UnderLyID)
+			{
+				UnderGrpLyID = li;
+				break;
+			}
+		}
+
+		dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
 	}
 
-	dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
 	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
 
 	const int GrpLyID = UnderGrpLyID+1;
 	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
 		(Group.m_LayerCount-GrpLyID) * sizeof(Group.m_apLayerIDs[0]));
-	Group.m_LayerCount++;
+
 	const int LyID = m_Map.m_aLayers.Count()-1;
 	Group.m_apLayerIDs[GrpLyID] = LyID;
+	Group.m_LayerCount++;
 
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Tile %d", LyID);
