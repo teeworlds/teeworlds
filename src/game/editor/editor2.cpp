@@ -45,6 +45,9 @@ static char s_aEdMsg[256];
 	#define dbg_assert(test,msg)
 #endif
 
+// TODO: move this elsewhere
+#define ARR_COUNT(arr) (sizeof(arr)/sizeof(arr[0]))
+
 const vec4 StyleColorBg(0.03, 0, 0.085, 1);
 const vec4 StyleColorButton(0.062, 0, 0.19, 1);
 const vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
@@ -222,7 +225,7 @@ bool CEditorMap::Load(const char* pFileName)
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap::CGroup Group;
-		IntsToStr(pGroup->m_aName, 3, Group.m_aName);
+		IntsToStr(pGroup->m_aName, ARR_COUNT(pGroup->m_aName), Group.m_aName);
 		Group.m_ParallaxX = pGroup->m_ParallaxX;
 		Group.m_ParallaxY = pGroup->m_ParallaxY;
 		Group.m_OffsetX = pGroup->m_OffsetX;
@@ -243,6 +246,7 @@ bool CEditorMap::Load(const char* pFileName)
 				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
 
 				CLayer LayerTile;
+				IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
 				LayerTile.m_Type = LAYERTYPE_TILES;
 				LayerTile.m_ImageID = Tilemap.m_Image;
 				LayerTile.m_Width = Tilemap.m_Width;
@@ -284,6 +288,7 @@ bool CEditorMap::Load(const char* pFileName)
 				const CMapItemLayerQuads& ItemQuadLayer = *(CMapItemLayerQuads*)pLayer;
 
 				CLayer LayerQuad;
+				IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
 
@@ -738,6 +743,9 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 		const CLayer& Layer = m_aLayers[li];
 		Snap.m_apLayers[li] = pCurrentLayerData;
 
+		int aNameInt[3];
+		StrToInts(aNameInt, ARR_COUNT(aNameInt), Layer.m_aName);
+
 		if(Layer.IsTileLayer())
 		{
 			CMapItemLayerTilemap& Tilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
@@ -745,6 +753,7 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 			if(li == m_GameLayerID)
 				Tilemap.m_Layer.m_Type = LAYERTYPE_GAME;
 
+			memmove(Tilemap.m_aName, aNameInt, sizeof(Tilemap.m_aName));
 			Tilemap.m_Color.r = (int)(Layer.m_Color.r*255);
 			Tilemap.m_Color.g = (int)(Layer.m_Color.g*255);
 			Tilemap.m_Color.b = (int)(Layer.m_Color.b*255);
@@ -761,6 +770,7 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 		else
 		{
 			CMapItemLayerQuads& LayerQuads = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
+			memmove(LayerQuads.m_aName, aNameInt, sizeof(LayerQuads.m_aName));
 			LayerQuads.m_Layer.m_Type = LAYERTYPE_QUADS;
 			LayerQuads.m_Data = QuadStartID;
 			LayerQuads.m_NumQuads = Layer.m_aQuads.Count();
@@ -839,6 +849,7 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		if(SnapLayer.m_Type == LAYERTYPE_GAME || SnapLayer.m_Type == LAYERTYPE_TILES)
 		{
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
+			IntsToStr(SnapTilemap.m_aName, ARR_COUNT(SnapTilemap.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_TILES;
 			Layer.m_ImageID = SnapTilemap.m_Image;
 			Layer.m_Color.r = SnapTilemap.m_Color.r/255.f;
@@ -855,6 +866,7 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		else
 		{
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
+			IntsToStr(SnapQuadLayer.m_aName, ARR_COUNT(SnapQuadLayer.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_QUADS;
 			Layer.m_ImageID = SnapQuadLayer.m_Image;
 			Layer.m_aQuads = NewQuadArray();
@@ -915,6 +927,9 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		const CMapItemLayer& SnapLayer = *Snap.m_apLayers[li];
 		const CLayer& Layer = m_aLayers[li];
 
+		int aNameInt[3];
+		StrToInts(aNameInt, ARR_COUNT(aNameInt), Layer.m_aName);
+
 		if(SnapLayer.m_Type == LAYERTYPE_GAME)
 			dbg_assert(Layer.m_Type == LAYERTYPE_TILES && li == m_GameLayerID, "");
 		else
@@ -923,6 +938,9 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		if(Layer.IsTileLayer())
 		{
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
+			dbg_assert(sizeof(SnapTilemap.m_aName) == sizeof(aNameInt), "");
+			dbg_assert(mem_comp(SnapTilemap.m_aName, aNameInt, sizeof(SnapTilemap.m_aName)) == 0,
+					   "Names don't match");
 			dbg_assert(SnapTilemap.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapTilemap.m_ColorEnv == Layer.m_ColorEnvelopeID, "");
 			dbg_assert(SnapTilemap.m_Color.r == (int)(Layer.m_Color.r*255), "");
@@ -938,6 +956,9 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 		else if(Layer.IsQuadLayer())
 		{
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
+			dbg_assert(sizeof(SnapQuadLayer.m_aName) == sizeof(aNameInt), "");
+			dbg_assert(mem_comp(SnapQuadLayer.m_aName, aNameInt, sizeof(SnapQuadLayer.m_aName)) == 0,
+					   "Names don't match");
 			dbg_assert(SnapQuadLayer.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapQuadLayer.m_NumQuads == Layer.m_aQuads.Count(), "");
 			dbg_assert(mem_comp(pSnapQuads, Layer.m_aQuads.Data(),
@@ -962,6 +983,7 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 {
 	CLayer TileLayer;
+	mem_zero(TileLayer.m_aName, sizeof(TileLayer.m_aName));
 	TileLayer.m_Type = LAYERTYPE_TILES;
 	TileLayer.m_ImageID = -1;
 	TileLayer.m_Width = Width;
@@ -974,6 +996,7 @@ CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 CEditorMap::CLayer&CEditorMap::NewQuadLayer()
 {
 	CLayer QuadLayer;
+	mem_zero(QuadLayer.m_aName, sizeof(QuadLayer.m_aName));
 	QuadLayer.m_Type = LAYERTYPE_QUADS;
 	QuadLayer.m_ImageID = -1;
 	QuadLayer.m_aQuads = NewQuadArray();
@@ -2200,7 +2223,8 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		// label
 		DrawRect(ButtonRect, StyleColorButtonPressed);
-		DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID), FontSize);
+		DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID),
+			FontSize);
 
 		// tile layer
 		if(SelectedLayer.IsTileLayer())
@@ -3787,6 +3811,13 @@ const char* CEditor::GetLayerName(int LayerID)
 {
 	static char aBuff[64];
 	const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	if(Layer.m_aName[0])
+	{
+		str_format(aBuff, sizeof(aBuff), "%s %d", Layer.m_aName, LayerID);
+		return aBuff;
+	}
+
 	if(Layer.IsTileLayer())
 		str_format(aBuff, sizeof(aBuff), Localize("Tile %d"), LayerID);
 	else if(Layer.IsQuadLayer())
