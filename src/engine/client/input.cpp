@@ -206,8 +206,13 @@ int CInput::Update()
 					if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
 					if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
 					if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
-					if(Event.button.clicks%2 == 0 && Event.button.button == SDL_BUTTON_LEFT)
-						m_MouseDoubleClick = true;
+					if(Event.button.button == SDL_BUTTON_LEFT)
+					{
+						if(Event.button.clicks%2 == 0)
+							m_MouseDoubleClick = true;
+						if(Event.button.clicks == 1)
+							m_MouseDoubleClick = false;
+					}
 					Scancode = Key;
 					break;
 
