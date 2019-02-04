@@ -734,6 +734,8 @@ class CEditor: public IEditor
 					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
 	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
 	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState);
+	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButtonState* pInputState);
+	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState);
 
 	struct CScrollRegionParams
 	{
