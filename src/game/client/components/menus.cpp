@@ -658,7 +658,10 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 	Button.Margin(2.0f, &Button);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
+	if(UI()->MouseInside(&Header))
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Graphics()->SetColor(0.6f, 0.6f, 0.6f, 1.0f);
 	if(Active)
 		RenderTools()->SelectSprite(SPRITE_MENU_EXPANDED);
 	else
@@ -707,7 +710,10 @@ float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const c
 	Button.Margin(2.0f, &Button);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_MENUICONS].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, UI()->HotItem() == pID ? 1.0f : 0.6f);
+	if(UI()->MouseInside(&Header))
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Graphics()->SetColor(0.6f, 0.6f, 0.6f, 1.0f);
 	if(Active)
 		RenderTools()->SelectSprite(SPRITE_MENU_EXPANDED);
 	else

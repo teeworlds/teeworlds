@@ -647,9 +647,10 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	{
 		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
+	vec4 Color = UI()->MouseInside(&View) ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.6f, 0.6f, 0.6f, 1.0f);
 	View.VSplitLeft(20.0f, &Button, &View);
 	Button.Margin(2.0f, &Button);
-	DoIcon(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button);
+	DoIconColor(IMAGE_MENUICONS, pFilter->Extended() ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Button, Color);
 	
 	// split buttons from label
 	View.VSplitLeft(Spacing, 0, &View);
@@ -1490,7 +1491,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		// header
 		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		Header.VSplitLeft(Header.h, &Icon, &Label);
-		DoIcon(IMAGE_MENUICONS, s_ListExtended[i] ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Icon);
+		vec4 Color = UI()->MouseInside(&Header) ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.6f, 0.6f, 0.6f, 1.0f);
+		DoIconColor(IMAGE_MENUICONS, s_ListExtended[i] ? SPRITE_MENU_EXPANDED : SPRITE_MENU_COLLAPSED, &Icon, Color);
 		int ListSize = m_lFriendList[i].size();
 		switch(i)
 		{
