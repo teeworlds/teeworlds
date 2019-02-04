@@ -733,6 +733,77 @@ class CEditor: public IEditor
 	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
 	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState);
 
+	struct CScrollRegionParams
+	{
+		float m_ScrollbarWidth;
+		float m_ScrollbarMargin;
+		float m_SliderMinHeight;
+		float m_ScrollSpeed;
+		vec4 m_ClipBgColor;
+		vec4 m_ScrollbarBgColor;
+		vec4 m_RailBgColor;
+		vec4 m_SliderColor;
+		vec4 m_SliderColorHover;
+		vec4 m_SliderColorGrabbed;
+		int m_Flags;
+
+		enum {
+			FLAG_CONTENT_STATIC_WIDTH = 0x1
+		};
+
+		CScrollRegionParams()
+		{
+			m_ScrollbarWidth = 10;
+			m_ScrollbarMargin = 1;
+			m_SliderMinHeight = 25;
+			m_ScrollSpeed = 5;
+			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			m_RailBgColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			m_SliderColor = vec4(0.2f, 0.1f, 0.98f, 1.0f);
+			m_SliderColorHover = vec4(0.4f, 0.41f, 1.0f, 1.0f);
+			m_SliderColorGrabbed = vec4(0.2f, 0.1f, 0.98f, 1.0f);
+			m_Flags = 0;
+		}
+	};
+
+	struct CScrollRegion
+	{
+		float m_ScrollY;
+		float m_ContentH;
+		float m_RequestScrollY; // [0, ContentHeight]
+		CUIRect m_ClipRect;
+		CUIRect m_OldClipRect;
+		CUIRect m_RailRect;
+		CUIRect m_LastAddedRect; // saved for ScrollHere()
+		vec2 m_MouseGrabStart;
+		vec2 m_ContentScrollOff;
+		bool m_WasClipped;
+		CScrollRegionParams m_Params;
+
+		enum {
+			SCROLLHERE_KEEP_IN_VIEW=0,
+			SCROLLHERE_TOP,
+			SCROLLHERE_BOTTOM,
+		};
+
+		CScrollRegion()
+		{
+			m_ScrollY = 0;
+			m_ContentH = 0;
+			m_RequestScrollY = -1;
+			m_ContentScrollOff = vec2(0,0);
+			m_WasClipped = false;
+			m_Params = CScrollRegionParams();
+		}
+	};
+
+	void UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams = 0);
+	void UiEndScrollRegion(CScrollRegion* pSr);
+	void UiScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect);
+	void UiScrollRegionScrollHere(CScrollRegion* pSr, int Option = CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+	bool UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect);
+
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
 
 	void Reset();

@@ -641,10 +641,10 @@ void CEditorMap::AssetsDeleteImage(int ImgID)
 {
 	Graphics()->UnloadTexture(&m_Assets.m_aTextureHandle[ImgID]);
 	const int SwappedID = m_Assets.m_ImageCount-1;
-	swap(m_Assets.m_aImageNames[ImgID], m_Assets.m_aImageNames[SwappedID]);
-	swap(m_Assets.m_aImageEmbeddedCrc[ImgID], m_Assets.m_aImageEmbeddedCrc[SwappedID]);
-	swap(m_Assets.m_aTextureHandle[ImgID], m_Assets.m_aTextureHandle[SwappedID]);
-	swap(m_Assets.m_aTextureInfos[ImgID], m_Assets.m_aTextureInfos[SwappedID]);
+	tl_swap(m_Assets.m_aImageNames[ImgID], m_Assets.m_aImageNames[SwappedID]);
+	tl_swap(m_Assets.m_aImageEmbeddedCrc[ImgID], m_Assets.m_aImageEmbeddedCrc[SwappedID]);
+	tl_swap(m_Assets.m_aTextureHandle[ImgID], m_Assets.m_aTextureHandle[SwappedID]);
+	tl_swap(m_Assets.m_aTextureInfos[ImgID], m_Assets.m_aTextureInfos[SwappedID]);
 	m_Assets.m_ImageCount--;
 
 	const int LayerCount = m_aLayers.Count();
@@ -1883,7 +1883,6 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	CUIRect DetailRect, ButtonRect;
 
 	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
-	UI()->ClipEnable(&NavRect);
 
 	const int GroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
@@ -1909,11 +1908,18 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	const float Spacing = 2.0f;
 	const float ShowButtonWidth = 15.0f;
 
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOff(0, 0);
+	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
+
+	NavRect.y += ScrollOff.y;
+
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+		UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
 		// check whole line for hover
 		CUIButtonState WholeLineState;
@@ -1991,6 +1997,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				const int LyID = m_Map.m_aGroups[gi].m_apLayerIDs[li];
 				NavRect.HSplitTop(Spacing, 0, &NavRect);
 				NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
+				UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 				ButtonRect.VSplitLeft(10.0f, 0, &ButtonRect);
 
 				dbg_assert(LyID >= 0 && LyID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
@@ -2055,7 +2062,11 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		}
 	}
 
-	UI()->ClipDisable(); // NavRect
+	// add some extra padding
+	NavRect.HSplitTop(10, &ButtonRect, &NavRect);
+	UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
+
+	UiEndScrollRegion(&s_ScrollRegion);
 
 	// Add buttons
 	CUIRect ButtonRect2;
@@ -2870,7 +2881,7 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 	pButState->m_Hovered = false;
 	pButState->m_Pressed = false;
 
-	if(UI()->MouseInside(&Rect))
+	if(UI()->MouseInside(&Rect) && UI()->MouseInsideClip())
 	{
 		pButState->m_Hovered = true;
 		if(pID)
@@ -3027,6 +3038,171 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 
 	return OldInteger != *pInteger;
 }
+
+
+void CEditor::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
+{
+	if(pParams)
+		pSr->m_Params = *pParams;
+
+	pSr->m_WasClipped = UI()->IsClipped();
+	pSr->m_OldClipRect = *UI()->ClipArea();
+
+	// only show scrollbar if content overflows
+	const bool ShowScrollbar = pSr->m_ContentH > pClipRect->h;
+
+	CUIRect ScrollBarBg;
+	CUIRect* pModifyRect = ShowScrollbar ? pClipRect : 0;
+	pClipRect->VSplitRight(pSr->m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
+	ScrollBarBg.Margin(pSr->m_Params.m_ScrollbarMargin, &pSr->m_RailRect);
+
+	if(ShowScrollbar)
+	{
+		if(pSr->m_Params.m_ScrollbarBgColor.a > 0)
+			RenderTools()->DrawRoundRect(&ScrollBarBg, pSr->m_Params.m_ScrollbarBgColor, 4.0f);
+		if(pSr->m_Params.m_RailBgColor.a > 0)
+			RenderTools()->DrawRoundRect(&pSr->m_RailRect, pSr->m_Params.m_RailBgColor, 0);
+	}
+	else
+		pSr->m_ContentScrollOff.y = 0;
+
+	if(pSr->m_Params.m_ClipBgColor.a > 0)
+		RenderTools()->DrawRoundRect(pClipRect, pSr->m_Params.m_ClipBgColor, 4.0f);
+
+	UI()->ClipEnable(pClipRect);
+
+	pSr->m_ClipRect = *pClipRect;
+	pSr->m_ContentH = 0;
+	*pOutOffset = pSr->m_ContentScrollOff;
+}
+
+void CEditor::UiEndScrollRegion(CScrollRegion* pSr)
+{
+	UI()->ClipDisable();
+	if(pSr->m_WasClipped)
+		UI()->ClipEnable(&pSr->m_OldClipRect);
+
+	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
+
+	// only show scrollbar if content overflows
+	if(pSr->m_ContentH <= pSr->m_ClipRect.h)
+		return;
+
+	// scroll wheel
+	CUIRect RegionRect = pSr->m_ClipRect;
+	RegionRect.w += pSr->m_Params.m_ScrollbarWidth;
+	if(UI()->MouseInside(&RegionRect))
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			pSr->m_ScrollY -= pSr->m_Params.m_ScrollSpeed;
+		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			pSr->m_ScrollY += pSr->m_Params.m_ScrollSpeed;
+	}
+
+	const float SliderHeight = max(pSr->m_Params.m_SliderMinHeight,
+		pSr->m_ClipRect.h/pSr->m_ContentH * pSr->m_RailRect.h);
+
+	CUIRect Slider = pSr->m_RailRect;
+	Slider.h = SliderHeight;
+	const float MaxScroll = pSr->m_RailRect.h - SliderHeight;
+
+	if(pSr->m_RequestScrollY >= 0)
+	{
+		pSr->m_ScrollY = pSr->m_RequestScrollY/(pSr->m_ContentH - pSr->m_ClipRect.h) * MaxScroll;
+		pSr->m_RequestScrollY = -1;
+	}
+
+	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
+	Slider.y += pSr->m_ScrollY;
+
+	bool Hovered = false;
+	bool Grabbed = false;
+	const void* pID = &pSr->m_ScrollY;
+	int Inside = UI()->MouseInside(&Slider);
+
+	if(Inside)
+	{
+		UI()->SetHotItem(pID);
+
+		if(!UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+		{
+			UI()->SetActiveItem(pID);
+			pSr->m_MouseGrabStart.y = UI()->MouseY();
+		}
+
+		Hovered = true;
+	}
+
+	if(UI()->CheckActiveItem(pID) && !UI()->MouseButton(0))
+		UI()->SetActiveItem(0);
+
+	// move slider
+	if(UI()->CheckActiveItem(pID))
+	{
+		float my = UI()->MouseY();
+		pSr->m_ScrollY += my - pSr->m_MouseGrabStart.y;
+		pSr->m_MouseGrabStart.y = my;
+
+		Grabbed = true;
+	}
+
+	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
+	pSr->m_ContentScrollOff.y = -pSr->m_ScrollY/MaxScroll * (pSr->m_ContentH - pSr->m_ClipRect.h);
+
+	vec4 SliderColor = pSr->m_Params.m_SliderColor;
+	if(Grabbed)
+		SliderColor = pSr->m_Params.m_SliderColorGrabbed;
+	else if(Hovered)
+		SliderColor = pSr->m_Params.m_SliderColorHover;
+
+	RenderTools()->DrawRoundRect(&Slider, SliderColor, 0);
+}
+
+void CEditor::UiScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
+{
+	vec2 ContentPos = vec2(pSr->m_ClipRect.x, pSr->m_ClipRect.y);
+	ContentPos.x += pSr->m_ContentScrollOff.x;
+	ContentPos.y += pSr->m_ContentScrollOff.y;
+	pSr->m_LastAddedRect = Rect;
+	pSr->m_ContentH = max(Rect.y + Rect.h - ContentPos.y, pSr->m_ContentH);
+}
+
+void CEditor::UiScrollRegionScrollHere(CScrollRegion* pSr, int Option)
+{
+	const float MinHeight = min(pSr->m_ClipRect.h, pSr->m_LastAddedRect.h);
+	const float TopScroll = pSr->m_LastAddedRect.y -
+		(pSr->m_ClipRect.y + pSr->m_ContentScrollOff.y);
+
+	switch(Option)
+	{
+		case CScrollRegion::SCROLLHERE_TOP:
+			pSr->m_RequestScrollY = TopScroll;
+			break;
+
+		case CScrollRegion::SCROLLHERE_BOTTOM:
+			pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
+			break;
+
+		case CScrollRegion::SCROLLHERE_KEEP_IN_VIEW:
+		default: {
+			const float dy = pSr->m_LastAddedRect.y - pSr->m_ClipRect.y;
+
+			if(dy < 0)
+				pSr->m_RequestScrollY = TopScroll;
+			else if(dy > (pSr->m_ClipRect.h-MinHeight))
+				pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
+		} break;
+	}
+}
+
+bool CEditor::UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect)
+{
+	return (pSr->m_ClipRect.x > (Rect.x + Rect.w)
+		|| (pSr->m_ClipRect.x + pSr->m_ClipRect.w) < Rect.x
+		|| pSr->m_ClipRect.y > (Rect.y + Rect.h)
+		|| (pSr->m_ClipRect.y + pSr->m_ClipRect.h) < Rect.y);
+}
+
 
 void CEditor::Reset()
 {
