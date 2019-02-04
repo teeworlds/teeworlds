@@ -16,7 +16,7 @@
 #include <generated/client_data.h>
 #include <game/client/components/mapimages.h>
 
-#include "input_console.h"
+#include "ed_console.h"
 
 
 class IStorage;
@@ -638,7 +638,7 @@ class CEditor: public IEditor
 	IGraphics::CTextureHandle m_GameTexture;
 
 	CEditorMap m_Map;
-	CEditorInputConsole m_InputConsole;
+	CEditorConsoleUI m_InputConsole;
 
 	bool m_ConfigShowGrid = true;
 	bool m_ConfigShowGridMajor = false;
@@ -679,6 +679,7 @@ class CEditor: public IEditor
 	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
 	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
+	bool m_UiDetailPanelIsOpen = true;
 
 	struct CBrush
 	{
@@ -715,6 +716,7 @@ class CEditor: public IEditor
 	void RenderMapViewHud();
 	void RenderMapEditorUI();
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
+	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 	void RenderPopupBrushPalette();
 	void RenderBrush(vec2 Pos);
 
@@ -735,7 +737,8 @@ class CEditor: public IEditor
 	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
 	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState);
 	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButtonState* pInputState);
-	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState);
+	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState,
+		const vec4* pColor = NULL);
 
 	struct CScrollRegionParams
 	{

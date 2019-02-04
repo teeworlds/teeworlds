@@ -11,7 +11,7 @@ class IGraphics;
 class CUI;
 class ITextRender;
 
-class CEditorInputConsole
+class CEditorConsoleUI
 {
 	IConsole* m_pConsole;
 	IGraphics* m_pGraphics;

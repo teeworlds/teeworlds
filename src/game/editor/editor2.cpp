@@ -1810,8 +1810,11 @@ void CEditor::RenderMapEditorUI()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
-	CUIRect RightPanel;
+	CUIRect RightPanel, DetailPanel;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
+
+	if(m_UiDetailPanelIsOpen)
+		m_UiMainViewRect.VSplitRight(150, &m_UiMainViewRect, &DetailPanel);
 
 	DrawRect(RightPanel, StyleColorBg);
 
@@ -1907,6 +1910,11 @@ void CEditor::RenderMapEditorUI()
 		UiEndScrollRegion(&s_ScrollRegion);
 	}
 
+	if(m_UiDetailPanelIsOpen)
+	{
+		DrawRect(DetailPanel, StyleColorBg);
+		RenderMapEditorUiDetailPanel(DetailPanel);
+	}
 
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
@@ -2124,8 +2132,10 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	{
 		m_UiSelectedLayerID = EditCreateAndAddQuadLayerUnder(m_UiSelectedLayerID, m_UiSelectedGroupID);
 	}
+}
 
-
+void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
+{
 	// GROUP/LAYER DETAILS
 	static CScrollRegion s_DetailSR;
 	vec2 DetailScrollOff(0, 0);
@@ -2137,6 +2147,11 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
 	char aBuff[128];
+
+	CUIRect ButtonRect, ButtonRect2;
+	const float FontSize = 8.0f;
+	const float ButtonHeight = 20.0f;
+	const float Spacing = 2.0f;
 
 	// label
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2293,24 +2308,32 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				static CUIButtonState s_SliderColorR, s_SliderColorG, s_SliderColorB, s_SliderColorA;
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.r, 0.0f, 1.0f, &s_SliderColorR);
+				vec4 SliderColor(0.7, 0.1, 0.1, 1);
+				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.r, 0.0f, 1.0f, &s_SliderColorR, &SliderColor);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.g, 0.0f, 1.0f, &s_SliderColorG);
+				SliderColor = vec4(0.1, 0.7, 0.1, 1);
+				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.g, 0.0f, 1.0f, &s_SliderColorG, &SliderColor);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.b, 0.0f, 1.0f, &s_SliderColorB);
+				SliderColor = vec4(0.1, 0.1, 0.7, 1);
+				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.b, 0.0f, 1.0f, &s_SliderColorB, &SliderColor);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.a, 0.0f, 1.0f, &s_SliderColorA);
+				SliderColor = vec4(0.5, 0.5, 0.5, 1);
+				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.a, 0.0f, 1.0f, &s_SliderColorA, &SliderColor);
 
 				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 			}
@@ -3150,12 +3173,25 @@ bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIB
 	return OldInt != *pInt;
 }
 
-bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState)
+bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState,
+	const vec4* pColor)
 {
 	const float OldInt = *pVal;
 	UiDoButtonBehavior(pInputState, Rect, pInputState);
 
-	if(UI()->CheckActiveItem(pInputState) && pInputState->m_Pressed)
+	// start grabbing
+	if(!UI()->CheckActiveItem(pInputState) && pInputState->m_Pressed && UI()->MouseButtonClicked(0))
+	{
+		UI()->SetActiveItem(pInputState);
+	}
+
+	// stop grabbing
+	if(UI()->CheckActiveItem(pInputState) && !UI()->MouseButton(0))
+	{
+		UI()->SetActiveItem(0);
+	}
+
+	if(UI()->CheckActiveItem(pInputState))
 	{
 		const float Precision = 200.0f; // TODO: precision should perhaps depend on exact rect pixel width
 		float ClickedX = m_UiMousePos.x - Rect.x;
@@ -3169,7 +3205,15 @@ bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float M
 	float Progress = *pVal/(Max-Min);
 	CUIRect ProgressRect = Rect;
 	ProgressRect.w = Rect.w * Progress;
-	DrawRect(ProgressRect, StyleColorButtonHover);
+
+	vec4 Color = StyleColorButtonHover;
+	if(pColor)
+		Color = *pColor;
+
+	if(pInputState->m_Hovered)
+		Color += vec4(0.1, 0.1, 0.1, 0.0);
+
+	DrawRect(ProgressRect, Color);
 
 	char aIntBuff[32];
 	str_format(aIntBuff, sizeof(aIntBuff), "%.3f", *pVal);

@@ -1,5 +1,5 @@
 // LordSk
-#include "input_console.h"
+#include "ed_console.h"
 
 #include <engine/console.h>
 #include <engine/graphics.h>
@@ -8,12 +8,12 @@
 #include <generated/client_data.h>
 #include <game/client/ui.h>
 
-void CEditorInputConsole::StaticConsolePrintCallback(const char* pLine, void* pUser, bool Highlighted)
+void CEditorConsoleUI::StaticConsolePrintCallback(const char* pLine, void* pUser, bool Highlighted)
 {
-	((CEditorInputConsole*)pUser)->ConsolePrintCallback(pLine, Highlighted);
+	((CEditorConsoleUI*)pUser)->ConsolePrintCallback(pLine, Highlighted);
 }
 
-void CEditorInputConsole::ConsolePrintCallback(const char* pLine, bool Highlighted)
+void CEditorConsoleUI::ConsolePrintCallback(const char* pLine, bool Highlighted)
 {
 	int Len = str_length(pLine);
 
@@ -27,7 +27,7 @@ void CEditorInputConsole::ConsolePrintCallback(const char* pLine, bool Highlight
 	pEntry->m_aText[Len] = 0;
 }
 
-void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender, IInput* pInput)
+void CEditorConsoleUI::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, ITextRender* pTextRender, IInput* pInput)
 {
 	m_pConsole = pConsole;
 	m_pGraphics = pGraphics;
@@ -42,7 +42,7 @@ void CEditorInputConsole::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pU
 #endif
 }
 
-void CEditorInputConsole::Render()
+void CEditorConsoleUI::Render()
 {
 	if(!m_IsOpen)
 		return;
@@ -143,7 +143,7 @@ void CEditorInputConsole::Render()
 	}
 }
 
-void CEditorInputConsole::OnInput(IInput::CEvent Event)
+void CEditorConsoleUI::OnInput(IInput::CEvent Event)
 {
 	if(m_IsOpen && Event.m_Key == KEY_ESCAPE && (Event.m_Flags&IInput::FLAG_PRESS))
 	{
@@ -256,7 +256,7 @@ void CEditorInputConsole::OnInput(IInput::CEvent Event)
 	}
 }
 
-void CEditorInputConsole::ToggleOpen()
+void CEditorConsoleUI::ToggleOpen()
 {
 	m_IsOpen ^= 1;
 }
