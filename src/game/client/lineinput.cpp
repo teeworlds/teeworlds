@@ -146,32 +146,34 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		{
 			// paste clipboard to cursor
 			const char *pClipboardText = pInput->GetClipboardText();
-
-			// gather string stats
-			int CharCount = 0;
-			int CharSize = 0;
-			while(pClipboardText[CharSize])
+			if(pClipboardText)
 			{
-				int NewCharSize = str_utf8_forward(pClipboardText, CharSize);
-				if(NewCharSize != CharSize)
+				// gather string stats
+				int CharCount = 0;
+				int CharSize = 0;
+				while(pClipboardText[CharSize])
 				{
-					++CharCount;
-					CharSize = NewCharSize;
+					int NewCharSize = str_utf8_forward(pClipboardText, CharSize);
+					if(NewCharSize != CharSize)
+					{
+						++CharCount;
+						CharSize = NewCharSize;
+					}
 				}
-			}
 
-			// add new string
-			if(CharCount)
-			{
-				if(Len+CharSize < StrMaxSize && CursorPos+CharSize < StrMaxSize && NumChars+CharCount < StrMaxChars)
+				// add new string
+				if(CharCount)
 				{
-					mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
-					for(int i = 0; i < CharSize; i++)
-						pStr[CursorPos+i] = pClipboardText[i];
-					CursorPos += CharSize;
-					Len += CharSize;
-					NumChars += CharCount;
-					Changes = true;
+					if(Len + CharSize < StrMaxSize && CursorPos + CharSize < StrMaxSize && NumChars + CharCount < StrMaxChars)
+					{
+						mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len - CursorPos + 1); // +1 == null term
+						for(int i = 0; i < CharSize; i++)
+							pStr[CursorPos + i] = pClipboardText[i];
+						CursorPos += CharSize;
+						Len += CharSize;
+						NumChars += CharCount;
+						Changes = true;
+					}
 				}
 			}
 		}
