@@ -523,7 +523,14 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		UI()->SetHotItem(pID);
 
 	CUIRect Textbox = *pRect;
-	RenderTools()->DrawUIRect(&Textbox, vec4(0.0f, 0.0f, 0.0f, 0.25f), Corners, 5.0f);
+	vec4 Color;
+	if(UI()->LastActiveItem() == pID)
+		Color = vec4(0.25f, 0.25f, 0.25f, 0.25f);
+	else if(Inside)
+		Color = vec4(0.5f, 0.5f, 0.5f, 0.25f);
+	else
+		Color = vec4(0.0f, 0.0f, 0.0f, 0.25f);
+	RenderTools()->DrawUIRect(&Textbox, Color, Corners, 5.0f);
 	Textbox.VMargin(2.0f, &Textbox);
 	Textbox.HMargin(2.0f, &Textbox);
 
