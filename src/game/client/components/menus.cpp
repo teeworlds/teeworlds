@@ -2817,7 +2817,7 @@ void CMenus::EndScrollRegion(CScrollRegion* pSr)
 	{
 		UI()->SetHotItem(pID);
 
-		if(!UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+		if(!UI()->CheckActiveItem(pID) && UI()->MouseButtonClicked(0))
 		{
 			UI()->SetActiveItem(pID);
 			pSr->m_MouseGrabStart.y = UI()->MouseY();
@@ -2830,7 +2830,7 @@ void CMenus::EndScrollRegion(CScrollRegion* pSr)
 		UI()->SetActiveItem(0);
 
 	// move slider
-	if(UI()->CheckActiveItem(pID))
+	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
 	{
 		float my = UI()->MouseY();
 		pSr->m_ScrollY += my - pSr->m_MouseGrabStart.y;
