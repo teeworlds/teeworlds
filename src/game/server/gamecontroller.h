@@ -181,6 +181,7 @@ public:
 		else
 			SetGameState(IGS_WARMUP_USER, Seconds);
 	}
+	void SwapTeamscore();
 
 	// general
 	virtual void Snap(int SnappingClient);

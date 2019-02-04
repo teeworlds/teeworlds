@@ -446,6 +446,8 @@ void CGameContext::SwapTeams()
 		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 			m_pController->DoTeamChange(m_apPlayers[i], m_apPlayers[i]->GetTeam()^1, false);
 	}
+
+	m_pController->SwapTeamscore();
 }
 
 void CGameContext::OnTick()

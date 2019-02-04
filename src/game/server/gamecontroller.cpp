@@ -657,6 +657,16 @@ void IGameController::StartRound()
 		SetGameState(IGS_WARMUP_GAME, TIMER_INFINITE);
 }
 
+void IGameController::SwapTeamscore()
+{
+	if(!IsTeamplay())
+		return;
+
+	int Score = m_aTeamscore[TEAM_RED];
+	m_aTeamscore[TEAM_RED] = m_aTeamscore[TEAM_BLUE];
+	m_aTeamscore[TEAM_BLUE] = Score;
+}
+
 // general
 void IGameController::Snap(int SnappingClient)
 {
