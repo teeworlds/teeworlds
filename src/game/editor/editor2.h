@@ -415,6 +415,7 @@ struct CEditorMap
 
 	struct CGroup
 	{
+		char m_aName[12];
 		int m_apLayerIDs[MAX_GROUP_LAYERS];
 		int m_LayerCount = 0;
 		int m_ParallaxX = 0;

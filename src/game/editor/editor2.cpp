@@ -222,6 +222,7 @@ bool CEditorMap::Load(const char* pFileName)
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap::CGroup Group;
+		IntsToStr(pGroup->m_aName, 3, Group.m_aName);
 		Group.m_ParallaxX = pGroup->m_ParallaxX;
 		Group.m_ParallaxY = pGroup->m_ParallaxY;
 		Group.m_OffsetX = pGroup->m_OffsetX;
@@ -2127,11 +2128,16 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		}
 	}
 
-	if(IsGameGroup)
-		str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
+	if(SelectedGroup.m_aName[0] == 0)
+	{
+		if(IsGameGroup)
+			str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
+		else
+			str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
+		DrawText(ButtonRect, aBuff, FontSize);
+	}
 	else
-		str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
-	DrawText(ButtonRect, aBuff, FontSize);
+		DrawText(ButtonRect, SelectedGroup.m_aName, FontSize);
 
 	// parallax
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2141,6 +2147,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	DrawRect(ButtonRect, vec4(0,0,0,1));
 	DrawText(ButtonRect, Localize("Parallax"), FontSize);
 
+	// TODO: implement some sort of instant preview when values change?
 	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
 	static CUIIntegerInputState s_IntInpParallaxX, s_IntInpParallaxY;
 	int GroupParallaxX = SelectedGroup.m_ParallaxX;
