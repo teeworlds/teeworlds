@@ -2148,6 +2148,9 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
 		{
 			EditDeleteGroup(m_UiSelectedGroupID);
+			// TODO: select group below
+			m_UiSelectedGroupID = m_Map.m_GameGroupID;
+			m_UiSelectedLayerID = m_Map.m_GameLayerID;
 		}
 	}
 
@@ -3581,9 +3584,6 @@ void CEditor::EditDeleteGroup(int GroupID)
 		m_Map.m_GameGroupID--; // see RemoveByIndexSlide
 
 	m_Map.m_aGroups.RemoveByIndexSlide(GroupID);
-
-	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 
 	// history entry
 	char aBuff[64];
