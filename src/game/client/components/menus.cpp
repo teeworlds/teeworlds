@@ -760,7 +760,8 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	// logic
 	float ReturnValue = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
+	bool Grabbed = false;
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -773,6 +774,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 		ReturnValue = (Cur-Min)/Max;
 		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
 		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
+		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
 	{
@@ -793,8 +795,14 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	CUIRect Slider = Handle;
 	Slider.VMargin(5.0f, &Slider);
-
-	RenderTools()->DrawUIRect(&Slider, vec4(1.0f , 1.0f, 1.0f, 1.0f), CUI::CORNER_ALL, Slider.w/2.0f);
+	vec4 Color;
+	if(Grabbed)
+		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
+	else if(Inside)
+		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.w/2.0f);
 
 	return ReturnValue;
 }
@@ -809,7 +817,8 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	// logic
 	float ReturnValue = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
+	bool Grabbed = false;
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -822,6 +831,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 		ReturnValue = (Cur-Min)/Max;
 		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
 		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
+		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
 	{
@@ -842,8 +852,14 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	CUIRect Slider = Handle;
 	Slider.HMargin(5.0f, &Slider);
-
-	RenderTools()->DrawUIRect(&Slider, vec4(1.0f , 1.0f, 1.0f, 1.0f), CUI::CORNER_ALL, Slider.h/2.0f);
+	vec4 Color;
+	if(Grabbed)
+		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
+	else if(Inside)
+		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.h/2.0f);
 
 	return ReturnValue;
 }
