@@ -3131,6 +3131,8 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 
 bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIButtonState* pInputState)
 {
+	dbg_assert(false, "implement, see UiSliderFloat");
+
 	const int OldInt = *pInt;
 	UiDoButtonBehavior(pInputState, Rect, pInputState);
 	DrawRect(Rect, StyleColorBg);
@@ -3155,8 +3157,10 @@ bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float M
 
 	if(UI()->CheckActiveItem(pInputState) && pInputState->m_Pressed)
 	{
+		const float Precision = 200.0f; // TODO: precision should perhaps depend on exact rect pixel width
 		float ClickedX = m_UiMousePos.x - Rect.x;
-		*pVal = clamp(ClickedX, 0.0f, Rect.w) / Rect.w * (Max-Min) + Min;
+		float Cx01 = clamp(ClickedX, 0.0f, Rect.w) / Rect.w;
+		*pVal  = (int)(roundf(Cx01 * Precision)) * (Max-Min) / Precision + Min;
 	}
 
 	DrawRect(Rect, StyleColorBg);
