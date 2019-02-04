@@ -1824,7 +1824,10 @@ void CEditor::RenderMapEditorUI()
 	}
 	else if(s_CurrentTab == TAB_HISTORY)
 	{
-		// TODO: scrollable region
+		static CScrollRegion s_ScrollRegion;
+		vec2 ScrollOff(0, 0);
+		UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
+		NavRect.y += ScrollOff.y;
 
 		CHistoryEntry* pFirstEntry = m_pHistoryEntryCurrent;
 		while(pFirstEntry->m_pPrev)
@@ -1840,6 +1843,7 @@ void CEditor::RenderMapEditorUI()
 		{
 			NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
+			UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
 			// somewhat hacky
 			CUIButtonState& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
@@ -1871,6 +1875,12 @@ void CEditor::RenderMapEditorUI()
 			pCurrentEntry = pCurrentEntry->m_pNext;
 			i++;
 		}
+
+		// some padding at the end
+		NavRect.HSplitTop(10, &ButtonRect, &NavRect);
+		UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
+
+		UiEndScrollRegion(&s_ScrollRegion);
 	}
 
 
@@ -1911,7 +1921,6 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOff(0, 0);
 	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
-
 	NavRect.y += ScrollOff.y;
 
 	for(int gi = 0; gi < GroupCount; gi++)
