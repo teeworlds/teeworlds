@@ -51,9 +51,11 @@ struct CVoice
 	int m_X, m_Y;
 };
 
-static CSample m_aSamples[NUM_SAMPLES] = { {0} };
-static CVoice m_aVoices[NUM_VOICES] = { {0} };
-static CChannel m_aChannels[NUM_CHANNELS] = { {255} };
+static CSample m_aSamples[NUM_SAMPLES] = {0};
+static CVoice m_aVoices[NUM_VOICES] = {0};
+static CChannel m_aChannels[NUM_CHANNELS];
+for(int i = 0; i < NUM_CHANNELS; ++i)
+	m_aChannels[i] = 255;
 
 static LOCK m_SoundLock = 0;
 
