@@ -119,6 +119,7 @@ const char *CInput::GetClipboardText()
 		SDL_free(m_pClipboardText);
 	}
 	m_pClipboardText = SDL_GetClipboardText();
+	str_sanitize_cc(m_pClipboardText);
 	return m_pClipboardText;
 }
 
