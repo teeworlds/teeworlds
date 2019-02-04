@@ -2025,7 +2025,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);
 
 			Name.VSplitLeft(2.0f, 0, &Name);
-			Name.VSplitLeft(20.0f, &Score, &Name);
+			Name.VSplitLeft(25.0f, &Score, &Name);
 			Name.VSplitRight(2*(Name.h-8.0f), &Name, &Flag);
 			Flag.HMargin(4.0f, &Flag);
 			Name.HSplitTop(LineHeight*0.5f, &Name, &Clan);
