@@ -2217,7 +2217,17 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
 				vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
 			{
-				EditDeleteLayer(m_UiSelectedLayerID, m_UiSelectedGroupID);
+				int SelectedLayerID = m_UiSelectedLayerID;
+				SelectLayerBelowCurrentOne();
+
+				EditDeleteLayer(SelectedLayerID, m_UiSelectedGroupID);
+
+				// this can happen since we select the layer below before deleting
+				if(m_UiSelectedLayerID >= m_Map.m_aLayers.Count())
+				{
+					m_UiSelectedLayerID = m_Map.m_GameLayerID;
+					m_UiSelectedGroupID = m_Map.m_GameGroupID;
+				}
 			}
 		}
 
@@ -3280,6 +3290,40 @@ void CEditor::ChangePage(int Page)
 	m_Page = Page;
 }
 
+void CEditor::SelectLayerBelowCurrentOne()
+{
+	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
+		"m_UiSelectedLayerID is invalid");
+	dbg_assert(m_UiSelectedGroupID >= 0 && m_UiSelectedGroupID < m_Map.m_aGroups.Count(),
+		"m_UiSelectedGroupID is invalid");
+
+	const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
+	int LayerPosID = -1;
+	for(int i = 0; i < (Group.m_LayerCount-1); i++)
+	{
+		if(Group.m_apLayerIDs[i] == m_UiSelectedLayerID)
+		{
+			LayerPosID = i;
+			break;
+		}
+	}
+
+	if(LayerPosID != -1)
+	{
+		m_UiSelectedLayerID = Group.m_apLayerIDs[LayerPosID+1];
+	}
+	else
+	{
+		m_UiSelectedLayerID = m_Map.m_GameLayerID;
+		m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	}
+
+	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
+		"m_UiSelectedLayerID is invalid");
+	dbg_assert(m_UiSelectedGroupID >= 0 && m_UiSelectedGroupID < m_Map.m_aGroups.Count(),
+		"m_UiSelectedGroupID is invalid");
+}
+
 void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
 {
 	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
@@ -3465,13 +3509,10 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 
 	// remove layer id from parent group
 	int GroupLayerID = -1;
-	int GroupSelectedLayerPos = -1;
-	for(int li = 0; li < ParentGroupLayerCount && GroupLayerID == -1 && GroupSelectedLayerPos == -1; li++)
+	for(int li = 0; li < ParentGroupLayerCount && GroupLayerID == -1; li++)
 	{
 		if(ParentGroup.m_apLayerIDs[li] == LyID)
 			GroupLayerID = li;
-		if(ParentGroup.m_apLayerIDs[li] == m_UiSelectedLayerID)
-			GroupSelectedLayerPos = li;
 	}
 	dbg_assert(GroupLayerID != -1, "Layer not found inside parent group");
 
@@ -3502,27 +3543,8 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 		}
 	}
 
-	// UiSelectedLayerID: try to stay at the same selected position
-	if(m_UiSelectedLayerID == LyID)
-	{
-		if(ParentGroup.m_LayerCount > 0 && GroupSelectedLayerPos != -1 &&
-		   GroupSelectedLayerPos < ParentGroup.m_LayerCount)
-		{
-			m_UiSelectedLayerID = ParentGroup.m_apLayerIDs[GroupSelectedLayerPos];
-		}
-		else
-		{
-			m_UiSelectedLayerID = m_Map.m_GameLayerID;
-			m_UiSelectedGroupID = m_Map.m_GameGroupID;
-		}
-	}
-
 	// validation checks
 #ifdef CONF_DEBUG
-	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
-		"m_UiSelectedLayerID is invalid");
-	dbg_assert(m_UiSelectedGroupID >= 0 && m_UiSelectedGroupID < m_Map.m_aGroups.Count(),
-		"m_UiSelectedGroupID is invalid");
 	dbg_assert(m_Map.m_GameLayerID >= 0 && m_Map.m_GameLayerID < m_Map.m_aLayers.Count(),
 		"m_Map.m_GameLayerID is invalid");
 	dbg_assert(m_Map.m_GameGroupID >= 0 && m_Map.m_GameGroupID < m_Map.m_aGroups.Count(),

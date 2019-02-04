@@ -755,7 +755,7 @@ class CEditor: public IEditor
 
 		CScrollRegionParams()
 		{
-			m_ScrollbarWidth = 10;
+			m_ScrollbarWidth = 8;
 			m_ScrollbarMargin = 1;
 			m_SliderMinHeight = 25;
 			m_ScrollSpeed = 5;
@@ -812,6 +812,7 @@ class CEditor: public IEditor
 	void ResetCamera();
 	void ChangeZoom(float Zoom);
 	void ChangePage(int Page);
+	void SelectLayerBelowCurrentOne();
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
 	void ClearBrush();
