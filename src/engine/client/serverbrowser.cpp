@@ -66,6 +66,7 @@ CServerBrowser::CServerBrowser()
 	m_NumRequests = 0;
 
 	m_NeedRefresh = 0;
+	m_RefreshFlags = 0;
 
 	// the token is to keep server refresh separated from each other
 	m_CurrentLanToken = 1;
