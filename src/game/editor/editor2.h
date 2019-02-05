@@ -316,23 +316,23 @@ public:
 
 	CDynArraySB(): ParentT()
 	{
-		list = m_BaseData;
-		list_size = BASE_COUNT;
+		ParentT::list = m_BaseData;
+		ParentT::list_size = BASE_COUNT;
 	}
 
 	~CDynArraySB()
 	{
-		if(list == m_BaseData)
-			list = 0x0;
+		if(ParentT::list == m_BaseData)
+			ParentT::list = 0x0;
 	}
 
 	// never used anywhere
 	void delete_all()
 	{
-		if(list == m_BaseData)
+		if(ParentT::list == m_BaseData)
 		{
-			for(int i = 0; i < size(); i++)
-				delete list[i];
+			for(int i = 0; i < ParentT::size(); i++)
+				delete ParentT::list[i];
 			clear();
 		}
 		else
@@ -341,10 +341,10 @@ public:
 
 	void clear()
 	{
-		if(list == m_BaseData)
+		if(ParentT::list == m_BaseData)
 		{
-			list_size = BASE_COUNT;
-			num_elements = 0;
+			ParentT::list_size = BASE_COUNT;
+			ParentT::num_elements = 0;
 		}
 		else
 			ParentT::clear();
@@ -352,21 +352,21 @@ public:
 
 	void alloc(int new_len)
 	{
-		if(list == m_BaseData)
-			list = 0x0;
+		if(ParentT::list == m_BaseData)
+			ParentT::list = 0x0;
 		ParentT::alloc(new_len);
 	}
 
 	void set_size_zero(int new_size)
 	{
-		const int OldElementCount = num_elements;
+		const int OldElementCount = ParentT::num_elements;
 		ParentT::set_size(new_size);
-		const int Diff = num_elements - OldElementCount;
+		const int Diff = ParentT::num_elements - OldElementCount;
 		for(int i = 0; i < Diff; i++)
-			list[i+OldElementCount] = T();
+			ParentT::list[i+OldElementCount] = T();
 	}
 
-	inline int capacity() const { return list_size; }
+	inline int capacity() const { return ParentT::list_size; }
 };
 
 struct CEditorMap
