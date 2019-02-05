@@ -2220,17 +2220,35 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 	DrawRect(ButtonRect, StyleColorButtonPressed);
+	DrawText(ButtonRect, Localize("Group"), FontSize);
 
-	if(SelectedGroup.m_aName[0] == 0)
+	if(!IsGameGroup)
 	{
-		if(IsGameGroup)
-			str_format(aBuff, sizeof(aBuff), Localize("Game Group"));
-		else
-			str_format(aBuff, sizeof(aBuff), "Group #%d", m_UiSelectedGroupID);
-		DrawText(ButtonRect, aBuff, FontSize);
+		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+		static CUITextInputState s_TIGroupName;
+
+		static char aBeforeSelectionName[sizeof(SelectedGroup.m_aName)];
+		char aNewName[sizeof(SelectedGroup.m_aName)];
+		str_copy(aNewName, SelectedGroup.m_aName, sizeof(aNewName));
+
+		// save name before text input selection
+		if(!s_TIGroupName.m_Selected)
+			str_copy(aBeforeSelectionName, SelectedGroup.m_aName, sizeof(aBeforeSelectionName));
+
+		// "preview" new name instantly
+		if(UiTextInput(ButtonRect, aNewName, sizeof(aNewName), &s_TIGroupName))
+			EditHistCondGroupChangeName(m_UiSelectedGroupID, aNewName, false);
+
+		// if not selected, restore old name and change to new name with history entry
+		if(!s_TIGroupName.m_Selected)
+		{
+			str_copy(SelectedGroup.m_aName, aBeforeSelectionName, sizeof(SelectedGroup.m_aName));
+			EditHistCondGroupChangeName(m_UiSelectedGroupID, aNewName, true);
+		}
 	}
-	else
-		DrawText(ButtonRect, SelectedGroup.m_aName, FontSize);
+
 
 	// parallax
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2282,8 +2300,34 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 		// label
 		DrawRect(ButtonRect, StyleColorButtonPressed);
-		DrawText(ButtonRect, IsGameLayer ? Localize("Game Layer") : GetLayerName(m_UiSelectedLayerID),
-			FontSize);
+		DrawText(ButtonRect, Localize("Layer"), FontSize);
+
+		if(!IsGameLayer)
+		{
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+			static CUITextInputState s_TILayerName;
+
+			static char aBeforeSelectionName[sizeof(SelectedLayer.m_aName)];
+			char aNewName[sizeof(SelectedLayer.m_aName)];
+			str_copy(aNewName, SelectedLayer.m_aName, sizeof(aNewName));
+
+			// save name before text input selection
+			if(!s_TILayerName.m_Selected)
+				str_copy(aBeforeSelectionName, SelectedLayer.m_aName, sizeof(aBeforeSelectionName));
+
+			// "preview" new name instantly
+			if(UiTextInput(ButtonRect, aNewName, sizeof(aNewName), &s_TILayerName))
+				EditHistCondLayerChangeName(m_UiSelectedLayerID, aNewName, false);
+
+			// if not selected, restore old name and change to new name with history entry
+			if(!s_TILayerName.m_Selected)
+			{
+				str_copy(SelectedLayer.m_aName, aBeforeSelectionName, sizeof(SelectedLayer.m_aName));
+				EditHistCondLayerChangeName(m_UiSelectedLayerID, aNewName, true);
+			}
+		}
 
 		// tile layer
 		if(SelectedLayer.IsTileLayer())
@@ -3939,6 +3983,56 @@ void CEditor::EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY)
 		OldOffsetX, OldOffsetY,
 		NewOffsetX, NewOffsetY);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
+	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	// names are indentical, stop
+	if(str_comp(Layer.m_aName, pNewName) == 0)
+		return;
+
+	char aOldName[sizeof(Layer.m_aName)];
+	str_copy(aOldName, Layer.m_aName, sizeof(aOldName));
+	str_copy(Layer.m_aName, pNewName, sizeof(Layer.m_aName));
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: changed name"),
+			LayerID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "'%s' -> '%s'", aOldName, pNewName);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	// names are indentical, stop
+	if(str_comp(Group.m_aName, pNewName) == 0)
+		return;
+
+	char aOldName[sizeof(Group.m_aName)];
+	str_copy(aOldName, Group.m_aName, sizeof(aOldName));
+	str_copy(Group.m_aName, pNewName, sizeof(Group.m_aName));
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed name"),
+			GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "'%s' -> '%s'", aOldName, pNewName);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
 }
 
 void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)

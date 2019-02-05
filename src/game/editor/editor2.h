@@ -841,12 +841,16 @@ class CEditor: public IEditor
 	void EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY);
 	void EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY);
 
+	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
+	void EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition);
+
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
 	void HistoryRedo();
 
 	const char* GetLayerName(int LayerID);
+	const char* GetGroupName(int GroupID);
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
