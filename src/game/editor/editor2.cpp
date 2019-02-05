@@ -1931,7 +1931,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	const float ShowButtonWidth = 15.0f;
 
 	CUIRect ActionLineRect, ButtonRect;
-	NavRect.HSplitBottom(ButtonHeight, &NavRect, &ActionLineRect);
+	NavRect.HSplitBottom((ButtonHeight + Spacing) * 3.0f, &NavRect, &ActionLineRect);
 
 	const int GroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
@@ -2113,7 +2113,9 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// Add buttons
 	CUIRect ButtonRect2;
-	ActionLineRect.VSplitMid(&ButtonRect, &ButtonRect2);
+	ActionLineRect.HSplitTop(ButtonHeight, &ButtonRect, &ActionLineRect);
+	ActionLineRect.HSplitTop(Spacing, 0, &ActionLineRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
 
 	static CUIButtonState s_ButAddTileLayer, s_ButAddQuadLayer, s_ButAddGroup;
 	if(UiButton(ButtonRect2, Localize("New group"), &s_ButAddGroup))
@@ -2131,6 +2133,45 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	if(UiButton(ButtonRect2, Localize("Q+"), &s_ButAddQuadLayer))
 	{
 		m_UiSelectedLayerID = EditCreateAndAddQuadLayerUnder(m_UiSelectedLayerID, m_UiSelectedGroupID);
+	}
+
+	// delete buttons
+	const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
+	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
+
+	ActionLineRect.HSplitTop(ButtonHeight, &ButtonRect, &ActionLineRect);
+	ActionLineRect.HSplitTop(Spacing, 0, &ActionLineRect);
+
+	static CUIButtonState s_LayerDeleteButton;
+	if(UiButtonEx(ButtonRect, Localize("Delete layer"), &s_LayerDeleteButton,
+		vec4(0.4, 0.04, 0.04, 1), vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1),
+		vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameLayer)
+	{
+		int SelectedLayerID = m_UiSelectedLayerID;
+		int SelectedGroupID = m_UiSelectedGroupID;
+		SelectLayerBelowCurrentOne();
+
+		EditDeleteLayer(SelectedLayerID, SelectedGroupID);
+
+		// this can happen since we select the layer below before deleting
+		if(m_UiSelectedLayerID >= m_Map.m_aLayers.Count())
+		{
+			m_UiSelectedLayerID = m_Map.m_GameLayerID;
+			m_UiSelectedGroupID = m_Map.m_GameGroupID;
+		}
+	}
+
+	ActionLineRect.HSplitTop(ButtonHeight, &ButtonRect, &ActionLineRect);
+
+	// delete button
+	static CUIButtonState s_GroupDeleteButton;
+	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4, 0.04, 0.04, 1),
+		vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameGroup)
+	{
+		EditDeleteGroup(m_UiSelectedGroupID);
+		// TODO: select group below
+		m_UiSelectedGroupID = m_Map.m_GameGroupID;
+		m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	}
 }
 
@@ -2157,22 +2198,6 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 	DrawRect(ButtonRect, StyleColorButtonPressed);
-
-	// delete button
-	if(!IsGameGroup)
-	{
-		CUIRect DelButRect;
-		ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
-		static CUIButtonState s_GroupDeleteButton;
-		if(UiButtonEx(DelButRect, "x", &s_GroupDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-			vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
-		{
-			EditDeleteGroup(m_UiSelectedGroupID);
-			// TODO: select group below
-			m_UiSelectedGroupID = m_Map.m_GameGroupID;
-			m_UiSelectedLayerID = m_Map.m_GameLayerID;
-		}
-	}
 
 	if(SelectedGroup.m_aName[0] == 0)
 	{
@@ -2232,30 +2257,6 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-
-		// delete button
-		if(!IsGameLayer)
-		{
-			CUIRect DelButRect;
-			ButtonRect.VSplitRight(15, &ButtonRect, &DelButRect);
-			static CUIButtonState s_LayerDeleteButton;
-			if(UiButtonEx(DelButRect, "x", &s_LayerDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-				vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10))
-			{
-				int SelectedLayerID = m_UiSelectedLayerID;
-				int SelectedGroupID = m_UiSelectedGroupID;
-				SelectLayerBelowCurrentOne();
-
-				EditDeleteLayer(SelectedLayerID, SelectedGroupID);
-
-				// this can happen since we select the layer below before deleting
-				if(m_UiSelectedLayerID >= m_Map.m_aLayers.Count())
-				{
-					m_UiSelectedLayerID = m_Map.m_GameLayerID;
-					m_UiSelectedGroupID = m_Map.m_GameGroupID;
-				}
-			}
-		}
 
 		// label
 		DrawRect(ButtonRect, StyleColorButtonPressed);
