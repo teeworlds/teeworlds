@@ -363,7 +363,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		}
 		NumRenderScoreIDs = MAX_IDS;
 		RenderScoreIDs[MAX_IDS-1] = -1;
-		HoleSizes[0] = m_pClient->m_GameInfo.m_aTeamSize[Team] - MAX_IDS-1;
+		HoleSizes[0] = m_pClient->m_GameInfo.m_aTeamSize[Team] - (MAX_IDS-1);
 
 		if(m_pClient->m_LocalClientID != -1 && (m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == Team || m_pClient->m_Snap.m_SpecInfo.m_Active))
 		{
