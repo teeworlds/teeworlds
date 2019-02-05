@@ -838,12 +838,12 @@ class CEditor: public IEditor
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
-	void EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY);
-	void EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
 	void EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition);
+	void EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition);
+	void EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);

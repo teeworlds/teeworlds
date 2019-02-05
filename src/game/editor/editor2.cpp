@@ -2257,16 +2257,32 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DrawRect(ButtonRect, vec4(0,0,0,1));
 	DrawText(ButtonRect, Localize("Parallax"), FontSize);
 
-	// TODO: implement some sort of instant preview when values change?
 	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
 	static CUIIntegerInputState s_IntInpParallaxX, s_IntInpParallaxY;
-	int GroupParallaxX = SelectedGroup.m_ParallaxX;
-	int GroupParallaxY = SelectedGroup.m_ParallaxY;
+
+	// before selection
+	static int BsGroupParallaX, BsGroupParallaY;
+	if(!s_IntInpParallaxX.m_TextInput.m_Selected && !s_IntInpParallaxY.m_TextInput.m_Selected)
+	{
+		BsGroupParallaX = SelectedGroup.m_ParallaxX;
+		BsGroupParallaY = SelectedGroup.m_ParallaxY;
+	}
+
+	int NewGroupParallaxX = SelectedGroup.m_ParallaxX;
+	int NewGroupParallaxY = SelectedGroup.m_ParallaxY;
 	bool ParallaxChanged = false;
-	ParallaxChanged |= UiIntegerInput(ButtonRect, &GroupParallaxX, &s_IntInpParallaxX);
-	ParallaxChanged |= UiIntegerInput(ButtonRect2, &GroupParallaxY, &s_IntInpParallaxY);
+	ParallaxChanged |= UiIntegerInput(ButtonRect, &NewGroupParallaxX, &s_IntInpParallaxX);
+	ParallaxChanged |= UiIntegerInput(ButtonRect2, &NewGroupParallaxY, &s_IntInpParallaxY);
 	if(ParallaxChanged)
-		EditGroupChangeParallax(m_UiSelectedGroupID, GroupParallaxX, GroupParallaxY);
+		EditHistCondGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, false);
+
+	// restore "before preview" parallax, the nchange to new one
+	if(!s_IntInpParallaxX.m_TextInput.m_Selected && !s_IntInpParallaxY.m_TextInput.m_Selected)
+	{
+		SelectedGroup.m_ParallaxX = BsGroupParallaX;
+		SelectedGroup.m_ParallaxY = BsGroupParallaY;
+		EditHistCondGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, true);
+	}
 
 	// offset
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -2278,13 +2294,30 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
 	static CUIIntegerInputState s_IntInpOffsetX, s_IntInpOffsetY;
-	int GroupOffsetX = SelectedGroup.m_OffsetX;
-	int GroupOffsetY = SelectedGroup.m_OffsetY;
+
+	// before selection
+	static int BsGroupOffsetX, BsGroupOffsetY;
+	if(!s_IntInpOffsetX.m_TextInput.m_Selected && !s_IntInpOffsetY.m_TextInput.m_Selected)
+	{
+		BsGroupOffsetX = SelectedGroup.m_OffsetX;
+		BsGroupOffsetY = SelectedGroup.m_OffsetY;
+	}
+
+	int NewGroupOffsetX = SelectedGroup.m_OffsetX;
+	int NewGroupOffsetY = SelectedGroup.m_OffsetY;
 	bool OffsetChanged = false;
-	OffsetChanged |= UiIntegerInput(ButtonRect, &GroupOffsetX, &s_IntInpOffsetX);
-	OffsetChanged |= UiIntegerInput(ButtonRect2, &GroupOffsetY, &s_IntInpOffsetY);
+	OffsetChanged |= UiIntegerInput(ButtonRect, &NewGroupOffsetX, &s_IntInpOffsetX);
+	OffsetChanged |= UiIntegerInput(ButtonRect2, &NewGroupOffsetY, &s_IntInpOffsetY);
 	if(OffsetChanged)
-		EditGroupChangeOffset(m_UiSelectedGroupID, GroupOffsetX, GroupOffsetY);
+		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, false);
+
+	// restore "before preview" offset, the nchange to new one
+	if(!s_IntInpOffsetX.m_TextInput.m_Selected && !s_IntInpOffsetY.m_TextInput.m_Selected)
+	{
+		SelectedGroup.m_OffsetX = BsGroupOffsetX;
+		SelectedGroup.m_OffsetY = BsGroupOffsetY;
+		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, true);
+	}
 
 	UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
@@ -3221,14 +3254,6 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 {
 	const int OldInteger = *pInteger;
 	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
-	UiTextInput(Rect, pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), &pInputState->m_TextInput);
-
-	// string parse, on return key press
-	if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER))
-	{
-		if(sscanf(pInputState->m_aIntBuff, "%d", pInteger) == 0)
-			*pInteger = 0;
-	}
 
 	// string format, when value differ, empty or on select/deselect
 	if((pInputState->m_Value != *pInteger && !OldSelected) ||
@@ -3237,6 +3262,21 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 	{
 		pInputState->m_Value = *pInteger;
 		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
+		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
+	}
+
+	UiTextInput(Rect, pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), &pInputState->m_TextInput);
+
+	// string parse
+	if(sscanf(pInputState->m_aIntBuff, "%d", pInteger) < 1)
+		*pInteger = 0;
+
+	char aBuff[sizeof(pInputState->m_aIntBuff)];
+	str_format(aBuff, sizeof(aBuff), "%d", *pInteger);
+	if(str_comp(aBuff, pInputState->m_aIntBuff) != 0)
+	{
+		pInputState->m_Value = *pInteger;
+		str_copy(pInputState->m_aIntBuff, aBuff, sizeof(pInputState->m_aIntBuff));
 		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
 	}
 
@@ -3962,52 +4002,6 @@ void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY)
-{
-	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
-
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
-	if(NewParallaxX == Group.m_ParallaxX && NewParallaxY == Group.m_ParallaxY)
-		return;
-
-	const int OldParallaxX = Group.m_ParallaxX;
-	const int OldParallaxY = Group.m_ParallaxY;
-	Group.m_ParallaxX = NewParallaxX;
-	Group.m_ParallaxY = NewParallaxY;
-
-	char aHistoryEntryAction[64];
-	char aHistoryEntryDesc[64];
-	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed parallax"),
-		GroupID);
-	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
-		OldParallaxX, OldParallaxY,
-		NewParallaxX, NewParallaxY);
-	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-}
-
-void CEditor::EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY)
-{
-	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
-
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
-	if(NewOffsetX == Group.m_OffsetX && NewOffsetY == Group.m_OffsetY)
-		return;
-
-	const int OldOffsetX = Group.m_OffsetX;
-	const int OldOffsetY = Group.m_OffsetY;
-	Group.m_OffsetX = NewOffsetX;
-	Group.m_OffsetY = NewOffsetY;
-
-	char aHistoryEntryAction[64];
-	char aHistoryEntryDesc[64];
-	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed offset"),
-		GroupID);
-	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
-		OldOffsetX, OldOffsetY,
-		NewOffsetX, NewOffsetY);
-	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-}
-
 void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
@@ -4078,6 +4072,58 @@ void CEditor::EditHistCondGroupChangeName(int GroupID, const char* pNewName, boo
 		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed name"),
 			GroupID);
 		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "'%s' -> '%s'", aOldName, pNewName);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	if(NewParallaxX == Group.m_ParallaxX && NewParallaxY == Group.m_ParallaxY)
+		return;
+
+	const int OldParallaxX = Group.m_ParallaxX;
+	const int OldParallaxY = Group.m_ParallaxY;
+	Group.m_ParallaxX = NewParallaxX;
+	Group.m_ParallaxY = NewParallaxY;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed parallax"),
+			GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+			OldParallaxX, OldParallaxY,
+			NewParallaxX, NewParallaxY);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	if(NewOffsetX == Group.m_OffsetX && NewOffsetY == Group.m_OffsetY)
+		return;
+
+	const int OldOffsetX = Group.m_OffsetX;
+	const int OldOffsetY = Group.m_OffsetY;
+	Group.m_OffsetX = NewOffsetX;
+	Group.m_OffsetY = NewOffsetY;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed offset"),
+			GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+			OldOffsetX, OldOffsetY,
+			NewOffsetX, NewOffsetY);
 		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 	}
 }
