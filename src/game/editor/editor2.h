@@ -679,7 +679,7 @@ class CEditor: public IEditor
 	CUIRect m_UiPopupBrushPaletteImageRect = {};
 
 	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
-	bool m_UiDetailPanelIsOpen = true;
+	bool m_UiDetailPanelIsOpen = false;
 
 	struct CBrush
 	{

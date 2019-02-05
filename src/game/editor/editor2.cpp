@@ -1816,9 +1816,6 @@ void CEditor::RenderMapEditorUI()
 	CUIRect RightPanel, DetailPanel;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
 
-	if(m_UiDetailPanelIsOpen)
-		m_UiMainViewRect.VSplitRight(150, &m_UiMainViewRect, &DetailPanel);
-
 	DrawRect(RightPanel, StyleColorBg);
 
 	CUIRect NavRect, ButtonRect;
@@ -1913,10 +1910,25 @@ void CEditor::RenderMapEditorUI()
 		UiEndScrollRegion(&s_ScrollRegion);
 	}
 
+	// detail panel
 	if(m_UiDetailPanelIsOpen)
 	{
+		m_UiMainViewRect.VSplitRight(150, &m_UiMainViewRect, &DetailPanel);
 		DrawRect(DetailPanel, StyleColorBg);
 		RenderMapEditorUiDetailPanel(DetailPanel);
+	}
+	else
+	{
+		const float ButtonSize = 20.0f;
+		const float Margin = 5.0f;
+		m_UiMainViewRect.VSplitRight(ButtonSize + Margin*2, &m_UiMainViewRect, &DetailPanel);
+		DetailPanel.Margin(Margin, &ButtonRect);
+		ButtonRect.h = ButtonSize;
+
+		static CUIButtonState s_OpenDetailPanelButton;
+		if(UiButton(ButtonRect, "<", &s_OpenDetailPanelButton, 7)) {
+			m_UiDetailPanelIsOpen = true;
+		}
 	}
 
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
@@ -2177,6 +2189,8 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 {
+	DetailRect.Margin(3.0f, &DetailRect);
+
 	// GROUP/LAYER DETAILS
 	static CScrollRegion s_DetailSR;
 	vec2 DetailScrollOff(0, 0);
@@ -2193,6 +2207,14 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
+
+	// close button
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	static CUIButtonState s_CloseDetailPanelButton;
+	if(UiButton(ButtonRect, ">", &s_CloseDetailPanelButton, 8)) {
+		m_UiDetailPanelIsOpen = false;
+	}
 
 	// label
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
