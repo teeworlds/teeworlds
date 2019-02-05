@@ -2249,7 +2249,6 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 		}
 	}
 
-
 	// parallax
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
@@ -2351,7 +2350,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			{
 				// image
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				DetailRect.HSplitTop(Spacing * 2, 0, &DetailRect);
 				static CUIButtonState s_ImageButton;
 				const char* pText = SelectedLayer.m_ImageID >= 0 ?
 					m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
@@ -2379,29 +2378,53 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
+				vec4 NewColor = SelectedLayer.m_Color;
+				bool SliderModified = false;
+				static bool AnySliderSelected = false;
+				static vec4 ColorBeforePreview = SelectedLayer.m_Color;
+
+				if(!AnySliderSelected)
+					ColorBeforePreview = SelectedLayer.m_Color;
+				AnySliderSelected = false;
+
 				vec4 SliderColor(0.7, 0.1, 0.1, 1);
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.r, 0.0f, 1.0f, &s_SliderColorR, &SliderColor);
+				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.r, 0.0f, 1.0f, &s_SliderColorR, &SliderColor);
+				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorR);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
 				SliderColor = vec4(0.1, 0.7, 0.1, 1);
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.g, 0.0f, 1.0f, &s_SliderColorG, &SliderColor);
+				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.g, 0.0f, 1.0f, &s_SliderColorG, &SliderColor);
+				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorG);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
 				SliderColor = vec4(0.1, 0.1, 0.7, 1);
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.b, 0.0f, 1.0f, &s_SliderColorB, &SliderColor);
+				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.b, 0.0f, 1.0f, &s_SliderColorB, &SliderColor);
+				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorB);
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
 				SliderColor = vec4(0.5, 0.5, 0.5, 1);
-				UiSliderFloat(ButtonRect, &SelectedLayer.m_Color.a, 0.0f, 1.0f, &s_SliderColorA, &SliderColor);
+				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.a, 0.0f, 1.0f, &s_SliderColorA, &SliderColor);
+				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorA);
+
+				// "preview" change instantly
+				if(SliderModified)
+					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, false);
+
+				// restore old color before preview, then change it
+				if(!AnySliderSelected)
+				{
+					SelectedLayer.m_Color = ColorBeforePreview;
+					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, true);
+				}
 
 				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 			}
@@ -4006,6 +4029,30 @@ void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, boo
 		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: changed name"),
 			LayerID);
 		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "'%s' -> '%s'", aOldName, pNewName);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
+	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	// colors are indentical, stop
+	if(mem_comp(&Layer.m_Color, &NewColor, sizeof(NewColor)) == 0)
+		return;
+
+	Layer.m_Color = NewColor;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("%s: changed layer color"),
+			GetLayerName(LayerID));
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc),
+			"(%.2f, %.2f, %.2f, %.2f)", NewColor.r, NewColor.g, NewColor.b, NewColor.a);
 		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 	}
 }

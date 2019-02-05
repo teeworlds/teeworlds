@@ -842,6 +842,7 @@ class CEditor: public IEditor
 	void EditGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
+	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
 	void EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
