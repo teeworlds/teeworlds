@@ -2352,6 +2352,16 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	str_format(aBuff, sizeof(aBuff), "%d", SelectedGroup.m_ClipHeight);
 	DrawText(ButtonRect2, aBuff, FontSize);
 
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+	DrawRect(ButtonRect, vec4(0,0,0,1));
+	DrawText(ButtonRect, Localize("Use clipping"), FontSize);
+	static CUICheckboxYesNoState s_CbClipping;
+	bool NewUseClipping = SelectedGroup.m_UseClipping;
+	if(UiCheckboxYesNo(ButtonRect2, &NewUseClipping, &s_CbClipping))
+		EditGroupUseClipping(m_UiSelectedGroupID, NewUseClipping);
+
 	UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
 	// layer
@@ -3408,6 +3418,46 @@ bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float M
 	return OldInt != *pVal;
 }
 
+bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNoState* pCbyn)
+{
+	const bool OldVal = *pVal;
+	CUIRect YesRect, NoRect;
+	Rect.VSplitMid(&NoRect, &YesRect);
+	UiDoButtonBehavior(&pCbyn->m_NoBut, NoRect, &pCbyn->m_NoBut);
+	UiDoButtonBehavior(&pCbyn->m_YesBut, YesRect, &pCbyn->m_YesBut);
+
+	if(pCbyn->m_NoBut.m_Clicked)
+		*pVal = false;
+	if(pCbyn->m_YesBut.m_Clicked)
+		*pVal = true;
+
+	vec4 ColorYes = StyleColorButton;
+	vec4 ColorNo = StyleColorButton;
+	if(!*pVal)
+	{
+		ColorNo = StyleColorInputSelected;
+		if(pCbyn->m_YesBut.m_Pressed)
+			ColorYes = StyleColorButtonPressed;
+		else if(pCbyn->m_YesBut.m_Hovered)
+			ColorYes = StyleColorButtonPressed;
+	}
+	else
+	{
+		ColorYes = StyleColorInputSelected;
+		if(pCbyn->m_NoBut.m_Pressed)
+			ColorNo = StyleColorButtonPressed;
+		else if(pCbyn->m_NoBut.m_Hovered)
+			ColorNo = StyleColorButtonPressed;
+	}
+
+	DrawRect(NoRect, ColorNo);
+	DrawRect(YesRect, ColorYes);
+	DrawText(NoRect, Localize("No"), 8);
+	DrawText(YesRect, Localize("Yes"), 8);
+
+	return OldVal != *pVal;
+}
+
 
 void CEditor::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
 {
@@ -4057,6 +4107,27 @@ void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
 		OldImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[OldImageID].m_Buff,
 		NewImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[NewImageID].m_Buff);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditGroupUseClipping(int GroupID, bool NewUseClipping)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	if(Group.m_UseClipping == NewUseClipping)
+		return;
+
+	const bool OldUseClipping = Group.m_UseClipping;
+	Group.m_UseClipping = NewUseClipping;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: use clipping"),
+		GroupID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
+		OldUseClipping ? Localize("true") : Localize("false"),
+		NewUseClipping ? Localize("true") : Localize("false"));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 

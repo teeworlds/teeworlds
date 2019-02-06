@@ -588,6 +588,12 @@ struct CUIMouseDragState
 	bool m_IsDragging = false;
 };
 
+struct CUICheckboxYesNoState
+{
+	CUIButtonState m_YesBut;
+	CUIButtonState m_NoBut;
+};
+
 struct CHistoryEntry
 {
 	CHistoryEntry* m_pPrev;
@@ -744,6 +750,7 @@ class CEditor: public IEditor
 	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButtonState* pInputState);
 	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState,
 		const vec4* pColor = NULL);
+	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNoState* pCbyn);
 
 	struct CScrollRegionParams
 	{
@@ -843,6 +850,7 @@ class CEditor: public IEditor
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
+	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
