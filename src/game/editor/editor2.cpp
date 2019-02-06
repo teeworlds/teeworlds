@@ -53,6 +53,7 @@ const vec4 StyleColorButton(0.062, 0, 0.19, 1);
 const vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
 const vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
 const vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
+const vec4 StyleColorInputSelected(0,0.2,1,1);
 const vec4 StyleColorTileSelection(0.0, 0.31, 1, 0.4);
 const vec4 StyleColorTileHover(1, 1, 1, 0.25);
 const vec4 StyleColorTileHoverBorder(0.0, 0.31, 1, 1);
@@ -2367,10 +2368,23 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			// size
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
 			DrawRect(ButtonRect, vec4(0,0,0,1));
-			str_format(aBuff, sizeof(aBuff), "Width = %d Height = %d",
-				SelectedLayer.m_Width, SelectedLayer.m_Height);
-			DrawText(ButtonRect, aBuff, FontSize);
+			DrawRect(ButtonRect2, StyleColorBg);
+
+			str_format(aBuff, sizeof(aBuff), "%d", SelectedLayer.m_Width);
+			DrawText(ButtonRect, Localize("Width"), FontSize);
+			DrawText(ButtonRect2, aBuff, FontSize);
+
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			DrawRect(ButtonRect2, StyleColorBg);
+
+			str_format(aBuff, sizeof(aBuff), "%d", SelectedLayer.m_Height);
+			DrawText(ButtonRect, Localize("Height"), FontSize);
+			DrawText(ButtonRect2, aBuff, FontSize);
 
 			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
@@ -3227,8 +3241,15 @@ bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 
 	const float FontSize = 8.0f;
 
-	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1,
-		pInputState->m_Selected ? vec4(0,0.2,1,1) : StyleColorButtonBorder);
+	vec4 BorderColor;
+	if(pInputState->m_Selected)
+		BorderColor = StyleColorInputSelected;
+	else if(pInputState->m_Button.m_Hovered)
+		BorderColor = StyleColorButtonHover;
+	else
+		BorderColor = StyleColorButtonBorder;
+
+	DrawRectBorder(Rect, vec4(0, 0, 0, 1), 1, BorderColor);
 	DrawText(Rect, pText, FontSize);
 
 	// cursor
