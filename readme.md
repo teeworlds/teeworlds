@@ -80,3 +80,29 @@ pacman -S --needed ninja` on Arch Linux.)
 
 `-DCLIENT=OFF`: Disable generation of the client target. Can be useful on
 headless servers which don't have graphics libraries like SDL2 installed.
+
+
+Building on Windows with Visual Studio
+======================================
+
+Download and install some version of [Microsoft Visual
+Studio](https://www.visualstudio.com/) (as of writing, MSVS Community 2017)
+with the following components:
+
+* Desktop development with C++ (on the main page)
+* Python development (on the main page)
+* Git for Windows (in Individual Components → Code tools)
+
+Run Visual Studio. Open the Team Explorer (View → Team Explorer, Ctrl+^,
+Ctrl+M). Click Clone (in the Team Explorer, Connect → Local Git Repositories).
+Enter `https://github.com/teeworlds/teeworlds` into the first input box. Wait
+for the download to complete (terminals might pop up).
+
+Wait until the CMake configuration is done (watch the Output windows at the
+bottom).
+
+Select `teeworlds.exe` in the Select Startup Item… combobox next to the green
+arrow. Wait for the compilation to finish.
+
+For subsequent builds you only have to click the button with the green arrow
+again.
