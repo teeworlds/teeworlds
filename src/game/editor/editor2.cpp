@@ -1975,6 +1975,18 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
 	NavRect.y += ScrollOff.y;
 
+	static CUIMouseDrag s_DragMove;
+	bool OldIsMouseDragging = s_DragMove.m_IsDragging;
+	bool FinishedMouseDragging = UiDoMouseDragging(0, NavRect, &s_DragMove);
+	bool StartedMouseDragging = s_DragMove.m_IsDragging && OldIsMouseDragging == false;
+
+	static void* pDragMoveID = NULL;
+	if(!s_DragMove.m_IsDragging)
+		pDragMoveID = NULL;
+	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && pDragMoveID;
+	CUIRect DragMoveOverlayRect;
+	int DragMoveDir = 0;
+
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
 		if(gi != 0)
@@ -1986,6 +1998,16 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		CUIButton WholeLineState;
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
 		m_UiGroupHovered[gi] = WholeLineState.m_Hovered;
+
+		if(StartedMouseDragging && WholeLineState.m_Hovered)
+		{
+			pDragMoveID = &s_UiGroupButState[gi];
+		}
+		if(pDragMoveID == &s_UiGroupButState[gi])
+		{
+			DragMoveOverlayRect = ButtonRect;
+			DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
+		}
 
 		CUIRect ExpandBut, ShowButton;
 
@@ -2190,6 +2212,36 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// TODO: select group below
 		m_UiSelectedGroupID = m_Map.m_GameGroupID;
 		m_UiSelectedLayerID = m_Map.m_GameLayerID;
+	}
+
+	if(DisplayDragMoveOverlay && !UI()->MouseInside(&DragMoveOverlayRect))
+	{
+		const vec4 Color = StyleColorInputSelected;
+		const float MarginX = 10.0f;
+		const float x = DragMoveOverlayRect.x + MarginX;
+		const float y = DragMoveOverlayRect.y + (DragMoveDir == 1 ? DragMoveOverlayRect.h : 0);
+		const float w = DragMoveOverlayRect.w - (MarginX * 2);
+
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		IGraphics::CFreeformItem Triangle(
+			x, y,
+			x + w, y,
+			x + w * 0.5f, y - 25 * -DragMoveDir,
+			x + w, y
+		);
+
+		Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+
+		Graphics()->QuadsDrawFreeform(&Triangle, 1);
+		Graphics()->QuadsEnd();
+
+		/*CUIRect TestRect;
+		TestRect.x = DragMoveOverlayRect.x - 200;
+		TestRect.y = DragMoveOverlayRect.y;
+		TestRect.w = 100.f;
+		TestRect.h = 20.f;
+		DrawRect(TestRect, StyleColorInputSelected);*/
 	}
 }
 
@@ -3200,9 +3252,9 @@ bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDr
 	CUIButton ButState;
 	UiDoButtonBehavior(pID, Rect, &ButState);
 
-	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+	if((!pID || UI()->CheckActiveItem(pID)) && UI()->MouseButton(0))
 	{
-		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0))
+		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0) && ButState.m_Pressed)
 		{
 			pDragState->m_StartDragPos = m_UiMousePos;
 			pDragState->m_IsDragging = true;
