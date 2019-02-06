@@ -26,14 +26,16 @@ jobs:
           command: |
             mkdir -p release
             cd release
-            env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake ..
+            env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -Werror=dev -DDOWNLOAD_GTEST=ON ..
             make everything
+            make run_tests
             ./teeworlds_srv shutdown
       - run:
           name: Build teeworlds with cmake in Debug mode
           command: |
             mkdir -p debug
             cd debug
-            env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -DDEV=ON ..
+            env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON ..
             make everything
+            make run_tests
             ./teeworlds_srv shutdown
