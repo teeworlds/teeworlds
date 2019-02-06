@@ -285,6 +285,7 @@ endif()
 find_package(ZLIB)
 find_package(Freetype)
 find_package(Git)
+find_package(GTest)
 find_package(Pnglite)
 find_package(SDL2)
 find_package(Threads)
@@ -1477,6 +1478,40 @@ list(APPEND TARGETS_LINK ${TARGETS_TOOLS})
 
 add_custom_target(tools DEPENDS ${TARGETS_TOOLS})
 add_custom_target(everything DEPENDS ${TARGETS_OWN})
+
+########################################################################
+# TESTS
+########################################################################
+
+if(GTEST_FOUND)
+  set_src(TESTS GLOB src/test
+    fs.cpp
+    git_revision.cpp
+    str.cpp
+    test.cpp
+    test.h
+    thread.cpp
+  )
+  set(TARGET_TESTRUNNER testrunner)
+  add_executable(${TARGET_TESTRUNNER} EXCLUDE_FROM_ALL
+    ${TESTS}
+    $<TARGET_OBJECTS:engine-shared>
+    $<TARGET_OBJECTS:game-shared>
+    ${DEPS}
+  )
+  target_link_libraries(${TARGET_TESTRUNNER} ${LIBS} ${GTEST_LIBRARIES})
+  target_include_directories(${TARGET_TESTRUNNER} PRIVATE ${GTEST_INCLUDE_DIRS})
+
+  list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
+  list(APPEND TARGETS_LINK ${TARGET_TESTRUNNER})
+
+  add_custom_target(run_tests
+    COMMAND $<TARGET_FILE:${TARGET_TESTRUNNER}> ${TESTRUNNER_ARGS}
+    COMMENT Running tests
+    DEPENDS ${TARGET_TESTRUNER}
+    USES_TERMINAL
+  )
+endif()
 
 ########################################################################
 # INSTALLATION
