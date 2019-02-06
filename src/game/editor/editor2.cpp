@@ -3273,7 +3273,8 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 
 	char aBuff[sizeof(pInputState->m_aIntBuff)];
 	str_format(aBuff, sizeof(aBuff), "%d", *pInteger);
-	if(str_comp(aBuff, pInputState->m_aIntBuff) != 0)
+	if(pInputState->m_aIntBuff[0] && pInputState->m_aIntBuff[0] != '-' &&
+		str_comp(aBuff, pInputState->m_aIntBuff) != 0)
 	{
 		pInputState->m_Value = *pInteger;
 		str_copy(pInputState->m_aIntBuff, aBuff, sizeof(pInputState->m_aIntBuff));
