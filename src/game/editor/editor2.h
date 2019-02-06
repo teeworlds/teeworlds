@@ -553,45 +553,45 @@ struct CEditorMap
 	CLayer& NewQuadLayer();
 };
 
-struct CUIButtonState
+struct CUIButton
 {
 	u8 m_Hovered = false;
 	u8 m_Pressed = false;
 	u8 m_Clicked = false;
 };
 
-struct CUITextInputState
+struct CUITextInput
 {
-	CUIButtonState m_Button;
+	CUIButton m_Button;
 	u8 m_Selected = false;
 	CLineInput m_LineInput;
 	int m_CursorPos;
 };
 
-struct CUIIntegerInputState
+struct CUIIntegerInput
 {
-	CUITextInputState m_TextInput;
+	CUITextInput m_TextInput;
 	char m_aIntBuff[32];
 	int m_Value;
 
-	CUIIntegerInputState()
+	CUIIntegerInput()
 	{
 		m_aIntBuff[0] = 0;
 		m_Value = 0;
 	}
 };
 
-struct CUIMouseDragState
+struct CUIMouseDrag
 {
 	vec2 m_StartDragPos;
 	vec2 m_EndDragPos;
 	bool m_IsDragging = false;
 };
 
-struct CUICheckboxYesNoState
+struct CUICheckboxYesNo
 {
-	CUIButtonState m_YesBut;
-	CUIButtonState m_NoBut;
+	CUIButton m_YesBut;
+	CUIButton m_NoBut;
 };
 
 struct CHistoryEntry
@@ -739,18 +739,18 @@ class CEditor: public IEditor
 	void DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
-	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState);
-	bool UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDragState* pDragState);
+	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState);
+	bool UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState);
 
-	bool UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize = 10);
-	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState,
+	bool UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize = 10);
+	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState,
 					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
-	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState);
-	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState);
-	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButtonState* pInputState);
-	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState,
+	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState);
+	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState);
+	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButton* pInputState);
+	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
 		const vec4* pColor = NULL);
-	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNoState* pCbyn);
+	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn);
 
 	struct CScrollRegionParams
 	{

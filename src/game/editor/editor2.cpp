@@ -1727,7 +1727,7 @@ void CEditor::RenderMapViewHud()
 	const vec2 GridMousePos(floor(MouseWorldPos.x/TileSize)*TileSize,
 		floor(MouseWorldPos.y/TileSize)*TileSize);
 
-	static CUIMouseDragState s_MapViewDrag;
+	static CUIMouseDrag s_MapViewDrag;
 	bool FinishedDragging = UiDoMouseDragging(&s_MapViewDrag, m_UiMainViewRect, &s_MapViewDrag);
 
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
@@ -1839,13 +1839,13 @@ void CEditor::RenderMapEditorUI()
 	CUIRect ButtonRectRight;
 	ButtonRect.VSplitMid(&ButtonRect, &ButtonRectRight);
 
-	static CUIButtonState s_ButGroups;
+	static CUIButton s_ButGroups;
 	if(UiButton(ButtonRect, "Groups", &s_ButGroups))
 	{
 		s_CurrentTab = TAB_GROUPS;
 	}
 
-	static CUIButtonState s_ButHistory;
+	static CUIButton s_ButHistory;
 	if(UiButton(ButtonRectRight, "History", &s_ButHistory))
 	{
 		s_CurrentTab = TAB_HISTORY;
@@ -1866,7 +1866,7 @@ void CEditor::RenderMapEditorUI()
 		while(pFirstEntry->m_pPrev)
 			pFirstEntry = pFirstEntry->m_pPrev;
 
-		static CUIButtonState s_ButEntry[50];
+		static CUIButton s_ButEntry[50];
 		const float ButtonHeight = 20.0f;
 		const float Spacing = 2.0f;
 
@@ -1879,7 +1879,7 @@ void CEditor::RenderMapEditorUI()
 			UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
 			// somewhat hacky
-			CUIButtonState& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
+			CUIButton& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
 			UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
 
 			// clickety click, restore to this entry
@@ -1931,7 +1931,7 @@ void CEditor::RenderMapEditorUI()
 		DetailPanel.Margin(Margin, &ButtonRect);
 		ButtonRect.h = ButtonSize;
 
-		static CUIButtonState s_OpenDetailPanelButton;
+		static CUIButton s_OpenDetailPanelButton;
 		if(UiButton(ButtonRect, "<", &s_OpenDetailPanelButton, 7)) {
 			m_UiDetailPanelIsOpen = true;
 		}
@@ -1954,10 +1954,10 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	const int GroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
 
-	static CDynArraySB<CUIButtonState, 64> s_UiGroupButState;
-	static CDynArraySB<CUIButtonState, 64> s_UiGroupShowButState;
-	static CDynArraySB<CUIButtonState, 128> s_UiLayerButState;
-	static CDynArraySB<CUIButtonState, 128> s_UiLayerShowButState;
+	static CDynArraySB<CUIButton, 64> s_UiGroupButState;
+	static CDynArraySB<CUIButton, 64> s_UiGroupShowButState;
+	static CDynArraySB<CUIButton, 128> s_UiLayerButState;
+	static CDynArraySB<CUIButton, 128> s_UiLayerShowButState;
 
 	s_UiGroupButState.set_size_zero(GroupCount);
 	s_UiGroupShowButState.set_size_zero(GroupCount);
@@ -1983,7 +1983,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
 		// check whole line for hover
-		CUIButtonState WholeLineState;
+		CUIButton WholeLineState;
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
 		m_UiGroupHovered[gi] = WholeLineState.m_Hovered;
 
@@ -1991,7 +1991,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		// show button
 		ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
-		CUIButtonState& ShowButState = s_UiGroupShowButState[gi];
+		CUIButton& ShowButState = s_UiGroupShowButState[gi];
 		UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 		if(ShowButState.m_Clicked)
@@ -2009,7 +2009,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 		// group button
-		CUIButtonState& ButState = s_UiGroupButState[gi];
+		CUIButton& ButState = s_UiGroupButState[gi];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 		if(ButState.m_Clicked)
@@ -2064,13 +2064,13 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				dbg_assert(LyID >= 0 && LyID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
 				// check whole line for hover
-				CUIButtonState WholeLineState;
+				CUIButton WholeLineState;
 				UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
 				m_UiLayerHovered[LyID] = WholeLineState.m_Hovered;
 
 				// show button
 				ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
-				CUIButtonState& ShowButState = s_UiLayerShowButState[LyID];
+				CUIButton& ShowButState = s_UiLayerShowButState[LyID];
 				UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 				if(ShowButState.m_Clicked)
@@ -2088,7 +2088,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 				// layer button
-				CUIButtonState& ButState = s_UiLayerButState[LyID];
+				CUIButton& ButState = s_UiLayerButState[LyID];
 				UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 				vec4 ButColor = StyleColorButton;
@@ -2135,7 +2135,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	ActionLineRect.HSplitTop(Spacing, 0, &ActionLineRect);
 	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
 
-	static CUIButtonState s_ButAddTileLayer, s_ButAddQuadLayer, s_ButAddGroup;
+	static CUIButton s_ButAddTileLayer, s_ButAddQuadLayer, s_ButAddGroup;
 	if(UiButton(ButtonRect2, Localize("New group"), &s_ButAddGroup))
 	{
 		EditCreateAndAddGroup();
@@ -2160,7 +2160,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	ActionLineRect.HSplitTop(ButtonHeight, &ButtonRect, &ActionLineRect);
 	ActionLineRect.HSplitTop(Spacing, 0, &ActionLineRect);
 
-	static CUIButtonState s_LayerDeleteButton;
+	static CUIButton s_LayerDeleteButton;
 	if(UiButtonEx(ButtonRect, Localize("Delete layer"), &s_LayerDeleteButton,
 		vec4(0.4, 0.04, 0.04, 1), vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1),
 		vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameLayer)
@@ -2182,7 +2182,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	ActionLineRect.HSplitTop(ButtonHeight, &ButtonRect, &ActionLineRect);
 
 	// delete button
-	static CUIButtonState s_GroupDeleteButton;
+	static CUIButton s_GroupDeleteButton;
 	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4, 0.04, 0.04, 1),
 		vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameGroup)
 	{
@@ -2217,7 +2217,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	// close button
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-	static CUIButtonState s_CloseDetailPanelButton;
+	static CUIButton s_CloseDetailPanelButton;
 	if(UiButton(ButtonRect, ">", &s_CloseDetailPanelButton, 8)) {
 		m_UiDetailPanelIsOpen = false;
 	}
@@ -2233,7 +2233,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUITextInputState s_TIGroupName;
+		static CUITextInput s_TIGroupName;
 
 		static char aBeforeSelectionName[sizeof(SelectedGroup.m_aName)];
 		char aNewName[sizeof(SelectedGroup.m_aName)];
@@ -2264,7 +2264,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DrawText(ButtonRect, Localize("Parallax"), FontSize);
 
 	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
-	static CUIIntegerInputState s_IntInpParallaxX, s_IntInpParallaxY;
+	static CUIIntegerInput s_IntInpParallaxX, s_IntInpParallaxY;
 
 	// before selection
 	static int BsGroupParallaX, BsGroupParallaY;
@@ -2299,7 +2299,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DrawText(ButtonRect, Localize("Offset"), FontSize);
 
 	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
-	static CUIIntegerInputState s_IntInpOffsetX, s_IntInpOffsetY;
+	static CUIIntegerInput s_IntInpOffsetX, s_IntInpOffsetY;
 
 	// before selection
 	static int BsGroupOffsetX, BsGroupOffsetY;
@@ -2357,7 +2357,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
 	DrawRect(ButtonRect, vec4(0,0,0,1));
 	DrawText(ButtonRect, Localize("Use clipping"), FontSize);
-	static CUICheckboxYesNoState s_CbClipping;
+	static CUICheckboxYesNo s_CbClipping;
 	bool NewUseClipping = SelectedGroup.m_UseClipping;
 	if(UiCheckboxYesNo(ButtonRect2, &NewUseClipping, &s_CbClipping))
 		EditGroupUseClipping(m_UiSelectedGroupID, NewUseClipping);
@@ -2382,7 +2382,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-			static CUITextInputState s_TILayerName;
+			static CUITextInput s_TILayerName;
 
 			static char aBeforeSelectionName[sizeof(SelectedLayer.m_aName)];
 			char aNewName[sizeof(SelectedLayer.m_aName)];
@@ -2440,7 +2440,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				// image
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				DetailRect.HSplitTop(Spacing * 2, 0, &DetailRect);
-				static CUIButtonState s_ImageButton;
+				static CUIButton s_ImageButton;
 				const char* pText = SelectedLayer.m_ImageID >= 0 ?
 					m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
 				if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
@@ -2461,7 +2461,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				DrawText(ButtonRect, "Color", FontSize);
 				DrawRect(ColorRect, SelectedLayer.m_Color);
 
-				static CUIButtonState s_SliderColorR, s_SliderColorG, s_SliderColorB, s_SliderColorA;
+				static CUIButton s_SliderColorR, s_SliderColorG, s_SliderColorB, s_SliderColorA;
 
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				ButtonRect.VMargin(2, &ButtonRect);
@@ -2523,7 +2523,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			// image
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-			static CUIButtonState s_ImageButton;
+			static CUIButton s_ImageButton;
 			const char* pText = SelectedLayer.m_ImageID >= 0 ?
 				m_Map.m_Assets.m_aImageNames[SelectedLayer.m_ImageID].m_Buff : Localize("none");
 			if(UiButton(ButtonRect, pText, &s_ImageButton, FontSize))
@@ -2614,7 +2614,7 @@ void CEditor::RenderPopupBrushPalette()
 	}
 
 	// do mouse dragging
-	static CUIMouseDragState s_DragState;
+	static CUIMouseDrag s_DragState;
 	bool FinishedDragging = UiDoMouseDragging(&s_DragState, m_UiPopupBrushPaletteImageRect, &s_DragState);
 	// TODO: perhaps allow dragging from outside the popup for convenience
 
@@ -2744,7 +2744,7 @@ void CEditor::RenderPopupBrushPalette()
 	TopRow.Margin(3.0f, &TopRow);
 	TopRow.VSplitLeft(100, &ButtonRect, &TopRow);
 
-	static CUIButtonState s_ButClear;
+	static CUIButton s_ButClear;
 	if(UiButton(ButtonRect, Localize("Clear"), &s_ButClear))
 	{
 		mem_zero(aTileSelected, sizeof(u8)*256);
@@ -2754,7 +2754,7 @@ void CEditor::RenderPopupBrushPalette()
 	TopRow.VSplitLeft(2, 0, &TopRow);
 	TopRow.VSplitLeft(100, &ButtonRect, &TopRow);
 
-	static CUIButtonState s_ButEraser;
+	static CUIButton s_ButEraser;
 	if(UiButton(ButtonRect, Localize("Eraser"), &s_ButEraser))
 	{
 		mem_zero(aTileSelected, sizeof(u8)*256);
@@ -2763,7 +2763,7 @@ void CEditor::RenderPopupBrushPalette()
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
 	TopRow.VSplitLeft(40, &ButtonRect, &TopRow);
-	static CUIButtonState s_ButFlipX;
+	static CUIButton s_ButFlipX;
 	if(UiButton(ButtonRect, Localize("X/X"), &s_ButFlipX))
 	{
 		BrushFlipX();
@@ -2771,7 +2771,7 @@ void CEditor::RenderPopupBrushPalette()
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
 	TopRow.VSplitLeft(40, &ButtonRect, &TopRow);
-	static CUIButtonState s_ButFlipY;
+	static CUIButton s_ButFlipY;
 	if(UiButton(ButtonRect, Localize("Y/Y"), &s_ButFlipY))
 	{
 		BrushFlipY();
@@ -2779,7 +2779,7 @@ void CEditor::RenderPopupBrushPalette()
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
 	TopRow.VSplitLeft(50, &ButtonRect, &TopRow);
-	static CUIButtonState s_ButRotClockwise;
+	static CUIButton s_ButRotClockwise;
 	if(UiButton(ButtonRect, "90° ⟳", &s_ButRotClockwise))
 	{
 		BrushRotate90Clockwise();
@@ -2787,7 +2787,7 @@ void CEditor::RenderPopupBrushPalette()
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
 	TopRow.VSplitLeft(50, &ButtonRect, &TopRow);
-	static CUIButtonState s_ButRotCounterClockwise;
+	static CUIButton s_ButRotCounterClockwise;
 	if(UiButton(ButtonRect, "90° ⟲", &s_ButRotCounterClockwise))
 	{
 		BrushRotate90CounterClockwise();
@@ -2865,7 +2865,7 @@ void CEditor::RenderAssetManager()
 	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
 	UI()->ClipEnable(&NavRect);
 
-	static CUIButtonState s_UiImageButState[CEditorMap::MAX_IMAGES] = {};
+	static CUIButton s_UiImageButState[CEditorMap::MAX_IMAGES] = {};
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
@@ -2971,7 +2971,7 @@ void CEditor::RenderAssetManager()
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUIButtonState s_ButDelete = {};
+		static CUIButton s_ButDelete = {};
 		if(UiButton(ButtonRect, Localize("Delete"), &s_ButDelete))
 		{
 			EditDeleteImage(m_UiSelectedImageID);
@@ -2980,14 +2980,14 @@ void CEditor::RenderAssetManager()
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUITextInputState s_TextInputAdd = {};
+		static CUITextInput s_TextInputAdd = {};
 		static char aAddPath[256] = "grass_main.png";
 		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
 
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUIButtonState s_ButAdd = {};
+		static CUIButton s_ButAdd = {};
 		if(UiButton(ButtonRect, Localize("Add image"), &s_ButAdd))
 		{
 			EditAddImage(aAddPath);
@@ -3158,7 +3158,7 @@ inline void CEditor::DrawText(const CUIRect& Rect, const char* pText, float Font
 	TextRender()->TextShadowed(&Cursor, pText, -1, vec2(0,0), vec4(0,0,0,0), Color);
 }
 
-void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButtonState* pButState)
+void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
 {
 	pButState->m_Clicked = false;
 
@@ -3194,10 +3194,10 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 
 }
 
-bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDragState* pDragState)
+bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState)
 {
 	bool Return = false;
-	CUIButtonState ButState;
+	CUIButton ButState;
 	UiDoButtonBehavior(pID, Rect, &ButState);
 
 	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
@@ -3221,13 +3221,13 @@ bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDr
 	return Return;
 }
 
-bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, float FontSize)
+bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover,
 		StyleColorButtonPressed, StyleColorButtonBorder, FontSize);
 }
 
-bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState* pButState, vec4 ColNormal,
+bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState, vec4 ColNormal,
 	vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize)
 {
 	UiDoButtonBehavior(pButState, Rect, pButState);
@@ -3243,7 +3243,7 @@ bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButtonState*
 	return pButState->m_Clicked;
 }
 
-bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInputState* pInputState)
+bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState)
 {
 	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
@@ -3313,7 +3313,7 @@ bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	return Changed;
 }
 
-bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInputState* pInputState)
+bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState)
 {
 	const int OldInteger = *pInteger;
 	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
@@ -3348,7 +3348,7 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 	return OldInteger != *pInteger;
 }
 
-bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIButtonState* pInputState)
+bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIButton* pInputState)
 {
 	dbg_assert(false, "implement, see UiSliderFloat");
 
@@ -3369,7 +3369,7 @@ bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIB
 	return OldInt != *pInt;
 }
 
-bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButtonState* pInputState,
+bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
 	const vec4* pColor)
 {
 	const float OldInt = *pVal;
@@ -3418,7 +3418,7 @@ bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float M
 	return OldInt != *pVal;
 }
 
-bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNoState* pCbyn)
+bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn)
 {
 	const bool OldVal = *pVal;
 	CUIRect YesRect, NoRect;
