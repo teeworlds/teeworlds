@@ -423,6 +423,11 @@ struct CEditorMap
 		int m_ParallaxY = 0;
 		int m_OffsetX = 0;
 		int m_OffsetY = 0;
+		int m_ClipX = 0;
+		int m_ClipY = 0;
+		int m_ClipWidth = 0;
+		int m_ClipHeight = 0;
+		bool m_UseClipping = false;
 	};
 
 	struct CEnvelope

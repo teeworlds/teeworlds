@@ -231,6 +231,11 @@ bool CEditorMap::Load(const char* pFileName)
 		Group.m_ParallaxY = pGroup->m_ParallaxY;
 		Group.m_OffsetX = pGroup->m_OffsetX;
 		Group.m_OffsetY = pGroup->m_OffsetY;
+		Group.m_ClipX = pGroup->m_ClipX;
+		Group.m_ClipY = pGroup->m_ClipY;
+		Group.m_ClipWidth = pGroup->m_ClipW;
+		Group.m_ClipHeight = pGroup->m_ClipH;
+		Group.m_UseClipping = pGroup->m_UseClipping;
 		Group.m_LayerCount = 0;
 
 		for(int li = 0; li < GroupLayerCount; li++)
@@ -2319,6 +2324,33 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 		SelectedGroup.m_OffsetY = BsGroupOffsetY;
 		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, true);
 	}
+
+	// clip
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+	DrawRect(ButtonRect, vec4(0,0,0,1));
+	DrawRect(ButtonRect2, StyleColorBg);
+	DrawText(ButtonRect, Localize("Clip start"), FontSize);
+	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
+
+	str_format(aBuff, sizeof(aBuff), "%d", SelectedGroup.m_ClipX);
+	DrawText(ButtonRect, aBuff, FontSize);
+	str_format(aBuff, sizeof(aBuff), "%d", SelectedGroup.m_ClipY);
+	DrawText(ButtonRect2, aBuff, FontSize);
+
+	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+	ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+	DrawRect(ButtonRect, vec4(0,0,0,1));
+	DrawRect(ButtonRect2, StyleColorBg);
+	DrawText(ButtonRect, Localize("Clip size"), FontSize);
+	ButtonRect2.VSplitMid(&ButtonRect, &ButtonRect2);
+
+	str_format(aBuff, sizeof(aBuff), "%d", SelectedGroup.m_ClipWidth);
+	DrawText(ButtonRect, aBuff, FontSize);
+	str_format(aBuff, sizeof(aBuff), "%d", SelectedGroup.m_ClipHeight);
+	DrawText(ButtonRect2, aBuff, FontSize);
 
 	UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
