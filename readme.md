@@ -60,6 +60,9 @@ Building
 
 On subsequent builds, you only have to repeat the `make` step.
 
+You can then run the client with `./teeworlds` and the server with
+`./teeworlds_srv`.
+
 
 Build options
 -------------
