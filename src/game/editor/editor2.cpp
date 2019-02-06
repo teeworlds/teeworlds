@@ -1975,20 +1975,25 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
 	NavRect.y += ScrollOff.y;
 
+	// drag to reorder items
 	static CUIMouseDrag s_DragMove;
+	static void* pDragMoveID = NULL;
+	if(!s_DragMove.m_IsDragging)
+		pDragMoveID = NULL;
+
 	bool OldIsMouseDragging = s_DragMove.m_IsDragging;
 	bool FinishedMouseDragging = UiDoMouseDragging(0, NavRect, &s_DragMove);
 	bool StartedMouseDragging = s_DragMove.m_IsDragging && OldIsMouseDragging == false;
 
-	static void* pDragMoveID = NULL;
-	if(!s_DragMove.m_IsDragging)
-		pDragMoveID = NULL;
 	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && pDragMoveID;
 	CUIRect DragMoveOverlayRect;
 	int DragMoveDir = 0;
+	// -----------------------
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
+		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
 		NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
@@ -1999,11 +2004,12 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
 		m_UiGroupHovered[gi] = WholeLineState.m_Hovered;
 
+		// drag started on this item
 		if(StartedMouseDragging && WholeLineState.m_Hovered)
 		{
-			pDragMoveID = &s_UiGroupButState[gi];
+			pDragMoveID = &Group;
 		}
-		if(pDragMoveID == &s_UiGroupButState[gi])
+		if(pDragMoveID == &Group)
 		{
 			DragMoveOverlayRect = ButtonRect;
 			DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
@@ -2214,6 +2220,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	}
 
+	// drag overlay (arrows for now)
 	if(DisplayDragMoveOverlay && !UI()->MouseInside(&DragMoveOverlayRect))
 	{
 		const vec4 Color = StyleColorInputSelected;
@@ -2236,12 +2243,43 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		Graphics()->QuadsDrawFreeform(&Triangle, 1);
 		Graphics()->QuadsEnd();
 
+		// TODO: remove
 		/*CUIRect TestRect;
 		TestRect.x = DragMoveOverlayRect.x - 200;
 		TestRect.y = DragMoveOverlayRect.y;
 		TestRect.w = 100.f;
 		TestRect.h = 20.f;
 		DrawRect(TestRect, StyleColorInputSelected);*/
+	}
+
+	// finished dragging, move
+	// TODO: merge the 2 ifs
+	if(FinishedMouseDragging)
+	{
+		if(pDragMoveID && !IsInsideRect(s_DragMove.m_EndDragPos, DragMoveOverlayRect))
+		{
+			int GroupID = (CEditorMap::CGroup*)pDragMoveID - m_Map.m_aGroups.Data();
+			if(GroupID < 0 || GroupID > m_Map.m_aGroups.Count()-1)
+				GroupID = -1;
+			int LayerID = (CEditorMap::CLayer*)pDragMoveID - m_Map.m_aLayers.Data();
+			if(LayerID < 0 || LayerID > m_Map.m_aLayers.Count()-1)
+				LayerID = -1;
+
+			if(GroupID != -1)
+			{
+				int NewGroupID;
+				if(DragMoveDir < 0)
+					NewGroupID = EditGroupOrderMove(GroupID, -1);
+				else
+					NewGroupID = EditGroupOrderMove(GroupID, 1);
+
+				if(GroupID == m_UiSelectedGroupID && NewGroupID != GroupID)
+				{
+					m_UiSelectedGroupID = NewGroupID;
+					m_UiSelectedLayerID = -1;
+				}
+			}
+		}
 	}
 }
 
@@ -4181,6 +4219,31 @@ void CEditor::EditGroupUseClipping(int GroupID, bool NewUseClipping)
 		OldUseClipping ? Localize("true") : Localize("false"),
 		NewUseClipping ? Localize("true") : Localize("false"));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+int CEditor::EditGroupOrderMove(int GroupID, int RelativePos)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	const int NewGroupID = clamp(GroupID + RelativePos, 0, m_Map.m_aGroups.Count()-1);
+	if(NewGroupID == GroupID)
+		return GroupID;
+
+	tl_swap(m_Map.m_aGroups[GroupID], m_Map.m_aGroups[NewGroupID]);
+	if(m_Map.m_GameGroupID == GroupID)
+		m_Map.m_GameGroupID = NewGroupID;
+	else if(m_Map.m_GameGroupID == NewGroupID)
+		m_Map.m_GameGroupID = GroupID;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"),
+		GroupID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+		GroupID,
+		NewGroupID);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	return NewGroupID;
 }
 
 void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)

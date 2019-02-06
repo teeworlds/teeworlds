@@ -851,6 +851,7 @@ class CEditor: public IEditor
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
 	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
+	int EditGroupOrderMove(int GroupID, int RelativePos);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
