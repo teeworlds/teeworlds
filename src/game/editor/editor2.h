@@ -247,7 +247,7 @@ struct CDynArray
 			Reserve(max(Capacity() * 2, m_EltCount+Count));
 		mem_copy(Data()+m_EltCount, aElements, Count*sizeof(T));
 		m_EltCount += Count;
-		return *(Data()-Count);
+		return *(Data()+m_EltCount-Count);
 	}
 
 	T& AddEmpty(int Count)
@@ -257,7 +257,7 @@ struct CDynArray
 			Reserve(max(Capacity() * 2, m_EltCount+Count));
 		mem_zero(Data()+m_EltCount, Count*sizeof(T));
 		m_EltCount += Count;
-		return *(Data()-Count);
+		return *(Data()+m_EltCount-Count);
 	}
 
 	inline void Clear()

@@ -3922,9 +3922,8 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 	// base width and height on given layer if it's a tilelayer, else base on game layer
 	int LyWidth = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Width;
 	int LyHeight = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Height;
+	int LyImageID = -1;
 
-
-	CEditorMap::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
 	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	int UnderGrpLyID = -1;
@@ -3937,6 +3936,7 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 		{
 			LyWidth = TopLayer.m_Width;
 			LyHeight = TopLayer.m_Height;
+			LyImageID = TopLayer.m_ImageID;
 		}
 
 		const int ParentGroupLayerCount = Group.m_LayerCount;
@@ -3953,6 +3953,9 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 	}
 
 	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
+
+	CEditorMap::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
+	Layer.m_ImageID = LyImageID;
 
 	const int GrpLyID = UnderGrpLyID+1;
 	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
