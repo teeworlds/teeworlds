@@ -3294,8 +3294,9 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 
 	char aBuff[sizeof(pInputState->m_aIntBuff)];
 	str_format(aBuff, sizeof(aBuff), "%d", *pInteger);
-	if(pInputState->m_aIntBuff[0] && pInputState->m_aIntBuff[0] != '-' &&
-		str_comp(aBuff, pInputState->m_aIntBuff) != 0)
+	const bool IsEmpty = pInputState->m_aIntBuff[0] == 0;
+	const bool IsMinusOnly = pInputState->m_aIntBuff[0] == '-' && pInputState->m_aIntBuff[1] == 0;
+	if(!IsEmpty && !IsMinusOnly && str_comp(aBuff, pInputState->m_aIntBuff) != 0)
 	{
 		pInputState->m_Value = *pInteger;
 		str_copy(pInputState->m_aIntBuff, aBuff, sizeof(pInputState->m_aIntBuff));
