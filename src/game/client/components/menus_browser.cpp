@@ -1238,14 +1238,15 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	// cut view
 	CUIRect Left, Label, EditBox, Button;
-	Status.VSplitLeft(ButtonWidth*3.0f+SpacingH*2.0f, &Left, &Status);
+	Status.VSplitLeft(ButtonWidth*3.5f+SpacingH*2.0f, &Left, &Status);
 
 	// render quick search and host address
 	Left.HSplitTop(((ButtonHeight*3.0f+SpacingH*2.0f)-(ButtonHeight*2.0f+SpacingH))/2.0f, 0, &Left);
 	Left.HSplitTop(ButtonHeight, &Label, &Left);
+	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Search:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Search:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static float s_ClearOffset = 0.0f;
 	if(DoEditBox(&g_Config.m_BrFilterString, &EditBox, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), ButtonHeight*ms_FontmodHeight*0.8f, &s_ClearOffset, false, CUI::CORNER_ALL))
@@ -1264,22 +1265,62 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	Left.HSplitTop(SpacingH, 0, &Left);
 	Left.HSplitTop(ButtonHeight, &Label, 0);
+	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Host address:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Host address:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 	static float s_AddressOffset = 0.0f;
 	DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), ButtonHeight*ms_FontmodHeight*0.8f, &s_AddressOffset, false, CUI::CORNER_ALL);
 
 	// render status
-	Status.HSplitTop(ButtonHeight+SpacingH, 0, &Status);
-	Status.HSplitTop(ButtonHeight, &Status, 0);
-	char aBuf[128];
 	if(ServerBrowser()->IsRefreshing())
+	{
+		char aBuf[128];
+		Status.HSplitTop(ButtonHeight + SpacingH, 0, &Status);
 		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
+		Status.y += 2.0f;
+		UI()->DoLabel(&Status, aBuf, 14.0f, CUI::ALIGN_CENTER);
+	}
 	else
-		str_format(aBuf, sizeof(aBuf), Localize("%d servers, %d players"), ServerBrowser()->NumServers(), NumPlayers);
-	Status.y += 2.0f;
-	UI()->DoLabel(&Status, aBuf, 14.0f, CUI::ALIGN_CENTER);
+	{
+		// todo: move this to a helper function
+		static float RenderOffset = 0.0f;
+		if(RenderOffset == 0.0f)
+		{
+			char aChar[2] = "0";
+			RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1);
+		}
+
+		float OffsetServer = 0.0f, OffsetPlayer = 0.0f;
+		int Num = ServerBrowser()->NumServers();
+		if(Num < 1000)
+			OffsetServer += RenderOffset;
+		if(Num < 100)
+			OffsetServer += RenderOffset;
+		if(Num < 10)
+			OffsetServer += RenderOffset;
+		Num = NumPlayers;
+		if(Num < 1000)
+			OffsetPlayer += RenderOffset;
+		if(Num < 100)
+			OffsetPlayer += RenderOffset;
+		if(Num < 10)
+			OffsetPlayer += RenderOffset;
+		char aBuf[128];
+		Status.VSplitLeft(20.0f, 0, &Status);
+		Status.HSplitTop(ButtonHeight/1.5f, 0, &Status);
+		Status.HSplitTop(ButtonHeight, &Label, &Status);
+		str_format(aBuf, sizeof(aBuf), Localize("%d servers"), ServerBrowser()->NumServers());
+		Label.y += 2.0f;
+		Label.x += OffsetServer;
+		UI()->DoLabel(&Label, aBuf, 14.0f, CUI::ALIGN_LEFT);
+		Status.HSplitTop(SpacingH, 0, &Status);
+		Status.HSplitTop(ButtonHeight, &Label, 0);
+		str_format(aBuf, sizeof(aBuf), Localize("%d players"), NumPlayers);
+		Label.y += 2.0f;
+		Label.x += OffsetPlayer;
+		UI()->DoLabel(&Label, aBuf, 14.0f, CUI::ALIGN_LEFT);
+	}
 }
 
 void CMenus::RenderServerbrowserSidebar(CUIRect View)
