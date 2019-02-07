@@ -1808,7 +1808,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
 
 	ServerFilter.HSplitTop(LineSize + 2, &Button, &ServerFilter);
-	UI()->DoLabel(&Button, Localize("Difficulty"), FontSize, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Button, Localize("Difficulty:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
 	Button.y -= 2.0f;
 	Button.VSplitLeft(Button.h, &Icon, &Button);
@@ -1867,12 +1867,12 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	if(pInfo)
 	{
 		CUIRect Row;
-		// Localize("Map"); Localize("Game type"); Localize("Version"); Localize("Casual", "Server difficulty"); Localize("Normal", "Server difficulty"); Localize("Competitive", "Server difficulty"); Localize("Difficulty");
+		// Localize("Map:"); Localize("Game type:"); Localize("Version:"); Localize("Difficulty:"); Localize("Casual", "Server difficulty"); Localize("Normal", "Server difficulty"); Localize("Competitive", "Server difficulty");
 		static CLocConstString s_aLabels[] = {
-			"Map",		
-			"Game type",
-			"Version",
-			"Difficulty" };
+			"Map:",		
+			"Game type:",
+			"Version:",
+			"Difficulty:" };
 		static CLocConstString s_aDifficulty[] = {
 			"Casual",
 			"Normal",
