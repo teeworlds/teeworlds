@@ -19,7 +19,7 @@ JSON_KEY_OLDTRANSL="old translations"
 JSON_KEY_OR="or"
 JSON_KEY_TR="tr"
 
-SOURCE_LOCALIZE_RE=re.compile(br'Localize\("(?P<str>([^"\\]|\\.)*)"(, "(?P<ctxt>([^"\\]|\\.)*)")?\)')
+SOURCE_LOCALIZE_RE=re.compile(br'Localize\("(?P<str>([^"\\]|\\.)*)"(, ?"(?P<ctxt>([^"\\]|\\.)*)")?\)')
 
 def parse_source():
 	l10n = defaultdict(lambda: [])
@@ -114,13 +114,13 @@ if __name__ == '__main__':
 		if(commenttxt):
 			commenttxt = 'Context: '+commenttxt
 		po.append(polib.POEntry(msgid=msg, msgstr="", occurrences=occurrences, msgctxt=ctxt, comment=commenttxt))
-	po.save('data/languages/base.pot')
+	po.save('datasrc/languages/base.pot')
 
-	for filename in os.listdir("data/languages"):
+	for filename in os.listdir("datasrc/languages"):
 		try:
 			if (os.path.splitext(filename)[1] == ".json"
 					and filename != "index.json"):
-				filename = "data/languages/" + filename
+				filename = "datasrc/languages/" + filename
 				write_languagefile(filename, l10n_src, load_languagefile(filename))
 		except Exception as e:
 			print("Failed on {0}, re-raising for traceback".format(filename))
