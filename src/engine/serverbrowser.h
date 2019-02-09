@@ -130,7 +130,6 @@ public:
 		FILTER_PURE=4096,
 		FILTER_PURE_MAP=8192,
 		FILTER_COUNTRY= 16384,
-		FILTER_PING= 32768,
 	};
 
 	virtual void SetType(int Type) = 0;
