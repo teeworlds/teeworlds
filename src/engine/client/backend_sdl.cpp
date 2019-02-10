@@ -703,6 +703,9 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 #endif
 
+	if(Flags&IGraphicsBackend::INITFLAG_X11XRANDR)
+		SDL_SetHint(SDL_HINT_VIDEO_X11_XRANDR, "1");
+
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	if(FsaaSamples)
