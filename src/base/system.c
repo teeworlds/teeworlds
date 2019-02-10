@@ -39,6 +39,7 @@
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>
+	#include <process.h>
 	#include <wincrypt.h>
 #else
 	#error NOT IMPLEMENTED
@@ -421,7 +422,7 @@ unsigned io_write_newline(IOHANDLE io)
 int io_close(IOHANDLE io)
 {
 	fclose((FILE*)io);
-	return 1;
+	return 0;
 }
 
 int io_flush(IOHANDLE io)
@@ -2348,6 +2349,15 @@ void secure_random_fill(void *bytes, unsigned length)
 		dbg_msg("secure", "io_read returned with a short read");
 		dbg_break();
 	}
+#endif
+}
+
+int pid()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	return _getpid();
+#else
+	return getpid();
 #endif
 }
 

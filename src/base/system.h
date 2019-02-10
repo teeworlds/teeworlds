@@ -1441,6 +1441,15 @@ int secure_random_init();
 */
 void secure_random_fill(void *bytes, unsigned length);
 
+/*
+	Function: pid
+		Gets the process ID of the current process
+
+	Returns:
+		The process ID of the current process.
+*/
+int pid();
+
 #ifdef __cplusplus
 }
 #endif
