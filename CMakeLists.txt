@@ -145,9 +145,16 @@ if(NOT MSVC)
   # Inaccurate floating point numbers cause problems on mingw-w64-gcc when
   # compiling for x86, might cause problems elsewhere. So don't store floats
   # in registers but keep them at higher accuracy.
-
   if(TARGET_ARCH STREQUAL "x86")
     add_c_compiler_flag_if_supported(OUR_FLAGS -ffloat-store)
+  endif()
+
+  # gcc < 4.10 chokes on _mm_pause on x86 without SSE support.
+  if(TARGET_ARCH STREQUAL "x86")
+    check_c_source_compiles("#include <immintrin.h>\nint main() { _mm_pause(); return 0; }" MM_PAUSE_WORKS_WITHOUT_MSSE2)
+    if(NOT MM_PAUSE_WORKS_WITHOUT_MSSE2)
+      add_c_compiler_flag_if_supported(OUR_FLAGS -msse2)
+    endif()
   endif()
 
   if(TARGET_OS STREQUAL "mac")
