@@ -40,3 +40,24 @@ TEST(Str, Endswith)
 	EXPECT_EQ(str_endswith(ABCDEFG, DEFG) - ABCDEFG,
 		str_length(ABCDEFG) - str_length(DEFG));
 }
+
+TEST(StrFormat, Positional)
+{
+	char aBuf[256];
+
+	// normal
+	str_format(aBuf, sizeof(aBuf), "%s %s", "first", "second");
+	EXPECT_STREQ(aBuf, "first second");
+
+	// normal with positional arguments
+	str_format(aBuf, sizeof(aBuf), "%1$s %2$s", "first", "second");
+	EXPECT_STREQ(aBuf, "first second");
+
+	// reverse
+	str_format(aBuf, sizeof(aBuf), "%2$s %1$s", "first", "second");
+	EXPECT_STREQ(aBuf, "second first");
+
+	// duplicate
+	str_format(aBuf, sizeof(aBuf), "%1$s %1$s %2$d %1$s %2$d", "str", 1);
+	EXPECT_STREQ(aBuf, "str str 1 str 1");
+}
