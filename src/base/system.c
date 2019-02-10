@@ -100,7 +100,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 
 	va_start(args, fmt);
 #if defined(CONF_FAMILY_WINDOWS)
-	_vsnprintf(msg, sizeof(str)-len, fmt, args);
+	_vsprintf_p(msg, sizeof(str)-len, fmt, args);
 #else
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
 #endif
@@ -1472,7 +1472,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 	char *home = getenv("APPDATA");
 	if(!home)
 		return -1;
-	_snprintf(path, max, "%s/%s", home, appname);
+	str_format(path, max, "%s/%s", home, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
@@ -1484,25 +1484,25 @@ int fs_storage_path(const char *appname, char *path, int max)
 		return -1;
 	
 #if defined(CONF_PLATFORM_MACOSX)
-	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
+	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
 	return 0;
 #endif
 
 	/* old folder location */
-	snprintf(path, max, "%s/.%s", home, appname);
+	str_format(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
 
 	if(!xdgdatahome)
 	{
 		/* use default location */
-		snprintf(xdgpath, max, "%s/.local/share/%s", home, appname);
+		str_format(xdgpath, max, "%s/.local/share/%s", home, appname);
 		for(i = strlen(home)+14; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
 	else
 	{
-		snprintf(xdgpath, max, "%s/%s", xdgdatahome, appname);
+		str_format(xdgpath, max, "%s/%s", xdgdatahome, appname);
 		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
@@ -1515,7 +1515,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		return 0;
 	}
 	
-	snprintf(path, max, "%s", xdgpath);
+	str_format(path, max, "%s", xdgpath);
 
 	return 0;
 #endif
@@ -1774,7 +1774,7 @@ void str_format(char *buffer, int buffer_size, const char *format, ...)
 #if defined(CONF_FAMILY_WINDOWS)
 	va_list ap;
 	va_start(ap, format);
-	_vsnprintf(buffer, buffer_size, format, ap);
+	_vsprintf_p(buffer, buffer_size, format, ap);
 	va_end(ap);
 #else
 	va_list ap;
