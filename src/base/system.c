@@ -995,9 +995,15 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 				((struct sockaddr_in6 *)(addr))->sin6_port = port;
 		}
 
+#if defined(CONF_FAMILY_WINDOWS)
+		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+			dbg_msg("net", "failed to setsockopt SO_REUSEADDR");
+		}
+#else
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &(int){ 1 }, sizeof(int)) < 0) {
 			dbg_msg("net", "failed to setsockopt SO_REUSEPORT");
 		}
+#endif
 
 		e = bind(sock, addr, sockaddrlen);
 		if(e == 0)
