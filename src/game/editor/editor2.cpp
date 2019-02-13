@@ -1262,7 +1262,14 @@ void CEditor::Render()
 		Graphics()->TextureSet(m_CursorTexture);
 		Graphics()->WrapClamp();
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1,0,1,1);
+
+		const vec3 aToolColors[] = {
+			vec3(1, 0.2, 1),
+			vec3(1, 0.5, 0.2),
+			vec3(0.2, 0.7, 1),
+		};
+		const vec3& ToolColor = aToolColors[m_Tool];
+		Graphics()->SetColor(ToolColor.r, ToolColor.g, ToolColor.b, 1);
 		/*if(UI()->HotItem())
 			Graphics()->SetColor(1,0.5,1,1);*/
 		IGraphics::CQuadItem QuadItem(m_UiMousePos.x, m_UiMousePos.y, 16.0f, 16.0f);
@@ -3805,19 +3812,19 @@ void CEditor::SelectLayerBelowCurrentOne()
 		"m_UiSelectedGroupID is invalid");
 
 	const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
-	int LayerPosID = -1;
+	int LayerPos = -1;
 	for(int i = 0; i < (Group.m_LayerCount-1); i++)
 	{
 		if(Group.m_apLayerIDs[i] == m_UiSelectedLayerID)
 		{
-			LayerPosID = i;
+			LayerPos = i;
 			break;
 		}
 	}
 
-	if(LayerPosID != -1)
+	if(LayerPos != -1)
 	{
-		m_UiSelectedLayerID = Group.m_apLayerIDs[LayerPosID+1];
+		m_UiSelectedLayerID = Group.m_apLayerIDs[LayerPos+1];
 	}
 	else
 	{
