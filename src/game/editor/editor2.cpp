@@ -1819,7 +1819,7 @@ void CEditor::RenderMapEditorUI()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
-	CUIRect RightPanel, DetailPanel;
+	CUIRect RightPanel, DetailPanel, ToolColumnRect;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
 
 	DrawRect(RightPanel, StyleColorBg);
@@ -1936,6 +1936,29 @@ void CEditor::RenderMapEditorUI()
 			m_UiDetailPanelIsOpen = true;
 		}
 	}
+
+	// tools
+	const float ButtonSize = 20.0f;
+	const float Margin = 5.0f;
+	m_UiMainViewRect.VSplitLeft(ButtonSize + Margin * 2, &ToolColumnRect, &m_UiMainViewRect);
+	ToolColumnRect.VMargin(Margin, &ToolColumnRect);
+
+	static CUIButton s_ButTools[TOOL_COUNT_];
+	const char* aButName[] = {
+		"Se",
+		"Di",
+		"TB"
+	};
+
+	for(int t = 0; t < TOOL_COUNT_; t++)
+	{
+		ToolColumnRect.HSplitTop(Margin, 0, &ToolColumnRect);
+		ToolColumnRect.HSplitTop(ButtonSize, &ButtonRect, &ToolColumnRect);
+
+		if(UiButtonSelect(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t))
+			m_Tool = t;
+	}
+
 
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
@@ -2254,14 +2277,6 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		Graphics()->QuadsDrawFreeform(&Triangle, 1);
 		Graphics()->QuadsEnd();
-
-		// TODO: remove
-		/*CUIRect TestRect;
-		TestRect.x = DragMoveOverlayRect.x - 200;
-		TestRect.y = DragMoveOverlayRect.y;
-		TestRect.w = 100.f;
-		TestRect.h = 20.f;
-		DrawRect(TestRect, StyleColorInputSelected);*/
 	}
 
 	// finished dragging, move
@@ -2279,11 +2294,8 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 			if(GroupID != -1)
 			{
-				int NewGroupID;
-				if(DragMoveDir < 0)
-					NewGroupID = EditGroupOrderMove(GroupID, -1);
-				else
-					NewGroupID = EditGroupOrderMove(GroupID, 1);
+				int NewGroupID = EditGroupOrderMove(GroupID,  DragMoveDir < 0 ? -1 : 1);
+				m_UiGroupOpen[NewGroupID] = true;
 
 				if(GroupID == m_UiSelectedGroupID && NewGroupID != GroupID)
 				{
@@ -3565,6 +3577,13 @@ bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo*
 	return OldVal != *pVal;
 }
 
+bool CEditor::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
+	float FontSize)
+{
+	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover, StyleColorButtonPressed,
+		Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize);
+}
+
 
 void CEditor::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
 {
@@ -4265,8 +4284,9 @@ int CEditor::EditGroupOrderMove(int GroupID, int RelativePos)
 
 int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 {
-	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "GroupID out of bounds");
+	// Returns new parent group ID (or the same if it does not change)
 
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "GroupID out of bounds");
 
 	int ParentGroupID = -1;
 	int LayerPos = -1;
@@ -4289,6 +4309,7 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 	dbg_assert(ParentGroupID != -1 && LayerPos != -1,
 		"Parent group or layer position not found for this LayerID");
 
+	// this assume a relative change of 1
 	RelativePos = clamp(RelativePos, -1, 1);
 	if(RelativePos == 0)
 		return ParentGroupID;

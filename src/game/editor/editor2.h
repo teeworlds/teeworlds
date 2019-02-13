@@ -710,9 +710,15 @@ class CEditor: public IEditor
 		PAGE_MAP_EDITOR=0,
 		PAGE_ASSET_MANAGER,
 		PAGE_COUNT_,
+
+		TOOL_SELECT=0,
+		TOOL_DIMENSION,
+		TOOL_TILE_BRUSH,
+		TOOL_COUNT_
 	};
 
 	int m_Page = PAGE_MAP_EDITOR;
+	int m_Tool = TOOL_SELECT;
 
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
@@ -751,6 +757,8 @@ class CEditor: public IEditor
 	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
 		const vec4* pColor = NULL);
 	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn);
+	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
+		float FontSize = 10);
 
 	struct CScrollRegionParams
 	{
