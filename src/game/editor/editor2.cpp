@@ -1977,7 +1977,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// drag to reorder items
 	static CUIMouseDrag s_DragMove;
-	static void* pDragMoveID = NULL;
+	static const void* pDragMoveID = NULL;
 	if(!s_DragMove.m_IsDragging)
 		pDragMoveID = NULL;
 
@@ -1992,7 +1992,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
@@ -2084,6 +2084,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			for(int li = 0; li < LayerCount; li++)
 			{
 				const int LyID = m_Map.m_aGroups[gi].m_apLayerIDs[li];
+				const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LyID];
 				NavRect.HSplitTop(Spacing, 0, &NavRect);
 				NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 				UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
@@ -2095,6 +2096,17 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				CUIButton WholeLineState;
 				UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
 				m_UiLayerHovered[LyID] = WholeLineState.m_Hovered;
+
+				// drag started on this item
+				if(StartedMouseDragging && WholeLineState.m_Hovered)
+				{
+					pDragMoveID = &Layer;
+				}
+				if(pDragMoveID == &Layer)
+				{
+					DragMoveOverlayRect = ButtonRect;
+					DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
+				}
 
 				// show button
 				ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
@@ -2278,6 +2290,11 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 					m_UiSelectedGroupID = NewGroupID;
 					m_UiSelectedLayerID = -1;
 				}
+			}
+			else if(LayerID != -1)
+			{
+				int NewGroupID = EditLayerOrderMove(LayerID, DragMoveDir < 0 ? -1 : 1);
+				m_UiGroupOpen[NewGroupID] = true;
 			}
 		}
 	}
@@ -4244,6 +4261,113 @@ int CEditor::EditGroupOrderMove(int GroupID, int RelativePos)
 		NewGroupID);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 	return NewGroupID;
+}
+
+int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "GroupID out of bounds");
+
+
+	int ParentGroupID = -1;
+	int LayerPos = -1;
+	const int GroupCount = m_Map.m_aGroups.Count();
+	for(int gi = 0; gi < GroupCount && ParentGroupID == -1; gi++)
+	{
+		const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+
+		for(int l = 0; l < Group.m_LayerCount; l++)
+		{
+			if(Group.m_apLayerIDs[l] == LayerID)
+			{
+				ParentGroupID = gi;
+				LayerPos = l;
+				break;
+			}
+		}
+	}
+
+	dbg_assert(ParentGroupID != -1 && LayerPos != -1,
+		"Parent group or layer position not found for this LayerID");
+
+	RelativePos = clamp(RelativePos, -1, 1);
+	if(RelativePos == 0)
+		return ParentGroupID;
+
+	const int NewPos = LayerPos + RelativePos;
+	CEditorMap::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
+	const bool IsGameLayer = LayerID == m_Map.m_GameLayerID;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+
+	// go up one group
+	if(NewPos < 0)
+	{
+		if(ParentGroupID > 0 && !IsGameLayer)
+		{
+			CEditorMap::CGroup& Group = m_Map.m_aGroups[ParentGroupID-1];
+
+			// TODO: make a function GroupAddLayer?
+			if(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS)
+				Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
+
+			// squash layer from previous group
+			ParentGroup.m_LayerCount--;
+			memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1],
+				sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);
+
+			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"),
+				LayerID);
+			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+				ParentGroupID,
+				ParentGroupID-1);
+			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+			return ParentGroupID-1;
+		}
+	}
+	// go down one group
+	else if(NewPos >= ParentGroup.m_LayerCount)
+	{
+		if(ParentGroupID < GroupCount-1 && !IsGameLayer)
+		{
+			CEditorMap::CGroup& Group = m_Map.m_aGroups[ParentGroupID+1];
+
+			// move other layers down, put this one first
+			if(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS)
+			{
+				memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0],
+					sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
+				Group.m_LayerCount++;
+				Group.m_apLayerIDs[0] = LayerID;
+			}
+
+			// "remove" layer from previous group
+			ParentGroup.m_LayerCount--;
+
+			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"),
+				LayerID);
+			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+				ParentGroupID,
+				ParentGroupID+1);
+			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+			return ParentGroupID+1;
+		}
+	}
+	else
+	{
+		tl_swap(ParentGroup.m_apLayerIDs[LayerPos], ParentGroup.m_apLayerIDs[NewPos]);
+
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"),
+			LayerID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+			LayerPos,
+			NewPos);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+		return ParentGroupID;
+	}
+
+	// never reached
+	return ParentGroupID;
 }
 
 void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
