@@ -847,6 +847,7 @@ class CEditor: public IEditor
 	void BrushRotate90Clockwise();
 	void BrushRotate90CounterClockwise();
 
+	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
 
 	int Save(const char* pFilename);

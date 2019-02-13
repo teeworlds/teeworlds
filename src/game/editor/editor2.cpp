@@ -1245,7 +1245,6 @@ void CEditor::Render()
 	m_GfxScreenWidth = Graphics()->ScreenWidth();
 	m_GfxScreenHeight = Graphics()->ScreenHeight();
 
-	// basic start
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
 	if(m_Page == PAGE_MAP_EDITOR)
@@ -1742,8 +1741,8 @@ void CEditor::RenderMapViewHud()
 
 	if(SelectedTileLayer.IsTileLayer())
 	{
-		// TODO: reorder all of this to better represent state
-		if(m_Brush.IsEmpty())
+		// cell overlay, select rectangle
+		if(IsToolBrush() || IsToolSelect())
 		{
 			if(s_MapViewDrag.m_IsDragging)
 			{
@@ -1774,9 +1773,11 @@ void CEditor::RenderMapViewHud()
 				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
 				DrawRect(HoverRect, HoverColor);
 			}
+		}
 
-			// TODO: do this better (ignoring mouse click on UI)
-			if(IsToolBrush())
+		if(IsToolBrush())
+		{
+			if(m_Brush.IsEmpty())
 			{
 				if(FinishedDragging)
 				{
@@ -1816,11 +1817,11 @@ void CEditor::RenderMapViewHud()
 					SetNewBrush(aExtractTiles.Data(), Width, Height);
 				}
 			}
-		}
-		else if(IsToolBrush())
-		{
-			// draw brush
-			RenderBrush(GridMousePos);
+			else
+			{
+				// draw brush
+				RenderBrush(GridMousePos);
+			}
 		}
 	}
 }
