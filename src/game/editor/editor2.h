@@ -837,14 +837,17 @@ class CEditor: public IEditor
 	void ResetCamera();
 	void ChangeZoom(float Zoom);
 	void ChangePage(int Page);
+	void ChangeTool(int Tool);
 	void SelectLayerBelowCurrentOne();
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
-	void ClearBrush();
+	void BrushClear();
 	void BrushFlipX();
 	void BrushFlipY();
 	void BrushRotate90Clockwise();
 	void BrushRotate90CounterClockwise();
+
+	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);

@@ -1231,9 +1231,9 @@ void CEditor::Update()
 				ChangePage((m_Page+1) % PAGE_COUNT_);
 		}
 
-		if(Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
+		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
 			m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
-		else if(!Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+		else if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 			m_UiCurrentPopupID = POPUP_NONE;
 	}
 }
@@ -1735,6 +1735,7 @@ void CEditor::RenderMapViewHud()
 
 	if(SelectedTileLayer.IsTileLayer())
 	{
+		// TODO: reorder all of this to better represent state
 		if(m_Brush.IsEmpty())
 		{
 			if(s_MapViewDrag.m_IsDragging)
@@ -1767,50 +1768,53 @@ void CEditor::RenderMapViewHud()
 				DrawRect(HoverRect, HoverColor);
 			}
 
-			// TODO: if tool == brush
 			// TODO: do this better (ignoring mouse click on UI)
-			if(SelectedTileLayer.IsTileLayer() && FinishedDragging)
+			if(IsToolBrush())
 			{
-				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
-					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
-				const vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
-					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_EndDragPos);
-
-				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
-				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
-				const int EndTX = floor(EndMouseWorldPos.x/TileSize);
-				const int EndTY = floor(EndMouseWorldPos.y/TileSize);
-
-				const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
-				const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
-				const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
-				const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
-				const int Width = SelEndX - SelStartX;
-				const int Height = SelEndY - SelStartY;
-
-				CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
-				aExtractTiles.AddEmpty(Width * Height);
-
-				const int LayerWidth = SelectedTileLayer.m_Width;
-				const CDynArray<CTile>& aLayerTiles = SelectedTileLayer.m_aTiles;
-				const int StartTid = SelStartY * LayerWidth + SelStartX;
-				const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
-
-				for(int ti = StartTid; ti < LastTid; ti++)
+				if(FinishedDragging)
 				{
-					const int tx = (ti % LayerWidth) - SelStartX;
-					const int ty = (ti / LayerWidth) - SelStartY;
-					if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
-						aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
-				}
+					const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+						m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
+					const vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+						m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_EndDragPos);
 
-				SetNewBrush(aExtractTiles.Data(), Width, Height);
+					const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+					const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+					const int EndTX = floor(EndMouseWorldPos.x/TileSize);
+					const int EndTY = floor(EndMouseWorldPos.y/TileSize);
+
+					const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
+					const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
+					const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
+					const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
+					const int Width = SelEndX - SelStartX;
+					const int Height = SelEndY - SelStartY;
+
+					CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
+					aExtractTiles.AddEmpty(Width * Height);
+
+					const int LayerWidth = SelectedTileLayer.m_Width;
+					const CDynArray<CTile>& aLayerTiles = SelectedTileLayer.m_aTiles;
+					const int StartTid = SelStartY * LayerWidth + SelStartX;
+					const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
+
+					for(int ti = StartTid; ti < LastTid; ti++)
+					{
+						const int tx = (ti % LayerWidth) - SelStartX;
+						const int ty = (ti / LayerWidth) - SelStartY;
+						if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
+							aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
+					}
+
+					SetNewBrush(aExtractTiles.Data(), Width, Height);
+				}
 			}
 		}
-
-		// TODO: if tool == brush
-		// draw brush
-		RenderBrush(GridMousePos);
+		else if(IsToolBrush())
+		{
+			// draw brush
+			RenderBrush(GridMousePos);
+		}
 	}
 }
 
@@ -1940,7 +1944,7 @@ void CEditor::RenderMapEditorUI()
 	// tools
 	const float ButtonSize = 20.0f;
 	const float Margin = 5.0f;
-	m_UiMainViewRect.VSplitLeft(ButtonSize + Margin * 2, &ToolColumnRect, &m_UiMainViewRect);
+	m_UiMainViewRect.VSplitLeft(ButtonSize + Margin * 2, &ToolColumnRect, 0);
 	ToolColumnRect.VMargin(Margin, &ToolColumnRect);
 
 	static CUIButton s_ButTools[TOOL_COUNT_];
@@ -1956,10 +1960,10 @@ void CEditor::RenderMapEditorUI()
 		ToolColumnRect.HSplitTop(ButtonSize, &ButtonRect, &ToolColumnRect);
 
 		if(UiButtonSelect(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t))
-			m_Tool = t;
+			ChangeTool(t);
 	}
 
-
+	// popups
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
 }
@@ -2728,8 +2732,7 @@ void CEditor::RenderPopupBrushPalette()
 	// right click clears brush
 	if(UI()->MouseButtonClicked(1))
 	{
-		mem_zero(Bps.m_aTileSelected, sizeof(Bps.m_aTileSelected));
-		ClearBrush();
+		BrushClear();
 	}
 
 	// do mouse dragging
@@ -2866,8 +2869,7 @@ void CEditor::RenderPopupBrushPalette()
 	static CUIButton s_ButClear;
 	if(UiButton(ButtonRect, Localize("Clear"), &s_ButClear))
 	{
-		mem_zero(aTileSelected, sizeof(u8)*256);
-		ClearBrush();
+		BrushClear();
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -3785,6 +3787,16 @@ void CEditor::ChangePage(int Page)
 	m_Page = Page;
 }
 
+void CEditor::ChangeTool(int Tool)
+{
+	if(m_Tool == Tool) return;
+
+	if(m_Tool == TOOL_TILE_BRUSH)
+		BrushClear();
+
+	m_Tool = Tool;
+}
+
 void CEditor::SelectLayerBelowCurrentOne()
 {
 	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
@@ -3828,11 +3840,12 @@ void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
 	m_Brush.m_aTiles.Add(aTiles, Width*Height);
 }
 
-void CEditor::ClearBrush()
+void CEditor::BrushClear()
 {
 	m_Brush.m_Width = 0;
 	m_Brush.m_Height = 0;
 	m_Brush.m_aTiles.Clear();
+	mem_zero(m_UiBrushPaletteState.m_aTileSelected, sizeof(m_UiBrushPaletteState.m_aTileSelected));
 }
 
 void CEditor::BrushFlipX()
@@ -3957,7 +3970,7 @@ void CEditor::OnMapLoaded()
 	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.capacity());
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
-	ClearBrush();
+	BrushClear();
 
 	// clear history
 	if(m_pHistoryEntryCurrent)
