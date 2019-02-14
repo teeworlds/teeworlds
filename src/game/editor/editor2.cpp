@@ -1773,8 +1773,9 @@ void CEditor::RenderMapViewHud()
 	const vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
 		m_ZoomWorldViewHeight, m_UiMousePos);
 
-	const vec2 GridMousePos(floor(MouseWorldPos.x/TileSize)*TileSize,
-		floor(MouseWorldPos.y/TileSize)*TileSize);
+	const int MouseTx = floor(MouseWorldPos.x/TileSize);
+	const int MouseTy = floor(MouseWorldPos.y/TileSize);
+	const vec2 GridMousePos(MouseTx*TileSize, MouseTy*TileSize);
 
 	static CUIMouseDrag s_MapViewDrag;
 	bool FinishedDragging = UiDoMouseDragging(0, m_UiMainViewRect, &s_MapViewDrag);
@@ -1897,6 +1898,9 @@ void CEditor::RenderMapViewHud()
 			{
 				// draw brush
 				RenderBrush(GridMousePos);
+
+				if(CanClick && UI()->MouseButtonClicked(0))
+					BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
 			}
 		}
 	}
@@ -4079,6 +4083,28 @@ void CEditor::BrushRotate90CounterClockwise()
 
 	m_Brush.m_Width = BrushHeight;
 	m_Brush.m_Height = BrushWidth;
+}
+
+void CEditor::BrushPaintLayer(int PaintX, int PaintY, int LayerID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	dbg_assert(Layer.IsTileLayer(), "Layer is not a tile layer");
+
+	const int BrushW = m_Brush.m_Width;
+	const int BrushH = m_Brush.m_Height;
+	const int LayerW = Layer.m_Width;
+	const int LayerH = Layer.m_Height;
+
+	for(int ty = 0; ty < BrushH; ty++)
+	{
+		for(int tx = 0; tx < BrushW; tx++)
+		{
+			int BrushTid = ty * BrushW + tx;
+			int LayerTid = clamp(ty + PaintY, 0, LayerH-1) * LayerW + clamp(tx + PaintX, 0, LayerW-1);
+			Layer.m_aTiles[LayerTid] = m_Brush.m_aTiles[BrushTid];
+		}
+	}
 }
 
 void CEditor::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY)

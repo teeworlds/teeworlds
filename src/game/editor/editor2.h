@@ -721,6 +721,7 @@ class CEditor: public IEditor
 	int m_Page = PAGE_MAP_EDITOR;
 	int m_Tool = TOOL_SELECT;
 
+	// TODO: here functions are member functions, but not for CBrush. Choose one or the other
 	struct CTileSelection
 	{
 		int m_StartTX = -1;
@@ -880,6 +881,7 @@ class CEditor: public IEditor
 	void BrushFlipY();
 	void BrushRotate90Clockwise();
 	void BrushRotate90CounterClockwise();
+	void BrushPaintLayer(int PaintX, int PaintY, int LayerID);
 	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
 
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
