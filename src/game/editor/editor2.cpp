@@ -1775,10 +1775,60 @@ void CEditor::RenderMapViewHud()
 			}
 		}
 
+		if(IsToolSelect())
+		{
+			if(s_MapViewDrag.m_IsDragging)
+				m_TileSelection.Deselect();
+
+			if(FinishedDragging)
+			{
+				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
+				const vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_EndDragPos);
+
+				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+				const int EndTX = floor(EndMouseWorldPos.x/TileSize);
+				const int EndTY = floor(EndMouseWorldPos.y/TileSize);
+
+				const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
+				const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
+				const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
+				const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
+
+				m_TileSelection.Select(
+					floor(StartMouseWorldPos.x/TileSize),
+					floor(StartMouseWorldPos.y/TileSize),
+					floor(EndMouseWorldPos.x/TileSize),
+					floor(EndMouseWorldPos.y/TileSize)
+				);
+
+				m_TileSelection.FitLayer(SelectedTileLayer);
+			}
+
+			if(m_TileSelection.IsSelected())
+			{
+				// fit selection to possibly newly selected layer
+				m_TileSelection.FitLayer(SelectedTileLayer);
+
+				const CUIRect HoverRect = {
+					m_TileSelection.m_StartTX * TileSize,
+					m_TileSelection.m_StartTY * TileSize,
+					(m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX)*TileSize,
+					(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
+				};
+				vec4 HoverColor = StyleColorTileSelection;
+				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+				DrawRectBorderMiddle(HoverRect, HoverColor, 2, vec4(1,1,1,1));
+			}
+		}
+
 		if(IsToolBrush())
 		{
 			if(m_Brush.IsEmpty())
 			{
+				// get tiles from map when we're done selecting
 				if(FinishedDragging)
 				{
 					const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
@@ -1791,30 +1841,7 @@ void CEditor::RenderMapViewHud()
 					const int EndTX = floor(EndMouseWorldPos.x/TileSize);
 					const int EndTY = floor(EndMouseWorldPos.y/TileSize);
 
-					const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
-					const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
-					const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
-					const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
-					const int Width = SelEndX - SelStartX;
-					const int Height = SelEndY - SelStartY;
-
-					CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
-					aExtractTiles.AddEmpty(Width * Height);
-
-					const int LayerWidth = SelectedTileLayer.m_Width;
-					const CDynArray<CTile>& aLayerTiles = SelectedTileLayer.m_aTiles;
-					const int StartTid = SelStartY * LayerWidth + SelStartX;
-					const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
-
-					for(int ti = StartTid; ti < LastTid; ti++)
-					{
-						const int tx = (ti % LayerWidth) - SelStartX;
-						const int ty = (ti / LayerWidth) - SelStartY;
-						if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
-							aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
-					}
-
-					SetNewBrush(aExtractTiles.Data(), Width, Height);
+					TileLayerRegionToBrush(SelectedLayerID, StartTX, StartTY, EndTX, EndTY);
 				}
 			}
 			else
@@ -3952,6 +3979,37 @@ void CEditor::BrushRotate90CounterClockwise()
 
 	m_Brush.m_Width = BrushHeight;
 	m_Brush.m_Height = BrushWidth;
+}
+
+void CEditor::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY)
+{
+	const CEditorMap::CLayer& TileLayer = m_Map.m_aLayers[LayerID];
+	dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
+
+	const int SelStartX = clamp(min(StartTX, EndTX), 0, TileLayer.m_Width-1);
+	const int SelStartY = clamp(min(StartTY, EndTY), 0, TileLayer.m_Height-1);
+	const int SelEndX = clamp(max(StartTX, EndTX), 0, TileLayer.m_Width-1) + 1;
+	const int SelEndY = clamp(max(StartTY, EndTY), 0, TileLayer.m_Height-1) + 1;
+	const int Width = SelEndX - SelStartX;
+	const int Height = SelEndY - SelStartY;
+
+	CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
+	aExtractTiles.AddEmpty(Width * Height);
+
+	const int LayerWidth = TileLayer.m_Width;
+	const CDynArray<CTile>& aLayerTiles = TileLayer.m_aTiles;
+	const int StartTid = SelStartY * LayerWidth + SelStartX;
+	const int LastTid = (SelEndY-1) * LayerWidth + SelEndX;
+
+	for(int ti = StartTid; ti < LastTid; ti++)
+	{
+		const int tx = (ti % LayerWidth) - SelStartX;
+		const int ty = (ti / LayerWidth) - SelStartY;
+		if(tx >= 0 && tx < Width && ty >= 0 && ty < Height)
+			aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
+	}
+
+	SetNewBrush(aExtractTiles.Data(), Width, Height);
 }
 
 bool CEditor::LoadMap(const char* pFileName)

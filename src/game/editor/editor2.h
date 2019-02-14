@@ -720,6 +720,49 @@ class CEditor: public IEditor
 	int m_Page = PAGE_MAP_EDITOR;
 	int m_Tool = TOOL_SELECT;
 
+	struct CTileSelection
+	{
+		int m_StartTX = -1;
+		int m_StartTY;
+		int m_EndTX;
+		int m_EndTY;
+
+		inline void Select(int StartTX, int StartTY, int EndTX, int EndTY)
+		{
+			m_StartTX = min(StartTX, EndTX);
+			m_StartTY = min(StartTY, EndTY);
+			m_EndTX = max(StartTX, EndTX);
+			m_EndTY = max(StartTY, EndTY);
+		}
+
+		inline void Deselect() { m_StartTX = -1; }
+
+		inline bool IsValid() const
+		{
+			return m_StartTX >= 0 && m_StartTY >= 0 && m_EndTX >= 0 && m_EndTY >= 0;
+		}
+
+		inline bool IsSelected() const
+		{
+			return IsValid() && m_EndTX - m_StartTX >= 0 && m_EndTY - m_StartTY >= 0;
+		}
+
+		void FitLayer(const CEditorMap::CLayer& TileLayer)
+		{
+			dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
+			// if either start or end point could be inside layer
+			if((m_StartTX >= 0 && m_StartTY >= 0) || (m_EndTX >= 0 && m_EndTY >= 0))
+			{
+				m_StartTX = clamp(m_StartTX, 0, TileLayer.m_Width-1);
+				m_StartTY = clamp(m_StartTY, 0, TileLayer.m_Height-1);
+				m_EndTX = clamp(m_EndTX, 0, TileLayer.m_Width-1);
+				m_EndTY = clamp(m_EndTY, 0, TileLayer.m_Height-1);
+			}
+		}
+	};
+
+	CTileSelection m_TileSelection;
+
 	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
@@ -846,6 +889,7 @@ class CEditor: public IEditor
 	void BrushFlipY();
 	void BrushRotate90Clockwise();
 	void BrushRotate90CounterClockwise();
+	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
 
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
@@ -865,6 +909,8 @@ class CEditor: public IEditor
 	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
 	int EditGroupOrderMove(int GroupID, int RelativePos);
 	int EditLayerOrderMove(int LayerID, int RelativePos);
+	void EditTileSelectionFlipX(int LayerID);
+	void EditTileSelectionFlipY(int LayerID);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
