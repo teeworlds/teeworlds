@@ -2025,44 +2025,48 @@ void CEditor::RenderMapEditorUI()
 			ChangeTool(t);
 	}
 
-	if(IsToolSelect() && m_TileSelection.IsSelected())
+	// selection context buttons
+	if(m_UiSelectedLayerID != -1 && IsToolSelect() && m_TileSelection.IsSelected())
 	{
-		const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
-		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
-		const float TileSize = 32;
+		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 
-		CUIRect SelectRect = {
-			m_TileSelection.m_StartTX * TileSize,
-			m_TileSelection.m_StartTY * TileSize,
-			(m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX)*TileSize,
-			(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
-		};
-
-		CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
-			m_ZoomWorldViewHeight, SelectRect);
-
-		const float Margin = 4.0f;
-		const float ButtonHeight = 25;
-		UiRect.y -= ButtonHeight + Margin;
-
-		CUIRect LineRect, ButtonRect;
-		UiRect.HSplitTop(ButtonHeight, &LineRect, 0);
-		LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
-		LineRect.VSplitLeft(Margin, 0, &LineRect);
-
-		static CUIButton s_ButFlipX, s_ButFlipY;
-
-		if(UiButton(ButtonRect, "X/X", &s_ButFlipX))
+		if(SelectedTileLayer.IsTileLayer())
 		{
-			EditTileSelectionFlipX(SelectedLayerID);
-		}
+			const float TileSize = 32;
 
-		LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
-		LineRect.VSplitLeft(Margin, 0, &LineRect);
+			CUIRect SelectRect = {
+				m_TileSelection.m_StartTX * TileSize,
+				m_TileSelection.m_StartTY * TileSize,
+				(m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX)*TileSize,
+				(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
+			};
 
-		if(UiButton(ButtonRect, "Y/Y", &s_ButFlipY))
-		{
-			EditTileSelectionFlipY(SelectedLayerID);
+			CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+				m_ZoomWorldViewHeight, SelectRect);
+
+			const float Margin = 4.0f;
+			const float ButtonHeight = 25;
+			UiRect.y -= ButtonHeight + Margin;
+
+			CUIRect LineRect, ButtonRect;
+			UiRect.HSplitTop(ButtonHeight, &LineRect, 0);
+			LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
+			LineRect.VSplitLeft(Margin, 0, &LineRect);
+
+			static CUIButton s_ButFlipX, s_ButFlipY;
+
+			if(UiButton(ButtonRect, "X/X", &s_ButFlipX))
+			{
+				EditTileSelectionFlipX(m_UiSelectedLayerID);
+			}
+
+			LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
+			LineRect.VSplitLeft(Margin, 0, &LineRect);
+
+			if(UiButton(ButtonRect, "Y/Y", &s_ButFlipY))
+			{
+				EditTileSelectionFlipY(m_UiSelectedLayerID);
+			}
 		}
 	}
 
