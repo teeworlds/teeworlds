@@ -1420,7 +1420,7 @@ inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, 
 	return vec2(MapOffX, MapOffY);
 }
 
-inline vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
+vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
 {
 	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
 	const float OffX = G.m_OffsetX;
@@ -1435,6 +1435,30 @@ inline vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, f
 	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
 		UiScreenRect.h*0.5 + UiPos.y)/ UiScreenRect.h * WorldHeight + OffY;
 	return vec2(MapOffX, MapOffY);
+}
+
+CUIRect CEditor::CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, float WorldHeight,
+	CUIRect WorldRect)
+{
+	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
+	const float OffX = G.m_OffsetX;
+	const float OffY = G.m_OffsetY;
+	const float ParaX = G.m_ParallaxX/100.f;
+	const float ParaY = G.m_ParallaxY/100.f;
+	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
+	// is based on the center of the screen
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const float MapOffX = (((m_MapUiPosOffset.x + UiScreenRect.w*0.5) * ParaX) -
+		UiScreenRect.w*0.5)/ UiScreenRect.w * WorldWidth + OffX;
+	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
+		UiScreenRect.h*0.5)/ UiScreenRect.h * WorldHeight + OffY;
+
+	const float UiX = ((-MapOffX + WorldRect.x) / WorldWidth) * UiScreenRect.w;
+	const float UiY = ((-MapOffY + WorldRect.y) / WorldHeight) * UiScreenRect.h;
+	const float UiW = (WorldRect.w / WorldWidth) * UiScreenRect.w;
+	const float UiH = (WorldRect.h / WorldHeight) * UiScreenRect.h;
+	const CUIRect r = {UiX, UiY, UiW, UiH};
+	return r;
 }
 
 void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
@@ -1815,7 +1839,7 @@ void CEditor::RenderMapViewHud()
 				// fit selection to possibly newly selected layer
 				m_TileSelection.FitLayer(SelectedTileLayer);
 
-				const CUIRect HoverRect = {
+				CUIRect SelectRect = {
 					m_TileSelection.m_StartTX * TileSize,
 					m_TileSelection.m_StartTY * TileSize,
 					(m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX)*TileSize,
@@ -1823,7 +1847,7 @@ void CEditor::RenderMapViewHud()
 				};
 				vec4 HoverColor = StyleColorTileSelection;
 				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.05;
-				DrawRectBorderMiddle(HoverRect, HoverColor, 2, vec4(1,1,1,1));
+				DrawRectBorderMiddle(SelectRect, HoverColor, 2, vec4(1,1,1,1));
 			}
 		}
 
@@ -1999,6 +2023,47 @@ void CEditor::RenderMapEditorUI()
 
 		if(UiButtonSelect(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t))
 			ChangeTool(t);
+	}
+
+	if(IsToolSelect() && m_TileSelection.IsSelected())
+	{
+		const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
+		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
+		const float TileSize = 32;
+
+		CUIRect SelectRect = {
+			m_TileSelection.m_StartTX * TileSize,
+			m_TileSelection.m_StartTY * TileSize,
+			(m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX)*TileSize,
+			(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
+		};
+
+		CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+			m_ZoomWorldViewHeight, SelectRect);
+
+		const float Margin = 4.0f;
+		const float ButtonHeight = 25;
+		UiRect.y -= ButtonHeight + Margin;
+
+		CUIRect LineRect, ButtonRect;
+		UiRect.HSplitTop(ButtonHeight, &LineRect, 0);
+		LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
+		LineRect.VSplitLeft(Margin, 0, &LineRect);
+
+		static CUIButton s_ButFlipX, s_ButFlipY;
+
+		if(UiButton(ButtonRect, "X/X", &s_ButFlipX))
+		{
+			EditTileSelectionFlipX(SelectedLayerID);
+		}
+
+		LineRect.VSplitLeft(30, &ButtonRect, &LineRect);
+		LineRect.VSplitLeft(Margin, 0, &LineRect);
+
+		if(UiButton(ButtonRect, "Y/Y", &s_ButFlipY))
+		{
+			EditTileSelectionFlipY(SelectedLayerID);
+		}
 	}
 
 	// popups
@@ -4471,6 +4536,16 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 
 	// never reached
 	return ParentGroupID;
+}
+
+void CEditor::EditTileSelectionFlipX(int LayerID)
+{
+
+}
+
+void CEditor::EditTileSelectionFlipY(int LayerID)
+{
+
 }
 
 void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
