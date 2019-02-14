@@ -4085,7 +4085,7 @@ void CEditor::BrushRotate90CounterClockwise()
 	m_Brush.m_Height = BrushWidth;
 }
 
-void CEditor::BrushPaintLayer(int PaintX, int PaintY, int LayerID)
+void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
@@ -4101,7 +4101,7 @@ void CEditor::BrushPaintLayer(int PaintX, int PaintY, int LayerID)
 		for(int tx = 0; tx < BrushW; tx++)
 		{
 			int BrushTid = ty * BrushW + tx;
-			int LayerTid = clamp(ty + PaintY, 0, LayerH-1) * LayerW + clamp(tx + PaintX, 0, LayerW-1);
+			int LayerTid = clamp(ty + PaintTY, 0, LayerH-1) * LayerW + clamp(tx + PaintTX, 0, LayerW-1);
 			Layer.m_aTiles[LayerTid] = m_Brush.m_aTiles[BrushTid];
 		}
 	}
@@ -4598,12 +4598,32 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 
 void CEditor::EditTileSelectionFlipX(int LayerID)
 {
+	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
+		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
+	BrushFlipX();
+	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
 
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tile selection"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Flipped X");
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
 void CEditor::EditTileSelectionFlipY(int LayerID)
 {
+	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
+		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
+	BrushFlipY();
+	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
 
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tile selection"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Flipped Y");
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
 void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
