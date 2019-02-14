@@ -74,6 +74,18 @@ inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 			Pos.y >= Rect.y && Pos.y < (Rect.y+Rect.h));
 }
 
+inline bool DoRectIntersect(CUIRect Rect1, CUIRect Rect2)
+{
+	if(Rect1.x < Rect2.x + Rect2.w &&
+	   Rect1.x + Rect1.w > Rect2.x &&
+	   Rect1.y < Rect2.y + Rect2.h &&
+	   Rect1.h + Rect2.y > Rect2.y)
+	{
+		return true;
+	}
+	return false;
+}
+
 // hash
 inline u32 fnv1a32(const void* data, u32 dataSize)
 {
@@ -4800,4 +4812,32 @@ void CEditor::ConDeleteImage(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor *pSelf = (CEditor *)pUserData;
 	pSelf->EditDeleteImage(pResult->GetInteger(0));
+}
+
+void CEditor::CTileSelection::FitLayer(const CEditorMap::CLayer& TileLayer)
+{
+	dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
+	// if either start or end point could be inside layer
+
+	CUIRect SelectRect = {
+		(float)m_StartTX,
+		(float)m_StartTY,
+		(float)m_EndTX + 1 - m_StartTX,
+		(float)m_EndTY + 1 - m_StartTY
+	};
+
+	CUIRect LayerRect = {
+		0, 0,
+		(float)TileLayer.m_Width, (float)TileLayer.m_Height
+	};
+
+	if(DoRectIntersect(SelectRect, LayerRect))
+	{
+		m_StartTX = clamp(m_StartTX, 0, TileLayer.m_Width-1);
+		m_StartTY = clamp(m_StartTY, 0, TileLayer.m_Height-1);
+		m_EndTX = clamp(m_EndTX, 0, TileLayer.m_Width-1);
+		m_EndTY = clamp(m_EndTY, 0, TileLayer.m_Height-1);
+	}
+	else
+		Deselect();
 }

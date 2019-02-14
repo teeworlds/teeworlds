@@ -747,18 +747,7 @@ class CEditor: public IEditor
 			return IsValid() && m_EndTX - m_StartTX >= 0 && m_EndTY - m_StartTY >= 0;
 		}
 
-		void FitLayer(const CEditorMap::CLayer& TileLayer)
-		{
-			dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
-			// if either start or end point could be inside layer
-			if((m_StartTX >= 0 && m_StartTY >= 0) || (m_EndTX >= 0 && m_EndTY >= 0))
-			{
-				m_StartTX = clamp(m_StartTX, 0, TileLayer.m_Width-1);
-				m_StartTY = clamp(m_StartTY, 0, TileLayer.m_Height-1);
-				m_EndTX = clamp(m_EndTX, 0, TileLayer.m_Width-1);
-				m_EndTY = clamp(m_EndTY, 0, TileLayer.m_Height-1);
-			}
-		}
+		void FitLayer(const CEditorMap::CLayer& TileLayer);
 	};
 
 	CTileSelection m_TileSelection;
