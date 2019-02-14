@@ -691,6 +691,7 @@ class CEditor: public IEditor
 
 	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
 	bool m_UiDetailPanelIsOpen = false;
+	bool m_WasMouseOnUiElement = false;
 
 	struct CBrush
 	{

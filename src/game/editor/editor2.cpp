@@ -1205,6 +1205,10 @@ void CEditor::Update()
 	if(Input()->KeyIsPressed(KEY_MOUSE_3)) MouseButtons |= MOUSE_MIDDLE;
 	UI()->Update(m_UiMousePos.x, m_UiMousePos.y, 0, 0, MouseButtons);
 
+	// was the mouse on a ui element
+	m_WasMouseOnUiElement = UI()->HotItem() != 0;
+	UI()->SetHotItem(0);
+
 	if(Input()->KeyPress(KEY_F1))
 	{
 		m_InputConsole.ToggleOpen();
@@ -1761,19 +1765,25 @@ void CEditor::RenderMapView()
 void CEditor::RenderMapViewHud()
 {
 	// NOTE: we're in selected group world space here
-
 	if(m_UiCurrentPopupID != POPUP_NONE)
 		return;
 
 	const float TileSize = 32;
-	vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
+
+	const vec2 MouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
 		m_ZoomWorldViewHeight, m_UiMousePos);
 
 	const vec2 GridMousePos(floor(MouseWorldPos.x/TileSize)*TileSize,
 		floor(MouseWorldPos.y/TileSize)*TileSize);
 
 	static CUIMouseDrag s_MapViewDrag;
-	bool FinishedDragging = UiDoMouseDragging(&s_MapViewDrag, m_UiMainViewRect, &s_MapViewDrag);
+	bool FinishedDragging = UiDoMouseDragging(0, m_UiMainViewRect, &s_MapViewDrag);
+
+	const bool CanClick = !m_WasMouseOnUiElement;
+
+	// TODO: kinda weird?
+	if(!CanClick)
+		s_MapViewDrag = {};
 
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
 	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
@@ -1897,6 +1907,12 @@ void CEditor::RenderMapEditorUI()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
+	// TODO: remove
+	/*
+	if(m_WasMouseOnUiElement)
+		DrawRect(UiScreenRect, vec4(0, 0.7, 0, 0.5));
+	*/
+
 	CUIRect RightPanel, DetailPanel, ToolColumnRect;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
 
@@ -2005,7 +2021,7 @@ void CEditor::RenderMapEditorUI()
 	{
 		const float ButtonSize = 20.0f;
 		const float Margin = 5.0f;
-		m_UiMainViewRect.VSplitRight(ButtonSize + Margin*2, &m_UiMainViewRect, &DetailPanel);
+		m_UiMainViewRect.VSplitRight(ButtonSize + Margin*2, 0, &DetailPanel);
 		DetailPanel.Margin(Margin, &ButtonRect);
 		ButtonRect.h = ButtonSize;
 
