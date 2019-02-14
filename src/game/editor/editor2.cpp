@@ -1229,6 +1229,9 @@ void CEditor::Update()
 			// TODO: remove
 			if(IsCtrlPressed && Input()->KeyPress(KEY_A))
 				ChangePage((m_Page+1) % PAGE_COUNT_);
+
+			if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE))
+				m_TileSelection.Deselect();
 		}
 
 		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
@@ -1819,7 +1822,7 @@ void CEditor::RenderMapViewHud()
 					(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
 				};
 				vec4 HoverColor = StyleColorTileSelection;
-				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.05;
 				DrawRectBorderMiddle(HoverRect, HoverColor, 2, vec4(1,1,1,1));
 			}
 		}
