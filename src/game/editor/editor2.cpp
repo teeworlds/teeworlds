@@ -1899,8 +1899,24 @@ void CEditor::RenderMapViewHud()
 				// draw brush
 				RenderBrush(GridMousePos);
 
-				if(CanClick && UI()->MouseButtonClicked(0))
-					BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+				if(FinishedDragging)
+				{
+					const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+						m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_StartDragPos);
+					const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+					const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+
+					const int RectStartX = min(MouseTx, StartTX);
+					const int RectStartY = min(MouseTy, StartTY);
+					const int RectEndX = max(MouseTx, StartTX);
+					const int RectEndY = max(MouseTy, StartTY);
+
+					// click without dragging, paint whole brush in place
+					if(StartTX == MouseTx && StartTY == MouseTy)
+						BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+					else // drag, fill the rectangle by repeating the brush
+						BrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
+				}
 			}
 		}
 	}
@@ -4095,14 +4111,52 @@ void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 	const int BrushH = m_Brush.m_Height;
 	const int LayerW = Layer.m_Width;
 	const int LayerH = Layer.m_Height;
+	CDynArray<CTile>& aLayerTiles = Layer.m_aTiles;
+	CDynArray<CTile>& aBrushTiles = m_Brush.m_aTiles;
 
 	for(int ty = 0; ty < BrushH; ty++)
 	{
 		for(int tx = 0; tx < BrushW; tx++)
 		{
 			int BrushTid = ty * BrushW + tx;
-			int LayerTid = clamp(ty + PaintTY, 0, LayerH-1) * LayerW + clamp(tx + PaintTX, 0, LayerW-1);
-			Layer.m_aTiles[LayerTid] = m_Brush.m_aTiles[BrushTid];
+			int LayerTx = tx + PaintTX;
+			int LayerTy = ty + PaintTY;
+
+			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1)
+				continue;
+
+			int LayerTid = LayerTy * LayerW + LayerTx;
+			aLayerTiles[LayerTid] = aBrushTiles[BrushTid];
+		}
+	}
+}
+
+void CEditor::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	dbg_assert(Layer.IsTileLayer(), "Layer is not a tile layer");
+
+	const int BrushW = m_Brush.m_Width;
+	const int BrushH = m_Brush.m_Height;
+	const int LayerW = Layer.m_Width;
+	const int LayerH = Layer.m_Height;
+	CDynArray<CTile>& aLayerTiles = Layer.m_aTiles;
+	CDynArray<CTile>& aBrushTiles = m_Brush.m_aTiles;
+
+	for(int ty = 0; ty < PaintH; ty++)
+	{
+		for(int tx = 0; tx < PaintW; tx++)
+		{
+			int BrushTid = (ty % BrushH) * BrushW + (tx % BrushW);
+			int LayerTx = tx + PaintTX;
+			int LayerTy = ty + PaintTY;
+
+			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1)
+				continue;
+
+			int LayerTid = LayerTy * LayerW + LayerTx;
+			aLayerTiles[LayerTid] = aBrushTiles[BrushTid];
 		}
 	}
 }

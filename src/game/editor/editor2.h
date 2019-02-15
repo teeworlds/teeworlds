@@ -882,6 +882,7 @@ class CEditor: public IEditor
 	void BrushRotate90Clockwise();
 	void BrushRotate90CounterClockwise();
 	void BrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
+	void BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
 	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
 
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
