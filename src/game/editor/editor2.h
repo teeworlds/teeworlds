@@ -905,6 +905,8 @@ class CEditor: public IEditor
 	int EditLayerOrderMove(int LayerID, int RelativePos);
 	void EditTileSelectionFlipX(int LayerID);
 	void EditTileSelectionFlipY(int LayerID);
+	void EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
+	void EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);

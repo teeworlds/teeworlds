@@ -1913,9 +1913,9 @@ void CEditor::RenderMapViewHud()
 
 					// click without dragging, paint whole brush in place
 					if(StartTX == MouseTx && StartTY == MouseTy)
-						BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+						EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
 					else // drag, fill the rectangle by repeating the brush
-						BrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
+						EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
 				}
 			}
 		}
@@ -4103,9 +4103,7 @@ void CEditor::BrushRotate90CounterClockwise()
 
 void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 {
-	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
-	dbg_assert(Layer.IsTileLayer(), "Layer is not a tile layer");
 
 	const int BrushW = m_Brush.m_Width;
 	const int BrushH = m_Brush.m_Height;
@@ -4133,9 +4131,7 @@ void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 
 void CEditor::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
 {
-	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
-	dbg_assert(Layer.IsTileLayer(), "Layer is not a tile layer");
 
 	const int BrushW = m_Brush.m_Width;
 	const int BrushH = m_Brush.m_Height;
@@ -4652,6 +4648,8 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 
 void CEditor::EditTileSelectionFlipX(int LayerID)
 {
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
 	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
 		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
 	BrushFlipX();
@@ -4667,6 +4665,8 @@ void CEditor::EditTileSelectionFlipX(int LayerID)
 
 void CEditor::EditTileSelectionFlipY(int LayerID)
 {
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
 	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
 		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
 	BrushFlipY();
@@ -4677,6 +4677,38 @@ void CEditor::EditTileSelectionFlipY(int LayerID)
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tile selection"),
 		LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Flipped Y");
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
+
+	BrushPaintLayer(PaintTX, PaintTY, LayerID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)",
+		PaintTX, PaintTY);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
+
+	BrushPaintLayerFillRectRepeat(PaintTX, PaintTY, PaintW, PaintH, LayerID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)(%d, %d)",
+		PaintTX, PaintTY, PaintW, PaintH);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
