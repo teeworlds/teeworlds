@@ -886,6 +886,7 @@ class CEditor: public IEditor
 	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
 
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
+	inline bool IsToolDimension() const { return m_Tool == TOOL_DIMENSION; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
 
 	int Save(const char* pFilename);

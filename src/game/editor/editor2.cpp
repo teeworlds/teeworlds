@@ -1569,6 +1569,43 @@ void CEditor::RenderMapView()
 
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 
+		const vec2 ClipOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
+			0, 0, 1, 1);
+		const CUIRect ClipScreenRect = { ClipOff.x, ClipOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
+		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w,
+			ClipScreenRect.y+ClipScreenRect.h);
+
+		const bool Clipped = Group.m_ClipWidth > 0 && Group.m_ClipHeight > 0;
+		if(Clipped)
+		{
+			float x0 = (Group.m_ClipX - ClipScreenRect.x) / ClipScreenRect.w;
+			float y0 = (Group.m_ClipY - ClipScreenRect.y) / ClipScreenRect.h;
+			float x1 = ((Group.m_ClipX+Group.m_ClipWidth) - ClipScreenRect.x) / ClipScreenRect.w;
+			float y1 = ((Group.m_ClipY+Group.m_ClipHeight) - ClipScreenRect.y) / ClipScreenRect.h;
+
+			if(x1 < 0.0f || x0 > 1.0f || y1 < 0.0f || y0 > 1.0f)
+				continue;
+
+			const float GfxScreenW = m_GfxScreenWidth;
+			const float GfxScreenH = m_GfxScreenHeight;
+			Graphics()->ClipEnable((int)(x0*GfxScreenW), (int)(y0*GfxScreenH),
+				(int)((x1-x0)*GfxScreenW), (int)((y1-y0)*GfxScreenH));
+		}
+
+		// TODO: remove
+		/*
+		if(Clipped)
+		{
+			CUIRect ClipRect = {
+				(float)Group.m_ClipX,
+				(float)Group.m_ClipY,
+				(float)Group.m_ClipWidth,
+				(float)Group.m_ClipHeight
+			};
+			DrawRect(ClipRect, vec4(1, 0, 0, 0.5));
+		}
+		*/
+
 		const float ParallaxX = Group.m_ParallaxX / 100.f;
 		const float ParallaxY = Group.m_ParallaxY / 100.f;
 		const float OffsetX = Group.m_OffsetX;
@@ -1579,6 +1616,7 @@ void CEditor::RenderMapView()
 
 		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 							  ScreenRect.y+ScreenRect.h);
+
 
 		const int LayerCount = Group.m_LayerCount;
 
@@ -1640,6 +1678,9 @@ void CEditor::RenderMapView()
 						LAYERRENDERFLAG_TRANSPARENT, StaticEnvelopeEval, this);
 			}
 		}
+
+		if(Clipped)
+			Graphics()->ClipDisable();
 	}
 
 	// game layer
@@ -1787,6 +1828,7 @@ void CEditor::RenderMapViewHud()
 		s_MapViewDrag = {};
 
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
+	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
 
 	if(SelectedTileLayer.IsTileLayer())
@@ -1919,6 +1961,25 @@ void CEditor::RenderMapViewHud()
 				}
 			}
 		}
+	}
+
+	if(IsToolDimension())
+	{
+		// draw clip rect
+		const vec2 ClipOff = CalcGroupScreenOffset(m_ZoomWorldViewWidth, m_ZoomWorldViewHeight,
+			0, 0, 1, 1);
+		const CUIRect ClipScreenRect = { ClipOff.x, ClipOff.y, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight };
+		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w,
+			ClipScreenRect.y+ClipScreenRect.h);
+
+		CUIRect ClipRect = {
+			(float)SelectedGroup.m_ClipX,
+			(float)SelectedGroup.m_ClipY,
+			(float)SelectedGroup.m_ClipWidth,
+			(float)SelectedGroup.m_ClipHeight
+		};
+
+		DrawRectBorder(ClipRect, vec4(0,0,0,0), 1, vec4(1,0,0,1));
 	}
 }
 
