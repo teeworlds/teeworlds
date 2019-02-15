@@ -1461,16 +1461,12 @@ CUIRect CEditor::CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, flo
 	const float OffY = G.m_OffsetY;
 	const float ParaX = G.m_ParallaxX/100.f;
 	const float ParaY = G.m_ParallaxY/100.f;
-	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
-	// is based on the center of the screen
-	const CUIRect UiScreenRect = m_UiScreenRect;
-	const float MapOffX = (((m_MapUiPosOffset.x + UiScreenRect.w*0.5) * ParaX) -
-		UiScreenRect.w*0.5)/ UiScreenRect.w * WorldWidth + OffX;
-	const float MapOffY = (((m_MapUiPosOffset.y + UiScreenRect.h*0.5) * ParaY) -
-		UiScreenRect.h*0.5)/ UiScreenRect.h * WorldHeight + OffY;
 
-	const float UiX = ((-MapOffX + WorldRect.x) / WorldWidth) * UiScreenRect.w;
-	const float UiY = ((-MapOffY + WorldRect.y) / WorldHeight) * UiScreenRect.h;
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	const vec2 MapOff = CalcGroupScreenOffset(WorldWidth, WorldHeight, OffX, OffY, ParaX, ParaY);
+
+	const float UiX = ((-MapOff.x + WorldRect.x) / WorldWidth) * UiScreenRect.w;
+	const float UiY = ((-MapOff.y + WorldRect.y) / WorldHeight) * UiScreenRect.h;
 	const float UiW = (WorldRect.w / WorldWidth) * UiScreenRect.w;
 	const float UiH = (WorldRect.h / WorldHeight) * UiScreenRect.h;
 	const CUIRect r = {UiX, UiY, UiW, UiH};
@@ -1569,6 +1565,7 @@ void CEditor::RenderMapView()
 
 		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
 
+		// group clip
 		const vec2 ClipOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
 			0, 0, 1, 1);
 		const CUIRect ClipScreenRect = { ClipOff.x, ClipOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
