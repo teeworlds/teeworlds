@@ -1316,6 +1316,8 @@ if(CLIENT)
     components/motd.h
     components/nameplates.cpp
     components/nameplates.h
+    components/notifications.cpp
+    components/notifications.h
     components/particles.cpp
     components/particles.h
     components/players.cpp
