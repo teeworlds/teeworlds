@@ -754,6 +754,16 @@ int CGraphics_Threaded::InitWindow()
 	if(IssueInit() == 0)
 		return 0;
 
+	// try resetting the screen index
+	if(g_Config.m_GfxScreen != 0)
+	{
+		dbg_msg("gfx", "resetting screen index and trying again");
+		g_Config.m_GfxScreen = 0;
+
+		if(IssueInit() == 0)
+			return 0;
+	}
+
 	// try disabling fsaa
 	while(g_Config.m_GfxFsaaSamples)
 	{
