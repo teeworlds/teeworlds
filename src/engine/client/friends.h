@@ -5,20 +5,21 @@
 
 #include <engine/friends.h>
 
-class CFriends : public IFriends
+class CFriends : public virtual IFriends
 {
+protected:
 	CFriendInfo m_aFriends[MAX_FRIENDS];
 	int m_NumFriends;
-
-	static void ConAddFriend(IConsole::IResult *pResult, void *pUserData);
-	static void ConRemoveFriend(IConsole::IResult *pResult, void *pUserData);
-
-	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
 
 public:
 	CFriends();
 
-	void Init();
+	void ConfigSave(IConfig *pConfig, const char* pCmdStr);
+
+	static void ConAddFriend(IConsole::IResult *pResult, void *pUserData);
+	static void ConRemoveFriend(IConsole::IResult *pResult, void *pUserData);
+
+	virtual void Init() = 0;
 
 	int NumFriends() const { return m_NumFriends; }
 	const CFriendInfo *GetFriend(int Index) const;
@@ -28,6 +29,22 @@ public:
 	void AddFriend(const char *pName, const char *pClan);
 	void RemoveFriend(const char *pName, const char *pClan);
 	void RemoveFriend(int Index);
+};
+
+class CGoodFriends: public CFriends, public IGoodFriends
+{
+public:
+	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+
+	void Init();
+};
+
+class CBadFriends: public CFriends, public IBadFriends
+{
+public:
+	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+
+	void Init();
 };
 
 #endif

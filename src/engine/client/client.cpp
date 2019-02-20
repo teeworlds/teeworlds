@@ -1708,7 +1708,8 @@ void CClient::RegisterInterfaces()
 	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
-	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
+	Kernel()->RegisterInterface(static_cast<IGoodFriends*>(&m_GoodFriends));
+	Kernel()->RegisterInterface(static_cast<IBadFriends*>(&m_BadFriends));
 }
 
 void CClient::InitInterfaces()
@@ -1726,7 +1727,8 @@ void CClient::InitInterfaces()
 
 	//
 	m_ServerBrowser.Init(&m_ContactClient, m_pGameClient->NetVersion());
-	m_Friends.Init();
+	m_GoodFriends.Init();
+	m_BadFriends.Init();
 }
 
 bool CClient::LimitFps()

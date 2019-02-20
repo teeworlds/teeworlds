@@ -323,7 +323,14 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				DoButton_Toggle(&s_aPlayerIDs[i][0], 1, &Label, false);
 			else
 				if(DoButton_Toggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Label, true))
+				{
+					if(m_pClient->m_aClients[i].m_ChatIgnore)
+						m_pClient->Enemies()->RemoveFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+					else
+						m_pClient->Enemies()->AddFriend(m_pClient->m_aClients[i].m_aName, m_pClient->m_aClients[i].m_aClan);
+
 					m_pClient->m_aClients[i].m_ChatIgnore ^= 1;
+				}
 
 			// friend button
 			Row.VSplitRight(2*Spacing+ButtonHeight,&Row, 0);

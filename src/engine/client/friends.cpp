@@ -17,17 +17,17 @@ CFriends::CFriends()
 
 void CFriends::ConAddFriend(IConsole::IResult *pResult, void *pUserData)
 {
-	CFriends *pSelf = (CFriends *)pUserData;
+	CFriends *pSelf = static_cast<CFriends *>(pUserData);
 	pSelf->AddFriend(pResult->GetString(0), pResult->GetString(1));
 }
 
 void CFriends::ConRemoveFriend(IConsole::IResult *pResult, void *pUserData)
 {
-	CFriends *pSelf = (CFriends *)pUserData;
+	CFriends *pSelf = static_cast<CFriends *>(pUserData);
 	pSelf->RemoveFriend(pResult->GetString(0), pResult->GetString(1));
 }
 
-void CFriends::Init()
+void CGoodFriends::Init()
 {
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
 	if(pConfig)
@@ -36,8 +36,22 @@ void CFriends::Init()
 	IConsole *pConsole = Kernel()->RequestInterface<IConsole>();
 	if(pConsole)
 	{
-		pConsole->Register("add_friend", "ss", CFGFLAG_CLIENT, ConAddFriend, this, "Add a friend");
-		pConsole->Register("remove_friend", "ss", CFGFLAG_CLIENT, ConRemoveFriend, this, "Remove a friend");
+		pConsole->Register("add_friend", "ss", CFGFLAG_CLIENT, CFriends::ConAddFriend, this, "Add a friend");
+		pConsole->Register("remove_friend", "ss", CFGFLAG_CLIENT, CFriends::ConRemoveFriend, this, "Remove a friend");
+	}
+}
+
+void CBadFriends::Init()
+{
+	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
+	if(pConfig)
+		pConfig->RegisterCallback(ConfigSaveCallback, this);
+
+	IConsole *pConsole = Kernel()->RequestInterface<IConsole>();
+	if(pConsole)
+	{
+		pConsole->Register("add_ignore", "ss", CFGFLAG_CLIENT, ConAddFriend, this, "Ignore a player");
+		pConsole->Register("remove_ignore", "ss", CFGFLAG_CLIENT, ConRemoveFriend, this, "Stop ignoring a player");
 	}
 }
 
@@ -125,16 +139,15 @@ void CFriends::RemoveFriend(int Index)
 	return;
 }
 
-void CFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+void CFriends::ConfigSave(IConfig *pConfig, const char* pCmdStr)
 {
-	CFriends *pSelf = (CFriends *)pUserData;
 	char aBuf[128];
 	const char *pEnd = aBuf+sizeof(aBuf)-4;
-	for(int i = 0; i < pSelf->m_NumFriends; ++i)
+	for(int i = 0; i < this->m_NumFriends; ++i)
 	{
-		str_copy(aBuf, "add_friend ", sizeof(aBuf));
+		str_copy(aBuf, pCmdStr, sizeof(aBuf));
 
-		const char *pSrc = pSelf->m_aFriends[i].m_aName;
+		const char *pSrc = this->m_aFriends[i].m_aName;
 		char *pDst = aBuf+str_length(aBuf);
 		*pDst++ = '"';
 		while(*pSrc && pDst < pEnd)
@@ -146,7 +159,7 @@ void CFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		*pDst++ = '"';
 		*pDst++ = ' ';
 
-		pSrc = pSelf->m_aFriends[i].m_aClan;
+		pSrc = this->m_aFriends[i].m_aClan;
 		*pDst++ = '"';
 		while(*pSrc && pDst < pEnd)
 		{
@@ -158,5 +171,18 @@ void CFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		*pDst++ = 0;
 
 		pConfig->WriteLine(aBuf);
-	}
+	}	
+}
+
+void CGoodFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+{
+	CGoodFriends *pSelf = (CGoodFriends *)pUserData;
+	pSelf->ConfigSave(pConfig, "add_friend ");
+}
+
+
+void CBadFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+{
+	CGoodFriends *pSelf = (CGoodFriends *)pUserData;
+	pSelf->ConfigSave(pConfig, "add_ignore ");
 }

@@ -17,7 +17,6 @@ struct CFriendInfo
 
 class IFriends : public IInterface
 {
-	MACRO_INTERFACE("friends", 0)
 public:
 	enum
 	{
@@ -37,6 +36,16 @@ public:
 
 	virtual void AddFriend(const char *pName, const char *pClan) = 0;
 	virtual void RemoveFriend(const char *pName, const char *pClan) = 0;
+};
+
+class IGoodFriends: public virtual IFriends
+{
+	MACRO_INTERFACE("good friends", 0)
+};
+
+class IBadFriends: public virtual IFriends
+{
+	MACRO_INTERFACE("bad friends", 0)
 };
 
 #endif

@@ -43,7 +43,8 @@ class CGameClient : public IGameClient
 	class IDemoRecorder *m_pDemoRecorder;
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
-	class IFriends *m_pFriends;
+	class IGoodFriends *m_pGoodFriends;
+	class IBadFriends *m_pBadFriends;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -60,6 +61,7 @@ class CGameClient : public IGameClient
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainEnemyUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
@@ -82,7 +84,8 @@ public:
 	class CLayers *Layers() { return &m_Layers; };
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
-	class IFriends *Friends() { return m_pFriends; }
+	class IFriends *Friends() { return reinterpret_cast<IFriends *>(m_pGoodFriends); }
+	class IFriends *Enemies() { return reinterpret_cast<IFriends *>(m_pBadFriends); }
 
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
