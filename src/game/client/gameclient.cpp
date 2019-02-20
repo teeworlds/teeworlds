@@ -678,7 +678,16 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		// update friend state
 		m_aClients[pMsg->m_ClientID].m_Friend = Friends()->IsFriend(m_aClients[pMsg->m_ClientID].m_aName, m_aClients[pMsg->m_ClientID].m_aClan, true);
+		// update chat ignore state
 		m_aClients[pMsg->m_ClientID].m_ChatIgnore = Enemies()->IsFriend(m_aClients[pMsg->m_ClientID].m_aName, m_aClients[pMsg->m_ClientID].m_aClan, true);
+		if(m_aClients[pMsg->m_ClientID].m_ChatIgnore)
+		{
+			char aBuf[128];
+			char aLabel[64];
+			GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_aClients[pMsg->m_ClientID].m_aName);
+			str_format(aBuf, sizeof(aBuf), Localize("%s is muted by you"), aLabel);
+			m_pChat->AddLine(-1, 0, aBuf);
+		}
 
 		m_aClients[pMsg->m_ClientID].UpdateRenderInfo(this, pMsg->m_ClientID, true);
 
