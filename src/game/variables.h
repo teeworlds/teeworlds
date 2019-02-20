@@ -148,6 +148,7 @@ MACRO_CONFIG_INT(ClTextEntities, cl_text_entities, 1, 0, 1, CFGFLAG_CLIENT|CFGFL
 MACRO_CONFIG_INT(ClTextEntitiesSize, cl_text_entities_size, 100, 0, 100, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Size of textual entity data from 0 to 100%")
 
 MACRO_CONFIG_INT(ClShowAdmins, cl_show_admins, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display admins in the scoreboard")
+MACRO_CONFIG_INT(ClShowSilentMessages, cl_show_silent_messages, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Force show all server messages, including \"silent\" ones")
 
 // dummy
 MACRO_CONFIG_STR(DummyName, dummy_name, 16, "zilly dummy", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the Dummy")
