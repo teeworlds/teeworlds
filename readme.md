@@ -106,3 +106,10 @@ arrow. Wait for the compilation to finish.
 
 For subsequent builds you only have to click the button with the green arrow
 again.
+
+
+Building with bam, guides for all operating systems
+===================================================
+
+You can also compile Teeworlds with bam, a custom build system. Instructions
+for that can be found at https://www.teeworlds.com/?page=docs&wiki=hacking.
