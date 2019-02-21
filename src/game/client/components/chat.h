@@ -29,10 +29,17 @@ class CChat : public CComponent
 		bool m_Highlighted;
 	};
 
+	// client IDs for special messages
+	enum 
+	{
+		CLIENT_MSG = -2,
+		SERVER_MSG = -1,
+	};
+
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
 
-	// chat
+	// chat sounds
 	enum
 	{
 		CHAT_SERVER=0,

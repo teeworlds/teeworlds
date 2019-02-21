@@ -436,12 +436,12 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 
 void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 {
-	if(*pLine == 0 || (ClientID != -1 && (!g_Config.m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
+	if(*pLine == 0 || (ClientID >= 0 && (!g_Config.m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
 		g_Config.m_ClFilterchat == 2 ||
 		(m_pClient->m_LocalClientID != ClientID && g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[ClientID].m_Friend))))
 		return;
-	if(Mode == CHAT_WHISPER && (TargetID == -1 || !m_pClient->m_aClients[TargetID].m_Active || // unknown client
+	if(Mode == CHAT_WHISPER && (TargetID < 0 || !m_pClient->m_aClients[TargetID].m_Active || // unknown client
 		m_pClient->m_aClients[TargetID].m_ChatIgnore ||	g_Config.m_ClFilterchat == 2 ||
 		(m_pClient->m_LocalClientID != TargetID && g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[TargetID].m_Friend)))
 		return;
@@ -501,7 +501,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 		// check for highlighted name
 		Highlighted = false;
 		// do not highlight our own messages, whispers and system messages
-		if(Mode != CHAT_WHISPER && ClientID != -1 && ClientID != m_pClient->m_LocalClientID)
+		if(Mode != CHAT_WHISPER && ClientID >= 0 && ClientID != m_pClient->m_LocalClientID)
 		{
 			const char *pHL = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
 			if(pHL)
@@ -524,10 +524,15 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 		if(Mode == CHAT_WHISPER && ClientID == m_pClient->m_LocalClientID && TargetID >= 0)
 			NameCID = TargetID;
 
-		if(ClientID == -1) // server message
+		if(ClientID == SERVER_MSG)
 		{
 			m_aLines[m_CurrentLine].m_aName[0] = 0;
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "*** %s", pLine);
+		}
+		else if(ClientID == CLIENT_MSG)
+		{
+			m_aLines[m_CurrentLine].m_aName[0] = 0;
+			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "— %s", pLine);
 		}
 		else
 		{
@@ -564,7 +569,7 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 	// play sound
 	int64 Now = time_get();
-	if(ClientID == -1)
+	if(ClientID < 0)
 	{
 		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
 		{
@@ -811,7 +816,7 @@ void CChat::OnRender()
 			else if(Line.m_Mode == CHAT_WHISPER)
 				str_format(aBuf, sizeof(aBuf), "[%s] ", Localize("Whisper"));
 
-			if(Line.m_ClientID != -1)
+			if(Line.m_ClientID >= 0)
 			{
 				Cursor.m_X += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 				str_append(aBuf, Line.m_aName, sizeof(aBuf));
@@ -961,7 +966,7 @@ void CChat::OnRender()
 		}
 
 		// render name
-		if(Line.m_ClientID == -1)
+		if(Line.m_ClientID < 0)
 			TextColor = ColorSystem;
 		else if(Line.m_Mode == CHAT_WHISPER)
 			TextColor = ColorWhisper;
@@ -976,7 +981,7 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllPre;
 
-		if(Line.m_ClientID != -1)
+		if(Line.m_ClientID >= 0)
 		{
 			int NameCID = Line.m_ClientID;
 			if(Line.m_Mode == CHAT_WHISPER && Line.m_ClientID == m_pClient->m_LocalClientID && Line.m_TargetID >= 0)
@@ -991,7 +996,7 @@ void CChat::OnRender()
 		}
 
 		// render line
-		if(Line.m_ClientID == -1)
+		if(Line.m_ClientID < 0)
 			TextColor = ColorSystem;
 		else if(Line.m_Mode == CHAT_WHISPER)
 			TextColor = ColorWhisper;
@@ -1197,7 +1202,7 @@ void CChat::Com_Mute(CChat *pChatData, const char* pCommand)
 		
 		char aMsg[128];
 		str_format(aMsg, sizeof(aMsg), pChatData->m_pClient->m_aClients[TargetID].m_ChatIgnore ? Localize("'%s' was muted") : Localize("'%s' was unmuted"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
-		pChatData->AddLine(-1, CHAT_ALL, aMsg, -1);
+		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 }
 
@@ -1217,7 +1222,7 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 		
 		char aMsg[128];
 		str_format(aMsg, sizeof(aMsg), !isFriend ? Localize("'%s' was added as a friend") : Localize("'%s' was removed as a friend"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
-		pChatData->AddLine(-1, CHAT_ALL, aMsg, -1);
+		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 }
 
