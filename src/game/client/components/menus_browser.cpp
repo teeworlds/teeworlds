@@ -2022,7 +2022,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		}
 		else
 		{
-			float Width = RowWidth * ceil(pInfo->m_NumClients / RowCount);
+			float Width = RowWidth * ((pInfo->m_NumClients+RowCount-1) / RowCount);
 			static float s_ScrollValue = 0.0f;
 			if(Width > View.w)
 			{
