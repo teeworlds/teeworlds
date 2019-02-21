@@ -1178,7 +1178,10 @@ void CChat::Com_Reply(CChat *pChatData, const char* pCommand)
 	if(pChatData->m_LastWhisperFrom == -1)
 		pChatData->ClearInput(); // just reset the chat
 	else
+	{
+		pChatData->m_WhisperTarget = pChatData->m_LastWhisperFrom;
 		pChatData->EnableMode(CHAT_WHISPER, true);
+	}
 }
 
 void CChat::Com_Whisper(CChat *pChatData, const char* pCommand)
