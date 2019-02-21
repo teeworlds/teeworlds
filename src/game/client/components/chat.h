@@ -86,7 +86,7 @@ class CChat : public CComponent
 	{
 		CChatCommand *m_apCommands;
 		int m_Count;
-		CChatCommand *m_SelectedCommand;
+		CChatCommand *m_pSelectedCommand;
 
 	private:
 		int GetActiveIndex(int index) const;

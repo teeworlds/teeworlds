@@ -413,7 +413,6 @@ void CChat::EnableMode(int Mode, const char* pText)
 
 	if(pText) // optional text to initalize with
 	{
-		dbg_msg("chat", "EnableMode(pText = %s)", pText);
 		m_Input.Set(pText);
 		m_Input.SetCursorOffset(str_length(pText));
 		m_InputUpdate = true;
@@ -1188,7 +1187,7 @@ void CChat::Com_Team(CChat *pChatData, const char* pCommand)
 	{
 		// save the parameter in a buffer before EnableMode clears it
 		pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
-		str_copy(pBuf, pParameter, sizeof(pBuf));
+		str_copy(pBuf, pParameter, str_length(pParameter) + 1);
 	}
 	pChatData->EnableMode(CHAT_TEAM, pBuf);
 	mem_free(pBuf);
@@ -1262,13 +1261,13 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 
 
 // CChatCommands methods
-CChat::CChatCommands::CChatCommands(CChatCommand apCommands[], int Count) : m_apCommands(apCommands), m_Count(Count), m_SelectedCommand(0x0) { }
+CChat::CChatCommands::CChatCommands(CChatCommand apCommands[], int Count) : m_apCommands(apCommands), m_Count(Count), m_pSelectedCommand(0x0) { }
 CChat::CChatCommands::~CChatCommands() { }
 
 // selection
 void CChat::CChatCommands::Reset()
 {
-	m_SelectedCommand = 0x0;
+	m_pSelectedCommand = 0x0;
 }
 
 // Example: /whisper command will match "/whi", "/whisper" and "/whisper tee"
@@ -1288,9 +1287,9 @@ void CChat::CChatCommands::Filter(const char* pLine)
 	if(!GetSelectedCommand() || GetSelectedCommand()->m_aFiltered)
 	{
 		if(CountActiveCommands() > 0)
-			m_SelectedCommand = &m_apCommands[GetActiveIndex(0)]; // default to first command
+			m_pSelectedCommand = &m_apCommands[GetActiveIndex(0)]; // default to first command
 		else
-			m_SelectedCommand = 0x0;
+			m_pSelectedCommand = 0x0;
 	}
 }
 
@@ -1310,7 +1309,7 @@ const CChat::CChatCommand* CChat::CChatCommands::GetCommand(int index) const
 
 const CChat::CChatCommand* CChat::CChatCommands::GetSelectedCommand() const
 {
-	return m_SelectedCommand;
+	return m_pSelectedCommand;
 }
 
 void CChat::CChatCommands::SelectPreviousCommand()
@@ -1320,8 +1319,11 @@ void CChat::CChatCommands::SelectPreviousCommand()
 	{
 		if(m_apCommands[i].m_aFiltered)
 			continue;
-		if(&m_apCommands[i] == m_SelectedCommand)
-			m_SelectedCommand = LastCommand;
+		if(&m_apCommands[i] == m_pSelectedCommand)
+		{
+			m_pSelectedCommand = LastCommand;
+			return;
+		}
 		LastCommand = &m_apCommands[i];
 	}
 }
@@ -1335,10 +1337,10 @@ void CChat::CChatCommands::SelectNextCommand()
 			continue;
 		if(FoundSelected)
 		{
-			m_SelectedCommand = &m_apCommands[i];
+			m_pSelectedCommand = &m_apCommands[i];
 			return;
 		}
-		if(&m_apCommands[i] == m_SelectedCommand)
+		if(&m_apCommands[i] == m_pSelectedCommand)
 			FoundSelected = true;
 	}
 }
