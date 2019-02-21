@@ -403,15 +403,20 @@ bool CChat::OnInput(IInput::CEvent Event)
 }
 
 
-void CChat::EnableMode(int Mode, bool Force)
+void CChat::EnableMode(int Mode, const char* pText)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	if(m_Mode == CHAT_NONE || Force)
+	m_Mode = Mode;
+	ClearInput();
+
+	if(pText) // optional text to initalize with
 	{
-		m_Mode = Mode;
-		ClearInput();
+		dbg_msg("chat", "EnableMode(pText = %s)", pText);
+		m_Input.Set(pText);
+		m_Input.SetCursorOffset(str_length(pText));
+		m_InputUpdate = true;
 	}
 }
 
@@ -1110,13 +1115,11 @@ bool CChat::ExecuteCommand()
 	{
 		// execute command
 		if(pCommand->m_pfnFunc != 0)
-			pCommand->m_pfnFunc(this, m_Input.GetString());
+			pCommand->m_pfnFunc(this, pCommandStr);
 	}
 	else
 	{
 		// autocomplete command
-		m_Input.GetString();
-
 		char aBuf[128];
 		str_copy(aBuf, pCommand->m_pCommandText, sizeof(aBuf));
 		str_append(aBuf, " ", sizeof(aBuf));
@@ -1165,12 +1168,30 @@ int CChat::IdentifyNameParameter(const char* pCommand) const
 // callback functions for commands
 void CChat::Com_All(CChat *pChatData, const char* pCommand)
 {
-	pChatData->EnableMode(CHAT_ALL, true);
+	const char* pParameter = str_skip_to_whitespace_const(pCommand);
+	char *pBuf = 0x0;
+	if(pParameter++ && *pParameter) // skip the first space
+	{
+		// save the parameter in a buffer before EnableMode clears it
+		pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
+		str_copy(pBuf, pParameter, str_length(pParameter) + 1);
+	}
+	pChatData->EnableMode(CHAT_ALL, pBuf);
+	mem_free(pBuf);
 }
 
 void CChat::Com_Team(CChat *pChatData, const char* pCommand)
 {
-	pChatData->EnableMode(CHAT_TEAM, true);
+	const char* pParameter = str_skip_to_whitespace_const(pCommand);
+	char *pBuf = 0x0;
+	if(pParameter++ && *pParameter) // skip the first space
+	{
+		// save the parameter in a buffer before EnableMode clears it
+		pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
+		str_copy(pBuf, pParameter, sizeof(pBuf));
+	}
+	pChatData->EnableMode(CHAT_TEAM, pBuf);
+	mem_free(pBuf);
 }
 
 void CChat::Com_Reply(CChat *pChatData, const char* pCommand)
@@ -1180,7 +1201,17 @@ void CChat::Com_Reply(CChat *pChatData, const char* pCommand)
 	else
 	{
 		pChatData->m_WhisperTarget = pChatData->m_LastWhisperFrom;
-		pChatData->EnableMode(CHAT_WHISPER, true);
+
+		const char* pParameter = str_skip_to_whitespace_const(pCommand);
+		char *pBuf = 0x0;
+		if(pParameter++ && *pParameter) // skip the first space
+		{
+			// save the parameter in a buffer before EnableMode clears it
+			pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
+			str_copy(pBuf, pParameter, sizeof(pBuf));
+		}
+		pChatData->EnableMode(CHAT_WHISPER, pBuf);
+		mem_free(pBuf);
 	}
 }
 
@@ -1190,7 +1221,7 @@ void CChat::Com_Whisper(CChat *pChatData, const char* pCommand)
 	if(TargetID != -1)
 	{
 		pChatData->m_WhisperTarget = TargetID;
-		pChatData->EnableMode(CHAT_WHISPER, true);
+		pChatData->EnableMode(CHAT_WHISPER);
 	}
 }
 

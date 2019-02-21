@@ -132,7 +132,7 @@ public:
 
 	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
 
-	void EnableMode(int Team, bool Force = false);
+	void EnableMode(int Team, const char* pText = NULL);
 
 	void Say(int Team, const char *pLine);
 
