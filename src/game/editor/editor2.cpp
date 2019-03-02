@@ -933,7 +933,7 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 	for(int gi = 0; gi < Snap.m_GroupCount; gi++)
 	{
 		const CGroup& SnapGroup = Snap.m_aGroups[gi];
-		const CGroup Group = m_aGroups[gi];
+		const CGroup& Group = m_aGroups[gi];
 		dbg_assert(mem_comp(&SnapGroup, &Group, sizeof(CGroup)) == 0, "Groups don't match");
 	}
 
@@ -1248,6 +1248,8 @@ void CEditor::Update()
 
 			if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE))
 				m_TileSelection.Deselect();
+			if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
+				BrushClear();
 		}
 
 		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
