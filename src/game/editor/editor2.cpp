@@ -20,7 +20,7 @@
 // - Allow brush to go in eraser mode, automapper mode
 // - Binds
 // - Smooth zoom
-// - Envelope offset
+// - Fix selecting while moving the camera
 
 // - Replace a lot of the static count arrays with dynamic ones (with a stack base)
 // - Localize everything
@@ -270,6 +270,7 @@ bool CEditorMap::Load(const char* pFileName)
 				LayerTile.m_Width = Tilemap.m_Width;
 				LayerTile.m_Height = Tilemap.m_Height;
 				LayerTile.m_ColorEnvelopeID = Tilemap.m_ColorEnv;
+				LayerTile.m_ColorEnvOffset = Tilemap.m_ColorEnvOffset;
 				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
 										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
 				LayerTile.m_aTiles = NewTileArray();
@@ -1269,7 +1270,7 @@ void CEditor::Render()
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
 	if(m_Page == PAGE_MAP_EDITOR)
-		RenderMapView();
+		RenderMap();
 	else if(m_Page == PAGE_ASSET_MANAGER)
 		RenderAssetManager();
 
@@ -1501,7 +1502,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 									  Time+TimeOffset, pChannels);
 }
 
-void CEditor::RenderMapView()
+void CEditor::RenderMap()
 {
 	// get world view points based on neutral paramters
 	float aWorldViewRectPoints[4];
@@ -1655,12 +1656,14 @@ void CEditor::RenderMapView()
 				Graphics()->BlendNone();
 				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
 											 BaseTilemapFlags|LAYERRENDERFLAG_OPAQUE,
-											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID, 0);
+											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID,
+											 Layer.m_ColorEnvOffset);
 
 				Graphics()->BlendNormal();
 				RenderTools()->RenderTilemap(pTiles, LyWidth, LyHeight, TileSize, LyColor,
 											 BaseTilemapFlags|LAYERRENDERFLAG_TRANSPARENT,
-											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID, 0);
+											 StaticEnvelopeEval, this, Layer.m_ColorEnvelopeID,
+											 Layer.m_ColorEnvOffset);
 			}
 			else if(Layer.m_Type == LAYERTYPE_QUADS)
 			{

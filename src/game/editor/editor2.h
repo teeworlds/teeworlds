@@ -400,6 +400,7 @@ struct CEditorMap
 				int m_Width;
 				int m_Height;
 				int m_ColorEnvelopeID;
+				int m_ColorEnvOffset;
 			};
 
 			// quad
@@ -764,7 +765,7 @@ class CEditor: public IEditor
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
-	void RenderMapView();
+	void RenderMap();
 	void RenderMapViewHud();
 	void RenderMapEditorUI();
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
