@@ -1816,7 +1816,7 @@ int CMenus::Render()
 	}
 	else
 	{
-		// make sure that other windows doesn't do anything funnay!
+		// make sure that other windows doesn't do anything funny!
 		//UI()->SetHotItem(0);
 		//UI()->SetActiveItem(0);
 		char aBuf[128];
@@ -2899,7 +2899,7 @@ void CMenus::ScrollRegionScrollHere(CScrollRegion* pSr, int Option)
 	{
 		case CScrollRegion::SCROLLHERE_TOP:
 			pSr->m_RequestScrollY = TopScroll;
-			break;
+			break;git
 
 		case CScrollRegion::SCROLLHERE_BOTTOM:
 			pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
