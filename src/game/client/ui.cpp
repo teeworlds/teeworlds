@@ -379,7 +379,7 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Al
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
-	int HorizontalPadding = 10.0f;
+	float HorizontalPadding = 10.0f;
 	switch(Align)
 	{
 	case ALIGN_CENTER:
