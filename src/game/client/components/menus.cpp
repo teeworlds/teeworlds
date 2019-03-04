@@ -2167,6 +2167,7 @@ int CMenus::Render()
 		{
 			CUIRect Yes, No;
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			// buttons
@@ -2202,6 +2203,7 @@ int CMenus::Render()
 			CUIRect Yes, No, EditBox;
 
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
@@ -2343,6 +2345,7 @@ int CMenus::Render()
 		{
 			CUIRect Yes, No;
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			// buttons
