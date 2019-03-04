@@ -1974,7 +1974,7 @@ void CEditor::RenderMapViewHud()
 		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w,
 			ClipScreenRect.y+ClipScreenRect.h);
 
-		CUIRect ClipRect = {
+		const CUIRect ClipRect = {
 			(float)SelectedGroup.m_ClipX,
 			(float)SelectedGroup.m_ClipY,
 			(float)SelectedGroup.m_ClipWidth,
@@ -2178,6 +2178,82 @@ void CEditor::RenderMapEditorUI()
 			{
 				EditTileSelectionFlipY(m_UiSelectedLayerID);
 			}
+		}
+	}
+
+	// Clip and tilelayer resize handles
+	if(IsToolDimension())
+	{
+		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+
+		const CUIRect ClipRect = {
+			(float)SelectedGroup.m_ClipX,
+			(float)SelectedGroup.m_ClipY,
+			(float)SelectedGroup.m_ClipWidth,
+			(float)SelectedGroup.m_ClipHeight
+		};
+
+		CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth,
+			m_ZoomWorldViewHeight, ClipRect);
+
+		DrawRect(UiRect, vec4(1, 0, 0, 0.1));
+
+		const float HandleSize = 10.0f;
+		const vec4 ColNormal(0.85, 0.0, 0.0, 1);
+		const vec4 ColHover(1.0, 0.0, 0.0, 1);
+		const vec4 ColPressed(0.8, 0.0, 0.0, 1);
+		const vec4 ColBorder(1.0, 0.0, 0.0, 1);
+
+		// handle top
+		const CUIRect HandleTop = {
+			UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
+			UiRect.y - HandleSize * 0.5f,
+			HandleSize, HandleSize
+		};
+
+		static CUIButton s_ButHandleTop;
+		if(UiButtonEx(HandleTop, "", &s_ButHandleTop, ColNormal, ColHover, ColPressed, ColBorder, 10))
+		{
+
+		}
+
+		// handle bottom
+		const CUIRect HandleBottom = {
+			UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
+			UiRect.y - HandleSize * 0.5f + UiRect.h,
+			HandleSize, HandleSize
+		};
+
+		static CUIButton s_ButHandleBottom;
+		if(UiButtonEx(HandleBottom, "", &s_ButHandleBottom, ColNormal, ColHover, ColPressed, ColBorder, 10))
+		{
+
+		}
+
+		// handle left
+		const CUIRect HandleLeft = {
+			UiRect.x - HandleSize * 0.5f,
+			UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+			HandleSize, HandleSize
+		};
+
+		static CUIButton s_ButHandleLeft;
+		if(UiButtonEx(HandleLeft, "", &s_ButHandleLeft, ColNormal, ColHover, ColPressed, ColBorder, 10))
+		{
+
+		}
+
+		// handle right
+		const CUIRect HandleRight = {
+			UiRect.x - HandleSize * 0.5f + UiRect.w,
+			UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+			HandleSize, HandleSize
+		};
+
+		static CUIButton s_ButHandleRight;
+		if(UiButtonEx(HandleRight, "", &s_ButHandleRight, ColNormal, ColHover, ColPressed, ColBorder, 10))
+		{
+
 		}
 	}
 
