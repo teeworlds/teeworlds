@@ -17,7 +17,7 @@
 // - Easily know if we're clicking on UI or elsewhere
 // ---- what event gets handled where should be VERY clear
 
-// - Allow brush to go in eraser mode, automapper mode
+// - Allow brush to go in automapper mode
 // - Binds
 // - Smooth zoom
 // - Fix selecting while moving the camera
@@ -3096,8 +3096,10 @@ void CEditor::RenderPopupBrushPalette()
 	static CUIButton s_ButEraser;
 	if(UiButton(ButtonRect, Localize("Eraser"), &s_ButEraser))
 	{
-		mem_zero(aTileSelected, sizeof(u8)*256);
-		aTileSelected[0] = 1; // TODO: don't show this, go into "eraser" state
+		BrushClear();
+		CTile TileZero;
+		mem_zero(&TileZero, sizeof(TileZero));
+		SetNewBrush(&TileZero, 1, 1);
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
