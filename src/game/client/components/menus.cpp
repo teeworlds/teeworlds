@@ -2899,7 +2899,7 @@ void CMenus::ScrollRegionScrollHere(CScrollRegion* pSr, int Option)
 	{
 		case CScrollRegion::SCROLLHERE_TOP:
 			pSr->m_RequestScrollY = TopScroll;
-			break;git
+			break;
 
 		case CScrollRegion::SCROLLHERE_BOTTOM:
 			pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
