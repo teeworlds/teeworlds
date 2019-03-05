@@ -595,6 +595,11 @@ struct CUICheckboxYesNo
 	CUIButton m_NoBut;
 };
 
+struct CUIGrabHandle: CUIMouseDrag
+{
+	bool m_Grabbed;
+};
+
 struct CHistoryEntry
 {
 	CHistoryEntry* m_pPrev;
@@ -766,7 +771,7 @@ class CEditor: public IEditor
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
 	void RenderMap();
-	void RenderMapViewHud();
+	void RenderMapOverlay();
 	void RenderMapEditorUI();
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
@@ -795,6 +800,7 @@ class CEditor: public IEditor
 	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn);
 	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 		float FontSize = 10);
+	bool UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive); // Returns pGrabHandle->m_IsDragging
 
 	struct CScrollRegionParams
 	{

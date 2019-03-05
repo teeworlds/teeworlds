@@ -1799,13 +1799,13 @@ void CEditor::RenderMap()
 	Graphics()->QuadsEnd();
 
 	// hud
-	RenderMapViewHud();
+	RenderMapOverlay();
 
 	// user interface
 	RenderMapEditorUI();
 }
 
-void CEditor::RenderMapViewHud()
+void CEditor::RenderMapOverlay()
 {
 	// NOTE: we're in selected group world space here
 	if(m_UiCurrentPopupID != POPUP_NONE)
@@ -2184,76 +2184,81 @@ void CEditor::RenderMapEditorUI()
 	// Clip and tilelayer resize handles
 	if(IsToolDimension())
 	{
-		const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
-
-		const CUIRect ClipRect = {
-			(float)SelectedGroup.m_ClipX,
-			(float)SelectedGroup.m_ClipY,
-			(float)SelectedGroup.m_ClipWidth,
-			(float)SelectedGroup.m_ClipHeight
-		};
-
-		CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth,
-			m_ZoomWorldViewHeight, ClipRect);
-
-		DrawRect(UiRect, vec4(1, 0, 0, 0.1));
-
-		const float HandleSize = 10.0f;
-		const vec4 ColNormal(0.85, 0.0, 0.0, 1);
-		const vec4 ColHover(1.0, 0.0, 0.0, 1);
-		const vec4 ColPressed(0.8, 0.0, 0.0, 1);
-		const vec4 ColBorder(1.0, 0.0, 0.0, 1);
-
-		// handle top
-		const CUIRect HandleTop = {
-			UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
-			UiRect.y - HandleSize * 0.5f,
-			HandleSize, HandleSize
-		};
-
-		static CUIButton s_ButHandleTop;
-		if(UiButtonEx(HandleTop, "", &s_ButHandleTop, ColNormal, ColHover, ColPressed, ColBorder, 10))
+		CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+		if(SelectedGroup.m_UseClipping)
 		{
+			const CUIRect ClipRect = {
+				(float)SelectedGroup.m_ClipX,
+				(float)SelectedGroup.m_ClipY,
+				(float)SelectedGroup.m_ClipWidth,
+				(float)SelectedGroup.m_ClipHeight
+			};
 
-		}
+			CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth,
+				m_ZoomWorldViewHeight, ClipRect);
 
-		// handle bottom
-		const CUIRect HandleBottom = {
-			UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
-			UiRect.y - HandleSize * 0.5f + UiRect.h,
-			HandleSize, HandleSize
-		};
+			DrawRect(UiRect, vec4(1, 0, 0, 0.1));
 
-		static CUIButton s_ButHandleBottom;
-		if(UiButtonEx(HandleBottom, "", &s_ButHandleBottom, ColNormal, ColHover, ColPressed, ColBorder, 10))
-		{
+			const float HandleSize = 10.0f;
+			const vec4 ColNormal(0.85, 0.0, 0.0, 1);
+			const vec4 ColActive(1.0, 0.0, 0.0, 1);
 
-		}
+			// handles
+			const CUIRect HandleTop = {
+				UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
+				UiRect.y - HandleSize * 0.5f,
+				HandleSize, HandleSize
+			};
 
-		// handle left
-		const CUIRect HandleLeft = {
-			UiRect.x - HandleSize * 0.5f,
-			UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
-			HandleSize, HandleSize
-		};
+			const CUIRect HandleBottom = {
+				UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
+				UiRect.y - HandleSize * 0.5f + UiRect.h,
+				HandleSize, HandleSize
+			};
 
-		static CUIButton s_ButHandleLeft;
-		if(UiButtonEx(HandleLeft, "", &s_ButHandleLeft, ColNormal, ColHover, ColPressed, ColBorder, 10))
-		{
+			const CUIRect HandleLeft = {
+				UiRect.x - HandleSize * 0.5f,
+				UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+				HandleSize, HandleSize
+			};
 
-		}
+			const CUIRect HandleRight = {
+				UiRect.x - HandleSize * 0.5f + UiRect.w,
+				UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+				HandleSize, HandleSize
+			};
 
-		// handle right
-		const CUIRect HandleRight = {
-			UiRect.x - HandleSize * 0.5f + UiRect.w,
-			UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
-			HandleSize, HandleSize
-		};
+			static CUIGrabHandle s_GrabHandleTop;
+			if(UiGrabHandle(HandleTop, &s_GrabHandleTop, ColNormal, ColActive))
+			{
+				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+				float DeltaY = SelectedGroup.m_ClipY - (int)WorldMousePos.y;
+				SelectedGroup.m_ClipY = WorldMousePos.y;
+				SelectedGroup.m_ClipHeight += DeltaY;
+			}
 
-		static CUIButton s_ButHandleRight;
-		if(UiButtonEx(HandleRight, "", &s_ButHandleRight, ColNormal, ColHover, ColPressed, ColBorder, 10))
-		{
+			static CUIGrabHandle s_GrabHandleLeft;
+			if(UiGrabHandle(HandleLeft, &s_GrabHandleLeft, ColNormal, ColActive))
+			{
+				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+				float DeltaX = SelectedGroup.m_ClipX - (int)WorldMousePos.x;
+				SelectedGroup.m_ClipX = WorldMousePos.x;
+				SelectedGroup.m_ClipWidth += DeltaX;
+			}
 
+			static CUIGrabHandle s_GrabHandleBot;
+			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
+			{
+				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+				SelectedGroup.m_ClipHeight = WorldMousePos.y - SelectedGroup.m_ClipY;
+			}
+
+			static CUIGrabHandle s_GrabHandleRight;
+			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
+			{
+				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+				SelectedGroup.m_ClipWidth = WorldMousePos.x - SelectedGroup.m_ClipX;
+			}
 		}
 	}
 
@@ -3879,7 +3884,15 @@ bool CEditor::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* 
 	float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover, StyleColorButtonPressed,
-		Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize);
+					  Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize);
+}
+
+bool CEditor::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive)
+{
+	UiDoMouseDragging(pGrabHandle, Rect, pGrabHandle);
+	const bool Active = IsInsideRect(m_UiMousePos, Rect) || pGrabHandle->m_IsDragging;
+	DrawRect(Rect, Active ? ColorActive : ColorNormal);
+	return pGrabHandle->m_IsDragging;
 }
 
 
