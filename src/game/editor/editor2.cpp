@@ -2187,77 +2187,108 @@ void CEditor::RenderMapEditorUI()
 		CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 		if(SelectedGroup.m_UseClipping)
 		{
-			const CUIRect ClipRect = {
+			CUIRect ClipRect = {
 				(float)SelectedGroup.m_ClipX,
 				(float)SelectedGroup.m_ClipY,
 				(float)SelectedGroup.m_ClipWidth,
 				(float)SelectedGroup.m_ClipHeight
 			};
 
-			CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth,
-				m_ZoomWorldViewHeight, ClipRect);
-
-			DrawRect(UiRect, vec4(1, 0, 0, 0.1));
+			CUIRect ClipUiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, ClipRect);
 
 			const float HandleSize = 10.0f;
 			const vec4 ColNormal(0.85, 0.0, 0.0, 1);
 			const vec4 ColActive(1.0, 0.0, 0.0, 1);
 
 			// handles
-			const CUIRect HandleTop = {
-				UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
-				UiRect.y - HandleSize * 0.5f,
+			CUIRect HandleTop = {
+				ClipUiRect.x - HandleSize * 0.5f + ClipUiRect.w * 0.5f,
+				ClipUiRect.y - HandleSize * 0.5f,
 				HandleSize, HandleSize
 			};
 
-			const CUIRect HandleBottom = {
-				UiRect.x - HandleSize * 0.5f + UiRect.w * 0.5f,
-				UiRect.y - HandleSize * 0.5f + UiRect.h,
+			CUIRect HandleBottom = {
+				ClipUiRect.x - HandleSize * 0.5f + ClipUiRect.w * 0.5f,
+				ClipUiRect.y - HandleSize * 0.5f + ClipUiRect.h,
 				HandleSize, HandleSize
 			};
 
-			const CUIRect HandleLeft = {
-				UiRect.x - HandleSize * 0.5f,
-				UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+			CUIRect HandleLeft = {
+				ClipUiRect.x - HandleSize * 0.5f,
+				ClipUiRect.y - HandleSize * 0.5f + ClipUiRect.h * 0.5f,
 				HandleSize, HandleSize
 			};
 
-			const CUIRect HandleRight = {
-				UiRect.x - HandleSize * 0.5f + UiRect.w,
-				UiRect.y - HandleSize * 0.5f + UiRect.h * 0.5f,
+			CUIRect HandleRight = {
+				ClipUiRect.x - HandleSize * 0.5f + ClipUiRect.w,
+				ClipUiRect.y - HandleSize * 0.5f + ClipUiRect.h * 0.5f,
 				HandleSize, HandleSize
 			};
 
-			static CUIGrabHandle s_GrabHandleTop;
+			const vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+
+			static CUIGrabHandle s_GrabHandleTop, s_GrabHandleLeft, s_GrabHandleBot, s_GrabHandleRight;
+			bool WasGrabbingTop = s_GrabHandleTop.m_IsDragging;
+			bool WasGrabbingLeft = s_GrabHandleLeft.m_IsDragging;
+			bool WasGrabbingBot = s_GrabHandleBot.m_IsDragging;
+			bool WasGrabbingRight = s_GrabHandleRight.m_IsDragging;
+			static int BeforeGrabbingClipX,BeforeGrabbingClipY, BeforeGrabbingClipWidth, BeforeGrabbingClipHeight;
+			if(!WasGrabbingTop && !WasGrabbingBot)
+			{
+				BeforeGrabbingClipY = SelectedGroup.m_ClipY;
+				BeforeGrabbingClipHeight = SelectedGroup.m_ClipHeight;
+			}
+			if(!WasGrabbingLeft && !WasGrabbingRight)
+			{
+				BeforeGrabbingClipX = SelectedGroup.m_ClipX;
+				BeforeGrabbingClipWidth = SelectedGroup.m_ClipWidth;
+			}
+
 			if(UiGrabHandle(HandleTop, &s_GrabHandleTop, ColNormal, ColActive))
 			{
-				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
-				float DeltaY = SelectedGroup.m_ClipY - (int)WorldMousePos.y;
-				SelectedGroup.m_ClipY = WorldMousePos.y;
-				SelectedGroup.m_ClipHeight += DeltaY;
+				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, false);
 			}
 
-			static CUIGrabHandle s_GrabHandleLeft;
 			if(UiGrabHandle(HandleLeft, &s_GrabHandleLeft, ColNormal, ColActive))
 			{
-				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
-				float DeltaX = SelectedGroup.m_ClipX - (int)WorldMousePos.x;
-				SelectedGroup.m_ClipX = WorldMousePos.x;
-				SelectedGroup.m_ClipWidth += DeltaX;
+				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, false);
 			}
 
-			static CUIGrabHandle s_GrabHandleBot;
 			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
 			{
-				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
-				SelectedGroup.m_ClipHeight = WorldMousePos.y - SelectedGroup.m_ClipY;
+				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, false);
 			}
 
-			static CUIGrabHandle s_GrabHandleRight;
 			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
 			{
-				vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
-				SelectedGroup.m_ClipWidth = WorldMousePos.x - SelectedGroup.m_ClipX;
+				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, false);
+			}
+
+			// finished grabbing
+			if(!s_GrabHandleLeft.m_IsDragging && WasGrabbingLeft)
+			{
+				SelectedGroup.m_ClipX = BeforeGrabbingClipX;
+				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
+				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, true);
+			}
+
+			if(!s_GrabHandleTop.m_IsDragging && WasGrabbingTop)
+			{
+				SelectedGroup.m_ClipY = BeforeGrabbingClipY;
+				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
+				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, true);
+			}
+
+			if(!s_GrabHandleRight.m_IsDragging && WasGrabbingRight)
+			{
+				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
+				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, true);
+			}
+
+			if(!s_GrabHandleBot.m_IsDragging && WasGrabbingBot)
+			{
+				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
+				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, true);
 			}
 		}
 	}
@@ -4988,6 +5019,113 @@ void CEditor::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int New
 		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
 			OldOffsetX, OldOffsetY,
 			NewOffsetX, NewOffsetY);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	if(NewClipX == Group.m_ClipX)
+		return;
+
+	int OldClipX = Group.m_ClipX;
+	int OldClipWidth = Group.m_ClipWidth;
+	Group.m_ClipWidth += Group.m_ClipX - NewClipX;
+	Group.m_ClipX = NewClipX;
+	if(Group.m_ClipWidth < 0)
+		Group.m_ClipWidth = 0;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed clip left"), GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+			OldClipX, OldClipWidth,
+			Group.m_ClipY, Group.m_ClipHeight);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	if(NewClipY == Group.m_ClipY)
+		return;
+
+	int OldClipY = Group.m_ClipY;
+	int OldClipHeight = Group.m_ClipHeight;
+	Group.m_ClipHeight += Group.m_ClipY - NewClipY;
+	Group.m_ClipY = NewClipY;
+	if(Group.m_ClipHeight < 0)
+		Group.m_ClipHeight = 0;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed clip top"),
+			GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+			OldClipY, OldClipHeight,
+			Group.m_ClipY, Group.m_ClipHeight);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	if(NewClipRight - Group.m_ClipX == Group.m_ClipWidth)
+		return;
+
+	int OldClipWidth = Group.m_ClipWidth;
+	Group.m_ClipWidth = NewClipRight - Group.m_ClipX;
+	if(Group.m_ClipWidth < 0)
+		Group.m_ClipWidth = 0;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed clip width"), GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+			OldClipWidth, Group.m_ClipWidth);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition)
+{
+	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
+
+	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+
+	if(NewClipBottom - Group.m_ClipY == Group.m_ClipHeight)
+		return;
+
+	int OldClipHeight = Group.m_ClipHeight;
+	Group.m_ClipHeight = NewClipBottom - Group.m_ClipY;
+	if(Group.m_ClipHeight < 0)
+		Group.m_ClipHeight = 0;
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: changed clip height"), GroupID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+			OldClipHeight, Group.m_ClipHeight);
 		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 	}
 }

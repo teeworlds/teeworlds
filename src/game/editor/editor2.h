@@ -921,6 +921,10 @@ class CEditor: public IEditor
 	void EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition);
 	void EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition);
+	void EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition);
+	void EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition);
+	void EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition);
+	void EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition);
 
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
