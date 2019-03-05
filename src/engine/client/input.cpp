@@ -106,8 +106,8 @@ void CInput::MouseRelative(float *x, float *y)
 	float jy = 0.0f;
 
 	if (m_pJoystick != NULL) {
-		jx = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickAxisX)) / 32768.0f * 50.0f;
-		jy = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickAxisY)) / 32768.0f * 50.0f;
+		jx = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickX)) / 32768.0f * 50.0f;
+		jy = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * 50.0f;
 	}
 
 	*x = (nx + jx)*Sens;
