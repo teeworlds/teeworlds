@@ -72,20 +72,20 @@ void CInput::Init()
 		}
 	}
 
-	m_Joystick = NULL;
+	m_pJoystick = NULL;
 	if (SDL_NumJoysticks() > 0) {
-		m_Joystick = SDL_JoystickOpen(0);
+		m_pJoystick = SDL_JoystickOpen(0);
 
-		if (m_Joystick == NULL) {
+		if (m_pJoystick == NULL) {
 			dbg_msg("joystick", "Could not open 0th joystick: %s", SDL_GetError());
 			return;
 		}
 
 		dbg_msg("joystick", "Opened Joystick 0");
 		dbg_msg("joystick", "Name: %s", SDL_JoystickNameForIndex(0));
-		dbg_msg("joystick", "Number of Axes: %d", SDL_JoystickNumAxes(m_Joystick));
-		dbg_msg("joystick", "Number of Buttons: %d", SDL_JoystickNumButtons(m_Joystick));
-		dbg_msg("joystick", "Number of Balls: %d", SDL_JoystickNumBalls(m_Joystick));
+		dbg_msg("joystick", "Number of Axes: %d", SDL_JoystickNumAxes(m_pJoystick));
+		dbg_msg("joystick", "Number of Buttons: %d", SDL_JoystickNumButtons(m_pJoystick));
+		dbg_msg("joystick", "Number of Balls: %d", SDL_JoystickNumBalls(m_pJoystick));
 	} else {
 		dbg_msg("joystick", "No joysticks found");
 		return;
@@ -105,9 +105,9 @@ void CInput::MouseRelative(float *x, float *y)
 	float jx = 0.0f;
 	float jy = 0.0f;
 
-	if (m_Joystick != NULL) {
-		jx = static_cast<float>(SDL_JoystickGetAxis(m_Joystick, g_Config.m_JoystickAxisX)) / 32768.0f * 50.0f;
-		jy = static_cast<float>(SDL_JoystickGetAxis(m_Joystick, g_Config.m_JoystickAxisY)) / 32768.0f * 50.0f;
+	if (m_pJoystick != NULL) {
+		jx = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickAxisX)) / 32768.0f * 50.0f;
+		jy = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickAxisY)) / 32768.0f * 50.0f;
 	}
 
 	*x = (nx + jx)*Sens;
