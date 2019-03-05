@@ -234,13 +234,11 @@ int CInput::Update()
 
 					// fall through
 				case SDL_JOYBUTTONDOWN:
-					dbg_msg("joystick", "Joystick button down: %d", Event.jbutton.button);
 					Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
 					Scancode = Key;
 					break;
 
 				case SDL_JOYHATMOTION:
-					dbg_msg("joystick", "Joystick hat down: %d", Event.jhat.value);
 					switch (Event.jhat.value) {
 					case SDL_HAT_LEFTUP:
 						Key = KEY_JOY_HAT_LEFTUP;
