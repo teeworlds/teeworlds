@@ -597,7 +597,7 @@ struct CUICheckboxYesNo
 
 struct CUIGrabHandle: CUIMouseDrag
 {
-	bool m_Grabbed;
+	bool m_IsGrabbed;
 };
 
 struct CHistoryEntry

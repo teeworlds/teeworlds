@@ -2291,6 +2291,104 @@ void CEditor::RenderMapEditorUI()
 				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, true);
 			}
 		}
+
+		// tile layer resize
+		CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+
+		if(SelectedTileLayer.IsTileLayer())
+		{
+			const float TileSize = 32;
+			CUIRect LayerRect = {
+				0,
+				0,
+				SelectedTileLayer.m_Width * TileSize,
+				SelectedTileLayer.m_Height * TileSize
+			};
+
+			const float HandleSize = 10.0f;
+			const vec4 ColNormal(0.85, 0.85, 0.85, 1);
+			const vec4 ColActive(1.0, 1.0, 1.0, 1);
+
+			static CUIGrabHandle s_GrabHandleBot, s_GrabHandleRight, s_GrabHandleBotRight;
+
+			static CUIRect PreviewRect;
+
+			bool IsAnyHandleGrabbed = true;
+			if(!s_GrabHandleBot.m_IsGrabbed && !s_GrabHandleRight.m_IsGrabbed && !s_GrabHandleBotRight.m_IsGrabbed)
+			{
+				PreviewRect = LayerRect;
+				IsAnyHandleGrabbed = false;
+			}
+
+			CUIRect LayerUiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, PreviewRect);
+
+			// handles
+			CUIRect HandleBottom = {
+				LayerUiRect.x - HandleSize * 0.5f + LayerUiRect.w * 0.5f,
+				LayerUiRect.y - HandleSize * 0.5f + LayerUiRect.h,
+				HandleSize, HandleSize
+			};
+
+			CUIRect HandleRight = {
+				LayerUiRect.x - HandleSize * 0.5f + LayerUiRect.w,
+				LayerUiRect.y - HandleSize * 0.5f + LayerUiRect.h * 0.5f,
+				HandleSize, HandleSize
+			};
+
+			CUIRect HandleBottomRight = {
+				LayerUiRect.x - HandleSize * 0.5f + LayerUiRect.w,
+				LayerUiRect.y - HandleSize * 0.5f + LayerUiRect.h,
+				HandleSize, HandleSize
+			};
+
+			if(IsAnyHandleGrabbed)
+				DrawRectBorder(LayerUiRect, vec4(1,1,1,0.2), 1, vec4(1, 1, 1, 1));
+
+			const vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
+
+			vec2 ToolTipPos;
+			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
+			{
+				PreviewRect.h = (int)(WorldMousePos.y / TileSize) * TileSize;
+				ToolTipPos = vec2(HandleBottom.x, HandleBottom.y + HandleSize);
+			}
+
+			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
+			{
+				PreviewRect.w = (int)(WorldMousePos.x / TileSize) * TileSize;
+				ToolTipPos = vec2(HandleRight.x, HandleRight.y);
+			}
+
+			if(UiGrabHandle(HandleBottomRight, &s_GrabHandleBotRight, ColNormal, ColActive))
+			{
+				PreviewRect.w = (int)(WorldMousePos.x / TileSize) * TileSize;
+				PreviewRect.h = (int)(WorldMousePos.y / TileSize) * TileSize;
+				ToolTipPos = vec2(HandleBottomRight.x, HandleBottomRight.y);
+			}
+
+			// Width/height tooltip info
+			if(IsAnyHandleGrabbed)
+			{
+				CUIRect ToolTipRect = {
+					ToolTipPos.x + 20.0f,
+					ToolTipPos.y,
+					30, 25
+				};
+				DrawRectBorder(ToolTipRect, vec4(0.6, 0.6, 0.6, 1.0), 1, vec4(1.0, 0.5, 0, 1));
+
+				ToolTipRect.x += 2;
+				CUIRect TopPart, BotPart;
+				ToolTipRect.HSplitMid(&TopPart, &BotPart);
+
+				char aWidthBuff[16];
+				char aHeightBuff[16];
+				str_format(aWidthBuff, sizeof(aWidthBuff), "%d", (int)(PreviewRect.w / TileSize));
+				str_format(aHeightBuff, sizeof(aHeightBuff), "%d", (int)(PreviewRect.h / TileSize));
+
+				DrawText(TopPart, aWidthBuff, 8, vec4(1, 1, 1, 1.0));
+				DrawText(BotPart, aHeightBuff, 8, vec4(1, 1, 1, 1.0));
+			}
+		}
 	}
 
 	// popups
@@ -3923,6 +4021,7 @@ bool CEditor::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, cons
 	UiDoMouseDragging(pGrabHandle, Rect, pGrabHandle);
 	const bool Active = IsInsideRect(m_UiMousePos, Rect) || pGrabHandle->m_IsDragging;
 	DrawRect(Rect, Active ? ColorActive : ColorNormal);
+	pGrabHandle->m_IsGrabbed = UI()->CheckActiveItem(pGrabHandle);
 	return pGrabHandle->m_IsDragging;
 }
 
