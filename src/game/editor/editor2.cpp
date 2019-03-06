@@ -2352,22 +2352,28 @@ void CEditor::RenderMapEditorUI()
 			vec2 ToolTipPos;
 			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
 			{
-				PreviewRect.h = (int)(WorldMousePos.y / TileSize) * TileSize;
+				PreviewRect.h = (int)round(WorldMousePos.y / TileSize) * TileSize;
 				ToolTipPos = vec2(HandleBottom.x, HandleBottom.y + HandleSize);
 			}
 
 			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
 			{
-				PreviewRect.w = (int)(WorldMousePos.x / TileSize) * TileSize;
+				PreviewRect.w = (int)round(WorldMousePos.x / TileSize) * TileSize;
 				ToolTipPos = vec2(HandleRight.x, HandleRight.y);
 			}
 
 			if(UiGrabHandle(HandleBottomRight, &s_GrabHandleBotRight, ColNormal, ColActive))
 			{
-				PreviewRect.w = (int)(WorldMousePos.x / TileSize) * TileSize;
-				PreviewRect.h = (int)(WorldMousePos.y / TileSize) * TileSize;
+				PreviewRect.w = (int)round(WorldMousePos.x / TileSize) * TileSize;
+				PreviewRect.h = (int)round(WorldMousePos.y / TileSize) * TileSize;
 				ToolTipPos = vec2(HandleBottomRight.x, HandleBottomRight.y);
 			}
+
+			// clamp
+			if(PreviewRect.w < TileSize)
+				PreviewRect.w = TileSize;
+			if(PreviewRect.h < TileSize)
+				PreviewRect.h = TileSize;
 
 			// Width/height tooltip info
 			if(IsAnyHandleGrabbed)
@@ -5011,7 +5017,7 @@ void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
-	dbg_assert(NewWidth > 1 && NewHeight > 1, "NewWidth, NewHeight invalid");
+	dbg_assert(NewWidth > 0 && NewHeight > 0, "NewWidth, NewHeight invalid");
 
 	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
