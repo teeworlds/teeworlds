@@ -2310,6 +2310,9 @@ void CEditor::RenderMapEditorUI()
 			const vec4 ColActive(1.0, 1.0, 1.0, 1);
 
 			static CUIGrabHandle s_GrabHandleBot, s_GrabHandleRight, s_GrabHandleBotRight;
+			bool WasGrabbingBot = s_GrabHandleBot.m_IsGrabbed;
+			bool WasGrabbingRight = s_GrabHandleRight.m_IsGrabbed;
+			bool WasGrabbingBotRight = s_GrabHandleBotRight.m_IsGrabbed;
 
 			static CUIRect PreviewRect;
 
@@ -2387,6 +2390,14 @@ void CEditor::RenderMapEditorUI()
 
 				DrawText(TopPart, aWidthBuff, 8, vec4(1, 1, 1, 1.0));
 				DrawText(BotPart, aHeightBuff, 8, vec4(1, 1, 1, 1.0));
+			}
+
+			// IF we let go of any handle, resize tile layer
+			if(WasGrabbingBot && !s_GrabHandleBot.m_IsGrabbed ||
+			   WasGrabbingRight && !s_GrabHandleRight.m_IsGrabbed ||
+			   WasGrabbingBotRight && !s_GrabHandleBotRight.m_IsGrabbed)
+			{
+				EditTileLayerResize(m_UiSelectedLayerID, (int)(PreviewRect.w / TileSize), (int)(PreviewRect.h / TileSize));
 			}
 		}
 	}
@@ -4993,6 +5004,54 @@ void CEditor::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int Pa
 		LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)(%d, %d)",
 		PaintTX, PaintTY, PaintW, PaintH);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
+	dbg_assert(NewWidth > 1 && NewHeight > 1, "NewWidth, NewHeight invalid");
+
+	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	if(NewWidth == Layer.m_Width && NewHeight == Layer.m_Height)
+		return;
+
+	const int OldWidth = Layer.m_Width;
+	const int OldHeight = Layer.m_Height;
+	CDynArray<CTile>& aTiles = Layer.m_aTiles;
+
+	CMemBlock<CTile> CopyBlock = m_Map.m_TileDispenser.Alloc(OldWidth * OldHeight);
+	CTile* pCopyBuff = CopyBlock.Get();
+
+	dbg_assert(aTiles.Count() == OldWidth * OldHeight, "Tile counbt does not match Width*Height");
+	memmove(pCopyBuff, aTiles.Data(), sizeof(CTile) * OldWidth * OldHeight);
+
+	aTiles.Clear();
+	aTiles.AddEmpty(NewWidth * NewHeight);
+
+	for(int oty = 0; oty < OldHeight; oty++)
+	{
+		for(int otx = 0; otx < OldWidth; otx++)
+		{
+			int oid = oty * OldWidth + otx;
+			if(oty > NewHeight-1 || otx > NewWidth-1)
+				continue;
+			aTiles[oty * NewWidth + otx] = pCopyBuff[oid];
+		}
+	}
+
+	Layer.m_Width = NewWidth;
+	Layer.m_Height = NewHeight;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: resized"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
+		OldWidth, OldHeight,
+		NewWidth, NewHeight);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
