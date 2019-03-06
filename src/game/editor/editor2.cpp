@@ -2228,10 +2228,10 @@ void CEditor::RenderMapEditorUI()
 			const vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
 
 			static CUIGrabHandle s_GrabHandleTop, s_GrabHandleLeft, s_GrabHandleBot, s_GrabHandleRight;
-			bool WasGrabbingTop = s_GrabHandleTop.m_IsDragging;
-			bool WasGrabbingLeft = s_GrabHandleLeft.m_IsDragging;
-			bool WasGrabbingBot = s_GrabHandleBot.m_IsDragging;
-			bool WasGrabbingRight = s_GrabHandleRight.m_IsDragging;
+			bool WasGrabbingTop = s_GrabHandleTop.m_IsGrabbed;
+			bool WasGrabbingLeft = s_GrabHandleLeft.m_IsGrabbed;
+			bool WasGrabbingBot = s_GrabHandleBot.m_IsGrabbed;
+			bool WasGrabbingRight = s_GrabHandleRight.m_IsGrabbed;
 			static int BeforeGrabbingClipX,BeforeGrabbingClipY, BeforeGrabbingClipWidth, BeforeGrabbingClipHeight;
 			if(!WasGrabbingTop && !WasGrabbingBot)
 			{
@@ -2244,51 +2244,92 @@ void CEditor::RenderMapEditorUI()
 				BeforeGrabbingClipWidth = SelectedGroup.m_ClipWidth;
 			}
 
+			vec2 ToolTipPos;
+
 			if(UiGrabHandle(HandleTop, &s_GrabHandleTop, ColNormal, ColActive))
 			{
 				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, false);
+				ToolTipPos = vec2(HandleTop.x, HandleTop.y);
 			}
 
 			if(UiGrabHandle(HandleLeft, &s_GrabHandleLeft, ColNormal, ColActive))
 			{
 				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, false);
+				ToolTipPos = vec2(HandleLeft.x, HandleLeft.y);
 			}
 
 			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
 			{
 				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, false);
+				ToolTipPos = vec2(HandleBottom.x, HandleBottom.y);
 			}
 
 			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
 			{
 				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, false);
+				ToolTipPos = vec2(HandleRight.x, HandleRight.y);
 			}
 
 			// finished grabbing
-			if(!s_GrabHandleLeft.m_IsDragging && WasGrabbingLeft)
+			if(!s_GrabHandleLeft.m_IsGrabbed && WasGrabbingLeft)
 			{
 				SelectedGroup.m_ClipX = BeforeGrabbingClipX;
 				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
 				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, true);
 			}
 
-			if(!s_GrabHandleTop.m_IsDragging && WasGrabbingTop)
+			if(!s_GrabHandleTop.m_IsGrabbed && WasGrabbingTop)
 			{
 				SelectedGroup.m_ClipY = BeforeGrabbingClipY;
 				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
 				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, true);
 			}
 
-			if(!s_GrabHandleRight.m_IsDragging && WasGrabbingRight)
+			if(!s_GrabHandleRight.m_IsGrabbed && WasGrabbingRight)
 			{
 				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
 				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, true);
 			}
 
-			if(!s_GrabHandleBot.m_IsDragging && WasGrabbingBot)
+			if(!s_GrabHandleBot.m_IsGrabbed && WasGrabbingBot)
 			{
 				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
 				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, true);
+			}
+
+			// Size tooltip info
+			if(s_GrabHandleLeft.m_IsGrabbed || s_GrabHandleTop.m_IsGrabbed ||
+			   s_GrabHandleRight.m_IsGrabbed || s_GrabHandleBot.m_IsGrabbed)
+			{
+				CUIRect ToolTipRect = {
+					ToolTipPos.x + 20.0f,
+					ToolTipPos.y,
+					30, 48
+				};
+				DrawRectBorder(ToolTipRect, vec4(0.6, 0.0, 0.0, 1.0), 1, vec4(1.0, 1.0, 1.0, 1));
+
+				ToolTipRect.x += 2;
+				CUIRect TopPart;
+				char aWidthBuff[16];
+				char aHeightBuff[16];
+				char aPosXBuff[16];
+				char aPosYBuff[16];
+				str_format(aPosXBuff, sizeof(aPosXBuff), "%d", SelectedGroup.m_ClipX);
+				str_format(aPosYBuff, sizeof(aPosYBuff), "%d", SelectedGroup.m_ClipY);
+				str_format(aWidthBuff, sizeof(aWidthBuff), "%d", SelectedGroup.m_ClipWidth);
+				str_format(aHeightBuff, sizeof(aHeightBuff), "%d", SelectedGroup.m_ClipHeight);
+
+				ToolTipRect.HSplitTop(12, &TopPart, &ToolTipRect);
+				DrawText(TopPart, aPosXBuff, 8, vec4(1, 1, 1, 1.0));
+
+				ToolTipRect.HSplitTop(12, &TopPart, &ToolTipRect);
+				DrawText(TopPart, aPosYBuff, 8, vec4(1, 1, 1, 1.0));
+
+				ToolTipRect.HSplitTop(12, &TopPart, &ToolTipRect);
+				DrawText(TopPart, aWidthBuff, 8, vec4(1, 1, 1, 1.0));
+
+				ToolTipRect.HSplitTop(12, &TopPart, &ToolTipRect);
+				DrawText(TopPart, aHeightBuff, 8, vec4(1, 1, 1, 1.0));
 			}
 		}
 
