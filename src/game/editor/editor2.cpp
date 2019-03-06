@@ -2114,6 +2114,8 @@ void CEditor::RenderMapEditorUI()
 		}
 	}
 
+	UI()->ClipEnable(&m_UiMainViewRect); // clip main view rect
+
 	// tools
 	const float ButtonSize = 20.0f;
 	const float Margin = 5.0f;
@@ -2452,6 +2454,8 @@ void CEditor::RenderMapEditorUI()
 	// popups
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
+
+	UI()->ClipDisable(); // main view rect clip
 }
 
 void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
