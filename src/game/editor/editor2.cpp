@@ -5025,7 +5025,7 @@ void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 	CMemBlock<CTile> CopyBlock = m_Map.m_TileDispenser.Alloc(OldWidth * OldHeight);
 	CTile* pCopyBuff = CopyBlock.Get();
 
-	dbg_assert(aTiles.Count() == OldWidth * OldHeight, "Tile counbt does not match Width*Height");
+	dbg_assert(aTiles.Count() == OldWidth * OldHeight, "Tile count does not match Width*Height");
 	memmove(pCopyBuff, aTiles.Data(), sizeof(CTile) * OldWidth * OldHeight);
 
 	aTiles.Clear();
@@ -5041,6 +5041,8 @@ void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 			aTiles[oty * NewWidth + otx] = pCopyBuff[oid];
 		}
 	}
+
+	m_Map.m_TileDispenser.Dealloc(&CopyBlock);
 
 	Layer.m_Width = NewWidth;
 	Layer.m_Height = NewHeight;
