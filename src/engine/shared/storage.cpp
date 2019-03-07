@@ -344,6 +344,7 @@ public:
 		int m_BufferSize;
 		unsigned m_WantedCrc;
 		unsigned m_WantedSize;
+		bool m_CheckCrcSize;
 	};
 
 	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
@@ -367,14 +368,17 @@ public:
 		{
 			// found the file
 			str_format(Data.m_pBuffer, Data.m_BufferSize, "%s/%s", Data.m_pPath, Data.m_pFilename);
-			
-			// check crc and size
-			unsigned Crc = 0;
-			unsigned Size = 0;
-			if(!Data.m_pStorage->GetCrcSize(Data.m_pBuffer, Type, &Crc, &Size) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+
+			if(Data.m_CheckCrcSize)
 			{
-				Data.m_pBuffer[0] = 0;
-				return 0;
+				// check crc and size
+				unsigned Crc = 0;
+				unsigned Size = 0;
+				if(!Data.m_pStorage->GetCrcSize(Data.m_pBuffer, Type, &Crc, &Size) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+				{
+					Data.m_pBuffer[0] = 0;
+					return 0;
+				}
 			}
 			
 			return 1;
@@ -383,13 +387,50 @@ public:
 		return 0;
 	}
 
-	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc = 0, unsigned WantedSize = 0)
+	bool FindFileImpl(int Type, CFindCBData *pCBData)
 	{
-		if(BufferSize < 1)
+		if(pCBData->m_BufferSize < 1)
 			return false;
 
-		pBuffer[0] = 0;
+		pCBData->m_pBuffer[0] = 0;
+
 		char aBuf[MAX_PATH_LENGTH];
+		
+		if(Type == TYPE_ALL)
+		{
+			// search within all available directories
+			for(int i = 0; i < m_NumPaths; ++i)
+			{
+				fs_listdir(GetPath(i, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, pCBData);
+				if(pCBData->m_pBuffer[0])
+					return true;
+			}
+		}
+		else if(Type >= 0 && Type < m_NumPaths)
+		{
+			// search within wanted directory
+			fs_listdir(GetPath(Type, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, pCBData);
+		}
+
+		return pCBData->m_pBuffer[0] != 0;
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_WantedCrc = 0;
+		Data.m_WantedSize = 0;
+		Data.m_CheckCrcSize = false;
+		return FindFileImpl(Type, &Data);
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc, unsigned WantedSize)
+	{
 		CFindCBData Data;
 		Data.m_pStorage = this;
 		Data.m_pFilename = pFilename;
@@ -398,24 +439,8 @@ public:
 		Data.m_BufferSize = BufferSize;
 		Data.m_WantedCrc = WantedCrc;
 		Data.m_WantedSize = WantedSize;
-		
-		if(Type == TYPE_ALL)
-		{
-			// search within all available directories
-			for(int i = 0; i < m_NumPaths; ++i)
-			{
-				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
-				if(pBuffer[0])
-					return true;
-			}
-		}
-		else if(Type >= 0 && Type < m_NumPaths)
-		{
-			// search within wanted directory
-			fs_listdir(GetPath(Type, pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
-		}
-
-		return pBuffer[0] != 0;
+		Data.m_CheckCrcSize = true;
+		return FindFileImpl(Type, &Data);
 	}
 
 	virtual bool RemoveFile(const char *pFilename, int Type)
@@ -494,6 +519,18 @@ public:
 		}
 		return p;
 	}
+
+	static IStorage *CreateTest()
+	{
+		CStorage *p = new CStorage();
+		if(!p)
+		{
+			return 0;
+		}
+		p->AddPath(".");
+		return p;
+	}
 };
 
 IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, StorageType, NumArgs, ppArguments); }
+IStorage *CreateTestStorage() { return CStorage::CreateTest(); }

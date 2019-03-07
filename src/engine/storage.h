@@ -21,7 +21,8 @@ public:
 
 	virtual void ListDirectory(int Type, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser) = 0;
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0) = 0;
-	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc = 0, unsigned WantedSize = 0) = 0;
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize) = 0;
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc, unsigned WantedSize) = 0;
 	virtual bool RemoveFile(const char *pFilename, int Type) = 0;
 	virtual bool RenameFile(const char* pOldFilename, const char* pNewFilename, int Type) = 0;
 	virtual bool CreateFolder(const char *pFoldername, int Type) = 0;
@@ -29,7 +30,8 @@ public:
 	virtual bool GetCrcSize(const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize) = 0;
 };
 
-extern IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments);
+IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments);
+IStorage *CreateTestStorage();
 
 
 #endif
